@@ -95,20 +95,6 @@ namespace zmq {
       DONTWAIT = ZMQ_DONTWAIT,
       SNDMORE = ZMQ_SNDMORE
    };
-
-   // Set socket options
-   template <class T>
-   void setsockopt(zmq::socket_t& socket, const zmq::SocketOptions opt, const T value) {
-      socket.setsockopt(opt, &value, sizeof(value));
-   }
-
-   void setsockopt(zmq::socket_t& socket, const zmq::SocketOptions opt, const int value);
-
-   // special case for const char and string
-   void setsockopt(zmq::socket_t& socket, const zmq::SocketOptions opt, const std::string value);
-
-   // special case for const char and string
-   void setsockopt(zmq::socket_t& socket, const zmq::SocketOptions opt, const char* value);
 }
 
 namespace ZMQ {
@@ -121,7 +107,5 @@ size_t defaultSizeOf(const T&) {
 size_t stringLength(const char& cs);
 
 }
-
-std::string connection(const size_t id);
 
 #endif // ZEROMQ_FUNCTIONS_H

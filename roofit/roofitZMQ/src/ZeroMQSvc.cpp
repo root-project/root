@@ -1,4 +1,5 @@
 //#include <memory>
+#include <functional>  // std::ref
 #include <ROOT/RMakeUnique.hxx>
 
 #include "RooFit_ZMQ/ZeroMQSvc.h"
@@ -21,17 +22,36 @@ void ZeroMQSvc::setEncoding(const ZeroMQSvc::Encoding &e) {
 
 zmq::context_t& ZeroMQSvc::context() const {
   if (!m_context) {
-    m_context = new zmq::context_t{1};
+    try {
+      m_context = new zmq::context_t{1};
+    } catch (zmq::error_t& e) {
+      std::cerr << "ERROR: Creating ZeroMQ context failed. This only happens when PGM initialization failed or when a nullptr was returned from zmq_ctx_new because the created context was invalid. Contact ZMQ experts when this happens, because it shouldn't.\n";
+      throw e;
+    }
   }
   return *m_context;
 }
 
 zmq::socket_t ZeroMQSvc::socket(int type) const {
-  return zmq::socket_t{context(), type};
+  try {
+    // the actual work this function should do, all the rest is error handling:
+    return zmq::socket_t{context(), type};
+  } catch (zmq::error_t& e) {
+    // all zmq errors not recoverable from here, only at call site
+    std::cerr << "ERROR in ZeroMQSvc::socket: " << e.what() << " (errno: " << e.num() << ")\n";
+    throw e;
+  }
 }
 
 zmq::socket_t* ZeroMQSvc::socket_ptr(int type) const {
-  return new zmq::socket_t(context(), type);
+  try {
+    // the actual work this function should do, all the rest is error handling:
+    return new zmq::socket_t(context(), type);
+  } catch (zmq::error_t& e) {
+    // all zmq errors not recoverable from here, only at call site
+    std::cerr << "ERROR in ZeroMQSvc::socket_ptr: " << e.what() << " (errno: " << e.num() << ")\n";
+    throw e;
+  }
 }
 
 void ZeroMQSvc::close_context() const {
@@ -60,6 +80,9 @@ zmq::message_t ZeroMQSvc::encode(const TObject& item) const {
   buffer.WriteObject(&item);
 
   // Create message and detach buffer
+  // This is the only ZMQ thing that can throw, and only when memory ran out
+  // (errno ENOMEM), and that is something only the caller can fix, so we don't
+  // catch it here:
   zmq::message_t message(buffer.Buffer(), buffer.Length(), deleteBuffer);
   buffer.DetachBuffer();
 
@@ -68,13 +91,13 @@ zmq::message_t ZeroMQSvc::encode(const TObject& item) const {
 
 
 bool ZeroMQSvc::send(zmq::socket_t& socket, const char* item, int flags) const {
-  return socket.send(encode(item), flags);
+  return retry_send(socket, 3, encode(item), flags);
 }
 
 bool ZeroMQSvc::send(zmq::socket_t& socket, zmq::message_t& msg, int flags) const {
-  return socket.send(msg, flags);
+  return retry_send(socket, 3, std::ref(msg), flags);
 }
 
 bool ZeroMQSvc::send(zmq::socket_t& socket, zmq::message_t&& msg, int flags) const {
-  return socket.send(std::move(msg), flags);
+  return retry_send(socket, 3, std::move(msg), flags);
 }
