@@ -16,11 +16,11 @@
 /** \class RooChebychev
    \ingroup Roofit
 
-Chebychev polynomial p.d.f. of the first kind
+Chebychev polynomial p.d.f. of the first kind.
 
-The coefficient that goes with T_0(x)=1 (i.e. the constant polynomial) is
+The coefficient that goes with \f$ T_0(x)=1 \f$ (i.e. the constant polynomial) is
 implicitly assumed to be 1, and the list of coefficients supplied by callers
-starts with the coefficient that goes with T_1(x)=x (i.e. the linear term).
+starts with the coefficient that goes with \f$ T_1(x)=x \f$ (i.e. the linear term).
 **/
 
 #include <cmath>
@@ -67,9 +67,9 @@ enum class Kind : int { First = 1, Second = 2 };
 template <typename T, Kind KIND>
 class ChebychevIterator {
 private:
-   T m_last = 1;
-   T m_curr = 0;
-   T m_twox = 0;
+   T _last = 1;
+   T _curr = 0;
+   T _twox = 0;
 
 public:
    /// default constructor
@@ -80,7 +80,7 @@ public:
    ChebychevIterator(ChebychevIterator &&) = default;
    /// construct from given x in [-1, 1]
    constexpr ChebychevIterator(const T &x)
-       : m_curr(static_cast<int>(KIND) * x), m_twox(2 * x)
+       : _curr(static_cast<int>(KIND) * x), _twox(2 * x)
    {}
 
    /// (copy) assignment
@@ -89,15 +89,15 @@ public:
    ChebychevIterator &operator=(ChebychevIterator &&) = default;
 
    /// get value of Chebychev polynomial at current order
-   constexpr inline T operator*() const noexcept { return m_last; }
+   constexpr inline T operator*() const noexcept { return _last; }
    // get value of Chebychev polynomial at (current + 1) order
-   constexpr inline T lookahead() const noexcept { return m_curr; }
+   constexpr inline T lookahead() const noexcept { return _curr; }
    /// move on to next order, return reference to new value
    inline ChebychevIterator &operator++() noexcept
    {
-      T newval = fast_fma(m_twox, m_curr, -m_last);
-      m_last = m_curr;
-      m_curr = newval;
+      T newval = fast_fma(_twox, _curr, -_last);
+      _last = _curr;
+      _curr = newval;
       return *this;
    }
    /// move on to next order, return copy of new value
