@@ -30,6 +30,7 @@ struct RComboBoxItem {
    std::string fSet;
    RComboBoxItem() = default;
    RComboBoxItem(const std::string &id, const std::string &set) : fId(id), fSet(set) {}
+   bool operator<(const RComboBoxItem& right) const { return fSet.compare(right.fSet) < 0; }
 };
 
 struct RFitFuncParameter {
@@ -128,6 +129,8 @@ struct RFitPanel6Model {
    int fScanMax{0};
 
    void Initialize(TH1 *hist);
+
+   TH1* FindHistogram(const std::string &id, TH1 *hist = nullptr);
 };
 
 } // namespace Experimental
