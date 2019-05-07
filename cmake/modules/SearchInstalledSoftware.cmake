@@ -116,11 +116,11 @@ if(builtin_freetype)
       FREETYPE
       URL ${CMAKE_SOURCE_DIR}/graf2d/freetype/src/freetype-${freetype_version}.tar.gz
       URL_HASH SHA256=0a3c7dfbda6da1e8fce29232e8e96d987ababbbf71ebc8c75659e4132c367014
-      CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --with-pic 
-                         --disable-shared --with-png=no --with-bzip2=no 
+      CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --with-pic
+                         --disable-shared --with-png=no --with-bzip2=no
                          --with-harfbuzz=no ${_freetype_zlib}
                           "CC=${_freetype_cc}" CFLAGS=${_freetype_cflags}
-      INSTALL_COMMAND ""                    
+      INSTALL_COMMAND ""
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
       BUILD_BYPRODUCTS ${FREETYPE_LIBRARY})
   endif()
@@ -374,10 +374,10 @@ if(builtin_afterimage)
       DOWNLOAD_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/graf2d/asimage/src/libAfterImage AFTERIMAGE
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR>
-                        --libdir=<INSTALL_DIR>/lib 
-                        --with-ttf ${_ttf_include} --with-afterbase=no 
-                        --without-svg --disable-glx ${_after_mmx} 
-                        --with-builtin-ungif  --with-jpeg ${_jpeginclude} 
+                        --libdir=<INSTALL_DIR>/lib
+                        --with-ttf ${_ttf_include} --with-afterbase=no
+                        --without-svg --disable-glx ${_after_mmx}
+                        --with-builtin-ungif  --with-jpeg ${_jpeginclude}
                         --with-png ${_pnginclude} ${_tiffinclude}
                         CC=${CMAKE_C_COMPILER} CFLAGS=${_after_cflags}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
@@ -789,7 +789,7 @@ if(builtin_xrootd)
   string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")  # Otherwise it produces many warnings
   string(REPLACE "-W " "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings
   string(REPLACE "-Wshadow" "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings
-  string(REPLACE "-Woverloaded-virtual" "" __cxxflags "${__cxxflags}")  # Otherwise it produces manywarnings  
+  string(REPLACE "-Woverloaded-virtual" "" __cxxflags "${__cxxflags}")  # Otherwise it produces manywarnings
   set(XROOTD_LIBRARIES ${XROOTD_ROOTDIR}/${_LIBDIR_DEFAULT}/libXrdUtils${CMAKE_SHARED_LIBRARY_SUFFIX}
                        ${XROOTD_ROOTDIR}/${_LIBDIR_DEFAULT}/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX}
                        ${XROOTD_ROOTDIR}/${_LIBDIR_DEFAULT}/libXrdCl${CMAKE_SHARED_LIBRARY_SUFFIX})
@@ -1036,7 +1036,7 @@ if(imt)
           set(builtin_tbb ON CACHE BOOL "Enabled because imt requested and external TBB version < ${tbb_min_version} (${builtin_tbb})" FORCE)
         endif()
       endif()
-    endif()  
+    endif()
     if(NOT TBB_FOUND)
       if(fail-on-missing)
         message(FATAL_ERROR "TBB not found. You can enable the option 'builtin_tbb' to build the library internally")
@@ -1046,7 +1046,7 @@ if(imt)
       endif()
     endif()
   endif()
-endif()  
+endif()
 if(builtin_tbb)
   set(tbb_builtin_version 2019_U1)
   set(tbb_sha256 d40aa6f62f2b2fb38c89b9f309859e3e6ff90487e8bc45abb0e096a6a165bec5)
@@ -1076,7 +1076,7 @@ if(builtin_tbb)
               COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbb.pdb ${CMAKE_BINARY_DIR}/bin/
               COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc.pdb ${CMAKE_BINARY_DIR}/bin/
               COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc_proxy.pdb ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR> 
+              COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR>
                                        -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
       BUILD_IN_SOURCE 1
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
@@ -1313,7 +1313,7 @@ if(vdt OR builtin_vdt)
       BUILD_BYPRODUCTS ${VDT_LIBRARIES}
     )
     set(VDT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
-    install(FILES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX} 
+    install(FILES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX}
             DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
     install(DIRECTORY ${CMAKE_BINARY_DIR}/include/vdt
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT extra-headers)
@@ -1470,7 +1470,7 @@ if (testing)
 endif()
 
 #------------------------------------------------------------------------------------
-if(webui)
+if(webgui)
   ExternalProject_Add(
      OPENUI5
      URL ${CMAKE_SOURCE_DIR}/gui/webdisplay/res/openui5.tar.gz
