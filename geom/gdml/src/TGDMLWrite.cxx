@@ -248,7 +248,7 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, const char* filename, T
 // Wrapper to only selectively write one branch of the volume hierarchy to file
 void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* volume, const char* filename, TString option)
 {
-  TList materials;
+  TList materials, volumes, nodes;
   MaterialExtractor extract;
   if ( !volume )   {
     Info("WriteGDMLfile", "Invalid Volume reference to extract GDML information!");
@@ -258,8 +258,13 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* volume, con
   for(TGeoMaterial* m : extract.materials)
     materials.Add(m);
   fTopVolumeName = volume->GetName();
+  fSurfaceList.clear();
+  fVolumeList.clear();
+  fNodeList.clear();
   WriteGDMLfile(geomanager, volume, &materials, filename, option);
   materials.Clear("nodelete");
+  volumes.Clear("nodelete");
+  nodes.Clear("nodelete");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -362,9 +367,9 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager,
    Info("WriteGDMLfile", "%i solids added", fSolCnt);
    Info("WriteGDMLfile", "%i volumes added", fVolCnt);
    Info("WriteGDMLfile", "%i physvolumes added", fPhysVolCnt);
-   ExtractOpticalSurfaces(geomanager->GetListOfOpticalSurfaces());
    ExtractSkinSurfaces(geomanager->GetListOfSkinSurfaces());
    ExtractBorderSurfaces(geomanager->GetListOfBorderSurfaces());
+   ExtractOpticalSurfaces(geomanager->GetListOfOpticalSurfaces());
    endT = time(NULL);
    //<gdml>
    fGdmlE->AddChild(rootNode, fDefineNode);                 //  <define>...</define>
@@ -429,8 +434,10 @@ void TGDMLWrite::ExtractOpticalSurfaces(TObjArray *surfaces)
    TIter next(surfaces);
    TGeoOpticalSurface *surf;
    while ((surf = (TGeoOpticalSurface*)next())) {
+      if ( fSurfaceList.find(surf) == fSurfaceList.end() ) continue;
       surfaceN = CreateOpticalSurfaceN(surf);
       fGdmlE->AddChild(fSolidsNode, surfaceN);
+      // Info("ExtractSkinSurfaces", "Extracted optical surface: %s",surf->GetName());
    }
 }
 
@@ -444,8 +451,11 @@ void TGDMLWrite::ExtractSkinSurfaces(TObjArray *surfaces)
    TIter next(surfaces);
    TGeoSkinSurface *surf;
    while ((surf = (TGeoSkinSurface*)next())) {
+      if ( fVolumeList.find(surf->GetVolume()) == fVolumeList.end() ) continue;
       surfaceN = CreateSkinSurfaceN(surf);
       fGdmlE->AddChild(fStructureNode, surfaceN);
+      fSurfaceList.insert(surf->GetSurface());
+      // Info("ExtractSkinSurfaces", "Extracted skin surface: %s",surf->GetName());
    }
 }
 
@@ -459,8 +469,25 @@ void TGDMLWrite::ExtractBorderSurfaces(TObjArray *surfaces)
    TIter next(surfaces);
    TGeoBorderSurface *surf;
    while ((surf = (TGeoBorderSurface*)next())) {
+      auto ia = fNodeList.find(surf->GetNode1());
+      auto ib = fNodeList.find(surf->GetNode2());
+      if ( ia == fNodeList.end() && ib == fNodeList.end() )  {
+        continue;
+      }
+      else if ( ia == fNodeList.end() && ib != fNodeList.end() )  {
+        Warning("ExtractBorderSurfaces", "Inconsistent border surface extraction %s: Node %s"
+             " is not part of GDML!",surf->GetName(), surf->GetNode1()->GetName());
+        continue;
+      }
+      else if ( ia != fNodeList.end() && ib == fNodeList.end() )  {
+        Warning("ExtractBorderSurfaces", "Inconsistent border surface extraction %s: Node %s"
+             " is not part of GDML!",surf->GetName(), surf->GetNode2()->GetName());
+        continue;
+      }
       surfaceN = CreateBorderSurfaceN(surf);
       fGdmlE->AddChild(fStructureNode, surfaceN);
+      fSurfaceList.insert(surf->GetSurface());
+      // Info("ExtractBorderSurfaces", "Extracted border surface: %s",surf->GetName());
    }
 }
 
@@ -524,7 +551,8 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
    TGeoPatternFinder *pattFinder = 0;
    Bool_t isPattern = kFALSE;
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
-
+   
+   fVolumeList.insert(volume);
    //create the name for volume/assembly
    if (volume->IsTopVolume()) {
       //not needed a special function for generating name
@@ -575,6 +603,7 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
    while ((geoNode = (TGeoNode *) next())) {
       //get volume of current node and if not processed then process it
       TGeoVolume * subvol = geoNode->GetVolume();
+      fNodeList.insert(geoNode);
       if (subvol->TestAttBit(fgkProcBitVol) == kFALSE) {
          subvol->SetAttBit(fgkProcBitVol);
          ExtractVolumes(subvol);

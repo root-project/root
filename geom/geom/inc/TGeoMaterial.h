@@ -20,6 +20,7 @@
 
 // forward declarations
 class TGeoExtension;
+class TGDMLMatrix;
 
 // Some units used in G4
 static const Double_t STP_temperature = 273.15;     // [K]
@@ -93,6 +94,8 @@ public:
    const char              *GetConstPropertyRef(Int_t i) const { return (fConstProperties.At(i) ? fConstProperties.At(i)->GetTitle() : nullptr); }
    TList const             &GetProperties() const { return fProperties; }
    TList const             &GetConstProperties() const { return fConstProperties; }
+   TGDMLMatrix*             GetProperty(const char* name)  const;
+   TGDMLMatrix*             GetProperty(Int_t i)  const;
    virtual Int_t            GetByteCount() const {return sizeof(*this);}
    virtual Double_t         GetA() const       {return fA;}
    virtual Double_t         GetZ()  const      {return fZ;}
