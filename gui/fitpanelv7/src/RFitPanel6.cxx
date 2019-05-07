@@ -112,7 +112,7 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
       DrawScan(arg.substr(8));
    } else if (arg.compare(0, 8, "GETPARS:") == 0) {
 
-      RFitFunc info;
+      RFitFuncParsList info;
       // ROOT::Experimental::RFitPanel6Model model;
 
       info.name = arg.substr(8);
@@ -121,50 +121,32 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
       printf("Found func %s %p\n", info.name.c_str(), func);
 
       if (func) {
-         for (int n = 0; n < func->GetNpar(); ++n) {
-            info.pars.emplace_back(n, func->GetParName(n));
-            auto &par = info.pars.back();
-
-            par.value = func->GetParameter(n);
-            par.error = func->GetParError(n);
-            func->GetParLimits(n, par.min, par.max);
-            if ((par.min >= par.max) && ((par.min != 0) || (par.max != 0)))
-               par.fixed = true;
-         }
+         info.GetParameters(func);
       } else {
          info.name = "<not exists>";
       }
-      TString json = TBufferJSON::ToJSON(&info);
 
+      TString json = TBufferJSON::ToJSON(&info);
       fWindow->Send(fConnId, "PARS:"s + json.Data());
 
    } else if (arg.compare(0, 8, "SETPARS:") == 0) {
 
-      auto info = TBufferJSON::FromJSON<RFitFunc>(arg.substr(8));
+      auto info = TBufferJSON::FromJSON<RFitFuncParsList>(arg.substr(8));
 
       if (info) {
          TF1 *func = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(info->name.c_str()));
 
-         if (func) {
-            printf("Found func1 %s %p %d %d\n", info->name.c_str(), func, func->GetNpar(), (int)info->pars.size());
-            // copy all parameters back to the function
-            for (int n = 0; n < func->GetNpar(); ++n) {
-               func->SetParameter(n, info->pars[n].value);
-               func->SetParError(n, info->pars[n].error);
-               func->SetParLimits(n, info->pars[n].min, info->pars[n].max);
-               if (info->pars[n].fixed)
-                  func->FixParameter(n, info->pars[n].value);
-            }
-         }
+         // copy all parameters back to the function
+         if (func)
+            info->SetParameters(func);
       }
 
    } else if (arg.compare(0, 12, "GETADVANCED:") == 0) {
 
-      RFitFunc info;
       RFitPanel6Model modelAdv;
 
-      info.name = arg.substr(12);
-      TF1 *func = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(info.name.c_str()));
+      std::string funcname = arg.substr(12);
+      TF1 *func = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(funcname.c_str()));
 
       // printf("Found func1 %s %p\n", info.name.c_str(), func);
 
@@ -177,11 +159,9 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
             modelAdv.fScan.emplace_back(std::to_string(n), func->GetParName(n));
             modelAdv.fScanId = "0";
          }
-      } else {
-         info.name = "<not exists>";
       }
-      TString jsonModel = TBufferJSON::ToJSON(&modelAdv);
 
+      TString jsonModel = TBufferJSON::ToJSON(&modelAdv);
       fWindow->Send(fConnId, "ADVANCED:"s + jsonModel.Data());
    }
 }

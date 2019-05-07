@@ -13,8 +13,9 @@
 #pragma link C++ class ROOT::Experimental::RFitPanel+;
 
 #pragma link C++ struct ROOT::Experimental::RComboBoxItem+;
+#pragma link C++ struct ROOT::Experimental::RFitFuncInfo+;
 #pragma link C++ struct ROOT::Experimental::RFitFuncParameter+;
-#pragma link C++ struct ROOT::Experimental::RFitFunc+;
+#pragma link C++ struct ROOT::Experimental::RFitFuncParsList+;
 #pragma link C++ struct ROOT::Experimental::RFitPanel6Model+;
 #pragma link C++ class ROOT::Experimental::RFitPanel6+;
 

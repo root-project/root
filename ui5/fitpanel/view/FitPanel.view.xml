@@ -64,8 +64,8 @@
 								</ComboBox>
 							</form:fields>
 							<form:fields>
-								<ComboBox id="selectedFuncCombo" selectedKey="{/fSelectedFunc}" items="{ path: '/fFuncList', sorter: { path: 'fSet' } }" change="onSelectedFuncChange">
-									<core:Item key="{fId}" text="{fSet}" />
+								<ComboBox id="selectedFuncCombo" selectedKey="{/fSelectedFunc}" items="{ path: '/fFuncList', sorter: { path: 'name' } }" change="onSelectedFuncChange">
+									<core:Item key="{name}" text="{name}" />
 									<layoutData>
 										<l:GridData span="XL2 L1 M2 S4" />
 									</layoutData>
