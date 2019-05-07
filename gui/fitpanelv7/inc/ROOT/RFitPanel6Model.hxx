@@ -20,6 +20,8 @@
 #include <vector>
 #include <string>
 
+class TH1;
+
 namespace ROOT {
 namespace Experimental {
 
@@ -71,9 +73,6 @@ struct RFitPanel6Model {
    std::vector<std::vector<RComboBoxItem>> fMethodMinAll;
    // Fit Function --- Type
    std::vector<std::vector<RComboBoxItem>> fTypeXYAll;
-
-   std::vector<RComboBoxItem> fMethodMin;
-   // std::vector<RComboBoxItem> fTypeXY;
 
    std::string fSelectTypeId;
    std::string fSelectMethodMinId;
@@ -127,6 +126,8 @@ struct RFitPanel6Model {
    int fScanPar{0};
    int fScanMin{0};
    int fScanMax{0};
+
+   void Initialize(TH1 *hist);
 };
 
 } // namespace Experimental
