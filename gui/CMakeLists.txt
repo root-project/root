@@ -6,7 +6,7 @@ add_subdirectory(guihtml)
 add_subdirectory(recorder)
 add_subdirectory(sessionviewer)
 
-if(webui)
+if(webgui)
    add_subdirectory(webdisplay)
    if(cefweb)
       add_subdirectory(cefdisplay)
