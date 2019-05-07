@@ -1064,6 +1064,13 @@
    ...
 }
 
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:_ZN8TStorage14UpdateIsOnHeapERVKjRVj
+   ...
+}
+
 ######## Minimizer
 
 {
