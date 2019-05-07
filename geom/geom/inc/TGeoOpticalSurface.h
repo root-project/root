@@ -22,6 +22,8 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
+class TGDMLMatrix;
+
 class TGeoOpticalSurface : public TNamed {
 public:
    enum ESurfaceFinish {
@@ -119,6 +121,9 @@ public:
    bool AddProperty(const char *property, const char *ref);
    const char *GetPropertyRef(const char *property);
    TList const &GetProperties() const { return fProperties; }
+   Int_t GetNproperties() const { return fProperties.GetSize(); }
+   TGDMLMatrix* GetProperty(const char* name)  const;
+   TGDMLMatrix* GetProperty(Int_t i)  const;
    ESurfaceType GetType() const { return fType; }
    ESurfaceModel GetModel() const { return fModel; }
    ESurfaceFinish GetFinish() const { return fFinish; }

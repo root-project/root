@@ -37,6 +37,7 @@
 #include "TGDMLMatrix.h"
 
 #include <map>
+#include <set>
 #include <vector>
 #include <iostream>
 
@@ -92,10 +93,13 @@ private:
       Double_t z;
    };
 
-   typedef  std::map<TString, Bool_t> NameList;
-   typedef  std::map<TString, TString> NameListS;
-   typedef  std::map<TString, Int_t> NameListI;
-   typedef  std::map<TString, Float_t> NameListF;
+   typedef  std::set<const TGeoOpticalSurface*> SurfaceList;
+   typedef  std::set<const TGeoVolume*> VolList;
+   typedef  std::set<const TGeoNode*>   NodeList;
+   typedef  std::map<TString, Bool_t>   NameList;
+   typedef  std::map<TString, TString>  NameListS;
+   typedef  std::map<TString, Int_t>    NameListI;
+   typedef  std::map<TString, Float_t>  NameListF;
    struct StructLst {
       NameList fLst;
    };     //to store pointers
@@ -109,7 +113,10 @@ private:
    StructLst *fElementList;   //list of elements
    StructLst *fAccPatt;       //list of accepted patterns for division
    StructLst *fRejShape;      //list of rejected shapes
-
+   SurfaceList fSurfaceList;  //list of optical surfaces
+   VolList     fVolumeList;   //list of volumes
+   NodeList    fNodeList;     //list of placed volumes
+  
    NameLst *fNameList; //list of names (pointer mapped)
 
    //Data members

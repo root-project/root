@@ -20,8 +20,10 @@ This is a wrapper class to G4OpticalSurface
 
 #include <string>
 
+#include "TGeoManager.h"
 #include "TGeoVolume.h"
 #include "TGeoNode.h"
+#include "TGDMLMatrix.h"
 
 ClassImp(TGeoOpticalSurface)
 ClassImp(TGeoSkinSurface)
@@ -247,6 +249,24 @@ const char *TGeoOpticalSurface::GetPropertyRef(const char *property)
    // Find reference for a given property
    TNamed *prop = (TNamed *)fProperties.FindObject(property);
    return (prop) ? prop->GetTitle() : nullptr;
+}
+
+//_____________________________________________________________________________
+TGDMLMatrix *TGeoOpticalSurface::GetProperty(const char *property) const
+{
+   // Find reference for a given property
+   TNamed *prop = (TNamed*)fProperties.FindObject(property);
+   if ( !prop ) return nullptr;
+   return gGeoManager->GetGDMLMatrix(prop->GetTitle());
+}
+
+//_____________________________________________________________________________
+TGDMLMatrix *TGeoOpticalSurface::GetProperty(Int_t i) const
+{
+   // Find reference for a given property
+   TNamed *prop = (TNamed*)fProperties.At(i);
+   if ( !prop ) return nullptr;
+   return gGeoManager->GetGDMLMatrix(prop->GetTitle());
 }
 
 //_____________________________________________________________________________
