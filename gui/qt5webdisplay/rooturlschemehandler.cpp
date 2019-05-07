@@ -1,5 +1,5 @@
 /// \file rooturlschemehandler.cpp
-/// \ingroup WebUI
+/// \ingroup WebGui
 /// \author Sergey Linev <S.Linev@gsi.de>
 /// \date 2017-06-29
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
