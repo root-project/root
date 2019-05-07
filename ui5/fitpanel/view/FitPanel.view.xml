@@ -1,509 +1,436 @@
 <mvc:View
-	class="sapUiSizeCompact"
-	height="100%"
-	width="100%"
-	xmlns:mvc="sap.ui.core.mvc"
-	xmlns:core="sap.ui.core"
-	xmlns="sap.m"
-	xmlns:l="sap.ui.layout"
-	xmlns:form="sap.ui.layout.form"
-	controllerName="rootui5.fitpanel.controller.FitPanel">
-	<Page id="simplefitpanel_page" title="Simple Fit Panel" showHeader="false">
-		<VBox class="sapUiSizeCompact sapUiBody fitPanelStyle sapUiSmallMarginStart">
-			<form:Form id="FormToolbar"
-				editable="true"
-				ariaLabelledBy="Title1">
-				<form:layout>
-					<form:ResponsiveGridLayout
-						labelSpanXL="4"
-						labelSpanL="3"
-						labelSpanM="4"
-						labelSpanS="4"
-						adjustLabelSpan="false"
-						emptySpanXL="2"
-						emptySpanL="0"
-						emptySpanM="0"
-						emptySpanS="0"
-						columnsXL="2"
-						columnsL="1"
-						columnsM="1"
-						singleContainerFullSize="false"/>
-				</form:layout>
-				<form:formContainers>
-					<form:FormContainer ariaLabelledBy="dataset">
-						<form:FormElement>
-							<Label text="Data Set:" labelFor="DataSet">
-								<layoutData>
-									<l:GridData span="XL1 L4 M3 S3" />
-								</layoutData>
-							</Label>
-							<form:fields >
-								<ComboBox id="DataSet" selectedKey="{/fSelectDataId}" items="{ path: '/fDataSet', sorter: { path: 'fSet' } }">
-									<core:Item key="{fId}" text="{fSet}" />
-									<layoutData>
-										<l:GridData span="XL1 L4 M3 S7" />
-									</layoutData>
-								</ComboBox>
-							</form:fields>
-							<Title level="H3" text="Fit Function">
-								<layoutData>
-									<l:GridData span="XL1 L4 M3 S12" />
-								</layoutData>
-							</Title>
-							<form:fields>
-								<Label text="Type:" labelFor="TypeFunc">
-									<layoutData>
-										<l:GridData span="XL1 L4 M3 S2" />
-									</layoutData>
-								</Label>
-								<ComboBox id="TypeFunc" selectedKey="{/fSelectTypeFunc}" items="{ path: '/fTypeFunc', sorter: { path: 'fFunc' } }" change="selectTypeFunc">
-									<core:Item key="{fId}" text="{fSet}"/>
-									<layoutData>
-										<l:GridData span="XL1 L4 M3 S4"/>
-									</layoutData>
-								</ComboBox>
-							</form:fields>
-							<form:fields>
-								<ComboBox id="selectedFuncCombo" selectedKey="{/fSelectedFunc}" items="{ path: '/fFuncList', sorter: { path: 'name' } }" change="onSelectedFuncChange">
-									<core:Item key="{name}" text="{name}" />
-									<layoutData>
-										<l:GridData span="XL2 L1 M2 S4" />
-									</layoutData>
-								</ComboBox>
-							</form:fields>
-						</form:FormElement>
-					</form:FormContainer>
-					<form:FormContainer ariaLabelledBy="Operation">
-						<form:FormElement>
-							<form:fields>
-								<TextArea id="OperationText" height="30px" value=" " valueLiveUpdate="{/fOpTextUpdate}" liveChange="operationTextChange">
-									<layoutData>
-										<l:GridData span="L4 M6 S10" />
-									</layoutData>
-								</TextArea>
-								<Label text="Selected " labelFor="OperationText">
-									<layoutData>
-										<l:GridData span="XL1 L4 M3 S3" />
-									</layoutData>
-								</Label>
-								<Text id="selectedOpText" text="gaus">
-									<layoutData>
-										<l:GridData span="XL1 L4 M3 S7" />
-									</layoutData>
-								</Text>
-								<Button text="Set Parameters" press="setParametersDialog">
-									<layoutData>
-										<l:GridData span="L4 M6 S10" />
-									</layoutData>
-								</Button>
-							</form:fields>
-						</form:FormElement>
-					</form:FormContainer>
-					<form:FormContainer>
-						<form:FormElement>
-							<form:fields>
-								<IconTabBar id="Gen-Min">
-									<items>
-										<IconTabFilter text="General">
-											<l:VerticalLayout class="sapUiSizeCompact" >
-												<Title level="H3" text="Method"/>
-												<ComboBox id="MethodCombo" selectedKey="{/fSelectMethodId}" items="{ path: '/fMethod', sorter: { path: 'fMethod' } }">
-													<core:Item key="{fId}" text="{fSet}" />
-												</ComboBox>
-												<l:HorizontalLayout class="sapUiSizeCompact">
-													<l:VerticalLayout class="sapUiMediumMarginEnd">
-														<CheckBox id="robust123" text="Robust"  enabled="{= ${/fSelectMethodId} === '3'}" selected="{/fRobust}" tooltip="Perform Linear Robust fitter if selected"/>
-													</l:VerticalLayout>
-													<l:VerticalLayout>
-														<StepInput
-															value="0.95"
-															min="0.01"
-															max="1"
-															step="0.01"
-															width="95px"
-															displayValuePrecision = "2"
-															enabled="{= ${/fRobust} === true}"
-															tooltip="Available only for graphs"/>
-													</l:VerticalLayout>
-												</l:HorizontalLayout>
-												<Title level="H3" text="Fit Options"/>
-												<l:HorizontalLayout class="sapUiSizeCompact">
-													<VBox>
-														<CheckBox id="Integral" text="Integral" selected="{/fIntegral}" tooltip="'I'-use integral of function instead of value in bin center"/>
-														<CheckBox text="All weights = 1" selected="{/fWeights}" enabled="{= ${/fBins} === false}" tooltip="'W'-all weights=1 for non-empty bins; eroors bars ignored" />
-														<CheckBox text="Empty bins, weights=1" selected="{/fBins}" enabled = "{= ${/fWeights} === false}" tooltip="'WW'-all weights=1 including empty bins; errors bars ignored"/>
-													</VBox>
-													<VBox>
-														<CheckBox text="Minus Errors" selected="{/fMinusErrors}" tooltip="'E'-better errors estimation using Minos technique"/>
-														<CheckBox text="Add to list" selected="{/fAddList}" tooltip="'+'-add function to the list without deleting the previous"/>
-													</VBox>
-												</l:HorizontalLayout>
-												<Title level="H3" text="Draw Options"/>
-												<l:HorizontalLayout class="sapUiSizeCompact">
-													<VBox>
-														<CheckBox text="SAME" selected="{/fSame}"/>
-														<CheckBox text="No Drawing" selected ="{/fNoDrawing}"/>
-													</VBox>
-												</l:HorizontalLayout>
-												<RangeSlider id="Slider" showAdvancedTooltip="true" range="{/fRange}" min="{/fMinRange}" max="{/fMaxRange}" step="{/fStep}" width="100%" showHandleTooltip="false" inputsAsTooltips="true" class="sapUiSmallMarginBottom"/>
-												<FlexBox
-													alignItems="Start"
-													justifyContent="End">
-												<Button text="Update Range" press="updateRange" tooltip="Update the fitting range"/>
-												</FlexBox>
-											</l:VerticalLayout>
-										</IconTabFilter>
-										<IconTabFilter text="Minimization">
-											<l:VerticalLayout id="libraryContainer" class="sapUiSizeCompact">
-												<Title level="H3" text="Library"/>
-												<RadioButtonGroup id="libraryRB" columns="3" width="100%"  selectedIndex="{/fLibrary}" select="selectRB">
-													<buttons>
-														<RadioButton id="RB2-1" text="Minuit"/>
-														<RadioButton id="RB2-2" text="Minuit2"/>
-														<RadioButton id="RB2-3" text="Fumili"/>
-														<RadioButton id="RB2-4" text="GSL" enabled="false"/>
-														<RadioButton id="RB2-5" text="Genetics"/>
-													</buttons>
-												</RadioButtonGroup>
-												<Title level="H3" text="Method"/>
-												<ComboBox id="MethodMin" selectedKey="{/fSelectMethodMinId}" items="{ path: '/fMethodMin', sorter: { path: 'fMethodMin' } }">
-													<core:Item key="{fId}" text="{fSet}" />
-												</ComboBox>
-												<Title level="H3" text="Settings"/>
-												<Text text="Use ENTER key to validate a new value or click on Reset button to set the defaults."/>
-												<form:Form id="FormMin"
-													editable="true"
-													ariaLabelledBy="Title1">
-													<form:layout>
-														<form:ResponsiveGridLayout
-															labelSpanXL="4"
-															labelSpanL="3"
-															labelSpanM="4"
-															labelSpanS="4"
-															adjustLabelSpan="false"
-															emptySpanXL="2"
-															emptySpanL="0"
-															emptySpanM="0"
-															emptySpanS="0"
-															columnsXL="2"
-															columnsL="1"
-															columnsM="1"
-															singleContainerFullSize="false"/>
-													</form:layout>
-													<form:formContainers>
-														<form:FormContainer ariaLabelledBy="Minimization">
-															<form:FormElement>
-																<Label text="Error Definition (default = 1)" labelFor="errorDef">
-																	<layoutData>
-																		<l:GridData span="XL1 L4 M3 S6" />
-																	</layoutData>
-																</Label>
-																<Input
-																	id="errorDef"
-																	type="Number"
-																	placeholder="1.00">
-																	<layoutData>
-																		<l:GridData span="XL1 L4 M3 S4" />
-																	</layoutData>
-																</Input>
-																<Label text="Max tolerance (precision)" labelFor="maxTolerance">
-																	<layoutData>
-																		<l:GridData span="XL1 L4 M3 S6" />
-																	</layoutData>
-																</Label>
-																<Input
-																	id="maxTolerance"
-																	type="Number"
-																	placeholder="0.01">
-																	<layoutData>
-																		<l:GridData span="XL1 L4 M3 S4" />
-																	</layoutData>
-																</Input>
-																<Label text="Max number of interations" labelFor="maxInterations">
-																	<layoutData>
-																		<l:GridData span="XL1 L4 M3 S6" />
-																	</layoutData>
-																</Label>
-																<Input
-																	id="maxInterations"
-																	type="Number"
-																	placeholder="0">
-																	<layoutData>
-																		<l:GridData span="XL1 L4 M3 S4" />
-																	</layoutData>
-																</Input>
-																<CheckBox text="Use gradient" selected="{/fUseGradient}">
-																	<layoutData>
-																		<l:GridData span="L4 M6 S6"/>
-																	</layoutData>
-																</CheckBox>
-															</form:FormElement>
-														</form:FormContainer>
-													</form:formContainers>
-												</form:Form>
-												<Title level="H3" text="Print Options"/>
-												<RadioButtonGroup columns="3" width="100%"  selectedIndex="{/fPrint}">
-													<buttons>
-														<RadioButton id="Print-1" text="Default"/>
-														<RadioButton id="Print-2" text="Verbose"/>
-														<RadioButton id="Print-3" text="Quiet"/>
-													</buttons>
-												</RadioButtonGroup>
-												<Panel expandable="true" expanded="false" headerText="Advanced Options" width="auto" class="sapUiBody" expand="advancedOptionsDialog">
-													<content>
-														<IconTabBar id="AdvancedOptions">
-															<items>
-																<IconTabFilter text="Contour">
-																	<form:Form id="FormContour"
-																	editable="true"
-																	ariaLabelledBy="Title1">
-																		<form:layout>
-																			<form:ResponsiveGridLayout
-																				labelSpanXL="4"
-																				labelSpanL="3"
-																				labelSpanM="4"
-																				labelSpanS="4"
-																				adjustLabelSpan="false"
-																				emptySpanXL="2"
-																				emptySpanL="0"
-																				emptySpanM="0"
-																				emptySpanS="0"
-																				columnsXL="2"
-																				columnsL="1"
-																				columnsM="1"
-																				singleContainerFullSize="false"/>
-																		</form:layout>
-																		<form:formContainers>
-																			<form:FormContainer ariaLabelledBy="Minimization">
-																				<form:FormElement>
-																					<Label text="Number of Points:" labelFor="contourPoints">
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S4" />
-																						</layoutData>
-																					</Label>
-																					<StepInput id="contourPoints" value="40" min="0" max="100" step="1" editable="true">
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S7" />
-																						</layoutData>
-																					</StepInput>
-																					<Label text="Parameter 1:" labelFor="ContourPar1">
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S4" />
-																						</layoutData>
-																					</Label>
-																					<ComboBox id="ContourPar1" selectedKey="{/fContourPar1Id}" items="{ path: '/fContour1', sorter: { path: 'fSet' } }">
-																						<core:Item key="{fId}" text="{fSet}" />
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S7" />
-																						</layoutData>
-																					</ComboBox>
-																					<Label text="Parameter 2:" labelFor="ContourPar2">
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S4" />
-																						</layoutData>
-																					</Label>
-																					<ComboBox id="ContourPar2" selectedKey="{/fContourPar2Id}" items="{ path: '/fContour2', sorter: { path: 'fSet' } }">
-																						<core:Item key="{fId}" text="{fSet}" />
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S7" />
-																						</layoutData>
-																					</ComboBox>
-																					<Label text="Confidence Level:" labelFor="ConfLevel">
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S4" />
-																						</layoutData>
-																					</Label>
-																					<StepInput id="ConfLevel" value="0.683" min="0.000" max="100.000" step="0.001" editable="true" displayValuePrecision="3">
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S7" />
-																						</layoutData>
-																					</StepInput>
-																					<Label text="Fill Colour:" labelFor="colorContour">
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S4" />
-																						</layoutData>
-																					</Label>
-																					<Button press="colorPickerContour" id="colorContour">
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S2"/>
-																						</layoutData>
-																					</Button>
-																					<CheckBox id="contourImpose" text="Super impose" selected="{/fContourImpose}">
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S4"/>
-																						</layoutData>
-																					</CheckBox>
-																					<Button text="Draw" press="drawContour">
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S5"/>
-																						</layoutData>
-																					</Button>
-																					<Button text="Close" press="">
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S4"/>
-																						</layoutData>
-																					</Button>
-																				</form:FormElement>
-																			</form:FormContainer>
-																		</form:formContainers>
-																	</form:Form>
-																</IconTabFilter>
-																<IconTabFilter text="Scan">
-																	<form:Form id="FormScan"
-																	editable="true"
-																	ariaLabelledBy="Title1">
-																		<form:layout>
-																			<form:ResponsiveGridLayout
-																				labelSpanXL="4"
-																				labelSpanL="3"
-																				labelSpanM="4"
-																				labelSpanS="4"
-																				adjustLabelSpan="false"
-																				emptySpanXL="2"
-																				emptySpanL="0"
-																				emptySpanM="0"
-																				emptySpanS="0"
-																				columnsXL="2"
-																				columnsL="1"
-																				columnsM="1"
-																				singleContainerFullSize="false"/>
-																		</form:layout>
-																		<form:formContainers>
-																			<form:FormContainer ariaLabelledBy="Minimization">
-																				<form:FormElement>
-																					<Label text="Number of Points:" labelFor="scanPoints">
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S4" />
-																						</layoutData>
-																					</Label>
-																					<StepInput id="scanPoints" value="40" min="0" max="100" step="1" editable="true">
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S7" />
-																						</layoutData>
-																					</StepInput>
-																					<Label text="Parameter 1:" labelFor="ScanPar">
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S4" />
-																						</layoutData>
-																					</Label>
-																					<ComboBox id="ScanPar" selectedKey="{/fScanId}" items="{ path: '/fScan', sorter: { path: 'fSet' } }">
-																						<core:Item key="{fId}" text="{fSet}" />
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S7" />
-																						</layoutData>
-																					</ComboBox>
-																					<Label text="Min:" labelFor="scanMin">
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S4" />
-																						</layoutData>
-																					</Label>
-																					<StepInput id="scanMin" value="0.0001" min="0.0001" max="100.0000" step="0.0001" editable="true" displayValuePrecision="4">
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S7" />
-																						</layoutData>
-																					</StepInput>
-																					<Label text="Max:" labelFor="scanMax">
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S4" />
-																						</layoutData>
-																					</Label>
-																					<StepInput id="scanMax" value="0.0001" min="0.0001" max="100.0000" step="0.0001" editable="true" displayValuePrecision="4">
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S7" />
-																						</layoutData>
-																					</StepInput>
-																					<Button text="Draw" press="drawScan">
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S4"/>
-																						</layoutData>
-																					</Button>
-																					<Button text="Close" press=" ">
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S4"/>
-																						</layoutData>
-																					</Button>
-																				</form:FormElement>
-																			</form:FormContainer>
-																		</form:formContainers>
-																	</form:Form>
-																</IconTabFilter>
-																<IconTabFilter text="Conf Intervals">
-																	<form:Form id="FormConf"
-																	editable="true"
-																	ariaLabelledBy="Title1">
-																		<form:layout>
-																			<form:ResponsiveGridLayout
-																				labelSpanXL="4"
-																				labelSpanL="3"
-																				labelSpanM="4"
-																				labelSpanS="4"
-																				adjustLabelSpan="false"
-																				emptySpanXL="2"
-																				emptySpanL="0"
-																				emptySpanM="0"
-																				emptySpanS="0"
-																				columnsXL="2"
-																				columnsL="1"
-																				columnsM="1"
-																				singleContainerFullSize="false"/>
-																		</form:layout>
-																		<form:formContainers>
-																			<form:FormContainer ariaLabelledBy="Minimization">
-																				<form:FormElement>
-																					<Label text="Confidence Level:" labelFor="ConfLevelInt">
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S4" />
-																						</layoutData>
-																					</Label>
-																					<StepInput id="ConfLevelInt" value="0.95" min="0.01" max="100" step="0.01" editable="true" displayValuePrecision="2">
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S7" />
-																						</layoutData>
-																					</StepInput>
-																					<Label text="Fill Colour:" labelFor="colorConf">
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S4" />
-																						</layoutData>
-																					</Label>
-																					<Button press="colorPickerConf" id="colorConf">
-																						<layoutData>
-																							<l:GridData span="XL1 L4 M3 S2"/>
-																						</layoutData>
-																					</Button>
-																					<Button text="Draw" press=" ">
-																							<layoutData>
-																								<l:GridData span="XL1 L4 M3 S5"/>
-																							</layoutData>
-																						</Button>
-																						<Button text="Close" press=" ">
-																							<layoutData>
-																								<l:GridData span="XL1 L4 M3 S5"/>
-																							</layoutData>
-																						</Button>
-																				</form:FormElement>
-																			</form:FormContainer>
-																		</form:formContainers>
-																	</form:Form>
-																</IconTabFilter>
-															</items>
-														</IconTabBar>
-													</content>
-												</Panel>
-											</l:VerticalLayout>
-										</IconTabFilter>
-									</items>
-								</IconTabBar>
-							</form:fields>
-						</form:FormElement>
-					</form:FormContainer>
-				</form:formContainers>
-			</form:Form>
-			<Toolbar>
-				<Button text="Fit" press="doFit" tooltip="Fit the histogram"/>
-				<Button text="Reset" press="resetPanel" tooltip="Reset to initial state"/>
-				<Button text="Back" press="backPanel" tooltip="Go to the previous fitting"/>
-				<Button text="Close" press="closePanel" tooltip="Close the Fit Panel"/>
-			</Toolbar>
-		</VBox>
-	</Page>
+   class="sapUiSizeCompact"
+   height="100%"
+   width="100%"
+   xmlns:mvc="sap.ui.core.mvc"
+   xmlns:core="sap.ui.core"
+   xmlns="sap.m"
+   xmlns:l="sap.ui.layout"
+   xmlns:form="sap.ui.layout.form"
+   controllerName="rootui5.fitpanel.controller.FitPanel">
+   <Page id="simplefitpanel_page" title="Simple Fit Panel" showHeader="false">
+      <VBox class="sapUiSizeCompact sapUiSmallMarginStart" width="100%">
+         <HBox alignItems="Center">
+            <Label text="Data Set:" labelFor="DataSet"/>
+            <ComboBox id="DataSet" selectedKey="{/fSelectDataId}" items="{ path: '/fDataSet', sorter: { path: 'fSet' } }">
+                <core:Item key="{fId}" text="{fSet}" />
+            </ComboBox>
+         </HBox>
+         <HBox alignItems="Center">
+           <Label text="Func:" labelFor="TypeFunc"/>
+           <ComboBox id="TypeFunc" selectedKey="{/fSelectTypeFunc}" items="{ path: '/fTypeFunc', sorter: { path: 'fFunc' } }" change="selectTypeFunc">
+              <core:Item key="{fId}" text="{fSet}"/>
+           </ComboBox>
+           <ComboBox id="selectedFuncCombo" selectedKey="{/fSelectedFunc}" items="{ path: '/fFuncList', sorter: { path: 'name' } }" change="onSelectedFuncChange">
+              <core:Item key="{name}" text="{name}" />
+           </ComboBox>
+           <Button text="Pars" press="setParametersDialog"/>
+         </HBox>
+         <HBox alignItems="Center">
+            <Label text="Selected " labelFor="OperationText"/>
+            <TextArea id="OperationText" height="30px" value=" " valueLiveUpdate="{/fOpTextUpdate}" liveChange="operationTextChange"/>
+            <Text id="selectedOpText" text="gaus"/>
+         </HBox>
+                        <IconTabBar id="Gen-Min">
+                           <items>
+                              <IconTabFilter text="General">
+                                 <l:VerticalLayout class="sapUiSizeCompact" >
+                                    <Title level="H3" text="Method"/>
+                                    <ComboBox id="MethodCombo" selectedKey="{/fSelectMethodId}" items="{ path: '/fMethod', sorter: { path: 'fMethod' } }">
+                                       <core:Item key="{fId}" text="{fSet}" />
+                                    </ComboBox>
+                                    <l:HorizontalLayout class="sapUiSizeCompact">
+                                       <l:VerticalLayout class="sapUiMediumMarginEnd">
+                                          <CheckBox id="robust123" text="Robust"  enabled="{= ${/fSelectMethodId} === '3'}" selected="{/fRobust}" tooltip="Perform Linear Robust fitter if selected"/>
+                                       </l:VerticalLayout>
+                                       <l:VerticalLayout>
+                                          <StepInput
+                                             value="0.95"
+                                             min="0.01"
+                                             max="1"
+                                             step="0.01"
+                                             width="95px"
+                                             displayValuePrecision = "2"
+                                             enabled="{= ${/fRobust} === true}"
+                                             tooltip="Available only for graphs"/>
+                                       </l:VerticalLayout>
+                                    </l:HorizontalLayout>
+                                    <Title level="H3" text="Fit Options"/>
+                                    <l:HorizontalLayout class="sapUiSizeCompact">
+                                       <VBox>
+                                          <CheckBox id="Integral" text="Integral" selected="{/fIntegral}" tooltip="'I'-use integral of function instead of value in bin center"/>
+                                          <CheckBox text="All weights = 1" selected="{/fWeights}" enabled="{= ${/fBins} === false}" tooltip="'W'-all weights=1 for non-empty bins; eroors bars ignored" />
+                                          <CheckBox text="Empty bins, weights=1" selected="{/fBins}" enabled = "{= ${/fWeights} === false}" tooltip="'WW'-all weights=1 including empty bins; errors bars ignored"/>
+                                       </VBox>
+                                       <VBox>
+                                          <CheckBox text="Minus Errors" selected="{/fMinusErrors}" tooltip="'E'-better errors estimation using Minos technique"/>
+                                          <CheckBox text="Add to list" selected="{/fAddList}" tooltip="'+'-add function to the list without deleting the previous"/>
+                                       </VBox>
+                                    </l:HorizontalLayout>
+                                    <Title level="H3" text="Draw Options"/>
+                                    <l:HorizontalLayout class="sapUiSizeCompact">
+                                       <VBox>
+                                          <CheckBox text="SAME" selected="{/fSame}"/>
+                                          <CheckBox text="No Drawing" selected ="{/fNoDrawing}"/>
+                                       </VBox>
+                                    </l:HorizontalLayout>
+                                    <RangeSlider id="Slider" showAdvancedTooltip="true" range="{/fRange}" min="{/fMinRange}" max="{/fMaxRange}" step="{/fStep}" width="100%" showHandleTooltip="false" inputsAsTooltips="true" class="sapUiSmallMarginBottom"/>
+                                    <FlexBox
+                                       alignItems="Start"
+                                       justifyContent="End">
+                                    <Button text="Update Range" press="updateRange" tooltip="Update the fitting range"/>
+                                    </FlexBox>
+                                 </l:VerticalLayout>
+                              </IconTabFilter>
+                              <IconTabFilter text="Minimization">
+                                 <l:VerticalLayout id="libraryContainer" class="sapUiSizeCompact">
+                                    <Title level="H3" text="Library"/>
+                                    <RadioButtonGroup id="libraryRB" columns="3" width="100%"  selectedIndex="{/fLibrary}" select="selectRB">
+                                       <buttons>
+                                          <RadioButton id="RB2-1" text="Minuit"/>
+                                          <RadioButton id="RB2-2" text="Minuit2"/>
+                                          <RadioButton id="RB2-3" text="Fumili"/>
+                                          <RadioButton id="RB2-4" text="GSL" enabled="false"/>
+                                          <RadioButton id="RB2-5" text="Genetics"/>
+                                       </buttons>
+                                    </RadioButtonGroup>
+                                    <Title level="H3" text="Method"/>
+                                    <ComboBox id="MethodMin" selectedKey="{/fSelectMethodMinId}" items="{ path: '/fMethodMin', sorter: { path: 'fMethodMin' } }">
+                                       <core:Item key="{fId}" text="{fSet}" />
+                                    </ComboBox>
+                                    <Title level="H3" text="Settings"/>
+                                    <Text text="Use ENTER key to validate a new value or click on Reset button to set the defaults."/>
+                                    <form:Form id="FormMin"
+                                       editable="true"
+                                       ariaLabelledBy="Title1">
+                                       <form:layout>
+                                          <form:ResponsiveGridLayout
+                                             labelSpanXL="4"
+                                             labelSpanL="3"
+                                             labelSpanM="4"
+                                             labelSpanS="4"
+                                             adjustLabelSpan="false"
+                                             emptySpanXL="2"
+                                             emptySpanL="0"
+                                             emptySpanM="0"
+                                             emptySpanS="0"
+                                             columnsXL="2"
+                                             columnsL="1"
+                                             columnsM="1"
+                                             singleContainerFullSize="false"/>
+                                       </form:layout>
+                                       <form:formContainers>
+                                          <form:FormContainer ariaLabelledBy="Minimization">
+                                             <form:FormElement>
+                                                <Label text="Error Definition (default = 1)" labelFor="errorDef">
+                                                   <layoutData>
+                                                      <l:GridData span="XL1 L4 M3 S6" />
+                                                   </layoutData>
+                                                </Label>
+                                                <Input
+                                                   id="errorDef"
+                                                   type="Number"
+                                                   placeholder="1.00">
+                                                   <layoutData>
+                                                      <l:GridData span="XL1 L4 M3 S4" />
+                                                   </layoutData>
+                                                </Input>
+                                                <Label text="Max tolerance (precision)" labelFor="maxTolerance">
+                                                   <layoutData>
+                                                      <l:GridData span="XL1 L4 M3 S6" />
+                                                   </layoutData>
+                                                </Label>
+                                                <Input
+                                                   id="maxTolerance"
+                                                   type="Number"
+                                                   placeholder="0.01">
+                                                   <layoutData>
+                                                      <l:GridData span="XL1 L4 M3 S4" />
+                                                   </layoutData>
+                                                </Input>
+                                                <Label text="Max number of interations" labelFor="maxInterations">
+                                                   <layoutData>
+                                                      <l:GridData span="XL1 L4 M3 S6" />
+                                                   </layoutData>
+                                                </Label>
+                                                <Input
+                                                   id="maxInterations"
+                                                   type="Number"
+                                                   placeholder="0">
+                                                   <layoutData>
+                                                      <l:GridData span="XL1 L4 M3 S4" />
+                                                   </layoutData>
+                                                </Input>
+                                                <CheckBox text="Use gradient" selected="{/fUseGradient}">
+                                                   <layoutData>
+                                                      <l:GridData span="L4 M6 S6"/>
+                                                   </layoutData>
+                                                </CheckBox>
+                                             </form:FormElement>
+                                          </form:FormContainer>
+                                       </form:formContainers>
+                                    </form:Form>
+                                    <Title level="H3" text="Print Options"/>
+                                    <RadioButtonGroup columns="3" width="100%"  selectedIndex="{/fPrint}">
+                                       <buttons>
+                                          <RadioButton id="Print-1" text="Default"/>
+                                          <RadioButton id="Print-2" text="Verbose"/>
+                                          <RadioButton id="Print-3" text="Quiet"/>
+                                       </buttons>
+                                    </RadioButtonGroup>
+                                    <Panel expandable="true" expanded="false" headerText="Advanced Options" width="auto" class="sapUiBody" expand="advancedOptionsDialog">
+                                       <content>
+                                          <IconTabBar id="AdvancedOptions">
+                                             <items>
+                                                <IconTabFilter text="Contour">
+                                                   <form:Form id="FormContour"
+                                                   editable="true"
+                                                   ariaLabelledBy="Title1">
+                                                      <form:layout>
+                                                         <form:ResponsiveGridLayout
+                                                            labelSpanXL="4"
+                                                            labelSpanL="3"
+                                                            labelSpanM="4"
+                                                            labelSpanS="4"
+                                                            adjustLabelSpan="false"
+                                                            emptySpanXL="2"
+                                                            emptySpanL="0"
+                                                            emptySpanM="0"
+                                                            emptySpanS="0"
+                                                            columnsXL="2"
+                                                            columnsL="1"
+                                                            columnsM="1"
+                                                            singleContainerFullSize="false"/>
+                                                      </form:layout>
+                                                      <form:formContainers>
+                                                         <form:FormContainer ariaLabelledBy="Minimization">
+                                                            <form:FormElement>
+                                                               <Label text="Number of Points:" labelFor="contourPoints">
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S4" />
+                                                                  </layoutData>
+                                                               </Label>
+                                                               <StepInput id="contourPoints" value="40" min="0" max="100" step="1" editable="true">
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S7" />
+                                                                  </layoutData>
+                                                               </StepInput>
+                                                               <Label text="Parameter 1:" labelFor="ContourPar1">
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S4" />
+                                                                  </layoutData>
+                                                               </Label>
+                                                               <ComboBox id="ContourPar1" selectedKey="{/fContourPar1Id}" items="{ path: '/fContour1', sorter: { path: 'fSet' } }">
+                                                                  <core:Item key="{fId}" text="{fSet}" />
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S7" />
+                                                                  </layoutData>
+                                                               </ComboBox>
+                                                               <Label text="Parameter 2:" labelFor="ContourPar2">
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S4" />
+                                                                  </layoutData>
+                                                               </Label>
+                                                               <ComboBox id="ContourPar2" selectedKey="{/fContourPar2Id}" items="{ path: '/fContour2', sorter: { path: 'fSet' } }">
+                                                                  <core:Item key="{fId}" text="{fSet}" />
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S7" />
+                                                                  </layoutData>
+                                                               </ComboBox>
+                                                               <Label text="Confidence Level:" labelFor="ConfLevel">
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S4" />
+                                                                  </layoutData>
+                                                               </Label>
+                                                               <StepInput id="ConfLevel" value="0.683" min="0.000" max="100.000" step="0.001" editable="true" displayValuePrecision="3">
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S7" />
+                                                                  </layoutData>
+                                                               </StepInput>
+                                                               <Label text="Fill Colour:" labelFor="colorContour">
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S4" />
+                                                                  </layoutData>
+                                                               </Label>
+                                                               <Button press="colorPickerContour" id="colorContour">
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S2"/>
+                                                                  </layoutData>
+                                                               </Button>
+                                                               <CheckBox id="contourImpose" text="Super impose" selected="{/fContourImpose}">
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S4"/>
+                                                                  </layoutData>
+                                                               </CheckBox>
+                                                               <Button text="Draw" press="drawContour">
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S5"/>
+                                                                  </layoutData>
+                                                               </Button>
+                                                               <Button text="Close" press="">
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S4"/>
+                                                                  </layoutData>
+                                                               </Button>
+                                                            </form:FormElement>
+                                                         </form:FormContainer>
+                                                      </form:formContainers>
+                                                   </form:Form>
+                                                </IconTabFilter>
+                                                <IconTabFilter text="Scan">
+                                                   <form:Form id="FormScan"
+                                                   editable="true"
+                                                   ariaLabelledBy="Title1">
+                                                      <form:layout>
+                                                         <form:ResponsiveGridLayout
+                                                            labelSpanXL="4"
+                                                            labelSpanL="3"
+                                                            labelSpanM="4"
+                                                            labelSpanS="4"
+                                                            adjustLabelSpan="false"
+                                                            emptySpanXL="2"
+                                                            emptySpanL="0"
+                                                            emptySpanM="0"
+                                                            emptySpanS="0"
+                                                            columnsXL="2"
+                                                            columnsL="1"
+                                                            columnsM="1"
+                                                            singleContainerFullSize="false"/>
+                                                      </form:layout>
+                                                      <form:formContainers>
+                                                         <form:FormContainer ariaLabelledBy="Minimization">
+                                                            <form:FormElement>
+                                                               <Label text="Number of Points:" labelFor="scanPoints">
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S4" />
+                                                                  </layoutData>
+                                                               </Label>
+                                                               <StepInput id="scanPoints" value="40" min="0" max="100" step="1" editable="true">
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S7" />
+                                                                  </layoutData>
+                                                               </StepInput>
+                                                               <Label text="Parameter 1:" labelFor="ScanPar">
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S4" />
+                                                                  </layoutData>
+                                                               </Label>
+                                                               <ComboBox id="ScanPar" selectedKey="{/fScanId}" items="{ path: '/fScan', sorter: { path: 'fSet' } }">
+                                                                  <core:Item key="{fId}" text="{fSet}" />
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S7" />
+                                                                  </layoutData>
+                                                               </ComboBox>
+                                                               <Label text="Min:" labelFor="scanMin">
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S4" />
+                                                                  </layoutData>
+                                                               </Label>
+                                                               <StepInput id="scanMin" value="0.0001" min="0.0001" max="100.0000" step="0.0001" editable="true" displayValuePrecision="4">
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S7" />
+                                                                  </layoutData>
+                                                               </StepInput>
+                                                               <Label text="Max:" labelFor="scanMax">
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S4" />
+                                                                  </layoutData>
+                                                               </Label>
+                                                               <StepInput id="scanMax" value="0.0001" min="0.0001" max="100.0000" step="0.0001" editable="true" displayValuePrecision="4">
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S7" />
+                                                                  </layoutData>
+                                                               </StepInput>
+                                                               <Button text="Draw" press="drawScan">
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S4"/>
+                                                                  </layoutData>
+                                                               </Button>
+                                                               <Button text="Close" press=" ">
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S4"/>
+                                                                  </layoutData>
+                                                               </Button>
+                                                            </form:FormElement>
+                                                         </form:FormContainer>
+                                                      </form:formContainers>
+                                                   </form:Form>
+                                                </IconTabFilter>
+                                                <IconTabFilter text="Conf Intervals">
+                                                   <form:Form id="FormConf"
+                                                   editable="true"
+                                                   ariaLabelledBy="Title1">
+                                                      <form:layout>
+                                                         <form:ResponsiveGridLayout
+                                                            labelSpanXL="4"
+                                                            labelSpanL="3"
+                                                            labelSpanM="4"
+                                                            labelSpanS="4"
+                                                            adjustLabelSpan="false"
+                                                            emptySpanXL="2"
+                                                            emptySpanL="0"
+                                                            emptySpanM="0"
+                                                            emptySpanS="0"
+                                                            columnsXL="2"
+                                                            columnsL="1"
+                                                            columnsM="1"
+                                                            singleContainerFullSize="false"/>
+                                                      </form:layout>
+                                                      <form:formContainers>
+                                                         <form:FormContainer ariaLabelledBy="Minimization">
+                                                            <form:FormElement>
+                                                               <Label text="Confidence Level:" labelFor="ConfLevelInt">
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S4" />
+                                                                  </layoutData>
+                                                               </Label>
+                                                               <StepInput id="ConfLevelInt" value="0.95" min="0.01" max="100" step="0.01" editable="true" displayValuePrecision="2">
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S7" />
+                                                                  </layoutData>
+                                                               </StepInput>
+                                                               <Label text="Fill Colour:" labelFor="colorConf">
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S4" />
+                                                                  </layoutData>
+                                                               </Label>
+                                                               <Button press="colorPickerConf" id="colorConf">
+                                                                  <layoutData>
+                                                                     <l:GridData span="XL1 L4 M3 S2"/>
+                                                                  </layoutData>
+                                                               </Button>
+                                                               <Button text="Draw" press=" ">
+                                                                     <layoutData>
+                                                                        <l:GridData span="XL1 L4 M3 S5"/>
+                                                                     </layoutData>
+                                                                  </Button>
+                                                                  <Button text="Close" press=" ">
+                                                                     <layoutData>
+                                                                        <l:GridData span="XL1 L4 M3 S5"/>
+                                                                     </layoutData>
+                                                                  </Button>
+                                                            </form:FormElement>
+                                                         </form:FormContainer>
+                                                      </form:formContainers>
+                                                   </form:Form>
+                                                </IconTabFilter>
+                                             </items>
+                                          </IconTabBar>
+                                       </content>
+                                    </Panel>
+                                 </l:VerticalLayout>
+                              </IconTabFilter>
+                           </items>
+                        </IconTabBar>
+      </VBox>
+      <footer>
+         <Toolbar>
+            <ToolbarSpacer/>
+            <Button text="Fit" press="doFit" tooltip="Fit the histogram"/>
+            <Button text="Reset" press="resetPanel" tooltip="Reset to initial state"/>
+            <Button text="Back" press="backPanel" tooltip="Go to the previous fitting"/>
+            <Button text="Close" press="closePanel" tooltip="Close the Fit Panel"/>
+         </Toolbar>
+      </footer>
+   </Page>
 </mvc:View>
