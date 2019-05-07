@@ -4610,7 +4610,7 @@ int RootClingMain(int argc,
    // Select using DictSelection
    const unsigned int selRulesInitialSize = selectionRules.Size();
    if (dictSelection && !onepcm)
-      DictSelectionReader dictSelReader(interp, selectionRules, CI->getASTContext(), normCtxt);
+      ROOT::Internal::DictSelectionReader dictSelReader(interp, selectionRules, CI->getASTContext(), normCtxt);
 
    bool dictSelRulesPresent = selectionRules.Size() > selRulesInitialSize;
 
