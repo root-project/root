@@ -25,6 +25,49 @@
 using namespace std::string_literals;
 
 
+void ROOT::Experimental::RFitFuncParsList::GetParameters(TF1 *func)
+{
+   pars.clear();
+
+   for (int n = 0; n < func->GetNpar(); ++n) {
+      pars.emplace_back(n, func->GetParName(n));
+      auto &par = pars.back();
+
+      par.value = func->GetParameter(n);
+      par.error = func->GetParError(n);
+      func->GetParLimits(n, par.min, par.max);
+      if ((par.min >= par.max) && ((par.min != 0) || (par.max != 0)))
+         par.fixed = true;
+   }
+}
+
+void ROOT::Experimental::RFitFuncParsList::SetParameters(TF1 *func)
+{
+   if (func->GetNpar() != (int) pars.size()) {
+      ::Error("RFitFuncParsList::SetParameters", "Mismatch in parameters numbers");
+      return;
+   }
+
+   for (int n = 0; n < func->GetNpar(); ++n) {
+      if (pars[n].name.compare(func->GetParName(n)) != 0) {
+         ::Error("RFitFuncParsList::SetParameters", "Mismatch in parameter %d name %s %s", n, pars[n].name.c_str(), func->GetParName(n));
+         return;
+      }
+
+      func->SetParameter(n, pars[n].value);
+      func->SetParError(n, pars[n].error);
+      if (pars[n].fixed) {
+         func->FixParameter(n, pars[n].value);
+      } else {
+         func->ReleaseParameter(n);
+         if (pars[n].min < pars[n].max)
+            func->SetParLimits(n, pars[n].min, pars[n].max);
+      }
+   }
+}
+
+///////////////////////////////
+
 TH1* ROOT::Experimental::RFitPanel6Model::FindHistogram(const std::string &id, TH1 *hist)
 {
    if (id == "__hist__") return hist;
@@ -81,19 +124,19 @@ void ROOT::Experimental::RFitPanel6Model::Initialize(TH1 *hist)
    TObject *func = nullptr;
    while ((func = iter()) != nullptr) {
       if (dynamic_cast<TF2 *>(func))
-         vec2d.emplace_back(func->GetName(), func->GetName());
+         vec2d.emplace_back(func->GetName(), (dynamic_cast<TF2 *>(func))->IsLinear());
       else if (dynamic_cast<TF1 *>(func))
-         vec1d.emplace_back(func->GetName(), func->GetName());
+         vec1d.emplace_back(func->GetName(), (dynamic_cast<TF1 *>(func))->IsLinear());
    }
-   if (vec1d.empty()) vec1d.emplace_back("none","none");
-   if (vec2d.empty()) vec2d.emplace_back("none","none");
+   if (vec1d.empty()) vec1d.emplace_back("none");
+   if (vec2d.empty()) vec2d.emplace_back("none");
 
    //std::sort(vec1d.begin(), vec1d.end());
    //std::sort(vec2d.begin(), vec2d.end());
 
    // corresponds when Type == User Func (fSelectedTypeID == 1)
    fFuncListAll.emplace_back();
-   fFuncListAll.back().emplace_back("user", "user");
+   fFuncListAll.back().emplace_back("user");
 
    // ComboBox for General Tab --- Method
    fMethod.emplace_back("1", "Linear Chi-square");
