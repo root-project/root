@@ -1,4 +1,4 @@
-/// \file ROOT/RFitPanel.cxx
+/// \file RFitPanel6.cxx
 /// \ingroup WebGui ROOT7
 /// \author Sergey Linev <S.Linev@gsi.de>
 /// \author Iliana Betsou <Iliana.Betsou@cern.ch>
@@ -33,7 +33,6 @@
 #include <sstream>
 #include <iostream>
 #include <iomanip>
-
 
 /** \class ROOT::Experimental::RFitPanel
 \ingroup webdisplay
@@ -88,9 +87,9 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
       fConnId = connid;
       printf("FitPanel connection established %u\n", fConnId);
       fWindow->Send(fConnId, "INITDONE");
-      ROOT::Experimental::RFitPanelModel6 model;
+      ROOT::Experimental::RFitPanel6Model model;
 
-      //ComboBox for Data Set
+      // ComboBox for Data Set
       if (fHist) {
          model.fDataSet.emplace_back("0", Form("%s::%s", fHist->ClassName(), fHist->GetName()));
          model.fSelectDataId = "0";
@@ -105,163 +104,157 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
       //          model.fDataSet.emplace_back(item->GetName(), Form("%s::%s", item->ClassName(), item->GetName()));
       // }
 
-       //ComboBox for Fit Function --- Type
-       model.fTypeFunc.emplace_back("0", "Predef-1D");
-       model.fTypeFunc.emplace_back("1", "User Func");
-       model.fSelectTypeId = "0";
+      // ComboBox for Fit Function --- Type
+      model.fTypeFunc.emplace_back("0", "Predef-1D");
+      model.fTypeFunc.emplace_back("1", "User Func");
+      model.fSelectTypeId = "0";
 
-       //Sub ComboBox for Type Function
-       model.fSelectXYId = "1";
+      // Sub ComboBox for Type Function
+      model.fSelectXYId = "1";
 
+      // corresponds when Type == Predef-1D (fSelectedTypeID == 0)
+      model.fTypeXYAll.emplace_back();
+      std::vector<ROOT::Experimental::RComboBoxItem> &vec0 = model.fTypeXYAll.back();
+      vec0.emplace_back("1", "gaus");
+      vec0.emplace_back("2", "gausn");
+      vec0.emplace_back("3", "expo");
+      vec0.emplace_back("4", "landau");
+      vec0.emplace_back("5", "landaun");
+      vec0.emplace_back("6", "pol0");
+      vec0.emplace_back("7", "pol1");
+      vec0.emplace_back("8", "pol2");
+      vec0.emplace_back("9", "pol3");
+      vec0.emplace_back("10", "pol4");
+      vec0.emplace_back("11", "pol5");
+      vec0.emplace_back("12", "pol6");
+      vec0.emplace_back("13", "pol7");
+      vec0.emplace_back("14", "pol8");
+      vec0.emplace_back("15", "pol9");
+      vec0.emplace_back("16", "cheb0");
+      vec0.emplace_back("17", "cheb1");
+      vec0.emplace_back("18", "cheb2");
+      vec0.emplace_back("19", "cheb3");
+      vec0.emplace_back("20", "cheb4");
+      vec0.emplace_back("21", "cheb5");
+      vec0.emplace_back("22", "cheb6");
+      vec0.emplace_back("23", "cheb7");
+      vec0.emplace_back("24", "cheb8");
+      vec0.emplace_back("25", "cheb9");
+      vec0.emplace_back("26", "user");
 
-       //corresponds when Type == Predef-1D (fSelectedTypeID == 0)
-       model.fTypeXYAll.emplace_back();
-       std::vector<ROOT::Experimental::RComboBoxItem> &vec0 = model.fTypeXYAll.back();
-       vec0.emplace_back("1", "gaus");
-       vec0.emplace_back("2", "gausn");
-       vec0.emplace_back("3", "expo");
-       vec0.emplace_back("4", "landau");
-       vec0.emplace_back("5", "landaun");
-       vec0.emplace_back("6", "pol0");
-       vec0.emplace_back("7", "pol1");
-       vec0.emplace_back("8", "pol2");
-       vec0.emplace_back("9", "pol3");
-       vec0.emplace_back("10", "pol4");
-       vec0.emplace_back("11", "pol5");
-       vec0.emplace_back("12", "pol6");
-       vec0.emplace_back("13", "pol7");
-       vec0.emplace_back("14", "pol8");
-       vec0.emplace_back("15", "pol9");
-       vec0.emplace_back("16", "cheb0");
-       vec0.emplace_back("17", "cheb1");
-       vec0.emplace_back("18", "cheb2");
-       vec0.emplace_back("19", "cheb3");
-       vec0.emplace_back("20", "cheb4");
-       vec0.emplace_back("21", "cheb5");
-       vec0.emplace_back("22", "cheb6");
-       vec0.emplace_back("23", "cheb7");
-       vec0.emplace_back("24", "cheb8");
-       vec0.emplace_back("25", "cheb9");
-       vec0.emplace_back("26", "user");
+      // corresponds when Type == User Func (fSelectedTypeID == 1)
+      model.fTypeXYAll.emplace_back();
+      std::vector<ROOT::Experimental::RComboBoxItem> &vec1 = model.fTypeXYAll.back();
+      vec1.emplace_back("1", "chebyshev0");
+      vec1.emplace_back("2", "chebyshev1");
+      vec1.emplace_back("3", "chebyshev2");
+      vec1.emplace_back("4", "chebyshev3");
+      vec1.emplace_back("5", "chebyshev4");
+      vec1.emplace_back("6", "chebyshev5");
+      vec1.emplace_back("7", "chebyshev6");
+      vec1.emplace_back("8", "chebyshev7");
+      vec1.emplace_back("9", "chebyshev8");
+      vec1.emplace_back("10", "chebyshev9");
 
+      // ComboBox for General Tab --- Method
+      model.fMethod.emplace_back("1", "Linear Chi-square");
+      model.fMethod.emplace_back("2", "Non-Linear Chi-square");
+      model.fMethod.emplace_back("3", "Linear Chi-square with Robust");
+      model.fMethod.emplace_back("4", "Binned Likelihood");
+      model.fSelectMethodId = "1";
 
-       //corresponds when Type == User Func (fSelectedTypeID == 1)
-       model.fTypeXYAll.emplace_back();
-       std::vector<ROOT::Experimental::RComboBoxItem> &vec1 = model.fTypeXYAll.back();
-       vec1.emplace_back("1", "chebyshev0");
-       vec1.emplace_back("2", "chebyshev1");
-       vec1.emplace_back("3", "chebyshev2");
-       vec1.emplace_back("4", "chebyshev3");
-       vec1.emplace_back("5", "chebyshev4");
-       vec1.emplace_back("6", "chebyshev5");
-       vec1.emplace_back("7", "chebyshev6");
-       vec1.emplace_back("8", "chebyshev7");
-       vec1.emplace_back("9", "chebyshev8");
-       vec1.emplace_back("10", "chebyshev9");
+      // Sub ComboBox for Minimization Tab --- Method
+      model.fSelectMethodMinId = "1";
 
-       //ComboBox for General Tab --- Method
-       model.fMethod.emplace_back("1", "Linear Chi-square");
-       model.fMethod.emplace_back("2", "Non-Linear Chi-square");
-       model.fMethod.emplace_back("3", "Linear Chi-square with Robust");
-       model.fMethod.emplace_back("4", "Binned Likelihood");
-       model.fSelectMethodId = "1";
+      // corresponds to library == 0
+      model.fMethodMinAll.emplace_back();
+      std::vector<ROOT::Experimental::RComboBoxItem> &vect0 = model.fMethodMinAll.back();
+      vect0.emplace_back("1", "MIGRAD");
+      vect0.emplace_back("2", "SIMPLEX");
+      vect0.emplace_back("3", "SCAN");
+      vect0.emplace_back("4", "Combination");
 
-       //Sub ComboBox for Minimization Tab --- Method
-       model.fSelectMethodMinId = "1";
+      // corresponds to library == 1
+      model.fMethodMinAll.emplace_back();
+      std::vector<ROOT::Experimental::RComboBoxItem> &vect1 = model.fMethodMinAll.back();
+      vect1.emplace_back("1", "MIGRAD");
+      vect1.emplace_back("2", "SIMPLEX");
+      vect1.emplace_back("3", "SCAN");
+      vect1.emplace_back("4", "Combination");
 
-       // corresponds to library == 0
-       model.fMethodMinAll.emplace_back();
-       std::vector<ROOT::Experimental::RComboBoxItem> &vect0 = model.fMethodMinAll.back();
-       vect0.emplace_back("1", "MIGRAD");
-       vect0.emplace_back("2", "SIMPLEX");
-       vect0.emplace_back("3", "SCAN");
-       vect0.emplace_back("4", "Combination");
+      // corresponds to library == 2
+      model.fMethodMinAll.emplace_back();
+      std::vector<ROOT::Experimental::RComboBoxItem> &vect2 = model.fMethodMinAll.back();
+      vect2.emplace_back("1", "FUMILI");
 
-       // corresponds to library == 1
-       model.fMethodMinAll.emplace_back();
-       std::vector<ROOT::Experimental::RComboBoxItem> &vect1 = model.fMethodMinAll.back();
-       vect1.emplace_back("1", "MIGRAD");
-       vect1.emplace_back("2", "SIMPLEX");
-       vect1.emplace_back("3", "SCAN");
-       vect1.emplace_back("4", "Combination");
+      // corresponds to library == 3
+      model.fMethodMinAll.emplace_back();
+      // std::vector<ROOT::Experimental::RComboBoxItem> &vect3 = model.fMethodMinAll.back();
+      // vect3.emplace_back("1", "Lib3_1");
+      // vect3.emplace_back("2", "Lib3_2");
 
-       // corresponds to library == 2
-       model.fMethodMinAll.emplace_back();
-       std::vector<ROOT::Experimental::RComboBoxItem> &vect2 = model.fMethodMinAll.back();
-       vect2.emplace_back("1", "FUMILI");
+      // corresponds to library == 4
+      model.fMethodMinAll.emplace_back();
+      std::vector<ROOT::Experimental::RComboBoxItem> &vect4 = model.fMethodMinAll.back();
+      vect4.emplace_back("1", "TMVA Genetic Algorithm");
 
-       // corresponds to library == 3
-       model.fMethodMinAll.emplace_back();
-       // std::vector<ROOT::Experimental::RComboBoxItem> &vect3 = model.fMethodMinAll.back();
-       // vect3.emplace_back("1", "Lib3_1");
-       // vect3.emplace_back("2", "Lib3_2");
+      // select items list for initial display
+      model.fMethodMin = model.fMethodMinAll[model.fLibrary];
+      // model.fTypeXY = model.fTypeXYAll[model.fTypeId];
 
-       // corresponds to library == 4
-       model.fMethodMinAll.emplace_back();
-       std::vector<ROOT::Experimental::RComboBoxItem> &vect4 = model.fMethodMinAll.back();
-       vect4.emplace_back("1", "TMVA Genetic Algorithm");
+      if (fHist) {
+         model.fMinRange = fHist->GetXaxis()->GetXmin();
+         model.fMaxRange = fHist->GetXaxis()->GetXmax();
 
-       // select items list for initial display
-       model.fMethodMin = model.fMethodMinAll[model.fLibrary];
-       // model.fTypeXY = model.fTypeXYAll[model.fTypeId];
+         model.fUpdateMinRange = fHist->GetXaxis()->GetXmin();
+         model.fUpdateMaxRange = fHist->GetXaxis()->GetXmax();
+      }
 
-       if (fHist) {
-          model.fMinRange = fHist->GetXaxis()->GetXmin();
-          model.fMaxRange = fHist->GetXaxis()->GetXmax();
+      // defined values
+      model.fStep = (model.fMaxRange - model.fMinRange) / 100;
+      model.fRange[0] = model.fMinRange;
+      model.fRange[1] = model.fMaxRange;
 
-          model.fUpdateMinRange = fHist->GetXaxis()->GetXmin();
-          model.fUpdateMaxRange = fHist->GetXaxis()->GetXmax();
-       }
+      model.fUpdateRange[0] = model.fUpdateMinRange;
+      model.fUpdateRange[1] = model.fUpdateMaxRange;
+      // model.fOperation = 0;
+      model.fFitOptions = 3;
+      model.fRobust = false;
+      model.fLibrary = 0;
+      model.fPrint = 0;
 
-       //defined values
-       model.fStep = (model.fMaxRange - model.fMinRange) / 100;
-       model.fRange[0] = model.fMinRange;
-       model.fRange[1] = model.fMaxRange;
+      // Checkboxes Values
+      model.fIntegral = false;
+      model.fWeights = false;
+      model.fBins = false;
+      // model.fUseRange = false;
+      model.fAddList = false;
+      model.fUseGradient = false;
+      model.fSame = false;
+      model.fNoStore = false;
+      model.fMinusErrors = false;
+      // model.fImproveFit = false;
 
-       model.fUpdateRange[0] = model.fUpdateMinRange;
-       model.fUpdateRange[1] = model.fUpdateMaxRange;
-       //model.fOperation = 0;
-       model.fFitOptions = 3;
-       model.fRobust = false;
-       model.fLibrary = 0;
-       model.fPrint = 0;
+      if (model.fNoStore) {
+         model.fNoDrawing = true;
+      } else {
+         model.fNoDrawing = false;
+      }
 
+      if ((model.fFuncChangeInt >= 6) && (model.fFuncChangeInt <= 15)) {
+         model.fLinear = true;
 
-       //Checkboxes Values
-       model.fIntegral = false;
-       model.fWeights = false;
-       model.fBins = false;
-       //model.fUseRange = false;
-       model.fAddList = false;
-       model.fUseGradient = false;
-       model.fSame = false;
-       model.fNoStore = false;
-       model.fMinusErrors = false;
-       //model.fImproveFit = false;
+      } else {
+         model.fLinear = false;
+      }
 
-       if(model.fNoStore){
-          model.fNoDrawing = true;
-       }
-       else{
-          model.fNoDrawing = false;
-       }
+      // Communication with the JSONModel in JS
+      // TString json = TBufferJSON::ConvertToJSON(&model, gROOT->GetClass("FitPanelModel"));
+      TString json = TBufferJSON::ToJSON(&model);
 
-       if((model.fFuncChangeInt >= 6) && (model.fFuncChangeInt <= 15)){
-          model.fLinear = true;
+      fWindow->Send(fConnId, std::string("MODEL:") + json.Data());
 
-       }
-       else {
-          model.fLinear = false;
-
-       }
-
-       //Communication with the JSONModel in JS
-       // TString json = TBufferJSON::ConvertToJSON(&model, gROOT->GetClass("FitPanelModel"));
-       TString json = TBufferJSON::ToJSON(&model);
-
-       fWindow->Send(fConnId, std::string("MODEL:") + json.Data());
-
-       return;
+      return;
    }
 
    if (arg == "CONN_CLOSED") {
@@ -273,31 +266,31 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
    if (arg.find("DOFIT:") == 0) {
 
       std::string arg1 = arg;
-      arg1.erase(0,6);
+      arg1.erase(0, 6);
       DoFit(arg1);
       return;
    }
 
-    if (arg.find("SETCONTOUR:") == 0) {
+   if (arg.find("SETCONTOUR:") == 0) {
 
       std::string argC = arg;
-      argC.erase(0,11);
+      argC.erase(0, 11);
       DrawContour(argC);
       return;
    }
 
-   if(arg.find("SETSCAN:") == 0) {
+   if (arg.find("SETSCAN:") == 0) {
 
-    std::string argS = arg;
-    argS.erase(0,8);
-    DrawScan(argS);
-    return;
+      std::string argS = arg;
+      argS.erase(0, 8);
+      DrawScan(argS);
+      return;
    }
 
    if (arg.find("GETPARS:") == 0) {
 
       RFitFunc info;
-      // ROOT::Experimental::RFitPanelModel6 model;
+      // ROOT::Experimental::RFitPanel6Model model;
 
       info.name = arg.substr(8);
       TF1 *func = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(info.name.c_str()));
@@ -331,23 +324,23 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
          TF1 *func = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(info->name.c_str()));
 
          if (func) {
-            printf("Found func1 %s %p %d %d\n", info->name.c_str(), func, func->GetNpar(), (int) info->pars.size());
+            printf("Found func1 %s %p %d %d\n", info->name.c_str(), func, func->GetNpar(), (int)info->pars.size());
             // copy all parameters back to the function
-            for (int n=0;n<func->GetNpar();++n) {
+            for (int n = 0; n < func->GetNpar(); ++n) {
                func->SetParameter(n, info->pars[n].value);
                func->SetParError(n, info->pars[n].error);
                func->SetParLimits(n, info->pars[n].min, info->pars[n].max);
                if (info->pars[n].fixed)
                   func->FixParameter(n, info->pars[n].value);
-             }
-          }
+            }
+         }
       }
       return;
    }
 
    if (arg.find("GETADVANCED:") == 0) {
       RFitFunc info;
-      ROOT::Experimental::RFitPanelModel6 modelAdv;
+      ROOT::Experimental::RFitPanel6Model modelAdv;
 
       info.name = arg.substr(12);
       TF1 *func = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(info.name.c_str()));
@@ -378,105 +371,105 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
 void ROOT::Experimental::RFitPanel6::DrawContour(const std::string &model)
 {
    // FIXME: do not use static!!!
-  static TGraph * graph = nullptr;
-  std::string options;
-  // TBackCompFitter *fFitter = nullptr;
-  auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanelModel6>(model);
+   static TGraph *graph = nullptr;
+   std::string options;
+   // TBackCompFitter *fFitter = nullptr;
+   auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanel6Model>(model);
 
-  if(!obj->fContourImpose) {
-    if(graph){
-      delete graph;
-      options = "ALF";
-      graph= nullptr;
-    }
-  } else {
-    options = "LF";
-  }
+   if (!obj->fContourImpose) {
+      if (graph) {
+         delete graph;
+         options = "ALF";
+         graph = nullptr;
+      }
+   } else {
+      options = "LF";
+   }
 
+   if (!graph)
+      graph = new TGraph(static_cast<int>(obj->fContourPoints));
 
-  if (!graph)
-     graph = new TGraph(static_cast<int>(obj->fContourPoints));
+   auto colorid = TColor::GetColor(std::stoi(obj->fColorContour[0]), std::stoi(obj->fColorContour[1]),
+                                   std::stoi(obj->fColorContour[2]));
+   graph->SetLineColor(colorid);
 
-  auto colorid = TColor::GetColor(std::stoi(obj->fColorContour[0]), std::stoi(obj->fColorContour[1]), std::stoi(obj->fColorContour[2]));
-  graph->SetLineColor(colorid);
+   if (obj->fContourPar1 == obj->fContourPar2) {
+      Error("DrawContour", "Parameters cannot be the same");
+      return;
+   }
 
-  if(obj->fContourPar1 == obj->fContourPar2) {
-    Error("DrawContour", "Parameters cannot be the same");
-    return;
-  }
+   // fFitter->Contour(obj->fContourPar1, obj->fContourPar2, graph, obj->fConfLevel);
+   // graph->GetXaxis()->SetTitle( fFitter->GetParName(obj->fContourPar1) );
+   // graph->GetYaxis()->SetTitle( fFitter->GetParName(obj->fContourPar2) );
+   // graph->Draw( options.c_str() );
+   gPad->Update();
 
-  //fFitter->Contour(obj->fContourPar1, obj->fContourPar2, graph, obj->fConfLevel);
-  //graph->GetXaxis()->SetTitle( fFitter->GetParName(obj->fContourPar1) );
-  //graph->GetYaxis()->SetTitle( fFitter->GetParName(obj->fContourPar2) );
-  //graph->Draw( options.c_str() );
-  gPad->Update();
-
- //printf("Points %d Contour1 %d Contour2 %d ConfLevel %f\n", obj->fContourPoints, obj->fContourPar1, obj->fContourPar2, obj->fConfLevel);
+   // printf("Points %d Contour1 %d Contour2 %d ConfLevel %f\n", obj->fContourPoints, obj->fContourPar1,
+   // obj->fContourPar2, obj->fConfLevel);
 }
 
 void ROOT::Experimental::RFitPanel6::DrawScan(const std::string &model)
 {
 
-  auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanelModel6>(model);
-  static TGraph * graph = nullptr;
-  // TBackCompFitter *fFitter = nullptr;
+   auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanel6Model>(model);
+   static TGraph *graph = nullptr;
+   // TBackCompFitter *fFitter = nullptr;
 
-  // FIXME: do not use static!!!
-  if(graph) {
-     delete graph;
-  }
-  graph = new TGraph(static_cast<int>(obj->fScanPoints));
-  //fFitter->Scan(obj->fScanPar, graph, obj->fScanMin, obj->fScanMax);
+   // FIXME: do not use static!!!
+   if (graph) {
+      delete graph;
+   }
+   graph = new TGraph(static_cast<int>(obj->fScanPoints));
+   // fFitter->Scan(obj->fScanPar, graph, obj->fScanMin, obj->fScanMax);
 
-  graph->SetLineColor(kBlue);
-  graph->SetLineWidth(2);
- // graph->GetXaxis()->SetTitle(fFitter->GetParName(obj->fScanPar)); ///???????????
-  graph->GetYaxis()->SetTitle("FCN");
-  graph->Draw("APL");
-  gPad->Update();
+   graph->SetLineColor(kBlue);
+   graph->SetLineWidth(2);
+   // graph->GetXaxis()->SetTitle(fFitter->GetParName(obj->fScanPar)); ///???????????
+   graph->GetYaxis()->SetTitle("FCN");
+   graph->Draw("APL");
+   gPad->Update();
 
-
-  //printf("SCAN Points %d, Par %d, Min %d, Max %d\n", obj->fScanPoints, obj->fScanPar, obj->fScanMin, obj->fScanMax);
+   // printf("SCAN Points %d, Par %d, Min %d, Max %d\n", obj->fScanPoints, obj->fScanPar, obj->fScanMin, obj->fScanMax);
 }
 
 void ROOT::Experimental::RFitPanel6::DoFit(const std::string &model)
 {
    // printf("DoFit %s\n", model.c_str());
-   auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanelModel6>(model);
+   auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanel6Model>(model);
 
    ROOT::Math::MinimizerOptions minOption;
 
-   //Fitting Options
+   // Fitting Options
    if (obj) {
 
       if (gDebug > 0)
-         ::Info("RFitPanel6::DoFit", "range %f %f select %s function %s", obj->fUpdateRange[0], obj->fUpdateRange[1], obj->fSelectDataId.c_str(), obj->fSelectXYId.c_str());
+         ::Info("RFitPanel6::DoFit", "range %f %f select %s function %s", obj->fUpdateRange[0], obj->fUpdateRange[1],
+                obj->fSelectDataId.c_str(), obj->fSelectXYId.c_str());
 
       if (obj->fRealFunc.empty()) {
          obj->fRealFunc = "gaus";
       }
 
-      if(!obj->fMinLibrary.empty()){
-        minOption.SetMinimizerAlgorithm(obj->fMinLibrary.c_str());
+      if (!obj->fMinLibrary.empty()) {
+         minOption.SetMinimizerAlgorithm(obj->fMinLibrary.c_str());
       }
 
-      if(!obj->fErrorDef == 0) {
-        minOption.SetErrorDef(obj->fErrorDef);
+      if (!obj->fErrorDef == 0) {
+         minOption.SetErrorDef(obj->fErrorDef);
       } else {
-        minOption.SetErrorDef(1.00);
+         minOption.SetErrorDef(1.00);
       }
 
-      if(!obj->fMaxTol == 0) {
-        minOption.SetTolerance(obj->fMaxTol);
-      }
-      else {
-        minOption.SetTolerance(0.01);
+      if (!obj->fMaxTol == 0) {
+         minOption.SetTolerance(obj->fMaxTol);
+      } else {
+         minOption.SetTolerance(0.01);
       }
 
-      if(!obj->fMaxInter == 0) {
-        minOption.SetMaxIterations(obj->fMaxInter);
-      }  else {
-        minOption.SetMaxIterations(0);
+      if (!obj->fMaxInter == 0) {
+         minOption.SetMaxIterations(obj->fMaxInter);
+      } else {
+         minOption.SetMaxIterations(0);
       }
 
       if (obj->fIntegral) {
@@ -501,12 +494,11 @@ void ROOT::Experimental::RFitPanel6::DoFit(const std::string &model)
          obj->fOption = "";
       }
 
-      //Assign the options to Fitting function
+      // Assign the options to Fitting function
       if (fHist && (obj->fSelectDataId == "0")) {
 
          fHist->Fit(obj->fRealFunc.c_str(), obj->fOption.c_str(), "*", obj->fUpdateRange[0], obj->fUpdateRange[1]);
          gPad->Update();
       }
    }
-
 }
