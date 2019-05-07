@@ -30,7 +30,7 @@ struct RComboBoxItem {
    std::string fSet;
    RComboBoxItem() = default;
    RComboBoxItem(const std::string &id, const std::string &set) : fId(id), fSet(set) {}
-   bool operator<(const RComboBoxItem& right) const { return fSet.compare(right.fSet) < 0; }
+   // bool operator<(const RComboBoxItem& right) const { return fSet.compare(right.fSet) < 0; }
 };
 
 struct RFitFuncParameter {
@@ -53,8 +53,6 @@ struct RFitFunc {
 struct RFitPanel6Model {
    std::vector<RComboBoxItem> fDataSet;
    std::string fSelectDataId;
-   std::vector<RComboBoxItem> fTypeFunc;
-   std::string fSelectXYId;
    std::vector<RComboBoxItem> fMethod;
    std::string fSelectMethodId;
    std::vector<RComboBoxItem> fContour1;
@@ -63,8 +61,7 @@ struct RFitPanel6Model {
    std::string fContourPar2Id;
    std::vector<RComboBoxItem> fScan;
    std::string fScanId;
-   std::string fRealFunc;
-   std::string fOption;
+   std::string fRealFunc;                    ///< name of the fit function
    std::string fFuncChange;
    std::string fMinLibrary;
 
@@ -72,10 +69,12 @@ struct RFitPanel6Model {
 
    // Minimization Tab
    std::vector<std::vector<RComboBoxItem>> fMethodMinAll;
-   // Fit Function --- Type
-   std::vector<std::vector<RComboBoxItem>> fTypeXYAll;
 
-   std::string fSelectTypeId;
+   std::vector<RComboBoxItem> fTypeFunc;                  ///< provided type of functions - 1D/2D/User ...
+   std::vector<std::vector<RComboBoxItem>> fFuncListAll;  ///< all kind of fit functions
+   std::string fSelectTypeFunc;                           ///< index (in string) of selected list of functions
+   std::string fSelectedFunc;                             ///< name of selected fit function
+
    std::string fSelectMethodMinId;
 
    float fUpdateMinRange{0};
@@ -131,6 +130,8 @@ struct RFitPanel6Model {
    void Initialize(TH1 *hist);
 
    TH1* FindHistogram(const std::string &id, TH1 *hist = nullptr);
+
+   std::string GetFitOption();
 };
 
 } // namespace Experimental

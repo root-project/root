@@ -17,6 +17,7 @@
 #include <ROOT/RFitPanel6.hxx>
 
 #include <ROOT/RWebWindowsManager.hxx>
+#include <ROOT/RMakeUnique.hxx>
 
 #include "TString.h"
 #include "TBackCompFitter.h"
@@ -88,13 +89,13 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
    if (arg == "CONN_READY") {
       fConnId = connid;
       fWindow->Send(fConnId, "INITDONE");
-
-      RFitPanel6Model model;
-
-      model.Initialize(fHist);
+      if (!fModel) {
+         fModel = std::make_unique<RFitPanel6Model>();
+         fModel->Initialize(fHist);
+      }
 
       // Communication with the JSONModel in JS
-      TString json = TBufferJSON::ToJSON(&model);
+      TString json = TBufferJSON::ToJSON(fModel.get());
       fWindow->Send(fConnId, "MODEL:"s + json.Data());
 
    } else if (arg == "CONN_CLOSED") {
@@ -263,64 +264,33 @@ void ROOT::Experimental::RFitPanel6::DoFit(const std::string &model)
 
       if (gDebug > 0)
          ::Info("RFitPanel6::DoFit", "range %f %f select %s function %s", obj->fUpdateRange[0], obj->fUpdateRange[1],
-                obj->fSelectDataId.c_str(), obj->fSelectXYId.c_str());
+                obj->fSelectDataId.c_str(), obj->fSelectedFunc.c_str());
 
-      if (obj->fRealFunc.empty()) {
-         obj->fRealFunc = "gaus";
-      }
+      if (obj->fSelectedFunc.empty())
+         obj->fSelectedFunc = "gaus";
 
-      if (!obj->fMinLibrary.empty()) {
+      if (!obj->fMinLibrary.empty())
          minOption.SetMinimizerAlgorithm(obj->fMinLibrary.c_str());
-      }
 
-      if (!obj->fErrorDef == 0) {
-         minOption.SetErrorDef(obj->fErrorDef);
-      } else {
+      if (obj->fErrorDef == 0)
          minOption.SetErrorDef(1.00);
-      }
+      else
+         minOption.SetErrorDef(obj->fErrorDef);
 
-      if (!obj->fMaxTol == 0) {
-         minOption.SetTolerance(obj->fMaxTol);
-      } else {
+      if (obj->fMaxTol == 0)
          minOption.SetTolerance(0.01);
-      }
+      else
+         minOption.SetTolerance(obj->fMaxTol);
 
-      if (!obj->fMaxInter == 0) {
-         minOption.SetMaxIterations(obj->fMaxInter);
-      } else {
-         minOption.SetMaxIterations(0);
-      }
+      minOption.SetMaxIterations(obj->fMaxInter);
 
-      if (obj->fIntegral) {
-         obj->fOption = "I";
-      } else if (obj->fMinusErrors) {
-         obj->fOption = "E";
-      } else if (obj->fWeights) {
-         obj->fOption = "W";
-      } else if (obj->fUseRange) {
-         obj->fOption = "R";
-      } else if (obj->fNoDrawing) {
-         obj->fOption = "O";
-      } else if ((obj->fWeights) && (obj->fBins)) {
-         obj->fOption = "WW";
-      } else if (obj->fAddList) {
-         obj->fOption = "+";
-      } else if (obj->fSelectMethodId == "1") {
-         obj->fOption = "P";
-      } else if (obj->fSelectMethodId == "2") {
-         obj->fOption = "L";
-      } else {
-         obj->fOption = "";
-      }
+      std::string opt = obj->GetFitOption();
 
       TH1 *h1 = obj->FindHistogram(obj->fSelectDataId, fHist);
 
-      printf("Fit histogram %s %p\n", obj->fSelectDataId.c_str(), h1);
-
       // Assign the options to Fitting function
-      if (h1) {
-
-         h1->Fit(obj->fRealFunc.c_str(), obj->fOption.c_str(), "*", obj->fUpdateRange[0], obj->fUpdateRange[1]);
+      if (h1 && !obj->fSelectedFunc.empty() && (obj->fSelectedFunc!="none")) {
+         h1->Fit(obj->fSelectedFunc.c_str(), opt.c_str(), "*", obj->fUpdateRange[0], obj->fUpdateRange[1]);
          gPad->Update();
       }
    }

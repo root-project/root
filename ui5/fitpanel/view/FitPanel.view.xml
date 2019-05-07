@@ -56,7 +56,7 @@
 										<l:GridData span="XL1 L4 M3 S2" />
 									</layoutData>
 								</Label>
-								<ComboBox id="TypeFunc" selectedKey="{/fSelectTypeId}" items="{ path: '/fTypeFunc', sorter: { path: 'fFunc' } }" change="selectTypeFunc">
+								<ComboBox id="TypeFunc" selectedKey="{/fSelectTypeFunc}" items="{ path: '/fTypeFunc', sorter: { path: 'fFunc' } }" change="selectTypeFunc">
 									<core:Item key="{fId}" text="{fSet}"/>
 									<layoutData>
 										<l:GridData span="XL1 L4 M3 S4"/>
@@ -64,7 +64,7 @@
 								</ComboBox>
 							</form:fields>
 							<form:fields>
-								<ComboBox id="TypeXY" selectedKey="{/fSelectXYId}" items="{ path: '/fTypeXY', sorter: { path: 'fXY' } }" change="onTypeXYChange">
+								<ComboBox id="selectedFuncCombo" selectedKey="{/fSelectedFunc}" items="{ path: '/fFuncList', sorter: { path: 'fSet' } }" change="onSelectedFuncChange">
 									<core:Item key="{fId}" text="{fSet}" />
 									<layoutData>
 										<l:GridData span="XL2 L1 M2 S4" />

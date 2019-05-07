@@ -65,36 +65,35 @@ void ROOT::Experimental::RFitPanel6Model::Initialize(TH1 *hist)
    fTypeFunc.emplace_back("0", "Predef-1D");
    fTypeFunc.emplace_back("1", "Predef-2D");
    fTypeFunc.emplace_back("2", "User");
-   fSelectTypeId = "0";
+   fSelectTypeFunc = "0";
 
    // Sub ComboBox for Type Function
-   fSelectXYId = "1";
+   fSelectedFunc = "gaus";
 
    // corresponds when Type == Predef-1D (fSelectedTypeID == 0)
-   fTypeXYAll.emplace_back();
-   fTypeXYAll.emplace_back();
+   fFuncListAll.emplace_back();
+   fFuncListAll.emplace_back();
 
-   auto &vec1d = fTypeXYAll[0];
-   auto &vec2d = fTypeXYAll[1];
+   auto &vec1d = fFuncListAll[0]; // for 1D histograms
+   auto &vec2d = fFuncListAll[1]; // for 2D histograms
 
    TIter iter(gROOT->GetListOfFunctions());
    TObject *func = nullptr;
-   int cnt1 = 1, cnt2 = 1;
    while ((func = iter()) != nullptr) {
       if (dynamic_cast<TF2 *>(func))
-         vec2d.emplace_back(std::to_string(cnt2++), func->GetName());
+         vec2d.emplace_back(func->GetName(), func->GetName());
       else if (dynamic_cast<TF1 *>(func))
-         vec1d.emplace_back(std::to_string(cnt1++), func->GetName());
+         vec1d.emplace_back(func->GetName(), func->GetName());
    }
-   if (vec1d.empty()) vec1d.emplace_back("1","none");
-   if (vec2d.empty()) vec2d.emplace_back("1","none");
+   if (vec1d.empty()) vec1d.emplace_back("none","none");
+   if (vec2d.empty()) vec2d.emplace_back("none","none");
 
-   std::sort(vec1d.begin(), vec1d.end());
-   std::sort(vec2d.begin(), vec2d.end());
+   //std::sort(vec1d.begin(), vec1d.end());
+   //std::sort(vec2d.begin(), vec2d.end());
 
    // corresponds when Type == User Func (fSelectedTypeID == 1)
-   fTypeXYAll.emplace_back();
-   fTypeXYAll.back().emplace_back("1", "user");
+   fFuncListAll.emplace_back();
+   fFuncListAll.back().emplace_back("user", "user");
 
    // ComboBox for General Tab --- Method
    fMethod.emplace_back("1", "Linear Chi-square");
@@ -171,3 +170,31 @@ void ROOT::Experimental::RFitPanel6Model::Initialize(TH1 *hist)
       fLinear = false;
    }
 }
+
+std::string ROOT::Experimental::RFitPanel6Model::GetFitOption()
+{
+   std::string opt;
+
+   if (fIntegral) {
+      opt = "I";
+   } else if (fMinusErrors) {
+      opt = "E";
+   } else if (fWeights) {
+      opt = "W";
+   } else if (fUseRange) {
+      opt = "R";
+   } else if (fNoDrawing) {
+      opt = "O";
+   } else if (fWeights && fBins) {
+      opt = "WW";
+   } else if (fAddList) {
+      opt = "+";
+   } else if (fSelectMethodId == "1") {
+      opt = "P";
+   } else if (fSelectMethodId == "2") {
+      opt = "L";
+   }
+
+   return opt;
+}
+
