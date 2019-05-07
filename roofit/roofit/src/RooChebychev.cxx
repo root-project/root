@@ -49,7 +49,9 @@ static inline double fast_fma(
    return std::fma(x, y, z);
 #else // defined(FP_FAST_FMA)
    // std::fma might be slow, so use a more pedestrian implementation
+#if defined(__clang__)
 #pragma STDC FP_CONTRACT ON // hint clang that using an FMA is okay here
+#endif // defined(__clang__)
    return (x * y) + z;
 #endif // defined(FP_FAST_FMA)
 }
@@ -66,8 +68,8 @@ template <typename T, Kind KIND>
 class ChebychevIterator {
 private:
    T m_last = 1;
-   T m_twox = 0;
    T m_curr = 0;
+   T m_twox = 0;
 
 public:
    /// default constructor
@@ -78,7 +80,7 @@ public:
    ChebychevIterator(ChebychevIterator &&) = default;
    /// construct from given x in [-1, 1]
    constexpr ChebychevIterator(const T &x)
-       : m_twox(2 * x), m_curr(static_cast<int>(KIND) * x)
+       : m_curr(static_cast<int>(KIND) * x), m_twox(2 * x)
    {}
 
    /// (copy) assignment
@@ -91,7 +93,7 @@ public:
    // get value of Chebychev polynomial at (current + 1) order
    constexpr inline T lookahead() const noexcept { return m_curr; }
    /// move on to next order, return reference to new value
-   constexpr inline ChebychevIterator &operator++() noexcept
+   inline ChebychevIterator &operator++() noexcept
    {
       T newval = fast_fma(m_twox, m_curr, -m_last);
       m_last = m_curr;
@@ -99,7 +101,7 @@ public:
       return *this;
    }
    /// move on to next order, return copy of new value
-   constexpr inline ChebychevIterator operator++(int) noexcept
+   inline ChebychevIterator operator++(int) noexcept
    {
       ChebychevIterator retVal(*this);
       operator++();
