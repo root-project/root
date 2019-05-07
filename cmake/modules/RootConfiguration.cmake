@@ -569,6 +569,15 @@ else()
    set(has_found_attribute_always_inline undef)
 endif()
 
+CHECK_CXX_SOURCE_COMPILES("
+inline __attribute__((noinline)) bool TestBit(unsigned long f) { return f != 0; };
+int main() { return TestBit(0); }" has_found_attribute_noinline)
+if(has_found_attribute_noinline)
+   set(has_found_attribute_noinline define)
+else()
+   set(has_found_attribute_noinline undef)
+endif()
+
 #---root-config----------------------------------------------------------------------------------------------
 ROOT_GET_OPTIONS(features ENABLED)
 string(REPLACE "c++11" "cxx11" features ${features}) # change the name of the c++11 feature needed for root-config.in

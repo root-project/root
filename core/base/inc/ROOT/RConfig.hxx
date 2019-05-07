@@ -571,6 +571,18 @@
 #endif
 #endif
 
+// See also https://nemequ.github.io/hedley/api-reference.html#HEDLEY_NEVER_INLINE
+// for other platforms.
+#ifdef R__HAS_ATTRIBUTE_NOINLINE
+#define R__NEVER_INLINE inline __attribute__((noinline))
+#else
+#if defined(_MSC_VER)
+#define R__NEVER_INLINE inline  __declspec(noinline)
+#else
+#define R__NEVER_INLINE inline
+#endif
+#endif
+
 /*---- unlikely / likely expressions -----------------------------------------*/
 // These are meant to use in cases like:
 //   if (R__unlikely(expression)) { ... }
