@@ -55,7 +55,7 @@ std::shared_ptr<ROOT::Experimental::RWebWindow> ROOT::Experimental::RFitPanel6::
 
       fWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { ProcessData(connid, arg); });
 
-      fWindow->SetGeometry(380, 750); // configure predefined geometry
+      fWindow->SetGeometry(400, 650); // configure predefined geometry
    }
 
    return fWindow;
