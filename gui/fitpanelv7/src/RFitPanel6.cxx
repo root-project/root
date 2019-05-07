@@ -34,6 +34,8 @@
 #include <iostream>
 #include <iomanip>
 
+using namespace std::string_literals;
+
 /** \class ROOT::Experimental::RFitPanel
 \ingroup webdisplay
 
@@ -52,7 +54,7 @@ std::shared_ptr<ROOT::Experimental::RWebWindow> ROOT::Experimental::RFitPanel6::
 
       fWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { ProcessData(connid, arg); });
 
-      fWindow->SetGeometry(400, 650); // configure predefined geometry
+      fWindow->SetGeometry(380, 750); // configure predefined geometry
    }
 
    return fWindow;
@@ -93,7 +95,7 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
 
       // Communication with the JSONModel in JS
       TString json = TBufferJSON::ToJSON(&model);
-      fWindow->Send(fConnId, std::string("MODEL:") + json.Data());
+      fWindow->Send(fConnId, "MODEL:"s + json.Data());
 
    } else if (arg == "CONN_CLOSED") {
       printf("FitPanel connection closed\n");
@@ -133,7 +135,7 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
       }
       TString json = TBufferJSON::ToJSON(&info);
 
-      fWindow->Send(fConnId, std::string("PARS:") + json.Data());
+      fWindow->Send(fConnId, "PARS:"s + json.Data());
 
    } else if (arg.compare(0, 8, "SETPARS:") == 0) {
 
@@ -179,7 +181,7 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
       }
       TString jsonModel = TBufferJSON::ToJSON(&modelAdv);
 
-      fWindow->Send(fConnId, std::string("ADVANCED:") + jsonModel.Data());
+      fWindow->Send(fConnId, "ADVANCED:"s + jsonModel.Data());
    }
 }
 
@@ -311,10 +313,14 @@ void ROOT::Experimental::RFitPanel6::DoFit(const std::string &model)
          obj->fOption = "";
       }
 
-      // Assign the options to Fitting function
-      if (fHist && (obj->fSelectDataId == "0")) {
+      TH1 *h1 = obj->FindHistogram(obj->fSelectDataId, fHist);
 
-         fHist->Fit(obj->fRealFunc.c_str(), obj->fOption.c_str(), "*", obj->fUpdateRange[0], obj->fUpdateRange[1]);
+      printf("Fit histogram %s %p\n", obj->fSelectDataId.c_str(), h1);
+
+      // Assign the options to Fitting function
+      if (h1) {
+
+         h1->Fit(obj->fRealFunc.c_str(), obj->fOption.c_str(), "*", obj->fUpdateRange[0], obj->fUpdateRange[1]);
          gPad->Update();
       }
    }
