@@ -51,10 +51,11 @@ sap.ui.define([
             var data = JSROOT.parse(msg.substr(6));
             if(data) {
                data.fTypeXY = data.fTypeXYAll[parseInt(data.fSelectTypeId)];
+               data.fMethodMin = data.fMethodMinAll[parseInt(data.fLibrary)];
                this.getView().setModel(new JSONModel(data));
                this._data = data;
 
-               this.copyModel = [ JSROOT.extend({},data) ];
+               this.copyModel = [ JSROOT.extend({}, data) ];
                this.modelCount = 0;
             }
          } else if (msg.startsWith("PARS:")) {
@@ -91,12 +92,14 @@ sap.ui.define([
          var maxInterations = Number(this.getView().byId("maxInterations").getValue());
          data.fMaxInter = maxInterations;
 
-
          //Refresh the model
          this.getView().getModel().refresh();
          //Each time we click the button, we keep the current state of the model
          this.copyModel[++this.modelCount] = JSROOT.extend({},data);
          //console.log("DOFIT " + this.getView().getModel().getJSON());
+
+         // TODO: skip "fMethodMin" and "fTypeXY" from output object
+         // Requires changes in JSROOT.toJSON(), can be done after REVE-selection commit
 
          if (this.websocket)
             this.websocket.Send('DOFIT:'+this.getView().getModel().getJSON());
@@ -158,16 +161,12 @@ sap.ui.define([
       selectRB: function(){
 
          var data = this.getView().getModel().getData();
-         var lib = this.getView().getModel().getData().fLibrary;
 
          // same code as initialization
-         data.fMethodMin = data.fMethodMinAll[parseInt(lib)];
-
+         data.fMethodMin = data.fMethodMinAll[parseInt(data.fLibrary)];
 
          // refresh all UI elements
          this.getView().getModel().refresh();
-         console.log("Method = ", data.fMethodMinAll[parseInt(lib)]);
-
       },
 
       //Change the combobox in Type Function

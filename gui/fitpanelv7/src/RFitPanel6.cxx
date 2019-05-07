@@ -85,209 +85,29 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
 {
    if (arg == "CONN_READY") {
       fConnId = connid;
-      printf("FitPanel connection established %u\n", fConnId);
       fWindow->Send(fConnId, "INITDONE");
-      ROOT::Experimental::RFitPanel6Model model;
 
-      // ComboBox for Data Set
-      if (fHist) {
-         model.fDataSet.emplace_back("0", Form("%s::%s", fHist->ClassName(), fHist->GetName()));
-         model.fSelectDataId = "0";
-      }
+      RFitPanel6Model model;
 
-      // if (gDirectory) {
-      //    TIter iter(gDirectory->GetList());
-      //    TObject *item = nullptr;
-
-      //    while ((item = iter()) != nullptr)
-      //       if (item->InheritsFrom(TH1::Class()))
-      //          model.fDataSet.emplace_back(item->GetName(), Form("%s::%s", item->ClassName(), item->GetName()));
-      // }
-
-      // ComboBox for Fit Function --- Type
-      model.fTypeFunc.emplace_back("0", "Predef-1D");
-      model.fTypeFunc.emplace_back("1", "User Func");
-      model.fSelectTypeId = "0";
-
-      // Sub ComboBox for Type Function
-      model.fSelectXYId = "1";
-
-      // corresponds when Type == Predef-1D (fSelectedTypeID == 0)
-      model.fTypeXYAll.emplace_back();
-      std::vector<ROOT::Experimental::RComboBoxItem> &vec0 = model.fTypeXYAll.back();
-      vec0.emplace_back("1", "gaus");
-      vec0.emplace_back("2", "gausn");
-      vec0.emplace_back("3", "expo");
-      vec0.emplace_back("4", "landau");
-      vec0.emplace_back("5", "landaun");
-      vec0.emplace_back("6", "pol0");
-      vec0.emplace_back("7", "pol1");
-      vec0.emplace_back("8", "pol2");
-      vec0.emplace_back("9", "pol3");
-      vec0.emplace_back("10", "pol4");
-      vec0.emplace_back("11", "pol5");
-      vec0.emplace_back("12", "pol6");
-      vec0.emplace_back("13", "pol7");
-      vec0.emplace_back("14", "pol8");
-      vec0.emplace_back("15", "pol9");
-      vec0.emplace_back("16", "cheb0");
-      vec0.emplace_back("17", "cheb1");
-      vec0.emplace_back("18", "cheb2");
-      vec0.emplace_back("19", "cheb3");
-      vec0.emplace_back("20", "cheb4");
-      vec0.emplace_back("21", "cheb5");
-      vec0.emplace_back("22", "cheb6");
-      vec0.emplace_back("23", "cheb7");
-      vec0.emplace_back("24", "cheb8");
-      vec0.emplace_back("25", "cheb9");
-      vec0.emplace_back("26", "user");
-
-      // corresponds when Type == User Func (fSelectedTypeID == 1)
-      model.fTypeXYAll.emplace_back();
-      std::vector<ROOT::Experimental::RComboBoxItem> &vec1 = model.fTypeXYAll.back();
-      vec1.emplace_back("1", "chebyshev0");
-      vec1.emplace_back("2", "chebyshev1");
-      vec1.emplace_back("3", "chebyshev2");
-      vec1.emplace_back("4", "chebyshev3");
-      vec1.emplace_back("5", "chebyshev4");
-      vec1.emplace_back("6", "chebyshev5");
-      vec1.emplace_back("7", "chebyshev6");
-      vec1.emplace_back("8", "chebyshev7");
-      vec1.emplace_back("9", "chebyshev8");
-      vec1.emplace_back("10", "chebyshev9");
-
-      // ComboBox for General Tab --- Method
-      model.fMethod.emplace_back("1", "Linear Chi-square");
-      model.fMethod.emplace_back("2", "Non-Linear Chi-square");
-      model.fMethod.emplace_back("3", "Linear Chi-square with Robust");
-      model.fMethod.emplace_back("4", "Binned Likelihood");
-      model.fSelectMethodId = "1";
-
-      // Sub ComboBox for Minimization Tab --- Method
-      model.fSelectMethodMinId = "1";
-
-      // corresponds to library == 0
-      model.fMethodMinAll.emplace_back();
-      std::vector<ROOT::Experimental::RComboBoxItem> &vect0 = model.fMethodMinAll.back();
-      vect0.emplace_back("1", "MIGRAD");
-      vect0.emplace_back("2", "SIMPLEX");
-      vect0.emplace_back("3", "SCAN");
-      vect0.emplace_back("4", "Combination");
-
-      // corresponds to library == 1
-      model.fMethodMinAll.emplace_back();
-      std::vector<ROOT::Experimental::RComboBoxItem> &vect1 = model.fMethodMinAll.back();
-      vect1.emplace_back("1", "MIGRAD");
-      vect1.emplace_back("2", "SIMPLEX");
-      vect1.emplace_back("3", "SCAN");
-      vect1.emplace_back("4", "Combination");
-
-      // corresponds to library == 2
-      model.fMethodMinAll.emplace_back();
-      std::vector<ROOT::Experimental::RComboBoxItem> &vect2 = model.fMethodMinAll.back();
-      vect2.emplace_back("1", "FUMILI");
-
-      // corresponds to library == 3
-      model.fMethodMinAll.emplace_back();
-      // std::vector<ROOT::Experimental::RComboBoxItem> &vect3 = model.fMethodMinAll.back();
-      // vect3.emplace_back("1", "Lib3_1");
-      // vect3.emplace_back("2", "Lib3_2");
-
-      // corresponds to library == 4
-      model.fMethodMinAll.emplace_back();
-      std::vector<ROOT::Experimental::RComboBoxItem> &vect4 = model.fMethodMinAll.back();
-      vect4.emplace_back("1", "TMVA Genetic Algorithm");
-
-      // select items list for initial display
-      model.fMethodMin = model.fMethodMinAll[model.fLibrary];
-      // model.fTypeXY = model.fTypeXYAll[model.fTypeId];
-
-      if (fHist) {
-         model.fMinRange = fHist->GetXaxis()->GetXmin();
-         model.fMaxRange = fHist->GetXaxis()->GetXmax();
-
-         model.fUpdateMinRange = fHist->GetXaxis()->GetXmin();
-         model.fUpdateMaxRange = fHist->GetXaxis()->GetXmax();
-      }
-
-      // defined values
-      model.fStep = (model.fMaxRange - model.fMinRange) / 100;
-      model.fRange[0] = model.fMinRange;
-      model.fRange[1] = model.fMaxRange;
-
-      model.fUpdateRange[0] = model.fUpdateMinRange;
-      model.fUpdateRange[1] = model.fUpdateMaxRange;
-      // model.fOperation = 0;
-      model.fFitOptions = 3;
-      model.fRobust = false;
-      model.fLibrary = 0;
-      model.fPrint = 0;
-
-      // Checkboxes Values
-      model.fIntegral = false;
-      model.fWeights = false;
-      model.fBins = false;
-      // model.fUseRange = false;
-      model.fAddList = false;
-      model.fUseGradient = false;
-      model.fSame = false;
-      model.fNoStore = false;
-      model.fMinusErrors = false;
-      // model.fImproveFit = false;
-
-      if (model.fNoStore) {
-         model.fNoDrawing = true;
-      } else {
-         model.fNoDrawing = false;
-      }
-
-      if ((model.fFuncChangeInt >= 6) && (model.fFuncChangeInt <= 15)) {
-         model.fLinear = true;
-
-      } else {
-         model.fLinear = false;
-      }
+      model.Initialize(fHist);
 
       // Communication with the JSONModel in JS
-      // TString json = TBufferJSON::ConvertToJSON(&model, gROOT->GetClass("FitPanelModel"));
       TString json = TBufferJSON::ToJSON(&model);
-
       fWindow->Send(fConnId, std::string("MODEL:") + json.Data());
 
-      return;
-   }
-
-   if (arg == "CONN_CLOSED") {
+   } else if (arg == "CONN_CLOSED") {
       printf("FitPanel connection closed\n");
       fConnId = 0;
-      return;
-   }
+   } else if (arg.compare(0, 6, "DOFIT:") == 0) {
 
-   if (arg.find("DOFIT:") == 0) {
+      DoFit(arg.substr(6));
+   } else if (arg.compare(0, 11, "SETCONTOUR:") == 0) {
 
-      std::string arg1 = arg;
-      arg1.erase(0, 6);
-      DoFit(arg1);
-      return;
-   }
+      DrawContour(arg.substr(11));
+   } else if (arg.compare(0, 8, "SETSCAN:") == 0) {
 
-   if (arg.find("SETCONTOUR:") == 0) {
-
-      std::string argC = arg;
-      argC.erase(0, 11);
-      DrawContour(argC);
-      return;
-   }
-
-   if (arg.find("SETSCAN:") == 0) {
-
-      std::string argS = arg;
-      argS.erase(0, 8);
-      DrawScan(argS);
-      return;
-   }
-
-   if (arg.find("GETPARS:") == 0) {
+      DrawScan(arg.substr(8));
+   } else if (arg.compare(0, 8, "GETPARS:") == 0) {
 
       RFitFunc info;
       // ROOT::Experimental::RFitPanel6Model model;
@@ -314,10 +134,9 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
       TString json = TBufferJSON::ToJSON(&info);
 
       fWindow->Send(fConnId, std::string("PARS:") + json.Data());
-      return;
-   }
 
-   if (arg.find("SETPARS:") == 0) {
+   } else if (arg.compare(0, 8, "SETPARS:") == 0) {
+
       auto info = TBufferJSON::FromJSON<RFitFunc>(arg.substr(8));
 
       if (info) {
@@ -335,12 +154,11 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
             }
          }
       }
-      return;
-   }
 
-   if (arg.find("GETADVANCED:") == 0) {
+   } else if (arg.compare(0, 12, "GETADVANCED:") == 0) {
+
       RFitFunc info;
-      ROOT::Experimental::RFitPanel6Model modelAdv;
+      RFitPanel6Model modelAdv;
 
       info.name = arg.substr(12);
       TF1 *func = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(info.name.c_str()));
@@ -362,7 +180,6 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
       TString jsonModel = TBufferJSON::ToJSON(&modelAdv);
 
       fWindow->Send(fConnId, std::string("ADVANCED:") + jsonModel.Data());
-      return;
    }
 }
 
@@ -411,7 +228,7 @@ void ROOT::Experimental::RFitPanel6::DrawContour(const std::string &model)
 void ROOT::Experimental::RFitPanel6::DrawScan(const std::string &model)
 {
 
-   auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanel6Model>(model);
+   auto obj = TBufferJSON::FromJSON<RFitPanel6Model>(model);
    static TGraph *graph = nullptr;
    // TBackCompFitter *fFitter = nullptr;
 
