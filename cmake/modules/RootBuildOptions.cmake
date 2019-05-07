@@ -143,7 +143,7 @@ ROOT_BUILD_OPTION(python ON "Enable support for automatic Python bindings (PyROO
 ROOT_BUILD_OPTION(qt5web OFF "Enable support for Qt5 web-based display (requires Qt5WebEngine)")
 ROOT_BUILD_OPTION(r OFF "Enable support for R bindings (requires R, Rcpp, and RInside)")
 ROOT_BUILD_OPTION(roofit ON "Build RooFit advanced fitting package")
-ROOT_BUILD_OPTION(webui ON "Build Web-based UI components of ROOT (requires C++14 standard or higher)")
+ROOT_BUILD_OPTION(webgui ON "Build Web-based UI components of ROOT (requires C++14 standard or higher)")
 ROOT_BUILD_OPTION(root7 ON "Build ROOT 7 components of ROOT (requires C++14 standard or higher)")
 ROOT_BUILD_OPTION(rpath OFF "Link libraries with built-in RPATH (run-time search path)")
 ROOT_BUILD_OPTION(runtime_cxxmodules OFF "Enable runtime support for C++ modules")
@@ -280,8 +280,8 @@ if(builtin_all)
   set(builtin_zlib_defvalue ON)
 endif()
 
-#---webui always build together with root7----------------------------------------------------
-set(webui_defvalue ${root7})
+#---webgui by default always build together with root7-----------------------------------------
+set(webgui_defvalue ${root7})
 
 #---Changes in defaults due to platform-------------------------------------------------------
 if(WIN32)
@@ -345,12 +345,12 @@ if(root7)
   endif()
 endif()
 
-#---check if webui can be build-------------------------------
-if(webui)
+#---check if webgui can be build-------------------------------
+if(webgui)
   if(NOT CMAKE_CXX_STANDARD GREATER 11)
-    set(webui OFF CACHE BOOL "(WebUI requires at least C++14)" FORCE)
+    set(webgui OFF CACHE BOOL "(WebGUI requires at least C++14)" FORCE)
   elseif(NOT http)
-    set(http ON CACHE BOOL "(Enabled since it's needed by webui)" FORCE)
+    set(http ON CACHE BOOL "(Enabled since it's needed by webgui)" FORCE)
   endif()
 endif()
 

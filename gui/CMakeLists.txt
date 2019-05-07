@@ -6,7 +6,7 @@ add_subdirectory(guihtml)
 add_subdirectory(recorder)
 add_subdirectory(sessionviewer)
 
-if(webui)
+if(webgui)
    add_subdirectory(webdisplay)
    if(cefweb)
       add_subdirectory(cefdisplay)
@@ -15,7 +15,7 @@ if(webui)
       add_subdirectory(qt5webdisplay)
    endif()
    add_subdirectory(webgui6)
-   
+
    if(root7)
       add_subdirectory(browserv7)
       add_subdirectory(canvaspainter)
