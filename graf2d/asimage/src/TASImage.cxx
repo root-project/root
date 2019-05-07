@@ -2900,7 +2900,8 @@ Double_t *TASImage::Vectorize(UInt_t max_colors, UInt_t dither, Int_t opaque_thr
    fPalette = *pal;
    fImage->alt.vector = vec;
    UnZoom();
-   if (res) delete res;
+   // ROOT-7647: res is allocated with `safemalloc` by colormap_asimage
+   if (res) safefree(res);
    return (Double_t*)fImage->alt.vector;
 }
 
