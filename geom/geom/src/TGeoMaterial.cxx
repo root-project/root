@@ -26,6 +26,7 @@ Base class describing materials.
 #include "TGeoExtension.h"
 #include "TGeoMaterial.h"
 #include "TGeoPhysicalConstants.h"
+#include "TGDMLMatrix.h"
 
 // statics and globals
 
@@ -291,6 +292,24 @@ const char *TGeoMaterial::GetPropertyRef(const char *property) const
    // Find reference for a given property
    TNamed *prop = (TNamed*)fProperties.FindObject(property);
    return (prop) ? prop->GetTitle() : nullptr;
+}
+
+//_____________________________________________________________________________
+TGDMLMatrix *TGeoMaterial::GetProperty(const char *property) const
+{
+   // Find reference for a given property
+   TNamed *prop = (TNamed*)fProperties.FindObject(property);
+   if ( !prop ) return nullptr;
+   return gGeoManager->GetGDMLMatrix(prop->GetTitle());
+}
+
+//_____________________________________________________________________________
+TGDMLMatrix *TGeoMaterial::GetProperty(Int_t i) const
+{
+   // Find reference for a given property
+   TNamed *prop = (TNamed*)fProperties.At(i);
+   if ( !prop ) return nullptr;
+   return gGeoManager->GetGDMLMatrix(prop->GetTitle());
 }
 
 //_____________________________________________________________________________
