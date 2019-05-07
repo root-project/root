@@ -1,4 +1,4 @@
-/// \file ROOT/RFitPanel.cxx
+/// \file RFitPanel.cxx
 /// \ingroup WebGui ROOT7
 /// \author Sergey Linev <S.Linev@gsi.de>
 /// \date 2017-10-24
@@ -106,8 +106,8 @@ void ROOT::Experimental::RFitPanel::ProcessData(unsigned connid, const std::stri
 
    if (arg.find("DOFIT:") == 0) {
       std::stringstream exec;
-      exec << "((ROOT::Experimental::RFitPanel *) " << std::hex << std::showbase << (size_t)this
-           << ")->DoFit(" << arg.c_str() + 6 << ");";
+      exec << "((ROOT::Experimental::RFitPanel *) " << std::hex << std::showbase << (size_t)this << ")->DoFit("
+           << arg.c_str() + 6 << ");";
       std::cout << "Execute " << exec.str() << std::endl;
       gROOT->ProcessLine(exec.str().c_str());
       return;
