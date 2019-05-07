@@ -795,6 +795,7 @@ WARN_LOGFILE           =
 INPUT                  = . \
                          ../../bindings/pyroot/ \
                          ../../core/base/ \
+                         ../../core/dictgen/ \
                          ../../core/cont/ \
                          ../../core/foundation/ \
                          ../../core/macosx/ \
