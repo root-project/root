@@ -21,6 +21,7 @@
 #include <string>
 
 class TH1;
+class TF1;
 
 namespace ROOT {
 namespace Experimental {
@@ -30,8 +31,18 @@ struct RComboBoxItem {
    std::string fSet;
    RComboBoxItem() = default;
    RComboBoxItem(const std::string &id, const std::string &set) : fId(id), fSet(set) {}
-   // bool operator<(const RComboBoxItem& right) const { return fSet.compare(right.fSet) < 0; }
 };
+
+/// Basic function info, used in combo boxes
+struct RFitFuncInfo {
+   std::string name;
+   bool linear{false};
+
+   RFitFuncInfo() = default;
+   RFitFuncInfo(const std::string &_name, bool _linear = false) : name(_name), linear(_linear) {}
+};
+
+/// Function parameter info, used in edit parameters dialog
 
 struct RFitFuncParameter {
    int ipar{0};
@@ -44,10 +55,15 @@ struct RFitFuncParameter {
    RFitFuncParameter(int _ipar, const std::string &_name) : ipar(_ipar), name(_name) {}
 };
 
-struct RFitFunc {
+/// Class used to transfer functions parameters list from/to client
+struct RFitFuncParsList {
    std::string name;
    std::vector<RFitFuncParameter> pars;
+   void GetParameters(TF1 *f1);
+   void SetParameters(TF1 *f1);
 };
+
+
 
 // Structure for the main fit panel model
 struct RFitPanel6Model {
@@ -71,8 +87,8 @@ struct RFitPanel6Model {
    std::vector<std::vector<RComboBoxItem>> fMethodMinAll;
 
    std::vector<RComboBoxItem> fTypeFunc;                  ///< provided type of functions - 1D/2D/User ...
-   std::vector<std::vector<RComboBoxItem>> fFuncListAll;  ///< all kind of fit functions
    std::string fSelectTypeFunc;                           ///< index (in string) of selected list of functions
+   std::vector<std::vector<RFitFuncInfo>> fFuncListAll;   ///< all kind of fit functions
    std::string fSelectedFunc;                             ///< name of selected fit function
 
    std::string fSelectMethodMinId;
