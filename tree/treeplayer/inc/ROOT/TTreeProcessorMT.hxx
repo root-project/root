@@ -170,7 +170,7 @@ namespace ROOT {
       const TEntryList fEntryList; // const to be sure to avoid race conditions among TTreeViews
       const Internal::FriendInfo fFriendInfo;
 
-      ROOT::TThreadedObject<ROOT::Internal::TTreeView> treeView; ///<! Thread-local TreeViews
+      ROOT::TThreadedObject<ROOT::Internal::TTreeView> fTreeView; ///<! Thread-local TreeViews
 
       Internal::FriendInfo GetFriendInfo(TTree &tree);
       std::string FindTreeName();
