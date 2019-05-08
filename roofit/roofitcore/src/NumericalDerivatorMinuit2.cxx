@@ -174,7 +174,9 @@ namespace RooFit {
 //#endif
       vx_fVal_cache = vx;
       fVal = (*fFunction)(vx_external.data());  // value of function at given points
-      std::cout << std::hexfloat << "fVal on worker " << MultiProcess::TaskManager::instance()->get_worker_id() << " = " << fVal << std::defaultfloat << std::endl;
+      if (MultiProcess::TaskManager::is_instantiated()) {
+        std::cout << std::hexfloat << "fVal on worker " << MultiProcess::TaskManager::instance()->get_worker_id() << " = " << fVal << std::defaultfloat << std::endl;
+      }
 //#ifndef NDEBUG
 //      std::cout << "NumericalDerivatorMinuit2::setup_differentiate, fVal evaluations: " << fVal_eval_counter << std::endl;
 //#endif
@@ -186,7 +188,12 @@ namespace RooFit {
 
     t8 = get_time();
 
-    oocxcoutD((TObject*)nullptr,Benchmarking2) << "NumericalDerivatorMinuit2::setup_differentiate on worker " << MultiProcess::TaskManager::instance()->get_worker_id() << ", timestamps: " << t1 << " " << t2 << " " << t3 << " " << t4 << " " << t5 << " " << t6 << " " << t7 << " " << t8 << std::endl;
+    if (MultiProcess::TaskManager::is_instantiated()) {
+      oocxcoutD((TObject *) nullptr, Benchmarking2) << "NumericalDerivatorMinuit2::setup_differentiate on worker "
+                                                    << MultiProcess::TaskManager::instance()->get_worker_id()
+                                                    << ", timestamps: " << t1 << " " << t2 << " " << t3 << " " << t4
+                                                    << " " << t5 << " " << t6 << " " << t7 << " " << t8 << std::endl;
+    }
   }
 
   std::tuple<double, double, double> NumericalDerivatorMinuit2::partial_derivative(const double *x, const std::vector<ROOT::Fit::ParameterSettings>& parameters, unsigned int i_component) {
