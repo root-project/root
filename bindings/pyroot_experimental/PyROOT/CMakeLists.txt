@@ -7,6 +7,7 @@ set(py_sources
   ROOT/_application.py
   ROOT/_facade.py
   ROOT/pythonization/__init__.py
+  ROOT/pythonization/_drawables.py
   ROOT/pythonization/_generic.py
   ROOT/pythonization/_rooabscollection.py
   ROOT/pythonization/_rdataframe.py
