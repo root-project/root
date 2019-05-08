@@ -23,7 +23,7 @@ void ZeroMQSvc::setEncoding(const ZeroMQSvc::Encoding &e) {
 zmq::context_t& ZeroMQSvc::context() const {
   if (!m_context) {
     try {
-      m_context = new zmq::context_t{1};
+      m_context = new zmq::context_t;
     } catch (zmq::error_t& e) {
       std::cerr << "ERROR: Creating ZeroMQ context failed. This only happens when PGM initialization failed or when a nullptr was returned from zmq_ctx_new because the created context was invalid. Contact ZMQ experts when this happens, because it shouldn't.\n";
       throw e;

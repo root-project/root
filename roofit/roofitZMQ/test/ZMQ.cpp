@@ -23,15 +23,15 @@ void elaborate_bind(const ZmqLingeringSocketPtr<>& socket, std::string name) {
   try {
     socket->bind(name);
   } catch (const zmq::error_t& e) {
-    if (e.num() == 48) { // 48: address already in use
+    if (e.num() == EADDRINUSE) {
       std::cerr << "address already in use, retrying bind in 500ms\n";
       usleep(500000);
       try {
         socket->bind(name);
       } catch (const zmq::error_t& e2) {
-        if (e2.num() == 48) { // 48: address already in use
+        if (e2.num() == EADDRINUSE) {
           std::cerr
-              << "again: address already in use, aborting; please check whether there are any remaining improperly exited processes (zombies) around or whether some other program is using port 5555\n";
+              << "again: address already in use, aborting; please check whether there are any remaining improperly exited processes (zombies) around or whether some other program is using port 6660\n";
         }
         throw e2;
       }
@@ -54,7 +54,6 @@ void elaborate_bind(const ZmqLingeringSocketPtr<>& socket, std::string name) {
 class AllSocketTypes : public ::testing::TestWithParam< std::tuple<int, std::pair<zmq::SocketTypes, zmq::SocketTypes>, std::pair<std::string, std::string> /* socket_names */> > {};
 
 TEST_P(AllSocketTypes, forkHandshake) {
-  ZmqLingeringSocketPtr<> socket;
   auto socket_names = std::get<2>(GetParam());
   pid_t child_pid {0};
   do {
@@ -62,8 +61,10 @@ TEST_P(AllSocketTypes, forkHandshake) {
   } while (child_pid == -1);  // retry if fork fails
 
   if (child_pid > 0) {                // master
+    ZmqLingeringSocketPtr<> socket;
     socket.reset(zmqSvc().socket_ptr(std::get<1>(GetParam()).first));
-    socket->connect(socket_names.first);
+    elaborate_bind(socket, socket_names.second);
+    // bind is on the master process to avoid zombie children to hold on to binds
 
     // start test
     zmqSvc().send(*socket, std::string("breaker breaker"));
@@ -78,8 +79,9 @@ TEST_P(AllSocketTypes, forkHandshake) {
 
     RooFit::MultiProcess::wait_for_child(child_pid, true, 5);
   } else {                            // child
+    ZmqLingeringSocketPtr<> socket;
     socket.reset(zmqSvc().socket_ptr(std::get<1>(GetParam()).second));
-    elaborate_bind(socket, socket_names.second);
+    socket->connect(socket_names.first);
 
     // start test
     auto receipt = zmqSvc().receive<std::string>(*socket);
@@ -96,9 +98,12 @@ TEST_P(AllSocketTypes, forkHandshake) {
 }
 
 std::string ipc {"ipc:///tmp/ZMQ_test_fork.ipc"};
-std::string tcp_server {"tcp://localhost:5555"};
-std::string tcp_client {"tcp://*:5555"};
-auto socket_name_options = ::testing::Values(std::make_pair(ipc, ipc), std::make_pair(tcp_server, tcp_client));
+std::string tcp_server {"tcp://127.0.0.1:6660"};
+std::string tcp_client {"tcp://*:6660"};
+auto socket_name_options = ::testing::Values(
+    std::make_pair(tcp_server, tcp_client),
+    std::make_pair(ipc, ipc)
+    );
 
 
 INSTANTIATE_TEST_CASE_P(REQREP, AllSocketTypes,
@@ -126,7 +131,8 @@ TEST_P(AsyncSocketTypes, forkMultiSendReceive) {
 
   if (child_pid > 0) {                // master
     socket.reset(zmqSvc().socket_ptr(std::get<1>(GetParam()).first));
-    socket->connect(socket_names.first);
+    elaborate_bind(socket, socket_names.second);
+    // bind is on the master process to avoid zombie children to hold on to binds
 
     // start test: send 2 things, receive 1, send 1 more, finish
     zmqSvc().send(*socket, std::string("breaker breaker"));
@@ -156,7 +162,7 @@ TEST_P(AsyncSocketTypes, forkMultiSendReceive) {
     RooFit::MultiProcess::wait_for_child(child_pid, true, 5);
   } else {                            // child
     socket.reset(zmqSvc().socket_ptr(std::get<1>(GetParam()).second));
-    elaborate_bind(socket, socket_names.second);
+    socket->connect(socket_names.first);
 
     // start test, receive something
     auto receipt1 = zmqSvc().receive<std::string>(*socket);
@@ -189,7 +195,8 @@ TEST_P(AsyncSocketTypes, forkIgnoreSomeMessages) {
 
   if (child_pid > 0) {                // master
     socket.reset(zmqSvc().socket_ptr(std::get<1>(GetParam()).first));
-    socket->connect(socket_names.first);
+    elaborate_bind(socket, socket_names.second);
+    // bind is on the master process to avoid zombie children to hold on to binds
 
     // start test: send 2 things, receive 1, send 1 more, finish
     zmqSvc().send(*socket, std::string("breaker breaker"));
@@ -219,7 +226,7 @@ TEST_P(AsyncSocketTypes, forkIgnoreSomeMessages) {
     RooFit::MultiProcess::wait_for_child(child_pid, true, 5);
   } else {                            // child
     socket.reset(zmqSvc().socket_ptr(std::get<1>(GetParam()).second));
-    elaborate_bind(socket, socket_names.second);
+    socket->connect(socket_names.first);
 
     // start test, receive first thing
     auto receipt = zmqSvc().receive<std::string>(*socket);
@@ -227,7 +234,12 @@ TEST_P(AsyncSocketTypes, forkIgnoreSomeMessages) {
       zmqSvc().send(*socket, 1212);
     }
 
-    // ignore the rest of the sent messages.
+    // ignore the rest of the sent messages, but give the other end a second to
+    // actually send its stuff, instead of hanging in retry_send because the
+    // connection has died; a better solution would be if retry_send (in
+    // ZeroMQSvc::send) had a callback mechanism that could be used to break
+    // out when a child has died, but ok
+    sleep(1);
 
     // take care, don't just use _exit, it will not cleanly destroy context etc!
     // if you really need to, at least close and destroy everything properly
