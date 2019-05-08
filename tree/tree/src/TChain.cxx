@@ -2608,7 +2608,7 @@ void TChain::SetDirectory(TDirectory* dir)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the input entry list (processing the entries of the chain will then be
 /// limited to the entries in the list)
-/// This function finds correspondance between the sub-lists of the TEntryList
+/// This function finds correspondence between the sub-lists of the TEntryList
 /// and the trees of the TChain
 /// By default (opt=""), both the file names of the chain elements and
 /// the file names of the TEntryList sublists are expanded to full path name.

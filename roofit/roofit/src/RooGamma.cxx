@@ -23,7 +23,7 @@ Wikipedia and several sources refer to the Gamma distribution as
 G(\mu,\alpha,\beta) = \beta^\alpha \mu^{(\alpha-1)} \frac{e^{(-\beta \mu)}}{\Gamma(\alpha)}
 \f]
 
-Below is the correspondance:
+Below is the correspondence:
 
 | Wikipedia       | This Implementation      |
 |-----------------|--------------------------|

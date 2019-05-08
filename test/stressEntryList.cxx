@@ -299,7 +299,7 @@ Bool_t Test2()
 
 Bool_t Test3()
 {
-   //Test correspondance of event lists and entry lists
+   //Test correspondence of event lists and entry lists
 
    TChain *chain = new TChain("chain", "chain");
    chain->Add("stressEntryListTrees*.root/tree1");
