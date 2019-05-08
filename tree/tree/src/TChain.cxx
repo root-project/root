@@ -773,7 +773,9 @@ void TChain::DirectoryAutoAdd(TDirectory * /* dir */)
 ///
 /// This function accepts TCut objects as arguments.
 /// Useful to use the string operator +, example:
+/// ~~~{.cpp}
 ///    ntuple.Draw("x",cut1+cut2+cut3);
+/// ~~~
 ///
 
 Long64_t TChain::Draw(const char* varexp, const TCut& selection,
@@ -2607,9 +2609,9 @@ void TChain::SetDirectory(TDirectory* dir)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the input entry list (processing the entries of the chain will then be
-/// limited to the entries in the list)
+/// limited to the entries in the list).
 /// This function finds correspondence between the sub-lists of the TEntryList
-/// and the trees of the TChain
+/// and the trees of the TChain.
 /// By default (opt=""), both the file names of the chain elements and
 /// the file names of the TEntryList sublists are expanded to full path name.
 /// If opt = "ne", the file names are taken as they are and not expanded
