@@ -25,18 +25,30 @@
 using namespace std::string_literals;
 
 
+void ROOT::Experimental::RFitFuncParsList::Clear()
+{
+   pars.clear();
+   name.clear();
+   haspars = false;
+}
+
 void ROOT::Experimental::RFitFuncParsList::GetParameters(TF1 *func)
 {
    pars.clear();
+   haspars = true;
 
    for (int n = 0; n < func->GetNpar(); ++n) {
       pars.emplace_back(n, func->GetParName(n));
       auto &par = pars.back();
 
-      par.value = func->GetParameter(n);
-      par.error = func->GetParError(n);
-      func->GetParLimits(n, par.min, par.max);
-      if ((par.min >= par.max) && ((par.min != 0) || (par.max != 0)))
+      par.value = std::to_string(func->GetParameter(n));
+      par.error = std::to_string(func->GetParError(n));
+      double min, max;
+      func->GetParLimits(n, min, max);
+      par.min = std::to_string(min);
+      par.max = std::to_string(max);
+
+      if ((min >= max) && ((min != 0) || (max != 0)))
          par.fixed = true;
    }
 }
@@ -54,34 +66,41 @@ void ROOT::Experimental::RFitFuncParsList::SetParameters(TF1 *func)
          return;
       }
 
-      func->SetParameter(n, pars[n].value);
-      func->SetParError(n, pars[n].error);
+      func->SetParameter(n, std::stod(pars[n].value));
+      func->SetParError(n, std::stod(pars[n].error));
       if (pars[n].fixed) {
-         func->FixParameter(n, pars[n].value);
+         func->FixParameter(n, std::stod(pars[n].value));
       } else {
          func->ReleaseParameter(n);
-         if (pars[n].min < pars[n].max)
-            func->SetParLimits(n, pars[n].min, pars[n].max);
+         double min = std::stod(pars[n].min);
+         double max = std::stod(pars[n].max);
+         if (min < max)
+            func->SetParLimits(n, min, max);
       }
    }
 }
 
 ///////////////////////////////
 
-TH1* ROOT::Experimental::RFitPanel6Model::FindHistogram(const std::string &id, TH1 *hist)
+TH1* ROOT::Experimental::RFitPanel6Model::GetSelectedHistogram(TH1 *hist)
 {
-   if (id == "__hist__") return hist;
-   if ((id.compare(0,6,"gdir::") != 0) || !gDirectory) return nullptr;
+   if (fSelectDataId == "__hist__") return hist;
+   if ((fSelectDataId.compare(0,6,"gdir::") != 0) || !gDirectory) return nullptr;
 
-   std::string hname = id.substr(6);
+   std::string hname = fSelectDataId.substr(6);
 
    return dynamic_cast<TH1*> (gDirectory->GetList()->FindObject(hname.c_str()));
 }
 
-void ROOT::Experimental::RFitPanel6Model::Initialize(TH1 *hist)
+
+// Configure usage of histogram
+
+bool ROOT::Experimental::RFitPanel6Model::SelectHistogram(const std::string &hname, TH1 *hist)
 {
-   // build list of available histograms, as id use name from gdir
    std::string histid;
+
+   fDataSet.clear();
+   TH1 *selected = nullptr;
 
    if (gDirectory) {
       TIter iter(gDirectory->GetList());
@@ -91,16 +110,51 @@ void ROOT::Experimental::RFitPanel6Model::Initialize(TH1 *hist)
          if (item->InheritsFrom(TH1::Class())) {
             std::string dataid = "gdir::"s + item->GetName();
 
-            if (hist && (hist == item)) histid = dataid;
+            if (hist && (hist == item)) {
+               histid = dataid;
+               selected = hist;
+            } else if (!hname.empty() && hname.compare(item->GetName())) {
+               histid = dataid;
+               selected = dynamic_cast<TH1 *> (item);
+            }
             fDataSet.emplace_back(dataid, Form("%s::%s", item->ClassName(), item->GetName()));
          }
    }
 
    if (hist && histid.empty()) {
+      selected = hist;
       histid = "__hist__";
       fDataSet.emplace_back(histid, Form("%s::%s", hist->ClassName(), hist->GetName()));
    }
+
    fSelectDataId = histid;
+
+   if (selected) {
+      fUpdateMinRange = fMinRange = selected->GetXaxis()->GetXmin();
+      fUpdateMaxRange = fMaxRange = selected->GetXaxis()->GetXmax();
+   } else {
+      fUpdateMinRange = fMinRange = 0.;
+      fUpdateMaxRange = fMaxRange = 100.;
+   }
+
+   // defined values
+   fStep = (fMaxRange - fMinRange) / 100;
+   fRange[0] = fMinRange;
+   fRange[1] = fMaxRange;
+
+   fUpdateRange[0] = fUpdateMinRange;
+   fUpdateRange[1] = fUpdateMaxRange;
+
+   UpdateAdvanced(selected);
+
+   return selected != nullptr;
+}
+
+
+void ROOT::Experimental::RFitPanel6Model::Initialize()
+{
+   // build list of available histograms, as id use name from gdir
+   fSelectDataId = "";
 
    // build list of available functions
 
@@ -169,21 +223,6 @@ void ROOT::Experimental::RFitPanel6Model::Initialize(TH1 *hist)
    fMethodMinAll.emplace_back();
    fMethodMinAll.back() = {{ "1", "TMVA Genetic Algorithm" }};
 
-   if (hist) {
-      fUpdateMinRange = fMinRange = hist->GetXaxis()->GetXmin();
-      fUpdateMaxRange = fMaxRange = hist->GetXaxis()->GetXmax();
-   } else {
-      fUpdateMinRange = fMinRange = 0.;
-      fUpdateMaxRange = fMaxRange = 100.;
-   }
-
-   // defined values
-   fStep = (fMaxRange - fMinRange) / 100;
-   fRange[0] = fMinRange;
-   fRange[1] = fMaxRange;
-
-   fUpdateRange[0] = fUpdateMinRange;
-   fUpdateRange[1] = fUpdateMaxRange;
    // fOperation = 0;
    fFitOptions = 3;
    fRobust = false;
@@ -213,6 +252,57 @@ void ROOT::Experimental::RFitPanel6Model::Initialize(TH1 *hist)
       fLinear = false;
    }
 }
+
+TF1 *ROOT::Experimental::RFitPanel6Model::FindFunction(const std::string &funcname, TH1 *hist)
+{
+   if (funcname.compare(0,6,"hist::")==0) {
+      TH1 *h1 = GetSelectedHistogram(hist);
+      if (!h1) return nullptr;
+      return dynamic_cast<TF1 *> (h1->GetListOfFunctions()->FindObject(funcname.substr(6).c_str()));
+   }
+
+   return dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(funcname.c_str()));
+}
+
+
+
+/// Update advanced parameters associated with histogram
+/// These appears when histogram has fit function inside
+
+void ROOT::Experimental::RFitPanel6Model::UpdateAdvanced(TH1 *hist)
+{
+   TF1 *func = nullptr;
+   if (hist) {
+      TObject *obj = nullptr;
+      TIter iter(hist->GetListOfFunctions());
+      while ((obj = iter()) != nullptr) {
+         func = dynamic_cast<TF1*> (obj);
+         if (func) break;
+      }
+   }
+
+   fContour1.clear();
+   fContour2.clear();
+   fScan.clear();
+   fContourPar1Id = "0";
+   fContourPar2Id = "0";
+   fScanId = "0";
+
+   fHasAdvanced = (func!=nullptr);
+
+   if (func) {
+      for (int n = 0; n < func->GetNpar(); ++n) {
+         fContour1.emplace_back(std::to_string(n), func->GetParName(n));
+         fContour2.emplace_back(std::to_string(n), func->GetParName(n));
+         fScan.emplace_back(std::to_string(n), func->GetParName(n));
+      }
+      fFuncPars.GetParameters(func); // take func parameters
+      fFuncPars.name = "hist::"s + func->GetName(); // clearly mark this as function from histogram
+   } else {
+      fFuncPars.Clear();
+   }
+}
+
 
 std::string ROOT::Experimental::RFitPanel6Model::GetFitOption()
 {

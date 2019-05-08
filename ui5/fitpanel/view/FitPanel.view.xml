@@ -27,7 +27,6 @@
                change="onSelectedFuncChange">
                <core:Item key="{name}" text="{name}" />
             </ComboBox>
-            <Button text="Pars" press="setParametersDialog" />
          </HBox>
          <HBox alignItems="Center">
             <Label text="Selected " labelFor="OperationText"
@@ -100,12 +99,6 @@
                                  span="XL6 L6 M6 S6" />
                            </layoutData>
                         </CheckBox>
-                        <Button text="Advanced..." press="pressAdvanced"
-                           enabled="false">
-                           <layoutData>
-                              <l:GridData span="XL6 L6 M6 S6" />
-                           </layoutData>
-                        </Button>
                      </l:Grid>
                      <RangeSlider id="Slider"
                         showAdvancedTooltip="true" range="{/fRange}"
@@ -191,7 +184,35 @@
                      </RadioButtonGroup>
                   </VBox>
                </IconTabFilter>
-               <IconTabFilter text="Advanced" visible="true">
+               <IconTabFilter text="Pars" visible="{/fFuncPars/haspars}">
+                   <HBox>
+                      <Text text="Func: {/fFuncPars/name}"/>
+                      <Button press="pressApplyPars" text="Apply" tooltip="Set parameters"/>
+                   </HBox>
+                   <Table id="ParsTable" items="{ path: '/fFuncPars/pars' }">
+                      <columns>
+                         <Column width="75px"><Text text="Name"/></Column>
+                         <Column width="45px"><Text text="Fix"/></Column>
+                         <Column width="75px"><Text text="Value"/></Column>
+                         <Column width="75px"><Text text="Min"/></Column>
+                         <Column width="75px"><Text text="Max"/></Column>
+                         <Column width="75px"><Text text="Error"/></Column>
+                      </columns>
+                      <items>
+                         <ColumnListItem>
+                            <cells>
+                               <Text text="{name}"/>
+                               <CheckBox selected="{fixed}"/>
+                               <Input value="{value}" type="Number" tooltip="{name}.value = {value}"/>
+                               <Input value="{min}" type="Number" tooltip="{name}.min = {min}"/>
+                               <Input value="{max}" type="Number" tooltip="{name}.max = {max}"/>
+                               <Input value="{error}" type="Number" tooltip="{name}.error = {error}"/>
+                            </cells>
+                         </ColumnListItem>
+                      </items>
+                   </Table>
+               </IconTabFilter>
+               <IconTabFilter text="Advanced" visible="{/fHasAdvanced}">
                   <IconTabBar id="AdvancedOptions" headerMode="Inline">
                      <items>
                         <IconTabFilter text="Contour">
@@ -222,7 +243,7 @@
                                  <Label text="Fill Colour:"
                                     labelFor="colorContour" />
                                  <Button press="colorPickerContour"
-                                    id="colorContour" />
+                                    id="colorContour" width="50px"/>
                               </HBox>
                               <CheckBox id="contourImpose"
                                  text="Super impose" selected="{/fContourImpose}" />
@@ -261,7 +282,7 @@
                                  value="0.95" min="0.01" max="100" step="0.01"
                                  editable="true" displayValuePrecision="2" />
                               <Text text="Fill color:" />
-                              <Button press="colorPickerConf" id="colorConf" />
+                              <Button press="colorPickerConf" id="colorConf" width="50px"/>
                            </l:Grid>
                         </IconTabFilter>
                      </items>
