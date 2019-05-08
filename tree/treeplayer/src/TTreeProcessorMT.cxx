@@ -141,15 +141,14 @@ static ClustersAndEntries MakeClusters(const std::string &treeName, const std::v
    TDirectory::TContext c;
    const auto nFileNames = fileNames.size();
    std::vector<std::vector<EntryCluster>> clustersPerFile;
-   std::vector<Long64_t> entriesPerFile; entriesPerFile.reserve(nFileNames);
+   std::vector<Long64_t> entriesPerFile;
+   entriesPerFile.reserve(nFileNames);
    Long64_t offset = 0ll;
    for (const auto &fileName : fileNames) {
       auto fileNameC = fileName.c_str();
       std::unique_ptr<TFile> f(TFile::Open(fileNameC)); // need TFile::Open to load plugins if need be
       if (!f || f->IsZombie()) {
-         Error("TTreeProcessorMT::Process",
-               "An error occurred while opening file %s: skipping it.",
-               fileNameC);
+         Error("TTreeProcessorMT::Process", "An error occurred while opening file %s: skipping it.", fileNameC);
          clustersPerFile.emplace_back(std::vector<EntryCluster>());
          entriesPerFile.emplace_back(0ULL);
          continue;
@@ -158,8 +157,7 @@ static ClustersAndEntries MakeClusters(const std::string &treeName, const std::v
       f->GetObject(treeName.c_str(), t);
 
       if (!t) {
-         Error("TTreeProcessorMT::Process",
-               "An error occurred while getting tree %s from file %s: skipping this file.",
+         Error("TTreeProcessorMT::Process", "An error occurred while getting tree %s from file %s: skipping this file.",
                treeName.c_str(), fileNameC);
          clustersPerFile.emplace_back(std::vector<EntryCluster>());
          entriesPerFile.emplace_back(0ULL);
@@ -202,15 +200,16 @@ static ClustersAndEntries MakeClusters(const std::string &treeName, const std::v
       // If the number of clusters is less than maxTasksPerFile
       // we take the clusters as they are
       if (nFolds == 0) {
-         std::for_each(clustersPerFileIt->begin(), clustersPerFileIt->end(),
-                       [&eventRangesPerFileIt](const EntryCluster &clust) { eventRangesPerFileIt->emplace_back(clust); });
+         std::for_each(
+            clustersPerFileIt->begin(), clustersPerFileIt->end(),
+            [&eventRangesPerFileIt](const EntryCluster &clust) { eventRangesPerFileIt->emplace_back(clust); });
          continue;
       }
       // Otherwise, we have to merge clusters, distributing the reminder evenly
       // onto the first clusters
       auto nReminderClusters = clustersInThisFileSize % maxTasksPerFile;
       const auto clustersInThisFile = *clustersPerFileIt;
-      for(auto i = 0ULL; i < (clustersInThisFileSize-1); ++i) {
+      for (auto i = 0ULL; i < (clustersInThisFileSize - 1); ++i) {
          const auto start = clustersInThisFile[i].start;
          // We lump together at least nFolds clusters, therefore
          // we need to jump ahead of nFolds-1.
@@ -230,8 +229,9 @@ static ClustersAndEntries MakeClusters(const std::string &treeName, const std::v
 
 ////////////////////////////////////////////////////////////////////////
 /// Return a vector containing the number of entries of each file of each friend TChain
-static std::vector<std::vector<Long64_t>> GetFriendEntries(const std::vector<std::pair<std::string, std::string>> &friendNames,
-                                                    const std::vector<std::vector<std::string>> &friendFileNames)
+static std::vector<std::vector<Long64_t>>
+GetFriendEntries(const std::vector<std::pair<std::string, std::string>> &friendNames,
+                 const std::vector<std::vector<std::string>> &friendFileNames)
 {
    std::vector<std::vector<Long64_t>> friendEntries;
    const auto nFriends = friendNames.size();
@@ -257,7 +257,7 @@ static std::string GetTreeFullPath(const TTree &tree)
 {
    // Case 1: this is a TChain: we get the name out of the first TChainElement
    if (0 == strcmp("TChain", tree.ClassName())) {
-      auto &chain = dynamic_cast<const TChain&>(tree);
+      auto &chain = dynamic_cast<const TChain &>(tree);
       auto files = chain.GetListOfFiles();
       if (files && 0 != files->GetEntries()) {
          return files->At(0)->GetName();
@@ -284,8 +284,8 @@ static std::string GetTreeFullPath(const TTree &tree)
    return tree.GetName();
 }
 
-} // End NS Internal
-} // End NS ROOT
+} // namespace Internal
+} // namespace ROOT
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get and store the names, aliases and file names of the friends of the tree.
@@ -365,9 +365,11 @@ std::string TTreeProcessorMT::FindTreeName()
 ///                     the implementation will automatically search for a
 ///                     tree in the file.
 TTreeProcessorMT::TTreeProcessorMT(std::string_view filename, std::string_view treename)
-   : fFileNames({std::string(filename)}), fTreeName(treename.empty() ? FindTreeName() : treename), fFriendInfo() {}
+   : fFileNames({std::string(filename)}), fTreeName(treename.empty() ? FindTreeName() : treename), fFriendInfo()
+{
+}
 
-std::vector<std::string> CheckAndConvert(const std::vector<std::string_view> & views)
+std::vector<std::string> CheckAndConvert(const std::vector<std::string_view> &views)
 {
    if (views.empty())
       throw std::runtime_error("The provided list of file names is empty");
@@ -386,7 +388,9 @@ std::vector<std::string> CheckAndConvert(const std::vector<std::string_view> & v
 ///                     the implementation will automatically search for a
 ///                     tree in the collection of files.
 TTreeProcessorMT::TTreeProcessorMT(const std::vector<std::string_view> &filenames, std::string_view treename)
-   : fFileNames(CheckAndConvert(filenames)), fTreeName(treename.empty() ? FindTreeName() : treename), fFriendInfo() {}
+   : fFileNames(CheckAndConvert(filenames)), fTreeName(treename.empty() ? FindTreeName() : treename), fFriendInfo()
+{
+}
 
 std::vector<std::string> GetFilesFromTree(TTree &tree)
 {
@@ -420,7 +424,9 @@ std::vector<std::string> GetFilesFromTree(TTree &tree)
 /// \param[in] entries List of entry numbers to process.
 TTreeProcessorMT::TTreeProcessorMT(TTree &tree, const TEntryList &entries)
    : fFileNames(GetFilesFromTree(tree)), fTreeName(ROOT::Internal::GetTreeFullPath(tree)), fEntryList(entries),
-     fFriendInfo(GetFriendInfo(tree)) {}
+     fFriendInfo(GetFriendInfo(tree))
+{
+}
 
 ////////////////////////////////////////////////////////////////////////
 /// Constructor based on a TTree.
