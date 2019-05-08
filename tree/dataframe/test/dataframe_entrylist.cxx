@@ -18,7 +18,23 @@ void MakeInputFile(const std::string &filename, int nEntries)
                .Snapshot<int>(treename, filename, {"e"});
 }
 
-void TestTreeWithEntryList()
+class RMTRAII {
+   bool fIsMT;
+
+public:
+   RMTRAII(bool isMT) : fIsMT(isMT)
+   {
+      if (fIsMT)
+         ROOT::EnableImplicitMT();
+   }
+   ~RMTRAII()
+   {
+      if (fIsMT)
+         ROOT::DisableImplicitMT();
+   }
+};
+
+void TestTreeWithEntryList(bool isMT = false)
 {
    const auto nEntries = 10;
    const auto treename = "t";
@@ -33,13 +49,14 @@ void TestTreeWithEntryList()
    auto t = f.Get<TTree>(treename);
    t->SetEntryList(&elist);
 
+   RMTRAII gomt(isMT);
    auto entries = ROOT::RDataFrame(*t).Take<int>("e");
    EXPECT_EQ(*entries, std::vector<int>({0, nEntries - 1}));
 
    gSystem->Unlink(filename);
 }
 
-void TestChainWithEntryList()
+void TestChainWithEntryList(bool isMT = false)
 {
    const auto nEntries = 10;
    const auto treename = "t";
@@ -66,6 +83,7 @@ void TestChainWithEntryList()
    c.Add(file2, nEntries);
    c.SetEntryList(&elists);
 
+   RMTRAII gomt(isMT);
    auto entries = ROOT::RDataFrame(c).Take<int>("e");
    EXPECT_EQ(*entries, std::vector<int>({0, nEntries - 1, 0, nEntries - 1}));
 
@@ -86,15 +104,11 @@ TEST(RDFEntryList, Tree)
 #ifdef R__USE_IMT
 TEST(RDFEntryList, DISABLED_ChainMT)
 {
-   ROOT::EnableImplicitMT();
-   TestChainWithEntryList();
-   ROOT::DisableImplicitMT();
+   TestChainWithEntryList(true);
 }
 
-TEST(RDFEntryList, DISABLED_TreeMT)
+TEST(RDFEntryList, TreeMT)
 {
-   ROOT::EnableImplicitMT();
-   TestTreeWithEntryList();
-   ROOT::DisableImplicitMT();
+   TestTreeWithEntryList(true);
 }
 #endif
