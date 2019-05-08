@@ -86,14 +86,14 @@
                                  </VBox>
                               </IconTabFilter>
                               <IconTabFilter text="Minimization">
-                                 <l:VerticalLayout id="libraryContainer" class="sapUiSizeCompact">
+                                 <VBox>
                                     <Title level="H3" text="Library"/>
                                     <RadioButtonGroup id="libraryRB" columns="3" width="100%"  selectedIndex="{/fLibrary}" select="selectRB">
                                        <buttons>
                                           <RadioButton id="RB2-1" text="Minuit"/>
                                           <RadioButton id="RB2-2" text="Minuit2"/>
                                           <RadioButton id="RB2-3" text="Fumili"/>
-                                          <RadioButton id="RB2-4" text="GSL" enabled="false"/>
+                                          <RadioButton id="RB2-4" text="GSL"/>
                                           <RadioButton id="RB2-5" text="Genetics"/>
                                        </buttons>
                                     </RadioButtonGroup>
@@ -102,77 +102,43 @@
                                        <core:Item key="{fId}" text="{fSet}" />
                                     </ComboBox>
                                     <Title level="H3" text="Settings"/>
-                                    <Text text="Use ENTER key to validate a new value or click on Reset button to set the defaults."/>
-                                    <form:Form id="FormMin"
-                                       editable="true"
-                                       ariaLabelledBy="Title1">
-                                       <form:layout>
-                                          <form:ResponsiveGridLayout
-                                             labelSpanXL="4"
-                                             labelSpanL="3"
-                                             labelSpanM="4"
-                                             labelSpanS="4"
-                                             adjustLabelSpan="false"
-                                             emptySpanXL="2"
-                                             emptySpanL="0"
-                                             emptySpanM="0"
-                                             emptySpanS="0"
-                                             columnsXL="2"
-                                             columnsL="1"
-                                             columnsM="1"
-                                             singleContainerFullSize="false"/>
-                                       </form:layout>
-                                       <form:formContainers>
-                                          <form:FormContainer ariaLabelledBy="Minimization">
-                                             <form:FormElement>
-                                                <Label text="Error Definition (default = 1)" labelFor="errorDef">
-                                                   <layoutData>
-                                                      <l:GridData span="XL1 L4 M3 S6" />
-                                                   </layoutData>
-                                                </Label>
-                                                <Input
-                                                   id="errorDef"
-                                                   type="Number"
-                                                   placeholder="1.00">
-                                                   <layoutData>
-                                                      <l:GridData span="XL1 L4 M3 S4" />
-                                                   </layoutData>
-                                                </Input>
-                                                <Label text="Max tolerance (precision)" labelFor="maxTolerance">
-                                                   <layoutData>
-                                                      <l:GridData span="XL1 L4 M3 S6" />
-                                                   </layoutData>
-                                                </Label>
-                                                <Input
-                                                   id="maxTolerance"
-                                                   type="Number"
-                                                   placeholder="0.01">
-                                                   <layoutData>
-                                                      <l:GridData span="XL1 L4 M3 S4" />
-                                                   </layoutData>
-                                                </Input>
-                                                <Label text="Max number of interations" labelFor="maxInterations">
-                                                   <layoutData>
-                                                      <l:GridData span="XL1 L4 M3 S6" />
-                                                   </layoutData>
-                                                </Label>
-                                                <Input
-                                                   id="maxInterations"
-                                                   type="Number"
-                                                   placeholder="0">
-                                                   <layoutData>
-                                                      <l:GridData span="XL1 L4 M3 S4" />
-                                                   </layoutData>
-                                                </Input>
-                                                <CheckBox text="Use gradient" selected="{/fUseGradient}">
-                                                   <layoutData>
-                                                      <l:GridData span="L4 M6 S6"/>
-                                                   </layoutData>
-                                                </CheckBox>
-                                             </form:FormElement>
-                                          </form:FormContainer>
-                                       </form:formContainers>
-                                    </form:Form>
+                                    <l:Grid class="sapUiSizeCompact" hSpacing="0.5" vSpacing="0">
+                                       <Text text="Use ENTER key to validate a new value or click on Reset button to set the defaults.">
+                                           <layoutData>
+                                               <l:GridData span="XL12 L12 M12 S12" />
+                                            </layoutData>
+                                       </Text>
+                                       <Text text="Error Definition (default = 1)">
+                                           <layoutData>
+                                               <l:GridData span="XL8 L8 M8 S8" />
+                                            </layoutData>
+                                        </Text>
+                                        <Input id="errorDef" type="Number" placeholder="1.00">
+                                           <layoutData>
+                                              <l:GridData span="XL4 L4 M4 S4" />
+                                           </layoutData>
+                                         </Input>
+                                         <Text text="Max tolerance (precision)">
+                                            <layoutData>
+                                               <l:GridData span="XL8 L8 M8 S8" />
+                                            </layoutData>
+                                          </Text>
+                                          <Input id="maxTolerance" type="Number" placeholder="0.01">
+                                             <layoutData>
+                                                <l:GridData span="XL4 L4 M4 S4" />
+                                             </layoutData>
+                                         </Input>
+                                         <Text text="Max number of iterations:">
+                                            <layoutData>
+                                               <l:GridData span="XL8 L8 M8 S8" />
+                                            </layoutData>
+                                          </Text>
+                                          <Input id="maxInterations" type="Number" placeholder="0">
+                                             <layoutData>
+                                                <l:GridData span="XL4 L4 M4 S4" />
+                                             </layoutData>
+                                         </Input>
+                                    </l:Grid>
                                     <Title level="H3" text="Print Options"/>
                                     <RadioButtonGroup columns="3" width="100%"  selectedIndex="{/fPrint}">
                                        <buttons>
@@ -181,8 +147,9 @@
                                           <RadioButton id="Print-3" text="Quiet"/>
                                        </buttons>
                                     </RadioButtonGroup>
-                                    <Panel expandable="true" expanded="false" headerText="Advanced Options" width="auto" class="sapUiBody" expand="advancedOptionsDialog">
-                                       <content>
+                                 </VBox>
+                              </IconTabFilter>
+                              <IconTabFilter text="Advanced" visible="true">
                                           <IconTabBar id="AdvancedOptions">
                                              <items>
                                                 <IconTabFilter text="Contour">
@@ -419,9 +386,6 @@
                                                 </IconTabFilter>
                                              </items>
                                           </IconTabBar>
-                                       </content>
-                                    </Panel>
-                                 </l:VerticalLayout>
                               </IconTabFilter>
                            </items>
                         </IconTabBar>
