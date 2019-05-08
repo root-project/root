@@ -2729,23 +2729,25 @@ void print_mask_info(ULong_t mask)
          if (fEventMask & kExposureMask) {
             if (ViewIsTextView(self)) {
                //Send Expose event, using child view (this is how it's done in GUI :( ).
+               [NSColor.whiteColor setFill];
+               NSRectFill(dirtyRect);
                NSView<X11Window> * const viewFrame = FrameForTextView(self);
                if (viewFrame)//Now we set fExposedRegion for TGView.
-                  vx->GetEventTranslator()->GenerateExposeEvent(viewFrame, [viewFrame visibleRect]);
+                  vx->GetEventTranslator()->GenerateExposeEvent(viewFrame, viewFrame.visibleRect);
             }
 
             if (ViewIsHtmlView(self)) {
                NSView<X11Window> *const viewFrame = FrameForHtmlView(self);
                if (viewFrame)
-                  vx->GetEventTranslator()->GenerateExposeEvent(viewFrame, [viewFrame visibleRect]);
+                  vx->GetEventTranslator()->GenerateExposeEvent(viewFrame, viewFrame.visibleRect);
             }
 
             //Ask ROOT's widget/window to draw itself.
             gClient->NeedRedraw(window, kTRUE);
 
-            if (!fSnapshotDraw && !ViewIsTextView(self) && !ViewIsHtmlView(self)) {
+            if (!fSnapshotDraw) {
                //If Cocoa repaints widget, cancel all ROOT's "outside of paint event"
-               //rendering into this widget ... Except it's a text view :)
+               //rendering into this widget.
                gClient->CancelRedraw(window);
                vx->GetCommandBuffer()->RemoveGraphicsOperationsForWindow(fID);
             }
