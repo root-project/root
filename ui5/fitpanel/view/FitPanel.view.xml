@@ -295,11 +295,8 @@
       </VBox>
       <footer>
          <Toolbar>
-            <ToolbarSpacer />
+            <ToolbarSpacer/>
             <Button text="Fit" press="doFit" tooltip="Fit the histogram" />
-            <Button text="Reset" press="resetPanel" tooltip="Reset to initial state" />
-            <Button text="Back" press="backPanel"
-               tooltip="Go to the previous fitting" />
             <Button text="Close" press="closePanel" tooltip="Close the Fit Panel" />
          </Toolbar>
       </footer>
