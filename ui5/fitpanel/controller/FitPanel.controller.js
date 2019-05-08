@@ -52,6 +52,7 @@ sap.ui.define([
             if(data) {
                data.fFuncList = data.fFuncListAll[parseInt(data.fSelectTypeFunc)];
                data.fMethodMin = data.fMethodMinAll[parseInt(data.fLibrary)];
+
                this.getView().setModel(new JSONModel(data));
                this._data = data;
 
@@ -59,8 +60,13 @@ sap.ui.define([
                this.modelCount = 0;
             }
          } else if (msg.startsWith("PARS:")) {
-            var data = JSROOT.parse(msg.substr(5));
-            this.showParametersDialog(data);
+
+            var data = this.getView().getModel().getData();
+
+            data.fFuncPars = JSROOT.parse(msg.substr(5));
+
+            this.getView().getModel().refresh();
+
          } else if (msg.startsWith("ADVANCED:")) {
          	var data = JSROOT.parse(msg.substr(9));
          	//this.getAdvanced();
@@ -145,8 +151,11 @@ sap.ui.define([
          var func = this.getSelectedFunc();
 
          var data = this.getView().getModel().getData();
-         data.fFuncChange = func;
+         data.fFuncChange = func; // FIXME: seems to be, not required
          this.getView().getModel().refresh();
+
+         if (this.websocket && func)
+            this.websocket.Send("GETPARS:" + func);
 
          //updates the text area and text in selected tab, depending on the choice in TypeXY ComboBox
          this.byId("OperationText").setValueLiveUpdate();
@@ -197,31 +206,6 @@ sap.ui.define([
          console.log("fNoDrawing ", data.fNoStore);
       },
 
-      closeParametersDialog: function(is_ok) {
-         if (is_ok && this.parData) {
-            // first convert back to float values
-
-            for (var i=0;i<this.parData.pars.length;++i) {
-               var par = this.parData.pars[i];
-               // convert value into floats back
-               this.toFloat(par, "value");
-               this.toFloat(par, "error");
-               this.toFloat(par, "min");
-               this.toFloat(par, "max");
-            }
-
-            var json = JSROOT.toJSON(this.parData);
-            if (this.websocket)
-               this.websocket.Send("SETPARS:" + json);
-                 //console.log("JSON " + json)
-         }
-
-         this.parsDialog.close();
-         this.parsDialog.destroy();
-         delete this.parsDialog;
-
-      },
-
       drawContour: function() {
 
       	var data = this.getView().getModel().getData();
@@ -268,98 +252,14 @@ sap.ui.define([
 
       },
 
-      setParametersDialog: function(){
-         var msg = "GETPARS:" + this.getSelectedFunc();
+      pressApplyPars: function() {
+         var data = this.getView().getModel().getData();
+         var json = JSROOT.toJSON(data.fFuncPars);
+
          if (this.websocket)
-            this.websocket.Send(msg);
+            this.websocket.Send("SETPARS:" + json);
       },
 
-      toString: function(par, field, digits) {
-         if (par[field] == Math.round(par[field])) digits = 0;
-         par[field+"Txt"] = par[field+"Txt0"] = par[field].toFixed(digits);
-      },
-
-      toFloat: function(par, field) {
-         if (par[field+"Txt"] !== par[field+"Txt0"]) {
-            var res = parseFloat(par[field+"Txt"]);
-            if (!isNaN(res)) par[field] = res;
-         }
-         delete par[field+"Txt"];
-         delete par[field+"Txt0"];
-      },
-
-      showParametersDialog: function(data){
-
-         var aData = { Data: data.pars };
-
-         this.parData = data;
-
-         // prepare text formatting
-         for (var i=0;i<data.pars.length;++i) {
-            var par = data.pars[i];
-            // convert value into strings, requird by sap.m.Input
-            this.toString(par, "value", 3);
-            this.toString(par, "error", 3);
-            this.toString(par, "min", 3);
-            this.toString(par, "max", 3);
-         }
-
-         var oModel = new sap.ui.model.json.JSONModel(aData);
-         // sap.ui.getCore().setModel(oModel, "aDataData");
-
-         var oTableItems = new mColumnListItem({ vAlign:"Middle", cells:[
-              new mLabel({ text: "{name}" }),
-              new mCheckBox({ selected: "{fixed}" }),
-              // new mCheckBox({ selected: "{Bound}" }),
-              new mInput({ value: "{valueTxt}", type: "Number", width: "75px" }),
-              new mInput({ value: "{minTxt}", type: "Number", width: "75px" }),
-              new mInput({ value: "{maxTxt}", type: "Number", width: "75px" }),
-              new mInput({ value: "{errorTxt}", type: "Number", width: "75px" })
-         ]});
-
-         var oTable = new mTable({
-            id: "PrmsTable",
-            fixedLayout: false,
-            mode: sap.m.ListMode.SingleSelectMaster,
-            includeItemInSelection: true,
-            growing: true,
-            columns: [
-                new mColumn({ header: new mLabel({text: "Name"})}),
-                new mColumn({ header: new mLabel({text: "Fix"})}),
-                // new mColumn({ header: new mLabel({text: "Bound"})}),
-                new mColumn({ header: new mLabel({text: "Value"})}),
-                new mColumn({ header: new mLabel({text: "Min"})}),
-                new mColumn({ header: new mLabel({text: "Max"})}),
-                new mColumn({ header: new mLabel({text: "Errors"})})
-            ]
-         });
-
-         oTable.bindAggregation("items","/Data",oTableItems,null);
-         oTable.setModel(oModel);
-         console.log("oModel " + oModel);
-
-         this.parsDialog = new mDialog({
-            title: "Set Prarameters",
-            beginButton: new mButton({
-               text: 'Cancel',
-               press: this.closeParametersDialog.bind(this)
-            }),
-            endButton: new mButton({
-               text: 'Ok',
-               press: this.closeParametersDialog.bind(this, true)
-            })
-         });
-
-         this.parsDialog.addContent(oTable);
-
-         this.parsDialog.addStyleClass("sapUiSizeCompact sapUiResponsiveMargin");
-
-         this.parsDialog.open();
-      },
-
-      startExtraParametersDialog: function() {
-         // placeholder for triggering new window with parameters editor only
-      },
 
       //Cancel Button on Set Parameters Dialog Box
       onCancel: function(oEvent){
@@ -436,12 +336,6 @@ sap.ui.define([
 
          colorConf = color2;
          return colorConf;
-	  },
-
-	  advancedOptionsDialog: function() {
-        var msg = "GETADVANCED:" + this.getSelectedFunc();
-        if (this.websocket)
-            this.websocket.Send(msg);
 	  }
 
    });

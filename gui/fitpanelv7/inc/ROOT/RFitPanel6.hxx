@@ -26,6 +26,8 @@
 #include <memory>
 #include <vector>
 
+class TPad;
+
 namespace ROOT {
 namespace Experimental {
 
@@ -33,9 +35,10 @@ class RFitPanel6 {
 
    std::unique_ptr<RFitPanel6Model> fModel;
 
-   std::string fTitle;  ///<! title
-   unsigned fConnId{0}; ///<! connection id
-   TH1 *fHist{nullptr};
+   std::string fTitle;           ///<! title
+   unsigned fConnId{0};          ///<! connection id
+   TH1 *fHist{nullptr};          ///<! explicit histogram used for fitting
+   std::string fCanvName{"c1"};  ///<! canvas used to display fit, will be created if not exists
 
    std::shared_ptr<RWebWindow> fWindow; ///!< configured display
 
@@ -48,6 +51,12 @@ class RFitPanel6 {
 
    void DrawScan(const std::string &model);
 
+   RFitPanel6Model &model();
+
+   TPad *GetDrawPad(TH1 *hist);
+
+   void SendModel();
+
 public:
    /// normal constructor
    RFitPanel6(const std::string &title = "Fit panel") : fTitle(title) {}
@@ -55,7 +64,11 @@ public:
    // method required when any panel want to be inserted into the RCanvas
    std::shared_ptr<RWebWindow> GetWindow();
 
-   void AssignHistogram(TH1 *hist) { fHist = hist; }
+   void AssignHistogram(TH1 *hist);
+
+   void AssignHistogram(const std::string &hname);
+
+   void AssignCanvas(const std::string &cname) { fCanvName = cname; }
 
    /// show FitPanel in specified place
    void Show(const std::string &where = "");

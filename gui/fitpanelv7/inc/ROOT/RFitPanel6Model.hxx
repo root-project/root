@@ -47,22 +47,24 @@ struct RFitFuncInfo {
 struct RFitFuncParameter {
    int ipar{0};
    std::string name;
-   double value{0.};
+   std::string value;
    bool fixed{false};
-   double error{0.};
-   double min{0.}, max{0.};
+   std::string error;
+   std::string min;
+   std::string max;
    RFitFuncParameter() = default;
    RFitFuncParameter(int _ipar, const std::string &_name) : ipar(_ipar), name(_name) {}
 };
 
 /// Class used to transfer functions parameters list from/to client
 struct RFitFuncParsList {
+   bool haspars{false};
    std::string name;
    std::vector<RFitFuncParameter> pars;
    void GetParameters(TF1 *f1);
    void SetParameters(TF1 *f1);
+   void Clear();
 };
-
 
 
 // Structure for the main fit panel model
@@ -71,12 +73,6 @@ struct RFitPanel6Model {
    std::string fSelectDataId;
    std::vector<RComboBoxItem> fMethod;
    std::string fSelectMethodId;
-   std::vector<RComboBoxItem> fContour1;
-   std::string fContourPar1Id;
-   std::vector<RComboBoxItem> fContour2;
-   std::string fContourPar2Id;
-   std::vector<RComboBoxItem> fScan;
-   std::string fScanId;
    std::string fRealFunc;                    ///< name of the fit function
    std::string fFuncChange;
    std::string fMinLibrary;
@@ -127,7 +123,20 @@ struct RFitPanel6Model {
    bool fNoDrawing{false};
    bool fNoStore{false};
 
+
+   /// Parameters
+
+   RFitFuncParsList fFuncPars;
+
    /////////Advanced Options
+
+   bool fHasAdvanced{false};
+   std::vector<RComboBoxItem> fContour1;
+   std::string fContourPar1Id;
+   std::vector<RComboBoxItem> fContour2;
+   std::string fContourPar2Id;
+   std::vector<RComboBoxItem> fScan;
+   std::string fScanId;
 
    // Contour Tab
    int fContourPar1{0};
@@ -143,9 +152,19 @@ struct RFitPanel6Model {
    int fScanMin{0};
    int fScanMax{0};
 
-   void Initialize(TH1 *hist);
+   RFitPanel6Model() { Initialize(); }
 
-   TH1* FindHistogram(const std::string &id, TH1 *hist = nullptr);
+   void Initialize();
+
+   bool SelectHistogram(const std::string &hname, TH1 *hist);
+
+   void UpdateAdvanced(TH1 *hist);
+
+   bool IsSelectedHistogram() const { return !fSelectDataId.empty(); }
+
+   TH1* GetSelectedHistogram(TH1 *hist = nullptr);
+
+   TF1 *FindFunction(const std::string &fname, TH1 *hist = nullptr);
 
    std::string GetFitOption();
 };
