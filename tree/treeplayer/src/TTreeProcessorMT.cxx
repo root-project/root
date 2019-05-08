@@ -83,12 +83,15 @@ TTreeView::MakeReaderWithEntryList(TEntryList &globalList, Long64_t start, Long6
    // TEntryList and SetEntriesRange do not work together (the former has precedence).
    // We need to construct a TEntryList that contains only those entry numbers in our desired range.
    auto localList = std::make_unique<TEntryList>();
+   // We call GetEntry twice: workaround for ROOT-10113 (the return value for 1 call only could be -1)
+   globalList.GetEntry(0);
    Long64_t entry = globalList.GetEntry(0);
    do {
-      if (entry >= end)
+      if (entry >= end) {
          break;
-      else if (entry >= start)
+      } else if (entry >= start) {
          localList->Enter(entry);
+      }
    } while ((entry = globalList.Next()) >= 0);
 
    auto reader = std::make_unique<TTreeReader>(fChain.get(), localList.get());
