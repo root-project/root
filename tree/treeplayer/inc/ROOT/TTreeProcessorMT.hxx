@@ -27,7 +27,6 @@
 #include <functional>
 #include <vector>
 
-
 /** \class TTreeView
     \brief A helper class that encapsulates a file and a tree.
 
@@ -46,67 +45,66 @@ the threaded object.
 */
 
 namespace ROOT {
-   namespace Internal {
-      struct FriendInfo;
-      /// Names, aliases, and file names of a TTree's or TChain's friends
-      using NameAlias = std::pair<std::string, std::string>;
-      struct FriendInfo {
-         /// Pairs of names and aliases of friend trees/chains
-         std::vector<Internal::NameAlias> fFriendNames;
-         /// Names of the files where each friend is stored. fFriendFileNames[i] is the list of files for friend with
-         /// name fFriendNames[i]
-         std::vector<std::vector<std::string>> fFriendFileNames;
-      };
+namespace Internal {
+struct FriendInfo;
+/// Names, aliases, and file names of a TTree's or TChain's friends
+using NameAlias = std::pair<std::string, std::string>;
+struct FriendInfo {
+   /// Pairs of names and aliases of friend trees/chains
+   std::vector<Internal::NameAlias> fFriendNames;
+   /// Names of the files where each friend is stored. fFriendFileNames[i] is the list of files for friend with
+   /// name fFriendNames[i]
+   std::vector<std::vector<std::string>> fFriendFileNames;
+};
 
-      class TTreeView {
-         public:
-         using TreeReaderEntryListPair = std::pair<std::unique_ptr<TTreeReader>, std::unique_ptr<TEntryList>>;
+class TTreeView {
+public:
+   using TreeReaderEntryListPair = std::pair<std::unique_ptr<TTreeReader>, std::unique_ptr<TEntryList>>;
 
-         private:
-            // NOTE: fFriends must come before fChain to be deleted after it, see ROOT-9281 for more details
-            std::vector<std::unique_ptr<TChain>> fFriends; ///< Friends of the tree/chain
-            std::unique_ptr<TChain> fChain;                ///< Chain on which to operate
+private:
+   // NOTE: fFriends must come before fChain to be deleted after it, see ROOT-9281 for more details
+   std::vector<std::unique_ptr<TChain>> fFriends; ///< Friends of the tree/chain
+   std::unique_ptr<TChain> fChain;                ///< Chain on which to operate
 
-            void MakeChain(const std::string &treeName, const std::vector<std::string> &fileNames,
-                           const FriendInfo &friendInfo, const std::vector<Long64_t> &nEntries,
-                           const std::vector<std::vector<Long64_t>> &friendEntries);
-            TreeReaderEntryListPair MakeReaderWithEntryList(TEntryList &globalList, Long64_t start, Long64_t end);
-            std::unique_ptr<TTreeReader> MakeReader(Long64_t start, Long64_t end);
+   void MakeChain(const std::string &treeName, const std::vector<std::string> &fileNames, const FriendInfo &friendInfo,
+                  const std::vector<Long64_t> &nEntries, const std::vector<std::vector<Long64_t>> &friendEntries);
+   TreeReaderEntryListPair MakeReaderWithEntryList(TEntryList &globalList, Long64_t start, Long64_t end);
+   std::unique_ptr<TTreeReader> MakeReader(Long64_t start, Long64_t end);
 
-         public:
-            TTreeView();
-            TTreeView(const TTreeView &);
-            TreeReaderEntryListPair GetTreeReader(Long64_t start, Long64_t end, const std::string &treeName,
-                                                  const std::vector<std::string> &fileNames,
-                                                  const FriendInfo &friendInfo, TEntryList entryList,
-                                                  const std::vector<Long64_t> &nEntries,
-                                                  const std::vector<std::vector<Long64_t>> &friendEntries);
-      };
-   } // End of namespace Internal
+public:
+   TTreeView();
+   TTreeView(const TTreeView &);
+   TreeReaderEntryListPair GetTreeReader(Long64_t start, Long64_t end, const std::string &treeName,
+                                         const std::vector<std::string> &fileNames, const FriendInfo &friendInfo,
+                                         TEntryList entryList, const std::vector<Long64_t> &nEntries,
+                                         const std::vector<std::vector<Long64_t>> &friendEntries);
+};
+} // End of namespace Internal
 
-   class TTreeProcessorMT {
-   private:
-      const std::vector<std::string> fFileNames; ///< Names of the files
-      const std::string fTreeName;               ///< Name of the tree
-      /// User-defined selection of entry numbers to be processed, empty if none was provided
-      const TEntryList fEntryList; // const to be sure to avoid race conditions among TTreeViews
-      const Internal::FriendInfo fFriendInfo;
+class TTreeProcessorMT {
+private:
+   const std::vector<std::string> fFileNames; ///< Names of the files
+   const std::string fTreeName;               ///< Name of the tree
+   /// User-defined selection of entry numbers to be processed, empty if none was provided
+   const TEntryList fEntryList; // const to be sure to avoid race conditions among TTreeViews
+   const Internal::FriendInfo fFriendInfo;
 
-      ROOT::TThreadedObject<ROOT::Internal::TTreeView> fTreeView; ///<! Thread-local TreeViews
+   ROOT::TThreadedObject<ROOT::Internal::TTreeView> fTreeView; ///<! Thread-local TreeViews
 
-      Internal::FriendInfo GetFriendInfo(TTree &tree);
-      std::string FindTreeName();
-      static unsigned int fgMaxTasksPerFilePerWorker;
-   public:
-      TTreeProcessorMT(std::string_view filename, std::string_view treename = "");
-      TTreeProcessorMT(const std::vector<std::string_view> &filenames, std::string_view treename = "");
-      TTreeProcessorMT(TTree &tree, const TEntryList &entries);
-      TTreeProcessorMT(TTree &tree);
+   Internal::FriendInfo GetFriendInfo(TTree &tree);
+   std::string FindTreeName();
+   static unsigned int fgMaxTasksPerFilePerWorker;
 
-      void Process(std::function<void(TTreeReader &)> func);
-      static void SetMaxTasksPerFilePerWorker(unsigned int m);
-      static unsigned int GetMaxTasksPerFilePerWorker();
-   };
+public:
+   TTreeProcessorMT(std::string_view filename, std::string_view treename = "");
+   TTreeProcessorMT(const std::vector<std::string_view> &filenames, std::string_view treename = "");
+   TTreeProcessorMT(TTree &tree, const TEntryList &entries);
+   TTreeProcessorMT(TTree &tree);
+
+   void Process(std::function<void(TTreeReader &)> func);
+   static void SetMaxTasksPerFilePerWorker(unsigned int m);
+   static unsigned int GetMaxTasksPerFilePerWorker();
+};
 
 } // End of namespace ROOT
 
