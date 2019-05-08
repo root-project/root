@@ -163,6 +163,7 @@ Maximal compression of JSON can be achieved now with compact parameter 128 = 100
   - Add `HasColumn` method to check whether a column is available to a given RDF node
   - PyROOT: add `AsRNode` helper function to convert RDF nodes to the common RNode type
   - PyROOT: add `AsNumpy` method to export contents of a RDataFrame as a dictionary of numpy arrays
+  - Experimental PyROOT: add `MakeNumpyDataFrame` factory to process data owned by numpy arrays with RDataFrame
   - The `Stats` method has been added, allowing to retrieve a `TStatistic` object filled with the values of a column and, optionally, the values of a second column to be used as weights.
 
 ### TLeafF16 and TLeafD32
@@ -219,9 +220,11 @@ Maximal compression of JSON can be achieved now with compact parameter 128 = 100
   - Add `T RVec<T>::at>(size_t, T)` method to allow users to specify a default value to be returned in case the vector is shorter than the position specified. No exception is thrown.
   - Add the `Concatenate` helper to merge the content of two `RVec<T>` instances.
   - Generalise the `VecOps::Map` utility allowing to apply a callable on a set of RVecs and not only to one.
-  - Add the `DeltaR2` and `DeltaR` helpers for RVec.
+  - Add the `DeltaR2`, `DeltaR` and `DeltaPhi` helpers for RVec.
+  - Add the `InvariantMass(es)` helpers computing the invariant mass from particle kinematics stored in RVecs.
   - Add the `Max`, `Min`, `ArgMax`, and `ArgMin` helpers for RVec.
   - Add the `Construct` helper to build an `RVec<T>` starting from N `RVec<P_i>`, where a constructor `T::T(P_0, P_1, ..., P_Nm1)` exists.
+  - Experimental PyROOT: Add `AsRVec` helper to adopt memory owned by numpy arrays with RVecs
 
 ### [Clad](https://github.com/vgvassilev/clad)
   - Upgrade Clad to 0.5 The new release includes some improvements in both
@@ -425,3 +428,10 @@ to `ROOT_GENERATE_DICTIONARY` or `ROOT_STANDARD_LIBRARY_PACKAGE`.
 
 We believe that this simplification / regularization of behavior, and the additional checks are worth the possible changes
 on the user side.
+
+
+## PyROOT
+
+If the fix or new feature is a pythonization related to a C++ class, the change is added to the respective section above.
+
+    - Experimental PyROOT: add `DeclareCppCallable` decorator, which allows to call Python callables from C++, e.g., in an RDataFrame workflow
