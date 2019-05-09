@@ -24,6 +24,7 @@
 #include "TBackCompFitter.h"
 #include "TGraph.h"
 #include "TROOT.h"
+#include "TH1.h"
 #include "TF1.h"
 #include "TList.h"
 #include "TCanvas.h"
@@ -44,6 +45,11 @@ using namespace std::string_literals;
 
 web-based FitPanel prototype.
 */
+
+ROOT::Experimental::RFitPanel6::RFitPanel6(const std::string &title)
+{
+   model().fTitle = title;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Returns RWebWindow instance, used to display FitPanel
@@ -80,6 +86,26 @@ void ROOT::Experimental::RFitPanel6::AssignHistogram(const std::string &hname)
    fHist = nullptr;
    model().SelectHistogram(hname, nullptr);
    SendModel();
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+/// assign canvas to use for drawing results of fitting or showing fitpanel itself
+
+void ROOT::Experimental::RFitPanel6::AssignCanvas(std::shared_ptr<RCanvas> &canv)
+{
+   if (!fCanvas) {
+      fCanvas = canv;
+   } else {
+      R__ERROR_HERE("webgui") << "FitPanel already bound to the canvas - change is not yet supported";
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+/// assign histogram for fitting
+
+void ROOT::Experimental::RFitPanel6::AssignHistogram(std::shared_ptr<RH1D> &hist)
+{
+   fFitHist = hist;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
