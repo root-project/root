@@ -1,4 +1,4 @@
-/// \file RFitPanel6.cxx
+/// \file RFitPanel.cxx
 /// \ingroup WebGui ROOT7
 /// \author Sergey Linev <S.Linev@gsi.de>
 /// \author Iliana Betsou <Iliana.Betsou@cern.ch>
@@ -14,7 +14,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RFitPanel6.hxx>
+#include <ROOT/RFitPanel.hxx>
 
 #include <ROOT/RWebWindowsManager.hxx>
 #include <ROOT/RMakeUnique.hxx>
@@ -46,7 +46,7 @@ using namespace std::string_literals;
 web-based FitPanel prototype.
 */
 
-ROOT::Experimental::RFitPanel6::RFitPanel6(const std::string &title)
+ROOT::Experimental::RFitPanel::RFitPanel(const std::string &title)
 {
    model().fTitle = title;
 }
@@ -54,7 +54,7 @@ ROOT::Experimental::RFitPanel6::RFitPanel6(const std::string &title)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Returns RWebWindow instance, used to display FitPanel
 
-std::shared_ptr<ROOT::Experimental::RWebWindow> ROOT::Experimental::RFitPanel6::GetWindow()
+std::shared_ptr<ROOT::Experimental::RWebWindow> ROOT::Experimental::RFitPanel::GetWindow()
 {
    if (!fWindow) {
       fWindow = RWebWindowsManager::Instance()->CreateWindow();
@@ -72,7 +72,7 @@ std::shared_ptr<ROOT::Experimental::RWebWindow> ROOT::Experimental::RFitPanel6::
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Assign histogram to use with fit panel - without ownership
 
-void ROOT::Experimental::RFitPanel6::AssignHistogram(TH1 *hist)
+void ROOT::Experimental::RFitPanel::AssignHistogram(TH1 *hist)
 {
    fHist = hist;
    model().SelectHistogram("", fHist);
@@ -81,7 +81,7 @@ void ROOT::Experimental::RFitPanel6::AssignHistogram(TH1 *hist)
 
 /// Assign histogram name to use with fit panel - it should be available in gDirectory
 
-void ROOT::Experimental::RFitPanel6::AssignHistogram(const std::string &hname)
+void ROOT::Experimental::RFitPanel::AssignHistogram(const std::string &hname)
 {
    fHist = nullptr;
    model().SelectHistogram(hname, nullptr);
@@ -91,7 +91,7 @@ void ROOT::Experimental::RFitPanel6::AssignHistogram(const std::string &hname)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// assign canvas to use for drawing results of fitting or showing fitpanel itself
 
-void ROOT::Experimental::RFitPanel6::AssignCanvas(std::shared_ptr<RCanvas> &canv)
+void ROOT::Experimental::RFitPanel::AssignCanvas(std::shared_ptr<RCanvas> &canv)
 {
    if (!fCanvas) {
       fCanvas = canv;
@@ -103,7 +103,7 @@ void ROOT::Experimental::RFitPanel6::AssignCanvas(std::shared_ptr<RCanvas> &canv
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// assign histogram for fitting
 
-void ROOT::Experimental::RFitPanel6::AssignHistogram(std::shared_ptr<RH1D> &hist)
+void ROOT::Experimental::RFitPanel::AssignHistogram(std::shared_ptr<RH1D> &hist)
 {
    fFitHist = hist;
 }
@@ -111,7 +111,7 @@ void ROOT::Experimental::RFitPanel6::AssignHistogram(std::shared_ptr<RH1D> &hist
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Show FitPanel
 
-void ROOT::Experimental::RFitPanel6::Show(const std::string &where)
+void ROOT::Experimental::RFitPanel::Show(const std::string &where)
 {
    GetWindow()->Show(where);
 }
@@ -119,16 +119,16 @@ void ROOT::Experimental::RFitPanel6::Show(const std::string &where)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Hide FitPanel
 
-void ROOT::Experimental::RFitPanel6::Hide()
+void ROOT::Experimental::RFitPanel::Hide()
 {
    if (fWindow)
       fWindow->CloseConnections();
 }
 
-ROOT::Experimental::RFitPanel6Model &ROOT::Experimental::RFitPanel6::model()
+ROOT::Experimental::RFitPanelModel &ROOT::Experimental::RFitPanel::model()
 {
    if (!fModel)
-      fModel = std::make_unique<RFitPanel6Model>();
+      fModel = std::make_unique<RFitPanelModel>();
 
    return *fModel.get();
 }
@@ -137,7 +137,7 @@ ROOT::Experimental::RFitPanel6Model &ROOT::Experimental::RFitPanel6::model()
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Send model object to the client
 
-void ROOT::Experimental::RFitPanel6::SendModel()
+void ROOT::Experimental::RFitPanel::SendModel()
 {
    if (fWindow && (fConnId > 0)) {
       TString json = TBufferJSON::ToJSON(&model());
@@ -149,7 +149,7 @@ void ROOT::Experimental::RFitPanel6::SendModel()
 /// Process data from FitPanel
 /// OpenUI5-based FitPanel sends commands or status changes
 
-void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::string &arg)
+void ROOT::Experimental::RFitPanel::ProcessData(unsigned connid, const std::string &arg)
 {
    if (arg == "CONN_READY") {
       fConnId = connid;
@@ -207,13 +207,13 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Dummy function, called when "Fit" button pressed in UI
-void ROOT::Experimental::RFitPanel6::DrawContour(const std::string &model)
+void ROOT::Experimental::RFitPanel::DrawContour(const std::string &model)
 {
    // FIXME: do not use static!!!
    static TGraph *graph = nullptr;
    std::string options;
    // TBackCompFitter *fFitter = nullptr;
-   auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanel6Model>(model);
+   auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanelModel>(model);
 
    if (!obj->fContourImpose) {
       if (graph) {
@@ -247,10 +247,10 @@ void ROOT::Experimental::RFitPanel6::DrawContour(const std::string &model)
    // obj->fContourPar2, obj->fConfLevel);
 }
 
-void ROOT::Experimental::RFitPanel6::DrawScan(const std::string &model)
+void ROOT::Experimental::RFitPanel::DrawScan(const std::string &model)
 {
 
-   auto obj = TBufferJSON::FromJSON<RFitPanel6Model>(model);
+   auto obj = TBufferJSON::FromJSON<RFitPanelModel>(model);
    static TGraph *graph = nullptr;
    // TBackCompFitter *fFitter = nullptr;
 
@@ -274,7 +274,7 @@ void ROOT::Experimental::RFitPanel6::DrawScan(const std::string &model)
 /// Returns pad where histogram should be drawn
 /// Ensure that histogram is on the first place
 
-TPad *ROOT::Experimental::RFitPanel6::GetDrawPad(TH1 *hist)
+TPad *ROOT::Experimental::RFitPanel::GetDrawPad(TH1 *hist)
 {
    if (fCanvName.empty()) {
       gPad = nullptr;
@@ -306,12 +306,12 @@ TPad *ROOT::Experimental::RFitPanel6::GetDrawPad(TH1 *hist)
 /// return 0 if nothing large changed
 /// return 1 if important selection are changed and client need to be updated
 
-int ROOT::Experimental::RFitPanel6::UpdateModel(const std::string &json)
+int ROOT::Experimental::RFitPanel::UpdateModel(const std::string &json)
 {
-   auto m = TBufferJSON::FromJSON<RFitPanel6Model>(json);
+   auto m = TBufferJSON::FromJSON<RFitPanelModel>(json);
 
    if (!m) {
-      R__ERROR_HERE("webgui") << "Fail to parse JSON for RFitPanel6Model";
+      R__ERROR_HERE("webgui") << "Fail to parse JSON for RFitPanelModel";
       return -1;
    }
 
@@ -340,7 +340,7 @@ int ROOT::Experimental::RFitPanel6::UpdateModel(const std::string &json)
 }
 
 
-void ROOT::Experimental::RFitPanel6::DoFit(const std::string &json)
+void ROOT::Experimental::RFitPanel::DoFit(const std::string &json)
 {
    if (UpdateModel(json) < 0) return;
 
@@ -350,7 +350,7 @@ void ROOT::Experimental::RFitPanel6::DoFit(const std::string &json)
 
    // Fitting Options
    if (gDebug > 0)
-      ::Info("RFitPanel6::DoFit", "range %f %f select %s function %s", m.fRangeX[0], m.fRangeX[1],
+      ::Info("RFitPanel::DoFit", "range %f %f select %s function %s", m.fRangeX[0], m.fRangeX[1],
              m.fSelectedData.c_str(), m.fSelectedFunc.c_str());
 
    if (m.fSelectedFunc.empty())
@@ -375,11 +375,13 @@ void ROOT::Experimental::RFitPanel6::DoFit(const std::string &json)
 
    TH1 *h1 = m.GetSelectedHistogram(fHist);
 
+   TF1 *f1 = m.FindFunction(m.fSelectedFunc, h1);
+
    auto pad = GetDrawPad(h1);
 
    // Assign the options to Fitting function
-   if (h1 && !m.fSelectedFunc.empty() && (m.fSelectedFunc != "none")) {
-      h1->Fit(m.fSelectedFunc.c_str(), opt.c_str(), "*", m.fRangeX[0], m.fRangeX[1]);
+   if (h1 && f1) {
+      h1->Fit(f1, opt.c_str(), "*", m.fRangeX[0], m.fRangeX[1]);
 
       if (pad) pad->Update();
 
