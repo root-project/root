@@ -23,7 +23,7 @@ sap.ui.define([
          var opText = this.getView().byId("OperationText");
          var data = {
                //fDataSet:[ { fId:"1", fSet: "----" } ],
-               fSelectDataId: "2",
+               fSelectedData: "2",
                // fMinRange: -4,
                // fMaxRange: 4,
                fStep: 0.01,
@@ -48,8 +48,8 @@ sap.ui.define([
 
          if(msg.startsWith("MODEL:")){
             var data = JSROOT.parse(msg.substr(6));
+
             if(data) {
-               data.fFuncList = data.fFuncListAll[parseInt(data.fSelectTypeFunc)];
                data.fMethodMin = data.fMethodMinAll[parseInt(data.fLibrary)];
 
                this.getView().setModel(new JSONModel(data));
@@ -60,6 +60,14 @@ sap.ui.define([
 
             this.refresh();
          }
+      },
+
+      sendModel: function(prefix) {
+         if (!prefix || (typeof prefix!="string"))
+            prefix = "UPDATE:";
+
+         if (this.websocket)
+            this.websocket.Send(prefix + this.getView().getModel().getJSON());
       },
 
       //Fitting Button
@@ -83,31 +91,25 @@ sap.ui.define([
          this.refresh();
          //Each time we click the button, we keep the current state of the model
 
-         // TODO: skip "fMethodMin" and "fFuncList" from output object
+         // TODO: skip "fMethodMin" from output object
          // Requires changes in JSROOT.toJSON(), can be done after REVE-selection commit
 
-         if (this.websocket)
-            this.websocket.Send('DOFIT:'+this.getView().getModel().getJSON());
-
+         this.sendModel("DOFIT:");
       },
 
       onPanelExit: function(){
-
       },
 
-      /** Returns selected function name */
-      getSelectedFunc: function() {
-         return this.data().fSelectedFunc;
+      // when selected data is changing - cause update of complete model
+      onSelectedDataChange: function() {
+         this.sendModel();
       },
 
       //Change the input text field. When a function is seleced, it appears on the text input field and
       //on the text area.
-      onSelectedFuncChange: function(){
+      onSelectedFuncChange: function() {
 
-         var func = this.getSelectedFunc();
-
-         this.data().fFuncChange = func; // FIXME: seems to be, not required
-         this.refresh();
+         var func = this.data().fSelectedFunc;
 
          if (this.websocket && func)
             this.websocket.Send("GETPARS:" + func);
@@ -118,12 +120,6 @@ sap.ui.define([
          this.byId("selectedOpText").setText(func);
       },
 
-      operationTextChange: function(oEvent) {
-         var newValue = oEvent.getParameter("value");
-         this.byId("selectedOpText").setText(newValue);
-      },
-
-
       //change the combo box in Minimization Tab --- Method depending on Radio Buttons values
       selectRB: function(){
 
@@ -133,19 +129,6 @@ sap.ui.define([
          data.fMethodMin = data.fMethodMinAll[parseInt(data.fLibrary)];
 
          // refresh all UI elements
-         this.refresh();
-      },
-
-      //Change the combobox in Type Function
-      //When the Type (TypeFunc) is changed (Predef etc) then the combobox with the funtions (TypeXY),
-      //is also changed
-      selectTypeFunc: function(){
-
-         var data = this.data();
-
-         // console.log("Func Type = " + data.fSelectTypeFunc);
-         data.fFuncList = data.fFuncListAll[parseInt(data.fSelectTypeFunc)];
-
          this.refresh();
       },
 

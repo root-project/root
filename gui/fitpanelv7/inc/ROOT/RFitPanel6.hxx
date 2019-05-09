@@ -45,6 +45,8 @@ class RFitPanel6 {
    /// process data from UI
    void ProcessData(unsigned connid, const std::string &arg);
 
+   int UpdateModel(const std::string &json);
+
    void DoFit(const std::string &model);
 
    void DrawContour(const std::string &model);

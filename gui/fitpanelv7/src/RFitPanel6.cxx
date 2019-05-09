@@ -135,8 +135,15 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
       SendModel();
 
    } else if (arg == "CONN_CLOSED") {
+
       printf("FitPanel connection closed\n");
       fConnId = 0;
+
+   } else if (arg.compare(0, 7, "UPDATE:") == 0) {
+
+      if (UpdateModel(arg.substr(7)) > 0)
+         SendModel();
+
    } else if (arg.compare(0, 6, "DOFIT:") == 0) {
 
       DoFit(arg.substr(6));
@@ -148,21 +155,11 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
       DrawScan(arg.substr(8));
    } else if (arg.compare(0, 8, "GETPARS:") == 0) {
 
-      auto &info = model().fFuncPars;
+      auto &m = model();
 
-      info.Clear();
+      m.SelectFunc(arg.substr(8), m.GetSelectedHistogram(fHist));
 
-      info.name = arg.substr(8);
-
-      TF1 *func = model().FindFunction(info.name, fHist);
-
-      if (func) {
-         info.GetParameters(func);
-      } else {
-         info.name = "<not exists>";
-      }
-
-      TString json = TBufferJSON::ToJSON(&info);
+      TString json = TBufferJSON::ToJSON(&m.fFuncPars);
       fWindow->Send(fConnId, "PARS:"s + json.Data());
 
    } else if (arg.compare(0, 8, "SETPARS:") == 0) {
@@ -297,18 +294,46 @@ TPad *ROOT::Experimental::RFitPanel6::GetDrawPad(TH1 *hist)
    return canv;
 }
 
+////////////////////////////////////////////
+/// Update fit model
+/// returns -1 if JSON fails
+/// return 0 if nothing large changed
+/// return 1 if important selection are changed and client need to be updated
+
+int ROOT::Experimental::RFitPanel6::UpdateModel(const std::string &json)
+{
+   // printf("DoFit %s\n", model.c_str());
+   auto m = TBufferJSON::FromJSON<RFitPanel6Model>(json);
+
+   if (!m) {
+      R__ERROR_HERE("webgui") << "Fail to parse JSON for RFitPanel6Model";
+      return -1;
+   }
+
+   int res = 0; // nothing changed
+
+   auto selected = m->GetSelectedHistogram(fHist);
+
+   if (model().fSelectedFunc != m->fSelectedFunc) {
+      res = 1;
+      m->SelectFunc(m->fSelectedFunc, selected);
+   }
+
+   if (model().fSelectedData != m->fSelectedData) {
+      res = 1;
+      m->UpdateFuncList(selected);
+      m->UpdateAdvanced(selected);
+   }
+
+   std::swap(fModel, m); // finally replace model
+
+   return res;
+}
+
 
 void ROOT::Experimental::RFitPanel6::DoFit(const std::string &json)
 {
-   // printf("DoFit %s\n", model.c_str());
-   auto obj = TBufferJSON::FromJSON<RFitPanel6Model>(json);
-
-   if (!obj) {
-      R__ERROR_HERE("webgui") << "Fail to parse JSON for RFitPanel6Model";
-      return;
-   }
-
-   std::swap(fModel, obj);
+   if (UpdateModel(json) < 0) return;
 
    auto &m = model();
 
@@ -317,7 +342,7 @@ void ROOT::Experimental::RFitPanel6::DoFit(const std::string &json)
    // Fitting Options
    if (gDebug > 0)
       ::Info("RFitPanel6::DoFit", "range %f %f select %s function %s", m.fUpdateRange[0], m.fUpdateRange[1],
-             m.fSelectDataId.c_str(), m.fSelectedFunc.c_str());
+             m.fSelectedData.c_str(), m.fSelectedFunc.c_str());
 
    if (m.fSelectedFunc.empty())
       m.fSelectedFunc = "gaus";
@@ -349,7 +374,7 @@ void ROOT::Experimental::RFitPanel6::DoFit(const std::string &json)
       if (pad) pad->Update();
 
       m.UpdateAdvanced(h1);
-
-      SendModel(); // provide client with latest changes
    }
+
+   SendModel(); // provide client with latest changes
 }
