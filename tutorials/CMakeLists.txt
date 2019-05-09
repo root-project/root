@@ -440,22 +440,14 @@ if(ROOT_python_FOUND)
                  tutorial-dataframe-df017_vecOpsHEP-py
                  tutorial-dataframe-df026_AsNumpyArrays-py
                  tutorial-dataframe-df102_NanoAODDimuonAnalysis-py
-                 tutorial-hist-fillrandom-py
                  tutorial-math-Legendre-py
                  tutorial-math-tStudent-py
                  tutorial-pyroot-benchmarks-py
-                 tutorial-pyroot-fillrandom-py
                  tutorial-pyroot-geometry-py
-                 tutorial-pyroot-h1draw-py
-                 tutorial-pyroot-hsimple-py
-                 tutorial-pyroot-hsum-py
                  tutorial-pyroot-na49view-py
-                 tutorial-pyroot-ntuple1-py
                  tutorial-pyroot-pyroot002_TTreeAsMatrix-py
-                 tutorial-pyroot-ratioplot-py
                  tutorial-pyroot-shapes-py
                  tutorial-pyroot-staff-py
-                 tutorial-pyroot-tornado-py
                  tutorial-roofit-rf106_plotdecoration-py
                  tutorial-roofit-rf315_projectpdf-py
                  tutorial-roofit-rf402_datahandling-py
@@ -465,9 +457,7 @@ if(ROOT_python_FOUND)
 
   if(${PYTHON_VERSION_MAJOR} GREATER_EQUAL 3)
     # These tests only fail in Py3 with PyROOT experimental
-    list(APPEND pyexp_fail tutorial-pyroot-surfaces-py)
-    list(APPEND pyexp_fail tutorial-pyroot-zdemo-py)
-    list(APPEND pyexp_fail tutorial-pyroot-first-py)
+    list(APPEND pyexp_fail tutorial-pyroot-hsimple-py)
   endif()
 
   foreach(t ${pytutorials})
