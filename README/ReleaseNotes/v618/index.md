@@ -12,30 +12,40 @@ For more information, see:
 
 The following people have contributed to this new version:
 
+ Kim Albertsson, CERN/ATLAS,\
+ Guilherme Amadio, CERN/SFT,\
  Bertrand Bellenot, CERN/SFT,\
+ Iliana Betsou, CERN/SFT,\
+ Jakob Blomer, CERN/SFT,\
  Brian Bockelman, Nebraska,\
  Rene Brun, CERN/SFT,\
  Philippe Canal, FNAL,\
- Javier Cervantes Villanueva, CERN/SFT \
+ Javier Cervantes Villanueva, CERN/SFT,\
  Olivier Couet, CERN/SFT,\
  Alexandra Dobrescu, CERN/SFT,\
+ Giulio Eulisse, CERN/ALICE,\
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
+ Enrico Guiraud, CERN/SFT,\
  Stephan Hageboeck, CERN/SFT,\
  Jan Knedlik, GSI,\
  Sergey Linev, GSI,\
  Pere Mato, CERN/SFT,\
  Lorenzo Moneta, CERN/SFT,\
+ Alja Mrak-Tadel, UCSD/CMS,\
  Axel Naumann, CERN/SFT,\
  Vincenzo Eduardo Padulano, Bicocca/SFT,
  Danilo Piparo, CERN/SFT,\
  Fons Rademakers, CERN/SFT,\
+ Henry Schreiner, Princeton,\
  Oksana Shadura, Nebraska,\
+ Simon Spies, GSI,\
+ Yuka Takahashi, Princeton and CERN/SFT,\
  Enric Tejedor Saavedra, CERN/SFT,\
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/Atlas,\
- Zhe Zhang, Nebraska, \
+ Zhe Zhang, Nebraska,\
  Stefan Wunsch, CERN/SFT
 
 
