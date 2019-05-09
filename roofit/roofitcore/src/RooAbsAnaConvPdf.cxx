@@ -79,7 +79,6 @@
 using namespace std;
 
 ClassImp(RooAbsAnaConvPdf); 
-;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -246,6 +245,9 @@ Bool_t RooAbsAnaConvPdf::changeModel(const RooResolutionModel& newModel)
   // Replace old convolutions with new set
   _convSet.removeAll() ;
   _convSet.addOwned(newConvSet) ;
+
+  // Update server link by hand, since _model.setArg() below will not do this
+  replaceServer((RooAbsArg&)_model.arg(),(RooAbsArg&)newModel,kFALSE,kFALSE) ;
 
   _model.setArg((RooResolutionModel&)newModel) ;
   return kFALSE ;
