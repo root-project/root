@@ -105,11 +105,6 @@ std::unique_ptr<TTreeReader> TTreeView::MakeReader(Long64_t start, Long64_t end)
    return reader;
 }
 
-TTreeView::TTreeView() {}
-
-// no-op, we don't want to copy the local TChains
-TTreeView::TTreeView(const TTreeView &) {}
-
 //////////////////////////////////////////////////////////////////////////
 /// Get a TTreeReader for the current tree of this view.
 TTreeView::TreeReaderEntryListPair
