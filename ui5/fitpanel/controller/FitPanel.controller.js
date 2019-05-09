@@ -22,13 +22,19 @@ sap.ui.define([
          this.inputId = "";
          var opText = this.getView().byId("OperationText");
          var data = {
-               //fDataSet:[ { fId:"1", fSet: "----" } ],
-               fSelectedData: "2",
-               // fMinRange: -4,
-               // fMaxRange: 4,
-               fStep: 0.01,
-               fRange: [-4,4],
-               fUpdateRange: [-4,4]
+               fDataSet:[ { fId:"1", fSet: "----" } ],
+               fSelectedData: "1",
+               fMinRangeX: -1,
+               fShowRangeX: false,
+               fMaxRangeX: 1,
+               fStepX: 0.1,
+               fRangeX: [-1,1],
+               fShowRangeY: false,
+               fMinRangeY: -1,
+               fMaxRangeY: 1,
+               fStepY: 0.1,
+               fRangeY: [-1,1]
+
          };
          this.getView().setModel(new JSONModel(data));
       },
@@ -40,7 +46,22 @@ sap.ui.define([
 
       // cause refresh of complete fit panel
       refresh: function() {
+         this.doing_refresh = true;
          this.getView().getModel().refresh();
+         this.doing_refresh = false;
+      },
+
+      sendModel: function(prefix) {
+         if (!prefix || (typeof prefix!="string")) {
+            // this is protection against infinite loop
+            // may happen if by refresh of model any callbacks are activated and trying update server side
+            // this should be prevented
+            if (this.doing_refresh) return;
+            prefix = "UPDATE:";
+         }
+
+         if (this.websocket)
+            this.websocket.Send(prefix + this.getView().getModel().getJSON());
       },
 
       // Assign the new JSONModel to data
@@ -60,14 +81,6 @@ sap.ui.define([
 
             this.refresh();
          }
-      },
-
-      sendModel: function(prefix) {
-         if (!prefix || (typeof prefix!="string"))
-            prefix = "UPDATE:";
-
-         if (this.websocket)
-            this.websocket.Send(prefix + this.getView().getModel().getJSON());
       },
 
       //Fitting Button
@@ -187,17 +200,6 @@ sap.ui.define([
 
          if (this.websocket)
             this.websocket.Send("SETPARS:" + json);
-      },
-
-
-      updateRange: function() {
-         var data = this.data();
-         var range = this.getView().byId("Slider").getRange();
-         console.log("Slider " + range);
-
-         //We pass the values from range array in JS to C++ fRange array
-         data.fUpdateRange[0] = range[0];
-         data.fUpdateRange[1] = range[1];
       },
 
       colorPickerContour: function (oEvent) {

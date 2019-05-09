@@ -132,31 +132,41 @@ bool ROOT::Experimental::RFitPanel6Model::SelectHistogram(const std::string &hna
 
    UpdateRange(selected);
 
-   UpdateFuncList(selected);
+   auto *hfunc = UpdateFuncList(selected);
 
-   UpdateAdvanced(selected);
+   UpdateAdvanced(hfunc);
 
    return selected != nullptr;
 }
 
 void ROOT::Experimental::RFitPanel6Model::UpdateRange(TH1 *hist)
 {
+   fShowRangeX = false;
+   fShowRangeY = false;
+   fMinRangeX = 0.;
+   fMaxRangeX = 100.;
+   fMinRangeY = 0.;
+   fMaxRangeY = 100.;
+
    if (hist) {
-      fUpdateMinRange = fMinRange = hist->GetXaxis()->GetXmin();
-      fUpdateMaxRange = fMaxRange = hist->GetXaxis()->GetXmax();
-   } else {
-      fUpdateMinRange = fMinRange = 0.;
-      fUpdateMaxRange = fMaxRange = 100.;
+      fShowRangeX = true;
+      fMinRangeX = hist->GetXaxis()->GetXmin();
+      fMaxRangeX = hist->GetXaxis()->GetXmax();
+      if (hist->GetDimension() > 1) {
+         fShowRangeY = true;
+         fMinRangeY = hist->GetYaxis()->GetXmin();
+         fMaxRangeY = hist->GetYaxis()->GetXmax();
+      }
    }
 
    // defined values
-   fStep = (fMaxRange - fMinRange) / 100;
-   fRange[0] = fMinRange;
-   fRange[1] = fMaxRange;
+   fStepX = (fMaxRangeX - fMinRangeX) / 100;
+   fRangeX[0] = fMinRangeX;
+   fRangeX[1] = fMaxRangeX;
 
-   fUpdateRange[0] = fUpdateMinRange;
-   fUpdateRange[1] = fUpdateMaxRange;
-
+   fStepY = (fMaxRangeY - fMinRangeY) / 100;
+   fRangeY[0] = fMinRangeY;
+   fRangeY[1] = fMaxRangeY;
 }
 
 bool ROOT::Experimental::RFitPanel6Model::SelectFunc(const std::string &name, TH1 *hist)
@@ -178,7 +188,7 @@ bool ROOT::Experimental::RFitPanel6Model::SelectFunc(const std::string &name, TH
 }
 
 
-void ROOT::Experimental::RFitPanel6Model::UpdateFuncList(TH1 *hist)
+TF1 *ROOT::Experimental::RFitPanel6Model::UpdateFuncList(TH1 *hist, bool select_hist_func)
 {
    int ndim = hist ? hist->GetDimension() : 1;
 
@@ -195,7 +205,24 @@ void ROOT::Experimental::RFitPanel6Model::UpdateFuncList(TH1 *hist)
          fFuncList.emplace_back(f1->GetName(), f1->IsLinear());
    }
 
+   TF1 *hfunc = nullptr;
+   if (hist) {
+      TObject *obj = nullptr;
+      TIter hiter(hist->GetListOfFunctions());
+      while ((obj = hiter()) != nullptr) {
+         hfunc = dynamic_cast<TF1*> (obj);
+         if (hfunc) break;
+      }
+   }
+
+   if (hfunc) {
+      fFuncList.emplace_back("hist::"s + hfunc->GetName(), hfunc->IsLinear());
+      if (select_hist_func) fSelectedFunc = "hist::"s + hfunc->GetName();
+   }
+
    fFuncList.emplace_back("user");
+
+   return hfunc;
 }
 
 
@@ -207,7 +234,7 @@ void ROOT::Experimental::RFitPanel6Model::Initialize()
    // build list of available functions
 
    // Sub ComboBox for Type Function
-   fSelectedFunc = "gaus";
+   fSelectedFunc = "";
    UpdateFuncList();
 
    // corresponds when Type == User Func (fSelectedTypeID == 1)
@@ -279,21 +306,10 @@ TF1 *ROOT::Experimental::RFitPanel6Model::FindFunction(const std::string &funcna
 }
 
 
-/// Update advanced parameters associated with histogram
-/// These appears when histogram has fit function inside
+/// Update advanced parameters associated with fit function for histogram
 
-void ROOT::Experimental::RFitPanel6Model::UpdateAdvanced(TH1 *hist)
+void ROOT::Experimental::RFitPanel6Model::UpdateAdvanced(TF1 *func)
 {
-   TF1 *func = nullptr;
-   if (hist) {
-      TObject *obj = nullptr;
-      TIter iter(hist->GetListOfFunctions());
-      while ((obj = iter()) != nullptr) {
-         func = dynamic_cast<TF1*> (obj);
-         if (func) break;
-      }
-   }
-
    fContour1.clear();
    fContour2.clear();
    fScan.clear();
@@ -312,7 +328,7 @@ void ROOT::Experimental::RFitPanel6Model::UpdateAdvanced(TH1 *hist)
       fFuncPars.GetParameters(func); // take func parameters
       fFuncPars.name = "hist::"s + func->GetName(); // clearly mark this as function from histogram
    } else {
-      fFuncPars.Clear();
+      // fFuncPars.Clear();
    }
 }
 
