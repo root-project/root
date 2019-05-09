@@ -67,13 +67,16 @@ struct RFitFuncParsList {
 };
 
 
-// Structure for the main fit panel model
+/** Data structure for the fit panel */
+
 struct RFitPanel6Model {
-   std::vector<RComboBoxItem> fDataSet;
-   std::string fSelectedData;
+
+   std::vector<RComboBoxItem> fDataSet;     ///< list of available data sources
+   std::string fSelectedData;               ///< selected data
+   std::vector<RFitFuncInfo>   fFuncList;   ///< all available fit functions
+   std::string fSelectedFunc;               ///< name of selected fit function
    std::vector<RComboBoxItem> fMethod;
    std::string fSelectMethodId;
-   std::string fRealFunc;                    ///< name of the fit function
    std::string fMinLibrary;
 
    // all combo items for all methods
@@ -81,18 +84,22 @@ struct RFitPanel6Model {
    // Minimization Tab
    std::vector<std::vector<RComboBoxItem>> fMethodMinAll;
 
-   std::vector<RFitFuncInfo>   fFuncList;   ///< all available fit functions
-   std::string fSelectedFunc;                  ///< name of selected fit function
 
    std::string fSelectMethodMinId;
 
-   float fUpdateMinRange{0};
-   float fUpdateMaxRange{1};
-   float fMinRange{0};
-   float fMaxRange{1};
-   float fStep{0.1};
-   float fRange[2];
-   float fUpdateRange[2];
+   // range selection
+   bool fShowRangeX{true};
+   float fMinRangeX{0};
+   float fMaxRangeX{1};
+   float fStepX{0.01};
+   float fRangeX[2] = {0,1};
+
+   bool fShowRangeY{false};
+   float fMinRangeY{0};
+   float fMaxRangeY{1};
+   float fStepY{0.01};
+   float fRangeY[2] = {0,1};
+
    // float fOperation{0};
    float fFitOptions{0};
    bool fLinear{false};
@@ -158,9 +165,9 @@ struct RFitPanel6Model {
 
    void UpdateRange(TH1 *hist);
 
-   void UpdateAdvanced(TH1 *hist);
+   void UpdateAdvanced(TF1 *func);
 
-   void UpdateFuncList(TH1 *hist = nullptr);
+   TF1 *UpdateFuncList(TH1 *hist = nullptr, bool select_hist_func = false);
 
    bool IsSelectedHistogram() const { return !fSelectedData.empty(); }
 
