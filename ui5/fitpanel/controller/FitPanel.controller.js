@@ -39,7 +39,7 @@ sap.ui.define([
          this.getView().setModel(new JSONModel(data));
       },
 
-      // returns actual model object of class RFitPanel6Model
+      // returns actual model object of class RFitPanelModel
       data: function() {
         return this.getView().getModel().getData();
       },

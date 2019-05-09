@@ -1,4 +1,4 @@
-// \file ROOT/RFitPanel6Model.hxx
+// \file ROOT/RFitPanelModel.hxx
 /// \ingroup WebGui ROOT7
 /// \author Sergey Linev <S.Linev@gsi.de>
 /// \author Iliana Betsou <Iliana.Betsou@cern.ch>
@@ -14,8 +14,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_RFitPanel6Model
-#define ROOT_RFitPanel6Model
+#ifndef ROOT_RFitPanelModel
+#define ROOT_RFitPanelModel
 
 #include <vector>
 #include <string>
@@ -69,7 +69,7 @@ struct RFitFuncParsList {
 
 /** Data structure for the fit panel */
 
-struct RFitPanel6Model {
+struct RFitPanelModel {
 
    std::string fTitle;                      ///< title of the fit panel
 
@@ -157,7 +157,7 @@ struct RFitPanel6Model {
    int fScanMin{0};
    int fScanMax{0};
 
-   RFitPanel6Model() { Initialize(); }
+   RFitPanelModel() { Initialize(); }
 
    void Initialize();
 

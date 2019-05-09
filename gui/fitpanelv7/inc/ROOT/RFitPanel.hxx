@@ -1,4 +1,4 @@
-// \file ROOT/RFitPanel6.hxx
+// \file ROOT/RFitPanel.hxx
 /// \ingroup WebGui ROOT7
 /// \author Sergey Linev <S.Linev@gsi.de>
 /// \author Iliana Betsou <Iliana.Betsou@cern.ch>
@@ -14,12 +14,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_RFitPanel6
-#define ROOT_RFitPanel6
+#ifndef ROOT_RFitPanel
+#define ROOT_RFitPanel
 
 #include <ROOT/RWebWindow.hxx>
 
-#include <ROOT/RFitPanel6Model.hxx>
+#include <ROOT/RFitPanelModel.hxx>
 
 #include <ROOT/RCanvas.hxx>
 
@@ -34,9 +34,9 @@ class TH1;
 namespace ROOT {
 namespace Experimental {
 
-class RFitPanel6 {
+class RFitPanel {
 
-   std::unique_ptr<RFitPanel6Model> fModel;
+   std::unique_ptr<RFitPanelModel> fModel;
 
    TH1 *fHist{nullptr};              ///<! explicit histogram used for fitting
    std::string fCanvName{"c1"};      ///<! v6 canvas name used to display fit, will be created if not exists
@@ -58,7 +58,7 @@ class RFitPanel6 {
 
    void DrawScan(const std::string &model);
 
-   RFitPanel6Model &model();
+   RFitPanelModel &model();
 
    TPad *GetDrawPad(TH1 *hist);
 
@@ -66,7 +66,7 @@ class RFitPanel6 {
 
 public:
    /// normal constructor
-   RFitPanel6(const std::string &title = "Fit panel");
+   RFitPanel(const std::string &title = "Fit panel");
 
    // method required when any panel want to be inserted into the RCanvas
    std::shared_ptr<RWebWindow> GetWindow();
