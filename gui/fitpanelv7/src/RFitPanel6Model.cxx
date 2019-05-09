@@ -84,10 +84,10 @@ void ROOT::Experimental::RFitFuncParsList::SetParameters(TF1 *func)
 
 TH1* ROOT::Experimental::RFitPanel6Model::GetSelectedHistogram(TH1 *hist)
 {
-   if (fSelectDataId == "__hist__") return hist;
-   if ((fSelectDataId.compare(0,6,"gdir::") != 0) || !gDirectory) return nullptr;
+   if (fSelectedData == "__hist__") return hist;
+   if ((fSelectedData.compare(0,6,"gdir::") != 0) || !gDirectory) return nullptr;
 
-   std::string hname = fSelectDataId.substr(6);
+   std::string hname = fSelectedData.substr(6);
 
    return dynamic_cast<TH1*> (gDirectory->GetList()->FindObject(hname.c_str()));
 }
@@ -97,6 +97,7 @@ TH1* ROOT::Experimental::RFitPanel6Model::GetSelectedHistogram(TH1 *hist)
 
 bool ROOT::Experimental::RFitPanel6Model::SelectHistogram(const std::string &hname, TH1 *hist)
 {
+
    std::string histid;
 
    fDataSet.clear();
@@ -127,11 +128,22 @@ bool ROOT::Experimental::RFitPanel6Model::SelectHistogram(const std::string &hna
       fDataSet.emplace_back(histid, Form("%s::%s", hist->ClassName(), hist->GetName()));
    }
 
-   fSelectDataId = histid;
+   fSelectedData = histid;
 
-   if (selected) {
-      fUpdateMinRange = fMinRange = selected->GetXaxis()->GetXmin();
-      fUpdateMaxRange = fMaxRange = selected->GetXaxis()->GetXmax();
+   UpdateRange(selected);
+
+   UpdateFuncList(selected);
+
+   UpdateAdvanced(selected);
+
+   return selected != nullptr;
+}
+
+void ROOT::Experimental::RFitPanel6Model::UpdateRange(TH1 *hist)
+{
+   if (hist) {
+      fUpdateMinRange = fMinRange = hist->GetXaxis()->GetXmin();
+      fUpdateMaxRange = fMaxRange = hist->GetXaxis()->GetXmax();
    } else {
       fUpdateMinRange = fMinRange = 0.;
       fUpdateMaxRange = fMaxRange = 100.;
@@ -145,52 +157,60 @@ bool ROOT::Experimental::RFitPanel6Model::SelectHistogram(const std::string &hna
    fUpdateRange[0] = fUpdateMinRange;
    fUpdateRange[1] = fUpdateMaxRange;
 
-   UpdateAdvanced(selected);
+}
 
-   return selected != nullptr;
+bool ROOT::Experimental::RFitPanel6Model::SelectFunc(const std::string &name, TH1 *hist)
+{
+   fSelectedFunc = name;
+
+   fFuncPars.Clear();
+
+   TF1 *func = FindFunction(name, hist);
+
+   if (func) {
+      fFuncPars.name = name;
+      fFuncPars.GetParameters(func);
+   } else {
+      fFuncPars.name = "<not exists>";
+   }
+
+   return func != nullptr;
+}
+
+
+void ROOT::Experimental::RFitPanel6Model::UpdateFuncList(TH1 *hist)
+{
+   int ndim = hist ? hist->GetDimension() : 1;
+
+   fFuncList.clear();
+
+   TIter iter(gROOT->GetListOfFunctions());
+   TObject *func = nullptr;
+   while ((func = iter()) != nullptr) {
+      TF1 *f1 = dynamic_cast<TF1 *>(func);
+      if (!f1) continue;
+      TF2 *f2 = dynamic_cast<TF2 *>(f1);
+
+      if (((ndim==2) && f2) || ((ndim==1) && !f2))
+         fFuncList.emplace_back(f1->GetName(), f1->IsLinear());
+   }
+
+   fFuncList.emplace_back("user");
 }
 
 
 void ROOT::Experimental::RFitPanel6Model::Initialize()
 {
    // build list of available histograms, as id use name from gdir
-   fSelectDataId = "";
+   fSelectedData = "";
 
    // build list of available functions
 
-   // ComboBox for Fit Function --- Type
-   fTypeFunc.emplace_back("0", "Predef-1D");
-   fTypeFunc.emplace_back("1", "Predef-2D");
-   fTypeFunc.emplace_back("2", "User");
-   fSelectTypeFunc = "0";
-
    // Sub ComboBox for Type Function
    fSelectedFunc = "gaus";
-
-   // corresponds when Type == Predef-1D (fSelectedTypeID == 0)
-   fFuncListAll.emplace_back();
-   fFuncListAll.emplace_back();
-
-   auto &vec1d = fFuncListAll[0]; // for 1D histograms
-   auto &vec2d = fFuncListAll[1]; // for 2D histograms
-
-   TIter iter(gROOT->GetListOfFunctions());
-   TObject *func = nullptr;
-   while ((func = iter()) != nullptr) {
-      if (dynamic_cast<TF2 *>(func))
-         vec2d.emplace_back(func->GetName(), (dynamic_cast<TF2 *>(func))->IsLinear());
-      else if (dynamic_cast<TF1 *>(func))
-         vec1d.emplace_back(func->GetName(), (dynamic_cast<TF1 *>(func))->IsLinear());
-   }
-   if (vec1d.empty()) vec1d.emplace_back("none");
-   if (vec2d.empty()) vec2d.emplace_back("none");
-
-   //std::sort(vec1d.begin(), vec1d.end());
-   //std::sort(vec2d.begin(), vec2d.end());
+   UpdateFuncList();
 
    // corresponds when Type == User Func (fSelectedTypeID == 1)
-   fFuncListAll.emplace_back();
-   fFuncListAll.back().emplace_back("user");
 
    // ComboBox for General Tab --- Method
    fMethod.emplace_back("1", "Linear Chi-square");
@@ -245,12 +265,6 @@ void ROOT::Experimental::RFitPanel6Model::Initialize()
    } else {
       fNoDrawing = false;
    }
-
-   if ((fFuncChangeInt >= 6) && (fFuncChangeInt <= 15)) {
-      fLinear = true;
-   } else {
-      fLinear = false;
-   }
 }
 
 TF1 *ROOT::Experimental::RFitPanel6Model::FindFunction(const std::string &funcname, TH1 *hist)
@@ -263,7 +277,6 @@ TF1 *ROOT::Experimental::RFitPanel6Model::FindFunction(const std::string &funcna
 
    return dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(funcname.c_str()));
 }
-
 
 
 /// Update advanced parameters associated with histogram
