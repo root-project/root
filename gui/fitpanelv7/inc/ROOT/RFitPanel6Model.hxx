@@ -70,11 +70,10 @@ struct RFitFuncParsList {
 // Structure for the main fit panel model
 struct RFitPanel6Model {
    std::vector<RComboBoxItem> fDataSet;
-   std::string fSelectDataId;
+   std::string fSelectedData;
    std::vector<RComboBoxItem> fMethod;
    std::string fSelectMethodId;
    std::string fRealFunc;                    ///< name of the fit function
-   std::string fFuncChange;
    std::string fMinLibrary;
 
    // all combo items for all methods
@@ -82,10 +81,8 @@ struct RFitPanel6Model {
    // Minimization Tab
    std::vector<std::vector<RComboBoxItem>> fMethodMinAll;
 
-   std::vector<RComboBoxItem> fTypeFunc;                  ///< provided type of functions - 1D/2D/User ...
-   std::string fSelectTypeFunc;                           ///< index (in string) of selected list of functions
-   std::vector<std::vector<RFitFuncInfo>> fFuncListAll;   ///< all kind of fit functions
-   std::string fSelectedFunc;                             ///< name of selected fit function
+   std::vector<RFitFuncInfo>   fFuncList;   ///< all available fit functions
+   std::string fSelectedFunc;                  ///< name of selected fit function
 
    std::string fSelectMethodMinId;
 
@@ -108,7 +105,6 @@ struct RFitPanel6Model {
 
    // convert fSelectTypeID from string to int
    int fTypeId{0};
-   int fFuncChangeInt{0};
 
    // Checkboxes Options
    bool fIntegral{false};
@@ -158,9 +154,15 @@ struct RFitPanel6Model {
 
    bool SelectHistogram(const std::string &hname, TH1 *hist);
 
+   bool SelectFunc(const std::string &name, TH1 *hist);
+
+   void UpdateRange(TH1 *hist);
+
    void UpdateAdvanced(TH1 *hist);
 
-   bool IsSelectedHistogram() const { return !fSelectDataId.empty(); }
+   void UpdateFuncList(TH1 *hist = nullptr);
+
+   bool IsSelectedHistogram() const { return !fSelectedData.empty(); }
 
    TH1* GetSelectedHistogram(TH1 *hist = nullptr);
 

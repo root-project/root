@@ -46,7 +46,7 @@ struct RFitPanelComboBoxItem {
 
 struct RFitPanelModel {
    std::vector<RFitPanelComboBoxItem> fDataNames;
-   std::string fSelectDataId;
+   std::string fSelectedData;
    std::vector<RFitPanelComboBoxItem> fModelNames;
    std::string fSelectModelId;
    RFitPanelModel() = default;

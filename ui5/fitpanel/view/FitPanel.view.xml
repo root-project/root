@@ -3,39 +3,22 @@
    xmlns:l="sap.ui.layout" controllerName="rootui5.fitpanel.controller.FitPanel">
    <Page id="simplefitpanel_page" title="Simple Fit Panel" showHeader="false">
       <VBox class="sapUiSizeCompact sapUiSmallMarginStart" width="100%">
-         <HBox alignItems="Center">
-            <Label text="Data Set:" labelFor="DataSet"
-               class="sapUiSmallMarginBeginEnd" />
-            <ComboBox id="DataSet" selectedKey="{/fSelectDataId}"
+         <l:Grid class="sapUiSizeCompact" defaultSpan="XL6 L6 M6 S6"  hSpacing="0.5" vSpacing="0">
+           <Text text="Data Set:"/>
+           <ComboBox id="DataSet" class="sapUiSmallMarginBeginEnd"
+               selectedKey="{/fSelectedData}"
                items="{ path: '/fDataSet', sorter: { path: 'fSet' } }"
-               class="sapUiSmallMarginBeginEnd">
+               change="onSelectedDataChange">
                <core:Item key="{fId}" text="{fSet}" />
-            </ComboBox>
-         </HBox>
-         <HBox alignItems="Center">
-            <Label text="Func:" labelFor="TypeFunc"
-               class="sapUiSmallMarginBeginEnd" />
-            <ComboBox id="TypeFunc" class="sapUiSmallMarginBeginEnd"
-               selectedKey="{/fSelectTypeFunc}"
-               items="{ path: '/fTypeFunc', sorter: { path: 'fFunc' } }"
-               change="selectTypeFunc">
-               <core:Item key="{fId}" text="{fSet}" />
-            </ComboBox>
-            <ComboBox id="selectedFuncCombo" class="sapUiSmallMarginBeginEnd"
+           </ComboBox>
+           <Text text="Function:"/>
+           <ComboBox id="selectedFuncCombo" class="sapUiSmallMarginBeginEnd"
                selectedKey="{/fSelectedFunc}"
                items="{ path: '/fFuncList', sorter: { path: 'name' } }"
                change="onSelectedFuncChange">
                <core:Item key="{name}" text="{name}" />
-            </ComboBox>
-         </HBox>
-         <HBox alignItems="Center">
-            <Label text="Selected " labelFor="OperationText"
-               class="sapUiSmallMarginBeginEnd" />
-            <Input id="OperationText" value="" valueLiveUpdate="{/fOpTextUpdate}"
-               liveChange="operationTextChange" class="sapUiSmallMarginBeginEnd" />
-            <Label id="selectedOpText" text="gaus"
-               class="sapUiSmallMarginBeginEnd" />
-         </HBox>
+           </ComboBox>
+         </l:Grid>
          <IconTabBar id="Gen-Min" headerMode="Inline">
             <items>
                <IconTabFilter text="General">
@@ -131,8 +114,7 @@
                         <core:Item key="{fId}" text="{fSet}" />
                      </ComboBox>
                      <Title level="H3" text="Settings" />
-                     <l:Grid class="sapUiSizeCompact" hSpacing="0.5"
-                        vSpacing="0">
+                     <l:Grid class="sapUiSizeCompact" hSpacing="0.5" vSpacing="0">
                         <Text
                            text="Use ENTER key to validate a new value or click on Reset button to set the defaults.">
                            <layoutData>
