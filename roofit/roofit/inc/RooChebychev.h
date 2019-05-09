@@ -45,7 +45,7 @@ private:
   mutable TNamed* _refRangeName ; 
 
   Double_t evaluate() const;
-  Double_t evalAnaInt(const Double_t x) const;
+  Double_t evalAnaInt(const Double_t a, const Double_t b) const;
 
   ClassDef(RooChebychev,2) // Chebychev polynomial PDF
 };
