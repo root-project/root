@@ -41,6 +41,8 @@ void TestTreeWithEntryList(bool isMT = false)
    const auto filename = "rdfentrylist.root";
    MakeInputFile(filename, nEntries);
 
+   RMTRAII gomt(isMT);
+
    TEntryList elist("e", "e", treename, filename);
    elist.Enter(0);
    elist.Enter(nEntries - 1);
@@ -49,7 +51,6 @@ void TestTreeWithEntryList(bool isMT = false)
    auto t = f.Get<TTree>(treename);
    t->SetEntryList(&elist);
 
-   RMTRAII gomt(isMT);
    auto entries = ROOT::RDataFrame(*t).Take<int>("e");
    EXPECT_EQ(*entries, std::vector<int>({0, nEntries - 1}));
 
@@ -64,6 +65,8 @@ void TestChainWithEntryList(bool isMT = false)
    MakeInputFile(file1, nEntries);
    const auto file2 = "rdfentrylist2.root";
    MakeInputFile(file2, nEntries);
+
+   RMTRAII gomt(isMT);
 
    TEntryList elist1("e", "e", treename, file1);
    elist1.Enter(0);
@@ -83,7 +86,6 @@ void TestChainWithEntryList(bool isMT = false)
    c.Add(file2, nEntries);
    c.SetEntryList(&elists);
 
-   RMTRAII gomt(isMT);
    auto entries = ROOT::RDataFrame(c).Take<int>("e");
    EXPECT_EQ(*entries, std::vector<int>({0, nEntries - 1, 0, nEntries - 1}));
 
