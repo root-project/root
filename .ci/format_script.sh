@@ -18,5 +18,11 @@ else
   echo -e "\tgit checkout $TRAVIS_BRANCH"
   echo -e "\tgit-clang-format --commit $BASE_COMMIT --diff --binary $(which clang-format)"
   echo "$RESULT_OUTPUT"
+
+  echo -e "\n\nPlease apply the code formatting changes without bloating the history."
+  echo -e "\tConsider running:"
+  echo -e "\t\tgit checkout $TRAVIS_BRANCH"
+  echo -e "\t\tgit rebase -i --autosquash -x 'git-clang-format-7 master && git commit -a --amend --no-edit' master"
+
   exit 1
 fi
