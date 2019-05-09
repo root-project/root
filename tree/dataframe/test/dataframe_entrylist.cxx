@@ -62,18 +62,18 @@ void TestChainWithEntryList(bool isMT = false)
    const auto nEntries = 10;
    const auto treename = "t";
    const auto file1 = "rdfentrylist1.root";
-   MakeInputFile(file1, nEntries);
    const auto file2 = "rdfentrylist2.root";
+   MakeInputFile(file1, nEntries);
    MakeInputFile(file2, nEntries);
 
    RMTRAII gomt(isMT);
 
    TEntryList elist1("e", "e", treename, file1);
    elist1.Enter(0);
-   elist1.Enter(2 * nEntries - 1);
+   elist1.Enter(nEntries - 1);
    TEntryList elist2("e", "e", treename, file2);
    elist2.Enter(0);
-   elist2.Enter(2 * nEntries - 1);
+   elist2.Enter(nEntries - 1);
 
    // make a TEntryList that contains two TEntryLists in its list of TEntryLists,
    // as required by TChain (see TEntryList's doc)
@@ -104,7 +104,7 @@ TEST(RDFEntryList, Tree)
 }
 
 #ifdef R__USE_IMT
-TEST(RDFEntryList, DISABLED_ChainMT)
+TEST(RDFEntryList, ChainMT)
 {
    TestChainWithEntryList(true);
 }
