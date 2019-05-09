@@ -82,17 +82,41 @@ TTreeView::MakeReaderWithEntryList(TEntryList &globalList, Long64_t start, Long6
 {
    // TEntryList and SetEntriesRange do not work together (the former has precedence).
    // We need to construct a TEntryList that contains only those entry numbers in our desired range.
-   auto localList = std::make_unique<TEntryList>();
-   // We call GetEntry twice: workaround for ROOT-10113 (the return value for 1 call only could be -1)
-   globalList.GetEntry(0);
-   Long64_t entry = globalList.GetEntry(0);
-   do {
-      if (entry >= end) {
-         break;
-      } else if (entry >= start) {
-         localList->Enter(entry);
+
+   std::vector<TEntryList*> globalEntryLists;
+   auto innerLists = globalList.GetLists();
+   if (!innerLists) {
+      globalEntryLists.emplace_back(&globalList);
+   } else {
+      for (auto lp : *innerLists) {
+         globalEntryLists.emplace_back(static_cast<TEntryList*>(lp));
       }
-   } while ((entry = globalList.Next()) >= 0);
+   }
+
+   auto localList = std::make_unique<TEntryList>();
+
+   for (auto gl : globalEntryLists) {
+      // We call GetEntry twice: workaround for ROOT-10113 (the return value for 1 call only could be -1)
+      gl->GetEntry(0);
+      Long64_t entry = gl->GetEntry(0);
+
+      // this may be owned by the local list
+      auto tmp_list = new TEntryList(gl->GetName(), gl->GetTitle(), gl->GetFileName(), gl->GetTreeName());
+
+      do {
+         if (entry >= end) {
+            break;
+         } else if (entry >= start) {
+            tmp_list->Enter(entry);
+         }
+      } while ((entry = gl->Next()) >= 0);
+
+      if (tmp_list->GetN() > 0) {
+         localList->Add(tmp_list);
+      } else {
+         delete tmp_list;
+      }
+   }
 
    auto reader = std::make_unique<TTreeReader>(fChain.get(), localList.get());
    return std::make_pair(std::move(reader), std::move(localList));
