@@ -84,7 +84,7 @@ void ROOT::Experimental::RFitPanel::ProcessData(unsigned connid, const std::stri
       model.fDataNames.emplace_back("1", "RootData1");
       model.fDataNames.emplace_back("2", "RootData2");
       model.fDataNames.emplace_back("3", "RootData3");
-      model.fSelectDataId = "1";
+      model.fSelectedData = "1";
 
       model.fModelNames.emplace_back("1", "RootModel1");
       model.fModelNames.emplace_back("2", "RootModel2");
