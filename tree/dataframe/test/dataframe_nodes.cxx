@@ -93,6 +93,7 @@ TEST(RDataFrameNodes, InheritanceOfCustomColumns)
 {
    ROOT::RDataFrame df(1);
    const auto nBinsExpected = 42;
+   // Read the TH1F as a TH1
    df.Define("b", [&nBinsExpected]() { return TH1F("b", "b", nBinsExpected, 0, 1); })
       .Foreach([&nBinsExpected](TH1 &h) { EXPECT_EQ(h.GetNbinsX(), nBinsExpected);}, {"b"});
 
@@ -104,6 +105,8 @@ TEST(RDataFrameNodes, InheritanceOfCustomColumns)
       t.Fill(val);
       return t;
    };
+
+   // Read as TObject from disk a TStatistics object
    auto checkStat = [&val](TObject &o) { EXPECT_EQ(val, ((TStatistic *)&o)->GetMean()); };
    ROOT::RDataFrame(1).Define("x", createStat).Snapshot<TStatistic>("t", ofileName, {"x"})->Foreach(checkStat, {"x"});
    gSystem->Unlink(ofileName);
