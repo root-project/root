@@ -71,6 +71,8 @@ struct RFitFuncParsList {
 
 struct RFitPanel6Model {
 
+   std::string fTitle;                      ///< title of the fit panel
+
    std::vector<RComboBoxItem> fDataSet;     ///< list of available data sources
    std::string fSelectedData;               ///< selected data
    std::vector<RFitFuncInfo>   fFuncList;   ///< all available fit functions
