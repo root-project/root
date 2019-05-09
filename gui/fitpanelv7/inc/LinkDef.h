@@ -8,15 +8,11 @@
 
 #ifdef __CINT__
 
-#pragma link C++ struct ROOT::Experimental::RFitPanelComboBoxItem+;
-#pragma link C++ struct ROOT::Experimental::RFitPanelModel+;
-#pragma link C++ class ROOT::Experimental::RFitPanel+;
-
 #pragma link C++ struct ROOT::Experimental::RComboBoxItem+;
 #pragma link C++ struct ROOT::Experimental::RFitFuncInfo+;
 #pragma link C++ struct ROOT::Experimental::RFitFuncParameter+;
 #pragma link C++ struct ROOT::Experimental::RFitFuncParsList+;
-#pragma link C++ struct ROOT::Experimental::RFitPanel6Model+;
-#pragma link C++ class ROOT::Experimental::RFitPanel6+;
+#pragma link C++ struct ROOT::Experimental::RFitPanelModel+;
+#pragma link C++ class ROOT::Experimental::RFitPanel+;
 
 #endif

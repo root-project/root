@@ -16,16 +16,27 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RFitPanel6.hxx>
+#include <ROOT/RFitPanel.hxx>
 #include "TH1.h"
+#include "TFile.h"
 
 void fitpanel6()
 {
-   auto panel = new ROOT::Experimental::RFitPanel6();
+   TFile::Open("hsimple.root");
+   gFile->Get("hpx");
+   gFile->Get("hpxpy");
+   gFile->Get("hprof");
+   
+
+
+   auto panel = new ROOT::Experimental::RFitPanel();
+
+
 
    TH1F *hpx = new TH1F("test","This is test histogram",100,-4,4);
    hpx->FillRandom("gaus", 10000);
-   hpx->Draw();
+
+   //hpx->Draw();
 
    // TFile::Open("hsimple.root");
    // gFile->Get("hpx");

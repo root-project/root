@@ -21,17 +21,6 @@
 #include "ROOT/RFitPanel.hxx"
 #include "ROOT/TDirectory.hxx"
 
-void fitpanel0() {
-
-  using namespace ROOT::Experimental;
-
-  auto panel = std::make_shared<RFitPanel>("FitPanel Title");
-  panel->Show();
-
-  // Register the histogram with ROOT: now it lives even after draw() ends.
-  ROOT::Experimental::TDirectory::Heap().Add("fitpanel", panel);
-}
-
 void fitpanel() {
 
    using namespace ROOT::Experimental;
@@ -48,7 +37,7 @@ void fitpanel() {
    pHist->Fill(3);
 
    auto canvas = RCanvas::Create("Canvas Title");
-   canvas->Draw(pHist)->SetLineColor(RColor::kRed);
+   canvas->Draw(pHist); //->SetLineColor(RColor::kRed);
 
    canvas->Show();
    canvas->Update(); // need to ensure canvas is drawn
@@ -62,7 +51,8 @@ void fitpanel() {
    // TODO: how combine there methods together
    // here std::shread_ptr<> on both sides
 
-   panel->UseCanvas(canvas);
+   panel->AssignCanvas(canvas);
+   panel->AssignHistogram(pHist);
 
    canvas->AddPanel(panel);
 }

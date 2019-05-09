@@ -1,4 +1,4 @@
-/// \file RFitPanel6Model.cxx
+/// \file RFitPanelModel.cxx
 /// \ingroup WebGui ROOT7
 /// \author Sergey Linev <S.Linev@gsi.de>
 /// \author Iliana Betsou <Iliana.Betsou@cern.ch>
@@ -14,7 +14,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RFitPanel6Model.hxx>
+#include <ROOT/RFitPanelModel.hxx>
 
 #include "TH1.h"
 #include "TDirectory.h"
@@ -82,7 +82,7 @@ void ROOT::Experimental::RFitFuncParsList::SetParameters(TF1 *func)
 
 ///////////////////////////////
 
-TH1* ROOT::Experimental::RFitPanel6Model::GetSelectedHistogram(TH1 *hist)
+TH1* ROOT::Experimental::RFitPanelModel::GetSelectedHistogram(TH1 *hist)
 {
    if (fSelectedData == "__hist__") return hist;
    if ((fSelectedData.compare(0,6,"gdir::") != 0) || !gDirectory) return nullptr;
@@ -95,7 +95,7 @@ TH1* ROOT::Experimental::RFitPanel6Model::GetSelectedHistogram(TH1 *hist)
 
 // Configure usage of histogram
 
-bool ROOT::Experimental::RFitPanel6Model::SelectHistogram(const std::string &hname, TH1 *hist)
+bool ROOT::Experimental::RFitPanelModel::SelectHistogram(const std::string &hname, TH1 *hist)
 {
 
    std::string histid;
@@ -139,7 +139,7 @@ bool ROOT::Experimental::RFitPanel6Model::SelectHistogram(const std::string &hna
    return selected != nullptr;
 }
 
-void ROOT::Experimental::RFitPanel6Model::UpdateRange(TH1 *hist)
+void ROOT::Experimental::RFitPanelModel::UpdateRange(TH1 *hist)
 {
    fShowRangeX = false;
    fShowRangeY = false;
@@ -169,7 +169,7 @@ void ROOT::Experimental::RFitPanel6Model::UpdateRange(TH1 *hist)
    fRangeY[1] = fMaxRangeY;
 }
 
-bool ROOT::Experimental::RFitPanel6Model::SelectFunc(const std::string &name, TH1 *hist)
+bool ROOT::Experimental::RFitPanelModel::SelectFunc(const std::string &name, TH1 *hist)
 {
    fSelectedFunc = name;
 
@@ -188,7 +188,7 @@ bool ROOT::Experimental::RFitPanel6Model::SelectFunc(const std::string &name, TH
 }
 
 
-TF1 *ROOT::Experimental::RFitPanel6Model::UpdateFuncList(TH1 *hist, bool select_hist_func)
+TF1 *ROOT::Experimental::RFitPanelModel::UpdateFuncList(TH1 *hist, bool select_hist_func)
 {
    int ndim = hist ? hist->GetDimension() : 1;
 
@@ -226,7 +226,7 @@ TF1 *ROOT::Experimental::RFitPanel6Model::UpdateFuncList(TH1 *hist, bool select_
 }
 
 
-void ROOT::Experimental::RFitPanel6Model::Initialize()
+void ROOT::Experimental::RFitPanelModel::Initialize()
 {
    // build list of available histograms, as id use name from gdir
    fSelectedData = "";
@@ -294,7 +294,7 @@ void ROOT::Experimental::RFitPanel6Model::Initialize()
    }
 }
 
-TF1 *ROOT::Experimental::RFitPanel6Model::FindFunction(const std::string &funcname, TH1 *hist)
+TF1 *ROOT::Experimental::RFitPanelModel::FindFunction(const std::string &funcname, TH1 *hist)
 {
    if (funcname.compare(0,6,"hist::")==0) {
       TH1 *h1 = GetSelectedHistogram(hist);
@@ -308,7 +308,7 @@ TF1 *ROOT::Experimental::RFitPanel6Model::FindFunction(const std::string &funcna
 
 /// Update advanced parameters associated with fit function for histogram
 
-void ROOT::Experimental::RFitPanel6Model::UpdateAdvanced(TF1 *func)
+void ROOT::Experimental::RFitPanelModel::UpdateAdvanced(TF1 *func)
 {
    fContour1.clear();
    fContour2.clear();
@@ -333,7 +333,7 @@ void ROOT::Experimental::RFitPanel6Model::UpdateAdvanced(TF1 *func)
 }
 
 
-std::string ROOT::Experimental::RFitPanel6Model::GetFitOption()
+std::string ROOT::Experimental::RFitPanelModel::GetFitOption()
 {
    std::string opt;
 
