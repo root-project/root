@@ -21,12 +21,15 @@
 
 #include <ROOT/RFitPanel6Model.hxx>
 
-#include "TH1.h"
+#include <ROOT/RCanvas.hxx>
+
+#include "ROOT/RHist.hxx"
 
 #include <memory>
 #include <vector>
 
 class TPad;
+class TH1;
 
 namespace ROOT {
 namespace Experimental {
@@ -35,12 +38,14 @@ class RFitPanel6 {
 
    std::unique_ptr<RFitPanel6Model> fModel;
 
-   std::string fTitle;           ///<! title
-   unsigned fConnId{0};          ///<! connection id
-   TH1 *fHist{nullptr};          ///<! explicit histogram used for fitting
-   std::string fCanvName{"c1"};  ///<! canvas used to display fit, will be created if not exists
+   TH1 *fHist{nullptr};              ///<! explicit histogram used for fitting
+   std::string fCanvName{"c1"};      ///<! v6 canvas name used to display fit, will be created if not exists
+
+   std::shared_ptr<RCanvas> fCanvas; ///!< v7 canvas used to display results
+   std::shared_ptr<RH1D> fFitHist;   ///!< v7 histogram for fitting
 
    std::shared_ptr<RWebWindow> fWindow; ///!< configured display
+   unsigned fConnId{0};              ///<! client connection id
 
    /// process data from UI
    void ProcessData(unsigned connid, const std::string &arg);
@@ -61,7 +66,7 @@ class RFitPanel6 {
 
 public:
    /// normal constructor
-   RFitPanel6(const std::string &title = "Fit panel") : fTitle(title) {}
+   RFitPanel6(const std::string &title = "Fit panel");
 
    // method required when any panel want to be inserted into the RCanvas
    std::shared_ptr<RWebWindow> GetWindow();
@@ -71,6 +76,10 @@ public:
    void AssignHistogram(const std::string &hname);
 
    void AssignCanvas(const std::string &cname) { fCanvName = cname; }
+
+   void AssignCanvas(std::shared_ptr<RCanvas> &canv);
+
+   void AssignHistogram(std::shared_ptr<RH1D> &hist);
 
    /// show FitPanel in specified place
    void Show(const std::string &where = "");
