@@ -5,12 +5,10 @@
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTFitPanelv7
   HEADERS
     ROOT/RFitPanel.hxx
-    ROOT/RFitPanel6.hxx
-    ROOT/RFitPanel6Model.hxx
+    ROOT/RFitPanelModel.hxx
   SOURCES
     RFitPanel.cxx
-    RFitPanel6.cxx
-    RFitPanel6Model.cxx
+    RFitPanelModel.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   DEPENDENCIES
