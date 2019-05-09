@@ -46,7 +46,6 @@ the threaded object.
 
 namespace ROOT {
 namespace Internal {
-struct FriendInfo;
 /// Names, aliases, and file names of a TTree's or TChain's friends
 using NameAlias = std::pair<std::string, std::string>;
 struct FriendInfo {
@@ -72,8 +71,9 @@ private:
    std::unique_ptr<TTreeReader> MakeReader(Long64_t start, Long64_t end);
 
 public:
-   TTreeView();
-   TTreeView(const TTreeView &);
+   TTreeView() = default;
+   // no-op, we don't want to copy the local TChains
+   TTreeView(const TTreeView &) {}
    TreeReaderEntryListPair GetTreeReader(Long64_t start, Long64_t end, const std::string &treeName,
                                          const std::vector<std::string> &fileNames, const FriendInfo &friendInfo,
                                          TEntryList entryList, const std::vector<Long64_t> &nEntries,
