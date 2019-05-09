@@ -257,8 +257,13 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
       // its mother's name
       fBranch = fDirector->GetTree()->GetBranch(fBranchName.Data());
       if (!fBranch) {
-         auto treeName = fDirector->GetTree()->GetName();
-         ::Error("TBranchProxy::Setup", "%s", Form("Unable to find branch %s in tree %s.",fBranchName.Data(), treeName));
+         // FIXME
+         // While fixing ROOT-10019, this error was added to give to the user an even better experience
+         // in presence of a problem.
+         // It is not easy to distinguish the cases where this error is "expected"
+         // For now we do not print anything - see conversation here: https://github.com/root-project/root/pull/3746
+         //auto treeName = fDirector->GetTree()->GetName();
+         //::Error("TBranchProxy::Setup", "%s", Form("Unable to find branch %s in tree %s.\n",fBranchName.Data(), treeName));
          return false;
       }
 
