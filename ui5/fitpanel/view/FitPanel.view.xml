@@ -83,15 +83,16 @@
                            </layoutData>
                         </CheckBox>
                      </l:Grid>
-                     <RangeSlider id="Slider"
-                        showAdvancedTooltip="true" range="{/fRange}"
-                        min="{/fMinRange}" max="{/fMaxRange}" step="{/fStep}"
+                     <RangeSlider id="SliderX" visible="{/fShowRangeX}"
+                        showAdvancedTooltip="true" range="{/fRangeX}"
+                        min="{/fMinRangeX}" max="{/fMaxRangeX}" step="{/fStepX}"
                         width="100%" showHandleTooltip="false"
                         inputsAsTooltips="true" class="sapUiSmallMarginBottom" />
-                     <FlexBox alignItems="Start" justifyContent="End">
-                        <Button text="Update Range" press="updateRange"
-                           tooltip="Update the fitting range" />
-                     </FlexBox>
+                     <RangeSlider id="SliderY" visible="{/fShowRangeY}"
+                        showAdvancedTooltip="true" range="{/fRangeY}"
+                        min="{/fMinRangeY}" max="{/fMaxRangeY}" step="{/fStepY}"
+                        width="100%" showHandleTooltip="false"
+                        inputsAsTooltips="true" class="sapUiSmallMarginBottom"/>
                   </VBox>
                </IconTabFilter>
                <IconTabFilter text="Minimization">

@@ -136,7 +136,6 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
 
    } else if (arg == "CONN_CLOSED") {
 
-      printf("FitPanel connection closed\n");
       fConnId = 0;
 
    } else if (arg.compare(0, 7, "UPDATE:") == 0) {
@@ -147,12 +146,15 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
    } else if (arg.compare(0, 6, "DOFIT:") == 0) {
 
       DoFit(arg.substr(6));
+
    } else if (arg.compare(0, 11, "SETCONTOUR:") == 0) {
 
       DrawContour(arg.substr(11));
+
    } else if (arg.compare(0, 8, "SETSCAN:") == 0) {
 
       DrawScan(arg.substr(8));
+
    } else if (arg.compare(0, 8, "GETPARS:") == 0) {
 
       auto &m = model();
@@ -174,28 +176,6 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
             info->SetParameters(func);
       }
 
-   } else if (arg.compare(0, 12, "GETADVANCED:") == 0) {
-
-      RFitPanel6Model modelAdv;
-
-      std::string funcname = arg.substr(12);
-      TF1 *func = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(funcname.c_str()));
-
-      // printf("Found func1 %s %p\n", info.name.c_str(), func);
-
-      if (func) {
-         for (int n = 0; n < func->GetNpar(); ++n) {
-            modelAdv.fContour1.emplace_back(std::to_string(n), func->GetParName(n));
-            modelAdv.fContourPar1Id = "0";
-            modelAdv.fContour2.emplace_back(std::to_string(n), func->GetParName(n));
-            modelAdv.fContourPar2Id = "0";
-            modelAdv.fScan.emplace_back(std::to_string(n), func->GetParName(n));
-            modelAdv.fScanId = "0";
-         }
-      }
-
-      TString jsonModel = TBufferJSON::ToJSON(&modelAdv);
-      fWindow->Send(fConnId, "ADVANCED:"s + jsonModel.Data());
    }
 }
 
@@ -302,7 +282,6 @@ TPad *ROOT::Experimental::RFitPanel6::GetDrawPad(TH1 *hist)
 
 int ROOT::Experimental::RFitPanel6::UpdateModel(const std::string &json)
 {
-   // printf("DoFit %s\n", model.c_str());
    auto m = TBufferJSON::FromJSON<RFitPanel6Model>(json);
 
    if (!m) {
@@ -314,15 +293,19 @@ int ROOT::Experimental::RFitPanel6::UpdateModel(const std::string &json)
 
    auto selected = m->GetSelectedHistogram(fHist);
 
-   if (model().fSelectedFunc != m->fSelectedFunc) {
-      res = 1;
-      m->SelectFunc(m->fSelectedFunc, selected);
-   }
+   TF1 *hfunc = nullptr;
 
    if (model().fSelectedData != m->fSelectedData) {
       res = 1;
-      m->UpdateFuncList(selected);
-      m->UpdateAdvanced(selected);
+      m->UpdateRange(selected);
+      hfunc = m->UpdateFuncList(selected, true); // try to get existing function
+      m->UpdateAdvanced(hfunc);
+      if (!hfunc) m->fSelectedFunc = ""; // reset func selection
+   }
+
+   if ((model().fSelectedFunc != m->fSelectedFunc) && !hfunc) {
+      res = 1;
+      m->SelectFunc(m->fSelectedFunc, selected);
    }
 
    std::swap(fModel, m); // finally replace model
@@ -341,7 +324,7 @@ void ROOT::Experimental::RFitPanel6::DoFit(const std::string &json)
 
    // Fitting Options
    if (gDebug > 0)
-      ::Info("RFitPanel6::DoFit", "range %f %f select %s function %s", m.fUpdateRange[0], m.fUpdateRange[1],
+      ::Info("RFitPanel6::DoFit", "range %f %f select %s function %s", m.fRangeX[0], m.fRangeX[1],
              m.fSelectedData.c_str(), m.fSelectedFunc.c_str());
 
    if (m.fSelectedFunc.empty())
@@ -370,10 +353,13 @@ void ROOT::Experimental::RFitPanel6::DoFit(const std::string &json)
 
    // Assign the options to Fitting function
    if (h1 && !m.fSelectedFunc.empty() && (m.fSelectedFunc != "none")) {
-      h1->Fit(m.fSelectedFunc.c_str(), opt.c_str(), "*", m.fUpdateRange[0], m.fUpdateRange[1]);
+      h1->Fit(m.fSelectedFunc.c_str(), opt.c_str(), "*", m.fRangeX[0], m.fRangeX[1]);
+
       if (pad) pad->Update();
 
-      m.UpdateAdvanced(h1);
+      auto *fres = m.UpdateFuncList(h1, true);
+
+      m.UpdateAdvanced(fres);
    }
 
    SendModel(); // provide client with latest changes
