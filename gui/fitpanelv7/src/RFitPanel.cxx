@@ -125,6 +125,11 @@ void ROOT::Experimental::RFitPanel::Hide()
       fWindow->CloseConnections();
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Return reference on model object
+/// Model created if was not exists before
+
+
 ROOT::Experimental::RFitPanelModel &ROOT::Experimental::RFitPanel::model()
 {
    if (!fModel)
@@ -171,7 +176,9 @@ void ROOT::Experimental::RFitPanel::ProcessData(unsigned connid, const std::stri
 
    } else if (arg.compare(0, 6, "DOFIT:") == 0) {
 
-      DoFit(arg.substr(6));
+      if (UpdateModel(arg.substr(6)) >= 0)
+         if (DoFit())
+            SendModel();
 
    } else if (arg.compare(0, 11, "SETCONTOUR:") == 0) {
 
@@ -207,6 +214,7 @@ void ROOT::Experimental::RFitPanel::ProcessData(unsigned connid, const std::stri
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Dummy function, called when "Fit" button pressed in UI
+
 void ROOT::Experimental::RFitPanel::DrawContour(const std::string &model)
 {
    // FIXME: do not use static!!!
@@ -339,11 +347,12 @@ int ROOT::Experimental::RFitPanel::UpdateModel(const std::string &json)
    return res;
 }
 
+///////////////////////////////////////////////
+/// Perform fitting using current model settings
+/// Returns true if any action was done
 
-void ROOT::Experimental::RFitPanel::DoFit(const std::string &json)
+bool ROOT::Experimental::RFitPanel::DoFit()
 {
-   if (UpdateModel(json) < 0) return;
-
    auto &m = model();
 
    ROOT::Math::MinimizerOptions minOption;
@@ -377,18 +386,17 @@ void ROOT::Experimental::RFitPanel::DoFit(const std::string &json)
 
    TF1 *f1 = m.FindFunction(m.fSelectedFunc, h1);
 
+   if (!h1 || !f1) return false;
+
    auto pad = GetDrawPad(h1);
 
-   // Assign the options to Fitting function
-   if (h1 && f1) {
-      h1->Fit(f1, opt.c_str(), "*", m.fRangeX[0], m.fRangeX[1]);
+   h1->Fit(f1, opt.c_str(), "*", m.fRangeX[0], m.fRangeX[1]);
 
-      if (pad) pad->Update();
+   if (pad) pad->Update();
 
-      auto *fres = m.UpdateFuncList(h1, true);
+   auto *fres = m.UpdateFuncList(h1, true);
 
-      m.UpdateAdvanced(fres);
-   }
+   m.UpdateAdvanced(fres);
 
-   SendModel(); // provide client with latest changes
+   return true; // provide client with latest changes
 }
