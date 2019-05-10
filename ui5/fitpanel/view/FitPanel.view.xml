@@ -98,9 +98,8 @@
                <IconTabFilter text="Minimization">
                   <VBox>
                      <Title level="H3" text="Library" />
-                     <RadioButtonGroup id="libraryRB"
-                        columns="3" width="100%" selectedIndex="{/fLibrary}"
-                        select="selectRB">
+                     <RadioButtonGroup columns="3" width="100%" selectedIndex="{/fLibrary}"
+                        select="selectMinimizationLibrary">
                         <buttons>
                            <RadioButton id="RB2-1" text="Minuit" />
                            <RadioButton id="RB2-2" text="Minuit2" />
@@ -110,9 +109,9 @@
                         </buttons>
                      </RadioButtonGroup>
                      <Title level="H3" text="Method" />
-                     <ComboBox id="MethodMin" selectedKey="{/fSelectMethodMinId}"
-                        items="{ path: '/fMethodMin', sorter: { path: 'fMethodMin' } }">
-                        <core:Item key="{fId}" text="{fSet}" />
+                     <ComboBox id="MethodMin" selectedKey="{/fSelectMethodMin}"
+                        items="{ path: '/fMethodMinAll', filters: { path: 'fId', operator: 'EQ', value1: '0' },  sorter: { path: 'fId' } }">
+                        <core:Item key="{fSet}" text="{fSet}" />
                      </ComboBox>
                      <Title level="H3" text="Settings" />
                      <l:Grid class="sapUiSizeCompact" hSpacing="0.5" vSpacing="0">

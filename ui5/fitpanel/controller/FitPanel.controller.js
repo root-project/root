@@ -1,7 +1,9 @@
 sap.ui.define([
    'rootui5/panel/Controller',
-   'sap/ui/model/json/JSONModel'
-], function (GuiPanelController, JSONModel) {
+   'sap/ui/model/json/JSONModel',
+   'sap/ui/model/Filter',
+   'sap/ui/model/FilterOperator'
+], function (GuiPanelController, JSONModel, Filter, FilterOperator) {
 
    "use strict";
 
@@ -71,7 +73,7 @@ sap.ui.define([
             var data = JSROOT.parse(msg.substr(6));
 
             if(data) {
-               data.fMethodMin = data.fMethodMinAll[parseInt(data.fLibrary)];
+               this.verifySelectedMethodMin(data);
 
                this.getView().setModel(new JSONModel(data));
             }
@@ -88,14 +90,12 @@ sap.ui.define([
          //Keep the #times the button is clicked
          //Data is a new model. With getValue() we select the value of the parameter specified from id
 
-         var libMin = this.getView().byId("MethodMin").getValue();
          var errorDefinition = parseFloat(this.getView().byId("errorDef").getValue());
          var maxTolerance = parseFloat(this.getView().byId("maxTolerance").getValue());
          var maxInterations = Number(this.getView().byId("maxInterations").getValue());
 
          var data = this.data();
 
-         data.fMinLibrary = libMin;
          data.fErrorDef = errorDefinition;
          data.fMaxTol = maxTolerance;
          data.fMaxInter = maxInterations;
@@ -104,8 +104,6 @@ sap.ui.define([
          this.refresh();
          //Each time we click the button, we keep the current state of the model
 
-         // TODO: skip "fMethodMin" from output object
-         // Requires changes in JSROOT.toJSON(), can be done after REVE-selection commit
 
          this.sendModel("DOFIT:");
       },
@@ -133,16 +131,33 @@ sap.ui.define([
          this.byId("selectedOpText").setText(func);
       },
 
+      // approve current fSelectMethodMin value - and change if require
+      verifySelectedMethodMin: function(data) {
+
+         this.getView().byId("MethodMin").getBinding("items").filter(new Filter("fId", FilterOperator.EQ, data.fLibrary.toString()));
+
+         var first = "";
+
+         for (var k=0;k<data.fMethodMinAll.length;++k) {
+            var item = data.fMethodMinAll[k];
+            if (item.fId != data.fLibrary) continue;
+            if (!first) first = item.fSet;
+            if (item.fSet === data.fSelectMethodMin) return;
+         }
+
+         data.fSelectMethodMin = first;
+      },
+
       //change the combo box in Minimization Tab --- Method depending on Radio Buttons values
-      selectRB: function(){
-
-         var data = this.data();
-
-         // same code as initialization
-         data.fMethodMin = data.fMethodMinAll[parseInt(data.fLibrary)];
+      selectMinimizationLibrary: function() {
+         this.verifySelectedMethodMin(this.data());
 
          // refresh all UI elements
          this.refresh();
+      },
+
+      testMethodVal: function(val) {
+        return val == "0";
       },
 
       //Change the selected checkbox of Draw Options

@@ -365,8 +365,8 @@ bool ROOT::Experimental::RFitPanel::DoFit()
    if (m.fSelectedFunc.empty())
       m.fSelectedFunc = "gaus";
 
-   if (!m.fMinLibrary.empty())
-      minOption.SetMinimizerAlgorithm(m.fMinLibrary.c_str());
+   if (!m.fSelectMethodMin.empty())
+      minOption.SetMinimizerAlgorithm(m.fSelectMethodMin.c_str());
 
    if (m.fErrorDef == 0)
       minOption.SetErrorDef(1.00);
