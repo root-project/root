@@ -207,6 +207,25 @@ RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t 
    fDataSource->SetNSlots(fNSlots);
 }
 
+// ROOT-9559: we cannot handle indexed friends
+void RLoopManager::CheckIndexedFriends()
+{
+   auto friends = fTree->GetListOfFriends();
+   if (!friends)
+      return;
+   for (auto friendElObj : *friends) {
+      auto friendEl = static_cast<TFriendElement *>(friendElObj);
+      auto friendTree = friendEl->GetTree();
+      if (friendTree && friendTree->GetTreeIndex()) {
+         std::string err = fTree->GetName();
+         err += " has a friend, \"";
+         err += friendTree->GetName();
+         err += "\", which has an index. This is not supported.";
+         throw std::runtime_error(err);
+      }
+   }
+}
+
 /// Run event loop with no source files, in parallel.
 void RLoopManager::RunEmptySourceMT()
 {
@@ -259,6 +278,7 @@ void RLoopManager::RunEmptySource()
 void RLoopManager::RunTreeProcessorMT()
 {
 #ifdef R__USE_IMT
+   CheckIndexedFriends();
    RSlotStack slotStack(fNSlots);
    const auto &entryList = fTree->GetEntryList() ? *fTree->GetEntryList() : TEntryList();
    auto tp = std::make_unique<ROOT::TTreeProcessorMT>(*fTree, entryList);
@@ -284,6 +304,7 @@ void RLoopManager::RunTreeProcessorMT()
 /// Run event loop over one or multiple ROOT files, in sequence.
 void RLoopManager::RunTreeReader()
 {
+   CheckIndexedFriends();
    TTreeReader r(fTree.get(), fTree->GetEntryList());
    if (0 == fTree->GetEntriesFast())
       return;
