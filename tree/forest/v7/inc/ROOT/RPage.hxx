@@ -95,7 +95,7 @@ public:
    void* GetBuffer() const { return fBuffer; }
    /// Return a pointer after the last element that has space for nElements new elements. If there is not enough capacity,
    /// return nullptr
-   void* Reserve(std::size_t nElements) {
+   void* TryGrow(std::size_t nElements) {
       size_t offset = fSize;
       size_t nbyte = nElements * fElementSize;
       if (offset + nbyte > fCapacity) {

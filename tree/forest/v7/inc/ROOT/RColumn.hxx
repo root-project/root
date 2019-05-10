@@ -71,10 +71,10 @@ public:
    void Connect(RPageStorage* pageStorage);
 
    void Append(const RColumnElementBase& element) {
-      void* dst = fHeadPage.Reserve(1);
+      void* dst = fHeadPage.TryGrow(1);
       if (dst == nullptr) {
          Flush();
-         dst = fHeadPage.Reserve(1);
+         dst = fHeadPage.TryGrow(1);
          R__ASSERT(dst != nullptr);
       }
       element.Serialize(dst, 1);
@@ -82,7 +82,7 @@ public:
    }
 
    void AppendV(const RColumnElementBase& elemArray, std::size_t count) {
-      void* dst = fHeadPage.Reserve(count);
+      void* dst = fHeadPage.TryGrow(count);
       if (dst == nullptr) {
          for (unsigned i = 0; i < count; ++i) {
             Append(RColumnElementBase(elemArray, i));
