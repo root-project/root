@@ -79,15 +79,13 @@ struct RFitPanelModel {
    std::string fSelectedFunc;               ///< name of selected fit function
    std::vector<RComboBoxItem> fMethod;
    std::string fSelectMethodId;
-   std::string fMinLibrary;
 
    // all combo items for all methods
 
    // Minimization Tab
-   std::vector<std::vector<RComboBoxItem>> fMethodMinAll;
-
-
-   std::string fSelectMethodMinId;
+   int fLibrary{0};   ///< selected minimization library
+   std::vector<RComboBoxItem> fMethodMinAll;  // all items for all methods
+   std::string fSelectMethodMin;
 
    // range selection
    bool fShowRangeX{true};
@@ -106,7 +104,6 @@ struct RFitPanelModel {
    float fFitOptions{0};
    bool fLinear{false};
    bool fRobust{false};
-   int fLibrary{0};
    int fPrint{0};
    float fErrorDef{1.00};
    float fMaxTol{0.01};
