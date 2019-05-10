@@ -10,7 +10,6 @@ public:
    NoDefCtor() = delete;
    NoDefCtor(TRootIOCtor*) {}
    NoDefCtor(int i) : fInt(i) {}
-   NoDefCtor(const NoDefCtor& o) : fInt(o.fInt) {}
    void SetInt(int i) { fInt = i; }
    int GetInt() const { return fInt; }
 };
