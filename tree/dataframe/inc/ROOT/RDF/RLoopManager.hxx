@@ -123,6 +123,7 @@ class RLoopManager : public RNodeBase {
    /// Cache of the tree/chain branch names. Never access directy, always use GetBranchNames().
    ColumnNames_t fValidBranchNames;
 
+   void CheckIndexedFriends();
    void RunEmptySourceMT();
    void RunEmptySource();
    void RunTreeProcessorMT();
