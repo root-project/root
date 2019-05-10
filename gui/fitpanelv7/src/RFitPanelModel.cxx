@@ -246,29 +246,18 @@ void ROOT::Experimental::RFitPanelModel::Initialize()
    fMethod.emplace_back("4", "Binned Likelihood");
    fSelectMethodId = "1";
 
-   // Sub ComboBox for Minimization Tab --- Method
-   fSelectMethodMinId = "1";
 
+   // Minimization method
    fLibrary = 0;
-
    // corresponds to library == 0
-   fMethodMinAll.emplace_back();
-   fMethodMinAll.back() = {{ "1", "MIGRAD" }, {"2", "SIMPLEX"}, {"3", "SCAN"}, {"4", "Combination"}};
-
-   // corresponds to library == 1
-   fMethodMinAll.emplace_back();
-   fMethodMinAll.back() = {{ "1", "MIGRAD" }, {"2", "SIMPLEX"}, {"3", "SCAN"}, {"4", "Combination"}};
-
-   // corresponds to library == 2
-   fMethodMinAll.emplace_back();
-   fMethodMinAll.back() = {{ "1", "FUMILI" }};
-
-   // corresponds to library == 3
-   fMethodMinAll.emplace_back();
-
-   // corresponds to library == 4
-   fMethodMinAll.emplace_back();
-   fMethodMinAll.back() = {{ "1", "TMVA Genetic Algorithm" }};
+   fMethodMinAll = {
+         {"0", "MIGRAD"}, {"0", "SIMPLEX"}, {"0", "SCAN"}, {"0", "Combination"},
+         {"1", "MIGRAD"}, {"1", "SIMPLEX"}, {"1", "SCAN"}, {"1", "Combination"},
+         {"2", "FUMILI"},
+         {"3", "none"},
+         {"4", "TMVA Genetic Algorithm"}
+   };
+   fSelectMethodMin = "MIGRAD";
 
    // fOperation = 0;
    fFitOptions = 3;
