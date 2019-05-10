@@ -86,18 +86,21 @@ TTreeView::MakeReaderWithEntryList(TEntryList &globalList, Long64_t start, Long6
    std::vector<TEntryList*> globalEntryLists;
    auto innerLists = globalList.GetLists();
    if (!innerLists) {
-      globalEntryLists.emplace_back(&globalList);
+      if (globalList.GetN()) {
+         globalEntryLists.emplace_back(&globalList);
+      }
    } else {
       for (auto lp : *innerLists) {
-         globalEntryLists.emplace_back(static_cast<TEntryList*>(lp));
+         auto lpAsTEntryList = static_cast<TEntryList *>(lp);
+         if (lpAsTEntryList->GetN()) {
+            globalEntryLists.emplace_back(lpAsTEntryList);
+         }
       }
    }
 
    auto localList = std::make_unique<TEntryList>();
 
    for (auto gl : globalEntryLists) {
-      // We call GetEntry twice: workaround for ROOT-10113 (the return value for 1 call only could be -1)
-      gl->GetEntry(0);
       Long64_t entry = gl->GetEntry(0);
 
       // this may be owned by the local list
