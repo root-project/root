@@ -347,6 +347,7 @@ void TModuleGenerator::WriteRegistrationSourceImpl(std::ostream& out,
                                                    const std::string &fwdDeclnArgsToKeepString,
                                                    const std::string &payloadCodeWrapped,
                                                    const std::string &headersClassesMapString,
+                                                   const std::string &extraIncludes,
                                                    bool hasCxxModule) const
 {
    // Dictionary initialization code for loading the module
@@ -388,12 +389,17 @@ void TModuleGenerator::WriteRegistrationSourceImpl(std::ostream& out,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
-      const std::string &fwdDeclnArgsToKeepString,
-      const std::string &headersClassesMapString,
-      const std::string &fwdDeclString,
-      const std::string &extraIncludes) const
+void TModuleGenerator::WriteRegistrationSource(std::ostream &out, const std::string &fwdDeclnArgsToKeepString,
+                                               const std::string &headersClassesMapString,
+                                               const std::string &fwdDeclString, const std::string &extraIncludes, bool hasCxxModule) const
 {
+   if (hasCxxModule) {
+      std::string emptyStr = "\"\"";
+      WriteRegistrationSourceImpl(out, GetDictionaryName(), GetDemangledDictionaryName(), {}, {}, emptyStr, "{}",
+                                  emptyStr, "0", "0",
+                                  /*HasCxxModule*/ true);
+      return;
+   }
 
    std::string fwdDeclStringSanitized = fwdDeclString;
 #ifdef R__WIN32
@@ -515,6 +521,7 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
                                fwdDeclnArgsToKeepString,
                                payloadcodeWrapped,
                                headersClassesMapString,
+                               extraIncludes,
                                /*HasCxxModule*/false);
 }
 

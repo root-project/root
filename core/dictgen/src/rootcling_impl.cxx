@@ -4894,7 +4894,8 @@ int RootClingMain(int argc,
          }
       }
 
-      modGen.WriteRegistrationSource(dictStream, fwdDeclnArgsToKeepString, headersClassesMapString, fwdDeclsString, extraIncludes);
+      modGen.WriteRegistrationSource(dictStream, fwdDeclnArgsToKeepString, headersClassesMapString, fwdDeclsString,
+                                     extraIncludes, cxxmodule && !isAclic);
       // If we just want to inline the input header, we don't need
       // to generate any files.
       if (!inlineInputHeader) {
