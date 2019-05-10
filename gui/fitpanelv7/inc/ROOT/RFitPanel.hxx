@@ -52,7 +52,7 @@ class RFitPanel {
 
    int UpdateModel(const std::string &json);
 
-   void DoFit(const std::string &model);
+   bool DoFit();
 
    void DrawContour(const std::string &model);
 
