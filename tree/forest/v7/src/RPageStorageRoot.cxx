@@ -314,7 +314,7 @@ void ROOT::Experimental::Detail::RPageSourceRoot::PopulatePage(
    }
 
    auto elemsInPage = firstOutsidePage - firstInPage;
-   void* buf = page->Reserve(elemsInPage);
+   void* buf = page->TryGrow(elemsInPage);
    R__ASSERT(buf != nullptr);
 
    auto clusterId = fMapper.fColumnIndex[columnId].fClusterId[pageIdx];
