@@ -29,9 +29,6 @@
 
 namespace ROOT {
 namespace Experimental {
-
-class RColumnModel;
-
 namespace Detail {
 
 // clang-format off
