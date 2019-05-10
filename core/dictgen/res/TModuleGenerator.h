@@ -91,11 +91,9 @@ namespace ROOT {
       std::ostream &WritePPDefines(std::ostream &out) const;
       std::ostream &WritePPUndefines(std::ostream &out) const;
 
-      void WriteRegistrationSource(std::ostream &out,
-                                   const std::string &fwdDeclnArgsToKeepString,
-                                   const std::string &headersClassesMapString,
-                                   const std::string &fwdDeclsString,
-                                   const std::string &extraIncludes) const;
+      void WriteRegistrationSource(std::ostream &out, const std::string &fwdDeclnArgsToKeepString,
+                                   const std::string &headersClassesMapString, const std::string &fwdDeclsString,
+                                   const std::string &extraIncludes, bool hasCxxModule) const;
       void WriteContentHeader(std::ostream &out) const;
       void WriteUmbrellaHeader(std::ostream &out) const;
 
@@ -109,6 +107,7 @@ namespace ROOT {
                                        const std::string &fwdDeclnArgsToKeepString,
                                        const std::string &payloadCodeWrapped,
                                        const std::string &headersClassesMapString,
+                                       const std::string &extraIncludes,
                                        bool hasCxxModule) const;
 
       void ConvertToCppString(std::string &text) const;
