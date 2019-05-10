@@ -94,8 +94,8 @@ TEST(RDataFrameNodes, InheritanceOfCustomColumns)
    ROOT::RDataFrame df(1);
    const auto nBinsExpected = 42;
    // Read the TH1F as a TH1
-   df.Define("b", []() { return TH1F("b", "b", nBinsExpected, 0, 1); })
-      .Foreach([&nBinsExpected](TH1 &h) { EXPECT_EQ(h.GetNbinsX(), nBinsExpected);}, {"b"});
+   df.Define("b", [&]() { return TH1F("b", "b", nBinsExpected, 0, 1); })
+      .Foreach([&](TH1 &h) { EXPECT_EQ(h.GetNbinsX(), nBinsExpected);}, {"b"});
 
    const auto ofileName = "InheritanceOfCustomColumns.root";
 
