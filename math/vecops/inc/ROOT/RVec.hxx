@@ -442,10 +442,13 @@ public:
 
    RVec<T> &operator=(RVec<T> &&v)
    {
-      if (CanUseBuffer(v)) {
-         fData.assign(v.fData.begin(), v.fData.end());
-      } else {
+      if (v.IsAdoptingExternalMemory()) {
          fAlloc = std::move(v.fAlloc);
+         fData = std::move(v.fData);
+      } else if (CanUseBuffer(v)) {
+         resize(v.size());
+         std::copy(v.begin(), v.end(), fData.begin());
+      } else {
          fData = std::move(v.fData);
       }
       return *this;
