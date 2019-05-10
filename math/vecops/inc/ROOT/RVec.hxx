@@ -318,7 +318,7 @@ public:
    using const_iterator = typename Impl_t::const_iterator;
    using reverse_iterator = typename Impl_t::reverse_iterator;
    using const_reverse_iterator = typename Impl_t::const_reverse_iterator;
-   static constexpr std::size_t fgBufferSize = std::is_arithmetic<T>::value && !fgIsVecBool ? 16 : 0;
+   static constexpr std::size_t fgBufferSize = std::is_arithmetic<T>::value && !fgIsVecBool ? 32 : 0;
 
 private:
    // We need this class for the case where fgBufferSize is 0, otherwise array<NonCopiable, 0>
@@ -346,9 +346,17 @@ private:
    /// The default storage std::vector, initialised with the allocator
    Impl_t fData{fAlloc};
 
+   bool CanUseBuffer(std::size_t s)
+   {
+      const auto thisBufSize = ::ROOT::Detail::VecOps::GetBufferSize(fAlloc);
+      return thisBufSize && s <= thisBufSize;
+   }
    bool CanUseBuffer(const RVec &v)
    {
       const auto thisBufSize = ::ROOT::Detail::VecOps::GetBufferSize(fAlloc);
+      const auto otherBufSize = ::ROOT::Detail::VecOps::GetBufferSize(v.fAlloc);
+      if (thisBufSize == 0 && otherBufSize == 0)
+         return false;
       return thisBufSize && v.size() <= thisBufSize;
    }
 
