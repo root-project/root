@@ -387,7 +387,6 @@ if(runtime_cxxmodules)
     add_dependencies(onepcm ${target_dependency})
   endforeach()
   unset(ROOT_LIBRARY_TARGETS CACHE)
-  set(FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES On)
 else()
   get_property(incdirs DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
 
