@@ -9,28 +9,26 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
-/**
-                                                               
-\class TStatistic                                                     
-                                                               
-Statistical variable, defined by its mean and variance (RMS).             
-Named, streamable, storable and mergeable.                     
-
-@ingroup MathCore
-
-*/
-                                                               
-
-
 #include "TStatistic.h"
 
+// clang-format off
+/**
+* \class TStatistic
+* \ingroup MathCore
+* \brief Statistical variable, defined by its mean and variance (RMS). Named, streamable, storable and mergeable.
+*/
+// clang-format on
 
 templateClassImp(TStatistic);
 
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor from a vector of values
-
+////////////////////////////////////////////////////////////////////////////
+/// \brief Constructor from a vector of values
+/// \param[in] name The name given to the object
+/// \param[in] n The total number of entries
+/// \param[in] val The vector of values
+/// \param[in] w The vector of weights for the values
+///
+/// Recursively calls the TStatistic::Fill() function to fill the object.
 TStatistic::TStatistic(const char *name, Int_t n, const Double_t *val, const Double_t *w)
          : fName(name), fN(0), fW(0.), fW2(0.), fM(0.), fM2(0.)
 {
@@ -47,25 +45,38 @@ TStatistic::TStatistic(const char *name, Int_t n, const Double_t *val, const Dou
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TStatistic destructor.
-
 TStatistic::~TStatistic()
 {
    // Required since we overload TObject::Hash.
    ROOT::CallRecursiveRemoveIfNeeded(*this);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Increment the entries in the object by one value-weight pair.
+/// \param[in] val Value to fill the Tstatistic with
+/// \param[in] w The weight of the value
+///
+/// Also updates statistics in the object. For number of entries, sum of weights,
+/// sum of squared weights and sum of (value*weight), one extra value is added to the
+/// statistic. For the sum of squared (value*weight) pairs, the function uses formula 1.4
+/// in Chan-Golub, LeVeque : Algorithms for computing the Sample Variance (1983),
+/// genralized by LM for the case of weights:
+/// \f[
+///   \frac{w_j}{\sum_{i=0}^{j} w_i \cdot \sum_{i=0}^{j-1} w_i} \cdot
+///   \left(
+///         \sum_{i=0}^{j} w_i \cdot val_i -
+///         \sum_{i=0}^{j} \left(w_i \cdot val_i\right)
+///   \right)
+/// \f]
 void TStatistic::Fill(Double_t val, Double_t w) {
-      // Incremental quantities
-   // use formula 1.4 in Chan-Golub, LeVeque
-   // Algorithms for computing the Sample Variance (1983)
-   // genralized by LM for the case of weights 
+
 
    if (w == 0) return;
 
    fN++;
 
    Double_t tW = fW + w;
-   fM += w * val; 
+   fM += w * val;
 
 //      Double_t dt = val - fM ;
    if (tW == 0) {
@@ -81,16 +92,30 @@ void TStatistic::Fill(Double_t val, Double_t w) {
    fW2 += w*w;
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Print the content of the object
+///
+/// Prints the statistics held by the object in one line. These include the mean,
+/// mean error, RMS and total number of values.
 void TStatistic::Print(Option_t *) const {
-   // Print this parameter content
    TROOT::IndentLevel();
    Printf(" OBJ: TStatistic\t %s = %.5g +- %.4g \t RMS = %.5g \t N = %lld",
           fName.Data(), GetMean(), GetMeanErr(), GetRMS(), fN);
 }
 
-
-// Implementation of Merge
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Merge implementation of TStatistic
+/// \param[in] in Other TStatistic objects to be added to the current one
+///
+/// The function merges the statistics of all objects together to form a new one.
+/// Merging quantities is done via simple addition for the following class data members:
+/// - number of entries fN
+/// - the sum of weights fW
+/// - the sum of squared weights fW2
+/// - the sum of (value*weight) fM
+///
+/// The sum of squared (value*weight) pairs fM2 is updated using the same formula as in
+/// TStatistic::Fill() function.
 Int_t TStatistic::Merge(TCollection *in) {
 
    // Let's organise the list of objects to merge excluding the empty ones
@@ -109,7 +134,7 @@ Int_t TStatistic::Merge(TCollection *in) {
    // Early return possible in case nothing has been filled
    if (nStatsPtrs == 0) return 0;
 
-   // Merge the statistic quantities into local variables to then 
+   // Merge the statistic quantities into local variables to then
    // update the data members of this object
    auto firstStatPtr = statPtrs[0];
    auto N = firstStatPtr->fN;
