@@ -47,23 +47,22 @@ v.emplace_back(0.);
 now the vector *v* owns its memory as a regular vector.
 **/
 
-template <typename T, bool IsCopyConstructible = std::is_copy_constructible<T>::value>
-class RConstructHelper {
-public:
-   template <class... Args>
-   static void Construct(std::allocator<T> &alloc, T *p, Args &&... args)
-   {
-      alloc.construct(p, args...);
-   }
+template<typename T, bool IsCopyConstructible = std::is_copy_constructible<T>::value>
+class RConstructHelper
+{
+   public:
+      template <class... Args>
+      static void Construct(std::allocator<T> &alloc, T *p, Args &&... args)
+      {
+         alloc.construct(p, args...);
+      }
 };
 
 template <typename T>
 class RConstructHelper<T, false> {
 public:
    template <class... Args>
-   static void Construct(std::allocator<T> &, T *, Args &&...)
-   {
-   }
+   static void Construct(std::allocator<T> &, T *, Args &&... ){}
 };
 
 template <typename T>
@@ -107,7 +106,12 @@ public:
    RAdoptAllocator &operator=(RAdoptAllocator &&) = default;
    RAdoptAllocator(const RAdoptAllocator<bool> &);
 
-   std::size_t GetBufferSize() const { return fBufferSize; }
+   std::size_t GetBufferSize() const { return fBufferSize;}
+   bool IsAdoptingExternalMemory() const {
+      return fBufferSize == 0 &&
+             fInitialAddress != nullptr &&
+             fAllocType != EAllocType::kOwning;
+   }
 
    /// Construct an object at a certain memory address
    /// \tparam U The type of the memory address at which the object needs to be constructed
@@ -122,7 +126,7 @@ public:
       if (fBufferSize == 0 && EAllocType::kAdopting == fAllocType)
          return;
       RConstructHelper<U>::Construct(fStdAllocator, p, args...);
-      // fStdAllocator.construct(p, args...);
+      //fStdAllocator.construct(p, args...);
    }
 
    /// \brief Allocate some memory
@@ -166,6 +170,7 @@ public:
    bool operator!=(const RAdoptAllocator<T> &other) { return !(*this == other); }
 
    size_type max_size() const { return fStdAllocator.max_size(); };
+
 };
 
 // The different semantics of std::vector<bool> make  memory adoption through a
@@ -209,6 +214,7 @@ public:
    bool *allocate(std::size_t n) { return fStdAllocator.allocate(n); }
 
    std::size_t GetBufferSize() const { return 0; }
+   bool IsAdoptingExternalMemory() const { return false; }
 
    template <typename U, class... Args>
    void construct(U *p, Args &&... args)
@@ -264,9 +270,17 @@ std::size_t GetBufferSize(const Alloc_t &alloc)
    return alloc.GetBufferSize();
 }
 
-inline std::size_t GetBufferSize(const std::allocator<bool> &)
+inline std::size_t GetBufferSize(const std::allocator<bool> &) { return 0;}
+
+template <typename Alloc_t>
+bool IsAdoptingExternalMemory(const Alloc_t &alloc)
 {
-   return 0;
+   return alloc.IsAdoptingExternalMemory();
+}
+
+inline bool IsAdoptingExternalMemory(const std::allocator<bool> &)
+{
+   return false;
 }
 
 } // namespace VecOps
