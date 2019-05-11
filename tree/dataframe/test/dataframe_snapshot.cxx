@@ -157,14 +157,11 @@ TEST_F(RDFSnapshot, Snapshot_nocolumnmatch)
 {
    const auto fname = "snapshotnocolumnmatch.root";
    RDataFrame d(1);
-   int ret(1);
-   try {
+   auto op = [&](){
       testing::internal::CaptureStderr();
       d.Snapshot("t", fname, "x");
-   } catch (const std::runtime_error &) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret);
+   };
+   EXPECT_ANY_THROW(op());
    gSystem->Unlink(fname);
 }
 

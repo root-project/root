@@ -51,14 +51,11 @@ TEST(RDataFrameNodes, RLoopManagerJit)
 {
    ROOT::Detail::RDF::RLoopManager lm(nullptr, {});
    lm.ToJitExec("souble d = 3.14");
-   int ret(1);
-   try {
+   auto op = [&](){
       testing::internal::CaptureStderr();
       lm.Run();
-   } catch (const std::runtime_error &) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret) << "Bogus C++ code was jitted and nothing was detected!";
+   };
+   EXPECT_ANY_THROW(op()) << "Bogus C++ code was jitted and nothing was detected!";
 }
 
 TEST(RDataFrameNodes, DoubleEvtLoop)

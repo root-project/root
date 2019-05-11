@@ -270,14 +270,11 @@ TEST(RDFAndFriendsNoFixture, IndexedFriend)
    auxChain.BuildIndex("idx");
    mainChain.AddFriend(&auxChain);
 
-   int ret = 1;
-   try {
+   auto op = [&](){
       auto df = ROOT::RDataFrame(mainChain);
       *df.Min<int>("x");
-   } catch (const std::runtime_error &) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret);
+   };
+   EXPECT_ANY_THROW(op());
 
    gSystem->Unlink(mainFile);
    gSystem->Unlink(auxFile);

@@ -143,14 +143,12 @@ TEST(Cache, InternalColumnsSnapshot)
    auto orig = tdf.Define(colName, [&f]() { return f++; }).Define("dummy", []() { return 0.f; });
    auto cached = orig.Cache<float, float>({colName, "dummy"});
    auto snapshot = cached.Snapshot("t", "InternalColumnsSnapshot.root", "", {"RECREATE", ROOT::kZLIB, 0, 0, 99, false});
-   int ret(1);
-   try {
+
+   auto op = [&](){
       testing::internal::CaptureStderr();
       snapshot->Mean<ULong64_t>(colName);
-   } catch (const std::runtime_error &) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret) << "Internal column " << colName << " has been snapshotted!";
+   };
+   EXPECT_ANY_THROW(op()) << "Internal column " << colName << " has been snapshotted!";
 }
 
 TEST(Cache, CollectionColumns)
