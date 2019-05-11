@@ -188,16 +188,7 @@ TEST_P(RDFSimpleTests, Define_jitted_type_unknown_to_interpreter)
    // everything works fine
    EXPECT_EQ(10U, *d.Count());
 
-   // We try to use the column: an exception is thrown
-   int ret = 1;
-   try {
-      // Here the system tries to understand the type of foo3 and will fail
-      auto d3 = d.Define("foo3", "foo*2");
-   } catch (const std::runtime_error &) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret);
-
+   EXPECT_ANY_THROW(d.Define("foo3", "foo*2"));
 }
 
 TEST_P(RDFSimpleTests, Define_jitted_complex)
@@ -973,13 +964,7 @@ TEST(RDFSimpleTests, NonExistingFile)
    ROOT::RDataFrame r("myTree", "nonexistingfile.root");
    
    // We try to use the tree for jitting: an exception is thrown
-   int ret = 1;
-   try {
-      auto r2 = r.Filter("inventedVar > 0");
-   } catch (const std::runtime_error &) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret);
+   EXPECT_ANY_THROW(r.Filter("inventedVar > 0"));
 }
 
 TEST_P(RDFSimpleTests, Stats)
@@ -1031,13 +1016,7 @@ TEST_P(RDFSimpleTests, Stats)
    EXPECT_FLOAT_EQ(s1->GetMean(), s1prime1c->GetMean());
 
    // Check for the unsupported case
-   auto ret = 1;
-   try {
-      rr.Stats<ULong64_t>("v", "one");
-   } catch (const std::runtime_error &) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret);
+   EXPECT_ANY_THROW(rr.Stats<ULong64_t>("v", "one"));
 }
 
 // ROOT-10092
@@ -1049,13 +1028,7 @@ TEST(RDFSimpleTests, ScalarValuesCollectionWeights)
              .Histo1D<int, ROOT::RVec<int>>("x","y");
    
    // Check that the exception is thrown
-   auto ret = 1;
-   try {
-      *h;
-   } catch (const std::runtime_error &) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret);
+   EXPECT_ANY_THROW(*h);
 }
 
 // run single-thread tests
