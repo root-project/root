@@ -52,21 +52,8 @@ TEST(RDataFrameReport, AnalyseCuts)
       ASSERT_FLOAT_EQ(cutis[j].GetEff(), effs[j]);
    }
 
-   int ret = 1;
-   try {
-      rep["NonExisting"];
-   } catch (...) {
-      ret = 0;
-   }
-   ASSERT_EQ(0, ret) << "No exception thrown when trying to get a non-existing cut.\n";
-
-   ret = 1;
-   try {
-      rep[""];
-   } catch (...) {
-      ret = 0;
-   }
-   ASSERT_EQ(0, ret) << "No exception thrown when trying to get an unnamed cut.\n";
+   EXPECT_ANY_THROW(rep["NonExisting"]) << "No exception thrown when trying to get a non-existing cut.\n";
+   EXPECT_ANY_THROW(rep[""]) << "No exception thrown when trying to get an unnamed cut.\n";
 }
 
 TEST(RDataFrameReport, Printing)

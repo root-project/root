@@ -156,35 +156,17 @@ TEST(RDataFrameUtils, CheckExistingCustomColumnDataSource)
 
 TEST(RDataFrameUtils, CheckTypesAndPars)
 {
-   int ret = 1;
-   try {
-      RDFInt::CheckTypesAndPars(5, 4);
-   } catch (const std::runtime_error &) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret);
+   EXPECT_ANY_THROW(RDFInt::CheckTypesAndPars(5, 4));  
 }
 
 TEST(RDataFrameUtils, SelectColumnsNNamesDiffersRequiredNames)
 {
-   int ret = 1;
-   try {
-      RDFInt::SelectColumns(3, {"a", "b"}, {});
-   } catch (const std::runtime_error &) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret);
+   EXPECT_ANY_THROW(RDFInt::SelectColumns(3, {"a", "b"}, {}));
 }
 
 TEST(RDataFrameUtils, SelectColumnsTooFewRequiredNames)
 {
-   int ret = 1;
-   try {
-      RDFInt::SelectColumns(3, {}, {"bla"});
-   } catch (const std::runtime_error &) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret);
+   EXPECT_ANY_THROW(RDFInt::SelectColumns(3, {}, {"bla"}));
 }
 
 TEST(RDataFrameUtils, SelectColumnsCheckNames)
