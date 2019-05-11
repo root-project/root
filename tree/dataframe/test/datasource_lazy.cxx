@@ -89,13 +89,7 @@ TEST(RLazyDS, ColSizesCheck)
    auto col1 = d1.Define(colName, genf).Take<float>(colName);
    RLazyDS<double, float> tds({"zero", col0}, {"one", col1});
    tds.SetNSlots(4);
-   int ret(1);
-   try {
-      tds.Initialise();
-   } catch (...) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret);
+   EXPECT_ANY_THROW(tds.Initialise());
 }
 
 TEST(RLazyDS, RDFSimple)
