@@ -19,8 +19,8 @@
 // Do not use for real data!
 
 #include <ROOT/RField.hxx>
-#include <ROOT/RForest.hxx>
-#include <ROOT/RForestModel.hxx>
+#include <ROOT/RDataSet.hxx>
+#include <ROOT/RDataSetModel.hxx>
 
 #include <TBranch.h>
 #include <TCanvas.h>

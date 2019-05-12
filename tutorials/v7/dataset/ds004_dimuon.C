@@ -17,8 +17,8 @@
 // Do not use for real data!
 
 #include <ROOT/RDataFrame.hxx>
-#include <ROOT/RForest.hxx>
-#include <ROOT/RForestDS.hxx>
+#include <ROOT/RDataSet.hxx>
+#include <ROOT/RDataSetDS.hxx>
 #include <ROOT/RVec.hxx>
 
 #include <TCanvas.h>
@@ -38,7 +38,6 @@
 // Import classes from experimental namespace for the time being
 using RInputForest = ROOT::Experimental::RInputForest;
 using ROutputForest = ROOT::Experimental::ROutputForest;
-using RForestDS = ROOT::Experimental::RForestDS;
 
 constexpr char const* kTreeFileName = "http://root.cern.ch/files/NanoAOD_DoubleMuon_CMS2011OpenData.root";
 constexpr char const* kForestFileName = "naod_dimuon_forest.root";
@@ -172,7 +171,7 @@ void ds004_dimuon() {
    if (gSystem->AccessPathName(kForestFileName))
       Convert();
 
-   auto df = ROOT::Experimental::MakeForestDataFrame("Events", kForestFileName);
+   auto df = ROOT::Experimental::MakeDataSetDataFrame("Events", kForestFileName);
 
    // As of this point, the tutorial is identical to df102_NanoAODDimuonAnalysis except the use of
    // InvariantMassStdVector instead of InvariantMass

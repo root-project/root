@@ -15,10 +15,10 @@
 // Functionality, interface, and data format is still subject to changes.
 // Do not use for real data!
 
-R__LOAD_LIBRARY(ROOTForest)
+R__LOAD_LIBRARY(ROOTDataSet)
 
-#include <ROOT/RForest.hxx>
-#include <ROOT/RForestModel.hxx>
+#include <ROOT/RDataSet.hxx>
+#include <ROOT/RDataSetModel.hxx>
 
 #include <TCanvas.h>
 #include <TH1I.h>

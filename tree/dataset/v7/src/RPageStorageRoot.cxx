@@ -14,8 +14,8 @@
  *************************************************************************/
 
 #include <ROOT/RField.hxx>
-#include <ROOT/RForestDescriptor.hxx>
-#include <ROOT/RForestModel.hxx>
+#include <ROOT/RDataSetDescriptor.hxx>
+#include <ROOT/RDataSetModel.hxx>
 #include <ROOT/RPageStorageRoot.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPagePool.hxx>
@@ -35,8 +35,8 @@ ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view forest
    , fSettings(settings)
    , fPrevClusterNEntries(0)
 {
-   R__WARNING_HERE("Forest") << "The RForest file format will change. " <<
-      "Do not store real data with this version of RForest!";
+   R__WARNING_HERE("DataSet") << "The RDataSet file format will change. " <<
+      "Do not store real data with this version of RDataSet!";
 }
 
 ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view forestName, std::string_view path)
@@ -44,8 +44,8 @@ ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view forest
    , fForestName(forestName)
    , fDirectory(nullptr)
 {
-   R__WARNING_HERE("Forest") << "The RForest file format will change. " <<
-      "Do not store real data with this version of RForest!";
+   R__WARNING_HERE("DataSet") << "The RDataSet file format will change. " <<
+      "Do not store real data with this version of RDataSet!";
    TFile *file = TFile::Open(path.to_string().c_str(), "UPDATE");
    fSettings.fFile = file;
    fSettings.fTakeOwnership = true;

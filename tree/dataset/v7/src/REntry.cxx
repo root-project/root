@@ -14,7 +14,7 @@
  *************************************************************************/
 
 #include <ROOT/RFieldValue.hxx>
-#include <ROOT/RForestEntry.hxx>
+#include <ROOT/REntry.hxx>
 
 ROOT::Experimental::RForestEntry::~RForestEntry()
 {

@@ -18,8 +18,8 @@
 
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RColumnModel.hxx>
-#include <ROOT/RForestDescriptor.hxx>
-#include <ROOT/RForestUtil.hxx>
+#include <ROOT/RDataSetDescriptor.hxx>
+#include <ROOT/RDataSetUtil.hxx>
 
 #include <TDirectory.h>
 #include <TFile.h>

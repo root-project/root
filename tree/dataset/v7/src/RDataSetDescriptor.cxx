@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RForestDescriptor.hxx>
-#include <ROOT/RForestUtil.hxx>
+#include <ROOT/RDataSetDescriptor.hxx>
+#include <ROOT/RDataSetUtil.hxx>
 #include <ROOT/RStringView.hxx>
 
 void ROOT::Experimental::RForestDescriptorBuilder::SetForest(std::string_view name, const RForestVersion &version) {

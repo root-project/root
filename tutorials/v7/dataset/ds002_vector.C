@@ -13,8 +13,8 @@
 // Functionality, interface, and data format is still subject to changes.
 // Do not use for real data!
 
-#include <ROOT/RForest.hxx>
-#include <ROOT/RForestModel.hxx>
+#include <ROOT/RDataSet.hxx>
+#include <ROOT/RDataSetModel.hxx>
 
 #include <TCanvas.h>
 #include <TH1F.h>

@@ -13,9 +13,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RForest.hxx"
+#include "ROOT/RDataSet.hxx"
 
-#include "ROOT/RForestModel.hxx"
+#include "ROOT/RDataSetModel.hxx"
 #include "ROOT/RPageStorage.hxx"
 #include "ROOT/RPageStorageRoot.hxx"
 

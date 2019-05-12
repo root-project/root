@@ -1,5 +1,5 @@
-/// \file RForestDS.hxx
-/// \ingroup Forest ROOT7
+/// \file RDataSetDS.hxx
+/// \ingroup DataSet ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-04
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_RFORESTDS
-#define ROOT_RFORESTDS
+#ifndef ROOT_RDATASETDS
+#define ROOT_RDATASETDS
 
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDataSource.hxx>
@@ -32,7 +32,7 @@ class RInputForest;
 class RForestEntry;
 
 
-class RForestDS final : public ROOT::RDF::RDataSource {
+class RDataSetDS final : public ROOT::RDF::RDataSource {
    std::unique_ptr<ROOT::Experimental::RInputForest> fForest;
    std::unique_ptr<ROOT::Experimental::RForestEntry> fEntry;
    unsigned fNSlots;
@@ -42,8 +42,8 @@ class RForestDS final : public ROOT::RDF::RDataSource {
    std::vector<void*> fValuePtrs;
 
 public:
-   RForestDS(std::unique_ptr<ROOT::Experimental::RInputForest> forest);
-   ~RForestDS();
+   RDataSetDS(std::unique_ptr<ROOT::Experimental::RInputForest> forest);
+   ~RDataSetDS();
    void SetNSlots(unsigned int nSlots) final;
    const std::vector<std::string> &GetColumnNames() const final;
    bool HasColumn(std::string_view colName) const final;
@@ -58,7 +58,7 @@ protected:
    Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) final;
 };
 
-RDataFrame MakeForestDataFrame(std::string_view forestName, std::string_view fileName);
+RDataFrame MakeDataSetDataFrame(std::string_view forestName, std::string_view fileName);
 
 } // ns Experimental
 } // ns ROOT

@@ -17,9 +17,9 @@
 #include <ROOT/RColumnModel.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldValue.hxx>
-#include <ROOT/RForest.hxx>
-#include <ROOT/RForestEntry.hxx>
-#include <ROOT/RForestModel.hxx>
+#include <ROOT/RDataSet.hxx>
+#include <ROOT/RDataSetModel.hxx>
+#include <ROOT/REntry.hxx>
 
 #include <TClass.h>
 #include <TCollection.h>

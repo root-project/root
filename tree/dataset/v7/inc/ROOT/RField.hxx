@@ -18,9 +18,9 @@
 
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RColumnElement.hxx>
+#include <ROOT/RDataSetUtil.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldValue.hxx>
-#include <ROOT/RForestUtil.hxx>
 #include <ROOT/RStringView.hxx>
 #include <ROOT/RVec.hxx>
 #include <ROOT/TypeTraits.hxx>

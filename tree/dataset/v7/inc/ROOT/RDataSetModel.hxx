@@ -16,9 +16,9 @@
 #ifndef ROOT7_RForestModel
 #define ROOT7_RForestModel
 
+#include <ROOT/REntry.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldValue.hxx>
-#include <ROOT/RForestEntry.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <TError.h>

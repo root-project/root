@@ -16,8 +16,8 @@
 #ifndef ROOT7_RPagePool
 #define ROOT7_RPagePool
 
+#include <ROOT/RDataSetUtil.hxx>
 #include <ROOT/RPage.hxx>
-#include <ROOT/RForestUtil.hxx>
 
 #include <cstddef>
 #include <vector>

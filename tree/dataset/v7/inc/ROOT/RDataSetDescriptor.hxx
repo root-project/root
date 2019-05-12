@@ -17,7 +17,7 @@
 #define ROOT7_RForestDescriptor
 
 #include <ROOT/RColumnModel.hxx>
-#include <ROOT/RForestUtil.hxx>
+#include <ROOT/RDataSetUtil.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <vector>

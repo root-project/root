@@ -16,7 +16,7 @@
 #ifndef ROOT7_RForestView
 #define ROOT7_RForestView
 
-#include <ROOT/RForestUtil.hxx>
+#include <ROOT/RDataSetUtil.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RStringView.hxx>
 

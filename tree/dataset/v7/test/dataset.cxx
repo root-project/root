@@ -1,7 +1,7 @@
 #include <ROOT/RDataFrame.hxx>
-#include <ROOT/RForest.hxx>
-#include <ROOT/RForestDS.hxx>
-#include <ROOT/RForestModel.hxx>
+#include <ROOT/RDataSet.hxx>
+#include <ROOT/RDataSetDS.hxx>
+#include <ROOT/RDataSetModel.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageStorageRoot.hxx>
 #include <ROOT/RVec.hxx>
@@ -501,6 +501,6 @@ TEST(RDataSet, RDF)
       forest.Fill();
    }
 
-   auto rdf = ROOT::Experimental::MakeForestDataFrame("f", "test.root");
+   auto rdf = ROOT::Experimental::MakeDataSetDataFrame("f", "test.root");
    EXPECT_EQ(42.0, *rdf.Min("pt"));
 }

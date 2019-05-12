@@ -16,8 +16,8 @@
 #ifndef ROOT7_RPageStorage
 #define ROOT7_RPageStorage
 
-#include <ROOT/RForestDescriptor.hxx>
-#include <ROOT/RForestUtil.hxx>
+#include <ROOT/RDataSetDescriptor.hxx>
+#include <ROOT/RDataSetUtil.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RStringView.hxx>
 

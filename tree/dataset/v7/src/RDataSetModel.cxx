@@ -14,8 +14,8 @@
  *************************************************************************/
 
 #include <ROOT/RField.hxx>
-#include <ROOT/RForestModel.hxx>
-#include <ROOT/RForest.hxx>
+#include <ROOT/RDataSetModel.hxx>
+#include <ROOT/RDataSet.hxx>
 
 #include <TError.h>
 

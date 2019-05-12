@@ -17,7 +17,7 @@
 #define ROOT7_RColumnElement
 
 #include <ROOT/RColumnModel.hxx>
-#include <ROOT/RForestUtil.hxx>
+#include <ROOT/RDataSetUtil.hxx>
 
 #include <cstring> // for memcpy
 #include <type_traits>

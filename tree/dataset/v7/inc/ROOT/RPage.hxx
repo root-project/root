@@ -16,7 +16,7 @@
 #ifndef ROOT7_RPage
 #define ROOT7_RPage
 
-#include <ROOT/RForestUtil.hxx>
+#include <ROOT/RDataSetUtil.hxx>
 
 #include <cstddef>
 #include <cstdint>

@@ -18,7 +18,7 @@
 
 #include <ROOT/RColumnElement.hxx>
 #include <ROOT/RColumnModel.hxx>
-#include <ROOT/RForestUtil.hxx>
+#include <ROOT/RDataSetUtil.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageStorage.hxx>
 

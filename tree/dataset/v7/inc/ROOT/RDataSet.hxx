@@ -16,9 +16,9 @@
 #ifndef ROOT7_RForest
 #define ROOT7_RForest
 
-#include <ROOT/RForestModel.hxx>
-#include <ROOT/RForestUtil.hxx>
-#include <ROOT/RForestView.hxx>
+#include <ROOT/RDataSetModel.hxx>
+#include <ROOT/RDataSetUtil.hxx>
+#include <ROOT/RDataSetView.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <iterator>
