@@ -1946,9 +1946,12 @@ void TCling::RegisterModule(const char* modulename,
 
    if (gIgnoredPCMNames.find(modulename) == gIgnoredPCMNames.end()) {
       llvm::SmallString<256> pcmFileNameFullPath;
-      if (dyLibName)
+      if (dyLibName) {
          pcmFileNameFullPath = dyLibName;
-      else {
+         // The path dyLibName might not be absolute. This can happen if dyLibName
+         // is linked to an executable in the same folder.
+         llvm::sys::fs::make_absolute(pcmFileNameFullPath, pcmFileNameFullPath);
+      } else {
          // if we were in the case of late registration
          assert(lateRegistration);
          pcmFileNameFullPath = FindLibraryName(triggerFunc);
