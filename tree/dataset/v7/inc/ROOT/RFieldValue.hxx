@@ -30,7 +30,7 @@ class RFieldBase;
 // clang-format off
 /**
 \class ROOT::Experimental::TreeValueBase
-\ingroup Forest
+\ingroup DataSet
 \brief Represents transient storage of simple or complex C++ values.
 
 The data carried by the tree value is used by the computational code and it is supposed to be serialized on Fill
@@ -68,7 +68,7 @@ public:
 // clang-format off
 /**
 \class ROOT::Experimental::RFieldValue
-\ingroup Forest
+\ingroup DataSet
 \brief A type-safe front for RFieldValueBase
 
 Used when types are available at compile time by RForestModel::AddField()

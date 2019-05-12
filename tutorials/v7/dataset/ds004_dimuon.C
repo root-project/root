@@ -1,8 +1,8 @@
 /// \file
 /// \ingroup tutorial_dataset
 /// \notebook
-/// Convert CMS open data from a TTree to RForest.
-/// This tutorial illustrates data conversion and data processing with RForest and RDataFrame.  In contrast to the
+/// Convert CMS open data from a TTree to RDataSet.
+/// This tutorial illustrates data conversion and data processing with RDataSet and RDataFrame.  In contrast to the
 /// LHCb open data tutorial, the data model in this tutorial is not tabular but entries have variable lengths vectors
 /// Based on RDataFrame's df102_NanoAODDimuonAnalysis.C
 ///
@@ -12,7 +12,7 @@
 /// \date April 2019
 /// \author The ROOT Team
 
-// NOTE: The RForest classes are experimental at this point.
+// NOTE: The RDataSet classes are experimental at this point.
 // Functionality, interface, and data format is still subject to changes.
 // Do not use for real data!
 
@@ -36,59 +36,60 @@
 #include <utility>
 
 // Import classes from experimental namespace for the time being
-using RInputForest = ROOT::Experimental::RInputForest;
-using ROutputForest = ROOT::Experimental::ROutputForest;
+// Also, hide the old RForest code name until sources are fully renamed.
+using RDataSetWriter = ROOT::Experimental::ROutputForest;
+using RDataSetModel = ROOT::Experimental::RForestModel;
 
 constexpr char const* kTreeFileName = "http://root.cern.ch/files/NanoAOD_DoubleMuon_CMS2011OpenData.root";
-constexpr char const* kForestFileName = "naod_dimuon_forest.root";
+constexpr char const* kDataSetFileName = "ds004_dimuon.root";
 
 
 using ColNames_t = std::vector<std::string>;
 
 // This is a custom action for RDataFrame. It does not support parallelism!
-// This action writes data from an RDataFrame entry into a forest. It is templated on the
+// This action writes data from an RDataFrame entry into a data set. It is templated on the
 // types of the columns to be written and can be used as a generic file format converter.
 template <typename... ColumnTypes_t>
-class RForestHelper : public ROOT::Detail::RDF::RActionImpl<RForestHelper<ColumnTypes_t...>> {
+class RConversionHelper : public ROOT::Detail::RDF::RActionImpl<RConversionHelper<ColumnTypes_t...>> {
 public:
-   using Result_t = ROutputForest;
+   using Result_t = RDataSetWriter;
 private:
    using ColumnValues_t = std::tuple<std::shared_ptr<ColumnTypes_t>...>;
 
-   std::string fForestName;
+   std::string fDataSetName;
    std::string fRootFile;
    ColNames_t fColNames;
    ColumnValues_t fColumnValues;
    static constexpr const auto fNColumns = std::tuple_size<ColumnValues_t>::value;
-   std::shared_ptr<ROutputForest> fForest;
+   std::shared_ptr<RDataSetWriter> fDataSet;
    int fCounter;
 
    template<std::size_t... S>
    void InitializeImpl(std::index_sequence<S...>) {
-      auto eventModel = ROOT::Experimental::RForestModel::Create();
+      auto eventModel = RDataSetModel::Create();
       // Create the fields and the shared pointers to the connected values
       std::initializer_list<int> expander{
          (std::get<S>(fColumnValues) = eventModel->MakeField<ColumnTypes_t>(fColNames[S]), 0)...};
-      fForest = std::move(ROutputForest::Recreate(std::move(eventModel), fForestName, fRootFile));
+      fDataSet = std::move(RDataSetWriter::Recreate(std::move(eventModel), fDataSetName, fRootFile));
    }
 
    template<std::size_t... S>
    void ExecImpl(std::index_sequence<S...>, ColumnTypes_t... values) {
-      // For every entry, set the destination of the forest's default entry's shared pointers to the given values,
+      // For every entry, set the destination of the data set's default entry's shared pointers to the given values,
       // which are provided by RDataFrame
       std::initializer_list<int> expander{(*std::get<S>(fColumnValues) = values, 0)...};
    }
 
 public:
-   RForestHelper(std::string_view forestName, std::string_view rootFile, const ColNames_t& colNames)
-      : fForestName(forestName), fRootFile(rootFile), fColNames(colNames)
+   RConversionHelper(std::string_view dataSetName, std::string_view rootFile, const ColNames_t& colNames)
+      : fDataSetName(dataSetName), fRootFile(rootFile), fColNames(colNames)
    {
       InitializeImpl(std::make_index_sequence<fNColumns>());
    }
 
-   RForestHelper(RForestHelper&&) = default;
-   RForestHelper(const RForestHelper&) = delete;
-   std::shared_ptr<ROutputForest> GetResultPtr() const { return fForest; }
+   RConversionHelper(RConversionHelper&&) = default;
+   RConversionHelper(const RConversionHelper&) = delete;
+   std::shared_ptr<RDataSetWriter> GetResultPtr() const { return fDataSet; }
 
    void Initialize()
    {
@@ -100,19 +101,19 @@ public:
    /// This is a method executed at every entry
    void Exec(unsigned int slot, ColumnTypes_t... values)
    {
-      // Populate the forest's fields data locations with the provided values, then write to disk
+      // Populate the data set's fields data locations with the provided values, then write to disk
       ExecImpl(std::make_index_sequence<fNColumns>(), values...);
-      fForest->Fill();
+      fDataSet->Fill();
       if (++fCounter % 100000 == 0)
          std::cout << "Wrote " << fCounter << " entries" << std::endl;
    }
 
    void Finalize()
    {
-      fForest->CommitCluster();
+      fDataSet->CommitCluster();
    }
 
-   std::string GetActionName() { return "RForest Writer"; }
+   std::string GetActionName() { return "RDataSet Writer"; }
 };
 
 
@@ -131,7 +132,7 @@ T InvariantMassStdVector(
    return InvariantMass(rvPt, rvEta, rvPhi, rvMass);
 }
 
-// We use an RDataFrame custom snapshotter to convert between TTree and RForest.
+// We use an RDataFrame custom snapshotter to convert between TTree and RDataSet.
 // The snapshotter is templated; we construct the conversion C++ code as a string and hand it over to Cling
 void Convert() {
    // Use df to list the branch types and names of the input tree
@@ -143,7 +144,7 @@ void Convert() {
    auto columnNames = df.GetColumnNames();
    for (auto name : columnNames) {
       auto typeName = df.GetColumnType(name);
-      // Skip ULong64_t for the time being, RForest support will be added at a later point
+      // Skip ULong64_t for the time being, RDataSet support will be added at a later point
       if (typeName == "ULong64_t") continue;
       columnList += "\"" + name + "\",";
       typeList += typeName + ",";
@@ -156,7 +157,7 @@ void Convert() {
    code += "auto df = std::make_unique<ROOT::RDataFrame>(\"Events\", \"" + std::string(kTreeFileName)
          + "\")->Range(0, 4000000);";
    code += "ColNames_t colNames = " + columnList + ";";
-   code += "RForestHelper" + typeList + " helper{\"Events\", \"" + std::string(kForestFileName) + "\", colNames};";
+   code += "RConversionHelper" + typeList + " helper{\"Events\", \"" + std::string(kDataSetFileName) + "\", colNames};";
    code += "*df.Book" + typeList + "(std::move(helper), colNames);";
    code += "}";
 
@@ -168,10 +169,10 @@ void ds004_dimuon() {
    // Support for multi-threading comes at a later point, for the time being do not enable
    // ROOT::EnableImplicitMT();
 
-   if (gSystem->AccessPathName(kForestFileName))
+   if (gSystem->AccessPathName(kDataSetFileName))
       Convert();
 
-   auto df = ROOT::Experimental::MakeDataSetDataFrame("Events", kForestFileName);
+   auto df = ROOT::Experimental::MakeDataSetDataFrame("Events", kDataSetFileName);
 
    // As of this point, the tutorial is identical to df102_NanoAODDimuonAnalysis except the use of
    // InvariantMassStdVector instead of InvariantMass

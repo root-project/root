@@ -27,10 +27,10 @@
 namespace ROOT {
 namespace Experimental {
 
-class RForestDescriptorBuilder;
+class RDataSetDescriptorBuilder;
 
 class RFieldDescriptor {
-   friend class RForestDescriptorBuilder;
+   friend class RDataSetDescriptorBuilder;
 
 private:
    DescriptorId_t fFieldId = kInvalidDescriptorId;
@@ -60,7 +60,7 @@ public:
 
 
 class RColumnDescriptor {
-   friend class RForestDescriptorBuilder;
+   friend class RDataSetDescriptorBuilder;
 
 private:
    DescriptorId_t fColumnId = kInvalidDescriptorId;;
@@ -84,7 +84,7 @@ public:
 
 
 class RClusterDescriptor {
-   friend class RForestDescriptorBuilder;
+   friend class RDataSetDescriptorBuilder;
 
 public:
    struct RColumnInfo {
@@ -110,11 +110,11 @@ public:
 
 
 /**
- * Represents the on-disk (on storage) information about a forest.  This can, for instance, be used
+ * Represents the on-disk (on storage) information about a data set.  This can, for instance, be used
  * by 3rd party utilies.
  */
-class RForestDescriptor {
-   friend class RForestDescriptorBuilder;
+class RDataSetDescriptor {
+   friend class RDataSetDescriptorBuilder;
 
 private:
    RForestVersion fVersion;
@@ -137,16 +137,16 @@ public:
 
 
 /**
- * Used by RPageStorage implementations in order to construct the RForestDescriptor from the various header parts.
+ * Used by RPageStorage implementations in order to construct the RDataSetDescriptor from the various header parts.
  */
-class RForestDescriptorBuilder {
+class RDataSetDescriptorBuilder {
 private:
-   RForestDescriptor fDescriptor;
+   RDataSetDescriptor fDescriptor;
 
 public:
-   const RForestDescriptor& GetDescriptor() const { return fDescriptor; }
+   const RDataSetDescriptor& GetDescriptor() const { return fDescriptor; }
 
-   void SetForest(std::string_view name, const RForestVersion &version);
+   void SetDataSet(std::string_view name, const RForestVersion &version);
 
    void AddField(DescriptorId_t fieldId, const RForestVersion &fieldVersion, const RForestVersion &typeVersion,
                  std::string_view fieldName, std::string_view typeName, EForestStructure structure);

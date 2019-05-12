@@ -125,7 +125,7 @@ public:
 // clang-format off
 /**
 \class ROOT::Experimental::Detail::RPageSinkRoot
-\ingroup Forest
+\ingroup DataSet
 \brief Storage provider that write Forest pages into a ROOT TFile
 */
 // clang-format on
@@ -167,7 +167,7 @@ public:
 // clang-format off
 /**
 \class ROOT::Experimental::Detail::RPageSourceRoot
-\ingroup Forest
+\ingroup DataSet
 \brief Storage provider that reads Forest pages from a ROOT TFile
 */
 // clang-format on
@@ -185,7 +185,7 @@ private:
    RSettings fSettings;
 
    RMapper fMapper;
-   RForestDescriptor fDescriptor;
+   RDataSetDescriptor fDescriptor;
 
 public:
    RPageSourceRoot(std::string_view forestName, RSettings settings);
@@ -199,7 +199,7 @@ public:
    ForestSize_t GetNEntries() final;
    ForestSize_t GetNElements(ColumnHandle_t columnHandle) final;
    ColumnId_t GetColumnId(ColumnHandle_t columnHandle) final;
-   const RForestDescriptor& GetDescriptor() const final { return fDescriptor; }
+   const RDataSetDescriptor& GetDescriptor() const final { return fDescriptor; }
 };
 
 } // namespace Detail

@@ -44,7 +44,7 @@ enum class EPageStorageType {
 // clang-format off
 /**
 \class ROOT::Experimental::Detail::RPageStorage
-\ingroup Forest
+\ingroup DataSet
 \brief Manages tree meta-data, which is common for sinks and sources.
 
 The tree meta-data contains of a list of fields, a unique identifier, and provenance information.
@@ -80,7 +80,7 @@ public:
 // clang-format off
 /**
 \class ROOT::Experimental::Detail::RPageSink
-\ingroup Forest
+\ingroup DataSet
 \brief Abstract interface to write data into a tree
 
 The page sink takes the list of columns and afterwards a series of page commits and cluster commits.
@@ -107,7 +107,7 @@ public:
 // clang-format off
 /**
 \class ROOT::Experimental::Detail::RPageSource
-\ingroup Forest
+\ingroup DataSet
 \brief Abstract interface to read data from a tree
 
 The page source is initialized with the columns of interest. Pages from those columns can then be
@@ -133,7 +133,7 @@ public:
    virtual ForestSize_t GetNEntries() = 0;
    virtual ForestSize_t GetNElements(ColumnHandle_t columnHandle) = 0;
    virtual ColumnId_t GetColumnId(ColumnHandle_t columnHandle) = 0;
-   virtual const RForestDescriptor& GetDescriptor() const = 0;
+   virtual const RDataSetDescriptor& GetDescriptor() const = 0;
 };
 
 } // namespace Detail

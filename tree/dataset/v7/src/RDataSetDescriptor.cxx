@@ -17,12 +17,12 @@
 #include <ROOT/RDataSetUtil.hxx>
 #include <ROOT/RStringView.hxx>
 
-void ROOT::Experimental::RForestDescriptorBuilder::SetForest(std::string_view name, const RForestVersion &version) {
+void ROOT::Experimental::RDataSetDescriptorBuilder::SetDataSet(std::string_view name, const RForestVersion &version) {
    fDescriptor.fName = name.to_string();
    fDescriptor.fVersion = version;
 }
 
-void ROOT::Experimental::RForestDescriptorBuilder::AddField(
+void ROOT::Experimental::RDataSetDescriptorBuilder::AddField(
    DescriptorId_t fieldId, const RForestVersion &fieldVersion, const RForestVersion &typeVersion,
    std::string_view fieldName, std::string_view typeName, EForestStructure structure)
 {
@@ -36,17 +36,17 @@ void ROOT::Experimental::RForestDescriptorBuilder::AddField(
    fDescriptor.fFieldDescriptors[fieldId] = f;
 }
 
-void ROOT::Experimental::RForestDescriptorBuilder::SetFieldParent(DescriptorId_t fieldId, DescriptorId_t parentId)
+void ROOT::Experimental::RDataSetDescriptorBuilder::SetFieldParent(DescriptorId_t fieldId, DescriptorId_t parentId)
 {
    fDescriptor.fFieldDescriptors[fieldId].fParentId = parentId;
 }
 
-void ROOT::Experimental::RForestDescriptorBuilder::AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId)
+void ROOT::Experimental::RDataSetDescriptorBuilder::AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId)
 {
    fDescriptor.fFieldDescriptors[fieldId].fLinkIds.push_back(linkId);
 }
 
-void ROOT::Experimental::RForestDescriptorBuilder::AddColumn(
+void ROOT::Experimental::RDataSetDescriptorBuilder::AddColumn(
    DescriptorId_t columnId, DescriptorId_t fieldId, const RForestVersion &version, const RColumnModel &model)
 {
    RColumnDescriptor c;
@@ -57,17 +57,17 @@ void ROOT::Experimental::RForestDescriptorBuilder::AddColumn(
    fDescriptor.fColumnDescriptors[columnId] = c;
 }
 
-void ROOT::Experimental::RForestDescriptorBuilder::SetColumnOffset(DescriptorId_t columnId, DescriptorId_t offsetId)
+void ROOT::Experimental::RDataSetDescriptorBuilder::SetColumnOffset(DescriptorId_t columnId, DescriptorId_t offsetId)
 {
    fDescriptor.fColumnDescriptors[columnId].fOffsetId = offsetId;
 }
 
-void ROOT::Experimental::RForestDescriptorBuilder::AddColumnLink(DescriptorId_t columnId, DescriptorId_t linkId)
+void ROOT::Experimental::RDataSetDescriptorBuilder::AddColumnLink(DescriptorId_t columnId, DescriptorId_t linkId)
 {
    fDescriptor.fColumnDescriptors[columnId].fLinkIds.push_back(linkId);
 }
 
-void ROOT::Experimental::RForestDescriptorBuilder::AddCluster(
+void ROOT::Experimental::RDataSetDescriptorBuilder::AddCluster(
    DescriptorId_t clusterId, RForestVersion version, ForestSize_t firstEntryIndex, ClusterSize_t nEntries)
 {
    RClusterDescriptor c;
@@ -78,7 +78,7 @@ void ROOT::Experimental::RForestDescriptorBuilder::AddCluster(
    fDescriptor.fClusterDescriptors[clusterId] = c;
 }
 
-void ROOT::Experimental::RForestDescriptorBuilder::AddClusterColumnInfo(
+void ROOT::Experimental::RDataSetDescriptorBuilder::AddClusterColumnInfo(
    DescriptorId_t clusterId, const RClusterDescriptor::RColumnInfo &columnInfo)
 {
    fDescriptor.fClusterDescriptors[clusterId].fColumnInfos[columnInfo.fColumnId] = columnInfo;
