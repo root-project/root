@@ -2,13 +2,13 @@
 \index{C++}
 
 This chapter introduces you to some useful insights into C++, to allow
-you to use of the most advanced features in ROOT. It is in no case a
+you to use some of the most advanced features in ROOT. It is in no case a
 full course in C++.
 
 ## Classes, Methods and Constructors
 
 
-C++ extends C with the notion of class. If you're used to structures
+C++ extends C with the notion of a class. If you're used to structures
 in C, a class is a `struct` that is a group of related variables,
 which is extended with functions and routines specific to this
 structure (class). What is the interest? Consider a `struct` that is defined this way:
@@ -95,7 +95,7 @@ class. We would write something like:
 
 The keyword "`public`" will be explained later. The class **`TArrow`**
 now contains everything that the class **`TLine`** does, and a couple
-of things more, the size of the arrowhead and a function that can
+of more things, the size of the arrowhead and a function that can
 change it. The Draw method of **`TArrow`** will draw the head and call
 the draw method of **`TLine`**. We just have to write the code for
 drawing the head!
@@ -108,7 +108,7 @@ of a class) in the child class (**`TArrow`**) as in the parent
 (**`TLine`**) does not give any problem. This is called **overriding**
 a method. Draw in **`TArrow`** overrides Draw in **`TLine`**. There is
 no possible ambiguity since, when one calls the `Draw()` method; this
-applies to an object which type is known. Suppose we have an object
+applies to an object whose type is known. Suppose we have an object
 `l` of type **`TLine`** and an object `a` of type **`TArrow`**. When
 you want to draw the line, you do:
 
@@ -300,7 +300,7 @@ new Quad(1.,2.,-3.);
 `new`, despite its looks, is an operator and creates an object or
 variable of the type that comes next, `Quad` in this case, on the
 heap. Just as with stack objects it has to be initialized by calling
-its constructor. The syntax requires that the argument list follow the
+its constructor. The syntax requires that the argument list follows the
 type. This one statement has brought two items into existence, one on
 the heap and one on the stack. The heap object will live until the
 delete operator is applied to it.
@@ -351,12 +351,12 @@ Here we have a `Quad` pointer that has been initialized with the
 address of a stack object. Be very careful if you take the address of
 stack objects. As we shall see soon, they are deleted automatically,
 which could leave you with an illegal pointer. Using it will corrupt
-and may well crash the program!
+and may as well crash the program!
 
 It is time to look at the destruction of objects. A destructor is a
-special C++ function that releases resources for (or destroy) an
-object of a class. It is opposite of a constructor that create the
-object of a class when is called. The compiler will provide a
+special C++ function that releases resources for (or destroys) an
+object of a class. It is the opposite of a constructor that creates the
+object of a class when it is called. The compiler will provide a
 destructor that does nothing if none is provided. We will add one to
 our Quad class so that we can see when it is called. The class names
 the destructor but with a prefix \~ which is the C++ one's complement
