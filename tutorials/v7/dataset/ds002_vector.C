@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_forest
+/// \ingroup tutorial_dataset
 /// \notebook
 /// Write and read STL vectors with RForest.  Adapted from the hvector tree tutorial.
 ///
@@ -149,7 +149,7 @@ void Read()
 }
 
 
-void fst002_vector()
+void ds002_vector()
 {
    Write();
    Read();

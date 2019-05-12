@@ -6,4 +6,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(CustomStruct
                               SOURCES CustomStruct.cxx
                               LINKDEF CustomStructLinkDef.h
                               DEPENDENCIES RIO)
-ROOT_ADD_GTEST(forest forest.cxx LIBRARIES ROOTDataFrame ROOTForest MathCore CustomStruct)
+ROOT_ADD_GTEST(dataset dataset.cxx LIBRARIES ROOTDataFrame ROOTForest MathCore CustomStruct)

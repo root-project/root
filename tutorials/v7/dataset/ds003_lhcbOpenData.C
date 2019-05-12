@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_forest
+/// \ingroup tutorial_dataset
 /// \notebook
 /// Convert LHCb run 1 open data from a TTree to RForest.
 /// This tutorial illustrates data conversion for a simple, tabular data model.
@@ -91,7 +91,7 @@ void Convert() {
 }
 
 
-void fst003_lhcbOpenData()
+void ds003_lhcbOpenData()
 {
    if (gSystem->AccessPathName(kForestFileName))
       Convert();

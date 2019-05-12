@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_forest
+/// \ingroup tutorial_dataset
 /// \notebook
 /// Write and read tabular data with RForest.  Adapted from the cernbuild and cernstaff tree tutorials.
 /// Illustrates the type-safe forest model interface, which is used to define a data model that is in a second step
@@ -14,6 +14,8 @@
 // NOTE: The RForest classes are experimental at this point.
 // Functionality, interface, and data format is still subject to changes.
 // Do not use for real data!
+
+R__LOAD_LIBRARY(ROOTForest)
 
 #include <ROOT/RForest.hxx>
 #include <ROOT/RForestModel.hxx>
@@ -104,7 +106,7 @@ void Analyze() {
    h->DrawCopy();
 }
 
-void fst001_staff() {
+void ds001_staff() {
    Ingest();
    Analyze();
 }

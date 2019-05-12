@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_forest
+/// \ingroup tutorial_dataset
 /// \notebook
 /// Convert CMS open data from a TTree to RForest.
 /// This tutorial illustrates data conversion and data processing with RForest and RDataFrame.  In contrast to the
@@ -165,7 +165,7 @@ void Convert() {
 }
 
 
-void fst004_dimuon() {
+void ds004_dimuon() {
    // Support for multi-threading comes at a later point, for the time being do not enable
    // ROOT::EnableImplicitMT();
 
