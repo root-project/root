@@ -1,5 +1,5 @@
-/// \file ROOT/RForestView.hxx
-/// \ingroup Forest ROOT7
+/// \file ROOT/RDataSetView.hxx
+/// \ingroup DataSet ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-05
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RForestView
-#define ROOT7_RForestView
+#ifndef ROOT7_RDataSetView
+#define ROOT7_RDataSetView
 
 #include <ROOT/RDataSetUtil.hxx>
 #include <ROOT/RField.hxx>

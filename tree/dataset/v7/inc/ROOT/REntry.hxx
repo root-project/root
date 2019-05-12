@@ -1,5 +1,5 @@
-/// \file ROOT/RForestEntry.hxx
-/// \ingroup Forest ROOT7
+/// \file ROOT/REntry.hxx
+/// \ingroup DataSet ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-07-19
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RForestEntry
-#define ROOT7_RForestEntry
+#ifndef ROOT7_REntry
+#define ROOT7_REntry
 
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldValue.hxx>
@@ -31,15 +31,15 @@ namespace Experimental {
 
 // clang-format off
 /**
-\class ROOT::Experimental::RForestEntry
+\class ROOT::Experimental::REntry
 \ingroup Forest
-\brief The RForestEntry is a collection of values in a forest corresponding to a complete row in the data set
+\brief The REntry is a collection of values in a forest corresponding to a complete row in the data set
 
 The entry provides a memory-managed binder for a set of values. Through shared pointers, the memory locations
 that are associated to values are managed.
 */
 // clang-format on
-class RForestEntry {
+class REntry {
    std::vector<Detail::RFieldValueBase> fValues;
    /// The objects involed in serialization and deserialization might be used long after the entry is gone:
    /// hence the shared pointer
@@ -48,10 +48,10 @@ class RForestEntry {
    std::vector<std::size_t> fManagedValues;
 
 public:
-   RForestEntry() = default;
-   RForestEntry(const RForestEntry& other) = delete;
-   RForestEntry& operator=(const RForestEntry& other) = delete;
-   ~RForestEntry();
+   REntry() = default;
+   REntry(const REntry& other) = delete;
+   REntry& operator=(const REntry& other) = delete;
+   ~REntry();
 
    /// Adds a value whose storage is managed by the entry
    void AddValue(const Detail::RFieldValueBase& value);

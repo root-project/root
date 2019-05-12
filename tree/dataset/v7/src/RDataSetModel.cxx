@@ -1,5 +1,5 @@
-/// \file RTreeModel.cxx
-/// \ingroup Forest ROOT7
+/// \file RDataSetModel.cxx
+/// \ingroup DataSet ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-15
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -26,7 +26,7 @@
 
 ROOT::Experimental::RForestModel::RForestModel()
   : fRootField(std::make_unique<RFieldRoot>())
-  , fDefaultEntry(std::make_unique<RForestEntry>())
+  , fDefaultEntry(std::make_unique<REntry>())
 {}
 
 ROOT::Experimental::RForestModel* ROOT::Experimental::RForestModel::Clone()
@@ -34,7 +34,7 @@ ROOT::Experimental::RForestModel* ROOT::Experimental::RForestModel::Clone()
    auto cloneModel = new RForestModel();
    auto cloneRootField = static_cast<RFieldRoot*>(fRootField->Clone(""));
    cloneModel->fRootField = std::unique_ptr<RFieldRoot>(cloneRootField);
-   cloneModel->fDefaultEntry = std::unique_ptr<RForestEntry>(cloneRootField->GenerateEntry());
+   cloneModel->fDefaultEntry = std::unique_ptr<REntry>(cloneRootField->GenerateEntry());
    return cloneModel;
 }
 
@@ -56,9 +56,9 @@ std::shared_ptr<ROOT::Experimental::RCollectionForest> ROOT::Experimental::RFore
    return collectionForest;
 }
 
-std::unique_ptr<ROOT::Experimental::RForestEntry> ROOT::Experimental::RForestModel::CreateEntry()
+std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RForestModel::CreateEntry()
 {
-   auto entry = std::make_unique<RForestEntry>();
+   auto entry = std::make_unique<REntry>();
    for (auto& f : *fRootField) {
       if (f.GetParent() != GetRootField())
          continue;

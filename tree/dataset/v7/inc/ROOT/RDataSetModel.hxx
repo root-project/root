@@ -1,5 +1,5 @@
-/// \file ROOT/RForestModel.hxx
-/// \ingroup Forest ROOT7
+/// \file ROOT/RDataSetModel.hxx
+/// \ingroup DataSet ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-04
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RForestModel
-#define ROOT7_RForestModel
+#ifndef ROOT7_RDataSetModel
+#define ROOT7_RDataSetModel
 
 #include <ROOT/REntry.hxx>
 #include <ROOT/RField.hxx>
@@ -47,7 +47,7 @@ class RForestModel {
    /// Hierarchy of fields consisting of simple types and collections (sub trees)
    std::unique_ptr<RFieldRoot> fRootField;
    /// Contains field values corresponding to the created top-level fields
-   std::unique_ptr<RForestEntry> fDefaultEntry;
+   std::unique_ptr<REntry> fDefaultEntry;
 
 public:
    RForestModel();
@@ -88,8 +88,8 @@ public:
       std::unique_ptr<RForestModel> collectionModel);
 
    RFieldRoot* GetRootField() { return fRootField.get(); }
-   RForestEntry* GetDefaultEntry() { return fDefaultEntry.get(); }
-   std::unique_ptr<RForestEntry> CreateEntry();
+   REntry* GetDefaultEntry() { return fDefaultEntry.get(); }
+   std::unique_ptr<REntry> CreateEntry();
 };
 
 } // namespace Exerimental

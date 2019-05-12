@@ -1,5 +1,5 @@
-/// \file RForest.cxx
-/// \ingroup Forest ROOT7
+/// \file RDataSet.cxx
+/// \ingroup DataSet ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-04
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -151,7 +151,7 @@ void ROOT::Experimental::ROutputForest::CommitCluster()
 //------------------------------------------------------------------------------
 
 
-ROOT::Experimental::RCollectionForest::RCollectionForest(std::unique_ptr<RForestEntry> defaultEntry)
+ROOT::Experimental::RCollectionForest::RCollectionForest(std::unique_ptr<REntry> defaultEntry)
    : fOffset(0), fDefaultEntry(std::move(defaultEntry))
 {
 }

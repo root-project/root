@@ -1,5 +1,5 @@
-/// \file ROOT/RForestDescriptor.hxx
-/// \ingroup Forest ROOT7
+/// \file ROOT/RDataSetDescriptor.hxx
+/// \ingroup DataSet ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-07-19
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RForestDescriptor
-#define ROOT7_RForestDescriptor
+#ifndef ROOT7_RDataSetDescriptor
+#define ROOT7_RDataSetDescriptor
 
 #include <ROOT/RColumnModel.hxx>
 #include <ROOT/RDataSetUtil.hxx>

@@ -1,5 +1,5 @@
-/// \file RForestEntry.cxx
-/// \ingroup Forest ROOT7
+/// \file REntry.cxx
+/// \ingroup DataSet ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-15
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -16,20 +16,20 @@
 #include <ROOT/RFieldValue.hxx>
 #include <ROOT/REntry.hxx>
 
-ROOT::Experimental::RForestEntry::~RForestEntry()
+ROOT::Experimental::REntry::~REntry()
 {
    for (auto idx : fManagedValues) {
       fValues[idx].GetField()->DestroyValue(fValues[idx]);
    }
 }
 
-void ROOT::Experimental::RForestEntry::AddValue(const Detail::RFieldValueBase& value)
+void ROOT::Experimental::REntry::AddValue(const Detail::RFieldValueBase& value)
 {
    fManagedValues.emplace_back(fValues.size());
    fValues.push_back(value);
 }
 
-void ROOT::Experimental::RForestEntry::CaptureValue(const Detail::RFieldValueBase& value)
+void ROOT::Experimental::REntry::CaptureValue(const Detail::RFieldValueBase& value)
 {
    fValues.push_back(value);
 }

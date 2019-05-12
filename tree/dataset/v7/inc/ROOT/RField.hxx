@@ -1,5 +1,5 @@
 /// \file ROOT/RField.hxx
-/// \ingroup Forest ROOT7
+/// \ingroup DataSet ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-09
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -44,7 +44,7 @@ namespace ROOT {
 namespace Experimental {
 
 class RCollectionForest;
-class RForestEntry;
+class REntry;
 class RForestModel;
 class RFieldCollection;
 
@@ -235,7 +235,7 @@ public:
    size_t GetValueSize() const final { return 0; }
 
    /// Generates managed values for the top-level sub fields
-   RForestEntry* GenerateEntry();
+   REntry* GenerateEntry();
 };
 
 /// The field for a class with dictionary

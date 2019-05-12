@@ -27,10 +27,10 @@
 namespace ROOT {
 namespace Experimental {
 
-RDataSetDS::RDataSetDS(std::unique_ptr<ROOT::Experimental::RInputForest> forest)
-  : fForest(std::move(forest)), fEntry(fForest->GetModel()->CreateEntry()), fNSlots(1), fHasSeenAllRanges(false)
+RDataSetDS::RDataSetDS(std::unique_ptr<ROOT::Experimental::RInputForest> dataSet)
+  : fDataSet(std::move(dataSet)), fEntry(fDataSet->GetModel()->CreateEntry()), fNSlots(1), fHasSeenAllRanges(false)
 {
-   auto rootField = fForest->GetModel()->GetRootField();
+   auto rootField = fDataSet->GetModel()->GetRootField();
    for (auto& f : *rootField) {
       if (f.GetParent() != rootField)
          continue;
@@ -67,7 +67,7 @@ RDF::RDataSource::Record_t RDataSetDS::GetColumnReadersImpl(std::string_view nam
 }
 
 bool RDataSetDS::SetEntry(unsigned int /*slot*/, ULong64_t entryIndex) {
-   fForest->LoadEntry(entryIndex, fEntry.get());
+   fDataSet->LoadEntry(entryIndex, fEntry.get());
    return true;
 }
 
@@ -76,7 +76,7 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RDataSetDS::GetEntryRanges()
    std::vector<std::pair<ULong64_t, ULong64_t>> ranges;
    if (fHasSeenAllRanges) return ranges;
 
-   auto nEntries = fForest->GetNEntries();
+   auto nEntries = fDataSet->GetNEntries();
    const auto chunkSize = nEntries / fNSlots;
    const auto reminder = 1U == fNSlots ? 0 : nEntries % fNSlots;
    auto start = 0UL;
@@ -120,9 +120,9 @@ void RDataSetDS::SetNSlots(unsigned int nSlots)
 }
 
 
-RDataFrame MakeDataSetDataFrame(std::string_view forestName, std::string_view fileName) {
-   auto forest = RInputForest::Open(forestName, fileName);
-   ROOT::RDataFrame rdf(std::make_unique<RDataSetDS>(std::move(forest)));
+RDataFrame MakeDataSetDataFrame(std::string_view dsName, std::string_view fileName) {
+   auto ds = RInputForest::Open(dsName, fileName);
+   ROOT::RDataFrame rdf(std::make_unique<RDataSetDS>(std::move(ds)));
    return rdf;
 }
 

@@ -29,12 +29,12 @@ namespace ROOT {
 namespace Experimental {
 
 class RInputForest;
-class RForestEntry;
+class REntry;
 
 
 class RDataSetDS final : public ROOT::RDF::RDataSource {
-   std::unique_ptr<ROOT::Experimental::RInputForest> fForest;
-   std::unique_ptr<ROOT::Experimental::RForestEntry> fEntry;
+   std::unique_ptr<ROOT::Experimental::RInputForest> fDataSet;
+   std::unique_ptr<ROOT::Experimental::REntry> fEntry;
    unsigned fNSlots;
    bool fHasSeenAllRanges;
    std::vector<std::string> fColumnNames;
@@ -42,7 +42,7 @@ class RDataSetDS final : public ROOT::RDF::RDataSource {
    std::vector<void*> fValuePtrs;
 
 public:
-   RDataSetDS(std::unique_ptr<ROOT::Experimental::RInputForest> forest);
+   RDataSetDS(std::unique_ptr<ROOT::Experimental::RInputForest> dataSet);
    ~RDataSetDS();
    void SetNSlots(unsigned int nSlots) final;
    const std::vector<std::string> &GetColumnNames() const final;
@@ -58,7 +58,7 @@ protected:
    Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) final;
 };
 
-RDataFrame MakeDataSetDataFrame(std::string_view forestName, std::string_view fileName);
+RDataFrame MakeDataSetDataFrame(std::string_view dsName, std::string_view fileName);
 
 } // ns Experimental
 } // ns ROOT

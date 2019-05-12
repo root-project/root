@@ -1,5 +1,5 @@
 /// \file ROOT/RFieldValue.hxx
-/// \ingroup Forest ROOT7
+/// \ingroup DataSet ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-09
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -35,7 +35,7 @@ class RFieldBase;
 
 The data carried by the tree value is used by the computational code and it is supposed to be serialized on Fill
 or deserialized into by tree reading.  Only fields can generate their corresponding tree values. This class is a mere
-wrapper around the memory location, it does not own it.  Memory ownership is managed through the RForestEntry.
+wrapper around the memory location, it does not own it.  Memory ownership is managed through the REntry.
 */
 // clang-format on
 class RFieldValueBase {
