@@ -184,4 +184,8 @@ public:
    ClassDef(TComplex,1)  //Complex Class
 };
 
+namespace cling {
+std::string printValue(TComplex *c);
+}
+
 #endif
