@@ -51,6 +51,47 @@ The following people have contributed to this new version:
 
 ## Deprecation and Removal
 
+### Deprecated packages
+
+The Virtual Monte Carlo (VMC) interfaces have been deprecated for this release
+and will be removed in a future release. It is no longer built by default, but
+can still be enabled with the option `-Dvmc=ON` in the CMake configuration phase.
+A standalone version of VMC is being developed at https://github.com/vmc-project/vmc
+to replace the deprecated version in ROOT.
+
+### Removed packages
+
+Support for the following optional components of ROOT has been removed:
+
+ * afdsmgrd (Dataset manager for PROOF-based analysis facilities)
+ * bonjour (Avahi/Bonjour/Zeroconf)
+ * castor (CERN Advanced STORage manager)
+ * geocad (OpenCascade)
+ * globus (Globus authentication)
+ * gviz (Graphviz graph rendering)
+ * hdfs (Hadoop Distributed File System)
+ * krb5 (Kerberos 5 authentication)
+ * ldap (OpenLDAP authentication)
+ * memstat (legacy memory statistics utility)
+ * qt, qtgsi, qtroot (Qt4-based GUI components)
+ * rfio (Remote File IO for CASTOR)
+ * table (libTable contrib library)
+
+In addition, the following deprecated parts of ROOT components have been
+removed:
+
+ * PROOF's PQ2 module
+ * `THttpServer::ExecuteHttp()` and `THttpServer::SubmitHttp` from `THttpServer`
+
+### Other changes
+
+The ODBC interface, deprecated in ROOT 6.16, is no longer deprecated in ROOT 6.18.
+It is the main option to support databases on Windows, so the decision to deprecate
+it was reverted.
+
+The `xft` option has been merged into `x11` and is no longer used (its value is
+now ignored by ROOT).
+
 ## Preprocessor deprecation macros
 ### Deprecated Classes
   * `R__SUGGEST_ALTERNATIVE("Suggestion text")` macro allows to suggest alternatives to classes. It must be used after the class definition and before the final semicolon:
@@ -123,7 +164,7 @@ The methods could be replaced by equivalent methods with other signature:
 ### TNetXNGFile
 Added necessary changes to allow [XRootD local redirection](https://github.com/xrootd/xrootd/blob/8c9d0a9cc7f00cbb2db35be275c35126f3e091c0/docs/ReleaseNotes.txt#L14)
   - Uses standard VectorReadLimits and does not query a XRootD data server (which is unknown in local redirection), when it is redirected to a local file
-  - Adds a new constructor with a const char *lurl to TNetXNGFile and passes it to TFile, if set. This allows redirection to files that have a different name in the local file system and is important to allow derivation (for example to TAlien and TJAlienFile) while still keeping functionality via TArchiveFile when the file name in the local file system does not match `*.zip`
+  - Adds a new constructor with a `const char *lurl` to `TNetXNGFile` and passes it to `TFile`, if set. This allows redirection to files that have a different name in the local file system and is important to allow derivation (for example to `TAlien` and `TJAlienFile`) while still keeping functionality via `TArchiveFile` when the file name in the local file system does not match `*.zip`
 
 ### TBufferJSON
 Add possibility to convert STL `std::map`, `std::multimap`, `std::unordered_map`,
@@ -150,13 +191,13 @@ class Container {
 };
 ~~~
 
-Now one could disable storage of type information - "_typename" field. For that compact parameter
+Now one could disable storage of type information - `_typename` field. For that compact parameter
 has to include value 100. Be aware that such JSON representation may not be recognized by JSROOT.
 Maximal compression of JSON can be achieved now with compact parameter 128 = 100 + 20 + 5 + 3:
    3 - remove all spaces and new lines
    5 - convert map->object (when applicable)
    20 - special compression of large arrays (auto-detected in JSROOT)
-   100 - suppressing _typename for all classes
+   100 - suppressing `_typename` for all classes
 
 
 ## TTree Libraries
@@ -357,6 +398,8 @@ In addition we have :
 
 ## Database Libraries
 
+The CMake module `FindOracle.cmake` was updated to support version 18.x
+of the Oracle client libraries.
 
 ## Networking Libraries
 
@@ -413,6 +456,45 @@ OpenUI5 files were moved to `ui5/` subfolder. After ROOT compilation they can be
 
 
 ## Build, Configuration and Testing Infrastructure
+
+### CMake build system requirements and updates
+
+The minimum required version of CMake has been updated to 3.9 or newer to be
+able to take advantage of new features such as native support for the CUDA
+language, among other things. Please refer to CMake's release notes for further
+information.
+
+The method to select the C++ standard has changed. Now the recommended way
+to select the C++ standard is via the option `-DCMAKE_CXX_STANDARD=XX`, which
+is the idiomatic way to do it in CMake. The old options still work, but have
+been deprecated and will be removed in a future release.
+
+Build option descriptions have been updated to indicate which builtins require
+an active network connection during the build. You can inspect the list of
+options and their descriptions by running `cmake -LH $PWD` in the build
+directory.
+
+The build system has been updated to remove most file globbing to improve
+the reliability of incremental builds when source files are added or removed.
+
+A new check has been added to make ROOT fail during the configuration step
+if incompatible versions of the Python interpreter and its libraries are
+selected.
+
+The `all=ON` option now tries to enable more options. Some options had their
+default value toggled to disabled, which affected `all=ON`. Now all options
+are listed explicitly so that they are enabled regardless of their default
+value.
+
+### Builtins
+
+The following builtins had their versions updated for this release:
+
+* VecCore 0.5.2
+* Vc 1.4.1
+* XRootD 4.8.5
+* OpenSSL 1.0.2q
+* PCRE 8.42
 
 ### Header location and `ROOT_GENERATE_DICTIONARY` / `ROOT_STANDARD_LIBRARY_PACKAGE`
 
