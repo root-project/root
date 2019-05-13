@@ -240,11 +240,25 @@ void ROOT::Experimental::RFitPanelModel::Initialize()
    // corresponds when Type == User Func (fSelectedTypeID == 1)
 
    // ComboBox for General Tab --- Method
-   fMethod.emplace_back("1", "Linear Chi-square");
-   fMethod.emplace_back("2", "Non-Linear Chi-square");
-   fMethod.emplace_back("3", "Linear Chi-square with Robust");
-   fMethod.emplace_back("4", "Binned Likelihood");
-   fSelectMethodId = "1";
+   fFitMethods = { {"P", "Chi-square"},
+                   {"L", "Log Likelihood"},
+                   {"WL", "Binned LogLikelihood"} };
+   fFitMethod = "P";
+
+   fLinearFit = false;
+   fRobust = false;
+   fRobustLevel = 0.95;
+
+   fIntegral = false;
+   fAllWeights1 = false;
+   fAddToList = false;
+   fEmptyBins1 = false;
+   fUseGradient = false;
+
+   fSame = false;
+   fNoDrawing = false;
+   fNoStoreDraw = false;
+
 
 
    // Minimization method
@@ -261,26 +275,7 @@ void ROOT::Experimental::RFitPanelModel::Initialize()
 
    // fOperation = 0;
    fFitOptions = 3;
-   fRobust = false;
    fPrint = 0;
-
-   // Checkboxes Values
-   fIntegral = false;
-   fWeights = false;
-   fBins = false;
-   // fUseRange = false;
-   fAddList = false;
-   fUseGradient = false;
-   fSame = false;
-   fNoStore = false;
-   fMinusErrors = false;
-   // fImproveFit = false;
-
-   if (fNoStore) {
-      fNoDrawing = true;
-   } else {
-      fNoDrawing = false;
-   }
 }
 
 TF1 *ROOT::Experimental::RFitPanelModel::FindFunction(const std::string &funcname, TH1 *hist)
@@ -324,27 +319,24 @@ void ROOT::Experimental::RFitPanelModel::UpdateAdvanced(TF1 *func)
 
 std::string ROOT::Experimental::RFitPanelModel::GetFitOption()
 {
-   std::string opt;
+   std::string opt = fFitMethod;
 
-   if (fIntegral) {
-      opt = "I";
-   } else if (fMinusErrors) {
-      opt = "E";
-   } else if (fWeights) {
-      opt = "W";
-   } else if (fUseRange) {
-      opt = "R";
-   } else if (fNoDrawing) {
-      opt = "O";
-   } else if (fWeights && fBins) {
-      opt = "WW";
-   } else if (fAddList) {
-      opt = "+";
-   } else if (fSelectMethodId == "1") {
-      opt = "P";
-   } else if (fSelectMethodId == "2") {
-      opt = "L";
-   }
+   if (fIntegral) opt.append("I");
+   if (fUseRange) opt.append("R");
+   if (fBestErrors) opt.append("E");
+   if (fImproveFitResults) opt.append("M");
+   if (fAddToList) opt.append("+");
+   if (fUseGradient) opt.append("G");
+
+   if (fEmptyBins1)
+      opt.append("WW");
+   else if (fAllWeights1)
+      opt.append("W");
+
+   if (fNoStoreDraw)
+      opt.append("N");
+   else if (fNoDrawing)
+      opt.append("O");
 
    return opt;
 }
