@@ -344,7 +344,8 @@ std::ostream &TModuleGenerator::WriteStringPairVec(const StringPairVec_t &vec,
 void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
       const std::string &fwdDeclnArgsToKeepString,
       const std::string &headersClassesMapString,
-      const std::string &fwdDeclString) const
+      const std::string &fwdDeclString,
+      const std::string &extraIncludes) const
 {
 
    std::string fwdDeclStringSanitized = fwdDeclString;
@@ -441,8 +442,10 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
    // way to express as a pragma the option "-Wno-deprecated" the
    // _BACKWARD_BACKWARD_WARNING_H macro, used to avoid to go through
    // backward/backward_warning.h.
-   payloadCode += "#define _BACKWARD_BACKWARD_WARNING_H\n" +
-                  inlinedHeaders + "\n"
+   payloadCode += "#define _BACKWARD_BACKWARD_WARNING_H\n"
+                  "// Inline headers\n"+
+                  inlinedHeaders + "\n"+
+                  (extraIncludes.empty() ? "" : "// Extra includes\n" + extraIncludes + "\n") +
                   "#undef  _BACKWARD_BACKWARD_WARNING_H\n";
 
    // Dictionary initialization code for loading the module

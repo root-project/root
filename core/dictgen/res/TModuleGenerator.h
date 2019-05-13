@@ -83,6 +83,7 @@ namespace ROOT {
       const std::vector<std::string> &GetHeaders() const {
          return fHeaders;
       }
+
       const std::vector<std::string> &GetIncludePaths() const {
          return fCompI;
       }
@@ -93,7 +94,8 @@ namespace ROOT {
       void WriteRegistrationSource(std::ostream &out,
                                    const std::string &fwdDeclnArgsToKeepString,
                                    const std::string &headersClassesMapString,
-                                   const std::string &fwdDeclsString) const;
+                                   const std::string &fwdDeclsString,
+                                   const std::string &extraIncludes) const;
       void WriteContentHeader(std::ostream &out) const;
       void WriteUmbrellaHeader(std::ostream &out) const;
 
