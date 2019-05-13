@@ -161,11 +161,6 @@ set(gl2pslibdir ${GL2PS_LIBRARY_DIR})
 set(gl2pslib ${GL2PS_LIBRARY})
 set(gl2psincdir ${GL2PS_INCLUDE_DIR})
 
-set(buildldap ${value${ldap}})
-set(ldaplibdir ${LDAP_LIBRARY_DIR})
-set(ldaplib ${LDAP_LIBRARY})
-set(ldapincdir ${LDAP_INCLUDE_DIR})
-
 set(buildmysql ${value${mysql}})
 set(mysqllibdir ${MYSQL_LIBRARY_DIR})
 set(mysqllib ${MYSQL_LIBRARY})
