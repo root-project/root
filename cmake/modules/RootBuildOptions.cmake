@@ -159,7 +159,7 @@ ROOT_BUILD_OPTION(tmva-pymva ON "Enable support for Python in TMVA (requires num
 ROOT_BUILD_OPTION(tmva-rmva OFF "Enable support for R in TMVA")
 ROOT_BUILD_OPTION(unuran OFF "Enable support for UNURAN (package for generating non-uniform random numbers)")
 ROOT_BUILD_OPTION(vc OFF "Enable support for Vc (SIMD Vector Classes for C++)")
-ROOT_BUILD_OPTION(vmc ON "Build VMC simulation library")
+ROOT_BUILD_OPTION(vmc OFF "Build VMC simulation library")
 ROOT_BUILD_OPTION(vdt ON "Enable support for VDT (fast and vectorisable mathematical functions)")
 ROOT_BUILD_OPTION(veccore OFF "Enable support for VecCore SIMD abstraction library")
 ROOT_BUILD_OPTION(vecgeom OFF "Enable support for VecGeom vectorized geometry library")
@@ -360,7 +360,7 @@ foreach(opt afdsmgrd afs bonjour castor chirp geocad glite globus gviz hdfs ios
 endforeach()
 
 #---Deprecated options---------------------------------------------------------
-foreach(opt memstat)
+foreach(opt memstat vmc)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in ROOT v6.18. Please inform rootdev@cern.ch should you still need it.")
   endif()
