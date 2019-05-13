@@ -4639,6 +4639,7 @@ int RootClingMain(int argc,
          ROOT::TMetaUtils::Error(0, "Error loading the #pragma extra_include.\n");
          return 1;
       }
+
    } else if (isSelXML) {
 
       selectionRules.SetSelectionFileType(SelectionRules::kSelectionXMLFile);
@@ -4686,6 +4687,7 @@ int RootClingMain(int argc,
          ROOT::TMetaUtils::Error(0, "Error loading the #pragma extra_include.\n");
          return 1;
       }
+      
    } else {
 
       ROOT::TMetaUtils::Error(0, "Unrecognized selection file: %s\n", linkdefFilename.c_str());
@@ -4893,7 +4895,7 @@ int RootClingMain(int argc,
          }
       }
 
-      modGen.WriteRegistrationSource(dictStream, fwdDeclnArgsToKeepString, headersClassesMapString, fwdDeclsString);
+      modGen.WriteRegistrationSource(dictStream, fwdDeclnArgsToKeepString, headersClassesMapString, fwdDeclsString, extraIncludes);
       // If we just want to inline the input header, we don't need
       // to generate any files.
       if (!inlineInputHeader) {
