@@ -353,22 +353,7 @@ individually.
 
 7.13. Globus Authentication (LEGACY):
 -------------------------------------
-To build the Globus authentication module used by TServerSocket,
-you first have to make sure that the Globus Tool Kit is installed
-on the machine. See:
-
-   http://www.globus.org/
-
-for details and downloads.
-Globus Tool Kit is available only for a subset of Unix platforms.
-The variable GLOBUS_LOCATION should be defined as the directory
-containing Globus lib, include and bin. For compilation purposes
-you can pass this directory to the configure script with the option
---with-globus-dir=<globus_dir>. An experimental path is available
-for versions 2.2.3 and 2.2.4 of the Globus Tool Kit to fix a small
-bug preventing full functionality of the root implementation; this
-is activated by setting --with-globus-patch-dir=<globus_src_dir>
-where <globus_src_dir> is the globus tool kit source,
+Not supported any longer
 
 7.14. SSH Authentication:
 -------------------------

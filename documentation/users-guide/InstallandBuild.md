@@ -627,13 +627,6 @@ PEAC.GmUrl:           http://somewhere:8080/clarens/
 PEAC.LmUrl:           http://elsewhere:8080/clarens/
 ```
 
-Certificate and key
-
-``` {.cpp}
-Clarens.CertFile:     $(HOME)/.globus/usercert.pem
-Clarens.KeyFile:      $(HOME)/.globus/userkey.pem
-```
-
 #### Server Authentication in TServerSocket
 
 General setting: file with server access rules
@@ -647,14 +640,6 @@ Check of host equivalence via `/etc/hosts`.`equiv` or `$HOME/.rhosts`.
 ``` {.cpp}
 SrvAuth.CheckHostsEquivalence: 1
 ```
-
-Globus/GSI: `hostcert` configuration file.
-
-``` {.cpp}
-SrvAuth.HostCert:         /etc/root/hostcert.conf
-```
-
-Globus/GSI: `gridmap` file.
 
 Force file opening via **`TNetFile`** (**`TXNetFile`**) if a hostname is
 specified in the Url. By default, for local files `TFile::Open()`
