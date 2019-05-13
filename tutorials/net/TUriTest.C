@@ -116,7 +116,6 @@ Bool_t TestValidation()
    valid &= TUri("ftp://ftp.is.co.za/rfc/rfc1808.txt").IsUri();
    valid &= TUri("http://www.ietf.org/rfc/rfc2396.txt").IsUri();
    // IPV6 example excluded
-   //valid &= TUri("ldap://[2001:db8::7]/c=GB?objectClass?one").IsUri();
    valid &= TUri("mailto:John.Doe@example.com").IsUri();
    valid &= TUri("news:comp.infosystems.www.servers.unix").IsUri();
    valid &= TUri("tel:+1-816-555-1212").IsUri();

@@ -16,9 +16,6 @@
 
 #include <libpq-fe.h>
 #include <pg_config.h> // to get PG_VERSION_NUM
-#ifdef USE_LDAP
-#undef USE_LDAP
-#endif
 
 #define pgsql_success(x) (((x) == PGRES_EMPTY_QUERY) \
                         || ((x) == PGRES_COMMAND_OK) \

@@ -150,11 +150,6 @@ GL2PSLIBDIR    := @gl2pslibdir@
 GL2PSLIB       := @gl2pslib@
 GL2PSINCDIR    := $(filter-out /usr/include, @gl2psincdir@)
 
-BUILDLDAP      := @buildldap@
-LDAPLIBDIR     := @ldaplibdir@
-LDAPCLILIB     := @ldaplib@
-LDAPINCDIR     := $(filter-out /usr/include, @ldapincdir@)
-
 BUILDMYSQL     := @buildmysql@
 MYSQLLIBDIR    := @mysqllibdir@
 MYSQLCLILIB    := @mysqllib@

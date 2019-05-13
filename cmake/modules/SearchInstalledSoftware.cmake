@@ -894,20 +894,6 @@ if(dcache)
   endif()
 endif()
 
-#---Check for Ldap--------------------------------------------------------------------
-if(ldap)
-  find_package(Ldap)
-  if(NOT LDAP_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "ldap library not found and is required (ldap option enabled)")
-    else()
-      message(STATUS "ldap library not found. Set variable LDAP_DIR to point to your ldap installation")
-      message(STATUS "For the time being switching OFF 'ldap' option")
-      set(ldap OFF CACHE BOOL "Disabled because ldap not found (${ldap_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 #---Check for ftgl if needed----------------------------------------------------------
 if(opengl AND NOT builtin_ftgl)
   find_package(FTGL)

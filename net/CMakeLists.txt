@@ -17,10 +17,6 @@ if(monalisa)
   add_subdirectory(monalisa)
 endif()
 
-if(ldap)
-   add_subdirectory(ldap)
-endif()
-
 if(davix)
    add_subdirectory(davix)
 endif()
