@@ -215,6 +215,7 @@ Maximal compression of JSON can be achieved now with compact parameter 128 = 100
 
 
 ## Math Libraries
+  - Add `TComplex` value printer for printing the value of object at the root prompt and in python
   - Add to the documentation of TLorentzVector a link to ROOT::Math::LorentzVector, which is a superior tool.
   - Add new implementation of `TStatistic::Merge` able to deal silently with empty TStatistic objects. This implementation is useful when filling TStatistics with one of ROOT's implicitly parallelised utilities such as `RDataFrame` or `TThreadExecutor`.
   - Add `T RVec<T>::at>(size_t, T)` method to allow users to specify a default value to be returned in case the vector is shorter than the position specified. No exception is thrown.
