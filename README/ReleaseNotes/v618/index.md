@@ -164,6 +164,7 @@ Maximal compression of JSON can be achieved now with compact parameter 128 = 100
   - Add `HasColumn` method to check whether a column is available to a given RDF node
   - PyROOT: add `AsRNode` helper function to convert RDF nodes to the common RNode type
   - PyROOT: add `AsNumpy` method to export contents of a RDataFrame as a dictionary of numpy arrays
+    * Such dictionary of numpy arrays can also be used to create a pandas DataFrame
   - Experimental PyROOT: add `MakeNumpyDataFrame` factory to process data owned by numpy arrays with RDataFrame
   - The `Stats` method has been added, allowing to retrieve a `TStatistic` object filled with the values of a column and, optionally, the values of a second column to be used as weights.
 
@@ -436,4 +437,19 @@ on the user side.
 
 If the fix or new feature is a pythonization related to a C++ class, the change is added to the respective section above.
 
-    - Experimental PyROOT: add `DeclareCppCallable` decorator, which allows to call Python callables from C++, e.g., in an RDataFrame workflow
+### Current PyROOT
+
+    - Fix compatibility with Python3.7 (ROOT-9922, ROOT-9871, ROOT-9809)
+    - Fix lookup for templated methods (ROOT-9789)
+    - Fix lookup for templated free functions (ROOT-9836)
+
+### Experimental PyROOT
+
+    - All pythonisations from current PyROOT already migrated (TTree & subclasses, TDirectory & subclasses,
+    TCollection & subclasses, TObject, TClass, TString, TObjString, TIter, TStyle, TH1, TFX, TMinuit, TVector3,
+    TVectorT, TArray, TCollection, TSeqCollection, TClonesArray, TComplex, TGraph, RooDataHist) - ROOT-9510
+    - Cppyy updated to cppyy 1.4.7, cppyy-backend 1.8.1 (clingwrapper), CPyCppyy 1.7.1
+      * Includes fixed template support, fixed overload resolution, Windows fixes and other
+    - Merged Cppyy's patch to support using namespace declarations (PR-3579)
+    - Add `DeclareCppCallable` decorator, which allows to call Python callables from C++, e.g., in an RDataFrame workflow
+
