@@ -74,8 +74,6 @@ WINRTDEBUG     := @winrtdebug@
 CTORSINITARRAY := @ctorsinitarray@
 CXXMKDEPFLAGS  := @cxxmkdepflags@
 
-EXTRA_AUTHFLAGS:= @krb5extracflags@ @sslextracflags@
-
 BINDIR         := @bindir@
 LIBDIR         := @libdir@
 INCDIR         := @incdir@
@@ -283,17 +281,6 @@ BUILDXRDCLT    := @buildxrdclt@
 
 ALLOCLIB       := @alloclib@
 ALLOCLIBDIR    := @alloclibdir@
-
-BUILDKRB5      := @buildkrb5@
-KRB5LIB        := @krb5lib@
-KRB5LIBDIR     := @krb5libdir@
-KRB5INCDIR     := $(filter-out /usr/include, @krb5incdir@)
-KRB5INIT       := @krb5init@
-
-COMERRLIB      := @comerrlib@
-COMERRLIBDIR   := @comerrlibdir@
-
-RESOLVLIB      := @resolvlib@
 
 BUILDMONALISA  := @buildmonalisa@
 MONALISALIBDIR := @monalisalibdir@

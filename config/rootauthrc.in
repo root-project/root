@@ -62,17 +62,13 @@
 #              Method                        short name      code
 #
 #              UsrPwd                         usrpwd          0
-#              Kerberos                       krb5            2
 #
 #           Example of a valid 'list' line:
 #
 #              default          list  0 
-#              lxplus*.cern.ch  list  usrpwd krb5
+#              lxplus*.cern.ch  list  usrpwd
 #
 #           The first line defines as default method UsrPwd.
-#
-#           The second line adds Kerberos as available methods for
-#           authentication to the lxplus machines.
 #
 #           Having a line 'list' for a host is non mandatory: methods can
 #           also be defined directly via 'method' lines (see below); in
@@ -107,7 +103,6 @@
 #              Method                       Format info
 #
 #              UsrPwd                       us:<username> cp:<crypt_option>
-#              Kerberos                     pp:<principal> us:<username>(<principal>) 
 #
 #           The key 'us' allows to specify a target username different from
 #           the local username (which is the default target username); the 
@@ -119,21 +114,12 @@
 #                   or not (slighty faster), values are 'yes' or '1' for YES,
 #                   'no' or '0' for NO (case sensitive);
 #
-#           For Kerberos, the default principal is the one associated to
-#           the local user in the Kerberos realm. A different principal
-#           can be specified via the key 'pp', access to which must be granted
-#           remotely via .k5login . For backward compatibility, the principal 
-#           can also be specified via the 'us' key (it must be in its full 
-#           form <username>@<KERBEROS.REALM>, otherwise the string pointed by
-#           'us' is interpreted as target username).
-#
 #           Example of valid 'method' lines:
 #
 #              default list 0
 #              default user asdfgh  method  usrpwd pt:1 ru:no 
 #              include local/myrootauthrc
 #              include $ROOTSYS/etc/system.rootauthrc
-#              pcepsft43.cern.ch  user asdfgh method 2 pt:no pp:asdkrb@LOC.KRB.REALM
 #            
 #           The first line states that, unless differently specified, 
 #           the first method to be tried for autentication is UsrPwd.
@@ -145,9 +131,6 @@
 #           directory where the intercative root session was started. 
 #           The fourth directive includes the content of the system 
 #           defaults.
-#           The fifth line states that the krb5 method should be used for
-#           accessing account 'asdfgh' at pcepsft43.cern.ch, with kerberos
-#           credentials for principal adskrb@LOC.KRB.REALM .
 #
 #    - Finally, also supported are lines of the form:
 #
@@ -165,4 +148,4 @@
 #      from the rest of the .rootauthrc file is sent to slaves via the master
 #            
 #
-default list usrpwd @havekrb5@
+default list usrpwd
