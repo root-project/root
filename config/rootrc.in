@@ -444,15 +444,12 @@ ACLiC.Linkdef:          _linkdef
 
 # Default login name (if not defined is taken from $(HOME)).
 #UsrPwd.Login:           qwerty
-#Krb5.Login:             qwerty@LOCAL.DOM.AIN
 
 # To be prompted for login information.
 #UsrPwd.LoginPrompt:     yes
-#Krb5.LoginPrompt:       yes
 
 # To reuse established security context.
 UsrPwd.ReUse:         yes
-Krb5.ReUse:           no
 
 # Duration validity of the security context.
 # Format:  <hours>:<minutes>  (default 24:00)
