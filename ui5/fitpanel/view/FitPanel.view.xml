@@ -26,18 +26,20 @@
                      <Title level="H3" text="Method" />
                      <l:Grid defaultSpan="XL6 L6 M6 S6" class="sapUiSizeCompact"
                         hSpacing="0.5" vSpacing="0">
-                        <ComboBox id="MethodCombo" selectedKey="{/fSelectMethodId}"
-                           items="{ path: '/fMethod', sorter: { path: 'fMethod' } }">
+                        <ComboBox id="MethodCombo" selectedKey="{/fFitMethod}"
+                           items="{ path: '/fFitMethods' }">
                            <core:Item key="{fId}" text="{fSet}" />
+                           <layoutData>
+                              <l:GridData span="XL12 L12 M12 S12" />
+                           </layoutData>
                         </ComboBox>
-                        <Button text="User-Defined..." press="pressUserDefined" />
-                        <CheckBox text="Linear fit" selected="{/fLinear}" />
+                        <CheckBox text="Linear fit" selected="{/fLinearFit}" />
                         <HBox>
                            <CheckBox id="robust123" text="Robust"
-                              enabled="{= ${/fSelectMethodId} === '3'}"
+                              enabled="{= ${/fLinearFit} === true}"
                               selected="{/fRobust}"
                               tooltip="Perform Linear Robust fitter if selected" />
-                           <StepInput value="0.95" min="0.01"
+                           <StepInput value="{/fRobustLevel}" min="0.01"
                               max="1" step="0.01" displayValuePrecision="2"
                               enabled="{= ${/fRobust} === true}"
                               tooltip="Available only for graphs" />
@@ -56,12 +58,12 @@
                         <CheckBox text="Improve fit results"
                            selected="{/fImproveFitResults}" tooltip="'M'-after medium is found ..." />
                         <CheckBox text="All weights = 1"
-                           selected="{/fWeights}" enabled="{= ${/fBins} === false}"
+                           selected="{/fAllWeights1}" enabled="true"
                            tooltip="'W'-all weights=1 for non-empty bins; eroors bars ignored" />
-                        <CheckBox text="Add to list" selected="{/fAddList}"
+                        <CheckBox text="Add to list" selected="{/fAddToList}"
                            tooltip="'+'-add function to the list without deleting the previous" />
                         <CheckBox text="Empty bins, weights=1"
-                           selected="{/fBins}" enabled="{= ${/fWeights} === false}"
+                           selected="{/fEmptyBins1}" enabled="true"
                            tooltip="'WW'-all weights=1 including empty bins; errors bars ignored" />
                         <CheckBox text="Use Gradient" selected="{/fUseGradient}"
                            tooltip="'G'-Use gradient" />
@@ -69,14 +71,17 @@
                      <Title level="H3" text="Draw Options" />
                      <l:Grid class="sapUiSizeCompact" hSpacing="0.5"
                         vSpacing="0">
-                        <CheckBox text="SAME" selected="{/fSame}" />
-                        <CheckBox text="No Drawing" selected="{/fNoDrawing}">
+                        <CheckBox text="SAME" selected="{/fSame}"
+                                  tooltip="Superimpose on previous picture in the same pad"/>
+                        <CheckBox text="No Drawing" selected="{/fNoDrawing}"
+                                  tooltip="'O'-do not draw graphic function">
                            <layoutData>
                               <l:GridData linebreak="true" />
                            </layoutData>
                         </CheckBox>
                         <CheckBox text="Do not store/draw"
-                           selected="{/fNoStoreDraw}">
+                           selected="{/fNoStoreDraw}"
+                           tooltip="'N'-do not store function, do not draw it">
                            <layoutData>
                               <l:GridData linebreak="true"
                                  span="XL6 L6 M6 S6" />
@@ -101,11 +106,11 @@
                      <RadioButtonGroup columns="3" width="100%" selectedIndex="{/fLibrary}"
                         select="selectMinimizationLibrary">
                         <buttons>
-                           <RadioButton id="RB2-1" text="Minuit" />
-                           <RadioButton id="RB2-2" text="Minuit2" />
-                           <RadioButton id="RB2-3" text="Fumili" />
-                           <RadioButton id="RB2-4" text="GSL" />
-                           <RadioButton id="RB2-5" text="Genetics" />
+                           <RadioButton text="Minuit" />
+                           <RadioButton text="Minuit2" />
+                           <RadioButton text="Fumili" />
+                           <RadioButton text="GSL" />
+                           <RadioButton text="Genetics" />
                         </buttons>
                      </RadioButtonGroup>
                      <Title level="H3" text="Method" />
