@@ -26,11 +26,12 @@ class TF1;
 namespace ROOT {
 namespace Experimental {
 
+/// Generic item for ui5 ComboBox
 struct RComboBoxItem {
-   std::string fId;
-   std::string fSet;
+   std::string key;
+   std::string value;
    RComboBoxItem() = default;
-   RComboBoxItem(const std::string &id, const std::string &set) : fId(id), fSet(set) {}
+   RComboBoxItem(const std::string &_key, const std::string &_value) : key(_key), value(_value) {}
 };
 
 /// Basic function info, used in combo boxes
