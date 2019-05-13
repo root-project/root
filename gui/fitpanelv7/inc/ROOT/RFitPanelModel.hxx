@@ -77,8 +77,33 @@ struct RFitPanelModel {
    std::string fSelectedData;               ///< selected data
    std::vector<RFitFuncInfo>   fFuncList;   ///< all available fit functions
    std::string fSelectedFunc;               ///< name of selected fit function
-   std::vector<RComboBoxItem> fMethod;
-   std::string fSelectMethodId;
+
+
+   // General tab
+
+   // Method
+   std::vector<RComboBoxItem> fFitMethods;   ///< all supported fit methods
+   std::string fFitMethod;                   ///< selected fit method
+
+   bool fLinearFit{false};
+   bool fRobust{false};
+   float fRobustLevel{0.95};
+
+   // Fit Options
+   bool fIntegral{false};
+   bool fUseRange{false};
+   bool fBestErrors{false};
+   bool fImproveFitResults{false};
+   bool fAllWeights1{false};
+   bool fAddToList{false};
+   bool fEmptyBins1{false};
+   bool fUseGradient{false};
+
+   // Draw Options
+   bool fSame{false};
+   bool fNoDrawing{false};
+   bool fNoStoreDraw{false};
+
 
    // all combo items for all methods
 
@@ -102,8 +127,6 @@ struct RFitPanelModel {
 
    // float fOperation{0};
    float fFitOptions{0};
-   bool fLinear{false};
-   bool fRobust{false};
    int fPrint{0};
    float fErrorDef{1.00};
    float fMaxTol{0.01};
@@ -112,18 +135,7 @@ struct RFitPanelModel {
    // convert fSelectTypeID from string to int
    int fTypeId{0};
 
-   // Checkboxes Options
-   bool fIntegral{false};
-   bool fMinusErrors{false};
-   bool fWeights{false};
-   bool fBins{false};
-   bool fUseRange{false};
    // bool fImproveFit {false};
-   bool fAddList{false};
-   bool fUseGradient{false};
-   bool fSame{false};
-   bool fNoDrawing{false};
-   bool fNoStore{false};
 
 
    /// Parameters
