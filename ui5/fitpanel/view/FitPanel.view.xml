@@ -7,9 +7,9 @@
            <Text text="Data Set:"/>
            <ComboBox id="DataSet" class="sapUiSmallMarginBeginEnd"
                selectedKey="{/fSelectedData}"
-               items="{ path: '/fDataSet', sorter: { path: 'fSet' } }"
+               items="{ path: '/fDataSet', sorter: { path: 'key' } }"
                change="onSelectedDataChange">
-               <core:Item key="{fId}" text="{fSet}" />
+               <core:Item key="{key}" text="{value}" />
            </ComboBox>
            <Text text="Function:"/>
            <ComboBox id="selectedFuncCombo" class="sapUiSmallMarginBeginEnd"
@@ -28,7 +28,7 @@
                         hSpacing="0.5" vSpacing="0">
                         <ComboBox id="MethodCombo" selectedKey="{/fFitMethod}"
                            items="{ path: '/fFitMethods' }">
-                           <core:Item key="{fId}" text="{fSet}" />
+                           <core:Item key="{key}" text="{value}" />
                            <layoutData>
                               <l:GridData span="XL12 L12 M12 S12" />
                            </layoutData>
@@ -115,8 +115,8 @@
                      </RadioButtonGroup>
                      <Title level="H3" text="Method" />
                      <ComboBox id="MethodMin" selectedKey="{/fSelectMethodMin}"
-                        items="{ path: '/fMethodMinAll', filters: { path: 'fId', operator: 'EQ', value1: '0' },  sorter: { path: 'fId' } }">
-                        <core:Item key="{fSet}" text="{fSet}" />
+                        items="{ path: '/fMethodMinAll', filters: { path: 'key', operator: 'EQ', value1: '0' },  sorter: { path: 'key' } }">
+                        <core:Item key="{value}" text="{value}" />
                      </ComboBox>
                      <Title level="H3" text="Settings" />
                      <l:Grid class="sapUiSizeCompact" hSpacing="0.5" vSpacing="0">
@@ -213,14 +213,14 @@
                               <Text text="Parameter 1:" />
                               <ComboBox id="ContourPar1"
                                  selectedKey="{/fContourPar1Id}"
-                                 items="{ path: '/fContour1', sorter: { path: 'fSet' } }">
-                                 <core:Item key="{fId}" text="{fSet}" />
+                                 items="{ path: '/fContour1', sorter: { path: 'value' } }">
+                                 <core:Item key="{key}" text="{value}" />
                               </ComboBox>
                               <Text text="Parameter 2:" />
                               <ComboBox id="ContourPar2"
                                  selectedKey="{/fContourPar2Id}"
-                                 items="{ path: '/fContour2', sorter: { path: 'fSet' } }">
-                                 <core:Item key="{fId}" text="{fSet}" />
+                                 items="{ path: '/fContour2', sorter: { path: 'value' } }">
+                                 <core:Item key="{key}" text="{value}" />
                               </ComboBox>
                               <Text text="Confidene Level:" />
                               <StepInput id="ConfLevel" value="0.683"
@@ -247,8 +247,8 @@
                               <Text text="Parameter:" />
                               <ComboBox id="ScanPar"
                                  selectedKey="{/fScanId}"
-                                 items="{ path: '/fScan', sorter: { path: 'fSet' } }">
-                                 <core:Item key="{fId}" text="{fSet}" />
+                                 items="{ path: '/fScan', sorter: { path: 'value' } }">
+                                 <core:Item key="{key}" text="{value}" />
                               </ComboBox>
                               <Text text="Min:" />
                               <StepInput id="scanMin" value="0.0001"
