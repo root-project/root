@@ -24,7 +24,7 @@ sap.ui.define([
          this.inputId = "";
          var opText = this.getView().byId("OperationText");
          var data = {
-               fDataSet:[ { fId:"1", fSet: "----" } ],
+               fDataSet:[ { key:"1", value: "----" } ],
                fSelectedData: "1",
                fMinRangeX: -1,
                fShowRangeX: false,
@@ -134,15 +134,15 @@ sap.ui.define([
       // approve current fSelectMethodMin value - and change if require
       verifySelectedMethodMin: function(data) {
 
-         this.getView().byId("MethodMin").getBinding("items").filter(new Filter("fId", FilterOperator.EQ, data.fLibrary.toString()));
+         this.getView().byId("MethodMin").getBinding("items").filter(new Filter("key", FilterOperator.EQ, data.fLibrary.toString()));
 
          var first = "";
 
          for (var k=0;k<data.fMethodMinAll.length;++k) {
             var item = data.fMethodMinAll[k];
-            if (item.fId != data.fLibrary) continue;
-            if (!first) first = item.fSet;
-            if (item.fSet === data.fSelectMethodMin) return;
+            if (item.key != data.fLibrary) continue;
+            if (!first) first = item.value;
+            if (item.value === data.fSelectMethodMin) return;
          }
 
          data.fSelectMethodMin = first;
