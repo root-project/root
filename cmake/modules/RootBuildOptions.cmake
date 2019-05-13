@@ -360,7 +360,7 @@ foreach(opt afdsmgrd afs bonjour castor chirp geocad glite globus gviz hdfs ios
 endforeach()
 
 #---Deprecated options---------------------------------------------------------
-foreach(opt memstat odbc)
+foreach(opt memstat)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in ROOT v6.18. Please inform rootdev@cern.ch should you still need it.")
   endif()
