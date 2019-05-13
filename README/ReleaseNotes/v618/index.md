@@ -27,6 +27,7 @@ The following people have contributed to this new version:
  Pere Mato, CERN/SFT,\
  Lorenzo Moneta, CERN/SFT,\
  Axel Naumann, CERN/SFT,\
+ Vincenzo Eduardo Padulano, Bicocca/SFT,
  Danilo Piparo, CERN/SFT,\
  Fons Rademakers, CERN/SFT,\
  Oksana Shadura, Nebraska,\
