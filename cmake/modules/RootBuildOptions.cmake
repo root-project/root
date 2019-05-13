@@ -355,14 +355,14 @@ endif()
 foreach(opt afdsmgrd afs bonjour castor chirp geocad glite globus gviz hdfs ios
             krb5 ldap qt qtgsi rfio ruby sapdb srp table)
   if(${opt})
-    message(FATAL_ERROR ">>> Option '${opt}' has been removed in ROOT v6.16.")
+    message(FATAL_ERROR ">>> Option '${opt}' is no longer supported in ROOT ${ROOT_VERSION}.")
   endif()
 endforeach()
 
 #---Deprecated options---------------------------------------------------------
 foreach(opt memstat vmc)
   if(${opt})
-    message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in ROOT v6.18. Please inform rootdev@cern.ch should you still need it.")
+    message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
   endif()
 endforeach()
 
