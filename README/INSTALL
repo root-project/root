@@ -338,18 +338,7 @@ Not supported any longer
 
 7.12. Kerberos Authentication (LEGACY):
 ---------------------------------------
-To build the Kerberos authentication module used by TServerSocket,
-you first have to install Kerberos V on your machine. See:
-
-   http://web.mit.edu/kerberos/www/
-
-for details and downloads.
-If the installation directory is different from the standard ones
-(typically /usr/kerberos) the --with-krb5=<krb5_dir> flag must be
-used to tell configure where to look for Kerberos. Alternatrively
-the --with-krb5-incdir and --with-krb5-libdir can be specified
-individually.
-
+Not supported any longer
 
 7.13. Globus Authentication (LEGACY):
 -------------------------------------

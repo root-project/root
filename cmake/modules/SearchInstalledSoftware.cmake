@@ -486,28 +486,6 @@ if(opengl AND NOT builtin_gl2ps)
   endif()
 endif()
 
-#---Check for krb5 Support-----------------------------------------------------------
-if(krb5)
-  message(STATUS "Looking for Kerberos 5")
-  find_package(Kerberos5)
-  if(NOT KRB5_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "Kerberos 5 libraries not found and they are required")
-    else()
-      message(STATUS "Kerberos 5 not found. Switching off krb5 option")
-      set(krb5 OFF CACHE BOOL "Disabled because Kerberos 5 not found (${krb5_description})" FORCE)
-    endif()
-  endif()
-endif()
-
-if(krb5)
-  find_library(COMERR_LIBRARY com_err)
-  if(COMERR_LIBRARY)
-    set(COMERR_LIBRARIES ${COMERR_LIBRARY})
-  endif()
-  mark_as_advanced(COMERR_LIBRARY)
-endif()
-
 #---Check for XML Parser Support-----------------------------------------------------------
 if(xml)
   message(STATUS "Looking for LibXml2")
