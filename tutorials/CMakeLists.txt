@@ -200,10 +200,10 @@ if(root7)
 endif()
 
 if(NOT root7)
-  set(root7_veto v7/forest/fst001_staff.C
-                 v7/forest/fst002_vector.C
-                 v7/forest/fst003_lhcbOpenData.C
-                 v7/forest/fst004_dimuon.C)
+  set(root7_veto v7/dataset/ds001_staff.C
+                 v7/dataset/ds002_vector.C
+                 v7/dataset/ds003_lhcbOpenData.C
+                 v7/dataset/ds004_dimuon.C)
 endif()
 
 if( CMAKE_SIZEOF_VOID_P EQUAL 4 )
