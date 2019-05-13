@@ -18,8 +18,16 @@ __all__ = [
 ]
 
 
+
 ### C++ language constructs test cases =======================================
 class Cpp1LanguageFeatureTestCase( MyTestCase ):
+   @classmethod
+   def setUpClass(cls):
+      try:
+         cls.AddressOf = ROOT.AddressOf
+      except AttributeError:
+         cls.AddressOf = ROOT.addressof # New Cppyy's nomenclature
+
    def test01ClassEnum( self ):
       """Test class enum access and values"""
 
@@ -149,7 +157,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       """Test passing of variants of void pointer arguments"""
 
       gROOT.LoadMacro( "PointerPassing.C+" )
-      AddressOf = ROOT.AddressOf
+      AddressOf = self.AddressOf
       MakeNullPointer = ROOT.MakeNullPointer
       
       Z = ROOT.Z
@@ -207,7 +215,8 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
 
       s = TString( "Hello World!" )
       co = ROOT.AsCObject( s )
-      ad = ROOT.AddressOf( s )[ 0 ]
+      
+      ad = self.AddressOf( s )[ 0 ]
 
       self.assert_( s == ROOT.BindObject( co, s.__class__ ) )
       self.assert_( s == ROOT.BindObject( co, "TString" ) )
