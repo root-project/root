@@ -120,7 +120,6 @@ ROOT_BUILD_OPTION(gsl_shared OFF "Enable linking against shared libraries for GS
 ROOT_BUILD_OPTION(http ON "Enable suppport for HTTP server")
 ROOT_BUILD_OPTION(imt ON "Enable support for implicit multi-threading via Intel® Thread Bulding Blocks (TBB)")
 ROOT_BUILD_OPTION(jemalloc OFF "Use jemalloc memory allocator")
-ROOT_BUILD_OPTION(ldap OFF "Enable support for LDAP (Lightweight Directory Access Protocol)")
 ROOT_BUILD_OPTION(libcxx OFF "Build using libc++")
 ROOT_BUILD_OPTION(macos_native OFF "Disable looking for libraries, includes and binaries in locations other than a native installation (MacOS only)")
 ROOT_BUILD_OPTION(mathmore ON "Build libMathMore extended math library (requires GSL)")
@@ -213,7 +212,6 @@ if(all)
  set(gfal_defvalue ON)
  set(http_defvalue ON)
  set(imt_defvalue ON)
- set(ldap_defvalue ON)
  set(mathmore_defvalue ON)
  set(memstat_defvalue ON)
  set(minuit2_defvalue ON)
@@ -355,14 +353,14 @@ endif()
 
 #---Removed options------------------------------------------------------------
 foreach(opt afdsmgrd afs bonjour castor chirp geocad glite globus gviz hdfs ios
-            krb5 qt qtgsi rfio ruby sapdb srp table)
+            krb5 ldap qt qtgsi rfio ruby sapdb srp table)
   if(${opt})
     message(FATAL_ERROR ">>> Option '${opt}' has been removed in ROOT v6.16.")
   endif()
 endforeach()
 
 #---Deprecated options---------------------------------------------------------
-foreach(opt ldap memstat odbc)
+foreach(opt memstat odbc)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in ROOT v6.18. Please inform rootdev@cern.ch should you still need it.")
   endif()

@@ -337,13 +337,6 @@ def getDefUndefLines(dirName):
                                '#ifdef signals\n' +\
                                '# undef signals\n' +\
                                '#endif\n'
-   if "%snet%sldap" %(os.sep,os.sep) in dirName:
-      allHeadersPartContent += '#ifdef Debug\n' +\
-                               '# undef Debug\n' +\
-                               '#endif\n' +\
-                               '#ifdef GSL_SUCCESS\n' +\
-                               '# undef GSL_SUCCESS\n' +\
-                               '#endif\n'
    return allHeadersPartContent
 
 #-------------------------------------------------------------------------------
