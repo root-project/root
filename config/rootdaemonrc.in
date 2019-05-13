@@ -44,7 +44,6 @@
 #        Method                           short name   code
 #
 #        UsrPwd                            usrpwd       0
-#        Kerberos                          krb5         2
 #
 #     (The insecure method is intended to speed up access within a cluster
 #     protected by other means from outside attacks; should not be used for
@@ -68,4 +67,4 @@
 127.0.0.1            0 2
 #
 # secure methods allowed by default
-default usrpwd @havekrb5@
+default usrpwd

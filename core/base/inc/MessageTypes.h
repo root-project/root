@@ -122,7 +122,6 @@ enum EMessageTypes {
    kROOTD_MV             = 2027,         //rename file
    kROOTD_RM             = 2028,         //delete file
    kROOTD_CHMOD          = 2029,         //change permission
-   kROOTD_KRB5           = 2030,         //krb5 authentication follows
    kROOTD_PROTOCOL2      = 2031,         //client proto follows, returns rootd proto
    kROOTD_BYE            = 2032,         //terminate rootd
    kROOTD_CLEANUP        = 2034,         //cleanup things

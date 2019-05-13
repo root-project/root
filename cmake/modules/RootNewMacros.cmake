@@ -357,9 +357,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       if(runtime_cxxmodules)
         set(cpp_module_file ${library_output_dir}/${cpp_module}.pcm)
         if (APPLE)
-          # FIXME: Krb5Auth.h triggers "declaration of '__mb_cur_max' has a different language linkage"
-          # problem.
-          if (${cpp_module} MATCHES "(Krb5Auth|GCocoa|GQuartz)")
+          if (${cpp_module} MATCHES "(GCocoa|GQuartz)")
             set(cpp_module_file)
           endif()
         endif(APPLE)

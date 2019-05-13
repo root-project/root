@@ -294,16 +294,6 @@ set(xrdversion)
 set(alloclib)
 set(alloclibdir)
 
-set(buildkrb5 ${value${krb5}})
-set(krb5libdir ${KRB5_LIBRARY_DIR})
-set(krb5lib ${KRB5_LIBRARY})
-set(krb5incdir ${KRB5_INCLUDE_DIR})
-set(krb5init ${KRB5_INIT})
-
-set(comerrlib)
-set(comerrlibdir)
-set(resolvlib)
-
 set(buildmonalisa ${value${monalisa}})
 set(monalisalibdir ${MONALISA_LIBRARY_DIR})
 set(monalisalib ${MONALISA_LIBRARY})

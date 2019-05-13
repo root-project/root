@@ -1,10 +1,6 @@
 add_subdirectory(net)
 add_subdirectory(auth)
 
-if(krb5)
-  add_subdirectory(krb5auth)
-endif()
-
 if(NOT WIN32 AND ssl)
   add_subdirectory(rpdutils)
 endif()

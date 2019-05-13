@@ -845,7 +845,6 @@ INPUT                  = . \
                          ../../net/auth/ \
                          ../../net/davix/ \
                          ../../net/http/ \
-                         ../../net/krb5auth/ \
                          ../../net/ldap/ \
                          ../../net/monalisa/ \
                          ../../net/net/ \
