@@ -74,8 +74,7 @@ WINRTDEBUG     := @winrtdebug@
 CTORSINITARRAY := @ctorsinitarray@
 CXXMKDEPFLAGS  := @cxxmkdepflags@
 
-GLBPATCHFLAGS  := @glbpatchcflags@
-EXTRA_AUTHFLAGS:= @krb5extracflags@ @glbextracflags@ @sslextracflags@
+EXTRA_AUTHFLAGS:= @krb5extracflags@ @sslextracflags@
 
 BINDIR         := @bindir@
 LIBDIR         := @libdir@
