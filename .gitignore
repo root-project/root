@@ -358,9 +358,6 @@ tags
 # /misc/rootsl/
 /misc/rootsl/build
 
-# /net/globusauth/src/
-/net/globusauth/src/globus_gsi_credential.c
-
 # /proof/proofbench/src/
 /proof/proofbench/src/ProofBenchCPUSel.par
 /proof/proofbench/src/ProofBenchDataSel.par
