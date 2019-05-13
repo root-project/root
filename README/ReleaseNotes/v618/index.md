@@ -451,5 +451,19 @@ If the fix or new feature is a pythonization related to a C++ class, the change 
     - Cppyy updated to cppyy 1.4.7, cppyy-backend 1.8.1 (clingwrapper), CPyCppyy 1.7.1
       * Includes fixed template support, fixed overload resolution, Windows fixes and other
     - Merged Cppyy's patch to support using namespace declarations (PR-3579)
-    - Add `DeclareCppCallable` decorator, which allows to call Python callables from C++, e.g., in an RDataFrame workflow
+    - Add `DeclareCppCallable` decorator, which allows to call Python callables from C++, e.g., in an RDataFrame workflow:
+~~~ {.python}
+      @ROOT.DeclareCppCallable(["float"], "float")
+
+      def f(x):
+         return 2.0 * x
+
+      ROOT.CppCallable.f(21.0)
+      # Returns 42.0
+
+      df = ROOT.ROOT.RDataFrame(4).Define("x", "CppCallable::f(rdfentry_)")
+
+      df.AsNumpy()
+      # Returns {'x': numpy.array([0., 2., 4., 6.], dtype=float32)}
+~~~
 
