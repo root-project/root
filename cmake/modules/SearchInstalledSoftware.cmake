@@ -266,7 +266,6 @@ if(x11)
       message(STATUS "X11_Xft_INCLUDE_PATH: ${X11_Xft_INCLUDE_PATH}")
       message(STATUS "X11_Xft_LIB: ${X11_Xft_LIB}")
     endif()
-    set(xft ON)
   else()
     message(FATAL_ERROR "libXft and Xft headers must be installed.")
   endif()
@@ -278,10 +277,7 @@ if(x11)
   else()
     message(FATAL_ERROR "libXext and Xext headers must be installed.")
   endif()
-else()
-  set(xft OFF)
 endif()
-
 
 #---Check for all kind of graphics includes needed by libAfterImage--------------------
 if(asimage)
