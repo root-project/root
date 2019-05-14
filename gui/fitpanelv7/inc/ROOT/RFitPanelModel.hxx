@@ -176,6 +176,8 @@ struct RFitPanelModel {
    int fScanMin{0};
    int fScanMax{0};
 
+   bool fInitialized{false};    ///<! indicates if data were initialized
+
    RFitPanelModel() { Initialize(); }
 
    void Initialize();
@@ -190,9 +192,8 @@ struct RFitPanelModel {
 
    void UpdateFuncList();
 
-   bool IsSelectedHistogram() const { return !fSelectedData.empty(); }
+   bool IsDataSelected() const { return !fSelectedData.empty(); }
 
-   TH1* GetSelectedHistogram(TH1 *hist = nullptr);
 
    void GetRanges(ROOT::Fit::DataRange &drange);
    void GetFitOptions(Foption_t &fitOpts);
