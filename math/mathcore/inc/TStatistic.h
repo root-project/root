@@ -41,6 +41,8 @@ private:
    Double_t    fW2;      ///< Sum of squared weights
    Double_t    fM;       ///< Sum of elements (i.e. sum of (val * weight) pairs
    Double_t    fM2;      ///< Second order momentum
+   Double_t    fMin;     ///< Minimum value in the Tstatistic object
+   Double_t    fMax;     ///< Maximum value in the TStatistic object
 
 public:
 
@@ -61,6 +63,8 @@ public:
    inline       Double_t GetVar() const { return (fW>0) ? ( (fN>1) ? (fM2 / fW)*(fN / (fN-1.)) : 0 ) : -1; }
    inline       Double_t GetW() const { return fW; }
    inline       Double_t GetW2() const { return fW2; }
+   inline       Double_t GetMin() const { return fMin; }
+   inline       Double_t GetMax() const { return fMax; }
 
    // Merging
    Int_t Merge(TCollection *in);
