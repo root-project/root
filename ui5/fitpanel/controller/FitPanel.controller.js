@@ -87,24 +87,6 @@ sap.ui.define([
 
       //Fitting Button
       doFit: function() {
-         //Keep the #times the button is clicked
-         //Data is a new model. With getValue() we select the value of the parameter specified from id
-
-         var errorDefinition = parseFloat(this.getView().byId("errorDef").getValue());
-         var maxTolerance = parseFloat(this.getView().byId("maxTolerance").getValue());
-         var maxInterations = Number(this.getView().byId("maxInterations").getValue());
-
-         var data = this.data();
-
-         data.fErrorDef = errorDefinition;
-         data.fMaxTol = maxTolerance;
-         data.fMaxInter = maxInterations;
-
-         //Refresh the model
-         this.refresh();
-         //Each time we click the button, we keep the current state of the model
-
-
          this.sendModel("DOFIT:");
       },
 
@@ -134,15 +116,15 @@ sap.ui.define([
       // approve current fSelectMethodMin value - and change if require
       verifySelectedMethodMin: function(data) {
 
-         this.getView().byId("MethodMin").getBinding("items").filter(new Filter("key", FilterOperator.EQ, data.fLibrary.toString()));
+         this.getView().byId("MethodMin").getBinding("items").filter(new Filter("lib", FilterOperator.EQ, data.fLibrary));
 
-         var first = "";
+         var first = 0;
 
          for (var k=0;k<data.fMethodMinAll.length;++k) {
             var item = data.fMethodMinAll[k];
-            if (item.key != data.fLibrary) continue;
-            if (!first) first = item.value;
-            if (item.value === data.fSelectMethodMin) return;
+            if (item.lib != data.fLibrary) continue;
+            if (!first) first = item.id;
+            if (item.id === data.fSelectMethodMin) return;
          }
 
          data.fSelectMethodMin = first;

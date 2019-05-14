@@ -17,6 +17,10 @@
 #ifndef ROOT_RFitPanelModel
 #define ROOT_RFitPanelModel
 
+#include "Foption.h"
+#include "Fit/DataRange.h"
+#include "Math/MinimizerOptions.h"
+
 #include <vector>
 #include <string>
 
@@ -72,10 +76,23 @@ struct RFitFuncParsList {
 
 struct RFitPanelModel {
 
+   /// Entry in minimizer algorithm combo
+   struct RMinimezerAlgorithm {
+      int lib{0};        // to which library belongs
+      int id{0};         // identifier
+      std::string text;  // text shown in combobox
+      RMinimezerAlgorithm() = default;
+      RMinimezerAlgorithm(int _lib, int _id, const std::string &_text) : lib(_lib), id(_id), text(_text) {}
+   };
+
+
    std::string fTitle;                      ///< title of the fit panel
 
    std::vector<RComboBoxItem> fDataSet;     ///< list of available data sources
    std::string fSelectedData;               ///< selected data
+
+   int fDim{0};                             ///< number of dimensions in selected data object
+
    std::vector<RFitFuncInfo>   fFuncList;   ///< all available fit functions
    std::string fSelectedFunc;               ///< name of selected fit function
 
@@ -109,18 +126,23 @@ struct RFitPanelModel {
    // all combo items for all methods
 
    // Minimization Tab
-   int fLibrary{0};   ///< selected minimization library
-   std::vector<RComboBoxItem> fMethodMinAll;  // all items for all methods
-   std::string fSelectMethodMin;
+   int fLibrary{0};                                 ///< selected minimization library
+   bool fHasGenetics{false};                        ///< is genetics available
+   std::vector<RMinimezerAlgorithm> fMethodMinAll;  ///< all items for all methods
+   int fSelectMethodMin{0};
 
-   // range selection
-   bool fShowRangeX{true};
+   float fErrorDef{1.00};
+   float fMaxTolerance{0.01};
+   int fMaxIterations{0};
+   int fPrint{0};
+
+
+   // range selection, shown dependning on fDim
    float fMinRangeX{0};
    float fMaxRangeX{1};
    float fStepX{0.01};
    float fRangeX[2] = {0,1};
 
-   bool fShowRangeY{false};
    float fMinRangeY{0};
    float fMaxRangeY{1};
    float fStepY{0.01};
@@ -128,10 +150,6 @@ struct RFitPanelModel {
 
    // float fOperation{0};
    float fFitOptions{0};
-   int fPrint{0};
-   float fErrorDef{1.00};
-   float fMaxTol{0.01};
-   int fMaxInter{0};
 
    // convert fSelectTypeID from string to int
    int fTypeId{0};
@@ -186,6 +204,12 @@ struct RFitPanelModel {
    TH1* GetSelectedHistogram(TH1 *hist = nullptr);
 
    TF1 *FindFunction(const std::string &fname, TH1 *hist = nullptr);
+
+   void GetRanges(ROOT::Fit::DataRange &drange);
+
+   void RetrieveOptions(Foption_t &fitOpts, ROOT::Math::MinimizerOptions &minOpts);
+
+   std::string GetDrawOption();
 
    std::string GetFitOption();
 };
