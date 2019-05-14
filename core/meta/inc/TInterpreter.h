@@ -176,6 +176,8 @@ public:
    virtual Long_t   ProcessLine(const char *line, EErrorCode *error = 0) = 0;
    virtual Long_t   ProcessLineSynch(const char *line, EErrorCode *error = 0) = 0;
    virtual void     PrintIntro() = 0;
+   virtual bool     RegisterPrebuiltModulePath(const std::string& FullPath,
+                                               const std::string& ModuleMapName = "module.modulemap") const = 0;
    virtual void     RegisterModule(const char* /*modulename*/,
                                    const char** /*headers*/,
                                    const char** /*includePaths*/,

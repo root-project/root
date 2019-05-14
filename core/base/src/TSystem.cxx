@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -3535,9 +3535,35 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    }
    if (gEnv) {
       TString fromConfig = gEnv->GetValue("ACLiC.IncludePaths","");
-      rcling.Append(fromConfig).Append(" \"");
+      rcling.Append(fromConfig);
    }
-   rcling.Append(filename_fullpath).Append("\" \"").Append(linkdef).Append("\"");;
+
+   // Create a modulemap
+   // FIXME: Merge the modulemap generation from cmake and here in rootcling.
+   if (useCxxModules) {
+      // TString moduleMapFileName = file_dirname + "/" + libname + ".modulemap";
+      TString moduleName = libname + "_ACLiC_dict";
+      if (moduleName.BeginsWith("lib"))
+          moduleName = moduleName.Remove(0, 3);
+      TString moduleMapName = moduleName + ".modulemap";
+      TString moduleMapFullPath = build_loc + "/" + moduleMapName;
+      // A modulemap may exist from previous runs, overwrite it.
+      if (verboseLevel > 3 && !AccessPathName(moduleMapFullPath))
+         ::Info("ACLiC", "File %s already exists!", moduleMapFullPath.Data());
+
+      std::ofstream moduleMapFile(moduleMapFullPath, std::ios::out);
+      moduleMapFile << "module \"" << moduleName << "\" {" << std::endl;
+      moduleMapFile << "  header \"" << filename_fullpath << "\"" << std::endl;
+      moduleMapFile << "  export *" << std::endl;
+      moduleMapFile << "  link \"" << libname_ext << "\"" << std::endl;
+      moduleMapFile << "}" << std::endl;
+      moduleMapFile.close();
+      gInterpreter->RegisterPrebuiltModulePath(build_loc.Data(), moduleMapName.Data());
+      rcling.Append(" \"-fmodule-map-file=" + moduleMapFullPath + "\" ");
+   }
+
+   rcling.Append(" \"").Append(filename_fullpath).Append("\" ");
+   rcling.Append("\"").Append(linkdef).Append("\"");
 
    // ======= Run rootcling
    if (withInfo) {

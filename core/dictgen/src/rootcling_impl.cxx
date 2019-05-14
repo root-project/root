@@ -3664,6 +3664,29 @@ public:
          }
       }
    }
+
+   // rootcling pre-includes things such as Rtypes.h. This means that ACLiC can
+   // call rootcling asking it to create a module for a file with no #includes
+   // but relying on things from Rtypes.h such as the ClassDef macro.
+   //
+   // When rootcling starts building a module, it becomes resilient to the
+   // outside environment and pre-included files have no effect. This hook
+   // informs rootcling when a new submodule is being built so that it can
+   // make Core.Rtypes.h visible.
+   virtual void EnteredSubmodule(clang::Module* M,
+                                 clang::SourceLocation ImportLoc,
+                                 bool ForPragma) {
+      assert(M);
+      using namespace clang;
+      if (llvm::StringRef(M->Name).endswith("ACLiC_dict")) {
+         Preprocessor& PP = m_Interpreter->getCI()->getPreprocessor();
+         HeaderSearch& HS = PP.getHeaderSearchInfo();
+         // FIXME: Reduce to Core.Rtypes.h.
+         Module* CoreModule = HS.lookupModule("Core", /*AllowSearch*/false);
+         assert(M && "Must have module Core");
+         PP.makeModuleVisible(CoreModule, ImportLoc);
+      }
+   }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3991,7 +4014,6 @@ int RootClingMain(int argc,
    bool selSyntaxOnly = false;
    bool noIncludePaths = false;
    bool cxxmodule = false;
-   bool isAclic = false;
 
    // Collect the diagnostic pragmas linked to the usage of -W
    // Workaround for ROOT-5656
@@ -4137,8 +4159,6 @@ int RootClingMain(int argc,
       }
       ic++;
    }
-   if (liblistPrefix.length())
-      isAclic = true;
 
    // Check if we have a multi dict request but no target library
    if (multiDict && sharedLibraryPathName.empty()) {
@@ -4895,14 +4915,14 @@ int RootClingMain(int argc,
       }
 
       modGen.WriteRegistrationSource(dictStream, fwdDeclnArgsToKeepString, headersClassesMapString, fwdDeclsString,
-                                     extraIncludes, cxxmodule && !isAclic);
+                                     extraIncludes, cxxmodule);
       // If we just want to inline the input header, we don't need
       // to generate any files.
       if (!inlineInputHeader) {
          // Write the module/PCH depending on what mode we are on
          if (modGen.IsPCH()) {
             if (!GenerateAllDict(modGen, CI, currentDirectory)) return 1;
-         } else if (cxxmodule && !isAclic) {
+         } else if (cxxmodule) {
             if (!CheckModuleValid(modGen, resourceDir, interp, linkdefFilename, moduleName.str()))
                return 1;
          }
@@ -5017,7 +5037,6 @@ int RootClingMain(int argc,
    // Manually call end of translation unit because we never call the
    // appropriate deconstructors in the interpreter. This writes out the C++
    // module file that we currently generate.
-   if (!isAclic)
    {
       cling::Interpreter::PushTransactionRAII RAII(&interp);
       CI->getSema().getASTConsumer().HandleTranslationUnit(CI->getSema().getASTContext());

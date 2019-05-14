@@ -128,6 +128,29 @@ public:
                                   const Module *Imported) {
   }
 
+  /// Callback invoked whenever a submodule was entered.
+  ///
+  /// \param M The submodule we have entered.
+  ///
+  /// \param ImportLoc The location of import directive token.
+  ///
+  /// \param ForPragma If entering from pragma directive.
+  ///
+  virtual void EnteredSubmodule(Module *M, SourceLocation ImportLoc,
+                                bool ForPragma) { }
+
+  /// Callback invoked whenever a submodule was left.
+  ///
+  /// \param M The submodule we have left.
+  ///
+  /// \param ImportLoc The location of import directive token.
+  ///
+  /// \param ForPragma If entering from pragma directive.
+  ///
+  virtual void LeftSubmodule(Module *M, SourceLocation ImportLoc,
+                             bool ForPragma) { }
+
+
   /// \brief Callback invoked whenever there was an explicit module-import
   /// syntax.
   ///
@@ -363,6 +386,18 @@ public:
     Second->InclusionDirective(HashLoc, IncludeTok, FileName, IsAngled,
                                FilenameRange, File, SearchPath, RelativePath,
                                Imported);
+  }
+
+  void EnteredSubmodule(Module *M, SourceLocation ImportLoc,
+                        bool ForPragma) override {
+    First->EnteredSubmodule(M, ImportLoc, ForPragma);
+    Second->EnteredSubmodule(M, ImportLoc, ForPragma);
+  }
+
+  void LeftSubmodule(Module *M, SourceLocation ImportLoc,
+                     bool ForPragma) override {
+    First->LeftSubmodule(M, ImportLoc, ForPragma);
+    Second->LeftSubmodule(M, ImportLoc, ForPragma);
   }
 
   void moduleImport(SourceLocation ImportLoc, ModuleIdPath Path,
