@@ -19,7 +19,9 @@ Buffer base class used for serializing objects.
 #include "TClass.h"
 #include "TProcessID.h"
 
-const Int_t  kExtraSpace        = 8;   // extra space at end of buffer (used for free block count)
+constexpr Int_t kExtraSpace    = 8;   // extra space at end of buffer (used for free block count)
+constexpr Int_t kMaxBufferSize  = 0x7FFFFFFE;  // largest possible size.
+
 
 ClassImp(TBuffer);
 
@@ -70,6 +72,8 @@ TBuffer::TBuffer(EMode mode)
 
 TBuffer::TBuffer(EMode mode, Int_t bufsiz)
 {
+   if (bufsiz < 0)
+      Fatal("TBuffer","Request to create a buffer with a negative size, likely due to an integer overflow: 0x%x for a max of 0x%x.", bufsiz, kMaxBufferSize);
    if (bufsiz < kMinimalSize) bufsiz = kMinimalSize;
    fBufSize  = bufsiz;
    fMode     = mode;
@@ -99,6 +103,8 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz)
 
 TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc)
 {
+   if (bufsiz < 0)
+      Fatal("TBuffer","Request to create a buffer with a negative size, likely due to an integer overflow: 0x%x for a max of 0x%x.", bufsiz, kMaxBufferSize);
    fBufSize  = bufsiz;
    fMode     = mode;
    fVersion  = 0;
@@ -116,7 +122,7 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharF
       if (fBufSize < kMinimalSize) {
          fBufSize = kMinimalSize;
       }
-      fBuffer = new char[fBufSize+kExtraSpace];
+      fBuffer = new char[(Long64_t)fBufSize+kExtraSpace];
    }
    fBufCur = fBuffer;
    fBufMax = fBuffer + fBufSize;
@@ -151,11 +157,17 @@ TBuffer::~TBuffer()
 
 void TBuffer::AutoExpand(Int_t size_needed)
 {
+   if (size_needed < 0) {
+      Fatal("AutoExpand","Request to expand to a negative size, likely due to an integer overflow: 0x%x for a max of 0x%x.", size_needed, kMaxBufferSize);
+   }
    if (size_needed > fBufSize) {
-      if (size_needed > 2*fBufSize) {
+      Long64_t doubling = 2LLU * fBufSize;
+      if (doubling > kMaxBufferSize)
+         doubling = kMaxBufferSize;
+      if (size_needed > doubling) {
          Expand(size_needed);
       } else {
-         Expand(2*fBufSize);
+         Expand(doubling);
       }
    }
 }
@@ -213,6 +225,15 @@ void TBuffer::Expand(Int_t newsize, Bool_t copy)
    Int_t l  = Length();
    if ( (l > newsize) && copy ) {
       newsize = l;
+   }
+   const Int_t extraspace = (fMode&kWrite)!=0 ? kExtraSpace : 0;
+
+   if ( ((Long64_t)newsize+extraspace) > kMaxBufferSize) {
+      if (l < kMaxBufferSize) {
+         newsize = kMaxBufferSize - extraspace;
+      } else {
+         Fatal("Expand","Requested size (%d) is too large (max is %d).", newsize, kMaxBufferSize);
+      }
    }
    if ( (fMode&kWrite)!=0 ) {
       fBuffer  = fReAllocFunc(fBuffer, newsize+kExtraSpace,
