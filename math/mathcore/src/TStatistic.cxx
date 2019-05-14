@@ -68,6 +68,9 @@ TStatistic::~TStatistic()
 ///         \sum_{i=0}^{j} \left(w_i \cdot val_i\right)
 ///   \right)
 /// \f]
+///
+/// The minimum(maximum) is computed by checking that the fill value
+/// is either less(greater) than the current minimum(maximum)
 void TStatistic::Fill(Double_t val, Double_t w) {
 
 
@@ -84,6 +87,15 @@ void TStatistic::Fill(Double_t val, Double_t w) {
       fN--;
       return;
    }
+   // Initialize min and max when filling with first value
+   if (fN == 1) {
+      fMin = val;
+      fMax = val;
+   // Update min and max at each iteration
+   } else if (fN > 1) {
+      fMin = (val < fMin) ? val : fMin;
+      fMax = (val > fMax) ? val : fMax;
+   }
    if (fW != 0) {  // from the second time
       Double_t rr = ( tW * val - fM);
       fM2 += w * rr * rr / (tW * fW);
@@ -96,11 +108,11 @@ void TStatistic::Fill(Double_t val, Double_t w) {
 /// \brief Print the content of the object
 ///
 /// Prints the statistics held by the object in one line. These include the mean,
-/// mean error, RMS and total number of values.
+/// mean error, RMS, the total number of values, the minimum and the maximum.
 void TStatistic::Print(Option_t *) const {
    TROOT::IndentLevel();
-   Printf(" OBJ: TStatistic\t %s = %.5g +- %.4g \t RMS = %.5g \t N = %lld",
-          fName.Data(), GetMean(), GetMeanErr(), GetRMS(), fN);
+   Printf(" OBJ: TStatistic\t %s \t Mean = %.5g +- %.4g \t RMS = %.5g \t Count = %lld \t Min = %.5g \t Max = %.5g",
+          fName.Data(), GetMean(), GetMeanErr(), GetRMS(), GetN(), GetMin(), GetMax());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,6 +128,9 @@ void TStatistic::Print(Option_t *) const {
 ///
 /// The sum of squared (value*weight) pairs fM2 is updated using the same formula as in
 /// TStatistic::Fill() function.
+///
+/// The minimum(maximum) is updated by checking that the minimum(maximum) of
+/// the next TStatistic object in the queue is either less(greater) than the current minimum(maximum).
 Int_t TStatistic::Merge(TCollection *in) {
 
    // Let's organise the list of objects to merge excluding the empty ones
@@ -142,6 +157,8 @@ Int_t TStatistic::Merge(TCollection *in) {
    auto M2 = firstStatPtr->fM2;
    auto W = firstStatPtr->fW;
    auto W2 = firstStatPtr->fW2;
+   auto Min = firstStatPtr->fMin;
+   auto Max = firstStatPtr->fMax;
    for (auto i = 1U; i < nStatsPtrs; ++i) {
       auto c = statPtrs[i];
       double temp = (c->fW) / (W)*M - c->fM;
@@ -150,6 +167,8 @@ Int_t TStatistic::Merge(TCollection *in) {
       W += c->fW;
       W2 += c->fW2;
       N += c->fN;
+      Min = (c->fMin < Min) ? c->fMin : Min;
+      Max = (c->fMax > Max) ? c->fMax : Max;
    }
 
    // Now update the data members of this object
@@ -158,6 +177,8 @@ Int_t TStatistic::Merge(TCollection *in) {
    fW2 = W2;
    fM = M;
    fM2 = M2;
+   fMin = Min;
+   fMax = Max;
 
    return nStatsPtrs;
 
