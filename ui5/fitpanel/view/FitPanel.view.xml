@@ -3,20 +3,34 @@
    xmlns:l="sap.ui.layout" controllerName="rootui5.fitpanel.controller.FitPanel">
    <Page id="simplefitpanel_page" title="Simple Fit Panel" showHeader="false">
       <VBox class="sapUiSizeCompact sapUiSmallMarginStart" width="100%">
-         <l:Grid class="sapUiSizeCompact" defaultSpan="XL6 L6 M6 S6"  hSpacing="0.5" vSpacing="0">
-           <Text text="Data Set:"/>
+         <l:Grid class="sapUiSizeCompact" hSpacing="0.5" vSpacing="0">
+           <Text text="Data Set:">
+               <layoutData>
+                  <l:GridData span="XL4 L4 M4 S4" />
+               </layoutData>
+           </Text>
            <ComboBox id="DataSet" class="sapUiSmallMarginBeginEnd"
                selectedKey="{/fSelectedData}"
                items="{ path: '/fDataSet', sorter: { path: 'key' } }"
                change="onSelectedDataChange">
                <core:Item key="{key}" text="{value}" />
+               <layoutData>
+                  <l:GridData span="XL8 L8 M8 S8" />
+               </layoutData>
            </ComboBox>
-           <Text text="Function:"/>
+           <Text text="Function:">
+               <layoutData>
+                  <l:GridData span="XL4 L4 M4 S4" />
+               </layoutData>
+           </Text>
            <ComboBox id="selectedFuncCombo" class="sapUiSmallMarginBeginEnd"
                selectedKey="{/fSelectedFunc}"
-               items="{ path: '/fFuncList', sorter: { path: 'name' } }"
+               items="{ path: '/fFuncList', sorter: { path: 'group', group: true, descending: false } }"
                change="onSelectedFuncChange">
-               <core:Item key="{name}" text="{name}" />
+               <core:Item key="{id}" text="{name}" />
+               <layoutData>
+                  <l:GridData span="XL8 L8 M8 S8" />
+               </layoutData>
            </ComboBox>
          </l:Grid>
          <IconTabBar id="Gen-Min" headerMode="Inline">
@@ -54,9 +68,9 @@
                         <CheckBox text="Use range" selected="{/fUseRange}"
                            tooltip="'R'-fit only data..." />
                         <CheckBox text="Best errors" selected="{/fBestErrors}"
-                           tooltip="'E'-better ..." />
-                        <CheckBox text="Improve fit results"
-                           selected="{/fImproveFitResults}" tooltip="'M'-after medium is found ..." />
+                           enabled="{= ${/fLinearFit} !== true}" tooltip="'E'-better ..." />
+                        <CheckBox text="Improve fit results" selected="{/fImproveFitResults}"
+                           enabled="{= ${/fLinearFit} !== true}" tooltip="'M'-after medium is found ..." />
                         <CheckBox text="All weights = 1"
                            selected="{/fAllWeights1}" enabled="true"
                            tooltip="'W'-all weights=1 for non-empty bins; eroors bars ignored" />

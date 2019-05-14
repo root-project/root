@@ -20,9 +20,7 @@ sap.ui.define([
          // for linev.github.io
          // JSROOT.loadScript('../rootui5/fitpanel/style/style.css');
 
-         var id = this.getView().getId();
          this.inputId = "";
-         var opText = this.getView().byId("OperationText");
          var data = {
                fDataSet:[ { key:"1", value: "----" } ],
                fSelectedData: "1",
@@ -69,13 +67,15 @@ sap.ui.define([
       // Assign the new JSONModel to data
       OnWebsocketMsg: function(handle, msg) {
 
-         if(msg.startsWith("MODEL:")){
+         if(msg.startsWith("MODEL:")) {
             var data = JSROOT.parse(msg.substr(6));
 
             if(data) {
+               this.getView().setModel(new JSONModel(data));
+
                this.verifySelectedMethodMin(data);
 
-               this.getView().setModel(new JSONModel(data));
+               this.refresh();
             }
          } else if (msg.startsWith("PARS:")) {
 
@@ -87,6 +87,7 @@ sap.ui.define([
 
       //Fitting Button
       doFit: function() {
+         console.log('method', this.data().fSelectMethodMin, typeof this.data().fSelectMethodMin);
          this.sendModel("DOFIT:");
       },
 
@@ -106,11 +107,6 @@ sap.ui.define([
 
          if (this.websocket && func)
             this.websocket.Send("GETPARS:" + func);
-
-         //updates the text area and text in selected tab, depending on the choice in TypeXY ComboBox
-         this.byId("OperationText").setValueLiveUpdate();
-         this.byId("OperationText").setValue(func);
-         this.byId("selectedOpText").setText(func);
       },
 
       // approve current fSelectMethodMin value - and change if require

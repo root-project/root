@@ -27,6 +27,7 @@
 
 #include <memory>
 #include <vector>
+#include <unordered_map>
 
 #include "TF1.h"
 
@@ -50,8 +51,9 @@ class RFitPanel {
    std::shared_ptr<RWebWindow> fWindow; ///!< configured display
    unsigned fConnId{0};              ///<! client connection id
 
-   std::vector<std::unique_ptr<TF1>> fSystemFuncs; ///!< local copy of all internal system funcs
+   std::vector<std::unique_ptr<TF1>> fSystemFuncs; ///<! local copy of all internal system funcs
 
+   std::unordered_map<std::string, std::unique_ptr<TF1>> fPrevFuncs; ///<! all previous functions used for fitting
 
    TF1* copyTF1(TF1* f);
 
@@ -69,6 +71,10 @@ class RFitPanel {
    void DrawScan(const std::string &model);
 
    RFitPanelModel &model();
+
+   TF1 *FindFunction(const std::string &funcname);
+
+   std::unique_ptr<TF1> GetFitFunction(const std::string &funcname);
 
    TPad *GetDrawPad(TH1 *hist);
 
