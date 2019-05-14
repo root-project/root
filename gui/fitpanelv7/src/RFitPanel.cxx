@@ -23,8 +23,12 @@
 #include "TString.h"
 #include "TBackCompFitter.h"
 #include "TGraph.h"
+#include "TGraph2D.h"
+#include "TMultiGraph.h"
+#include "THStack.h"
 #include "TROOT.h"
 #include "TH1.h"
+#include "TH2.h"
 #include "TF1.h"
 #include "TF2.h"
 #include "TF3.h"
@@ -43,6 +47,20 @@
 #include <iomanip>
 
 using namespace std::string_literals;
+
+enum EFitObjectType {
+   kObjectNone,
+   kObjectHisto,
+   kObjectGraph,
+   kObjectGraph2D,
+   kObjectHStack,
+//   kObjectTree,
+   kObjectMultiGraph,
+   kObjectNotSupported
+};
+
+
+
 
 /** \class ROOT::Experimental::RFitPanel
 \ingroup webdisplay
@@ -76,12 +94,154 @@ std::shared_ptr<ROOT::Experimental::RWebWindow> ROOT::Experimental::RFitPanel::G
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Update list of avaliable data
+
+void ROOT::Experimental::RFitPanel::UpdateDataSet()
+{
+   auto &m = model();
+
+   m.fDataSet.clear();
+
+   for (auto &obj : fObjects)
+      m.fDataSet.emplace_back("panel::"s + obj->GetName(), Form("%s::%s", obj->ClassName(), obj->GetName()));
+
+   if (gDirectory) {
+      TIter iter(gDirectory->GetList());
+      TObject *obj = nullptr;
+      while ((obj = iter()) != nullptr) {
+         if (obj->InheritsFrom(TH1::Class()) ||
+             obj->InheritsFrom(TGraph::Class()) ||
+             obj->InheritsFrom(TGraph2D::Class()) ||
+             obj->InheritsFrom(THStack::Class()) ||
+             obj->InheritsFrom(TMultiGraph::Class())) {
+            m.fDataSet.emplace_back("gdir::"s + obj->GetName(), Form("%s::%s", obj->ClassName(), obj->GetName()));
+         }
+      }
+   }
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Select object for fitting
+
+void ROOT::Experimental::RFitPanel::SelectObject(const std::string &objid)
+{
+   UpdateDataSet();
+
+   auto &m = model();
+
+   std::string id = objid;
+   if (id.compare("$$$") == 0) {
+      if (m.fDataSet.size()>0)
+         id = m.fDataSet[0].key;
+      else
+         id.clear();
+   }
+
+   int kind{0};
+   TObject *obj = GetSelectedObject(id, &kind);
+
+   TH1 *hist = nullptr;
+   switch (kind) {
+      case kObjectHisto:
+         hist = (TH1*)obj;
+         break;
+
+      case kObjectGraph:
+         hist = ((TGraph*)obj)->GetHistogram();
+         break;
+
+      case kObjectMultiGraph:
+         hist = ((TMultiGraph*)obj)->GetHistogram();
+         break;
+
+      case kObjectGraph2D:
+         hist = ((TGraph2D*)obj)->GetHistogram("empty");
+         break;
+
+      case kObjectHStack:
+         hist = (TH1 *)((THStack *)obj)->GetHists()->First();
+         break;
+
+      default:
+         break;
+   }
+
+   if (!obj)
+      m.fSelectedData = "";
+   else
+      m.fSelectedData = id;
+
+   m.fInitialized = true;
+
+   // update list of data
+
+   m.UpdateRange(hist);
+
+   m.UpdateFuncList(); // try to get existing function
+   m.UpdateAdvanced(nullptr);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Assign histogram to use with fit panel - without ownership
+
+TObject *ROOT::Experimental::RFitPanel::GetSelectedObject(const std::string &objid, int *kind)
+{
+   TObject *res = nullptr;
+
+   if (objid.compare(0,6,"gdir::") == 0) {
+      std::string name = objid.substr(6);
+      if (gDirectory)
+         res = gDirectory->GetList()->FindObject(name.c_str());
+   } else if (objid.compare(0,7,"panel::") == 0) {
+      std::string name = objid.substr(7);
+      for (auto &item : fObjects)
+         if (name.compare(item->GetName()) == 0) {
+            res = item;
+            break;
+         }
+   }
+
+   if (res && kind) {
+      if (res->InheritsFrom(TH1::Class()))
+         *kind = kObjectHisto;
+      else if (res->InheritsFrom(TGraph::Class()))
+         *kind = kObjectGraph;
+      else if (res->InheritsFrom(TGraph2D::Class()))
+         *kind = kObjectGraph2D;
+      else if (res->InheritsFrom(THStack::Class()))
+         *kind = kObjectGraph2D;
+      else if (res->InheritsFrom(TMultiGraph::Class()))
+         *kind = kObjectGraph2D;
+      else
+         *kind = kObjectNotSupported;
+   } else if (kind) {
+      *kind = kObjectNone;
+   }
+
+   return res;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Select function
+
+void ROOT::Experimental::RFitPanel::SelectFunction(const std::string &funcid)
+{
+   TF1 *func = FindFunction(funcid);
+
+   auto &m = model();
+
+   m.SelectedFunc(funcid, func);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Assign histogram to use with fit panel - without ownership
 
 void ROOT::Experimental::RFitPanel::AssignHistogram(TH1 *hist)
 {
-   fHist = hist;
-   model().SelectHistogram("", fHist);
+   fObjects.emplace_back(hist);
+   SelectObject("panel::"s + hist->GetName());
    SendModel();
 }
 
@@ -89,8 +249,7 @@ void ROOT::Experimental::RFitPanel::AssignHistogram(TH1 *hist)
 
 void ROOT::Experimental::RFitPanel::AssignHistogram(const std::string &hname)
 {
-   fHist = nullptr;
-   model().SelectHistogram(hname, nullptr);
+   SelectObject("gdir::" + hname);
    SendModel();
 }
 
@@ -165,9 +324,8 @@ void ROOT::Experimental::RFitPanel::ProcessData(unsigned connid, const std::stri
    if (arg == "CONN_READY") {
       fConnId = connid;
       fWindow->Send(fConnId, "INITDONE");
-
-      if (!model().IsSelectedHistogram())
-         model().SelectHistogram("", fHist);
+      if (!model().fInitialized)
+         SelectObject("$$$");
 
       SendModel();
 
@@ -340,7 +498,7 @@ void ROOT::Experimental::RFitPanel::DrawScan(const std::string &model)
 /// Returns pad where histogram should be drawn
 /// Ensure that histogram is on the first place
 
-TPad *ROOT::Experimental::RFitPanel::GetDrawPad(TH1 *hist)
+TPad *ROOT::Experimental::RFitPanel::GetDrawPad(TObject *obj)
 {
    if (model().fNoDrawing || model().fNoStoreDraw)
       return nullptr;
@@ -362,9 +520,9 @@ TPad *ROOT::Experimental::RFitPanel::GetDrawPad(TH1 *hist)
    canv->cd();
 
    // TODO: provide proper draw options
-   if (hist && !canv->FindObject(hist)) {
+   if (obj && !canv->FindObject(obj)) {
       canv->Clear();
-      hist->Draw();
+      obj->Draw();
    }
 
    return canv;
@@ -385,24 +543,25 @@ int ROOT::Experimental::RFitPanel::UpdateModel(const std::string &json)
       return -1;
    }
 
+   m->fInitialized = true;
+
    int res = 0; // nothing changed
 
-   auto selected = m->GetSelectedHistogram(fHist);
-
    if (model().fSelectedData != m->fSelectedData) {
-      res = 1;
-      m->UpdateRange(selected);
-      m->UpdateFuncList(); // try to get existing function
-      m->UpdateAdvanced(nullptr);
-      m->fSelectedFunc = ""; // reset func selection
+      res |= 1;
    }
 
    if (model().fSelectedFunc != m->fSelectedFunc) {
-      res = 1;
-      m->SelectedFunc(m->fSelectedFunc, FindFunction(m->fSelectedFunc));
+      res |= 2;
    }
 
    std::swap(fModel, m); // finally replace model
+
+   if (res & 1)
+      SelectObject(model().fSelectedData);
+
+   if (res != 0)
+      SelectFunction(model().fSelectedFunc);
 
    return res;
 }
@@ -493,9 +652,10 @@ bool ROOT::Experimental::RFitPanel::DoFit()
 {
    auto &m = model();
 
-   TH1 *h1 = m.GetSelectedHistogram(fHist);
+   int kind{0};
+   TObject *obj = GetSelectedObject(m.fSelectedData, &kind);
 
-   if (!h1) return false;
+   if (!obj) return false;
 
    if (m.fSelectedFunc.empty())
       m.fSelectedFunc = "dflt::gaus";
@@ -517,9 +677,50 @@ bool ROOT::Experimental::RFitPanel::DoFit()
 
    TVirtualPad *save = gPad;
 
-   auto pad = GetDrawPad(h1);
+   auto pad = GetDrawPad(obj);
 
-   ROOT::Fit::FitObject(h1, f1.get(), fitOpts, minOption, strDrawOpts, drange);
+   switch (kind) {
+      case kObjectHisto: {
+
+         TH1 *hist = dynamic_cast<TH1*>(obj);
+         if (hist)
+            ROOT::Fit::FitObject(hist, f1.get(), fitOpts, minOption, strDrawOpts, drange);
+
+         break;
+      }
+      case kObjectGraph: {
+
+         TGraph *gr = dynamic_cast<TGraph*>(obj);
+         if (gr)
+            ROOT::Fit::FitObject(gr, f1.get(), fitOpts, minOption, strDrawOpts, drange);
+         break;
+      }
+      case kObjectMultiGraph: {
+
+         TMultiGraph *mg = dynamic_cast<TMultiGraph*>(obj);
+         if (mg)
+            ROOT::Fit::FitObject(mg, f1.get(), fitOpts, minOption, strDrawOpts, drange);
+
+         break;
+      }
+      case kObjectGraph2D: {
+
+         TGraph2D *g2d = dynamic_cast<TGraph2D*>(obj);
+         if (g2d)
+            ROOT::Fit::FitObject(g2d, f1.get(), fitOpts, minOption, strDrawOpts, drange);
+
+         break;
+      }
+      case kObjectHStack: {
+         // N/A
+         break;
+      }
+
+      default: {
+         // N/A
+         break;
+      }
+   }
 
    if (m.fSame && f1)
       f1->Draw("same");
