@@ -533,6 +533,10 @@ TFitEditor::~TFitEditor()
    if (fConvFunc) delete fConvFunc;
    if (fSumFunc) delete fSumFunc;
 
+   for (auto func : fSystemFuncs)
+      delete func;
+   fSystemFuncs.clear();
+
    // Set the singleton reference to null
    fgFitDialog = 0;
 }
@@ -1844,7 +1848,7 @@ void TFitEditor::FillDataSetList()
    // Get all the objects registered in gDirectory
    if (gDirectory) {
       TList * l = gDirectory->GetList();
-      if (l) { 
+      if (l) {
          TIter next(l);
          TObject* obj = NULL;
          while ( (obj = (TObject*) next()) ) {
@@ -2322,7 +2326,7 @@ void TFitEditor::DoConvolution(Bool_t on)
       }
    } else
       first = kFALSE;*/
-   
+
    if (on) Info("DoConvolution","Convolution is selected");
 }
 
@@ -2539,7 +2543,7 @@ void TFitEditor::DoFunction(Int_t selected)
    ((TGCompositeFrame *)fSelLabel->GetParent())->Layout();
 
    // reset function parameters if the number of parameters of the new
-   // function is different from the old one!   
+   // function is different from the old one!
    TF1* fitFunc = GetFitFunction();
    //std::cout << "TFitEditor::DoFunction - using function " << fitFunc->GetName() << "  " << fitFunc << std::endl;
 
@@ -2769,7 +2773,7 @@ void TFitEditor::DoSetParameters()
 
    if ( fParentPad ) fParentPad->Disconnect("RangeAxisChanged()");
    Int_t ret = 0;
-   /// fit parameter dialog willbe deleted automatically when closed 
+   /// fit parameter dialog willbe deleted automatically when closed
    new TFitParametersDialog(gClient->GetDefaultRoot(), GetMainFrame(),
                             fitFunc, fParentPad, &ret);
 
@@ -2778,7 +2782,7 @@ void TFitEditor::DoSetParameters()
 
    // check return code to see if parameters settings have been modified
    // in this case we need to set the B option when fitting
-   if (ret) fChangedParams = kTRUE; 
+   if (ret) fChangedParams = kTRUE;
 
 
    if ( fParentPad ) fParentPad->Connect("RangeAxisChanged()", "TFitEditor", this, "UpdateGUI()");
@@ -3359,8 +3363,8 @@ void TFitEditor::RetrieveOptions(Foption_t& fitOpts, TString& drawOpts, ROOT::Ma
    // if ( (int) fFuncPars.size() == npar )
    //    for ( Int_t i = 0; i < npar; ++i )
    //       if ( fFuncPars[i][PAR_MIN] != fFuncPars[i][PAR_MAX] )
-   // 
-            
+   //
+
    //          //fitOpts.Bound = 1;
    //          break;
    //       }
@@ -3531,11 +3535,8 @@ void TFitEditor::GetFunctionsFromSystem()
    // session.
 
    // First, clean the copies stored in fSystemFunc
-   for ( fSystemFuncIter it = fSystemFuncs.begin();
-         it != fSystemFuncs.end();
-         ++it ) {
-      delete (*it);
-   }
+   for (auto func : fSystemFuncs)
+      delete func;
 
    fSystemFuncs.clear();
 
@@ -3564,7 +3565,7 @@ void TFitEditor::GetFunctionsFromSystem()
          }
          // Add them.
          if ( addFunction )
-            fSystemFuncs.push_back( copyTF1(func) );
+            fSystemFuncs.emplace_back( copyTF1(func) );
       }
    }
 }
@@ -3686,11 +3687,11 @@ TF1* TFitEditor::GetFitFunction()
             // copy everything from the founction available in gROOT
             //std::cout << "GetFitFunction: copying tmp function in PrevFitTMP " <<  tmpF1->GetName()  << "  "
             //          << tmpF1->GetExpFormula() << std::endl;
-            tmpF1->Copy(*fitFunc); 
+            tmpF1->Copy(*fitFunc);
             if ( int(fFuncPars.size()) != tmpF1->GetNpar() )
             {
                GetParameters(fFuncPars, fitFunc);
-            } 
+            }
          }
       }
    }
