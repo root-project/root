@@ -665,6 +665,8 @@ void Preprocessor::EnterSubmodule(Module *M, SourceLocation ImportLoc,
     BuildingSubmoduleStack.push_back(
         BuildingSubmoduleInfo(M, ImportLoc, ForPragma, CurSubmoduleState,
                               PendingModuleMacroNames.size()));
+    if (Callbacks)
+      Callbacks->EnteredSubmodule(M, ImportLoc, ForPragma);
     return;
   }
 
@@ -709,6 +711,9 @@ void Preprocessor::EnterSubmodule(Module *M, SourceLocation ImportLoc,
       BuildingSubmoduleInfo(M, ImportLoc, ForPragma, CurSubmoduleState,
                             PendingModuleMacroNames.size()));
 
+  if (Callbacks)
+    Callbacks->EnteredSubmodule(M, ImportLoc, ForPragma);
+
   // Switch to this submodule as the current submodule.
   CurSubmoduleState = &State;
 
@@ -749,6 +754,10 @@ Module *Preprocessor::LeaveSubmodule(bool ForPragma) {
     // are tracking macro visibility, don't build any, and preserve the list
     // of pending names for the surrounding submodule.
     BuildingSubmoduleStack.pop_back();
+
+    if (Callbacks)
+      Callbacks->LeftSubmodule(LeavingMod, ImportLoc, ForPragma);
+
     makeModuleVisible(LeavingMod, ImportLoc);
     return LeavingMod;
   }
@@ -832,6 +841,9 @@ Module *Preprocessor::LeaveSubmodule(bool ForPragma) {
     CurSubmoduleState = Info.OuterSubmoduleState;
 
   BuildingSubmoduleStack.pop_back();
+
+  if (Callbacks)
+    Callbacks->LeftSubmodule(LeavingMod, ImportLoc, ForPragma);
 
   // A nested #include makes the included submodule visible.
   makeModuleVisible(LeavingMod, ImportLoc);

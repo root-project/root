@@ -223,6 +223,8 @@ public: // Public Interface
    Long_t  ProcessLineAsynch(const char* line, EErrorCode* error = 0);
    Long_t  ProcessLineSynch(const char* line, EErrorCode* error = 0);
    void    PrintIntro();
+   bool    RegisterPrebuiltModulePath(const std::string& FullPath,
+                                      const std::string& ModuleMapName = "module.modulemap") const;
    void    RegisterModule(const char* modulename,
                           const char** headers,
                           const char** includePaths,
