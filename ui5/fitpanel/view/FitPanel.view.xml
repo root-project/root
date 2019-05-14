@@ -88,12 +88,12 @@
                            </layoutData>
                         </CheckBox>
                      </l:Grid>
-                     <RangeSlider id="SliderX" visible="{/fShowRangeX}"
+                     <RangeSlider id="SliderX" visible="{= ${/fDim} > 0}"
                         showAdvancedTooltip="true" range="{/fRangeX}"
                         min="{/fMinRangeX}" max="{/fMaxRangeX}" step="{/fStepX}"
                         width="100%" showHandleTooltip="false"
                         inputsAsTooltips="true" class="sapUiSmallMarginBottom" />
-                     <RangeSlider id="SliderY" visible="{/fShowRangeY}"
+                     <RangeSlider id="SliderY" visible="{= ${/fDim} > 1}"
                         showAdvancedTooltip="true" range="{/fRangeY}"
                         min="{/fMinRangeY}" max="{/fMaxRangeY}" step="{/fStepY}"
                         width="100%" showHandleTooltip="false"
@@ -110,13 +110,13 @@
                            <RadioButton text="Minuit2" />
                            <RadioButton text="Fumili" />
                            <RadioButton text="GSL" />
-                           <RadioButton text="Genetics" />
+                           <RadioButton text="Genetics" enabled="{/fHasGenetics}"/>
                         </buttons>
                      </RadioButtonGroup>
                      <Title level="H3" text="Method" />
                      <ComboBox id="MethodMin" selectedKey="{/fSelectMethodMin}"
-                        items="{ path: '/fMethodMinAll', filters: { path: 'key', operator: 'EQ', value1: '0' },  sorter: { path: 'key' } }">
-                        <core:Item key="{value}" text="{value}" />
+                        items="{ path: '/fMethodMinAll', filters: { path: 'lib', operator: 'EQ', value1: 0 } }">
+                        <core:Item key="{id}" text="{text}" />
                      </ComboBox>
                      <Title level="H3" text="Settings" />
                      <l:Grid class="sapUiSizeCompact" hSpacing="0.5" vSpacing="0">
@@ -131,8 +131,7 @@
                               <l:GridData span="XL8 L8 M8 S8" />
                            </layoutData>
                         </Text>
-                        <Input id="errorDef" type="Number"
-                           placeholder="1.00">
+                        <Input type="Number" value="{/fErrorDef}" placeholder="1.00">
                            <layoutData>
                               <l:GridData span="XL4 L4 M4 S4" />
                            </layoutData>
@@ -142,8 +141,7 @@
                               <l:GridData span="XL8 L8 M8 S8" />
                            </layoutData>
                         </Text>
-                        <Input id="maxTolerance" type="Number"
-                           placeholder="0.01">
+                        <Input type="Number" value="{/fMaxTolerance}" placeholder="0.01">
                            <layoutData>
                               <l:GridData span="XL4 L4 M4 S4" />
                            </layoutData>
@@ -153,8 +151,7 @@
                               <l:GridData span="XL8 L8 M8 S8" />
                            </layoutData>
                         </Text>
-                        <Input id="maxInterations" type="Number"
-                           placeholder="0">
+                        <Input type="Number" value="{/fMaxIterations}"  placeholder="0">
                            <layoutData>
                               <l:GridData span="XL4 L4 M4 S4" />
                            </layoutData>

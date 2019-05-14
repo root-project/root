@@ -13,6 +13,7 @@
 #pragma link C++ struct ROOT::Experimental::RFitFuncParameter+;
 #pragma link C++ struct ROOT::Experimental::RFitFuncParsList+;
 #pragma link C++ struct ROOT::Experimental::RFitPanelModel+;
+#pragma link C++ struct ROOT::Experimental::RFitPanelModel::RMinimezerAlgorithm+;
 #pragma link C++ class ROOT::Experimental::RFitPanel+;
 
 #endif
