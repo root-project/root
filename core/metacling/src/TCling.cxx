@@ -1950,7 +1950,7 @@ void TCling::RegisterModule(const char* modulename,
          pcmFileNameFullPath = dyLibName;
          // The path dyLibName might not be absolute. This can happen if dyLibName
          // is linked to an executable in the same folder.
-         llvm::sys::fs::make_absolute(pcmFileNameFullPath, pcmFileNameFullPath);
+         llvm::sys::fs::make_absolute(pcmFileNameFullPath);
       } else {
          // if we were in the case of late registration
          assert(lateRegistration);
