@@ -157,7 +157,7 @@ private:
    std::string GetSubName(std::string_view name) {
       std::string prefix(fCollectionName);
       prefix.push_back(Detail::RFieldBase::kCollectionSeparator);
-      return prefix + name.to_string();
+      return prefix + std::string(name);
    }
 
 public:

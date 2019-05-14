@@ -326,10 +326,10 @@ void ROOT::Experimental::RField<std::string>::CommitCluster()
 
 ROOT::Experimental::RFieldClass::RFieldClass(std::string_view fieldName, std::string_view className)
    : ROOT::Experimental::Detail::RFieldBase(fieldName, className, EForestStructure::kRecord, false /* isSimple */)
-   , fClass(TClass::GetClass(className.to_string().c_str()))
+   , fClass(TClass::GetClass(std::string(className).c_str()))
 {
    if (fClass == nullptr) {
-      throw std::runtime_error("RField: no I/O support for type " + className.to_string());
+      throw std::runtime_error("RField: no I/O support for type " + std::string(className));
    }
    TIter next(fClass->GetListOfDataMembers());
    while (auto dataMember = static_cast<TDataMember *>(next())) {
@@ -413,7 +413,7 @@ ROOT::Experimental::RFieldVector::RFieldVector(
 
 ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RFieldVector::Clone(std::string_view newName)
 {
-   auto newItemField = fSubFields[0]->Clone(GetCollectionName(newName.to_string()));
+   auto newItemField = fSubFields[0]->Clone(GetCollectionName(std::string(newName)));
    return new RFieldVector(newName, std::unique_ptr<Detail::RFieldBase>(newItemField));
 }
 
@@ -530,7 +530,7 @@ ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RFieldCollection::Cl
    //auto result = new RFieldCollection(newName, fCollectionForest, RForestModel::Create());
    //for (auto& f : fSubFields) {
    //   // switch the name prefix for the new parent name
-   //   std::string cloneName = newName.to_string() + f->GetName().substr(GetName().length());
+   //   std::string cloneName = std::string(newName) + f->GetName().substr(GetName().length());
    //   auto clone = f->Clone(cloneName);
    //   result->Attach(std::unique_ptr<RFieldBase>(clone));
    //}
