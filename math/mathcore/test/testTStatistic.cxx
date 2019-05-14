@@ -4,7 +4,7 @@
 #include "TStopwatch.h"
 #include <iostream>
 
-bool gVerbose = false; 
+bool gVerbose = false;
 
 void testTStatistic(Int_t n = 10000)
 {
@@ -25,19 +25,32 @@ void testTStatistic(Int_t n = 10000)
       ww[i] = rand3.Uniform(0.01, 3.00);
    }
 
+   // Find minimum and maximum
+   double min = xx[0]; // the minimum value in the array
+   double max = xx[0]; // the maximum value in the array
+   double eps_min_max = 0.000001; // epsilon to check for GetMin and GetMax functions
+   for (Int_t i = 0; i < n; ++i) {
+      if (xx[i] < min) {
+         min = xx[i];
+      } else if (xx[i] > max) {
+         max = xx[i];
+      }
+   }
 
    TStopwatch stp;
-   bool error = false; 
+   bool error = false;
 
    printf("\nTest without using weights :        ");
-   
+
    TStatistic st0("st0", n, xx.data());
    stp.Stop();
    if (!TMath::AreEqualAbs(st0.GetMean(),true_mean, eps1) )   { Error("TestTStatistic-GetMean","Different value obtained for the unweighted data"); error = true; }
    if (!TMath::AreEqualAbs(st0.GetRMS(),true_sigma, eps2) )   { Error("TestTStatistic-GetRMS","Different value obtained for the unweighted data"); error = true; }
+   if (!TMath::AreEqualAbs(st0.GetMin(), min, eps_min_max) )   { Error("TestTStatistic-GetMin","Different value obtained for the unweighted data"); error = true; }
+   if (!TMath::AreEqualAbs(st0.GetMax(), max, eps_min_max) )   { Error("TestTStatistic-GetMax","Different value obtained for the unweighted data"); error = true; }
 
    if (error) printf("Failed\n");
-   else printf("OK\n");                  
+   else printf("OK\n");
    if (error || gVerbose) {
       stp.Print();
       st0.Print();
@@ -45,16 +58,16 @@ void testTStatistic(Int_t n = 10000)
 
    // test with TMath
    printf("\nTest using TMath:                   ");
-   error = false; 
+   error = false;
    stp.Start();
-   double mean = TMath::Mean(xx.begin(), xx.end() ); 
+   double mean = TMath::Mean(xx.begin(), xx.end() );
    double rms  = TMath::RMS(xx.begin(), xx.end() );
-   stp.Stop();  
+   stp.Stop();
    if (!TMath::AreEqualAbs(mean,true_mean, eps1) )  {  Error("TestTStatistic::TMath::Mean","Different value obtained for the unweighted data"); error = true; }
    if (!TMath::AreEqualAbs(rms,true_sigma, eps2) )  {  Error("TestTStatistic::TMath::RMS","Different value obtained for the unweighted data"); error = true; }
 
    if (error) printf("Failed\n");
-   else printf("OK\n");                  
+   else printf("OK\n");
    if (error || gVerbose) {
       stp.Print();
       printf("  TMATH         mu =  %.5g +- %.4g \t RMS = %.5g \n",mean, rms/sqrt(double(xx.size()) ), rms);
