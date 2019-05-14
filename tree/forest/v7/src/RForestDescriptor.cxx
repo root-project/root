@@ -18,7 +18,7 @@
 #include <ROOT/RStringView.hxx>
 
 void ROOT::Experimental::RForestDescriptorBuilder::SetForest(std::string_view name, const RForestVersion &version) {
-   fDescriptor.fName = name.to_string();
+   fDescriptor.fName = std::string(name);
    fDescriptor.fVersion = version;
 }
 
@@ -30,8 +30,8 @@ void ROOT::Experimental::RForestDescriptorBuilder::AddField(
    f.fFieldId = fieldId;
    f.fFieldVersion = fieldVersion;
    f.fTypeVersion = typeVersion;
-   f.fFieldName = fieldName.to_string();
-   f.fTypeName = typeName.to_string();
+   f.fFieldName = std::string(fieldName);
+   f.fTypeName = std::string(typeName);
    f.fStructure = structure;
    fDescriptor.fFieldDescriptors[fieldId] = f;
 }
