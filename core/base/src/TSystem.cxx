@@ -4156,18 +4156,41 @@ TString TSystem::SplitAclicMode(const char* filename, TString &aclicMode,
                                 TString &arguments, TString &io) const
 {
    char *fname = Strip(filename);
+   TString filenameCopy = fname;
 
-   char *arg = strchr(fname, '(');
-   // special case for $(HOME)/aap.C(10)
-   while (arg && *arg && (arg > fname && *(arg-1) == '$') && *(arg+1))
-      arg = strchr(arg+1, '(');
-   if (arg && arg > fname) {
-      *arg = 0;
-      char *t = arg-1;
-      while (*t == ' ') {
-         *t = 0; t--;
+   if (filenameCopy.EndsWith(")")) {
+      Ssiz_t posArgEnd = filenameCopy.Length() - 1;
+      // There is an argument; find its start!
+      int parenNestCount = 1;
+      bool inString = false;
+      Ssiz_t posArgBegin = posArgEnd - 1;
+      for (; parenNestCount && posArgBegin >= 0; --posArgBegin) {
+	 // Escaped if the previous character is a `\` - but not if it
+	 // itself is preceded by a `\`!
+	 if (posArgBegin > 0 && filenameCopy[posArgBegin] == '\\' &&
+	     (posArgBegin == 1 || filenameCopy[posArgBegin - 1] != '\\')) {
+	    // skip escape.
+	    --posArgBegin;
+	    continue;
+	 }
+	 switch (filenameCopy[posArgBegin]) {
+	 case ')':
+	    if (!inString)
+	       ++parenNestCount;
+	    break;
+	 case '(':
+	    if (!inString)
+	       --parenNestCount;
+	    break;
+	 case '"': inString = !inString; break;
+	 }
       }
-      arg++;
+      if (parenNestCount || inString) {
+	 Error("SplitAclicMode", "Cannot parse argument in %s", filename);
+      } else {
+	 arguments = filenameCopy(posArgBegin + 1, posArgEnd - 1);
+	 fname[posArgBegin + 1] = 0;
+      }
    }
 
    // strip off I/O redirect tokens from filename
@@ -4226,9 +4249,6 @@ TString TSystem::SplitAclicMode(const char* filename, TString &aclicMode,
    }
 
    TString resFilename = fname;
-   arguments = "(";
-   if (arg) arguments += arg;
-   else arguments = "";
 
    delete []fname;
    return resFilename;
