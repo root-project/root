@@ -26,6 +26,8 @@
 #include "TROOT.h"
 #include "TH1.h"
 #include "TF1.h"
+#include "TF2.h"
+#include "TF3.h"
 #include "TList.h"
 #include "TCanvas.h"
 #include "TPad.h"
@@ -33,7 +35,9 @@
 #include "TBufferJSON.h"
 #include "TMath.h"
 #include "Math/Minimizer.h"
+#include "HFitInterface.h"
 #include "TColor.h"
+
 #include <sstream>
 #include <iostream>
 #include <iomanip>
@@ -49,6 +53,8 @@ web-based FitPanel prototype.
 ROOT::Experimental::RFitPanel::RFitPanel(const std::string &title)
 {
    model().fTitle = title;
+
+   GetFunctionsFromSystem();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -347,6 +353,84 @@ int ROOT::Experimental::RFitPanel::UpdateModel(const std::string &json)
    return res;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+///Copies f into a new TF1 to be stored in the fitpanel with it's
+///own ownership. This is taken from Fit::StoreAndDrawFitFunction in
+///HFitImpl.cxx
+
+TF1* ROOT::Experimental::RFitPanel::copyTF1(TF1* f)
+{
+   double xmin = 0, xmax = 0, ymin = 0, ymax = 0, zmin = 0, zmax = 0;
+
+   // no need to use kNotGlobal bit. TF1::Copy does not add in the list by default
+   if ( dynamic_cast<TF3*>(f)) {
+      TF3* fnew = (TF3*)f->IsA()->New();
+      f->Copy(*fnew);
+      f->GetRange(xmin,ymin,zmin,xmax,ymax,zmax);
+      fnew->SetRange(xmin,ymin,zmin,xmax,ymax,zmax);
+      fnew->SetParent( nullptr );
+      fnew->AddToGlobalList(false);
+      return fnew;
+   } else if ( dynamic_cast<TF2*>(f) != 0 ) {
+      TF2* fnew = (TF2*)f->IsA()->New();
+      f->Copy(*fnew);
+      f->GetRange(xmin,ymin,xmax,ymax);
+      fnew->SetRange(xmin,ymin,xmax,ymax);
+      fnew->Save(xmin,xmax,ymin,ymax,0,0);
+      fnew->SetParent( nullptr );
+      fnew->AddToGlobalList(false);
+      return fnew;
+   }
+
+   TF1* fnew = (TF1*)f->IsA()->New();
+   f->Copy(*fnew);
+   f->GetRange(xmin,xmax);
+   fnew->SetRange(xmin,xmax);
+   // This next line is added, as fnew-Save fails with gausND! As
+   // the number of dimensions is unknown...
+   if ( '\0' != fnew->GetExpFormula()[0] )
+      fnew->Save(xmin,xmax,0,0,0,0);
+   fnew->SetParent( nullptr );
+   fnew->AddToGlobalList(false);
+   return fnew;
+}
+
+void ROOT::Experimental::RFitPanel::GetFunctionsFromSystem()
+{
+   // Looks for all the functions registered in the current ROOT
+   // session.
+
+   fSystemFuncs.clear();
+
+   // Be carefull not to store functions that will be in the
+   // predefined section
+   std::vector<std::string> fnames = { "gaus" ,   "gausn", "expo", "landau",
+                                       "landaun", "pol0",  "pol1", "pol2",
+                                       "pol3",    "pol4",  "pol5", "pol6",
+                                       "pol7",    "pol8",  "pol9", "user" };
+
+   // No go through all the objects registered in gROOT
+   TIter functionsIter(gROOT->GetListOfFunctions());
+   TObject* obj;
+   while( (obj = functionsIter()) != nullptr ) {
+      // And if they are TF1s
+      if ( TF1* func = dynamic_cast<TF1*>(obj) ) {
+         bool addFunction = true;
+         // And they are not already registered in fSystemFunc
+         for ( auto &name : fnames) {
+            if ( name.compare(func->GetName()) == 0 ) {
+               addFunction = false;
+               break;
+            }
+         }
+         // Add them.
+         if ( addFunction )
+            fSystemFuncs.emplace_back( copyTF1(func) );
+      }
+   }
+}
+
 ///////////////////////////////////////////////
 /// Perform fitting using current model settings
 /// Returns true if any action was done
@@ -355,48 +439,45 @@ bool ROOT::Experimental::RFitPanel::DoFit()
 {
    auto &m = model();
 
-   ROOT::Math::MinimizerOptions minOption;
-
-   // Fitting Options
-   if (gDebug > 0)
-      ::Info("RFitPanel::DoFit", "range %f %f select %s function %s", m.fRangeX[0], m.fRangeX[1],
-             m.fSelectedData.c_str(), m.fSelectedFunc.c_str());
+   TH1 *h1 = m.GetSelectedHistogram(fHist);
 
    if (m.fSelectedFunc.empty())
       m.fSelectedFunc = "gaus";
 
-   if (!m.fSelectMethodMin.empty())
-      minOption.SetMinimizerAlgorithm(m.fSelectMethodMin.c_str());
-
-   if (m.fErrorDef == 0)
-      minOption.SetErrorDef(1.00);
-   else
-      minOption.SetErrorDef(m.fErrorDef);
-
-   if (m.fMaxTol == 0)
-      minOption.SetTolerance(0.01);
-   else
-      minOption.SetTolerance(m.fMaxTol);
-
-   minOption.SetMaxIterations(m.fMaxInter);
-
-   std::string opt = m.GetFitOption();
-
-   TH1 *h1 = m.GetSelectedHistogram(fHist);
-
    TF1 *f1 = m.FindFunction(m.fSelectedFunc, h1);
+
+   ROOT::Fit::DataRange drange;
+   m.GetRanges(drange);
+
+   ROOT::Math::MinimizerOptions minOption;
+   Foption_t fitOpts;
+   m.RetrieveOptions(fitOpts, minOption);
+
+   // std::string drawOpts = m.GetDrawOption();
+
+   TString strDrawOpts;
 
    if (!h1 || !f1) return false;
 
+   TVirtualPad *save = gPad;
+
    auto pad = GetDrawPad(h1);
 
-   h1->Fit(f1, opt.c_str(), "*", m.fRangeX[0], m.fRangeX[1]);
+   ROOT::Fit::FitObject(h1, f1, fitOpts, minOption, strDrawOpts, drange);
 
-   if (pad) pad->Update();
+   if (m.fSame && f1)
+      f1->Draw("same");
 
-   auto *fres = m.UpdateFuncList(h1, true);
+   if (pad) {
+      pad->Modified();
+      pad->Update();
+   }
 
-   m.UpdateAdvanced(fres);
+   // TODO: save fitting to be able comeback to previous fits
+
+   m.UpdateAdvanced(f1);
+
+   if (save) gPad = save;
 
    return true; // provide client with latest changes
 }

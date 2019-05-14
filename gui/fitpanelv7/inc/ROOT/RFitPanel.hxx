@@ -28,8 +28,11 @@
 #include <memory>
 #include <vector>
 
+#include "TF1.h"
+
 class TPad;
 class TH1;
+class TF1;
 
 namespace ROOT {
 namespace Experimental {
@@ -46,6 +49,13 @@ class RFitPanel {
 
    std::shared_ptr<RWebWindow> fWindow; ///!< configured display
    unsigned fConnId{0};              ///<! client connection id
+
+   std::vector<std::unique_ptr<TF1>> fSystemFuncs; ///!< local copy of all internal system funcs
+
+
+   TF1* copyTF1(TF1* f);
+
+   void GetFunctionsFromSystem();
 
    /// process data from UI
    void ProcessData(unsigned connid, const std::string &arg);

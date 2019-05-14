@@ -18,9 +18,19 @@
 
 #include "TH1.h"
 #include "TDirectory.h"
+#include "TPluginManager.h"
 
 #include "TF1.h"
 #include "TF2.h"
+
+
+enum EFitPanel {
+   kFP_NONE = 0,
+   kFP_MIGRAD, kFP_SIMPLX, kFP_SCAN, kFP_COMBINATION,
+   kFP_FUMILI, kFP_FUMILI2, kFP_GSLFR, kFP_GSLPR,
+   kFP_BFGS, kFP_BFGS2, kFP_GSLLM, kFP_GSLSA,
+   kFP_GALIB, kFP_TMVAGA
+};
 
 using namespace std::string_literals;
 
@@ -141,22 +151,20 @@ bool ROOT::Experimental::RFitPanelModel::SelectHistogram(const std::string &hnam
 
 void ROOT::Experimental::RFitPanelModel::UpdateRange(TH1 *hist)
 {
-   fShowRangeX = false;
-   fShowRangeY = false;
+   fDim = hist ? hist->GetDimension() : 0;
+
    fMinRangeX = 0.;
    fMaxRangeX = 100.;
    fMinRangeY = 0.;
    fMaxRangeY = 100.;
 
-   if (hist) {
-      fShowRangeX = true;
+   if (hist && (fDim > 0)) {
       fMinRangeX = hist->GetXaxis()->GetXmin();
       fMaxRangeX = hist->GetXaxis()->GetXmax();
-      if (hist->GetDimension() > 1) {
-         fShowRangeY = true;
-         fMinRangeY = hist->GetYaxis()->GetXmin();
-         fMaxRangeY = hist->GetYaxis()->GetXmax();
-      }
+   }
+   if (hist && (fDim > 1)) {
+      fMinRangeY = hist->GetYaxis()->GetXmin();
+      fMaxRangeY = hist->GetYaxis()->GetXmax();
    }
 
    // defined values
@@ -259,19 +267,33 @@ void ROOT::Experimental::RFitPanelModel::Initialize()
    fNoDrawing = false;
    fNoStoreDraw = false;
 
-
-
    // Minimization method
    fLibrary = 0;
    // corresponds to library == 0
    fMethodMinAll = {
-         {"0", "MIGRAD"}, {"0", "SIMPLEX"}, {"0", "SCAN"}, {"0", "Combination"},
-         {"1", "MIGRAD"}, {"1", "SIMPLEX"}, {"1", "SCAN"}, {"1", "Combination"},
-         {"2", "FUMILI"},
-         {"3", "none"},
-         {"4", "TMVA Genetic Algorithm"}
+         {0, kFP_MIGRAD, "MIGRAD"}, {0, kFP_SIMPLX, "SIMPLEX"}, {0, kFP_SCAN, "SCAN"}, {0, kFP_COMBINATION, "Combination"},
+         {1, kFP_MIGRAD, "MIGRAD"}, {1, kFP_SIMPLX, "SIMPLEX"}, {1, kFP_FUMILI2, "FUMILI"}, {1, kFP_SCAN, "SCAN"}, {1, kFP_COMBINATION, "Combination"},
+         {2, kFP_FUMILI, "FUMILI"},
+
+         {3, kFP_GSLFR, "Fletcher-Reeves conjugate gradient"},
+         {3, kFP_GSLPR, "Polak-Ribiere conjugate gradient"},
+         {3, kFP_BFGS,  "BFGS conjugate gradient"},
+         {3, kFP_BFGS2, "BFGS conjugate gradient (Version 2)"},
+         {3, kFP_GSLLM, "Levenberg-Marquardt"},
+         {3, kFP_GSLSA, "Simulated Annealing"}
    };
-   fSelectMethodMin = "MIGRAD";
+
+   fHasGenetics = false;
+   if ( gPluginMgr->FindHandler("ROOT::Math::Minimizer","GAlibMin") ) {
+      fMethodMinAll.emplace_back(4, kFP_GALIB, "GA Lib Genetic Algorithm");
+      fHasGenetics = true;
+   }
+   if (gPluginMgr->FindHandler("ROOT::Math::Minimizer","Genetic")) {
+      fMethodMinAll.emplace_back(4, kFP_TMVAGA, "TMVA Genetic Algorithm");
+      fHasGenetics = true;
+   }
+
+   fSelectMethodMin = kFP_MIGRAD;
 
    // fOperation = 0;
    fFitOptions = 3;
@@ -340,4 +362,115 @@ std::string ROOT::Experimental::RFitPanelModel::GetFitOption()
 
    return opt;
 }
+
+void ROOT::Experimental::RFitPanelModel::GetRanges(ROOT::Fit::DataRange &drange)
+{
+   if (fDim > 0)  {
+      drange.AddRange(0, fRangeX[0], fRangeX[1]);
+   }
+
+   if ( fDim > 1 ) {
+      drange.AddRange(1, fRangeY[0], fRangeY[1]);
+   }
+
+}
+
+
+void ROOT::Experimental::RFitPanelModel::RetrieveOptions(Foption_t &fitOpts, ROOT::Math::MinimizerOptions &minOpts)
+{
+   fitOpts.Range    = fUseRange;
+   fitOpts.Integral = fIntegral;
+   fitOpts.More     = fImproveFitResults;
+   fitOpts.Errors   = fBestErrors;
+   fitOpts.Like     = false; // (fMethodList->GetSelected() != kFP_MCHIS);
+
+   if (fEmptyBins1)
+      fitOpts.W1 = 2;
+   else if (fAllWeights1)
+      fitOpts.W1 = 1;
+
+   // TODO: fEnteredFunc->GetText();
+   TString tmpStr = ""; // fEnteredFunc->GetText();
+   if ( !fLinearFit && (tmpStr.Contains("pol") || tmpStr.Contains("++")) )
+      fitOpts.Minuit = 1;
+
+   // TODO: fChangedParams
+   bool fChangedParams = false;
+   if (fChangedParams) {
+      fitOpts.Bound = 1;
+      fChangedParams = false;  // reset
+   }
+
+   //fitOpts.Nochisq  = (fNoChi2->GetState() == kButtonDown);
+   fitOpts.Nostore  = fNoStoreDraw;
+   fitOpts.Nograph  = fNoDrawing;
+   fitOpts.Plus     = false; // TODO: (fAdd2FuncList->GetState() == kButtonDown);
+   fitOpts.Gradient = fUseGradient;
+   fitOpts.Quiet    = fPrint == 2;
+   fitOpts.Verbose  = fPrint == 1;
+
+   // TODO: only TGraph
+   if ( /* !(fType != kObjectGraph) &&  */ fRobust ) {
+      fitOpts.Robust = 1;
+      fitOpts.hRobust = fRobustLevel;
+   }
+
+   if (fLibrary == 0)
+      minOpts.SetMinimizerType ( "Minuit");
+   else if (fLibrary == 1)
+      minOpts.SetMinimizerType ( "Minuit2" );
+   else if (fLibrary == 2)
+      minOpts.SetMinimizerType ("Fumili" );
+   else if (fLibrary == 3)
+      minOpts.SetMinimizerType ("GSLMultiMin" );
+   else if (fLibrary == 4)
+      minOpts.SetMinimizerType ("Geneti2c" ); // should be handled separately
+
+   switch(fSelectMethodMin) {
+      case kFP_MIGRAD:  minOpts.SetMinimizerAlgorithm( "Migrad" ); break;
+      case kFP_FUMILI:  minOpts.SetMinimizerAlgorithm( "Fumili" ); break;
+      case kFP_FUMILI2: minOpts.SetMinimizerAlgorithm( "Fumili2" ); break;
+      case kFP_SIMPLX:  minOpts.SetMinimizerAlgorithm( "Simplex" ); break;
+      case kFP_SCAN:    minOpts.SetMinimizerAlgorithm( "Scan" ); break;
+      case kFP_COMBINATION: minOpts.SetMinimizerAlgorithm( "Minimize" ); break;
+      case kFP_GSLFR:  minOpts.SetMinimizerAlgorithm( "conjugatefr" ); break;
+      case kFP_GSLPR:  minOpts.SetMinimizerAlgorithm( "conjugatepr" ); break;
+      case kFP_BFGS:   minOpts.SetMinimizerAlgorithm( "bfgs" ); break;
+      case kFP_BFGS2:  minOpts.SetMinimizerAlgorithm( "bfgs2" ); break;
+      case kFP_GSLLM:
+         minOpts.SetMinimizerType ("GSLMultiFit" );
+         minOpts.SetMinimizerAlgorithm( "" );
+         break;
+      case kFP_GSLSA:
+         minOpts.SetMinimizerType ("GSLSimAn" );
+         minOpts.SetMinimizerAlgorithm( "" );
+         break;
+      case kFP_TMVAGA:
+         minOpts.SetMinimizerType ("Geneti2c" );
+         minOpts.SetMinimizerAlgorithm( "" );
+         break;
+      case kFP_GALIB:
+         minOpts.SetMinimizerType ("GAlibMin" );
+         minOpts.SetMinimizerAlgorithm( "" );
+         break;
+      default:
+         minOpts.SetMinimizerAlgorithm( "" );
+         break;
+   }
+
+   minOpts.SetErrorDef (fErrorDef);
+   minOpts.SetTolerance(fMaxTolerance);
+   minOpts.SetMaxIterations(fMaxIterations);
+   minOpts.SetMaxFunctionCalls(fMaxIterations);
+}
+
+std::string ROOT::Experimental::RFitPanelModel::GetDrawOption()
+{
+   return "";
+}
+
+
+
+
+
 
