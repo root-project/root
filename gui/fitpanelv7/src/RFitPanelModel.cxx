@@ -90,65 +90,6 @@ void ROOT::Experimental::RFitPanelModel::RFitFuncParsList::SetParameters(TF1 *fu
    }
 }
 
-///////////////////////////////
-
-TH1* ROOT::Experimental::RFitPanelModel::GetSelectedHistogram(TH1 *hist)
-{
-   if (fSelectedData == "__hist__") return hist;
-   if ((fSelectedData.compare(0,6,"gdir::") != 0) || !gDirectory) return nullptr;
-
-   std::string hname = fSelectedData.substr(6);
-
-   return dynamic_cast<TH1*> (gDirectory->GetList()->FindObject(hname.c_str()));
-}
-
-
-// Configure usage of histogram
-
-bool ROOT::Experimental::RFitPanelModel::SelectHistogram(const std::string &hname, TH1 *hist)
-{
-
-   std::string histid;
-
-   fDataSet.clear();
-   TH1 *selected = nullptr;
-
-   if (gDirectory) {
-      TIter iter(gDirectory->GetList());
-      TObject *item = nullptr;
-
-       while ((item = iter()) != nullptr)
-         if (item->InheritsFrom(TH1::Class())) {
-            std::string dataid = "gdir::"s + item->GetName();
-
-            if (hist && (hist == item)) {
-               histid = dataid;
-               selected = hist;
-            } else if (!hname.empty() && hname.compare(item->GetName())) {
-               histid = dataid;
-               selected = dynamic_cast<TH1 *> (item);
-            }
-            fDataSet.emplace_back(dataid, Form("%s::%s", item->ClassName(), item->GetName()));
-         }
-   }
-
-   if (hist && histid.empty()) {
-      selected = hist;
-      histid = "__hist__";
-      fDataSet.emplace_back(histid, Form("%s::%s", hist->ClassName(), hist->GetName()));
-   }
-
-   fSelectedData = histid;
-
-   UpdateRange(selected);
-
-   UpdateFuncList();
-
-   UpdateAdvanced(nullptr);
-
-   return selected != nullptr;
-}
-
 void ROOT::Experimental::RFitPanelModel::UpdateRange(TH1 *hist)
 {
    fDim = hist ? hist->GetDimension() : 0;
@@ -197,7 +138,7 @@ void ROOT::Experimental::RFitPanelModel::UpdateFuncList()
    if (fDim == 1) {
       fFuncList = { {"gaus"}, {"gausn"}, {"expo"}, {"landau"},{"landaun"},
                     {"pol0"},{"pol1"},{"pol2"},{"pol3"},{"pol4"},{"pol5"},{"pol6"},{"pol7"},{"pol8"},{"pol9"},
-                    {"cheb0"}, {"cheb1"}, {"cheb2"}, {"cheb3"}, {"cheb4"}, {"cheb5"}, {"cheb6"}, {"cheb7"}, {"cheb8"}, {"use9"} };
+                    {"cheb0"}, {"cheb1"}, {"cheb2"}, {"cheb3"}, {"cheb4"}, {"cheb5"}, {"cheb6"}, {"cheb7"}, {"cheb8"}, {"cheb9"} };
    } else if (fDim == 2) {
       fFuncList = { {"xygaus"}, {"bigaus"}, {"xyexpo"}, {"xylandau"}, {"xylandaun"} };
    }
