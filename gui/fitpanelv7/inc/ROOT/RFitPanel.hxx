@@ -42,8 +42,8 @@ class RFitPanel {
 
    std::unique_ptr<RFitPanelModel> fModel;
 
-   TH1 *fHist{nullptr};              ///<! explicit histogram used for fitting
-   std::string fCanvName{"c1"};      ///<! v6 canvas name used to display fit, will be created if not exists
+   std::vector<TObject*> fObjects;    ///<! objects provided directly to panel for fitting
+   std::string fCanvName{"c1"};       ///<! v6 canvas name used to display fit, will be created if not exists
 
    std::shared_ptr<RCanvas> fCanvas; ///!< v7 canvas used to display results
    std::shared_ptr<RH1D> fFitHist;   ///!< v7 histogram for fitting
@@ -72,11 +72,19 @@ class RFitPanel {
 
    RFitPanelModel &model();
 
+   void SelectObject(const std::string &objid);
+   TObject *GetSelectedObject(const std::string &objid, int *kind = nullptr);
+   void UpdateDataSet();
+
+
    TF1 *FindFunction(const std::string &funcname);
 
    std::unique_ptr<TF1> GetFitFunction(const std::string &funcname);
 
-   TPad *GetDrawPad(TH1 *hist);
+
+   void SelectFunction(const std::string &funcid);
+
+   TPad *GetDrawPad(TObject *obj);
 
    void SendModel();
 
