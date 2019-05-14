@@ -35,14 +35,14 @@ enum EFitPanel {
 using namespace std::string_literals;
 
 
-void ROOT::Experimental::RFitFuncParsList::Clear()
+void ROOT::Experimental::RFitPanelModel::RFitFuncParsList::Clear()
 {
    pars.clear();
    name.clear();
    haspars = false;
 }
 
-void ROOT::Experimental::RFitFuncParsList::GetParameters(TF1 *func)
+void ROOT::Experimental::RFitPanelModel::RFitFuncParsList::GetParameters(TF1 *func)
 {
    pars.clear();
    haspars = true;
@@ -63,7 +63,7 @@ void ROOT::Experimental::RFitFuncParsList::GetParameters(TF1 *func)
    }
 }
 
-void ROOT::Experimental::RFitFuncParsList::SetParameters(TF1 *func)
+void ROOT::Experimental::RFitPanelModel::RFitFuncParsList::SetParameters(TF1 *func)
 {
    if (func->GetNpar() != (int) pars.size()) {
       ::Error("RFitFuncParsList::SetParameters", "Mismatch in parameters numbers");
@@ -142,9 +142,9 @@ bool ROOT::Experimental::RFitPanelModel::SelectHistogram(const std::string &hnam
 
    UpdateRange(selected);
 
-   auto *hfunc = UpdateFuncList(selected);
+   UpdateFuncList();
 
-   UpdateAdvanced(hfunc);
+   UpdateAdvanced(nullptr);
 
    return selected != nullptr;
 }
@@ -177,60 +177,30 @@ void ROOT::Experimental::RFitPanelModel::UpdateRange(TH1 *hist)
    fRangeY[1] = fMaxRangeY;
 }
 
-bool ROOT::Experimental::RFitPanelModel::SelectFunc(const std::string &name, TH1 *hist)
+void ROOT::Experimental::RFitPanelModel::SelectedFunc(const std::string &name, TF1 *func)
 {
-   fSelectedFunc = name;
-
+   fSelectedFunc.clear();
    fFuncPars.Clear();
-
-   TF1 *func = FindFunction(name, hist);
-
    if (func) {
-      fFuncPars.name = name;
+      fFuncPars.name = fSelectedFunc = name;
       fFuncPars.GetParameters(func);
    } else {
       fFuncPars.name = "<not exists>";
    }
-
-   return func != nullptr;
 }
 
 
-TF1 *ROOT::Experimental::RFitPanelModel::UpdateFuncList(TH1 *hist, bool select_hist_func)
+void ROOT::Experimental::RFitPanelModel::UpdateFuncList()
 {
-   int ndim = hist ? hist->GetDimension() : 1;
-
    fFuncList.clear();
 
-   TIter iter(gROOT->GetListOfFunctions());
-   TObject *func = nullptr;
-   while ((func = iter()) != nullptr) {
-      TF1 *f1 = dynamic_cast<TF1 *>(func);
-      if (!f1) continue;
-      TF2 *f2 = dynamic_cast<TF2 *>(f1);
-
-      if (((ndim==2) && f2) || ((ndim==1) && !f2))
-         fFuncList.emplace_back(f1->GetName(), f1->IsLinear());
+   if (fDim == 1) {
+      fFuncList = { {"gaus"}, {"gausn"}, {"expo"}, {"landau"},{"landaun"},
+                    {"pol0"},{"pol1"},{"pol2"},{"pol3"},{"pol4"},{"pol5"},{"pol6"},{"pol7"},{"pol8"},{"pol9"},
+                    {"cheb0"}, {"cheb1"}, {"cheb2"}, {"cheb3"}, {"cheb4"}, {"cheb5"}, {"cheb6"}, {"cheb7"}, {"cheb8"}, {"use9"} };
+   } else if (fDim == 2) {
+      fFuncList = { {"xygaus"}, {"bigaus"}, {"xyexpo"}, {"xylandau"}, {"xylandaun"} };
    }
-
-   TF1 *hfunc = nullptr;
-   if (hist) {
-      TObject *obj = nullptr;
-      TIter hiter(hist->GetListOfFunctions());
-      while ((obj = hiter()) != nullptr) {
-         hfunc = dynamic_cast<TF1*> (obj);
-         if (hfunc) break;
-      }
-   }
-
-   if (hfunc) {
-      fFuncList.emplace_back("hist::"s + hfunc->GetName(), hfunc->IsLinear());
-      if (select_hist_func) fSelectedFunc = "hist::"s + hfunc->GetName();
-   }
-
-   fFuncList.emplace_back("user");
-
-   return hfunc;
 }
 
 
@@ -243,6 +213,7 @@ void ROOT::Experimental::RFitPanelModel::Initialize()
 
    // Sub ComboBox for Type Function
    fSelectedFunc = "";
+   fDim = 1;
    UpdateFuncList();
 
    // corresponds when Type == User Func (fSelectedTypeID == 1)
@@ -296,21 +267,8 @@ void ROOT::Experimental::RFitPanelModel::Initialize()
    fSelectMethodMin = kFP_MIGRAD;
 
    // fOperation = 0;
-   fFitOptions = 3;
    fPrint = 0;
 }
-
-TF1 *ROOT::Experimental::RFitPanelModel::FindFunction(const std::string &funcname, TH1 *hist)
-{
-   if (funcname.compare(0,6,"hist::")==0) {
-      TH1 *h1 = GetSelectedHistogram(hist);
-      if (!h1) return nullptr;
-      return dynamic_cast<TF1 *> (h1->GetListOfFunctions()->FindObject(funcname.substr(6).c_str()));
-   }
-
-   return dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(funcname.c_str()));
-}
-
 
 /// Update advanced parameters associated with fit function for histogram
 
@@ -375,8 +333,7 @@ void ROOT::Experimental::RFitPanelModel::GetRanges(ROOT::Fit::DataRange &drange)
 
 }
 
-
-void ROOT::Experimental::RFitPanelModel::RetrieveOptions(Foption_t &fitOpts, ROOT::Math::MinimizerOptions &minOpts)
+void ROOT::Experimental::RFitPanelModel::GetFitOptions(Foption_t &fitOpts)
 {
    fitOpts.Range    = fUseRange;
    fitOpts.Integral = fIntegral;
@@ -414,7 +371,10 @@ void ROOT::Experimental::RFitPanelModel::RetrieveOptions(Foption_t &fitOpts, ROO
       fitOpts.Robust = 1;
       fitOpts.hRobust = fRobustLevel;
    }
+}
 
+void ROOT::Experimental::RFitPanelModel::GetMinimizerOptions(ROOT::Math::MinimizerOptions &minOpts)
+{
    if (fLibrary == 0)
       minOpts.SetMinimizerType ( "Minuit");
    else if (fLibrary == 1)

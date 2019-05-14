@@ -30,51 +30,17 @@ class TF1;
 namespace ROOT {
 namespace Experimental {
 
-/// Generic item for ui5 ComboBox
-struct RComboBoxItem {
-   std::string key;
-   std::string value;
-   RComboBoxItem() = default;
-   RComboBoxItem(const std::string &_key, const std::string &_value) : key(_key), value(_value) {}
-};
-
-/// Basic function info, used in combo boxes
-struct RFitFuncInfo {
-   std::string name;
-   bool linear{false};
-
-   RFitFuncInfo() = default;
-   RFitFuncInfo(const std::string &_name, bool _linear = false) : name(_name), linear(_linear) {}
-};
-
-/// Function parameter info, used in edit parameters dialog
-
-struct RFitFuncParameter {
-   int ipar{0};
-   std::string name;
-   std::string value;
-   bool fixed{false};
-   std::string error;
-   std::string min;
-   std::string max;
-   RFitFuncParameter() = default;
-   RFitFuncParameter(int _ipar, const std::string &_name) : ipar(_ipar), name(_name) {}
-};
-
-/// Class used to transfer functions parameters list from/to client
-struct RFitFuncParsList {
-   bool haspars{false};
-   std::string name;
-   std::vector<RFitFuncParameter> pars;
-   void GetParameters(TF1 *f1);
-   void SetParameters(TF1 *f1);
-   void Clear();
-};
-
-
 /** Data structure for the fit panel */
 
 struct RFitPanelModel {
+
+   /// Generic item for ui5 ComboBox
+   struct RComboBoxItem {
+      std::string key;
+      std::string value;
+      RComboBoxItem() = default;
+      RComboBoxItem(const std::string &_key, const std::string &_value) : key(_key), value(_value) {}
+   };
 
    /// Entry in minimizer algorithm combo
    struct RMinimezerAlgorithm {
@@ -85,6 +51,39 @@ struct RFitPanelModel {
       RMinimezerAlgorithm(int _lib, int _id, const std::string &_text) : lib(_lib), id(_id), text(_text) {}
    };
 
+   /// Basic function info, used in combo boxes
+   struct RFitFuncInfo {
+      std::string group;
+      std::string name;
+      std::string id;
+
+      RFitFuncInfo() = default;
+      RFitFuncInfo(const std::string &_name) : group("Prefefined"), name(_name) { id = "dflt::"; id.append(_name); }
+   };
+
+   /// Function parameter info, used in edit parameters dialog
+
+   struct RFitFuncParameter {
+      int ipar{0};
+      std::string name;
+      std::string value;
+      bool fixed{false};
+      std::string error;
+      std::string min;
+      std::string max;
+      RFitFuncParameter() = default;
+      RFitFuncParameter(int _ipar, const std::string &_name) : ipar(_ipar), name(_name) {}
+   };
+
+   /// Class used to transfer functions parameters list from/to client
+   struct RFitFuncParsList {
+      bool haspars{false};
+      std::string name;
+      std::vector<RFitFuncParameter> pars;
+      void GetParameters(TF1 *f1);
+      void SetParameters(TF1 *f1);
+      void Clear();
+   };
 
    std::string fTitle;                      ///< title of the fit panel
 
@@ -93,8 +92,8 @@ struct RFitPanelModel {
 
    int fDim{0};                             ///< number of dimensions in selected data object
 
-   std::vector<RFitFuncInfo>   fFuncList;   ///< all available fit functions
-   std::string fSelectedFunc;               ///< name of selected fit function
+   std::vector<RFitFuncInfo> fFuncList;     ///< all available fit functions
+   std::string fSelectedFunc;               ///< id of selected fit function like dflt::gaus
 
 
    // General tab
@@ -137,7 +136,7 @@ struct RFitPanelModel {
    int fPrint{0};
 
 
-   // range selection, shown dependning on fDim
+   // range selection, shown depending on fDim
    float fMinRangeX{0};
    float fMaxRangeX{1};
    float fStepX{0.01};
@@ -147,14 +146,6 @@ struct RFitPanelModel {
    float fMaxRangeY{1};
    float fStepY{0.01};
    float fRangeY[2] = {0,1};
-
-   // float fOperation{0};
-   float fFitOptions{0};
-
-   // convert fSelectTypeID from string to int
-   int fTypeId{0};
-
-   // bool fImproveFit {false};
 
 
    /// Parameters
@@ -191,23 +182,21 @@ struct RFitPanelModel {
 
    bool SelectHistogram(const std::string &hname, TH1 *hist);
 
-   bool SelectFunc(const std::string &name, TH1 *hist);
+   void SelectedFunc(const std::string &name, TF1 *func);
 
    void UpdateRange(TH1 *hist);
 
    void UpdateAdvanced(TF1 *func);
 
-   TF1 *UpdateFuncList(TH1 *hist = nullptr, bool select_hist_func = false);
+   void UpdateFuncList();
 
    bool IsSelectedHistogram() const { return !fSelectedData.empty(); }
 
    TH1* GetSelectedHistogram(TH1 *hist = nullptr);
 
-   TF1 *FindFunction(const std::string &fname, TH1 *hist = nullptr);
-
    void GetRanges(ROOT::Fit::DataRange &drange);
-
-   void RetrieveOptions(Foption_t &fitOpts, ROOT::Math::MinimizerOptions &minOpts);
+   void GetFitOptions(Foption_t &fitOpts);
+   void GetMinimizerOptions(ROOT::Math::MinimizerOptions &minOpts);
 
    std::string GetDrawOption();
 
