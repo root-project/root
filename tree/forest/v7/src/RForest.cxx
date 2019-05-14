@@ -127,7 +127,7 @@ std::unique_ptr<ROOT::Experimental::ROutputForest> ROOT::Experimental::ROutputFo
    std::string_view storage)
 {
    // TODO(jblomer): heuristics based on storage
-   TFile *file = TFile::Open(storage.to_string().c_str(), "RECREATE");
+   TFile *file = TFile::Open(std::string(storage).c_str(), "RECREATE");
    Detail::RPageSinkRoot::RSettings settings;
    settings.fFile = file;
    settings.fTakeOwnership = true;
