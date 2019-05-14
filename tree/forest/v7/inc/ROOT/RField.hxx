@@ -642,7 +642,7 @@ class ROOT::Experimental::RField<std::vector<ItemT>> : public ROOT::Experimental
 public:
    static std::string MyTypeName() { return "std::vector<" + RField<ItemT>::MyTypeName() + ">"; }
    explicit RField(std::string_view name)
-      : RFieldVector(name, std::make_unique<RField<ItemT>>(GetCollectionName(name.to_string())))
+      : RFieldVector(name, std::make_unique<RField<ItemT>>(GetCollectionName(std::string(name))))
    {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
@@ -709,14 +709,14 @@ public:
       Attach(std::move(itemField));
    }
    explicit RField(std::string_view name)
-      : RField(name, std::make_unique<RField<ItemT>>(GetCollectionName(name.to_string())))
+      : RField(name, std::make_unique<RField<ItemT>>(GetCollectionName(std::string(name))))
    {
    }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
    RFieldBase* Clone(std::string_view newName) final {
-      auto newItemField = fSubFields[0]->Clone(GetCollectionName(newName.to_string()));
+      auto newItemField = fSubFields[0]->Clone(GetCollectionName(std::string(newName)));
       return new RField<ROOT::VecOps::RVec<ItemT>>(newName, std::unique_ptr<Detail::RFieldBase>(newItemField));
    }
 
