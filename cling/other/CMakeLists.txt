@@ -52,3 +52,7 @@ ROOTTEST_ADD_TEST(checkMissingSymbolExitCode
                   ERRREF checkMissingSymbolExitCode.eref
                   PASSRC 1
                   LABELS roottest regression cling)
+
+ROOTTEST_ADD_TEST(assertDirWithParen
+                  MACRO assertDirWithParen.C
+                  LABELS roottest regression cling)
