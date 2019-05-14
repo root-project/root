@@ -18,7 +18,7 @@
 #include "TComplex.h"
 #include "Riostream.h"
 
-#include <strstream>
+#include <sstream>
 
 ClassImp(TComplex);
 
@@ -56,7 +56,7 @@ std::istream& operator>>(std::istream& in, TComplex& c)
 namespace cling {
 std::string printValue(TComplex *c)
 {
-   std::strstream s;
+   std::stringstream s;
    s << *c;
    return s.str();
 }
