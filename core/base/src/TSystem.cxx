@@ -4157,7 +4157,12 @@ TString TSystem::SplitAclicMode(const char* filename, TString &aclicMode,
 {
    char *fname = Strip(filename);
    TString filenameCopy = fname;
+   filenameCopy = filenameCopy.Strip();
 
+   if (filenameCopy.EndsWith(";")) {
+     filenameCopy.Remove(filenameCopy.Length() - 1);
+     filenameCopy = filenameCopy.Strip();
+   }
    if (filenameCopy.EndsWith(")")) {
       Ssiz_t posArgEnd = filenameCopy.Length() - 1;
       // There is an argument; find its start!
