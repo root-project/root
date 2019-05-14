@@ -94,7 +94,6 @@ X11INCDIR      := $(filter-out /usr/include, @x11incdir@)
 X11LIBDIR      := @x11libdir@
 XPMLIBDIR      := @xpmlibdir@
 XPMLIB         := @xpmlib@
-XFTLIB         := @enable_xft@
 
 BUILDCOCOA     := @buildcocoa@
 MACOSXVERS     := @macosxvers@
