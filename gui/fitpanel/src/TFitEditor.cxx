@@ -187,9 +187,6 @@ typedef std::multimap<TObject*, TF1*> FitFuncMap_t;
 
 TF1* TFitEditor::FindFunction()
 {
-   // Get the list of functions from the system
-   std::vector<TF1*>& funcList(fSystemFuncs);
-
    // Get the title/name of the function from fFuncList
    TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
    if ( !te ) return 0;
@@ -197,9 +194,7 @@ TF1* TFitEditor::FindFunction()
 
    // Look for a system function if it's USER DEFINED function
    if ( fTypeFit->GetSelected() == kFP_UFUNC ) {
-      for ( fSystemFuncIter it = funcList.begin();
-            it != funcList.end(); ++it ) {
-         TF1* f = (*it);
+      for (auto f : fSystemFuncs) {
          if ( strcmp( f->GetName(), name ) == 0 )
             // If found, return it.
             return f;
@@ -260,6 +255,7 @@ TF1* copyTF1(TF1* f)
          fnew->Save(xmin,xmax,0,0,0,0);
       fnew->SetParent( 0 );
       fnew->AddToGlobalList(false);
+      printf("Create TF1 %s %p\n", fnew->GetName(), fnew);
       return fnew;
    }
 }
@@ -1681,9 +1677,7 @@ void TFitEditor::FillFunctionList(Int_t)
       Int_t newid = kFP_ALTFUNC;
 
       // Add system functions
-      for ( fSystemFuncIter it = fSystemFuncs.begin();
-            it != fSystemFuncs.end(); ++it ) {
-         TF1* f = (*it);
+      for (auto f : fSystemFuncs) {
          // Don't include system functions that has been previously
          // used to fit, as those are included under the kFP_PREVFIT
          // section.
@@ -2186,14 +2180,14 @@ void TFitEditor::DoFit()
    GetParameters(fFuncPars,fitFunc);
 
    // Save fit data for future use as a PrevFit function.
-   TF1* tmpTF1 = static_cast<TF1*>( copyTF1(fitFunc) );
+   TF1* tmpTF1 = copyTF1(fitFunc);
    ostringstream name;
    name << "PrevFit-" << fPrevFit.size() + 1;
    if ( strcmp(tmpTF1->GetName(), "PrevFitTMP") != 0 )
       name << "-" << tmpTF1->GetName();
    tmpTF1->SetName(name.str().c_str());
-   fPrevFit.insert(FitFuncMap_t::value_type(fFitObject, tmpTF1));
-   fSystemFuncs.push_back( copyTF1(tmpTF1) );
+   fPrevFit.emplace(fFitObject, tmpTF1);
+   fSystemFuncs.emplace_back( copyTF1(tmpTF1) );
 
    float xmin = 0.f, xmax = 0.f, ymin = 0.f, ymax = 0.f, zmin = 0.f, zmax = 0.f;
    if ( fParentPad ) {
@@ -3311,7 +3305,7 @@ TF1* TFitEditor::HasFitFunction()
             // breaks in the loops would make it to be different to
             // fPrevFit.end() if the function is already stored
             if ( it == fPrevFit.end() ) {
-               fPrevFit.insert( FitFuncMap_t::value_type( fFitObject, static_cast<TF1*>( copyTF1( func ) ) ) );
+               fPrevFit.emplace(fFitObject, copyTF1(func));
             }
          }
       }
