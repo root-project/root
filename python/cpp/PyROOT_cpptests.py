@@ -45,6 +45,12 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
          import libcppyy
          cls.AsCObject = libcppyy.AsCObject
 
+      try:
+         cls.BindObject = ROOT.BindObject
+      except AttributeError:
+         # BindObject is bind_object in new Cppyy
+         cls.BindObject = ROOT.bind_object
+
    def test01ClassEnum( self ):
       """Test class enum access and values"""
 
@@ -269,10 +275,10 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
          # In new Cppyy, addressof returns an integer/long
          ad = self.AddressOf(s)
 
-      self.assert_( s == ROOT.BindObject( co, s.__class__ ) )
-      self.assert_( s == ROOT.BindObject( co, "TString" ) )
-      self.assert_( s == ROOT.BindObject( ad, s.__class__ ) )
-      self.assert_( s == ROOT.BindObject( ad, "TString" ) )
+      self.assert_( s == self.BindObject( co, s.__class__ ) )
+      self.assert_( s == self.BindObject( co, "TString" ) )
+      self.assert_( s == self.BindObject( ad, s.__class__ ) )
+      self.assert_( s == self.BindObject( ad, "TString" ) )
 
    def test11ObjectAndPointerComparisons( self ):
       """Verify object and pointer comparisons"""
