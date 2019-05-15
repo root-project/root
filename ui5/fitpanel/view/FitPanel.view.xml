@@ -33,9 +33,9 @@
                </layoutData>
            </ComboBox>
          </l:Grid>
-         <IconTabBar id="Gen-Min" headerMode="Inline">
+         <IconTabBar expandable="false" headerMode="Inline" selectedKey="{/fSelectedTab}">
             <items>
-               <IconTabFilter text="General">
+               <IconTabFilter key="General" text="General">
                   <VBox>
                      <Title level="H3" text="Method" />
                      <l:Grid defaultSpan="XL6 L6 M6 S6" class="sapUiSizeCompact"
@@ -114,7 +114,7 @@
                         inputsAsTooltips="true" class="sapUiSmallMarginBottom"/>
                   </VBox>
                </IconTabFilter>
-               <IconTabFilter text="Minimization">
+               <IconTabFilter key="Minimization" text="Minimization">
                   <VBox>
                      <Title level="H3" text="Library" />
                      <RadioButtonGroup columns="3" width="100%" selectedIndex="{/fLibrary}"
@@ -182,7 +182,7 @@
                      </RadioButtonGroup>
                   </VBox>
                </IconTabFilter>
-               <IconTabFilter text="Pars" visible="{/fFuncPars/haspars}">
+               <IconTabFilter key="Pars" text="Pars" visible="{/fFuncPars/haspars}">
                    <HBox>
                       <Text text="Func: {/fFuncPars/name}"/>
                       <Button press="pressApplyPars" text="Apply" tooltip="Set parameters"/>
@@ -210,10 +210,10 @@
                       </items>
                    </Table>
                </IconTabFilter>
-               <IconTabFilter text="Advanced" visible="{/fHasAdvanced}">
-                  <IconTabBar id="AdvancedOptions" headerMode="Inline">
+               <IconTabFilter key="Advanced" text="Advanced" visible="{/fHasAdvanced}">
+                  <IconTabBar headerMode="Inline" expandable="false" selectedKey="{/fAdvancedTab}">
                      <items>
-                        <IconTabFilter text="Contour">
+                        <IconTabFilter key="Contour" text="Contour">
                            <l:Grid defaultSpan="XL6 L6 M6 S6"
                               class="sapUiSizeCompact" hSpacing="0.5"
                               vSpacing="0">
@@ -247,7 +247,7 @@
                                  text="Super impose" selected="{/fContourImpose}" />
                            </l:Grid>
                         </IconTabFilter>
-                        <IconTabFilter text="Scan">
+                        <IconTabFilter key="Scan" text="Scan">
                            <l:Grid defaultSpan="XL6 L6 M6 S6"
                               class="sapUiSizeCompact" hSpacing="0.5"
                               vSpacing="0">
@@ -271,7 +271,7 @@
                                  editable="true" displayValuePrecision="4" />
                            </l:Grid>
                         </IconTabFilter>
-                        <IconTabFilter text="Conf Intervals">
+                        <IconTabFilter key="Intervals" text="Conf Intervals">
                            <l:Grid defaultSpan="XL6 L6 M6 S6"
                               class="sapUiSizeCompact" hSpacing="0.5"
                               vSpacing="0">
@@ -285,16 +285,16 @@
                         </IconTabFilter>
                      </items>
                   </IconTabBar>
-                  <Button text="Draw" press="" />
-                  <Button text="Close" press="" />
                </IconTabFilter>
             </items>
          </IconTabBar>
       </VBox>
       <footer>
          <Toolbar>
+            <Button text="Update" press="doUpdate" tooltip="Update panel content from server" />
             <ToolbarSpacer/>
             <Button text="Fit" press="doFit" tooltip="Fit the histogram" />
+            <Button text="Draw" press="doDraw" tooltip="Draw histogram and selected function" />
             <Button text="Close" press="closePanel" tooltip="Close the Fit Panel" />
          </Toolbar>
       </footer>

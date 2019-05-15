@@ -139,7 +139,7 @@ void ROOT::Experimental::RFitPanel::SelectObject(const std::string &objid)
    }
 
    int kind{0};
-   TObject *obj = GetSelectedObject(id, &kind);
+   TObject *obj = GetSelectedObject(id, kind);
 
    TH1 *hist = nullptr;
    switch (kind) {
@@ -193,7 +193,7 @@ void ROOT::Experimental::RFitPanel::SelectObject(const std::string &objid)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Assign histogram to use with fit panel - without ownership
 
-TObject *ROOT::Experimental::RFitPanel::GetSelectedObject(const std::string &objid, int *kind)
+TObject *ROOT::Experimental::RFitPanel::GetSelectedObject(const std::string &objid, int &kind)
 {
    TObject *res = nullptr;
 
@@ -210,21 +210,21 @@ TObject *ROOT::Experimental::RFitPanel::GetSelectedObject(const std::string &obj
          }
    }
 
-   if (res && kind) {
+   if (res) {
       if (res->InheritsFrom(TH1::Class()))
-         *kind = kObjectHisto;
+         kind = kObjectHisto;
       else if (res->InheritsFrom(TGraph::Class()))
-         *kind = kObjectGraph;
+         kind = kObjectGraph;
       else if (res->InheritsFrom(TGraph2D::Class()))
-         *kind = kObjectGraph2D;
+         kind = kObjectGraph2D;
       else if (res->InheritsFrom(THStack::Class()))
-         *kind = kObjectGraph2D;
+         kind = kObjectGraph2D;
       else if (res->InheritsFrom(TMultiGraph::Class()))
-         *kind = kObjectGraph2D;
+         kind = kObjectGraph2D;
       else
-         *kind = kObjectNotSupported;
-   } else if (kind) {
-      *kind = kObjectNone;
+         kind = kObjectNotSupported;
+   } else {
+      kind = kObjectNone;
    }
 
    return res;
@@ -367,6 +367,10 @@ void ROOT::Experimental::RFitPanel::ProcessData(unsigned connid, const std::stri
 
       fConnId = 0;
 
+   } else if (arg == "RELOAD") {
+
+      SendModel();
+
    } else if (arg.compare(0, 7, "UPDATE:") == 0) {
 
       if (UpdateModel(arg.substr(7)) > 0)
@@ -376,6 +380,12 @@ void ROOT::Experimental::RFitPanel::ProcessData(unsigned connid, const std::stri
 
       if (UpdateModel(arg.substr(6)) >= 0)
          if (DoFit())
+            SendModel();
+
+   } else if (arg.compare(0, 7, "DODRAW:") == 0) {
+
+      if (UpdateModel(arg.substr(7)) >= 0)
+         if (DoDraw())
             SendModel();
 
    } else if (arg.compare(0, 11, "SETCONTOUR:") == 0) {
@@ -540,9 +550,9 @@ void ROOT::Experimental::RFitPanel::DrawScan(const std::string &model)
 /// Returns pad where histogram is drawn
 /// If canvas not exists, create new one
 
-TPad *ROOT::Experimental::RFitPanel::GetDrawPad(TObject *obj)
+TPad *ROOT::Experimental::RFitPanel::GetDrawPad(TObject *obj, bool force)
 {
-   if (!obj || model().fNoDrawing || model().fNoStoreDraw)
+   if (!obj || (!force && (model().fNoDrawing || model().fNoStoreDraw)))
       return nullptr;
 
    std::function<TPad*(TPad*)> check = [&](TPad *pad) {
@@ -721,12 +731,8 @@ bool ROOT::Experimental::RFitPanel::DoFit()
    auto &m = model();
 
    int kind{0};
-   TObject *obj = GetSelectedObject(m.fSelectedData, &kind);
-
+   TObject *obj = GetSelectedObject(m.fSelectedData, kind);
    if (!obj) return false;
-
-   if (m.fSelectedFunc.empty())
-      m.fSelectedFunc = (m.fDim == 2) ? "dflt::xygaus" : "dflt::gaus";
 
    auto f1 = GetFitFunction(m.fSelectedFunc);
    if (!f1) return false;
@@ -811,4 +817,36 @@ bool ROOT::Experimental::RFitPanel::DoFit()
       gPad = save;
 
    return true; // provide client with latest changes
+}
+
+///////////////////////////////////////////////
+/// Perform drawing using current model settings
+/// Returns true if any action was done
+
+bool ROOT::Experimental::RFitPanel::DoDraw()
+{
+   auto &m = model();
+
+   int kind{0};
+   TObject *obj = GetSelectedObject(m.fSelectedData, kind);
+   if (!obj) return false;
+
+   auto pad = GetDrawPad(obj, true);
+   if (!pad)
+      return false;
+
+   // find already existing functions, not try to create something new
+   TF1 *func = FindFunction(m.fSelectedFunc);
+   if (func) {
+      // when "Pars" tab is selected, automatically update function parameters
+      if ((m.fSelectedTab.compare("Pars") == 0) && (m.fSelectedFunc == m.fFuncPars.id))
+         m.fFuncPars.SetParameters(func);
+
+      func->Draw("same");
+   }
+
+   pad->Modified();
+   pad->Update();
+
+   return true;
 }

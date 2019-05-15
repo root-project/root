@@ -99,6 +99,8 @@ struct RFitPanelModel {
    std::string fSelectedFunc;               ///< id of selected fit function like dflt::gaus
 
 
+   std::string fSelectedTab;               ///< key of selected tab, useful for drawing
+
    // General tab
 
    // Method
@@ -158,6 +160,8 @@ struct RFitPanelModel {
    /////////Advanced Options
 
    bool fHasAdvanced{false};
+   std::string fAdvancedTab;
+
    std::vector<RComboBoxItem> fContour1;
    std::string fContourPar1Id;
    std::vector<RComboBoxItem> fContour2;

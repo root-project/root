@@ -157,6 +157,8 @@ void ROOT::Experimental::RFitPanelModel::Initialize()
    fSelectedFunc = "";
    fDim = 1;
 
+   fSelectedTab = "General";
+
    // corresponds when Type == User Func (fSelectedTypeID == 1)
 
    // ComboBox for General Tab --- Method
@@ -209,6 +211,8 @@ void ROOT::Experimental::RFitPanelModel::Initialize()
 
    // fOperation = 0;
    fPrint = 0;
+
+   fAdvancedTab = "Contour";
 }
 
 /// Update advanced parameters associated with fit function for histogram
