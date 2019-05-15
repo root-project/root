@@ -475,11 +475,6 @@ endfunction(ROOT_GENERATE_DICTIONARY)
 function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
   ROOT_FIND_DIRS_WITH_HEADERS(dirs)
 
-  # Variable 'dirs' is the return result of ROOT_FIND_DIRS_WITH_HEADERS.
-  if(NOT DEFINED dirs)
-    message(SEND_ERROR "Error, the variable ${dirs} is not defined!")
-  endif()
-
   set(found_headers "")
   set(dir_headers "")
   foreach(d ${dirs})
