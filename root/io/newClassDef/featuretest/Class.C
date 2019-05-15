@@ -1,5 +1,7 @@
 #include "Class.h"
 
+#include <iostream>
+
 void Class() {
   MyClass m;
   m.GetPublic();
@@ -7,6 +9,6 @@ void Class() {
 
 
 bool MyClass::GetProtected() {
-  cerr << "Properly run the protected function!" << endl;
+  std::cerr << "Properly run the protected function!" << std::endl;
   return true;
 };
