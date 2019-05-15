@@ -28,6 +28,8 @@ PyObject *SetBranchAddressPyz(PyObject *self, PyObject *args);
 
 PyObject *AddTClassDynamicCastPyz(PyObject *self, PyObject *args);
 
+PyObject *AddTObjectEqNePyz(PyObject *self, PyObject *args);
+
 PyObject *AddSetItemTCAPyz(PyObject *self, PyObject *args);
 
 PyObject *AsRVec(PyObject *self, PyObject *obj);

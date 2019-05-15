@@ -24,6 +24,9 @@ class TObjectComparisonOps(unittest.TestCase):
         # Test comparison with no TObject
         self.assertFalse(o == 1)
 
+        # Test comparison with None
+        self.assertFalse(o == None)
+
     def test_ne(self):
         o = ROOT.TObject()
 
@@ -32,6 +35,9 @@ class TObjectComparisonOps(unittest.TestCase):
 
         # Test comparison with no TObject
         self.assertTrue(o != 1)
+
+        # Test comparison with None
+        self.assertTrue(o != None)
 
     def test_lt(self):
         a = TUrl("a")

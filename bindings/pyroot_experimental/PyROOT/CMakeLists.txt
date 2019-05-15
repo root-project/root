@@ -44,6 +44,7 @@ set(sources
   src/TClonesArrayPyz.cxx
   src/TDirectoryPyz.cxx
   src/TFilePyz.cxx
+  src/TObjectPyz.cxx
   src/TTreePyz.cxx
   src/PyzCppHelpers.cxx
   src/PyzPythonHelpers.cxx
