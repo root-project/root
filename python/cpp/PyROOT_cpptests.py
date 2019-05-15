@@ -36,6 +36,15 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
          # but it is equivalent to bind_object(0, klass)
          cls.MakeNullPointer = partial(ROOT.bind_object, 0)
 
+      try:
+         cls.AsCObject = ROOT.AsCObject
+      except AttributeError:
+         # Feature still present in new Cppyy, returns a proxy to
+         # an opaque pointer to the provided object.
+         # Not exposed in new PyROOT for now (is it really necessary?)
+         import libcppyy
+         cls.AsCObject = libcppyy.AsCObject
+
    def test01ClassEnum( self ):
       """Test class enum access and values"""
 
@@ -252,7 +261,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       import ROOT
 
       s = TString( "Hello World!" )
-      co = ROOT.AsCObject( s )
+      co = self.AsCObject( s )
       
       try:
          ad = self.AddressOf( s )[ 0 ]
