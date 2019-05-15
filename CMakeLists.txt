@@ -68,12 +68,17 @@ else()# testing using an installation
       set(LZ4_VERSION ${LZ4} CACHE INTERNAL "")
     endif()
   endforeach()
+  # If we didn't manage to find LZ4_VERSION in "root-config --config" output,
+  # we consider that ROOT had used system LZ4 and we can find it via find_package().
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ROOTSYS}/cmake/modules ${ROOT_SOURCE_DIR}/cmake/modules)
+  if(NOT LZ4_VERSION)
+    find_package(LZ4)
+  endif()
   find_program(ROOT_root_CMD root.exe PATHS ${ROOTSYS}/bin)
   find_program(ROOT_hadd_CMD hadd PATHS ${ROOTSYS}/bin)
   find_program(ROOT_genreflex_CMD genreflex PATHS ${ROOTSYS}/bin)
   find_program(ROOT_rootcint_CMD rootcint PATHS ${ROOTSYS}/bin)
   find_program(ROOT_rootcling_CMD rootcling PATHS ${ROOTSYS}/bin)
-  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ROOTSYS}/cmake/modules ${ROOT_SOURCE_DIR}/cmake/modules)
   include(RootNewMacros)
   enable_testing()
 endif()
