@@ -453,7 +453,6 @@ public:
    /// df.Snapshot<int, float>("outputTree", "outputFile.root", {"x", "y"});
    /// ~~~
    ///
-   /// #### Using Snapshot as a lazy action
    /// To book a Snapshot without triggering the event loop, one needs to set the appropriate flag in
    /// `RSnapshotOptions`:
    /// ~~~{.cpp}
@@ -594,17 +593,17 @@ public:
    ///
    /// ### Example usage:
    ///
-   /// #### Types and columns specified:
+   /// **Types and columns specified:**
    /// ~~~{.cpp}
    /// auto cache_some_cols_df = df.Cache<double, MyClass, int>({"col0", "col1", "col2"});
    /// ~~~
    ///
-   /// #### Types inferred and columns specified (this invocation relies on jitting):
+   /// **Types inferred and columns specified (this invocation relies on jitting):**
    /// ~~~{.cpp}
    /// auto cache_some_cols_df = df.Cache({"col0", "col1", "col2"});
    /// ~~~
    ///
-   /// #### Types inferred and columns selected with a regexp (this invocation relies on jitting):
+   /// **Types inferred and columns selected with a regexp (this invocation relies on jitting):**
    /// ~~~{.cpp}
    /// auto cache_all_cols_df = df.Cache(myRegexp);
    /// ~~~
