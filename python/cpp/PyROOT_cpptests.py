@@ -219,7 +219,11 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
 
    def test09Macro( self ):
       """Test access to cpp macro's"""
-      self.assertEqual( ROOT.NULL, 0 );
+      try:
+         self.assertEqual( ROOT.NULL, 0 );
+      except AttributeError:
+         # In new PyROOT, we will just provide ROOT.nullptr
+         pass
 
       gROOT.ProcessLine( '#define aap "aap"' )
       gROOT.ProcessLine( '#define noot 1' )
