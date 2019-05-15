@@ -103,7 +103,7 @@ void ROOT::Experimental::RFitPanel::UpdateDataSet()
    m.fDataSet.clear();
 
    for (auto &obj : fObjects)
-      m.fDataSet.emplace_back("panel::"s + obj->GetName(), Form("%s::%s", obj->ClassName(), obj->GetName()));
+      m.fDataSet.emplace_back("Panel", "panel::"s + obj->GetName(), Form("%s::%s", obj->ClassName(), obj->GetName()));
 
    if (gDirectory) {
       TIter iter(gDirectory->GetList());
@@ -114,7 +114,7 @@ void ROOT::Experimental::RFitPanel::UpdateDataSet()
              obj->InheritsFrom(TGraph2D::Class()) ||
              obj->InheritsFrom(THStack::Class()) ||
              obj->InheritsFrom(TMultiGraph::Class())) {
-            m.fDataSet.emplace_back("gdir::"s + obj->GetName(), Form("%s::%s", obj->ClassName(), obj->GetName()));
+            m.fDataSet.emplace_back("gDirectory", "gdir::"s + obj->GetName(), Form("%s::%s", obj->ClassName(), obj->GetName()));
          }
       }
    }
@@ -132,8 +132,8 @@ void ROOT::Experimental::RFitPanel::SelectObject(const std::string &objid)
 
    std::string id = objid;
    if (id.compare("$$$") == 0) {
-      if (m.fDataSet.size()>0)
-         id = m.fDataSet[0].key;
+      if (m.fDataSet.size() > 0)
+         id = m.fDataSet[0].id;
       else
          id.clear();
    }
@@ -178,7 +178,15 @@ void ROOT::Experimental::RFitPanel::SelectObject(const std::string &objid)
 
    m.UpdateRange(hist);
 
-   m.UpdateFuncList(); // try to get existing function
+   UpdateFunctionsList();
+
+   if (!m.HasFunction(m.fSelectedFunc)) {
+      if (m.fFuncList.size() > 0)
+         m.fSelectedFunc = m.fFuncList[0].id;
+      else
+         m.fSelectedFunc.clear();
+   }
+
    m.UpdateAdvanced(nullptr);
 }
 
@@ -223,15 +231,39 @@ TObject *ROOT::Experimental::RFitPanel::GetSelectedObject(const std::string &obj
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Update list of available functions
+
+void ROOT::Experimental::RFitPanel::UpdateFunctionsList()
+{
+   auto &m = model();
+
+   m.fFuncList.clear();
+
+   if (m.fDim == 1) {
+      m.fFuncList = { {"gaus"}, {"gausn"}, {"expo"}, {"landau"}, {"landaun"},
+                    {"pol0"},{"pol1"},{"pol2"},{"pol3"},{"pol4"},{"pol5"},{"pol6"},{"pol7"},{"pol8"},{"pol9"},
+                    {"cheb0"}, {"cheb1"}, {"cheb2"}, {"cheb3"}, {"cheb4"}, {"cheb5"}, {"cheb6"}, {"cheb7"}, {"cheb8"}, {"cheb9"} };
+   } else if (m.fDim == 2) {
+      m.fFuncList = { {"xygaus"}, {"bigaus"}, {"xyexpo"}, {"xylandau"}, {"xylandaun"} };
+   }
+
+   for (auto &func : fSystemFuncs) {
+      m.fFuncList.emplace_back("System", "system::"s + func->GetName(), func->GetName());
+   }
+
+   for (auto &pair : fPrevFuncs) {
+      if (pair.first == m.fSelectedData)
+         m.fFuncList.emplace_back("Previous", "previous::"s + pair.second->GetName(), pair.second->GetName());
+   }
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Select function
 
 void ROOT::Experimental::RFitPanel::SelectFunction(const std::string &funcid)
 {
-   TF1 *func = FindFunction(funcid);
-
-   auto &m = model();
-
-   m.SelectedFunc(funcid, func);
+   model().SelectedFunc(funcid, FindFunction(funcid));
 }
 
 
@@ -297,8 +329,10 @@ void ROOT::Experimental::RFitPanel::Hide()
 
 ROOT::Experimental::RFitPanelModel &ROOT::Experimental::RFitPanel::model()
 {
-   if (!fModel)
+   if (!fModel) {
       fModel = std::make_unique<RFitPanelModel>();
+      fModel->Initialize();
+   }
 
    return *fModel.get();
 }
@@ -363,10 +397,10 @@ void ROOT::Experimental::RFitPanel::ProcessData(unsigned connid, const std::stri
 
    } else if (arg.compare(0, 8, "SETPARS:") == 0) {
 
-      auto info = TBufferJSON::FromJSON<RFitPanelModel::RFitFuncParsList>(arg.substr(8));
+      auto info = TBufferJSON::FromJSON<RFitPanelModel::RFuncParsList>(arg.substr(8));
 
       if (info) {
-         TF1 *func = FindFunction(info->name);
+         TF1 *func = FindFunction(info->id);
 
          // copy all parameters back to the function
          if (func)
@@ -379,14 +413,22 @@ void ROOT::Experimental::RFitPanel::ProcessData(unsigned connid, const std::stri
 /////////////////////////////////////////////////////////////////////////////////////
 /// Search for existing functions, ownership still belongs to FitPanel or global lists
 
-TF1 *ROOT::Experimental::RFitPanel::FindFunction(const std::string &funcname)
+TF1 *ROOT::Experimental::RFitPanel::FindFunction(const std::string &id)
 {
-   if (funcname.compare(0,8,"system::")) {
-      std::string name = funcname.substr(8);
+   if (id.compare(0,8,"system::") == 0) {
+      std::string name = id.substr(8);
 
       for (auto &item : fSystemFuncs)
          if (name.compare(item->GetName()) == 0)
             return item.get();
+   }
+
+   if (id.compare(0,10,"previous::") == 0) {
+      std::string name = id.substr(10);
+
+      for (auto &pair : fPrevFuncs)
+         if (name.compare(pair.second->GetName()) == 0)
+            return pair.second.get();
    }
 
    return nullptr;
@@ -416,11 +458,11 @@ std::unique_ptr<TF1> ROOT::Experimental::RFitPanel::GetFitFunction(const std::st
       drange.GetRange(xmin, xmax, ymin, ymax, zmin, zmax);
 
       if ( model().fDim == 1 || model().fDim == 0 ) {
-         res.reset(new TF1("PrevFitTMP", formula.c_str(), xmin, xmax));
+         res.reset(new TF1(formula.c_str(), formula.c_str(), xmin, xmax));
       } else if ( model().fDim == 2 ) {
-         res.reset(new TF2("PrevFitTMP", formula.c_str(), xmin, xmax, ymin, ymax));
+         res.reset(new TF2(formula.c_str(), formula.c_str(), xmin, xmax, ymin, ymax));
       } else if ( model().fDim == 3 ) {
-         res.reset(new TF3("PrevFitTMP", formula.c_str(), xmin, xmax, ymin, ymax, zmin, zmax));
+         res.reset(new TF3(formula.c_str(), formula.c_str(), xmin, xmax, ymin, ymax, zmin, zmax));
       }
    }
 
@@ -658,7 +700,7 @@ bool ROOT::Experimental::RFitPanel::DoFit()
    if (!obj) return false;
 
    if (m.fSelectedFunc.empty())
-      m.fSelectedFunc = "dflt::gaus";
+      m.fSelectedFunc = (m.fDim == 2) ? "dflt::xygaus" : "dflt::gaus";
 
    auto f1 = GetFitFunction(m.fSelectedFunc);
    if (!f1) return false;
@@ -730,12 +772,18 @@ bool ROOT::Experimental::RFitPanel::DoFit()
       pad->Update();
    }
 
-   // TODO: save fitting to be able comeback to previous fits
-
    m.UpdateAdvanced(f1.get());
 
-   f1->SetName(Form("PrevFit-%d", (int) (fPrevFuncs.size() + 1)));
+   std::string funcname = f1->GetName();
+   if ((funcname.compare(0,4,"prev") == 0) && (funcname.find("-") > 4))
+      funcname.erase(0, funcname.find("-") + 1);
+   funcname = "prev"s + std::to_string(fPrevFuncs.size() + 1) + "-"s + funcname;
+   f1->SetName(funcname.c_str());
    fPrevFuncs.emplace(m.fSelectedData, std::move(f1));
+
+   UpdateFunctionsList();
+
+   SelectFunction("previous::"s + funcname);
 
    if (save && (gPad != save))
       gPad = save;

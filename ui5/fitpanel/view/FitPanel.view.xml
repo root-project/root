@@ -11,9 +11,9 @@
            </Text>
            <ComboBox id="DataSet" class="sapUiSmallMarginBeginEnd"
                selectedKey="{/fSelectedData}"
-               items="{ path: '/fDataSet', sorter: { path: 'key' } }"
-               change="onSelectedDataChange">
-               <core:Item key="{key}" text="{value}" />
+               items="{ path: '/fDataSet', sorter: { path: 'group', group: true, descending: false } }"
+                  change="onSelectedDataChange">
+               <core:Item key="{id}" text="{name}" />
                <layoutData>
                   <l:GridData span="XL8 L8 M8 S8" />
                </layoutData>

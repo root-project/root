@@ -35,17 +35,19 @@ enum EFitPanel {
 using namespace std::string_literals;
 
 
-void ROOT::Experimental::RFitPanelModel::RFitFuncParsList::Clear()
+void ROOT::Experimental::RFitPanelModel::RFuncParsList::Clear()
 {
+   id.clear();
    pars.clear();
    name.clear();
    haspars = false;
 }
 
-void ROOT::Experimental::RFitPanelModel::RFitFuncParsList::GetParameters(TF1 *func)
+void ROOT::Experimental::RFitPanelModel::RFuncParsList::GetParameters(TF1 *func)
 {
    pars.clear();
    haspars = true;
+   name = func->GetName();
 
    for (int n = 0; n < func->GetNpar(); ++n) {
       pars.emplace_back(n, func->GetParName(n));
@@ -63,7 +65,7 @@ void ROOT::Experimental::RFitPanelModel::RFitFuncParsList::GetParameters(TF1 *fu
    }
 }
 
-void ROOT::Experimental::RFitPanelModel::RFitFuncParsList::SetParameters(TF1 *func)
+void ROOT::Experimental::RFitPanelModel::RFuncParsList::SetParameters(TF1 *func)
 {
    if (func->GetNpar() != (int) pars.size()) {
       ::Error("RFitFuncParsList::SetParameters", "Mismatch in parameters numbers");
@@ -118,32 +120,31 @@ void ROOT::Experimental::RFitPanelModel::UpdateRange(TH1 *hist)
    fRangeY[1] = fMaxRangeY;
 }
 
-void ROOT::Experimental::RFitPanelModel::SelectedFunc(const std::string &name, TF1 *func)
+bool ROOT::Experimental::RFitPanelModel::HasFunction(const std::string &id)
 {
-   fSelectedFunc.clear();
+   if (id.empty())
+      return false;
+
+   for (auto &item : fFuncList)
+      if (item.id == id)
+         return true;
+
+   return false;
+}
+
+void ROOT::Experimental::RFitPanelModel::SelectedFunc(const std::string &id, TF1 *func)
+{
+   if (HasFunction(id))
+      fSelectedFunc = id;
+   else
+      fSelectedFunc.clear();
+
    fFuncPars.Clear();
    if (func) {
-      fFuncPars.name = fSelectedFunc = name;
+      fFuncPars.id = id;
       fFuncPars.GetParameters(func);
-   } else {
-      fFuncPars.name = "<not exists>";
    }
 }
-
-
-void ROOT::Experimental::RFitPanelModel::UpdateFuncList()
-{
-   fFuncList.clear();
-
-   if (fDim == 1) {
-      fFuncList = { {"gaus"}, {"gausn"}, {"expo"}, {"landau"},{"landaun"},
-                    {"pol0"},{"pol1"},{"pol2"},{"pol3"},{"pol4"},{"pol5"},{"pol6"},{"pol7"},{"pol8"},{"pol9"},
-                    {"cheb0"}, {"cheb1"}, {"cheb2"}, {"cheb3"}, {"cheb4"}, {"cheb5"}, {"cheb6"}, {"cheb7"}, {"cheb8"}, {"cheb9"} };
-   } else if (fDim == 2) {
-      fFuncList = { {"xygaus"}, {"bigaus"}, {"xyexpo"}, {"xylandau"}, {"xylandaun"} };
-   }
-}
-
 
 void ROOT::Experimental::RFitPanelModel::Initialize()
 {
@@ -155,7 +156,6 @@ void ROOT::Experimental::RFitPanelModel::Initialize()
    // Sub ComboBox for Type Function
    fSelectedFunc = "";
    fDim = 1;
-   UpdateFuncList();
 
    // corresponds when Type == User Func (fSelectedTypeID == 1)
 

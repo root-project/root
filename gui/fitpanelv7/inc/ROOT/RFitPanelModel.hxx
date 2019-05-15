@@ -52,18 +52,19 @@ struct RFitPanelModel {
    };
 
    /// Basic function info, used in combo boxes
-   struct RFitFuncInfo {
+   struct RItemInfo {
       std::string group;
-      std::string name;
       std::string id;
+      std::string name;
 
-      RFitFuncInfo() = default;
-      RFitFuncInfo(const std::string &_name) : group("Prefefined"), name(_name) { id = "dflt::"; id.append(_name); }
+      RItemInfo() = default;
+      RItemInfo(const std::string &_name) : group("Predefined"), name(_name) { id = "dflt::"; id.append(_name); }
+      RItemInfo(const std::string &_group, const std::string &_id, const std::string &_name) : group(_group), id(_id), name(_name) {}
    };
 
    /// Function parameter info, used in edit parameters dialog
 
-   struct RFitFuncParameter {
+   struct RFuncPar {
       int ipar{0};
       std::string name;
       std::string value;
@@ -71,15 +72,16 @@ struct RFitPanelModel {
       std::string error;
       std::string min;
       std::string max;
-      RFitFuncParameter() = default;
-      RFitFuncParameter(int _ipar, const std::string &_name) : ipar(_ipar), name(_name) {}
+      RFuncPar() = default;
+      RFuncPar(int _ipar, const std::string &_name) : ipar(_ipar), name(_name) {}
    };
 
    /// Class used to transfer functions parameters list from/to client
-   struct RFitFuncParsList {
+   struct RFuncParsList {
       bool haspars{false};
-      std::string name;
-      std::vector<RFitFuncParameter> pars;
+      std::string id;                ///< function id in the FitPanel
+      std::string name;              ///< display name
+      std::vector<RFuncPar> pars;    ///< parameters
       void GetParameters(TF1 *f1);
       void SetParameters(TF1 *f1);
       void Clear();
@@ -87,12 +89,12 @@ struct RFitPanelModel {
 
    std::string fTitle;                      ///< title of the fit panel
 
-   std::vector<RComboBoxItem> fDataSet;     ///< list of available data sources
+   std::vector<RItemInfo> fDataSet;     ///< list of available data sources
    std::string fSelectedData;               ///< selected data
 
    int fDim{0};                             ///< number of dimensions in selected data object
 
-   std::vector<RFitFuncInfo> fFuncList;     ///< all available fit functions
+   std::vector<RItemInfo> fFuncList;     ///< all available fit functions
    std::string fSelectedFunc;               ///< id of selected fit function like dflt::gaus
 
 
@@ -150,7 +152,7 @@ struct RFitPanelModel {
 
    /// Parameters
 
-   RFitFuncParsList fFuncPars;
+   RFuncParsList fFuncPars;
 
    /////////Advanced Options
 
@@ -176,13 +178,15 @@ struct RFitPanelModel {
    int fScanMin{0};
    int fScanMax{0};
 
-   bool fInitialized{false};    ///<! indicates if data were initialized
+   bool fInitialized{false};        ///<! indicates if data were initialized
 
-   RFitPanelModel() { Initialize(); }
+   RFitPanelModel() = default;
 
    void Initialize();
 
    bool SelectHistogram(const std::string &hname, TH1 *hist);
+
+   bool HasFunction(const std::string &id);
 
    void SelectedFunc(const std::string &name, TF1 *func);
 
@@ -190,10 +194,7 @@ struct RFitPanelModel {
 
    void UpdateAdvanced(TF1 *func);
 
-   void UpdateFuncList();
-
    bool IsDataSelected() const { return !fSelectedData.empty(); }
-
 
    void GetRanges(ROOT::Fit::DataRange &drange);
    void GetFitOptions(Foption_t &fitOpts);
