@@ -199,7 +199,12 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
          pass
 
       ptr = MakeNullPointer( TObject )
-      self.assertRaises( ValueError, AddressOf, ptr )
+      try:
+         self.assertRaises( ValueError, AddressOf, ptr )
+      except AssertionError:
+         # New Cppyy does not raise ValueError,
+         # it just returns zero
+         self.assertEqual(AddressOf(ptr), 0)
       Z.SetAddressPtrRef( ptr )
 
       try:
