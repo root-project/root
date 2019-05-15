@@ -1859,7 +1859,7 @@ will illustrate them by examples.
     row-beside-row inside the container, making life much easier for its
     navigation algorithms. The problem is that in order to reproduce the
     honeycomb structure out of rows of cells, we have to overlap row
-    containers. Woops - we have not obeyed rule No. 2 in positioning.
+    containers. Whoops - we have not obeyed rule No. 2 in positioning.
     The way out is to position our rows with a special prototype:
 
 ``` {.cpp}
@@ -1933,7 +1933,7 @@ few chambers, but definitely not for 1000. Fortunately the modeller is
 smarter than that and creates for each volume some optimization
 structures called `voxels` to minimize the penalty having too many
 daughters, but if you have 100 pads like this in your geometry you will
-anyway loose a lot in your tracking performance. The way out when
+anyway lose a lot in your tracking performance. The way out when
 volumes can be arranged according to simple patterns is the usage of
 divisions. We will describe them in detail later on. Let's think now at
 a different situation: instead of 1000 chambers of the same type, we may
@@ -3368,8 +3368,8 @@ name): `gGeoManager->GetVolume("vol_name")->Draw();`
 
 Supposing you now understand the basic things to do for drawing the
 geometry or parts of it, you still might be not happy and wishing to
-have more control on it. We will describe below how you can tune some
-fine settings. Since the corresponding attributes are flags belonging to
+have more control on it. We will describe below how you can fine-tune some
+ settings. Since the corresponding attributes are flags belonging to
 volume and node objects, you can change them at any time (even when the
 picture is already drawn) and see immediately the result.
 
@@ -3610,7 +3610,7 @@ Option_t *opt="vg")
     TGeoBBox\_0x1, TGeoBBox\_0x2, ...). If `"f"` option is set then then
     suffix will contain pointer of object (e.g. TGeoBBox\_0xAAAAA01,
     ...). Finally if option `"n"` is set then no suffix will be added,
-    though in this case uniqness of the names is not ensured and it can
+    though in this case uniqueness of the names is not ensured and it can
     cause that file will be invalid.
 
 Loading geometry from a root file can be done in the same way as for any
