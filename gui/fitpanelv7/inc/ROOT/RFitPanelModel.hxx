@@ -20,6 +20,7 @@
 #include "Foption.h"
 #include "Fit/DataRange.h"
 #include "Math/MinimizerOptions.h"
+#include "TString.h"
 
 #include <vector>
 #include <string>
@@ -196,13 +197,11 @@ struct RFitPanelModel {
 
    bool IsDataSelected() const { return !fSelectedData.empty(); }
 
-   void GetRanges(ROOT::Fit::DataRange &drange);
-   void GetFitOptions(Foption_t &fitOpts);
-   void GetMinimizerOptions(ROOT::Math::MinimizerOptions &minOpts);
+   ROOT::Fit::DataRange GetRanges();
+   Foption_t GetFitOptions();
+   ROOT::Math::MinimizerOptions GetMinimizerOptions();
 
-   std::string GetDrawOption();
-
-   std::string GetFitOption();
+   TString GetDrawOption();
 };
 
 } // namespace Experimental
