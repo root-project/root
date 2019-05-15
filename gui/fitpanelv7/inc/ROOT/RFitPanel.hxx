@@ -43,7 +43,7 @@ class RFitPanel {
    std::unique_ptr<RFitPanelModel> fModel;
 
    std::vector<TObject*> fObjects;    ///<! objects provided directly to panel for fitting
-   std::string fCanvName{"c1"};       ///<! v6 canvas name used to display fit, will be created if not exists
+   std::string fCanvName;             ///<! v6 canvas name used to display fit, will be created if not exists
 
    std::shared_ptr<RCanvas> fCanvas; ///!< v7 canvas used to display results
    std::shared_ptr<RH1D> fFitHist;   ///!< v7 histogram for fitting

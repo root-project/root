@@ -238,44 +238,22 @@ void ROOT::Experimental::RFitPanelModel::UpdateAdvanced(TF1 *func)
 }
 
 
-std::string ROOT::Experimental::RFitPanelModel::GetFitOption()
+ROOT::Fit::DataRange ROOT::Experimental::RFitPanelModel::GetRanges()
 {
-   std::string opt = fFitMethod;
+   ROOT::Fit::DataRange drange;
 
-   if (fIntegral) opt.append("I");
-   if (fUseRange) opt.append("R");
-   if (fBestErrors) opt.append("E");
-   if (fImproveFitResults) opt.append("M");
-   if (fAddToList) opt.append("+");
-   if (fUseGradient) opt.append("G");
-
-   if (fEmptyBins1)
-      opt.append("WW");
-   else if (fAllWeights1)
-      opt.append("W");
-
-   if (fNoStoreDraw)
-      opt.append("N");
-   else if (fNoDrawing)
-      opt.append("O");
-
-   return opt;
-}
-
-void ROOT::Experimental::RFitPanelModel::GetRanges(ROOT::Fit::DataRange &drange)
-{
-   if (fDim > 0)  {
+   if (fDim > 0)
       drange.AddRange(0, fRangeX[0], fRangeX[1]);
-   }
 
-   if ( fDim > 1 ) {
+   if ( fDim > 1 )
       drange.AddRange(1, fRangeY[0], fRangeY[1]);
-   }
 
+   return drange;
 }
 
-void ROOT::Experimental::RFitPanelModel::GetFitOptions(Foption_t &fitOpts)
+Foption_t ROOT::Experimental::RFitPanelModel::GetFitOptions()
 {
+   Foption_t fitOpts;
    fitOpts.Range    = fUseRange;
    fitOpts.Integral = fIntegral;
    fitOpts.More     = fImproveFitResults;
@@ -312,10 +290,14 @@ void ROOT::Experimental::RFitPanelModel::GetFitOptions(Foption_t &fitOpts)
       fitOpts.Robust = 1;
       fitOpts.hRobust = fRobustLevel;
    }
+
+   return fitOpts;
 }
 
-void ROOT::Experimental::RFitPanelModel::GetMinimizerOptions(ROOT::Math::MinimizerOptions &minOpts)
+ROOT::Math::MinimizerOptions ROOT::Experimental::RFitPanelModel::GetMinimizerOptions()
 {
+   ROOT::Math::MinimizerOptions minOpts;
+
    if (fLibrary == 0)
       minOpts.SetMinimizerType ( "Minuit");
    else if (fLibrary == 1)
@@ -363,11 +345,14 @@ void ROOT::Experimental::RFitPanelModel::GetMinimizerOptions(ROOT::Math::Minimiz
    minOpts.SetTolerance(fMaxTolerance);
    minOpts.SetMaxIterations(fMaxIterations);
    minOpts.SetMaxFunctionCalls(fMaxIterations);
+
+   return minOpts;
 }
 
-std::string ROOT::Experimental::RFitPanelModel::GetDrawOption()
+TString ROOT::Experimental::RFitPanelModel::GetDrawOption()
 {
-   return "";
+   TString res;
+   return res;
 }
 
 

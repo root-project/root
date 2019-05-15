@@ -451,8 +451,7 @@ std::unique_ptr<TF1> ROOT::Experimental::RFitPanel::GetFitFunction(const std::st
 
       std::string formula = funcname.substr(6);
 
-      ROOT::Fit::DataRange drange;
-      model().GetRanges(drange);
+      ROOT::Fit::DataRange drange = model().GetRanges();
 
       double xmin, xmax, ymin, ymax, zmin, zmax;
       drange.GetRange(xmin, xmax, ymin, ymax, zmin, zmax);
@@ -537,35 +536,62 @@ void ROOT::Experimental::RFitPanel::DrawScan(const std::string &model)
    // printf("SCAN Points %d, Par %d, Min %d, Max %d\n", obj->fScanPoints, obj->fScanPar, obj->fScanMin, obj->fScanMax);
 }
 
-/// Returns pad where histogram should be drawn
-/// Ensure that histogram is on the first place
+///////////////////////////////////////////////////////////////////
+/// Returns pad where histogram is drawn
+/// If canvas not exists, create new one
 
 TPad *ROOT::Experimental::RFitPanel::GetDrawPad(TObject *obj)
 {
-   if (model().fNoDrawing || model().fNoStoreDraw)
+   if (!obj || model().fNoDrawing || model().fNoStoreDraw)
       return nullptr;
 
+   std::function<TPad*(TPad*)> check = [&](TPad *pad) {
+      TPad *res = nullptr;
+      if (pad) {
+         TIter next(pad->GetListOfPrimitives());
+         TObject *prim = nullptr;
+         while (!res && (prim = next())) {
+            res = (prim == obj) ? pad : check(dynamic_cast<TPad *>(prim));
+         }
+      }
 
-   if (fCanvName.empty()) {
-      gPad = nullptr;
-      return nullptr;
+      return res;
+   };
+
+   if (!fCanvName.empty()) {
+      auto drawcanv = dynamic_cast<TCanvas *> (gROOT->GetListOfCanvases()->FindObject(fCanvName.c_str()));
+      auto drawpad = check(drawcanv);
+      if (drawpad) {
+         drawpad->cd();
+         return drawpad;
+      }
+      if (drawcanv) {
+         drawcanv->Clear();
+         drawcanv->cd();
+         obj->Draw();
+         return drawcanv;
+      }
+      fCanvName.clear();
    }
 
-   TCanvas *canv = (TCanvas *) gROOT->GetListOfCanvases()->FindObject(fCanvName.c_str());
-
-   if (!canv) {
-      canv = gROOT->MakeDefCanvas();
-      canv->SetName(fCanvName.c_str());
-      canv->SetTitle("Fit panel drawings");
+   TObject *c = nullptr;
+   TIter nextc(gROOT->GetListOfCanvases());
+   while ((c = nextc())) {
+      auto drawpad = check(dynamic_cast<TCanvas* >(c));
+      if (drawpad) {
+         drawpad->cd();
+         fCanvName = c->GetName();
+         return drawpad;
+      }
    }
+
+   auto canv = gROOT->MakeDefCanvas();
+   canv->SetName("fpc");
+   canv->SetTitle("Fit panel drawings");
+   fCanvName = canv->GetName();
 
    canv->cd();
-
-   // TODO: provide proper draw options
-   if (obj && !canv->FindObject(obj)) {
-      canv->Clear();
-      obj->Draw();
-   }
+   obj->Draw();
 
    return canv;
 }
@@ -705,17 +731,10 @@ bool ROOT::Experimental::RFitPanel::DoFit()
    auto f1 = GetFitFunction(m.fSelectedFunc);
    if (!f1) return false;
 
-   ROOT::Fit::DataRange drange;
-   ROOT::Math::MinimizerOptions minOption;
-   Foption_t fitOpts;
-
-   m.GetRanges(drange);
-   m.GetFitOptions(fitOpts);
-   m.GetMinimizerOptions(minOption);
-
-   // std::string drawOpts = m.GetDrawOption();
-
-   TString strDrawOpts;
+   auto drange = m.GetRanges();
+   auto minOption = m.GetMinimizerOptions();
+   auto fitOpts = m.GetFitOptions();
+   auto drawOpts = m.GetDrawOption();
 
    TVirtualPad *save = gPad;
 
@@ -726,7 +745,7 @@ bool ROOT::Experimental::RFitPanel::DoFit()
 
          TH1 *hist = dynamic_cast<TH1*>(obj);
          if (hist)
-            ROOT::Fit::FitObject(hist, f1.get(), fitOpts, minOption, strDrawOpts, drange);
+            ROOT::Fit::FitObject(hist, f1.get(), fitOpts, minOption, drawOpts, drange);
 
          break;
       }
@@ -734,14 +753,14 @@ bool ROOT::Experimental::RFitPanel::DoFit()
 
          TGraph *gr = dynamic_cast<TGraph*>(obj);
          if (gr)
-            ROOT::Fit::FitObject(gr, f1.get(), fitOpts, minOption, strDrawOpts, drange);
+            ROOT::Fit::FitObject(gr, f1.get(), fitOpts, minOption, drawOpts, drange);
          break;
       }
       case kObjectMultiGraph: {
 
          TMultiGraph *mg = dynamic_cast<TMultiGraph*>(obj);
          if (mg)
-            ROOT::Fit::FitObject(mg, f1.get(), fitOpts, minOption, strDrawOpts, drange);
+            ROOT::Fit::FitObject(mg, f1.get(), fitOpts, minOption, drawOpts, drange);
 
          break;
       }
@@ -749,7 +768,7 @@ bool ROOT::Experimental::RFitPanel::DoFit()
 
          TGraph2D *g2d = dynamic_cast<TGraph2D*>(obj);
          if (g2d)
-            ROOT::Fit::FitObject(g2d, f1.get(), fitOpts, minOption, strDrawOpts, drange);
+            ROOT::Fit::FitObject(g2d, f1.get(), fitOpts, minOption, drawOpts, drange);
 
          break;
       }
@@ -764,8 +783,11 @@ bool ROOT::Experimental::RFitPanel::DoFit()
       }
    }
 
-   if (m.fSame && f1)
-      f1->Draw("same");
+   if (m.fSame && f1) {
+      TF1 *copy = copyTF1(f1.get());
+      copy->SetBit(kCanDelete);
+      copy->Draw("same");
+   }
 
    if (pad) {
       pad->Modified();
