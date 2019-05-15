@@ -343,12 +343,12 @@ public:
    void CommitCluster() final;
 };
 
-} // namespace Experimental
-} // namespace ROOT
+
+/// Template specializations for concrete C++ types
 
 
 template <>
-class ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t> : public ROOT::Experimental::Detail::RFieldBase {
+class RField<ClusterSize_t> : public Detail::RFieldBase {
 public:
    static std::string MyTypeName() { return "ROOT::Experimental::ClusterSize_t"; }
    explicit RField(std::string_view name)
@@ -392,11 +392,8 @@ public:
 };
 
 
-/// Template specializations for concrete C++ types
-
-
 template <>
-class ROOT::Experimental::RField<float> : public ROOT::Experimental::Detail::RFieldBase {
+class RField<float> : public Detail::RFieldBase {
 public:
    static std::string MyTypeName() { return "float"; }
    explicit RField(std::string_view name)
@@ -436,7 +433,7 @@ public:
 
 
 template <>
-class ROOT::Experimental::RField<double> : public ROOT::Experimental::Detail::RFieldBase {
+class RField<double> : public Detail::RFieldBase {
 public:
    static std::string MyTypeName() { return "double"; }
    explicit RField(std::string_view name)
@@ -475,7 +472,7 @@ public:
 };
 
 template <>
-class ROOT::Experimental::RField<std::int32_t> : public ROOT::Experimental::Detail::RFieldBase {
+class RField<std::int32_t> : public Detail::RFieldBase {
 public:
    static std::string MyTypeName() { return "std::int32_t"; }
    explicit RField(std::string_view name)
@@ -514,7 +511,7 @@ public:
 };
 
 template <>
-class ROOT::Experimental::RField<std::uint32_t> : public ROOT::Experimental::Detail::RFieldBase {
+class RField<std::uint32_t> : public Detail::RFieldBase {
 public:
    static std::string MyTypeName() { return "std::uint32_t"; }
    explicit RField(std::string_view name)
@@ -553,7 +550,7 @@ public:
 };
 
 template <>
-class ROOT::Experimental::RField<std::uint64_t> : public ROOT::Experimental::Detail::RFieldBase {
+class RField<std::uint64_t> : public Detail::RFieldBase {
 public:
    static std::string MyTypeName() { return "std::uint64_t"; }
    explicit RField(std::string_view name)
@@ -593,7 +590,7 @@ public:
 
 
 template <>
-class ROOT::Experimental::RField<std::string> : public ROOT::Experimental::Detail::RFieldBase {
+class RField<std::string> : public Detail::RFieldBase {
 private:
    ClusterSize_t fIndex;
    Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex> fElemIndex;
@@ -637,7 +634,7 @@ public:
 
 
 template <typename ItemT>
-class ROOT::Experimental::RField<std::vector<ItemT>> : public ROOT::Experimental::RFieldVector {
+class RField<std::vector<ItemT>> : public RFieldVector {
    using ContainerT = typename std::vector<ItemT>;
 public:
    static std::string MyTypeName() { return "std::vector<" + RField<ItemT>::MyTypeName() + ">"; }
@@ -670,7 +667,7 @@ public:
  * RVec implementation as we can with std::vector
  */
 template <typename ItemT>
-class ROOT::Experimental::RField<ROOT::VecOps::RVec<ItemT>> : public Detail::RFieldBase {
+class RField<ROOT::VecOps::RVec<ItemT>> : public Detail::RFieldBase {
    using ContainerT = typename ROOT::VecOps::RVec<ItemT>;
 private:
    size_t fItemSize;
@@ -756,5 +753,8 @@ public:
    }
    size_t GetValueSize() const final { return sizeof(ContainerT); }
 };
+
+} // namespace Experimental
+} // namespace ROOT
 
 #endif

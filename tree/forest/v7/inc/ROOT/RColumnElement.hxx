@@ -109,15 +109,9 @@ public:
    }
 };
 
-} // namespace Detail
-
-} // namespace Experimental
-} // namespace ROOT
-
 
 template <>
-class ROOT::Experimental::Detail::RColumnElement<float, ROOT::Experimental::EColumnType::kReal32>
-   : public ROOT::Experimental::Detail::RColumnElementBase {
+class RColumnElement<float, EColumnType::kReal32> : public RColumnElementBase {
 public:
    static constexpr bool kIsMappable = true;
    static constexpr size_t kSize = sizeof(float);
@@ -125,8 +119,7 @@ public:
 };
 
 template <>
-class ROOT::Experimental::Detail::RColumnElement<double, ROOT::Experimental::EColumnType::kReal64>
-   : public ROOT::Experimental::Detail::RColumnElementBase {
+class RColumnElement<double, EColumnType::kReal64> : public RColumnElementBase {
 public:
    static constexpr bool kIsMappable = true;
    static constexpr size_t kSize = sizeof(double);
@@ -134,8 +127,7 @@ public:
 };
 
 template <>
-class ROOT::Experimental::Detail::RColumnElement<std::int32_t, ROOT::Experimental::EColumnType::kInt32>
-   : public ROOT::Experimental::Detail::RColumnElementBase {
+class RColumnElement<std::int32_t, EColumnType::kInt32> : public RColumnElementBase {
 public:
    static constexpr bool kIsMappable = true;
    static constexpr size_t kSize = sizeof(std::int32_t);
@@ -143,8 +135,7 @@ public:
 };
 
 template <>
-class ROOT::Experimental::Detail::RColumnElement<std::uint32_t, ROOT::Experimental::EColumnType::kInt32>
-   : public ROOT::Experimental::Detail::RColumnElementBase {
+class RColumnElement<std::uint32_t, EColumnType::kInt32> : public RColumnElementBase {
 public:
    static constexpr bool kIsMappable = true;
    static constexpr size_t kSize = sizeof(std::uint32_t);
@@ -152,8 +143,7 @@ public:
 };
 
 template <>
-class ROOT::Experimental::Detail::RColumnElement<std::int64_t, ROOT::Experimental::EColumnType::kInt64>
-   : public ROOT::Experimental::Detail::RColumnElementBase {
+class RColumnElement<std::int64_t, EColumnType::kInt64> : public RColumnElementBase {
 public:
    static constexpr bool kIsMappable = true;
    static constexpr size_t kSize = sizeof(std::int64_t);
@@ -161,8 +151,7 @@ public:
 };
 
 template <>
-class ROOT::Experimental::Detail::RColumnElement<std::uint64_t, ROOT::Experimental::EColumnType::kInt64>
-   : public ROOT::Experimental::Detail::RColumnElementBase {
+class RColumnElement<std::uint64_t, EColumnType::kInt64> : public RColumnElementBase {
 public:
    static constexpr bool kIsMappable = true;
    static constexpr size_t kSize = sizeof(std::uint64_t);
@@ -170,22 +159,23 @@ public:
 };
 
 template <>
-class ROOT::Experimental::Detail::RColumnElement<
-   ROOT::Experimental::ClusterSize_t, ROOT::Experimental::EColumnType::kIndex>
-   : public ROOT::Experimental::Detail::RColumnElementBase {
+class RColumnElement<ClusterSize_t, EColumnType::kIndex> : public RColumnElementBase {
 public:
    static constexpr bool kIsMappable = true;
    static constexpr size_t kSize = sizeof(ROOT::Experimental::ClusterSize_t);
-   explicit RColumnElement(ROOT::Experimental::ClusterSize_t* value) : RColumnElementBase(value, kSize, kIsMappable) {}
+   explicit RColumnElement(ClusterSize_t* value) : RColumnElementBase(value, kSize, kIsMappable) {}
 };
 
 template <>
-class ROOT::Experimental::Detail::RColumnElement<char, ROOT::Experimental::EColumnType::kByte>
-   : public ROOT::Experimental::Detail::RColumnElementBase {
+class RColumnElement<char, EColumnType::kByte> : public RColumnElementBase {
 public:
    static constexpr bool kIsMappable = true;
    static constexpr size_t kSize = sizeof(char);
    explicit RColumnElement(char* value) : RColumnElementBase(value, kSize, kIsMappable) {}
 };
+
+} // namespace Detail
+} // namespace Experimental
+} // namespace ROOT
 
 #endif
