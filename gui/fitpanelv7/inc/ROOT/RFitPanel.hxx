@@ -53,7 +53,7 @@ class RFitPanel {
 
    std::vector<std::unique_ptr<TF1>> fSystemFuncs; ///<! local copy of all internal system funcs
 
-   std::unordered_map<std::string, std::unique_ptr<TF1>> fPrevFuncs; ///<! all previous functions used for fitting
+   std::unordered_multimap<std::string, std::unique_ptr<TF1>> fPrevFuncs; ///<! all previous functions used for fitting
 
    TF1* copyTF1(TF1* f);
 
@@ -76,12 +76,9 @@ class RFitPanel {
    TObject *GetSelectedObject(const std::string &objid, int *kind = nullptr);
    void UpdateDataSet();
 
-
+   void UpdateFunctionsList();
    TF1 *FindFunction(const std::string &funcname);
-
    std::unique_ptr<TF1> GetFitFunction(const std::string &funcname);
-
-
    void SelectFunction(const std::string &funcid);
 
    TPad *GetDrawPad(TObject *obj);
