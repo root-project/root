@@ -247,7 +247,7 @@ the function.
 Now we use the function:
 
 ``` {.cpp}
-   // this function used fitf to fit a histogram
+   // this function uses fitf to fit a histogram
    void fitexample() {
 
       // open a file and get a histogram
@@ -1099,13 +1099,13 @@ data). As above the user can select an extended likelihood fit by passing the op
 #### Customised Fit methods
 
 Above we described the pre-defined methods used for fitting. A user can also implement its own fitting methods, thus its version of the chi-square or likelihood function he wants to minimize.
-In this cas, the user does not really need to build as input a `ROOT::Fit` data set and model function as we described before. He can implements its own version of the method function using on its own
+In this case, the user does not really need to build as input a `ROOT::Fit` data set and model function as we described before. He can implements its own version of the method function using on its own
 data set objects and functions.
 
 In this case `ROOT::Fit::Fitter::SetFCN` is used to set the method function  and `ROOT::Fit::FitFCN` is used for fitting. The method function can be passed also in `ROOT::Fit::FitFCN`, but in this
 case a previously defined fitting configuration is used.
 
-The possible type of method functions that can be bassed in `ROOT::Fit::Fitter::SetFCN` are:
+The possible type of method functions that are based in `ROOT::Fit::Fitter::SetFCN` are:
 
 * A generic functor object implementing `operator()(const double * p)` where **`p`** is the parameter vectors. In this case one needs to pass the number of parameters,
   the function object and optionally a vector of initial parameter values. Other optional parameter include the size of the data sets and a flag specifying if it is a chi2 (least-square fit).
