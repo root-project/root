@@ -15,6 +15,10 @@
 // Functionality, interface, and data format is still subject to changes.
 // Do not use for real data!
 
+// The following line should disappear in a future version of RForest, when
+// the common template specializations of RField are part of the LinkDef.h
+R__LOAD_LIBRARY(ROOTForest)
+
 #include <ROOT/RForest.hxx>
 #include <ROOT/RForestModel.hxx>
 
