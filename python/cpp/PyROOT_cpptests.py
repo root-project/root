@@ -11,6 +11,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 import ROOT
 from ROOT import TObject, TLorentzVector, kRed, kGreen, kBlue, TVectorF, TROOT, TCanvas, gInterpreter, gROOT, TMatrixD, TString, std
 from common import *
+from functools import partial
 
 __all__ = [
    'Cpp1LanguageFeatureTestCase',
@@ -27,6 +28,13 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
          cls.AddressOf = ROOT.AddressOf
       except AttributeError:
          cls.AddressOf = ROOT.addressof # New Cppyy's nomenclature
+
+      try:
+         cls.MakeNullPointer = ROOT.MakeNullPointer
+      except AttributeError:
+         # MakeNullPointer(klass) does not exist anymore in new Cppyy,
+         # but it is equivalent to bind_object(0, klass)
+         cls.MakeNullPointer = partial(ROOT.bind_object, 0)
 
    def test01ClassEnum( self ):
       """Test class enum access and values"""
@@ -158,7 +166,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
 
       gROOT.LoadMacro( "PointerPassing.C+" )
       AddressOf = self.AddressOf
-      MakeNullPointer = ROOT.MakeNullPointer
+      MakeNullPointer = self.MakeNullPointer
       
       Z = ROOT.Z
 
@@ -225,7 +233,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
 
    def test11ObjectAndPointerComparisons( self ):
       """Verify object and pointer comparisons"""
-      MakeNullPointer = ROOT.MakeNullPointer
+      MakeNullPointer = self.MakeNullPointer
 
       c1 = MakeNullPointer( TCanvas )
       self.assertEqual( c1, None )
