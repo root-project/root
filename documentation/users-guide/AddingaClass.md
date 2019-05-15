@@ -48,7 +48,7 @@ some methods that use Introspection to help you see the data in the
 object or class. For instance:
 
 ``` {.cpp}
-obj->Dump();      // lists all data members and their current valsue
+obj->Dump();      // lists all data members and their current values
 obj->Inspect();   // opens a window to browse data members
 obj->DrawClass(); // Draws the class inheritance tree
 ```
@@ -161,8 +161,8 @@ enum EObjBits {
 
 For example, the bits `kMustCleanup` and `kCanDelete` are used in
 **`TObject`**. See "The kCanDelete Bit" and "The kMustCleanup Bit". They
-can be set by any object and should not be reused. Make sure to no
-overlap in any given hierarchy them. The bit 13 (`kInvalidObject`) is
+can be set by any object and should not be reused. Make sure not
+to overlap them in any given hierarchy. The bit 13 (`kInvalidObject`) is
 set when an object could not be read from a ROOT file. It will check
 this bit and will skip to the next object on the file.
 
