@@ -41,7 +41,7 @@ int f(){return 42;};
    // The value returned by f is checked to be correct 
    gInterpreter->ProcessLine(".L myextramacro.C+");
    auto r = gInterpreter->ProcessLine("f()");
-   EXPECT_EQ(r, 42U);
+   EXPECT_EQ(r, 42);
 
    gSystem->Unlink(macroName);
    gSystem->Unlink(includeName);
