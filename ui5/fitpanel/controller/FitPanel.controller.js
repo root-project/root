@@ -85,10 +85,20 @@ sap.ui.define([
          }
       },
 
-      //Fitting Button
+      // Update Button
+      doUpdate: function() {
+         if (this.websocket)
+            this.websocket.Send("RELOAD");
+      },
+
+      // Fit Button
       doFit: function() {
-         console.log('method', this.data().fSelectMethodMin, typeof this.data().fSelectMethodMin);
          this.sendModel("DOFIT:");
+      },
+
+      // Draw Button
+      doDraw: function() {
+         this.sendModel("DODRAW:");
       },
 
       onPanelExit: function(){
