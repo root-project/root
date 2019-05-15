@@ -7,7 +7,7 @@ if(ROOTTEST_OS_ID MATCHES Ubuntu)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-as-needed")
 endif()
 
-set(DFLIBRARIES Core RIO Hist Tree MathCore TreePlayer ROOTDataFrame)
+set(DFLIBRARIES Core RIO Hist Tree MathCore TreePlayer ROOTDataFrame ROOTVecOps)
 
 # ROOT-9674
 ROOTTEST_ADD_TEST(test_readShip
