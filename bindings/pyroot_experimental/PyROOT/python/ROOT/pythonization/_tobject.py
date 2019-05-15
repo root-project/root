@@ -9,6 +9,7 @@
 ################################################################################
 
 from ROOT import pythonization
+from libROOTPython import AddTObjectEqNePyz
 import cppyy
 
 # Searching
@@ -23,18 +24,6 @@ def _contains(self, o):
     return bool(self.FindObject(o))
 
 # Comparison operators
-
-def _eq(self, o):
-    if isinstance(o, cppyy.gbl.TObject):
-        return self.IsEqual(o)
-    else:
-        return False
-
-def _ne(self, o):
-    if isinstance(o, cppyy.gbl.TObject):
-        return not self.IsEqual(o)
-    else:
-        return True
 
 def _lt(self, o):
     if isinstance(o, cppyy.gbl.TObject):
@@ -69,8 +58,7 @@ def pythonize_tobject():
     klass.__contains__ = _contains
 
     # Inject comparison operators
-    klass.__eq__ = _eq
-    klass.__ne__ = _ne
+    AddTObjectEqNePyz(klass)
     klass.__lt__ = _lt
     klass.__le__ = _le
     klass.__gt__ = _gt
