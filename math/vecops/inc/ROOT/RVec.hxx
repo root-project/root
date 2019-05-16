@@ -1746,6 +1746,7 @@ T InvariantMass(const RVec<T>& pt, const RVec<T>& eta, const RVec<T>& phi, const
 /// Construct<ROOT::Math::PtEtaPhiMVector> fourVects(etas, phis, pts, masses);
 /// cout << fourVects << endl;
 /// // { (15.5,0.3,0.1,105.65), (34.32,2.2,3.02,105.65), (12.95,1.32,2.2,105.65) }
+/// ~~~
 template <typename T, typename... Args_t>
 RVec<T> Construct(const RVec<Args_t> &... args)
 {
