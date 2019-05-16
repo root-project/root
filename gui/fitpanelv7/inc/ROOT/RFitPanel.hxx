@@ -77,9 +77,6 @@ class RFitPanel {
 
    int UpdateModel(const std::string &json);
 
-   bool DoFit();
-   bool DoDraw();
-
    void SelectObject(const std::string &objid);
    TObject *GetSelectedObject(const std::string &objid, int &kind);
    void UpdateDataSet();
@@ -90,11 +87,17 @@ class RFitPanel {
    std::unique_ptr<TF1> GetFitFunction(const std::string &funcid);
    void SelectFunction(const std::string &funcid);
 
+   bool DrawConfidenceLevels(TFitResult *res);
+
    Color_t GetColor(const std::string &colorid);
 
    TPad *GetDrawPad(TObject *obj, bool force = false);
 
    void SendModel();
+
+   bool DoFit();
+   bool DoDraw();
+
 
 public:
    /// normal constructor
