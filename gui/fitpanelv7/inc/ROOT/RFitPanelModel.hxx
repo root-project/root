@@ -21,6 +21,7 @@
 #include "Fit/DataRange.h"
 #include "Math/MinimizerOptions.h"
 #include "TString.h"
+#include "TFitResult.h"
 
 #include <vector>
 #include <string>
@@ -157,31 +158,26 @@ struct RFitPanelModel {
 
    RFuncParsList fFuncPars;
 
-   /////////Advanced Options
+   /// Advanced Options
 
    bool fHasAdvanced{false};
    std::string fAdvancedTab;
+   std::vector<RComboBoxItem> fAdvancedPars;
 
-   std::vector<RComboBoxItem> fContour1;
-   std::string fContourPar1Id;
-   std::vector<RComboBoxItem> fContour2;
-   std::string fContourPar2Id;
-   std::vector<RComboBoxItem> fScan;
-   std::string fScanId;
+   /// Contour sub-tab
 
-   // Contour Tab
-   int fContourPar1{0};
-   int fContourPar2{0};
    int fContourPoints{0};
-   float fConfLevel{0.};
-   bool fContourImpose{false};
-   std::string fColorContour[3];
+   std::string fContourPar1Id;
+   std::string fContourPar2Id;
+   float fContourConfLevel{0.};
+   std::string fContourColor;
+   bool fContourSuperImpose{false};
 
-   // Scan Tab
+   // Scan sub-tab
    int fScanPoints{0};
-   int fScanPar{0};
-   int fScanMin{0};
-   int fScanMax{0};
+   std::string fScanId;
+   float fScanMin{0};
+   float fScanMax{0};
 
    bool fInitialized{false};        ///<! indicates if data were initialized
 
@@ -197,7 +193,7 @@ struct RFitPanelModel {
 
    void UpdateRange(TH1 *hist);
 
-   void UpdateAdvanced(TF1 *func);
+   void UpdateAdvanced(TFitResult *res);
 
    bool IsDataSelected() const { return !fSelectedData.empty(); }
 
