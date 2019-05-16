@@ -5,6 +5,7 @@ if(ROOT_python_FOUND)
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ Namespace.C+ 
                                          -e .L\ PointerPassing.C+ 
                                          -e .L\ Namespace2.C+
+                    ENVIRONMENT EXP_PYROOT=${exp_pyroot}
                     ${PYTESTS_WILLFAIL})
 
   ROOTTEST_ADD_TEST(advanced
