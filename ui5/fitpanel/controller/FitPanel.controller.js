@@ -19,14 +19,11 @@ sap.ui.define([
             JSROOT.loadScript('rootui5sys/fitpanel/style/style.css');
 
          var data = {
-               fDataSet:[ { key:"1", value: "----" } ],
-               fSelectedData: "1",
+               fDim: 1,
                fMinRangeX: -1,
-               fShowRangeX: false,
                fMaxRangeX: 1,
                fStepX: 0.1,
                fRangeX: [-1,1],
-               fShowRangeY: false,
                fMinRangeY: -1,
                fMaxRangeY: 1,
                fStepY: 0.1,
