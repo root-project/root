@@ -24,32 +24,35 @@ __all__ = [
 class Cpp1LanguageFeatureTestCase( MyTestCase ):
    @classmethod
    def setUpClass(cls):
-      try:
-         cls.AddressOf = ROOT.AddressOf
-      except AttributeError:
-         cls.AddressOf = ROOT.addressof # New Cppyy's nomenclature
+      cls.exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
 
-      try:
-         cls.MakeNullPointer = ROOT.MakeNullPointer
-      except AttributeError:
+      if cls.exp_pyroot:
+         # New Cppyy's nomenclature
+         cls.AddressOf = ROOT.addressof
+      else:
+         cls.AddressOf = ROOT.AddressOf
+
+      if cls.exp_pyroot:
          # MakeNullPointer(klass) does not exist anymore in new Cppyy,
          # but it is equivalent to bind_object(0, klass)
          cls.MakeNullPointer = partial(ROOT.bind_object, 0)
+      else:
+         cls.MakeNullPointer = ROOT.MakeNullPointer
 
-      try:
-         cls.AsCObject = ROOT.AsCObject
-      except AttributeError:
-         # Feature still present in new Cppyy, returns a proxy to
+      if cls.exp_pyroot:
+         # AsCObject still present in new Cppyy, returns a proxy to
          # an opaque pointer to the provided object.
          # Not exposed in new PyROOT for now (is it really necessary?)
          import libcppyy
          cls.AsCObject = libcppyy.AsCObject
+      else:
+         cls.AsCObject = ROOT.AsCObject
 
-      try:
-         cls.BindObject = ROOT.BindObject
-      except AttributeError:
+      if cls.exp_pyroot:
          # BindObject is bind_object in new Cppyy
          cls.BindObject = ROOT.bind_object
+      else:
+         cls.BindObject = ROOT.BindObject
 
    def test01ClassEnum( self ):
       """Test class enum access and values"""
@@ -186,11 +189,11 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       Z = ROOT.Z
 
       o = TObject()
-      try:
-         oaddr = AddressOf(o)[0]
-      except TypeError:
+      if self.exp_pyroot:
          # In new Cppyy, addressof returns an integer/long
          oaddr = AddressOf(o)
+      else:
+         oaddr = AddressOf(o)[0]
 
       self.assertEqual( oaddr, Z.GimeAddressPtr( o ) )
       self.assertEqual( oaddr, Z.GimeAddressPtrRef( o ) )
@@ -206,39 +209,35 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
 
       self.assertEqual( 0, Z.GimeAddressPtr( 0 ) );
       self.assertEqual( 0, Z.GimeAddressObject( 0 ) );
-      try:
+      if not self.exp_pyroot:
+         # The conversion None -> ptr is not supported in new Cppyy
          self.assertEqual( 0, Z.GimeAddressPtr( None ) );
          self.assertEqual( 0, Z.GimeAddressObject( None ) );
-      except:
-         # The conversion None -> ptr is not supported in new Cppyy
-         pass
 
       ptr = MakeNullPointer( TObject )
-      try:
-         self.assertRaises( ValueError, AddressOf, ptr )
-      except AssertionError:
+      if self.exp_pyroot:
          # New Cppyy does not raise ValueError,
          # it just returns zero
          self.assertEqual(AddressOf(ptr), 0)
+      else:
+         self.assertRaises( ValueError, AddressOf, ptr )
       Z.SetAddressPtrRef( ptr )
 
-      try:
-         self.assertEqual( AddressOf( ptr )[0], 0x1234 )
-         Z.SetAddressPtrPtr( ptr )
-         self.assertEqual( AddressOf( ptr )[0], 0x4321 )
-      except TypeError:
+      if self.exp_pyroot:
          # In new Cppyy, addressof returns an integer/long
          self.assertEqual(AddressOf(ptr), 0x1234 )
          Z.SetAddressPtrPtr( ptr )
          self.assertEqual(AddressOf(ptr), 0x4321 )
+      else:
+         self.assertEqual( AddressOf( ptr )[0], 0x1234 )
+         Z.SetAddressPtrPtr( ptr )
+         self.assertEqual( AddressOf( ptr )[0], 0x4321 )
 
    def test09Macro( self ):
       """Test access to cpp macro's"""
-      try:
-         self.assertEqual( ROOT.NULL, 0 );
-      except AttributeError:
+      if not self.exp_pyroot:
          # In new PyROOT, we will just provide ROOT.nullptr
-         pass
+         self.assertEqual( ROOT.NULL, 0 );
 
       gROOT.ProcessLine( '#define aap "aap"' )
       gROOT.ProcessLine( '#define noot 1' )
@@ -248,13 +247,11 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       # see above, is a special case)
       ROOT.PyConfig.ExposeCppMacros = True
 
-      try:
+      if not self.exp_pyroot:
+         # New Cppyy does not do lookup of macros
          self.assertEqual( ROOT.aap, "aap" )
          self.assertEqual( ROOT.noot, 1 )
          self.assertEqual( ROOT.mies, 2.0 )
-      except AttributeError:
-         # New Cppyy does not do lookup of macros
-         pass
 
       # test also that garbage macros are not found
       self.assertRaises( AttributeError, getattr, ROOT, "_this_does_not_exist_at_all" )
@@ -269,11 +266,11 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       s = TString( "Hello World!" )
       co = self.AsCObject( s )
       
-      try:
-         ad = self.AddressOf( s )[ 0 ]
-      except TypeError:
+      if self.exp_pyroot:
          # In new Cppyy, addressof returns an integer/long
          ad = self.AddressOf(s)
+      else:
+         ad = self.AddressOf( s )[ 0 ]
 
       self.assert_( s == self.BindObject( co, s.__class__ ) )
       self.assert_( s == self.BindObject( co, "TString" ) )
