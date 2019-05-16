@@ -2,7 +2,7 @@
    xmlns:mvc="sap.ui.core.mvc" xmlns:core="sap.ui.core" xmlns="sap.m"
    xmlns:fitpanel="rootui5.fitpanel.controller"
    xmlns:l="sap.ui.layout" controllerName="rootui5.fitpanel.controller.FitPanel">
-   <Page id="simplefitpanel_page" title="Simple Fit Panel" showHeader="false">
+   <Page title="Simple Fit Panel" showHeader="false">
       <VBox class="sapUiSizeCompact sapUiSmallMarginStart" width="100%">
          <l:Grid class="sapUiSizeCompact" hSpacing="0.5" vSpacing="0">
            <Text text="Data Set:">
@@ -39,7 +39,7 @@
                      <Title level="H3" text="Method" />
                      <l:Grid defaultSpan="XL6 L6 M6 S6" class="sapUiSizeCompact"
                         hSpacing="0.5" vSpacing="0">
-                        <ComboBox id="MethodCombo" selectedKey="{/fFitMethod}"
+                        <ComboBox selectedKey="{/fFitMethod}"
                            items="{ path: '/fFitMethods' }">
                            <core:Item key="{key}" text="{value}" />
                            <layoutData>
@@ -48,7 +48,7 @@
                         </ComboBox>
                         <CheckBox text="Linear fit" selected="{/fLinearFit}" />
                         <HBox>
-                           <CheckBox id="robust123" text="Robust"
+                           <CheckBox text="Robust"
                               enabled="{= ${/fLinearFit} === true}"
                               selected="{/fRobust}"
                               tooltip="Perform Linear Robust fitter if selected" />
@@ -61,8 +61,7 @@
                      <Title level="H3" text="Fit Options" />
                      <l:Grid defaultSpan="XL6 L6 M6 S6" class="sapUiSizeCompact"
                         hSpacing="0.5" vSpacing="0">
-                        <CheckBox id="Integral" text="Integral"
-                           selected="{/fIntegral}"
+                        <CheckBox text="Integral"  selected="{/fIntegral}"
                            tooltip="'I'-use integral of function instead of value in bin center" />
                         <CheckBox text="Use range" selected="{/fUseRange}"
                            tooltip="'R'-fit only data..." />
@@ -101,14 +100,12 @@
                            </layoutData>
                         </CheckBox>
                      </l:Grid>
-                     <RangeSlider id="SliderX" visible="{= ${/fDim} > 0}"
-                        showAdvancedTooltip="true" range="{/fRangeX}"
-                        min="{/fMinRangeX}" max="{/fMaxRangeX}" step="{/fStepX}"
+                     <RangeSlider visible="{= ${/fDim} > 0}"  showAdvancedTooltip="true"
+                        min="{/fMinRangeX}" max="{/fMaxRangeX}" step="{/fStepX}" range="{/fRangeX}"
                         width="100%" showHandleTooltip="false"
                         inputsAsTooltips="true" class="sapUiSmallMarginBottom" />
-                     <RangeSlider id="SliderY" visible="{= ${/fDim} > 1}"
-                        showAdvancedTooltip="true" range="{/fRangeY}"
-                        min="{/fMinRangeY}" max="{/fMaxRangeY}" step="{/fStepY}"
+                     <RangeSlider visible="{= ${/fDim} > 1}" showAdvancedTooltip="true"
+                        min="{/fMinRangeY}" max="{/fMaxRangeY}" step="{/fStepY}" range="{/fRangeY}"
                         width="100%" showHandleTooltip="false"
                         inputsAsTooltips="true" class="sapUiSmallMarginBottom"/>
                   </VBox>
@@ -174,16 +171,16 @@
                      <RadioButtonGroup columns="3"
                         width="100%" selectedIndex="{/fPrint}">
                         <buttons>
-                           <RadioButton id="Print-1" text="Default" />
-                           <RadioButton id="Print-2" text="Verbose" />
-                           <RadioButton id="Print-3" text="Quiet" />
+                           <RadioButton text="Default" />
+                           <RadioButton text="Verbose" />
+                           <RadioButton text="Quiet" />
                         </buttons>
                      </RadioButtonGroup>
                   </VBox>
                </IconTabFilter>
                <IconTabFilter key="Pars" text="Pars" visible="{/fFuncPars/haspars}">
                    <Text text="Func: {/fFuncPars/name}"/>
-                   <Table id="ParsTable" items="{ path: '/fFuncPars/pars' }">
+                   <Table items="{ path: '/fFuncPars/pars' }">
                       <columns>
                          <Column width="75px"><Text text="Name"/></Column>
                          <Column width="45px"><Text text="Fix"/></Column>
@@ -236,8 +233,7 @@
                                  <Text text="Fill Colour:"/>
                                  <fitpanel:ColorButton width="50px" color="{/fContourColor}" tooltip="Fill color for contour plot"/>
                               </HBox>
-                              <CheckBox id="contourImpose"
-                                 text="Super impose" selected="{/fContourSuperImpose}" />
+                              <CheckBox text="Super impose" selected="{/fContourSuperImpose}" />
                            </l:Grid>
                         </IconTabFilter>
                         <IconTabFilter key="Scan" text="Scan">
@@ -283,7 +279,7 @@
             <Button text="Update" press="doUpdate" tooltip="Update panel content from server" />
             <ToolbarSpacer/>
             <Button press="pressApplyPars" text="SetPars" visible="{= ${/fSelectedTab} === 'Pars'}" tooltip="Set function parameters"/>
-            <Button text="Fit" press="doFit" tooltip="Fit the histogram" />
+            <Button text="Fit" press="doFit" visible="{= ${/fSelectedTab} !== 'Advanced'}" tooltip="Fit the histogram" />
             <Button text="Draw" press="doDraw" tooltip="Draw histogram and selected function" />
             <Button text="Close" press="closePanel" tooltip="Close the Fit Panel" />
          </Toolbar>
