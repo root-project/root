@@ -20,10 +20,15 @@
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/TLogger.hxx>
 
+#include "Fit/BinData.h"
+#include "Fit/Fitter.h"
+// #include "TBackCompFitter.h"
+
 #include "TString.h"
-#include "TBackCompFitter.h"
 #include "TGraph.h"
+#include "TGraphErrors.h"
 #include "TGraph2D.h"
+#include "TGraph2DErrors.h"
 #include "TMultiGraph.h"
 #include "THStack.h"
 #include "TROOT.h"
@@ -779,6 +784,79 @@ Color_t ROOT::Experimental::RFitPanel::GetColor(const std::string &colorid)
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Create confidence levels drawing
+/// tab. Then it call Virtual Fitter to perform it.
+
+bool ROOT::Experimental::RFitPanel::DrawConfidenceLevels(TFitResult *result)
+{
+   if (!result)
+      return false;
+
+   // try to use provided method
+   // auto conf = result->GetConfidenceIntervals();
+   // printf("GET INTERVALS %d\n", (int) conf.size());
+
+   const auto *function = result->FittedFunction();
+   if (!function) {
+      R__ERROR_HERE("webgui") << "Fit Function does not exist!";
+      return false;
+   }
+
+   const auto *data = result->FittedBinData();
+   if (!data) {
+      R__ERROR_HERE("webgui") << "Unbinned data set cannot draw confidence levels.";
+      return false;
+   }
+
+   std::vector<Double_t> ci(data->Size());
+   result->GetConfidenceIntervals(*data, &ci[0], model().fConfidenceLevel);
+
+   if (model().fDim == 1) {
+      TGraphErrors *g = new TGraphErrors(ci.size());
+      for (unsigned int i = 0; i < ci.size(); ++i) {
+         const Double_t *x = data->Coords(i);
+         const Double_t y = (*function)(x);
+         g->SetPoint(i, *x, y);
+         g->SetPointError(i, 0, ci[i]);
+      }
+      // std::ostringstream os;
+      // os << "Confidence Intervals with " << conflvl << " conf. band.";
+      // g->SetTitle(os.str().c_str());
+      g->SetTitle("Confidence Intervals with");
+
+      auto icol = GetColor(model().fConfidenceColor);
+      g->SetLineColor(icol);
+      g->SetFillColor(icol);
+      g->SetFillStyle(3001);
+      g->Draw("C3same");
+      g->SetBit(kCanDelete);
+      return true;
+   } else if (model().fDim == 2) {
+      TGraph2DErrors *g = new TGraph2DErrors(ci.size());
+      for (unsigned int i = 0; i < ci.size(); ++i) {
+         const Double_t *x = data->Coords(i);
+         const Double_t y = (*function)(x);
+         g->SetPoint(i, x[0], x[1], y);
+         g->SetPointError(i, 0, 0, ci[i]);
+      }
+      // std::ostringstream os;
+      // os << "Confidence Intervals with " << fConfLevel->GetNumber() << " conf. band.";
+      // g->SetTitle(os.str().c_str());
+
+      g->SetTitle("Confidence Intervals with");
+
+      auto icol = GetColor(model().fConfidenceColor);
+      g->SetLineColor(icol);
+      g->SetFillColor(icol);
+      g->SetFillStyle(3001);
+      g->Draw("C3same");
+      g->SetBit(kCanDelete);
+      return true;
+   }
+   return false;
+}
+
 ///////////////////////////////////////////////
 /// Perform drawing using current model settings
 /// Returns true if any action was done
@@ -836,7 +914,9 @@ bool ROOT::Experimental::RFitPanel::DoDraw()
          graph->GetXaxis()->SetTitle(res->ParName(par).c_str());
          graph->GetYaxis()->SetTitle("FCN" );
       } else if (m.fAdvancedTab == "Confidence") {
-         fillcolor = GetColor(m.fConfidenceColor);
+
+         return DrawConfidenceLevels(res);
+
       } else {
          return false;
       }

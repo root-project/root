@@ -226,8 +226,8 @@
                                  <core:Item key="{key}" text="{value}" />
                               </ComboBox>
                               <Text text="Confidence Level:" />
-                              <StepInput value="{/fContourConfLevel}"
-                                 min="0.000" max="1.000" step="0.001"
+                              <StepInput min="0.000" max="1.000" step="0.001"
+                                 value="{/fContourConfLevel}"
                                  editable="true" displayValuePrecision="3" />
                               <HBox alignItems="Center">
                                  <Text text="Fill Colour:"/>
@@ -262,8 +262,8 @@
                               class="sapUiSizeCompact" hSpacing="0.5"
                               vSpacing="0">
                               <Text text="Confidence Level:"/>
-                              <StepInput value="{/fConfidenceLevel}" min="0.01" max="100" step="0.01"
-                                 editable="true" displayValuePrecision="2" />
+                              <StepInput min="0.000" max="1" step="0.001"
+                                 value="{/fConfidenceLevel}" editable="true" displayValuePrecision="3" />
                               <Text text="Fill color:" />
                               <fitpanel:ColorButton width="50px" color="{/fConfidenceColor}" tooltip="Fill color for confidence plot"/>
                            </l:Grid>
