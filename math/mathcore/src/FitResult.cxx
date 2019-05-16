@@ -98,13 +98,13 @@ FitResult::FitResult(const FitConfig & fconfig) :
 }
 
 void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, const FitConfig & fconfig, const std::shared_ptr<IModelFunction> & func,
-                     bool isValid,  unsigned int sizeOfData, bool binnedFit, const  ROOT::Math::IMultiGenFunction * chi2func, unsigned int ncalls ) 
+                     bool isValid,  unsigned int sizeOfData, bool binnedFit, const  ROOT::Math::IMultiGenFunction * chi2func, unsigned int ncalls )
 {
    // Fill the FitResult after minimization using result from Minimizers
 
    // minimizer must exist
    assert(min);
-   
+
    fValid = isValid;
    fNFree= min->NFree();
    fNCalls = min->NCalls();
@@ -114,7 +114,7 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
    fEdm = min->Edm();
 
    fMinimizer= min;
-   fFitFunc = func; 
+   fFitFunc = func;
 
 
 
@@ -130,15 +130,15 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
 
    // replace ncalls if minimizer does not support it (they are taken then from the FitMethodFunction)
    if (fNCalls == 0) fNCalls = ncalls;
-   
+
    const unsigned int npar = min->NDim();
    if (npar == 0) return;
-   
+
    if (min->X() )
       fParams = std::vector<double>(min->X(), min->X() + npar);
    else {
       // case minimizer does not provide minimum values (it failed) take from configuration
-      fParams.resize(npar); 
+      fParams.resize(npar);
       for (unsigned int i = 0; i < npar; ++i ) {
          fParams[i] = ( fconfig.ParSettings(i).Value() );
       }
@@ -270,7 +270,7 @@ FitResult & FitResult::operator = (const FitResult &rhs) {
    fChi2 = rhs.fChi2;
    fMinimizer = rhs.fMinimizer;
    fObjFunc = rhs.fObjFunc;
-   fFitFunc = rhs.fFitFunc; 
+   fFitFunc = rhs.fFitFunc;
 
    fFixedParams = rhs.fFixedParams;
    fBoundParams = rhs.fBoundParams;
@@ -292,7 +292,7 @@ bool FitResult::Update(const std::shared_ptr<ROOT::Math::Minimizer> & min, bool 
    // update fit result with new status from minimizer
    // ncalls if it is not zero is used instead of value from minimizer
 
-   fMinimizer = min; 
+   fMinimizer = min;
 
    const unsigned int npar = fParams.size();
    if (min->NDim() != npar ) {
@@ -570,7 +570,7 @@ void FitResult::GetConfidenceIntervals(unsigned int n, unsigned int stride1, uns
       return;
    }
    assert(fFitFunc);
-   
+
    // use student quantile in case of normalized errors
    double corrFactor = 1;
    if (fChi2 <= 0 || fNdf == 0) norm = false;
@@ -648,22 +648,22 @@ std::vector<double> FitResult::GetConfidenceIntervals(double cl, bool norm ) con
    // implement confidence intervals using stored data sets (if can be retrieved from objective function)
    // it works only in case of chi2 or binned likelihood fits
     const BinData * data = FittedBinData();
-    std::vector<double> result; 
+    std::vector<double> result;
     if (data) {
        result.resize(data->NPoints() );
-       GetConfidenceIntervals(*data, result.data(), cl, norm);      
+       GetConfidenceIntervals(*data, result.data(), cl, norm);
     }
     else {
       MATH_ERROR_MSG("FitResult::GetConfidenceIntervals","Cannot compute Confidence Intervals without the fit bin data");
     }
-    return result; 
+    return result;
 }
 
 // const BinData * GetFitBinData() const {
 //    // return a pointer to the binned data used in the fit
 //    // works only for chi2 or binned likelihood fits
 //    // thus when the objective function stored is a Chi2Func or a PoissonLikelihood
-//    ROOT::Math::IMultiGenFunction * f = fObjFunc->get(); 
+//    ROOT::Math::IMultiGenFunction * f = fObjFunc->get();
 //    Chi2Function * chi2func = dynamic_cast<Chi2Function*>(f);
 //    if (chi2func) return &(chi2func->Data());
 //    PoissonLLFunction * pllfunc = dynamic_cast<PoissonLLFunction*>(f);
@@ -677,11 +677,60 @@ std::vector<double> FitResult::GetConfidenceIntervals(double cl, bool norm ) con
 // }
 
 const BinData * FitResult::FittedBinData() const {
-   return dynamic_cast<const BinData*> ( fFitData.get() ); 
-} 
-      
+   return dynamic_cast<const BinData*> ( fFitData.get() );
+}
 
-     
+////////////////////////////////////////////////////////////////////////////////
+///  Scan parameter ipar between value of xmin and xmax
+///  A array for x and y points should be provided
+
+bool FitResult::Scan(unsigned int ipar, unsigned int &npoints, double *pntsx, double *pntsy, double xmin, double xmax)
+{
+   if (!pntsx || !pntsy || !npoints)
+      return false;
+
+   if (!fMinimizer) {
+      MATH_ERROR_MSG("FitResult::Scan", "Minimizer is not available - cannot Scan");
+      return false;
+   }
+
+   return fMinimizer->Scan(ipar, npoints, pntsx, pntsy, xmin, xmax);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create a 2D contour around the minimum for the parameter ipar and jpar
+/// if a minimum does not exist or is invalid it will return false
+/// A array for x and y points should be provided
+/// Pass optionally the confidence level, default is 0.683
+/// it is assumed that ErrorDef() defines the right error definition
+/// (i.e 1 sigma error for one parameter). If not the confidence level are scaled to new level
+
+bool FitResult::Contour(unsigned int ipar, unsigned int jpar, unsigned int &npoints, double *pntsx, double *pntsy, double confLevel)
+{
+   if (!pntsx || !pntsy || !npoints)
+      return false;
+
+   if (!fMinimizer) {
+      MATH_ERROR_MSG("FitResult::Contour", "Minimizer is not available - cannot produce Contour");
+      return false;
+   }
+
+   // get error level used for fitting
+   double upScale = fMinimizer->ErrorDef();
+
+   double upVal = TMath::ChisquareQuantile(confLevel, 2); // 2 is number of parameter we do the contour
+
+   // set required error definition in minimizer
+   fMinimizer->SetErrorDef(upScale * upVal);
+
+   bool ret = fMinimizer->Contour(ipar, jpar, npoints, pntsx, pntsy);
+
+   // restore the error level used for fitting
+   fMinimizer->SetErrorDef(upScale);
+
+   return ret;
+}
+
    } // end namespace Fit
 
 } // end namespace ROOT
