@@ -215,6 +215,7 @@ void ROOT::Experimental::RFitPanelModel::Initialize()
 
    fContourPoints = 40;
    fScanPoints = 40;
+   fContourConfLevel = 0.683;
    fConfidenceLevel = 0.683;
 }
 
