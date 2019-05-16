@@ -233,9 +233,8 @@
                                  min="0.000" max="100.000" step="0.001"
                                  editable="true" displayValuePrecision="3" />
                               <HBox alignItems="Center">
-                                 <Label text="Fill Colour:"
-                                    labelFor="colorContour" />
-                                 <fitpanel:ColorButton id="colorContour" width="50px" color="{/fContourColor}" tooltip="Fill color for contour plot"/>
+                                 <Text text="Fill Colour:"/>
+                                 <fitpanel:ColorButton width="50px" color="{/fContourColor}" tooltip="Fill color for contour plot"/>
                               </HBox>
                               <CheckBox id="contourImpose"
                                  text="Super impose" selected="{/fContourSuperImpose}" />
@@ -246,8 +245,7 @@
                               class="sapUiSizeCompact" hSpacing="0.5"
                               vSpacing="0">
                               <Text text="Number of Points:" />
-                              <StepInput value="{/fScanPoints} min="0" max="100" step="1"
-                                 editable="true" />
+                              <StepInput value="{/fScanPoints}" min="0" max="100" step="1" editable="true" />
                               <Text text="Parameter:" />
                               <ComboBox selectedKey="{/fScanId}"
                                  items="{ path: '/fAdvancedPars' }">
@@ -263,16 +261,15 @@
                                  editable="true" displayValuePrecision="4" />
                            </l:Grid>
                         </IconTabFilter>
-                        <IconTabFilter key="Intervals" text="Conf Intervals">
+                        <IconTabFilter key="Confidence" text="Conf Intervals">
                            <l:Grid defaultSpan="XL6 L6 M6 S6"
                               class="sapUiSizeCompact" hSpacing="0.5"
                               vSpacing="0">
-                              <Text text="Confidence Level:" />
-                              <StepInput id="ConfLevelInt"
-                                 value="0.95" min="0.01" max="100" step="0.01"
+                              <Text text="Confidence Level:"/>
+                              <StepInput value="{/fConfidenceLevel}" min="0.01" max="100" step="0.01"
                                  editable="true" displayValuePrecision="2" />
                               <Text text="Fill color:" />
-                              <Button press="colorPickerConf" id="colorConf" width="50px"/>
+                              <fitpanel:ColorButton width="50px" color="{/fConfidenceColor}" tooltip="Fill color for confidence plot"/>
                            </l:Grid>
                         </IconTabFilter>
                      </items>
