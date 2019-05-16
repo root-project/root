@@ -19,6 +19,7 @@ if(ROOT_python_FOUND)
                     MACRO PyROOT_cpp11tests.py
                     COPY_TO_BUILDDIR Cpp11Features.C
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ Cpp11Features.C+
+                    ENVIRONMENT EXP_PYROOT=${exp_pyroot}
                     ${PYTESTS_WILLFAIL})
                                          
 endif()
