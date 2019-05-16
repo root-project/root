@@ -47,6 +47,7 @@ class RFitPanel {
 
    std::vector<TObject*> fObjects;    ///<! objects provided directly to panel for fitting
    std::string fCanvName;             ///<! v6 canvas name used to display fit, will be created if not exists
+   std::string fPadName;              ///<! v6 pad name in the canvas, where object is (was) drawn
 
    std::shared_ptr<RCanvas> fCanvas; ///<! v7 canvas used to display results
    std::shared_ptr<RH1D> fFitHist;   ///<! v7 histogram for fitting
@@ -70,19 +71,14 @@ class RFitPanel {
 
    void GetFunctionsFromSystem();
 
-   /// process data from UI
    void ProcessData(unsigned connid, const std::string &arg);
+
+   RFitPanelModel &model();
 
    int UpdateModel(const std::string &json);
 
    bool DoFit();
    bool DoDraw();
-
-   void DrawContour(const std::string &model);
-
-   void DrawScan(const std::string &model);
-
-   RFitPanelModel &model();
 
    void SelectObject(const std::string &objid);
    TObject *GetSelectedObject(const std::string &objid, int &kind);
@@ -93,6 +89,8 @@ class RFitPanel {
    TFitResult *FindFitResult(const std::string &funcid);
    std::unique_ptr<TF1> GetFitFunction(const std::string &funcid);
    void SelectFunction(const std::string &funcid);
+
+   Color_t GetColor(const std::string &colorid);
 
    TPad *GetDrawPad(TObject *obj, bool force = false);
 
