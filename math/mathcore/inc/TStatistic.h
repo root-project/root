@@ -46,7 +46,7 @@ private:
 
 public:
 
-   TStatistic(const char *name = "") : fName(name), fN(0), fW(0.), fW2(0.), fM(0.), fM2(0.) { }
+   TStatistic(const char *name = "") : fName(name), fN(0), fW(0.), fW2(0.), fM(0.), fM2(0.), fMin(TMath::Limits<Double_t>::Max()), fMax(TMath::Limits<Double_t>::Min()) { }
    TStatistic(const char *name, Int_t n, const Double_t *val, const Double_t *w = 0);
    ~TStatistic();
 
@@ -76,7 +76,7 @@ public:
    void Print(Option_t * = "") const;
    void ls(Option_t *opt = "") const { Print(opt); }
 
-   ClassDef(TStatistic,2)  ///< Named statistical variable
+   ClassDef(TStatistic,3)  // Named statistical variable
 };
 
 #endif

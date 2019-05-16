@@ -30,7 +30,7 @@ templateClassImp(TStatistic);
 ///
 /// Recursively calls the TStatistic::Fill() function to fill the object.
 TStatistic::TStatistic(const char *name, Int_t n, const Double_t *val, const Double_t *w)
-         : fName(name), fN(0), fW(0.), fW2(0.), fM(0.), fM2(0.)
+         : fName(name), fN(0), fW(0.), fW2(0.), fM(0.), fM2(0.), fMin(TMath::Limits<Double_t>::Max()), fMax(TMath::Limits<Double_t>::Min())
 {
    if (n > 0) {
       for (Int_t i = 0; i < n; i++) {
@@ -75,11 +75,18 @@ void TStatistic::Fill(Double_t val, Double_t w) {
 
 
    if (w == 0) return;
-
+   // increase data count
    fN++;
 
+   // update sum of weights
    Double_t tW = fW + w;
+
+   // update sum of (value * weight) pairs
    fM += w * val;
+
+   // update minimum and maximum values
+   fMin = (val < fMin) ? val : fMin;
+   fMax = (val > fMax) ? val : fMax;
 
 //      Double_t dt = val - fM ;
    if (tW == 0) {
@@ -87,15 +94,7 @@ void TStatistic::Fill(Double_t val, Double_t w) {
       fN--;
       return;
    }
-   // Initialize min and max when filling with first value
-   if (fN == 1) {
-      fMin = val;
-      fMax = val;
-   // Update min and max at each iteration
-   } else if (fN > 1) {
-      fMin = (val < fMin) ? val : fMin;
-      fMax = (val > fMax) ? val : fMax;
-   }
+
    if (fW != 0) {  // from the second time
       Double_t rr = ( tW * val - fM);
       fM2 += w * rr * rr / (tW * fW);
