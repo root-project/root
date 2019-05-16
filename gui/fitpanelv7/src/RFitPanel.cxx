@@ -180,14 +180,16 @@ void ROOT::Experimental::RFitPanel::SelectObject(const std::string &objid)
 
    UpdateFunctionsList();
 
-   if (!m.HasFunction(m.fSelectedFunc)) {
+   std::string selfunc = m.fSelectedFunc;
+
+   if (!m.HasFunction(selfunc)) {
       if (m.fFuncList.size() > 0)
-         m.fSelectedFunc = m.fFuncList[0].id;
+         selfunc = m.fFuncList[0].id;
       else
-         m.fSelectedFunc.clear();
+         selfunc.clear();
    }
 
-   m.UpdateAdvanced(nullptr);
+   SelectFunction(selfunc);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -251,9 +253,9 @@ void ROOT::Experimental::RFitPanel::UpdateFunctionsList()
       m.fFuncList.emplace_back("System", "system::"s + func->GetName(), func->GetName());
    }
 
-   for (auto &pair : fPrevFuncs) {
-      if (pair.first == m.fSelectedData)
-         m.fFuncList.emplace_back("Previous", "previous::"s + pair.second->GetName(), pair.second->GetName());
+   for (auto &entry : fPrevRes) {
+      if (entry.objid == m.fSelectedData)
+         m.fFuncList.emplace_back("Previous", "previous::"s + entry.func->GetName(), entry.func->GetName());
    }
 }
 
@@ -264,6 +266,10 @@ void ROOT::Experimental::RFitPanel::UpdateFunctionsList()
 void ROOT::Experimental::RFitPanel::SelectFunction(const std::string &funcid)
 {
    model().SelectedFunc(funcid, FindFunction(funcid));
+
+   printf("Select function %s fitres %p\n", funcid.c_str(), FindFitResult(funcid));
+
+   model().UpdateAdvanced(FindFitResult(funcid));
 }
 
 
@@ -396,15 +402,6 @@ void ROOT::Experimental::RFitPanel::ProcessData(unsigned connid, const std::stri
 
       DrawScan(arg.substr(8));
 
-   } else if (arg.compare(0, 8, "GETPARS:") == 0) {
-
-      auto &m = model();
-
-      m.SelectedFunc(arg.substr(8), FindFunction(arg.substr(8)));
-
-      TString json = TBufferJSON::ToJSON(&m.fFuncPars);
-      fWindow->Send(fConnId, "PARS:"s + json.Data());
-
    } else if (arg.compare(0, 8, "SETPARS:") == 0) {
 
       auto info = TBufferJSON::FromJSON<RFitPanelModel::RFuncParsList>(arg.substr(8));
@@ -436,13 +433,31 @@ TF1 *ROOT::Experimental::RFitPanel::FindFunction(const std::string &id)
    if (id.compare(0,10,"previous::") == 0) {
       std::string name = id.substr(10);
 
-      for (auto &pair : fPrevFuncs)
-         if (name.compare(pair.second->GetName()) == 0)
-            return pair.second.get();
+      for (auto &entry : fPrevRes)
+         if (name.compare(entry.func->GetName()) == 0)
+            return entry.func.get();
    }
 
    return nullptr;
 }
+
+
+//////////////////////////////////////////////////////////
+/// Creates new instance to make fitting
+
+TFitResult *ROOT::Experimental::RFitPanel::FindFitResult(const std::string &id)
+{
+   if (id.compare(0,10,"previous::") == 0) {
+      std::string name = id.substr(10);
+
+      for (auto &entry : fPrevRes)
+         if (name.compare(entry.func->GetName()) == 0)
+            return entry.res.Get();
+   }
+
+   return nullptr;
+}
+
 
 //////////////////////////////////////////////////////////
 /// Creates new instance to make fitting
@@ -485,6 +500,8 @@ std::unique_ptr<TF1> ROOT::Experimental::RFitPanel::GetFitFunction(const std::st
 void ROOT::Experimental::RFitPanel::DrawContour(const std::string &model)
 {
    // FIXME: do not use static!!!
+
+/*
    static TGraph *graph = nullptr;
    std::string options;
    // TBackCompFitter *fFitter = nullptr;
@@ -520,11 +537,12 @@ void ROOT::Experimental::RFitPanel::DrawContour(const std::string &model)
 
    // printf("Points %d Contour1 %d Contour2 %d ConfLevel %f\n", obj->fContourPoints, obj->fContourPar1,
    // obj->fContourPar2, obj->fConfLevel);
+    */
 }
 
 void ROOT::Experimental::RFitPanel::DrawScan(const std::string &model)
 {
-
+/*
    auto obj = TBufferJSON::FromJSON<RFitPanelModel>(model);
    static TGraph *graph = nullptr;
    // TBackCompFitter *fFitter = nullptr;
@@ -542,8 +560,7 @@ void ROOT::Experimental::RFitPanel::DrawScan(const std::string &model)
    graph->GetYaxis()->SetTitle("FCN");
    graph->Draw("APL");
    gPad->Update();
-
-   // printf("SCAN Points %d, Par %d, Min %d, Max %d\n", obj->fScanPoints, obj->fScanPar, obj->fScanMin, obj->fScanMax);
+*/
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -742,16 +759,20 @@ bool ROOT::Experimental::RFitPanel::DoFit()
    auto fitOpts = m.GetFitOptions();
    auto drawOpts = m.GetDrawOption();
 
+   fitOpts.StoreResult = 1;
+
    TVirtualPad *save = gPad;
 
    auto pad = GetDrawPad(obj);
+
+   TFitResultPtr res;
 
    switch (kind) {
       case kObjectHisto: {
 
          TH1 *hist = dynamic_cast<TH1*>(obj);
          if (hist)
-            ROOT::Fit::FitObject(hist, f1.get(), fitOpts, minOption, drawOpts, drange);
+            res = ROOT::Fit::FitObject(hist, f1.get(), fitOpts, minOption, drawOpts, drange);
 
          break;
       }
@@ -759,14 +780,14 @@ bool ROOT::Experimental::RFitPanel::DoFit()
 
          TGraph *gr = dynamic_cast<TGraph*>(obj);
          if (gr)
-            ROOT::Fit::FitObject(gr, f1.get(), fitOpts, minOption, drawOpts, drange);
+            res = ROOT::Fit::FitObject(gr, f1.get(), fitOpts, minOption, drawOpts, drange);
          break;
       }
       case kObjectMultiGraph: {
 
          TMultiGraph *mg = dynamic_cast<TMultiGraph*>(obj);
          if (mg)
-            ROOT::Fit::FitObject(mg, f1.get(), fitOpts, minOption, drawOpts, drange);
+            res = ROOT::Fit::FitObject(mg, f1.get(), fitOpts, minOption, drawOpts, drange);
 
          break;
       }
@@ -774,7 +795,7 @@ bool ROOT::Experimental::RFitPanel::DoFit()
 
          TGraph2D *g2d = dynamic_cast<TGraph2D*>(obj);
          if (g2d)
-            ROOT::Fit::FitObject(g2d, f1.get(), fitOpts, minOption, drawOpts, drange);
+            res = ROOT::Fit::FitObject(g2d, f1.get(), fitOpts, minOption, drawOpts, drange);
 
          break;
       }
@@ -800,14 +821,15 @@ bool ROOT::Experimental::RFitPanel::DoFit()
       pad->Update();
    }
 
-   m.UpdateAdvanced(f1.get());
+   printf("FIT RESULT %p\n", res.Get());
 
    std::string funcname = f1->GetName();
    if ((funcname.compare(0,4,"prev") == 0) && (funcname.find("-") > 4))
       funcname.erase(0, funcname.find("-") + 1);
-   funcname = "prev"s + std::to_string(fPrevFuncs.size() + 1) + "-"s + funcname;
+   funcname = "prev"s + std::to_string(fPrevRes.size() + 1) + "-"s + funcname;
    f1->SetName(funcname.c_str());
-   fPrevFuncs.emplace(m.fSelectedData, std::move(f1));
+
+   fPrevRes.emplace_back(m.fSelectedData, f1, res);
 
    UpdateFunctionsList();
 

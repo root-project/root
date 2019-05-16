@@ -213,32 +213,34 @@ void ROOT::Experimental::RFitPanelModel::Initialize()
    fPrint = 0;
 
    fAdvancedTab = "Contour";
+
+   fContourPoints = 40;
+   fScanPoints = 40;
+
 }
 
-/// Update advanced parameters associated with fit function for histogram
+/// Update advanced parameters associated with fit function
 
-void ROOT::Experimental::RFitPanelModel::UpdateAdvanced(TF1 *func)
+void ROOT::Experimental::RFitPanelModel::UpdateAdvanced(TFitResult *res)
 {
-   fContour1.clear();
-   fContour2.clear();
-   fScan.clear();
-   fContourPar1Id = "0";
-   fContourPar2Id = "0";
-   fScanId = "0";
+   fAdvancedPars.clear();
 
-   fHasAdvanced = (func!=nullptr);
+   fHasAdvanced = (res!=nullptr);
 
-   if (func) {
-      for (int n = 0; n < func->GetNpar(); ++n) {
-         fContour1.emplace_back(std::to_string(n), func->GetParName(n));
-         fContour2.emplace_back(std::to_string(n), func->GetParName(n));
-         fScan.emplace_back(std::to_string(n), func->GetParName(n));
-      }
-      fFuncPars.GetParameters(func); // take func parameters
-      fFuncPars.name = "hist::"s + func->GetName(); // clearly mark this as function from histogram
-   } else {
-      // fFuncPars.Clear();
-   }
+   auto checkid = [&](std::string &id, const std::string &dflt) {
+      if (!res) { id.clear(); return; }
+      for (auto &item : fAdvancedPars)
+         if (item.key == id) return;
+      id = dflt;
+   };
+
+   if (res)
+      for (unsigned n = 0; n < res->NPar(); ++n)
+         fAdvancedPars.emplace_back(std::to_string(n), res->ParName(n));
+
+   checkid(fContourPar1Id, "0");
+   checkid(fContourPar2Id, "1");
+   checkid(fScanId, "0");
 }
 
 
