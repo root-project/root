@@ -431,7 +431,7 @@ PyObject* AsCObject(PyObject* dummy, PyObject* args)
 // Return object proxy as an opaque CObject.
     void* addr = GetCPPInstanceAddress(dummy, args);
     if (addr)
-        return CPyCppyy_PyCapsule_New((void*)(*(intptr_t*)addr), nullptr, nullptr);
+        return CPyCppyy_PyCapsule_New((void*)addr, nullptr, nullptr);
 
     return nullptr;
 }
