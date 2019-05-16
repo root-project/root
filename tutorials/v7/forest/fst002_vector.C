@@ -58,10 +58,10 @@ void Write()
    // In return, we get a unique pointer to a forest that we can fill
    auto forest = ROutputForest::Recreate(std::move(model), "F", kForestFileName);
 
-   TH1F *hpx = new TH1F("hpx", "This is the px distribution", 100, -4, 4);
-   hpx->SetFillColor(48);
+   TH1F hpx("hpx", "This is the px distribution", 100, -4, 4);
+   hpx.SetFillColor(48);
 
-   TCanvas *c1 = new TCanvas("c1", "Dynamic Filling Example", 200, 10, 700, 500);
+   auto c1 = new TCanvas("c1", "Dynamic Filling Example", 200, 10, 700, 500);
 
    gRandom->SetSeed();
    for (int i = 0; i < kNEvents; i++) {
@@ -77,9 +77,9 @@ void Write()
          float px, py, pz;
          gRandom->Rannor(px, py);
          pz = px*px + py*py;
-         float random = gRandom->Rndm(1);
+         auto random = gRandom->Rndm(1);
 
-         hpx->Fill(px);
+         hpx.Fill(px);
 
          fldVpx->emplace_back(px);
          fldVpy->emplace_back(py);
@@ -89,7 +89,7 @@ void Write()
 
       // Gui updates
       if (i && (i % kUpdateGuiFreq) == 0) {
-         if (i == kUpdateGuiFreq) hpx->Draw();
+         if (i == kUpdateGuiFreq) hpx.Draw();
          c1->Modified();
          c1->Update();
          if (gSystem->ProcessEvents())
@@ -99,7 +99,7 @@ void Write()
       forest->Fill();
    }
 
-   hpx->DrawCopy();
+   hpx.DrawCopy();
 
    // The forest unique pointer goes out of scope here.  On destruction, the forest flushes unwritten data to disk
    // and closes the attached ROOT file.
@@ -123,20 +123,20 @@ void Read()
    std::cout << forest->GetInfo();
    // In a future version of RForest, there will be support for forest->Show() and forest->Scan()
 
-   TCanvas *c2 = new TCanvas("c2", "Dynamic Filling Example", 200, 10, 700, 500);
-   TH1F *h = new TH1F("h", "This is the px distribution", 100, -4, 4);
-   h->SetFillColor(48);
+   auto c2 = new TCanvas("c2", "Dynamic Filling Example", 200, 10, 700, 500);
+   TH1F h("h", "This is the px distribution", 100, -4, 4);
+   h.SetFillColor(48);
 
    // Iterate through all the events using i as event number and as an index for accessing the view
    for (auto entryId : *forest) {
       forest->LoadEntry(entryId);
 
       for (unsigned int j = 0; j < fldVpx->size(); ++j) {
-         h->Fill(fldVpx->at(j));
+         h.Fill(fldVpx->at(j));
       }
 
       if (entryId && (entryId % kUpdateGuiFreq) == 0) {
-         if (entryId == kUpdateGuiFreq) h->Draw();
+         if (entryId == kUpdateGuiFreq) h.Draw();
          c2->Modified();
          c2->Update();
          if (gSystem->ProcessEvents())
@@ -145,7 +145,7 @@ void Read()
    }
 
    // Prevent the histogram from disappearing
-   h->DrawCopy();
+   h.DrawCopy();
 }
 
 

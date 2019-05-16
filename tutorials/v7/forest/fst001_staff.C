@@ -15,10 +15,6 @@
 // Functionality, interface, and data format is still subject to changes.
 // Do not use for real data!
 
-// The following line should disappear in a future version of RForest, when
-// the common template specializations of RField are part of the LinkDef.h
-R__LOAD_LIBRARY(ROOTForest)
-
 #include <ROOT/RForest.hxx>
 #include <ROOT/RForestModel.hxx>
 
@@ -95,17 +91,17 @@ void Analyze() {
    std::cout << forest->GetInfo();
    // In a future version of RForest, there will be support for forest->Show() and forest->Scan()
 
-   TCanvas *c = new TCanvas("c", "", 200, 10, 700, 500);
-   TH1I *h = new TH1I("h", "Age Distribution CERN, 1988", 100, 0, 100);
-   h->SetFillColor(48);
+   auto c = new TCanvas("c", "", 200, 10, 700, 500);
+   TH1I h("h", "Age Distribution CERN, 1988", 100, 0, 100);
+   h.SetFillColor(48);
 
    for (auto entryId : *forest) {
       // Populate fldAge
       forest->LoadEntry(entryId);
-      h->Fill(*fldAge);
+      h.Fill(*fldAge);
    }
 
-   h->DrawCopy();
+   h.DrawCopy();
 }
 
 void fst001_staff() {

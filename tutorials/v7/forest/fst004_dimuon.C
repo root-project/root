@@ -120,14 +120,15 @@ public:
 /// A wrapper for ROOT's InvariantMass function that takes std::vector instead of RVecs
 template <typename T>
 T InvariantMassStdVector(
-   const std::vector<T>& pt, const std::vector<T>& eta, const std::vector<T>& phi, const std::vector<T>& mass)
+ std::vector<T>& pt, std::vector<T>& eta, std::vector<T>& phi, std::vector<T>& mass)
 {
    assert(pt.size() == eta.size() == phi.size() == mass.size() == 2);
 
-   ROOT::VecOps::RVec<float> rvPt(pt);
-   ROOT::VecOps::RVec<float> rvEta(eta);
-   ROOT::VecOps::RVec<float> rvPhi(phi);
-   ROOT::VecOps::RVec<float> rvMass(mass);
+   // We adopt the memory here, no copy
+   ROOT::RVec<float> rvPt(pt.data(), pt.size());
+   ROOT::RVec<float> rvEta(eta.data(), eta.size());
+   ROOT::RVec<float> rvPhi(phi.data(), phi.data());
+   ROOT::RVec<float> rvMass(mass.data(), mass.size());
 
    return InvariantMass(rvPt, rvEta, rvPhi, rvMass);
 }
