@@ -209,15 +209,13 @@ void ROOT::Experimental::RFitPanelModel::Initialize()
 
    fSelectMethodMin = kFP_MIGRAD;
 
-   // fOperation = 0;
    fPrint = 0;
 
    fAdvancedTab = "Contour";
 
    fContourPoints = 40;
    fScanPoints = 40;
-   fConfidenceLevel = 0.95;
-
+   fConfidenceLevel = 0.683;
 }
 
 /// Update advanced parameters associated with fit function

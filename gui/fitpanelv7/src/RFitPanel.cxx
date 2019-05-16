@@ -259,19 +259,15 @@ void ROOT::Experimental::RFitPanel::UpdateFunctionsList()
    }
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-/// Select function
+/// Select fit function
 
 void ROOT::Experimental::RFitPanel::SelectFunction(const std::string &funcid)
 {
    model().SelectedFunc(funcid, FindFunction(funcid));
 
-   printf("Select function %s fitres %p\n", funcid.c_str(), FindFitResult(funcid));
-
    model().UpdateAdvanced(FindFitResult(funcid));
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Assign histogram to use with fit panel - without ownership
@@ -806,28 +802,56 @@ bool ROOT::Experimental::RFitPanel::DoDraw()
       Color_t fillcolor = 0;
       bool superimpose = false;
 
+      TGraph *graph = nullptr;
+
       if (m.fAdvancedTab == "Contour") {
-         fillcolor = GetColor(m.fContourColor);
          superimpose = m.fContourSuperImpose;
+         int par1 = std::stoi(m.fContourPar1Id);
+         int par2 = std::stoi(m.fContourPar2Id);
+
+         graph = new TGraph(m.fContourPoints);
+
+         // printf("Contour %d %d lvl %7.5f\n", par1, par2, m.fContourConfLevel);
+
+         if (!res->Contour(par1, par2, graph, m.fContourConfLevel)) {
+            delete graph;
+            return false;
+         }
+
+         fillcolor = GetColor(m.fContourColor);
+         graph->SetFillColor(fillcolor);
+         graph->GetXaxis()->SetTitle( res->ParName(par1).c_str() );
+         graph->GetYaxis()->SetTitle( res->ParName(par2).c_str() );
+
 
       } else if (m.fAdvancedTab == "Scan") {
-
+         int par = std::stoi(m.fScanId);
+         graph = new TGraph( m.fScanPoints);
+         if (!res->Scan( par, graph, m.fScanMin, m.fScanMax)) {
+            delete graph;
+            return false;
+         }
+         graph->SetLineColor(kBlue);
+         graph->SetLineWidth(2);
+         graph->GetXaxis()->SetTitle(res->ParName(par).c_str());
+         graph->GetYaxis()->SetTitle("FCN" );
       } else if (m.fAdvancedTab == "Confidence") {
          fillcolor = GetColor(m.fConfidenceColor);
       } else {
          return false;
       }
 
-      TGraph *gr = new TGraph(10);
-      for (int n=0;n<10;++n) gr->SetPoint(n, n*0.1, n*0.1);
-      if (fillcolor) gr->SetLineColor(fillcolor);
-      gr->SetBit(kCanDelete);
+      if (!graph) return false;
+
+
+
+      graph->SetBit(kCanDelete);
 
       if (superimpose) {
-         gr->Draw("L");
+         graph->Draw("LF");
       } else {
          pad->Clear();
-         gr->Draw("AL");
+         graph->Draw("ALF");
       }
 
       pad->Modified();
