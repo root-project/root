@@ -375,6 +375,11 @@ void ROOT::Experimental::RFitPanel::ProcessData(unsigned connid, const std::stri
 
    } else if (arg == "RELOAD") {
 
+      GetFunctionsFromSystem();
+
+      UpdateDataSet();
+      UpdateFunctionsList();
+
       SendModel();
 
    } else if (arg.compare(0, 7, "UPDATE:") == 0) {
@@ -393,14 +398,6 @@ void ROOT::Experimental::RFitPanel::ProcessData(unsigned connid, const std::stri
       if (UpdateModel(arg.substr(7)) >= 0)
          if (DoDraw())
             SendModel();
-
-   } else if (arg.compare(0, 11, "SETCONTOUR:") == 0) {
-
-      DrawContour(arg.substr(11));
-
-   } else if (arg.compare(0, 8, "SETSCAN:") == 0) {
-
-      DrawScan(arg.substr(8));
 
    } else if (arg.compare(0, 8, "SETPARS:") == 0) {
 
@@ -494,135 +491,6 @@ std::unique_ptr<TF1> ROOT::Experimental::RFitPanel::GetFitFunction(const std::st
 }
 
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-/// Dummy function, called when "Fit" button pressed in UI
-
-void ROOT::Experimental::RFitPanel::DrawContour(const std::string &model)
-{
-   // FIXME: do not use static!!!
-
-/*
-   static TGraph *graph = nullptr;
-   std::string options;
-   // TBackCompFitter *fFitter = nullptr;
-   auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanelModel>(model);
-
-   if (!obj->fContourImpose) {
-      if (graph) {
-         delete graph;
-         options = "ALF";
-         graph = nullptr;
-      }
-   } else {
-      options = "LF";
-   }
-
-   if (!graph)
-      graph = new TGraph(static_cast<int>(obj->fContourPoints));
-
-   auto colorid = TColor::GetColor(std::stoi(obj->fColorContour[0]), std::stoi(obj->fColorContour[1]),
-                                   std::stoi(obj->fColorContour[2]));
-   graph->SetLineColor(colorid);
-
-   if (obj->fContourPar1 == obj->fContourPar2) {
-      Error("DrawContour", "Parameters cannot be the same");
-      return;
-   }
-
-   // fFitter->Contour(obj->fContourPar1, obj->fContourPar2, graph, obj->fConfLevel);
-   // graph->GetXaxis()->SetTitle( fFitter->GetParName(obj->fContourPar1) );
-   // graph->GetYaxis()->SetTitle( fFitter->GetParName(obj->fContourPar2) );
-   // graph->Draw( options.c_str() );
-   gPad->Update();
-
-   // printf("Points %d Contour1 %d Contour2 %d ConfLevel %f\n", obj->fContourPoints, obj->fContourPar1,
-   // obj->fContourPar2, obj->fConfLevel);
-    */
-}
-
-void ROOT::Experimental::RFitPanel::DrawScan(const std::string &model)
-{
-/*
-   auto obj = TBufferJSON::FromJSON<RFitPanelModel>(model);
-   static TGraph *graph = nullptr;
-   // TBackCompFitter *fFitter = nullptr;
-
-   // FIXME: do not use static!!!
-   if (graph) {
-      delete graph;
-   }
-   graph = new TGraph(static_cast<int>(obj->fScanPoints));
-   // fFitter->Scan(obj->fScanPar, graph, obj->fScanMin, obj->fScanMax);
-
-   graph->SetLineColor(kBlue);
-   graph->SetLineWidth(2);
-   // graph->GetXaxis()->SetTitle(fFitter->GetParName(obj->fScanPar)); ///???????????
-   graph->GetYaxis()->SetTitle("FCN");
-   graph->Draw("APL");
-   gPad->Update();
-*/
-}
-
-///////////////////////////////////////////////////////////////////
-/// Returns pad where histogram is drawn
-/// If canvas not exists, create new one
-
-TPad *ROOT::Experimental::RFitPanel::GetDrawPad(TObject *obj, bool force)
-{
-   if (!obj || (!force && (model().fNoDrawing || model().fNoStoreDraw)))
-      return nullptr;
-
-   std::function<TPad*(TPad*)> check = [&](TPad *pad) {
-      TPad *res = nullptr;
-      if (pad) {
-         TIter next(pad->GetListOfPrimitives());
-         TObject *prim = nullptr;
-         while (!res && (prim = next())) {
-            res = (prim == obj) ? pad : check(dynamic_cast<TPad *>(prim));
-         }
-      }
-
-      return res;
-   };
-
-   if (!fCanvName.empty()) {
-      auto drawcanv = dynamic_cast<TCanvas *> (gROOT->GetListOfCanvases()->FindObject(fCanvName.c_str()));
-      auto drawpad = check(drawcanv);
-      if (drawpad) {
-         drawpad->cd();
-         return drawpad;
-      }
-      if (drawcanv) {
-         drawcanv->Clear();
-         drawcanv->cd();
-         obj->Draw();
-         return drawcanv;
-      }
-      fCanvName.clear();
-   }
-
-   TObject *c = nullptr;
-   TIter nextc(gROOT->GetListOfCanvases());
-   while ((c = nextc())) {
-      auto drawpad = check(dynamic_cast<TCanvas* >(c));
-      if (drawpad) {
-         drawpad->cd();
-         fCanvName = c->GetName();
-         return drawpad;
-      }
-   }
-
-   auto canv = gROOT->MakeDefCanvas();
-   canv->SetName("fpc");
-   canv->SetTitle("Fit panel drawings");
-   fCanvName = canv->GetName();
-
-   canv->cd();
-   obj->Draw();
-
-   return canv;
-}
-
 ////////////////////////////////////////////
 /// Update fit model
 /// returns -1 if JSON fails
@@ -704,10 +572,13 @@ TF1* ROOT::Experimental::RFitPanel::copyTF1(TF1* f)
    return fnew;
 }
 
+
+/////////////////////////////////////////////////////////////
+// Looks for all the functions registered in the current ROOT
+// session.
+
 void ROOT::Experimental::RFitPanel::GetFunctionsFromSystem()
 {
-   // Looks for all the functions registered in the current ROOT
-   // session.
 
    fSystemFuncs.clear();
 
@@ -737,6 +608,67 @@ void ROOT::Experimental::RFitPanel::GetFunctionsFromSystem()
             fSystemFuncs.emplace_back( copyTF1(func) );
       }
    }
+}
+
+///////////////////////////////////////////////////////////////////
+/// Returns pad where histogram is drawn
+/// If canvas not exists, create new one
+
+TPad *ROOT::Experimental::RFitPanel::GetDrawPad(TObject *obj, bool force)
+{
+   if (!obj || (!force && (model().fNoDrawing || model().fNoStoreDraw)))
+      return nullptr;
+
+   std::function<TPad*(TPad*)> check = [&](TPad *pad) {
+      TPad *res = nullptr;
+      if (!pad) return res;
+      if (!fPadName.empty() && (fPadName.compare(pad->GetName()) == 0)) return pad;
+      TIter next(pad->GetListOfPrimitives());
+      TObject *prim = nullptr;
+      while (!res && (prim = next())) {
+         res = (prim == obj) ? pad : check(dynamic_cast<TPad *>(prim));
+      }
+      return res;
+   };
+
+   if (!fCanvName.empty()) {
+      auto drawcanv = dynamic_cast<TCanvas *> (gROOT->GetListOfCanvases()->FindObject(fCanvName.c_str()));
+      auto drawpad = check(drawcanv);
+      if (drawpad) {
+         drawpad->cd();
+         return drawpad;
+      }
+      if (drawcanv) {
+         drawcanv->Clear();
+         drawcanv->cd();
+         obj->Draw();
+         return drawcanv;
+      }
+      fCanvName.clear();
+      fPadName.clear();
+   }
+
+   TObject *c = nullptr;
+   TIter nextc(gROOT->GetListOfCanvases());
+   while ((c = nextc())) {
+      auto drawpad = check(dynamic_cast<TCanvas* >(c));
+      if (drawpad) {
+         drawpad->cd();
+         fCanvName = c->GetName();
+         fPadName = drawpad->GetName();
+         return drawpad;
+      }
+   }
+
+   auto canv = gROOT->MakeDefCanvas();
+   canv->SetName("fpc");
+   canv->SetTitle("Fit panel drawings");
+   fPadName = fCanvName = canv->GetName();
+
+   canv->cd();
+   obj->Draw();
+
+   return canv;
 }
 
 ///////////////////////////////////////////////
@@ -821,8 +753,6 @@ bool ROOT::Experimental::RFitPanel::DoFit()
       pad->Update();
    }
 
-   printf("FIT RESULT %p\n", res.Get());
-
    std::string funcname = f1->GetName();
    if ((funcname.compare(0,4,"prev") == 0) && (funcname.find("-") > 4))
       funcname.erase(0, funcname.find("-") + 1);
@@ -841,6 +771,18 @@ bool ROOT::Experimental::RFitPanel::DoFit()
    return true; // provide client with latest changes
 }
 
+
+///////////////////////////////////////////////
+/// Exract color from string
+/// Should be coded as #ff00ff string
+Color_t ROOT::Experimental::RFitPanel::GetColor(const std::string &colorid)
+{
+   if ((colorid.length() != 7) || (colorid.compare(0,1,"#") != 0)) return 0;
+
+   return TColor::GetColor(colorid.c_str());
+}
+
+
 ///////////////////////////////////////////////
 /// Perform drawing using current model settings
 /// Returns true if any action was done
@@ -856,6 +798,45 @@ bool ROOT::Experimental::RFitPanel::DoDraw()
    auto pad = GetDrawPad(obj, true);
    if (!pad)
       return false;
+
+   if (m.fHasAdvanced && (m.fSelectedTab == "Advanced")) {
+      TFitResult *res = FindFitResult(m.fSelectedFunc);
+      if (!res) return false;
+
+      Color_t fillcolor = 0;
+      bool superimpose = false;
+
+      if (m.fAdvancedTab == "Contour") {
+         fillcolor = GetColor(m.fContourColor);
+         superimpose = m.fContourSuperImpose;
+
+      } else if (m.fAdvancedTab == "Scan") {
+
+      } else if (m.fAdvancedTab == "Confidence") {
+         fillcolor = GetColor(m.fConfidenceColor);
+      } else {
+         return false;
+      }
+
+      TGraph *gr = new TGraph(10);
+      for (int n=0;n<10;++n) gr->SetPoint(n, n*0.1, n*0.1);
+      if (fillcolor) gr->SetLineColor(fillcolor);
+      gr->SetBit(kCanDelete);
+
+      if (superimpose) {
+         gr->Draw("L");
+      } else {
+         pad->Clear();
+         gr->Draw("AL");
+      }
+
+      pad->Modified();
+      pad->Update();
+
+      printf("Do advanced %s color %d\n", m.fAdvancedTab.c_str(), fillcolor);
+
+      return true;
+   }
 
    // find already existing functions, not try to create something new
    TF1 *func = FindFunction(m.fSelectedFunc);
