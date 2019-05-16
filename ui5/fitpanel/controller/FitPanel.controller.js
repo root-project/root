@@ -2,8 +2,9 @@ sap.ui.define([
    'rootui5/panel/Controller',
    'sap/ui/model/json/JSONModel',
    'sap/ui/model/Filter',
-   'sap/ui/model/FilterOperator'
-], function (GuiPanelController, JSONModel, Filter, FilterOperator) {
+   'sap/ui/model/FilterOperator',
+   "sap/m/ColorPalettePopover"
+], function (GuiPanelController, JSONModel, Filter, FilterOperator, ColorPalettePopover) {
 
    "use strict";
 
@@ -109,14 +110,9 @@ sap.ui.define([
          this.sendModel();
       },
 
-      //Change the input text field. When a function is seleced, it appears on the text input field and
-      //on the text area.
+      // when change function many elements may be changed - resync model
       onSelectedFuncChange: function() {
-
-         var func = this.data().fSelectedFunc;
-
-         if (this.websocket && func)
-            this.websocket.Send("GETPARS:" + func);
+         this.sendModel();
       },
 
       // approve current fSelectMethodMin value - and change if require
@@ -144,19 +140,24 @@ sap.ui.define([
          this.refresh();
       },
 
-      testMethodVal: function(val) {
-        return val == "0";
+      onContourPar1Change: function() {
+         var data = this.data();
+         if (data.fContourPar1Id == data.fContourPar2Id) {
+            var par2 = parseInt(data.fContourPar2Id);
+            if (par2 > 0) par2--; else par2 = 1;
+            data.fContourPar2Id = par2.toString();
+            this.refresh();
+         }
       },
 
-      //Change the selected checkbox of Draw Options
-      //if Do not Store is selected then No Drawing is also selected
-      storeChange: function(){
+      onContourPar2Change: function() {
          var data = this.data();
-         var fDraw = this.getView().byId("noStore").getSelected();
-         console.log("fDraw = ", fDraw);
-         data.fNoStore = fDraw;
-         this.refresh();
-         console.log("fNoDrawing ", data.fNoStore);
+         if (data.fContourPar1Id == data.fContourPar2Id) {
+            var par1 = parseInt(data.fContourPar1Id);
+            if (par1 > 0) par1--; else par1 = 1;
+            data.fContourPar1Id = par1.toString();
+            this.refresh();
+         }
       },
 
       drawContour: function() {
@@ -206,16 +207,23 @@ sap.ui.define([
       },
 
       colorPickerContour: function (oEvent) {
-         this.inputId = oEvent.getSource().getId();
-         if (!this.oColorPickerPopoverContour) {
-            this.oColorPickerPopoverContour = new sap.ui.unified.ColorPickerPopover({
-               colorString: "blue",
-               mode: sap.ui.unified.ColorPickerMode.HSL,
-               change: this.handleChangeContour.bind(this)
-            });
-         }
-         this.oColorPickerPopoverContour.openBy(oEvent.getSource());
+         // official ROOT colors 1 .. 15, more is not supported by ColorPalettePopover
+         var colorMap = ['black','red','green','blue','yellow','magenta','cyan', '#59d354','#5954d8',
+                         '#fefefe', '#c0b6ac','#4c4c4c','#666666','#7f7f7f', '#999999'];
+         // ,, '#b2b2b2','#cccccc','#e5e5e5','#f2f2f2','#ccc6aa','#ccc6aa','#c1bfa8','#bab5a3','#b2a596','#b7a39b','#ad998c','#9b8e82','#876656','#afcec6'];
+
+          var oCPPop = new ColorPalettePopover( {
+             defaultColor: "cyan",
+             colors: colorMap,
+             colorSelect: function(event) {
+                console.log('select ', event.getParameters().value);
+             }
+          });
+
+          oCPPop.openBy(oEvent.getSource());
       },
+
+
 
       handleChangeContour: function (oEvent) {
          var oView = this.getView();

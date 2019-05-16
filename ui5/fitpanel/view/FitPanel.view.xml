@@ -1,5 +1,6 @@
 <mvc:View class="sapUiSizeCompact" height="100%" width="100%"
    xmlns:mvc="sap.ui.core.mvc" xmlns:core="sap.ui.core" xmlns="sap.m"
+   xmlns:fitpanel="rootui5.fitpanel.controller"
    xmlns:l="sap.ui.layout" controllerName="rootui5.fitpanel.controller.FitPanel">
    <Page id="simplefitpanel_page" title="Simple Fit Panel" showHeader="false">
       <VBox class="sapUiSizeCompact sapUiSmallMarginStart" width="100%">
@@ -9,10 +10,9 @@
                   <l:GridData span="XL4 L4 M4 S4" />
                </layoutData>
            </Text>
-           <ComboBox id="DataSet" class="sapUiSmallMarginBeginEnd"
-               selectedKey="{/fSelectedData}"
+           <ComboBox selectedKey="{/fSelectedData}"
                items="{ path: '/fDataSet', sorter: { path: 'group', group: true, descending: false } }"
-                  change="onSelectedDataChange">
+               change="onSelectedDataChange">
                <core:Item key="{id}" text="{name}" />
                <layoutData>
                   <l:GridData span="XL8 L8 M8 S8" />
@@ -23,8 +23,7 @@
                   <l:GridData span="XL4 L4 M4 S4" />
                </layoutData>
            </Text>
-           <ComboBox id="selectedFuncCombo" class="sapUiSmallMarginBeginEnd"
-               selectedKey="{/fSelectedFunc}"
+           <ComboBox selectedKey="{/fSelectedFunc}"
                items="{ path: '/fFuncList', sorter: { path: 'group', group: true, descending: false } }"
                change="onSelectedFuncChange">
                <core:Item key="{id}" text="{name}" />
@@ -183,10 +182,7 @@
                   </VBox>
                </IconTabFilter>
                <IconTabFilter key="Pars" text="Pars" visible="{/fFuncPars/haspars}">
-                   <HBox>
-                      <Text text="Func: {/fFuncPars/name}"/>
-                      <Button press="pressApplyPars" text="Apply" tooltip="Set parameters"/>
-                   </HBox>
+                   <Text text="Func: {/fFuncPars/name}"/>
                    <Table id="ParsTable" items="{ path: '/fFuncPars/pars' }">
                       <columns>
                          <Column width="75px"><Text text="Name"/></Column>
@@ -218,33 +214,31 @@
                               class="sapUiSizeCompact" hSpacing="0.5"
                               vSpacing="0">
                               <Text text="Number of Points:" />
-                              <StepInput id="contourPoints"
-                                 value="40" min="0" max="100" step="1"
+                              <StepInput value="{/fContourPoints}" min="0" max="1000" step="1"
                                  editable="true" />
                               <Text text="Parameter 1:" />
-                              <ComboBox id="ContourPar1"
-                                 selectedKey="{/fContourPar1Id}"
-                                 items="{ path: '/fContour1', sorter: { path: 'value' } }">
+                              <ComboBox selectedKey="{/fContourPar1Id}"
+                                 change="onContourPar1Change"
+                                 items="{ path: '/fAdvancedPars' }">
                                  <core:Item key="{key}" text="{value}" />
                               </ComboBox>
                               <Text text="Parameter 2:" />
-                              <ComboBox id="ContourPar2"
-                                 selectedKey="{/fContourPar2Id}"
-                                 items="{ path: '/fContour2', sorter: { path: 'value' } }">
+                              <ComboBox selectedKey="{/fContourPar2Id}"
+                                 change="onContourPar2Change"
+                                 items="{ path: '/fAdvancedPars' }">
                                  <core:Item key="{key}" text="{value}" />
                               </ComboBox>
-                              <Text text="Confidene Level:" />
-                              <StepInput id="ConfLevel" value="0.683"
+                              <Text text="Confidence Level:" />
+                              <StepInput value="{/fContourConfLevel}"
                                  min="0.000" max="100.000" step="0.001"
                                  editable="true" displayValuePrecision="3" />
                               <HBox alignItems="Center">
                                  <Label text="Fill Colour:"
                                     labelFor="colorContour" />
-                                 <Button press="colorPickerContour"
-                                    id="colorContour" width="50px"/>
+                                 <fitpanel:ColorButton id="colorContour" width="50px" color="{/fContourColor}" tooltip="Fill color for contour plot"/>
                               </HBox>
                               <CheckBox id="contourImpose"
-                                 text="Super impose" selected="{/fContourImpose}" />
+                                 text="Super impose" selected="{/fContourSuperImpose}" />
                            </l:Grid>
                         </IconTabFilter>
                         <IconTabFilter key="Scan" text="Scan">
@@ -252,21 +246,19 @@
                               class="sapUiSizeCompact" hSpacing="0.5"
                               vSpacing="0">
                               <Text text="Number of Points:" />
-                              <StepInput id="scanPoints"
-                                 value="40" min="0" max="100" step="1"
+                              <StepInput value="{/fScanPoints} min="0" max="100" step="1"
                                  editable="true" />
                               <Text text="Parameter:" />
-                              <ComboBox id="ScanPar"
-                                 selectedKey="{/fScanId}"
-                                 items="{ path: '/fScan', sorter: { path: 'value' } }">
+                              <ComboBox selectedKey="{/fScanId}"
+                                 items="{ path: '/fAdvancedPars' }">
                                  <core:Item key="{key}" text="{value}" />
                               </ComboBox>
                               <Text text="Min:" />
-                              <StepInput id="scanMin" value="0.0001"
+                              <StepInput value="{/fScanMin}"
                                  min="0.0001" max="100.0000" step="0.0001"
                                  editable="true" displayValuePrecision="4" />
                               <Text text="Max:" />
-                              <StepInput id="scanMax" value="0.0001"
+                              <StepInput value="{/fScanMax}"
                                  min="0.0001" max="100.0000" step="0.0001"
                                  editable="true" displayValuePrecision="4" />
                            </l:Grid>
@@ -293,6 +285,7 @@
          <Toolbar>
             <Button text="Update" press="doUpdate" tooltip="Update panel content from server" />
             <ToolbarSpacer/>
+            <Button press="pressApplyPars" text="SetPars" visible="{= ${/fSelectedTab} === 'Pars'}" tooltip="Set function parameters"/>
             <Button text="Fit" press="doFit" tooltip="Fit the histogram" />
             <Button text="Draw" press="doDraw" tooltip="Draw histogram and selected function" />
             <Button text="Close" press="closePanel" tooltip="Close the Fit Panel" />

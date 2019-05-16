@@ -25,8 +25,11 @@
 
 #include "ROOT/RHist.hxx"
 
+#include "TFitResultPtr.h"
+
 #include <memory>
 #include <vector>
+#include <list>
 #include <unordered_map>
 
 #include "TF1.h"
@@ -53,7 +56,15 @@ class RFitPanel {
 
    std::vector<std::unique_ptr<TF1>> fSystemFuncs; ///<! local copy of all internal system funcs
 
-   std::unordered_multimap<std::string, std::unique_ptr<TF1>> fPrevFuncs; ///<! all previous functions used for fitting
+   struct FitRes {
+      std::string objid;         // object used for fitting
+      std::unique_ptr<TF1> func; // function
+      TFitResultPtr res;          // result
+      FitRes() = default;
+      FitRes(const std::string &_objid, std::unique_ptr<TF1> &_func, TFitResultPtr _res) : objid(_objid), res(_res) { std::swap(func, _func); }
+   };
+
+   std::list<FitRes> fPrevRes; ///<! all previous functions used for fitting
 
    TF1 *copyTF1(TF1 *f);
 
@@ -79,6 +90,7 @@ class RFitPanel {
 
    void UpdateFunctionsList();
    TF1 *FindFunction(const std::string &funcid);
+   TFitResult *FindFitResult(const std::string &funcid);
    std::unique_ptr<TF1> GetFitFunction(const std::string &funcid);
    void SelectFunction(const std::string &funcid);
 
