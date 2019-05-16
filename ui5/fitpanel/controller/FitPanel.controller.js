@@ -2,13 +2,10 @@ sap.ui.define([
    'rootui5/panel/Controller',
    'sap/ui/model/json/JSONModel',
    'sap/ui/model/Filter',
-   'sap/ui/model/FilterOperator',
-   "sap/m/ColorPalettePopover"
-], function (GuiPanelController, JSONModel, Filter, FilterOperator, ColorPalettePopover) {
+   'sap/ui/model/FilterOperator'
+], function (GuiPanelController, JSONModel, Filter, FilterOperator) {
 
    "use strict";
-
-   var colorConf = "rgb(0,0,0)";
 
    return GuiPanelController.extend("rootui5.fitpanel.controller.FitPanel", {
 
@@ -16,12 +13,11 @@ sap.ui.define([
       onPanelInit : function() {
 
          // WORKAROUND, need to be FIXED IN THE FUTURE
-         JSROOT.loadScript('rootui5sys/fitpanel/style/style.css');
+         if (window && window.location && window.location.hostname && window.location.hostname.indexOf("github.io")>=0)
+            JSROOT.loadScript('../rootui5/fitpanel/style/style.css');
+         else
+            JSROOT.loadScript('rootui5sys/fitpanel/style/style.css');
 
-         // for linev.github.io
-         // JSROOT.loadScript('../rootui5/fitpanel/style/style.css');
-
-         this.inputId = "";
          var data = {
                fDataSet:[ { key:"1", value: "----" } ],
                fSelectedData: "1",
@@ -160,110 +156,12 @@ sap.ui.define([
          }
       },
 
-      drawContour: function() {
-
-      	var contourPoints = this.byId("contourPoints").getValue();
-         var contourPar1 = parseInt(this.byId("ContourPar1").getSelectedKey());
-         var contourPar2 = parseInt(this.byId("ContourPar2").getSelectedKey());
-         var confLevel = this.byId("ConfLevel").getValue();
-         var colorContourNum = (String((this.colorContour.replace( /^\D+/g, '')).replace(/[()]/g, ''))).split(',');
-
-         var data = this.data();
-         data.fContourPoints = contourPoints;
-      	data.fContourPar1 = contourPar1;
-      	data.fContourPar2 = contourPar2;
-         data.fColorContour = colorContourNum;
-
-         console.log("COLOR ", colorContourNum, typeof colorContourNum, " origin ", this.colorContour);
-       //   var colConfN = colorConf.replace( /^\D+/g, '');
-       //   var colorConfNum = colConfN.replace(/[()]/g, '');
-      	// data.fConfLevel = colorConfNum;
-
-	  	  this.refresh();
-        //Each time we click the button, we keep the current state of the model
-        if (this.websocket)
-            this.websocket.Send('SETCONTOUR:'+this.getView().getModel().getJSON());
-      },
-
-      drawScan: function() {
-      	var data = this.data();
-      	data.fScanPoints = this.byId("scanPoints").getValue();
-      	data.fScanPar = parseInt(this.byId("ScanPar").getSelectedKey());
-      	data.fScanMin = this.byId("scanMin").getValue();
-      	data.fScanMax = this.byId("scanMax").getValue();
-
-      	this.refresh();
-         //Each time we click the button, we keep the current state of the model
-         if (this.websocket)
-            this.websocket.Send('SETSCAN:'+this.getView().getModel().getJSON());
-
-      },
-
       pressApplyPars: function() {
          var json = JSROOT.toJSON(this.data().fFuncPars);
 
          if (this.websocket)
             this.websocket.Send("SETPARS:" + json);
-      },
-
-      colorPickerContour: function (oEvent) {
-         // official ROOT colors 1 .. 15, more is not supported by ColorPalettePopover
-         var colorMap = ['black','red','green','blue','yellow','magenta','cyan', '#59d354','#5954d8',
-                         '#fefefe', '#c0b6ac','#4c4c4c','#666666','#7f7f7f', '#999999'];
-         // ,, '#b2b2b2','#cccccc','#e5e5e5','#f2f2f2','#ccc6aa','#ccc6aa','#c1bfa8','#bab5a3','#b2a596','#b7a39b','#ad998c','#9b8e82','#876656','#afcec6'];
-
-          var oCPPop = new ColorPalettePopover( {
-             defaultColor: "cyan",
-             colors: colorMap,
-             colorSelect: function(event) {
-                console.log('select ', event.getParameters().value);
-             }
-          });
-
-          oCPPop.openBy(oEvent.getSource());
-      },
-
-
-
-      handleChangeContour: function (oEvent) {
-         var oView = this.getView();
-         this.inputId = "";
-         var color1 = oEvent.getParameter("colorString");
-         var oButtonContour = this.getView().byId("colorContour");
-         var oButtonInnerContour = oButtonContour.$().find('.sapMBtnInner');
-         oButtonInnerContour.css('background',color1);
-         oButtonInnerContour.css('color','#FFFFFF');
-         oButtonInnerContour.css('text-shadow','1px 1px 2px #333333');
-
-         this.colorContour = color1;
-         return this.colorContour;
-	  },
-
-	  colorPickerConf: function (oEvent) {
-         this.inputId = oEvent.getSource().getId();
-         if (!this.oColorPickerPopoverConf) {
-            this.oColorPickerPopoverConf = new sap.ui.unified.ColorPickerPopover({
-               colorString: "blue",
-               mode: sap.ui.unified.ColorPickerMode.HSL,
-               change: this.handleChangeConf.bind(this)
-            });
-         }
-         this.oColorPickerPopoverConf.openBy(oEvent.getSource());
-      },
-
-      handleChangeConf: function (oEvent) {
-         var oView = this.getView();
-         this.inputId = "";
-         var color2 = oEvent.getParameter("colorString");
-         var oButtonContour = this.getView().byId("colorConf");
-         var oButtonInnerContour = oButtonContour.$().find('.sapMBtnInner');
-         oButtonInnerContour.css('background',color2);
-         oButtonInnerContour.css('color','#FFFFFF');
-         oButtonInnerContour.css('text-shadow','1px 1px 2px #333333');
-
-         colorConf = color2;
-         return colorConf;
-	  }
+      }
 
    });
 
