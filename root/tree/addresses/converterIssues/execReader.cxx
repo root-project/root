@@ -25,7 +25,7 @@ int execReader() {
    static const char* APP_NAME = "fileReader";
 
    // Try to open the test input file:
-   std::auto_ptr< TFile > ifile( TFile::Open( "test_file.root", "READ" ) );
+   std::unique_ptr< TFile > ifile( TFile::Open( "test_file.root", "READ" ) );
    if( ( ! ifile.get() ) || ifile->IsZombie() ) {
       Error( APP_NAME, "Couldn't open test file!" );
       Error( APP_NAME, "Make sure that you run fileWriter first." );
