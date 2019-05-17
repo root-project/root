@@ -53,11 +53,22 @@
 
 using namespace std::string_literals;
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
+ROOT::Experimental::RFitPanel::FitRes::FitRes(const std::string &_objid, std::unique_ptr<TF1> &_func, TFitResultPtr &_res)
+   : objid(_objid), res(_res)
+{
+   std::swap(func, _func);
+}
+
 /** \class ROOT::Experimental::RFitPanel
 \ingroup webdisplay
 
 web-based FitPanel prototype.
 */
+
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Constructor
@@ -739,7 +750,11 @@ bool ROOT::Experimental::RFitPanel::DoFit()
       }
    }
 
-   if (m.fSame && f1) {
+   // After fitting function appears in global list
+   if (f1 && gROOT->GetListOfFunctions()->FindObject(f1.get()))
+      gROOT->GetListOfFunctions()->Remove(f1.get());
+
+   if (m.fSame && f1 && pad) {
       TF1 *copy = copyTF1(f1.get());
       copy->SetBit(kCanDelete);
       copy->Draw("same");
