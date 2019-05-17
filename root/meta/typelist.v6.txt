@@ -248,11 +248,6 @@ allocator<void>::pointer
 allocator<void>::value_type
 Angle_t
 Atom_t
-auto_ptr<ROOT::Fit::FitData>::element_type
-auto_ptr<ROOT::Fit::FitResult>::element_type
-auto_ptr<ROOT::Fit::Fitter>::element_type
-auto_ptr<ROOT::Math::Minimizer>::element_type
-auto_ptr<void>::element_type
 Axis_t
 binary_function<TClass*,TClass*,bool>::first_argument_type
 binary_function<TClass*,TClass*,bool>::result_type
@@ -1094,7 +1089,6 @@ UInt_t
 u_long
 ULong64_t
 ULong_t
-unexpected_handler
 unsigned
 unsigned char
 unsigned int
