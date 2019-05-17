@@ -788,10 +788,10 @@ Color_t ROOT::Experimental::RFitPanel::GetColor(const std::string &colorid)
 /// Create confidence levels drawing
 /// tab. Then it call Virtual Fitter to perform it.
 
-bool ROOT::Experimental::RFitPanel::DrawConfidenceLevels(TFitResult *result)
+TObject *ROOT::Experimental::RFitPanel::MakeConfidenceLevels(TFitResult *result)
 {
    if (!result)
-      return false;
+      return nullptr;
 
    // try to use provided method
    // auto conf = result->GetConfidenceIntervals();
@@ -800,13 +800,13 @@ bool ROOT::Experimental::RFitPanel::DrawConfidenceLevels(TFitResult *result)
    const auto *function = result->FittedFunction();
    if (!function) {
       R__ERROR_HERE("webgui") << "Fit Function does not exist!";
-      return false;
+      return nullptr;
    }
 
    const auto *data = result->FittedBinData();
    if (!data) {
       R__ERROR_HERE("webgui") << "Unbinned data set cannot draw confidence levels.";
-      return false;
+      return nullptr;
    }
 
    std::vector<Double_t> ci(data->Size());
@@ -829,9 +829,7 @@ bool ROOT::Experimental::RFitPanel::DrawConfidenceLevels(TFitResult *result)
       g->SetLineColor(icol);
       g->SetFillColor(icol);
       g->SetFillStyle(3001);
-      g->Draw("C3same");
-      g->SetBit(kCanDelete);
-      return true;
+      return g;
    } else if (model().fDim == 2) {
       TGraph2DErrors *g = new TGraph2DErrors(ci.size());
       for (unsigned int i = 0; i < ci.size(); ++i) {
@@ -850,11 +848,10 @@ bool ROOT::Experimental::RFitPanel::DrawConfidenceLevels(TFitResult *result)
       g->SetLineColor(icol);
       g->SetFillColor(icol);
       g->SetFillStyle(3001);
-      g->Draw("C3same");
-      g->SetBit(kCanDelete);
-      return true;
+      return g;
    }
-   return false;
+
+   return nullptr;
 }
 
 ///////////////////////////////////////////////
@@ -869,88 +866,94 @@ bool ROOT::Experimental::RFitPanel::DoDraw()
    TObject *obj = GetSelectedObject(m.fSelectedData, kind);
    if (!obj) return false;
 
-   auto pad = GetDrawPad(obj, true);
-   if (!pad)
-      return false;
+   TObject *drawobj = nullptr;
+   std::string drawopt;
+   bool superimpose = true, objowner = true;
 
    if (m.fHasAdvanced && (m.fSelectedTab == "Advanced")) {
+
       TFitResult *res = FindFitResult(m.fSelectedFunc);
       if (!res) return false;
 
-      Color_t fillcolor = 0;
-      bool superimpose = false;
-
-      TGraph *graph = nullptr;
-
       if (m.fAdvancedTab == "Contour") {
+
          superimpose = m.fContourSuperImpose;
          int par1 = std::stoi(m.fContourPar1Id);
          int par2 = std::stoi(m.fContourPar2Id);
 
-         graph = new TGraph(m.fContourPoints);
+         TGraph *graph = new TGraph(m.fContourPoints);
 
-         // printf("Contour %d %d lvl %7.5f\n", par1, par2, m.fContourConfLevel);
-
-         if (!res->Contour(par1, par2, graph, m.fContourConfLevel)) {
+         if (!res->Contour(par1, par2, graph, m.fConfidenceLevel)) {
             delete graph;
             return false;
          }
 
-         fillcolor = GetColor(m.fContourColor);
+         auto fillcolor = GetColor(m.fContourColor);
          graph->SetFillColor(fillcolor);
          graph->GetXaxis()->SetTitle( res->ParName(par1).c_str() );
          graph->GetYaxis()->SetTitle( res->ParName(par2).c_str() );
 
+         drawobj = graph;
+         drawopt = superimpose ? "LF" : "ALF";
 
       } else if (m.fAdvancedTab == "Scan") {
+
          int par = std::stoi(m.fScanId);
-         graph = new TGraph( m.fScanPoints);
+         TGraph *graph = new TGraph( m.fScanPoints);
          if (!res->Scan( par, graph, m.fScanMin, m.fScanMax)) {
             delete graph;
             return false;
          }
-         graph->SetLineColor(kBlue);
+         auto linecolor = GetColor(m.fScanColor);
+         if (!linecolor) linecolor = kBlue;
+         graph->SetLineColor(linecolor);
          graph->SetLineWidth(2);
          graph->GetXaxis()->SetTitle(res->ParName(par).c_str());
          graph->GetYaxis()->SetTitle("FCN" );
+
+         superimpose = false;
+         drawobj = graph;
+         drawopt = "ALF";
+
       } else if (m.fAdvancedTab == "Confidence") {
 
-         return DrawConfidenceLevels(res);
+         drawobj = MakeConfidenceLevels(res);
+         drawopt = "C3same";
 
       } else {
          return false;
       }
+   } else {
 
-      if (!graph) return false;
+       // find already existing functions, not try to create something new
+       TF1 *func = FindFunction(m.fSelectedFunc);
 
+       // when "Pars" tab is selected, automatically update function parameters
+       if (func && (m.fSelectedTab.compare("Pars") == 0) && (m.fSelectedFunc == m.fFuncPars.id))
+           m.fFuncPars.SetParameters(func);
 
-
-      graph->SetBit(kCanDelete);
-
-      if (superimpose) {
-         graph->Draw("LF");
-      } else {
-         pad->Clear();
-         graph->Draw("ALF");
-      }
-
-      pad->Modified();
-      pad->Update();
-
-      printf("Do advanced %s color %d\n", m.fAdvancedTab.c_str(), fillcolor);
-
-      return true;
+       drawobj = func;
+       drawopt = "same";
+       objowner = true;
    }
 
-   // find already existing functions, not try to create something new
-   TF1 *func = FindFunction(m.fSelectedFunc);
-   if (func) {
-      // when "Pars" tab is selected, automatically update function parameters
-      if ((m.fSelectedTab.compare("Pars") == 0) && (m.fSelectedFunc == m.fFuncPars.id))
-         m.fFuncPars.SetParameters(func);
+   if (!drawobj)
+      return false;
 
-      func->Draw("same");
+   auto pad = GetDrawPad(obj, true);
+   if (!pad) {
+      if (objowner)
+         delete drawobj;
+      return false;
    }
+
+   if (!superimpose)
+      pad->Clear();
+
+   if (objowner)
+      drawobj->SetBit(kCanDelete);
+
+   drawobj->Draw(drawopt.c_str());
 
    pad->Modified();
    pad->Update();

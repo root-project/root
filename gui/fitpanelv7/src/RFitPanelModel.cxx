@@ -215,8 +215,10 @@ void ROOT::Experimental::RFitPanelModel::Initialize()
 
    fContourPoints = 40;
    fScanPoints = 40;
-   fContourConfLevel = 0.683;
    fConfidenceLevel = 0.683;
+   fContourColor = "#c0b6ac"; // #11
+   fScanColor = "#0000ff"; // kBlue
+   fConfidenceColor = "#c0b6ac"; // #11
 }
 
 /// Update advanced parameters associated with fit function

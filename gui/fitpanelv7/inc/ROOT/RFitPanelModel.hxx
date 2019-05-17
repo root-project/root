@@ -163,12 +163,12 @@ struct RFitPanelModel {
    bool fHasAdvanced{false};
    std::string fAdvancedTab;
    std::vector<RComboBoxItem> fAdvancedPars;
+   float fConfidenceLevel{0.683};
 
    /// Contour sub-tab
    int fContourPoints{0};
    std::string fContourPar1Id;
    std::string fContourPar2Id;
-   float fContourConfLevel{0.};
    std::string fContourColor;
    bool fContourSuperImpose{false};
 
@@ -177,9 +177,9 @@ struct RFitPanelModel {
    std::string fScanId;
    float fScanMin{0};
    float fScanMax{0};
+   std::string fScanColor;
 
    /// Confidence sub-tab
-   float fConfidenceLevel{0};
    std::string fConfidenceColor;
 
    bool fInitialized{false};        ///<! indicates if data were initialized
