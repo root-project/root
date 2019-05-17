@@ -20,7 +20,7 @@ TEST(IOTest, OneD)
 
    RAxisConfig xaxis{10, 0., 1.};
    RH1D h(xaxis);
-   auto file = TFile::Recreate("IOTestOneD.root");
+   auto file = RFile::Recreate("IOTestOneD.root");
    file->Write("h", h);
 }
 
