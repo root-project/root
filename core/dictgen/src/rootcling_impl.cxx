@@ -5027,6 +5027,9 @@ int RootClingMain(int argc,
    // Add the warnings
    rootclingRetCode += ROOT::TMetaUtils::GetNumberOfErrors();
 
+   // make sure the file is closed before committing
+   fileout.close();
+
    // Before returning, rename the files if no errors occurred
    // otherwise clean them to avoid remnants (see ROOT-10015)
    if(rootclingRetCode == 0) {
