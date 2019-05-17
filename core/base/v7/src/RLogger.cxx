@@ -20,16 +20,16 @@
 #include "TError.h"
 
 // pin vtable
-ROOT::Experimental::TLogHandler::~TLogHandler() {}
+ROOT::Experimental::RLogHandler::~RLogHandler() {}
 
 namespace {
-class TLogHandlerDefault: public ROOT::Experimental::TLogHandler {
+class RLogHandlerDefault: public ROOT::Experimental::RLogHandler {
 public:
    // Returns false if further emission of this log entry should be suppressed.
-   bool Emit(const ROOT::Experimental::TLogEntry &entry) override;
+   bool Emit(const ROOT::Experimental::RLogEntry &entry) override;
 };
 
-bool TLogHandlerDefault::Emit(const ROOT::Experimental::TLogEntry &entry)
+bool RLogHandlerDefault::Emit(const ROOT::Experimental::RLogEntry &entry)
 {
    constexpr static std::array<const char *, 5> sTag{{"Debug", "Info", "Warning", "Log", "FATAL"}};
    std::stringstream strm;
@@ -51,8 +51,8 @@ bool TLogHandlerDefault::Emit(const ROOT::Experimental::TLogEntry &entry)
 }
 } // unnamed namespace
 
-ROOT::Experimental::TLogManager &ROOT::Experimental::TLogManager::Get()
+ROOT::Experimental::RLogManager &ROOT::Experimental::RLogManager::Get()
 {
-   static TLogManager instance(std::make_unique<TLogHandlerDefault>());
+   static RLogManager instance(std::make_unique<RLogHandlerDefault>());
    return instance;
 }
