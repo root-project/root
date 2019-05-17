@@ -18,7 +18,7 @@
 
 #include "ROOT/RHist.hxx"
 #include "ROOT/TFit.hxx"
-#include "ROOT/TFile.hxx"
+#include "ROOT/RFile.hxx"
 
 void simple()
 {
@@ -45,6 +45,6 @@ void simple()
 
    Experimental::TFitResult fitResult = Experimental::FitTo(hist, func, {{0., 1.}});
 
-   Experimental::TFilePtr file = Experimental::TFile::Recreate("hist.root");
+   auto file = Experimental::RFile::Recreate("hist.root");
    file->Write("TheHist", hist);
 }

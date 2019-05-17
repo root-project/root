@@ -13,7 +13,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/TFile.hxx"
+#include "ROOT/RFile.hxx"
 #include "TFile.h"
 
 #include <memory>
