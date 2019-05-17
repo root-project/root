@@ -3,7 +3,7 @@
 #include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RColor.hxx"
-#include "ROOT/TFile.hxx"
+#include "ROOT/RFile.hxx"
 
 #include <TApplication.h>
 
@@ -33,6 +33,6 @@ TEST(IOTest, OneDOpts)
    auto optsPtr = canv.Draw(std::move(h));
    optsPtr->Line().SetColor(RColor::kRed);
 
-   auto file = TFile::Recreate("IOTestOneDOpts.root");
+   auto file = RFile::Recreate("IOTestOneDOpts.root");
    file->Write("canv", canv);
 }
