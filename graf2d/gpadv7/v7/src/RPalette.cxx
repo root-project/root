@@ -15,7 +15,7 @@
 
 #include "ROOT/RPalette.hxx"
 
-#include "ROOT/TLogger.hxx"
+#include "ROOT/RLogger.hxx"
 
 #include <algorithm>
 #include <cmath>

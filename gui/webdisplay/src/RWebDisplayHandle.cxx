@@ -16,7 +16,7 @@
 #include <ROOT/RWebDisplayHandle.hxx>
 
 #include <ROOT/RMakeUnique.hxx>
-#include <ROOT/TLogger.hxx>
+#include <ROOT/RLogger.hxx>
 
 #include "ROOT/RWebWindow.hxx"
 #include "ROOT/RWebWindowsManager.hxx"

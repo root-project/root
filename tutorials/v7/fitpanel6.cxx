@@ -17,7 +17,7 @@
  *************************************************************************/
 
 #include <ROOT/RFitPanel.hxx>
-#include "ROOT/TDirectory.hxx"
+#include "ROOT/RDirectory.hxx"
 #include "TH1.h"
 #include "TFile.h"
 

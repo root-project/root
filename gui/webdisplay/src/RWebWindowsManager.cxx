@@ -15,7 +15,7 @@
 
 #include "ROOT/RWebWindowsManager.hxx"
 
-#include <ROOT/TLogger.hxx>
+#include <ROOT/RLogger.hxx>
 #include <ROOT/RWebDisplayArgs.hxx>
 #include <ROOT/RWebDisplayHandle.hxx>
 #include <ROOT/RWebWindowsManager.hxx>

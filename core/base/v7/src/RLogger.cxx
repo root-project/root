@@ -13,7 +13,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/TLogger.hxx"
+#include "ROOT/RLogger.hxx"
 #include <iostream>
 #include <sstream>
 

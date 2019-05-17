@@ -13,14 +13,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_TLog
-#define ROOT7_TLog
+#ifndef ROOT7_RLogger
+#define ROOT7_RLogger
 
 #include <array>
 #include <memory>
 #include <sstream>
-#include "ROOT/RStringView.hxx"
 #include <vector>
+
+#include "ROOT/RStringView.hxx"
 
 namespace ROOT {
 namespace Experimental {

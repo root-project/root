@@ -16,7 +16,7 @@
 #include <ROOT/RObjectDrawable.hxx>
 
 #include <ROOT/RDisplayItem.hxx>
-#include <ROOT/TLogger.hxx>
+#include <ROOT/RLogger.hxx>
 #include <ROOT/RMenuItem.hxx>
 #include <ROOT/RPadPainter.hxx>
 

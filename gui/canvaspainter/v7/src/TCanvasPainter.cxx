@@ -15,7 +15,7 @@
 
 #include "ROOT/RVirtualCanvasPainter.hxx"
 #include "ROOT/RCanvas.hxx"
-#include <ROOT/TLogger.hxx>
+#include <ROOT/RLogger.hxx>
 #include <ROOT/RDisplayItem.hxx>
 #include <ROOT/RPadDisplayItem.hxx>
 #include <ROOT/RMenuItem.hxx>

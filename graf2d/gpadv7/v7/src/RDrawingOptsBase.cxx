@@ -16,7 +16,7 @@
 #include "ROOT/RDrawingOptsBase.hxx"
 
 #include "ROOT/RDrawingAttr.hxx"
-#include "ROOT/TLogger.hxx"
+#include "ROOT/RLogger.hxx"
 
 #include "TClass.h"
 #include "TDataMember.h"
