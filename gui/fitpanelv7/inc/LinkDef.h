@@ -10,6 +10,7 @@
 
 #pragma link C++ struct ROOT::Experimental::RFitPanelModel+;
 #pragma link C++ struct ROOT::Experimental::RFitPanelModel::RComboBoxItem+;
+#pragma link C++ struct ROOT::Experimental::RFitPanelModel::RMethodInfo+;
 #pragma link C++ struct ROOT::Experimental::RFitPanelModel::RMinimezerAlgorithm+;
 #pragma link C++ struct ROOT::Experimental::RFitPanelModel::RItemInfo+;
 #pragma link C++ struct ROOT::Experimental::RFitPanelModel::RFuncPar+;
