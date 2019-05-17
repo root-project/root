@@ -59,6 +59,9 @@ using namespace std::string_literals;
 web-based FitPanel prototype.
 */
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 ROOT::Experimental::RFitPanel::RFitPanel(const std::string &title)
 {
    model().fTitle = title;
@@ -85,7 +88,7 @@ std::shared_ptr<ROOT::Experimental::RWebWindow> ROOT::Experimental::RFitPanel::G
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-/// Update list of avaliable data
+/// Update list of available data
 
 void ROOT::Experimental::RFitPanel::UpdateDataSet()
 {
@@ -105,7 +108,6 @@ void ROOT::Experimental::RFitPanel::UpdateDataSet()
       }
    }
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Select object for fitting
@@ -768,7 +770,7 @@ bool ROOT::Experimental::RFitPanel::DoFit()
 
 
 ///////////////////////////////////////////////
-/// Exract color from string
+/// Extract color from string
 /// Should be coded as #ff00ff string
 Color_t ROOT::Experimental::RFitPanel::GetColor(const std::string &colorid)
 {
