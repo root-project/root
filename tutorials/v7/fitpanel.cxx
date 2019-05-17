@@ -21,9 +21,9 @@
 #include "ROOT/RFitPanel.hxx"
 #include "ROOT/TDirectory.hxx"
 
-void fitpanel() {
+using namespace ROOT::Experimental;
 
-   using namespace ROOT::Experimental;
+void fitpanel() {
 
    // TODO - also keep axis correctly in the help
    auto xaxis = std::make_shared<RAxisConfig>(10, 0., 10.);
