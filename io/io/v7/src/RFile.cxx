@@ -1,4 +1,4 @@
-/// \file v7/src/TFile.cxx
+/// \file v7/src/RFile.cxx
 /// \ingroup Base ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-31
@@ -30,22 +30,22 @@ namespace ROOT {
 namespace Experimental {
 namespace Internal {
 // This will have to move to some "semi-internal" header.
-/** \class TFileStorageInterface
- Base class for TFile storage backends.
+/** \class RFileStorageInterface
+ Base class for RFile storage backends.
  */
-class TFileStorageInterface {
+class RFileStorageInterface {
 public:
    virtual void Flush() = 0;
    virtual void Close() = 0;
-   virtual ~TFileStorageInterface() = default;
+   virtual ~RFileStorageInterface() = default;
    virtual void WriteMemoryWithType(std::string_view name, const void *address, TClass *cl) = 0;
 };
 
-// make_shared<TFile> doesn't work, as TFile() is private. Take detour
+// make_shared<RFile> doesn't work, as RFile() is private. Take detour
 // through a friend instead.
-class TFileSharedPtrCtor: public ROOT::Experimental::TFile {
+class RFileSharedPtrCtor: public ROOT::Experimental::RFile {
 public:
-   TFileSharedPtrCtor(std::unique_ptr<TFileStorageInterface> &&storage): TFile(std::move(storage)) {}
+   RFileSharedPtrCtor(std::unique_ptr<RFileStorageInterface> &&storage): RFile(std::move(storage)) {}
 };
 } // namespace Internal
 } // namespace Experimental
@@ -54,13 +54,13 @@ public:
 namespace {
 /// We cannot afford users not closing their files. Yes, we return a unique_ptr -
 /// but that might be stored in an object that itself leaks. That would leave
-/// the TFile unclosed and data corrupted / not written. Instead, keep a
-/// collection of all opened writable TFiles and close them at destruction time,
+/// the RFile unclosed and data corrupted / not written. Instead, keep a
+/// collection of all opened writable RFiles and close them at destruction time,
 /// explicitly.
-static void AddFilesToClose(std::weak_ptr<ROOT::Experimental::TFile> pFile)
+static void AddFilesToClose(std::weak_ptr<ROOT::Experimental::RFile> pFile)
 {
    struct CloseFiles_t {
-      std::vector<std::weak_ptr<ROOT::Experimental::TFile>> fFiles;
+      std::vector<std::weak_ptr<ROOT::Experimental::RFile>> fFiles;
       std::mutex fMutex;
       ~CloseFiles_t()
       {
@@ -78,9 +78,9 @@ static void AddFilesToClose(std::weak_ptr<ROOT::Experimental::TFile> pFile)
 }
 
 /** \class TV6Storage
- TFile for a ROOT v6 storage backend.
+ RFile for a ROOT v6 storage backend.
  */
-class TV6Storage: public ROOT::Experimental::Internal::TFileStorageInterface {
+class TV6Storage: public ROOT::Experimental::Internal::RFileStorageInterface {
    ::TFile *fOldFile;
 
 public:
@@ -99,13 +99,13 @@ public:
 };
 } // namespace
 
-ROOT::Experimental::TFilePtr::TFilePtr(std::shared_ptr<ROOT::Experimental::TFile> &&file): fFile(std::move(file))
+ROOT::Experimental::RFilePtr::RFilePtr(std::shared_ptr<ROOT::Experimental::RFile> &&file): fFile(std::move(file))
 {
    AddFilesToClose(fFile);
 }
 
 namespace {
-static std::string GetV6TFileOpts(const char *mode, const ROOT::Experimental::TFile::Options_t &opts)
+static std::string GetV6RFileOpts(const char *mode, const ROOT::Experimental::RFile::Options_t &opts)
 {
    std::string ret(mode);
    if (opts.fCachedRead)
@@ -121,8 +121,8 @@ static std::mutex &GetCacheDirMutex()
    return sMutex;
 }
 
-static std::unique_ptr<ROOT::Experimental::Internal::TFileStorageInterface>
-OpenV6TFile(std::string_view name, const char *mode, const ROOT::Experimental::TFile::Options_t &opts)
+static std::unique_ptr<ROOT::Experimental::Internal::RFileStorageInterface>
+OpenV6RFile(std::string_view name, const char *mode, const ROOT::Experimental::RFile::Options_t &opts)
 {
    // Set and re-set the cache dir.
    // FIXME: do not modify a static here, pass this to the underlying Open.
@@ -133,60 +133,60 @@ OpenV6TFile(std::string_view name, const char *mode, const ROOT::Experimental::T
       SetCacheDirRAII_t(bool need): fLock(GetCacheDirMutex())
       {
          if (need)
-            fOldCacheDir = TFile::GetCacheFileDir();
+            fOldCacheDir = ::TFile::GetCacheFileDir();
       }
 
       ~SetCacheDirRAII_t()
       {
          if (!fOldCacheDir.empty())
-            TFile::SetCacheFileDir(fOldCacheDir.c_str());
+            ::TFile::SetCacheFileDir(fOldCacheDir.c_str());
       }
    } setCacheDirRAII(opts.fCachedRead);
 
-   auto v6storage = std::make_unique<TV6Storage>(std::string(name), GetV6TFileOpts(mode, opts));
+   auto v6storage = std::make_unique<TV6Storage>(std::string(name), GetV6RFileOpts(mode, opts));
 
    using namespace ROOT::Experimental::Internal;
-   return std::unique_ptr<TFileStorageInterface>{std::move(v6storage)};
+   return std::unique_ptr<RFileStorageInterface>{std::move(v6storage)};
 }
 } // namespace
 
-ROOT::Experimental::TFilePtr ROOT::Experimental::TFile::Open(std::string_view name,
+ROOT::Experimental::RFilePtr ROOT::Experimental::RFile::Open(std::string_view name,
                                                              const Options_t &opts /*= Options_t()*/)
 {
-   // will become delegation to TFileSystemFile, TWebFile etc.
+   // will become delegation to RFileSystemFile, TWebFile etc.
    using namespace Internal;
-   auto file = std::make_shared<TFileSharedPtrCtor>(OpenV6TFile(name, "READ", opts));
-   return ROOT::Experimental::TFilePtr(std::move(file));
+   auto file = std::make_shared<RFileSharedPtrCtor>(OpenV6RFile(name, "READ", opts));
+   return ROOT::Experimental::RFilePtr(std::move(file));
 }
 
-ROOT::Experimental::TFilePtr ROOT::Experimental::TFile::Create(std::string_view name,
+ROOT::Experimental::RFilePtr ROOT::Experimental::RFile::Create(std::string_view name,
                                                                const Options_t &opts /*= Options_t()*/)
 {
-   // will become delegation to TFileSystemFile, TWebFile etc.
+   // will become delegation to RFileSystemFile, TWebFile etc.
    using namespace Internal;
-   auto file = std::make_shared<TFileSharedPtrCtor>(OpenV6TFile(name, "CREATE", opts));
-   return ROOT::Experimental::TFilePtr(std::move(file));
+   auto file = std::make_shared<RFileSharedPtrCtor>(OpenV6RFile(name, "CREATE", opts));
+   return ROOT::Experimental::RFilePtr(std::move(file));
 }
 
-ROOT::Experimental::TFilePtr ROOT::Experimental::TFile::Recreate(std::string_view name,
+ROOT::Experimental::RFilePtr ROOT::Experimental::RFile::Recreate(std::string_view name,
                                                                  const Options_t &opts /*= Options_t()*/)
 {
-   // will become delegation to TFileSystemFile, TWebFile etc.
+   // will become delegation to RFileSystemFile, TWebFile etc.
    using namespace Internal;
-   auto file = std::make_shared<TFileSharedPtrCtor>(OpenV6TFile(name, "RECREATE", opts));
-   return ROOT::Experimental::TFilePtr(std::move(file));
+   auto file = std::make_shared<RFileSharedPtrCtor>(OpenV6RFile(name, "RECREATE", opts));
+   return ROOT::Experimental::RFilePtr(std::move(file));
 }
 
-ROOT::Experimental::TFilePtr ROOT::Experimental::TFile::OpenForUpdate(std::string_view name,
+ROOT::Experimental::RFilePtr ROOT::Experimental::RFile::OpenForUpdate(std::string_view name,
                                                                       const Options_t &opts /*= Options_t()*/)
 {
-   // will become delegation to TFileSystemFile, TWebFile etc.
+   // will become delegation to RFileSystemFile, TWebFile etc.
    using namespace Internal;
-   auto file = std::make_shared<TFileSharedPtrCtor>(OpenV6TFile(name, "UPDATE", opts));
-   return ROOT::Experimental::TFilePtr(std::move(file));
+   auto file = std::make_shared<RFileSharedPtrCtor>(OpenV6RFile(name, "UPDATE", opts));
+   return ROOT::Experimental::RFilePtr(std::move(file));
 }
 
-std::string ROOT::Experimental::TFile::SetCacheDir(std::string_view path)
+std::string ROOT::Experimental::RFile::SetCacheDir(std::string_view path)
 {
    std::lock_guard<std::mutex> lock(GetCacheDirMutex());
 
@@ -195,31 +195,31 @@ std::string ROOT::Experimental::TFile::SetCacheDir(std::string_view path)
    return ret;
 }
 
-std::string ROOT::Experimental::TFile::GetCacheDir()
+std::string ROOT::Experimental::RFile::GetCacheDir()
 {
    std::lock_guard<std::mutex> lock(GetCacheDirMutex());
    return ::TFile::GetCacheFileDir();
 }
 
-// Implement outlined, to hide implementation of TFileStorageInterface from
+// Implement outlined, to hide implementation of RFileStorageInterface from
 // header.
-ROOT::Experimental::TFile::TFile(std::unique_ptr<ROOT::Experimental::Internal::TFileStorageInterface> &&storage)
+ROOT::Experimental::RFile::RFile(std::unique_ptr<ROOT::Experimental::Internal::RFileStorageInterface> &&storage)
    : fStorage(std::move(storage))
 {}
 
-// Implement outlined, to hide implementation of TFileStorageInterface from
+// Implement outlined, to hide implementation of RFileStorageInterface from
 // header.
-ROOT::Experimental::TFile::~TFile() = default;
+ROOT::Experimental::RFile::~RFile() = default;
 
-void ROOT::Experimental::TFile::Flush()
+void ROOT::Experimental::RFile::Flush()
 {
    fStorage->Flush();
 }
-void ROOT::Experimental::TFile::Close()
+void ROOT::Experimental::RFile::Close()
 {
    fStorage->Close();
 }
-void ROOT::Experimental::TFile::WriteMemoryWithType(std::string_view name, const void *address, TClass *cl)
+void ROOT::Experimental::RFile::WriteMemoryWithType(std::string_view name, const void *address, TClass *cl)
 {
    fStorage->WriteMemoryWithType(name, address, cl);
 }
