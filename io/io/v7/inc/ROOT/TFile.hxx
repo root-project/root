@@ -126,8 +126,8 @@ public:
    /// This will re-read the object for each call, returning a new copy; whether
    /// the `TDirectory` is managing an object attached to this key or not.
    /// \returns a `unique_ptr` to the object.
-   /// \throws TDirectoryUnknownKey if no object is stored under this name.
-   /// \throws TDirectoryTypeMismatch if the object stored under this name is of
+   /// \throws RDirectoryUnknownKey if no object is stored under this name.
+   /// \throws RDirectoryTypeMismatch if the object stored under this name is of
    ///   a type different from `T`.
    template <class T>
    std::unique_ptr<T> Read(std::string_view name)

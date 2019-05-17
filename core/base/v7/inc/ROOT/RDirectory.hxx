@@ -1,4 +1,4 @@
-/// \file ROOT/TDirectory.h
+/// \file ROOT/RDirectory.h
 /// \ingroup Base ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-31
@@ -32,11 +32,11 @@ namespace Experimental {
 /**
   Objects of this class are thrown to signal that no key with that name exists.
  */
-class TDirectoryUnknownKey: public std::exception {
+class RDirectoryUnknownKey: public std::exception {
    std::string fKeyName;
 
 public:
-   TDirectoryUnknownKey(std::string_view keyName): fKeyName(keyName) {}
+   RDirectoryUnknownKey(std::string_view keyName): fKeyName(keyName) {}
    const char *what() const noexcept final { return fKeyName.c_str(); }
 };
 
@@ -44,37 +44,37 @@ public:
   Objects of this class are thrown to signal that the value known under the
   given name .
  */
-class TDirectoryTypeMismatch: public std::exception {
+class RDirectoryTypeMismatch: public std::exception {
    std::string fKeyName;
    // FIXME: add expected and actual type names.
 public:
-   TDirectoryTypeMismatch(std::string_view keyName): fKeyName(keyName) {}
+   RDirectoryTypeMismatch(std::string_view keyName): fKeyName(keyName) {}
    const char *what() const noexcept final { return fKeyName.c_str(); }
 };
 
 /**
  Key/value store of objects.
 
- Given a name, a `TDirectory` can store and retrieve an object. It will manage
+ Given a name, a `RDirectory` can store and retrieve an object. It will manage
  shared ownership through a `shared_ptr`.
 
  Example:
-  TDirectory dirMC;
-  TDirectory dirHiggs;
+  RDirectory dirMC;
+  RDirectory dirHiggs;
 
   dirMC.Add("higgs", histHiggsMC);
   dirHiggs.Add("mc", histHiggsMC);
 
  */
 
-class TDirectory {
+class RDirectory {
    // TODO: ContentMap_t should allow lookup by string_view while still providing
    // storage of names.
 
-   /// The directory content is a hashed map of name => `Internal::TDirectoryEntry`.
-   using ContentMap_t = std::unordered_map<std::string, Internal::TDirectoryEntry>;
+   /// The directory content is a hashed map of name => `Internal::RDirectoryEntry`.
+   using ContentMap_t = std::unordered_map<std::string, Internal::RDirectoryEntry>;
 
-   /// The `TDirectory`'s content.
+   /// The `RDirectory`'s content.
    ContentMap_t fContent;
 
    template <class T>
@@ -90,7 +90,7 @@ class TDirectory {
 
 public:
    /// Create an object of type `T` (passing some arguments to its constructor).
-   /// The `TDirectory` will have shared ownership of the object.
+   /// The `RDirectory` will have shared ownership of the object.
    ///
    /// \param name  - Key of the object.
    /// \param args  - arguments to be passed to the constructor of `T`
@@ -102,9 +102,9 @@ public:
       return ptr;
    }
 
-   /// Find the TDirectoryEntry associated to the name. Returns empty TDirectoryEntry if
+   /// Find the RDirectoryEntry associated to the name. Returns empty RDirectoryEntry if
    /// nothing is found.
-   Internal::TDirectoryEntry Find(std::string_view name) const
+   Internal::RDirectoryEntry Find(std::string_view name) const
    {
       auto idx = fContent.find(std::string(name));
       if (idx == fContent.end())
@@ -122,15 +122,15 @@ public:
       kTypeMismatch     ///< The provided type does not match the value's type.
    };
 
-   /// Find the TDirectoryEntry associated with the name.
-   /// \returns empty TDirectoryEntry in `first` if nothing is found, or if the type does not
+   /// Find the RDirectoryEntry associated with the name.
+   /// \returns empty RDirectoryEntry in `first` if nothing is found, or if the type does not
    ///    match the expected type. `second` contains the reason.
    /// \note if `second` is kValidValue, then static_pointer_cast<`T`>(`first`.GetPointer())
    ///    is shared_ptr<`T`> to initially stored object
    /// \note if `second` is kValidValueBase, then `first`.CastPointer<`T`>()
    ///    is a valid cast to base class `T` of the stored object
    template <class T>
-   std::pair<Internal::TDirectoryEntry, EFindStatus> Find(std::string_view name) const
+   std::pair<Internal::RDirectoryEntry, EFindStatus> Find(std::string_view name) const
    {
       auto idx = fContent.find(std::string(name));
       if (idx == fContent.end())
@@ -143,35 +143,35 @@ public:
    }
 
    /// Get the object for a key. `T` can be the object's type or a base class.
-   /// The `TDirectory` will return the same object for subsequent calls to
+   /// The `RDirectory` will return the same object for subsequent calls to
    /// `Get().`
    /// \returns a `shared_ptr` to the object or its base.
-   /// \throws TDirectoryUnknownKey if no object is stored under this name.
-   /// \throws TDirectoryTypeMismatch if the object stored under this name is of
+   /// \throws RDirectoryUnknownKey if no object is stored under this name.
+   /// \throws RDirectoryTypeMismatch if the object stored under this name is of
    ///   a type that is not a derived type of `T`.
    template <class T>
    std::shared_ptr<ToContentType_t<T>> Get(std::string_view name)
    {
       const auto &pair = Find<T>(name);
-      const Internal::TDirectoryEntry &entry = pair.first;
+      const Internal::RDirectoryEntry &entry = pair.first;
       EFindStatus status = pair.second;
       switch (status) {
       case EFindStatus::kValidValue: return std::static_pointer_cast<ToContentType_t<T>>(entry.GetPointer());
       case EFindStatus::kValidValueBase: return entry.CastPointer<ToContentType_t<T>>();
       case EFindStatus::kTypeMismatch:
          // FIXME: add expected versus actual type name as c'tor args
-         throw TDirectoryTypeMismatch(name);
-      case EFindStatus::kKeyNameNotFound: throw TDirectoryUnknownKey(name);
+         throw RDirectoryTypeMismatch(name);
+      case EFindStatus::kKeyNameNotFound: throw RDirectoryUnknownKey(name);
       }
       return nullptr; // never happens
    }
 
-   /// Add an existing object (rather a `shared_ptr` to it) to the TDirectory.
-   /// The TDirectory will have shared ownership.
+   /// Add an existing object (rather a `shared_ptr` to it) to the RDirectory.
+   /// The RDirectory will have shared ownership.
    template <class T>
    void Add(std::string_view name, const std::shared_ptr<T> &ptr)
    {
-      Internal::TDirectoryEntry entry(ptr);
+      Internal::RDirectoryEntry entry(ptr);
       // FIXME: CXX17: insert_or_assign
       std::string sName(name);
       auto idx = fContent.find(sName);
@@ -183,7 +183,7 @@ public:
       }
    }
 
-   /// Dedicated, process-wide TDirectory.
+   /// Dedicated, process-wide RDirectory.
    ///
    /// \note This is *not* thread-safe. You will need to syncronize yourself. In
    /// general it's a bad idea to use a global collection in a multi-threaded
@@ -191,7 +191,7 @@ public:
    /// historical, process-wide object registration by name. Instead, pass a
    /// pointer to the object where you need to access it - this is also much
    /// faster than a lookup by name.
-   static TDirectory &Heap();
+   static RDirectory &Heap();
 };
 
 } // namespace Experimental
