@@ -1,4 +1,4 @@
-/// \file ROOT/TDirectoryEntry.h
+/// \file ROOT/RDirectoryEntry.h
 /// \ingroup Base ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-31
@@ -26,7 +26,7 @@ namespace Experimental {
 
 namespace Internal {
 
-class TDirectoryEntry {
+class RDirectoryEntry {
 public:
    using clock_t = std::chrono::system_clock;
    using time_point_t = std::chrono::time_point<clock_t>;
@@ -37,16 +37,16 @@ private:
    std::shared_ptr<void> fObj;
 
 public:
-   TDirectoryEntry(): TDirectoryEntry(nullptr) {}
+   RDirectoryEntry(): RDirectoryEntry(nullptr) {}
 
-   TDirectoryEntry(std::nullptr_t): TDirectoryEntry(std::make_shared<std::nullptr_t>(nullptr)) {}
+   RDirectoryEntry(std::nullptr_t): RDirectoryEntry(std::make_shared<std::nullptr_t>(nullptr)) {}
 
    template <class T>
-   explicit TDirectoryEntry(T *ptr): TDirectoryEntry(std::make_shared<T>(*ptr))
+   explicit RDirectoryEntry(T *ptr): RDirectoryEntry(std::make_shared<T>(*ptr))
    {}
 
    template <class T>
-   explicit TDirectoryEntry(const std::shared_ptr<T> &ptr): fType(TClass::GetClass<T>()), fObj(ptr)
+   explicit RDirectoryEntry(const std::shared_ptr<T> &ptr): fType(TClass::GetClass<T>()), fObj(ptr)
    {}
 
    /// Get the last change date of the entry.
@@ -71,18 +71,18 @@ public:
 
    explicit operator bool() const { return !!fObj; }
 
-   void swap(TDirectoryEntry &other) noexcept;
+   void swap(RDirectoryEntry &other) noexcept;
 };
 
 template <class U>
-std::shared_ptr<U> TDirectoryEntry::CastPointer() const
+std::shared_ptr<U> RDirectoryEntry::CastPointer() const
 {
    if (auto ptr = fType->DynamicCast(TClass::GetClass<U>(), fObj.get()))
       return std::shared_ptr<U>(fObj, static_cast<U *>(ptr));
    return std::shared_ptr<U>();
 }
 
-inline void TDirectoryEntry::swap(TDirectoryEntry &other) noexcept
+inline void RDirectoryEntry::swap(RDirectoryEntry &other) noexcept
 {
    using std::swap;
 
@@ -91,7 +91,7 @@ inline void TDirectoryEntry::swap(TDirectoryEntry &other) noexcept
    swap(fObj, other.fObj);
 }
 
-inline void swap(TDirectoryEntry &e1, TDirectoryEntry &e2) noexcept
+inline void swap(RDirectoryEntry &e1, RDirectoryEntry &e2) noexcept
 {
    e1.swap(e2);
 }
