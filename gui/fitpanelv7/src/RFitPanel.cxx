@@ -53,20 +53,6 @@
 
 using namespace std::string_literals;
 
-enum EFitObjectType {
-   kObjectNone,
-   kObjectHisto,
-   kObjectGraph,
-   kObjectGraph2D,
-   kObjectHStack,
-//   kObjectTree,
-   kObjectMultiGraph,
-   kObjectNotSupported
-};
-
-
-
-
 /** \class ROOT::Experimental::RFitPanel
 \ingroup webdisplay
 
@@ -114,13 +100,8 @@ void ROOT::Experimental::RFitPanel::UpdateDataSet()
       TIter iter(gDirectory->GetList());
       TObject *obj = nullptr;
       while ((obj = iter()) != nullptr) {
-         if (obj->InheritsFrom(TH1::Class()) ||
-             obj->InheritsFrom(TGraph::Class()) ||
-             obj->InheritsFrom(TGraph2D::Class()) ||
-             obj->InheritsFrom(THStack::Class()) ||
-             obj->InheritsFrom(TMultiGraph::Class())) {
+         if (GetFitObjectType(obj) != RFitPanelModel::kObjectNotSupported)
             m.fDataSet.emplace_back("gDirectory", "gdir::"s + obj->GetName(), Form("%s::%s", obj->ClassName(), obj->GetName()));
-         }
       }
    }
 }
@@ -143,30 +124,37 @@ void ROOT::Experimental::RFitPanel::SelectObject(const std::string &objid)
          id.clear();
    }
 
-   int kind{0};
-   TObject *obj = GetSelectedObject(id, kind);
+   TObject *obj = GetSelectedObject(id);
+   auto kind = GetFitObjectType(obj);
+
+   m.SetObjectKind(kind);
 
    TH1 *hist = nullptr;
    switch (kind) {
-      case kObjectHisto:
+      case RFitPanelModel::kObjectHisto:
          hist = (TH1*)obj;
          break;
 
-      case kObjectGraph:
+      case RFitPanelModel::kObjectGraph:
          hist = ((TGraph*)obj)->GetHistogram();
          break;
 
-      case kObjectMultiGraph:
+      case RFitPanelModel::kObjectMultiGraph:
          hist = ((TMultiGraph*)obj)->GetHistogram();
          break;
 
-      case kObjectGraph2D:
+      case RFitPanelModel::kObjectGraph2D:
          hist = ((TGraph2D*)obj)->GetHistogram("empty");
          break;
 
-      case kObjectHStack:
+      case RFitPanelModel::kObjectHStack:
          hist = (TH1 *)((THStack *)obj)->GetHists()->First();
          break;
+
+      //case RFitPanelModel::kObjectTree:
+      //   m.fFitMethods = {{ kFP_MUBIN, "Unbinned Likelihood" }};
+      //   m.fFitMethod = kFP_MUBIN;
+      //   break;
 
       default:
          break;
@@ -198,43 +186,49 @@ void ROOT::Experimental::RFitPanel::SelectObject(const std::string &objid)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-/// Assign histogram to use with fit panel - without ownership
+/// Returns object based on it string id
+/// Searches either in gDirectory or in internal panel list
 
-TObject *ROOT::Experimental::RFitPanel::GetSelectedObject(const std::string &objid, int &kind)
+TObject *ROOT::Experimental::RFitPanel::GetSelectedObject(const std::string &objid)
 {
-   TObject *res = nullptr;
-
    if (objid.compare(0,6,"gdir::") == 0) {
       std::string name = objid.substr(6);
       if (gDirectory)
-         res = gDirectory->GetList()->FindObject(name.c_str());
+         return gDirectory->GetList()->FindObject(name.c_str());
    } else if (objid.compare(0,7,"panel::") == 0) {
       std::string name = objid.substr(7);
       for (auto &item : fObjects)
-         if (name.compare(item->GetName()) == 0) {
-            res = item;
-            break;
-         }
+         if (name.compare(item->GetName()) == 0)
+            return item;
    }
 
-   if (res) {
-      if (res->InheritsFrom(TH1::Class()))
-         kind = kObjectHisto;
-      else if (res->InheritsFrom(TGraph::Class()))
-         kind = kObjectGraph;
-      else if (res->InheritsFrom(TGraph2D::Class()))
-         kind = kObjectGraph2D;
-      else if (res->InheritsFrom(THStack::Class()))
-         kind = kObjectGraph2D;
-      else if (res->InheritsFrom(TMultiGraph::Class()))
-         kind = kObjectGraph2D;
-      else
-         kind = kObjectNotSupported;
-   } else {
-      kind = kObjectNone;
-   }
+   return nullptr;
+}
 
-   return res;
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Returns kind of object
+
+ROOT::Experimental::RFitPanelModel::EFitObjectType ROOT::Experimental::RFitPanel::GetFitObjectType(TObject *obj)
+{
+   if (!obj)
+      return RFitPanelModel::kObjectNone;
+
+   if (obj->InheritsFrom(TH1::Class()))
+      return RFitPanelModel::kObjectHisto;
+
+   if (obj->InheritsFrom(TGraph::Class()))
+      return RFitPanelModel::kObjectGraph;
+
+   if (obj->InheritsFrom(TGraph2D::Class()))
+      return RFitPanelModel::kObjectGraph2D;
+
+   if (obj->InheritsFrom(THStack::Class()))
+      return RFitPanelModel::kObjectGraph2D;
+
+   if (obj->InheritsFrom(TMultiGraph::Class()))
+      return RFitPanelModel::kObjectGraph2D;
+
+   return RFitPanelModel::kObjectNotSupported;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -680,9 +674,9 @@ bool ROOT::Experimental::RFitPanel::DoFit()
 {
    auto &m = model();
 
-   int kind{0};
-   TObject *obj = GetSelectedObject(m.fSelectedData, kind);
+   TObject *obj = GetSelectedObject(m.fSelectedData);
    if (!obj) return false;
+   auto kind = GetFitObjectType(obj);
 
    auto f1 = GetFitFunction(m.fSelectedFunc);
    if (!f1) return false;
@@ -701,7 +695,7 @@ bool ROOT::Experimental::RFitPanel::DoFit()
    TFitResultPtr res;
 
    switch (kind) {
-      case kObjectHisto: {
+      case RFitPanelModel::kObjectHisto: {
 
          TH1 *hist = dynamic_cast<TH1*>(obj);
          if (hist)
@@ -709,14 +703,14 @@ bool ROOT::Experimental::RFitPanel::DoFit()
 
          break;
       }
-      case kObjectGraph: {
+      case RFitPanelModel::kObjectGraph: {
 
          TGraph *gr = dynamic_cast<TGraph*>(obj);
          if (gr)
             res = ROOT::Fit::FitObject(gr, f1.get(), fitOpts, minOption, drawOpts, drange);
          break;
       }
-      case kObjectMultiGraph: {
+      case RFitPanelModel::kObjectMultiGraph: {
 
          TMultiGraph *mg = dynamic_cast<TMultiGraph*>(obj);
          if (mg)
@@ -724,7 +718,7 @@ bool ROOT::Experimental::RFitPanel::DoFit()
 
          break;
       }
-      case kObjectGraph2D: {
+      case RFitPanelModel::kObjectGraph2D: {
 
          TGraph2D *g2d = dynamic_cast<TGraph2D*>(obj);
          if (g2d)
@@ -732,7 +726,7 @@ bool ROOT::Experimental::RFitPanel::DoFit()
 
          break;
       }
-      case kObjectHStack: {
+      case RFitPanelModel::kObjectHStack: {
          // N/A
          break;
       }
@@ -862,8 +856,7 @@ bool ROOT::Experimental::RFitPanel::DoDraw()
 {
    auto &m = model();
 
-   int kind{0};
-   TObject *obj = GetSelectedObject(m.fSelectedData, kind);
+   TObject *obj = GetSelectedObject(m.fSelectedData);
    if (!obj) return false;
 
    TObject *drawobj = nullptr;

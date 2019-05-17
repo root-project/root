@@ -41,7 +41,7 @@
                         hSpacing="0.5" vSpacing="0">
                         <ComboBox selectedKey="{/fFitMethod}"
                            items="{ path: '/fFitMethods' }">
-                           <core:Item key="{key}" text="{value}" />
+                           <core:Item key="{id}" text="{text}" />
                            <layoutData>
                               <l:GridData span="XL12 L12 M12 S12" />
                            </layoutData>

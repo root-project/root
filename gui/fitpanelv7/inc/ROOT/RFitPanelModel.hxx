@@ -36,12 +36,30 @@ namespace Experimental {
 
 struct RFitPanelModel {
 
+   enum EFitObjectType {
+      kObjectNone,
+      kObjectHisto,
+      kObjectGraph,
+      kObjectGraph2D,
+      kObjectHStack,
+   //   kObjectTree,
+      kObjectMultiGraph,
+      kObjectNotSupported
+   };
+
    /// Generic item for ui5 ComboBox
    struct RComboBoxItem {
       std::string key;
       std::string value;
       RComboBoxItem() = default;
       RComboBoxItem(const std::string &_key, const std::string &_value) : key(_key), value(_value) {}
+   };
+
+   struct RMethodInfo {
+      int id{0};                 // method id
+      std::string text;          // text shown in combobox
+      RMethodInfo() = default;
+      RMethodInfo(int _id, const std::string &_text) : id(_id), text(_text) {}
    };
 
    /// Entry in minimizer algorithm combo
@@ -89,24 +107,24 @@ struct RFitPanelModel {
       void Clear();
    };
 
-   std::string fTitle;                      ///< title of the fit panel
+   std::string fTitle;                    ///< title of the fit panel
 
-   std::vector<RItemInfo> fDataSet;     ///< list of available data sources
-   std::string fSelectedData;               ///< selected data
+   std::vector<RItemInfo> fDataSet;       ///< list of available data sources
+   std::string fSelectedData;             ///< selected data
+   EFitObjectType fDataType{kObjectNone}; ///< selected object type, provided by server
 
-   int fDim{0};                             ///< number of dimensions in selected data object
+   int fDim{0};                           ///< number of dimensions in selected data object
 
-   std::vector<RItemInfo> fFuncList;     ///< all available fit functions
-   std::string fSelectedFunc;               ///< id of selected fit function like dflt::gaus
+   std::vector<RItemInfo> fFuncList;      ///< all available fit functions
+   std::string fSelectedFunc;             ///< id of selected fit function like dflt::gaus
 
-
-   std::string fSelectedTab;               ///< key of selected tab, useful for drawing
+   std::string fSelectedTab;              ///< key of selected tab, useful for drawing
 
    // General tab
 
    // Method
-   std::vector<RComboBoxItem> fFitMethods;   ///< all supported fit methods
-   std::string fFitMethod;                   ///< selected fit method
+   std::vector<RMethodInfo> fFitMethods;  ///< all supported for selected data
+   int fFitMethod{0};                     ///< selected fit method
 
    bool fLinearFit{false};
    bool fRobust{false};
@@ -189,6 +207,8 @@ struct RFitPanelModel {
    void Initialize();
 
    bool SelectHistogram(const std::string &hname, TH1 *hist);
+
+   void SetObjectKind(EFitObjectType kind);
 
    bool HasFunction(const std::string &id);
 
