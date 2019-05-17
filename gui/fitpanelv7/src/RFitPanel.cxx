@@ -37,6 +37,7 @@
 #include "TF1.h"
 #include "TF2.h"
 #include "TF3.h"
+#include "TFitResult.h"
 #include "TList.h"
 #include "TCanvas.h"
 #include "TPad.h"
@@ -62,6 +63,14 @@ ROOT::Experimental::RFitPanel::FitRes::FitRes(const std::string &_objid, std::un
    std::swap(func, _func);
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
+ROOT::Experimental::RFitPanel::FitRes::~FitRes()
+{
+   // to avoid dependency from TF1
+}
+
 /** \class ROOT::Experimental::RFitPanel
 \ingroup webdisplay
 
@@ -79,6 +88,15 @@ ROOT::Experimental::RFitPanel::RFitPanel(const std::string &title)
 
    GetFunctionsFromSystem();
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
+ROOT::Experimental::RFitPanel::~RFitPanel()
+{
+   // to avoid dependency from TF1
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Returns RWebWindow instance, used to display FitPanel
