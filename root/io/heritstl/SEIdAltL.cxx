@@ -17,7 +17,6 @@
 
 #include <iostream>
 #include <iomanip>
-// this is for mem_fun_ref ... but why isn't it needed in PlexSEIdALtL?
 #include <algorithm>
 #include <functional>
 
@@ -129,6 +128,7 @@ void SEIdAltL::DropCurrent()
 //______________________________________________________________________________
 void SEIdAltL::DropZeroWeights()
 {
+   /*
    // Remove pairs from the list that have weight == 0
 
    if (size() <= 0) return;  // one cannot drop what one doesn't have
@@ -140,7 +140,7 @@ void SEIdAltL::DropZeroWeights()
 
    // erase the moved items out of the array 
    this->erase(new_end,this->end());
-
+*/
 }
 
 //______________________________________________________________________________
