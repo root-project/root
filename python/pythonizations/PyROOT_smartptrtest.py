@@ -34,7 +34,7 @@ class TestClassSMARTPTRS:
         mine = cppyy.gbl.mine
 
         assert type(mine) == MyShareable
-        assert type(mine._get_smart_ptr()) == cppyy.gbl.std.auto_ptr(MyShareable)
+        assert type(mine._get_smart_ptr()) == cppyy.gbl.std.shared_ptr(MyShareable)
         assert mine.say_hi() == "Hi!"
 
     def test02_converters(self):
@@ -66,17 +66,17 @@ class TestClassSMARTPTRS:
 
         mine = cppyy.gbl.gime_mine_ptr()
         assert type(mine) == MyShareable
-        assert type(mine._get_smart_ptr()) == cppyy.gbl.std.auto_ptr(MyShareable)
+        assert type(mine._get_smart_ptr()) == cppyy.gbl.std.shared_ptr(MyShareable)
         assert mine.say_hi() == "Hi!"
 
         mine = cppyy.gbl.gime_mine_ref()
         assert type(mine) == MyShareable
-        assert type(mine._get_smart_ptr()) == cppyy.gbl.std.auto_ptr(MyShareable)
+        assert type(mine._get_smart_ptr()) == cppyy.gbl.std.shared_ptr(MyShareable)
         assert mine.say_hi() == "Hi!"
 
         mine = cppyy.gbl.gime_mine()
         assert type(mine) == MyShareable
-        assert type(mine._get_smart_ptr()) == cppyy.gbl.std.auto_ptr(MyShareable)
+        assert type(mine._get_smart_ptr()) == cppyy.gbl.std.shared_ptr(MyShareable)
         assert mine.say_hi() == "Hi!"
 
 
