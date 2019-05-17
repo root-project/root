@@ -9,7 +9,7 @@ sap.ui.define([
 
    return GuiPanelController.extend("rootui5.fitpanel.controller.FitPanel", {
 
-         //function called from GuiPanelController
+      //function called from GuiPanelController
       onPanelInit : function() {
 
          // WORKAROUND, need to be FIXED IN THE FUTURE
@@ -18,6 +18,7 @@ sap.ui.define([
          else
             JSROOT.loadScript('rootui5sys/fitpanel/style/style.css');
 
+         // need dummy ranges to initialize RangeSliders,
          var data = {
                fDim: 1,
                fMinRangeX: -1,
@@ -113,16 +114,26 @@ sap.ui.define([
 
          this.getView().byId("MethodMin").getBinding("items").filter(new Filter("lib", FilterOperator.EQ, data.fLibrary));
 
-         var first = 0;
+         var best = 0, selected = null;
+
+         // first find selected item
+         for (var k=0;k<data.fMethodMinAll.length;++k) {
+            if (data.fMethodMinAll[k].id == data.fSelectMethodMin) {
+               selected = data.fMethodMinAll[k];
+               break;
+            }
+         }
 
          for (var k=0;k<data.fMethodMinAll.length;++k) {
             var item = data.fMethodMinAll[k];
             if (item.lib != data.fLibrary) continue;
-            if (!first) first = item.id;
             if (item.id === data.fSelectMethodMin) return;
+            if (!best) best = item.id;
+            // if name matches with previous selection
+            if (selected && (selected.text == item.text)) best = item.id;
          }
 
-         data.fSelectMethodMin = first;
+         data.fSelectMethodMin = best;
       },
 
       //change the combo box in Minimization Tab --- Method depending on Radio Buttons values
