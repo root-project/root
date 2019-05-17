@@ -15,7 +15,7 @@
 
 #include "ROOT/RPadLength.hxx"
 
-#include <ROOT/TLogger.hxx>
+#include <ROOT/RLogger.hxx>
 
 #include <algorithm> // std::transform
 #include <cctype> // std::tolower

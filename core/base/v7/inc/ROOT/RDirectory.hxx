@@ -13,11 +13,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_TDirectory
-#define ROOT7_TDirectory
+#ifndef ROOT7_RDirectory
+#define ROOT7_RDirectory
 
-#include "ROOT/TLogger.hxx"
-#include "ROOT/TDirectoryEntry.hxx"
+#include "ROOT/RLogger.hxx"
+#include "ROOT/RDirectoryEntry.hxx"
 
 #include <iterator>
 #include <memory>

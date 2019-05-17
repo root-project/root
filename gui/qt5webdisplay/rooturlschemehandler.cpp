@@ -22,7 +22,7 @@
 #include <QWebEngineUrlRequestJob>
 #include <QWebEngineProfile>
 
-#include <ROOT/TLogger.hxx>
+#include <ROOT/RLogger.hxx>
 
 #include "THttpServer.h"
 #include "THttpCallArg.h"

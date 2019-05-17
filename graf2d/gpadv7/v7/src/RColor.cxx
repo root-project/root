@@ -15,7 +15,7 @@
 
 #include "ROOT/RColor.hxx"
 
-#include <ROOT/TLogger.hxx>
+#include <ROOT/RLogger.hxx>
 
 #include <algorithm>
 #include <cctype>

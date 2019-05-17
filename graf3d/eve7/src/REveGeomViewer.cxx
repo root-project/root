@@ -12,7 +12,7 @@
 #include <ROOT/REveGeomViewer.hxx>
 
 #include <ROOT/RWebWindowsManager.hxx>
-#include <ROOT/TLogger.hxx>
+#include <ROOT/RLogger.hxx>
 
 #include "TSystem.h"
 #include "TROOT.h"

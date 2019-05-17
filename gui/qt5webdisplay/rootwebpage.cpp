@@ -15,7 +15,7 @@
 
 #include "rootwebpage.h"
 
-#include <ROOT/TLogger.hxx>
+#include <ROOT/RLogger.hxx>
 #include <TString.h>
 
 void RootWebPage::javaScriptConsoleMessage(JavaScriptConsoleMessageLevel lvl, const QString &message, int lineNumber,

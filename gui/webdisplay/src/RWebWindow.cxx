@@ -16,7 +16,7 @@
 #include <ROOT/RWebWindow.hxx>
 
 #include <ROOT/RWebWindowsManager.hxx>
-#include <ROOT/TLogger.hxx>
+#include <ROOT/RLogger.hxx>
 
 #include "RWebWindowWSHandler.hxx"
 #include "THttpCallArg.h"

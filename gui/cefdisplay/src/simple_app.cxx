@@ -49,7 +49,7 @@
 
 #include <ROOT/RWebDisplayHandle.hxx>
 #include <ROOT/RMakeUnique.hxx>
-#include <ROOT/TLogger.hxx>
+#include <ROOT/RLogger.hxx>
 
 THttpServer *gHandlingServer = nullptr;
 

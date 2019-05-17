@@ -208,7 +208,7 @@ set(BASE_SOURCES
 )
 
 if(CMAKE_CXX_STANDARD GREATER 11)
-  list(APPEND BASE_HEADERS ROOT/TLogger.hxx)
+  list(APPEND BASE_HEADERS ROOT/RLogger.hxx)
   list(APPEND BASE_SOURCES v7/src/TLogger.cxx)
   # TLogger.hxx may be used without root7 flag, but is placed in v7/inc/,
   # so we need to tell ROOT_INSTALL_HEADERS() where to find it
@@ -218,7 +218,7 @@ endif()
 if(root7)
   list(APPEND BASE_HEADERS
       ROOT/RDrawable.hxx
-      ROOT/TDirectoryEntry.hxx
+      ROOT/RDirectoryEntry.hxx
       ROOT/TIndexIter.hxx
   )
   list(APPEND BASE_SOURCES

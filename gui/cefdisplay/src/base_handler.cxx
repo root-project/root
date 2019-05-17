@@ -24,7 +24,7 @@
 #include "TError.h"
 #include "TBase64.h"
 
-#include <ROOT/TLogger.hxx>
+#include <ROOT/RLogger.hxx>
 
 #include <sstream>
 #include <string>

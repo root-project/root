@@ -23,7 +23,7 @@ R__LOAD_LIBRARY(libROOTHistDraw);
 #include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RColor.hxx"
-#include "ROOT/TDirectory.hxx"
+#include "ROOT/RDirectory.hxx"
 
 void draw()
 {
