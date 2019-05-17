@@ -21,13 +21,13 @@
 #include "Fit/DataRange.h"
 #include "Math/MinimizerOptions.h"
 #include "TString.h"
-#include "TFitResult.h"
 
 #include <vector>
 #include <string>
 
 class TH1;
 class TF1;
+class TFitResult;
 
 namespace ROOT {
 namespace Experimental {

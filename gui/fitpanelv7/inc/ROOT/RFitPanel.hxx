@@ -31,10 +31,9 @@
 #include <vector>
 #include <list>
 
-#include "TF1.h"
-
 class TPad;
 class TH1;
+class TF1;
 
 namespace ROOT {
 namespace Experimental {
@@ -61,6 +60,7 @@ class RFitPanel {
       TFitResultPtr res;          // result
       FitRes() = default;
       FitRes(const std::string &_objid, std::unique_ptr<TF1> &_func, TFitResultPtr &_res);
+      ~FitRes();
    };
 
    std::list<FitRes> fPrevRes; ///<! all previous functions used for fitting
@@ -99,6 +99,7 @@ class RFitPanel {
 
 public:
    RFitPanel(const std::string &title = "Fit panel");
+   ~RFitPanel();
 
    // method required when any panel want to be inserted into the RCanvas
    std::shared_ptr<RWebWindow> GetWindow();
