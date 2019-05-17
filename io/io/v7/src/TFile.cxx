@@ -20,9 +20,9 @@
 #include <mutex>
 #include <string>
 
-ROOT::Experimental::TDirectory &ROOT::Experimental::TDirectory::Heap()
+ROOT::Experimental::RDirectory &ROOT::Experimental::RDirectory::Heap()
 {
-   static TDirectory heapDir;
+   static RDirectory heapDir;
    return heapDir;
 }
 

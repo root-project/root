@@ -34,7 +34,7 @@ void fitpanel6()
 
    // create panel
    auto panel = std::make_shared<RFitPanel>("FitPanel");
-   ROOT::Experimental::TDirectory::Heap().Add("fitpanel", panel);
+   RDirectory::Heap().Add("fitpanel", panel);
 
    TH1F *test = new TH1F("test","This is test histogram",100,-4,4);
    test->FillRandom("gaus", 10000);
