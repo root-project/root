@@ -1,4 +1,4 @@
-/// \file ROOT/TFile.h
+/// \file ROOT/RFile.h
 /// \ingroup Base ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-31
@@ -13,27 +13,26 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_TFile
-#define ROOT7_TFile
+#ifndef ROOT7_RFile
+#define ROOT7_RFile
 
 #include "ROOT/RDirectory.hxx"
+#include "ROOT/RStringView.hxx"
 
 #include "TClass.h"
-
-#include "ROOT/RStringView.hxx"
 #include <memory>
 
 namespace ROOT {
 namespace Experimental {
 
-class TFilePtr;
+class RFilePtr;
 
 namespace Internal {
-class TFileStorageInterface;
-class TFileSharedPtrCtor;
+class RFileStorageInterface;
+class RFileSharedPtrCtor;
 } // namespace Internal
 
-/** \class ROOT::Experimental::TFile
+/** \class ROOT::Experimental::RFile
  A ROOT file.
 
  A ROOT file is an object store: it can serialize any
@@ -41,20 +40,20 @@ class TFileSharedPtrCtor;
  dictionary), and it stores the object's data under a key name.
 
  */
-class TFile: public RDirectory {
+class RFile: public RDirectory {
 private:
-   std::unique_ptr<Internal::TFileStorageInterface> fStorage; ///< Storage backend.
+   std::unique_ptr<Internal::RFileStorageInterface> fStorage; ///< Storage backend.
 
-   TFile(std::unique_ptr<Internal::TFileStorageInterface> &&storage);
+   RFile(std::unique_ptr<Internal::RFileStorageInterface> &&storage);
 
    /// Serialize the object at address, using the object's TClass.
    // FIXME: what about `cl` "pointing" to a base class?
    void WriteMemoryWithType(std::string_view name, const void *address, TClass *cl);
 
-   friend Internal::TFileSharedPtrCtor;
+   friend Internal::RFileSharedPtrCtor;
 
 public:
-   /// Options for TFile construction.
+   /// Options for RFile construction.
    struct Options_t {
       /// Default constructor needed for member inits.
       Options_t() {}
@@ -70,7 +69,7 @@ public:
       /// remotely.
       bool fCachedRead = false;
 
-      /// Where to cache the file. If empty, defaults to TFilePtr::GetCacheDir().
+      /// Where to cache the file. If empty, defaults to RFilePtr::GetCacheDir().
       std::string fCacheDir;
    };
 
@@ -80,25 +79,25 @@ public:
    /// Open a file with `name` for reading.
    ///
    /// \note: Synchronizes multi-threaded accesses through locks.
-   static TFilePtr Open(std::string_view name, const Options_t &opts = Options_t());
+   static RFilePtr Open(std::string_view name, const Options_t &opts = Options_t());
 
    /// Open an existing file with `name` for reading and writing. If a file with
-   /// that name does not exist, an invalid TFilePtr will be returned.
+   /// that name does not exist, an invalid RFilePtr will be returned.
    ///
    /// \note: Synchronizes multi-threaded accesses through locks.
-   static TFilePtr OpenForUpdate(std::string_view name, const Options_t &opts = Options_t());
+   static RFilePtr OpenForUpdate(std::string_view name, const Options_t &opts = Options_t());
 
    /// Open a file with `name` for reading and writing. Fail (return an invalid
-   /// `TFilePtr`) if a file with this name already exists.
+   /// `RFilePtr`) if a file with this name already exists.
    ///
    /// \note: Synchronizes multi-threaded accesses through locks.
-   static TFilePtr Create(std::string_view name, const Options_t &opts = Options_t());
+   static RFilePtr Create(std::string_view name, const Options_t &opts = Options_t());
 
    /// Open a file with `name` for reading and writing. If a file with this name
    /// already exists, delete it and create a new one. Else simply create a new file.
    ///
    /// \note: Synchronizes multi-threaded accesses through locks.
-   static TFilePtr Recreate(std::string_view name, const Options_t &opts = Options_t());
+   static RFilePtr Recreate(std::string_view name, const Options_t &opts = Options_t());
 
    ///\}
 
@@ -113,7 +112,7 @@ public:
    /// Must not call Write() of all attached objects:
    /// some might not be needed to be written or writing might be aborted due to
    /// an exception; require explicit Write().
-   ~TFile();
+   ~RFile();
 
    /// Save all objects associated with this directory (including file header) to
    /// the storage medium.
@@ -140,28 +139,28 @@ public:
       return std::make_unique<T>(*Get<T>(name));
    }
 
-   /// Write an object that is not lifetime managed by this TFileImplBase.
+   /// Write an object that is not lifetime managed by this RFileImplBase.
    template <class T>
    void Write(std::string_view name, const T &obj)
    {
       WriteMemoryWithType(name, &obj, TClass::GetClass<T>());
    }
 
-   /// Write an object that is not lifetime managed by this TFileImplBase.
+   /// Write an object that is not lifetime managed by this RFileImplBase.
    template <class T>
    void Write(std::string_view name, const T *obj)
    {
       WriteMemoryWithType(name, obj, TClass::GetClass<T>());
    }
 
-   /// Write an object that is already lifetime managed by this TFileImplBase.
+   /// Write an object that is already lifetime managed by this RFileImplBase.
    void Write(std::string_view name)
    {
       auto dep = Find(name);
       WriteMemoryWithType(name, dep.GetPointer().get(), dep.GetType());
    }
 
-   /// Hand over lifetime management of an object to this TFileImplBase, and
+   /// Hand over lifetime management of an object to this RFileImplBase, and
    /// write it.
    template <class T>
    void Write(std::string_view name, std::shared_ptr<T> &&obj)
@@ -173,7 +172,7 @@ public:
 };
 
 /**
- \class TFilePtr
+ \class RFilePtr
  \brief Points to an object that stores or reads objects in ROOT's binary
  format.
 
@@ -182,22 +181,22 @@ public:
 
  */
 
-class TFilePtr {
+class RFilePtr {
 private:
-   std::shared_ptr<TFile> fFile;
+   std::shared_ptr<RFile> fFile;
 
    /// Constructed by Open etc.
-   TFilePtr(std::shared_ptr<TFile> &&);
+   RFilePtr(std::shared_ptr<RFile> &&);
 
-   friend class TFile;
+   friend class RFile;
 
 public:
-   /// Dereference the file pointer, giving access to the TFileImplBase object.
-   TFile *operator->() { return fFile.get(); }
+   /// Dereference the file pointer, giving access to the RFileImplBase object.
+   RFile *operator->() { return fFile.get(); }
 
-   /// Dereference the file pointer, giving access to the TFileImplBase object.
+   /// Dereference the file pointer, giving access to the RFileImplBase object.
    /// const overload.
-   const TFile *operator->() const { return fFile.get(); }
+   const RFile *operator->() const { return fFile.get(); }
 
    /// Check the validity of the file pointer.
    operator bool() const { return fFile.get(); }
