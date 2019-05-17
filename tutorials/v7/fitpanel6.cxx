@@ -6,7 +6,7 @@
 /// \date 2019-04-11
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 /// \author Sergey Linev <S.Linev@gsi.de>
-/// \author Iliana Bessou <Iliana.Bessou@cern.ch>
+/// \author Iliana Betsou <Iliana.Betsou@cern.ch>
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
@@ -17,33 +17,29 @@
  *************************************************************************/
 
 #include <ROOT/RFitPanel.hxx>
+#include "ROOT/TDirectory.hxx"
 #include "TH1.h"
 #include "TFile.h"
+
+using namespace ROOT::Experimental;
 
 void fitpanel6()
 {
    TFile::Open("hsimple.root");
-   gFile->Get("hpx");
-   gFile->Get("hpxpy");
-   gFile->Get("hprof");
-   
+   if (gFile) {
+      gFile->Get("hpx");
+      gFile->Get("hpxpy");
+      gFile->Get("hprof");
+   }
 
+   // create panel
+   auto panel = std::make_shared<RFitPanel>("FitPanel");
+   ROOT::Experimental::TDirectory::Heap().Add("fitpanel", panel);
 
-   auto panel = new ROOT::Experimental::RFitPanel();
+   TH1F *test = new TH1F("test","This is test histogram",100,-4,4);
+   test->FillRandom("gaus", 10000);
 
-
-
-   TH1F *hpx = new TH1F("test","This is test histogram",100,-4,4);
-   hpx->FillRandom("gaus", 10000);
-
-   //hpx->Draw();
-
-   // TFile::Open("hsimple.root");
-   // gFile->Get("hpx");
-   // gFile->Get("hpxpx");
-   // gFile->Get("hprof");
-
-   panel->AssignHistogram(hpx);
+   panel->AssignHistogram(test);
 
    panel->Show();
 }
