@@ -219,7 +219,7 @@ if(root7)
   list(APPEND BASE_HEADERS
       ROOT/RDrawable.hxx
       ROOT/RDirectoryEntry.hxx
-      ROOT/TIndexIter.hxx
+      ROOT/RIndexIter.hxx
   )
   list(APPEND BASE_SOURCES
       v7/src/RDrawable.cxx
