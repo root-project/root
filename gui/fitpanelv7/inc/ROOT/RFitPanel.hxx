@@ -78,7 +78,8 @@ class RFitPanel {
    int UpdateModel(const std::string &json);
 
    void SelectObject(const std::string &objid);
-   TObject *GetSelectedObject(const std::string &objid, int &kind);
+   TObject *GetSelectedObject(const std::string &objid);
+   RFitPanelModel::EFitObjectType GetFitObjectType(TObject *obj);
    void UpdateDataSet();
 
    void UpdateFunctionsList();

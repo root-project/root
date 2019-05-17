@@ -29,7 +29,10 @@ enum EFitPanel {
    kFP_MIGRAD, kFP_SIMPLX, kFP_SCAN, kFP_COMBINATION,
    kFP_FUMILI, kFP_FUMILI2, kFP_GSLFR, kFP_GSLPR,
    kFP_BFGS, kFP_BFGS2, kFP_GSLLM, kFP_GSLSA,
-   kFP_GALIB, kFP_TMVAGA
+   kFP_GALIB, kFP_TMVAGA,
+
+   kFP_MCHIS, kFP_MBINL, kFP_MUBIN // Fit methods
+
 };
 
 using namespace std::string_literals;
@@ -162,10 +165,8 @@ void ROOT::Experimental::RFitPanelModel::Initialize()
    // corresponds when Type == User Func (fSelectedTypeID == 1)
 
    // ComboBox for General Tab --- Method
-   fFitMethods = { {"P", "Chi-square"},
-                   {"L", "Log Likelihood"},
-                   {"WL", "Binned LogLikelihood"} };
-   fFitMethod = "P";
+   fFitMethods.clear();
+   fFitMethod = 0;
 
    fLinearFit = false;
    fRobust = false;
@@ -221,6 +222,59 @@ void ROOT::Experimental::RFitPanelModel::Initialize()
    fConfidenceColor = "#c0b6ac"; // #11
 }
 
+
+////////////////////////////////////////////////////////////
+/// Update setting dependent from object type
+
+void ROOT::Experimental::RFitPanelModel::SetObjectKind(EFitObjectType kind)
+{
+   fDataType = kind;
+
+   fFitMethods.clear();
+   fFitMethod = 0;
+   fRobust = false;
+
+   switch (kind) {
+      case kObjectHisto:
+         fFitMethods = {{kFP_MCHIS, "Chi-square"}, {kFP_MBINL, "Binned Likelihood"}};
+         fFitMethod = kFP_MCHIS;
+         break;
+
+      case kObjectGraph:
+         fFitMethods = {{kFP_MCHIS, "Chi-square"}};
+         fFitMethod = kFP_MCHIS;
+         fRobust = true;
+         break;
+
+      case kObjectMultiGraph:
+         fFitMethods = {{kFP_MCHIS, "Chi-square"}};
+         fFitMethod = kFP_MCHIS;
+         fRobust = true;
+         break;
+
+      case kObjectGraph2D:
+         fFitMethods = {{kFP_MCHIS, "Chi-square"}};
+         fFitMethod = kFP_MCHIS;
+         break;
+
+      case kObjectHStack:
+         fFitMethods = {{kFP_MCHIS, "Chi-square"}};
+         fFitMethod = kFP_MCHIS;
+         break;
+
+      //case kObjectTree:
+      //   fFitMethods = {{ kFP_MUBIN, "Unbinned Likelihood" }};
+      //   fFitMethod = kFP_MUBIN;
+      //   break;
+
+      default:
+         break;
+   }
+
+}
+
+
+////////////////////////////////////////////////////////////
 /// Update advanced parameters associated with fit function
 
 void ROOT::Experimental::RFitPanelModel::UpdateAdvanced(TFitResult *res)
@@ -266,7 +320,7 @@ Foption_t ROOT::Experimental::RFitPanelModel::GetFitOptions()
    fitOpts.Integral = fIntegral;
    fitOpts.More     = fImproveFitResults;
    fitOpts.Errors   = fBestErrors;
-   fitOpts.Like     = false; // (fMethodList->GetSelected() != kFP_MCHIS);
+   fitOpts.Like     = fFitMethod != kFP_MCHIS;
 
    if (fEmptyBins1)
       fitOpts.W1 = 2;
@@ -293,8 +347,7 @@ Foption_t ROOT::Experimental::RFitPanelModel::GetFitOptions()
    fitOpts.Quiet    = fPrint == 2;
    fitOpts.Verbose  = fPrint == 1;
 
-   // TODO: only TGraph
-   if ( /* !(fType != kObjectGraph) &&  */ fRobust ) {
+   if (fRobust) {
       fitOpts.Robust = 1;
       fitOpts.hRobust = fRobustLevel;
    }
