@@ -1,4 +1,4 @@
-/// \file ROOT/TFit.h
+/// \file ROOT/RFit.h
 /// \ingroup MathCore ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-09-06
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TFit
-#define ROOT_TFit
+#ifndef ROOT_RFit
+#define ROOT_RFit
 
 #include <array>
 #include <functional>
@@ -26,7 +26,7 @@
 namespace ROOT {
 namespace Experimental {
 
-class TFitResult {
+class RFitResult {
 };
 
 template <int DIMENSION>
@@ -36,10 +36,10 @@ public:
 };
 
 template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
-TFitResult FitTo(const RHist<DIMENSIONS, PRECISION, STAT...> &hist, const TFunction<DIMENSIONS> &func,
+RFitResult FitTo(const RHist<DIMENSIONS, PRECISION, STAT...> &hist, const TFunction<DIMENSIONS> &func,
                  std::span<double> paramInit)
 {
-   return TFitResult();
+   return RFitResult();
 }
 
 } // namespace Experimental
