@@ -19,7 +19,7 @@
 #include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RFitPanel.hxx"
-#include "ROOT/TDirectory.hxx"
+#include "ROOT/RDirectory.hxx"
 
 using namespace ROOT::Experimental;
 

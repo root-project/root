@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_TDirectoryEntry
-#define ROOT7_TDirectoryEntry
+#ifndef ROOT7_RDirectoryEntry
+#define ROOT7_RDirectoryEntry
 
 #include "TClass.h"
 

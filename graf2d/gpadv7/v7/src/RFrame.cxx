@@ -15,7 +15,7 @@
 
 #include "ROOT/RFrame.hxx"
 
-#include "ROOT/TLogger.hxx"
+#include "ROOT/RLogger.hxx"
 #include "ROOT/RPadUserAxis.hxx"
 
 #include <cassert>

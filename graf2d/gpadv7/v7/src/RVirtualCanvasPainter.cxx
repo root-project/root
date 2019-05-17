@@ -15,7 +15,7 @@
 
 #include <ROOT/RVirtualCanvasPainter.hxx>
 
-#include <ROOT/TLogger.hxx>
+#include <ROOT/RLogger.hxx>
 #include <TSystem.h> // TSystem::Load
 
 #include <exception>

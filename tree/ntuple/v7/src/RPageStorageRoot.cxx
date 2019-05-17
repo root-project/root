@@ -19,7 +19,7 @@
 #include <ROOT/RPageStorageRoot.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPagePool.hxx>
-#include <ROOT/TLogger.hxx>
+#include <ROOT/RLogger.hxx>
 
 #include <TKey.h>
 
