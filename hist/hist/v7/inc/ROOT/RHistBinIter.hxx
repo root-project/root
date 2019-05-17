@@ -16,7 +16,7 @@
 #ifndef ROOT7_RHistBinIter
 #define ROOT7_RHistBinIter
 
-#include "ROOT/TIndexIter.hxx"
+#include "ROOT/RIndexIter.hxx"
 
 namespace ROOT {
 namespace Experimental {
@@ -94,13 +94,13 @@ private:
  */
 
 template <class HISTIMPL>
-class RHistBinIter: public Internal::TIndexIter<RHistBinRef<HISTIMPL>, RHistBinPtr<HISTIMPL>> {
+class RHistBinIter: public Internal::RIndexIter<RHistBinRef<HISTIMPL>, RHistBinPtr<HISTIMPL>> {
 public:
    using Ref_t = RHistBinRef<HISTIMPL>;
    using Ptr_t = RHistBinPtr<HISTIMPL>;
 
 private:
-   using IndexIter_t = Internal::TIndexIter<RHistBinRef<HISTIMPL>, RHistBinPtr<HISTIMPL>>;
+   using IndexIter_t = Internal::RIndexIter<RHistBinRef<HISTIMPL>, RHistBinPtr<HISTIMPL>>;
 
    HISTIMPL &fHist; ///< The histogram we iterate over.
 
