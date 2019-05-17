@@ -43,7 +43,7 @@ void simple()
       return par[0] * x[0] * x[0] + (par[1] - x[1]) * x[1];
    });
 
-   Experimental::TFitResult fitResult = Experimental::FitTo(hist, func, {{0., 1.}});
+   auto fitResult = Experimental::FitTo(hist, func, {{0., 1.}});
 
    auto file = Experimental::RFile::Recreate("hist.root");
    file->Write("TheHist", hist);
