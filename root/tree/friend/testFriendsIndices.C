@@ -2,6 +2,7 @@
 
 
 #include <algorithm>
+#include <random>
 #include <vector>
 #include "TFile.h"
 #include "TChain.h"
@@ -29,12 +30,13 @@ void createFiles(TString name, Float_t valConst)
    Int_t val;
    Int_t val2;
    Int_t val3;
+   std::mt19937 urng;
    for (int treeNo = 0; treeNo < noTrees; treeNo++) {
       vector<Int_t> data;
       for (int j = 0; j < ::size[treeNo]; j++) {
          data.push_back(nextToFill++);
       }
-      random_shuffle(data.begin(), data.end());
+      shuffle(data.begin(), data.end(), urng);
 
       TString filename;
       filename += name;
