@@ -87,7 +87,7 @@ class RFitPanel {
    std::unique_ptr<TF1> GetFitFunction(const std::string &funcid);
    void SelectFunction(const std::string &funcid);
 
-   bool DrawConfidenceLevels(TFitResult *res);
+   TObject *MakeConfidenceLevels(TFitResult *res);
 
    Color_t GetColor(const std::string &colorid);
 
