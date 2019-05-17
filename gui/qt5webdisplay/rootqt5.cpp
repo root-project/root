@@ -40,7 +40,7 @@
 
 #include <ROOT/RWebDisplayHandle.hxx>
 #include <ROOT/RMakeUnique.hxx>
-#include <ROOT/TLogger.hxx>
+#include <ROOT/RLogger.hxx>
 
 class TQt5Timer : public TTimer {
 public:

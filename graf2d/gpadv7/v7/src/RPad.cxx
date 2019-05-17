@@ -15,7 +15,7 @@
 
 #include "ROOT/RPad.hxx"
 
-#include "ROOT/TLogger.hxx"
+#include "ROOT/RLogger.hxx"
 #include "ROOT/RPadExtent.hxx"
 #include "ROOT/RPadPos.hxx"
 #include <ROOT/RPadDisplayItem.hxx>

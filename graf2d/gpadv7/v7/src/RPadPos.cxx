@@ -16,7 +16,7 @@
 #include "ROOT/RPadPos.hxx"
 
 #include <ROOT/RPadExtent.hxx>
-#include <ROOT/TLogger.hxx>
+#include <ROOT/RLogger.hxx>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize a RPadPos from a style string.
