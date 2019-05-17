@@ -72,9 +72,9 @@ set(sources src/TArchiveFile.cxx
    src/TZIPFile.cxx
 )
 
-set(headersv7 v7/inc/ROOT/TFile.hxx)
+set(headersv7 v7/inc/ROOT/RFile.hxx)
 
-set(sourcesv7 v7/src/TFile.cxx)
+set(sourcesv7 v7/src/RFile.cxx)
 
 include_directories(${CMAKE_SOURCE_DIR}/core/clib/res ${CMAKE_SOURCE_DIR}/io/io/res)
 
