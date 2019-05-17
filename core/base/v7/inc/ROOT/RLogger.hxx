@@ -101,7 +101,7 @@ public:
  Object to count the number of warnings and errors emitted by a section of code,
  after construction of this type.
  */
-class TLogDiagCounter {
+class RLogDiagCounter {
 private:
    /// The number of the RLogManager's emitted warnings at construction time of *this.
    long long fInitialWarnings{RLogManager::Get().GetNumWarnings()};

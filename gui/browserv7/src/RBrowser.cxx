@@ -18,7 +18,6 @@
 #include <ROOT/RWebWindowsManager.hxx>
 #include <ROOT/RBrowserItem.hxx>
 #include <ROOT/RLogger.hxx>
-#include "ROOT/RDirectory.hxx"
 #include "ROOT/RMakeUnique.hxx"
 
 #include "TString.h"
