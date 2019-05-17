@@ -810,6 +810,8 @@ void REveTrackPropagator::LineToBounds(REveVectorD& p)
       tZ = (fMaxZ - fV.fZ) / p.fZ;
    else if (p.fZ < 0)
       tZ = - (fMaxZ + fV.fZ) / p.fZ;
+   else
+      tZ = 1e99;
 
    // time where particle intersects cylinder
    Double_t a = p.fX*p.fX + p.fY*p.fY;
