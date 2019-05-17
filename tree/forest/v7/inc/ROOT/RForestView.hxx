@@ -87,7 +87,7 @@ class RForestView {
 
 protected:
    RField<T> fField;
-   RFieldValue<T> fValue;
+   Detail::RFieldValue fValue;
    RForestView(std::string_view fieldName, Detail::RPageSource* pageSource)
      : fField(fieldName), fValue(fField.GenerateValue())
    {
@@ -106,7 +106,7 @@ public:
 
    const T& operator()(ForestSize_t index) {
       fField.Read(index, &fValue);
-      return *fValue.Get();
+      return *fValue.Get<T>();
    }
 };
 

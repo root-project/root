@@ -29,16 +29,16 @@ class RFieldBase;
 
 // clang-format off
 /**
-\class ROOT::Experimental::TreeValueBase
+\class ROOT::Experimental::RFieldValue
 \ingroup Forest
 \brief Represents transient storage of simple or complex C++ values.
 
-The data carried by the tree value is used by the computational code and it is supposed to be serialized on Fill
-or deserialized into by tree reading.  Only fields can generate their corresponding tree values. This class is a mere
+The data carried by the value is used by the computational code and it is supposed to be serialized on Fill
+or deserialized into by reading.  Only fields can generate their corresponding values. This class is a mere
 wrapper around the memory location, it does not own it.  Memory ownership is managed through the RForestEntry.
 */
 // clang-format on
-class RFieldValueBase {
+class RFieldValue {
    friend class RFieldBase;
 
 protected:
@@ -53,50 +53,36 @@ protected:
    RColumnElementBase fMappedElement;
 
 public:
-   RFieldValueBase() : fField(nullptr), fRawPtr(nullptr) {}
-   RFieldValueBase(RFieldBase* field, void* rawPtr) : fField(field), fRawPtr(rawPtr) {}
-   RFieldValueBase(RFieldBase* field, void* rawPtr, const RColumnElementBase& mappedElement)
-      : fField(field), fRawPtr(rawPtr), fMappedElement(mappedElement) {}
+   RFieldValue() : fField(nullptr), fRawPtr(nullptr) {}
+
+   // Constructors that wrap around existing objects; prefixed with a bool in order to help the constructor overload
+   // selection.
+   RFieldValue(bool /*captureTag*/, Detail::RFieldBase* field, void* value) : fField(field), fRawPtr(value) {}
+   RFieldValue(bool /*captureTag*/, const Detail::RColumnElementBase& elem, Detail::RFieldBase* field, void* value)
+      : fField(field), fRawPtr(value), fMappedElement(elem) {}
+
+   // Typed constructors that initialize the given memory location
+   template <typename T, typename... ArgsT>
+   RFieldValue(RFieldBase* field, T* where, ArgsT&&... args) : fField(field), fRawPtr(where)
+   {
+      new (where) T(std::forward<ArgsT>(args)...);
+   }
+
+   template <typename T, typename... ArgsT>
+   RFieldValue(const Detail::RColumnElementBase& elem, Detail::RFieldBase* field, T* where, ArgsT&&... args)
+      : fField(field), fRawPtr(where), fMappedElement(elem)
+   {
+      new (where) T(std::forward<ArgsT>(args)...);
+   }
+
+   template <typename T>
+   T* Get() const { return static_cast<T*>(fRawPtr); }
 
    void* GetRawPtr() const { return fRawPtr; }
    RFieldBase* GetField() const { return fField; }
 };
 
 } // namespace Detail
-
-
-// clang-format off
-/**
-\class ROOT::Experimental::RFieldValue
-\ingroup Forest
-\brief A type-safe front for RFieldValueBase
-
-Used when types are available at compile time by RForestModel::AddField()
-*/
-// clang-format on
-template <typename T>
-class RFieldValue : public Detail::RFieldValueBase {
-public:
-   RFieldValue() : Detail::RFieldValueBase(nullptr, nullptr) {}
-   RFieldValue(const Detail::RFieldValueBase &other) : Detail::RFieldValueBase(other) {}
-   template <typename... ArgsT>
-   RFieldValue(Detail::RFieldBase* field, T* where, ArgsT&&... args) : Detail::RFieldValueBase(field, where)
-   {
-      new (where) T(std::forward<ArgsT>(args)...);
-   }
-   template <typename... ArgsT>
-   RFieldValue(const Detail::RColumnElementBase& elem, Detail::RFieldBase* field, T* where, ArgsT&&... args)
-      : Detail::RFieldValueBase(field, where, elem)
-   {
-      new (where) T(std::forward<ArgsT>(args)...);
-   }
-   RFieldValue(bool /*captureTag*/, Detail::RFieldBase* field, T* value) : Detail::RFieldValueBase(field, value) {}
-   RFieldValue(bool /*captureTag*/, const Detail::RColumnElementBase& elem, Detail::RFieldBase* field, T* value)
-      : Detail::RFieldValueBase(field, value, elem) {}
-
-   T* Get() const { return static_cast<T*>(fRawPtr); }
-};
-
 } // namespace Experimental
 } // namespace ROOT
 

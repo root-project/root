@@ -40,7 +40,7 @@ that are associated to values are managed.
 */
 // clang-format on
 class RForestEntry {
-   std::vector<Detail::RFieldValueBase> fValues;
+   std::vector<Detail::RFieldValue> fValues;
    /// The objects involed in serialization and deserialization might be used long after the entry is gone:
    /// hence the shared pointer
    std::vector<std::shared_ptr<void>> fValuePtrs;
@@ -54,26 +54,26 @@ public:
    ~RForestEntry();
 
    /// Adds a value whose storage is managed by the entry
-   void AddValue(const Detail::RFieldValueBase& value);
+   void AddValue(const Detail::RFieldValue& value);
 
    /// Adds a value whose storage is _not_ managed by the entry
-   void CaptureValue(const Detail::RFieldValueBase& value);
+   void CaptureValue(const Detail::RFieldValue& value);
 
    /// While building the entry, adds a new value to the list and return the value's shared pointer
    template<typename T, typename... ArgsT>
    std::shared_ptr<T> AddValue(RField<T>* field, ArgsT&&... args) {
       auto ptr = std::make_shared<T>(std::forward<ArgsT>(args)...);
-      fValues.emplace_back(Detail::RFieldValueBase(field->CaptureValue(ptr.get())));
+      fValues.emplace_back(Detail::RFieldValue(field->CaptureValue(ptr.get())));
       fValuePtrs.emplace_back(ptr);
       return ptr;
    }
 
-   Detail::RFieldValueBase GetValue(std::string_view fieldName) {
+   Detail::RFieldValue GetValue(std::string_view fieldName) {
       for (auto& v : fValues) {
          if (v.GetField()->GetName() == fieldName)
             return v;
       }
-      return Detail::RFieldValueBase();
+      return Detail::RFieldValue();
    }
 
    template<typename T>
