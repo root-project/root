@@ -22,29 +22,29 @@
 
 void simple()
 {
-   using namespace ROOT;
+   using namespace ROOT::Experimental;
 
    // Create a 2D histogram with an X axis with equidistant bins, and a y axis
    // with irregular binning.
-   Experimental::RAxisConfig xAxis(100, 0., 1.);
-   Experimental::RAxisConfig yAxis({0., 1., 2., 3., 10.});
-   Experimental::RH2D histFromVars(xAxis, yAxis);
+   RAxisConfig xAxis(100, 0., 1.);
+   RAxisConfig yAxis({0., 1., 2., 3., 10.});
+   RH2D histFromVars(xAxis, yAxis);
 
    // Or the short in-place version:
    // Create a 2D histogram with an X axis with equidistant bins, and a y axis
    // with irregular binning.
-   Experimental::RH2D hist({100, 0., 1.}, {{0., 1., 2., 3., 10.}});
+   RH2D hist({100, 0., 1.}, {{0., 1., 2., 3., 10.}});
 
    // Fill weight 1. at the coordinate 0.01, 1.02.
    hist.Fill({0.01, 1.02});
 
    // Fit the histogram.
-   Experimental::TFunction<2> func([](const std::array<double, 2> &x, const std::span<double> par) {
+   RFunction<2> func([](const std::array<double, 2> &x, const std::span<double> par) {
       return par[0] * x[0] * x[0] + (par[1] - x[1]) * x[1];
    });
 
-   auto fitResult = Experimental::FitTo(hist, func, {{0., 1.}});
+   auto fitResult = FitTo(hist, func, {{0., 1.}});
 
-   auto file = Experimental::RFile::Recreate("hist.root");
+   auto file = RFile::Recreate("hist.root");
    file->Write("TheHist", hist);
 }
