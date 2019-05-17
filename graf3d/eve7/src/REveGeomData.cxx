@@ -14,7 +14,7 @@
 #include <ROOT/RBrowserItem.hxx>
 #include <ROOT/REveGeoPolyShape.hxx>
 #include <ROOT/REveUtil.hxx>
-#include <ROOT/TLogger.hxx>
+#include <ROOT/RLogger.hxx>
 
 #include "TMath.h"
 #include "TColor.h"

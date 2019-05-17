@@ -18,7 +18,7 @@
 
 #include <ROOT/RWebWindowsManager.hxx>
 #include <ROOT/RMakeUnique.hxx>
-#include <ROOT/TLogger.hxx>
+#include <ROOT/RLogger.hxx>
 
 #include "Fit/BinData.h"
 #include "Fit/Fitter.h"
