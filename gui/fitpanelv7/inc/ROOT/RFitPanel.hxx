@@ -30,13 +30,11 @@
 #include <memory>
 #include <vector>
 #include <list>
-#include <unordered_map>
 
 #include "TF1.h"
 
 class TPad;
 class TH1;
-class TF1;
 
 namespace ROOT {
 namespace Experimental {
@@ -62,7 +60,7 @@ class RFitPanel {
       std::unique_ptr<TF1> func; // function
       TFitResultPtr res;          // result
       FitRes() = default;
-      FitRes(const std::string &_objid, std::unique_ptr<TF1> &_func, TFitResultPtr _res) : objid(_objid), res(_res) { std::swap(func, _func); }
+      FitRes(const std::string &_objid, std::unique_ptr<TF1> &_func, TFitResultPtr &_res);
    };
 
    std::list<FitRes> fPrevRes; ///<! all previous functions used for fitting
@@ -99,9 +97,7 @@ class RFitPanel {
    bool DoFit();
    bool DoDraw();
 
-
 public:
-   /// normal constructor
    RFitPanel(const std::string &title = "Fit panel");
 
    // method required when any panel want to be inserted into the RCanvas
