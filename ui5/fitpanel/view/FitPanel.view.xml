@@ -211,8 +211,7 @@
                               class="sapUiSizeCompact" hSpacing="0.5"
                               vSpacing="0">
                               <Text text="Number of Points:" />
-                              <StepInput value="{/fContourPoints}" min="0" max="1000" step="1"
-                                 editable="true" />
+                              <StepInput min="0" max="1000" step="1" value="{/fContourPoints}" editable="true" />
                               <Text text="Parameter 1:" />
                               <ComboBox selectedKey="{/fContourPar1Id}"
                                  change="onContourPar1Change"
@@ -227,7 +226,7 @@
                               </ComboBox>
                               <Text text="Confidence Level:" />
                               <StepInput min="0.000" max="1.000" step="0.001"
-                                 value="{/fContourConfLevel}"
+                                 value="{/fConfidenceLevel}"
                                  editable="true" displayValuePrecision="3" />
                               <HBox alignItems="Center">
                                  <Text text="Fill Colour:"/>
@@ -241,7 +240,7 @@
                               class="sapUiSizeCompact" hSpacing="0.5"
                               vSpacing="0">
                               <Text text="Number of Points:" />
-                              <StepInput value="{/fScanPoints}" min="0" max="100" step="1" editable="true" />
+                              <StepInput min="0" max="1000" step="1" value="{/fScanPoints}" editable="true" />
                               <Text text="Parameter:" />
                               <ComboBox selectedKey="{/fScanId}"
                                  items="{ path: '/fAdvancedPars' }">
@@ -255,6 +254,8 @@
                               <StepInput value="{/fScanMax}"
                                  min="0.0001" max="100.0000" step="0.0001"
                                  editable="true" displayValuePrecision="4" />
+                              <Text text="Line color:" />
+                              <fitpanel:ColorButton width="50px" color="{/fScanColor}" tooltip="Line color for scan plot"/>
                            </l:Grid>
                         </IconTabFilter>
                         <IconTabFilter key="Confidence" text="Conf Intervals">
@@ -262,7 +263,7 @@
                               class="sapUiSizeCompact" hSpacing="0.5"
                               vSpacing="0">
                               <Text text="Confidence Level:"/>
-                              <StepInput min="0.000" max="1" step="0.001"
+                              <StepInput min="0.000" max="1.000" step="0.001"
                                  value="{/fConfidenceLevel}" editable="true" displayValuePrecision="3" />
                               <Text text="Fill color:" />
                               <fitpanel:ColorButton width="50px" color="{/fConfidenceColor}" tooltip="Fill color for confidence plot"/>
