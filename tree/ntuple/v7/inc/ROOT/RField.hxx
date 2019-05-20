@@ -72,7 +72,7 @@ private:
    /// The C++ type captured by this field
    std::string fType;
    /// The role of this field in the data model structure
-   EForestStructure fStructure;
+   ENTupleStructure fStructure;
    /// A field on a trivial type that maps as-is to a single column
    bool fIsSimple;
 
@@ -128,7 +128,7 @@ public:
    };
 
    /// The constructor creates the underlying column objects and connects them to either a sink or a source.
-   RFieldBase(std::string_view name, std::string_view type, EForestStructure structure, bool isSimple);
+   RFieldBase(std::string_view name, std::string_view type, ENTupleStructure structure, bool isSimple);
    RFieldBase(const RFieldBase&) = delete;
    RFieldBase(RFieldBase&&) = default;
    RFieldBase& operator =(const RFieldBase&) = delete;
@@ -206,7 +206,7 @@ public:
 
    std::string GetName() const { return fName; }
    std::string GetType() const { return fType; }
-   EForestStructure GetStructure() const { return fStructure; }
+   ENTupleStructure GetStructure() const { return fStructure; }
    const RFieldBase* GetParent() const { return fParent; }
    bool IsSimple() const { return fIsSimple; }
 
@@ -224,7 +224,7 @@ public:
 /// The container field for a tree model, which itself has no physical representation
 class RFieldRoot : public Detail::RFieldBase {
 public:
-   RFieldRoot() : Detail::RFieldBase("", "", EForestStructure::kRecord, false /* isSimple */) {}
+   RFieldRoot() : Detail::RFieldBase("", "", ENTupleStructure::kRecord, false /* isSimple */) {}
    RFieldBase* Clone(std::string_view newName);
 
    void DoGenerateColumns() final {}
@@ -351,7 +351,7 @@ class RField<ClusterSize_t> : public Detail::RFieldBase {
 public:
    static std::string MyTypeName() { return "ROOT::Experimental::ClusterSize_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, MyTypeName(), EForestStructure::kLeaf, true /* isSimple */) {}
+     : Detail::RFieldBase(name, MyTypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
@@ -393,7 +393,7 @@ class RField<float> : public Detail::RFieldBase {
 public:
    static std::string MyTypeName() { return "float"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, MyTypeName(), EForestStructure::kLeaf, true /* isSimple */) {}
+     : Detail::RFieldBase(name, MyTypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
@@ -430,7 +430,7 @@ class RField<double> : public Detail::RFieldBase {
 public:
    static std::string MyTypeName() { return "double"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, MyTypeName(), EForestStructure::kLeaf, true /* isSimple */) {}
+     : Detail::RFieldBase(name, MyTypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
@@ -466,7 +466,7 @@ class RField<std::int32_t> : public Detail::RFieldBase {
 public:
    static std::string MyTypeName() { return "std::int32_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, MyTypeName(), EForestStructure::kLeaf, true /* isSimple */) {}
+     : Detail::RFieldBase(name, MyTypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
@@ -502,7 +502,7 @@ class RField<std::uint32_t> : public Detail::RFieldBase {
 public:
    static std::string MyTypeName() { return "std::uint32_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, MyTypeName(), EForestStructure::kLeaf, true /* isSimple */) {}
+     : Detail::RFieldBase(name, MyTypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
@@ -538,7 +538,7 @@ class RField<std::uint64_t> : public Detail::RFieldBase {
 public:
    static std::string MyTypeName() { return "std::uint64_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, MyTypeName(), EForestStructure::kLeaf, true /* isSimple */) {}
+     : Detail::RFieldBase(name, MyTypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
@@ -582,7 +582,7 @@ private:
 public:
    static std::string MyTypeName() { return "std::string"; }
    explicit RField(std::string_view name)
-      : Detail::RFieldBase(name, MyTypeName(), EForestStructure::kLeaf, false /* isSimple */)
+      : Detail::RFieldBase(name, MyTypeName(), ENTupleStructure::kLeaf, false /* isSimple */)
       , fIndex(0), fElemIndex(&fIndex) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
@@ -679,7 +679,7 @@ protected:
 public:
    RField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField)
       : ROOT::Experimental::Detail::RFieldBase(
-           fieldName, "ROOT::VecOps::RVec<" + itemField->GetType() + ">", EForestStructure::kCollection, false)
+           fieldName, "ROOT::VecOps::RVec<" + itemField->GetType() + ">", ENTupleStructure::kCollection, false)
       , fItemSize(itemField->GetValueSize()), fNWritten(0)
    {
       Attach(std::move(itemField));
