@@ -501,6 +501,6 @@ TEST(RForest, RDF)
       forest.Fill();
    }
 
-   auto rdf = ROOT::Experimental::MakeForestDataFrame("f", "test.root");
+   auto rdf = ROOT::Experimental::MakeNTupleDataFrame("f", "test.root");
    EXPECT_EQ(42.0, *rdf.Min("pt"));
 }
