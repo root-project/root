@@ -781,13 +781,7 @@ void RooAddPdf::updateCoefficients(CacheElem& cache, const RooArgSet* nset) cons
   
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Calculate and return the current value
-
-Double_t RooAddPdf::evaluate() const 
-{
+std::pair<const RooArgSet*, RooAddPdf::CacheElem*> RooAddPdf::getNormAndCache() const {
   const RooArgSet* nset = _normSet ; 
   //cxcoutD(Caching) << "RooAddPdf::evaluate(" << GetName() << ") calling getProjCache with nset = " << nset << " = " << (nset?*nset:RooArgSet()) << endl ;
 
@@ -799,38 +793,38 @@ Double_t RooAddPdf::evaluate() const
 
   CacheElem* cache = getProjCache(nset) ;
   updateCoefficients(*cache,nset) ;
+
+  return {nset, cache};
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate and return the current value
+
+Double_t RooAddPdf::evaluate() const
+{
+  auto normAndCache = getNormAndCache();
+  const RooArgSet* nset = normAndCache.first;
+  CacheElem* cache = normAndCache.second;
+
   
   // Do running sum of coef/pdf pairs, calculate lastCoef.
-  Double_t value(0) ;
-  Int_t i(0) ;
+  Double_t value(0);
 
-  if (cache->_needSupNorm) {
-
-    Double_t snormVal ;
-    for (auto arg : _pdfList) {
-      auto pdf = static_cast<RooAbsPdf*>(arg);
-      snormVal = ((RooAbsReal*)cache->_suppNormList.at(i))->getVal() ;
-      Double_t pdfVal = pdf->getVal(nset) ;
-      if (pdf->isSelectedComp()) {
-        value += pdfVal*_coefCache[i]/snormVal ;
-      }
-      i++ ;
+  for (unsigned int i=0; i < _pdfList.size(); ++i) {
+    const auto& pdf = static_cast<RooAbsPdf&>(_pdfList[i]);
+    double snormVal = 1.;
+    if (cache->_needSupNorm) {
+      snormVal = ((RooAbsReal*)cache->_suppNormList.at(i))->getVal();
     }
-  } else {
     
-    for (auto arg : _pdfList) {
-      auto pdf = static_cast<RooAbsPdf*>(arg);
-      Double_t pdfVal = pdf->getVal(nset) ;
-
-      if (pdf->isSelectedComp()) {
-        value += pdfVal*_coefCache[i] ;
-      }
-      i++ ;
+    Double_t pdfVal = pdf.getVal(nset);
+    if (pdf.isSelectedComp()) {
+      value += pdfVal*_coefCache[i]/snormVal;
     }
-        
   }
 
-  return value ;
+  return value;
 }
 
 
@@ -839,24 +833,19 @@ Double_t RooAddPdf::evaluate() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute addition of PDFs in batches.
 
-RooSpan<double> RooAddPdf::evaluateBatch(std::size_t batchIndex, std::size_t batchSize) const {
-  const RooArgSet* nset = _normSet;
+RooSpan<double> RooAddPdf::evaluateBatch(std::size_t begin, std::size_t end) const {
+  auto normAndCache = getNormAndCache();
+  const RooArgSet* nset = normAndCache.first;
+  CacheElem* cache = normAndCache.second;
 
-  auto output = _batchData.makeWritableBatch(batchIndex, batchSize);
+
+  auto output = _batchData.makeWritableBatchInit(begin, end, 0.);
   const std::size_t n = output.size();
 
-  if (nset==0 || nset->getSize()==0) {
-    if (_refCoefNorm.getSize()!=0) {
-      nset = &_refCoefNorm ;
-    }
-  }
-
-  CacheElem* cache = getProjCache(nset);
-  updateCoefficients(*cache,nset);
 
   for (unsigned int pdfNo = 0; pdfNo < _pdfList.size(); ++pdfNo) {
     const auto& pdf = static_cast<RooAbsPdf&>(_pdfList[pdfNo]);
-    auto pdfOutputs = pdf.getValBatch(batchIndex, batchSize, nset);
+    auto pdfOutputs = pdf.getValBatch(begin, end, nset);
     assert(pdfOutputs.size() == output.size());
 
     const double coef = _coefCache[pdfNo] / (cache->_needSupNorm ?

@@ -1543,12 +1543,7 @@ RooSpan<const double> RooVectorDataStore::getWeightBatch(std::size_t first, std:
 
 
   if (_wgtVar) {
-    R__ASSERT(false); //Need to fill event by event?
-
-    // Otherwise look for weight variable
-    double theWeight = _wgtVar->getVal();
-
-//    std::fill(weights.begin(), weights.end(), theWeight);
+    return _wgtVar->getValBatch(first, last);
   }
 
   //TODO FIXME!

@@ -24,6 +24,8 @@ namespace BatchHelpers {
 
 class BatchData {
   public:
+    /// Status of the batch. Make sure that everything that is readable has
+    /// a status >= kReady.
     enum Status_t {kDirtyOrUnknown, kWriting, kReady, kReadyAndConstant};
 
     BatchData() :
@@ -40,19 +42,21 @@ class BatchData {
       return !_batchStatus.empty();
     }
 
-    void allocateAndBatch(std::size_t size, std::size_t batchSize);
+    void resizeAndClear(std::size_t size, std::size_t batchSize);
 
     Status_t status(std::size_t begin, std::size_t end) const {
       assert(isInit());
-      return _batchStatus[calcBatchIndex(begin, end)];
+      assert(calcBatchIndex(begin) == calcBatchIndex(end-1));
+      return _batchStatus[calcBatchIndex(begin)];
     }
 
     void setStatus(std::size_t begin, std::size_t end, Status_t status) {
       assert(isInit());
+      assert(calcBatchIndex(begin) == calcBatchIndex(end-1));
       if (_foreignData)
         return;
 
-      _batchStatus[calcBatchIndex(begin, end)] = status;
+      _batchStatus[calcBatchIndex(begin)] = status;
     }
 
     void reset();
@@ -67,30 +71,35 @@ class BatchData {
 
     RooSpan<const double> makeBatch(std::size_t begin, std::size_t end) const;
 
-    RooSpan<double> makeWritableBatch(std::size_t begin, std::size_t end);
+    RooSpan<double> makeWritableBatchUnInit(std::size_t begin, std::size_t end);
+
+    RooSpan<double> makeWritableBatchInit(std::size_t begin, std::size_t end, double value);
 
     void attachForeignStorage(const std::vector<double>& vec);
 
     void print(std::ostream& os, const std::string& indent) const;
+
+    double operator[](std::size_t evt) const {
+      assert(status(evt, evt+1) >= kReady);
+      return data()[evt];
+    }
 
   private:
     bool validRange(std::size_t begin, std::size_t end) const {
       return begin < data().size() && end <= data().size();
     }
 
-    std::size_t calcBatchIndex(std::size_t begin, std::size_t end) const;
+    std::size_t calcBatchIndex(std::size_t begin) const;
 
     const std::vector<double>& data() const {
       return _foreignData ? *_foreignData : _ownedData;
     }
 
-
-
     std::vector<double>  _ownedData;
     const std::vector<double>* _foreignData;
     std::vector<Status_t> _batchStatus;
     std::vector<std::size_t> _batchStartPoints;
-    mutable std::size_t _batchSize;
+    std::size_t _batchSize;
 };
 
 }

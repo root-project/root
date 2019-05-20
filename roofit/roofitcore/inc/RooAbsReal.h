@@ -53,7 +53,9 @@ class TH3F;
 #include <iostream>
 #include <sstream>
 
-//#define CHECK_CACHED_VALUES
+#ifndef NDEBUG
+#define ROOFIT_CHECK_CACHED_VALUES
+#endif
 
 class RooAbsReal : public RooAbsArg {
 public:
@@ -82,7 +84,7 @@ public:
   /// the variables to normalise over.
   /// These are integrated over their current ranges to compute the normalisation constant,
   /// and the unnormalised result is divided by this value.
-#ifdef CHECK_CACHED_VALUES
+#ifdef ROOFIT_CHECK_CACHED_VALUES
   Double_t getVal(const RooArgSet* normalisationSet = nullptr) const;
 #else
   inline Double_t getVal(const RooArgSet* normalisationSet = nullptr) const {
@@ -403,24 +405,10 @@ protected:
   virtual Double_t evaluate() const = 0;
   virtual RooSpan<double> evaluateBatch(std::size_t begin, std::size_t end) const;
 
+  //---------- Interface to access batch data ---------------------------
   //
   friend class BatchInterfaceAccessor;
-  virtual void allocateBatchStorage(std::size_t nData, std::size_t batchSize) {
-    if (isDerived()) {
-      // We depend on something, and hence must allocate batch storage
-//      std::cout << "Allocating for " << GetName() << std::endl;
-      _batchData.allocateAndBatch(nData, batchSize);
-    }
-    //TODO have to go through proxies???
-    for (auto arg : _serverList) {
-      //TODO get rid of this cast?
-//      std::cout << "Trying to allocate for " << arg->GetName() << std::endl;
-      auto absReal = dynamic_cast<RooAbsReal*>(arg);
-      if (absReal)
-        absReal->allocateBatchStorage(nData, batchSize);
-    }
-
-  }
+  void resetBatchMemory(std::size_t nData, std::size_t batchSize);
   virtual void markBatchesStale() {
     _batchData.markStale();
     for (auto arg : _serverList) {
@@ -431,6 +419,17 @@ protected:
     }
   }
 
+#ifdef ROOFIT_CHECK_CACHED_VALUES
+ public:
+  void checkBatchComputation(std::size_t evtNo, const RooArgSet* normSet = nullptr) const;
+  const BatchHelpers::BatchData& batchData() const {
+    return _batchData;
+  }
+#endif
+
+  //--------------------------------------------------------------------
+
+ protected:
   // Hooks for RooDataSet interface
   friend class RooRealIntegral ;
   friend class RooVectorDataStore ;
