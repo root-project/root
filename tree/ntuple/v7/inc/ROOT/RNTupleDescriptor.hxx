@@ -89,21 +89,21 @@ class RClusterDescriptor {
 public:
    struct RColumnInfo {
       DescriptorId_t fColumnId = kInvalidDescriptorId;
-      ForestSize_t fFirstElementIndex = kInvalidForestIndex;
+      NTupleSize_t fFirstElementIndex = kInvalidNTupleIndex;
       ClusterSize_t fNElements = kInvalidClusterIndex;
    };
 
 private:
    DescriptorId_t fClusterId = kInvalidDescriptorId;;
    RForestVersion fVersion;
-   ForestSize_t fFirstEntryIndex = kInvalidForestIndex;
+   NTupleSize_t fFirstEntryIndex = kInvalidNTupleIndex;
    ClusterSize_t fNEntries = kInvalidClusterIndex;
    std::unordered_map<DescriptorId_t, RColumnInfo> fColumnInfos;
 
 public:
    DescriptorId_t GetId() const { return fClusterId; }
    RForestVersion GetVersion() const { return fVersion; }
-   ForestSize_t GetFirstEntryIndex() const { return fFirstEntryIndex; }
+   NTupleSize_t GetFirstEntryIndex() const { return fFirstEntryIndex; }
    ClusterSize_t GetNEntries() const { return fNEntries; }
    RColumnInfo GetColumnInfo(DescriptorId_t columnId) const { return fColumnInfos.at(columnId); }
 };
@@ -159,7 +159,7 @@ public:
    void AddColumnLink(DescriptorId_t columnId, DescriptorId_t linkId);
 
    void AddCluster(DescriptorId_t clusterId, RForestVersion version,
-                   ForestSize_t firstEntryIndex, ClusterSize_t nEntries);
+                   NTupleSize_t firstEntryIndex, ClusterSize_t nEntries);
    void AddClusterColumnInfo(DescriptorId_t clusterId, const RClusterDescriptor::RColumnInfo &columnInfo);
 };
 

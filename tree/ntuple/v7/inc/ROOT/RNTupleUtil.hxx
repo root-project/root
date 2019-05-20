@@ -41,8 +41,8 @@ enum ENTupleStructure {
 };
 
 /// Integer type long enough to hold the maximum number of entries in a column
-using ForestSize_t = std::uint64_t;
-constexpr ForestSize_t kInvalidForestIndex = std::uint64_t(-1);
+using NTupleSize_t = std::uint64_t;
+constexpr NTupleSize_t kInvalidNTupleIndex = std::uint64_t(-1);
 /// Wrap the 32bit integer in a struct in order to avoid template specialization clash with std::uint32_t
 struct RClusterSize {
    RClusterSize() : fValue(0) {}

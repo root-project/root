@@ -37,16 +37,16 @@ namespace Experimental {
 // clang-format on
 class RNTupleViewRange {
 private:
-   const ForestSize_t fStart;
-   const ForestSize_t fEnd;
+   const NTupleSize_t fStart;
+   const NTupleSize_t fEnd;
 public:
-   class RIterator : public std::iterator<std::forward_iterator_tag, ForestSize_t> {
+   class RIterator : public std::iterator<std::forward_iterator_tag, NTupleSize_t> {
    private:
       using iterator = RIterator;
-      ForestSize_t fIndex = kInvalidForestIndex;
+      NTupleSize_t fIndex = kInvalidNTupleIndex;
    public:
       RIterator() = default;
-      explicit RIterator(ForestSize_t index) : fIndex(index) {}
+      explicit RIterator(NTupleSize_t index) : fIndex(index) {}
       ~RIterator() = default;
 
       iterator  operator++(int) /* postfix */        { auto r = *this; fIndex++; return r; }
@@ -57,7 +57,7 @@ public:
       bool      operator!=(const iterator& rh) const { return fIndex != rh.fIndex; }
    };
 
-   RNTupleViewRange(ForestSize_t start, ForestSize_t end) : fStart(start), fEnd(end) {}
+   RNTupleViewRange(NTupleSize_t start, NTupleSize_t end) : fStart(start), fEnd(end) {}
    RIterator begin() { return RIterator(fStart); }
    RIterator end() { return RIterator(fEnd); }
 };
@@ -106,7 +106,7 @@ public:
    RNTupleView& operator=(RNTupleView&& other) = default;
    ~RNTupleView() { fField.DestroyValue(fValue); }
 
-   const T& operator()(ForestSize_t index) {
+   const T& operator()(NTupleSize_t index) {
       fField.Read(index, &fValue);
       return *fValue.Get<T>();
    }
@@ -132,7 +132,7 @@ public:
    RNTupleView& operator=(RNTupleView&& other) = default;
    ~RNTupleView() = default;
 
-   float operator()(ForestSize_t index) { return *fField.Map(index); }
+   float operator()(NTupleSize_t index) { return *fField.Map(index); }
 };
 
 
@@ -169,9 +169,9 @@ public:
    RNTupleViewCollection& operator=(RNTupleViewCollection&& other) = default;
    ~RNTupleViewCollection() = default;
 
-   RNTupleViewRange GetViewRange(ForestSize_t index) {
+   RNTupleViewRange GetViewRange(NTupleSize_t index) {
       ClusterSize_t size;
-      ForestSize_t idxStart;
+      NTupleSize_t idxStart;
       fField.GetCollectionInfo(index, &idxStart, &size);
       return RNTupleViewRange(idxStart, idxStart + size);
    }
@@ -181,9 +181,9 @@ public:
       return RNTupleViewCollection(GetSubName(fieldName), fSource);
    }
 
-   ClusterSize_t operator()(ForestSize_t index) {
+   ClusterSize_t operator()(NTupleSize_t index) {
       ClusterSize_t size;
-      ForestSize_t idxStart;
+      NTupleSize_t idxStart;
       fField.GetCollectionInfo(index, &idxStart, &size);
       return size;
    }

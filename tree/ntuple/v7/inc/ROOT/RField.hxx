@@ -92,8 +92,8 @@ protected:
    /// Operations on values of complex types, e.g. ones that involve multiple columns or for which no direct
    /// column type exists.
    virtual void DoAppend(const RFieldValue& value);
-   virtual void DoRead(ForestSize_t index, RFieldValue* value);
-   virtual void DoReadV(ForestSize_t index, ForestSize_t count, void* dst);
+   virtual void DoRead(NTupleSize_t index, RFieldValue* value);
+   virtual void DoReadV(NTupleSize_t index, NTupleSize_t count, void* dst);
 
 public:
    /// Field names convey the level of subfields; sub fields (nested collections) are separated by a dot
@@ -175,7 +175,7 @@ public:
 
    /// Populate a single value with data from the tree, which needs to be of the fitting type.
    /// Reading copies data into the memory wrapped by the tree value.
-   void Read(ForestSize_t index, RFieldValue* value) {
+   void Read(NTupleSize_t index, RFieldValue* value) {
       if (!fIsSimple) {
          DoRead(index, value);
          return;
@@ -185,7 +185,7 @@ public:
 
    /// Type unsafe bulk read interface; dst must point to a vector of objects of the field type.
    /// TODO(jblomer): can this be type safe?
-   void ReadV(ForestSize_t index, ForestSize_t count, void *dst)
+   void ReadV(NTupleSize_t index, NTupleSize_t count, void *dst)
    {
       if (!fIsSimple) {
          DoReadV(index, count, dst);
@@ -195,7 +195,7 @@ public:
    }
 
    /// The number of elements in the principal column. For top level fields, the number of entries.
-   ForestSize_t GetNItems();
+   NTupleSize_t GetNItems();
 
    /// Ensure that all received items are written from page buffers to the storage.
    void Flush() const;
@@ -244,7 +244,7 @@ private:
    TClass* fClass;
 protected:
    void DoAppend(const Detail::RFieldValue& value) final;
-   void DoRead(ForestSize_t index, Detail::RFieldValue* value) final;
+   void DoRead(NTupleSize_t index, Detail::RFieldValue* value) final;
 public:
    RFieldClass(std::string_view fieldName, std::string_view className);
    RFieldClass(RFieldClass&& other) = default;
@@ -269,7 +269,7 @@ private:
 
 protected:
    void DoAppend(const Detail::RFieldValue& value) final;
-   void DoRead(ForestSize_t index, Detail::RFieldValue* value) final;
+   void DoRead(NTupleSize_t index, Detail::RFieldValue* value) final;
 
 public:
    RFieldVector(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField);
@@ -360,7 +360,7 @@ public:
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final { return 1; }
 
-   ClusterSize_t* Map(ForestSize_t index) {
+   ClusterSize_t* Map(NTupleSize_t index) {
       static_assert(Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex>::kIsMappable,
                     "(ClusterSize_t, EColumnType::kIndex) is not identical on this platform");
       return fPrincipalColumn->Map<ClusterSize_t, EColumnType::kIndex>(index, nullptr);
@@ -382,7 +382,7 @@ public:
    size_t GetValueSize() const final { return sizeof(ClusterSize_t); }
 
    /// Special help for offset fields
-   void GetCollectionInfo(ForestSize_t index, ForestSize_t* idxStart, ClusterSize_t* size) {
+   void GetCollectionInfo(NTupleSize_t index, NTupleSize_t* idxStart, ClusterSize_t* size) {
       fPrincipalColumn->GetCollectionInfo(index, idxStart, size);
    }
 };
@@ -402,7 +402,7 @@ public:
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final { return 1; }
 
-   float* Map(ForestSize_t index) {
+   float* Map(NTupleSize_t index) {
       static_assert(Detail::RColumnElement<float, EColumnType::kReal32>::kIsMappable,
                     "(float, EColumnType::kReal32) is not identical on this platform");
       return fPrincipalColumn->Map<float, EColumnType::kReal32>(index, nullptr);
@@ -439,7 +439,7 @@ public:
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final { return 1; }
 
-   double* Map(ForestSize_t index) {
+   double* Map(NTupleSize_t index) {
       static_assert(Detail::RColumnElement<double, EColumnType::kReal64>::kIsMappable,
                     "(double, EColumnType::kReal64) is not identical on this platform");
       return fPrincipalColumn->Map<double, EColumnType::kReal64>(index, nullptr);
@@ -475,7 +475,7 @@ public:
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final { return 1; }
 
-   std::int32_t* Map(ForestSize_t index) {
+   std::int32_t* Map(NTupleSize_t index) {
       static_assert(Detail::RColumnElement<std::int32_t, EColumnType::kInt32>::kIsMappable,
                     "(std::int32_t, EColumnType::kInt32) is not identical on this platform");
       return fPrincipalColumn->Map<std::int32_t, EColumnType::kInt32>(index, nullptr);
@@ -511,7 +511,7 @@ public:
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final { return 1; }
 
-   std::uint32_t* Map(ForestSize_t index) {
+   std::uint32_t* Map(NTupleSize_t index) {
       static_assert(Detail::RColumnElement<std::uint32_t, EColumnType::kInt32>::kIsMappable,
                     "(std::uint32_t, EColumnType::kInt32) is not identical on this platform");
       return fPrincipalColumn->Map<std::uint32_t, EColumnType::kInt32>(index, nullptr);
@@ -547,7 +547,7 @@ public:
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final { return 1; }
 
-   std::uint64_t* Map(ForestSize_t index) {
+   std::uint64_t* Map(NTupleSize_t index) {
       static_assert(Detail::RColumnElement<std::uint64_t, EColumnType::kInt64>::kIsMappable,
                     "(std::uint64_t, EColumnType::kInt64) is not identical on this platform");
       return fPrincipalColumn->Map<std::uint64_t, EColumnType::kInt64>(index, nullptr);
@@ -577,7 +577,7 @@ private:
    Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex> fElemIndex;
 
    void DoAppend(const ROOT::Experimental::Detail::RFieldValue& value) final;
-   void DoRead(ROOT::Experimental::ForestSize_t index, ROOT::Experimental::Detail::RFieldValue* value) final;
+   void DoRead(ROOT::Experimental::NTupleSize_t index, ROOT::Experimental::Detail::RFieldValue* value) final;
 
 public:
    static std::string MyTypeName() { return "std::string"; }
@@ -664,10 +664,10 @@ protected:
       fNWritten += count;
       fColumns[0]->Append(elemIndex);
    }
-   void DoRead(ForestSize_t index, Detail::RFieldValue* value) final {
+   void DoRead(NTupleSize_t index, Detail::RFieldValue* value) final {
       auto typedValue = value->Get<ContainerT>();
       ClusterSize_t nItems;
-      ForestSize_t idxStart;
+      NTupleSize_t idxStart;
       fPrincipalColumn->GetCollectionInfo(index, &idxStart, &nItems);
       typedValue->resize(nItems);
       for (unsigned i = 0; i < nItems; ++i) {
