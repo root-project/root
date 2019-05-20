@@ -34,8 +34,8 @@ class RFieldDescriptor {
 
 private:
    DescriptorId_t fFieldId = kInvalidDescriptorId;
-   RForestVersion fFieldVersion;
-   RForestVersion fTypeVersion;
+   RNTupleVersion fFieldVersion;
+   RNTupleVersion fTypeVersion;
    /// The leaf name, not including parent fields
    std::string fFieldName;
    /// The C++ type that was used when writing the field
@@ -49,8 +49,8 @@ private:
 
 public:
    DescriptorId_t GetId() const { return fFieldId; }
-   RForestVersion GetFieldVersion() const { return fFieldVersion; }
-   RForestVersion GetTypeVersion() const { return fTypeVersion; }
+   RNTupleVersion GetFieldVersion() const { return fFieldVersion; }
+   RNTupleVersion GetTypeVersion() const { return fTypeVersion; }
    std::string GetFieldName() const { return fFieldName; }
    std::string GetTypeName() const { return fTypeName; }
    ENTupleStructure GetStructure() const { return fStructure; }
@@ -64,7 +64,7 @@ class RColumnDescriptor {
 
 private:
    DescriptorId_t fColumnId = kInvalidDescriptorId;;
-   RForestVersion fVersion;
+   RNTupleVersion fVersion;
    RColumnModel fModel;
    /// Every column belongs to one and only one field
    DescriptorId_t fFieldId = kInvalidDescriptorId;;
@@ -75,7 +75,7 @@ private:
 
 public:
    DescriptorId_t GetId() const { return fColumnId; }
-   RForestVersion GetVersion() const { return fVersion; }
+   RNTupleVersion GetVersion() const { return fVersion; }
    RColumnModel GetModel() const { return fModel; }
    DescriptorId_t GetFieldId() const { return fFieldId; }
    DescriptorId_t GetOffsetId() const { return fOffsetId; }
@@ -95,14 +95,14 @@ public:
 
 private:
    DescriptorId_t fClusterId = kInvalidDescriptorId;;
-   RForestVersion fVersion;
+   RNTupleVersion fVersion;
    NTupleSize_t fFirstEntryIndex = kInvalidNTupleIndex;
    ClusterSize_t fNEntries = kInvalidClusterIndex;
    std::unordered_map<DescriptorId_t, RColumnInfo> fColumnInfos;
 
 public:
    DescriptorId_t GetId() const { return fClusterId; }
-   RForestVersion GetVersion() const { return fVersion; }
+   RNTupleVersion GetVersion() const { return fVersion; }
    NTupleSize_t GetFirstEntryIndex() const { return fFirstEntryIndex; }
    ClusterSize_t GetNEntries() const { return fNEntries; }
    RColumnInfo GetColumnInfo(DescriptorId_t columnId) const { return fColumnInfos.at(columnId); }
@@ -117,7 +117,7 @@ class RNTupleDescriptor {
    friend class RNTupleDescriptorBuilder;
 
 private:
-   RForestVersion fVersion;
+   RNTupleVersion fVersion;
    std::string fName;
 
    std::unordered_map<DescriptorId_t, RFieldDescriptor> fFieldDescriptors;
@@ -146,19 +146,19 @@ private:
 public:
    const RNTupleDescriptor& GetDescriptor() const { return fDescriptor; }
 
-   void SetForest(std::string_view name, const RForestVersion &version);
+   void SetForest(std::string_view name, const RNTupleVersion &version);
 
-   void AddField(DescriptorId_t fieldId, const RForestVersion &fieldVersion, const RForestVersion &typeVersion,
+   void AddField(DescriptorId_t fieldId, const RNTupleVersion &fieldVersion, const RNTupleVersion &typeVersion,
                  std::string_view fieldName, std::string_view typeName, ENTupleStructure structure);
    void SetFieldParent(DescriptorId_t fieldId, DescriptorId_t parentId);
    void AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId);
 
    void AddColumn(DescriptorId_t columnId, DescriptorId_t fieldId,
-                  const RForestVersion &version, const RColumnModel &model);
+                  const RNTupleVersion &version, const RColumnModel &model);
    void SetColumnOffset(DescriptorId_t columnId, DescriptorId_t offsetId);
    void AddColumnLink(DescriptorId_t columnId, DescriptorId_t linkId);
 
-   void AddCluster(DescriptorId_t clusterId, RForestVersion version,
+   void AddCluster(DescriptorId_t clusterId, RNTupleVersion version,
                    NTupleSize_t firstEntryIndex, ClusterSize_t nEntries);
    void AddClusterColumnInfo(DescriptorId_t clusterId, const RClusterDescriptor::RColumnInfo &columnInfo);
 };
