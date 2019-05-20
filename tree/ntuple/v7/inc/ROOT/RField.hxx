@@ -55,7 +55,7 @@ class RPageStorage;
 // clang-format off
 /**
 \class ROOT::Experimental::RFieldBase
-\ingroup Forest
+\ingroup NTuple
 \brief A field translates read and write calls from/to underlying columns to/from tree values
 
 A field is a serializable C++ type or a container for a collection of sub fields. The RFieldBase and its
