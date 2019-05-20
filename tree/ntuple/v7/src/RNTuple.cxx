@@ -24,7 +24,7 @@
 #include <string>
 #include <utility>
 
-ROOT::Experimental::Detail::RForest::RForest(std::unique_ptr<ROOT::Experimental::RForestModel> model)
+ROOT::Experimental::Detail::RForest::RForest(std::unique_ptr<ROOT::Experimental::RNTupleModel> model)
    : fModel(std::move(model))
    , fNEntries(0)
 {
@@ -37,7 +37,7 @@ ROOT::Experimental::Detail::RForest::~RForest()
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RInputForest::RInputForest(
-   std::unique_ptr<ROOT::Experimental::RForestModel> model,
+   std::unique_ptr<ROOT::Experimental::RNTupleModel> model,
    std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
    : ROOT::Experimental::Detail::RForest(std::move(model))
    , fSource(std::move(source))
@@ -66,7 +66,7 @@ ROOT::Experimental::RInputForest::~RInputForest()
 }
 
 std::unique_ptr<ROOT::Experimental::RInputForest> ROOT::Experimental::RInputForest::Open(
-   std::unique_ptr<RForestModel> model,
+   std::unique_ptr<RNTupleModel> model,
    std::string_view forestName,
    std::string_view storage)
 {
@@ -104,7 +104,7 @@ std::string ROOT::Experimental::RInputForest::GetInfo(const EForestInfo what) {
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::ROutputForest::ROutputForest(
-   std::unique_ptr<ROOT::Experimental::RForestModel> model,
+   std::unique_ptr<ROOT::Experimental::RNTupleModel> model,
    std::unique_ptr<ROOT::Experimental::Detail::RPageSink> sink)
    : ROOT::Experimental::Detail::RForest(std::move(model))
    , fSink(std::move(sink))
@@ -122,7 +122,7 @@ ROOT::Experimental::ROutputForest::~ROutputForest()
 
 
 std::unique_ptr<ROOT::Experimental::ROutputForest> ROOT::Experimental::ROutputForest::Recreate(
-   std::unique_ptr<RForestModel> model,
+   std::unique_ptr<RNTupleModel> model,
    std::string_view forestName,
    std::string_view storage)
 {

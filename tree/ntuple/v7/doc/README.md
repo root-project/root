@@ -39,7 +39,7 @@ RForest shall investigate improvements of the TTree I/O in the following ways
 Concepts
 --------
 
-At the **logical layer**, the user defines a data model using the RForestModel class.
+At the **logical layer**, the user defines a data model using the RNTupleModel class.
 The data model is a collection of serializable C++ types with associated names, similar to branches in a TTree.
 The data model can contain (nested) collection, e.g., a type can be `std::vector<std::vector<float>>`.
 

@@ -29,7 +29,7 @@ namespace ROOT {
 namespace Experimental {
 
 class REntry;
-class RForestModel;
+class RNTupleModel;
 
 namespace Detail {
 class RPageSink;
@@ -42,9 +42,9 @@ namespace Detail {
 /**
 \class ROOT::Experimental::RForest
 \ingroup NTuple
-\brief The RForest represents a live dataset, whose structure is defined by an RForestModel
+\brief The RForest represents a live dataset, whose structure is defined by an RNTupleModel
 
-RForest connects the static information of the RForestModel to a source or sink on physical storage.
+RForest connects the static information of the RNTupleModel to a source or sink on physical storage.
 Reading and writing requires use of the corresponding derived class RInputForest or ROutputForest.
 RForest writes only complete entries (rows of the data set).  The entry itself is not kept within the
 RForest, which allows for multiple concurrent entries for the same RForest.  Besides reading an entire entry,
@@ -53,19 +53,19 @@ the RForest can expose views that read only specific fields.
 // clang-format on
 class RForest {
 protected:
-   std::unique_ptr<RForestModel> fModel;
+   std::unique_ptr<RNTupleModel> fModel;
    /// The number of entries is constant for reading and reflects the sum of Fill() operations when writing
    ForestSize_t fNEntries;
 
    /// Only the derived RInputForest and ROutputForest can be instantiated
-   explicit RForest(std::unique_ptr<RForestModel> model);
+   explicit RForest(std::unique_ptr<RNTupleModel> model);
 
 public:
    RForest(const RForest&) = delete;
    RForest& operator =(const RForest&) = delete;
    ~RForest();
 
-   RForestModel* GetModel() { return fModel.get(); }
+   RNTupleModel* GetModel() { return fModel.get(); }
 }; // RForest
 
 } // namespace Detail
@@ -115,13 +115,13 @@ public:
    };
 
 
-   static std::unique_ptr<RInputForest> Open(std::unique_ptr<RForestModel> model,
+   static std::unique_ptr<RInputForest> Open(std::unique_ptr<RNTupleModel> model,
                                              std::string_view forestName,
                                              std::string_view storage);
    static std::unique_ptr<RInputForest> Open(std::string_view forestName, std::string_view storage);
 
    /// The user imposes a forest model, which must be compatible with the model found in the data on storage
-   RInputForest(std::unique_ptr<RForestModel> model, std::unique_ptr<Detail::RPageSource> source);
+   RInputForest(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSource> source);
    /// The model is generated from the forest metadata on storage
    RInputForest(std::unique_ptr<Detail::RPageSource> source);
    ~RInputForest();
@@ -175,10 +175,10 @@ private:
    ForestSize_t fLastCommitted;
 
 public:
-   static std::unique_ptr<ROutputForest> Recreate(std::unique_ptr<RForestModel> model,
+   static std::unique_ptr<ROutputForest> Recreate(std::unique_ptr<RNTupleModel> model,
                                                   std::string_view forestName,
                                                   std::string_view storage);
-   ROutputForest(std::unique_ptr<RForestModel> model, std::unique_ptr<Detail::RPageSink> sink);
+   ROutputForest(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSink> sink);
    ROutputForest(const ROutputForest&) = delete;
    ROutputForest& operator=(const ROutputForest&) = delete;
    ~ROutputForest();

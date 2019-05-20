@@ -23,7 +23,7 @@
 #pragma link C++ class ROOT::Experimental::RFieldVector-;
 #pragma link C++ class ROOT::Experimental::RInputForest-;
 #pragma link C++ class ROOT::Experimental::ROutputForest-;
-#pragma link C++ class ROOT::Experimental::RForestModel-;
+#pragma link C++ class ROOT::Experimental::RNTupleModel-;
 
 #pragma link C++ class ROOT::Experimental::Internal::RForestHeader+;
 #pragma link C++ class ROOT::Experimental::Internal::RForestFooter+;
