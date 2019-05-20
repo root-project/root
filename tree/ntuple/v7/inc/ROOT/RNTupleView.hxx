@@ -30,12 +30,12 @@ namespace Experimental {
 
 // clang-format off
 /**
-\class ROOT::Experimental::RForestViewContext
+\class ROOT::Experimental::RNTupleViewRange
 \ingroup NTuple
 \brief Used to loop over indexes (entries or collections) between start and end
 */
 // clang-format on
-class RForestViewRange {
+class RNTupleViewRange {
 private:
    const ForestSize_t fStart;
    const ForestSize_t fEnd;
@@ -57,7 +57,7 @@ public:
       bool      operator!=(const iterator& rh) const { return fIndex != rh.fIndex; }
    };
 
-   RForestViewRange(ForestSize_t start, ForestSize_t end) : fStart(start), fEnd(end) {}
+   RNTupleViewRange(ForestSize_t start, ForestSize_t end) : fStart(start), fEnd(end) {}
    RIterator begin() { return RIterator(fStart); }
    RIterator end() { return RIterator(fEnd); }
 };
@@ -65,30 +65,32 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RForestView
+\class ROOT::Experimental::RNTupleView
 \ingroup NTuple
-\brief An RForestView provides read-only access to a single field of the forest
+\brief An RNTupleView provides read-only access to a single field of the ntuple
 
-(NB(jblomer): The forest view is very close to TTreeReader. Do we simply want to teach TTreeReader to deal with Forest?)
+(NB(jblomer): The ntuple view is very close to TTreeReader. Do we simply want to teach TTreeReader to deal with
+RNTuple?)
 
-The view owns a field and its underlying columns in order to fill a tree value object with data. Data can be
+The view owns a field and its underlying columns in order to fill an ntuple value object with data. Data can be
 accessed by index. For top level fields, the index refers to the entry number. Fields that are part of
 nested collections have global index numbers that are derived from their parent indexes.
 
-The RForestView object is an iterable. That means, all field values in the tree can be sequentially read from begin() to end().
+The RNTupleView object is an iterable. That means, all field values in the tree can be sequentially read from begin()
+to end().
 
 For simple types, template specializations let the reading become a pure mapping into a page buffer.
 */
 // clang-format on
 template <typename T>
-class RForestView {
+class RNTupleView {
    friend class RInputForest;
-   friend class RForestViewCollection;
+   friend class RNTupleViewCollection;
 
 protected:
    RField<T> fField;
    Detail::RFieldValue fValue;
-   RForestView(std::string_view fieldName, Detail::RPageSource* pageSource)
+   RNTupleView(std::string_view fieldName, Detail::RPageSource* pageSource)
      : fField(fieldName), fValue(fField.GenerateValue())
    {
       fField.ConnectColumns(pageSource);
@@ -98,11 +100,11 @@ protected:
    }
 
 public:
-   RForestView(const RForestView& other) = delete;
-   RForestView(RForestView&& other) = default;
-   RForestView& operator=(const RForestView& other) = delete;
-   RForestView& operator=(RForestView&& other) = default;
-   ~RForestView() { fField.DestroyValue(fValue); }
+   RNTupleView(const RNTupleView& other) = delete;
+   RNTupleView(RNTupleView&& other) = default;
+   RNTupleView& operator=(const RNTupleView& other) = delete;
+   RNTupleView& operator=(RNTupleView&& other) = default;
+   ~RNTupleView() { fField.DestroyValue(fValue); }
 
    const T& operator()(ForestSize_t index) {
       fField.Read(index, &fValue);
@@ -113,22 +115,22 @@ public:
 // Template specializations in order to directly map simple types into the page pool
 
 template <>
-class RForestView<float> {
+class RNTupleView<float> {
    friend class RInputForest;
-   friend class RForestViewCollection;
+   friend class RNTupleViewCollection;
 
 protected:
    RField<float> fField;
-   RForestView(std::string_view fieldName, Detail::RPageSource* pageSource) : fField(fieldName) {
+   RNTupleView(std::string_view fieldName, Detail::RPageSource* pageSource) : fField(fieldName) {
       fField.ConnectColumns(pageSource);
    }
 
 public:
-   RForestView(const RForestView& other) = delete;
-   RForestView(RForestView&& other) = default;
-   RForestView& operator=(const RForestView& other) = delete;
-   RForestView& operator=(RForestView&& other) = default;
-   ~RForestView() = default;
+   RNTupleView(const RNTupleView& other) = delete;
+   RNTupleView(RNTupleView&& other) = default;
+   RNTupleView& operator=(const RNTupleView& other) = delete;
+   RNTupleView& operator=(RNTupleView&& other) = default;
+   ~RNTupleView() = default;
 
    float operator()(ForestSize_t index) { return *fField.Map(index); }
 };
@@ -136,20 +138,20 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RForestViewCollection
+\class ROOT::Experimental::RNTupleViewCollection
 \ingroup NTuple
-\brief A tree view for a collection, that can itself generate new tree views for its nested fields.
+\brief A view for a collection, that can itself generate new ntuple views for its nested fields.
 */
 // clang-format on
-class RForestViewCollection : public RForestView<ClusterSize_t> {
+class RNTupleViewCollection : public RNTupleView<ClusterSize_t> {
     friend class RInputForest;
 
 private:
    std::string fCollectionName;
    Detail::RPageSource* fSource;
 
-   RForestViewCollection(std::string_view fieldName, Detail::RPageSource* source)
-      : RForestView<ClusterSize_t>(fieldName, source)
+   RNTupleViewCollection(std::string_view fieldName, Detail::RPageSource* source)
+      : RNTupleView<ClusterSize_t>(fieldName, source)
       , fCollectionName(fieldName)
       , fSource(source)
    {}
@@ -161,22 +163,22 @@ private:
    }
 
 public:
-   RForestViewCollection(const RForestViewCollection& other) = delete;
-   RForestViewCollection(RForestViewCollection&& other) = default;
-   RForestViewCollection& operator=(const RForestViewCollection& other) = delete;
-   RForestViewCollection& operator=(RForestViewCollection&& other) = default;
-   ~RForestViewCollection() = default;
+   RNTupleViewCollection(const RNTupleViewCollection& other) = delete;
+   RNTupleViewCollection(RNTupleViewCollection&& other) = default;
+   RNTupleViewCollection& operator=(const RNTupleViewCollection& other) = delete;
+   RNTupleViewCollection& operator=(RNTupleViewCollection&& other) = default;
+   ~RNTupleViewCollection() = default;
 
-   RForestViewRange GetViewRange(ForestSize_t index) {
+   RNTupleViewRange GetViewRange(ForestSize_t index) {
       ClusterSize_t size;
       ForestSize_t idxStart;
       fField.GetCollectionInfo(index, &idxStart, &size);
-      return RForestViewRange(idxStart, idxStart + size);
+      return RNTupleViewRange(idxStart, idxStart + size);
    }
    template <typename T>
-   RForestView<T> GetView(std::string_view fieldName) { return RForestView<T>(GetSubName(fieldName), fSource); }
-   RForestViewCollection GetViewCollection(std::string_view fieldName) {
-      return RForestViewCollection(GetSubName(fieldName), fSource);
+   RNTupleView<T> GetView(std::string_view fieldName) { return RNTupleView<T>(GetSubName(fieldName), fSource); }
+   RNTupleViewCollection GetViewCollection(std::string_view fieldName) {
+      return RNTupleViewCollection(GetSubName(fieldName), fSource);
    }
 
    ClusterSize_t operator()(ForestSize_t index) {
