@@ -24,13 +24,13 @@
 #include <string>
 #include <utility>
 
-ROOT::Experimental::Detail::RForest::RForest(std::unique_ptr<ROOT::Experimental::RNTupleModel> model)
+ROOT::Experimental::Detail::RNTuple::RNTuple(std::unique_ptr<ROOT::Experimental::RNTupleModel> model)
    : fModel(std::move(model))
    , fNEntries(0)
 {
 }
 
-ROOT::Experimental::Detail::RForest::~RForest()
+ROOT::Experimental::Detail::RNTuple::~RNTuple()
 {
 }
 
@@ -39,7 +39,7 @@ ROOT::Experimental::Detail::RForest::~RForest()
 ROOT::Experimental::RInputForest::RInputForest(
    std::unique_ptr<ROOT::Experimental::RNTupleModel> model,
    std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
-   : ROOT::Experimental::Detail::RForest(std::move(model))
+   : ROOT::Experimental::Detail::RNTuple(std::move(model))
    , fSource(std::move(source))
 {
    fSource->Attach();
@@ -50,7 +50,7 @@ ROOT::Experimental::RInputForest::RInputForest(
 }
 
 ROOT::Experimental::RInputForest::RInputForest(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
-   : ROOT::Experimental::Detail::RForest(nullptr)
+   : ROOT::Experimental::Detail::RNTuple(nullptr)
    , fSource(std::move(source))
 {
    fSource->Attach();
@@ -82,12 +82,12 @@ std::unique_ptr<ROOT::Experimental::RInputForest> ROOT::Experimental::RInputFore
    return std::make_unique<RInputForest>(std::make_unique<Detail::RPageSourceRoot>(forestName, storage));
 }
 
-std::string ROOT::Experimental::RInputForest::GetInfo(const EForestInfo what) {
+std::string ROOT::Experimental::RInputForest::GetInfo(const ENTupleInfo what) {
    std::ostringstream os;
    auto name = fSource->GetDescriptor().GetName();
 
    switch (what) {
-   case EForestInfo::kSummary:
+   case ENTupleInfo::kSummary:
       os << "****************************** FOREST ******************************"  << std::endl
          << "* Name:    " << name << std::setw(57 - name.length())           << "*" << std::endl
          << "* Entries: " << std::setw(10) << fNEntries << std::setw(47)     << "*" << std::endl
@@ -106,7 +106,7 @@ std::string ROOT::Experimental::RInputForest::GetInfo(const EForestInfo what) {
 ROOT::Experimental::ROutputForest::ROutputForest(
    std::unique_ptr<ROOT::Experimental::RNTupleModel> model,
    std::unique_ptr<ROOT::Experimental::Detail::RPageSink> sink)
-   : ROOT::Experimental::Detail::RForest(std::move(model))
+   : ROOT::Experimental::Detail::RNTuple(std::move(model))
    , fSink(std::move(sink))
    , fClusterSizeEntries(kDefaultClusterSizeEntries)
    , fLastCommitted(0)
