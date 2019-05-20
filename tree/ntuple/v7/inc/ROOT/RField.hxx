@@ -44,7 +44,7 @@ namespace ROOT {
 namespace Experimental {
 
 class RCollectionForest;
-class RForestEntry;
+class REntry;
 class RForestModel;
 class RFieldCollection;
 
@@ -235,7 +235,7 @@ public:
    size_t GetValueSize() const final { return 0; }
 
    /// Generates managed values for the top-level sub fields
-   RForestEntry* GenerateEntry();
+   REntry* GenerateEntry();
 };
 
 /// The field for a class with dictionary

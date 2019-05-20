@@ -1,4 +1,4 @@
-/// \file RForestEntry.cxx
+/// \file REntry.cxx
 /// \ingroup NTuple ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-15
@@ -16,20 +16,20 @@
 #include <ROOT/REntry.hxx>
 #include <ROOT/RFieldValue.hxx>
 
-ROOT::Experimental::RForestEntry::~RForestEntry()
+ROOT::Experimental::REntry::~REntry()
 {
    for (auto idx : fManagedValues) {
       fValues[idx].GetField()->DestroyValue(fValues[idx]);
    }
 }
 
-void ROOT::Experimental::RForestEntry::AddValue(const Detail::RFieldValue& value)
+void ROOT::Experimental::REntry::AddValue(const Detail::RFieldValue& value)
 {
    fManagedValues.emplace_back(fValues.size());
    fValues.push_back(value);
 }
 
-void ROOT::Experimental::RForestEntry::CaptureValue(const Detail::RFieldValue& value)
+void ROOT::Experimental::REntry::CaptureValue(const Detail::RFieldValue& value)
 {
    fValues.push_back(value);
 }
