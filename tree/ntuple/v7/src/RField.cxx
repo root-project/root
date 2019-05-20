@@ -35,7 +35,7 @@
 #include <utility>
 
 ROOT::Experimental::Detail::RFieldBase::RFieldBase(
-   std::string_view name, std::string_view type, EForestStructure structure, bool isSimple)
+   std::string_view name, std::string_view type, ENTupleStructure structure, bool isSimple)
    : fName(name), fType(type), fStructure(structure), fIsSimple(isSimple), fParent(nullptr), fPrincipalColumn(nullptr)
 {
 }
@@ -325,7 +325,7 @@ void ROOT::Experimental::RField<std::string>::CommitCluster()
 
 
 ROOT::Experimental::RFieldClass::RFieldClass(std::string_view fieldName, std::string_view className)
-   : ROOT::Experimental::Detail::RFieldBase(fieldName, className, EForestStructure::kRecord, false /* isSimple */)
+   : ROOT::Experimental::Detail::RFieldBase(fieldName, className, ENTupleStructure::kRecord, false /* isSimple */)
    , fClass(TClass::GetClass(std::string(className).c_str()))
 {
    if (fClass == nullptr) {
@@ -403,7 +403,7 @@ size_t ROOT::Experimental::RFieldClass::GetValueSize() const
 ROOT::Experimental::RFieldVector::RFieldVector(
    std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField)
    : ROOT::Experimental::Detail::RFieldBase(
-      fieldName, "std::vector<" + itemField->GetType() + ">", EForestStructure::kCollection, false /* isSimple */)
+      fieldName, "std::vector<" + itemField->GetType() + ">", ENTupleStructure::kCollection, false /* isSimple */)
    , fItemSize(itemField->GetValueSize()), fNWritten(0)
 {
    Attach(std::move(itemField));
@@ -497,7 +497,7 @@ ROOT::Experimental::RFieldCollection::RFieldCollection(
    std::string_view name,
    std::shared_ptr<RCollectionForest> collectionForest,
    std::unique_ptr<RNTupleModel> collectionModel)
-   : RFieldBase(name, ":Collection:", EForestStructure::kCollection, true /* isSimple */)
+   : RFieldBase(name, ":Collection:", ENTupleStructure::kCollection, true /* isSimple */)
    , fCollectionForest(collectionForest)
 {
    std::string namePrefix(name);
