@@ -1,5 +1,5 @@
-/// \file RForestDS.hxx
-/// \ingroup Forest ROOT7
+/// \file RNTupleDS.hxx
+/// \ingroup NTuple ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-04
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
