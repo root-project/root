@@ -24,7 +24,7 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::SetForest(std::string_view na
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(
    DescriptorId_t fieldId, const RForestVersion &fieldVersion, const RForestVersion &typeVersion,
-   std::string_view fieldName, std::string_view typeName, EForestStructure structure)
+   std::string_view fieldName, std::string_view typeName, ENTupleStructure structure)
 {
    RFieldDescriptor f;
    f.fFieldId = fieldId;
