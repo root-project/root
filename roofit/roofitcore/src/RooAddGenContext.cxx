@@ -24,7 +24,7 @@ generator context specific for RooAddPdf PDFs. The strategy
 of RooAddGenContext is to defer generation of each component
 to a dedicated generator context for that component and to
 randomly choose one of those context to generate an event,
-with a probability proportional to its associated coefficient
+with a probability proportional to its associated coefficient.
 **/
 
 
