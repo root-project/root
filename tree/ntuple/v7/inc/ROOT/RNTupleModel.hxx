@@ -33,30 +33,30 @@ class RCollectionForest;
 
 // clang-format off
 /**
-\class ROOT::Experimental::RForestModel
+\class ROOT::Experimental::RNTupleModel
 \ingroup NTuple
-\brief The RForestModel encapulates the schema of a forest.
+\brief The RNTupleModel encapulates the schema of an ntuple.
 
-The forest model comprises a collection of hierarchically organized fields. From a frozen model, "entries"
+The ntuple model comprises a collection of hierarchically organized fields. From a frozen model, "entries"
 can be extracted. For convenience, the model provides a default entry. Models have a unique model identifier
 that faciliates checking whether entries are compatible with it (i.e.: have been extracted from that model).
-A model needs to be frozen before it can be used to create an RForest.
+A model needs to be frozen before it can be used to create a live ntuple.
 */
 // clang-format on
-class RForestModel {
+class RNTupleModel {
    /// Hierarchy of fields consisting of simple types and collections (sub trees)
    std::unique_ptr<RFieldRoot> fRootField;
    /// Contains field values corresponding to the created top-level fields
    std::unique_ptr<REntry> fDefaultEntry;
 
 public:
-   RForestModel();
-   RForestModel(const RForestModel&) = delete;
-   RForestModel& operator =(const RForestModel&) = delete;
-   ~RForestModel() = default;
+   RNTupleModel();
+   RNTupleModel(const RNTupleModel&) = delete;
+   RNTupleModel& operator =(const RNTupleModel&) = delete;
+   ~RNTupleModel() = default;
 
-   RForestModel* Clone();
-   static std::unique_ptr<RForestModel> Create() { return std::make_unique<RForestModel>(); }
+   RNTupleModel* Clone();
+   static std::unique_ptr<RNTupleModel> Create() { return std::make_unique<RNTupleModel>(); }
 
    /// Creates a new field and a corresponding tree value that is managed by a shared pointer.
    template <typename T, typename... ArgsT>
@@ -85,7 +85,7 @@ public:
    /// Ingests a model for a sub collection and attaches it to the current model
    std::shared_ptr<RCollectionForest> MakeCollection(
       std::string_view fieldName,
-      std::unique_ptr<RForestModel> collectionModel);
+      std::unique_ptr<RNTupleModel> collectionModel);
 
    RFieldRoot* GetRootField() { return fRootField.get(); }
    REntry* GetDefaultEntry() { return fDefaultEntry.get(); }

@@ -24,14 +24,14 @@
 #include <utility>
 
 
-ROOT::Experimental::RForestModel::RForestModel()
+ROOT::Experimental::RNTupleModel::RNTupleModel()
   : fRootField(std::make_unique<RFieldRoot>())
   , fDefaultEntry(std::make_unique<REntry>())
 {}
 
-ROOT::Experimental::RForestModel* ROOT::Experimental::RForestModel::Clone()
+ROOT::Experimental::RNTupleModel* ROOT::Experimental::RNTupleModel::Clone()
 {
-   auto cloneModel = new RForestModel();
+   auto cloneModel = new RNTupleModel();
    auto cloneRootField = static_cast<RFieldRoot*>(fRootField->Clone(""));
    cloneModel->fRootField = std::unique_ptr<RFieldRoot>(cloneRootField);
    cloneModel->fDefaultEntry = std::unique_ptr<REntry>(cloneRootField->GenerateEntry());
@@ -39,15 +39,15 @@ ROOT::Experimental::RForestModel* ROOT::Experimental::RForestModel::Clone()
 }
 
 
-void ROOT::Experimental::RForestModel::AddField(std::unique_ptr<Detail::RFieldBase> field)
+void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<Detail::RFieldBase> field)
 {
    fDefaultEntry->AddValue(field->GenerateValue());
    fRootField->Attach(std::move(field));
 }
 
 
-std::shared_ptr<ROOT::Experimental::RCollectionForest> ROOT::Experimental::RForestModel::MakeCollection(
-   std::string_view fieldName, std::unique_ptr<RForestModel> collectionModel)
+std::shared_ptr<ROOT::Experimental::RCollectionForest> ROOT::Experimental::RNTupleModel::MakeCollection(
+   std::string_view fieldName, std::unique_ptr<RNTupleModel> collectionModel)
 {
    auto collectionForest = std::make_shared<RCollectionForest>(std::move(collectionModel->fDefaultEntry));
    auto field = std::make_unique<RFieldCollection>(fieldName, collectionForest, std::move(collectionModel));
@@ -56,7 +56,7 @@ std::shared_ptr<ROOT::Experimental::RCollectionForest> ROOT::Experimental::RFore
    return collectionForest;
 }
 
-std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RForestModel::CreateEntry()
+std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::CreateEntry()
 {
    auto entry = std::make_unique<REntry>();
    for (auto& f : *fRootField) {

@@ -66,7 +66,7 @@ private:
 
    template<std::size_t... S>
    void InitializeImpl(std::index_sequence<S...>) {
-      auto eventModel = ROOT::Experimental::RForestModel::Create();
+      auto eventModel = ROOT::Experimental::RNTupleModel::Create();
       // Create the fields and the shared pointers to the connected values
       std::initializer_list<int> expander{
          (std::get<S>(fColumnValues) = eventModel->MakeField<ColumnTypes_t>(fColNames[S]), 0)...};

@@ -45,7 +45,7 @@ namespace Experimental {
 
 class RCollectionForest;
 class REntry;
-class RForestModel;
+class RNTupleModel;
 class RFieldCollection;
 
 namespace Detail {
@@ -319,7 +319,7 @@ public:
    static std::string MyTypeName() { return ":RFieldCollection:"; }
    RFieldCollection(std::string_view name,
                     std::shared_ptr<RCollectionForest> collectionForest,
-                    std::unique_ptr<RForestModel> collectionModel);
+                    std::unique_ptr<RNTupleModel> collectionModel);
    RFieldCollection(RFieldCollection&& other) = default;
    RFieldCollection& operator =(RFieldCollection&& other) = default;
    ~RFieldCollection() = default;
