@@ -36,7 +36,7 @@ ROOT::Experimental::Detail::RNTuple::~RNTuple()
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::RInputForest::RInputForest(
+ROOT::Experimental::RNTupleReader::RNTupleReader(
    std::unique_ptr<ROOT::Experimental::RNTupleModel> model,
    std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
    : ROOT::Experimental::Detail::RNTuple(std::move(model))
@@ -49,7 +49,7 @@ ROOT::Experimental::RInputForest::RInputForest(
    fNEntries = fSource->GetNEntries();
 }
 
-ROOT::Experimental::RInputForest::RInputForest(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
+ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
    : ROOT::Experimental::Detail::RNTuple(nullptr)
    , fSource(std::move(source))
 {
@@ -61,28 +61,28 @@ ROOT::Experimental::RInputForest::RInputForest(std::unique_ptr<ROOT::Experimenta
    fNEntries = fSource->GetNEntries();
 }
 
-ROOT::Experimental::RInputForest::~RInputForest()
+ROOT::Experimental::RNTupleReader::~RNTupleReader()
 {
 }
 
-std::unique_ptr<ROOT::Experimental::RInputForest> ROOT::Experimental::RInputForest::Open(
+std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleReader::Open(
    std::unique_ptr<RNTupleModel> model,
    std::string_view forestName,
    std::string_view storage)
 {
    // TODO(jblomer): heuristics based on storage
-   return std::make_unique<RInputForest>(
+   return std::make_unique<RNTupleReader>(
       std::move(model), std::make_unique<Detail::RPageSourceRoot>(forestName, storage));
 }
 
-std::unique_ptr<ROOT::Experimental::RInputForest> ROOT::Experimental::RInputForest::Open(
+std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleReader::Open(
    std::string_view forestName,
    std::string_view storage)
 {
-   return std::make_unique<RInputForest>(std::make_unique<Detail::RPageSourceRoot>(forestName, storage));
+   return std::make_unique<RNTupleReader>(std::make_unique<Detail::RPageSourceRoot>(forestName, storage));
 }
 
-std::string ROOT::Experimental::RInputForest::GetInfo(const ENTupleInfo what) {
+std::string ROOT::Experimental::RNTupleReader::GetInfo(const ENTupleInfo what) {
    std::ostringstream os;
    auto name = fSource->GetDescriptor().GetName();
 

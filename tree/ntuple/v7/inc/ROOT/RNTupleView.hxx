@@ -84,7 +84,7 @@ For simple types, template specializations let the reading become a pure mapping
 // clang-format on
 template <typename T>
 class RNTupleView {
-   friend class RInputForest;
+   friend class RNTupleReader;
    friend class RNTupleViewCollection;
 
 protected:
@@ -116,7 +116,7 @@ public:
 
 template <>
 class RNTupleView<float> {
-   friend class RInputForest;
+   friend class RNTupleReader;
    friend class RNTupleViewCollection;
 
 protected:
@@ -144,7 +144,7 @@ public:
 */
 // clang-format on
 class RNTupleViewCollection : public RNTupleView<ClusterSize_t> {
-    friend class RInputForest;
+    friend class RNTupleReader;
 
 private:
    std::string fCollectionName;

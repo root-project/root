@@ -36,7 +36,7 @@
 #include <utility>
 
 // Import classes from experimental namespace for the time being
-using RInputForest = ROOT::Experimental::RInputForest;
+using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using ROutputForest = ROOT::Experimental::ROutputForest;
 using RNTupleDS = ROOT::Experimental::RNTupleDS;
 

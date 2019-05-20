@@ -38,7 +38,7 @@ R__LOAD_LIBRARY(ROOTNTuple)
 
 // Import classes from experimental namespace for the time being
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
-using RInputForest = ROOT::Experimental::RInputForest;
+using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using ROutputForest = ROOT::Experimental::ROutputForest;
 
 constexpr char const* kForestFileName = "ntpl001_staff.root";
@@ -89,7 +89,7 @@ void Analyze() {
    std::shared_ptr<int> fldAge = model->MakeField<int>("Age");
 
    // Create a forest and attach the read model to it
-   auto forest = RInputForest::Open(std::move(model), "Staff", kForestFileName);
+   auto forest = RNTupleReader::Open(std::move(model), "Staff", kForestFileName);
 
    // Quick overview of the forest's key meta-data
    std::cout << forest->GetInfo();
