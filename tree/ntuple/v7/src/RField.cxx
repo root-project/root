@@ -211,9 +211,9 @@ ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RFieldRoot::Clone(st
 }
 
 
-ROOT::Experimental::RForestEntry* ROOT::Experimental::RFieldRoot::GenerateEntry()
+ROOT::Experimental::REntry* ROOT::Experimental::RFieldRoot::GenerateEntry()
 {
-   auto entry = new RForestEntry();
+   auto entry = new REntry();
    for (auto& f : fSubFields) {
       entry->AddValue(f->GenerateValue());
    }

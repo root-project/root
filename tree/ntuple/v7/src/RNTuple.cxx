@@ -151,7 +151,7 @@ void ROOT::Experimental::ROutputForest::CommitCluster()
 //------------------------------------------------------------------------------
 
 
-ROOT::Experimental::RCollectionForest::RCollectionForest(std::unique_ptr<RForestEntry> defaultEntry)
+ROOT::Experimental::RCollectionForest::RCollectionForest(std::unique_ptr<REntry> defaultEntry)
    : fOffset(0), fDefaultEntry(std::move(defaultEntry))
 {
 }

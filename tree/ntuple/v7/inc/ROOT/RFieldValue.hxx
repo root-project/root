@@ -35,7 +35,7 @@ class RFieldBase;
 
 The data carried by the value is used by the computational code and it is supposed to be serialized on Fill
 or deserialized into by reading.  Only fields can generate their corresponding values. This class is a mere
-wrapper around the memory location, it does not own it.  Memory ownership is managed through the RForestEntry.
+wrapper around the memory location, it does not own it.  Memory ownership is managed through the REntry.
 */
 // clang-format on
 class RFieldValue {
