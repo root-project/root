@@ -181,7 +181,7 @@ target_link_libraries(Core
     xxHash::xxHash
     LZ4::LZ4
     ZLIB::ZLIB
-    ZSTD::ZSTD
+    ${ZSTD_LIBRARIES}
     ${CMAKE_DL_LIBS}
     ${CMAKE_THREAD_LIBS_INIT}
     ${corelinklibs}

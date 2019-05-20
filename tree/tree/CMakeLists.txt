@@ -118,7 +118,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Tree
     Core
   LIBRARIES
   #FIXME: we don't need this dependency explicitly
-    ZSTD::ZSTD
+    ${ZSTD_LIBRARIES}
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
