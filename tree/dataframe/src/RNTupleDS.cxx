@@ -27,7 +27,7 @@
 namespace ROOT {
 namespace Experimental {
 
-RForestDS::RForestDS(std::unique_ptr<ROOT::Experimental::RInputForest> forest)
+RNTupleDS::RNTupleDS(std::unique_ptr<ROOT::Experimental::RInputForest> forest)
   : fForest(std::move(forest)), fEntry(fForest->GetModel()->CreateEntry()), fNSlots(1), fHasSeenAllRanges(false)
 {
    auto rootField = fForest->GetModel()->GetRootField();
@@ -41,18 +41,18 @@ RForestDS::RForestDS(std::unique_ptr<ROOT::Experimental::RInputForest> forest)
 }
 
 
-RForestDS::~RForestDS()
+RNTupleDS::~RNTupleDS()
 {
 }
 
 
-const std::vector<std::string>& RForestDS::GetColumnNames() const
+const std::vector<std::string>& RNTupleDS::GetColumnNames() const
 {
    return fColumnNames;
 }
 
 
-RDF::RDataSource::Record_t RForestDS::GetColumnReadersImpl(std::string_view name, const std::type_info& /* ti */)
+RDF::RDataSource::Record_t RNTupleDS::GetColumnReadersImpl(std::string_view name, const std::type_info& /* ti */)
 {
    const auto index = std::distance(
       fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), name));
@@ -66,12 +66,12 @@ RDF::RDataSource::Record_t RForestDS::GetColumnReadersImpl(std::string_view name
    return ptrs;
 }
 
-bool RForestDS::SetEntry(unsigned int /*slot*/, ULong64_t entryIndex) {
+bool RNTupleDS::SetEntry(unsigned int /*slot*/, ULong64_t entryIndex) {
    fForest->LoadEntry(entryIndex, fEntry.get());
    return true;
 }
 
-std::vector<std::pair<ULong64_t, ULong64_t>> RForestDS::GetEntryRanges()
+std::vector<std::pair<ULong64_t, ULong64_t>> RNTupleDS::GetEntryRanges()
 {
    std::vector<std::pair<ULong64_t, ULong64_t>> ranges;
    if (fHasSeenAllRanges) return ranges;
@@ -93,7 +93,7 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RForestDS::GetEntryRanges()
 }
 
 
-std::string RForestDS::GetTypeName(std::string_view colName) const
+std::string RNTupleDS::GetTypeName(std::string_view colName) const
 {
    const auto index = std::distance(
       fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), colName));
@@ -101,28 +101,28 @@ std::string RForestDS::GetTypeName(std::string_view colName) const
 }
 
 
-bool RForestDS::HasColumn(std::string_view colName) const
+bool RNTupleDS::HasColumn(std::string_view colName) const
 {
    return std::find(fColumnNames.begin(), fColumnNames.end(), colName) !=
           fColumnNames.end();
 }
 
 
-void RForestDS::Initialise()
+void RNTupleDS::Initialise()
 {
    fHasSeenAllRanges = false;
 }
 
 
-void RForestDS::SetNSlots(unsigned int nSlots)
+void RNTupleDS::SetNSlots(unsigned int nSlots)
 {
    fNSlots = nSlots;
 }
 
 
-RDataFrame MakeForestDataFrame(std::string_view forestName, std::string_view fileName) {
+RDataFrame MakeNTupleDataFrame(std::string_view forestName, std::string_view fileName) {
    auto forest = RInputForest::Open(forestName, fileName);
-   ROOT::RDataFrame rdf(std::make_unique<RForestDS>(std::move(forest)));
+   ROOT::RDataFrame rdf(std::make_unique<RNTupleDS>(std::move(forest)));
    return rdf;
 }
 
