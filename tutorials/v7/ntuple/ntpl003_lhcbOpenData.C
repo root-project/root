@@ -38,7 +38,7 @@
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
-using ROutputForest = ROOT::Experimental::ROutputForest;
+using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 
 constexpr char const* kTreeFileName = "http://root.cern.ch/files/LHCb/lhcb_B2HHH_MagnetUp.root";
 constexpr char const* kForestFileName = "ntpl003_lhcbOpenData.root";
@@ -78,7 +78,7 @@ void Convert() {
    }
 
    // The new forest takes ownership of the model
-   auto forest = ROutputForest::Recreate(std::move(model), "DecayTree", kForestFileName);
+   auto forest = RNTupleWriter::Recreate(std::move(model), "DecayTree", kForestFileName);
 
    auto nEntries = tree->GetEntries();
    for (decltype(nEntries) i = 0; i < nEntries; ++i) {
