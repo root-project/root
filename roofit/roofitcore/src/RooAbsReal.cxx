@@ -4798,7 +4798,7 @@ RooSpan<double> RooAbsReal::evaluateBatch(std::size_t begin, std::size_t end) co
   auto batchStatus = _batchData.status(begin, end);
   assert(batchStatus != BatchHelpers::BatchData::kReadyAndConstant);
 
-  auto output = _batchData.makeWritableBatch(begin, end);
+  auto output = _batchData.makeWritableBatchUnInit(begin, end);
 
 //  std::cout << "evaluateBatch on\n";
 //  Print("V");
@@ -4841,3 +4841,146 @@ RooSpan<double> RooAbsReal::evaluateBatch(std::size_t begin, std::size_t end) co
   return output;
 }
 
+
+
+void RooAbsReal::resetBatchMemory(std::size_t nData, std::size_t batchSize) {
+  if (isDerived()) {
+    // We depend on something, and hence must allocate batch storage
+    //      std::cout << "Allocating for " << GetName() << std::endl;
+    _batchData.resizeAndClear(nData, batchSize);
+  }
+  //TODO have to go through proxies???
+  for (auto arg : _serverList) {
+    //TODO get rid of this cast?
+    //      std::cout << "Trying to allocate for " << arg->GetName() << std::endl;
+    auto absReal = dynamic_cast<RooAbsReal*>(arg);
+    if (absReal)
+      absReal->resetBatchMemory(nData, batchSize);
+  }
+
+  for (Int_t i=0; i < numProxies(); ++i) {
+    auto proxy = getProxy(i);
+    auto realProxy = dynamic_cast<RooRealProxy*>(proxy);
+    if (realProxy) {
+
+      auto& arg = realProxy->arg();
+      auto foundElm = _serverList.findByNamePointer(&arg);
+
+      if (foundElm == _serverList.end()) {
+        std::cout << "Found a proxy that isn't a server.\n";
+        realProxy->arg().Print("V");
+
+        for (const auto elm : _serverList) {
+          elm->Print("V");
+        }
+
+        assert(false);
+      }
+
+
+    }
+  }
+
+}
+
+
+#ifdef ROOFIT_CHECK_CACHED_VALUES
+#include "TSystem.h"
+#include "RooHelpers.h"
+
+using RooHelpers::CachingError;
+using RooHelpers::FormatPdfTree;
+
+
+Double_t RooAbsReal::getVal(const RooArgSet* normalisationSet) const {
+
+  const bool tmpFast = _fast;
+  const double tmp = _value;
+
+  double fullEval = 0.;
+  try {
+    fullEval = getValV(normalisationSet);
+  }
+  catch (CachingError& error) {
+    throw CachingError(std::move(error),
+        FormatPdfTree() << *this);
+  }
+
+  const double ret = (_fast && !_inhibitDirty) ? _value : fullEval;
+
+  if (fabs( ret != 0. ? (ret - fullEval)/ret : ret - fullEval) > 1.E-14) {
+    gSystem->StackTrace();
+    FormatPdfTree formatter;
+    formatter << "--> (Scalar computation wrong here:)\n"
+            << GetName() << " " << this << " _fast=" << tmpFast << " _value=" << tmp << " ret=" << ret
+            << " actual=" << fullEval << " new _value=" << _value << "] ";
+    formatter << "\nServers:";
+    for (const auto server : _serverList) {
+      formatter << "\n  ";
+      server->printStream(formatter.stream(), kName | kClassName | kArgs | kExtras | kAddress | kValue, kInline);
+    }
+
+    throw CachingError(formatter);
+  }
+
+  return ret;
+}
+
+
+void RooAbsReal::checkBatchComputation(std::size_t evtNo, const RooArgSet* normSet) const {
+  for (const auto server : _serverList) {
+    try {
+      auto realServer = dynamic_cast<RooAbsReal*>(server);
+      if (realServer)
+        realServer->checkBatchComputation(evtNo, normSet);
+    } catch (CachingError& error) {
+      throw CachingError(std::move(error),
+          FormatPdfTree() << *this);
+    }
+  }
+
+  if (_batchData.isInit()) {
+    const double batchVal = _batchData[evtNo];
+
+    if (fabs( _value != 0. ? (_value - batchVal)/_value : _value - batchVal) > 1.E-14) {
+      gSystem->StackTrace();
+      FormatPdfTree formatter;
+      formatter << "--> (Batch computation wrong here:)\n";
+      printStream(formatter.stream(), kName | kClassName | kArgs | kExtras | kAddress, kInline);
+      formatter << std::setprecision(17)
+          << "\n _batch[" << std::setw(7) << evtNo-1 << "]=     " << _batchData[evtNo-1]
+          << "\n _batch[" << std::setw(7) << evtNo   << "]=     " << batchVal << " !!!"
+          << "\n expected ('_value'): " << _value
+          << "\n _batch[" << std::setw(7) << evtNo+1 << "]=     " << _batchData[evtNo+1];
+
+      formatter << "\n" << std::setw(25) << "evaluate(unnorm.)=" << evaluate();
+
+      auto result = evaluateBatch(evtNo, evtNo+1);
+      formatter << "\nevaluateBatch(" << std::setw(9) << evtNo << ")=" << result[0];
+
+      formatter << "\nServers: ";
+      for (const auto server : _serverList) {
+        formatter << "\n - ";
+        server->printStream(formatter.stream(), kName | kClassName | kArgs | kExtras | kAddress | kValue, kInline);
+        formatter << std::setprecision(17);
+
+        auto serverAsReal = dynamic_cast<RooAbsReal*>(server);
+        if (serverAsReal) {
+          const auto& theBatch = serverAsReal->batchData();
+          if (theBatch.isInit()) {
+            formatter << "\n   _batch[" << evtNo-1 << "]=" << theBatch[evtNo-1]
+                << "\n   _batch[" << evtNo << "]=" << theBatch[evtNo]
+                << "\n   _batch[" << evtNo+1 << "]=" << theBatch[evtNo+1];
+          }
+          else {
+            formatter << std::setprecision(17)
+                << "\n   getVal()=" << serverAsReal->getVal(normSet);
+          }
+        }
+      }
+
+      throw CachingError(formatter);
+    }
+  }
+}
+#endif

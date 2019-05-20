@@ -28,15 +28,12 @@ In extended mode, a
 \f$ N_mathrm{expect} - N_mathrm{observed}*log(N_mathrm{expect}) \f$ term is added.
 **/
 
-#define BATCH_COMPUTATIONS
-
-#include <algorithm>
+#include "RooNLLVar.h"
 
 #include "RooFit.h"
 #include "Riostream.h"
 #include "TMath.h"
 
-#include "RooNLLVar.h"
 #include "RooAbsData.h"
 #include "RooAbsPdf.h"
 #include "RooCmdConfig.h"
@@ -46,6 +43,10 @@ In extended mode, a
 #include "RooRealSumPdf.h"
 #include "RooRealVar.h"
 #include "RooProdPdf.h"
+
+#include "Math/Util.h"
+
+#include <algorithm>
 
 ClassImp(RooNLLVar)
 
@@ -243,14 +244,17 @@ void RooNLLVar::applyWeightSquared(Bool_t flag)
 
 class BatchInterfaceAccessor {
   public:
-    static void allocateBatchStorage(RooAbsReal* theReal, std::size_t nEvent, std::size_t batchSize) {
-      theReal->allocateBatchStorage(nEvent, batchSize);
+    static void resetBatchMemory(RooAbsReal* theReal, std::size_t nEvent, std::size_t batchSize) {
+      theReal->resetBatchMemory(nEvent, batchSize);
     }
 
     static void markBatchesStale(RooAbsReal* theReal) {
       theReal->markBatchesStale();
     }
+
+
 };
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return likelihood on subset of data.
@@ -268,7 +272,7 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
   // prevent loss of precision - this is a factor four more expensive than
   // straight addition, but since evaluating the PDF is usually much more
   // expensive than that, we tolerate the additional cost...
-  Double_t result(0), carry(0);
+  double result(0), carry(0), sumWeight(0);
 
   RooAbsPdf* pdfClone = (RooAbsPdf*) _funcClone ;
 
@@ -276,11 +280,11 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
 
   _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize, (_binnedPdf?kFALSE:kTRUE) ) ;
 
-  Double_t sumWeight(0), sumWeightCarry(0);
+
 
   // If pdf is marked as binned - do a binned likelihood calculation here (sum of log-Poisson for each bin)
   if (_binnedPdf) {
-
+    double sumWeightCarry = 0.;
     for (auto i=firstEvent ; i<lastEvent ; i+=stepSize) {
 
       _dataClone->get(i) ;
@@ -309,6 +313,7 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
 
         Double_t term = -1*(-mu + N*log(mu) - TMath::LnGamma(N+1)) ;
 
+        // TODO replace by Math::KahanSum
         // Kahan summation of sumWeight
         Double_t y = eventWeight - sumWeightCarry;
         Double_t t = sumWeight + y;
@@ -327,107 +332,30 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
   } else { //unbinned PDF
 
     if (_batchEvaluations) {
-      assert(stepSize == 1);
-      auto dataBatches = _dataClone->store()->getBatch(firstEvent, lastEvent);
-      auto eventWeightBatch = _dataClone->getWeightBatch(firstEvent, lastEvent);
+      std::tie(result, carry, sumWeight) = computeBatched(stepSize, firstEvent, lastEvent);
+#ifdef ROOFIT_CHECK_CACHED_VALUES
 
-      //TODO eliminate the copying if _weightSq: Write lambda that squares on the fly?
-      std::vector<double> eventWeights(eventWeightBatch.begin(), eventWeightBatch.end());
+      double resultScalar, carryScalar, sumWeightScalar;
+      std::tie(resultScalar, carryScalar, sumWeightScalar) =
+          computeScalar(stepSize, firstEvent, lastEvent);
 
-      //TODO do properly. Not here, but in base.
-      //TODO don't redo for every partition, anyway
-      std::size_t batchSize = _nEvents / ((_nEvents % _numSets == 0) ?
-          _numSets :
-          (_numSets-1));
-      BatchInterfaceAccessor::allocateBatchStorage(pdfClone, _nEvents, batchSize);
+      bool alwaysPrint = false;
 
-      auto results = pdfClone->getLogValBatch(firstEvent, lastEvent, _normSet);
-
-      if (_weightSq) {
-        for (auto& weight : eventWeights) {
-          weight *= weight;
-        }
+      if (alwaysPrint || fabs(result - resultScalar)/resultScalar > 1.E-15) {
+        std::cerr << "result is off " << result << "\t" << resultScalar << std::endl;
       }
 
-      if (eventWeights.size() == 1) {
-
-        //Sum the event weights
-        sumWeight = (lastEvent - firstEvent) * eventWeights.front();
-        sumWeightCarry = 0.;
-
-        //Sum the probabilities
-        const double negWeight = -eventWeights.front();
-        double myCarry = 0.;
-        double myResult = 0.;
-
-        for (int i = 0; i < (int)results.size(); ++i) {
-          double y = negWeight * results[i] - myCarry;
-          double t = myResult + y;
-          myCarry = (t - myResult) - y;
-          myResult = t;
-        }
-
-        carry = myCarry;
-        result = myResult;
-
-      } else {
-
-        //Sum the weights
-        double mySumWeightCarry = 0.;
-        double mySumWeight = 0.;
-        for (int i = 0; i < (int)eventWeights.size(); ++i) {
-          double y = eventWeights[i] - mySumWeightCarry;
-          double t = mySumWeight + y;
-          mySumWeightCarry = (t - mySumWeight) - y;
-          mySumWeight = t;
-        }
-
-        //Sum the probabilities
-        double myCarry = 0.;
-        double myResult = 0.;
-
-        for (int i = 0; i < (int)results.size(); ++i) {
-          results[i] = -eventWeights[i] * results[i];
-
-          double y = results[i] - myCarry;
-          double t = myResult + y;
-          myCarry = (t - myResult) - y;
-          myResult = t;
-
-        }
-
-        carry = myCarry;
-        result = myResult;
+      if (alwaysPrint || fabs(carry - carryScalar)/carryScalar > 10.) {
+        std::cerr << "carry is far off " << carry << "\t" << carryScalar << std::endl;
       }
 
+      if (alwaysPrint || fabs(sumWeight - sumWeightScalar)/sumWeightScalar > 1.E-15) {
+        std::cerr << "sumWeight is off " << sumWeight << "\t" << sumWeightScalar << std::endl;
+      }
 
+#endif
     } else { //scalar mode
-
-
-      for (auto i=firstEvent ; i<lastEvent ; i+=stepSize) {
-
-        _dataClone->get(i) ;
-
-        if (!_dataClone->valid()) continue;
-
-        Double_t eventWeight = _dataClone->weight(); //FIXME
-        if (0. == eventWeight * eventWeight) continue ;
-        if (_weightSq) eventWeight = _dataClone->weightSquared() ;
-
-        Double_t term = -eventWeight * pdfClone->getLogVal(_normSet);
-
-
-        Double_t y = eventWeight - sumWeightCarry;
-        Double_t t = sumWeight + y;
-        sumWeightCarry = (t - sumWeight) - y;
-        sumWeight = t;
-
-        y = term - carry;
-        t = result + y;
-        carry = (t - result) - y;
-        result = t;
-      }
-
+      std::tie(result, carry, sumWeight) = computeScalar(stepSize, firstEvent, lastEvent);
     }
 
     // include the extended maximum likelihood term, if requested
@@ -480,7 +408,7 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
         result = t;
       }
     }
-  }
+  } //unbinned PDF
 
 
   // If part of simultaneous PDF normalize probability over
@@ -523,5 +451,95 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
 }
 
 
+std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const
+{
+  assert(stepSize == 1);
+  auto pdfClone = static_cast<const RooAbsPdf*>(_funcClone);
+
+//  auto dataBatches = _dataClone->store()->getBatch(firstEvent, lastEvent);
+
+  //TODO do properly. Not here, but in base.
+  //TODO don't redo for every partition, anyway
+  std::size_t batchSize = _nEvents / ((_nEvents % _numSets == 0) ? _numSets : (_numSets - 1));
+  BatchInterfaceAccessor::resetBatchMemory(const_cast<RooAbsPdf*>(pdfClone), _nEvents, batchSize);
 
 
+  auto results = pdfClone->getLogValBatch(firstEvent, lastEvent, _normSet);
+
+
+#ifdef ROOFIT_CHECK_CACHED_VALUES
+  for (std::size_t evtNo = firstEvent; evtNo < lastEvent; ++evtNo) {
+    _dataClone->get(evtNo);
+    assert(_dataClone->valid());
+    pdfClone->getValV(_normSet);
+    pdfClone->checkBatchComputation(evtNo, _normSet);
+  }
+#endif
+
+
+  // Compute sum of event weights. First check if we need squared weights
+  const RooSpan<const double> eventWeights = _dataClone->getWeightBatch(firstEvent, lastEvent);
+  //Make it obvious for the optimiser that the switch will never change while looping
+  const bool retrieveSquaredWeights = _weightSq;
+  auto retrieveWeight = [&eventWeights, retrieveSquaredWeights](std::size_t i) {
+    if (retrieveSquaredWeights)
+      return eventWeights[i] * eventWeights[i];
+    else
+      return eventWeights[i];
+  };
+
+  //Sum the event weights
+  ROOT::Math::KahanSum<double, 4u> kahanWeight;
+  if (eventWeights.size() == 1) {
+    kahanWeight.Add( (lastEvent - firstEvent) * retrieveWeight(0));
+  } else {
+    for (std::size_t i = 0; i < eventWeights.size(); ++i) {
+      kahanWeight.AddIndexed(retrieveWeight(i), i);
+    }
+  }
+
+
+  //Sum the probabilities
+  ROOT::Math::KahanSum<double, 4u> kahanProb;
+  if (eventWeights.size() == 1) {
+    const double weight = retrieveWeight(0);
+    for (std::size_t i = 0; i < results.size(); ++i) {
+      kahanProb.AddIndexed(-weight * results[i], i);
+    }
+  } else {
+    for (std::size_t i = 0; i < results.size(); ++i) {
+      kahanProb.AddIndexed(-retrieveWeight(i) * results[i], i);
+    }
+  }
+
+
+//  std::cout << "Sum probabilities=" << kahanProb.Sum()
+//      << "\tcarry=" << kahanProb.Carry()
+//      << "\tsum weights=" << kahanWeight.Sum() << std::endl;
+  return {kahanProb.Sum(), kahanProb.Carry(), kahanWeight.Sum()};
+}
+
+
+std::tuple<double, double, double> RooNLLVar::computeScalar(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const {
+  auto pdfClone = static_cast<const RooAbsPdf*>(_funcClone);
+
+  ROOT::Math::KahanSum<double> kahanWeight;
+  ROOT::Math::KahanSum<double> kahanProb;
+
+  for (auto i=firstEvent; i<lastEvent; i+=stepSize) {
+    _dataClone->get(i) ;
+
+    if (!_dataClone->valid()) continue;
+
+    Double_t eventWeight = _dataClone->weight(); //FIXME
+    if (0. == eventWeight * eventWeight) continue ;
+    if (_weightSq) eventWeight = _dataClone->weightSquared() ;
+
+    const double term = -eventWeight * pdfClone->getLogVal(_normSet);
+
+    kahanWeight.Add(eventWeight);
+    kahanProb.Add(term);
+  }
+
+  return {kahanProb.Sum(), kahanProb.Carry(), kahanWeight.Sum()};
+}

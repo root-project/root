@@ -51,7 +51,7 @@ public:
 
   /// Conversion constructor from <T> to <const T>
   template<typename NON_CONST_T,
-      typename = std::enable_if<std::is_same<const NON_CONST_T, T>::value>>
+      typename = typename std::enable_if<std::is_same<const NON_CONST_T, T>::value>::type >
   constexpr RooSpan(const RooSpan<NON_CONST_T>& other) :
   _auxStorage{},
   _span{other.data(), other.size()}

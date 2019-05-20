@@ -119,7 +119,7 @@ void compute(RooSpan<double> output, Tx x, Tc c) {
 /// \return A span with the computed values.
 
 RooSpan<double> RooExponential::evaluateBatch(std::size_t begin, std::size_t end) const {
-  auto output = _batchData.makeWritableBatch(begin, end);
+  auto output = _batchData.makeWritableBatchUnInit(begin, end);
 
   //Now explicitly write down all possible template instantiations of compute() above:
   auto xData = x.getValBatch(begin, end);
