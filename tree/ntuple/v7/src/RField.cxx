@@ -94,15 +94,15 @@ void ROOT::Experimental::Detail::RFieldBase::DoAppend(const ROOT::Experimental::
 }
 
 void ROOT::Experimental::Detail::RFieldBase::DoRead(
-   ROOT::Experimental::ForestSize_t /*index*/,
+   ROOT::Experimental::NTupleSize_t /*index*/,
    RFieldValue* /*value*/)
 {
    R__ASSERT(false);
 }
 
 void ROOT::Experimental::Detail::RFieldBase::DoReadV(
-   ROOT::Experimental::ForestSize_t /*index*/,
-   ROOT::Experimental::ForestSize_t /*count*/,
+   ROOT::Experimental::NTupleSize_t /*index*/,
+   ROOT::Experimental::NTupleSize_t /*count*/,
    void* /*dst*/)
 {
    R__ASSERT(false);
@@ -304,10 +304,10 @@ void ROOT::Experimental::RField<std::string>::DoAppend(const ROOT::Experimental:
 }
 
 void ROOT::Experimental::RField<std::string>::DoRead(
-   ROOT::Experimental::ForestSize_t index, ROOT::Experimental::Detail::RFieldValue* value)
+   ROOT::Experimental::NTupleSize_t index, ROOT::Experimental::Detail::RFieldValue* value)
 {
    auto typedValue = value->Get<std::string>();
-   ForestSize_t idxStart;
+   NTupleSize_t idxStart;
    ClusterSize_t nChars;
    fPrincipalColumn->GetCollectionInfo(index, &idxStart, &nChars);
    typedValue->resize(nChars);
@@ -355,7 +355,7 @@ void ROOT::Experimental::RFieldClass::DoAppend(const Detail::RFieldValue& value)
    }
 }
 
-void ROOT::Experimental::RFieldClass::DoRead(ForestSize_t index, Detail::RFieldValue* value) {
+void ROOT::Experimental::RFieldClass::DoRead(NTupleSize_t index, Detail::RFieldValue* value) {
    TIter next(fClass->GetListOfDataMembers());
    unsigned i = 0;
    while (auto dataMember = static_cast<TDataMember *>(next())) {
@@ -428,11 +428,11 @@ void ROOT::Experimental::RFieldVector::DoAppend(const Detail::RFieldValue& value
    fColumns[0]->Append(elemIndex);
 }
 
-void ROOT::Experimental::RFieldVector::DoRead(ForestSize_t index, Detail::RFieldValue* value) {
+void ROOT::Experimental::RFieldVector::DoRead(NTupleSize_t index, Detail::RFieldValue* value) {
    auto typedValue = value->Get<std::vector<char>>();
 
    ClusterSize_t nItems;
-   ForestSize_t idxStart;
+   NTupleSize_t idxStart;
    fPrincipalColumn->GetCollectionInfo(index, &idxStart, &nItems);
 
    typedValue->resize(nItems * fItemSize);

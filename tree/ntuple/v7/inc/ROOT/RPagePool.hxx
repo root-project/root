@@ -68,7 +68,7 @@ public:
    void CommitPage(const RPage& page);
    /// Tries to find the page corresponding to column and index in the cache. On cache miss, load the page
    /// from the PageSource attached to the column and put it in the cache.
-   RPage GetPage(RColumn* column, ForestSize_t index);
+   RPage GetPage(RColumn* column, NTupleSize_t index);
    /// Give back a page to the pool. There must not be any pointers anymore into this page.
    void ReleasePage(const RPage &page);
 };

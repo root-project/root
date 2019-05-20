@@ -45,18 +45,18 @@ public:
    class RClusterInfo {
    private:
       /// The cluster number
-      ForestSize_t fId;
+      NTupleSize_t fId;
       /// The first element index of the column in this cluster
-      ForestSize_t fSelfOffset;
+      NTupleSize_t fSelfOffset;
       /// For offset columns, also store the cluster offset of the column being referenced
-      ForestSize_t fPointeeOffset;
+      NTupleSize_t fPointeeOffset;
    public:
       RClusterInfo() : fId(0), fSelfOffset(0), fPointeeOffset(0) {}
-      RClusterInfo(ForestSize_t id, ForestSize_t selfOffset, ForestSize_t pointeeOffset)
+      RClusterInfo(NTupleSize_t id, NTupleSize_t selfOffset, NTupleSize_t pointeeOffset)
          : fId(id), fSelfOffset(selfOffset), fPointeeOffset(pointeeOffset) {}
-      ForestSize_t GetId() const { return fId; }
-      ForestSize_t GetSelfOffset() const { return fSelfOffset; }
-      ForestSize_t GetPointeeOffset() const { return fPointeeOffset; }
+      NTupleSize_t GetId() const { return fId; }
+      NTupleSize_t GetSelfOffset() const { return fSelfOffset; }
+      NTupleSize_t GetPointeeOffset() const { return fPointeeOffset; }
    };
 
 private:
@@ -65,8 +65,8 @@ private:
    std::size_t fCapacity;
    std::size_t fSize;
    std::size_t fElementSize;
-   ForestSize_t fRangeFirst;
-   ForestSize_t fNElements;
+   NTupleSize_t fRangeFirst;
+   NTupleSize_t fNElements;
    RClusterInfo fClusterInfo;
 
 public:
@@ -85,11 +85,11 @@ public:
    std::size_t GetCapacity() const { return fCapacity; }
    /// The space taken by column elements in the buffer
    std::size_t GetSize() const { return fSize; }
-   ForestSize_t GetNElements() const { return fSize / fElementSize; }
-   ForestSize_t GetRangeFirst() const { return fRangeFirst; }
-   ForestSize_t GetRangeLast() const { return fRangeFirst + fNElements - 1; }
+   NTupleSize_t GetNElements() const { return fSize / fElementSize; }
+   NTupleSize_t GetRangeFirst() const { return fRangeFirst; }
+   NTupleSize_t GetRangeLast() const { return fRangeFirst + fNElements - 1; }
    const RClusterInfo& GetClusterInfo() const { return fClusterInfo; }
-   bool Contains(ForestSize_t index) const {
+   bool Contains(NTupleSize_t index) const {
       return (index >= fRangeFirst) && (index < fRangeFirst + fNElements);
    }
    void* GetBuffer() const { return fBuffer; }
@@ -106,12 +106,12 @@ public:
       return static_cast<unsigned char *>(fBuffer) + offset;
    }
    /// Seek the page to a certain position of the column
-   void SetWindow(const ForestSize_t rangeFirst, const RClusterInfo &clusterInfo) {
+   void SetWindow(const NTupleSize_t rangeFirst, const RClusterInfo &clusterInfo) {
       fClusterInfo = clusterInfo;
       fRangeFirst = rangeFirst;
    }
    /// Forget all currently stored elements (size == 0) and set a new starting index.
-   void Reset(ForestSize_t rangeFirst) { fSize = 0; fRangeFirst = rangeFirst; }
+   void Reset(NTupleSize_t rangeFirst) { fSize = 0; fRangeFirst = rangeFirst; }
    void ResetCluster(const RClusterInfo &clusterInfo) { fSize = 0; fClusterInfo = clusterInfo; }
 
    bool IsNull() const { return fBuffer == nullptr; }

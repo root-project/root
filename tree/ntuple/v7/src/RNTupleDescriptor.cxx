@@ -68,7 +68,7 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddColumnLink(DescriptorId_t 
 }
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(
-   DescriptorId_t clusterId, RForestVersion version, ForestSize_t firstEntryIndex, ClusterSize_t nEntries)
+   DescriptorId_t clusterId, RForestVersion version, NTupleSize_t firstEntryIndex, ClusterSize_t nEntries)
 {
    RClusterDescriptor c;
    c.fClusterId = clusterId;

@@ -55,7 +55,7 @@ class RNTuple {
 protected:
    std::unique_ptr<RNTupleModel> fModel;
    /// The number of entries is constant for reading and reflects the sum of Fill() operations when writing
-   ForestSize_t fNEntries;
+   NTupleSize_t fNEntries;
 
    /// Only the derived RInputForest and ROutputForest can be instantiated
    explicit RNTuple(std::unique_ptr<RNTupleModel> model);
@@ -97,13 +97,13 @@ private:
 
 public:
    // Browse through the entries
-   class RIterator : public std::iterator<std::forward_iterator_tag, ForestSize_t> {
+   class RIterator : public std::iterator<std::forward_iterator_tag, NTupleSize_t> {
    private:
       using iterator = RIterator;
-      ForestSize_t fIndex = kInvalidForestIndex;
+      NTupleSize_t fIndex = kInvalidNTupleIndex;
    public:
       RIterator() = default;
-      explicit RIterator(ForestSize_t index) : fIndex(index) {}
+      explicit RIterator(NTupleSize_t index) : fIndex(index) {}
       ~RIterator() = default;
 
       iterator  operator++(int) /* postfix */        { auto r = *this; ++fIndex; return r; }
@@ -126,15 +126,15 @@ public:
    RInputForest(std::unique_ptr<Detail::RPageSource> source);
    ~RInputForest();
 
-   ForestSize_t GetNEntries() { return fNEntries; }
+   NTupleSize_t GetNEntries() { return fNEntries; }
 
    std::string GetInfo(const ENTupleInfo what = ENTupleInfo::kSummary);
 
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the ntuple.
    /// On I/O errors, raises an expection.
-   void LoadEntry(ForestSize_t index) { LoadEntry(index, fModel->GetDefaultEntry()); }
+   void LoadEntry(NTupleSize_t index) { LoadEntry(index, fModel->GetDefaultEntry()); }
    /// Fills a user provided entry after checking that the entry has been instantiated from the ntuple model
-   void LoadEntry(ForestSize_t index, REntry* entry) {
+   void LoadEntry(NTupleSize_t index, REntry* entry) {
       for (auto& value : *entry) {
          value.GetField()->Read(index, &value);
       }
@@ -144,7 +144,7 @@ public:
 
    /// Provides access to an individual field that can contain either a skalar value or a collection, e.g.
    /// GetView<double>("particles.pt") or GetView<std::vector<double>>("particle").  It can as well be the index
-   /// field of a collection itself, like GetView<ForestSize_t>("particle")
+   /// field of a collection itself, like GetView<NTupleSize_t>("particle")
    template <typename T>
    RNTupleView<T> GetView(std::string_view fieldName) { return RNTupleView<T>(fieldName, fSource.get()); }
    RNTupleViewCollection GetViewCollection(std::string_view fieldName) {
@@ -169,10 +169,10 @@ triggered by Flush() or by destructing the ntuple.  On I/O errors, an exception 
 // clang-format on
 class ROutputForest : public Detail::RNTuple {
 private:
-   static constexpr ForestSize_t kDefaultClusterSizeEntries = 8192;
+   static constexpr NTupleSize_t kDefaultClusterSizeEntries = 8192;
    std::unique_ptr<Detail::RPageSink> fSink;
-   ForestSize_t fClusterSizeEntries;
-   ForestSize_t fLastCommitted;
+   NTupleSize_t fClusterSizeEntries;
+   NTupleSize_t fLastCommitted;
 
 public:
    static std::unique_ptr<ROutputForest> Recreate(std::unique_ptr<RNTupleModel> model,

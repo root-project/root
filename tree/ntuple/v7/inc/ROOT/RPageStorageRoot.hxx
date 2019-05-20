@@ -59,18 +59,18 @@ struct RForestHeader {
 struct RForestFooter {
    std::int32_t fVersion = 0;
    std::int32_t fNClusters = 0;
-   ForestSize_t fNEntries = 0;
-   std::vector<ForestSize_t> fNElementsPerColumn;
+   NTupleSize_t fNEntries = 0;
+   std::vector<NTupleSize_t> fNElementsPerColumn;
 };
 
 struct RPageInfo {
-   std::vector<ForestSize_t> fRangeStarts;
+   std::vector<NTupleSize_t> fRangeStarts;
 };
 
 struct RClusterFooter {
    std::int32_t fVersion = 0;
-   ForestSize_t fEntryRangeStart = 0;
-   ForestSize_t fNEntries = 0;
+   NTupleSize_t fEntryRangeStart = 0;
+   NTupleSize_t fNEntries = 0;
    std::vector<RPageInfo> fPagesPerColumn;
 };
 
@@ -99,12 +99,12 @@ public:
    static constexpr const char* kKeyPagePayload = "RFP";
 
    struct RColumnIndex {
-      ForestSize_t fNElements = 0;
-      std::vector<ForestSize_t> fRangeStarts;
-      std::vector<ForestSize_t> fClusterId;
-      std::vector<ForestSize_t> fPageInCluster;
-      std::vector<ForestSize_t> fSelfClusterOffset;
-      std::vector<ForestSize_t> fPointeeClusterOffset;
+      NTupleSize_t fNElements = 0;
+      std::vector<NTupleSize_t> fRangeStarts;
+      std::vector<NTupleSize_t> fClusterId;
+      std::vector<NTupleSize_t> fPageInCluster;
+      std::vector<NTupleSize_t> fSelfClusterOffset;
+      std::vector<NTupleSize_t> fPointeeClusterOffset;
    };
 
    struct RFieldDescriptor {
@@ -113,7 +113,7 @@ public:
       std::string fTypeName;
    };
 
-   ForestSize_t fNEntries = 0;
+   NTupleSize_t fNEntries = 0;
    std::unordered_map<std::int32_t, std::unique_ptr<RColumnModel>> fId2ColumnModel;
    std::unordered_map<std::string, std::int32_t> fColumnName2Id;
    std::unordered_map<std::int32_t, std::int32_t> fColumn2Pointee;
@@ -149,7 +149,7 @@ private:
    ROOT::Experimental::Internal::RForestFooter fForestFooter;
 
    RMapper fMapper;
-   ForestSize_t fPrevClusterNEntries;
+   NTupleSize_t fPrevClusterNEntries;
 
 public:
    RPageSinkRoot(std::string_view forestName, RSettings settings);
@@ -159,7 +159,7 @@ public:
    ColumnHandle_t AddColumn(RColumn* column) final;
    void Create(RNTupleModel* model) final;
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
-   void CommitCluster(ForestSize_t nEntries) final;
+   void CommitCluster(NTupleSize_t nEntries) final;
    void CommitDataset() final;
 };
 
@@ -195,9 +195,9 @@ public:
    ColumnHandle_t AddColumn(RColumn* column) final;
    void Attach() final;
    std::unique_ptr<ROOT::Experimental::RNTupleModel> GenerateModel() final;
-   void PopulatePage(ColumnHandle_t columnHandle, ForestSize_t index, RPage* page) final;
-   ForestSize_t GetNEntries() final;
-   ForestSize_t GetNElements(ColumnHandle_t columnHandle) final;
+   void PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t index, RPage* page) final;
+   NTupleSize_t GetNEntries() final;
+   NTupleSize_t GetNElements(ColumnHandle_t columnHandle) final;
    ColumnId_t GetColumnId(ColumnHandle_t columnHandle) final;
    const RNTupleDescriptor& GetDescriptor() const final { return fDescriptor; }
 };
