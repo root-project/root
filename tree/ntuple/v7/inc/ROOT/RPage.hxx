@@ -29,7 +29,7 @@ namespace Detail {
 // clang-format off
 /**
 \class ROOT::Experimental::Detail::RPage
-\ingroup Forest
+\ingroup NTuple
 \brief A page is a fixed size slice of a column that is mapped into memory
 
 The page provides a fixed-size opaque memory buffer for uncompressed data. It does not know how to interpret

@@ -30,7 +30,7 @@ namespace Detail {
 // clang-format off
 /**
 \class ROOT::Experimental::Detail::RColumnElement
-\ingroup Forest
+\ingroup NTuple
 \brief A column element points either to the content of an RFieldValue or into a memory mapped page.
 
 The content pointed to by fRawContent can be a single element or the first element of an array.

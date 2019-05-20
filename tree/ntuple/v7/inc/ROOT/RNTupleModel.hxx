@@ -34,7 +34,7 @@ class RCollectionForest;
 // clang-format off
 /**
 \class ROOT::Experimental::RForestModel
-\ingroup Forest
+\ingroup NTuple
 \brief The RForestModel encapulates the schema of a forest.
 
 The forest model comprises a collection of hierarchically organized fields. From a frozen model, "entries"

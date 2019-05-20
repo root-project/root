@@ -31,7 +31,7 @@ namespace Experimental {
 // clang-format off
 /**
 \class ROOT::Experimental::RForestViewContext
-\ingroup Forest
+\ingroup NTuple
 \brief Used to loop over indexes (entries or collections) between start and end
 */
 // clang-format on
@@ -66,7 +66,7 @@ public:
 // clang-format off
 /**
 \class ROOT::Experimental::RForestView
-\ingroup Forest
+\ingroup NTuple
 \brief An RForestView provides read-only access to a single field of the forest
 
 (NB(jblomer): The forest view is very close to TTreeReader. Do we simply want to teach TTreeReader to deal with Forest?)
@@ -137,7 +137,7 @@ public:
 // clang-format off
 /**
 \class ROOT::Experimental::RForestViewCollection
-\ingroup Forest
+\ingroup NTuple
 \brief A tree view for a collection, that can itself generate new tree views for its nested fields.
 */
 // clang-format on
