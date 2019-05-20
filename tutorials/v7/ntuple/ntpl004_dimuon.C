@@ -38,7 +38,7 @@
 // Import classes from experimental namespace for the time being
 using RInputForest = ROOT::Experimental::RInputForest;
 using ROutputForest = ROOT::Experimental::ROutputForest;
-using RForestDS = ROOT::Experimental::RForestDS;
+using RNTupleDS = ROOT::Experimental::RNTupleDS;
 
 constexpr char const* kTreeFileName = "http://root.cern.ch/files/NanoAOD_DoubleMuon_CMS2011OpenData.root";
 constexpr char const* kForestFileName = "ntpl004_dimuon.root";
@@ -172,7 +172,7 @@ void ntpl004_dimuon() {
    if (gSystem->AccessPathName(kForestFileName))
       Convert();
 
-   auto df = ROOT::Experimental::MakeForestDataFrame("Events", kForestFileName);
+   auto df = ROOT::Experimental::MakeNTupleDataFrame("Events", kForestFileName);
 
    // As of this point, the tutorial is identical to df102_NanoAODDimuonAnalysis except the use of
    // InvariantMassStdVector instead of InvariantMass
