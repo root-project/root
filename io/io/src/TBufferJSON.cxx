@@ -1816,27 +1816,29 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    } else if (isBase) {
       // base class has special handling - no additional level and no extra refid
 
-      jsonClass = (TClass *)objClass;
+      jsonClass = const_cast<TClass *>(objClass);
 
       if (gDebug > 1)
          Info("JsonReadObject", "Reading baseclass %s ptr %p", objClass->GetName(), obj);
    } else {
 
-      std::string clname;
-
-      if (fTypeNameTag.Length() > 0)
-         clname = json->at(fTypeNameTag.Data()).get<std::string>();
-
-      jsonClass = clname.empty() ? nullptr : TClass::GetClass(clname.c_str());
+      if ((fTypeNameTag.Length() > 0) && (json->count(fTypeNameTag.Data()) > 0)) {
+         std::string clname = json->at(fTypeNameTag.Data()).get<std::string>();
+         jsonClass = TClass::GetClass(clname.c_str());
+         if (!jsonClass)
+            Error("JsonReadObject", "Cannot find class %s", clname.c_str());
+      } else {
+         // try to use class which is assigned by streamers - better than nothing
+         jsonClass = const_cast<TClass *>(objClass);
+      }
 
       if (!jsonClass) {
-         Error("JsonReadObject", "Cannot find class %s", clname.c_str());
          if (process_stl)
             PopStack();
          return obj;
       }
 
-      if (fTypeVersionTag.Length() > 0)
+      if ((fTypeVersionTag.Length() > 0) && (json->count(fTypeVersionTag.Data()) > 0))
          jsonClassVersion = json->at(fTypeVersionTag.Data()).get<int>();
 
       if (objClass && (jsonClass != objClass)) {
@@ -1848,7 +1850,7 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
          obj = jsonClass->New();
 
       if (gDebug > 1)
-         Info("JsonReadObject", "Reading object of class %s refid %u ptr %p", clname.c_str(), fJsonrCnt, obj);
+         Info("JsonReadObject", "Reading object of class %s refid %u ptr %p", jsonClass->GetName(), fJsonrCnt, obj);
 
       if (!special_kind)
          special_kind = JsonSpecialClass(jsonClass);
