@@ -31,15 +31,15 @@ namespace Experimental {
 
 // clang-format off
 /**
-\class ROOT::Experimental::RForestEntry
+\class ROOT::Experimental::REntry
 \ingroup NTuple
-\brief The RForestEntry is a collection of values in a forest corresponding to a complete row in the data set
+\brief The REntry is a collection of values in an ntuple corresponding to a complete row in the data set
 
 The entry provides a memory-managed binder for a set of values. Through shared pointers, the memory locations
 that are associated to values are managed.
 */
 // clang-format on
-class RForestEntry {
+class REntry {
    std::vector<Detail::RFieldValue> fValues;
    /// The objects involed in serialization and deserialization might be used long after the entry is gone:
    /// hence the shared pointer
@@ -48,10 +48,10 @@ class RForestEntry {
    std::vector<std::size_t> fManagedValues;
 
 public:
-   RForestEntry() = default;
-   RForestEntry(const RForestEntry& other) = delete;
-   RForestEntry& operator=(const RForestEntry& other) = delete;
-   ~RForestEntry();
+   REntry() = default;
+   REntry(const REntry& other) = delete;
+   REntry& operator=(const REntry& other) = delete;
+   ~REntry();
 
    /// Adds a value whose storage is managed by the entry
    void AddValue(const Detail::RFieldValue& value);

@@ -47,7 +47,7 @@ class RForestModel {
    /// Hierarchy of fields consisting of simple types and collections (sub trees)
    std::unique_ptr<RFieldRoot> fRootField;
    /// Contains field values corresponding to the created top-level fields
-   std::unique_ptr<RForestEntry> fDefaultEntry;
+   std::unique_ptr<REntry> fDefaultEntry;
 
 public:
    RForestModel();
@@ -88,8 +88,8 @@ public:
       std::unique_ptr<RForestModel> collectionModel);
 
    RFieldRoot* GetRootField() { return fRootField.get(); }
-   RForestEntry* GetDefaultEntry() { return fDefaultEntry.get(); }
-   std::unique_ptr<RForestEntry> CreateEntry();
+   REntry* GetDefaultEntry() { return fDefaultEntry.get(); }
+   std::unique_ptr<REntry> CreateEntry();
 };
 
 } // namespace Exerimental

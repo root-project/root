@@ -28,7 +28,7 @@
 namespace ROOT {
 namespace Experimental {
 
-class RForestEntry;
+class REntry;
 class RForestModel;
 
 namespace Detail {
@@ -134,7 +134,7 @@ public:
    /// On I/O errors, raises an expection.
    void LoadEntry(ForestSize_t index) { LoadEntry(index, fModel->GetDefaultEntry()); }
    /// Fills a user provided entry after checking that the entry has been instantiated from the forest model
-   void LoadEntry(ForestSize_t index, RForestEntry* entry) {
+   void LoadEntry(ForestSize_t index, REntry* entry) {
       for (auto& value : *entry) {
          value.GetField()->Read(index, &value);
       }
@@ -187,7 +187,7 @@ public:
    void Fill() { Fill(fModel->GetDefaultEntry()); }
    /// Multiple entries can have been instantiated from the forest model.  This method will perform
    /// a light check whether the entry comes from the forest's own model
-   void Fill(RForestEntry *entry) {
+   void Fill(REntry *entry) {
       for (auto& treeValue : *entry) {
          treeValue.GetField()->Append(treeValue);
       }
@@ -212,15 +212,15 @@ public:
 class RCollectionForest {
 private:
    ClusterSize_t fOffset;
-   std::unique_ptr<RForestEntry> fDefaultEntry;
+   std::unique_ptr<REntry> fDefaultEntry;
 public:
-   explicit RCollectionForest(std::unique_ptr<RForestEntry> defaultEntry);
+   explicit RCollectionForest(std::unique_ptr<REntry> defaultEntry);
    RCollectionForest(const RCollectionForest&) = delete;
    RCollectionForest& operator=(const RCollectionForest&) = delete;
    ~RCollectionForest() = default;
 
    void Fill() { Fill(fDefaultEntry.get()); }
-   void Fill(RForestEntry *entry) {
+   void Fill(REntry *entry) {
       for (auto& treeValue : *entry) {
          treeValue.GetField()->Append(treeValue);
       }

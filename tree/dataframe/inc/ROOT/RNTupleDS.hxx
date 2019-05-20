@@ -29,12 +29,12 @@ namespace ROOT {
 namespace Experimental {
 
 class RInputForest;
-class RForestEntry;
+class REntry;
 
 
 class RForestDS final : public ROOT::RDF::RDataSource {
    std::unique_ptr<ROOT::Experimental::RInputForest> fForest;
-   std::unique_ptr<ROOT::Experimental::RForestEntry> fEntry;
+   std::unique_ptr<ROOT::Experimental::REntry> fEntry;
    unsigned fNSlots;
    bool fHasSeenAllRanges;
    std::vector<std::string> fColumnNames;
