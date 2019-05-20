@@ -32,7 +32,7 @@ class RInputForest;
 class REntry;
 
 
-class RForestDS final : public ROOT::RDF::RDataSource {
+class RNTupleDS final : public ROOT::RDF::RDataSource {
    std::unique_ptr<ROOT::Experimental::RInputForest> fForest;
    std::unique_ptr<ROOT::Experimental::REntry> fEntry;
    unsigned fNSlots;
@@ -42,8 +42,8 @@ class RForestDS final : public ROOT::RDF::RDataSource {
    std::vector<void*> fValuePtrs;
 
 public:
-   RForestDS(std::unique_ptr<ROOT::Experimental::RInputForest> forest);
-   ~RForestDS();
+   RNTupleDS(std::unique_ptr<ROOT::Experimental::RInputForest> forest);
+   ~RNTupleDS();
    void SetNSlots(unsigned int nSlots) final;
    const std::vector<std::string> &GetColumnNames() const final;
    bool HasColumn(std::string_view colName) const final;
@@ -58,7 +58,7 @@ protected:
    Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) final;
 };
 
-RDataFrame MakeForestDataFrame(std::string_view forestName, std::string_view fileName);
+RDataFrame MakeNTupleDataFrame(std::string_view forestName, std::string_view fileName);
 
 } // ns Experimental
 } // ns ROOT
