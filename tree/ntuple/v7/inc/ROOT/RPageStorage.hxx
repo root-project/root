@@ -133,7 +133,7 @@ public:
    virtual ForestSize_t GetNEntries() = 0;
    virtual ForestSize_t GetNElements(ColumnHandle_t columnHandle) = 0;
    virtual ColumnId_t GetColumnId(ColumnHandle_t columnHandle) = 0;
-   virtual const RForestDescriptor& GetDescriptor() const = 0;
+   virtual const RNTupleDescriptor& GetDescriptor() const = 0;
 };
 
 } // namespace Detail

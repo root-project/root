@@ -263,7 +263,7 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
    delete forestHeader;
 
    // TODO(jblomer): replace RMapper by a forest descriptor
-   RForestDescriptorBuilder descBuilder;
+   RNTupleDescriptorBuilder descBuilder;
    descBuilder.SetForest(fForestName, RForestVersion());
    fDescriptor = descBuilder.GetDescriptor();
 }
