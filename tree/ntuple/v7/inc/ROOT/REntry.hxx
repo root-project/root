@@ -32,7 +32,7 @@ namespace Experimental {
 // clang-format off
 /**
 \class ROOT::Experimental::RForestEntry
-\ingroup Forest
+\ingroup NTuple
 \brief The RForestEntry is a collection of values in a forest corresponding to a complete row in the data set
 
 The entry provides a memory-managed binder for a set of values. Through shared pointers, the memory locations

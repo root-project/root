@@ -125,7 +125,7 @@ public:
 // clang-format off
 /**
 \class ROOT::Experimental::Detail::RPageSinkRoot
-\ingroup Forest
+\ingroup NTuple
 \brief Storage provider that write Forest pages into a ROOT TFile
 */
 // clang-format on
@@ -167,7 +167,7 @@ public:
 // clang-format off
 /**
 \class ROOT::Experimental::Detail::RPageSourceRoot
-\ingroup Forest
+\ingroup NTuple
 \brief Storage provider that reads Forest pages from a ROOT TFile
 */
 // clang-format on

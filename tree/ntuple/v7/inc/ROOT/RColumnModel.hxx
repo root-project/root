@@ -30,7 +30,7 @@ class RColumnElementBase;
 // clang-format off
 /**
 \class ROOT::Experimental::EColumnType
-\ingroup Forest
+\ingroup NTuple
 \brief The available trivial, native content types of a column
 
 More complex types, such as classes, get translated into columns of such simple types by the RField.
@@ -62,7 +62,7 @@ constexpr std::size_t kColumnElementSizes[] =
 // clang-format off
 /**
 \class ROOT::Experimental::RColumnModel
-\ingroup Forest
+\ingroup NTuple
 \brief Holds the static meta-data of a column in a tree
 */
 // clang-format on

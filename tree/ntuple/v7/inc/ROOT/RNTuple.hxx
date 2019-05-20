@@ -41,7 +41,7 @@ namespace Detail {
 // clang-format off
 /**
 \class ROOT::Experimental::RForest
-\ingroup Forest
+\ingroup NTuple
 \brief The RForest represents a live dataset, whose structure is defined by an RForestModel
 
 RForest connects the static information of the RForestModel to a source or sink on physical storage.
@@ -82,7 +82,7 @@ enum class EForestInfo {
 // clang-format off
 /**
 \class ROOT::Experimental::RInputForest
-\ingroup Forest
+\ingroup NTuple
 \brief An RForest that is used to read data from storage
 
 An input forest provides data from storage as C++ objects. The forest model can be created from the data on storage
@@ -158,7 +158,7 @@ public:
 // clang-format off
 /**
 \class ROOT::Experimental::ROutputForest
-\ingroup Forest
+\ingroup NTuple
 \brief An RForest that gets filled with entries (data) and writes them to storage
 
 An output forest can be filled with entries. The caller has to make sure that the data that gets filled into a forest
@@ -201,7 +201,7 @@ public:
 // clang-format off
 /**
 \class ROOT::Experimental::RCollectionForest
-\ingroup Forest
+\ingroup NTuple
 \brief A virtual forest for collections that can be used to some extent like a real forest
 *
 * This class is between a field and a forest.  It carries the offset column for the collection and the default entry

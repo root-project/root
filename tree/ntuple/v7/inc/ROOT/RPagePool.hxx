@@ -32,7 +32,7 @@ class RColumn;
 // clang-format off
 /**
 \class ROOT::Experimental::Detail::RPagePool
-\ingroup Forest
+\ingroup NTuple
 \brief A thread-safe cache of column pages.
 
 The page pool encapsulated memory management for data written into a tree or read from a tree. Adding and removing

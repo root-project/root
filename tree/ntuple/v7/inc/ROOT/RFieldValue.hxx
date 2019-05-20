@@ -30,7 +30,7 @@ class RFieldBase;
 // clang-format off
 /**
 \class ROOT::Experimental::RFieldValue
-\ingroup Forest
+\ingroup NTuple
 \brief Represents transient storage of simple or complex C++ values.
 
 The data carried by the value is used by the computational code and it is supposed to be serialized on Fill
