@@ -19,9 +19,9 @@
 \class RooMCStudy
 \ingroup Roofitcore
 
-RooMCStudy is a help class to facilitate Monte Carlo studies
+RooMCStudy is a helper class to facilitate Monte Carlo studies
 such as 'goodness-of-fit' studies, that involve fitting a PDF 
-to multiple toy Monte Carlo sets generated from the same PDF 
+to multiple toy Monte Carlo sets generated from either same PDF
 or another PDF.
 
 Given a fit PDF and a generator PDF, RooMCStudy can produce
@@ -31,10 +31,10 @@ Additional plotting routines simplify the task of plotting
 the distribution of the minimized likelihood, the fitted parameter values,
 fitted error and pull distribution.
 RooMCStudy provides the option to insert add-in modules
-that modify the generate and fit cycle and allow to perform
+that modify the generate-and-fit cycle and allow to perform
 extra steps in the cycle. Output of these modules can be stored
 alongside the fit results in the aggregate results dataset.
-These study modules should derive from class RooAbsMCStudyModel
+These study modules should derive from the class RooAbsMCStudyModule.
 
 **/
 
@@ -72,10 +72,10 @@ ClassImp(RooMCStudy);
 
 /**
 Construct Monte Carlo Study Manager. This class automates generating data from a given PDF,
-fitting the PDF to that data and accumulating the fit statistics.
+fitting the PDF to data and accumulating the fit statistics.
 
 \param[in] model The PDF to be studied
-\param[in] observables The variables of the PDF to be considered the observables
+\param[in] observables The variables of the PDF to be considered observables
 \param[in] argX Arguments from the table below
 
 <table>

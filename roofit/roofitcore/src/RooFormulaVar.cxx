@@ -15,26 +15,27 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-//
-// RooFormulaVar is a generic implementation of a real valued object
-// which takes a RooArgList of servers and a C++ expression string defining how
-// its value should be calculated from the given list of servers.
-// RooFormulaVar uses a RooFormula object to perform the expression evaluation.
-//
-// If RooAbsPdf objects are supplied to RooFormulaVar as servers, their
-// raw (unnormalized) values will be evaluated. Use RooGenericPdf, which
-// constructs generic PDF functions, to access their properly normalized
-// values.
-//
-// The string expression can be any valid TFormula expression referring to the
-// listed servers either by name or by their ordinal list position:
-//
-//   RooFormulaVar("gen","x*y",RooArgList(x,y))  or
-//   RooFormulaVar("gen","@0*@1",RooArgList(x,y)) 
-//
-// The latter form, while slightly less readable, is more versatile because it
-// doesn't hardcode any of the variable names it expects
-//
+/// \class RooFormulaVar
+///
+/// A RooFormulaVar is a generic implementation of a real-valued object,
+/// which takes a RooArgList of servers and a C++ expression string defining how
+/// its value should be calculated from the given list of servers.
+/// RooFormulaVar uses a RooFormula object to perform the expression evaluation.
+///
+/// If RooAbsPdf objects are supplied to RooFormulaVar as servers, their
+/// raw (unnormalized) values will be evaluated. Use RooGenericPdf, which
+/// constructs generic PDF functions, to access their properly normalized
+/// values.
+///
+/// The string expression can be any valid TFormula expression referring to the
+/// listed servers either by name or by their ordinal list position:
+/// ```
+///   RooFormulaVar("gen","x*y",RooArgList(x,y))  or
+///   RooFormulaVar("gen","@0*@1",RooArgList(x,y))
+/// ```
+/// The latter form, while slightly less readable, is more versatile because it
+/// doesn't hardcode any of the variable names it expects
+///
 
 
 #include "RooFit.h"

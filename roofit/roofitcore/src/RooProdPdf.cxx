@@ -2020,7 +2020,7 @@ RooArgSet* RooProdPdf::findPdfNSet(RooAbsPdf& pdf) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return all parameter constraint p.d.f.s on parameters listed in constrainedParams
+/// Return all parameter constraint p.d.f.s on parameters listed in constrainedParams.
 /// The observables set is required to distinguish unambiguously p.d.f in terms
 /// of observables and parameters, which are not constraints, and p.d.fs in terms
 /// of parameters only, which can serve as constraints p.d.f.s

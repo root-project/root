@@ -204,15 +204,15 @@ public:
     return kFALSE;
   }
 
-  // Create a fundamental-type object that stores our type of value. The
-  // created object will have a valid value, but not necessarily the same
-  // as our value. The caller is responsible for deleting the returned object.
+  /// Create a fundamental-type object that stores our type of value. The
+  /// created object will have a valid value, but not necessarily the same
+  /// as our value. The caller is responsible for deleting the returned object.
   virtual RooAbsArg *createFundamental(const char* newname=0) const = 0;
 
+  /// Is this argument an l-value, i.e., can it appear on the left-hand side
+  /// of an assignment expression? LValues are also special since they can
+  /// potentially be analytically integrated and generated.
   inline virtual Bool_t isLValue() const {
-    // Is this argument an l-value, ie, can it appear on the left-hand side
-    // of an assignment expression? LValues are also special since they can
-    // potentially be analytically integrated and generated.
     return kFALSE;
   }
 
@@ -224,13 +224,13 @@ public:
   friend class RooAddPdfOrig ;
   RooArgSet* getVariables(Bool_t stripDisconnected=kTRUE) const ;
   RooArgSet* getParameters(const RooAbsData* data, Bool_t stripDisconnected=kTRUE) const ;
+  /// Return the parameters of this p.d.f when used in conjuction with dataset 'data'
   RooArgSet* getParameters(const RooAbsData& data, Bool_t stripDisconnected=kTRUE) const {
-    // Return the parameters of this p.d.f when used in conjuction with dataset 'data'
     return getParameters(&data,stripDisconnected) ;
   }
-  RooArgSet* getParameters(const RooArgSet& set, Bool_t stripDisconnected=kTRUE) const {
-    // Return the parameters of the p.d.f given the provided set of observables
-    return getParameters(&set,stripDisconnected) ;
+  /// Return the parameters of the p.d.f given the provided set of observables
+  RooArgSet* getParameters(const RooArgSet& observables, Bool_t stripDisconnected=kTRUE) const {
+    return getParameters(&observables,stripDisconnected);
   }
   virtual RooArgSet* getParameters(const RooArgSet* depList, Bool_t stripDisconnected=kTRUE) const ;
   /// Return the observables of this pdf given a set of observables
@@ -238,7 +238,7 @@ public:
     return getObservables(&set,valueOnly) ;
   }
   RooArgSet* getObservables(const RooAbsData* data) const ;
-  // Return the observables of this pdf given the observables defined by `data`.
+  /// Return the observables of this pdf given the observables defined by `data`.
   RooArgSet* getObservables(const RooAbsData& data) const {
     return getObservables(&data) ;
   }

@@ -64,15 +64,33 @@ public:
 
   // Get fit range limits
 
+  /// Retrive binning configuration with given name or default binning.
   virtual const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) const = 0 ;
+  /// Retrive binning configuration with given name or default binning.
   virtual RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) = 0 ;
+  /// Check if binning with given name has been defined.
   virtual Bool_t hasBinning(const char* name) const = 0 ;
   virtual Bool_t inRange(const char* name) const ;
+  /// Get number of bins of currently defined range.
+  /// \param name Optionally, request number of bins for range with given name.
   virtual Int_t getBins(const char* name=0) const { return getBinning(name).numBins(); }
+  /// Get miniminum of currently defined range.
+  /// \param name Optionally, request minimum of range with given name.
   virtual Double_t getMin(const char* name=0) const { return getBinning(name).lowBound(); }
+  /// Get maximum of currently defined range.
+  /// \param name Optionally, request maximum of range with given name.
   virtual Double_t getMax(const char* name=0) const { return getBinning(name).highBound(); }
+  /// Get low and high bound of the variable.
+  /// \param name Optional range name. If not given, the default range will be used.
+  /// \return A pair with [lowerBound, upperBound]
+  std::pair<double, double> getRange(const char* name = 0) const {
+    return {getMin(name), getMax(name)};
+  }
+  /// Check if variable has a lower bound.
   inline Bool_t hasMin(const char* name=0) const { return !RooNumber::isInfinite(getMin(name)); }
+  /// Check if variable has an upper bound.
   inline Bool_t hasMax(const char* name=0) const { return !RooNumber::isInfinite(getMax(name)); }
+  /// Check if variable has a binning with given name.
   virtual Bool_t hasRange(const char* name) const { return hasBinning(name) ; }
 
   // Jacobian term management

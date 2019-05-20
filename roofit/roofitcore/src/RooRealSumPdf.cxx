@@ -19,7 +19,7 @@
     \ingroup Roofitcore
 
 
-Class RooRealSumPdf implements a PDF constructed from a sum of functions:
+The class RooRealSumPdf implements a PDF constructed from a sum of functions:
 \f[
   \mathrm{PDF}(x) = \frac{ \sum_{i=1}^{n-1} \mathrm{coef}_i * \mathrm{func}_i(x) + \left[ 1 - \sum_{i=1}^{n-1} \mathrm{coef}_i \right] * \mathrm{func}_n(x) }
             {\sum_{i=1}^{n-1} \mathrm{coef}_i * \int \mathrm{func}_i(x)dx  + \left[ 1 - \sum_{i=1}^{n-1} \mathrm{coef}_i \right] * \int \mathrm{func}_n(x) dx }
@@ -31,8 +31,10 @@ In the present version \f$\mathrm{coef}_i\f$ may not depend on \f$ x \f$, but th
 If the number of coefficients is one less than the number of functions, the PDF is assumed to be normalised. Due to this additional constraint,
 \f$\mathrm{coef}_n\f$ is computed from the other coefficients.
 
-If an \f$ n^\mathrm{th} \f$ coefficient is provided, the PDF will behave as an extended PDF, *i.e.* the total number of events will be measured in addition
-to the fractions of the various functions.
+### Extending the PDF
+If an \f$ n^\mathrm{th} \f$ coefficient is provided, the PDF **can** be used as an extended PDF, *i.e.* the total number of events will be measured in addition
+to the fractions of the various functions. This requires setting the last argument of the constructor
+
 
 */
 

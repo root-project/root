@@ -48,7 +48,7 @@ void rf604_constraints()
    // -----------------------------------------
 
    // Construct Gaussian constraint p.d.f on parameter f at 0.8 with resolution of 0.1
-   RooGaussian fconstraint("fconstraint", "fconstraint", f, RooConst(0.8), RooConst(0.1));
+   RooGaussian fconstraint("fconstraint", "fconstraint", f, RooConst(0.8), RooConst(0.2));
 
    // M E T H O D   1   -   A d d   i n t e r n a l   c o n s t r a i n t   t o   m o d e l
    // -------------------------------------------------------------------------------------
@@ -68,7 +68,7 @@ void rf604_constraints()
    // M E T H O D   2   -     S p e c i f y   e x t e r n a l   c o n s t r a i n t   w h e n   f i t t i n g
    // -------------------------------------------------------------------------------------------------------
 
-   // Construct another Gaussian constraint p.d.f on parameter f at 0.8 with resolution of 0.1
+   // Construct another Gaussian constraint p.d.f on parameter f at 0.2 with resolution of 0.1
    RooGaussian fconstext("fconstext", "fconstext", f, RooConst(0.2), RooConst(0.1));
 
    // Fit with external constraint

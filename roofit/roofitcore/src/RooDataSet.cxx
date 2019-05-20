@@ -604,7 +604,9 @@ RooDataSet::RooDataSet(const char *name, const char *title, const RooArgSet& var
 /// any variable in the source dataset. For cuts involving variables
 /// other than those contained in the source data set, such as
 /// intermediate formula objects, use the equivalent constructor
-/// accepting RooFormulaVar reference as cut specification
+/// accepting RooFormulaVar reference as cut specification.
+///
+/// This constructor will internally store the data in a TTree.
 ///
 /// For most uses the RooAbsData::reduce() wrapper function, which
 /// uses this constructor, is the most convenient way to create a
@@ -645,6 +647,8 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset,
 /// exclusively and directly on the data set dimensions, the
 /// equivalent constructor with a string based cut expression is
 /// recommended.
+///
+/// This constructor will internally store the data in a TTree.
 ///
 /// For most uses the RooAbsData::reduce() wrapper function, which
 /// uses this constructor, is the most convenient way to create a

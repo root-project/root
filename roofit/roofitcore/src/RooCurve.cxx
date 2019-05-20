@@ -32,7 +32,7 @@ p->setDrawOptions("curve_y","PL");
 p->Draw();
 ```
 
-To retrieve a RooCurve form a RooPlot, use RooPlot::getCurve().
+To retrieve a RooCurve from a RooPlot, use RooPlot::getCurve().
 **/
 
 #include "RooFit.h"
