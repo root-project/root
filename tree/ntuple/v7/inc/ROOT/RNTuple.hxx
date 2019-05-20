@@ -45,7 +45,7 @@ namespace Detail {
 \brief The RNTuple represents a live dataset, whose structure is defined by an RNTupleModel
 
 RNTuple connects the static information of the RNTupleModel to a source or sink on physical storage.
-Reading and writing requires use of the corresponding derived class RNTupleReader or ROutputForest.
+Reading and writing requires use of the corresponding derived class RNTupleReader or RNTupleWriter.
 RNTuple writes only complete entries (rows of the data set).  The entry itself is not kept within the
 RNTuple, which allows for multiple concurrent entries for the same RNTuple.  Besides reading an entire entry,
 the RNTuple can expose views that read only specific fields.
@@ -57,7 +57,7 @@ protected:
    /// The number of entries is constant for reading and reflects the sum of Fill() operations when writing
    NTupleSize_t fNEntries;
 
-   /// Only the derived RNTupleReader and ROutputForest can be instantiated
+   /// Only the derived RNTupleReader and RNTupleWriter can be instantiated
    explicit RNTuple(std::unique_ptr<RNTupleModel> model);
 
 public:
@@ -157,7 +157,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::ROutputForest
+\class ROOT::Experimental::RNTupleWriter
 \ingroup NTuple
 \brief An RNTuple that gets filled with entries (data) and writes them to storage
 
@@ -167,7 +167,7 @@ writes data into the corresponding column page buffers.  Writing of the buffers 
 triggered by Flush() or by destructing the ntuple.  On I/O errors, an exception is thrown.
 */
 // clang-format on
-class ROutputForest : public Detail::RNTuple {
+class RNTupleWriter : public Detail::RNTuple {
 private:
    static constexpr NTupleSize_t kDefaultClusterSizeEntries = 8192;
    std::unique_ptr<Detail::RPageSink> fSink;
@@ -175,13 +175,13 @@ private:
    NTupleSize_t fLastCommitted;
 
 public:
-   static std::unique_ptr<ROutputForest> Recreate(std::unique_ptr<RNTupleModel> model,
+   static std::unique_ptr<RNTupleWriter> Recreate(std::unique_ptr<RNTupleModel> model,
                                                   std::string_view forestName,
                                                   std::string_view storage);
-   ROutputForest(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSink> sink);
-   ROutputForest(const ROutputForest&) = delete;
-   ROutputForest& operator=(const ROutputForest&) = delete;
-   ~ROutputForest();
+   RNTupleWriter(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSink> sink);
+   RNTupleWriter(const RNTupleWriter&) = delete;
+   RNTupleWriter& operator=(const RNTupleWriter&) = delete;
+   ~RNTupleWriter();
 
    /// The simplest user interface if the default entry that comes with the ntuple model is used
    void Fill() { Fill(fModel->GetDefaultEntry()); }

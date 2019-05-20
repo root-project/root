@@ -20,7 +20,7 @@
 #include <utility>
 
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
-using ROutputForest = ROOT::Experimental::ROutputForest;
+using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RPageSource = ROOT::Experimental::Detail::RPageSource;
 using RPageSinkRoot = ROOT::Experimental::Detail::RPageSinkRoot;
@@ -131,7 +131,7 @@ TEST(RNTuple, WriteRead)
    auto modelRead = std::unique_ptr<RNTupleModel>(modelWrite->Clone());
 
    {
-      ROutputForest forest(std::move(modelWrite), std::make_unique<RPageSinkRoot>("f", "test.root"));
+      RNTupleWriter forest(std::move(modelWrite), std::make_unique<RPageSinkRoot>("f", "test.root"));
       forest.Fill();
    }
 
@@ -177,7 +177,7 @@ TEST(RNTuple, RVec)
    wrJets->push_back(7.0);
 
    {
-      ROutputForest forest(std::move(modelWrite), std::make_unique<RPageSinkRoot>("f", "test.root"));
+      RNTupleWriter forest(std::move(modelWrite), std::make_unique<RPageSinkRoot>("f", "test.root"));
       forest.Fill();
       wrJets->clear();
       wrJets->push_back(1.0);
@@ -230,7 +230,7 @@ TEST(RNTuple, Clusters)
    auto modelRead = std::unique_ptr<RNTupleModel>(modelWrite->Clone());
 
    {
-      ROutputForest forest(std::move(modelWrite), std::make_unique<RPageSinkRoot>("f", "test.root"));
+      RNTupleWriter forest(std::move(modelWrite), std::make_unique<RPageSinkRoot>("f", "test.root"));
       forest.Fill();
       forest.CommitCluster();
       *wrPt = 24.0;
@@ -289,7 +289,7 @@ TEST(RNTuple, View)
    fieldJets->push_back(2.0);
 
    {
-      ROutputForest forest(std::move(model), std::make_unique<RPageSinkRoot>("f", "test.root"));
+      RNTupleWriter forest(std::move(model), std::make_unique<RPageSinkRoot>("f", "test.root"));
       forest.Fill();
       forest.CommitCluster();
       fieldJets->clear();
@@ -344,7 +344,7 @@ TEST(RNTuple, Composable)
    auto fldTracks = eventModel->MakeCollection("tracks", std::move(trackModel));
 
    {
-      auto forest = ROutputForest::Recreate(std::move(eventModel), "f", "test.root");
+      auto forest = RNTupleWriter::Recreate(std::move(eventModel), "f", "test.root");
 
       for (unsigned i = 0; i < 8; ++i) {
          for (unsigned t = 0; t < 3; ++t) {
@@ -414,7 +414,7 @@ TEST(RNTuple, TClass) {
    auto ptrKlass = model->MakeField<CustomStruct>("klass");
 
    FileRaii fileGuard("test.root");
-   ROutputForest forest(std::move(model), std::make_unique<RPageSinkRoot>("f", "test.root"));
+   RNTupleWriter forest(std::move(model), std::make_unique<RPageSinkRoot>("f", "test.root"));
 }
 
 
@@ -432,7 +432,7 @@ TEST(RNTuple, RealWorld1)
    TRandom3 rnd(42);
    double chksumWrite = 0.0;
    {
-      auto forest = ROutputForest::Recreate(std::move(modelWrite), "f", "test.root");
+      auto forest = RNTupleWriter::Recreate(std::move(modelWrite), "f", "test.root");
       constexpr unsigned int nEvents = 60000;
       for (unsigned int i = 0; i < nEvents; ++i) {
          wrEvent = i;
@@ -497,7 +497,7 @@ TEST(RNTuple, RDF)
    wrKlass->s = "abc";
 
    {
-      ROutputForest forest(std::move(modelWrite), std::make_unique<RPageSinkRoot>("f", "test.root"));
+      RNTupleWriter forest(std::move(modelWrite), std::make_unique<RPageSinkRoot>("f", "test.root"));
       forest.Fill();
    }
 
