@@ -110,7 +110,7 @@ void compute(RooSpan<double> output, Tx x, TMean mean, TSig sigma) {
 
 RooSpan<double> RooGaussian::evaluateBatch(std::size_t begin, std::size_t end) const {
   assert(_batchData.status(begin, end) == BatchHelpers::BatchData::kWriting);
-  auto output = _batchData.makeWritableBatch(begin, end);
+  auto output = _batchData.makeWritableBatchUnInit(begin, end);
 
   auto xData = x.getValBatch(begin, end);
   auto meanData = mean.getValBatch(begin, end);
@@ -142,7 +142,7 @@ RooSpan<double> RooGaussian::evaluateBatch(std::size_t begin, std::size_t end) c
   else if (!batchX && batchMean && batchSigma) {
     compute(output, BracketAdapter<RooRealProxy>(x), meanData, sigmaData);
   } else {
-    assert(false);
+    throw std::logic_error("Requested a batch computation, but no batch data available.");
   }
 
   return output;

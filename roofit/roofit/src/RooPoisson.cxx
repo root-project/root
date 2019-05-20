@@ -23,6 +23,9 @@ Poisson pdf
 #include "Math/ProbFuncMathCore.h"
 
 #include "BatchHelpers.h"
+
+//#undef USE_VDT
+
 #ifdef USE_VDT
 #include "vdt/exp.h"
 #include "vdt/log.h"
@@ -78,43 +81,41 @@ Double_t RooPoisson::evaluate() const
 namespace {
 
 template<class Tx, class TMean>
-void compute(RooSpan<double> output, Tx x, TMean mean, bool protectNegative) {
+void compute(RooSpan<double> output, Tx x, TMean mean,
+    const bool protectNegative, const bool noRounding) {
   const int n = output.size();
 
-  for (int i = 0; i < n; ++i) {
-    output[i] = std::lgamma(x[i]+1.);
+  for (int i = 0; i < n; ++i) { //CHECK_VECTORISE
+    const double x_i = noRounding ? x[i] : floor(x[i]);
+    output[i] = std::lgamma(x_i + 1.);
+//    output[i] = TMath::LnGamma(x_i + 1.);
   }
 
-  #pragma omp simd
-  for (int i = 0; i < n; ++i) {
+
+  for (int i = 0; i < n; ++i) { //CHECK_VECTORISE
+    const double x_i = noRounding ? x[i] : floor(x[i]);
 #ifdef USE_VDT
     const double logMean = vdt::fast_log(mean[i]);
+    const double logPoisson = x_i * logMean - mean[i] - output[i];
+    output[i] = vdt::fast_exp(logPoisson);
 #else
     const double logMean = log(mean[i]);
+    const double logPoisson = x_i * logMean - mean[i] - output[i];
+    output[i] = exp(logPoisson);
 #endif
 
-    output[i] = x[i] * logMean - mean[i] - output[i];
 
-#ifdef USE_VDT
-    output[i] = vdt::fast_exp(output[i]);
-#else
-    output[i] = exp(output[i]);
-#endif
-  }
-
-  // Cosmetics
-
-  for (int i = 0; i < n; ++i) {
-    if (x[i] < 0.)
+    // Cosmetics
+    if (x_i < 0.)
       output[i] = 0.;
-    if (x[i] == 0.) {
+    else if (x_i == 0.) {
 #ifdef USE_VDT
       output[i] = 1./vdt::fast_exp(mean[i]);
 #else
       output[i] = 1./exp(mean[i]);
 #endif
     }
-    if(protectNegative && mean[i] < 0.)
+    if (protectNegative && mean[i] < 0.)
       output[i] = 1.E-3;
   }
 }
@@ -125,7 +126,7 @@ void compute(RooSpan<double> output, Tx x, TMean mean, bool protectNegative) {
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute Poisson values in batches.
 RooSpan<double> RooPoisson::evaluateBatch(std::size_t begin, std::size_t end) const {
-  auto output = _batchData.makeWritableBatch(begin, end);
+  auto output = _batchData.makeWritableBatchUnInit(begin, end);
   auto xData = x.getValBatch(begin, end);
   auto meanData = mean.getValBatch(begin, end);
 
@@ -133,14 +134,14 @@ RooSpan<double> RooPoisson::evaluateBatch(std::size_t begin, std::size_t end) co
   const bool batchMean = !meanData.empty();
 
   if (batchX && batchMean) {
-    compute(output, xData, meanData, _protectNegative);
+    compute(output, xData, meanData, _protectNegative, _noRounding);
   } else if (batchX && !batchMean) {
-    compute(output, xData, BatchHelpers::BracketAdapter<RooRealProxy>(mean), _protectNegative);
+    compute(output, xData, BatchHelpers::BracketAdapter<RooRealProxy>(mean), _protectNegative, _noRounding);
   }
   else if (!batchX && batchMean) {
-    compute(output, BatchHelpers::BracketAdapter<RooRealProxy>(x), meanData, _protectNegative);
+    compute(output, BatchHelpers::BracketAdapter<RooRealProxy>(x), meanData, _protectNegative, _noRounding);
   } else if (!batchX && !batchMean) {
-    compute(output, BatchHelpers::BracketAdapter<RooRealProxy>(x), BatchHelpers::BracketAdapter<RooRealProxy>(mean), _protectNegative);
+    compute(output, BatchHelpers::BracketAdapter<RooRealProxy>(x), BatchHelpers::BracketAdapter<RooRealProxy>(mean), _protectNegative, _noRounding);
   } else {
     //Should not happen
     assert(false);

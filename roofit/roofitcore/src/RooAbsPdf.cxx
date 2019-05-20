@@ -401,6 +401,7 @@ RooSpan<const double> RooAbsPdf::getValBatch(std::size_t begin, std::size_t end,
 
     _batchData.setStatus(begin, end, BatchHelpers::BatchData::kReady);
   }
+  assert(_batchData.status(begin, end) != BatchHelpers::BatchData::kWriting);
 
   return _batchData.makeBatch(begin, end);
 }
@@ -935,13 +936,13 @@ Double_t RooAbsPdf::extendedTerm(Double_t observed, const RooArgSet* nset) const
 /// myVariable.setRange("range_pi0", 135, 210);
 /// myVariable.setRange("range_gamma", 50, 210);
 /// ```
-/// <tr><td> `Constrain(const RooArgSet&pars)`          <td> For p.d.f.s that contain internal parameter constraint terms, only apply constraints to
-///                                                        given subset of parameters
-/// <tr><td> `ExternalConstraints(const RooArgSet& )`   <td> Include given external constraints to likelihood
+/// <tr><td> `Constrain(const RooArgSet&pars)`          <td> For p.d.f.s that contain internal parameter constraint terms (that is usually product PDFs, where one
+///     term of the product depends on parameters but not on the observable(s),), only apply constraints to the given subset of parameters.
+/// <tr><td> `ExternalConstraints(const RooArgSet& )`   <td> Include given external constraints to likelihood by multiplying them with the original likelihood.
 /// <tr><td> `GlobalObservables(const RooArgSet&)`      <td> Define the set of normalization observables to be used for the constraint terms.
-///                                                        If none are specified the constrained parameters are used
+///                                                        If none are specified the constrained parameters are used.
 /// <tr><td> `GlobalObservablesTag(const char* tagName)` <td> Define the set of normalization observables to be used for the constraint terms by
-///                                                         a string attribute associated with pdf observables that match the given tagName 
+///                                                         a string attribute associated with pdf observables that match the given tagName.
 /// <tr><td> `Verbose(Bool_t flag)`           <td> Controls RooFit informational messages in likelihood construction
 /// <tr><td> `CloneData(Bool flag)`           <td> Use clone of dataset in NLL (default is true)
 /// <tr><td> `Offset(Bool_t)`                 <td> Offset likelihood by initial value (so that starting value of FCN in minuit is zero).
@@ -993,12 +994,12 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineSet("projDepSet","ProjectedObservables",0,0) ;
   pc.defineSet("cPars","Constrain",0,0) ;
   pc.defineSet("glObs","GlobalObservables",0,0) ;
-  pc.defineInt("constrAll","Constrained",0,0) ;
+//  pc.defineInt("constrAll","Constrained",0,0) ;
   pc.defineInt("doOffset","OffsetLikelihood",0,0) ;
   pc.defineSet("extCons","ExternalConstraints",0,0) ;
   pc.defineInt("BatchMode", "BatchMode", 0, 0);
   pc.defineMutex("Range","RangeWithName") ;
-  pc.defineMutex("Constrain","Constrained") ;
+//  pc.defineMutex("Constrain","Constrained") ;
   pc.defineMutex("GlobalObservables","GlobalObservablesTag") ;
     
   // Process and check varargs 
@@ -1227,11 +1228,11 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 /// myVariable.setRange("range_pi0", 135, 210);
 /// myVariable.setRange("range_gamma", 50, 210);
 /// ```
-/// <tr><td> `Constrained()`                    <td>  Apply all constrained contained in the p.d.f. in the likelihood 
-/// <tr><td> `Constrain(const RooArgSet&pars)`  <td>  Apply constraints to listed parameters in likelihood using internal constrains in p.d.f
-/// <tr><td> `GlobalObservables(const RooArgSet&)`  <td>  Define the set of normalization observables to be used for the constraint terms.
-///                                                     If none are specified the constrained parameters are used
-/// <tr><td> `ExternalConstraints(const RooArgSet& )`   <td>  Include given external constraints to likelihood
+/// <tr><td> `Constrain(const RooArgSet&pars)`          <td> For p.d.f.s that contain internal parameter constraint terms (that is usually product PDFs, where one
+///     term of the product depends on parameters but not on the observable(s),), only apply constraints to the given subset of parameters.
+/// <tr><td> `ExternalConstraints(const RooArgSet& )`   <td> Include given external constraints to likelihood by multiplying them with the original likelihood.
+/// <tr><td> `GlobalObservables(const RooArgSet&)`      <td> Define the set of normalization observables to be used for the constraint terms.
+///                                                        If none are specified the constrained parameters are used.
 /// <tr><td> `Offset(Bool_t)`                           <td>  Offset likelihood by initial value (so that starting value of FCN in minuit is zero).
 ///                                                         This can improve numeric stability in simultaneously fits with components with large likelihood values
 /// <tr><td> `BatchMode(bool on)`                       <td> **Experimental** batch evaluation mode. This computes a batch of likelihood values at a time,
@@ -2686,10 +2687,10 @@ void removeRangeOverlap(std::vector<std::pair<double, double>>& ranges) {
 /// <tr><td> `Range(const char* name)`          <td>  Only draw curve in range defined by given name. Multiple comma-separated ranges can be given.
 /// <tr><td> `Range(double lo, double hi)`      <td>  Only draw curve in specified range
 /// <tr><td> `VLines()`                         <td>  Add vertical lines to y=0 at end points of curve
-/// <tr><td> `Precision(Double_t eps)`          <td>  Control precision of drawn curve w.r.t to scale of plot, default is 1e-3. Higher precision will
-///                                                 result in more and more densely spaced curve points A negative precision value will disable
-///                                                 adaptive point spacing and restrict sampling to the grid point of points defined by the binning
-///                                                 of the plotted observabled (recommended for expensive functions such as profile likelihoods)
+/// <tr><td> `Precision(Double_t eps)`          <td>  Control precision of drawn curve w.r.t to scale of plot, default is 1e-3. A higher precision will
+///    result in more and more densely spaced curve points. A negative precision value will disable
+///    adaptive point spacing and restrict sampling to the grid point of points defined by the binning
+///    of the plotted observable (recommended for expensive functions such as profile likelihoods)
 /// <tr><td> `Invisible(Bool_t flag)`           <td>  Add curve to frame, but do not display. Useful in combination AddTo()
 /// <tr><td> `VisualizeError(const RooFitResult& fitres, Double_t Z=1, Bool_t linearMethod=kTRUE)`
 ///                                  <td> Visualize the uncertainty on the parameters, as given in fitres, at 'Z' sigma.
@@ -3390,28 +3391,23 @@ RooAbsReal* RooAbsPdf::createScanCdf(const RooArgSet& iset, const RooArgSet& nse
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This helper function finds and collects all constraints terms of all coponent p.d.f.s
-/// and returns a RooArgSet with all those terms
+/// This helper function finds and collects all constraints terms of all component p.d.f.s
+/// and returns a RooArgSet with all those terms.
 
 RooArgSet* RooAbsPdf::getAllConstraints(const RooArgSet& observables, RooArgSet& constrainedParams, Bool_t stripDisconnected) const 
 {
   RooArgSet* ret = new RooArgSet("AllConstraints") ;
 
-  RooArgSet* comps = getComponents() ;
-  TIterator* iter = comps->createIterator() ;
-  RooAbsArg *arg ;
-  while((arg=(RooAbsArg*)iter->Next())) {
-    RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(arg) ;
+  std::unique_ptr<RooArgSet> comps(getComponents());
+  for (const auto arg : *comps) {
+    auto pdf = dynamic_cast<const RooAbsPdf*>(arg) ;
     if (pdf && !ret->find(pdf->GetName())) {
-      RooArgSet* compRet = pdf->getConstraints(observables,constrainedParams,stripDisconnected) ; 
+      std::unique_ptr<RooArgSet> compRet(pdf->getConstraints(observables,constrainedParams,stripDisconnected));
       if (compRet) {
-	ret->add(*compRet,kFALSE) ;
-	delete compRet ;
+        ret->add(*compRet,kFALSE) ;
       }
     }
   }
-  delete iter ;
-  delete comps ;
 
   return ret ;
 }

@@ -128,7 +128,7 @@ protected:
 
 
   Double_t evaluate() const;
-  virtual RooSpan<double> evaluateBatch(std::size_t batchIndex, std::size_t batchSize) const;
+  virtual RooSpan<double> evaluateBatch(std::size_t begin, std::size_t end) const;
 
 
   mutable RooAICRegistry _codeReg ;  //! Registry of component analytical integration codes
@@ -144,6 +144,7 @@ protected:
   mutable Int_t _coefErrCount ; //! Coefficient error counter
 
 private:
+  std::pair<const RooArgSet*, CacheElem*> getNormAndCache() const;
 
   ClassDef(RooAddPdf,3) // PDF representing a sum of PDFs
 };

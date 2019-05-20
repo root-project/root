@@ -70,6 +70,12 @@ protected:
   static RooArgSet _emptySet ; // Supports named argument constructor
 
 private:
+  std::tuple<double, double, double> computeBatched(
+      std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const;
+
+  std::tuple<double, double, double> computeScalar(
+        std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const;
+
   Bool_t _extended ;
   bool _batchEvaluations{false};
   Bool_t _weightSq ; // Apply weights squared?

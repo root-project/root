@@ -17,10 +17,12 @@
 #include "BatchData.h"
 
 #include <ostream>
+#include <iomanip>
+#include <iostream>
 
 namespace BatchHelpers {
 
-void BatchData::allocateAndBatch(std::size_t size, std::size_t batchSize) {
+void BatchData::resizeAndClear(std::size_t size, std::size_t batchSize) {
   if (_foreignData) {
     assert(_foreignData->size() == size);
     _batchStartPoints = {0};
@@ -29,43 +31,82 @@ void BatchData::allocateAndBatch(std::size_t size, std::size_t batchSize) {
 
   _ownedData.resize(size);
   _batchSize = batchSize;
-  size_t nBatch = size / batchSize;
-  if (size % batchSize > 0)
-    ++nBatch;
+  const size_t nBatch = size / batchSize + (std::size_t)(size % batchSize > 0);
 
   _batchStatus.assign(nBatch, kDirtyOrUnknown);
 
   _batchStartPoints.clear();
-  for (unsigned int i=0; i < nBatch; ++i) {
+  for (std::size_t i=0; i < nBatch; ++i) {
     _batchStartPoints.push_back(batchSize*i);
   }
 }
 
 RooSpan<const double> BatchData::makeBatch(std::size_t begin, std::size_t end) const {
+#ifndef NDEBUG
   assert(isInit());
   assert(validRange(begin, end));
 
-  const auto batchIndex = calcBatchIndex(begin, end);
+  const auto batchIndex = calcBatchIndex(begin);
 
-  assert(_batchStartPoints[batchIndex] == begin);
+  if (_batchStartPoints[batchIndex] != begin) {
+    std::cerr << __FILE__ << ":" << __LINE__
+        << " Starting to read inside batch #" << batchIndex
+        << " from " << begin << " to " << end
+        << " although batch starts at " << _batchStartPoints[batchIndex] << std::endl;
+  }
+  assert(calcBatchIndex(end-1) == batchIndex);
   assert(_batchStatus[batchIndex] >= kReady);
+#endif
 
   return RooSpan<const double>(&data()[begin], end-begin);
 }
 
 
-RooSpan<double> BatchData::makeWritableBatch(std::size_t begin, std::size_t end) {
+////////////////////////////////////////////////////////////////////////////////
+/// Make a batch and return a span pointing to the pdf-local memory.
+/// The batch status is switched to `kWriting`, but the batch is not initialised.
+///
+/// \param[in] begin Begin of the batch.
+/// \param[in] end   End of the batch (not included)
+/// \return An uninitialised RooSpan starting at event `begin`.
+
+RooSpan<double> BatchData::makeWritableBatchUnInit(std::size_t begin, std::size_t end) {
   assert(isInit());
   assert(validRange(begin, end));
   assert(!_ownedData.empty());
 
-  const auto batchIndex = calcBatchIndex(begin, end);
-  assert(_batchStartPoints[batchIndex] == begin);
+  const auto batchIndex = calcBatchIndex(begin);
+#ifndef NDEBUG
+  if (_batchStartPoints[batchIndex] != begin) {
+    std::cerr << __FILE__ << ":" << __LINE__
+        << " Starting to write inside batch #" << batchIndex
+        << " from " << begin << " to " << end
+        << " although batch starts at " << _batchStartPoints[batchIndex] << std::endl;
+  }
+  assert(calcBatchIndex(end-1) == batchIndex);
   assert(_batchStatus[batchIndex] != kReadyAndConstant);
+#endif
 
   _batchStatus[batchIndex] = kWriting;
-
   return RooSpan<double>(&_ownedData[begin], end-begin);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Make a batch and return a span pointing to the pdf-local memory.
+/// Calls makeWritableBatchUnInit() and initialises the memory.
+///
+/// \param[in] begin Begin of the batch.
+/// \param[in] end   End of the batch (not included)
+/// \param[in] value Value to initialise with (defaults to 0.).
+/// \return An initialised RooSpan starting at event `begin`.
+RooSpan<double> BatchData::makeWritableBatchInit(std::size_t begin, std::size_t end, double value) {
+  auto batch = makeWritableBatchUnInit(begin, end);
+  for (auto& elm : batch) {
+    elm = value;
+  }
+
+  return batch;
 }
 
 void BatchData::attachForeignStorage(const std::vector<double>& vec) {
@@ -78,29 +119,38 @@ void BatchData::attachForeignStorage(const std::vector<double>& vec) {
 }
 
 void BatchData::print(std::ostream& os, const std::string& indent) const {
-  os << indent << "Batch data";
+  os << indent << "Batch data access";
   if (!isInit()) {
     os << " not initialised." << std::endl;
     return;
   }
 
-  os << " with " << data().size() << " items:";
+  using std::setw;
+
+  os << " with " << data().size() << " items "
+      << (_foreignData ? "(foreign)" : "(owned)") << ":";
+  os << "\n" << indent << std::right << std::setw(8) << "Batch #" << std::setw(8) << "Start"
+      << std::setw(7) << "Status";
   for (unsigned int i=0; i < _batchStatus.size(); ++i) {
-    os << "\n" << indent << "\t" << _batchStartPoints[i] << ":\t" << _batchStatus[i];
+    auto startPoint = _batchStartPoints[i];
+    os << "\n" << indent
+        << std::setw(8) << i << std::setw(8) << startPoint
+        << std::setw(7) << _batchStatus[i] << ": {";
+    for (unsigned int j=0; j < 5 && startPoint + j < data().size(); ++j) {
+        os << data()[startPoint+j] << ", ";
+    }
+    os << "...}";
   }
-  os << std::endl;
+  os << std::resetiosflags(std::ios::adjustfield) << std::endl;
 }
 
 
-std::size_t BatchData::calcBatchIndex(std::size_t begin, std::size_t end) const {
+std::size_t BatchData::calcBatchIndex(std::size_t begin) const {
   assert(isInit());
   if (_foreignData)
     return 0;
 
-  auto batchIndex = begin / _batchSize;
-  assert(batchIndex + 1 < data().size() / _batchSize || (end - begin) == _batchSize);
-
-  return batchIndex;
+  return begin / _batchSize;
 }
 
 
