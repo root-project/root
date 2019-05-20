@@ -41,7 +41,7 @@ private:
    /// The C++ type that was used when writing the field
    std::string fTypeName;
    /// The structural information carried by this field in the data model tree
-   EForestStructure fStructure;
+   ENTupleStructure fStructure;
    /// Establishes sub field trees, such as classes and collections
    DescriptorId_t fParentId = kInvalidDescriptorId;
    /// For pointers and optional/variant fields, the pointee field(s)
@@ -53,7 +53,7 @@ public:
    RForestVersion GetTypeVersion() const { return fTypeVersion; }
    std::string GetFieldName() const { return fFieldName; }
    std::string GetTypeName() const { return fTypeName; }
-   EForestStructure GetStructure() const { return fStructure; }
+   ENTupleStructure GetStructure() const { return fStructure; }
    DescriptorId_t GetParentId() const { return fParentId; }
    std::vector<DescriptorId_t> GetLinkIds() const { return fLinkIds; }
 };
@@ -149,7 +149,7 @@ public:
    void SetForest(std::string_view name, const RForestVersion &version);
 
    void AddField(DescriptorId_t fieldId, const RForestVersion &fieldVersion, const RForestVersion &typeVersion,
-                 std::string_view fieldName, std::string_view typeName, EForestStructure structure);
+                 std::string_view fieldName, std::string_view typeName, ENTupleStructure structure);
    void SetFieldParent(DescriptorId_t fieldId, DescriptorId_t parentId);
    void AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId);
 
