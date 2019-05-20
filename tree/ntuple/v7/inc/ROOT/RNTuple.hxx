@@ -140,15 +140,15 @@ public:
       }
    }
 
-   RForestViewRange GetViewRange() { return RForestViewRange(0, fNEntries); }
+   RNTupleViewRange GetViewRange() { return RNTupleViewRange(0, fNEntries); }
 
    /// Provides access to an individual field that can contain either a skalar value or a collection, e.g.
    /// GetView<double>("particles.pt") or GetView<std::vector<double>>("particle").  It can as well be the index
    /// field of a collection itself, like GetView<ForestSize_t>("particle")
    template <typename T>
-   RForestView<T> GetView(std::string_view fieldName) { return RForestView<T>(fieldName, fSource.get()); }
-   RForestViewCollection GetViewCollection(std::string_view fieldName) {
-      return RForestViewCollection(fieldName, fSource.get());
+   RNTupleView<T> GetView(std::string_view fieldName) { return RNTupleView<T>(fieldName, fSource.get()); }
+   RNTupleViewCollection GetViewCollection(std::string_view fieldName) {
+      return RNTupleViewCollection(fieldName, fSource.get());
    }
 
    RIterator begin() { return RIterator(0); }
