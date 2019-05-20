@@ -14,24 +14,28 @@
 Hypothesis Test Calculator based on the asymptotic formulae for the profile
 likelihood ratio.
 
- Performs hypothesis tests using asymptotic formula for the profile likelihood and
-Asimov data set
+It performs hypothesis tests using the asymptotic formula for the profile likelihood and
+the "Asimov" data set.
 
 See G. Cowan, K. Cranmer, E. Gross and O. Vitells: Asymptotic formulae for
 likelihood- based tests of new physics. Eur. Phys. J., C71:1–19, 2011.
-It provides method to perform an hypothesis tests using the likelihood function
-and computes the p values for the null and the alternate using the asymptotic
+It provides methods to perform a hypothesis test using the likelihood function,
+and computes the \f$ p \f$-values for the null and the alternate hypothesis using the asymptotic
 formulae for the profile likelihood ratio described in the given paper.
 
-The calculator provides methods to produce the Asimov dataset, i.e a dataset
+The calculator provides methods to produce the Asimov dataset, i.e, a dataset
 generated where the observed values are equal to the expected ones.
-The Asimov data set is then used to compute the observed asymptotic p-value for
-the alternate hypothesis and the asymptotic expected p-values.
+The Asimov data set is then used to compute the observed asymptotic \f$ p \f$-value for
+the alternate hypothesis and the asymptotic expected \f$ p \f$-value.
 
 The asymptotic formulae are valid only for one POI (parameter of interest). So
-the calculator works only for one-dimensional (one POI) model.
-If more than one POI exists consider as POI only the first one is used.
+the calculator works only for one-dimensional (one POI) models.
 
+If more than one POI exists, only the first one is used for calculations.
+
+The calculator can generate Asimov datasets from two kinds of PDFs:
+- "Counting" distributions: RooPoisson, RooGaussian, or products of RooPoissons.
+- Extended, *i.e.* number of events can be read off from extended likelihood term.
 */
 
 
@@ -912,7 +916,8 @@ void AsymptoticCalculator::FillBins(const RooAbsPdf & pdf, const RooArgList &obs
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// iterate a Prod pdf to find all the Poisson or Gaussian part to set the observed value to expected one
+/// Inpspect a product pdf to find all the Poisson or Gaussian parts to set the observed
+/// values to expected ones.
 
 bool AsymptoticCalculator::SetObsToExpected(RooProdPdf &prod, const RooArgSet &obs)
 {
@@ -1003,9 +1008,9 @@ bool AsymptoticCalculator::SetObsToExpected(RooAbsPdf &pdf, const RooArgSet &obs
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// generate counting Asimov data for the case when the pdf cannot be extended
-/// assume pdf is a RooPoisson or can be decomposed in a product of RooPoisson,
-/// otherwise we cannot know how to make the Asimov data sets in the other cases
+/// Generate counting Asimov data for the case when the pdf cannot be extended.
+/// This function assumes that the pdf is a RooPoisson or can be decomposed in a product of RooPoisson,
+/// or is a RooGaussian. Otherwise, we cannot know how to make the Asimov data sets.
 
 RooAbsData * AsymptoticCalculator::GenerateCountingAsimovData(RooAbsPdf & pdf, const RooArgSet & observables,  const RooRealVar & , RooCategory * channelCat) {
     RooArgSet obs(observables);
@@ -1040,10 +1045,10 @@ RooAbsData * AsymptoticCalculator::GenerateCountingAsimovData(RooAbsPdf & pdf, c
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// compute the asimov data set for an observable of a pdf
-/// use the number of bins sets in the observables
-/// to do :  (possibility to change number of bins)
-/// implement integration over bin content
+/// Compute the asimov data set for an observable of a pdf.
+/// It generates binned data following the binning of the observables.
+// TODO: (possibility to change number of bins)
+// TODO: implement integration over bin content
 
 RooAbsData * AsymptoticCalculator::GenerateAsimovDataSinglePdf(const RooAbsPdf & pdf, const RooArgSet & allobs,  const RooRealVar & weightVar, RooCategory * channelCat) {
 

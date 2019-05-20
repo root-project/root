@@ -363,7 +363,7 @@ RooAddPdf::~RooAddPdf()
 /// interpretation of the coefficients to be done in the given set of
 /// observables. If frozen, fractions are automatically transformed
 /// from the reference normalization set to the contextual normalization
-/// set by ratios of integrals
+/// set by ratios of integrals.
 
 void RooAddPdf::fixCoefNormalization(const RooArgSet& refCoefNorm) 
 {
