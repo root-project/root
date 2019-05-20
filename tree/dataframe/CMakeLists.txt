@@ -18,8 +18,8 @@ if(sqlite)
 endif()
 
 if(root7)
-  list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RForestDS.hxx)
-  list(APPEND RDATAFRAME_EXTRA_DEPS ROOTForest)
+  list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RNTupleDS.hxx)
+  list(APPEND RDATAFRAME_EXTRA_DEPS ROOTNTuple)
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
@@ -123,7 +123,7 @@ if(sqlite)
 endif()
 
 if(root7)
-  target_sources(ROOTDataFrame PRIVATE src/RForestDS.cxx)
+  target_sources(ROOTDataFrame PRIVATE src/RNTupleDS.cxx)
 endif(root7)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
