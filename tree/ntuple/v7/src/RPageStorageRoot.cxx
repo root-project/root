@@ -264,7 +264,7 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
 
    // TODO(jblomer): replace RMapper by a forest descriptor
    RNTupleDescriptorBuilder descBuilder;
-   descBuilder.SetForest(fForestName, RForestVersion());
+   descBuilder.SetForest(fForestName, RNTupleVersion());
    fDescriptor = descBuilder.GetDescriptor();
 }
 

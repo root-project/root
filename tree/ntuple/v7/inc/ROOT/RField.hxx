@@ -211,9 +211,9 @@ public:
    bool IsSimple() const { return fIsSimple; }
 
    /// Indicates an evolution of the mapping scheme from C++ type to columns
-   virtual RForestVersion GetFieldVersion() const { return RForestVersion(); }
+   virtual RNTupleVersion GetFieldVersion() const { return RNTupleVersion(); }
    /// Indicates an evolution of the C++ type itself
-   virtual RForestVersion GetTypeVersion() const { return RForestVersion(); }
+   virtual RNTupleVersion GetTypeVersion() const { return RNTupleVersion(); }
 
    RIterator begin();
    RIterator end();

@@ -17,13 +17,13 @@
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RStringView.hxx>
 
-void ROOT::Experimental::RNTupleDescriptorBuilder::SetForest(std::string_view name, const RForestVersion &version) {
+void ROOT::Experimental::RNTupleDescriptorBuilder::SetForest(std::string_view name, const RNTupleVersion &version) {
    fDescriptor.fName = std::string(name);
    fDescriptor.fVersion = version;
 }
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(
-   DescriptorId_t fieldId, const RForestVersion &fieldVersion, const RForestVersion &typeVersion,
+   DescriptorId_t fieldId, const RNTupleVersion &fieldVersion, const RNTupleVersion &typeVersion,
    std::string_view fieldName, std::string_view typeName, ENTupleStructure structure)
 {
    RFieldDescriptor f;
@@ -47,7 +47,7 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddFieldLink(DescriptorId_t f
 }
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(
-   DescriptorId_t columnId, DescriptorId_t fieldId, const RForestVersion &version, const RColumnModel &model)
+   DescriptorId_t columnId, DescriptorId_t fieldId, const RNTupleVersion &version, const RColumnModel &model)
 {
    RColumnDescriptor c;
    c.fColumnId = columnId;
@@ -68,7 +68,7 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddColumnLink(DescriptorId_t 
 }
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(
-   DescriptorId_t clusterId, RForestVersion version, NTupleSize_t firstEntryIndex, ClusterSize_t nEntries)
+   DescriptorId_t clusterId, RNTupleVersion version, NTupleSize_t firstEntryIndex, ClusterSize_t nEntries)
 {
    RClusterDescriptor c;
    c.fClusterId = clusterId;

@@ -67,29 +67,29 @@ constexpr DescriptorId_t kInvalidDescriptorId = std::uint64_t(-1);
 
 
 /// 64 possible flags to apply to all versioned entities (so far unused).
-using ForestFlags_t = std::uint64_t;
+using NTupleFlags_t = std::uint64_t;
 /// For forward and backward compatibility, attach version information to
-/// the consitituents of the file format (column, field, cluster, forest).
-class RForestVersion {
+/// the consitituents of the file format (column, field, cluster, ntuple).
+class RNTupleVersion {
 private:
    /// The version used to write an entity
    std::uint32_t fVersionUse = 0;
    /// The minimum required version necessary to read an entity
    std::uint32_t fVersionMin = 0;
-   ForestFlags_t fFlags = 0;
+   NTupleFlags_t fFlags = 0;
 
 public:
-   RForestVersion() = default;
-   RForestVersion(std::uint32_t versionUse, std::uint32_t versionMin)
+   RNTupleVersion() = default;
+   RNTupleVersion(std::uint32_t versionUse, std::uint32_t versionMin)
      : fVersionUse(versionUse), fVersionMin(versionMin)
    {}
-   RForestVersion(std::uint32_t versionUse, std::uint32_t versionMin, ForestFlags_t flags)
+   RNTupleVersion(std::uint32_t versionUse, std::uint32_t versionMin, NTupleFlags_t flags)
      : fVersionUse(versionUse), fVersionMin(versionMin), fFlags(flags)
    {}
 
    std::uint32_t GetVersionUse() const { return fVersionUse; }
    std::uint32_t GetVersionMin() const { return fVersionMin; }
-   ForestFlags_t GetFlags() const { return fFlags; }
+   NTupleFlags_t GetFlags() const { return fFlags; }
 };
 
 } // namespace Experimental
