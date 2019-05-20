@@ -40,33 +40,33 @@ namespace Detail {
 
 // clang-format off
 /**
-\class ROOT::Experimental::RForest
+\class ROOT::Experimental::RNTuple
 \ingroup NTuple
-\brief The RForest represents a live dataset, whose structure is defined by an RNTupleModel
+\brief The RNTuple represents a live dataset, whose structure is defined by an RNTupleModel
 
-RForest connects the static information of the RNTupleModel to a source or sink on physical storage.
+RNTuple connects the static information of the RNTupleModel to a source or sink on physical storage.
 Reading and writing requires use of the corresponding derived class RInputForest or ROutputForest.
-RForest writes only complete entries (rows of the data set).  The entry itself is not kept within the
-RForest, which allows for multiple concurrent entries for the same RForest.  Besides reading an entire entry,
-the RForest can expose views that read only specific fields.
+RNTuple writes only complete entries (rows of the data set).  The entry itself is not kept within the
+RNTuple, which allows for multiple concurrent entries for the same RNTuple.  Besides reading an entire entry,
+the RNTuple can expose views that read only specific fields.
 */
 // clang-format on
-class RForest {
+class RNTuple {
 protected:
    std::unique_ptr<RNTupleModel> fModel;
    /// The number of entries is constant for reading and reflects the sum of Fill() operations when writing
    ForestSize_t fNEntries;
 
    /// Only the derived RInputForest and ROutputForest can be instantiated
-   explicit RForest(std::unique_ptr<RNTupleModel> model);
+   explicit RNTuple(std::unique_ptr<RNTupleModel> model);
 
 public:
-   RForest(const RForest&) = delete;
-   RForest& operator =(const RForest&) = delete;
-   ~RForest();
+   RNTuple(const RNTuple&) = delete;
+   RNTuple& operator =(const RNTuple&) = delete;
+   ~RNTuple();
 
    RNTupleModel* GetModel() { return fModel.get(); }
-}; // RForest
+}; // RNTuple
 
 } // namespace Detail
 
@@ -74,8 +74,8 @@ public:
 /**
  * Listing of the different options that can be returned by RInputForest::GetInfo()
  */
-enum class EForestInfo {
-   kSummary,  // Forest name, description, number of entries
+enum class ENTupleInfo {
+   kSummary,  // The ntuple name, description, number of entries
 };
 
 
@@ -83,15 +83,15 @@ enum class EForestInfo {
 /**
 \class ROOT::Experimental::RInputForest
 \ingroup NTuple
-\brief An RForest that is used to read data from storage
+\brief An RNTuple that is used to read data from storage
 
-An input forest provides data from storage as C++ objects. The forest model can be created from the data on storage
-or it can be imposed by the user. The latter case allows users to read into a specialized forest model that covers
-only a subset of the fields in the forest. The forest model is used when reading complete entries.
+An input ntuple provides data from storage as C++ objects. The ntuple model can be created from the data on storage
+or it can be imposed by the user. The latter case allows users to read into a specialized ntuple model that covers
+only a subset of the fields in the ntuple. The ntuple model is used when reading complete entries.
 Individual fields can be read as well by instantiating a tree view.
 */
 // clang-format on
-class RInputForest : public Detail::RForest {
+class RInputForest : public Detail::RNTuple {
 private:
    std::unique_ptr<Detail::RPageSource> fSource;
 
@@ -120,20 +120,20 @@ public:
                                              std::string_view storage);
    static std::unique_ptr<RInputForest> Open(std::string_view forestName, std::string_view storage);
 
-   /// The user imposes a forest model, which must be compatible with the model found in the data on storage
+   /// The user imposes an ntuple model, which must be compatible with the model found in the data on storage
    RInputForest(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSource> source);
-   /// The model is generated from the forest metadata on storage
+   /// The model is generated from the ntuple metadata on storage
    RInputForest(std::unique_ptr<Detail::RPageSource> source);
    ~RInputForest();
 
    ForestSize_t GetNEntries() { return fNEntries; }
 
-   std::string GetInfo(const EForestInfo what = EForestInfo::kSummary);
+   std::string GetInfo(const ENTupleInfo what = ENTupleInfo::kSummary);
 
-   /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the forest.
+   /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the ntuple.
    /// On I/O errors, raises an expection.
    void LoadEntry(ForestSize_t index) { LoadEntry(index, fModel->GetDefaultEntry()); }
-   /// Fills a user provided entry after checking that the entry has been instantiated from the forest model
+   /// Fills a user provided entry after checking that the entry has been instantiated from the ntuple model
    void LoadEntry(ForestSize_t index, REntry* entry) {
       for (auto& value : *entry) {
          value.GetField()->Read(index, &value);
@@ -159,15 +159,15 @@ public:
 /**
 \class ROOT::Experimental::ROutputForest
 \ingroup NTuple
-\brief An RForest that gets filled with entries (data) and writes them to storage
+\brief An RNTuple that gets filled with entries (data) and writes them to storage
 
-An output forest can be filled with entries. The caller has to make sure that the data that gets filled into a forest
+An output ntuple can be filled with entries. The caller has to make sure that the data that gets filled into an ntuple
 is not modified for the time of the Fill() call. The fill call serializes the C++ object into the column format and
 writes data into the corresponding column page buffers.  Writing of the buffers to storage is deferred and can be
-triggered by Flush() or by destructing the forest.  On I/O errors, an exception is thrown.
+triggered by Flush() or by destructing the ntuple.  On I/O errors, an exception is thrown.
 */
 // clang-format on
-class ROutputForest : public Detail::RForest {
+class ROutputForest : public Detail::RNTuple {
 private:
    static constexpr ForestSize_t kDefaultClusterSizeEntries = 8192;
    std::unique_ptr<Detail::RPageSink> fSink;
@@ -183,13 +183,13 @@ public:
    ROutputForest& operator=(const ROutputForest&) = delete;
    ~ROutputForest();
 
-   /// The simplest user interface if the default entry that comes with the forest model is used
+   /// The simplest user interface if the default entry that comes with the ntuple model is used
    void Fill() { Fill(fModel->GetDefaultEntry()); }
-   /// Multiple entries can have been instantiated from the forest model.  This method will perform
-   /// a light check whether the entry comes from the forest's own model
+   /// Multiple entries can have been instantiated from the tnuple model.  This method will perform
+   /// a light check whether the entry comes from the ntuple's own model
    void Fill(REntry *entry) {
-      for (auto& treeValue : *entry) {
-         treeValue.GetField()->Append(treeValue);
+      for (auto& value : *entry) {
+         value.GetField()->Append(value);
       }
       fNEntries++;
       if ((fNEntries % fClusterSizeEntries) == 0) CommitCluster();
@@ -202,11 +202,11 @@ public:
 /**
 \class ROOT::Experimental::RCollectionForest
 \ingroup NTuple
-\brief A virtual forest for collections that can be used to some extent like a real forest
+\brief A virtual ntuple for collections that can be used to some extent like a real ntuple
 *
-* This class is between a field and a forest.  It carries the offset column for the collection and the default entry
+* This class is between a field and a ntuple.  It carries the offset column for the collection and the default entry
 * taken from the collection model.  It does not, however, have a tree model because the collection model has been merged
-* into the larger forest model.
+* into the larger ntuple model.
 */
 // clang-format on
 class RCollectionForest {
