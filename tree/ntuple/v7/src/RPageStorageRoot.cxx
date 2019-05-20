@@ -76,7 +76,7 @@ ROOT::Experimental::Detail::RPageSinkRoot::AddColumn(RColumn* column)
 }
 
 
-void ROOT::Experimental::Detail::RPageSinkRoot::Create(RForestModel *model)
+void ROOT::Experimental::Detail::RPageSinkRoot::Create(RNTupleModel *model)
 {
    fForestHeader.fPageSize = kPageSize;
    fDirectory = fSettings.fFile->mkdir(fForestName.c_str());
@@ -269,9 +269,9 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
 }
 
 
-std::unique_ptr<ROOT::Experimental::RForestModel> ROOT::Experimental::Detail::RPageSourceRoot::GenerateModel()
+std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::Detail::RPageSourceRoot::GenerateModel()
 {
-   auto model = std::make_unique<RForestModel>();
+   auto model = std::make_unique<RNTupleModel>();
    for (auto& f : fMapper.fRootFields) {
       auto field = Detail::RFieldBase::Create(f.fFieldName, f.fTypeName);
       model->AddField(std::unique_ptr<Detail::RFieldBase>(field));

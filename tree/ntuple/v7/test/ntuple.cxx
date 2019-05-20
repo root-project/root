@@ -21,7 +21,7 @@
 
 using RInputForest = ROOT::Experimental::RInputForest;
 using ROutputForest = ROOT::Experimental::ROutputForest;
-using RForestModel = ROOT::Experimental::RForestModel;
+using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RPageSource = ROOT::Experimental::Detail::RPageSource;
 using RPageSinkRoot = ROOT::Experimental::Detail::RPageSinkRoot;
 using RPageSourceRoot = ROOT::Experimental::Detail::RPageSourceRoot;
@@ -52,14 +52,14 @@ public:
 
 TEST(RForest, Basics)
 {
-   auto model = RForestModel::Create();
+   auto model = RNTupleModel::Create();
    auto fieldPt = model->MakeField<float>("pt");
 }
 
 TEST(RForest, ReconstructModel)
 {
    FileRaii fileGuard("test.root");
-   auto model = RForestModel::Create();
+   auto model = RNTupleModel::Create();
    auto fieldPt = model->MakeField<float>("pt", 42.0);
    auto fieldNnlo = model->MakeField<std::vector<std::vector<float>>>("nnlo");
    auto fieldKlass = model->MakeField<CustomStruct>("klass");
@@ -88,7 +88,7 @@ TEST(RForest, StorageRoot)
    settingsWrite.fFile = file;
    RPageSinkRoot sinkRoot("myTree", settingsWrite);
 
-   auto model = RForestModel::Create();
+   auto model = RNTupleModel::Create();
    auto fieldPt = model->MakeField<float>("pt", 42.0);
    auto fieldX = model->MakeField<float>("energy");
    auto fieldStr = model->MakeField<std::string>("string", "abc");
@@ -114,7 +114,7 @@ TEST(RForest, WriteRead)
 {
    FileRaii fileGuard("test.root");
 
-   auto modelWrite = RForestModel::Create();
+   auto modelWrite = RNTupleModel::Create();
    auto wrPt = modelWrite->MakeField<float>("pt", 42.0);
    auto wrEnergy = modelWrite->MakeField<float>("energy", 7.0);
    auto wrTag = modelWrite->MakeField<std::string>("tag", "xyz");
@@ -128,7 +128,7 @@ TEST(RForest, WriteRead)
    auto wrKlass = modelWrite->MakeField<CustomStruct>("klass");
    wrKlass->s = "abc";
 
-   auto modelRead = std::unique_ptr<RForestModel>(modelWrite->Clone());
+   auto modelRead = std::unique_ptr<RNTupleModel>(modelWrite->Clone());
 
    {
       ROutputForest forest(std::move(modelWrite), std::make_unique<RPageSinkRoot>("f", "test.root"));
@@ -171,7 +171,7 @@ TEST(RForest, RVec)
 {
    FileRaii fileGuard("test.root");
 
-   auto modelWrite = RForestModel::Create();
+   auto modelWrite = RNTupleModel::Create();
    auto wrJets = modelWrite->MakeField<ROOT::VecOps::RVec<float>>("jets");
    wrJets->push_back(42.0);
    wrJets->push_back(7.0);
@@ -184,7 +184,7 @@ TEST(RForest, RVec)
       forest.Fill();
    }
 
-   auto modelReadAsRVec = RForestModel::Create();
+   auto modelReadAsRVec = RNTupleModel::Create();
    auto rdJetsAsRVec = modelReadAsRVec->MakeField<ROOT::VecOps::RVec<float>>("jets");
 
    RInputForest forestRVec(std::move(modelReadAsRVec), std::make_unique<RPageSourceRoot>("f", "test.root"));
@@ -199,7 +199,7 @@ TEST(RForest, RVec)
    EXPECT_EQ(1U, rdJetsAsRVec->size());
    EXPECT_EQ(1.0, (*rdJetsAsRVec)[0]);
 
-   auto modelReadAsStdVector = RForestModel::Create();
+   auto modelReadAsStdVector = RNTupleModel::Create();
    auto rdJetsAsStdVector = modelReadAsStdVector->MakeField<std::vector<float>>("jets");
 
    RInputForest forestStdVector(std::move(modelReadAsStdVector), std::make_unique<RPageSourceRoot>("f", "test.root"));
@@ -219,7 +219,7 @@ TEST(RForest, Clusters)
 {
    FileRaii fileGuard("test.root");
 
-   auto modelWrite = RForestModel::Create();
+   auto modelWrite = RNTupleModel::Create();
    auto wrPt = modelWrite->MakeField<float>("pt", 42.0);
    auto wrTag = modelWrite->MakeField<std::string>("tag", "xyz");
    auto wrNnlo = modelWrite->MakeField<std::vector<std::vector<float>>>("nnlo");
@@ -227,7 +227,7 @@ TEST(RForest, Clusters)
    wrNnlo->push_back(std::vector<float>{1.0});
    wrNnlo->push_back(std::vector<float>{1.0, 2.0, 4.0, 8.0});
 
-   auto modelRead = std::unique_ptr<RForestModel>(modelWrite->Clone());
+   auto modelRead = std::unique_ptr<RNTupleModel>(modelWrite->Clone());
 
    {
       ROutputForest forest(std::move(modelWrite), std::make_unique<RPageSinkRoot>("f", "test.root"));
@@ -281,7 +281,7 @@ TEST(RForest, View)
 {
    FileRaii fileGuard("test.root");
 
-   auto model = RForestModel::Create();
+   auto model = RNTupleModel::Create();
    auto fieldPt = model->MakeField<float>("pt", 42.0);
    auto fieldTag = model->MakeField<std::string>("tag", "xyz");
    auto fieldJets = model->MakeField<std::vector<float>>("jets");
@@ -321,7 +321,7 @@ TEST(RForest, View)
 }
 
 TEST(RForest, Capture) {
-   auto model = RForestModel::Create();
+   auto model = RNTupleModel::Create();
    float pt;
    model->AddField("pt", &pt);
 }
@@ -330,14 +330,14 @@ TEST(RForest, Composable)
 {
    FileRaii fileGuard("test.root");
 
-   auto eventModel = RForestModel::Create();
+   auto eventModel = RNTupleModel::Create();
    auto fldPt = eventModel->MakeField<float>("pt", 0.0);
 
-   auto hitModel = RForestModel::Create();
+   auto hitModel = RNTupleModel::Create();
    auto fldHitX = hitModel->MakeField<float>("x", 0.0);
    auto fldHitY = hitModel->MakeField<float>("y", 0.0);
 
-   auto trackModel = RForestModel::Create();
+   auto trackModel = RNTupleModel::Create();
    auto fldTrackEnergy = trackModel->MakeField<float>("energy", 0.0);
 
    auto fldHits = trackModel->MakeCollection("hits", std::move(hitModel));
@@ -407,10 +407,10 @@ class RNoDictionary {};
 } // namespace
 
 TEST(RForest, TClass) {
-   auto modelFail = RForestModel::Create();
+   auto modelFail = RNTupleModel::Create();
    EXPECT_THROW(modelFail->MakeField<RNoDictionary>("nodict"), std::runtime_error);
 
-   auto model = RForestModel::Create();
+   auto model = RNTupleModel::Create();
    auto ptrKlass = model->MakeField<CustomStruct>("klass");
 
    FileRaii fileGuard("test.root");
@@ -423,7 +423,7 @@ TEST(RForest, RealWorld1)
    FileRaii fileGuard("test.root");
 
    // See https://github.com/olifre/root-io-bench/blob/master/benchmark.cpp
-   auto modelWrite = RForestModel::Create();
+   auto modelWrite = RNTupleModel::Create();
    auto& wrEvent   = *modelWrite->MakeField<std::uint32_t>("event");
    auto& wrEnergy  = *modelWrite->MakeField<double>("energy");
    auto& wrTimes   = *modelWrite->MakeField<std::vector<double>>("times");
@@ -459,7 +459,7 @@ TEST(RForest, RealWorld1)
       }
    }
 
-   auto modelRead  = RForestModel::Create();
+   auto modelRead  = RNTupleModel::Create();
    auto& rdEvent   = *modelRead->MakeField<std::uint32_t>("event");
    auto& rdEnergy  = *modelRead->MakeField<double>("energy");
    auto& rdTimes   = *modelRead->MakeField<std::vector<double>>("times");
@@ -482,7 +482,7 @@ TEST(RForest, RDF)
 {
    FileRaii fileGuard("test.root");
 
-   auto modelWrite = RForestModel::Create();
+   auto modelWrite = RNTupleModel::Create();
    auto wrPt = modelWrite->MakeField<float>("pt", 42.0);
    auto wrEnergy = modelWrite->MakeField<float>("energy", 7.0);
    auto wrTag = modelWrite->MakeField<std::string>("tag", "xyz");

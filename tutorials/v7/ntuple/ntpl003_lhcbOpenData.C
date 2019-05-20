@@ -4,7 +4,7 @@
 /// Convert LHCb run 1 open data from a TTree to RForest.
 /// This tutorial illustrates data conversion for a simple, tabular data model.
 /// For reading, the tutorial shows the use of a Forest View, which selectively accesses specific fields.
-/// If a view is used for reading, there is no need to define the data model as an RForestModel first.
+/// If a view is used for reading, there is no need to define the data model as an RNTupleModel first.
 /// The advantage of a view is that it directly accesses RForest's data buffers without making an additional
 /// memory copy.
 ///
@@ -35,7 +35,7 @@
 #include <vector>
 
 // Import classes from experimental namespace for the time being
-using RForestModel = ROOT::Experimental::RForestModel;
+using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
 using RInputForest = ROOT::Experimental::RInputForest;
 using ROutputForest = ROOT::Experimental::ROutputForest;
@@ -49,7 +49,7 @@ void Convert() {
    assert(f.is_valid() && ! f->IsZombie());
 
    // Get a unique pointer to an empty RForest model
-   auto model = RForestModel::Create();
+   auto model = RNTupleModel::Create();
 
    // We create RForest fields based on the types found in the TTree
    // This simple approach only works for trees with simple branches and only one leaf per branch
