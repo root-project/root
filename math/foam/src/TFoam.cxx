@@ -619,7 +619,7 @@ void TFoam::Explore(TFoamCell *cell)
       if (ceSum[3]>wt) ceSum[3]=wt;  // minimum weight;
       if (ceSum[4]<wt) ceSum[4]=wt;  // maximum weight
       // test MC loop exit condition
-      nevEff = ceSum[0]*ceSum[0]/ceSum[1];
+      nevEff = ceSum[1] == 0. ? 0. : ceSum[0]*ceSum[0]/ceSum[1];
       if( nevEff >= fNBin*fEvPerBin) break;
    }   // ||||||||||||||||||||||||||END MC LOOP|||||||||||||||||||||||||||||
    //------------------------------------------------------------------
