@@ -496,7 +496,7 @@ void ROOT::Experimental::RFieldVector::CommitCluster()
 ROOT::Experimental::RFieldCollection::RFieldCollection(
    std::string_view name,
    std::shared_ptr<RCollectionForest> collectionForest,
-   std::unique_ptr<RForestModel> collectionModel)
+   std::unique_ptr<RNTupleModel> collectionModel)
    : RFieldBase(name, ":Collection:", EForestStructure::kCollection, true /* isSimple */)
    , fCollectionForest(collectionForest)
 {
@@ -525,7 +525,7 @@ ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RFieldCollection::Cl
 {
    // TODO(jblomer)
    return nullptr;
-   //auto result = new RFieldCollection(newName, fCollectionForest, RForestModel::Create());
+   //auto result = new RFieldCollection(newName, fCollectionForest, RNTupleModel::Create());
    //for (auto& f : fSubFields) {
    //   // switch the name prefix for the new parent name
    //   std::string cloneName = std::string(newName) + f->GetName().substr(GetName().length());

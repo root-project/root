@@ -37,7 +37,7 @@ R__LOAD_LIBRARY(ROOTNTuple)
 #include <utility>
 
 // Import classes from experimental namespace for the time being
-using RForestModel = ROOT::Experimental::RForestModel;
+using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RInputForest = ROOT::Experimental::RInputForest;
 using ROutputForest = ROOT::Experimental::ROutputForest;
 
@@ -49,7 +49,7 @@ void Ingest() {
    assert(fin.is_open());
 
    // We create a unique pointer to an empty data model
-   auto model = RForestModel::Create();
+   auto model = RNTupleModel::Create();
 
    // To define the data model, we create fields with a given C++ type and name.  Fields are roughly TTree branches.
    // MakeField returns a shared pointer to a memory location that we can populate to fill the forest with data
@@ -83,7 +83,7 @@ void Ingest() {
 
 void Analyze() {
    // Get a unique pointer to an empty RForest model
-   auto model = RForestModel::Create();
+   auto model = RNTupleModel::Create();
 
    // We only define the fields that are needed for reading
    std::shared_ptr<int> fldAge = model->MakeField<int>("Age");

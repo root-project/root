@@ -28,7 +28,7 @@
 #include <utility>
 
 // Import classes from experimental namespace for the time being
-using RForestModel = ROOT::Experimental::RForestModel;
+using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RInputForest = ROOT::Experimental::RInputForest;
 using ROutputForest = ROOT::Experimental::ROutputForest;
 
@@ -45,7 +45,7 @@ constexpr int kNEvents = 25000;
 void Write()
 {
    // We create a unique pointer to an empty data model
-   auto model = RForestModel::Create();
+   auto model = RNTupleModel::Create();
 
    // Creating fields of std::vector is the same as creating fields of simple types.  As a result, we get
    // shared pointers of the given type
@@ -110,7 +110,7 @@ void Write()
 void Read()
 {
    // Get a unique pointer to an empty RForest model
-   auto model = RForestModel::Create();
+   auto model = RNTupleModel::Create();
 
    // We only define the fields that are needed for reading
    auto fldVpx = model->MakeField<std::vector<float>>("vpx");
