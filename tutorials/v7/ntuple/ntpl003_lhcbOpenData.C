@@ -37,7 +37,7 @@
 // Import classes from experimental namespace for the time being
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
-using RInputForest = ROOT::Experimental::RInputForest;
+using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using ROutputForest = ROOT::Experimental::ROutputForest;
 
 constexpr char const* kTreeFileName = "http://root.cern.ch/files/LHCb/lhcb_B2HHH_MagnetUp.root";
@@ -100,7 +100,7 @@ void ntpl003_lhcbOpenData()
 
    // We open the forest without specifiying an explicit model first, but instead use a view on the field we are
    // interested in
-   auto forest = RInputForest::Open("DecayTree", kForestFileName);
+   auto forest = RNTupleReader::Open("DecayTree", kForestFileName);
 
    // The view wraps a read-only double value and accesses directly the forest's data buffers
    auto viewFlightDistance = forest->GetView<double>("B_FlightDistance");

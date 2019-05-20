@@ -45,7 +45,7 @@ namespace Detail {
 \brief The RNTuple represents a live dataset, whose structure is defined by an RNTupleModel
 
 RNTuple connects the static information of the RNTupleModel to a source or sink on physical storage.
-Reading and writing requires use of the corresponding derived class RInputForest or ROutputForest.
+Reading and writing requires use of the corresponding derived class RNTupleReader or ROutputForest.
 RNTuple writes only complete entries (rows of the data set).  The entry itself is not kept within the
 RNTuple, which allows for multiple concurrent entries for the same RNTuple.  Besides reading an entire entry,
 the RNTuple can expose views that read only specific fields.
@@ -57,7 +57,7 @@ protected:
    /// The number of entries is constant for reading and reflects the sum of Fill() operations when writing
    NTupleSize_t fNEntries;
 
-   /// Only the derived RInputForest and ROutputForest can be instantiated
+   /// Only the derived RNTupleReader and ROutputForest can be instantiated
    explicit RNTuple(std::unique_ptr<RNTupleModel> model);
 
 public:
@@ -72,7 +72,7 @@ public:
 
 
 /**
- * Listing of the different options that can be returned by RInputForest::GetInfo()
+ * Listing of the different options that can be returned by RNTupleReader::GetInfo()
  */
 enum class ENTupleInfo {
    kSummary,  // The ntuple name, description, number of entries
@@ -81,7 +81,7 @@ enum class ENTupleInfo {
 
 // clang-format off
 /**
-\class ROOT::Experimental::RInputForest
+\class ROOT::Experimental::RNTupleReader
 \ingroup NTuple
 \brief An RNTuple that is used to read data from storage
 
@@ -91,7 +91,7 @@ only a subset of the fields in the ntuple. The ntuple model is used when reading
 Individual fields can be read as well by instantiating a tree view.
 */
 // clang-format on
-class RInputForest : public Detail::RNTuple {
+class RNTupleReader : public Detail::RNTuple {
 private:
    std::unique_ptr<Detail::RPageSource> fSource;
 
@@ -115,16 +115,16 @@ public:
    };
 
 
-   static std::unique_ptr<RInputForest> Open(std::unique_ptr<RNTupleModel> model,
+   static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<RNTupleModel> model,
                                              std::string_view forestName,
                                              std::string_view storage);
-   static std::unique_ptr<RInputForest> Open(std::string_view forestName, std::string_view storage);
+   static std::unique_ptr<RNTupleReader> Open(std::string_view forestName, std::string_view storage);
 
    /// The user imposes an ntuple model, which must be compatible with the model found in the data on storage
-   RInputForest(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSource> source);
+   RNTupleReader(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSource> source);
    /// The model is generated from the ntuple metadata on storage
-   RInputForest(std::unique_ptr<Detail::RPageSource> source);
-   ~RInputForest();
+   RNTupleReader(std::unique_ptr<Detail::RPageSource> source);
+   ~RNTupleReader();
 
    NTupleSize_t GetNEntries() { return fNEntries; }
 
