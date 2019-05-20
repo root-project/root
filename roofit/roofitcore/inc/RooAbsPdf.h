@@ -274,7 +274,7 @@ public:
   virtual RooAbsGenContext* autoGenContext(const RooArgSet &vars, const RooDataSet* prototype=0, const RooArgSet* auxProto=0, 
 					   Bool_t verbose=kFALSE, Bool_t autoBinned=kTRUE, const char* binnedTag="") const ;
 
-protected:
+private:
 
   RooDataSet *generate(RooAbsGenContext& context, const RooArgSet& whatVars, const RooDataSet* prototype,
 		       Double_t nEvents, Bool_t verbose, Bool_t randProtoOrder, Bool_t resampleProto, Bool_t skipInit=kFALSE, 
@@ -285,7 +285,7 @@ protected:
                            const char *label= "", Int_t sigDigits = 2, Option_t *options = "NELU", Double_t xmin=0.65,
 			   Double_t xmax= 0.99,Double_t ymax=0.95, const RooCmdArg* formatCmd=0) ;
 
-
+protected:
   virtual RooPlot *plotOn(RooPlot *frame, PlotOpt o) const;  
 
   friend class RooEffGenContext ;

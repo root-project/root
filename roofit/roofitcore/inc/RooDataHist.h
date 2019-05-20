@@ -182,7 +182,6 @@ protected:
   Double_t*      _binv ; //[_arrSize] Bin volume array  
 
   RooArgSet  _realVars ; // Real dimensions of the dataset 
-  TIterator* _realIter ; //! Iterator over realVars
   Bool_t*    _binValid ; //! Valid bins with current range definition
  
   mutable Double_t _curWeight{0.}; // Weight associated with the current coordinate

@@ -899,14 +899,12 @@ Bool_t RooMCStudy::addFitResult(const RooFitResult& fr)
 
 void RooMCStudy::calcPulls() 
 {
-  TIterator* iter = _fitParams->createIterator()  ;
-  RooRealVar* par ;
-  while((par=(RooRealVar*)iter->Next())) {
-    
-    RooErrorVar* err = par->errorVar() ;
-    _fitParData->addColumn(*err) ;
-    delete err ;
-    
+  for (const auto elm : *_fitParams) {
+    const auto par = static_cast<RooRealVar*>(elm);
+    RooErrorVar* err = par->errorVar();
+    _fitParData->addColumn(*err);
+    delete err;
+
     TString name(par->GetName()), title(par->GetTitle()) ;
     name.Append("pull") ;
     title.Append(" Pull") ;    
@@ -921,21 +919,19 @@ void RooMCStudy::calcPulls()
     } else {
       // If not use fixed generator value
       genParOrig = (RooAbsReal*)_genInitParams->find(par->GetName()) ;
-      
+
       if (genParOrig) {
-	RooAbsReal* genPar = (RooAbsReal*) genParOrig->Clone("truth") ;
-	RooPullVar pull(name,title,*par,*genPar) ;
-	
-	_fitParData->addColumn(pull,kFALSE) ;
-	delete genPar ;
-	
+        RooAbsReal* genPar = (RooAbsReal*) genParOrig->Clone("truth") ;
+        RooPullVar pull(name,title,*par,*genPar) ;
+
+        _fitParData->addColumn(pull,kFALSE) ;
+        delete genPar ;
+
       }
 
     }
 
   }
-  delete iter ;
-  
 }
 
 
@@ -1134,8 +1130,8 @@ RooPlot* RooMCStudy::plotNLL(const RooCmdArg& arg1, const RooCmdArg& arg2,
 ///     for list of allowed arguments
 /// </table>
 ///
-/// If no frame specifications are given, the AutoRange() feature will be used to set the range
-/// Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options
+/// If no frame specifications are given, the AutoRange() feature will be used to set a default range.
+/// Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options.
 
 RooPlot* RooMCStudy::plotError(const RooRealVar& param, const RooCmdArg& arg1, const RooCmdArg& arg2,
                      const RooCmdArg& arg3, const RooCmdArg& arg4,
@@ -1159,10 +1155,11 @@ RooPlot* RooMCStudy::plotError(const RooRealVar& param, const RooCmdArg& arg1, c
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Plot the distribution of pull values for the specified parameter on a newly created frame. If asymmetric
-/// errors are calculated in the fit (by MINOS) those will be used in the pull calculation
+/// errors are calculated in the fit (by MINOS) those will be used in the pull calculation.
 ///
+/// Further options:
 /// <table>
-/// <tr><th> Optional arguments <th>
+/// <tr><th> Arguments <th> Effect
 /// <tr><td> FrameRange(double lo, double hi) <td> Set range of frame to given specification
 /// <tr><td> FrameBins(int bins)              <td> Set default number of bins of frame to given number
 /// <tr><td> Frame()                       <td> Pass supplied named arguments to RooAbsRealLValue::frame() function. See there
@@ -1170,8 +1167,8 @@ RooPlot* RooMCStudy::plotError(const RooRealVar& param, const RooCmdArg& arg1, c
 /// <tr><td> FitGauss(Bool_t flag)            <td> Add a gaussian fit to the frame
 /// </table>
 ///
-/// If no frame specifications are given, the AutoSymRange() feature will be used to set the range
-/// Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options
+/// If no frame specifications are given, the AutoSymRange() feature will be used to set a default range.
+/// Any other named argument is passed to the RooAbsData::plotOn(). See that function for allowed options.
 
 RooPlot* RooMCStudy::plotPull(const RooRealVar& param, const RooCmdArg& arg1, const RooCmdArg& arg2,
                      const RooCmdArg& arg3, const RooCmdArg& arg4,
