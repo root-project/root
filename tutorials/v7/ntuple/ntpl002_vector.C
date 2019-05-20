@@ -30,7 +30,7 @@
 // Import classes from experimental namespace for the time being
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
-using ROutputForest = ROOT::Experimental::ROutputForest;
+using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 
 // Where to store the forest of this example
 constexpr char const* kForestFileName = "ntpl002_vector.root";
@@ -56,7 +56,7 @@ void Write()
 
    // We hand-over the data model to a newly created forest of name "F", stored in kForestFileName
    // In return, we get a unique pointer to a forest that we can fill
-   auto forest = ROutputForest::Recreate(std::move(model), "F", kForestFileName);
+   auto forest = RNTupleWriter::Recreate(std::move(model), "F", kForestFileName);
 
    TH1F *hpx = new TH1F("hpx", "This is the px distribution", 100, -4, 4);
    hpx->SetFillColor(48);
