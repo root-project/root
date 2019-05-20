@@ -1735,8 +1735,9 @@ RooAbsGenContext* RooAbsPdf::autoGenContext(const RooArgSet &vars, const RooData
 /// <tr><td> `Name(const char* name)`            <td> Name of the output dataset
 /// <tr><td> `Verbose(Bool_t flag)`              <td> Print informational messages during event generation
 /// <tr><td> `NumEvent(int nevt)`                <td> Generate specified number of events
-/// <tr><td> `Extended()`                        <td> The actual number of events generated will be sampled from a Poisson distribution with mu=nevt.
-///                                                 For use with extended maximum likelihood fits
+/// <tr><td> `Extended()`                        <td> If no number of events to be generated is given,
+/// use expected number of events from extended likelihood term.
+/// This evidently only works for extended PDFs.
 /// <tr><td> `GenBinned(const char* tag)`        <td> Use binned generation for all component pdfs that have 'setAttribute(tag)' set
 /// <tr><td> `AutoBinned(Bool_t flag)`           <td> Automatically deploy binned generation for binned distributions (e.g. RooHistPdf, sums and products of
 ///                                                 RooHistPdfs etc)
@@ -1780,6 +1781,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
   pc.defineDouble("nEventsD","NumEventsD",0,-1.) ;
   pc.defineString("binnedTag","GenBinned",0,"") ;
   pc.defineMutex("GenBinned","ProtoData") ;
+  pc.defineMutex("Extended", "NumEvents");
     
   // Process and check varargs 
   pc.process(arg1,arg2,arg3,arg4,arg5,arg6) ;
@@ -1810,11 +1812,6 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
 
   if (extended) {
      if (nEvents == 0) nEvents = expectedEvents(&whatVars);
-     //  nEvents = RooRandom::randomGenerator()->Poisson(nEvents==0 ? expectedEvents(&whatVars) : nEvents  ) ;
-    // // If Poisson fluctuation results in zero events, stop here
-    // if (nEvents==0) {
-    //   return new RooDataSet("emptyData","emptyData",whatVars) ;
-    // }
   } else if (nEvents==0) {
     cxcoutI(Generation) << "No number of events specified , number of events generated is " 
 			  << GetName() << "::expectedEvents() = " << expectedEvents(&whatVars)<< endl ;
