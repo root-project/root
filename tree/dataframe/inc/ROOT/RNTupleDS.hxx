@@ -28,12 +28,12 @@
 namespace ROOT {
 namespace Experimental {
 
-class RInputForest;
+class RNTupleReader;
 class REntry;
 
 
 class RNTupleDS final : public ROOT::RDF::RDataSource {
-   std::unique_ptr<ROOT::Experimental::RInputForest> fForest;
+   std::unique_ptr<ROOT::Experimental::RNTupleReader> fForest;
    std::unique_ptr<ROOT::Experimental::REntry> fEntry;
    unsigned fNSlots;
    bool fHasSeenAllRanges;
@@ -42,7 +42,7 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    std::vector<void*> fValuePtrs;
 
 public:
-   RNTupleDS(std::unique_ptr<ROOT::Experimental::RInputForest> forest);
+   RNTupleDS(std::unique_ptr<ROOT::Experimental::RNTupleReader> forest);
    ~RNTupleDS();
    void SetNSlots(unsigned int nSlots) final;
    const std::vector<std::string> &GetColumnNames() const final;

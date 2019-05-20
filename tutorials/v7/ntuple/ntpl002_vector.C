@@ -29,7 +29,7 @@
 
 // Import classes from experimental namespace for the time being
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
-using RInputForest = ROOT::Experimental::RInputForest;
+using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using ROutputForest = ROOT::Experimental::ROutputForest;
 
 // Where to store the forest of this example
@@ -117,7 +117,7 @@ void Read()
 
    // Create a forest without imposing a specific data model.  We could generate the data model from the forest
    // but here we prefer the view because we only want to access a single field
-   auto forest = RInputForest::Open(std::move(model), "F", kForestFileName);
+   auto forest = RNTupleReader::Open(std::move(model), "F", kForestFileName);
 
    // Quick overview of the forest's key meta-data
    std::cout << forest->GetInfo();

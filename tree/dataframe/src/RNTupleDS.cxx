@@ -27,7 +27,7 @@
 namespace ROOT {
 namespace Experimental {
 
-RNTupleDS::RNTupleDS(std::unique_ptr<ROOT::Experimental::RInputForest> forest)
+RNTupleDS::RNTupleDS(std::unique_ptr<ROOT::Experimental::RNTupleReader> forest)
   : fForest(std::move(forest)), fEntry(fForest->GetModel()->CreateEntry()), fNSlots(1), fHasSeenAllRanges(false)
 {
    auto rootField = fForest->GetModel()->GetRootField();
@@ -121,7 +121,7 @@ void RNTupleDS::SetNSlots(unsigned int nSlots)
 
 
 RDataFrame MakeNTupleDataFrame(std::string_view forestName, std::string_view fileName) {
-   auto forest = RInputForest::Open(forestName, fileName);
+   auto forest = RNTupleReader::Open(forestName, fileName);
    ROOT::RDataFrame rdf(std::make_unique<RNTupleDS>(std::move(forest)));
    return rdf;
 }

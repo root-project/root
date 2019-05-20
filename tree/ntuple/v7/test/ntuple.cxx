@@ -19,7 +19,7 @@
 #include <string>
 #include <utility>
 
-using RInputForest = ROOT::Experimental::RInputForest;
+using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using ROutputForest = ROOT::Experimental::ROutputForest;
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RPageSource = ROOT::Experimental::Detail::RPageSource;
@@ -142,7 +142,7 @@ TEST(RNTuple, WriteRead)
    auto rdNnlo = modelRead->Get<std::vector<std::vector<float>>>("nnlo");
    auto rdKlass = modelRead->Get<CustomStruct>("klass");
 
-   RInputForest forest(std::move(modelRead), std::make_unique<RPageSourceRoot>("f", "test.root"));
+   RNTupleReader forest(std::move(modelRead), std::make_unique<RPageSourceRoot>("f", "test.root"));
    EXPECT_EQ(1U, forest.GetNEntries());
    forest.LoadEntry(0);
 
@@ -187,7 +187,7 @@ TEST(RNTuple, RVec)
    auto modelReadAsRVec = RNTupleModel::Create();
    auto rdJetsAsRVec = modelReadAsRVec->MakeField<ROOT::VecOps::RVec<float>>("jets");
 
-   RInputForest forestRVec(std::move(modelReadAsRVec), std::make_unique<RPageSourceRoot>("f", "test.root"));
+   RNTupleReader forestRVec(std::move(modelReadAsRVec), std::make_unique<RPageSourceRoot>("f", "test.root"));
    EXPECT_EQ(2U, forestRVec.GetNEntries());
 
    forestRVec.LoadEntry(0);
@@ -202,7 +202,7 @@ TEST(RNTuple, RVec)
    auto modelReadAsStdVector = RNTupleModel::Create();
    auto rdJetsAsStdVector = modelReadAsStdVector->MakeField<std::vector<float>>("jets");
 
-   RInputForest forestStdVector(std::move(modelReadAsStdVector), std::make_unique<RPageSourceRoot>("f", "test.root"));
+   RNTupleReader forestStdVector(std::move(modelReadAsStdVector), std::make_unique<RPageSourceRoot>("f", "test.root"));
    EXPECT_EQ(2U, forestRVec.GetNEntries());
 
    forestStdVector.LoadEntry(0);
@@ -247,7 +247,7 @@ TEST(RNTuple, Clusters)
    auto rdTag = modelRead->Get<std::string>("tag");
    auto rdNnlo = modelRead->Get<std::vector<std::vector<float>>>("nnlo");
 
-   RInputForest forest(std::move(modelRead), std::make_unique<RPageSourceRoot>("f", "test.root"));
+   RNTupleReader forest(std::move(modelRead), std::make_unique<RPageSourceRoot>("f", "test.root"));
    EXPECT_EQ(3U, forest.GetNEntries());
 
    forest.LoadEntry(0);
@@ -296,7 +296,7 @@ TEST(RNTuple, View)
       forest.Fill();
    }
 
-   RInputForest forest(std::make_unique<RPageSourceRoot>("f", "test.root"));
+   RNTupleReader forest(std::make_unique<RPageSourceRoot>("f", "test.root"));
    auto viewPt = forest.GetView<float>("pt");
    int n = 0;
    for (auto i : forest.GetViewRange()) {
@@ -363,7 +363,7 @@ TEST(RNTuple, Composable)
       }
    }
 
-   RInputForest forest(std::make_unique<RPageSourceRoot>("f", "test.root"));
+   RNTupleReader forest(std::make_unique<RPageSourceRoot>("f", "test.root"));
    auto viewPt = forest.GetView<float>("pt");
    auto viewTracks = forest.GetViewCollection("tracks");
    auto viewTrackEnergy = viewTracks.GetView<float>("energy");
@@ -466,7 +466,7 @@ TEST(RNTuple, RealWorld1)
    auto& rdIndices = *modelRead->MakeField<std::vector<std::uint32_t>>("indices");
 
    double chksumRead = 0.0;
-   auto forest = RInputForest::Open(std::move(modelRead), "f", "test.root");
+   auto forest = RNTupleReader::Open(std::move(modelRead), "f", "test.root");
    for (auto entryId : *forest) {
       forest->LoadEntry(entryId);
       chksumRead += double(rdEvent) + rdEnergy;
