@@ -37,7 +37,7 @@
 
 // Import classes from experimental namespace for the time being
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
-using ROutputForest = ROOT::Experimental::ROutputForest;
+using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 using RNTupleDS = ROOT::Experimental::RNTupleDS;
 
 constexpr char const* kTreeFileName = "http://root.cern.ch/files/NanoAOD_DoubleMuon_CMS2011OpenData.root";
@@ -52,7 +52,7 @@ using ColNames_t = std::vector<std::string>;
 template <typename... ColumnTypes_t>
 class RForestHelper : public ROOT::Detail::RDF::RActionImpl<RForestHelper<ColumnTypes_t...>> {
 public:
-   using Result_t = ROutputForest;
+   using Result_t = RNTupleWriter;
 private:
    using ColumnValues_t = std::tuple<std::shared_ptr<ColumnTypes_t>...>;
 
@@ -61,7 +61,7 @@ private:
    ColNames_t fColNames;
    ColumnValues_t fColumnValues;
    static constexpr const auto fNColumns = std::tuple_size<ColumnValues_t>::value;
-   std::shared_ptr<ROutputForest> fForest;
+   std::shared_ptr<RNTupleWriter> fForest;
    int fCounter;
 
    template<std::size_t... S>
@@ -70,7 +70,7 @@ private:
       // Create the fields and the shared pointers to the connected values
       std::initializer_list<int> expander{
          (std::get<S>(fColumnValues) = eventModel->MakeField<ColumnTypes_t>(fColNames[S]), 0)...};
-      fForest = std::move(ROutputForest::Recreate(std::move(eventModel), fForestName, fRootFile));
+      fForest = std::move(RNTupleWriter::Recreate(std::move(eventModel), fForestName, fRootFile));
    }
 
    template<std::size_t... S>
@@ -89,7 +89,7 @@ public:
 
    RForestHelper(RForestHelper&&) = default;
    RForestHelper(const RForestHelper&) = delete;
-   std::shared_ptr<ROutputForest> GetResultPtr() const { return fForest; }
+   std::shared_ptr<RNTupleWriter> GetResultPtr() const { return fForest; }
 
    void Initialize()
    {

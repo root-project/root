@@ -39,7 +39,7 @@ R__LOAD_LIBRARY(ROOTNTuple)
 // Import classes from experimental namespace for the time being
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
-using ROutputForest = ROOT::Experimental::ROutputForest;
+using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 
 constexpr char const* kForestFileName = "ntpl001_staff.root";
 
@@ -67,7 +67,7 @@ void Ingest() {
 
    // We hand-over the data model to a newly created forest of name "Staff", stored in kForestFileName
    // In return, we get a unique pointer to a forest that we can fill
-   auto forest = ROutputForest::Recreate(std::move(model), "Staff", kForestFileName);
+   auto forest = RNTupleWriter::Recreate(std::move(model), "Staff", kForestFileName);
 
    std::string record;
    while (std::getline(fin, record)) {

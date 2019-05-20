@@ -103,7 +103,7 @@ std::string ROOT::Experimental::RNTupleReader::GetInfo(const ENTupleInfo what) {
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::ROutputForest::ROutputForest(
+ROOT::Experimental::RNTupleWriter::RNTupleWriter(
    std::unique_ptr<ROOT::Experimental::RNTupleModel> model,
    std::unique_ptr<ROOT::Experimental::Detail::RPageSink> sink)
    : ROOT::Experimental::Detail::RNTuple(std::move(model))
@@ -114,14 +114,14 @@ ROOT::Experimental::ROutputForest::ROutputForest(
    fSink->Create(fModel.get());
 }
 
-ROOT::Experimental::ROutputForest::~ROutputForest()
+ROOT::Experimental::RNTupleWriter::~RNTupleWriter()
 {
    CommitCluster();
    fSink->CommitDataset();
 }
 
 
-std::unique_ptr<ROOT::Experimental::ROutputForest> ROOT::Experimental::ROutputForest::Recreate(
+std::unique_ptr<ROOT::Experimental::RNTupleWriter> ROOT::Experimental::RNTupleWriter::Recreate(
    std::unique_ptr<RNTupleModel> model,
    std::string_view forestName,
    std::string_view storage)
@@ -131,12 +131,12 @@ std::unique_ptr<ROOT::Experimental::ROutputForest> ROOT::Experimental::ROutputFo
    Detail::RPageSinkRoot::RSettings settings;
    settings.fFile = file;
    settings.fTakeOwnership = true;
-   return std::make_unique<ROutputForest>(
+   return std::make_unique<RNTupleWriter>(
       std::move(model), std::make_unique<Detail::RPageSinkRoot>(forestName, settings));
 }
 
 
-void ROOT::Experimental::ROutputForest::CommitCluster()
+void ROOT::Experimental::RNTupleWriter::CommitCluster()
 {
    if (fNEntries == fLastCommitted) return;
    for (auto& field : *fModel->GetRootField()) {
