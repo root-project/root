@@ -79,7 +79,7 @@ void ROOT::Experimental::Detail::RPagePool::ReleasePage(const RPage& page)
    R__ASSERT(false);
 }
 
-ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPagePool::GetPage(RColumn* column, ForestSize_t index)
+ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPagePool::GetPage(RColumn* column, NTupleSize_t index)
 {
    for (unsigned i = 0; i < fNPages; ++i) {
       if (fReferences[i] == 0) continue;

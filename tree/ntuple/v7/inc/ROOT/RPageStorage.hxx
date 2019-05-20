@@ -99,7 +99,7 @@ public:
    /// Write a page to the storage. The column must have been added before.
    virtual void CommitPage(ColumnHandle_t columnHandle, const RPage &page) = 0;
    /// Finalize the current cluster and create a new one for the following data.
-   virtual void CommitCluster(ForestSize_t nEntries) = 0;
+   virtual void CommitCluster(NTupleSize_t nEntries) = 0;
    /// Finalize the current cluster and the entrire data set.
    virtual void CommitDataset() = 0;
 };
@@ -129,9 +129,9 @@ public:
    virtual std::unique_ptr<ROOT::Experimental::RNTupleModel> GenerateModel() = 0;
 
    /// Fills a page starting with index rangeStart; the corresponding column is taken from the page object
-   virtual void PopulatePage(ColumnHandle_t columnHandle, ForestSize_t index, RPage* page) = 0;
-   virtual ForestSize_t GetNEntries() = 0;
-   virtual ForestSize_t GetNElements(ColumnHandle_t columnHandle) = 0;
+   virtual void PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t index, RPage* page) = 0;
+   virtual NTupleSize_t GetNEntries() = 0;
+   virtual NTupleSize_t GetNElements(ColumnHandle_t columnHandle) = 0;
    virtual ColumnId_t GetColumnId(ColumnHandle_t columnHandle) = 0;
    virtual const RNTupleDescriptor& GetDescriptor() const = 0;
 };
