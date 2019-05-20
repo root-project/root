@@ -50,13 +50,13 @@ public:
 } // anonymous namespace
 
 
-TEST(RForest, Basics)
+TEST(RNTuple, Basics)
 {
    auto model = RNTupleModel::Create();
    auto fieldPt = model->MakeField<float>("pt");
 }
 
-TEST(RForest, ReconstructModel)
+TEST(RNTuple, ReconstructModel)
 {
    FileRaii fileGuard("test.root");
    auto model = RNTupleModel::Create();
@@ -80,7 +80,7 @@ TEST(RForest, ReconstructModel)
    vecPtr->push_back(std::vector<float>{1.0});
 }
 
-TEST(RForest, StorageRoot)
+TEST(RNTuple, StorageRoot)
 {
    TFile *file = TFile::Open("test.root", "RECREATE");
    FileRaii fileGuard("test.root");
@@ -110,7 +110,7 @@ TEST(RForest, StorageRoot)
 }
 
 
-TEST(RForest, WriteRead)
+TEST(RNTuple, WriteRead)
 {
    FileRaii fileGuard("test.root");
 
@@ -167,7 +167,7 @@ TEST(RForest, WriteRead)
    EXPECT_STREQ("abc", rdKlass->s.c_str());
 }
 
-TEST(RForest, RVec)
+TEST(RNTuple, RVec)
 {
    FileRaii fileGuard("test.root");
 
@@ -215,7 +215,7 @@ TEST(RForest, RVec)
    EXPECT_EQ(1.0, (*rdJetsAsStdVector)[0]);
 }
 
-TEST(RForest, Clusters)
+TEST(RNTuple, Clusters)
 {
    FileRaii fileGuard("test.root");
 
@@ -277,7 +277,7 @@ TEST(RForest, Clusters)
 }
 
 
-TEST(RForest, View)
+TEST(RNTuple, View)
 {
    FileRaii fileGuard("test.root");
 
@@ -320,13 +320,13 @@ TEST(RForest, View)
    EXPECT_EQ(2, n);
 }
 
-TEST(RForest, Capture) {
+TEST(RNTuple, Capture) {
    auto model = RNTupleModel::Create();
    float pt;
    model->AddField("pt", &pt);
 }
 
-TEST(RForest, Composable)
+TEST(RNTuple, Composable)
 {
    FileRaii fileGuard("test.root");
 
@@ -394,7 +394,7 @@ TEST(RForest, Composable)
    EXPECT_EQ(8, nEv);
 }
 
-TEST(RForest, TypeName) {
+TEST(RNTuple, TypeName) {
    EXPECT_STREQ("float", ROOT::Experimental::RField<float>::MyTypeName().c_str());
    EXPECT_STREQ("std::vector<std::string>",
                 ROOT::Experimental::RField<std::vector<std::string>>::MyTypeName().c_str());
@@ -406,7 +406,7 @@ namespace {
 class RNoDictionary {};
 } // namespace
 
-TEST(RForest, TClass) {
+TEST(RNTuple, TClass) {
    auto modelFail = RNTupleModel::Create();
    EXPECT_THROW(modelFail->MakeField<RNoDictionary>("nodict"), std::runtime_error);
 
@@ -418,7 +418,7 @@ TEST(RForest, TClass) {
 }
 
 
-TEST(RForest, RealWorld1)
+TEST(RNTuple, RealWorld1)
 {
    FileRaii fileGuard("test.root");
 
@@ -478,7 +478,7 @@ TEST(RForest, RealWorld1)
 }
 
 
-TEST(RForest, RDF)
+TEST(RNTuple, RDF)
 {
    FileRaii fileGuard("test.root");
 

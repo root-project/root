@@ -1,9 +1,9 @@
-RForest Introduction
+RNTuple Introduction
 ====================
 
-RForest is the experimental evolution of TTree columnar data storage. RForest introduces new interfaces that aim to be
-more robust.  In particular, the new interfaces are type-safe through the use of templates, and the ownership is
-well-defined through the use of smart pointers.  For instance
+RNTuple (for n-tuple and nested tuple) is the experimental evolution of TTree columnar data storage. RNTuple introduces
+new interfaces that aim to be more robust.  In particular, the new interfaces are type-safe through the use of
+templates, and the ownership is well-defined through the use of smart pointers.  For instance
 
     tree->Branch("px", &Category, "px/F");
 
@@ -14,13 +14,13 @@ becomes
 
 The physical layout changes slightly from big endian to little endian so that it matches the in-memory layout on
 most modern architectures. Combined with a clear separation of offset/index data and payload data for collections,
-uncompressed RForest data can be directly mapped to memory without further copies.
+uncompressed RNTuple data can be directly mapped to memory without further copies.
 
 
 Goals
 -----
 
-RForest shall investigate improvements of the TTree I/O in the following ways
+RNTuple shall investigate improvements of the TTree I/O in the following ways
 
 1. More speed
    * Improve mapping to vectorized and parallel hardware
@@ -59,6 +59,6 @@ decoupled from the high-level C++ logic.  The physical layer implements an abstr
 so that dedicated implementations for key-value stores and other storage systems are conceivable.
 At this point, the only provided backend stores the pages in ROOT files.
 
-Forests are further grouped into **clusters**, which are, like TTree clusters, self-contained blocks of
+NTuples are further grouped into **clusters**, which are, like TTree clusters, self-contained blocks of
 consecutive entries.  Clusters provide a unit of writing and will provide the means for parallel writing of data
-in a future version of RForest.
+in a future version of RNTuple.
