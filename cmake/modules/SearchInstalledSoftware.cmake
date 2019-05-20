@@ -154,7 +154,7 @@ endif()
 #---Check for LZMA-------------------------------------------------------------------
 if(NOT builtin_lzma)
   message(STATUS "Looking for LZMA")
-  find_package(LZMA)
+  find_package(LibLZMA 5.0.4)
   if(NOT LZMA_FOUND)
     message(STATUS "LZMA not found. Switching on builtin_lzma option")
     set(builtin_lzma ON CACHE BOOL "Enabled because LZMA not found (${builtin_lzma_description})" FORCE)
