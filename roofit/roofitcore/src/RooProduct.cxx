@@ -19,9 +19,7 @@
 \class RooProduct
 \ingroup Roofitcore
 
-
-RooProduct a RooAbsReal implementation that represent the product
-of a given set of other RooAbsReal objects
+A RooProduct represents the product of a given set of RooAbsReal objects.
 
 **/
 
