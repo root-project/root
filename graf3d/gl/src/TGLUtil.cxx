@@ -147,14 +147,6 @@ minimum required.
 ClassImp(TGLVector3);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Construct a default (0.0, 0.0, 0.0) vector
-
-TGLVector3::TGLVector3() :
-   TGLVertex3()
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Construct a vector with components (x,y,z)
 
 TGLVector3::TGLVector3(Double_t x, Double_t y, Double_t z) :
@@ -178,12 +170,6 @@ TGLVector3::TGLVector3(const Double_t *src) :
 {
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Destroy vector object
-
-TGLVector3::~TGLVector3()
-{
-}
 
 /** \class TGLLine3
 \ingroup opengl
