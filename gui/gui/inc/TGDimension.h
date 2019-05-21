@@ -32,8 +32,6 @@ public:
    TGDimension(): fWidth(0), fHeight(0) { }
    TGDimension(UInt_t width, UInt_t height): fWidth(width), fHeight(height) { }
    TGDimension(const TGDimension &d): fWidth(d.fWidth), fHeight(d.fHeight) { }
-   TGDimension &TGDimension::operator = (const TGDimension &d) {
-                fWidth = d.fWidth; fHeight = d.fHeight; return *this; }
    virtual ~TGDimension() { }
 
    Bool_t operator==(const TGDimension &b) const
@@ -42,6 +40,8 @@ public:
       { return TGDimension(fWidth - b.fWidth, fHeight - b.fHeight); }
    TGDimension operator+(const TGDimension &b) const
       { return TGDimension(fWidth + b.fWidth, fHeight + b.fHeight); }
+   TGDimension &operator=(const TGDimension &d) const
+      { fWidth = d.fWidth; fHeight = d.fHeight; return *this; }
 
    ClassDef(TGDimension,0)  // Dimension object (width, height)
 };
@@ -55,8 +55,6 @@ public:
    TGPosition(): fX(0), fY(0) { }
    TGPosition(Int_t xc, Int_t yc): fX(xc), fY(yc) { }
    TGPosition(const TGPosition &p): fX(p.fX), fY(p.fY) { }
-   TGPosition &TGPosition::operator = (const TGPosition &p) {
-               fX = p.fX; fY = p.fY; return *this; }
    virtual ~TGPosition() { }
 
    Bool_t operator==(const TGPosition &b) const
@@ -65,6 +63,8 @@ public:
       { return TGPosition(fX - b.fX, fY - b.fY); }
    TGPosition operator+(const TGPosition &b) const
       { return TGPosition(fX + b.fX, fY + b.fY); }
+   TGPosition &operator=(const TGPosition &p) const
+      { fX = p.fX; fY = p.fY; return *this; }
 
    ClassDef(TGPosition,0)  // Position object (x and y are Int_t)
 };
@@ -78,8 +78,6 @@ public:
    TGLongPosition(): fX(0), fY(0) { }
    TGLongPosition(Long_t xc, Long_t yc): fX(xc), fY(yc) { }
    TGLongPosition(const TGLongPosition &p): fX(p.fX), fY(p.fY) { }
-   TGLongPosition &TGLongPosition::operator = (const TGLongPosition &p) {
-               fX = p.fX; fY = p.fY; return *this; }
    virtual ~TGLongPosition() { }
 
    Bool_t operator==(const TGLongPosition &b) const
@@ -88,6 +86,8 @@ public:
       { return TGLongPosition(fX - b.fX, fY - b.fY); }
    TGLongPosition operator+(const TGLongPosition &b) const
       { return TGLongPosition(fX + b.fX, fY + b.fY); }
+   TGLongPosition &operator=(const TGLongPosition &p) const
+      { fX = p.fX; fY = p.fY; return *this; }
 
    ClassDef(TGLongPosition,0)  // Position object (x and y are Long_t)
 };
@@ -105,12 +105,12 @@ public:
       fL(lf), fR(rg), fT(tp), fB(bt) { }
    TGInsets(const TGInsets &in):
       fL(in.fL), fR(in.fR), fT(in.fT), fB(in.fB) { }
-   TGInsets &TGInsets::operator = (const TGInsets &in) {
-      fL = in.fL; fR = in.fR; fT = in.fT; fB = in.fB; return *this; }
    virtual ~TGInsets() { }
 
    Bool_t operator==(const TGInsets &in) const
       { return ((fL == in.fL) && (fR == in.fR) && (fT == in.fT) && (fB == in.fB)); }
+   TGInsets &operator=(const TGInsets &in) const
+      { fL = in.fL; fR = in.fR; fT = in.fT; fB = in.fB; return *this; }
 
    ClassDef(TGInsets,0)   // Inset (left, right, top, bottom)
 };
@@ -131,8 +131,6 @@ public:
                 fX(p.fX), fY(p.fY), fW(d.fWidth), fH(d.fHeight) { }
    TGRectangle(const TGRectangle &r):
                 fX(r.fX), fY(r.fY), fW(r.fW), fH(r.fH) { }
-   TGRectangle &TGRectangle::operator = (const TGRectangle &r) {
-                fX = r.fX; fY = r.fY; fW = r.fW; fH = r.fH; return *this; }
    virtual ~TGRectangle() { }
 
    // methods
@@ -156,6 +154,9 @@ public:
    void Merge(const TGRectangle &r);
    void Empty() { fX = fY = 0; fW = fH = 0; }
    Bool_t IsEmpty() const { return ((fW == 0) && (fH == 0)); }
+
+   TGRectangle &operator=(const TGRectangle &r) const
+                { fX = r.fX; fY = r.fY; fW = r.fW; fH = r.fH; return *this; }
 
    ClassDef(TGRectangle, 0)  // Rectangle object
 };
