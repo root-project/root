@@ -5,8 +5,7 @@ if(ROOT_python_FOUND)
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ Namespace.C+ 
                                          -e .L\ PointerPassing.C+ 
                                          -e .L\ Namespace2.C+
-                    ENVIRONMENT EXP_PYROOT=${exp_pyroot}
-                    ${PYTESTS_WILLFAIL})
+                    ENVIRONMENT EXP_PYROOT=${exp_pyroot})
 
   ROOTTEST_ADD_TEST(advanced
                     MACRO PyROOT_advancedtests.py
@@ -19,7 +18,6 @@ if(ROOT_python_FOUND)
                     MACRO PyROOT_cpp11tests.py
                     COPY_TO_BUILDDIR Cpp11Features.C
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ Cpp11Features.C+
-                    ENVIRONMENT EXP_PYROOT=${exp_pyroot}
-                    ${PYTESTS_WILLFAIL})
+                    ENVIRONMENT EXP_PYROOT=${exp_pyroot})
                                          
 endif()
