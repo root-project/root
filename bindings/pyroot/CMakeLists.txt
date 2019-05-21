@@ -85,8 +85,8 @@ if(MSVC)
 endif()
 
 #---Install python modules--------------------------------------------------
-file(GLOB pyfiles RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.py)
-foreach(pyfile ${pyfiles})
+
+foreach(pyfile cppyy.py _pythonization.py ROOT.py)
   install(FILES ${pyfile} DESTINATION ${runtimedir})
   if(IS_ABSOLUTE ${runtimedir})
     set(absruntimedir ${runtimedir})
