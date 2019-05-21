@@ -688,7 +688,7 @@ Cppyy::TCppIndex_t Cppyy::GetMethodIndexAt( TCppScope_t /* scope */, TCppIndex_t
 }
 
 std::vector< Cppyy::TCppMethod_t > Cppyy::GetMethodsFromName(
-      TCppScope_t scope, const std::string& name )
+      TCppScope_t scope, const std::string& name, bool alsoInBases )
 {
 // TODO: this method assumes that the call for this name is made only
 // once, and thus there is no need to store the results of the search
@@ -716,7 +716,7 @@ std::vector< Cppyy::TCppMethod_t > Cppyy::GetMethodsFromName(
       TClassRef& cr = type_from_handle( scope );
       if ( cr.GetClass() ) {
       // todo: handle overloads
-         TMethod* m = cr->GetMethodAny( name.c_str() );
+         TMethod* m = alsoInBases ? cr->GetMethodAllAny( name.c_str() ) : cr->GetMethodAny( name.c_str() );
          if ( m ) methods.push_back( (TCppMethod_t)m );
       }
    }
