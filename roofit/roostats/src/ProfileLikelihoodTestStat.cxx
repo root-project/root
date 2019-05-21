@@ -19,8 +19,8 @@ either use:
 
   - the ProfileLikelihoodCalculator that relies on asymptotic properties of the
     Profile Likelihood Ratio
-  - the Neyman Construction classes with this class as a test statistic
-  - the Hybrid Calculator class with this class as a test statistic
+  - the NeymanConstruction class with this class as a test statistic
+  - the HybridCalculator class with this class as a test statistic
 
 
 */

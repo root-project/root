@@ -1083,11 +1083,26 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 ///                                                \attention Use of this option excludes use of any of the new style steering options.
 ///
 /// <tr><td> `SumW2Error(Bool_t flag)`         <td>  Apply correction to errors and covariance matrix.
-///                                               This uses sum-of-weights covariance matrix
-///                                               to obtain correct error for weighted likelihood fits. If this option is activated the
-///                                               corrected covariance matrix is calculated as \f$ V_\mathrm{corr} = V C^{-1} V \f$, where V is the original
-///                                               covariance matrix and C is the inverse of the covariance matrix calculated using the
-///                                               weights squared
+///       This uses two covariance matrices, one with the weights, the other with squared weights,
+///       to obtain the correct errors for weighted likelihood fits. If this option is activated, the
+///       corrected covariance matrix is calculated as \f$ V_\mathrm{corr} = V C^{-1} V \f$, where \f$ V \f$ is the original
+///       covariance matrix and \f$ C \f$ is the inverse of the covariance matrix calculated using the
+///       squared weights. This allows to switch between two interpretations of errors:
+///       <table>
+///       <tr><th> SumW2Error <th> Interpretation
+///       <tr><td> true       <td> The errors reflect the uncertainty of the Monte Carlo simulation.
+///                                Use this if you want to know how much accuracy you can get from the available Monte Carlo statistics.
+///
+///                                **Example**: Simulation with 1000 events, the average weight is 0.1.
+///                                The errors are as big as if one fitted to 1000 events.
+///       <tr><td> false      <td> The errors reflect the errors of a dataset, which is as big as the sum of weights.
+///                                Use this if you want to know what statistical errors you would get if you had a dataset with as many
+///                                events as the (weighted) Monte Carlo simulation represents.
+///
+///                                **Example** (Data as above):
+///                                The errors are as big as if one fitted to 100 events.
+///       </table>
+///
 ///
 /// <tr><th><th> Options to control informational output
 /// <tr><td> `Verbose(Bool_t flag)`            <td>  Flag controls if verbose output is printed (NLL, parameter changes during fit
@@ -1198,17 +1213,17 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 
   // Warn user that a SumW2Error() argument should be provided if weighted data is offered
   if (weightedData && doSumW2==-1) {
-    coutW(InputArguments) << "RooAbsPdf::fitTo(" << GetName() << ") WARNING: a likelihood fit is request of what appears to be weighted data. " << endl
-                          << "       While the estimated values of the parameters will always be calculated taking the weights into account, " << endl 
-			  << "       there are multiple ways to estimate the errors on these parameter values. You are advised to make an " << endl 
-			  << "       explicit choice on the error calculation: " << endl
-			  << "           - Either provide SumW2Error(kTRUE), to calculate a sum-of-weights corrected HESSE error matrix " << endl
-			  << "             (error will be proportional to the number of events)" << endl 
-			  << "           - Or provide SumW2Error(kFALSE), to return errors from original HESSE error matrix" << endl 
-			  << "             (which will be proportional to the sum of the weights)" << endl 
-			  << "       If you want the errors to reflect the information contained in the provided dataset, choose kTRUE. " << endl
-			  << "       If you want the errors to reflect the precision you would be able to obtain with an unweighted dataset " << endl 
-			  << "       with 'sum-of-weights' events, choose kFALSE." << endl ;
+    coutW(InputArguments) << "RooAbsPdf::fitTo(" << GetName() << ") WARNING: a likelihood fit is requested of what appears to be weighted data.\n"
+                          << "       While the estimated values of the parameters will always be calculated taking the weights into account,\n"
+			  << "       there are multiple ways to estimate the errors of the parameters. You are advised to make an'n"
+			  << "       explicit choice for the error calculation:\n"
+			  << "           - Either provide SumW2Error(true), to calculate a sum-of-weights-corrected HESSE error matrix\n"
+			  << "             (error will be proportional to the number of events in MC).\n"
+			  << "           - Or provide SumW2Error(false), to return errors from original HESSE error matrix\n"
+			  << "             (which will be proportional to the sum of the weights, i.e., a dataset with <sum of weights> events).\n"
+			  << "       If you want the errors to reflect the information contained in the provided simulation, choose true.\n"
+			  << "       If you want the errors to reflect the precision you would be able to obtain with an unweighted dataset\n"
+			  << "       with <sum of weights> events, choose false." << endl ;
   }
 
 
