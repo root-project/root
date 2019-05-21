@@ -794,7 +794,8 @@ public:
    TGLColor(Int_t r, Int_t g, Int_t b, Int_t a=255);
    TGLColor(Float_t r, Float_t g, Float_t b, Float_t a=1);
    TGLColor(Color_t color_index, Char_t transparency=0);
-   virtual ~TGLColor();
+   TGLColor(const TGLColor& c);
+   virtual ~TGLColor() = default;
 
    TGLColor& operator=(const TGLColor& c);
 
