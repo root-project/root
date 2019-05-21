@@ -26,20 +26,40 @@ namespace Experimental {
  Drawing attributes for RLine.
  */
 class RAttrLine: public RDrawingAttrBase {
-public:
-   using RDrawingAttrBase::RDrawingAttrBase;
+   RColor fColor; /// The color of the line.
+   float fWidth = 3; ///The width of the line.
+   int fStyle = 0; ///The style of the line.
 
+protected:
+   std::vector<MemberAssociation> GetMembers() final {
+      return {
+         Associate("color", fColor),
+         Associate("width", fWidth),
+         Associate("style", fStyle)};
+   }
+
+public:
    /// The color of the line.
-   RAttrLine &SetColor(const RColor& col) { Set("color", col); return *this; }
-   RColor GetColor() const { return Get<RColor>("color"); }
+   RAttrLine &SetColor(const RColor& col) { fColor = col; return *this; }
+   RColor GetColor() const { return fColor; }
 
    ///The width of the line.
-   RAttrLine &SetWidth(float width) { Set("width", width); return *this; }
-   float GetWidth() const { return Get<float>("width"); }
+   RAttrLine &SetWidth(float width) { fWidth = width; return *this; }
+   float GetWidth() const { return fWidth; }
 
    ///The style of the line.
-   RAttrLine &SetStyle(int style) { Set("style", style); return *this; }
-   int GetStyle() const { return Get<int>("style"); }
+   RAttrLine &SetStyle(int style) { fStyle = style; return *this; }
+   int GetStyle() const { return fStyle; }
+
+   bool operator==(const RAttrLine &other) const {
+      return fColor == other.fColor
+         && fWidth == other.fWidth
+         && fStyle == other.fStyle;
+   }
+
+   bool operator!=(const RAttrLine &other) const {
+      return !(*this == other);
+   }
 };
 
 } // namespace Experimental

@@ -29,6 +29,16 @@ struct RPadPos: Internal::RPadHorizVert {
    RPadPos() = default;
    RPadPos(const RPadExtent& extent): Internal::RPadHorizVert(extent) {}
 
+   bool operator==(const RPadPos &other) const
+   {
+      return fHoriz == other.fHoriz && fVert == other.fVert;
+   }
+
+   bool operator!=(const RPadPos &other) const
+   {
+      return !(*this == other);
+   }
+
    /// Add a `RPadExtent`.
    friend RPadPos operator+(const RPadPos &lhs, const RPadExtent &rhs)
    {

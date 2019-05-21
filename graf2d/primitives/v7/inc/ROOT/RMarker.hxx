@@ -39,9 +39,12 @@ public:
  Drawing options for RMarker.
  */
 
-class DrawingOpts: public RDrawingOptsBase, public RAttrMarker {
+class DrawingOpts: public RDrawingOptsBase {
+protected:
+   Name_t GetName() const final { return "marker"; }
+
 public:
-   DrawingOpts(): RAttrMarker(FromOption, "marker", *this) {}
+   RAttrMarker &Marker() { return Get<RAttrMarker>("marker"); }
 };
 
 

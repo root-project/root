@@ -16,6 +16,7 @@
 #ifndef ROOT7_RDrawingAttr
 #define ROOT7_RDrawingAttr
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -41,10 +42,14 @@ unsigned short FromAttributeString(const std::string &strval, const std::string 
 unsigned int FromAttributeString(const std::string &strval, const std::string &name, unsigned int *);
 unsigned long FromAttributeString(const std::string &strval, const std::string &name, unsigned long *);
 unsigned long long FromAttributeString(const std::string &strval, const std::string &name, unsigned long long *);
+inline std::string FromAttributeString(const std::string &strval, const std::string & /*name*/, std::string *)
+{
+   return strval;
+}
 
 /// Decode an enum value from its integer representation.
 template <typename ENUM, class = typename std::enable_if<std::is_enum<ENUM>::value>::type>
-ENUM FromAttributeString(const std::string &strval, const std::string &name, ENUM *)
+inline ENUM FromAttributeString(const std::string &strval, const std::string &name, ENUM *)
 {
    return static_cast<ENUM>(FromAttributeString(strval, name, (typename std::underlying_type<ENUM>::type*)nullptr));
 }
@@ -62,10 +67,11 @@ std::string ToAttributeString(unsigned short val);
 std::string ToAttributeString(unsigned int val);
 std::string ToAttributeString(unsigned long val);
 std::string ToAttributeString(unsigned long long val);
+inline std::string ToAttributeString(const std::string &val) { return val; }
 
 /// Stringify an enum value through its integer representation.
 template <typename ENUM, class = typename std::enable_if<std::is_enum<ENUM>::value>::type>
-std::string ToAttributeString(ENUM val)
+inline std::string ToAttributeString(ENUM val)
 {
    return ToAttributeString(static_cast<typename std::underlying_type<ENUM>::type>(val));
 }
@@ -99,8 +105,10 @@ public:
       Path() = default;
 
       explicit Path(const std::string &str): fStr(str) {}
-
       explicit Path(std::string &&str): fStr(std::move(str)) {}
+      explicit Path(const char *name): fStr(name) {}
+      explicit Path(const Name &name): fStr(name.fStr) {}
+      explicit Path(Name &&name): fStr(std::move(name.fStr)) {}
 
       void Append(const Name &name) {
          if (!fStr.empty())
@@ -126,111 +134,45 @@ public:
    };
 
 protected:
-   /// The chain of attribute names, as used in style files.
-   /// E.g. "hist1D.hist.box.line".
-   Path fPath;
-
-   /// The container of the attribute values.
-   std::weak_ptr<RDrawingAttrHolder> fHolder;   ///<!   I/O not working anyway
+   struct MemberAssociation {
+      Name fName;
+      RDrawingAttrBase *fNestedAttr;
+      std::function<std::string()> fMemberToString;
+      std::function<void(const std::string&, const std::string&)> fSetMemberFromString;
+   };
 
 protected:
-   /// Get the attribute value as string, for a given attribute name.
-   std::string GetValueString(const Path &path) const;
+   MemberAssociation Associate(const std::string &name, RDrawingAttrBase &attr) {
+      return {name, &attr, {}, {}};
+   }
 
-   /// Insert or update the attribute value identified by the valueIndex (in fValueNames)
-   /// to the value `strVal`.
-   void SetValueString(const Name &name, const std::string &strVal);
+   template <class VALUE, class = typename std::enable_if<!std::is_base_of<RDrawingAttrBase, VALUE>::value>::type>
+   MemberAssociation Associate(const std::string &name, VALUE &val) {
+      return {name,
+         nullptr,
+         [&val]{return ToAttributeString(val);},
+         [&val](const std::string &strval, const std::string &attrname) {
+            val = FromAttributeString(strval, attrname, &val); }
+      };
+   }
+
+   /// Create the name / member association for attribute values.
+   virtual std::vector<MemberAssociation> GetMembers() = 0;
 
    /// Construct a default, unnamed, unconnected attribute.
    RDrawingAttrBase() = default;
 
-   /// Return `true` if the attribute's value comes from the
-   /// styles, i.e. through `RDrawingAttrHolder::GetAttrFromStyle()`, instead
-   /// if from our `RDrawingAttrHolder` (i.e. explicitly set through `Set()`).
-   bool IsFromStyle(const Path &path) const;
+   /// Initialize this from a style's values.
+   void InitializeFromStyle(const Path &path, const RDrawingAttrHolder &attr);
 
 public:
-   /// Construct as a copy.
-   RDrawingAttrBase(const RDrawingAttrBase& other) = default;
+   virtual ~RDrawingAttrBase() = default;
 
-   /// Construct as a moved-to.
-   RDrawingAttrBase(RDrawingAttrBase&& other) = default;
-
-   /// Construct a named attribute that does not have a parent; e.g.
-   /// because it's the top-most attribute in a drawing option object.
-   RDrawingAttrBase(const Name &name): fPath{name.fStr} {}
-
-   /// Construct a named attribute that has a parent, e.g.
-   /// because it's some line attribute of the histogram attributes.
-   RDrawingAttrBase(const Name &name, const RDrawingAttrBase &parent);
-
-   /// Tag type to disambiguate construction from options.
-   struct FromOption_t {};
-   static constexpr const FromOption_t FromOption{};
-   /// Construct a top-most attribute from its holder.
-   RDrawingAttrBase(FromOption_t, const Name &name, RDrawingOptsBase &opts);
-
-   /// Construct a top-most attribute from its holder. If this is ambiguous, use the
-   /// tag overload taking an `FromOption_t`.
-   RDrawingAttrBase(const Name &name, RDrawingOptsBase &opts):
-      RDrawingAttrBase(FromOption, name, opts) {}
-
-   /// Copy-assign: this assigns the attribute values to this attribute, *without*
-   /// changing the connected drawing options object / holder or attribute path!
-   ///
-   /// It gives value semantics to attributes:
-   /// ```
-   /// DrawingOpts1 o1;
-   /// DrawingOpts2 o2;
-   /// RAttrLine l1 = o1.DogLine();
-   /// RAttrLine l2 = o2.CatLine();
-   /// l1.SetWidth(42);
-   /// l2 = l1;
-   /// // Now o2.CatLine().GetWidth() is 42!
-   /// ```
-   RDrawingAttrBase &operator=(const RDrawingAttrBase& rhs);
-
-   /// Return `true` if the attribute's value comes from the
-   /// styles, i.e. through `RDrawingAttrHolder::GetAttrFromStyle()`, instead
-   /// if from our `RDrawingAttrHolder` (i.e. explicitly set through `Set()`).
-   bool IsFromStyle(const Name &name) const;
-
-   /// Get the attribute value for an attribute value of type `T`.
-   template <class T>
-   T Get(const Name &name) const
-   {
-      Path path = fPath + name;
-      auto strVal = GetValueString(path);
-      return FromAttributeString(strVal, path.Str(), (T*)nullptr);
-   }
-
-   /// Insert or update the attribute value identified by `name` to the given value.
-   template <class T>
-   void Set(const Name &name, const T &val)
-   {
-      SetValueString(name, ToAttributeString(val));
-   }
-
-   /// Return the attribute names that lead to this attribute, starting
-   /// with the topmost attribute, i.e. the parent that does not have a parent
-   /// itself, down to the name of *this (the last entry in the vector).
-   const Path &GetPath() const { return fPath; }
-
-   /// Actual attribute holder.
-   const std::weak_ptr<RDrawingAttrHolder> &GetHolderPtr() const { return fHolder; }
-
-   /// Equality compare to other RDrawingAttrBase.
-   /// They are equal if
-   /// - the same set of attributes are custom set (versus are determined from the style), and
-   /// - the values of all the custom set ones compare equal.
-   /// The set of styles to be taken into account is not compared.
-   bool operator==(const RDrawingAttrBase &other) const;
-
-   /// Compare unequal to other RDrawingAttrBase. Returns the negated `operator==`.
-   bool operator!=(const RDrawingAttrBase &other) const
-   {
-      return !(*this == other);
-   }
+   /// Insert all attribute members' values into keyval, using their name as the first string
+   /// and their stringified value as the second. This pair is only inserted into keyval if
+   /// the attribute's value is different than value provided by the style.
+   void InsertModifiedAttributeStrings(const Path &path, const RDrawingAttrHolder &holder,
+                                       std::vector<std::pair<std::string, std::string>> &keyval);
 };
 
 
@@ -239,8 +181,9 @@ public:
  */
 class RDrawingAttrHolder {
 public:
+   using Name_t = RDrawingAttrBase::Name;
    using Path_t = RDrawingAttrBase::Path;
-   using Map_t = std::unordered_map<std::string, std::string>;
+   using Map_t = std::unordered_map<std::string, std::unique_ptr<RDrawingAttrBase>>;
 private:
    /// Map attribute paths to their values.
    Map_t fAttrNameVals;
@@ -258,38 +201,29 @@ public:
    /// RDrawingAttrHolder with an ordered collection of styles taking precedence before the default style.
    RDrawingAttrHolder(const std::vector<std::string> &styleClasses): fStyleClasses(styleClasses) {}
 
-   /// Get an attribute value as string, given its name path.
-   std::string &At(const Path_t &path) { return fAttrNameVals[path.fStr]; }
-
    /// Get an attribute value as pointer to string, given its name path, or
    /// `nullptr` if the attribute does not exist.
-   const std::string *AtIf(const Path_t &path) const;
+   RDrawingAttrBase *AtIf(const Name_t &path) const;
 
-   /// Get the (stringified) value of the named attribute from the Style.
-   /// Return the empty string if no such value exists - which means that the attribute
-   /// name is unknown even for the (implicit) default style!
-   std::string GetAttrFromStyle(const Path_t &path);
-
-   /// Equality compare the attributes within `path` to those of `other` within `otherpath`.
-   /// Takes all sub-attributes contained in the respective paths (i.e. those starting with that path)
-   /// into account. They compare equal if their set of (sub-)attributes and their respective values are equal.
-   bool Equal(const RDrawingAttrHolder &other, const Path_t &thisPath, const Path_t &otherPath);
-
-   /// Extract contained attributes for a given path (including sub-attributes); returns iterators
-   /// to a subset of fAttrNameVals.
-   std::vector<Map_t::const_iterator> GetAttributesInPath(const Path_t &path) const;
-
-   /// Erase all custom set attributes for a given path (including sub-attributes).
-   void EraseAttributesInPath(const Path_t &path);
-
-   /// Copy attributes within otherPath into
-   void CopyAttributesInPath(const Path_t &targetPath, const RDrawingAttrHolder &source, const Path_t &sourcePath);
+   template <class ATTR>
+   ATTR &Insert(const Name_t &name)
+   {
+      auto &attrPtr = fAttrNameVals[name.fStr];
+      attrPtr = std::make_unique<ATTR>();
+      return *static_cast<ATTR*>(attrPtr.get());
+   }
 
    /// Get the attribute style classes of these options.
    const std::vector<std::string> &GetStyleClasses() const { return fStyleClasses; }
 
    /// Set the attribute style classes of these options.
    void SetStyleClasses(const std::vector<std::string> &styles) { fStyleClasses = styles; }
+
+   /// Retrieve the attribute string from the current style, given the set of style classes.
+   std::string GetAttrValStringFromStyle(const Path_t &path) const;
+
+   /// Stringify all attributes set to non-default values, returning a collection of [name, value] pairs.
+   std::vector<std::pair<std::string, std::string>> CustomizedValuesToString(const Name_t &option_name);
 };
 
 } // namespace Experimental

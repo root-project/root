@@ -27,20 +27,44 @@ namespace Experimental {
  */
 
 class RAttrMarker : public RDrawingAttrBase {
-public:
-   using RDrawingAttrBase::RDrawingAttrBase;
-
    /// The color of the marker.
-   RAttrMarker &SetColor(const RColor &col) { Set("color", col); return *this; }
-   RColor GetColor() const { return Get<RColor>("color"); }
+   RColor fColor;
 
    /// The size of the marker.
-   RAttrMarker &SetSize(float size) { Set("size", size); return *this; }
-   float GetSize() const { return Get<float>("size"); }
+   float fSize = 3.;
 
    /// The style of the marker.
-   RAttrMarker &SetStyle(int style) { Set("style", style); return *this; }
-   int GetStyle() const { return Get<int>("style"); }
+   int fStyle = 0;
+
+private:
+   std::vector<MemberAssociation> GetMembers() final {
+      return {
+         Associate("color", fColor),
+         Associate("size", fSize),
+         Associate("style", fStyle)
+      };
+   };
+
+public:
+   /// The color of the marker.
+   RAttrMarker &SetColor(const RColor &col) { fColor = col; return *this; }
+   const RColor &GetColor() const { return fColor; }
+
+   /// The size of the marker.
+   RAttrMarker &SetSize(float size) { fSize = size; return *this; }
+   float GetSize() const { return fSize; }
+
+   /// The style of the marker.
+   RAttrMarker &SetStyle(int style) { fStyle = style; return *this; }
+   int GetStyle() const { return fStyle; }
+
+   bool operator==(const RAttrMarker &other) const {
+      return fColor == other.fColor && fSize == other.fSize && fStyle == other.fStyle;
+   }
+
+   bool operator!=(const RAttrMarker &other) const {
+      return !(*this == other);
+   }
 };
 
 } // namespace Experimental

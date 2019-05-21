@@ -186,25 +186,48 @@ public:
    */
 
    class DrawingOpts: public RDrawingOptsBase, public RDrawingAttrBase {
+      /// Size of the pad in the parent's (!) coordinate system.
+      RPadExtent fSize;
+      /// Position (offset) of the pad in the parent's coordinate system.
+      RPadPos fPos;
+
+   protected:
+      Name_t GetName() const final { return "pad"; }
+
+   private:
+      std::vector<MemberAssociation> GetMembers() final {
+         return {
+            Associate("size", fSize),
+            Associate("pos", fPos)
+         };
+      }
+
    public:
       DrawingOpts() = default;
 
       DrawingOpts(const RPadPos &pos, const RPadExtent &size):
-         DrawingOpts()
-      {
-         SetPos(pos);
-         SetSize(size);
-      }
+         fSize(size), fPos(pos)
+      {}
 
-      RAttrBox Border() { return {FromOption, "border", *this}; }
-      
       /// The position (offset) of the pad.
-      DrawingOpts &SetPos(const RPadPos &pos) { Set("pos", pos); return *this; }
-      RPadPos GetPos() const { return Get<RPadPos>("pos"); }
+      DrawingOpts &SetPos(const RPadPos &pos) { fPos = pos; return *this; }
+      const RPadPos &GetPos() const { return fPos; }
 
       /// The size of the pad.
-      DrawingOpts &SetSize(const RPadExtent &size) { Set("size", size); return *this; }
-      RPadExtent GetSize() const { return Get<RPadExtent>("size"); }
+      DrawingOpts &SetSize(const RPadExtent &size) { fSize = size; return *this; }
+      const RPadExtent &GetSize() const { return fSize; }
+
+      /// The pad's border.
+      RAttrBox &Border() { return Get<RAttrBox>("path"); }
+
+      bool operator==(const DrawingOpts &other) const {
+         return fSize == other.fSize
+            && fPos == other.fPos;
+      }
+
+      bool operator!=(const DrawingOpts &other) const {
+         return !(*this == other);
+      }
    };
 
 private:
@@ -214,9 +237,6 @@ private:
    /// Drawing options, containing the size (in parent coordinates!)
    DrawingOpts fOpts;
 
-   /// Size of the pad in the parent's (!) coordinate system.
-   RPadExtent fSize = fOpts.GetSize(); // {640_px, 400_px};
-
 public:
    friend std::unique_ptr<RPadDrawable> GetDrawable(std::unique_ptr<RPad> &&pad);
 
@@ -224,7 +244,7 @@ public:
    RPad() = default;
 
    /// Create a child pad.
-   RPad(RPadBase &parent, const RPadExtent &size): fParent(&parent), fSize(size) {}
+   RPad(RPadBase &parent, const RPadExtent &size): fParent(&parent), fOpts({}, size) {}
 
    /// Destructor to have a vtable.
    virtual ~RPad();
@@ -242,7 +262,7 @@ public:
    RCanvas *GetCanvas() override { return fParent ? fParent->GetCanvas() : nullptr; }
 
    /// Get the size of the pad in parent (!) coordinates.
-   const RPadExtent &GetSize() const { return fSize; }
+   const RPadExtent &GetSize() const { return fOpts.GetSize(); }
 
    /// Drawing options.
    DrawingOpts &GetDrawingOpts() { return fOpts; }
@@ -252,13 +272,13 @@ public:
    {
       std::array<RPadLength::Normal, 2> posInParentNormal = fParent->PixelsToNormal(pos);
       std::array<RPadLength::Normal, 2> myPixelInNormal =
-         fParent->PixelsToNormal({{fSize.fHoriz.fPixel, fSize.fVert.fPixel}});
+         fParent->PixelsToNormal({{GetSize().fHoriz.fPixel, GetSize().fVert.fPixel}});
       std::array<RPadLength::Normal, 2> myUserInNormal =
-         fParent->UserToNormal({{fSize.fHoriz.fUser, fSize.fVert.fUser}});
+         fParent->UserToNormal({{GetSize().fHoriz.fUser, GetSize().fVert.fUser}});
       // If the parent says pos is at 0.6 in normal coords, and our size converted to normal is 0.2, then pos in our
       // coord system is 3.0!
-      return {{posInParentNormal[0] / (fSize.fHoriz.fNormal + myPixelInNormal[0] + myUserInNormal[0]),
-               posInParentNormal[1] / (fSize.fVert.fNormal + myPixelInNormal[1] + myUserInNormal[1])}};
+      return {{posInParentNormal[0] / (GetSize().fHoriz.fNormal + myPixelInNormal[0] + myUserInNormal[0]),
+               posInParentNormal[1] / (GetSize().fVert.fNormal + myPixelInNormal[1] + myUserInNormal[1])}};
    }
 
    /// Convert a RPadPos to [x, y] of normalized coordinates.

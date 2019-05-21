@@ -29,20 +29,47 @@ namespace Experimental {
  Drawing attributes for a box: rectangular lines with size and position.
  */
 class RAttrBox: public RDrawingAttrBase {
-public:
-   using RDrawingAttrBase::RDrawingAttrBase;
+   RAttrLine fBorder; /// Line style, can be overriden for each side.
+   RAttrLine fTop; /// Overrides Border() for the top line.
+   RAttrLine fRight; /// Overrides Border() for the right line.
+   RAttrLine fBottom; /// Overrides Border() for the bottom line.
+   RAttrLine fLeft; /// Overrides Border() for the left line.
 
-   RAttrLine Border() const { return  {"border", *this}; }
-   /// Overrides Border() for the top line..
-   RAttrLine Top() const { return  {"top", *this}; }
+   std::vector<MemberAssociation> GetMembers() final {
+      return {
+         Associate("border", fBorder),
+         Associate("top", fTop),
+         Associate("right", fRight),
+         Associate("bottom", fBottom),
+         Associate("left", fLeft)
+      };
+   }
+
+public:
+
+   RAttrLine &Border() { return  fBorder; }
+   /// Overrides Border() for the top line.
+   RAttrLine &Top() { return fTop; }
    /// Overrides Border() for the right line.
-   RAttrLine Right() const { return  {"right", *this}; }
+   RAttrLine &Right() { return fRight; }
    /// Overrides Border() for the bottom line.
-   RAttrLine Bottom() const { return  {"bottom", *this}; }
+   RAttrLine &Bottom() { return fBottom; }
    /// Overrides Border() for the left line.
-   RAttrLine Left() const { return  {"left", *this}; }
+   RAttrLine &Left() { return fLeft; }
 
    // TODO: Add Fill()!
+
+   bool operator==(const RAttrBox &other) const {
+      return fBorder == other.fBorder
+         && fTop == other.fTop
+         && fRight == other.fRight
+         && fBottom == other.fBottom
+         && fLeft == other.fLeft;
+   }
+
+   bool operator!=(const RAttrBox &other) const {
+      return !(*this == other);
+   }
 };
 
 } // namespace Experimental

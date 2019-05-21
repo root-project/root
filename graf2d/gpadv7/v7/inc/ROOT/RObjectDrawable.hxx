@@ -33,11 +33,22 @@ namespace Experimental {
 class RPadBase;
 
 /// \class ROOT::Experimental::Internal::RObjectDrawingOpts Drawing options for TObject.
-class RObjectDrawingOpts : public RDrawingOptsBase {
+class RObjectDrawingOpts : public RDrawingOptsBase, public RDrawingAttrBase {
    std::string fOpts; ///< The drawing options
 
+protected:
+   Name_t GetName() const final { return "tobject"; }
+
+private:
+   std::vector<MemberAssociation> GetMembers() final {
+      return {
+         Associate("opts", fOpts)
+      };
+   }
+
 public:
-   RObjectDrawingOpts(const std::string &opts = "") : fOpts(opts) {}
+   RObjectDrawingOpts(const std::string &opts = ""): fOpts(opts) {}
+
 
    const std::string &GetOptionString() const { return fOpts; }
 };

@@ -26,15 +26,33 @@ namespace Experimental {
 
 class RDrawingOptsBase {
 public:
-   /// The RDrawingAttrHolder of the attribute values.
-   std::shared_ptr<RDrawingAttrHolder> fHolder;    ///<!  I/O does not work
-   RDrawingAttrHolder    *fHolderIO{nullptr};      ///<   only for I/O, should be fixed in the fututre
+   using Name_t = RDrawingAttrBase::Name;
+   using Path_t = RDrawingAttrBase::Path;
 
-public:
+private:
+   /// The RDrawingAttrHolder of the attribute values.
+   std::unique_ptr<RDrawingAttrHolder> fHolder;
+
+protected:
    RDrawingOptsBase() = default;
 
    /// Initialize the options with a (possibly empty) set of style classes.
    RDrawingOptsBase(const std::vector<std::string> &styleClasses);
+
+   RDrawingOptsBase(const RDrawingOptsBase &other);
+
+   RDrawingOptsBase(RDrawingOptsBase &&other) = default;
+
+   RDrawingOptsBase &operator=(const RDrawingOptsBase &other);
+
+   RDrawingOptsBase &operator=(RDrawingOptsBase &&other) = default;
+
+   /// Get the root class name of these options in the style file,
+   /// e.g. "hist" in "hist.line.width".
+   virtual Name_t GetName() const = 0;
+
+public:
+   virtual ~RDrawingOptsBase() = default;
 
    /// Get the attribute style classes of these options.
    const std::vector<std::string> &GetStyleClasses() const;
@@ -42,7 +60,28 @@ public:
    /// Get the attribute style classes of these options.
    void SetStyleClasses(const std::vector<std::string> &styles);
 
-   std::shared_ptr<RDrawingAttrHolder> &GetHolder();
+   /// Get the holder of the attributes.
+   RDrawingAttrHolder &GetHolder();
+
+   /// Construct an attribute from the RDrawingAttrHolder's data given the
+   /// attribute's Name.
+   template <class ATTR>
+   ATTR GetAttribute(const Name_t &name) const;
+
+   /// Initialize an attribute from the styles and custom settings, insert it into the
+   /// holder and return a reference to it.
+   template <class ATTR>
+   ATTR &Get(const Name_t &name)
+   {
+      if (RDrawingAttrBase* exists = GetHolder().AtIf(name))
+         return *static_cast<ATTR*>(exists);
+      return GetHolder().Insert<ATTR>(name);
+   }
+
+   /// Collect all attribute members' values into keyval, using their name as the first string
+   /// and their stringified value as the second. This pair is only inserted into keyval if
+   /// the attribute's value is different than value provided by the style.
+   std::vector<std::pair<std::string, std::string>> GetModifiedAttributeStrings();
 };
 
 } // namespace Experimental

@@ -37,9 +37,12 @@ public:
 /** \class ROOT::Experimental::RLine::DrawingOpts
  Drawing options for RLine.
  */
-class DrawingOpts: public RDrawingOptsBase, public RAttrLine {
+class DrawingOpts: public RDrawingOptsBase {
+protected:
+   Name_t GetName() const final { return "line"; }
+
 public:
-   DrawingOpts(): RAttrLine(FromOption, "line", *this) {}
+   RAttrLine &Line() { return Get<RAttrLine>("line"); }
 };
 
 

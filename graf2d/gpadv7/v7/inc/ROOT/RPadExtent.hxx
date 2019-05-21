@@ -47,6 +47,16 @@ struct RPadHorizVert {
 struct RPadExtent: Internal::RPadHorizVert {
    using Internal::RPadHorizVert::RPadHorizVert;
 
+   bool operator==(const RPadExtent &other) const
+   {
+      return fHoriz == other.fHoriz && fVert == other.fVert;
+   }
+
+   bool operator!=(const RPadExtent &other) const
+   {
+      return !(*this == other);
+   }
+
    /// Add two `RPadExtent`s.
    friend RPadExtent operator+(RPadExtent lhs, const RPadExtent &rhs)
    {

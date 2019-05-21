@@ -39,13 +39,11 @@ public:
  Drawing options for RBox.
  */
 
-class DrawingOpts: public RDrawingOptsBase, public RAttrBox {
+class DrawingOpts: public RDrawingOptsBase {
+protected:
+   Name_t GetName() const final { return "box"; }
 public:
-      DrawingOpts():
-         RAttrBox(FromOption, "box", *this)
-      {}
-
-      using RAttrBox::RAttrBox;
+   RAttrBox &Box() { return Get<RAttrBox>("box"); }
 };
 
 

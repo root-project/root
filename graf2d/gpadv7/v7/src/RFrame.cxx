@@ -21,7 +21,7 @@
 #include <cassert>
 
 ROOT::Experimental::RFrame::RFrame(std::vector<std::unique_ptr<RPadUserAxisBase>> &&coords, const DrawingOpts &opts)
-   : fUserCoord(std::move(coords)), fPalette(RPalette::GetPalette("default")), fOpts(opts)
+   : fUserCoord(std::move(coords)), fPalette(RPalette::GetPalette("default")), fOpts(std::move(opts))
 {}
 
 void ROOT::Experimental::RFrame::GrowToDimensions(size_t nDimensions)

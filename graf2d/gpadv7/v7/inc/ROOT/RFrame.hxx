@@ -33,8 +33,11 @@ namespace Experimental {
 class RFrame {
 public:
    class DrawingOpts: public RDrawingOptsBase {
+   protected:
+      Name_t GetName() const final { return "frame"; }
+
    public:
-      RAttrBox Frame() { return {"frame", *this}; }
+      RAttrBox &Border() { return Get<RAttrBox>("border"); }
    };
 
 private:

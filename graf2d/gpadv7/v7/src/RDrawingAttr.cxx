@@ -16,80 +16,11 @@
 #include "ROOT/RDrawingAttr.hxx"
 
 #include "ROOT/RDrawingOptsBase.hxx"
+#include "ROOT/RStyle.hxx"
 #include "ROOT/TLogger.hxx"
 
 #include <algorithm>
 #include <iterator>
-
-ROOT::Experimental::RDrawingAttrBase::RDrawingAttrBase(const Name &name, const RDrawingAttrBase &parent) :
-   fPath(parent.GetPath() + name), fHolder(parent.GetHolderPtr())
-{
-}
-
-ROOT::Experimental::RDrawingAttrBase::RDrawingAttrBase(FromOption_t, const Name &name, RDrawingOptsBase &opts) :
-   fPath{name.fStr}, fHolder(opts.GetHolder())
-{
-}
-
-ROOT::Experimental::RDrawingAttrBase &ROOT::Experimental::RDrawingAttrBase::operator=(const RDrawingAttrBase& rhs)
-{
-   auto otherHolder = rhs.fHolder.lock();
-   if (!otherHolder)
-      return *this;
-
-   auto thisHolder = fHolder.lock();
-   if (!thisHolder)
-      return *this;
-
-   // First, remove all attributes in fPath; we will replace them with what's in rhs (if any).
-   thisHolder->EraseAttributesInPath(fPath);
-   thisHolder->CopyAttributesInPath(fPath, *otherHolder, rhs.fPath);
-   return *this;
-}
-
-void ROOT::Experimental::RDrawingAttrBase::SetValueString(const Name &name, const std::string &strVal)
-{
-   if (auto holder = GetHolderPtr().lock())
-      holder->At(GetPath() + name) = strVal;
-}
-
-std::string ROOT::Experimental::RDrawingAttrBase::GetValueString(const Path &path) const
-{
-   auto holder = GetHolderPtr().lock();
-   if (!holder)
-      return "";
-
-   if (const std::string *pStr = holder->AtIf(path))
-      return *pStr;
-   return holder->GetAttrFromStyle(path);
-}
-
-bool ROOT::Experimental::RDrawingAttrBase::IsFromStyle(const Path& path) const
-{
-   auto holder = GetHolderPtr().lock();
-   if (!holder)
-      return "";
-
-   return !holder->AtIf(path);
-}
-
-bool ROOT::Experimental::RDrawingAttrBase::IsFromStyle(const Name& name) const
-{
-   return IsFromStyle(GetPath() + name);
-}
-
-bool ROOT::Experimental::RDrawingAttrBase::operator==(const RDrawingAttrBase &other) const
-{
-   auto thisHolder = GetHolderPtr().lock();
-   auto otherHolder = other.GetHolderPtr().lock();
-   if (!thisHolder && !otherHolder)
-      return true;
-   if (!thisHolder != !otherHolder)
-      return false;
-
-   // We have valid holders for both.
-   return thisHolder->Equal(*otherHolder.get(), GetPath(), other.GetPath());
-}
 
 float ROOT::Experimental::FromAttributeString(const std::string &val, const std::string &/*name*/, float *)
 {
@@ -121,80 +52,55 @@ std::string ROOT::Experimental::ToAttributeString(int val)
    return std::to_string(val);
 }
 
-const std::string *ROOT::Experimental::RDrawingAttrHolder::AtIf(const Path_t &path) const
+void ROOT::Experimental::RDrawingAttrBase::InitializeFromStyle(const Path &path, const RDrawingAttrHolder &holder)
 {
-   auto it = fAttrNameVals.find(path.fStr);
+   for (const MemberAssociation &assoc: GetMembers()) {
+      Path attrPath = path + assoc.fName;
+      if (assoc.fNestedAttr)
+         assoc.fNestedAttr->InitializeFromStyle(attrPath, holder);
+      else
+         assoc.fSetMemberFromString(holder.GetAttrValStringFromStyle(attrPath), attrPath.Str());
+   }
+}
+
+void ROOT::Experimental::RDrawingAttrBase::InsertModifiedAttributeStrings(const Path &path, const RDrawingAttrHolder &holder,
+                                                                          std::vector<std::pair<std::string, std::string>> &keyval)
+{
+   for (MemberAssociation &assoc: GetMembers()) {
+      Path attrPath = path + assoc.fName;
+      if (assoc.fNestedAttr)
+         assoc.fNestedAttr->InsertModifiedAttributeStrings(attrPath, holder, keyval);
+      else {
+         std::string val = assoc.fMemberToString();
+         if (val != holder.GetAttrValStringFromStyle(attrPath))
+            keyval.emplace_back(attrPath.Str(), val);
+      }
+   }
+}
+
+ROOT::Experimental::RDrawingAttrBase *ROOT::Experimental::RDrawingAttrHolder::AtIf(const Name_t &name) const
+{
+   auto it = fAttrNameVals.find(name.fStr);
    if (it != fAttrNameVals.end())
-      return &it->second;
+      return it->second.get();
    return nullptr;
 }
 
-std::string ROOT::Experimental::RDrawingAttrHolder::GetAttrFromStyle(const Path_t &path)
+std::string ROOT::Experimental::RDrawingAttrHolder::GetAttrValStringFromStyle(const Path_t &path) const
 {
-   R__WARNING_HERE("Graf2d") << "Failed to get attribute for "
-      << path.fStr << ": not yet implemented!";
-   return "";
-}
-
-bool ROOT::Experimental::RDrawingAttrHolder::Equal(const RDrawingAttrHolder &other, const Path_t &thisPath, const Path_t &otherPath)
-{
-   std::vector<Map_t::const_iterator> thisIters = GetAttributesInPath(thisPath);
-   std::vector<Map_t::const_iterator> otherIters = other.GetAttributesInPath(otherPath);
-
-   if (thisIters.size() != otherIters.size())
-      return false;
-
-   for (auto thisIter: thisIters) {
-      // thisIters and otherIters have equal size. If any element in thisIters does not exist
-      // in other.fAttrNameVals then they are not equal (if other.fAttrNameVals has an entry that
-      // does not exist in this->fAttrNameVals, there must also be a key in this->fAttrNameVals
-      // that does not exist in other.fAttrNameVals or the counts of thisIters and otherIters
-      // would differ).
-      // If all keys' values are equal, thisIters and otherIters are equal.
-      auto otherIter = other.fAttrNameVals.find(thisIter->first);
-      if (otherIter == other.fAttrNameVals.end())
-         return false;
-      if (thisIter->second != otherIter->second)
-         return false;
+   for (auto &&cls: GetStyleClasses()) {
+      std::string val = RStyle::GetCurrent().GetAttribute(path.Str(), cls);
+      if (!val.empty())
+         return val;
    }
-   return true;
+   return RStyle::GetCurrent().GetAttribute(path.Str());
 }
 
-std::vector<ROOT::Experimental::RDrawingAttrHolder::Map_t::const_iterator>
-ROOT::Experimental::RDrawingAttrHolder::GetAttributesInPath(const Path_t &path) const
+std::vector<std::pair<std::string, std::string>> ROOT::Experimental::RDrawingAttrHolder::CustomizedValuesToString(const Name_t &option_name)
 {
-   std::vector<Map_t::const_iterator> ret;
-   const std::string &stem = path.fStr;
-   for (auto i = fAttrNameVals.begin(), e = fAttrNameVals.end(); i !=e; ++i)
-      if (i->first.compare(0, stem.length(), stem) == 0) {
-         // Require i->first to be complete stem, or more but then stem followed by ".":
-         // stem "a.b", i->first can be "a.b" or "a.b.c.d"
-         if (stem.length() == i->first.length()
-             || i->first[stem.length()] == '.')
-         ret.emplace_back(i);
-      }
+   std::vector<std::pair<std::string, std::string>> ret;
+   Path_t path(option_name);
+   for (auto &&name_attr: fAttrNameVals)
+      name_attr.second->InsertModifiedAttributeStrings(path + name_attr.first, *this, ret);
    return ret;
-}
-
-void ROOT::Experimental::RDrawingAttrHolder::EraseAttributesInPath(const Path_t &path)
-{
-   // Iterators are stable under erase()ing!
-   auto iters = GetAttributesInPath(path);
-   for (auto iter: iters)
-      fAttrNameVals.erase(iter);
-}
-
-
-void ROOT::Experimental::RDrawingAttrHolder::CopyAttributesInPath(const Path_t &targetPath, const RDrawingAttrHolder &source, const Path_t &sourcePath)
-{
-   auto sourceIters = source.GetAttributesInPath(sourcePath);
-   if (targetPath != sourcePath) {
-      for (auto sourceIter: sourceIters)
-         fAttrNameVals.emplace(sourceIter->first, sourceIter->second);
-   } else {
-      for (auto sourceIter: sourceIters) {
-         std::string newPath = targetPath.fStr + sourceIter->first.substr(sourcePath.fStr.length());
-         fAttrNameVals.emplace(newPath, sourceIter->second);
-      }
-   }
 }

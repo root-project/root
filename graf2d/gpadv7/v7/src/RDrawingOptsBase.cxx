@@ -25,23 +25,29 @@
 #include <algorithm>
 #include <sstream>
 
-std::shared_ptr<ROOT::Experimental::RDrawingAttrHolder> &
+ROOT::Experimental::RDrawingOptsBase::RDrawingOptsBase(const RDrawingOptsBase & /*other*/)
+{
+   R__ERROR_HERE("GPadv7") << "Not implemented yet!";
+}
+
+ROOT::Experimental::RDrawingOptsBase &
+ROOT::Experimental::RDrawingOptsBase::operator=(const RDrawingOptsBase & /*other*/)
+{
+   R__ERROR_HERE("GPadv7") << "Not implemented yet!";
+   return *this;
+}
+
+ROOT::Experimental::RDrawingAttrHolder &
 ROOT::Experimental::RDrawingOptsBase::GetHolder()
 {
-   if (!fHolder) {
-      fHolder = std::make_shared<RDrawingAttrHolder>();
-      fHolderIO = fHolder.get();
-   }
-   return fHolder;
+   if (!fHolder)
+      fHolder = std::make_unique<RDrawingAttrHolder>();
+   return *fHolder;
 }
 
 void ROOT::Experimental::RDrawingOptsBase::SetStyleClasses(const std::vector<std::string> &styles)
 {
-   if (!fHolder) {
-      fHolder = std::make_shared<RDrawingAttrHolder>(styles);
-      fHolderIO = fHolder.get();
-   } else
-      fHolder->SetStyleClasses(styles);
+   GetHolder().SetStyleClasses(styles);
 }
 
 const std::vector<std::string> &ROOT::Experimental::RDrawingOptsBase::GetStyleClasses() const
@@ -50,4 +56,11 @@ const std::vector<std::string> &ROOT::Experimental::RDrawingOptsBase::GetStyleCl
    if (!fHolder)
       return sEmpty;
    return fHolder->GetStyleClasses();
+}
+
+std::vector<std::pair<std::string, std::string>> ROOT::Experimental::RDrawingOptsBase::GetModifiedAttributeStrings()
+{
+   if (fHolder)
+      return GetHolder().CustomizedValuesToString(GetName());
+   return {};
 }

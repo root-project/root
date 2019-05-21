@@ -39,17 +39,27 @@ class RHistDrawingOpts<1>: public RDrawingOptsBase, public RDrawingAttrBase {
 public:
    enum class EStyle { kHist, kBar, kText };
 
-   RHistDrawingOpts():
-      RDrawingAttrBase(FromOption, "hist1D", *this)
-   {}
-
+private:
    /// The drawing style.
-   void SetStyle(EStyle style) { Set("style", style); }
-   EStyle GetStyle() const { return Get<EStyle>("style"); }
+   EStyle fStyle;
 
-   RAttrLine Line() { return {FromOption, "contentLine", *this}; }
-   RAttrLine BarLine() { return {FromOption, "barLine", *this}; }
-   RAttrLine UncertaintyLine() { return {FromOption, "uncertaintyLine", *this}; }
+   std::vector<MemberAssociation> GetMembers() final {
+      return {
+         Associate("style", fStyle)
+      };
+   };
+
+protected:
+   Name_t GetName() const final { return "hist1D"; }
+
+public:
+   /// The drawing style.
+   void SetStyle(EStyle style) { fStyle = style; }
+   EStyle GetStyle() const { return fStyle; }
+
+   RAttrLine &Line() { return Get<RAttrLine>("contentLine"); }
+   RAttrLine &BarLine() { return Get<RAttrLine>("barLine"); }
+   RAttrLine &UncertaintyLine() { return Get<RAttrLine>("uncertaintyLine"); }
 };
 
 /** \class RHistDrawingOpts<2>
@@ -60,15 +70,25 @@ class RHistDrawingOpts<2>: public RDrawingOptsBase, public RDrawingAttrBase {
 public:
    enum class EStyle { kBox, kSurf, kText };
 
-   RHistDrawingOpts():
-      RDrawingAttrBase(FromOption, "hist2D", *this)
-   {}
-
+private:
    /// The drawing style.
-   void SetStyle(EStyle style) { Set("style", style); }
-   EStyle GetStyle() const { return Get<EStyle>("style"); }
+   EStyle fStyle;
 
-   RAttrLine BoxLine() { return {FromOption, "boxLine", *this}; }
+   std::vector<MemberAssociation> GetMembers() final {
+      return {
+         Associate("style", fStyle)
+      };
+   };
+
+protected:
+   Name_t GetName() const final { return "hist2D"; }
+
+public:
+   /// The drawing style.
+   void SetStyle(EStyle style) { fStyle = style; }
+   EStyle GetStyle() const { return fStyle; }
+
+   RAttrLine &BoxLine() { return Get<RAttrLine>("boxLine"); }
 };
 
 /** \class RHistDrawingOpts<3>
@@ -79,17 +99,27 @@ class RHistDrawingOpts<3>: public RDrawingOptsBase, public RDrawingAttrBase {
 public:
    enum class EStyle { kBox, kIso };
 
-public:
-   RHistDrawingOpts():
-      RDrawingAttrBase(FromOption, "hist3D", *this)
-   {}
-
+private:
    /// The drawing style.
-   void SetStyle(EStyle style) { Set("style", style); }
-   EStyle GetStyle() const { return Get<EStyle>("style"); }
+   EStyle fStyle;
 
-   RAttrLine BoxLine() { return {FromOption, "boxLine", *this}; }
-   RAttrLine IsoLine() { return {FromOption, "isoLine", *this}; }
+   std::vector<MemberAssociation> GetMembers() final {
+      return {
+         Associate("style", fStyle)
+      };
+   };
+
+protected:
+   Name_t GetName() const final { return "hist3D"; }
+
+public:
+   /// The drawing style.
+   void SetStyle(EStyle style) { fStyle = style; }
+   EStyle GetStyle() const { return fStyle; }
+
+
+   RAttrLine &BoxLine() { return Get<RAttrLine>("boxLine"); }
+   RAttrLine &IsoLine() { return Get<RAttrLine>("isoLine"); }
 };
 
 } // namespace Experimental

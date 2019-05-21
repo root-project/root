@@ -40,9 +40,11 @@ public:
  Drawing options for RText.
  */
 
-class DrawingOpts: public RDrawingOptsBase, public RAttrText {
+class DrawingOpts: public RDrawingOptsBase {
+protected:
+   Name_t GetName() const final { return "text"; }
 public:
-   DrawingOpts(): RAttrText(FromOption, "text", *this) {}
+   RAttrText &Text() { return Get<RAttrText>("text"); }
 };
 
 private:

@@ -35,6 +35,16 @@ public:
       CoordSysBase(double val): fVal(val) {}
       DERIVED &ToDerived() { return static_cast<DERIVED &>(*this); }
 
+      bool operator==(const DERIVED &other) const
+      {
+         return fVal == other.fVal;
+      }
+
+      bool operator!=(const DERIVED &other) const
+      {
+         return !(*this == other);
+      }
+
       DERIVED operator-() { return DERIVED(-fVal); }
 
       friend DERIVED operator+(DERIVED lhs, DERIVED rhs) { return DERIVED{lhs.fVal + rhs.fVal}; }
@@ -117,6 +127,16 @@ public:
 
    /// Sort-of aggregate initialization constructor taking normal, pixel and user parts.
    RPadLength(Normal normal, Pixel px, User user): fNormal(normal), fPixel(px), fUser(user) {}
+
+   bool operator==(const RPadLength &other) const
+   {
+      return fNormal == other.fNormal && fPixel == other.fPixel && fUser == other.fUser;
+   }
+
+   bool operator!=(const RPadLength &other) const
+   {
+      return !(*this == other);
+   }
 
    /// Add two `RPadLength`s.
    friend RPadLength operator+(RPadLength lhs, const RPadLength &rhs)
