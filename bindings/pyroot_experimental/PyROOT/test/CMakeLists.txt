@@ -94,3 +94,6 @@ ROOT_ADD_PYUNITTEST(pyroot_string_view_backport string_view_backport.py)
 
 # Test wrapping Python callables for use in C++
 ROOT_ADD_PYUNITTEST(pyroot_cppcallable cppcallable.py)
+
+# TComplex pythonizations
+ROOT_ADD_PYUNITTEST(pyroot_tcomplex tcomplex_operators.py)
