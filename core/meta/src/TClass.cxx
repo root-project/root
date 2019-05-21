@@ -2269,7 +2269,7 @@ Bool_t TClass::CanSplit() const
 
       Int_t stl = -TClassEdit::IsSTLCont(GetName(), 0);
       if ((stl==ROOT::kSTLmap || stl==ROOT::kSTLmultimap)
-          && !valueClass->HasDataMemberInfo()==0)
+          && !valueClass->HasDataMemberInfo())
       {
          This->fCanSplit = 0;
          return kFALSE;
