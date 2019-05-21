@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_forest
+/// \ingroup tutorial_ntuple
 /// \notebook
 /// Convert CMS open data from a TTree to RForest.
 /// This tutorial illustrates data conversion and data processing with RForest and RDataFrame.  In contrast to the
@@ -47,7 +47,7 @@ constexpr char const* kForestFileName = "ntpl004_dimuon.root";
 using ColNames_t = std::vector<std::string>;
 
 // This is a custom action for RDataFrame. It does not support parallelism!
-// This action writes data from an RDataFrame entry into a forest. It is templated on the
+// This action writes data from an RDataFrame entry into an ntuple. It is templated on the
 // types of the columns to be written and can be used as a generic file format converter.
 template <typename... ColumnTypes_t>
 class RForestHelper : public ROOT::Detail::RDF::RActionImpl<RForestHelper<ColumnTypes_t...>> {
@@ -56,12 +56,12 @@ public:
 private:
    using ColumnValues_t = std::tuple<std::shared_ptr<ColumnTypes_t>...>;
 
-   std::string fForestName;
+   std::string fNTupleName;
    std::string fRootFile;
    ColNames_t fColNames;
    ColumnValues_t fColumnValues;
    static constexpr const auto fNColumns = std::tuple_size<ColumnValues_t>::value;
-   std::shared_ptr<RNTupleWriter> fForest;
+   std::shared_ptr<RNTupleWriter> fNTuple;
    int fCounter;
 
    template<std::size_t... S>
@@ -70,26 +70,26 @@ private:
       // Create the fields and the shared pointers to the connected values
       std::initializer_list<int> expander{
          (std::get<S>(fColumnValues) = eventModel->MakeField<ColumnTypes_t>(fColNames[S]), 0)...};
-      fForest = std::move(RNTupleWriter::Recreate(std::move(eventModel), fForestName, fRootFile));
+      fNTuple = std::move(RNTupleWriter::Recreate(std::move(eventModel), fNTupleName, fRootFile));
    }
 
    template<std::size_t... S>
    void ExecImpl(std::index_sequence<S...>, ColumnTypes_t... values) {
-      // For every entry, set the destination of the forest's default entry's shared pointers to the given values,
+      // For every entry, set the destination of the ntuple's default entry's shared pointers to the given values,
       // which are provided by RDataFrame
       std::initializer_list<int> expander{(*std::get<S>(fColumnValues) = values, 0)...};
    }
 
 public:
-   RForestHelper(std::string_view forestName, std::string_view rootFile, const ColNames_t& colNames)
-      : fForestName(forestName), fRootFile(rootFile), fColNames(colNames)
+   RForestHelper(std::string_view ntupleName, std::string_view rootFile, const ColNames_t& colNames)
+      : fNTupleName(ntupleName), fRootFile(rootFile), fColNames(colNames)
    {
       InitializeImpl(std::make_index_sequence<fNColumns>());
    }
 
    RForestHelper(RForestHelper&&) = default;
    RForestHelper(const RForestHelper&) = delete;
-   std::shared_ptr<RNTupleWriter> GetResultPtr() const { return fForest; }
+   std::shared_ptr<RNTupleWriter> GetResultPtr() const { return fNTuple; }
 
    void Initialize()
    {
@@ -101,16 +101,16 @@ public:
    /// This is a method executed at every entry
    void Exec(unsigned int slot, ColumnTypes_t... values)
    {
-      // Populate the forest's fields data locations with the provided values, then write to disk
+      // Populate the ntuple's fields data locations with the provided values, then write to disk
       ExecImpl(std::make_index_sequence<fNColumns>(), values...);
-      fForest->Fill();
+      fNTuple->Fill();
       if (++fCounter % 100000 == 0)
          std::cout << "Wrote " << fCounter << " entries" << std::endl;
    }
 
    void Finalize()
    {
-      fForest->CommitCluster();
+      fNTuple->CommitCluster();
    }
 
    std::string GetActionName() { return "RForest Writer"; }

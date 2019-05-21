@@ -313,7 +313,7 @@ public:
 
 class RFieldCollection : public ROOT::Experimental::Detail::RFieldBase {
 private:
-   /// Save the link to the collection forest in order to reset the offset counter when committing the cluster
+   /// Save the link to the collection ntuple in order to reset the offset counter when committing the cluster
    std::shared_ptr<RCollectionForest> fCollectionForest;
 public:
    static std::string MyTypeName() { return ":RFieldCollection:"; }
