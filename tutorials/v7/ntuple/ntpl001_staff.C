@@ -41,7 +41,7 @@ using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 
-constexpr char const* kForestFileName = "ntpl001_staff.root";
+constexpr char const* kNTupleFileName = "ntpl001_staff.root";
 
 void Ingest() {
    // The input file cernstaff.dat is a copy of the CERN staff data base from 1988
@@ -65,9 +65,9 @@ void Ingest() {
    auto fldDivision = model->MakeField<std::string>("Division");
    auto fldNation   = model->MakeField<std::string>("Nation");
 
-   // We hand-over the data model to a newly created ntuple of name "Staff", stored in kForestFileName
+   // We hand-over the data model to a newly created ntuple of name "Staff", stored in kNTupleFileName
    // In return, we get a unique pointer to an ntuple that we can fill
-   auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff", kForestFileName);
+   auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff", kNTupleFileName);
 
    std::string record;
    while (std::getline(fin, record)) {
@@ -89,7 +89,7 @@ void Analyze() {
    std::shared_ptr<int> fldAge = model->MakeField<int>("Age");
 
    // Create an ntuple and attach the read model to it
-   auto ntuple = RNTupleReader::Open(std::move(model), "Staff", kForestFileName);
+   auto ntuple = RNTupleReader::Open(std::move(model), "Staff", kNTupleFileName);
 
    // Quick overview of the ntuple's key meta-data
    std::cout << ntuple->GetInfo();

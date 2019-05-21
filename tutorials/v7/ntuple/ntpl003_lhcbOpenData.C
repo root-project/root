@@ -41,7 +41,7 @@ using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 
 constexpr char const* kTreeFileName = "http://root.cern.ch/files/LHCb/lhcb_B2HHH_MagnetUp.root";
-constexpr char const* kForestFileName = "ntpl003_lhcbOpenData.root";
+constexpr char const* kNTupleFileName = "ntpl003_lhcbOpenData.root";
 
 
 void Convert() {
@@ -78,7 +78,7 @@ void Convert() {
    }
 
    // The new ntuple takes ownership of the model
-   auto ntuple = RNTupleWriter::Recreate(std::move(model), "DecayTree", kForestFileName);
+   auto ntuple = RNTupleWriter::Recreate(std::move(model), "DecayTree", kNTupleFileName);
 
    auto nEntries = tree->GetEntries();
    for (decltype(nEntries) i = 0; i < nEntries; ++i) {
@@ -93,14 +93,14 @@ void Convert() {
 
 void ntpl003_lhcbOpenData()
 {
-   if (gSystem->AccessPathName(kForestFileName))
+   if (gSystem->AccessPathName(kNTupleFileName))
       Convert();
 
    // Create histogram of the flight distance
 
    // We open the ntuple without specifiying an explicit model first, but instead use a view on the field we are
    // interested in
-   auto ntuple = RNTupleReader::Open("DecayTree", kForestFileName);
+   auto ntuple = RNTupleReader::Open("DecayTree", kNTupleFileName);
 
    // The view wraps a read-only double value and accesses directly the ntuple's data buffers
    auto viewFlightDistance = ntuple->GetView<double>("B_FlightDistance");

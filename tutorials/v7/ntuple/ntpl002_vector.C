@@ -33,7 +33,7 @@ using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 
 // Where to store the ntuple of this example
-constexpr char const* kForestFileName = "ntpl002_vector.root";
+constexpr char const* kNTupleFileName = "ntpl002_vector.root";
 
 // Update the histogram GUI every so many fills
 constexpr int kUpdateGuiFreq = 1000;
@@ -41,7 +41,7 @@ constexpr int kUpdateGuiFreq = 1000;
 // Number of events to generate
 constexpr int kNEvents = 25000;
 
-// Generate kNEvents with vectors in kForestFileName
+// Generate kNEvents with vectors in kNTupleFileName
 void Write()
 {
    // We create a unique pointer to an empty data model
@@ -54,9 +54,9 @@ void Write()
    auto fldVpz   = model->MakeField<std::vector<float>>("vpz");
    auto fldVrand = model->MakeField<std::vector<float>>("vrand");
 
-   // We hand-over the data model to a newly created ntuple of name "F", stored in kForestFileName
+   // We hand-over the data model to a newly created ntuple of name "F", stored in kNTupleFileName
    // In return, we get a unique pointer to an ntuple that we can fill
-   auto ntuple = RNTupleWriter::Recreate(std::move(model), "F", kForestFileName);
+   auto ntuple = RNTupleWriter::Recreate(std::move(model), "F", kNTupleFileName);
 
    TH1F *hpx = new TH1F("hpx", "This is the px distribution", 100, -4, 4);
    hpx->SetFillColor(48);
@@ -117,7 +117,7 @@ void Read()
 
    // Create an ntuple without imposing a specific data model.  We could generate the data model from the ntuple
    // but here we prefer the view because we only want to access a single field
-   auto ntuple = RNTupleReader::Open(std::move(model), "F", kForestFileName);
+   auto ntuple = RNTupleReader::Open(std::move(model), "F", kNTupleFileName);
 
    // Quick overview of the ntuple's key meta-data
    std::cout << ntuple->GetInfo();
