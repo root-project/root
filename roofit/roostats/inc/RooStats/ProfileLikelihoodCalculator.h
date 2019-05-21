@@ -45,11 +45,11 @@ namespace RooStats {
       virtual ~ProfileLikelihoodCalculator();
 
       /// Return a likelihood interval. A global fit to the likelihood is performed and
-      /// the interval is constructed using the the profile likelihood ratio function of the POI
+      /// the interval is constructed using the profile likelihood ratio function of the POI.
       virtual LikelihoodInterval* GetInterval() const ;
 
       /// Return the hypothesis test result obtained from the likelihood ratio of the
-      /// maximum likelihood value with the null parameters fixed to their values, with respect keeping all parameters
+      /// maximum likelihood value with the null parameters fixed to their values, with respect to keeping all parameters
       /// floating (global maximum likelihood value).
       virtual HypoTestResult* GetHypoTest() const;
 
