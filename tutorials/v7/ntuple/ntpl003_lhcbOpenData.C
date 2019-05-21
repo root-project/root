@@ -3,7 +3,7 @@
 /// \notebook
 /// Convert LHCb run 1 open data from a TTree to RNTuple.
 /// This tutorial illustrates data conversion for a simple, tabular data model.
-/// For reading, the tutorial shows the use of a Forest View, which selectively accesses specific fields.
+/// For reading, the tutorial shows the use of an ntuple View, which selectively accesses specific fields.
 /// If a view is used for reading, there is no need to define the data model as an RNTupleModel first.
 /// The advantage of a view is that it directly accesses RNTuple's data buffers without making an additional
 /// memory copy.

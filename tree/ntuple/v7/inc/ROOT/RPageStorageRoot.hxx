@@ -88,13 +88,13 @@ namespace Detail {
 class RPagePool;
 
 /**
- * Maps the Forest meta-data to and from TFile
+ * Maps the ntuple meta-data to and from TFile
  */
 class RMapper {
 public:
    static constexpr const char* kKeySeparator = "_";
-   static constexpr const char* kKeyForestHeader = "RFH";
-   static constexpr const char* kKeyForestFooter = "RFF";
+   static constexpr const char* kKeyNTupleHeader = "RFH";
+   static constexpr const char* kKeyNTupleFooter = "RFF";
    static constexpr const char* kKeyClusterFooter = "RFCF";
    static constexpr const char* kKeyPagePayload = "RFP";
 
@@ -126,7 +126,7 @@ public:
 /**
 \class ROOT::Experimental::Detail::RPageSinkRoot
 \ingroup NTuple
-\brief Storage provider that write Forest pages into a ROOT TFile
+\brief Storage provider that write ntuple pages into a ROOT TFile
 */
 // clang-format on
 class RPageSinkRoot : public RPageSink {
@@ -168,7 +168,7 @@ public:
 /**
 \class ROOT::Experimental::Detail::RPageSourceRoot
 \ingroup NTuple
-\brief Storage provider that reads Forest pages from a ROOT TFile
+\brief Storage provider that reads ntuple pages from a ROOT TFile
 */
 // clang-format on
 class RPageSourceRoot : public RPageSource {
