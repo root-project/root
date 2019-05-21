@@ -11,50 +11,55 @@
 /**
   \defgroup tree Tree Library
 
-  To store large quantities of same-class objects, ROOT provides the TTree and
-  TNtuple classes. The TTree class is optimized to
-  reduce disk space and enhance access speed. A TNtuple is a TTree that is limited
-  to only hold floating-point numbers; a TTree on the other hand can hold all kind
-  of data, such as objects or arrays in addition to all the simple types.
+  In order to store columnar datasets, ROOT provides the TTree, TChain,
+  TNtuple and TNtupleD classes.
+  The TTree class represents a columnar dataset. Any C++ type can be stored in the
+  columns. The TTree has allowed to store about **1 EB** of data coming from the LHC alone:
+  it is demonstrated to scale and it's battle tested. It has been optimized during the years
+  to reduce dataset sizes on disk and to deliver excellent runtime performance.
+  It allows to access only part of the columns of the datasets, too.
+  The TNtuple and TNtupleD classes are specialisations of the TTree class which can
+  only hold single precision and double precision floating-point numbers respectively;
+  The TChain is a collection of TTrees, which can be located also in different files.
 
 */
 
 /** \class TTree
 \ingroup tree
 
-A TTree object has a header with a name and a title.
+A TTree represents a columnar dataset. Any C++ type can be stored in its columns.
 
-It consists of a list of independent branches (TBranch). Each branch has its own
-definition and list of buffers. Branch buffers may be automatically written to
-disk or kept in memory until the Tree attribute `fMaxVirtualSize` is reached.
+A TTree, often called in jargon *tree*, consists of a list of independent columns or *branches*,
+represented by the TBranch class.
+Behind each branch, buffers are allocated automatically by ROOT.
+Such buffers are automatically written to disk or kept in memory until the size stored in the
+attribute fMaxVirtualSize is reached.
 Variables of one branch are written to the same buffer. A branch buffer is
 automatically compressed if the file compression attribute is set (default).
-
 Branches may be written to different files (see TBranch::SetFile).
 
 The ROOT user can decide to make one single branch and serialize one object into
-one single I/O buffer or to make several branches. Making one single branch and
-one single buffer can be the right choice when one wants to process only a subset
-of all entries in the tree. (you know for example the list of entry numbers you
-want to process). Making several branches is particularly interesting in the
-data analysis phase, when one wants to histogram some attributes of an object
-(entry) without reading all the attributes.
+one single I/O buffer or to make several branches.
+Making several branches is particularly interesting in the data analysis phase,
+when it is desirable to have a high reading rate and not all columns are equally interesting
+
+## How to create a TTree, define its branches and fill it:
 ~~~ {.cpp}
-    TTree *tree = new TTree(name, title)
+    TTree tree(name, title)
 ~~~
 Creates a Tree with name and title.
 
 Various kinds of branches can be added to a tree:
+- Variables representing fundamental types, simple classes/structures or list of variables: for example for C or Fortran
+structures.
+- Any C++ object or collection, provided by the STL or ROOT.
 
-- simple structures or list of variables. (may be for C or Fortran structures)
-- any object (inheriting from TObject). (we expect this option be the most frequent)
-- a ClonesArray. (a specialized object for collections of same class objects)
+In the following, the details about the creation of different types of branches are given.
 
-
-## Case A
+### Case A
 
 ~~~ {.cpp}
-    TBranch *branch = tree->Branch(branchname, address, leaflist, bufsize)
+    auto branch = tree.Branch(branchname, address, leaflist, bufsize)
 ~~~
 - address is the address of the first item of a structure
 - leaflist is the concatenation of all the variable names and types
@@ -94,11 +99,11 @@ Various kinds of branches can be added to a tree:
   the type character. See `TStreamerElement::GetRange()` for further information.
 
 
-## Case B
+### Case B
 
 ~~~ {.cpp}
-    TBranch *branch = tree->Branch(branchname, &p_object, bufsize, splitlevel)
-    TBranch *branch = tree->Branch(branchname, className, &p_object, bufsize, splitlevel)
+    auto branch = tree.Branch(branchname, &p_object, bufsize, splitlevel)
+    auto branch = tree.Branch(branchname, className, &p_object, bufsize, splitlevel)
 ~~~
 - p_object is a pointer to an object.
 - If className is not specified, Branch uses the type of p_object to determine the
@@ -123,13 +128,13 @@ Note: The pointer whose address is passed to TTree::Branch must not
 Note: The pointer p_object must be initialized before calling TTree::Branch
 - Do either:
 ~~~ {.cpp}
-    MyDataClass* p_object = 0;
-    tree->Branch(branchname, &p_object);
+    MyDataClass* p_object = nullptr;
+    tree.Branch(branchname, &p_object);
 ~~~
 - Or:
 ~~~ {.cpp}
-    MyDataClass* p_object = new MyDataClass;
-    tree->Branch(branchname, &p_object);
+    auto p_object = new MyDataClass;
+    tree.Branch(branchname, &p_object);
 ~~~
 Whether the pointer is set to zero or not, the ownership of the object
 is not taken over by the TTree.  I.e. even though an object will be allocated
@@ -137,11 +142,11 @@ by TTree::Branch if the pointer p_object is zero, the object will <b>not</b>
 be deleted when the TTree is deleted.
 
 
-## Case C
+### Case C
 
 ~~~ {.cpp}
     MyClass object;
-    TBranch *branch = tree->Branch(branchname, &object, bufsize, splitlevel)
+    auto branch = tree.Branch(branchname, &object, bufsize, splitlevel)
 ~~~
 Note: The 2nd parameter must be the address of a valid object.
       The object must not be destroyed (i.e. be deleted) until the TTree
@@ -158,11 +163,11 @@ Note: The 2nd parameter must be the address of a valid object.
   it is processed as a TObject*, only one branch.
 
 
-## Case D
+### Case D
 
 ~~~ {.cpp}
-    TBranch *branch = tree->Branch(branchname,clonesarray, bufsize, splitlevel)
-    clonesarray is the address of a pointer to a TClonesArray.
+    // clonesarray is the address of a pointer to a TClonesArray.
+    auto branch = tree.Branch(branchname,clonesarray, bufsize, splitlevel)
 ~~~
 The TClonesArray is a direct access list of objects of the same class.
 For example, if the TClonesArray is an array of TTrack objects,
@@ -170,10 +175,10 @@ this function will create one subbranch for each data member of
 the object TTrack.
 
 
-## Case E
+### Case E
 
 ~~~ {.cpp}
-    TBranch *branch = tree->Branch( branchname, STLcollection, buffsize, splitlevel);
+    auto branch = tree.Branch( branchname, STLcollection, buffsize, splitlevel);
 ~~~
 STLcollection is the address of a pointer to std::vector, std::list,
 std::deque, std::set or std::multiset containing pointers to objects.
@@ -183,18 +188,20 @@ any types deriving from TTrack this function will sort the objects
 based on their type and store them in separate branches in split
 mode.
 ~~~ {.cpp}
-    branch->SetAddress(Void *address)
+    branch->SetAddress(void *address)
 ~~~
 In case of dynamic structures changing with each entry for example, one must
 redefine the branch address before filling the branch again.
 This is done via the TBranch::SetAddress member function.
-~~~ {.cpp}
-    tree->Fill()
-~~~
-loops on all defined branches and for each branch invokes the Fill function.
 
-See also the class TNtuple (a simple Tree with branches of floats)
-and the class TNtupleD (a simple Tree with branches of doubles)
+### Fill the Tree:
+
+A TTree instance is filled with the invocation of the TTree::Fill method:
+~~~ {.cpp}
+    tree.Fill()
+~~~
+Upon its invocation, a loop on all defined branches takes place that for each branch invokes
+the TBranch::Fill method.
 
 ## Adding a Branch to an Existing Tree
 
@@ -211,26 +218,24 @@ are saved.
         TFile f("tree3.root", "update");
 
         Float_t new_v;
-        TTree *t3 = (TTree*)f->Get("t3");
-        TBranch *newBranch = t3->Branch("new_v", &new_v, "new_v/F");
+        auto t3 = f->Get<TTree>("t3");
+        auto newBranch = t3->Branch("new_v", &new_v, "new_v/F");
 
         Long64_t nentries = t3->GetEntries(); // read the number of entries in the t3
 
         for (Long64_t i = 0; i < nentries; i++) {
-            new_v= gRandom->Gaus(0, 1);
+            new_v = gRandom->Gaus(0, 1);
             newBranch->Fill();
         }
 
         t3->Write("", TObject::kOverwrite); // save only the new version of the tree
     }
 ~~~
-Adding a branch is often not possible because the tree is in a read-only
-file and you do not have permission to save the modified tree with the
-new branch. Even if you do have the permission, you risk losing the
-original tree with an unsuccessful attempt to save  the modification.
-
-For these reasons, ROOT offers the concept of friends for trees (and chains).
-We encourage you to use TTree::AddFriend rather than adding a branch manually.
+It is not always possible to add branches to existing datasets stored in TFiles: for example,
+these files might not be writeable, just readable. In addition, modifying in place a TTree
+causes a new TTree instance to be written and the previous one to be deleted.
+For this reasons, ROOT offers the concept of friends for TTree and TChain:
+if is good practice to rely on friend trees rather than adding a branchs manually.
 
 Begin_Macro
 ../../../tutorials/tree/tree.C
