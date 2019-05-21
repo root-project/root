@@ -88,7 +88,7 @@ std::string ROOT::Experimental::RNTupleReader::GetInfo(const ENTupleInfo what) {
 
    switch (what) {
    case ENTupleInfo::kSummary:
-      os << "****************************** FOREST ******************************"  << std::endl
+      os << "****************************** NTUPLE *******************************"  << std::endl
          << "* Name:    " << name << std::setw(57 - name.length())           << "*" << std::endl
          << "* Entries: " << std::setw(10) << fNEntries << std::setw(47)     << "*" << std::endl
          << "********************************************************************"  << std::endl;

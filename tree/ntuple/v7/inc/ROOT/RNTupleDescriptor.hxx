@@ -146,7 +146,7 @@ private:
 public:
    const RNTupleDescriptor& GetDescriptor() const { return fDescriptor; }
 
-   void SetForest(std::string_view name, const RNTupleVersion &version);
+   void SetNTuple(std::string_view name, const RNTupleVersion &version);
 
    void AddField(DescriptorId_t fieldId, const RNTupleVersion &fieldVersion, const RNTupleVersion &typeVersion,
                  std::string_view fieldName, std::string_view typeName, ENTupleStructure structure);

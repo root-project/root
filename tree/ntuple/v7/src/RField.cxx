@@ -495,10 +495,10 @@ void ROOT::Experimental::RFieldVector::CommitCluster()
 
 ROOT::Experimental::RFieldCollection::RFieldCollection(
    std::string_view name,
-   std::shared_ptr<RCollectionNTuple> collectionForest,
+   std::shared_ptr<RCollectionNTuple> collectionNTuple,
    std::unique_ptr<RNTupleModel> collectionModel)
    : RFieldBase(name, ":Collection:", ENTupleStructure::kCollection, true /* isSimple */)
-   , fCollectionForest(collectionForest)
+   , fCollectionNTuple(collectionNTuple)
 {
    std::string namePrefix(name);
    namePrefix.push_back(kCollectionSeparator);
@@ -525,7 +525,7 @@ ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RFieldCollection::Cl
 {
    // TODO(jblomer)
    return nullptr;
-   //auto result = new RFieldCollection(newName, fCollectionForest, RNTupleModel::Create());
+   //auto result = new RFieldCollection(newName, fCollectionNTuple, RNTupleModel::Create());
    //for (auto& f : fSubFields) {
    //   // switch the name prefix for the new parent name
    //   std::string cloneName = std::string(newName) + f->GetName().substr(GetName().length());
@@ -536,6 +536,6 @@ ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RFieldCollection::Cl
 }
 
 void ROOT::Experimental::RFieldCollection::CommitCluster() {
-   *fCollectionForest->GetOffsetPtr() = 0;
+   *fCollectionNTuple->GetOffsetPtr() = 0;
 }
 

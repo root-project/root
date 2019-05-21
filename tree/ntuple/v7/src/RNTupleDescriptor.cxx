@@ -17,7 +17,7 @@
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RStringView.hxx>
 
-void ROOT::Experimental::RNTupleDescriptorBuilder::SetForest(std::string_view name, const RNTupleVersion &version) {
+void ROOT::Experimental::RNTupleDescriptorBuilder::SetNTuple(std::string_view name, const RNTupleVersion &version) {
    fDescriptor.fName = std::string(name);
    fDescriptor.fVersion = version;
 }
