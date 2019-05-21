@@ -116,9 +116,9 @@ public:
 
 
    static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<RNTupleModel> model,
-                                             std::string_view forestName,
+                                             std::string_view ntupleName,
                                              std::string_view storage);
-   static std::unique_ptr<RNTupleReader> Open(std::string_view forestName, std::string_view storage);
+   static std::unique_ptr<RNTupleReader> Open(std::string_view ntupleName, std::string_view storage);
 
    /// The user imposes an ntuple model, which must be compatible with the model found in the data on storage
    RNTupleReader(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSource> source);
@@ -176,7 +176,7 @@ private:
 
 public:
    static std::unique_ptr<RNTupleWriter> Recreate(std::unique_ptr<RNTupleModel> model,
-                                                  std::string_view forestName,
+                                                  std::string_view ntupleName,
                                                   std::string_view storage);
    RNTupleWriter(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSink> sink);
    RNTupleWriter(const RNTupleWriter&) = delete;

@@ -1,9 +1,9 @@
 /// \file
-/// \ingroup tutorial_forest
+/// \ingroup tutorial_ntuple
 /// \notebook
 /// Write and read tabular data with RForest.  Adapted from the cernbuild and cernstaff tree tutorials.
-/// Illustrates the type-safe forest model interface, which is used to define a data model that is in a second step
-/// taken by an input or an output forest.
+/// Illustrates the type-safe ntuple model interface, which is used to define a data model that is in a second step
+/// taken by an ntuple reader or writer.
 ///
 /// \macro_image
 /// \macro_code
@@ -52,7 +52,7 @@ void Ingest() {
    auto model = RNTupleModel::Create();
 
    // To define the data model, we create fields with a given C++ type and name.  Fields are roughly TTree branches.
-   // MakeField returns a shared pointer to a memory location that we can populate to fill the forest with data
+   // MakeField returns a shared pointer to a memory location that we can populate to fill the ntuple with data
    auto fldCategory = model->MakeField<int>("Category");
    auto fldFlag     = model->MakeField<unsigned int>("Flag");
    auto fldAge      = model->MakeField<int>("Age");
@@ -65,43 +65,43 @@ void Ingest() {
    auto fldDivision = model->MakeField<std::string>("Division");
    auto fldNation   = model->MakeField<std::string>("Nation");
 
-   // We hand-over the data model to a newly created forest of name "Staff", stored in kForestFileName
-   // In return, we get a unique pointer to a forest that we can fill
-   auto forest = RNTupleWriter::Recreate(std::move(model), "Staff", kForestFileName);
+   // We hand-over the data model to a newly created ntuple of name "Staff", stored in kForestFileName
+   // In return, we get a unique pointer to an ntuple that we can fill
+   auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff", kForestFileName);
 
    std::string record;
    while (std::getline(fin, record)) {
       std::istringstream iss(record);
       iss >> *fldCategory >> *fldFlag >> *fldAge >> *fldService >> *fldChildren >> *fldGrade >> *fldStep >> *fldHrweek
           >> *fldCost >> *fldDivision >> *fldNation;
-      forest->Fill();
+      ntuple->Fill();
    }
 
-   // The forest unique pointer goes out of scope here.  On destruction, the forest flushes unwritten data to disk
+   // The ntuple unique pointer goes out of scope here.  On destruction, the ntuple flushes unwritten data to disk
    // and closes the attached ROOT file.
 }
 
 void Analyze() {
-   // Get a unique pointer to an empty RForest model
+   // Get a unique pointer to an empty RNTuple model
    auto model = RNTupleModel::Create();
 
    // We only define the fields that are needed for reading
    std::shared_ptr<int> fldAge = model->MakeField<int>("Age");
 
-   // Create a forest and attach the read model to it
-   auto forest = RNTupleReader::Open(std::move(model), "Staff", kForestFileName);
+   // Create an ntuple and attach the read model to it
+   auto ntuple = RNTupleReader::Open(std::move(model), "Staff", kForestFileName);
 
-   // Quick overview of the forest's key meta-data
-   std::cout << forest->GetInfo();
-   // In a future version of RForest, there will be support for forest->Show() and forest->Scan()
+   // Quick overview of the ntuple's key meta-data
+   std::cout << ntuple->GetInfo();
+   // In a future version of RForest, there will be support for ntuple->Show() and ntuple->Scan()
 
    TCanvas *c = new TCanvas("c", "", 200, 10, 700, 500);
    TH1I *h = new TH1I("h", "Age Distribution CERN, 1988", 100, 0, 100);
    h->SetFillColor(48);
 
-   for (auto entryId : *forest) {
+   for (auto entryId : *ntuple) {
       // Populate fldAge
-      forest->LoadEntry(entryId);
+      ntuple->LoadEntry(entryId);
       h->Fill(*fldAge);
    }
 

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_forest
+/// \ingroup tutorial_ntuple
 /// \notebook
 /// Convert LHCb run 1 open data from a TTree to RForest.
 /// This tutorial illustrates data conversion for a simple, tabular data model.
@@ -60,30 +60,30 @@ void Convert() {
       // We assume every branch has a single leaf
       TLeaf *l = static_cast<TLeaf*>(b->GetListOfLeaves()->First());
 
-      // Create a forest field with the same name and type than the tree branch
+      // Create an ntuple field with the same name and type than the tree branch
       auto field = RFieldBase::Create(l->GetName(), l->GetTypeName());
       std::cout << "Convert leaf " << l->GetName() << " [" << l->GetTypeName() << "]"
                 << " --> " << "field " << field->GetName() << " [" << field->GetType() << "]" << std::endl;
 
-      // Hand over ownership of the field to the forest model.  This will also create a memory location attached
+      // Hand over ownership of the field to the ntuple model.  This will also create a memory location attached
       // to the model's default entry, that will be used to place the data supposed to be written
       model->AddField(std::unique_ptr<RFieldBase>(field));
 
       // We connect the model's default entry's memory location for the new field to the branch, so that we can
-      // fill the forest with the data read from the TTree
+      // fill the ntuple with the data read from the TTree
       void *fieldDataPtr = model->GetDefaultEntry()->GetValue(l->GetName()).GetRawPtr();
       TBranch *branchRead = nullptr;
       tree->SetBranchAddress(b->GetName(), fieldDataPtr);
       branches.push_back(branchRead);
    }
 
-   // The new forest takes ownership of the model
-   auto forest = RNTupleWriter::Recreate(std::move(model), "DecayTree", kForestFileName);
+   // The new ntuple takes ownership of the model
+   auto ntuple = RNTupleWriter::Recreate(std::move(model), "DecayTree", kForestFileName);
 
    auto nEntries = tree->GetEntries();
    for (decltype(nEntries) i = 0; i < nEntries; ++i) {
       tree->GetEntry(i);
-      forest->Fill();
+      ntuple->Fill();
 
       if (i && i % 100000 == 0)
          std::cout << "Wrote " << i << " entries" << std::endl;
@@ -98,18 +98,18 @@ void ntpl003_lhcbOpenData()
 
    // Create histogram of the flight distance
 
-   // We open the forest without specifiying an explicit model first, but instead use a view on the field we are
+   // We open the ntuple without specifiying an explicit model first, but instead use a view on the field we are
    // interested in
-   auto forest = RNTupleReader::Open("DecayTree", kForestFileName);
+   auto ntuple = RNTupleReader::Open("DecayTree", kForestFileName);
 
-   // The view wraps a read-only double value and accesses directly the forest's data buffers
-   auto viewFlightDistance = forest->GetView<double>("B_FlightDistance");
+   // The view wraps a read-only double value and accesses directly the ntuple's data buffers
+   auto viewFlightDistance = ntuple->GetView<double>("B_FlightDistance");
 
    TCanvas *c = new TCanvas("c", "B Flight Distance", 200, 10, 700, 500);
    TH1F *h = new TH1F("h", "B Flight Distance", 200, 0, 140);
    h->SetFillColor(48);
 
-   for (auto i : forest->GetViewRange()) {
+   for (auto i : ntuple->GetViewRange()) {
       // Note that we do not load an entry in this loop, i.e. we avoid the memory copy of loading the data into
       // the memory location given by the entry
       h->Fill(viewFlightDistance(i));

@@ -67,19 +67,19 @@ ROOT::Experimental::RNTupleReader::~RNTupleReader()
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleReader::Open(
    std::unique_ptr<RNTupleModel> model,
-   std::string_view forestName,
+   std::string_view ntupleName,
    std::string_view storage)
 {
    // TODO(jblomer): heuristics based on storage
    return std::make_unique<RNTupleReader>(
-      std::move(model), std::make_unique<Detail::RPageSourceRoot>(forestName, storage));
+      std::move(model), std::make_unique<Detail::RPageSourceRoot>(ntupleName, storage));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleReader::Open(
-   std::string_view forestName,
+   std::string_view ntupleName,
    std::string_view storage)
 {
-   return std::make_unique<RNTupleReader>(std::make_unique<Detail::RPageSourceRoot>(forestName, storage));
+   return std::make_unique<RNTupleReader>(std::make_unique<Detail::RPageSourceRoot>(ntupleName, storage));
 }
 
 std::string ROOT::Experimental::RNTupleReader::GetInfo(const ENTupleInfo what) {
@@ -123,7 +123,7 @@ ROOT::Experimental::RNTupleWriter::~RNTupleWriter()
 
 std::unique_ptr<ROOT::Experimental::RNTupleWriter> ROOT::Experimental::RNTupleWriter::Recreate(
    std::unique_ptr<RNTupleModel> model,
-   std::string_view forestName,
+   std::string_view ntupleName,
    std::string_view storage)
 {
    // TODO(jblomer): heuristics based on storage
@@ -132,7 +132,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleWriter> ROOT::Experimental::RNTupleWr
    settings.fFile = file;
    settings.fTakeOwnership = true;
    return std::make_unique<RNTupleWriter>(
-      std::move(model), std::make_unique<Detail::RPageSinkRoot>(forestName, settings));
+      std::move(model), std::make_unique<Detail::RPageSinkRoot>(ntupleName, settings));
 }
 
 
