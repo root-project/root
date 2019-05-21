@@ -14,24 +14,23 @@
 Hypothesis Test Calculator based on the asymptotic formulae for the profile
 likelihood ratio.
 
-It performs hypothesis tests using the asymptotic formula for the profile likelihood and
-the "Asimov" data set.
+It performs hypothesis tests using the asymptotic formula for the profile likelihood, and
+uses the Asimov data set to compute expected significances or limits.
 
 See G. Cowan, K. Cranmer, E. Gross and O. Vitells: Asymptotic formulae for
 likelihood- based tests of new physics. Eur. Phys. J., C71:1–19, 2011.
-It provides methods to perform a hypothesis test using the likelihood function,
-and computes the \f$ p \f$-values for the null and the alternate hypothesis using the asymptotic
+It provides methods to perform hypothesis tests using the likelihood function,
+and computes the \f$p\f$-values for the null and the alternate hypothesis using the asymptotic
 formulae for the profile likelihood ratio described in the given paper.
 
-The calculator provides methods to produce the Asimov dataset, i.e, a dataset
+The calculator provides methods to produce the Asimov dataset, *i.e.* a dataset
 generated where the observed values are equal to the expected ones.
-The Asimov data set is then used to compute the observed asymptotic \f$ p \f$-value for
-the alternate hypothesis and the asymptotic expected \f$ p \f$-value.
+The Asimov data set is then used to compute the observed asymptotic \f$p\f$-value for
+the alternate hypothesis and the asymptotic expected \f$p\f$-values.
 
 The asymptotic formulae are valid only for one POI (parameter of interest). So
 the calculator works only for one-dimensional (one POI) models.
-
-If more than one POI exists, only the first one is used for calculations.
+If more than one POI exists, only the first one is used.
 
 The calculator can generate Asimov datasets from two kinds of PDFs:
 - "Counting" distributions: RooPoisson, RooGaussian, or products of RooPoissons.
