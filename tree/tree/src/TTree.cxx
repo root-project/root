@@ -29,7 +29,7 @@
 
 A TTree represents a columnar dataset. Any C++ type can be stored in its columns.
 
-A TTree, often called in jeargon *tree*, consists of a list of independent columns or *branches*,
+A TTree, often called in jargon *tree*, consists of a list of independent columns or *branches*,
 represented by the TBranch class.
 Behind each branch, buffers are allocated automatically by ROOT.
 Such buffers are automatically written to disk or kept in memory until the size stored in the
