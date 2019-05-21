@@ -48,7 +48,7 @@ struct RColumnHeader {
    std::string fOffsetColumn;
 };
 
-struct RForestHeader {
+struct RNTupleHeader {
    std::int32_t fVersion = 0;
    std::string fModelUuid;
    std::int32_t fPageSize = 0;
@@ -56,7 +56,7 @@ struct RForestHeader {
    std::vector<RColumnHeader> fColumns;
 };
 
-struct RForestFooter {
+struct RNTupleFooter {
    std::int32_t fVersion = 0;
    std::int32_t fNClusters = 0;
    NTupleSize_t fNEntries = 0;
@@ -145,8 +145,8 @@ private:
    RSettings fSettings;
    /// Updated on CommitPage and written and reset on CommitCluster
    ROOT::Experimental::Internal::RClusterFooter fCurrentCluster;
-   ROOT::Experimental::Internal::RForestHeader fNTupleHeader;
-   ROOT::Experimental::Internal::RForestFooter fNTupleFooter;
+   ROOT::Experimental::Internal::RNTupleHeader fNTupleHeader;
+   ROOT::Experimental::Internal::RNTupleFooter fNTupleFooter;
 
    RMapper fMapper;
    NTupleSize_t fPrevClusterNEntries;
