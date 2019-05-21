@@ -507,7 +507,7 @@ public:
 // 4. The column is an RVec, the collection is a vector
 
 template <typename V, typename COLL>
-void FillColl(V& v, COLL& c) {
+void FillColl(V&& v, COLL& c) {
    c.emplace_back(v);
 }
 
