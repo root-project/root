@@ -1,8 +1,8 @@
 /// \file
 /// \ingroup tutorial_ntuple
 /// \notebook
-/// Convert CMS open data from a TTree to RForest.
-/// This tutorial illustrates data conversion and data processing with RForest and RDataFrame.  In contrast to the
+/// Convert CMS open data from a TTree to RNTuple.
+/// This tutorial illustrates data conversion and data processing with RNTuple and RDataFrame.  In contrast to the
 /// LHCb open data tutorial, the data model in this tutorial is not tabular but entries have variable lengths vectors
 /// Based on RDataFrame's df102_NanoAODDimuonAnalysis.C
 ///
@@ -12,7 +12,7 @@
 /// \date April 2019
 /// \author The ROOT Team
 
-// NOTE: The RForest classes are experimental at this point.
+// NOTE: The RNTuple classes are experimental at this point.
 // Functionality, interface, and data format is still subject to changes.
 // Do not use for real data!
 
@@ -50,7 +50,7 @@ using ColNames_t = std::vector<std::string>;
 // This action writes data from an RDataFrame entry into an ntuple. It is templated on the
 // types of the columns to be written and can be used as a generic file format converter.
 template <typename... ColumnTypes_t>
-class RForestHelper : public ROOT::Detail::RDF::RActionImpl<RForestHelper<ColumnTypes_t...>> {
+class RNTupleHelper : public ROOT::Detail::RDF::RActionImpl<RNTupleHelper<ColumnTypes_t...>> {
 public:
    using Result_t = RNTupleWriter;
 private:
@@ -81,14 +81,14 @@ private:
    }
 
 public:
-   RForestHelper(std::string_view ntupleName, std::string_view rootFile, const ColNames_t& colNames)
+   RNTupleHelper(std::string_view ntupleName, std::string_view rootFile, const ColNames_t& colNames)
       : fNTupleName(ntupleName), fRootFile(rootFile), fColNames(colNames)
    {
       InitializeImpl(std::make_index_sequence<fNColumns>());
    }
 
-   RForestHelper(RForestHelper&&) = default;
-   RForestHelper(const RForestHelper&) = delete;
+   RNTupleHelper(RNTupleHelper&&) = default;
+   RNTupleHelper(const RNTupleHelper&) = delete;
    std::shared_ptr<RNTupleWriter> GetResultPtr() const { return fNTuple; }
 
    void Initialize()
@@ -113,7 +113,7 @@ public:
       fNTuple->CommitCluster();
    }
 
-   std::string GetActionName() { return "RForest Writer"; }
+   std::string GetActionName() { return "RNTuple Writer"; }
 };
 
 
@@ -132,7 +132,7 @@ T InvariantMassStdVector(
    return InvariantMass(rvPt, rvEta, rvPhi, rvMass);
 }
 
-// We use an RDataFrame custom snapshotter to convert between TTree and RForest.
+// We use an RDataFrame custom snapshotter to convert between TTree and RNTuple.
 // The snapshotter is templated; we construct the conversion C++ code as a string and hand it over to Cling
 void Convert() {
    // Use df to list the branch types and names of the input tree
@@ -144,7 +144,7 @@ void Convert() {
    auto columnNames = df.GetColumnNames();
    for (auto name : columnNames) {
       auto typeName = df.GetColumnType(name);
-      // Skip ULong64_t for the time being, RForest support will be added at a later point
+      // Skip ULong64_t for the time being, RNTuple support will be added at a later point
       if (typeName == "ULong64_t") continue;
       columnList += "\"" + name + "\",";
       typeList += typeName + ",";
@@ -157,7 +157,7 @@ void Convert() {
    code += "auto df = std::make_unique<ROOT::RDataFrame>(\"Events\", \"" + std::string(kTreeFileName)
          + "\")->Range(0, 4000000);";
    code += "ColNames_t colNames = " + columnList + ";";
-   code += "RForestHelper" + typeList + " helper{\"Events\", \"" + std::string(kNTupleFileName) + "\", colNames};";
+   code += "RNTupleHelper" + typeList + " helper{\"Events\", \"" + std::string(kNTupleFileName) + "\", colNames};";
    code += "*df.Book" + typeList + "(std::move(helper), colNames);";
    code += "}";
 
