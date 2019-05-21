@@ -1201,10 +1201,15 @@ TGLColor::TGLColor(Color_t color_index, Char_t transparency)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor.
+/// copy constructor
 
-TGLColor::~TGLColor()
+TGLColor::TGLColor(const TGLColor& c)
 {
+   fRGBA[0] = c.fRGBA[0];
+   fRGBA[1] = c.fRGBA[1];
+   fRGBA[2] = c.fRGBA[2];
+   fRGBA[3] = c.fRGBA[3];
+   fIndex   = c.fIndex;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
