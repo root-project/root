@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_ntuple
 /// \notebook
-/// Write and read tabular data with RForest.  Adapted from the cernbuild and cernstaff tree tutorials.
+/// Write and read tabular data with RNTuple.  Adapted from the cernbuild and cernstaff tree tutorials.
 /// Illustrates the type-safe ntuple model interface, which is used to define a data model that is in a second step
 /// taken by an ntuple reader or writer.
 ///
@@ -11,11 +11,11 @@
 /// \date April 2019
 /// \author The ROOT Team
 
-// NOTE: The RForest classes are experimental at this point.
+// NOTE: The RNTuple classes are experimental at this point.
 // Functionality, interface, and data format is still subject to changes.
 // Do not use for real data!
 
-// The following line should disappear in a future version of RForest, when
+// The following line should disappear in a future version of RNTuple, when
 // the common template specializations of RField are part of the LinkDef.h
 R__LOAD_LIBRARY(ROOTNTuple)
 
@@ -93,7 +93,7 @@ void Analyze() {
 
    // Quick overview of the ntuple's key meta-data
    std::cout << ntuple->GetInfo();
-   // In a future version of RForest, there will be support for ntuple->Show() and ntuple->Scan()
+   // In a future version of RNTuple, there will be support for ntuple->Show() and ntuple->Scan()
 
    TCanvas *c = new TCanvas("c", "", 200, 10, 700, 500);
    TH1I *h = new TH1I("h", "Age Distribution CERN, 1988", 100, 0, 100);
