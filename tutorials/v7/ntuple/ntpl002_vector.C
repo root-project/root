@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_forest
+/// \ingroup tutorial_ntuple
 /// \notebook
 /// Write and read STL vectors with RForest.  Adapted from the hvector tree tutorial.
 ///
@@ -32,7 +32,7 @@ using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 
-// Where to store the forest of this example
+// Where to store the ntuple of this example
 constexpr char const* kForestFileName = "ntpl002_vector.root";
 
 // Update the histogram GUI every so many fills
@@ -54,9 +54,9 @@ void Write()
    auto fldVpz   = model->MakeField<std::vector<float>>("vpz");
    auto fldVrand = model->MakeField<std::vector<float>>("vrand");
 
-   // We hand-over the data model to a newly created forest of name "F", stored in kForestFileName
-   // In return, we get a unique pointer to a forest that we can fill
-   auto forest = RNTupleWriter::Recreate(std::move(model), "F", kForestFileName);
+   // We hand-over the data model to a newly created ntuple of name "F", stored in kForestFileName
+   // In return, we get a unique pointer to an ntuple that we can fill
+   auto ntuple = RNTupleWriter::Recreate(std::move(model), "F", kForestFileName);
 
    TH1F *hpx = new TH1F("hpx", "This is the px distribution", 100, -4, 4);
    hpx->SetFillColor(48);
@@ -96,12 +96,12 @@ void Write()
             break;
       }
 
-      forest->Fill();
+      ntuple->Fill();
    }
 
    hpx->DrawCopy();
 
-   // The forest unique pointer goes out of scope here.  On destruction, the forest flushes unwritten data to disk
+   // The ntuple unique pointer goes out of scope here.  On destruction, the ntuple flushes unwritten data to disk
    // and closes the attached ROOT file.
 }
 
@@ -115,21 +115,21 @@ void Read()
    // We only define the fields that are needed for reading
    auto fldVpx = model->MakeField<std::vector<float>>("vpx");
 
-   // Create a forest without imposing a specific data model.  We could generate the data model from the forest
+   // Create an ntuple without imposing a specific data model.  We could generate the data model from the ntuple
    // but here we prefer the view because we only want to access a single field
-   auto forest = RNTupleReader::Open(std::move(model), "F", kForestFileName);
+   auto ntuple = RNTupleReader::Open(std::move(model), "F", kForestFileName);
 
-   // Quick overview of the forest's key meta-data
-   std::cout << forest->GetInfo();
-   // In a future version of RForest, there will be support for forest->Show() and forest->Scan()
+   // Quick overview of the ntuple's key meta-data
+   std::cout << ntuple->GetInfo();
+   // In a future version of RForest, there will be support for ntuple->Show() and ntuple->Scan()
 
    TCanvas *c2 = new TCanvas("c2", "Dynamic Filling Example", 200, 10, 700, 500);
    TH1F *h = new TH1F("h", "This is the px distribution", 100, -4, 4);
    h->SetFillColor(48);
 
    // Iterate through all the events using i as event number and as an index for accessing the view
-   for (auto entryId : *forest) {
-      forest->LoadEntry(entryId);
+   for (auto entryId : *ntuple) {
+      ntuple->LoadEntry(entryId);
 
       for (unsigned int j = 0; j < fldVpx->size(); ++j) {
          h->Fill(fldVpx->at(j));

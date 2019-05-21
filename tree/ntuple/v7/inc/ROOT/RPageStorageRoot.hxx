@@ -139,21 +139,21 @@ public:
 private:
    static constexpr std::size_t kPageSize = 32000;
 
-   std::string fForestName;
-   /// Currently, a forest is stored as a directory in a TFile
+   std::string fNTupleName;
+   /// Currently, an ntuple is stored as a directory in a TFile
    TDirectory *fDirectory;
    RSettings fSettings;
    /// Updated on CommitPage and written and reset on CommitCluster
    ROOT::Experimental::Internal::RClusterFooter fCurrentCluster;
-   ROOT::Experimental::Internal::RForestHeader fForestHeader;
-   ROOT::Experimental::Internal::RForestFooter fForestFooter;
+   ROOT::Experimental::Internal::RForestHeader fNTupleHeader;
+   ROOT::Experimental::Internal::RForestFooter fNTupleFooter;
 
    RMapper fMapper;
    NTupleSize_t fPrevClusterNEntries;
 
 public:
-   RPageSinkRoot(std::string_view forestName, RSettings settings);
-   RPageSinkRoot(std::string_view forestName, std::string_view path);
+   RPageSinkRoot(std::string_view ntupleName, RSettings settings);
+   RPageSinkRoot(std::string_view ntupleName, std::string_view path);
    virtual ~RPageSinkRoot();
 
    ColumnHandle_t AddColumn(RColumn* column) final;
@@ -179,8 +179,8 @@ public:
    };
 
 private:
-   std::string fForestName;
-   /// Currently, a forest is stored as a directory in a TFile
+   std::string fNTupleName;
+   /// Currently, an ntuple is stored as a directory in a TFile
    TDirectory *fDirectory;
    RSettings fSettings;
 
@@ -188,8 +188,8 @@ private:
    RNTupleDescriptor fDescriptor;
 
 public:
-   RPageSourceRoot(std::string_view forestName, RSettings settings);
-   RPageSourceRoot(std::string_view forestName, std::string_view path);
+   RPageSourceRoot(std::string_view ntupleName, RSettings settings);
+   RPageSourceRoot(std::string_view ntupleName, std::string_view path);
    virtual ~RPageSourceRoot();
 
    ColumnHandle_t AddColumn(RColumn* column) final;

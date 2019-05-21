@@ -27,10 +27,10 @@
 namespace ROOT {
 namespace Experimental {
 
-RNTupleDS::RNTupleDS(std::unique_ptr<ROOT::Experimental::RNTupleReader> forest)
-  : fForest(std::move(forest)), fEntry(fForest->GetModel()->CreateEntry()), fNSlots(1), fHasSeenAllRanges(false)
+RNTupleDS::RNTupleDS(std::unique_ptr<ROOT::Experimental::RNTupleReader> ntuple)
+  : fNTuple(std::move(ntuple)), fEntry(fNTuple->GetModel()->CreateEntry()), fNSlots(1), fHasSeenAllRanges(false)
 {
-   auto rootField = fForest->GetModel()->GetRootField();
+   auto rootField = fNTuple->GetModel()->GetRootField();
    for (auto& f : *rootField) {
       if (f.GetParent() != rootField)
          continue;
@@ -67,7 +67,7 @@ RDF::RDataSource::Record_t RNTupleDS::GetColumnReadersImpl(std::string_view name
 }
 
 bool RNTupleDS::SetEntry(unsigned int /*slot*/, ULong64_t entryIndex) {
-   fForest->LoadEntry(entryIndex, fEntry.get());
+   fNTuple->LoadEntry(entryIndex, fEntry.get());
    return true;
 }
 
@@ -76,7 +76,7 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RNTupleDS::GetEntryRanges()
    std::vector<std::pair<ULong64_t, ULong64_t>> ranges;
    if (fHasSeenAllRanges) return ranges;
 
-   auto nEntries = fForest->GetNEntries();
+   auto nEntries = fNTuple->GetNEntries();
    const auto chunkSize = nEntries / fNSlots;
    const auto reminder = 1U == fNSlots ? 0 : nEntries % fNSlots;
    auto start = 0UL;
@@ -120,9 +120,9 @@ void RNTupleDS::SetNSlots(unsigned int nSlots)
 }
 
 
-RDataFrame MakeNTupleDataFrame(std::string_view forestName, std::string_view fileName) {
-   auto forest = RNTupleReader::Open(forestName, fileName);
-   ROOT::RDataFrame rdf(std::make_unique<RNTupleDS>(std::move(forest)));
+RDataFrame MakeNTupleDataFrame(std::string_view ntupleName, std::string_view fileName) {
+   auto ntuple = RNTupleReader::Open(ntupleName, fileName);
+   ROOT::RDataFrame rdf(std::make_unique<RNTupleDS>(std::move(ntuple)));
    return rdf;
 }
 
