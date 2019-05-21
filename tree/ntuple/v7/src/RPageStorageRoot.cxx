@@ -190,7 +190,7 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
 {
    fDirectory = fSettings.fFile->GetDirectory(fNTupleName.c_str());
    auto keyForestHeader = fDirectory->GetKey(RMapper::kKeyForestHeader);
-   auto ntupleHeader = keyForestHeader->ReadObject<ROOT::Experimental::Internal::RForestHeader>();
+   auto ntupleHeader = keyForestHeader->ReadObject<ROOT::Experimental::Internal::RNTupleHeader>();
    //printf("Number of fields %lu, of columns %lu\n", ntupleHeader->fFields.size(), ntupleHeader->fColumns.size());
 
    for (auto &fieldHeader : ntupleHeader->fFields) {
@@ -220,7 +220,7 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
    }
 
    auto keyForestFooter = fDirectory->GetKey(RMapper::kKeyForestFooter);
-   auto ntupleFooter = keyForestFooter->ReadObject<ROOT::Experimental::Internal::RForestFooter>();
+   auto ntupleFooter = keyForestFooter->ReadObject<ROOT::Experimental::Internal::RNTupleFooter>();
    //printf("Number of clusters: %d, entries %ld\n", ntupleFooter->fNClusters, ntupleFooter->fNEntries);
 
    for (std::int32_t iCluster = 0; iCluster < ntupleFooter->fNClusters; ++iCluster) {

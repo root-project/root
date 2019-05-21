@@ -17,7 +17,7 @@
 #pragma link C++ nestedtypedefs;
 #pragma link C++ nestedclasses;
 
-// Support for auto-loading in the RForest tutorials
+// Support for auto-loading in the RNTuple tutorials
 #pragma link C++ class ROOT::Experimental::Detail::RFieldBase-;
 #pragma link C++ class ROOT::Experimental::Detail::RFieldBase::RIterator-;
 #pragma link C++ class ROOT::Experimental::RFieldVector-;
@@ -25,8 +25,8 @@
 #pragma link C++ class ROOT::Experimental::RNTupleWriter-;
 #pragma link C++ class ROOT::Experimental::RNTupleModel-;
 
-#pragma link C++ class ROOT::Experimental::Internal::RForestHeader+;
-#pragma link C++ class ROOT::Experimental::Internal::RForestFooter+;
+#pragma link C++ class ROOT::Experimental::Internal::RNTupleHeader+;
+#pragma link C++ class ROOT::Experimental::Internal::RNTupleFooter+;
 #pragma link C++ class ROOT::Experimental::Internal::RFieldHeader+;
 #pragma link C++ class ROOT::Experimental::Internal::RColumnHeader+;
 #pragma link C++ class ROOT::Experimental::Internal::RClusterFooter+;
