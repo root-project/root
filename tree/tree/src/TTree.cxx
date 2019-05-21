@@ -18,7 +18,7 @@
   it is demonstrated to scale and it's battle tested. It has been optimized during the years
   to reduce dataset sizes on disk and to deliver excellent runtime performance.
   It allows to access only part of the columns of the datasets, too.
-  The TNtuple and TNtupleD classes are specialisations of the TTree class which can store
+  The TNtuple and TNtupleD classes are specialisations of the TTree class which can
   to only hold single precision and double precision floating-point numbers respectively;
   The TChain is a collection of TTrees, which can be located also in different files.
 
