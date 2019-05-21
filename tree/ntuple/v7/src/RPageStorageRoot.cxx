@@ -28,9 +28,9 @@
 #include <utility>
 
 
-ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view forestName, RSettings settings)
-   : ROOT::Experimental::Detail::RPageSink(forestName)
-   , fForestName(forestName)
+ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view ntupleName, RSettings settings)
+   : ROOT::Experimental::Detail::RPageSink(ntupleName)
+   , fNTupleName(ntupleName)
    , fDirectory(nullptr)
    , fSettings(settings)
    , fPrevClusterNEntries(0)
@@ -39,9 +39,9 @@ ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view forest
       "Do not store real data with this version of RNTuple!";
 }
 
-ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view forestName, std::string_view path)
-   : ROOT::Experimental::Detail::RPageSink(forestName)
-   , fForestName(forestName)
+ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view ntupleName, std::string_view path)
+   : ROOT::Experimental::Detail::RPageSink(ntupleName)
+   , fNTupleName(ntupleName)
    , fDirectory(nullptr)
 {
    R__WARNING_HERE("NTuple") << "The RNTuple file format will change. " <<
@@ -69,8 +69,8 @@ ROOT::Experimental::Detail::RPageSinkRoot::AddColumn(RColumn* column)
    if (column->GetOffsetColumn() != nullptr) {
       columnHeader.fOffsetColumn = column->GetOffsetColumn()->GetModel().GetName();
    }
-   auto columnId = fForestHeader.fColumns.size();
-   fForestHeader.fColumns.emplace_back(columnHeader);
+   auto columnId = fNTupleHeader.fColumns.size();
+   fNTupleHeader.fColumns.emplace_back(columnHeader);
    //printf("Added column %s type %d\n", columnHeader.fName.c_str(), (int)columnHeader.fType);
    return ColumnHandle_t(columnId, column);
 }
@@ -78,14 +78,14 @@ ROOT::Experimental::Detail::RPageSinkRoot::AddColumn(RColumn* column)
 
 void ROOT::Experimental::Detail::RPageSinkRoot::Create(RNTupleModel *model)
 {
-   fForestHeader.fPageSize = kPageSize;
-   fDirectory = fSettings.fFile->mkdir(fForestName.c_str());
+   fNTupleHeader.fPageSize = kPageSize;
+   fDirectory = fSettings.fFile->mkdir(fNTupleName.c_str());
 
    unsigned int nColumns = 0;
    for (auto& f : *model->GetRootField()) {
       nColumns += f.GetNColumns();
    }
-   fPagePool = std::make_unique<RPagePool>(fForestHeader.fPageSize, nColumns);
+   fPagePool = std::make_unique<RPagePool>(fNTupleHeader.fPageSize, nColumns);
 
    for (auto& f : *model->GetRootField()) {
       ROOT::Experimental::Internal::RFieldHeader fieldHeader;
@@ -93,15 +93,15 @@ void ROOT::Experimental::Detail::RPageSinkRoot::Create(RNTupleModel *model)
       fieldHeader.fType = f.GetType();
       //printf("Added field %s type [%s]\n", f.GetName().c_str(), f.GetType().c_str());
       if (f.GetParent()) fieldHeader.fParentName = f.GetParent()->GetName();
-      fForestHeader.fFields.emplace_back(fieldHeader);
+      fNTupleHeader.fFields.emplace_back(fieldHeader);
 
       f.ConnectColumns(this); // issues in turn one or several calls to AddColumn()
    }
-   R__ASSERT(nColumns == fForestHeader.fColumns.size());
+   R__ASSERT(nColumns == fNTupleHeader.fColumns.size());
 
    fCurrentCluster.fPagesPerColumn.resize(nColumns);
-   fForestFooter.fNElementsPerColumn.resize(nColumns, 0);
-   fDirectory->WriteObject(&fForestHeader, RMapper::kKeyForestHeader);
+   fNTupleFooter.fNElementsPerColumn.resize(nColumns, 0);
+   fDirectory->WriteObject(&fNTupleHeader, RMapper::kKeyForestHeader);
 }
 
 void ROOT::Experimental::Detail::RPageSinkRoot::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
@@ -111,51 +111,51 @@ void ROOT::Experimental::Detail::RPageSinkRoot::CommitPage(ColumnHandle_t column
    pagePayload.fSize = page.GetSize();
    pagePayload.fContent = static_cast<unsigned char *>(page.GetBuffer());
    std::string key = std::string(RMapper::kKeyPagePayload) +
-      std::to_string(fForestFooter.fNClusters) + RMapper::kKeySeparator +
+      std::to_string(fNTupleFooter.fNClusters) + RMapper::kKeySeparator +
       std::to_string(columnId) + RMapper::kKeySeparator +
       std::to_string(fCurrentCluster.fPagesPerColumn[columnId].fRangeStarts.size());
    fDirectory->WriteObject(&pagePayload, key.c_str());
    fCurrentCluster.fPagesPerColumn[columnId].fRangeStarts.push_back(page.GetRangeFirst());
-   fForestFooter.fNElementsPerColumn[columnId] += page.GetNElements();
+   fNTupleFooter.fNElementsPerColumn[columnId] += page.GetNElements();
 }
 
 void ROOT::Experimental::Detail::RPageSinkRoot::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
 {
    fCurrentCluster.fNEntries = nEntries - fPrevClusterNEntries;
    fPrevClusterNEntries = nEntries;
-   std::string key = RMapper::kKeyClusterFooter + std::to_string(fForestFooter.fNClusters);
+   std::string key = RMapper::kKeyClusterFooter + std::to_string(fNTupleFooter.fNClusters);
    fDirectory->WriteObject(&fCurrentCluster, key.c_str());
-   fForestFooter.fNClusters++;
-   fForestFooter.fNEntries = nEntries;
+   fNTupleFooter.fNClusters++;
+   fNTupleFooter.fNEntries = nEntries;
 
    for (auto& pageInfo : fCurrentCluster.fPagesPerColumn) {
       pageInfo.fRangeStarts.clear();
    }
-   fCurrentCluster.fEntryRangeStart = fForestFooter.fNEntries;
+   fCurrentCluster.fEntryRangeStart = fNTupleFooter.fNEntries;
 }
 
 
 void ROOT::Experimental::Detail::RPageSinkRoot::CommitDataset()
 {
    if (fDirectory)
-      fDirectory->WriteObject(&fForestFooter, RMapper::kKeyForestFooter);
+      fDirectory->WriteObject(&fNTupleFooter, RMapper::kKeyForestFooter);
 }
 
 
 //------------------------------------------------------------------------------
 
 
-ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view forestName, RSettings settings)
-   : ROOT::Experimental::Detail::RPageSource(forestName)
-   , fForestName(forestName)
+ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, RSettings settings)
+   : ROOT::Experimental::Detail::RPageSource(ntupleName)
+   , fNTupleName(ntupleName)
    , fDirectory(nullptr)
    , fSettings(settings)
 {
 }
 
-ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view forestName, std::string_view path)
-   : ROOT::Experimental::Detail::RPageSource(forestName)
-   , fForestName(forestName)
+ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, std::string_view path)
+   : ROOT::Experimental::Detail::RPageSource(ntupleName)
+   , fNTupleName(ntupleName)
    , fDirectory(nullptr)
 {
    TFile *file = TFile::Open(std::string(path).c_str(), "READ");
@@ -188,23 +188,23 @@ ROOT::Experimental::Detail::RPageSourceRoot::AddColumn(RColumn* column)
 
 void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
 {
-   fDirectory = fSettings.fFile->GetDirectory(fForestName.c_str());
+   fDirectory = fSettings.fFile->GetDirectory(fNTupleName.c_str());
    auto keyForestHeader = fDirectory->GetKey(RMapper::kKeyForestHeader);
-   auto forestHeader = keyForestHeader->ReadObject<ROOT::Experimental::Internal::RForestHeader>();
-   //printf("Number of fields %lu, of columns %lu\n", forestHeader->fFields.size(), forestHeader->fColumns.size());
+   auto ntupleHeader = keyForestHeader->ReadObject<ROOT::Experimental::Internal::RForestHeader>();
+   //printf("Number of fields %lu, of columns %lu\n", ntupleHeader->fFields.size(), ntupleHeader->fColumns.size());
 
-   for (auto &fieldHeader : forestHeader->fFields) {
+   for (auto &fieldHeader : ntupleHeader->fFields) {
       if (fieldHeader.fParentName.empty()) {
          fMapper.fRootFields.push_back(RMapper::RFieldDescriptor(fieldHeader.fName, fieldHeader.fType));
       }
    }
 
-   auto nColumns = forestHeader->fColumns.size();
-   fPagePool = std::make_unique<RPagePool>(forestHeader->fPageSize, nColumns);
+   auto nColumns = ntupleHeader->fColumns.size();
+   fPagePool = std::make_unique<RPagePool>(ntupleHeader->fPageSize, nColumns);
    fMapper.fColumnIndex.resize(nColumns);
 
    std::int32_t columnId = 0;
-   for (auto &columnHeader : forestHeader->fColumns) {
+   for (auto &columnHeader : ntupleHeader->fColumns) {
       auto columnModel = std::make_unique<RColumnModel>(
          columnHeader.fName, columnHeader.fType, columnHeader.fIsSorted);
       fMapper.fId2ColumnModel[columnId] = std::move(columnModel);
@@ -213,17 +213,17 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
    }
 
    /// Determine column dependencies (offset - pointee relationships)
-   for (auto &columnHeader : forestHeader->fColumns) {
+   for (auto &columnHeader : ntupleHeader->fColumns) {
       if (columnHeader.fOffsetColumn.empty()) continue;
       fMapper.fColumn2Pointee[fMapper.fColumnName2Id[columnHeader.fOffsetColumn]] =
         fMapper.fColumnName2Id[columnHeader.fName];
    }
 
    auto keyForestFooter = fDirectory->GetKey(RMapper::kKeyForestFooter);
-   auto forestFooter = keyForestFooter->ReadObject<ROOT::Experimental::Internal::RForestFooter>();
-   //printf("Number of clusters: %d, entries %ld\n", forestFooter->fNClusters, forestFooter->fNEntries);
+   auto ntupleFooter = keyForestFooter->ReadObject<ROOT::Experimental::Internal::RForestFooter>();
+   //printf("Number of clusters: %d, entries %ld\n", ntupleFooter->fNClusters, ntupleFooter->fNEntries);
 
-   for (std::int32_t iCluster = 0; iCluster < forestFooter->fNClusters; ++iCluster) {
+   for (std::int32_t iCluster = 0; iCluster < ntupleFooter->fNClusters; ++iCluster) {
       auto keyClusterFooter = fDirectory->GetKey((RMapper::kKeyClusterFooter + std::to_string(iCluster)).c_str());
       auto clusterFooter = keyClusterFooter->ReadObject<ROOT::Experimental::Internal::RClusterFooter>();
       R__ASSERT(clusterFooter->fPagesPerColumn.size() == nColumns);
@@ -255,16 +255,16 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
    }
 
    for (unsigned iColumn = 0; iColumn < nColumns; ++iColumn) {
-      fMapper.fColumnIndex[iColumn].fNElements = forestFooter->fNElementsPerColumn[iColumn];
+      fMapper.fColumnIndex[iColumn].fNElements = ntupleFooter->fNElementsPerColumn[iColumn];
    }
-   fMapper.fNEntries = forestFooter->fNEntries;
+   fMapper.fNEntries = ntupleFooter->fNEntries;
 
-   delete forestFooter;
-   delete forestHeader;
+   delete ntupleFooter;
+   delete ntupleHeader;
 
-   // TODO(jblomer): replace RMapper by a forest descriptor
+   // TODO(jblomer): replace RMapper by a ntuple descriptor
    RNTupleDescriptorBuilder descBuilder;
-   descBuilder.SetForest(fForestName, RNTupleVersion());
+   descBuilder.SetForest(fNTupleName, RNTupleVersion());
    fDescriptor = descBuilder.GetDescriptor();
 }
 

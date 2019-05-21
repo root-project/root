@@ -1,5 +1,5 @@
 ############################################################################
-# CMakeLists.txt file for building ROOT forest package
+# CMakeLists.txt file for building ROOT ntuple package
 # @author Jakob Blomer CERN
 ############################################################################
 
