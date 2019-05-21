@@ -1,11 +1,11 @@
 /// \file
 /// \ingroup tutorial_ntuple
 /// \notebook
-/// Convert LHCb run 1 open data from a TTree to RForest.
+/// Convert LHCb run 1 open data from a TTree to RNTuple.
 /// This tutorial illustrates data conversion for a simple, tabular data model.
 /// For reading, the tutorial shows the use of a Forest View, which selectively accesses specific fields.
 /// If a view is used for reading, there is no need to define the data model as an RNTupleModel first.
-/// The advantage of a view is that it directly accesses RForest's data buffers without making an additional
+/// The advantage of a view is that it directly accesses RNTuple's data buffers without making an additional
 /// memory copy.
 ///
 /// \macro_image
@@ -14,7 +14,7 @@
 /// \date April 2019
 /// \author The ROOT Team
 
-// NOTE: The RForest classes are experimental at this point.
+// NOTE: The RNTuple classes are experimental at this point.
 // Functionality, interface, and data format is still subject to changes.
 // Do not use for real data!
 
@@ -48,10 +48,10 @@ void Convert() {
    std::unique_ptr<TFile> f(TFile::Open(kTreeFileName));
    assert(f.is_valid() && ! f->IsZombie());
 
-   // Get a unique pointer to an empty RForest model
+   // Get a unique pointer to an empty RNTuple model
    auto model = RNTupleModel::Create();
 
-   // We create RForest fields based on the types found in the TTree
+   // We create RNTuple fields based on the types found in the TTree
    // This simple approach only works for trees with simple branches and only one leaf per branch
    auto tree = f->Get<TTree>("DecayTree");
    std::vector<TBranch*> branches;

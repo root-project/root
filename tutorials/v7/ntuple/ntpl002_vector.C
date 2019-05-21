@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_ntuple
 /// \notebook
-/// Write and read STL vectors with RForest.  Adapted from the hvector tree tutorial.
+/// Write and read STL vectors with RNTuple.  Adapted from the hvector tree tutorial.
 ///
 /// \macro_image
 /// \macro_code
@@ -9,7 +9,7 @@
 /// \date April 2019
 /// \author The ROOT Team
 
-// NOTE: The RForest classes are experimental at this point.
+// NOTE: The RNTuple classes are experimental at this point.
 // Functionality, interface, and data format is still subject to changes.
 // Do not use for real data!
 
@@ -109,7 +109,7 @@ void Write()
 // For all of the events, histogram only one of the written vectors
 void Read()
 {
-   // Get a unique pointer to an empty RForest model
+   // Get a unique pointer to an empty RNTuple model
    auto model = RNTupleModel::Create();
 
    // We only define the fields that are needed for reading
@@ -121,7 +121,7 @@ void Read()
 
    // Quick overview of the ntuple's key meta-data
    std::cout << ntuple->GetInfo();
-   // In a future version of RForest, there will be support for ntuple->Show() and ntuple->Scan()
+   // In a future version of RNTuple, there will be support for ntuple->Show() and ntuple->Scan()
 
    TCanvas *c2 = new TCanvas("c2", "Dynamic Filling Example", 200, 10, 700, 500);
    TH1F *h = new TH1F("h", "This is the px distribution", 100, -4, 4);
