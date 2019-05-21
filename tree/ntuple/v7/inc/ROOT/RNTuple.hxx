@@ -200,7 +200,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RCollectionForest
+\class ROOT::Experimental::RCollectionNTuple
 \ingroup NTuple
 \brief A virtual ntuple for collections that can be used to some extent like a real ntuple
 *
@@ -209,15 +209,15 @@ public:
 * into the larger ntuple model.
 */
 // clang-format on
-class RCollectionForest {
+class RCollectionNTuple {
 private:
    ClusterSize_t fOffset;
    std::unique_ptr<REntry> fDefaultEntry;
 public:
-   explicit RCollectionForest(std::unique_ptr<REntry> defaultEntry);
-   RCollectionForest(const RCollectionForest&) = delete;
-   RCollectionForest& operator=(const RCollectionForest&) = delete;
-   ~RCollectionForest() = default;
+   explicit RCollectionNTuple(std::unique_ptr<REntry> defaultEntry);
+   RCollectionNTuple(const RCollectionNTuple&) = delete;
+   RCollectionNTuple& operator=(const RCollectionNTuple&) = delete;
+   ~RCollectionNTuple() = default;
 
    void Fill() { Fill(fDefaultEntry.get()); }
    void Fill(REntry *entry) {
