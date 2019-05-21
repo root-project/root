@@ -52,7 +52,7 @@ namespace PyROOT {
       // it has changed or has been freed.
          if ( fFlags & kIsSmartPtr ) {
          // TODO: this is icky and slow
-            std::vector< Cppyy::TCppMethod_t > methods = Cppyy::GetMethodsFromName( fSmartPtrType, "operator->" );
+            std::vector< Cppyy::TCppMethod_t > methods = Cppyy::GetMethodsFromName( fSmartPtrType, "operator->", /*bases?*/ true);
             std::vector<TParameter> args;
             return Cppyy::CallR( methods[0], fSmartPtr, &args );
          }
