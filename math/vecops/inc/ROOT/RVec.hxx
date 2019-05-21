@@ -117,26 +117,6 @@ void EmplaceBack(std::vector<bool> &v, Args &&... args)
    v.push_back(std::forward<Args>(args)...);
 }
 
-// This template and specialisation allow to create vectors of size 0 and with T 
-// w/o a default constructor
-template <typename RVec_t, std::size_t BufferSize = RVec_t::fgBufferSize>
-class RStorageVectorFactory {
-public:
-   static typename RVec_t::Impl_t Get(typename RVec_t::pointer buf)
-   {
-      typename RVec_t::Impl_t v(BufferSize, typename RVec_t::value_type(),
-                                ::ROOT::Detail::VecOps::MakeAdoptAllocator(buf, BufferSize));
-      v.resize(0);
-      return v;
-}
-};
-
-template <typename RVec_t>
-class RStorageVectorFactory<RVec_t, 0> {
-public:
-   static typename RVec_t::Impl_t Get(typename RVec_t::value_type *) { return typename RVec_t::Impl_t(); }
-};
-
 } // namespace VecOps
 } // namespace Internal
 
@@ -152,8 +132,6 @@ A RVec is a container designed to make analysis of values' collections fast and 
 Its storage is contiguous in memory and its interface is designed such to resemble to the one
 of the stl vector. In addition the interface features methods and external functions to ease
 the manipulation and analysis of the data in the RVec.
-RVec implements for arithmetic types a small buffer optimisation, relying on the stack rather 
-than the heap to represent small collections.
 
 \htmlonly
 <a href="https://doi.org/10.5281/zenodo.1253756"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.1253756.svg" alt="DOI"></a>
@@ -291,6 +269,24 @@ hpt->Draw();
 **/
 // clang-format on
 
+template <typename RVec_t, std::size_t BufferSize = RVec_t::fgBufferSize>
+class RStorageVectorFactory {
+public:
+   static typename RVec_t::Impl_t Get(typename RVec_t::pointer buf)
+   {
+      typename RVec_t::Impl_t v(BufferSize, typename RVec_t::value_type(),
+                                ::ROOT::Detail::VecOps::MakeAdoptAllocator(buf, BufferSize));
+      v.resize(0);
+      return v;
+}
+};
+
+template <typename RVec_t>
+class RStorageVectorFactory<RVec_t, 0> {
+public:
+   static typename RVec_t::Impl_t Get(typename RVec_t::value_type *) { return typename RVec_t::Impl_t(); }
+};
+
 template <typename T>
 class RVec {
    // Here we check if T is a bool. This is done in order to decide what type
@@ -322,62 +318,40 @@ public:
 
 private:
    // We need this class for the case where fgBufferSize is 0, otherwise array<NonCopiable, 0>
-   // will not compile on macos.
+   // will not compile on osx.
    class RArrayPlaceHolder
    {
       public:
       std::size_t size() {return 0U;}
-      T *data() {return nullptr;}
+      T * data() {return nullptr;}
    };
-
-   /// The type of the buffer the RVec keeps for small buffer optimisation.
-   /// If the size of the buffer is 0, a place holder internal type is used, if not an std::array
-   /// is used because its content resides on the stack. The RAdoptAllocator adopts if needed this 
-   /// memory.
    using Buffer_t = typename std::conditional<fgBufferSize == 0, RArrayPlaceHolder, std::array<T, fgBufferSize>>::type;
-
-   /// The buffer used for avoiding heap allocations
    Buffer_t fBuffer;
-
-   /// The allocator for the RVec. It is created through a free function since this could
-   /// be an std::allocator<bool> and therefore a template for all T!=Bool and a no-op
-   /// overload for bool are needed.
-   Alloc_t fAlloc = ROOT::Detail::VecOps::MakeAdoptAllocator(fgBufferSize ? fBuffer.data() : nullptr, fgBufferSize);
-
-   /// The default storage std::vector, initialised with the allocator
+   Alloc_t fAlloc = ::ROOT::Detail::VecOps::MakeAdoptAllocator(fgBufferSize ? fBuffer.data() : nullptr, fgBufferSize);
    Impl_t fData{fAlloc};
-
    bool CanUseBuffer(std::size_t s)
    {
-      const auto thisBufSize = ROOT::Detail::VecOps::GetBufferSize(fAlloc);
+      const auto thisBufSize = ::ROOT::Detail::VecOps::GetBufferSize(fAlloc);
       return thisBufSize && s <= thisBufSize;
    }
    bool CanUseBuffer(const RVec &v)
    {
-      const auto thisBufSize = ROOT::Detail::VecOps::GetBufferSize(fAlloc);
-      const auto otherBufSize = ROOT::Detail::VecOps::GetBufferSize(v.fAlloc);
+      const auto thisBufSize = ::ROOT::Detail::VecOps::GetBufferSize(fAlloc);
+      const auto otherBufSize = ::ROOT::Detail::VecOps::GetBufferSize(v.fAlloc);
       if (thisBufSize == 0 && otherBufSize == 0)
          return false;
       return thisBufSize && v.size() <= thisBufSize;
    }
 
-   /// Helper method to know whether the allocator is adopting a memory region which is
-   /// not the small buffer.
-   bool IsAdoptingExternalMemory() { return ROOT::Detail::VecOps::IsAdoptingExternalMemory(fAlloc); }
+   bool IsAdoptingExternalMemory() { return ::ROOT::Detail::VecOps::IsAdoptingExternalMemory(fAlloc); }
 
 public:
    // constructors
 
-   // We need to use a sfinae here to allow for the case where a vector of size 0 is created
-   // and T does not have a default constructor. We cannot even write T().
-   RVec() : fData(ROOT::Internal::VecOps::RStorageVectorFactory<RVec>::Get(fBuffer.data())) {}
+   RVec() : fData(RStorageVectorFactory<RVec>::Get(fBuffer.data())) {}
 
    RVec(pointer p, size_type n) : fAlloc(ROOT::Detail::VecOps::MakeAdoptAllocator(p)), fData(n, T(), fAlloc) {}
 
-   // Here we initialise the internal vector to the size of the small buffer if count is smaller or equal
-   // than such size to then resize back to count.
-   // This step is carried out in order for the capacity of fData to be equal to the size of the
-   // buffer.
    explicit RVec(size_type count) : fData(count <= fgBufferSize ? fgBufferSize : 0, T(), fAlloc)
    {
       resize(count);
@@ -394,24 +368,32 @@ public:
 
    RVec(const RVec &v) : fData(v.size() <= fgBufferSize ? fgBufferSize : 0, T(), fAlloc)
    {
-      resize(v.size());
-      std::copy(v.begin(), v.end(), begin());
+      if (CanUseBuffer(v.size()))
+      {
+         resize(v.size());
+         std::copy(v.begin(), v.end(), begin());
+      } else {
+         resize(v.size());
+         std::copy(v.begin(), v.end(), begin());
+      }
    }
 
-   RVec(const std::vector<T> &v) : fData(v.size() <= fgBufferSize ? fgBufferSize : 0, T(), fAlloc)
+   RVec(const std::vector<T> &v) : fData(v.size(), T(), fAlloc)
    {
-      resize(v.size());
-      std::copy(v.begin(), v.end(), fData.begin());
+      if (CanUseBuffer(v.size())) {
+         std::copy(v.begin(), v.end(), fData.begin());
+      } else {
+         std::copy(v.begin(), v.end(), fData.begin());
+      }
    }
 
-   RVec(RVec<T> &&v) : fData(v.size() <= fgBufferSize ? fgBufferSize : 0, T(), fAlloc)
+   RVec(RVec<T> &&v) : fData(v.size(), T(), fAlloc)
    {
       if (v.IsAdoptingExternalMemory())
       {
          fAlloc = std::move(v.fAlloc);
          fData = std::move(v.fData);
       } else if (CanUseBuffer(v)) {
-         resize(v.size());
          std::copy(v.begin(), v.end(), fData.begin());
       } else {
          fData = std::move(v.fData);
@@ -456,8 +438,12 @@ public:
 
    RVec<T> &operator=(std::initializer_list<T> ilist)
    {
-      resize(ilist.size());
-      std::copy(ilist.begin(), ilist.end(), begin());
+      if (CanUseBuffer(ilist.size())) {
+         resize(ilist.size());
+      } else {
+         fData = Impl_t(ilist.size(), T(), fAlloc);
+      }
+      std::copy(ilist.begin(), ilist.end(), fData.begin());
       return *this;
    }
 
