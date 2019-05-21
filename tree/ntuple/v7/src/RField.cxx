@@ -495,7 +495,7 @@ void ROOT::Experimental::RFieldVector::CommitCluster()
 
 ROOT::Experimental::RFieldCollection::RFieldCollection(
    std::string_view name,
-   std::shared_ptr<RCollectionForest> collectionForest,
+   std::shared_ptr<RCollectionNTuple> collectionForest,
    std::unique_ptr<RNTupleModel> collectionModel)
    : RFieldBase(name, ":Collection:", ENTupleStructure::kCollection, true /* isSimple */)
    , fCollectionForest(collectionForest)

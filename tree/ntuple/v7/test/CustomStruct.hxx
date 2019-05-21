@@ -2,7 +2,7 @@
 #include <vector>
 
 /**
- * Used to test serialization and deserialization of classes in RForest with TClass
+ * Used to test serialization and deserialization of classes in RNTuple with TClass
  */
 struct CustomStruct {
   float a = 0.0;

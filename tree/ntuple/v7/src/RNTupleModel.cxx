@@ -46,10 +46,10 @@ void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<Detail::RFieldBa
 }
 
 
-std::shared_ptr<ROOT::Experimental::RCollectionForest> ROOT::Experimental::RNTupleModel::MakeCollection(
+std::shared_ptr<ROOT::Experimental::RCollectionNTuple> ROOT::Experimental::RNTupleModel::MakeCollection(
    std::string_view fieldName, std::unique_ptr<RNTupleModel> collectionModel)
 {
-   auto collectionForest = std::make_shared<RCollectionForest>(std::move(collectionModel->fDefaultEntry));
+   auto collectionForest = std::make_shared<RCollectionNTuple>(std::move(collectionModel->fDefaultEntry));
    auto field = std::make_unique<RFieldCollection>(fieldName, collectionForest, std::move(collectionModel));
    fDefaultEntry->CaptureValue(field->CaptureValue(collectionForest->GetOffsetPtr()));
    fRootField->Attach(std::move(field));
