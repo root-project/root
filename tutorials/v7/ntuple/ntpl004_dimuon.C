@@ -41,7 +41,7 @@ using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 using RNTupleDS = ROOT::Experimental::RNTupleDS;
 
 constexpr char const* kTreeFileName = "http://root.cern.ch/files/NanoAOD_DoubleMuon_CMS2011OpenData.root";
-constexpr char const* kForestFileName = "ntpl004_dimuon.root";
+constexpr char const* kNTupleFileName = "ntpl004_dimuon.root";
 
 
 using ColNames_t = std::vector<std::string>;
@@ -157,7 +157,7 @@ void Convert() {
    code += "auto df = std::make_unique<ROOT::RDataFrame>(\"Events\", \"" + std::string(kTreeFileName)
          + "\")->Range(0, 4000000);";
    code += "ColNames_t colNames = " + columnList + ";";
-   code += "RForestHelper" + typeList + " helper{\"Events\", \"" + std::string(kForestFileName) + "\", colNames};";
+   code += "RForestHelper" + typeList + " helper{\"Events\", \"" + std::string(kNTupleFileName) + "\", colNames};";
    code += "*df.Book" + typeList + "(std::move(helper), colNames);";
    code += "}";
 
@@ -169,10 +169,10 @@ void ntpl004_dimuon() {
    // Support for multi-threading comes at a later point, for the time being do not enable
    // ROOT::EnableImplicitMT();
 
-   if (gSystem->AccessPathName(kForestFileName))
+   if (gSystem->AccessPathName(kNTupleFileName))
       Convert();
 
-   auto df = ROOT::Experimental::MakeNTupleDataFrame("Events", kForestFileName);
+   auto df = ROOT::Experimental::MakeNTupleDataFrame("Events", kNTupleFileName);
 
    // As of this point, the tutorial is identical to df102_NanoAODDimuonAnalysis except the use of
    // InvariantMassStdVector instead of InvariantMass
