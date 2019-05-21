@@ -40,7 +40,7 @@ public:
       { return TGDimension(fWidth - b.fWidth, fHeight - b.fHeight); }
    TGDimension operator+(const TGDimension &b) const
       { return TGDimension(fWidth + b.fWidth, fHeight + b.fHeight); }
-   TGDimension &operator=(const TGDimension &d) const
+   TGDimension &operator=(const TGDimension &d)
       { fWidth = d.fWidth; fHeight = d.fHeight; return *this; }
 
    ClassDef(TGDimension,0)  // Dimension object (width, height)
@@ -63,7 +63,7 @@ public:
       { return TGPosition(fX - b.fX, fY - b.fY); }
    TGPosition operator+(const TGPosition &b) const
       { return TGPosition(fX + b.fX, fY + b.fY); }
-   TGPosition &operator=(const TGPosition &p) const
+   TGPosition &operator=(const TGPosition &p)
       { fX = p.fX; fY = p.fY; return *this; }
 
    ClassDef(TGPosition,0)  // Position object (x and y are Int_t)
@@ -86,7 +86,7 @@ public:
       { return TGLongPosition(fX - b.fX, fY - b.fY); }
    TGLongPosition operator+(const TGLongPosition &b) const
       { return TGLongPosition(fX + b.fX, fY + b.fY); }
-   TGLongPosition &operator=(const TGLongPosition &p) const
+   TGLongPosition &operator=(const TGLongPosition &p)
       { fX = p.fX; fY = p.fY; return *this; }
 
    ClassDef(TGLongPosition,0)  // Position object (x and y are Long_t)
@@ -109,7 +109,7 @@ public:
 
    Bool_t operator==(const TGInsets &in) const
       { return ((fL == in.fL) && (fR == in.fR) && (fT == in.fT) && (fB == in.fB)); }
-   TGInsets &operator=(const TGInsets &in) const
+   TGInsets &operator=(const TGInsets &in)
       { fL = in.fL; fR = in.fR; fT = in.fT; fB = in.fB; return *this; }
 
    ClassDef(TGInsets,0)   // Inset (left, right, top, bottom)
@@ -155,7 +155,7 @@ public:
    void Empty() { fX = fY = 0; fW = fH = 0; }
    Bool_t IsEmpty() const { return ((fW == 0) && (fH == 0)); }
 
-   TGRectangle &operator=(const TGRectangle &r) const
+   TGRectangle &operator=(const TGRectangle &r)
                 { fX = r.fX; fY = r.fY; fW = r.fW; fH = r.fH; return *this; }
 
    ClassDef(TGRectangle, 0)  // Rectangle object
