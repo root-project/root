@@ -101,7 +101,7 @@ void ROOT::Experimental::Detail::RPageSinkRoot::Create(RNTupleModel *model)
 
    fCurrentCluster.fPagesPerColumn.resize(nColumns);
    fNTupleFooter.fNElementsPerColumn.resize(nColumns, 0);
-   fDirectory->WriteObject(&fNTupleHeader, RMapper::kKeyForestHeader);
+   fDirectory->WriteObject(&fNTupleHeader, RMapper::kKeyNTupleHeader);
 }
 
 void ROOT::Experimental::Detail::RPageSinkRoot::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
@@ -138,7 +138,7 @@ void ROOT::Experimental::Detail::RPageSinkRoot::CommitCluster(ROOT::Experimental
 void ROOT::Experimental::Detail::RPageSinkRoot::CommitDataset()
 {
    if (fDirectory)
-      fDirectory->WriteObject(&fNTupleFooter, RMapper::kKeyForestFooter);
+      fDirectory->WriteObject(&fNTupleFooter, RMapper::kKeyNTupleFooter);
 }
 
 
@@ -189,8 +189,8 @@ ROOT::Experimental::Detail::RPageSourceRoot::AddColumn(RColumn* column)
 void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
 {
    fDirectory = fSettings.fFile->GetDirectory(fNTupleName.c_str());
-   auto keyForestHeader = fDirectory->GetKey(RMapper::kKeyForestHeader);
-   auto ntupleHeader = keyForestHeader->ReadObject<ROOT::Experimental::Internal::RNTupleHeader>();
+   auto keyNTupleHeader = fDirectory->GetKey(RMapper::kKeyNTupleHeader);
+   auto ntupleHeader = keyNTupleHeader->ReadObject<ROOT::Experimental::Internal::RNTupleHeader>();
    //printf("Number of fields %lu, of columns %lu\n", ntupleHeader->fFields.size(), ntupleHeader->fColumns.size());
 
    for (auto &fieldHeader : ntupleHeader->fFields) {
@@ -219,8 +219,8 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
         fMapper.fColumnName2Id[columnHeader.fName];
    }
 
-   auto keyForestFooter = fDirectory->GetKey(RMapper::kKeyForestFooter);
-   auto ntupleFooter = keyForestFooter->ReadObject<ROOT::Experimental::Internal::RNTupleFooter>();
+   auto keyNTupleFooter = fDirectory->GetKey(RMapper::kKeyNTupleFooter);
+   auto ntupleFooter = keyNTupleFooter->ReadObject<ROOT::Experimental::Internal::RNTupleFooter>();
    //printf("Number of clusters: %d, entries %ld\n", ntupleFooter->fNClusters, ntupleFooter->fNEntries);
 
    for (std::int32_t iCluster = 0; iCluster < ntupleFooter->fNClusters; ++iCluster) {
@@ -264,7 +264,7 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
 
    // TODO(jblomer): replace RMapper by a ntuple descriptor
    RNTupleDescriptorBuilder descBuilder;
-   descBuilder.SetForest(fNTupleName, RNTupleVersion());
+   descBuilder.SetNTuple(fNTupleName, RNTupleVersion());
    fDescriptor = descBuilder.GetDescriptor();
 }
 
