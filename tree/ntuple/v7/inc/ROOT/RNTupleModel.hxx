@@ -29,7 +29,7 @@
 namespace ROOT {
 namespace Experimental {
 
-class RCollectionForest;
+class RCollectionNTuple;
 
 // clang-format off
 /**
@@ -83,7 +83,7 @@ public:
    }
 
    /// Ingests a model for a sub collection and attaches it to the current model
-   std::shared_ptr<RCollectionForest> MakeCollection(
+   std::shared_ptr<RCollectionNTuple> MakeCollection(
       std::string_view fieldName,
       std::unique_ptr<RNTupleModel> collectionModel);
 

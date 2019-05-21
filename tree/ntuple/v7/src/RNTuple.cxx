@@ -151,7 +151,7 @@ void ROOT::Experimental::RNTupleWriter::CommitCluster()
 //------------------------------------------------------------------------------
 
 
-ROOT::Experimental::RCollectionForest::RCollectionForest(std::unique_ptr<REntry> defaultEntry)
+ROOT::Experimental::RCollectionNTuple::RCollectionNTuple(std::unique_ptr<REntry> defaultEntry)
    : fOffset(0), fDefaultEntry(std::move(defaultEntry))
 {
 }

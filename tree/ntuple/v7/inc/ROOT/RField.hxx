@@ -43,7 +43,7 @@ class TClass;
 namespace ROOT {
 namespace Experimental {
 
-class RCollectionForest;
+class RCollectionNTuple;
 class REntry;
 class RNTupleModel;
 class RFieldCollection;
@@ -314,11 +314,11 @@ public:
 class RFieldCollection : public ROOT::Experimental::Detail::RFieldBase {
 private:
    /// Save the link to the collection ntuple in order to reset the offset counter when committing the cluster
-   std::shared_ptr<RCollectionForest> fCollectionForest;
+   std::shared_ptr<RCollectionNTuple> fCollectionForest;
 public:
    static std::string MyTypeName() { return ":RFieldCollection:"; }
    RFieldCollection(std::string_view name,
-                    std::shared_ptr<RCollectionForest> collectionForest,
+                    std::shared_ptr<RCollectionNTuple> collectionForest,
                     std::unique_ptr<RNTupleModel> collectionModel);
    RFieldCollection(RFieldCollection&& other) = default;
    RFieldCollection& operator =(RFieldCollection&& other) = default;
