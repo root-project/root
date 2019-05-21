@@ -342,20 +342,20 @@ private:
    /// The allocator for the RVec. It is created through a free function since this could
    /// be an std::allocator<bool> and therefore a template for all T!=Bool and a no-op
    /// overload for bool are needed.
-   Alloc_t fAlloc = ::ROOT::Detail::VecOps::MakeAdoptAllocator(fgBufferSize ? fBuffer.data() : nullptr, fgBufferSize);
+   Alloc_t fAlloc = ROOT::Detail::VecOps::MakeAdoptAllocator(fgBufferSize ? fBuffer.data() : nullptr, fgBufferSize);
 
    /// The default storage std::vector, initialised with the allocator
    Impl_t fData{fAlloc};
 
    bool CanUseBuffer(std::size_t s)
    {
-      const auto thisBufSize = ::ROOT::Detail::VecOps::GetBufferSize(fAlloc);
+      const auto thisBufSize = ROOT::Detail::VecOps::GetBufferSize(fAlloc);
       return thisBufSize && s <= thisBufSize;
    }
    bool CanUseBuffer(const RVec &v)
    {
-      const auto thisBufSize = ::ROOT::Detail::VecOps::GetBufferSize(fAlloc);
-      const auto otherBufSize = ::ROOT::Detail::VecOps::GetBufferSize(v.fAlloc);
+      const auto thisBufSize = ROOT::Detail::VecOps::GetBufferSize(fAlloc);
+      const auto otherBufSize = ROOT::Detail::VecOps::GetBufferSize(v.fAlloc);
       if (thisBufSize == 0 && otherBufSize == 0)
          return false;
       return thisBufSize && v.size() <= thisBufSize;
@@ -363,16 +363,16 @@ private:
 
    /// Helper method to know whether the allocator is adopting a memory region which is
    /// not the small buffer.
-   bool IsAdoptingExternalMemory() { return ::ROOT::Detail::VecOps::IsAdoptingExternalMemory(fAlloc); }
+   bool IsAdoptingExternalMemory() { return ROOT::Detail::VecOps::IsAdoptingExternalMemory(fAlloc); }
 
 public:
    // constructors
 
    // We need to use a sfinae here to allow for the case where a vector of size 0 is created
    // and T does not have a default constructor. We cannot even write T().
-   RVec() : fData(::ROOT::Internal::VecOps::RStorageVectorFactory<RVec>::Get(fBuffer.data())) {}
+   RVec() : fData(ROOT::Internal::VecOps::RStorageVectorFactory<RVec>::Get(fBuffer.data())) {}
 
-   RVec(pointer p, size_type n) : fAlloc(::ROOT::Detail::VecOps::MakeAdoptAllocator(p)), fData(n, T(), fAlloc) {}
+   RVec(pointer p, size_type n) : fAlloc(ROOT::Detail::VecOps::MakeAdoptAllocator(p)), fData(n, T(), fAlloc) {}
 
    // Here we initialise the internal vector to the size of the small buffer if count is smaller or equal
    // than such size to then resize back to count.
@@ -534,7 +534,7 @@ public:
    template <class... Args>
    reference emplace_back(Args &&... args)
    {
-      ::ROOT::Internal::VecOps::EmplaceBack(fData, std::forward<Args>(args)...);
+      ROOT::Internal::VecOps::EmplaceBack(fData, std::forward<Args>(args)...);
       return fData.back();
    }
    /// This method is intended only for arithmetic types unlike the std::vector
