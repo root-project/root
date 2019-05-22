@@ -70,6 +70,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooUnblindUniform.h
     RooUniform.h
     RooVoigtian.h
+    RooJohnson.h
   SOURCES
     src/Roo2DKeysPdf.cxx
     src/RooArgusBG.cxx
@@ -132,6 +133,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooUnblindUniform.cxx
     src/RooUniform.cxx
     src/RooVoigtian.cxx
+    src/RooJohnson.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   LINKDEF
