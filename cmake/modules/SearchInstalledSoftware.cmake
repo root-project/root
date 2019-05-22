@@ -251,6 +251,8 @@ if (builtin_zstd)
                -DCMAKE_C_FLAGS=${ZSTD_C_FLAGS}
                -DCMAKE_AR=${CMAKE_AR}
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
+    # zstd 1.4.0 install libzstd.a in lib64 (to be fixed with proper builtins)
+    INSTALL_COMMAND  ${CMAKE_COMMAND} -E copy_if_different <INSTALL_DIR>/lib64/libzstd.a <INSTALL_DIR>/lib/.
     BUILD_BYPRODUCTS ${ZSTD_LIBRARIES})
   set(ZSTD_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
   set(ZSTD_DEFINITIONS -DBUILTIN_ZSTD)
