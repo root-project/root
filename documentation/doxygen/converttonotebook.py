@@ -73,7 +73,8 @@ from datetime import datetime, date
 # for the script to work correctly.
 gTypesList = ["void", "int", "Int_t", "TF1", "string", "bool", "double", "float", "char",
     "TCanvas", "TTree", "TString", "TSeqCollection", "Double_t", "TFile", "Long64_t", "Bool_t", "TH1",
-    "RooDataSet", "RooWorkspace" , "HypoTestInverterResult" , "TVectorD" , "TArrayF", "UInt_t"]
+    "RooDataSet", "RooWorkspace" , "HypoTestInverterResult" , "TVectorD" , "TArrayF", "UInt_t",
+    "TGraphErrors", "TGraphAsymmErrors"]
 
 # -------------------------------------
 # -------- Function definitions--------
@@ -799,7 +800,7 @@ if __name__ == "__main__":
             tutRelativePath = "$ROOTSYS/tutorials/%s/" % tutPath.split("/")[-1]
         tutFileName = os.path.basename(tutPathName)
         tutName, extension = tutFileName.split(".")
-        tutTitle = re.sub( r"([A-Z\d])", r" \1", tutName).title()
+        tutTitle = tutName
         outname = tutFileName + ".ipynb"
         outnameconverted = tutFileName + ".nbconvert.ipynb"
 
