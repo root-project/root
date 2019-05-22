@@ -73,7 +73,8 @@ from datetime import datetime, date
 # for the script to work correctly.
 gTypesList = ["void", "int", "Int_t", "TF1", "string", "bool", "double", "float", "char",
     "TCanvas", "TTree", "TString", "TSeqCollection", "Double_t", "TFile", "Long64_t", "Bool_t", "TH1",
-    "RooDataSet", "RooWorkspace" , "HypoTestInverterResult" , "TVectorD" , "TArrayF", "UInt_t"]
+    "RooDataSet", "RooWorkspace" , "HypoTestInverterResult" , "TVectorD" , "TArrayF", "UInt_t",
+    "TGraphErrors", "TGraphAsymmErrors"]
 
 # -------------------------------------
 # -------- Function definitions--------
