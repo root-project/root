@@ -296,6 +296,10 @@ Maximal compression of JSON can be achieved now with compact parameter 128 = 100
       size like `double A[] = {1, 2, 3};`, `double A[3];` or `double A[1][2][3][4];`
 
 ## RooFit Libraries
+### RooJohnson PDF
+The Johnson SU PDF has been added to RooFit. It comes with an analytical integral and a generator function,
+which make it superior (faster and more accurate) than implementing it manually with an interpreted/compiled formula.
+
 ### HistFactory
 hist2workspace performance optimisations. For a large, ATLAS-style Higgs-->bb workspace with > 100 systematic uncertainties and more than 10 channels, the run time decreases by a factor 11 to 12.
 
