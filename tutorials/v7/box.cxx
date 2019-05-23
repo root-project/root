@@ -27,38 +27,33 @@ void box()
    auto canvas = RCanvas::Create("Canvas Title");
 
    auto OptsBox1 = canvas->Draw(RBox({0.1_normal, 0.3_normal}, {0.3_normal,0.6_normal}));
-   RColor Color1(1., 0., 0.);
-   RColor Color2(0., 0., 1.);
+   RColor Color1(1., 0., 0., 0.5); // 50% opaque
+   RColor Color2(0., 0., 1., 0.3); // 30% opaque
 
-   OptsBox1->SetLineColor(Color1);
-   OptsBox1->SetLineWidth(5);
-   OptsBox1->SetLineColorAlpha(.5);
-   OptsBox1->SetFillColor(Color2);
-   OptsBox1->SetFillColorAlpha(.3);
+   OptsBox1->Box().Border().SetColor(Color1).SetWidth(5);
+   //OptsBox1->Fill().SetColor(Color2);
 
    auto OptsBox2 = canvas->Draw(RBox({0.4_normal, 0.2_normal}, {0.6_normal,0.7_normal}));
-   OptsBox2->SetLineColor(Color2);
-   OptsBox2->SetFillStyle(0);
-   OptsBox2->SetLineStyle(2);
-   OptsBox2->SetLineWidth(3);
+   OptsBox2->Box().Border().SetColor(Color2).SetStyle(2).SetWidth(3);
+   //OptsBox2->Fill().SetStyle(0);
 
    auto OptsBox3 = canvas->Draw(RBox({0.7_normal, 0.4_normal}, {0.9_normal,0.6_normal}));
-   OptsBox3->SetFillStyle(0);
-   OptsBox3->SetRoundWidth(50);
-   OptsBox3->SetRoundHeight(50);
-   OptsBox3->SetLineWidth(3);
+   //OptsBox3->SetFillStyle(0);
+   //OptsBox3->SetRoundWidth(50);
+   //OptsBox3->SetRoundHeight(50);
+   OptsBox3->Box().Border().SetWidth(3);
 
    auto OptsBox4 = canvas->Draw(RBox({0.7_normal, 0.7_normal}, {0.9_normal,0.9_normal}));
-   OptsBox4->SetFillStyle(0);
-   OptsBox4->SetRoundWidth(50);
-   OptsBox4->SetRoundHeight(25);
-   OptsBox4->SetLineWidth(3);
+   //OptsBox4->SetFillStyle(0);
+   //OptsBox4->SetRoundWidth(50);
+   //OptsBox4->SetRoundHeight(25);
+   OptsBox4->Box().Border().SetWidth(3);
 
    auto OptsBox5 = canvas->Draw(RBox({0.7_normal, 0.1_normal}, {0.9_normal,0.3_normal}));
-   OptsBox5->SetFillStyle(0);
-   OptsBox5->SetRoundWidth(25);
-   OptsBox5->SetRoundHeight(50);
-   OptsBox5->SetLineWidth(3);
+   //OptsBox5->SetFillStyle(0);
+   //OptsBox5->SetRoundWidth(25);
+   //OptsBox5->SetRoundHeight(50);
+   OptsBox5->Box().Border().SetWidth(3);
 
    canvas->Show();
 }

@@ -29,22 +29,19 @@ void markerStyle() {
       auto ot1 = canvas->Draw(RText(pt1, std::to_string(i)));
       RPadPos pm1(RPadLength::Normal(x), .25_normal);
       auto om1 = canvas->Draw(RMarker(pm1));
-      om1->SetMarkerStyle(i);
-      om1->SetMarkerSize(2.5);
+      om1->Marker().SetStyle(i).SetSize(2.5);
 
       RPadPos pt2(RPadLength::Normal(x), .42_normal);
       auto ot2 = canvas->Draw(RText(pt2, std::to_string(i+19)));
       RPadPos pm2(RPadLength::Normal(x), .55_normal);
       auto om2 = canvas->Draw(RMarker(pm2));
-      om2->SetMarkerStyle(i+19);
-      om2->SetMarkerSize(2.5);
+      om2->Marker().SetStyle(i+19).SetSize(2.5);
 
       RPadPos pt3(RPadLength::Normal(x), .72_normal);
       auto ot3 = canvas->Draw(RText(pt3, std::to_string(i+34)));
       RPadPos pm3(RPadLength::Normal(x), .85_normal);
       auto om3 = canvas->Draw(RMarker(pm3));
-      om3->SetMarkerStyle(i+34);
-      om3->SetMarkerSize(2.5);
+      om3->Marker().SetStyle(i+34).SetSize(2.5);
    }
 
    canvas->Show();

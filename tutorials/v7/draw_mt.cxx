@@ -22,10 +22,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-R__LOAD_LIBRARY(libROOTWebDisplay);
-
 #include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RCanvas.hxx"
+
+R__LOAD_LIBRARY(libROOTWebDisplay);
 
 #include "TRandom3.h"
 #include "TEnv.h"
@@ -53,8 +53,8 @@ void draw_canvas(const std::string &title, RColor col)
 
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create(title + " canvas");
-   canvas->Draw(pHist)->SetLineColor(col);
-   canvas->Draw(pHist2)->SetLineColor(RColor::kBlue);
+   canvas->Draw(pHist)->Line().SetColor(col);
+   canvas->Draw(pHist2)->Line().SetColor(RColor::kBlue);
 
    int maxloop = 50;
 
