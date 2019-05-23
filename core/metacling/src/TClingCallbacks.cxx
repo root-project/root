@@ -99,8 +99,8 @@ void TClingCallbacks::InclusionDirective(clang::SourceLocation sLoc/*HashLoc*/,
                                          llvm::StringRef /*RelativePath*/,
                                          const clang::Module * Imported) {
    // We found a module. Do not try to do anything else.
+   Sema &SemaR = m_Interpreter->getSema();
    if (Imported) {
-      Sema &SemaR = m_Interpreter->getSema();
       // FIXME: We should make the module visible at that point.
       if (!SemaR.isModuleVisible(Imported))
          ROOT::TMetaUtils::Info("TClingCallbacks::InclusionDirective",
@@ -126,7 +126,6 @@ void TClingCallbacks::InclusionDirective(clang::SourceLocation sLoc/*HashLoc*/,
 
    std::string localString(FileName.str());
 
-   Sema &SemaR = m_Interpreter->getSema();
    DeclarationName Name = &SemaR.getASTContext().Idents.get(localString.c_str());
    LookupResult RHeader(SemaR, Name, sLoc, Sema::LookupOrdinaryName);
 
