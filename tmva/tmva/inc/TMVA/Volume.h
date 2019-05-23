@@ -61,6 +61,9 @@ namespace TMVA {
       // destructor
       virtual ~Volume( void );
 
+      // operators
+      Volume& operator=( const Volume& );
+
       // destruct the volue 
       void Delete       ( void );
       // "scale" the volume by multiplying each upper and lower boundary by "f" 

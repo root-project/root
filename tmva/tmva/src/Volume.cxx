@@ -130,6 +130,24 @@ TMVA::Volume::Volume( Volume& V )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// assignment operator
+
+TMVA::Volume& TMVA::Volume::operator=( const Volume& V )
+{
+   if (fOwnerShip) {
+      if (fLower) delete fLower;
+      if (fUpper) delete fUpper;
+      fLower = new std::vector<Double_t>( *V.fLower );
+      fUpper = new std::vector<Double_t>( *V.fUpper );
+   }
+   else {
+      fLower = V.fLower;
+      fUpper = V.fUpper;
+   }
+   return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
 TMVA::Volume::~Volume( void )
