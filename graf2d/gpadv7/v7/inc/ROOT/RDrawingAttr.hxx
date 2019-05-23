@@ -168,6 +168,8 @@ protected:
 public:
    virtual ~RDrawingAttrBase() = default;
 
+   virtual std::unique_ptr<RDrawingAttrBase> Clone() const = 0;
+
    /// Insert all attribute members' values into keyval, using their name as the first string
    /// and their stringified value as the second. This pair is only inserted into keyval if
    /// the attribute's value is different than value provided by the style.
@@ -200,6 +202,12 @@ public:
 
    /// RDrawingAttrHolder with an ordered collection of styles taking precedence before the default style.
    RDrawingAttrHolder(const std::vector<std::string> &styleClasses): fStyleClasses(styleClasses) {}
+
+   RDrawingAttrHolder(const RDrawingAttrHolder &other);
+   RDrawingAttrHolder(RDrawingAttrHolder &&other) = default;
+
+   RDrawingAttrHolder &operator=(const RDrawingAttrHolder &other);
+   RDrawingAttrHolder &operator=(RDrawingAttrHolder &&other) = default;
 
    /// Get an attribute value as pointer to string, given its name path, or
    /// `nullptr` if the attribute does not exist.

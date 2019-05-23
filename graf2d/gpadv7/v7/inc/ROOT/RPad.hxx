@@ -209,6 +209,9 @@ public:
          fSize(size), fPos(pos)
       {}
 
+      // Not needed; attributes always part of options (not in holder).
+      std::unique_ptr<RDrawingAttrBase> Clone() const { return {}; }
+
       /// The position (offset) of the pad.
       DrawingOpts &SetPos(const RPadPos &pos) { fPos = pos; return *this; }
       const RPadPos &GetPos() const { return fPos; }

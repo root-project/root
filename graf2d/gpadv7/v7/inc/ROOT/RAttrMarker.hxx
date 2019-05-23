@@ -46,6 +46,8 @@ private:
    };
 
 public:
+   std::unique_ptr<RDrawingAttrBase> Clone() const { return std::make_unique<RAttrMarker>(*this); }
+
    /// The color of the marker.
    RAttrMarker &SetColor(const RColor &col) { fColor = col; return *this; }
    const RColor &GetColor() const { return fColor; }

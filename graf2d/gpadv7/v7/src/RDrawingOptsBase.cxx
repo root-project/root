@@ -25,15 +25,19 @@
 #include <algorithm>
 #include <sstream>
 
-ROOT::Experimental::RDrawingOptsBase::RDrawingOptsBase(const RDrawingOptsBase & /*other*/)
+ROOT::Experimental::RDrawingOptsBase::RDrawingOptsBase(const RDrawingOptsBase & other):
+   fHolder(other.fHolder ? std::make_unique<RDrawingAttrHolder>(*other.fHolder) : nullptr)
 {
-   R__ERROR_HERE("GPadv7") << "Not implemented yet!";
 }
 
 ROOT::Experimental::RDrawingOptsBase &
-ROOT::Experimental::RDrawingOptsBase::operator=(const RDrawingOptsBase & /*other*/)
+ROOT::Experimental::RDrawingOptsBase::operator=(const RDrawingOptsBase & other)
 {
-   R__ERROR_HERE("GPadv7") << "Not implemented yet!";
+   if (other.fHolder)
+      fHolder = std::make_unique<RDrawingAttrHolder>(*other.fHolder);
+   else
+      fHolder.reset();
+
    return *this;
 }
 

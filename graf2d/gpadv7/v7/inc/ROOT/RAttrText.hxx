@@ -56,8 +56,7 @@ private:
    }
 
 public:
-
-   using RDrawingAttrBase::RDrawingAttrBase;
+   std::unique_ptr<RDrawingAttrBase> Clone() const { return std::make_unique<RAttrText>(*this); }
 
    /// The color of the text.
    RAttrText &SetColor(const RColor &col) { fColor = col; return *this; }

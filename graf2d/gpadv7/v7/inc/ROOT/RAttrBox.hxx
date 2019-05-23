@@ -46,6 +46,7 @@ class RAttrBox: public RDrawingAttrBase {
    }
 
 public:
+   std::unique_ptr<RDrawingAttrBase> Clone() const { return std::make_unique<RAttrBox>(*this); }
 
    RAttrLine &Border() { return  fBorder; }
    /// Overrides Border() for the top line.

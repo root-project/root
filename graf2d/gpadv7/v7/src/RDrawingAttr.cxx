@@ -78,6 +78,22 @@ void ROOT::Experimental::RDrawingAttrBase::InsertModifiedAttributeStrings(const 
    }
 }
 
+ROOT::Experimental::RDrawingAttrHolder::RDrawingAttrHolder(const RDrawingAttrHolder &other):
+   fStyleClasses(other.fStyleClasses)
+{
+   for (auto &&keyval: other.fAttrNameVals)
+      fAttrNameVals[keyval.first] = keyval.second->Clone();
+}
+
+ROOT::Experimental::RDrawingAttrHolder &ROOT::Experimental::RDrawingAttrHolder::operator=(const RDrawingAttrHolder &other)
+{
+   fStyleClasses = other.fStyleClasses;
+   fAttrNameVals.clear();
+   for (auto &&keyval: other.fAttrNameVals)
+      fAttrNameVals[keyval.first] = keyval.second->Clone();
+   return *this;
+}
+
 ROOT::Experimental::RDrawingAttrBase *ROOT::Experimental::RDrawingAttrHolder::AtIf(const Name_t &name) const
 {
    auto it = fAttrNameVals.find(name.fStr);

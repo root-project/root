@@ -39,6 +39,8 @@ protected:
    }
 
 public:
+   std::unique_ptr<RDrawingAttrBase> Clone() const { return std::make_unique<RAttrLine>(*this); }
+
    /// The color of the line.
    RAttrLine &SetColor(const RColor& col) { fColor = col; return *this; }
    RColor GetColor() const { return fColor; }

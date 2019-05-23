@@ -49,6 +49,8 @@ private:
 public:
    RObjectDrawingOpts(const std::string &opts = ""): fOpts(opts) {}
 
+   // Not needed; attributes always part of options (not in holder).
+   std::unique_ptr<RDrawingAttrBase> Clone() const { return {}; }
 
    const std::string &GetOptionString() const { return fOpts; }
 };

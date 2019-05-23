@@ -53,6 +53,9 @@ protected:
    Name_t GetName() const final { return "hist1D"; }
 
 public:
+   // Not needed; attributes always part of options (not in holder).
+   std::unique_ptr<RDrawingAttrBase> Clone() const { return {}; }
+
    /// The drawing style.
    void SetStyle(EStyle style) { fStyle = style; }
    EStyle GetStyle() const { return fStyle; }
@@ -84,6 +87,9 @@ protected:
    Name_t GetName() const final { return "hist2D"; }
 
 public:
+   // Not needed; attributes always part of options (not in holder).
+   std::unique_ptr<RDrawingAttrBase> Clone() const { return {}; }
+
    /// The drawing style.
    void SetStyle(EStyle style) { fStyle = style; }
    EStyle GetStyle() const { return fStyle; }
@@ -113,6 +119,9 @@ protected:
    Name_t GetName() const final { return "hist3D"; }
 
 public:
+   // Not needed; attributes always part of options (not in holder).
+   std::unique_ptr<RDrawingAttrBase> Clone() const { return {}; }
+
    /// The drawing style.
    void SetStyle(EStyle style) { fStyle = style; }
    EStyle GetStyle() const { return fStyle; }
