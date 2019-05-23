@@ -37,12 +37,12 @@ bool Classes() {
   test01( new PartialDefault(TObject::Class()) );
   test01( new Normal(44) );
 
-  test01( new TStruct );
-  test01( new TNodefault(10) );
-  test01( new TNodefaultOpNew(11) );
-  test01( new TDefault(33) );
-  test01( new TPartialDefault(TObject::Class()) );
-  test01( new TNormal(44) );
+  test02( new TStruct );
+  test02( new TNodefault(10) );
+  test02( new TNodefaultOpNew(11) );
+  test02( new TDefault(33) );
+  test02( new TPartialDefault(TObject::Class()) );
+  test02( new TNormal(44) );
 
   
   TNormal m;
