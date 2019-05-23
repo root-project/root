@@ -37,13 +37,11 @@ PyObject *CallPyObjMethod(PyObject *obj, const char *meth, PyObject *arg1)
 PyObject *BoolNot(PyObject *value)
 {
    if (PyObject_IsTrue(value) == 1) {
-      Py_INCREF(Py_False);
       Py_DECREF(value);
-      return Py_False;
+      Py_RETURN_FALSE;
    } else {
-      Py_INCREF(Py_True);
       Py_XDECREF(value);
-      return Py_True;
+      Py_RETURN_TRUE;
    }
 }
 
