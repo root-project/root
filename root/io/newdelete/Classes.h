@@ -158,3 +158,9 @@ public:
   ClassDef(TNormal,1);
 };
 
+// See ROOT-7014.
+struct ROOT7014_class {
+   template<class... ARGS>
+   ROOT7014_class(ARGS...) {}
+   ROOT7014_class(int CannotUseThis);
+};
