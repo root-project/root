@@ -42,8 +42,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(cppyy
     -writeEmptyRootPCM
 )
 
-target_compile_options(cppyy PRIVATE
-  -Wno-shadow -Wno-strict-aliasing -Wno-unused-but-set-parameter)
+if(NOT MSVC)
+  target_compile_options(cppyy PRIVATE
+    -Wno-shadow -Wno-strict-aliasing -Wno-unused-but-set-parameter)
+endif()
 
 # Disables warnings coming from PyCFunction casts
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER_EQUAL 8)
