@@ -36,6 +36,7 @@ bool Classes() {
   test01( new Default(33) );
   test01( new PartialDefault(TObject::Class()) );
   test01( new Normal(44) );
+  test01( new ROOT7014_class("abc") );
 
   test02( new TStruct );
   test02( new TNodefault(10) );
@@ -43,6 +44,7 @@ bool Classes() {
   test02( new TDefault(33) );
   test02( new TPartialDefault(TObject::Class()) );
   test02( new TNormal(44) );
+  // test02( new ROOT7014_class("abc") ); no ClassDef
 
   
   TNormal m;
