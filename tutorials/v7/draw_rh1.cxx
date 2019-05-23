@@ -46,12 +46,10 @@ void draw_rh1() {
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("Canvas Title");
    auto draw1 = canvas->Draw(pHist);
-   draw1->Line().SetColor(RColor::kRed);
-   draw1->Line().SetWidth(2);
+   draw1->Line().SetColor(RColor::kRed).SetWidth(2);
    
    auto draw2 = canvas->Draw(pHist2);
-   draw2->Line().SetColor(RColor::kBlue);
-   draw2->Line().SetWidth(4);
+   draw2->Line().SetColor(RColor::kBlue).SetWidth(4);
 
    canvas->Show();
 }
