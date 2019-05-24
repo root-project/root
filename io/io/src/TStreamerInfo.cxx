@@ -3325,6 +3325,25 @@ static void R__WriteConstructorBody(FILE *file, TIter &next)
    }
 }
 
+static constexpr int str_length(const char* str)
+{
+    return *str ? 1 + str_length(str + 1) : 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if the element is auto_ptr or unique_ptr
+
+static bool R__IsUniquePtr(TStreamerElement *element) {
+
+   constexpr auto auto_ptr_len = str_length("auto_ptr<");
+   constexpr auto unique_ptr_len = str_length("unique_ptr<");
+
+   const char *name = element->GetTypeNameBasic();
+
+   return ((strncmp(name, "auto_ptr<", auto_ptr_len) == 0)
+           || (strncmp(name, "unique_ptr<", unique_ptr_len) == 0));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Write down the body of the 'move' constructor.
 
@@ -3342,7 +3361,11 @@ static void R__WriteMoveConstructorBody(FILE *file, const TString &protoname, TI
          if (element->GetArrayLength() <= 1) {
             if (atstart) { fprintf(file,"   : "); atstart = kFALSE; }
             else fprintf(file,"   , ");
-            fprintf(file, "%s(const_cast<%s &>( rhs ).%s)\n",element->GetName(),protoname.Data(),element->GetName());
+            if (R__IsUniquePtr(element)) {
+               fprintf(file, "%s(const_cast<%s &>( rhs ).%s.release() )\n",element->GetName(),protoname.Data(),element->GetName());
+            } else {
+               fprintf(file, "%s(const_cast<%s &>( rhs ).%s)\n",element->GetName(),protoname.Data(),element->GetName());
+            }
          }
       }
    }
@@ -3672,6 +3695,8 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
                   // nothing to do.
                   break;
             }
+         } else if (strncmp(enamebasic.Data(), "auto_ptr<", strlen("auto_ptr<")) == 0) {
+            enamebasic = TMakeProject::UpdateAssociativeToVector(enamebasic);
          }
 
          lt = enamebasic.Length();

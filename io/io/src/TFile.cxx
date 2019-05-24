@@ -2978,6 +2978,9 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       if (info->IsA() != TStreamerInfo::Class()) {
          continue;
       }
+      if (strncmp(info->GetName(), "auto_ptr<", strlen("auto_ptr<")) == 0) {
+         continue;
+      }
       TClass *cl = TClass::GetClass(info->GetName());
       if (cl) {
          if (cl->HasInterpreterInfo()) continue; // skip known classes
