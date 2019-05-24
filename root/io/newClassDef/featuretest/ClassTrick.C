@@ -12,3 +12,8 @@ bool ClassTrick() {
   return false;
 #endif
 }
+
+// This file gets included in the dictionary and the interpreter,
+// make sure we clean up behind us!
+#undef private
+#undef protected
