@@ -155,14 +155,6 @@ TGLVector3::TGLVector3(Double_t x, Double_t y, Double_t z) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Construct a vector from components of 'other'
-
-TGLVector3::TGLVector3(const TGLVector3 & other) :
-   TGLVertex3(other.fVals[0], other.fVals[1], other.fVals[2])
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Construct a vector with components (src[0], src[1], src[2])
 
 TGLVector3::TGLVector3(const Double_t *src) :
