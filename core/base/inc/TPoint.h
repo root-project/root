@@ -43,14 +43,11 @@ public:
    TPoint() : fX(0), fY(0) { }
    TPoint(SCoord_t xy) : fX(xy), fY(xy) { }
    TPoint(SCoord_t x, SCoord_t y) : fX(x), fY(y) { }
-   TPoint(const TPoint &p) : fX(p.fX), fY(p.fY) { }
-   ~TPoint() { }
    SCoord_t    GetX() const { return (SCoord_t)fX; }
    SCoord_t    GetY() const { return (SCoord_t)fY; }
    void        SetX(SCoord_t x) { fX = x; }
    void        SetY(SCoord_t y) { fY = y; }
 
-   TPoint& operator=(const TPoint& p) { fX = p.fX; fY = p.fY; return *this; }
    friend bool operator==(const TPoint& p1, const TPoint& p2);
    friend bool operator!=(const TPoint& p1, const TPoint& p2);
 };
