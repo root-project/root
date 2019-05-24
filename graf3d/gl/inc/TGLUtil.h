@@ -249,11 +249,6 @@ public:
    TGLVector3() = default;
    TGLVector3(Double_t x, Double_t y, Double_t z);
    TGLVector3(const Double_t *src);
-   TGLVector3(const TGLVector3 &other);
-   ~TGLVector3() = default;
-
-   TGLVector3& operator = (const TGLVector3& v)
-   { fVals[0] = v[0]; fVals[1] = v[1]; fVals[2] = v[2]; return *this; }
 
    TGLVector3& operator = (const TGLVertex3& v)
    { fVals[0] = v[0]; fVals[1] = v[1]; fVals[2] = v[2]; return *this; }
@@ -795,7 +790,6 @@ public:
    TGLColor(Float_t r, Float_t g, Float_t b, Float_t a=1);
    TGLColor(Color_t color_index, Char_t transparency=0);
    TGLColor(const TGLColor& c);
-   virtual ~TGLColor() = default;
 
    TGLColor& operator=(const TGLColor& c);
 
