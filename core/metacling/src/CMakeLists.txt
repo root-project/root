@@ -21,8 +21,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
 
 if(MSVC)
   set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingCallbacks.cxx COMPILE_FLAGS -GR-)
+  set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingRdictModuleFileExtension.cxx COMPILE_FLAGS -GR-)
 else()
   set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingCallbacks.cxx COMPILE_FLAGS -fno-rtti)
+  set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingRdictModuleFileExtension.cxx COMPILE_FLAGS -fno-rtti)
 endif()
 
 # This to avoid warning coming from llvm/src/tools/clang/include/clang/Sema/Lookup.h:441
@@ -47,6 +49,7 @@ ROOT_OBJECT_LIBRARY(MetaCling
   TClingDeclInfo.cxx
   TClingMethodArgInfo.cxx
   TClingMethodInfo.cxx
+  TClingRdictModuleFileExtension.cxx
   TClingTypedefInfo.cxx
   TClingTypeInfo.cxx
   TClingValue.cxx

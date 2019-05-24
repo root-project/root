@@ -1014,7 +1014,8 @@ bool LinkdefReader::Parse(SelectionRules &sr, llvm::StringRef code, const std::v
    // Extract all #pragmas
    std::unique_ptr<llvm::MemoryBuffer> memBuf = llvm::MemoryBuffer::getMemBuffer(code, "CLING #pragma extraction");
    clang::CompilerInstance *pragmaCI = cling::CIFactory::createCI(std::move(memBuf), parserArgsC.size(),
-                                                                  &parserArgsC[0], llvmdir, nullptr, true /*OnlyLex*/);
+                                                                  &parserArgsC[0], llvmdir, nullptr /*Consumer*/,
+                                                                  {} /*ModuleFileExtension*/, true /*OnlyLex*/);
 
    clang::Preprocessor &PP = pragmaCI->getPreprocessor();
    clang::DiagnosticConsumer &DClient = pragmaCI->getDiagnosticClient();
