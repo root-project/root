@@ -155,4 +155,4 @@ cpack_add_component(tests
     DESCRIPTION "These are needed to do any test and tutorial"
      INSTALL_TYPES full developer)
 
-add_test(NAME package COMMAND ${CMAKE_CPACK_COMMAND})
+
