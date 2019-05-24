@@ -1134,7 +1134,8 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
          fDelaunay = dt;
       }
       SetBit(kOldInterpolation);
-      if (!hl->FindObject("TGraphDelaunay")) hl->Add(fDelaunay);
+      if (!hl->FindObject("TGraphDelaunay"))
+         hl->Add(fDelaunay);
    } else {
       // new interpolation based on ROOT::Math::Delaunay
       if (!fDelaunay || !fDelaunay->TestBit(kNotDeleted)) {
@@ -1143,7 +1144,8 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
          fDelaunay = dt;
       }
       ResetBit(kOldInterpolation);
-      if (!hl->FindObject("TGraphDelaunay2D")) hl->Add(fDelaunay);
+      if (!hl->FindObject("TGraphDelaunay2D"))
+         hl->Add(fDelaunay);
    }
 
    // Option "empty" is selected. An empty histogram is returned.
