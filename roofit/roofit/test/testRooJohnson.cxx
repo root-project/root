@@ -41,7 +41,10 @@ const char* fixedFormula = "delta/(sigma*TMath::Sqrt(TMath::TwoPi()))"
 TEST(RooJohnson, ReferenceImplementation)
 {
   MAKE_JOHNSON_AND_VARS
-  RooGenericPdf johnsonRef("johnsonRef",
+  // Note: Ownership bug. Deleting this might crash on Mac.
+  // Therefore, it will leak because we are testing not the
+  // GenericPdf.
+  auto johnsonRef = new RooGenericPdf("johnsonRef",
       fixedFormula,
       RooArgSet( mass, mu, sigma, gamma, delta));
 
@@ -56,7 +59,7 @@ TEST(RooJohnson, ReferenceImplementation)
             gamma = theGam;
             delta = theDelta;
 
-            EXPECT_FLOAT_EQ(johnson.getVal(), johnsonRef.getVal())
+            EXPECT_FLOAT_EQ(johnson.getVal(), johnsonRef->getVal())
             << theMass << " " << theMu << " " << theSig << " " << theGam << " " << theDelta;
           }
         }
