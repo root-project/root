@@ -564,7 +564,6 @@ void TGContainer::SelectAll()
    TIter next(fList);
    TGFrameElement *el;
    TGFrame *fr;
-   TGPosition pos = GetPagePosition();
 
    while ((el = (TGFrameElement *) next())) {
       fr = el->fFrame;
@@ -586,7 +585,6 @@ void TGContainer::UnSelectAll()
 {
    TIter next(fList);
    TGFrameElement *el;
-   TGPosition pos = GetPagePosition();
    TGFrame *fr;
 
    while ((el = (TGFrameElement *) next())) {
