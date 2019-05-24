@@ -3723,6 +3723,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
       fprintf(fp,"\n   %s() {\n",protoname.Data());
       R__WriteConstructorBody(fp,next);
       fprintf(fp,"   }\n");
+      fprintf(fp,"   %s(%s && ) = default;\n",protoname.Data(),protoname.Data());
       fprintf(fp,"   %s(const %s & rhs )\n",protoname.Data(),protoname.Data());
       R__WriteMoveConstructorBody(fp,protoname,next);
       fprintf(fp,"   }\n");
@@ -3733,6 +3734,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
    } else {
       // Generate default functions, ClassDef and trailer.
       fprintf(fp,"\n   %s();\n",protoname.Data());
+      fprintf(fp,"   %s(%s && ) = default;\n",protoname.Data(),protoname.Data());
       fprintf(fp,"   %s(const %s & );\n",protoname.Data(),protoname.Data());
       fprintf(fp,"   virtual ~%s();\n\n",protoname.Data());
 
