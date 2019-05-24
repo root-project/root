@@ -25,6 +25,7 @@ clang/LLVM technology.
 #include "TClingDataMemberInfo.h"
 #include "TClingMethodArgInfo.h"
 #include "TClingMethodInfo.h"
+#include "TClingRdictModuleFileExtension.h"
 #include "TClingTypedefInfo.h"
 #include "TClingTypeInfo.h"
 #include "TClingValue.h"
@@ -1340,9 +1341,12 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       interpArgs.push_back(arg.c_str());
    }
 
+   // Add the Rdict module file extension.
+   extensions.push_back(std::make_shared<TClingRdictModuleFileExtension>(""));
+
    fInterpreter = new cling::Interpreter(interpArgs.size(),
                                          &(interpArgs[0]),
-                                         llvmResourceDir);
+                                         llvmResourceDir, extensions);
 
    if (!fromRootCling) {
       fInterpreter->installLazyFunctionCreator(llvmLazyFunctionCreator);
@@ -1493,6 +1497,122 @@ static bool R__InitStreamerInfoFactory()
    return doneFactory; // avoid unused variable warning.
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Tries to load a PCM from TFile; returns true on success.
+bool TCling::LoadPCMImpl(TFile *pcmFile)
+{
+
+   auto listOfKeys = pcmFile->GetListOfKeys();
+
+   // This is an empty pcm
+   if (listOfKeys && ((listOfKeys->GetSize() == 0) ||                           // Nothing here, or
+                      ((listOfKeys->GetSize() == 1) &&                          // only one, and
+                       !strcmp(((TKey *)listOfKeys->At(0))->GetName(), "EMPTY") // name is EMPTY
+                       ))) {
+      return kTRUE;
+   }
+
+   TObjArray *protoClasses;
+   if (gDebug > 1)
+      ::Info("TCling::LoadPCM", "reading protoclasses for %s \n", pcmFile->GetName());
+
+   pcmFile->GetObject("__ProtoClasses", protoClasses);
+
+   if (protoClasses) {
+      for (auto obj : *protoClasses) {
+         TProtoClass *proto = (TProtoClass *)obj;
+         TClassTable::Add(proto);
+      }
+      // Now that all TClass-es know how to set them up we can update
+      // existing TClasses, which might cause the creation of e.g. TBaseClass
+      // objects which in turn requires the creation of TClasses, that could
+      // come from the PCH, but maybe later in the loop. Instead of resolving
+      // a dependency graph the addition to the TClassTable above allows us
+      // to create these dependent TClasses as needed below.
+      for (auto proto : *protoClasses) {
+         if (TClass *existingCl = (TClass *)gROOT->GetListOfClasses()->FindObject(proto->GetName())) {
+            // We have an existing TClass object. It might be emulated
+            // or interpreted; we now have more information available.
+            // Make that available.
+            if (existingCl->GetState() != TClass::kHasTClassInit) {
+               DictFuncPtr_t dict = gClassTable->GetDict(proto->GetName());
+               if (!dict) {
+                  ::Error("TCling::LoadPCM", "Inconsistent TClassTable for %s", proto->GetName());
+               } else {
+                  // This will replace the existing TClass.
+                  TClass *ncl = (*dict)();
+                  if (ncl)
+                     ncl->PostLoadCheck();
+               }
+            }
+         }
+      }
+
+      protoClasses->Clear(); // Ownership was transfered to TClassTable.
+      delete protoClasses;
+   }
+
+   TObjArray *dataTypes;
+   pcmFile->GetObject("__Typedefs", dataTypes);
+   if (dataTypes) {
+      for (auto typedf : *dataTypes)
+         gROOT->GetListOfTypes()->Add(typedf);
+      dataTypes->Clear(); // Ownership was transfered to TListOfTypes.
+      delete dataTypes;
+   }
+
+   TObjArray *enums;
+   pcmFile->GetObject("__Enums", enums);
+   if (enums) {
+      // Cache the pointers
+      auto listOfGlobals = gROOT->GetListOfGlobals();
+      auto listOfEnums = dynamic_cast<THashList *>(gROOT->GetListOfEnums());
+      // Loop on enums and then on enum constants
+      for (auto selEnum : *enums) {
+         const char *enumScope = selEnum->GetTitle();
+         const char *enumName = selEnum->GetName();
+         if (strcmp(enumScope, "") == 0) {
+            // This is a global enum and is added to the
+            // list of enums and its constants to the list of globals
+            if (!listOfEnums->THashList::FindObject(enumName)) {
+               ((TEnum *)selEnum)->SetClass(nullptr);
+               listOfEnums->Add(selEnum);
+            }
+            for (auto enumConstant : *static_cast<TEnum *>(selEnum)->GetConstants()) {
+               if (!listOfGlobals->FindObject(enumConstant)) {
+                  listOfGlobals->Add(enumConstant);
+               }
+            }
+         } else {
+            // This enum is in a namespace. A TClass entry is bootstrapped if
+            // none exists yet and the enum is added to it
+            TClass *nsTClassEntry = TClass::GetClass(enumScope);
+            if (!nsTClassEntry) {
+               nsTClassEntry = new TClass(enumScope, 0, TClass::kNamespaceForMeta, true);
+            }
+            auto listOfEnums = nsTClassEntry->fEnums.load();
+            if (!listOfEnums) {
+               if ((kIsClass | kIsStruct | kIsUnion) & nsTClassEntry->Property()) {
+                  // For this case, the list will be immutable once constructed
+                  // (i.e. in this case, by the end of this routine).
+                  listOfEnums = nsTClassEntry->fEnums = new TListOfEnums(nsTClassEntry);
+               } else {
+                  // namespaces can have enums added to them
+                  listOfEnums = nsTClassEntry->fEnums = new TListOfEnumsWithLock(nsTClassEntry);
+               }
+            }
+            if (listOfEnums && !listOfEnums->THashList::FindObject(enumName)) {
+               ((TEnum *)selEnum)->SetClass(nsTClassEntry);
+               listOfEnums->Add(selEnum);
+            }
+         }
+      }
+      enums->Clear();
+      delete enums;
+   }
+
+   return kTRUE;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Tries to load a PCM; returns true on success.
@@ -1505,7 +1625,7 @@ bool TCling::LoadPCM(const std::string &pcmFileNameFullPath)
    assert(!pcmFileNameFullPath.empty());
    assert(llvm::sys::path::is_absolute(pcmFileNameFullPath));
    if (!llvm::sys::fs::exists(pcmFileNameFullPath)) {
-     return false;
+      return false;
    }
 
    // Easier to work with the ROOT interfaces.
@@ -1527,131 +1647,15 @@ bool TCling::LoadPCM(const std::string &pcmFileNameFullPath)
 
       TDirectory::TContext ctxt;
 
-      TFile *pcmFile = new TFile(pcmFileName+"?filetype=pcm","READ");
+      TFile *pcmFile = new TFile(pcmFileName + "?filetype=pcm", "READ");
 
-      auto listOfKeys = pcmFile->GetListOfKeys();
-
-      // This is an empty pcm
-      if (
-         listOfKeys &&
-         (
-            (listOfKeys->GetSize() == 0) || // Nothing here, or
-            (
-               (listOfKeys->GetSize() == 1) && // only one, and
-               !strcmp(((TKey*)listOfKeys->At(0))->GetName(), "EMPTY") // name is EMPTY
-            )
-         )
-      ) {
-         delete pcmFile;
-         gDebug = oldDebug;
-         return kTRUE;
-      }
-
-      TObjArray *protoClasses;
-      if (gDebug > 1)
-            ::Info("TCling::LoadPCM","reading protoclasses for %s \n",pcmFileName.Data());
-
-      pcmFile->GetObject("__ProtoClasses", protoClasses);
-
-      if (protoClasses) {
-         for (auto obj : *protoClasses) {
-            TProtoClass * proto = (TProtoClass*)obj;
-            TClassTable::Add(proto);
-         }
-         // Now that all TClass-es know how to set them up we can update
-         // existing TClasses, which might cause the creation of e.g. TBaseClass
-         // objects which in turn requires the creation of TClasses, that could
-         // come from the PCH, but maybe later in the loop. Instead of resolving
-         // a dependency graph the addition to the TClassTable above allows us
-         // to create these dependent TClasses as needed below.
-         for (auto proto : *protoClasses) {
-            if (TClass* existingCl
-                = (TClass*)gROOT->GetListOfClasses()->FindObject(proto->GetName())) {
-               // We have an existing TClass object. It might be emulated
-               // or interpreted; we now have more information available.
-               // Make that available.
-               if (existingCl->GetState() != TClass::kHasTClassInit) {
-                  DictFuncPtr_t dict = gClassTable->GetDict(proto->GetName());
-                  if (!dict) {
-                     ::Error("TCling::LoadPCM", "Inconsistent TClassTable for %s",
-                             proto->GetName());
-                  } else {
-                     // This will replace the existing TClass.
-                     TClass *ncl = (*dict)();
-                     if (ncl) ncl->PostLoadCheck();
-
-                  }
-               }
-            }
-         }
-
-         protoClasses->Clear(); // Ownership was transfered to TClassTable.
-         delete protoClasses;
-      }
-
-      TObjArray *dataTypes;
-      pcmFile->GetObject("__Typedefs", dataTypes);
-      if (dataTypes) {
-         for (auto typedf: *dataTypes)
-            gROOT->GetListOfTypes()->Add(typedf);
-         dataTypes->Clear(); // Ownership was transfered to TListOfTypes.
-         delete dataTypes;
-      }
-
-      TObjArray *enums;
-      pcmFile->GetObject("__Enums", enums);
-      if (enums) {
-         // Cache the pointers
-         auto listOfGlobals = gROOT->GetListOfGlobals();
-         auto listOfEnums = dynamic_cast<THashList*>(gROOT->GetListOfEnums());
-         // Loop on enums and then on enum constants
-         for (auto selEnum: *enums){
-            const char* enumScope = selEnum->GetTitle();
-            const char* enumName = selEnum->GetName();
-            if (strcmp(enumScope,"") == 0){
-               // This is a global enum and is added to the
-               // list of enums and its constants to the list of globals
-               if (!listOfEnums->THashList::FindObject(enumName)){
-                  ((TEnum*) selEnum)->SetClass(nullptr);
-                  listOfEnums->Add(selEnum);
-               }
-               for (auto enumConstant: *static_cast<TEnum*>(selEnum)->GetConstants()){
-                  if (!listOfGlobals->FindObject(enumConstant)){
-                     listOfGlobals->Add(enumConstant);
-                  }
-               }
-            }
-            else {
-               // This enum is in a namespace. A TClass entry is bootstrapped if
-               // none exists yet and the enum is added to it
-               TClass* nsTClassEntry = TClass::GetClass(enumScope);
-               if (!nsTClassEntry){
-                  nsTClassEntry = new TClass(enumScope,0,TClass::kNamespaceForMeta, true);
-               }
-               auto listOfEnums = nsTClassEntry->fEnums.load();
-               if (!listOfEnums) {
-                  if ( (kIsClass | kIsStruct | kIsUnion) & nsTClassEntry->Property() ) {
-                     // For this case, the list will be immutable once constructed
-                     // (i.e. in this case, by the end of this routine).
-                     listOfEnums = nsTClassEntry->fEnums = new TListOfEnums(nsTClassEntry);
-                  } else {
-                     //namespaces can have enums added to them
-                     listOfEnums = nsTClassEntry->fEnums = new TListOfEnumsWithLock(nsTClassEntry);
-                  }
-               }
-               if (listOfEnums && !listOfEnums->THashList::FindObject(enumName)){
-                  ((TEnum*) selEnum)->SetClass(nsTClassEntry);
-                  listOfEnums->Add(selEnum);
-               }
-            }
-         }
-         enums->Clear();
-         delete enums;
-      }
+      bool result = LoadPCMImpl(pcmFile);
 
       delete pcmFile;
 
       gDebug = oldDebug;
+      return result;
+
    } else {
       if (gDebug > 5)
          ::Info("TCling::LoadPCM", "Loading clang PCM %s", pcmFileName.Data());
