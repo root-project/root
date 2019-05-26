@@ -123,18 +123,11 @@ void double32()
    auto branches = demoInstanceBranch->GetListOfBranches();
    const auto nb = branches->GetEntries();
    auto br = static_cast<TBranch *>(branches->At(0));
-   Long64_t zip64 = br->GetZipBytes();
-   auto cx = 1.;
-   auto drange = 0.;
-   auto dval = 0.;
-
-   auto c1 = new TCanvas("c1", "c1", 800, 600);
-   c1->SetGrid();
+   const Long64_t zip64 = br->GetZipBytes();
 
    auto h = new TH1F("h", "Double32_t compression and precision", nb, 0, nb);
    h->SetMaximum(18);
    h->SetStats(0);
-   h->Draw();
 
    auto gcx = new TGraph();
    gcx->SetName("gcx");
@@ -153,24 +146,37 @@ void double32()
 
    // loop on branches to get the precision and compression factors
    for (auto i : ROOT::TSeqI(nb)) {
-      br = static_cast<TBranch *>(branches->At(i));
-      h->GetXaxis()->SetBinLabel(i + 1, br->GetName());
-      cx = double(zip64) / br->GetZipBytes();
+      auto br = static_cast<TBranch *>(branches->At(i));
+      const auto brName = br->GetName();
+
+      h->GetXaxis()->SetBinLabel(i + 1, brName);
+      const auto cx = double(zip64) / br->GetZipBytes();
       gcx->SetPoint(i, i + 0.5, cx);
       if (i == 0 ) continue;
-      if (i > 0) {
-         tree.Draw(Form("(fD64-%s)/(%g)", br->GetName(), xmax - xmin), "", "goff");
-         auto rms = TMath::RMS(nEntries, tree.GetV1());
-         drange = TMath::Max(0., -TMath::Log10(rms));
-      }
+
+      tree.Draw(Form("(fD64-%s)/(%g)", brName, xmax - xmin), "", "goff");
+      const auto rmsDrange = TMath::RMS(nEntries, tree.GetV1());
+      const auto drange = TMath::Max(0., -TMath::Log10(rmsDrange));
       gdrange->SetPoint(i-1, i + 0.5, drange);
-      if (i > 0) {
-         tree.Draw(Form("(fD64-%s)/fD64", br->GetName()), "", "goff");
-         auto rms = TMath::RMS(nEntries, tree.GetV1());
-         dval = TMath::Max(0., -TMath::Log10(rms));
-      }
+
+      tree.Draw(Form("(fD64-%s)/fD64", brName), "", "goff");
+      const auto rmsDVal = TMath::RMS(nEntries, tree.GetV1());
+      const auto dval = TMath::Max(0., -TMath::Log10(rmsDVal));
       gdval->SetPoint(i-1, i + 0.5, dval);
+
+      tree.Draw(Form("(fD64-%s) >> hdvalabs_%s", brName, brName), "", "goff");
+      auto hdval = gDirectory->Get<TH1F>(Form("hdvalabs_%s", brName));
+      hdval->GetXaxis()->SetTitle("Difference wrt reference value");
+      auto c = new TCanvas(brName, brName, 800, 600);
+      c->SetGrid();
+      c->SetLogy();
+      hdval->DrawClone();
    }
+   
+   auto c1 = new TCanvas("c1", "c1", 800, 600);
+   c1->SetGrid();
+
+   h->Draw();
    h->GetXaxis()->LabelsOption("v");
    gcx->Draw("lp");
    gdrange->Draw("lp");
