@@ -2,7 +2,7 @@
 /// \ingroup tutorial_io
 /// \notebook -js
 /// Tutorial illustrating use and precision of the Double32_t data type
-/// You must run this tutorial with ACLIC: a dictionary will be automatically
+/// You should run this tutorial with ACLIC: a dictionary will be automatically
 /// created.
 /// ~~~{.bash}
 ///    root > .x double32.C+
@@ -43,7 +43,7 @@
 /// relative precision when storing and reading back the truncated x, say xt.
 /// The variance of (x-xt)/x will be better than when specifying a range
 /// for the same number of bits. However the precision relative to the
-/// range (x-xt)/(xmax-xmin) will be worst, and vice-versa.
+/// range (x-xt)/(xmax-xmin) will be worse, and vice-versa.
 /// The format [0,0,8] is also interesting when the range of x is infinite
 /// or unknown.
 ///
@@ -52,140 +52,135 @@
 ///
 /// \author Rene Brun
 
-#include "TFile.h"
+#include "ROOT/TSeq.hxx"
 #include "TCanvas.h"
-#include "TTree.h"
+#include "TFile.h"
+#include "TGraph.h"
 #include "TH1.h"
+#include "TLegend.h"
 #include "TMath.h"
 #include "TRandom3.h"
-#include "TGraph.h"
-#include "TLegend.h"
-#include "TFrame.h"
-#include "TPaveLabel.h"
+#include "TTree.h"
 
-class DemoDouble32  {
+class DemoDouble32 {
 private:
-   Double_t    fD64;     //reference member with full double precision
-   Double32_t  fF32;     //saved as a 32 bit Float_t
-   Double32_t  fI32;     //[-pi,pi]    saved as a 32 bit unsigned int
-   Double32_t  fI30;     //[-pi,pi,30] saved as a 30 bit unsigned int
-   Double32_t  fI28;     //[-pi,pi,28] saved as a 28 bit unsigned int
-   Double32_t  fI26;     //[-pi,pi,26] saved as a 26 bit unsigned int
-   Double32_t  fI24;     //[-pi,pi,24] saved as a 24 bit unsigned int
-   Double32_t  fI22;     //[-pi,pi,22] saved as a 22 bit unsigned int
-   Double32_t  fI20;     //[-pi,pi,20] saved as a 20 bit unsigned int
-   Double32_t  fI18;     //[-pi,pi,18] saved as a 18 bit unsigned int
-   Double32_t  fI16;     //[-pi,pi,16] saved as a 16 bit unsigned int
-   Double32_t  fI14;     //[-pi,pi,14] saved as a 14 bit unsigned int
-   Double32_t  fI12;     //[-pi,pi,12] saved as a 12 bit unsigned int
-   Double32_t  fI10;     //[-pi,pi,10] saved as a 10 bit unsigned int
-   Double32_t  fI8;      //[-pi,pi, 8] saved as a  8 bit unsigned int
-   Double32_t  fI6;      //[-pi,pi, 6] saved as a  6 bit unsigned int
-   Double32_t  fI4;      //[-pi,pi, 4] saved as a  4 bit unsigned int
-   Double32_t  fI2;      //[-pi,pi, 2] saved as a  2 bit unsigned int
-   Double32_t  fR14;     //[0,  0, 14] saved as a 32 bit float with a 14 bits mantissa
-   Double32_t  fR12;     //[0,  0, 12] saved as a 32 bit float with a 12 bits mantissa
-   Double32_t  fR10;     //[0,  0, 10] saved as a 32 bit float with a 10 bits mantissa
-   Double32_t  fR8;      //[0,  0,  8] saved as a 32 bit float with a  8 bits mantissa
-   Double32_t  fR6;      //[0,  0,  6] saved as a 32 bit float with a  6 bits mantissa
-   Double32_t  fR4;      //[0,  0,  4] saved as a 32 bit float with a  4 bits mantissa
-   Double32_t  fR2;      //[0,  0,  2] saved as a 32 bit float with a  2 bits mantissa
+   Double_t fD64;   // reference member with full double precision
+   Double32_t fF32; // saved as a 32 bit Float_t
+   Double32_t fI32; //[-pi,pi]    saved as a 32 bit unsigned int
+   Double32_t fI30; //[-pi,pi,30] saved as a 30 bit unsigned int
+   Double32_t fI28; //[-pi,pi,28] saved as a 28 bit unsigned int
+   Double32_t fI26; //[-pi,pi,26] saved as a 26 bit unsigned int
+   Double32_t fI24; //[-pi,pi,24] saved as a 24 bit unsigned int
+   Double32_t fI22; //[-pi,pi,22] saved as a 22 bit unsigned int
+   Double32_t fI20; //[-pi,pi,20] saved as a 20 bit unsigned int
+   Double32_t fI18; //[-pi,pi,18] saved as a 18 bit unsigned int
+   Double32_t fI16; //[-pi,pi,16] saved as a 16 bit unsigned int
+   Double32_t fI14; //[-pi,pi,14] saved as a 14 bit unsigned int
+   Double32_t fI12; //[-pi,pi,12] saved as a 12 bit unsigned int
+   Double32_t fI10; //[-pi,pi,10] saved as a 10 bit unsigned int
+   Double32_t fI8;  //[-pi,pi, 8] saved as a  8 bit unsigned int
+   Double32_t fI6;  //[-pi,pi, 6] saved as a  6 bit unsigned int
+   Double32_t fI4;  //[-pi,pi, 4] saved as a  4 bit unsigned int
+   Double32_t fI2;  //[-pi,pi, 2] saved as a  2 bit unsigned int
+   Double32_t fR14; //[0,  0, 14] saved as a 32 bit float with a 14 bits mantissa
+   Double32_t fR12; //[0,  0, 12] saved as a 32 bit float with a 12 bits mantissa
+   Double32_t fR10; //[0,  0, 10] saved as a 32 bit float with a 10 bits mantissa
+   Double32_t fR8;  //[0,  0,  8] saved as a 32 bit float with a  8 bits mantissa
+   Double32_t fR6;  //[0,  0,  6] saved as a 32 bit float with a  6 bits mantissa
+   Double32_t fR4;  //[0,  0,  4] saved as a 32 bit float with a  4 bits mantissa
+   Double32_t fR2;  //[0,  0,  2] saved as a 32 bit float with a  2 bits mantissa
 
 public:
-   DemoDouble32() {;}
-   void Set(Double_t ref);
+   DemoDouble32() = default;
+   void Set(Double_t ref)
+   {
+      fD64 = fF32 = fI32 = fI30 = fI28 = fI26 = fI24 = fI22 = fI20 = fI18 = fI16 = fI14 = fI12 = fI10 = fI8 = fI6 =
+         fI4 = fI2 = fR14 = fR12 = fR10 = fR8 = fR6 = fR4 = fR2 = ref;
+   }
 };
 
-void DemoDouble32::Set(Double_t ref) {
-   fD64 = fF32 = fI32 = fI30 = fI28 = fI26 = fI24 = fI22 = fI20 = ref;
-   fI18 = fI16 = fI14 = fI12 = fI10 = fI8  = fI6  = fI4  = fI2  = ref;
-   fR14 = fR12 = fR10 = fR8  = fR6  = fR4  = fR2  = ref;
-}
+void double32()
+{
+   const auto nEntries = 40000;
+   const auto xmax = TMath::Pi();
+   const auto xmin = -xmax;
 
-void double32() {
-   // show the use and precision of the Double32_t data type
-
-   DemoDouble32 *d = new DemoDouble32();
-
-   //create a Tree with 40000 objects DemoDouble32
-   TFile::Open("DemoDouble32.root","recreate");
-   TTree *T = new TTree("T","DemoDouble32");
-   TBranch *bd = T->Branch("d","DemoDouble32",&d,4000);
+   // create a Tree with nEntries objects DemoDouble32
+   TFile::Open("DemoDouble32.root", "recreate");
+   TTree tree("tree", "DemoDouble32");
+   DemoDouble32 demoInstance;
+   auto demoInstanceBranch = tree.Branch("d", "DemoDouble32", &demoInstance, 4000);
    TRandom3 r;
-   Double_t xmax = TMath::Pi();
-   Double_t xmin = -xmax;
-   Int_t i, n = 40000;
-   for (i=0;i<n;i++) {
-      d->Set(r.Uniform(xmin,xmax));
-      T->Fill();
+   for (auto i : ROOT::TSeqI(nEntries)) {
+      demoInstance.Set(r.Uniform(xmin, xmax));
+      tree.Fill();
    }
-   T->Write();
+   tree.Write();
 
-   //Create the frame histogram and the graphs
-   TObjArray *branches = bd->GetListOfBranches();
-   Int_t nb = branches->GetEntries();
-   TBranch *br = (TBranch*)branches->At(0);
+   // Now we can proceed with the analysis of the sizes on disk of all branches
+
+   // Create the frame histogram and the graphs
+   auto branches = demoInstanceBranch->GetListOfBranches();
+   const auto nb = branches->GetEntries();
+   auto br = static_cast<TBranch *>(branches->At(0));
    Long64_t zip64 = br->GetZipBytes();
-   Double_t cx = 1;
-   Double_t drange = 15;
-   Double_t dval = 15;
-   TCanvas *c1 = new TCanvas("c1","c1",800,600);
+   auto cx = 1.;
+   auto drange = 0.;
+   auto dval = 0.;
+
+   auto c1 = new TCanvas("c1", "c1", 800, 600);
    c1->SetGrid();
-   c1->SetHighLightColor(0);
-   c1->SetFillColor(17);
-   c1->SetFrameFillColor(20);
-   c1->SetFrameBorderSize(10);
-   TH1F *h = new TH1F("h","",nb,0,nb);
-   h->SetMaximum(16);
+
+   auto h = new TH1F("h", "Double32_t compression and precision", nb, 0, nb);
+   h->SetMaximum(18);
    h->SetStats(0);
    h->Draw();
-   c1->GetFrame()->SetFillColor(21);
-   c1->GetFrame()->SetBorderSize(12);
-   TGraph *gcx = new TGraph(nb); gcx->SetName("gcx");
-   gcx->SetMarkerStyle(21);
-   gcx->SetMarkerColor(kBlue);
-   TGraph *gdrange = new TGraph(nb); gdrange->SetName("gdrange");
-   gdrange->SetMarkerStyle(20);
-   gdrange->SetMarkerColor(kRed);
-   TGraph *gdval = new TGraph(nb); gdval->SetName("gdval");
-   gdval->SetMarkerStyle(20);
-   gdval->SetMarkerColor(kBlack);
-   TPaveLabel *title = new TPaveLabel(.15,.92,.85,.97,"Double32_t compression and precision","brNDC");
-   title->Draw();
 
-   //loop on branches to get the precision and compression factors
-   for (i=0;i<nb;i++) {
-      br = (TBranch*)branches->At(i);
-      h->GetXaxis()->SetBinLabel(i+1,br->GetName());
-      cx = Double_t(zip64)/Double_t(br->GetZipBytes());
-      gcx->SetPoint(i,i+0.5,cx);
+   auto gcx = new TGraph();
+   gcx->SetName("gcx");
+   gcx->SetMarkerStyle(kFullSquare);
+   gcx->SetMarkerColor(kBlue);
+
+   auto gdrange = new TGraph();
+   gdrange->SetName("gdrange");
+   gdrange->SetMarkerStyle(kFullCircle);
+   gdrange->SetMarkerColor(kRed);
+
+   auto gdval = new TGraph();
+   gdval->SetName("gdval");
+   gdval->SetMarkerStyle(kFullTriangleUp);
+   gdval->SetMarkerColor(kBlack);
+
+   // loop on branches to get the precision and compression factors
+   for (auto i : ROOT::TSeqI(nb)) {
+      br = static_cast<TBranch *>(branches->At(i));
+      h->GetXaxis()->SetBinLabel(i + 1, br->GetName());
+      cx = double(zip64) / br->GetZipBytes();
+      gcx->SetPoint(i, i + 0.5, cx);
+      if (i == 0 ) continue;
       if (i > 0) {
-         T->Draw(Form("(fD64-%s)/(%g)",br->GetName(),xmax-xmin),"","goff");
-         Double_t rms = TMath::RMS(n,T->GetV1());
-         drange = TMath::Max(0.,-TMath::Log10(rms));
+         tree.Draw(Form("(fD64-%s)/(%g)", br->GetName(), xmax - xmin), "", "goff");
+         auto rms = TMath::RMS(nEntries, tree.GetV1());
+         drange = TMath::Max(0., -TMath::Log10(rms));
       }
-      gdrange->SetPoint(i,i+0.5,drange);
+      gdrange->SetPoint(i-1, i + 0.5, drange);
       if (i > 0) {
-         T->Draw(Form("(fD64-%s)/(fD64+0.01)",br->GetName()),"","goff");
-         Double_t rms = TMath::RMS(n,T->GetV1());
-         dval = TMath::Max(0.,-TMath::Log10(rms));
+         tree.Draw(Form("(fD64-%s)/fD64", br->GetName()), "", "goff");
+         auto rms = TMath::RMS(nEntries, tree.GetV1());
+         dval = TMath::Max(0., -TMath::Log10(rms));
       }
-      gdval->SetPoint(i,i+0.5,dval);
+      gdval->SetPoint(i-1, i + 0.5, dval);
    }
+   h->GetXaxis()->LabelsOption("v");
    gcx->Draw("lp");
    gdrange->Draw("lp");
    gdval->Draw("lp");
-   TLegend *legend = new TLegend(0.2,0.7,0.7,0.85);
-   legend->SetTextFont(72);
-   legend->SetTextSize(0.04);
-   legend->AddEntry(gcx,"Compression factor","lp");
-   legend->AddEntry(gdrange,"Log of precision wrt range","lp");
-   legend->AddEntry(gdval,"Log of precision wrt value","lp");
+
+   // Finally build a legend
+   auto legend = new TLegend(0.3, 0.6, 0.9, 0.9);
+   legend->SetHeader(Form("%d entries within the [-#pi, #pi] range", nEntries));
+   legend->AddEntry(gcx, "Compression factor", "lp");
+   legend->AddEntry(gdrange, "Log of precision wrt range: p = -Log_{10}( RMS( #frac{Ref - x}{range} ) ) ", "lp");
+   legend->AddEntry(gdval, "Log of precision wrt value: p = -Log_{10}( RMS( #frac{Ref - x}{Ref} ) ) ", "lp");
    legend->Draw();
-   TPaveLabel *rang = new TPaveLabel(.75,.75,.88,.80,"[-pi,pi]","brNDC");
-   rang->Draw();
 }
-
-
-
-
