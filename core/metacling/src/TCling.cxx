@@ -1713,6 +1713,24 @@ static const std::unordered_set<std::string> gIgnoredPCMNames = {"libCore",
                                                                  "G__GenVector32",
                                                                  "G__Smatrix32"};
 
+static void MaybePrintDlError(const char *dyLibName, const char *modulename)
+{
+#ifdef R__WIN32
+   char dyLibError[1000];
+   FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                  dyLibError, sizeof(dyLibError), NULL);
+#else
+   const char *dyLibError = dlerror();
+   if (dyLibError)
+#endif
+   {
+      if (gDebug > 0) {
+         ::Info("TCling::RegisterModule", "Cannot open shared library %s for dictionary %s:\n  %s", dyLibName,
+                modulename, dyLibError);
+      }
+   }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Inject the module named "modulename" into cling; load all headers.
 /// headers is a 0-terminated array of header files to #include after
@@ -1821,21 +1839,7 @@ void TCling::RegisterModule(const char* modulename,
          // Recursive dlopen seems to work just fine.
          void* dyLibHandle = dlopen(dyLibName, RTLD_LAZY | RTLD_GLOBAL);
          if (!dyLibHandle) {
-#ifdef R__WIN32
-            char dyLibError[1000];
-            FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                           dyLibError, sizeof(dyLibError), NULL);
-#else
-            const char* dyLibError = dlerror();
-            if (dyLibError)
-#endif
-            {
-               if (gDebug > 0) {
-                  ::Info("TCling::RegisterModule",
-                         "Cannot open shared library %s for dictionary %s:\n  %s",
-                         dyLibName, modulename, dyLibError);
-               }
-            }
+            MaybePrintDlError(dyLibName, modulename);
          } else {
             fRegisterModuleDyLibs.push_back(dyLibHandle);
             wasDlopened = true;
