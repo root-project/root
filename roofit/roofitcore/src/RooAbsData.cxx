@@ -119,8 +119,6 @@ RooAbsData::RooAbsData()
   claimVars(this) ;
   _dstore = 0 ;
   storageType = defaultStorageType;
-  _iterator = _vars.createIterator() ;
-  _cacheIter = _cachedVars.createIterator() ;
 
   RooTrace::create(this) ;
 }
@@ -163,9 +161,6 @@ RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& var
    }
    delete iter;
 
-   _iterator = _vars.createIterator();
-   _cacheIter = _cachedVars.createIterator();
-
    RooTrace::create(this);
 }
 
@@ -182,16 +177,9 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
   _vars.addClone(other._vars) ;
 
   // reconnect any parameterized ranges to internal dataset observables
-  TIterator* iter = _vars.createIterator() ;
-  RooAbsArg* var ;
-  while((0 != (var= (RooAbsArg*)iter->Next()))) {
+  for (const auto var : _vars) {
     var->attachDataSet(*this) ;
   }
-  delete iter ;
-
-
-  _iterator= _vars.createIterator();
-  _cacheIter = _cachedVars.createIterator() ;
 
 
   if (other._ownedComponents.size()>0) {
@@ -199,15 +187,11 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
     // copy owned components here
 
     map<string,RooAbsDataStore*> smap ;
-    for (std::map<std::string,RooAbsData*>::const_iterator itero =other._ownedComponents.begin() ; itero!=other._ownedComponents.end() ; ++itero ) {
-      RooAbsData* dclone = (RooAbsData*) itero->second->Clone() ;
-      _ownedComponents[itero->first] = dclone ;
-      smap[itero->first] = dclone->store() ;
+    for (auto& itero : other._ownedComponents) {
+      RooAbsData* dclone = (RooAbsData*) itero.second->Clone();
+      _ownedComponents[itero.first] = dclone;
+      smap[itero.first] = dclone->store();
     }
-
-//     if (!dynamic_cast<const RooCompositeDataStore*>(other.store())) {
-//       cout << "Huh, have owned components, but store is not composite?" << endl ;
-//     }
 
     RooCategory* idx = (RooCategory*) _vars.find(*((RooCompositeDataStore*)other.store())->index()) ;
     _dstore = new RooCompositeDataStore(newname?newname:other.GetName(),other.GetTitle(),_vars,*idx,smap) ;
@@ -223,6 +207,45 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
   RooTrace::create(this) ;
 }
 
+RooAbsData& RooAbsData::operator=(const RooAbsData& other) {
+  TNamed::operator=(other);
+  RooPrintable::operator=(other);
+
+  claimVars(this);
+  _vars.Clear();
+  _vars.addClone(other._vars);
+
+  // reconnect any parameterized ranges to internal dataset observables
+  for (const auto var : _vars) {
+    var->attachDataSet(*this) ;
+  }
+
+
+  if (other._ownedComponents.size()>0) {
+
+    // copy owned components here
+
+    map<string,RooAbsDataStore*> smap ;
+    for (auto& itero : other._ownedComponents) {
+      RooAbsData* dclone = (RooAbsData*) itero.second->Clone();
+      _ownedComponents[itero.first] = dclone;
+      smap[itero.first] = dclone->store();
+    }
+
+    RooCategory* idx = (RooCategory*) _vars.find(*((RooCompositeDataStore*)other.store())->index()) ;
+    _dstore = new RooCompositeDataStore(GetName(), GetTitle(), _vars, *idx, smap);
+    storageType = RooAbsData::Composite;
+
+  } else {
+
+    // Convert to vector store if default is vector
+    _dstore = other._dstore->clone(_vars);
+    storageType = other.storageType;
+  }
+
+  return *this;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
@@ -236,8 +259,6 @@ RooAbsData::~RooAbsData()
 
   // delete owned contents.
   delete _dstore ;
-  delete _iterator ;
-  delete _cacheIter ;
 
   // Delete owned dataset components
   for(map<std::string,RooAbsData*>::iterator iter = _ownedComponents.begin() ; iter!= _ownedComponents.end() ; ++iter) {
@@ -1386,21 +1407,19 @@ TH1 *RooAbsData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char
     // Apply range based selection criteria
     Bool_t selectByRange = kTRUE ;
     if (cutRange) {
-      _iterator->Reset() ;
-      RooAbsArg* arg ;
-      while((arg=(RooAbsArg*)_iterator->Next())) {
-   Bool_t selectThisArg = kFALSE ;
-   UInt_t icut ;
-   for (icut=0 ; icut<cutVec.size() ; icut++) {
-     if (arg->inRange(cutVec[icut].c_str())) {
-       selectThisArg = kTRUE ;
-       break ;
-     }
-   }
-   if (!selectThisArg) {
-     selectByRange = kFALSE ;
-     break ;
-   }
+      for (const auto arg : _vars) {
+        Bool_t selectThisArg = kFALSE ;
+        UInt_t icut ;
+        for (icut=0 ; icut<cutVec.size() ; icut++) {
+          if (arg->inRange(cutVec[icut].c_str())) {
+            selectThisArg = kTRUE ;
+            break ;
+          }
+        }
+        if (!selectThisArg) {
+          selectByRange = kFALSE ;
+          break ;
+        }
       }
     }
 
