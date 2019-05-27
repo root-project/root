@@ -43,7 +43,18 @@ one single I/O buffer or to make several branches.
 Making several branches is particularly interesting in the data analysis phase,
 when it is desirable to have a high reading rate and not all columns are equally interesting
 
-## How to create a TTree, define its branches and fill it:
+## Table of contents:
+- [Creating a TTree](#creatingattree)
+- [Add a Column of Fundamental Types and Arrays thereof](#addcolumnoffundamentaltypes)
+- [Add a Column of a STL Collection instances](#addingacolumnofstl)
+- [Add a column holding an object](#addingacolumnofobjs)
+- [Add a column holding a TObjectArray](#addingacolumnofobjs)
+- [Fill the tree](#fillthetree)
+- [Add a column to an already existing Tree](#addcoltoexistingtree)
+- [An Example](#fullexample)
+
+## <a name="creatingattree"></a>Creating a TTree
+
 ~~~ {.cpp}
     TTree tree(name, title)
 ~~~
@@ -56,7 +67,9 @@ structures.
 
 In the following, the details about the creation of different types of branches are given.
 
-### Case A
+## <a name="addcolumnoffundamentaltypes"></a>Add a column (`branch`) of fundamental types and arrays thereof
+This strategy works also for lists of variables, e.g. to describe simple structures.
+It is strongly reccomended to persistify those as objects rather than lists of leaves.
 
 ~~~ {.cpp}
     auto branch = tree.Branch(branchname, address, leaflist, bufsize)
@@ -86,14 +99,23 @@ In the following, the details about the creation of different types of branches 
    - `L` : a 64 bit signed integer (`Long64_t`)
    - `l` : a 64 bit unsigned integer (`ULong64_t`)
    - `O` : [the letter `o`, not a zero] a boolean (`Bool_t`)
+  
+  Examples:
+   - A int: "myVar/I"
+   - A float array with fixed size: "myArrfloat[42]/F"
+   - An double array with variable size, held by the `myvar` column: "myArrdouble[myvar]/D"
+   - An Double32_t array with variable size, held by the `myvar` column , with values between 0 and 16: "myArr[myvar]/d[0,10]"
+
 - If the address points to a single numerical variable, the leaflist is optional:
+~~~ {.cpp}
   int value;
   `tree->Branch(branchname, &value);`
+~~~
 - If the address points to more than one numerical variable, we strongly recommend
   that the variable be sorted in decreasing order of size.  Any other order will
-  result in a non-portable (even between CINT and compiled code on the platform)
-  TTree (i.e. you will not be able to read it back on a platform with a different
-  padding strategy).
+  result in a non-portable TTree (i.e. you will not be able to read it back on a 
+  platform with a different padding strategy).
+  We recommend to persistify objects rather than composite leaflists.
 - In case of the truncated floating point types (Float16_t and Double32_t) you can
   furthermore specify the range in the style [xmin,xmax] or [xmin,xmax,nbits] after
   the type character. For example, for storing a variable size array `myArr` of 
@@ -103,7 +125,47 @@ In the following, the details about the creation of different types of branches 
   the standard rules of opaque typedefs annotation are valid. For example, if only
   18 bits were sufficient, the syntax would become: `myArr[myArrSize]/d[0,twopi,18]`
 
-### Case B
+## <a name="addingacolumnofstl"></a>Adding a column of STL collection instances (e.g. std::vector, std::list, std::unordered_map)
+
+~~~ {.cpp}
+    auto branch = tree.Branch( branchname, STLcollection, buffsize, splitlevel);
+~~~
+STLcollection is the address of a pointer to std::vector, std::list,
+std::deque, std::set or std::multiset containing pointers to objects.
+If the splitlevel is a value bigger than 100 (TTree::kSplitCollectionOfPointers)
+then the collection will be written in split mode, e.g. if it contains objects of
+any types deriving from TTrack this function will sort the objects
+based on their type and store them in separate branches in split
+mode.
+
+~~~ {.cpp}
+    branch->SetAddress(void *address)
+~~~
+In case of dynamic structures changing with each entry for example, one must
+redefine the branch address before filling the branch again.
+This is done via the TBranch::SetAddress member function.
+
+## <a name="addingacolumnofobjs">Add a column of objects
+
+~~~ {.cpp}
+    MyClass object;
+    auto branch = tree.Branch(branchname, &object, bufsize, splitlevel)
+~~~
+Note: The 2nd parameter must be the address of a valid object.
+      The object must not be destroyed (i.e. be deleted) until the TTree
+      is deleted or TTree::ResetBranchAddress is called.
+
+- if splitlevel=0, the object is serialized in the branch buffer.
+- if splitlevel=1 (default), this branch will automatically be split
+  into subbranches, with one subbranch for each data member or object
+  of the object itself. In case the object member is a TClonesArray,
+  the mechanism described in case C is applied to this array.
+- if splitlevel=2 ,this branch will automatically be split
+  into subbranches, with one subbranch for each data member or object
+  of the object itself. In case the object member is a TClonesArray,
+  it is processed as a TObject*, only one branch.
+
+Another available syntax is the following:
 
 ~~~ {.cpp}
     auto branch = tree.Branch(branchname, &p_object, bufsize, splitlevel)
@@ -115,15 +177,6 @@ In the following, the details about the creation of different types of branches 
 - If className is used to specify explicitly the object type, the className must
   be of a type related to the one pointed to by the pointer.  It should be either
   a parent or derived class.
-- if splitlevel=0, the object is serialized in the branch buffer.
-- if splitlevel=1, this branch will automatically be split
-  into subbranches, with one subbranch for each data member or object
-  of the object itself. In case the object member is a TClonesArray,
-  the mechanism described in case C is applied to this array.
-- if splitlevel=2 ,this branch will automatically be split
-  into subbranches, with one subbranch for each data member or object
-  of the object itself. In case the object member is a TClonesArray,
-  it is processed as a TObject*, only one branch.
 
 Note: The pointer whose address is passed to TTree::Branch must not
       be destroyed (i.e. go out of scope) until the TTree is deleted or
@@ -145,29 +198,9 @@ is not taken over by the TTree.  I.e. even though an object will be allocated
 by TTree::Branch if the pointer p_object is zero, the object will <b>not</b>
 be deleted when the TTree is deleted.
 
+## <a name="addingacolumnoftclonesarray">Add a column of TClonesArray instances
 
-### Case C
-
-~~~ {.cpp}
-    MyClass object;
-    auto branch = tree.Branch(branchname, &object, bufsize, splitlevel)
-~~~
-Note: The 2nd parameter must be the address of a valid object.
-      The object must not be destroyed (i.e. be deleted) until the TTree
-      is deleted or TTree::ResetBranchAddress is called.
-
-- if splitlevel=0, the object is serialized in the branch buffer.
-- if splitlevel=1 (default), this branch will automatically be split
-  into subbranches, with one subbranch for each data member or object
-  of the object itself. In case the object member is a TClonesArray,
-  the mechanism described in case C is applied to this array.
-- if splitlevel=2 ,this branch will automatically be split
-  into subbranches, with one subbranch for each data member or object
-  of the object itself. In case the object member is a TClonesArray,
-  it is processed as a TObject*, only one branch.
-
-
-### Case D
+*It is recommended to use STL containers instead of TClonesArrays*.
 
 ~~~ {.cpp}
     // clonesarray is the address of a pointer to a TClonesArray.
@@ -178,27 +211,7 @@ For example, if the TClonesArray is an array of TTrack objects,
 this function will create one subbranch for each data member of
 the object TTrack.
 
-
-### Case E
-
-~~~ {.cpp}
-    auto branch = tree.Branch( branchname, STLcollection, buffsize, splitlevel);
-~~~
-STLcollection is the address of a pointer to std::vector, std::list,
-std::deque, std::set or std::multiset containing pointers to objects.
-If the splitlevel is a value bigger than 100 (TTree::kSplitCollectionOfPointers)
-then the collection will be written in split mode, e.g. if it contains objects of
-any types deriving from TTrack this function will sort the objects
-based on their type and store them in separate branches in split
-mode.
-~~~ {.cpp}
-    branch->SetAddress(void *address)
-~~~
-In case of dynamic structures changing with each entry for example, one must
-redefine the branch address before filling the branch again.
-This is done via the TBranch::SetAddress member function.
-
-### Fill the Tree:
+## <a name="fillthetree">Fill the Tree:
 
 A TTree instance is filled with the invocation of the TTree::Fill method:
 ~~~ {.cpp}
@@ -207,7 +220,7 @@ A TTree instance is filled with the invocation of the TTree::Fill method:
 Upon its invocation, a loop on all defined branches takes place that for each branch invokes
 the TBranch::Fill method.
 
-## Adding a Branch to an Existing Tree
+## <a name="addcoltoexistingtree">Add a column to an already existing Tree
 
 You may want to add a branch to an existing tree. For example,
 if one variable in the tree was computed with a certain algorithm,
@@ -239,7 +252,9 @@ It is not always possible to add branches to existing datasets stored in TFiles:
 these files might not be writeable, just readable. In addition, modifying in place a TTree
 causes a new TTree instance to be written and the previous one to be deleted.
 For this reasons, ROOT offers the concept of friends for TTree and TChain:
-if is good practice to rely on friend trees rather than adding a branchs manually.
+if is good practice to rely on friend trees rather than adding a branch manually.
+
+## <a name="fullexample">An Example
 
 Begin_Macro
 ../../../tutorials/tree/tree.C
@@ -273,9 +288,9 @@ End_Macro
     TFile hfile("htree.root","RECREATE","Demo ROOT file with histograms & trees");
 
     // Create some histograms and a profile histogram
-    TH1F *hpx   = new TH1F("hpx","This is the px distribution",100,-4,4);
-    TH2F *hpxpy = new TH2F("hpxpy","py ps px",40,-4,4,40,-4,4);
-    TProfile *hprof = new TProfile("hprof","Profile of pz versus px",100,-4,4,0,20);
+    TH1F hpx("hpx","This is the px distribution",100,-4,4);
+    TH2F hpxpy("hpxpy","py ps px",40,-4,4,40,-4,4);
+    TProfile hprof("hprof","Profile of pz versus px",100,-4,4,0,20);
 
     // Define some simple structures
     typedef struct {Float_t x,y,z;} POINT;
@@ -284,34 +299,30 @@ End_Macro
        UInt_t flag;
        Float_t temperature;
     } EVENTN;
-    static POINT point;
-    static EVENTN eventn;
+    POINT point;
+    EVENTN eventn;
 
     // Create a ROOT Tree
-    TTree *tree = new TTree("T","An example of ROOT tree with a few branches");
-    tree->Branch("point",&point,"x:y:z");
-    tree->Branch("eventn",&eventn,"ntrack/I:nseg:nvertex:flag/i:temperature/F");
-    tree->Branch("hpx","TH1F",&hpx,128000,0);
+    TTree tree("T","An example of ROOT tree with a few branches");
+    tree.Branch("point",&point,"x:y:z");
+    tree.Branch("eventn",&eventn,"ntrack/I:nseg:nvertex:flag/i:temperature/F");
+    tree.Branch("hpx","TH1F",&hpx,128000,0);
 
     Float_t px,py,pz;
-    static Float_t p[3];
 
     // Here we start a loop on 1000 events
     for ( Int_t i=0; i<1000; i++) {
        gRandom->Rannor(px,py);
        pz = px*px + py*py;
-       Float_t random = gRandom->::Rndm(1);
+       const auto random = gRandom->::Rndm(1);
 
        // Fill histograms
-       hpx->Fill(px);
-       hpxpy->Fill(px,py,1);
-       hprof->Fill(px,pz,1);
+       hpx.Fill(px);
+       hpxpy.Fill(px,py,1);
+       hprof.Fill(px,pz,1);
 
        // Fill structures
-       p[0] = px;
-       p[1] = py;
-       p[2] = pz;
-       point.x = 10*(random-1);;
+       point.x = 10*(random-1);
        point.y = 5*random;
        point.z = 20*random;
        eventn.ntrack  = Int_t(100*random);
@@ -327,13 +338,13 @@ End_Macro
     }
     // End of the loop
 
-    tree->Print();
+    tree.Print();
 
     // Save all objects in this file
     hfile.Write();
 
     // Close the file. Note that this is automatically done when you leave
-    // the application.
+    // the application upon file destruction.
     hfile.Close();
 
     return 0;
