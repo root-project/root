@@ -34,3 +34,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistPainter
     Matrix
     ${HISTPAINTER_V7_LIBRARIES}
 )
+
+# Silence -Wformat=truncation warnings starting with gcc7
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER_EQUAL 7)
+    target_compile_options(HistPainter PRIVATE -Wno-format-truncation)
+endif()
