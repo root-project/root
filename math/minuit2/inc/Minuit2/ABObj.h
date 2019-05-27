@@ -70,7 +70,7 @@ public:
 
 private:
 
-  ABObj& operator=(const ABObj&) {return *this;}
+  ABObj& operator=(const ABObj&) = delete;
 
 public:
 
