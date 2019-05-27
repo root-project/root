@@ -230,6 +230,8 @@ public:
    template <class M>
    SMatrix<T,D1,D2,R>& operator=(const M& rhs);
 
+   SMatrix<T,D1,D2,R>& operator=(const SMatrix<T,D1,D2,R>& rhs);
+
    /**
        Assign from a matrix expression
    */
