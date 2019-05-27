@@ -158,6 +158,12 @@ SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator=(const M&  rhs) {
 }
 
 template <class T, unsigned int D1, unsigned int D2, class R>
+SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator=(const SMatrix<T,D1,D2,R>&  rhs) {
+   fRep = rhs.fRep;
+   return *this;
+}
+
+template <class T, unsigned int D1, unsigned int D2, class R>
 template <class A, class R2>
 SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator=(const Expr<A,T,D1,D2,R2>&  rhs) {
 
