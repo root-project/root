@@ -75,7 +75,6 @@ else()
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
   string(TIMESTAMP GIT_TIMESTAMP "%b %d %Y, %H:%M:%S" UTC)
 
-  string(REGEX REPLACE "^v([0-9])-([0-9]+)-" "\\1.\\2." ROOT_VERSION "${GIT_DESCRIBE_ALWAYS}")
   if("${GIT_DESCRIBE_ALL}" MATCHES "^tags/v[0-9]+-[0-9]+-[0-9]+.*")
     # GIT_DESCRIBE_ALWAYS: v6-16-00-rc1
     # GIT_DESCRIBE_ALL: tags/v6-16-00-rc1
@@ -94,6 +93,7 @@ else()
     # GIT_DESCRIBE_ALL: heads/master or remotes/origin/master
     SET_VERSION_FROM_FILE()
   endif()
+  set(ROOT_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}")
 endif()
 
 
