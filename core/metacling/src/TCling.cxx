@@ -1113,6 +1113,101 @@ static std::string GetModuleNameAsString(clang::Module *M, const clang::Preproce
    return std::string(llvm::sys::path::stem(ModuleName));
 }
 
+static void RegisterCxxModules(cling::Interpreter &clingInterp)
+{
+   if (!clingInterp.getCI()->getLangOpts().Modules)
+      return;
+      // Setup core C++ modules if we have any to setup.
+
+      // Load libc and stl first.
+#ifdef R__MACOSX
+   LoadModules({"Darwin", "std"}, clingInterp);
+#else
+   LoadModules({"libc", "stl"}, clingInterp);
+#endif
+
+   // Load core modules
+   // This should be vector in order to be able to pass it to LoadModules
+   std::vector<std::string> CoreModules = {"ROOT_Foundation_C", "ROOT_Config",
+                                           "ROOT_Foundation_Stage1_NoRTTI", "Core", "RIO"};
+
+   // FIXME: Reducing those will let us be less dependent on rootmap files
+   static constexpr std::array<const char *, 3> ExcludeModules = {
+      {"Rtools", "RSQLite", "RInterface"}};
+
+   LoadModules(CoreModules, clingInterp);
+
+   // Take this branch only from ROOT because we don't need to preload modules in rootcling
+   if (!IsFromRootCling()) {
+      // Dynamically get all the modules and load them if they are not in core modules
+      clang::CompilerInstance &CI = *clingInterp.getCI();
+      clang::ModuleMap &moduleMap = CI.getPreprocessor().getHeaderSearchInfo().getModuleMap();
+      clang::Preprocessor &PP = CI.getPreprocessor();
+      std::vector<std::string> ModulesPreloaded;
+      for (auto I = moduleMap.module_begin(), E = moduleMap.module_end(); I != E; ++I) {
+         clang::Module *M = I->second;
+         assert(M);
+
+         std::string ModuleName = GetModuleNameAsString(M, PP);
+         if (!ModuleName.empty() &&
+             std::find(CoreModules.begin(), CoreModules.end(), ModuleName) == CoreModules.end() &&
+             std::find(ExcludeModules.begin(), ExcludeModules.end(), ModuleName) ==
+                ExcludeModules.end()) {
+            if (M->IsSystem && !M->IsMissingRequirement)
+               LoadModule(ModuleName, clingInterp);
+            else if (!M->IsSystem && !M->IsMissingRequirement)
+               ModulesPreloaded.push_back(ModuleName);
+         }
+      }
+      LoadModules(ModulesPreloaded, clingInterp);
+   }
+
+   // Check that the gROOT macro was exported by any core module.
+   assert(clingInterp.getMacro("gROOT") && "Couldn't load gROOT macro?");
+
+   // C99 decided that it's a very good idea to name a macro `I` (the letter I).
+   // This seems to screw up nearly all the template code out there as `I` is
+   // common template parameter name and iterator variable name.
+   // Let's follow the GCC recommendation and undefine `I` in case any of the
+   // core modules have defined it:
+   // https://www.gnu.org/software/libc/manual/html_node/Complex-Numbers.html
+   clingInterp.declare("#ifdef I\n #undef I\n #endif\n");
+
+   // These macros are from loading R related modules, which conflict with
+   // user's code.
+   clingInterp.declare("#ifdef PI\n #undef PI\n #endif\n");
+   clingInterp.declare("#ifdef ERROR\n #undef ERROR\n #endif\n");
+}
+
+static void RegisterPreIncludedHeaders(cling::Interpreter &clingInterp)
+{
+   std::string PreIncludes;
+   bool hasCxxModules = clingInterp.getCI()->getLangOpts().Modules;
+
+   // For the list to also include string, we have to include it now.
+   // rootcling does parts already if needed, e.g. genreflex does not want using
+   // namespace std.
+   if (IsFromRootCling()) {
+      PreIncludes += "#include \"RtypesCore.h\"\n";
+   } else {
+      if (!hasCxxModules)
+         PreIncludes += "#include \"Rtypes.h\"\n";
+
+      PreIncludes += gClassDefInterpMacro + "\n"
+                     + gInterpreterClassDef + "\n"
+                     "#undef ClassImp\n"
+                     "#define ClassImp(X);\n";
+   }
+   if (!hasCxxModules)
+      PreIncludes += "#include <string>\n";
+
+   // We must include it even when we have modules because it is marked as
+   // textual in the modulemap due to the nature of the assert header.
+   PreIncludes += "#include <cassert>\n";
+   PreIncludes += "using namespace std;\n";
+   clingInterp.declare(PreIncludes);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the cling interpreter interface.
 /// \param argv - array of arguments passed to the cling::Interpreter constructor
@@ -1267,87 +1362,8 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    static llvm::raw_fd_ostream fMPOuts (STDOUT_FILENO, /*ShouldClose*/false);
    fMetaProcessor = new cling::MetaProcessor(*fInterpreter, fMPOuts);
 
-   if (fInterpreter->getCI()->getLangOpts().Modules) {
-      // Setup core C++ modules if we have any to setup.
-
-      // Load libc and stl first.
-#ifdef R__MACOSX
-      LoadModules({"Darwin", "std"}, *fInterpreter);
-#else
-      LoadModules({"libc", "stl"}, *fInterpreter);
-#endif
-
-      // Load core modules
-      // This should be vector in order to be able to pass it to LoadModules
-      std::vector<std::string> CoreModules = {"ROOT_Foundation_C","ROOT_Config",
-         "ROOT_Foundation_Stage1_NoRTTI", "Core", "RIO"};
-
-      // FIXME: Reducing those will let us be less dependent on rootmap files
-      static constexpr std::array<const char*, 3> ExcludeModules =
-         { { "Rtools", "RSQLite", "RInterface"} };
-
-      LoadModules(CoreModules, *fInterpreter);
-
-      // Take this branch only from ROOT because we don't need to preload modules in rootcling
-      if (!fromRootCling) {
-         // Dynamically get all the modules and load them if they are not in core modules
-         clang::CompilerInstance &CI = *fInterpreter->getCI();
-         clang::ModuleMap &moduleMap = CI.getPreprocessor().getHeaderSearchInfo().getModuleMap();
-         clang::Preprocessor &PP = CI.getPreprocessor();
-         std::vector<std::string> ModulesPreloaded;
-
-         for (auto I = moduleMap.module_begin(), E = moduleMap.module_end(); I != E; ++I) {
-            clang::Module *M = I->second;
-            assert(M);
-
-            std::string ModuleName = GetModuleNameAsString(M, PP);
-            if (!ModuleName.empty() &&
-                  std::find(CoreModules.begin(), CoreModules.end(), ModuleName) == CoreModules.end()
-                  && std::find(ExcludeModules.begin(), ExcludeModules.end(), ModuleName) == ExcludeModules.end()) {
-               if (M->IsSystem && !M->IsMissingRequirement)
-                  LoadModule(ModuleName, *fInterpreter);
-               else if (!M->IsSystem && !M->IsMissingRequirement)
-                  ModulesPreloaded.push_back(ModuleName);
-            }
-         }
-         LoadModules(ModulesPreloaded, *fInterpreter);
-      }
-
-      // Check that the gROOT macro was exported by any core module.
-      assert(fInterpreter->getMacro("gROOT") && "Couldn't load gROOT macro?");
-
-      // C99 decided that it's a very good idea to name a macro `I` (the letter I).
-      // This seems to screw up nearly all the template code out there as `I` is
-      // common template parameter name and iterator variable name.
-      // Let's follow the GCC recommendation and undefine `I` in case any of the
-      // core modules have defined it:
-      // https://www.gnu.org/software/libc/manual/html_node/Complex-Numbers.html
-      fInterpreter->declare("#ifdef I\n #undef I\n #endif\n");
-
-      // These macros are from loading R related modules, which conflict with
-      // user's code.
-      fInterpreter->declare("#ifdef PI\n #undef PI\n #endif\n");
-      fInterpreter->declare("#ifdef ERROR\n #undef ERROR\n #endif\n");
-   }
-
-   // For the list to also include string, we have to include it now.
-   // rootcling does parts already if needed, e.g. genreflex does not want using
-   // namespace std.
-   if (fromRootCling) {
-      fInterpreter->declare("#include \"RtypesCore.h\"\n"
-                            "#include <string>\n"
-                            "using std::string;\n"
-                            "#include <cassert>\n");
-   } else {
-      fInterpreter->declare("#include \"Rtypes.h\"\n"
-                            + gClassDefInterpMacro + "\n"
-                            + gInterpreterClassDef + "\n"
-                            "#undef ClassImp\n"
-                            "#define ClassImp(X);\n"
-                            "#include <string>\n"
-                            "using namespace std;\n"
-                            "#include <cassert>\n");
-   }
+   RegisterCxxModules(*fInterpreter);
+   RegisterPreIncludedHeaders(*fInterpreter);
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
