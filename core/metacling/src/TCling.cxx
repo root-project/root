@@ -1833,13 +1833,13 @@ void TCling::RegisterModule(const char* modulename,
          // its symbols are not yet reachable from the process.
          // Recursive dlopen seems to work just fine.
          void* dyLibHandle = dlopen(dyLibName, RTLD_LAZY | RTLD_GLOBAL);
-         if (!dyLibHandle) {
-            PrintDlError(dyLibName, modulename);
-         } else {
+         if (dyLibHandle) {
             fRegisterModuleDyLibs.push_back(dyLibHandle);
             wasDlopened = true;
-         } // if (!dyLibHandle) .. else
-      } // if (dyLibName)
+         } else {
+            PrintDlError(dyLibName, modulename);
+         }
+      }
    } // if (!lateRegistration)
 
    if (hasHeaderParsingOnDemand && fwdDeclsCode){
