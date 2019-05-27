@@ -45,6 +45,8 @@ public:
 
   MnCross(const MnCross& cross) : fValue(cross.fValue), fState(cross.fState), fNFcn(cross.fNFcn), fValid(cross.fValid), fLimset(cross.fLimset), fMaxFcn(cross.fMaxFcn), fNewMin(cross.fNewMin) {}
 
+  MnCross& operator=(const MnCross&) = default;
+
   MnCross& operator()(const MnCross& cross) {
     fValue = cross.fValue;
     fState = cross.fState;
