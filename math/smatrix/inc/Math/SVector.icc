@@ -199,6 +199,13 @@ SVector<T,D>& SVector<T,D>::operator=(const T& a1) {
 }
 
 template <class T, unsigned int D>
+SVector<T,D>& SVector<T,D>::operator=(const SVector<T,D>& rhs) {
+   for(unsigned int i=0; i<D; ++i)
+      fArray[i] = rhs.fArray[i];
+   return *this;
+}
+
+template <class T, unsigned int D>
 template <class A>
 SVector<T,D>& SVector<T,D>::operator=(const VecExpr<A,T,D>& rhs) {
    if (! rhs.IsInUse(fArray) ) {
