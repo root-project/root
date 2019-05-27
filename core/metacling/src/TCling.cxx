@@ -1792,8 +1792,15 @@ void TCling::RegisterModule(const char* modulename,
       // its symbols are not yet reachable from the process.
       // Recursive dlopen seems to work just fine.
       dyLibName = FindLibraryName(triggerFunc);
+
+      // The triggerFunc may not be in a shared object but in an executable.
+      // In that case, we are done.
+      if (dyLibName && !cling::DynamicLibraryManager::isSharedLibrary(dyLibName))
+         dyLibName = nullptr;
+
       if (dyLibName) {
-         // We were able to determine the library name.
+
+         // We were able to determine that is a valid library.
          void* dyLibHandle = dlopen(dyLibName, RTLD_LAZY | RTLD_GLOBAL);
          if (!dyLibHandle) {
 #ifdef R__WIN32
