@@ -674,17 +674,13 @@ void RooDataHist::initialize(const char* binningName, Bool_t fillTree)
 {
 
   // Save real dimensions of dataset separately
-  RooAbsArg* real ;
-  _iterator->Reset() ;
-  while((real=(RooAbsArg*)_iterator->Next())) {
+  for (const auto real : _vars) {
     if (dynamic_cast<RooAbsReal*>(real)) _realVars.add(*real);
   }
   _realIter = _realVars.createIterator() ;
 
   // Fill array of LValue pointers to variables
-  _iterator->Reset();
-  RooAbsArg* rvarg;
-  while((rvarg=(RooAbsArg*)_iterator->Next())) {
+  for (const auto rvarg : _vars) {
     if (binningName) {
       RooRealVar* rrv = dynamic_cast<RooRealVar*>(rvarg); 
       if (rrv) {
@@ -703,10 +699,9 @@ void RooDataHist::initialize(const char* binningName, Bool_t fillTree)
   _idxMult.resize(_vars.getSize()) ;
 
   _arrSize = 1 ;
-  _iterator->Reset() ;
-  RooAbsLValue* arg ;
   Int_t n(0), i ;
-  while((arg=dynamic_cast<RooAbsLValue*>(_iterator->Next()))) {
+  for (const auto var : _vars) {
+    auto arg = dynamic_cast<const RooAbsLValue*>(var);
     
     // Calculate sub-index multipliers for master index
     for (i=0 ; i<n ; i++) {
@@ -747,14 +742,12 @@ void RooDataHist::initialize(const char* binningName, Bool_t fillTree)
 
   Int_t ibin ;
   for (ibin=0 ; ibin<_arrSize ; ibin++) {
-    _iterator->Reset() ;
-    RooAbsLValue* arg2 ;
     Int_t j(0), idx(0), tmp(ibin) ;
     Double_t theBinVolume(1) ;
-    while((arg2=dynamic_cast<RooAbsLValue*>(_iterator->Next()))) {
+    for (auto arg2 : _vars) {
       idx  = tmp / _idxMult[j] ;
       tmp -= idx*_idxMult[j++] ;
-      RooAbsLValue* arglv = dynamic_cast<RooAbsLValue*>(arg2) ;
+      auto arglv = dynamic_cast<RooAbsLValue*>(arg2);
       arglv->setBin(idx) ;
       theBinVolume *= arglv->getBinWidth(idx) ;
 //       cout << "init: bin width at idx=" << idx << " = " << arglv->getBinWidth(idx) << " binv[" << idx << "] = " << theBinVolume << endl ;
@@ -811,17 +804,13 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
   }  
 
   // Save real dimensions of dataset separately
-  RooAbsArg* arg ;
-  _iterator->Reset() ;
-  while((arg=(RooAbsArg*)_iterator->Next())) {
-    if (dynamic_cast<RooAbsReal*>(arg)) _realVars.add(*arg) ;
+  for (const auto arg : _vars) {
+    if (dynamic_cast<RooAbsReal*>(arg) != nullptr) _realVars.add(*arg) ;
   }
   _realIter = _realVars.createIterator() ;
 
   // Fill array of LValue pointers to variables
-  _iterator->Reset() ;
-  RooAbsArg* rvarg ;
-  while((rvarg=(RooAbsArg*)_iterator->Next())) {
+  for (const auto rvarg : _vars) {
     // coverity[FORWARD_NULL]
     _lvvars.push_back(dynamic_cast<RooAbsLValue*>(rvarg)) ;
     // coverity[FORWARD_NULL]
@@ -1512,25 +1501,20 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
   _vars = *sliceOnlySet ;
   calculatePartialBinVolume(*sliceOnlySet) ;
   delete sliceOnlySet ;
-
-  TIterator* ssIter = sumSet.createIterator() ;
   
   // Calculate mask and refence plot bins for non-iterating variables
-  RooAbsArg* arg ;
   Bool_t* mask = new Bool_t[_vars.getSize()] ;
   Int_t*  refBin = new Int_t[_vars.getSize()] ;
 
-  Int_t i(0) ;
-  _iterator->Reset() ;
-  while((arg=(RooAbsArg*)_iterator->Next())) {
+  for (unsigned int i = 0; i < _vars.size(); ++i) {
+    const auto arg = _vars[i];
+
     if (sumSet.find(*arg)) {
       mask[i] = kFALSE ;
     } else {
       mask[i] = kTRUE ;
-      // coverity[FORWARD_NULL]
-      refBin[i] = (dynamic_cast<RooAbsLValue*>(arg))->getBin() ;
+      refBin[i] = dynamic_cast<RooAbsLValue*>(arg)->getBin();
     }
-    i++ ;
   }
     
   // Loop over entire data set, skipping masked entries
@@ -1542,9 +1526,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
     Bool_t skip(kFALSE) ;
 
     // Check if this bin belongs in selected slice
-    _iterator->Reset() ;
-    // coverity[UNUSED_VALUE]
-    while((!skip && (arg=(RooAbsArg*)_iterator->Next()))) {
+    for (unsigned int i = 0; !skip && i < _vars.size(); ++i) {
       idx  = tmp / _idxMult[ivar] ;
       tmp -= idx*_idxMult[ivar] ;
       if (mask[ivar] && idx!=refBin[ivar]) skip=kTRUE ;
@@ -1552,7 +1534,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
     }
     
     if (!skip) {
-      Double_t theBinVolume = correctForBinSize ? (inverseBinCor ? 1/(*_pbinv)[i] : (*_pbinv)[i] ) : 1.0 ;
+      Double_t theBinVolume = correctForBinSize ? (inverseBinCor ? 1/(*_pbinv)[_vars.size()] : (*_pbinv)[_vars.size()] ) : 1.0 ;
       //       cout << "adding bin[" << ibin << "] to sum wgt = " << _wgt[ibin] << " binv = " << theBinVolume << endl ;
       // Double_t y = _wgt[ibin]*theBinVolume - carry;
       Double_t y = get_wgt(ibin) * theBinVolume - carry;
@@ -1561,7 +1543,6 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
       total = t;
     }
   }
-  delete ssIter ;
 
   delete[] mask ;
   delete[] refBin ;
@@ -1608,14 +1589,12 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
   std::vector<Double_t> rangeLo(_vars.getSize(), -std::numeric_limits<Double_t>::infinity());
   std::vector<Double_t> rangeHi(_vars.getSize(), +std::numeric_limits<Double_t>::infinity());
 
-  _iterator->Reset();
-  RooAbsArg* arg;
-  for (Int_t i = 0; (arg=(RooAbsArg*)_iterator->Next()); ++i) {
+  for (Int_t i = 0; _vars.size(); ++i) {
+    const auto arg = _vars[i];
     RooAbsArg* sumsetv = sumSet.find(*arg);
     RooAbsArg* slicesetv = sliceSet.find(*arg);
     mask[i] = !sumsetv;
     if (mask[i]) {
-      // coverity[FORWARD_NULL]
       refBin[i] = (dynamic_cast<RooAbsLValue*>(arg))->getBin();
     }
     std::map<const RooAbsArg*, std::pair<Double_t, Double_t> >::const_iterator
@@ -1630,33 +1609,30 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
   Double_t total(0), carry(0);
   for (Int_t ibin = 0; ibin < _arrSize; ++ibin) {
     // Check if this bin belongs in selected slice
-    _iterator->Reset();
     Bool_t skip(kFALSE);
-    // coverity[UNUSED_VALUE]
-    for (Int_t ivar = 0, tmp = ibin;
-	(!skip && (arg=(RooAbsArg*)_iterator->Next())); ++ivar) {
+    for (int ivar = 0, tmp = ibin; !skip && ivar < int(_vars.size()); ++ivar) {
       const Int_t idx = tmp / _idxMult[ivar];
       tmp -= idx*_idxMult[ivar];
       if (mask[ivar] && idx!=refBin[ivar]) skip=kTRUE;
     }
+
     if (skip) continue;
-    _iterator->Reset();
+
     // work out bin volume
     Double_t theBinVolume = 1.;
-    for (Int_t ivar = 0, tmp = ibin;
-	(arg=(RooAbsArg*)_iterator->Next()); ++ivar) {
+    for (Int_t ivar = 0, tmp = ibin; ivar < (int)_vars.size(); ++ivar) {
       const Int_t idx = tmp / _idxMult[ivar];
       tmp -= idx*_idxMult[ivar];
       if (_binbounds[ivar].empty()) continue;
       const Double_t binLo = _binbounds[ivar][2 * idx];
       const Double_t binHi = _binbounds[ivar][2 * idx + 1];
       if (binHi < rangeLo[ivar] || binLo > rangeHi[ivar]) {
-	// bin is outside of allowed range - effective bin volume is zero
-	theBinVolume = 0.;
-	break;
+        // bin is outside of allowed range - effective bin volume is zero
+        theBinVolume = 0.;
+        break;
       }
       theBinVolume *= 
-	(std::min(rangeHi[ivar], binHi) - std::max(rangeLo[ivar], binLo));
+          (std::min(rangeHi[ivar], binHi) - std::max(rangeLo[ivar], binLo));
     }
     const Double_t corrPartial = theBinVolume / _binv[ibin];
     if (0. == corrPartial) continue;
@@ -1693,26 +1669,25 @@ void RooDataHist::calculatePartialBinVolume(const RooArgSet& dimSet) const
 
   // Calculate plot bins of components from master index
   Bool_t* selDim = new Bool_t[_vars.getSize()] ;
-  _iterator->Reset() ;
-  RooAbsArg* v ;
   Int_t i(0) ;
-  while((v=(RooAbsArg*)_iterator->Next())) {
+  for (const auto v : _vars) {
     selDim[i++] = dimSet.find(*v) ? kTRUE : kFALSE ;
   }
 
   // Recalculate partial bin volume cache
   Int_t ibin ;
   for (ibin=0 ; ibin<_arrSize ; ibin++) {
-    _iterator->Reset() ;
-    RooAbsLValue* arg ;
     Int_t j(0), idx(0), tmp(ibin) ;
     Double_t theBinVolume(1) ;
-    while((arg=dynamic_cast<RooAbsLValue*>(_iterator->Next()))) {
+    for (const auto absArg : _vars) {
+      auto arg = dynamic_cast<const RooAbsLValue*>(absArg);
+      if (!arg)
+        break;
+
       idx  = tmp / _idxMult[j] ;
       tmp -= idx*_idxMult[j++] ;
       if (selDim[j-1]) {
-	RooAbsLValue* arglv = dynamic_cast<RooAbsLValue*>(arg) ;
-	theBinVolume *= arglv->getBinWidth(idx) ;
+        theBinVolume *= arg->getBinWidth(idx) ;
       }
     }
     (*pbinv)[ibin] = theBinVolume ;
@@ -1940,10 +1915,8 @@ void RooDataHist::printValue(ostream& os) const
 void RooDataHist::printArgs(ostream& os) const 
 {
   os << "[" ;    
-  _iterator->Reset() ;
-  RooAbsArg* arg ;
   Bool_t first(kTRUE) ;
-  while((arg=(RooAbsArg*)_iterator->Next())) {
+  for (const auto arg : _vars) {
     if (first) {
       first=kFALSE ;
     } else {

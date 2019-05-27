@@ -48,6 +48,36 @@ RooStats::HistFactory::Sample::Sample(const Sample& other) :
     }
   }
 
+RooStats::HistFactory::Sample& RooStats::HistFactory::Sample::operator=(const Sample& other)
+{
+  fName = other.fName; fInputFile = other.fInputFile;
+  fHistoName = other.fHistoName; fHistoPath = other.fHistoPath;
+  fChannelName = other.fChannelName;
+
+  fOverallSysList = other.fOverallSysList;
+  fNormFactorList = other.fNormFactorList;
+  fHistoSysList = other.fHistoSysList;
+  fHistoFactorList = other.fHistoFactorList;
+  fShapeSysList = other.fShapeSysList;
+  fShapeFactorList = other.fShapeFactorList;
+
+  fStatError = other.fStatError;
+  fNormalizeByTheory = other.fNormalizeByTheory;
+  fStatErrorActivate = other.fStatErrorActivate;
+  fhNominal = other.fhNominal;
+
+  if (fhCountingHist)
+    delete fhCountingHist;
+
+  if( other.fhCountingHist ) {
+    SetValue( other.fhCountingHist->GetBinContent(1) );
+  } else {
+    fhCountingHist = NULL;
+  }
+
+  return *this;
+}
+
 
 RooStats::HistFactory::Sample::Sample(std::string SampName, std::string SampHistoName, std::string SampInputFile, std::string SampHistoPath) : 
   fName( SampName ),   fInputFile( SampInputFile), 

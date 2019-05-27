@@ -32,6 +32,7 @@ public:
   Sample();
   Sample(std::string Name);
   Sample(const Sample& other);
+  Sample& operator=(const Sample& other);
   /// constructor from name, file and path. Name of the histogram should not include the path
   Sample(std::string Name, std::string HistoName, std::string InputFile, std::string HistoPath="");
   ~Sample();

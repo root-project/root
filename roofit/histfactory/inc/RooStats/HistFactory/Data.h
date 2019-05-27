@@ -27,9 +27,11 @@ public:
   //friend class Channel;
 
   Data();
-  Data( const Data& other );
+  Data( const Data& other ) = default;
   /// constructor from name, file and path. Name of the histogram should not include the path
   Data( std::string HistoName, std::string InputFile, std::string HistoPath="" );
+
+  Data& operator=(const Data& other) = default;
 
   std::string GetName() { return fName; }
   void SetName(const std::string& name) { fName=name; }
