@@ -41,6 +41,7 @@ public:
   RooAbsData() ; 
   RooAbsData(const char *name, const char *title, const RooArgSet& vars, RooAbsDataStore* store=0) ;
   RooAbsData(const RooAbsData& other, const char* newname = 0) ;
+  RooAbsData& operator=(const RooAbsData& other);
   virtual ~RooAbsData() ;
   virtual RooAbsData* emptyClone(const char* newName=0, const char* newTitle=0, const RooArgSet* vars=0, const char* wgtVarName=0) const = 0 ;
 
@@ -258,9 +259,6 @@ protected:
   // Column structure definition
   RooArgSet _vars;         // Dimensions of this data set
   RooArgSet _cachedVars ;  //! External variables cached with this data set
-
-  TIterator *_iterator;    //! Iterator over dimension variables
-  TIterator *_cacheIter ;  //! Iterator over cached variables
 
   RooAbsDataStore* _dstore ; // Data storage implementation
 
