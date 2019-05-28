@@ -21,18 +21,6 @@ ClassImp(TView);
 See TView3D.
 */
 
-// pin the vtable here.
-TView::~TView() {}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor.
-
-TView::TView(const TView& tv) :
-   TObject(tv),
-   TAttLine(tv)
-{
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a concrete default 3-d view via the plug-in manager
 
