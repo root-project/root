@@ -23,10 +23,10 @@
 class TLine : public TObject, public TAttLine, public TAttBBox2D {
 
 protected:
-   Double_t      fX1;           ///< X of 1st point
-   Double_t      fY1;           ///< Y of 1st point
-   Double_t      fX2;           ///< X of 2nd point
-   Double_t      fY2;           ///< Y of 2nd point
+   Double_t      fX1{0};           ///< X of 1st point
+   Double_t      fY1{0};           ///< Y of 1st point
+   Double_t      fX2{0};           ///< X of 2nd point
+   Double_t      fY2{0};           ///< Y of 2nd point
 
 public:
    // TLine status bits
@@ -36,10 +36,10 @@ public:
       kHorizontal = BIT(16)  ///< Line is horizontal
    };
 
-   TLine();
-   TLine(Double_t x1, Double_t y1,Double_t x2, Double_t  y2);
+   TLine() = default;
+   TLine(Double_t x1, Double_t y1, Double_t x2, Double_t  y2);
    TLine(const TLine &line);
-   virtual ~TLine();
+   virtual ~TLine() = default;
 
    TLine &operator=(const TLine &src);
 

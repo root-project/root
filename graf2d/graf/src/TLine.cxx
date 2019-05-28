@@ -28,13 +28,6 @@ ClassImp(TLine);
 A simple line.
 */
 
-////////////////////////////////////////////////////////////////////////////////
-/// Line default constructor.
-
-TLine::TLine(): TObject(), TAttLine()
-{
-   fX1=0; fY1=0; fX2=0; fY2=0;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Line normal constructor.
@@ -45,19 +38,12 @@ TLine::TLine(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    fX1=x1; fY1=y1; fX2=x2; fY2=y2;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Line default destructor.
-
-TLine::~TLine()
-{
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Line copy constructor.
 
 TLine::TLine(const TLine &line) : TObject(line), TAttLine(line), TAttBBox2D(line)
 {
-   fX1=0; fY1=0; fX2=0; fY2=0;
    ((TLine&)line).Copy(*this);
 }
 
