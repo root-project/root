@@ -28,8 +28,8 @@
 #  include <fcntl.h>
 #endif
 
-#ifdef __linux__
-#define linux
+#if defined(__linux__) && !defined(linux)
+# define linux
 #endif
 
 #ifdef SIGTSTP
