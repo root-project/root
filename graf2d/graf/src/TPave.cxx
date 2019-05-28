@@ -119,8 +119,18 @@ TPave::TPave(const TPave &pave) : TBox(pave)
    fInit         = 0;
    fShadowColor  = 0;
 
-   ((TPave&)pave).TPave::Copy(*this);
+   pave.TPave::Copy(*this);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
+TPave &TPave::operator=(const TPave &src)
+{
+   src.TPave::Copy(*this);
+   return *this;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert pave coordinates from NDC to Pad coordinates.
