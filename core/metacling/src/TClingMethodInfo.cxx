@@ -100,6 +100,29 @@ TClingMethodInfo::TClingMethodInfo(const TClingMethodInfo &rhs) :
 }
 
 
+TClingMethodInfo& TClingMethodInfo::operator=(const TClingMethodInfo &rhs) {
+   if (this == &rhs)
+      return *this;
+
+   this->TClingDeclInfo::operator=(rhs);
+   fInterp = rhs.fInterp;
+   fContexts = rhs.fContexts;
+   fFirstTime = rhs.fFirstTime;
+   fContextIdx = rhs.fContextIdx;
+   fIter = rhs.fIter;
+   fTitle = rhs.fTitle;
+   fTemplateSpecIter = nullptr;
+
+   if (rhs.fTemplateSpecIter) {
+      // The SpecIterator query the decl.
+      R__LOCKGUARD(gInterpreterMutex);
+      fTemplateSpecIter = new SpecIterator(*rhs.fTemplateSpecIter);
+   }
+
+   return *this;
+}
+
+
 TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
                                    TClingClassInfo *ci)
    : TClingDeclInfo(nullptr), fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""),
