@@ -815,6 +815,7 @@ INPUT                  = . \
                          ../../graf2d/gpad/ \
                          ../../graf2d/gpadv7/ \
                          ../../graf2d/graf/ \
+                         ../../graf2d/gviz/ \
                          ../../graf2d/postscript/ \
                          ../../graf2d/quartz/ \
                          ../../graf2d/win32gdk/ \
@@ -823,6 +824,7 @@ INPUT                  = . \
                          ../../graf3d/eve/ \
                          ../../graf3d/g3d/ \
                          ../../graf3d/gl/ \
+                         ../../graf3d/gviz3d/ \
                          ../../gui/fitpanel/ \
                          ../../gui/ged/ \
                          ../../gui/gui/ \
