@@ -71,6 +71,7 @@ public:
         fTemplateSpecIter(0) {}
 
    TClingMethodInfo(const TClingMethodInfo&);
+   TClingMethodInfo& operator=(const TClingMethodInfo &in);
 
    // Takes concrete decl and disables the iterator.
    TClingMethodInfo(cling::Interpreter *, const clang::FunctionDecl *);
