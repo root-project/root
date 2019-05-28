@@ -284,7 +284,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
       delete [] (char*)fname;
       fname = fName;
    } else {
-      Error("TMapFile", "error expanding path %s", fname);
+      Error("TMapFile", "error expanding path %s", name);
       goto zombie;
    }
 
