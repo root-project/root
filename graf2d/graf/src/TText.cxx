@@ -55,18 +55,9 @@ End_Macro
 */
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Text default constructor.
-
-TText::TText(): TNamed(), TAttText(), fWcsTitle(NULL)
-{
-   fX = 0.;
-   fY = 0.;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Text normal constructor.
 
-TText::TText(Double_t x, Double_t y, const char *text) : TNamed("",text), TAttText(), fWcsTitle(NULL)
+TText::TText(Double_t x, Double_t y, const char *text) : TNamed("",text), TAttText(), fWcsTitle(nullptr)
 {
    fX = x;
    fY = y;
@@ -75,7 +66,7 @@ TText::TText(Double_t x, Double_t y, const char *text) : TNamed("",text), TAttTe
 ////////////////////////////////////////////////////////////////////////////////
 /// Text normal constructor.
 
-TText::TText(Double_t x, Double_t y, const wchar_t *text) : TAttText()
+TText::TText(Double_t x, Double_t y, const wchar_t *text) : TNamed(), TAttText()
 {
    fX = x;
    fY = y;
@@ -89,16 +80,14 @@ TText::TText(Double_t x, Double_t y, const wchar_t *text) : TAttText()
 
 TText::~TText()
 {
-   if (fWcsTitle != NULL) delete reinterpret_cast<std::wstring *>(fWcsTitle);
+   if (fWcsTitle) delete reinterpret_cast<std::wstring *>(fWcsTitle);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TText::TText(const TText &text) : TNamed(text), TAttText(text), TAttBBox2D(text), fWcsTitle(NULL)
+TText::TText(const TText &text) : TNamed(text), TAttText(text), TAttBBox2D(text), fWcsTitle(nullptr)
 {
-   fX = 0.;
-   fY = 0.;
    ((TText&)text).Copy(*this);
 }
 
