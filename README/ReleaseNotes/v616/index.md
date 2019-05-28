@@ -61,6 +61,14 @@ They were deprecated before, or never ported from configure, make to CMake.
 
 It was never used in TVirtualX interfaces. If GLUtesselator forward declaration is required, use TGLUtil.h include instead.
 
+### Deprecation of ROOT packages
+
+*Note*: while the deprecation was emitted by `cmake` upon enabling these packages, the original release notes (of 6.16/00) did not mention the deprecation. Apologies for missing this!
+
+The following packages have been deprecated in 6.16 and will be removed in 6.18:
+afdsmgrd bonjour castor geocad globus hdfs krb5 ldap memstat odbc qt qtgsi rfio table
+
+
 ## C++ Modules Technology Preview
 
 ROOT has several features which interact with libraries and require implicit
