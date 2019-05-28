@@ -1,14 +1,12 @@
 % ROOT Version 6.18 Release Notes
-% 2018-11-14
+% 2019-05-28
 <a name="TopOfPage"></a>
 
 ## Introduction
 
-ROOT version 6.18/00 is scheduled for release in May, 2019.
+ROOT version 6.18/00 is scheduled for release in June, 2019.
 
-For more information, see:
-
-[http://root.cern](http://root.cern)
+For more information, see [http://root.cern](http://root.cern)
 
 The following people have contributed to this new version:
 
@@ -34,7 +32,7 @@ The following people have contributed to this new version:
  Lorenzo Moneta, CERN/SFT,\
  Alja Mrak-Tadel, UCSD/CMS,\
  Axel Naumann, CERN/SFT,\
- Vincenzo Eduardo Padulano, Bicocca/SFT,
+ Vincenzo Eduardo Padulano, Bicocca/SFT,\
  Danilo Piparo, CERN/SFT,\
  Fons Rademakers, CERN/SFT,\
  Henry Schreiner, Princeton,\
@@ -56,7 +54,7 @@ The following people have contributed to this new version:
 The Virtual Monte Carlo (VMC) interfaces have been deprecated for this release
 and will be removed in a future release. It is no longer built by default, but
 can still be enabled with the option `-Dvmc=ON` in the CMake configuration phase.
-A standalone version of VMC is being developed at https://github.com/vmc-project/vmc
+A standalone version of VMC is being developed at [https://github.com/vmc-project/vmc](https://github.com/vmc-project/vmc)
 to replace the deprecated version in ROOT.
 
 ### Removed packages
@@ -95,13 +93,13 @@ now ignored by ROOT).
 ## Preprocessor deprecation macros
 ### Deprecated Classes
   * `R__SUGGEST_ALTERNATIVE("Suggestion text")` macro allows to suggest alternatives to classes. It must be used after the class definition and before the final semicolon:
-```
+```{.cpp}
 class DoNotUseClass {
 } R__SUGGEST_ALTERNATIVE("Use ... instead.");
 ```
 It is activated by the preprocessor defines `R__SUGGEST_NEW_INTERFACE`. The former is useful when deprecation warnings should be activated/deactivated at global level, for example for an entire project. This could be done by defining `R__SUGGEST_NEW_INTERFACE` in the build system. 
 If the warning needs to be confined within single translation units, irrespective of the definition of `R__SUGGEST_NEW_INTERFACE`, the `R__ALWAYS_SUGGEST_ALTERNATIVE` macro can be used:
-```
+```{.cpp}
 #ifndef DONOTUSECLASS_H
 #define DONOTUSECLASS_H
 
@@ -112,7 +110,7 @@ class DoNotUseClass {
 ```
 ### Deprecated Functions
 The same macro as for classes can be used for functions:
-```
+```{.cpp}
 TIterator* createIterator() const
 R__SUGGEST_ALTERNATIVE("begin(), end() and range-based for loops.") {
  return makeLegacyIterator();
@@ -128,25 +126,25 @@ R__SUGGEST_ALTERNATIVE("begin(), end() and range-based for loops.") {
 
 The following methods were deprecated and removed:
 
-   * Bool_t THttpServer::SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately = kFALSE, Bool_t ownership = kFALSE);
-   * Bool_t THttpServer::ExecuteHttp(THttpCallArg *arg)
-   * Bool_t TRootSniffer::Produce(const char *path, const char *file, const char *options, void *&ptr, Long_t &length, TString &str);
-   * TString THttpCallArg::GetPostDataAsString();
-   * void THttpCallArg::FillHttpHeader(TString &buf, const char *header = nullptr);
-   * void THttpCallArg::SetBinData(void *data, Long_t length);
+   * `Bool_t THttpServer::SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately = kFALSE, Bool_t ownership = kFALSE)`
+   * `Bool_t THttpServer::ExecuteHttp(THttpCallArg *arg)`
+   * `Bool_t TRootSniffer::Produce(const char *path, const char *file, const char *options, void *&ptr, Long_t &length, TString &str)`
+   * `TString THttpCallArg::GetPostDataAsString()`
+   * `void THttpCallArg::FillHttpHeader(TString &buf, const char *header = nullptr)`
+   * `void THttpCallArg::SetBinData(void *data, Long_t length)`
 
 The methods could be replaced by equivalent methods with other signature:
 
-   * Bool_t THttpServer::SubmitHttp(std::shared_ptr<THttpCallArg> arg, Bool_t can_run_immediately = kFALSE);
-   * Bool_t THttpServer::ExecuteHttp(std::shared_ptr<THttpCallArg> arg);
-   * Bool_t TRootSniffer::Produce(const std::string &path, const std::string &file, const std::string &options, std::string &res);
-   * const void *THttpCallArg::GetPostData() const;
-   * Long_t THttpCallArg::GetPostDataLength() const;
-   * std::string THttpCallArg::FillHttpHeader(const char *header = nullptr);
-   * void THttpCallArg::SetContent(std::string &&cont);
+   * `Bool_t THttpServer::SubmitHttp(std::shared_ptr<THttpCallArg> arg, Bool_t can_run_immediately = kFALSE)`
+   * `Bool_t THttpServer::ExecuteHttp(std::shared_ptr<THttpCallArg> arg)`
+   * `Bool_t TRootSniffer::Produce(const std::string &path, const std::string &file, const std::string &options, std::string &res)`
+   * `const void *THttpCallArg::GetPostData() const`
+   * `Long_t THttpCallArg::GetPostDataLength() const`
+   * `std::string THttpCallArg::FillHttpHeader(const char *header = nullptr)`
+   * `void THttpCallArg::SetContent(std::string &&cont)`
 
 ### Core Libraries
-  * The TStringLong class is deprecated.
+  * The `TStringLong` class is deprecated. Please use `std::string` (or, if needeed, `TString`) instead.
 
 
 ## Core Libraries
@@ -156,7 +154,7 @@ The methods could be replaced by equivalent methods with other signature:
 
 * Added simpler way to retrieve object from `TDirectory` and `TFile`:
 ~~~ {.cpp}
-   auto obj = directory->Get<MyClass>("some object");
+auto obj = directory->Get<MyClass>("some object");
 ~~~
 
 * Added support for read-only `TMemFile`s.
@@ -173,13 +171,13 @@ is `std::string` (or compatible) and contains only valid JSON identifiers. By de
 into JSON array of `std::pair` objects. To enable new feature, compact parameter should be 5:
 
 ~~~ {.cpp}
-   std::map<std::string,int> obj;
-   obj["name1"] = 11;
-   obj["name1"] = 22;
-   auto json = TBufferJSON::ToJSON(&obj, 5);
-   // {"_typename": "map<string,int>", "name1": 11, "name2": 22}
-   auto dflt_json = TBufferJSON::ToJSON(&obj);
-   // [{"$pair" : "pair<string,int>", "first" : "name1", "second" : 11}, {"$pair" : "pair<string,int>", "first" : "name2", "second" : 22}]
+std::map<std::string,int> obj;
+obj["name1"] = 11;
+obj["name1"] = 22;
+auto json = TBufferJSON::ToJSON(&obj, 5);
+// {"_typename": "map<string,int>", "name1": 11, "name2": 22}
+auto dflt_json = TBufferJSON::ToJSON(&obj);
+// [{"$pair" : "pair<string,int>", "first" : "name1", "second" : 11}, {"$pair" : "pair<string,int>", "first" : "name2", "second" : 22}]
 ~~~
 
 Also one could put "JSON_object" string in class-member comments to enable this feature:
@@ -229,18 +227,15 @@ Maximal compression of JSON can be achieved now with compact parameter 128 = 100
   - The documentation of `TTree` and `TBuffer` has been updated accordingly.
   - The following example shows how to use the new features:
 ~~~ {.cpp}
-      {
-         Float16_t  floatVal;
-         Float16_t  floatArray[7];
-         Double32_t doubleVal;
-         Double32_t doubleArray[5];
-
-         TTree *tree = new TTree("tree", "An example tree using the new data types");
-         tree->Branch("floatVal",   &floatVal,    "floatVal/f");               // Float16_t value with default settings
-         tree->Branch("floatArray",  floatArray,  "floatArray[7]/f[0,100]");   // Float16_t array with range from 0 to 100
-         tree->Branch("doubleVal",  &doubleVal,   "doubleVal/d[0,1000,20]");   // Double32_t value with range from 0 to 1000 and 20 bits
-         tree->Branch("doubleArray", doubleArray, "doubleArray[5]/d[0,0,18]"); // Double32_t array without range and 18 bits
-      }
+Float16_t  floatVal;
+Float16_t  floatArray[7];
+Double32_t doubleVal;
+Double32_t doubleArray[5];
+TTree *tree = new TTree("tree", "An example tree using the new data types");
+tree->Branch("floatVal",   &floatVal,    "floatVal/f");               // Float16_t value with default settings
+tree->Branch("floatArray",  floatArray,  "floatArray[7]/f[0,100]");   // Float16_t array with range from 0 to 100
+tree->Branch("doubleVal",  &doubleVal,   "doubleVal/d[0,1000,20]");   // Double32_t value with range from 0 to 1000 and 20 bits
+tree->Branch("doubleArray", doubleArray, "doubleArray[5]/d[0,0,18]"); // Double32_t array without range and 18 bits
 ~~~
 
 ### Bulk I/O
@@ -258,10 +253,10 @@ Maximal compression of JSON can be achieved now with compact parameter 128 = 100
   - Add a search range to the `TH1::FindFirstBinAbove(..)` and `TH1::FindLastBinAvove(..)` functions
 
 ### TH2Poly
-  - Add implementation of SetBinError and fix a bug in GetBinError in case of weighted events.
+  - Add implementation of `SetBinError` and fix a bug in `GetBinError` in case of weighted events.
 
 ### TF1
-  - The implementation of TF1::GetX has been improved. In case of the presence of multiple roots, the function will return the root with the lower x value. In case of no-roots a NaN will be returned instead of returning a random incorrect value.
+  - The implementation of `TF1::GetX` has been improved. In case of the presence of multiple roots, the function will return the root with the lower x value. In case of no-roots a NaN will be returned instead of returning a random incorrect value.
 
 ### TKDE
   - Add support for I/O
@@ -269,7 +264,7 @@ Maximal compression of JSON can be achieved now with compact parameter 128 = 100
 
 ## Math Libraries
   - Add `TComplex` value printer for printing the value of object at the root prompt and in python
-  - Add to the documentation of TLorentzVector a link to ROOT::Math::LorentzVector, which is a superior tool.
+  - Add to the documentation of `TLorentzVector` a link to `ROOT::Math::LorentzVector`, which is a superior tool.
   - Add new implementation of `TStatistic::Merge` able to deal silently with empty TStatistic objects. This implementation is useful when filling TStatistics with one of ROOT's implicitly parallelised utilities such as `RDataFrame` or `TThreadExecutor`.
   - Add `T RVec<T>::at>(size_t, T)` method to allow users to specify a default value to be returned in case the vector is shorter than the position specified. No exception is thrown.
   - Add the `Concatenate` helper to merge the content of two `RVec<T>` instances.
@@ -376,18 +371,16 @@ In addition we have :
   - Improve the line clipping when a histogram is drawn with option "L". The following
     example shows the improvement.
 ~~~ {.cpp}
-      {
-         auto h = new TH1F("h","h",5,0.5,5.5);
-         h->SetBinContent(1,100000);
-         h->SetBinContent(2,10000);
-         h->SetBinContent(3,1000);
-         h->SetBinContent(4,100);
-         h->SetBinContent(5,10);
-         h->SetMinimum(50.);
-         h->SetMaximum(40000);
-         h->Draw("L*");
-         gPad->SetLogy();
-      }
+  auto h = new TH1F("h","h",5,0.5,5.5);
+  h->SetBinContent(1,100000);
+  h->SetBinContent(2,10000);
+  h->SetBinContent(3,1000);
+  h->SetBinContent(4,100);
+  h->SetBinContent(5,10);
+  h->SetMinimum(50.);
+  h->SetMaximum(40000);
+  h->Draw("L*");
+  gPad->SetLogy();
 ~~~
   - `ChangeLabel` is now available for alphanumeric axis.
   - Implement transparency for lines, texts and markers in the TeX output.
@@ -424,20 +417,20 @@ of the Oracle client libraries.
 
 ### New functionality from 5.7.0 release
 
-   - Add support of TProfile2Poly class
-   - Add support of TGeoOverlap class
-   - Add support of TGeoHalfSpace for composites
-   - Implement update of TF2 drawings, see tutorials/graphics/anim.C
+   - Add support of `TProfile2Poly` class
+   - Add support of `TGeoOverlap` class
+   - Add support of `TGeoHalfSpace` for composites
+   - Implement update of `TF2` drawings, see `tutorials/graphics/anim.C`
    - Improve windows handling in flex(ible) layout
    - Provide special widget for object inspector
-   - Use requestAnimationFrame when do monitoring, improves performance
-   - Better position for text in TH2Poly drawings
+   - Use `requestAnimationFrame` when do monitoring, improves performance
+   - Better position for text in `TH2Poly` drawings
    - Support eve7 geometry viewer - render data generated in ROOT itself
    - Provide initial WebVR support, thanks to Diego Marcos
-   - Use gStyle attributes to draw histogram title
-   - Enable projections drawing also with TH2 lego plots
-   - Many adjustment with new TWebCanvas - interactivity, attributes/position updates, context menus
-   - Upgrade three.js 86 -> 102, use SoftwareRenderer instead of CanvasRenderer
+   - Use `gStyle` attributes to draw histogram title
+   - Enable projections drawing also with `TH2` lego plots
+   - Many adjustment with new `TWebCanvas` - interactivity, attributes/position updates, context menus
+   - Upgrade three.js 86 -> 102, use `SoftwareRenderer` instead of `CanvasRenderer`
    - Upgrade d3.js 4.4.4 -> 5.7.0
    - Fix - support clipping for tracks and points in geo painter
    - Fix - drawing of TGeoNode with finder
@@ -535,31 +528,31 @@ If the fix or new feature is a pythonization related to a C++ class, the change 
 
 ### Current PyROOT
 
-    - Fix compatibility with Python3.7 (ROOT-9922, ROOT-9871, ROOT-9809)
-    - Fix lookup for templated methods (ROOT-9789)
-    - Fix lookup for templated free functions (ROOT-9836)
+- Fix compatibility with Python3.7 (ROOT-9922, ROOT-9871, ROOT-9809)
+- Fix lookup for templated methods (ROOT-9789)
+- Fix lookup for templated free functions (ROOT-9836)
 
 ### Experimental PyROOT
 
-    - All pythonisations from current PyROOT already migrated (TTree & subclasses, TDirectory & subclasses,
-    TCollection & subclasses, TObject, TClass, TString, TObjString, TIter, TStyle, TH1, TFX, TMinuit, TVector3,
-    TVectorT, TArray, TCollection, TSeqCollection, TClonesArray, TComplex, TGraph, RooDataHist) - ROOT-9510
-    - Cppyy updated to cppyy 1.4.7, cppyy-backend 1.8.1 (clingwrapper), CPyCppyy 1.7.1
-      * Includes fixed template support, fixed overload resolution, Windows fixes and other
-    - Merged Cppyy's patch to support using namespace declarations (PR-3579)
-    - Add `DeclareCppCallable` decorator, which allows to call Python callables from C++, e.g., in an RDataFrame workflow:
+- All pythonisations from current PyROOT already migrated (`TTree` and subclasses, `TDirectory` and subclasses,
+    `TCollection` and subclasses, `TObject`, `TClass`, `TString`, `TObjString`, `TIter`, `TStyle`, `TH1`, `TFX`, `TMinuit`, `TVector3`,
+    `TVectorT`, `TArray`, `TCollection`, `TSeqCollection`, `TClonesArray`, `TComplex`, `TGraph`, `RooDataHist`) - ROOT-9510
+- Cppyy updated to cppyy 1.4.7, cppyy-backend 1.8.1 (clingwrapper), CPyCppyy 1.7.1
+  * Includes fixed template support, fixed overload resolution, Windows fixes and other
+- Merged Cppyy's patch to support using namespace declarations (PR-3579)
+- Add `DeclareCppCallable` decorator, which allows to call Python callables from C++, e.g., in an RDataFrame workflow:
 ~~~ {.python}
-      @ROOT.DeclareCppCallable(["float"], "float")
+@ROOT.DeclareCppCallable(["float"], "float")
 
-      def f(x):
-         return 2.0 * x
+def f(x):
+   return 2.0 * x
 
-      ROOT.CppCallable.f(21.0)
-      # Returns 42.0
+ROOT.CppCallable.f(21.0)
+# Returns 42.0
 
-      df = ROOT.ROOT.RDataFrame(4).Define("x", "CppCallable::f(rdfentry_)")
+df = ROOT.ROOT.RDataFrame(4).Define("x", "CppCallable::f(rdfentry_)")
 
-      df.AsNumpy()
-      # Returns {'x': numpy.array([0., 2., 4., 6.], dtype=float32)}
+df.AsNumpy()
+# Returns {'x': numpy.array([0., 2., 4., 6.], dtype=float32)}
 ~~~
 
