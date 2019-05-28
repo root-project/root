@@ -392,10 +392,12 @@ TGLPlane::TGLPlane(const TGLVector3 & v, const TGLVertex3 & p)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destroy plane object
+/// Assignment operator
 
-TGLPlane::~TGLPlane()
+TGLPlane &TGLPlane::operator=(const TGLPlane &src)
 {
+   Set(src);
+   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
