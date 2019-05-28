@@ -67,8 +67,8 @@ private:
    std::string           fDeclFileName; // Name of the file where the underlying entity is declared.
    llvm::DenseMap<const clang::Decl*, std::pair<ptrdiff_t, OffsetPtrFunc_t> > fOffsetCache; // Functions already generated for offsets.
 
-   explicit TClingClassInfo() /* = delete */; // NOT IMPLEMENTED
-   TClingClassInfo &operator=(const TClingClassInfo &) /* = delete */; // NOT IMPLEMENTED
+   explicit TClingClassInfo() = delete;
+   TClingClassInfo &operator=(const TClingClassInfo &) = delete;
 public: // Types
 
    enum EInheritanceMode {
