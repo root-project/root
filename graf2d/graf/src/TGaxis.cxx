@@ -1014,10 +1014,9 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Bool_t flexpo,flexne;
    char *label;
    char *chtemp;
-   char *coded;
    char chlabel[256];
    char kchtemp[256];
-   char chcoded[8];
+   char chcoded[64];
    TLine *linegrid;
    TString timeformat;
    TString typolabel;
@@ -1824,14 +1823,13 @@ L110:
                   if1++;
                   if2++;
                }
-               coded = &chcoded[0];
                if (if1 > 14) if1 = 14;
                if (if2 > 14) if2 = 14;
                if (if1 <  0) if1 = 0;
                if (if2 > 0) {
-                  snprintf(coded,8,"%%%d.%df",if1,if2);
+                  snprintf(chcoded,sizeof(chcoded),"%%%d.%df",if1,if2);
                } else {
-                  snprintf(coded,8,"%%%d.%df",if1+1,1);
+                  snprintf(chcoded,sizeof(chcoded),"%%%d.%df",if1+1,1);
                }
 
             }
@@ -1868,7 +1866,7 @@ L110:
                if (optionM)    xlabel += 0.5*dxlabel;
 
                if (!optionText && !optionTime) {
-                  snprintf(label,256,&chcoded[0],wlabel);
+                  snprintf(label,256,chcoded,wlabel);
                   label[28] = 0;
                   wlabel += dwlabel;
 
