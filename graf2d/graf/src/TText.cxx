@@ -103,6 +103,15 @@ TText::TText(const TText &text) : TNamed(text), TAttText(text), TAttBBox2D(text)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
+
+TText &TText::operator=(const TText &src)
+{
+   ((TText&)src).Copy(*this);
+   return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Copy this text to text.
 
 void TText::Copy(TObject &obj) const

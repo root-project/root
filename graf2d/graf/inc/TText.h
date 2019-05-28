@@ -38,6 +38,9 @@ public:
    TText(Double_t x, Double_t y, const wchar_t *text);
    TText(const TText &text);
    virtual ~TText();
+
+   TText &operator=(const TText &src);
+
    void             Copy(TObject &text) const;
    virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
    virtual TText   *DrawText(Double_t x, Double_t y, const char *text);
