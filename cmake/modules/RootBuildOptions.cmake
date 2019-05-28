@@ -117,6 +117,7 @@ ROOT_BUILD_OPTION(gdml ON "Enable support for GDML (Geometry Description Markup 
 ROOT_BUILD_OPTION(gfal ON "Enable support for GFAL (Grid File Access Library)")
 ROOT_BUILD_OPTION(gnuinstall OFF "Perform installation following the GNU guidelines")
 ROOT_BUILD_OPTION(gsl_shared OFF "Enable linking against shared libraries for GSL (default no)")
+ROOT_BUILD_OPTION(gviz OFF "Enable support for Graphviz (graph visualization software)")
 ROOT_BUILD_OPTION(http ON "Enable suppport for HTTP server")
 ROOT_BUILD_OPTION(imt ON "Enable support for implicit multi-threading via Intel® Thread Bulding Blocks (TBB)")
 ROOT_BUILD_OPTION(jemalloc OFF "Use jemalloc memory allocator")
@@ -209,6 +210,7 @@ if(all)
  set(fortran_defvalue ON)
  set(gdml_defvalue ON)
  set(gfal_defvalue ON)
+ set(gviz_defvalue ON)
  set(http_defvalue ON)
  set(imt_defvalue ON)
  set(mathmore_defvalue ON)
@@ -349,7 +351,7 @@ endif()
 
 
 #---Removed options------------------------------------------------------------
-foreach(opt afdsmgrd afs bonjour castor chirp geocad glite globus gviz hdfs ios
+foreach(opt afdsmgrd afs bonjour castor chirp geocad glite globus hdfs ios
             krb5 ldap qt qtgsi rfio ruby sapdb srp table)
   if(${opt})
     message(FATAL_ERROR ">>> Option '${opt}' is no longer supported in ROOT ${ROOT_VERSION}.")

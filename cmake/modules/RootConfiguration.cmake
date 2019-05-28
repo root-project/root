@@ -267,6 +267,12 @@ set(fitsiolibdir ${FITSIO_LIBRARY_DIR})
 set(fitsiolib ${FITSIO_LIBRARY})
 set(fitsioincdir ${FITSIO_INCLUDE_DIR})
 
+set(buildgviz ${value${gviz}})
+set(gvizlibdir ${GVIZ_LIBRARY_DIR})
+set(gvizlib ${GVIZ_LIBRARY})
+set(gvizincdir ${GVIZ_INCLUDE_DIR})
+set(gvizcflags)
+
 set(buildpython ${value${python}})
 set(pythonlibdir ${PYTHON_LIBRARY_DIR})
 set(pythonlib ${PYTHON_LIBRARY})
