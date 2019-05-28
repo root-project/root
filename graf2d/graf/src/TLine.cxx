@@ -62,6 +62,15 @@ TLine::TLine(const TLine &line) : TObject(line), TAttLine(line), TAttBBox2D(line
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
+TLine &TLine::operator=(const TLine &src)
+{
+   ((TLine&)src).Copy(*this);
+   return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Copy this line to line.
 
 void TLine::Copy(TObject &obj) const
