@@ -817,7 +817,7 @@ public:
 
    TString AsString() const;
 
-   ClassDef(TGLColor, 0); // Color in preferred GL format - RGBA.
+   ClassDefNV(TGLColor, 0); // Color in preferred GL format - RGBA.
 };
 
 
