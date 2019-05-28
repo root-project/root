@@ -41,6 +41,8 @@ public:
    TLine(const TLine &line);
    virtual ~TLine();
 
+   TLine &operator=(const TLine &src);
+
    void                 Copy(TObject &line) const;
    virtual Int_t        DistancetoPrimitive(Int_t px, Int_t py);
    virtual TLine       *DrawLine(Double_t x1, Double_t y1,Double_t x2, Double_t y2);
