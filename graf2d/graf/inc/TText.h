@@ -23,9 +23,9 @@
 class TText : public TNamed, public TAttText, public TAttBBox2D {
 
 protected:
-   Double_t     fX;           ///< X position of text (left,center,etc..)
-   Double_t     fY;           ///< Y position of text (left,center,etc..)
-   void         *fWcsTitle;   ///<!Used by TMathText
+   Double_t     fX{0};                 ///< X position of text (left,center,etc..)
+   Double_t     fY{0};                 ///< Y position of text (left,center,etc..)
+   void         *fWcsTitle{nullptr};   ///<!Used by TMathText
 
 public:
    // TText status bits
@@ -33,7 +33,7 @@ public:
       kTextNDC = BIT(14)  ///< The text position is in the NDC space
    };
 
-   TText();
+   TText() = default;
    TText(Double_t x, Double_t y, const char *text);
    TText(Double_t x, Double_t y, const wchar_t *text);
    TText(const TText &text);
