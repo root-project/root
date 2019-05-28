@@ -536,7 +536,9 @@ public:
    TGLPlane(Double_t eq[4]);
    TGLPlane(const TGLVector3 & norm, const TGLVertex3 & point);
    TGLPlane(const TGLVertex3 & p1, const TGLVertex3 & p2, const TGLVertex3 & p3);
-   virtual ~TGLPlane();
+   ~TGLPlane() = default;
+
+   TGLPlane &operator=(const TGLPlane &src);
 
    // Manipulators
    void Set(const TGLPlane & other);
@@ -562,7 +564,7 @@ public:
 
    void Dump() const;
 
-   ClassDef(TGLPlane,0); // GL plane helper/wrapper class
+   ClassDefNV(TGLPlane,0); // GL plane helper/wrapper class
 };
 
 typedef std::vector<TGLPlane>                 TGLPlaneSet_t;
