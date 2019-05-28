@@ -66,7 +66,6 @@ Support for the following optional components of ROOT has been removed:
  * castor (CERN Advanced STORage manager)
  * geocad (OpenCascade)
  * globus (Globus authentication)
- * gviz (Graphviz graph rendering)
  * hdfs (Hadoop Distributed File System)
  * krb5 (Kerberos 5 authentication)
  * ldap (OpenLDAP authentication)
@@ -82,6 +81,9 @@ removed:
  * `THttpServer::ExecuteHttp()` and `THttpServer::SubmitHttp` from `THttpServer`
 
 ### Other changes
+
+The deprecation of the GraphViz integration has been reverted since the code is
+still in use.
 
 The ODBC interface, deprecated in ROOT 6.16, is no longer deprecated in ROOT 6.18.
 It is the main option to support databases on Windows, so the decision to deprecate
