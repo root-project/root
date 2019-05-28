@@ -243,9 +243,11 @@ AutoDict_*.cxx
 
 # /root/io/datamodelevolution/misc/
 /root/io/datamodelevolution/misc/*.root
+/root/io/datamodelevolution/misc/arr_cint.cpp
 
 # /root/io/datamodelevolution/stl/
 /root/io/datamodelevolution/stl/stlinnerevo.root
+/root/io/datamodelevolution/stl/libcond/libcondProjectDict.cxx
 
 # /root/io/dirdelete/
 /root/io/dirdelete/test.root
@@ -635,6 +637,12 @@ AutoDict_*.cxx
 
 # /root/meta/callfunc/
 
+# /root/meta/ROOT-7181
+/root/meta/ROOT-7181/obj/
+
+# /root/meta/cmsUnload
+/root/meta/cmsUnload/obj/
+
 # /root/meta/evolution/
 /root/meta/evolution/data5.root
 /root/meta/evolution/data2.root
@@ -822,12 +830,17 @@ root/tree/addresses/converterIssues/ExtHit/ExtHitProjectDict.cxx
 
 # /root/tree/reader/
 /root/tree/reader/*.root
+/root/tree/reader/assertReaderIterator.ref
 
 # /root/tree/readfile/
 
 # /root/tree/selector/
 /root/tree/selector/lhef_*_gen.C
 /root/tree/selector/lhef_*_gen.h
+
+
+# /root/tree/selectorreader/
+/root/tree/selectorreader/generated_selectors/
 
 # /root/tree/split/
 /root/tree/split/abstract.root
