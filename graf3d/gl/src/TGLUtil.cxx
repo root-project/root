@@ -188,13 +188,6 @@ TGLLine3::TGLLine3(const TGLVertex3 & start, const TGLVector3 & vect) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destroy 3D line object
-
-TGLLine3::~TGLLine3()
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Set 3D line running from 'start' to 'end'
 
 void TGLLine3::Set(const TGLVertex3 & start, const TGLVertex3 & end)
@@ -1348,10 +1341,16 @@ TGLColorSet::TGLColorSet()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor.
+/// Copy constructor
 
-TGLColorSet::~TGLColorSet()
+TGLColorSet::TGLColorSet(const TGLColorSet& s)
 {
+   fBackground = s.fBackground;
+   fForeground = s.fForeground;
+   fOutline    = s.fOutline;
+   fMarkup     = s.fMarkup;
+   for (Int_t i = 0; i < 5; ++i)
+      fSelection[i] = s.fSelection[i];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
