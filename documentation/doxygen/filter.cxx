@@ -540,7 +540,14 @@ string ImagesList(string& name) {
 
    int N = NumberOfImages();
 
-   char val[300];
+   // evaluate the size of the output string
+   char evalstring[300];
+   sprintf(&evalstring[0]," \n/// \\image html pict%d_%s width=%d",N,name.c_str(),10000);
+   int evallen = (int)strlen(evalstring);
+
+   // allocate the output string
+   char *val = (char *) malloc(sizeof(char)*evallen*N);
+
    int len = 0;
 
    int ImageSize = 300;
