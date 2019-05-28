@@ -256,6 +256,7 @@ AutoDict_*.cxx
 /root/io/directory/runcd.root
 /root/io/directory/runcd1.root
 /root/io/directory/fdb.root
+/root/io/directory/test.root
 
 # /root/io/double32/
 /root/io/double32/double32.root
@@ -392,6 +393,10 @@ AutoDict_*.cxx
 /root/io/heritstl/strtest.root
 
 # /root/io/ignoretobject/
+/root/io/ignoretobject/test.root
+
+# /root/io/unordered_set
+/root/io/unordered_set/set_problem.root
 
 # /root/io/interface/
 /root/io/interface/*.root
@@ -804,6 +809,7 @@ root/tree/addresses/converterIssues/ExtHit/ExtHitProjectDict.cxx
 
 # /root/tree/index/
 /root/tree/index/newTestFile.root
+/root/tree/index/index64.root
 
 # /root/tree/interpreted/
 
@@ -972,6 +978,11 @@ root/tree/stl/vecptr.root
 /root/treeproxy/make_tuple_sel.h
 /root/treeproxy/btagobjsSel.h
 /root/treeproxy/VectorProxyTestSel.h
+
+# /root/treeproxy/split/
+/root/treeproxy/split/MyTree.root
+/root/treeproxy/split/MyTree0.h
+/root/treeproxy/split/MyTree99.h
 
 # /root/treeproxy/stlvec/
 /root/treeproxy/stlvec/tlorentzvecProxy.h
