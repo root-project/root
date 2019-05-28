@@ -1826,12 +1826,15 @@ L110:
                if (if1 > 14) if1 = 14;
                if (if2 > 14) if2 = 14;
                if (if1 <  0) if1 = 0;
+               int len = 0;
                if (if2 > 0) {
-                  snprintf(chcoded,sizeof(chcoded),"%%%d.%df",if1,if2);
+                  len = snprintf(chcoded,sizeof(chcoded),"%%%d.%df",if1,if2);
                } else {
-                  snprintf(chcoded,sizeof(chcoded),"%%%d.%df",if1+1,1);
+                  len = snprintf(chcoded,sizeof(chcoded),"%%%d.%df",if1+1,1);
                }
-
+               // check improbable error condition, suppress gcc9 warnings
+               if ((len < 0) || (len >= (int) sizeof(chcoded)))
+                  strcpy(chcoded,"%7.3f");
             }
 
 // We draw labels
