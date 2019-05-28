@@ -88,7 +88,7 @@ TText::~TText()
 
 TText::TText(const TText &text) : TNamed(text), TAttText(text), TAttBBox2D(text), fWcsTitle(nullptr)
 {
-   ((TText&)text).Copy(*this);
+   text.TText::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -96,7 +96,7 @@ TText::TText(const TText &text) : TNamed(text), TAttText(text), TAttBBox2D(text)
 
 TText &TText::operator=(const TText &src)
 {
-   ((TText&)src).Copy(*this);
+   src.TText::Copy(*this);
    return *this;
 }
 

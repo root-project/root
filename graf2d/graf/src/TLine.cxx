@@ -44,7 +44,7 @@ TLine::TLine(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 
 TLine::TLine(const TLine &line) : TObject(line), TAttLine(line), TAttBBox2D(line)
 {
-   ((TLine&)line).Copy(*this);
+   line.TLine::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -52,7 +52,7 @@ TLine::TLine(const TLine &line) : TObject(line), TAttLine(line), TAttBBox2D(line
 
 TLine &TLine::operator=(const TLine &src)
 {
-   ((TLine&)src).Copy(*this);
+   src.TLine::Copy(*this);
    return *this;
 }
 
