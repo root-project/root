@@ -392,7 +392,7 @@ private:
 public:
    TGLLine3(const TGLVertex3 & start, const TGLVertex3 & end);
    TGLLine3(const TGLVertex3 & start, const TGLVector3 & vector);
-   virtual ~TGLLine3();
+   ~TGLLine3() = default;
 
    void Set(const TGLVertex3 & start, const TGLVertex3 & end);
    void Set(const TGLVertex3 & start, const TGLVector3 & vector);
@@ -407,7 +407,7 @@ public:
    // Debug
    void Draw() const;
 
-   ClassDef(TGLLine3,0); // GL line wrapper class
+   ClassDefNV(TGLLine3,0); // GL line wrapper class
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -842,7 +842,8 @@ protected:
 
 public:
    TGLColorSet();
-   virtual ~TGLColorSet();
+   TGLColorSet(const TGLColorSet& s);
+   ~TGLColorSet() = default;
 
    TGLColorSet& operator=(const TGLColorSet& s);
 
@@ -861,7 +862,7 @@ public:
    void StdDarkBackground();
    void StdLightBackground();
 
-   ClassDef(TGLColorSet, 0); // Collection of colors used for GL rendering.
+   ClassDefNV(TGLColorSet, 0); // Collection of colors used for GL rendering.
 };
 
 //////////////////////////////////////////////////////////////////////////
