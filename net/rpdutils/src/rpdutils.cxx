@@ -43,8 +43,8 @@
 #   define cygwingcc
 #endif
 
-#ifdef __linux__
-#define linux
+#if defined(__linux__) && !defined(linux)
+# define linux
 #endif
 
 #if defined(linux) || defined(__sun) || defined(__sgi) || \
