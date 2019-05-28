@@ -482,6 +482,20 @@ if(opengl AND NOT builtin_gl2ps)
   endif()
 endif()
 
+#---Check for Graphviz installation-------------------------------------------------------
+if(gviz)
+  message(STATUS "Looking for Graphviz")
+  find_package(Graphviz)
+  if(NOT GRAPHVIZ_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "Graphviz package not found and gviz option required")
+    else()
+      message(STATUS "Graphviz not found. Switching off gviz option")
+      set(gviz OFF CACHE BOOL "Disabled because Graphviz not found (${gviz_description})" FORCE)
+    endif()
+  endif()
+endif()
+
 #---Check for XML Parser Support-----------------------------------------------------------
 if(xml)
   message(STATUS "Looking for LibXml2")
