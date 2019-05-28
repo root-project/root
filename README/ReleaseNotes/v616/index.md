@@ -83,7 +83,7 @@ feature [here](https://github.com/root-project/root/blob/v6-16-00-patches/README
 
 ## Core Libraries
 
-### New command line flag "--version" for `root`
+### New command line flag `--version` for `root`
 
 `root --version` now displays ROOT version and build info and quits:
 
