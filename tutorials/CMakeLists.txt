@@ -137,6 +137,10 @@ if(NOT ROOT_opengl_FOUND)
                   gl/*.C)
 endif()
 
+if(NOT GRAPHVIZ_FOUND)
+  set(gviz_veto graphs/graphstruct.C)
+endif()
+
 if(NOT TBB_FOUND AND NOT builtin_tbb)
   set(tbb_veto  multicore/mtbb*.C)
 endif()
@@ -158,7 +162,7 @@ endif()
 set(gui_veto fit/fitpanel_playback.C
              cocoa/*.C
              geom/building.C geom/cheongwadae.C geom/geom*.C geom/lego.C geom/robot.C geom/south_gate.C geom/station*.C geom/tank.C
-             gl/glViewerExercise.C gl/glViewerLOD.C gl/nucleus.C gl/viewer3DLocal.C gl/viewer3DMaster.C
+             gl/glViewerExercise.C gl/glViewerLOD.C gl/gviz3d.C gl/nucleus.C gl/viewer3DLocal.C gl/viewer3DMaster.C
              gui/*.C
              hist/exec1.C
              hist/exec2.C
@@ -252,6 +256,7 @@ set(all_veto hsimple.C
              ${mathmore_veto}
              ${fftw3_veto}
              ${opengl_veto}
+             ${gviz_veto}
              ${r_veto}
              ${runtime_cxxmodules_veto}
              ${histfactory_veto}

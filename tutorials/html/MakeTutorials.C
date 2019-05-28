@@ -334,6 +334,7 @@ Bool_t CreateOutput_Tutorial(const char* tut) {
       "fitpanel_playback",
       "guitest_playback",
       "geom_cms_playback",
+      "gviz3d.C",
       0
    };
 
