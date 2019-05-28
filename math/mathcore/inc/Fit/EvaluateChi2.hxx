@@ -390,7 +390,7 @@ struct Chi2 {
       // maximum finite values (preserving the original sign).
       static vecCore::Mask<T> isFinite(T &rval)
       {
-         return rval > -vecCore::NumericLimits<T>::Max() && rval < vecCore::NumericLimits<T>::Max();
+         return rval > vecCore::NumericLimits<T>::Lowest() && rval < vecCore::NumericLimits<T>::Max();
       }
 };
 template <>
