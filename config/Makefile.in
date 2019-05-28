@@ -245,6 +245,12 @@ CFITSIOLIBDIR  := @cfitsiolibdir@
 CFITSIOLIB     := @cfitsiolib@
 CFITSIOINCDIR  := $(filter-out /usr/include, @cfitsioincdir@)
 
+BUILDGVIZ      := @buildgviz@
+GRAPHVIZLIBDIR := @gvizlibdir@
+GRAPHVIZLIB    := @gvizlib@
+GRAPHVIZINCDIR := $(filter-out /usr/include, @gvizincdir@)
+GRAPHVIZCFLAGS := @gvizcflags@
+
 BUILDPYTHON    := @buildpython@
 PYTHONLIBDIR   := @pythonlibdir@
 PYTHONLIB      := @pythonlib@
