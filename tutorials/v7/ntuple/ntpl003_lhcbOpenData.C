@@ -54,8 +54,7 @@ void Convert() {
    // We create RNTuple fields based on the types found in the TTree
    // This simple approach only works for trees with simple branches and only one leaf per branch
    auto tree = f->Get<TTree>("DecayTree");
-   std::vector<TBranch*> branches;
-   for (TObject *obj : *(tree->GetListOfBranches())) {
+   for (auto obj : *(tree->GetListOfBranches())) {
       auto b = static_cast<TBranch*>(obj);
       // We assume every branch has a single leaf
       TLeaf *l = static_cast<TLeaf*>(b->GetListOfLeaves()->First());
@@ -72,9 +71,7 @@ void Convert() {
       // We connect the model's default entry's memory location for the new field to the branch, so that we can
       // fill the ntuple with the data read from the TTree
       void *fieldDataPtr = model->GetDefaultEntry()->GetValue(l->GetName()).GetRawPtr();
-      TBranch *branchRead = nullptr;
       tree->SetBranchAddress(b->GetName(), fieldDataPtr);
-      branches.push_back(branchRead);
    }
 
    // The new ntuple takes ownership of the model
@@ -105,15 +102,15 @@ void ntpl003_lhcbOpenData()
    // The view wraps a read-only double value and accesses directly the ntuple's data buffers
    auto viewFlightDistance = ntuple->GetView<double>("B_FlightDistance");
 
-   TCanvas *c = new TCanvas("c", "B Flight Distance", 200, 10, 700, 500);
-   TH1F *h = new TH1F("h", "B Flight Distance", 200, 0, 140);
-   h->SetFillColor(48);
+   auto c = new TCanvas("c", "B Flight Distance", 200, 10, 700, 500);
+   TH1F h("h", "B Flight Distance", 200, 0, 140);
+   h.SetFillColor(48);
 
    for (auto i : ntuple->GetViewRange()) {
       // Note that we do not load an entry in this loop, i.e. we avoid the memory copy of loading the data into
       // the memory location given by the entry
-      h->Fill(viewFlightDistance(i));
+      h.Fill(viewFlightDistance(i));
    }
 
-   h->DrawCopy();
+   h.DrawCopy();
 }
