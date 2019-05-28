@@ -95,17 +95,17 @@ void Analyze() {
    std::cout << ntuple->GetInfo();
    // In a future version of RNTuple, there will be support for ntuple->Show() and ntuple->Scan()
 
-   TCanvas *c = new TCanvas("c", "", 200, 10, 700, 500);
-   TH1I *h = new TH1I("h", "Age Distribution CERN, 1988", 100, 0, 100);
-   h->SetFillColor(48);
+   auto c = new TCanvas("c", "", 200, 10, 700, 500);
+   TH1I h("h", "Age Distribution CERN, 1988", 100, 0, 100);
+   h.SetFillColor(48);
 
    for (auto entryId : *ntuple) {
       // Populate fldAge
       ntuple->LoadEntry(entryId);
-      h->Fill(*fldAge);
+      h.Fill(*fldAge);
    }
 
-   h->DrawCopy();
+   h.DrawCopy();
 }
 
 void ntpl001_staff() {
