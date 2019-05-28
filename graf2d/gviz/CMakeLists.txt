@@ -6,6 +6,19 @@
 include_directories(${GRAPHVIZ_INCLUDE_DIR}/graphviz)
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Gviz
-                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              DEPENDENCIES Hist Graf
-                              LIBRARIES ${GRAPHVIZ_LIBRARIES})
+  HEADERS
+    TGraphEdge.h
+    TGraphNode.h
+    TGraphStruct.h
+  SOURCES
+    src/TGraphEdge.cxx
+    src/TGraphNode.cxx
+    src/TGraphStruct.cxx
+  DICTIONARY_OPTIONS
+    -writeEmptyRootPCM
+  LIBRARIES
+    ${GRAPHVIZ_LIBRARIES}
+  DEPENDENCIES
+    Hist
+    Graf
+)
