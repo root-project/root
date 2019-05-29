@@ -115,11 +115,20 @@ public:
    std::vector<REveGeomVisible> visibles;   ///< all visibles items with
    std::string drawopt;                     ///< draw options for TGeoPainter
    int binlen{0};                           ///< extra binary data for that drawing
-
-   REveGeomDrawing() = default;
 };
 
+
+/** Request object send from client for different operations */
+class REveGeomRequest {
+public:
+   std::string oper;  ///< operation like HIGHL or HOVER
+   std::string path;  ///< path parameter, used with HOVER
+   std::vector<int> stack; ///< stack parameter, used with HIGHL
+};
+
+
 using REveGeomScanFunc_t = std::function<bool(REveGeomNode &, std::vector<int> &, bool)>;
+
 
 class REveGeomDescription {
 
