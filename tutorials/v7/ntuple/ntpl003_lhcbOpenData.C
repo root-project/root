@@ -55,6 +55,9 @@ void Convert() {
    // This simple approach only works for trees with simple branches and only one leaf per branch
    auto tree = f->Get<TTree>("DecayTree");
    for (auto b : TRangeDynCast<TBranch>(*tree->GetListOfBranches())) {
+      // The dynamic cast to TBranch should never fail for GetListOfBranches()
+      assert(b);
+
       // We assume every branch has a single leaf
       TLeaf *l = static_cast<TLeaf*>(b->GetListOfLeaves()->First());
 
