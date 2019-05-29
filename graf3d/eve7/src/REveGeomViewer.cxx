@@ -21,6 +21,8 @@
 #include "TBufferJSON.h"
 #include "TGeoManager.h"
 
+using namespace std::string_literals;
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
@@ -196,33 +198,24 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
       if (binary.size() > 0)
          fWebWindow->SendBinary(connid, &binary[0], binary.size());
 
-   } else if (arg.compare(0, 6, "HOVER:") == 0) {
+   } else if (arg.compare(0, 6, "GVREQ:") == 0) {
 
-      std::string msg = arg.substr(6), json;
+      auto req = TBufferJSON::FromJSON<REveGeomRequest>(arg.substr(6));
 
-      if (msg.compare("OFF") != 0) {
-         auto stack = fDesc.MakeStackByPath(msg);
-         if (stack.size() > 0)
-            json = TBufferJSON::ToJSON(&stack, fDesc.GetJsonComp());
+      if (req && (req->oper == "HOVER")) {
+         if (req->path != "OFF")
+            req->stack = fDesc.MakeStackByPath(req->path);
+         req->path.clear();
+      } else if (req && (req->oper == "HIGHL")) {
+         if (req->stack.size() > 0)
+            req->path = fDesc.MakePathByStack(req->stack);
+         req->stack.clear();
+      } else {
+         req.reset(nullptr);
       }
 
-      if (json.empty()) json = "OFF";
-      json = std::string("HOVER:") + json;
-      fWebWindow->Send(connid, json);
-
-   } else if (arg.compare(0, 6, "HIGHL:") == 0) {
-
-      std::string msg = arg.substr(6), json;
-
-      if (msg.compare("OFF") != 0) {
-         auto stack = GetStackFromJson(msg);
-
-         json = fDesc.MakePathByStack(stack);
-      }
-
-      if (json.empty()) json = "OFF";
-      json = std::string("HIGHL:") + json;
-      fWebWindow->Send(connid, json);
+      if (req)
+         fWebWindow->Send(connid, "GVRPL:"s + TBufferJSON::ToJSON(req.get(), TBufferJSON::kSkipTypeInfo + TBufferJSON::kNoSpaces).Data());
 
    } else if ((arg.compare(0, 7, "SETVI0:") == 0) || (arg.compare(0, 7, "SETVI1:") == 0)) {
       // change visibility for specified nodeid

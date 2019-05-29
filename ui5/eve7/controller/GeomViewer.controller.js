@@ -194,6 +194,31 @@ sap.ui.define(['sap/ui/core/Component',
          }
       },
 
+      /** @brief Send REveGeomRequest data to geometry viewer */
+      sendViewerRequest: function(_oper, args) {
+         var req = { oper: _oper, path: "", stack: [] };
+         JSROOT.extend(req, args);
+         this.websocket.Send("GVREQ:" + JSON.stringify(req));
+      },
+
+      /** Process reply on REveGeomRequest */
+      processViewerReply: function(repl) {
+         if (!repl || (typeof repl != "object") || !repl.oper)
+            return false;
+
+         if (repl.oper == "HOVER") {
+
+            this._hover_stack = repl.stack || null;
+            if (this.geo_painter)
+               this.geo_painter.HighlightMesh(null, 0x00ff00, null, undefined, this._hover_stack, true);
+
+         } else if (repl.oper == "HIGHL") {
+
+            this.highlighRowWithPath(repl.path);
+
+         }
+      },
+
       /** @brief function called then mouse-hover event over the row is invoked
        * @desc Used to highlight correspondent volume on geometry drawing */
       onRowHover: function(row, is_enter) {
@@ -206,7 +231,7 @@ sap.ui.define(['sap/ui/core/Component',
             // avoid multiple time submitting same request
             if (this._last_hover_req === req) return;
             this._last_hover_req = req;
-            return this.websocket.Send("HOVER:" + req);
+            return this.sendViewerRequest("HOVER", { path: req });
          }
 
          if (this.geo_painter && this.geo_clones) {
@@ -260,11 +285,11 @@ sap.ui.define(['sap/ui/core/Component',
       /** Callback from geo painter when mesh object is highlighted. Use for update of TreeTable */
       HighlightMesh: function(active_mesh, color, geo_object, geo_index, geo_stack) {
          if (!this.standalone) {
-            var req = geo_stack ? JSON.stringify(geo_stack) : "OFF";
+            var req = geo_stack ? geo_stack : [];
             // avoid multiple time submitting same request
-            if (this._last_highlight_req === req) return;
+            if (JSROOT.GEO.IsSameStack(this._last_highlight_req, req)) return;
             this._last_highlight_req = req;
-            return this.websocket.Send("HIGHL:" + req);
+            return this.sendViewerRequest("HIGHL", { stack: req });
          }
 
          var hpath = "---";
@@ -282,7 +307,7 @@ sap.ui.define(['sap/ui/core/Component',
 
          for (var i=0;i<rows.length;++i) {
             rows[i].$().css("background-color", "");
-            if (path !== "OFF") {
+            if (path && (path !== "OFF")) {
                var ctxt = rows[i].getBindingContext(),
                    prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null,
                    cmp = 0;
@@ -474,7 +499,7 @@ sap.ui.define(['sap/ui/core/Component',
          var mhdr = msg.substr(0,6);
          msg = msg.substr(6);
 
-         // console.log(mhdr, msg.length, msg.substr(0,70), "...");
+         console.log(mhdr, msg.length, msg.substr(0,70), "...");
 
          switch (mhdr) {
          case "DESCR:":  // browser hierarchy
@@ -503,13 +528,8 @@ sap.ui.define(['sap/ui/core/Component',
          case "APPND:":
             this.checkDrawMsg("append", JSROOT.parse(msg));
             break;
-         case "HOVER:":
-            this._hover_stack = (msg == "OFF") ? null : JSON.parse(msg);
-            if (this.geo_painter)
-               this.geo_painter.HighlightMesh(null, 0x00ff00, null, undefined, this._hover_stack, true);
-            break;
-         case "HIGHL:":
-            this.highlighRowWithPath(msg);
+         case "GVRPL:":
+            this.processViewerReply(JSROOT.parse(msg));
             break;
          default:
             console.error('Non recognized msg ' + mhdr + ' len=' + msg.length);
