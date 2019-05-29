@@ -584,6 +584,9 @@ AutoDict_*.cxx
 # /root/io/tuple
 /root/io/tuple/tuple.root
 
+# /root/io/uniquePointer/
+/root/io/uniquePointer/*_rflx.cpp_tmp_*
+
 # /root/io/vararyobj/
 /root/io/vararyobj/*.root
 
@@ -667,6 +670,7 @@ AutoDict_*.cxx
 # /root/meta/genreflex
 /root/meta/genreflex/dicts/*
 /root/meta/genreflex/ofile.root
+/root/meta/genreflex/*_rflx.cpp_tmp_*
 
 # root/meta/genreflex/XMLParsing
 root/meta/genreflex/XMLParsing/dicts/*
