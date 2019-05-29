@@ -113,7 +113,9 @@ target_include_directories(ZLIB INTERFACE $<BUILD_INTERFACE:${ZLIB_INCLUDE_DIR}>
 if((CMAKE_SYSTEM_PROCESSOR MATCHES "amd64|x86_64|AMD64|X86_64") AND (CMAKE_SYSTEM_NAME MATCHES "Linux"))
    target_compile_options(ZLIB PRIVATE -Wno-unused-function -O3 -mpclmul -Wno-attribute-alias ${ROOT_DEFINITIONS})
 else()
+if(NOT MSVC)
     target_compile_options(ZLIB PRIVATE -O3)
+endif()
 endif()
 
 add_library(ZLIB::ZLIB ALIAS ZLIB)
