@@ -476,7 +476,7 @@ bool TClassEdit::TSplitType::IsTemplate()
 
 ROOT::ESTLType TClassEdit::STLKind(std::string_view type)
 {
-   unsigned char offset = 0;
+   size_t offset = 0;
    if (type.compare(0,6,"const ")==0) { offset += 6; }
    offset += StdLen(type.substr(offset));
 
