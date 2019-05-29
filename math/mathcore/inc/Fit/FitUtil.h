@@ -208,6 +208,7 @@ namespace FitUtil {
      ROOT::Math::IMultiGenFunction *fFuncNDim;
   };
 
+#ifdef R__USE_IMT
   inline unsigned setAutomaticChunking(unsigned nEvents)
   {
      auto ncpu = ROOT::GetImplicitMTPoolSize();
@@ -216,6 +217,7 @@ namespace FitUtil {
      return nEvents / 1000;
      //   return ((nEvents/ncpu + 1) % 1000) *40 ; //arbitrary formula
    }
+#endif
 
    // derivative with respect of the parameter to be integrated
    template <class GradFunc = IGradModelFunction>
