@@ -84,7 +84,7 @@
    }
 
    var openui5_sources = [],
-       openui5_dflt = "https://openui5.hana.ondemand.com/",
+       openui5_dflt = "https://openui5.hana.ondemand.com/1.64.1/",
        openui5_root = JSROOT.source_dir.replace(/jsrootsys/g, "rootui5sys/distribution");
 
    if (openui5_root == JSROOT.source_dir) openui5_root = "";
