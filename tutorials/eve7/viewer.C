@@ -6,13 +6,12 @@
 ///
 /// \author Sergey Linev
 
+#include <ROOT/REveGeomViewer.hxx>
+#include <ROOT/RDirectory.hxx>
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
 #include "TFile.h"
-#include <ROOT/REveGeomViewer.hxx>
-
-std::shared_ptr<ROOT::Experimental::REveGeomViewer> vvv;
 
 void viewer()
 {
@@ -37,18 +36,23 @@ void viewer()
    gGeoManager->GetVolume("EAP4")->SetLineColor(7);
    gGeoManager->GetVolume("HTC1")->SetLineColor(2);
 
-   vvv = std::make_shared<ROOT::Experimental::REveGeomViewer>(gGeoManager);
+   using namespace ROOT::Experimental;
+
+   auto viewer = std::make_shared<REveGeomViewer>(gGeoManager);
 
    // select volume to draw
-   vvv->SelectVolume("CMSE");
+   viewer->SelectVolume("CMSE");
 
    // specify JSROOT draw options - here clipping on X,Y,Z axes
-   vvv->SetDrawOptions("clipxyz");
+   viewer->SetDrawOptions("clipxyz");
 
    // set default limits for number of visible nodes and faces
    // when viewer created, initial values exported from TGeoManager
-   vvv->SetLimits();
+   viewer->SetLimits();
 
    // start browser
-   vvv->Show();
+   viewer->Show();
+
+   // add to global heap to avoid immediate destroy of RGeomViewer
+   RDirectory::Heap().Add("geom_viewer", viewer);
 }
