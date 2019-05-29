@@ -199,6 +199,7 @@ endif()
 
 if(root7)
   set(root7_veto dataframe/df013_InspectAnalysis.C
+                 v7/browser.cxx
                  v7/fitpanel.cxx
                  v7/fitpanel6.cxx
       )
