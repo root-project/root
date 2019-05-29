@@ -247,21 +247,23 @@
          if (!vrDisplay) return;
          pthis._renderer.vr.setDevice(vrDisplay);
          pthis._vrDisplay = vrDisplay;
-         pthis._standingMatrix.fromArray(vrDisplay.stageParameters.sittingToStandingTransform);
+         if (vrDisplay.stageParameters) {
+            this._standingMatrix.fromArray(vrDisplay.stageParameters.sittingToStandingTransform);
+         }
          pthis.InitVRControllersGeometry();
       });
    }
 
    TGeoPainter.prototype.InitVRControllersGeometry = function() {
 
-      let geometry = new THREE.SphereGeometry(0.025, 18, 36);
-      let material = new THREE.MeshBasicMaterial({color: 'grey'});
-      let rayMaterial = new THREE.MeshBasicMaterial({color: 'fuchsia'});
-      let rayGeometry = new THREE.BoxBufferGeometry(0.001, 0.001, 2);
-      let ray1Mesh = new THREE.Mesh(rayGeometry, rayMaterial);
-      let ray2Mesh = new THREE.Mesh(rayGeometry, rayMaterial);
-      let sphere1 = new THREE.Mesh(geometry, material);
-      let sphere2 = new THREE.Mesh(geometry, material);
+      var geometry = new THREE.SphereGeometry(0.025, 18, 36);
+      var material = new THREE.MeshBasicMaterial({color: 'grey'});
+      var rayMaterial = new THREE.MeshBasicMaterial({color: 'fuchsia'});
+      var rayGeometry = new THREE.BoxBufferGeometry(0.001, 0.001, 2);
+      var ray1Mesh = new THREE.Mesh(rayGeometry, rayMaterial);
+      var ray2Mesh = new THREE.Mesh(rayGeometry, rayMaterial);
+      var sphere1 = new THREE.Mesh(geometry, material);
+      var sphere2 = new THREE.Mesh(geometry, material);
 
       this._controllersMeshes = [];
       this._controllersMeshes.push(sphere1);
@@ -285,7 +287,7 @@
       this._controllersMeshes.forEach(function (mesh) { mesh.visible = false; });
       this._vrControllers = [];
       for (var i = 0; i < gamepads.length; ++i) {
-         if (!gamepads[i].pose) { continue; }
+         if (!gamepads[i] || !gamepads[i].pose) { continue; }
          this._vrControllers.push({
             gamepad: gamepads[i],
             mesh: this._controllersMeshes[i]
