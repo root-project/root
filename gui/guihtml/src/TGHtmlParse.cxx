@@ -772,7 +772,7 @@ int TGHtml::Tokenize()
          if (fIPlaintext == 0 || fIPlaintext == Html_TEXTAREA) {
             HtmlTranslateEscapes(tpElem->fZText);
          }
-         pElem->fCount = strlen(tpElem->fZText);
+         pElem->fCount = (Html_16_t) strlen(tpElem->fZText);
          n += i;
          inpCol += i;
 
@@ -1144,7 +1144,7 @@ TGHtmlElement *TGHtml::InsertToken(TGHtmlElement *pToken,
       if (zArgs) {
          // coverity[secure_coding]
          strcpy (((TGHtmlTextElement *)pElem)->fZText, zArgs);
-         pElem->fCount = strlen(zArgs);
+         pElem->fCount = (Html_16_t) strlen(zArgs);
       }
    } else if (!strcmp(zType, "Space")) {
       pElem = new TGHtmlSpaceElement();
