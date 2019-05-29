@@ -204,13 +204,15 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
 {
    std::string res;
 
-   auto request = TBufferJSON::FromJSON<RBrowserRequest>(msg);
+   std::unique_ptr<RBrowserRequest> request;
 
-   if (msg.empty() && !request) {
+   if (msg.empty()) {
       request = std::make_unique<RBrowserRequest>();
       request->path = "/";
       request->first = 0;
       request->number = 100;
+   } else {
+      request = TBufferJSON::FromJSON<RBrowserRequest>(msg);
    }
 
    if (!request)
@@ -238,7 +240,7 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
    }
 
    res = "BREPL:";
-   res.append(TBufferJSON::ToJSON(&reply, 103).Data());
+   res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kSkipTypeInfo + TBufferJSON::kNoSpaces).Data());
 
    return res;
 }
