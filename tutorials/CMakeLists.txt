@@ -212,7 +212,7 @@ if(NOT root7)
 endif()
 
 if( CMAKE_SIZEOF_VOID_P EQUAL 4 )
-  set(bits32_veto dataframe/*.C graphs/timeSeriesFrom*.C)
+  set(bits32_veto dataframe/*.C graphs/timeSeriesFrom*.C v7/ntuple/ntpl004_dimuon.C)
 endif()
 
 #---These ones are disabled !!! ------------------------------------
