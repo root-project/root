@@ -369,7 +369,7 @@ static clang::CharUnits computeOffsetHint(clang::ASTContext &Context,
    // If Dst is not derived from Src we can skip the whole computation below and
    // return that Src is not a public base of Dst.  Record all inheritance paths.
    if (!Dst->isDerivedFrom(Src, Paths))
-     return clang::CharUnits::fromQuantity(-2ULL);
+     return clang::CharUnits::fromQuantity(-2);
 
    unsigned NumPublicPaths = 0;
    clang::CharUnits Offset;
@@ -384,7 +384,7 @@ static clang::CharUnits computeOffsetHint(clang::ASTContext &Context,
        // If the path contains a virtual base class we can't give any hint.
        // -1: no hint.
        if (J->Base->isVirtual())
-         return clang::CharUnits::fromQuantity(-1ULL);
+         return clang::CharUnits::fromQuantity(-1);
 
        if (NumPublicPaths > 1) // Won't use offsets, skip computation.
          continue;
@@ -398,11 +398,11 @@ static clang::CharUnits computeOffsetHint(clang::ASTContext &Context,
 
    // -2: Src is not a public base of Dst.
    if (NumPublicPaths == 0)
-     return clang::CharUnits::fromQuantity(-2ULL);
+     return clang::CharUnits::fromQuantity(-2);
 
    // -3: Src is a multiple public base type but never a virtual base type.
    if (NumPublicPaths > 1)
-     return clang::CharUnits::fromQuantity(-3ULL);
+     return clang::CharUnits::fromQuantity(-3);
 
    // Otherwise, the Src type is a unique public nonvirtual base type of Dst.
    // Return the offset of Src from the origin of Dst.
