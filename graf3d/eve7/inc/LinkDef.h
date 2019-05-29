@@ -220,6 +220,7 @@
 #pragma link C++ class ROOT::Experimental::REveShapeRenderInfo+;
 #pragma link C++ class ROOT::Experimental::REveGeomDescription+;
 #pragma link C++ class ROOT::Experimental::REveGeomDrawing+;
+#pragma link C++ class ROOT::Experimental::REveGeomRequest+;
 
 // Tables
 #pragma link C++ class ROOT::Experimental::REveTableViewInfo;
