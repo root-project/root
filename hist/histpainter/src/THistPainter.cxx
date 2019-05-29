@@ -10580,7 +10580,7 @@ const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
       ef = TString::Format("%s.%df","%",tv.Length()-id-1);
    }
 
-   return ef;
+   return Form("%s",ef.Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
