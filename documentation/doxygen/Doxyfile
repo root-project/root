@@ -800,6 +800,7 @@ INPUT                  = . \
                          ../../core/foundation/ \
                          ../../core/macosx/ \
                          ../../core/meta/ \
+                         ../../core/metacling/ \
                          ../../core/metautils/ \
                          ../../core/multiproc/ \
                          ../../core/rint/ \
