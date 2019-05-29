@@ -11,7 +11,9 @@
 #include <cctype>
 
 #ifdef WIN32
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #endif
 
 #include "TVirtualX.h"
