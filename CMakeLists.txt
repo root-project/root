@@ -74,6 +74,7 @@ else()
                   ERROR_QUIET
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
   string(TIMESTAMP GIT_TIMESTAMP "%b %d %Y, %H:%M:%S" UTC)
+  string(REGEX REPLACE "^v(.*)" "\\1" ROOT_FULL_VERSION ${GIT_DESCRIBE_ALWAYS})
 
   if("${GIT_DESCRIBE_ALL}" MATCHES "^tags/v[0-9]+-[0-9]+-[0-9]+.*")
     # GIT_DESCRIBE_ALWAYS: v6-16-00-rc1
@@ -92,6 +93,7 @@ else()
     # GIT_DESCRIBE_ALWAYS: v6-13-04-2163-g7e8d27ea66
     # GIT_DESCRIBE_ALL: heads/master or remotes/origin/master
     SET_VERSION_FROM_FILE()
+    set(ROOT_FULL_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}")
   endif()
   set(ROOT_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}")
 endif()
@@ -439,7 +441,7 @@ add_custom_target(version COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makeversion.sh 
 endif()
 
 #---distribution commands------------------------------------------------------------------------
-add_custom_target(distsrc COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makedistsrc.sh "${ROOT_VERSION}" "${GIT_DESCRIBE_ALWAYS}" "${CMAKE_SOURCE_DIR}")
+add_custom_target(distsrc COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makedistsrc.sh "${ROOT_FULL_VERSION}" "${GIT_DESCRIBE_ALWAYS}" "${CMAKE_SOURCE_DIR}")
 add_custom_target(dist COMMAND cpack --config CPackConfig.cmake)
 
 #---Configure and install various files neded later and for clients -----------------------------
