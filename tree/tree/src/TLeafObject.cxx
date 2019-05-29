@@ -62,7 +62,7 @@ void TLeafObject::FillBasket(TBuffer &b)
    TObject *object  = GetObject();
    if (object) {
       if (fVirtual) {
-         UChar_t n = strlen(object->ClassName());
+         UChar_t n = (UChar_t) strlen(object->ClassName());
          b << n;
          b.WriteFastArray(object->ClassName(),n+1);
       }
