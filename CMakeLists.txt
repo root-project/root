@@ -74,7 +74,7 @@ else()
                   ERROR_QUIET
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
   string(TIMESTAMP GIT_TIMESTAMP "%b %d %Y, %H:%M:%S" UTC)
-  string(REGEX REPLACE "^v(.*)" "\\1" ROOT_FULL_VERSION ${GIT_DESCRIBE_ALWAYS})
+  string(REGEX REPLACE "^v([0-9]+)-([0-9]+)-(.*)" "\\1.\\2.\\3" ROOT_FULL_VERSION ${GIT_DESCRIBE_ALWAYS})
 
   if("${GIT_DESCRIBE_ALL}" MATCHES "^tags/v[0-9]+-[0-9]+-[0-9]+.*")
     # GIT_DESCRIBE_ALWAYS: v6-16-00-rc1
