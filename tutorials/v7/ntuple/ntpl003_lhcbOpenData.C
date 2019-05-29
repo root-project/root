@@ -54,8 +54,7 @@ void Convert() {
    // We create RNTuple fields based on the types found in the TTree
    // This simple approach only works for trees with simple branches and only one leaf per branch
    auto tree = f->Get<TTree>("DecayTree");
-   for (auto obj : *(tree->GetListOfBranches())) {
-      auto b = static_cast<TBranch*>(obj);
+   for (auto b : TRangeDynCast<TBranch>(*tree->GetListOfBranches())) {
       // We assume every branch has a single leaf
       TLeaf *l = static_cast<TLeaf*>(b->GetListOfLeaves()->First());
 
