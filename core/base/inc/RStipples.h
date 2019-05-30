@@ -158,6 +158,11 @@ const unsigned char gStipples[26][32] = {
 
 #else
 
+// Disable warning C4838: conversion from 'int' to 'const unsigned char' requires a narrowing conversion
+
+#pragma warning( push )
+#pragma warning( disable : 4838 )
+
 const unsigned char gStipples[26][32] = {
    {
       ~0xaa, ~0xaa, ~0x55, ~0x55, ~0xaa, ~0xaa, ~0x55, ~0x55, ~0xaa, ~0xaa, ~0x55, ~0x55,
@@ -290,6 +295,8 @@ const unsigned char gStipples[26][32] = {
       ~0xff, ~0xf8, ~0xff, ~0xfc, ~0xff, ~0xfe, ~0xff, ~0xff
    } //25
 };
+
+#pragma warning( pop )
 
 #endif
 
