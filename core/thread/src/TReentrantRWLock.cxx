@@ -273,7 +273,7 @@ TReentrantRWLock<MutexT, RecurseCountsT>::GetStateBefore()
    // was taken, the write recursion level was `fWriteRecurse - 1`
    pState->fWriteRecurse = fRecurseCounts.fWriteRecurse - 1;
 
-   return std::move(pState);
+   return pState;
 }
 
 //////////////////////////////////////////////////////////////////////////
