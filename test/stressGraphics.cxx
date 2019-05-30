@@ -1549,7 +1549,7 @@ void tgaxis5()
    tex2->SetTextSize(0.07*f);
    tex2->SetTextColor(kOrange+3);
 
-   long   offset[] = {0,                   0, 1325376000, 1341100800};
+   time_t offset[] = {0,                   0, 1325376000, 1341100800};
    time_t t[]      = {1331150400, 1336417200,          0, 36000};
 
    C->SetTopMargin(0);  C->SetBottomMargin(0);
@@ -1587,7 +1587,7 @@ void tgaxis5()
          char buf[256];
          if (offset[i] < t[i]) {
             sprintf(buf, "#splitline{%s, %s}{offset: %ld, option %s}",
-                    stime(t+i).Data(), stime(t+i, true).Data(), offset[i], opt);
+                    stime(t+i).Data(), stime(t+i, true).Data(), (long) offset[i], opt);
          } else {
             int h = t[i] / 3600;
             int m = (t[i] - 3600 * h) / 60 ;
