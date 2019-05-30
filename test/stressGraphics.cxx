@@ -1549,7 +1549,7 @@ void tgaxis5()
    tex2->SetTextSize(0.07*f);
    tex2->SetTextColor(kOrange+3);
 
-   time_t offset[] = {0,                   0, 1325376000, 1341100800};
+   long   offset[] = {0,                   0, 1325376000, 1341100800};
    time_t t[]      = {1331150400, 1336417200,          0, 36000};
 
    C->SetTopMargin(0);  C->SetBottomMargin(0);
