@@ -3,13 +3,12 @@ sap.ui.define(['sap/ui/core/Component',
                'sap/ui/core/Control',
                'sap/m/Text',
                'sap/m/CheckBox',
-               'sap/ui/layout/Splitter',
-               "sap/ui/core/ResizeHandler",
                "sap/ui/layout/HorizontalLayout",
                "sap/ui/table/Column",
+               "sap/ui/model/json/JSONModel",
                "rootui5/browser/model/BrowserModel"
-],function(Component, Controller, CoreControl, mText, mCheckBox, Splitter, ResizeHandler,
-           HorizontalLayout, tableColumn, BrowserModel) {
+],function(Component, Controller, CoreControl, mText, mCheckBox,
+           HorizontalLayout, tableColumn, JSONModel, BrowserModel) {
 
    "use strict";
 
@@ -175,7 +174,7 @@ sap.ui.define(['sap/ui/core/Component',
          }
       },
 
-      /** @brief function called then mouse-hover event over the row is invoked
+      /** @brief Handler for mouse-hover event
        * @desc Used to highlight correspondent volume on geometry drawing */
       onRowHover: function(row, is_enter) {
          // property of current entry, not used now
@@ -489,6 +488,9 @@ sap.ui.define(['sap/ui/core/Component',
          case "GVRPL:":
             this.processViewerReply(JSROOT.parse(msg));
             break;
+         case "NINFO:":
+            this.provideNodeInfo(JSROOT.parse(msg));
+            break;
          default:
             console.error('Non recognized msg ' + mhdr + ' len=' + msg.length);
          }
@@ -799,6 +801,30 @@ sap.ui.define(['sap/ui/core/Component',
          }
       },
 
+      onCellClick: function(oEvent) {
+
+         var rowindx = oEvent.getParameters().rowIndex,
+             row = this.getView().byId("treeTable").getRows()[rowindx],
+             ctxt = row ? row.getBindingContext() : null,
+             prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
+
+         if(prop && this.isInfoPageActive())
+            if (this.standalone) {
+               // do something in standalone mode
+            } else {
+               this.sendViewerRequest("INFO", { path: prop.fullpath });
+            }
+      },
+
+      // this is reply on INFO request
+      provideNodeInfo: function(info) {
+
+         var model = new JSONModel(info);
+
+         this.byId(this.createId("geomInfo")).setModel(model);
+
+      },
+
       /** Reload geometry description and base drawing, normally not required */
       onRealoadPress: function (oEvent) {
          this.doReload(true);
@@ -814,9 +840,24 @@ sap.ui.define(['sap/ui/core/Component',
          }
       },
 
+      isInfoPageActive: function() {
+         var app = this.byId("geomViewerApp");
+         var curr = app ? app.getCurrentDetailPage() : null;
+         return curr ? curr.getId() == this.createId("geomInfo") : false;
+      },
+
+      onInfoPress: function() {
+         var app = this.byId("geomViewerApp");
+         if (this.isInfoPageActive())
+            app.toDetail(this.createId("geomDraw"));
+         else
+            app.toDetail(this.createId("geomInfo"));
+      },
+
       /** Quit ROOT session */
-      onQuitRootPress: function(oEvent) {
-         this.websocket.Send("QUIT_ROOT");
+      onQuitRootPress: function() {
+         if (!this.standalone)
+            this.websocket.Send("QUIT_ROOT");
       }
 
    });

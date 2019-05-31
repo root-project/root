@@ -58,6 +58,8 @@ public:
 
    bool IsValid() const { return fNodeId >= 0; }
 
+   int GetNodeId() const { return fNodeId; }
+
    bool HasChilds() const { return (fNodeId < 0) ? true : fDesc.fDesc[fNodeId].chlds.size() > 0; }
 
    int NumChilds() const { return (fNodeId < 0) ? 1 : fDesc.fDesc[fNodeId].chlds.size(); }
@@ -1275,3 +1277,35 @@ bool ROOT::Experimental::REveGeomDescription::ChangeNodeVisibility(int nodeid, b
 
    return true;
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Change visibility for specified element
+/// Returns true if changes was performed
+
+std::unique_ptr<ROOT::Experimental::REveGeomNodeInfo> ROOT::Experimental::REveGeomDescription::MakeNodeInfo(const std::string &path)
+{
+   std::unique_ptr<REveGeomNodeInfo> res;
+
+   RGeomBrowserIter iter(*this);
+
+   if (iter.Navigate(path)) {
+
+      auto node = fNodes[iter.GetNodeId()];
+
+      res = std::make_unique<REveGeomNodeInfo>();
+
+      res->fullpath = path;
+      res->node_name = node->GetName();
+      res->node_type = node->ClassName();
+
+      if (node->GetVolume() && node->GetVolume()->GetShape()) {
+         auto shape = node->GetVolume()->GetShape();
+
+         res->shape_name = shape->GetName();
+         res->shape_type = shape->ClassName();
+      }
+   }
+
+   return res;
+}
+
