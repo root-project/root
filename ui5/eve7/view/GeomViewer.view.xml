@@ -34,8 +34,7 @@
          <Page id="geomDraw" title="" showNavButton="false"
             showFooter="false" showSubHeader="false" showHeader="false">
             <content>
-               <eve7:GeomDrawing id="geomDrawing" color="white">
-               </eve7:GeomDrawing>
+               <eve7:GeomDrawing id="geomDrawing" color="white"/>
             </content>
          </Page>
          <Page id="geomInfo" title="Node information" showNavButton="false"
@@ -47,6 +46,7 @@
                   <Text text="Type: {/node_type}"/>
                   <Text text="Shape name: {/shape_name}"/>
                   <Text text="Type: {/shape_type}"/>
+                  <eve7:GeomDrawing id="nodeDrawing" color="white"/>
                </VBox>
             </content>
          </Page>

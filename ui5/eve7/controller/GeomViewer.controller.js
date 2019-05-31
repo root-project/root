@@ -177,6 +177,10 @@ sap.ui.define(['sap/ui/core/Component',
       /** @brief Handler for mouse-hover event
        * @desc Used to highlight correspondent volume on geometry drawing */
       onRowHover: function(row, is_enter) {
+
+         // ignore hover event when drawing not exists
+         if (this.isDrawPageActive()) return;
+
          // property of current entry, not used now
          var ctxt = row.getBindingContext(),
              prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
@@ -331,29 +335,39 @@ sap.ui.define(['sap/ui/core/Component',
                continue;
             }
 
-            // reconstruct render data
-            var off = draw_msg.offset + rd.rnr_offset;
-
-            if (rd.vert_size) {
-               rd.vtxBuff = new Float32Array(draw_msg.raw, off, rd.vert_size);
-               off += rd.vert_size*4;
-            }
-
-            if (rd.norm_size) {
-               rd.nrmBuff = new Float32Array(draw_msg.raw, off, rd.norm_size);
-               off += rd.norm_size*4;
-            }
-
-            if (rd.index_size) {
-               rd.idxBuff = new Uint32Array(draw_msg.raw, off, rd.index_size);
-               off += rd.index_size*4;
-            }
-
-            // shape handle is similar to created in JSROOT.GeoPainter
-            item.server_shape = rd.server_shape = { geom: this.creator.makeEveGeometry(rd), nfaces: (rd.index_size-2)/3, ready: true };
+            item.server_shape = rd.server_shape =
+               this.createServerShape(rd, draw_msg.raw, draw_msg.offset);
          }
 
          return true;
+      },
+
+      /** Create single shape from provided raw data */
+      createServerShape: function(rd, raw, off) {
+         off = (off || 0) + rd.rnr_offset;
+
+         if (rd.vert_size) {
+            rd.vtxBuff = new Float32Array(raw, off, rd.vert_size);
+            off += rd.vert_size*4;
+         }
+
+         if (rd.norm_size) {
+            rd.nrmBuff = new Float32Array(raw, off, rd.norm_size);
+            off += rd.norm_size*4;
+         }
+
+         if (rd.index_size) {
+            rd.idxBuff = new Uint32Array(raw, off, rd.index_size);
+            off += rd.index_size*4;
+         }
+
+         // shape handle is similar to created in JSROOT.GeoPainter
+         return {
+            _typename: "$$Shape$$", // indicate that shape can be used as is
+            geom: this.creator.makeEveGeometry(rd),
+            nfaces: (rd.index_size-2)/3,
+            ready: true
+         };
       },
 
       /** function to accumulate and process all drawings messages
@@ -823,6 +837,21 @@ sap.ui.define(['sap/ui/core/Component',
 
          this.byId(this.createId("geomInfo")).setModel(model);
 
+         if (info.ri && info.rndr_binary) {
+
+            console.log('BINARY SIZE IS', info.rndr_binary.length);
+
+            var server_shape = this.createServerShape(info.ri, info.rndr_binary.buffer, 0);
+
+            var nodeDrawing = this.byId(this.createId("nodeDrawing"));
+
+            var node_painter = JSROOT.Painter.CreateGeoPainter(nodeDrawing.getDomRef(), server_shape, "");
+
+            nodeDrawing.setGeomPainter(node_painter);
+
+            node_painter.prepareObjectDraw(server_shape, "");
+         }
+
       },
 
       /** Reload geometry description and base drawing, normally not required */
@@ -838,6 +867,12 @@ sap.ui.define(['sap/ui/core/Component',
          } else {
             this.model.reloadMainModel(force);
          }
+      },
+
+      isDrawPageActive: function() {
+         var app = this.byId("geomViewerApp");
+         var curr = app ? app.getCurrentDetailPage() : null;
+         return curr ? curr.getId() == this.createId("geomDraw") : false;
       },
 
       isInfoPageActive: function() {
