@@ -2,6 +2,7 @@
    controllerName="rootui5.eve7.controller.GeomViewer"
    xmlns="sap.m"
    xmlns:mvc="sap.ui.core.mvc"
+   xmlns:eve7="rootui5.eve7.lib"
    xmlns:t="sap.ui.table">
    <SplitApp id="geomViewerApp" initialMaster="geomHierarchy"
       initialDetail="geomDraw" orientationChange="onOrientationChange">
@@ -30,6 +31,8 @@
          <Page id="geomDraw" title="" showNavButton="false"
             showFooter="false" showSubHeader="false" showHeader="false">
             <content>
+               <eve7:GeomDrawing id="geomDrawing" color="white">
+               </eve7:GeomDrawing>
             </content>
          </Page>
       </detailPages>
