@@ -213,11 +213,8 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
       } else if (req && (req->oper == "INFO")) {
 
          auto info = fDesc.MakeNodeInfo(req->path);
-         if (info) {
+         if (info)
             fWebWindow->Send(connid, "NINFO:"s + TBufferJSON::ToJSON(info.get(), (fDesc.GetJsonComp() % 5) + TBufferJSON::kSameSuppression).Data());
-
-            printf("SENDING INFO\n%s\n", TBufferJSON::ToJSON(info.get(), (fDesc.GetJsonComp() % 5) + TBufferJSON::kSameSuppression).Data());
-         }
 
          // not request but different object type is send
          req.reset(nullptr);
