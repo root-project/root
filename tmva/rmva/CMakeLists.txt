@@ -15,6 +15,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RMVA
     src/MethodRSVM.cxx
     src/MethodRXGB.cxx
     src/RMethodBase.cxx
+  DICTIONARY_OPTIONS
+    -I${R_INCLUDE_DIR}
   DEPENDENCIES
     Core
     Matrix
@@ -23,3 +25,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RMVA
     Thread
     TMVA
 )
+
+target_include_directories(RMVA BEFORE PRIVATE ${R_INCLUDE_DIR})
