@@ -1,45 +1,37 @@
 <mvc:View height="100%" width="100%" class="sapUiSizeCompact"
-          controllerName="rootui5.eve7.controller.GeomViewer"
-          xmlns="sap.m"
-          xmlns:mvc="sap.ui.core.mvc"
-          xmlns:t="sap.ui.table"
-          xmlns:l="sap.ui.layout">
-   <Page title="" showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false">
-      <!-- headerContent>
-      </headerContent-->
-      <!-- subHeader>
-      </subHeader-->
-      <content>
-        <l:Splitter id="mainSplitter" height="100%">
-          <l:Splitter orientation="Vertical">
-            <l:layoutData><l:SplitterLayoutData size="300px" /></l:layoutData>
-            <Toolbar>
-               <layoutData><l:SplitterLayoutData size="30px" resizable="false"/></layoutData>
-               <Button icon="sap-icon://synchronize" type="Transparent"
-                    tooltip="Reload geometry drawing" press="onRealoadPress"/>
-               <Button icon="sap-icon://log" type="Transparent"
-                    tooltip="Quit ROOT session" press="onQuitRootPress"/>
-               <ToolbarSpacer/>
-               <SearchField liveChange="onSearch"/>
-            </Toolbar>
-            <t:TreeTable
-              id="treeTable"
-              title="Browser"
-              columnHeaderVisible="false"
-              editable="false"
-              enableSelectAll="false"
-              selectionBehavior="RowOnly"
-              selectionMode="Single"
-              visibleRowCountMode="Auto"
-              rows="{/nodes}">
-              <!--  rows="{ path:'/nodes',  parameters : { arrayNames: ['childs']}}">  -->
-            </t:TreeTable>
-          </l:Splitter>
-           <!-- here place for Geom drawing, custom controller append in initializer -->
-        </l:Splitter>
-      </content>
-    </Page>
+   controllerName="rootui5.eve7.controller.GeomViewer"
+   xmlns="sap.m"
+   xmlns:mvc="sap.ui.core.mvc"
+   xmlns:t="sap.ui.table">
+   <SplitApp id="geomViewerApp" initialMaster="geomHierarchy"
+      initialDetail="geomDraw" orientationChange="onOrientationChange">
+      <masterPages>
+         <Page id="geomHierarchy" title="" showNavButton="false"
+            showFooter="false" showSubHeader="false" showHeader="false">
+            <content>
+               <Toolbar>
+                  <Button icon="sap-icon://synchronize" type="Transparent"
+                     tooltip="Reload geometry drawing" press="onRealoadPress" />
+                  <Button icon="sap-icon://log" type="Transparent"
+                     tooltip="Quit ROOT session" press="onQuitRootPress" />
+                  <ToolbarSpacer />
+                  <SearchField liveChange="onSearch" />
+               </Toolbar>
+               <t:TreeTable id="treeTable" title="Browser"
+                  columnHeaderVisible="false" editable="false"
+                  enableSelectAll="false" selectionBehavior="RowOnly"
+                  selectionMode="Single" visibleRowCountMode="Auto"
+                  rows="{/nodes}">
+               </t:TreeTable>
+            </content>
+         </Page>
+      </masterPages>
+      <detailPages>
+         <Page id="geomDraw" title="" showNavButton="false"
+            showFooter="false" showSubHeader="false" showHeader="false">
+            <content>
+            </content>
+         </Page>
+      </detailPages>
+   </SplitApp>
 </mvc:View>
-
-
-
