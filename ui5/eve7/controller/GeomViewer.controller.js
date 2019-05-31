@@ -162,7 +162,7 @@ sap.ui.define(['sap/ui/core/Component',
 
          // placeholder for geometry painter
          this.geomControl = new GeomDraw({color:"#f00"});
-         this.getView().byId("mainSplitter").addContentArea(this.geomControl);
+         this.getView().byId("geomDraw").addContent(this.geomControl);
 
          JSROOT.AssertPrerequisites("geom", function() {
             sap.ui.define(['rootui5/eve7/lib/EveElements'], function(EveElements) {
