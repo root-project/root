@@ -735,13 +735,13 @@ void ROOT::Experimental::REveGeomDescription::ResetRndrInfos()
 /////////////////////////////////////////////////////////////////////
 /// Fill binary buffer
 
-void ROOT::Experimental::REveGeomDescription::BuildRndrBinary(std::vector<char> &buf)
+void ROOT::Experimental::REveGeomDescription::BuildRndrBinary(std::vector<unsigned char> &buf)
 {
    buf.resize(fRndrOffest);
    int off{0};
 
    for (auto rd : fRndrShapes) {
-      auto sz = rd->Write( &buf[off], buf.size() - off );
+      auto sz = rd->Write( reinterpret_cast<char *>(buf.data() + off), buf.size() - off );
       off += sz;
    }
    assert(fRndrOffest == off);
@@ -867,7 +867,7 @@ bool ROOT::Experimental::REveGeomDescription::IsPrincipalEndNode(int nodeid)
 /// If number of found elements less than 100, create description and shapes for them
 /// Returns number of match elements
 
-int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &find, std::string &hjson, std::string &json, std::vector<char> &binary)
+int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &find, std::string &hjson, std::string &json, std::vector<unsigned char> &binary)
 {
    hjson.clear();
    json.clear();
@@ -1187,7 +1187,7 @@ std::string ROOT::Experimental::REveGeomDescription::ProduceModifyReply(int node
 /// Produce shape rendering data for given stack
 /// All nodes, which are referencing same shape will be transferred
 
-bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std::string &json, std::vector<char> &binary, bool check_volume)
+bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std::string &json, std::vector<unsigned char> &binary, bool check_volume)
 {
    // only this shape is interesting
 
@@ -1292,18 +1292,37 @@ std::unique_ptr<ROOT::Experimental::REveGeomNodeInfo> ROOT::Experimental::REveGe
 
       auto node = fNodes[iter.GetNodeId()];
 
+      auto &desc = fDesc[iter.GetNodeId()];
+
       res = std::make_unique<REveGeomNodeInfo>();
 
       res->fullpath = path;
       res->node_name = node->GetName();
       res->node_type = node->ClassName();
 
-      if (node->GetVolume() && node->GetVolume()->GetShape()) {
-         auto shape = node->GetVolume()->GetShape();
+      TGeoShape *shape = node->GetVolume() ? node->GetVolume()->GetShape() : nullptr;
 
+      if (shape) {
          res->shape_name = shape->GetName();
          res->shape_type = shape->ClassName();
       }
+
+      if (shape && desc.CanDisplay()) {
+
+         ResetRndrInfos();
+
+         auto &shape_descr = MakeShapeDescr(shape, true);
+
+         res->ri = &shape_descr.fRenderInfo; // temporary pointer, can be used preserved for short time
+
+         printf("OFFSET %d\n", fRndrOffest);
+
+         BuildRndrBinary(res->rndr_binary);
+
+         printf("BINARY SIZE %u\n", (unsigned) res->rndr_binary.size());
+
+      }
+
    }
 
    return res;
