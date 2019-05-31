@@ -62,46 +62,6 @@ sap.ui.define(['sap/ui/core/Component',
 
    });
 
-   var GeomDraw = CoreControl.extend("rootui5.eve7.controller.GeomDraw", {
-
-      metadata : {
-         properties : {           // setter and getter are created behind the scenes, incl. data binding and type validation
-            "color" : {type: "sap.ui.core.CSSColor", defaultValue: "#fff"} // you can give a default value and more
-         }
-      },
-
-      // the part creating the HTML:
-      renderer : function(oRm, oControl) { // static function, so use the given "oControl" instance instead of "this" in the renderer function
-         oRm.write("<div");
-         oRm.writeControlData(oControl);  // writes the Control ID and enables event handling - important!
-         // oRm.addStyle("background-color", oControl.getColor());  // write the color property; UI5 has validated it to be a valid CSS color
-         oRm.addStyle("width", "100%");
-         oRm.addStyle("height", "100%");
-         oRm.addStyle("overflow", "hidden");
-         oRm.writeStyles();
-         oRm.writeClasses();              // this call writes the above class plus enables support for Square.addStyleClass(...)
-         oRm.write(">");
-         oRm.write("</div>"); // no text content to render; close the tag
-      },
-
-      onAfterRendering: function() {
-         ResizeHandler.register(this, this.onResize.bind(this));
-         this.geom_painter = null;
-      },
-
-      onResize: function() {
-         if (this.resize_tmout) clearTimeout(this.resize_tmout);
-         this.resize_tmout = setTimeout(this.onResizeTimeout.bind(this), 100); // minimal latency
-      },
-
-      onResizeTimeout: function() {
-         delete this.resize_tmout;
-         if (this.geo_painter)
-            this.geo_painter.CheckResize();
-      }
-   });
-
-
    /** Central geometry viewer contoller
     * All TGeo functionality is loaded after main ui5 rendering is performed,
     * To start drawing, following stages should be completed:
@@ -128,7 +88,7 @@ sap.ui.define(['sap/ui/core/Component',
 
          if (JSROOT.GetUrlOption('nobrowser') !== null) {
             // remove complete area - plain geometry drawing
-            this.getView().byId("mainSplitter").removeAllContentAreas();
+            this.getView().byId("geomViewerApp").setMode(sap.m.SplitAppMode.HideMode);
          } else {
 
             // create model only for browser - no need for anybody else
@@ -159,10 +119,6 @@ sap.ui.define(['sap/ui/core/Component',
             }, this);
 
          }
-
-         // placeholder for geometry painter
-         this.geomControl = new GeomDraw({color:"#f00"});
-         this.getView().byId("geomDraw").addContent(this.geomControl);
 
          JSROOT.AssertPrerequisites("geom", function() {
             sap.ui.define(['rootui5/eve7/lib/EveElements'], function(EveElements) {
@@ -327,8 +283,10 @@ sap.ui.define(['sap/ui/core/Component',
       createGeoPainter: function(drawopt) {
          if (this.geo_painter) return;
 
-         this.geo_painter = JSROOT.Painter.CreateGeoPainter(this.geomControl.getDomRef(), null, drawopt);
-         this.geomControl.geo_painter = this.geo_painter;
+         var geomDrawing = this.getView().byId("geomDrawing");
+
+         this.geo_painter = JSROOT.Painter.CreateGeoPainter(geomDrawing.getDomRef(), null, drawopt);
+         geomDrawing.setGeomPainter(this.geo_painter);
 
          this.geo_painter.AddHighlightHandler(this);
          this.geo_painter.ActivateInBrowser = this.activateInTreeTable.bind(this);
