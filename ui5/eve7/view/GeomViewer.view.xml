@@ -13,6 +13,8 @@
                <Toolbar>
                   <Button icon="sap-icon://synchronize" type="Transparent"
                      tooltip="Reload geometry drawing" press="onRealoadPress" />
+                  <Button icon="sap-icon://show" type="Transparent"
+                     tooltip="Toggle with info page" press="onInfoPress" />
                   <Button icon="sap-icon://log" type="Transparent"
                      tooltip="Quit ROOT session" press="onQuitRootPress" />
                   <ToolbarSpacer />
@@ -22,6 +24,7 @@
                   columnHeaderVisible="false" editable="false"
                   enableSelectAll="false" selectionBehavior="RowOnly"
                   selectionMode="Single" visibleRowCountMode="Auto"
+                  cellClick="onCellClick"
                   rows="{/nodes}">
                </t:TreeTable>
             </content>
@@ -33,6 +36,18 @@
             <content>
                <eve7:GeomDrawing id="geomDrawing" color="white">
                </eve7:GeomDrawing>
+            </content>
+         </Page>
+         <Page id="geomInfo" title="Node information" showNavButton="false"
+            showFooter="false" showSubHeader="false" showHeader="true">
+            <content>
+               <VBox>
+                  <Text text="Path: {/fullpath}"/>
+                  <Text text="Node name: {/node_name}"/>
+                  <Text text="Type: {/node_type}"/>
+                  <Text text="Shape name: {/shape_name}"/>
+                  <Text text="Type: {/shape_type}"/>
+               </VBox>
             </content>
          </Page>
       </detailPages>

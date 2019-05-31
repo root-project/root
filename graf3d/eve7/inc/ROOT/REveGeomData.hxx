@@ -81,17 +81,16 @@ public:
 class REveShapeRenderInfo {
 public:
    // render data, equivalent of REveElement::WriteCoreJson
-   int rnr_offset{-1};     ///< rnr_offset;
-   std::string rnr_func;  ///< fRenderData->GetRnrFunc();
-   int vert_size{0};      ///< fRenderData->SizeV();
-   int norm_size{0};      ///< fRenderData->SizeN();
-   int index_size{0};     ///< fRenderData->SizeI();
+   int rnr_offset{-1};   ///< rnr_offset;
+   std::string rnr_func; ///< fRenderData->GetRnrFunc();
+   int vert_size{0};     ///< fRenderData->SizeV();
+   int norm_size{0};     ///< fRenderData->SizeN();
+   int index_size{0};    ///< fRenderData->SizeI();
    // int trans_size{0};     ///< fRenderData->SizeT(); not used in GeomViewer
 };
 
 /** REveGeomVisible contains description of visible node
- * It is path to the node plus reference to shape rendering data
- */
+ * It is path to the node plus reference to shape rendering data */
 
 class REveGeomVisible {
 public:
@@ -106,13 +105,13 @@ public:
 };
 
 /** Object with full description for drawing geometry
- * It include list of visibles and list of nodes required to build them */
+ * It includes list of visible items and list of nodes required to build them */
 
 class REveGeomDrawing {
 public:
    int numnodes{0};                         ///< total number of nodes in description
-   std::vector<REveGeomNode*> nodes;        ///< all used nodes to display visibles and not known for client
-   std::vector<REveGeomVisible> visibles;   ///< all visibles items with
+   std::vector<REveGeomNode*> nodes;        ///< all used nodes to display visible items and not known for client
+   std::vector<REveGeomVisible> visibles;   ///< all visible items
    std::string drawopt;                     ///< draw options for TGeoPainter
    int binlen{0};                           ///< extra binary data for that drawing
 };
@@ -126,6 +125,14 @@ public:
    std::vector<int> stack; ///< stack parameter, used with HIGHL
 };
 
+class REveGeomNodeInfo {
+public:
+   std::string fullpath;  ///< full path to node
+   std::string node_type;  ///< node class name
+   std::string node_name;  ///< node name
+   std::string shape_type; ///< shape type (if any)
+   std::string shape_name; ///< shape class name (if any)
+};
 
 using REveGeomScanFunc_t = std::function<bool(REveGeomNode &, std::vector<int> &, bool)>;
 
@@ -258,6 +265,7 @@ public:
 
    void SetDrawOptions(const std::string &opt = "") { fDrawOptions = opt; }
 
+   std::unique_ptr<REveGeomNodeInfo> MakeNodeInfo(const std::string &path);
 };
 
 
