@@ -213,6 +213,9 @@
 #pragma link C++ class ROOT::Experimental::REveChunkManager+;
 #pragma link C++ class ROOT::Experimental::REveChunkManager::iterator;
 
+// Tables
+#pragma link C++ class ROOT::Experimental::REveTableViewInfo;
+
 // Geometry viewer
 #pragma link C++ class ROOT::Experimental::REveGeomNodeBase+;
 #pragma link C++ class ROOT::Experimental::REveGeomNode+;
@@ -221,8 +224,6 @@
 #pragma link C++ class ROOT::Experimental::REveGeomDescription+;
 #pragma link C++ class ROOT::Experimental::REveGeomDrawing+;
 #pragma link C++ class ROOT::Experimental::REveGeomRequest+;
-
-// Tables
-#pragma link C++ class ROOT::Experimental::REveTableViewInfo;
+#pragma link C++ class ROOT::Experimental::REveGeomNodeInfo+;
 
 #endif
