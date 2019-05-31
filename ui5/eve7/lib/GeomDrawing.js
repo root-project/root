@@ -54,15 +54,14 @@ sap.ui.define(['sap/ui/core/Control',
       },
 
       setGeomPainter: function(painter) {
+
          if (this.geom_painter) {
-            console.log('Cleanup previous GEOM painter');
             this.geom_painter.Cleanup();
             delete this.geom_painter;
-            this.getDomRef().innerHTML = '';
-         } else {
-            console.log('Assign GEOM Painter');
-            this.geom_painter = painter;
          }
+
+         if (painter)
+            this.geom_painter = painter;
       },
 
       onResize: function() {

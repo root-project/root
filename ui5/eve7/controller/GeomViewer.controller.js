@@ -837,21 +837,20 @@ sap.ui.define(['sap/ui/core/Component',
 
          this.byId(this.createId("geomInfo")).setModel(model);
 
+         var nodeDrawing = this.byId(this.createId("nodeDrawing"));
+
          if (info.ri && info.rndr_binary) {
 
-            console.log('BINARY SIZE IS', info.rndr_binary.length);
-
             var server_shape = this.createServerShape(info.ri, info.rndr_binary.buffer, 0);
-
-            var nodeDrawing = this.byId(this.createId("nodeDrawing"));
 
             var node_painter = JSROOT.Painter.CreateGeoPainter(nodeDrawing.getDomRef(), server_shape, "");
 
             nodeDrawing.setGeomPainter(node_painter);
 
             node_painter.prepareObjectDraw(server_shape, "");
+         } else {
+            nodeDrawing.setGeomPainter(null);
          }
-
       },
 
       /** Reload geometry description and base drawing, normally not required */
