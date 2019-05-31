@@ -716,7 +716,6 @@ sap.ui.define(['sap/ui/core/Component',
          }
       },
 
-
       appendNodes: function(nodes) {
          if (this.geo_painter) this.geo_painter.prepareObjectDraw(nodes, "__geom_viewer_append__");
       },
