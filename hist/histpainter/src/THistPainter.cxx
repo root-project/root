@@ -3657,7 +3657,7 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
 {
 
    if (!gPad) return (char*)"";
-   TString info;
+
    Double_t x  = gPad->PadtoX(gPad->AbsPixeltoX(px));
    Double_t y  = gPad->PadtoY(gPad->AbsPixeltoY(py));
    Double_t x1 = gPad->PadtoX(gPad->AbsPixeltoX(px+1));
@@ -3739,43 +3739,43 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
    if (fH->GetDimension() == 1) {
       if (fH->InheritsFrom(TProfile::Class())) {
          TProfile *tp = (TProfile*)fH;
-         info = TString::Format("(x=%g, y=%g, binx=%d, binc=%g, bine=%g, binn=%d)",
-                  x, y, binx, fH->GetBinContent(binx), fH->GetBinError(binx),
-                  (Int_t) tp->GetBinEntries(binx));
+         fObjectInfo.Form("(x=%g, y=%g, binx=%d, binc=%g, bine=%g, binn=%d)",
+            x, y, binx, fH->GetBinContent(binx), fH->GetBinError(binx),
+            (Int_t) tp->GetBinEntries(binx));
       }
       else {
          Double_t integ = 0;
          for (Int_t bin=binmin;bin<=binx;bin++) {integ += fH->GetBinContent(bin);}
-         info = TString::Format("(x=%g, y=%g, binx=%d, binc=%g, Sum=%g)",
-                  x,y,binx,fH->GetBinContent(binx),integ);
+         fObjectInfo.Form("(x=%g, y=%g, binx=%d, binc=%g, Sum=%g)",
+            x,y,binx,fH->GetBinContent(binx),integ);
       }
    } else if (fH->GetDimension() == 2) {
       if (fH->InheritsFrom(TH2Poly::Class())) {
          TH2Poly *th2 = (TH2Poly*)fH;
          biny = th2->FindBin(x,y);
-         info = TString::Format("%s (x=%g, y=%g, bin=%d, binc=%g)",
-                  th2->GetBinTitle(biny),x,y,biny,th2->GetBinContent(biny));
+         fObjectInfo.Form("%s (x=%g, y=%g, bin=%d, binc=%g)",
+            th2->GetBinTitle(biny),x,y,biny,th2->GetBinContent(biny));
       }
       else if (fH->InheritsFrom(TProfile2D::Class())) {
          TProfile2D *tp = (TProfile2D*)fH;
          biny = fYaxis->FindFixBin(y);
          Int_t bin = fH->GetBin(binx,biny);
-         info = TString::Format("(x=%g, y=%g, binx=%d, biny=%d, binc=%g, bine=%g, binn=%d)",
-                  x, y, binx, biny, fH->GetBinContent(bin),
-                  fH->GetBinError(bin), (Int_t) tp->GetBinEntries(bin));
+         fObjectInfo.Form("(x=%g, y=%g, binx=%d, biny=%d, binc=%g, bine=%g, binn=%d)",
+            x, y, binx, biny, fH->GetBinContent(bin),
+            fH->GetBinError(bin), (Int_t) tp->GetBinEntries(bin));
       } else {
          biny = fYaxis->FindFixBin(y);
-         info = TString::Format("(x=%g, y=%g, binx=%d, biny=%d, binc=%g bine=%g)",
-                  x,y,binx,biny,fH->GetBinContent(binx,biny),
-                  fH->GetBinError(binx,biny));
+         fObjectInfo.Form("(x=%g, y=%g, binx=%d, biny=%d, binc=%g bine=%g)",
+            x,y,binx,biny,fH->GetBinContent(binx,biny),
+            fH->GetBinError(binx,biny));
       }
    } else {
       // 3d case: retrieving the x,y,z bin is not yet implemented
       // print just the x,y info
-      info = TString::Format("(x=%g, y=%g)",x,y);
+      fObjectInfo.Form("(x=%g, y=%g)",x,y);
    }
 
-   return Form("%s",info.Data());
+   return (char *)fObjectInfo.Data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -8512,93 +8512,93 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    }
    if (print_name)  stats->AddText(fH->GetName());
    if (print_entries) {
-      if (fH->GetEntries() < 1e7) tt = TString::Format("%s = %-7d",gStringEntries.Data(),Int_t(fH->GetEntries()+0.5));
-      else                        tt = TString::Format("%s = %14.7g",gStringEntries.Data(),Float_t(fH->GetEntries()));
+      if (fH->GetEntries() < 1e7) tt.Form("%s = %-7d",gStringEntries.Data(),Int_t(fH->GetEntries()+0.5));
+      else                        tt.Form("%s = %14.7g",gStringEntries.Data(),Float_t(fH->GetEntries()));
       stats->AddText(tt.Data());
    }
    if (print_mean) {
       if (print_mean == 1) {
-         tf = TString::Format("%s  = %s%s",gStringMean.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),fH->GetMean(1));
+         tf.Form("%s  = %s%s",gStringMean.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),fH->GetMean(1));
       } else {
-         tf = TString::Format("%s  = %s%s #pm %s%s",gStringMean.Data(),"%",stats->GetStatFormat()
+         tf.Form("%s  = %s%s #pm %s%s",gStringMean.Data(),"%",stats->GetStatFormat()
                                                   ,"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),fH->GetMean(1),fH->GetMeanError(1));
+         tt.Form(tf.Data(),fH->GetMean(1),fH->GetMeanError(1));
       }
       stats->AddText(tt.Data());
       if (fH->InheritsFrom(TProfile::Class())) {
          if (print_mean == 1) {
-            tf = TString::Format("%s = %s%s",gStringMeanY.Data(),"%",stats->GetStatFormat());
-            tt = TString::Format(tf.Data(),fH->GetMean(2));
+            tf.Form("%s = %s%s",gStringMeanY.Data(),"%",stats->GetStatFormat());
+            tt.Form(tf.Data(),fH->GetMean(2));
          } else {
-            tf = TString::Format("%s = %s%s #pm %s%s",gStringMeanY.Data(),"%",stats->GetStatFormat()
+            tf.Form("%s = %s%s #pm %s%s",gStringMeanY.Data(),"%",stats->GetStatFormat()
                                                       ,"%",stats->GetStatFormat());
-            tt = TString::Format(tf.Data(),fH->GetMean(2),fH->GetMeanError(2));
+            tt.Form(tf.Data(),fH->GetMean(2),fH->GetMeanError(2));
          }
          stats->AddText(tt.Data());
       }
    }
    if (print_stddev) {
       if (print_stddev == 1) {
-         tf = TString::Format("%s   = %s%s",gStringStdDev.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),fH->GetStdDev(1));
+         tf.Form("%s   = %s%s",gStringStdDev.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),fH->GetStdDev(1));
       } else {
-         tf = TString::Format("%s   = %s%s #pm %s%s",gStringStdDev.Data(),"%",stats->GetStatFormat()
+         tf.Form("%s   = %s%s #pm %s%s",gStringStdDev.Data(),"%",stats->GetStatFormat()
                                                   ,"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),fH->GetStdDev(1),fH->GetStdDevError(1));
+         tt.Form(tf.Data(),fH->GetStdDev(1),fH->GetStdDevError(1));
       }
       stats->AddText(tt.Data());
       if (fH->InheritsFrom(TProfile::Class())) {
          if (print_stddev == 1) {
-            tf = TString::Format("%s = %s%s",gStringStdDevY.Data(),"%",stats->GetStatFormat());
-            tt = TString::Format(tf.Data(),fH->GetStdDev(2));
+            tf.Form("%s = %s%s",gStringStdDevY.Data(),"%",stats->GetStatFormat());
+            tt.Form(tf.Data(),fH->GetStdDev(2));
          } else {
-            tf = TString::Format("%s = %s%s #pm %s%s",gStringStdDevY.Data(),"%",stats->GetStatFormat()
+            tf.Form("%s = %s%s #pm %s%s",gStringStdDevY.Data(),"%",stats->GetStatFormat()
                                                      ,"%",stats->GetStatFormat());
-            tt = TString::Format(tf.Data(),fH->GetStdDev(2),fH->GetStdDevError(2));
+            tt.Form(tf.Data(),fH->GetStdDev(2),fH->GetStdDevError(2));
          }
          stats->AddText(tt.Data());
       }
    }
    if (print_under) {
-      tf = TString::Format("%s = %s%s",gStringUnderflow.Data(),"%",stats->GetStatFormat());
-      tt = TString::Format(tf.Data(),fH->GetBinContent(0));
+      tf.Form("%s = %s%s",gStringUnderflow.Data(),"%",stats->GetStatFormat());
+      tt.Form(tf.Data(),fH->GetBinContent(0));
       stats->AddText(tt.Data());
    }
    if (print_over) {
-      tf = TString::Format("%s  = %s%s",gStringOverflow.Data(),"%",stats->GetStatFormat());
-      tt = TString::Format(tf.Data(),fH->GetBinContent(fXaxis->GetNbins()+1));
+      tf.Form("%s  = %s%s",gStringOverflow.Data(),"%",stats->GetStatFormat());
+      tt.Form(tf.Data(),fH->GetBinContent(fXaxis->GetNbins()+1));
       stats->AddText(tt.Data());
    }
    if (print_integral) {
       if (print_integral == 1) {
-         tf = TString::Format("%s = %s%s",gStringIntegral.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),fH->Integral());
+         tf.Form("%s = %s%s",gStringIntegral.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),fH->Integral());
       } else {
-         tf = TString::Format("%s = %s%s",gStringIntegralBinWidth.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),fH->Integral("width"));
+         tf.Form("%s = %s%s",gStringIntegralBinWidth.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),fH->Integral("width"));
       }
       stats->AddText(tt.Data());
    }
    if (print_skew) {
       if (print_skew == 1) {
-         tf = TString::Format("%s = %s%s",gStringSkewness.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),fH->GetSkewness(1));
+         tf.Form("%s = %s%s",gStringSkewness.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),fH->GetSkewness(1));
       } else {
-         tf = TString::Format("%s = %s%s #pm %s%s",gStringSkewness.Data(),"%",stats->GetStatFormat()
+         tf.Form("%s = %s%s #pm %s%s",gStringSkewness.Data(),"%",stats->GetStatFormat()
                                                      ,"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),fH->GetSkewness(1),fH->GetSkewness(11));
+         tt.Form(tf.Data(),fH->GetSkewness(1),fH->GetSkewness(11));
       }
       stats->AddText(tt.Data());
    }
    if (print_kurt) {
       if (print_kurt == 1) {
-         tf = TString::Format("%s = %s%s",gStringKurtosis.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),fH->GetKurtosis(1));
+         tf.Form("%s = %s%s",gStringKurtosis.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),fH->GetKurtosis(1));
       } else {
-         tf = TString::Format("%s = %s%s #pm %s%s",gStringKurtosis.Data(),"%",stats->GetStatFormat()
+         tf.Form("%s = %s%s #pm %s%s",gStringKurtosis.Data(),"%",stats->GetStatFormat()
                                                      ,"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),fH->GetKurtosis(1),fH->GetKurtosis(11));
+         tt.Form(tf.Data(),fH->GetKurtosis(1),fH->GetKurtosis(11));
       }
       stats->AddText(tt.Data());
    }
@@ -8606,12 +8606,12 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    // Draw Fit parameters
    if (fit) {
       Int_t ndf = fit->GetNDF();
-      tf = TString::Format("#chi^{2} / ndf = %s%s / %d","%",stats->GetFitFormat(),ndf);
-      tt = TString::Format(tf.Data(),(Float_t)fit->GetChisquare());
+      tf.Form("#chi^{2} / ndf = %s%s / %d","%",stats->GetFitFormat(),ndf);
+      tt.Form(tf.Data(),(Float_t)fit->GetChisquare());
       if (print_fchi2) stats->AddText(tt.Data());
       if (print_fprob) {
-         tf = TString::Format("Prob  = %s%s","%",stats->GetFitFormat());
-         tt = TString::Format(tf.Data(),(Float_t)TMath::Prob(fit->GetChisquare(),ndf));
+         tf.Form("Prob  = %s%s","%",stats->GetFitFormat());
+         tt.Form(tf.Data(),(Float_t)TMath::Prob(fit->GetChisquare(),ndf));
          stats->AddText(tt.Data());
       }
       if (print_fval || print_ferrors) {
@@ -8620,13 +8620,13 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
             fit->GetParLimits(ipar,parmin,parmax);
             if (print_fval < 2 && parmin*parmax != 0 && parmin >= parmax) continue;
             if (print_ferrors) {
-               tf = TString::Format("%-8s = %s%s #pm %s ", fit->GetParName(ipar), "%",stats->GetFitFormat(),
+               tf.Form("%-8s = %s%s #pm %s ", fit->GetParName(ipar), "%",stats->GetFitFormat(),
                        GetBestFormat(fit->GetParameter(ipar), fit->GetParError(ipar), stats->GetFitFormat()));
-               tt = TString::Format(tf.Data(),(Float_t)fit->GetParameter(ipar)
+               tt.Form(tf.Data(),(Float_t)fit->GetParameter(ipar)
                                ,(Float_t)fit->GetParError(ipar));
             } else {
-               tf = TString::Format("%-8s = %s%s ",fit->GetParName(ipar), "%",stats->GetFitFormat());
-               tt = TString::Format(tf.Data(),(Float_t)fit->GetParameter(ipar));
+               tf.Form("%-8s = %s%s ",fit->GetParName(ipar), "%",stats->GetFitFormat());
+               tt.Form(tf.Data(),(Float_t)fit->GetParameter(ipar));
             }
             stats->AddText(tt.Data());
          }
@@ -8720,88 +8720,88 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
    }
    if (print_name)  stats->AddText(h2->GetName());
    if (print_entries) {
-      if (h2->GetEntries() < 1e7) tt = TString::Format("%s = %-7d",gStringEntries.Data(),Int_t(h2->GetEntries()+0.5));
-      else                        tt = TString::Format("%s = %14.7g",gStringEntries.Data(),Float_t(h2->GetEntries()));
+      if (h2->GetEntries() < 1e7) tt.Form("%s = %-7d",gStringEntries.Data(),Int_t(h2->GetEntries()+0.5));
+      else                        tt.Form("%s = %14.7g",gStringEntries.Data(),Float_t(h2->GetEntries()));
       stats->AddText(tt.Data());
    }
    if (print_mean) {
       if (print_mean == 1) {
-         tf = TString::Format("%s = %s%s",gStringMeanX.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h2->GetMean(1));
+         tf.Form("%s = %s%s",gStringMeanX.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),h2->GetMean(1));
          stats->AddText(tt.Data());
-         tf = TString::Format("%s = %s%s",gStringMeanY.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h2->GetMean(2));
+         tf.Form("%s = %s%s",gStringMeanY.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),h2->GetMean(2));
          stats->AddText(tt.Data());
       } else {
-         tf = TString::Format("%s = %s%s #pm %s%s",gStringMeanX.Data(),"%",stats->GetStatFormat()
+         tf.Form("%s = %s%s #pm %s%s",gStringMeanX.Data(),"%",stats->GetStatFormat()
                                                    ,"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h2->GetMean(1),h2->GetMeanError(1));
+         tt.Form(tf.Data(),h2->GetMean(1),h2->GetMeanError(1));
          stats->AddText(tt.Data());
-         tf = TString::Format("%s = %s%s #pm %s%s",gStringMeanY.Data(),"%",stats->GetStatFormat()
+         tf.Form("%s = %s%s #pm %s%s",gStringMeanY.Data(),"%",stats->GetStatFormat()
                                                    ,"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h2->GetMean(2),h2->GetMeanError(2));
+         tt.Form(tf.Data(),h2->GetMean(2),h2->GetMeanError(2));
          stats->AddText(tt.Data());
       }
    }
    if (print_stddev) {
       if (print_stddev == 1) {
-         tf = TString::Format("%s = %s%s",gStringStdDevX.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h2->GetStdDev(1));
+         tf.Form("%s = %s%s",gStringStdDevX.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),h2->GetStdDev(1));
          stats->AddText(tt.Data());
-         tf = TString::Format("%s = %s%s",gStringStdDevY.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h2->GetStdDev(2));
+         tf.Form("%s = %s%s",gStringStdDevY.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),h2->GetStdDev(2));
          stats->AddText(tt.Data());
       } else {
-         tf = TString::Format("%s = %s%s #pm %s%s",gStringStdDevX.Data(),"%",stats->GetStatFormat()
+         tf.Form("%s = %s%s #pm %s%s",gStringStdDevX.Data(),"%",stats->GetStatFormat()
                                                   ,"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h2->GetStdDev(1),h2->GetStdDevError(1));
+         tt.Form(tf.Data(),h2->GetStdDev(1),h2->GetStdDevError(1));
          stats->AddText(tt.Data());
-         tf = TString::Format("%s = %s%s #pm %s%s",gStringStdDevY.Data(),"%",stats->GetStatFormat()
+         tf.Form("%s = %s%s #pm %s%s",gStringStdDevY.Data(),"%",stats->GetStatFormat()
                                                   ,"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h2->GetStdDev(2),h2->GetStdDevError(2));
+         tt.Form(tf.Data(),h2->GetStdDev(2),h2->GetStdDevError(2));
          stats->AddText(tt.Data());
       }
    }
    if (print_integral) {
-      tf = TString::Format("%s = %s%s",gStringIntegral.Data(),"%",stats->GetStatFormat());
-      tt = TString::Format(tf.Data(),fH->Integral());
+      tf.Form("%s = %s%s",gStringIntegral.Data(),"%",stats->GetStatFormat());
+      tt.Form(tf.Data(),fH->Integral());
       stats->AddText(tt.Data());
    }
    if (print_skew) {
       if (print_skew == 1) {
-         tf = TString::Format("%s = %s%s",gStringSkewnessX.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h2->GetSkewness(1));
+         tf.Form("%s = %s%s",gStringSkewnessX.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),h2->GetSkewness(1));
          stats->AddText(tt.Data());
-         tf = TString::Format("%s = %s%s",gStringSkewnessY.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h2->GetSkewness(2));
+         tf.Form("%s = %s%s",gStringSkewnessY.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),h2->GetSkewness(2));
          stats->AddText(tt.Data());
       } else {
-         tf = TString::Format("%s = %s%s #pm %s%s",gStringSkewnessX.Data(),"%",stats->GetStatFormat()
+         tf.Form("%s = %s%s #pm %s%s",gStringSkewnessX.Data(),"%",stats->GetStatFormat()
                                                        ,"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h2->GetSkewness(1),h2->GetSkewness(11));
+         tt.Form(tf.Data(),h2->GetSkewness(1),h2->GetSkewness(11));
          stats->AddText(tt.Data());
-         tf = TString::Format("%s = %s%s #pm %s%s",gStringSkewnessY.Data(),"%",stats->GetStatFormat()
+         tf.Form("%s = %s%s #pm %s%s",gStringSkewnessY.Data(),"%",stats->GetStatFormat()
                                                        ,"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h2->GetSkewness(2),h2->GetSkewness(12));
+         tt.Form(tf.Data(),h2->GetSkewness(2),h2->GetSkewness(12));
          stats->AddText(tt.Data());
       }
    }
    if (print_kurt) {
       if (print_kurt == 1) {
-         tf = TString::Format("%s = %s%s",gStringKurtosisX.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h2->GetKurtosis(1));
+         tf.Form("%s = %s%s",gStringKurtosisX.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),h2->GetKurtosis(1));
          stats->AddText(tt.Data());
-         tf = TString::Format("%s = %s%s",gStringKurtosisY.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h2->GetKurtosis(2));
+         tf.Form("%s = %s%s",gStringKurtosisY.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),h2->GetKurtosis(2));
          stats->AddText(tt.Data());
       } else {
-         tf = TString::Format("%s = %s%s #pm %s%s",gStringKurtosisX.Data(),"%",stats->GetStatFormat()
+         tf.Form("%s = %s%s #pm %s%s",gStringKurtosisX.Data(),"%",stats->GetStatFormat()
                                                        ,"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h2->GetKurtosis(1),h2->GetKurtosis(11));
+         tt.Form(tf.Data(),h2->GetKurtosis(1),h2->GetKurtosis(11));
          stats->AddText(tt.Data());
-         tf = TString::Format("%s = %s%s #pm %s%s",gStringKurtosisY.Data(),"%",stats->GetStatFormat()
+         tf.Form("%s = %s%s #pm %s%s",gStringKurtosisY.Data(),"%",stats->GetStatFormat()
                                                        ,"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h2->GetKurtosis(2),h2->GetKurtosis(12));
+         tt.Form(tf.Data(),h2->GetKurtosis(2),h2->GetKurtosis(12));
          stats->AddText(tt.Data());
       }
    }
@@ -8826,24 +8826,24 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
       unov[7] = h2->Integral(firstX, lastX,           0, firstY-1);
       unov[8] = h2->Integral(lastX+1, cellsX  ,       0, firstY-1);
 
-      tt = TString::Format(" %7d|%7d|%7d\n", (Int_t)unov[0], (Int_t)unov[1], (Int_t)unov[2]);
+      tt.Form(" %7d|%7d|%7d\n", (Int_t)unov[0], (Int_t)unov[1], (Int_t)unov[2]);
       stats->AddText(tt.Data());
       if (TMath::Abs(unov[4]) < 1.e7)
-         tt = TString::Format(" %7d|%7d|%7d\n", (Int_t)unov[3], (Int_t)unov[4], (Int_t)unov[5]);
+         tt.Form(" %7d|%7d|%7d\n", (Int_t)unov[3], (Int_t)unov[4], (Int_t)unov[5]);
       else
-         tt = TString::Format(" %7d|%14.7g|%7d\n", (Int_t)unov[3], (Float_t)unov[4], (Int_t)unov[5]);
+         tt.Form(" %7d|%14.7g|%7d\n", (Int_t)unov[3], (Float_t)unov[4], (Int_t)unov[5]);
       stats->AddText(tt.Data());
-      tt = TString::Format(" %7d|%7d|%7d\n", (Int_t)unov[6], (Int_t)unov[7], (Int_t)unov[8]);
+      tt.Form(" %7d|%7d|%7d\n", (Int_t)unov[6], (Int_t)unov[7], (Int_t)unov[8]);
       stats->AddText(tt.Data());
    }
 
    // Draw Fit parameters
    if (fit) {
       Int_t ndf = fit->GetNDF();
-      tt = TString::Format("#chi^{2} / ndf = %6.4g / %d",(Float_t)fit->GetChisquare(),ndf);
+      tt.Form("#chi^{2} / ndf = %6.4g / %d",(Float_t)fit->GetChisquare(),ndf);
       stats->AddText(tt.Data());
       for (Int_t ipar=0;ipar<fit->GetNpar();ipar++) {
-         tt = TString::Format("%-8s = %5.4g #pm %5.4g ",fit->GetParName(ipar)
+         tt.Form("%-8s = %5.4g #pm %5.4g ",fit->GetParName(ipar)
                                    ,(Float_t)fit->GetParameter(ipar)
                                    ,(Float_t)fit->GetParError(ipar));
          stats->AddText(tt.Data());
@@ -8935,115 +8935,115 @@ void THistPainter::PaintStat3(Int_t dostat, TF1 *fit)
    }
    if (print_name)  stats->AddText(h3->GetName());
    if (print_entries) {
-      if (h3->GetEntries() < 1e7) tt = TString::Format("%s = %-7d",gStringEntries.Data(),Int_t(h3->GetEntries()+0.5));
-      else                        tt = TString::Format("%s = %14.7g",gStringEntries.Data(),Float_t(h3->GetEntries()+0.5));
+      if (h3->GetEntries() < 1e7) tt.Form("%s = %-7d",gStringEntries.Data(),Int_t(h3->GetEntries()+0.5));
+      else                        tt.Form("%s = %14.7g",gStringEntries.Data(),Float_t(h3->GetEntries()+0.5));
       stats->AddText(tt.Data());
    }
    if (print_mean) {
       if (print_mean == 1) {
-         tf = TString::Format("%s = %s%s",gStringMeanX.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h3->GetMean(1));
+         tf.Form("%s = %s%s",gStringMeanX.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),h3->GetMean(1));
          stats->AddText(tt.Data());
-         tf = TString::Format("%s = %s%s",gStringMeanY.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h3->GetMean(2));
+         tf.Form("%s = %s%s",gStringMeanY.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),h3->GetMean(2));
          stats->AddText(tt.Data());
-         tf = TString::Format("%s = %s%s",gStringMeanZ.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h3->GetMean(3));
+         tf.Form("%s = %s%s",gStringMeanZ.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),h3->GetMean(3));
          stats->AddText(tt.Data());
       } else {
-         tf = TString::Format("%s = %s%s #pm %s%s",gStringMeanX.Data(),"%",stats->GetStatFormat()
+         tf.Form("%s = %s%s #pm %s%s",gStringMeanX.Data(),"%",stats->GetStatFormat()
                                                    ,"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h3->GetMean(1),h3->GetMeanError(1));
+         tt.Form(tf.Data(),h3->GetMean(1),h3->GetMeanError(1));
          stats->AddText(tt.Data());
-         tf = TString::Format("%s = %s%s #pm %s%s",gStringMeanY.Data(),"%",stats->GetStatFormat()
+         tf.Form("%s = %s%s #pm %s%s",gStringMeanY.Data(),"%",stats->GetStatFormat()
                                                    ,"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h3->GetMean(2),h3->GetMeanError(2));
+         tt.Form(tf.Data(),h3->GetMean(2),h3->GetMeanError(2));
          stats->AddText(tt.Data());
-         tf = TString::Format("%s = %s%s #pm %s%s",gStringMeanZ.Data(),"%",stats->GetStatFormat()
+         tf.Form("%s = %s%s #pm %s%s",gStringMeanZ.Data(),"%",stats->GetStatFormat()
                                                    ,"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h3->GetMean(3),h3->GetMeanError(3));
+         tt.Form(tf.Data(),h3->GetMean(3),h3->GetMeanError(3));
          stats->AddText(tt.Data());
       }
    }
    if (print_stddev) {
       if (print_stddev == 1) {
-         tf = TString::Format("%s = %s%s",gStringStdDevX.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h3->GetStdDev(1));
+         tf.Form("%s = %s%s",gStringStdDevX.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),h3->GetStdDev(1));
          stats->AddText(tt.Data());
-         tf = TString::Format("%s = %s%s",gStringStdDevY.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h3->GetStdDev(2));
+         tf.Form("%s = %s%s",gStringStdDevY.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),h3->GetStdDev(2));
          stats->AddText(tt.Data());
-         tf = TString::Format("%s = %s%s",gStringStdDevZ.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h3->GetStdDev(3));
+         tf.Form("%s = %s%s",gStringStdDevZ.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),h3->GetStdDev(3));
          stats->AddText(tt.Data());
       } else {
-         tf = TString::Format("%s = %s%s #pm %s%s",gStringStdDevX.Data(),"%",stats->GetStatFormat()
+         tf.Form("%s = %s%s #pm %s%s",gStringStdDevX.Data(),"%",stats->GetStatFormat()
                                                   ,"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h3->GetStdDev(1),h3->GetStdDevError(1));
+         tt.Form(tf.Data(),h3->GetStdDev(1),h3->GetStdDevError(1));
          stats->AddText(tt.Data());
-         tf = TString::Format("%s = %s%s #pm %s%s",gStringStdDevY.Data(),"%",stats->GetStatFormat()
+         tf.Form("%s = %s%s #pm %s%s",gStringStdDevY.Data(),"%",stats->GetStatFormat()
                                                   ,"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h3->GetStdDev(2),h3->GetStdDevError(2));
+         tt.Form(tf.Data(),h3->GetStdDev(2),h3->GetStdDevError(2));
          stats->AddText(tt.Data());
-         tf = TString::Format("%s = %s%s #pm %s%s",gStringStdDevZ.Data(),"%",stats->GetStatFormat()
+         tf.Form("%s = %s%s #pm %s%s",gStringStdDevZ.Data(),"%",stats->GetStatFormat()
                                                   ,"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h3->GetStdDev(3),h3->GetStdDevError(3));
+         tt.Form(tf.Data(),h3->GetStdDev(3),h3->GetStdDevError(3));
          stats->AddText(tt.Data());
       }
    }
    if (print_integral) {
-      tt = TString::Format("%s  = %6.4g",gStringIntegral.Data(),h3->Integral());
+      tt.Form("%s  = %6.4g",gStringIntegral.Data(),h3->Integral());
       stats->AddText(tt.Data());
    }
    if (print_skew) {
       if (print_skew == 1) {
-         tf = TString::Format("%s = %s%s",gStringSkewnessX.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h3->GetSkewness(1));
+         tf.Form("%s = %s%s",gStringSkewnessX.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),h3->GetSkewness(1));
          stats->AddText(tt.Data());
-         tf = TString::Format("%s = %s%s",gStringSkewnessY.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h3->GetSkewness(2));
+         tf.Form("%s = %s%s",gStringSkewnessY.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),h3->GetSkewness(2));
          stats->AddText(tt.Data());
-         tf = TString::Format("%s = %s%s",gStringSkewnessZ.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h3->GetSkewness(3));
+         tf.Form("%s = %s%s",gStringSkewnessZ.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),h3->GetSkewness(3));
          stats->AddText(tt.Data());
       } else {
-         tf = TString::Format("%s = %s%s #pm %s%s",gStringSkewnessX.Data(),"%",stats->GetStatFormat()
+         tf.Form("%s = %s%s #pm %s%s",gStringSkewnessX.Data(),"%",stats->GetStatFormat()
                                                        ,"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h3->GetSkewness(1),h3->GetSkewness(11));
+         tt.Form(tf.Data(),h3->GetSkewness(1),h3->GetSkewness(11));
          stats->AddText(tt.Data());
-         tf = TString::Format("%s = %s%s #pm %s%s",gStringSkewnessY.Data(),"%",stats->GetStatFormat()
+         tf.Form("%s = %s%s #pm %s%s",gStringSkewnessY.Data(),"%",stats->GetStatFormat()
                                                        ,"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h3->GetSkewness(2),h3->GetSkewness(12));
+         tt.Form(tf.Data(),h3->GetSkewness(2),h3->GetSkewness(12));
          stats->AddText(tt.Data());
-         tf = TString::Format("%s = %s%s #pm %s%s",gStringSkewnessZ.Data(),"%",stats->GetStatFormat()
+         tf.Form("%s = %s%s #pm %s%s",gStringSkewnessZ.Data(),"%",stats->GetStatFormat()
                                                        ,"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h3->GetSkewness(3),h3->GetSkewness(13));
+         tt.Form(tf.Data(),h3->GetSkewness(3),h3->GetSkewness(13));
          stats->AddText(tt.Data());
       }
    }
    if (print_kurt) {
       if (print_kurt == 1) {
-         tf = TString::Format("%s = %s%s",gStringKurtosisX.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h3->GetKurtosis(1));
+         tf.Form("%s = %s%s",gStringKurtosisX.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),h3->GetKurtosis(1));
          stats->AddText(tt.Data());
-         tf = TString::Format("%s = %s%s",gStringKurtosisY.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h3->GetKurtosis(2));
+         tf.Form("%s = %s%s",gStringKurtosisY.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),h3->GetKurtosis(2));
          stats->AddText(tt.Data());
-         tf = TString::Format("%s = %s%s",gStringKurtosisZ.Data(),"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h3->GetKurtosis(3));
+         tf.Form("%s = %s%s",gStringKurtosisZ.Data(),"%",stats->GetStatFormat());
+         tt.Form(tf.Data(),h3->GetKurtosis(3));
          stats->AddText(tt.Data());
       } else {
-         tf = TString::Format("%s = %s%s #pm %s%s",gStringKurtosisX.Data(),"%",stats->GetStatFormat()
+         tf.Form("%s = %s%s #pm %s%s",gStringKurtosisX.Data(),"%",stats->GetStatFormat()
                                                        ,"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h3->GetKurtosis(1),h3->GetKurtosis(11));
+         tt.Form(tf.Data(),h3->GetKurtosis(1),h3->GetKurtosis(11));
          stats->AddText(tt.Data());
-         tf = TString::Format("%s = %s%s #pm %s%s",gStringKurtosisY.Data(),"%",stats->GetStatFormat()
+         tf.Form("%s = %s%s #pm %s%s",gStringKurtosisY.Data(),"%",stats->GetStatFormat()
                                                        ,"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h3->GetKurtosis(2),h3->GetKurtosis(12));
+         tt.Form(tf.Data(),h3->GetKurtosis(2),h3->GetKurtosis(12));
          stats->AddText(tt.Data());
-         tf = TString::Format("%s = %s%s #pm %s%s",gStringKurtosisZ.Data(),"%",stats->GetStatFormat()
+         tf.Form("%s = %s%s #pm %s%s",gStringKurtosisZ.Data(),"%",stats->GetStatFormat()
                                                        ,"%",stats->GetStatFormat());
-         tt = TString::Format(tf.Data(),h3->GetKurtosis(3),h3->GetKurtosis(13));
+         tt.Form(tf.Data(),h3->GetKurtosis(3),h3->GetKurtosis(13));
          stats->AddText(tt.Data());
       }
    }
@@ -9055,10 +9055,10 @@ void THistPainter::PaintStat3(Int_t dostat, TF1 *fit)
    // Draw Fit parameters
    if (fit) {
       Int_t ndf = fit->GetNDF();
-      tt = TString::Format("#chi^{2} / ndf = %6.4g / %d",(Float_t)fit->GetChisquare(),ndf);
+      tt.Form("#chi^{2} / ndf = %6.4g / %d",(Float_t)fit->GetChisquare(),ndf);
       stats->AddText(tt.Data());
       for (Int_t ipar=0;ipar<fit->GetNpar();ipar++) {
-         tt = TString::Format("%-8s = %5.4g #pm %5.4g ",fit->GetParName(ipar)
+         tt.Form("%-8s = %5.4g #pm %5.4g ",fit->GetParName(ipar)
                                    ,(Float_t)fit->GetParameter(ipar)
                                    ,(Float_t)fit->GetParError(ipar));
          stats->AddText(tt.Data());
@@ -9832,7 +9832,7 @@ void THistPainter::PaintTH2PolyText(Option_t *)
 
    Double_t x, y, z, e, angle = 0;
    TString tt, tf;
-   tf = TString::Format("%s%s","%",gStyle->GetPaintTextFormat());
+   tf.Form("%s%s","%",gStyle->GetPaintTextFormat());
    if (Hoption.Text >= 1000) angle = Hoption.Text%1000;
    Int_t opt = (Int_t)Hoption.Text/1000;
 
@@ -9863,12 +9863,12 @@ void THistPainter::PaintTH2PolyText(Option_t *)
       if (z < Hparam.zmin || (z == 0 && !Hoption.MinimumZero)) continue;
       if (opt==2) {
          e = fH->GetBinError(b->GetBinNumber());
-         tf = TString::Format("#splitline{%s%s}{#pm %s%s}",
+         tf.Form("#splitline{%s%s}{#pm %s%s}",
                                     "%",gStyle->GetPaintTextFormat(),
                                     "%",gStyle->GetPaintTextFormat());
-         tt = TString::Format(tf.Data(),z,e);
+         tt.Form(tf.Data(),z,e);
       } else {
-         tt = TString::Format(tf.Data(),z);
+         tt.Form(tf.Data(),z);
       }
       if (opt==3) text.PaintLatex(x,y,angle,0.02*fH->GetMarkerSize(),p->GetName());
       else        text.PaintLatex(x,y,angle,0.02*fH->GetMarkerSize(),tt.Data());
@@ -9890,7 +9890,7 @@ void THistPainter::PaintText(Option_t *)
 
    Double_t x, y, z, e, angle = 0;
    TString tt, tf;
-   tf = TString::Format("%s%s","%",gStyle->GetPaintTextFormat());
+   tf.Form("%s%s","%",gStyle->GetPaintTextFormat());
    if (Hoption.Text >= 1000) angle = Hoption.Text%1000;
 
    // 1D histograms
@@ -9921,7 +9921,7 @@ void THistPainter::PaintText(Option_t *)
          if (Hoption.MinimumZero && y<0) y = 0;
          if (getentries) yt = hp->GetBinEntries(i);
          if (yt == 0.) continue;
-         tt = TString::Format(tf.Data(),yt);
+         tt.Form(tf.Data(),yt);
          if (Hoption.Logx) {
             if (x > 0)  x  = TMath::Log10(x);
             else continue;
@@ -9959,12 +9959,12 @@ void THistPainter::PaintText(Option_t *)
             if (z < Hparam.zmin || (z == 0 && !Hoption.MinimumZero)) continue;
             if (Hoption.Text>2000) {
                e = fH->GetBinError(bin);
-               tf = TString::Format("#splitline{%s%s}{#pm %s%s}",
+               tf.Form("#splitline{%s%s}{#pm %s%s}",
                                           "%",gStyle->GetPaintTextFormat(),
                                           "%",gStyle->GetPaintTextFormat());
-               tt = TString::Format(tf.Data(),z,e);
+               tt.Form(tf.Data(),z,e);
             } else {
-               tt = TString::Format(tf.Data(),z);
+               tt.Form(tf.Data(),z);
             }
             text.PaintLatex(x,y+fH->GetBarOffset()*fYaxis->GetBinWidth(j),
                             angle,0.02*fH->GetMarkerSize(),tt.Data());
@@ -10538,11 +10538,12 @@ LZMIN:
 const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
 {
 
-   TString ef, tf, tv;
+   static TString ef;
+   TString tf, tv;
 
    // print v with the format f in tv.
-   tf = TString::Format("%s%s","%",f);
-   tv = TString::Format(tf.Data(),v);
+   tf.Form("%s%s","%",f);
+   tv.Form(tf.Data(),v);
 
    // Analyse tv.
    int ie = tv.Index("e");
@@ -10554,33 +10555,33 @@ const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
    if (ie >= 0 || iE >= 0) {
       if (tv.Index("+") >= 0) {
          if (e < 1) {
-            ef = TString::Format("%s.1f","%");
+            ef.Form("%s.1f","%");
          } else {
             if (ie >= 0) {
-               ef = TString::Format("%s.%de","%",ie-id-1);
+               ef.Form("%s.%de","%",ie-id-1);
             } else {
-               ef = TString::Format("%s.%dE","%",iE-id-1);
+               ef.Form("%s.%dE","%",iE-id-1);
             }
          }
       } else {
          if (ie >= 0) {
-            ef = TString::Format("%s.%de","%",ie-id-1);
+            ef.Form("%s.%de","%",ie-id-1);
          } else {
-            ef = TString::Format("%s.%dE","%",iE-id-1);
+            ef.Form("%s.%dE","%",iE-id-1);
          }
       }
 
    // There is not '.' in tv. e will be printed with one decimal digit.
    } else if (id < 0) {
-      ef = TString::Format("%s.1f","%");
+      ef.Form("%s.1f","%");
 
    // There is a '.' in tv and no exponent notation. e's decimal part will
    // have the same number of digits as v's one.
    } else {
-      ef = TString::Format("%s.%df","%",tv.Length()-id-1);
+      ef.Form("%s.%df","%",tv.Length()-id-1);
    }
 
-   return Form("%s",ef.Data());
+   return ef.Data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
