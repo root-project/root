@@ -12,6 +12,14 @@ sap.ui.define(['sap/ui/core/Control',
          }
       },
 
+      onBeforeRendering: function() {
+         // remove Canvas and painter from DOM
+         if (this.geom_painter) {
+            this.geom_painter.clear_3d_canvas();
+            this.geom_painter.AccessTopPainter(false);
+         }
+      },
+
       // the part creating the HTML:
       renderer : function(oRm, oControl) { // static function, so use the given "oControl" instance instead of "this" in the renderer function
          oRm.write("<div");
@@ -28,7 +36,21 @@ sap.ui.define(['sap/ui/core/Control',
 
       onAfterRendering: function() {
          ResizeHandler.register(this, this.onResize.bind(this));
-         this.geom_painter = null;
+
+         if (this.geom_painter) {
+            // this should be moved to GeomPainter itself !!!
+
+            this.geom_painter.SetDivId(this.getDomRef(), 5);
+
+            var size = this.geom_painter.size_for_3d();
+
+            this.geom_painter.add_3d_canvas(size, this.geom_painter._renderer.domElement);
+
+            // set top painter only when first child exists
+            this.geom_painter.AccessTopPainter(true);
+
+            this.geom_painter.Render3D();
+         }
       },
 
       setGeomPainter: function(painter) {
@@ -42,8 +64,8 @@ sap.ui.define(['sap/ui/core/Control',
 
       onResizeTimeout: function() {
          delete this.resize_tmout;
-         if (this.geo_painter)
-            this.geo_painter.CheckResize();
+         if (this.geom_painter)
+            this.geom_painter.CheckResize();
       }
    });
 
