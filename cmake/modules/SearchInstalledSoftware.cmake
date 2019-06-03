@@ -1458,3 +1458,8 @@ if(webgui)
      INSTALL_COMMAND ""
      SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution)
 endif()
+
+if (NOT proof)
+  message(STATUS "RooFit is enabled while Proof is not: disabling RooFit")
+  set(roofit OFF CACHE BOOL "Disabled because Proof was not activated" FORCE)
+endif()

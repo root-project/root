@@ -454,6 +454,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RIO
     MathCore
     Foam
+    Proof
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

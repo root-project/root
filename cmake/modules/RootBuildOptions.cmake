@@ -134,6 +134,7 @@ ROOT_BUILD_OPTION(opengl ON "Enable support for OpenGL (requires libGL and libGL
 ROOT_BUILD_OPTION(oracle ON "Enable support for Oracle databases (requires Oracle Instant Client)")
 ROOT_BUILD_OPTION(pch ON "Enable support for Pre-Compiled Headers (PCH)")
 ROOT_BUILD_OPTION(pgsql ON "Enable support for PostgreSQL")
+ROOT_BUILD_OPTION(proof ON "Enable support for Proof")
 ROOT_BUILD_OPTION(pyroot_experimental OFF "Use experimental Python bindings for ROOT")
 ROOT_BUILD_OPTION(pythia6_nolink OFF "Delayed linking of Pythia6 library")
 ROOT_BUILD_OPTION(pythia6 ON "Enable support for Pythia 6.x")
