@@ -344,6 +344,18 @@ sap.ui.define(['sap/ui/core/Component',
 
       /** Create single shape from provided raw data */
       createServerShape: function(rd, raw, off) {
+
+         if (rd.shape) {
+            // case when TGeoShape provided as is
+            var g = JSROOT.GEO.createGeometry(rd.shape);
+            return {
+               _typename: "$$Shape$$",
+               ready: true,
+               geom: g,
+               nfaces: JSROOT.GEO.numGeometryFaces(g)
+            }
+         }
+
          off = (off || 0) + rd.rnr_offset;
 
          if (rd.vert_size) {
@@ -364,9 +376,9 @@ sap.ui.define(['sap/ui/core/Component',
          // shape handle is similar to created in JSROOT.GeoPainter
          return {
             _typename: "$$Shape$$", // indicate that shape can be used as is
+            ready: true,
             geom: this.creator.makeEveGeometry(rd),
-            nfaces: (rd.index_size-2)/3,
-            ready: true
+            nfaces: (rd.index_size-2)/3
          };
       },
 

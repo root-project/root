@@ -86,6 +86,7 @@ public:
    int vert_size{0};     ///< fRenderData->SizeV();
    int norm_size{0};     ///< fRenderData->SizeN();
    int index_size{0};    ///< fRenderData->SizeI();
+   TGeoShape *shape{nullptr}; ///< original shape - can be much less than binary data
    // int trans_size{0};     ///< fRenderData->SizeT(); not used in GeomViewer
 };
 
