@@ -606,14 +606,14 @@ void FitResult::GetConfidenceIntervals(unsigned int n, unsigned int stride1, uns
             d.SetFunction(fadapter);
             // compute step size as a small fraction of the error
             // (see numerical recipes in C 5.7.8)   1.E-5 is ~ (eps)^1/3
-            if ( fErrors[ipar] > 0 ) 
-               d.SetStepSize( std::max( fErrors[ipar]*1.E-5, 1.E-15) ); 
+            if ( fErrors[ipar] > 0 )
+               d.SetStepSize( std::max( fErrors[ipar]*1.E-5, 1.E-15) );
             else
                d.SetStepSize( std::min(std::max(fParams[ipar]*1.E-5, 1.E-15), 0.0001 ) );
-            
+
             grad[ipar] = d(fParams[ipar] ); // evaluate df/dp
          }
-         else 
+         else
             grad[ipar] = 0.;  // for fixed parameters
       }
 
