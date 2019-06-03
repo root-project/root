@@ -1052,15 +1052,14 @@ TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_
 {
    char *linear;
    linear = (char*) strstr(fname, "++");
-   TF1 *f1 = 0;
-   if (linear)
-      f1 = new TF1(fname, fname, xmin, xmax);
-   else {
-      f1 = (TF1*)gROOT->GetFunction(fname);
-      if (!f1) {
-         Printf("Unknown function: %s", fname);
-         return -1;
-      }
+   if (linear) { 
+      TF1 f1(fname, fname, xmin, xmax);
+      return Fit(&f1, option, "", xmin, xmax);
+   }
+   TF1 * f1 = (TF1*)gROOT->GetFunction(fname);
+   if (!f1) {
+      Printf("Unknown function: %s", fname);
+      return -1;
    }
    return Fit(f1, option, "", xmin, xmax);
 }
