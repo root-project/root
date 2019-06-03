@@ -1124,22 +1124,29 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
 
    // Add a TGraphDelaunay in the list of the fHistogram's functions
 
-   if (oldInterp) {
-      TGraphDelaunay *dt = new TGraphDelaunay(this);
-      dt->SetMaxIter(fMaxIter);
-      dt->SetMarginBinsContent(fZout);
-      fDelaunay = dt;
-      SetBit(kOldInterpolation);
-   }
-   else {
-      // new interpolation based on ROOT::Math::Delaunay
-      TGraphDelaunay2D *dt = new TGraphDelaunay2D(this);
-      dt->SetMarginBinsContent(fZout);
-      fDelaunay = dt;
-      ResetBit(kOldInterpolation);
-   }
    TList *hl = fHistogram->GetListOfFunctions();
-   hl->Add(fDelaunay);
+
+   if (oldInterp) {
+      if (!fDelaunay || !fDelaunay->TestBit(kNotDeleted)) {
+         TGraphDelaunay *dt = new TGraphDelaunay(this);
+         dt->SetMaxIter(fMaxIter);
+         dt->SetMarginBinsContent(fZout);
+         fDelaunay = dt;
+      }
+      SetBit(kOldInterpolation);
+      if (!hl->FindObject("TGraphDelaunay"))
+         hl->Add(fDelaunay);
+   } else {
+      // new interpolation based on ROOT::Math::Delaunay
+      if (!fDelaunay || !fDelaunay->TestBit(kNotDeleted)) {
+         TGraphDelaunay2D *dt = new TGraphDelaunay2D(this);
+         dt->SetMarginBinsContent(fZout);
+         fDelaunay = dt;
+      }
+      ResetBit(kOldInterpolation);
+      if (!hl->FindObject("TGraphDelaunay2D"))
+         hl->Add(fDelaunay);
+   }
 
    // Option "empty" is selected. An empty histogram is returned.
    if (empty) {
