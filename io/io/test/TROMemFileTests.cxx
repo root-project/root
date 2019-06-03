@@ -64,6 +64,7 @@ TEST(TROMemFile, NoInternalMemCopy)
    EXPECT_STREQ(title2, readN->GetTitle());
 }
 
+/// Check that TMemFile do not (re-)allocate the external contents.
 TEST(TROMemFile, RealNoMemCopy)
 {
    std::string expected = "Hello from TMemFile!";
@@ -78,4 +79,10 @@ TEST(TROMemFile, RealNoMemCopy)
 
    ASSERT_EQ(expected_size, seen.size());
    ASSERT_STREQ(expected.c_str(), &seen[0]);
+
+   // Make sure that the ptr is the same assuming no allocations happened internally.
+   struct MemBlockPtrGetter : public TMemFile {
+      static void *GetBlockStart(TMemFile *M) { return static_cast<MemBlockPtrGetter *>(M)->fBlockList.fBuffer; }
+   };
+   ASSERT_EQ(expected.c_str(), MemBlockPtrGetter::GetBlockStart(&rosmf));
 }
