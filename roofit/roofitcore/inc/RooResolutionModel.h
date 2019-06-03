@@ -53,16 +53,11 @@ public:
 
   virtual void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
 
-  static void cleanup() ;
-
   static RooFormulaVar* identity() ;
 
   virtual void changeBasis(RooFormulaVar* basis) ;
 
 protected:
-
-  static RooFormulaVar* _identity ;  // Identity basis function pointe
-
 
   friend class RooConvGenContext ;
   friend class RooAddModel ;

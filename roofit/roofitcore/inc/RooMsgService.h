@@ -140,7 +140,7 @@ public:
   } ;
 
   // Access to instance
-  static RooMsgService& instance() ;
+  static RooMsgService& instance();
   static Bool_t anyDebug() ;
 
   // User interface -- Add or delete reporting streams ;
@@ -153,7 +153,7 @@ public:
   void setStreamStatus(Int_t id, Bool_t active) ;
   Bool_t getStreamStatus(Int_t id) const ;
 
-  void reset() { cleanup() ; }
+  void reset();
 
   void setGlobalKillBelow(RooFit::MsgLevel level) { _globMinLevel = level ; }
   RooFit::MsgLevel globalKillBelow() const { return _globMinLevel ; }
@@ -170,8 +170,6 @@ public:
   static Int_t _debugCount ;
   std::map<int,std::string> _levelNames ;
   std::map<int,std::string> _topicNames ;
-
-  static void cleanup() ;
 
   // Print level support for RooFit-related messages that are not routed through RooMsgService (such as Minuit printouts)
   Bool_t silentMode() const { return _silentMode ; }  
@@ -209,15 +207,11 @@ protected:
   RooMsgService() ;
   RooMsgService(const RooMsgService&) ;
 
-  static RooMsgService* _instance ;
-
   RooWorkspace* _debugWorkspace ;
 
   Int_t _debugCode ;
   
   ClassDef(RooMsgService,0) // RooFit Message Service Singleton class
 };
-
-extern RooMsgService* gMsgService ;
 
 #endif
