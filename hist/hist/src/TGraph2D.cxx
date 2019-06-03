@@ -760,15 +760,15 @@ TFitResultPtr TGraph2D::Fit(const char *fname, Option_t *option, Option_t *)
 
    char *linear;
    linear = (char*)strstr(fname, "++");
-   TF2 *f2 = 0;
-   if (linear)
-      f2 = new TF2(fname, fname);
-   else {
-      f2 = (TF2*)gROOT->GetFunction(fname);
-      if (!f2) {
-         Printf("Unknown function: %s", fname);
-         return -1;
-      }
+
+   if (linear) { 
+      TF2 f2(fname, fname);
+      return Fit(&f2, option, "");
+   }
+   TF2 * f2 = (TF2*)gROOT->GetFunction(fname);
+   if (!f2) {
+      Printf("Unknown function: %s", fname);
+      return -1;
    }
    return Fit(f2, option, "");
 
