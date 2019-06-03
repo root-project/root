@@ -26,7 +26,7 @@ public:
       ExternalDataRange_t(const char * start, const size_t size) : fStart(start), fSize(size) {}
    };
 
-private:
+protected:
    struct TMemBlock {
    private:
       TMemBlock(const TMemBlock&);            // Not implemented
