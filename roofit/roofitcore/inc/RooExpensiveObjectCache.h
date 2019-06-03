@@ -44,8 +44,6 @@ public:
 
   Int_t size() const { return _map.size() ; }
 
-  static void cleanup() ;
-
   void print() const ;
 
   class ExpensiveObject {
@@ -79,8 +77,6 @@ public:
 protected:
 
   Int_t _nextUID ; 
-
-  static RooExpensiveObjectCache* _instance ;  //!
 
   std::map<TString,ExpensiveObject*> _map ;
  

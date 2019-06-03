@@ -50,7 +50,6 @@ The singleton instance is accessible through RooMsgService::instance() ;
 #include "RooCmdArg.h"
 #include "RooCmdConfig.h"
 #include "RooGlobalFunc.h"
-#include "RooSentinel.h"
 #include "RooWorkspace.h"
 
 #include "TSystem.h"
@@ -60,25 +59,8 @@ using namespace std ;
 using namespace RooFit ;
 
 ClassImp(RooMsgService);
-;
 
-RooMsgService* gMsgService = 0 ;
-RooMsgService* RooMsgService::_instance = 0 ;
 Int_t RooMsgService::_debugCount = 0 ;
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Cleanup function called by atexit() handler installed by RooSentinel
-/// to delete all global object upon program termination
-
-void RooMsgService::cleanup() 
-{
-  if (_instance) {
-    delete _instance ;
-    _instance = 0 ;
-  }
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -88,11 +70,6 @@ void RooMsgService::cleanup()
 
 RooMsgService::RooMsgService() 
 {
-  _silentMode = kFALSE ;
-  _showPid = kFALSE ;
-  _globMinLevel = DEBUG ;
-  _lastMsgLevel = DEBUG ;
-
   _devnull = new ofstream("/dev/null") ;
 
   _levelNames[DEBUG]="DEBUG" ;
@@ -118,13 +95,27 @@ RooMsgService::RooMsgService()
   _topicNames[DataHandling]="DataHandling" ;
   _topicNames[NumIntegration]="NumericIntegration" ;
 
-  _instance = this ;
-  gMsgService = this ;
+  reset();
+}
 
-  _debugWorkspace = 0 ;
+
+void RooMsgService::reset() {
+  _silentMode = kFALSE ;
+  _showPid = kFALSE ;
+  _globMinLevel = DEBUG ;
+  _lastMsgLevel = DEBUG ;
+
+  delete _debugWorkspace;
+  _debugWorkspace = nullptr;
   _debugCode = 0 ;
 
+  for (auto item : _files) {
+    delete item.second;
+  }
+  _files.clear();
+
   // Old-style streams
+  _streams.clear();
   addStream(RooFit::PROGRESS) ;
   addStream(RooFit::INFO,Topic(RooFit::Eval|RooFit::Plotting|RooFit::Fitting|RooFit::Minimization|RooFit::Caching|RooFit::ObjectHandling|RooFit::NumIntegration|RooFit::InputArguments|RooFit::DataHandling)) ;
 }
@@ -357,13 +348,10 @@ Bool_t RooMsgService::getStreamStatus(Int_t id) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return reference to singleton instance 
 
-RooMsgService& RooMsgService::instance() 
+RooMsgService& RooMsgService::instance()
 {
-  if (!_instance) {
-    new RooMsgService() ;    
-    RooSentinel::activate() ;
-  }
-  return *_instance ;
+  static RooMsgService instance;
+  return instance;
 }
 
 

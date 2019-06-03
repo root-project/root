@@ -39,24 +39,7 @@ use this class in the (normalization) integral configuration interface
 
 using namespace std;
 
-ClassImp(RooNumIntConfig);
-;
-
-RooNumIntConfig* RooNumIntConfig::_default = 0 ;
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Function called by atexit() handler installed by RooSentinel to
-/// cleanup global objects at end of job
-
-void RooNumIntConfig::cleanup()
-{
-  if (_default) {
-    delete _default ;
-    _default = 0 ;
-  }
-}
-
+ClassImp(RooNumIntConfig)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,12 +47,20 @@ void RooNumIntConfig::cleanup()
 
 RooNumIntConfig& RooNumIntConfig::defaultConfig() 
 {
-  // Instantiate object if it doesn't exist yet
-  if (_default==0) {
-    _default = new RooNumIntConfig ;    
-    RooNumIntFactory::instance() ;
+  static RooNumIntConfig theConfig;
+  static bool initStarted = false;
+
+  if (!initStarted) {
+    // This is needed to break a deadlock. We need the RooNumIntFactory constructor
+    // to initialise us, but this constructor will call back to us again.
+    // Here, we ensure that we can return the instance to the factory constructor by
+    // flipping the bool, but we only return to the outside world when the factory
+    // is done constructing (i.e. we leave this block).
+    initStarted = true;
+    RooNumIntFactory::instance();
   }
-  return *_default ;
+
+  return theConfig;
 }
 
 

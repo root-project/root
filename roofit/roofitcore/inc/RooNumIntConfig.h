@@ -70,12 +70,7 @@ public:
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
-  static void cleanup() ;
-
 protected:
-
-  static RooNumIntConfig* _default ;
-  
   Double_t _epsAbs          ; // Absolute precision
   Double_t _epsRel          ; // Relative precision
   Bool_t   _printEvalCounter ; // Flag to control printing of function evaluation counter

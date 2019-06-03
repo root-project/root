@@ -40,23 +40,6 @@ use this class in the (normalization) integral configuration interface
 using namespace std;
 
 ClassImp(RooNumGenConfig);
-;
-
-RooNumGenConfig* RooNumGenConfig::_default = 0 ;
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Function called by atexit() handler installed by RooSentinel to
-/// cleanup global objects at end of job
-
-void RooNumGenConfig::cleanup()
-{
-  if (_default) {
-    delete _default ;
-    _default = 0 ;
-  }
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,12 +47,8 @@ void RooNumGenConfig::cleanup()
 
 RooNumGenConfig& RooNumGenConfig::defaultConfig() 
 {
-  // Instantiate object if it doesn't exist yet
-  if (_default==0) {
-    _default = new RooNumGenConfig ;    
-    RooNumGenFactory::instance() ;
-  }
-  return *_default ;
+  static RooNumGenConfig defaultConfig;
+  return defaultConfig;
 }
 
 
