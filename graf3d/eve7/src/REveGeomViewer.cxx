@@ -40,8 +40,8 @@ ROOT::Experimental::REveGeomViewer::REveGeomViewer(TGeoManager *mgr)
    if (mgr) SetGeometry(mgr);
 
    fDesc.SetPreferredOffline(gEnv->GetValue("WebGui.PreferredOffline",0) != 0);
-   auto comp = gEnv->GetValue("WebGui.JsonComp", -1);
-   if (comp >= 0) fDesc.SetJsonComp(comp);
+   fDesc.SetJsonComp(gEnv->GetValue("WebGui.JsonComp", TBufferJSON::kSkipTypeInfo + TBufferJSON::kNoSpaces));
+   fDesc.SetBuildShapes(gEnv->GetValue("WebGui.GeomBuildShapes", 1) > 0);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -138,7 +138,8 @@ void ROOT::Experimental::REveGeomViewer::SendGeometry(unsigned connid)
 
    fWebWindow->Send(connid, json);
 
-   fWebWindow->SendBinary(connid, binary.data(), binary.size());
+   if (binary.size() > 0)
+      fWebWindow->SendBinary(connid, binary.data(), binary.size());
 }
 
 

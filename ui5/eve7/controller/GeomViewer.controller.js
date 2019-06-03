@@ -301,7 +301,7 @@ sap.ui.define(['sap/ui/core/Component',
        * Draw message is vector of REveGeomVisible objects, including info where shape is in raw data */
       extractRawShapes: function(draw_msg) {
 
-         var nodes = null;
+         var nodes = null, old_gradpersegm = 0;
 
          // array for descriptors for each node
          // if array too large (>1M), use JS object while only ~1K nodes are expected to be used
@@ -324,6 +324,11 @@ sap.ui.define(['sap/ui/core/Component',
             this.geo_clones.name_prefix = this.geo_clones.GetNodeName(0);
          }
 
+         if (draw_msg.nsegm) {
+            old_gradpersegm = JSROOT.GEO.GradPerSegm;
+            JSROOT.GEO.GradPerSegm = 360 / Math.max(draw_msg.nsegm,6);
+         }
+
          for (var cnt = 0; cnt < draw_msg.visibles.length; ++cnt) {
             var item = draw_msg.visibles[cnt], rd = item.ri;
 
@@ -338,6 +343,9 @@ sap.ui.define(['sap/ui/core/Component',
             item.server_shape = rd.server_shape =
                this.createServerShape(rd, draw_msg.raw, draw_msg.offset);
          }
+
+         if (old_gradpersegm)
+            JSROOT.GEO.GradPerSegm = old_gradpersegm;
 
          return true;
       },

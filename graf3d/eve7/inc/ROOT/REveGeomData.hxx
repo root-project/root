@@ -111,10 +111,11 @@ public:
 class REveGeomDrawing {
 public:
    int numnodes{0};                         ///< total number of nodes in description
+   std::string drawopt;                     ///< draw options for TGeoPainter
+   int nsegm{0};                            ///< number of segments for cylindrical shapes
+   int binlen{0};                           ///< extra binary data for that drawing
    std::vector<REveGeomNode*> nodes;        ///< all used nodes to display visible items and not known for client
    std::vector<REveGeomVisible> visibles;   ///< all visible items
-   std::string drawopt;                     ///< draw options for TGeoPainter
-   int binlen{0};                           ///< extra binary data for that drawing
 };
 
 
@@ -176,8 +177,9 @@ class REveGeomDescription {
    int fFacesLimit{0};              ///<! maximal number of faces to be selected for drawing
    int fNodesLimit{0};              ///<! maximal number of nodes to be selected for drawing
    bool fPreferredOffline{false};   ///<! indicates that full description should be provided to client
+   bool fBuildShapes{true};         ///<! if TGeoShape build already on server (default) or send as is to client
 
-   int fJsonComp{103};              ///<! default JSON compression - all class info can be removed
+   int fJsonComp{0};                ///<! default JSON compression
 
    void PackMatrix(std::vector<float> &arr, TGeoMatrix *matr);
 
@@ -262,13 +264,25 @@ public:
 
    void SelectNode(TGeoNode *);
 
+   /** Set number of segments for cylindrical shapes, if 0 - default value will be used */
    void SetNSegments(int n = 0) { fNSegments = n; }
+   /** Return of segments for cylindrical shapes, if 0 - default value will be used */
    int GetNSegments() const { return fNSegments; }
 
-   void SetJsonComp(int comp = 103) { fJsonComp = comp; }
+   /** Set JSON compression level for data transfer */
+   void SetJsonComp(int comp = 0) { fJsonComp = comp; }
+   /** Returns JSON compression level for data transfer */
    int GetJsonComp() const  { return fJsonComp; }
 
+   /** Set draw options as string for JSROOT TGeoPainter */
    void SetDrawOptions(const std::string &opt = "") { fDrawOptions = opt; }
+   /** Returns draw options, used for JSROOT TGeoPainter */
+   std::string GetDrawOptions() const { return fDrawOptions; }
+
+   /** Instruct to build binary 3D model already on the server (true) or send TGeoShape as is to client, which can build model itself */
+   void SetBuildShapes(bool on = true) { fBuildShapes = on; }
+   /** Retuns true if binary 3D model build already by C++ server (default) */
+   bool IsBuildShapes() const { return fBuildShapes; }
 
    std::unique_ptr<REveGeomNodeInfo> MakeNodeInfo(const std::string &path);
 };

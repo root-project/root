@@ -576,9 +576,7 @@ std::string ROOT::Experimental::REveGeomDescription::ProcessBrowserRequest(const
       for (auto &item : fDesc)
          vect[cnt++]= &item;
 
-      res = "DESCR:";
-
-      res.append(TBufferJSON::ToJSON(&vect,GetJsonComp()).Data());
+      res = "DESCR:"s + TBufferJSON::ToJSON(&vect,GetJsonComp()).Data();
 
       // example how iterator can be used
       RGeomBrowserIter iter(*this);
@@ -619,8 +617,7 @@ std::string ROOT::Experimental::REveGeomDescription::ProcessBrowserRequest(const
       for (auto &n : temp_nodes)
          reply.nodes.emplace_back(&n);
 
-      res = "BREPL:";
-      res.append(TBufferJSON::ToJSON(&reply, GetJsonComp()).Data());
+      res = "BREPL:"s + TBufferJSON::ToJSON(&reply, GetJsonComp()).Data();
    }
 
    return res;
@@ -650,12 +647,10 @@ ROOT::Experimental::REveGeomDescription::MakeShapeDescr(TGeoShape *shape, bool a
 {
    auto &elem = FindShapeDescr(shape);
 
-   if (!elem.fRenderData) {
+   if (elem.nfaces == 0) {
       TGeoCompositeShape *comp = dynamic_cast<TGeoCompositeShape *>(shape);
 
-      bool create_binaries = true;
-
-      if (create_binaries) {
+      if (IsBuildShapes() || (comp != nullptr)) {
 
          auto poly = std::make_unique<REveGeoPolyShape>();
 
@@ -684,7 +679,7 @@ ROOT::Experimental::REveGeomDescription::MakeShapeDescr(TGeoShape *shape, bool a
          ri.rnr_func.clear();
          ri.rnr_offset = 0;
          ri.vert_size = ri.norm_size = ri.index_size = 0;
-      } else if (ri.rnr_offset < 0) {
+      } else if (rd && (ri.rnr_offset < 0)) {
          ri.shape = nullptr;
          ri.rnr_offset = fRndrOffest;
          fRndrOffest += rd->GetBinarySize();
@@ -820,6 +815,7 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
 
    REveGeomDrawing drawing;
    ResetRndrInfos();
+   bool has_shape = false;
 
    ScanNodes(true, [&, this](REveGeomNode &node, std::vector<int> &stack, bool) {
       if (node.sortid < fDrawIdCut) {
@@ -834,6 +830,7 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
          auto &sd = MakeShapeDescr(volume->GetShape(), true);
 
          item.ri = sd.rndr_info();
+         if (item.ri->shape) has_shape = true;
       }
       return true;
    });
@@ -843,10 +840,12 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
    // create binary data with all produced shapes
    BuildRndrBinary(fDrawBinary);
 
-   drawing.drawopt = fDrawOptions;
+   drawing.drawopt = GetDrawOptions();
+   drawing.nsegm = GetNSegments();
    drawing.binlen = fDrawBinary.size();
 
-   fDrawJson = "GDRAW:"s + TBufferJSON::ToJSON(&drawing, GetJsonComp()).Data();
+   int compcut = has_shape ? 100 : 1000;
+   fDrawJson = "GDRAW:"s + TBufferJSON::ToJSON(&drawing, GetJsonComp() % compcut).Data();
 
    return true;
 }
@@ -977,6 +976,7 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
    ResetRndrInfos();
 
    REveGeomDrawing drawing;
+   bool has_shape = true;
 
    ScanNodes(false, [&, this](REveGeomNode &node, std::vector<int> &stack, bool is_vis) {
       // select only nodes which should match
@@ -1029,16 +1029,19 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
       auto &sd = MakeShapeDescr(volume->GetShape(), true);
 
       item.ri = sd.rndr_info();
+      if (item.ri->shape) has_shape = true;
       return true;
    });
 
-   hjson = "FESCR:"s + TBufferJSON::ToJSON(&found_desc, GetJsonComp()).Data();
+   int compcut = has_shape ? 100 : 1000;
+   hjson = "FESCR:"s + TBufferJSON::ToJSON(&found_desc, GetJsonComp() % compcut).Data();
 
    CollectNodes(drawing);
 
    BuildRndrBinary(binary);
 
-   drawing.drawopt = fDrawOptions;
+   drawing.drawopt = GetDrawOptions();
+   drawing.nsegm = GetNSegments();
    drawing.binlen = binary.size();
 
    json = "FDRAW:"s + TBufferJSON::ToJSON(&drawing, GetJsonComp()).Data();
@@ -1188,9 +1191,7 @@ std::string ROOT::Experimental::REveGeomDescription::ProduceModifyReply(int node
       if (fNodes[id++]->GetVolume() == vol)
          nodes.emplace_back(&desc);
 
-   std::string res = "MODIF:";
-   res.append(TBufferJSON::ToJSON(&nodes, GetJsonComp()).Data());
-   return res;
+   return "MODIF:"s + TBufferJSON::ToJSON(&nodes, GetJsonComp()).Data();
 }
 
 
@@ -1237,20 +1238,26 @@ bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std:
 
    ResetRndrInfos();
 
+   bool has_shape = false;
+
    auto &sd = MakeShapeDescr(vol->GetShape(), true);
 
    // assign shape data
-   for (auto &item : drawing.visibles)
+   for (auto &item : drawing.visibles) {
       item.ri = sd.rndr_info();
+      if (item.ri->shape) has_shape = true;
+   }
 
    CollectNodes(drawing);
 
    BuildRndrBinary(binary);
 
-   drawing.drawopt = fDrawOptions;
+   drawing.drawopt = GetDrawOptions();
+   drawing.nsegm = GetNSegments();
    drawing.binlen = binary.size();
 
-   json.append(TBufferJSON::ToJSON(&drawing, GetJsonComp()).Data());
+   int compcut = has_shape ? 100 : 1000;
+   json.append(TBufferJSON::ToJSON(&drawing, GetJsonComp() % compcut).Data());
 
    return true;
 }
@@ -1326,12 +1333,9 @@ std::unique_ptr<ROOT::Experimental::REveGeomNodeInfo> ROOT::Experimental::REveGe
 
          res->ri = &shape_descr.fRenderInfo; // temporary pointer, can be used preserved for short time
 
-         printf("OFFSET %d\n", fRndrOffest);
-
          BuildRndrBinary(res->rndr_binary);
 
          printf("BINARY SIZE %u\n", (unsigned) res->rndr_binary.size());
-
       }
 
    }
