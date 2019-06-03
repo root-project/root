@@ -1331,6 +1331,11 @@ if(cuda OR tmva-gpu)
 endif()
 
 #---TMVA and its dependencies------------------------------------------------------------
+if (tmva AND NOT mlp)
+  message(STATUS "TMVA is enabled while MLP is not: disabling TMVA")
+  set(tmva OFF CACHE BOOL "Disabled because mlp was not activated" FORCE)
+endif()
+
 if(tmva)
   if(tmva-cpu AND imt)
     message(STATUS "Looking for BLAS for optional parts of TMVA")
