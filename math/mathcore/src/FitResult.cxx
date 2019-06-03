@@ -610,6 +610,7 @@ void FitResult::GetConfidenceIntervals(unsigned int n, unsigned int stride1, uns
                d.SetStepSize( std::max( fErrors[ipar]*1.E-5, 1.E-15) ); 
             else
                d.SetStepSize( std::min(std::max(fParams[ipar]*1.E-5, 1.E-15), 0.0001 ) );
+            
             grad[ipar] = d(fParams[ipar] ); // evaluate df/dp
          }
          else 
