@@ -44,7 +44,7 @@ TEST(TROMemFile, NoWriting)
 }
 
 /// Check that TMemFile uses the original buffer, not a copy
-TEST(TROMemFile, NoMemCopy)
+TEST(TROMemFile, NoInternalMemCopy)
 {
    // Create a TNamed with this original title, and open the TMemFile with it.
    constexpr const char title1[] = "This is a title for TMemFile shared data test NoMemCopy";
@@ -62,4 +62,20 @@ TEST(TROMemFile, NoMemCopy)
    TObject *readN = rosmf.Get("name");
    ASSERT_NE(nullptr, readN);
    EXPECT_STREQ(title2, readN->GetTitle());
+}
+
+TEST(TROMemFile, RealNoMemCopy)
+{
+   std::string expected = "Hello from TMemFile!";
+   // Include the 0 terminator to later compare the strings.
+   size_t expected_size = expected.size() + 1;
+   TMemFile::ExternalDataRange_t externalDataRange{expected.c_str(), expected_size};
+   TMemFile rosmf("hello.bin?filetype=raw", externalDataRange);
+
+   std::vector<char> seen;
+   seen.resize(rosmf.GetSize());
+   rosmf.CopyTo(&seen.front(), seen.size());
+
+   ASSERT_EQ(expected_size, seen.size());
+   ASSERT_STREQ(expected.c_str(), &seen[0]);
 }

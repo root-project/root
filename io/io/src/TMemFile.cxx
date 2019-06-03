@@ -2,7 +2,7 @@
 // Author: Philippe Canal, May 2011
 
 /*************************************************************************
- * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -113,12 +113,12 @@ TMemFile::EMode TMemFile::ParseOption(Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor to create a TMemFile re-using external storage.
+/// Constructor to create a TMemFile re-using external C-Style storage.
 
-TMemFile::TMemFile(const char *path, ExternalDataPtr_t data) :
-   TFile(path, "WEB", "read-only TMemFile", 0 /*compress*/),
-   fBlockList(reinterpret_cast<UChar_t*>(const_cast<char*>(data->data())), data->size()),
-   fExternalData(std::move(data)), fSize(fExternalData->size()), fSysOffset(0), fBlockSeek(nullptr), fBlockOffset(0)
+TMemFile::TMemFile(const char *path, const ExternalDataRange_t &datarange)
+   : TFile(path, "WEB", "read-only TMemFile", 0 /*compress*/),
+     fBlockList(reinterpret_cast<UChar_t *>(const_cast<char *>(datarange.fStart)), datarange.fSize),
+     fIsOwnedByROOT(false), fSize(datarange.fSize), fSysOffset(0), fBlockSeek(nullptr), fBlockOffset(0)
 {
    fD = 0;
    fOption = "READ";
@@ -134,13 +134,22 @@ TMemFile::TMemFile(const char *path, ExternalDataPtr_t data) :
    Init(/* create */ false);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor to create a TMemFile re-using external storage.
+
+TMemFile::TMemFile(const char *path, ExternalDataPtr_t data)
+   : TMemFile(path, ExternalDataRange_t(data->data(), data->size()))
+{
+   fExternalData = data;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////
 /// Constructor to create a read-only TMemFile using an std::unique_ptr<TBufferFile>
 
-TMemFile::TMemFile(const char *name, std::unique_ptr<TBufferFile> buffer) :
-   TFile(name, "WEB", "read-only TMemFile", 0 /* compress */),
-   fBlockList(reinterpret_cast<UChar_t*>(buffer->Buffer()), buffer->BufferSize()),
-   fSize(buffer->BufferSize()), fSysOffset(0), fBlockSeek(&(fBlockList)), fBlockOffset(0)
+TMemFile::TMemFile(const char *name, std::unique_ptr<TBufferFile> buffer)
+   : TFile(name, "WEB", "read-only TMemFile", 0 /* compress */),
+     fBlockList(reinterpret_cast<UChar_t *>(buffer->Buffer()), buffer->BufferSize()), fIsOwnedByROOT(true),
+     fSize(buffer->BufferSize()), fSysOffset(0), fBlockSeek(&(fBlockList)), fBlockOffset(0)
 {
    fD = 0;
    fOption = "READ";
@@ -178,8 +187,8 @@ TMemFile::TMemFile(const char *path, Option_t *option, const char *ftitle, Int_t
 /// Usual Constructor.  See the TFile constructor for details. Copy data from buffer.
 
 TMemFile::TMemFile(const char *path, char *buffer, Long64_t size, Option_t *option, const char *ftitle, Int_t compress)
-   : TFile(path, "WEB", ftitle, compress), fBlockList(size), fSize(size), fSysOffset(0), fBlockSeek(&(fBlockList)),
-     fBlockOffset(0)
+   : TFile(path, "WEB", ftitle, compress), fBlockList(size), fIsOwnedByROOT(true), fSize(size), fSysOffset(0),
+     fBlockSeek(&(fBlockList)), fBlockOffset(0)
 {
    EMode optmode = ParseOption(option);
 
@@ -219,17 +228,17 @@ zombie:
 ////////////////////////////////////////////////////////////////////////////////
 /// Copying the content of the TMemFile into another TMemFile.
 
-TMemFile::TMemFile(const TMemFile &orig) :
-   TFile(orig.GetEndpointUrl()->GetUrl(), "WEB", orig.GetTitle(),
-         orig.GetCompressionSettings() ), fBlockList(orig.GetEND()), fExternalData(orig.fExternalData),
-   fSize(orig.GetEND()), fSysOffset(0), fBlockSeek(&(fBlockList)), fBlockOffset(0)
+TMemFile::TMemFile(const TMemFile &orig)
+   : TFile(orig.GetEndpointUrl()->GetUrl(), "WEB", orig.GetTitle(), orig.GetCompressionSettings()),
+     fBlockList(orig.GetEND()), fExternalData(orig.fExternalData), fIsOwnedByROOT(orig.fIsOwnedByROOT),
+     fSize(orig.GetEND()), fSysOffset(0), fBlockSeek(&(fBlockList)), fBlockOffset(0)
 {
    EMode optmode = ParseOption(orig.fOption);
 
    fD = orig.fD; // not really used, so it is okay to have the same value.
    fWritable = orig.fWritable;
 
-   if (!fExternalData) {
+   if (!IsExternalData()) {
       // We intentionally allocated just one big buffer for this object.
       orig.CopyTo(fBlockList.fBuffer,fSize);
    }
@@ -246,11 +255,11 @@ TMemFile::~TMemFile()
    // Need to call close, now as it will need both our virtual table
    // and the content of the list of blocks
    Close();
-   if (fExternalData) {
+   if (IsExternalData()) {
       // Do not delete external buffer, we don't own it.
       fBlockList.fBuffer = nullptr;
       // We must not get extra blocks, as writing is disabled for external data!
-      R__ASSERT(!fBlockList.fNext || "External block is not the only one!");
+      R__ASSERT(!fBlockList.fNext && "External block is not the only one!");
    }
    TRACE("destroy")
 }
@@ -607,7 +616,7 @@ Int_t TMemFile::SysWriteImpl(Int_t /* fd */, const void *buf, Long64_t len)
 {
    TRACE("WRITE")
 
-   if (fExternalData) {
+   if (IsExternalData()) {
       gSystem->SetErrorStr("A memory file with shared data is read-only.");
       return 0;
    }
