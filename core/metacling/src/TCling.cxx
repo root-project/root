@@ -1798,25 +1798,27 @@ void TCling::RegisterModule(const char* modulename,
    if (payloadCode)
       code += payloadCode;
 
-   const char* dyLibName = nullptr;
+   const char *const dyLibName = FindLibraryName(triggerFunc);
+   if (!dyLibName) {
+      ::Error("TCling::RegisterModule", "Dictionary trigger function for %s not found", modulename);
+      return;
+   }
+
+   // The triggerFunc may not be in a shared object but in an executable.
+   bool isSharedLib = cling::DynamicLibraryManager::isSharedLibrary(dyLibName);
+
+   bool wasDlopened = false;
+
    // If this call happens after dlopen has finished (i.e. late registration)
    // there is no need to dlopen the library recursively. See ROOT-8437 where
    // the dyLibName would correspond to the binary.
    if (!lateRegistration) {
-      // We need to open the dictionary shared library, to resolve symbols
-      // requested by the JIT from it: as the library is currently being dlopen'ed,
-      // its symbols are not yet reachable from the process.
-      // Recursive dlopen seems to work just fine.
-      dyLibName = FindLibraryName(triggerFunc);
 
-      // The triggerFunc may not be in a shared object but in an executable.
-      // In that case, we are done.
-      if (dyLibName && !cling::DynamicLibraryManager::isSharedLibrary(dyLibName))
-         dyLibName = nullptr;
-
-      if (dyLibName) {
-
-         // We were able to determine that is a valid library.
+      if (isSharedLib) {
+         // We need to open the dictionary shared library, to resolve symbols
+         // requested by the JIT from it: as the library is currently being dlopen'ed,
+         // its symbols are not yet reachable from the process.
+         // Recursive dlopen seems to work just fine.
          void* dyLibHandle = dlopen(dyLibName, RTLD_LAZY | RTLD_GLOBAL);
          if (!dyLibHandle) {
 #ifdef R__WIN32
@@ -1834,9 +1836,9 @@ void TCling::RegisterModule(const char* modulename,
                          dyLibName, modulename, dyLibError);
                }
             }
-            dyLibName = 0;
          } else {
             fRegisterModuleDyLibs.push_back(dyLibHandle);
+            wasDlopened = true;
          } // if (!dyLibHandle) .. else
       } // if (dyLibName)
    } // if (!lateRegistration)
@@ -1981,31 +1983,11 @@ void TCling::RegisterModule(const char* modulename,
    }
 
    if (gIgnoredPCMNames.find(modulename) == gIgnoredPCMNames.end()) {
-      llvm::SmallString<256> pcmFileNameFullPath;
-      if (dyLibName) {
-         pcmFileNameFullPath = dyLibName;
-         // The path dyLibName might not be absolute. This can happen if dyLibName
-         // is linked to an executable in the same folder.
-         llvm::sys::fs::make_absolute(pcmFileNameFullPath);
-      } else {
-         // if we were in the case of late registration
-         assert(lateRegistration);
-         pcmFileNameFullPath = FindLibraryName(triggerFunc);
-         // FIXME: A horrible workaround for ctest. ROOT_ADD_TEST adds a test by
-         // invoking ${CMAKE_COMMAND} -DCMD=blah. This does not work well with
-         // statically linked executables such as stress* (referencing libEvent)
-         // because FindLibraryName relies on dladdr which gets confused by the
-         // outer executable. Explicitly add the current working directory to
-         // the library.
-         // Note, we do not take this branch outside of ctest.
-         if (!llvm::sys::path::is_absolute(pcmFileNameFullPath)) {
-            llvm::SmallString<128> curr_path;
-            llvm::sys::fs::current_path(curr_path);
-            llvm::sys::fs::make_absolute(curr_path, pcmFileNameFullPath);
-         }
-      }
+      llvm::SmallString<256> pcmFileNameFullPath(dyLibName);
+      // The path dyLibName might not be absolute. This can happen if dyLibName
+      // is linked to an executable in the same folder.
+      llvm::sys::fs::make_absolute(pcmFileNameFullPath);
       llvm::sys::path::remove_filename(pcmFileNameFullPath);
-
       llvm::sys::path::append(pcmFileNameFullPath,
                               ROOT::TMetaUtils::GetModuleFileName(modulename));
       if (!LoadPCM(pcmFileNameFullPath.str().str())) {
@@ -2109,7 +2091,8 @@ void TCling::RegisterModule(const char* modulename,
                             "#endif");
    }
 
-   if (dyLibName) {
+   if (wasDlopened) {
+      assert(isSharedLib);
       void* dyLibHandle = fRegisterModuleDyLibs.back();
       fRegisterModuleDyLibs.pop_back();
       dlclose(dyLibHandle);
