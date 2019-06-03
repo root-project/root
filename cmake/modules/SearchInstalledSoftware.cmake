@@ -1026,8 +1026,8 @@ if(imt)
   endif()
 endif()
 if(builtin_tbb)
-  set(tbb_builtin_version 2019_U1)
-  set(tbb_sha256 d40aa6f62f2b2fb38c89b9f309859e3e6ff90487e8bc45abb0e096a6a165bec5)
+  set(tbb_builtin_version 2019_U7)
+  set(tbb_sha256 4204a93f4c0fd989fb6f79acae74feb02ee39725c93968773d9b6efeb75c7a6a)
   if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
     set(_tbb_compiler compiler=clang)
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
@@ -1040,7 +1040,7 @@ if(builtin_tbb)
     set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/tbb.lib)
     ExternalProject_Add(
       TBB
-      URL ${lcgpackages}/tbb${tbb_builtin_version}.tar.gz
+      URL ${lcgpackages}/tbb-${tbb_builtin_version}.tar.gz
       URL_HASH SHA256=${tbb_sha256}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND devenv.exe /useenv /upgrade build/${vsdir}/makefile.sln
@@ -1072,7 +1072,7 @@ if(builtin_tbb)
     set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
     ExternalProject_Add(
       TBB
-      URL ${lcgpackages}/tbb${tbb_builtin_version}.tar.gz
+      URL ${lcgpackages}/tbb-${tbb_builtin_version}.tar.gz
       URL_HASH SHA256=${tbb_sha256}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND ""
