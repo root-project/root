@@ -367,9 +367,9 @@ void FilterTutorial()
 
       // notebook found
       if (gLineString.find("\\notebook") != string::npos) {
-         ExecuteCommand(StringFormat("%s converttonotebook.py %s %s/notebooks/",
-                                          gPythonExec.c_str(),
-                                          gFileName.c_str(), gOutDir.c_str()));
+         ExecuteCommand(StringFormat("%s converttonotebook.py %s %s/notebooks/ &",
+                                     gPythonExec.c_str(),
+                                     gFileName.c_str(), gOutDir.c_str()));
          if (gPython){
              gLineString = "## ";
          }
