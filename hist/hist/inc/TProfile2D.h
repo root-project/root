@@ -86,6 +86,7 @@ public:
    TProfile2D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
                                ,Int_t nbinsy,const Double_t *ybins,Option_t *option="");
    TProfile2D(const TProfile2D &profile);
+   TProfile2D &operator=(const TProfile2D &profile);
    virtual ~TProfile2D();
    virtual Bool_t    Add(TF1 *h1, Double_t c1=1, Option_t *option="");
    virtual Bool_t    Add(const TH1 *h1, Double_t c1=1);
