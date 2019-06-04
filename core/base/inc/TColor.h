@@ -36,6 +36,7 @@ public:
    TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name="", Float_t a = 1);
    TColor(Float_t r, Float_t g, Float_t b, Float_t a = 1);
    TColor(const TColor &color);
+   TColor &operator=(const TColor &color);
    virtual ~TColor();
    const char   *AsHexString() const;
    void          Copy(TObject &color) const;
