@@ -107,11 +107,9 @@
 
 using namespace std ;
 
-ClassImp(RooAbsReal);
-;
+ClassImp(RooAbsReal)
 
-Bool_t RooAbsReal::_cacheCheck(kFALSE) ;
-Bool_t RooAbsReal::_globalSelectComp = kFALSE ;
+Bool_t RooAbsReal::_globalSelectComp = false;
 Bool_t RooAbsReal::_hideOffset = kTRUE ;
 
 void RooAbsReal::setHideOffset(Bool_t flag) { _hideOffset = flag ; }
@@ -981,7 +979,7 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
   }
 
   if(projected->InheritsFrom(RooRealIntegral::Class())){
-    ((RooRealIntegral*)projected)->setAllowComponentSelection(true);
+    static_cast<RooRealIntegral*>(projected)->setAllowComponentSelection(true);
   }
 
   projected->SetName(name.Data()) ;
@@ -1516,13 +1514,13 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
 void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
 {
   // Get complete set of tree branch nodes
-  RooArgSet branchNodeSet ;
-  branchNodeServerList(&branchNodeSet) ;
+  RooArgSet branchNodeSet;
+  branchNodeServerList(&branchNodeSet);
 
   // Discard any non-PDF nodes
-  TIterator* iter = branchNodeSet.createIterator() ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)iter->Next())) {
+  // Iterate by number because collection is being modified! Iterators may invalidate ...
+  for (unsigned int i = 0; i < branchNodeSet.size(); ++i) {
+    const auto arg = branchNodeSet[i];
     if (!dynamic_cast<RooAbsReal*>(arg)) {
       branchNodeSet.remove(*arg) ;
     }
@@ -1531,51 +1529,40 @@ void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
   // If no set is specified, restored all selection bits to kTRUE
   if (!selNodes) {
     // Reset PDF selection bits to kTRUE
-    iter->Reset() ;
-    while((arg=(RooAbsArg*)iter->Next())) {
-      ((RooAbsReal*)arg)->selectComp(kTRUE) ;
+    for (const auto arg : branchNodeSet) {
+      static_cast<RooAbsReal*>(arg)->selectComp(true);
     }
-    delete iter ;
     return ;
   }
 
 
   // Add all nodes below selected nodes
-  iter->Reset() ;
-  TIterator* sIter = selNodes->createIterator() ;
-  RooArgSet tmp ;
-  while((arg=(RooAbsArg*)iter->Next())) {
-    sIter->Reset() ;
-    RooAbsArg* selNode ;
-    while((selNode=(RooAbsArg*)sIter->Next())) {
+  RooArgSet tmp;
+  for (const auto arg : branchNodeSet) {
+    for (const auto selNode : *selNodes) {
       if (selNode->dependsOn(*arg)) {
-	tmp.add(*arg,kTRUE) ;
+        tmp.add(*arg,kTRUE);
       }
     }
   }
-  delete sIter ;
 
   // Add all nodes that depend on selected nodes
-  iter->Reset() ;
-  while((arg=(RooAbsArg*)iter->Next())) {
+  for (const auto arg : branchNodeSet) {
     if (arg->dependsOn(*selNodes)) {
-      tmp.add(*arg,kTRUE) ;
+      tmp.add(*arg,kTRUE);
     }
   }
 
-  tmp.remove(*selNodes,kTRUE) ;
-  tmp.remove(*this) ;
-  selNodes->add(tmp) ;
+  tmp.remove(*selNodes, true);
+  tmp.remove(*this);
+  selNodes->add(tmp);
   coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") indirectly selected PDF components: " << tmp << endl ;
 
   // Set PDF selection bits according to selNodes
-  iter->Reset() ;
-  while((arg=(RooAbsArg*)iter->Next())) {
-    Bool_t select = selNodes->find(arg->GetName()) ? kTRUE : kFALSE ;
-    ((RooAbsReal*)arg)->selectComp(select) ;
+  for (const auto arg : branchNodeSet) {
+    Bool_t select = selNodes->find(arg->GetName()) != nullptr;
+    static_cast<RooAbsReal*>(arg)->selectComp(select);
   }
-
-  delete iter ;
 }
 
 
@@ -2248,12 +2235,10 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
       }
 
       // Evaluate fractional correction integral always on full p.d.f, not component.
-      Bool_t tmp = _globalSelectComp ;
-      globalSelectComp(kTRUE) ;
+      GlobalSelectComponentRAII selectCompRAII(true);
       RooAbsReal* intFrac = projection->createIntegral(*plotVar,*plotVar,o.normRangeName) ;
-      globalSelectComp(kTRUE) ;
+      _globalSelectComp = true; //It's unclear why this is done a second time. Maybe unnecessary.
       o.scaleFactor /= intFrac->getVal() ;
-      globalSelectComp(tmp) ;
       delete intFrac ;
 
     }
@@ -3565,16 +3550,6 @@ void RooAbsReal::selectNormalization(const RooArgSet*, Bool_t)
 
 void RooAbsReal::selectNormalizationRange(const char*, Bool_t)
 {
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Activate cache validation mode
-
-void RooAbsReal::setCacheCheck(Bool_t flag)
-{
-  _cacheCheck = flag ;
 }
 
 

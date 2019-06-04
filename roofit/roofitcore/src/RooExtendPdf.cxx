@@ -128,9 +128,11 @@ Double_t RooExtendPdf::expectedEvents(const RooArgSet* nset) const
   // Optionally multiply with fractional normalization
   if (_rangeName) {
 
-    globalSelectComp(kTRUE) ;
-    Double_t fracInt = pdf.getNormObj(nset,nset,_rangeName)->getVal() ;
-    globalSelectComp(kFALSE) ;
+    double fracInt;
+    {
+      GlobalSelectComponentRAII globalSelectComp(true);
+      fracInt = pdf.getNormObj(nset,nset,_rangeName)->getVal();
+    }
 
 
     if ( fracInt == 0. || _n == 0.) {
