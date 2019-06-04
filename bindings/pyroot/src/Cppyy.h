@@ -99,6 +99,8 @@ namespace Cppyy {
    std::string GetMethodSignature( TCppScope_t scope, TCppIndex_t imeth );
    Bool_t      IsConstMethod( TCppMethod_t );
 
+   bool        ExistsMethodTemplate(TCppScope_t scope, const std::string& name);
+   TCppMethod_t GetMethodTemplate(TCppScope_t scope, const std::string& name, const std::string& proto);
    Bool_t      IsMethodTemplate( TCppMethod_t );
    TCppIndex_t GetMethodNumTemplateArgs( TCppScope_t scope, TCppIndex_t imeth );
    std::string GetMethodTemplateArgName( TCppScope_t scope, TCppIndex_t imeth, TCppIndex_t iarg );

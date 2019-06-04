@@ -789,6 +789,11 @@ PyObject* PyROOT::GetCppGlobal( const std::string& name )
       return (PyObject*)MethodProxy_New( name, overloads );
    }
 
+   // Try function templates
+   if (Cppyy::ExistsMethodTemplate(Cppyy::gGlobalScope, name)) {
+      return (PyObject*)TemplateProxy_New(name, CreateScopeProxy(""));
+   }
+
 // allow lookup into std as if global (historic)
    TDataMember* dm = TClass::GetClass( "std" )->GetDataMember( name.c_str() );
    if ( dm ) {

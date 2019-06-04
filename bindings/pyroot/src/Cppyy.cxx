@@ -538,6 +538,9 @@ size_t Cppyy::GetFunctionArgTypeoffset()\
 // scope reflection information ----------------------------------------------
 Bool_t Cppyy::IsNamespace( TCppScope_t scope ) {
 // Test if this scope represents a namespace.
+   if (scope == GLOBAL_HANDLE)
+      return kTRUE;
+
    TClassRef& cr = type_from_handle( scope );
    if ( cr.GetClass() )
       return cr->Property() & kIsNamespace;
@@ -815,6 +818,33 @@ Bool_t Cppyy::IsConstMethod( TCppMethod_t method )
    return kFALSE;
 }
 
+
+bool Cppyy::ExistsMethodTemplate(TCppScope_t scope, const std::string& name)
+{
+   if (scope == (TCppScope_t)GLOBAL_HANDLE) {
+      return (bool)gROOT->GetFunctionTemplate(name.c_str());
+   } else {
+      TClassRef& cr = type_from_handle(scope);
+      if (cr.GetClass())
+         return (bool)cr->GetFunctionTemplate(name.c_str());
+   }
+
+   return false;
+}
+
+Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(
+   TCppScope_t scope, const std::string& name, const std::string& proto)
+{
+   if (scope == (TCppScope_t)GLOBAL_HANDLE) {
+      return (TCppMethod_t)gROOT->GetGlobalFunctionWithPrototype(name.c_str(), proto.c_str());
+   } else {
+      TClassRef& cr = type_from_handle(scope);
+      if (cr.GetClass())
+         return (TCppMethod_t)cr->GetMethodWithPrototype(name.c_str(), proto.c_str());
+   }
+
+   return (TCppMethod_t)nullptr;
+}
 
 Bool_t Cppyy::IsMethodTemplate( TCppMethod_t method )
 {

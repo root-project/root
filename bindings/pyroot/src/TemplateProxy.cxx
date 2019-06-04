@@ -9,6 +9,7 @@
 #include "PyCallable.h"
 #include "PyStrings.h"
 #include "Utility.h"
+#include "PyRootType.h"
 
 // ROOT
 #include "TClass.h"
@@ -194,38 +195,6 @@ namespace {
 
    // case 2: non-instantiating obj->method< t0, t1, ... >( a0, a1, ... )
 
-   // build "< type, type, ... >" part of method name
-      PyObject* pyname_v1 = Utility::BuildTemplateName( pytmpl->fPyName, args, 0 );
-      if ( pyname_v1 ) {
-      // lookup method on self (to make sure it propagates), which is readily callable
-         pymeth = PyObject_GetAttr( pytmpl->fSelf ? pytmpl->fSelf : pytmpl->fPyClass, pyname_v1 );
-         if ( pymeth ) { // overloads stop here, as this is an explicit match
-            Py_DECREF( pyname_v1 );
-            return pymeth;         // callable method, next step is by user
-         }
-      }
-      PyErr_Clear();
-
-   // case 3: loop over all previously instantiated templates
-      pymeth = MethodProxy_Type.tp_descr_get(
-         (PyObject*)pytmpl->fTemplated, pytmpl->fSelf, (PyObject*)&MethodProxy_Type );
-      if ( MethodProxy_Check( pymeth ) ) {
-      // now call the method with the arguments
-         PyObject* result = MethodProxy_Type.tp_call( pymeth, args, kwds );
-         Py_DECREF( pymeth ); pymeth = 0;
-         if ( result ) {
-            Py_XDECREF( pyname_v1 );
-            return result;
-         }
-      // TODO: collect error here, as the failure may be either an overload
-      // failure after which we should continue; or a real failure, which should
-      // be reported.
-      }
-      Py_XDECREF( pymeth ); pymeth = 0;
-      PyErr_Clear();
-
-   // still here? try instantiating methods
-
       Bool_t isType = kFALSE;
       Int_t nStrings = 0;
       PyObject* tpArgs = PyTuple_New( nArgs );
@@ -274,9 +243,44 @@ namespace {
          Py_XDECREF( pytc );
       }
 
+   // build "< type, type, ... >" part of method name
+      PyObject* pyname_v1 = Utility::BuildTemplateName( pytmpl->fPyName, args, 0 );
+      if ((isType || nStrings == nArgs) && pyname_v1) {  // types in args or all strings
+      // lookup method on self (to make sure it propagates), which is readily callable
+         pymeth = PyObject_GetAttr( pytmpl->fSelf ? pytmpl->fSelf : pytmpl->fPyClass, pyname_v1 );
+         if ( pymeth ) { // overloads stop here, as this is an explicit match
+            Py_DECREF( pyname_v1 );
+            return pymeth;         // callable method, next step is by user
+         }
+      }
+      PyErr_Clear();
+
+   // case 3: loop over all previously instantiated templates
+      pymeth = MethodProxy_Type.tp_descr_get(
+         (PyObject*)pytmpl->fTemplated, pytmpl->fSelf, (PyObject*)&MethodProxy_Type );
+      if ( MethodProxy_Check( pymeth ) ) {
+      // now call the method with the arguments
+         PyObject* result = MethodProxy_Type.tp_call( pymeth, args, kwds );
+         Py_DECREF( pymeth ); pymeth = 0;
+         if ( result ) {
+            Py_XDECREF( pyname_v1 );
+            return result;
+         }
+      // TODO: collect error here, as the failure may be either an overload
+      // failure after which we should continue; or a real failure, which should
+      // be reported.
+      }
+      Py_XDECREF( pymeth ); pymeth = 0;
+      PyErr_Clear();
+
+   // still here? try instantiating methods
+
       PyObject* clName = PyObject_GetAttr( pytmpl->fPyClass, PyStrings::gCppName );
       if ( ! clName ) clName = PyObject_GetAttr( pytmpl->fPyClass, PyStrings::gName );
-      TClass* klass = TClass::GetClass( PyROOT_PyUnicode_AsString( clName ) );
+      auto clNameStr = std::string(PyROOT_PyUnicode_AsString(clName));
+      if (clNameStr == "_global_cpp")
+         clNameStr = ""; // global namespace
+      TClass* klass = TClass::GetClass(clNameStr.c_str());
       Py_DECREF( clName );
       const std::string& tmplname = pytmpl->fNonTemplated->fMethodInfo->fName;
 
@@ -288,23 +292,23 @@ namespace {
             Py_DECREF( pyname_v2 );
             std::string proto = mname.substr( 1, mname.size() - 2 );
          // the following causes instantiation as necessary
-            TMethod* cppmeth = klass ? klass->GetMethodWithPrototype( tmplname.c_str(), proto.c_str() ) : 0;
+            auto scope = Cppyy::GetScope(clNameStr);
+            auto cppmeth = Cppyy::GetMethodTemplate(scope, tmplname, proto);
             if ( cppmeth ) {    // overload stops here
                Py_XDECREF( pyname_v1 );
-               Cppyy::TCppScope_t scope = Cppyy::GetScope( klass->GetName() );
-               if ( (klass->Property() & kIsNamespace) || (cppmeth->Property() & kIsStatic) ) {
-                  pytmpl->fTemplated->AddMethod( new TFunctionHolder( scope, (Cppyy::TCppMethod_t)cppmeth ) );
+               if (Cppyy::IsNamespace(scope) || Cppyy::IsStaticMethod(cppmeth)) {
+                  pytmpl->fTemplated->AddMethod( new TFunctionHolder( scope, cppmeth ) );
                   pymeth = (PyObject*)MethodProxy_New(
-                     cppmeth->GetName(), new TFunctionHolder( scope, (Cppyy::TCppMethod_t)cppmeth ) );
+                     Cppyy::GetMethodName(cppmeth).c_str(), new TFunctionHolder( scope, cppmeth ) );
                } else {
-                  pytmpl->fTemplated->AddMethod( new TMethodHolder( scope, (Cppyy::TCppMethod_t)cppmeth ) );
+                  pytmpl->fTemplated->AddMethod( new TMethodHolder( scope, cppmeth ) );
                   pymeth = (PyObject*)MethodProxy_New(
-                     cppmeth->GetName(), new TMethodHolder( scope, (Cppyy::TCppMethod_t)cppmeth ) );
+                     Cppyy::GetMethodName(cppmeth).c_str(), new TMethodHolder( scope, cppmeth ) );
                }
-               PyObject_SetAttrString( pytmpl->fPyClass, (char*)cppmeth->GetName(), (PyObject*)pymeth );
+               PyObject_SetAttrString( pytmpl->fPyClass, (char*)Cppyy::GetMethodName(cppmeth).c_str(), (PyObject*)pymeth );
                Py_DECREF( pymeth );
                pymeth = PyObject_GetAttrString(
-                  pytmpl->fSelf ? pytmpl->fSelf : pytmpl->fPyClass, (char*)cppmeth->GetName() );
+                  pytmpl->fSelf ? pytmpl->fSelf : pytmpl->fPyClass, (char*)Cppyy::GetMethodName(cppmeth).c_str() );
                PyObject* result = MethodProxy_Type.tp_call( pymeth, args, kwds );
                Py_DECREF( pymeth );
                return result;
