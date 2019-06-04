@@ -1,13 +1,7 @@
 
 Processing cintrun.C...
-get<double>() const
-get<float>() const
-get<int>() const
 getfloat() const
 operator=(const t&)
-set<double>(double)
-set<float>(float)
-set<int>(int)
 t()
 t(const t&)
 ~t()
