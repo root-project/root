@@ -6,7 +6,7 @@ set -ex
 mkdir ../build
 cd ../build
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -Dall=On -Dtesting=On -Dx11=Off -Dalien=Off \
-      -Dcuda=Off -Dtmva-gpu=Off ../root
+      -Dcuda=Off -Dtmva-gpu=Off -Dveccore=Off ../root
 # We need to prebuild a minimal set of targets which are responsible for header copy
 # or generation.
 make -j4 move_headers intrinsics_gen ClangCommentCommandList ClangCommentCommandInfo \
