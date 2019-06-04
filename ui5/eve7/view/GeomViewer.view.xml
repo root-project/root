@@ -3,6 +3,7 @@
    xmlns="sap.m"
    xmlns:mvc="sap.ui.core.mvc"
    xmlns:eve7="rootui5.eve7.lib"
+   xmlns:l="sap.ui.layout"
    xmlns:t="sap.ui.table">
    <SplitApp id="geomViewerApp" initialMaster="geomHierarchy"
       initialDetail="geomDraw" orientationChange="onOrientationChange">
@@ -40,14 +41,17 @@
          <Page id="geomInfo" title="Node information" showNavButton="false"
             showFooter="false" showSubHeader="false" showHeader="true">
             <content>
-               <VBox>
-                  <Text text="Path: {/fullpath}"/>
-                  <Text text="Node name: {/node_name}"/>
-                  <Text text="Type: {/node_type}"/>
-                  <Text text="Shape name: {/shape_name}"/>
-                  <Text text="Type: {/shape_type}"/>
-                  <eve7:GeomDrawing id="nodeDrawing" color="white"/>
-               </VBox>
+               <l:Splitter orientation="Vertical" width="100%" height="100%">
+                  <VBox>
+                     <layoutData><l:SplitterLayoutData size="30%"/></layoutData>
+                     <Text text="Path: {/fullpath}"/>
+                     <Text text="Node name: {/node_name}"/>
+                     <Text text="Type: {/node_type}"/>
+                     <Text text="Shape name: {/shape_name}"/>
+                     <Text text="Type: {/shape_type}"/>
+                   </VBox>
+                   <eve7:GeomDrawing id="nodeDrawing" color="white"/>
+               </l:Splitter>
             </content>
          </Page>
       </detailPages>
