@@ -160,6 +160,12 @@ TProfile3D::TProfile3D(const TProfile3D &profile) : TH3D()
    ((TProfile3D&)profile).Copy(*this);
 }
 
+TProfile3D &TProfile3D::operator=(const TProfile3D &profile)
+{
+   ((TProfile3D &)profile).Copy(*this);
+   return *this;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Performs the operation: `this = this + c1*f1` .
 
