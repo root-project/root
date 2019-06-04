@@ -545,7 +545,6 @@ public:
    Double_t fReal;
    RunTimes(Double_t c = -1., Double_t r = -1.) : fCpu(c), fReal(r) { }
    
-   RunTimes &operator=(const RunTimes &rt) { fCpu = rt.fCpu; fReal = rt.fReal; return *this; }
    void Set(Double_t c = -1., Double_t r = -1.) { if (c > -1.) fCpu = c; if (r > -1.) fReal = r; }
    void Print(const char *tag = "") { printf("%s real: %f s, cpu: %f s\n", tag, fReal, fCpu); }  
 };
