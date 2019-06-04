@@ -286,7 +286,7 @@ namespace {
 
     // case 4a: instantiating obj->method< T0, T1, ... >( type(a0), type(a1), ... )( a0, a1, ... )
       if ( ! isType && ! ( nStrings == nArgs ) ) {    // no types among args and not all strings
-         PyObject* pyname_v2 = Utility::BuildTemplateName( NULL, tpArgs, 0 );
+         PyObject* pyname_v2 = Utility::BuildTemplateName( NULL, tpArgs, 0, true );
          if ( pyname_v2 ) {
             std::string mname = PyROOT_PyUnicode_AsString( pyname_v2 );
             Py_DECREF( pyname_v2 );
