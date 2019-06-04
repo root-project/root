@@ -44,10 +44,7 @@ public:
    int          fGid;        // Unix group ID
 
    XrdProofUI() { fUid = -1; fGid = -1; }
-   XrdProofUI(const XrdProofUI &ui) { fUser = ui.fUser;
-                                      fGroup = ui.fGroup;
-                                      fHomeDir = ui.fHomeDir;
-                                      fUid = ui.fUid; fGid = ui.fGid; }
+   XrdProofUI(const XrdProofUI &) = default;
    ~XrdProofUI() { }
 
    void Reset() { fUser = ""; fHomeDir = ""; fGroup = ""; fUid = -1; fGid = -1; }
