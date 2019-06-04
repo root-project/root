@@ -336,20 +336,20 @@ void FilterTutorial()
          } else {
             if (gPython) {
                if (nobatch) {
-                  ExecuteCommand(StringFormat("%s makeimage.py %s %s %s 0 1 0",
+                  ExecuteCommand(StringFormat("%s makeimage.py %s %s %s 0 1 0 &",
                                              gPythonExec.c_str(),
                                              gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
                } else {
-                  ExecuteCommand(StringFormat("%s makeimage.py %s %s %s 0 1 1",
+                  ExecuteCommand(StringFormat("%s makeimage.py %s %s %s 0 1 1 &",
                                              gPythonExec.c_str(),
                                              gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
                }
             } else {
                if (nobatch) {
-                  ExecuteCommand(StringFormat("root -l -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
+                  ExecuteCommand(StringFormat("root -l -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\" &",
                                                gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
                } else {
-                  ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
+                  ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\" &",
                                                gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
                }
             }
