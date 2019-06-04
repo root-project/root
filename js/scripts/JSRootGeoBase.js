@@ -2176,8 +2176,9 @@
       if (obj) {
          if (obj.$geoh) this.toplevel = false;
          this.CreateClones(obj);
-      } else
-      if (clones) this.nodes = clones;
+      } else if (clones) {
+         this.nodes = clones;
+      }
    }
 
    /** Insert node into existing array */
@@ -2186,6 +2187,7 @@
          this.nodes[node.id] = node;
    }
 
+   /** Returns TGeoShape for element with given indx */
    JSROOT.GEO.ClonedNodes.prototype.GetNodeShape = function(indx) {
       if (!this.origin || !this.nodes) return null;
       var obj = this.origin[indx], clone = this.nodes[indx];
@@ -2227,8 +2229,13 @@
 
    }
 
+   /** Create complete description for provided Geo object */
    JSROOT.GEO.ClonedNodes.prototype.CreateClones = function(obj, sublevel, kind) {
        if (!sublevel) {
+
+          if (obj && obj._typename == "$$Shape$$")
+             return this.CreateClonesForShape(obj);
+
           this.origin = [];
           sublevel = 1;
           kind = JSROOT.GEO.NodeKind(obj);
@@ -2275,8 +2282,7 @@
           if (kind===1) {
              shape = obj.fShape;
              if (obj.fElements) chlds = obj.fElements.arr;
-          } else
-          if (obj.fVolume) {
+          } else if (obj.fVolume) {
              shape = obj.fVolume.fShape;
              if (obj.fVolume.fNodes) chlds = obj.fVolume.fNodes.arr;
           }
@@ -2327,9 +2333,29 @@
        }
    }
 
+   /** Create elementary item with single already existing shape,
+    * used by details view of geometry shape */
+   JSROOT.GEO.ClonedNodes.prototype.CreateClonesForShape = function(obj) {
+      this.origin = [];
 
+      // indicate that just plain shape is used
+      this.plain_shape = obj;
+
+      var node = {
+            id: 0, sortid: 0, kind: 2, numvischld: 0, idshift: 0,
+            name: "Shape",
+            nfaces: obj.nfaces,
+            fDX: 1, fDY: 1, fDZ: 1, vol: 1,
+            vis: true
+         };
+
+      this.nodes = [ node ];
+   }
+
+   /** Mark visisble nodes */
    JSROOT.GEO.ClonedNodes.prototype.MarkVisisble = function(on_screen, copy_bits, cloning) {
       if (!this.nodes) return 0;
+      if (this.plain_shape) return 1;
 
       var res = 0, simple_copy = cloning && (cloning.length === this.nodes.length);
 
@@ -2608,17 +2634,16 @@
       return stack;
    }
 
-   /** returns different properties of draw entry nodeid */
+   /** @brief Provide different properties of draw entry nodeid
+    * @desc Only if node visible, material will be created*/
    JSROOT.GEO.ClonedNodes.prototype.getDrawEntryProperties = function(entry) {
-      // function return different properties for specified node
-      // Only if node visible, material will be created
 
       var clone = this.nodes[entry.nodeid];
       var visible = true;
 
       if (clone.kind === 2) {
          var prop = { name: clone.name, nname: clone.name, shape: null, material: null, chlds: null };
-         var _opacity = entry.opacity;
+         var _opacity = entry.opacity || 1;
          prop.fillcolor = new THREE.Color( entry.color ? "rgb(" + entry.color + ")" : "blue" );
          prop.material = new THREE.MeshLambertMaterial( { transparent: _opacity < 1,
                           opacity: _opacity, wireframe: false, color: prop.fillcolor,
@@ -2813,9 +2838,13 @@
       return result;
    }
 
+   /** @brief Collects visible nodes, using maxlimit
+     * @desc One can use map to define cut based on the volume or serious of cuts */
    JSROOT.GEO.ClonedNodes.prototype.CollectVisibles = function(maxnumfaces, frustum, maxnumnodes) {
-      // function collects visible nodes, using maxlimit
-      // one can use map to define cut based on the volume or serious of cuts
+
+      // in simple case shape as it is
+      if (this.plain_shape)
+         return { lst: [ { nodeid: 0, seqid: 0, stack: [], factor: 1, shapeid: 0, server_shape: this.plain_shape } ], complete: true };
 
       if (!maxnumnodes) maxnumnodes = maxnumfaces/100;
 
@@ -2894,10 +2923,10 @@
       return { lst: arg.items, complete: minVol === 0 };
    }
 
+   /** @brief merge list of drawn objects
+     * @desc in current list we should mark if object already exists
+     * from previous list we should collect objects which are not there */
    JSROOT.GEO.ClonedNodes.prototype.MergeVisibles = function(current, prev) {
-      // merge list of drawn objects
-      // in current list we should mark if object already exists
-      // from previous list we should collect objects which are not there
 
       var indx2 = 0, del = [];
       for (var indx1=0; (indx1<current.length) && (indx2<prev.length); ++indx1) {
@@ -2919,8 +2948,13 @@
       return del; //
    }
 
+   /** @brief Collect all uniques shapes which should be build
+    *  @desc Check if same shape used many time for drawing */
    JSROOT.GEO.ClonedNodes.prototype.CollectShapes = function(lst) {
-      // based on list of visible nodes, collect all uniques shapes which should be build
+
+      // nothing else - just that single shape
+      if (this.plain_shape)
+         return [ this.plain_shape ];
 
       var shapes = [];
 
@@ -3024,12 +3058,13 @@
          if (res.done) { item.ready = true; continue; }
 
          if (!item.ready) {
+            item._typename = "$$Shape$$"; // let reuse item for direct drawing
+            item.ready = true;
             if (item.geom === undefined) {
                item.geom = JSROOT.GEO.createGeometry(item.shape);
                if (item.geom) created++; // indicate that at least one shape was created
             }
             item.nfaces = JSROOT.GEO.numGeometryFaces(item.geom);
-            item.ready = true;
          }
 
          res.shapes++;
@@ -3038,8 +3073,7 @@
 
          if (res.faces >= limit) {
             res.done = true;
-         } else
-         if ((created > 0.01*lst.length) && (timelimit!==undefined)) {
+         } else if ((created > 0.01*lst.length) && (timelimit!==undefined)) {
             var tm2 = new Date().getTime();
             if (tm2-tm1 > timelimit) return res;
          }

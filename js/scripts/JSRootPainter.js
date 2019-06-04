@@ -3188,10 +3188,19 @@
    }
 
    /** @summary Clear all 3D drawings
+    * @returns can3d value - how webgl canvas was placed
     * @private */
    TObjectPainter.prototype.clear_3d_canvas = function() {
       var can3d = this.access_3d_kind(null);
-      if (can3d < 0) return;
+      if (can3d < 0) {
+         // remove first child from main element - if it is canvas
+         var main = this.select_main().node();
+         if (main && main.firstChild && main.firstChild.$jsroot) {
+            delete main.firstChild.painter;
+            main.removeChild(main.firstChild);
+         }
+         return can3d;
+      }
 
       var size = this.size_for_3d(can3d);
 
@@ -3205,6 +3214,7 @@
 
          this.svg_frame().style('display', null);  // clear display property
       }
+      return can3d;
    }
 
    /** @summary Add 3D canvas
@@ -3220,6 +3230,7 @@
          if (main !== null) {
             main.appendChild(canv);
             canv.painter = this;
+            canv.$jsroot = true; // mark canvas as added by jsroot
          }
 
          return;

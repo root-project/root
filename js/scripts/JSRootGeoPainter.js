@@ -127,8 +127,11 @@
        }
    };
 
-   Toolbar.prototype.removeAllButtons = function() {
-      this.element.remove();
+   Toolbar.prototype.Cleanup = function() {
+      if (this.element) {
+         this.element.remove();
+         delete this.element;
+      }
    };
 
    /**
@@ -299,9 +302,9 @@
    TGeoPainter.prototype.ProcessVRControllerIntersections = function() {
       var intersects = []
       for (var i = 0; i < this._vrControllers.length; ++i) {
-         let controller = this._vrControllers[i].mesh;
-         let end = controller.localToWorld(this._raycasterEnd.set(0, 0, -1));
-         let origin = controller.localToWorld(this._raycasterOrigin.set(0, 0, 0));
+         var controller = this._vrControllers[i].mesh;
+         var end = controller.localToWorld(this._raycasterEnd.set(0, 0, -1));
+         var origin = controller.localToWorld(this._raycasterOrigin.set(0, 0, 0));
          end.sub(origin).normalize();
          intersects = intersects.concat(this._controls.GetOriginDirectionIntersects(origin, end));
       }
@@ -314,10 +317,10 @@
       this.UpdateVRControllersList();
       // Update pose.
       for (var i = 0; i < this._vrControllers.length; ++i) {
-         let controller = this._vrControllers[i];
-         let orientation = controller.gamepad.pose.orientation;
-         let position = controller.gamepad.pose.position;
-         let controllerMesh = controller.mesh;
+         var controller = this._vrControllers[i];
+         var orientation = controller.gamepad.pose.orientation;
+         var position = controller.gamepad.pose.position;
+         var controllerMesh = controller.mesh;
          if (orientation) { controllerMesh.quaternion.fromArray(orientation); }
          if (position) { controllerMesh.position.fromArray(position); }
          controllerMesh.updateMatrix();
@@ -2867,7 +2870,12 @@
       this._clones = clones;
    }
 
+   /** Prepare drawings */
    TGeoPainter.prototype.prepareObjectDraw = function(draw_obj, name_prefix) {
+
+      // if did cleanup - ignore all kind of activity
+      if (this.did_cleanup)
+         return;
 
       if (name_prefix == "__geom_viewer_append__") {
          this._new_append_nodes = draw_obj;
@@ -3506,6 +3514,10 @@
 
          this.AccessTopPainter(false); // remove as pointer
 
+         var can3d = this.clear_3d_canvas(); // remove 3d canvas from main HTML element
+
+         if (this._toolbar) this._toolbar.Cleanup(); // remove toolbar
+
          this.helpText();
 
          JSROOT.Painter.DisposeThreejsObject(this._scene);
@@ -3526,10 +3538,6 @@
 
          if (this._worker) this._worker.terminate();
 
-         JSROOT.TObjectPainter.prototype.Cleanup.call(this);
-
-         delete this.options;
-
          delete this._animating;
 
          var obj = this.GetGeometry();
@@ -3547,13 +3555,22 @@
             var slave = this._slave_painters[k];
             if (slave && (slave._main_painter===this)) slave._main_painter = null;
          }
+
+         JSROOT.TObjectPainter.prototype.Cleanup.call(this);
+
+         delete this.options;
+
+         this.did_cleanup = true;
+
+         if (can3d < 0) this.select_main().html("");
       }
 
-      for (var k in this._slave_painters) {
-         var slave = this._slave_painters[k];
-         slave._main_painter = null;
-         if (slave._clones === this._clones) slave._clones = null;
-      }
+      if (this._slave_painters)
+         for (var k in this._slave_painters) {
+            var slave = this._slave_painters[k];
+            slave._main_painter = null;
+            if (slave._clones === this._clones) slave._clones = null;
+         }
 
       this._main_painter = null;
       this._slave_painters = [];
@@ -3572,7 +3589,8 @@
       this._camera = null;
       this._selected_mesh = null;
 
-      if (this._clones && this._clones_owner) this._clones.Cleanup(this._draw_nodes, this._build_shapes);
+      if (this._clones && this._clones_owner)
+         this._clones.Cleanup(this._draw_nodes, this._build_shapes);
       delete this._clones;
       delete this._clones_owner;
       delete this._draw_nodes;
@@ -3692,7 +3710,7 @@
 
       painter._webgl = !painter._usesvg && JSROOT.Painter.TestWebGL();
 
-      painter.options = painter.decodeOptions(opt);
+      painter.options = painter.decodeOptions(opt); // indicator of initialization
 
       return painter;
    }

@@ -3897,16 +3897,18 @@
       r.ux2 = r.px2 = r.ranges ? main.scale_xmax : 0;
       r.uy2 = r.py2 = r.ranges ? main.scale_ymax : 0;
 
-      if (main.zoom_xmin !== main.zoom_xmax) {
-         r.zx1 = main.zoom_xmin; r.zx2 = main.zoom_xmax;
-      }
+      if (main) {
+         if (main.zoom_xmin !== main.zoom_xmax) {
+            r.zx1 = main.zoom_xmin; r.zx2 = main.zoom_xmax;
+         }
 
-      if (main.zoom_ymin !== main.zoom_ymax) {
-         r.zy1 = main.zoom_ymin; r.zy2 = main.zoom_ymax;
-      }
+         if (main.zoom_ymin !== main.zoom_ymax) {
+            r.zy1 = main.zoom_ymin; r.zy2 = main.zoom_ymax;
+         }
 
-      if (main.zoom_zmin !== main.zoom_zmax) {
-         r.zz1 = main.zoom_zmin; r.zz2 = main.zoom_zmax;
+         if (main.zoom_zmin !== main.zoom_zmax) {
+            r.zz1 = main.zoom_zmin; r.zz2 = main.zoom_zmax;
+         }
       }
 
       if (!r.ranges || p.empty()) return true;
