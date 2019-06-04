@@ -40,7 +40,7 @@ namespace PyROOT {
          const char* op, const char* label, const char* alt_label = NULL );
 
    // helper for template classes and methods
-      PyObject* BuildTemplateName( PyObject* pyname, PyObject* args, int argoff );
+      PyObject* BuildTemplateName( PyObject* pyname, PyObject* args, int argoff, bool inferredTypes = false );
 
    // initialize proxy type objects
       Bool_t InitProxy( PyObject* module, PyTypeObject* pytype, const char* name );
