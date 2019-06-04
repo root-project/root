@@ -193,7 +193,7 @@ TCondorSlave *TCondor::ClaimVM(const char *vm, const char *cmd)
 
 TList *TCondor::GetVirtualMachines() const
 {
-   TString poolopt = fPool ? "" : Form("-pool %s", fPool.Data());
+   TString poolopt = fPool ? Form("-pool %s", fPool.Data()) : "";
    TString cmd = Form("condor_status %s -format \"%%s\\n\" Name", poolopt.Data());
 
    PDB(kCondor,2) Info("GetVirtualMachines","command: %s", cmd.Data());
