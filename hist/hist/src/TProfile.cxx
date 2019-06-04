@@ -236,6 +236,12 @@ TProfile::TProfile(const TProfile &profile) : TH1D()
    ((TProfile&)profile).Copy(*this);
 }
 
+TProfile &TProfile::operator=(const TProfile &profile)
+{
+   ((TProfile &)profile).Copy(*this);
+   return *this;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Performs the operation: this = this + c1*f1
 
