@@ -1,4 +1,4 @@
-['get', 'get<double>', 'get<float>', 'get<int>', 'getfloat', 'set', 'set<double>', 'set<float>', 'set<int>']
+['get', 'getfloat', 'set']
 called get<double>()
 called get<int>()
 called get<float>()
