@@ -309,7 +309,7 @@ endif()
 
 #---Apply minimal or gminimal------------------------------------------------------------------
 foreach(opt ${root_build_options})
-  if(NOT opt MATCHES "thread|cling|builtin_llvm|builtin_clang|builtin_ftgl|shared|explicitlink")
+  if(NOT opt MATCHES "thread|cling|builtin_llvm|builtin_clang|shared|explicitlink")
     if(minimal)
       set(${opt}_defvalue OFF)
     elseif(gminimal AND NOT opt MATCHES "x11|cocoa")
