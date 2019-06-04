@@ -190,7 +190,7 @@ macro(REFLEX_GENERATE_DICTIONARY dictionary)
 endmacro()
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_GENERATE_DICTIONARY( result_var )
+#---ROOT_GET_LIBRARY_OUTPUT_DIR( result_var )
 # Returns the path to the .so file or .dll file. In the latter case Windows defines the dll files as
 # executables and puts them in the $ROOTSYS/bin folder.
 function(ROOT_GET_LIBRARY_OUTPUT_DIR result)
