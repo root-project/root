@@ -296,12 +296,6 @@ elseif(APPLE)
   set(x11_defvalue OFF)
 endif()
 
-#---Vc supports only x86_64 architecture-------------------------------------------------------
-if (NOT CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
-  message(STATUS "Vc does not support ${CMAKE_SYSTEM_PROCESSOR}. Support for Vc disabled.")
-  set(vc_defvalue OFF)
-endif()
-
 #---Options depending of CMake Generator-------------------------------------------------------
 if( CMAKE_GENERATOR STREQUAL Ninja)
    set(fortran_defvalue OFF)
