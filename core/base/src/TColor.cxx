@@ -1069,6 +1069,12 @@ TColor::TColor(const TColor &color) : TNamed(color)
    ((TColor&)color).Copy(*this);
 }
 
+TColor &TColor::operator=(const TColor &color)
+{
+   ((TColor &)color).Copy(*this);
+   return *this;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize colors used by the TCanvas based graphics (via TColor objects).
 /// This method should be called before the ApplicationImp is created (which
