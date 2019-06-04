@@ -459,7 +459,7 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
 /// for a class as in MakeRootTemplateClass in RootModule.cxx) or for method lookup
 /// (as in TemplatedMemberHook, below).
 
-PyObject* PyROOT::Utility::BuildTemplateName( PyObject* pyname, PyObject* args, int argoff )
+PyObject* PyROOT::Utility::BuildTemplateName( PyObject* pyname, PyObject* args, int argoff, bool inferredTypes )
 {
    if ( pyname )
       pyname = PyROOT_PyUnicode_FromString( PyROOT_PyUnicode_AsString( pyname ) );
@@ -482,9 +482,15 @@ PyObject* PyROOT::Utility::BuildTemplateName( PyObject* pyname, PyObject* args, 
             tpName = PyObject_GetAttr( tn, PyStrings::gName );
          }
          // special case for strings
-         if ( strcmp( PyROOT_PyUnicode_AsString( tpName ), "str" ) == 0 ) {
+         auto tpNameStr = PyROOT_PyUnicode_AsString(tpName);
+         if ( strcmp( tpNameStr, "str" ) == 0 ) {
             Py_DECREF( tpName );
             tpName = PyROOT_PyUnicode_FromString( "std::string" );
+         }
+         // and Python float (should be double in C++) if types have been inferred
+         else if (inferredTypes && strcmp(tpNameStr, "float") == 0) {
+            Py_DECREF(tpName);
+            tpName = PyROOT_PyUnicode_FromString("double");
          }
          PyROOT_PyUnicode_AppendAndDel( &pyname, tpName );
       } else if ( PyInt_Check( tn ) || PyLong_Check( tn ) || PyFloat_Check( tn ) ) {
