@@ -743,28 +743,28 @@ void RooAddPdf::updateCoefficients(CacheElem& cache, const RooArgSet* nset) cons
    
   // Adjust coefficients for given projection
   Double_t coefSum(0) ;
-  for (int i = 0; i < _pdfList.getSize(); i++) {
-    Bool_t _tmp = _globalSelectComp ;
-    RooAbsPdf::globalSelectComp(kTRUE) ;    
+  {
+    RooAbsReal::GlobalSelectComponentRAII compRAII(true);
 
-    RooAbsReal* pp = ((RooAbsReal*)cache._projList.at(i)) ; 
-    RooAbsReal* sn = ((RooAbsReal*)cache._suppProjList.at(i)) ; 
-    RooAbsReal* r1 = ((RooAbsReal*)cache._refRangeProjList.at(i)) ;
-    RooAbsReal* r2 = ((RooAbsReal*)cache._rangeProjList.at(i)) ;
+    for (int i = 0; i < _pdfList.getSize(); i++) {
 
-    Double_t proj = pp->getVal()/sn->getVal()*(r2->getVal()/r1->getVal()) ;  
-    
-//     cxcoutD(Caching) << "ALEX:    RooAddPdf::updateCoef(" << GetName() << ") with nset = " << (nset?*nset:RooArgSet()) << "for pdf component #" << i << " = " << _pdfList.at(i)->GetName() << endl
-// 	 << "ALEX:   pp = " << pp->GetName() << " = " << pp->getVal() << endl 
-// 	 << "ALEX:   sn = " << sn->GetName() << " = " << sn->getVal() <<  endl 
-// 	 << "ALEX:   r1 = " << r1->GetName() << " = " << r1->getVal() <<  endl 
-// 	 << "ALEX:   r2 = " << r2->GetName() << " = " << r2->getVal() <<  endl 
-// 	 << "ALEX: proj = (" << pp->getVal() << "/" << sn->getVal() << ")*(" << r2->getVal() << "/" << r1->getVal() << ") = " << proj << endl ;
-    
-    RooAbsPdf::globalSelectComp(_tmp) ;
+      RooAbsReal* pp = ((RooAbsReal*)cache._projList.at(i)) ;
+      RooAbsReal* sn = ((RooAbsReal*)cache._suppProjList.at(i)) ;
+      RooAbsReal* r1 = ((RooAbsReal*)cache._refRangeProjList.at(i)) ;
+      RooAbsReal* r2 = ((RooAbsReal*)cache._rangeProjList.at(i)) ;
 
-    _coefCache[i] *= proj ;
-    coefSum += _coefCache[i] ;
+      Double_t proj = pp->getVal()/sn->getVal()*(r2->getVal()/r1->getVal()) ;
+
+      //     cxcoutD(Caching) << "ALEX:    RooAddPdf::updateCoef(" << GetName() << ") with nset = " << (nset?*nset:RooArgSet()) << "for pdf component #" << i << " = " << _pdfList.at(i)->GetName() << endl
+      // 	 << "ALEX:   pp = " << pp->GetName() << " = " << pp->getVal() << endl
+      // 	 << "ALEX:   sn = " << sn->GetName() << " = " << sn->getVal() <<  endl
+      // 	 << "ALEX:   r1 = " << r1->GetName() << " = " << r1->getVal() <<  endl
+      // 	 << "ALEX:   r2 = " << r2->GetName() << " = " << r2->getVal() <<  endl
+      // 	 << "ALEX: proj = (" << pp->getVal() << "/" << sn->getVal() << ")*(" << r2->getVal() << "/" << r1->getVal() << ") = " << proj << endl ;
+
+      _coefCache[i] *= proj ;
+      coefSum += _coefCache[i] ;
+    }
   }
 
 
