@@ -5443,7 +5443,7 @@ Int_t TCling::ReloadAllSharedLibraryMaps()
       rootMapBaseStr += ".rootmap";
       const char* rootMap = gSystem->Which(gSystem->GetDynamicPath(), rootMapBaseStr);
       if (!rootMap) {
-         Error("ReloadAllSharedLibraryMaps", "Could not find rootmap %s in path", rootMap);
+         Error("ReloadAllSharedLibraryMaps", "Could not find rootmap %s in path", rootMapBaseStr.Data());
          delete[] rootMap;
          delete sharedLibL;
          return -1;
