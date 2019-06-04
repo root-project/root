@@ -46,7 +46,7 @@ constexpr char const* kNTupleFileName = "ntpl003_lhcbOpenData.root";
 
 void Convert() {
    std::unique_ptr<TFile> f(TFile::Open(kTreeFileName));
-   assert(f.is_valid() && ! f->IsZombie());
+   assert(f && ! f->IsZombie());
 
    // Get a unique pointer to an empty RNTuple model
    auto model = RNTupleModel::Create();
