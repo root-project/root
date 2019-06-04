@@ -87,7 +87,7 @@ void   GetClassName();
 int    NumberOfImages();
 string ImagesList(string&);
 void   ExecuteMacro();
-void   ExecuteCommand(string);
+void   ExecuteCommand(const string &);
 void   ReplaceAll(string&, const string&, const string&);
 string StringFormat(const string fmt_str, ...);
 bool   EndsWith(string const &, string const &);
@@ -473,7 +473,7 @@ void ExecuteMacro()
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute a command making sure stdout will not go in the doxygen file.
 
-void ExecuteCommand(string command)
+void ExecuteCommand(const string &command)
 {
    int o = dup(fileno(stdout));
    freopen(gOutputName.c_str(),"a",stdout);
