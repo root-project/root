@@ -223,7 +223,7 @@ class Cpp02TemplateLookup( MyTestCase ):
     # note that the function and template arguments are reverted
       self.assertRaises( TypeError, m.GetSize2( 'char', 'long' ), 'a', 1 )
       self.assertEqual( m.GetSize2( 'char', 'long' )( 1, 'a' ), m.GetCharSize() - m.GetLongSize() )
-      self.assertEqual( m.GetSize2(ROOT.Long(256), 1.), m.GetFloatSize() - m.GetLongSize() )
+      self.assertEqual( m.GetSize2(ROOT.Long(256), 1.), m.GetDoubleSize() - m.GetLongSize() )
 
    def test06OverloadedTemplateMemberFunctions( self ):
       """Test overloaded template member functions lookup and calls"""
@@ -245,23 +245,23 @@ class Cpp02TemplateLookup( MyTestCase ):
 
     # use existing explicit instantiations
       self.assertEqual( m.GetSizeOL( float )( 3.14 ),  m.GetFloatSize() )
-      self.assertEqual( m.GetSizeOL( 3.14 ),           m.GetFloatSize() )
-      self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + 1)
+      self.assertEqual( m.GetSizeOL( 3.14 ),           m.GetDoubleSize() )
+      self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + 2)
 
     # explicit forced instantiation
       self.assertEqual( m.GetSizeOL( int )( 1 ),       m.GetIntSize() )
-      self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + 2 )
+      self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + 3 )
       self.assert_( 'GetSizeOL<int>' in dir(MyTemplatedMethodClass) )
       gzoi_id = id( MyTemplatedMethodClass.__dict__[ 'GetSizeOL<int>' ] )
 
     # second call should make no changes, but re-use
       self.assertEqual( m.GetSizeOL( int )( 1 ),       m.GetIntSize() )
-      self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + 2 )
+      self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + 3 )
       self.assertEqual( gzoi_id, id( MyTemplatedMethodClass.__dict__[ 'GetSizeOL<int>' ] ) )
 
     # implicitly forced instantiation
       self.assertEqual( m.GetSizeOL( MyDoubleVector_t() ), m.GetVectorOfDoubleSize() )
-      self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + 3 )
+      self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + 4 )
       for key in MyTemplatedMethodClass.__dict__.keys():
        # the actual method name is implementation dependent (due to the
        # default vars, and vector could live in a versioned namespace),
@@ -273,7 +273,7 @@ class Cpp02TemplateLookup( MyTestCase ):
 
     # as above, no changes on 2nd call
       self.assertEqual( m.GetSizeOL( MyDoubleVector_t() ), m.GetVectorOfDoubleSize() )
-      self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + 3 )
+      self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + 4 )
       self.assertEqual( gzoi_id, id( MyTemplatedMethodClass.__dict__[ mname ] ) )
 
    def test07TemplateMemberFunctionsNotInstantiated(self):
