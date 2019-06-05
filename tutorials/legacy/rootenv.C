@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup Tutorials
+/// \ingroup tutorial_legacy
 /// Produce a picture of the ROOT environment.
 ///
 /// \macro_image
