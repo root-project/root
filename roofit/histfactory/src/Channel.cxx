@@ -21,6 +21,7 @@
 
 
 #include "RooStats/HistFactory/Channel.h"
+#include "HFMsgService.h"
 #include <stdlib.h>
 
 #include "TFile.h"
@@ -103,7 +104,7 @@ void RooStats::HistFactory::Channel::Print( std::ostream& stream ) {
 void RooStats::HistFactory::Channel::PrintXML( std::string directory, std::string prefix ) {
 
   // Create an XML file for this channel
-  std::cout << "Printing XML Files for channel: " << GetName() << std::endl;
+  cxcoutPHF << "Printing XML Files for channel: " << GetName() << std::endl;
   
   std::string XMLName = prefix + fName + ".xml";
   if( directory != "" ) XMLName = directory + "/" + XMLName;
@@ -155,7 +156,7 @@ void RooStats::HistFactory::Channel::PrintXML( std::string directory, std::strin
   xml << "  </Channel>  " << std::endl;
   xml.close();
 
-  std::cout << "Finished printing XML files" << std::endl;
+  cxcoutPHF << "Finished printing XML files" << std::endl;
 
 }
 
@@ -242,7 +243,7 @@ void RooStats::HistFactory::Channel::CollectHistograms() {
 
 
     // Get the nominal histogram:
-    std::cout << "Collecting Nominal Histogram" << std::endl;
+    cxcoutDHF << "Collecting Nominal Histogram" << std::endl;
     TH1* Nominal =  GetHistogram(sample.GetInputFile(),
 				 sample.GetHistoPath(),
 				 sample.GetHistoName());
@@ -328,7 +329,7 @@ bool RooStats::HistFactory::Channel::CheckHistograms() {
   try {
   
     if( fData.GetHisto() == NULL && fData.GetInputFile() != "" ) {
-      std::cout << "Error: Data Histogram for channel " << GetName() << " is NULL." << std::endl;
+      cxcoutEHF << "Error: Data Histogram for channel " << GetName() << " is NULL." << std::endl;
       throw hf_exc();
     }
 
@@ -339,7 +340,7 @@ bool RooStats::HistFactory::Channel::CheckHistograms() {
 
       // Get the nominal histogram:
       if( sample.GetHisto() == NULL ) {
-	std::cout << "Error: Nominal Histogram for sample " << sample.GetName() << " is NULL." << std::endl;
+	cxcoutEHF << "Error: Nominal Histogram for sample " << sample.GetName() << " is NULL." << std::endl;
 	throw hf_exc();
       } 
       else {
@@ -355,7 +356,7 @@ bool RooStats::HistFactory::Channel::CheckHistograms() {
 	  }
 	}
 	if(NegativeBinNumber.size()>0) {
-	  std::cout << "WARNING: Nominal Histogram " << histNominal->GetName() << " for Sample = " << sample.GetName()
+	  cxcoutWHF << "WARNING: Nominal Histogram " << histNominal->GetName() << " for Sample = " << sample.GetName()
 		    << " in Channel = " << GetName() << " has negative entries in bin numbers = ";
 
 	  for(unsigned int ibin=0; ibin<NegativeBinNumber.size(); ++ibin) {
@@ -370,7 +371,7 @@ bool RooStats::HistFactory::Channel::CheckHistograms() {
       // Get the StatError Histogram (if necessary)
       if( sample.GetStatError().GetUseHisto() ) {
 	if( sample.GetStatError().GetErrorHist() == NULL ) {
-	  std::cout << "Error: Statistical Error Histogram for sample " << sample.GetName() << " is NULL." << std::endl;
+	  cxcoutEHF << "Error: Statistical Error Histogram for sample " << sample.GetName() << " is NULL." << std::endl;
 	  throw hf_exc();
 	}
       }
@@ -382,12 +383,12 @@ bool RooStats::HistFactory::Channel::CheckHistograms() {
 	RooStats::HistFactory::HistoSys& histoSys = sample.GetHistoSysList().at( histoSysItr );
 
 	if( histoSys.GetHistoLow() == NULL ) {
-	  std::cout << "Error: HistoSyst Low for Systematic " << histoSys.GetName() 
+	  cxcoutEHF << "Error: HistoSyst Low for Systematic " << histoSys.GetName()
 		    << " in sample " << sample.GetName() << " is NULL." << std::endl;
 	  throw hf_exc();
 	}
 	if( histoSys.GetHistoHigh() == NULL ) {
-	  std::cout << "Error: HistoSyst High for Systematic " << histoSys.GetName() 
+	  cxcoutEHF << "Error: HistoSyst High for Systematic " << histoSys.GetName()
 		    << " in sample " << sample.GetName() << " is NULL." << std::endl;
 	  throw hf_exc();
 	}
@@ -401,12 +402,12 @@ bool RooStats::HistFactory::Channel::CheckHistograms() {
 	RooStats::HistFactory::HistoFactor& histoFactor = sample.GetHistoFactorList().at( histoFactorItr );
 
 	if( histoFactor.GetHistoLow() == NULL ) {
-	  std::cout << "Error: HistoSyst Low for Systematic " << histoFactor.GetName() 
+	  cxcoutEHF << "Error: HistoSyst Low for Systematic " << histoFactor.GetName()
 		    << " in sample " << sample.GetName() << " is NULL." << std::endl;
 	  throw hf_exc();
 	}
 	if( histoFactor.GetHistoHigh() == NULL ) {
-	  std::cout << "Error: HistoSyst High for Systematic " << histoFactor.GetName() 
+	  cxcoutEHF << "Error: HistoSyst High for Systematic " << histoFactor.GetName()
 		    << " in sample " << sample.GetName() << " is NULL." << std::endl;
 	  throw hf_exc();
 	}
@@ -420,7 +421,7 @@ bool RooStats::HistFactory::Channel::CheckHistograms() {
 	RooStats::HistFactory::ShapeSys& shapeSys = sample.GetShapeSysList().at( shapeSysItr );
 
 	if( shapeSys.GetErrorHist() == NULL ) {
-	  std::cout << "Error: HistoSyst High for Systematic " << shapeSys.GetName() 
+	  cxcoutEHF << "Error: HistoSyst High for Systematic " << shapeSys.GetName()
 		    << " in sample " << sample.GetName() << " is NULL." << std::endl;
 	  throw hf_exc();
 	}
@@ -448,7 +449,7 @@ bool RooStats::HistFactory::Channel::CheckHistograms() {
 
 TH1* RooStats::HistFactory::Channel::GetHistogram(std::string InputFile, std::string HistoPath, std::string HistoName) {
 
-  std::cout << "Getting histogram. "  
+  cxcoutPHF << "Getting histogram. "
 	    << " InputFile " << InputFile
 	    << " HistoPath " << HistoPath
 	    << " HistoName " << HistoName
@@ -458,19 +459,19 @@ TH1* RooStats::HistFactory::Channel::GetHistogram(std::string InputFile, std::st
 
   TFile* inFile = TFile::Open( InputFile.c_str() );
   if( !inFile ) {
-    std::cout << "Error: Unable to open input file: " << InputFile << std::endl;
+    cxcoutEHF << "Error: Unable to open input file: " << InputFile << std::endl;
     throw hf_exc();
   }
 
-  std::cout << "Opened input file: " << InputFile << ": " << inFile << std::endl;
+  cxcoutIHF << "Opened input file: " << InputFile << ": " << inFile << std::endl;
 
   std::string HistNameFull = HistoPath + HistoName;
 
   if( HistoPath != std::string("") ) {
     if( HistoPath[ HistoPath.length()-1 ] != std::string("/") ) {
-      std::cout << "WARNING: Histogram path is set to: " << HistoPath
+      cxcoutWHF << "WARNING: Histogram path is set to: " << HistoPath
 		<< " but it should end with a '/' " << std::endl;
-      std::cout << "Total histogram path is now: " << HistNameFull << std::endl;
+      cxcoutWHF << "Total histogram path is now: " << HistNameFull << std::endl;
     }
   }
 
@@ -480,12 +481,12 @@ TH1* RooStats::HistFactory::Channel::GetHistogram(std::string InputFile, std::st
   }
   catch(std::exception& e)
     {
-      std::cout << "Failed to cast object to TH1*" << std::endl;
+      cxcoutEHF << "Failed to cast object to TH1*" << std::endl;
       std::cout << e.what() << std::endl;
       throw hf_exc();
     }
   if( !hist ) {
-    std::cout << "Failed to get histogram: " << HistNameFull
+    cxcoutEHF << "Failed to get histogram: " << HistNameFull
 	      << " in file: " << InputFile << std::endl;
     throw hf_exc();
   }
