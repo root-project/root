@@ -1482,7 +1482,7 @@ bool TH1::CheckBinLimits(const TAxis* a1, const TAxis * a2)
          for ( int i = 0; i < fN; ++i ) {
             // for i==fN (nbin+1) a->GetBinWidth() returns last bin width
             // we do not need to exclude that case
-            double binWidth = a1->GetBinWidth(i); 
+            double binWidth = a1->GetBinWidth(i);
             if ( ! TMath::AreEqualAbs( h1Array->GetAt(i), h2Array->GetAt(i), binWidth*1E-10 ) ) {
                throw DifferentBinLimits();
                return false;
@@ -1532,7 +1532,7 @@ bool TH1::CheckBinLabels(const TAxis* a1, const TAxis * a2)
 bool TH1::CheckAxisLimits(const TAxis *a1, const TAxis *a2 )
 {
    double firstBin = a1->GetBinWidth(1);
-   double lastBin = a1->GetBinWidth( a1->GetNbins() ); 
+   double lastBin = a1->GetBinWidth( a1->GetNbins() );
    if ( ! TMath::AreEqualAbs(a1->GetXmin(), a2->GetXmin(), firstBin* 1.E-10) ||
         ! TMath::AreEqualAbs(a1->GetXmax(), a2->GetXmax(), lastBin*1.E-10) ) {
       throw DifferentAxisLimits();
@@ -3675,7 +3675,7 @@ Int_t TH1::FindFirstBinAbove(Double_t threshold, Int_t axis, Int_t firstBin, Int
       for (Int_t biny = firstBin; biny <= lastBin; biny++) {
          for (Int_t binx = 1; binx <= nbinsx; binx++) {
             for (Int_t binz = 1; binz <= nbinsz; binz++) {
-               if (RetrieveBinContent(GetBin(binx,biny,binz)) > threshold) return biny; 
+               if (RetrieveBinContent(GetBin(binx,biny,binz)) > threshold) return biny;
            }
          }
       }
@@ -3687,7 +3687,7 @@ Int_t TH1::FindFirstBinAbove(Double_t threshold, Int_t axis, Int_t firstBin, Int
       for (Int_t binz = firstBin; binz <= lastBin; binz++) {
          for (Int_t binx = 1; binx <= nbinsx; binx++) {
             for (Int_t biny = 1; biny <= nbinsy; biny++) {
-               if (RetrieveBinContent(GetBin(binx,biny,binz)) > threshold) return binz; 
+               if (RetrieveBinContent(GetBin(binx,biny,binz)) > threshold) return binz;
             }
          }
       }
@@ -3790,34 +3790,29 @@ TObject *TH1::FindObject(const TObject *obj) const
 ///  This function finds a pointer to the TF1 object with name fname
 ///  and calls TH1::Fit(TF1 *f1,...)
 
-TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, Double_t xxmin, Double_t xxmax)
+TFitResultPtr TH1::Fit(const char *fname, Option_t *option, Option_t *goption, Double_t xxmin, Double_t xxmax)
 {
-   char *linear;
-   linear= (char*)strstr(fname, "++");
-   TF1 *f1=0;
-   TF2 *f2=0;
-   TF3 *f3=0;
-   Int_t ndim=GetDimension();
-   if (linear){
-      if (ndim<2){
+   auto linear = strstr(fname, "++");
+   Int_t ndim = GetDimension();
+   if (linear) {
+      if (ndim < 2) {
          TF1 f1(fname, fname, xxmin, xxmax);
-         return Fit(&f1,option,goption,xxmin,xxmax);
-      }
-      else if (ndim<3){
+         return Fit(&f1, option, goption, xxmin, xxmax);
+      } else if (ndim < 3) {
          TF2 f2(fname, fname);
-         return Fit(&f2,option,goption,xxmin,xxmax);
-      }
-      else{
+         return Fit(&f2, option, goption, xxmin, xxmax);
+      } else {
          TF3 f3(fname, fname);
-         return Fit(&f3,option,goption,xxmin,xxmax);
+         return Fit(&f3, option, goption, xxmin, xxmax);
       }
    }
 
-   else{
-      f1 = (TF1*)gROOT->GetFunction(fname);
-      if (!f1) { Printf("Unknown function: %s",fname); return -1; }
-      return Fit(f1,option,goption,xxmin,xxmax);
+   TF1 *f1 = (TF1 *)gROOT->GetFunction(fname);
+   if (!f1) {
+      Printf("Unknown function: %s", fname);
+      return -1;
    }
+   return Fit(f1, option, goption, xxmin, xxmax);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4998,7 +4993,7 @@ Bool_t TH1::IsEmpty() const
    // case fTSumw == 0 amd entries are also zero
    // this should not really happening, but if one sets content by hand
    // it can happen. a call to ResetStats() should be done in such cases
-   double sumw = 0; 
+   double sumw = 0;
    for (int i = 0; i< GetNcells(); ++i) sumw += RetrieveBinContent(i);
    return (sumw != 0) ? kFALSE : kTRUE;
 }
@@ -7342,7 +7337,7 @@ void TH1::GetStats(Double_t *stats) const
          stats[0] += w;
          stats[1] += err*err;
          // statistics in x makes sense only for not labels histograms
-         if (!labelHist)  { 
+         if (!labelHist)  {
             stats[2] += w*x;
             stats[3] += w*x*x;
          }
