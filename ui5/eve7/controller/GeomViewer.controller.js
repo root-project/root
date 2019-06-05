@@ -87,13 +87,13 @@ sap.ui.define(['sap/ui/core/Component',
 
          if (JSROOT.GetUrlOption('nobrowser') !== null) {
             // remove complete area - plain geometry drawing
-            this.getView().byId("geomViewerApp").setMode(sap.m.SplitAppMode.HideMode);
+            this.byId("geomViewerApp").setMode(sap.m.SplitAppMode.HideMode);
          } else {
 
             // create model only for browser - no need for anybody else
             this.model = new BrowserModel();
 
-            var t = this.getView().byId("treeTable");
+            var t = this.byId("treeTable");
 
             t.setModel(this.model);
 
@@ -143,7 +143,7 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       assignRowHandlers: function() {
-         var rows = this.getView().byId("treeTable").getRows();
+         var rows = this.byId("treeTable").getRows();
          for (var k=0;k<rows.length;++k) {
             rows[k].$().hover(this.onRowHover.bind(this, rows[k], true), this.onRowHover.bind(this, rows[k], false));
          }
@@ -179,7 +179,7 @@ sap.ui.define(['sap/ui/core/Component',
       onRowHover: function(row, is_enter) {
 
          // ignore hover event when drawing not exists
-         if (this.isDrawPageActive()) return;
+         if (!this.isDrawPageActive()) return;
 
          // property of current entry, not used now
          var ctxt = row.getBindingContext(),
@@ -201,6 +201,7 @@ sap.ui.define(['sap/ui/core/Component',
 
             // remember current element with hover stack
             this._hover_stack = fullpath ? this.geo_clones.FindStackByName(fullpath) : null;
+
             this.geo_painter.HighlightMesh(null, 0x00ff00, null, undefined, this._hover_stack, true);
          }
       },
@@ -262,7 +263,7 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       highlighRowWithPath: function(path) {
-         var rows = this.getView().byId("treeTable").getRows(), best_cmp = 0, best_indx = 0;
+         var rows = this.byId("treeTable").getRows(), best_cmp = 0, best_indx = 0;
 
          for (var i=0;i<rows.length;++i) {
             rows[i].$().css("background-color", "");
@@ -286,7 +287,7 @@ sap.ui.define(['sap/ui/core/Component',
       createGeoPainter: function(drawopt) {
          if (this.geo_painter) return;
 
-         var geomDrawing = this.getView().byId("geomDrawing");
+         var geomDrawing = this.byId("geomDrawing");
 
          this.geo_painter = JSROOT.Painter.CreateGeoPainter(geomDrawing.getDomRef(), null, drawopt);
          geomDrawing.setGeomPainter(this.geo_painter);
@@ -837,20 +838,51 @@ sap.ui.define(['sap/ui/core/Component',
 
       onCellClick: function(oEvent) {
 
-         var rowindx = oEvent.getParameters().rowIndex,
-             row = this.getView().byId("treeTable").getRows()[rowindx],
+         var tt = this.byId("treeTable"),
+             first = tt.getFirstVisibleRow() || 0,
+             rowindx = oEvent.getParameters().rowIndex - first,
+             row = (rowindx >=0) ? tt.getRows()[rowindx] : null,
              ctxt = row ? row.getBindingContext() : null,
              prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
 
          if(prop && this.isInfoPageActive())
             if (this.standalone) {
+               this.processInfoOffline(prop.fullpath, prop.id, prop);
                // do something in standalone mode
             } else {
                this.sendViewerRequest("INFO", { path: prop.fullpath });
             }
       },
 
-      // this is reply on INFO request
+      /** Try to provide as much info as possible offline */
+      processInfoOffline: function(path, id, prop) {
+         console.log('path', path, 'nodeid', id, 'prop', prop);
+         var info = {
+            fullpath: path
+         };
+         console.log('this.geo_clones', !!this.geo_clones, typeof this.geo_clones);
+
+         if (this.geo_clones && path) {
+            path = path.substr(1, path.length-2);
+
+            console.log('path', path);
+
+            var stack = this.geo_clones.FindStackByName(path);
+
+            if (stack) {
+               var info = this.geo_clones.ResolveStack(stack);
+               console.log('Stack', stack);
+               console.log('info', info);
+            }
+         }
+
+         var model = new JSONModel(info);
+
+         this.byId(this.createId("geomInfo")).setModel(model);
+
+      },
+
+      /** This is reply on INFO request */
       provideNodeInfo: function(info) {
 
          var model = new JSONModel(info);
