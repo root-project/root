@@ -26,35 +26,37 @@ if(insource)
                       "an out-of-source directory.")
 endif()
 
-# You need to tell CMake where to find the ROOT installation. This can be done in a number of ways:
-#   - ROOT built with classic configure/make use the provided $ROOTSYS/etc/cmake/FindROOT.cmake
-#   - ROOT built with CMake. Add in CMAKE_PREFIX_PATH the installation prefix for ROOT
-list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
+# Treat ROOT as a dependency for roottest.git
+find_package(ROOT REQUIRED CONFIG)
 
 if(DEFINED ENV{ROOTSYS})
-  message(DEPRECATION "Using ROOTSYS for roottest.git is under deprecation, please add ROOT in PATH.")
+  message(DEPRECATION "Using directly ROOTSYS for roottest.git is under deprecation, please add ROOT in PATH.")
 endif()
 
 # If ROOT_SOURCE_DIR is set, roottest is built as part of the root build.
 # If ROOT_SOURCE_DIR is not set, search for an installation.
 if(DEFINED ROOT_SOURCE_DIR)
-  find_package(ROOT REQUIRED CONFIG)
-  get_filename_component(ROOT_INCLUDE_DIR "${ROOTSYS}/include" ABSOLUTE)
-  set(ROOT_INCLUDE_DIRS ${ROOT_INCLUDE_DIR})
+  # root-config --prefix helps to retrieve ROOTSYS env variable.
+  find_program(ROOT_CONFIG_EXECUTABLE root-config PATHS ${ROOT_BINARY_DIR})
+  if(NOT ROOT_CONFIG_EXECUTABLE)
+    message(ERROR "root-config is not found, please rerun configuration step.")
+  endif()
+  exec_program(root-config ARGS "--prefix" OUTPUT_VARIABLE ROOTSYS RETURN_VALUE RETVAR)
+  set(ROOTSYS ${ROOTSYS} CACHE INTERNAL "")
   set(ROOT_LIBRARIES Core RIO Net Hist Gpad Tree Rint Matrix MathCore)
   set(ROOT_root_CMD ${ROOTSYS}/bin/root.exe)
   set(ROOT_hadd_CMD ${ROOTSYS}/bin/hadd)
   set(ROOT_genreflex_CMD ${ROOTSYS}/bin/genreflex)
   set(ROOT_rootcint_CMD ${ROOTSYS}/bin/rootcint)
   set(ROOT_rootcling_CMD rootcling)
-else()# testing using an installation
-  find_package(ROOT REQUIRED COMPONENTS RIO Net Hist Gpad Tree Rint Matrix MathCore)
+else() # standalone roottest.git
   include(${ROOT_USE_FILE})
+  # root-config --prefix helps to retrieve ROOTSYS env variable.
+  find_program(ROOT_CONFIG_EXECUTABLE root-config PATH)
+  exec_program(root-config ARGS "--prefix" OUTPUT_VARIABLE ROOTSYS RETURN_VALUE RETVAR)
+  set(ROOTSYS ${ROOTSYS} CACHE INTERNAL "")
   # Some roottest.git tests are checking LZ4, which has different references depends on its version.
   # We recover LZ4 version used in ROOT, stored in root-config --config output.
-  # Also we need to know, where is located RootNewMacros.cmake, stored in
-  # `root-config --src`/cmake/modules output or in case of installed ROOT in
-  # ${ROOTSYS}/cmake/modules.
   exec_program(root-config ARGS "--srcdir" OUTPUT_VARIABLE ROOT_SOURCE_DIR)
   exec_program(root-config ARGS "--config" OUTPUT_VARIABLE ROOT_CONFIG_VARIABLES RETURN_VALUE RETVAR)
   separate_arguments(ROOT_CONFIG_VARIABLES)
@@ -90,6 +92,7 @@ endif()
 
 # Synchronizing default compression algorithm used for ROOT.
 # We need to have it for CMake settings for switching tests references.
+# FIXME: it should be exported from ROOT build.
 set(compression_default "zlib" CACHE STRING "" FORCE)
 
 get_filename_component(ROOT_BINARY_DIR  "${ROOTSYS}/bin" ABSOLUTE)
