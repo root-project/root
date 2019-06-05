@@ -496,6 +496,23 @@ protected:
   static void globalSelectComp(Bool_t flag) ;
   Bool_t _selectComp ;               //! Component selection flag for RooAbsPdf::plotCompOn
   static Bool_t _globalSelectComp ;  // Global activation switch for component selection
+  // This struct can be used to flip the global switch to select components.
+  // Doing this with RAII prevents forgetting to reset the state.
+  struct GlobalSelectComponentRAII {
+      GlobalSelectComponentRAII(bool state) :
+      _oldState{_globalSelectComp} {
+        if (state != RooAbsReal::_globalSelectComp)
+          RooAbsReal::_globalSelectComp = state;
+      }
+
+      ~GlobalSelectComponentRAII() {
+        if (RooAbsReal::_globalSelectComp != _oldState)
+          RooAbsReal::_globalSelectComp = _oldState;
+      }
+
+      bool _oldState;
+  };
+
 
   mutable RooArgSet* _lastNSet ; //!
   static Bool_t _hideOffset ; // Offset hiding flag

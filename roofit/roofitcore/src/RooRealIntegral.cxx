@@ -64,7 +64,7 @@ Int_t RooRealIntegral::_cacheAllNDim(2) ;
 
 RooRealIntegral::RooRealIntegral() : 
   _valid(kFALSE),
-  _respectCompSelect(kFALSE),
+  _respectCompSelect(true),
   _funcNormSet(0),
   _iconfig(0),
   _sumCatIter(0),
@@ -97,7 +97,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 				 const char* rangeName) :
   RooAbsReal(name,title), 
   _valid(kTRUE), 
-  _respectCompSelect(kFALSE),
+  _respectCompSelect(true),
   _sumList("!sumList","Categories to be summed numerically",this,kFALSE,kFALSE), 
   _intList("!intList","Variables to be integrated numerically",this,kFALSE,kFALSE), 
   _anaList("!anaList","Variables to be integrated analytically",this,kFALSE,kFALSE), 
@@ -817,12 +817,8 @@ Double_t RooRealIntegral::getValV(const RooArgSet* nset) const
 /// Perform the integration and return the result
 
 Double_t RooRealIntegral::evaluate() const 
-{  
-
-  bool tmp = RooAbsReal::_globalSelectComp;
-  if(!_respectCompSelect){
-    RooAbsReal::_globalSelectComp = true ;
-  }
+{
+  GlobalSelectComponentRAII selCompRAII(_globalSelectComp || !_respectCompSelect);
   
   Double_t retVal(0) ;
   switch (_intOperMode) {    
@@ -850,7 +846,6 @@ Double_t RooRealIntegral::evaluate() const
         if(!(_valid= initNumIntegrator())) {
           coutE(Integration) << ClassName() << "::" << GetName()
                              << ":evaluate: cannot initialize numerical integrator" << endl;
-          RooAbsReal::_globalSelectComp = tmp ;
           return 0;
         }
         
@@ -927,8 +922,6 @@ Double_t RooRealIntegral::evaluate() const
 
     ccxcoutD(Tracing) << "raw*fact = " << retVal << endl ;
   }
-  
-  RooAbsReal::_globalSelectComp = tmp ;
 
   return retVal ;
 }
