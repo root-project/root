@@ -101,7 +101,7 @@ class RooWorkspace ;
 #define cxcoutF(a) if (RooMsgService::instance().isActive(this,RooFit::a,RooFit::FATAL)) RooMsgService::instance().log(this,RooFit::FATAL,RooFit::a) 
 #define ccxcoutF(a) if (RooMsgService::instance().isActive(this,RooFit::a,RooFit::FATAL)) RooMsgService::instance().log(this,RooFit::FATAL,RooFit::a,kTRUE) 
 #define oocxcoutF(o,a) if (RooMsgService::instance().isActive(o,RooFit::a,RooFit::FATAL)) RooMsgService::instance().log(o,RooFit::FATAL,RooFit::a) 
-#define ooccxcoutF(o,a) if (RooMsgService::instance().isActive(o,RooFit::a,RooFit::FATAL)) RooMsgService::instance().log(o,RooFit::FATAL,RooFit::a,kTRUE) 
+#define ooccxcoutF(o,a) if (RooMsgService::instance().isActive(o,RooFit::a,RooFit::FATAL)) RooMsgService::instance().log(o,RooFit::FATAL,RooFit::a,kTRUE)
 
 class RooMsgService : public TObject {
 public:
