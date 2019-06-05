@@ -65,7 +65,7 @@ namespace RooStats {
 /// We use NULL to mean not set, so we don't want to fill
 /// with empty RooArgSets.
 
-void ModelConfig::GuessObsAndNuisance(const RooAbsData& data) {
+void ModelConfig::GuessObsAndNuisance(const RooAbsData& data, bool printModelConfig) {
 
    // observables
   if (!GetObservables()) {
@@ -107,9 +107,11 @@ void ModelConfig::GuessObsAndNuisance(const RooAbsData& data) {
 
    // print Modelconfig as an info message
 
-   std::ostream& oldstream = RooPrintable::defaultPrintStream(&ccoutI(InputArguments));
-   Print();
-   RooPrintable::defaultPrintStream(&oldstream);
+   if (printModelConfig) {
+     std::ostream& oldstream = RooPrintable::defaultPrintStream(&ccoutI(InputArguments));
+     Print();
+     RooPrintable::defaultPrintStream(&oldstream);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
