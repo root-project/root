@@ -66,6 +66,10 @@ if(NOT ROOT_minuit2_FOUND)
                    tutorials/roostats/rs_bernsteinCorrection.C)
 endif()
 
+if(NOT ROOT_mlp_FOUND)
+   set(mlp_veto mlp/*.C)
+endif()
+
 if(NOT ROOT_roofit_FOUND)
   set(roofit_veto  fit/RoofitDemo.C
                    roofit/*.C roostats/*.C histfactory/*.C
@@ -82,6 +86,7 @@ if(NOT ROOT_xml_FOUND)
                 histfactory/*.C    # histfactory requires xml
                 unfold/*.C)        # unfold requires xml
 endif()
+
 
 if(NOT XROOTD_FOUND)
   set(xrootd_veto dataframe/df101_h1Analysis.C
@@ -268,6 +273,7 @@ set(all_veto hsimple.C
              ${root7_veto}
              ${bits32_veto}
              ${xrootd_veto}
+             ${mlp_veto}
              )
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
