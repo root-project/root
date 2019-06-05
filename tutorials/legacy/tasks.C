@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_heritage
+/// \ingroup tutorial_legacy
 /// Example of TTasks.
 /// Create a hierarchy of objects derived from TTask in library Mytasks
 /// Show the tasks in a browser.
