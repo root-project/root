@@ -1197,12 +1197,35 @@ namespace HistFactory{
   ///////////////////////////////////////////////
   RooWorkspace* HistoToWorkspaceFactoryFast::MakeSingleChannelWorkspace(Measurement& measurement, Channel& channel) {
 
-     // check inputs (see JIRA-6890 )
+    // check inputs (see JIRA-6890 )
 
-     if (channel.GetSamples().empty()) {
-        Error("MakeSingleChannelWorkspace","The input Channel does not contain any sample - return a nullptr");
-        return 0; 
-     }
+    if (channel.GetSamples().empty()) {
+      Error("MakeSingleChannelWorkspace",
+          "The input Channel does not contain any sample - return a nullptr");
+      return 0;
+    }
+
+    const TH1* channel_hist_template = channel.GetSamples().front().GetHisto();
+    if (channel_hist_template == nullptr) {
+      channel.CollectHistograms();
+      channel_hist_template = channel.GetSamples().front().GetHisto();
+    }
+    if (channel_hist_template == nullptr) {
+      std::ostringstream stream;
+      stream << "The sample " << channel.GetSamples().front().GetName()
+               << " in channel " << channel.GetName() << " does not contain a histogram. This is the channel:\n";
+      channel.Print(stream);
+      Error("MakeSingleChannelWorkspace", "%s", stream.str().c_str());
+      return 0;
+    }
+
+    if( ! channel.CheckHistograms() ) {
+      std::cout << "MakeSingleChannelWorkspace: Channel: " << channel.GetName()
+                  << " has uninitialized histogram pointers" << std::endl;
+      throw hf_exc();
+    }
+
+
      
     // Set these by hand inside the function
     vector<string> systToFix = measurement.GetConstantParams();
@@ -1220,7 +1243,6 @@ namespace HistFactory{
     /// MB: label observables x,y,z, depending on histogram dimensionality
     /// GHL: Give it the first sample's nominal histogram as a template
     ///      since the data histogram may not be present
-    const TH1* channel_hist_template = channel.GetSamples().at(0).GetHisto();
     if (fObsNameVec.empty()) { GuessObsNameVec(channel_hist_template); }
 
     for ( unsigned int idx=0; idx<fObsNameVec.size(); ++idx ) {
