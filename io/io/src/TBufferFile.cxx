@@ -3580,8 +3580,11 @@ Int_t TBufferFile::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequen
       for(TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
           iter != end;
           ++iter) {
-         (*iter).PrintDebug(*this,*(char**)start_collection);  // Warning: This limits us to TClonesArray and vector of pointers.
-         (*iter)(*this,start_collection,end_collection);
+         if (!start_collection || start_collection == end_collection)
+            (*iter).PrintDebug(*this, nullptr);  // Warning: This limits us to TClonesArray and vector of pointers.
+         else
+            (*iter).PrintDebug(*this, *(char**)start_collection);  // Warning: This limits us to TClonesArray and vector of pointers.
+         (*iter)(*this, start_collection, end_collection);
       }
 
    } else {
