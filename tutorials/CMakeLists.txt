@@ -67,7 +67,7 @@ if(NOT ROOT_minuit2_FOUND)
 endif()
 
 if(NOT ROOT_mlp_FOUND)
-   set(mlp_veto mlp/*.C)
+   set(mlp_veto legacy/mlp/*.C)
 endif()
 
 if(NOT ROOT_roofit_FOUND)
@@ -223,12 +223,12 @@ endif()
 
 #---These ones are disabled !!! ------------------------------------
 set(extra_veto
-  htmlex.C
-  rootalias.C          # Helper macro
-  rootlogon.C          # Helper macro
-  rootlogoff.C         # Helper macro
-  rootmarks.C          # Instrumentation. Not a standalone tutorial
-  memstat/memstatExample.C   # Instrumentation. Not a standalone tutorial
+  legacy/htmlex.C
+  legacy/rootalias.C          # Helper macro
+  legacy/rootlogon.C          # Helper macro
+  legacy/rootlogoff.C         # Helper macro
+  legacy/rootmarks.C          # Instrumentation. Not a standalone tutorial
+  legacy/memstat/memstatExample.C   # Instrumentation. Not a standalone tutorial
   multicore/mp_H1_lambdas.C # not a tutorial; used by mp104_processH1.C et al.
   html/*.C
   net/*.C
