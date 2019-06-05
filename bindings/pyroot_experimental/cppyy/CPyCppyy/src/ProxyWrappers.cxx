@@ -265,10 +265,21 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass)
     const Cppyy::TCppIndex_t nTemplMethods = isNamespace ? 0 : Cppyy::GetNumTemplatedMethods(scope);
     for (Cppyy::TCppIndex_t imeth = 0; imeth < nTemplMethods; ++imeth) {
         const std::string mtCppName = Cppyy::GetTemplatedMethodName(scope, imeth);
-        // TODO: figure out number of arguments to distinguish operators (problem is
-        // that it's not known until instantiation, so perhaps add both 0 and 1?)
-        std::string mtName = Cppyy::IsTemplatedConstructor(scope, imeth) ? "__init__" : Utility::MapOperatorName(mtCppName, 0);
-        sync_templates(pyclass, mtCppName, mtName);
+    // the number of arguments isn't known until instantiation and as far as C++ is concerned, all
+    // same-named operators are simply overloads; so will pre-emptively add both names if with and
+    // without arguments differ, letting the normal overload mechanism resolve on call
+        bool isConstructor = Cppyy::IsTemplatedConstructor(scope, imeth);
+
+    // first add with no arguments
+        std::string mtName0 = isConstructor ? "__init__" : Utility::MapOperatorName(mtCppName, false);
+        sync_templates(pyclass, mtCppName, mtName0);
+
+    // then add when taking arguments, if this method is different
+        if (!isConstructor) {
+            std::string mtName1 = Utility::MapOperatorName(mtCppName, true);
+            if (mtName0 != mtName1)
+                sync_templates(pyclass, mtCppName, mtName1);
+        }
     }
 
 // add a pseudo-default ctor, if none defined
