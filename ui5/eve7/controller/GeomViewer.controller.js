@@ -847,39 +847,40 @@ sap.ui.define(['sap/ui/core/Component',
 
          if(prop && this.isInfoPageActive())
             if (this.standalone) {
-               this.processInfoOffline(prop.fullpath, prop.id, prop);
-               // do something in standalone mode
+               this.processInfoOffline(prop.fullpath, prop.id);
             } else {
                this.sendViewerRequest("INFO", { path: prop.fullpath });
             }
       },
 
       /** Try to provide as much info as possible offline */
-      processInfoOffline: function(path, id, prop) {
-         console.log('path', path, 'nodeid', id, 'prop', prop);
-         var info = {
-            fullpath: path
-         };
-         console.log('this.geo_clones', !!this.geo_clones, typeof this.geo_clones);
+      processInfoOffline: function(path, id) {
+         var model = new JSONModel({ fullpath: path });
+
+         this.byId("geomInfo").setModel(model);
 
          if (this.geo_clones && path) {
-            path = path.substr(1, path.length-2);
+            var stack = this.geo_clones.FindStackByName(path.substr(1, path.length-2));
 
-            console.log('path', path);
+            var info = stack ? this.geo_clones.ResolveStack(stack) : null;
 
-            var stack = this.geo_clones.FindStackByName(path);
+            var build_shape = null;
 
-            if (stack) {
-               var info = this.geo_clones.ResolveStack(stack);
-               console.log('Stack', stack);
-               console.log('info', info);
+            // console.log('id', id, info ? info.id : "---");
+
+            // this can be moved into GeoPainter later
+            if (info && (info.id !== undefined) && this.geo_painter && this.geo_painter._draw_nodes) {
+               for (var k=0;k<this.geo_painter._draw_nodes.length;++k) {
+                  var item = this.geo_painter._draw_nodes[k];
+                  if ((item.nodeid == info.id) && item.server_shape) {
+                     build_shape = item.server_shape;
+                     break;
+                  }
+               }
             }
+
+            this.drawNodeShape(build_shape, true);
          }
-
-         var model = new JSONModel(info);
-
-         this.byId(this.createId("geomInfo")).setModel(model);
-
       },
 
       /** This is reply on INFO request */
@@ -887,21 +888,26 @@ sap.ui.define(['sap/ui/core/Component',
 
          var model = new JSONModel(info);
 
-         this.byId(this.createId("geomInfo")).setModel(model);
+         this.byId("geomInfo").setModel(model);
 
-         var nodeDrawing = this.byId(this.createId("nodeDrawing"));
+         var server_shape = null;
 
-         if (info.ri && info.rndr_binary) {
+         if (info.ri && info.rndr_binary)
+            server_shape = this.createServerShape(info.ri, info.rndr_binary.buffer, 0);
 
-            var server_shape = this.createServerShape(info.ri, info.rndr_binary.buffer, 0);
+         this.drawNodeShape(server_shape, false);
+      },
 
+      drawNodeShape: function(server_shape, skip_cleanup) {
+
+         var nodeDrawing = this.byId("nodeDrawing");
+
+         nodeDrawing.setGeomPainter(null);
+
+         if (server_shape) {
             var node_painter = JSROOT.Painter.CreateGeoPainter(nodeDrawing.getDomRef(), server_shape, "");
-
-            nodeDrawing.setGeomPainter(node_painter);
-
+            nodeDrawing.setGeomPainter(node_painter, skip_cleanup);
             node_painter.prepareObjectDraw(server_shape, "");
-         } else {
-            nodeDrawing.setGeomPainter(null);
          }
       },
 

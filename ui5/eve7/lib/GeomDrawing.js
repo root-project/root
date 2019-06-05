@@ -53,15 +53,24 @@ sap.ui.define(['sap/ui/core/Control',
          }
       },
 
-      setGeomPainter: function(painter) {
+      setGeomPainter: function(painter, skip_cleanup) {
 
          if (this.geom_painter) {
+            if (this.geom_skip_cleanup) {
+               // workaround, done for nodes drawing to avoid deletion of 3D objects
+               this.geom_painter._clones = null;
+               this.geom_painter._clones_owner = false;
+            }
+
             this.geom_painter.Cleanup();
             delete this.geom_painter;
+            delete this.geom_skip_cleanup;
          }
 
-         if (painter)
+         if (painter) {
             this.geom_painter = painter;
+            this.geom_skip_cleanup = skip_cleanup;
+         }
       },
 
       onResize: function() {
