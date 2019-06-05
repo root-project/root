@@ -77,6 +77,12 @@ the above code can be simplified to
 Check the [doxygen reference guide](https://root.cern.ch/doc/master/classRooProxy.html) for `RooProxy` for
 more information on how to modernise old code.
 
+### Less verbose HistFactory
+HistFactory was very verbose, writing to the terminal with lots of `cout`. Now, many HistFactory messages are going
+into RooFit's message stream number 2. The verbosity can therefore be adjusted using
+    RooMsgService::instance().getStream(2).minLevel = RooFit::PROGRESS;
+
+
 ## 2D Graphics Libraries
 
 

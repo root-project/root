@@ -101,7 +101,14 @@ class RooWorkspace ;
 #define cxcoutF(a) if (RooMsgService::instance().isActive(this,RooFit::a,RooFit::FATAL)) RooMsgService::instance().log(this,RooFit::FATAL,RooFit::a) 
 #define ccxcoutF(a) if (RooMsgService::instance().isActive(this,RooFit::a,RooFit::FATAL)) RooMsgService::instance().log(this,RooFit::FATAL,RooFit::a,kTRUE) 
 #define oocxcoutF(o,a) if (RooMsgService::instance().isActive(o,RooFit::a,RooFit::FATAL)) RooMsgService::instance().log(o,RooFit::FATAL,RooFit::a) 
-#define ooccxcoutF(o,a) if (RooMsgService::instance().isActive(o,RooFit::a,RooFit::FATAL)) RooMsgService::instance().log(o,RooFit::FATAL,RooFit::a,kTRUE) 
+#define ooccxcoutF(o,a) if (RooMsgService::instance().isActive(o,RooFit::a,RooFit::FATAL)) RooMsgService::instance().log(o,RooFit::FATAL,RooFit::a,kTRUE)
+
+#define cxcoutDnoObj(a) oocxcoutD((TObject*)nullptr, a)
+#define cxcoutInoObj(a) oocxcoutI((TObject*)nullptr, a)
+#define cxcoutPnoObj(a) oocxcoutP((TObject*)nullptr, a)
+#define cxcoutWnoObj(a) oocxcoutW((TObject*)nullptr, a)
+#define cxcoutEnoObj(a) oocxcoutE((TObject*)nullptr, a)
+#define cxcoutFnoObj(a) oocxcoutF((TObject*)nullptr, a)
 
 class RooMsgService : public TObject {
 public:
