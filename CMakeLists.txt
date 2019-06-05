@@ -31,12 +31,8 @@ endif()
 #   - ROOT built with CMake. Add in CMAKE_PREFIX_PATH the installation prefix for ROOT
 list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 
-# Check, if ROOTSYS is set.
-if(NOT DEFINED ROOTSYS)
-  set(ROOTSYS $ENV{ROOTSYS})
-  if(NOT DEFINED ROOTSYS)
-    message(FATAL_ERROR "ROOTSYS is not set!")
-  endif()
+if(DEFINED ENV{ROOTSYS})
+  message(DEPRECATION "Using ROOTSYS for roottest.git is under deprecation, please add ROOT in PATH.")
 endif()
 
 # If ROOT_SOURCE_DIR is set, roottest is built as part of the root build.
