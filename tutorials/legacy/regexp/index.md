@@ -1,3 +1,3 @@
 \defgroup tutorial_regexp Regexp tutorials
-\ingroup tutorial_heritage
+\ingroup tutorial_legacy
 \brief Examples for ROOT's regular expressions
