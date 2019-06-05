@@ -1,10 +1,9 @@
 /// \file
-/// \ingroup tutorial_heritage
+/// \ingroup tutorial_legacy
 /// This file demonstrates how THtml can document sources.
 ///
 /// See the [Users Guide](https://root.cern.ch/root/htmldoc/guides/users-guide/ROOTUsersGuide.html)
-/// chapter [Automatic HTML
-/// Documentation](https://root.cern.ch/root/htmldoc/guides/users-guide/ROOTUsersGuideChapters/HTMLDoc.pdf), and
+/// chapter [Automatic HTML Documentation](https://root.cern.ch/root/htmldoc/guides/users-guide/ROOTUsersGuideChapters/HTMLDoc.pdf), and
 /// [THtml's class documentation](https://root.cern.ch/doc/master/classTHtml.html).
 ///
 /// To see this demo script in action start up ROOT and run

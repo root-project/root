@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_heritage
+/// \ingroup tutorial_legacy
 /// This script is a representation using TTasks of the Geant3 simulation program
 /// This example uses directly TTask objects.
 /// A real implementation would require one class per task derived from TTask.
