@@ -2,7 +2,9 @@
 /// \ingroup tutorial_cont
 /// \notebook -nodraw
 /// Example showing possible usages of the TSeq class.
+///
 /// \macro_code
+/// \macro_output
 ///
 /// \author Danilo Piparo
 
