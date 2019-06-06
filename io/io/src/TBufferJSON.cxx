@@ -1105,7 +1105,7 @@ TJSONStackObj *TBufferJSON::PushStack(Int_t inclevel, void *readnode)
       next->fLevel += prev->fLevel;
       next->fMemberPtr = prev->fMemberPtr;
    }
-   fStack.push_back(next);
+   fStack.emplace_back(next);
    return next;
 }
 
@@ -1114,12 +1114,10 @@ TJSONStackObj *TBufferJSON::PushStack(Int_t inclevel, void *readnode)
 
 TJSONStackObj *TBufferJSON::PopStack()
 {
-   if (fStack.size() > 0) {
-      delete fStack.back();
+   if (fStack.size() > 0)
       fStack.pop_back();
-   }
 
-   return fStack.size() > 0 ? Stack() : nullptr;
+   return fStack.size() > 0 ? fStack.back().get() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2080,7 +2078,7 @@ void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t)
    Int_t number = info ? info->GetElements()->IndexOf(elem) : -1;
 
    if (!elem) {
-      Error("WorkWithElement", "streamer info returns elem = 0");
+      Error("WorkWithElement", "streamer info returns elem = nullptr");
       return;
    }
 
