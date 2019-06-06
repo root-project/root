@@ -184,8 +184,4 @@ target_link_libraries(Core
     ${corelinklibs}
 )
 
-if(cling)
-  add_dependencies(Core CLING)
-endif()
-
-#----------------------------------------------------------------------------------------
+add_dependencies(Core CLING)
