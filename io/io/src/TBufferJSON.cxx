@@ -451,7 +451,7 @@ public:
          fStlRead->fIter = fNode->begin();
          fStlRead->fTypeTag = typename_tag && (strlen(typename_tag) > 0) ? typename_tag : nullptr;
       } else {
-         if (!fNode->is_array() && !(fNode->is_object() && (fNode->count("$arr")==1))) {
+         if (!fNode->is_array() && !(fNode->is_object() && (fNode->count("$arr") == 1))) {
             ::Error("TJSONStackObj::AssignStl", "when reading %s expecting JSON array", cl->GetName());
             return kFALSE;
          }
@@ -2721,12 +2721,16 @@ R__ALWAYS_INLINE void TBufferJSON::JsonReadFastArray(T *arr, Int_t arrsize, bool
          // TODO: provide TBase64::Decode with direct write into target buffer
          auto decode = TBase64::Decode(base64.c_str());
 
-         if (arrsize * (long) sizeof(T) < decode.Length()) {
-            Error("ReadFastArray", "Base64 data %ld larger than target array size %ld", (long) decode.Length(), (long) (arrsize*sizeof(T)));
+         int offset = 0;
+         if (json->count("o") == 1)
+            offset = json->at("o").get<int>();
+
+         if (arrsize * (long) sizeof(T) < (offset + decode.Length())) {
+            Error("ReadFastArray", "Base64 data %ld larger than target array size %ld", (long) decode.Length() + offset, (long) (arrsize*sizeof(T)));
          } else if ((sizeof(T) > 1) && (decode.Length() % sizeof(T) != 0)) {
             Error("ReadFastArray", "Base64 data size %ld not matches with element size %ld", (long) decode.Length(), (long) sizeof(T));
          } else {
-            memcpy(arr, decode.Data(), decode.Length());
+            memcpy((char *) arr + offset, decode.Data(), decode.Length());
          }
          return;
       }
@@ -2966,15 +2970,9 @@ void TBufferJSON::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t 
 template <typename T>
 R__ALWAYS_INLINE void TBufferJSON::JsonWriteArrayCompress(const T *vname, Int_t arrsize, const char *typname)
 {
-   if (Stack()->fBase64 || (fArrayCompact == kBase64)) {
-      TString base64 = TBase64::Encode((const char *) vname, arrsize * sizeof(T));
+   bool is_base64 = Stack()->fBase64 || (fArrayCompact == kBase64);
 
-      fValue.Append("{");
-      fValue.Append(TString::Format("\"$arr\":\"%s\"%s\"len\":%d%s\"b\":\"", typname, fArraySepar.Data(), arrsize,fArraySepar.Data()));
-      fValue.Append(base64);
-      fValue.Append("\"}");
-
-   } else if ((fArrayCompact == 0) || (arrsize < 6)) {
+   if (!is_base64 && ((fArrayCompact == 0) || (arrsize < 6))) {
       fValue.Append("[");
       for (Int_t indx = 0; indx < arrsize; indx++) {
          if (indx > 0)
@@ -2990,7 +2988,19 @@ R__ALWAYS_INLINE void TBufferJSON::JsonWriteArrayCompress(const T *vname, Int_t 
          aindx++;
       while ((aindx < bindx) && (vname[bindx - 1] == 0))
          bindx--;
-      if (aindx < bindx) {
+
+      if (is_base64) {
+         if ((aindx > 0) && (aindx < bindx))
+            fValue.Append(TString::Format("%s\"o\":%ld", fArraySepar.Data(), (long) (aindx * (int) sizeof(T))));
+
+         fValue.Append(fArraySepar);
+         fValue.Append("\"b\":\"");
+
+         if (aindx < bindx)
+            fValue.Append(TBase64::Encode((const char *) (vname + aindx), (bindx - aindx) * sizeof(T)));
+
+         fValue.Append("\"");
+      } else if (aindx < bindx) {
          TString suffix("");
          Int_t p(aindx), suffixcnt(-1), lastp(0);
          while (p < bindx) {
