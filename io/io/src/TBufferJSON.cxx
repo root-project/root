@@ -106,7 +106,7 @@ class Container {
 #include "TArrayI.h"
 #include "TObjArray.h"
 #include "TError.h"
-#include "TExMap.h"
+#include "TBase64.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TClassTable.h"
@@ -347,6 +347,7 @@ public:
    Bool_t fIsPostProcessed{kFALSE};     //! indicate that value is written
    Bool_t fIsObjStarted{kFALSE};        //! indicate that object writing started, should be closed in postprocess
    Bool_t fAccObjects{kFALSE};          //! if true, accumulate whole objects in values
+   Bool_t fBase64{kFALSE};              //! enable base64 coding when writing array
    std::vector<std::string> fValues;    //! raw values
    int fMemberCnt{1};                   //! count number of object members, normally _typename is first member
    int *fMemberPtr{nullptr};            //! pointer on members counter, can be inherit from parent stack objects
@@ -358,7 +359,7 @@ public:
 
    TJSONStackObj() = default;
 
-   virtual ~TJSONStackObj()
+   ~TJSONStackObj()
    {
       if (fIsElemOwner)
          delete fElem;
@@ -1360,9 +1361,14 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
       stack = PushStack(0);
 
    } else {
+
+      bool base64 = ((special_kind == TClassEdit::kVector) && stack && stack->fElem && strstr(stack->fElem->GetTitle(), "JSON_base64"));
+
       // for array, string and STL collections different handling -
       // they not recognized at the end as objects in JSON
       stack = PushStack(0);
+
+      stack->fBase64 = base64;
    }
 
    if (gDebug > 3)
@@ -2081,7 +2087,7 @@ void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t)
    TClass *base_class = elem->IsBase() ? elem->GetClassPointer() : nullptr;
 
    stack = PushStack(0, stack->fNode);
-   stack->fElem = (TStreamerElement *)elem;
+   stack->fElem = elem;
    stack->fIsElemOwner = (number < 0);
 
    JsonStartElement(elem, base_class);
@@ -2944,7 +2950,15 @@ void TBufferJSON::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t 
 template <typename T>
 R__ALWAYS_INLINE void TBufferJSON::JsonWriteArrayCompress(const T *vname, Int_t arrsize, const char *typname)
 {
-   if ((fArrayCompact == 0) || (arrsize < 6)) {
+   if (Stack()->fBase64 || (fArrayCompact == kBase64)) {
+      TString base64 = TBase64::Encode((const char *) vname, arrsize * sizeof(T));
+
+      fValue.Append("{");
+      fValue.Append(TString::Format("\"$arr\":\"%s\"%s\"len\":%d%s\"b\":\"", typname, fArraySepar.Data(), arrsize,fArraySepar.Data()));
+      fValue.Append(base64);
+      fValue.Append("\"}");
+
+   } else if ((fArrayCompact == 0) || (arrsize < 6)) {
       fValue.Append("[");
       for (Int_t indx = 0; indx < arrsize; indx++) {
          if (indx > 0)
