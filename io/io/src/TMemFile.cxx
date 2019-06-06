@@ -118,7 +118,7 @@ TMemFile::EMode TMemFile::ParseOption(Option_t *option)
 TMemFile::TMemFile(const char *path, const ExternalDataRange_t &datarange)
    : TFile(path, "WEB", "read-only TMemFile", 0 /*compress*/),
      fBlockList(reinterpret_cast<UChar_t *>(const_cast<char *>(datarange.fStart)), datarange.fSize),
-     fIsOwnedByROOT(false), fSize(datarange.fSize), fSysOffset(0), fBlockSeek(nullptr), fBlockOffset(0)
+     fIsOwnedByROOT(false), fSize(datarange.fSize), fSysOffset(0), fBlockSeek(&(fBlockList)), fBlockOffset(0)
 {
    fD = 0;
    fOption = "READ";
