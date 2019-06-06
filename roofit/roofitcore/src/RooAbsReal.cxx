@@ -1773,6 +1773,9 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   pc.defineInt("VLines","VLines",0,2) ; // 2==ExtendedWings
   pc.defineString("rangeName","RangeWithName",0,"") ;
   pc.defineString("normRangeName","NormRange",0,"") ;
+  pc.defineInt("markerColor","MarkerColor",0,-999) ;
+  pc.defineInt("markerStyle","MarkerStyle",0,-999) ;
+  pc.defineDouble("markerSize","MarkerSize",0,-999) ;
   pc.defineInt("lineColor","LineColor",0,-999) ;
   pc.defineInt("lineStyle","LineStyle",0,-999) ;
   pc.defineInt("lineWidth","LineWidth",0,-999) ;
@@ -1940,6 +1943,9 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   Int_t lineColor = pc.getInt("lineColor") ;
   Int_t lineStyle = pc.getInt("lineStyle") ;
   Int_t lineWidth = pc.getInt("lineWidth") ;
+  Int_t markerColor = pc.getInt("markerColor") ;
+  Int_t markerStyle = pc.getInt("markerStyle") ;
+  Size_t markerSize  = pc.getDouble("markerSize") ;
   Int_t fillColor = pc.getInt("fillColor") ;
   Int_t fillStyle = pc.getInt("fillStyle") ;
   if (lineColor!=-999) ret->getAttLine()->SetLineColor(lineColor) ;
@@ -1947,6 +1953,9 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   if (lineWidth!=-999) ret->getAttLine()->SetLineWidth(lineWidth) ;
   if (fillColor!=-999) ret->getAttFill()->SetFillColor(fillColor) ;
   if (fillStyle!=-999) ret->getAttFill()->SetFillStyle(fillStyle) ;
+  if (markerColor!=-999) ret->getAttMarker()->SetMarkerColor(markerColor) ;
+  if (markerStyle!=-999) ret->getAttMarker()->SetMarkerStyle(markerStyle) ;
+  if (markerSize!=-999) ret->getAttMarker()->SetMarkerSize(markerSize) ;
 
   // Move last inserted object to back to drawing stack if requested
   if (pc.getInt("moveToBack") && frame->numItems()>1) {
@@ -2956,6 +2965,9 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
   pc.defineInt("lineColor","LineColor",0,-999) ;
   pc.defineInt("lineStyle","LineStyle",0,-999) ;
   pc.defineInt("lineWidth","LineWidth",0,-999) ;
+  pc.defineInt("markerColor","MarkerColor",0,-999) ;
+  pc.defineInt("markerStyle","MarkerStyle",0,-999) ;
+  pc.defineDouble("markerSize","MarkerSize",0,-999) ;
   pc.defineInt("fillColor","FillColor",0,-999) ;
   pc.defineInt("fillStyle","FillStyle",0,-999) ;
   pc.defineString("curveName","Name",0,"") ;
@@ -2977,6 +2989,9 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
   Int_t lineColor = pc.getInt("lineColor") ;
   Int_t lineStyle = pc.getInt("lineStyle") ;
   Int_t lineWidth = pc.getInt("lineWidth") ;
+  Int_t markerColor = pc.getInt("markerColor") ;
+  Int_t markerStyle = pc.getInt("markerStyle") ;
+  Size_t markerSize  = pc.getDouble("markerSize") ;
   Int_t fillColor = pc.getInt("fillColor") ;
   Int_t fillStyle = pc.getInt("fillStyle") ;
   if (lineColor!=-999) frame->getAttLine()->SetLineColor(lineColor) ;
@@ -2984,6 +2999,9 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
   if (lineWidth!=-999) frame->getAttLine()->SetLineWidth(lineWidth) ;
   if (fillColor!=-999) frame->getAttFill()->SetFillColor(fillColor) ;
   if (fillStyle!=-999) frame->getAttFill()->SetFillStyle(fillStyle) ;
+  if (markerColor!=-999) ret->getAttMarker()->SetMarkerColor(markerColor) ;
+  if (markerStyle!=-999) ret->getAttMarker()->SetMarkerStyle(markerStyle) ;
+  if (markerSize!=-999) ret->getAttMarker()->SetMarkerSize(markerSize) ;
 
   // Adjust name if requested
   if (pc.getString("curveName",0,kTRUE)) {
