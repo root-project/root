@@ -250,7 +250,7 @@ protected:
 
    TJSONStackObj *PushStack(Int_t inclevel = 0, void *readnode = nullptr);
    TJSONStackObj *PopStack();
-   TJSONStackObj *Stack() { return fStack.back(); }
+   TJSONStackObj *Stack() { return fStack.back().get(); }
 
    void WorkWithClass(TStreamerInfo *info, const TClass *cl = nullptr);
    void WorkWithElement(TStreamerElement *elem, Int_t);
@@ -314,7 +314,7 @@ protected:
    TString *fOutput{nullptr};          ///<!  current output buffer for json code
    TString fValue;                     ///<!  buffer for current value
    unsigned fJsonrCnt{0};              ///<!  counter for all objects, used for referencing
-   std::deque<TJSONStackObj *> fStack; ///<!  hierarchy of currently streamed element
+   std::deque<std::unique_ptr<TJSONStackObj>> fStack; ///<!  hierarchy of currently streamed element
    Int_t fCompact{0};                  ///<!  0 - no any compression, 1 - no spaces in the begin, 2 - no new lines, 3 - no spaces at all
    Bool_t fMapAsObject{kFALSE};        ///<! when true, std::map will be converted into JSON object
    TString fSemicolon;                 ///<!  depending from compression level, " : " or ":"
