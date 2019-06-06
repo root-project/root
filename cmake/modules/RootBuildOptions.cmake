@@ -131,7 +131,6 @@ ROOT_BUILD_OPTION(mysql ON "Enable support for MySQL databases")
 ROOT_BUILD_OPTION(odbc OFF "Enable support for ODBC databases (requires libiodbc or libodbc)")
 ROOT_BUILD_OPTION(opengl ON "Enable support for OpenGL (requires libGL and libGLU)")
 ROOT_BUILD_OPTION(oracle ON "Enable support for Oracle databases (requires Oracle Instant Client)")
-ROOT_BUILD_OPTION(pch ON "Enable support for Pre-Compiled Headers (PCH)")
 ROOT_BUILD_OPTION(pgsql ON "Enable support for PostgreSQL")
 ROOT_BUILD_OPTION(pyroot_experimental OFF "Use experimental Python bindings for ROOT")
 ROOT_BUILD_OPTION(pythia6_nolink OFF "Delayed linking of Pythia6 library")
@@ -178,10 +177,6 @@ option(roottest "Build roottest if roottest exists in root or if it is a sibling
 option(testing "Enable testing with CTest" OFF)
 
 set(gcctoolchain "" CACHE PATH "Set path to GCC toolchain used to build llvm/clang")
-
-if (runtime_cxxmodules)
-  set(pch_defvalue OFF)
-endif(runtime_cxxmodules)
 
 #--- Compression algorithms in ROOT-------------------------------------------------------------
 set(compression_default "zlib" CACHE STRING "Default compression algorithm (zlib (default), lz4, or lzma)")
