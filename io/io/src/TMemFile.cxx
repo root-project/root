@@ -147,27 +147,16 @@ TMemFile::TMemFile(const char *path, ExternalDataPtr_t data)
 /// Constructor to create a read-only TMemFile using an std::unique_ptr<TBufferFile>
 
 TMemFile::TMemFile(const char *name, std::unique_ptr<TBufferFile> buffer)
-   : TFile(name, "WEB", "read-only TMemFile", 0 /* compress */),
-     fBlockList(reinterpret_cast<UChar_t *>(buffer->Buffer()), buffer->BufferSize()), fIsOwnedByROOT(true),
-     fSize(buffer->BufferSize()), fSysOffset(0), fBlockSeek(&(fBlockList)), fBlockOffset(0)
+   : TMemFile(name, ExternalDataRange_t(buffer->Buffer(), (size_t)buffer->BufferSize()))
 {
-   fD = 0;
-   fOption = "READ";
-   fWritable = false;
+   assert(!fD && !fWritable);
+
+   fIsOwnedByROOT = true;
 
    // Note: We need to release the buffer here to avoid double delete.
    // The memory of a TBufferFile is allocated with new[], so we can let
    // TMemBlock delete it, as its destructor calls "delete [] fBuffer;"
    buffer.release();
-
-   // This is read-only, so become a zombie if created with an empty buffer
-   if (!fBlockList.fBuffer) {
-      MakeZombie();
-      gDirectory = gROOT;
-      return;
-   }
-
-   Init(/* create */ false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -45,7 +45,7 @@ protected:
       Long64_t   fSize;
    };
    TMemBlock    fBlockList;               ///< Collection of memory blocks of size fgDefaultBlockSize
-   ExternalDataPtr_t fExternalData; ///< shared file data / content
+   ExternalDataPtr_t fExternalData;       ///< shared file data / content
    Bool_t       fIsOwnedByROOT;           ///< if this is a C-style memory region
    Long64_t     fSize;                    ///< Total file size (sum of the size of the chunks)
    Long64_t     fSysOffset;               ///< Seek offset in file
