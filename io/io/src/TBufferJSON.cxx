@@ -451,7 +451,7 @@ public:
          fStlRead->fIter = fNode->begin();
          fStlRead->fTypeTag = typename_tag && (strlen(typename_tag) > 0) ? typename_tag : nullptr;
       } else {
-         if (!fNode->is_array()) {
+         if (!fNode->is_array() && !(fNode->is_object() && (fNode->count("$arr")==1))) {
             ::Error("TJSONStackObj::AssignStl", "when reading %s expecting JSON array", cl->GetName());
             return kFALSE;
          }
@@ -2711,8 +2711,26 @@ R__ALWAYS_INLINE void TBufferJSON::JsonReadFastArray(T *arr, Int_t arrsize, bool
    } else if (json->is_object() && (json->count("$arr") == 1)) {
       if (json->at("len").get<int>() != arrsize)
          Error("ReadFastArray", "Mismatch compressed array size %d %d", arrsize, json->at("len").get<int>());
+
       for (int cnt = 0; cnt < arrsize; ++cnt)
          arr[cnt] = 0;
+
+      if (json->count("b") == 1) {
+         auto base64 = json->at("b").get<std::string>();
+
+         // TODO: provide TBase64::Decode with direct write into target buffer
+         auto decode = TBase64::Decode(base64.c_str());
+
+         if (arrsize * (long) sizeof(T) < decode.Length()) {
+            Error("ReadFastArray", "Base64 data %ld larger than target array size %ld", (long) decode.Length(), (long) (arrsize*sizeof(T)));
+         } else if ((sizeof(T) > 1) && (decode.Length() % sizeof(T) != 0)) {
+            Error("ReadFastArray", "Base64 data size %ld not matches with element size %ld", (long) decode.Length(), (long) sizeof(T));
+         } else {
+            memcpy(arr, decode.Data(), decode.Length());
+         }
+         return;
+      }
+
       int p = 0, id = 0;
       std::string idname = "", pname, vname, nname;
       while (p < arrsize) {
