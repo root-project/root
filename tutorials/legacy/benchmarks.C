@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup Tutorials
+/// \ingroup tutorial_legacy
 /// This macro run several tests and produces an benchmark report.
 ///
 /// \macro_image
