@@ -223,10 +223,11 @@ endif()
 
 #---These ones are disabled !!! ------------------------------------
 set(extra_veto
+  legacy/benchmarks.C
   legacy/htmlex.C
   legacy/rootalias.C          # Helper macro
-  legacy/rootlogon.C          # Helper macro
-  legacy/rootlogoff.C         # Helper macro
+  rootlogon.C          # Helper macro
+  rootlogoff.C         # Helper macro
   legacy/rootmarks.C          # Instrumentation. Not a standalone tutorial
   legacy/memstat/memstatExample.C   # Instrumentation. Not a standalone tutorial
   multicore/mp_H1_lambdas.C # not a tutorial; used by mp104_processH1.C et al.
