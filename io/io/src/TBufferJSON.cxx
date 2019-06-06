@@ -450,7 +450,7 @@ public:
          fStlRead->fIter = fNode->begin();
          fStlRead->fTypeTag = typename_tag && (strlen(typename_tag) > 0) ? typename_tag : nullptr;
       } else {
-         if (!fNode->is_array()) {
+         if (!fNode->is_array() && !(fNode->is_object() && (fNode->count("$arr") == 1))) {
             ::Error("TJSONStackObj::AssignStl", "when reading %s expecting JSON array", cl->GetName());
             return kFALSE;
          }
