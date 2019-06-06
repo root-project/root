@@ -39,9 +39,10 @@ public:
 
      kMapAsObject   = 5,             ///< store std::map, std::unodered_map as JSON object
 
-     // algorithms for array compression
+     // algorithms for array compression - exclusive
      kZeroSuppression = 10,          ///< if array has much zeros in begin and/or end, they will be removed
      kSameSuppression = 20,          ///< zero suppression plus compress many similar values together
+     kBase64          = 30,          ///< all binary arrays will be compressed with base64 coding, supported by JSROOT
 
      kSkipTypeInfo  = 100            // do not store typenames in JSON
    };
