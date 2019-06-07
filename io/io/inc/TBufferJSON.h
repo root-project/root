@@ -56,6 +56,8 @@ public:
    void SetSkipClassInfo(const TClass *cl);
    Bool_t IsSkipClassInfo(const TClass *cl) const;
 
+   TString StoreObject(const void *obj, const TClass *cl);
+
    static TString ConvertToJSON(const TObject *obj, Int_t compact = 0, const char *member_name = nullptr);
    static TString
    ConvertToJSON(const void *obj, const TClass *cl, Int_t compact = 0, const char *member_name = nullptr);
