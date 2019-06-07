@@ -57,6 +57,7 @@ public:
    Bool_t IsSkipClassInfo(const TClass *cl) const;
 
    TString StoreObject(const void *obj, const TClass *cl);
+   void *RestoreObject(const char *str, TClass **cl);
 
    static TString ConvertToJSON(const TObject *obj, Int_t compact = 0, const char *member_name = nullptr);
    static TString
