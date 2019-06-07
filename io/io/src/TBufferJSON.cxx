@@ -629,16 +629,19 @@ Bool_t TBufferJSON::IsSkipClassInfo(const TClass *cl) const
 /// Converts any type of object to JSON string
 /// One should provide pointer on object and its class name
 /// Lower digit of compact parameter define formatting rules
-///  - 0 - no any compression, human-readable form
-///  - 1 - exclude spaces in the begin
-///  - 2 - remove newlines
-///  - 3 - exclude spaces as much as possible
+///  - TBufferJSON::kNoCompress (0) - no any compression, human-readable form
+///  - TBufferJSON::kNoIndent (1) - exclude spaces in the begin
+///  - TBufferJSON::kNoNewLine (2) - no indent and no newlines
+///  - TBufferJSON::kNoSpaces (3) - exclude spaces as much as possible
 /// Second digit of compact parameter defines algorithm for arrays compression
 ///  - 0 - no compression, standard JSON array
-///  - 1 - exclude leading and trailing zeros
-///  - 2 - check values repetition and empty gaps
-/// If third digit of compact parameter is 1, "_typename" will be skipped
-/// Maximal compression achieved when compact parameter equal to 23
+///  - TBufferJSON::kZeroSuppression (10) - exclude leading and trailing zeros
+///  - TBufferJSON::kSameSuppression (20) - check values repetition and empty gaps
+///  - TBufferJSON::kBase64 (30) - arrays will be coded with base64 coding
+/// Third digit of compact parameter defines typeinfo storage:
+///  - TBufferJSON::kSkipTypeInfo (100) - "_typename" will be skipped, not always can be read back
+/// Maximal none-destructive compression can be achieved when
+/// compact parameter equal to TBufferJSON::kNoSpaces + TBufferJSON::kSameSuppression
 /// When member_name specified, converts only this data member
 
 TString TBufferJSON::ConvertToJSON(const void *obj, const TClass *cl, Int_t compact, const char *member_name)
@@ -687,15 +690,33 @@ TString TBufferJSON::ConvertToJSON(const void *obj, const TClass *cl, Int_t comp
 
    buf.SetCompact(compact);
 
-   buf.InitMap();
+   return buf.StoreObject(actualStart, clActual);
+}
 
-   buf.PushStack(0); // dummy stack entry to avoid extra checks in the beginning
+////////////////////////////////////////////////////////////////////////////////
+/// Store provided object as JSON structure
+/// Allows to configure different TBufferJSON properties before converting object into JSON
+/// Actual object class must be specified here
+/// Method can be safely called once - after that TBufferJSON instance must be destroyed
+/// Code should look like:
+///
+///   auto obj = new UserClass();
+///   TBufferJSON buf;
+///   buf.SetCompact(TBufferJSON::kNoSpaces); // change any other settings in TBufferJSON
+///   auto json = buf.StoreObject(obj, TClass::GetClass<UserClass>());
+///
 
-   buf.JsonWriteObject(actualStart, clActual);
+TString TBufferJSON::StoreObject(const void *obj, const TClass *cl)
+{
+   InitMap();
 
-   buf.PopStack();
+   PushStack(); // dummy stack entry to avoid extra checks in the beginning
 
-   return buf.fOutBuffer.Length() ? buf.fOutBuffer : buf.fValue;
+   JsonWriteObject(obj, cl);
+
+   PopStack();
+
+   return fOutBuffer.Length() ? fOutBuffer : fValue;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
