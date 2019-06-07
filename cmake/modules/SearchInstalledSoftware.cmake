@@ -1075,6 +1075,7 @@ if(builtin_tbb)
       URL ${lcgpackages}/tbb-${tbb_builtin_version}.tar.gz
       URL_HASH SHA256=${tbb_sha256}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
+      PATCH_COMMAND sed -i -e "/clang -v/s@-v@--version@" build/macos.inc
       CONFIGURE_COMMAND ""
       BUILD_COMMAND make ${_tbb_compiler} "CXXFLAGS=${_tbb_cxxflags}" CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER}
       INSTALL_COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR>
