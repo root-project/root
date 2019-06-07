@@ -18,6 +18,7 @@
 #include <deque>
 #include <memory>
 #include <string>
+#include <vector>
 
 class TVirtualStreamerInfo;
 class TStreamerInfo;
@@ -326,7 +327,7 @@ protected:
    TString fNumericLocale;             ///<!  stored value of setlocale(LC_NUMERIC), which should be recovered at the end
    TString fTypeNameTag;               ///<! JSON member used for storing class name, when empty - no class name will be stored
    TString fTypeVersionTag;            ///<! JSON member used to store class version, default empty
-   TObjArray *fSkipClasses{nullptr};   ///<! list of classes, which class info is not stored
+   std::vector<const TClass *> fSkipClasses; ///<! list of classes, which class info is not stored
 
    ClassDef(TBufferJSON, 1) // a specialized TBuffer to only write objects into JSON format
 };
