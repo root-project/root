@@ -708,13 +708,18 @@ TString TBufferJSON::ConvertToJSON(const void *obj, const TClass *cl, Int_t comp
 
 TString TBufferJSON::StoreObject(const void *obj, const TClass *cl)
 {
-   InitMap();
+   if (IsWriting()) {
 
-   PushStack(); // dummy stack entry to avoid extra checks in the beginning
+      InitMap();
 
-   JsonWriteObject(obj, cl);
+      PushStack(); // dummy stack entry to avoid extra checks in the beginning
 
-   PopStack();
+      JsonWriteObject(obj, cl);
+
+      PopStack();
+   } else {
+      Error("StoreObject", "Can not store object into TBuffer for reading");
+   }
 
    return fOutBuffer.Length() ? fOutBuffer : fValue;
 }
@@ -931,12 +936,32 @@ TObject *TBufferJSON::ConvertFromJSON(const char *str)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Read object from JSON, produced by ConvertToJSON() method.
+/// Read object from JSON
 /// In class pointer (if specified) read class is returned
 /// One must specify expected object class, if it is TArray or STL container
 
 void *TBufferJSON::ConvertFromJSONAny(const char *str, TClass **cl)
 {
+   TBufferJSON buf(TBuffer::kRead);
+
+   return buf.RestoreObject(str, cl);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Read object from JSON
+/// In class pointer (if specified) read class is returned
+/// One must specify expected object class, if it is TArray or STL container
+
+void *TBufferJSON::RestoreObject(const char *json_str, TClass **cl)
+{
+   if (!IsReading())
+      return nullptr;
+
+   nlohmann::json docu = nlohmann::json::parse(json_str);
+
+   if (docu.is_null() || (!docu.is_object() && !docu.is_array()))
+      return nullptr;
+
    TClass *objClass = nullptr;
 
    if (cl) {
@@ -944,20 +969,13 @@ void *TBufferJSON::ConvertFromJSONAny(const char *str, TClass **cl)
       *cl = nullptr;
    }
 
-   nlohmann::json docu = nlohmann::json::parse(str);
+   InitMap();
 
-   if (docu.is_null() || (!docu.is_object() && !docu.is_array()))
-      return nullptr;
+   PushStack(0, &docu);
 
-   TBufferJSON buf(TBuffer::kRead);
+   void *obj = JsonReadObject(nullptr, objClass, cl);
 
-   buf.InitMap();
-
-   buf.PushStack(0, &docu);
-
-   void *obj = buf.JsonReadObject(nullptr, objClass, cl);
-
-   buf.PopStack();
+   PopStack();
 
    return obj;
 }
