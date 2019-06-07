@@ -1,3 +1,12 @@
+/// \file
+/// \ingroup tutorial_eve
+/// A ROOT script demonstrating  an example of writing a HistFactory  model using c++ only.
+///
+/// \macro_output
+/// \macro_code
+///
+/// \author George Lewis
+
 
 #include "RooStats/HistFactory/Measurement.h"
 #include "RooStats/HistFactory/MakeModelAndMeasurementsFast.h"
@@ -6,22 +15,6 @@
 
 using namespace RooStats;
 using namespace HistFactory;
-
-
-/*
-
- A ROOT script demonstrating
- an example of writing a HistFactory
- model using c++ only.
-
- This example was written to match
- the example.xml analysis in
- $ROOTSYS/tutorials/histfactory/
-
- Written by George Lewis
-
- */
-
 
 void example() {
 
