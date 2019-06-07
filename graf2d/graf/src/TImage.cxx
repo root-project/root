@@ -105,6 +105,15 @@ TImage::EImageFileTypes TImage::GetImageFileTypeFromFilename(const char* filenam
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// List this image with its attributes.
+
+void TImage::ls(Option_t *) const
+{
+   TROOT::IndentLevel();
+   printf("TImage: \"%s\"\n", GetName() );
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Open a specified image file.
 
 TImage *TImage::Open(const char *file, EImageFileTypes type)
