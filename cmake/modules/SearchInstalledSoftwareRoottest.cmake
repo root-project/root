@@ -15,7 +15,7 @@ set(_gtest_byproducts
 ExternalProject_Add(
     googletest
     GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG release-1.8.0
+    GIT_TAG release-1.8.1
     UPDATE_COMMAND ""
     # TIMEOUT 10
     # # Force separate output paths for debug and release builds to allow easy
