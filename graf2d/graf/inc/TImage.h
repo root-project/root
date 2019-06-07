@@ -255,6 +255,8 @@ public:
    TImage    &operator+=(const TImage &i) { Append(&i, "+"); return *this; }
    TImage    &operator/=(const TImage &i) { Append(&i, "/"); return *this; }
 
+   virtual void  ls(Option_t *option="") const;
+
    ClassDef(TImage,1)  // Abstract image class
 };
 
