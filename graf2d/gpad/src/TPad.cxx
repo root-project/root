@@ -3845,37 +3845,28 @@ void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
    }
 
    Int_t nc = 2*nn+1;
-   Double_t *x = new Double_t[nc];
-   Double_t *y = new Double_t[nc];
-   memset(x,0,8*nc);
-   memset(y,0,8*nc);
+   std::vector<Double_t> x(nc, 0.);
+   std::vector<Double_t> y(nc, 0.);
 
-   n = ClipPolygon(nn, xx, yy, nc, x, y,xmin,ymin,xmax,ymax);
-   if (!n) {
-      delete [] x;
-      delete [] y;
+   n = ClipPolygon(nn, xx, yy, nc, &x.front(), &y.front(),xmin,ymin,xmax,ymax);
+   if (!n)
       return;
-   }
 
    // Paint the fill area with hatches
    Int_t fillstyle = GetPainter()->GetFillStyle();
    if (gPad->IsBatch() && gVirtualPS) fillstyle = gVirtualPS->GetFillStyle();
    if (fillstyle >= 3100 && fillstyle < 4000) {
-      PaintFillAreaHatches(nn, x, y, fillstyle);
-      delete [] x;
-      delete [] y;
+      PaintFillAreaHatches(nn, &x.front(), &y.front(), fillstyle);
       return;
    }
 
    if (!gPad->IsBatch())
       // invoke the graphics subsystem
-      GetPainter()->DrawFillArea(n, x, y);
+      GetPainter()->DrawFillArea(n, &x.front(), &y.front());
 
-   if (gVirtualPS) {
-      gVirtualPS->DrawPS(-n, x, y);
-   }
-   delete [] x;
-   delete [] y;
+   if (gVirtualPS)
+      gVirtualPS->DrawPS(-n, &x.front(), &y.front());
+
    Modified();
 }
 
