@@ -484,7 +484,7 @@ TBufferJSON::TBufferJSON(TBuffer::EMode mode)
    // checks if setlocale(LC_NUMERIC) returns others than "C"
    // in this case locale will be changed and restored at the end of object conversion
 
-   char *loc = setlocale(LC_NUMERIC, 0);
+   char *loc = setlocale(LC_NUMERIC, nullptr);
    if (loc && (strcmp(loc, "C") != 0)) {
       fNumericLocale = loc;
       setlocale(LC_NUMERIC, "C");
@@ -501,9 +501,6 @@ TBufferJSON::~TBufferJSON()
 
    if (fNumericLocale.Length() > 0)
       setlocale(LC_NUMERIC, fNumericLocale.Data());
-
-   if (fSkipClasses)
-      delete fSkipClasses;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -607,12 +604,8 @@ void TBufferJSON::SetTypeversionTag(const char *tag)
 
 void TBufferJSON::SetSkipClassInfo(const TClass *cl)
 {
-   if (!cl)
-      return;
-   if (!fSkipClasses)
-      fSkipClasses = new TObjArray();
-
-   fSkipClasses->Add(const_cast<TClass *>(cl));
+   if (cl && (std::find(fSkipClasses.begin(), fSkipClasses.end(), cl) == fSkipClasses.end()))
+      fSkipClasses.emplace_back(cl);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -620,9 +613,7 @@ void TBufferJSON::SetSkipClassInfo(const TClass *cl)
 
 Bool_t TBufferJSON::IsSkipClassInfo(const TClass *cl) const
 {
-   if (!cl || !fSkipClasses) return kFALSE;
-
-   return fSkipClasses->FindObject(cl) != nullptr;
+   return cl && (std::find(fSkipClasses.begin(), fSkipClasses.end(), cl) != fSkipClasses.end());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
