@@ -118,13 +118,21 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Doubl
 
   // calculate the points to add to our curve
   Double_t prevYMax = getYAxisMax() ;
-  list<Double_t>* hint = f.plotSamplingHint(x,xlo,xhi) ;
-  addPoints(*funcPtr,xlo,xhi,xbins+1,prec,resolution,wmode,nEvalError,doEEVal,eeVal,hint);
-  if (_showProgress) {
-    ccoutP(Plotting) << endl ;
-  }
-  if (hint) {
-    delete hint ;
+  if(xbins > 0){
+    list<Double_t>* hint = f.plotSamplingHint(x,xlo,xhi) ;
+    addPoints(*funcPtr,xlo,xhi,xbins+1,prec,resolution,wmode,nEvalError,doEEVal,eeVal,hint);
+    if (_showProgress) {
+      ccoutP(Plotting) << endl ;
+    }
+    if (hint) {
+      delete hint ;
+    }
+  } else {
+    xbins = x.numBins();
+    for(int i=0; i<xbins; ++i){
+      double xval = x.getBinning().binCenter(i);
+      addPoint(xval,(*funcPtr)(&xval)) ;      
+    }
   }
   initialize();
 
@@ -328,7 +336,6 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
   step=0 ;
   for(list<Double_t>::iterator iter = xval->begin() ; iter!=xval->end() ; ++iter,++step) {
     Double_t xx = *iter ;
-    
     if (step==minPoints-1) xx-=1e-15 ;
 
     yval[step]= func(&xx);
