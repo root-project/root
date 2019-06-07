@@ -31,6 +31,7 @@ a RooPlot.
 #include "RooHist.h"
 #include "RooHistError.h"
 #include "RooCurve.h"
+#include "RooScaledFunc.h"
 #include "RooMsgService.h"
 
 #include "TH1.h"
@@ -257,6 +258,73 @@ RooHist::RooHist(const RooHist& hist1, const RooHist& hist2, Double_t wgt1, Doub
     }
   }
 
+}
+
+
+RooHist::RooHist(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xErrorFrac, Double_t scaleFactor, const RooArgSet *normVars, const RooFitResult* fr) :
+  TGraphAsymmErrors(), _nSigma(1), _rawEntries(-1)
+{
+  // grab the function's name and title
+  TString name(f.GetName());
+  SetName(name.Data());
+  TString title(f.GetTitle());
+  SetTitle(title.Data());
+  // append " ( [<funit> ][/ <xunit> ])" to our y-axis label if necessary
+  if(0 != strlen(f.getUnit()) || 0 != strlen(x.getUnit())) {
+    title.Append(" ( ");
+    if(0 != strlen(f.getUnit())) {
+      title.Append(f.getUnit());
+      title.Append(" ");
+    }
+    if(0 != strlen(x.getUnit())) {
+      title.Append("/ ");
+      title.Append(x.getUnit());
+      title.Append(" ");
+    }
+    title.Append(")");
+  }
+  setYAxisLabel(title.Data());
+
+  RooAbsFunc *funcPtr = 0;
+  RooAbsFunc *rawPtr  = 0;
+  funcPtr= f.bindVars(x,normVars,kTRUE);
+
+  // apply a scale factor if necessary
+  if(scaleFactor != 1) {
+    rawPtr= funcPtr;
+    funcPtr= new RooScaledFunc(*rawPtr,scaleFactor);
+  }
+  
+  // apply a scale factor if necessary
+  assert(0 != funcPtr);
+
+  // calculate the points to add to our curve
+  std::map<double,int> widthcount;
+  int xbins = x.numBins();
+  RooArgSet nset;
+  if(normVars) nset.add(*normVars);
+  for(int i=0; i<xbins; ++i){
+    double xval = x.getBinning().binCenter(i);
+    double xwidth = x.getBinning().binWidth(i);
+    if(widthcount.find(xwidth) == widthcount.end()) widthcount[xwidth] = 1;
+    else widthcount[xwidth]+=1;
+    Axis_t xval_ax = xval;
+    double yval = (*funcPtr)(&xval);
+    double yerr = sqrt(yval);
+    if(fr) yerr = f.getPropagatedError(*fr,nset);
+    addBinWithError(xval_ax,yval,yerr,yerr,xwidth,xErrorFrac,false,scaleFactor) ;
+    _entries += yval;
+  }
+  int count = 0;
+  for(auto it:widthcount){
+    if(it.first > count){
+      count = it.first; _nominalBinWidth=it.second;
+    }
+  }
+
+  // cleanup
+  delete funcPtr;
+  if(rawPtr) delete rawPtr;
 }
 
 
