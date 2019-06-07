@@ -45,6 +45,7 @@
 #include "RooBinning.h"
 #include "RooPlot.h"
 #include "RooCurve.h"
+#include "RooHist.h"
 #include "RooRealVar.h"
 #include "RooArgProxy.h"
 #include "RooFormulaVar.h"
@@ -1805,18 +1806,21 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   }
 
   PlotOpt o ;
+  TString drawOpt(pc.getString("drawOption"));
 
   RooFitResult* errFR = (RooFitResult*) pc.getObject("errorFR") ;
   Double_t errZ = pc.getDouble("errorZ") ;
   RooArgSet* errPars = pc.getSet("errorPars") ;
   Bool_t linMethod = pc.getInt("linearMethod") ;
-  if (errFR) {
+  if (!drawOpt.Contains("P") && errFR) {
     return plotOnWithErrorBand(frame,*errFR,errZ,errPars,argList,linMethod) ;
+  } else {
+    o.errorFR = errFR;
   }
 
   // Extract values from named arguments
   o.numee       = pc.getInt("numee") ;
-  o.drawOptions = pc.getString("drawOption") ;
+  o.drawOptions = drawOpt.Data();
   o.curveNameSuffix = pc.getString("curveNameSuffix") ;
   o.scaleFactor = pc.getDouble("scaleFactor") ;
   o.projData = (const RooAbsData*) pc.getObject("projData") ;
@@ -2286,13 +2290,6 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     // create a new curve of our function using the clone to do the evaluations
     // Curve constructor for regular projections
 
-    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
-    RooCurve *curve = new RooCurve(*projection,*plotVar,o.rangeLo,o.rangeHi,frame->GetNbinsX(),
-				   o.scaleFactor,0,o.precision,o.precision,o.shiftToZero,o.wmode,o.numee,o.doeeval,o.eeval,o.progress);
-    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
-
-
-
     // Set default name of curve
     TString curveName(projection->GetName()) ;
     if (sliceSet.getSize()>0) {
@@ -2302,25 +2299,42 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
       // Append any suffixes imported from RooAbsPdf::plotOn
       curveName.Append(o.curveNameSuffix) ;
     }
-    curve->SetName(curveName.Data()) ;
+    
+    TString opt(o.drawOptions);
+    if(opt.Contains("P")){
+      RooHist *graph= new RooHist(*projection,*plotVar,1.,1.,frame->getNormVars(),o.errorFR);
 
+      // Override name of curve by user name, if specified
+      if (o.curveName) {
+        graph->SetName(o.curveName) ;
+      }
 
-    // Add self to other curve if requested
-    if (o.addToCurveName) {
-      RooCurve* otherCurve = static_cast<RooCurve*>(frame->findObject(o.addToCurveName,RooCurve::Class())) ;
-      RooCurve* sumCurve = new RooCurve(projection->GetName(),projection->GetTitle(),*curve,*otherCurve,o.addToWgtSelf,o.addToWgtOther) ;
-      sumCurve->SetName(Form("%s_PLUS_%s",curve->GetName(),otherCurve->GetName())) ;
-      delete curve ;
-      curve = sumCurve ;
+      // add this new curve to the specified plot frame
+      frame->addPlotable(graph, o.drawOptions, o.curveInvisible);
+    } else {
+      RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
+      RooCurve *curve = new RooCurve(*projection,*plotVar,o.rangeLo,o.rangeHi,frame->GetNbinsX(),
+                                     o.scaleFactor,0,o.precision,o.precision,o.shiftToZero,o.wmode,o.numee,o.doeeval,o.eeval,o.progress);
+      RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
+      curve->SetName(curveName.Data()) ;
+
+      // Add self to other curve if requested
+      if (o.addToCurveName) {
+        RooCurve* otherCurve = static_cast<RooCurve*>(frame->findObject(o.addToCurveName,RooCurve::Class())) ;
+        RooCurve* sumCurve = new RooCurve(projection->GetName(),projection->GetTitle(),*curve,*otherCurve,o.addToWgtSelf,o.addToWgtOther) ;
+        sumCurve->SetName(Form("%s_PLUS_%s",curve->GetName(),otherCurve->GetName())) ;
+        delete curve ;
+        curve = sumCurve ;
+      }
+
+      // Override name of curve by user name, if specified
+      if (o.curveName) {
+        curve->SetName(o.curveName) ;
+      }
+
+      // add this new curve to the specified plot frame
+      frame->addPlotable(curve, o.drawOptions, o.curveInvisible);
     }
-
-    // Override name of curve by user name, if specified
-    if (o.curveName) {
-      curve->SetName(o.curveName) ;
-    }
-
-    // add this new curve to the specified plot frame
-    frame->addPlotable(curve, o.drawOptions, o.curveInvisible);
   }
 
   if (projDataNeededVars) delete projDataNeededVars ;
@@ -2661,7 +2675,7 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 /// \f$ \mathrm{Corr}(a,a') \f$ = the correlation matrix from the fit result
 ///
 
-Double_t RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &nset_in)
+Double_t RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &nset_in) const
 {
 
    // Strip out parameters with zero error
@@ -2811,6 +2825,10 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
   RooLinkedList tmp(plotArgList) ;
   plotOn(frame,tmp) ;
   RooCurve* cenCurve = frame->getCurve() ;
+  if(!cenCurve){
+    coutE(Plotting) << ClassName() << "::" << GetName() << ":plotOnWithErrorBand: no curve for central value available" << endl;
+    return frame;
+  }
   frame->remove(0,kFALSE) ;
 
   RooCurve* band(0) ;
@@ -2987,7 +3005,6 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
   // Insert error band in plot frame
   frame->addPlotable(band,pc.getString("drawOption"),pc.getInt("curveInvisible")) ;
 
-
   // Optionally adjust line/fill attributes
   Int_t lineColor = pc.getInt("lineColor") ;
   Int_t lineStyle = pc.getInt("lineStyle") ;
@@ -3002,9 +3019,9 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
   if (lineWidth!=-999) frame->getAttLine()->SetLineWidth(lineWidth) ;
   if (fillColor!=-999) frame->getAttFill()->SetFillColor(fillColor) ;
   if (fillStyle!=-999) frame->getAttFill()->SetFillStyle(fillStyle) ;
-  if (markerColor!=-999) ret->getAttMarker()->SetMarkerColor(markerColor) ;
-  if (markerStyle!=-999) ret->getAttMarker()->SetMarkerStyle(markerStyle) ;
-  if (markerSize!=-999) ret->getAttMarker()->SetMarkerSize(markerSize) ;
+  if (markerColor!=-999) frame->getAttMarker()->SetMarkerColor(markerColor) ;
+  if (markerStyle!=-999) frame->getAttMarker()->SetMarkerStyle(markerStyle) ;
+  if (markerSize!=-999) frame->getAttMarker()->SetMarkerSize(markerSize) ;
 
   // Adjust name if requested
   if (pc.getString("curveName",0,kTRUE)) {
