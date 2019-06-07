@@ -2718,12 +2718,10 @@ R__ALWAYS_INLINE void TBufferJSON::JsonReadFastArray(T *arr, Int_t arrsize, bool
       if (json->count("b") == 1) {
          auto base64 = json->at("b").get<std::string>();
 
+         int offset = (json->count("o") == 1) ? json->at("o").get<int>() : 0;
+
          // TODO: provide TBase64::Decode with direct write into target buffer
          auto decode = TBase64::Decode(base64.c_str());
-
-         int offset = 0;
-         if (json->count("o") == 1)
-            offset = json->at("o").get<int>();
 
          if (arrsize * (long) sizeof(T) < (offset + decode.Length())) {
             Error("ReadFastArray", "Base64 data %ld larger than target array size %ld", (long) decode.Length() + offset, (long) (arrsize*sizeof(T)));
@@ -2990,6 +2988,10 @@ R__ALWAYS_INLINE void TBufferJSON::JsonWriteArrayCompress(const T *vname, Int_t 
          bindx--;
 
       if (is_base64) {
+         // small initial offset makes no sense - JSON code is large then size gain
+         if ((aindx * sizeof(T) < 5) && (aindx < bindx))
+            aindx = 0;
+
          if ((aindx > 0) && (aindx < bindx))
             fValue.Append(TString::Format("%s\"o\":%ld", fArraySepar.Data(), (long) (aindx * (int) sizeof(T))));
 
