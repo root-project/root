@@ -192,7 +192,7 @@ macro(ROOTTEST_COMPILE_MACRO filename)
         -e "gSystem->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
         ${RootMacroDirDefines})
 
-  set(root_compile_macro root.exe ${RootMacroBuildDefines} -q -l -b)
+  set(root_compile_macro ${ROOT_root_CMD} ${RootMacroBuildDefines} -q -l -b)
 
   get_filename_component(realfp ${filename} ABSOLUTE)
 

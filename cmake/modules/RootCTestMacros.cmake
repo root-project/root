@@ -21,16 +21,16 @@ macro(ROOTTEST_SETUP_MACROTEST)
     list(APPEND RootExeDefines "-e;#define ${d}")
   endforeach()
 
-  set(root_cmd root.exe ${RootExeDefines}
+  set(root_cmd ${ROOT_root_CMD} ${RootExeDefines}
                -e "gSystem->SetBuildDir(\"${CMAKE_CURRENT_BINARY_DIR}\",true)"
                -e "gSystem->AddDynamicPath(\"${CMAKE_CURRENT_BINARY_DIR}\")"
                -e "gROOT->SetMacroPath(\"${CMAKE_CURRENT_SOURCE_DIR}\")"
                -e "gInterpreter->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
                -e "gSystem->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
                ${RootExternalIncludes} ${RootExeOptions}
-               -q -l -b) 
+               -q -l -b)
 
-  set(root_buildcmd root.exe ${RootExeDefines} -q -l -b)
+  set(root_buildcmd ${ROOT_root_CMD} ${RootExeDefines} -q -l -b)
 
   # Compile macro, then add to CTest.
   if(ARG_MACRO MATCHES "[.]C\\+" OR ARG_MACRO MATCHES "[.]cxx\\+")
@@ -40,7 +40,7 @@ macro(ROOTTEST_SETUP_MACROTEST)
     if(DEFINED ARG_MACROARG)
       set(command ${root_cmd} "${realfp}+(${ARG_MACROARG})")
     else()
-      set(command ${root_cmd} "${realfp}+")   
+      set(command ${root_cmd} "${realfp}+")
     endif()
 
   # Add interpreted macro to CTest.
@@ -51,7 +51,7 @@ macro(ROOTTEST_SETUP_MACROTEST)
     endif()
 
     set(command ${root_cmd} ${realfp})
-    
+
   # Add python script to CTest.
   elseif(ARG_MACRO MATCHES "[.]py")
     get_filename_component(realfp ${ARG_MACRO} REALPATH)
@@ -100,8 +100,8 @@ endmacro(ROOTTEST_SETUP_EXECTEST)
 
 #-------------------------------------------------------------------------------
 #
-# function ROOTTEST_ADD_TEST(testname 
-#                            MACRO|EXEC macro_or_command   
+# function ROOTTEST_ADD_TEST(testname
+#                            MACRO|EXEC macro_or_command
 #                            [MACROARG args1 arg2 ...]
 #                            [INPUT infile]
 #                            [ENABLE_IF root-feature]
@@ -164,7 +164,7 @@ function(ROOTTEST_ADD_TEST testname)
   if(ARG_EXEC)
     ROOTTEST_SETUP_EXECTEST()
   endif()
-  
+
   if(ARG_COMMAND)
     set(command ${ARG_COMMAND})
     if(ARG_OUTREF)
@@ -196,7 +196,7 @@ function(ROOTTEST_ADD_TEST testname)
         set(OUTREF_PATH ${OUTREF_PATH}-${CINT_VERSION})
       elseif(EXISTS ${OUTREF_PATH}${ROOTBITS})
         set(OUTREF_PATH ${OUTREF_PATH}${ROOTBITS})
-      endif() 
+      endif()
     else()
       if(EXISTS ${OUTREF_PATH}${ROOTBITS})
         set(OUTREF_PATH ${OUTREF_PATH}${ROOTBITS})
@@ -204,7 +204,7 @@ function(ROOTTEST_ADD_TEST testname)
     endif()
     set(outref OUTREF ${OUTREF_PATH})
   endif()
-  
+
   if(ARG_ERRREF)
     get_filename_component(ERRREF_PATH ${ARG_ERRREF} ABSOLUTE)
     set(errref ERRREF ${ERRREF_PATH})
@@ -237,11 +237,11 @@ function(ROOTTEST_ADD_TEST testname)
   if(ARG_LABELS)
     set(labels LABELS ${ARG_LABELS})
     if(testowner)
-      set(labels ${labels} ${testowner}) 
+      set(labels ${labels} ${testowner})
     endif()
   else()
     if(testowner)
-      set(labels LABELS ${testowner}) 
+      set(labels LABELS ${testowner})
     endif()
   endif()
 
@@ -417,11 +417,11 @@ function(ROOTTEST_ADD_UNITTEST_DIR)
   if(ARG_LABELS)
     set(labels LABELS ${ARG_LABELS})
     if(testowner)
-      set(labels ${labels} ${testowner}) 
+      set(labels ${labels} ${testowner})
     endif()
   else()
     if(testowner)
-      set(labels LABELS ${testowner}) 
+      set(labels LABELS ${testowner})
     endif()
   endif()
 
@@ -436,11 +436,11 @@ function(ROOTTEST_ADD_UNITTEST_DIR)
   if(ARG_LABELS)
     set(labels LABELS ${ARG_LABELS})
     if(testowner)
-      set(labels ${labels} ${testowner}) 
+      set(labels ${labels} ${testowner})
     endif()
   else()
     if(testowner)
-      set(labels LABELS ${testowner}) 
+      set(labels LABELS ${testowner})
     endif()
   endif()
 
@@ -480,7 +480,7 @@ function(ROOTTEST_ADD_UNITTEST_DIR)
                   PATH=${_path}:$ENV{PATH}
                   PYTHONPATH=${_pythonpath}:$ENV{PYTHONPATH}
                   ${ld_library_path}=${_librarypath}:$ENV{${ld_library_path}})
- 
+
 
   ROOT_ADD_TEST(${fulltestname} COMMAND ${binary}
     ${environment}
