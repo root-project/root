@@ -1,4 +1,4 @@
-// @(#)root/tmva/tmva/dnn:$Id$
+// @(#)root/tmva/tmva/dnn:$Id$ 
 // Author: Saurav Shekhar 23/06/17
 
 /*************************************************************************
@@ -17,12 +17,13 @@
 
 
 #include "TMVA/DNN/Architectures/Cpu.h"
+#include "TMVA/DNN/Architectures/Cpu/Blas.h"
 
 namespace TMVA
 {
 namespace DNN
 {
-
+  
 template<typename AFloat>
 auto TCpu<AFloat>::RecurrentLayerBackward(TCpuMatrix<AFloat> & state_gradients_backward, // BxH
                                           TCpuMatrix<AFloat> & input_weight_gradients,
@@ -30,7 +31,7 @@ auto TCpu<AFloat>::RecurrentLayerBackward(TCpuMatrix<AFloat> & state_gradients_b
                                           TCpuMatrix<AFloat> & bias_gradients,
                                           TCpuMatrix<AFloat> & df, //BxH
                                           const TCpuMatrix<AFloat> & state, // BxH
-                                          const TCpuMatrix<AFloat> & weights_input, // HxD
+                                          const TCpuMatrix<AFloat> & weights_input, // HxD 
                                           const TCpuMatrix<AFloat> & weights_state, // HxH
                                           const TCpuMatrix<AFloat> & input,  // BxD
                                           TCpuMatrix<AFloat> & input_gradient)
@@ -43,10 +44,10 @@ auto TCpu<AFloat>::RecurrentLayerBackward(TCpuMatrix<AFloat> & state_gradients_b
    // TMVA_DNN_PrintTCpuMatrix(input_weight_gradients,"input w grad");
    // TMVA_DNN_PrintTCpuMatrix(state,"state");
    // TMVA_DNN_PrintTCpuMatrix(input,"input");
-
+   
    // Compute element-wise product.
-   //Hadamard(df, state_gradients_backward);  // B x H
-
+   Hadamard(df, state_gradients_backward);  // B x H 
+   
    // Input gradients.
    if (input_gradient.GetNoElements() > 0) Multiply(input_gradient, df, weights_input);
 
@@ -54,9 +55,9 @@ auto TCpu<AFloat>::RecurrentLayerBackward(TCpuMatrix<AFloat> & state_gradients_b
    if (state_gradients_backward.GetNoElements() > 0) Multiply(state_gradients_backward, df, weights_state);
 
    // compute the gradients
-   // Perform the operation in place by readding the result on the same gradient matrix
+   // Perform the operation in place by readding the result on the same gradient matrix 
    // e.g. W += D * X
-
+   
    // Weights gradients
    if (input_weight_gradients.GetNoElements() > 0) {
       TransposeMultiply(input_weight_gradients, df, input, 1. , 1.); // H x B . B x D
@@ -82,8 +83,11 @@ auto TCpu<AFloat>::RecurrentLayerBackward(TCpuMatrix<AFloat> & state_gradients_b
 
 //______________________________________________________________________________
 template <typename AFloat>
-auto TCpu<AFloat>::LSTMLayerBackward(TCpuMatrix<AFloat> & state_gradients_backward,
-                                     TCpuMatrix<AFloat> & cell_gradients_backward,
+auto TCpu<AFloat>::LSTMLayerBackward(const TCpuMatrix<AFloat> & /* state_gradients_backward */,
+                                     /* const TCpuMatrix<AFloat> & input_state_gradients_backward, */
+                                     /* const TCpuMatrix<AFloat> & forget_state_gradients_backward, */
+                                     /* const TCpuMatrix<AFloat> & candidate_state_gradients_backward, */
+                                     /* const TCpuMatrix<AFloat> & output_state_gradients_backward, */
                                      TCpuMatrix<AFloat> & input_weight_gradients,
                                      TCpuMatrix<AFloat> & forget_weight_gradients,
                                      TCpuMatrix<AFloat> & candidate_weight_gradients,
@@ -97,58 +101,28 @@ auto TCpu<AFloat>::LSTMLayerBackward(TCpuMatrix<AFloat> & state_gradients_backwa
                                      TCpuMatrix<AFloat> & candidate_bias_gradients,
                                      TCpuMatrix<AFloat> & output_bias_gradients,
                                      TCpuMatrix<AFloat> & di,
-                                     TCpuMatrix<AFloat> & df,
                                      TCpuMatrix<AFloat> & dc,
+                                     TCpuMatrix<AFloat> & df,
                                      TCpuMatrix<AFloat> & dout,
-                                     const TCpuMatrix<AFloat> & precStateActivations,
-                                     //const TCpuMatrix<AFloat> & precCelleActivations,
-                                     //const TCpuMatrix<AFloat> & fCell,
-                                     //const TCpuMatrix<AFloat> & fInput,
-                                     //const TCpuMatrix<AFloat> & fForget,
-                                     //const TCpuMatrix<AFloat> & fCandidate,
-                                     //const TCpuMatrix<AFloat> & fOutput,
+                                     const TCpuMatrix<AFloat> & output_state,
+                                     const TCpuMatrix<AFloat> & /* cell_state */,
                                      const TCpuMatrix<AFloat> & weights_input,
                                      const TCpuMatrix<AFloat> & weights_forget,
                                      const TCpuMatrix<AFloat> & weights_candidate,
                                      const TCpuMatrix<AFloat> & weights_output,
-                                     const TCpuMatrix<AFloat> & weights_input_state,
-                                     const TCpuMatrix<AFloat> & weights_forget_state,
-                                     const TCpuMatrix<AFloat> & weights_candidate_state,
-                                     const TCpuMatrix<AFloat> & weights_output_state,
+                                     const TCpuMatrix<AFloat> & /* weights_input_state */,
+                                     const TCpuMatrix<AFloat> & /* weights_forget_state */,
+                                     const TCpuMatrix<AFloat> & /* weights_candidate_state */,
+                                     const TCpuMatrix<AFloat> & /* weights_output_state */,
                                      const TCpuMatrix<AFloat> & input,
-                                     TCpuMatrix<AFloat> & input_gradient)
+                                     TCpuMatrix<AFloat> & input_gradient,
+                                     TCpuMatrix<AFloat> & forget_gradient,
+                                     TCpuMatrix<AFloat> & candidate_gradient,
+                                     TCpuMatrix<AFloat> & output_gradient)
 -> TCpuMatrix<AFloat> &
 {
     /* TODO: Update all gate values during backward pass using required equations.
      * Reference: https://medium.com/@aidangomez/let-s-do-this-f9b699de31d9 */
-
-  //cell_gradient
-  //candidate_grad (init 1)
-  //inp
-  //for
-  //op
-
-  /*
-  DNN::evaluateDerivative<Architecture_t>(cell_gradient, DNN::EActivationFunction::kTanh, fCell);
-  Hadamard(cell_gradient, fOuptput); 
-  Hadamard(cell_gradient, state_gradients_backward);
-  ScaleAdd(cell_gradient, cell_gradients_backward);
-  
-  Hadamard(candidate_gradient, cell_gradient);
-  Hadamard(candidate_gradient, fInput);
-  Hadamard(candidate_gradient, dc);
-
-  Hadamard(input_gradient, cell_gradient);
-  Hadamard(input_gradient, fCandidate);
-  Hadamard(input_gradient, dci);
-
-  Hadamard(forget_gradient, cell_gradient);
-  Hadamard(forget_gradient, fInput);
-  Hadamard(candidate_gradient, dc);
-
-  Hadamard(cell_gradient, fForget);
-  Copy(cell_gradient, cell_gradients_backward);
-  */
 
     // Input gradients.
     if (input_gradient.GetNElements() > 0) Multiply(input_gradient, di, weights_input);

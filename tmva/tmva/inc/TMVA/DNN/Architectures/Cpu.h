@@ -220,6 +220,61 @@ public:
                         const Tensor_t & activationGradients,
                         const Matrix_t & weights,
                         const Tensor_t & activationBackward);
+   // static void Backward(TCpuMatrix<Scalar_t> & activationGradientsBackward,
+   //                      TCpuMatrix<Scalar_t> & weightGradients,
+   //                      TCpuMatrix<Scalar_t> & biasGradients,
+   //                      TCpuMatrix<Scalar_t> & df,
+   //                      const TCpuMatrix<Scalar_t> & activationGradients,
+   //                      const TCpuMatrix<Scalar_t> & weights,
+   //                      const TCpuMatrix<Scalar_t> & activationBackward);
+   /** Backward pass for Recurrent Networks */
+   static Matrix_t & RecurrentLayerBackward(TCpuMatrix<Scalar_t> & state_gradients_backward, // BxH
+                                            TCpuMatrix<Scalar_t> & input_weight_gradients,
+                                            TCpuMatrix<Scalar_t> & state_weight_gradients,
+                                            TCpuMatrix<Scalar_t> & bias_gradients,
+                                            TCpuMatrix<Scalar_t> & df, //DxH
+                                            const TCpuMatrix<Scalar_t> & state, // BxH
+                                            const TCpuMatrix<Scalar_t> & weights_input, // HxD 
+                                            const TCpuMatrix<Scalar_t> & weights_state, // HxH
+                                            const TCpuMatrix<Scalar_t> & input,  // BxD
+                                            TCpuMatrix<Scalar_t> & input_gradient);
+	
+  /** Backward pass for LSTM Network */
+    static Matrix_t & LSTMLayerBackward(TCpuMatrix<AFloat> & state_gradients_backward,
+			               TCpuMatrix<AFloat> & cell_gradients_backward,
+			               TCpuMatrix<AFloat> & input_weight_gradients,
+                                       TCpuMatrix<AFloat> & forget_weight_gradients,
+                                       TCpuMatrix<AFloat> & candidate_weight_gradients,
+                                       TCpuMatrix<AFloat> & output_weight_gradients,
+                                       TCpuMatrix<AFloat> & input_state_weight_gradients,
+                                       TCpuMatrix<AFloat> & forget_state_weight_gradients,
+                                       TCpuMatrix<AFloat> & candidate_state_weight_gradients,
+                                       TCpuMatrix<AFloat> & output_state_weight_gradients,
+                                       TCpuMatrix<AFloat> & input_bias_gradients,
+                                       TCpuMatrix<AFloat> & forget_bias_gradients,
+                                       TCpuMatrix<AFloat> & candidate_bias_gradients,
+                                       TCpuMatrix<AFloat> & output_bias_gradients,
+                                       TCpuMatrix<AFloat> & di,
+                                       TCpuMatrix<AFloat> & df,
+                                       TCpuMatrix<AFloat> & dc,
+                                       TCpuMatrix<AFloat> & dout,
+                                       const TCpuMatrix<AFloat> & precStateActivations,
+                                       //const TCpuMatrix<AFloat> & precCelleActivations,
+                                       //const TCpuMatrix<AFloat> & fCell,
+                                       //const TCpuMatrix<AFloat> & fInput,
+                                       //const TCpuMatrix<AFloat> & fForget,
+                                       //const TCpuMatrix<AFloat> & fCandidate,
+                                       //const TCpuMatrix<AFloat> & fOutput,
+                                       const TCpuMatrix<AFloat> & weights_input,
+                                       const TCpuMatrix<AFloat> & weights_forget,
+                                       const TCpuMatrix<AFloat> & weights_candidate,
+                                       const TCpuMatrix<AFloat> & weights_output,
+                                       const TCpuMatrix<AFloat> & weights_input_state,
+                                       const TCpuMatrix<AFloat> & weights_forget_state,
+                                       const TCpuMatrix<AFloat> & weights_candidate_state,
+                                       const TCpuMatrix<AFloat> & weights_output_state,
+                                       const TCpuMatrix<AFloat> & input,
+                                       TCpuMatrix<AFloat> & input_gradient);
 
    /** Adds a the elements in matrix B scaled by c to the elements in
     *  the matrix A. This is required for the weight update in the gradient
