@@ -43,6 +43,7 @@
 #include "TMVA/DNN/CNN/MaxPoolLayer.h"
 
 #include "TMVA/DNN/RNN/RNNLayer.h"
+#include "TMVA/DNN/LSTM/LSTMLayer.h"
 
 #ifdef HAVE_DAE
 #include "TMVA/DNN/DAE/CompressionLayer.h"
@@ -60,6 +61,7 @@ namespace DNN {
 
    using namespace CNN;
    using namespace RNN;
+   using namespace LSTM;
    //using namespace DAE;
 
 /** \class TDeepNet
@@ -149,6 +151,17 @@ public:
    /*! Function for adding Vanilla RNN when the layer is already created
     */
    void AddBasicRNNLayer(TBasicRNNLayer<Architecture_t> *basicRNNLayer);
+
+   /*! Function for adding LSTM Layer in the Deep Neural Network,
+    * with given parameters */
+   TBasicLSTMLayer<Architecture_t> *AddBasicLSTMLayer(size_t stateSize, size_t inputSize, size_t timeSteps,
+                                                    bool rememberState = false);
+
+   /*! Function for adding LSTM Layer in the Deep Neural Network,
+    * when the layer is already created. */
+   void AddBasicLSTMLayer(TBasicLSTMLayer<Architecture_t> *basicLSTMLayer);
+
+
 
    /*! Function for adding Dense Connected Layer in the Deep Neural Network,
     *  with a given width, activation function and dropout probability.
@@ -541,6 +554,46 @@ void TDeepNet<Architecture_t, Layer_t>::AddBasicRNNLayer(TBasicRNNLayer<Architec
 {
    fLayers.push_back(basicRNNLayer);
 }
+
+//______________________________________________________________________________
+template <typename Architecture_t, typename Layer_t>
+TBasicLSTMLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBasicLSTMLayer(size_t stateSize, size_t inputSize,
+                                                                                      size_t timeSteps, bool rememberState)
+{
+   // should check if input and time size are consistent
+   size_t inputHeight, inputWidth;
+   if (fLayers.size() == 0) {
+      inputHeight = this->GetInputHeight();
+      inputWidth = this->GetInputWidth();
+   } else {
+      Layer_t *lastLayer = fLayers.back();
+      inputHeight = lastLayer->GetHeight();
+      inputWidth = lastLayer->GetWidth();
+   }
+   if (inputSize != inputWidth) {
+      Error("AddBasicLSTMLayer", "Inconsistent input size with input layout  - it should be %zu instead of %zu", inputSize, inputWidth);
+   }
+   if (timeSteps != inputHeight) {
+      Error("AddBasicLSTMLayer", "Inconsistent time steps with input layout - it should be %zu instead of %zu", timeSteps, inputHeight);
+   }
+
+   TBasicLSTMLayer<Architecture_t> *basicLSTMLayer =
+      new TBasicLSTMLayer<Architecture_t>(this->GetBatchSize(), stateSize, inputSize, timeSteps, rememberState,
+                                         DNN::EActivationFunction::kSigmoid, 
+                                         DNN::EActivationFunction::kTanh,
+                                         fIsTraining, this->GetInitialization());
+   fLayers.push_back(basicLSTMLayer);
+   return basicLSTMLayer;
+}
+
+//______________________________________________________________________________
+template <typename Architecture_t, typename Layer_t>
+void TDeepNet<Architecture_t, Layer_t>::AddBasicLSTMLayer(TBasicLSTMLayer<Architecture_t> *basicLSTMLayer)
+{
+   fLayers.push_back(basicLSTMLayer);
+}
+  
+
 
 //DAE
 #ifdef HAVE_DAE
