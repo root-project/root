@@ -111,4 +111,4 @@ The following people have contributed to this new version:
 
 ## Build, Configuration and Testing Infrastructure
 - Make MLP optional via the "-Dmlp={OFF,ON}" switch for CMake
-
+- Make Spectrum optional via the "-Dspectrum={OFF,ON}" switch for CMake
