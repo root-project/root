@@ -10,27 +10,30 @@
  *************************************************************************/
 
 /** \class TClass
-The ROOT global object gROOT contains a list of all defined
-classes. This list is build when a reference to a class dictionary
-is made. When this happens, the static "class"::Dictionary()
-function is called to create a TClass object describing the
-class. The Dictionary() function is defined in the ClassDef
-macro and stored (at program startup or library load time) together
-with the class name in the TClassTable singleton object.
-For a description of all dictionary classes see TDictionary.
+TClass instances represent classes, structs and namespaces in the ROOT type system.
 
-The name of the class as registered in the TClass object and in the
-list of class is the "normalized name" and is defined as:
+TClass instances are created starting from different sources of information:
+1. TStreamerInfo instances saved in a ROOT file which is opened. This is called in jargon an *emulated TClass*.
+2. From TProtoClass instances saved in a ROOT pcm file created by the dictionary generator and the dictionary itself.
+3. From a lookup in the AST built by cling.
 
-The name of the type as accessible from the global scope to which
-a 'using namespace std;' has been applied to and with:
-   - all typedefs disagreed except for Double32_t, Float16_t,
-     Long64_t, ULong64_t and std::string.
-   - default template parameters removed for STL collections and
-     added for any other class templates instances.
-   - Fully qualified both for the class name itself and all of its
-     component, except that, at least for moment, all 'std::' are
-     stripped.
+If a TClass instance is built through the mechanisms 1. and 2., it does not contain information about methods of the 
+class/struct/namespace it represents. Conversely, if built through 3. or 1., it does not carry the information which is necessary
+to ROOT to perform I/O of instances of the class/struct it represents.
+The mechanisms 1., 2. and 3. are not mutually exclusive: it can happen that during the execution of the program, all 
+the three are triggered, modifying the state of the TClass instance.
+
+In order to retrieve a TClass instance from the type system, a query can be executed as follows through the static 
+TClass::GetClass method:
+```{.cpp}
+auto myClassTClass_0 = TClass::GetClass("myClass");
+auto myClassTClass_1 = TClass::GetClass<myClass>();
+auto myClassTClass_2 = TClass::GetClass(myClassTypeInfo);
+```
+
+The name of classes is crucial for ROOT. A careful procedure of *name normalization* is carried out for
+each and every class. A *normalized name* is a valid C++ class name.
+In order to access the name of a class within the ROOT type system, the method TClass::GetName() can be used.
 */
 
 //*-*x7.5 macros/layout_class
