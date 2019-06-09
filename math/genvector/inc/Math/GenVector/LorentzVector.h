@@ -41,6 +41,16 @@ namespace ROOT {
         relativistic particles. A LorentzVector behaves like a
         DisplacementVector in 4D.  The Minkowski components could be viewed as
         v and t, or for kinematic 4-vectors, as p and E.
+        
+        ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVector template:
+        - ROOT::Math::PtEtaPhiMVector based on pt (rho),eta,phi and M (t) coordinates in double precision
+        - ROOT::Math::PtEtaPhiEVector based on pt (rho),eta,phi and E (t) coordinates in double precision
+        - ROOT::Math::PxPyPzMVector based on px,py,pz and M (mass) coordinates in double precision
+        - ROOT::Math::XYZTVector based on x,y,z,t coordinates (cartesian) in double precision
+        - ROOT::Math::XYZTVectorF based on x,y,z,t coordinates (cartesian) in float precision
+
+More details about the GenVector package can be found [here](Vector.html).
+
 
      @ingroup GenVector
     */
