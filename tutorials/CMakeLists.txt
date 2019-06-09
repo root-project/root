@@ -70,6 +70,10 @@ if(NOT ROOT_mlp_FOUND)
    set(mlp_veto legacy/mlp/*.C)
 endif()
 
+if(NOT ROOT_spectrum_FOUND)
+   set(spectrum_veto spectrum/*.C)
+endif()
+
 if(NOT ROOT_roofit_FOUND)
   set(roofit_veto  fit/RoofitDemo.C
                    roofit/*.C roostats/*.C histfactory/*.C
@@ -275,6 +279,7 @@ set(all_veto hsimple.C
              ${bits32_veto}
              ${xrootd_veto}
              ${mlp_veto}
+             ${spectrum_veto}
              )
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
