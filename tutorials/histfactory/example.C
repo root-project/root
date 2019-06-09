@@ -1,9 +1,9 @@
 /// \file
-/// \ingroup tutorial_eve
+/// \ingroup tutorial_histfactory
 /// A ROOT script demonstrating  an example of writing a HistFactory  model using c++ only.
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \author George Lewis
 
