@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_pyroot
+## \ingroup tutorial_pyroot_legacy
 ## Prints a summary of all ROOT benchmarks (must be run before)
 ## The ROOTMARK number printed is by reference to a Pentium IV 2.4 Ghz
 ## (with 512 MBytes memory and 120 GBytes IDE disk)
