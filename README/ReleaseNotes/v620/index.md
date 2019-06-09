@@ -103,11 +103,12 @@ The following people have contributed to this new version:
 
 
 ## Tutorials
+- Add the "Legacy" category collecting the old tutorials which do not represent any more best practices
 
 
 ## Class Reference Guide
 
 
 ## Build, Configuration and Testing Infrastructure
-
+- Make MLP optional via the "-Dmlp={OFF,ON}" switch for CMake
 
