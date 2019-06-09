@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_cont
+/// \ingroup tutorial_cont_legacy
 /// \notebook -nodraw
 /// This is an example of using TList with STL algoritms in CLING.
 ///
