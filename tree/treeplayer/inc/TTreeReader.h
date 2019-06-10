@@ -220,7 +220,8 @@ public:
 
    EEntryStatus GetEntryStatus() const { return fEntryStatus; }
 
-   Long64_t GetEntries(Bool_t force) const;
+   Long64_t GetEntries() const;
+   Long64_t GetEntries(Bool_t force);
 
    /// Returns the index of the current entry being read.
    ///

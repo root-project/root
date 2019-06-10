@@ -419,19 +419,40 @@ void TTreeReader::Restart() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the number of entries of the TEntryList if one is provided, else
+/// of the TTree / TChain, independent of a range set by SetEntriesRange()
+/// by calling TTree/TChain::GetEntriesFast.
+
+
+Long64_t TTreeReader::GetEntries() const {
+   if (fEntryList)
+      return fEntryList->GetN();
+   if (!fTree)
+      return -1;
+   return fTree->GetEntriesFast();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the number of entries of the TEntryList if one is provided, else
 /// of the TTree / TChain, independent of a range set by SetEntriesRange().
 ///
 /// \param force If `IsChain()` and `force`, determines whether all TFiles of
 ///   this TChain should be opened to determine the exact number of entries
 /// of the TChain. If `!IsChain()`, `force` is ignored.
 
-Long64_t TTreeReader::GetEntries(Bool_t force) const {
+Long64_t TTreeReader::GetEntries(Bool_t force)  {
    if (fEntryList)
       return fEntryList->GetN();
    if (!fTree)
       return -1;
-   if (force)
-      return fTree->GetEntries();
+   if (force) {
+      fSetEntryBaseCallingLoadTree = kTRUE;
+      auto res = fTree->GetEntries();
+      // Go back to where we were:
+      fTree->LoadTree(GetCurrentEntry());
+      fSetEntryBaseCallingLoadTree = kFALSE;
+      return res;
+   }
    return fTree->GetEntriesFast();
 }
 
