@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorials_regexp
+/// \ingroup tutorial_regexp
 /// A regular expression, often called a pattern, is an expression that describes a set of
 /// strings. They are usually used to give a concise description of a set, without having to
 /// list all elements.
