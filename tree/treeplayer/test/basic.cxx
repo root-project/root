@@ -367,6 +367,16 @@ TEST(TTreeReaderBasic, DisappearingBranch)
    EXPECT_EQ(*rv,42);
    EXPECT_FALSE(r.Next());
    
+   // Make the warnings fatal.
+   gErrorAbortLevel = kWarning;
+   TChain c2("t");
+   c2.Add("DisappearingBranch0.root");
+   c2.Add("DisappearingBranch0.root");
+   c2.Add("DisappearingBranch0.root");
+   TTreeReader r2(&c2);
+   EXPECT_EQ(r2.GetEntries(true),3);
+   EXPECT_FALSE(r2.SetEntry(0));
+   gErrorAbortLevel = kFatal;
 
    gSystem->Unlink("DisappearingBranch0.root");
    gSystem->Unlink("DisappearingBranch1.root");
