@@ -317,11 +317,11 @@ RooHist::RooHist(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xErrorFrac, 
   }
   int count = 0;
   for(auto it:widthcount){
-    if(it.first > count){
-      count = it.first; _nominalBinWidth=it.second;
+    if(it.second > count){
+      count = it.second; _nominalBinWidth=it.first;
     }
   }
-
+  
   // cleanup
   delete funcPtr;
   if(rawPtr) delete rawPtr;
