@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorials_regexp
+/// \ingroup tutorial_regexp
 /// Class TPMERegexp - API similar to PME - PCRE Made Easy
 /// Tries to be as close as possible to PERL syntax and functionality.
 ///
