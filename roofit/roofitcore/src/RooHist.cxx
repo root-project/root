@@ -318,10 +318,12 @@ Double_t RooHist::getFitRangeNEvt(Double_t xlo, Double_t xhi) const
   }
 
   if (_rawEntries!=-1) {
-    coutW(Plotting) << "RooHist::getFitRangeNEvt() WARNING: Number of normalization events associated to histogram is not equal to number of events in histogram" << endl
-          << "                           due cut made in RooAbsData::plotOn() call. Automatic normalization over sub-range of plot variable assumes"    << endl
-          << "                           that the effect of that cut is uniform across the plot, which may be an incorrect assumption. To be sure of"   << endl
-          << "                           correct normalization explicit pass normalization information to RooAbsPdf::plotOn() call using Normalization()" << endl ;
+    coutW(Plotting) << "RooHist::getFitRangeNEvt() WARNING: The number of normalisation events associated to histogram " << GetName() << " is not equal to number of events in this histogram."
+          << "\n\t\t This is due a cut being applied while plotting the data. Automatic normalisation over a sub-range of a plot variable assumes"
+          << "\n\t\t that the effect of that cut is uniform across the plot, which may be an incorrect assumption. To obtain a correct normalisation, it needs to be passed explicitly:"
+          << "\n\t\t\t data->plotOn(frame01,CutRange(\"SB1\"));"
+          << "\n\t\t\t const double nData = data->sumEntries(\"\", \"SB1\"); //or the cut string such as sumEntries(\"x > 0.\");"
+          << "\n\t\t\t model.plotOn(frame01, RooFit::Normalization(nData, RooAbsReal::NumEvent), ProjectionRange(\"SB1\"));" << endl ;
     sum *= _rawEntries / _entries ;
   }
 

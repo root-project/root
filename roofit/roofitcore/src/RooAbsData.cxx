@@ -1590,6 +1590,17 @@ TList* RooAbsData::split(const RooAbsCategory& splitCat, Bool_t createEmptyDataS
 ///     not the first one added to the frame. By default only the 1st dataset
 ///     added to a frame will update the normalization information
 /// <tr><td> `Rescale(Double_t f)`   <td> Rescale drawn histogram by given factor
+/// <tr><td> `CutRange(const char*)` <td> Apply cuts to dataset.
+/// \note This often requires passing the normalisation when plotting the PDF because RooFit does not save
+/// how many events were being plotted (it will only work for cutting slices out of uniformly distributed variables).
+/// ```
+///  data->plotOn(frame01, CutRange("SB1"));
+///  const double nData = data->sumEntries("", "SB1");
+///  // Make clear that the target normalisation is nData. The enumerator NumEvent
+///  // is needed to switch between relative and absolute scaling.
+///  model.plotOn(frame01, Normalization(nData, RooAbsReal::NumEvent),
+///    ProjectionRange("SB1"));
+/// ```
 ///
 /// <tr><th> <th> Histogram drawing options
 /// <tr><td> `DrawOption(const char* opt)`   <td> Select ROOT draw option for resulting TGraph object
