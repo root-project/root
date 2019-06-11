@@ -252,6 +252,7 @@ std::unique_ptr<TVirtualRWMutex::State>
 TReentrantRWLock<MutexT, RecurseCountsT>::GetStateBefore()
 {
    using State_t = TReentrantRWLockState<MutexT, RecurseCountsT>;
+   using BaseState_t = TVirtualRWMutex::State;
    if (!fWriter) {
       Error("TReentrantRWLock::GetStateBefore()", "Must be write locked!");
       return nullptr;
@@ -273,7 +274,13 @@ TReentrantRWLock<MutexT, RecurseCountsT>::GetStateBefore()
    // was taken, the write recursion level was `fWriteRecurse - 1`
    pState->fWriteRecurse = fRecurseCounts.fWriteRecurse - 1;
 
-   return std::move(pState);
+#if __GNUC__ < 7
+   // older version of gcc can not convert implicitly from
+   // unique_ptr of derived to unique_ptr of base
+   return std::unique_ptr<BaseState_t>(pState.release());
+#else
+   return pState;
+#endif
 }
 
 //////////////////////////////////////////////////////////////////////////
