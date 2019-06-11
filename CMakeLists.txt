@@ -29,19 +29,21 @@ endif()
 # Treat ROOT as a dependency for roottest.git
 find_package(ROOT REQUIRED CONFIG)
 
+# Deprecation of directly using ROOTSYS for roottest.git
 if(DEFINED ENV{ROOTSYS})
-  message(DEPRECATION "Using directly ROOTSYS for roottest.git is under deprecation, please add ROOT in PATH.")
+  message(STATUS "Using directly ROOTSYS for roottest.git is under deprecation, please add ROOT in PATH.")
 endif()
 
 # If ROOT_SOURCE_DIR is set, roottest is built as part of the root build.
 # If ROOT_SOURCE_DIR is not set, search for an installation.
 if(DEFINED ROOT_SOURCE_DIR)
   # root-config --prefix helps to retrieve ROOTSYS env variable.
+  # ROOT_BINARY_DIR is set by ROOTConfig.cmake
   find_program(ROOT_CONFIG_EXECUTABLE root-config PATHS ${ROOT_BINARY_DIR})
   if(NOT ROOT_CONFIG_EXECUTABLE)
     message(ERROR "root-config is not found, please rerun configuration step.")
   endif()
-  exec_program(root-config ARGS "--prefix" OUTPUT_VARIABLE ROOTSYS RETURN_VALUE RETVAR)
+  exec_program(${ROOT_CONFIG_EXECUTABLE} ARGS "--prefix" OUTPUT_VARIABLE ROOTSYS RETURN_VALUE RETVAR)
   set(ROOTSYS ${ROOTSYS} CACHE INTERNAL "")
   set(ROOT_LIBRARIES Core RIO Net Hist Gpad Tree Rint Matrix MathCore)
   set(ROOT_root_CMD ${ROOTSYS}/bin/root.exe)
@@ -52,13 +54,13 @@ if(DEFINED ROOT_SOURCE_DIR)
 else() # standalone roottest.git
   include(${ROOT_USE_FILE})
   # root-config --prefix helps to retrieve ROOTSYS env variable.
-  find_program(ROOT_CONFIG_EXECUTABLE root-config PATH)
-  exec_program(root-config ARGS "--prefix" OUTPUT_VARIABLE ROOTSYS RETURN_VALUE RETVAR)
+  find_program(ROOT_CONFIG_EXECUTABLE root-config)
+  exec_program(${ROOT_CONFIG_EXECUTABLE} ARGS "--prefix" OUTPUT_VARIABLE ROOTSYS RETURN_VALUE RETVAR)
   set(ROOTSYS ${ROOTSYS} CACHE INTERNAL "")
   # Some roottest.git tests are checking LZ4, which has different references depends on its version.
   # We recover LZ4 version used in ROOT, stored in root-config --config output.
-  exec_program(root-config ARGS "--srcdir" OUTPUT_VARIABLE ROOT_SOURCE_DIR)
-  exec_program(root-config ARGS "--config" OUTPUT_VARIABLE ROOT_CONFIG_VARIABLES RETURN_VALUE RETVAR)
+  exec_program(${ROOT_CONFIG_EXECUTABLE} ARGS "--srcdir" OUTPUT_VARIABLE ROOT_SOURCE_DIR)
+  exec_program(${ROOT_CONFIG_EXECUTABLE} ARGS "--config" OUTPUT_VARIABLE ROOT_CONFIG_VARIABLES RETURN_VALUE RETVAR)
   separate_arguments(ROOT_CONFIG_VARIABLES)
   foreach(item ${ROOT_CONFIG_VARIABLES})
     if("${item}" MATCHES "LZ4_VERSION=(.*)")
