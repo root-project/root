@@ -4966,6 +4966,9 @@ void TTreeFormula::ResetLoading()
          ((TTreeFormula *)(c->GetObjectY()))->ResetLoading();
       }
    }
+   fRealInstanceCache.fInstanceCache = 0;
+   fRealInstanceCache.fLocalIndexCache = 0;
+   fRealInstanceCache.fVirtAccumCache = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
