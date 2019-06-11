@@ -1,55 +1,72 @@
-# - Try to find CFITSIO
-# Once done this will define
+#.rst:
+# FindCFITSIO
+# -------
 #
-#  CFITSIO_FOUND - system has CFITSIO
-#  CFITSIO_INCLUDE_DIR - the CFITSIO include directory
-#  CFITSIO_LIBRARY - the CFITSIO library
-#  CFITSIO_LIBRARIES (not cached) - Link these to use CFITSIO
-#  CFITSIO_VERSION_STRING - Human readable version number of cfitsio
-#  CFITSIO_VERSION_MAJOR  - Major version number of cfitsio
-#  CFITSIO_VERSION_MINOR  - Minor version number of cfitsio
-
-# Copyright (c) 2006, Jasem Mutlaq <mutlaqja@ikarustech.com>
-# Based on FindLibfacile by Carsten Niehaus, <cniehaus@gmx.de>
-# Chnaged by Pere Mato
+# Find the CFITSIO library header and define variables.
 #
-# Redistribution and use is allowed according to the terms of the BSD license.
-# For details see the accompanying COPYING-CMAKE-SCRIPTS file.
+# Imported Targets
+# ^^^^^^^^^^^^^^^^
+#
+# This module defines :prop_tgt:`IMPORTED` target ``CFITSIO::CFITSIO``,
+# if CFITSIO has been found
+#
+# Result Variables
+# ^^^^^^^^^^^^^^^^
+#
+# This module defines the following variables:
+#
+# ::
+#
+#   CFITSIO_FOUND          - True if CFITSIO is found.
+#   CFITSIO_INCLUDE_DIRS   - Where to find fitsio.h
+#
+# ::
+#
+#   CFITSIO_VERSION        - The version of CFITSIO found (x.y)
+#   CFITSIO_VERSION_MAJOR  - The major version of CFITSIO
+#   CFITSIO_VERSION_MINOR  - The minor version of CFITSIO
 
-
-find_path(CFITSIO_INCLUDE_DIR fitsio.h
+find_path(CFITSIO_INCLUDE_DIR NAME fitsio.h
   PATH_SUFFIXES libcfitsio3 libcfitsio0 cfitsio
-  PATHS
-  $ENV{CFITSIO}
-  ${CFITSIO_DIR}/include
-  ${GNUWIN32_DIR}/include
-)
+  PATHS $ENV{CFITSIO} ${CFITSIO_DIR}/include ${GNUWIN32_DIR}/include)
 
-find_library(CFITSIO_LIBRARY NAMES cfitsio
-  PATHS
-  $ENV{CFITSIO}
-  ${CFITSIO_DIR}/lib
-  ${GNUWIN32_DIR}/lib
-)
-if(CFITSIO_LIBRARY)
-  set(CFITSIO_LIBRARIES ${CFITSIO_LIBRARY})
+if(NOT CFITSIO_LIBRARY)
+  find_library(CFITSIO_LIBRARY NAMES cfitsio
+    PATHS $ENV{CFITSIO} ${CFITSIO_DIR}/lib ${GNUWIN32_DIR}/lib)
 endif()
 
-# handle the QUIETLY and REQUIRED arguments and set CFITSIO_FOUND to TRUE if
-# all listed variables are TRUE
-INCLUDE(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(CFITSIO DEFAULT_MSG CFITSIO_INCLUDE_DIR CFITSIO_LIBRARY)
+mark_as_advanced(CFITSIO_INCLUDE_DIR CFITSIO_LIBRARY)
 
-mark_as_advanced(
-  CFITSIO_LIBRARY
-  CFITSIO_INCLUDE_DIR
-)
+if(CFITSIO_INCLUDE_DIR AND EXISTS "${CFITSIO_INCLUDE_DIR}/fitsio.h")
+  file(STRINGS "${CFITSIO_INCLUDE_DIR}/fitsio.h" CFITSIO_H REGEX "^#define CFITSIO_[A-Z]+[ ]+[0-9]+.*$")
+  string(REGEX REPLACE ".+CFITSIO_MAJOR[ ]+([0-9]+).*$"   "\\1" CFITSIO_VERSION_MAJOR "${CFITSIO_H}")
+  string(REGEX REPLACE ".+CFITSIO_MINOR[ ]+([0-9]+).*$"   "\\1" CFITSIO_VERSION_MINOR "${CFITSIO_H}")
+  set(CFITSIO_VERSION "${CFITSIO_VERSION_MAJOR}.${CFITSIO_VERSION_MINOR}")
+endif()
 
-if (CFITSIO_FOUND)
-  # Find the version of the cfitsio header
-  FILE(READ "${CFITSIO_INCLUDE_DIR}/fitsio.h" FITSIO_H)
-  STRING(REGEX REPLACE ".*#define CFITSIO_VERSION[^0-9]*([0-9]+)\\.([0-9]+).*" "\\1.\\2" CFITSIO_VERSION_STRING "${FITSIO_H}")
-  STRING(REGEX REPLACE "^([0-9]+)[.]([0-9]+)" "\\1" CFITSIO_VERSION_MAJOR ${CFITSIO_VERSION_STRING})
-  STRING(REGEX REPLACE "^([0-9]+)[.]([0-9]+)" "\\2" CFITSIO_VERSION_MINOR ${CFITSIO_VERSION_STRING})
-  message(STATUS "Found CFITSIO version: ${CFITSIO_VERSION_STRING}")
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(CFITSIO
+  REQUIRED_VARS CFITSIO_LIBRARY CFITSIO_INCLUDE_DIR VERSION_VAR CFITSIO_VERSION)
+
+if(CFITSIO_FOUND)
+  set(CFITSIO_INCLUDE_DIRS "${CFITSIO_INCLUDE_DIR}")
+
+  if(NOT CFITSIO_LIBRARIES)
+    set(CFITSIO_LIBRARIES ${CFITSIO_LIBRARY})
+    if(${CFITSIO_VERSION} VERSION_GREATER_EQUAL 3.42)
+      find_package(CURL QUIET)
+      if(CURL_FOUND)
+        set(CFITSIO_LIBRARIES "${CFITSIO_LIBRARIES} ${CURL_LIBRARIES}")
+      endif()
+    endif()
+  endif()
+
+  if(NOT TARGET CFITSIO::CFITSIO)
+    add_library(CFITSIO::CFITSIO UNKNOWN IMPORTED)
+    set_target_properties(CFITSIO::CFITSIO PROPERTIES
+      IMPORTED_LOCATION "${CFITSIO_LIBRARY}"
+      INTERFACE_INCLUDE_DIRECTORIES "${CFITSIO_INCLUDE_DIRS}"
+      INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}"
+    )
+  endif()
 endif()
