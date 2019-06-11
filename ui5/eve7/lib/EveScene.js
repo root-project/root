@@ -352,13 +352,13 @@ sap.ui.define([
       var is_secsel = indx !== undefined;
 
       var so = this.mgr.GetElement(this.mgr.global_highlight_id);
-      var a = so.prev_sel_list;
+      var a = so ? so.prev_sel_list : null;
 
       // AMT presume there is no multiple highlight and multiple secondary selections
       // if that is the case in the futre write data in set and comapre sets
 
       // console.log("EveScene.prototype.processElementHighlighted compare Reveselection ", a[0], "incoming ", obj3d.eveId,indx);
-      if (a.length == 1 ) {
+      if (a && (a.length == 1)) {
          var h = a[0];
          if (h.primary == obj3d.eveId || h.primary == obj3d.mstrId ) {
             if (indx) {
@@ -394,7 +394,7 @@ sap.ui.define([
    EveScene.prototype.clearHighlight = function()
    {
       var so = this.mgr.GetElement(this.mgr.global_highlight_id);
-      if (so.prev_sel_list.length) {
+      if (so && so.prev_sel_list && so.prev_sel_list.length) {
          console.log("clearHighlight", this);
          this.mgr.SendMIR({ "mir":        "SelectionCleared()",
                             "fElementId": this.mgr.global_highlight_id,
@@ -408,6 +408,7 @@ sap.ui.define([
    EveScene.prototype.applySelectionOnSceneCreate =  function(selection_id)
    {
       var selection_obj = this.mgr.GetElement(selection_id);
+      if (!selection_obj || !selection_obj.prev_sel_list) return;
       var pthis = this;
       selection_obj.prev_sel_list.forEach(function(rec) {
          var prl = pthis.mgr.GetElement(rec.primary);
@@ -448,7 +449,7 @@ sap.ui.define([
       if(sec_idcs === undefined || sec_idcs.length == 0)
       {
          // exit if you try to highlight an object that has already been selected
-         if(estype == THREE.OutlinePass.selection_enum["highlight"] && 
+         if(estype == THREE.OutlinePass.selection_enum["highlight"] &&
             this.viewer.outlinePass.id2obj_map[element_id][this.mgr.global_selection_id] !== undefined
          ) return;
 
