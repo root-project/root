@@ -625,6 +625,7 @@ set(ROOT_CXX_FLAGS \"${__cxxflags}\")
 set(ROOT_C_FLAGS \"${__cflags}\")
 set(ROOT_fortran_FLAGS \"${__fflags}\")
 set(ROOT_EXE_LINKER_FLAGS \"${CMAKE_EXE_LINKER_FLAGS}\")")
+set(ROOT_BINDIR ${CMAKE_BINARY_DIR}/bin CACHE INTERNAL "")
 
 #---To be used from the binary tree--------------------------------------------------------------------------
 set(ROOT_INCLUDE_DIR_SETUP "
@@ -635,9 +636,14 @@ set(ROOT_LIBRARY_DIR_SETUP "
 # ROOT configured for use from the build tree - absolute paths are used.
 set(ROOT_LIBRARY_DIR ${CMAKE_BINARY_DIR}/lib)
 ")
-set(ROOT_BINARY_DIR_SETUP "
+set(ROOT_BINDIR_SETUP "
 # ROOT configured for use from the build tree - absolute paths are used.
-set(ROOT_BINARY_DIR ${CMAKE_BINARY_DIR}/bin)
+set(ROOT_BINDIR ${CMAKE_BINARY_DIR}/bin)
+")
+# Deprecated value ROOT_BINARY_DIR
+set(ROOT_BINARY_DIR_SETUP "
+# Deprecated value, please don't use it and use ROOT_BINDIR instead.
+set(ROOT_BINARY_DIR ${ROOT_BINDIR})
 ")
 set(ROOT_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules")
 
@@ -662,8 +668,13 @@ set(ROOT_LIBRARY_DIR_SETUP "
 # ROOT configured for the install with relative paths, so use these
 get_filename_component(ROOT_LIBRARY_DIR \"\${_thisdir}/${ROOT_CMAKE_TO_LIB_DIR}\" ABSOLUTE)
 ")
-set(ROOT_BINARY_DIR_SETUP "
+set(ROOT_BINDIR_SETUP "
 # ROOT configured for the install with relative paths, so use these
+get_filename_component(ROOT_BINDIR \"\${_thisdir}/${ROOT_CMAKE_TO_BIN_DIR}\" ABSOLUTE)
+")
+# Deprecated value ROOT_BINARY_DIR
+set(ROOT_BINARY_DIR_SETUP "
+# Deprecated value, please don't use it and use ROOT_BINDIR instead.
 get_filename_component(ROOT_BINARY_DIR \"\${_thisdir}/${ROOT_CMAKE_TO_BIN_DIR}\" ABSOLUTE)
 ")
 set(ROOT_MODULE_PATH "\${_thisdir}/modules")
