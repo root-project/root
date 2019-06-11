@@ -106,15 +106,19 @@ sap.ui.define([], function() {
    EveManager.prototype.executeCommand = function(cmd) {
       if (!cmd || !this.handle) return;
       var obj = { "mir": cmd.func, "fElementId": cmd.elementid, "class": cmd.elementclass };
-      this.handle.Send(JSON.stringify(obj));
+      // only for real connections send commands to server
+      // only with NextEvent command meaningful handling is possible
+      if ((this.handle.kind != "file") || (cmd.name == "NextEvent"))
+         this.handle.Send(JSON.stringify(obj));
       if ((cmd.name == "QuitRoot") && window) window.close();
    }
 
    EveManager.prototype.SendMIR = function(mir)
    {
-      if ( ! mir || ! this.handle) return;
+      if (!mir || ! this.handle) return;
 
-      this.handle.Send(JSON.stringify(mir));
+      if (this.handle.kind != "file")
+         this.handle.Send(JSON.stringify(mir));
    }
 
    /** Configure receiver for scene-respective events. Following event used:
