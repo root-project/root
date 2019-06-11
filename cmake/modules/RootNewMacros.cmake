@@ -1268,6 +1268,8 @@ function(ROOT_ADD_TEST test)
     endif()
   endif()
 
+  set_property(TEST ${test} APPEND PROPERTY ENVIRONMENT ROOT_HIST=0)
+
   #- Handle TIMOUT and DEPENDS arguments
   if(ARG_TIMEOUT)
     set_property(TEST ${test} PROPERTY TIMEOUT ${ARG_TIMEOUT})
