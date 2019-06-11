@@ -128,8 +128,8 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Doubl
       delete hint ;
     }
   } else {
-    xbins = x.numBins();
-    for(int i=0; i<xbins; ++i){
+    int nBinsX = x.numBins();
+    for(int i=0; i<nBinsX; ++i){
       double xval = x.getBinning().binCenter(i);
       addPoint(xval,(*funcPtr)(&xval)) ;      
     }
