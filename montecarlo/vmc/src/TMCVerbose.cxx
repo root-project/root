@@ -315,6 +315,15 @@ void TMCVerbose::FinishPrimary()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// End of event info
+
+void TMCVerbose::EndOfEvent()
+{
+   if (fLevel>0)
+      std::cout << "--- End of event " << std::endl;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Finish of an event info
 
 void TMCVerbose::FinishEvent()
