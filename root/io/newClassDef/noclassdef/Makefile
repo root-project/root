@@ -69,8 +69,6 @@ LIBSFORLINK =
 CLDFLAGS := $(LDFLAGS)
 endif
 
-CXXFLAGS := $(patsubst -O2,-Z7,$(CXXFLAGS))
-
 ifeq ($(FAIL),)
 #Make sure the failing code is excluded
 exec1 := $(shell if test -e fail.mode ; then rm -f fail.mode *.o mydict.*; fi )
