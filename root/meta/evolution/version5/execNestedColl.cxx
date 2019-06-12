@@ -4,7 +4,7 @@
 #include "TObject.h"
 using namespace std;
 
-namespace Exp {
+namespace HepExp {
   class Inner { 
   public:
      Inner(int i = 0) : fX(i),fY(i) {}
@@ -45,10 +45,10 @@ namespace Exp {
   };
 }
 
-//typedef Exp::Inner Alias;
+//typedef HepExp::Inner Alias;
 
 //#ifdef __MAKECINT__
-// #pragma read sourceClass="Alias" targetClass="Exp::Inner";
+//  #pragma read sourceClass="Alias" targetClass="HepExp::Inner";
 //#endif
 
 #include "TFile.h"
@@ -56,7 +56,7 @@ namespace Exp {
 void writeFile(const char *filename = "nestedColl.root") 
 {
    TFile *f = TFile::Open(filename,"RECREATE");
-   Exp::Outer obj(1);
+   HepExp::Outer obj(1);
    f->WriteObject(&obj,"obj");
    delete f;
 }
@@ -64,7 +64,7 @@ void writeFile(const char *filename = "nestedColl.root")
 void readFile(const char *filename = "nestedColl.root") 
 {
    TFile *f = TFile::Open(filename,"READ");
-   Exp::Outer *obj;
+   HepExp::Outer *obj;
    f->GetObject("obj",obj);
    if (obj) obj->Print();
    delete f;
