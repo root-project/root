@@ -24,6 +24,7 @@ HEADERS
   ROOT/RPagePool.hxx
   ROOT/RPageStorage.hxx
   ROOT/RPageStorageRoot.hxx
+  ROOT/RFieldVisitor.hxx
 SOURCES
   v7/src/RColumn.cxx
   v7/src/RField.cxx
@@ -35,6 +36,7 @@ SOURCES
   v7/src/RPagePool.cxx
   v7/src/RPageStorage.cxx
   v7/src/RPageStorageRoot.cxx
+  v7/src/RFieldVisitor.cxx
 LINKDEF
   LinkDef.h
 DEPENDENCIES
