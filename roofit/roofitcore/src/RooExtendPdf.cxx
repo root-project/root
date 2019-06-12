@@ -130,7 +130,7 @@ Double_t RooExtendPdf::expectedEvents(const RooArgSet* nset) const
 
     double fracInt;
     {
-      GlobalSelectComponentRAII globalSelectComp(true);
+      GlobalSelectComponentRAII globalSelComp(true);
       fracInt = pdf.getNormObj(nset,nset,_rangeName)->getVal();
     }
 
