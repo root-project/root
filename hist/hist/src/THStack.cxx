@@ -796,8 +796,7 @@ void THStack::Paint(Option_t *choptin)
       if (h->GetYaxis()->GetXmax() > ymax) ymax = h->GetYaxis()->GetXmax();
    }
 
-   TString loption;
-   loption.Form("%s",opt.Data());
+   TString loption = opt;
    char *nostack  = (char *)strstr(loption.Data(),"nostack");
    char *nostackb = (char *)strstr(loption.Data(),"nostackb");
    char *candle   = (char *)strstr(loption.Data(),"candle");
