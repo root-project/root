@@ -16,7 +16,7 @@
 using namespace RooStats;
 using namespace HistFactory;
 
-void example() {
+void hf001_example() {
 
 
   std::string InputFile = "./data/example.root";
