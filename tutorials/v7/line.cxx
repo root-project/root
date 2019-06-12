@@ -33,7 +33,7 @@ void line()
                  0.3_normal*TMath::Sin(angle) + 0.5_normal);
       auto opts = canvas->Draw(RLine({0.5_normal, 0.5_normal} , p));
       RColor col(0.0025*i, 0, 0);
-      opts->Line().SetColor(col);
+      opts->SetColor(col);
     }
 
    canvas->Draw(RLine({0.0_normal, 0.0_normal}, {1.0_normal,1.0_normal}));

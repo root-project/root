@@ -26,12 +26,12 @@ void lineStyle() {
 
       RPadPos pt(.3_normal, RPadLength::Normal(num));
       auto optts = canvas->Draw(RText(pt, std::to_string(i)));
-      optts->Text().SetSize(13).SetAlign(32).SetFont(52);
+      optts->SetSize(13).SetAlign(32).SetFont(52);
 
       RPadPos pl1(.32_normal, RPadLength::Normal(num));
       RPadPos pl2(.8_normal , RPadLength::Normal(num));
       auto optls = canvas->Draw(RLine(pl1, pl2));
-      optls->Line().SetStyle(i);
+      optls->SetStyle(i);
    }
 
    canvas->Show();
