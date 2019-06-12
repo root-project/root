@@ -97,6 +97,9 @@ public:
    /// Define actions at the end of the primary track
    virtual void FinishPrimary() = 0;
 
+   /// Define actions at the end of the event before calling SD's end of the event
+   virtual void EndOfEvent() {}
+
    /// Define actions at the end of the event
    virtual void FinishEvent() = 0;
 
