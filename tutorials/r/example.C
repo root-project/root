@@ -63,5 +63,5 @@ void example() {
    std::cout << "Function gaussian(0,1,1) evaluated in  R    = " << value_r << std::endl;
    std::cout << "Function gaussian(0,1,1) evaluated in ROOT  = " <<  value_root << std::endl;
    if (value_r != value_root)
-      Error("ROOT-R-Example","Different function value forund in r = %f and ROOT = %f", value_r, value_root);
+      Error("ROOT-R-Example","Different function value found in r = %f and ROOT = %f", value_r, value_root);
 }
