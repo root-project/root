@@ -1735,8 +1735,8 @@ Int_t TGraph::InsertPoint()
 
 void TGraph::InsertPointBefore(Int_t ipoint, Double_t x, Double_t y)
 {
-   if (ipoint <= 0) {
-      Error("TGraph", "Inserted point index should be > 0");
+   if (ipoint < 0) {
+      Error("TGraph", "Inserted point index should be >= 0");
       return;
    }
 
