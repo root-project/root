@@ -269,9 +269,6 @@ if(builtin_all)
   set(builtin_zlib_defvalue ON)
 endif()
 
-#---webgui by default always build together with root7-----------------------------------------
-set(webgui_defvalue ${root7})
-
 #---Changes in defaults due to platform-------------------------------------------------------
 if(WIN32)
   set(builtin_tbb_defvalue OFF)
@@ -309,6 +306,9 @@ endforeach()
 if(NOT CMAKE_CXX_STANDARD GREATER 11)
   set(root7_defvalue OFF)
 endif()
+
+#---webgui by default always build together with root7-----------------------------------------
+set(webgui_defvalue ${root7_defvalue})
 
 #---roottest option implies testing
 if(roottest OR rootbench)
