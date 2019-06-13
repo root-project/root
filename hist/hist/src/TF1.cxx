@@ -56,6 +56,90 @@ Bool_t TF1::fgRejectPoint = kFALSE;
 std::atomic<Bool_t> TF1::fgAddToGlobList(kTRUE);
 static Double_t gErrorTF1 = 0;
 
+using TF1Updater_t = void (*)(Int_t nobjects, TObject **from, TObject **to);
+bool R__SetClonesArrayTF1Updater(TF1Updater_t func);
+
+
+namespace {
+struct TF1v5Convert : public TF1 {
+public:
+   void Convert(ROOT::v5::TF1Data &from)
+   {
+      // convert old TF1 to new one
+      fNpar = from.GetNpar();
+      fNdim = from.GetNdim();
+      if (from.fType == 0) {
+         // formula functions
+         // if ndim is not 1  set xmin max to zero to avoid error in ctor
+         double xmin = from.fXmin;
+         double xmax = from.fXmax;
+         if (fNdim > 1) {
+            xmin = 0;
+            xmax = 0;
+         }
+         TF1 fnew(from.GetName(), from.GetExpFormula(), xmin, xmax);
+         if (fNdim > 1) {
+            fnew.SetRange(from.fXmin, from.fXmax);
+         }
+         fnew.Copy(*this);
+      } else {
+         // case of a function pointers
+         fParams = new TF1Parameters(fNpar);
+         fName = from.GetName();
+         fTitle = from.GetTitle();
+      }
+      // need to set parameter values
+      SetParameters(from.GetParameters());
+      // copy the other data members
+      fNpx = from.fNpx;
+      fType = (EFType)from.fType;
+      fNpfits = from.fNpfits;
+      fNDF = from.fNDF;
+      fChisquare = from.fChisquare;
+      fMaximum = from.fMaximum;
+      fMinimum = from.fMinimum;
+      fXmin = from.fXmin;
+      fXmax = from.fXmax;
+
+      if (from.fParErrors)
+         fParErrors = std::vector<Double_t>(from.fParErrors, from.fParErrors + fNpar);
+      if (from.fParMin)
+         fParMin = std::vector<Double_t>(from.fParMin, from.fParMin + fNpar);
+      if (from.fParMax)
+         fParMax = std::vector<Double_t>(from.fParMax, from.fParMax + fNpar);
+      if (from.fNsave > 0) {
+         assert(from.fSave);
+         fSave = std::vector<Double_t>(from.fSave, from.fSave + from.fNsave);
+      }
+      // set the bits
+      for (int ibit = 0; ibit < 24; ++ibit)
+         if (from.TestBit(BIT(ibit)))
+            SetBit(BIT(ibit));
+
+      // copy the graph attributes
+      auto &fromLine = static_cast<TAttLine &>(from);
+      fromLine.Copy(*this);
+      auto &fromFill = static_cast<TAttFill &>(from);
+      fromFill.Copy(*this);
+      auto &fromMarker = static_cast<TAttMarker &>(from);
+      fromMarker.Copy(*this);
+   }
+};
+} // unnamed namespace
+
+static void R__v5TF1Updater(Int_t nobjects, TObject **from, TObject **to)
+{
+   auto **fromv5 = (ROOT::v5::TF1Data **)from;
+   auto **target = (TF1v5Convert **)to;
+
+   for (int i = 0; i < nobjects; ++i) {
+      if (fromv5[i] && target[i])
+         target[i]->Convert(*fromv5[i]);
+   }
+}
+
+static int R__RegisterTF1UpdaterTrigger = R__SetClonesArrayTF1Updater(R__v5TF1Updater);
+
 ClassImp(TF1);
 
 // class wrapping evaluation of TF1(x) - y0
@@ -1764,8 +1848,7 @@ Double_t TF1::GetX(Double_t fy, Double_t xmin, Double_t xmax, Double_t epsilon, 
    brf.SetLogScan(logx);
    bool ret = brf.Solve(maxiter, epsilon, epsilon);
    if (!ret) Error("GetX","[%f,%f] is not a valid interval",xmin,xmax);
-   return (ret) ? brf.Root() : TMath::QuietNaN(); 
-
+   return (ret) ? brf.Root() : TMath::QuietNaN();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3490,60 +3573,7 @@ void TF1::Streamer(TBuffer &b)
          //printf("Reading TF1 as v5::TF1Data- version %d \n",v);
          fold.Streamer(b, v, R__s, R__c, TF1::Class());
          // convert old TF1 to new one
-         fNpar = fold.GetNpar();
-         fNdim = fold.GetNdim();
-         if (fold.fType == 0) {
-            // formula functions
-            // if ndim is not 1  set xmin max to zero to avoid error in ctor
-            double xmin = fold.fXmin;
-            double xmax = fold.fXmax;
-            if (fNdim >  1) {
-               xmin = 0;
-               xmax = 0;
-            }
-            TF1 fnew(fold.GetName(), fold.GetExpFormula(), xmin, xmax);
-            if (fNdim > 1) {
-               fnew.SetRange(fold.fXmin, fold.fXmax);
-            }
-            fnew.Copy(*this);
-         } else {
-            // case of a function pointers
-            fParams = new TF1Parameters(fNpar);
-            fName = fold.GetName();
-            fTitle = fold.GetTitle();
-         }
-         // need to set parameter values
-         SetParameters(fold.GetParameters());
-         // copy the other data members
-         fNpx = fold.fNpx;
-         fType = (EFType) fold.fType;
-         fNpfits = fold.fNpfits;
-         fNDF = fold.fNDF;
-         fChisquare = fold.fChisquare;
-         fMaximum = fold.fMaximum;
-         fMinimum = fold.fMinimum;
-         fXmin = fold.fXmin;
-         fXmax = fold.fXmax;
-
-         if (fold.fParErrors) fParErrors = std::vector<Double_t>(fold.fParErrors, fold.fParErrors + fNpar);
-         if (fold.fParMin) fParMin = std::vector<Double_t>(fold.fParMin, fold.fParMin + fNpar);
-         if (fold.fParMax) fParMax = std::vector<Double_t>(fold.fParMax, fold.fParMax + fNpar);
-         if (fold.fNsave > 0) {
-            assert(fold.fSave);
-            fSave = std::vector<Double_t>(fold.fSave, fold.fSave + fold.fNsave);
-         }
-         // set the bits
-         for (int ibit = 0; ibit < 24; ++ibit)
-            if (fold.TestBit(BIT(ibit))) SetBit(BIT(ibit));
-
-         // copy the graph attributes
-         TAttLine &fOldLine = static_cast<TAttLine &>(fold);
-         fOldLine.Copy(*this);
-         TAttFill &fOldFill = static_cast<TAttFill &>(fold);
-         fOldFill.Copy(*this);
-         TAttMarker &fOldMarker = static_cast<TAttMarker &>(fold);
-         fOldMarker.Copy(*this);
-
+         ((TF1v5Convert *)this)->Convert(fold);
       }
    }
 

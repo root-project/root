@@ -135,6 +135,22 @@ When investigating misuse of TClonesArray, please make sure of the following:
 
 ClassImp(TClonesArray);
 
+// To allow backward compatibility of TClonesArray of v5 TF1 objects
+// that were stored member-wise.
+using Updater_t = void (*)(Int_t nobjects, TObject **from, TObject **to);
+Updater_t gClonesArrayTF1Updater = nullptr;
+Updater_t gClonesArrayTFormulaUpdater = nullptr;
+
+bool R__SetClonesArrayTF1Updater(Updater_t func) {
+   gClonesArrayTF1Updater = func;
+   return true;
+}
+
+bool R__SetClonesArrayTFormulaUpdater(Updater_t func) {
+   gClonesArrayTFormulaUpdater = func;
+   return true;
+}
+
 /// Internal Utility routine to correctly release the memory for an object
 static inline void R__ReleaseMemory(TClass *cl, TObject *obj)
 {
@@ -778,9 +794,28 @@ void TClonesArray::Streamer(TBuffer &b)
 
             fCont[i] = fKeep->fCont[i];
          }
-         //sinfo->ReadBufferClones(b,this,nobjects,-1,0);
-         b.ReadClones(this,nobjects,clv);
-
+         if (clv < 8 && classv == "TF1") {
+            // To allow backward compatibility of TClonesArray of v5 TF1 objects
+            // that were stored member-wise.
+            TClonesArray temp("ROOT::v5::TF1Data");
+            temp.ExpandCreate(nobjects);
+            b.ReadClones(&temp, nobjects, clv);
+            // And now covert the v5 into the current
+            if (gClonesArrayTF1Updater)
+               gClonesArrayTF1Updater(nobjects, temp.GetObjectRef(nullptr), this->GetObjectRef(nullptr));
+         } else if (clv <= 8 && clv > 3 && clv != 6 && classv == "TFormula") {
+            // To allow backwar compatibility of TClonesArray of v5 TF1 objects
+            // that were stored member-wise.
+            TClonesArray temp("ROOT::v5::TFormula");
+            temp.ExpandCreate(nobjects);
+            b.ReadClones(&temp, nobjects, clv);
+            // And now covert the v5 into the current
+            if (gClonesArrayTFormulaUpdater)
+               gClonesArrayTFormulaUpdater(nobjects, temp.GetObjectRef(nullptr), this->GetObjectRef(nullptr));
+         } else {
+            // sinfo->ReadBufferClones(b,this,nobjects,-1,0);
+            b.ReadClones(this, nobjects, clv);
+         }
       } else {
          for (Int_t i = 0; i < nobjects; i++) {
             b >> nch;
