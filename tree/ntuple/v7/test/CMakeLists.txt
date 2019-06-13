@@ -1,6 +1,6 @@
 # @author Jakob Blomer CERN
 
-if(NOT ROOT_ROOTDataFrame_LIBRARY)
+if(NOT dataframe)
   return()
 endif()
 

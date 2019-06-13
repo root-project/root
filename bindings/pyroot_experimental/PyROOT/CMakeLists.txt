@@ -2,6 +2,11 @@
 # CMakeLists.txt file for building ROOT bindings/pyroot_experimental package
 ############################################################################
 
+if(dataframe)
+    list(APPEND PYROOT_EXTRA_PYSOURCE ROOT/pythonization/_rdataframe.py)
+    list(APPEND PYROOT_EXTRA_SOURCE src/RDataFramePyz.cxx)
+endif()
+
 set(py_sources
   ROOT/__init__.py
   ROOT/_application.py
@@ -10,7 +15,6 @@ set(py_sources
   ROOT/pythonization/_drawables.py
   ROOT/pythonization/_generic.py
   ROOT/pythonization/_rooabscollection.py
-  ROOT/pythonization/_rdataframe.py
   ROOT/pythonization/_rvec.py
   ROOT/pythonization/_stl_vector.py
   ROOT/pythonization/_tarray.py
@@ -30,6 +34,7 @@ set(py_sources
   ROOT/pythonization/_ttree.py
   ROOT/pythonization/_tvector3.py
   ROOT/pythonization/_tvectort.py
+  ${PYROOT_EXTRA_PYSOURCE)
 )
 
 set(sources
@@ -39,7 +44,6 @@ set(sources
   src/PyROOTWrapper.cxx
   src/RPyROOTApplication.cxx
   src/GenericPyz.cxx
-  src/RDataFramePyz.cxx
   src/RVecPyz.cxx
   src/TClassPyz.cxx
   src/TClonesArrayPyz.cxx
@@ -49,6 +53,7 @@ set(sources
   src/TTreePyz.cxx
   src/PyzCppHelpers.cxx
   src/PyzPythonHelpers.cxx
+  ${PYROOT_EXTRA_SOURCE}
 )
 
 file(COPY python/ROOT DESTINATION ${localruntimedir})
