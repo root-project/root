@@ -112,6 +112,16 @@ endforeach()
 set(ROOT_EXECUTABLE ${ROOT_root_CMD})
 
 #----------------------------------------------------------------------------
+# Deprecation function
+function(__deprecated_var var access)
+  if(access STREQUAL "READ_ACCESS")
+    message(DEPRECATION "The variable '${var}' is deprecated!")
+  endif()
+endfunction()
+
+variable_watch(ROOT_BINARY_DIR __deprecated_var)
+
+#----------------------------------------------------------------------------
 # Point the user to the ROOTUseFile.cmake file which they may wish to include
 # to help them with setting up ROOT
 #
