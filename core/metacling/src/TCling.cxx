@@ -3044,6 +3044,7 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
 
 #if defined(R__MACOSX)
    // Check that this is not a system library
+   auto lenFilename = strlen(filename);
    if (!strncmp(filename, "/usr/lib/system/", 16)
        || !strncmp(filename, "/usr/lib/libc++", 15)
        || !strncmp(filename, "/System/Library/Frameworks/", 27)
@@ -3063,7 +3064,11 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
        || strstr(filename, "/usr/lib/libCRFSuite")
        || strstr(filename, "/usr/lib/libpam")
        || strstr(filename, "/usr/lib/libOpenScriptingUtil")
-       || strstr(filename, "/usr/lib/libextension"))
+       || strstr(filename, "/usr/lib/libextension")
+       // "cannot link directly with dylib/framework, your binary is not an allowed client of
+       // /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/
+       // SDKs/MacOSX.sdk/usr/lib/libAudioToolboxUtility.tbd for architecture x86_64
+       || (lenFilename > 4 && !strcmp(filename + lenFilename - 4, ".tbd") /**/))
       return;
 #elif defined(__CYGWIN__)
    // Check that this is not a system library
