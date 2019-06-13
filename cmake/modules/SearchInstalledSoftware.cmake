@@ -13,14 +13,6 @@ endmacro()
 #---On MacOSX, try to find frameworks after standard libraries or headers------------
 set(CMAKE_FIND_FRAMEWORK LAST)
 
-#---Guess under which lib directory the external packages will install the libraires
-set(_LIBDIR_DEFAULT "lib")
-if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT CMAKE_CROSSCOMPILING AND NOT EXISTS "/etc/debian_version")
-  if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
-    set(_LIBDIR_DEFAULT "lib64")
-  endif()
-endif()
-
 #---If -Dshared=Off, prefer static libraries-----------------------------------------
 if(NOT shared)
   if(WINDOWS)
@@ -779,9 +771,17 @@ if(builtin_xrootd)
   string(REPLACE "-W " "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings
   string(REPLACE "-Wshadow" "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings
   string(REPLACE "-Woverloaded-virtual" "" __cxxflags "${__cxxflags}")  # Otherwise it produces manywarnings
-  set(XROOTD_LIBRARIES ${XROOTD_ROOTDIR}/${_LIBDIR_DEFAULT}/libXrdUtils${CMAKE_SHARED_LIBRARY_SUFFIX}
-                       ${XROOTD_ROOTDIR}/${_LIBDIR_DEFAULT}/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX}
-                       ${XROOTD_ROOTDIR}/${_LIBDIR_DEFAULT}/libXrdCl${CMAKE_SHARED_LIBRARY_SUFFIX})
+
+  # Guess under which directory XRootD will install its libraires
+  set(XROOTD_LIBDIR "lib")
+  if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND ${CMAKE_SIZEOF_VOID_P} EQUAL 8
+     AND NOT CMAKE_CROSSCOMPILING AND NOT EXISTS "/etc/debian_version")
+    set(XROOTD_LIBDIR "lib64")
+  endif()
+
+  set(XROOTD_LIBRARIES ${XROOTD_ROOTDIR}/${XROOTD_LIBDIR}/libXrdUtils${CMAKE_SHARED_LIBRARY_SUFFIX}
+                       ${XROOTD_ROOTDIR}/${XROOTD_LIBDIR}/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX}
+                       ${XROOTD_ROOTDIR}/${XROOTD_LIBDIR}/libXrdCl${CMAKE_SHARED_LIBRARY_SUFFIX})
   ExternalProject_Add(
     XROOTD
     URL ${XROOTD_SRC_URI}
@@ -802,10 +802,11 @@ if(builtin_xrootd)
     BUILD_BYPRODUCTS ${XROOTD_LIBRARIES}
   )
   # We cannot call find_package(XROOTD) becuase the package is not yet built. So, we need to emulate what it defines....
+
   set(XROOTD_INCLUDE_DIRS ${XROOTD_ROOTDIR}/include/xrootd ${XROOTD_ROOTDIR}/include/xrootd/private)
   set(XROOTD_NOMAIN TRUE)
   set(XROOTD_CFLAGS "-DROOTXRDVERS=${XROOTD_VERSIONNUM}")
-  install(DIRECTORY ${XROOTD_ROOTDIR}/${_LIBDIR_DEFAULT}/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libXrd*")
+  install(DIRECTORY ${XROOTD_ROOTDIR}/${XROOTD_LIBDIR}/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libXrd*")
   install(DIRECTORY ${XROOTD_ROOTDIR}/include/xrootd/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
   set(XROOTD_TARGET XROOTD)
   set(xrootd ON CACHE BOOL "Enabled because builtin_xrootd requested (${xrootd_description})" FORCE)
