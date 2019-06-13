@@ -1,4 +1,6 @@
-if( CMAKE_SIZEOF_VOID_P EQUAL 8 )
+if(NOT dataframe)
+  return()
+endif()
 
 ROOTTEST_ADD_TESTDIRS()
 
@@ -210,5 +212,3 @@ ROOTTEST_ADD_TEST(test_progressiveCSV
                   COPY_TO_BUILDDIR test_progressiveCSV.csv
                   OUTREF test_progressiveCSV.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
-
-endif() # CMAKE_SIZEOF_VOID_P EQUAL 4
