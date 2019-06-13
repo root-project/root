@@ -211,6 +211,25 @@ static const TString gNamePrefix = "TFormula__";
 //static std::unordered_map<std::string,  TInterpreter::CallFuncIFacePtr_t::Generic_t> gClingFunctions = std::unordered_map<TString,  TInterpreter::CallFuncIFacePtr_t::Generic_t>();
 static std::unordered_map<std::string,  void *> gClingFunctions = std::unordered_map<std::string,  void * >();
 
+static void R__v5TFormulaUpdater(Int_t nobjects, TObject **from, TObject **to)
+{
+   auto **fromv5 = (ROOT::v5::TFormula **)from;
+   auto **target = (TFormula **)to;
+
+   for (int i = 0; i < nobjects; ++i) {
+      if (fromv5[i] && target[i]) {
+         TFormula fnew(fromv5[i]->GetName(), fromv5[i]->GetExpFormula());
+         *(target[i]) = fnew;
+         target[i]->SetParameters(fromv5[i]->GetParameters());
+      }
+   }
+}
+
+using TFormulaUpdater_t = void (*)(Int_t nobjects, TObject **from, TObject **to);
+bool R__SetClonesArrayTFormulaUpdater(TFormulaUpdater_t func);
+
+static int R__RegisterTF1UpdaterTrigger = R__SetClonesArrayTFormulaUpdater(R__v5TFormulaUpdater);
+
 ////////////////////////////////////////////////////////////////////////////////
 Bool_t TFormula::IsOperator(const char c)
 {
