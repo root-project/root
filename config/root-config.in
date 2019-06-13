@@ -76,10 +76,9 @@ rootlibs="-lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lROOTVecOps -l
           -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread\
           -lMultiProc"
 
-if [ "@UNIX@" != "1" ] || [ "@CMAKE_SIZEOF_VOID_P@" != "4" ]; then
+if echo "${features}" | grep -q "dataframe"; then
    rootlibs="$rootlibs -lROOTDataFrame"
 fi
-
 
 if test "$platform" = "win32"; then
    rootulibs="-include:_G__cpp_setupG__Net        \
