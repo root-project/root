@@ -66,6 +66,15 @@ if(NOT ROOT_minuit2_FOUND)
                    tutorials/roostats/rs_bernsteinCorrection.C)
 endif()
 
+if (NOT dataframe)
+    # RDataFrame
+    list(APPEND dataframe_veto dataframe/*.C)
+    # RDataFrame tutorial in graphs
+    list(APPEND dataframe_veto graphs/timeSeriesFromCSV_TDF.C)
+    # TMVA tutorials dependent on RDataFrame
+    list(APPEND dataframe_veto tmva/tmva*.C)
+endif()
+
 if(NOT ROOT_mlp_FOUND)
    set(mlp_veto legacy/mlp/*.C)
 endif()
@@ -185,10 +194,10 @@ set(gui_veto fit/fitpanel_playback.C
              eve/*.C)
 
 if (NOT ROOT_tmva_FOUND)
-  set(tmva_veto tmva/*.C tmva/*.py tmva/envelope/*.C tmva/keras/*.C tmva/keras/*.py)
+  list(APPEND tmva_veto tmva/*.C tmva/*.py tmva/envelope/*.C tmva/keras/*.C tmva/keras/*.py)
 else()
   #---These do not need to run for TMVA
-  set(tmva_veto tmva/createData.C)
+  list(APPEND tmva_veto tmva/createData.C)
 endif()
 
 if (NOT ROOT_pythia6_FOUND)
@@ -280,6 +289,7 @@ set(all_veto hsimple.C
              ${xrootd_veto}
              ${mlp_veto}
              ${spectrum_veto}
+             ${dataframe_veto}
              )
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
@@ -436,10 +446,10 @@ if(ROOT_python_FOUND)
 
   list(REMOVE_ITEM pytutorials ${pyveto})
 
-  if( CMAKE_SIZEOF_VOID_P EQUAL 4 )
-    set(bits32_veto_py dataframe/*.py)
-    file(GLOB bits32_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*.py)
-    list(REMOVE_ITEM pytutorials ${bits32_veto_py})
+  if(NOT dataframe)
+    set(dataframe_veto_py dataframe/*.py)
+    file(GLOB dataframe_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*.py tmva/tmva*.py)
+    list(REMOVE_ITEM pytutorials ${dataframe_veto_py})
     list(REMOVE_ITEM pytutorials pyroot/pyroot002_TTreeAsMatrix.py)
   endif()
 

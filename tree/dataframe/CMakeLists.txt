@@ -3,9 +3,8 @@
 # @author Danilo Piparo CERN, Pere Mato CERN
 ############################################################################
 
-# Disable RDataFrame on 32-bit UNIX platforms due to ROOT-9236
-if(UNIX AND CMAKE_SIZEOF_VOID_P EQUAL 4)
-  return()
+if(NOT dataframe)
+    return()
 endif()
 
 if(arrow)
