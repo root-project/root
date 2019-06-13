@@ -1,11 +1,3 @@
-#-------------------------------------------------------------------------------
-#
-# CMakeLists.txt
-#
-# Top level CMakeLists.txt file for the roottest directory.
-#
-#-------------------------------------------------------------------------------
-
 cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
 # Set the name of the project.
