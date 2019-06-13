@@ -1,5 +1,6 @@
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleDS.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RPageStorage.hxx>
@@ -19,9 +20,12 @@
 #include <string>
 #include <utility>
 
+using RNTupleDescriptor = ROOT::Experimental::RNTupleDescriptor;
+using RNTupleDescriptorBuilder = ROOT::Experimental::RNTupleDescriptorBuilder;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
+using RNTupleVersion = ROOT::Experimental::RNTupleVersion;
 using RPageSource = ROOT::Experimental::Detail::RPageSource;
 using RPageSinkRoot = ROOT::Experimental::Detail::RPageSinkRoot;
 using RPageSourceRoot = ROOT::Experimental::Detail::RPageSourceRoot;
@@ -504,4 +508,24 @@ TEST(RNTuple, RDF)
 
    auto rdf = ROOT::Experimental::MakeNTupleDataFrame("f", "test.root");
    EXPECT_EQ(42.0, *rdf.Min("pt"));
+}
+
+
+TEST(RNTuple, Descriptor)
+{
+   RNTupleDescriptorBuilder descBuilder;
+   descBuilder.SetNTuple("MyTuple", RNTupleVersion(), ROOT::Experimental::Uuid_t());
+
+   auto reference = descBuilder.GetDescriptor();
+   EXPECT_EQ("MyTuple", reference.GetName());
+
+   auto szHeader = reference.SerializeHeader(nullptr);
+   auto headerBuffer = new unsigned char[szHeader];
+   reference.SerializeHeader(headerBuffer);
+
+   auto reconstructed = RNTupleDescriptor::Deserialize(headerBuffer, nullptr);
+
+   EXPECT_EQ(reconstructed, reference);
+
+   delete[] headerBuffer;
 }

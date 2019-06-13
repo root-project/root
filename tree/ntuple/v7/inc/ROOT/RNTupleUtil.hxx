@@ -65,6 +65,9 @@ constexpr ColumnId_t kInvalidColumnId = -1;
 using DescriptorId_t = std::uint64_t;
 constexpr DescriptorId_t kInvalidDescriptorId = std::uint64_t(-1);
 
+/// Every NTuple is identified by a UUID.  TODO(jblomer): should this be a TUUID?
+using Uuid_t = std::string;
+
 
 /// 64 possible flags to apply to all versioned entities (so far unused).
 using NTupleFlags_t = std::uint64_t;
@@ -86,6 +89,10 @@ public:
    RNTupleVersion(std::uint32_t versionUse, std::uint32_t versionMin, NTupleFlags_t flags)
      : fVersionUse(versionUse), fVersionMin(versionMin), fFlags(flags)
    {}
+
+   bool operator ==(const RNTupleVersion &other) const {
+      return fVersionUse == other.fVersionUse && fVersionMin == other.fVersionMin && fFlags == other.fFlags;
+   }
 
    std::uint32_t GetVersionUse() const { return fVersionUse; }
    std::uint32_t GetVersionMin() const { return fVersionMin; }

@@ -42,12 +42,14 @@ private:
    std::string fTypeName;
    /// The structural information carried by this field in the data model tree
    ENTupleStructure fStructure;
-   /// Establishes sub field trees, such as classes and collections
+   /// Establishes sub field relationships, such as classes and collections
    DescriptorId_t fParentId = kInvalidDescriptorId;
    /// For pointers and optional/variant fields, the pointee field(s)
    std::vector<DescriptorId_t> fLinkIds;
 
 public:
+   bool operator==(const RFieldDescriptor &other) const;
+
    DescriptorId_t GetId() const { return fFieldId; }
    RNTupleVersion GetFieldVersion() const { return fFieldVersion; }
    RNTupleVersion GetTypeVersion() const { return fTypeVersion; }
@@ -74,6 +76,8 @@ private:
    std::vector<DescriptorId_t> fLinkIds;
 
 public:
+   bool operator==(const RColumnDescriptor &other) const;
+
    DescriptorId_t GetId() const { return fColumnId; }
    RNTupleVersion GetVersion() const { return fVersion; }
    RColumnModel GetModel() const { return fModel; }
@@ -87,10 +91,17 @@ class RClusterDescriptor {
    friend class RNTupleDescriptorBuilder;
 
 public:
-   struct RColumnInfo {
+   struct RColumnRange {
       DescriptorId_t fColumnId = kInvalidDescriptorId;
       NTupleSize_t fFirstElementIndex = kInvalidNTupleIndex;
       ClusterSize_t fNElements = kInvalidClusterIndex;
+      // TODO(jblomer): we perhaps want to store summary information, such as average, min/max, etc.
+      // Should this be done on the field level?
+
+      bool operator==(const RColumnRange &other) const {
+         return fColumnId == other.fColumnId && fFirstElementIndex == other.fFirstElementIndex &&
+                fNElements == other.fNElements;
+      }
    };
 
 private:
@@ -98,14 +109,16 @@ private:
    RNTupleVersion fVersion;
    NTupleSize_t fFirstEntryIndex = kInvalidNTupleIndex;
    ClusterSize_t fNEntries = kInvalidClusterIndex;
-   std::unordered_map<DescriptorId_t, RColumnInfo> fColumnInfos;
+   std::unordered_map<DescriptorId_t, RColumnRange> fColumnRanges;
 
 public:
+   bool operator==(const RClusterDescriptor &other) const;
+
    DescriptorId_t GetId() const { return fClusterId; }
    RNTupleVersion GetVersion() const { return fVersion; }
    NTupleSize_t GetFirstEntryIndex() const { return fFirstEntryIndex; }
    ClusterSize_t GetNEntries() const { return fNEntries; }
-   RColumnInfo GetColumnInfo(DescriptorId_t columnId) const { return fColumnInfos.at(columnId); }
+   RColumnRange GetColumnRanges(DescriptorId_t columnId) const { return fColumnRanges.at(columnId); }
 };
 
 
@@ -117,14 +130,39 @@ class RNTupleDescriptor {
    friend class RNTupleDescriptorBuilder;
 
 private:
-   RNTupleVersion fVersion;
+   /// In order to handle changes to the serialization routine in future ntuple versions
+   static constexpr std::uint32_t kByteProtocol = 0;
+
    std::string fName;
+   RNTupleVersion fVersion;
+   /// Every NTuple gets a unique identifier
+   Uuid_t fOwnUuid;
+   /// Column sets that are created as derived sets from existing NTuples share the same group id.
+   /// NTuples in the same group have the same number of entries and are supposed to contain associated data.
+   Uuid_t fGroupUuid;
 
    std::unordered_map<DescriptorId_t, RFieldDescriptor> fFieldDescriptors;
    std::unordered_map<DescriptorId_t, RColumnDescriptor> fColumnDescriptors;
    std::unordered_map<DescriptorId_t, RClusterDescriptor> fClusterDescriptors;
 
 public:
+   bool operator ==(const RNTupleDescriptor &other) const;
+
+   /// We deliberately do not use ROOT's built-in serialization in order to allow for use of RNTuple's outside ROOT
+   /**
+    * Serializes the global ntuple information as well as the column and field schemata
+    * Returns the number of bytes and fills buffer if it is not nullptr.
+    */
+   std::uint32_t SerializeHeader(void* buffer);
+   /**
+    * Serializes cluster meta data. Returns the number of bytes and fills buffer if it is not nullptr.
+    */
+   std::uint32_t SerializeFooter(void* buffer);
+   /**
+    * Reconstructs the ntuple descriptor from a header and a footer
+    */
+   static RNTupleDescriptor Deserialize(void* headerBuffer, void* footerBuffer);
+
    const RFieldDescriptor& GetFieldDescriptor(DescriptorId_t fieldId) const { return fFieldDescriptors.at(fieldId); }
    const RColumnDescriptor& GetColumnDescriptor(DescriptorId_t columnId) const {
       return fColumnDescriptors.at(columnId);
@@ -132,6 +170,8 @@ public:
    const RClusterDescriptor& GetClusterDescriptor(DescriptorId_t clusterId) const {
       return fClusterDescriptors.at(clusterId);
    }
+   Uuid_t GetOwnUuid() const { return fOwnUuid; }
+   Uuid_t GetGroupUuid() const { return fGroupUuid; }
    std::string GetName() const { return fName; }
 };
 
@@ -146,7 +186,7 @@ private:
 public:
    const RNTupleDescriptor& GetDescriptor() const { return fDescriptor; }
 
-   void SetNTuple(std::string_view name, const RNTupleVersion &version);
+   void SetNTuple(const std::string_view &name, const RNTupleVersion &version, const Uuid_t &uuid);
 
    void AddField(DescriptorId_t fieldId, const RNTupleVersion &fieldVersion, const RNTupleVersion &typeVersion,
                  std::string_view fieldName, std::string_view typeName, ENTupleStructure structure);
@@ -160,7 +200,7 @@ public:
 
    void AddCluster(DescriptorId_t clusterId, RNTupleVersion version,
                    NTupleSize_t firstEntryIndex, ClusterSize_t nEntries);
-   void AddClusterColumnInfo(DescriptorId_t clusterId, const RClusterDescriptor::RColumnInfo &columnInfo);
+   void AddClusterColumnRange(DescriptorId_t clusterId, const RClusterDescriptor::RColumnRange &columnRange);
 };
 
 } // namespace Experimental

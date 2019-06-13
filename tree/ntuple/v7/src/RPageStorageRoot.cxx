@@ -304,7 +304,7 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
 
    // TODO(jblomer): replace RMapper by a ntuple descriptor
    RNTupleDescriptorBuilder descBuilder;
-   descBuilder.SetNTuple(fNTupleName, RNTupleVersion());
+   descBuilder.SetNTuple(fNTupleName, RNTupleVersion(), Uuid_t());
    fDescriptor = descBuilder.GetDescriptor();
 }
 
