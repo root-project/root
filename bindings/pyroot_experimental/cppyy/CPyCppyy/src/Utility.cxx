@@ -767,6 +767,7 @@ void CPyCppyy::Utility::SetDetailedException(std::vector<PyError_t>& errors, PyO
 // Use the collected exceptions to build up a detailed error log.
     if (errors.empty()) {
     // should not happen ...
+        PyErr_SetString(defexc, CPyCppyy_PyUnicode_AsString(topmsg));
         Py_DECREF(topmsg);
         return;
     }
@@ -779,14 +780,26 @@ void CPyCppyy::Utility::SetDetailedException(std::vector<PyError_t>& errors, PyO
         if (!exc_type) exc_type = e.fType;
         else if (exc_type != e.fType) exc_type = defexc;
         CPyCppyy_PyUnicode_Append(&topmsg, separator);
-        CPyCppyy_PyUnicode_Append(&topmsg, e.fValue);
+        if (CPyCppyy_PyUnicode_Check(e.fValue)) {
+            CPyCppyy_PyUnicode_Append(&topmsg, e.fValue);
+        } else if (e.fValue) {
+            PyObject* excstr = PyObject_Str(e.fValue);
+            if (!excstr) {
+                PyErr_Clear();
+                excstr = PyObject_Str((PyObject*)Py_TYPE(e.fValue));
+            }
+            CPyCppyy_PyUnicode_AppendAndDel(&topmsg, excstr);
+        } else {
+            CPyCppyy_PyUnicode_AppendAndDel(&topmsg,
+                CPyCppyy_PyUnicode_FromString("unknown exception"));
+        }
     }
 
     Py_DECREF(separator);
     std::for_each(errors.begin(), errors.end(), PyError_t::Clear);
 
 // set the python exception
-    PyErr_SetObject(exc_type, topmsg);
+    PyErr_SetString(exc_type, CPyCppyy_PyUnicode_AsString(topmsg));
     Py_DECREF(topmsg);
 }
 
