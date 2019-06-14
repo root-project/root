@@ -15,6 +15,7 @@
 #include "TObject.h"
 #include "TString.h"
 #include "TDatime.h"
+#include "TTimeStamp.h"
 #include<vector>
 
 class TSQLStatement : public TObject {
@@ -53,6 +54,7 @@ public:
    virtual Bool_t      SetDatime(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Int_t) { return kFALSE; }
            Bool_t      SetDatime(Int_t, const TDatime&);
    virtual Bool_t      SetTimestamp(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Int_t = 0) { return kFALSE; }
+   virtual Bool_t      SetTimestamp(Int_t, const TTimeStamp&) { return kFALSE; }
            Bool_t      SetTimestamp(Int_t, const TDatime&);
    virtual void        SetTimeFormating(const char*) {}
    virtual Bool_t      SetBinary(Int_t, void*, Long_t, Long_t = 0x1000) { return kFALSE; }
@@ -97,6 +99,7 @@ public:
            Int_t       GetMinute(Int_t);
            Int_t       GetSecond(Int_t);
    virtual Bool_t      GetTimestamp(Int_t, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&) { return kFALSE; }
+   virtual Bool_t      GetTimestamp(Int_t, TTimeStamp&) { return kFALSE; }
            TDatime     GetTimestamp(Int_t);
 #ifndef __MAKECINT__
    virtual Bool_t      GetVInt(Int_t, std::vector<Int_t>&) { return kFALSE; }

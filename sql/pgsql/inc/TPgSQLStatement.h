@@ -77,6 +77,7 @@ public:
    virtual Bool_t      SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec);
    virtual Bool_t      SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec);
    virtual Bool_t      SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec, Int_t frac = 0);
+   virtual Bool_t      SetTimestamp(Int_t npar, const TTimeStamp& tm);
 
    virtual Bool_t      NextIteration();
 
@@ -102,6 +103,7 @@ public:
    virtual Bool_t      GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec);
    virtual Bool_t      GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec);
    virtual Bool_t      GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec, Int_t&);
+   virtual Bool_t      GetTimestamp(Int_t npar, TTimeStamp& tm);
 
    ClassDef(TPgSQLStatement, 0);  // SQL statement class for PgSQL DB
 };
