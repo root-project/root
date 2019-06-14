@@ -469,6 +469,10 @@ void TClonesArray::Expand(Int_t newSize)
       Error ("Expand", "newSize must be positive (%d)", newSize);
       return;
    }
+   if (!fKeep) {
+      Error("ExpandCreate", "Not initialized properly, fKeep is still a nullptr");
+      return;
+   }
    if (newSize == fSize)
       return;
    if (newSize < fSize) {
@@ -497,7 +501,11 @@ void TClonesArray::ExpandCreate(Int_t n)
 {
    if (n < 0) {
       Error("ExpandCreate", "n must be positive (%d)", n);
-      return ;
+      return;
+   }
+   if (!fKeep) {
+      Error("ExpandCreate", "Not initialized properly, fKeep is still a nullptr");
+      return;
    }
    if (n > fSize)
       Expand(TMath::Max(n, GrowBy(fSize)));
