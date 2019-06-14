@@ -28,7 +28,7 @@ void testTStatistic(Int_t n = 10000)
    // Find minimum and maximum
    double min = TMath::Limits<Double_t>::Max(); // The minimum value in the array
    double max = TMath::Limits<Double_t>::Min(); // The maximum value in the array
-   double eps_min_max = 0.000001; // Epsilon to check for GetMin and GetMax functions
+   double eps_min_max = 0.000001;               // Epsilon to check for GetMin and GetMax functions
 
    double sum = 0; // Sum of values in the vector
    double eps_sum = eps_min_max;
@@ -51,7 +51,10 @@ void testTStatistic(Int_t n = 10000)
    if (!TMath::AreEqualAbs(st0.GetRMS(),true_sigma, eps2) )   { Error("TestTStatistic-GetRMS","Different value obtained for the unweighted data"); error = true; }
    if (!TMath::AreEqualAbs(st0.GetMin(), min, eps_min_max) )   { Error("TestTStatistic-GetMin","Different value obtained for the unweighted data"); error = true; }
    if (!TMath::AreEqualAbs(st0.GetMax(), max, eps_min_max) )   { Error("TestTStatistic-GetMax","Different value obtained for the unweighted data"); error = true; }
-   if (!TMath::AreEqualAbs(st0.GetSum(), sum, eps_sum) )   { Error("TestTStatistic-GetMax","Different value obtained for the unweighted data"); error = true; }
+   if (!TMath::AreEqualAbs(st0.GetSum(), sum, eps_sum)) {
+      Error("TestTStatistic-GetMax", "Different value obtained for the unweighted data");
+      error = true;
+   }
    if (error) printf("Failed\n");
    else printf("OK\n");
    if (error || gVerbose) {
@@ -87,12 +90,12 @@ void testTStatistic(Int_t n = 10000)
    if (!TMath::AreEqualAbs(st1.GetRMS(),true_sigma, eps2) )  {  Error("TestTStatistic-GetRMS","Different value obtained for the weighted data"); error = true; }
 
    if (error) printf("Failed\n");
-   else printf("OK\n");
+   else
+      printf("OK\n");
    if (error || gVerbose) {
       stp.Print();
       st1.Print();
    }
-
 
    // Incremental test
    printf("\nTest incremental filling :          ");
@@ -108,7 +111,8 @@ void testTStatistic(Int_t n = 10000)
    if (!TMath::AreEqualRel(st1.GetRMS(),st2.GetRMS(), 1.E-15) )    { Error("TestTStatistic-GetRMS","2 Different values obtained for the weighted data"); error = true; }
 
    if (error) printf("Failed\n");
-   else printf("OK\n");
+   else
+      printf("OK\n");
    if (error || gVerbose) {
       stp.Print();
       st2.Print();
@@ -119,8 +123,7 @@ void testTStatistic(Int_t n = 10000)
    int n1 = rand3.Uniform(10,n-10);
 
    // sort the data to have then two biased samples
-   std::sort(xx.begin(), xx.end() );
-
+   std::sort(xx.begin(), xx.end());
 
    printf("\nTest merge :                        ");
    error = false;
@@ -140,7 +143,8 @@ void testTStatistic(Int_t n = 10000)
    if (!TMath::AreEqualAbs(sta.GetRMS(),true_sigma, eps2) )   { Error("TestTStatistic-GetRMS","Different value obtained for the merged data"); error = true; }
 
    if (error) printf("Failed\n");
-   else printf("OK\n");
+   else
+      printf("OK\n");
    if (error || gVerbose) {
       stp.Print();
       sta.Print();
@@ -156,7 +160,8 @@ void testTStatistic(Int_t n = 10000)
    if (!TMath::AreEqualAbs(st3.GetRMS(), sta.GetRMS() , 1.E-10 ) )  {  Error("TestTStatistic-GetRMS","Different value obtained for the sorted data");  error = true; }
 
    if (error) printf("Failed\n");
-   else printf("OK\n");
+   else
+      printf("OK\n");
    if (error || gVerbose) {
       stp.Print();
       st3.Print();
@@ -167,7 +172,7 @@ void testTStatistic(Int_t n = 10000)
    printf("\nTest TMath with weights :           ");
    error = false;
    stp.Start();
-   double meanw = TMath::Mean(xx.begin(), xx.end(), ww.begin() );
+   double meanw = TMath::Mean(xx.begin(), xx.end(), ww.begin());
    double rmsw  = TMath::RMS(xx.begin(), xx.end(), ww.begin() );
    double neff = st2.GetW() * st2.GetW() / st2.GetW2();
    stp.Stop();
@@ -176,30 +181,29 @@ void testTStatistic(Int_t n = 10000)
    if (!TMath::AreEqualAbs(rmsw,true_sigma, eps2) )  {  Error("TestTStatistic::TMath::RMS","Different value obtained for the weighted data"); error = true; }
 
    if (error) printf("Failed\n");
-   else printf("OK\n");
+   else
+      printf("OK\n");
    if (error || gVerbose) {
       stp.Print();
       printf("  TMATH         mu =  %.5g +- %.4g \t RMS = %.5g \n",meanw, rmsw/sqrt(neff ), rmsw);
    }
-
-
 }
 
 int main(int argc, char **argv)
 {
-  // Parse command line arguments
-  for (Int_t i=1 ;  i<argc ; i++) {
-     std::string arg = argv[i] ;
-     if (arg == "-v") {
-      gVerbose = true;
-     }
-     if (arg == "-h") {
-        std::cout << "Usage: " << argv[0] << " [-v]\n";
-        std::cout << "  where:\n";
-        std::cout << "     -v : verbose  mode";
-        std::cout << std::endl;
-        return -1;
-     }
+   // Parse command line arguments
+   for (Int_t i = 1; i < argc; i++) {
+      std::string arg = argv[i];
+      if (arg == "-v") {
+         gVerbose = true;
+      }
+      if (arg == "-h") {
+         std::cout << "Usage: " << argv[0] << " [-v]\n";
+         std::cout << "  where:\n";
+         std::cout << "     -v : verbose  mode";
+         std::cout << std::endl;
+         return -1;
+      }
    }
 
    testTStatistic();
