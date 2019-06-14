@@ -21,6 +21,7 @@
 #include "TDataType.h"
 #include "TDatime.h"
 #include "TTimeStamp.h"
+#include "TMath.h"
 
 #include <stdlib.h>
 
@@ -30,7 +31,7 @@ ClassImp(TPgSQLStatement);
 
 #include "libpq/libpq-fs.h"
 
-static const Int_t kBindStringSize = 25;
+static const Int_t kBindStringSize = 30;    // big enough to handle text rep. of 64 bit number and timestamp (e.g. "1970-01-01 01:01:01.111111+00")
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal constructor.
@@ -330,7 +331,7 @@ void TPgSQLStatement::SetBuffersNumber(Int_t numpars)
 
    fBind = new char*[fNumBuffers];
    for(int i=0; i<fNumBuffers; ++i){
-      fBind[i] = new char[kBindStringSize]; //big enough to handle text rep. of 64 bit number
+      fBind[i] = new char[kBindStringSize];
    }
    fFieldName = new char*[fNumBuffers];
 
@@ -666,6 +667,25 @@ Bool_t TPgSQLStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return value of parameter in form of TTimeStamp
+/// Be aware, that TTimeStamp does not allow dates before 1970-01-01
+
+Bool_t TPgSQLStatement::GetTimestamp(Int_t npar, TTimeStamp& tm)
+{
+   Int_t year, month, day, hour, min, sec, microsec;
+   GetTimestamp(npar, year, month, day, hour, min, sec, microsec);
+
+   if (year < 1970) {
+      SetError(-1, "Date before year 1970 does not supported by TTimeStamp type", "GetTimestamp");
+      return kFALSE;
+   }
+
+   tm.Set(year, month, day, hour, min, sec, microsec*1000, kTRUE, 0);
+
+   return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set NULL as parameter value.
 /// If NULL should be set for statement parameter during first iteration,
 /// one should call before proper Set... method to identify type of argument for
@@ -850,17 +870,17 @@ Bool_t TPgSQLStatement::SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set parameter value as date & time.
+/// Set parameter value as date & time, in UTC.
 
 Bool_t TPgSQLStatement::SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec)
 {
    TDatime d=TDatime(year,month,day,hour,min,sec);
-   snprintf(fBind[npar],kBindStringSize,"%s",(char*)d.AsSQLString());
+   snprintf(fBind[npar],kBindStringSize,"%s+00",(char*)d.AsSQLString());
    return kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set parameter value as timestamp.
+/// Set parameter value as timestamp, in UTC.
 /// Second fraction is assumed as value in microseconds,
 /// i.e. as a fraction with six decimal places.
 /// See GetTimestamp() for an example.
@@ -868,7 +888,16 @@ Bool_t TPgSQLStatement::SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day
 Bool_t TPgSQLStatement::SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec, Int_t frac)
 {
    TDatime d(year,month,day,hour,min,sec);
-   snprintf(fBind[npar],kBindStringSize,"%s.%06d",(char*)d.AsSQLString(),frac);
+   snprintf(fBind[npar],kBindStringSize,"%s.%06d+00",(char*)d.AsSQLString(),frac);
+   return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as timestamp from TTimeStamp object
+
+Bool_t TPgSQLStatement::SetTimestamp(Int_t npar, const TTimeStamp& tm)
+{
+   snprintf(fBind[npar], kBindStringSize, "%s.%06d+00", (char*)tm.AsString("s"), TMath::Nint(tm.GetNanoSec() / 1000.0));
    return kTRUE;
 }
 
@@ -1107,6 +1136,15 @@ Bool_t TPgSQLStatement::GetTimestamp(Int_t, Int_t&, Int_t&, Int_t&, Int_t&, Int_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return value of parameter in form of TTimeStamp
+/// Be aware, that TTimeStamp does not allow dates before 1970-01-01
+
+Bool_t TPgSQLStatement::GetTimestamp(Int_t npar, TTimeStamp& tm)
+{
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set parameter type to be used as buffer.
 /// Used in both setting data to database and retriving data from data base.
 /// Initialize proper PGSQL_BIND structure and allocate required buffers.
@@ -1232,6 +1270,14 @@ Bool_t TPgSQLStatement::SetDatime(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Int_
 /// Set parameter value as timestamp.
 
 Bool_t TPgSQLStatement::SetTimestamp(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Int_t)
+{
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter value as timestamp from TTimeStamp object
+
+Bool_t TPgSQLStatement::SetTimestamp(Int_t, const TTimeStamp&)
 {
    return kFALSE;
 }
