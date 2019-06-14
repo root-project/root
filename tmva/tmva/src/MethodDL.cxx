@@ -390,6 +390,27 @@ void MethodDL::ProcessOptions()
 
       fTrainingSettings.push_back(settings);
    }
+
+   // case inputlayout and batch layout was not given. Use default then
+   // (1, batchsize, nvariables)
+   if (fInputWidth == 0 && fInputHeight == 0 && fInputDepth == 0) {
+      fInputDepth = 1;
+      fInputHeight = 1;
+      fInputWidth = GetNVariables();
+   }
+   if (fBatchWidth == 0 && fBatchHeight == 0 && fBatchDepth == 0) {
+      if (fInputHeight == 1 && fInputDepth == 1) {
+         // case of (1, batchsize, input features)
+         fBatchDepth = 1;
+         fBatchHeight = fTrainingSettings.front().batchSize;
+         fBatchWidth = fInputWidth;
+      }
+      else { // more general cases (e.g. for CNN) 
+         fBatchDepth = fTrainingSettings.front().batchSize;
+         fBatchHeight = fInputDepth;
+         fBatchWidth = fInputWidth*fInputHeight;
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -512,6 +533,7 @@ void MethodDL::CreateDeepNet(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
 
 
    for (; layerString != nullptr; layerString = (TObjString *)nextLayer()) {
+
       // Split layer details
       TObjArray *subStrings = layerString->GetString().Tokenize(subDelimiter);
       TIter nextToken(subStrings);
@@ -531,9 +553,13 @@ void MethodDL::CreateDeepNet(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
          ParseReshapeLayer(deepNet, nets, layerString->GetString(), subDelimiter);
       } else if (strLayerType == "RNN") {
          ParseRnnLayer(deepNet, nets, layerString->GetString(), subDelimiter);
-      } else if (strLayerType == "LSTM") {
-         Log() << kFATAL << "LSTM Layer is not yet fully implemented" << Endl;
-         //ParseLstmLayer(deepNet, nets, layerString->GetString(), subDelimiter);
+      // } else if (strLayerType == "LSTM") {
+      //    Log() << kError << "LSTM Layer is not yet fully implemented" << Endl;
+      //    //ParseLstmLayer(deepNet, nets, layerString->GetString(), subDelimiter);
+      //    break;
+      } else {
+         // no type of layer specified - assume is dense layer as in old DNN interface
+         ParseDenseLayer(deepNet, nets, layerString->GetString(), subDelimiter);
       }
    }
 }
@@ -564,10 +590,11 @@ void MethodDL::ParseDenseLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
    // both  100|TANH and TANH|100 are valid cases
    for (; token != nullptr; token = (TObjString *)nextToken()) {
       idxToken++;
-      // first token defines the layer type- skip it 
-      if (idxToken == 1) continue;
       // try a match with the activation function 
       TString strActFnc(token->GetString());
+      // if first token defines the layer type- skip it 
+      if (strActFnc =="DENSE") continue;
+
       if (strActFnc == "RELU") {
          activationFunction = DNN::EActivationFunction::kRelu;
       } else if (strActFnc == "TANH") {
@@ -596,6 +623,8 @@ void MethodDL::ParseDenseLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
       }
 
    }
+   // avoid zero width. assume is 1
+   if (width == 0) width = 1; 
 
    // Add the dense layer, initialize the weights and biases and copy
    TDenseLayer<Architecture_t> *denseLayer = deepNet.AddDenseLayer(width, activationFunction);
@@ -1062,7 +1091,6 @@ UInt_t TMVA::MethodDL::GetNumValidationSamples()
 template <typename Architecture_t>
 void MethodDL::TrainDeepNet()
 {
-   
 
    using Scalar_t = typename Architecture_t::Scalar_t;
    using Layer_t = TMVA::DNN::VGeneralLayer<Architecture_t>;
@@ -1155,18 +1183,17 @@ void MethodDL::TrainDeepNet()
                << " of them." << Endl;
       }
 
-
       DeepNet_t deepNet(batchSize, inputDepth, inputHeight, inputWidth, batchDepth, batchHeight, batchWidth, J, I, R, weightDecay);
 
       // create a copy of DeepNet for evaluating but with batch size = 1
       // fNet is the saved network and will be with CPU or Referrence architecture
       if (trainingPhase == 1) {
-         fNet = std::unique_ptr<DeepNetImpl_t>(new DeepNetImpl_t(1, inputDepth, inputHeight, inputWidth, batchDepth, 
+         fNet = std::unique_ptr<DeepNetImpl_t>(new DeepNetImpl_t(1, inputDepth, inputHeight, inputWidth, batchDepth,
                                                                  batchHeight, batchWidth, J, I, R, weightDecay));
-         fBuildNet = true; 
+         fBuildNet = true;
       }
       else
-         fBuildNet = false; 
+         fBuildNet = false;
 
       // Initialize the vector of slave nets
       std::vector<DeepNet_t> nets{};
@@ -1176,8 +1203,10 @@ void MethodDL::TrainDeepNet()
          nets.push_back(deepNet);
       }
 
+
       // Add all appropriate layers to deepNet and (if fBuildNet is true) also to fNet
       CreateDeepNet(deepNet, nets);
+
 
       // set droput probabilities
       // use convention to store in the layer 1.- dropout probabilities
@@ -1190,10 +1219,10 @@ void MethodDL::TrainDeepNet()
       if (trainingPhase > 1) {
          // copy initial weights from fNet to deepnet
          for (size_t i = 0; i < deepNet.GetDepth(); ++i) {
-            const auto & nLayer = fNet->GetLayerAt(i); 
+            const auto & nLayer = fNet->GetLayerAt(i);
             const auto & dLayer = deepNet.GetLayerAt(i);
             // could use a traits for detecting equal architectures
-           // dLayer->CopyWeights(nLayer->GetWeights()); 
+           // dLayer->CopyWeights(nLayer->GetWeights());
            //  dLayer->CopyBiases(nLayer->GetBiases());
             Architecture_t::CopyDiffArch(dLayer->GetWeights(), nLayer->GetWeights() );
             Architecture_t::CopyDiffArch(dLayer->GetBiases(), nLayer->GetBiases() );
