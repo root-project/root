@@ -16,6 +16,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+R__LOAD_LIBRARY(libROOTGpadv7)
+
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RColor.hxx"
 #include "ROOT/RText.hxx"
