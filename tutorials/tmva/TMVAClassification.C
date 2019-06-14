@@ -119,8 +119,17 @@ int TMVAClassification( TString myMethodList = "" )
    Use["MLPBNN"]          = 1; // Recommended ANN with BFGS training method and bayesian regulator
    Use["CFMlpANN"]        = 0; // Depreciated ANN from ALEPH
    Use["TMlpANN"]         = 0; // ROOT's own ANN
-   Use["DNN_GPU"]         = 0; // CUDA-accelerated DNN training.
-   Use["DNN_CPU"]         = 0; // Multi-core accelerated DNN.
+#ifdef R__HAS_TMVAGPU
+   Use["DNN_GPU"]         = 1; // CUDA-accelerated DNN training.
+#else
+   Use["DNN_GPU"]         = 0;
+#endif
+
+#ifdef R__HAS_TMVACPU
+   Use["DNN_CPU"]         = 1; // Multi-core accelerated DNN.
+#else
+   Use["DNN_CPU"]         = 0;
+#endif
    //
    // Support Vector Machine
    Use["SVM"]             = 1;
@@ -441,9 +450,9 @@ int TMVAClassification( TString myMethodList = "" )
       TString layoutString ("Layout=TANH|128,TANH|128,TANH|128,LINEAR");
 
       // Training strategies.
-      TString training0("LearningRate=1e-1,Momentum=0.9,Repetitions=1,"
-                        "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
-                        "WeightDecay=1e-4,Regularization=L2,"
+      TString training0("LearningRate=1e-2,Momentum=0.9,Repetitions=1,"
+                        "ConvergenceSteps=30,BatchSize=256,TestRepetitions=10,"
+                        "WeightDecay=1e-4,Regularization=None,"
                         "DropConfig=0.0+0.5+0.5+0.5, Multithreading=True");
       TString training1("LearningRate=1e-2,Momentum=0.9,Repetitions=1,"
                         "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
@@ -465,12 +474,12 @@ int TMVAClassification( TString myMethodList = "" )
       // Cuda implementation.
       if (Use["DNN_GPU"]) {
          TString gpuOptions = dnnOptions + ":Architecture=GPU";
-         factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN_GPU", gpuOptions);
+         factory->BookMethod(dataloader, TMVA::Types::kDL, "DNN_GPU", gpuOptions);
       }
       // Multi-core CPU implementation.
       if (Use["DNN_CPU"]) {
          TString cpuOptions = dnnOptions + ":Architecture=CPU";
-         factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN_CPU", cpuOptions);
+         factory->BookMethod(dataloader, TMVA::Types::kDL, "DNN_CPU", cpuOptions);
       }
    }
 
