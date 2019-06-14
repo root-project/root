@@ -43,10 +43,13 @@ private:
    Double_t    fM2;      ///< Second order momentum
    Double_t    fMin;     ///< Minimum value in the Tstatistic object
    Double_t    fMax;     ///< Maximum value in the TStatistic object
+   Double_t    fSum;     ///< Sum of the values in the TStatistic object
 
 public:
 
-   TStatistic(const char *name = "") : fName(name), fN(0), fW(0.), fW2(0.), fM(0.), fM2(0.), fMin(TMath::Limits<Double_t>::Max()), fMax(TMath::Limits<Double_t>::Min()) { }
+   TStatistic(const char *name = "")
+      : fName(name), fN(0), fW(0.), fW2(0.), fM(0.), fM2(0.), fSum(0.)
+      , fMin(TMath::Limits<Double_t>::Max()), fMax(TMath::Limits<Double_t>::Min()) { }
    TStatistic(const char *name, Int_t n, const Double_t *val, const Double_t *w = 0);
    ~TStatistic();
 
@@ -65,6 +68,7 @@ public:
    inline       Double_t GetW2() const { return fW2; }
    inline       Double_t GetMin() const { return fMin; }
    inline       Double_t GetMax() const { return fMax; }
+   inline       Double_t GetSum() const { return fSum; }
 
    // Merging
    Int_t Merge(TCollection *in);
@@ -76,7 +80,7 @@ public:
    void Print(Option_t * = "") const;
    void ls(Option_t *opt = "") const { Print(opt); }
 
-   ClassDef(TStatistic,3)  // Named statistical variable
+   ClassDef(TStatistic,4)  // Named statistical variable
 };
 
 #endif
