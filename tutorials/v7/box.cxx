@@ -13,6 +13,8 @@
 /// is welcome!
 /// \author Olivier couet
 
+R__LOAD_LIBRARY(libROOTGpadv7)
+
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RColor.hxx"
 #include "ROOT/RBox.hxx"
