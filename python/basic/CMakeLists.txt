@@ -14,8 +14,7 @@ if(ROOT_python_FOUND)
   ROOTTEST_ADD_TEST(operator
                     MACRO PyROOT_operatortests.py
                     COPY_TO_BUILDDIR Operators.C
-                    PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ Operators.C+
-                    ${PYTESTS_WILLFAIL})
+                    PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ Operators.C+)
 
   ROOTTEST_ADD_TEST(overload
                     MACRO PyROOT_overloadtests.py
