@@ -2033,20 +2033,6 @@ void TCling::RegisterModule(const char* modulename,
       }
    }
 
-   if (gIgnoredPCMNames.find(modulename) == gIgnoredPCMNames.end()) {
-      llvm::SmallString<256> pcmFileNameFullPath(dyLibName);
-      // The path dyLibName might not be absolute. This can happen if dyLibName
-      // is linked to an executable in the same folder.
-      llvm::sys::fs::make_absolute(pcmFileNameFullPath);
-      llvm::sys::path::remove_filename(pcmFileNameFullPath);
-      llvm::sys::path::append(pcmFileNameFullPath,
-                              ROOT::TMetaUtils::GetModuleFileName(modulename));
-      if (!LoadPCM(pcmFileNameFullPath.str().str())) {
-         ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
-                 ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
-      }
-   }
-
    clang::Sema &TheSema = fInterpreter->getSema();
 
    bool ModuleWasSuccessfullyLoaded = false;
@@ -2072,6 +2058,20 @@ void TCling::RegisterModule(const char* modulename,
          clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
          if (moduleMap.findModule(ModuleName))
             Info("TCling::RegisterModule", "Module %s in modulemap failed to load.", ModuleName.c_str());
+      }
+   }
+
+   if (gIgnoredPCMNames.find(modulename) == gIgnoredPCMNames.end()) {
+      llvm::SmallString<256> pcmFileNameFullPath(dyLibName);
+      // The path dyLibName might not be absolute. This can happen if dyLibName
+      // is linked to an executable in the same folder.
+      llvm::sys::fs::make_absolute(pcmFileNameFullPath);
+      llvm::sys::path::remove_filename(pcmFileNameFullPath);
+      llvm::sys::path::append(pcmFileNameFullPath,
+                              ROOT::TMetaUtils::GetModuleFileName(modulename));
+      if (!LoadPCM(pcmFileNameFullPath.str().str())) {
+         ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
+                 ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
       }
    }
 
