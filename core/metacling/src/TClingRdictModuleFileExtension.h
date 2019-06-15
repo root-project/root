@@ -24,8 +24,6 @@
 
 /// A module file extension used for testing purposes.
 class TClingRdictModuleFileExtension : public clang::ModuleFileExtension {
-   std::string UserInfo;
-   std::string RdictFileName;
 
    class Writer : public clang::ModuleFileExtensionWriter {
    public:
@@ -46,7 +44,7 @@ class TClingRdictModuleFileExtension : public clang::ModuleFileExtension {
    };
 
 public:
-   TClingRdictModuleFileExtension(llvm::StringRef UserInfo) : UserInfo(UserInfo) {}
+   TClingRdictModuleFileExtension() {}
 
    ~TClingRdictModuleFileExtension() override;
 

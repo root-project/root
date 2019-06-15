@@ -53,8 +53,8 @@ void TClingRdictModuleFileExtension::Writer::writeExtensionContents(clang::Sema 
    const clang::LangOptions &Opts = SemaRef.getLangOpts();
    const clang::Preprocessor &PP = SemaRef.getPreprocessor();
 
-   const llvm::StringRef CachePath = PP.getHeaderSearchInfo().getHeaderSearchOpts().ModuleCachePath;
-   const std::string RdictsStart = "lib" + Opts.CurrentModule + "_";
+   llvm::StringRef CachePath = PP.getHeaderSearchInfo().getHeaderSearchOpts().ModuleCachePath;
+   std::string RdictsStart = "lib" + Opts.CurrentModule + "_";
    const std::string RdictsEnd = "_rdict.pcm";
 
    using namespace llvm;
@@ -91,22 +91,7 @@ void TClingRdictModuleFileExtension::Writer::writeExtensionContents(clang::Sema 
    }
 }
 
-static void WriteOnDisk(llvm::StringRef PathName, llvm::StringRef CurRdictName, llvm::StringRef CurRdictContent)
-{
-   llvm::SmallString<255> FullRdictName = PathName;
-   llvm::sys::path::append(FullRdictName, CurRdictName);
-   if (llvm::sys::fs::exists(FullRdictName)) {
-      // FIXME: Add diagnostics if we have a file on disk and we enter here...
-      return;
-   }
-   std::error_code EC;
-   // FIXME: Convert to new TMemFile = ...;
-   llvm::raw_fd_ostream os(FullRdictName.str(), EC, llvm::sys::fs::F_None);
-   os << CurRdictContent;
-   os.close();
-   // Add this class as a friend of TCling.
-   // gCling->LoadPCM(FullRdictName);
-}
+extern "C" void TCling__RegisterRdictForLoadPCM(const std::string &pcmFileNameFullPath, llvm::StringRef *pcmContent);
 
 TClingRdictModuleFileExtension::Reader::Reader(clang::ModuleFileExtension *Ext, clang::ASTReader &Reader,
                                                clang::serialization::ModuleFile &Mod,
@@ -136,8 +121,10 @@ TClingRdictModuleFileExtension::Reader::Reader(clang::ModuleFileExtension *Ext, 
          break;
       }
       case FIRST_EXTENSION_RECORD_ID + 1: {
-         llvm::StringRef Path = llvm::sys::path::parent_path(Mod.FileName);
-         WriteOnDisk(Path, CurrentRdictName, Blob);
+         // FIXME: Remove the string copy in fPendingRdicts.
+         llvm::SmallString<255> FullRdictName = llvm::sys::path::parent_path(Mod.FileName);
+         llvm::sys::path::append(FullRdictName, CurrentRdictName);
+         TCling__RegisterRdictForLoadPCM(FullRdictName.str(), &Blob);
          break;
       }
       }
@@ -159,7 +146,6 @@ llvm::hash_code TClingRdictModuleFileExtension::hashExtension(llvm::hash_code Co
    Code = llvm::hash_combine(Code, ROOT_CLING_RDICT_BLOCK_NAME);
    Code = llvm::hash_combine(Code, ROOT_CLING_RDICT_VERSION_MAJOR);
    Code = llvm::hash_combine(Code, ROOT_CLING_RDICT_VERSION_MINOR);
-   Code = llvm::hash_combine(Code, UserInfo);
 
    return Code;
 }
