@@ -68,6 +68,7 @@ clang/LLVM technology.
 #include "TListOfEnumsWithLock.h"
 #include "TListOfFunctions.h"
 #include "TListOfFunctionTemplates.h"
+#include "TMemFile.h"
 #include "TProtoClass.h"
 #include "TStreamerInfo.h" // This is here to avoid to use the plugin manager
 #include "ThreadLocalStorage.h"
@@ -573,6 +574,11 @@ extern "C" void TCling__LibraryLoadedRTTI(const void* dyLibHandle,
                                           const char* canonicalName) {
 
    ((TCling*)gCling)->LibraryLoaded(dyLibHandle, canonicalName);
+}
+
+extern "C" void TCling__RegisterRdictForLoadPCM(const std::string &pcmFileNameFullPath, llvm::StringRef *pcmContent)
+{
+   ((TCling *)gCling)->RegisterRdictForLoadPCM(pcmFileNameFullPath, pcmContent);
 }
 
 extern "C" void TCling__LibraryUnloadedRTTI(const void* dyLibHandle,
@@ -1345,7 +1351,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    cling::Interpreter::ModuleFileExtensions extensions;
    EnvOpt = llvm::sys::Process::GetEnv("ROOTDEBUG_RDICT");
    if (!EnvOpt.hasValue())
-      extensions.push_back(std::make_shared<TClingRdictModuleFileExtension>(""));
+      extensions.push_back(std::make_shared<TClingRdictModuleFileExtension>());
 
    fInterpreter = new cling::Interpreter(interpArgs.size(),
                                          &(interpArgs[0]),
@@ -1501,10 +1507,26 @@ static bool R__InitStreamerInfoFactory()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Register Rdict data for future loading by LoadPCM;
+
+void TCling::RegisterRdictForLoadPCM(const std::string &pcmFileNameFullPath, llvm::StringRef *pcmContent)
+{
+   if (IsFromRootCling())
+      return;
+
+   if (llvm::sys::fs::exists(pcmFileNameFullPath)) {
+      ::Error("TCling::LoadPCM", "Rdict '%s' is both in Module extension and in File system.", pcmFileNameFullPath.c_str());
+      return;
+   }
+
+   fPendingRdicts[pcmFileNameFullPath] = *pcmContent;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Tries to load a PCM from TFile; returns true on success.
+
 bool TCling::LoadPCMImpl(TFile *pcmFile)
 {
-
    auto listOfKeys = pcmFile->GetListOfKeys();
 
    // This is an empty pcm
@@ -1618,18 +1640,14 @@ bool TCling::LoadPCMImpl(TFile *pcmFile)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Tries to load a PCM; returns true on success.
+/// Tries to load a rdict PCM; returns true on success.
 
 bool TCling::LoadPCM(const std::string &pcmFileNameFullPath)
 {
-
    SuspendAutoloadingRAII autoloadOff(this);
    SuspendAutoParsing autoparseOff(this);
    assert(!pcmFileNameFullPath.empty());
    assert(llvm::sys::path::is_absolute(pcmFileNameFullPath));
-   if (!llvm::sys::fs::exists(pcmFileNameFullPath)) {
-      return false;
-   }
 
    // Easier to work with the ROOT interfaces.
    TString pcmFileName = pcmFileNameFullPath;
@@ -1639,6 +1657,35 @@ bool TCling::LoadPCM(const std::string &pcmFileNameFullPath)
    // Avoid to call the plugin manager at all.
    R__InitStreamerInfoFactory();
 
+   TDirectory::TContext ctxt;
+
+   auto pendingRdict = fPendingRdicts.find(pcmFileNameFullPath);
+   if (pendingRdict != fPendingRdicts.end()) {
+      llvm::StringRef pcmContent = pendingRdict->second;
+      TMemFile::ExternalDataRange_t range{pcmContent.data(), pcmContent.size()};
+      std::string RDictFileOpts = pcmFileNameFullPath + "?filetype=pcm";
+      TMemFile pcmMemFile(RDictFileOpts.c_str(), range);
+
+      Int_t oldDebug = gDebug;
+      if (gDebug > 5) {
+         gDebug -= 5;
+         ::Info("TCling::LoadPCM", "Loading ROOT PCM %s from module extension", pcmFileName.Data());
+      } else {
+         gDebug = 0;
+      }
+
+      bool result = LoadPCMImpl(&pcmMemFile);
+
+      fPendingRdicts.erase(pendingRdict);
+
+      gDebug = oldDebug;
+      return result;
+   }
+
+   if (!llvm::sys::fs::exists(pcmFileNameFullPath)) {
+      return false;
+   }
+
    if (gROOT->IsRootFile(pcmFileName)) {
       Int_t oldDebug = gDebug;
       if (gDebug > 5) {
@@ -1647,8 +1694,6 @@ bool TCling::LoadPCM(const std::string &pcmFileNameFullPath)
       } else {
          gDebug = 0;
       }
-
-      TDirectory::TContext ctxt;
 
       TFile *pcmFile = new TFile(pcmFileName + "?filetype=pcm", "READ");
 
