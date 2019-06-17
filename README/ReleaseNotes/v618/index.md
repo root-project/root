@@ -99,7 +99,7 @@ now ignored by ROOT).
 class DoNotUseClass {
 } R__SUGGEST_ALTERNATIVE("Use ... instead.");
 ```
-It is activated by the preprocessor defines `R__SUGGEST_NEW_INTERFACE`. The former is useful when deprecation warnings should be activated/deactivated at global level, for example for an entire project. This could be done by defining `R__SUGGEST_NEW_INTERFACE` in the build system. 
+It is activated by the preprocessor defines `R__SUGGEST_NEW_INTERFACE`. The former is useful when deprecation warnings should be activated/deactivated at global level, for example for an entire project. This could be done by defining `R__SUGGEST_NEW_INTERFACE` in the build system.
 If the warning needs to be confined within single translation units, irrespective of the definition of `R__SUGGEST_NEW_INTERFACE`, the `R__ALWAYS_SUGGEST_ALTERNATIVE` macro can be used:
 ```{.cpp}
 #ifndef DONOTUSECLASS_H
@@ -123,6 +123,9 @@ R__SUGGEST_ALTERNATIVE("begin(), end() and range-based for loops.") {
 ### I/O Libraries
 
 * The deprecrated `I/O` plugins for  `HDFS`, `Castor` and `RFIO` have been removed.
+
+* A new version of zlib (ZLIB-CF), based on ZLIB Cloudlare fork and CMSSW zlib Cloudlare fork, was added in ROOT.
+It is a high performance modification of zlib 1.2.8 compression algorithm, which offers up to 70% faster compression speed for Intel/ARMv8 processors  for tested use cases (30% - for fast compression (`CompressionSettings(101)`) and 70% for the slow compression (`CompressionSettings(109)`)), using SIMD/NEON acceleration for CRC32 and Adler computations. ZLIB-CF was adopted in ROOT using a zlib builtin mechanism. To enable ZLIB-CF, please use `-Dbuiltin_zlib=ON` flag.
 
 ### THttpServer classes
 
@@ -557,4 +560,3 @@ df = ROOT.ROOT.RDataFrame(4).Define("x", "CppCallable::f(rdfentry_)")
 df.AsNumpy()
 # Returns {'x': numpy.array([0., 2., 4., 6.], dtype=float32)}
 ~~~
-
