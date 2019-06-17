@@ -135,7 +135,7 @@ ifeq ($(PLATFORM),win32)
    export PATH:=${PATH}:${ROOTTEST_LOC}/scripts
 else
 ifeq ($(PLATFORM),macosx)
-   export ROOTTEST_LOC := $(shell $(ROOTTEST_HOME)/scripts/mac_readlink -f -n $(ROOTTEST_HOME))/
+   export ROOTTEST_LOC := $(shell python -c 'import os,sys; print os.path.realpath(sys.argv[1]);' $(ROOTTEST_HOME))/
    export PATH := $(PATH):$(ROOTTEST_HOME)/scripts
 else
    export ROOTTEST_LOC := $(shell readlink -f -n $(ROOTTEST_HOME))/
