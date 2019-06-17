@@ -134,10 +134,8 @@ include_directories(${ROOT_INCLUDE_DIRS} ${ROOT_INCLUDE_DIR} ${CMAKE_CURRENT_SOU
 link_directories(${ROOT_LIBRARY_DIR})
 set(CMAKE_MACOSX_RPATH TRUE)              # use RPATH for MacOSX
 
-# Enable and setup CTest.
 include(RoottestCTest)
-include(RootCTestMacros)
-
+include(RoottestMacros)
 include(SearchInstalledSoftwareRoottest)
 
 message("-- Scanning subdirectories for tests...")
