@@ -69,6 +69,7 @@ private:
       kOldInterpolation =  BIT(15)
    };
 
+   void CreateInterpolator(Bool_t oldInterp);
 
 protected:
 

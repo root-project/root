@@ -761,7 +761,7 @@ TFitResultPtr TGraph2D::Fit(const char *fname, Option_t *option, Option_t *)
    char *linear;
    linear = (char*)strstr(fname, "++");
 
-   if (linear) { 
+   if (linear) {
       TF2 f2(fname, fname);
       return Fit(&f2, option, "");
    }
@@ -1024,6 +1024,30 @@ Double_t TGraph2D::GetErrorZ(Int_t) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Add a TGraphDelaunay in the list of the fHistogram's functions
+
+void TGraph2D::CreateInterpolator(Bool_t oldInterp)
+{
+
+   TList *hl = fHistogram->GetListOfFunctions();
+
+   if (oldInterp) {
+      TGraphDelaunay *dt = new TGraphDelaunay(this);
+      dt->SetMaxIter(fMaxIter);
+      dt->SetMarginBinsContent(fZout);
+      fDelaunay = dt;
+      SetBit(kOldInterpolation);
+      if (!hl->FindObject("TGraphDelaunay")) hl->Add(fDelaunay);
+   } else {
+      TGraphDelaunay2D *dt = new TGraphDelaunay2D(this);
+      dt->SetMarginBinsContent(fZout);
+      fDelaunay = dt;
+      ResetBit(kOldInterpolation);
+      if (!hl->FindObject("TGraphDelaunay2D")) hl->Add(fDelaunay);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// By default returns a pointer to the Delaunay histogram. If fHistogram
 /// doesn't exist, books the 2D histogram fHistogram with a margin around
 /// the hull. Calls TGraphDelaunay::Interpolate at each bin centre to build up
@@ -1112,6 +1136,7 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
          fHistogram = new TH2D(GetName(), GetTitle(),
                                fNpx , hxmin, hxmax,
                                fNpy, hymin, hymax);
+         CreateInterpolator(oldInterp);
       }
       TH1::AddDirectory(add);
       fHistogram->SetBit(TH1::kNoStats);
@@ -1120,32 +1145,6 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
       hymin = fHistogram->GetYaxis()->GetXmin();
       hxmax = fHistogram->GetXaxis()->GetXmax();
       hymax = fHistogram->GetYaxis()->GetXmax();
-   }
-
-   // Add a TGraphDelaunay in the list of the fHistogram's functions
-
-   TList *hl = fHistogram->GetListOfFunctions();
-
-   if (oldInterp) {
-      if (!fDelaunay || !fDelaunay->TestBit(kNotDeleted)) {
-         TGraphDelaunay *dt = new TGraphDelaunay(this);
-         dt->SetMaxIter(fMaxIter);
-         dt->SetMarginBinsContent(fZout);
-         fDelaunay = dt;
-      }
-      SetBit(kOldInterpolation);
-      if (!hl->FindObject("TGraphDelaunay"))
-         hl->Add(fDelaunay);
-   } else {
-      // new interpolation based on ROOT::Math::Delaunay
-      if (!fDelaunay || !fDelaunay->TestBit(kNotDeleted)) {
-         TGraphDelaunay2D *dt = new TGraphDelaunay2D(this);
-         dt->SetMarginBinsContent(fZout);
-         fDelaunay = dt;
-      }
-      ResetBit(kOldInterpolation);
-      if (!hl->FindObject("TGraphDelaunay2D"))
-         hl->Add(fDelaunay);
    }
 
    // Option "empty" is selected. An empty histogram is returned.
@@ -1592,6 +1591,7 @@ void TGraph2D::SetHistogram(TH2 *h)
    fHistogram = (TH2D*)h;
    fNpx       = h->GetNbinsX();
    fNpy       = h->GetNbinsY();
+   CreateInterpolator(kTRUE);
 }
 
 
