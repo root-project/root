@@ -14,8 +14,8 @@ endif()
 # If ROOT_SOURCE_DIR is not set, search for an installation.
 if(DEFINED ROOT_SOURCE_DIR)
   # root-config --prefix helps to retrieve ROOTSYS env variable.
-  # ROOT_BINARY_DIR is set by ROOTConfig.cmake
-  find_program(ROOT_CONFIG_EXECUTABLE root-config PATHS ${ROOT_BINARY_DIR})
+  # ROOT_BINDIR is set by ROOTConfig.cmake
+  find_program(ROOT_CONFIG_EXECUTABLE root-config PATHS ${ROOT_BINDIR})
   if(NOT ROOT_CONFIG_EXECUTABLE)
     message(ERROR "root-config is not found, please rerun configuration step.")
   endif()
@@ -73,7 +73,6 @@ endif()
 # FIXME: it should be exported from ROOT build.
 set(compression_default "zlib" CACHE STRING "" FORCE)
 
-get_filename_component(ROOT_BINARY_DIR  "${ROOTSYS}/bin" ABSOLUTE)
 get_filename_component(ROOT_LIBRARY_DIR "${ROOTSYS}/lib" ABSOLUTE)
 
 # Detect bitness.
@@ -87,7 +86,7 @@ elseif(CMAKE_SYSTEM_PROCESSOR MATCHES i686.*|i386.*|x86.*)
 endif()
 
 # Setup environment.
-set(ROOTTEST_ENV_PATH ${ROOT_BINARY_DIR})
+set(ROOTTEST_ENV_PATH ${ROOT_BINDIR})
 set(ROOTTEST_ENV_PYTHONPATH ${ROOT_LIBRARY_DIR})
 set(ROOTTEST_ENV_LIBRARYPATH ${ROOT_LIBRARY_DIR})
 set(ROOTTEST_ENV_EXTRA)
