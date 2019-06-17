@@ -82,14 +82,18 @@ public:
             fnew.SetRange(from.fXmin, from.fXmax);
          }
          fnew.Copy(*this);
+         // need to set parameter values
+         if (from.GetParameters())
+            fFormula->SetParameters(from.GetParameters());
       } else {
          // case of a function pointers
          fParams = new TF1Parameters(fNpar);
          fName = from.GetName();
          fTitle = from.GetTitle();
+         // need to set parameter values
+         if (from.GetParameters())
+            fParams->SetParameters(from.GetParameters());
       }
-      // need to set parameter values
-      SetParameters(from.GetParameters());
       // copy the other data members
       fNpx = from.fNpx;
       fType = (EFType)from.fType;
