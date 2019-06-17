@@ -675,7 +675,7 @@ get_filename_component(ROOT_BINDIR \"\${_thisdir}/${ROOT_CMAKE_TO_BIN_DIR}\" ABS
 # Deprecated value ROOT_BINARY_DIR
 set(ROOT_BINARY_DIR_SETUP "
 # Deprecated value, please don't use it and use ROOT_BINDIR instead.
-get_filename_component(ROOT_BINARY_DIR \"\${_thisdir}/${ROOT_CMAKE_TO_BIN_DIR}\" ABSOLUTE)
+get_filename_component(ROOT_BINARY_DIR \"\${ROOT_BINDIR}\" ABSOLUTE)
 ")
 set(ROOT_MODULE_PATH "\${_thisdir}/modules")
 
