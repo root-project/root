@@ -1659,6 +1659,13 @@ bool TCling::LoadPCM(const std::string &pcmFileNameFullPath)
    R__InitStreamerInfoFactory();
 
    TDirectory::TContext ctxt;
+   llvm::SaveAndRestore<Int_t> SaveGDebug(gDebug);
+   if (gDebug > 5) {
+      gDebug -= 5;
+      ::Info("TCling::LoadPCM", "Loading ROOT PCM %s", pcmFileName.Data());
+   } else {
+      gDebug = 0;
+   }
 
    auto pendingRdict = fPendingRdicts.find(pcmFileNameFullPath);
    if (pendingRdict != fPendingRdicts.end()) {
@@ -1667,19 +1674,10 @@ bool TCling::LoadPCM(const std::string &pcmFileNameFullPath)
       std::string RDictFileOpts = pcmFileNameFullPath + "?filetype=pcm";
       TMemFile pcmMemFile(RDictFileOpts.c_str(), range);
 
-      Int_t oldDebug = gDebug;
-      if (gDebug > 5) {
-         gDebug -= 5;
-         ::Info("TCling::LoadPCM", "Loading ROOT PCM %s from module extension", pcmFileName.Data());
-      } else {
-         gDebug = 0;
-      }
-
       bool result = LoadPCMImpl(pcmMemFile);
 
       fPendingRdicts.erase(pendingRdict);
 
-      gDebug = oldDebug;
       return result;
    }
 
@@ -1687,28 +1685,12 @@ bool TCling::LoadPCM(const std::string &pcmFileNameFullPath)
       return false;
    }
 
-   if (gROOT->IsRootFile(pcmFileName)) {
-      Int_t oldDebug = gDebug;
-      if (gDebug > 5) {
-         gDebug -= 5;
-         ::Info("TCling::LoadPCM", "Loading ROOT PCM %s", pcmFileName.Data());
-      } else {
-         gDebug = 0;
-      }
-
-      TFile pcmFile(pcmFileName + "?filetype=pcm", "READ");
-
-      bool result = LoadPCMImpl(pcmFile);
-
-      gDebug = oldDebug;
-      return result;
-
-   } else {
-      if (gDebug > 5)
-         ::Info("TCling::LoadPCM", "Loading clang PCM %s", pcmFileName.Data());
-
+   if (!gROOT->IsRootFile(pcmFileName)) {
+      Fatal("LoadPCM", "The file %s is not a ROOT as was expected\n", pcmFileName.Data());
+      return false;
    }
-   return kTRUE;
+   TFile pcmFile(pcmFileName + "?filetype=pcm", "READ");
+   return LoadPCMImpl(pcmFile);
 }
 
 //______________________________________________________________________________
