@@ -319,7 +319,7 @@ add_custom_command(
 )
 install(FILES "${CMAKE_BINARY_DIR}/include/module.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
 
-add_dependencies(move_headers copymodulemap move_artifacts)
+add_dependencies(move_headers copymodulemap)
 
 # Provide our own modulemap for implementations other than libcxx.
 if (NOT WIN32 AND NOT libcxx)
