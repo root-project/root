@@ -228,6 +228,8 @@ if(NOT root7)
                  v7/ntuple/ntpl002_vector.C
                  v7/ntuple/ntpl003_lhcbOpenData.C
                  v7/ntuple/ntpl004_dimuon.C)
+elseif(NOT dataframe)
+  set(root7_veto v7/ntuple/ntpl004_dimuon.C)
 endif()
 
 if( CMAKE_SIZEOF_VOID_P EQUAL 4 )
