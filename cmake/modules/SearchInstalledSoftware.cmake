@@ -459,9 +459,12 @@ if(mathmore OR builtin_gsl)
 endif()
 
 #---Check for Python installation-------------------------------------------------------
+
+message(STATUS "Looking for python")
+# Python is required by header and manpage generation
+find_package(PythonInterp ${python_version} REQUIRED)
+
 if(python)
-  message(STATUS "Looking for python")
-  find_package(PythonInterp ${python_version} REQUIRED)
   find_package(PythonLibs ${python_version} REQUIRED)
 
   if(NOT "${PYTHONLIBS_VERSION_STRING}" MATCHES "${PYTHON_VERSION_STRING}")
