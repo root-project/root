@@ -124,6 +124,7 @@ public:
   virtual void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override;
   virtual void printArgs(std::ostream& os) const override;
   virtual void printValue(std::ostream& os) const override;
+  void printDataHistogram(std::ostream& os, RooRealVar* obs) const;
 
   void SetName(const char *name) override;
   void SetNameTitle(const char *name, const char* title) override;
@@ -262,7 +263,6 @@ protected:
   enum CacheSumState_t{kInvalid = 0, kNoBinCorrection = 1, kCorrectForBinSize = 2, kInverseBinCorr = 3};
   mutable Int_t _cache_sum_valid{kInvalid}; //! Is cache sum valid? Needs to be Int_t instead of CacheSumState_t for subclasses.
   mutable Double_t _cache_sum{0.}; //! Cache for sum of entries ;
-
 
 private:
   void _adjustBinning(RooRealVar &theirVar, const TAxis &axis, RooRealVar *ourVar, Int_t *offset);
