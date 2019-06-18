@@ -56,11 +56,11 @@
 /* #pragma link C++ class std::vector< TVector2 >; */
 /* #pragma link C++ class std::vector< TVector2 >::iterator ; */
 /* #pragma link C++ class RooPolyMorph2D+ ; */
+//
 #pragma link C++ class RooUniform+ ;
 #pragma link C++ class RooJeffreysPrior+ ;
 #pragma link C++ class RooJohnson+;
-
-
+#pragma link C++ class RooLagrangianMorphFunc+;
 #pragma link C++ class RooFunctorBinding+ ;
 #pragma link C++ class RooFunctor1DBinding+ ;
 #pragma link C++ class RooFunctorPdfBinding+ ;

@@ -148,6 +148,8 @@ namespace RooStats {
    // function returning if the flag to check if the flag to use  NLLOffset is set
    bool IsNLLOffset();
 
+   // function that clones a workspace, copying all needed components and discarding all others
+   RooWorkspace* MakeCleanWorkspace(RooWorkspace* oldWS, const char* newName, const char* mcname, bool keepData);
 
 
 }

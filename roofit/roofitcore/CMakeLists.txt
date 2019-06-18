@@ -11,6 +11,7 @@
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
   HEADERS
+    Floats.h
     Roo1DTable.h
     RooAbsAnaConvPdf.h
     RooAbsArg.h
@@ -123,6 +124,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooIntegratorBinding.h
     RooInt.h
     RooInvTransform.h
+    RooLinearCombination.h
     RooLinearVar.h
     RooLinkedListElem.h
     RooLinkedList.h
@@ -170,6 +172,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooProofDriverSelector.h
     RooPullVar.h
     RooQuasiRandomGenerator.h
+    RooRatio.h
     RooRandom.h
     RooRandomizeParamMCSModule.h
     RooRangeBinning.h
@@ -339,6 +342,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooIntegrator2D.cxx
     src/RooIntegratorBinding.cxx
     src/RooInvTransform.cxx
+    src/RooLinearCombination.cxx
     src/RooLinearVar.cxx
     src/RooLinkedList.cxx
     src/RooLinkedListElem.cxx
@@ -385,6 +389,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooProofDriverSelector.cxx
     src/RooPullVar.cxx
     src/RooQuasiRandomGenerator.cxx
+    src/RooRatio.cxx
     src/RooRandom.cxx
     src/RooRandomizeParamMCSModule.cxx
     src/RooRangeBinning.cxx

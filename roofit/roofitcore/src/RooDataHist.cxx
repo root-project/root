@@ -1999,6 +1999,14 @@ void RooDataHist::printMultiline(ostream& os, Int_t content, Bool_t verbose, TSt
   }
 }
 
+void RooDataHist::printDataHistogram(ostream& os, RooRealVar* obs) const
+{
+  for(Int_t i=0; i<obs->getBins(); ++i){
+    this->get(i);
+    obs->setBin(i);
+    os << this->weight() << " +/- " << this->weightSquared() << endl;
+  }
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////

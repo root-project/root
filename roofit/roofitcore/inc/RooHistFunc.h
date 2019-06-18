@@ -78,6 +78,8 @@ public:
   virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
   virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const ; 
   virtual Bool_t isBinnedDistribution(const RooArgSet&) const { return _intOrder==0 ; }
+  const RooArgSet getObservables() const { return _histObsList; }
+
 
 protected:
 
