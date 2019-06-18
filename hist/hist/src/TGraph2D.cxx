@@ -541,7 +541,8 @@ TGraph2D& TGraph2D::operator=(const TGraph2D &g)
    if (fZ) delete [] fZ;
    if (fHistogram &&  !fUserHisto) {
       delete fHistogram;
-      fHistogram = 0;
+      fHistogram = nullptr;
+      fDelaunay = nullptr;
    }
    // copy everything except the function list
    fNpoints = g.fNpoints;
@@ -588,7 +589,7 @@ void TGraph2D::Build(Int_t n)
    fNpy       = 40;
    fDirectory = 0;
    fHistogram = 0;
-   fDelaunay  = nullptr;
+   fDelaunay = nullptr;
    fMaximum   = -1111;
    fMinimum   = -1111;
    fX         = new Double_t[fSize];
@@ -633,7 +634,8 @@ void TGraph2D::Clear(Option_t * /*option = "" */)
    fSize = fNpoints = 0;
    if (fHistogram && !fUserHisto) {
       delete fHistogram;
-      fHistogram = 0;
+      fHistogram = nullptr;
+      fDelaunay = nullptr;
    }
    if (fFunctions) {
       fFunctions->SetBit(kInvalidObject);
@@ -1082,14 +1084,16 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
       if (!empty && fHistogram->GetEntries() == 0) {
          if (!fUserHisto) {
             delete fHistogram;
-            fHistogram = 0;
+            fHistogram = nullptr;
+            fDelaunay = nullptr;
          }
       } else if (fHistogram->GetEntries() == 0)
       {;      }
          // check case if interpolation type has changed
       else if ( (TestBit(kOldInterpolation) && !oldInterp) || ( !TestBit(kOldInterpolation) && oldInterp ) ) {
          delete fHistogram;
-         fHistogram = 0;
+         fHistogram = nullptr;
+         fDelaunay = nullptr;
       }
       // normal case return existing histogram
       else {
@@ -1490,7 +1494,8 @@ Int_t TGraph2D::RemovePoint(Int_t ipoint)
    fSize = fNpoints;
    if (fHistogram) {
       delete fHistogram;
-      fHistogram = 0;
+      fHistogram = nullptr;
+      fDelaunay = nullptr;
    }
    return ipoint;
 }
@@ -1608,7 +1613,8 @@ void TGraph2D::SetMargin(Double_t m)
    }
    if (fHistogram) {
       delete fHistogram;
-      fHistogram = 0;
+      fHistogram = nullptr;
+      fDelaunay = nullptr;
    }
 }
 
@@ -1622,7 +1628,8 @@ void TGraph2D::SetMarginBinsContent(Double_t z)
    fZout = z;
    if (fHistogram) {
       delete fHistogram;
-      fHistogram = 0;
+      fHistogram = nullptr;
+      fDelaunay = nullptr;
    }
 }
 
@@ -1693,7 +1700,8 @@ void TGraph2D::SetNpx(Int_t npx)
    }
    if (fHistogram) {
       delete fHistogram;
-      fHistogram = 0;
+      fHistogram = nullptr;
+      fDelaunay = nullptr;
    }
 }
 
@@ -1714,7 +1722,8 @@ void TGraph2D::SetNpy(Int_t npy)
    }
    if (fHistogram) {
       delete fHistogram;
-      fHistogram = 0;
+      fHistogram = nullptr;
+      fDelaunay = nullptr;
    }
 }
 
