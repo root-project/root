@@ -9,7 +9,7 @@
 #ifndef ROO_LAGRANGIAN_MORPH_LC
 #define ROO_LAGRANGIAN_MORPH_LC
 
-#include "RooLagrangianMorphing/Floats.h"
+#include "Floats.h"
 
 #ifdef USE_MULTIPRECISION_LC
 #include <vector>

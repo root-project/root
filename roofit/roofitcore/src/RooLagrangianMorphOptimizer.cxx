@@ -23,8 +23,8 @@
 #include <RooStringVar.h>
 #include <RooFormulaVar.h>
 
-#include <RooLagrangianMorphing/RooLagrangianMorphOptimizer.h>
-#include <RooLagrangianMorphing/RooLagrangianMorphing.h>
+#include <RooLagrangianMorphOptimizer.h>
+#include <RooLagrangianMorphing.h>
 
 #define ERROR(arg){                                                     \
   if(RooLagrangianMorphing::gAllowExceptions){                                \

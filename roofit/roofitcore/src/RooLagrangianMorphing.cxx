@@ -12,7 +12,7 @@
 // #define USE_MULTIPRECISION_LC 1
 // #undef USE_MULTIPRECISION_LC
 
-#include "RooLagrangianMorphing//RooLagrangianMorphing.h"
+#include "RooLagrangianMorphing.h"
 
 #include "Riostream.h"
 
@@ -125,7 +125,7 @@ template <> inline size_t size<TMatrixD> (const TMatrixD& mat){
 }
 using namespace std;
 
-#include "RooLagrangianMorphing/LinearCombination.h"
+#include "LinearCombination.h"
 
 template<class MatrixT>
 inline void writeMatrixToStreamT(const MatrixT& matrix, std::ostream& stream){
@@ -2744,7 +2744,7 @@ TPair* RooLagrangianMorphing::makeCrosssectionContainer(double xs, double unc){
 
 //_____________________________________________________________________________
 std::map<std::string,std::string> RooLagrangianMorphing::createWeightStrings(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<std::string>& couplings){
-  return RooLagrangianMorphing::createWeightStrings(inputs,{couplings});
+  return RooLagrangianMorphing::createWeightStrings(inputs,couplings);
 }
 
 //_____________________________________________________________________________
