@@ -1526,9 +1526,9 @@ void TCling::RegisterRdictForLoadPCM(const std::string &pcmFileNameFullPath, llv
 ////////////////////////////////////////////////////////////////////////////////
 /// Tries to load a PCM from TFile; returns true on success.
 
-bool TCling::LoadPCMImpl(TFile *pcmFile)
+bool TCling::LoadPCMImpl(TFile &pcmFile)
 {
-   auto listOfKeys = pcmFile->GetListOfKeys();
+   auto listOfKeys = pcmFile.GetListOfKeys();
 
    // This is an empty pcm
    if (listOfKeys && ((listOfKeys->GetSize() == 0) ||                           // Nothing here, or
@@ -1540,9 +1540,9 @@ bool TCling::LoadPCMImpl(TFile *pcmFile)
 
    TObjArray *protoClasses;
    if (gDebug > 1)
-      ::Info("TCling::LoadPCM", "reading protoclasses for %s \n", pcmFile->GetName());
+      ::Info("TCling::LoadPCM", "reading protoclasses for %s \n", pcmFile.GetName());
 
-   pcmFile->GetObject("__ProtoClasses", protoClasses);
+   pcmFile.GetObject("__ProtoClasses", protoClasses);
 
    if (protoClasses) {
       for (auto obj : *protoClasses) {
@@ -1579,7 +1579,7 @@ bool TCling::LoadPCMImpl(TFile *pcmFile)
    }
 
    TObjArray *dataTypes;
-   pcmFile->GetObject("__Typedefs", dataTypes);
+   pcmFile.GetObject("__Typedefs", dataTypes);
    if (dataTypes) {
       for (auto typedf : *dataTypes)
          gROOT->GetListOfTypes()->Add(typedf);
@@ -1588,7 +1588,7 @@ bool TCling::LoadPCMImpl(TFile *pcmFile)
    }
 
    TObjArray *enums;
-   pcmFile->GetObject("__Enums", enums);
+   pcmFile.GetObject("__Enums", enums);
    if (enums) {
       // Cache the pointers
       auto listOfGlobals = gROOT->GetListOfGlobals();
@@ -1675,7 +1675,7 @@ bool TCling::LoadPCM(const std::string &pcmFileNameFullPath)
          gDebug = 0;
       }
 
-      bool result = LoadPCMImpl(&pcmMemFile);
+      bool result = LoadPCMImpl(pcmMemFile);
 
       fPendingRdicts.erase(pendingRdict);
 
@@ -1696,11 +1696,9 @@ bool TCling::LoadPCM(const std::string &pcmFileNameFullPath)
          gDebug = 0;
       }
 
-      TFile *pcmFile = new TFile(pcmFileName + "?filetype=pcm", "READ");
+      TFile pcmFile(pcmFileName + "?filetype=pcm", "READ");
 
       bool result = LoadPCMImpl(pcmFile);
-
-      delete pcmFile;
 
       gDebug = oldDebug;
       return result;
