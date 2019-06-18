@@ -34,7 +34,7 @@ set(py_sources
   ROOT/pythonization/_ttree.py
   ROOT/pythonization/_tvector3.py
   ROOT/pythonization/_tvectort.py
-  ${PYROOT_EXTRA_PYSOURCE)
+  ${PYROOT_EXTRA_PYSOURCE}
 )
 
 set(sources
