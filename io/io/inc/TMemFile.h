@@ -23,7 +23,7 @@ public:
    struct ExternalDataRange_t {
       const char *fStart;
       const size_t fSize;
-      ExternalDataRange_t(const char * start, const size_t size) : fStart(start), fSize(size) {}
+      explicit ExternalDataRange_t(const char * start, const size_t size) : fStart(start), fSize(size) {}
    };
 
 protected:
