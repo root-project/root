@@ -299,15 +299,12 @@ RooHist::RooHist(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xErrorFrac, 
   assert(0 != funcPtr);
 
   // calculate the points to add to our curve
-  std::map<double,int> widthcount;
   int xbins = x.numBins();
   RooArgSet nset;
   if(normVars) nset.add(*normVars);
   for(int i=0; i<xbins; ++i){
     double xval = x.getBinning().binCenter(i);
     double xwidth = x.getBinning().binWidth(i);
-    if(widthcount.find(xwidth) == widthcount.end()) widthcount[xwidth] = 1;
-    else widthcount[xwidth]+=1;
     Axis_t xval_ax = xval;
     double yval = (*funcPtr)(&xval);
     double yerr = sqrt(yval);
@@ -315,12 +312,7 @@ RooHist::RooHist(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xErrorFrac, 
     addBinWithError(xval_ax,yval,yerr,yerr,xwidth,xErrorFrac,false,scaleFactor) ;
     _entries += yval;
   }
-  int count = 0;
-  for(auto it:widthcount){
-    if(it.second > count){
-      count = it.second; _nominalBinWidth=it.first;
-    }
-  }
+  _nominalBinWidth = 1.;
   
   // cleanup
   delete funcPtr;
