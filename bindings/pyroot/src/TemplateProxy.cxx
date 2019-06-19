@@ -231,7 +231,8 @@ namespace {
                default:  ptrname = "void*";  // TODO: verify if this is right
             }
             if ( ptrname ) {
-               PyObject* pyptrname = PyBytes_FromString( ptrname );
+               //PyObject* pyptrname = PyBytes_FromString( ptrname );
+               PyObject *pyptrname = PyROOT_PyUnicode_FromString(ptrname);
                PyTuple_SET_ITEM( tpArgs, i, pyptrname );
             // string added, but not counted towards nStrings
             } else {
