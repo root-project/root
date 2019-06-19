@@ -223,6 +223,12 @@ public:
 
 protected:
 
+   struct TF1FunctorPointer {
+      virtual  ~TF1FunctorPointer() {}
+      virtual  TF1FunctorPointer * Clone() const = 0;
+   };
+
+
    enum EFType {
       kFormula = 0,      // formula functions which can be stored,
       kPtrScalarFreeFcn, // pointer to scalar free function,
@@ -278,17 +284,14 @@ private:
 		       Double_t xmin, Double_t xmax);
    int TermCoeffLength(TString &term);
 
-public:
-   
-   struct TF1FunctorPointer {
-      virtual  TF1FunctorPointer() {}
-   };
+protected:
 
    template <class T>
    struct TF1FunctorPointerImpl: TF1FunctorPointer {
       TF1FunctorPointerImpl(const ROOT::Math::ParamFunctorTempl<T> &func): fImpl(func) {};
       TF1FunctorPointerImpl(const std::function<T(const T *f, const Double_t *param)> &func) : fImpl(func){};
       virtual ~TF1FunctorPointerImpl() {}
+      virtual  TF1FunctorPointer * Clone() const { return new TF1FunctorPointerImpl<T>(fImpl); }
       ROOT::Math::ParamFunctorTempl<T> fImpl;
    };
 
@@ -309,6 +312,8 @@ public:
    virtual Double_t GetMinMaxNDim(Double_t *x , Bool_t findmax, Double_t epsilon = 0, Int_t maxiter = 0) const;
    virtual void GetRange(Double_t *xmin, Double_t *xmax) const;
    virtual TH1 *DoCreateHistogram(Double_t xmin, Double_t xmax, Bool_t recreate = kFALSE);
+
+public:
 
    // TF1 status bits
    enum EStatusBits {
@@ -419,7 +424,7 @@ public:
    virtual TObject *DrawIntegral(Option_t *option = "al"); // *MENU*
    virtual void     DrawF1(Double_t xmin, Double_t xmax, Option_t *option = "");
    virtual Double_t Eval(Double_t x, Double_t y = 0, Double_t z = 0, Double_t t = 0) const;
-   //template <class T> T Eval(T x, T y = 0, T z = 0, T t = 0) const; 
+   //template <class T> T Eval(T x, T y = 0, T z = 0, T t = 0) const;
    virtual Double_t EvalPar(const Double_t *x, const Double_t *params = 0);
    template <class T> T EvalPar(const T *x, const Double_t *params = 0);
    virtual Double_t operator()(Double_t x, Double_t y = 0, Double_t z = 0, Double_t t = 0) const;
