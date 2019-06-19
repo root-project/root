@@ -951,6 +951,7 @@ TF1::~TF1()
 
    if (fFormula) delete fFormula;
    if (fParams) delete fParams;
+   if (fFunctor) delete fFunctor; 
 }
 
 
@@ -1006,7 +1007,6 @@ void TF1::Copy(TObject &obj) const
    ((TF1 &)obj).fNpar = fNpar;
    ((TF1 &)obj).fNdim = fNdim;
    ((TF1 &)obj).fType = fType;
-   ((TF1 &)obj).fFunctor   = fFunctor;
    ((TF1 &)obj).fChisquare = fChisquare;
    ((TF1 &)obj).fNpfits  = fNpfits;
    ((TF1 &)obj).fNDF     = fNDF;
@@ -1044,6 +1044,11 @@ void TF1::Copy(TObject &obj) const
       TF1Parameters *paramsToCopy = ((TF1 &)obj).fParams;
       if (paramsToCopy) *paramsToCopy = *fParams;
       else ((TF1 &)obj).fParams = new TF1Parameters(*fParams);
+   }
+   if (fFunctor) {
+      // use clone of TF1FunctorPointer
+      if (((TF1 &)obj).fFunctor) delete((TF1 &)obj).fFunctor;
+      ((TF1 &)obj).fFunctor  = fFunctor->Clone();
    }
 
    if (fComposition) {
