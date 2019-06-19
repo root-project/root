@@ -475,10 +475,8 @@ if(ROOT_python_FOUND)
                  tutorial-dataframe-df014_CSVDataSource-py
                  tutorial-dataframe-df016_vecOps-py
                  tutorial-dataframe-df017_vecOpsHEP-py
-                 tutorial-dataframe-df026_AsNumpyArrays-py
                  tutorial-dataframe-df102_NanoAODDimuonAnalysis-py
                  tutorial-math-Legendre-py
-                 tutorial-math-tStudent-py
                  tutorial-pyroot-benchmarks-py
                  tutorial-pyroot-geometry-py
                  tutorial-pyroot-na49view-py
