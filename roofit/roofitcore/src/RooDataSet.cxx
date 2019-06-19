@@ -30,21 +30,22 @@ cannot be serialised if the dataset exceeds a size of 1 Gb
 before creating the dataset. This significantly reduces the memory pressure, as the
 baskets of the tree can be written to a file, and only the basket that's currently
 being read stays in RAM.
-  - Enable tree-backed storage similar to this:
-  ```
-  TFile outputFile("filename.root", "RECREATE");
-  RooAbsData::setDefaultStorageType(RooAbsData::Tree);
-  RooDataSet mydata(...);
-  ```
-  - Or convert an existing memory-backed data storage:
-  ```
-  RooDataSet mydata(...);
+Enable tree-backed storage similar to this:
+```
+TFile outputFile("filename.root", "RECREATE");
+RooAbsData::setDefaultStorageType(RooAbsData::Tree);
+RooDataSet mydata(...);
+```
+or convert an existing memory-backed data storage:
+```
+RooDataSet mydata(...);
 
-  TFile outputFile("filename.root", "RECREATE");
-  mydata.convertToTreeStore();
-  ```
+TFile outputFile("filename.root", "RECREATE");
+mydata.convertToTreeStore();
+```
 
-For the inverse conversion, see `RooAbsData::convertToVectorStore()`.
+Tree-backed storage can be converted like this:
+`RooAbsData::convertToTreeStore()`.
 
 **/
 
