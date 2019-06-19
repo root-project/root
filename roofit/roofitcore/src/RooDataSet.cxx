@@ -22,6 +22,30 @@
 RooDataSet is a container class to hold unbinned data. Each data point
 in N-dimensional space is represented by a RooArgSet of RooRealVar, RooCategory 
 or RooStringVar objects.
+
+There are two storage backends:
+- RooVectorDataStore (default): std::vectors in memory. They are fast, but they
+cannot be serialised if the dataset exceeds a size of 1 Gb
+- RooTreeDataStore: Uses a TTree, which can be file backed if a file is opened
+before creating the dataset. This significantly reduces the memory pressure, as the
+baskets of the tree can be written to a file.
+Enable tree-backed storage similar to this:
+```
+TFile outputFile("filename.root", "RECREATE");
+RooAbsData::setDefaultStorageType(RooAbsData::Tree);
+RooDataSet mydata(...);
+```
+or convert an existing memory-backed data storage:
+```
+RooDataSet mydata(...);
+
+TFile outputFile("filename.root", "RECREATE");
+mydata.convertToTreeStore();
+```
+
+Tree-backed storage can be converted like this:
+`RooAbsData::convertToTreeStore()`.
+
 **/
 
 #include "RooFit.h"
