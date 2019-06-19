@@ -122,7 +122,7 @@ public:
   
   const RooArgSet& row() { return _varsww ; }
 
- protected:
+ private:
 
   friend class RooVectorDataStore ;
 
@@ -136,6 +136,8 @@ public:
   void setBranchBufferSize(Int_t size) { _defTreeBufSize = size ; }
   Int_t getBranchBufferSize() const { return _defTreeBufSize ; }
 
+  std::string makeTreeName() const;
+
   static Int_t _defTreeBufSize ;  
 
   void createTree(const char* name, const char* title) ; 
@@ -147,10 +149,10 @@ public:
   RooArgSet _varsww ;
   RooRealVar* _wgtVar ;     // Pointer to weight variable (if set)
 
-  Double_t* _extWgtArray ;         //! External weight array
-  Double_t* _extWgtErrLoArray ;    //! External weight array - low error
-  Double_t* _extWgtErrHiArray ;    //! External weight array - high error
-  Double_t* _extSumW2Array ;       //! External sum of weights array
+  const Double_t* _extWgtArray{nullptr};         //! External weight array
+  const Double_t* _extWgtErrLoArray{nullptr};    //! External weight array - low error
+  const Double_t* _extWgtErrHiArray{nullptr};    //! External weight array - high error
+  const Double_t* _extSumW2Array{nullptr};       //! External sum of weights array
 
   mutable Double_t  _curWgt ;      // Weight of current event
   mutable Double_t  _curWgtErrLo ; // Weight of current event
@@ -159,7 +161,7 @@ public:
 
   RooArgSet _attachedBuffers ; //! Currently attached buffers (if different from _varsww)
 
-  ClassDef(RooTreeDataStore,2) // TTree-based Data Storage class
+  ClassDef(RooTreeDataStore, 2) // TTree-based Data Storage class
 };
 
 
