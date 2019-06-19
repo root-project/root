@@ -3651,7 +3651,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
    // Handle the special case of 'tuple' where we ignore the real implementation
    // details and just overlay a 'simpler'/'simplistic' version that is easy
    // for the I/O to understand and handle.
-   if (!(fCxxModulesEnabled && IsFromRootCling()) && strncmp(cl->GetName(),"tuple<",strlen("tuple<"))==0) {
+   if (strncmp(cl->GetName(),"tuple<",strlen("tuple<"))==0) {
 
       name = AlternateTuple(cl->GetName());
 
