@@ -179,6 +179,10 @@ option(testing "Enable testing with CTest" OFF)
 
 set(gcctoolchain "" CACHE PATH "Set path to GCC toolchain used to build llvm/clang")
 
+if(all AND minimal)
+  message(FATAL_ERROR "The 'all' and 'minimal' options are mutually exclusive")
+endif()
+
 #--- Compression algorithms in ROOT-------------------------------------------------------------
 set(compression_default "zlib" CACHE STRING "Default compression algorithm (zlib (default), lz4, or lzma)")
 string(TOLOWER "${compression_default}" compression_default)
