@@ -276,7 +276,10 @@ namespace {
    // still here? try instantiating methods
 
       PyObject* clName = PyObject_GetAttr( pytmpl->fPyClass, PyStrings::gCppName );
-      if ( ! clName ) clName = PyObject_GetAttr( pytmpl->fPyClass, PyStrings::gName );
+      if (!clName) {
+         PyErr_Clear();
+         clName = PyObject_GetAttr(pytmpl->fPyClass, PyStrings::gName);
+      }
       auto clNameStr = std::string(PyROOT_PyUnicode_AsString(clName));
       if (clNameStr == "_global_cpp")
          clNameStr = ""; // global namespace
