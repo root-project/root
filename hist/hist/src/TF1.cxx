@@ -142,7 +142,7 @@ static void R__v5TF1Updater(Int_t nobjects, TObject **from, TObject **to)
    }
 }
 
-static int R__RegisterTF1UpdaterTrigger = R__SetClonesArrayTF1Updater(R__v5TF1Updater);
+int R__RegisterTF1UpdaterTrigger = R__SetClonesArrayTF1Updater(R__v5TF1Updater);
 
 ClassImp(TF1);
 
