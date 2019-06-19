@@ -602,7 +602,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       // Unzip all the compressed objects in the compressed object buffer.
       while (1) {
          // Check the header for errors.
-         if (R__unlikely(R__unzip_header(&nin, rawCompressedObjectBuffer, &nbuf) != 0)) {
+         if (R__unlikely(R__unzip_header(nin, reinterpret_cast<char *>(rawCompressedObjectBuffer), nbuf) != 0)) {
             Error("ReadBasketBuffers", "Inconsistency found in header (nin=%d, nbuf=%d)", nin, nbuf);
             break;
          }
@@ -612,7 +612,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
             goto AfterBuffer;
          }
 
-         R__unzip(&nin, rawCompressedObjectBuffer, &nbuf, (unsigned char*) rawUncompressedObjectBuffer, &nout);
+         R__unzip(nin, reinterpret_cast<char *>(rawCompressedObjectBuffer), nbuf, rawUncompressedObjectBuffer, nout);
          if (!nout) break;
          noutot += nout;
          nintot += nin;
@@ -1159,7 +1159,7 @@ Int_t TBasket::WriteBuffer()
          // NOTE this is declared with C linkage, so it shouldn't except.  Also, when
          // USE_IMT is defined, we are guaranteed that the compression buffer is unique per-branch.
          // (see fCompressedBufferRef in constructor).
-         R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
+         R__zipMultipleAlgorithm(cxlevel, bufmax, objbuf, bufmax, bufcur, nout, cxAlgorithm);
 #ifdef R__USE_IMT
          sentry.lock();
 #endif  // R__USE_IMT

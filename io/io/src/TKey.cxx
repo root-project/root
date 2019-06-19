@@ -265,7 +265,7 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
       for (Int_t i = 0; i < nbuffers; ++i) {
          if (i == nbuffers - 1) bufmax = fObjlen - nzip;
          else               bufmax = kMAXZIPBUF;
-         R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
+         R__zipMultipleAlgorithm(cxlevel, bufmax, objbuf, bufmax, bufcur, nout, cxAlgorithm);
          if (nout == 0 || nout >= fObjlen) { //this happens when the buffer cannot be compressed
             fBuffer = fBufferRef->Buffer();
             Create(fObjlen);
@@ -356,7 +356,7 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
       for (Int_t i = 0; i < nbuffers; ++i) {
          if (i == nbuffers - 1) bufmax = fObjlen - nzip;
          else               bufmax = kMAXZIPBUF;
-         R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
+         R__zipMultipleAlgorithm(cxlevel, bufmax, objbuf, bufmax, bufcur, nout, cxAlgorithm);
          if (nout == 0 || nout >= fObjlen) { //this happens when the buffer cannot be compressed
             fBuffer = fBufferRef->Buffer();
             Create(fObjlen);
@@ -792,9 +792,9 @@ TObject *TKey::ReadObj()
       Int_t nin, nout = 0, nbuf;
       Int_t noutot = 0;
       while (1) {
-         Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
+         Int_t hc = R__unzip_header(nin, reinterpret_cast<char *>(bufcur), nbuf);
          if (hc!=0) break;
-         R__unzip(&nin, bufcur, &nbuf, (unsigned char*) objbuf, &nout);
+         R__unzip(nin, reinterpret_cast<char *>(bufcur), nbuf, objbuf, nout);
          if (!nout) break;
          noutot += nout;
          if (noutot >= fObjlen) break;
@@ -923,9 +923,9 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
       Int_t nin, nout = 0, nbuf;
       Int_t noutot = 0;
       while (1) {
-         Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
+         Int_t hc = R__unzip_header(nin, reinterpret_cast<char *>(bufcur), nbuf);
          if (hc!=0) break;
-         R__unzip(&nin, bufcur, &nbuf, (unsigned char*) objbuf, &nout);
+         R__unzip(nin, reinterpret_cast<char *>(bufcur), nbuf, objbuf, nout);
          if (!nout) break;
          noutot += nout;
          if (noutot >= fObjlen) break;
@@ -1070,9 +1070,9 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
       Int_t nin, nout = 0, nbuf;
       Int_t noutot = 0;
       while (1) {
-         Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
+         Int_t hc = R__unzip_header(nin, reinterpret_cast<char *>(bufcur), nbuf);
          if (hc!=0) break;
-         R__unzip(&nin, bufcur, &nbuf, (unsigned char*) objbuf, &nout);
+         R__unzip(nin, reinterpret_cast<char *>(bufcur), nbuf, objbuf, nout);
          if (!nout) break;
          noutot += nout;
          if (noutot >= fObjlen) break;
@@ -1161,9 +1161,9 @@ Int_t TKey::Read(TObject *obj)
       Int_t nin, nout = 0, nbuf;
       Int_t noutot = 0;
       while (1) {
-         Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
+         Int_t hc = R__unzip_header(nin, reinterpret_cast<char *>(bufcur), nbuf);
          if (hc!=0) break;
-         R__unzip(&nin, bufcur, &nbuf, (unsigned char*) objbuf, &nout);
+         R__unzip(nin, reinterpret_cast<char *>(bufcur), nbuf, objbuf, nout);
          if (!nout) break;
          noutot += nout;
          if (noutot >= fObjlen) break;

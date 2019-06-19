@@ -29,9 +29,9 @@
 /**
  * Forward decl's
  */
-static void R__zipOld(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgrt, int *irep);
-static void R__zipZLIB(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgrt, int *irep);
-static void R__unzipZLIB(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep);
+static void R__zipOld(int cxlevel, int srcsize, char * src, int tgtsize, char * tgt, int & irep);
+static void R__zipZLIB(int cxlevel, int srcsize, char * src, int tgtsize, char * tgt, int & irep);
+static void R__unzipZLIB(int srcsize, char * src, int tgtsize, char * tgt, int & irep);
 
 /* ===========================================================================
    R__ZipMode is used to select the compression algorithm when R__zip is called
@@ -70,23 +70,24 @@ unsigned long R__crc32(unsigned long crc, const unsigned char* buf, unsigned int
    return crc32(crc, buf, len);
 }
 
+/* int cxlevel;                      compression level */
 /* int  *srcsize, *tgtsize, *irep;   source and target sizes, replay */
 /* char *tgt, *src;                  source and target buffers */
 /* compressionAlgorithm 0 = use global setting */
 /*                      1 = zlib */
 /*                      2 = lzma */
 /*                      3 = old */
-void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, ROOT::RCompressionSetting::EAlgorithm::EValues compressionAlgorithm)
-     /* int cxlevel;                      compression level */
+void R__zipMultipleAlgorithm(int cxlevel,  int srcsize,  char * src, 
+  int tgtsize,  char * tgt,  int & irep, ROOT::RCompressionSetting::EAlgorithm::EValues compressionAlgorithm)
 {
 
-  if (*srcsize < 1 + HDRSIZE + 1) {
-     *irep = 0;
+  if (srcsize < 1 + HDRSIZE + 1) {
+     irep = 0;
      return;
   }
 
   if (cxlevel <= 0) {
-    *irep = 0;
+    irep = 0;
     return;
   }
 
@@ -97,28 +98,25 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
   // The LZMA compression algorithm from the XZ package
   if (compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kLZMA) {
      R__zipLZMA(cxlevel, srcsize, src, tgtsize, tgt, irep);
-     return;
   } else if (compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kLZ4) {
      R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
-     return;
   } else if (compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kZSTD) {
      R__zipZSTD(cxlevel, srcsize, src, tgtsize, tgt, irep);
   } else if (compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kOldCompressionAlgo || compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kUseGlobal) {
      R__zipOld(cxlevel, srcsize, src, tgtsize, tgt, irep);
-     return;
   } else {
      // 1 is for ZLIB (which is the default), ZLIB is also used for any illegal
      // algorithm setting.  This was a poor historic choice, as poor code may result in
      // a surprising change in algorithm in a future version of ROOT.
      R__zipZLIB(cxlevel, srcsize, src, tgtsize, tgt, irep);
-     return;
   }
+  return;
 }
 
   // The very old algorithm for backward compatibility
   // 0 for selecting with R__ZipMode in a backward compatible way
   // 3 for selecting in other cases
-static void R__zipOld(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
+static void R__zipOld(int cxlevel, int srcsize, char * src, int tgtsize, char * tgt, int & irep)
 {
     int method   = Z_DEFLATED;
     bits_internal_state state;
@@ -127,13 +125,13 @@ static void R__zipOld(int cxlevel, int *srcsize, char *src, int *tgtsize, char *
     if (cxlevel > 9) cxlevel = 9;
     gCompressionLevel = cxlevel;
 
-    *irep        = 0;
+    irep        = 0;
     /* error_flag   = 0; */
-    if (*tgtsize <= 0) {
+    if (tgtsize <= 0) {
        R__error("target buffer too small");
        return;
     }
-    if (*srcsize > 0xffffff) {
+    if (srcsize > 0xffffff) {
        R__error("source buffer too big");
        return;
     }
@@ -144,11 +142,11 @@ static void R__zipOld(int cxlevel, int *srcsize, char *src, int *tgtsize, char *
 #endif
 
     state.in_buf    = src;
-    state.in_size   = (unsigned) (*srcsize);
+    state.in_size   = (unsigned) srcsize;
     state.in_offset = 0;
 
     state.out_buf     = tgt;
-    state.out_size    = (unsigned) (*tgtsize);
+    state.out_size    = (unsigned) tgtsize;
     state.out_offset  = HDRSIZE;
     state.R__window_size = 0L;
 
@@ -172,14 +170,13 @@ static void R__zipOld(int cxlevel, int *srcsize, char *src, int *tgtsize, char *
     tgt[7] = (char)((state.in_size >> 8) & 0xff);
     tgt[8] = (char)((state.in_size >> 16) & 0xff);
 
-    *irep     = state.out_offset;
-    return;
+    irep     = state.out_offset;
 }
 
 /**
  * Compress buffer contents using the venerable zlib algorithm.
  */
-static void R__zipZLIB(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
+static void R__zipZLIB(int cxlevel, int srcsize, char * src, int tgtsize, char * tgt, int & irep)
 {
   int err;
   int method   = Z_DEFLATED;
@@ -187,22 +184,22 @@ static void R__zipZLIB(int cxlevel, int *srcsize, char *src, int *tgtsize, char 
     z_stream stream;
     //Don't use the globals but want name similar to help see similarities in code
     unsigned l_in_size, l_out_size;
-    *irep = 0;
+    irep = 0;
 
-    if (*tgtsize <= 0) {
+    if (tgtsize <= 0) {
        R__error("target buffer too small");
        return;
     }
-    if (*srcsize > 0xffffff) {
+    if (srcsize > 0xffffff) {
        R__error("source buffer too big");
        return;
     }
 
     stream.next_in   = (Bytef*)src;
-    stream.avail_in  = (uInt)(*srcsize);
+    stream.avail_in  = (uInt)srcsize;
 
     stream.next_out  = (Bytef*)(&tgt[HDRSIZE]);
-    stream.avail_out = (uInt)(*tgtsize);
+    stream.avail_out = (uInt)tgtsize;
 
     stream.zalloc    = (alloc_func)0;
     stream.zfree     = (free_func)0;
@@ -228,7 +225,7 @@ static void R__zipZLIB(int cxlevel, int *srcsize, char *src, int *tgtsize, char 
     tgt[1] = 'L';
     tgt[2] = (char) method;
 
-    l_in_size   = (unsigned) (*srcsize);
+    l_in_size   = (unsigned) srcsize;
     l_out_size  = stream.total_out;             /* compressed size */
     tgt[3] = (char)(l_out_size & 0xff);
     tgt[4] = (char)((l_out_size >> 8) & 0xff);
@@ -238,12 +235,12 @@ static void R__zipZLIB(int cxlevel, int *srcsize, char *src, int *tgtsize, char 
     tgt[7] = (char)((l_in_size >> 8) & 0xff);
     tgt[8] = (char)((l_in_size >> 16) & 0xff);
 
-    *irep = stream.total_out + HDRSIZE;
+    irep = stream.total_out + HDRSIZE;
     return;
 }
 
 
-void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) {
+void R__zip(int cxlevel, int srcsize, char * src, int tgtsize, char * tgt, int & irep) {
    R__zipMultipleAlgorithm(cxlevel, srcsize, src, tgtsize, tgt, irep,
                            ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
 }
@@ -252,53 +249,53 @@ void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *
  * Below are the routines for unzipping (inflating) buffers.
  */
 
-static int is_valid_header_zlib(unsigned char *src)
+static int is_valid_header_zlib(char *src)
 {
    return src[0] == 'Z' && src[1] == 'L' && src[2] == Z_DEFLATED;
 }
 
-static int is_valid_header_old(unsigned char *src)
+static int is_valid_header_old(char *src)
 {
    return src[0] == 'C' && src[1] == 'S' && src[2] == Z_DEFLATED;
 }
 
-static int is_valid_header_lzma(unsigned char *src)
+static int is_valid_header_lzma(char *src)
 {
    return src[0] == 'X' && src[1] == 'Z' && src[2] == 0;
 }
 
-static int is_valid_header_lz4(unsigned char *src)
+static int is_valid_header_lz4(char *src)
 {
    return src[0] == 'L' && src[1] == '4';
 }
 
-static int is_valid_header_zstd(unsigned char *src)
+static int is_valid_header_zstd(char *src)
 {
    return src[0] == 'Z' && src[1] == 'S' && src[2] == '\1';
 }
 
-static int is_valid_header(unsigned char *src)
+static int is_valid_header(char *src)
 {
    return is_valid_header_zlib(src) || is_valid_header_old(src) || is_valid_header_lzma(src) ||
           is_valid_header_lz4(src) || is_valid_header_zstd(src);
 }
 
-int R__unzip_header(int *srcsize, uch *src, int *tgtsize)
+int R__unzip_header(int srcsize, char *src, int tgtsize)
 {
   // Reads header envelope, and determines target size.
   // Returns 0 in case of success.
 
-  *srcsize = 0;
-  *tgtsize = 0;
+  srcsize = 0;
+  tgtsize = 0;
 
-  /*   C H E C K   H E A D E R   */
+  // C H E C K   H E A D E R 
   if (!is_valid_header(src)) {
      fprintf(stderr, "Error R__unzip_header: error in header.  Values: %x%x\n", src[0], src[1]);
      return 1;
   }
 
-  *srcsize = HDRSIZE + ((long)src[3] | ((long)src[4] << 8) | ((long)src[5] << 16));
-  *tgtsize = (long)src[6] | ((long)src[7] << 8) | ((long)src[8] << 16);
+  srcsize = HDRSIZE + ((long)src[3] | ((long)src[4] << 8) | ((long)src[5] << 16));
+  tgtsize = (long)src[6] | ((long)src[7] << 8) | ((long)src[8] << 16);
 
   return 0;
 }
@@ -323,17 +320,17 @@ int R__unzip_header(int *srcsize, uch *src, int *tgtsize)
  ***********************************************************************/
 // N.B. (Brian) - I have kept the original note out of complete awe of the
 // age of the original code...
-void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
-{
+void R__unzip(int srcsize, char * src, int tgtsize, char * tgt, int & irep){
+
   long isize;
-  uch  *ibufptr,*obufptr;
+  char  *ibufptr,*obufptr;
   long  ibufcnt, obufcnt;
 
-  *irep = 0L;
+  irep = 0L;
 
   /*   C H E C K   H E A D E R   */
 
-  if (*srcsize < HDRSIZE) {
+  if (srcsize < HDRSIZE) {
     fprintf(stderr,"R__unzip: too small source\n");
     return;
   }
@@ -348,14 +345,14 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
   ibufcnt = (long)src[3] | ((long)src[4] << 8) | ((long)src[5] << 16);
   isize   = (long)src[6] | ((long)src[7] << 8) | ((long)src[8] << 16);
   obufptr = tgt;
-  obufcnt = *tgtsize;
+  obufcnt = tgtsize;
 
   if (obufcnt < isize) {
     fprintf(stderr,"R__unzip: too small target\n");
     return;
   }
 
-  if (ibufcnt + HDRSIZE != *srcsize) {
+  if (ibufcnt + HDRSIZE != srcsize) {
     fprintf(stderr,"R__unzip: discrepancy in source length\n");
     return;
   }
@@ -372,35 +369,38 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
   } else if (is_valid_header_lz4(src)) {
      R__unzipLZ4(srcsize, src, tgtsize, tgt, irep);
      return;
+  } else if (is_valid_header_zstd(src)) {
+     R__unzipZSTD(srcsize, src, tgtsize, tgt, irep);
+     return;
   }
 
   /* Old zlib format */
-  if (R__Inflate(&ibufptr, &ibufcnt, &obufptr, &obufcnt)) {
+  if (R__Inflate(reinterpret_cast<unsigned char **>(&ibufptr), &ibufcnt, reinterpret_cast<unsigned char **>(&obufptr), &obufcnt)) {
     fprintf(stderr,"R__unzip: error during decompression\n");
     return;
   }
 
   /* if (obufptr - tgt != isize) {
     There are some rare cases when a few more bytes are required */
-  if (obufptr - tgt > *tgtsize) {
+  if (obufptr - tgt > tgtsize) {
     fprintf(stderr,"R__unzip: discrepancy (%ld) with initial size: %ld, tgtsize=%d\n",
-            (long)(obufptr - tgt),isize,*tgtsize);
-    *irep = obufptr - tgt;
+            (long)(obufptr - tgt),isize,tgtsize);
+    irep = obufptr - tgt;
     return;
   }
 
-  *irep = isize;
+  irep = isize;
 }
 
-void R__unzipZLIB(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep)
+void R__unzipZLIB(int srcsize, char * src, int tgtsize, char * tgt, int & irep)
 {
      z_stream stream; /* decompression stream */
      int err = 0;
 
      stream.next_in = (Bytef *)(&src[HDRSIZE]);
-     stream.avail_in = (uInt)(*srcsize) - HDRSIZE;
+     stream.avail_in = (uInt)srcsize - HDRSIZE;
      stream.next_out = (Bytef *)tgt;
-     stream.avail_out = (uInt)(*tgtsize);
+     stream.avail_out = (uInt)tgtsize;
      stream.zalloc = (alloc_func)0;
      stream.zfree = (free_func)0;
      stream.opaque = (voidpf)0;
@@ -421,6 +421,6 @@ void R__unzipZLIB(int *srcsize, unsigned char *src, int *tgtsize, unsigned char 
 
      inflateEnd(&stream);
 
-     *irep = stream.total_out;
+     irep = stream.total_out;
      return;
 }

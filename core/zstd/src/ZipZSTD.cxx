@@ -20,19 +20,19 @@
 
 static const int kHeaderSize = 9;
 
-void R__zipZSTD(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
+void R__zipZSTD(int cxlevel, int srcsize, char * src, int tgtsize, char * tgt, int & irep)
 {
     using Ctx_ptr = std::unique_ptr<ZSTD_CCtx, decltype(&ZSTD_freeCCtx)>;
     Ctx_ptr fCtx{ZSTD_createCCtx(), &ZSTD_freeCCtx};
 
-    *irep = 0;
-    if (R__unlikely(*tgtsize < kHeaderSize)) {
+    irep = 0;
+    if (R__unlikely(tgtsize < kHeaderSize)) {
         std::cout << "Error: target buffer too small in ZSTD" << std::endl;
         return;
     }
     size_t retval = ZSTD_compressCCtx(fCtx.get(),
-                                        &tgt[kHeaderSize], static_cast<size_t>(*tgtsize - kHeaderSize),
-                                        src, static_cast<size_t>(*srcsize),
+                                        &tgt[kHeaderSize], static_cast<size_t>(tgtsize - kHeaderSize),
+                                        src, static_cast<size_t>(srcsize),
                                         2*cxlevel);
 
     if (R__unlikely(ZSTD_isError(retval))) {
@@ -40,11 +40,11 @@ void R__zipZSTD(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, i
         return;
     }
     else {
-        *irep = static_cast<size_t>(retval + kHeaderSize);
+        irep = static_cast<size_t>(retval + kHeaderSize);
     }
 
     size_t deflate_size = retval;
-    size_t inflate_size = static_cast<size_t>(*srcsize);
+    size_t inflate_size = static_cast<size_t>(srcsize);
     tgt[0] = 'Z';
     tgt[1] = 'S';
     tgt[2] = '\1';
@@ -58,7 +58,7 @@ void R__zipZSTD(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, i
     return;
 }
 
-void R__unzipZSTD(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep)
+void R__unzipZSTD(int srcsize, char * src, int tgtsize, char * tgt, int & irep)
 {
     using Ctx_ptr = std::unique_ptr<ZSTD_DCtx, decltype(&ZSTD_freeDCtx)>;
     Ctx_ptr fCtx{ZSTD_createDCtx(), &ZSTD_freeDCtx};
@@ -78,15 +78,15 @@ void R__unzipZSTD(int *srcsize, unsigned char *src, int *tgtsize, unsigned char 
     }
 
     size_t retval = ZSTD_decompressDCtx(fCtx.get(),
-                                        (char *)tgt, static_cast<size_t>(*tgtsize),
-                                        (char *)&src[kHeaderSize], static_cast<size_t>(*srcsize - kHeaderSize));
+                                        (char *)tgt, static_cast<size_t>(tgtsize),
+                                        (char *)&src[kHeaderSize], static_cast<size_t>(srcsize - kHeaderSize));
 
     if (R__unlikely(ZSTD_isError(retval))) {
         std::cout << "Error in unzip ZSTD" << std::endl;
-        *irep = 0;
+        irep = 0;
     }
     else {
-        *irep = retval;
+        irep = retval;
     }
     return;
 }

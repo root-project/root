@@ -345,7 +345,7 @@ Int_t TMessage::Compress()
          bufmax = messlen - nzip;
       else
          bufmax = kMAXZIPBUF;
-      R__zipMultipleAlgorithm(compressionLevel, &bufmax, messbuf, &bufmax, bufcur, &nout,
+      R__zipMultipleAlgorithm(compressionLevel, bufmax, messbuf, bufmax, bufcur, nout,
                               static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(compressionAlgorithm));
       if (nout == 0 || nout >= messlen) {
          //this happens when the buffer cannot be compressed
@@ -389,7 +389,7 @@ Int_t TMessage::Uncompress()
 
    /* early consistency check */
    Int_t nin, nbuf;
-   if(R__unzip_header(&nin, bufcur, &nbuf)!=0) {
+   if(R__unzip_header(nin, reinterpret_cast<char *>(bufcur), nbuf)!=0) {
       Error("Uncompress", "Inconsistency found in header (nin=%d, nbuf=%d)", nin, nbuf);
       return -1;
    }
@@ -403,9 +403,9 @@ Int_t TMessage::Uncompress()
    Int_t nout;
    Int_t noutot = 0;
    while (1) {
-      Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
+      Int_t hc = R__unzip_header(nin, reinterpret_cast<char *>(bufcur), nbuf);
       if (hc!=0) break;
-      R__unzip(&nin, bufcur, &nbuf, (unsigned char*) messbuf, &nout);
+      R__unzip(nin, reinterpret_cast<char *>(bufcur), nbuf, messbuf, nout);
       if (!nout) break;
       noutot += nout;
       if (noutot >= buflen - hdrlen) break;

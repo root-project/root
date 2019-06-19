@@ -425,7 +425,7 @@ void TBufferXML::XmlWriteBlock(XMLNodePointer_t node)
       fZipBuffer = new char[zipBufferSize + 9];
       int dataSize = Length();
       int compressedSize = 0;
-      R__zipMultipleAlgorithm(compressionLevel, &dataSize, Buffer(), &zipBufferSize, fZipBuffer, &compressedSize,
+      R__zipMultipleAlgorithm(compressionLevel, dataSize, Buffer(), zipBufferSize, fZipBuffer, compressedSize,
                               compressionAlgorithm);
       if (compressedSize > 0) {
          src = fZipBuffer;
@@ -519,10 +519,10 @@ void TBufferXML::XmlReadBlock(XMLNodePointer_t blocknode)
    if (fUnzipBuffer) {
 
       int srcsize(0), tgtsize(0), unzipRes(0);
-      int status = R__unzip_header(&srcsize, (UChar_t *)fUnzipBuffer, &tgtsize);
+      int status = R__unzip_header(srcsize, fUnzipBuffer, tgtsize);
 
       if (status == 0)
-         R__unzip(&readSize, (unsigned char *)fUnzipBuffer, &blockSize, (unsigned char *)Buffer(), &unzipRes);
+         R__unzip(readSize, fUnzipBuffer, blockSize, Buffer(), unzipRes);
 
       if (status != 0 || unzipRes != blockSize)
          Error("XmlReadBlock", "Decompression error %d", unzipRes);

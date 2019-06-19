@@ -13,8 +13,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-void R__zipZSTD(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep);
-void R__unzipZSTD(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep);
+
+void R__zipZSTD(int cxlevel, int srcsize, char * src, int tgtsize, char * tgt, int & irep);
+void R__unzipZSTD(int srcsize, char * src, int tgtsize, char * tgt, int & irep);
+
 #ifdef __cplusplus
 }
 #endif
