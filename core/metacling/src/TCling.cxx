@@ -1057,15 +1057,16 @@ static bool RegisterPrebuiltModulePath(clang::Preprocessor& PP,
    if (DE) {
       HeaderSearch& HS = PP.getHeaderSearchInfo();
       const FileEntry *FE = HS.lookupModuleMapFile(DE, /*IsFramework*/ false);
+      const auto &ModPaths = HS.getHeaderSearchOpts().PrebuiltModulePaths;
+      bool pathExists = std::find(ModPaths.begin(), ModPaths.end(), FullPath) != ModPaths.end();
+      if (!pathExists)
+         HS.getHeaderSearchOpts().AddPrebuiltModulePath(FullPath);
       // FIXME: Calling IsLoaded is slow! Replace this with the appropriate
       // call to the clang::ModuleMap class.
       if (FE && !gCling->IsLoaded(FE->getName().data())) {
-         if (!HS.loadModuleMapFile(FE, /*IsSystem*/ false)) {
-            // We have loaded successfully the modulemap. Add the path to the
-            // prebuilt module paths.
-            HS.getHeaderSearchOpts().AddPrebuiltModulePath(FullPath);
+         assert(!pathExists && "Prebuilt module path was added w/o loading a modulemap!");
+         if (!HS.loadModuleMapFile(FE, /*IsSystem*/ false))
             return true;
-         }
          Error("TCling::LoadModule", "Could not load modulemap in the current directory");
       }
    }
