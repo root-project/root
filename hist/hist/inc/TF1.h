@@ -222,7 +222,7 @@ public:
    };
 
 protected:
-   struct TF1FunctorPointer {};
+
    enum EFType {
       kFormula = 0,      // formula functions which can be stored,
       kPtrScalarFreeFcn, // pointer to scalar free function,
@@ -279,11 +279,16 @@ private:
    int TermCoeffLength(TString &term);
 
 public:
+   
+   struct TF1FunctorPointer {
+      virtual  TF1FunctorPointer() {}
+   };
 
    template <class T>
    struct TF1FunctorPointerImpl: TF1FunctorPointer {
       TF1FunctorPointerImpl(const ROOT::Math::ParamFunctorTempl<T> &func): fImpl(func) {};
       TF1FunctorPointerImpl(const std::function<T(const T *f, const Double_t *param)> &func) : fImpl(func){};
+      virtual ~TF1FunctorPointerImpl() {}
       ROOT::Math::ParamFunctorTempl<T> fImpl;
    };
 
