@@ -56,7 +56,7 @@ namespace RooFit {
 
       while (carry_on) {
         if (work_mode) {
-          decltype(get_time()) t1, t2, t3;
+          decltype(get_time()) t1 = 0, t2 = 0, t3 = 0;
 
           // try to dequeue a task
           if (dequeue_acknowledged) {  // don't ask twice
@@ -132,7 +132,6 @@ namespace RooFit {
             }
 
             case Q2W::update_real: {
-              auto get_time = [](){return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();};
               auto t1 = get_time();
 
               job_id = TaskManager::instance()->receive_from_queue_on_worker<std::size_t>();

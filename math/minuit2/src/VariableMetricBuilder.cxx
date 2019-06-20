@@ -324,8 +324,8 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
       auto t1 = get_time();
       MnParabolaPoint pp = lsearch(fcn, s0.Parameters(), step, gdel, prec);
       auto t2 = get_time();
-      std::cout << "line_search: " << (t2 - t1)/1.e9 << "s" << std::endl;
-      std::cout << std::hexfloat << "fVal after line search = " << s0.Fval() << std::defaultfloat << std::endl;
+//      std::cout << "line_search: " << (t2 - t1)/1.e9 << "s" << std::endl;
+//      std::cout << std::hexfloat << "fVal after line search = " << s0.Fval() << std::defaultfloat << std::endl;
 
       // <= needed for case 0 <= 0
       if(fabs(pp.Y() - s0.Fval()) <=  fabs(s0.Fval())*prec.Eps() ) {

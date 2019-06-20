@@ -190,6 +190,7 @@ namespace RooFit {
 
     void NLLVar::evaluate_task(std::size_t task) {
       assert(get_manager()->is_worker());
+      std::cout << "evaluate task " << task << " on worker " << get_manager()->get_worker_id() << std::endl;
       std::size_t N_events = static_cast<std::size_t>(_data->numEntries());
       // "default" values (all events in one task)
       std::size_t first = task;
