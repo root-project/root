@@ -228,7 +228,7 @@ static void R__v5TFormulaUpdater(Int_t nobjects, TObject **from, TObject **to)
 using TFormulaUpdater_t = void (*)(Int_t nobjects, TObject **from, TObject **to);
 bool R__SetClonesArrayTFormulaUpdater(TFormulaUpdater_t func);
 
-int R__RegisterTF1UpdaterTrigger = R__SetClonesArrayTFormulaUpdater(R__v5TFormulaUpdater);
+int R__RegisterTFormulaUpdaterTrigger = R__SetClonesArrayTFormulaUpdater(R__v5TFormulaUpdater);
 
 ////////////////////////////////////////////////////////////////////////////////
 Bool_t TFormula::IsOperator(const char c)
