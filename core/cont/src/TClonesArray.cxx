@@ -759,7 +759,8 @@ void TClonesArray::Streamer(TBuffer &b)
       }
       TClass *cl = TClass::GetClass(classv);
       if (!cl) {
-         printf("TClonesArray::Streamer expecting class %s\n", classv.Data());
+         Error("Streamer", "expecting class %s but it was not found by TClass::GetClass\n",
+               classv.Data());
          b.CheckByteCount(R__s, R__c,TClonesArray::IsA());
          return;
       }
