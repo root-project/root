@@ -53,7 +53,9 @@ public:
   RooDataHist& operator=(const RooDataHist&) = delete;
 
   RooDataHist(const RooDataHist& other, const char* newname = 0) ;
-  virtual TObject* Clone(const char* newname=0) const { return new RooDataHist(*this,newname?newname:GetName()) ; }
+  virtual TObject* Clone(const char* newname) const {
+    return new RooDataHist(*this, newname && newname != std::string("") ? newname : GetName());
+  }
   virtual ~RooDataHist() ;
 
   virtual RooAbsData* emptyClone(const char* newName=0, const char* newTitle=0, const RooArgSet*vars=0, const char* /*wgtVarName*/=0) const {
