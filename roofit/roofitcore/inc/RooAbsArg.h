@@ -77,8 +77,8 @@ public:
   RooAbsArg(const char *name, const char *title);
   RooAbsArg(const RooAbsArg& other, const char* name=0) ;
   virtual TObject* clone(const char* newname=0) const = 0 ;
-  virtual TObject* Clone(const char* newname=0) const {
-    return clone(newname) ;
+  virtual TObject* Clone(const char* newname = 0) const {
+    return clone(newname && newname != std::string("") ? newname : nullptr);
   }
   virtual RooAbsArg* cloneTree(const char* newname=0) const ;
 
