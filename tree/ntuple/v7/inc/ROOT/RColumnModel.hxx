@@ -68,7 +68,7 @@ constexpr std::size_t kColumnElementSizes[] =
 // clang-format on
 class RColumnModel {
 private:
-   std::string fName;
+   std::string fName;  // TODO(jblomer): remove me
    EColumnType fType;
    bool fIsSorted;
 
