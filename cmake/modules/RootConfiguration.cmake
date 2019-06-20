@@ -28,7 +28,6 @@ set(ldflags ${CMAKE_CXX_LINK_FLAGS})
 
 set(winrtdebug ${value${winrtdebug}})
 set(exceptions ${value${exceptions}})
-set(explicitlink ${value${explicitlink}})
 
 if(gnuinstall)
   set(prefix ${CMAKE_INSTALL_PREFIX})
@@ -691,7 +690,7 @@ else()
     ${CMAKE_BINARY_DIR}/include/compiledata.h "${CMAKE_CXX_COMPILER}"
         "${CMAKE_CXX_FLAGS_RELEASE}" "${CMAKE_CXX_FLAGS_DEBUG}" "${CMAKE_CXX_FLAGS}"
         "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_FLAGS}" "so"
-        "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "" "${explicitlink}" )
+        "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "")
 endif()
 
 #---Get the value of CMAKE_CXX_FLAGS provided by the user in the command line

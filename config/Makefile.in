@@ -106,8 +106,6 @@ CXX14          := @c++14@
 CXXMODULES     := @cxxmodules@
 LIBCXX         := @libc++@
 
-EXPLICITLINK   := @explicitlink@
-
 ENABLETHREAD   := @enable_thread@
 OSTHREADFLAG   := @threadflag@
 OSTHREADLIBDIR := @threadlibdir@
