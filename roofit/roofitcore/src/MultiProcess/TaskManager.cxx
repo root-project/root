@@ -524,7 +524,7 @@ namespace RooFit {
       if (_is_queue) {
         bool carry_on = true;
         ZeroMQPoller poller;
-        poller.register_socket(*mq_socket, zmq::POLLIN);
+        auto mq_index = poller.register_socket(*mq_socket, zmq::POLLIN);
         for(auto& s : qw_sockets) {
           poller.register_socket(*s, zmq::POLLIN);
         }
@@ -535,7 +535,7 @@ namespace RooFit {
           // then process incoming messages from sockets
           for (auto readable_socket : poll_result) {
             // message comes from the master/queue socket (first element):
-            if (readable_socket.first == 0) {
+            if (readable_socket.first == mq_index) {
               auto message = receive_from_master_on_queue<M2Q>();
               carry_on = process_queue_pipe_message(message);
               // on terminate, also stop for-loop, no need to check other
