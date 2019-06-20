@@ -774,7 +774,9 @@ void TClonesArray::Streamer(TBuffer &b)
          fKeep  = new TObjArray(fSize);
          Expand(nobjects);
       }
-      if (cl != fClass) {
+      if (cl != fClass && classv == fClass->GetName()) {
+         // If fClass' name is different from classv, the user has intentionally changed
+         // the target class, so we must not override it.
          fClass = cl;
          //this case may happen when switching from an emulated class to the real class
          //may not be an error. fClass may point to a deleted object
