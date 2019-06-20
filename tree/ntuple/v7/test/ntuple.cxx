@@ -1,3 +1,4 @@
+#include <ROOT/RColumnModel.hxx>
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
@@ -20,6 +21,9 @@
 #include <string>
 #include <utility>
 
+using EColumnType = ROOT::Experimental::EColumnType;
+using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
+using RColumnModel = ROOT::Experimental::RColumnModel;
 using RNTupleDescriptor = ROOT::Experimental::RNTupleDescriptor;
 using RNTupleDescriptorBuilder = ROOT::Experimental::RNTupleDescriptorBuilder;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
@@ -514,18 +518,48 @@ TEST(RNTuple, RDF)
 TEST(RNTuple, Descriptor)
 {
    RNTupleDescriptorBuilder descBuilder;
-   descBuilder.SetNTuple("MyTuple", RNTupleVersion(), ROOT::Experimental::Uuid_t());
+   descBuilder.SetNTuple("MyTuple", RNTupleVersion(1, 2, 3), ROOT::Experimental::Uuid_t());
+   descBuilder.AddField(42, RNTupleVersion(), RNTupleVersion(), "x", "std::string", ENTupleStructure::kLeaf);
+   descBuilder.AddColumn(3, 42, RNTupleVersion(), RColumnModel("idx_x", EColumnType::kIndex, true));
+   descBuilder.AddColumn(4, 42, RNTupleVersion(), RColumnModel("x", EColumnType::kByte, true));
+   descBuilder.AddCluster(0, RNTupleVersion(), 0, ROOT::Experimental::ClusterSize_t(100));
+   ROOT::Experimental::RClusterDescriptor::RColumnRange range;
+   range.fColumnId = 3;
+   range.fFirstElementIndex = 0;
+   range.fNElements = 100;
+   descBuilder.AddClusterColumnRange(0, range);
+   range.fColumnId = 4;
+   range.fFirstElementIndex = 0;
+   range.fNElements = 300;
+   descBuilder.AddClusterColumnRange(0, range);
+   descBuilder.AddCluster(1, RNTupleVersion(), 100, ROOT::Experimental::ClusterSize_t(1000));
+   range.fColumnId = 3;
+   range.fFirstElementIndex = 100;
+   range.fNElements = 1000;
+   descBuilder.AddClusterColumnRange(1, range);
+   range.fColumnId = 4;
+   range.fFirstElementIndex = 300;
+   range.fNElements = 3000;
+   descBuilder.AddClusterColumnRange(1, range);
 
    auto reference = descBuilder.GetDescriptor();
    EXPECT_EQ("MyTuple", reference.GetName());
+   EXPECT_EQ(1U, reference.GetVersion().GetVersionUse());
+   EXPECT_EQ(2U, reference.GetVersion().GetVersionMin());
+   EXPECT_EQ(3U, reference.GetVersion().GetFlags());
 
    auto szHeader = reference.SerializeHeader(nullptr);
    auto headerBuffer = new unsigned char[szHeader];
    reference.SerializeHeader(headerBuffer);
+   auto szFooter = reference.SerializeFooter(nullptr);
+   auto footerBuffer = new unsigned char[szFooter];
+   reference.SerializeFooter(footerBuffer);
 
-   auto reconstructed = RNTupleDescriptor::Deserialize(headerBuffer, nullptr);
+   RNTupleDescriptorBuilder reco;
+   reco.SetFromHeader(headerBuffer);
+   reco.AddClustersFromFooter(footerBuffer);
+   EXPECT_EQ(reference, reco.GetDescriptor());
 
-   EXPECT_EQ(reconstructed, reference);
-
+   delete[] footerBuffer;
    delete[] headerBuffer;
 }
