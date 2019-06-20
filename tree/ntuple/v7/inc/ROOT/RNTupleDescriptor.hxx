@@ -83,7 +83,7 @@ public:
    RColumnModel GetModel() const { return fModel; }
    DescriptorId_t GetFieldId() const { return fFieldId; }
    DescriptorId_t GetOffsetId() const { return fOffsetId; }
-   std::vector<DescriptorId_t> GetLinkIds() { return fLinkIds; }
+   std::vector<DescriptorId_t> GetLinkIds() const { return fLinkIds; }
 };
 
 
@@ -143,6 +143,8 @@ private:
 
    std::unordered_map<DescriptorId_t, RFieldDescriptor> fFieldDescriptors;
    std::unordered_map<DescriptorId_t, RColumnDescriptor> fColumnDescriptors;
+   /// May contain only a subset of all the available clusters, e.g. the clusters of the current file
+   /// from a chain of files
    std::unordered_map<DescriptorId_t, RClusterDescriptor> fClusterDescriptors;
 
 public:
@@ -158,10 +160,6 @@ public:
     * Serializes cluster meta data. Returns the number of bytes and fills buffer if it is not nullptr.
     */
    std::uint32_t SerializeFooter(void* buffer);
-   /**
-    * Reconstructs the ntuple descriptor from a header and a footer
-    */
-   static RNTupleDescriptor Deserialize(void* headerBuffer, void* footerBuffer);
 
    const RFieldDescriptor& GetFieldDescriptor(DescriptorId_t fieldId) const { return fFieldDescriptors.at(fieldId); }
    const RColumnDescriptor& GetColumnDescriptor(DescriptorId_t columnId) const {
@@ -170,9 +168,10 @@ public:
    const RClusterDescriptor& GetClusterDescriptor(DescriptorId_t clusterId) const {
       return fClusterDescriptors.at(clusterId);
    }
+   std::string GetName() const { return fName; }
+   RNTupleVersion GetVersion() const { return fVersion; }
    Uuid_t GetOwnUuid() const { return fOwnUuid; }
    Uuid_t GetGroupUuid() const { return fGroupUuid; }
-   std::string GetName() const { return fName; }
 };
 
 
@@ -198,9 +197,13 @@ public:
    void SetColumnOffset(DescriptorId_t columnId, DescriptorId_t offsetId);
    void AddColumnLink(DescriptorId_t columnId, DescriptorId_t linkId);
 
+   void SetFromHeader(void* headerBuffer);
+
    void AddCluster(DescriptorId_t clusterId, RNTupleVersion version,
                    NTupleSize_t firstEntryIndex, ClusterSize_t nEntries);
    void AddClusterColumnRange(DescriptorId_t clusterId, const RClusterDescriptor::RColumnRange &columnRange);
+
+   void AddClustersFromFooter(void* footerBuffer);
 };
 
 } // namespace Experimental
