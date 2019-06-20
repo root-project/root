@@ -3,7 +3,7 @@
 ############################################################################
 
 # set variables to emulate find_package(GLEW)
-set(GLEW_FOUND CACHE INTERNAL "" FORCE)
+set(GLEW_FOUND TRUE CACHE INTERNAL "" FORCE)
 set(GLEW_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/inc CACHE INTERNAL "" FORCE)
 set(GLEW_LIBRARY GLEW CACHE INTERNAL "" FORCE)
 set(GLEW_LIBRARIES GLEW CACHE INTERNAL "" FORCE)
