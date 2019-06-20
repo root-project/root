@@ -256,6 +256,7 @@ endif()
 
 if (builtin_zstd)
   set(zstd_version v1.4.0)
+  set(ZSTD_TARGET ZSTD)
   message(STATUS "Building ZSTD version ${zstd_version} included in ROOT itself")
   set(ZSTD_URL https://github.com/facebook/zstd/archive/${zstd_version}.tar.gz)
   set(ZSTD_SHA256 63be339137d2b683c6d19a9e34f4fb684790e864fee13c7dd40e197a64c705c1)
