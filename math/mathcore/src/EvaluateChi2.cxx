@@ -81,7 +81,7 @@ double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, co
 #endif
 
 #ifdef USE_PARAMCACHE
-   IntegralEvaluator<> igEval(func, 0, useBinIntegral);
+   IntegralEvaluator<> igEval(func, nullptr, useBinIntegral);
 #else
    IntegralEvaluator<> igEval(func, p, useBinIntegral);
 #endif
@@ -268,7 +268,7 @@ FitUtil::EvaluateChi2Effective(const IModelFunction &func, const BinData &data, 
       double delta_y_func = y - fval;
 
       double ey = 0;
-      const double *ex = 0;
+      const double *ex = nullptr;
       if (!data.HaveAsymErrors())
          ex = data.GetPointError(i, ey);
       else {
@@ -370,11 +370,11 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction &func, const BinData &
    double fval = 0;
    unsigned int ndim = data.NDim();
    double binVolume = 1.0;
-   const double *x2 = 0;
+   const double *x2 = nullptr;
    if (useBinVolume || useBinIntegral)
       x2 = data.BinUpEdge(i);
 
-   double *xc = 0;
+   double *xc = nullptr;
 
    if (useBinVolume) {
       xc = new double[ndim];
@@ -418,12 +418,12 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction &func, const BinData &
    resval = CorrectValue(resval);
 
    // estimate gradient
-   if (g != 0) {
+   if (g != nullptr) {
 
       unsigned int npar = func.NPar();
-      const IGradModelFunction *gfunc = dynamic_cast<const IGradModelFunction *>(&func);
+      auto *gfunc = dynamic_cast<const IGradModelFunction *>(&func);
 
-      if (gfunc != 0) {
+      if (gfunc != nullptr) {
          // case function provides gradient
          if (!useBinIntegral) {
             gfunc->ParameterGradient(x, p, g);
@@ -469,7 +469,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
       return; // it will assert otherwise later in GetPoint
    }
 
-   const IGradModelFunction *fg = dynamic_cast<const IGradModelFunction *>(&f);
+   auto *fg = dynamic_cast<const IGradModelFunction *>(&f);
    assert(fg != nullptr); // must be called by a gradient function
 
    const IGradModelFunction &func = *fg;

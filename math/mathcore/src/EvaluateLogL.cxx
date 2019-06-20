@@ -64,13 +64,13 @@ FitUtil::EvaluatePdf(const IModelFunction &func, const UnBinData &data, const do
    double fval = func(x, p);
    double logPdf = ROOT::Math::Util::EvalLog(fval);
    // return
-   if (g == 0)
+   if (g == nullptr)
       return logPdf;
 
-   const IGradModelFunction *gfunc = dynamic_cast<const IGradModelFunction *>(&func);
+   auto *gfunc = dynamic_cast<const IGradModelFunction *>(&func);
 
    // gradient  calculation
-   if (gfunc != 0) {
+   if (gfunc != nullptr) {
       // case function provides gradient
       gfunc->ParameterGradient(x, p, g);
    } else {
@@ -313,7 +313,7 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
 {
    // evaluate the gradient of the log likelihood function
 
-   const IGradModelFunction *fg = dynamic_cast<const IGradModelFunction *>(&f);
+   auto *fg = dynamic_cast<const IGradModelFunction *>(&f);
    assert(fg != nullptr); // must be called by a grad function
 
    const IGradModelFunction &func = *fg;
