@@ -1384,8 +1384,7 @@ endif()
 
 #---TMVA and its dependencies------------------------------------------------------------
 if (tmva AND NOT mlp)
-  message(STATUS "TMVA is enabled while MLP is not: disabling TMVA")
-  set(tmva OFF CACHE BOOL "Disabled because mlp was not activated" FORCE)
+  message(FATAL_ERROR "The 'tmva' option requires 'mlp', please enable mlp with -Dmlp=ON")
 endif()
 
 if(tmva)
