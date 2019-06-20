@@ -385,13 +385,13 @@ struct Chi2 {
       return -1.;
    }
 
-       // Compute a mask to filter out infinite numbers and NaN values.
-      // The argument rval is updated so infinite numbers and NaN values are replaced by
-      // maximum finite values (preserving the original sign).
-      static vecCore::Mask<T> isFinite(T &rval)
-      {
-         return rval > vecCore::NumericLimits<T>::Lowest() && rval < vecCore::NumericLimits<T>::Max();
-      }
+   // Compute a mask to filter out infinite numbers and NaN values.
+   // The argument rval is updated so infinite numbers and NaN values are replaced by
+   // maximum finite values (preserving the original sign).
+   static vecCore::Mask<T> isFinite(T &rval)
+   {
+      return rval > vecCore::NumericLimits<T>::Lowest() && rval < vecCore::NumericLimits<T>::Max();
+   }
 };
 template <>
 struct Chi2<double> {

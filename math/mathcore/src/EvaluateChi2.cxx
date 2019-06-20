@@ -95,7 +95,6 @@ double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, co
    (const_cast<IModelFunction &>(func)).SetParameters(p);
 
    auto mapFunction = [&](const unsigned i) {
-
       double chi2{};
       double fval{};
 
