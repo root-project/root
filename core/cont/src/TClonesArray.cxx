@@ -769,12 +769,13 @@ void TClonesArray::Streamer(TBuffer &b)
       if (nobjects < 0)
          nobjects = -nobjects;  // still there for backward compatibility
       b >> fLowerBound;
-      if (fClass == 0 && fKeep == 0) {
+      if (fClass == 0) {
          fClass = cl;
-         fKeep  = new TObjArray(fSize);
-         Expand(nobjects);
-      }
-      if (cl != fClass && classv == fClass->GetName()) {
+         if (fKeep == 0) {
+            fKeep  = new TObjArray(fSize);
+            Expand(nobjects);
+         }
+      } else if (cl != fClass && classv == fClass->GetName()) {
          // If fClass' name is different from classv, the user has intentionally changed
          // the target class, so we must not override it.
          fClass = cl;
