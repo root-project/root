@@ -113,8 +113,6 @@ namespace RooFit {
 
       bool is_worker();
 
-      void set_work_mode(bool flag);
-
       std::size_t get_worker_id();
 
 //      std::map<JobTask, double>& get_results();
@@ -253,7 +251,6 @@ namespace RooFit {
       std::size_t N_tasks = 0;  // total number of received tasks
       std::size_t N_tasks_completed = 0;
       bool queue_activated = false;
-      bool work_mode = false;
       bool processes_initialized = false;
 //      std::unique_ptr<zmq::context_t> zmq_context;
 

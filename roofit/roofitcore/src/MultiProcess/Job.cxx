@@ -55,139 +55,90 @@ namespace RooFit {
       auto get_time = [](){return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();};
 
       while (carry_on) {
-        if (work_mode) {
-          decltype(get_time()) t1 = 0, t2 = 0, t3 = 0;
+        decltype(get_time()) t1 = 0, t2 = 0, t3 = 0;
 
-          // try to dequeue a task
-          if (dequeue_acknowledged) {  // don't ask twice
-            t1 = get_time();
-            TaskManager::instance()->send_from_worker_to_queue(W2Q::dequeue);
-            dequeue_acknowledged = false;
+        // try to dequeue a task
+        if (dequeue_acknowledged) {  // don't ask twice
+          t1 = get_time();
+          TaskManager::instance()->send_from_worker_to_queue(W2Q::dequeue);
+          dequeue_acknowledged = false;
+        }
+
+        // receive handshake
+        message_q2w = TaskManager::instance()->receive_from_queue_on_worker<Q2W>();
+
+        switch (message_q2w) {
+          case Q2W::terminate: {
+            carry_on = false;
+            break;
           }
 
-          // receive handshake
-          message_q2w = TaskManager::instance()->receive_from_queue_on_worker<Q2W>();
+          case Q2W::dequeue_rejected: {
+            t2 = get_time();
+            oocxcoutD((TObject*)nullptr,Benchmarking2) << "no work: worker " << TaskManager::instance()->get_worker_id() << " asked at " << t1 << " and got rejected at " << t2 << std::endl;
 
-          switch (message_q2w) {
-            case Q2W::terminate: {
-              carry_on = false;
-              break;
-            }
-
-            case Q2W::dequeue_rejected: {
-              t2 = get_time();
-              oocxcoutD((TObject*)nullptr,Benchmarking2) << "no work: worker " << TaskManager::instance()->get_worker_id() << " asked at " << t1 << " and got rejected at " << t2 << std::endl;
-
-              dequeue_acknowledged = true;
-              break;
-            }
-            case Q2W::dequeue_accepted: {
-              dequeue_acknowledged = true;
-              job_id = TaskManager::instance()->receive_from_queue_on_worker<std::size_t>();
-              task = TaskManager::instance()->receive_from_queue_on_worker<Task>();
-
-              t2 = get_time();
-              TaskManager::get_job_object(job_id)->evaluate_task(task);
-
-              t3 = get_time();
-              oocxcoutD((TObject*)nullptr,Benchmarking2) << "job done: worker " << TaskManager::instance()->get_worker_id() << " asked at " << t1 << ", started at " << t2 << " and finished at " << t3 << std::endl;
-
-              TaskManager::instance()->send_from_worker_to_queue(W2Q::send_result);
-              TaskManager::get_job_object(job_id)->send_back_task_result_from_worker(task);
-
-              message_q2w = TaskManager::instance()->receive_from_queue_on_worker<Q2W>();
-              if (message_q2w != Q2W::result_received) {
-                std::cerr << "worker " << getpid() << " sent result, but did not receive Q2W::result_received handshake! Got " << message_q2w << " instead." << std::endl;
-                throw std::runtime_error("");
-              }
-              break;
-            }
-
-            case Q2W::switch_work_mode: {
-              // change to non-work-mode
-              work_mode = false;
-              break;
-            }
-
-            case Q2W::call_double_const_method:
-            case Q2W::update_real:
-            case Q2W::flush_ostreams: {
-              std::cerr << "In worker_loop: " << message_q2w << " message invalid in work-mode!" << std::endl;
-              break;
-            }
-
-            case Q2W::result_received: {
-              std::cerr << "In worker_loop: " << message_q2w << " message received, but should only be received as handshake!" << std::endl;
-              break;
-            }
+            dequeue_acknowledged = true;
+            break;
           }
-        } else {
-          // receive message
-          message_q2w = TaskManager::instance()->receive_from_queue_on_worker<Q2W>();
+          case Q2W::dequeue_accepted: {
+            dequeue_acknowledged = true;
+            job_id = TaskManager::instance()->receive_from_queue_on_worker<std::size_t>();
+            task = TaskManager::instance()->receive_from_queue_on_worker<Task>();
 
-          switch (message_q2w) {
-            case Q2W::terminate: {
-              carry_on = false;
-              break;
-            }
+            t2 = get_time();
+            TaskManager::get_job_object(job_id)->evaluate_task(task);
 
-            case Q2W::update_real: {
-              auto t1 = get_time();
+            t3 = get_time();
+            oocxcoutD((TObject*)nullptr,Benchmarking2) << "job done: worker " << TaskManager::instance()->get_worker_id() << " asked at " << t1 << ", started at " << t2 << " and finished at " << t3 << std::endl;
 
-              job_id = TaskManager::instance()->receive_from_queue_on_worker<std::size_t>();
-              std::size_t ix = TaskManager::instance()->receive_from_queue_on_worker<std::size_t>();
-              double val = TaskManager::instance()->receive_from_queue_on_worker<double>();
-              bool is_constant = TaskManager::instance()->receive_from_queue_on_worker<bool>();
-              TaskManager::get_job_object(job_id)->update_real(ix, val, is_constant);
+            TaskManager::instance()->send_from_worker_to_queue(W2Q::send_result);
+            TaskManager::get_job_object(job_id)->send_back_task_result_from_worker(task);
 
-              auto t2 = get_time();
-              oocxcoutD((TObject*)nullptr,Benchmarking1) << "update_real on worker " << TaskManager::instance()->get_worker_id() << ": " << (t2 - t1)/1.e9 << "s (from " << t1 << " to " << t2 << "ns)" << std::endl;
-
-              break;
-            }
-
-            case Q2W::call_double_const_method: {
-              job_id = TaskManager::instance()->receive_from_queue_on_worker<std::size_t>();
-              std::string key = TaskManager::instance()->receive_from_queue_on_worker<std::string>();
-              Job * job = TaskManager::get_job_object(job_id);
-//                double (* method)() = job->get_double_const_method(key);
-              double result = job->call_double_const_method(key);
-              TaskManager::instance()->send_from_worker_to_queue(result);
-              break;
-            }
-
-            case Q2W::switch_work_mode: {
-              // change to work-mode
-              work_mode = true;
-              // reset dequeue_acknowledged
-              dequeue_acknowledged = true;
-              break;
-            }
-
-            case Q2W::flush_ostreams: {
-              TaskManager::instance()->flush_ostreams();
+            message_q2w = TaskManager::instance()->receive_from_queue_on_worker<Q2W>();
+            if (message_q2w != Q2W::result_received) {
+              std::cerr << "worker " << getpid() << " sent result, but did not receive Q2W::result_received handshake! Got " << message_q2w << " instead." << std::endl;
+              throw std::runtime_error("");
             }
             break;
-
-            case Q2W::dequeue_accepted:
-            case Q2W::dequeue_rejected: {
-              if (!dequeue_acknowledged) {
-                // when switching from work to non-work mode, often a dequeue
-                // message from the worker must still be processed by the
-                // queue process
-                dequeue_acknowledged = true;
-              } else {
-                std::cerr << "In worker_loop: " << message_q2w << " message invalid in non-work-mode!" << std::endl;
-              }
-              break;
-            }
-
-            case Q2W::result_received: {
-              std::cerr << "In worker_loop: " << message_q2w << " message received, but should only be received as handshake!" << std::endl;
-              break;
-            }
-
           }
+
+          // previously this was non-work mode
+
+          case Q2W::update_real: {
+            auto t1 = get_time();
+
+            job_id = TaskManager::instance()->receive_from_queue_on_worker<std::size_t>();
+            std::size_t ix = TaskManager::instance()->receive_from_queue_on_worker<std::size_t>();
+            double val = TaskManager::instance()->receive_from_queue_on_worker<double>();
+            bool is_constant = TaskManager::instance()->receive_from_queue_on_worker<bool>();
+            TaskManager::get_job_object(job_id)->update_real(ix, val, is_constant);
+
+            auto t2 = get_time();
+            oocxcoutD((TObject*)nullptr,Benchmarking1) << "update_real on worker " << TaskManager::instance()->get_worker_id() << ": " << (t2 - t1)/1.e9 << "s (from " << t1 << " to " << t2 << "ns)" << std::endl;
+
+            break;
+          }
+
+          case Q2W::call_double_const_method: {
+            job_id = TaskManager::instance()->receive_from_queue_on_worker<std::size_t>();
+            std::string key = TaskManager::instance()->receive_from_queue_on_worker<std::string>();
+            Job * job = TaskManager::get_job_object(job_id);
+//                double (* method)() = job->get_double_const_method(key);
+            double result = job->call_double_const_method(key);
+            TaskManager::instance()->send_from_worker_to_queue(result);
+            break;
+          }
+
+          case Q2W::flush_ostreams: {
+            TaskManager::instance()->flush_ostreams();
+            break;
+          }
+
+          case Q2W::result_received: {
+            std::cerr << "In worker_loop: " << message_q2w << " message received, but should only be received as handshake!" << std::endl;
+            break;
+          }
+
         }
       }
     }
@@ -219,7 +170,6 @@ namespace RooFit {
     }
 
     // initialize static members
-    bool Job::work_mode = false;
     bool Job::worker_loop_running = false;
 
   } // namespace MultiProcess

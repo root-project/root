@@ -12,7 +12,6 @@
  *****************************************************************************/
 
 #include <MultiProcess/messages.h>
-//#include <MultiProcess/BidirMMapPipe.h>
 
 namespace RooFit {
   namespace MultiProcess {
@@ -27,7 +26,6 @@ namespace RooFit {
         PROCESS_VAL(M2Q::enqueue);
         PROCESS_VAL(M2Q::retrieve);
         PROCESS_VAL(M2Q::update_real);
-        PROCESS_VAL(M2Q::switch_work_mode);
         PROCESS_VAL(M2Q::call_double_const_method);
         PROCESS_VAL(M2Q::flush_ostreams);
       }
@@ -59,7 +57,6 @@ namespace RooFit {
         PROCESS_VAL(Q2W::dequeue_rejected);
         PROCESS_VAL(Q2W::dequeue_accepted);
         PROCESS_VAL(Q2W::update_real);
-        PROCESS_VAL(Q2W::switch_work_mode);
         PROCESS_VAL(Q2W::result_received);
         PROCESS_VAL(Q2W::call_double_const_method);
         PROCESS_VAL(Q2W::flush_ostreams);
@@ -70,54 +67,4 @@ namespace RooFit {
 #undef PROCESS_VAL
 
   } // namespace MultiProcess
-
-  // stream operators for message enum classes
-//  BidirMMapPipe& operator<<(BidirMMapPipe& bipe, const MultiProcess::M2Q& sent) {
-//    bipe << static_cast<int>(sent);
-//    return bipe;
-//  }
-//
-//  BidirMMapPipe& operator>>(BidirMMapPipe& bipe, MultiProcess::M2Q& received) {
-//    int receptor;
-//    bipe >> receptor;
-//    received = static_cast<MultiProcess::M2Q>(receptor);
-//    return bipe;
-//  }
-//
-//  BidirMMapPipe& operator<<(BidirMMapPipe& bipe, const MultiProcess::Q2M& sent) {
-//    bipe << static_cast<int>(sent);
-//    return bipe;
-//  }
-//
-//  BidirMMapPipe& operator>>(BidirMMapPipe& bipe, MultiProcess::Q2M& received) {
-//    int receptor;
-//    bipe >> receptor;
-//    received = static_cast<MultiProcess::Q2M>(receptor);
-//    return bipe;
-//  }
-//
-//  BidirMMapPipe& operator<<(BidirMMapPipe& bipe, const MultiProcess::W2Q& sent) {
-//    bipe << static_cast<int>(sent);
-//    return bipe;
-//  }
-//
-//  BidirMMapPipe& operator>>(BidirMMapPipe& bipe, MultiProcess::W2Q& received) {
-//    int receptor;
-//    bipe >> receptor;
-//    received = static_cast<MultiProcess::W2Q>(receptor);
-//    return bipe;
-//  }
-//
-//  BidirMMapPipe& operator<<(BidirMMapPipe& bipe, const MultiProcess::Q2W& sent) {
-//    bipe << static_cast<int>(sent);
-//    return bipe;
-//  }
-//
-//  BidirMMapPipe& operator>>(BidirMMapPipe& bipe, MultiProcess::Q2W& received) {
-//    int receptor;
-//    bipe >> receptor;
-//    received = static_cast<MultiProcess::Q2W>(receptor);
-//    return bipe;
-//  }
-
 } // namespace RooFit

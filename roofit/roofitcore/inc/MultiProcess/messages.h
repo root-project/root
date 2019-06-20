@@ -26,7 +26,6 @@ namespace RooFit {
       retrieve = 11,
       update_real = 12,
 //      update_cat = 13,
-      switch_work_mode = 14,
       call_double_const_method = 15,
       flush_ostreams = 16
     };
@@ -48,7 +47,6 @@ namespace RooFit {
       terminate = 400,
       dequeue_rejected = 40,
       dequeue_accepted = 41,
-      switch_work_mode = 42,
       result_received = 43,
       update_real = 44,
 //      update_cat = 45

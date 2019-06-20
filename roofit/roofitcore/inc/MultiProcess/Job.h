@@ -90,7 +90,6 @@ namespace RooFit {
       // do not use _manager directly, it must first be initialized! use get_manager()
       TaskManager* _manager = nullptr;
 
-      static bool work_mode;
       static bool worker_loop_running;
     };
 

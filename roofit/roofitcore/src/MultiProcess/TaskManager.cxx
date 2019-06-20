@@ -421,13 +421,6 @@ namespace RooFit {
         }
         break;
 
-        case M2Q::switch_work_mode: {
-          for (std::size_t worker_ix = 0; worker_ix < N_workers; ++worker_ix) {
-            send_from_queue_to_worker(worker_ix, Q2W::switch_work_mode);
-          }
-        }
-        break;
-
         case M2Q::call_double_const_method: {
           auto job_id = receive_from_master_on_queue<std::size_t>();
           auto worker_id_call = receive_from_master_on_queue<std::size_t>();
@@ -592,14 +585,7 @@ namespace RooFit {
     bool TaskManager::is_worker() {
       return !(_is_master || _is_queue);
     }
-
-    void TaskManager::set_work_mode(bool flag) {
-      if (is_master() && flag != work_mode) {
-        work_mode = flag;
-        send_from_master_to_queue(M2Q::switch_work_mode);
-      }
-    }
-
+    
     std::size_t TaskManager::get_worker_id() {
       return worker_id;
     }

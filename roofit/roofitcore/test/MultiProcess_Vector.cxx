@@ -69,9 +69,6 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
 
   void evaluate() override {
     if (get_manager()->is_master()) {
-      // start work mode
-      get_manager()->set_work_mode(true);
-
       // master fills queue with tasks
       for (std::size_t task_id = 0; task_id < x.size(); ++task_id) {
         JobTask job_task(id, task_id);
@@ -81,10 +78,7 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
 
       // wait for task results back from workers to master
       gather_worker_results();
-
-      // end work mode
-      get_manager()->set_work_mode(false);
-
+      
       // put task results in desired container (same as used in serial class)
       for (std::size_t task_id = 0; task_id < x.size(); ++task_id) {
         result[task_id] = results[task_id];

@@ -157,8 +157,6 @@ namespace RooFit {
           t2 = get_time();
 
           RooWallTimer timer;
-          // activate work mode
-          get_manager()->set_work_mode(true);
 
           // master fills queue with tasks
           for (std::size_t ix = 0; ix < N_tasks; ++ix) {
@@ -170,8 +168,6 @@ namespace RooFit {
           // wait for task results back from workers to master (put into _grad)
           gather_worker_results();
 
-          // end work mode
-          get_manager()->set_work_mode(false);
           timer.stop();
 
           oocxcoutD((TObject*)nullptr,Benchmarking1) << "update_state: " << (t2 - t1)/1.e9 << "s (from " << t1 << " to " << t2 << "ns), gradient work: " << timer.timing_s() << "s" << std::endl;

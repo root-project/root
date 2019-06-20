@@ -119,10 +119,7 @@ namespace RooFit {
       if (get_manager()->is_master()) {
         // update parameters that changed since last calculation (or creation if first time)
         update_parameters();
-
-        // activate work mode
-        get_manager()->set_work_mode(true);
-
+        
         // master fills queue with tasks
         for (std::size_t ix = 0; ix < N_tasks; ++ix) {
           JobTask job_task(id, ix);
@@ -132,10 +129,7 @@ namespace RooFit {
 
         // wait for task results back from workers to master
         gather_worker_results();
-
-        // end work mode
-        get_manager()->set_work_mode(false);
-
+        
         // put the results in vectors for calling sum_of_kahan_sums (TODO: make a map-friendly sum_of_kahan_sums)
         std::vector<double> results_vec, carrys_vec;
         for (auto const &item : results) {
