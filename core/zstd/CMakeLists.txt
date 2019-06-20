@@ -7,7 +7,7 @@ find_package(ZSTD REQUIRED)
 set(headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/ZipZSTD.hxx)
 set(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/ZipZSTD.cxx)
 
-ROOT_OBJECT_LIBRARY(Zstd ${sources})
+ROOT_OBJECT_LIBRARY(Zstd ${sources} BUILTINS ZSTD)
 target_compile_definitions(Zstd PRIVATE ${ZSTD_DEFINITIONS})
 target_include_directories(Zstd PRIVATE ${ZSTD_INCLUDE_DIR})
 
