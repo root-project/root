@@ -22,8 +22,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTVecOps
 )
 
 if(builtin_vdt)
-  target_link_libraries(ROOTVecOps PUBLIC $<INSTALL_INTERFACE:vdt>)
-  target_include_directories(ROOTVecOps PUBLIC $<INSTALL_INTERFACE:include>)
+  target_link_libraries(ROOTVecOps PRIVATE ${VDT_LIBRARIES})
 elseif(vdt)
   target_link_libraries(ROOTVecOps PUBLIC ${VDT_LIBRARIES})
   target_include_directories(ROOTVecOps PUBLIC ${VDT_INCLUDE_DIRS})
