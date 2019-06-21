@@ -297,7 +297,7 @@ int main(int argc, char **argv)
    if (arg5 < 10)  printev = 10000;
 
    Track::Class()->IgnoreTObjectStreamer();
-      
+
 //         Read case
    if (read) {
       hfile = new TFile(filename.str().c_str());
@@ -315,15 +315,16 @@ int main(int argc, char **argv)
 #ifdef R__HAS_CLOUDFLARE_ZLIB
       else if (comp == 101) expectedSize = 1239527;
 #else
-      else if (comp == 101) expectedSize = 1254957; 
+      else if (comp == 101) expectedSize = 1254957;
 #endif
       else if (comp == 208) expectedSize = 1088187;
       else if (comp == 301) expectedSize = 1265145;
       else if (comp == 404) expectedSize = 1289623;
+      else if (comp == 505) expectedSize = 1156626;
 #ifdef R__HAS_DEFAULT_LZ4
-      else if (comp == 5) expectedSize = 1285037;
+      else if (comp == 6) expectedSize = 1285037;
 #else
-      else if (comp == 5) expectedSize = 1208871;
+      else if (comp == 6) expectedSize = 1208871;
 #endif
 
       if (expectedSize > 0 &&
@@ -333,7 +334,7 @@ int main(int argc, char **argv)
                       " size expected for the input parameters.\n"
                       "The expected size may need tuning as compression "
                       "libraries and other things change.\n";
-         std::cerr << "compression setting = " << comp 
+         std::cerr << "compression setting = " << comp
                    << "  expected compressed TTree size = " << expectedSize
                    << "  actual size = " << tree->GetZipBytes() << std::endl;
          exit(27);
@@ -343,7 +344,7 @@ int main(int argc, char **argv)
          for (ev = 0; ev < nevent; ev++) {
             if (ev%printev == 0) {
                tnew = timer.RealTime();
-               printf("event:%d, rtime=%f s\n",ev,tnew-told);               
+               printf("event:%d, rtime=%f s\n",ev,tnew-told);
                told=tnew;
                timer.Continue();
             }
@@ -589,7 +590,7 @@ int main(int argc, char **argv)
          event->GetUshort()->push_back(3);
          event->GetUshort()->push_back(5);
          //printf("vector size:%d \n",event->GetUshort()->size());
-            
+
          //  Create and Fill the Track objects
          for (Int_t t = 0; t < ntrack; t++) event->AddTrack(random);
 

@@ -32,5 +32,7 @@ compressionTest: ./Event$(ExeSuf) ./libEvent.$(DllSuf)
 	$(CMDECHO)./Event 20 301 1 20  >> Event.read.log
 	$(CMDECHO)./Event 20 404 1  1  >> Event.write.log
 	$(CMDECHO)./Event 20 404 1 20  >> Event.read.log
+	$(CMDECHO)./Event 20 505 1  1  >> Event.write.log
+	$(CMDECHO)./Event 20 505 1 20  >> Event.read.log
 	$(CMDECHO)./Event 20   5 1  1  >> Event.write.log
 	$(CMDECHO)./Event 20   5 1 20  >> Event.read.log
