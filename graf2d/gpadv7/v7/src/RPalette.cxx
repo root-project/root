@@ -68,7 +68,8 @@ RColor RPalette::GetColor(double ordinal)
       if (iColor == fColors.end())
          return fColors.back().fColor;
       // Is iColor-1 closer to ordinal than iColor?
-      if ((iColor - 1)->fOrdinal - ordinal < ordinal - iColor->fOrdinal)
+      if (iColor != fColors.begin()
+	  && (iColor - 1)->fOrdinal - ordinal < ordinal - iColor->fOrdinal)
          return (iColor - 1)->fColor;
       return iColor->fColor;
    }
