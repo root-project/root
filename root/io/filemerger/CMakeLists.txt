@@ -50,6 +50,17 @@ ROOTTEST_ADD_TEST(datagen-hadd-mlz4file34
                      COMMAND ${ROOT_hadd_CMD} -f404 mlz4file3-4.root mfile3.root mfile4.root
                      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                      DEPENDS execMergeMulti)
+
+ROOTTEST_ADD_TEST(datagen-hadd-mzstdfile12
+                     COMMAND ${ROOT_hadd_CMD} -f505 mzstdfile1-2.root mfile1.root mfile2.root
+                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                     DEPENDS execMergeMulti)
+
+ROOTTEST_ADD_TEST(datagen-hadd-mzstdfile34
+                     COMMAND ${ROOT_hadd_CMD} -f505 mzstdfile3-4.root mfile3.root mfile4.root
+                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                     DEPENDS execMergeMulti)
+
 if(ZLIB_CF)
   ROOTTEST_ADD_TEST(merged-zlib
                     PRECMD  ${ROOT_hadd_CMD} -f101 mzlibfile1-4.root mzlibfile1-2.root mzlibfile3-4.root
@@ -83,6 +94,12 @@ elseif(${LZ4_VERSION} VERSION_GREATER_EQUAL "1.7.5")
                   DEPENDS datagen-hadd-mlz4file12
                   DEPENDS datagen-hadd-mlz4file34)
 endif()
+
+ROOTTEST_ADD_TEST(merged-zstd
+                  PRECMD ${ROOT_hadd_CMD} -f505 mzstdfile1-4.root mzstdfile1-2.root mzstdfile3-4.root
+                  COMMAND ${ROOT_root_CMD} -q -l -b "${CMAKE_CURRENT_SOURCE_DIR}/testMergedFile.C(\"mzstdfile1-4.root\",505,4454,20)"
+                  DEPENDS datagen-hadd-mzstdfile12
+                  DEPENDS datagen-hadd-mzstdfile34)
 
 #TBD: add file generation as test fixture
 if(NOT TARGET hsimple)
