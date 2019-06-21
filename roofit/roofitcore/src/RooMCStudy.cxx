@@ -24,9 +24,9 @@ such as 'goodness-of-fit' studies, that involve fitting a PDF
 to multiple toy Monte Carlo sets generated from either same PDF
 or another PDF.
 
-Given a fit PDF and a generator PDF, RooMCStudy can produce
-large numbers of toyMC samples and/or fit these samples
-and accumulate the final parameters of each fit in a dataset.
+Given a fit and a generator PDF (they might be identical), RooMCStudy can produce
+large numbers of toyMC samples and/or fit these samples.
+It accumulates the post-fit parameters of each iteration in a dataset.
 Additional plotting routines simplify the task of plotting
 the distribution of the minimized likelihood, the fitted parameter values,
 fitted error and pull distribution.
