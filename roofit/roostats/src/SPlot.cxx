@@ -132,6 +132,9 @@ SPlot::SPlot(const SPlot &other):
 ////////////////////////////////////////////////////////////////////////////////
 ///Construct a new SPlot instance, calculate sWeights, and include them
 ///in the RooDataSet held by this instance.
+///
+/// The constructor automatically calls AddSWeight() to add s weights to the dataset.
+/// These can be retrieved later using GetSWeight() or GetSDataSet().
 ///\param[in] name Name of the instance.
 ///\param[in] title Title of the instance.
 ///\param[in] data Dataset to fit to.
@@ -156,16 +159,13 @@ SPlot::SPlot(const char* name, const char* title, RooDataSet& data, RooAbsPdf* p
     fSData = (RooDataSet*) &data;
 
   // Add check that yieldsList contains all RooRealVars
-  TIterator* iter = yieldsList.createIterator() ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)iter->Next())) {
-    if (!dynamic_cast<RooRealVar*>(arg)) {
+  for (const auto arg : yieldsList) {
+    if (!dynamic_cast<const RooRealVar*>(arg)) {
       coutE(InputArguments) << "SPlot::SPlot(" << GetName() << ") input argument "
              << arg->GetName() << " is not of type RooRealVar " << endl ;
       throw string(Form("SPlot::SPlot(%s) input argument %s is not of type RooRealVar",GetName(),arg->GetName())) ;
     }
   }
-  delete iter ;
 
   //Construct a new SPlot class,
   //calculate sWeights, and include them
@@ -175,7 +175,7 @@ SPlot::SPlot(const char* name, const char* title, RooDataSet& data, RooAbsPdf* p
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/// Set dataset (if not passed in constructor).
 RooDataSet* SPlot::SetSData(RooDataSet* data)
 {
   if(data)    {
@@ -186,14 +186,17 @@ RooDataSet* SPlot::SetSData(RooDataSet* data)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/// Retrieve s-weighted data.
+/// It does **not** automatically call AddSWeight(). This needs to be done manually.
 RooDataSet* SPlot::GetSDataSet() const
 {
   return fSData;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/// Retrieve an s weight.
+/// \param[in] numEvent Event number to retrieve s weight for.
+/// \param[in] sVariable The yield parameter to retrieve the s weight for.
 Double_t SPlot::GetSWeight(Int_t numEvent, const char* sVariable) const
 {
   if(numEvent > fSData->numEntries() )
@@ -270,8 +273,8 @@ Double_t SPlot::GetSumOfEventSWeight(Int_t numEvent) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Sum the SWeights for a particular specie over all events
-/// This should equal the total (weighted) yield of that specie
+/// Sum the SWeights for a particular species over all events.
+/// This should equal the total (weighted) yield of that species.
 /// This method is intended as a check.
 
 Double_t SPlot::GetYieldFromSWeight(const char* sVariable) const
@@ -313,7 +316,7 @@ Double_t SPlot::GetYieldFromSWeight(const char* sVariable) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return a RooArgList containing the SWeights
+/// Return a RooArgList containing all paramters that have s weights.
 
 RooArgList SPlot::GetSWeightVars() const
 {
@@ -369,6 +372,8 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
 
   RooFit::MsgLevel currentLevel =  RooMsgService::instance().globalKillBelow();
 
+  // Find Parameters in the PDF to be considered fixed when calculating the SWeights
+  // and be sure to NOT include the yields in that list
   RooArgList* constParameters = (RooArgList*)pdf->getParameters(fSData) ;
   constParameters->remove(yieldsTmp, kTRUE, kTRUE);
 
