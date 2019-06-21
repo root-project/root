@@ -153,6 +153,10 @@ class Cpp01Inheritence( MyTestCase ):
 
 ### C++ template tests =======================================================
 class Cpp02TemplateLookup( MyTestCase ):
+   @classmethod
+   def setUpClass(cls):
+      cls.exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
+
    def test01SingleInstantiatedTemplate( self ):
       """Test data member access for a templated class"""
 
@@ -222,7 +226,15 @@ class Cpp02TemplateLookup( MyTestCase ):
 
     # note that the function and template arguments are reverted
       self.assertRaises( TypeError, m.GetSize2( 'char', 'long' ), 'a', 1 )
-      self.assertEqual( m.GetSize2( 'char', 'long' )( 1, 'a' ), m.GetCharSize() - m.GetLongSize() )
+      if self.exp_pyroot:
+         # In the new Cppyy, we need to use square brackets in this case for
+         # the bindings to know we are explicitly instantiating for char,long.
+         # Otherwise, the templated parameters are just (mis)interpreted as
+         # strings and a call to the string,string instantiation is made.
+         inst = m.GetSize2['char', 'long']
+      else:
+         inst = m.GetSize2('char', 'long')
+      self.assertEqual(inst( 1, 'a' ), m.GetCharSize() - m.GetLongSize() )
       self.assertEqual( m.GetSize2(ROOT.Long(256), 1.), m.GetDoubleSize() - m.GetLongSize() )
 
    def test06OverloadedTemplateMemberFunctions( self ):
@@ -283,7 +295,15 @@ class Cpp02TemplateLookup( MyTestCase ):
       m = MyTemplatedMethodClass()
 
       # Test the templated overload
-      self.assertEqual(m.GetSizeNEI('char')('c'), m.GetCharSize())
+      if self.exp_pyroot:
+         # In the new Cppyy, we need to use square brackets in this case for
+         # the bindings to know we are explicitly instantiating for char.
+         # Otherwise, the templated parameter is just (mis)interpreted as
+         # string and a call to the string instantiation is made.
+         inst = m.GetSizeNEI['char']
+      else:
+         inst = m.GetSizeNEI('char')
+      self.assertEqual(inst('c'), m.GetCharSize())
       self.assertEqual(m.GetSizeNEI(int)(1), m.GetIntSize())
 
       # Test the non-templated overload (must have been added to
@@ -318,22 +338,33 @@ class Cpp02TemplateLookup( MyTestCase ):
       v = ROOT.std.vector("float")()
       v.push_back(val)
 
+      if self.exp_pyroot:
+         inst_float = f["float"]
+         inst_float_t = f["Float_t"]
+         inst_vec_float = f["vector<float>"]
+         inst_std_vec_float = f["std::vector<float>"]
+      else:
+         inst_float = f("float")
+         inst_float_t = f("Float_t")
+         inst_vec_float = f("vector<float>")
+         inst_std_vec_float = f("std::vector<float>")
+
       # Test basic type
-      self.assertEqual(f("float")(val), val)
-      self.assertEqual(type(f("float")(val)), type(val))
+      self.assertEqual(inst_float(val), val)
+      self.assertEqual(type(inst_float(val)), type(val))
 
       # Test typedef resolution
-      self.assertEqual(f("Float_t")(val), val)
-      self.assertEqual(type(f("Float_t")(val)), type(val))
+      self.assertEqual(inst_float_t(val), val)
+      self.assertEqual(type(inst_float_t(val)), type(val))
 
       # Test no namespace specification
-      self.assertEqual(f("vector<float>")(v)[0], val)
-      self.assertEqual(type(f("vector<float>")(v)), type(v))
+      self.assertEqual(inst_vec_float(v)[0], val)
+      self.assertEqual(type(inst_vec_float(v)), type(v))
 
       # Test incomplete type specification
       # Complete type is std::vector<float, std::allocator<float>>
-      self.assertEqual(f("std::vector<float>")(v)[0], val)
-      self.assertEqual(type(f("std::vector<float>")(v)), type(v))
+      self.assertEqual(inst_std_vec_float(v)[0], val)
+      self.assertEqual(type(inst_std_vec_float(v)), type(v))
 
 
 ### C++ by-non-const-ref arguments tests =====================================
