@@ -207,7 +207,11 @@ class Cpp02TemplateLookup( MyTestCase ):
       try:
          m.GetSize()
       except TypeError as e:
-         self.assert_( "must be explicit" in str(e) )
+         if self.exp_pyroot:
+            # The error message has changed in new Cppyy
+            self.assert_( "cannot resolve method template call" in str(e) )
+         else:
+            self.assert_( "must be explicit" in str(e) )
 
       self.assertEqual( m.GetSize( 'char' )(),   m.GetCharSize() )
       self.assertEqual( m.GetSize( int )(),      m.GetIntSize() )
@@ -458,6 +462,10 @@ class Cpp04HandlingAbstractClasses( MyTestCase ):
 
 ### Return by reference should call assignment operator ======================
 class Cpp05AssignToRefArbitraryClass( MyTestCase ):
+   @classmethod
+   def setUpClass(cls):
+      cls.exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
+
    def test1AssignToReturnByRef( self ):
       """Test assignment to an instance returned by reference"""
       
@@ -485,7 +493,11 @@ class Cpp05AssignToRefArbitraryClass( MyTestCase ):
       try:
          a[0] = RefTesterNoAssign()
       except TypeError as e:
-         self.assert_( 'can not assign' in str(e) )
+         if self.exp_pyroot:
+            # Message has changed in new Cppyy
+            self.assert_( 'cannot assign' in str(e) )
+         else:
+            self.assert_( 'can not assign' in str(e) )
 
 
 ### Check availability of math conversions ===================================
