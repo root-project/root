@@ -174,9 +174,6 @@ namespace RooFit {
 //#endif
       vx_fVal_cache = vx;
       fVal = (*fFunction)(vx_external.data());  // value of function at given points
-      if (MultiProcess::TaskManager::is_instantiated()) {
-        std::cout << std::hexfloat << "fVal on worker " << MultiProcess::TaskManager::instance()->get_worker_id() << " = " << fVal << std::defaultfloat << std::endl;
-      }
 //#ifndef NDEBUG
 //      std::cout << "NumericalDerivatorMinuit2::setup_differentiate, fVal evaluations: " << fVal_eval_counter << std::endl;
 //#endif

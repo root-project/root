@@ -119,7 +119,7 @@ namespace RooFit {
       if (get_manager()->is_master()) {
         // update parameters that changed since last calculation (or creation if first time)
         update_parameters();
-        
+
         // master fills queue with tasks
         for (std::size_t ix = 0; ix < N_tasks; ++ix) {
           JobTask job_task(id, ix);
@@ -129,7 +129,7 @@ namespace RooFit {
 
         // wait for task results back from workers to master
         gather_worker_results();
-        
+
         // put the results in vectors for calling sum_of_kahan_sums (TODO: make a map-friendly sum_of_kahan_sums)
         std::vector<double> results_vec, carrys_vec;
         for (auto const &item : results) {
@@ -184,7 +184,6 @@ namespace RooFit {
 
     void NLLVar::evaluate_task(std::size_t task) {
       assert(get_manager()->is_worker());
-      std::cout << "evaluate task " << task << " on worker " << get_manager()->get_worker_id() << std::endl;
       std::size_t N_events = static_cast<std::size_t>(_data->numEntries());
       // "default" values (all events in one task)
       std::size_t first = task;

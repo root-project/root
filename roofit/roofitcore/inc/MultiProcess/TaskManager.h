@@ -125,15 +125,12 @@ namespace RooFit {
 
       template<typename T, typename ... Ts>
       void send_from_worker_to_queue(T item, Ts ... items) {
-        auto get_time = [](){using namespace std::chrono; return duration_cast<nanoseconds>(high_resolution_clock::now().time_since_epoch()).count();};
-        std::cout << "send " << item << " from worker to queue on PID " << getpid() << " at " << get_time() << std::endl;
         try {
           zmqSvc().send(*this_worker_qw_socket, item);
         } catch (zmq::error_t& e) {
           std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
           throw;
         };
-//        *this_worker_pipe << item;
 //      if (sizeof...(items) > 0) {  // this will only work with if constexpr, c++17
         send_from_worker_to_queue(items...);
       }
@@ -142,23 +139,17 @@ namespace RooFit {
       value_t receive_from_worker_on_queue(std::size_t this_worker_id) {
         try {
           auto value = zmqSvc().receive<value_t>(*qw_sockets[this_worker_id]);
-          auto get_time = [](){using namespace std::chrono; return duration_cast<nanoseconds>(high_resolution_clock::now().time_since_epoch()).count();};
-          std::cout << "receive " << value << " from worker on queue on PID " << getpid() << " at " << get_time() << std::endl;
           return value;
         } catch (zmq::error_t& e) {
           std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
           throw;
         };
-//        *worker_pipes[this_worker_id] >> value;
       }
 
       void send_from_queue_to_worker(std::size_t this_worker_id);
 
       template<typename T, typename ... Ts>
       void send_from_queue_to_worker(std::size_t this_worker_id, T item, Ts ... items) {
-//        *worker_pipes[this_worker_id] << item;
-        auto get_time = [](){using namespace std::chrono; return duration_cast<nanoseconds>(high_resolution_clock::now().time_since_epoch()).count();};
-        std::cout << "send " << item << " from queue to worker " << this_worker_id << " on PID " << getpid() << " at " << get_time() << std::endl;
         try {
           zmqSvc().send(*qw_sockets[this_worker_id], item);
         } catch (zmq::error_t& e) {
@@ -173,14 +164,11 @@ namespace RooFit {
       value_t receive_from_queue_on_worker() {
         try {
           auto value = zmqSvc().receive<value_t>(*this_worker_qw_socket);
-          auto get_time = [](){using namespace std::chrono; return duration_cast<nanoseconds>(high_resolution_clock::now().time_since_epoch()).count();};
-          std::cout << "receive " << value << " from queue on worker " << worker_id << " on PID " << getpid() << " at " << get_time() << std::endl;
           return value;
         } catch (zmq::error_t& e) {
           std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
           throw;
         };
-//        *this_worker_pipe >> value;
       }
 
 
@@ -190,9 +178,6 @@ namespace RooFit {
 
       template<typename T, typename ... Ts>
       void send_from_queue_to_master(T item, Ts ... items) {
-//        *queue_pipe << item;
-        auto get_time = [](){using namespace std::chrono; return duration_cast<nanoseconds>(high_resolution_clock::now().time_since_epoch()).count();};
-        std::cout << "send " << item << " from queue to master on PID " << getpid() << " at " << get_time() << std::endl;
         try {
           zmqSvc().send(*mq_socket, item);
         } catch (zmq::error_t& e) {
@@ -207,14 +192,11 @@ namespace RooFit {
       value_t receive_from_queue_on_master() {
         try {
           auto value = zmqSvc().receive<value_t>(*mq_socket);
-          auto get_time = [](){using namespace std::chrono; return duration_cast<nanoseconds>(high_resolution_clock::now().time_since_epoch()).count();};
-          std::cout << "receive " << value << " from queue on master on PID " << getpid() << " at " << get_time() << std::endl;
           return value;
         } catch (zmq::error_t& e) {
           std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
           throw;
         };
-//        *queue_pipe >> value;
       }
 
       void send_from_master_to_queue();

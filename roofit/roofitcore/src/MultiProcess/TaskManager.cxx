@@ -175,7 +175,10 @@ namespace RooFit {
 
       if (cpu_pinning) {
         #if defined(__APPLE__)
-        if (is_master()) std::cerr << "WARNING: CPU affinity cannot be set on macOS, continuing...\n";
+        static bool affinity_warned = false;
+        if (is_master() & !affinity_warned) {
+          ooccoutD(static_cast<RooAbsArg*>(nullptr),Eval) << "CPU affinity cannot be set on macOS";
+        }
         #elif defined(_WIN32)
         if (is_master()) std::cerr << "WARNING: CPU affinity setting not implemented on Windows, continuing...\n";
         #else
@@ -209,7 +212,7 @@ namespace RooFit {
 
 
     TaskManager::~TaskManager() {
-      std::cerr << "\ndestroying TaskManager on PID " << getpid() << (is_worker() ? " worker" : (is_queue()? " queue" : " master")) << '\n';
+      ooccoutD(static_cast<RooAbsArg*>(nullptr),Eval) << "destroying TaskManager on PID " << getpid() << (is_worker() ? " worker" : (is_queue()? " queue" : " master"));
       // The TM instance gets created by some Job. Once all Jobs are gone, the
       // TM will get destroyed. In this case, the job_objects map should have
       // been emptied. This check makes sure:
@@ -585,7 +588,7 @@ namespace RooFit {
     bool TaskManager::is_worker() {
       return !(_is_master || _is_queue);
     }
-    
+
     std::size_t TaskManager::get_worker_id() {
       return worker_id;
     }

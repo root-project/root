@@ -16,6 +16,8 @@
 #include <sys/wait.h>  // waitpid
 #include <string>
 
+#include <RooMsgService.h>
+
 #include <MultiProcess/util.h>
 
 namespace RooFit {
@@ -36,7 +38,7 @@ namespace RooFit {
           );
 
       if (patience < 1) {
-        std::cerr << "Had to send PID " << child_pid << " " << (-patience+1) << " SIGKILLs\n";
+        ooccoutD(static_cast<RooAbsArg*>(nullptr),Eval) << "Had to send PID " << child_pid << " " << (-patience+1) << " SIGKILLs";
       }
 
       if (0 != status) {
