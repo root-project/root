@@ -3562,11 +3562,16 @@ static ETupleOrdering IsTupleAscending()
    }
 }
 
-std::string AlternateTuple(const char *classname)
+static std::string AlternateTuple(const char *classname, const cling::LookupHelper& lh)
 {
    TClassEdit::TSplitType tupleContent(classname);
    std::string alternateName = "TEmulatedTuple";
    alternateName.append( classname + 5 );
+
+   std::string fullname = "ROOT::Internal::" + alternateName;
+   if (lh.findScope(fullname, cling::LookupHelper::NoDiagnostics,
+                    /*resultType*/nullptr, /* intantiateTemplate= */ false))
+      return fullname;
 
    std::string guard_name;
    ROOT::TMetaUtils::GetCppName(guard_name,alternateName.c_str());
@@ -3651,9 +3656,9 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
    // Handle the special case of 'tuple' where we ignore the real implementation
    // details and just overlay a 'simpler'/'simplistic' version that is easy
    // for the I/O to understand and handle.
-   if (!(fCxxModulesEnabled && IsFromRootCling()) && strncmp(cl->GetName(),"tuple<",strlen("tuple<"))==0) {
+   if (strncmp(cl->GetName(),"tuple<",strlen("tuple<"))==0) {
 
-      name = AlternateTuple(cl->GetName());
+      name = AlternateTuple(cl->GetName(), fInterpreter->getLookupHelper());
 
    }
 
