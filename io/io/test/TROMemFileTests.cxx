@@ -70,7 +70,7 @@ TEST(TROMemFile, RealNoMemCopy)
    std::string expected = "Hello from TMemFile!";
    // Include the 0 terminator to later compare the strings.
    size_t expected_size = expected.size() + 1;
-   TMemFile::ExternalDataRange_t externalDataRange{expected.c_str(), expected_size};
+   TMemFile::ZeroCopyView_t externalDataRange{expected.c_str(), expected_size};
    TMemFile rosmf("hello.bin?filetype=raw", externalDataRange);
 
    std::vector<char> seen;

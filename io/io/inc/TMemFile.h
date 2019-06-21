@@ -20,10 +20,10 @@ class TMemFile : public TFile {
 public:
    using ExternalDataPtr_t = std::shared_ptr<const std::vector<char>>;
    /// A read-only memory range which we do not control.
-   struct ExternalDataRange_t {
+   struct ZeroCopyView_t {
       const char *fStart;
       const size_t fSize;
-      explicit ExternalDataRange_t(const char * start, const size_t size) : fStart(start), fSize(size) {}
+      explicit ZeroCopyView_t(const char * start, const size_t size) : fStart(start), fSize(size) {}
    };
 
 protected:
@@ -91,7 +91,7 @@ public:
             Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose, Long64_t defBlockSize = 0LL);
    TMemFile(const char *name, char *buffer, Long64_t size, Option_t *option="", const char *ftitle="", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose);
    TMemFile(const char *name, ExternalDataPtr_t data);
-   TMemFile(const char *name, const ExternalDataRange_t &datarange);
+   TMemFile(const char *name, const ZeroCopyView_t &datarange);
    TMemFile(const char *name, std::unique_ptr<TBufferFile> buffer);
    TMemFile(const TMemFile &orig);
    virtual ~TMemFile();

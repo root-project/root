@@ -115,7 +115,7 @@ TMemFile::EMode TMemFile::ParseOption(Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor to create a TMemFile re-using external C-Style storage.
 
-TMemFile::TMemFile(const char *path, const ExternalDataRange_t &datarange)
+TMemFile::TMemFile(const char *path, const ZeroCopyView_t &datarange)
    : TFile(path, "WEB", "read-only TMemFile", 0 /*compress*/),
      fBlockList(reinterpret_cast<UChar_t *>(const_cast<char *>(datarange.fStart)), datarange.fSize),
      fIsOwnedByROOT(false), fSize(datarange.fSize), fSysOffset(0), fBlockSeek(&(fBlockList)), fBlockOffset(0)
@@ -138,7 +138,7 @@ TMemFile::TMemFile(const char *path, const ExternalDataRange_t &datarange)
 /// Constructor to create a TMemFile re-using external storage.
 
 TMemFile::TMemFile(const char *path, ExternalDataPtr_t data)
-   : TMemFile(path, ExternalDataRange_t(data->data(), data->size()))
+   : TMemFile(path, ZeroCopyView_t(data->data(), data->size()))
 {
    fExternalData = data;
 }
@@ -147,7 +147,7 @@ TMemFile::TMemFile(const char *path, ExternalDataPtr_t data)
 /// Constructor to create a read-only TMemFile using an std::unique_ptr<TBufferFile>
 
 TMemFile::TMemFile(const char *name, std::unique_ptr<TBufferFile> buffer)
-   : TMemFile(name, ExternalDataRange_t(buffer->Buffer(), (size_t)buffer->BufferSize()))
+   : TMemFile(name, ZeroCopyView_t(buffer->Buffer(), (size_t)buffer->BufferSize()))
 {
    assert(!fD && !fWritable);
 

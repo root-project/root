@@ -1670,7 +1670,7 @@ bool TCling::LoadPCM(const std::string &pcmFileNameFullPath)
    auto pendingRdict = fPendingRdicts.find(pcmFileNameFullPath);
    if (pendingRdict != fPendingRdicts.end()) {
       llvm::StringRef pcmContent = pendingRdict->second;
-      TMemFile::ExternalDataRange_t range{pcmContent.data(), pcmContent.size()};
+      TMemFile::ZeroCopyView_t range{pcmContent.data(), pcmContent.size()};
       std::string RDictFileOpts = pcmFileNameFullPath + "?filetype=pcm";
       TMemFile pcmMemFile(RDictFileOpts.c_str(), range);
 
