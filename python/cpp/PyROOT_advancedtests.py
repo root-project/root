@@ -265,7 +265,12 @@ class Cpp02TemplateLookup( MyTestCase ):
       self.assertEqual( len(dir(MyTemplatedMethodClass)), nd )
 
     # use existing explicit instantiations
-      self.assertEqual( m.GetSizeOL( float )( 3.14 ),  m.GetFloatSize() )
+      if self.exp_pyroot:
+         # New cppyy: use bracket syntax for explicit instantiation
+         inst = m.GetSizeOL[float]
+      else:
+         inst = m.GetSizeOL(float)
+      self.assertEqual( inst( 3.14 ),  m.GetFloatSize() )
       self.assertEqual( m.GetSizeOL( 3.14 ),           m.GetDoubleSize() )
       self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + 2)
 
@@ -309,11 +314,14 @@ class Cpp02TemplateLookup( MyTestCase ):
          # the bindings to know we are explicitly instantiating for char.
          # Otherwise, the templated parameter is just (mis)interpreted as
          # string and a call to the string instantiation is made.
-         inst = m.GetSizeNEI['char']
+         inst_char = m.GetSizeNEI['char']
+         # This instantiation also needs square brackets in new Cppyy
+         inst_int = m.GetSizeNEI[int]
       else:
-         inst = m.GetSizeNEI('char')
-      self.assertEqual(inst('c'), m.GetCharSize())
-      self.assertEqual(m.GetSizeNEI(int)(1), m.GetIntSize())
+         inst_char = m.GetSizeNEI('char')
+         inst_int = m.GetSizeNEI(int)
+      self.assertEqual(inst_char('c'), m.GetCharSize())
+      self.assertEqual(inst_int(1), m.GetIntSize())
 
       # Test the non-templated overload (must have been added to
       # the template proxy too)
