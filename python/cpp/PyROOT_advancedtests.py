@@ -213,14 +213,34 @@ class Cpp02TemplateLookup( MyTestCase ):
          else:
             self.assert_( "must be explicit" in str(e) )
 
-      self.assertEqual( m.GetSize( 'char' )(),   m.GetCharSize() )
-      self.assertEqual( m.GetSize( int )(),      m.GetIntSize() )
-      self.assertEqual( m.GetSize( 'long' )(),   m.GetLongSize() )
-      self.assertEqual( m.GetSize( float )(),    m.GetFloatSize() )
-      self.assertEqual( m.GetSize( 'double' )(), m.GetDoubleSize() )
+      if self.exp_pyroot:
+         # New cppyy needs square brackets for explicit instantiation here,
+         # otherwise it tries to call the template proxy with the passed
+         # argument and it fails, since no instantiation is available. 
+         inst_char = m.GetSize['char']
+         inst_int = m.GetSize[int]
+         inst_long = m.GetSize['long']
+         inst_float = m.GetSize[float]
+         inst_double = m.GetSize['double']
+         inst_my_vec_double = m.GetSize['MyDoubleVector_t']
+         inst_vec_double = m.GetSize['vector<double>']
+      else:
+         inst_char = m.GetSize('char')
+         inst_int = m.GetSize(int)
+         inst_long = m.GetSize('long')
+         inst_float = m.GetSize(float)
+         inst_double = m.GetSize('double')
+         inst_my_vec_double = m.GetSize('MyDoubleVector_t')
+         inst_vec_double = m.GetSize('vector<double>')
 
-      self.assertEqual( m.GetSize( 'MyDoubleVector_t' )(), m.GetVectorOfDoubleSize() )
-      self.assertEqual( m.GetSize( 'vector<double>' )(), m.GetVectorOfDoubleSize() )
+      self.assertEqual( inst_char(),   m.GetCharSize() )
+      self.assertEqual( inst_int(),      m.GetIntSize() )
+      self.assertEqual( inst_long(),   m.GetLongSize() )
+      self.assertEqual( inst_float(),    m.GetFloatSize() )
+      self.assertEqual( inst_double(), m.GetDoubleSize() )
+
+      self.assertEqual( inst_my_vec_double(), m.GetVectorOfDoubleSize() )
+      self.assertEqual( inst_vec_double(), m.GetVectorOfDoubleSize() )
 
    def test05TemplateMemberFunctions( self ):
       """Test template member functions lookup and calls (set 2)"""
