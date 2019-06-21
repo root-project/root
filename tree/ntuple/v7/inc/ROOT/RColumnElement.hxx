@@ -46,10 +46,10 @@ protected:
    /// Points to valid C++ data, either a single value or an array of values
    void* fRawContent;
    /// Size of the C++ value pointed to by fRawContent (not necessarily equal to the on-disk element size)
-   const unsigned int fSize;
+   unsigned int fSize;
 
    /// Indicates that *fRawContent is bitwise identical to the physical column element
-   const bool fIsMappable;
+   bool fIsMappable;
 
    virtual void DoSerialize(void* /* destination */, std::size_t /*count*/) const { }
    virtual void DoDeserialize(void* /* source */, std::size_t /*count*/) const { }
