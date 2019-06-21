@@ -241,9 +241,10 @@ class Cpp02TemplateLookup( MyTestCase ):
          # Cppyy's Long will be deprecated in favour of ctypes.c_long
          # https://bitbucket.org/wlav/cppyy/issues/101
          long_par = ctypes.c_long(256).value
+         self.assertEqual( m.GetSize2(long_par, 1.), m.GetDoubleSize() - m.GetIntSize() )
       else:
          long_par = ROOT.Long(256)
-      self.assertEqual( m.GetSize2(long_par, 1.), m.GetFloatSize() - m.GetLongSize() )
+         self.assertEqual( m.GetSize2(long_par, 1.), m.GetDoubleSize() - m.GetLongSize() )
 
    def test06OverloadedTemplateMemberFunctions( self ):
       """Test overloaded template member functions lookup and calls"""
