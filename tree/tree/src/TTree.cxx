@@ -8813,6 +8813,16 @@ void TTree::SetFileNumber(Int_t number)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set all the branches in this TTree to be in decomposed object mode
 /// (also known as MakeClass mode).
+///
+/// For MakeClass mode 0, the TTree expects the address where the data is stored
+/// to be set by either the user or the TTree to the address of a full object
+/// through the top level branch.
+/// For MakeClass mode 1, this address is expected to point to a numerical type
+/// or C-style array (variable or not) of numerical type, representing the
+/// primitive data members.
+/// The function's primary purpose is to allow the user to access the data
+/// directly with numerical type variable rather than having to have the original
+/// set of classes (or a reproduction thereof).
 
 void TTree::SetMakeClass(Int_t make)
 {
