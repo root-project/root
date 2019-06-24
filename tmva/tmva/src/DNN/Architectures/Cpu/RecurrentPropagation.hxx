@@ -1,6 +1,5 @@
 // @(#)root/tmva/tmva/dnn:$Id$
 // Author: Saurav Shekhar 23/06/17
-
 /*************************************************************************
  * Copyright (C) 2017, Saurav Shekhar                                    *
  * All rights reserved.                                                  *
@@ -8,15 +7,13 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
 /////////////////////////////////////////////////////////////////////
 // Implementation of the functions required for the forward and    //
 // backward propagation of activations through a recurrent neural  //
 // network in the TCpu architecture                                //
 /////////////////////////////////////////////////////////////////////
-
-
 #include "TMVA/DNN/Architectures/Cpu.h"
+#include "TMVA/DNN/Architectures/Cpu/Blas.h"
 
 namespace TMVA
 {
@@ -36,7 +33,6 @@ auto TCpu<AFloat>::RecurrentLayerBackward(TCpuMatrix<AFloat> & state_gradients_b
                                           TCpuMatrix<AFloat> & input_gradient)
 -> TCpuMatrix<AFloat> &
 {
-
    // std::cout << "Recurrent Propo" << std::endl;
    // TMVA_DNN_PrintTCpuMatrix(df,"DF");
    // TMVA_DNN_PrintTCpuMatrix(state_gradients_backward,"State grad");
@@ -49,10 +45,8 @@ auto TCpu<AFloat>::RecurrentLayerBackward(TCpuMatrix<AFloat> & state_gradients_b
 
    // Input gradients.
    if (input_gradient.GetNoElements() > 0) Multiply(input_gradient, df, weights_input);
-
    // State gradients.
    if (state_gradients_backward.GetNoElements() > 0) Multiply(state_gradients_backward, df, weights_state);
-
    // compute the gradients
    // Perform the operation in place by readding the result on the same gradient matrix
    // e.g. W += D * X
@@ -64,19 +58,15 @@ auto TCpu<AFloat>::RecurrentLayerBackward(TCpuMatrix<AFloat> & state_gradients_b
    if (state_weight_gradients.GetNoElements() > 0) {
       TransposeMultiply(state_weight_gradients, df, state, 1. , 1. ); // H x B . B x H
    }
-
    // Bias gradients.
    if (bias_gradients.GetNoElements() > 0) {
       SumColumns(bias_gradients, df, 1., 1.);  // could be probably do all here
    }
-
    //std::cout << "RecurrentPropo: end " << std::endl;
-
    // TMVA_DNN_PrintTCpuMatrix(state_gradients_backward,"State grad");
    // TMVA_DNN_PrintTCpuMatrix(input_weight_gradients,"input w grad");
    // TMVA_DNN_PrintTCpuMatrix(bias_gradients,"bias grad");
    // TMVA_DNN_PrintTCpuMatrix(input_gradient,"input grad");
-
    return input_gradient;
 }
 
@@ -137,15 +127,12 @@ auto TCpu<AFloat>::LSTMLayerBackward(TCpuMatrix<AFloat> & state_gradients_backwa
   Hadamard(candidate_gradient, cell_gradient);
   Hadamard(candidate_gradient, fInput);
   Hadamard(candidate_gradient, dc);
-
   Hadamard(input_gradient, cell_gradient);
   Hadamard(input_gradient, fCandidate);
   Hadamard(input_gradient, dci);
-
   Hadamard(forget_gradient, cell_gradient);
   Hadamard(forget_gradient, fInput);
   Hadamard(candidate_gradient, dc);
-
   Hadamard(cell_gradient, fForget);
   Copy(cell_gradient, cell_gradients_backward);
   */
