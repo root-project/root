@@ -92,7 +92,7 @@ public:
    std::unique_ptr<REntry> CreateEntry();
 };
 
-} // namespace Exerimental
+} // namespace Experimental
 } // namespace ROOT
 
 #endif

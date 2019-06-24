@@ -24,6 +24,7 @@
 #include <ROOT/RStringView.hxx>
 #include <ROOT/RVec.hxx>
 #include <ROOT/TypeTraits.hxx>
+//#include <ROOT/RFieldVisitor.hxx>
 
 #include <TGenericClassInfo.h>
 #include <TError.h>
@@ -47,6 +48,7 @@ class RCollectionNTuple;
 class REntry;
 class RNTupleModel;
 class RFieldCollection;
+class RNTupleVisitor;
 
 namespace Detail {
 
@@ -66,6 +68,7 @@ The field knows based on its type and the field name the type(s) and name(s) of 
 // clang-format on
 class RFieldBase {
    friend class ROOT::Experimental::RFieldCollection; // to change the field names when collections are attached
+    //friend class ROOT::Experimental::TNtuplePrintVisitor;
 private:
    /// The field name is a unique within a tree and also the basis for the column name(s)
    std::string fName;
@@ -75,6 +78,8 @@ private:
    ENTupleStructure fStructure;
    /// A field on a trivial type that maps as-is to a single column
    bool fIsSimple;
+   /// First Field in NTuple has Order 0, the next Order 1, etc. Value set by Attach()
+   int fOrder = -1;
 
 protected:
    /// Collections and classes own sub fields
@@ -217,8 +222,13 @@ public:
 
    RIterator begin();
    RIterator end();
-};
+   virtual void AcceptVisitor(RNTupleVisitor &fVisitor) const;
+   //virtual void Accept(RNTupleVisitor fVisitor, int index);
+   int getOrder() {return fOrder;}
+    ///auto getSubfields() {return fSubFields;}
 
+
+  };
 } // namespace Detail
 
 /// The container field for a tree model, which itself has no physical representation
@@ -226,6 +236,8 @@ class RFieldRoot : public Detail::RFieldBase {
 public:
    RFieldRoot() : Detail::RFieldBase("", "", ENTupleStructure::kRecord, false /* isSimple */) {}
    RFieldBase* Clone(std::string_view newName);
+    /*
+    friend void ROOT::Experimental::TNtuplePrintVisitor::visitNtuple(ROOT::Experimental::RNTupleReader* fReader); /// To print list of branches*/
 
    void DoGenerateColumns() final {}
    unsigned int GetNColumns() const final { return 0; }
@@ -236,6 +248,8 @@ public:
 
    /// Generates managed values for the top-level sub fields
    REntry* GenerateEntry();
+   ///void AcceptVisitor(RPrintVisitor fPrintVisitor) override;
+    virtual void AcceptVisitor(RNTupleVisitor &fVisitor) const;
 };
 
 /// The field for a class with dictionary
@@ -610,6 +624,8 @@ public:
    }
    size_t GetValueSize() const final { return sizeof(std::string); }
    void CommitCluster() final;
+    //void Accept(RNTupleVisitor fVisitor, int index);
+    //void Accept(RPrintVisitor fPrintVisitor, int index) { fPrintVisitor.visitField<std::string>(this, index);}
 };
 
 

@@ -20,6 +20,7 @@
 #include <ROOT/RFieldValue.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RFieldVisitor.hxx>
 
 #include <TClass.h>
 #include <TCollection.h>
@@ -126,6 +127,7 @@ void ROOT::Experimental::Detail::RFieldBase::Attach(
 {
    child->fParent = this;
    fSubFields.emplace_back(std::move(child));
+   fOrder = fSubFields.size();
 }
 
 std::string ROOT::Experimental::Detail::RFieldBase::GetLeafName(const std::string &fullName)
@@ -158,6 +160,28 @@ void ROOT::Experimental::Detail::RFieldBase::ConnectColumns(RPageStorage *pageSt
       column->Connect(pageStorage);
    }
 }
+/*
+void ROOT::Experimental::Detail::RFieldBase::AcceptVisitor(RNTupleVisitor fVisitor) {
+    //fPrintVisitor.visitField(this);
+    for(std::size_t i = 0; i < fSubFields.size(); ++i) {
+        //std::cout << "Calling for each loop\n";
+        (*fSubFields.at(i)).Accept(fVisitor, i);
+    }
+}
+*/
+void ROOT::Experimental::Detail::RFieldBase::AcceptVisitor (RNTupleVisitor &fVisitor) const {
+    fVisitor.visitField(*this);
+}
+void ROOT::Experimental::RFieldRoot::AcceptVisitor (RNTupleVisitor &fVisitor) const {
+    fVisitor.visitField(*this);
+}
+/*
+void ROOT::Experimental::Detail::RFieldRoot::AcceptVisitor(RPrintVisitor fPrintVisitor) {
+    fPrintVisitor.visitField(this);
+}*/
+
+//void ROOT::Experimental::RField<std::string, void>::Accept(RNTupleVisitor fVisitor, int index) { fVisitor.visitField(this, index);}
+
 
 ROOT::Experimental::Detail::RFieldBase::RIterator ROOT::Experimental::Detail::RFieldBase::begin()
 {
@@ -169,6 +193,12 @@ ROOT::Experimental::Detail::RFieldBase::RIterator ROOT::Experimental::Detail::RF
 {
    return RIterator(this, -1);
 }
+
+/*
+ * NTupleSize_t GetNItems() {
+ *   return 1; // missing, to be implemented later.
+ * }
+ */
 
 
 //-----------------------------------------------------------------------------
