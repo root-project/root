@@ -16,6 +16,7 @@
 #ifndef ROOT7_RNTuple
 #define ROOT7_RNTuple
 
+//#include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RNTupleView.hxx>
@@ -30,6 +31,7 @@ namespace Experimental {
 
 class REntry;
 class RNTupleModel;
+//class RPrintVisitor;
 
 namespace Detail {
 class RPageSink;
@@ -131,6 +133,16 @@ public:
    NTupleSize_t GetNEntries() { return fNEntries; }
 
    std::string GetInfo(const ENTupleInfo what = ENTupleInfo::kSummary);
+   
+    /// Print() and Accept() are used for printing a detailed summary of the ntuple.
+    void Print();
+    /*
+   void Accept(ROOT::Experimental::VBaseNtupleVisitor &fVisitor);*/
+    std::string GetName() {
+        return fSource->GetDescriptor().GetName();
+    }
+    
+   //const auto fSourceGetter() {return fSource;}
 
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the ntuple.
    /// On I/O errors, raises an expection.
