@@ -29,6 +29,7 @@ allows a simple partial implementation for new OS'es.
 #include <algorithm>
 #include <sys/stat.h>
 
+#include <ROOT/FoundationUtils.hxx>
 #include "Riostream.h"
 #include "TSystem.h"
 #include "TApplication.h"
@@ -3551,9 +3552,11 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       if (verboseLevel > 3 && !AccessPathName(moduleMapFullPath))
          ::Info("ACLiC", "File %s already exists!", moduleMapFullPath.Data());
 
+      std::string curDir = ROOT::FoundationUtils::GetCurrentDir();
+      std::string relative_path = ROOT::FoundationUtils::MakePathRelative(filename_fullpath.Data(), curDir);
       std::ofstream moduleMapFile(moduleMapFullPath, std::ios::out);
       moduleMapFile << "module \"" << moduleName << "\" {" << std::endl;
-      moduleMapFile << "  header \"" << filename_fullpath << "\"" << std::endl;
+      moduleMapFile << "  header \"" << relative_path << "\"" << std::endl;
       moduleMapFile << "  export *" << std::endl;
       moduleMapFile << "  link \"" << libname_ext << "\"" << std::endl;
       moduleMapFile << "}" << std::endl;

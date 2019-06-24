@@ -19,6 +19,7 @@ const char *shortHelp =
 
 #include "RConfigure.h"
 #include <ROOT/RConfig.hxx>
+#include <ROOT/FoundationUtils.hxx>
 
 #include <iostream>
 #include <iomanip>
@@ -187,42 +188,6 @@ static void EmitEnums(const std::vector<const clang::EnumDecl *> &enumvec)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-static void GetCurrentDirectory(std::string &output)
-{
-   char fixedLength[1024];
-   char *currWorkDir = fixedLength;
-   size_t len = 1024;
-   char *result = currWorkDir;
-
-   do {
-      if (result == 0) {
-         len = 2 * len;
-         if (fixedLength != currWorkDir) {
-            delete [] currWorkDir;
-         }
-         currWorkDir = new char[len];
-      }
-#ifdef WIN32
-      result = ::_getcwd(currWorkDir, len);
-#else
-      result = getcwd(currWorkDir, len);
-#endif
-   } while (result == 0 && errno == ERANGE);
-
-   output = currWorkDir;
-   output += '/';
-#ifdef WIN32
-   // convert backslashes into forward slashes
-   std::replace(output.begin(), output.end(), '\\', '/');
-#endif
-
-   if (fixedLength != currWorkDir) {
-      delete [] currWorkDir;
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Returns the executable path name, used e.g. by SetRootSys().
 
 const char *GetExePath()
@@ -257,35 +222,6 @@ const char *GetExePath()
 #endif
   }
   return exepath.c_str();
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Convert to path relative to $PWD
-/// If that's not what the caller wants, she should pass -I to rootcling and a
-/// different relative path to the header files.
-
-static std::string GetRelocatableHeaderName(const std::string &header, const std::string &currentDirectory)
-{
-   std::string result(header);
-
-   const char *currWorkDir = currentDirectory.c_str();
-   size_t lenCurrWorkDir = strlen(currWorkDir);
-   if (result.substr(0, lenCurrWorkDir) == currWorkDir) {
-      // Convert to path relative to $PWD.
-      // If that's not what the caller wants, she should pass -I to rootcling and a
-      // different relative path to the header files.
-      result.erase(0, lenCurrWorkDir);
-   }
-   if (gBuildingROOT) {
-      // For ROOT, convert module directories like core/base/inc/ to include/
-      int posInc = result.find("/inc/");
-      if (posInc != -1) {
-         result = /*std::string("include") +*/ result.substr(posInc + 5, -1);
-      }
-   }
-   return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3833,9 +3769,6 @@ int RootClingMain(int argc,
    bool ignoreExistingDict = false;
    bool requestAllSymbols = isDeep;
 
-   std::string currentDirectory;
-   GetCurrentDirectory(currentDirectory);
-
    ic = 1;
    if (!gDriverConfig->fBuildingROOTStage1) {
       if (strcmp("-rootbuild", argv[ic]) == 0) {
@@ -4392,6 +4325,8 @@ int RootClingMain(int argc,
 
    AddPlatformDefines(clingArgs);
 
+   std::string currentDirectory = ROOT::FoundationUtils::GetCurrentDir();
+
    std::string interpPragmaSource;
    std::string includeForSource;
    std::string interpreterDeclarations;
@@ -4438,7 +4373,9 @@ int RootClingMain(int argc,
             if (fullheader[fullheader.length() - 1] == '+') {
                fullheader.erase(fullheader.length() - 1);
             }
-            std::string header(isSelectionFile ? fullheader : GetRelocatableHeaderName(fullheader, currentDirectory));
+            std::string header(
+               isSelectionFile ? fullheader
+                               : ROOT::FoundationUtils::MakePathRelative(fullheader, currentDirectory, gBuildingROOT));
 
             interpPragmaSource += std::string("#include \"") + header + "\"\n";
             if (!isSelectionFile) {
