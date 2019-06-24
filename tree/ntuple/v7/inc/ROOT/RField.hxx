@@ -24,6 +24,7 @@
 #include <ROOT/RStringView.hxx>
 #include <ROOT/RVec.hxx>
 #include <ROOT/TypeTraits.hxx>
+//#include <ROOT/RFieldVisitor.hxx>
 
 #include <TGenericClassInfo.h>
 #include <TError.h>
@@ -69,6 +70,7 @@ The field knows based on its type and the field name the type(s) and name(s) of 
 class RFieldBase {
    friend class ROOT::Experimental::Detail::RFieldFuse; // to connect the columns to a page storage
    friend class ROOT::Experimental::RFieldCollection; // to change the field names when collections are attached
+    //friend class ROOT::Experimental::TNtuplePrintVisitor;
 private:
    /// The field name relative to its parent field
    std::string fName;
@@ -219,7 +221,6 @@ public:
    }
 
 
-<<<<<<< HEAD
 // clang-format off
 /**
 \class ROOT::Experimental::RFieldFuse
@@ -235,9 +236,14 @@ public:
    static void Connect(DescriptorId_t fieldId, RPageStorage &pageStorage, RFieldBase &field);
 };
 
-=======
-  };
->>>>>>> Zwischenresultat nach 3 Versuchen
+virtual void AcceptVisitor(RNTupleVisitor &fVisitor) const;
+//virtual void Accept(RNTupleVisitor fVisitor, int index);
+int getOrder() {return fOrder;}
+///auto getSubfields() {return fSubFields;}
+
+
+};
+
 } // namespace Detail
 
 /// The container field for an ntuple model, which itself has no physical representation
@@ -245,6 +251,8 @@ class RFieldRoot : public Detail::RFieldBase {
 public:
    RFieldRoot() : Detail::RFieldBase("", "", ENTupleStructure::kRecord, false /* isSimple */) {}
    RFieldBase* Clone(std::string_view newName);
+    /*
+    friend void ROOT::Experimental::TNtuplePrintVisitor::visitNtuple(ROOT::Experimental::RNTupleReader* fReader); /// To print list of branches*/
 
    void DoGenerateColumns() final {}
    using Detail::RFieldBase::GenerateValue;
@@ -619,6 +627,8 @@ public:
    }
    size_t GetValueSize() const final { return sizeof(std::string); }
    void CommitCluster() final;
+    //void Accept(RNTupleVisitor fVisitor, int index);
+    //void Accept(RPrintVisitor fPrintVisitor, int index) { fPrintVisitor.visitField<std::string>(this, index);}
 };
 
 
