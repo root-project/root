@@ -89,7 +89,7 @@ Root.ErrorIgnoreLevel:   Print
 # Settings for X11 behaviour.
 X11.Sync:                no
 X11.FindBestVisual:      yes
-X11.UseXft:              no
+X11.UseXft:              yes
 X11.XInitThread:         yes
 
 # Settings for Cocoa backend.
