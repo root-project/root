@@ -34,12 +34,12 @@ void ROOT::Experimental::Detail::RColumn::Connect(RPageStorage* pageStorage)
    switch (pageStorage->GetType()) {
    case EPageStorageType::kSink:
       fPageSink = static_cast<RPageSink*>(pageStorage); // the page sink initializes fHeadPage on AddColumn
-      fHandleSink = fPageSink->AddColumn(this);
+      fHandleSink = fPageSink->AddColumn(*this);
       fHeadPage = fPageSink->GetPagePool()->ReservePage(this);
       break;
    case EPageStorageType::kSource:
       fPageSource = static_cast<RPageSource*>(pageStorage);
-      fHandleSource = fPageSource->AddColumn(this);
+      fHandleSource = fPageSource->AddColumn(*this);
       fNElements = fPageSource->GetNElements(fHandleSource);
       fColumnIdSource = fPageSource->GetColumnId(fHandleSource);
       break;

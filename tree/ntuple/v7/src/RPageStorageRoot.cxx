@@ -60,34 +60,34 @@ ROOT::Experimental::Detail::RPageSinkRoot::~RPageSinkRoot()
 }
 
 ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
-ROOT::Experimental::Detail::RPageSinkRoot::AddColumn(RColumn* column)
+ROOT::Experimental::Detail::RPageSinkRoot::AddColumn(const RColumn &column)
 {
    ROOT::Experimental::Internal::RColumnHeader columnHeader;
-   columnHeader.fName = column->GetModel().GetName();
-   columnHeader.fType = column->GetModel().GetType();
-   columnHeader.fIsSorted = column->GetModel().GetIsSorted();
-   if (column->GetOffsetColumn() != nullptr) {
-      columnHeader.fOffsetColumn = column->GetOffsetColumn()->GetModel().GetName();
+   columnHeader.fName = column.GetModel().GetName();
+   columnHeader.fType = column.GetModel().GetType();
+   columnHeader.fIsSorted = column.GetModel().GetIsSorted();
+   if (column.GetOffsetColumn() != nullptr) {
+      columnHeader.fOffsetColumn = column.GetOffsetColumn()->GetModel().GetName();
    }
    auto columnId = fNTupleHeader.fColumns.size();
    fNTupleHeader.fColumns.emplace_back(columnHeader);
    //printf("Added column %s type %d\n", columnHeader.fName.c_str(), (int)columnHeader.fType);
-   return ColumnHandle_t(columnId, column);
+   return ColumnHandle_t(columnId, &column);
 }
 
 
-void ROOT::Experimental::Detail::RPageSinkRoot::Create(RNTupleModel *model)
+void ROOT::Experimental::Detail::RPageSinkRoot::Create(RNTupleModel &model)
 {
    fNTupleHeader.fPageSize = kPageSize;
    fDirectory = fSettings.fFile->mkdir(fNTupleName.c_str());
 
    unsigned int nColumns = 0;
-   for (auto& f : *model->GetRootField()) {
+   for (const auto& f : *model.GetRootField()) {
       nColumns += f.GetNColumns();
    }
    fPagePool = std::make_unique<RPagePool>(fNTupleHeader.fPageSize, nColumns);
 
-   for (auto& f : *model->GetRootField()) {
+   for (auto& f : *model.GetRootField()) {
       ROOT::Experimental::Internal::RFieldHeader fieldHeader;
       fieldHeader.fName = f.GetName();
       fieldHeader.fType = f.GetType();
@@ -174,15 +174,15 @@ ROOT::Experimental::Detail::RPageSourceRoot::~RPageSourceRoot()
 
 
 ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
-ROOT::Experimental::Detail::RPageSourceRoot::AddColumn(RColumn* column)
+ROOT::Experimental::Detail::RPageSourceRoot::AddColumn(const RColumn &column)
 {
-   auto& model = column->GetModel();
+   auto& model = column.GetModel();
    auto columnId = fMapper.fColumnName2Id[model.GetName()];
    R__ASSERT(model == *fMapper.fId2ColumnModel[columnId]);
    //printf("Attaching column %s id %d type %d length %lu\n",
    //   column->GetModel().GetName().c_str(), columnId, (int)(column->GetModel().GetType()),
    //   fMapper.fColumnIndex[columnId].fNElements);
-   return ColumnHandle_t(columnId, column);
+   return ColumnHandle_t(columnId, &column);
 }
 
 

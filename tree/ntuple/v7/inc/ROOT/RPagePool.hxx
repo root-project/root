@@ -35,9 +35,10 @@ class RColumn;
 \ingroup NTuple
 \brief A thread-safe cache of column pages.
 
-The page pool encapsulated memory management for data written into a tree or read from a tree. Adding and removing
-pages is thread-safe. All pages have the same size, which means different pages do not necessarily contain the same
-number of elements. Multiple page caches can coexist.
+The page pool provides memory tracking for data written into an ntuple or read from an ntuple. Adding and removing
+pages is thread-safe. The page pool does not allocate the memory -- allocation and deallocation is performed by the
+page storage, which might do it in a way optimized to the backing store (e.g., mmap()).
+Multiple page caches can coexist.
 
 TODO(jblomer): it should be possible to register pages and to find them by column and index; this would
 facilitate pre-filling a cache, e.g. by read-ahead.
@@ -62,7 +63,7 @@ public:
    RPagePool& operator =(const RPagePool&) = delete;
    ~RPagePool();
 
-   /// Get a new, empty page from the cache. Return a "null Page" if there is no more free space.
+   /// Get a new, empty page from the cache. Return a "null page" if there is no more free space.  Used for writing.
    RPage ReservePage(RColumn* column);
    /// Registers a page that has previously been acquired by ReservePage() and was meanwhile filled with content.
    void CommitPage(const RPage& page);
