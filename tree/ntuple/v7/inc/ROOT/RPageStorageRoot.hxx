@@ -156,8 +156,8 @@ public:
    RPageSinkRoot(std::string_view ntupleName, std::string_view path);
    virtual ~RPageSinkRoot();
 
-   ColumnHandle_t AddColumn(RColumn* column) final;
-   void Create(RNTupleModel* model) final;
+   ColumnHandle_t AddColumn(const RColumn &column) final;
+   void Create(RNTupleModel &model) final;
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
    void CommitCluster(NTupleSize_t nEntries) final;
    void CommitDataset() final;
@@ -192,7 +192,7 @@ public:
    RPageSourceRoot(std::string_view ntupleName, std::string_view path);
    virtual ~RPageSourceRoot();
 
-   ColumnHandle_t AddColumn(RColumn* column) final;
+   ColumnHandle_t AddColumn(const RColumn &column) final;
    void Attach() final;
    std::unique_ptr<ROOT::Experimental::RNTupleModel> GenerateModel() final;
    void PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t index, RPage* page) final;
