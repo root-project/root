@@ -1,10 +1,10 @@
 % ROOT Version 6.18 Release Notes
-% 2019-05-28
+% 2019-06-25
 <a name="TopOfPage"></a>
 
 ## Introduction
 
-ROOT version 6.18/00 is scheduled for release in June, 2019.
+ROOT version 6.18/00 hass been released on June 25, 2019.
 
 For more information, see [http://root.cern](http://root.cern)
 
