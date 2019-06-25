@@ -653,14 +653,14 @@ df.AsNumpy()
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9916'>ROOT-9916</a>] -         build problem
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9923'>ROOT-9923</a>] -         User guide html version has problem with horizontal scaling
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9925'>ROOT-9925</a>] -         Manpages always regenerated even when up-to-date
-* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9927'>ROOT-9927</a>] -         --web should be unavailable if not available!
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9927'>ROOT-9927</a>] -         `--web` should be unavailable if not available!
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9930'>ROOT-9930</a>] -         [DF] Support RDF+TEntryList+IMT
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9938'>ROOT-9938</a>] -         Artefacts in TGeoPgon
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9940'>ROOT-9940</a>] -         root compile fails
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9946'>ROOT-9946</a>] -         [DF] Broken edge cases in jitting of strings
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9948'>ROOT-9948</a>] -         [TTreeProcessorMT] Wrong tree name deduction when reading from EOS
-* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9951'>ROOT-9951</a>] -         Segmentation fault after creating a TBrowser with root --web
-* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9956'>ROOT-9956</a>] -         We need a root-config --tutdir to return the correct tutorial directory
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9951'>ROOT-9951</a>] -         Segmentation fault after creating a `TBrowser` with `root --web`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9956'>ROOT-9956</a>] -         We need a `root-config --tutdir` to return the correct tutorial directory
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9959'>ROOT-9959</a>] -         When passing command line arguments to a python script that contain a `$` sign, ROOT segfaults.
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9979'>ROOT-9979</a>] -         [DF] Wrong entry ranges deduced in MT runs when nClusters &gt;&gt; nThreads
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9984'>ROOT-9984</a>] -         [DF] Error messages from jitting even if input file does not exist
@@ -693,7 +693,7 @@ df.AsNumpy()
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10162'>ROOT-10162</a>] -         MakeSingleChannelModel in HistFactory fails to collect histograms
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10170'>ROOT-10170</a>] -         TTree::Draw use incorrect values in array with scarce selections
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-8446'>ROOT-8446</a>] -          `gStyle->SetHistMinimumZero(1)` is not persistent
-* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9702'>ROOT-9702</a>] -         Cannot seamlessly evolve a datamember of type `auto_ptr<T> into `unique_ptr<T>`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9702'>ROOT-9702</a>] -         Cannot seamlessly evolve a datamember of type `auto_ptr<T>` into `unique_ptr<T>`
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9710'>ROOT-9710</a>] -         CMake warning for OpenGL setup (CMake policy CMP0072)
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10127'>ROOT-10127</a>] -         Fix GCC 9 Warnings
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-7910'>ROOT-7910</a>] -         Unwanted "missing dictionary" messages from TBrowser
