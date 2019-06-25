@@ -111,7 +111,7 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(
    , fClusterSizeEntries(kDefaultClusterSizeEntries)
    , fLastCommitted(0)
 {
-   fSink->Create(fModel.get());
+   fSink->Create(*fModel.get());
 }
 
 ROOT::Experimental::RNTupleWriter::~RNTupleWriter()

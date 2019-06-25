@@ -52,7 +52,7 @@ The tree meta-data contains of a list of fields, a unique identifier, and proven
 // clang-format on
 class RPageStorage {
 protected:
-   /// All data is shipped to and from physical storage in pages, and moderated through a page pool
+   /// All data is shipped to and from physical storage in pages, moderated through a page pool
    std::unique_ptr<RPagePool> fPagePool;
 
 public:
@@ -63,17 +63,19 @@ public:
 
    struct RColumnHandle {
       RColumnHandle() : fId(-1), fColumn(nullptr) {}
-      RColumnHandle(int id, RColumn* column) : fId(id), fColumn(column) {}
+      RColumnHandle(int id, const RColumn *column) : fId(id), fColumn(column) {}
       int fId;
-      RColumn *fColumn;
+      const RColumn *fColumn;
    };
    /// The column handle identfies a column with the current open page storage
    using ColumnHandle_t = RColumnHandle;
 
-   /// Register a new column.  When reading, the column must exist in the tree on disk corresponding to the meta-data.
+   /// Register a new column.  When reading, the column must exist in the ntuple on disk corresponding to the meta-data.
    /// When writing, every column can only be attached once.
-   virtual ColumnHandle_t AddColumn(RColumn *column) = 0;
+   virtual ColumnHandle_t AddColumn(const RColumn &column) = 0;
    virtual EPageStorageType GetType() = 0;
+
+   // Page memory management
    RPagePool* GetPagePool() const { return fPagePool.get(); }
 };
 
@@ -81,10 +83,10 @@ public:
 /**
 \class ROOT::Experimental::Detail::RPageSink
 \ingroup NTuple
-\brief Abstract interface to write data into a tree
+\brief Abstract interface to write data into an ntuple
 
 The page sink takes the list of columns and afterwards a series of page commits and cluster commits.
-The user is responsible to commit clusters at consistent point, i.e. when all pages corresponding to data
+The user is responsible to commit clusters at a consistent point, i.e. when all pages corresponding to data
 up to the given entry number are committed.
 */
 // clang-format on
@@ -94,8 +96,9 @@ public:
    virtual ~RPageSink();
    EPageStorageType GetType() final { return EPageStorageType::kSink; }
 
-   /// Physically creates the storage container to hold the tree (e.g., a directory in a TFile or a S3 bucket)
-   virtual void Create(RNTupleModel* model) = 0;
+   /// Physically creates the storage container to hold the ntuple (e.g., a keys a TFile or an S3 bucket)
+   /// Create() associates column handles to the columns referenced by the model
+   virtual void Create(RNTupleModel &model) = 0;
    /// Write a page to the storage. The column must have been added before.
    virtual void CommitPage(ColumnHandle_t columnHandle, const RPage &page) = 0;
    /// Finalize the current cluster and create a new one for the following data.
