@@ -395,28 +395,10 @@ In addition we have :
   - Make sure a TF3 is painted the same way in GL and non-GL mode.
     The mismatch was reported in [this post](https://root-forum.cern.ch/t/how-to-specify-the-level-value-in-isosurface-drawing-with-tf3-and-gl/32179)
 
-## Geometry Libraries
-
-
 ## Database Libraries
 
 The CMake module `FindOracle.cmake` was updated to support version 18.x
 of the Oracle client libraries.
-
-## Networking Libraries
-
-
-## GUI Libraries
-
-
-## Montecarlo Libraries
-
-
-## PROOF Libraries
-
-
-## Language Bindings
-
 
 ## JavaScript ROOT
 
@@ -453,8 +435,6 @@ OpenUI5 files were moved to `ui5/` subfolder. After ROOT compilation they can be
 ## Tutorials
   - Add `RSqliteDS` examples.
   - Make RCsvDS and RLazyDS tutorials standalone, i.e. downloading input csv directly using `TFile::Cp` rather than relying on CMake.
-
-## Class Reference Guide
 
 
 ## Build, Configuration and Testing Infrastructure
