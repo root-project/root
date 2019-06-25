@@ -30,11 +30,12 @@ namespace Detail {
 /**
 \class ROOT::Experimental::Detail::RPage
 \ingroup NTuple
-\brief A page is a fixed size slice of a column that is mapped into memory
+\brief A page is a slice of a column that is mapped into memory
 
-The page provides a fixed-size opaque memory buffer for uncompressed data. It does not know how to interpret
+The page provides an opaque memory buffer for uncompressed, unpacked data. It does not interpret
 the contents but it does now about the size (and thus the number) of the elements inside as well as the element
-number range within the backing column. The memory buffer is not managed by the page but normally by the page pool.
+number range within the backing column. The memory buffer is not managed by the page.  It normally registered with
+the page pool and managed (allocated) by the page storage.
 */
 // clang-format on
 class RPage {

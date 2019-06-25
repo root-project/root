@@ -27,6 +27,7 @@ HEADERS
   ROOT/RNTupleUtil.hxx
   ROOT/RNTupleView.hxx
   ROOT/RPage.hxx
+  ROOT/RPageAllocator.hxx
   ROOT/RPagePool.hxx
   ROOT/RPageStorage.hxx
   ROOT/RPageStorageRoot.hxx
@@ -38,6 +39,7 @@ SOURCES
   v7/src/RNTupleDescriptor.cxx
   v7/src/RNTupleModel.cxx
   v7/src/RPage.cxx
+  v7/src/RPageAllocator.cxx
   v7/src/RPagePool.cxx
   v7/src/RPageStorage.cxx
   v7/src/RPageStorageRoot.cxx
