@@ -130,6 +130,9 @@ SPlot::SPlot(const SPlot &other):
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+//Construct a new SPlot class,
+//calculate sWeights, and include them
+//in the RooDataSet of this class.
 
 SPlot::SPlot(const char* name, const char* title, RooDataSet& data, RooAbsPdf* pdf,
         const RooArgList &yieldsList, const RooArgSet &projDeps,
