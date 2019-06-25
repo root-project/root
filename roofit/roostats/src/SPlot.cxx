@@ -136,7 +136,8 @@ SPlot::SPlot(const SPlot &other):
 
 SPlot::SPlot(const char* name, const char* title, RooDataSet& data, RooAbsPdf* pdf,
         const RooArgList &yieldsList, const RooArgSet &projDeps,
-        bool includeWeights, bool cloneData, const char* newName):
+        bool includeWeights, bool cloneData, const char* newName,
+        const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8):
   TNamed(name, title)
 {
    if(cloneData == 1) {
@@ -162,7 +163,7 @@ SPlot::SPlot(const char* name, const char* title, RooDataSet& data, RooAbsPdf* p
   //calculate sWeights, and include them
   //in the RooDataSet of this class.
 
-  this->AddSWeight(pdf, yieldsList, projDeps, includeWeights);
+  this->AddSWeight(pdf, yieldsList, projDeps, includeWeights, arg5, arg6, arg7, arg8);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -342,9 +343,17 @@ Int_t SPlot::GetNumSWeightVars() const
 ///
 /// Find Parameters in the PDF to be considered fixed when calculating the SWeights
 /// and be sure to NOT include the yields in that list
+///
+/// After fixing non-yield parameters, calls
+/// `pdf->fitTo(*fSData, RooFit::Extended(kTRUE), RooFit::SumW2Error(kTRUE), RooFit::PrintLevel(-1), RooFit::PrintEvalErrors(-1))`.
+/// One can pass additional arguments to `fitTo`, such as `RooFit::Range("fitrange")`, as `arg5`, `arg6`, `arg7`, `arg8`.
+/// Note that `RooFit::Range` may be necessary to get expected results if you initially fit in a range
+/// and/or called `pdf->fixCoefRange("fitrange")` on `pdf`.
+/// CALL `arg5`, `arg6`, `arg7`, `arg8` AT YOUR OWN RISK.
 
 void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
-         const RooArgSet &projDeps, bool includeWeights)
+         const RooArgSet &projDeps, bool includeWeights,
+         const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8)
 {
 
   RooFit::MsgLevel currentLevel =  RooMsgService::instance().globalKillBelow();
@@ -370,7 +379,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
   // Fit yields to the data with all other variables held constant
   // This is necessary because SPlot assumes the yields minimise -Log(likelihood)
 
-  pdf->fitTo(*fSData, RooFit::Extended(kTRUE), RooFit::SumW2Error(kTRUE), RooFit::PrintLevel(-1), RooFit::PrintEvalErrors(-1) );
+  pdf->fitTo(*fSData, RooFit::Extended(kTRUE), RooFit::SumW2Error(kTRUE), RooFit::PrintLevel(-1), RooFit::PrintEvalErrors(-1), arg5, arg6, arg7, arg8);
 
   // Hold the value of the fitted yields
   std::vector<double> yieldsHolder;
