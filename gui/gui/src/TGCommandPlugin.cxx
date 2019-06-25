@@ -71,7 +71,8 @@ TGCommandPlugin::TGCommandPlugin(const TGWindow *p, UInt_t w, UInt_t h) :
       if (linecount > 500) {
          linecount -= 500;
          while(--linecount > 0)
-            fgets(histline, 256, lunin);
+            if (!fgets(histline, 256, lunin))
+               break;
       }
       linecount = 0;
       while (fgets(histline, 256, lunin)) {
