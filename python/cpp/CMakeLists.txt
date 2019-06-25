@@ -12,7 +12,8 @@ if(ROOT_python_FOUND)
                     COPY_TO_BUILDDIR AdvancedCpp.C Template.C
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ AdvancedCpp.C+
                                                      -e .L\ Template.C+
-                    ENVIRONMENT EXP_PYROOT=${exp_pyroot})
+                    ENVIRONMENT EXP_PYROOT=${exp_pyroot}
+                    ${PYTESTS_WILLFAIL})
                                          
   ROOTTEST_ADD_TEST(cpp11
                     MACRO PyROOT_cpp11tests.py
