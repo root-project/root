@@ -4,7 +4,7 @@
 
 ## Introduction
 
-ROOT version 6.18/00 hass been released on June 25, 2019.
+ROOT version 6.18/00 was released on June 25, 2019.
 
 For more information, see [http://root.cern](http://root.cern)
 
