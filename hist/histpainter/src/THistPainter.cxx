@@ -469,15 +469,15 @@ Begin_Macro(source)
 
    // create hint1 filled with the bins integral of h1
    auto hint1 = new TH1F("hint1","h1 bins integral",100,-3,3);
-   Float_t sum = 0;
+   float sum = 0.f;
    for (i=1;i<=100;i++) {
       sum += h1->GetBinContent(i);
       hint1->SetBinContent(i,sum);
    }
 
    // scale hint1 to the pad coordinates
-   Float_t rightmax = 1.1*hint1->GetMaximum();
-   Float_t scale = gPad->GetUymax()/rightmax;
+   float rightmax = 1.1*hint1->GetMaximum();
+   float scale = gPad->GetUymax()/rightmax;
    hint1->SetLineColor(kRed);
    hint1->Scale(scale);
    hint1->Draw("same");
@@ -712,7 +712,7 @@ Begin_Macro(source)
 {
    auto c2e = new TCanvas("c2e","c2e",600,400);
    auto h2e = new TH2F("h2e","TH2 drawn with option E",40,-4,4,40,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       h2e->Fill(px,5*py);
@@ -739,7 +739,7 @@ Begin_Macro(source)
    float d_35_0[nx] = {0.75, -3.30, -0.92, 0.10, 0.08, -1.69, -1.29, -2.37};
    float d_35_1[nx] = {1.01, -3.02, -0.65, 0.37, 0.34, -1.42, -1.02, -2.10};
 
-   auto *cb = new TCanvas("cb","cb",600,400);
+   auto cb = new TCanvas("cb","cb",600,400);
    cb->SetGrid();
 
    gStyle->SetHistMinimumZero();
@@ -823,7 +823,7 @@ Begin_Macro(source)
 {
    auto c1 = new TCanvas("c1","c1",600,400);
    auto hscat = new TH2F("hscat","Option SCATter example (default for 2D histograms)  ",40,-4,4,40,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       hscat->Fill(px,5*py);
@@ -845,7 +845,7 @@ Begin_Macro(source)
    auto c1   = new TCanvas("c1","c1",600,400);
    auto harr = new TH2F("harr","Option ARRow example",20,-4,4,20,-20,20);
    harr->SetLineColor(kRed);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       harr->Fill(px,5*py);
@@ -864,7 +864,7 @@ Begin_Macro(source)
    auto c1   = new TCanvas("c1","c1",600,400);
    auto harr = new TH2F("harr","Option ARR + COLZ example",20,-4,4,20,-20,20);
    harr->SetStats(0);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       harr->Fill(px,5*py);
@@ -975,9 +975,9 @@ Begin_Macro(source)
    hf->Fill(5,23);
 
    auto hf_copy1 = hf->Clone("hf_copy1");
-   auto* lt = new TLatex();
+   auto lt = new TLatex();
 
-   auto* cx = new TCanvas(); cx->Divide(2,1);
+   auto cx = new TCanvas(); cx->Divide(2,1);
 
    cx->cd(1);
    h2->Draw("box");
@@ -1031,7 +1031,7 @@ Begin_Macro(source)
 {
    auto c1    = new TCanvas("c1","c1",600,400);
    auto hcol1 = new TH2F("hcol1","Option COLor example ",40,-4,4,40,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       hcol1->Fill(px,5*py);
@@ -1051,7 +1051,7 @@ Begin_Macro(source)
    c1->Divide(1,2);
    auto hcol23 = new TH2F("hcol23","Option COLZ example ",40,-4,4,40,-20,20);
    auto hcol24 = new TH2F("hcol24","Option COLZ1 example ",40,-4,4,40,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       hcol23->Fill(px,5*py);
@@ -1080,7 +1080,7 @@ Begin_Macro(source)
    c1->Divide(1,2);
    auto hcol21 = new TH2F("hcol21","Option COLZ",40,-4,4,40,-20,20);
    auto hcol22 = new TH2F("hcol22","Option COLZ0",40,-4,4,40,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       hcol21->Fill(px,5*py);
@@ -1132,7 +1132,7 @@ Begin_Macro(source)
 {
    auto c1 = new TCanvas("c1","c1",600,400);
    auto hcol1 = new TH2F("hcol1","Option COLor combined with POL",40,-4,4,40,-4,4);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       hcol1->Fill(px,py);
@@ -1315,18 +1315,16 @@ data, the situation is a bit more complex. The following example shows this:
 
 ~~~ {.cpp}
 void quantiles() {
-   TH1I *h = new TH1I("h","h",10,0,10);
+   auto h = new TH1I("h","h",10,0,10);
    //h->Fill(3);
    //h->Fill(3);
    h->Fill(4);
    h->Draw();
-   Double_t *p = new Double_t[1];
-   p[0] = 0.5;
-   Double_t *q = new Double_t[1];
-   q[0] = 0;
-   h->GetQuantiles(1,q,p);
+   double p = 0.;
+   double q = 0.;
+   h->GetQuantiles(1,&q,&p);
 
-   cout << "Median is: " << q[0] << std::endl;
+   cout << "Median is: " << q << std::endl;
 }
 ~~~
 
@@ -1450,7 +1448,7 @@ Begin_Macro
    gStyle->SetOptStat(kFALSE);
 
    auto hcandle = new TH2F("hcandle"," ",10,-4,4,40,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 15000; i++) {
       gRandom->Rannor(px,py);
       hcandle->Fill(px,5*py);
@@ -1557,12 +1555,12 @@ Begin_Macro(source)
 {
     auto c1 = new TCanvas("c1","c1",600,400);
     Int_t nx(6), ny(40);
-    Double_t xmin(0.0), xmax(+6.0), ymin(0.0), ymax(+4.0);
+    double xmin(0.0), xmax(+6.0), ymin(0.0), ymax(+4.0);
     auto hviolin = new TH2F("hviolin", "Option VIOLIN example", nx, xmin, xmax, ny, ymin, ymax);
     TF1 f1("f1", "gaus", +0,0 +4.0);
-    Double_t x,y;
+    double x,y;
     for (Int_t iBin=1; iBin<hviolin->GetNbinsX(); ++iBin) {
-        Double_t xc = hviolin->GetXaxis()->GetBinCenter(iBin);
+        double xc = hviolin->GetXaxis()->GetBinCenter(iBin);
         f1.SetParameters(1, 2.0+TMath::Sin(1.0+xc), 0.2+0.1*(xc-xmin)/xmax);
         for(Int_t i=0; i<10000; ++i){
             x = xc;
@@ -1616,7 +1614,7 @@ Begin_Macro(source)
    c01->Divide(2,1);
    auto htext1 = new TH1F("htext1","Option TEXT on 1D histograms ",10,-4,4);
    auto htext2 = new TH2F("htext2","Option TEXT on 2D histograms ",10,-4,4,10,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       htext1->Fill(px,0.1);
@@ -1645,7 +1643,7 @@ Begin_Macro(source)
    auto htext3 = new TH2F("htext3","Several 2D histograms drawn with option TEXT",10,-4,4,10,-20,20);
    auto htext4 = new TH2F("htext4","htext4",10,-4,4,10,-20,20);
    auto htext5 = new TH2F("htext5","htext5",10,-4,4,10,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       htext3->Fill(4*px,20*py,0.1);
@@ -1717,7 +1715,7 @@ Begin_Macro(source)
 {
    auto c1 = new TCanvas("c1","c1",600,400);
    auto hcontz = new TH2F("hcontz","Option CONTZ example ",40,-4,4,40,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       hcontz->Fill(px-1,5*py);
@@ -1737,7 +1735,7 @@ Begin_Macro(source)
 {
    auto c1 = new TCanvas("c1","c1",600,400);
    auto hcont1 = new TH2F("hcont1","Option CONT1Z example ",40,-4,4,40,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       hcont1->Fill(px-1,5*py);
@@ -1755,7 +1753,7 @@ Begin_Macro(source)
 {
    auto c1 = new TCanvas("c1","c1",600,400);
    auto hcont2 = new TH2F("hcont2","Option CONT2 example ",40,-4,4,40,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       hcont2->Fill(px-1,5*py);
@@ -1773,7 +1771,7 @@ Begin_Macro(source)
 {
    auto c1 = new TCanvas("c1","c1",600,400);
    auto hcont3 = new TH2F("hcont3","Option CONT3 example ",40,-4,4,40,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       hcont3->Fill(px-1,5*py);
@@ -1793,7 +1791,7 @@ Begin_Macro(source)
 {
    auto c1 = new TCanvas("c1","c1",600,400);
    auto hcont4 = new TH2F("hcont4","Option CONT4Z example ",40,-4,4,40,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       hcont4->Fill(px-1,5*py);
@@ -1888,7 +1886,7 @@ Begin_Macro(source)
 {
    auto c2 = new TCanvas("c2","c2",600,400);
    auto hlego = new TH2F("hlego","Option LEGO example ",40,-4,4,40,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       hlego->Fill(px-1,5*py);
@@ -1907,7 +1905,7 @@ Begin_Macro(source)
 {
    auto c2 = new TCanvas("c2","c2",600,400);
    auto hlego1 = new TH2F("hlego1","Option LEGO1 example (with option 0)  ",40,-4,4,40,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       hlego1->Fill(px-1,5*py);
@@ -1929,7 +1927,7 @@ Begin_Macro(source)
 {
    auto c2 = new TCanvas("c2","c2",600,400);
    auto hlego3 = new TH2F("hlego3","Option LEGO3 example",40,-4,4,40,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       hlego3->Fill(px-1,5*py);
@@ -1950,7 +1948,7 @@ Begin_Macro(source)
 {
    auto c2 = new TCanvas("c2","c2",600,400);
    auto hlego2 = new TH2F("hlego2","Option LEGO2Z example ",40,-4,4,40,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       hlego2->Fill(px-1,5*py);
@@ -1991,7 +1989,7 @@ Begin_Macro(source)
 {
    auto c2 = new TCanvas("c2","c2",600,400);
    auto hsurf = new TH2F("hsurf","Option SURF example ",30,-4,4,30,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       hsurf->Fill(px-1,5*py);
@@ -2011,7 +2009,7 @@ Begin_Macro(source)
 {
    auto c2 = new TCanvas("c2","c2",600,400);
    auto hsurf1 = new TH2F("hsurf1","Option SURF1 example ",30,-4,4,30,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       hsurf1->Fill(px-1,5*py);
@@ -2031,7 +2029,7 @@ Begin_Macro(source)
 {
    auto c2 = new TCanvas("c2","c2",600,400);
    auto hsurf2 = new TH2F("hsurf2","Option SURF2 example ",30,-4,4,30,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       hsurf2->Fill(px-1,5*py);
@@ -2051,7 +2049,7 @@ Begin_Macro(source)
 {
    auto c2 = new TCanvas("c2","c2",600,400);
    auto hsurf3 = new TH2F("hsurf3","Option SURF3 example ",30,-4,4,30,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       hsurf3->Fill(px-1,5*py);
@@ -2069,7 +2067,7 @@ Begin_Macro(source)
 {
    auto c2 = new TCanvas("c2","c2",600,400);
    auto hsurf4 = new TH2F("hsurf4","Option SURF4 example ",30,-4,4,30,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       hsurf4->Fill(px-1,5*py);
@@ -2088,7 +2086,7 @@ Begin_Macro(source)
 {
    auto c2 = new TCanvas("c2","c2",600,400);
    auto hsurf5 = new TH2F("hsurf4","Option SURF5 example ",30,-4,4,30,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       hsurf5->Fill(px-1,5*py);
@@ -2108,7 +2106,7 @@ Begin_Macro(source)
 {
    auto c2 = new TCanvas("c2","c2",600,400);
    auto hsurf7 = new TH2F("hsurf3","Option SURF7 example ",30,-4,4,30,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       hsurf7->Fill(px-1,5*py);
@@ -2167,7 +2165,7 @@ Begin_Macro(source)
    auto c3 = new TCanvas("c3","c3",600,400);
    c3->Divide(2,2);
    auto hlcc = new TH2F("hlcc","Cylindrical coordinates",20,-4,4,20,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       hlcc->Fill(px-1,5*py);
@@ -2175,11 +2173,11 @@ Begin_Macro(source)
    }
    hlcc->SetFillColor(kYellow);
    c3->cd(1); hlcc->Draw("LEGO1 CYL");
-   c3->cd(2); TH2F *hlpc = (TH2F*) hlcc->DrawClone("LEGO1 POL");
+   c3->cd(2); auto hlpc = (TH2F*) hlcc->DrawClone("LEGO1 POL");
    hlpc->SetTitle("Polar coordinates");
-   c3->cd(3); TH2F *hlsc = (TH2F*) hlcc->DrawClone("LEGO1 SPH");
+   c3->cd(3); auto hlsc = (TH2F*) hlcc->DrawClone("LEGO1 SPH");
    hlsc->SetTitle("Spherical coordinates");
-   c3->cd(4); TH2F *hlprpc = (TH2F*) hlcc->DrawClone("LEGO1 PSR");
+   c3->cd(4); auto hlprpc = (TH2F*) hlcc->DrawClone("LEGO1 PSR");
    hlprpc->SetTitle("PseudoRapidity/Phi coordinates");
 }
 End_Macro
@@ -2191,18 +2189,18 @@ Begin_Macro(source)
    auto c4 = new TCanvas("c4","c4",600,400);
    c4->Divide(2,2);
    auto hscc = new TH2F("hscc","Cylindrical coordinates",20,-4,4,20,-20,20);
-   Float_t px, py;
+   float px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       hscc->Fill(px-1,5*py);
       hscc->Fill(2+0.5*px,2*py-10.,0.1);
    }
    c4->cd(1); hscc->Draw("SURF1 CYL");
-   c4->cd(2); TH2F *hspc = (TH2F*) hscc->DrawClone("SURF1 POL");
+   c4->cd(2); auto hspc = (TH2F*) hscc->DrawClone("SURF1 POL");
    hspc->SetTitle("Polar coordinates");
-   c4->cd(3); TH2F *hssc = (TH2F*) hscc->DrawClone("SURF1 SPH");
+   c4->cd(3); auto hssc = (TH2F*) hscc->DrawClone("SURF1 SPH");
    hssc->SetTitle("Spherical coordinates");
-   c4->cd(4); TH2F *hsprpc = (TH2F*) hscc->DrawClone("SURF1 PSR");
+   c4->cd(4); auto hsprpc = (TH2F*) hscc->DrawClone("SURF1 PSR");
    hsprpc->SetTitle("PseudoRapidity/Phi coordinates");
 }
 End_Macro
@@ -2224,7 +2222,7 @@ Begin_Macro(source)
    auto hz1 = new TH1F("hz1","Bar-chart drawn from 0",20,-3,3);
    auto hz2 = new TH2F("hz2","Lego plot drawn from 0",20,-3,3,20,-3,3);
    Int_t i;
-   Double_t x,y;
+   double x,y;
    hz1->SetFillColor(kBlue);
    hz2->SetFillColor(kBlue);
    for (i=0;i<10000;i++) {
@@ -2314,12 +2312,12 @@ Begin_Macro(source)
    auto h2p = new TH2Poly();
    h2p->SetName("h2poly_name");
    h2p->SetTitle("h2poly_title");
-   Double_t px1[] = {0, 5, 6};
-   Double_t py1[] = {0, 0, 5};
-   Double_t px2[] = {0, -1, -1, 0};
-   Double_t py2[] = {0, 0, -1, 3};
-   Double_t px3[] = {4, 3, 0, 1, 2.4};
-   Double_t py3[] = {4, 3.7, 1, 3.7, 2.5};
+   double px1[] = {0, 5, 6};
+   double py1[] = {0, 0, 5};
+   double px2[] = {0, -1, -1, 0};
+   double py2[] = {0, 0, -1, 3};
+   double px3[] = {4, 3, 0, 1, 2.4};
+   double py3[] = {4, 3.7, 1, 3.7, 2.5};
    h2p->AddBin(3, px1, py1);
    h2p->AddBin(4, px2, py2);
    h2p->AddBin(5, px3, py3);
@@ -2327,9 +2325,9 @@ Begin_Macro(source)
    h2p->Fill(-0.5, -0.5, 7);
    h2p->Fill(-0.7, -0.5, 1);
    h2p->Fill(1, 3, 1.5);
-   Double_t fx[] = {0.1, -0.5, -0.7, 1};
-   Double_t fy[] = {0.01, -0.5, -0.5, 3};
-   Double_t fw[] = {3, 1, 1, 1.5};
+   double fx[] = {0.1, -0.5, -0.7, 1};
+   double fy[] = {0.01, -0.5, -0.5, 3};
+   double fw[] = {3, 1, 1, 1.5};
    h2p->FillN(4, fx, fy, fw);
    h2p->Draw("col");
 }
@@ -2383,7 +2381,7 @@ Begin_Macro(source)
    auto p = new TH2Poly("USA","USA Population",lon1,lon2,lat1,lat2);
 
    TFile::SetCacheFileDir(".");
-   TFile *f = TFile::Open("http://root.cern.ch/files/usa.root", "CACHEREAD");
+   auto f = TFile::Open("http://root.cern.ch/files/usa.root", "CACHEREAD");
 
    TMultiGraph *mg;
    TKey *key;
@@ -2541,7 +2539,7 @@ Begin_Macro(source)
    auto c06 = new TCanvas("c06","c06",600,400);
    gStyle->SetOptStat(kFALSE);
    auto h3scat = new TH3F("h3scat","Option SCAT (default) ",15,-2,2,15,-2,2,15,0,4);
-   Double_t x, y, z;
+   double x, y, z;
    for (Int_t i=0;i<10000;i++) {
       gRandom->Rannor(x, y);
       z = x*x + y*y;
@@ -2558,7 +2556,7 @@ Begin_Macro(source)
    auto c16 = new TCanvas("c16","c16",600,400);
    gStyle->SetOptStat(kFALSE);
    auto h3box = new TH3F("h3box","Option BOX",15,-2,2,15,-2,2,15,0,4);
-   Double_t x, y, z;
+   double x, y, z;
    for (Int_t i=0;i<10000;i++) {
       gRandom->Rannor(x, y);
       z = x*x + y*y;
@@ -2575,7 +2573,7 @@ Begin_Macro(source)
    auto c36 = new TCanvas("c36","c36",600,400);
    gStyle->SetOptStat(kFALSE);
    auto h3box = new TH3F("h3box","Option BOX1",10,-2.,2.,10,-2.,2.,10,-0.5,2.);
-   Double_t x, y, z;
+   double x, y, z;
    for (Int_t i=0;i<10000;i++) {
       gRandom->Rannor(x, y);
       z = abs(sin(x)/x + cos(y)*y);
@@ -2593,7 +2591,7 @@ Begin_Macro(source)
    auto c56 = new TCanvas("c56","c56",600,400);
    gStyle->SetOptStat(kFALSE);
    auto h3box = new TH3F("h3box","Option BOX2",10,-2.,2.,10,-2.,2.,10,-0.5,2.);
-   Double_t x, y, z;
+   double x, y, z;
    for (Int_t i=0;i<10000;i++) {
       gRandom->Rannor(x, y);
       z = abs(sin(x)/x + cos(y)*y);
@@ -2611,7 +2609,7 @@ Begin_Macro(source)
    c46->SetFillColor(38);
    gStyle->SetOptStat(kFALSE);
    auto h3box = new TH3F("h3box","Option BOX3",15,-2,2,15,-2,2,15,0,4);
-   Double_t x, y, z;
+   double x, y, z;
    for (Int_t i=0;i<10000;i++) {
       gRandom->Rannor(x, y);
       z = x*x + y*y;
@@ -2647,7 +2645,7 @@ Begin_Macro(source)
    auto c26 = new TCanvas("c26","c26",600,400);
    gStyle->SetOptStat(kFALSE);
    auto h3iso = new TH3F("h3iso","Option ISO",15,-2,2,15,-2,2,15,0,4);
-   Double_t x, y, z;
+   double x, y, z;
    for (Int_t i=0;i<10000;i++) {
       gRandom->Rannor(x, y);
       z = x*x + y*y;
@@ -2693,9 +2691,9 @@ other as bar charts:
 Begin_Macro(source)
 {
    auto cst0 = new TCanvas("cst0","cst0",600,400);
-   THStack *hs = new THStack("hs","Stacked 1D histograms: option #font[82]{\"nostackb\"}");
+   auto hs = new THStack("hs","Stacked 1D histograms: option #font[82]{\"nostackb\"}");
 
-   TH1F *h1 = new TH1F("h1","h1",10,-4,4);
+   auto h1 = new TH1F("h1","h1",10,-4,4);
    h1->FillRandom("gaus",20000);
    h1->SetFillColor(kRed);
    hs->Add(h1);
@@ -3052,7 +3050,7 @@ file `hlprint.C`
 ~~~ {.cpp}
 void PrintInfo(TVirtualPad *pad, TObject *obj, Int_t x, Int_t y)
 {
-   TH1F *h = (TH1F *)obj;
+   auto h = (TH1F *)obj;
    if (!h->IsHighlight()) // after highlight disabled
       h->SetTitle("highlight disable");
    else
