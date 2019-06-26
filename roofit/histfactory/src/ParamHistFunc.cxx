@@ -124,8 +124,8 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a function which returns binewise-values
-/// This class contains N RooRealVar's, one for each
+/// Create a function which returns bin-wise values.
+/// This class contains N RooRealVars, one for each
 /// bin from the given RooRealVar.
 ///
 /// The value of the function in the ith bin is 
@@ -133,8 +133,7 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
 ///
 /// F(i) = gamma_i * nominal(i)
 ///
-/// Where the nominal values are simply fixed
-/// numbers (default = 1.0 for all i)
+/// Where the nominal values are taken from the histogram.
 ParamHistFunc::ParamHistFunc(const char* name, const char* title, 
 			     const RooArgList& vars, const RooArgList& paramSet,
 			     const TH1* Hist ) :
@@ -214,7 +213,7 @@ ParamHistFunc::~ParamHistFunc()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the index of the gamma parameter associated
-/// with the current bin
+/// with the current bin.
 /// This number is the "RooDataSet" style index
 /// and it must be because it uses the RooDataSet method directly
 /// This is intended to be fed into the getParameter(Int_t) method:
@@ -460,9 +459,7 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
 
   RooArgList params = ParamHistFunc::createParamSet( w, Prefix, vars );
 
-  RooFIter paramIter = params.fwdIterator() ;
-  RooAbsArg* comp ;
-  while((comp = (RooAbsArg*) paramIter.next())) {
+  for (auto comp : params) {
     
     RooRealVar* var = (RooRealVar*) comp;
 
@@ -493,7 +490,7 @@ RooArgList ParamHistFunc::createParamSet(const std::string& Prefix, Int_t numBin
 
   if( gamma_max <= gamma_min ) {
 
-    std::cout << "Warming: gamma_min <= gamma_max: Using default values (0, 10)" << std::endl;
+    std::cout << "Warning: gamma_min <= gamma_max: Using default values (0, 10)" << std::endl;
 
     gamma_min = 0.0;
     gamma_max = 10.0;
