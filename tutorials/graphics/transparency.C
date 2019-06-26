@@ -25,7 +25,7 @@
 
 void transparency()
 {
-   auto *c1 = new TCanvas("c1", "c1",224,330,700,527);
+   auto c1 = new TCanvas("c1", "c1",224,330,700,527);
    c1->Range(-0.125,-0.125,1.125,1.125);
 
    auto tex = new TLatex(0.06303724,0.0194223,"This text is opaque and this line is transparent");
@@ -50,7 +50,7 @@ void transparency()
    graph->Draw("l");
 
    // Draw an ellipse with opaque colors.
-   TEllipse *ellipse = new TEllipse(0.1740688,0.8352632,0.1518625,0.1010526,0,360,0);
+   auto ellipse = new TEllipse(0.1740688,0.8352632,0.1518625,0.1010526,0,360,0);
    ellipse->SetFillColor(30);
    ellipse->SetLineColor(51);
    ellipse->SetLineWidth(3);
