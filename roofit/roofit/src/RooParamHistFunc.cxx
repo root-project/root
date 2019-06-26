@@ -5,9 +5,19 @@
  *****************************************************************************/
 
 /** \class RooParamHistFunc
-    \ingroup Roofit
-
-*/
+ *  \ingroup Roofit
+ * A histogram function that assigns scale parameters to every bin. Instead of the bare bin contents,
+ * it therefore yields:
+ * \f[
+ *  \gamma_{i} * \mathrm{bin}_i
+ * \f]
+ *
+ * The \f$ \gamma_i \f$ can therefore be used to parametrise statistical uncertainties of the histogram
+ * template. In conjuction with a constraint term, this can be used to implement the Barlow-Beeston method.
+ * The constraint can be implemented using RooHistConstraint.
+ *
+ * See also the tutorial rf709_BarlowBeeston.C
+ */
 
 #include "Riostream.h"
 #include "RooParamHistFunc.h"
@@ -37,6 +47,7 @@ RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataH
   RooArgSet allVars ;
   for (Int_t i=0 ; i<_dh.numEntries() ; i++) {
     _dh.get(i) ;
+
     const char* vname = Form("%s_gamma_bin_%i",GetName(),i) ;
     RooRealVar* var = new RooRealVar(vname,vname,0,1000) ;
     var->setVal(_relParam ? 1 : _dh.weight()) ;
@@ -237,22 +248,19 @@ Double_t RooParamHistFunc::analyticalIntegralWN(Int_t code, const RooArgSet* /*n
 {
   R__ASSERT(code==1) ;
 
-  RooFIter iter = _p.fwdIterator() ;
-  RooAbsReal* p ;
   Double_t ret(0) ;
   Int_t i(0) ;
-  while((p=(RooAbsReal*)iter.next())) {
+  for (const auto param : _p) {
+    auto p = static_cast<const RooAbsReal*>(param);
     Double_t bin = p->getVal() ;
     if (_relParam) bin *= getNominal(i++) ;
     ret += bin ;
   }
 
   // WVE fix this!!! Assume uniform binning for now!
-  RooFIter xiter = _x.fwdIterator() ;
-  RooAbsArg* obs ;
   Double_t binV(1) ;
-  while((obs=xiter.next())) {
-    RooRealVar* xx = (RooRealVar*) obs ;
+  for (const auto obs : _x) {
+    auto xx = static_cast<const RooRealVar*>(obs);
     binV *= (xx->getMax()-xx->getMin())/xx->numBins() ;
   }
 

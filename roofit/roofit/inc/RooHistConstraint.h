@@ -28,18 +28,15 @@ public:
 
 protected:
 
-  Double_t logSum(Int_t i) const ;
-
   RooListProxy _gamma ;
   RooListProxy _nominal ;
-  RooListProxy _nominalErr ;
   Bool_t _relParam ;
 
   Double_t evaluate() const ;
 
 private:
 
-  ClassDef(RooHistConstraint,1) // Your description goes here...
+  ClassDef(RooHistConstraint, 2)
 };
 
 #endif
