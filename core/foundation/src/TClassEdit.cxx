@@ -1,6 +1,17 @@
 // @(#)root/metautils:$Id$
-// Author: Victor Perev   04/10/2003
-//         Philippe Canal 05/2004
+/// \file TClassEdit.cxx
+/// \ingroup Base
+/// \author Victor Perev
+/// \author Philippe Canal
+/// \date 04/10/2003
+
+/*************************************************************************
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
