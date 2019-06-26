@@ -137,7 +137,7 @@ SPlot::SPlot(const SPlot &other):
 ///\param[in] data Dataset to fit to.
 ///\param[in] pdf PDF to compute s weights for.
 ///\param[in] yieldsList List of parameters in `pdf` that are yields.
-///\param[in] projDeps Don't normalise over these parameters when calculating the sWeights. Will be passed on to AddSWeight(). 
+///\param[in] projDeps Don't normalise over these parameters when calculating the sWeights. Will be passed on to AddSWeight().
 ///\param[in] includeWeights Whether or not to include the weights in `data`. Passed on to AddSWeight().
 ///\param[in] cloneData Make a clone of the incoming data before adding weights.
 ///\param[in] newName New name for the data.
@@ -341,7 +341,7 @@ Int_t SPlot::GetNumSWeightVars() const
 ///
 /// The SPlot will contain two new variables for each yield parameter:
 /// - `L_<varname>` is the value of the pdf for the variable "varname" for each event.
-/// - `varname_sw` is the value of the sWeight for the variable "varname" for each event.
+/// - `<varname>_sw` is the value of the sWeight for the variable "varname" for each event.
 ///
 /// Find Parameters in the PDF to be considered fixed when calculating the SWeights
 /// and be sure to NOT include the yields in that list.
@@ -351,17 +351,17 @@ Int_t SPlot::GetNumSWeightVars() const
 /// pdf->fitTo(*fSData, RooFit::Extended(kTRUE), RooFit::SumW2Error(kTRUE), RooFit::PrintLevel(-1), RooFit::PrintEvalErrors(-1)).
 /// ```
 /// One can pass additional arguments to `fitTo`, such as `RooFit::Range("fitrange")`, as `arg5`, `arg6`, `arg7`, `arg8`.
-/// 
+///
 /// \note A `RooFit::Range` may be necessary to get expected results if you initially fit in a range
 /// and/or called `pdf->fixCoefRange("fitrange")` on `pdf`.
 /// Pass `arg5`, `arg6`, `arg7`, `arg8` AT YOUR OWN RISK.
 ///
 /// \param[in] pdf PDF to fit to data to compute s weights.
-/// \param[in] yieldsTmp 
+/// \param[in] yieldsTmp Yields to use to compute s weights.
 /// \param[in] projDeps These will not be normalized over when calculating the sWeights,
 /// and will be considered parameters, not observables.
 /// \param[in] includeWeights
-/// \param[in] argX Optional arguments for the fitting step.
+/// \param[in] argX Optional additional arguments for the fitting step.
 void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
          const RooArgSet &projDeps, bool includeWeights,
          const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8)
