@@ -239,10 +239,10 @@ public:
                                             const TCpuMatrix<Scalar_t> & input,  // BxD
                                             TCpuMatrix<Scalar_t> & input_gradient);
 	
-  /** Backward pass for LSTM Network */
-    static Matrix_t & LSTMLayerBackward(TCpuMatrix<AFloat> & state_gradients_backward,
-			               TCpuMatrix<AFloat> & cell_gradients_backward,
-			               TCpuMatrix<AFloat> & input_weight_gradients,
+   /** Backward pass for LSTM Network */
+   static Matrix_t & LSTMLayerBackward(TCpuMatrix<AFloat> & state_gradients_backward,
+			                              TCpuMatrix<AFloat> & cell_gradients_backward,
+			                              TCpuMatrix<AFloat> & input_weight_gradients,
                                        TCpuMatrix<AFloat> & forget_weight_gradients,
                                        TCpuMatrix<AFloat> & candidate_weight_gradients,
                                        TCpuMatrix<AFloat> & output_weight_gradients,
