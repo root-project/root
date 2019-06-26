@@ -210,7 +210,7 @@ Maximal compression of JSON can be achieved now with compact parameter 128 = 100
   - Speed up event loop, improve scaling in the presence of a large amount of Defines
   - Allow Filter expressions to return types convertible to bool, rather than only bool
   - Add `GetNSlots` method to easily retrieve the number of slots that will be used by
-    `DefineSlot, `ForeachSlot`, `OnPartialResultSlot`, ...
+    `DefineSlot`, `ForeachSlot`, `OnPartialResultSlot`, ...
   - Add support for TTrees/TChains with TEntryLists (currently only for single-thread event loops)
   - Add `HasColumn` method to check whether a column is available to a given RDF node
   - PyROOT: add `AsRNode` helper function to convert RDF nodes to the common RNode type
