@@ -110,5 +110,21 @@ The following people have contributed to this new version:
 
 
 ## Build, Configuration and Testing Infrastructure
-- Make MLP optional via the "-Dmlp={OFF,ON}" switch for CMake
-- Make Spectrum optional via the "-Dspectrum={OFF,ON}" switch for CMake
+
+- Make MLP optional via the `-Dmlp={OFF,ON}` switch for CMake
+- Make Spectrum optional via the `-Dspectrum={OFF,ON}` switch for CMake
+- ROOT now fails to configure when any package is missing
+  when `-Dfail-on-missing=ON` is passed to CMake
+- The `-Dall=ON` now switches the default value of all optional packages to `ON`
+- The options `astiff`, `cling`, `pch`, `thread`, and `explicitlink` have been
+  removed and are now ignored. They either had no effect (their value was not
+  being used in the build system), or could not be disabled (like `cling` and
+  `explicitlink`).
+- ROOT library targets now export which C++ standard they were built with via
+  the target compile features `cxx_std_11`, `cxx_std_14`, and `cxx_std_17`.
+
+The following builtins have been updated:
+
+- Intel TBB 2019 U7
+- OpenSSL 1.0.2s
+- XRootD 4.9.1
