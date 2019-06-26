@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_pyroot
+## \ingroup tutorial_pyroot_legacy
 ## \notebook
 ## This macro displays the ROOT Directory data structure
 ##
