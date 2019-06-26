@@ -166,7 +166,7 @@ Begin_Macro(source)
       x[i] = i*0.1;
       y[i] = 10*sin(x[i]+0.2)-6;
    }
-   gr = new TGraph(n,x,y);
+   auto gr = new TGraph(n,x,y);
    gr->SetFillColor(38);
    c47->cd(1); gr->Draw("AB");
    c47->cd(2); gr->Draw("AB1");
@@ -235,7 +235,7 @@ Begin_Macro(source)
    double y[] = {0, 2, 4, 1, 3};
    double ex[] = {0.1, 0.2, 0.3, 0.4, 0.5};
    double ey[] = {1, 0.5, 1, 0.5, 1};
-   TGraphErrors* ge = new TGraphErrors(5, x, y, ex, ey);
+   auto ge = new TGraphErrors(5, x, y, ex, ey);
    ge->Draw("ap");
 }
 End_Macro
@@ -249,10 +249,10 @@ Begin_Macro(source)
    float err_x[] = {0,0,0};
    float err_y[] = {5,5,5};
    float y[]     = {1,4,9};
-   TGraphErrors tg(3,x,y,err_x,err_y);
+   auto tg = new TGraphErrors(3,x,y,err_x,err_y);
    c48->Divide(2,1);
-   c48->cd(1); gPad->DrawFrame(0,0,4,8); tg.Draw("PC");
-   c48->cd(2); gPad->DrawFrame(0,0,4,8); tg.Draw("0PC");
+   c48->cd(1); gPad->DrawFrame(0,0,4,8); tg->Draw("PC");
+   c48->cd(2); gPad->DrawFrame(0,0,4,8); tg->Draw("0PC");
 }
 End_Macro
 
@@ -265,7 +265,7 @@ Begin_Macro(source)
    double y[] = {0, 2, 4, 1, 3};
    double ex[] = {0.1, 0.2, 0.3, 0.4, 0.5};
    double ey[] = {1, 0.5, 1, 0.5, 1};
-   TGraphErrors* ge = new TGraphErrors(5, x, y, ex, ey);
+   auto ge = new TGraphErrors(5, x, y, ex, ey);
    ge->SetFillColor(4);
    ge->SetFillStyle(3010);
    ge->Draw("a3");
@@ -285,7 +285,7 @@ Begin_Macro(source)
    double y[] = {0, 2, 4, 1, 3};
    double ex[] = {0.1, 0.2, 0.3, 0.4, 0.5};
    double ey[] = {1, 0.5, 1, 0.5, 1};
-   TGraphErrors* ge = new TGraphErrors(5, x, y, ex, ey);
+   auto ge = new TGraphErrors(5, x, y, ex, ey);
    ge->SetFillColor(6);
    ge->SetFillStyle(3005);
    ge->Draw("a4");
@@ -316,25 +316,25 @@ Begin_Macro(source)
    // Now draw data set (1)
 
    // We first have to draw it only with the stat errors
-   TGraphErrors *graph1 = new TGraphErrors(5, x, py1, zero, ey_stat1);
+   auto graph1 = new TGraphErrors(5, x, py1, zero, ey_stat1);
    graph1->SetMarkerStyle(20);
    graph1->Draw("P");
 
    // Now we have to somehow depict the sys errors
 
-   TGraphErrors *graph1_sys = new TGraphErrors(5, x, py1, zero, ey_sys1);
+   auto graph1_sys = new TGraphErrors(5, x, py1, zero, ey_sys1);
    graph1_sys->Draw("[]");
 
    // Now draw data set (2)
 
    // We first have to draw it only with the stat errors
-   TGraphErrors *graph2 = new TGraphErrors(5, x, y2, zero, ey_stat2);
+   auto graph2 = new TGraphErrors(5, x, y2, zero, ey_stat2);
    graph2->SetMarkerStyle(24);
    graph2->Draw("P");
 
    // Now we have to somehow depict the sys errors
 
-   TGraphErrors *graph2_sys = new TGraphErrors(5, x, y2, zero, ey_sys2);
+   auto graph2_sys = new TGraphErrors(5, x, y2, zero, ey_sys2);
    graph2_sys->Draw("[]");
 }
 End_Macro
@@ -353,7 +353,7 @@ Begin_Macro(source)
    double aexh[] = {0.5, 0.4, 0.3, 0.2, 0.1};
    double aeyl[] = {1, 0.5, 1, 0.5, 1};
    double aeyh[] = {0.5, 1, 0.5, 1, 0.5};
-   TGraphAsymmErrors* gae = new TGraphAsymmErrors(5, ax, ay, aexl, aexh, aeyl, aeyh);
+   auto gae = new TGraphAsymmErrors(5, ax, ay, aexl, aexh, aeyl, aeyh);
    gae->SetFillColor(2);
    gae->SetFillStyle(3001);
    gae->Draw("a2");
@@ -381,7 +381,7 @@ Begin_Macro(source)
    Double_t eyld[n] = {.0,.0,.05,.0,.0,.0,.0,.0,.0,.0};
    Double_t exhd[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
    Double_t eyhd[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.05,.0};
-   TGraphBentErrors *gr = new TGraphBentErrors(n,x,y,exl,exh,eyl,eyh,exld,exhd,eyld,eyhd);
+   auto gr = new TGraphBentErrors(n,x,y,exl,exh,eyl,eyh,exld,exhd,eyld,eyhd);
    gr->SetTitle("TGraphBentErrors Example");
    gr->SetMarkerColor(4);
    gr->SetMarkerStyle(21);
@@ -407,7 +407,7 @@ The drawing options for the polar graphs are the following:
 Begin_Macro(source)
 {
    auto c46 = new TCanvas("c46","c46",500,500);
-   TGraphPolar * grP1 = new TGraphPolar();
+   auto grP1 = new TGraphPolar();
    grP1->SetTitle("TGraphPolar example");
 
    grP1->SetPoint(0, (1*TMath::Pi())/4., 0.05);
@@ -465,9 +465,9 @@ values from top to bottom. The following example illustrate how to use these opt
 
 Begin_Macro(source)
 {
-   auto *c = new TCanvas();
+   auto c = new TCanvas();
    c->Divide(2,1);
-   auto *g = new TGraphErrors();
+   auto g = new TGraphErrors();
    g->SetTitle("Simple Graph");
 
    g->SetPoint(0,-4,-3);
@@ -515,7 +515,7 @@ Begin_Macro(source)
    Int_t n = 10000;
    Double_t dx = (xmax-xmin)/n;
    Double_t x = xmin;
-   TGraph*g2 = new TGraph();
+   auto g2 = new TGraph();
    for (Int_t i=0; i<n; i++) {
       g2->SetPoint(i, x, g->Eval(x));
       x = x + dx;
