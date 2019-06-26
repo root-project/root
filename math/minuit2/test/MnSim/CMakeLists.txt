@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 
 add_library(GaussSim
     GaussDataGen.cxx
@@ -35,4 +41,3 @@ configure_file(paul.txt paul.txt COPYONLY)
 configure_file(paul2.txt paul2.txt COPYONLY)
 configure_file(paul3.txt paul3.txt COPYONLY)
 configure_file(paul4.txt paul4.txt COPYONLY)
-

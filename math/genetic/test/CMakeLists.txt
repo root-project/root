@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 project(genetic-tests)
 find_package(ROOT REQUIRED)
 
@@ -19,4 +25,3 @@ foreach(file ${TestGeneticSource})
   ROOT_EXECUTABLE(${testname} ${file} LIBRARIES ${Libraries})
   ROOT_ADD_TEST(genetic-${testname} COMMAND ${testname})
 endforeach()
-
