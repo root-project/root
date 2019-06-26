@@ -50,6 +50,11 @@ if (CUDA_FOUND AND tmva-gpu)
   TARGET_LINK_LIBRARIES(testBackpropagationDLCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
   ROOT_ADD_TEST(TMVA-DNN-Backpropagation-DLCuda COMMAND testBackpropagationDLCuda)
 
+  # DNN - Batch normalization Cuda
+  CUDA_ADD_EXECUTABLE(testBatchNormalizationCuda TestBatchNormalizationCuda.cxx )
+  TARGET_LINK_LIBRARIES(testBatchNormalizationCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
+  ROOT_ADD_TEST(TMVA-DNN-BatchNormalization-Cuda COMMAND testBatchNormalizationCuda)
+
   # DNN - Minimization Cuda
   CUDA_ADD_EXECUTABLE(testMinimizationCuda TestMinimizationCuda.cxx)
   TARGET_LINK_LIBRARIES(testMinimizationCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
@@ -100,6 +105,10 @@ if ( (BLAS_FOUND OR mathmore) AND imt AND tmva-cpu)
   ROOT_EXECUTABLE(testBackpropagationDLCpu TestBackpropagationDLCpu.cxx
     LIBRARIES ${Libraries})
   ROOT_ADD_TEST(TMVA-DNN-Backpropagation-DL-Cpu COMMAND testBackpropagationDLCpu)
+
+    # DNN - Batch normalization
+  ROOT_EXECUTABLE(testBatchNormalizationCpu TestBatchNormalizationCpu.cxx LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-BatchNormalization-Cpu COMMAND testBatchNormalizationCpu)
 
   # DNN - DataLoader CPU
   ROOT_EXECUTABLE(testDataLoaderCpu TestDataLoaderCpu.cxx
@@ -167,6 +176,10 @@ endif ()
   # DNN - Backpropagation DL
   ROOT_EXECUTABLE(testBackpropagationDL TestBackpropagationDL.cxx LIBRARIES ${Libraries})
   ROOT_ADD_TEST(TMVA-DNN-Backpropagation-DL COMMAND testBackpropagationDL)
+
+  # DNN - Batch normalization
+  ROOT_EXECUTABLE(testBatchNormalization TestBatchNormalization.cxx LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-BatchNormalization COMMAND testBatchNormalization)
 
   # DNN - DataLoader
   ROOT_EXECUTABLE(testDataLoader TestDataLoader.cxx LIBRARIES ${Libraries})
