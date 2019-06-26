@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 # General pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_pretty_printing pretty_printing.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface array_interface.py)

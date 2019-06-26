@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 add_subdirectory(math)
 
 set(MINUIT2_HEADERS
@@ -226,4 +232,3 @@ install(TARGETS Minuit2
         )
 
 install(FILES ${MINUIT2_HEADERS} DESTINATION include/Minuit2/Minuit2)
-
