@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Speecial p.d.f.'s: histogram based p.d.f.s and functions
+/// Special p.d.f.'s: histogram-based p.d.f.s and functions
 ///
 /// \macro_image
 /// \macro_output
