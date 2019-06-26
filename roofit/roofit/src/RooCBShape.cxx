@@ -17,7 +17,7 @@
 /** \class RooCBShape
     \ingroup Roofit
 
-P.d.f implementing the Crystal Ball line shape
+PDF implementing the Crystal Ball line shape.
 **/
 
 #include "RooFit.h"
@@ -166,7 +166,7 @@ Double_t RooCBShape::analyticalIntegral(Int_t code, const char* rangeName) const
     result += term1 + term2;
   }
 
-  return result;
+  return result != 0. ? result : std::numeric_limits<double>::min();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
