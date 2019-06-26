@@ -566,7 +566,7 @@ bool ROOT::Experimental::RWebWindow::ProcessWS(THttpCallArg &arg)
       return false;
    }
 
-   unsigned processed_len = (str_end + 1 - buf);
+   Long_t processed_len = (str_end + 1 - buf);
 
    if (processed_len > arg.GetPostDataLength()) {
       R__ERROR_HERE("webgui") << "corrupted buffer";
