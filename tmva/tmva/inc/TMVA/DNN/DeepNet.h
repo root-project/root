@@ -37,6 +37,7 @@
 #include "TMVA/DNN/GeneralLayer.h"
 #include "TMVA/DNN/DenseLayer.h"
 #include "TMVA/DNN/ReshapeLayer.h"
+#include "TMVA/DNN/BatchNormLayer.h"
 
 #include "TMVA/DNN/CNN/ConvLayer.h"
 #include "TMVA/DNN/CNN/MaxPoolLayer.h"
@@ -163,6 +164,9 @@ public:
     *  reshape it to a matrix with new dimensions. */
    TReshapeLayer<Architecture_t> *AddReshapeLayer(size_t depth, size_t height, size_t width, bool flattening);
 
+   /*! Function for adding a Batch Normalization layer with given parameters */
+   TBatchNormLayer<Architecture_t> *AddBatchNormLayer(Scalar_t momentum, Scalar_t epsilon);
+
    /*! Function for adding Reshape Layer in the Deep Neural Network, when
     *  the layer is already created. */
    void AddReshapeLayer(TReshapeLayer<Architecture_t> *reshapeLayer);
@@ -271,7 +275,7 @@ public:
 
    /*! Function for evaluating the loss, based on the propagation of the given input. */
    Scalar_t Loss(std::vector<Matrix_t> &input, const Matrix_t &groundTruth, const Matrix_t &weights,
-                 bool applyDropout = false, bool includeRegularization = true);
+                 bool inTraining = false, bool includeRegularization = true);
 
    /*! Function for computing the regularizaton term to be added to the loss function  */
    Scalar_t RegularizationTerm() const; 
@@ -700,6 +704,26 @@ TReshapeLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddReshapeLaye
 
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
+TBatchNormLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBatchNormLayer(Scalar_t momentum, Scalar_t epsilon)
+{
+   size_t batchSize = this->GetBatchSize();
+   size_t inputWidth = 0; 
+   if (fLayers.size() == 0) {
+      inputWidth = this->GetInputWidth();
+   } else {
+      Layer_t *lastLayer = fLayers.back();
+      inputWidth = lastLayer->GetWidth();
+   }
+
+   auto bnormLayer = new TBatchNormLayer<Architecture_t>(batchSize, inputWidth, momentum, epsilon);
+
+   fLayers.push_back(bnormLayer);
+
+   return bnormLayer;
+}
+
+//______________________________________________________________________________
+template <typename Architecture_t, typename Layer_t>
 void TDeepNet<Architecture_t, Layer_t>::AddReshapeLayer(TReshapeLayer<Architecture_t> *reshapeLayer)
 {
    fLayers.push_back(reshapeLayer);
@@ -737,6 +761,8 @@ auto TDeepNet<Architecture_t, Layer_t>::Forward(std::vector<Matrix_t> &input, bo
 
    for (size_t i = 1; i < fLayers.size(); i++) {
       fLayers[i]->Forward(fLayers[i - 1]->GetOutput(), applyDropout);
+      // std::cout << "forward for layer " << i << std::endl;
+      // fLayers[i]->GetOutput()[0].Print(); 
    }
 }
 
@@ -1106,10 +1132,10 @@ auto TDeepNet<Architecture_t, Layer_t>::Loss(const Matrix_t &groundTruth, const 
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
 auto TDeepNet<Architecture_t, Layer_t>::Loss(std::vector<Matrix_t> &input, const Matrix_t &groundTruth,
-                                             const Matrix_t &weights, bool applyDropout, bool includeRegularization)
+                                             const Matrix_t &weights, bool inTraining, bool includeRegularization)
    -> Scalar_t
 {
-   Forward(input, applyDropout);
+   Forward(input, inTraining);
    return Loss(groundTruth, weights, includeRegularization);
 }
 
