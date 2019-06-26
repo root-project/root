@@ -1,8 +1,8 @@
 // @(#)root/tmva $Id$
-// Author: Harshit Prasad 27/05/18
+// Author: Surya S Dwivedi 07/06/2019
 
 /*************************************************************************
- * Copyright (C) 2018, Harshit Prasad                                    *
+ * Copyright (C) 2019, Surya S Dwivedi                                    *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -22,14 +22,13 @@ using namespace TMVA::DNN::LSTM;
 
 int main() {
 
-    using Scalar_t = Double_t;
+   using Scalar_t = Double_t;
 
-    std::cout << "Testing LSTM Forward pass\n";
+   std::cout << "Testing LSTM Forward pass\n";
 
-    // timesteps, batchsize, statesize, inputsize
-    std::cout << testForwardPass<TCpu<Scalar_t>>(1, 2, 3, 2)  << "\n";
-    // std::cout << testForwardPass<TCpu<Scalar_t>>(1, 8, 100, 50)  << "\n";
-    // std::cout << testForwardPass<TCpu<Scalar_t>>(5, 9, 128, 64)  << "\n";
-
+   // timesteps, batchsize, statesize, inputsize
+   std::cout << testForwardPass<TCpu<Scalar_t>>(1, 2, 3, 2)  << "\n";
+   // std::cout << testForwardPass<TCpu<Scalar_t>>(1, 8, 100, 50)  << "\n";
+   // std::cout << testForwardPass<TCpu<Scalar_t>>(5, 9, 128, 64)  << "\n";
    return 0;
 }

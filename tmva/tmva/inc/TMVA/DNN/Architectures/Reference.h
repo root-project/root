@@ -111,10 +111,10 @@ public:
 
 
    
-    /** Backward pass for LSTM Network */
-    static Matrix_t & LSTMLayerBackward(TMatrixT<Scalar_t> & state_gradients_backward,
-			               TMatrixT<Scalar_t> & cell_gradients_backward,
-			               TMatrixT<Scalar_t> & input_weight_gradients,
+   /** Backward pass for LSTM Network */
+   static Matrix_t & LSTMLayerBackward(TMatrixT<Scalar_t> & state_gradients_backward,
+			                              TMatrixT<Scalar_t> & cell_gradients_backward,
+			                              TMatrixT<Scalar_t> & input_weight_gradients,
                                        TMatrixT<Scalar_t> & forget_weight_gradients,
                                        TMatrixT<Scalar_t> & candidate_weight_gradients,
                                        TMatrixT<Scalar_t> & output_weight_gradients,
