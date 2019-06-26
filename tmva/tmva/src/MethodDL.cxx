@@ -551,6 +551,8 @@ void MethodDL::CreateDeepNet(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
          ParseMaxPoolLayer(deepNet, nets, layerString->GetString(), subDelimiter);
       } else if (strLayerType == "RESHAPE") {
          ParseReshapeLayer(deepNet, nets, layerString->GetString(), subDelimiter);
+      } else if (strLayerType == "BNORM") {
+         ParseBatchNormLayer(deepNet, nets, layerString->GetString(), subDelimiter);
       } else if (strLayerType == "RNN") {
          ParseRnnLayer(deepNet, nets, layerString->GetString(), subDelimiter);
       // } else if (strLayerType == "LSTM") {
@@ -863,6 +865,47 @@ void MethodDL::ParseReshapeLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet
    //for (size_t i = 0; i < nets.size(); i++) {
    //   nets[i].AddReshapeLayer(copyReshapeLayer);
    //}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Pases the layer string and creates the appropriate reshape layer
+template <typename Architecture_t, typename Layer_t>
+void MethodDL::ParseBatchNormLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
+                                 std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> & /*nets*/, TString layerString,
+                                 TString delim)
+{
+    
+   // default values 
+   double momentum = 0.99; 
+   double epsilon = 0.0001; 
+
+   // Split layer details
+   TObjArray *subStrings = layerString.Tokenize(delim);
+   TIter nextToken(subStrings);
+   TObjString *token = (TObjString *)nextToken();
+   int idxToken = 0;
+
+   for (; token != nullptr; token = (TObjString *)nextToken()) {
+      switch (idxToken) {
+      case 1: {
+         momentum = std::atof(token->GetString().Data());
+      } break;
+      case 2: // height
+      {
+         epsilon = std::atof(token->GetString().Data());
+      } break;
+      }
+      ++idxToken;
+   }
+  
+   // Add the batch norm  layer
+   // 
+   auto layer = deepNet.AddBatchNormLayer(momentum, epsilon);
+   layer->Initialize();
+
+   // Add the same layer to fNet
+   if (fBuildNet) fNet->AddBatchNormLayer(momentum, epsilon);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2073,6 +2116,11 @@ void MethodDL::ReadWeightsFromXML(void * rootXML)
          
          fNet->AddBasicRNNLayer(stateSize, inputSize, timeSteps, rememberState);
          
+      }
+       // BatchNorm Layer
+      else if (layerName == "BatchNormLayer") {   
+         // use some dammy value which will be overwrittem in BatchNormLayer::ReadWeightsFromXML
+         fNet->AddBatchNormLayer(0., 0.0);
       }
 
 
