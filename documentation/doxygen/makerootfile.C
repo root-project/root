@@ -39,6 +39,13 @@ void makerootfile(const char *MacroName, const char *IN, const char *OutDir, boo
    // Build the html file inlining the JS pictures
    int i;
    FILE *fh = fopen(TString::Format("%s/macros/%s.html",OutDir,IN), "w");
+
+   fprintf(fh,"<center>\n");
+   for (i=1; i<=ImageNum; i++) {
+      fprintf(fh,"<div id=\"draw_pict%d_%s\" style=\"width:%dpx; height:%dpx\"></div>\n",
+              i,IN,cw,ch);
+   }
+   fprintf(fh,"</center>\n");
    fprintf(fh,"<script src=\"https://root.cern.ch/js/dev/scripts/JSRootCore.js\" type=\"text/javascript\"></script>\n");
    fprintf(fh,"<script type='text/javascript'>\n");
    fprintf(fh,"JSROOT.OpenFile(\"./%s.root\", function(file) {\n",IN);
@@ -48,11 +55,6 @@ void makerootfile(const char *MacroName, const char *IN, const char *OutDir, boo
    }
    fprintf(fh,"});\n");
    fprintf(fh,"</script>\n");
-   fprintf(fh,"<center>\n");
-   for (i=1; i<=ImageNum; i++) {
-      fprintf(fh,"<div id=\"draw_pict%d_%s\" style=\"width:%dpx; height:%dpx\"></div>\n",
-              i,IN,cw,ch);
-   }
-   fprintf(fh,"</center>\n");
+
    fclose(fh);
 }
