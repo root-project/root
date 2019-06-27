@@ -11,4 +11,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(CustomStruct
                               LINKDEF CustomStructLinkDef.h
                               DEPENDENCIES RIO)
 ROOT_ADD_GTEST(ntuple ntuple.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
-ROOT_ADD_GTEST(ntupleprint ntupleprint.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
+ROOT_ADD_GTEST(ntuple_print ntuple_print.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)

@@ -103,37 +103,28 @@ std::string ROOT::Experimental::RNTupleReader::GetInfo(const ENTupleInfo what) {
    return "";
 }
 
-void ROOT::Experimental::RNTupleReader::Print() {
-    //std::cout << "CallingPrint\n";
-    //std::cout << "****************************** NTUPLE *******************************\n";
-    //std::cout << "* Ntuple  : " << GetName() << std::setw(58-GetName().size()) << "*\n";
-    //std::cout << "* Entries : " << GetNEntries() << std::setw(58-NumDigits(GetNEntries())) << "*\n";
-    //std::cout << "*********************************************************************\n";
-    
-    RPrintVisitor fPrintVisitor;
-    GetModel()->GetRootField()->AcceptVisitor(fPrintVisitor);
-    for(const auto& field: *(GetModel()->GetRootField()))
-    
-    //for(int i = 0; i < GetModel()->GetRootField()->getSubfields().size(); ++i)
-    {
+void ROOT::Experimental::RNTupleReader::Print(std::ostream &output, int width, unsigned int fNoFields) {
+    if(width < 30) {
+        std::cout << "The width is too small! Should be at least 30.\n";
+        return;
+    }
+    RPrintVisitor fPrintVisitor(output, width, fNoFields);
+    for(int i = 0; i < (width/2 + width%2 -4); ++i)
+        output << '*'; output << " NTUPLE ";
+    for(int i = 0; i < (width/2 -4); ++i) output << '*'; output << '\n';
+    //CutIfNecessary defined in RFieldVisitor.hxx
+    output << "* Ntuple  : " << CutIfNecessary(GetName(),width-13) << std::setw(width-11-GetName().size()) << "*\n";
+    output << "* Entries : " << GetNEntries() << std::setw(width-11-NumDigits(GetNEntries())) << "*\n";
+    for(int i = 0; i < width; ++i)
+        output << "*"; output << '\n';
+    for(const auto& field: *(GetModel()->GetRootField())) {
+        output << "*";
         field.AcceptVisitor(fPrintVisitor);
+        output << "*\n";
+        for(int i = 0; i < width; ++i)
+            output << "*"; output << '\n';
      }
-    //GetModel()->GetRootField()->AcceptVisitor(fPrintVisitor);
-    /*
-    for (auto field : GetModel()->GetRootField())
-        field.AcceptVisitor(...)
-    GetModel()->GetRootField()->AcceptVisitor(fPrintVisitor);*/
 }
-/*
-void ROOT::Experimental::RNTupleReader::Print() {
-    TNtuplePrintVisitor fPrintVisitor;
-    Accept(fPrintVisitor);
-}
-
-void ROOT::Experimental::RNTupleReader::Accept(ROOT::Experimental::VBaseNtupleVisitor &fVisitor) {
-    fVisitor.visitNtuple(this);
-}
-*/
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RNTupleWriter::RNTupleWriter(

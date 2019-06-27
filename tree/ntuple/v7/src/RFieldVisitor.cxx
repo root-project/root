@@ -13,31 +13,19 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//#include "ROOT/RNTuple.hxx"
 #include "ROOT/RFieldVisitor.hxx"
 #include "ROOT/RField.hxx"
+#include "ROOT/RNTuple.hxx"
 #include <iostream>
+#include <sstream>
 #include <iomanip>
+#include <string>
 
 
-void ROOT::Experimental::RPrintVisitor::visitField(const ROOT::Experimental::Detail::RFieldBase& fField) { std::cout << "Called visitField for any normal field\n";}
-void ROOT::Experimental::RPrintVisitor::visitField(const ROOT::Experimental::RFieldRoot& fRootField) {
-    std::cout << "Called function for RootField\n";
+void ROOT::Experimental::RPrintVisitor::visitField(const ROOT::Experimental::Detail::RFieldBase& fField) {
+    std::string fNameAndType{fField.GetName() +" (" + fField.GetType()+")"};
+    fOutput << " Field " << std::setw(FieldDistance(maxNoFields)+5-NumDigits(fField.GetOrder())) << fField.GetOrder() << " : " << CutIfNecessary(fNameAndType, fWidth-FieldDistance(maxNoFields)-16) << std::setw(fWidth-17-FieldDistance(maxNoFields)-fField.GetName().size()-fField.GetType().size());
 }
-/*void ROOT::Experimental::RPrintVisitor::visitField(ROOT::Experimental::Detail::RFieldBase* fField, int fIndex) {
-    /// content here: Each line has 69 char.
-    //std::cout << "Calling visitField\n";
-    std::cout << "* Br " << std::setw(5-NumDigits(fIndex)) << fIndex << " : " << fField->GetName() << ": " << fField->GetType() << std::setw(56-(fField->GetName().size()) - (fField->GetType().size())) <<"*\n";
-    std::cout << "* Entries : \n"; //Does this even make sense?!
-    std::cout << "* Baskets : \n"; //WTF is a basket.
-    std::cout << "*********************************************************************\n";
-}
-
-void ROOT::Experimental::RPrintVisitor::visitField(ROOT::Experimental::RField<std::string, void>* fField, int fIndex) {
-    std::cout << "* Br " << std::setw(5-NumDigits(fIndex)) << fIndex << " : " << fField->GetName() << ": " << fField->GetType() << std::setw(56-(fField->GetName().size()) - (fField->GetType().size())) <<"*\n";
-    std::cout << "* Invoked templated version because data type was std::string" << std::setw(9) << "*\n";
-    std::cout << "*********************************************************************\n";
-}*/
 
 int ROOT::Experimental::NumDigits(int x)
 {
@@ -53,33 +41,20 @@ int ROOT::Experimental::NumDigits(int x)
                    (x < 1000000000 ? 9 :
                     10)))))))));
 }
-    /*
-    std::cout << "****************************** NTUPLE *******************************\n";
-    std::cout << "* Ntuple  : " << fField->GetName() << std::setw(58-fField->GetName().size()) << "*\n";
-    std::cout << "*********************************************************************\n";*/
 
-
-
-
-/*
-void ROOT::Experimental::TNtuplePrintVisitor::visitNtuple(ROOT::Experimental::RNTupleReader* fReader)  {
-    /// content here: Each line has 69 char.
-    auto Rootfield = fReader->GetModel()->GetRootField();
-    std::cout << "****************************** NTUPLE *******************************\n";
-    std::cout << "* Ntuple  : " << fReader->getName() << std::setw(58-fReader->getName().size()) << "*\n";
-    std::cout << "* Entries : " << fReader->GetNEntries() << std::setw(58-NumDigits(fReader->GetNEntries())) << "*\n";
-    std::cout << "*********************************************************************\n";
-    /// From here on entry specific for each branch.
-    for(size_t i = 0; i < Rootfield->fSubFields.size(); ++i) {
-    // for(size_t i = 0; i < fReader->GetModel()->GetRootField()->(Detail::GetNItems()); ++i) {
-        std::cout << "* Br " << std::setw(5-NumDigits(i)) << i << " : " << Rootfield->fSubFields.at(i)->fName << ": " << Rootfield->fSubFields.at(i)->fType << std::setw(56-(Rootfield->fSubFields.at(i)->fName.size()) - (Rootfield->fSubFields.at(i)->fType.size())) <<"*\n";
-        std::cout << "* Entries : \n"; //Does this even make sense?!
-        std::cout << "* Baskets : \n"; //WTF is a basket.
-        std::cout << "*********************************************************************\n";
-    } // end for loop
-    // for(auto subfieldptr: fReader->GetModel()->GetRootField()->fSubFields) {  }
-    
-    
-    
+int ROOT::Experimental::FieldDistance(unsigned int x) {
+    return (x < 10000 ? 0 :
+             (x < 100000 ? 1 :
+              (x < 1000000 ? 2 :
+               (x < 10000000 ? 3 :
+                (x < 100000000 ? 4 :
+                 (x < 1000000000 ? 5 :
+                  10))))));
 }
-*/
+
+std::string ROOT::Experimental::CutIfNecessary(const std::string &toCut, unsigned int maxAvailableSpace) {
+    if(toCut.size() > maxAvailableSpace) {
+        return std::string(toCut, 0, maxAvailableSpace-3) + "...";
+    }
+   return toCut;
+}

@@ -16,50 +16,38 @@
 #ifndef ROOT7_RFieldVisitor
 #define ROOT7_RFieldVisitor
 
+#include <iostream>
+#include <sstream>
+#include <string>
 
-//#include "ROOT/RField.hxx"
 
 namespace ROOT {
 namespace Experimental {
-    //template<typename T, typename T2>
-    //class RField;
     class RFieldRoot;
 namespace Detail {
     class RFieldBase;
-    
     }
     
     
 class RNTupleVisitor {
 public:
     virtual void visitField(const ROOT::Experimental::Detail::RFieldBase& fField) = 0;
-    virtual void visitField(const ROOT::Experimental::RFieldRoot& fRootField) = 0;
-    //virtual void visitField(ROOT::Experimental::Detail::RFieldBase* fField, int floop);
-    //virtual void visitField(ROOT::Experimental::RField<std::string, void>* fField, int floop);
 };
     
 class RPrintVisitor: public RNTupleVisitor {
+private:
+    /// holds ostream which is used for output
+    std::ostream &fOutput;
+    int fWidth;
+    int maxNoFields;
 public:
+    RPrintVisitor(std::ostream& out = std::cout, int width = 69, int fNoFields = 1000): fOutput{out}, fWidth{width}, maxNoFields{fNoFields} { }
     void visitField(const ROOT::Experimental::Detail::RFieldBase& fField);
-    void visitField(const ROOT::Experimental::RFieldRoot& fRootField);
-    //void visitField(ROOT::Experimental::Detail::RFieldBase* fField, int floop);
-    //void visitField(ROOT::Experimental::RField<std::string, void>* fField, int floop);
 };
     
 int NumDigits(int x);
-    /*
-class RNTupleReader;
-
-class VBaseNtupleVisitor {
-public:
-    virtual void visitNtuple(ROOT::Experimental::RNTupleReader* fReader) = 0;
-};
-
-class TNtuplePrintVisitor: public VBaseNtupleVisitor {
-public:
-    void visitNtuple(ROOT::Experimental::RNTupleReader* fReader);
-};
-    */
+int FieldDistance(unsigned int fNoFields);
+std::string CutIfNecessary(const std::string &fToCut, unsigned int maxAvailableSpace);
 } // namespace Experimental
 } // namespace ROOT
 
