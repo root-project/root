@@ -54,6 +54,7 @@
 ///  is passed, the macro is executed without the batch option.
 ///  Some tutorials generate pictures (png or pdf) with `Print` or `SaveAs`.
 ///  Such pictures can be displayed with `\macro_image (picture_name.png[.pdf])`
+///  When the option (js) is used the image is displayed as JavaScript.
 ///
 ///  2. `\macro_code`
 ///  The macro code is shown.  A caption can be added: `\macro_code This is code`
@@ -321,6 +322,8 @@ void FilterTutorial()
       if (gLineString.find("\\macro_image") != string::npos) {
          bool nobatch = (gLineString.find("(nobatch)") != string::npos);
          ReplaceAll(gLineString,"(nobatch)","");
+         bool js = (gLineString.find("(js)") != string::npos);
+         ReplaceAll(gLineString,"(js)","");
          bool image_created_by_macro = (gLineString.find(".png)") != string::npos) ||
                                        (gLineString.find(".svg)") != string::npos) ||
                                        (gLineString.find(".pdf)") != string::npos);
@@ -333,6 +336,14 @@ void FilterTutorial()
             ExecuteCommand(StringFormat("mv %s %s/html", image_name.c_str(), gOutDir.c_str()));
             ReplaceAll(gLineString, "macro_image (", "image html ");
             ReplaceAll(gLineString, ")", "");
+         } else if (js) {
+            string IN;
+            IN = gImageName;
+            int i = IN.find(".C");
+            IN.erase(i,IN.length());
+            ExecuteCommand(StringFormat("root -l -b -q \"makerootfile.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
+                                         gFileName.c_str(), IN.c_str(), gOutDir.c_str()));
+            ReplaceAll(gLineString, "macro_image", StringFormat("htmlinclude[block] %s.html",IN.c_str()));
          } else {
             if (gPython) {
                if (nobatch) {
