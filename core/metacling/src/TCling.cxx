@@ -1405,17 +1405,19 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       fInterpreter->enableDynamicLookup();
    }
 
-   // Attach cling callbacks last; they might need TROOT::fInterpreter
-   // and should thus not be triggered during the equivalent of
-   // TROOT::fInterpreter = new TCling;
-   std::unique_ptr<TClingCallbacks>
-      clingCallbacks(new TClingCallbacks(fInterpreter));
-   fClingCallbacks = clingCallbacks.get();
-   fClingCallbacks->SetAutoParsingSuspended(fIsAutoParsingSuspended);
-   fInterpreter->setCallbacks(std::move(clingCallbacks));
+   if (!fromRootCling) {
+      // Attach cling callbacks last; they might need TROOT::fInterpreter
+      // and should thus not be triggered during the equivalent of
+      // TROOT::fInterpreter = new TCling;
+      std::unique_ptr<TClingCallbacks>
+	 clingCallbacks(new TClingCallbacks(fInterpreter));
+      fClingCallbacks = clingCallbacks.get();
+      fClingCallbacks->SetAutoParsingSuspended(fIsAutoParsingSuspended);
+      fInterpreter->setCallbacks(std::move(clingCallbacks));
 
-   // We are set up.
-   EnableAutoLoading();
+      // We are set up.
+      EnableAutoLoading();
+   }
 }
 
 
@@ -1449,7 +1451,8 @@ TCling::~TCling()
 
 void TCling::Initialize()
 {
-   fClingCallbacks->Initialize();
+   if (fClingCallbacks)
+      fClingCallbacks->Initialize();
 }
 
 void TCling::ShutDown()
@@ -5975,6 +5978,9 @@ UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
 
 Int_t TCling::AutoParse(const char *cls)
 {
+   if (!fClingCallbacks) // thread safe: never toggles after TCling().
+      return 0;
+
    R__LOCKGUARD(gInterpreterMutex);
 
    if (!fHeaderParsingOnDemand || fIsAutoParsingSuspended) {
@@ -7150,8 +7156,6 @@ void TCling::SetAllocunlockfunc(void (* /* p */ )()) const
 
 bool TCling::IsClassAutoloadingEnabled() const
 {
-   if (IsFromRootCling())
-      return false;
    if (!fClingCallbacks)
       return false;
    return fClingCallbacks->IsAutoloadingEnabled();
@@ -7169,7 +7173,9 @@ int TCling::SetClassAutoloading(int autoload) const
    if (autoload == IsClassAutoloadingEnabled())
       return autoload;
 
-   assert(fClingCallbacks && "We must have callbacks!");
+   if (!fClingCallbacks)
+      return 0;
+
    bool oldVal = fClingCallbacks->IsAutoloadingEnabled();
    fClingCallbacks->SetAutoloadingEnabled(autoload);
    return oldVal;
