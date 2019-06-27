@@ -15,11 +15,11 @@
 
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RColumnModel.hxx>
-#include <ROOT/RPagePool.hxx>
 #include <ROOT/RPageStorage.hxx>
 
 #include <TError.h>
 
+#include <iostream>
 
 ROOT::Experimental::Detail::RColumn::RColumn(const RColumnModel& model)
    : fModel(model), fPageSink(nullptr), fPageSource(nullptr), fHeadPage(), fNElements(0),
@@ -29,13 +29,21 @@ ROOT::Experimental::Detail::RColumn::RColumn(const RColumnModel& model)
 {
 }
 
+ROOT::Experimental::Detail::RColumn::~RColumn()
+{
+   if (!fHeadPage.IsNull())
+      fPageSink->ReleasePage(fHeadPage);
+   if (!fCurrentPage.IsNull())
+      fPageSource->ReleasePage(fCurrentPage);
+}
+
 void ROOT::Experimental::Detail::RColumn::Connect(RPageStorage* pageStorage)
 {
    switch (pageStorage->GetType()) {
    case EPageStorageType::kSink:
       fPageSink = static_cast<RPageSink*>(pageStorage); // the page sink initializes fHeadPage on AddColumn
       fHandleSink = fPageSink->AddColumn(*this);
-      fHeadPage = fPageSink->GetPagePool()->ReservePage(this);
+      fHeadPage = fPageSink->ReservePage(fHandleSink);
       break;
    case EPageStorageType::kSource:
       fPageSource = static_cast<RPageSource*>(pageStorage);
@@ -58,6 +66,6 @@ void ROOT::Experimental::Detail::RColumn::Flush()
 
 void ROOT::Experimental::Detail::RColumn::MapPage(const NTupleSize_t index)
 {
-   fPageSource->GetPagePool()->ReleasePage(fCurrentPage);
-   fCurrentPage = fPageSource->GetPagePool()->GetPage(this, index);
+   fPageSource->ReleasePage(fCurrentPage);
+   fCurrentPage = fPageSource->PopulatePage(fHandleSource, index);
 }

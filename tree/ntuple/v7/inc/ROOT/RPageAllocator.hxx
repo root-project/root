@@ -27,35 +27,22 @@ namespace Detail {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPageAllocator
+\class ROOT::Experimental::Detail::RPageAllocatorHeap
 \ingroup NTuple
-\brief Basic memory management of column pages: reserve and release
+\brief Uses standard C++ memory allocation for the column data pages
 
 The page allocator acquires and releases memory for pages.  It does not populate the pages, the returned pages
 are empty but guaranteed to have enough contiguous space for the given number of elements.  While a common
 concrete implementation uses the heap, other implementations are possible, e.g. using arenas or mmap().
 */
 // clang-format on
-class RPageAllocator {
+class RPageAllocatorHeap {
 public:
-   /// Reserves memory large enough to hold nElements of the given size; the page is immediately tagged with a column id
-   virtual RPage AllocatePage(ColumnId_t columnId, std::size_t elementSize, std::size_t nElements) = 0;
-   /// Frees the memory pointed to by page and resets the page's information
-   virtual void ReleasePage(RPage &page) = 0;
-};
-
-
-// clang-format off
-/**
-\class ROOT::Experimental::Detail::RPageAllocatorHeap
-\ingroup NTuple
-\brief Uses standard C++ memory allocation for the pages
-*/
-// clang-format on
-class RPageAllocatorHeap : public RPageAllocator {
-public:
-   RPage AllocatePage(ColumnId_t columnId, std::size_t elementSize, std::size_t nElements) final;
-   void ReleasePage(RPage& page) final;
+   /// Reserves memory large enough to hold nElements of the given size. The page is immediately tagged with
+   /// a column id.
+   RPage NewPage(ColumnId_t columnId, std::size_t elementSize, std::size_t nElements);
+   /// Releases the memory pointed to by page and resets the page's information
+   void DeletePage(const RPage& page);
 };
 
 } // namespace Detail

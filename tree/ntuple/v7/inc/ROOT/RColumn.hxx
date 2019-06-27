@@ -63,7 +63,7 @@ public:
    explicit RColumn(const RColumnModel& model);
    RColumn(const RColumn&) = delete;
    RColumn& operator =(const RColumn&) = delete;
-   ~RColumn() = default;
+   ~RColumn();
 
    void Connect(RPageStorage* pageStorage);
 
