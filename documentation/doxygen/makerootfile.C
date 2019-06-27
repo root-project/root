@@ -25,12 +25,9 @@ void makerootfile(const char *MacroName, const char *IN, const char *OutDir, boo
 
    auto f = new TFile( TString::Format("%s/html/%s.root",OutDir,IN),"RECREATE");
 
-   int cw, ch;
    while ((canvas = (TCanvas*) iCanvas())) {
       ImageNum++;
       canvas->SetName(TString::Format("pict%d_%s",ImageNum,IN));
-      cw = canvas->GetWindowWidth();
-      ch = canvas->GetWindowHeight();
       canvas->Write();
    }
 
@@ -40,8 +37,13 @@ void makerootfile(const char *MacroName, const char *IN, const char *OutDir, boo
    int i;
    FILE *fh = fopen(TString::Format("%s/macros/%s.html",OutDir,IN), "w");
 
+   TIter next(gROOT->GetListOfCanvases());
+   int cw, ch;
    fprintf(fh,"<center>\n");
    for (i=1; i<=ImageNum; i++) {
+      canvas = (TCanvas*)next();
+      cw = canvas->GetWindowWidth();
+      ch = canvas->GetWindowHeight();
       fprintf(fh,"<div id=\"draw_pict%d_%s\" style=\"width:%dpx; height:%dpx\"></div>\n",
               i,IN,cw,ch);
    }
