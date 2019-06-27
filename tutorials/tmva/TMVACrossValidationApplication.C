@@ -78,7 +78,7 @@ int TMVACrossValidationApplication()
    reader->AddSpectator("eventID", &eventID);
 
    // Book the serialised methods
-   TString jobname("TMVACrossEvaluation");
+   TString jobname("TMVACrossValidation");
    {
       TString methodName = "BDTG";
       TString weightfile = TString("dataset/weights/") + jobname + "_" + methodName + TString(".weights.xml");
