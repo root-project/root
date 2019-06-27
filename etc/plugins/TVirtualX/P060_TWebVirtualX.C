@@ -1,4 +1,4 @@
 void P060_TWebVirtualX()
 {
-   gPluginMgr->AddHandler("TVirtualX", "web", "TWebVirtualX", "WebGui", "TWebVirtualX(const char*,const char*)");
+   gPluginMgr->AddHandler("TVirtualX", "web", "TWebVirtualX", "WebGui6", "TWebVirtualX(const char*,const char*)");
 }
