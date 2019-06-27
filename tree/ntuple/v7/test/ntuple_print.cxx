@@ -17,11 +17,11 @@ using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
 using RPrintVisitor = ROOT::Experimental::RPrintVisitor;
 using RPrepareVisitor = ROOT::Experimental::RPrepareVisitor;
+
 template <class T>
 using RField = ROOT::Experimental::RField<T>;
 
 namespace {
-    
    /**
    * An RAII wrapper around an open temporary file on disk. It cleans up the guarded file when the wrapper object
    * goes out of scope.

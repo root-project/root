@@ -32,7 +32,6 @@ namespace Experimental {
 
 class REntry;
 class RNTupleModel;
-//class RPrintVisitor;
 
 namespace Detail {
 class RPageSink;

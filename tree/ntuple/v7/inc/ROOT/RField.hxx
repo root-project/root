@@ -24,7 +24,6 @@
 #include <ROOT/RStringView.hxx>
 #include <ROOT/RVec.hxx>
 #include <ROOT/TypeTraits.hxx>
-//#include <ROOT/RFieldVisitor.hxx>
 
 #include <TGenericClassInfo.h>
 #include <TError.h>
@@ -251,8 +250,6 @@ class RFieldRoot : public Detail::RFieldBase {
 public:
    RFieldRoot() : Detail::RFieldBase("", "", ENTupleStructure::kRecord, false /* isSimple */) {}
    RFieldBase* Clone(std::string_view newName);
-    /*
-    friend void ROOT::Experimental::TNtuplePrintVisitor::visitNtuple(ROOT::Experimental::RNTupleReader* fReader); /// To print list of branches*/
 
    void DoGenerateColumns() final {}
    using Detail::RFieldBase::GenerateValue;
@@ -262,7 +259,10 @@ public:
 
    /// Generates managed values for the top-level sub fields
    REntry* GenerateEntry();
+<<<<<<< HEAD
    void AcceptVisitor(RNTupleVisitor &visitor, int level) const;
+=======
+>>>>>>> implement first draft of RNTuple::Print()
 };
 
 /// The field for a class with dictionary
@@ -627,8 +627,6 @@ public:
    }
    size_t GetValueSize() const final { return sizeof(std::string); }
    void CommitCluster() final;
-    //void Accept(RNTupleVisitor fVisitor, int index);
-    //void Accept(RPrintVisitor fPrintVisitor, int index) { fPrintVisitor.visitField<std::string>(this, index);}
 };
 
 
