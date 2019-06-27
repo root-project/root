@@ -21,7 +21,7 @@
 #include <iomanip>
 #include <string>
 
-
+// Entire function only prints a single line.
 void ROOT::Experimental::RPrintVisitor::visitField(const ROOT::Experimental::Detail::RFieldBase& fField) {
     std::string fNameAndType{fField.GetName() +" (" + fField.GetType()+")"};
     fOutput << " Field " << std::setw(FieldDistance(maxNoFields)+5-NumDigits(fField.GetOrder())) << fField.GetOrder() << " : " << CutIfNecessary(fNameAndType, fWidth-FieldDistance(maxNoFields)-16) << std::setw(fWidth-17-FieldDistance(maxNoFields)-fField.GetName().size()-fField.GetType().size());
@@ -42,6 +42,8 @@ int ROOT::Experimental::NumDigits(int x)
                     10)))))))));
 }
 
+// Used for RPrintVisitor::visitField(RFieldBase*). Returns number of additional
+// spaces needed so that larger field indexes can be shown properly alligned.
 int ROOT::Experimental::FieldDistance(unsigned int x) {
     return (x < 10000 ? 0 :
              (x < 100000 ? 1 :
