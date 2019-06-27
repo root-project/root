@@ -24,7 +24,6 @@
 #include <ROOT/RStringView.hxx>
 #include <ROOT/RVec.hxx>
 #include <ROOT/TypeTraits.hxx>
-//#include <ROOT/RFieldVisitor.hxx>
 
 #include <TGenericClassInfo.h>
 #include <TError.h>
@@ -212,10 +211,10 @@ public:
 
    RIterator begin();
    RIterator end();
+
+   /// Used for the visitor design pattern, called by RNTupleReader::Print()
    virtual void AcceptVisitor(RNTupleVisitor &fVisitor) const;
-   //virtual void Accept(RNTupleVisitor fVisitor, int index);
-   int getOrder() {return fOrder;}
-    ///auto getSubfields() {return fSubFields;}
+   int GetOrder() const {return fOrder;}
 
 
 <<<<<<< HEAD
@@ -244,8 +243,6 @@ class RFieldRoot : public Detail::RFieldBase {
 public:
    RFieldRoot() : Detail::RFieldBase("", "", ENTupleStructure::kRecord, false /* isSimple */) {}
    RFieldBase* Clone(std::string_view newName);
-    /*
-    friend void ROOT::Experimental::TNtuplePrintVisitor::visitNtuple(ROOT::Experimental::RNTupleReader* fReader); /// To print list of branches*/
 
    void DoGenerateColumns() final {}
    using Detail::RFieldBase::GenerateValue;
@@ -255,8 +252,6 @@ public:
 
    /// Generates managed values for the top-level sub fields
    REntry* GenerateEntry();
-   ///void AcceptVisitor(RPrintVisitor fPrintVisitor) override;
-    virtual void AcceptVisitor(RNTupleVisitor &fVisitor) const;
 };
 
 /// The field for a class with dictionary
@@ -621,8 +616,6 @@ public:
    }
    size_t GetValueSize() const final { return sizeof(std::string); }
    void CommitCluster() final;
-    //void Accept(RNTupleVisitor fVisitor, int index);
-    //void Accept(RPrintVisitor fPrintVisitor, int index) { fPrintVisitor.visitField<std::string>(this, index);}
 };
 
 

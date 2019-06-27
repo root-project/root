@@ -93,6 +93,9 @@ void Analyze() {
 
    // Quick overview of the ntuple's key meta-data
    std::cout << ntuple->GetInfo();
+    
+   // Quick overview of the ntuple and list of fields.
+   ntuple->Print();
    // In a future version of RNTuple, there will be support for ntuple->Show() and ntuple->Scan()
 
    auto c = new TCanvas("c", "", 200, 10, 700, 500);
