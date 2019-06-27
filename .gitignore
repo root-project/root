@@ -20,6 +20,7 @@ CMakeLists.txt.user
 # Eclipse
 .settings/*
 .cproject
+.project
 
 # Vim
 *.swp
