@@ -28,20 +28,41 @@ namespace Detail {
     class RFieldBase;
     }
     
-    
+// clang-format off
+/**
+\class ROOT::Experimental::RNTupleVisitor
+\ingroup NTuple
+\brief Pure virtual parentclass for classes implementing the visitor design pattern.
+     
+Currently only has a virtual visitField() function, used by the RPrintVisitor class.
+*/
+// clang-format on
 class RNTupleVisitor {
 public:
     virtual void visitField(const ROOT::Experimental::Detail::RFieldBase& fField) = 0;
 };
     
+// clang-format off
+/**
+\class ROOT::Experimental::RPrintVisitor
+\ingroup NTuple
+\brief Contains settings for printing and prints a summary of an RField instance.
+     
+ Instances of this class are currently only invoked by RNTupleReader::Print() -> RFieldBase::AcceptVisitor()
+*/
+// clang-format on
+
+    
 class RPrintVisitor: public RNTupleVisitor {
 private:
-    /// holds ostream which is used for output
+    /// Holds ostream which is used for holding the printed output
     std::ostream &fOutput;
+    /// Indicates maximal number of allowed characters per line
     int fWidth;
-    int maxNoFields;
+    unsigned int maxNoFields;
 public:
-    RPrintVisitor(std::ostream& out = std::cout, int width = 69, int fNoFields = 1000): fOutput{out}, fWidth{width}, maxNoFields{fNoFields} { }
+    RPrintVisitor(std::ostream& out = std::cout, int width = 69, unsigned int fNoFields = 1000): fOutput{out}, fWidth{width}, maxNoFields{fNoFields} { }
+    /// Prints summary of Field
     void visitField(const ROOT::Experimental::Detail::RFieldBase& fField);
 };
     

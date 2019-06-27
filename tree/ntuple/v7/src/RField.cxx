@@ -165,9 +165,6 @@ void ROOT::Experimental::Detail::RFieldBase::ConnectColumns(RPageStorage *pageSt
 void ROOT::Experimental::Detail::RFieldBase::AcceptVisitor (RNTupleVisitor &fVisitor) const {
     fVisitor.visitField(*this);
 }
-void ROOT::Experimental::RFieldRoot::AcceptVisitor (RNTupleVisitor &fVisitor) const {
-    fVisitor.visitField(*this);
-}
 
 ROOT::Experimental::Detail::RFieldBase::RIterator ROOT::Experimental::Detail::RFieldBase::begin()
 {

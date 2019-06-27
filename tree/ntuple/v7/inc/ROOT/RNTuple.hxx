@@ -137,7 +137,7 @@ public:
     /// Prints a detailed summary of the ntuple, including a list of fields.
     void Print(std::ostream &output = std::cout, int width = 69, unsigned int fNoFields = 1000u);
     
-    // Returns name associated to the ntuple
+    /// Returns name associated to the ntuple
     std::string GetName() const {
         return fSource->GetDescriptor().GetName();
     }

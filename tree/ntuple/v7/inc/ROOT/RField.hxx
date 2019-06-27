@@ -212,7 +212,7 @@ public:
    RIterator begin();
    RIterator end();
 
-   /// Used for the visitor design pattern, called by RNTupleReader::Print()
+   /// Used for the visitor design pattern, currently only called by RNTupleReader::Print()
    virtual void AcceptVisitor(RNTupleVisitor &fVisitor) const;
    int GetOrder() const {return fOrder;}
 
