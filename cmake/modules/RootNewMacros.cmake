@@ -1576,5 +1576,5 @@ function(generateManual name input output)
       ${PYTHON_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py ${input} ${output}
   )
 
-  install(FILES ${output} DESTINATION ${CMAKE_INSTALL_MANDIR})
+  install(FILES ${output} DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 endfunction()
