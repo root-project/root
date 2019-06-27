@@ -19,9 +19,11 @@
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPage.hxx>
+#include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <atomic>
+#include <cstddef>
 #include <memory>
 
 namespace ROOT {
@@ -45,18 +47,18 @@ enum class EPageStorageType {
 /**
 \class ROOT::Experimental::Detail::RPageStorage
 \ingroup NTuple
-\brief Manages tree meta-data, which is common for sinks and sources.
+\brief Common functionality of an ntuple storage for both reading and writing
 
-The tree meta-data contains of a list of fields, a unique identifier, and provenance information.
+The RPageStore provides access to a storage container that keeps the bits of pages and clusters comprising
+an ntuple.  Concrete implementations can use a TFile, a raw file, an object store, and so on.
 */
 // clang-format on
 class RPageStorage {
 protected:
-   /// All data is shipped to and from physical storage in pages, moderated through a page pool
-   std::unique_ptr<RPagePool> fPagePool;
+   std::string fNTupleName;
 
 public:
-   RPageStorage();
+   explicit RPageStorage(std::string_view name);
    RPageStorage(const RPageStorage &other) = delete;
    RPageStorage& operator =(const RPageStorage &other) = delete;
    virtual ~RPageStorage();
@@ -67,16 +69,18 @@ public:
       int fId;
       const RColumn *fColumn;
    };
-   /// The column handle identfies a column with the current open page storage
+   /// The column handle identifies a column with the current open page storage
    using ColumnHandle_t = RColumnHandle;
 
    /// Register a new column.  When reading, the column must exist in the ntuple on disk corresponding to the meta-data.
    /// When writing, every column can only be attached once.
    virtual ColumnHandle_t AddColumn(const RColumn &column) = 0;
+   /// Whether the concrete implementation is a sink or a source
    virtual EPageStorageType GetType() = 0;
 
-   // Page memory management
-   RPagePool* GetPagePool() const { return fPagePool.get(); }
+   /// Every page store needs to be able to free pages it handed out.  But Sinks and sources have different means
+   /// of allocating pages.
+   virtual void ReleasePage(RPage &page) = 0;
 };
 
 // clang-format off
@@ -92,7 +96,7 @@ up to the given entry number are committed.
 // clang-format on
 class RPageSink : public RPageStorage {
 public:
-   RPageSink(std::string_view treeName);
+   explicit RPageSink(std::string_view ntupleName);
    virtual ~RPageSink();
    EPageStorageType GetType() final { return EPageStorageType::kSink; }
 
@@ -105,21 +109,25 @@ public:
    virtual void CommitCluster(NTupleSize_t nEntries) = 0;
    /// Finalize the current cluster and the entrire data set.
    virtual void CommitDataset() = 0;
+
+   /// Get a new, empty page for the given column that can be filled with up to nElements.  If nElements is zero,
+   /// the page sink picks an appropriate size.
+   virtual RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements = 0) = 0;
 };
 
 // clang-format off
 /**
 \class ROOT::Experimental::Detail::RPageSource
 \ingroup NTuple
-\brief Abstract interface to read data from a tree
+\brief Abstract interface to read data from an ntuple
 
 The page source is initialized with the columns of interest. Pages from those columns can then be
-mapped into pages. The page source also gives access to its meta-data.
+mapped into memory. The page source also gives access to the ntuple's meta-data.
 */
 // clang-format on
 class RPageSource : public RPageStorage {
 public:
-   RPageSource(std::string_view treeName);
+   explicit RPageSource(std::string_view ntupleName);
    virtual ~RPageSource();
    EPageStorageType GetType() final { return EPageStorageType::kSource; }
    /// TODO: copy/assignment for creating clones in multiple threads.
@@ -127,16 +135,16 @@ public:
    /// Open the physical storage container for the tree
    virtual void Attach() = 0;
 
-   // TODO(jblomer): virtual std::unique_ptr<RFieldBase> ListFields() {/* Make me abstract */ return nullptr;}
-   // TODO(jblomer): ListClusters()
+   /// Re-create the C++ model from the stored meta-data
    virtual std::unique_ptr<ROOT::Experimental::RNTupleModel> GenerateModel() = 0;
 
-   /// Fills a page starting with index rangeStart; the corresponding column is taken from the page object
-   virtual void PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t index, RPage* page) = 0;
    virtual NTupleSize_t GetNEntries() = 0;
    virtual NTupleSize_t GetNElements(ColumnHandle_t columnHandle) = 0;
    virtual ColumnId_t GetColumnId(ColumnHandle_t columnHandle) = 0;
    virtual const RNTupleDescriptor& GetDescriptor() const = 0;
+
+   /// Allocates and fills a page that contains the index-th element
+   virtual RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t index) = 0;
 };
 
 } // namespace Detail

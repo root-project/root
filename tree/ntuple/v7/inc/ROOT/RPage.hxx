@@ -34,8 +34,8 @@ namespace Detail {
 
 The page provides an opaque memory buffer for uncompressed, unpacked data. It does not interpret
 the contents but it does now about the size (and thus the number) of the elements inside as well as the element
-number range within the backing column. The memory buffer is not managed by the page.  It normally registered with
-the page pool and managed (allocated) by the page storage.
+number range within the backing column/cluster. The memory buffer is not managed by the page. It is normally registered
+with the page pool and allocated/freed by the page storage.
 */
 // clang-format on
 class RPage {
@@ -86,6 +86,7 @@ public:
    std::size_t GetCapacity() const { return fCapacity; }
    /// The space taken by column elements in the buffer
    std::size_t GetSize() const { return fSize; }
+   std::size_t GetElementSize() const { return fElementSize; }
    NTupleSize_t GetNElements() const { return fSize / fElementSize; }
    NTupleSize_t GetRangeFirst() const { return fRangeFirst; }
    NTupleSize_t GetRangeLast() const { return fRangeFirst + fNElements - 1; }

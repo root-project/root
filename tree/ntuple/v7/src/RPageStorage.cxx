@@ -19,26 +19,34 @@
 
 #include <ROOT/RStringView.hxx>
 
-ROOT::Experimental::Detail::RPageStorage::RPageStorage()
+namespace ROOT {
+namespace Experimental {
+namespace Detail {
+
+RPageStorage::RPageStorage(std::string_view name) : fNTupleName(name)
 {
 }
 
-ROOT::Experimental::Detail::RPageStorage::~RPageStorage()
+RPageStorage::~RPageStorage()
 {
 }
 
-ROOT::Experimental::Detail::RPageSource::RPageSource(std::string_view /*treeName*/)
+RPageSource::RPageSource(std::string_view name) : RPageStorage(name)
 {
 }
 
-ROOT::Experimental::Detail::RPageSource::~RPageSource()
+RPageSource::~RPageSource()
 {
 }
 
-ROOT::Experimental::Detail::RPageSink::RPageSink(std::string_view /*treeName*/)
+RPageSink::RPageSink(std::string_view name) : RPageStorage(name)
 {
 }
 
-ROOT::Experimental::Detail::RPageSink::~RPageSink()
+RPageSink::~RPageSink()
 {
 }
+
+} // namespace Detail
+} // namespace Experimental
+} // namespace ROOT

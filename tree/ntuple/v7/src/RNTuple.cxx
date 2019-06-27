@@ -63,6 +63,8 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimen
 
 ROOT::Experimental::RNTupleReader::~RNTupleReader()
 {
+   // needs to be destructed before the page source
+   fModel = nullptr;
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleReader::Open(
@@ -118,6 +120,8 @@ ROOT::Experimental::RNTupleWriter::~RNTupleWriter()
 {
    CommitCluster();
    fSink->CommitDataset();
+   // needs to be destructed before the page sink
+   fModel = nullptr;
 }
 
 
