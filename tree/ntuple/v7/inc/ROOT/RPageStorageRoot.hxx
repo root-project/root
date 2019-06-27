@@ -16,6 +16,7 @@
 #ifndef ROOT7_RPageStorageRoot
 #define ROOT7_RPageStorageRoot
 
+#include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RColumnModel.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
@@ -51,7 +52,6 @@ struct RColumnHeader {
 struct RNTupleHeader {
    std::int32_t fVersion = 0;
    std::string fModelUuid;
-   std::int32_t fPageSize = 0;
    std::vector<RFieldHeader> fFields;
    std::vector<RColumnHeader> fColumns;
 };
@@ -137,9 +137,10 @@ public:
    };
 
 private:
-   static constexpr std::size_t kPageSize = 32000;
+   static constexpr std::size_t kDefaultElementsPerPage = 10000;
 
-   std::string fNTupleName;
+   std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
+
    /// Currently, an ntuple is stored as a directory in a TFile
    TDirectory *fDirectory;
    RSettings fSettings;
@@ -161,6 +162,26 @@ public:
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
    void CommitCluster(NTupleSize_t nEntries) final;
    void CommitDataset() final;
+
+   RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements = 0) final;
+   void ReleasePage(RPage &page) final;
+};
+
+
+// clang-format off
+/**
+\class ROOT::Experimental::Detail::RPageAllocatorKey
+\ingroup NTuple
+\brief Adopts the memory return by TKey->ReadObject()
+*/
+// clang-format on
+class RPageAllocatorKey {
+private:
+  std::unordered_map<void *, ROOT::Experimental::Internal::RPagePayload *> fPage2Payload;
+public:
+   RPage NewPage(ColumnId_t columnId, std::size_t elementSize, std::size_t nElements,
+                 ROOT::Experimental::Internal::RPagePayload &payload);
+   void DeletePage(const RPage& page);
 };
 
 
@@ -179,7 +200,8 @@ public:
    };
 
 private:
-   std::string fNTupleName;
+   std::unique_ptr<RPageAllocatorKey> fPageAllocator;
+
    /// Currently, an ntuple is stored as a directory in a TFile
    TDirectory *fDirectory;
    RSettings fSettings;
@@ -195,11 +217,13 @@ public:
    ColumnHandle_t AddColumn(const RColumn &column) final;
    void Attach() final;
    std::unique_ptr<ROOT::Experimental::RNTupleModel> GenerateModel() final;
-   void PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t index, RPage* page) final;
    NTupleSize_t GetNEntries() final;
    NTupleSize_t GetNElements(ColumnHandle_t columnHandle) final;
    ColumnId_t GetColumnId(ColumnHandle_t columnHandle) final;
    const RNTupleDescriptor& GetDescriptor() const final { return fDescriptor; }
+
+   RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t index) final;
+   void ReleasePage(RPage &page) final;
 };
 
 } // namespace Detail

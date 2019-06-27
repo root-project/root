@@ -22,7 +22,7 @@ namespace ROOT {
 namespace Experimental {
 namespace Detail {
 
-RPage RPageAllocatorHeap::AllocatePage(ColumnId_t columnId, std::size_t elementSize, std::size_t nElements)
+RPage RPageAllocatorHeap::NewPage(ColumnId_t columnId, std::size_t elementSize, std::size_t nElements)
 {
    R__ASSERT((elementSize > 0) && (nElements > 0));
    auto nbytes = elementSize * nElements;
@@ -30,10 +30,9 @@ RPage RPageAllocatorHeap::AllocatePage(ColumnId_t columnId, std::size_t elementS
    return RPage(columnId, buffer, nbytes, elementSize);
 }
 
-void RPageAllocatorHeap::ReleasePage(RPage& page)
+void RPageAllocatorHeap::DeletePage(const RPage& page)
 {
    delete[] reinterpret_cast<unsigned char *>(page.GetBuffer());
-   page = RPage();
 }
 
 } // namespace Detail

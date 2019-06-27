@@ -89,7 +89,8 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPagePool::GetPage
       return fPages[i];
    }
    RPage newPage = ReservePage(column);
-   column->GetPageSource()->PopulatePage(column->GetHandleSource(), index, &newPage);
+   // TODO
+   //column->GetPageSource()->PopulatePage(column->GetHandleSource(), index, &newPage);
    CommitPage(newPage);
    return newPage;
 }

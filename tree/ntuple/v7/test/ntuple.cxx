@@ -67,6 +67,7 @@ TEST(RNTuple, ReconstructModel)
       RPageSinkRoot sinkRoot("myTree", "test.root");
       sinkRoot.Create(*model.get());
       sinkRoot.CommitDataset();
+      model = nullptr;
    }
 
    RPageSourceRoot sourceRoot("myTree", "test.root");
