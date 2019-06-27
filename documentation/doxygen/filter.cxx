@@ -339,7 +339,7 @@ void FilterTutorial()
          } else if (js) {
             string IN;
             IN = gImageName;
-            int i = IN.find_first_of(".C");
+            int i = IN.find(".C");
             IN.erase(i,IN.length());
             ExecuteCommand(StringFormat("root -l -b -q \"makerootfile.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
                                          gFileName.c_str(), IN.c_str(), gOutDir.c_str()));
