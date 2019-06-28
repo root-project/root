@@ -25,7 +25,8 @@ int df015_LazyDataSource()
    // See the tutorial relative to CSV data sources for more details!
    auto fileNameUrl = "http://root.cern.ch/files/tutorials/df014_CsvDataSource_MuRun2010B.csv";
    auto fileName = "df015_CsvDataSource_MuRun2010B.csv";
-   TFile::Cp(fileNameUrl, fileName);
+   if(gSystem->AccessPathName(fileName))
+      TFile::Cp(fileNameUrl, fileName);
 
    auto csv_rdf = MakeCsvDataFrame(fileName);
 

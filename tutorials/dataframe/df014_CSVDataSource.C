@@ -23,7 +23,8 @@ int df014_CSVDataSource()
    // The types of the columns will be automatically inferred.
    auto fileNameUrl = "http://root.cern.ch/files/tutorials/df014_CsvDataSource_MuRun2010B.csv";
    auto fileName = "df014_CsvDataSource_MuRun2010B_cpp.csv";
-   TFile::Cp(fileNameUrl, fileName);
+   if(gSystem->AccessPathName(fileName))
+      TFile::Cp(fileNameUrl, fileName);
    auto tdf = ROOT::RDF::MakeCsvDataFrame(fileName);
 
    // Now we will apply a first filter based on two columns of the CSV,
