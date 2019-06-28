@@ -343,7 +343,7 @@ void FilterTutorial()
             IN.erase(i,IN.length());
             ExecuteCommand(StringFormat("root -l -b -q \"makerootfile.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
                                          gFileName.c_str(), IN.c_str(), gOutDir.c_str()));
-            ReplaceAll(gLineString, "macro_image", StringFormat("htmlinclude[block] %s.html",IN.c_str()));
+            ReplaceAll(gLineString, "macro_image", StringFormat("htmlinclude %s.html",IN.c_str()));
          } else {
             if (gPython) {
                if (nobatch) {
