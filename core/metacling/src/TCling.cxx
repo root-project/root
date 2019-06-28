@@ -1046,7 +1046,7 @@ std::string TCling::ToString(const char* type, void* obj)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///\returns true if the module was loaded.
-static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp, bool Complain = true)
+static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp)
 {
    // When starting up ROOT, cling would load all modulemap files on the include
    // paths. However, in a ROOT session, it is very common to run aclic which
@@ -1058,7 +1058,7 @@ static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp
    std::string currentDir = gSystem->WorkingDirectory();
    assert(!currentDir.empty());
    gCling->RegisterPrebuiltModulePath(currentDir);
-   return interp.loadModule(ModuleName, Complain);
+   return interp.loadModule(ModuleName, /*Complain=*/true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2045,7 +2045,7 @@ void TCling::RegisterModule(const char* modulename,
 
       // FIXME: We should only complain for modules which we know to exist. For example, we should not complain about
       // modules such as GenVector32 because it needs to fall back to GenVector.
-      ModuleWasSuccessfullyLoaded = LoadModule(ModuleName, *fInterpreter, /*Complain=*/true);
+      ModuleWasSuccessfullyLoaded = LoadModule(ModuleName, *fInterpreter);
       if (!ModuleWasSuccessfullyLoaded) {
          // Only report if we found the module in the modulemap.
          clang::HeaderSearch &headerSearch = PP.getHeaderSearchInfo();
