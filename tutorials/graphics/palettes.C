@@ -3,7 +3,13 @@
 /// \notebook
 /// This macro draws all the high definition palettes available in ROOT.
 /// It generates a png file for each palette and one pdf file, with a table of
-/// content, containing all the palettes
+/// content, containing all the palettes.
+///
+/// In ROOT, [more than 60 high quality palettes are predefined with 255 colors each](https://root.cern/doc/master/classTColor.html#C06).
+///
+/// These palettes can be accessed "by name" with `gStyle->SetPalette(num)`. num
+/// can be taken within the enum given in the previous link. As an example
+/// `gStyle->SetPalette(kCividis)` will select the following palette.
 ///
 /// \macro_image
 /// \macro_code
