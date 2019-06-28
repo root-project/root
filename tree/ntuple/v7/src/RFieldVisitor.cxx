@@ -13,50 +13,57 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <iomanip>
+#include <iostream>
+#include <sstream>
+#include <string>
+
 #include "ROOT/RFieldVisitor.hxx"
 #include "ROOT/RField.hxx"
 #include "ROOT/RNTuple.hxx"
-#include <iostream>
-#include <sstream>
-#include <iomanip>
-#include <string>
+
 
 // Entire function only prints a single line.
-void ROOT::Experimental::RPrintVisitor::visitField(const ROOT::Experimental::Detail::RFieldBase& fField) {
-    std::string fNameAndType{fField.GetName() +" (" + fField.GetType()+")"};
-    fOutput << " Field " << std::setw(FieldDistance(maxNoFields)+5-NumDigits(fField.GetOrder())) << fField.GetOrder() << " : " << CutIfNecessary(fNameAndType, fWidth-FieldDistance(maxNoFields)-16) << std::setw(fWidth-17-FieldDistance(maxNoFields)-fField.GetName().size()-fField.GetType().size());
+void ROOT::Experimental::RPrintVisitor::visitField(const ROOT::Experimental::Detail::RFieldBase &Field)
+{
+   std::string fNameAndType{Field.GetName() + " (" + Field.GetType() + ")"};
+   fOutput << " Field " << std::setw(FieldDistance(maxNoFields) + 5 - NumDigits(Field.GetOrder())) << Field.GetOrder()
+           << " : " << CutIfNecessary(fNameAndType, fWidth - FieldDistance(maxNoFields) - 16)
+           << std::setw(fWidth - 17 - FieldDistance(maxNoFields) - Field.GetName().size() - Field.GetType().size());
 }
 
 int ROOT::Experimental::NumDigits(int x)
 {
-    x = abs(x);
-    return (x < 10 ? 1 :
-            (x < 100 ? 2 :
-             (x < 1000 ? 3 :
-              (x < 10000 ? 4 :
-               (x < 100000 ? 5 :
-                (x < 1000000 ? 6 :
-                 (x < 10000000 ? 7 :
-                  (x < 100000000 ? 8 :
-                   (x < 1000000000 ? 9 :
-                    10)))))))));
+   x = abs(x);
+   return (
+      x < 10 ? 1
+             : (x < 100
+                   ? 2
+                   : (x < 1000
+                         ? 3
+                         : (x < 10000
+                               ? 4
+                               : (x < 100000
+                                     ? 5
+                                     : (x < 1000000
+                                           ? 6
+                                           : (x < 10000000 ? 7 : (x < 100000000 ? 8 : (x < 1000000000 ? 9 : 10)))))))));
 }
 
 // Used for RPrintVisitor::visitField(RFieldBase*). Returns number of additional
 // spaces needed so that larger field indexes can be shown properly alligned.
-int ROOT::Experimental::FieldDistance(unsigned int x) {
-    return (x < 10000 ? 0 :
-             (x < 100000 ? 1 :
-              (x < 1000000 ? 2 :
-               (x < 10000000 ? 3 :
-                (x < 100000000 ? 4 :
-                 (x < 1000000000 ? 5 :
-                  10))))));
+int ROOT::Experimental::FieldDistance(unsigned int x)
+{
+   return (
+      x < 10000
+         ? 0
+         : (x < 100000 ? 1 : (x < 1000000 ? 2 : (x < 10000000 ? 3 : (x < 100000000 ? 4 : (x < 1000000000 ? 5 : 10))))));
 }
 
-std::string ROOT::Experimental::CutIfNecessary(const std::string &toCut, unsigned int maxAvailableSpace) {
-    if(toCut.size() > maxAvailableSpace) {
-        return std::string(toCut, 0, maxAvailableSpace-3) + "...";
-    }
+std::string ROOT::Experimental::CutIfNecessary(const std::string &toCut, unsigned int maxAvailableSpace)
+{
+   if (toCut.size() > maxAvailableSpace) {
+      return std::string(toCut, 0, maxAvailableSpace - 3) + "...";
+   }
    return toCut;
 }

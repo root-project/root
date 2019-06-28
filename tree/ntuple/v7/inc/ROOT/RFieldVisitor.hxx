@@ -20,14 +20,13 @@
 #include <sstream>
 #include <string>
 
-
 namespace ROOT {
 namespace Experimental {
-    class RFieldRoot;
+class RFieldRoot;
 namespace Detail {
-    class RFieldBase;
-    }
-    
+class RFieldBase;
+}
+
 // clang-format off
 /**
 \class ROOT::Experimental::RNTupleVisitor
@@ -39,9 +38,9 @@ Currently only has a virtual visitField() function, used by the RPrintVisitor cl
 // clang-format on
 class RNTupleVisitor {
 public:
-    virtual void visitField(const ROOT::Experimental::Detail::RFieldBase& fField) = 0;
+   virtual void visitField(const ROOT::Experimental::Detail::RFieldBase &fField) = 0;
 };
-    
+
 // clang-format off
 /**
 \class ROOT::Experimental::RPrintVisitor
@@ -52,20 +51,23 @@ public:
 */
 // clang-format on
 
-    
-class RPrintVisitor: public RNTupleVisitor {
+class RPrintVisitor : public RNTupleVisitor {
 private:
-    /// Holds ostream which is used for holding the printed output
-    std::ostream &fOutput;
-    /// Indicates maximal number of allowed characters per line
-    int fWidth;
-    unsigned int maxNoFields;
+   /// Holds ostream which is used for holding the printed output
+   std::ostream &fOutput;
+   /// Indicates maximal number of allowed characters per line
+   int fWidth;
+   unsigned int maxNoFields;
+
 public:
-    RPrintVisitor(std::ostream& out = std::cout, int width = 69, unsigned int fNoFields = 1000): fOutput{out}, fWidth{width}, maxNoFields{fNoFields} { }
-    /// Prints summary of Field
-    void visitField(const ROOT::Experimental::Detail::RFieldBase& fField);
+   RPrintVisitor(std::ostream &out = std::cout, int width = 69, unsigned int fNoFields = 1000)
+      : fOutput{out}, fWidth{width}, maxNoFields{fNoFields}
+   {
+   }
+   /// Prints summary of Field
+   void visitField(const ROOT::Experimental::Detail::RFieldBase &fField);
 };
-    
+
 int NumDigits(int x);
 int FieldDistance(unsigned int fNoFields);
 std::string CutIfNecessary(const std::string &fToCut, unsigned int maxAvailableSpace);
