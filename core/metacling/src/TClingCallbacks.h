@@ -46,7 +46,7 @@ private:
    bool fPPOldFlag;
    bool fPPChanged;
 public:
-   TClingCallbacks(cling::Interpreter* interp);
+   TClingCallbacks(cling::Interpreter* interp, bool hasCodeGen);
 
    ~TClingCallbacks();
 

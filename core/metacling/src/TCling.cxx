@@ -1409,7 +1409,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    // and should thus not be triggered during the equivalent of
    // TROOT::fInterpreter = new TCling;
    std::unique_ptr<TClingCallbacks>
-      clingCallbacks(new TClingCallbacks(fInterpreter));
+      clingCallbacks(new TClingCallbacks(fInterpreter, /*hasCodeGen*/ !fromRootCling));
    fClingCallbacks = clingCallbacks.get();
    fClingCallbacks->SetAutoParsingSuspended(fIsAutoParsingSuspended);
    fInterpreter->setCallbacks(std::move(clingCallbacks));
