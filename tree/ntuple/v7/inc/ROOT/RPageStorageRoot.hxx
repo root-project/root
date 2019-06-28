@@ -201,6 +201,7 @@ public:
 
 private:
    std::unique_ptr<RPageAllocatorKey> fPageAllocator;
+   std::shared_ptr<RPagePool> fPagePool;
 
    /// Currently, an ntuple is stored as a directory in a TFile
    TDirectory *fDirectory;

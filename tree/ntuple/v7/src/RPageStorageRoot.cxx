@@ -185,6 +185,7 @@ void RPageAllocatorKey::DeletePage(const RPage& page)
 RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, RSettings settings)
    : RPageSource(ntupleName)
    , fPageAllocator(std::make_unique<RPageAllocatorKey>())
+   , fPagePool(std::make_shared<RPagePool>())
    , fDirectory(nullptr)
    , fSettings(settings)
 {
@@ -193,6 +194,7 @@ RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, RSettings settings
 RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, std::string_view path)
    : RPageSource(ntupleName)
    , fPageAllocator(std::make_unique<RPageAllocatorKey>())
+   , fPagePool(std::make_shared<RPagePool>())
    , fDirectory(nullptr)
 {
    TFile *file = TFile::Open(std::string(path).c_str(), "READ");
@@ -318,6 +320,10 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> RPageSourceRoot::GenerateModel
 RPage RPageSourceRoot::PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t index)
 {
    auto columnId = columnHandle.fId;
+   auto cachedPage = fPagePool->GetPage(columnId, index);
+   if (!cachedPage.IsNull())
+      return cachedPage;
+
    auto nElems = fMapper.fColumnIndex[columnId].fNElements;
    R__ASSERT(index < nElems);
 
@@ -366,6 +372,7 @@ RPage RPageSourceRoot::PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t in
    R__ASSERT(pagePayload->fSize % elemsInPage == 0);
    auto newPage = fPageAllocator->NewPage(columnId, elementSize, elemsInPage, *pagePayload);
    newPage.SetWindow(firstInPage, RPage::RClusterInfo(clusterId, selfOffset, pointeeOffset));
+   fPagePool->RegisterPage(newPage);
    return newPage;
 
    //free(pagePayload->fContent);
@@ -374,7 +381,8 @@ RPage RPageSourceRoot::PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t in
 
 void RPageSourceRoot::ReleasePage(RPage &page)
 {
-   fPageAllocator->DeletePage(page);
+   if (fPagePool->ReturnPage(page))
+      fPageAllocator->DeletePage(page);
 }
 
 ROOT::Experimental::NTupleSize_t RPageSourceRoot::GetNEntries()
