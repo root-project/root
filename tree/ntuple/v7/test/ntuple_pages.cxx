@@ -41,4 +41,6 @@ TEST(Pages, Pool)
 
    EXPECT_FALSE(pool.ReturnPage(page));
    EXPECT_TRUE(pool.ReturnPage(page));
+   page = pool.GetPage(1, 55);
+   EXPECT_TRUE(page.IsNull());
 }
