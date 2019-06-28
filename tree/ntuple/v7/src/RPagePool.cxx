@@ -35,7 +35,10 @@ bool ROOT::Experimental::Detail::RPagePool::ReturnPage(const RPage& page)
    for (unsigned i = 0; i < N; ++i) {
       if (fPages[i] == page) {
          if (--fReferences[i] == 0) {
-            fPages[i] = RPage();
+            fPages[i] = fPages[N-1];
+            fReferences[i] = fReferences[N-1];
+            fPages.resize(N-1);
+            fReferences.resize(N-1);
             return true;
          }
          return false;
