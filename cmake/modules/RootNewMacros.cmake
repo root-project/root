@@ -282,7 +282,34 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       if(IS_ABSOLUTE ${fp})
         set(headerFile ${fp})
       else()
-        find_file(headerFile ${fp} HINTS ${incdirs} NO_DEFAULT_PATH NO_SYSTEM_ENVIRONMENT_PATH)
+        set(incdirs_in_build)
+        set(incdirs_in_prefix)
+        foreach(incdir ${incdirs})
+          if(NOT IS_ABSOLUTE incdir
+             OR incdir MATCHES "^${CMAKE_SOURCE_DIR}"
+             OR incdir MATCHES "^${CMAKE_CURRENT_BUILD_DIR}"
+             OR incdir MATCHES "^${CMAKE_BUILD_DIR}")
+            list(APPEND incdirs_in_build
+                 ${incdir})
+          else()
+            list(APPEND incdirs_in_prefix
+                 ${incdir})
+          endif()
+        endforeach()
+        if(incdirs_in_build)
+          find_file(headerFile ${fp}
+            HINTS ${incdirs_in_build}
+            NO_DEFAULT_PATH
+            NO_SYSTEM_ENVIRONMENT_PATH
+            NO_CMAKE_FIND_ROOT_PATH)
+        endif()
+        # Try this even if NOT incdirs_in_prefix: might not need a HINT.
+        if(NOT headerFile)
+          find_file(headerFile ${fp}
+            HINTS ${incdirs_in_prefix}
+            NO_DEFAULT_PATH
+            NO_SYSTEM_ENVIRONMENT_PATH)
+        endif()
       endif()
       if(NOT headerFile)
         message(FATAL_ERROR "Cannot find header ${fp} to generate dictionary ${dictionary} for. Did you forget to set the INCLUDE_DIRECTORIES property for the current directory?")
