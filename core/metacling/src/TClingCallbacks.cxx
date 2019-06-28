@@ -74,14 +74,16 @@ extern "C" {
                                     cling::Interpreter &interpreter, bool searchSystem);
 }
 
-TClingCallbacks::TClingCallbacks(cling::Interpreter* interp)
+TClingCallbacks::TClingCallbacks(cling::Interpreter* interp, bool hasCodeGen)
    : InterpreterCallbacks(interp),
      fLastLookupCtx(0), fROOTSpecialNamespace(0),
      fFirstRun(true), fIsAutoloading(false), fIsAutoloadingRecursively(false),
      fIsAutoParsingSuspended(false), fPPOldFlag(false), fPPChanged(false) {
-   Transaction* T = 0;
-   m_Interpreter->declare("namespace __ROOT_SpecialObjects{}", &T);
-   fROOTSpecialNamespace = dyn_cast<NamespaceDecl>(T->getFirstDecl().getSingleDecl());
+   if (hasCodeGen) {
+      Transaction* T = 0;
+      m_Interpreter->declare("namespace __ROOT_SpecialObjects{}", &T);
+      fROOTSpecialNamespace = dyn_cast<NamespaceDecl>(T->getFirstDecl().getSingleDecl());
+   }
 }
 
 //pin the vtable here
@@ -242,6 +244,11 @@ static bool topmostDCIsFunction(Scope* S) {
 // returns true when a declaration is found and no error should be emitted.
 //
 bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
+   if (!fROOTSpecialNamespace) {
+      // init error or rootcling
+      return false;
+   }
+
    // Don't do any extra work if an error that is not still recovered occurred.
    if (m_Interpreter->getSema().getDiagnostics().hasErrorOccurred())
       return false;
@@ -280,6 +287,11 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
 }
 
 bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) {
+   if (!fROOTSpecialNamespace) {
+      // init error or rootcling
+      return false;
+   }
+
    if (!IsAutoloadingEnabled() || fIsAutoloadingRecursively) return false;
 
    if (Name.getNameKind() != DeclarationName::Identifier) return false;
@@ -327,6 +339,11 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) 
 }
 
 bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
+   if (!fROOTSpecialNamespace) {
+      // init error or rootcling
+      return false;
+   }
+
    // Clang needs Tag's complete definition. Can we parse it?
    if (fIsAutoloadingRecursively || fIsAutoParsingSuspended) return false;
 
@@ -379,6 +396,11 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
 //
 bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R,
                                            Scope *S, const FileEntry* FE /*=0*/) {
+   if (!fROOTSpecialNamespace) {
+      // init error or rootcling
+      return false;
+   }
+
    Sema &SemaR = m_Interpreter->getSema();
 
    // Try to autoload first if autoloading is enabled
@@ -463,6 +485,11 @@ bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R
 // returns true when declaration is found and no error should be emitted.
 //
 bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
+   if (!fROOTSpecialNamespace) {
+      // init error or rootcling
+      return false;
+   }
+
    // User must be able to redefine the names that come from a file.
    if (R.isForRedeclaration())
       return false;
@@ -563,6 +590,11 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
 }
 
 bool TClingCallbacks::tryResolveAtRuntimeInternal(LookupResult &R, Scope *S) {
+   if (!fROOTSpecialNamespace) {
+      // init error or rootcling
+      return false;
+   }
+
    if (!shouldResolveAtRuntime(R, S))
       return false;
 
@@ -670,6 +702,11 @@ bool TClingCallbacks::shouldResolveAtRuntime(LookupResult& R, Scope* S) {
 }
 
 bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
+   if (!fROOTSpecialNamespace) {
+      // init error or rootcling
+      return false;
+   }
+
    // Should be disabled with the dynamic scopes.
    if (m_IsRuntime)
       return false;
