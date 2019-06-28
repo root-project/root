@@ -26,6 +26,7 @@ Base class describing materials.
 #include "TGeoExtension.h"
 #include "TGeoMaterial.h"
 #include "TGeoPhysicalConstants.h"
+#include "TGeant4PhysicalConstants.h"
 #include "TGDMLMatrix.h"
 
 // statics and globals
@@ -52,6 +53,7 @@ TGeoMaterial::TGeoMaterial()
               fUserExtension(0),
               fFWExtension(0)
 {
+   TGeoUnit::setUnitType(TGeoUnit::unitType()); // Ensure nobody changes the units afterwards
    SetUsed(kFALSE);
    fIndex    = -1;
    fTemperature = STP_temperature;
@@ -79,6 +81,7 @@ TGeoMaterial::TGeoMaterial(const char *name)
               fUserExtension(0),
               fFWExtension(0)
 {
+   TGeoUnit::setUnitType(TGeoUnit::unitType()); // Ensure nobody changes the units afterwards
    fName = fName.Strip();
    SetUsed(kFALSE);
    fIndex    = -1;
@@ -113,6 +116,7 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z,
               fUserExtension(0),
               fFWExtension(0)
 {
+   TGeoUnit::setUnitType(TGeoUnit::unitType()); // Ensure nobody changes the units afterwards
    fName = fName.Strip();
    SetUsed(kFALSE);
    fIndex    = -1;
@@ -153,6 +157,7 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z, Double_t rh
               fUserExtension(0),
               fFWExtension(0)
 {
+   TGeoUnit::setUnitType(TGeoUnit::unitType()); // Ensure nobody changes the units afterwards
    fName = fName.Strip();
    SetUsed(kFALSE);
    fIndex    = -1;
@@ -186,6 +191,7 @@ TGeoMaterial::TGeoMaterial(const char *name, TGeoElement *elem, Double_t rho)
               fUserExtension(0),
               fFWExtension(0)
 {
+   TGeoUnit::setUnitType(TGeoUnit::unitType()); // Ensure nobody changes the units afterwards
    fName = fName.Strip();
    SetUsed(kFALSE);
    fIndex    = -1;
@@ -226,6 +232,7 @@ TGeoMaterial::TGeoMaterial(const TGeoMaterial& gm) :
 
 {
    //copy constructor
+   TGeoUnit::setUnitType(TGeoUnit::unitType()); // Ensure nobody changes the units afterwards
    fProperties.SetOwner();
    TIter next(&fProperties);
    TNamed *property;
@@ -436,29 +443,50 @@ void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
       if (intlen>=0) fIntLen = 1.E30;
       return;
    }
+   TGeoUnit::UnitType typ = TGeoUnit::unitType();
    // compute radlen systematically with G3 formula for a valid material
-   if (radlen>=0) {
+   if ( typ == TGeoUnit::kTGeoUnits && radlen>=0 ) {
       //taken grom Geant3 routine GSMATE
-      const Double_t alr2av=1.39621E-03, al183=5.20948;
+      constexpr Double_t alr2av = 1.39621E-03*TGeoUnit::cm2;
+      constexpr Double_t al183  = 5.20948;
       fRadLen = fA/(alr2av*fDensity*fZ*(fZ +TGeoMaterial::ScreenFactor(fZ))*
-             (al183-TMath::Log(fZ)/3-TGeoMaterial::Coulomb(fZ)));
+                   (al183-TMath::Log(fZ)/3-TGeoMaterial::Coulomb(fZ)));
+      fRadLen *= TGeoUnit::cm;
+   }
+   else if ( typ == TGeoUnit::kTGeant4Units && radlen>=0 ) {
+      //taken grom Geant3 routine GSMATE
+      constexpr Double_t alr2av = 1.39621E-03*TGeant4Unit::cm2;
+      constexpr Double_t al183  = 5.20948;
+      fRadLen = fA/(alr2av*fDensity*fZ*(fZ +TGeoMaterial::ScreenFactor(fZ))*
+                   (al183-TMath::Log(fZ)/3-TGeoMaterial::Coulomb(fZ)));
+      fRadLen *= TGeant4Unit::cm;
    }
    // Compute interaction length using the same formula as in GEANT4
-   if (intlen>=0) {
-      const Double_t cm = 1.;
-      const Double_t g = 6.2415e21; // [gram = 1E-3*joule*s*s/(m*m)]
-      const Double_t amu = 1.03642688246781065e-02; // [MeV/c^2]
-      const Double_t lambda0 = 35.*g/(cm*cm);  // [g/cm^2]
+   if ( typ == TGeoUnit::kTGeoUnits && intlen>=0 ) {
+      constexpr Double_t lambda0 = 35.*TGeoUnit::g/TGeoUnit::cm2;  // [g/cm^2]
       Double_t nilinv = 0.0;
       TGeoElement *elem = GetElement();
       if (!elem) {
          Fatal("SetRadLen", "Element not found for material %s", GetName());
          return;
       }
-      Double_t nbAtomsPerVolume = TMath::Na()*fDensity/elem->A();
+      Double_t nbAtomsPerVolume = TGeoUnit::Avogadro*fDensity/elem->A();
       nilinv += nbAtomsPerVolume*TMath::Power(elem->Neff(), 0.6666667);
-      nilinv *= amu/lambda0;
-      fIntLen = (nilinv<=0) ? TGeoShape::Big() : (1./nilinv);
+      nilinv *= TGeoUnit::amu/lambda0;
+      fIntLen = (nilinv<=0) ? TGeoShape::Big() : (TGeoUnit::cm/nilinv);
+   }
+   else if ( typ == TGeoUnit::kTGeant4Units && intlen>=0 ) {
+      constexpr Double_t lambda0 = 35.*TGeant4Unit::g/TGeant4Unit::cm2;  // [g/cm^2]
+      Double_t nilinv = 0.0;
+      TGeoElement *elem = GetElement();
+      if (!elem) {
+         Fatal("SetRadLen", "Element not found for material %s", GetName());
+         return;
+      }
+      Double_t nbAtomsPerVolume = TGeant4Unit::Avogadro*fDensity/elem->A();
+      nilinv += nbAtomsPerVolume*TMath::Power(elem->Neff(), 0.6666667);
+      nilinv *= TGeant4Unit::amu/lambda0;
+      fIntLen = (nilinv<=0) ? TGeoShape::Big() : (TGeant4Unit::cm/nilinv);
    }
 }
 
@@ -470,11 +498,10 @@ void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
 
 Double_t TGeoMaterial::Coulomb(Double_t z)
 {
-   const Double_t alpha = 7.29927E-03;
-
-   Double_t az    = alpha*z;
+   Double_t az    = TGeoUnit::unitType() == TGeoUnit::kTGeoUnits
+     ? TGeoUnit::fine_structure_const*z : TGeant4Unit::fine_structure_const*z;
    Double_t az2   = az*az;
-   Double_t az4   =   az2 * az2;
+   Double_t az4   = az2 * az2;
    Double_t fp    = ( 0.0083*az4 + 0.20206 + 1./(1.+az2) ) * az2;
    Double_t fm    = ( 0.0020*az4 + 0.0369  ) * az4;
    return fp - fm;
@@ -750,11 +777,15 @@ TGeoMixture::~TGeoMixture()
 
 void TGeoMixture::AverageProperties()
 {
-   const Double_t alr2av = 1.39621E-03 , al183 =5.20948;
-   const Double_t cm = 1.;
-   const Double_t g = 6.2415e21; // [gram = 1E-3*joule*s*s/(m*m)]
-   const Double_t amu = 1.03642688246781065e-02; // [MeV/c^2]
-   const Double_t lambda0 = 35.*g/(cm*cm);  // [g/cm^2]
+   TGeoUnit::UnitType typ = TGeoUnit::unitType();
+   const Double_t cm   = (typ==TGeoUnit::kTGeoUnits) ? TGeoUnit::cm   : TGeant4Unit::cm;
+   const Double_t cm2  = (typ==TGeoUnit::kTGeoUnits) ? TGeoUnit::cm2  : TGeant4Unit::cm2;
+   const Double_t amu  = (typ==TGeoUnit::kTGeoUnits) ? TGeoUnit::amu  : TGeant4Unit::amu; // [MeV/c^2]
+   const Double_t gram = (typ==TGeoUnit::kTGeoUnits) ? TGeoUnit::gram : TGeant4Unit::gram;
+   const Double_t na   = (typ==TGeoUnit::kTGeoUnits) ? TGeoUnit::Avogadro : TGeant4Unit::Avogadro;
+   const Double_t alr2av  = 1.39621E-03 * cm2;
+   const Double_t al183   = 5.20948;
+   const Double_t lambda0 = 35.*gram/cm2;  // [g/cm^2]
    Double_t radinv = 0.0;
    Double_t nilinv = 0.0;
    Double_t nbAtomsPerVolume;
@@ -764,7 +795,7 @@ void TGeoMixture::AverageProperties()
       if (fWeights[j] <= 0) continue;
       fA += fWeights[j]*fAmixture[j];
       fZ += fWeights[j]*fZmixture[j];
-      nbAtomsPerVolume = TMath::Na()*fDensity*fWeights[j]/GetElement(j)->A();
+      nbAtomsPerVolume = na*fDensity*fWeights[j]/GetElement(j)->A();
       nilinv += nbAtomsPerVolume*TMath::Power(GetElement(j)->Neff(), 0.6666667);
       Double_t zc = fZmixture[j];
       Double_t alz = TMath::Log(zc)/3.;
@@ -773,10 +804,10 @@ void TGeoMixture::AverageProperties()
       radinv += xinv*fWeights[j];
    }
    radinv *= alr2av*fDensity;
-   if (radinv > 0) fRadLen = 1/radinv;
+   if (radinv > 0) fRadLen = cm/radinv;
    // Compute interaction length
    nilinv *= amu/lambda0;
-   fIntLen = (nilinv<=0) ? TGeoShape::Big() : (1./nilinv);
+   fIntLen = (nilinv<=0) ? TGeoShape::Big() : (cm/nilinv);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1195,11 +1226,16 @@ Double_t TGeoMaterial::ScreenFactor(Double_t z)
 
 void TGeoMixture::ComputeDerivedQuantities()
 {
+   const Double_t Na = (TGeoUnit::unitType()==TGeoUnit::kTGeoUnits)
+     ? TGeoUnit::Avogadro : TGeant4Unit::Avogadro;
+
+   if ( fVecNbOfAtomsPerVolume ) delete [] fVecNbOfAtomsPerVolume;
+
    fVecNbOfAtomsPerVolume = new Double_t[fNelements];
 
    // Formula taken from G4Material.cxx L312
    for (Int_t i=0; i<fNelements; ++i) {
-      fVecNbOfAtomsPerVolume[i] = TGeoUnit::Avogadro*fDensity*fWeights[i]/((TGeoElement*)fElements->At(i))->A();
+      fVecNbOfAtomsPerVolume[i] = Na*fDensity*fWeights[i]/((TGeoElement*)fElements->At(i))->A();
    }
    ComputeRadiationLength();
    ComputeNuclearInterLength();
@@ -1212,21 +1248,25 @@ void TGeoMixture::ComputeDerivedQuantities()
 void TGeoMixture::ComputeRadiationLength()
 {
    // Formula taken from G4Material.cxx L556
+   const Double_t cm = (TGeoUnit::unitType()==TGeoUnit::kTGeoUnits) ? TGeoUnit::cm : TGeant4Unit::cm;
    Double_t radinv = 0.0 ;
    for (Int_t i=0;i<fNelements;++i) {
      radinv += fVecNbOfAtomsPerVolume[i]*((TGeoElement*)fElements->At(i))->GetfRadTsai();
    }
-   fRadLen = (radinv <= 0.0 ? DBL_MAX : 1./radinv);
+   fRadLen = (radinv <= 0.0 ? DBL_MAX : cm/radinv);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute Nuclear Interaction Length based on Geant4 formula
 void TGeoMixture::ComputeNuclearInterLength()
 {
-
    // Formula taken from G4Material.cxx L567
-   constexpr Double_t lambda0  = 35*TGeoUnit::g/TGeoUnit::cm2;
-   constexpr Double_t twothird = 2.0/3.0;
+   TGeoUnit::UnitType typ = TGeoUnit::unitType();
+   const Double_t g   = (typ==TGeoUnit::kTGeoUnits) ? TGeoUnit::g   : TGeant4Unit::g;
+   const Double_t cm  = (typ==TGeoUnit::kTGeoUnits) ? TGeoUnit::cm  : TGeant4Unit::cm;
+   const Double_t amu = (typ==TGeoUnit::kTGeoUnits) ? TGeoUnit::amu : TGeant4Unit::amu;
+   const Double_t lambda0  = 35*g/(cm*cm);
+   const Double_t twothird = 2.0/3.0;
    Double_t NILinv = 0.0;
    for (Int_t i=0; i<fNelements; ++i) {
       Int_t Z = static_cast<Int_t>(((TGeoElement*)fElements->At(i))->Z()+0.5);
@@ -1237,6 +1277,6 @@ void TGeoMixture::ComputeNuclearInterLength()
          NILinv += fVecNbOfAtomsPerVolume[i]*TMath::Exp(twothird*TMath::Log(A));
       }
    }
-   NILinv *= TGeoUnit::amu/lambda0;
-   fIntLen = (NILinv <= 0.0 ? DBL_MAX : 1./NILinv);
+   NILinv *= amu/lambda0;
+   fIntLen = (NILinv <= 0.0 ? DBL_MAX : cm/NILinv);
 }

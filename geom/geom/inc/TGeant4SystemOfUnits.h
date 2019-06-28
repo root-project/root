@@ -51,14 +51,10 @@
 // 12.01.16   added symbols for microsecond (us) and picosecond (ps) (mma)
 // 02.10.17   addopted units from CLHEP 2.3.4.3 and converted to TGeo unit base
 
-#ifndef TGEO_SYSTEM_OF_UNITS_H
-#define TGEO_SYSTEM_OF_UNITS_H
+#ifndef TGEANT4_SYSTEM_OF_UNITS_H
+#define TGEANT4_SYSTEM_OF_UNITS_H
 
-#ifndef HAVE_GEANT4_UNITS
-//#define HAVE_GEANT4_UNITS
-#endif
-
-namespace TGeoUnit {
+namespace TGeant4Unit {
 
   //
   // TGeo follows Geant3 convention as specified in manual
@@ -76,7 +72,7 @@ namespace TGeoUnit {
   //
   // Length [L]
   //
-  static constexpr double millimeter = 0.1;
+  static constexpr double millimeter = 1.0;
   static constexpr double millimeter2 = millimeter * millimeter;
   static constexpr double millimeter3 = millimeter * millimeter * millimeter;
 
@@ -151,7 +147,7 @@ namespace TGeoUnit {
   //
   // Time [T]
   //
-  static constexpr double nanosecond = 1.e-9;
+  static constexpr double nanosecond = 1.0;
   static constexpr double second = 1.e+9 * nanosecond; // Base unit
   static constexpr double millisecond = 1.e-3 * second;
   static constexpr double microsecond = 1.e-6 * second;
@@ -178,7 +174,7 @@ namespace TGeoUnit {
   //
   // Energy [E]
   //
-  static constexpr double megaelectronvolt = 1.e-3;
+  static constexpr double megaelectronvolt = 1.0;
   static constexpr double electronvolt = 1.e-6 * megaelectronvolt;
   static constexpr double kiloelectronvolt = 1.e-3 * megaelectronvolt;
   static constexpr double gigaelectronvolt = 1.e+3 * megaelectronvolt; // Base unit
@@ -330,11 +326,12 @@ namespace TGeoUnit {
   static constexpr double perThousand = 0.001;
   static constexpr double perMillion = 0.000001;
 
-  /// System of units flavor. Must be kept in sync with TGeant4Units::UnitType
+  /// System of units flavor. Must be kept in sync with TGeoUnits::UnitType
   enum  UnitType {
-    kTGeoUnits    = 1<<0,
+    kTGeoUnits   = 1<<0,
     kTGeant4Units = 1<<1
   };
+
   /// Access the currently set units type
   UnitType unitType();
   /// Set the currently used unit type (Only ONCE possible)
@@ -342,4 +339,4 @@ namespace TGeoUnit {
   
 } // namespace TGeoUnit
 
-#endif /* TGEO_SYSTEM_OF_UNITS_H */
+#endif /* TGEANT4_SYSTEM_OF_UNITS_H */
