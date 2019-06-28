@@ -12,7 +12,7 @@ def main():
     try:
         import ROOT
     except:
-        print "It seems that pyROOT isn't properly configured"
+        print("It seems that pyROOT isn't properly configured")
         return
 
     """
