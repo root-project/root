@@ -27,8 +27,6 @@ namespace Experimental {
 
 namespace Detail {
 
-class RColumn;
-
 // clang-format off
 /**
 \class ROOT::Experimental::Detail::RPagePool
@@ -46,9 +44,6 @@ facilitate pre-filling a cache, e.g. by read-ahead.
 // clang-format on
 class RPagePool {
 private:
-   void* fMemory;
-   std::size_t fPageSize;
-   std::size_t fNPages;
    /// TODO(jblomer): should be an efficient index structure that allows
    ///   - random insert
    ///   - random delete
@@ -58,20 +53,20 @@ private:
    std::vector<std::uint32_t> fReferences;
 
 public:
-   RPagePool(std::size_t pageSize, std::size_t nPages);
+   RPagePool() = default;
    RPagePool(const RPagePool&) = delete;
    RPagePool& operator =(const RPagePool&) = delete;
-   ~RPagePool();
+   ~RPagePool() = default;
 
-   /// Get a new, empty page from the cache. Return a "null page" if there is no more free space.  Used for writing.
-   RPage ReservePage(RColumn* column);
-   /// Registers a page that has previously been acquired by ReservePage() and was meanwhile filled with content.
-   void CommitPage(const RPage& page);
-   /// Tries to find the page corresponding to column and index in the cache. On cache miss, load the page
-   /// from the PageSource attached to the column and put it in the cache.
-   RPage GetPage(RColumn* column, NTupleSize_t index);
-   /// Give back a page to the pool. There must not be any pointers anymore into this page.
-   void ReleasePage(const RPage &page);
+   /// Adds a new page to the pool. The new page has its reference counter set to 1.
+   void RegisterPage(const RPage &page);
+   /// Tries to find the page corresponding to column and index in the cache. If the page is found, its reference
+   /// counter is increased
+   RPage GetPage(ColumnId_t columnId, NTupleSize_t index);
+   /// Give back a page to the pool and decrease the reference counter. There must not be any pointers anymore into
+   /// this page. If the reference counter drops to zero, the page is removed from the page pool and the return value
+   /// is true, indicating that its memory can be freed.
+   bool ReturnPage(const RPage &page);
 };
 
 } // namespace Detail
