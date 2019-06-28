@@ -10,28 +10,28 @@
 ##
 ## \author Wim Lavrijsen
 
-import sys, string, os
-from ROOT import TFile, TNtuple
+import sys, os
+from ROOT import TFile, TNtuple, TROOT
 
 
-ifn = os.path.expandvars("${ROOTSYS}/tutorials/pyroot/aptuple.txt")
+ifn = os.path.join(str(TROOT.GetTutorialDir()), 'pyroot', 'aptuple.txt')
 ofn = 'aptuple.root'
 
-print 'opening file', ifn, '...'
+print('opening file %s ...' % ifn)
 infile = open( ifn, 'r' )
 lines  = infile.readlines()
 title  = lines[0]
-labels = string.split( lines[1] )
+labels = lines[1].split()
 
-print 'writing file', ofn, '...'
+print('writing file %s ...' % ofn)
 outfile = TFile( ofn, 'RECREATE', 'ROOT file with an NTuple' )
-ntuple  = TNtuple( 'ntuple', title, string.join( labels, ':') )
+ntuple  = TNtuple( 'ntuple', title, ':'.join( labels ) )
 
 for line in lines[2:]:
-    words = string.split( line )
+    words = line.split()
     row = map( float, words )
-    apply( ntuple.Fill, row )
+    ntuple.Fill(*row)
 
 outfile.Write()
 
-print 'done'
+print('done')
