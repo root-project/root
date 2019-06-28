@@ -20,7 +20,7 @@
 #include "RooAbsArg.h"
 #include <string>
 
-/// Template specialisation used in RooAbsArg:
+// Template specialisation used in RooAbsArg:
 ClassImp(RooSTLRefCountList<RooAbsArg>);
 
 namespace RooFit {
