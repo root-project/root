@@ -101,9 +101,6 @@ protected:
   RooAbsArg* _masterPdf ;             // Pointer to input p.d.f
   RooAbsCategoryLValue* _masterCat ;  // Pointer to input master category
 
-  TIterator* _masterLeafListIter ;    // Iterator over leaf list
-  TIterator* _masterBranchListIter ;  // Iterator over branch list
-
   RooArgSet  _masterBranchList ;      // List of branch nodes
   RooArgSet  _masterLeafList ;        // List of leaf nodes
 

@@ -241,32 +241,32 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 /// from getMin() getMax(),getBins() of each RooAbsArg representing that
 /// dimension.
 ///
-/// This constructor takes the following optional arguments
-///
-/// Import(TH1&, Bool_t impDens) -- Import contents of the given TH1/2/3 into this binned dataset. The 
+/// <table>
+/// <tr><th> Optional Argument <th> Effect
+/// <tr><td> Import(TH1&, Bool_t impDens) <td> Import contents of the given TH1/2/3 into this binned dataset. The
 ///                                 ranges and binning of the binned dataset are automatically adjusted to
 ///                                 match those of the imported histogram. 
 ///
 ///                                 Please note: for TH1& with unequal binning _only_,
 ///                                 you should decide if you want to import the absolute bin content,
 ///                                 or the bin content expressed as density. The latter is default and will
-///                                 result in the same histogram as the original TH1. For certain type of
+///                                 result in the same histogram as the original TH1. For certain types of
 ///                                 bin contents (containing efficiencies, asymmetries, or ratio is general)
 ///                                 you should import the absolute value and set impDens to kFALSE
 ///                                 
 ///
-/// Weight(Double_t)          -- Apply given weight factor when importing histograms
+/// <tr><td> Weight(Double_t)          <td> Apply given weight factor when importing histograms
 ///
-/// Index(RooCategory&)       -- Prepare import of multiple TH1/1/2/3 into a N+1 dimensional RooDataHist
+/// <tr><td> Index(RooCategory&)       <td> Prepare import of multiple TH1/1/2/3 into a N+1 dimensional RooDataHist
 ///                              where the extra discrete dimension labels the source of the imported histogram
 ///                              If the index category defines states for which no histogram is be imported
 ///                              the corresponding bins will be left empty.
 ///                              
-/// Import(const char*, TH1&) -- Import a THx to be associated with the given state name of the index category
+/// <tr><td> Import(const char*, TH1&) <td> Import a THx to be associated with the given state name of the index category
 ///                              specified in Index(). If the given state name is not yet defined in the index
 ///                              category it will be added on the fly. The import command can be specified
 ///                              multiple times. 
-/// Import(map<string,TH1*>&) -- As above, but allows specification of many imports in a single operation
+/// <tr><td> Import(map<string,TH1*>&) <td> As above, but allows specification of many imports in a single operation
 ///                              
 
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,

@@ -20,7 +20,6 @@
 
 class RooAbsReal ;
 class RooArgList ;
-class TIterator ;
 #include "RooConstVar.h"
 
 class RooRealConstant {

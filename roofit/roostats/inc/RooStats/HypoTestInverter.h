@@ -74,16 +74,25 @@ public:
 
    void Clear();
 
-   // set for a fixed scan in nbins
+   /// Set up to perform a fixed scan.
+   /// \param[in] nBins Number of points to scan.
+   /// \param[in] xMin Lower limit of range to be scanned.
+   /// \param[in] xMax Upper limit of range to be scanned.
+   /// \param[in] scanLog Run in logarithmic steps along x.
    void SetFixedScan(int nBins, double xMin = 1, double xMax = -1, bool scanLog = false ) {
       fNBins = nBins;
       fXmin = xMin; fXmax = xMax;
       fScanLog = scanLog;
    }
 
-   // set auto scan (default)
+   /// Use automatic scanning, i.e. adaptive
    void SetAutoScan() { SetFixedScan(0); }
 
+   /// Run a fixed scan.
+   /// \param[in] nBins Number of points to scan.
+   /// \param[in] xMin Lower limit of range to be scanned.
+   /// \param[in] xMax Upper limit of range to be scanned.
+   /// \param[in] scanLog Run in logarithmic steps along x.
    bool RunFixedScan( int nBins, double xMin, double xMax, bool scanLog = false ) const;
 
    bool RunOnePoint( double thisX, bool adaptive = false, double clTarget = -1 ) const;

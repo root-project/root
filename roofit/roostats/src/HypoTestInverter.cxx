@@ -1,5 +1,6 @@
 // @(#)root/roostats:$Id$
 // Author: Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke
+// Contributions: Giovanni Petrucciani and Annapaola Decosa
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -11,23 +12,24 @@
 /** \class RooStats::HypoTestInverter
     \ingroup Roostats
 
-HypoTestInverter class for performing an hypothesis test inversion by scanning
-the hypothesis test results of an HypoTestCalculator  for various values of the
-parameter of interest. By looking at the confidence level curve of the result an
-upper limit, where it intersects the desired confidence level, can be derived.
-The class implements the RooStats::IntervalCalculator interface and returns an
-RooStats::HypoTestInverterResult class. The result is a SimpleInterval, which
-via the method UpperLimit returns to the user the upper limit value.
+A class for performing a hypothesis test inversion by scanning
+the hypothesis test results of a HypoTestCalculator  for various values of the
+parameter of interest. By looking at the confidence level curve of the result, an
+upper limit can be derived by computing the intersection of the confidence level curve with the desired confidence level.
+The class implements the RooStats::IntervalCalculator interface, and returns a
+RooStats::HypoTestInverterResult. The result is a SimpleInterval, which
+via the method UpperLimit() returns to the user the upper limit value.
 
-The  HypoTestInverter implements various option for performing the scan.
-HypoTestInverter::RunFixedScan will scan using a fixed grid the parameter of
-interest. HypoTestInverter::RunAutoScan will perform an automatic scan to find
-optimally the curve and it will stop until the desired precision is obtained.
-The confidence level value at a given point can be done via  HypoTestInverter::RunOnePoint.
-The class can scan the CLs+b values or alternatively CLs
-(if the method HypoTestInverter::UseCLs has been called).
+## Scanning options
+The  HypoTestInverter implements various options for performing the scan.
+- HypoTestInverter::RunFixedScan will scan the parameter of interest using a fixed grid.
+- HypoTestInverter::SetAutoScan will perform an automatic scan to find
+optimally the curve. It will stop when the desired precision is obtained.
+- HypoTestInverter::RunOnePoint computes the confidence level at a given point.
 
-Contributions to this class have been written by Giovanni Petrucciani and Annapaola Decosa
+### CLs presciption
+The class can scan the CLs+b values or alternatively CLs. For the latter,
+call HypoTestInverter::UseCLs().
 */
 
 // include other header files
@@ -483,8 +485,8 @@ void  HypoTestInverter::CreateResults() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Run a fixed scan or the automatic scan depending on the configuration
-/// Return if needed a copy of the result object which will be managed by the user
+/// Run a fixed scan or the automatic scan depending on the configuration.
+/// Return if needed a copy of the result object which will be managed by the user.
 
 HypoTestInverterResult* HypoTestInverter::GetInterval() const {
 
@@ -622,7 +624,7 @@ bool HypoTestInverter::RunFixedScan( int nBins, double xMin, double xMax, bool s
    }
    if ( xMin>xMax ) {
       oocoutE((TObject*)0,InputArguments) << "HypoTestInverter::RunFixedScan - Please provide xMin ("
-                                          << xMin << ") smaller that xMax (" << xMax << ")\n";
+                                          << xMin << ") smaller than xMax (" << xMax << ")\n";
       return false;
    }
 
@@ -751,11 +753,16 @@ bool HypoTestInverter::RunOnePoint( double rVal, bool adaptive, double clTarget)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// run an automatic scan until the desired accuracy is reached
+/// Run an automatic scan until the desired accuracy is reached.
 /// Start by default from the full interval (min,max) of the POI and then via bisection find the line crossing
-/// the target line
-/// Optionally an hint can be provided and the scan will be done closer to that value
-/// If by bisection the desired accuracy will not be reached a fit to the points is performed
+/// the target line.
+/// Optionally, a hint can be provided and the scan will be done closer to that value.
+/// If by bisection the desired accuracy will not be reached, a fit to the points is performed.
+/// \param[out] limit The limit.
+/// \param[out] limitErr The error of the limit.
+/// \param[in] absAccuracy Desired absolute accuracy.
+/// \param[in] relAccuracy Desired relative accuracy.
+/// \param[in] hint Hint to start from or nullptr for no hint.
 
 bool HypoTestInverter::RunLimit(double &limit, double &limitErr, double absAccuracy, double relAccuracy, const double*hint) const {
 
