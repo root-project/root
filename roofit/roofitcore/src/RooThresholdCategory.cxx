@@ -72,6 +72,11 @@ RooThresholdCategory::RooThresholdCategory(const RooThresholdCategory& other, co
   _threshIter = _threshList.MakeIterator() ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Default Constructor
+
+RooThresholdCategory::RooThresholdCategory() : RooAbsCategory(), _defCat(0), _threshIter(0){
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
