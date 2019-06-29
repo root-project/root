@@ -3370,8 +3370,8 @@ void ExtractHeadersForDecls(const RScanner::ClassColl_t &annotatedRcds,
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate the fwd declarations of the selected entities
 
-std::string GenerateFwdDeclString(const RScanner &scan,
-                                  const cling::Interpreter &interp)
+static std::string GenerateFwdDeclString(const RScanner &scan,
+                                         const cling::Interpreter &interp)
 {
    std::string newFwdDeclString;
 
@@ -4842,13 +4842,10 @@ int RootClingMain(int argc,
       const std::string headersClassesMapString = GenerateStringFromHeadersForClasses(headersDeclsMap,
                                                                                       detectedUmbrella,
                                                                                       true);
-      std::string fwdDeclsString = "\"\"";
+      std::string fwdDeclsString = "nullptr";
       if (!gDriverConfig->fBuildingROOTStage1) {
-         if (writeEmptyRootPCM) {
-            fwdDeclsString = "nullptr";
-         } else {
+         if (!writeEmptyRootPCM)
             fwdDeclsString = GenerateFwdDeclString(scan, interp);
-         }
       }
 
       modGen.WriteRegistrationSource(dictStream, fwdDeclnArgsToKeepString, headersClassesMapString, fwdDeclsString,
