@@ -66,7 +66,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TrackMathCoreUnitDict
                               NO_SOURCES
                               HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/stress/TrackMathCore.h
                               LINKDEF stress/TrackMathCoreLinkDef.h
-                              DEPENDENCIES Core MathCore RIO GenVector)
+                              DEPENDENCIES Core MathCore RIO GenVector Smatrix)
 
 if(MSVC)
   add_custom_command(TARGET TrackMathCoreUnitDict POST_BUILD
