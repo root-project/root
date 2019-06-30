@@ -20,32 +20,33 @@
 
 #include <cstdlib>
 
-void ROOT::Experimental::Detail::RPagePool::RegisterPage(const RPage &page)
+void ROOT::Experimental::Detail::RPagePool::RegisterPage(const RPage &page, const RPageDeleter &deleter)
 {
    fPages.emplace_back(page);
    fReferences.emplace_back(1);
-
+   fDeleters.emplace_back(deleter);
 }
 
-bool ROOT::Experimental::Detail::RPagePool::ReturnPage(const RPage& page)
+void ROOT::Experimental::Detail::RPagePool::ReturnPage(const RPage& page)
 {
-   if (page.IsNull()) return false;
+   if (page.IsNull()) return;
 
    unsigned int N = fPages.size();
    for (unsigned i = 0; i < N; ++i) {
-      if (fPages[i] == page) {
-         if (--fReferences[i] == 0) {
-            fPages[i] = fPages[N-1];
-            fReferences[i] = fReferences[N-1];
-            fPages.resize(N-1);
-            fReferences.resize(N-1);
-            return true;
-         }
-         return false;
+      if (fPages[i] != page) continue;
+
+      if (--fReferences[i] == 0) {
+         fDeleters[i](fPages[i]);
+         fPages[i] = fPages[N-1];
+         fReferences[i] = fReferences[N-1];
+         fDeleters[i] = fDeleters[N-1];
+         fPages.resize(N-1);
+         fReferences.resize(N-1);
+         fDeleters.resize(N-1);
       }
+      return;
    }
    R__ASSERT(false);
-   return false;
 }
 
 ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPagePool::GetPage(

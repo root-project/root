@@ -3,9 +3,14 @@
 #include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RPagePool.hxx>
 
+using RPage = ROOT::Experimental::Detail::RPage;
+using RPageAllocatorHeap = ROOT::Experimental::Detail::RPageAllocatorHeap;
+using RPageDeleter = ROOT::Experimental::Detail::RPageDeleter;
+using RPagePool = ROOT::Experimental::Detail::RPagePool;
+
 TEST(Pages, Allocation)
 {
-   ROOT::Experimental::Detail::RPageAllocatorHeap allocator;
+   RPageAllocatorHeap allocator;
 
    auto page = allocator.NewPage(42, 4, 16);
    EXPECT_FALSE(page.IsNull());
@@ -17,18 +22,21 @@ TEST(Pages, Allocation)
 
 TEST(Pages, Pool)
 {
-   ROOT::Experimental::Detail::RPagePool pool;
+   RPagePool pool;
 
    auto page = pool.GetPage(0, 0);
    EXPECT_TRUE(page.IsNull());
-   EXPECT_FALSE(pool.ReturnPage(page));
+   pool.ReturnPage(page); // should not crash
 
-   ROOT::Experimental::Detail::RPage::RClusterInfo clusterInfo;
-   page = ROOT::Experimental::Detail::RPage(1, &page, 10, 1);
+   RPage::RClusterInfo clusterInfo;
+   page = RPage(1, &page, 10, 1);
    EXPECT_NE(nullptr, page.TryGrow(10));
    page.SetWindow(50, clusterInfo);
    EXPECT_FALSE(page.IsNull());
-   pool.RegisterPage(page);
+   unsigned int nCallDeleter = 0;
+   pool.RegisterPage(page, RPageDeleter([&nCallDeleter](const RPage &/*page*/, void */*userData*/) {
+      nCallDeleter++;
+   }));
 
    page = pool.GetPage(0, 0);
    EXPECT_TRUE(page.IsNull());
@@ -39,8 +47,10 @@ TEST(Pages, Pool)
    EXPECT_EQ(50U, page.GetRangeFirst());
    EXPECT_EQ(59U, page.GetRangeLast());
 
-   EXPECT_FALSE(pool.ReturnPage(page));
-   EXPECT_TRUE(pool.ReturnPage(page));
+   pool.ReturnPage(page);
+   EXPECT_EQ(0U, nCallDeleter);
+   pool.ReturnPage(page);
+   EXPECT_EQ(1U, nCallDeleter);
    page = pool.GetPage(1, 55);
    EXPECT_TRUE(page.IsNull());
 }
