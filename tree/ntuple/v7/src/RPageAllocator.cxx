@@ -18,11 +18,8 @@
 
 #include <TError.h>
 
-namespace ROOT {
-namespace Experimental {
-namespace Detail {
-
-RPage RPageAllocatorHeap::NewPage(ColumnId_t columnId, std::size_t elementSize, std::size_t nElements)
+ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageAllocatorHeap::NewPage(
+   ColumnId_t columnId, std::size_t elementSize, std::size_t nElements)
 {
    R__ASSERT((elementSize > 0) && (nElements > 0));
    auto nbytes = elementSize * nElements;
@@ -30,11 +27,7 @@ RPage RPageAllocatorHeap::NewPage(ColumnId_t columnId, std::size_t elementSize, 
    return RPage(columnId, buffer, nbytes, elementSize);
 }
 
-void RPageAllocatorHeap::DeletePage(const RPage& page)
+void ROOT::Experimental::Detail::RPageAllocatorHeap::DeletePage(const RPage& page)
 {
    delete[] reinterpret_cast<unsigned char *>(page.GetBuffer());
 }
-
-} // namespace Detail
-} // namespace Experimental
-} // namespace ROOT
