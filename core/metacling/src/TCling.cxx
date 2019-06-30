@@ -1090,7 +1090,50 @@ static std::string GetModuleNameAsString(clang::Module *M, const clang::Preproce
    return std::string(llvm::sys::path::stem(ModuleName));
 }
 
-static void RegisterCxxModules(cling::Interpreter &clingInterp)
+static bool HaveFullGlobalModuleIndex = false;
+static GlobalModuleIndex *loadGlobalModuleIndex(SourceLocation TriggerLoc, cling::Interpreter &interp)
+{
+   CompilerInstance &CI = *interp.getCI();
+   Preprocessor &PP = CI.getPreprocessor();
+   auto ModuleManager = CI.getModuleManager();
+   assert(ModuleManager);
+   // StringRef ModuleIndexPath = HSI.getModuleCachePath();
+   // HeaderSearch& HSI = PP.getHeaderSearchInfo();
+   // HSI.setModuleCachePath(TROOT::GetLibDir().Data());
+   std::string ModuleIndexPath = TROOT::GetLibDir().Data();
+   if (ModuleIndexPath.empty())
+      return nullptr;
+   // Get an existing global index. This loads it if not already loaded.
+   ModuleManager->resetForReload();
+   ModuleManager->loadGlobalIndex();
+   GlobalModuleIndex *GlobalIndex = ModuleManager->getGlobalIndex();
+
+   // For finding modules needing to be imported for fixit messages,
+   // we need to make the global index cover all modules, so we do that here.
+   if (!GlobalIndex && !HaveFullGlobalModuleIndex) {
+      ModuleMap &MMap = PP.getHeaderSearchInfo().getModuleMap();
+      bool RecreateIndex = false;
+      for (ModuleMap::module_iterator I = MMap.module_begin(), E = MMap.module_end(); I != E; ++I) {
+         Module *TheModule = I->second;
+         // We do want the index only of the prebuilt modules
+         std::string ModuleName = GetModuleNameAsString(TheModule, PP);
+         if (ModuleName.empty())
+            continue;
+         LoadModule(ModuleName, interp);
+         RecreateIndex = true;
+      }
+      if (RecreateIndex) {
+         GlobalModuleIndex::writeIndex(CI.getFileManager(), CI.getPCHContainerReader(), ModuleIndexPath);
+         ModuleManager->resetForReload();
+         ModuleManager->loadGlobalIndex();
+         GlobalIndex = ModuleManager->getGlobalIndex();
+      }
+      HaveFullGlobalModuleIndex = true;
+   }
+   return GlobalIndex;
+}
+
+static void RegisterCommonCxxModules(cling::Interpreter &clingInterp)
 {
    if (!clingInterp.getCI()->getLangOpts().Modules)
       return;
@@ -1115,35 +1158,22 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
                                            "Core",
                                            "RIO"};
 
-   // FIXME: Reducing those will let us be less dependent on rootmap files
-   static constexpr std::array<const char *, 3> ExcludeModules = {
-      {"Rtools", "RSQLite", "RInterface"}};
-
    LoadModules(CoreModules, clingInterp);
+
+   // FIXME: Reducing those will let us be less dependent on rootmap files
+   // static constexpr std::array<const char *, 3> ExcludeModules = {
+   //    {"Rtools", "RSQLite", "RInterface"}};
 
    // Take this branch only from ROOT because we don't need to preload modules in rootcling
    if (!IsFromRootCling()) {
-      // Dynamically get all the modules and load them if they are not in core modules
-      clang::CompilerInstance &CI = *clingInterp.getCI();
-      clang::ModuleMap &moduleMap = CI.getPreprocessor().getHeaderSearchInfo().getModuleMap();
-      clang::Preprocessor &PP = CI.getPreprocessor();
-      std::vector<std::string> ModulesPreloaded;
-      for (auto I = moduleMap.module_begin(), E = moduleMap.module_end(); I != E; ++I) {
-         clang::Module *M = I->second;
-         assert(M);
+      std::vector<std::string> CommonModules = {"MathCore"};
+      LoadModules(CommonModules, clingInterp);
 
-         std::string ModuleName = GetModuleNameAsString(M, PP);
-         if (!ModuleName.empty() &&
-             std::find(CoreModules.begin(), CoreModules.end(), ModuleName) == CoreModules.end() &&
-             std::find(ExcludeModules.begin(), ExcludeModules.end(), ModuleName) ==
-                ExcludeModules.end()) {
-            if (M->IsSystem && !M->IsMissingRequirement)
-               LoadModule(ModuleName, clingInterp);
-            else if (!M->IsSystem && !M->IsMissingRequirement)
-               ModulesPreloaded.push_back(ModuleName);
-         }
-      }
-      LoadModules(ModulesPreloaded, clingInterp);
+      // These modules should not be preloaded but they fix issues.
+      std::vector<std::string> FIXMEModules = {"Gpad"};
+      LoadModules(FIXMEModules, clingInterp);
+
+      loadGlobalModuleIndex(SourceLocation(), clingInterp);
    }
 
    // Check that the gROOT macro was exported by any core module.
@@ -1194,51 +1224,6 @@ static void RegisterPreIncludedHeaders(cling::Interpreter &clingInterp)
    PreIncludes += "#include <cassert>\n";
    PreIncludes += "using namespace std;\n";
    clingInterp.declare(PreIncludes);
-}
-
-static bool HaveFullGlobalModuleIndex = false;
-static GlobalModuleIndex *loadGlobalModuleIndex(cling::Interpreter &interp, SourceLocation TriggerLoc)
-{
-   CompilerInstance &CI = *interp.getCI();
-   Preprocessor &PP = CI.getPreprocessor();
-   auto ModuleManager = CI.getModuleManager();
-   assert(ModuleManager);
-   // StringRef ModuleIndexPath = HSI.getModuleCachePath();
-   // HeaderSearch& HSI = PP.getHeaderSearchInfo();
-   // HSI.setModuleCachePath(TROOT::GetLibDir().Data());
-   std::string ModuleIndexPath = TROOT::GetLibDir().Data();
-   if (ModuleIndexPath.empty())
-      return nullptr;
-   // Get an existing global index. This loads it if not already loaded.
-   ModuleManager->resetForReload();
-   ModuleManager->loadGlobalIndex();
-   GlobalModuleIndex *GlobalIndex = ModuleManager->getGlobalIndex();
-   if (!GlobalIndex && CI.hasFileManager()) {
-   }
-
-   // For finding modules needing to be imported for fixit messages,
-   // we need to make the global index cover all modules, so we do that here.
-   if (!GlobalIndex && !HaveFullGlobalModuleIndex) {
-      ModuleMap &MMap = PP.getHeaderSearchInfo().getModuleMap();
-      bool RecreateIndex = false;
-      for (ModuleMap::module_iterator I = MMap.module_begin(), E = MMap.module_end(); I != E; ++I) {
-         Module *TheModule = I->second;
-         // We do want the index only of the prebuilt modules
-         std::string ModuleName = GetModuleNameAsString(TheModule, PP);
-         if (ModuleName.empty())
-            continue;
-         LoadModule(ModuleName, interp);
-         RecreateIndex = true;
-      }
-      if (RecreateIndex) {
-         GlobalModuleIndex::writeIndex(CI.getFileManager(), CI.getPCHContainerReader(), ModuleIndexPath);
-         ModuleManager->resetForReload();
-         ModuleManager->loadGlobalIndex();
-         GlobalIndex = ModuleManager->getGlobalIndex();
-      }
-      HaveFullGlobalModuleIndex = true;
-   }
-   return GlobalIndex;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1449,34 +1434,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    static llvm::raw_fd_ostream fMPOuts (STDOUT_FILENO, /*ShouldClose*/false);
    fMetaProcessor = llvm::make_unique<cling::MetaProcessor>(*fInterpreter, fMPOuts);
 
-   if (fInterpreter->getCI()->getLangOpts().Modules) {
-      // Setup core C++ modules if we have any to setup.
-
-      // Load libc and stl first.
-#ifdef R__MACOSX
-      LoadModules({"Darwin", "std"}, *fInterpreter);
-#else
-      LoadModules({"libc", "stl"}, *fInterpreter);
-#endif
-
-      if (!fromRootCling)
-         loadGlobalModuleIndex(*fInterpreter, SourceLocation());
-
-      // C99 decided that it's a very good idea to name a macro `I` (the letter I).
-      // This seems to screw up nearly all the template code out there as `I` is
-      // common template parameter name and iterator variable name.
-      // Let's follow the GCC recommendation and undefine `I` in case any of the
-      // core modules have defined it:
-      // https://www.gnu.org/software/libc/manual/html_node/Complex-Numbers.html
-      fInterpreter->declare("#ifdef I\n #undef I\n #endif\n");
-
-      // These macros are from loading R related modules, which conflict with
-      // user's code.
-      fInterpreter->declare("#ifdef PI\n #undef PI\n #endif\n");
-      fInterpreter->declare("#ifdef ERROR\n #undef ERROR\n #endif\n");
-   }
-
-   // RegisterCxxModules(*fInterpreter);
+   RegisterCommonCxxModules(*fInterpreter);
    RegisterPreIncludedHeaders(*fInterpreter);
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
