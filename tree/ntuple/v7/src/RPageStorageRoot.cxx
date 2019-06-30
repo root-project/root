@@ -159,20 +159,17 @@ void RPageSinkRoot::ReleasePage(RPage &page)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-RPage RPageAllocatorKey::NewPage(ColumnId_t columnId, std::size_t elementSize, std::size_t nElements,
-                                 ROOT::Experimental::Internal::RPagePayload &payload)
+RPage RPageAllocatorKey::NewPage(ColumnId_t columnId, void *mem, std::size_t elementSize, std::size_t nElements)
 {
-   fPage2Payload[payload.fContent] = &payload;
-   RPage newPage(columnId, payload.fContent, elementSize * nElements, elementSize);
+   RPage newPage(columnId, mem, elementSize * nElements, elementSize);
    newPage.TryGrow(nElements);
    return newPage;
 }
 
-void RPageAllocatorKey::DeletePage(const RPage& page)
+void RPageAllocatorKey::DeletePage(const RPage& page, ROOT::Experimental::Internal::RPagePayload *payload)
 {
    if (page.IsNull())
       return;
-   auto payload = fPage2Payload[page.GetBuffer()];
    R__ASSERT(page.GetBuffer() == payload->fContent);
    free(payload->fContent);
    free(payload);
@@ -370,19 +367,19 @@ RPage RPageSourceRoot::PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t in
    auto pagePayload = pageKey->ReadObject<ROOT::Experimental::Internal::RPagePayload>();
    auto elementSize = pagePayload->fSize / elemsInPage;
    R__ASSERT(pagePayload->fSize % elemsInPage == 0);
-   auto newPage = fPageAllocator->NewPage(columnId, elementSize, elemsInPage, *pagePayload);
+   auto newPage = fPageAllocator->NewPage(columnId, pagePayload->fContent, elementSize, elemsInPage);
    newPage.SetWindow(firstInPage, RPage::RClusterInfo(clusterId, selfOffset, pointeeOffset));
-   fPagePool->RegisterPage(newPage);
+   fPagePool->RegisterPage(newPage,
+      RPageDeleter([](const RPage &page, void *userData)
+      {
+         RPageAllocatorKey::DeletePage(page, reinterpret_cast<ROOT::Experimental::Internal::RPagePayload *>(userData));
+      }, pagePayload));
    return newPage;
-
-   //free(pagePayload->fContent);
-   //free(pagePayload);
 }
 
 void RPageSourceRoot::ReleasePage(RPage &page)
 {
-   if (fPagePool->ReturnPage(page))
-      fPageAllocator->DeletePage(page);
+   fPagePool->ReturnPage(page);
 }
 
 ROOT::Experimental::NTupleSize_t RPageSourceRoot::GetNEntries()

@@ -17,6 +17,7 @@
 #define ROOT7_RPagePool
 
 #include <ROOT/RPage.hxx>
+#include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
 #include <cstddef>
@@ -51,6 +52,7 @@ private:
    ///   - searching by tree index
    std::vector<RPage> fPages;
    std::vector<std::uint32_t> fReferences;
+   std::vector<RPageDeleter> fDeleters;
 
 public:
    RPagePool() = default;
@@ -58,15 +60,16 @@ public:
    RPagePool& operator =(const RPagePool&) = delete;
    ~RPagePool() = default;
 
-   /// Adds a new page to the pool. The new page has its reference counter set to 1.
-   void RegisterPage(const RPage &page);
+   /// Adds a new page to the pool together with the function to free its space. Upon registration,
+   /// the page pool takes ownership of the page's memory. The new page has its reference counter set to 1.
+   void RegisterPage(const RPage &page, const RPageDeleter &deleter);
    /// Tries to find the page corresponding to column and index in the cache. If the page is found, its reference
    /// counter is increased
    RPage GetPage(ColumnId_t columnId, NTupleSize_t index);
    /// Give back a page to the pool and decrease the reference counter. There must not be any pointers anymore into
-   /// this page. If the reference counter drops to zero, the page is removed from the page pool and the return value
-   /// is true, indicating that its memory can be freed.
-   bool ReturnPage(const RPage &page);
+   /// this page. If the reference counter drops to zero, the page pool might decide to call the deleter given in
+   /// during registration.
+   void ReturnPage(const RPage &page);
 };
 
 } // namespace Detail

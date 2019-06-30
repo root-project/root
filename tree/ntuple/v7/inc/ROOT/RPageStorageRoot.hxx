@@ -172,16 +172,13 @@ public:
 /**
 \class ROOT::Experimental::Detail::RPageAllocatorKey
 \ingroup NTuple
-\brief Adopts the memory return by TKey->ReadObject()
+\brief Adopts the memory returned by TKey->ReadObject()
 */
 // clang-format on
 class RPageAllocatorKey {
-private:
-  std::unordered_map<void *, ROOT::Experimental::Internal::RPagePayload *> fPage2Payload;
 public:
-   RPage NewPage(ColumnId_t columnId, std::size_t elementSize, std::size_t nElements,
-                 ROOT::Experimental::Internal::RPagePayload &payload);
-   void DeletePage(const RPage& page);
+   static RPage NewPage(ColumnId_t columnId, void *mem, std::size_t elementSize, std::size_t nElements);
+   static void DeletePage(const RPage& page, ROOT::Experimental::Internal::RPagePayload *payload);
 };
 
 
