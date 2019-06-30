@@ -34,7 +34,7 @@ TEST(Pages, Pool)
    page.SetWindow(50, clusterInfo);
    EXPECT_FALSE(page.IsNull());
    unsigned int nCallDeleter = 0;
-   pool.RegisterPage(page, RPageDeleter([&nCallDeleter](const RPage &/*page*/, void */*userData*/) {
+   pool.RegisterPage(page, RPageDeleter([&nCallDeleter](const RPage & /*page*/, void * /*userData*/) {
       nCallDeleter++;
    }));
 
