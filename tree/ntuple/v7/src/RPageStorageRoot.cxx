@@ -28,11 +28,7 @@
 #include <iostream>
 #include <utility>
 
-namespace ROOT {
-namespace Experimental {
-namespace Detail {
-
-RPageSinkRoot::RPageSinkRoot(std::string_view ntupleName, RSettings settings)
+ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view ntupleName, RSettings settings)
    : RPageSink(ntupleName)
    , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
    , fDirectory(nullptr)
@@ -43,7 +39,7 @@ RPageSinkRoot::RPageSinkRoot(std::string_view ntupleName, RSettings settings)
       "Do not store real data with this version of RNTuple!";
 }
 
-RPageSinkRoot::RPageSinkRoot(std::string_view ntupleName, std::string_view path)
+ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view ntupleName, std::string_view path)
    : RPageSink(ntupleName)
    , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
    , fDirectory(nullptr)
@@ -55,7 +51,7 @@ RPageSinkRoot::RPageSinkRoot(std::string_view ntupleName, std::string_view path)
    fSettings.fTakeOwnership = true;
 }
 
-RPageSinkRoot::~RPageSinkRoot()
+ROOT::Experimental::Detail::RPageSinkRoot::~RPageSinkRoot()
 {
    if (fSettings.fTakeOwnership) {
       fSettings.fFile->Close();
@@ -63,7 +59,8 @@ RPageSinkRoot::~RPageSinkRoot()
    }
 }
 
-RPageStorage::ColumnHandle_t RPageSinkRoot::AddColumn(const RColumn &column)
+ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
+ROOT::Experimental::Detail::RPageSinkRoot::AddColumn(const RColumn &column)
 {
    ROOT::Experimental::Internal::RColumnHeader columnHeader;
    columnHeader.fName = column.GetModel().GetName();
@@ -79,7 +76,7 @@ RPageStorage::ColumnHandle_t RPageSinkRoot::AddColumn(const RColumn &column)
 }
 
 
-void RPageSinkRoot::Create(RNTupleModel &model)
+void ROOT::Experimental::Detail::RPageSinkRoot::Create(RNTupleModel &model)
 {
    fDirectory = fSettings.fFile->mkdir(fNTupleName.c_str());
 
@@ -106,7 +103,7 @@ void RPageSinkRoot::Create(RNTupleModel &model)
    fDirectory->WriteObject(&fNTupleHeader, RMapper::kKeyNTupleHeader);
 }
 
-void RPageSinkRoot::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
+void ROOT::Experimental::Detail::RPageSinkRoot::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
 {
    auto columnId = columnHandle.fId;
    ROOT::Experimental::Internal::RPagePayload pagePayload;
@@ -121,7 +118,7 @@ void RPageSinkRoot::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
    fNTupleFooter.fNElementsPerColumn[columnId] += page.GetNElements();
 }
 
-void RPageSinkRoot::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
+void ROOT::Experimental::Detail::RPageSinkRoot::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
 {
    fCurrentCluster.fNEntries = nEntries - fPrevClusterNEntries;
    fPrevClusterNEntries = nEntries;
@@ -136,13 +133,14 @@ void RPageSinkRoot::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
    fCurrentCluster.fEntryRangeStart = fNTupleFooter.fNEntries;
 }
 
-void RPageSinkRoot::CommitDataset()
+void ROOT::Experimental::Detail::RPageSinkRoot::CommitDataset()
 {
    if (fDirectory)
       fDirectory->WriteObject(&fNTupleFooter, RMapper::kKeyNTupleFooter);
 }
 
-RPage RPageSinkRoot::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
+ROOT::Experimental::Detail::RPage
+ROOT::Experimental::Detail::RPageSinkRoot::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
 {
    if (nElements == 0)
       nElements = kDefaultElementsPerPage;
@@ -150,7 +148,7 @@ RPage RPageSinkRoot::ReservePage(ColumnHandle_t columnHandle, std::size_t nEleme
    return fPageAllocator->NewPage(columnHandle.fId, elementSize, nElements);
 }
 
-void RPageSinkRoot::ReleasePage(RPage &page)
+void ROOT::Experimental::Detail::RPageSinkRoot::ReleasePage(RPage &page)
 {
    fPageAllocator->DeletePage(page);
 }
@@ -159,14 +157,16 @@ void RPageSinkRoot::ReleasePage(RPage &page)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-RPage RPageAllocatorKey::NewPage(ColumnId_t columnId, void *mem, std::size_t elementSize, std::size_t nElements)
+ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageAllocatorKey::NewPage(
+   ColumnId_t columnId, void *mem, std::size_t elementSize, std::size_t nElements)
 {
    RPage newPage(columnId, mem, elementSize * nElements, elementSize);
    newPage.TryGrow(nElements);
    return newPage;
 }
 
-void RPageAllocatorKey::DeletePage(const RPage& page, ROOT::Experimental::Internal::RPagePayload *payload)
+void ROOT::Experimental::Detail::RPageAllocatorKey::DeletePage(
+   const RPage& page, ROOT::Experimental::Internal::RPagePayload *payload)
 {
    if (page.IsNull())
       return;
@@ -179,7 +179,7 @@ void RPageAllocatorKey::DeletePage(const RPage& page, ROOT::Experimental::Intern
 ////////////////////////////////////////////////////////////////////////////////
 
 
-RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, RSettings settings)
+ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, RSettings settings)
    : RPageSource(ntupleName)
    , fPageAllocator(std::make_unique<RPageAllocatorKey>())
    , fPagePool(std::make_shared<RPagePool>())
@@ -188,7 +188,7 @@ RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, RSettings settings
 {
 }
 
-RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, std::string_view path)
+ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, std::string_view path)
    : RPageSource(ntupleName)
    , fPageAllocator(std::make_unique<RPageAllocatorKey>())
    , fPagePool(std::make_shared<RPagePool>())
@@ -200,7 +200,7 @@ RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, std::string_view p
 }
 
 
-RPageSourceRoot::~RPageSourceRoot()
+ROOT::Experimental::Detail::RPageSourceRoot::~RPageSourceRoot()
 {
    if (fSettings.fTakeOwnership) {
       fSettings.fFile->Close();
@@ -209,7 +209,8 @@ RPageSourceRoot::~RPageSourceRoot()
 }
 
 
-RPageStorage::ColumnHandle_t RPageSourceRoot::AddColumn(const RColumn &column)
+ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
+ROOT::Experimental::Detail::RPageSourceRoot::AddColumn(const RColumn &column)
 {
    auto& model = column.GetModel();
    auto columnId = fMapper.fColumnName2Id[model.GetName()];
@@ -221,7 +222,7 @@ RPageStorage::ColumnHandle_t RPageSourceRoot::AddColumn(const RColumn &column)
 }
 
 
-void RPageSourceRoot::Attach()
+void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
 {
    fDirectory = fSettings.fFile->GetDirectory(fNTupleName.c_str());
    auto keyNTupleHeader = fDirectory->GetKey(RMapper::kKeyNTupleHeader);
@@ -304,7 +305,7 @@ void RPageSourceRoot::Attach()
 }
 
 
-std::unique_ptr<ROOT::Experimental::RNTupleModel> RPageSourceRoot::GenerateModel()
+std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::Detail::RPageSourceRoot::GenerateModel()
 {
    auto model = std::make_unique<RNTupleModel>();
    for (auto& f : fMapper.fRootFields) {
@@ -314,7 +315,8 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> RPageSourceRoot::GenerateModel
    return model;
 }
 
-RPage RPageSourceRoot::PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t index)
+ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::PopulatePage(
+   ColumnHandle_t columnHandle, NTupleSize_t index)
 {
    auto columnId = columnHandle.fId;
    auto cachedPage = fPagePool->GetPage(columnId, index);
@@ -377,27 +379,23 @@ RPage RPageSourceRoot::PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t in
    return newPage;
 }
 
-void RPageSourceRoot::ReleasePage(RPage &page)
+void ROOT::Experimental::Detail::RPageSourceRoot::ReleasePage(RPage &page)
 {
    fPagePool->ReturnPage(page);
 }
 
-ROOT::Experimental::NTupleSize_t RPageSourceRoot::GetNEntries()
+ROOT::Experimental::NTupleSize_t ROOT::Experimental::Detail::RPageSourceRoot::GetNEntries()
 {
    return fMapper.fNEntries;
 }
 
-ROOT::Experimental::NTupleSize_t RPageSourceRoot::GetNElements(ColumnHandle_t columnHandle)
+ROOT::Experimental::NTupleSize_t ROOT::Experimental::Detail::RPageSourceRoot::GetNElements(ColumnHandle_t columnHandle)
 {
    return fMapper.fColumnIndex[columnHandle.fId].fNElements;
 }
 
-ROOT::Experimental::ColumnId_t RPageSourceRoot::GetColumnId(ColumnHandle_t columnHandle)
+ROOT::Experimental::ColumnId_t ROOT::Experimental::Detail::RPageSourceRoot::GetColumnId(ColumnHandle_t columnHandle)
 {
    // TODO(jblomer) distinguish trees
    return columnHandle.fId;
 }
-
-} // namespace Detail
-} // namespace Exprimental
-} // namespace ROOT
