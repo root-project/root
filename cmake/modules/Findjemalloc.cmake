@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 # - Locate jemalloc library
 #
 # Defines:
@@ -16,4 +22,3 @@ FIND_PACKAGE_HANDLE_STANDARD_ARGS(jemalloc DEFAULT_MSG JEMALLOC_LIBRARIES JEMALL
 
 mark_as_advanced(JEMALLOC_FOUND JEMALLOC_LIBRARIES JEMALLOC_INCLUDE_DIR)
 get_filename_component(JEMALLOC_LIBRARY_PATH ${JEMALLOC_LIBRARIES} DIRECTORY)
-

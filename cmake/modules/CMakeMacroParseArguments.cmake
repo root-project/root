@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 # This file defines the following macro for developers needing to parse
 # arguments passed to a CMake macro using names.
 #
@@ -87,4 +93,3 @@ MACRO(PARSE_ARGUMENTS prefix arg_names option_names)
   ENDFOREACH(arg)
   SET(${prefix}_${current_arg_name} ${current_arg_list})
 ENDMACRO(PARSE_ARGUMENTS)
-
