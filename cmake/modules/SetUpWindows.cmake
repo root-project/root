@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 set(ROOT_PLATFORM win32)
 
 #----Check the compiler that is used-----------------------------------------------------
@@ -75,5 +81,3 @@ elseif(MSVC)
 else()
   message(FATAL_ERROR "There is no setup for compiler '${CMAKE_CXX_COMPILER}' on this Windows system up to now. Stop cmake at this point.")
 endif()
-
-
