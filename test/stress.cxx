@@ -406,7 +406,7 @@ void stress3()
 #else
    constexpr Long64_t lastgood = 51886;
 #endif
-   constexpr Long64_t tolerance = 100;
+   constexpr Long64_t tolerance = 150;
 #ifdef R__HAS_DEFAULT_LZ4
       constexpr Long64_t difflastgoodlz4 = 5500;
       if (last < lastgood - tolerance || last > lastgood + difflastgoodlz4 + tolerance || comp < 1.5 || comp > 2.1)
