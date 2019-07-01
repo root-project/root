@@ -60,7 +60,7 @@ REveDataSimpleProxyBuilder::Build(const REveDataCollection *collection,
       auto di = Collection()->GetDataItem(index);
       if (di->GetRnrSelf() && !di->GetFiltered())
       {
-         Build(collection->GetDataPtr(index), itemHolder, vc);
+         Build(collection->GetDataPtr(index), index, itemHolder, vc);
       }
    }
 }
@@ -91,7 +91,7 @@ REveDataSimpleProxyBuilder::BuildViewType(const REveDataCollection* collection,
       auto di = Collection()->GetDataItem(index);
       if (di->GetRnrSelf() && !di->GetFiltered())
       {
-         BuildViewType(collection->GetDataPtr(index), itemHolder, viewType, vc);
+         BuildViewType(collection->GetDataPtr(index), index, itemHolder, viewType, vc);
       }
    }
 }
@@ -106,7 +106,7 @@ REveDataSimpleProxyBuilder::VisibilityModelChanges(int idx, REveElement* iCompou
    if (item->GetRnrSelf() && iCompound->NumChildren()==0)
    {
       printf("REveDataSimpleProxyBuilder::VisibilityModelChanges BUILD %d \n", idx);
-      Build(Collection()->GetDataPtr(idx), iCompound, vc);
+      Build(Collection()->GetDataPtr(idx), idx, iCompound, vc);
       returnValue=true;
    }
    return returnValue;
