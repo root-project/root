@@ -98,6 +98,7 @@ public:
            Int_t       GetHour(Int_t);
            Int_t       GetMinute(Int_t);
            Int_t       GetSecond(Int_t);
+           Int_t       GetSecondsFraction(Int_t);
    virtual Bool_t      GetTimestamp(Int_t, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&) { return kFALSE; }
    virtual Bool_t      GetTimestamp(Int_t, TTimeStamp&) { return kFALSE; }
            TDatime     GetTimestamp(Int_t);

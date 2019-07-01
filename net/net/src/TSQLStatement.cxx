@@ -387,6 +387,16 @@ Int_t TSQLStatement::GetSecond(Int_t npar)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// return seconds fraction value for parameter (if applicable)
+
+Int_t TSQLStatement::GetSecondsFraction(Int_t npar)
+{
+   Int_t year, month, day, hour, min, sec, frac;
+   if (GetTimestamp(npar, year, month, day, hour, min, sec, frac)) return frac;
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// return value of parameter in form of TDatime
 /// Be aware, that TDatime does not allow dates before 1995-01-01
 
