@@ -1371,14 +1371,12 @@ endif()
 #---Check for CUDA-----------------------------------------------------------------------
 
 if(cuda OR tmva-gpu)
-  if(CMAKE_CXX_STANDARD EQUAL 11)
-    find_package(CUDA 7.5)
-  elseif(CMAKE_CXX_STANDARD EQUAL 14)
-    message(STATUS "Detected request for c++14, requiring minimum version CUDA 9.0 (default 7.5)")
-    find_package(CUDA 9.0)
-  else()
-    message(FATAL_ERROR "CUDA not supported with C++${CMAKE_CXX_STANDARD}")
+  find_package(CUDA REQUIRED)
+
+  if(NOT DEFINED CMAKE_CUDA_STANDARD)
+    set(CMAKE_CUDA_STANDARD ${CMAKE_CXX_STANDARD})
   endif()
+
   enable_language(CUDA)
 endif()
 
