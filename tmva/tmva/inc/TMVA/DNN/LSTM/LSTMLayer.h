@@ -62,56 +62,65 @@ public:
    using Scalar_t = typename Architecture_t::Scalar_t;
    using Tensor_t = std::vector<Matrix_t>;
 
+  
+
 private:
-   size_t fStateSize;                        ///< Hidden state size for LSTM
-   size_t fCellSize;                         ///< Cell state size of LSTM
-   size_t fTimeSteps;                        ///< Timesteps for LSTM
 
-   bool fRememberState;                      ///< Remember state in next pass
+   size_t fStateSize;                           ///< Hidden state size for LSTM
+   size_t fCellSize;                            ///< Cell state size of LSTM
+   size_t fTimeSteps;                           ///< Timesteps for LSTM
 
-   DNN::EActivationFunction fF1;             ///< Activation function: sigmoid
-   DNN::EActivationFunction fF2;             ///< Activaton function: tanh
+   bool fRememberState;                         ///< Remember state in next pass
 
-   Matrix_t fInputValue;                     ///< Computed input gate values
-   Matrix_t fCandidateValue;                 ///< Computed candidate values
-   Matrix_t fForgetValue;                    ///< Computed forget gate values
-   Matrix_t fOutputValue;                    ///< Computed output gate values
-   Matrix_t fState;                          ///< Hidden state of LSTM
-   Matrix_t fCell;                           ///< Cell state of LSTM
+   DNN::EActivationFunction fF1;                ///< Activation function: sigmoid
+   DNN::EActivationFunction fF2;                ///< Activaton function: tanh
 
-   Matrix_t &fWeightsInputGate;              ///< Input Gate weights for input, fWeights[0]
-   Matrix_t &fWeightsInputGateState;         ///< Input Gate weights for prev state, fWeights[1]
-   Matrix_t &fInputGateBias;                 ///< Input Gate bias
+   Matrix_t fInputValue;                        ///< Computed input gate values
+   Matrix_t fCandidateValue;                    ///< Computed candidate values
+   Matrix_t fForgetValue;                       ///< Computed forget gate values
+   Matrix_t fOutputValue;                       ///< Computed output gate values
+   Matrix_t fState;                             ///< Hidden state of LSTM
+   Matrix_t fCell;                              ///< Cell state of LSTM
 
-   Matrix_t &fWeightsForgetGate;             ///< Forget Gate weights for input, fWeights[0]
-   Matrix_t &fWeightsForgetGateState;        ///< Forget Gate weights for prev state, fWeights[1]
-   Matrix_t &fForgetGateBias;                ///< Forget Gate bias
+   Matrix_t &fWeightsInputGate;                 ///< Input Gate weights for input, fWeights[0]
+   Matrix_t &fWeightsInputGateState;            ///< Input Gate weights for prev state, fWeights[1]
+   Matrix_t &fInputGateBias;                    ///< Input Gate bias
 
-   Matrix_t &fWeightsCandidate;              ///< Candidate Gate weights for input, fWeights[0]
-   Matrix_t &fWeightsCandidateState;         ///< Candidate Gate weights for prev state, fWeights[1]
-   Matrix_t &fCandidateBias;                 ///< Candidate Gate bias
+   Matrix_t &fWeightsForgetGate;                ///< Forget Gate weights for input, fWeights[0]
+   Matrix_t &fWeightsForgetGateState;           ///< Forget Gate weights for prev state, fWeights[1]
+   Matrix_t &fForgetGateBias;                   ///< Forget Gate bias
 
-   Matrix_t &fWeightsOutputGate;             ///< Output Gate weights for input, fWeights[0]
-   Matrix_t &fWeightsOutputGateState;        ///< Output Gate weights for prev state, fWeights[1]
-   Matrix_t &fOutputGateBias;                ///< Output Gate bias
+   Matrix_t &fWeightsCandidate;                 ///< Candidate Gate weights for input, fWeights[0]
+   Matrix_t &fWeightsCandidateState;            ///< Candidate Gate weights for prev state, fWeights[1]
+   Matrix_t &fCandidateBias;                    ///< Candidate Gate bias
 
+   Matrix_t &fWeightsOutputGate;                ///< Output Gate weights for input, fWeights[0]
+   Matrix_t &fWeightsOutputGateState;           ///< Output Gate weights for prev state, fWeights[1]
+   Matrix_t &fOutputGateBias;                   ///< Output Gate bias
+
+
+   std::vector<Matrix_t> input_gate_value;      ///< input gate value for every time step
+   std::vector<Matrix_t> forget_gate_value;     ///< forget gate value for every time step
+   std::vector<Matrix_t> candidate_gate_value;  ///< candidate gate value for every time step
+   std::vector<Matrix_t> output_gate_value;     ///< output gate value for every time step
+   std::vector<Matrix_t> cell_value;            ///< cell value for every time step
    std::vector<Matrix_t> fDerivativesInput;     ///< First fDerivatives of the activations input gate
    std::vector<Matrix_t> fDerivativesForget;    ///< First fDerivatives of the activations forget gate
    std::vector<Matrix_t> fDerivativesCandidate; ///< First fDerivatives of the activations candidate gate
    std::vector<Matrix_t> fDerivativesOutput;    ///< First fDerivatives of the activations output gate
 
-   Matrix_t &fWeightsInputGradients;         ///< Gradients w.r.t the input gate - input weights
-   Matrix_t &fWeightsInputStateGradients;    ///< Gradients w.r.t the input gate - hidden state weights
-   Matrix_t &fInputBiasGradients;            ///< Gradients w.r.t the input gate - bias weights
-   Matrix_t &fWeightsForgetGradients;        ///< Gradients w.r.t the forget gate - input weights
-   Matrix_t &fWeightsForgetStateGradients;   ///< Gradients w.r.t the forget gate - hidden state weights
-   Matrix_t &fForgetBiasGradients;           ///< Gradients w.r.t the forget gate - bias weights
-   Matrix_t &fWeightsCandidateGradients;     ///< Gradients w.r.t the candidate gate - input weights
-   Matrix_t &fWeightsCandidateStateGradients;///< Gradients w.r.t the candidate gate - hidden state weights
-   Matrix_t &fCandidateBiasGradients;        ///< Gradients w.r.t the candidate gate - bias weights
-   Matrix_t &fWeightsOutputGradients;        ///< Gradients w.r.t the output gate - input weights
-   Matrix_t &fWeightsOutputStateGradients;   ///< Gradients w.r.t the output gate - hidden state weights
-   Matrix_t &fOutputBiasGradients;           ///< Gradients w.r.t the output gate - bias weights
+   Matrix_t &fWeightsInputGradients;            ///< Gradients w.r.t the input gate - input weights
+   Matrix_t &fWeightsInputStateGradients;       ///< Gradients w.r.t the input gate - hidden state weights
+   Matrix_t &fInputBiasGradients;               ///< Gradients w.r.t the input gate - bias weights
+   Matrix_t &fWeightsForgetGradients;           ///< Gradients w.r.t the forget gate - input weights
+   Matrix_t &fWeightsForgetStateGradients;      ///< Gradients w.r.t the forget gate - hidden state weights
+   Matrix_t &fForgetBiasGradients;              ///< Gradients w.r.t the forget gate - bias weights
+   Matrix_t &fWeightsCandidateGradients;        ///< Gradients w.r.t the candidate gate - input weights
+   Matrix_t &fWeightsCandidateStateGradients;   ///< Gradients w.r.t the candidate gate - hidden state weights
+   Matrix_t &fCandidateBiasGradients;           ///< Gradients w.r.t the candidate gate - bias weights
+   Matrix_t &fWeightsOutputGradients;           ///< Gradients w.r.t the output gate - input weights
+   Matrix_t &fWeightsOutputStateGradients;      ///< Gradients w.r.t the output gate - hidden state weights
+   Matrix_t &fOutputBiasGradients;              ///< Gradients w.r.t the output gate - bias weights
 
 public:
 
@@ -150,12 +159,13 @@ public:
     *  a the corresponding call to Forward(...). */
    Matrix_t & CellBackward(Matrix_t & state_gradients_backward,
                            Matrix_t & cell_gradients_backward,
-                           const Matrix_t & precStateActivations,
-                           const Matrix_t & input, 
-                           Matrix_t & input_gradient,
-                           Matrix_t &di, Matrix_t &df, Matrix_t &dc, Matrix_t &dout);
+                           const Matrix_t & precStateActivations, const Matrix_t & precCellActivations,
+                           const Matrix_t & input_gate, const Matrix_t & forget_gate,   
+                           const Matrix_t & candidate_gate, const Matrix_t & output_gate,
+                           const Matrix_t & input, Matrix_t & input_gradient,
+                           Matrix_t &di, Matrix_t &df, Matrix_t &dc, Matrix_t &dout, size_t t);
 
-
+  
     
    /*! Decides the values we'll update (NN with Sigmoid) */
    void InputGate(const Matrix_t &input, Matrix_t &di);
@@ -236,7 +246,30 @@ public:
    std::vector<Matrix_t>             & GetDerivativesOutput()                    { return fDerivativesOutput; }
    const Matrix_t                    & GetOutputDerivativesAt(size_t i)    const { return fDerivativesOutput[i]; }
    Matrix_t                          & GetOutputDerivativesAt(size_t i)          { return fDerivativesOutput[i]; }
+
+   const std::vector<Matrix_t>       & GetInputGateTensor()              const { return input_gate_value; }
+   std::vector<Matrix_t>             & GetInputGateTensor()                    { return input_gate_value; }
+   const Matrix_t                    & GetInputGateTensorAt(size_t i)    const { return input_gate_value[i]; }
+   Matrix_t                          & GetInputGateTensorAt(size_t i)           { return input_gate_value[i]; }
+   const std::vector<Matrix_t>       & GetForgetGateTensor()              const { return forget_gate_value; }
+   std::vector<Matrix_t>             & GetForgetGateTensor()                    { return forget_gate_value; }
+   const Matrix_t                    & GetForgetGateTensorAt(size_t i)    const { return forget_gate_value[i]; }
+   Matrix_t                          & GetForgetGateTensorAt(size_t i)          { return forget_gate_value[i]; }
+   const std::vector<Matrix_t>       & GetCandidateGateTensor()           const { return candidate_gate_value; }
+   std::vector<Matrix_t>             & GetCandidateGateTensor()                 { return candidate_gate_value; }
+   const Matrix_t                    & GetCandidateGateTensorAt(size_t i) const { return candidate_gate_value[i]; }
+   Matrix_t                          & GetCandidateGateTensorAt(size_t i)       { return candidate_gate_value[i]; }
+   const std::vector<Matrix_t>       & GetOutputGateTensor()              const { return output_gate_value; }
+   std::vector<Matrix_t>             & GetOutputGateTensor()                    { return output_gate_value; }
+   const Matrix_t                    & GetOutputGateTensorAt(size_t i)    const { return output_gate_value[i]; }
+   Matrix_t                          & GetOutputGateTensorAt(size_t i)          { return output_gate_value[i]; }
+   const std::vector<Matrix_t>       & GetCellTensor()                    const { return cell_value; }
+   std::vector<Matrix_t>             & GetCellTensor()                          { return cell_value; }
+   const Matrix_t                    & GetCellTensorAt(size_t i)          const { return cell_value[i]; }
+   Matrix_t                          & GetCellTensorAt(size_t i)                { return cell_value[i]; }
    
+
+
    const Matrix_t                   & GetInputGateBias()         const { return fInputGateBias; }
    Matrix_t                         & GetInputGateBias()               { return fInputGateBias; }
    const Matrix_t                   & GetForgetGateBias()        const { return fForgetGateBias; }
@@ -269,11 +302,14 @@ public:
    Matrix_t                         & GetWeightsOutputStateGradients()         { return fWeightsOutputStateGradients; }
    const Matrix_t                   & GetOutputBiasGradients()           const { return fOutputBiasGradients; }
    Matrix_t                         & GetOutputBiasGradients()                 { return fOutputBiasGradients; }
+
 };
+
 //______________________________________________________________________________
 //
 // Basic LSTM-Layer Implementation
 //______________________________________________________________________________
+
 template <typename Architecture_t>
 TBasicLSTMLayer<Architecture_t>::TBasicLSTMLayer(size_t batchSize, size_t stateSize, size_t inputSize, size_t timeSteps,
                                                  bool rememberState, DNN::EActivationFunction f1, DNN::EActivationFunction f2,
@@ -282,16 +318,16 @@ TBasicLSTMLayer<Architecture_t>::TBasicLSTMLayer(size_t batchSize, size_t stateS
                                    {stateSize, stateSize, stateSize, stateSize, stateSize, stateSize, stateSize, stateSize}, 
                                    {inputSize, stateSize, inputSize, stateSize, inputSize, stateSize, inputSize, stateSize}, 
                                    4, {stateSize, stateSize, stateSize, stateSize}, {1, 1, 1, 1}, batchSize, timeSteps, stateSize, fA),
+   fStateSize(stateSize),
+   fCellSize(stateSize),
+   fTimeSteps(timeSteps),
+   fRememberState(rememberState),
+   fF1(f1),
+   fF2(f2),
    fInputValue(batchSize, stateSize),
    fCandidateValue(batchSize, stateSize),
    fForgetValue(batchSize, stateSize),
    fOutputValue(batchSize, stateSize),
-   fTimeSteps(timeSteps),
-   fStateSize(stateSize),
-   fCellSize(stateSize),
-   fRememberState(rememberState),
-   fF1(f1),
-   fF2(f2),
    fState(batchSize, stateSize),
    fCell(batchSize, stateSize),
    fWeightsInputGate(this->GetWeightsAt(0)),
@@ -324,22 +360,28 @@ TBasicLSTMLayer<Architecture_t>::TBasicLSTMLayer(size_t batchSize, size_t stateS
       fDerivativesForget.emplace_back(batchSize, stateSize);
       fDerivativesCandidate.emplace_back(batchSize, stateSize);
       fDerivativesOutput.emplace_back(batchSize, stateSize);
+      input_gate_value.emplace_back(batchSize, stateSize);
+      forget_gate_value.emplace_back(batchSize, stateSize);
+      candidate_gate_value.emplace_back(batchSize, stateSize);
+      output_gate_value.emplace_back(batchSize, stateSize);
+      cell_value.emplace_back(batchSize, stateSize);
    }
 }
+
  //______________________________________________________________________________
 template <typename Architecture_t>
 TBasicLSTMLayer<Architecture_t>::TBasicLSTMLayer(const TBasicLSTMLayer &layer)
    : VGeneralLayer<Architecture_t>(layer), 
+      fStateSize(layer.fStateSize),
+      fCellSize(layer.fCellSize),
+      fTimeSteps(layer.fTimeSteps),
+      fRememberState(layer.fRememberState),
+      fF1(layer.GetActivationFunctionF1()),
+      fF2(layer.GetActivationFunctionF2()),
       fInputValue(layer.GetBatchSize(), layer.GetStateSize()),
       fCandidateValue(layer.GetBatchSize(), layer.GetStateSize()),
       fForgetValue(layer.GetBatchSize(), layer.GetStateSize()),
       fOutputValue(layer.GetBatchSize(), layer.GetStateSize()),
-      fTimeSteps(layer.fTimeSteps),
-      fStateSize(layer.fStateSize),
-      fCellSize(layer.fCellSize),
-      fRememberState(layer.fRememberState),
-      fF1(layer.GetActivationFunctionF1()),
-      fF2(layer.GetActivationFunctionF2()),
       fState(layer.GetBatchSize(), layer.GetStateSize()),
       fCell(layer.GetBatchSize(), layer.GetCellSize()),
       fWeightsInputGate(this->GetWeightsAt(0)),
@@ -365,20 +407,35 @@ TBasicLSTMLayer<Architecture_t>::TBasicLSTMLayer(const TBasicLSTMLayer &layer)
       fCandidateBiasGradients(this->GetBiasGradientsAt(2)),
       fWeightsOutputGradients(this->GetWeightGradientsAt(6)),
       fWeightsOutputStateGradients(this->GetWeightGradientsAt(7)),
-      fOutputBiasGradients(this->GetBiasGradientsAt(3))
+      fOutputBiasGradients(this->GetBiasGradientsAt(3)) 
 {
    for (size_t i = 0; i < fTimeSteps; ++i) {
       fDerivativesInput.emplace_back(layer.GetBatchSize(), layer.GetStateSize());
-      Architecture_t::Copy(fDerivativesInput[i], layer.GetDerivativesAt(i));
+      Architecture_t::Copy(fDerivativesInput[i], layer.GetInputDerivativesAt(i));
         
       fDerivativesForget.emplace_back(layer.GetBatchSize(), layer.GetStateSize());
-      Architecture_t::Copy(fDerivativesForget[i], layer.GetDerivativesAt(i));
+      Architecture_t::Copy(fDerivativesForget[i], layer.GetForgetDerivativesAt(i));
         
       fDerivativesCandidate.emplace_back(layer.GetBatchSize(), layer.GetStateSize());
-      Architecture_t::Copy(fDerivativesCandidate[i], layer.GetDerivativesAt(i));
+      Architecture_t::Copy(fDerivativesCandidate[i], layer.GetCandidateDerivativesAt(i));
         
       fDerivativesOutput.emplace_back(layer.GetBatchSize(), layer.GetStateSize());
-      Architecture_t::Copy(fDerivativesOutput[i], layer.GetDerivativesAt(i));
+      Architecture_t::Copy(fDerivativesOutput[i], layer.GetOutputDerivativesAt(i));
+
+      input_gate_value.emplace_back(layer.GetBatchSize(), layer.GetStateSize());
+      Architecture_t::Copy(input_gate_value[i], layer.GetInputGateTensorAt(i));
+
+      forget_gate_value.emplace_back(layer.GetBatchSize(), layer.GetStateSize());
+      Architecture_t::Copy(forget_gate_value[i], layer.GetForgetGateTensorAt(i));
+
+      candidate_gate_value.emplace_back(layer.GetBatchSize(), layer.GetStateSize());
+      Architecture_t::Copy(candidate_gate_value[i], layer.GetCandidateGateTensorAt(i));
+
+      output_gate_value.emplace_back(layer.GetBatchSize(), layer.GetStateSize());
+      Architecture_t::Copy(output_gate_value[i], layer.GetOutputGateTensorAt(i));
+
+      cell_value.emplace_back(layer.GetBatchSize(), layer.GetStateSize());
+      Architecture_t::Copy(cell_value[i], layer.GetCellTensorAt(i));
    }
     
    // Gradient matrices not copied
@@ -409,6 +466,7 @@ auto inline TBasicLSTMLayer<Architecture_t>::InputGate(const Matrix_t &input, Ma
    DNN::evaluateDerivative<Architecture_t>(di, fInp, fInputValue);
    DNN::evaluate<Architecture_t>(fInputValue, fInp);
 }
+
  //______________________________________________________________________________
 template <typename Architecture_t>
 auto inline TBasicLSTMLayer<Architecture_t>::ForgetGate(const Matrix_t &input, Matrix_t &df)
@@ -426,6 +484,7 @@ auto inline TBasicLSTMLayer<Architecture_t>::ForgetGate(const Matrix_t &input, M
    DNN::evaluateDerivative<Architecture_t>(df, fFor, fForgetValue);
    DNN::evaluate<Architecture_t>(fForgetValue, fFor);
 }
+
  //______________________________________________________________________________
 template <typename Architecture_t>
 auto inline TBasicLSTMLayer<Architecture_t>::CandidateValue(const Matrix_t &input, Matrix_t &dc)
@@ -443,6 +502,7 @@ auto inline TBasicLSTMLayer<Architecture_t>::CandidateValue(const Matrix_t &inpu
    DNN::evaluateDerivative<Architecture_t>(dc, fCan, fCandidateValue);
    DNN::evaluate<Architecture_t>(fCandidateValue, fCan);
 }
+
  //______________________________________________________________________________
 template <typename Architecture_t>
 auto inline TBasicLSTMLayer<Architecture_t>::OutputGate(const Matrix_t &input, Matrix_t &dout)
@@ -460,6 +520,7 @@ auto inline TBasicLSTMLayer<Architecture_t>::OutputGate(const Matrix_t &input, M
    DNN::evaluateDerivative<Architecture_t>(dout, fOut, fOutputValue);
    DNN::evaluate<Architecture_t>(fOutputValue, fOut);
 }
+
  //______________________________________________________________________________
 template <typename Architecture_t>
 auto inline TBasicLSTMLayer<Architecture_t>::Forward(Tensor_t &input, bool /* isTraining = true */)
@@ -493,13 +554,20 @@ auto inline TBasicLSTMLayer<Architecture_t>::Forward(Tensor_t &input, bool /* is
       ForgetGate(arrInput[t], fDerivativesForget[t]);
       CandidateValue(arrInput[t], fDerivativesCandidate[t]);
       OutputGate(arrInput[t], fDerivativesOutput[t]);
+
+      Architecture_t::Copy(this->GetInputGateTensorAt(t), fInputValue);
+      Architecture_t::Copy(this->GetForgetGateTensorAt(t), fForgetValue);
+      Architecture_t::Copy(this->GetCandidateGateTensorAt(t), fCandidateValue);
+      Architecture_t::Copy(this->GetOutputGateTensorAt(t), fOutputValue);
        
       CellForward(fInputValue, fForgetValue, fCandidateValue, fOutputValue);
       Architecture_t::Copy(arrOutput[t], fState);
+      Architecture_t::Copy(this->GetCellTensorAt(t), fCell);
    }
 
    Architecture_t::Rearrange(this->GetOutput(), arrOutput);  // B x T x D
 }
+
  //______________________________________________________________________________
 template <typename Architecture_t>
 auto inline TBasicLSTMLayer<Architecture_t>::CellForward(Matrix_t &inputGateValues, Matrix_t &forgetGateValues,
@@ -525,8 +593,8 @@ auto inline TBasicLSTMLayer<Architecture_t>::CellForward(Matrix_t &inputGateValu
    Architecture_t::Copy(fState, cache);
    Architecture_t::Hadamard(fState, outputGateValues);
 }
- //____________________________________________________________________________
 
+ //____________________________________________________________________________
 template <typename Architecture_t>
 auto inline TBasicLSTMLayer<Architecture_t>::Backward(Tensor_t &gradients_backward,           // B x T x D
                                                       const Tensor_t &activations_backward,   // B x T x D
@@ -605,22 +673,31 @@ auto inline TBasicLSTMLayer<Architecture_t>::Backward(Tensor_t &gradients_backwa
    fWeightsOutputStateGradients.Zero();
    fOutputBiasGradients.Zero();
 
+
    for (size_t t = fTimeSteps; t > 0; t--) {
       // Store the sum of gradients obtained at each timestep during backward pass.
       Architecture_t::ScaleAdd(state_gradients_backward, arr_actgradients[t-1]);
       if (t > 1) {
          const Matrix_t &prevStateActivations = arr_output[t-2];
+         const Matrix_t &prevCellActivations = this->GetCellTensorAt(t-2);
          // During forward propagation, each gate value calculates their gradients.
-         CellBackward(state_gradients_backward, cell_gradients_backward, prevStateActivations, 
+         CellBackward(state_gradients_backward, cell_gradients_backward, 
+         	          prevStateActivations, prevCellActivations,
+                      this->GetInputGateTensorAt(t-1), this->GetForgetGateTensorAt(t-1),
+                      this->GetCandidateGateTensorAt(t-1), this->GetOutputGateTensorAt(t-1),  
                       arr_activations_backward[t-1], arr_gradients_backward[t-1],
                       fDerivativesInput[t-1], fDerivativesForget[t-1],
-                      fDerivativesCandidate[t-1], fDerivativesOutput[t-1]);
+                      fDerivativesCandidate[t-1], fDerivativesOutput[t-1], t-1);
       } else {
          const Matrix_t &prevStateActivations = initState;
-         CellBackward(state_gradients_backward, cell_gradients_backward, prevStateActivations, 
+         const Matrix_t &prevCellActivations = initState;
+         CellBackward(state_gradients_backward, cell_gradients_backward, 
+         	          prevStateActivations, prevCellActivations, 
+                      this->GetInputGateTensorAt(t-1), this->GetForgetGateTensorAt(t-1),
+                      this->GetCandidateGateTensorAt(t-1), this->GetOutputGateTensorAt(t-1), 
                       arr_activations_backward[t-1], arr_gradients_backward[t-1],
                       fDerivativesInput[t-1], fDerivativesForget[t-1],
-                      fDerivativesCandidate[t-1], fDerivativesOutput[t-1]);
+                      fDerivativesCandidate[t-1], fDerivativesOutput[t-1], t-1);
         }
    }
 
@@ -634,21 +711,38 @@ auto inline TBasicLSTMLayer<Architecture_t>::Backward(Tensor_t &gradients_backwa
 template <typename Architecture_t>
 auto inline TBasicLSTMLayer<Architecture_t>::CellBackward(Matrix_t & state_gradients_backward,
                                                           Matrix_t & cell_gradients_backward,
-                                                          const Matrix_t & precStateActivations,
+                                                          const Matrix_t & precStateActivations, const Matrix_t & precCellActivations, 
+                                                          const Matrix_t & input_gate, const Matrix_t & forget_gate,   
+                                                          const Matrix_t & candidate_gate, const Matrix_t & output_gate,
                                                           const Matrix_t & input, Matrix_t & input_gradient,
-                                                          Matrix_t &di, Matrix_t &df, Matrix_t &dc, Matrix_t &dout)
+                                                          Matrix_t &di, Matrix_t &df, Matrix_t &dc, Matrix_t &dout,
+                                                          size_t t)
 -> Matrix_t &
 {   
    /*! Call here LSTMLayerBackward() to pass parameters i.e. gradient
     *  values obtained from each gate during forward propagation. */
+
+    
+   // Update hidden state.
+   const DNN::EActivationFunction fAT = this->GetActivationFunctionF2();   
+   Matrix_t cell_gradient(this->GetCellTensorAt(t).GetNrows(), this->GetCellTensorAt(t).GetNcols());
+   DNN::evaluateDerivative<Architecture_t>(cell_gradient, fAT, this->GetCellTensorAt(t));
+
+   Matrix_t cell_tanh(this->GetCellTensorAt(t).GetNrows(), this->GetCellTensorAt(t).GetNcols());
+   Architecture_t::Copy(cell_tanh, this->GetCellTensorAt(t));
+   DNN::evaluate<Architecture_t>(cell_tanh, fAT);
+
    return Architecture_t::LSTMLayerBackward(state_gradients_backward, cell_gradients_backward,
                                             fWeightsInputGradients, fWeightsForgetGradients, fWeightsCandidateGradients,
                                             fWeightsOutputGradients, fWeightsInputStateGradients, fWeightsForgetStateGradients,
                                             fWeightsCandidateStateGradients, fWeightsOutputStateGradients, fInputBiasGradients, fForgetBiasGradients,
                                             fCandidateBiasGradients, fOutputBiasGradients, di, df, dc, dout, 
-                                            precStateActivations, fWeightsInputGate, fWeightsForgetGate, fWeightsCandidate, fWeightsOutputGate,
+                                            precStateActivations, precCellActivations,
+                                            input_gate, forget_gate, candidate_gate, output_gate,
+                                            fWeightsInputGate, fWeightsForgetGate, fWeightsCandidate, fWeightsOutputGate,
                                             fWeightsInputGateState, fWeightsForgetGateState, fWeightsCandidateState,
-                                            fWeightsOutputGateState, input, input_gradient);
+                                            fWeightsOutputGateState, input, input_gradient, 
+                                            cell_gradient, cell_tanh);
 }
 	
  //______________________________________________________________________________
@@ -685,13 +779,20 @@ auto inline TBasicLSTMLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
    gTools().xmlengine().NewAttr(layerxml, 0, "InputSize", gTools().StringFromInt(this->GetInputSize()));
    gTools().xmlengine().NewAttr(layerxml, 0, "TimeSteps", gTools().StringFromInt(this->GetTimeSteps()));
    gTools().xmlengine().NewAttr(layerxml, 0, "RememberState", gTools().StringFromInt(this->DoesRememberState()));
-   /*! 1. Write recurrent weights: input, forget and output.
-    *  2. Write input weights: input, forget and output.
-    *  3. Write biases values for each gate: input, forget and output. */
    
-   // this->WriteMatrixToXML(layerxml, "InputWeights", this->GetWeightsAt(0));
-   // this->WriteMatrixToXML(layerxml, "StateWeights", this->GetWeightsAt(1));
-   // this->WriteMatrixToXML(layerxml, "Biases", this->GetBiasesAt(0));
+   // write weights and bias matrices
+   this->WriteMatrixToXML(layerxml, "InputWeights", this->GetWeightsAt(0));
+   this->WriteMatrixToXML(layerxml, "InputStateWeights", this->GetWeightsAt(1));
+   this->WriteMatrixToXML(layerxml, "InputBiases", this->GetBiasesAt(0));
+   this->WriteMatrixToXML(layerxml, "ForgetWeights", this->GetWeightsAt(2));
+   this->WriteMatrixToXML(layerxml, "ForgetStateWeights", this->GetWeightsAt(3));
+   this->WriteMatrixToXML(layerxml, "ForgetBiases", this->GetBiasesAt(1));
+   this->WriteMatrixToXML(layerxml, "Candidateeights", this->GetWeightsAt(4));
+   this->WriteMatrixToXML(layerxml, "CandidateStateWeights", this->GetWeightsAt(5));
+   this->WriteMatrixToXML(layerxml, "CandidateBiases", this->GetBiasesAt(2));
+   this->WriteMatrixToXML(layerxml, "OuputWeights", this->GetWeightsAt(6));
+   this->WriteMatrixToXML(layerxml, "OutputStateWeights", this->GetWeightsAt(7));
+   this->WriteMatrixToXML(layerxml, "OutputBiases", this->GetBiasesAt(3));
 }
 
  //______________________________________________________________________________
@@ -699,14 +800,19 @@ template <typename Architecture_t>
 auto inline TBasicLSTMLayer<Architecture_t>::ReadWeightsFromXML(void *parent) 
 -> void
 {
-   /*! TODO:
-    *  1. Read recurrent weights: input, forget and output. 
-    *  2. Read input weights: input, forget and output.
-    *  3. Read biases: input, forget and ouput. */
-
-   // this->ReadMatrixXML(parent,"InputWeights", this->GetWeightsAt(0));
-   // this->ReadMatrixXML(parent,"StateWeights", this->GetWeightsAt(1));
-   // this->ReadMatrixXML(parent,"Biases", this->GetBiasesAt(0));
+	// Read weights and biases
+   this->ReadMatrixXML(parent, "InputWeights", this->GetWeightsAt(0));
+   this->ReadMatrixXML(parent, "InputStateWeights", this->GetWeightsAt(1));
+   this->ReadMatrixXML(parent, "InputBiases", this->GetBiasesAt(0));
+   this->ReadMatrixXML(parent, "ForgetWeights", this->GetWeightsAt(2));
+   this->ReadMatrixXML(parent, "ForgetStateWeights", this->GetWeightsAt(3));
+   this->ReadMatrixXML(parent, "ForgetBiases", this->GetBiasesAt(1));
+   this->ReadMatrixXML(parent, "Candidateeights", this->GetWeightsAt(4));
+   this->ReadMatrixXML(parent, "CandidateStateWeights", this->GetWeightsAt(5));
+   this->ReadMatrixXML(parent, "CandidateBiases", this->GetBiasesAt(2));
+   this->ReadMatrixXML(parent, "OuputWeights", this->GetWeightsAt(6));
+   this->ReadMatrixXML(parent, "OutputStateWeights", this->GetWeightsAt(7));
+   this->ReadMatrixXML(parent, "OutputBiases", this->GetBiasesAt(3));
 }
 
 } // namespace RNN
