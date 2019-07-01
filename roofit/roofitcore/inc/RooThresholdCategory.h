@@ -25,7 +25,7 @@ class RooThresholdCategory : public RooAbsCategory {
 
 public:
   // Constructors etc.
-  inline RooThresholdCategory() { }
+  RooThresholdCategory();
   RooThresholdCategory(const char *name, const char *title, RooAbsReal& inputVar, const char* defCatName="Default", Int_t defCatIdx=0);
   RooThresholdCategory(const RooThresholdCategory& other, const char *name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooThresholdCategory(*this, newname); }
