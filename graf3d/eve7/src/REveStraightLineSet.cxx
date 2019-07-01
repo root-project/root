@@ -161,6 +161,10 @@ Int_t REveStraightLineSet::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 
    j["fLinePlexSize"] = fLinePlex.Size();
    j["fMarkerPlexSize"] = fMarkerPlex.Size();
+   j["fLineWidth"] = fLineWidth;
+   j["fLineStyle"] = fLineStyle;
+   j["fMarkerSize"] = fMarkerSize;
+   j["fMarkerStyle"] = fMarkerStyle;
    printf("REveStraightLineSet::WriteCoreJson %d \n", ret);
    return ret;
 }
