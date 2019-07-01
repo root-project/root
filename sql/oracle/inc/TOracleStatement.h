@@ -81,6 +81,7 @@ public:
    virtual Bool_t      SetDate(Int_t npar, Int_t year, Int_t month, Int_t day);
    virtual Bool_t      SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec);
    virtual Bool_t      SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec);
+   using TSQLStatement::SetTimestamp;
    virtual Bool_t      SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec, Int_t frac = 0);
    virtual void        SetTimeFormating(const char* fmt) { fTimeFmt = fmt; }
    virtual Bool_t      SetVInt(Int_t npar, const std::vector<Int_t> value, const char* schemaName, const char* typeName);
@@ -113,6 +114,7 @@ public:
    virtual Bool_t      GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& day);
    virtual Bool_t      GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec);
    virtual Bool_t      GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec);
+   using TSQLStatement::GetTimestamp;
    virtual Bool_t      GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec, Int_t& frac);
    virtual Bool_t      GetVInt(Int_t npar, std::vector<Int_t> &value);
    virtual Bool_t      GetVUInt(Int_t npar, std::vector<UInt_t> &value);
