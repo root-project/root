@@ -290,11 +290,14 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       else()
         set(incdirs_in_build)
         set(incdirs_in_prefix)
+        string(REGEX REPLACE "([][+.*()^])" "\\\\\\1" _source_dir "${CMAKE_SOURCE_DIR}")
+        string(REGEX REPLACE "([][+.*()^])" "\\\\\\1" _binary_dir "${CMAKE_BINARY_DIR}")
+        string(REGEX REPLACE "([][+.*()^])" "\\\\\\1" _curr_binary_dir "${CMAKE_CURRENT_BINARY_DIR}")
         foreach(incdir ${incdirs})
-          if(NOT IS_ABSOLUTE incdir
-             OR incdir MATCHES "^${CMAKE_SOURCE_DIR}"
-             OR incdir MATCHES "^${CMAKE_CURRENT_BUILD_DIR}"
-             OR incdir MATCHES "^${CMAKE_BUILD_DIR}")
+          if(NOT IS_ABSOLUTE ${incdir}
+             OR ${incdir} MATCHES "^${_source_dir}"
+             OR ${incdir} MATCHES "^${_binary_dir}"
+             OR ${incdir} MATCHES "^${_curr_binary_dir}")
             list(APPEND incdirs_in_build
                  ${incdir})
           else()
