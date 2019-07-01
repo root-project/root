@@ -1,6 +1,6 @@
 ############################################################################
 # CMakeLists.txt file for building TMVA/DNN/LSTM tests.
-# @author Harshit Prasad
+# @author Surya S Dwivedi
 ############################################################################
 
 project(tmva-tests)
@@ -14,8 +14,8 @@ ROOT_EXECUTABLE(testLSTMForwardPass TestLSTMForwardPass.cxx LIBRARIES ${Librarie
 ROOT_ADD_TEST(TMVA-DNN-LSTM-Forward COMMAND testLSTMForwardPass)
 
 # LSTM - Backpropagation Reference
-#ROOT_EXECUTABLE(testLSTMBackpropagation TestLSTMBackpropagation.cxx LIBRARIES ${Libraries})
-#ROOT_ADD_TEST(TMVA-DNN-LSTM-Backpropagation COMMAND testLSTMBackpropagation)
+ROOT_EXECUTABLE(testLSTMBackpropagation TestLSTMBackpropagation.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-LSTM-Backpropagation COMMAND testLSTMBackpropagation)
 
 #--- CUDA tests. ---------------------------
 if (CUDA_FOUND)
@@ -33,7 +33,7 @@ if (BLAS_FOUND AND imt)
     ROOT_ADD_TEST(TMVA-DNN-LSTM-Forward-Cpu COMMAND testLSTMForwardPassCpu)
 
     # LSTM - Backward CPU
-    #ROOT_EXECUTABLE(testLSTMBackpropagationCpu TestLSTMBackpropagationCpu.cxx LIBRARIES ${Libraries})
-    #ROOT_ADD_TEST(TMVA-DNN-LSTM-Backward-Cpu COMMAND testLSTMBackpropagationCpu)
+    ROOT_EXECUTABLE(testLSTMBackpropagationCpu TestLSTMBackpropagationCpu.cxx LIBRARIES ${Libraries})
+    ROOT_ADD_TEST(TMVA-DNN-LSTM-Backward-Cpu COMMAND testLSTMBackpropagationCpu)
 
 endif (BLAS_FOUND AND imt)
