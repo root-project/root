@@ -26,12 +26,23 @@ ROOT_EXECUTABLE(rmkdepend
 )
 
 IF(CMAKE_BUILD_TYPE MATCHES "Debug|RelWithDebInfo")
-  file(COPY "gdbPrinters/"
-       DESTINATION ${CMAKE_BINARY_DIR}/lib
-       FILES_MATCHING PATTERN "*-gdb.py")
+  file(GLOB PRETTY_PRINTERS "gdbPrinters/*.so-gdb.py")
+  set(PRETTY_PRINTER_DESTS)
+  foreach(PRETTY_PRINTER ${PRETTY_PRINTERS})
+    get_filename_component(PRETTY_PRINTER_DEST ${PRETTY_PRINTER} NAME)
+    if(soversion)
+      string(REPLACE ".so-gdb.py" ".so.${ROOT_VERSION}-gdb.py"
+        PRETTY_PRINTER_DEST ${PRETTY_PRINTER_DEST})
+    endif(soversion)
+    string(PREPEND PRETTY_PRINTER_DEST ${CMAKE_BINARY_DIR}/lib/)
+    add_custom_command(OUTPUT ${PRETTY_PRINTER_DEST}
+      COMMAND ${CMAKE_COMMAND} -E copy ${PRETTY_PRINTER} ${PRETTY_PRINTER_DEST}
+      DEPENDS ${PRETTY_PRINTER})
+    list(APPEND PRETTY_PRINTER_DESTS ${PRETTY_PRINTER_DEST})
+  endforeach()
+  add_custom_target(copy_pretty_printers ALL DEPENDS ${PRETTY_PRINTER_DESTS})
 
-  file(GLOB PRETTY_PRINTERS "gdbPrinters/*-gdb.py")
-  install(FILES ${PRETTY_PRINTERS}
-          DESTINATION lib
+  install(FILES ${PRETTY_PRINTER_DESTS}
+          DESTINATION ${CMAKE_INSTALL_LIBDIR}
           CONFIGURATIONS Debug RelWithDebInfo)
 ENDIF()
