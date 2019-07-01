@@ -415,3 +415,37 @@ TDatime TSQLStatement::GetTimestamp(Int_t npar)
    return TDatime(year, month, day, hour, min, sec);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter as timestamp
+
+Bool_t TSQLStatement::SetTimestamp(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Int_t)
+{
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter as TTimeStamp
+
+Bool_t TSQLStatement::SetTimestamp(Int_t, const TTimeStamp&)
+{
+   Warning("SetTimestamp", "Not implemented for TTimeStamp");
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get parameter as timestamp
+
+Bool_t TSQLStatement::GetTimestamp(Int_t, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&)
+{
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get parameter as TTimeStamp
+
+Bool_t TSQLStatement::GetTimestamp(Int_t, TTimeStamp&)
+{
+   Warning("GetTimestamp", "Not implemented for TTimeStamp");
+   return kFALSE;
+}
+
