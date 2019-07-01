@@ -21,19 +21,23 @@
 
 RooTreeDataStore is a TTree-backed data storage. When a file is opened before
 creating the data storage, the storage will be file-backed. This reduces memory
-pressure because it allows reading the data on-demand.
-The basket size defaults to 1 Mb per branch.
-For a completely memory-backed storage, RooVectorDataStore can be used.
+pressure because it allows storing the data in the file and reading it on demand.
+For a completely memory-backed storage, which is faster than the file-backed storage,
+RooVectorDataStore can be used.
+
+With tree-backed storage, the tree can be found in the file with the name
+`RooTreeDataStore_name_title` for a dataset created as
+`RooDataSet("name", "title", ...)`.
 
 \note A file needs to be opened **before** creating the data storage to enable file-backed
-storage. For memory-backed storage (smaller datasets), the RooVectorDataStore is superior.
+storage.
 ```
 TFile outputFile("filename.root", "RECREATE");
 RooAbsData::setDefaultStorageType(RooAbsData::Tree);
 RooDataSet mydata(...);
 ```
 
-One can also change between TTree- and vector-backed storage using
+One can also change between TTree- and std::vector-backed storage using
 RooAbsData::convertToTreeStore() and
 RooAbsData::convertToVectorStore().
 **/
@@ -59,7 +63,7 @@ using namespace std ;
 ClassImp(RooTreeDataStore);
 
 
-Int_t RooTreeDataStore::_defTreeBufSize = 1024*1024;
+Int_t RooTreeDataStore::_defTreeBufSize = 10*1024*1024;
 
 
 
@@ -411,8 +415,6 @@ void RooTreeDataStore::createTree(const char* name, const char* title)
     _tree = new TTree(name,title);
     _tree->ResetBit(kCanDelete);
     _tree->ResetBit(kMustCleanup);
-//    _tree->SetDirectory(nullptr);
-//    gDirectory->RecursiveRemove(_tree);
   }
 
   TString pwd(gDirectory->GetPath()) ;
@@ -1354,15 +1356,11 @@ void RooTreeDataStore::Streamer(TBuffer &R__b)
     R__b.ReadClassBuffer(RooTreeDataStore::Class(), this, R__v, R__s, R__c);
 
     if (!_tree) {
+      // If the tree has not been deserialised automatically, it is time to load
+      // it now.
       TFile* parent = dynamic_cast<TFile*>(R__b.GetParent());
       assert(parent);
       parent->GetObject(makeTreeName().c_str(), _tree);
-//      if (_tree) {
-//        _tree->LoadBaskets();
-//        _tree->SetDirectory(0);
-//        gDirectory->RecursiveRemove(_tree);
-//      }
-
     }
 
     initialize();
@@ -1373,7 +1371,7 @@ void RooTreeDataStore::Streamer(TBuffer &R__b)
     if (_tree) {
       // Large trees cannot be written because of the 1Gb I/O limitation.
       // Here, we take the tree away from our instance, write it, and continue
-      // normally
+      // to write the rest of the class normally
       TFile* parent = dynamic_cast<TFile*>(R__b.GetParent());
       assert(parent);
       _tree->SetDirectory(parent);
@@ -1393,6 +1391,7 @@ void RooTreeDataStore::Streamer(TBuffer &R__b)
 std::string RooTreeDataStore::makeTreeName() const {
   std::string title = GetTitle();
   std::replace(title.begin(), title.end(), ' ', '_');
+  std::replace(title.begin(), title.end(), '-', '_');
   return std::string("RooTreeDataStore_") + GetName() + "_" + title;
 }
 
