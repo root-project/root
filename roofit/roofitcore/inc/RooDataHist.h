@@ -54,7 +54,7 @@ public:
 
   RooDataHist(const RooDataHist& other, const char* newname = 0) ;
   virtual TObject* Clone(const char* newname) const {
-    return new RooDataHist(*this, newname && newname != std::string("") ? newname : GetName());
+    return new RooDataHist(*this, newname && newname[0] != '\0' ? newname : GetName());
   }
   virtual ~RooDataHist() ;
 
