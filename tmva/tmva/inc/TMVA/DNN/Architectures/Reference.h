@@ -26,6 +26,7 @@
 #include "TMVA/DNN/Architectures/Reference/TensorDataLoader.h"
 #include <vector>
 
+
 class TRandom;
 
 namespace TMVA
@@ -45,6 +46,8 @@ namespace DNN
 *
 * \tparam AReal The floating point type used to represent scalars.
 */
+
+
 template<typename AReal>
 class TReference
 {
@@ -131,12 +134,11 @@ public:
                                        TMatrixT<Scalar_t> & dc,
                                        TMatrixT<Scalar_t> & dout,
                                        const TMatrixT<Scalar_t> & precStateActivations,
-                                       //const TMatrixT<Scalar_t> & precCelleActivations,
-                                       //const TMatrixT<Scalar_t> & fCell,
-                                       //const TMatrixT<Scalar_t> & fInput,
-                                       //const TMatrixT<Scalar_t> & fForget,
-                                       //const TMatrixT<Scalar_t> & fCandidate,
-                                       //const TMatrixT<Scalar_t> & fOutput,
+                                       const TMatrixT<Scalar_t> & precCellActivations,
+                                       const TMatrixT<Scalar_t> & fInput,
+                                       const TMatrixT<Scalar_t> & fForget,
+                                       const TMatrixT<Scalar_t> & fCandidate,
+                                       const TMatrixT<Scalar_t> & fOutput,
                                        const TMatrixT<Scalar_t> & weights_input,
                                        const TMatrixT<Scalar_t> & weights_forget,
                                        const TMatrixT<Scalar_t> & weights_candidate,
@@ -146,7 +148,9 @@ public:
                                        const TMatrixT<Scalar_t> & weights_candidate_state,
                                        const TMatrixT<Scalar_t> & weights_output_state,
                                        const TMatrixT<Scalar_t> & input,
-                                       TMatrixT<Scalar_t> & input_gradient);
+                                       TMatrixT<Scalar_t> & input_gradient,
+                                       TMatrixT<Scalar_t> & cell_gradient,
+                                       TMatrixT<Scalar_t> & cell_tanh);
 
    /** Adds a the elements in matrix B scaled by c to the elements in
     *  the matrix A. This is required for the weight update in the gradient

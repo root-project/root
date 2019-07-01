@@ -7,11 +7,13 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 /////////////////////////////////////////////////////////////////////
 // Implementation of the functions required for the forward and    //
 // backward propagation of activations through a recurrent neural  //
 // network in the TCpu architecture                                //
 /////////////////////////////////////////////////////////////////////
+
 #include "TMVA/DNN/Architectures/Cpu.h"
 #include "TMVA/DNN/Architectures/Cpu/Blas.h"
 
@@ -100,12 +102,11 @@ auto inline TCpu<AFloat>::LSTMLayerBackward(TCpuMatrix<AFloat> & state_gradients
 												 TCpuMatrix<AFloat> & dc,
 												 TCpuMatrix<AFloat> & dout,
 												 const TCpuMatrix<AFloat> & precStateActivations,
-												 //const TCpuMatrix<AFloat> & precCelleActivations,
-												 //const TCpuMatrix<AFloat> & fCell,
-												 //const TCpuMatrix<AFloat> & fInput,
-												 //const TCpuMatrix<AFloat> & fForget,
-												 //const TCpuMatrix<AFloat> & fCandidate,
-												 //const TCpuMatrix<AFloat> & fOutput,
+												 const TCpuMatrix<AFloat> & precCellActivations,
+												 const TCpuMatrix<AFloat> & fInput,
+												 const TCpuMatrix<AFloat> & fForget,
+												 const TCpuMatrix<AFloat> & fCandidate,
+												 const TCpuMatrix<AFloat> & fOutput,
 												 const TCpuMatrix<AFloat> & weights_input,
 												 const TCpuMatrix<AFloat> & weights_forget,
 												 const TCpuMatrix<AFloat> & weights_candidate,
@@ -115,114 +116,80 @@ auto inline TCpu<AFloat>::LSTMLayerBackward(TCpuMatrix<AFloat> & state_gradients
 												 const TCpuMatrix<AFloat> & weights_candidate_state,
 												 const TCpuMatrix<AFloat> & weights_output_state,
 												 const TCpuMatrix<AFloat> & input,
-												 TCpuMatrix<AFloat> & input_gradient)
+												 TCpuMatrix<AFloat> & input_gradient,
+                                     TCpuMatrix<AFloat> & cell_gradient,
+                                     TCpuMatrix<AFloat> & cell_tanh)
 -> TCpuMatrix<AFloat> &
 {
    /* TODO: Update all gate values during backward pass using required equations.
     * Reference: https://medium.com/@aidangomez/let-s-do-this-f9b699de31d9 */
 
-   //cell_gradient
-   //candidate_grad (init 1)
-   //inp
-   //for
-   //op
+   //some temporary varibales used later
+   TCpuMatrix<AFloat> cache(fCell.GetNrows(), fCell.GetNcols());
+   TCpuMatrix<AFloat> tmpInp(input_gradient.GetNrows(), input_gradient.GetNcols());
+   TCpuMatrix<AFloat> tmpState(state_gradients_backward.GetNrows(), state_gradients_backward.GetNcols());
 
-   /*
-   DNN::evaluateDerivative<Architecture_t>(cell_gradient, DNN::EActivationFunction::kTanh, fCell);
-   Hadamard(cell_gradient, fOuptput); 
+   TCpuMatrix<AFloat> input_gate_gradient(fInput.GetNrows(), fInput.GetNcols());
+   TCpuMatrix<AFloat> forget_gradient(fForget.GetNrows(), fForget.GetNcols());
+   TCpuMatrix<AFloat> candidate_gradient(fCandidate.GetNrows(), fCandidate.GetNcols());
+   TCpuMatrix<AFloat> output_gradient(fOutput.GetNrows(), fOutput.GetNcols());
+   
+   Hadamard(cell_gradient, fOutput); 
    Hadamard(cell_gradient, state_gradients_backward);
    ScaleAdd(cell_gradient, cell_gradients_backward);
-  
-   Hadamard(candidate_gradient, cell_gradient);
+   Copy(cell_gradient, cell_gradients_backward);
+   Hadamard(cell_gradients_backward, fForget);
+
+   Copy(cell_gradient, candidate_gradient);
    Hadamard(candidate_gradient, fInput);
    Hadamard(candidate_gradient, dc);
-   Hadamard(input_gradient, cell_gradient);
-   Hadamard(input_gradient, fCandidate);
-   Hadamard(input_gradient, dci);
-   Hadamard(forget_gradient, cell_gradient);
-   Hadamard(forget_gradient, fInput);
-   Hadamard(candidate_gradient, dc);
-   Hadamard(cell_gradient, fForget);
-   Copy(cell_gradient, cell_gradients_backward);
-  */
 
-	// Input gradients.
-	if (input_gradient.GetNElements() > 0) {
-      Multiply(input_gradient, di, weights_input);
-   }
+   Copy(cell_gradient, input_gate_gradient);
+   Hadamard(input_gate_gradient, fCandidate);
+   Hadamard(input_gate_gradient, di);
 
-	// Forget gradients.
-	if (forget_gradient.GetNElements() > 0) {
-      Multiply(forget_gradient, df, weights_forget);
-   }
+   Copy(cell_gradient, forget_gradient);
+   Hadamard(forget_gradient, precCellActivations);
+   Hadamard(forget_gradient, df);
 
-	// Candidate gradients
-	if (candidate_gradient.GetNElements() > 0) {
-      Multiply(candidate_gradient, dc, weights_candidate);
-   }
+   Copy(cell_gradient, output_gradient);
+   Hadamard(output_gradient, state_gradients_backward);
+   Hadamard(output_gradient, cell_tanh);
+   Hadamard(output_gradient, dout);
 
-	// Output gradients
-	if (output_gradient.GetNElements() > 0) {
-      Multiply(output_gradient, dout, weights_output);
-   }
+   Multiply(tmpInp, input_gate_gradient, weights_input);
+   Copy(tmpInp, input_gradient);
+   Multiply(tmpInp, forget_gradient, weights_forget);
+   ScaleAdd(input_gradient, tmpInp);
+   Multiply(tmpInp, candidate_gradient, weights_candidate);
+   ScaleAdd(input_gradient, tmpInp);
+   Multiply(tmpInp, output_gradient, weights_output);
+   ScaleAdd(input_gradient, tmpInp);
 
-	// ______________________________________________________
-	// Weight gradients calculation.
-	// Total there are 8 different weight matrices.
+   Multiply(tmpState, input_gate_gradient, weights_input_state);
+   Copy(tmpState, state_gradients_backward);
+   Multiply(tmpState, forget_gradient, weights_forget_state);
+   ScaleAdd(state_gradients_backward, tmpState);
+   Multiply(tmpState, candidate_gradient, weights_candidate_state);
+   ScaleAdd(state_gradients_backward, tmpState);
+   Multiply(tmpState, output_gradient, weights_output_state);
+   ScaleAdd(state_gradients_backward, tmpState);
 
-	// For input gate.
-	if (input_weight_gradients.GetNElements() > 0) {
-	   TransposeMultiply(input_weight_gradients, di, input, 1.0, 1.0);
-	}
+   TransposeMultiply(input_weight_gradients, input_gate_gradient, input, 1. , 1.); // H x B . B x D
+   TransposeMultiply(forget_weight_gradients, forget_gradient, input, 1. , 1.); 
+   TransposeMultiply(candidate_weight_gradients, candidate_gradient, input, 1. , 1.); 
+   TransposeMultiply(output_weight_gradients, output_gradient, input, 1. , 1.); 
+   
+   TransposeMultiply(input_state_weight_gradients, input_gate_gradient, precStateActivations, 1. , 1. ); // H x B . B x H
+   TransposeMultiply(forget_state_weight_gradients, forget_gradient, precStateActivations, 1. , 1. );
+   TransposeMultiply(candidate_state_weight_gradients, candidate_gradient, precStateActivations, 1. , 1. );
+   TransposeMultiply(output_state_weight_gradients, output_gradient, precStateActivations, 1. , 1. );
 
-	if (input_state_weight_gradients.GetNElements() > 0) {
-	   TransposeMultiply(input_state_weight_gradients, di, output_state, 1.0, 1.0);
-	}
-
-	// For forget gate.
-	if (forget_weight_gradients.GetNElements() > 0) {
-      TransposeMultiply(forget_weight_gradients, df, input, 1.0, 1.0);
-	}
-	 
-   if (forget_state_weight_gradients.GetNElements() > 0) {
-	   TransposeMultiply(forget_state_weight_gradients, df, output_state, 1.0, 1.0);
-	}
-
-	// For candidate gate.
-	if (candidate_weight_gradients.GetNElements() > 0) {
-	   TransposeMultiply(candidate_weight_gradients, dc, input, 1.0, 1.0);
-	}
-	 
-   if (candidate_state_weight_gradients.GetNElements() > 0) {
-	   TransposeMultiply(candidate_state_weight_gradients, dc, output_state, 1.0, 1.0);
-	}
-
-	// For output gate.
-	if (output_weight_gradients.GetNElements() > 0) {
-      TransposeMultiply(output_weight_gradients, dout, input, 1.0, 1.0);
-	}
-	 
-   if (output_state_weight_gradients.GetNElements() > 0) {
-      TransposeMultiply(output_state_weight_gradients, dout, output_state, 1.0, 1.0);
-	}
-
-	// We've 4 bias vectors.
-   if (input_bias_gradients.GetNElements() > 0) {
-      SumColumns(input_bias_gradients, di, 1.0, 1.0);
-   }
-	 
-   if (forget_bias_gradients.GetNElements() > 0) {
-      SumColumns(forget_bias_gradients, df, 1.0, 1.0);
-   }
-	 
-   if (candidate_bias_gradients.GetNElements() > 0) {
-      SumColumns(candidate_bias_gradients, dc, 1.0, 1.0);
-   }
-	 
-   if (output_bias_gradients.GetNElements() > 0) {
-      SumColumns(output_bias_gradients, dout, 1.0, 1.0);
-   }
-
+   SumColumns(input_bias_gradients, input_gate_gradient, 1., 1.);  // could be probably do all here
+   SumColumns(forget_bias_gradients, forget_gradient, 1., 1.);  
+   SumColumns(candidate_bias_gradients, candidate_gradient, 1., 1.);  
+   SumColumns(output_bias_gradients, output_gradient, 1., 1.);  
+   
    return input_gradient;
 }
 } // namespace DNN

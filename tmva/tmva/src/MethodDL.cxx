@@ -571,10 +571,8 @@ void MethodDL::CreateDeepNet(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
          ParseBatchNormLayer(deepNet, nets, layerString->GetString(), subDelimiter);
       } else if (strLayerType == "RNN") {
          ParseRnnLayer(deepNet, nets, layerString->GetString(), subDelimiter);
-      // } else if (strLayerType == "LSTM") {
-      //    Log() << kError << "LSTM Layer is not yet fully implemented" << Endl;
-      //    //ParseLstmLayer(deepNet, nets, layerString->GetString(), subDelimiter);
-      //    break;
+      } else if (strLayerType == "LSTM") {
+         ParseLstmLayer(deepNet, nets, layerString->GetString(), subDelimiter);
       } else {
          // no type of layer specified - assume is dense layer as in old DNN interface
          ParseDenseLayer(deepNet, nets, layerString->GetString(), subDelimiter);

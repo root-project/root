@@ -259,12 +259,11 @@ public:
                                        TCpuMatrix<AFloat> & dc,
                                        TCpuMatrix<AFloat> & dout,
                                        const TCpuMatrix<AFloat> & precStateActivations,
-                                       //const TCpuMatrix<AFloat> & precCelleActivations,
-                                       //const TCpuMatrix<AFloat> & fCell,
-                                       //const TCpuMatrix<AFloat> & fInput,
-                                       //const TCpuMatrix<AFloat> & fForget,
-                                       //const TCpuMatrix<AFloat> & fCandidate,
-                                       //const TCpuMatrix<AFloat> & fOutput,
+                                       const TCpuMatrix<AFloat> & precCellActivations,
+                                       const TCpuMatrix<AFloat> & fInput,
+                                       const TCpuMatrix<AFloat> & fForget,
+                                       const TCpuMatrix<AFloat> & fCandidate,
+                                       const TCpuMatrix<AFloat> & fOutput,
                                        const TCpuMatrix<AFloat> & weights_input,
                                        const TCpuMatrix<AFloat> & weights_forget,
                                        const TCpuMatrix<AFloat> & weights_candidate,
@@ -274,7 +273,9 @@ public:
                                        const TCpuMatrix<AFloat> & weights_candidate_state,
                                        const TCpuMatrix<AFloat> & weights_output_state,
                                        const TCpuMatrix<AFloat> & input,
-                                       TCpuMatrix<AFloat> & input_gradient);
+                                       TCpuMatrix<AFloat> & input_gradient,
+                                       TCpuMatrix<AFloat> & cell_gradient,
+                                       TCpuMatrix<AFloat> & cell_tanh);
 
    /** Adds a the elements in matrix B scaled by c to the elements in
     *  the matrix A. This is required for the weight update in the gradient
