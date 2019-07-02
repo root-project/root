@@ -1,0 +1,26 @@
+<mvc:View class="sapUiSizeCompact" height="100%" controllerName="localapp.controller.TestPanel"
+   xmlns:mvc="sap.ui.core.mvc" xmlns:core="sap.ui.core"  xmlns="sap.m">
+   <Page id="testpanel_page" title="Test Panel" showHeader="true">
+       <content>
+         <VBox class="sapUiSmallMargin">
+            <Label text="Text:" labelFor="SampleText"/>
+            <Text id="SampleText" text="{/fSampleText}"/>
+            <Label text="ComboBox:" labelFor="SamleComboBox"/>
+            <ComboBox id="SamleComboBox" selectedKey="{/fSelectId}" items="{ path: '/fComboItems', sorter: { path: 'fName' } }">
+               <core:Item key="{fId}" text="{fName}" />
+            </ComboBox>
+            <Label text="Button:" labelFor="SampleButton"/>
+            <Button id="SampleButton" text="{/fButtonText}" press="handleButtonPress"/>
+         </VBox>
+      </content>
+      <footer>
+         <Bar>
+            <contentRight>
+               <Button text="Send" press="handleSendPress" />
+               <Button text="Refresh" press="handleRefreshPress" />
+               <Button text="Close" press="closePanel" />
+            </contentRight>
+         </Bar>
+      </footer>
+   </Page>
+</mvc:View>
