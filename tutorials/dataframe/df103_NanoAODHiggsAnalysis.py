@@ -40,7 +40,9 @@ import ROOT
 ROOT.ROOT.EnableImplicitMT()
 
 # Include necessary header
-ROOT.gInterpreter.Declare('#include "df103_NanoAODHiggsAnalysis.h"')
+higgs_header_path = str(ROOT.gROOT.GetTutorialDir())
+higgs_header_path += "/dataframe/df103_NanoAODHiggsAnalysis.h"
+ROOT.gInterpreter.Declare('#include "{}"'.format(higgs_header_path))
 
 # Python functions
 def reco_higgs_to_2el2mu(df):
