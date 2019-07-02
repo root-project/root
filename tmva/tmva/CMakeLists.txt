@@ -25,6 +25,8 @@ if(dataframe)
         TMVA/RTensor.hxx
         TMVA/RTensorUtils.hxx
         TMVA/RStandardScaler.hxx
+        TMVA/RReader.hxx
+        TMVA/RInferenceUtils.hxx
     )
     set(TMVA_EXTRA_DEPENDENCIES
         ROOTDataFrame
