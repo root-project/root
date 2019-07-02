@@ -313,7 +313,7 @@ void REveDataColumn::SetExpressionAndType(const std::string& expr, FieldType_e t
      << ") = [](" << icls->GetName() << "* p){" << icls->GetName() << " &i=*p; return (" << fExpression.Data()
      << "); }";
 
-   printf("%s\n", s.str().c_str());
+   // printf("%s\n", s.str().c_str());
    try {
       gROOT->ProcessLine(s.str().c_str());
    }
