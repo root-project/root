@@ -571,6 +571,8 @@ TEST_P(RDFSimpleTests, Graph)
 
    auto dfGraph = dd.Graph("x1", "x2");
    EXPECT_EQ(dfGraph->GetN(), NR_ELEMENTS);
+   EXPECT_STREQ(dfGraph->GetXaxis()->GetTitle(), "x1");
+   EXPECT_STREQ(dfGraph->GetYaxis()->GetTitle(), "x2");
 
    //To perform the test, it's easier to sort
    dfGraph->Sort();
@@ -899,12 +901,14 @@ TEST(RDFSimpleTests, AutomaticNamesOfHisto1DAndGraph)
    EXPECT_STREQ(hx->GetName(), "x");
    EXPECT_STREQ(hx->GetTitle(), "x");
    EXPECT_STREQ(hx->GetXaxis()->GetTitle(), "x");
-   EXPECT_STREQ(hxy->GetName(), "x*y");
-   EXPECT_STREQ(hxy->GetTitle(), "x*y");
-   EXPECT_STREQ(hxy->GetXaxis()->GetTitle(), "x*y");
-   EXPECT_STREQ(gxy->GetName(), "x*y");
-   EXPECT_STREQ(gxy->GetTitle(), "x*y"); // current behaviour of TGraph
-   EXPECT_STREQ(gxy->GetXaxis()->GetTitle(), "x*y");
+   EXPECT_STREQ(hx->GetYaxis()->GetTitle(), "count");
+   EXPECT_STREQ(hxy->GetName(), "x_weighted_y");
+   EXPECT_STREQ(hxy->GetTitle(), "x, weights: y");
+   EXPECT_STREQ(hxy->GetXaxis()->GetTitle(), "x");
+   EXPECT_STREQ(hxy->GetYaxis()->GetTitle(), "count * y");
+   EXPECT_STREQ(gxy->GetName(), "x_vs_y");
+   EXPECT_STREQ(gxy->GetTitle(), "x vs y");
+   EXPECT_STREQ(gxy->GetXaxis()->GetTitle(), "x");
    EXPECT_STREQ(gxy->GetYaxis()->GetTitle(), "y");
 
 }
