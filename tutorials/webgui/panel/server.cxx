@@ -6,7 +6,7 @@
 /// \author Sergey Linev
 
 
-#include <ROOT/RWebWindowsManager.hxx>
+#include <ROOT/RWebWindow.hxx>
 #include "TBufferJSON.h"
 #include <vector>
 #include <string>
@@ -75,7 +75,7 @@ void server()
    model->fButtonText = "Custom button";
 
    // create window
-   window = ROOT::Experimental::RWebWindowsManager::Instance()->CreateWindow();
+   window = ROOT::Experimental::RWebWindow::Create();
 
    // this is very important, it defines name of openui5 widget
    // "localapp" prefix indicates that all files located in current directory

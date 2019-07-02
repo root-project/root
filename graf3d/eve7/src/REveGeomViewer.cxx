@@ -11,8 +11,8 @@
 
 #include <ROOT/REveGeomViewer.hxx>
 
-#include <ROOT/RWebWindowsManager.hxx>
 #include <ROOT/RLogger.hxx>
+#include <ROOT/RWebWindow.hxx>
 
 #include "TSystem.h"
 #include "TROOT.h"
@@ -28,7 +28,7 @@ using namespace std::string_literals;
 
 ROOT::Experimental::REveGeomViewer::REveGeomViewer(TGeoManager *mgr)
 {
-   fWebWindow = ROOT::Experimental::RWebWindowsManager::Instance()->CreateWindow();
+   fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/eve7/geom.html");
 
    // this is call-back, invoked when message received via websocket
@@ -158,7 +158,7 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
 
    } else if (arg == "QUIT_ROOT") {
 
-      RWebWindowsManager::Instance()->Terminate();
+      fWebWindow->TerminateROOT();
 
    } else if (arg.compare(0, 7, "SEARCH:") == 0) {
 

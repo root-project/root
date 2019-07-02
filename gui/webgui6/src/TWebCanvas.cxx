@@ -37,7 +37,6 @@
 #include "TAtt3D.h"
 #include "TView.h"
 
-#include <ROOT/RWebWindowsManager.hxx>
 #include <ROOT/RMakeUnique.hxx>
 
 #include <stdio.h>
@@ -531,7 +530,7 @@ void TWebCanvas::Close()
 void TWebCanvas::ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &args)
 {
    if (!fWindow) {
-      fWindow = ROOT::Experimental::RWebWindowsManager::Instance()->CreateWindow();
+      fWindow = ROOT::Experimental::RWebWindow::Create();
 
       fWindow->SetConnLimit(0); // configure connections limit
 
@@ -663,7 +662,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
    } else if (arg == "QUIT") {
 
       // use window manager to correctly terminate http server
-      ROOT::Experimental::RWebWindowsManager::Instance()->Terminate();
+      fWindow->TerminateROOT();
 
    } else if (arg.compare(0, 7, "READY6:") == 0) {
 
