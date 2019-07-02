@@ -876,7 +876,7 @@ void MethodDL::ParseBatchNormLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepN
 {
     
    // default values 
-   double momentum = 0.99; 
+   double momentum = -1; //0.99; 
    double epsilon = 0.0001; 
 
    // Split layer details
