@@ -17,7 +17,7 @@
 #include <ROOT/REveScene.hxx>
 #include <ROOT/REveClient.hxx>
 #include <ROOT/REveGeomViewer.hxx>
-#include <ROOT/RWebWindowsManager.hxx>
+#include <ROOT/RWebWindow.hxx>
 
 #include "TGeoManager.h"
 #include "TObjString.h"
@@ -136,7 +136,7 @@ REveManager::REveManager() : // (Bool_t map_window, Option_t* opt) :
    // !!! AMT increase threshold to enable color pick on client
    TColor::SetColorThreshold(0.1);
 
-   fWebWindow = ROOT::Experimental::RWebWindowsManager::Instance()->CreateWindow();
+   fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/eve7/index.html");
 
    // this is call-back, invoked when message received via websocket

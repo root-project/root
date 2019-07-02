@@ -18,7 +18,6 @@
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RWebDisplayArgs.hxx>
 #include <ROOT/RWebDisplayHandle.hxx>
-#include <ROOT/RWebWindowsManager.hxx>
 
 #include "RWebWindowWSHandler.hxx"
 

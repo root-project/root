@@ -8,8 +8,7 @@
 ///
 /// \author Sergey Linev
 
-
-#include <ROOT/RWebWindowsManager.hxx>
+#include <ROOT/RWebWindow.hxx>
 
 std::shared_ptr<ROOT::Experimental::RWebWindow> window;
 
@@ -42,14 +41,14 @@ void ProcessData(unsigned connid, const std::string &arg)
       window->SendBinary(connid, arr, sizeof(arr));
    } else if (arg == "halt") {
       // terminate ROOT
-      ROOT::Experimental::RWebWindowsManager::Instance()->Terminate();
+      window->TerminateROOT();
    }
 }
 
 void server()
 {
    // create window, manager can handle many windows a time
-   window = ROOT::Experimental::RWebWindowsManager::Instance()->CreateWindow();
+   window = ROOT::Experimental::RWebWindow::Create();
 
    // configure default html page
    // either HTML code can be specified or just name of file after 'file:' prefix
