@@ -1051,7 +1051,7 @@ void ROOT::Experimental::RWebWindow::SendBinary(unsigned connid, const void *dat
 ///
 /// Most simple way to assign call-back - use of c++11 lambdas like:
 /// ~~~ {.cpp}
-/// std::shared_ptr<RWebWindow> win = RWebWindowsManager::Instance()->CreateWindow();
+/// auto win = RWebWindow::Create();
 /// win->SetDefaultPage("file:./page.htm");
 /// win->SetDataCallBack(
 ///          [](unsigned connid, const std::string &data) {

@@ -21,7 +21,6 @@
 #include <ROOT/RMenuItem.hxx>
 
 #include <ROOT/RWebWindow.hxx>
-#include <ROOT/RWebWindowsManager.hxx>
 
 #include <memory>
 #include <string>
@@ -487,8 +486,8 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
       cdata.erase(0, 8);
       conn->fGetMenu = cdata;
    } else if (arg == "QUIT") {
-      // use window manager to correctly terminate http server
-      RWebWindowsManager::Instance()->Terminate();
+      // use window manager to correctly terminate http server and ROOT session
+      fWindow->TerminateROOT();
       return;
    } else if (arg == "RELOAD") {
       conn->fSend = 0; // reset send version, causes new data sending
@@ -542,7 +541,7 @@ void ROOT::Experimental::TCanvasPainter::CreateWindow()
 {
    if (fWindow) return;
 
-   fWindow = RWebWindowsManager::Instance()->CreateWindow();
+   fWindow = RWebWindow::Create();
    fWindow->SetConnLimit(0); // allow any number of connections
    fWindow->SetDefaultPage("file:rootui5sys/canv/canvas.html");
    fWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { ProcessData(connid, arg); });

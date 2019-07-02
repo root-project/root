@@ -15,7 +15,6 @@
 
 #include <ROOT/RBrowser.hxx>
 
-#include <ROOT/RWebWindowsManager.hxx>
 #include <ROOT/RBrowserItem.hxx>
 #include <ROOT/RLogger.hxx>
 #include "ROOT/RMakeUnique.hxx"
@@ -44,7 +43,7 @@ web-based ROOT Browser prototype.
 
 ROOT::Experimental::RBrowser::RBrowser()
 {
-   fWebWindow = ROOT::Experimental::RWebWindowsManager::Instance()->CreateWindow();
+   fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
 
    // this is call-back, invoked when message received via websocket
@@ -286,7 +285,7 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
 
    } else if (arg == "QUIT_ROOT") {
 
-      RWebWindowsManager::Instance()->Terminate();
+      fWebWindow->TerminateROOT();
 
    } else if (arg.compare(0,6, "BRREQ:") == 0) {
       // central place for processing browser requests

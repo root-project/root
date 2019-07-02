@@ -19,7 +19,6 @@
 #include <ROOT/RLogger.hxx>
 
 #include "ROOT/RWebWindow.hxx"
-#include "ROOT/RWebWindowsManager.hxx"
 
 #include "THttpServer.h"
 

@@ -16,7 +16,6 @@
 
 #include <ROOT/RFitPanel.hxx>
 
-#include <ROOT/RWebWindowsManager.hxx>
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RLogger.hxx>
 
@@ -104,7 +103,7 @@ ROOT::Experimental::RFitPanel::~RFitPanel()
 std::shared_ptr<ROOT::Experimental::RWebWindow> ROOT::Experimental::RFitPanel::GetWindow()
 {
    if (!fWindow) {
-      fWindow = RWebWindowsManager::Instance()->CreateWindow();
+      fWindow = RWebWindow::Create();
 
       fWindow->SetPanelName("rootui5.fitpanel.view.FitPanel");
 
