@@ -985,7 +985,7 @@ public:
    RResultPtr<::TH1D> Histo1D(std::string_view vName)
    {
       const auto h_name = std::string(vName);
-      const auto h_title = h_name + ";" + h_name + ";";
+      const auto h_title = h_name + ";" + h_name + ";count";
       return Histo1D<V>({h_name.c_str(), h_title.c_str(), 128u, 0., 0.}, vName);
    }
 
@@ -1047,8 +1047,10 @@ public:
    RResultPtr<::TH1D> Histo1D(std::string_view vName, std::string_view wName)
    {
       // We build name and title based on the value and weight column names
-      const auto h_name = std::string(vName) + "*" + std::string(wName);
-      const auto h_title = h_name + ";" + h_name + ";";
+      std::string str_vName{vName};
+      std::string str_wName{wName};
+      const auto h_name = str_vName + "_weighted_" + str_wName;
+      const auto h_title = str_vName + ", weights: " + str_wName + ";" + str_vName + ";count * " + str_wName;
       return Histo1D<V, W>({h_name.c_str(), h_title.c_str(), 128u, 0., 0.}, vName, wName);
    }
 
@@ -1293,11 +1295,11 @@ public:
 
       // We build a default name and title based on the input columns
       if (!(validatedColumns[0].empty() && validatedColumns[1].empty())) {
-         const auto v2Name_str = std::string(v2Name);
-         const auto g_name = std::string(v1Name) + "*" + v2Name_str;
-         graph->SetNameTitle(g_name.c_str(), g_name.c_str());
-         graph->GetXaxis()->SetTitle(g_name.c_str());
-         graph->GetYaxis()->SetTitle(v2Name_str.c_str());
+         const auto g_name = std::string(v1Name) + "_vs_" + std::string(v2Name);
+         const auto g_title = std::string(v1Name) + " vs " + std::string(v2Name);
+         graph->SetNameTitle(g_name.c_str(), g_title.c_str());
+         graph->GetXaxis()->SetTitle(std::string(v1Name).c_str());
+         graph->GetYaxis()->SetTitle(std::string(v2Name).c_str());
       }
 
       return CreateAction<RDFInternal::ActionTags::Graph, V1, V2>(validatedColumns, graph);
