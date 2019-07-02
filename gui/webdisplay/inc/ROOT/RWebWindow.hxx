@@ -282,6 +282,7 @@ public:
 
    int WaitForTimed(WebWindowWaitFunc_t check, double duration);
 
+   static std::shared_ptr<RWebWindow> Create();
 };
 
 } // namespace Experimental

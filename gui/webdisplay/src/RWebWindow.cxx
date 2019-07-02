@@ -1132,3 +1132,13 @@ void ROOT::Experimental::RWebWindow::Run(double tm)
       WaitForTimed([](double) { return 0; }, tm);
    }
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Create new RWebWindow
+/// Using default RWebWindowsManager
+
+std::shared_ptr<ROOT::Experimental::RWebWindow> ROOT::Experimental::RWebWindow::Create()
+{
+   return ROOT::Experimental::RWebWindowsManager::Instance()->CreateWindow();
+}
+
