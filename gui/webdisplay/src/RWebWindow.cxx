@@ -1142,3 +1142,13 @@ std::shared_ptr<ROOT::Experimental::RWebWindow> ROOT::Experimental::RWebWindow::
    return ROOT::Experimental::RWebWindowsManager::Instance()->CreateWindow();
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+/// Terminate ROOT session
+/// Tries to correctly close THttpServer, associated with RWebWindowsManager
+/// After that exit from process
+
+void ROOT::Experimental::RWebWindow::TerminateROOT()
+{
+   fMgr->Terminate();
+}
+

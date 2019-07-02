@@ -282,6 +282,8 @@ public:
 
    int WaitForTimed(WebWindowWaitFunc_t check, double duration);
 
+   void TerminateROOT();
+
    static std::shared_ptr<RWebWindow> Create();
 };
 
