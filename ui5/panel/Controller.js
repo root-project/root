@@ -14,7 +14,7 @@ sap.ui.define([
             this.websocket.SetReceiver(this); // redirect websocket handling on controller itself
             this.websocket.Send("PANEL_READY"); // confirm panel creation, only then GUI can send commands
          }
-         
+
          // TODO: use more specific API between Canvas and Panel
          if (data && data.masterPanel) {
             this.masterPanel = data.masterPanel;
@@ -27,7 +27,7 @@ sap.ui.define([
          console.log('Connection established - should never happen');
       },
 
-      OnWebsocketMsg: function(handle, msg) {
+      OnWebsocketMsg: function(handle, msg, offset) {
           console.log('GuiPanel Get message ' + msg);
       },
 
@@ -37,8 +37,20 @@ sap.ui.define([
           delete this.websocket; // remove reference on websocket
       },
 
+      setPanelTitle: function(title) {
+         if (!this.masterPanel && document)
+            document.title = title;
+      },
+
+      panelSend: function(msg) {
+         if (this.websocket)
+            this.websocket.Send(msg);
+         else
+            console.error('No connection available to send message');
+      },
+
       onExit: function() {
-         if (this.onPanelExit) 
+         if (this.onPanelExit)
             this.onPanelExit();
          if (this.websocket) {
             this.websocket.Close();
@@ -46,8 +58,9 @@ sap.ui.define([
          }
       },
 
+      /** Method should be used to close panel
+       * Depending from used window manager different functionality can be used here */
       closePanel: function() {
-         
          if (this.masterPanel) {
             if (this.masterPanel.showLeftArea) this.masterPanel.showLeftArea("");
          } else {
