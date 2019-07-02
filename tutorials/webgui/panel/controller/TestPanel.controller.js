@@ -9,7 +9,7 @@ sap.ui.define([
 
       // function called from rootui5.panel.Controller
       onPanelInit : function() {
-         if (document) document.title = "TestPanel";
+         this.setPanelTitle("TestPanel");
       },
 
       // function called from rootui5.panel.Controller
@@ -36,15 +36,13 @@ sap.ui.define([
          MessageToast.show("Press sample button");
       },
 
+      // just send model as is to the server back
       handleSendPress: function() {
-         // just send model as is to the server back
-         if (this.websocket)
-            this.websocket.Send("MODEL:" + this.getView().getModel().getJSON());
+         this.panelSend("MODEL:" + this.getView().getModel().getJSON());
       },
 
       handleRefreshPress: function() {
-         if (this.websocket)
-            this.websocket.Send("REFRESH");
+         this.panelSend("REFRESH");
       }
    });
 
