@@ -52,6 +52,10 @@ namespace DNN {
    In addition a running batch mean and variance is computed and stored in the class
    During inference the inputs are not normalized using the batch mean but the previously computed 
   at  running mean and variance 
+   If momentum is in [0,1) the running mean and variances are the exponetial averages using the momentum value
+     runnig_mean = momentum * running_mean + (1-momentum) * batch_mean
+   If instead momentum<1 the cumulative average is computed
+   running_mean = (nb/(nb+1) * running_mean + 1/(nb+1) * batch_mean
 
    See more at [https://arxiv.org/pdf/1502.03167v3.pdf]
 */
@@ -82,9 +86,12 @@ private:
    std::vector<Scalar_t> fMu_Training;
    std::vector<Scalar_t> fVar_Training;
 
+   // counter of trained batches for computing tesing and variance means
+   int fTrainedBatches = 0;
+
 public:
    /*! Constructor */
-   TBatchNormLayer(size_t batchSize, size_t inputWidth, Scalar_t momentum = 0.99, Scalar_t epsilon = 0.0001);
+   TBatchNormLayer(size_t batchSize, size_t inputWidth, Scalar_t momentum = -1., Scalar_t epsilon = 0.0001);
 
    /*! Copy the dense layer provided as a pointer */
    TBatchNormLayer(TBatchNormLayer<Architecture_t> *layer);
@@ -109,6 +116,10 @@ public:
    void Backward(std::vector<Matrix_t> &gradients_backward, const std::vector<Matrix_t> &activations_backward,
                  std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2);
 
+  
+   /* reset at end of training the batch counter */
+   void ResetTraining() { fTrainedBatches = 0; }
+
    /*! Printing the layer info. */
    void Print() const;
 
@@ -121,7 +132,16 @@ public:
    /* initialize weights */
    virtual void Initialize();
 
+   /*  get vector of averages computed in the training phase */
+   const std::vector<Scalar_t> & GetMuVector() const { return fMu_Training;}
+   std::vector<Scalar_t> & GetMuVector() { return fMu_Training;}
+
+   /*  get vector of variances computed in the training phase */
+   const std::vector<Scalar_t> & GetVarVector() const { return fVar_Training;}
+   std::vector<Scalar_t> & GetVarVector()  { return fVar_Training;}
+
    // Scalar_t GetWeightDecay() const { return fWeightDecay; }
+   
 };
 
 //
@@ -186,6 +206,8 @@ auto TBatchNormLayer<Architecture_t>::Initialize() -> void
    // assign default values for the other parameters
    fMu_Training.assign(inputWidth, 0.);
    fVar_Training.assign(inputWidth, 1.);
+
+   fTrainedBatches = 0;
 }
 
 //______________________________________________________________________________
@@ -234,12 +256,14 @@ auto TBatchNormLayer<Architecture_t>::Forward(std::vector<Matrix_t> &x, bool inT
 
          // fVar(0,k) -= epsilon;
 
-         if (fVar_Training[k] == 0) {
+         if (fTrainedBatches == 0) {
             fMu_Training[k] = mean;
-            fVar_Training[k] = fVar(0, k) * (n) / Scalar_t(n - 1);
+            fVar_Training[k] = fVar(0, k) * (n) / (Scalar_t(n - 1) + epsilon);
          } else {
-            fMu_Training[k] = fMomentum * mean + (1 - fMomentum) * fMu_Training[k];
-            fVar_Training[k] = fMomentum * fVar(0, k) * (n) / Scalar_t(n - 1) + (1 - fMomentum) * fVar_Training[k];
+            Scalar_t decay = fMomentum; 
+            if (fMomentum < 0) decay = fTrainedBatches/Scalar_t(fTrainedBatches+1);
+            fMu_Training[k] = decay * fMu_Training[k] + (1. - decay) * mean;
+            fVar_Training[k] = decay * fVar_Training[k] + (1.-decay) * fVar(0, k) * (n) / (Scalar_t(n - 1) + epsilon);
          }
 
       }
@@ -250,9 +274,14 @@ auto TBatchNormLayer<Architecture_t>::Forward(std::vector<Matrix_t> &x, bool inT
                gamma(0, k) * ((input(i, k) - fMu_Training[k]) / (sqrt(fVar_Training[k] + epsilon))) + beta(0, k);
          }
       }
-   }
-   // std::cout << "forward variance - in training "  << inTraining << std::endl;
+   } // end loop on k
+   if (inTraining) fTrainedBatches++;
+   else fTrainedBatches = 0; 
    // fVar.Print();
+   if (inTraining) 
+      std::cout << " training batch " << fTrainedBatches << " mu var0" << fMu_Training[0] << std::endl;
+   else
+      std::cout << " testing batch  " << fTrainedBatches << " mu var0" << fMu_Training[0] << std::endl;
 }
 
 //______________________________________________________________________________
@@ -263,6 +292,7 @@ auto TBatchNormLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_
 {
 
    double epsilon = fEpsilon;
+
 
    // inputs
    const Matrix_t &dout = this->GetActivationGradients()[0];

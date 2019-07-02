@@ -107,6 +107,11 @@ public:
    virtual void Backward(std::vector<Matrix_t> &gradients_backward, const std::vector<Matrix_t> &activations_backward,
                          std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2) = 0;
 
+   /*! Reset some training flags after a loop on all batches
+       Some layer (e.g. batchnormalization) might need to implement the function in case some operations 
+       are needed after looping an all batches                                                 */
+   virtual void ResetTraining() {}
+
    /*! Updates the weights and biases, given the learning rate */
    void Update(const Scalar_t learningRate);
 
@@ -121,6 +126,7 @@ public:
 
    /*! Updates the bias gradients, given some other weight gradients and learning rate. */
    void UpdateBiasGradients(const std::vector<Matrix_t> &biasGradients, const Scalar_t learningRate);
+
 
    /*! Copies the weights provided as an input.  */
    void CopyWeights(const std::vector<Matrix_t> &otherWeights);
