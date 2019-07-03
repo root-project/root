@@ -107,6 +107,11 @@ The following people have contributed to this new version:
 
 
 ## Class Reference Guide
+- Images in tutorials can now be displayed à JavaScript thanks to the (js) option
+  added nex to the directive `\macro_image`
+- As the tutorial `palettes.C` is often hit when searching the keyword `palette`
+  in the reference guide, a direct link from this example to the full list of
+  predefined palettes given in `TColor` has been added.
 
 
 ## Build, Configuration and Testing Infrastructure
