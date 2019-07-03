@@ -472,7 +472,12 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
     _dataClone->get(evtNo);
     assert(_dataClone->valid());
     pdfClone->getValV(_normSet);
-    pdfClone->checkBatchComputation(evtNo, _normSet);
+    try {
+      pdfClone->checkBatchComputation(evtNo, _normSet);
+    } catch (std::exception& e) {
+      std::cerr << "ERROR when checking batch computation for event " << evtNo << ":\n"
+          << e.what() << std::endl;
+    }
   }
 #endif
 

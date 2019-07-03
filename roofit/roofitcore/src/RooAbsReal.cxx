@@ -553,7 +553,7 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooCmdArg& a
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create an object that represents the integral of the function over one or more observables listed in iset
+/// Create an object that represents the integral of the function over one or more observables listed in iset.
 /// The actual integration calculation is only performed when the return object is evaluated. The name
 /// of the integral object is automatically constructed from the name of the input function, the variables
 /// it integrates and the range integrates over. If nset is specified the integrand is request
@@ -561,7 +561,7 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooCmdArg& a
 /// the integral is performed over the named range, otherwise it is performed over the domain of each
 /// integrated observable. If cfg is specified it will be used to configure any numeric integration
 /// aspect of the integral. It will not force the integral to be performed numerically, which is
-/// decided automatically by RooRealIntegral
+/// decided automatically by RooRealIntegral.
 
 RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* nset,
 				       const RooNumIntConfig* cfg, const char* rangeName) const
@@ -4800,39 +4800,52 @@ RooSpan<double> RooAbsReal::evaluateBatch(std::size_t begin, std::size_t end) co
 
   auto output = _batchData.makeWritableBatchUnInit(begin, end);
 
-//  std::cout << "evaluateBatch on\n";
-//  Print("V");
+  RooArgSet allLeafs;
+  leafNodeServerList(&allLeafs);
 
-  RooArgSet allServers;
-  leafNodeServerList(&allServers);
-  allServers.Print("");
+#ifndef NDEBUG
+  static unsigned int msgCount = 0;
+  if (msgCount < 5) {
+    std::cout << "Falling back to slow compatibility mode for evaluateBatch() in class " << IsA()->GetName()
+          << "\n\tLeafs: ";
+    allLeafs.Print("");
+  }
+#endif
 
-  assert(false);
 
-  std::vector<std::pair<std::size_t, RooAbsRealLValue*>> serverVars;
-  //First find out which values from the inputVars we need to set,
-  //because we depend on them.
-//  for (unsigned int i = 0; i < inputVars.size(); ++i) {
-//    const RooAbsArg* var = inputVars[i];
-////    std::cout << "\n\nVar #" << i << " coming in:\n";
-////    var->Print("v");
-//
-//    RooAbsArg* server = allServers.find(*var);
-////    std::cout << "\nCorresponding server: " << server << std::endl;
-//
-//    if (server && dynamic_cast<RooAbsRealLValue*>(server)) {
-////      server->Print("");
-////      std::cout << "Saved." << std::endl;
-//
-//      auto lval = static_cast<RooAbsRealLValue*>(server);
-//      serverVars.emplace_back(i, lval);
-//    }
-//  }
+  // TODO Make faster by using batch computation results also on intermediate nodes
+  std::vector<std::pair<RooRealVar*, RooSpan<const double>>> leafsAndBatches;
+  for (auto leaf : allLeafs) {
+    auto leafRRV = static_cast<RooRealVar*>(leaf);
+    assert(dynamic_cast<RooRealVar*>(leaf));
 
-  for (auto i = 0; i < output.size(); ++i) {
-    for (auto indexLVal : serverVars) {
-//      std::cout << "Setting var to " << inputs[indexLVal.first][i] << std::endl;
-//      indexLVal.second->setVal(inputs[indexLVal.first][i]);
+    auto leafBatch = leafRRV->getValBatch(begin, end);
+
+#ifndef NDEBUG
+    if (msgCount < 5) {
+      std::cout << "\tBatch " << leafRRV->GetName() << "?: ";
+      if (leafBatch.size() == 0)
+        std::cout << "No";
+      else std::cout << "Yes size=" << leafBatch.size();
+    }
+    assert(leafBatch.size() == 0 || leafBatch.size() == output.size());
+#endif
+
+    if (leafBatch.size() == output.size()) {
+      leafsAndBatches.emplace_back(leafRRV, leafBatch);
+    }
+  }
+#ifndef NDEBUG
+  if (msgCount++ < 5) std::cout << std::endl;
+#endif
+
+
+  for (auto i = 0u; i < output.size(); ++i) {
+    for (auto& leafAndBatch : leafsAndBatches) {
+      RooRealVar* leaf = leafAndBatch.first;
+      auto batch = leafAndBatch.second;
+
+      leaf->setVal(batch[i]);
     }
 
     output[i] = evaluate();
@@ -4939,7 +4952,7 @@ void RooAbsReal::checkBatchComputation(std::size_t evtNo, const RooArgSet* normS
     }
   }
 
-  if (_batchData.isInit()) {
+  if (_batchData.isInit() && _batchData.status(evtNo, evtNo+1) >= BatchHelpers::BatchData::kReady) {
     const double batchVal = _batchData[evtNo];
 
     if (fabs( _value != 0. ? (_value - batchVal)/_value : _value - batchVal) > 1.E-14) {
