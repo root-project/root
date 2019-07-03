@@ -16,7 +16,7 @@ sap.ui.define([
       onPanelExit : function() {
       },
 
-      OnWebsocketMsg: function(handle, msg, offset) {
+      onPanelReceive: function(msg, offset) {
          if (typeof msg != "string") {
             // binary data transfer not used in this example
             var arr = new Float32Array(msg, offset);
@@ -28,7 +28,7 @@ sap.ui.define([
             if (data)
                this.getView().setModel(new JSONModel(data));
          } else {
-            this.getView().byId("SampleText").setText("Get message:\n" + msg);
+            MessageToast.show("Receive msg: " + msg.substr(0,30));
          }
       },
 

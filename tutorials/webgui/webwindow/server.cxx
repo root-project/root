@@ -37,7 +37,7 @@ void ProcessData(unsigned connid, const std::string &arg)
 
 void server()
 {
-   // create window, manager can handle many windows a time
+   // create window
    window = ROOT::Experimental::RWebWindow::Create();
 
    // configure default html page
