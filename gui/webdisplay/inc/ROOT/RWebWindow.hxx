@@ -99,11 +99,14 @@ private:
       void ResetStamps() { fSendStamp = fRecvStamp = std::chrono::system_clock::now(); }
    };
 
-   struct DataEntry {
-      unsigned fConnId{0};         ///<! connection id
-      std::string fData;           ///<! data for given connection
-      DataEntry() = default;
-      DataEntry(unsigned connid, std::string &&data) : fConnId(connid), fData(data) {}
+   enum EQueueEntryKind { kind_None, kind_Connect, kind_Data, kind_Disconnect };
+
+   struct QueueEntry {
+      unsigned fConnId{0};               ///<! connection id
+      EQueueEntryKind fKind{kind_None};  ///<! kind of data
+      std::string fData;                 ///<! data for given connection
+      QueueEntry() = default;
+      QueueEntry(unsigned connid, EQueueEntryKind kind, std::string &&data) : fConnId(connid), fKind(kind), fData(data) {}
    };
 
    typedef std::vector<std::shared_ptr<WebConn>> ConnectionsList;
@@ -127,8 +130,8 @@ private:
    WebWindowConnectCallback_t fDisconnCallback;     ///<! callback for disconnect event
    std::thread::id fCallbacksThrdId;                ///<! thread id where callbacks should be invoked
    bool fCallbacksThrdIdSet{false};                 ///<! flag indicating that thread id is assigned
-   std::queue<DataEntry> fDataQueue;                ///<! data queue for main callback
-   std::mutex fDataMutex;                           ///<! mutex to protect data queue
+   std::queue<QueueEntry> fInputQueue;              ///<! input queue for all callbacks
+   std::mutex fInputQueueMutex;                     ///<! mutex to protect input queue
    unsigned fWidth{0};                              ///<! initial window width when displayed
    unsigned fHeight{0};                             ///<! initial window height when displayed
    float fOperationTmout{50.};                      ///<! timeout in seconds to perform synchronous operation, default 50s
@@ -154,7 +157,7 @@ private:
 
    std::string _MakeSendHeader(std::shared_ptr<WebConn> &conn, bool txt, const std::string &data, int chid);
 
-   void ProvideData(unsigned connid, std::string &&arg);
+   void ProvideQueueEntry(unsigned connid, EQueueEntryKind kind, std::string &&arg);
 
    void InvokeCallbacks(bool force = false);
 
