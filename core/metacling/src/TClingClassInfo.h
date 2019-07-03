@@ -27,6 +27,7 @@
 
 #include "TClingDeclInfo.h"
 #include "TClingMethodInfo.h"
+#include "TDataType.h"
 #include "TDictionary.h"
 
 #include <vector>
@@ -128,6 +129,8 @@ public:
    void                 Init(const clang::Type &);
    bool                 IsBase(const char *name) const;
    static bool          IsEnum(cling::Interpreter *interp, const char *name);
+   bool                 IsScopedEnum() const;
+   EDataType            GetUnderlyingType() const;
    bool                 IsLoaded() const;
    bool                 IsValidMethod(const char *method, const char *proto, Bool_t objectIsConst, long *offset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const;
    int                  InternalNext();

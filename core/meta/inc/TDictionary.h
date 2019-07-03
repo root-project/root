@@ -86,6 +86,7 @@ enum EProperty {
    kIsConstant      = 0x00100000,
    kIsVirtualBase   = 0x00200000,
    kIsConstPointer  = 0x00400000,
+   kIsScopedEnum    = 0x00800000,
    kIsExplicit      = 0x04000000,
    kIsNamespace     = 0x08000000,
    kIsConstMethod   = 0x10000000,

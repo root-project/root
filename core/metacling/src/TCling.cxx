@@ -7795,6 +7795,13 @@ ClassInfo_t* TCling::ClassInfo_Factory(const char* name) const
    return (ClassInfo_t*) new TClingClassInfo(fInterpreter, name);
 }
 
+ClassInfo_t* TCling::ClassInfo_Factory(DeclId_t declid) const
+{
+   R__LOCKGUARD(gInterpreterMutex);
+   return (ClassInfo_t*) new TClingClassInfo(fInterpreter, (const clang::Decl*)declid);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 int TCling::ClassInfo_GetMethodNArg(ClassInfo_t* cinfo, const char* method, const char* proto, Bool_t objectIsConst /* = false */, EFunctionMatchMode mode /* = kConversionMatch */) const
@@ -7851,6 +7858,24 @@ bool TCling::ClassInfo_IsEnum(const char* name) const
 {
    return TClingClassInfo::IsEnum(fInterpreter, name);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+Bool_t TCling::ClassInfo_IsScopedEnum(ClassInfo_t *info) const
+{
+   TClingClassInfo* TClinginfo = (TClingClassInfo*) info;
+   return TClinginfo->IsScopedEnum();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+EDataType TCling::ClassInfo_GetUnderlyingType(ClassInfo_t* info) const
+{
+   TClingClassInfo* TClinginfo = (TClingClassInfo*) info;
+   return TClinginfo->GetUnderlyingType();
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

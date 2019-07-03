@@ -22,6 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TDataType.h"
 #include "TDictionary.h"
 #include "TInterpreterValue.h"
 #include "TVirtualRWMutex.h"
@@ -399,6 +400,7 @@ public:
    virtual ClassInfo_t  *ClassInfo_Factory(Bool_t /*all*/ = kTRUE) const = 0;
    virtual ClassInfo_t  *ClassInfo_Factory(ClassInfo_t * /* cl */) const = 0;
    virtual ClassInfo_t  *ClassInfo_Factory(const char * /* name */) const = 0;
+   virtual ClassInfo_t  *ClassInfo_Factory(DeclId_t declid) const = 0;
    virtual Long_t   ClassInfo_GetBaseOffset(ClassInfo_t* /* fromDerived */,
                                             ClassInfo_t* /* toBase */, void* /* address */ = 0, bool /*isderived*/ = true) const {return 0;}
    virtual int    ClassInfo_GetMethodNArg(ClassInfo_t * /* info */, const char * /* method */,const char * /* proto */, Bool_t /* objectIsConst */ = false, ROOT::EFunctionMatchMode /* mode */ = ROOT::kConversionMatch) const {return 0;}
@@ -408,6 +410,8 @@ public:
    virtual void   ClassInfo_Init(ClassInfo_t * /* info */, int /* tagnum */) const {;}
    virtual Bool_t ClassInfo_IsBase(ClassInfo_t * /* info */, const char * /* name */) const {return 0;}
    virtual Bool_t ClassInfo_IsEnum(const char * /* name */) const {return 0;}
+   virtual Bool_t ClassInfo_IsScopedEnum(ClassInfo_t * /* info */) const {return 0;}
+   virtual EDataType ClassInfo_GetUnderlyingType(ClassInfo_t * /* info */) const {return kNumDataTypes;}
    virtual Bool_t ClassInfo_IsLoaded(ClassInfo_t * /* info */) const {return 0;}
    virtual Bool_t ClassInfo_IsValid(ClassInfo_t * /* info */) const {return 0;}
    virtual Bool_t ClassInfo_IsValidMethod(ClassInfo_t * /* info */, const char * /* method */,const char * /* proto */, Long_t * /* offset */, ROOT::EFunctionMatchMode /* mode */ = ROOT::kConversionMatch) const {return 0;}

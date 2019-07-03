@@ -399,6 +399,7 @@ public: // Public Interface
    virtual ClassInfo_t*  ClassInfo_Factory(Bool_t all = kTRUE) const;
    virtual ClassInfo_t*  ClassInfo_Factory(ClassInfo_t* cl) const;
    virtual ClassInfo_t*  ClassInfo_Factory(const char* name) const;
+   virtual ClassInfo_t*  ClassInfo_Factory(DeclId_t declid) const;
    virtual Long_t   ClassInfo_GetBaseOffset(ClassInfo_t* fromDerived, ClassInfo_t* toBase, void * address, bool isDerivedObject) const;
    virtual int    ClassInfo_GetMethodNArg(ClassInfo_t* info, const char* method, const char* proto, Bool_t objectIsConst = false, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const;
    virtual bool   ClassInfo_HasDefaultConstructor(ClassInfo_t* info) const;
@@ -407,6 +408,8 @@ public: // Public Interface
    virtual void   ClassInfo_Init(ClassInfo_t* info, int tagnum) const;
    virtual bool   ClassInfo_IsBase(ClassInfo_t* info, const char* name) const;
    virtual bool   ClassInfo_IsEnum(const char* name) const;
+   virtual bool   ClassInfo_IsScopedEnum(ClassInfo_t* info) const;
+   virtual EDataType ClassInfo_GetUnderlyingType(ClassInfo_t* info) const;
    virtual bool   ClassInfo_IsLoaded(ClassInfo_t* info) const;
    virtual bool   ClassInfo_IsValid(ClassInfo_t* info) const;
    virtual bool   ClassInfo_IsValidMethod(ClassInfo_t* info, const char* method, const char* proto, Long_t* offset, ROOT::EFunctionMatchMode /* mode */ = ROOT::kConversionMatch) const;

@@ -801,6 +801,61 @@ bool TClingClassInfo::IsEnum(cling::Interpreter *interp, const char *name)
    return false;
 }
 
+bool TClingClassInfo::IsScopedEnum() const
+{
+   if (auto *ED = llvm::dyn_cast<clang::EnumDecl>(GetDecl()))
+      return ED->isScoped();
+   return false;
+}
+
+EDataType TClingClassInfo::GetUnderlyingType() const
+{
+   if (!IsValid())
+      return kNumDataTypes;
+   if (GetDecl() == 0)
+      return kNumDataTypes;
+
+   if (auto ED = llvm::dyn_cast<EnumDecl>(GetDecl())) {
+      R__LOCKGUARD(gInterpreterMutex);
+      auto Ty = ED->getIntegerType().getTypePtrOrNull();
+      if (auto BTy = llvm::dyn_cast<BuiltinType>(Ty)) {
+         switch (BTy->getKind()) {
+         case BuiltinType::Bool:
+            return kBool_t;
+
+         case BuiltinType::Char_U:
+         case BuiltinType::UChar:
+            return kUChar_t;
+
+         case BuiltinType::Char_S:
+         case BuiltinType::SChar:
+            return kChar_t;
+
+         case BuiltinType::UShort:
+            return kUShort_t;
+         case BuiltinType::Short:
+            return kShort_t;
+         case BuiltinType::UInt:
+            return kUInt_t;
+         case BuiltinType::Int:
+            return kInt_t;
+         case BuiltinType::ULong:
+            return kULong_t;
+         case BuiltinType::Long:
+            return kLong_t;
+         case BuiltinType::ULongLong:
+            return kULong64_t;
+         case BuiltinType::LongLong:
+            return kLong64_t;
+         default:
+            return kNumDataTypes;
+         };
+      }
+   }
+   return kNumDataTypes;
+}
+
+
 bool TClingClassInfo::IsLoaded() const
 {
    // IsLoaded in CINT was meaning is known to the interpreter
