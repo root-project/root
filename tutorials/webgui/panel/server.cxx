@@ -30,38 +30,34 @@ struct TestPanelModel {
 std::shared_ptr<ROOT::Experimental::RWebWindow> window;
 std::unique_ptr<TestPanelModel> model;
 
+
+void ProcessConnection(unsigned connid)
+{
+   printf("connection established %u\n", connid);
+   TString json = TBufferJSON::ToJSON(model.get());
+   window->Send(connid, std::string("MODEL:") + json.Data());
+}
+
+void ProcessCloseConnection(unsigned connid)
+{
+   printf("connection closed %u\n", connid);
+}
+
 void ProcessData(unsigned connid, const std::string &arg)
 {
-   if (arg == "CONN_READY") {
-      printf("connection established %u\n", connid);
-
-      TString json = TBufferJSON::ToJSON(model.get());
-      window->Send(connid, std::string("MODEL:") + json.Data());
-      return;
-   }
-
-   if (arg == "CONN_CLOSED") {
-      printf("connection closed\n");
-      return;
-   }
-
    if (arg == "REFRESH") {
       // send model to client again
       printf("Resend model\n");
       TString json = TBufferJSON::ToJSON(model.get());
       window->Send(connid, std::string("MODEL:") + json.Data());
-      return;
-   }
-
-   if (arg.find("MODEL:") == 0) {
+   } else if (arg.find("MODEL:") == 0) {
       printf("Decode model %s\n", arg.c_str());
 
       auto m = TBufferJSON::FromJSON<TestPanelModel>(arg.substr(6));
       if (m) {
-         printf("Selected %s\n", m->fSelectId.c_str());
+         printf("New model, selected %s\n", m->fSelectId.c_str());
          std::swap(model, m);
       }
-      return;
    }
 }
 
@@ -77,12 +73,13 @@ void server()
    // create window
    window = ROOT::Experimental::RWebWindow::Create();
 
-   // this is very important, it defines name of openui5 widget
+   // Important - defines name of openui5 widget
    // "localapp" prefix indicates that all files located in current directory
+   // "localapp.view.TestPanel" means file ./view/TestPanel.view.xml will be loaded
    window->SetPanelName("localapp.view.TestPanel");
 
-   // this is call-back, invoked when message received via websocket
-   window->SetDataCallBack(ProcessData);
+   // these are different callbacks
+   window->SetCallBacks(ProcessConnection, ProcessData, ProcessCloseConnection);
 
    window->SetGeometry(400, 500); // configure window geometry
 
