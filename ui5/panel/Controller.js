@@ -6,6 +6,12 @@ sap.ui.define([
 
    return Controller.extend("rootui5.panel.Controller", {
 
+      // one could define in derived classes followin methods
+      //   onPanelInit: function() {},
+      //   onPanelReceive: function(msg, offset) {},
+      //   onPanelExit: function(),
+
+
       onInit: function() {
          var data = this.getView().getViewData();
 
@@ -20,7 +26,8 @@ sap.ui.define([
             this.masterPanel = data.masterPanel;
          }
 
-         if (this.onPanelInit) this.onPanelInit();
+         if (typeof this.onPanelInit == "function")
+            this.onPanelInit();
       },
 
       OnWebsocketOpened: function(handle) {
@@ -28,7 +35,10 @@ sap.ui.define([
       },
 
       OnWebsocketMsg: function(handle, msg, offset) {
-          console.log('GuiPanel Get message ' + msg);
+         if (typeof this.onPanelReceive == 'function')
+            this.onPanelReceive(msg, offset);
+         else
+            console.log('GuiPanel Get message ' + msg);
       },
 
       OnWebsocketClosed: function(handle) {
@@ -50,7 +60,7 @@ sap.ui.define([
       },
 
       onExit: function() {
-         if (this.onPanelExit)
+         if (typeof this.onPanelExit == 'function')
             this.onPanelExit();
          if (this.websocket) {
             this.websocket.Close();

@@ -55,7 +55,7 @@ void ProcessData(unsigned connid, const std::string &arg)
 
       auto m = TBufferJSON::FromJSON<TestPanelModel>(arg.substr(6));
       if (m) {
-         printf("New model, selected %s\n", m->fSelectId.c_str());
+         printf("New model, selected: %s\n", m->fSelectId.c_str());
          std::swap(model, m);
       }
    }
