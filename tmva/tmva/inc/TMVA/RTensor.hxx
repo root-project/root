@@ -91,6 +91,21 @@ inline T ComputeIndicesFromGlobalIndex(const T& shape, MemoryLayout layout, cons
     return indices;
 }
 
+/// \brief Compute global index from indices
+/// \param[in] strides Strides vector
+/// \param[in] idx Indice vector
+/// \return Global index
+template <typename U, typename V>
+inline std::size_t ComputeGlobalIndex(const U& strides, const V& idx)
+{
+   std::size_t globalIndex = 0;
+   const auto size = idx.size();
+   for (std::size_t i = 0; i < size; i++) {
+      globalIndex += strides[size - 1 - i] * idx[size - 1 - i];
+   }
+   return globalIndex;
+}
+
 /// \brief Type checking for all types of a parameter pack, e.g., used in combination with std::is_convertible
 template <class... Ts>
 struct and_types : std::true_type {
@@ -204,17 +219,19 @@ public:
 
    // Access elements
    Value_t &operator()(const Index_t &idx);
+   const Value_t &operator() (const Index_t &idx) const;
    template <typename... Idx> Value_t &operator()(Idx... idx);
+   template <typename... Idx> const Value_t &operator() (Idx... idx) const;
 
    // Access properties
-   std::size_t GetSize() { return fSize; }
-   Shape_t GetShape() { return fShape; }
-   Shape_t GetStrides() { return fStrides; }
-   Value_t *GetData() { return fData; }
-   std::shared_ptr<Container_t> GetContainer() { return fContainer; }
-   MemoryLayout GetMemoryLayout() { return fLayout; }
-   bool IsView() { return fContainer == NULL; }
-   bool IsOwner() { return !IsView(); }
+   std::size_t GetSize() const { return fSize; }
+   Shape_t GetShape() const { return fShape; }
+   Shape_t GetStrides() const { return fStrides; }
+   Value_t *GetData() const { return fData; }
+   std::shared_ptr<Container_t> GetContainer() const { return fContainer; }
+   MemoryLayout GetMemoryLayout() const { return fLayout; }
+   bool IsView() const { return fContainer == NULL; }
+   bool IsOwner() const { return !IsView(); }
 
    // Copy
    RTensor<Value_t, Container_t> Copy(MemoryLayout layout = MemoryLayout::RowMajor);
@@ -278,11 +295,17 @@ public:
 template <typename Value_t, typename Container_t>
 inline Value_t &RTensor<Value_t, Container_t>::operator()(const Index_t &idx)
 {
-   std::size_t globalIndex = 0;
-   const auto size = idx.size();
-   for (std::size_t i = 0; i < size; i++) {
-      globalIndex += fStrides[size - 1 - i] * idx[size - 1 - i];
-   }
+   const auto globalIndex = Internal::ComputeGlobalIndex(fStrides, idx);
+   return fData[globalIndex];
+}
+
+/// \brief Access elements
+/// \param[in] idx Index vector
+/// \return Reference to element
+template <typename Value_t, typename Container_t>
+inline const Value_t &RTensor<Value_t, Container_t>::operator() (const Index_t &idx) const
+{
+   const auto globalIndex = Internal::ComputeGlobalIndex(fStrides, idx);
    return fData[globalIndex];
 }
 
@@ -292,6 +315,18 @@ inline Value_t &RTensor<Value_t, Container_t>::operator()(const Index_t &idx)
 template <typename Value_t, typename Container_t>
 template <typename... Idx>
 Value_t &RTensor<Value_t, Container_t>::operator()(Idx... idx)
+{
+   static_assert(Internal::and_types<std::is_convertible<Idx, std::size_t>...>{},
+                 "Indices are not convertible to std::size_t.");
+   return operator()({static_cast<std::size_t>(idx)...});
+}
+
+/// \brief Access elements
+/// \param[in] idx Indices
+/// \return Reference to element
+template <typename Value_t, typename Container_t>
+template <typename... Idx>
+const Value_t &RTensor<Value_t, Container_t>::operator() (Idx... idx) const
 {
    static_assert(Internal::and_types<std::is_convertible<Idx, std::size_t>...>{},
                  "Indices are not convertible to std::size_t.");

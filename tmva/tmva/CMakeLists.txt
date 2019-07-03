@@ -24,6 +24,7 @@ if(dataframe)
     set(TMVA_EXTRA_HEADERS
         TMVA/RTensor.hxx
         TMVA/RTensorUtils.hxx
+        TMVA/RStandardScaler.hxx
     )
     set(TMVA_EXTRA_DEPENDENCIES
         ROOTDataFrame
