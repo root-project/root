@@ -79,19 +79,16 @@ ROOT::Experimental::RPadBase::Divide(int nHoriz, int nVert, const RPadExtent &pa
    offset *= {1. / nHoriz, 1. / nVert};
    const RPadExtent size = offset - padding;
 
-   printf("SIZES %5.2f %5.2f\n", size.fHoriz.fNormal.fVal, size.fVert.fNormal.fVal);
-
    ret.resize(nHoriz);
    for (int iHoriz = 0; iHoriz < nHoriz; ++iHoriz) {
       ret[iHoriz].resize(nVert);
       for (int iVert = 0; iVert < nVert; ++iVert) {
          RPadPos subPos = offset;
          subPos *= {1. * iHoriz, 1. * iVert};
-         auto uniqPad = std::make_unique<RPad>(*this, size);
+         auto uniqPad = std::make_unique<RPad>(*this, subPos, size);
          ret[iHoriz][iVert] = uniqPad.get();
          Draw(std::move(uniqPad), subPos, size);
-
-         printf("Create subpad pos %5.2f %5.2f\n", subPos.fHoriz.fNormal.fVal, subPos.fVert.fNormal.fVal);
+         // printf("Create subpad pos %5.2f %5.2f\n", subPos.fHoriz.fNormal.fVal, subPos.fVert.fNormal.fVal);
       }
    }
    return ret;
@@ -225,6 +222,8 @@ void ROOT::Experimental::RPadDrawable::Paint(Internal::RPadPainter &toppad)
    painter.PaintDrawables(*fPad.get());
 
    painter.fPadDisplayItem->SetDrawOpts(&GetOptions());
+
+   painter.fPadDisplayItem->SetPos(&fPad->GetPos());
 
    painter.fPadDisplayItem->SetSize(&fPad->GetSize());
 
