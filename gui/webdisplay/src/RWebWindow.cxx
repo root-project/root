@@ -497,8 +497,8 @@ void ROOT::Experimental::RWebWindow::CheckInactiveConnections()
       fConn.erase(std::remove_if(fConn.begin(), fConn.end(), pred), fConn.end());
    }
 
-   for (auto &&entry : clr)
-      ProvideQueueEntry(entry->fConnId, kind_Disconnect, "CONN_CLOSED");
+   for (auto &entry : clr)
+      ProvideQueueEntry(entry->fConnId, kind_Disconnect, ""s);
 
 }
 
@@ -540,7 +540,7 @@ bool ROOT::Experimental::RWebWindow::ProcessWS(THttpCallArg &arg)
       auto conn = RemoveConnection(arg.GetWSId());
 
       if (conn)
-         ProvideQueueEntry(conn->fConnId, kind_Disconnect, "CONN_CLOSED");
+         ProvideQueueEntry(conn->fConnId, kind_Disconnect, ""s);
 
       return true;
    }
@@ -641,17 +641,17 @@ bool ROOT::Experimental::RWebWindow::ProcessWS(THttpCallArg &arg)
             Send(conn->fConnId, "SHOWPANEL:"s + fPanelName);
             conn->fReady = 5;
          } else {
-            ProvideQueueEntry(conn->fConnId, kind_Connect, "CONN_READY");
+            ProvideQueueEntry(conn->fConnId, kind_Connect, ""s);
             conn->fReady = 10;
          }
       }
    } else if (fPanelName.length() && (conn->fReady < 10)) {
       if (cdata == "PANEL_READY") {
          R__DEBUG_HERE("webgui") << "Get panel ready " << fPanelName;
-         ProvideQueueEntry(conn->fConnId, kind_Connect, "CONN_READY");
+         ProvideQueueEntry(conn->fConnId, kind_Connect, ""s);
          conn->fReady = 10;
       } else {
-         ProvideQueueEntry(conn->fConnId, kind_Disconnect, "CONN_CLOSED");
+         ProvideQueueEntry(conn->fConnId, kind_Disconnect, ""s);
          RemoveConnection(conn->fWSId);
       }
    } else if (nchannel == 1) {
