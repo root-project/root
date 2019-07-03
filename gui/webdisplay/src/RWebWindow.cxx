@@ -359,7 +359,7 @@ void ROOT::Experimental::RWebWindow::InvokeCallbacks(bool force)
    if (fCallbacksThrdIdSet && (fCallbacksThrdId != std::this_thread::get_id()) && !force)
       return;
 
-   while (fDataCallback) {
+   while (true) {
       unsigned connid;
       EQueueEntryKind kind;
       std::string arg;
@@ -375,7 +375,21 @@ void ROOT::Experimental::RWebWindow::InvokeCallbacks(bool force)
          fInputQueue.pop();
       }
 
-      fDataCallback(connid, arg);
+      switch (kind) {
+      case kind_None: break;
+      case kind_Connect:
+         if (fConnCallback)
+            fConnCallback(connid);
+         break;
+      case kind_Data:
+         if (fDataCallback)
+            fDataCallback(connid, arg);
+         break;
+      case kind_Disconnect:
+         if (fDisconnCallback)
+            fDisconnCallback(connid);
+         break;
+      }
    }
 }
 
@@ -1061,9 +1075,6 @@ void ROOT::Experimental::RWebWindow::AssignCallbackThreadId()
 ///
 /// Function should have signature like void func(unsigned connid, const std::string &data)
 /// First argument identifies connection (unique for each window), second argument is received data
-/// There are predefined values for the data:
-///     "CONN_READY"  - appears when new connection is established
-///     "CONN_CLOSED" - when connection closed, no more data will be send/received via connection
 ///
 /// At the moment when callback is assigned, RWebWindow working thread is detected.
 /// If called not from main application thread, RWebWindow::Run() function must be regularly called from that thread.
