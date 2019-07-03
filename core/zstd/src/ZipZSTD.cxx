@@ -20,23 +20,23 @@
 
 static const int kHeaderSize = 9;
 
+static const size_t errorCodeSmallBuffer = 18446744073709551546U;
+
 void R__zipZSTD(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
 {
     using Ctx_ptr = std::unique_ptr<ZSTD_CCtx, decltype(&ZSTD_freeCCtx)>;
     Ctx_ptr fCtx{ZSTD_createCCtx(), &ZSTD_freeCCtx};
 
     *irep = 0;
-    if (R__unlikely(*tgtsize < kHeaderSize)) {
-        std::cout << "Error: target buffer too small in ZSTD" << std::endl;
-        return;
-    }
+
     size_t retval = ZSTD_compressCCtx(fCtx.get(),
                                         &tgt[kHeaderSize], static_cast<size_t>(*tgtsize - kHeaderSize),
                                         src, static_cast<size_t>(*srcsize),
                                         2*cxlevel);
 
     if (R__unlikely(ZSTD_isError(retval))) {
-        std::cout << "Error in zip ZSTD" << std::endl;
+        std::cerr << "Error in zip ZSTD. Type = " << ZSTD_getErrorName(retval) <<
+        " . Code = " << retval << std::endl;
         return;
     }
     else {
@@ -60,18 +60,18 @@ void R__unzipZSTD(int *srcsize, unsigned char *src, int *tgtsize, unsigned char 
 {
     using Ctx_ptr = std::unique_ptr<ZSTD_DCtx, decltype(&ZSTD_freeDCtx)>;
     Ctx_ptr fCtx{ZSTD_createDCtx(), &ZSTD_freeDCtx};
+    *irep = 0;
 
     if (R__unlikely(src[0] != 'Z' || src[1] != 'S')) {
-      fprintf(stderr, "R__unzipZSTD: algorithm run against buffer with incorrect header (got %d%d; expected %d%d).\n",
-              src[0], src[1], 'Z', 'S');
+      std::cerr << "R__unzipZSTD: algorithm run against buffer with incorrect header (got " <<
+      src[0] << src[1] << "; expected ZS)." << std::endl;
       return;
     }
 
     int ZSTD_version =  ZSTD_versionNumber() / (100 * 100);
     if (R__unlikely(src[2] != ZSTD_version)) {
-      fprintf(stderr,
-              "R__unzipZSTD: This version of ZSTD is incompatible with the on-disk version (got %d; expected %d).\n",
-              src[2], ZSTD_version);
+      std::cerr << "R__unzipZSTD: This version of ZSTD is incompatible with the on-disk version "
+      "got "<< src[2] << "; expected "<< ZSTD_version << ")" << std::endl;
       return;
     }
 
@@ -79,9 +79,13 @@ void R__unzipZSTD(int *srcsize, unsigned char *src, int *tgtsize, unsigned char 
                                         (char *)tgt, static_cast<size_t>(*tgtsize),
                                         (char *)&src[kHeaderSize], static_cast<size_t>(*srcsize - kHeaderSize));
 
-    if (R__unlikely(ZSTD_isError(retval))) {
-        std::cout << "Error in unzip ZSTD" << std::endl;
-        *irep = 0;
+    /* The error code 18446744073709551546 arises when the tgt buffer is too small
+     * However this error is already handled outside of the compression algorithm
+     */
+    if (R__unlikely(ZSTD_isError(retval)) && retval != 18446744073709551546U) {
+        std::cerr << "Error in unzip ZSTD. Type = " << ZSTD_getErrorName(retval) <<
+        " . Code = " << retval << std::endl;
+        return;
     }
     else {
         *irep = retval;
