@@ -34,6 +34,11 @@ class THttpServer;
 namespace ROOT {
 namespace Experimental {
 
+
+/// function signature for connect/disconnect call-backs
+/// argument is connection id
+using WebWindowConnectCallback_t = std::function<void(unsigned)>;
+
 /// function signature for call-backs from the window clients
 /// first argument is connection id, second is received data
 using WebWindowDataCallback_t = std::function<void(unsigned, const std::string &)>;
@@ -117,8 +122,11 @@ private:
    unsigned fConnLimit{1};                          ///<! number of allowed active connections
    bool fNativeOnlyConn{false};                     ///<! only native connection are allowed, created by Show() method
    unsigned fMaxQueueLength{10};                    ///<! maximal number of queue entries
+   WebWindowConnectCallback_t fConnCallback;        ///<! callback for connect event
    WebWindowDataCallback_t fDataCallback;           ///<! main callback when data over channel 1 is arrived
-   std::thread::id fDataThrdId;                     ///<! thread id where data callback should be invoked
+   WebWindowConnectCallback_t fDisconnCallback;     ///<! callback for disconnect event
+   std::thread::id fCallbacksThrdId;                ///<! thread id where callbacks should be invoked
+   bool fCallbacksThrdIdSet{false};                 ///<! flag indicating that thread id is assigned
    std::queue<DataEntry> fDataQueue;                ///<! data queue for main callback
    std::mutex fDataMutex;                           ///<! mutex to protect data queue
    unsigned fWidth{0};                              ///<! initial window width when displayed
@@ -165,6 +173,8 @@ private:
    unsigned AddDisplayHandle(bool batch_mode, const std::string &key, std::unique_ptr<RWebDisplayHandle> &handle);
 
    bool ProcessBatchHolder(std::shared_ptr<THttpCallArg> &arg);
+
+   void AssignCallbackThreadId();
 
 public:
 
@@ -274,7 +284,13 @@ public:
 
    std::string RelativeAddr(std::shared_ptr<RWebWindow> &win);
 
+   void SetCallBacks(WebWindowConnectCallback_t conn, WebWindowDataCallback_t data, WebWindowConnectCallback_t disconn = nullptr);
+
+   void SetConnectCallBack(WebWindowConnectCallback_t func);
+
    void SetDataCallBack(WebWindowDataCallback_t func);
+
+   void SetDisconnectCallBack(WebWindowConnectCallback_t func);
 
    int WaitFor(WebWindowWaitFunc_t check);
 

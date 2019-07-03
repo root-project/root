@@ -30,6 +30,8 @@
 #include <algorithm>
 #include <fstream>
 
+using namespace std::string_literals;
+
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Destructor for WebConn
 /// Notify special HTTP request which blocks headless browser from exit
@@ -354,7 +356,7 @@ void ROOT::Experimental::RWebWindow::ProvideData(unsigned connid, std::string &&
 
 void ROOT::Experimental::RWebWindow::InvokeCallbacks(bool force)
 {
-   if ((fDataThrdId != std::this_thread::get_id()) && !force)
+   if ((fCallbacksThrdId != std::this_thread::get_id()) && !force)
       return;
 
    while (fDataCallback) {
@@ -618,9 +620,9 @@ bool ROOT::Experimental::RWebWindow::ProcessWS(THttpCallArg &arg)
             return false;
          }
 
-         if (fPanelName.length()) {
+         if (!fPanelName.empty()) {
             // initialization not yet finished, appropriate panel should be started
-            Send(conn->fConnId, std::string("SHOWPANEL:") + fPanelName);
+            Send(conn->fConnId, "SHOWPANEL:"s + fPanelName);
             conn->fReady = 5;
          } else {
             ProvideData(conn->fConnId, "CONN_READY");
@@ -983,7 +985,7 @@ void ROOT::Experimental::RWebWindow::SubmitData(unsigned connid, bool txt, std::
 
             if (fProtocol.length() > 2)
                fProtocol.insert(fProtocol.length() - 1, ",");
-            fProtocol.insert(fProtocol.length() - 1, std::string("\"") + fname + std::string("\""));
+            fProtocol.insert(fProtocol.length() - 1, "\""s + fname + "\""s);
 
             std::ofstream pfs(fProtocolFileName);
             pfs.write(fProtocol.c_str(), fProtocol.length());
@@ -1037,6 +1039,21 @@ void ROOT::Experimental::RWebWindow::SendBinary(unsigned connid, const void *dat
    SubmitData(connid, false, std::move(buf), 1);
 }
 
+///////////////////////////////////////////////////////////////////////////////////
+/// Assign thread id which has to be used for callbacks
+
+void ROOT::Experimental::RWebWindow::AssignCallbackThreadId()
+{
+   fCallbacksThrdIdSet = true;
+   fCallbacksThrdId = std::this_thread::get_id();
+   if (!RWebWindowsManager::IsMainThrd()) {
+      fProcessMT = true;
+   } else if (fMgr->IsUseHttpThread()) {
+      // special thread is used by the manager, but main thread used for the canvas - not supported
+      R__ERROR_HERE("webgui") << "create web window from main thread when THttpServer created with special thread - not supported";
+   }
+}
+
 /////////////////////////////////////////////////////////////////////////////////
 /// Set call-back function for data, received from the clients via websocket
 ///
@@ -1058,19 +1075,42 @@ void ROOT::Experimental::RWebWindow::SendBinary(unsigned connid, const void *dat
 ///                  printf("Conn:%u data:%s\n", connid, data.c_str());
 ///           }
 ///       );
-/// win->Show("opera");
+/// win->Show();
 /// ~~~
 
 void ROOT::Experimental::RWebWindow::SetDataCallBack(WebWindowDataCallback_t func)
 {
+   AssignCallbackThreadId();
    fDataCallback = func;
-   fDataThrdId = std::this_thread::get_id();
-   if (!RWebWindowsManager::IsMainThrd()) {
-      fProcessMT = true;
-   } else if (fMgr->IsUseHttpThread()) {
-      // special thread is used by the manager, but main thread used for the canvas - not supported
-      R__ERROR_HERE("webgui") << "create web window from main thread when THttpServer created with special thread - not supported";
-   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Set call-back function for new connection
+
+void ROOT::Experimental::RWebWindow::SetConnectCallBack(WebWindowConnectCallback_t func)
+{
+   AssignCallbackThreadId();
+   fConnCallback = func;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Set call-back function for disconnecting
+
+void ROOT::Experimental::RWebWindow::SetDisconnectCallBack(WebWindowConnectCallback_t func)
+{
+   AssignCallbackThreadId();
+   fDisconnCallback = func;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Set call-backs function for connect, data and disconnect events
+
+void ROOT::Experimental::RWebWindow::SetCallBacks(WebWindowConnectCallback_t conn, WebWindowDataCallback_t data, WebWindowConnectCallback_t disconn)
+{
+   AssignCallbackThreadId();
+   fConnCallback = conn;
+   fDataCallback = data;
+   fDisconnCallback = disconn;
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -1121,9 +1161,9 @@ int ROOT::Experimental::RWebWindow::WaitForTimed(WebWindowWaitFunc_t check, doub
 
 void ROOT::Experimental::RWebWindow::Run(double tm)
 {
-   if (fDataThrdId != std::this_thread::get_id()) {
+   if (fCallbacksThrdId != std::this_thread::get_id()) {
       R__WARNING_HERE("webgui") << "Change thread id where RWebWindow is executed";
-      fDataThrdId = std::this_thread::get_id();
+      fCallbacksThrdId = std::this_thread::get_id();
    }
 
    if (tm <= 0) {
