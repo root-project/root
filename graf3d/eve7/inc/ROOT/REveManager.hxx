@@ -126,7 +126,9 @@ protected:
    std::shared_ptr<ROOT::Experimental::RWebWindow>  fWebWindow;
    std::vector<Conn>                                fConnList;
 
-   void GeomWindowCallback(unsigned connid, const std::string &arg);
+   void WindowConnect(unsigned connid);
+   void WindowData(unsigned connid, const std::string &arg);
+   void WindowDisconnect(unsigned connid);
 
 public:
    REveManager(); // (Bool_t map_window=kTRUE, Option_t* opt="FI");
@@ -216,7 +218,6 @@ public:
 
    void EnforceTimerActive (Bool_t ta) { fTimerActive = ta; }
 
-   void HttpServerCallback(unsigned connid, const std::string &arg);
    // void Send(void* buff, unsigned connid);
    void Send(unsigned connid, const std::string &data);
    void SendBinary(unsigned connid, const void *data, std::size_t len);

@@ -150,9 +150,7 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
 {
    printf("Recv %s\n", arg.c_str());
 
-   if (arg == "CONN_READY") {
-
-   } else if (arg == "GETDRAW") {
+   if (arg == "GETDRAW") {
 
       SendGeometry(connid);
 

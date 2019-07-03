@@ -16,16 +16,6 @@ int counter{0};
 
 void ProcessData(unsigned connid, const std::string &arg)
 {
-   if (arg == "CONN_READY") {
-      printf("connection established %u\n", connid);
-      return;
-   }
-
-   if (arg == "CONN_CLOSED") {
-      printf("connection closed\n");
-      return;
-   }
-
    printf("Get msg %s \n", arg.c_str());
 
    counter++;

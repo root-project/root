@@ -47,7 +47,8 @@ ROOT::Experimental::RBrowser::RBrowser()
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
 
    // this is call-back, invoked when message received via websocket
-   fWebWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { this->WebWindowCallback(connid, arg); });
+   fWebWindow->SetCallBacks([this](unsigned connid) { fConnId = connid; },
+                            [this](unsigned connid, const std::string &arg) { WebWindowCallback(connid, arg); });
    fWebWindow->SetGeometry(1200, 700); // configure predefined window geometry
    fWebWindow->SetConnLimit(1); // the only connection is allowed
    fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
@@ -279,11 +280,7 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
 {
    printf("Recv %s\n", arg.c_str());
 
-   if (arg == "CONN_READY") {
-
-      fConnId = connid;
-
-   } else if (arg == "QUIT_ROOT") {
+   if (arg == "QUIT_ROOT") {
 
       fWebWindow->TerminateROOT();
 

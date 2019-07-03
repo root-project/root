@@ -140,7 +140,9 @@ REveManager::REveManager() : // (Bool_t map_window, Option_t* opt) :
    fWebWindow->SetDefaultPage("file:rootui5sys/eve7/index.html");
 
    // this is call-back, invoked when message received via websocket
-   fWebWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { this->HttpServerCallback(connid, arg); });
+   fWebWindow->SetCallBacks([this](unsigned connid) { WindowConnect(connid); },
+                            [this](unsigned connid, const std::string &arg) { WindowData(connid, arg); },
+                            [this](unsigned connid) { WindowDisconnect(connid); });
    fWebWindow->SetGeometry(900, 700); // configure predefined window geometry
    fWebWindow->SetConnLimit(100); // maximal number of connections
    fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
@@ -725,54 +727,87 @@ REveManager::RExceptionHandler::Handle(std::exception &exc)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Callback from THttpServer
+/// Process new connection from web window
 
-void REveManager::HttpServerCallback(unsigned connid, const std::string &arg)
+void REveManager::WindowConnect(unsigned connid)
 {
-   static const REveException eh("REveManager::HttpServerCallback ");
+   fConnList.emplace_back(connid);
+   printf("connection established %u\n", connid);
 
-   if (arg == "CONN_READY")
+   // This prepares core and render data buffers.
+   printf("\nEVEMNG ............. streaming the world scene.\n");
+
+   fWorld->AddSubscriber(std::make_unique<REveClient>(connid, fWebWindow));
+   fWorld->StreamElements();
+
+   printf("   sending json, len = %d\n", (int) fWorld->fOutputJson.size());
+   Send(connid, fWorld->fOutputJson);
+   printf("   for now assume world-scene has no render data, binary-size=%d\n", fWorld->fTotalBinarySize);
+   assert(fWorld->fTotalBinarySize == 0);
+
+   for (auto &c: fScenes->RefChildren())
    {
-      fConnList.emplace_back(connid);
-      printf("connection established %u\n", connid);
+      REveScene* scene = dynamic_cast<REveScene *>(c);
+
+      scene->AddSubscriber(std::make_unique<REveClient>(connid, fWebWindow));
+      printf("\nEVEMNG ............. streaming scene %s [%s]\n",
+             scene->GetCTitle(), scene->GetCName());
 
       // This prepares core and render data buffers.
-      printf("\nEVEMNG ............. streaming the world scene.\n");
+      scene->StreamElements();
 
-      fWorld->AddSubscriber(std::make_unique<REveClient>(connid, fWebWindow));
-      fWorld->StreamElements();
+      printf("   sending json, len = %d\n", (int) scene->fOutputJson.size());
+      Send(connid, scene->fOutputJson);
 
-      printf("   sending json, len = %d\n", (int) fWorld->fOutputJson.size());
-      Send(connid, fWorld->fOutputJson);
-      printf("   for now assume world-scene has no render data, binary-size=%d\n", fWorld->fTotalBinarySize);
-      assert(fWorld->fTotalBinarySize == 0);
+      if (scene->fTotalBinarySize > 0)
+      {
+         printf("   sending binary, len = %d\n", scene->fTotalBinarySize);
+         SendBinary(connid, &scene->fOutputBinary[0], scene->fTotalBinarySize);
+      }
+      else
+      {
+         printf("   NOT sending binary, len = %d\n", scene->fTotalBinarySize);
+      }
+   }
+}
 
+////////////////////////////////////////////////////////////////////////////////
+/// Process disconnect of web window
+
+void REveManager::WindowDisconnect(unsigned connid)
+{
+   auto conn = fConnList.end();
+   for (auto i = fConnList.begin(); i != fConnList.end(); ++i)
+   {
+      if (i->fId == connid)
+      {
+         conn = i;
+         break;
+      }
+   }
+   // this should not happen, just check
+   if (conn == fConnList.end()) {
+      printf("error, connection not found!");
+   } else {
+      printf("connection closed %u\n", connid);
+      fConnList.erase(conn);
       for (auto &c: fScenes->RefChildren())
       {
          REveScene* scene = dynamic_cast<REveScene *>(c);
-
-         scene->AddSubscriber(std::make_unique<REveClient>(connid, fWebWindow));
-         printf("\nEVEMNG ............. streaming scene %s [%s]\n",
-                scene->GetCTitle(), scene->GetCName());
-
-         // This prepares core and render data buffers.
-         scene->StreamElements();
-
-         printf("   sending json, len = %d\n", (int) scene->fOutputJson.size());
-         Send(connid, scene->fOutputJson);
-
-         if (scene->fTotalBinarySize > 0)
-         {
-            printf("   sending binary, len = %d\n", scene->fTotalBinarySize);
-            SendBinary(connid, &scene->fOutputBinary[0], scene->fTotalBinarySize);
-         }
-         else
-         {
-            printf("   NOT sending binary, len = %d\n", scene->fTotalBinarySize);
-         }
+         scene->RemoveSubscriber(connid);
       }
-      return;
+      fWorld->RemoveSubscriber(connid);
+
    }
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Process data from web window
+
+void REveManager::WindowData(unsigned connid, const std::string &arg)
+{
+   static const REveException eh("REveManager::WindowData ");
 
    // find connection object
    auto conn = fConnList.end();
@@ -790,52 +825,36 @@ void REveManager::HttpServerCallback(unsigned connid, const std::string &arg)
       return;
    }
 
-   if (arg == "CONN_CLOSED") {
-      printf("connection closed\n");
-      fConnList.erase(conn);
-      for (auto &c: fScenes->RefChildren())
-      {
-         REveScene* scene = dynamic_cast<REveScene *>(c);
-         scene->RemoveSubscriber(connid);
-      }
-      fWorld->RemoveSubscriber(connid);
+   fWorld->BeginAcceptingChanges();
+   fScenes->AcceptChanges(true);
 
-      return;
-   }
-   else
-   {
-      fWorld->BeginAcceptingChanges();
-      fScenes->AcceptChanges(true);
+   // MIR
+   nlohmann::json cj = nlohmann::json::parse(arg);
+   if (gDebug > 0)
+      ::Info("REveManager::WindowData", "MIR test %s", cj.dump().c_str());
+   std::string mir = cj["mir"];
+   std::string ctype = cj["class"];
+   int id = cj["fElementId"];
 
-      // MIR
-      nlohmann::json cj =  nlohmann::json::parse(arg);
-      if (gDebug > 0)
-         ::Info("REveManager::HttpServerCallback", "MIR test %s", cj.dump().c_str());
-      std::string mir =  cj["mir"];
-      std::string ctype =  cj["class"];
-      int id = cj["fElementId"];
+   auto el = FindElementById(id);
+   std::stringstream cmd;
+   cmd << "((" << ctype << "*)" << std::hex << std::showbase << (size_t)el << ")->" << mir << ";";
+   if (gDebug > 0)
+      ::Info("REveManager::WindowData", "MIR cmd %s", cmd.str().c_str());
+   gROOT->ProcessLine(cmd.str().c_str());
 
-      auto el =  FindElementById(id);
-      std::stringstream cmd;
-      cmd << "((" << ctype << "*)" << std::hex << std::showbase << (size_t)el << ")->" << mir << ";";
-      if (gDebug > 0)
-         ::Info("REveManager::HttpServerCallback", "MIR cmd %s", cmd.str().c_str());
-      gROOT->ProcessLine(cmd.str().c_str());
+   fScenes->AcceptChanges(false);
+   fWorld->EndAcceptingChanges();
 
-      fScenes->AcceptChanges(false);
-      fWorld->EndAcceptingChanges();
+   Redraw3D();
 
-      Redraw3D();
-
-
-      /*
-      nlohmann::json resp;
-      resp["function"] = "replaceElement";
-      //el->SetCoreJson(resp);
-      for (auto &conn : fConnList)
-         fWebWindow->Send(conn.fId, resp.dump());
-      */
-   }
+   /*
+   nlohmann::json resp;
+   resp["function"] = "replaceElement";
+   //el->SetCoreJson(resp);
+   for (auto &conn : fConnList)
+      fWebWindow->Send(conn.fId, resp.dump());
+   */
 }
 
 void REveManager::Send(unsigned connid, const std::string &data)
@@ -865,8 +884,7 @@ void REveManager::DestroyElementsOf(REveElement::List_t& els)
 
    nlohmann::json jels = nlohmann::json::array();
 
-   for (auto & ep : els)
-   {
+   for (auto &ep : els) {
       jels.push_back(ep->GetElementId());
 
       ep->DestroyElements();
@@ -880,8 +898,7 @@ void REveManager::DestroyElementsOf(REveElement::List_t& els)
 
    // XXXX Do we have broadcast?
 
-   for (auto && conn: fConnList)
-   {
+   for (auto &conn : fConnList) {
       fWebWindow->Send(conn.fId, msg);
    }
 }

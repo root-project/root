@@ -44,6 +44,8 @@
 #include <sstream>
 #include <iostream>
 
+using namespace std::string_literals;
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
@@ -536,10 +538,28 @@ void TWebCanvas::ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &args)
 
       fWindow->SetDefaultPage("file:rootui5sys/canv/canvas6.html");
 
-      fWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) {
-         ProcessData(connid, arg);
-         CheckDataToSend(connid);
-      });
+      fWindow->SetCallBacks(
+         // connection
+         [this](unsigned connid) {
+            fWebConn.emplace_back(connid);
+            CheckDataToSend(connid);
+         },
+         // data
+         [this](unsigned connid, const std::string &arg) {
+            ProcessData(connid, arg);
+            CheckDataToSend(connid);
+         },
+         // disconnect
+         [this](unsigned connid) {
+            unsigned indx = 0;
+            for (auto &c : fWebConn) {
+               if (c.fConnId == connid) {
+                  fWebConn.erase(fWebConn.begin() + indx);
+                  break;
+               }
+               indx++;
+            }
+         });
    }
 
    auto w = Canvas()->GetWw(), h = Canvas()->GetWh();
@@ -563,10 +583,7 @@ void TWebCanvas::Show()
 
 void TWebCanvas::ShowCmd(const std::string &arg, Bool_t show)
 {
-   std::string cmd = "SHOW:";
-   cmd.append(arg);
-   cmd.append(show ? ":1" : ":0");
-   if (AddToSendQueue(0, cmd))
+   if (AddToSendQueue(0, "SHOW:"s + arg + (show ? ":1"s : ":0"s)))
       CheckDataToSend();
 }
 
@@ -579,7 +596,7 @@ void TWebCanvas::ActivateInEditor(TPad *pad, TObject *obj)
 
    UInt_t hash = TString::Hash(&obj, sizeof(obj));
 
-   if (AddToSendQueue(0, Form("EDIT:%u", (unsigned) hash)))
+   if (AddToSendQueue(0, "EDIT:"s + std::to_string(hash)))
       CheckDataToSend();
 }
 
@@ -636,11 +653,6 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
    if (arg.empty())
       return kTRUE;
 
-   if (arg == "CONN_READY") {
-      fWebConn.emplace_back(connid);
-      return kTRUE;
-   }
-
    // try to identify connection for given WS request
    unsigned indx = 0;
    for (auto &c : fWebConn) {
@@ -652,11 +664,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
    const char *cdata = arg.c_str();
 
-   if (arg == "CONN_CLOSED") {
-
-      fWebConn.erase(fWebConn.begin() + indx);
-
-   } else if (arg == "KEEPALIVE") {
+   if (arg == "KEEPALIVE") {
       // do nothing
 
    } else if (arg == "QUIT") {
