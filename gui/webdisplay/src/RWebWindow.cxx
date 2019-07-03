@@ -340,11 +340,11 @@ bool ROOT::Experimental::RWebWindow::ProcessBatchHolder(std::shared_ptr<THttpCal
 /// Provide data to user callback
 /// User callback must be executed in the window thread
 
-void ROOT::Experimental::RWebWindow::ProvideData(unsigned connid, std::string &&arg)
+void ROOT::Experimental::RWebWindow::ProvideQueueEntry(unsigned connid, EQueueEntryKind kind, std::string &&arg)
 {
    {
-      std::lock_guard<std::mutex> grd(fDataMutex);
-      fDataQueue.emplace(connid, std::move(arg));
+      std::lock_guard<std::mutex> grd(fInputQueueMutex);
+      fInputQueue.emplace(connid, kind, std::move(arg));
    }
 
    InvokeCallbacks();
@@ -356,21 +356,23 @@ void ROOT::Experimental::RWebWindow::ProvideData(unsigned connid, std::string &&
 
 void ROOT::Experimental::RWebWindow::InvokeCallbacks(bool force)
 {
-   if ((fCallbacksThrdId != std::this_thread::get_id()) && !force)
+   if (fCallbacksThrdIdSet && (fCallbacksThrdId != std::this_thread::get_id()) && !force)
       return;
 
    while (fDataCallback) {
-      std::string arg;
       unsigned connid;
+      EQueueEntryKind kind;
+      std::string arg;
 
       {
-         std::lock_guard<std::mutex> grd(fDataMutex);
-         if (fDataQueue.size() == 0)
+         std::lock_guard<std::mutex> grd(fInputQueueMutex);
+         if (fInputQueue.size() == 0)
             return;
-         DataEntry &entry = fDataQueue.front();
+         auto &entry = fInputQueue.front();
          connid = entry.fConnId;
+         kind = entry.fKind;
          arg = std::move(entry.fData);
-         fDataQueue.pop();
+         fInputQueue.pop();
       }
 
       fDataCallback(connid, arg);
@@ -482,7 +484,7 @@ void ROOT::Experimental::RWebWindow::CheckInactiveConnections()
    }
 
    for (auto &&entry : clr)
-      ProvideData(entry->fConnId, "CONN_CLOSED");
+      ProvideQueueEntry(entry->fConnId, kind_Disconnect, "CONN_CLOSED");
 
 }
 
@@ -524,7 +526,7 @@ bool ROOT::Experimental::RWebWindow::ProcessWS(THttpCallArg &arg)
       auto conn = RemoveConnection(arg.GetWSId());
 
       if (conn)
-         ProvideData(conn->fConnId, "CONN_CLOSED");
+         ProvideQueueEntry(conn->fConnId, kind_Disconnect, "CONN_CLOSED");
 
       return true;
    }
@@ -625,21 +627,21 @@ bool ROOT::Experimental::RWebWindow::ProcessWS(THttpCallArg &arg)
             Send(conn->fConnId, "SHOWPANEL:"s + fPanelName);
             conn->fReady = 5;
          } else {
-            ProvideData(conn->fConnId, "CONN_READY");
+            ProvideQueueEntry(conn->fConnId, kind_Connect, "CONN_READY");
             conn->fReady = 10;
          }
       }
    } else if (fPanelName.length() && (conn->fReady < 10)) {
       if (cdata == "PANEL_READY") {
          R__DEBUG_HERE("webgui") << "Get panel ready " << fPanelName;
-         ProvideData(conn->fConnId, "CONN_READY");
+         ProvideQueueEntry(conn->fConnId, kind_Connect, "CONN_READY");
          conn->fReady = 10;
       } else {
-         ProvideData(conn->fConnId, "CONN_CLOSED");
+         ProvideQueueEntry(conn->fConnId, kind_Disconnect, "CONN_CLOSED");
          RemoveConnection(conn->fWSId);
       }
    } else if (nchannel == 1) {
-      ProvideData(conn->fConnId, std::move(cdata));
+      ProvideQueueEntry(conn->fConnId, kind_Data, std::move(cdata));
    } else if (nchannel > 1) {
       // add processing of extra channels later
       // conn->fCallBack(conn->fConnId, cdata);
@@ -1161,8 +1163,9 @@ int ROOT::Experimental::RWebWindow::WaitForTimed(WebWindowWaitFunc_t check, doub
 
 void ROOT::Experimental::RWebWindow::Run(double tm)
 {
-   if (fCallbacksThrdId != std::this_thread::get_id()) {
+   if (!fCallbacksThrdIdSet || (fCallbacksThrdId != std::this_thread::get_id())) {
       R__WARNING_HERE("webgui") << "Change thread id where RWebWindow is executed";
+      fCallbacksThrdIdSet = true;
       fCallbacksThrdId = std::this_thread::get_id();
    }
 
