@@ -20,21 +20,27 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TNamed.h"
-#include "THashList.h"
-#include "TString.h"
+#include "TDataType.h"
 #include "TDictionary.h"
+#include "THashList.h"
+#include "TNamed.h"
+#include "TString.h"
 
+class ClassInfo_t;
 class TClass;
 class TEnumConstant;
 
 class TEnum : public TDictionary {
 
 private:
-   THashList fConstantList;     //list of constants the enum type
-   void     *fInfo;             //!interpreter implementation provided declaration
-   TClass   *fClass;            //!owning class
-   std::string fQualName;       // fully qualified type name
+   THashList    fConstantList;  //list of constants the enum type
+   ClassInfo_t *fInfo;          //!interpreter information, owned by TEnum
+   TClass      *fClass;         //!owning class
+   std::string  fQualName;      // fully qualified type name
+
+   enum EBits {
+     kBitIsScopedEnum = BIT(14) ///< The enum is an enum class.
+   };
 
 public:
 
@@ -45,7 +51,7 @@ public:
                       };
 
    TEnum(): fInfo(0), fClass(0) {}
-   TEnum(const char *name, void *info, TClass *cls);
+   TEnum(const char *name, DeclId_t declid, TClass *cls);
    virtual ~TEnum();
 
    void                  AddConstant(TEnumConstant *constant);
@@ -58,9 +64,8 @@ public:
    const TEnumConstant  *GetConstant(const char *name) const {
       return (TEnumConstant *) fConstantList.FindObject(name);
    }
-   DeclId_t              GetDeclId() const {
-      return (DeclId_t)fInfo;
-   }
+   DeclId_t              GetDeclId() const;
+   EDataType             GetUnderlyingType() const;
    Bool_t                IsValid();
    Long_t                Property() const;
    void                  SetClass(TClass *cl) {
