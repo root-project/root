@@ -210,10 +210,6 @@ def plot(sig, bkg, data, x_label, filename):
     h_bkg = bkg
     h_cmb = sig.Clone()
 
-
-    print("Types inside plotting:")
-    print(type(h_sig), type(h_bkg), type(h_cmb), type(h_data))
-
     h_cmb.Add(h_bkg)
     h_cmb.SetTitle("")
     h_cmb.GetXaxis().SetTitle(x_label)
