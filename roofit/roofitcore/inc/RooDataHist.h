@@ -92,12 +92,18 @@ public:
   virtual Bool_t isNonPoissonWeighted() const ;
 
   virtual std::vector<RooSpan<const double>> getBatch(std::size_t first, std::size_t last) const {
+    //TODO
+    std::cerr << "Retrieving batches not yet implemented for RooDataHist." << std::endl;
     assert(false);
+
     std::vector<double> vec(first, last);
     return {RooSpan<const double>(std::move(vec))};
   }
   virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t last) const {
+    //TODO
+    std::cerr << "Retrieving weights in batches not yet implemented for RooDataHist." << std::endl;
     assert(false);
+
     std::vector<double> vec(first, last);
     return RooSpan<const double>(std::move(vec));
   }
