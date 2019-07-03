@@ -1482,7 +1482,7 @@ bool TH1::CheckBinLimits(const TAxis* a1, const TAxis * a2)
          for ( int i = 0; i < fN; ++i ) {
             // for i==fN (nbin+1) a->GetBinWidth() returns last bin width
             // we do not need to exclude that case
-            double binWidth = a1->GetBinWidth(i); 
+            double binWidth = a1->GetBinWidth(i);
             if ( ! TMath::AreEqualAbs( h1Array->GetAt(i), h2Array->GetAt(i), binWidth*1E-10 ) ) {
                throw DifferentBinLimits();
                return false;
@@ -1532,7 +1532,7 @@ bool TH1::CheckBinLabels(const TAxis* a1, const TAxis * a2)
 bool TH1::CheckAxisLimits(const TAxis *a1, const TAxis *a2 )
 {
    double firstBin = a1->GetBinWidth(1);
-   double lastBin = a1->GetBinWidth( a1->GetNbins() ); 
+   double lastBin = a1->GetBinWidth( a1->GetNbins() );
    if ( ! TMath::AreEqualAbs(a1->GetXmin(), a2->GetXmin(), firstBin* 1.E-10) ||
         ! TMath::AreEqualAbs(a1->GetXmax(), a2->GetXmax(), lastBin*1.E-10) ) {
       throw DifferentAxisLimits();
@@ -3675,7 +3675,7 @@ Int_t TH1::FindFirstBinAbove(Double_t threshold, Int_t axis, Int_t firstBin, Int
       for (Int_t biny = firstBin; biny <= lastBin; biny++) {
          for (Int_t binx = 1; binx <= nbinsx; binx++) {
             for (Int_t binz = 1; binz <= nbinsz; binz++) {
-               if (RetrieveBinContent(GetBin(binx,biny,binz)) > threshold) return biny; 
+               if (RetrieveBinContent(GetBin(binx,biny,binz)) > threshold) return biny;
            }
          }
       }
@@ -3687,7 +3687,7 @@ Int_t TH1::FindFirstBinAbove(Double_t threshold, Int_t axis, Int_t firstBin, Int
       for (Int_t binz = firstBin; binz <= lastBin; binz++) {
          for (Int_t binx = 1; binx <= nbinsx; binx++) {
             for (Int_t biny = 1; biny <= nbinsy; biny++) {
-               if (RetrieveBinContent(GetBin(binx,biny,binz)) > threshold) return binz; 
+               if (RetrieveBinContent(GetBin(binx,biny,binz)) > threshold) return binz;
             }
          }
       }
@@ -4994,7 +4994,7 @@ Bool_t TH1::IsEmpty() const
    // case fTSumw == 0 amd entries are also zero
    // this should not really happening, but if one sets content by hand
    // it can happen. a call to ResetStats() should be done in such cases
-   double sumw = 0; 
+   double sumw = 0;
    for (int i = 0; i< GetNcells(); ++i) sumw += RetrieveBinContent(i);
    return (sumw != 0) ? kFALSE : kTRUE;
 }
@@ -6004,7 +6004,7 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
                                        hnew->GetXaxis()->GetBinLowEdge(bin),
                                        TMath::Max(1.E-8 * fXaxis.GetBinWidth(oldbin), 1.E-16 )) )
       {
-         Warning("Rebin","Bin edge %d of rebinned histogram does not much any bin edges of the old histogram. Result can be inconsistent",bin);
+         Warning("Rebin","Bin edge %d of rebinned histogram does not match any bin edges of the old histogram. Result can be inconsistent",bin);
       }
       for (i=0;i<ngroup;i++) {
          if( (oldbin+i > nbins) ||
@@ -7338,7 +7338,7 @@ void TH1::GetStats(Double_t *stats) const
          stats[0] += w;
          stats[1] += err*err;
          // statistics in x makes sense only for not labels histograms
-         if (!labelHist)  { 
+         if (!labelHist)  {
             stats[2] += w*x;
             stats[3] += w*x*x;
          }
