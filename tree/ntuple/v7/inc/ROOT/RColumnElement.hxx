@@ -105,6 +105,8 @@ public:
    static constexpr bool kIsMappable = false;
    explicit RColumnElement(CppT* value) : RColumnElementBase(value, sizeof(CppT), kIsMappable)
    {
+      // Do not allow this template to be instantiated unless there is a specialization. The assert needs to depend
+      // on the template type or else the static_assert will always fire.
       static_assert(sizeof(CppT) != sizeof(CppT), "No column mapping for this C++ type");
    }
 };
