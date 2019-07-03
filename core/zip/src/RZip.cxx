@@ -19,6 +19,8 @@
 #include <stdio.h>
 #include <assert.h>
 
+#include <iostream>
+
 // The size of the ROOT block framing headers for compression:
 // - 3 bytes to identify the compression algorithm and version.
 // - 3 bytes to identify the deflated buffer size.
@@ -69,6 +71,7 @@ unsigned long R__crc32(unsigned long crc, const unsigned char* buf, unsigned int
    return crc32(crc, buf, len);
 }
 
+/* int cxlevel;                      compression level */
 /* int  *srcsize, *tgtsize, *irep;   source and target sizes, replay */
 /* char *tgt, *src;                  source and target buffers */
 /* compressionAlgorithm 0 = use global setting */
@@ -76,7 +79,6 @@ unsigned long R__crc32(unsigned long crc, const unsigned char* buf, unsigned int
 /*                      2 = lzma */
 /*                      3 = old */
 void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, ROOT::RCompressionSetting::EAlgorithm::EValues compressionAlgorithm)
-     /* int cxlevel;                      compression level */
 {
 
   if (*srcsize < 1 + HDRSIZE + 1) {
@@ -96,21 +98,17 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
   // The LZMA compression algorithm from the XZ package
   if (compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kLZMA) {
      R__zipLZMA(cxlevel, srcsize, src, tgtsize, tgt, irep);
-     return;
   } else if (compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kLZ4) {
      R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
-     return;
   } else if (compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kZSTD) {
      R__zipZSTD(cxlevel, srcsize, src, tgtsize, tgt, irep);
   } else if (compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kOldCompressionAlgo || compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kUseGlobal) {
      R__zipOld(cxlevel, srcsize, src, tgtsize, tgt, irep);
-     return;
   } else {
      // 1 is for ZLIB (which is the default), ZLIB is also used for any illegal
      // algorithm setting.  This was a poor historic choice, as poor code may result in
      // a surprising change in algorithm in a future version of ROOT.
      R__zipZLIB(cxlevel, srcsize, src, tgtsize, tgt, irep);
-     return;
   }
 }
 
@@ -361,17 +359,29 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
 
   /*   D E C O M P R E S S   D A T A  */
 
+  /*std::cout << "tgtsize: " << *tgtsize << std::endl;
+  std::cout << "srcsize: " << *srcsize << std::endl;*/
+
   /* ZLIB and other standard compression algorithms */
   if (is_valid_header_zlib(src)) {
      R__unzipZLIB(srcsize, src, tgtsize, tgt, irep);
+     //std::cout << "retval: " << *irep << std::endl << std::endl;
      return;
   } else if (is_valid_header_lzma(src)) {
      R__unzipLZMA(srcsize, src, tgtsize, tgt, irep);
+     //std::cout << "retval: " << *irep << std::endl << std::endl;
      return;
   } else if (is_valid_header_lz4(src)) {
      R__unzipLZ4(srcsize, src, tgtsize, tgt, irep);
+     //std::cout << "retval: " << *irep << std::endl << std::endl;
      return;
   }
+  else if (is_valid_header_zstd(src)) {
+     R__unzipZSTD(srcsize, src, tgtsize, tgt, irep);
+     //std::cout << "retval: " << *irep << std::endl << std::endl;
+     return;
+  }
+
 
   /* Old zlib format */
   if (R__Inflate(&ibufptr, &ibufcnt, &obufptr, &obufcnt)) {
