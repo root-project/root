@@ -18,7 +18,7 @@ __all__ = [
    'PickleWritingSimpleObjectsTestCase'
 ]
 
-if not os.path.exists('PickleTypes.C'): 
+if not os.path.exists('PickleTypes.C'):
     os.chdir(os.path.dirname(__file__))
 
 gROOT.LoadMacro( "PickleTypes.C+" )
@@ -75,7 +75,18 @@ class PickleWritingSimpleObjectsTestCase( MyTestCase ):
    def test5WriteCustomTypes( self ):
       """Test writing PyROOT custom types"""
 
-      o = [ ROOT.Long(123), ROOT.Double(123.123) ]
+      exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
+
+      if exp_pyroot:
+         # Cppyy's Long and Double will be deprecated in favour of
+         # ctypes.c_long and ctypes.c_double, respectively
+         # https://bitbucket.org/wlav/cppyy/issues/101
+         import ctypes
+
+         o = [ctypes.c_long(123), ctypes.c_double(123.123)]
+      else:
+         o = [ ROOT.Long(123), ROOT.Double(123.123)  ]
+
       pickle.dump(  o, self.out1, protocol = 2 )
       cPickle.dump( o, self.out2, protocol = 2 )
 

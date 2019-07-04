@@ -5,7 +5,7 @@
 
 """Pickle writing unit tests for PyROOT package."""
 
-import os, sys, unittest
+import os, sys, unittest, ctypes
 try:
    import pickle, cPickle
 except ImportError:
@@ -19,7 +19,7 @@ __all__ = [
    'PickleReadingComplicationsTestCase'
 ]
 
-if not os.path.exists('PickleTypes.C'): 
+if not os.path.exists('PickleTypes.C'):
     os.chdir(os.path.dirname(__file__))
 
 gROOT.LoadMacro( "PickleTypes.C+" )
@@ -96,7 +96,7 @@ class PickleReadingSimpleObjectsTestCase( MyTestCase ):
          self.assertEqual( d.__class__, ROOT.ROOT.Math.SVector('double',2) )
          self.assertEqual( d.At(0) , 1 )
          self.assertEqual( d.At(1) , 2 )
-            
+
 
       d = pickle.load( self.in1 )
       __doftest( self, d )
@@ -107,12 +107,30 @@ class PickleReadingSimpleObjectsTestCase( MyTestCase ):
    def test5ReadCustomTypes( self ):
       """Test reading PyROOT custom types"""
 
-      o = pickle.load( self.in1 )
-      self.assertEqual(o, [123,123.123] )
+      exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
 
-      o = cPickle.load( self.in2 )
-      self.assertEqual(o, [123,123.123] )
+      p = pickle.load( self.in1 )
+      cp = cPickle.load( self.in2 )
 
+      if exp_pyroot:
+         # Cppyy's Long and Double will be deprecated in favour of
+         # ctypes.c_long and ctypes.c_double, respectively
+         # https://bitbucket.org/wlav/cppyy/issues/101
+         import ctypes
+
+         proto = [ctypes.c_long(123), ctypes.c_double(123.123)]
+
+         for e1, e2 in zip(p, proto):
+            self.assertEqual(e1.value, e2.value)
+
+         for e1, e2 in zip(cp, proto):
+            self.assertEqual(e1.value, e2.value)
+
+      else:
+         proto = [ROOT.Long(123), ROOT.Double(123.123)]
+
+         self.assertEqual(p, [123, 123.123])
+         self.assertEqual(cp, [123, 123.123])
 
 ### Pretend-write and read back objects that gave complications ==============
 class PickleReadingComplicationsTestCase( MyTestCase ):
