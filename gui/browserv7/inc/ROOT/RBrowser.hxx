@@ -64,7 +64,7 @@ protected:
 
    std::string fDescPath;                ///<! last scanned directory
    std::vector<RRootFileItem> fDesc;     ///<! plain list of current directory
-   std::vector<RRootFileItem*> fSorted;  ///<! current sorted list (no ownership)
+   std::vector<RRootFileItem *> fSorted; ///<! current sorted list (no ownership)
 
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to show geometry
 
