@@ -40,15 +40,17 @@ PyObject *gRootModule = 0;
 // Methods offered by the interface
 static PyMethodDef gPyROOTMethods[] = {{(char *)"AddDirectoryWritePyz", (PyCFunction)PyROOT::AddDirectoryWritePyz, METH_VARARGS,
                                         (char *)"Allow to use seamlessly from Python the templated TDirectory::WriteObject method"},
+                                       {(char *)"AddCPPInstancePickling", (PyCFunction)PyROOT::AddCPPInstancePickling, METH_VARARGS,
+                                        (char *)"Add a custom pickling mechanism for Cppyy Python proxy objects"},
                                        {(char *)"AddDirectoryAttrSyntaxPyz", (PyCFunction)PyROOT::AddDirectoryAttrSyntaxPyz, METH_VARARGS,
                                         (char *)"Attr syntax for TDirectory"},
                                        {(char *)"AddBranchAttrSyntax", (PyCFunction)PyROOT::AddBranchAttrSyntax, METH_VARARGS,
                                         (char *)"Allow to access branches as tree attributes"},
                                        {(char *)"AddFileOpenPyz", (PyCFunction)PyROOT::AddFileOpenPyz, METH_VARARGS,
                                         (char *)"Make TFile::Open a constructor, adjusting for example the reference count"},
-                                        {(char *)"AddTClassDynamicCastPyz", (PyCFunction)PyROOT::AddTClassDynamicCastPyz, METH_VARARGS,
+                                       {(char *)"AddTClassDynamicCastPyz", (PyCFunction)PyROOT::AddTClassDynamicCastPyz, METH_VARARGS,
                                         (char *)"Cast the void* returned by TClass::DynamicCast to the right type"},
-                                        {(char *)"AddTObjectEqNePyz", (PyCFunction)PyROOT::AddTObjectEqNePyz, METH_VARARGS,
+                                       {(char *)"AddTObjectEqNePyz", (PyCFunction)PyROOT::AddTObjectEqNePyz, METH_VARARGS,
                                         (char *)"Add equality and inequality comparison operators to TObject"},
                                        {(char *)"SetBranchAddressPyz", (PyCFunction)PyROOT::SetBranchAddressPyz, METH_VARARGS,
                                         (char *)"Fully enable the use of TTree::SetBranchAddress from Python"},
@@ -74,6 +76,8 @@ static PyMethodDef gPyROOTMethods[] = {{(char *)"AddDirectoryWritePyz", (PyCFunc
                                         (char *)"Initialize interactive ROOT use from Python"},
                                        {(char *)"InstallGUIEventInputHook", (PyCFunction)PyROOT::RPyROOTApplication::InstallGUIEventInputHook, METH_NOARGS,
                                         (char *)"Install an input hook to process GUI events"},
+                                       {(char *)"_CPPInstance__expand__", (PyCFunction)PyROOT::CPPInstanceExpand, METH_VARARGS,
+                                        (char *)"Deserialize a pickled object"},
                                        {NULL, NULL, 0, NULL}};
 
 #if PY_VERSION_HEX >= 0x03000000
