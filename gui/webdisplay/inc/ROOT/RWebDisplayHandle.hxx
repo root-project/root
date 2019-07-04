@@ -16,16 +16,11 @@
 #ifndef ROOT7_RWebDisplayHandle
 #define ROOT7_RWebDisplayHandle
 
+#include <ROOT/RWebDisplayArgs.hxx>
+
 #include <string>
 #include <map>
 #include <memory>
-#include <functional>
-
-#include <ROOT/RWebDisplayArgs.hxx>
-
-#include "TString.h"
-
-class THttpServer;
 
 namespace ROOT {
 namespace Experimental {
@@ -48,7 +43,7 @@ protected:
 
       void TestProg(const std::string &nexttry, bool check_std_paths = false);
 
-      virtual std::string MakeProfile(TString &, bool) { return ""; }
+      virtual std::string MakeProfile(std::string &, bool) { return ""; }
 
    public:
 
@@ -71,7 +66,7 @@ protected:
       FirefoxCreator();
       virtual ~FirefoxCreator() = default;
       bool IsActive() const override { return !fProg.empty(); }
-      std::string MakeProfile(TString &exec, bool batch) override;
+      std::string MakeProfile(std::string &exec, bool batch) override;
    };
 
    std::string fUrl; ///!< URL used to launch display
@@ -80,12 +75,11 @@ protected:
 
    static std::unique_ptr<Creator> &FindCreator(const std::string &name, const std::string &libname = "");
 
-   static void TestProg(TString &prog, const std::string &nexttry);
-
 public:
 
    RWebDisplayHandle(const std::string &url) : fUrl(url) {}
 
+   // required virtual destructor for correct cleanup at the end
    virtual ~RWebDisplayHandle() = default;
 
    std::string GetUrl() const { return fUrl; }
