@@ -76,10 +76,7 @@ extern "C" {
                                     cling::Interpreter &interpreter, bool searchSystem);
 }
 
-TClingCallbacks::TClingCallbacks(cling::Interpreter *interp, bool hasCodeGen)
-   : InterpreterCallbacks(interp), fLastLookupCtx(0), fROOTSpecialNamespace(0), fFirstRun(true), fIsAutoloading(false),
-     fIsAutoloadingRecursively(false), fIsAutoParsingSuspended(false), fPPOldFlag(false), fPPChanged(false),
-     fIsCodeGening(false)
+TClingCallbacks::TClingCallbacks(cling::Interpreter *interp, bool hasCodeGen) : InterpreterCallbacks(interp)
 {
    if (hasCodeGen) {
       Transaction* T = 0;
