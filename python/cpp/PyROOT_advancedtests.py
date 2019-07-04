@@ -311,13 +311,18 @@ class Cpp02TemplateLookup( MyTestCase ):
       self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + num_new_inst)
 
     # explicit forced instantiation
-      self.assertEqual( m.GetSizeOL( int )( 1 ),       m.GetIntSize() )
+      if self.exp_pyroot:
+         # New cppyy: use bracket syntax for explicit instantiation
+         inst = m.GetSizeOL[int]
+      else:
+         inst = m.GetSizeOL(int)
+      self.assertEqual( inst( 1 ),       m.GetIntSize() )
       self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + 3 )
       self.assert_( 'GetSizeOL<int>' in dir(MyTemplatedMethodClass) )
       gzoi_id = id( MyTemplatedMethodClass.__dict__[ 'GetSizeOL<int>' ] )
 
     # second call should make no changes, but re-use
-      self.assertEqual( m.GetSizeOL( int )( 1 ),       m.GetIntSize() )
+      self.assertEqual( inst( 1 ),       m.GetIntSize() )
       self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + 3 )
       self.assertEqual( gzoi_id, id( MyTemplatedMethodClass.__dict__[ 'GetSizeOL<int>' ] ) )
 
