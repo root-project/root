@@ -13,6 +13,7 @@
 #include "TDataMember.h"
 #include "TDataType.h"
 #include "TEnum.h"
+#include "TEnumConstant.h"
 #include "TEnv.h"
 #include "TError.h"
 #include "TFunction.h"
@@ -21,6 +22,7 @@
 #include "THashList.h"
 #include "TInterpreter.h"
 #include "TList.h"
+#include "TListOfDataMembers.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
 #include "TROOT.h"
@@ -36,6 +38,7 @@
 #include <sstream>
 #include <stdlib.h>      // for getenv
 #include <string.h>
+#include <typeinfo>
 
 // temp
 #include <iostream>
@@ -116,8 +119,8 @@ public:
             "binary_negate", "bitset", "char_traits", "codecvt_byname", "codecvt", "collate",
             "collate_byname", "compare", "complex", "ctype_byname", "ctype", "default_delete",
             "deque", "divides", "domain_error", "equal_to", "exception", "forward_list", "fpos",
-            "greater_equal", "greater", "gslice_array", "gslice", "hash", "indirect_array",
-            "invalid_argument", "ios_base", "istream_iterator", "istreambuf_iterator",
+            "function", "greater_equal", "greater", "gslice_array", "gslice", "hash", "indirect_array",
+            "integer_sequence", "invalid_argument", "ios_base", "istream_iterator", "istreambuf_iterator",
             "istrstream", "iterator_traits", "iterator", "length_error", "less_equal", "less",
             "list", "locale", "localedef utility", "locale utility", "logic_error", "logical_and",
             "logical_not", "logical_or", "map", "mask_array", "mem_fun", "mem_fun_ref", "messages",
@@ -135,10 +138,6 @@ public:
         for (auto& name : stl_names)
             gSTLNames.insert(name);
 
-    // save global context before running interpreter thingies
-       gInterpreter->SaveContext();
-       gInterpreter->SaveGlobalsContext();
-
     // set opt level (default to 2 if not given; Cling itself defaults to 0)
         int optLevel = 2;
         if (getenv("CPPYY_OPT_LEVEL")) optLevel = atoi(getenv("CPPYY_OPT_LEVEL"));
@@ -148,13 +147,22 @@ public:
             gInterpreter->ProcessLine(s.str().c_str());
         }
 
+    // load frequently used headers
+        const char* code =
+               "#include <iostream>\n"
+               "#include <string>\n"
+               "#include <DllImport.h>\n";  // defines R__EXTERN
+               "#include <vector>\n"
+               "#include <utility>";
+        gInterpreter->ProcessLine(code);
+
     // create helpers for comparing thingies
-       gInterpreter->Declare(
-           "namespace __cppyy_internal { template<class C1, class C2>"
-           " bool is_equal(const C1& c1, const C2& c2){ return (bool)(c1 == c2); } }");
-       gInterpreter->Declare(
-           "namespace __cppyy_internal { template<class C1, class C2>"
-           " bool is_not_equal(const C1& c1, const C2& c2){ return (bool)(c1 != c2); } }");
+        gInterpreter->Declare(
+            "namespace __cppyy_internal { template<class C1, class C2>"
+            " bool is_equal(const C1& c1, const C2& c2) { return (bool)(c1 == c2); } }");
+        gInterpreter->Declare(
+            "namespace __cppyy_internal { template<class C1, class C2>"
+            " bool is_not_equal(const C1& c1, const C2& c2) { return (bool)(c1 != c2); } }");
 
     // start off with a reasonable size placeholder for wrappers
         gWrapperHolder.reserve(1024);
@@ -300,30 +308,60 @@ std::string Cppyy::ResolveEnum(const std::string& enum_type)
         }
     }
 
-// failed or anonymous ... signal up stream to special case this
-    resolved_enum_types[enum_type] = "internal_enum_type_t";
-    return "internal_enum_type_t";      // should default to int
+// failed or anonymous ... signal upstream to special case this
+    std::string::size_type ipos = enum_type.size()-1;
+    for (; 0 <= ipos; --ipos) {
+        char c = enum_type[ipos];
+        if (isspace(c)) continue;
+        if (isalnum(c) || c == '_' || c == '>' || c == ')') break;
+    }
+    bool isConst = enum_type.find("const ", 6) != std::string::npos;
+    std::string restype = isConst ? "const " : "";
+    restype += "internal_enum_type_t"+enum_type.substr(ipos+1, std::string::npos);
+    resolved_enum_types[enum_type] = restype;
+    return restype;     // should default to some int variant
+}
+
+static inline Cppyy::TCppType_t find_memoized(const std::string& name)
+{
+    auto icr = g_name2classrefidx.find(name);
+    if (icr != g_name2classrefidx.end())
+        return (Cppyy::TCppType_t)icr->second;
+    return (Cppyy::TCppType_t)0;
 }
 
 Cppyy::TCppScope_t Cppyy::GetScope(const std::string& sname)
 {
-// TODO: scope_name should always be final already
+// First, try cache
+    TCppType_t result = find_memoized(sname);
+    if (result) return result;
+
+// TODO: scope_name should always be final already?
+// Resolve name fully before lookup to make sure all aliases point to the same scope
     std::string scope_name = ResolveName(sname);
-    auto icr = g_name2classrefidx.find(scope_name);
-    if (icr != g_name2classrefidx.end())
-        return (TCppType_t)icr->second;
+    result = find_memoized(scope_name);
+    if (result) return result;
 
 // use TClass directly, to enable auto-loading; class may be stubbed (eg. for
 // function returns) or forward declared, leading to a non-null TClass that is
 // otherwise invalid/unusable
     TClassRef cr(TClass::GetClass(scope_name.c_str(), true /* load */, true /* silent */));
-    if (!cr.GetClass() || !cr->Property())
+    if (!cr.GetClass())
         return (TCppScope_t)0;
 
 // memoize found/created TClass
     ClassRefs_t::size_type sz = g_classrefs.size();
     g_name2classrefidx[scope_name] = sz;
+    if (sname != scope_name)
+        g_name2classrefidx[sname] = sz;
     g_classrefs.push_back(TClassRef(scope_name.c_str()));
+
+// TODO: make ROOT/meta NOT remove std :/
+    if (is_missclassified_stl(scope_name))
+        g_name2classrefidx["std::"+scope_name] = sz;
+    if (is_missclassified_stl(sname))
+        g_name2classrefidx["std::"+sname] = sz;
+
     return (TCppScope_t)sz;
 }
 
@@ -345,13 +383,37 @@ Cppyy::TCppType_t Cppyy::GetActualClass(TCppType_t klass, TCppObject_t obj)
     if (!cr.GetClass() || !obj) return klass;
 
 #ifdef _WIN64
+// Cling does not provide a consistent ImageBase address for calculating relative addresses
+// as used in Windows 64b RTTI. So, check for our own RTTI extension instead. If that fails,
+// see whether the unmangled raw_name is available (e.g. if this is an MSVC compiled rather
+// than JITed class) and pass on if it is.
+    volatile const char* raw = nullptr;     // to prevent too aggressive reordering
     try {
+    // this will filter those objects that do not have RTTI to begin with (throws)
         AutoCastRTTI* pcst = (AutoCastRTTI*)obj;
-        const char* raw = typeid(*pcst).raw_name();
-    // if the raw name is the empty string then there is no RTTI info available
+        raw = typeid(*pcst).raw_name();
+
+    // check the signature id (0 == absolute, 1 == relative, 2 == ours)
+        void* vfptr = *(void**)((intptr_t)obj);
+        void* meta = (void*)((intptr_t)*((void**)((intptr_t)vfptr-sizeof(void*))));
+        if (*(intptr_t*)meta == 2) {
+        // access the extra data item which is an absolute pointer to the RTTI
+            void* ptdescr = (void*)((intptr_t)meta + 4*sizeof(unsigned long)+sizeof(void*));
+            if (ptdescr && *(void**)ptdescr) {
+                auto rtti = *(std::type_info**)ptdescr;
+                raw = rtti->raw_name();
+                if (raw && raw[0] != '\0')    // likely unnecessary
+                    return (TCppType_t)GetScope(rtti->name());
+            }
+
+            return klass;        // do not fall through if no RTTI info available
+        }
+
+    // if the raw name is the empty string (no guarantees that this is so as truly, the
+    // address is corrupt, but it is common to be empty), then there is no accessible RTTI
     // and getting the unmangled name will crash ...
         if (!raw || raw[0] == '\0')
-            return klass;    // TODO: fix whatever is hampering RTTI (linking?)
+            return klass;
     } catch (std::bad_typeid) {
         return klass;        // can't risk passing to ROOT/meta as it may do RTTI
     }
@@ -1112,7 +1174,13 @@ std::string Cppyy::GetMethodResultType(TCppMethod_t method)
         TFunction* f = m2f(method);
         if (f->ExtraProperty() & kIsConstructor)
             return "constructor";
-        std::string restype = f->GetReturnTypeNormalizedName();
+        std::string restype = f->GetReturnTypeName();
+        // TODO: this is ugly, but we can't use GetReturnTypeName() for ostreams
+        // and maybe others, whereas GetReturnTypeNormalizedName() has proven to
+        // be save in all cases (Note: 'int8_t' covers 'int8_t' and 'uint8_t')
+        if (restype.find("int8_t") != std::string::npos)
+            return restype;
+        restype = f->GetReturnTypeNormalizedName();
         if (restype == "(lambda)") {
             std::ostringstream s;
             // TODO: what if there are parameters to the lambda?
@@ -1269,9 +1337,7 @@ bool Cppyy::IsTemplatedConstructor(TCppScope_t scope, TCppIndex_t imeth)
     TClassRef& cr = type_from_handle(scope);
     if (cr.GetClass()) {
         TFunctionTemplate* f = (TFunctionTemplate*)cr->GetListOfFunctionTemplates(false)->At((int)imeth);
-        // TODO: f->Property() does not fill the kIsConstructor flag :/
-        if (GetFinalName(scope) == f->GetName())  // still flaky ...
-            return true;
+        return f->ExtraProperty() & kIsConstructor;
     }
 
     return false;
@@ -1296,8 +1362,8 @@ bool Cppyy::IsMethodTemplate(TCppScope_t scope, TCppIndex_t imeth)
     TFunction* f = type_get_method(scope, imeth);
     if (!f) return false;
 
-    auto result = ExistsMethodTemplate(scope, f->GetName());
-    return result;
+    if (strstr(f->GetName(), "<")) return true;
+    return false;
 }
 
 // helpers for Cppyy::GetMethodTemplate()
@@ -1333,7 +1399,19 @@ Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(
         TClassRef& cr = type_from_handle(scope);
         if (cr.GetClass()) {
             func = cr->GetMethodWithPrototype(name.c_str(), proto.c_str());
-            if (!func) cl = cr->GetClassInfo();
+            if (!func) {
+                cl = cr->GetClassInfo();
+            // try base classes to cover a common 'using' case (TODO: this is stupid and misses
+            // out on base classes; fix that with improved access to Cling)
+                TCppIndex_t nbases = GetNumBases(scope);
+                for (TCppIndex_t i = 0; i < nbases; ++i) {
+                    TClassRef& base = type_from_handle(GetScope(GetBaseName(scope, i)));
+                    if (base.GetClass()) {
+                        func = base->GetMethodWithPrototype(name.c_str(), proto.c_str());
+                        if (func) break;
+                    }
+                }
+            }
         }
     }
 
@@ -1351,8 +1429,25 @@ Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(
         }
     }
 
-    if (func)
-        return (TCppMethod_t)new_CallWrapper(func);
+    if (func) {
+    // make sure we didn't match a non-templated overload
+        if (strstr(func->GetName(), "<"))
+            return (TCppMethod_t)new_CallWrapper(func);
+
+    // don't give in just yet, but rather get the full name through the symbol name,
+    // as eg. constructors do not receive their proper/full name from GetName()
+        int err;
+        char* truename = TClassEdit::DemangleName(func->GetMangledName(), err);
+        if (truename && err != -1) {
+            bool isTemplated = (bool)strstr(truename, "<");
+            free(truename);
+            if (isTemplated)
+                return (TCppMethod_t)new_CallWrapper(func);
+        }
+
+    // disregard this non-templated method as it will be considered when appropriate
+        return (TCppMethod_t)nullptr;
+    }
 
 // try again with template arguments removed from name, if applicable
     if (name.back() == '>') {
@@ -1478,7 +1573,7 @@ std::string Cppyy::GetDatamemberType(TCppScope_t scope, TCppIndex_t idata)
     TClassRef& cr = type_from_handle(scope);
     if (cr.GetClass())  {
         TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At((int)idata);
-        std::string fullType = m->GetTrueTypeName();
+        std::string fullType = m->GetFullTypeName();
         if ((int)m->GetArrayDim() > 1 || (!m->IsBasic() && m->IsaPointer()))
             fullType.append("*");
         else if ((int)m->GetArrayDim() == 1) {
@@ -1509,11 +1604,15 @@ intptr_t Cppyy::GetDatamemberOffset(TCppScope_t scope, TCppIndex_t idata)
     TClassRef& cr = type_from_handle(scope);
     if (cr.GetClass()) {
         TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At((int)idata);
-    // CLING WORKAROUND: the following causes templates to be instantiated first
-    // in the proper scope, making the lookup succeed and preventing spurious
-    // duplicate instantiations later.
-        if ((m->Property() & kIsStatic) && strchr(cr->GetName(), '<'))
-            gInterpreter->ProcessLine(((std::string)cr->GetName()+"::"+m->GetName()+";").c_str());
+    // CLING WORKAROUND: the following causes templates to be instantiated first within the proper
+    // scope, making the lookup succeed and preventing spurious duplicate instantiations later. Also,
+    // if the variable is not yet loaded, pull it in through gInterpreter.
+        if (m->Property() & kIsStatic) {
+            if (strchr(cr->GetName(), '<'))
+                gInterpreter->ProcessLine(((std::string)cr->GetName()+"::"+m->GetName()+";").c_str());
+            if ((intptr_t)m->GetOffsetCint() == (intptr_t)-1)
+                return (intptr_t)gInterpreter->ProcessLine((std::string("&")+cr->GetName()+"::"+m->GetName()+";").c_str());
+        }
         return (intptr_t)m->GetOffsetCint();    // yes, CINT (GetOffset() is both wrong
                                                 // and caches that wrong result!
     }
@@ -1524,7 +1623,19 @@ intptr_t Cppyy::GetDatamemberOffset(TCppScope_t scope, TCppIndex_t idata)
 Cppyy::TCppIndex_t Cppyy::GetDatamemberIndex(TCppScope_t scope, const std::string& name)
 {
     if (scope == GLOBAL_HANDLE) {
-        TGlobal* gb = (TGlobal*)gROOT->GetListOfGlobals(true)->FindObject(name.c_str());
+        TGlobal* gb = (TGlobal*)gROOT->GetListOfGlobals(false /* load */)->FindObject(name.c_str());
+        if (!gb) gb = (TGlobal*)gROOT->GetListOfGlobals(true  /* load */)->FindObject(name.c_str());
+        if (!gb) {
+        // some enums are not loaded as they are not considered part of
+        // the global scope, but of the enum scope; get them w/o checking
+            TDictionary::DeclId_t did = gInterpreter->GetDataMember(nullptr, name.c_str());
+            if (did) {
+                DataMemberInfo_t* t = gInterpreter->DataMemberInfo_Factory(did, nullptr);
+                ((TListOfDataMembers*)gROOT->GetListOfGlobals())->Get(t, true);
+                gb = (TGlobal*)gROOT->GetListOfGlobals(false /* load */)->FindObject(name.c_str());
+            }
+        }
+
         if (gb && strcmp(gb->GetFullTypeName(), "(lambda)") == 0) {
         // lambdas use a compiler internal closure type, so we wrap
         // them, then return the wrapper's type
@@ -1541,6 +1652,7 @@ Cppyy::TCppIndex_t Cppyy::GetDatamemberIndex(TCppScope_t scope, const std::strin
         }
 
         if (gb) {
+        // TODO: do we ever need a reverse lookup?
             g_globalvars.push_back(gb);
             return TCppIndex_t(g_globalvars.size() - 1);
         }
@@ -1622,6 +1734,36 @@ int Cppyy::GetDimensionSize(TCppScope_t scope, TCppIndex_t idata, int dimension)
         return m->GetMaxIndex(dimension);
     }
     return -1;
+}
+
+
+// enum properties -----------------------------------------------------------
+Cppyy::TCppEnum_t Cppyy::GetEnum(TCppScope_t scope, const std::string& enum_name)
+{
+    if (scope == GLOBAL_HANDLE)
+        return (TCppEnum_t)gROOT->GetListOfEnums(kTRUE)->FindObject(enum_name.c_str());
+
+    TClassRef& cr = type_from_handle(scope);
+    if (cr.GetClass())
+        return (TCppEnum_t)cr->GetListOfEnums(kTRUE)->FindObject(enum_name.c_str());
+
+    return (TCppEnum_t)0;
+}
+
+Cppyy::TCppIndex_t Cppyy::GetNumEnumData(TCppEnum_t etype)
+{
+    return (TCppIndex_t)((TEnum*)etype)->GetConstants()->GetSize();
+}
+
+std::string Cppyy::GetEnumDataName(TCppEnum_t etype, TCppIndex_t idata)
+{
+    return ((TEnumConstant*)((TEnum*)etype)->GetConstants()->At(idata))->GetName();
+}
+
+long long Cppyy::GetEnumDataValue(TCppEnum_t etype, TCppIndex_t idata)
+{
+     TEnumConstant* ecst = (TEnumConstant*)((TEnum*)etype)->GetConstants()->At(idata);
+     return (long long)ecst->GetValue();
 }
 
 
