@@ -89,6 +89,9 @@ if (dataframe)
     ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_makenumpy rdataframe_makenumpy.py)
 endif()
 
+# RTensor pythonizations
+ROOT_ADD_PYUNITTEST(pyroot_pyz_rtensor rtensor.py)
+
 # Passing Python callables to ROOT.TF
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tf_pycallables tf_pycallables.py)
 

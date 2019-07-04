@@ -64,6 +64,8 @@ static PyMethodDef gPyROOTMethods[] = {{(char *)"AddDirectoryWritePyz", (PyCFunc
                                         (char *)"Get endianess of the system"},
                                        {(char *)"GetVectorDataPointer", (PyCFunction)PyROOT::GetVectorDataPointer, METH_VARARGS,
                                         (char *)"Get pointer to data of vector"},
+                                       {(char *)"GetTensorDataPointer", (PyCFunction)PyROOT::GetTensorDataPointer, METH_VARARGS,
+                                        (char *)"Get pointer to data of RTensor"},
                                        {(char *)"GetSizeOfType", (PyCFunction)PyROOT::GetSizeOfType, METH_VARARGS,
                                         (char *)"Get size of data-type"},
                                        {(char *)"GetCppCallableClass", (PyCFunction)PyROOT::GetCppCallableClass, METH_VARARGS,

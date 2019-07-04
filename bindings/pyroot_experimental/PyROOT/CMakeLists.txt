@@ -9,7 +9,9 @@
 ############################################################################
 
 if(dataframe)
-    list(APPEND PYROOT_EXTRA_PYSOURCE ROOT/pythonization/_rdataframe.py)
+    list(APPEND PYROOT_EXTRA_PYSOURCE
+        ROOT/pythonization/_rdataframe.py
+        ROOT/pythonization/_rtensor.py)
     list(APPEND PYROOT_EXTRA_SOURCE src/RDataFramePyz.cxx)
 endif()
 
