@@ -1,6 +1,6 @@
 import py, os, sys
 from pytest import raises
-from .support import setup_make
+from .support import setup_make, IS_WINDOWS
 
 
 class TestREGRESSION:
@@ -24,9 +24,7 @@ class TestREGRESSION:
         qtpath = "/usr/include/qt5"
         kdcraw_h = "/usr/include/KF5/KDCRAW/kdcraw/kdcraw.h"
         if not os.path.isdir(qtpath) or not os.path.exists(kdcraw_h):
-            import warnings
-            warnings.warn("no KDE/Qt found, skipping test01_kdcraw")
-            return
+            py.test.skip("no KDE/Qt found, skipping test01_kdcraw")
 
         # need to resolve qt_version_tag for the incremental compiler; since
         # it's not otherwise used, just make something up
@@ -170,3 +168,66 @@ class TestREGRESSION:
         assert not 'vector<const PyABC::S1*>' in dir(PyABC.S2)
         assert PyABC.S2.S1_coll is cppyy.gbl.std.vector('const PyABC::S1*')
 
+    def test08_gil_not_released(self):
+        """GIL was released by accident for by-value returns"""
+
+        import cppyy
+
+        something = 5.0
+
+        code = """
+#include "Python.h"
+
+std::vector<float> some_foo_calling_python() {
+   auto pyobj = reinterpret_cast<PyObject*>(ADDRESS);
+   float f = (float)PyFloat_AsDouble(pyobj);
+   std::vector<float> v;
+   v.push_back(f);
+   return v;
+}
+""".replace("ADDRESS", str(id(something)))
+
+        cppyy.cppdef(code)
+        cppyy.gbl.some_foo_calling_python()
+
+    def test09_enum_in_global_space(self):
+        """Enum declared in search.h did not appear in global space"""
+
+        if IS_WINDOWS:
+            return           # no such enum in MSVC's search.h
+
+        import cppyy
+
+        cppyy.include('search.h')
+
+        assert cppyy.gbl.ACTION
+        assert hasattr(cppyy.gbl, 'ENTER')
+        assert hasattr(cppyy.gbl, 'FIND')
+
+    def test10_cobject_addressing(self):
+        """AsCObject (not public) had a deref too many"""
+
+        import cppyy
+
+        cppyy.cppdef('struct CObjA { CObjA() : m_int(42) {} int m_int; };')
+        a = cppyy.gbl.CObjA()
+        co = cppyy._backend.AsCObject(a)
+
+        assert a == cppyy.bind_object(co, 'CObjA')
+        assert a.m_int == 42
+        assert cppyy.bind_object(co, 'CObjA').m_int == 42
+
+    def test11_exception_while_exception(self):
+        """Exception from SetDetailedException during exception handling used to crash"""
+
+        import cppyy
+
+        cppyy.cppdef("namespace AnExceptionNamespace { }")
+
+        try:
+            cppyy.gbl.blabla
+        except AttributeError:
+            try:
+                cppyy.gbl.AnExceptionNamespace.blabla
+            except AttributeError:
+                pass

@@ -4,9 +4,11 @@
   <class name="FourVector" />
 
   <enum name="EFruit" />
+  <enum name="NamedClassEnum" />
   <enum name="EnumSpace::E" />
   <class name="EnumSpace::EnumClass" />
   <enum name="EnumSpace::letter_code" />
+  <enum name="EnumSpace::NamedClassEnum" />
 
   <function pattern="get_*" />
   <function pattern="set_*" />
@@ -25,5 +27,13 @@
   <function name="call_int_int" />
   <function name="call_void" />
   <class name="StoreCallable" />
+
+  <function name="sum_of_int_sf" />
+  <function name="sum_of_double_sf" />
+  <function name="call_double_double_sf" /> 
+
+  <function name="call_int_int_sf" />
+  <function name="call_void_sf" />
+  <class name="StoreCallable_sf" />
 
 </lcgdict>

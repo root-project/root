@@ -47,13 +47,13 @@ public:
     void array_method(int* ad, int size) {
         for (int i=0; i < size; ++i)
             std::cerr << ad[i] << ' ';
-        std::cerr << std::endl;
+        std::cerr << '\\n'; // TODO: not std::endl for 32b Windows
     }
 
     void array_method(double* ad, int size) {
         for (int i=0; i < size; ++i)
             std::cerr << ad[i] << ' ';
-        std::cerr << std::endl;
+        std::cerr << '\\n'; // TODO: not std::endl for 32b Windows
     }
 
     void uint_ref_assign(unsigned int& target, unsigned int value) {
@@ -370,3 +370,201 @@ namespace Namespace {
 
         pc = PyConcrete4()
         assert call_abstract_method(pc) == "Hello, Python World! (4)"
+
+
+class TestTUTORIALFEATURES:
+    def setup_class(cls):
+        import cppyy
+
+        cppyy.cppdef("""
+class Integer1 {
+public:
+    Integer1(int i) : m_data(i) {}
+    int m_data;
+};""")
+
+        cppyy.cppdef("""
+namespace Math {
+    class Integer2 : public Integer1 {
+    public:
+        using Integer1::Integer1;
+        operator int() { return m_data; }
+    };
+}""")
+
+        cppyy.cppdef("""
+namespace Zoo {
+
+    enum EAnimal { eLion, eMouse };
+
+    class Animal {
+    public:
+        virtual ~Animal() {}
+        virtual std::string make_sound() = 0;
+    };
+
+    class Lion : public Animal {
+    public:
+        virtual std::string make_sound() { return s_lion_sound; }
+        static std::string s_lion_sound;
+    };
+    std::string Lion::s_lion_sound = "growl!";
+
+    class Mouse : public Animal {
+    public:
+        virtual std::string make_sound() { return "peep!"; }
+    };
+
+    Animal* release_animal(EAnimal animal) {
+        if (animal == eLion) return new Lion{};
+        if (animal == eMouse) return new Mouse{};
+        return nullptr;
+    }
+
+    std::string identify_animal(Lion*) {
+        return "the animal is a lion";
+    }
+
+    std::string identify_animal(Mouse*) {
+        return "the animal is a mouse";
+    }
+
+}
+""")
+
+      # pythonize the animal release function to take ownership on return
+        cppyy.gbl.Zoo.release_animal.__creates__ = True
+
+    def test01_class_existence(self):
+        """Existence and importability of created class"""
+
+        import cppyy
+
+        assert cppyy.gbl.Integer1
+        assert issubclass(cppyy.gbl.Integer1, object)
+
+        from cppyy.gbl import Integer1
+
+        assert cppyy.gbl.Integer1 is Integer1
+
+        i = Integer1(42)
+        assert isinstance(i, Integer1)
+
+    def test02_python_introspection(self):
+        """Introspection of newly created class/instances"""
+
+        from cppyy.gbl import Integer1
+
+        i = Integer1(42)
+        assert hasattr(i, 'm_data')
+        assert not isinstance(i, int)
+        assert isinstance(i, Integer1)
+
+    def test03_STL_containers(self):
+        """Instantiate STL contaienrs with new class"""
+
+        from cppyy.gbl import Integer1
+        from cppyy.gbl.std import vector
+
+        v = vector[Integer1]()
+
+        v += [Integer1(j) for j in range(10)]
+
+    def test04_pretty_repr(self):
+        """Create a pretty repr for the new class"""
+
+        from cppyy.gbl import Integer1
+
+        Integer1.__repr__ = lambda self: repr(self.m_data)
+        assert str([Integer1(j) for j in range(10)]) == '[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]'
+
+    def test05_pythonizer(self):
+        """Implement and test a pythonizor"""
+
+        import cppyy
+
+        def pythonizor(klass, name):
+            if name == 'Integer2':
+                klass.__repr__ = lambda self: repr(self.m_data)
+
+        cppyy.py.add_pythonization(pythonizor, 'Math')
+
+        Integer2 = cppyy.gbl.Math.Integer2    # first time a new namespace is used, it can not be imported from
+        v = [Integer2(j) for j in range(10)]
+
+        assert str(v) == '[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]'
+
+        i2 = Integer2(13)
+        assert int(i2) == 13
+
+    def test06_add_operator(self):
+        """Add operator+"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+namespace Math {
+    Integer2 operator+(const Integer2& left, const Integer1& right) {
+        return left.m_data + right.m_data;
+    }
+}""")
+
+        from cppyy.gbl import Integer1
+        from cppyy.gbl.Math import Integer2
+
+        i = Integer1(42)
+        i2 = Integer2(13)
+
+        k = i2 + i
+        assert int(k) == i2.m_data + i.m_data
+
+    def test07_run_zoo(self):
+        """Bunch of zoo animals running around"""
+
+        from cppyy.gbl import Zoo
+
+        assert raises(TypeError, Zoo.Animal)
+
+        assert issubclass(Zoo.Lion, Zoo.Animal)
+
+        mouse = Zoo.release_animal(Zoo.eMouse)
+        assert type(mouse) == Zoo.Mouse
+        lion = Zoo.release_animal(Zoo.eLion)
+        assert type(lion) == Zoo.Lion
+
+        assert lion.__python_owns__
+        assert mouse.__python_owns__
+
+        assert mouse.make_sound() == 'peep!'
+        assert lion.make_sound() == 'growl!'
+
+        Zoo.Lion.s_lion_sound = "mooh!"
+        assert lion.make_sound() == 'mooh!'
+
+        assert Zoo.identify_animal(mouse) == "the animal is a mouse"
+        assert Zoo.identify_animal(lion) == "the animal is a lion"
+
+    def test08_shared_ptr(self):
+        """Shared pointer transparency"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+namespace Zoo {
+   std::shared_ptr<Lion> free_lion{new Lion{}};
+
+   std::string identify_animal_smart(std::shared_ptr<Lion>& smart) {
+       return "the animal is a lion";
+   }
+}
+""")
+
+        from cppyy.gbl import Zoo
+
+        assert type(Zoo.free_lion).__name__ == 'Lion'
+
+        smart_lion = Zoo.free_lion.__smartptr__()
+        assert type(smart_lion).__name__ in ['shared_ptr<Zoo::Lion>', 'std::shared_ptr<Zoo::Lion>']
+
+        assert Zoo.identify_animal(Zoo.free_lion) == "the animal is a lion"
+        assert Zoo.identify_animal_smart(Zoo.free_lion) == "the animal is a lion"

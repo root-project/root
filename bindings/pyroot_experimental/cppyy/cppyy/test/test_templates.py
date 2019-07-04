@@ -33,6 +33,10 @@ class TestTEMPLATES:
             targ = long
         assert m.get_size[targ]()     == m.get_long_size()
 
+        import ctypes
+        assert m.get_size(ctypes.c_double(3.14)) == m.get_size['double']()
+        assert m.get_size(ctypes.c_double(3.14).value) == m.get_size['double']()+1
+
       # auto-instantiation
         assert m.get_size[float]()    == m.get_float_size()
         assert m.get_size['double']() == m.get_double_size()
@@ -351,6 +355,137 @@ class TestTEMPLATES:
         assert not is_valid(0)
         assert is_valid(1.)
         assert not is_valid(0.)
+
+    def test15_variadic(self):
+        """Range of variadic templates"""
+
+        import cppyy
+        ns = cppyy.gbl.some_variadic
+
+        def get_tn(ns):
+          # helper to make all platforms look the same
+            tn = ns.gTypeName
+            tn = tn.replace(' ', '')
+            tn = tn.replace('class', '')
+            tn = tn.replace('__cdecl', '')
+            tn = tn.replace('__thiscall', '')
+            tn = tn.replace('__ptr64', '')
+            return tn
+
+      # templated class
+        a = ns.A['int', 'double']()
+        assert get_tn(ns) == "some_variadic::A<int,double>"
+
+      # static functions
+        a.sa(1, 1., 'a')
+        assert get_tn(ns).find("some_variadic::A<int,double>::void(int&&,double&&,std::") == 0
+        ns.A['char&', 'double*'].sa(1, 1., 'a')
+        assert get_tn(ns).find("some_variadic::A<char&,double*>::void(int&&,double&&,std::") == 0
+        ns.A['char&', 'double*'].sa_T['int'](1, 1., 'a')
+        assert get_tn(ns).find("some_variadic::A<char&,double*>::int(int&&,double&&,std::") == 0
+
+      # member functions
+        a.a(1, 1., 'a')
+        assert get_tn(ns).find("void(some_variadic::A<int,double>::*)(int&&,double&&,std::") == 0
+        a.a_T['int'](1, 1., 'a')
+        assert get_tn(ns).find("int(some_variadic::A<int,double>::*)(int&&,double&&,std::") == 0
+
+      # non-templated class
+        b = ns.B()
+        assert get_tn(ns) == "some_variadic::B"
+
+      # static functions
+        b.sb(1, 1., 'a')
+        assert get_tn(ns).find("some_variadic::B::void(int&&,double&&,std::") == 0
+        ns.B.sb(1, 1., 'a')
+        assert get_tn(ns).find("some_variadic::B::void(int&&,double&&,std::") == 0
+        ns.B.sb_T['int'](1, 1., 'a')
+        assert get_tn(ns).find("some_variadic::B::int(int&&,double&&,std::") == 0
+
+      # member functions
+        b.b(1, 1., 'a')
+        assert get_tn(ns).find("void(some_variadic::B::*)(int&&,double&&,std::") == 0
+        b.b_T['int'](1, 1., 'a')
+        assert get_tn(ns).find("int(some_variadic::B::*)(int&&,double&&,std::") == 0
+
+    def test16_empty_body(self):
+        """Use of templated function with empty body"""
+
+        import cppyy
+
+        f_T = cppyy.gbl.T_WithEmptyBody.some_empty
+
+        assert cppyy.gbl.T_WithEmptyBody.side_effect == "not set"
+        assert f_T[int]() is None
+        assert cppyy.gbl.T_WithEmptyBody.side_effect == "side effect"
+
+    def test17_greedy_overloads(self):
+        """void*/void** should not pre-empt template instantiations"""
+
+        import cppyy
+
+        ns = cppyy.gbl.T_WithGreedyOverloads
+
+      # check that void* does not mask template instantiations
+        g1 = ns.WithGreedy1()
+        assert g1.get_size(ns.SomeClass(), True) == -1
+        assert g1.get_size(ns.SomeClass()) == cppyy.sizeof(ns.SomeClass)
+
+      # check that void* does not mask template instantiations
+        g2 = ns.WithGreedy2()
+        assert g2.get_size(ns.SomeClass()) == cppyy.sizeof(ns.SomeClass)
+        assert g2.get_size(ns.SomeClass(), True) == -1
+
+      # check that unknown classes do not mask template instantiations
+        g3 = ns.WithGreedy3()
+        assert g3.get_size(ns.SomeClass()) == cppyy.sizeof(ns.SomeClass)
+        assert g3.get_size(cppyy.nullptr, True) == -1
+
+    def test18_templated_operator_add(self):
+        """Templated operator+ is ambiguous: either __pos__ or __add__"""
+
+        import cppyy
+        import cppyy.gbl as gbl
+
+        cppyy.cppdef("""
+        namespace OperatorAddTest {
+        template <class V>
+        class CustomVec {
+            V fX;
+        public:
+            CustomVec() : fX(0) {}
+            CustomVec(const V & a) : fX(a) { }
+            V X()  const { return fX; }
+            template <class fV> CustomVec operator + (const fV& v) {
+                CustomVec<V> u;
+                u.fX = fX + v.fX;
+                return u;
+            }
+        }; }
+        """)
+
+        c = gbl.OperatorAddTest.CustomVec['double'](5.3)
+        d = gbl.OperatorAddTest.CustomVec['int'](1)
+
+        q = c + d
+
+        assert round(q.X() - 6.3, 8) == 0.
+
+    def test19_templated_ctor_with_defaults(self):
+        """Templated constructor with defaults used to be ignored"""
+
+        import cppyy
+
+        cppyy.cppdef(r"""
+        namespace TemplatedCtor { class C {
+        public:
+            template <typename Integer, typename std::enable_if_t<std::is_integral_v<Integer>, int> = 0>
+            C(Integer) {}
+            C(const std::string&) {}
+        }; }
+        """)
+
+        assert cppyy.gbl.TemplatedCtor.C(0)
 
 
 class TestTEMPLATED_TYPEDEFS:

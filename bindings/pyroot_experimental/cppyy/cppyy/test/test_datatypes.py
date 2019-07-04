@@ -37,6 +37,8 @@ class TestDATATYPES:
         assert c.m_wchar == u'D'
 
         # reading integer types
+        assert c.m_int8    == - 9; assert c.get_int8_cr()    == - 9; assert c.get_int8_r()    == - 9
+        assert c.m_uint8   ==   9; assert c.get_uint8_cr()   ==   9; assert c.get_uint8_r()   ==   9 
         assert c.m_short   == -11; assert c.get_short_cr()   == -11; assert c.get_short_r()   == -11
         assert c.m_ushort  ==  11; assert c.get_ushort_cr()  ==  11; assert c.get_ushort_r()  ==  11
         assert c.m_int     == -22; assert c.get_int_cr()     == -22; assert c.get_int_r()     == -22
@@ -177,7 +179,7 @@ class TestDATATYPES:
         raises(ValueError, c.set_wchar, "string")
 
         # integer types
-        names = ['short', 'ushort', 'int', 'uint', 'long', 'ulong', 'llong', 'ullong']
+        names = ['int8', 'uint8', 'short', 'ushort', 'int', 'uint', 'long', 'ulong', 'llong', 'ullong']
         for i in range(len(names)):
             setattr(c, 'm_'+names[i], i)
             assert eval('c.get_%s()' % names[i]) == i
@@ -294,6 +296,10 @@ class TestDATATYPES:
         assert type(CppyyTestData.s_wchar) == pyunicode
 
         # integer types
+        assert CppyyTestData.s_int8     == - 87
+        assert c.s_int8                 == - 87
+        assert CppyyTestData.s_uint8    ==   87
+        assert c.s_uint8                ==   87
         assert CppyyTestData.s_short    == -101
         assert c.s_short                == -101
         assert c.s_ushort               ==  255
@@ -347,6 +353,10 @@ class TestDATATYPES:
         assert CppyyTestData.s_wchar    == u'L'
 
         # integer types
+        c.s_short                        = - 88
+        assert CppyyTestData.s_short    == - 88
+        CppyyTestData.s_short            =   88
+        assert c.s_short                ==   88
         c.s_short                        = -102
         assert CppyyTestData.s_short    == -102
         CppyyTestData.s_short            = -203
@@ -523,9 +533,17 @@ class TestDATATYPES:
         assert gbl.kBanana == 29
         assert gbl.kCitrus == 34
 
+        assert gbl.NamedClassEnum.E1 == 42
+        assert gbl.NamedClassEnum.__name__    == 'NamedClassEnum'
+        assert gbl.NamedClassEnum.__cppname__ == 'NamedClassEnum'
+
         assert gbl.EnumSpace.E
         assert gbl.EnumSpace.EnumClass.E1 == -1   # anonymous
         assert gbl.EnumSpace.EnumClass.E2 == -1   # named type
+
+        assert gbl.EnumSpace.NamedClassEnum.E1 == -42
+        assert gbl.EnumSpace.NamedClassEnum.__name__    == 'NamedClassEnum'
+        assert gbl.EnumSpace.NamedClassEnum.__cppname__ == 'EnumSpace::NamedClassEnum'
 
         # typedef enum
         assert gbl.EnumSpace.letter_code
@@ -851,6 +869,74 @@ class TestDATATYPES:
 
         assert 'call_double_double' in str(fdd)
         assert 'call_refd' in str(frd)
+
+        def pyf(arg0, arg1):
+            return arg0+arg1
+
+        assert type(fdd(pyf, 2, 3)) == float
+        assert fdd(pyf, 2, 3) == 5.
+
+        assert type(fii(pyf, 2, 3)) == int
+        assert fii(pyf, 2, 3) == 5
+
+        def pyf(arg0, arg1):
+            return arg0*arg1
+
+        assert fdd(pyf, 2, 3) == 6.
+        assert fii(pyf, 2, 3) == 6
+
+        # call of void function
+        global retval
+        retval = None
+        def voidf(i):
+            global retval
+            retval = i
+
+        assert retval is None
+        assert fv(voidf, 5) == None
+        assert retval == 5
+
+        # call of function with reference argument
+        def reff(ref):
+            ref.value = 5
+        assert fri(reff) == 5
+        assert frl(reff) == pylong(5)
+        assert frd(reff) == 5.
+
+        # callable that does not accept weak-ref
+        import math
+        assert fdd(math.atan2, 0, 3.) == 0.
+
+        # error testing
+        raises(TypeError, fii, None, 2, 3)
+
+        def pyf(arg0, arg1):
+            return arg0/arg1
+
+        raises(ZeroDivisionError, fii, pyf, 1, 0)
+
+        def pyd(arg0, arg1):
+            return arg0*arg1
+        c = cppyy.gbl.StoreCallable(pyd)
+        assert c(3, 3) == 9.
+
+        c.set_callable(lambda x, y: x*y)
+        raises(TypeError, c, 3, 3)     # lambda gone out of scope
+
+    def test23_callable_through_function_passing(self):
+        """Passing callables through std::function"""
+
+        import cppyy
+
+        fdd = cppyy.gbl.call_double_double_sf
+        fii = cppyy.gbl.call_int_int_sf
+        fv  = cppyy.gbl.call_void_sf
+        fri = cppyy.gbl.call_refi_sf
+        frl = cppyy.gbl.call_refl_sf
+        frd = cppyy.gbl.call_refd_sf
+
+        assert 'call_double_double_sf' in str(fdd)
+        assert 'call_refd_sf' in str(frd)
 
         def pyf(arg0, arg1):
             return arg0+arg1
