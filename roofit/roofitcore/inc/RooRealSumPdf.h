@@ -91,7 +91,7 @@ protected:
   
 private:
 
-  constexpr bool haveLastCoef() const {
+  bool haveLastCoef() const {
     return _funcList.size() == _coefList.size();
   }
 
