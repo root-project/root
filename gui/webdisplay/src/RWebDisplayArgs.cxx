@@ -6,7 +6,7 @@
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -124,7 +124,6 @@ void ROOT::Experimental::RWebDisplayArgs::AppendUrlOpt(const std::string &opt)
 
    fUrlOpt.append(opt);
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Returns full url, which is combined from URL and extra URL options
