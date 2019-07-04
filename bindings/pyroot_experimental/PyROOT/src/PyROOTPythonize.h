@@ -42,6 +42,7 @@ PyObject *GetCppCallableClass(PyObject *self, PyObject *args);
 
 PyObject *GetEndianess(PyObject *self, PyObject *args);
 PyObject *GetVectorDataPointer(PyObject *self, PyObject *args);
+PyObject *GetTensorDataPointer(PyObject *self, PyObject *args);
 PyObject *GetSizeOfType(PyObject *self, PyObject *args);
 
 PyObject *MakeNumpyDataFrame(PyObject *self, PyObject *obj);

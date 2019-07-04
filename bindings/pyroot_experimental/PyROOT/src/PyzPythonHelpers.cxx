@@ -53,14 +53,13 @@ PyObject *PyROOT::GetSizeOfType(PyObject * /*self*/, PyObject *args)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-/// \brief Get pointer to the data of a vector
-/// \param[in] self Always null, since this is a module function.
-/// \param[in] args[0] Data-type of the C++ object as Python string
-/// \param[in] args[1] Python representation of the C++ object.
+/// \brief Helper to get pointer to the data of an object
+/// \param[in] args Arguments with Python object and data-type
+/// \param[in] method Name of the method returning the pointer to the data
 ///
 /// This function returns the pointer to the data of a vector as an Python
-/// integer.
-PyObject *PyROOT::GetVectorDataPointer(PyObject * /*self*/, PyObject *args)
+/// integer retrieved by the given method.
+PyObject* GetDataPointerHelper(PyObject* args, const std::string& method)
 {
    // Get pointer of C++ object
    PyObject *pyobj = PyTuple_GetItem(args, 0);
@@ -75,12 +74,38 @@ PyObject *PyROOT::GetVectorDataPointer(PyObject * /*self*/, PyObject *args)
    unsigned long long pointer = 0;
    std::stringstream code;
    code << "*((long*)" << &pointer << ") = reinterpret_cast<long>(reinterpret_cast<" << cppname << "*>(" << cppobj
-        << ")->data())";
+        << ")->" << method << "())";
    gInterpreter->Calc(code.str().c_str());
 
    // Return pointer as integer
    PyObject *pypointer = PyLong_FromUnsignedLongLong(pointer);
    return pypointer;
+}
+
+////////////////////////////////////////////////////////////////////////////
+/// \brief Get pointer to the data of a vector
+/// \param[in] self Always null, since this is a module function.
+/// \param[in] args[0] Data-type of the C++ object as Python string
+/// \param[in] args[1] Python representation of the C++ object.
+///
+/// This function returns the pointer to the data of a vector as an Python
+/// integer.
+PyObject *PyROOT::GetVectorDataPointer(PyObject * /*self*/, PyObject *args)
+{
+   return GetDataPointerHelper(args, "data");
+}
+
+////////////////////////////////////////////////////////////////////////////
+/// \brief Get pointer to the data of a RTensor
+/// \param[in] self Always null, since this is a module function.
+/// \param[in] args[0] Data-type of the C++ object as Python string
+/// \param[in] args[1] Python representation of the C++ object.
+///
+/// This function returns the pointer to the data of a RTensor as an Python
+/// integer.
+PyObject *PyROOT::GetTensorDataPointer(PyObject * /*self*/, PyObject *args)
+{
+   return GetDataPointerHelper(args, "GetData");
 }
 
 ////////////////////////////////////////////////////////////////////////////
