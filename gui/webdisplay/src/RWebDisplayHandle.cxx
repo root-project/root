@@ -192,7 +192,14 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
    if (url.empty())
       return nullptr;
 
-   TString exec = args.IsHeadless() ? fBatchExec.c_str() : fExec.c_str();
+   TString exec;
+   if (args.IsHeadless())
+      exec = fBatchExec.c_str();
+   else if (args.IsStandalone())
+      exec = fExec.c_str();
+   else
+      exec = "$prog $url";
+
    if (exec.Length() == 0)
       return nullptr;
 
