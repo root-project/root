@@ -219,3 +219,9 @@ class TestOPERATORS:
             assert m[1]    == 74
             assert m(1,2)  == 74
 
+    def test09_templated_operator(self):
+        """Templated operator<()"""
+
+        from cppyy.gbl import TOIClass
+
+        assert (TOIClass() < 1)

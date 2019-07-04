@@ -37,3 +37,16 @@ fragile::K* fragile::K::GimeL() {
 }
 
 fragile::L::~L() {}
+
+
+int fragile::create_handle(OpaqueHandle_t* handle) {
+    *handle = (OpaqueHandle_t)0x01;
+    return 0x01;
+}
+
+int fragile::destroy_handle(OpaqueHandle_t handle, intptr_t addr) {
+    if ((intptr_t)handle == addr)
+        return 1;
+    return 0;
+}
+

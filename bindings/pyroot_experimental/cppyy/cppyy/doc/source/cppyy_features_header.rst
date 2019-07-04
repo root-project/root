@@ -40,13 +40,13 @@ File features.h
         void array_method(int* ad, int size) {
             for (int i=0; i < size; ++i)
                 std::cout << ad[i] << ' ';
-            std::cout << std::endl;
+            std::cout << '\\n';
         }
 
         void array_method(double* ad, int size) {
             for (int i=0; i < size; ++i)
                 std::cout << ad[i] << ' ';
-            std::cout << std::endl;
+            std::cout << '\\n';
         }
 
         void uint_ref_assign(unsigned int& target, unsigned int value) {

@@ -9,12 +9,57 @@ level packages, which have their own releases.
 See :doc:`packages <packages>`, for details on the package structure.
 PyPy support lags CPython support.
 
+2019-07-01 : 1.4.12
+-------------------
 
-MASTER : 1.4.8
---------------
+* automatic conversion of python functions to std::function arguments
+* fix for templated operators that can map to different python names
+* fix on p3 crash when setting a detailed exception during exception handling
+* fix lookup of std::nullopt
+* fix bug that prevented certain templated constructors from being considered
+* support for enum values as data members on "enum class" enums
+* support for implicit conversion when passing by-value
 
+
+2019-05-23 : 1.4.11
+-------------------
+
+* Workaround for JITed RTTI lookup failures on 64b MS Windows
+* Improved overload resolution between f(void*) and f<>(T*)
+* Minimal support for char16_t (Windows) and char32_t (Linux/Mac)
+* Do not unnecessarily autocast smart pointers
+
+
+2019-05-13 : 1.4.10
+-------------------
+
+* Imported several FindCppyy.cmake improvements from Camille's cppyy-bbhash
+* Fixes to cppyy-generator for unresolved templates, void, etc.
+* Fixes in typedef parsing for template arguments in unknown namespaces
+* Fix in templated operator code generation
+* Fixed ref-counting error for instantiated template methods
+
+
+2019-04-25 : 1.4.9
+------------------
+
+* Fix import error on pypy-c
+
+
+2019-04-22 : 1.4.8
+------------------
+
+* std::tuple is now iterable for return assignments w/o tie
+* Support for opaque handles and typedefs of pointers to classes
+* Keep unresolved enums desugared and provide generic converters
+* Treat int8_t and uint8_t as integers (even when they are chars)
+* Fix lookup of enum values in global namespace
+* Backported name mangling (esp. for static/global data lookup) for 32b Windows
+* Fixed more linker problems with malloc on 64b Windows
+* Consistency in buffer length calculations and c_int/c_uint handling  on Windows
 * Properly resolve overloaded functions with using of templates from bases
 * Get templated constructor info from decl instead of name comparison
+* Fixed a performance regression for free functions.
 
 
 2019-04-04 : 1.4.7

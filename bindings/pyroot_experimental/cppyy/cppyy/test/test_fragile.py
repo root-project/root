@@ -346,3 +346,36 @@ class TestFRAGILE:
         assert cppyy.gbl.myvar2
         assert cppyy.gbl.myvar3
         assert cppyy.gbl.myvar4
+
+    def test16_opaque_handle(self):
+        """Support use of opaque handles"""
+
+        import cppyy
+
+        assert cppyy.gbl.fragile.OpaqueType
+        assert cppyy.gbl.fragile.OpaqueHandle_t
+
+        handle = cppyy.gbl.fragile.OpaqueHandle_t(0x42)
+        assert handle
+        assert cppyy.addressof(handle) == 0x42
+
+        raises(TypeError, cppyy.gbl.fragile.OpaqueType)
+        assert not 'OpaqueType' in cppyy.gbl.fragile.__dict__
+
+        handle = cppyy.gbl.fragile.OpaqueHandle_t()
+        assert not handle
+
+        addr = cppyy.gbl.fragile.create_handle(handle);
+        assert addr
+        assert not not handle
+
+        assert cppyy.gbl.fragile.destroy_handle(handle, addr);
+
+        # now define OpaqueType
+        cppyy.cppdef("namespace fragile { class OpaqueType { public: int m_int; }; }")
+
+        # get fresh (should not have been cached while incomplete)
+        o = cppyy.gbl.fragile.OpaqueType()
+        assert hasattr(o, 'm_int')
+
+        assert 'OpaqueType' in cppyy.gbl.fragile.__dict__

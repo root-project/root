@@ -1,7 +1,7 @@
 .. _packages:
 
-Packages
-========
+PyPI Packages
+=============
 
 Cppyy
 -----

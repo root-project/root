@@ -13,6 +13,8 @@ CppyyTestData::CppyyTestData() : m_const_int(17), m_owns_arrays(false)
     m_schar    = 'b';
     m_uchar    = 'c';
     m_wchar    = L'D';
+    m_int8     =  -9;
+    m_uint8    =   9;
     m_short    = -11;
     m_ushort   =  11u;
     m_int      = -22;
@@ -107,6 +109,8 @@ char                 CppyyTestData::get_char()     { return m_char; }
 signed char          CppyyTestData::get_schar()    { return m_schar; }
 unsigned char        CppyyTestData::get_uchar()    { return m_uchar; }
 wchar_t              CppyyTestData::get_wchar()    { return m_wchar; }
+int8_t               CppyyTestData::get_int8()     { return m_int8; }
+uint8_t              CppyyTestData::get_uint8()    { return m_uint8; }
 short                CppyyTestData::get_short()    { return m_short; }
 unsigned short       CppyyTestData::get_ushort()   { return m_ushort; }
 int                  CppyyTestData::get_int()      { return m_int; }
@@ -163,6 +167,8 @@ const char&                 CppyyTestData::get_char_cr()     { return m_char; }
 const signed char&          CppyyTestData::get_schar_cr()    { return m_schar; }
 const unsigned char&        CppyyTestData::get_uchar_cr()    { return m_uchar; }
 const wchar_t&              CppyyTestData::get_wchar_cr()    { return m_wchar; }
+const int8_t&               CppyyTestData::get_int8_cr()     { return m_int8; }
+const uint8_t&              CppyyTestData::get_uint8_cr()    { return m_uint8; }
 const short&                CppyyTestData::get_short_cr()    { return m_short; }
 const unsigned short&       CppyyTestData::get_ushort_cr()   { return m_ushort; }
 const int&                  CppyyTestData::get_int_cr()      { return m_int; }
@@ -186,6 +192,8 @@ char&                 CppyyTestData::get_char_r()     { return m_char; }
 signed char&          CppyyTestData::get_schar_r()    { return m_schar; }
 unsigned char&        CppyyTestData::get_uchar_r()    { return m_uchar; }
 wchar_t&              CppyyTestData::get_wchar_r()    { return m_wchar; }
+int8_t&               CppyyTestData::get_int8_r()     { return m_int8; }
+uint8_t&              CppyyTestData::get_uint8_r()    { return m_uint8; }
 short&                CppyyTestData::get_short_r()    { return m_short; }
 unsigned short&       CppyyTestData::get_ushort_r()   { return m_ushort; }
 int&                  CppyyTestData::get_int_r()      { return m_int; }
@@ -209,6 +217,8 @@ void CppyyTestData::set_char(char c)                       { m_char     = c; }
 void CppyyTestData::set_schar(signed char sc)              { m_schar    = sc; }
 void CppyyTestData::set_uchar(unsigned char uc)            { m_uchar    = uc; }
 void CppyyTestData::set_wchar(wchar_t wc)                  { m_wchar    = wc; }
+void CppyyTestData::set_int8(int8_t s8)                    { m_int8     = s8; }
+void CppyyTestData::set_uint8(uint8_t u8)                  { m_uint8    = u8; }
 void CppyyTestData::set_short(short s)                     { m_short    = s; }
 void CppyyTestData::set_ushort(unsigned short us)          { m_ushort   = us; }
 void CppyyTestData::set_int(int i)                         { m_int      = i; }
@@ -245,6 +255,8 @@ void CppyyTestData::set_char_cr(const char& c)                   { m_char     = 
 void CppyyTestData::set_schar_cr(const signed char& sc)          { m_schar    = sc; }
 void CppyyTestData::set_uchar_cr(const unsigned char& uc)        { m_uchar    = uc; }
 void CppyyTestData::set_wchar_cr(const wchar_t& wc)              { m_wchar    = wc; }
+void CppyyTestData::set_int8_cr(const int8_t& s8)                { m_int8     = s8; }
+void CppyyTestData::set_uint8_cr(const uint8_t& u8)              { m_uint8    = u8; }
 void CppyyTestData::set_short_cr(const short& s)                 { m_short    = s; }
 void CppyyTestData::set_ushort_cr(const unsigned short& us)      { m_ushort   = us; }
 void CppyyTestData::set_int_cr(const int& i)                     { m_int      = i; }
@@ -268,6 +280,8 @@ void CppyyTestData::set_char_rv(char&& c)                   { m_char     = c; }
 void CppyyTestData::set_schar_rv(signed char&& sc)          { m_schar    = sc; }
 void CppyyTestData::set_uchar_rv(unsigned char&& uc)        { m_uchar    = uc; }
 void CppyyTestData::set_wchar_rv(wchar_t&& wc)              { m_wchar    = wc; }
+void CppyyTestData::set_int8_rv(int8_t&& s8)                { m_int8     = s8; }
+void CppyyTestData::set_uint8_rv(uint8_t&& u8)              { m_uint8    = u8; }
 void CppyyTestData::set_short_rv(short&& s)                 { m_short    = s; }
 void CppyyTestData::set_ushort_rv(unsigned short&& us)      { m_ushort   = us; }
 void CppyyTestData::set_int_rv(int&& i)                     { m_int      = i; }
@@ -303,6 +317,8 @@ char                 CppyyTestData::s_char     = 'c';
 signed char          CppyyTestData::s_schar    = 's';
 unsigned char        CppyyTestData::s_uchar    = 'u';
 wchar_t              CppyyTestData::s_wchar    = L'U';
+int8_t               CppyyTestData::s_int8     = - 87;
+uint8_t              CppyyTestData::s_uint8    =   87;
 short                CppyyTestData::s_short    = -101;
 unsigned short       CppyyTestData::s_ushort   =  255u;
 int                  CppyyTestData::s_int      = -202;
@@ -351,6 +367,8 @@ char               g_char     = 'w';
 signed char        g_schar    = 'v';
 unsigned char      g_uchar    = 'u';
 wchar_t            g_wchar    = L'U';
+int8_t             g_int8     =  -66;
+uint8_t            g_uint8    =   66;
 short              g_short    =  -88;
 unsigned short     g_ushort   =   88u;
 int                g_int      = -188;
@@ -445,5 +463,43 @@ void StoreCallable::set_callable(double (*f)(double, double)) {
 }
 
 double StoreCallable::operator()(double d1, double d2) {
+    return fF(d1, d2);
+}
+
+//= callable through std::function ==========================================
+double call_double_double_sf(const std::function<double(double, double)>& f, double d1, double d2) {
+    return f(d1, d2);
+}
+
+int call_int_int_sf(const std::function<int(int, int)>& f, int i1, int i2) {
+    return f(i1, i2);
+}
+
+void call_void_sf(const std::function<void(int)>& f, int i) {
+    f(i);
+}
+
+int call_refi_sf(const std::function<void(int&)>& f) {
+    int i = -1; f(i); return i;
+}
+
+int call_refl_sf(const std::function<void(long&)>& f) {
+    long l = -1L; f(l); return l;
+}
+
+int call_refd_sf(const std::function<void(double&)>& f) {
+    double d = -1.; f(d); return d;
+}
+
+
+StoreCallable_sf::StoreCallable_sf(const std::function<double(double, double)>& f) : fF(f) {
+    /* empty */
+}
+
+void StoreCallable_sf::set_callable(const std::function<double(double, double)>& f) {
+    fF = f;
+}
+
+double StoreCallable_sf::operator()(double d1, double d2) {
     return fF(d1, d2);
 }

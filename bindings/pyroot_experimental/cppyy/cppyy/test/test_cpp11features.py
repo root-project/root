@@ -231,3 +231,23 @@ class TestCPP11FEATURES:
             l3 = cppyy.gbl.gime_a_lambda3(4)
             assert l3
             assert l3(2) == 48
+
+    def test09_optional(self):
+        """Use of optional and nullopt"""
+
+        import cppyy
+
+        if 201703 <= cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;"):
+            assert cppyy.gbl.std.optional
+            assert cppyy.gbl.std.nullopt
+
+            cppyy.cppdef("""
+                enum Enum { A = -1 };
+                bool callopt(std::optional<Enum>) { return true; }
+            """)
+
+            a = cppyy.gbl.std.optional[cppyy.gbl.Enum]()
+            assert cppyy.gbl.callopt(a)
+
+            c = cppyy.gbl.nullopt
+            assert cppyy.gbl.callopt(c)
