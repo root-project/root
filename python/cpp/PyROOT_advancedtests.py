@@ -295,7 +295,16 @@ class Cpp02TemplateLookup( MyTestCase ):
       else:
          inst = m.GetSizeOL(float)
       self.assertEqual( inst( 3.14 ),  m.GetFloatSize() )
-      self.assertEqual( m.GetSizeOL( 3.14 ),           m.GetDoubleSize() )
+
+      if self.exp_pyroot:
+         # In new cppyy, since an instantiation of GetSizeOL for
+         # float already exists, that instantiation will be picked
+         # instead of creating a new instantiation for double.
+         # https://bitbucket.org/wlav/cppyy/issues/115
+         self.assertEqual( m.GetSizeOL( 3.14 ), m.GetFloatSize() )
+      else:
+         self.assertEqual( m.GetSizeOL( 3.14 ), m.GetDoubleSize() )
+      
       self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + 2)
 
     # explicit forced instantiation
