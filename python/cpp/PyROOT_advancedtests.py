@@ -294,6 +294,7 @@ class Cpp02TemplateLookup( MyTestCase ):
          inst = m.GetSizeOL[float]
       else:
          inst = m.GetSizeOL(float)
+      num_new_inst = 1
       self.assertEqual( inst( 3.14 ),  m.GetFloatSize() )
 
       if self.exp_pyroot:
@@ -304,8 +305,10 @@ class Cpp02TemplateLookup( MyTestCase ):
          self.assertEqual( m.GetSizeOL( 3.14 ), m.GetFloatSize() )
       else:
          self.assertEqual( m.GetSizeOL( 3.14 ), m.GetDoubleSize() )
-      
-      self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + 2)
+         # GetSizeOL<double> is only instantiated here
+         num_new_inst += 1
+
+      self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + num_new_inst)
 
     # explicit forced instantiation
       self.assertEqual( m.GetSizeOL( int )( 1 ),       m.GetIntSize() )
