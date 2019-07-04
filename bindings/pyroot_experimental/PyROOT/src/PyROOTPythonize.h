@@ -16,6 +16,8 @@
 
 namespace PyROOT {
 
+PyObject* AddCPPInstancePickling(PyObject *self, PyObject *args);
+
 PyObject *AddPrettyPrintingPyz(PyObject *self, PyObject *args);
 
 PyObject *AddDirectoryAttrSyntaxPyz(PyObject *self, PyObject *args);
@@ -33,6 +35,8 @@ PyObject *AddTObjectEqNePyz(PyObject *self, PyObject *args);
 PyObject *AddSetItemTCAPyz(PyObject *self, PyObject *args);
 
 PyObject *AsRVec(PyObject *self, PyObject *obj);
+
+PyObject* CPPInstanceExpand(PyObject *self, PyObject *args);
 
 PyObject *GetCppCallableClass(PyObject *self, PyObject *args);
 
