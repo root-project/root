@@ -76,11 +76,11 @@ extern "C" {
                                     cling::Interpreter &interpreter, bool searchSystem);
 }
 
-TClingCallbacks::TClingCallbacks(cling::Interpreter* interp, bool hasCodeGen)
-   : InterpreterCallbacks(interp),
-     fLastLookupCtx(0), fROOTSpecialNamespace(0),
-     fFirstRun(true), fIsAutoLoading(false), fIsAutoLoadingRecursively(false),
-     fIsAutoParsingSuspended(false), fPPOldFlag(false), fPPChanged(false) {
+TClingCallbacks::TClingCallbacks(cling::Interpreter *interp, bool hasCodeGen)
+   : InterpreterCallbacks(interp), fLastLookupCtx(0), fROOTSpecialNamespace(0), fFirstRun(true), fIsAutoloading(false),
+     fIsAutoloadingRecursively(false), fIsAutoParsingSuspended(false), fPPOldFlag(false), fPPChanged(false),
+     fIsCodeGening(false)
+{
    if (hasCodeGen) {
       Transaction* T = 0;
       m_Interpreter->declare("namespace __ROOT_SpecialObjects{}", &T);
@@ -322,6 +322,8 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) 
    const LangOptions &LangOpts = SemaR.getPreprocessor().getLangOpts();
    if (LangOpts.Modules) {
       if (LangOpts.isCompilingModule())
+         return false;
+      if (fIsCodeGening)
          return false;
 
       // FIXME: We should load only the first available and rely on other callbacks
