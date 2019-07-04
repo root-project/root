@@ -198,7 +198,11 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
    else if (args.IsStandalone())
       exec = fExec.c_str();
    else
+#ifdef _MSC_VER
       exec = "$prog $url";
+#else
+      exec = "$prog $url &";
+#endif
 
    if (exec.Length() == 0)
       return nullptr;
@@ -461,4 +465,28 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> ROOT::Experimental::RWebD
    }
 
    return handle;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Display provided url in configured web browser
+/// \param url - specified URL address like https://root.cern
+/// Browser can specified when starting `root --web=firefox`
+/// Returns true when browser started
+/// It is convenience method, equivalent to:
+///  ~~~
+///     RWebDisplayArgs args;
+///     args.SetUrl(url);
+///     args.SetStandalone(false);
+///     auto handle = RWebDisplayHandle::Display(args);
+/// ~~~
+
+bool ROOT::Experimental::RWebDisplayHandle::DisplayUrl(const std::string &url)
+{
+   RWebDisplayArgs args;
+   args.SetUrl(url);
+   args.SetStandalone(false);
+
+   auto handle = Display(args);
+
+   return !!handle;
 }
