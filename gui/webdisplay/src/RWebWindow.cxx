@@ -90,7 +90,7 @@ ROOT::Experimental::RWebWindow::~RWebWindow()
          fConn.clear(); // remove all connections under mutex
       }
 
-      for (auto &&conn : lst)
+      for (auto &conn : lst)
          conn->fActive = false;
 
       fMgr->Unregister(*this);
@@ -208,12 +208,12 @@ unsigned ROOT::Experimental::RWebWindow::GetDisplayConnection()
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
-   for (auto &&entry : fPendingConn) {
+   for (auto &entry : fPendingConn) {
       if (!entry->fBatchMode)
          return entry->fConnId;
    }
 
-   for (auto &&conn : fConn) {
+   for (auto &conn : fConn) {
       if (!conn->fBatchMode)
          return conn->fConnId;
    }
@@ -229,7 +229,7 @@ std::shared_ptr<ROOT::Experimental::RWebWindow::WebConn> ROOT::Experimental::RWe
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
-   for (auto &&conn : fConn) {
+   for (auto &conn : fConn) {
       if (conn->fWSId == wsid)
          return conn;
    }
@@ -308,7 +308,7 @@ bool ROOT::Experimental::RWebWindow::ProcessBatchHolder(std::shared_ptr<THttpCal
    // use connection mutex to access hold request
    {
       std::lock_guard<std::mutex> grd(fConnMutex);
-      for (auto &&entry : fPendingConn) {
+      for (auto &entry : fPendingConn) {
          if (entry->fKey == key)  {
             assert(!found_key); // indicate error if many same keys appears
             found_key = true;
@@ -318,7 +318,7 @@ bool ROOT::Experimental::RWebWindow::ProcessBatchHolder(std::shared_ptr<THttpCal
       }
 
 
-      for (auto &&conn : fConn) {
+      for (auto &conn : fConn) {
          if (conn->fKey == key) {
             assert(!found_key); // indicate error if many same keys appears
             prev = std::move(conn->fHold);
@@ -420,12 +420,12 @@ bool ROOT::Experimental::RWebWindow::HasKey(const std::string &key)
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
-   for (auto &&entry : fPendingConn) {
+   for (auto &entry : fPendingConn) {
       if (entry->fKey == key)
          return true;
    }
 
-   for (auto &&conn : fConn) {
+   for (auto &conn : fConn) {
       if (conn->fKey == key)
          return true;
    }
@@ -788,7 +788,7 @@ void ROOT::Experimental::RWebWindow::CheckDataToSend(bool only_once)
    do {
       bool isany = false;
 
-      for (auto &&conn : arr)
+      for (auto &conn : arr)
          if (CheckDataToSend(conn))
             isany = true;
 
@@ -876,14 +876,17 @@ bool ROOT::Experimental::RWebWindow::HasConnection(unsigned connid, bool only_ac
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
-   for (auto &&conn: fConn) {
-      if (connid && (conn->fConnId != connid)) continue;
-      if (conn->fActive || !only_active) return true;
+   for (auto &conn : fConn) {
+      if (connid && (conn->fConnId != connid))
+         continue;
+      if (conn->fActive || !only_active)
+         return true;
    }
 
    if (!only_active)
-      for (auto &&conn: fPendingConn) {
-         if (!connid || (conn->fConnId == connid)) return true;
+      for (auto &conn : fPendingConn) {
+         if (!connid || (conn->fConnId == connid))
+            return true;
       }
 
    return false;
@@ -921,7 +924,7 @@ ROOT::Experimental::RWebWindow::ConnectionsList ROOT::Experimental::RWebWindow::
    if (!connid) {
       arr = fConn;
    } else {
-      for (auto &&conn : fConn)
+      for (auto &conn : fConn)
          if ((conn->fConnId == connid) && conn->fActive)
             arr.push_back(conn);
    }
@@ -939,7 +942,7 @@ bool ROOT::Experimental::RWebWindow::CanSend(unsigned connid, bool direct)
 {
    auto arr = GetConnections(connid);
 
-   for (auto &&conn : arr) {
+   for (auto &conn : arr) {
 
       std::lock_guard<std::mutex> grd(conn->fMutex);
 
@@ -962,7 +965,7 @@ int ROOT::Experimental::RWebWindow::GetSendQueueLength(unsigned connid)
 {
    int maxq = -1;
 
-   for (auto &&conn : GetConnections(connid)) {
+   for (auto &conn : GetConnections(connid)) {
       std::lock_guard<std::mutex> grd(conn->fMutex);
       int len = conn->fQueue.size();
       if (len > maxq) maxq = len;
@@ -985,7 +988,7 @@ void ROOT::Experimental::RWebWindow::SubmitData(unsigned connid, bool txt, std::
 
    timestamp_t stamp = std::chrono::system_clock::now();
 
-   for (auto &&conn : arr) {
+   for (auto &conn : arr) {
 
       if (fProtocolCnt >= 0)
          if (!fProtocolConnId || (conn->fConnId == fProtocolConnId)) {
