@@ -13,9 +13,11 @@ public:
 
     virtual PyCallable* Clone() { return new CPPFunction(*this); }
 
-    virtual PyObject* PreProcessArgs(CPPInstance*& self, PyObject* args, PyObject* kwds);
     virtual PyObject* Call(
         CPPInstance*&, PyObject* args, PyObject* kwds, CallContext* ctx = nullptr);
+
+protected:
+    virtual PyObject* PreProcessArgs(CPPInstance*& self, PyObject* args, PyObject* kwds);
 };
 
 } // namespace CPyCppyy

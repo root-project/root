@@ -4,6 +4,7 @@
 #include "CPPDataMember.h"
 #include "CPPFunction.h"
 #include "CPPOverload.h"
+#include "CustomPyTypes.h"
 #include "Dispatcher.h"
 #include "ProxyWrappers.h"
 #include "PyStrings.h"
@@ -270,26 +271,81 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname)
             }
         }
 
+    // this may be a typedef that resolves to a sugared type
+        if (!attr) {
+            const std::string& lookup = Cppyy::GetScopedFinalName(klass->fCppType) + "::" + name;
+            const std::string& resolved = Cppyy::ResolveName(lookup);
+            if (resolved != lookup) {
+                const std::string& cpd = Utility::Compound(resolved);
+                if (cpd == "*") {
+                    const std::string& clean = TypeManip::clean_type(resolved, false, true);
+                    Cppyy::TCppType_t tcl = Cppyy::GetScope(clean);
+                    if (tcl) {
+                        typedefpointertoclassobject* tpc = PyObject_GC_New(typedefpointertoclassobject, &TypedefPointerToClass_Type);
+                        tpc->fType = tcl;
+                        attr = (PyObject*)tpc;
+                    }
+                }
+            }
+        }
+
     // function templates that have not been instantiated
-        if (!attr && Cppyy::ExistsMethodTemplate(scope, name)) {
-            attr = (PyObject*)TemplateProxy_New(name, name, pyclass);
-        } else {
-        // for completeness in error reporting
-            PyErr_Format(PyExc_TypeError, "\'%s\' is not a known C++ template", name.c_str());
-            Utility::FetchError(errors);
+        if (!attr) {
+            if (Cppyy::ExistsMethodTemplate(scope, name)) {
+                attr = (PyObject*)TemplateProxy_New(name, name, pyclass);
+            } else {
+            // for completeness in error reporting
+                PyErr_Format(PyExc_TypeError, "\'%s\' is not a known C++ template", name.c_str());
+                Utility::FetchError(errors);
+            }
         }
 
     // enums types requested as type (rather than the constants)
-    // TODO: IsEnum should deal with the scope, using klass->GetListOfEnums()->FindObject()
-        if (!attr && Cppyy::IsEnum(scope == Cppyy::gGlobalScope ? name : Cppyy::GetScopedFinalName(scope)+"::"+name)) {
-        // special case; enum types; for now, pretend int
-        // TODO: although fine for C++98, this isn't correct in C++11
-            Py_INCREF(&PyInt_Type);
-            attr = (PyObject*)&PyInt_Type;
-        } else {
-        // for completeness in error reporting
-            PyErr_Format(PyExc_TypeError, "\'%s\' is not a known C++ enum", name.c_str());
-            Utility::FetchError(errors);
+        if (!attr) {
+        // TODO: IsEnum should deal with the scope, using klass->GetListOfEnums()->FindObject()
+            if (Cppyy::IsEnum(scope == Cppyy::gGlobalScope ? name : Cppyy::GetScopedFinalName(scope)+"::"+name)) {
+            // enum types (incl. named and class enums)
+                Cppyy::TCppEnum_t etype = Cppyy::GetEnum(scope, name);
+                if (etype) {
+                // collect the enum values
+                    Cppyy::TCppIndex_t ndata = Cppyy::GetNumEnumData(etype);
+                    PyObject* dct = PyDict_New();
+                    for (Cppyy::TCppIndex_t idata = 0; idata < ndata; ++idata) {
+                        PyObject* val = PyLong_FromLongLong(Cppyy::GetEnumDataValue(etype, idata));
+                        PyDict_SetItemString(dct, Cppyy::GetEnumDataName(etype, idata).c_str(), val);
+                        Py_DECREF(val);
+                    }
+
+                // add the __cppname__ for templates
+                    PyObject* cppname = nullptr;
+                    if (scope == Cppyy::gGlobalScope) {
+                        Py_INCREF(pyname);
+                        cppname = pyname;
+                    } else
+                        cppname = CPyCppyy_PyUnicode_FromString((Cppyy::GetScopedFinalName(scope)+"::"+name).c_str());
+                    PyDict_SetItem(dct, PyStrings::gCppName, cppname);
+                    Py_DECREF(cppname);
+
+                // create new type with labeled values in place
+                    PyObject* pybases = PyTuple_New(1);
+                    Py_INCREF(&PyInt_Type);
+                    PyTuple_SET_ITEM(pybases, 0, (PyObject*)&PyInt_Type);
+                    PyObject* args = Py_BuildValue((char*)"sOO", name.c_str(), pybases, dct);
+                    attr = Py_TYPE(&PyInt_Type)->tp_new(Py_TYPE(&PyInt_Type), args, nullptr);
+                    Py_DECREF(args);
+                    Py_DECREF(pybases);
+                    Py_DECREF(dct);
+
+                } else {
+                // presumably not a class enum; simply pretend int
+                    Py_INCREF(&PyInt_Type);
+                    attr = (PyObject*)&PyInt_Type;
+                }
+            } else {
+            // for completeness in error reporting
+                PyErr_Format(PyExc_TypeError, "\'%s\' is not a known C++ enum", name.c_str());
+                Utility::FetchError(errors);
+            }
         }
 
         if (attr) {
@@ -318,11 +374,12 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname)
 
         // reload and reset weak refs
             for (auto uid : uv) {
-                PyObject* pyuscope = CreateScopeProxy(Cppyy::GetScopedFinalName(uid));
+                std::string uname = Cppyy::GetScopedFinalName(uid);
+                PyObject* pyuscope = CreateScopeProxy(uname);
                 if (pyuscope) {
                     klass->fImp.fUsing->push_back(PyWeakref_NewRef(pyuscope, nullptr));
                 // the namespace may not otherwise be held, so tie the lifetimes
-                    PyObject_SetAttr(pyclass, pyname, pyuscope);
+                    PyObject_SetAttrString(pyclass, ("__lifeline_"+uname).c_str(), pyuscope);
                     Py_DECREF(pyuscope);
                 }
             }

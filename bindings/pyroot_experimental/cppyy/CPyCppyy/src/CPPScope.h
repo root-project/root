@@ -37,10 +37,11 @@ class CPPScope {
 public:
     enum EFlags {
         kNone            = 0x0,
-        kIsDispatcher    = 0x0001,
-        kIsMeta          = 0x0002,
-        kIsNamespace     = 0x0004,
-        kIsPython        = 0x0008 };
+        kIsInComplete    = 0x0001,
+        kIsDispatcher    = 0x0002,
+        kIsMeta          = 0x0004,
+        kIsNamespace     = 0x0008,
+        kIsPython        = 0x0010 };
 
 public:
     PyHeapTypeObject  fType;

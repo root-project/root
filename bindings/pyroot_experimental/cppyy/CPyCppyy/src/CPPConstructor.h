@@ -41,6 +41,14 @@ public:
     virtual PyObject* Call(CPPInstance*&, PyObject*, PyObject*, CallContext* = nullptr);
 };
 
+class CPPIncompleteClassConstructor : public CPPConstructor {
+public:
+    using CPPConstructor::CPPConstructor;
+
+public:
+    virtual PyObject* Call(CPPInstance*&, PyObject*, PyObject*, CallContext* = nullptr);
+};
+
 } // namespace CPyCppyy
 
 #endif // !CPYCPPYY_CPPCONSTRUCTOR_H

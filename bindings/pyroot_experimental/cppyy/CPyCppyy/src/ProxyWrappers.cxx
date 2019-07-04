@@ -217,10 +217,11 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass)
                 const std::string& clName = Cppyy::GetFinalName(scope);
                 mtName = "_" + clName + "__" + mtName;
            }
-       }
+        }
 
     // template members; handled by adding a dispatcher to the class
-        if (isTemplate) {
+        bool storeOnTemplate = isTemplate ? true : (!isConstructor && Cppyy::ExistsMethodTemplate(scope, mtCppName));
+        if (storeOnTemplate) {
             sync_templates(pyclass, mtCppName, mtName);
         // continue processing to actually add the method so that the proxy can find
         // it on the class when called explicitly
@@ -254,9 +255,10 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass)
             setitem.push_back(new CPPSetItem(scope, method));
         }
 
-        if (isTemplate) {
+        if (storeOnTemplate) {
             PyObject* attr = PyObject_GetAttrString(pyclass, const_cast<char*>(mtName.c_str()));
-            ((TemplateProxy*)attr)->AddTemplate(pycall->Clone());
+            if (isTemplate) ((TemplateProxy*)attr)->AddTemplate(pycall->Clone());
+            else ((TemplateProxy*)attr)->AddOverload(pycall->Clone());
             Py_DECREF(attr);
         }
     }
@@ -289,7 +291,10 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass)
             defctor = new CPPAbstractClassConstructor(scope, (Cppyy::TCppMethod_t)0);
         else if (isNamespace)
             defctor = new CPPNamespaceConstructor(scope, (Cppyy::TCppMethod_t)0);
-        else
+        else if (!Cppyy::IsComplete(Cppyy::GetScopedFinalName(scope))) {
+            ((CPPScope*)pyclass)->fFlags |= CPPScope::kIsInComplete;
+            defctor = new CPPIncompleteClassConstructor(scope, (Cppyy::TCppMethod_t)0);
+        } else
             defctor = new CPPConstructor(scope, (Cppyy::TCppMethod_t)0);
         cache["__init__"].push_back(defctor);
     }
@@ -323,7 +328,7 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass)
             Py_DECREF(method);
         }
 
-        Py_XDECREF(attr);         // could have be found in base class or non-existent
+        Py_XDECREF(attr);         // could have been found in base class or non-existent
     }
     Py_DECREF(dct);
 
@@ -386,6 +391,7 @@ static PyObject* BuildCppClassBases(Cppyy::TCppType_t klass)
         const std::string& name = Cppyy::GetBaseName(klass, ibase);
         int decision = 2;
         Cppyy::TCppType_t tp = Cppyy::GetScope(name);
+        if (!tp) continue;   // means this base with not be available Python-side
         for (size_t ibase2 = 0; ibase2 < uqb.size(); ++ibase2) {
             if (uqb[ibase2] == name) {         // not unique ... skip
                 decision = 0;
@@ -631,7 +637,7 @@ PyObject* CPyCppyy::CreateScopeProxy(const std::string& name, PyObject* parent)
         }
     }
 
-// use the module as a fake cope if no outer scope found
+// use the module as a fake scope if no outer scope found
     if (!parent) {
         Py_INCREF(gThisModule);
         parent = gThisModule;
@@ -658,7 +664,7 @@ PyObject* CPyCppyy::CreateScopeProxy(const std::string& name, PyObject* parent)
         }
 
     // store a ref from cppyy scope id to new python class
-        if (pyscope) {
+        if (pyscope && !(((CPPScope*)pyscope)->fFlags & CPPScope::kIsInComplete)) {
             gPyClasses[klass] = PyWeakref_NewRef(pyscope, nullptr);
 
             if (!Cppyy::IsNamespace(klass)) {
@@ -682,8 +688,8 @@ PyObject* CPyCppyy::CreateScopeProxy(const std::string& name, PyObject* parent)
         }
     }
 
-// store on parent if found/created
-    if (pyscope)
+// store on parent if found/created and complete
+    if (pyscope && !(((CPPScope*)pyscope)->fFlags & CPPScope::kIsInComplete))
         PyObject_SetAttrString(parent, const_cast<char*>(name.c_str()), pyscope);
     Py_DECREF(parent);
 

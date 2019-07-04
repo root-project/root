@@ -37,6 +37,26 @@ inline bool RefInt_CheckExact(T* object)
     return object && Py_TYPE(object) == &RefInt_Type;
 }
 
+//- custom type representing typedef to pointer of class ---------------------
+struct typedefpointertoclassobject {
+    PyObject_HEAD
+    Cppyy::TCppType_t        fType;
+};
+
+extern PyTypeObject TypedefPointerToClass_Type;
+
+template<typename T>
+inline bool TypedefPointerToClass_Check(T* object)
+{
+    return object && PyObject_TypeCheck(object, &TypedefPointerToClass_Type);
+}
+
+template<typename T>
+inline bool TypedefPointerToClass_CheckExact(T* object)
+{
+    return object && Py_TYPE(object) == &TypedefPointerToClass_Type;
+}
+
 //- custom instance method object type and type verification -----------------
 extern PyTypeObject CustomInstanceMethod_Type;
 

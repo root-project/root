@@ -347,6 +347,25 @@ int CPyCppyy::CPPMethod::GetPriority()
 }
 
 //----------------------------------------------------------------------------
+bool CPyCppyy::CPPMethod::IsGreedy()
+{
+// Methods will all void*-like arguments should be sorted after template
+// instanstations, so that they don't greedily take over pointers to object.
+// GetPriority() is too heavy-handed, as it will pull in all the argument
+// types, so use this cheaper check.
+    const size_t nArgs = Cppyy::GetMethodReqArgs(fMethod);
+    if (!nArgs) return false;
+
+    for (int iarg = 0; iarg < (int)nArgs; ++iarg) {
+        const std::string aname = Cppyy::GetMethodArgType(fMethod, iarg);
+        if (aname.find("void*") != 0)
+            return false;
+    }
+    return true;
+}
+
+
+//----------------------------------------------------------------------------
 int CPyCppyy::CPPMethod::GetMaxArgs()
 {
     return (int)Cppyy::GetMethodNumArgs(fMethod);
@@ -481,16 +500,21 @@ bool CPyCppyy::CPPMethod::ConvertAndSetArgs(PyObject* args, CallContext* ctxt)
     Py_ssize_t argc = PyTuple_GET_SIZE(args);
     Py_ssize_t argMax = (Py_ssize_t)fConverters.size();
 
-// argc must be between min and max number of arguments
-    if (argc < fArgsRequired) {
-        SetPyError_(CPyCppyy_PyUnicode_FromFormat(
-            "takes at least %ld arguments (%ld given)", fArgsRequired, argc));
-        return false;
-    } else if (argMax < argc) {
-        SetPyError_(CPyCppyy_PyUnicode_FromFormat(
-            "takes at most %ld arguments (%ld given)", argMax, argc));
-        return false;
+    if (argMax != argc) {
+    // argc must be between min and max number of arguments
+        if (argc < fArgsRequired) {
+            SetPyError_(CPyCppyy_PyUnicode_FromFormat(
+                "takes at least %ld arguments (%ld given)", fArgsRequired, argc));
+            return false;
+        } else if (argMax < argc) {
+            SetPyError_(CPyCppyy_PyUnicode_FromFormat(
+                "takes at most %ld arguments (%ld given)", argMax, argc));
+            return false;
+        }
     }
+
+    if (argc == 0)
+        return true;
 
 // convert the arguments to the method call array
     bool isOK = true;
@@ -537,12 +561,6 @@ PyObject* CPyCppyy::CPPMethod::Execute(void* self, ptrdiff_t offset, CallContext
 PyObject* CPyCppyy::CPPMethod::Call(
         CPPInstance*& self, PyObject* args, PyObject* kwds, CallContext* ctxt)
 {
-// preliminary check in case keywords are accidently used (they are ignored otherwise)
-    if (kwds && PyDict_Size(kwds)) {
-        PyErr_SetString(PyExc_TypeError, "keyword arguments are not yet supported");
-        return nullptr;
-    }
-
 // setup as necessary
     if (!fIsInitialized && !Initialize(ctxt))
         return nullptr;
