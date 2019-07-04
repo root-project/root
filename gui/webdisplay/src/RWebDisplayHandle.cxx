@@ -6,7 +6,7 @@
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -18,18 +18,11 @@
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RLogger.hxx>
 
-#include "ROOT/RWebWindow.hxx"
-
-#include "THttpServer.h"
-
 #include "RConfigure.h"
 #include "TSystem.h"
 #include "TRandom.h"
 #include "TString.h"
-#include "TApplication.h"
-#include "TTimer.h"
 #include "TObjArray.h"
-#include "TROOT.h"
 #include "TEnv.h"
 
 #include <regex>
