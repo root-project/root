@@ -66,7 +66,6 @@ private:
 
    bool CreateServer(bool with_http = false);
 
-
 public:
    RWebWindowsManager();
 
