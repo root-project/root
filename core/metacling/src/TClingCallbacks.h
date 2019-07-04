@@ -45,6 +45,8 @@ private:
    bool fIsAutoParsingSuspended;
    bool fPPOldFlag;
    bool fPPChanged;
+   bool fIsCodeGening;
+
 public:
    TClingCallbacks(cling::Interpreter* interp, bool hasCodeGen);
 
@@ -84,6 +86,22 @@ public:
    // The callback is used to update the list of globals in ROOT.
    //
    virtual void TransactionCommitted(const cling::Transaction &T);
+
+   // The callback is used to inform ROOT when cling started code generation.
+   //
+   virtual void TransactionCodeGenStarted(const cling::Transaction &T)
+   {
+      assert(!fIsCodeGening);
+      fIsCodeGening = true;
+   }
+
+   // The callback is used to inform ROOT when cling finished code generation.
+   //
+   virtual void TransactionCodeGenFinished(const cling::Transaction &T)
+   {
+      assert(fIsCodeGening);
+      fIsCodeGening = false;
+   }
 
    // The callback is used to update the list of globals in ROOT.
    //
