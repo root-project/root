@@ -903,11 +903,8 @@
       if (this.fillatt === undefined) {
          this.createAttFill({ pattern: 1001, color: 0 });
 
-         var fillcolor = 'white';
-         if (tframe && tframe.fFillColor)
-            fillcolor = this.canv_painter().GetOldColor(tframe.fFillColor, true);
-
-         this.fillatt.SetSolidColor(fillcolor);
+         // TODO: provide real fill color
+         this.fillatt.SetSolidColor('white');
       }
 
       this.createAttLine({ color: 'black' });
@@ -2831,10 +2828,10 @@
           svg_pad = null, svg_rect = null, btns = null;
 
       if (this.pad && this.pad.fDrawOpts && this.pad.fSize) {
+         x = Math.round(width * this.pad.fPos.fHoriz.fNormal.fVal);
+         y = Math.round(height * this.pad.fPos.fVert.fNormal.fVal);
          w = Math.round(width * this.pad.fSize.fHoriz.fNormal.fVal);
          h = Math.round(height * this.pad.fSize.fVert.fNormal.fVal);
-         x = Math.round(width * this.pad.fDrawOpts.fPos.fAttr.fHoriz.fNormal.fVal);
-         y = Math.round(height * this.pad.fDrawOpts.fPos.fAttr.fVert.fNormal.fVal);
       }
 
       if (pad_enlarged === this.pad) { w = width; h = height; x = y = 0; }
@@ -4246,24 +4243,6 @@
 
    TCanvasPainter.prototype.HasEventStatus = function() {
       return this.has_event_status;
-   }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return the color in a string ready for SVG from the value found in `RGBa`
-/// If `fKind` == 0 the color `RGBa` contains the Red Green Blue and alpha values.
-/// Otherwise the `fRedOrPalettePos` member of RGBa contains the color index in
-/// the current palette
-
-   TCanvasPainter.prototype.GetOldColor = function(attr, direct) {
-      if (!attr) return;
-
-      var tcol = direct ? attr : attr.fAttr; // this is TColor instance
-      if (!tcol.fKind)
-         return "rgb(" + Math.round(tcol.fRedOrPalettePos*255) + "," +
-                         Math.round(tcol.fGreen*255) + "," +
-                         Math.round(tcol.fBlue*255) + ")";
-      return col;
    }
 
    TCanvasPainter.prototype.GetNewOpt = function(opts, name, dflt) {

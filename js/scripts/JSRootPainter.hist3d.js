@@ -1296,7 +1296,7 @@
          mesh.painter = this;
          mesh.zmin = axis_zmin;
          mesh.zmax = axis_zmax;
-         mesh.baseline = (this.options.BaseLine===false) ? axis_zmin : this.options.BaseLine;
+         mesh.baseline = (this.options.BaseLine!==false) ? this.options.BaseLine : (this.options.Zero ? axis_zmin : 0);
          mesh.tip_color = (rootcolor===3) ? 0xFF0000 : 0x00FF00;
          mesh.handle = handle;
 

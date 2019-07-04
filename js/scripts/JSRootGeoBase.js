@@ -2505,8 +2505,8 @@
       return res;
    }
 
-   /** Return node name with given id.
-    * Either original object or description is used
+   /** @brief Return node name with given id.
+    * @desc Either original object or description is used
     * @private */
    JSROOT.GEO.ClonedNodes.prototype.GetNodeName = function(nodeid) {
       if (this.origin) {
@@ -2517,6 +2517,8 @@
       return node ? node.name : "";
    }
 
+   /** @brief Returns description for provide stack
+    * @private */
    JSROOT.GEO.ClonedNodes.prototype.ResolveStack = function(stack, withmatrix) {
 
       var res = { id: 0, obj: null, node: this.nodes[0], name: this.name_prefix };
