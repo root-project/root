@@ -98,15 +98,16 @@ gbl.std.move  = _backend.move
 
 
 #- fake namespace for interactive lazy lookups -------------------------------
-class InteractiveLazy(object):
-    def __getattr__(self, attr):
-        if attr == '__all__':
-            caller = sys.modules[sys._getframe(1).f_globals['__name__']]
-            _backend._set_cpp_lazy_lookup(caller.__dict__)
-        return []
+if not (hasattr(__builtins__, '__IPYTHON__') or 'IPython' in sys.modules):
+    class InteractiveLazy(object):
+        def __getattr__(self, attr):
+            if attr == '__all__':
+                caller = sys.modules[sys._getframe(1).f_globals['__name__']]
+                _backend._set_cpp_lazy_lookup(caller.__dict__)
+            return []
 
-sys.modules['cppyy.interactive'] = InteractiveLazy()
-del InteractiveLazy
+    sys.modules['cppyy.interactive'] = InteractiveLazy()
+    del InteractiveLazy
 
 
 #- add to the dynamic path as needed -----------------------------------------

@@ -119,6 +119,7 @@ development environments.
    :maxdepth: 1
 
    installation
+   examples
    changelog
 
 .. toctree::

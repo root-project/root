@@ -199,3 +199,12 @@ public:
 
     int m_val;
 };
+
+
+//----------------------------------------------------------------------------
+// templated operator
+class TOIClass {
+public:
+    template<typename T>
+    bool operator<(T t) { return true; }
+};

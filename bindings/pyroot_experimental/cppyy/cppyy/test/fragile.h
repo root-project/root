@@ -1,3 +1,6 @@
+#include <cstdint>
+
+
 namespace fragile {
 
 class no_such_class;
@@ -120,5 +123,11 @@ class O {
 public:
    virtual int abstract() = 0;
 };
+
+class OpaqueType;
+typedef OpaqueType* OpaqueHandle_t;
+
+int create_handle(OpaqueHandle_t* handle);
+int destroy_handle(OpaqueHandle_t handle, intptr_t addr);
 
 } // namespace fragile

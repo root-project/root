@@ -1,12 +1,33 @@
+#ifndef CPPYY_TEST_TEMPLATES_H
+#define CPPYY_TEST_TEMPLATES_H
+
+#include <stdexcept>
 #include <string>
 #include <sstream>
 #include <vector>
+
+#ifndef WIN32
+#include <cxxabi.h>
+inline std::string demangle_it(const char* name, const char* errmsg) {
+    int status;
+    std::string res = abi::__cxa_demangle(name, 0, 0, &status);
+    if (status != 0) throw std::runtime_error(errmsg);
+    return res;
+}
+#else
+inline std::string demangle_it(const char* name, const char*) {
+    return name;        // typeinfo's name() is already demangled
+}
+#endif
 
 
 //===========================================================================
 class MyTemplatedMethodClass {         // template methods
 public:
-    long get_size();      // to get around bug in genreflex
+    template<class A> long get_size(A&);
+    template<class A> long get_size(const A&);
+
+    long get_size();
     template<class B> long get_size();
 
     long get_char_size();
@@ -20,6 +41,16 @@ public:
 private:
     double m_data[3];
 };
+
+template<class A>
+long MyTemplatedMethodClass::get_size(A&) {
+    return sizeof(A);
+}
+
+template<class A>
+long MyTemplatedMethodClass::get_size(const A&) {
+    return sizeof(A)+1;
+}
 
 template<class B>
 inline long MyTemplatedMethodClass::get_size() {
@@ -260,7 +291,7 @@ public:
     using _Mybase::get3;
 };
 
-}
+} // namespace using_problem
 
 
 //===========================================================================
@@ -272,4 +303,155 @@ bool is_valid(T&& new_value) {
     return new_value != T{};
 }
 
+} // namespace T_WithRValue
+
+
+//===========================================================================
+// variadic templates
+namespace some_variadic {
+
+#ifdef WIN32
+extern __declspec(dllimport) std::string gTypeName;
+#else
+extern std::string gTypeName;
+#endif
+
+template <typename ... Args>
+class A {
+public:
+    A() {
+        gTypeName = demangle_it(typeid(A<Args...>).name(), "A::A");
+    }
+    A(const A&) = default;
+    A(A&&) = default;
+    A& operator=(const A&) = default;
+    A& operator=(A&&) = default;
+
+    template <typename ... FArgs>
+    void a(FArgs&&... args) {
+        gTypeName = demangle_it(typeid(&A<Args...>::a<FArgs...>).name(), "A::a-2");
+    }
+
+    template <typename T, typename ... FArgs>
+    T a_T(FArgs&&... args) {
+        gTypeName = demangle_it(typeid(&A<Args...>::a_T<T, FArgs...>).name(), "A::a_T-2");
+        return T{};
+    }
+
+    template <typename ... FArgs>
+    static void sa(FArgs&&... args) {
+        gTypeName = demangle_it(typeid(A<Args...>).name(), "A::sa-1");
+        gTypeName += "::";
+        gTypeName += demangle_it(typeid(A<Args...>::sa<FArgs...>).name(), "A::sa-2");
+    }
+
+    template <typename T, typename ... FArgs>
+    static T sa_T(FArgs&&... args) {
+        gTypeName = demangle_it(typeid(A<Args...>).name(), "A::sa_T-1");
+        gTypeName +=  "::";
+        gTypeName += demangle_it(typeid(A<Args...>::sa_T<T, FArgs...>).name(), "A::sa_T-2");
+        return T{};
+    }
+};
+
+class B {
+public:
+    B() {
+        gTypeName = demangle_it(typeid(B).name(), "B::B");
+    }
+    B(const B&) = default;
+    B(B&&) = default;
+    B& operator=(const B&) = default;
+    B& operator=(B&&) = default;
+
+    template <typename ... FArgs>
+    void b(FArgs&&... args) {
+        gTypeName = demangle_it(typeid(&B::b<FArgs...>).name(), "B::b-2");
+    }
+
+    template <typename T, typename ... FArgs>
+    T b_T(FArgs&&... args) {
+        gTypeName = demangle_it(typeid(&B::b_T<T, FArgs...>).name(), "B::b_T-2");
+        return T{};
+    }
+
+    template <typename ... FArgs>
+    static void sb(FArgs&&... args) {
+        gTypeName = demangle_it(typeid(B).name(), "B::sb-1");
+        gTypeName += "::";
+        gTypeName +=  demangle_it(typeid(B::sb<FArgs...>).name(), "B::sb-2");
+    }
+
+    template <typename T, typename ... FArgs>
+    static T sb_T(FArgs&&... args) {
+        gTypeName = demangle_it(typeid(B).name(), "B::sb_T-1");
+        gTypeName += "::";
+        gTypeName += demangle_it(typeid(B::sb_T<T, FArgs...>).name(), "B::sb_T-2");
+        return T{};
+    }
+};
+
+template <typename ... Args>
+void fn(Args&&... args) {
+    gTypeName = demangle_it(typeid(fn<Args...>).name(), "fn");
 }
+
+template <typename T, typename ... Args>
+T fn_T(Args&&... args) {
+    gTypeName = demangle_it(typeid(fn<Args...>).name(), "fn_T");
+    return T{};
+}
+
+} // namespace some_variadic
+
+
+//===========================================================================
+// template with empty body
+namespace T_WithEmptyBody {
+
+#ifdef WIN32
+extern __declspec(dllimport) std::string side_effect;
+#else
+extern std::string side_effect;
+#endif
+
+template<typename T>
+void some_empty();
+
+} // namespace T_WithEmptyBody
+
+
+//===========================================================================
+// template with catch-all (void*, void**)overloads
+namespace T_WithGreedyOverloads {
+
+class SomeClass {
+    double fD;
+};
+
+class WithGreedy1 {
+public:
+    template<class T>
+    int get_size(T*) { return (int)sizeof(T); }
+    int get_size(void*, bool force=false) { return -1; }
+};
+
+class WithGreedy2 {
+public:
+    template<class T>
+    int get_size(T*) { return (int)sizeof(T); }
+    int get_size(void**, bool force=false) { return -1; }
+};
+
+class DoesNotExist;
+
+class WithGreedy3 {
+public:
+    template<class T>
+    int get_size(T*) { return (int)sizeof(T); }
+    int get_size(DoesNotExist*, bool force=false) { return -1; }
+};
+
+} // namespace T_WithGreedyOverloads
+
+#endif // !CPPYY_TEST_TEMPLATES_H
