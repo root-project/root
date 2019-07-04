@@ -1,0 +1,135 @@
+#!/usr/bin/env python
+
+import codecs
+import inspect
+import os
+import re
+import setuptools
+
+from distutils.command.clean import clean
+from distutils.util import get_platform
+from setuptools.command.build_py import build_py
+from setuptools import setup, find_packages
+from wheel.bdist_wheel import bdist_wheel
+
+
+PKG              = '@CPPYY_PKG@'
+VERSION          = '@PROJECT_VERSION@'
+AUTHOR           = '@AUTHOR@'
+EMAIL            = '@EMAIL@'
+LICENSE          = '@BINDINGS_LICENSE@'
+(PKG_NAMESPACE,
+ PKG_SIMPLENAME) = PKG.rsplit(".", 1) if '.' in PKG else "", PKG
+PKG_DIR          = os.path.dirname(__file__)
+
+CPPYY_LIB_SO     = os.path.join(PKG, '@CPPYY_LIB_SO@')
+CPPYY_ROOTMAP    = os.path.join(PKG, '@CPPYY_ROOTMAP@')
+CPPYY_PCM        = os.path.join(PKG, '@CPPYY_PCM@')
+CPPYY_MAP        = os.path.join(PKG, '@CPPYY_MAP@')
+EXTRA_PY         = '@EXTRA_PY@'
+
+CPPYY_PKG_DATA = [CPPYY_LIB_SO, CPPYY_ROOTMAP, CPPYY_PCM, CPPYY_MAP]
+CPPYY_PKG_DATA.extend([ep for ep in EXTRA_PY.split(';') if ep])
+
+PKG_DESC = '''
+Bindings for {name}.
+These bindings are based on https://cppyy.readthedocs.io/en/latest/, and can be
+used as per the documentation provided via the cppyy.gbl namespace. The environment
+variable LD_LIBRARY_PATH must contain the path of the rootmap file. Use
+"import cppyy; from cppyy.gbl import <some-C++-entity>".
+
+Alternatively, use "import {name}". This convenience wrapper supports "discovery" of the
+available C++ entities using, for example Python 3's command line completion support.
+'''.format(name=PKG)
+
+
+class cppyy_build_py(build_py):
+
+    def run(self):
+        #
+        # Base build.
+        #
+        build_py.run(self)
+        #
+        # Custom build.
+        #
+        #
+        # Move CMake output to self.build_lib.
+        #
+        pkg_subdir = PKG.replace(".", os.path.sep)
+        if PKG_NAMESPACE:
+            #
+            # Implement a pkgutil-style namespace package as per the guidance on
+            # https://packaging.python.org/guides/packaging-namespace-packages.
+            #
+            namespace_init = os.path.join(PKG_NAMESPACE, "__init__.py")
+            with open(namespace_init, "w") as f:
+                f.write("__path__ = __import__('pkgutil').extend_path(__path__, __name__)\n")
+            self.copy_file(namespace_init, os.path.join(self.build_lib, namespace_init))
+
+
+class cppyy_clean(clean):
+
+    def run(self):
+        #
+        # Custom clean.
+        # TODO: There is no way to reliably clean the "dist" directory.
+        #
+        #
+        #  Base clean.
+        #
+        clean.run(self)
+
+
+class cppyy_bdist_wheel(bdist_wheel):
+
+    def finalize_options(self):
+        #
+        # This is a universal (Python2/Python3), but platform-specific (has
+        # compiled parts) package; a combination that wheel does not recognize,
+        # thus simply fool it.
+        #
+        self.plat_name = get_platform()
+        bdist_wheel.finalize_options(self)
+        self.root_is_pure = True
+
+
+CLASSIFIERS = [
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: 3.6",
+    "Topic :: Scientific/Engineering",
+]
+
+
+try:
+    with codecs.open("README.rst", encoding='utf-8') as f:
+        long_description = f.read()
+except IOError:
+    long_description = ""
+
+SETUP_METADATA = \
+{
+    "name":                 PKG,
+    "version":              VERSION,
+    "description":          PKG_DESC,
+    "long_description":     long_description,
+    "author":               AUTHOR,
+    "author_email":         EMAIL,
+    "packages":             find_packages(),
+    "include_package_data": True,
+    "zip_safe":             False,
+    "platforms":            ['any'],
+    "classifiers":          CLASSIFIERS,
+    "cmdclass": {
+        'build_py':    cppyy_build_py,
+        'clean':       cppyy_clean,
+        'bdist_wheel': cppyy_bdist_wheel,
+    },
+}
+
+setup(**SETUP_METADATA)
