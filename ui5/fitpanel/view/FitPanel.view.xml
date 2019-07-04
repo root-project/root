@@ -178,7 +178,7 @@
                      </RadioButtonGroup>
                   </VBox>
                </IconTabFilter>
-               <IconTabFilter key="Pars" text="Pars" visible="{/fFuncPars/haspars}">
+               <IconTabFilter key="Pars" text="Pars" enabled="{/fFuncPars/haspars}">
                    <Text text="Func: {/fFuncPars/name}"/>
                    <Table items="{ path: '/fFuncPars/pars' }">
                       <columns>
@@ -203,7 +203,7 @@
                       </items>
                    </Table>
                </IconTabFilter>
-               <IconTabFilter key="Advanced" text="Advanced" visible="{/fHasAdvanced}">
+               <IconTabFilter key="Advanced" text="Advanced" enabled="{/fHasAdvanced}">
                   <IconTabBar headerMode="Inline" expandable="false" selectedKey="{/fAdvancedTab}">
                      <items>
                         <IconTabFilter key="Contour" text="Contour">
