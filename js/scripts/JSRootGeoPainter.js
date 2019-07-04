@@ -251,7 +251,7 @@
          pthis._renderer.vr.setDevice(vrDisplay);
          pthis._vrDisplay = vrDisplay;
          if (vrDisplay.stageParameters) {
-            this._standingMatrix.fromArray(vrDisplay.stageParameters.sittingToStandingTransform);
+            pthis._standingMatrix.fromArray(vrDisplay.stageParameters.sittingToStandingTransform);
          }
          pthis.InitVRControllersGeometry();
       });
@@ -342,6 +342,8 @@
       this._previousCameraRotation = this._camera.rotation.clone();
       this._vrDisplay.requestPresent([{ source: this._renderer.domElement }]).then(function() {
          pthis._previousCameraNear = pthis._camera.near;
+         pthis._dolly.position.set(pthis._camera.position.x/4, - pthis._camera.position.y/8, - pthis._camera.position.z/4);
+         pthis._camera.position.set(0,0,0);
          pthis._dolly.add(pthis._camera);
          pthis._camera.near = 0.1;
          pthis._camera.updateProjectionMatrix();
@@ -2505,7 +2507,7 @@
       if ((obj._typename === "TList") || (obj._typename === "TObjArray")) {
          if (!obj.arr) return false;
          for (var n=0;n<obj.arr.length;++n) {
-            var sobj = obj.arr[n], sname = obj.opt[n];
+            var sobj = obj.arr[n], sname = obj.opt ? obj.opt[n] : "";
             if (!sname) sname = (itemname || "<prnt>") + "/[" + n + "]";
             if (this.drawExtras(sobj, sname, add_objects)) isany = true;
          }

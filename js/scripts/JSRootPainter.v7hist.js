@@ -180,7 +180,7 @@
 
       var lcol = pp.GetNewColor(opts, "contentLine.color");
       var lwidth = pp.GetNewOpt(opts, "contentLine.width");
-      console.log("new color lcol", lcol, lwidth);
+      // console.log("new color lcol", lcol, lwidth);
 
       this.createAttLine({ color: lcol || 'black', width : parseInt(lwidth) || 1 });
    }
@@ -3612,8 +3612,10 @@
                           fBarOffset: 0, fBarWidth: 1000, BaseLine: false, Mode3D: false, AutoColor: 0,
                           Color: false, Scat: false, ScatCoef: 1, Candle: "", Box: false, BoxStyle: 0, Arrow: false, Contour: 0, Proj: 0 };
 
-      if (obj.fOpts.fStyle.fIdx == 1) painter.options.Box = true;
-                                 else painter.options.Color = true;
+      // FIXME: options are changed now in ROOT7 part, need to adjust here;
+      //if (obj.fOpts.fStyle.fIdx == 1) painter.options.Box = true;
+      //                           else painter.options.Color = true;
+      painter.options.Color = true;
 
       // here we deciding how histogram will look like and how will be shown
       painter.DecodeOptions(opt);
