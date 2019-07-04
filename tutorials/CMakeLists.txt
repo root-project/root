@@ -197,7 +197,8 @@ set(gui_veto fit/fitpanel_playback.C
              graphics/graph_edit_playback.C
              roostats/ModelInspector.C
              tree/tvdemo.C
-             eve/*.C)
+             eve/*.C
+             webgui/panel/server.cxx webgui/webwindow/server.cxx)
 
 if (NOT ROOT_tmva_FOUND)
   list(APPEND tmva_veto tmva/*.C tmva/*.py tmva/envelope/*.C tmva/keras/*.C tmva/keras/*.py)
