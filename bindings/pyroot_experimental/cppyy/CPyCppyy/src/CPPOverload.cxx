@@ -70,6 +70,7 @@ public:
     }
 
     virtual int GetPriority() { return 100; };
+    virtual bool IsGreedy() { return false; };
 
     virtual int GetMaxArgs() { return 100; };
     virtual PyObject* GetCoVarNames() { // TODO: pick these up from the callable
@@ -521,15 +522,13 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
 
 // get local handles to proxy internals
     auto& methods     = pymeth->fMethodInfo->fMethods;
-    auto& dispatchMap = pymeth->fMethodInfo->fDispatchMap;
-    auto& mflags      = pymeth->fMethodInfo->fFlags;
 
     CPPOverload::Methods_t::size_type nMethods = methods.size();
 
     CallContext ctxt{};
-    ctxt.fFlags |= (mflags & CallContext::kUseHeuristics);
-    ctxt.fFlags |= (mflags & CallContext::kUseStrict);
-    if (!ctxt.fFlags) ctxt.fFlags |= CallContext::sMemoryPolicy;
+    const auto mflags = pymeth->fMethodInfo->fFlags;
+    const auto mempolicy = (mflags & (CallContext::kUseHeuristics | CallContext::kUseStrict));
+    ctxt.fFlags |= mempolicy ? mempolicy : CallContext::sMemoryPolicy;
     ctxt.fFlags |= (mflags & CallContext::kReleaseGIL);
 
 // magic variable to prevent recursion passed by keyword?
@@ -537,6 +536,10 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
         if (PyDict_DelItem(kwds, PyStrings::gNoImplicit) == 0) {
             ctxt.fFlags |= CallContext::kNoImplicit;
             if (!PyDict_Size(kwds)) kwds = nullptr;
+            else {
+                PyErr_SetString(PyExc_TypeError, "keyword arguments are not yet supported");
+                return nullptr;
+            }
         } else
            PyErr_Clear();
     }
@@ -552,6 +555,7 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
     uint64_t sighash = HashSignature(args);
 
 // look for known signatures ...
+    auto& dispatchMap = pymeth->fMethodInfo->fDispatchMap;
     PyCallable* pc = nullptr;
     for (const auto& p : dispatchMap) {
         if (p.first == sighash) {
@@ -573,7 +577,7 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
 // ... otherwise loop over all methods and find the one that does not fail
     if (!IsSorted(mflags)) {
         std::stable_sort(methods.begin(), methods.end(), PriorityCmp);
-        mflags |= CallContext::kIsSorted;
+        pymeth->fMethodInfo->fFlags |= CallContext::kIsSorted;
     }
 
     std::vector<Utility::PyError_t> errors;

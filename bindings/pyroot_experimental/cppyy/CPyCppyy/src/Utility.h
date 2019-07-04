@@ -37,7 +37,7 @@ bool AddBinaryOperator(PyObject* pyclass, const std::string& lcname, const std::
 // helper for template classes and methods
 enum ArgPreference { kNone, kPointer, kReference, kValue };
 std::string ConstructTemplateArgs(
-    PyObject* pyname, PyObject* tpArgs, PyObject* args = nullptr, ArgPreference = kNone, int argoff = 0);
+    PyObject* pyname, PyObject* tpArgs, PyObject* args = nullptr, ArgPreference = kNone, int argoff = 0, int* pcnt = nullptr);
 
 // helper for generating callbacks
 void ConstructCallbackPreamble(const std::string& retType,

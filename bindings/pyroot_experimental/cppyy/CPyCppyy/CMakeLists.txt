@@ -13,7 +13,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(cppyy
     CPyCppyy/TPyArg.h
     CPyCppyy/TPyException.h
     CPyCppyy/TPyReturn.h
-    CPyCppyy/TPython.h
+    CPyCppyy/API.h
   SOURCES
     src/CallContext.cxx
     src/Converters.cxx
@@ -40,7 +40,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(cppyy
     src/TPyClassGenerator.cxx
     src/TPyException.cxx
     src/TPyReturn.cxx
-    src/TPython.cxx
+    src/API.cxx
     src/TupleOfInstances.cxx
     src/TypeManip.cxx
     src/Utility.cxx

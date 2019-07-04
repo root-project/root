@@ -11,7 +11,7 @@ except ImportError:
     has_wheel = False
 
 
-requirements = ['cppyy-cling', 'cppyy-backend>=1.8.0']
+requirements = ['cppyy-cling', 'cppyy-backend>=1.9.0']
 setup_requirements = ['wheel']
 if 'build' in sys.argv or 'install' in sys.argv:
     setup_requirements += requirements
@@ -48,7 +48,7 @@ def _get_link_dirs():
     return []
 
 def _get_config_exec():
-    return ['python', '-m', 'cppyy_backend._cling_config']
+    return [sys.executable, '-m', 'cppyy_backend._cling_config']
 
 def get_cflags():
     config_exec_args = _get_config_exec()
@@ -111,7 +111,7 @@ class MyDistribution(Distribution):
 
 setup(
     name='CPyCppyy',
-    version='1.7.1',
+    version='1.8.2',
     description='Cling-based Python-C++ bindings for CPython',
     long_description=long_description,
 
@@ -150,10 +150,12 @@ setup(
     keywords='C++ bindings data science',
 
     ext_modules=[Extension('libcppyy',
-        sources=glob.glob('src/*.cxx'),
+        sources=glob.glob(os.path.join('src', '*.cxx')),
         include_dirs=['include'],
         libraries=_get_link_libraries(),
         library_dirs=_get_link_dirs())],
+
+    headers=glob.glob(os.path.join('include', 'CPyCppyy', '*.h')),
 
     cmdclass=cmdclass,
     distclass=MyDistribution,

@@ -111,7 +111,7 @@ static PyObject* op_get_smart_ptr(CPPInstance* self)
         Py_RETURN_NONE;
     }
 
-    return (PyObject*)CPyCppyy::BindCppObject(self->fObject, self->fSmartPtrType);
+    return (PyObject*)CPyCppyy::BindCppObjectNoCast(self->fObject, self->fSmartPtrType);
 }
 
 

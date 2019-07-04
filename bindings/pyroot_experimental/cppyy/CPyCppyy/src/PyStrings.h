@@ -29,6 +29,7 @@ namespace PyStrings {
     extern PyObject* gName;
     extern PyObject* gNe;
     extern PyObject* gTypeCode;
+    extern PyObject* gCTypesType;
 
     extern PyObject* gAdd;
     extern PyObject* gSub;

@@ -14,6 +14,7 @@
 #include <new>
 #include <sstream>
 #include <utility>
+#include <sys/types.h>
 
 
 //- data _____________________________________________________________________
@@ -30,33 +31,38 @@ namespace CPyCppyy {
 //- helpers ------------------------------------------------------------------
 namespace {
 
+#ifdef WITH_THREAD
     class GILControl {
     public:
-        GILControl(CPyCppyy::CallContext* /*ctxt*/) : fSave(nullptr) {
-#ifdef WITH_THREAD
-            fSave = PyEval_SaveThread();
-#endif
-        }
+        GILControl() : fSave(PyEval_SaveThread()) { }
         ~GILControl() {
-#ifdef WITH_THREAD
             PyEval_RestoreThread(fSave);
-#endif
         }
     private:
         PyThreadState* fSave;
     };
+#endif
 
 } // unnamed namespace
 
+#ifdef WITH_THREAD
 #define CPPYY_IMPL_GILCALL(rtype, tcode)                                     \
 static inline rtype GILCall##tcode(                                          \
     Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CPyCppyy::CallContext* ctxt)\
 {                                                                            \
     if (!ReleasesGIL(ctxt))                                                  \
         return Cppyy::Call##tcode(method, self, ctxt->GetSize(), ctxt->GetArgs());\
-    GILControl gc(ctxt);                                                     \
+    GILControl gc{};                                                         \
     return Cppyy::Call##tcode(method, self, ctxt->GetSize(), ctxt->GetArgs());\
 }
+#else
+#define CPPYY_IMPL_GILCALL(rtype, tcode)                                     \
+static inline rtype GILCall##tcode(                                          \
+    Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CPyCppyy::CallContext* ctxt)\
+{                                                                            \
+    return Cppyy::Call##tcode(method, self, ctxt->GetSize(), ctxt->GetArgs());\
+}
+#endif
 
 CPPYY_IMPL_GILCALL(void,          V)
 CPPYY_IMPL_GILCALL(unsigned char, B)
@@ -73,19 +79,27 @@ CPPYY_IMPL_GILCALL(void*,         R)
 static inline Cppyy::TCppObject_t GILCallO(Cppyy::TCppMethod_t method,
     Cppyy::TCppObject_t self, CPyCppyy::CallContext* ctxt, Cppyy::TCppType_t klass)
 {
+#ifdef WITH_THREAD
     if (!ReleasesGIL(ctxt))
+#endif
         return Cppyy::CallO(method, self, ctxt->GetSize(), ctxt->GetArgs(), klass);
-    GILControl gc(ctxt);
+#ifdef WITH_THREAD
+    GILControl gc{};
     return Cppyy::CallO(method, self, ctxt->GetSize(), ctxt->GetArgs(), klass);
+#endif
 }
 
 static inline Cppyy::TCppObject_t GILCallConstructor(
     Cppyy::TCppMethod_t method, Cppyy::TCppType_t klass, CPyCppyy::CallContext* ctxt)
 {
+#ifdef WITH_THREAD
     if (!ReleasesGIL(ctxt))
+#endif
         return Cppyy::CallConstructor(method, klass, ctxt->GetSize(), ctxt->GetArgs());
-    GILControl gc(ctxt);
+#ifdef WITH_THREAD
+    GILControl gc{};
     return Cppyy::CallConstructor(method, klass, ctxt->GetSize(), ctxt->GetArgs());
+#endif
 }
 
 static inline PyObject* CPyCppyy_PyUnicode_FromLong(long cl)
@@ -190,6 +204,22 @@ PyObject* CPyCppyy::IntExecutor::Execute(
 {
 // execute <method> with argument <self, ctxt>, construct python int return value
     return PyInt_FromLong((int)GILCallI(method, self, ctxt));
+}
+
+//----------------------------------------------------------------------------
+PyObject* CPyCppyy::Int8Executor::Execute(
+    Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
+{
+// execute <method> with argument <self, ctxt>, construct python int return value
+    return PyInt_FromLong((int8_t)GILCallC(method, self, ctxt));
+}
+
+//----------------------------------------------------------------------------
+PyObject* CPyCppyy::UInt8Executor::Execute(
+    Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
+{
+// execute <method> with argument <self, ctxt>, construct python int return value
+    return PyInt_FromLong((uint8_t)GILCallB(method, self, ctxt));
 }
 
 //----------------------------------------------------------------------------
@@ -298,7 +328,9 @@ PyObject* CPyCppyy::name##RefExecutor::Execute(                              \
 CPPYY_IMPL_REFEXEC(Bool,   bool,   Long_t,   CPyCppyy_PyBool_FromLong,    PyLong_AsLong)
 CPPYY_IMPL_REFEXEC(Char,   char,   Long_t,   CPyCppyy_PyUnicode_FromLong, PyLong_AsLong)
 CPPYY_IMPL_REFEXEC(UChar,  unsigned char,  ULong_t,  CPyCppyy_PyUnicode_FromULong, PyLongOrInt_AsULong)
-CPPYY_IMPL_REFEXEC(Short,  short,  Long_t,   PyInt_FromLong,     PyLong_AsLong)
+CPPYY_IMPL_REFEXEC(Int8,   int8_t,  Long_t,  PyInt_FromLong, PyLong_AsLong)
+CPPYY_IMPL_REFEXEC(UInt8,  uint8_t, ULong_t, PyInt_FromLong, PyLongOrInt_AsULong)
+CPPYY_IMPL_REFEXEC(Short,  short,          Long_t,   PyInt_FromLong,     PyLong_AsLong)
 CPPYY_IMPL_REFEXEC(UShort, unsigned short, ULong_t,  PyInt_FromLong,     PyLongOrInt_AsULong)
 CPPYY_IMPL_REFEXEC(Int,    Int_t,    Long_t,   PyInt_FromLong,     PyLong_AsLong)
 CPPYY_IMPL_REFEXEC(UInt,   UInt_t,   ULong_t,  PyLong_FromUnsignedLong, PyLongOrInt_AsULong)
@@ -859,6 +891,12 @@ public:
         gf["const signed char&"] =          (ef_t)+[]() { return new CharConstRefExecutor{}; };
         gf["const unsigned char&"] =        (ef_t)+[]() { return new UCharConstRefExecutor{}; };
         gf["wchar_t"] =                     (ef_t)+[]() { return new WCharExecutor{}; };
+        gf["int8_t"] =                      (ef_t)+[]() { return new Int8Executor{}; };
+        gf["int8_t&"] =                     (ef_t)+[]() { return new Int8RefExecutor{}; };
+        gf["const int8_t&"] =               (ef_t)+[]() { return new Int8RefExecutor{}; };
+        gf["uint8_t"] =                     (ef_t)+[]() { return new UInt8Executor{}; };
+        gf["uint8_t&"] =                    (ef_t)+[]() { return new UInt8RefExecutor{}; };
+        gf["const uint8_t&"] =              (ef_t)+[]() { return new UInt8RefExecutor{}; };
         gf["short"] =                       (ef_t)+[]() { return new ShortExecutor{}; };
         gf["short&"] =                      (ef_t)+[]() { return new ShortRefExecutor{}; };
         gf["unsigned short"] =              (ef_t)+[]() { return new IntExecutor{}; };

@@ -2,6 +2,7 @@
 #include "CPyCppyy.h"
 #include "CustomPyTypes.h"
 #include "Converters.h"
+#include "ProxyWrappers.h"
 #include "PyStrings.h"
 
 #if PY_VERSION_HEX >= 0x03000000
@@ -53,6 +54,36 @@ PyTypeObject RefInt_Type = {       // python int is a C/C++ long
 #endif
 #if PY_VERSION_HEX >= 0x03040000
     , 0                            // tp_finalize
+#endif
+};
+
+//- custom type representing typedef to pointer of class ---------------------
+static PyObject* tpc_call(typedefpointertoclassobject* self, PyObject* args, PyObject* /* kwds */)
+{
+    long long addr = 0;
+    if (!PyArg_ParseTuple(args, const_cast<char*>("|L"), &addr))
+        return nullptr;
+    return BindCppObjectNoCast((Cppyy::TCppObject_t)(intptr_t)addr, self->fType);
+}
+
+PyTypeObject TypedefPointerToClass_Type = {
+    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+    (char*)"cppyy.TypedefPointerToClass",// tp_name
+    sizeof(typedefpointertoclassobject), // tp_basicsize
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    (ternaryfunc)tpc_call,        // tp_call
+    0, 0, 0, 0,
+    Py_TPFLAGS_DEFAULT |
+        Py_TPFLAGS_HAVE_GC,       // tp_flags
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+#if PY_VERSION_HEX >= 0x02030000
+    , 0                           // tp_del
+#endif
+#if PY_VERSION_HEX >= 0x02060000
+    , 0                           // tp_version_tag
+#endif
+#if PY_VERSION_HEX >= 0x03040000
+    , 0                           // tp_finalize
 #endif
 };
 

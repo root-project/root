@@ -4,6 +4,8 @@
 // Standard
 #include <vector>
 
+#include <sys/types.h>
+
 
 namespace CPyCppyy {
 
@@ -14,6 +16,8 @@ const int SMALL_ARGS_N = 8;
 struct Parameter {
     union Value {
         bool           fBool;
+        int8_t         fInt8;
+        uint8_t        fUInt8;
         short          fShort;
         unsigned short fUShort;
         Int_t          fInt;

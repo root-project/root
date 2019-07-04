@@ -19,6 +19,7 @@ public:
     virtual PyObject* GetDocString() { return GetPrototype(); }
 
     virtual int GetPriority() = 0;
+    virtual bool IsGreedy() = 0;
 
     virtual int GetMaxArgs() = 0;
     virtual PyObject* GetCoVarNames() = 0;

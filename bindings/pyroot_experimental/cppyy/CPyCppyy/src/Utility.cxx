@@ -361,7 +361,7 @@ bool CPyCppyy::Utility::AddBinaryOperator(PyObject* pyclass, const std::string& 
 
 //----------------------------------------------------------------------------
 std::string CPyCppyy::Utility::ConstructTemplateArgs(
-    PyObject* pyname, PyObject* tpArgs, PyObject* args, ArgPreference pref, int argoff)
+    PyObject* pyname, PyObject* tpArgs, PyObject* args, ArgPreference pref, int argoff, int* pcnt)
 {
 // Helper to construct the "<type, type, ...>" part of a templated name (either
 // for a class or method lookup
@@ -369,6 +369,8 @@ std::string CPyCppyy::Utility::ConstructTemplateArgs(
     if (pyname)
         tmpl_name << CPyCppyy_PyUnicode_AsString(pyname);
     tmpl_name << '<';
+
+    if (pcnt) *pcnt = 0;     // count number of times 'pref' is used
 
     Py_ssize_t nArgs = PyTuple_GET_SIZE(tpArgs);
     for (int i = argoff; i < nArgs; ++i) {
@@ -384,10 +386,13 @@ std::string CPyCppyy::Utility::ConstructTemplateArgs(
                 if (CPPInstance_Check(pyobj)) {
                     if (pyobj->fFlags & CPPInstance::kIsRValue)
                         tmpl_name << "&&";
-                    else if ((pyobj->fFlags & CPPInstance::kIsReference) || pref == kPointer)
-                        tmpl_name << '*';
-                    else if (pref != kValue)
-                        tmpl_name << '&';
+                    else {
+                        if (pcnt) *pcnt += 1;
+                        if ((pyobj->fFlags & CPPInstance::kIsReference) || pref == kPointer)
+                            tmpl_name << '*';
+                        else if (pref != kValue)
+                            tmpl_name << '&';
+                    }
                 }
             }
         } else if (PyObject_HasAttr(tn, PyStrings::gCppName)) {
@@ -534,13 +539,18 @@ Py_ssize_t CPyCppyy::Utility::GetBuffer(PyObject* pyobject, char tc, int size, v
         Py_buffer bufinfo;
         memset(&bufinfo, 0, sizeof(Py_buffer));
         if (PyObject_GetBuffer(pyobject, &bufinfo, PyBUF_FORMAT) == 0) {
-            if (tc == '*' || strchr(bufinfo.format, tc)) {
+            if (tc == '*' || strchr(bufinfo.format, tc)
+#ifdef _WIN32
+            // ctypes is inconsistent in format on Windows; either way these types are the same size
+                || (tc == 'I' && strchr(bufinfo.format, 'L')) || (tc == 'i' && strchr(bufinfo.format, 'l'))
+#endif
+                    ) {
                 buf = bufinfo.buf;
                 if (buf && bufinfo.ndim == 0) {
                     PyBuffer_Release(&bufinfo);
                     return bufinfo.len/bufinfo.itemsize;
                 } else if (buf && bufinfo.ndim == 1) {
-                    Py_ssize_t size1d = bufinfo.shape ? bufinfo.shape[0] : bufinfo.len;
+                    Py_ssize_t size1d = bufinfo.shape ? bufinfo.shape[0] : bufinfo.len/bufinfo.itemsize;
                     PyBuffer_Release(&bufinfo);
                     return size1d;
                 }
@@ -613,7 +623,7 @@ Py_ssize_t CPyCppyy::Utility::GetBuffer(PyObject* pyobject, char tc, int size, v
         }
 
         if (!buf) return 0;
-        return buflen;
+        return buflen/(size ? size : 1);
     }
 
     return 0;

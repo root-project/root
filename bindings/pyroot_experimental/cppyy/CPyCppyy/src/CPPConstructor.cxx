@@ -30,14 +30,8 @@ PyObject* CPyCppyy::CPPConstructor::GetDocString()
 PyObject* CPyCppyy::CPPConstructor::Call(
     CPPInstance*& self, PyObject* args, PyObject* kwds, CallContext* ctxt)
 {
-// preliminary check in case keywords are accidently used (they are ignored otherwise)
-    if (kwds && PyDict_Size(kwds)) {
-        PyErr_SetString(PyExc_TypeError, "keyword arguments are not yet supported");
-        return nullptr;
-    }
-
 // setup as necessary
-    if (!this->Initialize(ctxt))
+    if (!fIsInitialized && !this->Initialize(ctxt))
         return nullptr;                     // important: 0, not Py_None
 
 // fetch self, verify, and put the arguments in usable order
@@ -142,6 +136,16 @@ PyObject* CPyCppyy::CPPNamespaceConstructor::Call(
 {
 // do not allow instantiation of namespaces
     PyErr_Format(PyExc_TypeError, "cannot instantiate namespace \'%s\'",
+        Cppyy::GetScopedFinalName(this->GetScope()).c_str());
+    return nullptr;
+}
+
+//----------------------------------------------------------------------------
+PyObject* CPyCppyy::CPPIncompleteClassConstructor::Call(
+    CPPInstance*&, PyObject*, PyObject*, CallContext*)
+{
+// do not allow instantiation of incomplete (forward declared) classes)
+    PyErr_Format(PyExc_TypeError, "cannot instantiate incomplete class \'%s\'",
         Cppyy::GetScopedFinalName(this->GetScope()).c_str());
     return nullptr;
 }

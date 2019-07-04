@@ -80,6 +80,8 @@ public:
     virtual PyObject* FromMemory(void*);
 };
 CPPYY_DECLARE_BASIC_CONVERTER(WChar);
+CPPYY_DECLARE_BASIC_CONVERTER(Int8);
+CPPYY_DECLARE_BASIC_CONVERTER(UInt8);
 CPPYY_DECLARE_BASIC_CONVERTER(Short);
 CPPYY_DECLARE_BASIC_CONVERTER(UShort);
 CPPYY_DECLARE_BASIC_CONVERTER(Int);
@@ -306,6 +308,25 @@ protected:
     std::string fSignature;
 };
 
+// std::function
+class StdFunctionConverter : public FunctionPointerConverter {
+public:
+    StdFunctionConverter(Converter* cnv, const std::string& ret, const std::string& sig) :
+        FunctionPointerConverter(ret, sig), fConverter(cnv), fFuncWrap(nullptr) {}
+    StdFunctionConverter(const StdFunctionConverter&) = delete;
+    StdFunctionConverter& operator=(const StdFunctionConverter&) = delete;
+    ~StdFunctionConverter() { Py_XDECREF(fFuncWrap); delete fConverter; }
+
+public:
+    virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);
+    virtual PyObject* FromMemory(void* address);                             \
+    virtual bool ToMemory(PyObject* value, void* address);                   \
+
+protected:
+    Converter* fConverter;
+    PyObject* fFuncWrap;
+};
+
 
 // smart pointer converter
 class SmartPtrConverter : public Converter {
@@ -339,9 +360,9 @@ class InitializerListConverter : public Converter {
 public:
     InitializerListConverter(Converter* cnv, size_t sz) :
         fConverter(cnv), fValueSize(sz) {}
-    ~InitializerListConverter() {
-        delete fConverter;
-    }
+    InitializerListConverter(const InitializerListConverter&) = delete;
+    InitializerListConverter& operator=(const InitializerListConverter&) = delete;
+    ~InitializerListConverter() { delete fConverter; }
 
 public:
     virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);

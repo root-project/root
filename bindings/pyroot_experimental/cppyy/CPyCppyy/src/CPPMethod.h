@@ -25,6 +25,7 @@ public:
     virtual PyObject* GetSignature(bool show_formalargs = true);
     virtual PyObject* GetPrototype(bool show_formalargs = true);
     virtual int       GetPriority();
+    virtual bool IsGreedy();
 
     virtual int       GetMaxArgs();
     virtual PyObject* GetCoVarNames();
@@ -38,12 +39,13 @@ public:
     virtual PyObject* Call(
         CPPInstance*& self, PyObject* args, PyObject* kwds, CallContext* ctxt = nullptr);
 
-    virtual bool      Initialize(CallContext* ctxt = nullptr);
-    virtual PyObject* PreProcessArgs(CPPInstance*& self, PyObject* args, PyObject* kwds);
-    virtual bool      ConvertAndSetArgs(PyObject* args, CallContext* ctxt = nullptr);
-    virtual PyObject* Execute(void* self, ptrdiff_t offset, CallContext* ctxt = nullptr);
-
 protected:
+    virtual PyObject* PreProcessArgs(CPPInstance*& self, PyObject* args, PyObject* kwds);
+
+    bool      Initialize(CallContext* ctxt = nullptr);
+    bool      ConvertAndSetArgs(PyObject* args, CallContext* ctxt = nullptr);
+    PyObject* Execute(void* self, ptrdiff_t offset, CallContext* ctxt = nullptr);
+
     Cppyy::TCppMethod_t GetMethod()   { return fMethod; }
 // TODO: the following is a special case to allow shimming of the
 // constructor; there's probably a better way ...
