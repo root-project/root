@@ -15,10 +15,10 @@
 
 static const int kHeaderSize = 9;
 
-void R__zipLZMA(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
+void R__zipLZMA(int cxlevel, int srcsize, char * src, int tgtsize, char * tgt, int & irep)
 {
    uint64_t out_size;             /* compressed size */
-   unsigned in_size   = (unsigned) (*srcsize);
+   unsigned in_size   = (unsigned) srcsize;
    uint32_t dict_size_est = in_size/4;
    lzma_stream stream = LZMA_STREAM_INIT;
    lzma_options_lzma opt_lzma2;
@@ -28,13 +28,13 @@ void R__zipLZMA(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, i
    };
    lzma_ret returnStatus;
 
-   *irep = 0;
+   irep = 0;
 
-   if (*tgtsize <= 0) {
+   if (tgtsize <= 0) {
       return;
    }
 
-   if (*srcsize > 0xffffff || *srcsize < 0) {
+   if (srcsize > 0xffffff || srcsize < 0) {
       return;
    }
 
@@ -62,10 +62,10 @@ void R__zipLZMA(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, i
    }
 
    stream.next_in   = (const uint8_t *)src;
-   stream.avail_in  = (size_t)(*srcsize);
+   stream.avail_in  = (size_t) srcsize;
 
    stream.next_out  = (uint8_t *)(&tgt[kHeaderSize]);
-   stream.avail_out = (size_t)(*tgtsize);
+   stream.avail_out = (size_t) tgtsize;
 
    returnStatus = lzma_code(&stream, LZMA_FINISH);
    if (returnStatus != LZMA_STREAM_END) {
@@ -82,7 +82,7 @@ void R__zipLZMA(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, i
    tgt[1] = 'Z';
    tgt[2] = 0;
 
-   in_size   = (unsigned) (*srcsize);
+   in_size   = (unsigned) srcsize;
    out_size  = stream.total_out;             /* compressed size */
 
    tgt[3] = (char)(out_size & 0xff);
@@ -93,15 +93,15 @@ void R__zipLZMA(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, i
    tgt[7] = (char)((in_size >> 8) & 0xff);
    tgt[8] = (char)((in_size >> 16) & 0xff);
 
-   *irep = (int)stream.total_out + kHeaderSize;
+   irep = (int)stream.total_out + kHeaderSize;
 }
 
-void R__unzipLZMA(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep)
+void R__unzipLZMA(int srcsize, unsigned char * src, int tgtsize, unsigned char * tgt, int & irep)
 {
    lzma_stream stream = LZMA_STREAM_INIT;
    lzma_ret returnStatus;
 
-   *irep = 0;
+   irep = 0;
 
    returnStatus = lzma_stream_decoder(&stream,
                                       UINT64_MAX,
@@ -114,9 +114,9 @@ void R__unzipLZMA(int *srcsize, unsigned char *src, int *tgtsize, unsigned char 
    }
 
    stream.next_in   = (const uint8_t *)(&src[kHeaderSize]);
-   stream.avail_in  = (size_t)(*srcsize);
+   stream.avail_in  = (size_t) srcsize;
    stream.next_out  = (uint8_t *)tgt;
-   stream.avail_out = (size_t)(*tgtsize);
+   stream.avail_out = (size_t) tgtsize;
 
    returnStatus = lzma_code(&stream, LZMA_FINISH);
    if (returnStatus != LZMA_STREAM_END) {
@@ -128,5 +128,5 @@ void R__unzipLZMA(int *srcsize, unsigned char *src, int *tgtsize, unsigned char 
    }
    lzma_end(&stream);
 
-   *irep = (int)stream.total_out;
+   irep = (int)stream.total_out;
 }
