@@ -183,7 +183,7 @@ void ROOT::Experimental::RWebDisplayHandle::BrowserCreator::TestProg(const std::
 
 #ifdef _MSC_VER
    std::string ProgramFiles = gSystem->Getenv("ProgramFiles");
-   size_t pos = ProgramFiles.find(" (x86)");
+   auto pos = ProgramFiles.find(" (x86)");
    if (pos != std::string::npos)
       ProgramFiles.erase(pos, 6);
    std::string ProgramFilesx86 = gSystem->Getenv("ProgramFiles(x86)");
@@ -271,7 +271,7 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
       char c;
       int pid;
       if (!fProg.empty()) {
-         exec = "wmic process call create \"" + fProg + exec;
+         exec = "wmic process call create \""s + fProg + exec;
       } else {
          R__ERROR_HERE("WebDisplay") << "No Web browser found in Program Files!";
          return nullptr;
@@ -288,33 +288,34 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
 #endif
    }
 
-   std::string prog = fProg;
-
-#ifdef R__MACOSX
-   prog = std::regex_replace(prog, std::regex(" "), "\\ ");
-#endif
-
 #ifdef _MSC_VER
-   std::unique_ptr<TObjArray> fargs(TString(exec.c_str()).Tokenize(" "));
    std::vector<char *> argv;
-   if (prog.EndsWith("chrome.exe"))
-      argv.push_back("chrome.exe");
-   else if (prog.EndsWith("firefox.exe"))
-      argv.push_back("firefox.exe");
+   std::string firstarg = fProg;
+   while(firstarg.find("\\") != std::string::npos)
+      firstarg.erase(0, firstarg.find("\\")+1);
+   argv.push_back((char *)firstarg.c_str());
+
+   std::unique_ptr<TObjArray> fargs(TString(exec.c_str()).Tokenize(" "));
    for (Int_t n = 1; n <= fargs->GetLast(); ++n)
       argv.push_back((char *)fargs->At(n)->GetName());
    argv.push_back(nullptr);
+
+   R__DEBUG_HERE("WebDisplay") << "Showing web window in " << fProg << " with:\n" << exec;
+
+   _spawnv(_P_NOWAIT, fProg.c_str(), argv.data());
+
+#else
+
+#ifdef R__MACOSX
+   std::string prog = std::regex_replace(fProg, std::regex(" "), "\\ ");
+#else
+   std::string prog = fProg;
 #endif
 
    exec = std::regex_replace(exec, std::regex("\\$prog"), prog);
 
-   // unsigned connid = win.AddProcId(batch_mode, key, where + rmdir); // for now just application name
-
    R__DEBUG_HERE("WebDisplay") << "Showing web window in browser with:\n" << exec;
 
-#ifdef _MSC_VER
-   _spawnv(_P_NOWAIT, prog.c_str(), argv.data());
-#else
    gSystem->Exec(exec.c_str());
 #endif
 
