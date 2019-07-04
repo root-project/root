@@ -144,3 +144,22 @@ std::string ROOT::Experimental::RWebDisplayArgs::GetFullUrl() const
 
    return url;
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////
+/// Configure custom web browser
+/// Either just name of browser which can be used like "opera"
+/// or full execution string which must includes $url like "/usr/bin/opera $url"
+
+void ROOT::Experimental::RWebDisplayArgs::SetCustomExec(const std::string &exec)
+{
+   SetBrowserKind(kCustom);
+   fExec = exec;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+/// returns custom executable to start web browser
+
+std::string ROOT::Experimental::RWebDisplayArgs::GetCustomExec() const
+{
+   return GetBrowserKind() == kCustom ? fExec : "";
+}
