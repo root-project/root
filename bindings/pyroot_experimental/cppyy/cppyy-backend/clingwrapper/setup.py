@@ -15,7 +15,7 @@ except ImportError:
 from distutils.errors import DistutilsSetupError
 
 
-requirements = ['cppyy-cling>=6.15.2.6']
+requirements = ['cppyy-cling>=6.15.2.9']
 setup_requirements = ['wheel']
 if 'build' in sys.argv or 'install' in sys.argv:
     setup_requirements += requirements
@@ -48,7 +48,7 @@ def _get_linker_options():
     return link_libraries, link_dirs
 
 def _get_config_exec():
-    return ['python', '-m', 'cppyy_backend._cling_config']
+    return [sys.executable, '-m', 'cppyy_backend._cling_config']
 
 def get_include_path():
     config_exec_args = _get_config_exec()
@@ -93,6 +93,9 @@ class my_build_cpplib(_build_ext):
         elif 'win32' in sys.platform:
             # force the export results in the proper directory.
             extra_postargs.append('/IMPLIB:'+os.path.join(output_dir, libname_base+'.lib'))
+            import platform
+            if '64' in platform.architecture()[0]:
+                extra_postargs.append('/EXPORT:?__type_info_root_node@@3U__type_info_node@@A')
 
         log.info("now building %s", libname)
         link_libraries, link_dirs = _get_linker_options()
@@ -204,7 +207,7 @@ setup(
     author='PyPy Developers',
     author_email='pypy-dev@python.org',
 
-    version='1.8.1',
+    version='1.9.0',
 
     license='LBNL BSD',
 

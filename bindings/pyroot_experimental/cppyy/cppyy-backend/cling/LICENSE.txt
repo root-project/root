@@ -53,7 +53,9 @@ the following people and organizations:
   Antonio Cuni
   Aditi Dutta
   Shaheed Haque
+  Jonsomi
   Matti Picus
+  Camille Scott
 
 
 External code

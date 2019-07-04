@@ -17,6 +17,7 @@ typedef long double          LongDouble_t;
 namespace Cppyy {
     typedef size_t      TCppScope_t;
     typedef TCppScope_t TCppType_t;
+    typedef void*       TCppEnum_t;
     typedef void*       TCppObject_t;
     typedef intptr_t    TCppMethod_t;
 
@@ -229,6 +230,16 @@ namespace Cppyy {
     bool IsEnumData(TCppScope_t scope, TCppIndex_t idata);
     RPY_EXPORTED
     int  GetDimensionSize(TCppScope_t scope, TCppIndex_t idata, int dimension);
+
+// enum properties -----------------------------------------------------------
+    RPY_EXPORTED
+    TCppEnum_t  GetEnum(TCppScope_t scope, const std::string& enum_name);
+    RPY_EXPORTED
+    TCppIndex_t GetNumEnumData(TCppEnum_t);
+    RPY_EXPORTED
+    std::string GetEnumDataName(TCppEnum_t, TCppIndex_t idata);
+    RPY_EXPORTED
+    long long   GetEnumDataValue(TCppEnum_t, TCppIndex_t idata);
 
 } // namespace Cppyy
 

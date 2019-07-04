@@ -1,0 +1,7 @@
+import os
+import cppyy
+from .initializor import initialise
+initialise('@CPPYY_PKG@', '@CPPYY_LIB_SO@', '@CPPYY_MAP@')
+del initialise
+
+@NAMESPACE_INJECTIONS@
