@@ -156,7 +156,7 @@
       if (!postpart) return true;
 
       var pos2 = pos;
-      while ((pos2<this.opt.length) && (this.opt[pos2] !== ' ') && (this.opt[pos2] !== ',') && (this.opt[pos2] !== ';')) pos2++;
+      while ((pos2 < this.opt.length) && (this.opt[pos2] !== ' ') && (this.opt[pos2] !== ',') && (this.opt[pos2] !== ';')) pos2++;
       if (pos2 > pos) {
          this.part = this.opt.substr(pos, pos2-pos);
          this.opt = this.opt.substr(0, pos) + this.opt.substr(pos2);
@@ -166,8 +166,15 @@
 
    /** @summary Returns remaining part of found option as integer. */
    DrawOptions.prototype.partAsInt = function(offset, dflt) {
-      var val = this.part.replace( /^\D+/g, '');
+      var val = this.part.replace(/^\D+/g, '');
       val = val ? parseInt(val,10) : Number.NaN;
+      return isNaN(val) ? (dflt || 0) : val + (offset || 0);
+   }
+
+   /** @summary Returns remaining part of found option as float. */
+   DrawOptions.prototype.partAsFloat = function(offset, dflt) {
+      var val = this.part.replace(/^\D+/g, '');
+      val = val ? parseFloat(val) : Number.NaN;
       return isNaN(val) ? (dflt || 0) : val + (offset || 0);
    }
 
