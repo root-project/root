@@ -113,14 +113,9 @@ public:
    int GetHeight() const { return fHeight; }
 
    /// set custom executable to start web browser
-   void SetCustomExec(const std::string &exec)
-   {
-      SetBrowserKind(kCustom);
-      fExec = exec;
-   }
-
+   void SetCustomExec(const std::string &exec);
    /// returns custom executable to start web browser
-   std::string GetCustomExec() const { return GetBrowserKind() == kCustom ? fExec : ""; }
+   std::string GetCustomExec() const;
 
    /// set http server instance, used for window display
    void SetHttpServer(THttpServer *serv) { fServer = serv; }

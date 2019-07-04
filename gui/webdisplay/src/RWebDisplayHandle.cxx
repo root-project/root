@@ -139,7 +139,19 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::BrowserCreator(bool custo
    if (custom) return;
 
    if (!exec.empty()) {
-      fExec = exec;
+      if (exec.find("$url") == std::string::npos) {
+         fProg = exec;
+#ifdef _MSC_VER
+         fExec = exec + " $url";
+#else
+         fExec = exec + " $url &";
+#endif
+      } else {
+         fExec = exec;
+         auto pos = exec.find(" ");
+         if (pos != std::string::npos)
+            fProg = exec.substr(0, pos);
+      }
    } else if (gSystem->InheritsFrom("TMacOSXSystem")) {
       fExec = "open \'$url\'";
    } else if (gSystem->InheritsFrom("TWinNTSystem")) {
