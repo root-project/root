@@ -41,6 +41,7 @@ protected:
    EBrowserKind fKind{kNative};   ///<! id of web browser used for display
    std::string fUrl;              ///<! URL to display
    bool fHeadless{false};         ///<! is browser runs in headless mode
+   bool fStandalone{true};        ///<! indicates if browser should run isolated from other browser instances
    THttpServer *fServer{nullptr}; ///<! http server which handle all requests
    int fWidth{0};                 ///<! custom window width, when not specified - used RWebWindow geometry
    int fHeight{0};                ///<! custom window height, when not specified - used RWebWindow geometry
@@ -78,6 +79,12 @@ public:
    void SetUrl(const std::string &url) { fUrl = url; }
    /// returns window url
    std::string GetUrl() const { return fUrl; }
+
+   /// Set standalone mode for running browser, default on
+   /// When disabled, normal browser window (or just tab) will be started
+   void SetStandalone(bool on = true) { fStandalone = on; }
+   /// Return true if browser should runs in standalone mode
+   bool IsStandalone() const { return fStandalone; }
 
    /// set window url options
    void SetUrlOpt(const std::string &opt) { fUrlOpt = opt; }
