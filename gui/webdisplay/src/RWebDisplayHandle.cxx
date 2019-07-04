@@ -34,15 +34,16 @@
 
 #include <regex>
 
-#if !defined(_MSC_VER)
+#ifdef _MSC_VER
+#include <process.h>
+#else
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <spawn.h>
-#else
-#include <process.h>
 #endif
 
+using namespace std::string_literals;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Static holder of registered creators of web displays
@@ -94,10 +95,10 @@ namespace Experimental {
 
 class RWebBrowserHandle : public RWebDisplayHandle {
 
-#if !defined(_MSC_VER)
-   typedef pid_t browser_process_id;
-#else
+#ifdef _MSC_VER
    typedef int browser_process_id;
+#else
+   typedef pid_t browser_process_id;
 #endif
    std::string fTmpDir;
    bool fHasPid{false};
@@ -113,17 +114,17 @@ public:
 
    virtual ~RWebBrowserHandle()
    {
-#if !defined(_MSC_VER)
+#ifdef _MSC_VER
       if (fHasPid)
-         kill(fPid, SIGKILL);
-      if (!fTmpDir.empty())
-         gSystem->Exec(TString::Format("rm -rf %s", fTmpDir.c_str()));
+         gSystem->Exec(("taskkill /F /PID "s + std::to_string(fPid)).c_str());
+      std::string rmdir = "rmdir /S /Q ";
 #else
       if (fHasPid)
-         gSystem->Exec(TString::Format("taskkill /F /PID %d", fPid));
-      if (!fTmpDir.empty())
-         gSystem->Exec(TString::Format("rmdir /S /Q %s", fTmpDir.c_str()));
+         kill(fPid, SIGKILL);
+      std::string rmdir = "rm -rf ";
 #endif
+      if (!fTmpDir.empty())
+         gSystem->Exec((rmdir + fTmpDir).c_str());
    }
 };
 
@@ -192,11 +193,11 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
    if (url.empty())
       return nullptr;
 
-   TString exec;
+   std::string exec;
    if (args.IsHeadless())
-      exec = fBatchExec.c_str();
+      exec = fBatchExec;
    else if (args.IsStandalone())
-      exec = fExec.c_str();
+      exec = fExec;
    else
 #ifdef _MSC_VER
       exec = "$prog $url";
@@ -204,7 +205,7 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
       exec = "$prog $url &";
 #endif
 
-   if (exec.Length() == 0)
+   if (exec.empty())
       return nullptr;
 
    std::string swidth = std::to_string(args.GetWidth() > 0 ? args.GetWidth() : 800);
@@ -212,20 +213,21 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
 
    std::string rmdir = MakeProfile(exec, args.IsHeadless());
 
-   exec.ReplaceAll("$url", url.c_str());
-   exec.ReplaceAll("$width", swidth.c_str());
-   exec.ReplaceAll("$height", sheight.c_str());
+   exec = std::regex_replace(exec, std::regex("\\$url"), url);
+   exec = std::regex_replace(exec, std::regex("\\$width"), swidth);
+   exec = std::regex_replace(exec, std::regex("\\$height"), sheight);
 
-   if (exec.Index("fork:") == 0) {
+   if (exec.compare(0,5,"fork:") == 0) {
       if (fProg.empty()) {
          R__ERROR_HERE("WebDisplay") << "Fork instruction without executable";
          return nullptr;
       }
 
-      exec.Remove(0, 5);
-#if !defined(_MSC_VER)
+      exec.erase(0, 5);
 
-      std::unique_ptr<TObjArray> fargs(exec.Tokenize(" "));
+#ifndef _MSC_VER
+
+      std::unique_ptr<TObjArray> fargs(TString(exec.c_str()).Tokenize(" "));
       if (!fargs || (fargs->GetLast()<=0)) {
          R__ERROR_HERE("WebDisplay") << "Fork instruction is empty";
          return nullptr;
@@ -257,14 +259,14 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
       char c;
       int pid;
       if (!fProg.empty()) {
-         exec.Prepend(Form("wmic process call create \"%s", fProg.c_str()));
+         exec = "wmic process call create \"" + fProg + exec;
       } else {
          R__ERROR_HERE("WebDisplay") << "No Web browser found in Program Files!";
          return nullptr;
       }
-      exec.Append("\" | find \"ProcessId\" ");
-      TString process_id(gSystem->GetFromPipe(exec.Data()));
-      std::stringstream ss(process_id.Data());
+      exec.append("\" | find \"ProcessId\" ");
+      std::string process_id = gSystem->GetFromPipe(exec.c_str());
+      std::stringstream ss(process_id);
       ss >> tmp >> c >> pid;
 
       // add processid and rm dir
@@ -274,14 +276,14 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
 #endif
    }
 
-   TString prog = fProg.c_str();
+   std::string prog = fProg;
 
 #ifdef R__MACOSX
-   prog.ReplaceAll(" ", "\\ ");
+   prog = std::regex_replace(prog, std::regex(" "), "\\ ");
 #endif
 
 #ifdef _MSC_VER
-   std::unique_ptr<TObjArray> fargs(exec.Tokenize(" "));
+   std::unique_ptr<TObjArray> fargs(TString(exec.c_str()).Tokenize(" "));
    std::vector<char *> argv;
    if (prog.EndsWith("chrome.exe"))
       argv.push_back("chrome.exe");
@@ -292,16 +294,16 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
    argv.push_back(nullptr);
 #endif
 
-   exec.ReplaceAll("$prog", prog.Data());
+   exec = std::regex_replace(exec, std::regex("\\$prog"), prog);
 
    // unsigned connid = win.AddProcId(batch_mode, key, where + rmdir); // for now just application name
 
    R__DEBUG_HERE("WebDisplay") << "Showing web window in browser with:\n" << exec;
 
 #ifdef _MSC_VER
-   _spawnv(_P_NOWAIT, prog.Data(), argv.data());
+   _spawnv(_P_NOWAIT, prog.c_str(), argv.data());
 #else
-   gSystem->Exec(exec);
+   gSystem->Exec(exec.c_str());
 #endif
 
    // add rmdir if required
@@ -367,44 +369,44 @@ ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : Browse
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Create Firefox profile to run independent browser window
 
-std::string ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::MakeProfile(TString &exec, bool batch_mode)
+std::string ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::MakeProfile(std::string &exec, bool batch_mode)
 {
    std::string rmdir;
 
-   if (exec.Index("$profile") == kNPOS)
+   if (exec.find("$profile") == std::string::npos)
       return rmdir;
 
-   TString profile_arg;
+   std::string profile_arg;
 
    const char *ff_profile = gEnv->GetValue("WebGui.FirefoxProfile", "");
    const char *ff_profilepath = gEnv->GetValue("WebGui.FirefoxProfilePath", "");
-   Int_t ff_randomprofile = gEnv->GetValue("WebGui.FirefoxRandomProfile", 0);
+   Int_t ff_randomprofile = gEnv->GetValue("WebGui.FirefoxRandomProfile", (Int_t) 0);
    if (ff_profile && *ff_profile) {
-      profile_arg.Form("-P %s", ff_profile);
+      profile_arg = "-P "s + ff_profile;
    } else if (ff_profilepath && *ff_profilepath) {
-      profile_arg.Form("-profile %s", ff_profilepath);
+      profile_arg = "-profile "s + ff_profilepath;
    } else if ((ff_randomprofile > 0) || (batch_mode && (ff_randomprofile >= 0))) {
 
       gRandom->SetSeed(0);
 
-      TString rnd_profile = TString::Format("root_ff_profile_%d", gRandom->Integer(0x100000));
-      TString profile_dir = TString::Format("%s/%s", gSystem->TempDirectory(), rnd_profile.Data());
+      std::string rnd_profile = "root_ff_profile_"s + std::to_string(gRandom->Integer(0x100000));
+      std::string profile_dir = std::string(gSystem->TempDirectory()) + "/"s + rnd_profile;
 
-      profile_arg.Form("-profile %s", profile_dir.Data());
+      profile_arg = "-profile "s + profile_dir;
       if (!batch_mode)
-         profile_arg.Prepend("-no-remote ");
+         profile_arg = "-no-remote "s + profile_arg;
 
       if (!fProg.empty()) {
          gSystem->Exec(Form("%s %s -no-remote -CreateProfile \"%s %s\"", fProg.c_str(), (batch_mode ? "-headless" : ""),
-                            rnd_profile.Data(), profile_dir.Data()));
+                            rnd_profile.c_str(), profile_dir.c_str()));
 
-         rmdir = profile_dir.Data();
+         rmdir = profile_dir;
       } else {
          R__ERROR_HERE("WebDisplay") << "Cannot create Firefox profile without assigned executable, check WebGui.Firefox variable";
       }
    }
 
-   exec.ReplaceAll("$profile", profile_arg.Data());
+   exec = std::regex_replace(exec, std::regex("\\$profile"), profile_arg);
 
    return rmdir;
 }
