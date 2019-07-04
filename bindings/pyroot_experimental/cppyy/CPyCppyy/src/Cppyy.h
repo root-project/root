@@ -20,6 +20,7 @@ namespace Cppyy {
 
     typedef size_t      TCppScope_t;
     typedef TCppScope_t TCppType_t;
+    typedef void*       TCppEnum_t;
     typedef void*       TCppObject_t;
     typedef intptr_t    TCppMethod_t;
 
@@ -232,6 +233,16 @@ namespace Cppyy {
     bool IsEnumData(TCppScope_t scope, TCppIndex_t idata);
     CPPYY_IMPORT
     int  GetDimensionSize(TCppScope_t scope, TCppIndex_t idata, int dimension);
+
+// enum properties -----------------------------------------------------------
+    CPPYY_IMPORT
+    TCppEnum_t  GetEnum(TCppScope_t scope, const std::string& enum_name);
+    CPPYY_IMPORT
+    TCppIndex_t GetNumEnumData(TCppEnum_t);
+    CPPYY_IMPORT
+    std::string GetEnumDataName(TCppEnum_t, TCppIndex_t idata);
+    CPPYY_IMPORT
+    long long   GetEnumDataValue(TCppEnum_t, TCppIndex_t idata);
 
 } // namespace Cppyy
 
