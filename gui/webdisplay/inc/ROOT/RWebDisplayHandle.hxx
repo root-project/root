@@ -99,6 +99,4 @@ public:
 }
 }
 
-
-
 #endif
