@@ -38,6 +38,8 @@ private:
    RNTupleVersion fTypeVersion;
    /// The leaf name, not including parent fields
    std::string fFieldName;
+   /// Free text set by the user
+   std::string fFieldDescription;
    /// The C++ type that was used when writing the field
    std::string fTypeName;
    /// The structural information carried by this field in the data model tree
@@ -54,6 +56,7 @@ public:
    RNTupleVersion GetFieldVersion() const { return fFieldVersion; }
    RNTupleVersion GetTypeVersion() const { return fTypeVersion; }
    std::string GetFieldName() const { return fFieldName; }
+   std::string GetFieldDescription() const { return fFieldDescription; }
    std::string GetTypeName() const { return fTypeName; }
    ENTupleStructure GetStructure() const { return fStructure; }
    DescriptorId_t GetParentId() const { return fParentId; }
@@ -134,6 +137,7 @@ private:
    static constexpr std::uint32_t kByteProtocol = 0;
 
    std::string fName;
+   std::string fDescription;
    RNTupleVersion fVersion;
    /// Every NTuple gets a unique identifier
    Uuid_t fOwnUuid;
@@ -169,6 +173,7 @@ public:
       return fClusterDescriptors.at(clusterId);
    }
    std::string GetName() const { return fName; }
+   std::string GetDescription() const { return fDescription; }
    RNTupleVersion GetVersion() const { return fVersion; }
    Uuid_t GetOwnUuid() const { return fOwnUuid; }
    Uuid_t GetGroupUuid() const { return fGroupUuid; }
