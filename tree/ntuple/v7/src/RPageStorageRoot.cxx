@@ -131,9 +131,8 @@ void ROOT::Experimental::Detail::RPageSinkRoot::Create(RNTupleModel &model)
 void ROOT::Experimental::Detail::RPageSinkRoot::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
 {
    auto columnId = columnHandle.fId;
-   ROOT::Experimental::Internal::RPagePayload pagePayload;
-   pagePayload.fSize = page.GetSize();
-   pagePayload.fContent = static_cast<unsigned char *>(page.GetBuffer());
+   ROOT::Experimental::Internal::RNTupleBlob pagePayload(
+      page.GetSize(), static_cast<unsigned char *>(page.GetBuffer()));
    std::string key = std::string(RMapper::kKeyPagePayload) +
       std::to_string(fNTupleFooter.fNClusters) + RMapper::kKeySeparator +
       std::to_string(columnId) + RMapper::kKeySeparator +
@@ -204,13 +203,13 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageAllocatorKey:
 }
 
 void ROOT::Experimental::Detail::RPageAllocatorKey::DeletePage(
-   const RPage& page, ROOT::Experimental::Internal::RPagePayload *payload)
+   const RPage& page, ROOT::Experimental::Internal::RNTupleBlob *payload)
 {
    if (page.IsNull())
       return;
    R__ASSERT(page.GetBuffer() == payload->fContent);
    free(payload->fContent);
-   free(payload);
+   delete payload;
 }
 
 
@@ -407,7 +406,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::P
       std::to_string(columnId) + RMapper::kKeySeparator +
       std::to_string(pageInCluster);
    auto pageKey = fDirectory->GetKey(keyName.c_str());
-   auto pagePayload = pageKey->ReadObject<ROOT::Experimental::Internal::RPagePayload>();
+   auto pagePayload = pageKey->ReadObject<ROOT::Experimental::Internal::RNTupleBlob>();
    auto elementSize = pagePayload->fSize / elemsInPage;
    R__ASSERT(pagePayload->fSize % elemsInPage == 0);
    auto newPage = fPageAllocator->NewPage(columnId, pagePayload->fContent, elementSize, elemsInPage);
@@ -415,7 +414,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::P
    fPagePool->RegisterPage(newPage,
       RPageDeleter([](const RPage &page, void *userData)
       {
-         RPageAllocatorKey::DeletePage(page, reinterpret_cast<ROOT::Experimental::Internal::RPagePayload *>(userData));
+         RPageAllocatorKey::DeletePage(page, reinterpret_cast<ROOT::Experimental::Internal::RNTupleBlob *>(userData));
       }, pagePayload));
    return newPage;
 }
