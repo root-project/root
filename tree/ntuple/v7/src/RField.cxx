@@ -369,11 +369,6 @@ void ROOT::Experimental::RFieldClass::DoGenerateColumns()
 {
 }
 
-unsigned int ROOT::Experimental::RFieldClass::GetNColumns() const
-{
-   return 0;
-}
-
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RFieldClass::GenerateValue(void* where)
 {
    return Detail::RFieldValue(true /* captureFlag */, this, fClass->New(where));
@@ -447,11 +442,6 @@ void ROOT::Experimental::RFieldVector::DoGenerateColumns()
    RColumnModel modelIndex(GetName(), EColumnType::kIndex, true /* isSorted*/);
    fColumns.emplace_back(std::make_unique<Detail::RColumn>(modelIndex));
    fPrincipalColumn = fColumns[0].get();
-}
-
-unsigned int ROOT::Experimental::RFieldVector::GetNColumns() const
-{
-   return 1;
 }
 
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RFieldVector::GenerateValue(void* where)

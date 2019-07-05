@@ -140,10 +140,10 @@ private:
    std::string fDescription;
    RNTupleVersion fVersion;
    /// Every NTuple gets a unique identifier
-   Uuid_t fOwnUuid;
+   RNTupleUuid fOwnUuid;
    /// Column sets that are created as derived sets from existing NTuples share the same group id.
    /// NTuples in the same group have the same number of entries and are supposed to contain associated data.
-   Uuid_t fGroupUuid;
+   RNTupleUuid fGroupUuid;
 
    std::unordered_map<DescriptorId_t, RFieldDescriptor> fFieldDescriptors;
    std::unordered_map<DescriptorId_t, RColumnDescriptor> fColumnDescriptors;
@@ -159,11 +159,11 @@ public:
     * Serializes the global ntuple information as well as the column and field schemata
     * Returns the number of bytes and fills buffer if it is not nullptr.
     */
-   std::uint32_t SerializeHeader(void* buffer);
+   std::uint32_t SerializeHeader(void* buffer) const;
    /**
     * Serializes cluster meta data. Returns the number of bytes and fills buffer if it is not nullptr.
     */
-   std::uint32_t SerializeFooter(void* buffer);
+   std::uint32_t SerializeFooter(void* buffer) const;
 
    const RFieldDescriptor& GetFieldDescriptor(DescriptorId_t fieldId) const { return fFieldDescriptors.at(fieldId); }
    const RColumnDescriptor& GetColumnDescriptor(DescriptorId_t columnId) const {
@@ -175,8 +175,12 @@ public:
    std::string GetName() const { return fName; }
    std::string GetDescription() const { return fDescription; }
    RNTupleVersion GetVersion() const { return fVersion; }
-   Uuid_t GetOwnUuid() const { return fOwnUuid; }
-   Uuid_t GetGroupUuid() const { return fGroupUuid; }
+   RNTupleUuid GetOwnUuid() const { return fOwnUuid; }
+   RNTupleUuid GetGroupUuid() const { return fGroupUuid; }
+
+   std::size_t GetNFields() const { return fFieldDescriptors.size(); }
+   std::size_t GetNColumns() const { return fColumnDescriptors.size(); }
+   std::size_t GetNClusters() const { return fClusterDescriptors.size(); }
 };
 
 
@@ -190,7 +194,8 @@ private:
 public:
    const RNTupleDescriptor& GetDescriptor() const { return fDescriptor; }
 
-   void SetNTuple(const std::string_view &name, const RNTupleVersion &version, const Uuid_t &uuid);
+   void SetNTuple(const std::string_view &name, const std::string_view &description, const RNTupleVersion &version,
+                  const RNTupleUuid &uuid);
 
    void AddField(DescriptorId_t fieldId, const RNTupleVersion &fieldVersion, const RNTupleVersion &typeVersion,
                  std::string_view fieldName, std::string_view typeName, ENTupleStructure structure);
