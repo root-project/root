@@ -69,7 +69,6 @@ The field knows based on its type and the field name the type(s) and name(s) of 
 class RFieldBase {
    friend class ROOT::Experimental::Detail::RFieldFuse; // to connect the columns to a page storage
    friend class ROOT::Experimental::RFieldCollection; // to change the field names when collections are attached
-    //friend class ROOT::Experimental::TNtuplePrintVisitor;
 private:
    /// The field name relative to its parent field
    std::string fName;
@@ -80,8 +79,7 @@ private:
    /// A field on a trivial type that maps as-is to a single column
    bool fIsSimple;
    /// First Field in NTuple has Order 0, the next Order 1, etc. Value set by Attach()
-   int fOrder = -1;
-
+   int fNTupleIndex = -1;
 protected:
    /// Collections and classes own sub fields
    std::vector<std::unique_ptr<RFieldBase>> fSubFields;
@@ -212,9 +210,13 @@ public:
    RIterator begin();
    RIterator end();
 
-   /// Used for the visitor design pattern, currently only called by RNTupleReader::Print()
-   virtual void AcceptVisitor(RNTupleVisitor &fVisitor) const;
-   int GetOrder() const {return fOrder;}
+   /// Used for the visitor design pattern, see for example RNTupleReader::Print()
+   virtual void TraverseVisitor(RNTupleVisitor &visitor, int level = 0) const;
+   virtual void AcceptVisitor(RNTupleVisitor &visitor, int level) const;
+   int GetIndex() const {return fNTupleIndex;}
+   bool IsLastInParentSubField() const {
+      return fNTupleIndex == static_cast<int>(fParent->fSubFields.size());
+   }
 
 
 <<<<<<< HEAD
@@ -252,6 +254,7 @@ public:
 
    /// Generates managed values for the top-level sub fields
    REntry* GenerateEntry();
+   void AcceptVisitor(RNTupleVisitor &visitor, int level) const;
 };
 
 /// The field for a class with dictionary

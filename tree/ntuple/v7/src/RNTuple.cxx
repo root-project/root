@@ -20,12 +20,13 @@
 #include "ROOT/RPageStorage.hxx"
 #include "ROOT/RPageStorageRoot.hxx"
 
+#include <algorithm>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
-#include <iostream>
 
 ROOT::Experimental::Detail::RNTuple::RNTuple(std::unique_ptr<ROOT::Experimental::RNTupleModel> model)
    : fModel(std::move(model))
@@ -115,27 +116,35 @@ std::string ROOT::Experimental::RNTupleReader::GetInfo(const ENTupleInfo what) {
 }
 
 
-void ROOT::Experimental::RNTupleReader::Print(std::ostream &output, int width, unsigned int fNoFields) {
-    if(width < 30) {
-        std::cout << "The width is too small! Should be at least 30.\n";
-        return;
-    }
-    RPrintVisitor fPrintVisitor(output, width, fNoFields);
-    for(int i = 0; i < (width/2 + width%2 -4); ++i)
-        output << '*'; output << " NTUPLE ";
-    for(int i = 0; i < (width/2 -4); ++i) output << '*'; output << '\n';
-    //CutIfNecessary defined in RFieldVisitor.hxx
-    output << "* Ntuple  : " << CutIfNecessary(GetName(),width-13) << std::setw(width-11-GetName().size()) << "*\n";
-    output << "* Entries : " << GetNEntries() << std::setw(width-11-NumDigits(GetNEntries())) << "*\n";
-    for(int i = 0; i < width; ++i)
-        output << "*"; output << '\n';
-    for(const auto& field: *(GetModel()->GetRootField())) {
-        output << "*";
-        field.AcceptVisitor(fPrintVisitor);
-        output << "*\n";
-        for(int i = 0; i < width; ++i)
-            output << "*"; output << '\n';
-     }
+void ROOT::Experimental::RNTupleReader::Print(std::ostream &output, char frameSymbol, int width)
+{
+   if (width < 30) {
+      std::cout << "The width is too small! Should be at least 30.\n";
+      return;
+   }
+   for (int i = 0; i < (width/2 + width%2 - 4); ++i) output << frameSymbol; output << " NTUPLE ";
+   for (int i = 0; i < (width/2 - 4); ++i) output << frameSymbol; output << '\n';
+   //CutStringAndAddEllipsisIfNeeded defined in RFieldVisitor.hxx
+   output << frameSymbol << " Ntuple  : " << CutStringAndAddEllipsisIfNeeded(GetName(), width-13) << std::string(std::max(0, static_cast<int>(width-13-GetName().size())), ' ' ) << frameSymbol << '\n'; // prints line with name of ntuple
+   output << frameSymbol << " Entries : " << GetNEntries() << std::string(std::max(0, static_cast<int>(width-13-(std::to_string(GetNEntries())).size())), ' ') << frameSymbol << '\n';  // prints line with number of entries
+   
+   //prepVisitor traverses through all fields to gather information needed for printing.
+   RPrepareVisitor prepVisitor;
+   GetModel()->GetRootField()->TraverseVisitor(prepVisitor);
+   
+   //printVisitor traverses through all fields to do the actual printing.
+   RPrintVisitor printVisitor(output);
+   //To make code more understandable, all the parameter setting is done here instead of inside the constructor
+   printVisitor.SetFrameSymbol(frameSymbol);
+   printVisitor.SetWidth(width);
+   printVisitor.SetDeepestLevel(prepVisitor.getDeepestLevel());
+   printVisitor.SetNumFields(prepVisitor.getNumFields());
+   printVisitor.SetAvailableSpaceForStrings();
+   printVisitor.ResizeFlagVec();
+   GetModel()->GetRootField()->TraverseVisitor(printVisitor);
+   
+   
+   for(int i = 0; i < width; ++i) output << frameSymbol; output << '\n';
 }
 //------------------------------------------------------------------------------
 

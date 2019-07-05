@@ -16,7 +16,6 @@
 #ifndef ROOT7_RNTuple
 #define ROOT7_RNTuple
 
-//#include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RNTupleView.hxx>
@@ -134,13 +133,11 @@ public:
 
    std::string GetInfo(const ENTupleInfo what = ENTupleInfo::kSummary);
    
-    /// Prints a detailed summary of the ntuple, including a list of fields.
-    void Print(std::ostream &output = std::cout, int width = 69, unsigned int fNoFields = 1000u);
+   /// Prints a detailed summary of the ntuple, including a list of fields.
+   void Print(std::ostream &output = std::cout, char frameSymbol = '*', int width = 80);
     
-    /// Returns name associated to the ntuple
-    std::string GetName() const {
-        return fSource->GetDescriptor().GetName();
-    }
+   /// Returns name associated to the ntuple
+   std::string GetName() const { return fSource->GetDescriptor().GetName(); }
     
 
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the ntuple.
