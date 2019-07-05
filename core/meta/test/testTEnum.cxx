@@ -4,6 +4,8 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
+#include <type_traits>
+
 TEST(TEnum, UnderlyingType)
 {
    gInterpreter->Declare(R"CODE(
@@ -42,9 +44,13 @@ enum class ECcl: short;
 )CODE"
 			);
 
-   EXPECT_EQ(TEnum::GetEnum("E0")->GetUnderlyingType(), kUInt_t);
-   EXPECT_EQ(TEnum::GetEnum("E1")->GetUnderlyingType(), kULong_t);
-   EXPECT_EQ(TEnum::GetEnum("E2")->GetUnderlyingType(), kULong_t);
+   enum E0 { kE0One };
+   enum E1 { kE1One = LONG_MAX };
+   enum E2 { kE2One = ULONG_MAX };
+
+   EXPECT_EQ(TEnum::GetEnum("E0")->GetUnderlyingType(), TDataType::GetType(typeid(std::underlying_type<E0>::type)));
+   EXPECT_EQ(TEnum::GetEnum("E1")->GetUnderlyingType(), TDataType::GetType(typeid(std::underlying_type<E1>::type)));
+   EXPECT_EQ(TEnum::GetEnum("E2")->GetUnderlyingType(), TDataType::GetType(typeid(std::underlying_type<E2>::type)));
    EXPECT_EQ(TEnum::GetEnum("E3")->GetUnderlyingType(), kChar_t);
 
    EXPECT_EQ(TEnum::GetEnum("Eb")->GetUnderlyingType(), kBool_t);
