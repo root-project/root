@@ -71,7 +71,6 @@ RooDataHist::RooDataHist() : _pbinvCacheMgr(0,10)
   _pbinv = 0 ;
   _curWeight = 0 ;
   _curIndex = -1 ;
-  _realIter = _realVars.createIterator() ;
   _binValid = 0 ;
   _curSumW2 = 0 ;
   _curVolume = 1 ;
@@ -677,7 +676,6 @@ void RooDataHist::initialize(const char* binningName, Bool_t fillTree)
   for (const auto real : _vars) {
     if (dynamic_cast<RooAbsReal*>(real)) _realVars.add(*real);
   }
-  _realIter = _realVars.createIterator() ;
 
   // Fill array of LValue pointers to variables
   for (const auto rvarg : _vars) {
@@ -807,7 +805,6 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
   for (const auto arg : _vars) {
     if (dynamic_cast<RooAbsReal*>(arg) != nullptr) _realVars.add(*arg) ;
   }
-  _realIter = _realVars.createIterator() ;
 
   // Fill array of LValue pointers to variables
   for (const auto rvarg : _vars) {
@@ -951,7 +948,6 @@ RooDataHist::~RooDataHist()
   if (_errHi) delete[] _errHi ;
   if (_sumw2) delete[] _sumw2 ;
   if (_binv) delete[] _binv ;
-  if (_realIter) delete _realIter ;
   if (_binValid) delete[] _binValid ;
   vector<const RooAbsBinning*>::iterator iter = _lvbins.begin() ;
   while(iter!=_lvbins.end()) {
@@ -988,14 +984,13 @@ Int_t RooDataHist::getIndex(const RooArgSet& coord, Bool_t fast)
 
 Int_t RooDataHist::calcTreeIndex() const 
 {
-  Int_t masterIdx(0), i(0) ;
-  vector<RooAbsLValue*>::const_iterator iter = _lvvars.begin() ;
-  vector<const RooAbsBinning*>::const_iterator biter = _lvbins.begin() ;
-  for (;iter!=_lvvars.end() ; ++iter) {
-    const RooAbsBinning* binning = (*biter) ;
-    masterIdx += _idxMult[i++]*(*iter)->getBin(binning) ;
-    ++biter ;
+  int masterIdx(0);
+  for (unsigned int i=0; i < _lvvars.size(); ++i) {
+    const RooAbsLValue*  lvvar = _lvvars[i];
+    const RooAbsBinning* binning = _lvbins[i];
+    masterIdx += _idxMult[i] * lvvar->getBin(binning);
   }
+
   return masterIdx ;
 }
 
@@ -1101,17 +1096,15 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
   if (_realVars.getSize()==1) {
 
     // 1-dimensional interpolation
-    RooFIter realIter = _realVars.fwdIterator() ;
-    RooRealVar* real=(RooRealVar*)realIter.next() ;
+    const auto real = static_cast<RooRealVar*>(_realVars[static_cast<std::size_t>(0)]);
     const RooAbsBinning* binning = real->getBinningPtr(0) ;
     wInt = interpolateDim(*real,binning,((RooAbsReal*)bin.find(*real))->getVal(), intOrder, correctForBinSize, cdfBoundaries) ;
     
   } else if (_realVars.getSize()==2) {
 
     // 2-dimensional interpolation
-    RooFIter realIter = _realVars.fwdIterator() ;
-    RooRealVar* realX=(RooRealVar*)realIter.next() ;
-    RooRealVar* realY=(RooRealVar*)realIter.next() ;
+    const auto realX = static_cast<RooRealVar*>(_realVars[static_cast<std::size_t>(0)]);
+    const auto realY = static_cast<RooRealVar*>(_realVars[static_cast<std::size_t>(1)]);
     Double_t xval = ((RooAbsReal*)bin.find(*realX))->getVal() ;
     Double_t yval = ((RooAbsReal*)bin.find(*realY))->getVal() ;
     

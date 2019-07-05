@@ -195,7 +195,7 @@ RooCmdArg SumCoefRange(const char* rangeName) ;
 RooCmdArg Constrain(const RooArgSet& params) ;
 RooCmdArg GlobalObservables(const RooArgSet& globs) ;
 RooCmdArg GlobalObservablesTag(const char* tagName) ;
-RooCmdArg Constrained() ;
+//RooCmdArg Constrained() ;
 RooCmdArg ExternalConstraints(const RooArgSet& constraintPdfs) ;
 RooCmdArg PrintEvalErrors(Int_t numErrors) ;
 RooCmdArg EvalErrorWall(Bool_t flag) ;
