@@ -518,7 +518,7 @@ TEST(RNTuple, RDF)
 TEST(RNTuple, Descriptor)
 {
    RNTupleDescriptorBuilder descBuilder;
-   descBuilder.SetNTuple("MyTuple", RNTupleVersion(1, 2, 3), ROOT::Experimental::Uuid_t());
+   descBuilder.SetNTuple("MyTuple", "Description", RNTupleVersion(1, 2, 3), ROOT::Experimental::RNTupleUuid());
    descBuilder.AddField(42, RNTupleVersion(), RNTupleVersion(), "x", "std::string", ENTupleStructure::kLeaf);
    descBuilder.AddColumn(3, 42, RNTupleVersion(), RColumnModel("idx_x", EColumnType::kIndex, true));
    descBuilder.AddColumn(4, 42, RNTupleVersion(), RColumnModel("x", EColumnType::kByte, true));
