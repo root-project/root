@@ -1170,7 +1170,7 @@ static void RegisterCommonCxxModules(cling::Interpreter &clingInterp)
       LoadModules(CommonModules, clingInterp);
 
       // These modules should not be preloaded but they fix issues.
-      std::vector<std::string> FIXMEModules = {"Gpad"};
+      std::vector<std::string> FIXMEModules = {"Hist", "Gpad"};
       LoadModules(FIXMEModules, clingInterp);
 
       loadGlobalModuleIndex(SourceLocation(), clingInterp);
