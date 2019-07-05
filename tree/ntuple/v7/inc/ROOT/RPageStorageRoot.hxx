@@ -164,6 +164,9 @@ private:
    DescriptorId_t fLastClusterId = 0;
    RNTupleDescriptorBuilder fDescriptorBuilder;
 
+   /// Keeps track of the number of elements in the currently open cluster. Indexed by column id.
+   std::vector<RClusterDescriptor::RColumnRange> fOpenColumnRanges;
+
 public:
    RPageSinkRoot(std::string_view ntupleName, RSettings settings);
    RPageSinkRoot(std::string_view ntupleName, std::string_view path);

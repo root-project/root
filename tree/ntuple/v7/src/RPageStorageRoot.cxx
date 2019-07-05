@@ -75,14 +75,14 @@ ROOT::Experimental::Detail::RPageSinkRoot::AddColumn(const RColumn &column)
    if (column.GetOffsetColumn() != nullptr) {
       columnHeader.fOffsetColumn = column.GetOffsetColumn()->GetModel().GetName();
    }
-   auto columnId = fNTupleHeader.fColumns.size();
    fNTupleHeader.fColumns.emplace_back(columnHeader);
 
    /// We use the fact the AddColumn is called during Create() just after the field that corresponds to the
    /// current set of columns has been added.
-   fDescriptorBuilder.AddColumn(fLastColumnId++, fLastFieldId, column.GetVersion(), column.GetModel());
+   fDescriptorBuilder.AddColumn(fLastColumnId, fLastFieldId, column.GetVersion(), column.GetModel());
 
    //printf("Added column %s type %d\n", columnHeader.fName.c_str(), (int)columnHeader.fType);
+   auto columnId = fLastColumnId++;
    return ColumnHandle_t(columnId, &column);
 }
 
@@ -117,6 +117,13 @@ void ROOT::Experimental::Detail::RPageSinkRoot::Create(RNTupleModel &model)
    auto nColumns = fLastColumnId;
    fCurrentCluster.fPagesPerColumn.resize(nColumns);
    fNTupleFooter.fNElementsPerColumn.resize(nColumns, 0);
+   for (DescriptorId_t i = 0; i < nColumns; ++i) {
+      RClusterDescriptor::RColumnRange range;
+      range.fColumnId = i;
+      range.fFirstElementIndex = 0;
+      range.fNElements = 0;
+      fOpenColumnRanges.emplace_back(range);
+   }
 
    fDirectory->WriteObject(&fNTupleHeader, RMapper::kKeyNTupleHeader);
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
@@ -131,22 +138,31 @@ void ROOT::Experimental::Detail::RPageSinkRoot::Create(RNTupleModel &model)
 void ROOT::Experimental::Detail::RPageSinkRoot::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
 {
    auto columnId = columnHandle.fId;
+
    ROOT::Experimental::Internal::RNTupleBlob pagePayload(
       page.GetSize(), static_cast<unsigned char *>(page.GetBuffer()));
    std::string key = std::string(RMapper::kKeyPagePayload) +
-      std::to_string(fNTupleFooter.fNClusters) + RMapper::kKeySeparator +
+      std::to_string(fLastClusterId) + RMapper::kKeySeparator +
       std::to_string(columnId) + RMapper::kKeySeparator +
       std::to_string(fCurrentCluster.fPagesPerColumn[columnId].fRangeStarts.size());
    fDirectory->WriteObject(&pagePayload, key.c_str());
+
    fCurrentCluster.fPagesPerColumn[columnId].fRangeStarts.push_back(page.GetRangeFirst());
    fNTupleFooter.fNElementsPerColumn[columnId] += page.GetNElements();
+
+   fOpenColumnRanges[columnId].fNElements += page.GetNElements();
 }
 
 void ROOT::Experimental::Detail::RPageSinkRoot::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
 {
    R__ASSERT((nEntries - fPrevClusterNEntries) < ClusterSize_t(-1));
-   fDescriptorBuilder.AddCluster(fLastClusterId++, RNTupleVersion(), fPrevClusterNEntries,
+   fDescriptorBuilder.AddCluster(fLastClusterId, RNTupleVersion(), fPrevClusterNEntries,
                                  ClusterSize_t(nEntries - fPrevClusterNEntries));
+   for (auto &range : fOpenColumnRanges) {
+      fDescriptorBuilder.AddClusterColumnRange(fLastClusterId, range);
+      range.fFirstElementIndex += range.fNElements;
+   }
+   ++fLastClusterId;
 
    fCurrentCluster.fNEntries = nEntries - fPrevClusterNEntries;
    fPrevClusterNEntries = nEntries;
@@ -166,12 +182,13 @@ void ROOT::Experimental::Detail::RPageSinkRoot::CommitDataset()
    if (!fDirectory)
       return;
 
-   //const auto &descriptor = fDescriptorBuilder.GetDescriptor();
-   //auto szFooter = descriptor.SerializeFooter(nullptr);
-   //auto buffer = new unsigned char[szFooter];
-   //descriptor.SerializeFooter(buffer);
-   //fDirectory->WriteObject(buffer, kKeyNTupleFooter);
-   //delete[] buffer;
+   const auto &descriptor = fDescriptorBuilder.GetDescriptor();
+   auto szFooter = descriptor.SerializeFooter(nullptr);
+   auto buffer = new unsigned char[szFooter];
+   descriptor.SerializeFooter(buffer);
+   ROOT::Experimental::Internal::RNTupleBlob footerBlob(szFooter, buffer);
+   fDirectory->WriteObject(&footerBlob, kKeyNTupleFooter);
+   delete[] buffer;
 
    fDirectory->WriteObject(&fNTupleFooter, RMapper::kKeyNTupleFooter);
 }
@@ -262,11 +279,17 @@ ROOT::Experimental::Detail::RPageSourceRoot::AddColumn(const RColumn &column)
 void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
 {
    fDirectory = fSettings.fFile->GetDirectory(fNTupleName.c_str());
+   RNTupleDescriptorBuilder descBuilder;
 
    auto keyRawNTupleHeader = fDirectory->GetKey(kKeyNTupleHeader);
    auto ntupleRawHeader = keyRawNTupleHeader->ReadObject<ROOT::Experimental::Internal::RNTupleBlob>();
-   RNTupleDescriptorBuilder descBuilder;
    descBuilder.SetFromHeader(ntupleRawHeader->fContent);
+   free(ntupleRawHeader->fContent);
+   delete ntupleRawHeader;
+
+   auto keyRawNTupleFooter = fDirectory->GetKey(kKeyNTupleFooter);
+   auto ntupleRawFooter = keyRawNTupleFooter->ReadObject<ROOT::Experimental::Internal::RNTupleBlob>();
+   descBuilder.AddClustersFromFooter(ntupleRawFooter->fContent);
    free(ntupleRawHeader->fContent);
    delete ntupleRawHeader;
 
