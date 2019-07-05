@@ -9,7 +9,7 @@
 ################################################################################
 
 from ROOT import pythonization
-from libROOTPython import GetEndianess, GetVectorDataPointer, GetSizeOfType, AsRVec
+from libROOTPython import GetEndianess, GetDataPointer, GetSizeOfType, AsRVec
 
 
 _array_interface_dtype_map = {
@@ -37,7 +37,7 @@ def get_array_interface(self):
             if self.empty():
                 pointer = 1
             else:
-                pointer = GetVectorDataPointer(self, cppname)
+                pointer = GetDataPointer(self, cppname, "data")
             return {
                 "shape": (size, ),
                 "typestr": "{}{}{}".format(endianess, dtype_numpy, dtype_size),
