@@ -290,8 +290,8 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
    auto keyRawNTupleFooter = fDirectory->GetKey(kKeyNTupleFooter);
    auto ntupleRawFooter = keyRawNTupleFooter->ReadObject<ROOT::Experimental::Internal::RNTupleBlob>();
    descBuilder.AddClustersFromFooter(ntupleRawFooter->fContent);
-   free(ntupleRawHeader->fContent);
-   delete ntupleRawHeader;
+   free(ntupleRawFooter->fContent);
+   delete ntupleRawFooter;
 
    auto keyNTupleHeader = fDirectory->GetKey(RMapper::kKeyNTupleHeader);
    auto ntupleHeader = keyNTupleHeader->ReadObject<ROOT::Experimental::Internal::RNTupleHeader>();
