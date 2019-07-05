@@ -4839,15 +4839,17 @@ int RootClingMain(int argc,
       }
 
 
-      const std::string headersClassesMapString = GenerateStringFromHeadersForClasses(headersDeclsMap,
-                                                                                      detectedUmbrella,
-                                                                                      true);
-      std::string fwdDeclsString = "nullptr";
-      if (!gDriverConfig->fBuildingROOTStage1) {
-         if (!writeEmptyRootPCM)
-            fwdDeclsString = GenerateFwdDeclString(scan, interp);
+      std::string headersClassesMapString = "\"\"";
+      std::string fwdDeclsString = "\"\"";
+      if (!cxxmodule) {
+         headersClassesMapString = GenerateStringFromHeadersForClasses(headersDeclsMap,
+                                                                       detectedUmbrella,
+                                                                       true);
+         if (!gDriverConfig->fBuildingROOTStage1) {
+            if (!writeEmptyRootPCM)
+               fwdDeclsString = GenerateFwdDeclString(scan, interp);
+         }
       }
-
       modGen.WriteRegistrationSource(dictStream, fwdDeclnArgsToKeepString, headersClassesMapString, fwdDeclsString,
                                      extraIncludes, cxxmodule);
       // If we just want to inline the input header, we don't need

@@ -395,8 +395,9 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out, const std::str
 {
    if (hasCxxModule) {
       std::string emptyStr = "\"\"";
-      WriteRegistrationSourceImpl(out, GetDictionaryName(), GetDemangledDictionaryName(), {}, {}, emptyStr, "{}",
-                                  emptyStr, "0", "0",
+      WriteRegistrationSourceImpl(out, GetDictionaryName(), GetDemangledDictionaryName(), {}, {},
+                                  fwdDeclString, "{}",
+                                  emptyStr, headersClassesMapString, "0",
                                   /*HasCxxModule*/ true);
       return;
    }
