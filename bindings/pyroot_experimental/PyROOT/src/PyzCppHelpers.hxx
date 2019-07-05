@@ -8,6 +8,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#ifndef PYROOT_PYZCPPHELPERS
+#define PYROOT_PYZCPPHELPERS
+
+#include <string>
+
 struct _object;
 typedef _object PyObject;
 
@@ -20,3 +25,11 @@ PyObject *CallPyObjMethod(PyObject *obj, const char *meth);
 PyObject *CallPyObjMethod(PyObject *obj, const char *meth, PyObject *arg1);
 PyObject *BoolNot(PyObject *value);
 TClass *GetTClass(const CPyCppyy::CPPInstance *pyobj);
+std::string GetCppTypeFromNumpyType(const std::string& dtype);
+PyObject *GetArrayInterface(PyObject *obj);
+unsigned long long GetDataPointerFromArrayInterface(PyObject *obj);
+std::string GetTypestrFromArrayInterface(PyObject *obj);
+unsigned int GetDatatypeSizeFromTypestr(const std::string& typestr);
+bool CheckEndianessFromTypestr(const std::string& typestr);
+
+#endif // PYROOT_PYZCPPHELPERS

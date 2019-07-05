@@ -35,14 +35,14 @@ PyObject *AddTObjectEqNePyz(PyObject *self, PyObject *args);
 PyObject *AddSetItemTCAPyz(PyObject *self, PyObject *args);
 
 PyObject *AsRVec(PyObject *self, PyObject *obj);
+PyObject *AsRTensor(PyObject *self, PyObject *obj);
 
 PyObject* CPPInstanceExpand(PyObject *self, PyObject *args);
 
 PyObject *GetCppCallableClass(PyObject *self, PyObject *args);
 
 PyObject *GetEndianess(PyObject *self, PyObject *args);
-PyObject *GetVectorDataPointer(PyObject *self, PyObject *args);
-PyObject *GetTensorDataPointer(PyObject *self, PyObject *args);
+PyObject *GetDataPointer(PyObject *self, PyObject *args);
 PyObject *GetSizeOfType(PyObject *self, PyObject *args);
 
 PyObject *MakeNumpyDataFrame(PyObject *self, PyObject *obj);

@@ -190,6 +190,17 @@ public:
       fStrides = Internal::ComputeStridesFromShape(shape, layout);
    }
 
+   /// \brief Construct a tensor as view on data
+   /// \param[in] data Pointer to data contiguous in memory
+   /// \param[in] shape Shape vector
+   /// \param[in] strides Strides vector
+   /// \param[in] layout Memory layout
+   RTensor(Value_t *data, Shape_t shape, Shape_t strides, MemoryLayout layout = MemoryLayout::RowMajor)
+      : fShape(shape), fStrides(strides), fLayout(layout), fData(data), fContainer(NULL)
+   {
+      fSize = Internal::GetSizeFromShape(shape);
+   }
+
    /// \brief Construct a tensor owning externally provided data
    /// \param[in] container Shared pointer to data container
    /// \param[in] shape Shape vector
