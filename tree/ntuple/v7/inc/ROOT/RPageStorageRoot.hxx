@@ -74,12 +74,6 @@ struct RClusterFooter {
    std::vector<RPageInfo> fPagesPerColumn;
 };
 
-struct RPagePayload {
-   std::int32_t fVersion = 0;
-   int fSize = 0;
-   unsigned char* fContent = nullptr; //[fSize]
-};
-
 struct RNTupleBlob {
    RNTupleBlob() {}
    RNTupleBlob(int size, unsigned char *content) : fSize(size), fContent(content) {}
@@ -196,7 +190,7 @@ public:
 class RPageAllocatorKey {
 public:
    static RPage NewPage(ColumnId_t columnId, void *mem, std::size_t elementSize, std::size_t nElements);
-   static void DeletePage(const RPage& page, ROOT::Experimental::Internal::RPagePayload *payload);
+   static void DeletePage(const RPage& page, ROOT::Experimental::Internal::RNTupleBlob *payload);
 };
 
 

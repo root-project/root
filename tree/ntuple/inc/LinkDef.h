@@ -32,6 +32,5 @@
 #pragma link C++ class ROOT::Experimental::Internal::RColumnHeader+;
 #pragma link C++ class ROOT::Experimental::Internal::RClusterFooter+;
 #pragma link C++ class ROOT::Experimental::Internal::RPageInfo+;
-#pragma link C++ class ROOT::Experimental::Internal::RPagePayload+;
 
 #endif
