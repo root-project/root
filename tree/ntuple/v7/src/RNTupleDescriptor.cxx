@@ -144,6 +144,7 @@ std::uint32_t SerializeField(const RFieldDescriptor &val, void* buffer) {
    pos += SerializeVersion(val.GetFieldVersion(), *where);
    pos += SerializeVersion(val.GetTypeVersion(), *where);
    pos += SerializeString(val.GetFieldName(), *where);
+   pos += SerializeString(val.GetFieldDescription(), *where);
    pos += SerializeString(val.GetTypeName(), *where);
    pos += SerializeUInt32(static_cast<int>(val.GetStructure()), *where);
    pos += SerializeUInt64(val.GetParentId(), *where);
@@ -182,6 +183,7 @@ bool RFieldDescriptor::operator==(const RFieldDescriptor &other) const {
           fFieldVersion == other.fFieldVersion &&
           fTypeVersion == other.fTypeVersion &&
           fFieldName == other.fFieldName &&
+          fFieldDescription == other.fFieldDescription &&
           fTypeName == other.fTypeName &&
           fStructure == other.fStructure &&
           fParentId == other.fParentId &&
@@ -219,6 +221,7 @@ bool RClusterDescriptor::operator==(const RClusterDescriptor &other) const {
 
 bool RNTupleDescriptor::operator==(const RNTupleDescriptor &other) const {
    return fName == other.fName &&
+          fDescription == other.fDescription &&
           fVersion == other.fVersion &&
           fOwnUuid == other.fOwnUuid &&
           fGroupUuid == other.fGroupUuid &&
@@ -239,6 +242,7 @@ std::uint32_t RNTupleDescriptor::SerializeHeader(void* buffer)
    pos += SerializeUInt32(0, *where); // placeholder for the size
 
    pos += SerializeString(fName, *where);
+   pos += SerializeString(fDescription, *where);
    pos += SerializeVersion(fVersion, *where);
    pos += SerializeUInt32(fFieldDescriptors.size(), *where);
    for (const auto& f : fFieldDescriptors) {
@@ -302,6 +306,7 @@ void RNTupleDescriptorBuilder::SetFromHeader(void* headerBuffer) {
    // TODO: verify crc32
 
    pos += DeserializeString(pos, &fDescriptor.fName);
+   pos += DeserializeString(pos, &fDescriptor.fDescription);
    pos += DeserializeVersion(pos, &fDescriptor.fVersion);
    // TODO
    fDescriptor.fOwnUuid = Uuid_t();
@@ -315,6 +320,7 @@ void RNTupleDescriptorBuilder::SetFromHeader(void* headerBuffer) {
       pos += DeserializeVersion(pos, &f.fFieldVersion);
       pos += DeserializeVersion(pos, &f.fTypeVersion);
       pos += DeserializeString(pos, &f.fFieldName);
+      pos += DeserializeString(pos, &f.fFieldDescription);
       pos += DeserializeString(pos, &f.fTypeName);
       std::int32_t structure;
       pos += DeserializeInt32(pos, &structure);
