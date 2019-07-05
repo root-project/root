@@ -84,6 +84,7 @@ TEST(RNtuplePrint, FloatTest)
    testField.AcceptVisitor(visitor, 1);
    std::string expected{"********************************************************************************\n* Field -1  : floatTest (float)                                                *\n"};
    EXPECT_EQ(expected, os.str());
+   
 }
 
 TEST(RNtuplePrint, FloatTestTraverse)

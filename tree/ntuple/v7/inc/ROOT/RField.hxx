@@ -69,7 +69,6 @@ The field knows based on its type and the field name the type(s) and name(s) of 
 class RFieldBase {
    friend class ROOT::Experimental::Detail::RFieldFuse; // to connect the columns to a page storage
    friend class ROOT::Experimental::RFieldCollection; // to change the field names when collections are attached
-    //friend class ROOT::Experimental::TNtuplePrintVisitor;
 private:
    /// The field name relative to its parent field
    std::string fName;
@@ -259,10 +258,7 @@ public:
 
    /// Generates managed values for the top-level sub fields
    REntry* GenerateEntry();
-<<<<<<< HEAD
    void AcceptVisitor(RNTupleVisitor &visitor, int level) const;
-=======
->>>>>>> implement first draft of RNTuple::Print()
 };
 
 /// The field for a class with dictionary

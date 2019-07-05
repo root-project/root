@@ -162,8 +162,18 @@ void ROOT::Experimental::Detail::RFieldBase::ConnectColumns(RPageStorage *pageSt
    }
 }
 
-void ROOT::Experimental::Detail::RFieldBase::AcceptVisitor (RNTupleVisitor &fVisitor) const {
-    fVisitor.visitField(*this);
+void ROOT::Experimental::Detail::RFieldBase::TraverseVisitor(RNTupleVisitor &visitor, int level) const
+{
+   this->AcceptVisitor(visitor, level);
+   ++level;
+   for (const auto &fieldPtr: fSubFields) {
+      fieldPtr->TraverseVisitor(visitor, level);
+   }
+}
+
+void ROOT::Experimental::Detail::RFieldBase::AcceptVisitor(RNTupleVisitor &visitor, int level) const
+{
+    visitor.visitField(*this, level);
 }
 
 void ROOT::Experimental::Detail::RFieldBase::TraverseVisitor(RNTupleVisitor &visitor, int level) const

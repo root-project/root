@@ -16,7 +16,6 @@
 #ifndef ROOT7_RNTuple
 #define ROOT7_RNTuple
 
-//#include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RNTupleView.hxx>

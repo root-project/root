@@ -27,7 +27,6 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
-#include <iostream>
 
 ROOT::Experimental::Detail::RNTuple::RNTuple(std::unique_ptr<ROOT::Experimental::RNTupleModel> model)
    : fModel(std::move(model))
