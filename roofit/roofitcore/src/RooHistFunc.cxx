@@ -54,9 +54,6 @@ RooHistFunc::RooHistFunc() :
   _unitNorm(kFALSE)
 {
   TRACE_CREATE 
-
-  _histObsIter = _histObsList.createIterator() ;
-  _pdfObsIter = _depList.createIterator() ;
 }
 
 
@@ -81,9 +78,6 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& v
   _histObsList.addClone(vars) ;
   _depList.add(vars) ;
 
-  _histObsIter = _histObsList.createIterator() ;
-  _pdfObsIter = _depList.createIterator() ;
-
   // Verify that vars and dhist.get() have identical contents
   const RooArgSet* dvars = dhist.get() ;
   if (vars.getSize()!=dvars->getSize()) {
@@ -91,16 +85,15 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& v
 			  << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
     assert(0) ;
   }
-  TIterator* iter = vars.createIterator() ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)iter->Next())) {
+
+  for (const auto arg : vars) {
     if (!dvars->find(arg->GetName())) {
       coutE(InputArguments) << "RooHistFunc::ctor(" << GetName() 
 			    << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
       assert(0) ;
     }
   }
-  delete iter ;
+
   TRACE_CREATE 
 }
 
@@ -127,9 +120,6 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& 
   _histObsList.addClone(histObs) ;
   _depList.add(funcObs) ;
 
-  _histObsIter = _histObsList.createIterator() ;
-  _pdfObsIter = _depList.createIterator() ;
-
   // Verify that vars and dhist.get() have identical contents
   const RooArgSet* dvars = dhist.get() ;
   if (histObs.getSize()!=dvars->getSize()) {
@@ -137,16 +127,15 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& 
 			  << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
     assert(0) ;
   }
-  TIterator* iter = histObs.createIterator() ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)iter->Next())) {
+
+  for (const auto arg : histObs) {
     if (!dvars->find(arg->GetName())) {
       coutE(InputArguments) << "RooHistFunc::ctor(" << GetName() 
 			    << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
       assert(0) ;
     }
   }
-  delete iter ;
+
   TRACE_CREATE 
 }
 
@@ -168,9 +157,6 @@ RooHistFunc::RooHistFunc(const RooHistFunc& other, const char* name) :
   TRACE_CREATE 
 
   _histObsList.addClone(other._histObsList) ;
-
-  _histObsIter = _histObsList.createIterator() ;
-  _pdfObsIter = _depList.createIterator() ;
 }
 
 
@@ -179,10 +165,7 @@ RooHistFunc::RooHistFunc(const RooHistFunc& other, const char* name) :
 
 RooHistFunc::~RooHistFunc() 
 { 
-  TRACE_DESTROY 
-
-  delete _histObsIter ;
-  delete _pdfObsIter ;
+  TRACE_DESTROY
 }
 
 
@@ -197,17 +180,16 @@ Double_t RooHistFunc::evaluate() const
 {
   // Transfer values from   
   if (_depList.getSize()>0) {
-    _histObsIter->Reset() ;
-    _pdfObsIter->Reset() ;
-    RooAbsArg* harg, *parg ;
-    while((harg=(RooAbsArg*)_histObsIter->Next())) {
-      parg = (RooAbsArg*)_pdfObsIter->Next() ;
+    for (auto i = 0u; i < _histObsList.size(); ++i) {
+      const auto harg = _histObsList[i];
+      const auto parg = _depList[i];
+
       if (harg != parg) {
-	parg->syncCache() ;
-	harg->copyCache(parg,kTRUE) ;
-	if (!harg->inRange(0)) {
-	  return 0 ;
-	}
+        parg->syncCache() ;
+        harg->copyCache(parg,kTRUE) ;
+        if (!harg->inRange(0)) {
+          return 0 ;
+        }
       }
     }
   }
@@ -256,9 +238,7 @@ Double_t RooHistFunc::totVolume() const
     return _totVolume ;
   }
   _totVolume = 1. ;
-  TIterator* iter = _depList.createIterator() ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)iter->Next())) {
+  for (const auto arg : _depList) {
     RooRealVar* real = dynamic_cast<RooRealVar*>(arg) ;
     if (real) {
       _totVolume *= (real->getMax()-real->getMin()) ;
@@ -269,7 +249,7 @@ Double_t RooHistFunc::totVolume() const
       }
     }
   }
-  delete iter ;
+
   return _totVolume ;
 }
 
@@ -313,13 +293,11 @@ Int_t RooHistFunc::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
   // Partial integration scenarios.
   // Build unique code from bit mask of integrated variables in depList
   Int_t code(0),n(0) ;
-  TIterator* iter = _depList.createIterator() ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)iter->Next())) {
+  for (const auto arg : _depList) {
     if (allVars.find(arg->GetName())) code |= (1<<n) ;
     n++ ;
   }
-  delete iter ;
+
   analVars.add(*allVarsSel) ;
 
   return code ;
@@ -344,29 +322,25 @@ Double_t RooHistFunc::analyticalIntegral(Int_t code, const char* /*rangeName*/) 
 
   // Partial integration scenario, retrieve set of variables, calculate partial sum
   RooArgSet intSet ;
-  TIterator* iter = _depList.createIterator() ;
-  RooAbsArg* arg ;
   Int_t n(0) ;
-  while((arg=(RooAbsArg*)iter->Next())) {
+  for (const auto arg : _depList) {
     if (code & (1<<n)) {
       intSet.add(*arg) ;
     }
     n++ ;
   }
-  delete iter ;
 
   if (_depList.getSize()>0) {
-    _histObsIter->Reset() ;
-    _pdfObsIter->Reset() ;
-    RooAbsArg* harg, *parg ;
-    while((harg=(RooAbsArg*)_histObsIter->Next())) {
-      parg = (RooAbsArg*)_pdfObsIter->Next() ;
+    for (auto i = 0u; i < _histObsList.size(); ++i) {
+      const auto harg = _histObsList[i];
+      const auto parg = _depList[i];
+
       if (harg != parg) {
-	parg->syncCache() ;
-	harg->copyCache(parg,kTRUE) ;
-	if (!harg->inRange(0)) {
-	  return 0 ;
-	}
+        parg->syncCache() ;
+        harg->copyCache(parg,kTRUE) ;
+        if (!harg->inRange(0)) {
+          return 0 ;
+        }
       }
     }
   }
@@ -392,11 +366,9 @@ list<Double_t>* RooHistFunc::plotSamplingHint(RooAbsRealLValue& obs, Double_t xl
 
   // Find histogram observable corresponding to pdf observable
   RooAbsArg* hobs(0) ;
-  _histObsIter->Reset() ;
-  _pdfObsIter->Reset() ;
-  RooAbsArg* harg, *parg ;
-  while((harg=(RooAbsArg*)_histObsIter->Next())) {
-    parg = (RooAbsArg*)_pdfObsIter->Next() ;
+  for (auto i = 0u; i < _histObsList.size(); ++i) {
+    const auto harg = _histObsList[i];
+    const auto parg = _depList[i];
     if (string(parg->GetName())==obs.GetName()) {
       hobs=harg ; 
     }
@@ -450,11 +422,9 @@ std::list<Double_t>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t 
 
   // Find histogram observable corresponding to pdf observable
   RooAbsArg* hobs(0) ;
-  _histObsIter->Reset() ;
-  _pdfObsIter->Reset() ;
-  RooAbsArg* harg, *parg ;
-  while((harg=(RooAbsArg*)_histObsIter->Next())) {
-    parg = (RooAbsArg*)_pdfObsIter->Next() ;
+  for (auto i = 0u; i < _histObsList.size(); ++i) {
+    const auto harg = _histObsList[i];
+    const auto parg = _depList[i];
     if (string(parg->GetName())==obs.GetName()) {
       hobs=harg ; 
     }
@@ -468,13 +438,12 @@ std::list<Double_t>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t 
 
     // Considering alternate: input observable is histogram observable and pdf observable is transformation in terms of it
     RooAbsArg* pobs(0) ;
-    _histObsIter->Reset() ;
-    _pdfObsIter->Reset() ;
-    while((harg=(RooAbsArg*)_histObsIter->Next())) {
-      parg = (RooAbsArg*)_pdfObsIter->Next() ;
+    for (auto i = 0u; i < _histObsList.size(); ++i) {
+      const auto harg = _histObsList[i];
+      const auto parg = _depList[i];
       if (string(harg->GetName())==obs.GetName()) {
-	pobs=parg ; 
-	hobs=harg ;
+        pobs=parg ;
+        hobs=harg ;
       }
     }
 

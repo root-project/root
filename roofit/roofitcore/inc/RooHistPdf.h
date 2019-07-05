@@ -97,8 +97,6 @@ protected:
   RooArgSet         _histObsList ; // List of observables defining dimensions of histogram
   RooSetProxy       _pdfObsList ;  // List of observables mapped onto histogram observables
   RooDataHist*      _dataHist ;  // Unowned pointer to underlying histogram
-  TIterator*         _histObsIter ; //! 
-  TIterator*         _pdfObsIter ; //! 
   mutable RooAICRegistry _codeReg ; //! Auxiliary class keeping tracking of analytical integration code
   Int_t             _intOrder ; // Interpolation order
   Bool_t            _cdfBoundaries ; // Use boundary conditions for CDFs.

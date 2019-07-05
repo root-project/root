@@ -114,7 +114,8 @@ public:
   
   void dump() ;
 
-  void setExternalWeightArray(Double_t* arrayWgt, Double_t* arrayWgtErrLo, Double_t* arrayWgtErrHi, Double_t* arraySumW2) { 
+  void setExternalWeightArray(const Double_t* arrayWgt, const Double_t* arrayWgtErrLo,
+      const Double_t* arrayWgtErrHi, const Double_t* arraySumW2) {
     _extWgtArray = arrayWgt ; 
     _extWgtErrLoArray = arrayWgtErrLo ;
     _extWgtErrHiArray = arrayWgtErrHi ;
@@ -739,10 +740,10 @@ public:
   Double_t _sumWeight ; 
   Double_t _sumWeightCarry;
 
-  Double_t* _extWgtArray ;         //! External weight array
-  Double_t* _extWgtErrLoArray ;    //! External weight array - low error
-  Double_t* _extWgtErrHiArray ;    //! External weight array - high error
-  Double_t* _extSumW2Array ;       //! External sum of weights array
+  const Double_t* _extWgtArray ;         //! External weight array
+  const Double_t* _extWgtErrLoArray ;    //! External weight array - low error
+  const Double_t* _extWgtErrHiArray ;    //! External weight array - high error
+  const Double_t* _extSumW2Array ;       //! External sum of weights array
 
   mutable Double_t  _curWgt ;      // Weight of current event
   mutable Double_t  _curWgtErrLo ; // Weight of current event
