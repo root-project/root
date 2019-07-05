@@ -231,7 +231,7 @@ bool RNTupleDescriptor::operator==(const RNTupleDescriptor &other) const {
 }
 
 
-std::uint32_t RNTupleDescriptor::SerializeHeader(void* buffer)
+std::uint32_t RNTupleDescriptor::SerializeHeader(void* buffer) const
 {
    auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
    auto pos = base;
@@ -259,7 +259,7 @@ std::uint32_t RNTupleDescriptor::SerializeHeader(void* buffer)
    return size;
 }
 
-std::uint32_t RNTupleDescriptor::SerializeFooter(void* buffer)
+std::uint32_t RNTupleDescriptor::SerializeFooter(void* buffer) const
 {
    auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
    auto pos = base;
@@ -309,8 +309,8 @@ void RNTupleDescriptorBuilder::SetFromHeader(void* headerBuffer) {
    pos += DeserializeString(pos, &fDescriptor.fDescription);
    pos += DeserializeVersion(pos, &fDescriptor.fVersion);
    // TODO
-   fDescriptor.fOwnUuid = Uuid_t();
-   fDescriptor.fGroupUuid = Uuid_t();
+   fDescriptor.fOwnUuid = RNTupleUuid();
+   fDescriptor.fGroupUuid = RNTupleUuid();
 
    std::uint32_t nFields;
    pos += DeserializeUInt32(pos, &nFields);
@@ -402,9 +402,11 @@ void RNTupleDescriptorBuilder::AddClustersFromFooter(void* footerBuffer) {
 
 
 void RNTupleDescriptorBuilder::SetNTuple(
-   const std::string_view &name, const RNTupleVersion &version, const Uuid_t &uuid)
+   const std::string_view &name, const std::string_view &description, const RNTupleVersion &version,
+   const RNTupleUuid &uuid)
 {
    fDescriptor.fName = std::string(name);
+   fDescriptor.fDescription = std::string(description);
    fDescriptor.fVersion = version;
    fDescriptor.fOwnUuid = uuid;
    fDescriptor.fGroupUuid = uuid;

@@ -66,7 +66,7 @@ using DescriptorId_t = std::uint64_t;
 constexpr DescriptorId_t kInvalidDescriptorId = std::uint64_t(-1);
 
 /// Every NTuple is identified by a UUID.  TODO(jblomer): should this be a TUUID?
-using Uuid_t = std::string;
+using RNTupleUuid = std::string;
 
 
 /// 64 possible flags to apply to all versioned entities (so far unused).

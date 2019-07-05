@@ -18,6 +18,7 @@
 
 #include <ROOT/REntry.hxx>
 #include <ROOT/RField.hxx>
+#include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RFieldValue.hxx>
 #include <ROOT/RStringView.hxx>
 
@@ -90,6 +91,9 @@ public:
    RFieldRoot* GetRootField() { return fRootField.get(); }
    REntry* GetDefaultEntry() { return fDefaultEntry.get(); }
    std::unique_ptr<REntry> CreateEntry();
+   RNTupleVersion GetVersion() const { return RNTupleVersion(); }
+   std::string GetDescription() const { return ""; /* TODO */ }
+   RNTupleUuid GetUuid() const { return RNTupleUuid(); /* TODO */ }
 };
 
 } // namespace Exerimental

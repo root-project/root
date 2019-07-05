@@ -169,6 +169,7 @@ public:
    RPageStorage::ColumnHandle_t GetHandleSource() const { return fHandleSource; }
    void SetOffsetColumn(RColumn* offsetColumn) { fOffsetColumn = offsetColumn; }
    RColumn* GetOffsetColumn() const { return fOffsetColumn; }
+   RNTupleVersion GetVersion() const { return RNTupleVersion(); }
 };
 
 } // namespace Detail

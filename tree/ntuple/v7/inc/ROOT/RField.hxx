@@ -147,8 +147,6 @@ public:
 
    /// Registeres (or re-registers) the backing columns with the physical storage
    void ConnectColumns(Detail::RPageStorage *pageStorage);
-   /// Returns the number of columns generated to store data for the field; defaults to 1
-   virtual unsigned int GetNColumns() const = 0;
 
    /// Generates a tree value of the field type and allocates new initialized memory according to the type.
    RFieldValue GenerateValue();
@@ -228,7 +226,6 @@ public:
    RFieldBase* Clone(std::string_view newName);
 
    void DoGenerateColumns() final {}
-   unsigned int GetNColumns() const final { return 0; }
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void*) { return Detail::RFieldValue(); }
    Detail::RFieldValue CaptureValue(void*) final { return Detail::RFieldValue(); }
@@ -253,7 +250,6 @@ public:
    RFieldBase* Clone(std::string_view newName) final;
 
    void DoGenerateColumns() final;
-   unsigned int GetNColumns() const final;
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void* where) override;
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
@@ -279,7 +275,6 @@ public:
    RFieldBase* Clone(std::string_view newName) final;
 
    void DoGenerateColumns() final;
-   unsigned int GetNColumns() const final;
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void* where) override;
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
@@ -326,7 +321,6 @@ public:
    RFieldBase* Clone(std::string_view newName) final;
 
    void DoGenerateColumns() final;
-   unsigned int GetNColumns() const final { return 1; }
 
    using Detail::RFieldBase::GenerateValue;
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final {
@@ -358,7 +352,6 @@ public:
    RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
 
    void DoGenerateColumns() final;
-   unsigned int GetNColumns() const final { return 1; }
 
    ClusterSize_t* Map(NTupleSize_t index) {
       static_assert(Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex>::kIsMappable,
@@ -400,7 +393,6 @@ public:
    RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
 
    void DoGenerateColumns() final;
-   unsigned int GetNColumns() const final { return 1; }
 
    float* Map(NTupleSize_t index) {
       static_assert(Detail::RColumnElement<float, EColumnType::kReal32>::kIsMappable,
@@ -437,7 +429,6 @@ public:
    RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
 
    void DoGenerateColumns() final;
-   unsigned int GetNColumns() const final { return 1; }
 
    double* Map(NTupleSize_t index) {
       static_assert(Detail::RColumnElement<double, EColumnType::kReal64>::kIsMappable,
@@ -473,7 +464,6 @@ public:
    RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
 
    void DoGenerateColumns() final;
-   unsigned int GetNColumns() const final { return 1; }
 
    std::int32_t* Map(NTupleSize_t index) {
       static_assert(Detail::RColumnElement<std::int32_t, EColumnType::kInt32>::kIsMappable,
@@ -509,7 +499,6 @@ public:
    RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
 
    void DoGenerateColumns() final;
-   unsigned int GetNColumns() const final { return 1; }
 
    std::uint32_t* Map(NTupleSize_t index) {
       static_assert(Detail::RColumnElement<std::uint32_t, EColumnType::kInt32>::kIsMappable,
@@ -545,7 +534,6 @@ public:
    RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
 
    void DoGenerateColumns() final;
-   unsigned int GetNColumns() const final { return 1; }
 
    std::uint64_t* Map(NTupleSize_t index) {
       static_assert(Detail::RColumnElement<std::uint64_t, EColumnType::kInt64>::kIsMappable,
@@ -590,7 +578,6 @@ public:
    RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
 
    void DoGenerateColumns() final;
-   unsigned int GetNColumns() const final { return 2; }
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
@@ -701,7 +688,6 @@ public:
       fColumns.emplace_back(std::make_unique<Detail::RColumn>(modelIndex));
       fPrincipalColumn = fColumns[0].get();
    }
-   unsigned int GetNColumns() const final { return 1; }
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final {
       auto vec = reinterpret_cast<ContainerT*>(value.GetRawPtr());
       auto nItems = vec->size();

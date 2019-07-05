@@ -25,6 +25,7 @@
 #pragma link C++ class ROOT::Experimental::RNTupleWriter-;
 #pragma link C++ class ROOT::Experimental::RNTupleModel-;
 
+#pragma link C++ class ROOT::Experimental::Internal::RNTupleBlob+;
 #pragma link C++ class ROOT::Experimental::Internal::RNTupleHeader+;
 #pragma link C++ class ROOT::Experimental::Internal::RNTupleFooter+;
 #pragma link C++ class ROOT::Experimental::Internal::RFieldHeader+;

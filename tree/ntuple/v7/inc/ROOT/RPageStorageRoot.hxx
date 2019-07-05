@@ -80,6 +80,18 @@ struct RPagePayload {
    unsigned char* fContent = nullptr; //[fSize]
 };
 
+struct RNTupleBlob {
+   RNTupleBlob() {}
+   RNTupleBlob(int size, unsigned char *content) : fSize(size), fContent(content) {}
+   RNTupleBlob(const RNTupleBlob &other) = delete;
+   RNTupleBlob &operator =(const RNTupleBlob &other) = delete;
+   ~RNTupleBlob() = default;
+
+   std::int32_t fVersion = 0;
+   int fSize = 0;
+   unsigned char* fContent = nullptr; //[fSize]
+};
+
 } // namespace Internal
 
 
@@ -150,7 +162,13 @@ private:
    ROOT::Experimental::Internal::RNTupleFooter fNTupleFooter;
 
    RMapper fMapper;
-   NTupleSize_t fPrevClusterNEntries;
+   NTupleSize_t fPrevClusterNEntries = 0;
+
+   /// Field, column, and cluster ids are issued sequentially starting with 0
+   DescriptorId_t fLastFieldId = 0;
+   DescriptorId_t fLastColumnId = 0;
+   DescriptorId_t fLastClusterId = 0;
+   RNTupleDescriptorBuilder fDescriptorBuilder;
 
 public:
    RPageSinkRoot(std::string_view ntupleName, RSettings settings);

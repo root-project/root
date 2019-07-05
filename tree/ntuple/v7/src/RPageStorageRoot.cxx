@@ -28,13 +28,18 @@
 #include <iostream>
 #include <utility>
 
+namespace {
+
+static constexpr const char* kKeyNTupleFooter = "NTPLF";
+static constexpr const char* kKeyNTupleHeader = "NTPLH";
+
+}
 
 ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view ntupleName, RSettings settings)
    : RPageSink(ntupleName)
    , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
    , fDirectory(nullptr)
    , fSettings(settings)
-   , fPrevClusterNEntries(0)
 {
    R__WARNING_HERE("NTuple") << "The RNTuple file format will change. " <<
       "Do not store real data with this version of RNTuple!";
@@ -72,6 +77,11 @@ ROOT::Experimental::Detail::RPageSinkRoot::AddColumn(const RColumn &column)
    }
    auto columnId = fNTupleHeader.fColumns.size();
    fNTupleHeader.fColumns.emplace_back(columnHeader);
+
+   /// We use the fact the AddColumn is called during Create() just after the field that corresponds to the
+   /// current set of columns has been added.
+   fDescriptorBuilder.AddColumn(fLastColumnId++, fLastFieldId, column.GetVersion(), column.GetModel());
+
    //printf("Added column %s type %d\n", columnHeader.fName.c_str(), (int)columnHeader.fType);
    return ColumnHandle_t(columnId, &column);
 }
@@ -84,12 +94,9 @@ void ROOT::Experimental::Detail::RPageSinkRoot::Create(RNTupleModel &model)
    fDirectory->SetBit(TDirectoryFile::kCustomBrowse);
    fDirectory->SetTitle("ROOT::Experimental::Detail::RNTupleBrowser");
 
-   unsigned int nColumns = 0;
-   for (const auto& f : *model.GetRootField()) {
-      nColumns += f.GetNColumns();
-   }
-   //fPagePool = std::make_shared<RPagePool>();
+   fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription(), model.GetVersion(), model.GetUuid());
 
+   std::unordered_map<const RFieldBase *, DescriptorId_t> fFieldPtr2Id; // necessary to find parent field ids
    for (auto& f : *model.GetRootField()) {
       ROOT::Experimental::Internal::RFieldHeader fieldHeader;
       fieldHeader.fName = f.GetName();
@@ -97,14 +104,28 @@ void ROOT::Experimental::Detail::RPageSinkRoot::Create(RNTupleModel &model)
       //printf("Added field %s type [%s]\n", f.GetName().c_str(), f.GetType().c_str());
       if (f.GetParent()) fieldHeader.fParentName = f.GetParent()->GetName();
       fNTupleHeader.fFields.emplace_back(fieldHeader);
+      fDescriptorBuilder.AddField(fLastFieldId, f.GetFieldVersion(), f.GetTypeVersion(), f.GetName(), f.GetType(),
+                                  f.GetStructure());
+      if (f.GetParent() != model.GetRootField()) {
+         fDescriptorBuilder.SetFieldParent(fLastFieldId, fFieldPtr2Id[f.GetParent()]);
+      }
 
       f.ConnectColumns(this); // issues in turn one or several calls to AddColumn()
+      fFieldPtr2Id[&f] = fLastFieldId++;
    }
-   R__ASSERT(nColumns == fNTupleHeader.fColumns.size());
 
+   auto nColumns = fLastColumnId;
    fCurrentCluster.fPagesPerColumn.resize(nColumns);
    fNTupleFooter.fNElementsPerColumn.resize(nColumns, 0);
+
    fDirectory->WriteObject(&fNTupleHeader, RMapper::kKeyNTupleHeader);
+   const auto &descriptor = fDescriptorBuilder.GetDescriptor();
+   auto szFooter = descriptor.SerializeHeader(nullptr);
+   auto buffer = new unsigned char[szFooter];
+   descriptor.SerializeHeader(buffer);
+   ROOT::Experimental::Internal::RNTupleBlob blob(szFooter, buffer);
+   fDirectory->WriteObject(&blob, kKeyNTupleHeader);
+   delete[] buffer;
 }
 
 void ROOT::Experimental::Detail::RPageSinkRoot::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
@@ -124,6 +145,10 @@ void ROOT::Experimental::Detail::RPageSinkRoot::CommitPage(ColumnHandle_t column
 
 void ROOT::Experimental::Detail::RPageSinkRoot::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
 {
+   R__ASSERT((nEntries - fPrevClusterNEntries) < ClusterSize_t(-1));
+   fDescriptorBuilder.AddCluster(fLastClusterId++, RNTupleVersion(), fPrevClusterNEntries,
+                                 ClusterSize_t(nEntries - fPrevClusterNEntries));
+
    fCurrentCluster.fNEntries = nEntries - fPrevClusterNEntries;
    fPrevClusterNEntries = nEntries;
    std::string key = RMapper::kKeyClusterFooter + std::to_string(fNTupleFooter.fNClusters);
@@ -139,8 +164,17 @@ void ROOT::Experimental::Detail::RPageSinkRoot::CommitCluster(ROOT::Experimental
 
 void ROOT::Experimental::Detail::RPageSinkRoot::CommitDataset()
 {
-   if (fDirectory)
-      fDirectory->WriteObject(&fNTupleFooter, RMapper::kKeyNTupleFooter);
+   if (!fDirectory)
+      return;
+
+   //const auto &descriptor = fDescriptorBuilder.GetDescriptor();
+   //auto szFooter = descriptor.SerializeFooter(nullptr);
+   //auto buffer = new unsigned char[szFooter];
+   //descriptor.SerializeFooter(buffer);
+   //fDirectory->WriteObject(buffer, kKeyNTupleFooter);
+   //delete[] buffer;
+
+   fDirectory->WriteObject(&fNTupleFooter, RMapper::kKeyNTupleFooter);
 }
 
 ROOT::Experimental::Detail::RPage
@@ -229,6 +263,14 @@ ROOT::Experimental::Detail::RPageSourceRoot::AddColumn(const RColumn &column)
 void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
 {
    fDirectory = fSettings.fFile->GetDirectory(fNTupleName.c_str());
+
+   auto keyRawNTupleHeader = fDirectory->GetKey(kKeyNTupleHeader);
+   auto ntupleRawHeader = keyRawNTupleHeader->ReadObject<ROOT::Experimental::Internal::RNTupleBlob>();
+   RNTupleDescriptorBuilder descBuilder;
+   descBuilder.SetFromHeader(ntupleRawHeader->fContent);
+   free(ntupleRawHeader->fContent);
+   delete ntupleRawHeader;
+
    auto keyNTupleHeader = fDirectory->GetKey(RMapper::kKeyNTupleHeader);
    auto ntupleHeader = keyNTupleHeader->ReadObject<ROOT::Experimental::Internal::RNTupleHeader>();
    //printf("Number of fields %lu, of columns %lu\n", ntupleHeader->fFields.size(), ntupleHeader->fColumns.size());
@@ -301,11 +343,6 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
 
    delete ntupleFooter;
    delete ntupleHeader;
-
-   // TODO(jblomer): replace RMapper by a ntuple descriptor
-   RNTupleDescriptorBuilder descBuilder;
-   descBuilder.SetNTuple(fNTupleName, RNTupleVersion(), Uuid_t());
-   fDescriptor = descBuilder.GetDescriptor();
 }
 
 
