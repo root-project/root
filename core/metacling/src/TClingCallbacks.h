@@ -15,6 +15,7 @@
 
 namespace clang {
    class Decl;
+   class DeclarationName;
    class LookupResult;
    class NamespaceDecl;
    class Scope;
@@ -129,4 +130,5 @@ private:
    bool tryResolveAtRuntimeInternal(clang::LookupResult &R, clang::Scope *S);
    bool shouldResolveAtRuntime(clang::LookupResult &R, clang::Scope *S);
    bool tryInjectImplicitAutoKeyword(clang::LookupResult &R, clang::Scope *S);
+   bool findInGlobalModuleIndex(clang::DeclarationName Name, bool loadFirstMatchOnly = true) const;
 };
