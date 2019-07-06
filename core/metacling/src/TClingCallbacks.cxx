@@ -888,7 +888,6 @@ static void SearchAndAddPath(const std::string& Path,
 
       std::string FileName(DirIt->path());
       if (!llvm::sys::fs::is_directory(FileName) && llvm::sys::path::extension(FileName) == ".so") {
-         // TCling::IsLoaded is incredibly slow!
          // No need to check linked libraries, as this function is only invoked
          // for symbols that cannot be found (neither by dlsym nor in the JIT).
          if (dyLibManager->isLibraryLoaded(FileName.c_str()))
