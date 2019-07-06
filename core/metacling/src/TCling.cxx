@@ -6113,8 +6113,16 @@ static bool LookupBloomFilter(llvm::object::ObjectFile *soFile, uint32_t hash) {
 }
 
 // Lookup for normal symbols
-static bool LookupNormalSymbols(llvm::object::ObjectFile *RealSoFile, const std::string& mangled_name, const std::string& LibName)
+static bool LookupNormalSymbols(llvm::object::ObjectFile *RealSoFile, std::string mangled_name, const std::string& LibName)
 {
+   // The JIT gives us a mangled name which has only one leading underscore on
+   // all platforms, for instance _ZN8TRandom34RndmEv. However, on OSX the
+   // linker stores this symbol as __ZN8TRandom34RndmEv (adding an extra _).
+#ifdef R__MACOSX
+   assert(llvm::StringRef(mangled_name).startswith("__"));
+   mangled_name = "_" + mangled_name;
+#endif
+
    uint32_t hashedMangle = GNUHash(mangled_name);
    // Check Bloom filter. If false, it means that this library doesn't contain mangled_name defenition
    if (!LookupBloomFilter(RealSoFile, hashedMangle))
@@ -6175,16 +6183,6 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
       sFirstRun = false;
    }
 
-   // The JIT gives us a mangled name which has only one leading underscore on
-   // all platforms, for instance _ZN8TRandom34RndmEv. However, on OSX the
-   // linker stores this symbol as __ZN8TRandom34RndmEv (adding an extra _).
-#ifdef R__MACOSX
-   std::string name_in_so = "_" + mangled_name;
-#else
-   std::string name_in_so = mangled_name;
-#endif
-
-
    // Iterate over files under this path. We want to get each ".so" files
    for (std::pair<uint32_t, std::string> &P : sLibraries) {
       llvm::SmallString<400> Vec(sPaths[P.first]);
@@ -6195,7 +6193,7 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
       if (!SoFile)
          continue;
 
-      if (LookupNormalSymbols(SoFile.get().getBinary(), name_in_so, LibName)) {
+      if (LookupNormalSymbols(SoFile.get().getBinary(), mangled_name, LibName)) {
          if (gSystem->Load(LibName.c_str(), "", false) < 0)
             Error("LazyFunctionCreatorAutoloadForModule", "Failed to load library %s", LibName.c_str());
 
@@ -6224,7 +6222,7 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
 
       auto RealSoFile = SoFile.get().getBinary();
 
-      if (LookupNormalSymbols(RealSoFile, name_in_so, LibName)) {
+      if (LookupNormalSymbols(RealSoFile, mangled_name, LibName)) {
          if (gSystem->Load(LibName.c_str(), "", false) < 0)
             Error("LazyFunctionCreatorAutoloadForModule", "Failed to load library %s", LibName.c_str());
 
