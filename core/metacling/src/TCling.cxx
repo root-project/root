@@ -6167,15 +6167,18 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
 
    static bool sFirstRun = true;
    static bool sFirstSystemLibrary = true;
-   // sLibraies contains pair of sPaths[i] (eg. /home/foo/module) and library name (eg. libTMVA.so). The
-   // reason why we're separating sLibraries and sPaths is that we have a lot of
-   // dupulication in path, for example we have "/home/foo/module-release/lib/libFoo.so", "/home/../libBar.so", "/home/../lib.."
-   // and it's waste of memory to store the full path.
-   static std::vector< std::pair<uint32_t, std::string> > sLibraries;
+   // LibraryPath contains a pair offset to the canonical dirname (stored as
+   // sPaths[i]) and a filename. For example, `/home/foo/root/lib/libTMVA.so`)
+   // The .first will contain an index in sPaths where `/home/foo/root/lib/`
+   // will be stored and .second `libTMVA.so`.
+   // This approach reduces the duplicate paths as at one location there may be
+   // plenty of libraries.
+   using LibraryPath = std::pair<uint32_t, std::string>;
+   static std::vector<LibraryPath> sLibraries;
    static std::vector<std::string> sPaths;
 
    // For system header autoloading
-   static std::vector< std::pair<uint32_t, std::string> > sSysLibraries;
+   static std::vector<LibraryPath> sSysLibraries;
    static std::vector<std::string> sSysPaths;
 
    if (sFirstRun) {
@@ -6184,7 +6187,7 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
    }
 
    // Iterate over files under this path. We want to get each ".so" files
-   for (std::pair<uint32_t, std::string> &P : sLibraries) {
+   for (LibraryPath &P : sLibraries) {
       llvm::SmallString<512> Vec(sPaths[P.first]);
       llvm::sys::path::append(Vec, StringRef(P.second));
       const std::string LibName = Vec.str();
@@ -6211,7 +6214,7 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
       sFirstSystemLibrary = false;
    }
 
-   for (std::pair<uint32_t, std::string> &P : sSysLibraries) {
+   for (LibraryPath &P : sSysLibraries) {
       llvm::SmallString<512> Vec(sSysPaths[P.first]);
       llvm::sys::path::append(Vec, StringRef(P.second));
       const std::string LibName = Vec.str();
