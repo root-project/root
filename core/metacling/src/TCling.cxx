@@ -6185,7 +6185,7 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
 
    // Iterate over files under this path. We want to get each ".so" files
    for (std::pair<uint32_t, std::string> &P : sLibraries) {
-      llvm::SmallString<400> Vec(sPaths[P.first]);
+      llvm::SmallString<512> Vec(sPaths[P.first]);
       llvm::sys::path::append(Vec, StringRef(P.second));
       const std::string LibName = Vec.str();
 
@@ -6212,7 +6212,7 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
    }
 
    for (std::pair<uint32_t, std::string> &P : sSysLibraries) {
-      llvm::SmallString<400> Vec(sSysPaths[P.first]);
+      llvm::SmallString<512> Vec(sSysPaths[P.first]);
       llvm::sys::path::append(Vec, StringRef(P.second));
       const std::string LibName = Vec.str();
 
