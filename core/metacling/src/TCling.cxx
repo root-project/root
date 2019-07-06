@@ -6188,7 +6188,7 @@ static bool LookupDynamicSymbols(const std::string &library_filename, std::strin
 }
 
 static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_name,
-                                                  cling::Interpreter *fInterpreter) {
+                                                  cling::Interpreter *interp) {
    using namespace llvm::sys::path;
    using namespace llvm::sys::fs;
 
@@ -6203,73 +6203,67 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
    // This approach reduces the duplicate paths as at one location there may be
    // plenty of libraries.
    using LibraryPath = std::pair<uint32_t, std::string>;
+   using LibraryPaths = std::vector<LibraryPath>;
    using BasePaths = std::vector<std::string>;
-   static std::vector<LibraryPath> sLibraries;
+   static LibraryPaths sLibraries;
    static BasePaths sPaths;
 
    // For system header autoloading
-   static std::vector<LibraryPath> sSysLibraries;
+   static LibraryPaths sSysLibraries;
    static BasePaths sSysPaths;
 
    if (sFirstRun) {
-      TCling__FindLoadedLibraries(sLibraries, sPaths, *fInterpreter, /* searchSystem */ false);
+      TCling__FindLoadedLibraries(sLibraries, sPaths, *interp, /* searchSystem */ false);
       sFirstRun = false;
    }
 
-   auto GetLibFileName = [](LibraryPath &P, const BasePaths &BaseP) {
+   auto GetLibFileName = [](const LibraryPath &P, const BasePaths &BaseP) {
       llvm::SmallString<512> Vec(BaseP[P.first]);
       llvm::sys::path::append(Vec, StringRef(P.second));
       return Vec.str();
    };
 
+   auto MaterializeSymbol = [&mangled_name](const std::string &LibName,
+                                            const LibraryPath &P,
+                                            LibraryPaths& LibPaths) {
+      if (gSystem->Load(LibName.c_str(), "", false) < 0)
+         Error("LazyFunctionCreatorAutoloadForModule", "Failed to load library %s", LibName.c_str());
+
+      // We want to delete a loaded library from sLibraries cache, because sLibraries is
+      // a vector of candidate libraries which might be loaded in the future.
+      LibPaths.erase(std::remove(LibPaths.begin(), LibPaths.end(), P), LibPaths.end());
+      void* addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(mangled_name.c_str());
+      return addr;
+   };
+
    // Iterate over files under this path. We want to get each ".so" files
-   for (LibraryPath &P : sLibraries) {
+   for (const LibraryPath &P : sLibraries) {
       const std::string LibName = GetLibFileName(P, sPaths);
 
-      if (LookupNormalSymbols(LibName, mangled_name)) {
-         if (gSystem->Load(LibName.c_str(), "", false) < 0)
-            Error("LazyFunctionCreatorAutoloadForModule", "Failed to load library %s", LibName.c_str());
-
-         // We want to delete a loaded library from sLibraries cache, because sLibraries is
-         // a vector of candidate libraries which might be loaded in the future.
-         sLibraries.erase(std::remove(sLibraries.begin(), sLibraries.end(), P), sLibraries.end());
-         void* addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(mangled_name.c_str());
-         return addr;
-      }
+      // FIXME: We should also iterate over the dynamic symbols for ROOT
+      // libraries. However, it seems to be redundant for the moment as we do
+      // not strictly require symbols from those sections. Enable after checking
+      // performance!
+      if (LookupNormalSymbols(LibName, mangled_name))
+         if (void * addr = MaterializeSymbol(LibName, P, sLibraries))
+            return addr;
    }
 
-   // Normal lookup failed! Fall back to system library
+   // Lookup in non-system libraries failed. Expand the search to the system.
    if (sFirstSystemLibrary) {
-      TCling__FindLoadedLibraries(sSysLibraries, sSysPaths, *fInterpreter, /* searchSystem */ true);
+      TCling__FindLoadedLibraries(sSysLibraries, sSysPaths, *interp, /* searchSystem */ true);
       sFirstSystemLibrary = false;
    }
 
-   for (LibraryPath &P : sSysLibraries) {
+   for (const LibraryPath &P : sSysLibraries) {
       const std::string LibName = GetLibFileName(P, sPaths);
 
-      if (LookupNormalSymbols(LibName, mangled_name)) {
-         if (gSystem->Load(LibName.c_str(), "", false) < 0)
-            Error("LazyFunctionCreatorAutoloadForModule", "Failed to load library %s", LibName.c_str());
-
-         sSysLibraries.erase(std::remove(sSysLibraries.begin(), sSysLibraries.end(), P), sSysLibraries.end());
-         void* addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(mangled_name.c_str());
-         return addr;
-      }
-
-      // Lookup for dynamic symbols
-      if (LookupDynamicSymbols(LibName, mangled_name)) {
-         if (gSystem->Load(LibName.data(), "", false) < 0)
-            Error("LazyFunctionCreatorAutoloadForModule", "Failed to load library %s", LibName.data());
-
-         // Delete a loaded library from sLibraries cache.
-         sSysLibraries.erase(std::remove(sSysLibraries.begin(), sSysLibraries.end(), P), sSysLibraries.end());
-         void* addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(mangled_name.c_str());
-         return addr;
-      }
+      if (LookupNormalSymbols(LibName, mangled_name) || LookupDynamicSymbols(LibName, mangled_name))
+         if (void * addr = MaterializeSymbol(LibName, P, sSysLibraries))
+            return addr;
    }
 
-   // Lookup failed!!!!
-   return nullptr;
+   return nullptr; // Lookup failed.
 }
 
 ////////////////////////////////////////////////////////////////////////////////
