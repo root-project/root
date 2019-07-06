@@ -6112,9 +6112,16 @@ static bool LookupBloomFilter(llvm::object::ObjectFile *soFile, uint32_t hash) {
    return  (bitmask & word) == bitmask;
 }
 
-// Lookup for normal symbols
-static bool LookupNormalSymbols(llvm::object::ObjectFile *RealSoFile, std::string mangled_name)
+/// Looks up symbols from a an object file, representing the library.
+///\returns true on success.
+static bool LookupNormalSymbols(const std::string &library_filename, std::string mangled_name)
 {
+   auto ObjF = llvm::object::ObjectFile::createObjectFile(library_filename);
+   if (!ObjF)
+      return false;
+
+   llvm::object::ObjectFile *BinObjFile = ObjF.get().getBinary();
+
    // The JIT gives us a mangled name which has only one leading underscore on
    // all platforms, for instance _ZN8TRandom34RndmEv. However, on OSX the
    // linker stores this symbol as __ZN8TRandom34RndmEv (adding an extra _).
@@ -6125,11 +6132,10 @@ static bool LookupNormalSymbols(llvm::object::ObjectFile *RealSoFile, std::strin
 
    uint32_t hashedMangle = GNUHash(mangled_name);
    // Check Bloom filter. If false, it means that this library doesn't contain mangled_name defenition
-   if (!LookupBloomFilter(RealSoFile, hashedMangle))
+   if (!LookupBloomFilter(BinObjFile, hashedMangle))
       return false;
 
-   auto Symbols = RealSoFile->symbols();
-   for (auto S : Symbols) {
+   for (const auto &S : BinObjFile->symbols()) {
       uint32_t Flags = S.getFlags();
       // DO NOT insert to table if symbol was undefined
       if (Flags & llvm::object::SymbolRef::SF_Undefined)
@@ -6158,9 +6164,15 @@ static bool LookupNormalSymbols(llvm::object::ObjectFile *RealSoFile, std::strin
 }
 
 ///\returns true on success
-static bool LookupDynamicSymbols(llvm::object::ObjectFile *ObjFile,
-                                 const std::string &mangled_name) {
-   for (auto section : ObjFile->sections()) {
+static bool LookupDynamicSymbols(const std::string &library_filename, std::string mangled_name)
+{
+   llvm::object::ObjectFile *BinObjFile = nullptr;
+   if (auto ObjF = llvm::object::ObjectFile::createObjectFile(library_filename))
+      BinObjFile = ObjF.get().getBinary();
+   else
+      return false;
+
+   for (const auto &section : BinObjFile->sections()) {
       llvm::StringRef sectionName;
       section.getName(sectionName);
 
@@ -6177,7 +6189,6 @@ static bool LookupDynamicSymbols(llvm::object::ObjectFile *ObjFile,
 
 static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_name,
                                                   cling::Interpreter *fInterpreter) {
-   using namespace llvm::object;
    using namespace llvm::sys::path;
    using namespace llvm::sys::fs;
 
@@ -6205,26 +6216,19 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
       sFirstRun = false;
    }
 
-   auto GetLibObjectFile = [](LibraryPath &P, const BasePaths &BaseP) {
+   auto GetLibFileName = [](LibraryPath &P, const BasePaths &BaseP) {
       llvm::SmallString<512> Vec(BaseP[P.first]);
       llvm::sys::path::append(Vec, StringRef(P.second));
-      const std::string LibName = Vec.str();
-
-      return ObjectFile::createObjectFile(LibName);
+      return Vec.str();
    };
 
    // Iterate over files under this path. We want to get each ".so" files
    for (LibraryPath &P : sLibraries) {
-      auto SoFile = GetLibObjectFile(P, sPaths);
-      if (!SoFile)
-         continue;
+      const std::string LibName = GetLibFileName(P, sPaths);
 
-      auto RealSoFile = SoFile.get().getBinary();
-
-      if (LookupNormalSymbols(RealSoFile, mangled_name)) {
-         llvm::StringRef LibName = RealSoFile->getFileName();
-         if (gSystem->Load(LibName.data(), "", false) < 0)
-            Error("LazyFunctionCreatorAutoloadForModule", "Failed to load library %s", LibName.data());
+      if (LookupNormalSymbols(LibName, mangled_name)) {
+         if (gSystem->Load(LibName.c_str(), "", false) < 0)
+            Error("LazyFunctionCreatorAutoloadForModule", "Failed to load library %s", LibName.c_str());
 
          // We want to delete a loaded library from sLibraries cache, because sLibraries is
          // a vector of candidate libraries which might be loaded in the future.
@@ -6241,16 +6245,11 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
    }
 
    for (LibraryPath &P : sSysLibraries) {
-      auto SoFile = GetLibObjectFile(P, sSysPaths);
-      if (!SoFile)
-         continue;
+      const std::string LibName = GetLibFileName(P, sPaths);
 
-      auto RealSoFile = SoFile.get().getBinary();
-
-      llvm::StringRef LibName = RealSoFile->getFileName();
-      if (LookupNormalSymbols(RealSoFile, mangled_name)) {
-         if (gSystem->Load(LibName.data(), "", false) < 0)
-            Error("LazyFunctionCreatorAutoloadForModule", "Failed to load library %s", LibName.data());
+      if (LookupNormalSymbols(LibName, mangled_name)) {
+         if (gSystem->Load(LibName.c_str(), "", false) < 0)
+            Error("LazyFunctionCreatorAutoloadForModule", "Failed to load library %s", LibName.c_str());
 
          sSysLibraries.erase(std::remove(sSysLibraries.begin(), sSysLibraries.end(), P), sSysLibraries.end());
          void* addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(mangled_name.c_str());
@@ -6258,7 +6257,7 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
       }
 
       // Lookup for dynamic symbols
-      if (LookupDynamicSymbols(RealSoFile, mangled_name)) {
+      if (LookupDynamicSymbols(LibName, mangled_name)) {
          if (gSystem->Load(LibName.data(), "", false) < 0)
             Error("LazyFunctionCreatorAutoloadForModule", "Failed to load library %s", LibName.data());
 
