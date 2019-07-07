@@ -6210,7 +6210,6 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
 
    // For system header autoloading
    static LibraryPaths sSysLibraries;
-   static BasePaths sSysPaths;
 
    if (sFirstRun) {
       TCling__FindLoadedLibraries(sLibraries, sPaths, *interp, /* searchSystem */ false);
@@ -6251,7 +6250,7 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
 
    // Lookup in non-system libraries failed. Expand the search to the system.
    if (sFirstSystemLibrary) {
-      TCling__FindLoadedLibraries(sSysLibraries, sSysPaths, *interp, /* searchSystem */ true);
+      TCling__FindLoadedLibraries(sSysLibraries, sPaths, *interp, /* searchSystem */ true);
       sFirstSystemLibrary = false;
    }
 
