@@ -227,8 +227,10 @@ public:
    std::size_t GetSize() const { return fSize; }
    Shape_t GetShape() const { return fShape; }
    Shape_t GetStrides() const { return fStrides; }
-   Value_t *GetData() const { return fData; }
-   std::shared_ptr<Container_t> GetContainer() const { return fContainer; }
+   Value_t *GetData() { return fData; }
+   const Value_t *GetData() const { return fData; }
+   std::shared_ptr<Container_t> GetContainer() { return fContainer; }
+   const std::shared_ptr<Container_t> GetContainer() const { return fContainer; }
    MemoryLayout GetMemoryLayout() const { return fLayout; }
    bool IsView() const { return fContainer == NULL; }
    bool IsOwner() const { return !IsView(); }
@@ -256,8 +258,8 @@ public:
       Iterator operator++(int) { auto tmp = *this; operator++(); return tmp; }
       Iterator& operator--() { fGlobalIndex--; return *this; }
       Iterator operator--(int) { auto tmp = *this; operator--(); return tmp; }
-      Iterator operator+(difference_type rhs) { return Iterator(fTensor, fGlobalIndex + rhs); }
-      Iterator operator-(difference_type rhs) { return Iterator(fTensor, fGlobalIndex - rhs); }
+      Iterator operator+(difference_type rhs) const { return Iterator(fTensor, fGlobalIndex + rhs); }
+      Iterator operator-(difference_type rhs) const { return Iterator(fTensor, fGlobalIndex - rhs); }
       difference_type operator-(const Iterator& rhs) { return fGlobalIndex - rhs.GetGlobalIndex(); }
       Iterator& operator+=(difference_type rhs) { fGlobalIndex += rhs; return *this; }
       Iterator& operator-=(difference_type rhs) { fGlobalIndex -= rhs; return *this; }
