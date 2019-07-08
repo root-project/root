@@ -102,7 +102,7 @@ public:
 
   virtual Double_t getValV(const RooArgSet* normalisationSet = nullptr) const ;
 
-  virtual RooSpan<const double> getValBatch(std::size_t begin, std::size_t end, const RooArgSet* normSet = nullptr) const;
+  virtual RooSpan<const double> getValBatch(std::size_t begin, std::size_t batchSize, const RooArgSet* normSet = nullptr) const;
 
   Double_t getPropagatedError(const RooFitResult &fr, const RooArgSet &nset = RooArgSet());
 
@@ -403,19 +403,27 @@ protected:
 //  }
   /// Evaluate this PDF / function / constant. Needs to be overridden by all derived classes.
   virtual Double_t evaluate() const = 0;
-  virtual RooSpan<double> evaluateBatch(std::size_t begin, std::size_t end) const;
+  virtual RooSpan<double> evaluateBatch(std::size_t begin, std::size_t batchSize) const;
 
   //---------- Interface to access batch data ---------------------------
   //
   friend class BatchInterfaceAccessor;
-  void resetBatchMemory(std::size_t nData, std::size_t batchSize);
-  virtual void markBatchesStale() {
-    _batchData.markStale();
+  void clearBatchMemory() {
+    _batchData.clear();
     for (auto arg : _serverList) {
       //TODO get rid of this cast?
       auto absReal = dynamic_cast<RooAbsReal*>(arg);
       if (absReal)
-        absReal->_batchData.markStale();
+        absReal->clearBatchMemory();
+    }
+  }
+  virtual void markBatchesStale() {
+    _batchData.markDirty();
+    for (auto arg : _serverList) {
+      //TODO get rid of this cast?
+      auto absReal = dynamic_cast<RooAbsReal*>(arg);
+      if (absReal)
+        absReal->_batchData.markDirty();
     }
   }
 

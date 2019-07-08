@@ -244,8 +244,8 @@ void RooNLLVar::applyWeightSquared(Bool_t flag)
 
 class BatchInterfaceAccessor {
   public:
-    static void resetBatchMemory(RooAbsReal* theReal, std::size_t nEvent, std::size_t batchSize) {
-      theReal->resetBatchMemory(nEvent, batchSize);
+    static void clearBatchMemory(RooAbsReal* theReal) {
+      theReal->clearBatchMemory();
     }
 
     static void markBatchesStale(RooAbsReal* theReal) {
@@ -460,11 +460,10 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
 
   //TODO do properly. Not here, but in base.
   //TODO don't redo for every partition, anyway
-  std::size_t batchSize = _nEvents / ((_nEvents % _numSets == 0) ? _numSets : (_numSets - 1));
-  BatchInterfaceAccessor::resetBatchMemory(const_cast<RooAbsPdf*>(pdfClone), _nEvents, batchSize);
+  BatchInterfaceAccessor::clearBatchMemory(const_cast<RooAbsPdf*>(pdfClone));
 
 
-  auto results = pdfClone->getLogValBatch(firstEvent, lastEvent, _normSet);
+  auto results = pdfClone->getLogValBatch(firstEvent, lastEvent-firstEvent, _normSet);
 
 
 #ifdef ROOFIT_CHECK_CACHED_VALUES

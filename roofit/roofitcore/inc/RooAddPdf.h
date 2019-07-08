@@ -128,7 +128,7 @@ protected:
 
 
   Double_t evaluate() const;
-  virtual RooSpan<double> evaluateBatch(std::size_t begin, std::size_t end) const;
+  virtual RooSpan<double> evaluateBatch(std::size_t begin, std::size_t batchSize) const;
 
 
   mutable RooAICRegistry _codeReg ;  //! Registry of component analytical integration codes

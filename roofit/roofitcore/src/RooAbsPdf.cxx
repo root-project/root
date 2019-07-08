@@ -342,30 +342,28 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
 /// are returned. All elements of `nset` must be lvalues.
 ///
 /// \param[in] begin Begin of the batch.
-/// \param[in] end   End of the batch (not included).
+/// \param[in] batchSize Size of the batch (not included).
 /// \param[in] normSet    If not nullptr, normalise results by integrating over
 /// the variables in this set. The normalisation is only computed once, and applied
 /// to the full batch.
 ///
-RooSpan<const double> RooAbsPdf::getValBatch(std::size_t begin, std::size_t end,
+RooSpan<const double> RooAbsPdf::getValBatch(std::size_t begin, std::size_t batchSize,
     const RooArgSet* normSet) const
 {
   // Special handling of case without normalization set (used in numeric integration of pdfs)
   if (!normSet) {
-    R__ASSERT(false); //TODO implement
     RooArgSet* tmp = _normSet ;
-    _normSet = 0 ;
-    Double_t val = evaluate() ;
-    _normSet = tmp ;
-    Bool_t error = traceEvalPdf(val) ;
+    _normSet = nullptr;
+    auto outputs = evaluateBatch(begin, batchSize);
+    _normSet = tmp;
+    const bool error = traceEvalBatch(outputs);
 
     if (error) {
 //       raiseEvalError() ;
       return RooSpan<const double>();
     }
 
-    //TODO FIXME
-//    return val ;
+    return outputs;
   }
 
 
@@ -376,11 +374,15 @@ RooSpan<const double> RooAbsPdf::getValBatch(std::size_t begin, std::size_t end,
   }
 
   //TODO wait if batch is computing
-  if (_batchData.status(begin, end) == BatchHelpers::BatchData::kDirtyOrUnknown
+  const auto batchStatus = _batchData.status(begin, batchSize);
+  if (batchStatus <= BatchHelpers::BatchData::kDirty
       || nsetChanged || _norm->isValueDirty()) {
-    _batchData.setStatus(begin, end, BatchHelpers::BatchData::kWriting);
+//    if (batchStatus == BatchHelpers::BatchData::kInvalid)
+//      _batchData.makeWritableBatchUnInit(begin, batchSize);
+//
+//    _batchData.setStatus(begin, batchSize, BatchHelpers::BatchData::kWriting);
 
-    auto outputs = evaluateBatch(begin, end);
+    auto outputs = evaluateBatch(begin, batchSize);
     bool error = traceEvalBatch(outputs) ; // Error checking and printing
 
 
@@ -399,11 +401,12 @@ RooSpan<const double> RooAbsPdf::getValBatch(std::size_t begin, std::size_t end,
       }
     }
 
-    _batchData.setStatus(begin, end, BatchHelpers::BatchData::kReady);
+    const bool statusSet = _batchData.setStatus(begin, batchSize, BatchHelpers::BatchData::kReady);
+    assert(statusSet);
   }
-  assert(_batchData.status(begin, end) != BatchHelpers::BatchData::kWriting);
+  assert(_batchData.status(begin, batchSize) != BatchHelpers::BatchData::kWriting);
 
-  return _batchData.makeBatch(begin, end);
+  return _batchData.getBatch(begin, batchSize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -777,13 +780,13 @@ Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute the log-likelihoods for all events in the requested batch.
 /// The arguments are passed over to getValBatch().
-/// \param[in] batchIndex Index of the batch to computed.
-/// \param[in] batchSize  Size of the batch. Last batch might be smaller.
+/// \param[in] begin Start of the batch.
+/// \param[in] size  Maximum size of the batch.
 /// \return    Returns a batch of doubles that contains the log probabilities.
-RooSpan<double> RooAbsPdf::getLogValBatch(std::size_t batchIndex, std::size_t batchSize,
+RooSpan<double> RooAbsPdf::getLogValBatch(std::size_t begin, std::size_t batchSize,
     const RooArgSet* normSet) const
 {
-  auto pdfValues = getValBatch(batchIndex, batchSize, normSet);
+  auto pdfValues = getValBatch(begin, batchSize, normSet);
 
   //TODO avoid allocate&destroy?
   std::vector<double> outputs(pdfValues.size());
@@ -814,7 +817,7 @@ RooSpan<double> RooAbsPdf::getLogValBatch(std::size_t batchIndex, std::size_t ba
   }
   */
 
-  for (unsigned int i = 0; i < batchSize; ++i) {
+  for (unsigned int i = 0; i < pdfValues.size(); ++i) {
 #ifdef USE_VDT
     outputs[i] = vdt::fast_log(pdfValues[i]);
 #else

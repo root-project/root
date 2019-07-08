@@ -87,8 +87,10 @@ void compute(RooSpan<double> output, Tx x, TMean mean,
 
   for (int i = 0; i < n; ++i) { //CHECK_VECTORISE
     const double x_i = noRounding ? x[i] : floor(x[i]);
-    output[i] = std::lgamma(x_i + 1.);
-//    output[i] = TMath::LnGamma(x_i + 1.);
+    // The std::lgamma yields different values than in the scalar implementation.
+    // Need to check which one is more accurate.
+//    output[i] = std::lgamma(x_i + 1.);
+    output[i] = TMath::LnGamma(x_i + 1.);
   }
 
 
@@ -125,10 +127,10 @@ void compute(RooSpan<double> output, Tx x, TMean mean,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute Poisson values in batches.
-RooSpan<double> RooPoisson::evaluateBatch(std::size_t begin, std::size_t end) const {
-  auto output = _batchData.makeWritableBatchUnInit(begin, end);
-  auto xData = x.getValBatch(begin, end);
-  auto meanData = mean.getValBatch(begin, end);
+RooSpan<double> RooPoisson::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+  auto xData = x.getValBatch(begin, batchSize);
+  auto meanData = mean.getValBatch(begin, batchSize);
 
   const bool batchX = !xData.empty();
   const bool batchMean = !meanData.empty();

@@ -201,15 +201,17 @@ Double_t RooRealVar::getValV(const RooArgSet*) const
 /// Return batch of data between begin and end.
 /// This requires that this instance is attached to a data store.
 /// \param begin First event to return.
-/// \param end   End of the batch.
+/// \param batchSize   Size of the batch.
 /// \return Span with event data. May be empty if not attached to a data storage.
-RooSpan<const double> RooRealVar::getValBatch(std::size_t begin, std::size_t end,
+RooSpan<const double> RooRealVar::getValBatch(std::size_t begin, std::size_t batchSize,
     const RooArgSet*) const {
-  if (!_batchData.isInit())
-    return RooSpan<const double>();
+  const auto batchStatus = _batchData.status(begin, batchSize);
+  if (batchStatus == BatchHelpers::BatchData::kNoBatch) {
+    return {};
+  }
 
-  assert(_batchData.status(begin, end) == BatchHelpers::BatchData::kReadyAndConstant);
-  return _batchData.makeBatch(begin, end);
+  assert(batchStatus == BatchHelpers::BatchData::kReadyAndConstant);
+  return _batchData.getBatch(begin, batchSize);
 }
 
 
