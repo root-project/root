@@ -88,6 +88,7 @@ endif()
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Choose the type of build, options are: Release, MinSizeRel, Debug, RelWithDebInfo." FORCE)
+  message(STATUS "No CMAKE_BUILD_TYPE set. Defaulting to ${CMAKE_BUILD_TYPE}.")
 endif()
 
 include(CheckCXXCompilerFlag)
@@ -192,8 +193,19 @@ check_cxx_source_compiles(
 int main() {}
 " GLIBCXX_USE_CXX11_ABI)
 
+
 #---Print the final compiler flags--------------------------------------------------------------------
 message(STATUS "ROOT Platform: ${ROOT_PLATFORM}")
 message(STATUS "ROOT Architecture: ${ROOT_ARCHITECTURE}")
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
-message(STATUS "Compiler Flags: ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${uppercase_CMAKE_BUILD_TYPE}}")
+
+string(TOUPPER ${CMAKE_BUILD_TYPE} upperCaseBuildType)
+message(STATUS "Compiler Flags (automatically from 'CMAKE_BUILD_TYPE'): ${CMAKE_CXX_FLAGS_${upperCaseBuildType}}")
+
+#---Fix order of compiler flags: user-supplied flags are overridden otherwise----------------------
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_${upperCaseBuildType}} ${CMAKE_CXX_FLAGS}")
+unset(CMAKE_CXX_FLAGS_${upperCaseBuildType})
+
+message(STATUS "Final compiler Flags: ${CMAKE_CXX_FLAGS}")
+
+
