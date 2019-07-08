@@ -30,6 +30,7 @@
 
 #include "include/cef_browser.h"
 #include "include/cef_scheme.h"
+#include "include/cef_version.h"
 #include "include/views/cef_browser_view.h"
 #include "include/views/cef_window.h"
 #include "include/wrapper/cef_helpers.h"
@@ -388,8 +389,12 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
 
       window_info.SetAsWindowless(0);
 
+#if CEF_COMMIT_NUMBER > 1926
       // Create the first browser window.
+      CefBrowserHost::CreateBrowser(window_info, fOsrHandler, url, browser_settings, nullptr, nullptr);
+#else
       CefBrowserHost::CreateBrowser(window_info, fOsrHandler, url, browser_settings, nullptr);
+#endif
 
       return;
    }
@@ -412,8 +417,11 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
    if (fUseViewes) {
       // Create the BrowserView.
       CefRefPtr<CefBrowserView> browser_view =
+#if CEF_COMMIT_NUMBER > 1926
+         CefBrowserView::CreateBrowserView(fGuiHandler, url, browser_settings, nullptr, nullptr, nullptr);
+#else
          CefBrowserView::CreateBrowserView(fGuiHandler, url, browser_settings, nullptr, nullptr);
-
+#endif
       // Create the Window. It will show itself after creation.
       CefWindow::CreateTopLevelWindow(new SimpleWindowDelegate(browser_view));
    } else {
@@ -425,7 +433,11 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
 #endif
 
       // Create the first browser window.
+#if CEF_COMMIT_NUMBER > 1926
+      CefBrowserHost::CreateBrowser(window_info, fGuiHandler, url, browser_settings, nullptr, nullptr);
+#else
       CefBrowserHost::CreateBrowser(window_info, fGuiHandler, url, browser_settings, nullptr);
+#endif
    }
 }
 
