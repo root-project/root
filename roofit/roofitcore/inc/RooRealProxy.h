@@ -40,8 +40,8 @@ public:
   inline operator Double_t() const { return (_arg->_fast && !_arg->inhibitDirty()) ? ((RooAbsReal*)_arg)->_value : ((RooAbsReal*)_arg)->getVal(_nset) ; }
 #endif
 
-  RooSpan<const double> getValBatch(std::size_t begin, std::size_t end) const {
-    return static_cast<RooAbsReal*>(_arg)->getValBatch(begin, end, _nset);
+  RooSpan<const double> getValBatch(std::size_t begin, std::size_t batchSize) const {
+    return static_cast<RooAbsReal*>(_arg)->getValBatch(begin, batchSize, _nset);
   }
 
   inline const RooAbsReal& arg() const { return (RooAbsReal&)*_arg ; }

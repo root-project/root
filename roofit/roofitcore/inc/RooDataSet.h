@@ -63,7 +63,7 @@ public:
   
 
   RooDataSet(RooDataSet const & other, const char* newname=0) ;  
-  virtual TObject* Clone(const char* newname = "") const {
+  virtual TObject* Clone(const char* newname = "") const override {
     return new RooDataSet(*this, newname && newname[0] != '\0' ? newname : GetName());
   }
   virtual ~RooDataSet() ;

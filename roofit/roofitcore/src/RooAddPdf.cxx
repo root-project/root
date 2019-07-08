@@ -833,19 +833,19 @@ Double_t RooAddPdf::evaluate() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute addition of PDFs in batches.
 
-RooSpan<double> RooAddPdf::evaluateBatch(std::size_t begin, std::size_t end) const {
+RooSpan<double> RooAddPdf::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
   auto normAndCache = getNormAndCache();
   const RooArgSet* nset = normAndCache.first;
   CacheElem* cache = normAndCache.second;
 
 
-  auto output = _batchData.makeWritableBatchInit(begin, end, 0.);
+  auto output = _batchData.makeWritableBatchInit(begin, batchSize, 0.);
   const std::size_t n = output.size();
 
 
   for (unsigned int pdfNo = 0; pdfNo < _pdfList.size(); ++pdfNo) {
     const auto& pdf = static_cast<RooAbsPdf&>(_pdfList[pdfNo]);
-    auto pdfOutputs = pdf.getValBatch(begin, end, nset);
+    auto pdfOutputs = pdf.getValBatch(begin, batchSize, nset);
     assert(pdfOutputs.size() == output.size());
 
     const double coef = _coefCache[pdfNo] / (cache->_needSupNorm ?

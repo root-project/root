@@ -263,8 +263,12 @@ Double_t RooAbsReal::getValV(const RooArgSet* nset) const
   return ret ;
 }
 
-
-RooSpan<const double> RooAbsReal::getValBatch(std::size_t begin, std::size_t end,
+////////////////////////////////////////////////////////////////////////////////
+/// Return value of object for all data events in the batch.
+/// \param[in] begin First event in the batch.
+/// \param[in] batchSize Size of the batch to be computed.
+/// \param[in] normSet Variables to normalise over.
+RooSpan<const double> RooAbsReal::getValBatch(std::size_t begin, std::size_t batchSize,
     const RooArgSet* normSet) const {
   if (normSet && normSet != _lastNSet) {
     const_cast<RooAbsReal*>(this)->setProxyNormSet(normSet);
@@ -272,13 +276,13 @@ RooSpan<const double> RooAbsReal::getValBatch(std::size_t begin, std::size_t end
   }
 
   //TODO check and wait if computation is running
-  if (isValueDirty() || _batchData.status(begin, end) < BatchHelpers::BatchData::kReady) {
-    auto ret = evaluateBatch(begin, end);
-    _batchData.setStatus(begin, end, BatchHelpers::BatchData::kReady);
+  if (isValueDirty() || _batchData.status(begin, batchSize) < BatchHelpers::BatchData::kReady) {
+    auto ret = evaluateBatch(begin, batchSize);
+    _batchData.setStatus(begin, batchSize, BatchHelpers::BatchData::kReady);
     return ret;
   }
 
-  return _batchData.makeBatch(begin, end);
+  return _batchData.getBatch(begin, batchSize);
 }
 
 
@@ -4791,14 +4795,14 @@ void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
 /// Evaluate function for a batch of input data points. If not overridden by
 /// derived classes, this will call the slow, single-valued evaluate() in a loop.
 /// \param[in]  begin First event of batch.
-/// \param[in]  end   First event not inside the batch.
+/// \param[in]  batchSize   First event not inside the batch.
 /// \return     Span pointing to the results. The memory is held by the object, on which this
 /// function is called.
-RooSpan<double> RooAbsReal::evaluateBatch(std::size_t begin, std::size_t end) const {
-  auto batchStatus = _batchData.status(begin, end);
+RooSpan<double> RooAbsReal::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
+  auto batchStatus = _batchData.status(begin, batchSize);
   assert(batchStatus != BatchHelpers::BatchData::kReadyAndConstant);
 
-  auto output = _batchData.makeWritableBatchUnInit(begin, end);
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
 
   RooArgSet allLeafs;
   leafNodeServerList(&allLeafs);
@@ -4819,7 +4823,7 @@ RooSpan<double> RooAbsReal::evaluateBatch(std::size_t begin, std::size_t end) co
     auto leafRRV = static_cast<RooRealVar*>(leaf);
     assert(dynamic_cast<RooRealVar*>(leaf));
 
-    auto leafBatch = leafRRV->getValBatch(begin, end);
+    auto leafBatch = leafRRV->getValBatch(begin, batchSize);
 
 #ifndef NDEBUG
     if (msgCount < 5) {
@@ -4854,47 +4858,6 @@ RooSpan<double> RooAbsReal::evaluateBatch(std::size_t begin, std::size_t end) co
   return output;
 }
 
-
-
-void RooAbsReal::resetBatchMemory(std::size_t nData, std::size_t batchSize) {
-  if (isDerived()) {
-    // We depend on something, and hence must allocate batch storage
-    //      std::cout << "Allocating for " << GetName() << std::endl;
-    _batchData.resizeAndClear(nData, batchSize);
-  }
-  //TODO have to go through proxies???
-  for (auto arg : _serverList) {
-    //TODO get rid of this cast?
-    //      std::cout << "Trying to allocate for " << arg->GetName() << std::endl;
-    auto absReal = dynamic_cast<RooAbsReal*>(arg);
-    if (absReal)
-      absReal->resetBatchMemory(nData, batchSize);
-  }
-
-  for (Int_t i=0; i < numProxies(); ++i) {
-    auto proxy = getProxy(i);
-    auto realProxy = dynamic_cast<RooRealProxy*>(proxy);
-    if (realProxy) {
-
-      auto& arg = realProxy->arg();
-      auto foundElm = _serverList.findByNamePointer(&arg);
-
-      if (foundElm == _serverList.end()) {
-        std::cout << "Found a proxy that isn't a server.\n";
-        realProxy->arg().Print("V");
-
-        for (const auto elm : _serverList) {
-          elm->Print("V");
-        }
-
-        assert(false);
-      }
-
-
-    }
-  }
-
-}
 
 
 #ifdef ROOFIT_CHECK_CACHED_VALUES
@@ -4952,24 +4915,26 @@ void RooAbsReal::checkBatchComputation(std::size_t evtNo, const RooArgSet* normS
     }
   }
 
-  if (_batchData.isInit() && _batchData.status(evtNo, evtNo+1) >= BatchHelpers::BatchData::kReady) {
-    const double batchVal = _batchData[evtNo];
+  if (_batchData.status(evtNo, evtNo+1) >= BatchHelpers::BatchData::kReady) {
+    RooSpan<const double> batch = _batchData.getBatch(evtNo, 1);
+    RooSpan<const double> enclosingBatch = _batchData.getBatch(evtNo-1, 3);
+    const double batchVal = batch[0];
 
     if (fabs( _value != 0. ? (_value - batchVal)/_value : _value - batchVal) > 1.E-14) {
-      gSystem->StackTrace();
+//      gSystem->StackTrace();
       FormatPdfTree formatter;
       formatter << "--> (Batch computation wrong here:)\n";
       printStream(formatter.stream(), kName | kClassName | kArgs | kExtras | kAddress, kInline);
       formatter << std::setprecision(17)
-          << "\n _batch[" << std::setw(7) << evtNo-1 << "]=     " << _batchData[evtNo-1]
+          << "\n _batch[" << std::setw(7) << evtNo-1 << "]=     " << (enclosingBatch.empty() ? 0 : enclosingBatch[0])
           << "\n _batch[" << std::setw(7) << evtNo   << "]=     " << batchVal << " !!!"
           << "\n expected ('_value'): " << _value
-          << "\n _batch[" << std::setw(7) << evtNo+1 << "]=     " << _batchData[evtNo+1];
+          << "\n _batch[" << std::setw(7) << evtNo+1 << "]=     " << (enclosingBatch.empty() ? 0 : enclosingBatch[2]);
 
-      formatter << "\n" << std::setw(25) << "evaluate(unnorm.)=" << evaluate();
+      formatter << "\n" << std::left << std::setw(24) << "evaluate(unnorm.)" << '=' << evaluate();
 
       auto result = evaluateBatch(evtNo, evtNo+1);
-      formatter << "\nevaluateBatch(" << std::setw(9) << evtNo << ")=" << result[0];
+      formatter << "\nevaluateBatch(" << std::right << std::setw(9) << evtNo << ")=" << result[0];
 
       formatter << "\nServers: ";
       for (const auto server : _serverList) {
@@ -4979,11 +4944,12 @@ void RooAbsReal::checkBatchComputation(std::size_t evtNo, const RooArgSet* normS
 
         auto serverAsReal = dynamic_cast<RooAbsReal*>(server);
         if (serverAsReal) {
-          const auto& theBatch = serverAsReal->batchData();
-          if (theBatch.isInit()) {
-            formatter << "\n   _batch[" << evtNo-1 << "]=" << theBatch[evtNo-1]
-                << "\n   _batch[" << evtNo << "]=" << theBatch[evtNo]
-                << "\n   _batch[" << evtNo+1 << "]=" << theBatch[evtNo+1];
+          const BatchHelpers::BatchData& batchData = serverAsReal->batchData();
+          RooSpan<const double> theBatch = batchData.getBatch(evtNo-1, 3);
+          if (!theBatch.empty()) {
+            formatter << "\n   _batch[" << evtNo-1 << "]=" << theBatch[0]
+                                                                       << "\n   _batch[" << evtNo << "]=" << theBatch[1]
+                                                                                                                      << "\n   _batch[" << evtNo+1 << "]=" << theBatch[2];
           }
           else {
             formatter << std::setprecision(17)
