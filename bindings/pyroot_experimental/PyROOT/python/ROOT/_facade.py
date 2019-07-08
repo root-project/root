@@ -72,3 +72,8 @@ class ROOTFacade(types.ModuleType):
         self._finalSetup()
 
         return setattr(self, name, val)
+
+    # Inject version as __version__ property in ROOT module
+    @property
+    def __version__(self):
+        return self.gROOT.GetVersion()
