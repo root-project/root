@@ -74,8 +74,10 @@ protected:
 
       virtual ~Qt5Creator()
       {
-         if (fHandler)
-            QWebEngineProfile::defaultProfile()->removeUrlSchemeHandler(fHandler.get());
+         /** Code executed during exit and sometime crashes.
+          *  Disable it, while not clear if defaultProfile can be still used - seems to be not */
+         // if (fHandler)
+         //   QWebEngineProfile::defaultProfile()->removeUrlSchemeHandler(fHandler.get());
       }
 
       std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args) override
