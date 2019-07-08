@@ -21,7 +21,7 @@
 #include <QWebEngineProfile>
 #include <QtGlobal>
 
-#if QT_VERSION >= 0x051200
+#if QT_VERSION >= 0x050C00
 #include <QWebEngineUrlScheme>
 #endif
 
@@ -90,7 +90,7 @@ protected:
                return nullptr;
             }
 
-            #if QT_VERSION >= 0x051200
+            #if QT_VERSION >= 0x050C00
             QWebEngineUrlScheme scheme("rootscheme");
             scheme.setSyntax(QWebEngineUrlScheme::Syntax::HostAndPort);
             scheme.setDefaultPort(2345);
@@ -100,7 +100,7 @@ protected:
 
             qargv[0] = gApplication->Argv(0);
             qargv[1] = nullptr;
-            
+
             qapp = new QApplication(qargc, qargv);
          }
 
