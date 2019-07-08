@@ -49,7 +49,7 @@ public:
   
   // Parameter value and error accessors
   virtual Double_t getValV(const RooArgSet* nset=0) const ;
-  RooSpan<const double> getValBatch(std::size_t begin, std::size_t end,
+  RooSpan<const double> getValBatch(std::size_t begin, std::size_t batchSize,
       const RooArgSet* = nullptr) const;
 
   virtual void setVal(Double_t value);

@@ -118,12 +118,12 @@ void compute(RooSpan<double> output, Tx x, Tc c) {
 /// \param[in] batchSize Size of each batch. The last batch may be smaller.
 /// \return A span with the computed values.
 
-RooSpan<double> RooExponential::evaluateBatch(std::size_t begin, std::size_t end) const {
-  auto output = _batchData.makeWritableBatchUnInit(begin, end);
+RooSpan<double> RooExponential::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
 
   //Now explicitly write down all possible template instantiations of compute() above:
-  auto xData = x.getValBatch(begin, end);
-  auto cData = c.getValBatch(begin, end);
+  auto xData = x.getValBatch(begin, batchSize);
+  auto cData = c.getValBatch(begin, batchSize);
 
   const bool batchX = !xData.empty();
   const bool batchC = !cData.empty();

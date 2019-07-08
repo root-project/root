@@ -200,6 +200,10 @@ public:
      : length_(v.size()), data_(v.empty() ? nullptr : v.data())
   {}
 
+  /*implicit*/ span(std::vector<typename std::remove_cv<T>::type> & v) noexcept
+     : length_(v.size()), data_(v.empty() ? nullptr : v.data())
+  {}
+
   /*implicit*/ constexpr span(pointer a, index_type const n) noexcept
      : length_(n), data_(a)
   {}

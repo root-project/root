@@ -81,7 +81,12 @@ public:
   { }
 
 
-  constexpr RooSpan(const std::vector<value_type>& vec) noexcept :
+  constexpr RooSpan(const std::vector<typename std::remove_cv<T>::type>& vec) noexcept :
+  _auxStorage{},
+  _span{vec}
+  { }
+
+  constexpr RooSpan(std::vector<typename std::remove_cv<T>::type>& vec) noexcept :
   _auxStorage{},
   _span{vec}
   { }

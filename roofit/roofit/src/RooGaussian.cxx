@@ -108,13 +108,12 @@ void compute(RooSpan<double> output, Tx x, TMean mean, TSig sigma) {
 /// \param[in] batchSize Size of each batch. The last batch may be smaller.
 /// \return A span with the computed values.
 
-RooSpan<double> RooGaussian::evaluateBatch(std::size_t begin, std::size_t end) const {
-  assert(_batchData.status(begin, end) == BatchHelpers::BatchData::kWriting);
-  auto output = _batchData.makeWritableBatchUnInit(begin, end);
+RooSpan<double> RooGaussian::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
 
-  auto xData = x.getValBatch(begin, end);
-  auto meanData = mean.getValBatch(begin, end);
-  auto sigmaData = sigma.getValBatch(begin, end);
+  auto xData = x.getValBatch(begin, batchSize);
+  auto meanData = mean.getValBatch(begin, batchSize);
+  auto sigmaData = sigma.getValBatch(begin, batchSize);
 
   //Now explicitly write down all possible template instantiations of compute() above:
   const bool batchX = !xData.empty();
