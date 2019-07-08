@@ -15,7 +15,7 @@
 #include "PyROOTPythonize.h"
 #include "RConfig.h"
 #include "TInterpreter.h"
-#include "CPyCppyy/TPython.h"
+#include "CPyCppyy/API.h"
 
 #include <utility> // std::pair
 #include <sstream> // std::stringstream
