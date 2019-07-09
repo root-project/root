@@ -51,9 +51,13 @@ if(PRE)
 endif()
 
 if(POST)
-  string(REPLACE "^" ";" _post ${POST})
+  set(POST_LIST ${POST})
+  separate_arguments(${POST_LIST})
+  string(REPLACE " " ";" _postargs ${POST_LIST})
+  list(GET _postargs 0 _postcmd)
+  list(REMOVE_AT _postargs 0)
   if(DBG)
-    message(STATUS "testdriver:POST=${_post}")
+    message(STATUS "testdriver:POST=${_postcmd}${_postargs}")
   endif()
 endif()
 
@@ -143,7 +147,7 @@ if(CMD)
         set(_chkerr ERROR_VARIABLE _errvar2)  # Only check out eventually
       endif()
     endif()
- 
+
     execute_process(COMMAND ${_cmd} ${_input} ${_chkout} ${_chkerr} WORKING_DIRECTORY ${CWD} RESULT_VARIABLE _rc)
 
     string(REGEX REPLACE "([.]*)[;][-][e][;]([^;]+)([.]*)" "\\1;-e '\\2\\3'" res "${_cmd}")
@@ -243,7 +247,7 @@ endif()
 
 #---Execute post-command-----------------------------------------------------------------------------
 if(POST)
-  execute_process(COMMAND ${_post} ${_cwd} OUTPUT_VARIABLE _outvar ERROR_VARIABLE _outvar RESULT_VARIABLE _rc)
+  execute_process(COMMAND ${_postcmd} ${_postargs} ${_cwd} OUTPUT_VARIABLE _outvar ERROR_VARIABLE _outvar RESULT_VARIABLE _rc)
   if(_outvar)
     message("-- BEGIN POST OUTPUT --")
     message("${_outvar}")
