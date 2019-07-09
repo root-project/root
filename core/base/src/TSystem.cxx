@@ -21,14 +21,6 @@ that the method should be overridden in a derived class), which
 allows a simple partial implementation for new OS'es.
 */
 
-#ifdef WIN32
-#include <io.h>
-#endif
-#include <stdlib.h>
-#include <errno.h>
-#include <algorithm>
-#include <sys/stat.h>
-
 #include <ROOT/FoundationUtils.hxx>
 #include "Riostream.h"
 #include "TSystem.h"
@@ -54,6 +46,14 @@ allows a simple partial implementation for new OS'es.
 #include "compiledata.h"
 #include "RConfigure.h"
 #include "THashList.h"
+
+#include <sstream>
+#include <string>
+#include <sys/stat.h>
+
+#ifdef WIN32
+#include <io.h>
+#endif
 
 const char *gRootDir;
 const char *gProgName;
@@ -3353,6 +3353,35 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       linkDepLibraries = linkLibs & 0x1;
    }
 
+   constexpr const bool useCxxModules =
+#ifdef R__USE_CXXMODULES
+    true;
+#else
+    false;
+#endif
+
+   auto LoadLibrary = [useCxxModules, produceRootmap](const TString& lib) {
+      // We have no rootmap files or modules to construct `-l` flags enabling
+      // explicit linking. We have to resolve the dependencies by ourselves
+      // taking the job of the dyld.
+      // FIXME: This is a rare case where we have rootcling running with
+      // modules disabled. Remove this code once we fully switch to modules,
+      // or implement a special flag in rootcling which selective enables
+      // modules for dependent libraries and does not produce a module for
+      // the ACLiC library.
+      if (useCxxModules && !produceRootmap) {
+         using namespace std;
+         string deps = gInterpreter->GetSharedLibDeps(lib, /*tryDyld*/true);
+         istringstream iss(deps);
+         vector<string> libs {istream_iterator<std::string>{iss}, istream_iterator<string>{}};
+         // Skip the first element: it is a relative path to `lib`.
+         for (auto I = libs.begin() + 1, E = libs.end(); I != E; ++I)
+            if (gInterpreter->Load(I->c_str(), /*system*/false) < 0)
+               return false; // failure
+      }
+      return !gSystem->Load(lib);
+   };
+
    if (!recompile) {
       // The library already exist, let's just load it.
       if (loadLib) {
@@ -3367,7 +3396,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
             gInterpreter->LoadLibraryMap(libmapfilename);
          }
 
-         return !gSystem->Load(library);
+         return LoadLibrary(library);
       }
       else return kTRUE;
    }
@@ -3478,9 +3507,11 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    TString mapfileout = mapfile + ".out";
 
    Bool_t needLoadMap = kFALSE;
-   if (gInterpreter->GetSharedLibDeps(libname) !=0 ) {
-       gInterpreter->UnloadLibraryMap(libname);
-      needLoadMap = kTRUE;
+   if (!useCxxModules) {
+      if (gInterpreter->GetSharedLibDeps(libname) !=0 ) {
+         gInterpreter->UnloadLibraryMap(libname);
+         needLoadMap = kTRUE;
+      }
    }
 
    std::ofstream mapfileStream( mapfilein, std::ios::out );
@@ -3510,11 +3541,6 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       }
    }
    mapfileStream.close();
-
-   bool useCxxModules = false;
-#ifdef R__USE_CXXMODULES
-   useCxxModules = true;
-#endif
 
    // ======= Generate the rootcling command line
    TString rcling = "rootcling";
@@ -3770,8 +3796,10 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
           gInterpreter->LoadLibraryMap(libmapfilename);
       }
       if (verboseLevel>3 && withInfo)  ::Info("ACLiC","loading the shared library");
-      if (loadLib) result = !gSystem->Load(library);
-      else result = kTRUE;
+      if (loadLib)
+         result = LoadLibrary(library);
+      else
+         result = kTRUE;
 
       if ( !result ) {
          if (verboseLevel>3 && withInfo) {

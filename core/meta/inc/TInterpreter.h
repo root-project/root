@@ -157,7 +157,7 @@ public:
    virtual char    *GetPrompt() = 0;
    virtual const char *GetSharedLibs() = 0;
    virtual const char *GetClassSharedLibs(const char *cls) = 0;
-   virtual const char *GetSharedLibDeps(const char *lib) = 0;
+   virtual const char *GetSharedLibDeps(const char *lib, bool tryDyld = false) = 0;
    virtual const char *GetIncludePath() = 0;
    virtual const char *GetSTLIncludePath() const { return ""; }
    virtual TObjArray  *GetRootMapFiles() const = 0;

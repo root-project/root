@@ -133,7 +133,7 @@ static std::string MakeLibNamePlatformIndependent(llvm::StringRef libName)
    EXPECT_TRUE(llvm::sys::path::has_extension(libName));
    libName.consume_front("lib");
    // Remove the extension.
-   return libName.substr(0, libName.find_last_of('.')).str();
+   return libName.substr(0, libName.find_first_of('.')).str();
 }
 
 // Shortens the invocation.
@@ -178,4 +178,51 @@ TEST_F(TClingTests, GetClassSharedLibs)
    // GetLibs("ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> >")
    //    != GetLibs("ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float>>")
    // note the missing space.
+}
+
+static std::string MakeDepLibsPlatformIndependent(llvm::StringRef libs) {
+   llvm::SmallVector<llvm::StringRef, 32> splitLibs;
+   libs.trim().split(splitLibs, ' ');
+   assert(!splitLibs.empty());
+   std::string result = MakeLibNamePlatformIndependent(splitLibs[0]) + ' ';
+   splitLibs.erase(splitLibs.begin());
+
+   std::sort(splitLibs.begin(), splitLibs.end());
+   for (llvm::StringRef lib : splitLibs)
+      result += MakeLibNamePlatformIndependent(lib.trim()) + ' ';
+
+   return llvm::StringRef(result).rtrim();
+}
+
+// Check the interface computing the dependencies of a given library.
+TEST_F(TClingTests, GetSharedLibDeps)
+{
+   // Shortens the invocation.
+   auto GetLibDeps = [](const char *lib) -> const char* {
+      return gInterpreter->GetSharedLibDeps(lib, /*tryDyld*/true);
+   };
+
+   std::string SeenDeps
+      = MakeDepLibsPlatformIndependent(GetLibDeps("libGenVector.so"));
+#ifdef R__MACOSX
+   ASSERT_TRUE(llvm::StringRef(SeenDeps).startswith("GenVector New"));
+#else
+   // Depends only on libCore.so but libCore.so is loaded and thus missing.
+   ASSERT_STREQ("GenVector", SeenDeps.c_str());
+#endif
+
+   SeenDeps = MakeDepLibsPlatformIndependent(GetLibDeps("libTreePlayer.so"));
+   llvm::StringRef SeenDepsRef = SeenDeps;
+
+   // Depending on the configuration we expect:
+   // TreePlayer Gpad Graf Graf3d Hist [Imt] MathCore MultiProc Net [New] Tree [tbb]..
+   // FIXME: We should add a generic gtest regex matcher and use a regex here.
+   ASSERT_TRUE(SeenDepsRef.startswith("TreePlayer Gpad Graf Graf3d Hist"));
+   ASSERT_TRUE(SeenDepsRef.contains("MathCore MultiProc Net"));
+   ASSERT_TRUE(SeenDepsRef.contains("Tree"));
+
+   EXPECT_ROOT_ERROR(ASSERT_TRUE(nullptr == GetLibDeps("")),
+                     "Error in <TCling__GetSharedLibImmediateDepsSlow>: Cannot find library ''\n");
+   EXPECT_ROOT_ERROR(ASSERT_TRUE(nullptr == GetLibDeps("   ")),
+                     "Error in <TCling__GetSharedLibImmediateDepsSlow>: Cannot find library '   '\n");
 }

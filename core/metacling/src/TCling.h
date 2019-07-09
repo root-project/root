@@ -201,7 +201,7 @@ public: // Public Interface
    char*   GetPrompt() { return fPrompt; }
    const char* GetSharedLibs();
    const char* GetClassSharedLibs(const char* cls);
-   const char* GetSharedLibDeps(const char* lib);
+   const char* GetSharedLibDeps(const char* lib, bool tryDyld = false);
    const char* GetIncludePath();
    virtual const char* GetSTLIncludePath() const;
    TObjArray*  GetRootMapFiles() const { return fRootmapFiles; }
