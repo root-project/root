@@ -95,7 +95,11 @@ public:
      fDecl = D;
      fNameCache.clear(); // invalidate the cache.
    }
-   TDictionary::DeclId_t   GetDeclId() const { return (const clang::Decl*)(fDecl->getCanonicalDecl()); }
+   TDictionary::DeclId_t   GetDeclId() const {
+      if (!fDecl)
+        return nullptr;
+      return (const clang::Decl*)(fDecl->getCanonicalDecl());
+   }
    const clang::FunctionTemplateDecl *GetFunctionTemplate(const char *fname) const;
    TClingMethodInfo     GetMethod(const char *fname) const;
    TClingMethodInfo     GetMethod(const char *fname, const char *proto,
