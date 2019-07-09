@@ -395,7 +395,6 @@ sap.ui.define([
    {
       var so = this.mgr.GetElement(this.mgr.global_highlight_id);
       if (so && so.prev_sel_list && so.prev_sel_list.length) {
-         console.log("clearHighlight", this);
          this.mgr.SendMIR({ "mir":        "SelectionCleared()",
                             "fElementId": this.mgr.global_highlight_id,
                             "class":      "ROOT::Experimental::REveSelection"
@@ -420,7 +419,7 @@ sap.ui.define([
             {
                var eli =  pthis.mgr.GetElement(impId);
                if (eli && eli.fSceneId == pthis.id) {
-               console.log("CHECK select IMPLIED", pthis);
+                  // console.log("CHECK select IMPLIED", pthis);
                   pthis.SelectElement(selection_obj, impId, rec.sec_idcs);
                }
             }
@@ -437,7 +436,7 @@ sap.ui.define([
       var stype = selection_obj.fName.endsWith("Selection") ? "select" : "highlight";
       var estype = THREE.OutlinePass.selection_enum[stype];
 
-      console.log("EveScene.SelectElement ", selection_obj.fName, element_id, selection_obj.fElementId, this.viewer.outlinePass.id2obj_map);
+      // console.log("EveScene.SelectElement ", selection_obj.fName, element_id, selection_obj.fElementId, this.viewer.outlinePass.id2obj_map);
 
       let res = {
          "sel_type": estype,
@@ -467,7 +466,7 @@ sap.ui.define([
 
    EveScene.prototype.UnselectElement = function(selection_obj, element_id)
    {
-      console.log("EveScene.UnselectElement ", selection_obj.fName, element_id, selection_obj.fElementId, this.viewer.outlinePass.id2obj_map);
+      // console.log("EveScene.UnselectElement ", selection_obj.fName, element_id, selection_obj.fElementId, this.viewer.outlinePass.id2obj_map);
       if (this.viewer.outlinePass.id2obj_map[element_id] !== undefined)
       {
 	      delete this.viewer.outlinePass.id2obj_map[element_id][selection_obj.fElementId];
