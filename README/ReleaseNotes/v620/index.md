@@ -100,6 +100,8 @@ The following people have contributed to this new version:
 
 
 ## JavaScript ROOT
+- Provide monitoring capabilities for TGeoManager object. Now geomtry with some tracks can be displayed and
+  updated in web browser, using THttpServer monitoring capability like histogram objects.
 
 
 ## Tutorials
