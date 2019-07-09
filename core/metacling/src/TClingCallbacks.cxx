@@ -914,20 +914,12 @@ void TCling__FindLoadedLibraries(std::vector<std::pair<uint32_t, std::string>> &
 {
    // Store the information of path so that we don't have to iterate over the same path again and again.
    static std::unordered_set<std::string> alreadyLookedPath;
-   const clang::Preprocessor &PP = interpreter.getCI()->getPreprocessor();
-   const HeaderSearchOptions &HSOpts = PP.getHeaderSearchInfo().getHeaderSearchOpts();
    cling::DynamicLibraryManager* dyLibManager = interpreter.getDynamicLibraryManager();
 
-   if (searchSystem) {
-      llvm::SmallVector<std::string, 32> systemPath = dyLibManager->getSystemSearchPath();
-      for (const std::string& sysPath : systemPath) {
-         SearchAndAddPath(sysPath, sLibraries, sPaths, alreadyLookedPath, dyLibManager);
-      }
-   } else {
-      const std::vector<std::string>& MPaths = HSOpts.PrebuiltModulePaths;
-      // Take path here eg. "/home/foo/module-release/lib/"
-      for (const std::string& mPath : MPaths) {
-         SearchAndAddPath(mPath, sLibraries, sPaths, alreadyLookedPath, dyLibManager);
-      }
+   const auto &searchPaths = dyLibManager->getSearchPath();
+   for (const cling::DynamicLibraryManager::SearchPathInfo &Info : searchPaths) {
+      if (!Info.IsUser && !searchSystem)
+         continue;
+      SearchAndAddPath(Info.Path, sLibraries, sPaths, alreadyLookedPath, dyLibManager);
    }
 }
