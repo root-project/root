@@ -193,7 +193,6 @@ check_cxx_source_compiles(
 int main() {}
 " GLIBCXX_USE_CXX11_ABI)
 
-
 #---Print the final compiler flags--------------------------------------------------------------------
 message(STATUS "ROOT Platform: ${ROOT_PLATFORM}")
 message(STATUS "ROOT Architecture: ${ROOT_ARCHITECTURE}")
