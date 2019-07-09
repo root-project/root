@@ -85,7 +85,7 @@ onmessage = function(e) {
       // this is task to collect visible nodes using camera position
 
       // first mark all visible flags
-      clones.MarkVisisble(false, false, e.data.visible);
+      clones.MarkVisibles(false, false, e.data.visible);
       delete e.data.visible;
 
       var matrix = null;
