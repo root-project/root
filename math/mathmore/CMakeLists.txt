@@ -78,15 +78,13 @@ SOURCES
     src/cblas.cxx
   LINKDEF
     Math/LinkDef.h
-  LIBRARIES
-    ${GSL_LIBRARIES}
   DEPENDENCIES
     MathCore
   BUILTINS
     GSL
 )
 
-target_include_directories(MathMore PUBLIC ${GSL_INCLUDE_DIR})
-target_link_libraries(MathMore PUBLIC ${GSL_LIBRARIES})
+target_include_directories(MathMore PRIVATE ${GSL_INCLUDE_DIR})
+target_link_libraries(MathMore PRIVATE ${GSL_LIBRARIES})
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
