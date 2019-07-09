@@ -11,12 +11,7 @@
 
 #include "CPyCppyy.h"
 #include "CPPOverload.h"
-#include "CallContext.h"
 #include "PyROOTPythonize.h"
-#include "CPyCppyy/API.h"
-#include "Utility.h"
-#include "PyzCppHelpers.hxx"
-#include "TFile.h"
 #include "Python.h"
 
 using namespace CPyCppyy;
