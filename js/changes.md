@@ -1,5 +1,13 @@
 # JSROOT changelog
 
+## Changes in dev
+1. Add "rotyNN" and "rotzNN" options to Geo painter - let customize camera position
+2. Provide context menu command to show current camera position
+3. Implement monitoring of TGeoManager with THttpServer
+4. Provide "showtop" option for TGeoManager (equivalent to gGeoManager->SetTopVisible())
+5. Provide "no_screen" option to let ignore kVisOnScreen bits for display, checked first by default
+
+
 ## Changes in 5.7.0
 1. Add support of TProfile2Poly class
 2. Add support of TGeoOverlap class, provide access from TGeoManager
