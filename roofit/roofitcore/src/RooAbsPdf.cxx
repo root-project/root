@@ -2450,9 +2450,12 @@ void removeRangeOverlap(std::vector<std::pair<double, double>>& ranges) {
 /// show a projected curve integrated over all variables that were present in the shown
 /// dataset except for the one on the x-axis. The normalization of the curve will also
 /// be adjusted to the event count of the plotted dataset. An informational message
-/// will be printed for each projection step that is performed
+/// will be printed for each projection step that is performed.
 ///
-/// This function takes the following named arguments
+/// This function takes the following named arguments (for more arguments, see also
+/// RooAbsReal::plotOn(RooPlot*,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,
+/// const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,
+/// const RooCmdArg&) const )
 ///
 /// 
 /// <table>
@@ -2487,6 +2490,9 @@ void removeRangeOverlap(std::vector<std::pair<double, double>>& ranges) {
 ///               Mostly useful when plotting -log(L) or \f$ \chi^2 \f$ distributions
 /// <tr><td> `AddTo(const char* name, double_t wgtSelf, double_t wgtOther)`  <td>  Add constructed projection to
 ///               already existing curve with given name and relative weight factors
+/// <tr><td> `Components(const char* names)`  <td>  When plotting sums of PDFs, plot only the named components (*e.g.* only
+///                                                 the signal of a signal+background model).
+/// <tr><td> `Components(const RooArgSet& compSet)` <td> As above, but pass a RooArgSet of the components themselves.
 ///
 /// <tr><th><th> Plotting control 
 /// <tr><td> `LineStyle(Int_t style)`           <td>  Select line style by ROOT line style code, default is solid
