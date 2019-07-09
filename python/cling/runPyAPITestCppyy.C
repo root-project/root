@@ -1,4 +1,4 @@
-#include "CPyCppyy/TPython.h"
+#include "CPyCppyy/API.h"
 #include "TError.h"
 
 void runPyAPITestCppyy() {
