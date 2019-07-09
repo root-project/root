@@ -15,7 +15,7 @@ using namespace TMVA::Experimental;
 void tmva004_RStandardScaler()
 {
    // Load data used to fit the parameters
-   ROOT::RDataFrame df("TreeS", "https://root.cern/files/tmva_class_example.root");
+   ROOT::RDataFrame df("TreeS", "http://root.cern/files/tmva_class_example.root");
    auto x = AsTensor<float>(df);
 
    // Create standard scaler and fit to data
