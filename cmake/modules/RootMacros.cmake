@@ -5,7 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 #---------------------------------------------------------------------------------------------------
-#  RootNewMacros.cmake
+#  RootMacros.cmake
 #---------------------------------------------------------------------------------------------------
 
 set(THISDIR ${CMAKE_CURRENT_LIST_DIR})

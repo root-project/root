@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.4.3 FATAL_ERROR)
 
 #---Define the Standard macros for ROOT-----------------------------------------------------------
-include(@ROOT_MODULE_PATH@/RootNewMacros.cmake)
+include(@ROOT_MODULE_PATH@/RootMacros.cmake)
 
 #---Set Link and include directories--------------------------------------------------------------
 include_directories(${ROOT_INCLUDE_DIRS})

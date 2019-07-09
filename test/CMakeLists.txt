@@ -31,7 +31,7 @@ if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
 else()                       # Testing using an installation (assuming access to ROOT CMake modules)
   include_directories(${ROOT_INCLUDE_DIRS}/../tutorials)
   add_definitions(${ROOT_DEFINITIONS})
-  include(RootNewMacros)
+  include(RootMacros)
 endif()
 
 #---environment-------------------------------------------------------------------------------
