@@ -2352,8 +2352,18 @@
       this.nodes = [ node ];
    }
 
+   /** Count all visisble nodes */
+   JSROOT.GEO.ClonedNodes.prototype.CountVisibles = function() {
+      var cnt = 0;
+      if (this.nodes)
+         for (var k=0;k<this.nodes.length;++k)
+            if (this.nodes[k].vis)
+               cnt++;
+      return cnt;
+   }
+
    /** Mark visisble nodes */
-   JSROOT.GEO.ClonedNodes.prototype.MarkVisisble = function(on_screen, copy_bits, cloning) {
+   JSROOT.GEO.ClonedNodes.prototype.MarkVisibles = function(on_screen, copy_bits, cloning, hide_top_volume) {
       if (!this.nodes) return 0;
       if (this.plain_shape) return 1;
 
@@ -2390,6 +2400,9 @@
                } else {
                   clone.vis = !JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisNone) &&
                                JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisThis) && !obj.fFinder;
+                  // special handling for TGeoManager, which top module always hidden
+                  if (hide_top_volume && (n==0))
+                     clone.vis = false;
                   if (!JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisDaughters))
                      clone.depth = JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisOneLevel) ? 1 : 0;
                }
@@ -3420,24 +3433,20 @@
 
       opt.res_mesh = opt.res_faces = 0;
 
-      var shape = null;
+      var shape = null, hide_top = false;
 
       if (('fShapeBits' in obj) && ('fShapeId' in obj)) {
          shape = obj; obj = null;
-      } else
-      if ((obj._typename === 'TGeoVolumeAssembly') || (obj._typename === 'TGeoVolume')) {
+      } else if ((obj._typename === 'TGeoVolumeAssembly') || (obj._typename === 'TGeoVolume')) {
          shape = obj.fShape;
-      } else
-      if ((obj._typename === "TEveGeoShapeExtract") || (obj._typename === "ROOT::Experimental::TEveGeoShapeExtract")  ) {
+      } else if ((obj._typename === "TEveGeoShapeExtract") || (obj._typename === "ROOT::Experimental::TEveGeoShapeExtract")  ) {
          shape = obj.fShape;
-      } else
-      if (obj._typename === 'TGeoManager') {
+      } else if (obj._typename === 'TGeoManager') {
          obj = obj.fMasterVolume;
-         JSROOT.GEO.SetBit(obj, JSROOT.GEO.BITS.kVisThis, false);
+         hide_top = !opt.showtop;
          shape = obj.fShape;
-      } else
-      if ('fVolume' in obj) {
-         if (obj.fVolume) shape = obj.fVolume.fShape;
+      } else if (obj.fVolume) {
+         shape = obj.fVolume.fShape;
       } else {
          obj = null;
       }
@@ -3456,14 +3465,11 @@
 
       var clones = new JSROOT.GEO.ClonedNodes(obj);
 
-      var uniquevis = clones.MarkVisisble(true);
-
+      var uniquevis = opt.no_screen ? 0 : clones.MarkVisibles(true);
       if (uniquevis <= 0)
-         uniquevis = clones.MarkVisisble(false);
+         uniquevis = clones.MarkVisibles(false, false, null, hide_top);
       else
-         uniquevis = clones.MarkVisisble(true, true); // copy bits once and use normal visibility bits
-
-      var numvis = clones.MarkVisisble();
+         uniquevis = clones.MarkVisibles(true, true); // copy bits once and use normal visibility bits
 
       var frustum = null;
 
