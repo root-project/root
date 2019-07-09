@@ -243,16 +243,14 @@ void REveManager::DoRedraw3D()
    nlohmann::json jobj = {};
    
    jobj["content"] = "BeginChanges";
-   for (auto i = fConnList.begin(); i != fConnList.end(); ++i)
-      fWebWindow->Send(i->fId, jobj.dump());
+   fWebWindow->Send(0, jobj.dump());
 
    // Process changes in scenes.
    fWorld ->ProcessChanges();
    fScenes->ProcessSceneChanges();
 
    jobj["content"] = "EndChanges";
-   for (auto i = fConnList.begin(); i != fConnList.end(); ++i)
-      fWebWindow->Send(i->fId, jobj.dump());
+   fWebWindow->Send(0, jobj.dump());
 
    fResetCameras = kFALSE;
    fDropLogicals = kFALSE;
