@@ -45,10 +45,10 @@ A simpler analysis example can be found below: it histograms a function of the p
 ~~~{.cpp}
 // A simple TTreeReader use: read data from hsimple.root (written by hsimple.C)
 
-#include "TFile.h
-#include "TH1F.h
-#include "TTreeReader.h
-#include "TTreeReaderValue.h
+#include "TFile.h"
+#include "TH1F.h"
+#include "TTreeReader.h"
+#include "TTreeReaderValue.h"
 
 void hsimpleReader() {
    // Create a histogram for the values we read.
@@ -133,12 +133,17 @@ bool analyze(TFile* file) {
 
    TH1F("hist", "TTreeReader example histogram", 10, 0., 100.);
 
+   bool firstEntry = true;
    while (reader.Next()) {
-      if (!CheckValue(weight)) return false;
-      if (!CheckValue(triggerInfo)) return false;
-      if (!CheckValue(muons)) return false;
-      if (!CheckValue(jetPt)) return false;
-      if (!CheckValue(taus)) return false;
+      if (firstEntry) {
+         // Check that branches exist and their types match our expectation.
+         if (!CheckValue(weight)) return false;
+         if (!CheckValue(triggerInfo)) return false;
+         if (!CheckValue(muons)) return false;
+         if (!CheckValue(jetPt)) return false;
+         if (!CheckValue(taus)) return false;
+         firstentry = false;
+      }
 
       // Access the TriggerInfo object as if it's a pointer.
       if (!triggerInfo->hasMuonL1())
@@ -164,6 +169,9 @@ bool analyze(TFile* file) {
          }
       }
    } // TTree entry / event loop
+
+   // Return true if we have iterated through all entries.
+   return reader.GetEntryStatus() == TTreeReader::kEntryBeyondEnd;
 }
 ~~~
 */
