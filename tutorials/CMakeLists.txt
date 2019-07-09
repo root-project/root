@@ -26,7 +26,7 @@ else()                       # testing using an installation
   include(${ROOT_USE_FILE})
   if(DEFINED ROOT_CONFIG_EXECUTABLE) #---If ROOT was built with the classic configure/make---
     set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules)
-    include(RootNewMacros)
+    include(RootMacros)
     set(ROOT_root_CMD root.exe)
   endif()
   enable_testing()
