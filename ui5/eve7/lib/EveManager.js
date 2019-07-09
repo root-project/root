@@ -84,22 +84,35 @@ sap.ui.define([], function() {
          return;
       }
 
-      // console.log("msg len=", msg.length, " txt:", msg.substr(0,120), "...");
+      // console.log("OnWebsocketMsg msg len=", msg.length, " txt:", msg.substr(0,120), "...");
 
       var resp = JSON.parse(msg);
+      if (resp === undefined) return;
 
-      if (resp && resp[0] && resp[0].content == "REveManager::DestroyElementsOf") {
+      if (resp[0] && resp[0].content == "REveManager::DestroyElementsOf") {
 
          this.DestroyElements(resp);
 
-      } else if (resp && resp[0] && resp[0].content == "REveScene::StreamElements") {
+      } else if (resp[0] && resp[0].content == "REveScene::StreamElements") {
 
          this.ImportSceneJson(resp);
 
-      } else if (resp && resp.header && resp.header.content == "ElementsRepresentaionChanges") {
+      } else if (resp.header && resp.header.content == "ElementsRepresentaionChanges") {
 
          this.ImportSceneChangeJson(resp);
-
+      }
+      else if (resp.content == "BeginChanges")
+      {
+         this.listScenesToRedraw = [];
+         this.doRedraw = false;
+      }
+      else if (resp.content == "EndChanges") {
+         this.ServerEndRedrawCallback();
+         this.doRedraw = true;
+         return;
+      }
+      else {
+         console.log("Unhandled OnWebsocketMsg message ", resp);
       }
    }
 
@@ -333,9 +346,6 @@ sap.ui.define([], function() {
       // notify for element removal
       var removedIds = msg.header["removedElements"];
 
-      // do we need this? -- AMT this is intended to freeze redraws
-      this.callSceneReceivers(scene, "beginChanges");
-
       // notify controllers
       this.callSceneReceivers(scene, "elementsRemoved", removedIds);
 
@@ -440,11 +450,15 @@ sap.ui.define([], function() {
          }
       }
 
+      if (this.doRedraw) {
+         var treeRebuild = header.removedElements.length || (arr.length != nModified );
+         if (treeRebuild) this.InvokeReceivers("update", null, 0, this);
 
-      var treeRebuild = header.removedElements.length || (arr.length != nModified );
-      if (treeRebuild) this.InvokeReceivers("update", null, 0, this);
-
-      this.callSceneReceivers(scene, "endChanges", treeRebuild);
+         this.callSceneReceivers(scene, "endChanges", treeRebuild);
+      }
+      else {
+         this.listScenesToRedraw.push(scene);
+      }
    },
 
    //______________________________________________________________________________
@@ -661,7 +675,8 @@ sap.ui.define([], function() {
       // redraw
       for (let item of changedSet) {
          var scene = this.GetElement(item);
-         this.callSceneReceivers(scene, "endChanges");
+         // this.callSceneReceivers(scene, "endChanges");
+         this.listScenesToRedraw.push(scene);
       }
 
       // XXXX Oh, blimy, on first arrival, if selection is set, the selected
@@ -694,7 +709,17 @@ sap.ui.define([], function() {
       scene.$receivers[0].UnselectElement(selection_obj, element_id);
 
       // console.log("EveManager.UnselectElement", element, scene.$receivers[0].viewer.outlinePass.id2obj_map);
-}
+   }
+
+   EveManager.prototype.ServerEndRedrawCallback = function()
+   {
+      console.log("ServerEndRedrawCallback ", this.listScenesToRedraw);
+      for ( var i =0; i < this.listScenesToRedraw.length; i++) {
+         var scene = this.listScenesToRedraw[i];
+         this.callSceneReceivers(scene, "endChanges", true);
+      }
+   }
+
 
    //==============================================================================
    // END protoype functions
