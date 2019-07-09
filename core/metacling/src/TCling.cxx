@@ -6114,21 +6114,16 @@ static bool LookupBloomFilter(llvm::object::ObjectFile *soFile, uint32_t hash) {
 
 /// Looks up symbols from a an object file, representing the library.
 ///\returns true on success.
-static bool LookupNormalSymbols(const std::string &library_filename, std::string mangled_name)
+static bool LookupNormalSymbol(const std::string &library_filename,
+                               const std::string &mangled_name)
 {
    auto ObjF = llvm::object::ObjectFile::createObjectFile(library_filename);
-   if (!ObjF)
+   if (!ObjF) {
+      Warning("TCling__FindSymbol", "Failed to read object file %s", library_filename.c_str());
       return false;
+   }
 
    llvm::object::ObjectFile *BinObjFile = ObjF.get().getBinary();
-
-   // The JIT gives us a mangled name which has only one leading underscore on
-   // all platforms, for instance _ZN8TRandom34RndmEv. However, on OSX the
-   // linker stores this symbol as __ZN8TRandom34RndmEv (adding an extra _).
-#ifdef R__MACOSX
-   assert(llvm::StringRef(mangled_name).startswith("__"));
-   mangled_name = "_" + mangled_name;
-#endif
 
    uint32_t hashedMangle = GNUHash(mangled_name);
    // Check Bloom filter. If false, it means that this library doesn't contain mangled_name defenition
@@ -6152,7 +6147,7 @@ static bool LookupNormalSymbols(const std::string &library_filename, std::string
 
       llvm::Expected<StringRef> SymNameErr = S.getName();
       if (!SymNameErr) {
-         Warning("LookupNormalSymbols", "Failed to read symbol");
+         Warning("LookupNormalSymbol", "Failed to read symbol");
          continue;
       }
 
@@ -6164,13 +6159,14 @@ static bool LookupNormalSymbols(const std::string &library_filename, std::string
 }
 
 ///\returns true on success
-static bool LookupDynamicSymbols(const std::string &library_filename, std::string mangled_name)
+static bool LookupDynamicSymbol(const std::string &library_filename,
+                                const std::string &mangled_name)
 {
-   llvm::object::ObjectFile *BinObjFile = nullptr;
-   if (auto ObjF = llvm::object::ObjectFile::createObjectFile(library_filename))
-      BinObjFile = ObjF.get().getBinary();
-   else
+   auto ObjF = llvm::object::ObjectFile::createObjectFile(library_filename);
+   if (!ObjF)
       return false;
+
+   llvm::object::ObjectFile *BinObjFile = ObjF.get().getBinary();
 
    for (const auto &section : BinObjFile->sections()) {
       llvm::StringRef sectionName;
@@ -6187,8 +6183,10 @@ static bool LookupDynamicSymbols(const std::string &library_filename, std::strin
    return false;
 }
 
-static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_name,
-                                                  cling::Interpreter *interp) {
+static std::string ResolveSymbol(const std::string& mangled_name,
+                                 cling::Interpreter *interp,
+                                 bool searchSystem = true) {
+   assert(!mangled_name.empty());
    using namespace llvm::sys::path;
    using namespace llvm::sys::fs;
 
@@ -6197,8 +6195,8 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
    static bool sFirstRun = true;
    static bool sFirstSystemLibrary = true;
    // LibraryPath contains a pair offset to the canonical dirname (stored as
-   // sPaths[i]) and a filename. For example, `/home/foo/root/lib/libTMVA.so`)
-   // The .first will contain an index in sPaths where `/home/foo/root/lib/`
+   // sPaths[i]) and a filename. For example, `/home/foo/root/lib/libTMVA.so`,
+   // the .first will contain an index in sPaths where `/home/foo/root/lib/`
    // will be stored and .second `libTMVA.so`.
    // This approach reduces the duplicate paths as at one location there may be
    // plenty of libraries.
@@ -6207,6 +6205,7 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
    using BasePaths = std::vector<std::string>;
    static LibraryPaths sLibraries;
    static BasePaths sPaths;
+   static LibraryPaths sQueriedLibraries;
 
    // For system header autoloading
    static LibraryPaths sSysLibraries;
@@ -6219,21 +6218,28 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
    auto GetLibFileName = [](const LibraryPath &P, const BasePaths &BaseP) {
       llvm::SmallString<512> Vec(BaseP[P.first]);
       llvm::sys::path::append(Vec, StringRef(P.second));
-      return Vec.str();
+      return Vec.str().str();
    };
 
-   auto MaterializeSymbol = [&mangled_name](const std::string &LibName,
-                                            const LibraryPath &P,
-                                            LibraryPaths& LibPaths) {
-      if (gSystem->Load(LibName.c_str(), "", false) < 0)
-         Error("LazyFunctionCreatorAutoloadForModule", "Failed to load library %s", LibName.c_str());
+   if (!sQueriedLibraries.empty()) {
+      // Last call we were asked if a library contains a symbol. Usually, the
+      // caller wants to load this library. Check if was loaded and remove it
+      // from our lists of not-yet-loaded libs.
+      for (const LibraryPath &P : sQueriedLibraries) {
+         const std::string LibName = GetLibFileName(P, sPaths);
+         if (!gCling->IsLibraryLoaded(LibName.c_str()))
+            continue;
 
-      // We want to delete a loaded library from sLibraries cache, because sLibraries is
-      // a vector of candidate libraries which might be loaded in the future.
-      LibPaths.erase(std::remove(LibPaths.begin(), LibPaths.end(), P), LibPaths.end());
-      void* addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(mangled_name.c_str());
-      return addr;
-   };
+         sLibraries.erase(std::remove(sLibraries.begin(), sLibraries.end(), P), sLibraries.end());
+         if (!sSysLibraries.empty())
+            sSysLibraries.erase(std::remove(sSysLibraries.begin(), sSysLibraries.end(), P), sSysLibraries.end());
+      }
+   }
+
+   if (sFirstRun) {
+      TCling__FindLoadedLibraries(sLibraries, sPaths, *interp, /* searchSystem */ false);
+      sFirstRun = false;
+   }
 
    // Iterate over files under this path. We want to get each ".so" files
    for (const LibraryPath &P : sLibraries) {
@@ -6243,10 +6249,14 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
       // libraries. However, it seems to be redundant for the moment as we do
       // not strictly require symbols from those sections. Enable after checking
       // performance!
-      if (LookupNormalSymbols(LibName, mangled_name))
-         if (void * addr = MaterializeSymbol(LibName, P, sLibraries))
-            return addr;
+      if (LookupNormalSymbol(LibName, mangled_name)) {
+         sQueriedLibraries.push_back(P);
+         return LibName;
+      }
    }
+
+   if (!searchSystem)
+      return "";
 
    // Lookup in non-system libraries failed. Expand the search to the system.
    if (sFirstSystemLibrary) {
@@ -6257,12 +6267,26 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
    for (const LibraryPath &P : sSysLibraries) {
       const std::string LibName = GetLibFileName(P, sPaths);
 
-      if (LookupNormalSymbols(LibName, mangled_name) || LookupDynamicSymbols(LibName, mangled_name))
-         if (void * addr = MaterializeSymbol(LibName, P, sSysLibraries))
-            return addr;
+      if (LookupNormalSymbol(LibName, mangled_name) || LookupDynamicSymbol(LibName, mangled_name)) {
+         sQueriedLibraries.push_back(P);
+         return LibName;
+      }
    }
 
-   return nullptr; // Lookup failed.
+   return ""; // Search found no match.
+}
+
+static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_name,
+                                                  cling::Interpreter *interp) {
+   std::string LibName = ResolveSymbol(mangled_name, interp);
+   if (LibName.empty())
+      return nullptr;
+
+   if (gSystem->Load(LibName.c_str(), "", false) < 0)
+      Error("LazyFunctionCreatorAutoloadForModule", "Failed to load library %s", LibName.c_str());
+
+   void* addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(mangled_name.c_str());
+   return addr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6923,14 +6947,90 @@ const char* TCling::GetClassSharedLibs(const char* cls)
    return 0;
 }
 
+/// This interface returns a list of dependent libraries in the form:
+/// lib libA.so libB.so libC.so. The first library is the library we are
+/// searching dependencies for.
+/// Note: In order to speed up the search, we display the dependencies of the
+/// libraries which are not yet loaded. For instance, if libB.so was already
+/// loaded the list would contain: lib libA.so libC.so.
+static std::string GetSharedLibImmediateDepsSlow(std::string lib,
+                                                 cling::Interpreter *interp,
+                                                 bool skipLoadedLibs = true)
+{
+   TString LibFullPath(lib);
+   if (!llvm::sys::path::is_absolute(lib)) {
+      if (!gSystem->FindDynamicLibrary(LibFullPath, /*quiet=*/true)) {
+         Error("TCling__GetSharedLibImmediateDepsSlow", "Cannot find library '%s'", lib.c_str());
+         return "";
+      }
+   } else {
+      lib = llvm::sys::path::filename(lib);
+   }
+
+   auto ObjF = llvm::object::ObjectFile::createObjectFile(LibFullPath.Data());
+   if (!ObjF) {
+      Warning("TCling__GetSharedLibImmediateDepsSlow", "Failed to read object file %s", lib.c_str());
+      return "";
+   }
+
+   llvm::object::ObjectFile *BinObjFile = ObjF.get().getBinary();
+
+   std::set<string> DedupSet;
+   std::string Result = lib + ' ';
+   for (const auto &S : BinObjFile->symbols()) {
+      uint32_t Flags = S.getFlags();
+      if (Flags & llvm::object::SymbolRef::SF_Undefined) {
+         llvm::Expected<StringRef> SymNameErr = S.getName();
+         if (!SymNameErr) {
+            Warning("GetSharedLibDepsForModule", "Failed to read symbol");
+            continue;
+         }
+         llvm::StringRef SymName = SymNameErr.get();
+         if (SymName.empty())
+            continue;
+
+         // If we can find the address of the symbol, we have loaded it. Skip.
+         if (skipLoadedLibs && llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(SymName))
+            continue;
+
+         std::string found = ResolveSymbol(SymName, interp, /*searchSystem*/false);
+         // The expected output is just filename without the full path, which
+         // is not very accurate, because our Dyld implementation might find
+         // a match in location a/b/c.so and if we return just c.so ROOT might
+         // resolve it to y/z/c.so and there we might not be ABI compatible.
+         // FIXME: Teach the users of GetSharedLibDeps to work with full paths.
+         if (!found.empty()) {
+            std::string cand = llvm::sys::path::filename(found).str();
+            if (!DedupSet.insert(cand).second)
+               continue;
+
+            Result += cand + ' ';
+         }
+      }
+   }
+
+   return Result;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the list a libraries on which the specified lib depends. The
 /// returned string contains as first element the lib itself.
 /// Returns 0 in case the lib does not exist or does not have
-/// any dependencies.
+/// any dependencies. If useDyld is true, we iterate through all available
+/// libraries and try to construct the dependency chain by resolving each
+/// symbol.
 
-const char* TCling::GetSharedLibDeps(const char* lib)
+const char* TCling::GetSharedLibDeps(const char* lib, bool useDyld/* = false*/)
 {
+   if (useDyld) {
+      std::string libs = GetSharedLibImmediateDepsSlow(lib, fInterpreter);
+      if (!libs.empty()) {
+         fAutoLoadLibStorage.push_back(libs);
+         return fAutoLoadLibStorage.back().c_str();
+      }
+   }
+
    if (!fMapfile || !lib || !lib[0]) {
       return 0;
    }
