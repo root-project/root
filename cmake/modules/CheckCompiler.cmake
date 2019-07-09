@@ -206,6 +206,6 @@ message(STATUS "Compiler Flags (automatically from 'CMAKE_BUILD_TYPE'): ${CMAKE_
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_${upperCaseBuildType}} ${CMAKE_CXX_FLAGS}")
 unset(CMAKE_CXX_FLAGS_${upperCaseBuildType})
 
-message(STATUS "Final compiler Flags: ${CMAKE_CXX_FLAGS}")
+message(STATUS "Final compiler flags: ${CMAKE_CXX_FLAGS}")
 
 
