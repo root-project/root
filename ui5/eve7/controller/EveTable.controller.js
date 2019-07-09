@@ -37,7 +37,8 @@ sap.ui.define([
          for (var k=0;k<element.childs.length;++k) {
             var scene = element.childs[k];
             this.mgr.RegisterSceneReceiver(scene.fSceneId, this);
-            this.build();
+            console.log("on init ....table controller");
+            this.onSceneCreate();
          }
       },
 
@@ -55,22 +56,24 @@ sap.ui.define([
             this.collection = this.mgr.GetElement(this.eveTable.fCollectionId);
          }
       },
-
+/*
       build: function()
       {
          // console.log("EveTable controller build()");
          this.locateEveTable();
          if (this.eveTable) {
-            this.buildTableHeader();
             this.buildTableBody();
          }
          else {
             console.log("ERROR can't find table in table scene !!!!");
          }
       },
-
-      buildTableBody: function()
+*/
+      buildTableBody: function(doBind)
       {
+
+         // amt
+         //return;
          var oTable = this.getView().byId("table");
 
          // column definition
@@ -79,6 +82,7 @@ sap.ui.define([
          columnData.push({columnName:"Name"});
          columnData.push({columnName:"Filtered"});
 
+         console.log("buildTableBody",this.eveTable );
          var eveColumns = this.eveTable.childs;
          for (var i = 0; i < eveColumns.length; i++)
          {
@@ -92,6 +96,7 @@ sap.ui.define([
          {
             rowData[i].Name =  this.collection.childs[i].fName;
             rowData[i].Filtered =  this.collection.childs[i].fFiltered === true ? "--" : "*";
+            if (i > 10) break;
          }
 
          // table model
@@ -101,22 +106,22 @@ sap.ui.define([
             columns: columnData
          });
          oTable.setModel(oModel);
+         console.log("column table data ",columnData );
 
-         // bind rows and columns
-         oTable.bindColumns("/columns", function(sId, oContext) {
-            var columnName = oContext.getObject().columnName;
-            var oColumn = new Column({
-               label: columnName,
-               template: columnName,
-               sortProperty: columnName,
-               showFilterMenuEntry: true
+         if (doBind) {
+            // bind rows and columns
+            oTable.bindColumns("/columns", function(sId, oContext) {
+               var columnName = oContext.getObject().columnName;
+               var oColumn = new Column({
+                  label: columnName,
+                  template: columnName,
+                  sortProperty: columnName,
+                  showFilterMenuEntry: true
+               });
+               return oColumn;
             });
-
-            return oColumn;
-         });
-
-         oTable.bindRows("/rows");
-
+            oTable.bindRows("/rows");
+         }
       },
 
       buildTableHeader: function()
@@ -153,8 +158,10 @@ sap.ui.define([
       },
 
       onSceneCreate: function(element, id) {
-         // console.log("EveTable onSceneChanged", id);
-         this.build();
+         console.log("EveTable onSceneChanged", id);
+         this.locateEveTable();
+         this.buildTableHeader();
+         this.buildTableBody(true);
       },
 
       UpdateMgr : function(mgr) {
@@ -306,8 +313,9 @@ sap.ui.define([
       },
 
       endChanges : function(oEvent) {
-         // console.log("table controller endChanges ",this.eveTable );
-         this.build();
+         console.log("table controller endChanges ",this.eveTable );
+          this.locateEveTable();
+         this.buildTableBody(false);
       },
 
       elementRemoved: function(elId) {
