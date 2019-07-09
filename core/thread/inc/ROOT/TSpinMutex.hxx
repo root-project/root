@@ -35,7 +35,8 @@ namespace ROOT {
     *    // Wait until main() sends data
     *    std::unique_lock<ROOT::TSpinMutex> lk(m);
     *    cv.wait(lk, []{return ready;});
-    * [...]
+    *    [...]
+    * }
     * ~~~ {.cpp}
     */
    class TSpinMutex {
