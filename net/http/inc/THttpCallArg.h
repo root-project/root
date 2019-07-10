@@ -63,6 +63,9 @@ protected:
 
    void ReplaceAllinContent(const std::string &from, const std::string &to, bool once = false);
 
+   /** Method used to modify content of web page used by web socket handler */
+   virtual void CheckWSPageContent(THttpWSHandler *) {}
+
 private:
    std::shared_ptr<THttpWSEngine> fWSEngine; ///<!  web-socket engine, which supplied to run created web socket
 
@@ -71,9 +74,6 @@ private:
 
    void AssignWSId();
    std::shared_ptr<THttpWSEngine> TakeWSEngine();
-
-   /** Method used to modify content of web page used by web socket handler */
-   virtual void CheckWSPageContent(THttpWSHandler *) {}
 
 public:
    explicit THttpCallArg() = default;
