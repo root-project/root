@@ -183,6 +183,8 @@ private:
    /// If the number of required rows has been parsed, returns false.
    bool HasNext() { return fEntries > 0; }
 
+   void EnsureCurrentColumnWidth(size_t w);
+
 public:
    ////////////////////////////////////////////////////////////////////////////
    /// Creates an RDisplay to print the event values
