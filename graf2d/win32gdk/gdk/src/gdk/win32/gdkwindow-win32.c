@@ -137,6 +137,8 @@ void gdk_window_init(void)
    SystemParametersInfo(SPI_GETWORKAREA, 0, &r, 0);
    width = r.right - r.left;
    height = r.bottom - r.top;
+   width = GetSystemMetrics(78 /*SM_CXVIRTUALSCREEN*/);
+   height = GetSystemMetrics(79 /*SM_CYVIRTUALSCREEN*/);
 
    gdk_parent_root = gdk_win32_window_alloc();
    private = (GdkWindowPrivate *) gdk_parent_root;
@@ -396,7 +398,7 @@ GdkWindow *gdk_window_new(GdkWindow * parent,
       rect.right = rect.left + private->drawable.width;
       rect.bottom = rect.top + private->drawable.height;
 
-      SafeAdjustWindowRectEx(&rect, dwStyle, FALSE, dwExStyle);
+      //SafeAdjustWindowRectEx(&rect, dwStyle, FALSE, dwExStyle);
 
       if (x != CW_USEDEFAULT) {
          x = rect.left;
@@ -768,7 +770,7 @@ void gdk_window_move(GdkWindow * window, gint x, gint y)
 
          dwStyle = GetWindowLong(GDK_DRAWABLE_XID(window), GWL_STYLE);
          dwExStyle = GetWindowLong(GDK_DRAWABLE_XID(window), GWL_EXSTYLE);
-         SafeAdjustWindowRectEx(&rect, dwStyle, FALSE, dwExStyle);
+         //SafeAdjustWindowRectEx(&rect, dwStyle, FALSE, dwExStyle);
 
          x = rect.left;
          y = rect.top;
