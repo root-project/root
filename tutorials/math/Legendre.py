@@ -6,7 +6,7 @@
 ## \macro_image
 ## \macro_code
 ##
-## \author Alberto Ferro
+## \author Alberto Ferro, Massimiliano Galli
 
 
 import ROOT
@@ -28,11 +28,14 @@ for nu in range(5):
 L[0].SetMaximum(1)
 L[0].SetMinimum(-1)
 L[0].SetTitle("Legendre polynomials")
-leg.AddEntry(L[0].Draw(), " L_{0}(x)", "l")
-leg.AddEntry(L[1].Draw("same"), " L_{1}(x)", "l")
-leg.AddEntry(L[2].Draw("same"), " L_{2}(x)", "l")
-leg.AddEntry(L[3].Draw("same"), " L_{3}(x)", "l")
-leg.AddEntry(L[4].Draw("same"), " L_{4}(x)", "l")
-leg.Draw()
+
+for idx, val in enumerate(L):
+    leg.AddEntry(val, " L_{}(x)".format(idx), "l")
+    if idx == 0:
+        val.Draw()
+    else:
+        val.Draw("same")
+
+leg.Draw("same")
 
 
