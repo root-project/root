@@ -74,9 +74,14 @@ void server()
    window = ROOT::Experimental::RWebWindow::Create();
 
    // Important - defines name of openui5 widget
-   // "localapp" prefix indicates that all files located in current directory
+   // "localapp" prefix will be point on current directory, where script executed
    // "localapp.view.TestPanel" means file ./view/TestPanel.view.xml will be loaded
    window->SetPanelName("localapp.view.TestPanel");
+
+   // Provide window client version to control browser cache
+   // When value changed, URL for JSROOT, UI5 and local files will differ
+   // Therefore web browser automatically reload all these files
+   // window->SetClientVersion("1.2");
 
    // these are different callbacks
    window->SetCallBacks(ProcessConnection, ProcessData, ProcessCloseConnection);
