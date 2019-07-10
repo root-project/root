@@ -833,6 +833,7 @@ INPUT                  = . \
                          ../../gui/guihtml/ \
                          ../../gui/recorder/ \
                          ../../gui/sessionviewer/ \
+                         ../../gui/webdisplay \
                          ../../hist/ \
                          ../../html/ \
                          ../../io/dcache/ \
