@@ -135,6 +135,7 @@ private:
    unsigned fWidth{0};                              ///<! initial window width when displayed
    unsigned fHeight{0};                             ///<! initial window height when displayed
    float fOperationTmout{50.};                      ///<! timeout in seconds to perform synchronous operation, default 50s
+   std::string fClientVersion;                      ///<! configured client version, used as prefix in scripts URL
    std::string fProtocolFileName;                   ///<! local file where communication protocol will be written
    int fProtocolCnt{-1};                            ///<! counter for protocol recording
    unsigned fProtocolConnId{0};                     ///<! connection id, which is used for writing protocol
@@ -237,6 +238,17 @@ public:
    /////////////////////////////////////////////////////////////////////////
    /// returns true if only native (own-created) connections are allowed
    bool IsNativeOnlyConn() const { return fNativeOnlyConn; }
+
+   /////////////////////////////////////////////////////////////////////////
+   /// Set client version, used as prefix in scripts URL
+   /// When changed, web browser will reload all related JS files while full URL will be different
+   /// Default is empty value - no extra string in URL
+   /// Version should be string like "1.2" or "ver1.subv2" and not contain any special symbols
+   void SetClientVersion(const std::string &vers) { fClientVersion = vers; }
+
+   /////////////////////////////////////////////////////////////////////////
+   /// Returns current client version
+   std::string GetClientVersion() const { return fClientVersion; }
 
    int NumConnections();
 
