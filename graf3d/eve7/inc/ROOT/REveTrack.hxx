@@ -223,8 +223,8 @@ public:
    REveTrack *FindTrackByLabel(Int_t label); // *MENU*
    REveTrack *FindTrackByIndex(Int_t index); // *MENU*
 
-   virtual void CopyVizParams(const REveElement *el) override;
-   virtual void WriteVizParams(std::ostream &out, const TString &var) override;
+   void CopyVizParams(const REveElement *el) override;
+   void WriteVizParams(std::ostream &out, const TString &var) override;
 
    TClass *ProjectedClass(const REveProjection *p) const override;
 };

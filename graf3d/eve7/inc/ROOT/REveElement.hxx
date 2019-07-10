@@ -158,11 +158,11 @@ public:
    Bool_t         ApplyVizTag(const TString& tag, const TString& fallback_tag="");
 
    virtual void   PropagateVizParamsToProjecteds();
-   virtual void   PropagateVizParamsToChildren(REveElement* el=0);
+   virtual void   PropagateVizParamsToChildren(REveElement* el = nullptr);
    virtual void   CopyVizParams(const REveElement* el);
    virtual void   CopyVizParamsFromDB();
-   void           SaveVizParams (std::ostream& out, const TString& tag, const TString& var);
-   virtual void   WriteVizParams(std::ostream& out, const TString& var);
+   void           SaveVizParams (std::ostream &out, const TString &tag, const TString &var);
+   virtual void   WriteVizParams(std::ostream &out, const TString &var);
 
    REveElement*   GetMaster();
    REveCompound*  GetCompound()                { return fCompound; }
@@ -174,10 +174,10 @@ public:
    REveScene*   GetScene()  { return fScene;  }
    REveElement* GetMother() { return fMother; }
 
-   virtual void AddAunt(REveAunt* au);
-   virtual void RemoveAunt(REveAunt* au);
-   virtual void CheckReferenceCount(const std::string& from="<unknown>");
-   virtual void CollectScenes(List_t& scenes);
+   virtual void AddAunt(REveAunt *au);
+   virtual void RemoveAunt(REveAunt *au);
+   virtual void CheckReferenceCount(const std::string &from = "<unknown>");
+   virtual void CollectScenes(List_t &scenes);
 
    AuntList_t       &RefAunts()       { return fAunts; }
    const AuntList_t &RefAunts() const { return fAunts; }
@@ -214,13 +214,13 @@ public:
 
    TClass *IsA() const;
 
-   virtual void ExportToCINT(char *var_name); // *MENU*
+   virtual void ExportToCINT(const char *var_name); // *MENU*
 
-   virtual Bool_t AcceptElement(REveElement* el);
+   virtual Bool_t AcceptElement(REveElement *el);
 
-   virtual void AddElement(REveElement* el);
-   virtual void RemoveElement(REveElement* el);
-   virtual void RemoveElementLocal(REveElement* el);
+   virtual void AddElement(REveElement *el);
+   virtual void RemoveElement(REveElement *el);
+   virtual void RemoveElementLocal(REveElement *el);
    virtual void RemoveElements();
    virtual void RemoveElementsLocal();
 
@@ -253,8 +253,8 @@ public:
 
    virtual Bool_t CanEditMainColor() const   { return fCanEditMainColor; }
    void           SetEditMainColor(Bool_t x) { fCanEditMainColor = x;    }
-   Color_t* GetMainColorPtr()        const   { return fMainColorPtr;     }
-   void     SetMainColorPtr(Color_t* colptr) { fMainColorPtr = colptr;   }
+   Color_t       *GetMainColorPtr()        const   { return fMainColorPtr;     }
+   void           SetMainColorPtr(Color_t *colptr) { fMainColorPtr = colptr;   }
 
    virtual Bool_t  HasMainColor() const { return fMainColorPtr != nullptr; }
    virtual Color_t GetMainColor() const { return fMainColorPtr ? *fMainColorPtr : 0; }
