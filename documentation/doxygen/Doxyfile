@@ -980,7 +980,7 @@ EXCLUDE_PATTERNS       = */G__* \
                          converttonotebook.py \
                          makeimage.py \
                          parallelNotebooks.py \
-                         LinkDef.h \
+                         LinkDef*.h \
                          */io/io/res/* \
                          */src/lexertk.hpp
 
