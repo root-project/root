@@ -1103,6 +1103,9 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 ///                                The errors are as big as if one fitted to 100 events.
 ///       </table>
 ///
+/// <tr><td> `PrefitDataFraction(double fraction)`
+///                                            <td>  Runs a prefit on a small dataset of size fraction*(actual data size). This can speed up fits
+///                                                  by finding good starting values for the parameters for the actual fit.
 ///
 /// <tr><th><th> Options to control informational output
 /// <tr><td> `Verbose(Bool_t flag)`            <td>  Flag controls if verbose output is printed (NLL, parameter changes during fit
@@ -1140,13 +1143,13 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooCmdArg& arg1, const Ro
 
 RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList) 
 {
-
   // Select the pdf-specific commands 
   RooCmdConfig pc(Form("RooAbsPdf::fitTo(%s)",GetName())) ;
 
   RooLinkedList fitCmdList(cmdList) ;
   RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,RangeWithName,SumCoefRange,NumCPU,SplitRange,Constrained,Constrain,ExternalConstraints,CloneData,GlobalObservables,GlobalObservablesTag,OffsetLikelihood") ;
 
+  pc.defineDouble("prefit", "Prefit",0,0);
   pc.defineString("fitOpt","FitOptions",0,"") ;
   pc.defineInt("optConst","Optimize",0,2) ;
   pc.defineInt("verbose","Verbose",0,0) ;
@@ -1186,6 +1189,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   }
 
   // Decode command line arguments
+  Double_t prefit = pc.getDouble("prefit");
   const char* fitOpt = pc.getString("fitOpt",0,kTRUE) ;
   Int_t optConst = pc.getInt("optConst") ;
   Int_t verbose  = pc.getInt("verbose") ;
@@ -1232,6 +1236,41 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
     coutW(InputArguments) << "RooAbsPdf::fitTo(" << GetName() << ") WARNING: sum-of-weights correction does not apply to MINOS errors" << endl ;
   }
     
+  if (prefit != 0)  {
+    size_t nEvents = prefit*data.numEntries();
+    if (prefit > 0.5 || nEvents < 100)  {
+      oocoutW(this,InputArguments) << "PrefitDataFraction should be in suitable range. With the current PrefitDataFraction=" << prefit << ", the number of events would be " << nEvents<< " out of " << data.numEntries() << ". Skipping prefit..." << endl;
+    }
+    else {
+      size_t step = data.numEntries()/nEvents;
+      RooDataSet tiny("tiny","tiny",*data.get());
+      for (int i=0; i<data.numEntries(); i+=step)
+      {
+        const RooArgSet *event = data.get(i);
+        tiny.add(*event,data.weight());
+      }
+      RooLinkedList tinyCmdList(cmdList) ;
+      pc.filterCmdList(tinyCmdList,"Prefit,Hesse,Minos,Verbose,Save,Timer");
+      RooCmdArg prefit_option = RooFit::PrefitDataFraction(0);
+      RooCmdArg minos_option = RooFit::Minos(false);
+      RooCmdArg hesse_option = RooFit::Hesse(false);
+      RooCmdArg verbose_option = RooFit::Verbose(false);
+      RooCmdArg save_option = RooFit::Save(false);
+      RooCmdArg timer_option = RooFit::Timer(false);
+      RooCmdArg print_option = RooFit::PrintLevel(-1);
+      
+      tinyCmdList.Add((TObject*)&prefit_option);
+      tinyCmdList.Add((TObject*)&minos_option);
+      tinyCmdList.Add((TObject*)&hesse_option);
+      tinyCmdList.Add((TObject*)&verbose_option);
+      tinyCmdList.Add((TObject*)&save_option);
+      tinyCmdList.Add((TObject*)&timer_option);
+      tinyCmdList.Add((TObject*)&print_option);
+      
+      fitTo(tiny,tinyCmdList);
+    }
+  }
+  
   RooAbsReal* nll = createNLL(data,nllCmdList) ;  
   RooFitResult *ret = 0 ;    
 
