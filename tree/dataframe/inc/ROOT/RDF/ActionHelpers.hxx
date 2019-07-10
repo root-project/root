@@ -1349,6 +1349,7 @@ public:
       // With this code, we set the value of the pointer in the output branch anew when needed.
       // Nota bene: the extra ",0" after the invocation of SetAddress, is because that method returns void and
       // we need an int for the expander list.
+      (void)slot; // avoid bogus 'unused parameter' warning
       int expander[] = {(fBranches[slot][S] && fBranchAddresses[slot][S] != GetData(values)
                          ? fBranches[slot][S]->SetAddress(GetData(values)),
                          fBranchAddresses[slot][S] = GetData(values), 0 : 0, 0)...,
@@ -1372,6 +1373,7 @@ public:
    template <std::size_t... S>
    void UpdateBoolArrays(unsigned int slot, BranchTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
+      (void)slot; // avoid bogus 'unused parameter' warning
       int expander[] = {
          (UpdateBoolArray(fBoolArrays[slot], values, fOutputBranchNames[S], *fOutputTrees[slot]), 0)..., 0};
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
