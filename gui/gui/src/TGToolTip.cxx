@@ -330,7 +330,7 @@ Bool_t TGToolTip::HandleTimer(TTimer *)
       fLabel->SetWrapLength((screenW/2)-15);
    Resize(GetDefaultSize());
 
-   if (x + fWidth > screenW) {
+   if (x + (Int_t)fWidth > (Int_t)screenW) {
       x = screenW - fWidth;
       move += 1;
    }
