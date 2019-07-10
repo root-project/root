@@ -28,76 +28,74 @@ static std::string HierarchialFieldOrder(const ROOT::Experimental::Detail::RFiel
 
 //---------------------------- RPrintVisitor ------------------------------------
 
-std::string ROOT::Experimental::RPrintVisitor::KeyString(const ROOT::Experimental::Detail::RFieldBase &field, int level)
+std::string ROOT::Experimental::RPrintVisitor::MakeKeyString(const ROOT::Experimental::Detail::RFieldBase &field, int level)
 {
-   std::string goesOut{""};
-   if(level==1) {
-      goesOut += "Field ";
-      goesOut += std::to_string(field.GetIndex());
-      goesOut += std::string(std::max(0, fAvailableSpaceKeyString-6-static_cast<int>(std::to_string(field.GetIndex()).size())), ' ');
+   std::string result{""};
+   if (level==1) {
+      result += "Field ";
+      result += std::to_string(field.GetIndex());
    } else {
-      if(field.IsLastInParentSubField()) fFlagforVerticalLines.at(level-2) = false;
+      if (field.GetIndex() == field.GetNumSiblings()) fFlagforVerticalLines.at(level-2) = false;
       else fFlagforVerticalLines.at(level-2) = true;
       for(int i = 0; i < level-2; ++i) {
-         if(fFlagforVerticalLines.at(i)) goesOut+= "| "; else goesOut += "  ";
+         if(fFlagforVerticalLines.at(i)) result+= "| "; else result += "  ";
       }
-      goesOut += "|__Field ";
-      goesOut += HierarchialFieldOrder(field);
-      goesOut += std::string(std::max(0, fAvailableSpaceKeyString-2*(level-2)-static_cast<int>(HierarchialFieldOrder(field).size())-9), ' ');
+      result += "|__Field ";
+      result += HierarchialFieldOrder(field);
    }
-   return goesOut;
+   return result;
 }
 
-std::string ROOT::Experimental::RPrintVisitor::ValueString(const ROOT::Experimental::Detail::RFieldBase &field)
+std::string ROOT::Experimental::RPrintVisitor::MakeValueString(const ROOT::Experimental::Detail::RFieldBase &field)
 {
    std::string nameAndType{field.GetName() + " (" + field.GetType() + ")"};
-   nameAndType += std::string(std::max(0, fAvailableSpaceValueString-static_cast<int>(nameAndType.size())),' '); //adding whitespaces
    return nameAndType;
 }
 
 // Entire function only prints 1 Line, when if statement is disregarded.
-void ROOT::Experimental::RPrintVisitor::visitField(const ROOT::Experimental::Detail::RFieldBase &field, int level)
+void ROOT::Experimental::RPrintVisitor::VisitField(const ROOT::Experimental::Detail::RFieldBase &field, int level)
 {
-   if(level==1) {
-      for(int i = 0; i < fWidth; ++i) fOutput << fFrameSymbol; fOutput << '\n';
+   if (level==1)
+   {
+      for (int i = 0; i < fWidth; ++i) fOutput << fFrameSymbol; fOutput << std::endl;
    }
    fOutput << fFrameSymbol << ' ';
-   fOutput << CutStringAndAddEllipsisIfNeeded(KeyString(field, level), fAvailableSpaceKeyString);
+   fOutput << FitString(MakeKeyString(field, level), fAvailableSpaceKeyString);
    fOutput << " : ";
-   fOutput << CutStringAndAddEllipsisIfNeeded(ValueString(field), fAvailableSpaceValueString);
-   fOutput << fFrameSymbol << '\n';
+   fOutput << FitString(MakeValueString(field), fAvailableSpaceValueString);
+   fOutput << fFrameSymbol << std::endl;
 }
 
 //---------------------- RPrepareVisitor -------------------------------
 
 
-void ROOT::Experimental::RPrepareVisitor::visitField(const ROOT::Experimental::Detail::RFieldBase &/*field*/, int level)
+void ROOT::Experimental::RPrepareVisitor::VisitField(const ROOT::Experimental::Detail::RFieldBase &/*field*/, int level)
 {
    ++fNumFields;
-   if(level > fDeepestLevel) fDeepestLevel = level;
+   if (level > fDeepestLevel) fDeepestLevel = level;
 }
 
 //------------------------ Helper functions -----------------------------
 
 //E.g. ("ExampleString" , space= 8) => "Examp..."
-std::string ROOT::Experimental::CutStringAndAddEllipsisIfNeeded(const std::string &toCut, int maxAvailableSpace)
-{
-   if (maxAvailableSpace < 3) return "";
-   if (static_cast<int>(toCut.size()) > maxAvailableSpace) {
-      return std::string(toCut, 0, maxAvailableSpace - 3) + "...";
-   }
-   return toCut;
+std::string ROOT::Experimental::FitString(const std::string &str, int availableSpace) {
+   int strSize{static_cast<int>(str.size())};
+   if (strSize <= availableSpace)
+      return str + std::string(availableSpace - strSize, ' ');
+   else if (availableSpace < 3)
+      return std::string(availableSpace, '.');
+   return std::string(str, 0, availableSpace - 3) + "...";
 }
 
-//Returns string of form "1" or "2.1.1"
+//Returns std::string of form "1" or "2.1.1"
 std::string HierarchialFieldOrder(const ROOT::Experimental::Detail::RFieldBase &field)
 {
    std::string hierarchialOrder{std::to_string(field.GetIndex())};
-   const ROOT::Experimental::Detail::RFieldBase* ParentPtr{field.GetParent()};
+   const ROOT::Experimental::Detail::RFieldBase* parentPtr{field.GetParent()};
    // To avoid having the index of the RootField (-1) in the return value, it is checked if the grandparent is a nullptr (in that case RootField is parent)
-   while(ParentPtr && ParentPtr->GetParent()) {
-      hierarchialOrder = std::to_string(ParentPtr->GetIndex()) + "." + hierarchialOrder;
-      ParentPtr = ParentPtr->GetParent();
+   while (parentPtr && parentPtr->GetParent()) {
+      hierarchialOrder = std::to_string(parentPtr->GetIndex()) + "." + hierarchialOrder;
+      parentPtr = parentPtr->GetParent();
    }
    return hierarchialOrder;
 }

@@ -92,7 +92,7 @@ void Analyze() {
    auto ntuple = RNTupleReader::Open(std::move(model), "Staff", kNTupleFileName);
 
    // Quick overview of the ntuple's key meta-data, uncomment to see it.
-   //std::cout << ntuple->GetInfo();
+   //ntuple->GetInfo();
     
    // Quick overview of the ntuple and list of fields.
    ntuple->Print();

@@ -23,8 +23,8 @@
 
 #include <iterator>
 #include <memory>
-#include <utility>
 #include <sstream>
+#include <utility>
 
 namespace ROOT {
 namespace Experimental {
@@ -131,15 +131,11 @@ public:
 
    NTupleSize_t GetNEntries() const { return fNEntries; }
 
-   std::string GetInfo(const ENTupleInfo what = ENTupleInfo::kSummary);
+   void GetInfo(std::ostream &output = std::cout, const ENTupleInfo what = ENTupleInfo::kSummary);
    
    /// Prints a detailed summary of the ntuple, including a list of fields.
    void Print(std::ostream &output = std::cout, char frameSymbol = '*', int width = 80);
-    
-   /// Returns name associated to the ntuple
-   std::string GetName() const { return fSource->GetDescriptor().GetName(); }
-    
-
+   
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the ntuple.
    /// On I/O errors, raises an expection.
    void LoadEntry(NTupleSize_t index) { LoadEntry(index, fModel->GetDefaultEntry()); }
