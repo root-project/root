@@ -5,6 +5,7 @@
 #include <sstream>
 #include <streambuf>
 #include <map>
+#include <vector>
 
 #include "bdt.h"
 
@@ -41,6 +42,59 @@ void print_json_type(json j){
   else if (j.type() == json::value_t::string){my_type = "string";}
   std::cout << "Type: " << my_type << '\n';
 }
+
+
+
+void check_params(json j, int max_counter, int counter=0){
+
+  std::string params[7] = {"depth",
+                            "no",
+                            "split_condition",
+                            "nodeid",
+                            "split",
+                            "yes",
+                            "children"};
+
+  for (int i = 0; i<j.size(); i++){
+    for (auto &mess : params){
+      if ((mess == "children") && (counter<max_counter)){
+        counter++;
+        check_params(j[i][mess],max_counter, counter);
+      }
+      else{
+        std::cout << mess <<": " <<j[0]["children"][i][mess] << std::endl;
+      }
+    }
+  }
+}
+
+void check_params2(json j, int max_counter, int counter=0){
+
+  std::string params[7] = {"depth",
+                            "no",
+                            "split_condition",
+                            "nodeid",
+                            "split",
+                            "yes",
+                            "children"};
+
+  for (int i = 0; i<j.size(); i++){
+    for (auto &mess : params){
+    //for (auto &mess : j[i]){
+      if (mess == "leaf"){
+        std::cout<< "FOUND\n";
+      }
+      else if ((mess == "children") && (counter<max_counter)){
+        counter++;
+        check_params2(j[i][mess],max_counter, counter);
+      }
+      else{
+        std::cout << mess <<": " <<j[i]["children"][i][mess] << std::endl;
+      }
+    }
+  }
+}
+
 
 
 
@@ -132,19 +186,38 @@ int main() {
   n2.child_1 = &n4; n2.child_2 = &n5;
   n3.child_1 = &n6; n3.child_2 = &n6;
 
-
-  std::cout << n2.kind << std::endl;
-  std::cout << n7.kind << std::endl;
   //Node n2;  Node n3;  Node n4;  Node n5;  Node n6;  Node n7;
 
-  std::map<unsigned int, AbstractNode> level_0;
+  std::vector<AbstractNode*> nodes;
+  for (auto &node : normalNodes){
+    nodes.push_back(&node);
+  }
+
+  for (auto &node : leafNodes){
+    nodes.push_back(&node);
+  }
+
+  for (auto node : nodes){
+    std::cout << node->kind << std::endl;
+  }
+
 
   Tree my_tree;
   /*
   std::map<unsigned int, AbstractNode> level_1;
   std::map<unsigned int, AbstractNode> level_2;
   */
+  check_params2(j3, 2);
+  std::cout << "\n***** pause *****" << std::endl;
 
+  for (auto &mess: j3[0]){
+    std::cout << "***  " << mess << "  ***\n";
+  }
+  /*
+  for (json::iterator it = o.begin(); it != o.end(); ++it) {
+  std::cout << it.key() << " : " << it.value() << "\n";
+}
+  */
   //my_tree.nodes[]
   std::cout << "\n***** END *****" << std::endl;
 } // End main
