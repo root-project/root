@@ -437,7 +437,7 @@ public:
   ///
   ~MatrixMulOp() {}
 
-  /// calc $\sum_{j} a_{ik} * b_{kj}$
+  /// calc \f$\sum_{j} a_{ik} * b_{kj}\f$
   inline typename MatrixA::value_type apply(unsigned int i) const {
     return meta_matrix_dot<D-1>::f(lhs_, rhs_, i);
   }

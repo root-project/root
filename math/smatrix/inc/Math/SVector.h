@@ -175,7 +175,7 @@ public:
    };
 
 
-   /// return dimension $D$
+   /// return dimension \f$D\f$
    inline static unsigned int Dim() { return D; }
    /// access the parse tree. Index starts from zero
    T apply(unsigned int i) const;
