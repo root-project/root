@@ -1254,8 +1254,7 @@ void TGPopupMenu::PlaceMenu(Int_t x, Int_t y, Bool_t stick_mode, Bool_t grab_poi
          x = rw - abs(rx) - fMenuWidth;
       if ((y > 0) && (y + abs(ry) + (Int_t)fMenuHeight > (Int_t)rh))
          y = rh - fMenuHeight;
-   }
-   else {
+   } else {
       if (x < 0) x = 0;
       if (x + fMenuWidth > rw) x = rw - fMenuWidth;
       if (y < 0) y = 0;

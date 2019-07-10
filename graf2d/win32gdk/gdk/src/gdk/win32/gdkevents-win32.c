@@ -62,6 +62,9 @@
 
 #define WINDOW_PRIVATE(wp) GDK_WINDOW_WIN32DATA (wp)
 
+#define GET_X_LPARAM(lp)   ((int)(short)LOWORD(lp))
+#define GET_Y_LPARAM(lp)   ((int)(short)HIWORD(lp))
+
 typedef struct _GdkIOClosure GdkIOClosure;
 typedef struct _GdkEventPrivate GdkEventPrivate;
 
@@ -167,8 +170,8 @@ inner_window_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
    msg.lParam = lParam;
    msg.time = GetTickCount();
    pos = GetMessagePos();
-   msg.pt.x = LOWORD(pos);
-   msg.pt.y = HIWORD(pos);
+   msg.pt.x = GET_X_LPARAM(pos);
+   msg.pt.y = GET_Y_LPARAM(pos);
 
    event.flags = GDK_EVENT_PENDING;
    if (gdk_event_translate(&event.event, &msg, &ret_val_flag, &ret_val)) {
@@ -4506,8 +4509,8 @@ static void synthesize_crossing_events(GdkWindow * window, MSG * xevent)
       gdk_window_ref(event->crossing.window);
       event->crossing.subwindow = NULL;
       event->crossing.time = xevent->time;
-      event->crossing.x = LOWORD(xevent->lParam);
-      event->crossing.y = HIWORD(xevent->lParam);
+      event->crossing.x = GET_X_LPARAM(xevent->lParam);
+      event->crossing.y = GET_Y_LPARAM(xevent->lParam);
       event->crossing.x_root = (gfloat) xevent->pt.x;
       event->crossing.y_root = (gfloat) xevent->pt.y;
       event->crossing.mode = GDK_CROSSING_NORMAL;
@@ -4559,8 +4562,8 @@ translate_mouse_coords(GdkWindow * window1,
 {
    POINT pt;
 
-   pt.x = LOWORD(xevent->lParam);
-   pt.y = HIWORD(xevent->lParam);
+   pt.x = GET_X_LPARAM(xevent->lParam);
+   pt.y = GET_Y_LPARAM(xevent->lParam);
    ClientToScreen(GDK_DRAWABLE_XID(window1), &pt);
    ScreenToClient(GDK_DRAWABLE_XID(window2), &pt);
    xevent->lParam = MAKELPARAM(pt.x, pt.y);
@@ -4880,8 +4883,8 @@ gdk_event_translate(GdkEvent * event,
        * around that. Also, the position is in screen coordinates, not
        * client coordinates as with the button messages.
        */
-      pt.x = LOWORD(xevent->lParam);
-      pt.y = HIWORD(xevent->lParam);
+      pt.x = GET_X_LPARAM(xevent->lParam);
+      pt.y = GET_Y_LPARAM(xevent->lParam);
       if ((hwnd = WindowFromPoint(pt)) == NULL)
          goto bypass_switch;
 
@@ -4914,8 +4917,8 @@ gdk_event_translate(GdkEvent * event,
       event->scroll.time = xevent->time;
       event->scroll.x = (gint16) pt.x;
       event->scroll.y = (gint16) pt.y;
-      event->scroll.x_root = (gint16) LOWORD(xevent->lParam);
-      event->scroll.y_root = (gint16) HIWORD(xevent->lParam);
+      event->scroll.x_root = (gint16) GET_X_LPARAM(xevent->lParam);
+      event->scroll.y_root = (gint16) GET_Y_LPARAM(xevent->lParam);
       event->scroll.pressure = 0.5;
       event->scroll.xtilt = 0;
       event->scroll.ytilt = 0;
@@ -5479,7 +5482,7 @@ gdk_event_translate(GdkEvent * event,
                g_print("WM_%cBUTTONDOWN: %#x  (%d,%d)\n",
                        " LMR"[button],
                        xevent->hwnd,
-                       LOWORD(xevent->lParam), HIWORD(xevent->lParam)));
+                       GET_X_LPARAM(xevent->lParam), GET_Y_LPARAM(xevent->lParam)));
 
       if (((GdkWindowPrivate *) window)->extension_events != 0
           && gdk_input_ignore_core) {
@@ -5527,8 +5530,8 @@ gdk_event_translate(GdkEvent * event,
       event->button.time = xevent->time;
       if (window != orig_window)
          translate_mouse_coords(orig_window, window, xevent);
-      event->button.x = curX = (gint16) LOWORD(xevent->lParam);
-      event->button.y = curY = (gint16) HIWORD(xevent->lParam);
+      event->button.x = curX = (gint16) GET_X_LPARAM(xevent->lParam);
+      event->button.y = curY = (gint16) GET_Y_LPARAM(xevent->lParam);
       event->button.x_root = xevent->pt.x;
       event->button.y_root = xevent->pt.y;
       event->button.pressure = 0.5;
@@ -5558,7 +5561,7 @@ gdk_event_translate(GdkEvent * event,
                g_print("WM_%cBUTTONUP: %#x  (%d,%d)\n",
                        " LMR"[button],
                        xevent->hwnd,
-                       LOWORD(xevent->lParam), HIWORD(xevent->lParam)));
+                       GET_X_LPARAM(xevent->lParam), GET_Y_LPARAM(xevent->lParam)));
 
       window = find_window_for_pointer_event (window, xevent);
 
@@ -5583,8 +5586,8 @@ gdk_event_translate(GdkEvent * event,
 
          event->button.window = window;
          event->button.time = xevent->time;
-         event->button.x = (gint16) LOWORD(xevent->lParam);
-         event->button.y = (gint16) HIWORD(xevent->lParam);
+         event->button.x = (gint16) GET_X_LPARAM(xevent->lParam);
+         event->button.y = (gint16) GET_Y_LPARAM(xevent->lParam);
          event->button.x_root = xevent->pt.x;
          event->button.y_root = xevent->pt.y;
          event->button.pressure = 0.5;
@@ -5645,7 +5648,7 @@ gdk_event_translate(GdkEvent * event,
       GDK_NOTE(EVENTS,
                g_print("WM_MOUSEMOVE: %#x  %#x (%d,%d)\n",
                        xevent->hwnd, xevent->wParam,
-                       LOWORD(xevent->lParam), HIWORD(xevent->lParam)));
+                       GET_X_LPARAM(xevent->lParam), GET_Y_LPARAM(xevent->lParam)));
 
       track_mouse_event(xevent->hwnd);
 
@@ -5673,11 +5676,11 @@ gdk_event_translate(GdkEvent * event,
          translate_mouse_coords(orig_window, window, xevent);
 
       if (window == curWnd
-         && (gint16) LOWORD(xevent->lParam) == curX
-         && (gint16) HIWORD(xevent->lParam) == curY) break;
+         && (gint16) GET_X_LPARAM(xevent->lParam) == curX
+         && (gint16) GET_Y_LPARAM(xevent->lParam) == curY) break;
 
-      event->motion.x = curX = (gint16) LOWORD(xevent->lParam);
-      event->motion.y = curY = (gint16) HIWORD(xevent->lParam);
+      event->motion.x = curX = (gint16) GET_X_LPARAM(xevent->lParam);
+      event->motion.y = curY = (gint16) GET_Y_LPARAM(xevent->lParam);
       event->motion.x_root = xevent->pt.x;
       event->motion.y_root = xevent->pt.y;
       curXroot = event->motion.x_root;
@@ -5703,7 +5706,7 @@ gdk_event_translate(GdkEvent * event,
       GDK_NOTE(EVENTS,
                g_print("WM_NCMOUSEMOVE: %#x  x,y: %d %d\n",
                        xevent->hwnd,
-                       LOWORD(xevent->lParam), HIWORD(xevent->lParam)));
+                       GET_X_LPARAM(xevent->lParam), GET_Y_LPARAM(xevent->lParam)));
       if (p_TrackMouseEvent == NULL
           && curWnd != NULL
           && (GDK_WINDOW_WIN32DATA(curWnd)->
@@ -5747,8 +5750,8 @@ gdk_event_translate(GdkEvent * event,
        * coordinates as with the button messages. I love the
        * consistency of Windows.
        */
-      pt.x = LOWORD(xevent->lParam);
-      pt.y = HIWORD(xevent->lParam);
+      pt.x = GET_X_LPARAM(xevent->lParam);
+      pt.y = GET_Y_LPARAM(xevent->lParam);
       if ((hwnd = WindowFromPoint(pt)) == NULL)
          break;
 
@@ -5792,8 +5795,8 @@ gdk_event_translate(GdkEvent * event,
       event->scroll.time = xevent->time;
       event->scroll.x = (gint16) pt.x;
       event->scroll.y = (gint16) pt.y;
-      event->scroll.x_root = (gint16) LOWORD(xevent->lParam);
-      event->scroll.y_root = (gint16) HIWORD(xevent->lParam);
+      event->scroll.x_root = (gint16) GET_X_LPARAM(xevent->lParam);
+      event->scroll.y_root = (gint16) GET_Y_LPARAM(xevent->lParam);
       event->scroll.pressure = 0.5;
       event->scroll.xtilt = 0;
       event->scroll.ytilt = 0;
@@ -6189,8 +6192,8 @@ gdk_event_translate(GdkEvent * event,
    case WM_MOVE:
       GDK_NOTE(EVENTS, g_print("WM_MOVE: %#x  (%d,%d)\n",
                                xevent->hwnd,
-                               LOWORD(xevent->lParam),
-                               HIWORD(xevent->lParam)));
+                               GET_X_LPARAM(xevent->lParam),
+                               GET_Y_LPARAM(xevent->lParam)));
 
       if (!(GDK_WINDOW_WIN32DATA(window)->event_mask & GDK_STRUCTURE_MASK))
          break;
@@ -6201,8 +6204,8 @@ gdk_event_translate(GdkEvent * event,
          event->type = GDK_CONFIGURE;
          event->configure.type = GDK_CONFIGURE;
          event->configure.window = window;
-         event->configure.x = LOWORD(xevent->lParam);
-         event->configure.y = HIWORD(xevent->lParam);
+         event->configure.x = GET_X_LPARAM(xevent->lParam);
+         event->configure.y = GET_Y_LPARAM(xevent->lParam);
          GetClientRect(xevent->hwnd, &rect);
          event->configure.width = rect.right;
          event->configure.height = rect.bottom;

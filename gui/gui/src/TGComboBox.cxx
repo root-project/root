@@ -136,10 +136,17 @@ void TGComboBoxPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
    // Parent is root window for the popup:
    gVirtualX->GetWindowSize(fParent->GetId(), rx, ry, rw, rh);
 
-   if (x < 0) x = 0;
-   if (x + fWidth > rw) x = rw - fWidth;
-   if (y < 0) y = 0;
-   if (y + fHeight > rh) y = rh - fHeight;
+   if (gVirtualX->InheritsFrom("TGWin32")) {
+      if ((x > 0) && ((x + abs(rx) + (Int_t)fWidth) > (Int_t)rw))
+         x = rw - abs(rx) - fWidth;
+      if ((y > 0) && (y + abs(ry) + (Int_t)fHeight > (Int_t)rh))
+         y = rh - fHeight;
+   } else {
+      if (x < 0) x = 0;
+      if (x + fWidth > rw) x = rw - fWidth;
+      if (y < 0) y = 0;
+      if (y + fHeight > rh) y = rh - fHeight;
+   }
 
    // remember the current selected entry
    if (fListBox == 0) {

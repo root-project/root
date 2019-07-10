@@ -1961,15 +1961,17 @@ void TGTransientFrame::CenterOnParent(Bool_t croot, EPlacement pos)
 
       gVirtualX->TranslateCoordinates(fMain->GetId(), GetParent()->GetId(),
                                       x, y, ax, ay, wdummy);
-      if (ax < 10)
-         ax = 10;
-      else if (ax + fWidth + 10 > dw)
-         ax = dw - fWidth - 10;
+      if (!gVirtualX->InheritsFrom("TGWin32")) {
+         if (ax < 10)
+            ax = 10;
+         else if (ax + fWidth + 10 > dw)
+            ax = dw - fWidth - 10;
 
-      if (ay < 20)
-         ay = 20;
-      else if (ay + fHeight + 50 > dh)
-         ay = dh - fHeight - 50;
+         if (ay < 20)
+            ay = 20;
+         else if (ay + fHeight + 50 > dh)
+            ay = dh - fHeight - 50;
+      }
 
    } else if (croot) {
 
