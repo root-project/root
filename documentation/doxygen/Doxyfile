@@ -972,6 +972,7 @@ EXCLUDE_PATTERNS       = */G__* \
                          */win32gdk/gdk/* \
                          */bindings/pyroot/*.py \
                          makeimage.C \
+                         makerootfile.C \
                          libs.C \
                          filter.cxx \
                          *gl2ps* \
