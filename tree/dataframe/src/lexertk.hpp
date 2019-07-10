@@ -965,6 +965,7 @@ public:
 
    inline void ignore_symbol(const std::string &symbol) { ignore_set_.insert(symbol); }
 
+   using token_inserter::insert;
    inline int insert(const lexertk::token &t0, const lexertk::token &t1, lexertk::token &new_token)
    {
       new_token.type = lexertk::token::e_mul;
@@ -1088,6 +1089,7 @@ public:
       error_token_.clear();
    }
 
+   using token_scanner::operator();
    bool operator()(const lexertk::token &t)
    {
       if (!t.value.empty() && (lexertk::token::e_string != t.type) && (lexertk::token::e_symbol != t.type) &&
@@ -1216,6 +1218,7 @@ public:
 
    bool result() { return error_list_.empty(); }
 
+   using token_scanner::operator();
    bool operator()(const lexertk::token &t0, const lexertk::token &t1)
    {
       set_t::value_type p = std::make_pair(t0.type, t1.type);
