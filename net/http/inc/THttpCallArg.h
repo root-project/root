@@ -61,8 +61,6 @@ protected:
 
    TString CountHeader(const TString &buf, Int_t number = -1111) const;
 
-   void ReplaceAllinContent(const std::string &from, const std::string &to, bool once = false);
-
    /** Method used to modify content of web page used by web socket handler */
    virtual void CheckWSPageContent(THttpWSHandler *) {}
 
@@ -201,6 +199,7 @@ public:
 
    void SetContent(const char *cont);
    void SetContent(std::string &&cont);
+   void ReplaceAllinContent(const std::string &from, const std::string &to, bool once = false);
 
    Bool_t CompressWithGzip();
 
