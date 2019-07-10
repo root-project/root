@@ -7179,7 +7179,7 @@ int TCling::SetClassAutoloading(int autoload) const
    // If no state change is required, exit early.
    // FIXME: In future we probably want to complain if we made a request which
    // was with the same state as before in order to catch programming errors.
-   if (autoload == IsClassAutoloadingEnabled())
+   if ((bool) autoload == IsClassAutoloadingEnabled())
       return autoload;
 
    assert(fClingCallbacks && "We must have callbacks!");
