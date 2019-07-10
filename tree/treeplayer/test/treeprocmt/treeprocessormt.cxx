@@ -1,8 +1,10 @@
+#include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <random>
 #include <string>
 #include <thread>
+#include <utility>
 
 #include <TFile.h>
 #include <TTree.h>
@@ -139,10 +141,10 @@ void WriteFileManyClusters(unsigned int nevents, const char *treename, const cha
       gSystem->Unlink(filename);
    }
 
-TEST(TreeProcessorMT, MaxTasks)
+TEST(TreeProcessorMT, LimitNTasks_CheckEntries)
 {
    const auto nEvents = 991;
-   const auto filename = "TreeProcessorMT_MaxTasks.root";
+   const auto filename = "TreeProcessorMT_LimitNTasks_CheckEntries.root";
    const auto treename = "t";
    WriteFileManyClusters(nEvents, treename, filename);
    auto nTasks = 0U;
@@ -167,6 +169,49 @@ TEST(TreeProcessorMT, MaxTasks)
    EXPECT_EQ(nTasks, 96U) << "Wrong number of tasks generated!\n";
    EXPECT_EQ(nEntriesCountsMap[10], 65U) << "Wrong number of tasks with 10 clusters each!\n";
    EXPECT_EQ(nEntriesCountsMap[11], 31U) << "Wrong number of tasks with 11 clusters each!\n";
+
+   gSystem->Unlink(filename);
+   ROOT::DisableImplicitMT();
+}
+
+void CheckClusters(std::vector<std::pair<Long64_t, Long64_t>>& clusters, Long64_t entries)
+{
+   using R = std::pair<Long64_t, Long64_t>;
+   // sort them
+   std::sort(clusters.begin(), clusters.end(), [](const R &p1, const R &p2) { return p1.first < p2.first; });
+   // check each end corresponds to the next start
+   const auto nClusters = clusters.size();
+   for (auto i = 0u; i < nClusters - 1; ++i)
+      EXPECT_EQ(clusters[i].second, clusters[i+1].first);
+   // check start and end correspond to true start and end
+   EXPECT_EQ(clusters.front().first, 0LL);
+   EXPECT_EQ(clusters.back().second, entries);
+}
+
+TEST(TreeProcessorMT, LimitNTasks_CheckClusters)
+{
+   const auto nEvents = 156;
+   const auto filename = "TreeProcessorMT_LimitNTasks_CheckClusters.root";
+   const auto treename = "t";
+   WriteFileManyClusters(nEvents, treename, filename);
+
+   std::mutex m;
+   std::vector<std::pair<Long64_t, Long64_t>> clusters;
+   auto get_clusters = [&m, &clusters](TTreeReader &t) {
+      std::lock_guard<std::mutex> l(m);
+      clusters.emplace_back(t.GetEntriesRange());
+   };
+
+   for (auto nThreads = 0; nThreads <= 4; ++nThreads) {
+      ROOT::DisableImplicitMT();
+      ROOT::EnableImplicitMT(nThreads);
+
+      ROOT::TTreeProcessorMT p(filename, treename);
+      p.Process(get_clusters);
+
+      CheckClusters(clusters, nEvents);
+      clusters.clear();
+   }
 
    gSystem->Unlink(filename);
    ROOT::DisableImplicitMT();
