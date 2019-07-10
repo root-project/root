@@ -39,8 +39,7 @@
 #include "RooBinning.h"
 #include "RooWorkspace.h"
 #include "RooSimultaneous.h"
-#include "RooStats/HistFactory/PiecewiseInterpolation.h"
-#include "RooStats/ModelConfig.h"
+//#include "RooStats/HistFactory/PiecewiseInterpolation.h"
 
 // plain ROOT includes
 #include "TH1.h"
@@ -1166,27 +1165,27 @@ namespace {
         ERROR("internal error, number of operators inconsistent!");
       }
 
-      RooAbsReal* obj;
+      RooAbsReal* obj0;
       int idx = 0;
       RooFIter itr1(couplings.fwdIterator());
-      while((obj = dynamic_cast<RooAbsReal*>(itr1.next()))){
-        if(obj->getVal() != 0){
-          DEBUG(obj->GetName() << " is non-zero for sample " << sample << " (idx=" << idx << ")!");
+      while((obj0 = dynamic_cast<RooAbsReal*>(itr1.next()))){
+        if(obj0->getVal() != 0){
+          DEBUG(obj0->GetName() << " is non-zero for sample " << sample << " (idx=" << idx << ")!");
           couplingsZero[idx] = false;
         } else {
-          DEBUG(obj->GetName() << " is zero for sample " << sample << " (idx=" << idx << ")!");
+          DEBUG(obj0->GetName() << " is zero for sample " << sample << " (idx=" << idx << ")!");
         }
         idx++;
       }
     }
 
     RooFIter itr2(flags.fwdIterator());
-    RooAbsReal* obj;    
-    while((obj = dynamic_cast<RooAbsReal*>(itr2.next()))){
+    RooAbsReal* obj1; 
+    while((obj1 = dynamic_cast<RooAbsReal*>(itr2.next()))){
       int nZero = 0;
       int nNonZero = 0;
       for(auto sampleit=inputFlags.begin(); sampleit!=inputFlags.end(); ++sampleit){
-        const auto& flag = sampleit->second.find(obj->GetName());
+        const auto& flag = sampleit->second.find(obj1->GetName());
         if(flag != sampleit->second.end()){
           if(flag->second == 0.) nZero++;
           else nNonZero++;
@@ -1195,20 +1194,20 @@ namespace {
           //          std::cout << "flag not found " << obj->GetName() << std::endl;
         }
       }
-      if(nZero > 0 && nNonZero == 0) flagsZero[obj->GetName()] = true;
-      else flagsZero[obj->GetName()] = false;
+      if(nZero > 0 && nNonZero == 0) flagsZero[obj1->GetName()] = true;
+      else flagsZero[obj1->GetName()] = false;
     }
     
     #ifdef _DEBUG_
     {
       int idx = 0;
-      RooAbsReal* obj;
+      RooAbsReal* obj2;
       RooFIter itr(couplings.fwdIterator());
-      while((obj = dynamic_cast<RooAbsReal*>(itr.next()))){
+      while((obj2 = dynamic_cast<RooAbsReal*>(itr.next()))){
         if(couplingsZero[idx]){
-          DEBUG(obj->GetName() << " is zero (idx=" << idx << ")");
+          DEBUG(obj2->GetName() << " is zero (idx=" << idx << ")");
         } else {
-          DEBUG(obj->GetName() << " is non-zero (idx=" << idx << ")");
+          DEBUG(obj2->GetName() << " is non-zero (idx=" << idx << ")");
         }
         idx++;
       }
@@ -1241,7 +1240,7 @@ namespace {
           const int exponent = morphfunc[i][j];
           if(exponent == 0) continue;
           RooAbsReal* coupling = dynamic_cast<RooAbsReal*>(couplings.at(j));
-          for(int i=0; i<exponent; ++i){
+          for(int k=0; k<exponent; ++k){
             ss.add(*coupling);
             if(coupling->getAttribute("NP")){
               nNP++;
@@ -1583,10 +1582,11 @@ public:
 #ifdef _DEBUG_
     printMatrix(matrix);
 #endif
-    DEBUG("inverting matrix");
+
     double condition = (double)(invertMatrix(matrix,inverse));
     DEBUG("inverse matrix (condition " << condition << ") is:");
 #ifdef _DEBUG_
+    std::cout << "Condition of the matrix :" << condition << std::endl;
     printMatrix(inverse);
 #endif
     
@@ -1625,7 +1625,7 @@ public:
 #endif
     this->_matrix  = matrix;
     this->_inverse = inverse;
-    this->_condition=condition;
+    this->_condition = condition;
   }
 
   //_____________________________________________________________________________
@@ -1674,7 +1674,7 @@ public:
         sumElements.add(*max);
       } else {
         sumElements.add(*prod);
-      }
+	      }
       scaleElements.add(*(binWidth));
       i++;
     }
@@ -1783,94 +1783,7 @@ namespace RooLagrangianMorphing {
 // Class Implementation ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-namespace {
-  template<class listT, class stringT>
-  void getParameterNames(const listT* l,std::vector<stringT>& names){
-    // extract the parameter names from a list
-    if(!l) return;
-    RooAbsArg* obj;
-    RooFIter itr(l->fwdIterator());
-    while((obj = itr.next())){
-      names.push_back(obj->GetName());
-    }
-  }
-
-  template<class listT, class stringT>
-  void getArgs(RooWorkspace* ws, const std::vector<stringT>& names, listT& args){ 
-    for(const auto& p:names){
-      RooAbsArg* v =(RooAbsArg*) ws->obj(p);
-      if(v){
-        args.add(*v);
-      }
-    }
-  }
-  
-}
-
-RooWorkspace* RooLagrangianMorphing::makeCleanWorkspace(RooWorkspace* oldWS, const char* newName, const char* mcname, bool keepData){
-  // clone a workspace, copying all needed components and discarding all others
-	
-  // butcher the old workspace
-  auto objects = oldWS->allGenericObjects();
-  RooStats::ModelConfig* oldMC = mcname ? dynamic_cast<RooStats::ModelConfig*>(oldWS->obj(mcname)) : 0;
-  RooAbsPdf* pdf = NULL;
-  auto data = oldWS->allData();
-  for(auto it:objects){
-    if(!oldMC){
-      oldMC = dynamic_cast<RooStats::ModelConfig*>(it);
-    }
-    pdf = dynamic_cast<RooSimultaneous*>(it);
-  }
  
-  // butcher the old modelconfig
-  std::vector<TString> poilist;
-  std::vector<TString> nplist;
-  std::vector<TString> obslist;
-  std::vector<TString> globobslist;
-  if(oldMC){
-    pdf = oldMC->GetPdf();
-    ::getParameterNames(oldMC->GetParametersOfInterest(),poilist);
-    ::getParameterNames(oldMC->GetNuisanceParameters(),nplist);
-    ::getParameterNames(oldMC->GetObservables(),obslist);
-    ::getParameterNames(oldMC->GetGlobalObservables(),globobslist);
-  } else if(!pdf){
-    pdf = oldWS->pdf(mcname);
-  }
-
-  if(!pdf){
-    return NULL;
-  }
-
-  // create them anew
-  RooWorkspace* newWS = newName ? new RooWorkspace(newName,newName) : new RooWorkspace(oldWS->GetName(),oldWS->GetTitle());
-  newWS->autoImportClassCode(true);
-  RooStats::ModelConfig* newMC = new RooStats::ModelConfig("ModelConfig", newWS);
-
-  newWS->import(*pdf, RooFit::RecycleConflictNodes());
-  RooAbsPdf* newPdf = newWS->pdf(pdf->GetName());
-  newMC->SetPdf(*newPdf);
-
-  if(keepData){
-    for(auto d:data){
-      newWS->import(*d);
-    }
-  }
-
-  RooArgSet poiset; ::getArgs(newWS,poilist,poiset);
-  RooArgSet npset; ::getArgs(newWS,nplist,npset);
-  RooArgSet obsset; ::getArgs(newWS,obslist,obsset);
-  RooArgSet globobsset; ::getArgs(newWS,globobslist,globobsset);
-
-  newMC->SetParametersOfInterest(poiset);
-  newMC->SetNuisanceParameters  (npset);
-  newMC->SetObservables         (obsset);
-  newMC->SetGlobalObservables   (globobsset);
-  
-  newWS->import(*newMC);
-
-  return newWS;
-}
-
 void RooLagrangianMorphing::importToWorkspace(RooWorkspace* ws, const RooAbsReal* object){
   // insert an object into a workspace (wrapper for RooWorkspace::import)
   if(!ws) return;
@@ -2046,7 +1959,8 @@ void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::collectInputs(TDirecto
   if(mode->InheritsFrom(TH1::Class())){
     DEBUG("using TH1");
     collectHistograms(this->GetName(), file, this->_sampleMap,this->_physics,*observable, this->_objFilter, _baseFolder, this->_paramCards);
-  } else if(mode->InheritsFrom(RooHistFunc::Class()) || mode->InheritsFrom(RooParamHistFunc::Class()) || mode->InheritsFrom(PiecewiseInterpolation::Class())){
+  } else if(mode->InheritsFrom(RooHistFunc::Class()) || mode->InheritsFrom(RooParamHistFunc::Class())){
+//  else if(mode->InheritsFrom(RooHistFunc::Class()) || mode->InheritsFrom(RooParamHistFunc::Class()) || mode->InheritsFrom(PiecewiseInterpolation::Class())){
     DEBUG("using RooHistFunc");      
     collectRooAbsReal(this->GetName(), file, this->_sampleMap,this->_physics, this->_objFilter, this->_paramCards);
   } else if(mode->InheritsFrom(TParameter<double>::Class())){
@@ -2791,7 +2705,7 @@ std::map<std::string,std::string> RooLagrangianMorphing::createWeightStrings(con
     ERROR("input matrix is empty, please provide suitable input samples!");
   }
   Matrix inverse(::diagMatrix(size(matrix)));
-  double condition = (double)(invertMatrix(matrix,inverse));  
+  double condition __attribute__((unused)) = (double)(invertMatrix(matrix,inverse));  
   auto retval = buildSampleWeightStrings(inputs,formulas,inverse);
   for(auto f:formulas){
     delete f.second;
@@ -2810,7 +2724,7 @@ RooArgSet RooLagrangianMorphing::createWeights(const RooLagrangianMorphing::Para
     ERROR("input matrix is empty, please provide suitable input samples!");
   }
   Matrix inverse(::diagMatrix(size(matrix)));
-  double condition = (double)(invertMatrix(matrix,inverse));  
+  double condition __attribute__((unused)) = (double)(invertMatrix(matrix,inverse));  
   RooArgSet retval;
   ::buildSampleWeights(retval,(const char*)NULL /* name */,inputs,formulas,inverse);
   return retval;
@@ -2824,7 +2738,7 @@ RooArgSet RooLagrangianMorphing::createWeights(const RooLagrangianMorphing::Para
   FlagMap flagValues;
   return RooLagrangianMorphing::createWeights(inputs,vertices,couplings,flagValues,flags,nonInterfering);
 }
-
+      
 //_____________________________________________________________________________
 template <class Base>
 RooParamHistFunc* RooLagrangianMorphing::RooLagrangianMorphBase<Base>::getBaseTemplate(){
@@ -3311,9 +3225,6 @@ bool RooLagrangianMorphing::RooLagrangianMorphBase<Base>::isParameterUsed(const 
   return isUsed;
 }
 
-
-
-
 //_____________________________________________________________________________
 template <class Base>
 bool RooLagrangianMorphing::RooLagrangianMorphBase<Base>::isCouplingUsed(const char* couplname) const {
@@ -3580,6 +3491,8 @@ double RooLagrangianMorphing::RooLagrangianMorphBase<Base>::expectedUncertainty(
   }
   return sqrt(unc2);
 }
+
+
 
 //_____________________________________________________________________________
 template <class Base>

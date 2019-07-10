@@ -1,8 +1,4 @@
 //this file is -*- c++ -*-
-#include "Floats.h"
-#include "LinearCombination.h"
-#include "RooLagrangianMorphing.h"
-#include "RooLagrangianMorphOptimizer.h"
 #ifdef __CINT__
 
 #pragma link off all globals;

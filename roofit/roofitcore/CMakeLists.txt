@@ -123,8 +123,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooIntegratorBinding.h
     RooInt.h
     RooInvTransform.h
-    RooLagrangianMorphing.h
-    RooLagrangianMorphOptimizer.h
     RooLinearVar.h
     RooLinkedListElem.h
     RooLinkedList.h
@@ -341,8 +339,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooIntegrator2D.cxx
     src/RooIntegratorBinding.cxx
     src/RooInvTransform.cxx
-    src/RooLagrangianMorphing.cxx
-    src/RooLagrangianMorphOptimizer.cxx
     src/RooLinearVar.cxx
     src/RooLinkedList.cxx
     src/RooLinkedListElem.cxx

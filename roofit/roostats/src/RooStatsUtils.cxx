@@ -18,6 +18,9 @@ NamespaceImp(RooStats)
 #include "TTree.h"
 #include "TBranch.h"
 
+#include "RooArgSet.h"
+#include "RooWorkspace.h"
+#include "RooAbsPdf.h"
 #include "RooUniform.h"
 #include "RooProdPdf.h"
 #include "RooExtendPdf.h"
@@ -25,7 +28,7 @@ NamespaceImp(RooStats)
 #include "RooStats/ModelConfig.h"
 #include "RooStats/RooStatsUtils.h"
 #include <typeinfo>
-
+#include "RooLagrangianMorphing.h"
 using namespace std;
 
 namespace RooStats {
@@ -330,3 +333,95 @@ namespace RooStats {
       os << ")\n";
    }
 }
+
+namespace { 
+   template<class listT, class stringT>
+   void getParameterNames(const listT* l,std::vector<stringT>& names){
+   // extract the parameter names from a list
+      if(!l) return;
+      RooAbsArg* obj;
+      RooFIter itr(l->fwdIterator());
+      while((obj = itr.next())){
+      names.push_back(obj->GetName());
+      }
+   } 
+ 
+   template<class listT, class stringT>
+   void getArgs(RooWorkspace* ws, const std::vector<stringT>& names, listT& args){
+      for(const auto& p:names){
+         RooAbsArg* v =(RooAbsArg*) ws->obj(p);
+         if(v){
+            args.add(*v);
+         }
+      }
+   }
+}
+
+RooWorkspace* MakeCleanWorkspace(RooWorkspace* oldWS, const char* newName, const char* mcname, bool keepData){
+  // clone a workspace, copying all needed components and discarding all others
+	
+  // butcher the old workspace
+     auto objects = oldWS->allGenericObjects();
+     RooStats::ModelConfig* oldMC = mcname ? dynamic_cast<RooStats::ModelConfig*>(oldWS->obj(mcname)) : 0;
+     RooAbsPdf* pdf = NULL;
+     auto data = oldWS->allData();
+     for (auto it:objects) {
+        if (!oldMC) {
+           oldMC = dynamic_cast<RooStats::ModelConfig*>(it);
+        }
+      pdf = dynamic_cast<RooSimultaneous*>(it);
+     }
+ 
+  // butcher the old modelconfig
+     std::vector<TString> poilist;
+     std::vector<TString> nplist;
+     std::vector<TString> obslist;
+     std::vector<TString> globobslist;
+     if (oldMC) {
+        pdf = oldMC->GetPdf();
+        ::getParameterNames(oldMC->GetParametersOfInterest(),poilist);
+        ::getParameterNames(oldMC->GetNuisanceParameters(),nplist);
+        ::getParameterNames(oldMC->GetObservables(),obslist);
+        ::getParameterNames(oldMC->GetGlobalObservables(),globobslist);
+     } 
+     else if (!pdf) {
+        pdf = oldWS->pdf(mcname);
+     }
+
+     if (!pdf) {
+        return NULL;
+     }
+
+  // create them anew
+     RooWorkspace* newWS = newName ? new RooWorkspace(newName,newName) : new RooWorkspace(oldWS->GetName(),oldWS->GetTitle());
+     newWS->autoImportClassCode(true);
+     RooStats::ModelConfig* newMC = new RooStats::ModelConfig("ModelConfig", newWS);
+
+     newWS->import(*pdf, RooFit::RecycleConflictNodes());
+     RooAbsPdf* newPdf = newWS->pdf(pdf->GetName());
+     newMC->SetPdf(*newPdf);
+
+     if(keepData){
+       for(auto d:data){
+         newWS->import(*d);
+       }
+     }
+
+     RooArgSet poiset; 
+     ::getArgs(newWS,poilist,poiset);
+     RooArgSet npset;
+     ::getArgs(newWS,nplist,npset);
+     RooArgSet obsset;
+     ::getArgs(newWS,obslist,obsset);
+     RooArgSet globobsset;
+     ::getArgs(newWS,globobslist,globobsset);
+
+     newMC->SetParametersOfInterest(poiset);
+     newMC->SetNuisanceParameters  (npset);
+     newMC->SetObservables         (obsset);
+     newMC->SetGlobalObservables   (globobsset);
+  
+     newWS->import(*newMC);
+
+     return newWS;
+   }

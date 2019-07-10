@@ -18,7 +18,7 @@
 #include "RooProduct.h"
 #include "TMatrixD.h"
 #include "RooAbsArg.h"
-   
+
 class RooWorkspace;
 class RooParamHistFunc;
 class TPair;
@@ -251,7 +251,7 @@ namespace RooLagrangianMorphing {
 
   public:
 
-    ClassDefT(RooLagrangianMorphBase<Base>,4)
+    ClassDefOverride(RooLagrangianMorphBase<Base>,4)
   
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //
