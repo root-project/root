@@ -20,6 +20,10 @@
 
 #include <ROOT/RWebWindow.hxx>
 
+#include <string>
+
+using namespace std::string_literals;
+
 namespace ROOT {
 namespace Experimental {
 
@@ -31,6 +35,18 @@ protected:
    Bool_t ProcessBatchHolder(std::shared_ptr<THttpCallArg> &arg) override
    {
       return IsDisabled() ? kFALSE : fWindow.ProcessBatchHolder(arg);
+   }
+
+   void VerifyDefaultPageContent(std::shared_ptr<THttpCallArg> &arg) override
+   {
+      auto version = fWindow.GetClientVersion();
+      if (!version.empty()) {
+         std::string search = "jsrootsys/scripts/JSRootCore."s;
+         std::string replace = version + "/jsrootsys/scripts/JSRootCore."s;
+         // replace link to JSROOT main script to emulate new version
+         arg->ReplaceAllinContent(search, replace, true);
+         arg->AddNoCacheHeader();
+      }
    }
 
 public:
