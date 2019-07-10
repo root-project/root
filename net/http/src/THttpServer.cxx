@@ -714,7 +714,7 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
       return;
    }
 
-   // this is just to support old Process(), should be deprecated after 6.20
+   // this is just to support old Process(THttpCallArg*), should be deprecated after 6.20
    fOldProcessSignature = kTRUE;
    ProcessRequest(arg.get());
    if (fOldProcessSignature) {
@@ -745,8 +745,9 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
                TString resolve;
                if (!IsFileRequested(fname, resolve)) resolve = fname;
                arg->fContent = ReadFileContent(resolve.Data());
-               arg->AddNoCacheHeader();
             }
+
+            handler->VerifyDefaultPageContent(arg);
 
             arg->CheckWSPageContent(handler);
          }

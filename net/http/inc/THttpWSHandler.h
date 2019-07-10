@@ -55,6 +55,10 @@ protected:
    /// Method used to accept or reject root_batch_holder.js request
    virtual Bool_t ProcessBatchHolder(std::shared_ptr<THttpCallArg> &) { return kFALSE; }
 
+   /// Method called when default page content is prepared for use
+   /// By default no-cache header is provided
+   virtual void VerifyDefaultPageContent(std::shared_ptr<THttpCallArg> &arg) { arg->AddNoCacheHeader(); }
+
 public:
    virtual ~THttpWSHandler();
 
