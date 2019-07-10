@@ -234,7 +234,7 @@ static ClustersAndEntries MakeClusters(const std::string &treeName, const std::v
       // onto the first clusters
       auto nReminderClusters = clustersInThisFileSize % maxTasksPerFile;
       const auto clustersInThisFile = *clustersPerFileIt;
-      for (auto i = 0ULL; i < (clustersInThisFileSize - 1); ++i) {
+      for (auto i = 0ULL; i < clustersInThisFileSize; ++i) {
          const auto start = clustersInThisFile[i].start;
          // We lump together at least nFolds clusters, therefore
          // we need to jump ahead of nFolds-1.
