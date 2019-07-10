@@ -1371,13 +1371,18 @@ endif()
 #---Check for CUDA-----------------------------------------------------------------------
 
 if(cuda OR tmva-gpu)
-  find_package(CUDA REQUIRED)
+  find_package(CUDA)
 
-  if(NOT DEFINED CMAKE_CUDA_STANDARD)
-    set(CMAKE_CUDA_STANDARD ${CMAKE_CXX_STANDARD})
+  if(CUDA_FOUND)
+    if(NOT DEFINED CMAKE_CUDA_STANDARD)
+      set(CMAKE_CUDA_STANDARD ${CMAKE_CXX_STANDARD})
+    endif()
+
+    enable_language(CUDA)
+  elseif(fail-on-missing)
+    message(FATAL_ERROR "CUDA not found. Ensure that the installation of CUDA is in the CMAKE_PREFIX_PATH")
   endif()
 
-  enable_language(CUDA)
 endif()
 
 #---TMVA and its dependencies------------------------------------------------------------
