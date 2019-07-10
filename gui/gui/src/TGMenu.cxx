@@ -1249,10 +1249,18 @@ void TGPopupMenu::PlaceMenu(Int_t x, Int_t y, Bool_t stick_mode, Bool_t grab_poi
    // Parent is root window for a popup menu
    gVirtualX->GetWindowSize(fParent->GetId(), rx, ry, rw, rh);
 
-   if (x < 0) x = 0;
-   if (x + fMenuWidth > rw) x = rw - fMenuWidth;
-   if (y < 0) y = 0;
-   if (y + fMenuHeight > rh) y = rh - fMenuHeight;
+   if (gVirtualX->InheritsFrom("TGWin32")) {
+      if ((x > 0) && ((x + abs(rx) + (Int_t)fMenuWidth) > (Int_t)rw))
+         x = rw - abs(rx) - fMenuWidth;
+      if ((y > 0) && (y + abs(ry) + (Int_t)fMenuHeight > (Int_t)rh))
+         y = rh - fMenuHeight;
+   }
+   else {
+      if (x < 0) x = 0;
+      if (x + fMenuWidth > rw) x = rw - fMenuWidth;
+      if (y < 0) y = 0;
+      if (y + fMenuHeight > rh) y = rh - fMenuHeight;
+   }
 
    Move(x, y);
    MapRaised();
