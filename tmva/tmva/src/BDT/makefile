@@ -7,7 +7,7 @@ CPPFLAGS = -I./include \
 LIBFLAGS = -L
 
 OBJS = build/main.o
-EXE = main
+EXE = main.exe
 
 .PHONY : all clean distclean
 
