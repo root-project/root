@@ -73,6 +73,8 @@ void InitRDFValues(unsigned int slot, std::vector<RTypeErasedColumnValue> &value
                    ROOT::TypeTraits::TypeList<ColTypes...>, const std::array<bool, sizeof...(S)> &isTmpColumn)
 {
    using expander = int[];
+   (void)slot; // avoid bogus 'unused parameter' warning
+   (void)r; // avoid bogus 'unused parameter' warning
    (void)expander{(values.emplace_back(std::make_unique<RColumnValue<ColTypes>>()), 0)..., 0};
    (void)expander{(isTmpColumn[S]
                       ? values[S].Cast<ColTypes>()->SetTmpColumn(slot, customCols.GetColumns().at(bn.at(S)).get())
