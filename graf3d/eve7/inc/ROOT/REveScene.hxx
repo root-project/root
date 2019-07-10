@@ -87,7 +87,7 @@ public:
 
    void CollectSceneParents(List_t &scenes);
 
-   virtual Bool_t SingleRnrState() const { return kTRUE; }
+   Bool_t SingleRnrState() const override { return kTRUE; }
 
    void   SetHierarchical(Bool_t h) { fHierarchical = h; }
    Bool_t GetHierarchical() const { return fHierarchical; }

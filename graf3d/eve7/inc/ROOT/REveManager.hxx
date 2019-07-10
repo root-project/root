@@ -174,8 +174,8 @@ public:
    void ElementChanged(REveElement* element, Bool_t update_scenes=kTRUE, Bool_t redraw=kFALSE);
    void ScenesChanged(REveElement::List_t& scenes);
 
-   void AddElement(REveElement* element, REveElement* parent=0);
-   void AddGlobalElement(REveElement* element, REveElement* parent=0);
+   void AddElement(REveElement *element, REveElement* parent = nullptr);
+   void AddGlobalElement(REveElement *element, REveElement* parent = nullptr);
 
    void RemoveElement(REveElement* element, REveElement* parent);
 

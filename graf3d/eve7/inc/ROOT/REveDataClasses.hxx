@@ -73,11 +73,11 @@ public:
    void *GetDataPtr(Int_t i) const { return fItems[i].fDataPtr; }
    REveDataItem *GetDataItem(Int_t i) const { return fItems[i].fItemPtr; }
 
-   virtual Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset);
+   Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
 
    virtual void SetCollectionColorRGB(UChar_t r, UChar_t g, UChar_t b);
    virtual void SetCollectionVisible(bool);
-   virtual void ItemChanged(REveDataItem* item);
+   virtual void ItemChanged(REveDataItem *item);
 
    void SetHandlerFunc (std::function<void (REveDataCollection*)> handler_func)
    {
