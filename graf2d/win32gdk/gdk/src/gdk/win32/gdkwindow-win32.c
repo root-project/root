@@ -1515,17 +1515,28 @@ gdk_window_get_geometry(GdkWindow * window,
    if (!GDK_DRAWABLE_DESTROYED(window)) {
       RECT rect;
 
-      if (!GetClientRect(GDK_DRAWABLE_XID(window), &rect))
-         WIN32_API_FAILED("GetClientRect");
-
-      if (x)
-         *x = rect.left;
-      if (y)
-         *y = rect.top;
-      if (width)
-         *width = rect.right - rect.left;
-      if (height)
-         *height = rect.bottom - rect.top;
+      if (window == gdk_parent_root) {
+         if (x)
+            *x = GetSystemMetrics(76 /*SM_XVIRTUALSCREEN*/);
+         if (y)
+            *y = GetSystemMetrics(77 /*SM_YVIRTUALSCREEN*/);
+         if (width)
+            *width = GetSystemMetrics(78 /*SM_CXVIRTUALSCREEN*/);
+         if (height)
+            *height = GetSystemMetrics(79 /*SM_CYVIRTUALSCREEN*/);
+      }
+      else {
+         if (!GetClientRect(GDK_DRAWABLE_XID(window), &rect))
+            WIN32_API_FAILED("GetClientRect");
+         if (x)
+            *x = rect.left;
+         if (y)
+            *y = rect.top;
+         if (width)
+            *width = rect.right - rect.left;
+         if (height)
+            *height = rect.bottom - rect.top;
+      }
       if (depth)
          *depth = gdk_drawable_get_visual(window)->depth;
    }
