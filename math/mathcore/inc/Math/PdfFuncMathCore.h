@@ -134,9 +134,9 @@ namespace Math {
 
   For detailed description see
   <A HREF="http://mathworld.wolfram.com/NegativeBinomialDistribution.html">
-  Mathworld</A> (where $k \to x$ and $n \to r$).
+  Mathworld</A> (where \f$k \to x\f$ and \f$n \to r\f$).
   The distribution in <A HREF="http://en.wikipedia.org/wiki/Negative_binomial_distribution">
-  Wikipedia</A> is defined with a $p$ corresponding to $1-p$ in this case.
+  Wikipedia</A> is defined with a \f$p\f$ corresponding to \f$1-p\f$ in this case.
 
 
   @ingroup PdfFunc
