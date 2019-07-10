@@ -38,6 +38,7 @@ protected:
    Long_t fMainThrdId{0};               ///<! id of the thread for processing requests
    Bool_t fOwnThread{kFALSE};           ///<! true when specialized thread allocated for processing requests
    std::thread fThrd;                   ///<! own thread
+   Bool_t fOldProcessSignature{kFALSE}; ///<! flag used to detect usage of old signature of Process() method
 
    TString fJSROOTSYS;       ///<! location of local JSROOT files
    TString fTopName{"ROOT"}; ///<! name of top folder, default - "ROOT"
