@@ -1,0 +1,40 @@
+CXX = mpicxx
+CXXFLAGS = -std=c++11 -Wall -g
+
+#MODULE_DIR = u/sw
+#PKGS_DIR = u/sw/pkgs/toolchains/gcc-glibc/5/pkgs
+
+CPPFLAGS = -I./include -I/home/zampieri/Documents/CERN/PicklingTools170Release/C++ -pthread -D_REENTRANT \
+-I/home/zampieri/Documents/CERN/PicklingTools170Release/opencontainers_1_8_5/include \
+-I/home/zampieri/Documents/CERN/PicklingTools170Release/C++ \
+-fno-strict-aliasing -DLINUX_ -DOC_NEW_STYLE_INCLUDES -Wno-deprecated \
+-I/home/zampieri/Documents/CERN/PicklingTools170Release/C++/opencontainers_1_8_5/include \
+-rpath='../PicklingTools170Release'
+# -fno-strict-aliasing -DLINUX_ -DOC_NEW_STYLE_INCLUDES -Wno-deprecated -I/home/me/PicklingTools132/C++/opencontainers_1_7_2/include -I/home/me/PicklingTools132/C++ -pthread -D_REENTRANT
+
+LIBFLAGS = -L/home/zampieri/Documents/CERN/PicklingTools170Release/C++ -lptools
+
+OBJS = my_pickle.o
+EXE = my_pickle
+# libptools.so
+.PHONY : all clean distclean
+
+all : $(EXE)
+
+#hellomake: $(OBJ)
+#	$(CC) -o $@ $^ $(CFLAGS)
+#g++ main.cxx -o main -std=c++11
+$(EXE) : my_pickle.o my_pickle.cxx   #$(OBJS)
+	$(CXX) $(LIBFLAGS) $(CXXFLAGS)  $^  -o $@
+
+#build/pickle.o : my_pickle.cxx chooseser.h
+#	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
+
+$(OBJS) : %.o : %.cxx
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
+
+clean :
+	$(RM) build/*.o *.o
+
+distclean : clean outclean
+	$(RM) $(EXE)
