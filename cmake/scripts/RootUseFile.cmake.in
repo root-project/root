@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.4.3 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
 #---Define the Standard macros for ROOT-----------------------------------------------------------
 include(@ROOT_MODULE_PATH@/RootMacros.cmake)
