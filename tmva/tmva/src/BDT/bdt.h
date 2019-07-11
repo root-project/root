@@ -10,7 +10,7 @@ private:
 
 protected:
 public:
-  std::string kind; 
+  std::string kind;
   double threshold = 0;
   std::string split_variable;
   int node_id;
@@ -43,10 +43,16 @@ public:
 class Tree{
 public:
   //std::map< unsigned int, std::map<unsigned int, AbstractNode> > nodes;
-  std::vector<AbstractNode*> nodes;
+  std::vector<AbstractNode> nodes; // change to vector of pointers
   double inference(double event[]){
     return 0;
   }
+};
+
+class Forest{// or BDT?
+public:
+  std::vector<Tree> trees;
+  double inference(double event[]);
 };
 
 // Definition of printname using scope resolution operator ::
