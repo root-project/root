@@ -24,7 +24,7 @@ protected:
       }
    }
 
-   void Build(const T & /*iData*/, int /*index*/, REveElement */*itemHolder*/, const REveViewContext */*context*/) override
+   void Build(const T & /*iData*/, int /*index*/, REveElement * /*itemHolder*/, const REveViewContext * /*context*/) override
    {
       throw std::runtime_error("virtual Build(const T&, int, REveElement&, const REveViewContext*) not implemented by inherited class.");
    }
@@ -36,7 +36,7 @@ protected:
       }
    }
 
-   void BuildViewType(const T &/*iData*/, int /*index*/, REveElement */*itemHolder*/, std::string /*viewType*/, const REveViewContext */*context*/) override
+   void BuildViewType(const T & /*iData*/, int /*index*/, REveElement * /*itemHolder*/, std::string /*viewType*/, const REveViewContext * /*context*/) override
    {
       throw std::runtime_error("virtual BuildViewType(const T&, int, REveElement&, const REveViewContext*) not implemented by inherited class.");
    }

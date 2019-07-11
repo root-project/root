@@ -38,7 +38,9 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOGDI
 #define NOIME
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 
 #ifdef __MINGW64_VERSION_MAJOR
   #undef _WIN32_WINNT

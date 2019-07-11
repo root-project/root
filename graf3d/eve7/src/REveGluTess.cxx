@@ -69,9 +69,9 @@ void TestTriangleHandler::tess_vertex(Int_t *vi, TriangleCollector *tc)
 //////////////////////////////////////////////////////////////////////////////////////
 /// tess_combine
 
-void TestTriangleHandler::tess_combine(GLdouble /*coords*/[3], void* /*vertex_data*/[4],
-                                     GLfloat  /*weight*/[4], void** /*outData*/,
-                                     TriangleCollector */*tc*/)
+void TestTriangleHandler::tess_combine(GLdouble /*coords*/[3], void * /*vertex_data*/[4],
+                                     GLfloat  /*weight*/[4], void ** /*outData*/,
+                                     TriangleCollector * /*tc*/)
 {
    throw std::runtime_error("GLU::TriangleCollector tesselator requested vertex combining -- not supported yet.");
 }
