@@ -109,6 +109,10 @@ RooAbsArg::RooAbsArg(const char *name, const char *title)
      _ownedComponents(0), _prohibitServerRedirect(kFALSE), _eocache(0), _namePtr(0), _isConstant(kFALSE),
      _localNoInhibitDirty(kFALSE), _myws(0)
 {
+  if (name == nullptr || strlen(name) == 0) {
+    throw std::logic_error("Each RooFit object needs a name. "
+        "Objects representing the same entity (e.g. an observable 'x') are identified using their name.");
+  }
   _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
 }
 
