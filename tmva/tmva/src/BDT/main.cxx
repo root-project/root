@@ -55,7 +55,7 @@ void check_params(json j, int max_counter, int counter=0){
                             "yes",
                             "children"};
 
-  for (int i = 0; i<j.size(); i++){
+  for (size_t i = 0; i<j.size(); i++){
     for (auto &mess : params){
       if ((mess == "children") && (counter<max_counter)){
         counter++;
@@ -78,7 +78,7 @@ void check_params2(json j, int max_counter, int counter=0){
                             "yes",
                             "children"};
 
-  for (int i = 0; i<j.size(); i++){
+  for (size_t i = 0; i<j.size(); i++){
     for (auto &mess : params){
     //for (auto &mess : j[i]){
       if (j[i].count("leaf") > 0){
@@ -158,10 +158,10 @@ int main() {
   //std::cout << "String: " << my_config << std::endl;
 
   // Parse the string with all the model
-  auto j3 = json::parse(my_config);
+  auto json_model = json::parse(my_config);
   //std::cout << "json stringed" << j3.dump() << std::endl;
   //std::cout << "Size: " <<  j3.size() << std::endl;
-  auto my_type = j3.type();
+  //auto my_type = json_model.type();
   //std::cout << my_type.get<std::string>();
 
   /*
@@ -173,11 +173,26 @@ int main() {
   */
   std::cout << "\n *************************** \n\n";
 
+  int number_of_trees = json_model.size();
+  Tree trees[number_of_trees];
+  for (int i=0; i<number_of_trees; i++){
+    trees[i].nodes = read_nodes_from_tree(json_model[i]);
+    std::cout << "Number of nodes : " << trees[i].nodes.size() << std::endl;
+  }
 
-  Tree tree_1;
-  std::vector<AbstractNode> nodes = read_nodes_from_tree(j3[0]);
-  std::cout << "Number of nodes : " << nodes.size() << std::endl;
-  tree_1.nodes = nodes;
+  Tree test = trees[0];
+  for (auto &node : test.nodes){
+    std::cout << node.threshold << std::endl;
+  }
+
+  Forest my_forest;
+  for (auto &tree : trees){
+    my_forest.trees.push_back(tree);
+  }
+  //my_forest.trees = trees;
+  //std::vector<AbstractNode> nodes = read_nodes_from_tree(json_model[0]);
+  //std::cout << "Number of nodes : " << nodes.size() << std::endl;
+  //tree_1.nodes = nodes;
 
 
 

@@ -6,8 +6,6 @@
 
 class AbstractNode{ // TODO make it abstract with pure virtual method
 private:
-  // double threshold = 0; --> moved to public
-
 protected:
 public:
   std::string kind;
