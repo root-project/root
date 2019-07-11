@@ -145,10 +145,10 @@ public:
 //==============================================================================
 class XYJetProxyBuilder: public REX::REveDataSimpleProxyBuilderTemplate<XYJet>
 {
-   virtual bool HaveSingleProduct() const { return false; }
+   bool HaveSingleProduct() const override { return false; }
 
    using REveDataSimpleProxyBuilderTemplate<XYJet>::BuildViewType;
-   virtual void BuildViewType(const XYJet& dj, int /*idx*/, REX::REveElement* iItemHolder, std::string viewType, const REX::REveViewContext* context)
+   void BuildViewType(const XYJet& dj, int /*idx*/, REX::REveElement* iItemHolder, std::string viewType, const REX::REveViewContext* context) override
    {
       auto jet = new REX::REveJetCone();
       jet->SetCylinder(context->GetMaxR(), context->GetMaxZ());
@@ -206,7 +206,7 @@ class XYJetProxyBuilder: public REX::REveDataSimpleProxyBuilderTemplate<XYJet>
 class TrackProxyBuilder : public REX::REveDataSimpleProxyBuilderTemplate<TParticle>
 {
    using REveDataSimpleProxyBuilderTemplate<TParticle>::Build;
-   virtual void Build(const TParticle& p, int /*idx*/, REX::REveElement* iItemHolder, const REX::REveViewContext* context)
+   void Build(const TParticle& p, int /*idx*/, REX::REveElement* iItemHolder, const REX::REveViewContext* context) override
    {
       const TParticle *x = &p;
       // printf("==============  BUILD track %s (pt=%f, eta=%f) \n", iItemHolder->GetCName(), p.Pt(), p.Eta());
