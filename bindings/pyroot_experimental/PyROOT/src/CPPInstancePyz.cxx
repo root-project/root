@@ -10,6 +10,7 @@
  *************************************************************************/
 
 // Bindings
+#include <iostream>
 #include "CPyCppyy.h"
 #include "PyROOTPythonize.h"
 #include "CPPInstance.h"
