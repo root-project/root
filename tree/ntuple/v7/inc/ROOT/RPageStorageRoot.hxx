@@ -166,6 +166,8 @@ private:
 
    /// Keeps track of the number of elements in the currently open cluster. Indexed by column id.
    std::vector<RClusterDescriptor::RColumnRange> fOpenColumnRanges;
+   /// Keeps track of the written pages in the currently open cluster. Indexed by column id.
+   std::vector<RClusterDescriptor::RPageRange> fOpenPageRanges;
 
 public:
    RPageSinkRoot(std::string_view ntupleName, RSettings settings);

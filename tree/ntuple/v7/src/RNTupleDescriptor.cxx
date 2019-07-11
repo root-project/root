@@ -212,7 +212,8 @@ bool RClusterDescriptor::operator==(const RClusterDescriptor &other) const {
           fVersion == other.fVersion &&
           fFirstEntryIndex == other.fFirstEntryIndex &&
           fNEntries == other.fNEntries &&
-          fColumnRanges == other.fColumnRanges;
+          fColumnRanges == other.fColumnRanges &&
+          fPageRanges == other.fPageRanges;
 }
 
 
@@ -278,11 +279,21 @@ std::uint32_t RNTupleDescriptor::SerializeFooter(void* buffer) const
       pos += SerializeUInt64(cluster.second.GetNEntries(), *where);
       pos += SerializeUInt32(fColumnDescriptors.size(), *where);
       for (const auto& column : fColumnDescriptors) {
-         auto range = cluster.second.GetColumnRanges(column.first);
-         R__ASSERT(range.fColumnId == column.first);
-         pos += SerializeUInt64(range.fColumnId, *where);
-         pos += SerializeUInt64(range.fFirstElementIndex, *where);
-         pos += SerializeUInt64(range.fNElements, *where);
+         pos += SerializeUInt64(column.first, *where);
+
+         auto columnRange = cluster.second.GetColumnRange(column.first);
+         R__ASSERT(columnRange.fColumnId == column.first);
+         pos += SerializeUInt64(columnRange.fFirstElementIndex, *where);
+         pos += SerializeUInt64(columnRange.fNElements, *where);
+
+         auto pageRange = cluster.second.GetPageRange(column.first);
+         R__ASSERT(pageRange.fColumnId == column.first);
+         auto nPages = pageRange.fPageInfos.size();
+         pos += SerializeUInt32(nPages, *where);
+         for (unsigned int i = 0; i < nPages; ++i) {
+            pos += SerializeUInt64(pageRange.fPageInfos[i].fNElements, *where);
+            pos += SerializeUInt64(pageRange.fPageInfos[i].fLocator, *where);
+         }
       }
    }
 
@@ -389,13 +400,28 @@ void RNTupleDescriptorBuilder::AddClustersFromFooter(void* footerBuffer) {
       std::uint32_t nColumns;
       pos += DeserializeUInt32(pos, &nColumns);
       for (std::uint32_t j = 0; j < nColumns; ++j) {
-         RClusterDescriptor::RColumnRange range;
+         RClusterDescriptor::RColumnRange columnRange;
+         uint64_t columnId;
          uint64_t nElements;
-         pos += DeserializeUInt64(pos, &range.fColumnId);
-         pos += DeserializeUInt64(pos, &range.fFirstElementIndex);
+         pos += DeserializeUInt64(pos, &columnId);
+         columnRange.fColumnId = columnId;
+         pos += DeserializeUInt64(pos, &columnRange.fFirstElementIndex);
          pos += DeserializeUInt64(pos, &nElements);
-         range.fNElements = nElements;
-         AddClusterColumnRange(clusterId, range);
+         columnRange.fNElements = nElements;
+         AddClusterColumnRange(clusterId, columnRange);
+
+         RClusterDescriptor::RPageRange pageRange;
+         pageRange.fColumnId = columnId;
+         uint32_t nPages;
+         pos += DeserializeUInt32(pos, &nPages);
+         for (unsigned int k = 0; k < nPages; ++k) {
+            RClusterDescriptor::RPageRange::RPageInfo pageInfo;
+            pos += DeserializeUInt64(pos, &nElements);
+            pageInfo.fNElements = nElements;
+            pos += DeserializeInt64(pos, &pageInfo.fLocator);
+            pageRange.fPageInfos.emplace_back(pageInfo);
+         }
+         AddClusterPageRange(clusterId, pageRange);
       }
    }
 }
@@ -472,6 +498,12 @@ void RNTupleDescriptorBuilder::AddClusterColumnRange(
    DescriptorId_t clusterId, const RClusterDescriptor::RColumnRange &columnRange)
 {
    fDescriptor.fClusterDescriptors[clusterId].fColumnRanges[columnRange.fColumnId] = columnRange;
+}
+
+void RNTupleDescriptorBuilder::AddClusterPageRange(
+   DescriptorId_t clusterId, const RClusterDescriptor::RPageRange &pageRange)
+{
+   fDescriptor.fClusterDescriptors[clusterId].fPageRanges[pageRange.fColumnId] = pageRange;
 }
 
 } // namespace Experimental
