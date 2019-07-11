@@ -335,6 +335,47 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
   return _value ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Check
+namespace {
+template<class T>
+bool checkInfNaN(const T& inputs)
+{
+  // check for a math error or negative value
+  bool nan = false;
+  bool neg = false;
+
+  for (double val : inputs) { //CHECK_VECTORISE
+    nan |= std::isnan(val);
+    neg |= val < 0;
+  }
+
+  return nan || neg;
+}
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Scan through outputs and fix+log all nans and negative values.
+/// \param[in/out] outputs Array to be scanned & fixed.
+/// \param[in] begin Begin of event range. Only needed to print the correct event number
+/// where the error occurred.
+void RooAbsPdf::fixOutputsAndLogErrors(RooSpan<double>& outputs, std::size_t begin) const {
+  for (unsigned int i=0; i<outputs.size(); ++i) {
+    const double value = outputs[i];
+    if (std::isnan(outputs[i])) {
+      logEvalError(Form("p.d.f value of (%s) is Not-a-Number (%f), forcing value to zero for entry %zu",
+          GetName(), value, begin+i));
+      outputs[i] = 0;
+    }
+    if (outputs[i] < 0.) {
+      logEvalError(Form("p.d.f value of (%s) is less than zero (%f), forcing value to zero for entry %zu",
+          GetName(), value, begin+i));
+      outputs[i] = 0;
+    }
+  }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute batch of values for given range, and normalise by integrating over
@@ -356,11 +397,9 @@ RooSpan<const double> RooAbsPdf::getValBatch(std::size_t begin, std::size_t batc
     _normSet = nullptr;
     auto outputs = evaluateBatch(begin, batchSize);
     _normSet = tmp;
-    const bool error = traceEvalBatch(outputs);
 
-    if (error) {
-//       raiseEvalError() ;
-      return RooSpan<const double>();
+    if (checkInfNaN(outputs)) {
+      fixOutputsAndLogErrors(outputs, begin);
     }
 
     return outputs;
@@ -377,26 +416,22 @@ RooSpan<const double> RooAbsPdf::getValBatch(std::size_t begin, std::size_t batc
   const auto batchStatus = _batchData.status(begin, batchSize);
   if (batchStatus <= BatchHelpers::BatchData::kDirty
       || nsetChanged || _norm->isValueDirty()) {
-//    if (batchStatus == BatchHelpers::BatchData::kInvalid)
-//      _batchData.makeWritableBatchUnInit(begin, batchSize);
-//
-//    _batchData.setStatus(begin, batchSize, BatchHelpers::BatchData::kWriting);
 
     auto outputs = evaluateBatch(begin, batchSize);
-    bool error = traceEvalBatch(outputs) ; // Error checking and printing
-
+    if (checkInfNaN(outputs)) {
+      fixOutputsAndLogErrors(outputs, begin);
+    }
 
     // Evaluate denominator
     const double normDenom = _norm->getVal();
     if (normDenom <= 0.) {
-      error = true;
       logEvalError(Form("p.d.f normalization integral is zero or negative."
           "\n\tInt(%s) = %f", GetName(), normDenom));
     }
 
     if (normDenom != 1. && normDenom > 0.) {
       const double normVal = 1./normDenom;
-      for (double& val : outputs) {
+      for (double& val : outputs) { //CHECK_VECTORISE
         val *= normVal;
       }
     }
@@ -463,52 +498,6 @@ Bool_t RooAbsPdf::traceEvalPdf(Double_t value) const
 
   Print() ;
   return error ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check that all passed values are positive and not 'not-a-number'.
-/// Print in case of errors until the error counter reaches its set
-/// maximum.
-template<class T>
-bool RooAbsPdf::traceEvalBatch(const T& inputs) const
-{
-  // check for a math error or negative value
-  Bool_t error = false;
-  bool nan = false;
-  bool neg = false;
-
-  for (auto value : inputs) {
-    if (TMath::IsNaN(value))
-      nan = true;
-    if (value < 0)
-      neg = true;
-  }
-
-  if (nan) {
-    logEvalError(Form("p.d.f value is Not-a-Number, forcing value to zero (in %s)", GetName()));
-    error=kTRUE ;
-  }
-  if (neg) {
-    logEvalError(Form("p.d.f value is less than zero, forcing value to zero (in %s)", GetName()));
-    error=kTRUE ;
-  }
-
-  // do nothing if we are no longer tracing evaluations and there was no error
-  if(!error) return error ;
-
-  // otherwise, print out this evaluations input values and result
-  if(++_errorCount <= 10) {
-    cxcoutD(Tracing) << "*** Evaluation Error " << _errorCount << " ";
-    if(_errorCount == 10) cxcoutD(Tracing) << "(no more will be printed) ";
-  }
-  else {
-    return error;
-  }
-
-  Print();
-  return error;
 }
 
 
@@ -817,7 +806,7 @@ RooSpan<double> RooAbsPdf::getLogValBatch(std::size_t begin, std::size_t batchSi
   }
   */
 
-  for (unsigned int i = 0; i < pdfValues.size(); ++i) {
+  for (unsigned int i = 0; i < pdfValues.size(); ++i) { //CHECK_VECTORISE
 #ifdef USE_VDT
     outputs[i] = vdt::fast_log(pdfValues[i]);
 #else

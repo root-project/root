@@ -4884,7 +4884,7 @@ Double_t RooAbsReal::getVal(const RooArgSet* normalisationSet) const {
 
   const double ret = (_fast && !_inhibitDirty) ? _value : fullEval;
 
-  if (fabs( ret != 0. ? (ret - fullEval)/ret : ret - fullEval) > 1.E-14) {
+  if (std::isfinite(ret) && ( ret != 0. ? (ret - fullEval)/ret : ret - fullEval) > 1.E-14) {
     gSystem->StackTrace();
     FormatPdfTree formatter;
     formatter << "--> (Scalar computation wrong here:)\n"
