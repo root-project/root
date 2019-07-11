@@ -96,7 +96,7 @@ void check_params2(json j, int max_counter, int counter=0){
 }
 
 
-
+/// Need a nlohmann::json object from an xgboost saved format
 AbstractNode* _read_nodes(json jTree, std::vector<AbstractNode> *nodes_vector){
   bool node_has_children = (jTree.find("children") != jTree.end());
   bool is_leaf_node = (
@@ -159,86 +159,28 @@ int main() {
 
   // Parse the string with all the model
   auto j3 = json::parse(my_config);
-  std::cout << "json stringed" << j3.dump() << std::endl;
-  std::cout << "Size: " <<  j3.size() << std::endl;
-
+  //std::cout << "json stringed" << j3.dump() << std::endl;
+  //std::cout << "Size: " <<  j3.size() << std::endl;
   auto my_type = j3.type();
   //std::cout << my_type.get<std::string>();
 
+  /*
   int count = 0;
   for (auto &tree : j3){
     std::cout << tree << "\n\n";
     count++;
   }
+  */
   std::cout << "\n *************************** \n\n";
 
-  //print(j3[0].size().dump());
-  std::cout << j3[0].size();
-  std::cout << j3[0]["children"];
 
-  print_json_type(j3);
-  print_json_type(j3[0]);
-  print_json_type(j3[0]["children"]);
-  std::cout << j3[0]["children"].size();
-
-  std::cout << "\n" << j3[1] << std::endl;
-
-  int base_count = 0;
-  for (auto &tree : j3){
-    base_count++;
-    std::cout << base_count << "[";
-    int sub_count=0;
-    for (auto &objs : tree){
-      sub_count++;
-      std::cout << sub_count << "{";
-      int sscount = 0;
-      for (auto &stree : objs){
-        sscount++;
-        std::cout << sscount << ",";
-      }
-      std::cout << "}\n";
-    }
-    std::cout << "]\n\n";
-  }
+  Tree tree_1;
+  std::vector<AbstractNode> nodes = read_nodes_from_tree(j3[0]);
+  std::cout << "Number of nodes : " << nodes.size() << std::endl;
+  tree_1.nodes = nodes;
 
 
-  //Node n2;  Node n3;  Node n4;  Node n5;  Node n6;  Node n7;
-
-  std::vector<AbstractNode*> nodes;
-  for (auto &node : normalNodes){
-    nodes.push_back(&node);
-  }
-
-  for (auto &node : leafNodes){
-    nodes.push_back(&node);
-  }
-
-  for (auto node : nodes){
-    std::cout << node->kind << std::endl;
-  }
 
 
-  Tree my_tree;
-  /*
-  std::map<unsigned int, AbstractNode> level_1;
-  std::map<unsigned int, AbstractNode> level_2;
-  */
-  check_params2(j3, 4);
-  std::cout << "\n***** pause *****" << std::endl;
-
-  for (auto &mess: j3[0]){
-    std::cout << "***  " << mess << "  ***\n";
-  }
-
-  for (json::iterator it = j3[0].begin(); it != j3[0].end(); ++it) {
-    std::cout << it.key() << " : " << it.value() << "\n";
-  }
-
-  int fob_present = j3[0]["children"][0]["children"][0]["children"][0].count("leaf");
-  std::cout << fob_present;
-
-  std::vector<AbstractNode> my_tree2 = read_nodes_from_tree(j3[0]);
-  std::cout << "Values: " << my_tree2.size() << std::endl;
-  //my_tree.nodes[]
   std::cout << "\n***** END *****" << std::endl;
 } // End main
