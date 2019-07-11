@@ -68,7 +68,7 @@ PyObject *PyROOT::CPPInstanceExpand(PyObject * /*self*/, PyObject *args)
 /// Turn the object proxy instance into a character stream and return for
 /// pickle, together with the callable object that can restore the stream
 /// into the object proxy instance.
-PyObject *op_reduce(CPPInstance *self)
+PyObject *op_reduce(CPPInstance *self, PyObject * /*args*/)
 {
    // keep a borrowed reference around to the callable function for expanding;
    // because it is borrowed, it means that there can be no pickling during the
