@@ -357,11 +357,10 @@ esac
 
 case $arch in
 freebsd* | openbsd* | linux*)
+   auxcflags="-pthread $auxcflags"
+   auxlibs="-pthread $auxlibs"
+
    for f in $features ; do
-      if test "x$f" = "xthread" ; then
-         auxcflags="-pthread $auxcflags"
-         auxlibs="-pthread $auxlibs"
-      fi
       if test "x$f" = "xrpath" ; then
          auxlibs="-Wl,-rpath,$libdir $auxlibs"
       fi
@@ -372,16 +371,14 @@ freebsd* | openbsd* | linux*)
    done
    ;;
 macosx*)
+   if [ $macosx_minor -ge 5 ]; then
+      auxcflags="-pthread $auxcflags"
+      auxlibs="-lpthread $auxlibs"
+   else
+      auxcflags="-D_REENTRANT $auxcflags"
+      auxlibs="-lpthread $auxlibs"
+   fi
    for f in $features ; do
-      if test "x$f" = "xthread" ; then
-         if [ $macosx_minor -ge 5 ]; then
-            auxcflags="-pthread $auxcflags"
-            auxlibs="-lpthread $auxlibs"
-         else
-            auxcflags="-D_REENTRANT $auxcflags"
-            auxlibs="-lpthread $auxlibs"
-         fi
-      fi
       if test "x$f" = "xrpath" ; then
          if [ $macosx_minor -ge 5 ]; then
             auxlibs="-Wl,-rpath,$libdir $auxlibs"
@@ -394,21 +391,15 @@ macosx*)
    done
    ;;
 hpuxacc | hpuxia64acc)
-   for f in $features ; do
-      if test "x$f" = "xthread" ; then
-         auxcflags="-mt $auxcflags"
-         auxlibs="-mt $auxlibs"
-      fi
-   done
+   auxcflags="-mt $auxcflags"
+   auxlibs="-mt $auxlibs"
    ;;
 win32)
    ;;
 *)
    for f in $features ; do
-      if test "x$f" = "xthread" ; then
-         auxcflags="-D_REENTRANT $auxcflags"
-         auxlibs="-lpthread $auxlibs"
-      fi
+      auxcflags="-D_REENTRANT $auxcflags"
+      auxlibs="-lpthread $auxlibs"
    done
    ;;
 esac
