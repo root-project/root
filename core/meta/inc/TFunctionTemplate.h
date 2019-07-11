@@ -41,6 +41,7 @@ public:
 
    virtual Bool_t      IsValid();
    Long_t              Property() const;
+   Long_t              ExtraProperty() const;
 
    virtual bool        Update(FuncTempInfo_t *info);
 
