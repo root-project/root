@@ -528,7 +528,7 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
     CallContext ctxt{};
     const auto mflags = pymeth->fMethodInfo->fFlags;
     const auto mempolicy = (mflags & (CallContext::kUseHeuristics | CallContext::kUseStrict));
-    ctxt.fFlags |= mempolicy ? mempolicy : CallContext::sMemoryPolicy;
+    ctxt.fFlags |= mempolicy ? mempolicy : (uint64_t)CallContext::sMemoryPolicy;
     ctxt.fFlags |= (mflags & CallContext::kReleaseGIL);
 
 // magic variable to prevent recursion passed by keyword?
