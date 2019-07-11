@@ -118,11 +118,14 @@ void ROOT::Experimental::Detail::RPageSinkRoot::Create(RNTupleModel &model)
    fCurrentCluster.fPagesPerColumn.resize(nColumns);
    fNTupleFooter.fNElementsPerColumn.resize(nColumns, 0);
    for (DescriptorId_t i = 0; i < nColumns; ++i) {
-      RClusterDescriptor::RColumnRange range;
-      range.fColumnId = i;
-      range.fFirstElementIndex = 0;
-      range.fNElements = 0;
-      fOpenColumnRanges.emplace_back(range);
+      RClusterDescriptor::RColumnRange columnRange;
+      columnRange.fColumnId = i;
+      columnRange.fFirstElementIndex = 0;
+      columnRange.fNElements = 0;
+      fOpenColumnRanges.emplace_back(columnRange);
+      RClusterDescriptor::RPageRange pageRange;
+      pageRange.fColumnId = i;
+      fOpenPageRanges.emplace_back(pageRange);
    }
 
    fDirectory->WriteObject(&fNTupleHeader, RMapper::kKeyNTupleHeader);
@@ -151,6 +154,10 @@ void ROOT::Experimental::Detail::RPageSinkRoot::CommitPage(ColumnHandle_t column
    fNTupleFooter.fNElementsPerColumn[columnId] += page.GetNElements();
 
    fOpenColumnRanges[columnId].fNElements += page.GetNElements();
+   RClusterDescriptor::RPageRange::RPageInfo pageInfo;
+   pageInfo.fNElements = page.GetNElements();
+   pageInfo.fLocator = fOpenPageRanges[columnId].fPageInfos.size();
+   fOpenPageRanges[columnId].fPageInfos.emplace_back(pageInfo);
 }
 
 void ROOT::Experimental::Detail::RPageSinkRoot::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
@@ -161,6 +168,10 @@ void ROOT::Experimental::Detail::RPageSinkRoot::CommitCluster(ROOT::Experimental
    for (auto &range : fOpenColumnRanges) {
       fDescriptorBuilder.AddClusterColumnRange(fLastClusterId, range);
       range.fFirstElementIndex += range.fNElements;
+   }
+   for (auto &range : fOpenPageRanges) {
+      fDescriptorBuilder.AddClusterPageRange(fLastClusterId, range);
+      range.fPageInfos.clear();
    }
    ++fLastClusterId;
 
@@ -292,6 +303,8 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
    descBuilder.AddClustersFromFooter(ntupleRawFooter->fContent);
    free(ntupleRawFooter->fContent);
    delete ntupleRawFooter;
+
+   fDescriptor = descBuilder.GetDescriptor();
 
    auto keyNTupleHeader = fDirectory->GetKey(RMapper::kKeyNTupleHeader);
    auto ntupleHeader = keyNTupleHeader->ReadObject<ROOT::Experimental::Internal::RNTupleHeader>();
