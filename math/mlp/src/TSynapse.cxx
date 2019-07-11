@@ -9,16 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-///////////////////////////////////////////////////////////////////////////
-//
-// TSynapse
-//
-// This is a simple weighted bidirectionnal connection between
-// two neurons.
-// A network is built connecting two neurons by a synapse.
-// In addition to the value, the synapse can return the DeDw
-//
-///////////////////////////////////////////////////////////////////////////
+/** \class TSynapse
+
+This is a simple weighted bidirectional connection between
+two neurons.
+A network is built connecting two neurons by a synapse.
+In addition to the value, the synapse can return the DeDw
+
+*/
 
 #include "TSynapse.h"
 #include "TNeuron.h"
@@ -77,7 +75,7 @@ void TSynapse::SetPost(TNeuron * post)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns the value: weithted input
+/// Returns the value: weighted input
 
 Double_t TSynapse::GetValue() const
 {
