@@ -33,9 +33,9 @@ std::string ROOT::Experimental::RPrintVisitor::MakeKeyString(const ROOT::Experim
    std::string result{""};
    if (level==1) {
       result += "Field ";
-      result += std::to_string(field.GetIndex());
+      result += std::to_string(field.GetLevelInfo().fOrder);
    } else {
-      if (field.GetIndex() == field.GetNumSiblings()) fFlagforVerticalLines.at(level-2) = false;
+      if (field.GetLevelInfo().fOrder == field.GetLevelInfo().fNumSiblingFields) fFlagforVerticalLines.at(level-2) = false;
       else fFlagforVerticalLines.at(level-2) = true;
       for(int i = 0; i < level-2; ++i) {
          if(fFlagforVerticalLines.at(i)) result+= "| "; else result += "  ";
@@ -90,11 +90,11 @@ std::string ROOT::Experimental::FitString(const std::string &str, int availableS
 //Returns std::string of form "1" or "2.1.1"
 std::string HierarchialFieldOrder(const ROOT::Experimental::Detail::RFieldBase &field)
 {
-   std::string hierarchialOrder{std::to_string(field.GetIndex())};
+   std::string hierarchialOrder{std::to_string(field.GetLevelInfo().fOrder)};
    const ROOT::Experimental::Detail::RFieldBase* parentPtr{field.GetParent()};
    // To avoid having the index of the RootField (-1) in the return value, it is checked if the grandparent is a nullptr (in that case RootField is parent)
    while (parentPtr && parentPtr->GetParent()) {
-      hierarchialOrder = std::to_string(parentPtr->GetIndex()) + "." + hierarchialOrder;
+      hierarchialOrder = std::to_string(parentPtr->GetLevelInfo().fOrder) + "." + hierarchialOrder;
       parentPtr = parentPtr->GetParent();
    }
    return hierarchialOrder;

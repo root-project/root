@@ -141,7 +141,6 @@ void ROOT::Experimental::Detail::RFieldBase::Attach(
    std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> child)
 {
    child->fParent = this;
-   child->fLevelInfo.SetfLevel(this);
    child->fLevelInfo.fOrder = fSubFields.size() + 1;
    fSubFields.emplace_back(std::move(child));
 }

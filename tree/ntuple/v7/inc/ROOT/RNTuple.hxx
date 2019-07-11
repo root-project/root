@@ -130,11 +130,9 @@ public:
    ~RNTupleReader();
 
    NTupleSize_t GetNEntries() const { return fNEntries; }
-
-   void GetInfo(std::ostream &output = std::cout, const ENTupleInfo what = ENTupleInfo::kSummary);
    
    /// Prints a detailed summary of the ntuple, including a list of fields.
-   void Print(std::ostream &output = std::cout, char frameSymbol = '*', int width = 80);
+   void PrintInfo(std::ostream &output = std::cout, const ENTupleInfo what = ENTupleInfo::kSummary, char frameSymbol = '*', int width = 80);
    
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the ntuple.
    /// On I/O errors, raises an expection.

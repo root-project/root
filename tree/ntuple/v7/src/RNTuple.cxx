@@ -96,58 +96,46 @@ std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleRe
    return std::make_unique<RNTupleReader>(std::make_unique<Detail::RPageSourceRoot>(ntupleName, storage));
 }
 
-void ROOT::Experimental::RNTupleReader::GetInfo(std::ostream &os, const ENTupleInfo what) {
-   auto name = fSource->GetDescriptor().GetName();
-
-   switch (what) {
-   case ENTupleInfo::kSummary:
-      os << "****************************** NTUPLE ******************************"  << std::endl
-         << "* Name:    " << name << std::setw(57 - name.length())           << "*" << std::endl
-         << "* Entries: " << std::setw(10) << fNEntries << std::setw(47)     << "*" << std::endl
-         << "********************************************************************"  << std::endl;
-      return;
-   default:
-      // Unhandled case, internal error
-      assert(false);
-   }
-   // Never here
-   return;
-}
-
-
-void ROOT::Experimental::RNTupleReader::Print(std::ostream &output, char frameSymbol, int width)
+void ROOT::Experimental::RNTupleReader::PrintInfo(std::ostream &output, const ENTupleInfo what, char frameSymbol, int width)
 {
    if (width < 30) {
       output << "The width is too small! Should be at least 30." << std::endl;
       return;
    }
    std::string name = fSource->GetDescriptor().GetName();
-   for (int i = 0; i < (width/2 + width%2 - 4); ++i)
-      output << frameSymbol;
-   output << " NTUPLE ";
-   for (int i = 0; i < (width/2 - 4); ++i)
-      output << frameSymbol;
-   output << std::endl;
-   // FitString defined in RFieldVisitor.cxx
-   output << frameSymbol << " n-tuple  : " << FitString(name, width-14) << frameSymbol << std::endl; // prints line with name of ntuple
-   output << frameSymbol << " Entries : " << FitString(std::to_string(GetNEntries()), width - 13) << frameSymbol << std::endl;  // prints line with number of entries
-   
    //prepVisitor traverses through all fields to gather information needed for printing.
    RPrepareVisitor prepVisitor;
-   GetModel()->GetRootField()->TraverseVisitor(prepVisitor);
-   
    //printVisitor traverses through all fields to do the actual printing.
    RPrintVisitor printVisitor(output);
-   //To make code more understandable, all the parameter setting is done here instead of inside the constructor
-   printVisitor.SetFrameSymbol(frameSymbol);
-   printVisitor.SetWidth(width);
-   printVisitor.SetDeepestLevel(prepVisitor.GetDeepestLevel());
-   printVisitor.SetNumFields(prepVisitor.GetNumFields());
-   GetModel()->GetRootField()->TraverseVisitor(printVisitor);
+   switch (what) {
+      case ENTupleInfo::kSummary:
+         for (int i = 0; i < (width/2 + width%2 - 4); ++i)
+               output << frameSymbol;
+         output << " NTUPLE ";
+         for (int i = 0; i < (width/2 - 4); ++i)
+            output << frameSymbol;
+         output << std::endl;
+         // FitString defined in RFieldVisitor.cxx
+         output << frameSymbol << " N-Tuple  : " << FitString(name, width-14) << frameSymbol << std::endl; // prints line with name of ntuple
+         output << frameSymbol << " Entries : " << FitString(std::to_string(GetNEntries()), width - 13) << frameSymbol << std::endl;  // prints line with number of entries
+         GetModel()->GetRootField()->TraverseVisitor(prepVisitor);
+         //To make code more understandable, all the parameter setting is done here instead of inside the constructor
+         printVisitor.SetFrameSymbol(frameSymbol);
+         printVisitor.SetWidth(width);
+         printVisitor.SetDeepestLevel(prepVisitor.GetDeepestLevel());
+         printVisitor.SetNumFields(prepVisitor.GetNumFields());
+         GetModel()->GetRootField()->TraverseVisitor(printVisitor);
    
-   for (int i = 0; i < width; ++i)
-      output << frameSymbol;
-   output << std::endl;
+         for (int i = 0; i < width; ++i)
+            output << frameSymbol;
+         output << std::endl;
+         return;
+      default:
+         // Unhandled case, internal error
+         assert(false);
+   }
+   // Never here
+   return;
 }
 //------------------------------------------------------------------------------
 

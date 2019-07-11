@@ -78,22 +78,23 @@ private:
    ENTupleStructure fStructure;
    /// A field on a trivial type that maps as-is to a single column
    bool fIsSimple;
-   /// Contains various info on where the field is located inside the ntuple.
+   /// Describes where the field is located inside the ntuple.
    struct RLevelInfo {
       /// Tells how deep the field is in the ntuple. Rootfield has fLevel 0, direct subfield of Rootfield has fLevel 1, etc.
       int fLevel;
-      /// First subfield of parentfield has fOrder 0, the next fOrder 1, etc. Value set by Attach()
+      /// First subfield of parentfield has fOrder 0, the next fOrder 1, etc. Value set by RFieldBase::Attach()
       int fOrder;
-      // How to call it: GetNumSiblingFields(this);
-      int GetNumSiblingFields(const RFieldBase* field) const {return static_cast<int>(field->GetParent()->fSubFields.size());}
-      // called in Attach(), so no need to call it elsewhere
-      void SetfLevel(RFieldBase* field) {
-         fLevel = 0;
-         const RFieldBase* parentPtr{field->GetParent()};
-         while (parentPtr) {
-            parentPtr = parentPtr->GetParent();
-            ++fLevel;
-         }
+      /// The field itself is also included in this number.
+      int fNumSiblingFields;
+      RLevelInfo(): fLevel{1}, fOrder{1}, fNumSiblingFields{1} {}
+      RLevelInfo(int level, int order, int sibling): fLevel{level}, fOrder{order}, fNumSiblingFields{sibling} {}
+      int GetNumSiblings(const RFieldBase* field) const { return static_cast<int>(field->GetParent()->fSubFields.size());
+      }
+      int GetLevel(const RFieldBase* field) const {
+         int level{0};
+         const RFieldBase* parentPtr{field};
+         while ((parentPtr = parentPtr->GetParent())) { ++level; }
+         return level;
       }
    };
    RLevelInfo fLevelInfo;
@@ -230,43 +231,34 @@ public:
    /// Used for the visitor design pattern, see for example RNTupleReader::Print()
    virtual void TraverseVisitor(RNTupleVisitor &visitor, int level = 0) const;
    virtual void AcceptVisitor(RNTupleVisitor &visitor, int level) const;
-<<<<<<< HEAD
    int GetIndex() const {return fNTupleIndex;}
    bool IsLastInParentSubField() const {
       return fNTupleIndex == static_cast<int>(fParent->fSubFields.size());
    }
 
-
-// clang-format off
-/**
-\class ROOT::Experimental::RFieldFuse
-\ingroup NTuple
-\brief A friend of RFieldBase responsible for connecting a field's columns to the physical page storage
-
-Fields and their columns live in the void until connected to a physical page storage.  Only once connected, data
-can be read or written.
-*/
-// clang-format on
-class RFieldFuse {
-public:
-   static void Connect(DescriptorId_t fieldId, RPageStorage &pageStorage, RFieldBase &field);
-};
-
-virtual void AcceptVisitor(RNTupleVisitor &fVisitor) const;
-//virtual void Accept(RNTupleVisitor fVisitor, int index);
-int getOrder() {return fOrder;}
-///auto getSubfields() {return fSubFields;}
-
-
-};
-
-=======
    int GetIndex() const {return fLevelInfo.fOrder;}
    int GetLevel() const {return fLevelInfo.fLevel;}
    int GetNumSiblings() const {return fLevelInfo.GetNumSiblingFields(this);}
+   RLevelInfo GetLevelInfo() const {
+      return RLevelInfo((fLevelInfo.GetLevel(this)), fLevelInfo.fOrder, fLevelInfo.GetNumSiblings(this));
+   }
   };
->>>>>>> implement suggestions from jblomer
 } // namespace Detail
+   
+   // clang-format off
+   /**
+    \class ROOT::Experimental::RFieldFuse
+    \ingroup NTuple
+    \brief A friend of RFieldBase responsible for connecting a field's columns to the physical page storage
+    
+    Fields and their columns live in the void until connected to a physical page storage.  Only once connected, data
+    can be read or written.
+    */
+   // clang-format on
+   class RFieldFuse {
+   public:
+      static void Connect(DescriptorId_t fieldId, RPageStorage &pageStorage, RFieldBase &field);
+   };
 
 /// The container field for an ntuple model, which itself has no physical representation
 class RFieldRoot : public Detail::RFieldBase {
