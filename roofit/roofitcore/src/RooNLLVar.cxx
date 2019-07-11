@@ -456,11 +456,9 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
   assert(stepSize == 1);
   auto pdfClone = static_cast<const RooAbsPdf*>(_funcClone);
 
-//  auto dataBatches = _dataClone->store()->getBatch(firstEvent, lastEvent);
-
   //TODO do properly. Not here, but in base.
   //TODO don't redo for every partition, anyway
-  BatchInterfaceAccessor::clearBatchMemory(const_cast<RooAbsPdf*>(pdfClone));
+  BatchInterfaceAccessor::markBatchesStale(const_cast<RooAbsPdf*>(pdfClone));
 
 
   auto results = pdfClone->getLogValBatch(firstEvent, lastEvent-firstEvent, _normSet);

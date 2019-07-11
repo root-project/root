@@ -773,6 +773,10 @@ void RooAddPdf::updateCoefficients(CacheElem& cache, const RooArgSet* nset) cons
     }
   }
 
+  if (coefSum==0.) {
+    coutE(Eval) << "RooAddPdf::updateCoefCache(" << GetName() << ") sum of coefficients is zero." << endl ;
+  }
+
   for (int i=0; i < _pdfList.getSize(); i++) {
     _coefCache[i] /= coefSum ;
   }
@@ -854,7 +858,7 @@ RooSpan<double> RooAddPdf::evaluateBatch(std::size_t begin, std::size_t batchSiz
 
     if (pdf.isSelectedComp()) {
       #pragma omp simd
-      for (std::size_t i = 0; i < n; ++i) {
+      for (std::size_t i = 0; i < n; ++i) { //CHECK_VECTORISE
         output[i] += pdfOutputs[i] * coef;
       }
     }

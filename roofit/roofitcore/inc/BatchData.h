@@ -77,7 +77,8 @@ class BatchData {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    /// Set the status of a batch.
+    /// Set the status of a batch with the given start point and size.
+    ///
     /// The status of foreign read-only data will never change.
     /// \return True if status successfully set, false if no such batch / not writable.
     bool setStatus(std::size_t begin, std::size_t size, Status_t status) {
@@ -85,10 +86,9 @@ class BatchData {
         return false;
 
       auto item = _ownedBatches.find(begin);
-      if (item == _ownedBatches.end())
+      if (item == _ownedBatches.end() || size != item->second.data.size())
         return false;
 
-      assert(item->second.data.size() == size);
       item->second.status = status;
       return true;
     }

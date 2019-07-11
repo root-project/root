@@ -216,8 +216,6 @@ public:
   void setTraceCounter(Int_t value, Bool_t allNodes=kFALSE) ;
 private:
   Bool_t traceEvalPdf(Double_t value) const;
-  template<class T>
-  bool traceEvalBatch(const T& inputs) const;
 
 public:
 
@@ -294,6 +292,8 @@ private:
   virtual RooPlot* paramOn(RooPlot* frame, const RooArgSet& params, Bool_t showConstants=kFALSE,
                            const char *label= "", Int_t sigDigits = 2, Option_t *options = "NELU", Double_t xmin=0.65,
 			   Double_t xmax= 0.99,Double_t ymax=0.95, const RooCmdArg* formatCmd=0) ;
+
+  void fixOutputsAndLogErrors(RooSpan<double>& outputs, std::size_t begin) const;
 
 protected:
   virtual RooPlot *plotOn(RooPlot *frame, PlotOpt o) const;  
