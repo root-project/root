@@ -131,12 +131,6 @@ set(x11libdir -L${X11_LIBRARY_DIR})
 set(xpmlibdir -L${X11_LIBRARY_DIR})
 set(xpmlib ${X11_Xpm_LIB})
 
-set(thread yes)
-set(enable_thread yes)
-set(threadflag ${CMAKE_THREAD_FLAG})
-set(threadlibdir)
-set(threadlib ${CMAKE_THREAD_LIBS_INIT})
-
 set(builtinfreetype ${value${builtin_freetype}})
 set(builtinpcre ${value${builtin_pcre}})
 

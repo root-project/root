@@ -105,10 +105,9 @@ CXX14          := @c++14@
 CXXMODULES     := @cxxmodules@
 LIBCXX         := @libc++@
 
-ENABLETHREAD   := @enable_thread@
-OSTHREADFLAG   := @threadflag@
-OSTHREADLIBDIR := @threadlibdir@
-OSTHREADLIB    := @threadlib@
+ENABLETHREAD   := yes
+OSTHREADFLAG   := @CMAKE_THREAD_FLAG@
+OSTHREADLIB    := @CMAKE_THREAD_LIBS_INIT@
 
 BUILTINFREETYPE:= @builtinfreetype@
 
