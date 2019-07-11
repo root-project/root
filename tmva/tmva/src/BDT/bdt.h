@@ -7,9 +7,16 @@
 class AbstractNode{ // TODO make it abstract with pure virtual method
 private:
   // double threshold = 0; --> moved to public
+
+protected:
 public:
-  std::string kind; // put protected and write get_kind() const
+  std::string kind; 
   double threshold = 0;
+  std::string split_variable;
+  int node_id;
+  int depth;
+  int missing; // what is missing
+
   //float get_threshold(){this->threshold;}
 
   //virtual std::string getKind();
@@ -18,17 +25,17 @@ public:
 
 class Node : public AbstractNode{
 public:
-  unsigned int level = 0;
-  unsigned int child_number = 0;
-  AbstractNode* child_1;
-  AbstractNode* child_2;
+  int child_id_true;
+  int child_id_false;
+  AbstractNode* child_true;
+  AbstractNode* child_false;
   Node(){kind = "NormalNode";}
 };
 
 class LeafNode : public AbstractNode{
 public:
-  double leaf_1 = 0;
-  double leaf_2 = 0;
+  double leaf_true = 0;
+  double leaf_false = 0;
   LeafNode(){kind = "LeafNode";}
 };
 
@@ -36,7 +43,7 @@ public:
 class Tree{
 public:
   //std::map< unsigned int, std::map<unsigned int, AbstractNode> > nodes;
-  std::vector<Node*> nodes;
+  std::vector<AbstractNode*> nodes;
   double inference(double event[]){
     return 0;
   }
