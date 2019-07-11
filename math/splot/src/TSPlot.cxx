@@ -22,21 +22,16 @@ extern void Yields(Int_t &, Double_t *, Double_t &f, Double_t *x, Int_t iflag);
 
 ClassImp(TSPlot);
 
-//____________________________________________________________________
-//Begin_Html <!--
-/* -->
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
-<p>
-<b><font size="+2">Overview</font></b>
+/** \class TSPlot
 
-</p><p>
 A common method used in High Energy Physics to perform measurements is
 the maximum Likelihood method, exploiting discriminating variables to
 disentangle signal from background. The crucial point for such an
 analysis to be reliable is to use an exhaustive list of sources of
 events combined with an accurate description of all the Probability
 Density Functions (PDF).
-</p><p>To assess the validity of the fit, a convincing quality check
+
+To assess the validity of the fit, a convincing quality check
 is to explore further the data sample by examining the distributions of
 control variables. A control variable can be obtained for instance by
 removing one of the discriminating variables before performing again
@@ -45,321 +40,206 @@ variable. The expected distribution of this control variable, for
 signal, is to be compared to the one extracted, for signal, from the
 data sample. In order to be able to do so, one must be able to unfold
 from the distribution of the whole data sample.
-</p><p>The TSPlot method allows to reconstruct the distributions for
+
+The TSPlot method allows to reconstruct the distributions for
 the control variable, independently for each of the various sources of
 events, without making use of any <em>a priori</em> knowledge on <u>this</u>
 variable. The aim is thus to use the knowledge available for the
 discriminating variables to infer the behaviour of the individual
 sources of events with respect to the control variable.
-</p><p>
+
 TSPlot is optimal if the control variable is uncorrelated with the discriminating variables.
 
-</p><p>
-A detail description of the formalism itself, called <!-- MATH
- $\hbox{$_s$}{\cal P}lot$
- -->
-<img src="gif/sPlot_img5.png" alt="$\hbox{$_s$}{\cal P}lot$" align="middle" border="0" height="34" width="48">, is given in&nbsp;[<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/node1.html#bib:sNIM">1</a>].
 
-</p><p>
-<b><font size="+2">The method</font></b>
+A detail description of the formalism itself, called \f$\hbox{$_s$}{\cal P}lot\f$, is given
+in [<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/node1.html#bib:sNIM">1</a>].
 
-</p><p>
-The <!-- MATH
- $\hbox{$_s$}{\cal P}lot$
- -->
-<img src="gif/sPlot_img5.png" alt="$\hbox{$_s$}{\cal P}lot$" align="middle" border="0" height="34" width="48"> technique is developped in the above context of a maximum Likelihood method making use of discriminating variables.
+### The method
 
-</p><p>One considers a data sample in which are merged several species
+
+The \f$\hbox{$_s$}{\cal P}lot\f$ technique is developed in the above context of a
+maximum Likelihood method making use of discriminating variables.
+
+One considers a data sample in which are merged several species
 of events. These species represent various signal components and
 background components which all together account for the data sample.
 The different terms of the log-Likelihood are:
-</p><ul>
-<li><img src="gif/sPlot_img6.png" alt="$N$" align="bottom" border="0" height="17" width="22">: the total number of events in the data sample,
-</li>
-<li><!-- MATH
- ${\rm N}_{\rm s}$
- -->
-<img src="gif/sPlot_img7.png" alt="${\rm N}_{\rm s}$" align="middle" border="0" height="34" width="25">: the number of species of events populating the data sample,
-</li>
-<li><img src="gif/sPlot_img8.png" alt="$N_i$" align="middle" border="0" height="34" width="25">: the number of events expected on the average for the <img src="gif/sPlot_img9.png" alt="$i^{\rm th}$" align="bottom" border="0" height="20" width="25"> species,
-</li>
-<li><!-- MATH
- ${\rm f}_i(y_e)$
- -->
-<img src="gif/sPlot_img10.png" alt="${\rm f}_i(y_e)$" align="middle" border="0" height="37" width="47">: the value of the PDFs of the discriminating variables <img src="gif/sPlot_img11.png" alt="$y$" align="middle" border="0" height="33" width="15"> for the <img src="gif/sPlot_img12.png" alt="$i^{th}$" align="bottom" border="0" height="20" width="25"> species and for event <img src="gif/sPlot_img13.png" alt="$e$" align="bottom" border="0" height="17" width="13">,
-</li>
-<li><img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15">: the set of control variables which, by definition, do not appear in the expression of the Likelihood function <img src="gif/sPlot_img15.png" alt="${\cal L}$" align="bottom" border="0" height="18" width="18">.
-</li>
-</ul>
+
+  - \f$N\f$ : the total number of events in the data sample,
+  - \f${\rm N}_{\rm s}\f$ : the number of species of events populating the data sample,
+  - \f$N_i\f$ : the number of events expected on the average for the \f$i^{\rm th}\f$ species,
+  - \f${\rm f}_i(y_e)\f$" : the value of the PDFs of the discriminating variables
+    \f$y\f$" for the\f$i^{th}\f$ species and for event\f$e\f$",
+  - \f$x\f$" : the set of control variables which, by definition, do not appear in
+    the expression of the Likelihood function \f${\cal L}\f$.
+
 The extended log-Likelihood reads:
-<br>
-<div align="right">
 
-<!-- MATH
- \begin{equation}
-{\cal L}=\sum_{e=1}^{N}\ln \Big\{ \sum_{i=1}^{{\rm N}_{\rm s}}N_i{\rm f}_i(y_e) \Big\} -\sum_{i=1}^{{\rm N}_{\rm s}}N_i ~.
-\end{equation}
- -->
-<table align="center" width="100%">
-<tbody><tr valign="middle"><td align="center" nowrap="nowrap"><a name="eq:eLik"></a><img src="gif/sPlot_img16.png" alt="\begin{displaymath}
-{\cal L}=\sum_{e=1}^{N}\ln \Big\{ \sum_{i=1}^{{\rm N}_{\rm s}}N_i{\rm f}_i(y_e) \Big\} -\sum_{i=1}^{{\rm N}_{\rm s}}N_i ~.
-\end{displaymath}" border="0" height="59" width="276"></td>
-<td align="right" width="10">
-(1)</td></tr>
-</tbody></table>
-<br clear="all"></div><p></p>
-From this expression, after maximization of <img src="gif/sPlot_img15.png" alt="${\cal L}$" align="bottom" border="0" height="18" width="18"> with respect to the <img src="gif/sPlot_img8.png" alt="$N_i$" align="middle" border="0" height="34" width="25"> parameters, a weight can be computed for every event and each species, in order to obtain later the true distribution <!-- MATH
- ${\hbox{\bf {M}}}_i(x)$
- -->
-<img src="gif/sPlot_img17.png" alt="${\hbox{\bf {M}}}_i(x)$" align="middle" border="0" height="37" width="56"> of variable <img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15">. If <img src="gif/sPlot_img18.png" alt="${\rm n}$" align="bottom" border="0" height="17" width="15"> is one of the <!-- MATH
- ${\rm N}_{\rm s}$
- -->
-<img src="gif/sPlot_img7.png" alt="${\rm N}_{\rm s}$" align="middle" border="0" height="34" width="25"> species present in the data sample, the weight for this species is defined by:
-<br>
-<div align="right">
+ \f[
+{\cal L}=\sum_{e=1}^{N}\ln \Big\{ \sum_{i=1}^{{\rm N}_{\rm s}}N_i{\rm f}_i(y_e) \Big\} -\sum_{i=1}^{{\rm N}_{\rm s}}N_i \tag{1}
+\f]
 
-<!-- MATH
- \begin{equation}
-\begin{Large}\fbox{$
-{_s{\cal P}}_{\rm n}(y_e)={\sum_{j=1}^{{\rm N}_{\rm s}} \hbox{\bf V}_{{\rm n}j}{\rm f}_j(y_e)\over\sum_{k=1}^{{\rm N}_{\rm s}}N_k{\rm f}_k(y_e) } $}\end{Large} ~,
-\end{equation}
- -->
-<table align="center" width="100%">
-<tbody><tr valign="middle"><td align="center" nowrap="nowrap"><a name="eq:weightxnotiny"></a><img src="gif/sPlot_img19.png" alt="\begin{displaymath}
-\begin{Large}
+From this expression, after maximization of \f${\cal L}\f$ with respect to the \f$N_i\f$ parameters,
+a weight can be computed for every event and each species, in order to obtain later the true distribution
+\f$\hbox{M}_i(x)\f$ of variable \f$x\f$. If \f${\rm n}\f$ is one of the
+ \f${\rm N}_{\rm s}\f$ species present in the data sample, the weight for this species is defined by:
+
+
+\f[
 \fbox{$
-{_s{\cal P}}_{\rm n}(y_e)={\sum_{j=1}^...
-...um_{k=1}^{{\rm N}_{\rm s}}N_k{\rm f}_k(y_e) } $}\end{Large} ~,
-\end{displaymath}" border="0" height="76" width="279"></td>
-<td align="right" width="10">
-(2)</td></tr>
-</tbody></table>
-<br clear="all"></div><p></p>
-where <!-- MATH
- $\hbox{\bf V}_{{\rm n}j}$
- -->
-<img src="gif/sPlot_img20.png" alt="$\hbox{\bf V}_{{\rm n}j}$" align="middle" border="0" height="34" width="35">
+{_s{\cal P}}_{\rm n}(y_e)={\sum_{j=1}^{{\rm N}_{\rm s}} \hbox{V}_{{\rm n}j}{\rm f}_j(y_e)\over\sum_{k=1}^{{\rm N}_{\rm s}}N_k{\rm f}_k(y_e) } $} , \tag{2}
+\f]
+
+
+where \f$\hbox{V}_{{\rm n}j}\f$
+
 is the covariance matrix resulting from the Likelihood maximization.
 This matrix can be used directly from the fit, but this is numerically
 less accurate than the direct computation:
-<br>
-<div align="right">
 
-<!-- MATH
- \begin{equation}
-\hbox{\bf V}^{-1}_{{\rm n}j}~=~
+
+\f[
+\hbox{ V}^{-1}_{{\rm n}j}~=~
 {\partial^2(-{\cal L})\over\partial N_{\rm n}\partial N_j}~=~
-\sum_{e=1}^N {{\rm f}_{\rm n}(y_e){\rm f}_j(y_e)\over(\sum_{k=1}^{{\rm N}_{\rm s}}N_k{\rm f}_k(y_e))^2} ~.
-\end{equation}
- -->
-<table align="center" width="100%">
-<tbody><tr valign="middle"><td align="center" nowrap="nowrap"><a name="eq:VarianceMatrixDirect"></a><img src="gif/sPlot_img21.png" alt="\begin{displaymath}
-\hbox{\bf V}^{-1}_{{\rm n}j}~=~
-{\partial^2(-{\cal L})\over\...
-...y_e)\over(\sum_{k=1}^{{\rm N}_{\rm s}}N_k{\rm f}_k(y_e))^2} ~.
-\end{displaymath}" border="0" height="58" width="360"></td>
-<td align="right" width="10">
-(3)</td></tr>
-</tbody></table>
-<br clear="all"></div><p></p>
-The distribution of the control variable&nbsp;<img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15"> obtained by histogramming the weighted events reproduces, on average, the true distribution <!-- MATH
- ${\hbox{\bf {M}}}_{\rm n}(x)$
- -->
-<img src="gif/sPlot_img22.png" alt="${\hbox{\bf {M}}}_{\rm n}(x)$" align="middle" border="0" height="37" width="59">.
+\sum_{e=1}^N {{\rm f}_{\rm n}(y_e){\rm f}_j(y_e)\over(\sum_{k=1}^{{\rm N}_{\rm s}}N_k{\rm f}_k(y_e))^2} . \tag{3}
+\f]
 
-<p>
-The class TSPlot allows to reconstruct the true distribution <!-- MATH
- ${\hbox{\bf {M}}}_{\rm n}(x)$
- -->
-<img src="gif/sPlot_img22.png" alt="${\hbox{\bf {M}}}_{\rm n}(x)$" align="middle" border="0" height="37" width="59"> of a control variable&nbsp;<img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15"> for each of the <!-- MATH
- ${\rm N}_{\rm s}$
- -->
-<img src="gif/sPlot_img7.png" alt="${\rm N}_{\rm s}$" align="middle" border="0" height="34" width="25"> species from the sole knowledge of the PDFs of the discriminating variables <img src="gif/sPlot_img23.png" alt="${\rm f}_i(y)$" align="middle" border="0" height="37" width="40">. The plots obtained thanks to the TSPlot class are called <!-- MATH
- $\hbox{$_s$}{\cal P}lots$
- -->
-<img src="gif/sPlot_img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57">.
 
-</p><p>
-<b><font size="+2">Some properties and checks</font></b>
+The distribution of the control variable \f$x\f$ obtained by histogramming the weighted
+events reproduces, on average, the true distribution
+\f${\hbox{ {M}}}_{\rm n}(x)\f$
 
-</p><p>
-Beside reproducing the true distribution, <!-- MATH
- $\hbox{$_s$}{\cal P}lots$
- -->
-<img src="gif/sPlot_img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57"> bear remarkable properties:
+The class TSPlot allows to reconstruct the true distribution
+\f${\hbox{ {M}}}_{\rm n}(x)\f$
 
-</p><ul>
-<li>
-Each <img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15">-distribution is properly normalized:
-<br>
-<div align="right">
+of a control variable \f$x\f$ for each of the \f${\rm N}_{\rm s}\f$ species from
+the sole knowledge of the PDFs of the discriminating variables \f${\rm f}_i(y)\f$.
+The plots obtained thanks to the TSPlot class are called \f$\hbox {$_s$}{\cal P}lots\f$.
 
-<!-- MATH
- \begin{equation}
-\sum_{e=1}^{N} {_s{\cal P}}_{\rm n}(y_e)~=~N_{\rm n}~.
-\end{equation}
- -->
-<table align="center" width="100%">
-<tbody><tr valign="middle"><td align="center" nowrap="nowrap"><a name="eq:NormalizationOK"></a><img src="gif/sPlot_img24.png" alt="\begin{displaymath}
-\sum_{e=1}^{N} {_s{\cal P}}_{\rm n}(y_e)~=~N_{\rm n}~.
-\end{displaymath}" border="0" height="58" width="158"></td>
-<td align="right" width="10">
-(4)</td></tr>
-</tbody></table>
-<br clear="all"></div><p></p>
-</li>
-<li>
-For any event:
-<br>
-<div align="right">
 
-<!-- MATH
- \begin{equation}
-\sum_{l=1}^{{\rm N}_{\rm s}} {_s{\cal P}}_l(y_e) ~=~1 ~.
-\end{equation}
- -->
-<table align="center" width="100%">
-<tbody><tr valign="middle"><td align="center" nowrap="nowrap"><a name="eq:numberconservation"></a><img src="gif/sPlot_img25.png" alt="\begin{displaymath}
-\sum_{l=1}^{{\rm N}_{\rm s}} {_s{\cal P}}_l(y_e) ~=~1 ~.
-\end{displaymath}" border="0" height="59" width="140"></td>
-<td align="right" width="10">
-(5)</td></tr>
-</tbody></table>
-<br clear="all"></div><p></p>
-That is to say that, summing up the <!-- MATH
- ${\rm N}_{\rm s}$
- -->
-<img src="gif/sPlot_img7.png" alt="${\rm N}_{\rm s}$" align="middle" border="0" height="34" width="25"> <!-- MATH
- $\hbox{$_s$}{\cal P}lots$
- -->
-<img src="gif/sPlot_img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57">, one recovers the data sample distribution in&nbsp;<img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15">, and summing up the number of events entering in a <!-- MATH
- $\hbox{$_s$}{\cal P}lot$
- -->
-<img src="gif/sPlot_img5.png" alt="$\hbox{$_s$}{\cal P}lot$" align="middle" border="0" height="34" width="48"> for a given species, one recovers the yield of the species, as provided by the fit. The property&nbsp;<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#eq:NormalizationOK">4</a> is implemented in the TSPlot class as a check.
-</li>
-<li>the sum of the statistical uncertainties per bin
-<br>
-<div align="right">
+### Some properties and checks
 
-<!-- MATH
- \begin{equation}
-\sigma[N_{\rm n}\  _s\tilde{\rm M}_{\rm n}(x) {\delta x}]~=~\sqrt{\sum_{e \subset {\delta x}} ({_s{\cal P}}_{\rm n})^2} ~.
-\end{equation}
- -->
-<table align="center" width="100%">
-<tbody><tr valign="middle"><td align="center" nowrap="nowrap"><a name="eq:ErrorPerBin"></a><img src="gif/sPlot_img26.png" alt="\begin{displaymath}
-\sigma[N_{\rm n}\ _s\tilde{\rm M}_{\rm n}(x) {\delta x}]~=~\sqrt{\sum_{e \subset {\delta x}} ({_s{\cal P}}_{\rm n})^2} ~.
-\end{displaymath}" border="0" height="55" width="276"></td>
-<td align="right" width="10">
-(6)</td></tr>
-</tbody></table>
-<br clear="all"></div><p></p>
-reproduces the statistical uncertainty on the yield <img src="gif/sPlot_img27.png" alt="$N_{\rm n}$" align="middle" border="0" height="34" width="28">, as provided by the fit: <!-- MATH
- $\sigma[N_{\rm n}]\equiv\sqrt{\hbox{\bf V}_{{\rm n}{\rm n}}}$
- -->
-<img src="gif/sPlot_img28.png" alt="$\sigma[N_{\rm n}]\equiv\sqrt{\hbox{\bf V}_{{\rm n}{\rm n}}}$" align="middle" border="0" height="40" width="123">.
-Because of that and since the determination of the yields is optimal
-when obtained using a Likelihood fit, one can conclude that the<!-- MATH
- $\hbox{$_s$}{\cal P}lot$
- -->
- <img src="gif/sPlot_img5.png" alt="$\hbox{$_s$}{\cal P}lot$" align="middle" border="0" height="34" width="48"> technique is itself an optimal method to reconstruct distributions of control variables.
-</li>
-</ul>
 
-<p>
-<b><font size="+2">Different steps followed by TSPlot</font></b>
+Beside reproducing the true distribution,\f$\hbox {$_s$}{\cal P}lots\f$ bear remarkable properties:
 
-</p><p>
 
-</p><ol>
-<li>A maximum Likelihood fit is performed to obtain the yields <img src="gif/sPlot_img8.png" alt="$N_i$" align="middle" border="0" height="34" width="25"> of the various species.
-The fit relies on discriminating variables&nbsp;<img src="gif/sPlot_img11.png" alt="$y$" align="middle" border="0" height="33" width="15"> uncorrelated with a control variable&nbsp;<img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15">:
-the later is therefore totally absent from the fit.
-</li>
-<li>The weights <img src="gif/sPlot_img29.png" alt="${_s{\cal P}}$" align="middle" border="0" height="34" width="27"> are calculated using Eq.&nbsp;(<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#eq:weightxnotiny">2</a>) where the covariance matrix is taken from Minuit.
-</li>
-<li>Histograms of&nbsp;<img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15"> are filled by weighting the events with <img src="gif/sPlot_img29.png" alt="${_s{\cal P}}$" align="middle" border="0" height="34" width="27">.
-</li>
-<li>Error bars per bin are given by Eq.&nbsp;(<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#eq:ErrorPerBin">6</a>).
-</li>
-</ol>
-The <!-- MATH
- $\hbox{$_s$}{\cal P}lots$
- -->
-<img src="gif/sPlot_img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57"> reproduce the true distributions of the species in the control variable&nbsp;<img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15">, within the above defined statistical uncertainties.
+  - Each \f$x\f$ - distribution is properly normalized:
 
-<p>
-<b><font size="+2">Illustrations</font></b>
+\f[
+\sum_{e=1}^{N} {_s{\cal P}}_{\rm n}(y_e)~=~N_{\rm n} ~. \tag{4}
+\f]
 
-</p><p>
-To illustrate the technique, one considers an example derived from the analysis where <!-- MATH
- $\hbox{$_s$}{\cal P}lots$
- -->
-<img src="gif/sPlot_img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57">
+
+  - For any event:
+
+\f[
+\sum_{l=1}^{{\rm N}_{\rm s}} {_s{\cal P}}_l(y_e) ~=~1 ~. \tag{5}
+\f]
+
+    That is to say that, summing up the \f${\rm N}_{\rm s}\f$ \f$\hbox {$_s$}{\cal P}lots\f$,
+    one recovers the data sample distribution in \f$x\f$, and summing up the number of events
+    entering in a \f$\hbox{$_s$}{\cal P}lot\f$ for a given species, one recovers the yield of the
+    species, as provided by the fit.
+    The property <a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#eq:NormalizationOK">4</a> is implemented in the TSPlot class as a check.
+
+  - the sum of the statistical uncertainties per bin
+
+\f[
+\sigma[N_{\rm n}\  _s\tilde{\rm M}_{\rm n}(x) {\delta x}]~=~\sqrt{\sum_{e \subset {\delta x}} ({_s{\cal P}}_{\rm n})^2} ~. \tag{6}
+\f]
+
+    reproduces the statistical uncertainty on the yield \f$N_{\rm n}\f$, as provided by the fit:
+    \f$\sigma[N_{\rm n}]\equiv\sqrt{\hbox{ V}_{{\rm n}{\rm n}}}\f$ .
+    Because of that and since the determination of the yields is optimal
+    when obtained using a Likelihood fit, one can conclude that the \f$\hbox{$_s$}{\cal P}lot\f$
+    technique is itself an optimal method to reconstruct distributions of control variables.
+
+
+### Different steps followed by TSPlot
+
+
+  1. A maximum Likelihood fit is performed to obtain the yields \f$N_i\f$
+     of the various species.The fit relies on discriminating variables \f$y\f$
+     uncorrelated with a control variable \f$x\f$:
+     the later is therefore totally absent from the fit.
+
+  2. The weights \f${_s{\cal P}}\f$ are calculated using Eq.
+     (<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#eq:weightxnotiny">2</a>)
+     where the covariance matrix is taken from Minuit.
+
+  3. Histograms of \f$x\f$ are filled by weighting the events with \f${_s{\cal P}}\f$ .
+
+  4. Error bars per bin are given by Eq. (<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#eq:ErrorPerBin">6</a>).
+
+
+The \f$\hbox {$_s$}{\cal P}lots\f$ reproduce the true distributions of the species
+in the control variable \f$x\f$, within the above defined statistical uncertainties.
+
+### Illustrations
+
+
+To illustrate the technique, one considers an example derived from the analysis where
+\f$\hbox {$_s$}{\cal P}lots\f$
 have been first used (charmless B decays). One is dealing with a data
 sample in which two species are present: the first is termed signal and
 the second background. A maximum Likelihood fit is performed to obtain
-the two yields <img src="gif/sPlot_img30.png" alt="$N_1$" align="middle" border="0" height="34" width="27"> and <img src="gif/sPlot_img31.png" alt="$N_2$" align="middle" border="0" height="34" width="27">. The fit relies on two discriminating variables collectively denoted&nbsp;<img src="gif/sPlot_img11.png" alt="$y$" align="middle" border="0" height="33" width="15"> which are chosen within three possible variables denoted <img src="gif/sPlot_img1.png" alt="${m_{\rm ES}}$" align="middle" border="0" height="33" width="39">, <img src="gif/sPlot_img2.png" alt="$\Delta E$" align="bottom" border="0" height="17" width="35"> and <img src="gif/sPlot_img3.png" alt="${\cal F}$" align="bottom" border="0" height="18" width="20">.
-The variable which is not incorporated in&nbsp;<img src="gif/sPlot_img11.png" alt="$y$" align="middle" border="0" height="33" width="15"> is used as the control variable&nbsp;<img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15">. The six distributions of the three variables are assumed to be the ones depicted in Fig.&nbsp;<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:pdfs">1</a>.
+the two yields \f$N_1\f$ and \f$N_2\f$ . The fit relies on two discriminating
+variables collectively denoted \f$y\f$ which are chosen within three possible
+variables denoted \f${m_{\rm ES}}\f$ , \f$\Delta E\f$ and \f${\cal F}\f$.
+The variable which is not incorporated in \f$y\f$ is used as the control variable
+\f$x\f$ . The six distributions of the three variables are assumed to be the ones
+depicted in Fig. <a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:pdfs">1</a>.
 
-</p><p>
 
-</p><div align="center"><a name="fig:pdfs"></a><a name="106"></a>
-<table>
-<caption align="bottom"><strong>Figure 1:</strong>
+\image html splot_pdfmesNIM.png width=800
+
+#### Figure 1:
+
 Distributions of the three discriminating variables available to perform the Likelihood fit:
-<img src="gif/sPlot_img32.png" alt="${m_{\rm ES}}$" align="middle" border="0" height="33" width="39">, <img src="gif/sPlot_img2.png" alt="$\Delta E$" align="bottom" border="0" height="17" width="35">, <img src="gif/sPlot_img3.png" alt="${\cal F}$" align="bottom" border="0" height="18" width="20">.
+\f${m_{\rm ES}}\f$ , \f$\Delta E\f$ , \f${\cal F}\f$ .
 Among the three variables, two are used to perform the fit while one is
 kept out of the fit to serve the purpose of a control variable. The
 three distributions on the top (resp. bottom) of the figure correspond
 to the signal (resp. background). The unit of the vertical axis is
 chosen such that it indicates the number of entries per bin, if one
-slices the histograms in 25 bins.</caption>
-<tbody><tr><td><img src="gif/sPlot_img33.png" alt="\begin{figure}\begin{center}
-\mbox{{\psfig{file=pdfmesNIM.eps,width=0.33\linewi...
-...th}}
-{\psfig{file=pdffiNIM.eps,width=0.33\linewidth}}}
-\end{center}\end{figure}" border="0" height="162" width="544"></td></tr>
-</tbody></table>
-</div>
+slices the histograms in 25 bins.
 
-<p>
-A data sample being built through a Monte Carlo simulation based on the distributions shown in Fig.&nbsp;<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:pdfs">1</a>, one obtains the three distributions of Fig.&nbsp;<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:pdfstot">2</a>. Whereas the distribution of&nbsp;<img src="gif/sPlot_img2.png" alt="$\Delta E$" align="bottom" border="0" height="17" width="35"> clearly indicates the presence of the signal, the distribution of <img src="gif/sPlot_img1.png" alt="${m_{\rm ES}}$" align="middle" border="0" height="33" width="39"> and <img src="gif/sPlot_img3.png" alt="${\cal F}$" align="bottom" border="0" height="18" width="20"> are less obviously populated by signal.
+A data sample being built through a Monte Carlo simulation based on the
+distributions shown in Fig.
+<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:pdfs">1</a>,
+one obtains the three distributions of Fig.
+<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:pdfstot">2</a>.
+Whereas the distribution of \f$\Delta E\f$  clearly indicates the presence of the signal,
+the distribution of \f${m_{\rm ES}}\f$ and \f${\cal F}\f$  are less obviously populated by signal.
 
-</p><p>
 
-</p><div align="center"><a name="fig:pdfstot"></a><a name="169"></a>
-<table>
-<caption align="bottom"><strong>Figure 2:</strong>
+\image html splot_genfiTOTNIM.png  width=800
+
+#### Figure 2:
+
 Distributions of the three discriminating variables for signal plus
 background. The three distributions are the ones obtained from a data
 sample obtained through a Monte Carlo simulation based on the
-distributions shown in Fig.&nbsp;<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:pdfs">1</a>.  The data sample consists of 500 signal events and 5000 background events.</caption>
-<tbody><tr><td><img src="gif/sPlot_img34.png" alt="\begin{figure}\begin{center}
-\mbox{{\psfig{file=genmesTOTNIM.eps,width=0.33\lin...
-...}
-{\psfig{file=genfiTOTNIM.eps,width=0.33\linewidth}}}
-\end{center}\end{figure}" border="0" height="160" width="545"></td></tr>
-</tbody></table>
-</div>
+distributions shown in Fig.
+<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:pdfs">1</a>.
+The data sample consists of 500 signal events and 5000 background events.
 
-<p>
-Chosing <img src="gif/sPlot_img2.png" alt="$\Delta E$" align="bottom" border="0" height="17" width="35"> and <img src="gif/sPlot_img3.png" alt="${\cal F}$" align="bottom" border="0" height="18" width="20"> as discriminating variables to determine <img src="gif/sPlot_img30.png" alt="$N_1$" align="middle" border="0" height="34" width="27"> and <img src="gif/sPlot_img31.png" alt="$N_2$" align="middle" border="0" height="34" width="27"> through a maximum Likelihood fit, one builds, for the control variable <img src="gif/sPlot_img1.png" alt="${m_{\rm ES}}$" align="middle" border="0" height="33" width="39"> which is unknown to the fit, the two <!-- MATH
- $\hbox{$_s$}{\cal P}lots$
- -->
-<img src="gif/sPlot_img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57"> for signal and background shown in Fig.&nbsp;<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:messPlots">3</a>. One observes that the <!-- MATH
- $\hbox{$_s$}{\cal P}lot$
- -->
-<img src="gif/sPlot_img5.png" alt="$\hbox{$_s$}{\cal P}lot$" align="middle" border="0" height="34" width="48">
+
+Choosing \f$\Delta E\f$ and \f${\cal F}\f$ as discriminating variables to determine
+\f$N_1\f$ and \f$N_2\f$ through a maximum Likelihood fit, one builds, for the control
+variable \f${m_{\rm ES}}\f$  which is unknown to the fit, the two \f$\hbox {$_s$}{\cal P}lots\f$
+for signal and background shown in
+Fig. <a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:messPlots">3</a>.
+One observes that the \f$\hbox{$_s$}{\cal P}lot\f$
 for signal reproduces correctly the PDF even where the latter vanishes,
 although the error bars remain sizeable. This results from the almost
 complete cancellation between positive and negative weights: the sum of
 weights is close to zero while the sum of weights squared is not. The
 occurence of negative weights occurs through the appearance of the
 covariance matrix, and its negative components, in the definition of
-Eq.&nbsp;(<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#eq:weightxnotiny">2</a>).
+Eq. (<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#eq:weightxnotiny">2</a>).
 
-</p><p>
+
 A word of caution is in order with respect to the error bars. Whereas
 their sum in quadrature is identical to the statistical uncertainties
 of the yields determined by the fit, and if, in addition, they are
@@ -368,10 +248,7 @@ low statistics and/or for too fine binning. This is because the error
 bars do not incorporate two known properties of the PDFs: PDFs are
 positive definite and can be non-zero in a given x-bin, even if in the
 particular data sample at hand, no event is observed in this bin. The
-latter limitation is not specific to<!-- MATH
- $\hbox{$_s$}{\cal P}lots$
- -->
- <img src="gif/sPlot_img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57">,
+latter limitation is not specific to \f$\hbox {$_s$}{\cal P}lots\f$ ,
 rather it is always present when one is willing to infer the PDF at the
 origin of an histogram, when, for some bins, the number of entries does
 not guaranty the applicability of the Gaussian regime. In such
@@ -379,52 +256,37 @@ situations, a satisfactory practice is to attach allowed ranges to the
 histogram to indicate the upper and lower limits of the PDF value which
 are consistent with the actual observation, at a given confidence
 level.
-</p><p>
 
-</p><div align="center"><a name="fig:messPlots"></a><a name="127"></a>
-<table>
-<caption align="bottom"><strong>Figure 3:</strong>
-The <!-- MATH
- $\hbox{$_s$}{\cal P}lots$
- -->
-<img src="gif/sPlot_img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57"> (signal on the left, background on the right) obtained for <img src="gif/sPlot_img32.png" alt="${m_{\rm ES}}$" align="middle" border="0" height="33" width="39"> are represented as dots with error bars. They are obtained from a fit using only information from <img src="gif/sPlot_img2.png" alt="$\Delta E$" align="bottom" border="0" height="17" width="35"> and <img src="gif/sPlot_img3.png" alt="${\cal F}$" align="bottom" border="0" height="18" width="20">.</caption>
-<tbody><tr><td><img src="gif/sPlot_img35.png" alt="\begin{figure}\begin{center}
-\mbox{\psfig{file=mass-sig-sPlot.eps,width=0.48\li...
-... \psfig{file=mass-bkg-sPlot.eps,width=0.48\linewidth}}
-\end{center}\end{figure}" border="0" height="181" width="539"></td></tr>
-</tbody></table>
-</div>
+
+\image html splot_mass-bkg-sPlot.png  width=600
+
+#### Figure 3:
+
+The \f$\hbox {$_s$}{\cal P}lots\f$ (signal on top, background on bottom)
+obtained for \f${m_{\rm ES}}\f$ are represented as dots with error bars.
+They are obtained from a fit using only information from \f$\Delta E\f$ and
+\f${\cal F}\f$
 
 <p>
-Chosing <img src="gif/sPlot_img1.png" alt="${m_{\rm ES}}$" align="middle" border="0" height="33" width="39"> and <img src="gif/sPlot_img2.png" alt="$\Delta E$" align="bottom" border="0" height="17" width="35"> as discriminating variables to determine <img src="gif/sPlot_img30.png" alt="$N_1$" align="middle" border="0" height="34" width="27"> and <img src="gif/sPlot_img31.png" alt="$N_2$" align="middle" border="0" height="34" width="27"> through a maximum Likelihood fit, one builds, for the control variable <img src="gif/sPlot_img3.png" alt="${\cal F}$" align="bottom" border="0" height="18" width="20"> which is unknown to the fit, the two <!-- MATH
- $\hbox{$_s$}{\cal P}lots$
- -->
-<img src="gif/sPlot_img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57"> for signal and background shown in Fig.&nbsp;<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:FisPlots">4</a>. In the <!-- MATH
- $\hbox{$_s$}{\cal P}lot$
- -->
-<img src="gif/sPlot_img5.png" alt="$\hbox{$_s$}{\cal P}lot$" align="middle" border="0" height="34" width="48"> for signal one observes that error bars are the largest in the&nbsp;<img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15"> regions where the background is the largest.
+Choosing \f${m_{\rm ES}}\f$ and \f$\Delta E\f$ as discriminating variables to
+determine \f$N_1\f$ and \f$N_2\f$ through a maximum Likelihood fit, one builds,
+for the control variable \f${\cal F}\f$ which is unknown to the fit, the two
+\f$\hbox {$_s$}{\cal P}lots\f$ for signal and background shown in
+Fig. <a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:FisPlots">4</a>.
+In the \f$\hbox{$_s$}{\cal P}lot\f$ for signal one observes that error bars are
+the largest in the \f$x\f$ regions where the background is the largest.
 
-</p><p>
 
-</p><div align="center"><a name="fig:FisPlots"></a><a name="136"></a>
-<table>
-<caption align="bottom"><strong>Figure 4:</strong>
-The <!-- MATH
- $\hbox{$_s$}{\cal P}lots$
- -->
-<img src="gif/sPlot_img4.png" alt="$\hbox {$_s$}{\cal P}lots$" align="middle" border="0" height="34" width="57"> (signal on the left, background on the right) obtained for <img src="gif/sPlot_img3.png" alt="${\cal F}$" align="bottom" border="0" height="18" width="20"> are represented as dots with error bars. They are obtained from a fit using only information from <img src="gif/sPlot_img32.png" alt="${m_{\rm ES}}$" align="middle" border="0" height="33" width="39"> and <img src="gif/sPlot_img2.png" alt="$\Delta E$" align="bottom" border="0" height="17" width="35">.</caption>
-<tbody><tr><td><img src="gif/sPlot_img36.png" alt="\begin{figure}\begin{center}
-\mbox{\psfig{file=fisher-sig-sPlot.eps,width=0.48\...
-...psfig{file=fisher-bkg-sPlot.eps,width=0.48\linewidth}}
-\end{center}\end{figure}" border="0" height="180" width="539"></td></tr>
-</tbody></table>
-</div>
+\image html splot_fisher-bkg-sPlot.png width=600
 
-<p>
+#### Figure 4:
+
+The \f$\hbox {$_s$}{\cal P}lots\f$ (signal on top, background on bottom) obtained
+for \f${\cal F}\f$ are represented as dots with error bars. They are obtained
+from a fit using only information from \f${m_{\rm ES}}\f$ and \f$\Delta E\f$
+
 The results above can be obtained by running the tutorial TestSPlot.C
-</p>
-<!--*/
-//-->End_Html
+*/
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -444,6 +306,12 @@ TSPlot::TSPlot() :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Normal TSPlot constructor
+///  - nx :  number of control variables
+///  - ny :  number of discriminating variables
+///  - ne :  total number of events
+///  - ns :  number of species
+///  - tree: input data
 
 TSPlot::TSPlot(Int_t nx, Int_t ny, Int_t ne, Int_t ns, TTree *tree) :
  fTreename(0),
@@ -451,13 +319,6 @@ TSPlot::TSPlot(Int_t nx, Int_t ny, Int_t ne, Int_t ns, TTree *tree) :
  fSelection(0)
 
 {
-   //normal TSPlot constructor
-   // nx :  number of control variables
-   // ny :  number of discriminating variables
-   // ne :  total number of events
-   // ns :  number of species
-   // tree: input data
-
    fNx = nx;
    fNy=ny;
    fNevents = ne;
@@ -472,7 +333,7 @@ TSPlot::TSPlot(Int_t nx, Int_t ny, Int_t ne, Int_t ns, TTree *tree) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// destructor
+/// Destructor
 
 TSPlot::~TSPlot()
 {
@@ -487,7 +348,7 @@ TSPlot::~TSPlot()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///To browse the histograms
+/// To browse the histograms
 
 void TSPlot::Browse(TBrowser *b)
 {
@@ -519,10 +380,9 @@ void TSPlot::Browse(TBrowser *b)
    b->Add(&fSWeights, "sWeights");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///Set the initial number of events of each species - used
-///as initial estimates in minuit
+/// Set the initial number of events of each species - used
+/// as initial estimates in minuit
 
 void TSPlot::SetInitialNumbersOfSpecies(Int_t *numbers)
 {
@@ -533,11 +393,12 @@ void TSPlot::SetInitialNumbersOfSpecies(Int_t *numbers)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Calculates the sWeights
-///The option controls the print level
-///"Q" - no print out
-///"V" - prints the estimated #of events in species - default
-///"VV" - as "V" + the minuit printing + sums of weights for control
+/// Calculates the sWeights
+///
+/// The option controls the print level
+///  - "Q" - no print out
+///  - "V" - prints the estimated #of events in species - default
+///  - "VV" - as "V" + the minuit printing + sums of weights for control
 
 void TSPlot::MakeSPlot(Option_t *option)
 {
@@ -617,7 +478,7 @@ void TSPlot::MakeSPlot(Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Computes the sWeights from the covariance matrix
+/// Computes the sWeights from the covariance matrix
 
 void TSPlot::SPlots(Double_t *covmat, Int_t i_excl)
 {
@@ -638,7 +499,7 @@ void TSPlot::SPlots(Double_t *covmat, Int_t i_excl)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the matrix of sweights
+/// Returns the matrix of sweights
 
 void TSPlot::GetSWeights(TMatrixD &weights)
 {
@@ -648,7 +509,8 @@ void TSPlot::GetSWeights(TMatrixD &weights)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the matrix of sweights. It is assumed that the array passed in the argurment is big enough
+/// Returns the matrix of sweights. It is assumed that the array passed in the
+/// argurment is big enough
 
 void TSPlot::GetSWeights(Double_t *weights)
 {
@@ -660,7 +522,7 @@ void TSPlot::GetSWeights(Double_t *weights)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Fills the histograms of x variables (not weighted) with nbins
+/// Fills the histograms of x variables (not weighted) with nbins
 
 void TSPlot::FillXvarHists(Int_t nbins)
 {
@@ -686,9 +548,9 @@ void TSPlot::FillXvarHists(Int_t nbins)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the array of histograms of x variables (not weighted)
-///If histograms have not already
-///been filled, they are filled with default binning 100.
+/// Returns the array of histograms of x variables (not weighted).
+/// If histograms have not already
+/// been filled, they are filled with default binning 100.
 
 TObjArray* TSPlot::GetXvarHists()
 {
@@ -701,9 +563,9 @@ TObjArray* TSPlot::GetXvarHists()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the histogram of variable #ixvar
-///If histograms have not already
-///been filled, they are filled with default binning 100.
+///Returns the histogram of variable ixvar.
+/// If histograms have not already
+/// been filled, they are filled with default binning 100.
 
 TH1D *TSPlot::GetXvarHist(Int_t ixvar)
 {
@@ -717,7 +579,7 @@ TH1D *TSPlot::GetXvarHist(Int_t ixvar)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Fill the histograms of y variables
+/// Fill the histograms of y variables
 
 void TSPlot::FillYvarHists(Int_t nbins)
 {
@@ -742,8 +604,8 @@ void TSPlot::FillYvarHists(Int_t nbins)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the array of histograms of y variables. If histograms have not already
-///been filled, they are filled with default binning 100.
+/// Returns the array of histograms of y variables. If histograms have not already
+/// been filled, they are filled with default binning 100.
 
 TObjArray* TSPlot::GetYvarHists()
 {
@@ -756,8 +618,8 @@ TObjArray* TSPlot::GetYvarHists()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the histogram of variable iyvar.If histograms have not already
-///been filled, they are filled with default binning 100.
+/// Returns the histogram of variable iyvar.If histograms have not already
+/// been filled, they are filled with default binning 100.
 
 TH1D *TSPlot::GetYvarHist(Int_t iyvar)
 {
@@ -770,7 +632,7 @@ TH1D *TSPlot::GetYvarHist(Int_t iyvar)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Fills the histograms of pdf-s of y variables with binning nbins
+/// Fills the histograms of pdf-s of y variables with binning nbins
 
 void TSPlot::FillYpdfHists(Int_t nbins)
 {
@@ -797,9 +659,9 @@ void TSPlot::FillYpdfHists(Int_t nbins)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the array of histograms of pdf's of y variables with binning nbins
-///If histograms have not already
-///been filled, they are filled with default binning 100.
+/// Returns the array of histograms of pdf's of y variables with binning nbins.
+/// If histograms have not already
+/// been filled, they are filled with default binning 100.
 
 TObjArray* TSPlot::GetYpdfHists()
 {
@@ -811,9 +673,9 @@ TObjArray* TSPlot::GetYpdfHists()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the histogram of the pdf of variable #iyvar for species #ispecies, binning nbins
-///If histograms have not already
-///been filled, they are filled with default binning 100.
+/// Returns the histogram of the pdf of variable iyvar for species #ispecies, binning nbins.
+/// If histograms have not already
+/// been filled, they are filled with default binning 100.
 
 TH1D *TSPlot::GetYpdfHist(Int_t iyvar, Int_t ispecies)
 {
@@ -825,10 +687,12 @@ TH1D *TSPlot::GetYpdfHist(Int_t iyvar, Int_t ispecies)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///The order of histograms in the array:
-///x0_species0, x0_species1,..., x1_species0, x1_species1,..., y0_species0, y0_species1,...
-///If the histograms have already been filled with a different binning, they are refilled
-///and all histograms are deleted
+/// The order of histograms in the array:
+///
+/// x0_species0, x0_species1,..., x1_species0, x1_species1,..., y0_species0, y0_species1,...
+///
+/// If the histograms have already been filled with a different binning, they are refilled
+/// and all histograms are deleted
 
 void TSPlot::FillSWeightsHists(Int_t nbins)
 {
@@ -858,7 +722,7 @@ void TSPlot::FillSWeightsHists(Int_t nbins)
          }
    }
 
-   //Fill histograms of y-variables (exluded from the fit), weighted with sWeights
+   //Fill histograms of y-variables (excluded from the fit), weighted with sWeights
    for (Int_t iexcl=0; iexcl<fNy; iexcl++){
       for(Int_t ispecies=0; ispecies<fNSpecies; ispecies++){
             snprintf(name,30, "y%d_species%d", iexcl, ispecies);
@@ -872,10 +736,11 @@ void TSPlot::FillSWeightsHists(Int_t nbins)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns an array of all histograms of variables, weighted with sWeights
-///If histograms have not been already filled, they are filled with default binning 50
-///The order of histograms in the array:
-///x0_species0, x0_species1,..., x1_species0, x1_species1,..., y0_species0, y0_species1,...
+/// Returns an array of all histograms of variables, weighted with sWeights.
+/// If histograms have not been already filled, they are filled with default binning 50
+/// The order of histograms in the array:
+///
+/// x0_species0, x0_species1,..., x1_species0, x1_species1,..., y0_species0, y0_species1,...
 
 TObjArray *TSPlot::GetSWeightsHists()
 {
@@ -887,14 +752,16 @@ TObjArray *TSPlot::GetSWeightsHists()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///The Fill...Hist() methods fill the histograms with the real limits on the variables
-///This method allows to refill the specified histogram with user-set boundaries min and max
+/// The Fill...Hist() methods fill the histograms with the real limits on the variables
+/// This method allows to refill the specified histogram with user-set boundaries min and max
+///
 ///Parameters:
-///type = 1 - histogram of x variable #nvar
-///     = 2 - histogram of y variable #nvar
-///     = 3 - histogram of y_pdf for y #nvar and species #nspecies
-///     = 4 - histogram of x variable #nvar, species #nspecies, WITH sWeights
-///     = 5 - histogram of y variable #nvar, species #nspecies, WITH sWeights
+///
+///  - type = 1 - histogram of x variable #nvar
+///  - type = 2 - histogram of y variable #nvar
+///  - type = 3 - histogram of y_pdf for y #nvar and species #nspecies
+///  - type = 4 - histogram of x variable #nvar, species #nspecies, WITH sWeights
+///  - type = 5 - histogram of y variable #nvar, species #nspecies, WITH sWeights
 
 void TSPlot::RefillHist(Int_t type, Int_t nvar, Int_t nbins, Double_t min, Double_t max, Int_t nspecies)
 {
@@ -954,12 +821,12 @@ void TSPlot::RefillHist(Int_t type, Int_t nvar, Int_t nbins, Double_t min, Doubl
    }
 }
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the histogram of a variable, weithed with sWeights
-///If histograms have not been already filled, they are filled with default binning 50
-///If parameter ixvar!=-1, the histogram of x-variable #ixvar is returned for species ispecies
-///If parameter ixvar==-1, the histogram of y-variable #iyexcl is returned for species ispecies
-///If the histogram has already been filled and the binning is different from the parameter nbins
-///all histograms with old binning will be deleted and refilled.
+/// Returns the histogram of a variable, weighted with sWeights.
+///  - If histograms have not been already filled, they are filled with default binning 50
+///  - If parameter ixvar!=-1, the histogram of x-variable ixvar is returned for species ispecies
+///  - If parameter ixvar==-1, the histogram of y-variable iyexcl is returned for species ispecies
+///  - If the histogram has already been filled and the binning is different from the parameter nbins
+///    all histograms with old binning will be deleted and refilled.
 
 TH1D *TSPlot::GetSWeightsHist(Int_t ixvar, Int_t ispecies,Int_t iyexcl)
 {
@@ -991,7 +858,7 @@ void TSPlot::SetTree(TTree *tree)
 ///
 ///In the 1st parameter it is assumed that first fNx variables are x(control variables),
 ///then fNy y variables (discriminating variables),
-///then fNy*fNSpecies ypdf variables (probability distribution functions of dicriminating
+///then fNy*fNSpecies ypdf variables (probability distribution functions of discriminating
 ///variables for different species). The order of pdfs should be: species0_y0, species0_y1,...
 ///species1_y0, species1_y1,...species[fNSpecies-1]_y0...
 ///The 2nd parameter allows to make a cut
