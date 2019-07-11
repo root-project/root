@@ -126,6 +126,14 @@ Long_t TFunctionTemplate::Property() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get the properties not already defined in Property.See TDictionary's EFunctionProperty.
+
+Long_t TFunctionTemplate::ExtraProperty() const
+{
+   return fInfo ? gCling->FuncTempInfo_ExtraProperty(fInfo) : 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 TDictionary::DeclId_t TFunctionTemplate::GetDeclId() const
 {

@@ -474,6 +474,7 @@ public: // Public Interface
    virtual UInt_t FuncTempInfo_TemplateNargs(FuncTempInfo_t * /* ft_info */) const;
    virtual UInt_t FuncTempInfo_TemplateMinReqArgs(FuncTempInfo_t * /* ft_info */) const;
    virtual Long_t FuncTempInfo_Property(FuncTempInfo_t * /* ft_info */) const;
+   virtual Long_t FuncTempInfo_ExtraProperty(FuncTempInfo_t * /* ft_info */) const;
    virtual void FuncTempInfo_Name(FuncTempInfo_t * /* ft_info */, TString& name) const;
    virtual void FuncTempInfo_Title(FuncTempInfo_t * /* ft_info */, TString& name) const;
 

@@ -8474,6 +8474,34 @@ Long_t TCling::FuncTempInfo_Property(FuncTempInfo_t *ft_info) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the property not already defined in Property
+/// See TDictionary's EFunctionProperty
+
+Long_t TCling::FuncTempInfo_ExtraProperty(FuncTempInfo_t* ft_info) const
+{
+   if (!ft_info) return 0;
+
+   long property = 0L;
+   property |= kIsCompiled;
+
+   const clang::FunctionTemplateDecl *ft = (clang::FunctionTemplateDecl*)ft_info;
+   const clang::FunctionDecl *fd = ft->getTemplatedDecl();
+
+   if (fd->isOverloadedOperator()) {
+      property |= kIsOperator;
+   }
+   else if (llvm::isa<clang::CXXConversionDecl>(fd)) {
+      property |= kIsConversion;
+   } else if (llvm::isa<clang::CXXConstructorDecl>(fd)) {
+      property |= kIsConstructor;
+   } else if (llvm::isa<clang::CXXDestructorDecl>(fd)) {
+      property |= kIsDestructor;
+   }
+
+   return property;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return the name of this function template.
 
 void TCling::FuncTempInfo_Name(FuncTempInfo_t *ft_info, TString &output) const
