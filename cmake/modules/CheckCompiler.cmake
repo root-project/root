@@ -177,7 +177,7 @@ if(gcctoolchain)
 endif()
 
 if(gnuinstall)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR__HAVE_CONFIG")
+  set(R__HAVE_CONFIG 1)
 endif()
 
 #---Check if we use the new libstdc++ CXX11 ABI-----------------------------------------------------
