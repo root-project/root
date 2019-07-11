@@ -136,13 +136,13 @@ if(libcxx)
 endif()
 
 #---Need to locate thead libraries and options to set properly some compilation flags----------------
-find_package(Threads)
-if(CMAKE_USE_PTHREADS_INIT)
-  set(CMAKE_THREAD_FLAG -pthread)
-else()
-  set(CMAKE_THREAD_FLAG)
-endif()
 
+set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+find_package(Threads REQUIRED)
+
+if(CMAKE_USE_PTHREADS_INIT)
+  set(CMAKE_THREAD_FLAG ${CMAKE_THREAD_LIBS_INIT})
+endif()
 
 #---Setup compiler-specific flags (warning etc)----------------------------------------------
 if(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
