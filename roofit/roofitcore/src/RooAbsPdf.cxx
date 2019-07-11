@@ -1239,7 +1239,10 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   if (prefit != 0)  {
     size_t nEvents = prefit*data.numEntries();
     if (prefit > 0.5 || nEvents < 100)  {
-      oocoutW(this,InputArguments) << "PrefitDataFraction should be in suitable range. With the current PrefitDataFraction=" << prefit << ", the number of events would be " << nEvents<< " out of " << data.numEntries() << ". Skipping prefit..." << endl;
+      oocoutW(this,InputArguments) << "PrefitDataFraction should be in suitable range."
+      << "With the current PrefitDataFraction=" << prefit 
+      << ", the number of events would be " << nEvents<< " out of " 
+      << data.numEntries() << ". Skipping prefit..." << endl;
     }
     else {
       size_t step = data.numEntries()/nEvents;
@@ -1251,21 +1254,11 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
       }
       RooLinkedList tinyCmdList(cmdList) ;
       pc.filterCmdList(tinyCmdList,"Prefit,Hesse,Minos,Verbose,Save,Timer");
-      RooCmdArg prefit_option = RooFit::PrefitDataFraction(0);
-      RooCmdArg minos_option = RooFit::Minos(false);
       RooCmdArg hesse_option = RooFit::Hesse(false);
-      RooCmdArg verbose_option = RooFit::Verbose(false);
-      RooCmdArg save_option = RooFit::Save(false);
-      RooCmdArg timer_option = RooFit::Timer(false);
       RooCmdArg print_option = RooFit::PrintLevel(-1);
       
-      tinyCmdList.Add((TObject*)&prefit_option);
-      tinyCmdList.Add((TObject*)&minos_option);
-      tinyCmdList.Add((TObject*)&hesse_option);
-      tinyCmdList.Add((TObject*)&verbose_option);
-      tinyCmdList.Add((TObject*)&save_option);
-      tinyCmdList.Add((TObject*)&timer_option);
-      tinyCmdList.Add((TObject*)&print_option);
+      tinyCmdList.Add(&hesse_option);
+      tinyCmdList.Add(&print_option);
       
       fitTo(tiny,tinyCmdList);
     }
