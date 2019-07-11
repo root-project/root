@@ -107,12 +107,36 @@ public:
       }
    };
 
+   struct RPageRange {
+      /// We do not need to store the element size / page size because we know to which column
+      /// the page belongs
+      struct RPageInfo {
+         /// The sum of the elements of all the pages must match the corresponding fNElements field in fColumnRanges
+         ClusterSize_t fNElements = kInvalidClusterIndex;
+         /// The meaning of fLocator depends on the storage backend.  It indicates where on the storage
+         /// medium the page resides.  For file based storage, for instance, it can be the offset in the file.
+         std::int64_t fLocator = 0;
+
+         bool operator==(const RPageInfo &other) const {
+            return fNElements == other.fNElements && fLocator == other.fLocator;
+         }
+      };
+
+      DescriptorId_t fColumnId = kInvalidDescriptorId;
+      std::vector<RPageInfo> fPageInfos;
+
+      bool operator==(const RPageRange &other) const {
+         return fColumnId == other.fColumnId && fPageInfos == other.fPageInfos;
+      }
+   };
+
 private:
    DescriptorId_t fClusterId = kInvalidDescriptorId;;
    RNTupleVersion fVersion;
    NTupleSize_t fFirstEntryIndex = kInvalidNTupleIndex;
    ClusterSize_t fNEntries = kInvalidClusterIndex;
    std::unordered_map<DescriptorId_t, RColumnRange> fColumnRanges;
+   std::unordered_map<DescriptorId_t, RPageRange> fPageRanges;
 
 public:
    bool operator==(const RClusterDescriptor &other) const;
@@ -121,7 +145,8 @@ public:
    RNTupleVersion GetVersion() const { return fVersion; }
    NTupleSize_t GetFirstEntryIndex() const { return fFirstEntryIndex; }
    ClusterSize_t GetNEntries() const { return fNEntries; }
-   RColumnRange GetColumnRanges(DescriptorId_t columnId) const { return fColumnRanges.at(columnId); }
+   RColumnRange GetColumnRange(DescriptorId_t columnId) const { return fColumnRanges.at(columnId); }
+   RPageRange GetPageRange(DescriptorId_t columnId) const { return fPageRanges.at(columnId); }
 };
 
 
@@ -154,7 +179,7 @@ private:
 public:
    bool operator ==(const RNTupleDescriptor &other) const;
 
-   /// We deliberately do not use ROOT's built-in serialization in order to allow for use of RNTuple's outside ROOT
+   // We deliberately do not use ROOT's built-in serialization in order to allow for use of RNTuple's outside ROOT
    /**
     * Serializes the global ntuple information as well as the column and field schemata
     * Returns the number of bytes and fills buffer if it is not nullptr.
@@ -192,6 +217,7 @@ private:
    RNTupleDescriptor fDescriptor;
 
 public:
+   bool IsValid() const { return true; /* TODO(jblomer) */}
    const RNTupleDescriptor& GetDescriptor() const { return fDescriptor; }
 
    void SetNTuple(const std::string_view &name, const std::string_view &description, const RNTupleVersion &version,
@@ -212,6 +238,7 @@ public:
    void AddCluster(DescriptorId_t clusterId, RNTupleVersion version,
                    NTupleSize_t firstEntryIndex, ClusterSize_t nEntries);
    void AddClusterColumnRange(DescriptorId_t clusterId, const RClusterDescriptor::RColumnRange &columnRange);
+   void AddClusterPageRange(DescriptorId_t clusterId, const RClusterDescriptor::RPageRange &pageRange);
 
    void AddClustersFromFooter(void* footerBuffer);
 };

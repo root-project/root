@@ -522,25 +522,63 @@ TEST(RNTuple, Descriptor)
    descBuilder.AddField(42, RNTupleVersion(), RNTupleVersion(), "x", "std::string", ENTupleStructure::kLeaf);
    descBuilder.AddColumn(3, 42, RNTupleVersion(), RColumnModel("idx_x", EColumnType::kIndex, true));
    descBuilder.AddColumn(4, 42, RNTupleVersion(), RColumnModel("x", EColumnType::kByte, true));
+
+   ROOT::Experimental::RClusterDescriptor::RColumnRange columnRange;
+   ROOT::Experimental::RClusterDescriptor::RPageRange pageRange;
+   ROOT::Experimental::RClusterDescriptor::RPageRange::RPageInfo pageInfo;
+   // Description of cluster #0
    descBuilder.AddCluster(0, RNTupleVersion(), 0, ROOT::Experimental::ClusterSize_t(100));
-   ROOT::Experimental::RClusterDescriptor::RColumnRange range;
-   range.fColumnId = 3;
-   range.fFirstElementIndex = 0;
-   range.fNElements = 100;
-   descBuilder.AddClusterColumnRange(0, range);
-   range.fColumnId = 4;
-   range.fFirstElementIndex = 0;
-   range.fNElements = 300;
-   descBuilder.AddClusterColumnRange(0, range);
+   columnRange.fColumnId = 3;
+   columnRange.fFirstElementIndex = 0;
+   columnRange.fNElements = 100;
+   descBuilder.AddClusterColumnRange(0, columnRange);
+   pageRange.fPageInfos.clear();
+   pageRange.fColumnId = 3;
+   pageInfo.fNElements = 40;
+   pageInfo.fLocator = 0;
+   pageRange.fPageInfos.emplace_back(pageInfo);
+   pageInfo.fNElements = 60;
+   pageInfo.fLocator = 1024;
+   pageRange.fPageInfos.emplace_back(pageInfo);
+   descBuilder.AddClusterPageRange(0, pageRange);
+
+   columnRange.fColumnId = 4;
+   columnRange.fFirstElementIndex = 0;
+   columnRange.fNElements = 300;
+   descBuilder.AddClusterColumnRange(0, columnRange);
+   pageRange.fPageInfos.clear();
+   pageRange.fColumnId = 4;
+   pageInfo.fNElements = 200;
+   pageInfo.fLocator = 2048;
+   pageRange.fPageInfos.emplace_back(pageInfo);
+   pageInfo.fNElements = 100;
+   pageInfo.fLocator = 4096;
+   pageRange.fPageInfos.emplace_back(pageInfo);
+   descBuilder.AddClusterPageRange(0, pageRange);
+
+   // Description of cluster #1
    descBuilder.AddCluster(1, RNTupleVersion(), 100, ROOT::Experimental::ClusterSize_t(1000));
-   range.fColumnId = 3;
-   range.fFirstElementIndex = 100;
-   range.fNElements = 1000;
-   descBuilder.AddClusterColumnRange(1, range);
-   range.fColumnId = 4;
-   range.fFirstElementIndex = 300;
-   range.fNElements = 3000;
-   descBuilder.AddClusterColumnRange(1, range);
+   columnRange.fColumnId = 3;
+   columnRange.fFirstElementIndex = 100;
+   columnRange.fNElements = 1000;
+   descBuilder.AddClusterColumnRange(1, columnRange);
+   pageRange.fPageInfos.clear();
+   pageRange.fColumnId = 3;
+   pageInfo.fNElements = 1000;
+   pageInfo.fLocator = 8192;
+   pageRange.fPageInfos.emplace_back(pageInfo);
+   descBuilder.AddClusterPageRange(1, pageRange);
+
+   columnRange.fColumnId = 4;
+   columnRange.fFirstElementIndex = 300;
+   columnRange.fNElements = 3000;
+   descBuilder.AddClusterColumnRange(1, columnRange);
+   pageRange.fPageInfos.clear();
+   pageRange.fColumnId = 4;
+   pageInfo.fNElements = 3000;
+   pageInfo.fLocator = 16384;
+   pageRange.fPageInfos.emplace_back(pageInfo);
+   descBuilder.AddClusterPageRange(1, pageRange);
 
    auto reference = descBuilder.GetDescriptor();
    EXPECT_EQ("MyTuple", reference.GetName());
