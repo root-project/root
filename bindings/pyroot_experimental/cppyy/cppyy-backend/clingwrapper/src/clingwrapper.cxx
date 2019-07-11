@@ -151,7 +151,7 @@ public:
         const char* code =
                "#include <iostream>\n"
                "#include <string>\n"
-               "#include <DllImport.h>\n";  // defines R__EXTERN
+               "#include <DllImport.h>\n"  // defines R__EXTERN
                "#include <vector>\n"
                "#include <utility>";
         gInterpreter->ProcessLine(code);
