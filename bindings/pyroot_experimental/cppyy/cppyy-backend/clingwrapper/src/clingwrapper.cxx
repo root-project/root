@@ -309,7 +309,7 @@ std::string Cppyy::ResolveEnum(const std::string& enum_type)
     }
 
 // failed or anonymous ... signal upstream to special case this
-    std::string::size_type ipos = enum_type.size()-1;
+    int ipos = enum_type.size()-1;
     for (; 0 <= ipos; --ipos) {
         char c = enum_type[ipos];
         if (isspace(c)) continue;
