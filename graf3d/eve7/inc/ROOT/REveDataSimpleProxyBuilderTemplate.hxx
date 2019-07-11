@@ -17,6 +17,7 @@ public:
    }
 
 protected:
+   using REveDataSimpleProxyBuilder::Build;
    void Build(const void *iData, int index, REveElement *itemHolder, const REveViewContext *context) override
    {
       if(iData) {
@@ -24,11 +25,12 @@ protected:
       }
    }
 
-   void Build(const T & /*iData*/, int /*index*/, REveElement * /*itemHolder*/, const REveViewContext * /*context*/) override
+   virtual void Build(const T & /*iData*/, int /*index*/, REveElement * /*itemHolder*/, const REveViewContext * /*context*/)
    {
       throw std::runtime_error("virtual Build(const T&, int, REveElement&, const REveViewContext*) not implemented by inherited class.");
    }
 
+   using REveDataSimpleProxyBuilder::BuildViewType;
    void BuildViewType(const void *iData, int index, REveElement *itemHolder, std::string viewType, const REveViewContext *context) override
    {
       if(iData) {
@@ -36,7 +38,7 @@ protected:
       }
    }
 
-   void BuildViewType(const T & /*iData*/, int /*index*/, REveElement * /*itemHolder*/, std::string /*viewType*/, const REveViewContext * /*context*/) override
+   virtual void BuildViewType(const T & /*iData*/, int /*index*/, REveElement * /*itemHolder*/, std::string /*viewType*/, const REveViewContext * /*context*/)
    {
       throw std::runtime_error("virtual BuildViewType(const T&, int, REveElement&, const REveViewContext*) not implemented by inherited class.");
    }
