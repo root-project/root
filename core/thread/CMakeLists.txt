@@ -69,7 +69,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Thread
   INSTALL_OPTIONS ${installoptions}
 )
 
-target_link_libraries(Thread PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(Thread PUBLIC Threads::Threads)
 
 # keep include directory for ROOT/RSha256.hxx private
 set_source_files_properties(src/RConcurrentHashColl.cxx

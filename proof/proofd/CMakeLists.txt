@@ -67,7 +67,7 @@ else()
     LIBRARIES
       ${XROOTD_LIBRARIES}
       rpdutil
-      ${CMAKE_THREAD_LIBS_INIT}
+      Threads::Threads
       ${CMAKE_DL_LIBS}
     BUILTINS
       XROOTD
@@ -78,5 +78,7 @@ else()
     proofexecv.cxx
     ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdconn.cxx
     ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdpriv.cxx
+    LIBRARIES
+      Threads::Threads
   )
 endif()

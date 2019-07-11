@@ -69,6 +69,10 @@ set(ROOT_PYTHON_VERSION @PYTHON_VERSION_STRING@)
 # Include RootMacros.cmake to get ROOT's CMake macros
 include("${_thisdir}/RootMacros.cmake")
 
+include(CMakeFindDependencyMacro)
+
+find_dependency(Threads REQUIRED)
+
 #----------------------------------------------------------------------------
 # Include the file listing all the imported targets and options
 if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)

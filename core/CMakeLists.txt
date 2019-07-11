@@ -178,8 +178,9 @@ target_link_libraries(Core
     ZLIB::ZLIB
     ${ZSTD_LIBRARIES}
     ${CMAKE_DL_LIBS}
-    ${CMAKE_THREAD_LIBS_INIT}
     ${corelinklibs}
+  PUBLIC
+    Threads::Threads
 )
 
 add_dependencies(Core CLING)
