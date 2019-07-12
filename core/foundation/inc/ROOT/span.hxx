@@ -225,7 +225,7 @@ public:
      : length_(l.size()), data_(std::begin(l))
   {}
 
-  span& operator=(span const&) noexcept = delete;
+  span& operator=(span const&) noexcept = default;
   span& operator=(span &&) noexcept = delete;
 
   /*
@@ -432,8 +432,8 @@ private:
   }
 
 private:
-  index_type const length_;
-  pointer const data_;
+  index_type length_;
+  pointer data_;
 };
 // }}}
 } // inline namespace __ROOT
