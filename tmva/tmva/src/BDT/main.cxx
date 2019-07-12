@@ -97,7 +97,8 @@ void check_params2(json j, int max_counter, int counter=0){
 
 
 /// Need a nlohmann::json object from an xgboost saved format
-AbstractNode* _read_nodes(json jTree, std::vector<AbstractNode> *nodes_vector){
+//AbstractNode* _read_nodes(json jTree, std::vector<AbstractNode> *nodes_vector){
+AbstractNode* _read_nodes(json jTree, Nodes &nodes_struct){
   bool node_has_children = (jTree.find("children") != jTree.end());
   bool is_leaf_node = (
     (jTree["children"][0].find("leaf") != jTree["children"][0].end())
@@ -117,7 +118,8 @@ AbstractNode* _read_nodes(json jTree, std::vector<AbstractNode> *nodes_vector){
       else {
         std::cerr << "Implementation error for reading leaf nodes.";
       }
-      nodes_vector->push_back(tmp_leaf_node);
+      nodes_struct.leaf_nodes.push_back(tmp_leaf_node);
+      return &tmp_leaf_node;
     }
     else {
       Node tmp_normal_node;
@@ -128,25 +130,27 @@ AbstractNode* _read_nodes(json jTree, std::vector<AbstractNode> *nodes_vector){
       tmp_normal_node.child_id_false = jTree["no"];
       // Read childs
       if (jTree["yes"] == jTree["children"][0]["nodeid"]){
-        tmp_normal_node.child_true = _read_nodes(jTree["children"][0], nodes_vector);
-        tmp_normal_node.child_false = _read_nodes(jTree["children"][1], nodes_vector);
+        tmp_normal_node.child_true = _read_nodes(jTree["children"][0], nodes_struct);
+        tmp_normal_node.child_false = _read_nodes(jTree["children"][1], nodes_struct);
       }
       else {
         std::cerr << "Implementation error for reading normal nodes.";
       }
-      nodes_vector->push_back(tmp_normal_node);
-
+      nodes_struct.normal_nodes.push_back(tmp_normal_node);
+      return &tmp_normal_node;
     }
   }
   else {
     std::cerr << "Warning: node has no childrens!!!\n";
   }
+  //return 1;
 }
 
-std::vector<AbstractNode> read_nodes_from_tree(json jTree){
-  std::vector<AbstractNode> nodes;
-  _read_nodes(jTree, &nodes);
-  return nodes;
+//std::vector<AbstractNode>
+void read_nodes_from_tree(json jTree,Nodes &Nodes){
+  //std::vector<AbstractNode> nodes;
+  _read_nodes(jTree, Nodes);
+  //return nodes;
 }
 
 // */
@@ -176,16 +180,25 @@ int main() {
   int number_of_trees = json_model.size();
   Tree trees[number_of_trees];
   for (int i=0; i<number_of_trees; i++){
-    trees[i].nodes = read_nodes_from_tree(json_model[i]);
-    std::cout << "Number of nodes : " << trees[i].nodes.size() << std::endl;
+    //trees[i].nodes =
+    read_nodes_from_tree(json_model[i], trees[i].nodes);
+    std::cout << "Number of nodes : "
+              << trees[i].nodes.normal_nodes.size()+trees[i].nodes.leaf_nodes.size()
+              << std::endl;
   }
 
   Tree test = trees[0];
   double event[3] = {0,1,2};
-  for (auto &node : test.nodes){
+  for (auto &node : test.nodes.leaf_nodes){
     std::cout << node.threshold << std::endl;
     std::cout << node.inference(event) << std::endl;
   }
+  for (auto &node : test.nodes.normal_nodes){
+    std::cout << node.threshold << std::endl;
+    std::cout << node.inference(event) << std::endl;
+  }
+
+
 
   Forest my_forest;
   for (auto &tree : trees){

@@ -13,8 +13,7 @@ public:
   std::string split_variable;
   int node_id;
   int depth;
-  int missing; // what is missing
-  double inference(double event[]){return -1;}
+  int missing; // what is missing?
   //float get_threshold(){this->threshold;}
 
   //virtual std::string getKind();
@@ -39,14 +38,18 @@ public:
   double inference(double event[]){return 2;}
 };
 
-
+struct Nodes {
+  std::vector<LeafNode> leaf_nodes;
+  std::vector<Node> normal_nodes;
+} ;
 
 
 //class tree
 class Tree{
 public:
+  Nodes nodes;
   //std::map< unsigned int, std::map<unsigned int, AbstractNode> > nodes;
-  std::vector<AbstractNode> nodes; // change to vector of pointers
+  //std::vector<AbstractNode> nodes; // change to vector of pointers
   double inference(double event[]){
     return 0;
   }
