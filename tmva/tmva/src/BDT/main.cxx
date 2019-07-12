@@ -181,8 +181,10 @@ int main() {
   }
 
   Tree test = trees[0];
+  double event[3] = {0,1,2};
   for (auto &node : test.nodes){
     std::cout << node.threshold << std::endl;
+    std::cout << node.inference(event) << std::endl;
   }
 
   Forest my_forest;

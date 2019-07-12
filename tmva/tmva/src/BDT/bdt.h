@@ -14,7 +14,7 @@ public:
   int node_id;
   int depth;
   int missing; // what is missing
-
+  double inference(double event[]){return -1;}
   //float get_threshold(){this->threshold;}
 
   //virtual std::string getKind();
@@ -28,6 +28,7 @@ public:
   AbstractNode* child_true;
   AbstractNode* child_false;
   Node(){kind = "NormalNode";}
+  double inference(double event[]){return 1;}
 };
 
 class LeafNode : public AbstractNode{
@@ -35,7 +36,11 @@ public:
   double leaf_true = 0;
   double leaf_false = 0;
   LeafNode(){kind = "LeafNode";}
+  double inference(double event[]){return 2;}
 };
+
+
+
 
 //class tree
 class Tree{
