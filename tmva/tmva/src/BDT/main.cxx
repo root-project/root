@@ -133,20 +133,19 @@ Node* _read_nodes(json jTree, Tree &tree){
     tmp_node->leaf_true = jTree["children"][0]["leaf"];
     tmp_node->leaf_false = jTree["children"][1]["leaf"];
     tmp_node->is_leaf_node=1;
-    tree.nodes.push_back(tmp_node);
-    //return tmp_node;
+    //tree.nodes.push_back(tmp_node);
   }
   else {
     tmp_node->child_true = _read_nodes(jTree["children"][0], tree);
     tmp_node->child_false = _read_nodes(jTree["children"][1], tree);
-    tree.nodes.push_back(tmp_node);
   }
+  tree.nodes.push_back(tmp_node);
   return tmp_node;
 
 }
 
 //std::vector<AbstractNode>
-void read_nodes_from_tree(json jTree,Tree &tree){
+void read_nodes_from_tree(json &jTree,Tree &tree){
   //std::vector<AbstractNode> nodes;
   _read_nodes(jTree, tree);
   //return nodes;
@@ -175,10 +174,16 @@ int main() {
               << std::endl;
   }
 
-  double event[4] = {0,1,2,3};
+  //double event[4] = {6.,148.,72.,35.};
+  double event[4] = {1.,115.,70.,30.};
 
-  std::cout << trees[0].inference(event) << std::endl;
-  std::cout << trees[0].nodes.size() << std::endl;
+  for (auto& tree : trees){
+    std::cout  << "There are: " << tree.nodes.size() << " trees\n";
+    std::cout << "Prediction: " << tree.inference(event) << std::endl;
+  }
+
+
+  //Tree test = trees[0];
   /*
   for (auto &node : test.nodes.leaf_nodes){
     std::cout << node.split_value << std::endl;

@@ -30,6 +30,8 @@ model.fit(X_train, y_train)
 
 # make predictions for test data
 y_pred = model.predict(X_test)
+# print(X_test)
+# print(y_pred)
 predictions = [round(value) for value in y_pred]
 
 # evaluate predictions
