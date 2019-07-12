@@ -41,7 +41,6 @@
 #include "THttpCallArg.h"
 
 #include <stdlib.h>
-#include <vector>
 #include <string.h>
 
 //////////////////////////////////////////////////////////////////////////

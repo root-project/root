@@ -43,8 +43,8 @@ protected:
    UInt_t fMask{0};                       ///<! defines operation kind
    const char *fSearchPath{nullptr};      ///<! current path searched
    Int_t fLevel{0};                       ///<! current level of hierarchy
-   TString fItemName{};                   ///<! name of current item
-   TList fItemsNames{};                   ///<! list of created items names, need to avoid duplication
+   TString fItemName;                     ///<! name of current item
+   TList fItemsNames;                     ///<! list of created items names, need to avoid duplication
    Int_t fRestriction{0};                 ///<! restriction 0 - default, 1 - read-only, 2 - full access
 
    TRootSnifferStore *fStore{nullptr}; ///<! object to store results
