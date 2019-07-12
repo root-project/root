@@ -887,14 +887,16 @@ static void SearchAndAddPath(const std::string& Path,
          DirIt != DirEnd && !EC; DirIt.increment(EC)) {
 
       std::string FileName(DirIt->path());
-      if (!llvm::sys::fs::is_directory(FileName) && llvm::sys::path::extension(FileName) == ".so") {
-         // No need to check linked libraries, as this function is only invoked
-         // for symbols that cannot be found (neither by dlsym nor in the JIT).
-         if (dyLibManager->isLibraryLoaded(FileName.c_str()))
-            continue;
-         sLibraries.push_back(std::make_pair(sPaths.size(), llvm::sys::path::filename(FileName)));
-         flag = true;
-      }
+      if (llvm::sys::fs::is_directory(FileName))
+         continue;
+      if (!cling::DynamicLibraryManager::isSharedLibrary(FileName))
+         continue;
+      // No need to check linked libraries, as this function is only invoked
+      // for symbols that cannot be found (neither by dlsym nor in the JIT).
+      if (dyLibManager->isLibraryLoaded(FileName.c_str()))
+         continue;
+      sLibraries.push_back(std::make_pair(sPaths.size(), llvm::sys::path::filename(FileName)));
+      flag = true;
    }
 
    if (flag)
