@@ -28,9 +28,6 @@
 #include <iostream>
 #include <utility>
 
-namespace {
-constexpr int kDirectoryCustomBrowse = BIT(9);
-}
 
 ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view ntupleName, RSettings settings)
    : RPageSink(ntupleName)
@@ -84,7 +81,7 @@ void ROOT::Experimental::Detail::RPageSinkRoot::Create(RNTupleModel &model)
 {
    fDirectory = fSettings.fFile->mkdir(fNTupleName.c_str());
    // In TBrowser, use RNTupleBrowser(TDirectory *directory) in order to show the ntuple contents
-   fDirectory->SetBit(kDirectoryCustomBrowse);
+   fDirectory->SetBit(TDirectoryFile::kCustomBrowse);
    fDirectory->SetTitle("ROOT::Experimental::Detail::RNTupleBrowser");
 
    unsigned int nColumns = 0;
