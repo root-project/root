@@ -54,7 +54,7 @@ private:
 
 public:
    // TDirectory status bits
-   enum { kCloseDirectory = BIT(7) };
+   enum { kCloseDirectory = BIT(7), kCustomBrowse = BIT(9) };
 
    TDirectoryFile();
    TDirectoryFile(const char *name, const char *title, Option_t *option="", TDirectory* motherDir = 0);
