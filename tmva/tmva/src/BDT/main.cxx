@@ -94,57 +94,61 @@ void check_params2(json j, int max_counter, int counter=0){
     }
   }
 }
+// -----------------------------------------------------------------------------
 
-void write_node_members(json &jTree, Node &tmp_node){
-  tmp_node.split_value = jTree["split_condition"];
-  tmp_node.node_id = jTree["nodeid"];
-  tmp_node.child_id_true = jTree["yes"];
-  tmp_node.child_id_false = jTree["no"];
+void write_node_members(json &jTree, Node* tmp_node){
+  tmp_node->split_value = jTree["split_condition"];
+  tmp_node->node_id = jTree["nodeid"];
+  tmp_node->child_id_true = jTree["yes"];
+  tmp_node->child_id_false = jTree["no"];
 
   std::string tmp_str = jTree["split"].get<std::string>();
   tmp_str.erase(tmp_str.begin(), tmp_str.begin()+1); // remove initial "f"
-  tmp_node.split_variable = std::stoi(tmp_str);
+  tmp_node->split_variable = std::stoi(tmp_str);
 }
 /// Need a nlohmann::json object from an xgboost saved format
 //AbstractNode* _read_nodes(json jTree, std::vector<AbstractNode> *nodes_vector){
-AbstractNode* _read_nodes(json jTree, Nodes &nodes_struct){
+void check_json(json &jTree){
   bool node_has_children = (jTree.find("children") != jTree.end());
+  if (!node_has_children){
+    std::cerr << "Warning: node has no childrens!!!\n";
+  }
+  if (jTree["yes"] != jTree["children"][0]["nodeid"]){
+    std::cerr << "Implementation error for reading nodes.";
+  }
+}
+
+
+Node* _read_nodes(json jTree, Tree &tree){
+  std::cout << "create\n";
   bool is_leaf_node = (
     (jTree["children"][0].find("leaf") != jTree["children"][0].end())
     && (jTree["children"][0].find("nodeid") != jTree["children"][0].end())
   );
 
-  if (node_has_children){
-    if (jTree["yes"] != jTree["children"][0]["nodeid"]){
-      std::cerr << "Implementation error for reading nodes.";
-    }
-    if (is_leaf_node){
-      LeafNode tmp_node;
-      write_node_members(jTree, tmp_node);
-      tmp_node.leaf_true = jTree["children"][0]["leaf"];
-      tmp_node.leaf_false = jTree["children"][1]["leaf"];
-      nodes_struct.leaf_nodes.push_back(tmp_node);
-      return &tmp_node;
-    }
-    else {
-      Node tmp_node;
-      write_node_members(jTree, tmp_node);
-      tmp_node.child_true = _read_nodes(jTree["children"][0], nodes_struct);
-      tmp_node.child_false = _read_nodes(jTree["children"][1], nodes_struct);
-      nodes_struct.normal_nodes.push_back(tmp_node);
-      return &tmp_node;
-    }
+  Node* tmp_node;
+  tmp_node = new Node();
+  write_node_members(jTree, tmp_node);
+  if (is_leaf_node){
+    tmp_node->leaf_true = jTree["children"][0]["leaf"];
+    tmp_node->leaf_false = jTree["children"][1]["leaf"];
+    tmp_node->is_leaf_node=1;
+    tree.nodes.push_back(tmp_node);
+    //return tmp_node;
   }
   else {
-    std::cerr << "Warning: node has no childrens!!!\n";
+    tmp_node->child_true = _read_nodes(jTree["children"][0], tree);
+    tmp_node->child_false = _read_nodes(jTree["children"][1], tree);
+    tree.nodes.push_back(tmp_node);
   }
-  //return 1;
+  return tmp_node;
+
 }
 
 //std::vector<AbstractNode>
-void read_nodes_from_tree(json jTree,Nodes &Nodes){
+void read_nodes_from_tree(json jTree,Tree &tree){
   //std::vector<AbstractNode> nodes;
-  _read_nodes(jTree, Nodes);
+  _read_nodes(jTree, tree);
   //return nodes;
 }
 
@@ -158,32 +162,23 @@ int main() {
 
   // Parse the string with all the model
   auto json_model = json::parse(my_config);
-  //std::cout << "json stringed" << j3.dump() << std::endl;
-  //std::cout << "Size: " <<  j3.size() << std::endl;
-  //auto my_type = json_model.type();
-  //std::cout << my_type.get<std::string>();
 
-  /*
-  int count = 0;
-  for (auto &tree : j3){
-    std::cout << tree << "\n\n";
-    count++;
-  }
-  */
   std::cout << "\n *************************** \n\n";
-
+  std::cout << "Create " << json_model.size() << " trees\n";
   int number_of_trees = json_model.size();
   Tree trees[number_of_trees];
   for (int i=0; i<number_of_trees; i++){
     //trees[i].nodes =
-    read_nodes_from_tree(json_model[i], trees[i].nodes);
+    read_nodes_from_tree(json_model[i], trees[i]);
     std::cout << "Number of nodes : "
-              << trees[i].nodes.normal_nodes.size()+trees[i].nodes.leaf_nodes.size()
+              << trees[i].nodes.size()
               << std::endl;
   }
 
-  Tree test = trees[0];
   double event[4] = {0,1,2,3};
+
+  std::cout << trees[0].inference(event) << std::endl;
+  std::cout << trees[0].nodes.size() << std::endl;
   /*
   for (auto &node : test.nodes.leaf_nodes){
     std::cout << node.split_value << std::endl;
@@ -210,8 +205,6 @@ int main() {
 
   // template faillure
   //Node2<double> leaf;
-  //Node2<Node2<double>> normal_node;
-  Node3 ttt;
 
 
 
