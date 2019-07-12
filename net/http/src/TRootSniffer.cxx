@@ -760,7 +760,7 @@ void TRootSniffer::ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj)
       ScanCollection(rec, ((TFolder *)obj)->GetListOfFolders());
    } else if (obj->InheritsFrom(TDirectory::Class())) {
       TDirectory *dir = (TDirectory *)obj;
-      ScanCollection(rec, dir->GetList(), 0, dir->GetListOfKeys());
+      ScanCollection(rec, dir->GetList(), nullptr, dir->GetListOfKeys());
    }
    if (rec.CanExpandItem()) {
       ScanObjectMembers(rec, obj->IsA(), (char *)obj);
@@ -1846,7 +1846,7 @@ Bool_t TRootSniffer::RegisterCommand(const char *cmdname, const char *method, co
    Int_t numargs = 0;
    do {
       TString nextname = TString::Format("%sarg%d%s", "%", numargs + 1, "%");
-      if (strstr(method, nextname.Data()) == 0)
+      if (strstr(method, nextname.Data()) == nullptr)
          break;
       numargs++;
    } while (numargs < 100);
