@@ -484,8 +484,6 @@ if(ROOT_python_FOUND)
                  tutorial-dataframe-df017_vecOpsHEP-py
                  tutorial-dataframe-df102_NanoAODDimuonAnalysis-py
                  tutorial-pyroot-benchmarks-py
-                 tutorial-pyroot-geometry-py
-                 tutorial-pyroot-na49view-py
                  tutorial-pyroot-pyroot002_TTreeAsMatrix-py
                  tutorial-pyroot-shapes-py
                  tutorial-pyroot-staff-py
