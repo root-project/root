@@ -45,12 +45,24 @@ class ROOTFacade(types.ModuleType):
         self.__class__.__setattr__ = self._setattr
 
     def _fallback_getattr(self, name):
-        # Try first in the global namespace, then in the ROOT namespace
-        # This allows to lookup e.g. ROOT.ROOT.Math as ROOT.Math
+        # Try:
+        # - in the global namespace
+        # - in the ROOT namespace
+        # - in gROOT (ROOT lists such as list of files,
+        #   memory mapped files, functions, geometries ecc.)
+        # The first two attempts allow to lookup
+        # e.g. ROOT.ROOT.Math as ROOT.Math
         try:
             return getattr(gbl_namespace, name)
-        except AttributeError:
-            return getattr(self.__dict__['ROOT_ns'], name)
+        except AttributeError as err:
+            try:
+                return getattr(self.__dict__['ROOT_ns'], name)
+            except AttributeError:
+                res = gROOT.FindObject(name)
+                if res:
+                    return res
+                else:
+                    raise AttributeError(str(err))
 
     def _finalSetup(self):
         # Setup interactive usage from Python
