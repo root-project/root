@@ -136,6 +136,50 @@ public:
 };
 
 
+template <>
+class RNTupleView<double> {
+   friend class RNTupleReader;
+   friend class RNTupleViewCollection;
+
+protected:
+   RField<double> fField;
+   RNTupleView(std::string_view fieldName, Detail::RPageSource* pageSource) : fField(fieldName) {
+      fField.ConnectColumns(pageSource);
+   }
+
+public:
+   RNTupleView(const RNTupleView& other) = delete;
+   RNTupleView(RNTupleView&& other) = default;
+   RNTupleView& operator=(const RNTupleView& other) = delete;
+   RNTupleView& operator=(RNTupleView&& other) = default;
+   ~RNTupleView() = default;
+
+   double operator()(NTupleSize_t index) { return *fField.Map(index); }
+};
+
+
+template <>
+class RNTupleView<int> {
+   friend class RNTupleReader;
+   friend class RNTupleViewCollection;
+
+protected:
+   RField<int> fField;
+   RNTupleView(std::string_view fieldName, Detail::RPageSource* pageSource) : fField(fieldName) {
+      fField.ConnectColumns(pageSource);
+   }
+
+public:
+   RNTupleView(const RNTupleView& other) = delete;
+   RNTupleView(RNTupleView&& other) = default;
+   RNTupleView& operator=(const RNTupleView& other) = delete;
+   RNTupleView& operator=(RNTupleView&& other) = default;
+   ~RNTupleView() = default;
+
+   int operator()(NTupleSize_t index) { return *fField.Map(index); }
+};
+
+
 // clang-format off
 /**
 \class ROOT::Experimental::RNTupleViewCollection
