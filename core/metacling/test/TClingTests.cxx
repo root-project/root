@@ -136,16 +136,15 @@ static std::string MakeLibNamePlatformIndependent(llvm::StringRef libName)
    return libName.substr(0, libName.find_first_of('.')).str();
 }
 
-// Shortens the invocation.
-static const char *GetLibs(const char *cls)
-{
-   return gInterpreter->GetClassSharedLibs(cls);
-}
-
 // Check if the heavily used interface in TCling::AutoLoad returns consistent
 // results.
 TEST_F(TClingTests, GetClassSharedLibs)
 {
+   // Shortens the invocation.
+   auto GetLibs = [](const char *cls) -> const char * {
+      return gInterpreter->GetClassSharedLibs(cls);
+   };
+
    llvm::StringRef lib = GetLibs("TLorentzVector");
    ASSERT_STREQ("Physics", MakeLibNamePlatformIndependent(lib).c_str());
 
