@@ -101,6 +101,9 @@ public:
   { }
 
 
+  RooSpan<T>& operator=(const RooSpan<T>& other) = default;
+
+
   constexpr typename std::span<T>::iterator begin() const {
     return _span.begin();
   }
