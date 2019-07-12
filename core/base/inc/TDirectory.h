@@ -93,6 +93,7 @@ protected:
    mutable std::atomic_flag fSpinLock; //! MSVC doesn't support = ATOMIC_FLAG_INIT;
 
    static Bool_t fgAddDirectory;   //!flag to add histograms, graphs,etc to the directory
+   static Bool_t fgReproducible;   //!Whether fixed values should be used for name, title, UUID, and datimes
 
           Bool_t  cd1(const char *path);
    static Bool_t  Cd1(const char *path);
@@ -210,6 +211,9 @@ public:
    static Bool_t       Cd(const char *path);
    static void         DecodeNameCycle(const char *namecycle, char *name, Short_t &cycle, const size_t namesize = 0);
    static void         EncodeNameCycle(char *buffer, const char *name, Short_t cycle);
+
+   static void         MakeReproducible(Bool_t reproducible = kTRUE) {fgReproducible = reproducible;}
+   static Bool_t       IsReproducible() {return fgReproducible;}
 
    ClassDef(TDirectory,5)  //Describe directory structure in memory
 };

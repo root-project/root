@@ -29,6 +29,7 @@
 #include "TSpinLockGuard.h"
 
 Bool_t TDirectory::fgAddDirectory = kTRUE;
+Bool_t TDirectory::fgReproducible = kFALSE;
 
 const Int_t  kMaxLen = 2048;
 

@@ -39,6 +39,7 @@ required, use TTimeStamp.
 #include "TError.h"
 #include "Bytes.h"
 #include "TString.h"
+#include "TDirectory.h"
 
 
 ClassImp(TDatime);
@@ -287,6 +288,11 @@ void TDatime::ReadBuffer(char *&buffer)
 
 void TDatime::Set()
 {
+   if (TDirectory::IsReproducible()) {
+      fDatime = UInt_t(0);
+      return;
+   }
+
 #ifndef WIN32
    time_t tloc   = time(0);
 #ifdef _REENTRANT

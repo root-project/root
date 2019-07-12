@@ -645,6 +645,10 @@ void TFile::Init(Bool_t create)
       new TFree(fFree, fBEGIN, Long64_t(kStartBigFile));  //Create new free list
 
       //*-* Write Directory info
+      if (fgReproducible) {
+         fName = "ReproducibleRootFile";
+         fUUID.SetUUID("00000000-0000-0000-0000-000000000000");
+      }
       Int_t namelen= TNamed::Sizeof();
       Int_t nbytes = namelen + TDirectoryFile::Sizeof();
       TKey *key    = new TKey(fName, fTitle, IsA(), nbytes, this);
