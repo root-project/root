@@ -6,6 +6,7 @@
 #include <streambuf>
 #include <map>
 #include <vector>
+#include <memory>
 
 #include "bdt.h"
 
@@ -95,57 +96,55 @@ void check_params2(json j, int max_counter, int counter=0){
   }
 }
 
+void write_base_properties_to_node(std::shared_ptr<AbstractNode> tmp_node, json &jTree){
+  tmp_node->threshold = jTree["split_condition"];
+  tmp_node->split_variable = jTree["split"];
+  tmp_node->node_id = jTree["nodeid"];
+  tmp_node->child_id_true = jTree["yes"];
+  tmp_node->child_id_false = jTree["no"];
+  tmp_node->depth = jTree["depth"];
+  tmp_node->depth = jTree["missing"];
+}
+
 
 /// Need a nlohmann::json object from an xgboost saved format
-AbstractNode* _read_nodes(json jTree, std::vector<AbstractNode> *nodes_vector){
-  bool node_has_children = (jTree.find("children") != jTree.end());
+std::shared_ptr<AbstractNode> _read_nodes(json jTree, std::vector<std::shared_ptr<AbstractNode>> nodes_vector){
+  bool is_node = (jTree.find("children") != jTree.end());
   bool is_leaf_node = (
     (jTree["children"][0].find("leaf") != jTree["children"][0].end())
     && (jTree["children"][0].find("nodeid") != jTree["children"][0].end())
   );
 
-  if (node_has_children){
+  if (is_node){
+    if (jTree["yes"] != jTree["children"][0]["nodeid"]){
+      std::cerr << "Implementation error for reading nodes.";
+    }
     if (is_leaf_node){
-      LeafNode tmp_leaf_node;
-      tmp_leaf_node.threshold = jTree["split_condition"];
-      tmp_leaf_node.split_variable = jTree["split"];
-      tmp_leaf_node.node_id = jTree["nodeid"];
-      if (jTree["yes"] == jTree["children"][0]["nodeid"]){
-        tmp_leaf_node.leaf_true = jTree["children"][0]["leaf"];
-        tmp_leaf_node.leaf_false = jTree["children"][1]["leaf"];
-      }
-      else {
-        std::cerr << "Implementation error for reading leaf nodes.";
-      }
-      nodes_vector->push_back(tmp_leaf_node);
+      //LeafNode tmp_node;
+      std::shared_ptr<LeafNode> tmp_node(new LeafNode());
+      tmp_node->leaf_true = jTree["children"][0]["leaf"];
+      tmp_node->leaf_false = jTree["children"][1]["leaf"];
+      write_base_properties_to_node(tmp_node, jTree);
+      nodes_vector.push_back(tmp_node);
     }
     else {
-      Node tmp_normal_node;
-      tmp_normal_node.threshold = jTree["split_condition"];
-      tmp_normal_node.split_variable = jTree["split"];
-      tmp_normal_node.node_id = jTree["nodeid"];
-      tmp_normal_node.child_id_true = jTree["yes"];
-      tmp_normal_node.child_id_false = jTree["no"];
-      // Read childs
-      if (jTree["yes"] == jTree["children"][0]["nodeid"]){
-        tmp_normal_node.child_true = _read_nodes(jTree["children"][0], nodes_vector);
-        tmp_normal_node.child_false = _read_nodes(jTree["children"][1], nodes_vector);
-      }
-      else {
-        std::cerr << "Implementation error for reading normal nodes.";
-      }
-      nodes_vector->push_back(tmp_normal_node);
-
+      //Node tmp_node;
+      std::shared_ptr<Node> tmp_node(new Node());
+      tmp_node->child_true = _read_nodes(jTree["children"][0], nodes_vector);
+      tmp_node->child_false = _read_nodes(jTree["children"][1], nodes_vector);
+      write_base_properties_to_node(tmp_node, jTree);
+      nodes_vector.push_back(tmp_node);
     }
   }
   else {
-    std::cerr << "Warning: node has no childrens!!!\n";
+    std::cerr << "Unknown 'node'!\n";
   }
+  return nodes_vector.back();
 }
 
-std::vector<AbstractNode> read_nodes_from_tree(json jTree){
-  std::vector<AbstractNode> nodes;
-  _read_nodes(jTree, &nodes);
+std::vector<std::shared_ptr<AbstractNode>> read_nodes_from_tree(json jTree){
+  std::vector<std::shared_ptr<AbstractNode>> nodes;
+  _read_nodes(jTree, nodes);
   return nodes;
 }
 
@@ -182,7 +181,7 @@ int main() {
 
   Tree test = trees[0];
   for (auto &node : test.nodes){
-    std::cout << node.threshold << std::endl;
+    std::cout << node->threshold << std::endl;
   }
 
   Forest my_forest;
