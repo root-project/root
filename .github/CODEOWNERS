@@ -24,6 +24,7 @@
 /interpreter/ @Axel-Naumann
 /interpreter/llvm/ @vgvassilev
 /io/ @pcanal
+/io/xml/ @pcanal @linev
 /main/ @pcanal
 /math/ @lmoneta
 /misc/ @Axel-Naumann
@@ -32,7 +33,7 @@
 /proof/ @gganis
 /roofit/ @lmoneta @hageboeck
 /rootx/ @Axel-Naumann
-/sql/ @pcanal
+/sql/ @pcanal @linev
 /tmva/ @lmoneta @ashlaban @stwunsch
 /tree/ @pcanal
 /tutorials/ @couet
@@ -47,17 +48,23 @@
 /core/lzma/ @pcanal
 /core/multiproc/ @gganis
 /core/thread/ @pcanal
-/etc/http/ @linev
-/etc/eve7/ @linev
 /graf2d/cocoa/ @TimurP
 /graf3d/eve/ @osschar
-/graf3d/eve7/ @osschar
-/gui/fitpanelv7/ @linev
+/graf3d/eve7/ @osschar @linev
+
+#different http/webgui components
+/net/http/ @linev
+/net/httpsniff/ @linev
+/tutorials/http/ @linev
+/js/ @linev
+/gui/webdisplay/ @linev
 /gui/cefdisplay/ @linev
 /gui/qt5webdisplay/ @linev
-/gui/webdisplay/ @linev
 /gui/webgui6/ @linev
-/net/http/ @linev
+/gui/fitpanelv7/ @linev
+/gui/browserv7/ @bellenot @linev
+/gui/canvaspainter/ @Axel-Naumann @linev
+/ui5/ @linev
 
 /cmake/ @amadio
 *.cmake @amadio
