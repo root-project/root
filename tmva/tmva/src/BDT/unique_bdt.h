@@ -1,5 +1,5 @@
-#ifndef __BDT_H_
-#define __BDT_H_
+#ifndef __UNIQUE_BDT_H_
+#define __UNIQUE_BDT_H_
 
 
 #include <string>
@@ -15,7 +15,7 @@
 
 using json = nlohmann::json;
 
-namespace shared{
+namespace unique{
   class Node{
   public:
     static int count;
@@ -23,8 +23,8 @@ namespace shared{
     double split_value = 0;
     int split_variable;
     int node_id;
-    std::shared_ptr<Node> child_true;
-    std::shared_ptr<Node> child_false;
+    std::unique_ptr<Node> child_true;
+    std::unique_ptr<Node> child_false;
     double leaf_true, leaf_false;
     int depth;
     int missing; // what is missing?
@@ -55,28 +55,18 @@ namespace shared{
 
   class Tree{
   public:
-    std::vector<std::shared_ptr<Node>> nodes;
+    //std::vector<std::unique_ptr<Node>> nodes;
+    std::unique_ptr<Node> nodes;
     double inference(double event[]){
-      return nodes.back()->inference(event);
+      return nodes->inference(event);
     }
-  // /*
-    ~Tree(){
-      int i = 0;
-      for (auto node : nodes){
-        std::cout << i << std::endl;
-        i++;
-        // delete node; // should I leave it?
-      }
-    }
-  // */
   };
 
   // Reading functions
-  void write_node_members(json &jTree, std::shared_ptr<Node> tmp_node);
-  std::shared_ptr<Node> _read_nodes(json jTree, Tree &tree);
+  void write_node_members(json &jTree, std::unique_ptr<Node> &tmp_node);
+  std::unique_ptr<Node> _read_nodes(json &jTree, Tree &tree);
   void read_nodes_from_tree(json &jTree,Tree &tree);
 }
-
 
 
 #endif

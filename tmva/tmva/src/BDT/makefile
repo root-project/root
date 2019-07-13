@@ -6,7 +6,7 @@ CPPFLAGS = -I./include \
 
 LIBFLAGS = -L
 
-OBJS = build/main.o build/bdt.o
+OBJS = build/main.o build/bdt.o build/unique_bdt.o
 EXE = main.exe
 
 .PHONY : all clean distclean

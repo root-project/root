@@ -1,10 +1,10 @@
-#include "bdt.h"
+#include "unique_bdt.h"
 #include <string>
 #include <map>
 #include <iostream>
 
 
-namespace shared{
+namespace unique{
 
 
   // counter
@@ -22,7 +22,7 @@ namespace shared{
 
 
   // Reading functions
-  void write_node_members(json &jTree, std::shared_ptr<Node> tmp_node){
+  void write_node_members(json &jTree, std::unique_ptr<Node> &tmp_node){
     tmp_node->split_value = jTree["split_condition"];
     tmp_node->node_id = jTree["nodeid"];
     tmp_node->child_id_true = jTree["yes"];
@@ -35,14 +35,14 @@ namespace shared{
 
 
   /// Need a nlohmann::json object from an xgboost saved format
-  std::shared_ptr<Node> _read_nodes(json jTree, Tree &tree){
+  std::unique_ptr<Node> _read_nodes(json &jTree, Tree &tree){
     std::cout << "create\n";
     bool is_leaf_node = (
       (jTree["children"][0].find("leaf") != jTree["children"][0].end())
       && (jTree["children"][0].find("nodeid") != jTree["children"][0].end())
     );
 
-    std::shared_ptr<Node> tmp_node(new Node);
+    std::unique_ptr<Node> tmp_node(new Node);
     //tmp_node = new Node();
     write_node_members(jTree, tmp_node);
     if (is_leaf_node){
@@ -55,15 +55,15 @@ namespace shared{
       tmp_node->child_true = _read_nodes(jTree["children"][0], tree);
       tmp_node->child_false = _read_nodes(jTree["children"][1], tree);
     }
-    tree.nodes.push_back(tmp_node);
-    return tmp_node;
+    //tree.nodes.push_back(tmp_node);
+    return std::move(tmp_node);
 
   }
 
   //std::vector<AbstractNode>
   void read_nodes_from_tree(json &jTree,Tree &tree){
     //std::vector<AbstractNode> nodes;
-    _read_nodes(jTree, tree);
+    tree.nodes = _read_nodes(jTree, tree);
     //return nodes;
   }
 } // end namespace
