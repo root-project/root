@@ -13,8 +13,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep);
-void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep);
+
+void R__zipLZ4(int cxlevel, int srcsize, char * src, int tgtsize, char * tgt, int & irep);
+void R__unzipLZ4(int srcsize, unsigned char * src, int tgtsize, unsigned char * tgt, int & irep);
+
 #ifdef __cplusplus
 }
 #endif

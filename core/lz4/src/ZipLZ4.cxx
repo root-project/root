@@ -30,20 +30,20 @@ static const int kChecksumOffset = 2 + 1 + 3 + 3;
 static const int kChecksumSize = sizeof(XXH64_canonical_t);
 static const int kHeaderSize = kChecksumOffset + kChecksumSize;
 
-void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
+void R__zipLZ4(int cxlevel, int srcsize, char * src, int tgtsize, char * tgt, int & irep)
 {
    int LZ4_version = LZ4_versionNumber();
    uint64_t out_size; /* compressed size */
-   uint64_t in_size = (unsigned)(*srcsize);
+   uint64_t in_size = (unsigned) srcsize;
 
-   *irep = 0;
+   irep = 0;
 
-   if (R__unlikely(*tgtsize <= 0)) {
+   if (R__unlikely(tgtsize <= 0)) {
       return;
    }
 
    // Refuse to compress more than 16MB at a time -- we are only allowed 3 bytes for size info.
-   if (R__unlikely(*srcsize > 0xffffff || *srcsize < 0)) {
+   if (R__unlikely(srcsize > 0xffffff || srcsize < 0)) {
       return;
    }
 
@@ -52,9 +52,9 @@ void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, in
       cxlevel = 9;
    }
    if (cxlevel >= 4) {
-      returnStatus = LZ4_compress_HC(src, &tgt[kHeaderSize], *srcsize, *tgtsize - kHeaderSize, cxlevel);
+      returnStatus = LZ4_compress_HC(src, &tgt[kHeaderSize], srcsize, tgtsize - kHeaderSize, cxlevel);
    } else {
-      returnStatus = LZ4_compress_default(src, &tgt[kHeaderSize], *srcsize, *tgtsize - kHeaderSize);
+      returnStatus = LZ4_compress_default(src, &tgt[kHeaderSize], srcsize, tgtsize - kHeaderSize);
    }
 
    if (R__unlikely(returnStatus == 0)) { /* LZ4 compression failed */
@@ -81,16 +81,16 @@ void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, in
    // Write out checksum.
    XXH64_canonicalFromHash(reinterpret_cast<XXH64_canonical_t *>(tgt + kChecksumOffset), checksumResult);
 
-   *irep = (int)returnStatus + kHeaderSize;
+   irep = (int)returnStatus + kHeaderSize;
 }
 
-void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep)
+void R__unzipLZ4(int srcsize, unsigned char * src, int tgtsize, unsigned char * tgt, int & irep)
 {
    // NOTE: We don't check that srcsize / tgtsize is reasonable or within the ROOT-imposed limits.
    // This is assumed to be handled by the upper layers.
 
    int LZ4_version = LZ4_versionNumber() / (100 * 100);
-   *irep = 0;
+   irep = 0;
    if (R__unlikely(src[0] != 'L' || src[1] != '4')) {
       fprintf(stderr, "R__unzipLZ4: algorithm run against buffer with incorrect header (got %d%d; expected %d%d).\n",
               src[0], src[1], 'L', '4');
@@ -103,7 +103,7 @@ void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *
       return;
    }
 
-   int inputBufferSize = *srcsize - kHeaderSize;
+   int inputBufferSize = srcsize - kHeaderSize;
 
    // TODO: The checksum followed by the decompression means we iterate through the buffer twice.
    // We should perform some performance tests to see whether we can interleave the two -- i.e., at
@@ -120,12 +120,12 @@ void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *
          checksumResult, checksumFromFile);
       return;
    }
-   int returnStatus = LZ4_decompress_safe((char *)(&src[kHeaderSize]), (char *)(tgt), inputBufferSize, *tgtsize);
+   int returnStatus = LZ4_decompress_safe((char *)(&src[kHeaderSize]), (char *)(tgt), inputBufferSize, tgtsize);
    if (R__unlikely(returnStatus < 0)) {
       fprintf(stderr, "R__unzipLZ4: error in decompression around byte %d out of maximum %d.\n", -returnStatus,
-              *tgtsize);
+              tgtsize);
       return;
    }
 
-   *irep = returnStatus;
+   irep = returnStatus;
 }

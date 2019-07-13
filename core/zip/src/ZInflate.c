@@ -19,8 +19,6 @@ static const int qflag = 0;
 
 #include "zlib.h"
 #include "RConfigure.h"
-#include "ZipLZMA.h"
-#include "ZipLZ4.h"
 
 /* inflate.c -- put in the public domain by Mark Adler
    version c14o, 23 August 1994 */
