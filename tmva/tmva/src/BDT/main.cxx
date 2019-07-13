@@ -11,6 +11,8 @@
 
 using json = nlohmann::json;
 
+
+// ------------------- helper functions -------------------
 json read_file(const std::string &filename) {
   std::ifstream i(filename);
   json j;
@@ -43,58 +45,17 @@ void print_json_type(json j){
   std::cout << "Type: " << my_type << '\n';
 }
 
+/* // params of the children
+std::string params[7] = {"depth",
+                          "no",
+                          "split_condition",
+                          "nodeid",
+                          "split",
+                          "yes",
+                          "children"};
+*/
 
-
-void check_params(json j, int max_counter, int counter=0){
-
-  std::string params[7] = {"depth",
-                            "no",
-                            "split_condition",
-                            "nodeid",
-                            "split",
-                            "yes",
-                            "children"};
-
-  for (size_t i = 0; i<j.size(); i++){
-    for (auto &mess : params){
-      if ((mess == "children") && (counter<max_counter)){
-        counter++;
-        check_params(j[i][mess],max_counter, counter);
-      }
-      else{
-        std::cout << mess <<": " <<j[0]["children"][i][mess] << std::endl;
-      }
-    }
-  }
-}
-
-void check_params2(json j, int max_counter, int counter=0){
-
-  std::string params[7] = {"depth",
-                            "no",
-                            "split_condition",
-                            "nodeid",
-                            "split",
-                            "yes",
-                            "children"};
-
-  for (size_t i = 0; i<j.size(); i++){
-    for (auto &mess : params){
-    //for (auto &mess : j[i]){
-      if (j[i].count("leaf") > 0){
-        std::cout<< "FOUND\n";
-      }
-      else if ((mess == "children") && (counter<max_counter)){
-        counter++;
-        check_params2(j[i][mess],max_counter, counter);
-      }
-      else{
-        std::cout << mess <<": " <<j[i]["children"][i][mess] << std::endl;
-      }
-    }
-  }
-}
-// -----------------------------------------------------------------------------
+// ---------------------------  read json  ------------------------------
 
 void write_node_members(json &jTree, Node* tmp_node){
   tmp_node->split_value = jTree["split_condition"];

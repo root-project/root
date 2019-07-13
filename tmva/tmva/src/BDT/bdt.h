@@ -7,6 +7,7 @@
 #include <sstream>
 #include <streambuf>
 #include <vector>
+#include <memory>
 
 class Node{
 public:

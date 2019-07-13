@@ -1,5 +1,5 @@
 CXX = g++ #mpicxx
-CXXFLAGS = -std=c++11 -Wall -g
+CXXFLAGS = -std=c++14 -Wall -g
 
 CPPFLAGS = -I./include \
  -Wno-deprecated \
