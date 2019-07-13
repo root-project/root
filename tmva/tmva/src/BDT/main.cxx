@@ -178,9 +178,12 @@ int main() {
   double event[4] = {1.,115.,70.,30.};
 
   for (auto& tree : trees){
-    std::cout  << "There are: " << tree.nodes.size() << " trees\n";
+    std::cout  << "There are: " << tree.nodes.size() << " nodes\n";
     std::cout << "Prediction: " << tree.inference(event) << std::endl;
   }
+
+  std::cout << "Count: "
+            << trees[0].nodes.back()->count << std::endl;
 
 
   //Tree test = trees[0];
