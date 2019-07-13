@@ -16,8 +16,8 @@ public:
   double split_value = 0;
   int split_variable;
   int node_id;
-  Node* child_true = nullptr;
-  Node* child_false = nullptr;
+  std::shared_ptr<Node> child_true;
+  std::shared_ptr<Node> child_false;
   double leaf_true, leaf_false;
   int depth;
   int missing; // what is missing?
@@ -56,7 +56,7 @@ public:
 
 class Tree{
 public:
-  std::vector<Node*> nodes;
+  std::vector<std::shared_ptr<Node>> nodes;
   double inference(double event[]){
     return nodes.back()->inference(event);
   }
@@ -66,7 +66,7 @@ public:
     for (auto node : nodes){
       std::cout << i << std::endl;
       i++;
-      delete node;
+      // delete node; // should I leave it?
     }
   }
 // */

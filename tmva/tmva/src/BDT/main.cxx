@@ -57,7 +57,7 @@ std::string params[7] = {"depth",
 
 // ---------------------------  read json  ------------------------------
 
-void write_node_members(json &jTree, Node* tmp_node){
+void write_node_members(json &jTree, std::shared_ptr<Node> tmp_node){
   tmp_node->split_value = jTree["split_condition"];
   tmp_node->node_id = jTree["nodeid"];
   tmp_node->child_id_true = jTree["yes"];
@@ -80,15 +80,15 @@ void check_json(json &jTree){
 }
 
 
-Node* _read_nodes(json jTree, Tree &tree){
+std::shared_ptr<Node> _read_nodes(json jTree, Tree &tree){
   std::cout << "create\n";
   bool is_leaf_node = (
     (jTree["children"][0].find("leaf") != jTree["children"][0].end())
     && (jTree["children"][0].find("nodeid") != jTree["children"][0].end())
   );
 
-  Node* tmp_node;
-  tmp_node = new Node();
+  std::shared_ptr<Node> tmp_node(new Node);
+  //tmp_node = new Node();
   write_node_members(jTree, tmp_node);
   if (is_leaf_node){
     tmp_node->leaf_true = jTree["children"][0]["leaf"];

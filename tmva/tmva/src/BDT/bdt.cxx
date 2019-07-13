@@ -41,11 +41,13 @@ Node::Node(){
 Node::Node(Node const & node ){
   std::cout << "Copying\n";
   //Allocate the memory first
+  /*
   child_true = new Node();
   child_false = new Node();
   //Then copy the value from the passed object
   child_true = node.child_true;
   child_false = node.child_false;
+  */
 }
 
 // move operator
