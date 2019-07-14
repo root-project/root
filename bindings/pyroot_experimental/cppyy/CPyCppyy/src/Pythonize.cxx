@@ -14,6 +14,7 @@
 
 // Standard
 #include <complex>
+#include <set>
 #include <stdexcept>
 #include <sstream>
 #include <string>
@@ -740,27 +741,48 @@ PyObject* StlIterNext(PyObject* self)
 
     if (last) {
     // handle special case of empty container (i.e. self is end)
-        if (PyObject_RichCompareBool(last, self, Py_EQ)) {
+        if (PyObject_RichCompareBool(last, self, Py_EQ) == 1 || PyObject_RichCompareBool(last, self, Py_NE) == 0) {
             PyErr_SetString(PyExc_StopIteration, "");
         } else {
-            PyObject* dummy = PyInt_FromLong(1l);
+        // first, get next from the _current_ iterator as internal state may change
+        // when call post or pre increment
+            next = CallPyObjMethod(self, "__deref__");
+            if (!next) PyErr_Clear();
+
+        // use postinc, even as the C++11 range-based for loops prefer preinc b/c
+        // that allows the current value from the iterator to be had from __deref__,
+        // an issue that does not come up in C++
+            static PyObject* dummy = PyInt_FromLong(1l);
             PyObject* iter = CallPyObjMethod(self, "__postinc__", dummy);
-            Py_DECREF(dummy);
-            if (iter != 0) {
-                if (PyObject_RichCompareBool(last, iter, Py_EQ))
-                    PyErr_SetString(PyExc_StopIteration, "");
-                else
-                    next = CallPyObjMethod(iter, "__deref__");
-            } else {
-                PyErr_SetString(PyExc_StopIteration, "");
+            if (!iter && PyErr_Occurred()) {
+            // allow preinc, as in that case likely __deref__ is not defined and it
+            // is the iterator rather that is returned in the loop
+                PyErr_Clear();
+                iter = CallPyObjMethod(self, "__preinc__");
             }
-            Py_XDECREF(iter);
+            if (iter) {
+            // prefer != as per C++11 range-based for
+                int isEnd = PyObject_RichCompareBool(last, iter, Py_NE);
+                if (isEnd == -1) {     // if failed, try == instead
+                    PyErr_Clear();
+                    isEnd = PyObject_RichCompareBool(last, iter, Py_EQ);
+                } else isEnd = !isEnd;
+                if (!isEnd && !next) {
+                // if no dereference, continue iterating over the iterator
+                    Py_INCREF(iter);
+                    next = iter;
+                }
+                Py_DECREF(iter);
+            } else {
+            // fail current next, even if available
+                Py_XDECREF(next);
+                next = nullptr;
+            }
         }
-    } else {
-        PyErr_SetString(PyExc_StopIteration, "");
+        Py_DECREF(last);
     }
 
-    Py_XDECREF(last);
+    if (!next) PyErr_SetString(PyExc_StopIteration, "");
     return next;
 }
 
@@ -866,6 +888,8 @@ static PyObject* ComplexDComplex(CPPInstance* self)
 
 
 //- public functions ---------------------------------------------------------
+static std::set<std::string> g_iterator_types;
+
 bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
 {
 // Add pre-defined pythonizations (for STL and ROOT) to classes based on their
@@ -889,11 +913,21 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
     if (!IsTemplatedSTLClass(name, "vector")  &&      // vector is dealt with below
            !((PyTypeObject*)pyclass)->tp_iter) {
         if (HasAttrDirect(pyclass, PyStrings::gBegin) && HasAttrDirect(pyclass, PyStrings::gEnd)) {
-            if (Cppyy::GetScope(name+"::iterator") || Cppyy::GetScope(name+"::const_iterator")) {
-            // iterator protocol fully implemented, so use it (TODO: check return type, rather than
-            // the existence of these typedefs? I.e. what's the "full protocol"?)
-                ((PyTypeObject*)pyclass)->tp_iter = (getiterfunc)StlSequenceIter;
-                Utility::AddToClass(pyclass, "__iter__", (PyCFunction)StlSequenceIter, METH_NOARGS);
+        // obtain the name of the return type
+            const auto& v = Cppyy::GetMethodIndicesFromName(((CPPScope*)pyclass)->fCppType, "begin");
+            if (!v.empty()) {
+            // check return type; if not explicitly an iterator, add it to the "known" return
+            // types to add the "next" method on use
+                Cppyy::TCppMethod_t meth = Cppyy::GetMethod(((CPPScope*)pyclass)->fCppType, v[0]);
+                const std::string& resname = Cppyy::GetMethodResultType(meth);
+                if (Cppyy::GetScope(resname)) {
+                    if (resname.find("iterator") == std::string::npos)
+                        g_iterator_types.insert(resname);
+
+                // install iterator protocol a la STL
+                    ((PyTypeObject*)pyclass)->tp_iter = (getiterfunc)StlSequenceIter;
+                    Utility::AddToClass(pyclass, "__iter__", (PyCFunction)StlSequenceIter, METH_NOARGS);
+                }
             }
         }
         if (!((PyTypeObject*)pyclass)->tp_iter &&     // no iterator resolved
@@ -981,7 +1015,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
         Utility::AddToClass(pyclass, "__init__", (PyCFunction)SharedPtrInit, METH_VARARGS | METH_KEYWORDS);
     }
 
-    else if (name.find("iterator") != std::string::npos) {
+    else if (name.find("iterator") != std::string::npos || g_iterator_types.find(name) != g_iterator_types.end()) {
         ((PyTypeObject*)pyclass)->tp_iternext = (iternextfunc)StlIterNext;
         Utility::AddToClass(pyclass, CPPYY__next__, (PyCFunction)StlIterNext, METH_NOARGS);
     }
@@ -1014,7 +1048,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
         Utility::AddToClass(pyclass, "__cpp_real", "real");
         PyObject_SetAttrString(pyclass, "real", PyDescr_NewGetSet((PyTypeObject*)pyclass, &realComplex));
         Utility::AddToClass(pyclass, "__cpp_imag", "imag");
-        PyObject_SetAttrString(pyclass, "imag", PyDescr_NewGetSet((PyTypeObject*)pyclass, &imagComplex)); 
+        PyObject_SetAttrString(pyclass, "imag", PyDescr_NewGetSet((PyTypeObject*)pyclass, &imagComplex));
         Utility::AddToClass(pyclass, "__complex__", (PyCFunction)ComplexComplex, METH_NOARGS);
         Utility::AddToClass(pyclass, "__repr__", (PyCFunction)ComplexRepr, METH_NOARGS);
     }
