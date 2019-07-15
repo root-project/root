@@ -490,9 +490,7 @@ if(ROOT_python_FOUND)
                  tutorial-roofit-rf106_plotdecoration-py
                  tutorial-roofit-rf315_projectpdf-py
                  tutorial-roofit-rf402_datahandling-py
-                 tutorial-roofit-rf610_visualerror-py
-                 tutorial-vecops-vo004_SortAndSelect-py
-                 tutorial-vecops-vo005_Combinations-py)
+                 tutorial-roofit-rf610_visualerror-py)
 
   if(${PYTHON_VERSION_MAJOR} GREATER_EQUAL 3)
     # These tests only fail in Py3 with PyROOT experimental
