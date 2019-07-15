@@ -7,16 +7,17 @@
 #include <map>
 #include <vector>
 
-//#define __MY_UNIQUE__
+#define BDT_KIND 2
 
-#ifndef __MY_UNIQUE__
+#if BDT_KIND == 1
   #include "bdt.h"
   using namespace shared;
-#else
+#elif BDT_KIND == 2
   #include "unique_bdt.h"
   using namespace unique;
 #endif
 
+//#include "array_bdt.h"
 
 
 using json = nlohmann::json;
@@ -105,6 +106,8 @@ int main() {
   std::cout << "Count: "
             //<< trees[0].nodes.back()->count
             << std::endl;
+
+  //std::cout << std::pow(2,2) << std::endl;
 
   std::cout << "\n***** END *****" << std::endl;
 } // End main
