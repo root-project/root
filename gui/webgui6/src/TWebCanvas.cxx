@@ -123,8 +123,48 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj)
          if (obj->InheritsFrom(supported_classes[i].name))
             return kTRUE;
 
-   return kFALSE;
+   return IsCustomClass(obj->IsA());
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Configures custom script for canvas.
+/// If started from "load:" or "assert:" prefix will be loaded with JSROOT.AssertPrerequisites function
+/// Script should implement custom user classes, which transferred as is to client
+/// In the script draw handler for appropriate classes whould be assigned
+
+void TWebCanvas::SetCustomScripts(const std::string &src)
+{
+   fCustomScripts = src;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Assign custom class
+
+void TWebCanvas::AddCustomClass(const std::string &clname, bool with_derived)
+{
+   if (with_derived)
+      fCustomClasses.emplace_back("+"s + clname);
+   else
+      fCustomClasses.emplace_back(clname);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Checks if class belongs to custom
+
+bool TWebCanvas::IsCustomClass(TClass *cl)
+{
+   for (auto &name : fCustomClasses) {
+      if (name[0] == '+') {
+         if (cl->InheritsFrom(name.substr(1).c_str()))
+            return true;
+      } else if (name.compare(cl->GetName()) == 0) {
+         return true;
+      }
+   }
+   return false;
+}
+
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Creates representation of the object for painting in web browser
