@@ -500,6 +500,10 @@ void TWebCanvas::CheckDataToSend(unsigned connid)
 
          TCanvasWebSnapshot holder(IsReadOnly(), fCanvVersion);
 
+         // scripts send only when canvas drawn for the first time
+         if (!conn.fSendVersion)
+            holder.SetScripts(fCustomScripts);
+
          CreatePadSnapshot(holder, Canvas(), conn.fSendVersion, [&buf,this](TPadWebSnapshot *snap) {
             buf.append(TBufferJSON::ToJSON(snap, fJsonComp).Data());
          });
