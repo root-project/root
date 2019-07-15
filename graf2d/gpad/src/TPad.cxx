@@ -5893,6 +5893,8 @@ void TPad::SetPad(Double_t xlow, Double_t ylow, Double_t xup, Double_t yup)
 
    fXlowNDC = xlow;
    fYlowNDC = ylow;
+   fXUpNDC  = xup;
+   fYUpNDC  = yup;
    fWNDC    = xup - xlow;
    fHNDC    = yup - ylow;
 
