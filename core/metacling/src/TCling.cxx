@@ -1318,15 +1318,9 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       interpArgs.push_back(arg.c_str());
    }
 
-   // Add the Rdict module file extension.
-   cling::Interpreter::ModuleFileExtensions extensions;
-   EnvOpt = llvm::sys::Process::GetEnv("ROOTDEBUG_RDICT");
-   if (!EnvOpt.hasValue())
-      extensions.push_back(std::make_shared<TClingRdictModuleFileExtension>());
-
    fInterpreter = new cling::Interpreter(interpArgs.size(),
                                          &(interpArgs[0]),
-                                         llvmResourceDir, extensions);
+                                         llvmResourceDir);
 
    if (!fromRootCling) {
       fInterpreter->installLazyFunctionCreator(llvmLazyFunctionCreator);
