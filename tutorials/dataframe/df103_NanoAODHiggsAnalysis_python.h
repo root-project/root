@@ -127,7 +127,6 @@ bool filter_z_dr(const RVec<RVec<size_t>> &idx, rvec_f eta, rvec_f phi)
       const auto i1 = idx[i][0];
       const auto i2 = idx[i][1];
       const auto dr = DeltaR(eta[i1], eta[i2], phi[i1], phi[i2]);
-      // const auto dr = sqrt(pow(eta[i1] - eta[i2], 2) + pow(phi[i1] - phi[i2], 2));
       if (dr < 0.02) {
          return false;
       }
@@ -152,8 +151,6 @@ bool dr_cuts(rvec_f mu_eta, rvec_f mu_phi, rvec_f el_eta, rvec_f el_phi)
 {
    auto mu_dr = DeltaR(mu_eta[0], mu_eta[1], mu_phi[0], mu_phi[1]);
    auto el_dr = DeltaR(el_eta[0], el_eta[1], el_eta[0], el_eta[1]);
-   // auto mu_dr = sqrt(pow(mu_eta[0] - mu_eta[1], 2) + pow(mu_phi[0] - mu_phi[1], 2));
-   // auto el_dr = sqrt(pow(el_eta[0] - el_eta[1], 2) + pow(el_phi[0] - el_phi[1], 2));
    if (mu_dr < 0.02 || el_dr < 0.02) {
       return false;
    }

@@ -45,12 +45,9 @@ import os
 ROOT.ROOT.EnableImplicitMT()
 
 # Include necessary header
-tutorial_dir = str(ROOT.gROOT.GetTutorialDir())
-dataframe_dir = "dataframe"
-header_file = "df103_NanoAODHiggsAnalysis_python.h"
 higgs_header_path = os.path.join(
-    os.sep, tutorial_dir + os.sep,
-    dataframe_dir + os.sep, header_file
+    os.sep, str(ROOT.gROOT.GetTutorialDir()) + os.sep, "dataframe" + os.sep,
+    "df103_NanoAODHiggsAnalysis_python.h"
 )
 
 ROOT.gInterpreter.Declare('#include "{}"'.format(higgs_header_path))
@@ -291,10 +288,11 @@ def selection_4el(df):
     return df_2p2n
 
 
-# Plot invariant mass for signal and background processes from simulated events
-# overlay the measured data.
 def plot(sig, bkg, data, x_label, filename):
-
+    """
+    Plot invariant mass for signal and background processes from simulated
+    events overlay the measured data.
+    """
     # Canvas and general style options
     ROOT.gStyle.SetOptStat(0)
     ROOT.gStyle.SetTextFont(42)
@@ -356,7 +354,6 @@ def plot(sig, bkg, data, x_label, filename):
 
 
 def df103_NanoAODHiggsAnalysis():
-
     # Create dataframes for signal, background and data samples
 
     # Signal: Higgs -> 4 leptons
@@ -549,7 +546,7 @@ def df103_NanoAODHiggsAnalysis():
         "m_{2e2#mu} (GeV)", "higgs_2el2mu.pdf"
     )
 
-    # Final datasets
+    # Combined plots
     # If this was done before plotting the others, calling the `Add` function
     # on the `signal_4mu` histogram would modify the underlying `TH1D` object.
     # Thus, the histogram with the 4 muons reconstruction would be lost,
