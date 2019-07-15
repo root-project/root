@@ -1106,6 +1106,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 /// <tr><td> `PrefitDataFraction(double fraction)`
 ///                                            <td>  Runs a prefit on a small dataset of size fraction*(actual data size). This can speed up fits
 ///                                                  by finding good starting values for the parameters for the actual fit.
+///                                                  \warning Prefitting may give bad results when used in binned analysis.
 ///
 /// <tr><th><th> Options to control informational output
 /// <tr><td> `Verbose(Bool_t flag)`            <td>  Flag controls if verbose output is printed (NLL, parameter changes during fit
@@ -1237,7 +1238,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   }
     
   if (prefit != 0)  {
-    size_t nEvents = prefit*data.numEntries();
+    size_t nEvents = static_cast<size_t>(prefit*data.numEntries());
     if (prefit > 0.5 || nEvents < 100)  {
       oocoutW(this,InputArguments) << "PrefitDataFraction should be in suitable range."
       << "With the current PrefitDataFraction=" << prefit 
