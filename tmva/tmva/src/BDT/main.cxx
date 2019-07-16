@@ -18,6 +18,7 @@
 #endif
 
 //#include "array_bdt.h"
+#include "bdt_generator.h"
 
 
 using json = nlohmann::json;
@@ -109,5 +110,18 @@ int main() {
 
   //std::cout << std::pow(2,2) << std::endl;
 
+  // Write
+  for (int i = 0; i<number_of_trees; i++){
+    std::filebuf fb;
+    std::string filename = "./generated_files/generated_tree_"
+                          +std::to_string(i)+".h";
+    fb.open (filename, std::ios::out);
+    std::ostream os(&fb);
+    generate_code_bdt(os, trees[i], i);
+    fb.close();
+  }
+
+
   std::cout << "\n***** END *****" << std::endl;
+  return 0;
 } // End main

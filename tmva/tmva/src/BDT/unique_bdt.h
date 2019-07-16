@@ -68,6 +68,5 @@ namespace unique{
   void read_nodes_from_tree(json &jTree,Tree &tree);
 }
 
-
 #endif
 // end

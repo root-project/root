@@ -12,11 +12,11 @@ namespace unique{
 
   // constructor
   Node::Node(){
-    std::cout << "CREATION\n";
+    //std::cout << "CREATION\n";
   }
   // Destructor
   Node::~Node(){
-    std::cout << "DESTROYED\n";
+    //std::cout << "DESTROYED\n";
   }
 
 
@@ -36,7 +36,6 @@ namespace unique{
 
   /// Need a nlohmann::json object from an xgboost saved format
   std::unique_ptr<Node> _read_nodes(json &jTree, Tree &tree){
-    std::cout << "create\n";
     bool is_leaf_node = (
       (jTree["children"][0].find("leaf") != jTree["children"][0].end())
       && (jTree["children"][0].find("nodeid") != jTree["children"][0].end())
@@ -66,4 +65,9 @@ namespace unique{
     tree.nodes = _read_nodes(jTree, tree);
     //return nodes;
   }
+
 } // end namespace
+
+
+
+// end file

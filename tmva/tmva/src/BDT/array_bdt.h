@@ -15,6 +15,10 @@ namespace array_bdt{
     double tree[node_number] = {0};
     return tree;
   }
+
+  //int get_index(int& counter, int depth){
+  //
+  //}
   /// Need a nlohmann::json object from an xgboost saved format
   void _read_nodes(json &jTree,
                     double[] &tree_features,
