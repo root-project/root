@@ -16,7 +16,6 @@ set(LZ4_PUBLIC_HEADERS
 
 set(LZ4_PRIVATE_HEADERS
   lz4frame_static.h
-  lz4opt.h
 )
 
 set(LZ4_SOURCES
