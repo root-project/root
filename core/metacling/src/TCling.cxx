@@ -116,9 +116,10 @@ clang/LLVM technology.
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/Process.h"
+#include "llvm/Object/ELFObjectFile.h"
 #include "llvm/Object/ObjectFile.h"
-#include "llvm/Support/FileSystem.h"
 #include "llvm/Object/SymbolicFile.h"
+#include "llvm/Support/FileSystem.h"
 
 #include <algorithm>
 #include <iostream>
@@ -6114,8 +6115,8 @@ static bool LookupBloomFilter(llvm::object::ObjectFile *soFile, uint32_t hash) {
 
 /// Looks up symbols from a an object file, representing the library.
 ///\returns true on success.
-static bool LookupNormalSymbol(const std::string &library_filename,
-                               const std::string &mangled_name)
+static bool FindSymbol(const std::string &library_filename,
+                       const std::string &mangled_name)
 {
    auto ObjF = llvm::object::ObjectFile::createObjectFile(library_filename);
    if (!ObjF) {
@@ -6147,7 +6148,7 @@ static bool LookupNormalSymbol(const std::string &library_filename,
 
       llvm::Expected<StringRef> SymNameErr = S.getName();
       if (!SymNameErr) {
-         Warning("LookupNormalSymbol", "Failed to read symbol");
+         Warning("TCling__FindSymbol", "Failed to read symbol %s", mangled_name.c_str());
          continue;
       }
 
@@ -6155,31 +6156,37 @@ static bool LookupNormalSymbol(const std::string &library_filename,
          return true;
    }
 
-   return false;
-}
-
-///\returns true on success
-static bool LookupDynamicSymbol(const std::string &library_filename,
-                                const std::string &mangled_name)
-{
-   auto ObjF = llvm::object::ObjectFile::createObjectFile(library_filename);
-   if (!ObjF)
+   if (!BinObjFile->isELF())
       return false;
 
-   llvm::object::ObjectFile *BinObjFile = ObjF.get().getBinary();
+   // ELF file format has .dynstr section for the dynamic symbol table.
+   const auto *ElfObj = cast<llvm::object::ELFObjectFileBase>(BinObjFile);
 
-   for (const auto &section : BinObjFile->sections()) {
-      llvm::StringRef sectionName;
-      section.getName(sectionName);
+   for (const auto &S : ElfObj->getDynamicSymbolIterators()) {
+      uint32_t Flags = S.getFlags();
+      // DO NOT insert to table if symbol was undefined
+      if (Flags & llvm::object::SymbolRef::SF_Undefined)
+         continue;
 
-      // .dynstr contains string of dynamic symbols
-      if (sectionName == ".dynstr") {
-         llvm::StringRef dContents;
-         section.getContents(dContents);
-         // If this library contains mangled name
-         return dContents.contains(mangled_name);
+      // Note, we are at last resort and loading library based on a weak
+      // symbol is allowed. Otherwise, the JIT will issue an unresolved
+      // symbol error.
+      //
+      // There are other weak symbol kinds (marked as 'V') to denote
+      // typeinfo and vtables. It is unclear whether we should load such
+      // libraries or from which library we should resolve the symbol.
+      // We seem to not have a way to differentiate it from the symbol API.
+
+      llvm::Expected<StringRef> SymNameErr = S.getName();
+      if (!SymNameErr) {
+         Warning("TCling__FindSymbol", "Failed to read symbol %s", mangled_name.c_str());
+         continue;
       }
+
+      if (SymNameErr.get() == mangled_name)
+         return true;
    }
+
    return false;
 }
 
@@ -6249,7 +6256,7 @@ static std::string ResolveSymbol(const std::string& mangled_name,
       // libraries. However, it seems to be redundant for the moment as we do
       // not strictly require symbols from those sections. Enable after checking
       // performance!
-      if (LookupNormalSymbol(LibName, mangled_name)) {
+      if (FindSymbol(LibName, mangled_name)) {
          sQueriedLibraries.push_back(P);
          return LibName;
       }
@@ -6267,7 +6274,7 @@ static std::string ResolveSymbol(const std::string& mangled_name,
    for (const LibraryPath &P : sSysLibraries) {
       const std::string LibName = GetLibFileName(P, sPaths);
 
-      if (LookupNormalSymbol(LibName, mangled_name) || LookupDynamicSymbol(LibName, mangled_name)) {
+      if (FindSymbol(LibName, mangled_name)) {
          sQueriedLibraries.push_back(P);
          return LibName;
       }
@@ -6283,7 +6290,8 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
       return nullptr;
 
    if (gSystem->Load(LibName.c_str(), "", false) < 0)
-      Error("LazyFunctionCreatorAutoloadForModule", "Failed to load library %s", LibName.c_str());
+      Error("TCling__LazyFunctionCreatorAutoloadForModule",
+            "Failed to load library %s", LibName.c_str());
 
    void* addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(mangled_name.c_str());
    return addr;
