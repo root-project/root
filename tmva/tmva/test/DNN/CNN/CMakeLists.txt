@@ -55,6 +55,9 @@ ROOT_ADD_TEST(TMVA-DNN-CNN-Im2Col COMMAND testIm2Col)
 ROOT_EXECUTABLE(testPoolingLayer TestPoolingLayer.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-PoolingLayer COMMAND testPoolingLayer)
 
+ROOT_EXECUTABLE(testUpsampleLayer TestUpsampleLayer.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-CNN-UpsampleLayer COMMAND testUpsampleLayer)
+
 ROOT_EXECUTABLE(testReshape TestReshape.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-Reshape COMMAND testReshape)
 

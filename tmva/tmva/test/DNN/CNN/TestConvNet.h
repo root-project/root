@@ -161,6 +161,139 @@ auto testPoolingBackward(const typename Architecture::Matrix_t &input, const typ
     return true;
 }
 
+/** Upsample the matrix A and check whether the upsampled version
++ *  is equal to B, and if the winning indices are equal to the matrix ind. */
+//______________________________________________________________________________
+template <typename Architecture>
+auto testUpsample(const typename Architecture::Matrix_t &input, const typename Architecture::Matrix_t &output) -> bool 
+{
+    size_t m1,n1;
+    m1 = input.GetNrows();
+    n1 = input.GetNcols();
+
+    size_t m2,n2;
+    m2 = output.GetNrows();
+    n2 = output.GetNcols();
+
+    std::cout<<m1<<", "<<n1<<" & "<<m2<<", "<<n2<<std::endl;
+
+    if ( m1 <= m2 && n1 <= n2){
+      typename Architecture::Matrix_t AUp(m2,n2);
+
+      std::cout<<"Output Matrix"<<std::endl;
+      for ( size_t i = 0; i < m2; i++){
+        for ( size_t j = 0; j < n2; j++){
+          std::cout<<output(i,j)<<" ";
+        }
+        std::cout<<std::endl;
+      }
+      std::cout<<std::endl;
+
+      std::cout<<"Input Matrix"<<std::endl;
+      for ( size_t i = 0; i < m1; i++){
+        for ( size_t j = 0; j < n1; j++){
+          std::cout<<input(i,j)<<" ";
+        }
+        std::cout<<std::endl;
+      }
+      std::cout<<std::endl;    
+
+      std::vector< typename Architecture::Matrix_t > AUpVector;
+      AUpVector.emplace_back(AUp);
+
+      std::vector< typename Architecture::Matrix_t > AOutput;
+
+      Architecture::Upsample(AUpVector,input);
+
+      std::cout<<"AUpVector output"<<std::endl;
+      for ( size_t i = 0; i < m2; i++){
+        for ( size_t j = 0; j < n2; j++){
+          std::cout<<AUpVector[0](i,j)<<" ";
+        }
+        std::cout<<std::endl;
+      }
+      std::cout<<std::endl;
+
+      std::cout<<"Verifying output"<<std::endl;
+      for ( size_t i = 0; i < m2; i++){
+        for ( size_t j = 0; j < n2; j++){
+          std::cout<<AUpVector[0](i,j)<<" ";
+          if ( AUpVector[0](i,j) != output(i,j) ){
+            return false;
+          }
+        }
+        std::cout<<std::endl;
+      }
+      std::cout<<std::endl;
+      return true;
+    }
+    else{
+      return false;
+    }
+}
+
+/** Back propagate the activation gradients through the upsample layer and check whether the
++ * computed gradients are equal to the matrix A. */
+//______________________________________________________________________________
+template <typename Architecture>
+auto testUpsampleBackward(const typename Architecture::Matrix_t &input, const typename Architecture::Matrix_t &output) -> bool 
+{
+    size_t m1,n1;
+    m1 = input.GetNrows();
+    n1 = input.GetNcols();
+
+    size_t m2,n2;
+    m2 = output.GetNrows();
+    n2 = output.GetNcols();
+
+    std::cout<<m1<<", "<<n1<<" & "<<m2<<", "<<n2<<std::endl;
+
+    if ( m1 >= m2 && n1 >= n2){
+      typename Architecture::Matrix_t AUp(m2,n2);
+
+      std::cout<<"Output Matrix"<<std::endl;
+      for ( size_t i = 0; i < m2; i++){
+        for ( size_t j = 0; j < n2; j++){
+          std::cout<<output(i,j)<<" ";
+        }
+        std::cout<<std::endl;
+      }
+      std::cout<<std::endl;
+
+      std::cout<<"Input Matrix"<<std::endl;
+      for ( size_t i = 0; i < m1; i++){
+        for ( size_t j = 0; j < n1; j++){
+          std::cout<<input(i,j)<<" ";
+        }
+        std::cout<<std::endl;
+      }
+      std::cout<<std::endl;    
+
+      std::vector< typename Architecture::Matrix_t > AVector;
+      AVector.emplace_back(AUp);
+
+      std::vector< typename Architecture::Matrix_t > AOutput;
+
+      Architecture::UpsampleLayerBackward(AVector,input);
+
+      std::cout<<"Verifying output"<<std::endl;
+      for ( size_t i = 0; i < m2; i++){
+        for ( size_t j = 0; j < n2; j++){
+          std::cout<<AVector[0](i,j)<<" ";
+          if ( AVector[0](i,j) != output(i,j) ){
+            return false;
+          }
+        }
+        std::cout<<std::endl;
+      }
+      std::cout<<std::endl;
+      return true;
+    }
+    else{
+      return false;
+    }
+}
+
 /** Reshape the matrix A using the Reshape function and compare it to
  *  the result in matrix B. */
 //______________________________________________________________________________
