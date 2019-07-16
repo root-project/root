@@ -426,6 +426,29 @@ public:
 
    //____________________________________________________________________________
    //
+   //  Upsampling Layer Propagation
+   //____________________________________________________________________________
+   /** @name Forward Propagation in Upsampling Layer
+    */
+   ///@{
+
+  /** Upsample the matrix \p C to the matrix \p A, using max
+    *  nearest neighbor interpolation method. */
+   static void Upsample(std::vector< TCpuMatrix<AReal> > &A, const TCpuMatrix<AReal> &C);
+
+   ///@}
+
+   /** @name Backward Propagation in Upsampling Layer
+    */
+   ///@{
+
+   /** Perform the complete backward propagation step in a Upsampling Layer. Based on the
+    *  exact opposite method of nearest neighbor interpolation. */
+   static void UpsampleLayerBackward(std::vector< TCpuMatrix<AReal> > &A, const TCpuMatrix<AReal> &C);
+   ///@}
+
+   //____________________________________________________________________________
+   //
    //  Reshape Layer Propagation
    //____________________________________________________________________________
    /** @name Forward and Backward Propagation in Reshape Layer

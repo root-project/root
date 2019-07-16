@@ -607,6 +607,59 @@ void TCpu<AFloat>::MaxPoolLayerBackward(TCpuMatrix<AFloat> &activationGradientsB
    }
 }
 
+//______________________________________________________________________________
+template <typename AFloat>
+void TCpu<AFloat>::Upsample(std::vector< TCpuMatrix<AFloat> > &A, const TCpuMatrix<AFloat> &C)
+{
+
+   // image index ratio
+   double imgRowRatio = ( double ) C.GetNrows()/A[0].GetNrows();
+   double imgColRatio = ( double ) C.GetNcols()/A[0].GetNcols();
+
+   // coordinates of the neighbor pixels
+   size_t neighbourRow = 0;
+   size_t neighbourCol = 0;
+
+   // calculate the upsampled matrix
+   for(size_t i = 0; i < A[0].GetNrows(); i++){
+      for(size_t j = 0; j < A[0].GetNcols(); j++){
+
+         // define the row and column positions of the nearest neighbours
+         neighbourRow = Int_t(imgRowRatio*i);
+         neighbourCol = Int_t(imgColRatio*j);
+
+         // assign the neighbour values to each position
+         A[0](i,j) = C(neighbourRow,neighbourCol);
+      }
+   }
+}
+
+//______________________________________________________________________________
+template <typename AFloat>
+void TCpu<AFloat>::UpsampleLayerBackward(std::vector< TCpuMatrix<AFloat> > &A, const TCpuMatrix<AFloat> &C)
+{
+   // image index ratio
+   double imgRowRatio = ( double ) C.GetNrows()/A[0].GetNrows();
+   double imgColRatio = ( double ) C.GetNcols()/A[0].GetNcols();
+
+   // coordinates of the neighbor pixels
+   size_t neighbourRow = 0;
+   size_t neighbourCol = 0;
+
+   // calculate the upsampled matrix
+   for(size_t i = 0; i < A[0].GetNrows(); i++){
+      for(size_t j = 0; j < A[0].GetNcols(); j++){
+
+         // define the row and column positions of the nearest neighbours
+         neighbourRow = Int_t(imgRowRatio*i);
+         neighbourCol = Int_t(imgColRatio*j);
+
+         // assign the neighbour values to each position
+         A[0](i,j) = C(neighbourRow,neighbourCol);
+      }
+   }
+}
+
 //____________________________________________________________________________
 template <typename AFloat>
 void TCpu<AFloat>::Reshape(TCpuMatrix<AFloat> &A, const TCpuMatrix<AFloat> &B)
@@ -651,8 +704,8 @@ void TCpu<AFloat>::Deflatten(std::vector<TCpuMatrix<AFloat>> &A, const TCpuMatri
 }
 
 //______________________________________________________________________________
-template <typename AReal>
-void TCpu<AReal>::Rearrange(std::vector<TCpuMatrix<AReal>> &out, const std::vector<TCpuMatrix<AReal>> &in)
+template <typename AFloat>
+void TCpu<AFloat>::Rearrange(std::vector<TCpuMatrix<AFloat>> &out, const std::vector<TCpuMatrix<AFloat>> &in)
 {
    // B x T x D out --- T x B x D in*/
    size_t B = out.size();
