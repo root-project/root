@@ -163,7 +163,6 @@ ROOT_CHECK_OUT_OF_SOURCE_BUILD()
 
 #---Here we look for installed software and switch on and of the different build options--------
 include(SearchInstalledSoftware)
-ROOT_SHOW_ENABLED_OPTIONS()
 
 #---Here we add tcmalloc to the linker flags if needed------------------------------------------
 if (TCMALLOC_FOUND)
@@ -554,6 +553,8 @@ if(testing)
     endif()
   endif()
 endif()
+
+ROOT_SHOW_ENABLED_OPTIONS()
 
 #---Packaging-------------------------------------------------------------------------------------
 include(RootCPack)
