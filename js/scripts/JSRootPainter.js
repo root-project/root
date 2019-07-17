@@ -3942,6 +3942,26 @@
       return false;
    }
 
+   /** @brief Invoke method for object via WebCanvas functionality
+    * @desc Requires that painter marked with object identifier (this.snapid) or identifier provided as second argument
+    * Canvas painter should exists and in non-readonly mode
+    * Execution string can look like "Print()".
+    * Many methods call can be chained with "Print();;Update();;Clear()"
+    * @private */
+
+   TObjectPainter.prototype.WebCanvasExec = function(exec, snapid) {
+      if (!exec || (typeof exec != 'string')) return;
+
+      if (!snapid) snapid = this.snapid;
+      if (!snapid || (typeof snapid != 'string')) return;
+
+      var canp = this.canv_painter();
+      if (canp && !canp._readonly && canp._websocket) {
+         console.log('execute ' + exec + ' for object ' + snapid);
+         canp.SendWebsocket("OBJEXEC:" + snapid + ":" + exec);
+      }
+   }
+
    /** @summary Fill object menu in web canvas
     * @private */
    TObjectPainter.prototype.FillObjectExecMenu = function(menu, kind, call_back) {
@@ -3970,10 +3990,8 @@
 
          if (execp.ExecuteMenuCommand(item)) return;
 
-         if (cp._websocket && execp.args_menu_id && !cp._readonly) {
-            console.log('execute method ' + item.fExec + ' for object ' + execp.args_menu_id);
-            cp.SendWebsocket('OBJEXEC:' + execp.args_menu_id + ":" + item.fExec);
-         }
+         if (execp.args_menu_id)
+            execp.WebCanvasExec(item.fExec, execp.args_menu_id);
       }
 
       function DoFillMenu(_menu, _reqid, _call_back, reply) {
