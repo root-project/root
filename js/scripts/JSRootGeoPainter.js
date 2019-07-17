@@ -628,11 +628,10 @@
          this.showControlOptions('toggle');
       });
       menu.addchk(this.TestAxisVisibility, "Show axes", function() {
-         this.toggleAxisDraw();
+         this.toggleAxesDraw();
       });
       menu.addchk(this.options.wireframe, "Wire frame", function() {
-         this.options.wireframe = !this.options.wireframe;
-         this.changeWireFrame(this._scene, this.options.wireframe);
+         this.toggleWireFrame();
       });
       menu.addchk(this.options.highlight, "Highlight volumes", function() {
          this.options.highlight = !this.options.highlight;
@@ -902,7 +901,7 @@
                if (obj.geo_name) {
                   itemname = obj.geo_name;
                   if (itemname.indexOf("<prnt>") == 0)
-                     itemname = (this.GetItemName() || "top") + itemname.substr(6);
+                     itemname = (menu.painter.GetItemName() || "top") + itemname.substr(6);
                   name = itemname.substr(itemname.lastIndexOf("/")+1);
                   if (!name) name = itemname;
                   hdr = name;
@@ -1053,7 +1052,6 @@
       // objects in view may be changed
 
       if (!this.options.select_in_view || this._draw_all_nodes) return;
-
 
       var matrix = JSROOT.GEO.CreateProjectionMatrix(this._camera);
 
@@ -2212,6 +2210,14 @@
       // recheck which elements to draw
       if (this.options.select_in_view)
          this.startDrawGeometry();
+   }
+
+   TGeoPainter.prototype.setCameraPosition = function(rotatey, rotatez, zoom) {
+      if (!this.options) return;
+      this.options.rotatey = rotatey || 0;
+      this.options.rotatez = rotatez || 0;
+      if (zoom && !isNaN(zoom)) this.options.zoom = zoom;
+      this.adjustCameraPosition();
    }
 
    TGeoPainter.prototype.focusOnItem = function(itemname) {
@@ -3459,18 +3465,44 @@
       }
    }
 
-   TGeoPainter.prototype.toggleAxisDraw = function(force_draw) {
+   /** Toggle axes visibility */
+   TGeoPainter.prototype.toggleAxesDraw = function(force_draw) {
       if (this.TestAxisVisibility) {
-         if (!force_draw)
+         if (!force_draw) {
            this.TestAxisVisibility(null, this._toplevel);
+           this.options._axis = false;
+         }
       } else {
+         this.options._axis = true;
          this.drawSimpleAxis();
+         if (force_draw !== true) {
+            this.TestCameraPosition(true);
+            this.Render3D();
+         }
       }
+   }
+
+   /** set axes visibility */
+   TGeoPainter.prototype.setAxesDraw = function(on) {
+      if (on != this.options._axis)
+         this.toggleAxesDraw();
+   }
+
+   /** Toggle wireframe mode */
+   TGeoPainter.prototype.toggleWireFrame = function() {
+      this.options.wireframe = !this.options.wireframe;
+      this.changeWireFrame(this._scene, this.options.wireframe);
+   }
+
+   /** Specify wireframe mode */
+   TGeoPainter.prototype.setWireFrame = function(on) {
+      this.options.wireframe = on ? true : false;
+      this.changeWireFrame(this._scene, this.options.wireframe);
    }
 
    TGeoPainter.prototype.completeDraw = function(close_progress) {
 
-      var first_time = false, check_extras = true;
+      var first_time = false, full_redraw = false, check_extras = true;
 
       if (!this.options) {
          console.warn('options object does not exist in completeDraw - something went wrong');
@@ -3490,6 +3522,8 @@
 
       if (this._full_redrawing) {
          this._full_redrawing = false;
+         full_redraw = true;
+         this.TestCameraPosition(true); // recheck position
       }
 
       if (this._first_drawing) {
@@ -3497,6 +3531,7 @@
          this.showDrawInfo();
          this._first_drawing = false;
          first_time = true;
+         full_redraw = true;
 
          if (this._webgl) {
             this.enableX = this.options.clipx;
@@ -3508,10 +3543,11 @@
       if (this.options.transparency!==0)
          this.changeGlobalTransparency(this.options.transparency, true);
 
-      if (first_time) {
+      if (first_time)
          this.completeScene();
-         if (this.options._axis) this.toggleAxisDraw(true);
-      }
+
+      if (full_redraw && this.options._axis)
+         this.toggleAxesDraw(true);
 
       this._scene.overrideMaterial = null;
 
@@ -3674,6 +3710,7 @@
       delete this._new_draw_nodes;
       delete this._new_append_nodes;
       delete this._last_camera_position;
+      delete this.TestAxisVisibility;
 
       this.first_render_tm = 0; // time needed for first rendering
       this.last_render_tm = 0;
@@ -3794,6 +3831,7 @@
       delete this._build_shapes;
 
       delete this._extraObjects;
+      delete this.TestAxisVisibility; // allow draw of axes again
 
       JSROOT.Painter.DisposeThreejsObject(this._toplevel, true);
 
