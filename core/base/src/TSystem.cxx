@@ -3353,7 +3353,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       linkDepLibraries = linkLibs & 0x1;
    }
 
-   constexpr const bool useCxxModules =
+   // FIXME: Triggers clang false positive warning -Wunused-lambda-capture.
+   /*constexpr const*/ bool useCxxModules =
 #ifdef R__USE_CXXMODULES
     true;
 #else
