@@ -6,6 +6,7 @@
 #include <streambuf>
 #include <map>
 #include <vector>
+#include <array>
 
 #define BDT_KIND 2
 
@@ -97,7 +98,9 @@ int main() {
   }
 
   //double event[4] = {6.,148.,72.,35.};
-  double event[4] = {1.,115.,70.,30.};
+  std::vector<double> event{1., 115., 70., 30.};
+  //vector<int> vect{ 10, 20, 30 };
+  //double event[4] = {1.,115.,70.,30.};
 
   for (auto& tree : trees){
     //std::cout  << "There are: " << tree.nodes.size() << " nodes\n";

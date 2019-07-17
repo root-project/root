@@ -40,6 +40,16 @@ namespace unique{
                 child_true->inference(event) : child_false->inference(event));
       }
     }
+
+    double inference(std::vector<double> event){
+      if (this->is_leaf_node){
+        return ((event[split_variable] < split_value) ? leaf_true : leaf_false);
+      }
+      else{
+        return ((event[split_variable] < split_value) ?
+                child_true->inference(event) : child_false->inference(event));
+      }
+    }
     Node();
     Node(Node const & node);
     Node(Node&& other);
@@ -57,6 +67,9 @@ namespace unique{
   public:
     //std::vector<std::unique_ptr<Node>> nodes;
     std::unique_ptr<Node> nodes;
+    double inference(std::vector<double> event){
+      return nodes->inference(event);
+    }
     double inference(double event[]){
       return nodes->inference(event);
     }

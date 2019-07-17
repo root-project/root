@@ -66,8 +66,11 @@ void generate_code_bdt(std::ostream& fout,
        << " inference of a single tree" << std::endl;
   fout << std::endl << std::endl;
 
+  fout << "#include <vector>" << std::endl;
+
+
   fout << "double generated_tree_" << std::to_string(tree_number)
-       << "(double event[]){" << std::endl;
+       << "(std::vector<double> event){" << std::endl;
   fout << "double result = 0; // variable to store the result" << std::endl;
 
   generate_if_statement_for_bdt(fout, tree.nodes.get());

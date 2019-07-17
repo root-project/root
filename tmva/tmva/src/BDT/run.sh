@@ -9,5 +9,5 @@ make distclean && make
 echo "\n ***** Finished with first C++ ***** \n"
 
 rm ./test.exe
-g++ test.cxx `root-config --libs --cflags` -o test.exe -std=c++11
+g++ test.cxx -std=c++11 `root-config --libs --cflags` -o test.exe 
 ./test.exe
