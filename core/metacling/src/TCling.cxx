@@ -8496,6 +8496,8 @@ Long_t TCling::FuncTempInfo_ExtraProperty(FuncTempInfo_t* ft_info) const
       property |= kIsConstructor;
    } else if (llvm::isa<clang::CXXDestructorDecl>(fd)) {
       property |= kIsDestructor;
+   } else if (fd->isInlined()) {
+      property |= kIsInlined;
    }
 
    return property;
