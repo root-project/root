@@ -228,7 +228,9 @@ if(MSVC)
       OpenGL::GL
       OpenGL::GLU
       ${FTGL_LIBRARIES}
-      ${GLEW_LIBRARIES}
+      GLEW
+    BUILTINS
+      GLEW
     DEPENDENCIES
       Core
       EG
@@ -263,7 +265,9 @@ else()
       OpenGL::GL
       OpenGL::GLU
       ${FTGL_LIBRARIES}
-      ${GLEW_LIBRARIES}
+      GLEW
+    BUILTINS
+      GLEW
     DEPENDENCIES
       Core
       EG

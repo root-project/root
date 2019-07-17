@@ -8,7 +8,8 @@
 # CMakeLists.txt file for building ROOT graf3d/gl package
 ############################################################################
 
-include_directories(${OPENGL_INCLUDE_DIR} ${FTGL_INCLUDE_DIR} ${FREETYPE_INCLUDE_DIRS})
+include_directories(${OPENGL_INCLUDE_DIR} ${FTGL_INCLUDE_DIR}
+                    ${FREETYPE_INCLUDE_DIRS} ${GLEW_INCLUDE_DIRS})
 
 if(WIN32 OR cocoa)
   set(installoptions FILTER "TX11GL")
@@ -208,7 +209,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
   LIBRARIES
     OpenGL::GL
     OpenGL::GLU
-    GLEW
     ${FTGL_LIBRARIES}
     ${GL2PS_LIBRARIES}
     ${X11_LIBRARIES}
@@ -217,6 +217,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
     Gui
     Ged
     RCsg
+  LIBRARIES
+    GLEW
+  BUILTINS
+    GLEW
   INSTALL_OPTIONS
     ${installoptions}
 )
@@ -224,3 +228,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
 if(MACOSX_GLU_DEPRECATED)
   target_compile_options(RGL PRIVATE -Wno-deprecated-declarations)
 endif()
+
+target_include_directories(RGL PRIVATE ${GLEW_INCLUDE_DIRS})

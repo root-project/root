@@ -611,7 +611,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
                         libcpp_string_view.h
                         RWrap_libcpp_string_view.h
                         ThreadLocalStorage.h
-                        TBranchProxyTemplate.h TGLIncludes.h TGLWSIncludes.h
+                        TBranchProxyTemplate.h TGLWSIncludes.h
                         snprintf.h strlcpy.h)
 
    # Deprecated header files.

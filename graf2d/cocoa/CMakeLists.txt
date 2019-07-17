@@ -39,6 +39,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GCocoa
     "-framework Cocoa"
     "-framework OpenGL"
     ${FREETYPE_LIBRARIES}
+    GLEW
+  BUILTINS
+    GLEW
 )
 
 # We know GL is deprecated on macOS. And our answer is WebGUI/Graphics.
