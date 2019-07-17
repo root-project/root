@@ -181,7 +181,7 @@ ROOT_LINKER_LIBRARY(Core G__Core.cxx $<TARGET_OBJECTS:BaseTROOT> ${objectlibs} B
 target_link_libraries(Core
   PRIVATE
     PCRE::PCRE
-    ${LZMA_LIBRARIES}
+    ${LIBLZMA_LIBRARIES}
     xxHash::xxHash
     LZ4::LZ4
     ZLIB::ZLIB
