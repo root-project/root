@@ -12,7 +12,17 @@ if(POLICY CMP0071)
   cmake_policy(SET CMP0071 NEW)
 endif()
 
-find_package(Qt5 COMPONENTS Core WebEngine WebEngineWidgets REQUIRED)
+find_package(Qt5 COMPONENTS Core WebEngine WebEngineWidgets CONFIG)
+
+if(NOT Qt5_FOUND)
+  if(fail-on-missing)
+    message(FATAL_ERROR "Could NOT find Qt5")
+  else()
+    message(WARNING "Qt5 not found, disabling option 'qt5web'")
+    set(qt5web OFF CACHE BOOL "Disabled because Qt5 not found" FORCE)
+    return()
+  endif()
+endif()
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
