@@ -164,7 +164,7 @@ public:
    void SetCustomScripts(const std::string &src);
 
    void AddCustomClass(const std::string &clname, bool with_derived = false);
-   bool IsCustomClass(TClass *cl);
+   bool IsCustomClass(const TClass *cl) const;
 
    static TString CreateCanvasJSON(TCanvas *c, Int_t json_compression = 0);
    static Int_t StoreCanvasJSON(TCanvas *c, const char *filename, const char *option = "");

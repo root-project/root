@@ -151,7 +151,7 @@ void TWebCanvas::AddCustomClass(const std::string &clname, bool with_derived)
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Checks if class belongs to custom
 
-bool TWebCanvas::IsCustomClass(TClass *cl)
+bool TWebCanvas::IsCustomClass(const TClass *cl) const
 {
    for (auto &name : fCustomClasses) {
       if (name[0] == '+') {
@@ -163,8 +163,6 @@ bool TWebCanvas::IsCustomClass(TClass *cl)
    }
    return false;
 }
-
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Creates representation of the object for painting in web browser
