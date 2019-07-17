@@ -28,18 +28,7 @@
 ** ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 ** THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-/* ROOT additions begin */
-#include "RConfigure.h"
-
 #define GLEW_BUILD
-
-#if defined(__APPLE__) && !defined(R__HAS_COCOA)
-#  define GLEW_APPLE_GLX
-#endif
-
-/* ROOT additions end */
-
 
 #include <GL/glew.h>
 

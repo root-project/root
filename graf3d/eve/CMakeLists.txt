@@ -263,7 +263,7 @@ else()
       OpenGL::GL
       OpenGL::GLU
       ${FTGL_LIBRARIES}
-      ${GLEW_LIBRARIES}
+      GLEW
     DEPENDENCIES
       Core
       EG
