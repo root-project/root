@@ -5,7 +5,7 @@
 // our GL implementation.
 #include_next <GL/gl.h>
 #else
-#if !defined(ROOT_TGLIncludes) && !defined(GLEW_BUILD)
+#if !defined(GLEW_BUILD)
 #ifndef __has_feature
 # define __has_feature(X) 0
 #endif
