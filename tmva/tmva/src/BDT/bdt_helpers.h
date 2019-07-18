@@ -11,9 +11,26 @@
 #include <ios>
 #include <array>
 #include <algorithm>
+#include <cmath>
 
-double average(std::vector<double> vec){
-  return std::accumulate(vec.begin(), vec.end(), 0.0) / vec.size();
+
+
+/// sums internal values of vector
+template <class T>
+T vec_sum(std::vector<T> vec){
+  return std::accumulate(vec.begin(), vec.end(), 0.0);
+}
+
+/// logistic function
+template <class T>
+T logistic_function(T value){
+  return 1. / (1. + (1./std::exp(value)));
+}
+
+/// binary logistic
+template <class T>
+bool binary_logistic(T value){
+  return (logistic_function(value)>0.5)? 1: 0;
 }
 
 std::string read_file_string(const std::string &filename){
@@ -23,37 +40,9 @@ std::string read_file_string(const std::string &filename){
   return buffer.str();
 }
 
-size_t count_columns_in_line(const std::string &line){
-  size_t number_of_columns = std::count(line.begin(), line.end(), ',');
-  return number_of_columns;
-}
-
-std::vector<std::string> getNextLineAndSplitIntoTokens(std::istream& str)
-{
-    std::vector<std::string>   result;
-    std::string                line;
-    std::getline(str,line);
-
-    std::stringstream          lineStream(line);
-    std::string                cell;
-
-    while(std::getline(lineStream,cell, ','))
-    {
-        result.push_back(cell);
-        std::cout << cell;
-    }
-    // This checks for a trailing comma with no data after it.
-    if (!lineStream && cell.empty())
-    {
-        // If there was a trailing comma then add an empty element.
-        result.push_back("");
-    }
-    return result;
-}
-
 /// read a line of a "csv file" format
-std::vector<double> read_csv_line(std::string & s_line){
-  std::vector<double> vector_line;
+std::vector<float> read_csv_line(std::string & s_line){
+  std::vector<float> vector_line;
   std::stringstream sstream_line(s_line);
   std::string cell;
   while (getline(sstream_line, cell, ',')) {
@@ -68,11 +57,11 @@ std::vector<double> read_csv_line(std::string & s_line){
   return vector_line;
 }
 
-/// reads csv file contaning doubles into vector<vector<double>>
-std::vector<std::vector<double>> read_csv(std::string & filename) {
+/// reads csv file contaning floats into vector<vector<float>>
+std::vector<std::vector<float>> read_csv(std::string & filename) {
   //std::ifstream fin;
   std::ifstream       file(filename);
-  std::vector<std::vector<double>> out;
+  std::vector<std::vector<float>> out;
   std::string cell, line;
   //std::stringstream sstream_line;
   while(file.good()){
@@ -83,42 +72,8 @@ std::vector<std::vector<double>> read_csv(std::string & filename) {
   return out;
 }
 
-std::vector<std::vector<double>> read_csv_old(std::string & filename) {
-  std::fstream fin;
-  fin.open(filename, std::ios::in); //"reportcard.csv"
-  std::vector<std::vector<double>> out;
-  std::string line, word, temp;
-
-  //std::cout << read_file_string(filename) << std::endl;
-
-  int number_of_features=0;
-  int count = 0;
-  while (fin >> temp) {
-      std::getline(fin, line); // read one line and put it in a string
-      std::stringstream s(line);
-      std::cout << line << std::endl;
-      if (count == 0){number_of_features=count_columns_in_line(line);}
-      std::cout << number_of_features << std::endl;
-      std::vector<double> event;
-      while (std::getline(s, word, ',')) { //decompose line in words
-          //event[counter] = std::stod(word);
-          std::cout << word << std::endl;
-          event.push_back(std::stod(word));
-      }
-      if (event.size() != number_of_features){
-        std::cerr << "#columns of csv file not constant!\n";
-      }
-      out.push_back(event);
-  }
-  fin.close();
-  return out;
-}
-
-
-
-
-
-void write_csv(std::string &filename, std::vector<std::vector<double>> values_vec)
+template <class T>
+void write_csv(std::string &filename, std::vector<std::vector<T>> values_vec)
 {
   std::ofstream fout;
   // opens an existing csv file or creates a new file.

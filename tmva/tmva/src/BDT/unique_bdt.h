@@ -20,18 +20,18 @@ namespace unique{
   public:
     static int count;
     bool is_leaf_node=0;
-    double split_value = 0;
+    float split_value = 0;
     int split_variable;
     int node_id;
     std::unique_ptr<Node> child_true;
     std::unique_ptr<Node> child_false;
-    double leaf_true, leaf_false;
+    float leaf_true, leaf_false;
     int depth;
     int missing; // what is missing?
     int child_id_true;
     int child_id_false;
 
-    double inference(double event[]){
+    float inference(float event[]){
       if (this->is_leaf_node){
         return ((event[split_variable] < split_value) ? leaf_true : leaf_false);
       }
@@ -41,7 +41,7 @@ namespace unique{
       }
     }
 
-    double inference(std::vector<double> event){
+    float inference(std::vector<float> event){
       if (this->is_leaf_node){
         return ((event[split_variable] < split_value) ? leaf_true : leaf_false);
       }
@@ -67,10 +67,10 @@ namespace unique{
   public:
     //std::vector<std::unique_ptr<Node>> nodes;
     std::unique_ptr<Node> nodes;
-    double inference(std::vector<double> event){
+    float inference(std::vector<float> event){
       return nodes->inference(event);
     }
-    double inference(double event[]){
+    float inference(float event[]){
       return nodes->inference(event);
     }
   };

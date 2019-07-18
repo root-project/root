@@ -10,9 +10,9 @@
 
 namespace array_bdt{
   // Create one for thresholds, one for features number
-  double * tree_creator(int depth){
+  float * tree_creator(int depth){
     int node_number = std::pow(2, depth);
-    double tree[node_number] = {0};
+    float tree[node_number] = {0};
     return tree;
   }
 
@@ -21,8 +21,8 @@ namespace array_bdt{
   //}
   /// Need a nlohmann::json object from an xgboost saved format
   void _read_nodes(json &jTree,
-                    double[] &tree_features,
-                    double[] &tree_values,
+                    float[] &tree_features,
+                    float[] &tree_values,
                     int depth,
                     int index
                   ){

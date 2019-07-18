@@ -32,6 +32,10 @@ model.fit(X_train, y_train)
 y_pred = model.predict(X_test)
 y_scores = model.apply(X_test)
 
+# from eli5 import show_weights
+
+# show_weights(model, vec=vec)
+
 print(X_test)
 
 # print(y_pred)
@@ -42,6 +46,7 @@ accuracy = accuracy_score(y_test, predictions)
 print("Accuracy: %.2f%%" % (accuracy * 100.0))
 
 model.get_booster().dump_model("model.json", dump_format="json")
+# xgboostModel.booster.saveModel("/tmp/xgbm")
 
 fig, ax = plt.subplots(figsize=(30, 30))
 xgb.plot_tree(model, ax=ax)
@@ -52,20 +57,6 @@ np.savetxt("data_files/events.csv", X_test, delimiter=",", fmt="%f")
 np.savetxt("data_files/python_predictions.csv", y_pred, delimiter=",", fmt="%d")
 np.savetxt("data_files/python_groundtruths.csv", y_test, delimiter=",", fmt="%d")
 np.savetxt("data_files/python_scores.csv", y_scores, delimiter=",", fmt="%f")
-
-
-b = np.genfromtxt("data_files/test.csv", delimiter=",")
-a = np.genfromtxt("data_files/events.csv", delimiter=",")
-print(f"Are the cpp and python events the same? \n {np.equal(a, b).all()}")
-
-bb = np.genfromtxt("data_files/cpp_scores.csv", delimiter=",")
-aa = np.genfromtxt("data_files/python_scores.csv", delimiter=",")
-if aa.shape[0] != bb.shape[0]:
-    print("cpp scores and python scores don't have the same number of rows")
-elif aa.shape[1] != bb.shape[1]:
-    print("cpp scores and python scores don't have the same number of columns")
-else:
-    print(f"Are the cpp and python predictions the same? \n {np.equal(aa, bb)}")
 
 
 for idx in range(20):
