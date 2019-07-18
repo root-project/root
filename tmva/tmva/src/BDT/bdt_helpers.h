@@ -14,7 +14,7 @@
 #include <cmath>
 
 
-
+//
 /// sums internal values of vector
 template <class T>
 T vec_sum(std::vector<T> vec){
@@ -33,6 +33,20 @@ bool binary_logistic(T value){
   return (logistic_function(value)>0.5)? 1: 0;
 }
 
+
+std::function<bool (float)> get_classification_function(std::string & s_class_func){
+  std::function<bool(float)> classification_function;
+   if (!s_class_func.compare("logistic")){
+     std::cerr << "Not implemented yet" << std::endl;
+   }
+   else {
+     classification_function = binary_logistic<float>;
+   }
+   return classification_function;
+}
+
+
+// --------------- READING FILES ----------------------------
 std::string read_file_string(const std::string &filename){
   std::ifstream t(filename);
   std::stringstream buffer;

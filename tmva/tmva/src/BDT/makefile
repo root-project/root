@@ -33,4 +33,4 @@ clean :
 	$(RM) build/*.o *.o
 
 distclean : clean
-	$(RM) $(EXE)
+	$(RM) $(EXE) $(TEST_EXE)

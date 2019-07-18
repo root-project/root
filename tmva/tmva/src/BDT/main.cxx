@@ -7,6 +7,8 @@
 #include <map>
 #include <vector>
 #include <array>
+#include <chrono>
+#include <ctime>
 
 #define BDT_KIND 2
 
@@ -114,6 +116,11 @@ int main() {
   //std::cout << std::pow(2,2) << std::endl;
 
   // Write
+  //auto now = std::chrono::system_clock::now();
+  //auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
+  time_t my_time = time(0);
+  std::cout << "time: "<< my_time << std::endl;
+  //std::string s_namespace_name = ;
   for (int i = 0; i<number_of_trees; i++){
     std::filebuf fb;
     std::string filename = "./generated_files/generated_tree_"
@@ -121,6 +128,7 @@ int main() {
     fb.open (filename, std::ios::out);
     std::ostream os(&fb);
     generate_code_bdt(os, trees[i], i);
+    //generate_code_bdt(os, trees[i], i, std::to_string(my_time));
     fb.close();
   }
 

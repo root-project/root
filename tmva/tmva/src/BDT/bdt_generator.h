@@ -58,17 +58,20 @@ void generate_if_statement_for_bdt (std::ostream& fout,
 
 void generate_code_bdt(std::ostream& fout,
                         Tree &tree,
-                        int tree_number
-                        //std::string namespace=""
+                        int tree_number,
+                        std::string s_id=""
                       ) {
-
+  bool use_namespaces = (!s_id.empty());
   fout << "// File automatically generated! " << std::endl;
   fout << "/// Functions that defines the"
        << " inference of a single tree" << std::endl;
   fout << std::endl << std::endl;
 
   //fout << "#include <vector>" << std::endl;
-
+  if (use_namespaces){
+    // add "s_" to have a valid name
+    fout << "namespace s_" << s_id << "{" << std::endl;
+  }
 
   fout << "float generated_tree_" << std::to_string(tree_number)
        << "(std::vector<float> event){" << std::endl;
@@ -77,5 +80,10 @@ void generate_code_bdt(std::ostream& fout,
   generate_if_statement_for_bdt(fout, tree.nodes.get());
 
   fout << "return result;" << std::endl;
-  fout << "}" << std::endl;
+  fout << "}" << std::endl; // close function scope
+
+  if (use_namespaces){
+    fout << "} // end of s_" << s_id << " namespace" << std::endl;
+  }
+
 }
