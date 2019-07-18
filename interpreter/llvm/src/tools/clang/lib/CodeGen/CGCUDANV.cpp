@@ -254,7 +254,8 @@ llvm::Function *CGNVCUDARuntime::makeRegisterGlobalsFn() {
 /// \endcode
 llvm::Function *CGNVCUDARuntime::makeModuleCtorFunction() {
   // No need to generate ctors/dtors if there are no GPU binaries.
-  if (CGM.getCodeGenOpts().CudaGpuBinaryFileNames.empty())
+  if (!CGM.getCodeGenOpts().CudaGpuBinaryBuffer &&
+      CGM.getCodeGenOpts().CudaGpuBinaryFileNames.empty())
     return nullptr;
 
   // void __cuda_register_globals(void* handle);
@@ -281,16 +282,7 @@ llvm::Function *CGNVCUDARuntime::makeModuleCtorFunction() {
   // to be cleaned up in destructor on exit. Then associate all known kernels
   // with the GPU binary handle so CUDA runtime can figure out what to call on
   // the GPU side.
-  for (const std::string &GpuBinaryFileName :
-       CGM.getCodeGenOpts().CudaGpuBinaryFileNames) {
-    llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> GpuBinaryOrErr =
-        llvm::MemoryBuffer::getFileOrSTDIN(GpuBinaryFileName);
-    if (std::error_code EC = GpuBinaryOrErr.getError()) {
-      CGM.getDiags().Report(diag::err_cannot_open_file) << GpuBinaryFileName
-                                                        << EC.message();
-      continue;
-    }
-
+  auto buildFatbinarySection = [&](const llvm::StringRef FatbinCode) {
     const char *FatbinConstantName =
         CGM.getTriple().isMacOSX() ? "__NV_CUDA,__nv_fatbin" : ".nv_fatbin";
     // NVIDIA's cuobjdump looks for fatbins in this section.
@@ -305,14 +297,12 @@ llvm::Function *CGNVCUDARuntime::makeModuleCtorFunction() {
     // Fatbin version.
     Values.addInt(IntTy, 1);
     // Data.
-    Values.add(makeConstantString(GpuBinaryOrErr.get()->getBuffer(), 
-                                  "", FatbinConstantName, 8));
+    Values.add(makeConstantString(FatbinCode, "", FatbinConstantName, 8));
     // Unused in fatbin v1.
     Values.add(llvm::ConstantPointerNull::get(VoidPtrTy));
-    llvm::GlobalVariable *FatbinWrapper =
-      Values.finishAndCreateGlobal("__cuda_fatbin_wrapper",
-                                   CGM.getPointerAlign(),
-                                   /*constant*/ true);
+    llvm::GlobalVariable *FatbinWrapper = Values.finishAndCreateGlobal(
+        "__cuda_fatbin_wrapper", CGM.getPointerAlign(),
+        /*constant*/ true);
     FatbinWrapper->setSection(FatbinSectionName);
 
     // GpuBinaryHandle = __cudaRegisterFatBinary(&FatbinWrapper);
@@ -331,6 +321,27 @@ llvm::Function *CGNVCUDARuntime::makeModuleCtorFunction() {
 
     // Save GpuBinaryHandle so we can unregister it in destructor.
     GpuBinaryHandles.push_back(GpuBinaryHandle);
+  };
+
+  // If there is a valid buffer with fatbinary code, embed the buffer.
+  // Otherwise, embed fatbinary code from files.
+  if (CGM.getCodeGenOpts().CudaGpuBinaryBuffer) {
+    const llvm::StringRef GpuBinaryBuffer(
+        CGM.getCodeGenOpts().CudaGpuBinaryBuffer->data(),
+        CGM.getCodeGenOpts().CudaGpuBinaryBuffer->size());
+    buildFatbinarySection(GpuBinaryBuffer);
+  } else {
+    for (const std::string &GpuBinaryFileName :
+         CGM.getCodeGenOpts().CudaGpuBinaryFileNames) {
+      llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> GpuBinaryOrErr =
+          llvm::MemoryBuffer::getFileOrSTDIN(GpuBinaryFileName);
+      if (std::error_code EC = GpuBinaryOrErr.getError()) {
+        CGM.getDiags().Report(diag::err_cannot_open_file)
+            << GpuBinaryFileName << EC.message();
+        continue;
+      }
+      buildFatbinarySection(GpuBinaryOrErr.get()->getBuffer());
+    }
   }
 
   CtorBuilder.CreateRetVoid();

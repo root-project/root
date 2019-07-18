@@ -209,6 +209,10 @@ public:
   /// object file.
   std::vector<std::string> CudaGpuBinaryFileNames;
 
+  /// A buffer that contains the fatbinary code to forward to CUDA runtime
+  /// back-end for incorporating them into host-side object file.
+  std::shared_ptr<llvm::SmallVectorImpl<char>> CudaGpuBinaryBuffer;
+
   /// The name of the file to which the backend should save YAML optimization
   /// records.
   std::string OptRecordFile;
