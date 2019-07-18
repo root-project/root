@@ -1,6 +1,7 @@
 *.ipynb
 *.pkl
 *.pdf
+*.json
 
 # Prerequisites
 *.d
