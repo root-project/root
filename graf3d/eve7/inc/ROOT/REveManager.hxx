@@ -210,6 +210,9 @@ public:
 
    void ClearROOTClassSaved();
 
+   void AddLocation(std::string name, std::string path);
+   void SetDefaultHtmlPage(std::string path);
+   
    static REveManager* Create();
    static void         Terminate();
 
