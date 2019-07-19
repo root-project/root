@@ -1429,33 +1429,61 @@ void TCling::ShutDown()
 ////////////////////////////////////////////////////////////////////////////////
 /// Wrapper around dladdr (and friends)
 
-static const char *FindLibraryName(void (*func)())
+static std::string FindLibraryName(void (*func)())
 {
 #if defined(__CYGWIN__) && defined(__GNUC__)
-   return 0;
+   return {};
 #elif defined(G__WIN32)
    MEMORY_BASIC_INFORMATION mbi;
    if (!VirtualQuery (func, &mbi, sizeof (mbi)))
    {
-      return 0;
+      return {};
    }
 
    HMODULE hMod = (HMODULE) mbi.AllocationBase;
-   TTHREAD_TLS_ARRAY(char, MAX_PATH, moduleName);
+   char moduleName[MAX_PATH];
 
    if (!GetModuleFileNameA (hMod, moduleName, sizeof (moduleName)))
    {
-      return 0;
+      return {};
    }
    return moduleName;
 #else
    Dl_info info;
-   if (dladdr((void*)func,&info)==0) {
-      // Not in a known share library, let's give up
-      return 0;
+   if (dladdr((void*)func, &info) == 0) {
+      // Not in a known shared library, let's give up
+      return {};
    } else {
-      //fprintf(stdout,"Found address in %s\n",info.dli_fname);
+      if (strchr(info.dli_fname, '/'))
+         return info.dli_fname;
+      // Else absolute path. For all we know that's a binary.
+      // Some people have dictionaries in binaries, this is how we find their path:
+      // (see also https://stackoverflow.com/a/1024937/6182509)
+# if defined(R__MACOSX)
+      char buf[PATH_MAX] = { 0 };
+      uint32_t bufsize = sizeof(buf);
+      if (_NSGetExecutablePath(buf, &bufsize) >= 0)
+         return buf;
       return info.dli_fname;
+# elif defined(R__UNIX)
+      char buf[PATH_MAX] = { 0 };
+      // Cross our fingers that /proc/self/exe exists.
+      if (readlink("/proc/self/exe", buf, sizeof(buf)) > 0)
+         return buf;
+      std::string pipeCmd = std::string("which \"") + info.dli_fname + "\"";
+      FILE* pipe = popen(pipeCmd.c_str(), "r");
+      if (!pipe)
+         return info.dli_fname;
+      std::string result;
+      while (fgets(buf, sizeof(buf), pipe)) {
+         result += buf;
+      }
+      pclose(pipe);
+      return result;
+# else
+#  error "Unsupported platform."
+# endif
+      return {};
    }
 #endif
 
@@ -1875,8 +1903,9 @@ void TCling::RegisterModule(const char* modulename,
    if (payloadCode)
       code += payloadCode;
 
-   const char *const dyLibName = FindLibraryName(triggerFunc);
-   if (!dyLibName) {
+   std::string dyLibName = FindLibraryName(triggerFunc);
+
+   if (dyLibName.empty()) {
       ::Error("TCling::RegisterModule", "Dictionary trigger function for %s not found", modulename);
       return;
    }
@@ -1896,12 +1925,12 @@ void TCling::RegisterModule(const char* modulename,
          // requested by the JIT from it: as the library is currently being dlopen'ed,
          // its symbols are not yet reachable from the process.
          // Recursive dlopen seems to work just fine.
-         void* dyLibHandle = dlopen(dyLibName, RTLD_LAZY | RTLD_GLOBAL);
+         void* dyLibHandle = dlopen(dyLibName.c_str(), RTLD_LAZY | RTLD_GLOBAL);
          if (dyLibHandle) {
             fRegisterModuleDyLibs.push_back(dyLibHandle);
             wasDlopened = true;
          } else {
-            PrintDlError(dyLibName, modulename);
+            PrintDlError(dyLibName.c_str(), modulename);
          }
       }
    } // if (!lateRegistration)
