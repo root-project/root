@@ -14,7 +14,7 @@
 //#include "bdt.h"
 #include "unique_bdt.h"
 
-using namespace unique;
+using namespace unique_bdt;
 
 //  /*
 

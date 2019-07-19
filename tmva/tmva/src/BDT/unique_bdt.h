@@ -15,7 +15,7 @@
 
 using json = nlohmann::json;
 
-namespace unique{
+namespace unique_bdt{
   class Node{
   public:
     static int count;

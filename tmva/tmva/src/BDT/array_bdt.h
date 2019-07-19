@@ -6,54 +6,137 @@
 #include <streambuf>
 #include <map>
 #include <vector>
-
+#include <array>
+#include <utility>
+using json = nlohmann::json;
 
 namespace array_bdt{
   // Create one for thresholds, one for features number
-  float * tree_creator(int depth){
+  template <class T>
+  T * tree_creator(int depth){
     int node_number = std::pow(2, depth);
-    float tree[node_number] = {0};
+    T tree[node_number] = {0};
     return tree;
   }
 
-  //int get_index(int& counter, int depth){
-  //
-  //}
+  int get_node_index(int depth, int previous_row_index, int child_number){
+    if (depth==0){return 0;}
+    int row_index = (previous_row_index-1)*2+child_number;
+    return std::pow(2, depth-1) + row_index;
+  }
+  /*
+  float recursive_inference(std::vector event, int index=0){
+    index = index*2
+    return inference(event, index);
+  }
+  */
+
+  class Tree{
+  private:
+    size_t array_length;
+  public:
+    void set_array_length(size_t array_length){
+      this->array_length = array_length;
+    }
+    float inference(std::vector<float>);
+    std::vector<float> thresholds;
+    std::vector<int> features; // -1 if it is not a node
+  };
+
+  //float inference(std::vector<float> event, float thesholds[],
+  //              int features[], size_t array_length){
+  float Tree::inference(std::vector<float> event){
+    size_t index=0;
+    float result = 0;
+    while (index < this->array_length){
+      if (this->features[index] == -1){
+        result = this->thresholds[index];
+        break;
+      }
+      if (event[this->features[index]] <= this->thresholds[index]){
+        index = index*2+1;
+      }
+      else {
+        index = index*2+2;
+      }
+      //index += (event[this->features[index]] <= this->thresholds[index])? 1 : 2;
+    }
+    return result;
+  }
+
+
+
+  // ----- Reading functions -----
+  std::pair<int, float> get_node_members(json &jTree){
+    float threshold = jTree["split_condition"];
+    std::string tmp_str = jTree["split"].get<std::string>();
+    tmp_str.erase(tmp_str.begin(), tmp_str.begin()+1); // remove initial "f"
+    int variable = std::stoi(tmp_str);
+    return std::make_pair(variable, threshold);
+  }
+
   /// Need a nlohmann::json object from an xgboost saved format
   void _read_nodes(json &jTree,
-                    float[] &tree_features,
-                    float[] &tree_values,
-                    int depth,
-                    int index
+                    std::vector<int> &tree_features,
+                    std::vector<float> &tree_thresholds,
+                    int index = 0
                   ){
     bool is_leaf_node = (
       (jTree["children"][0].find("leaf") != jTree["children"][0].end())
       && (jTree["children"][0].find("nodeid") != jTree["children"][0].end())
     );
 
+    std::pair<int, float> features_thresholds = get_node_members(jTree);
+
+    tree_features.at(index) = features_thresholds.first;
+    tree_thresholds.at(index) = features_thresholds.second;
+
+    int true_index  = 2*index+1;
+    int false_index = 2*index+2;
+
     if (is_leaf_node){
-      // std::pow(2,depth)
-      tree_features[index]=-1;
-      tree_values[index]=
-      tmp_node->leaf_true = jTree["children"][0]["leaf"];
-      tmp_node->leaf_false = jTree["children"][1]["leaf"];
-      tmp_node->is_leaf_node=1;
-      //tree.nodes.push_back(tmp_node);
+      tree_features.at(true_index)    = -1;
+      tree_features.at(false_index)   = -1;
+      tree_thresholds.at(true_index)  = jTree["children"][0]["leaf"];
+      tree_thresholds.at(false_index) = jTree["children"][1]["leaf"];
     }
     else {
-      tmp_node->child_true = _read_nodes(jTree["children"][0], tree);
-      tmp_node->child_false = _read_nodes(jTree["children"][1], tree);
-    }
-    //tree.nodes.push_back(tmp_node);
-    return std::move(tmp_node);
+      _read_nodes(jTree["children"][0], tree_features,tree_thresholds, true_index);
+      _read_nodes(jTree["children"][1], tree_features,tree_thresholds, false_index);
+    } // end if-else
+  } // end function
 
+  /// Get the depth of a tree
+  int _get_tree_max_depth(json &jTree,
+                    int depth = 0
+                  ){
+    int depth_tmp = 0;
+    bool is_leaf_node = (
+      (jTree["children"][0].find("leaf") != jTree["children"][0].end())
+      && (jTree["children"][0].find("nodeid") != jTree["children"][0].end())
+    );
+    depth_tmp = jTree["depth"].get<int>()+1;
+    depth = (depth<depth_tmp)? depth_tmp : depth;
+
+    if (!is_leaf_node){
+      depth_tmp =_get_tree_max_depth(jTree["children"][0], depth);
+      depth = (depth<depth_tmp)? depth_tmp : depth;
+      depth_tmp = _get_tree_max_depth(jTree["children"][1], depth);
+      depth = (depth<depth_tmp)? depth_tmp : depth;
+    } // end if-else
+    return depth;
+  } // end function
+
+  
+  void read_nodes_from_tree(json &jTree, Tree &tree){
+
+    int depth = _get_tree_max_depth(jTree);
+    size_t array_length = std::pow(2,depth+1)-1; // (2^0+2^1+2^2+...)
+    tree.set_array_length(array_length);
+    std::vector<float> Ts(array_length);
+    std::vector<int> Feats(array_length);
+    _read_nodes(jTree, Feats, Ts );
+    tree.thresholds.swap(Ts);
+    tree.features.swap(Feats);
   }
-
-  //std::vector<AbstractNode>
-  void read_nodes_from_tree(json &jTree,Tree &tree){
-    //std::vector<AbstractNode> nodes;
-    tree.nodes = _read_nodes(jTree, tree);
-    //return nodes;
-  }
-
 } // end namespace

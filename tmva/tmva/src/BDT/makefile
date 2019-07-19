@@ -6,6 +6,9 @@ CPPFLAGS = -I./include \
 
 #ROOT_FLAGS = root-config --cflags --glibs
 ROOT_FLAGS = $(shell root-config --cflags)
+ROOT_BIS = -I$(ROOTSYS)/include
+ROOTCXXFLAGS=`root-config --cflags`
+LDFLAGSROOT=`root-config --glibs`
 
 LIBFLAGS = -L
 
@@ -18,13 +21,13 @@ TEST_EXE = test.exe
 all: $(EXE) #$(TEST_EXE)
 
 $(EXE): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) $(LDFLAGSROOT) -o $@ $^
 
 #$(TEST_EXE) : $(OBJS)
 #	$(CXX) $(CXXFLAGS) $(ROOT_FLAGS) -o $@ $^
 
 $(OBJS) : build/%.o: %.cxx
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(ROOTCXXFLAGS) -c $< -o $@
 	#$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(ROOT_FLAGS) -c $< -o $@
 
 

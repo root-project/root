@@ -80,6 +80,7 @@ int main() {
   std::vector<float> scores_tmp;
   std::vector<std::vector<float>> scores_out;
   std::vector<std::vector<bool>> prediction_out;
+  //std::vector<std::vector<bool>> prediction_out;
 
   float scores_sum;
   // Predict events
@@ -96,6 +97,8 @@ int main() {
   }
   write_csv(scores_file, scores_out); // write scores
   write_csv(predictions_file, prediction_out); // write predictions
+
+  //write_csv(array_pred_file, array_pred_out); // write predictions
 
   return 0;
 }

@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cmath>
 
+//#include "TInterpreter.h" // for gInterpreter
 
 //
 /// sums internal values of vector

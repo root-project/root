@@ -4,7 +4,7 @@
 #include <iostream>
 
 
-namespace unique{
+namespace unique_bdt{
 
 
   // counter

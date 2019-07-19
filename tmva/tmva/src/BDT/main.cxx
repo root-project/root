@@ -8,16 +8,23 @@
 #include <vector>
 #include <array>
 #include <chrono>
-#include <ctime>
+#include <ctime> // for date
+#include <functional> // for std::fucntion
+
+#include "bdt_helpers.h"
+
 
 #define BDT_KIND 2
 
+#include "unique_bdt.h"
+#include "array_bdt.h"
 #if BDT_KIND == 1
   #include "bdt.h"
   using namespace shared;
 #elif BDT_KIND == 2
-  #include "unique_bdt.h"
-  using namespace unique;
+  //using namespace unique_bdt;
+#elif BDT_KIND == 3
+  //using namespace array_bdt;
 #endif
 
 //#include "array_bdt.h"
@@ -30,16 +37,9 @@ json read_file(const std::string &filename) {
   std::ifstream i(filename);
   json j;
   i >> j;
-  //std::cout << "Read file: " << j.type();
   return j;
 }
 
-std::string read_file_string(const std::string &filename){
-  std::ifstream t(filename);
-  std::stringstream buffer;
-  buffer << t.rdbuf();
-  return buffer.str();
-}
 
 void print(const std::string message){
   std::cout << message << std::endl;
@@ -78,49 +78,47 @@ void check_json(json &jTree){
 }
 
 // ---------------------------  read json  ------------------------------
-
+// TODO
 int main() {
-  json config = read_file("model.json"); // get the model as a json object
-  std::string my_config = read_file_string("model.json"); // get model as string
-  //std::cout << "String: " << my_config << std::endl;
+  std::cout << "\n\n\n ########## READING MAIN.CXX ##########\n\n";
 
+  std::cout << "\n ***** READ JSON *****\n";
+  //json config = read_file("model.json"); // get the model as a json object
+  std::string my_config = read_file_string("model.json"); // get model as string
   // Parse the string with all the model
   auto json_model = json::parse(my_config);
-
-  std::cout << "\n *************************** \n\n";
-  std::cout << "Create " << json_model.size() << " trees\n";
+  std::cout << "Json read, there are " << json_model.size()
+            << " trees in the forest.\n";
   int number_of_trees = json_model.size();
-  Tree trees[number_of_trees];
+  std::vector<float> event_sample{1., 115., 70., 30.}; // event to test trees
+
+
+
+  std::cout << "\n\n ***** Create unique_ptr representation ***** \n";
+  unique_bdt::Tree trees[number_of_trees];
+
   for (int i=0; i<number_of_trees; i++){
-    //trees[i].nodes =
-    read_nodes_from_tree(json_model[i], trees[i]);
-    std::cout << "Number of nodes : "
-              //<< trees[i].nodes.size()
-              << std::endl;
+    unique_bdt::read_nodes_from_tree(json_model[i], trees[i]);
   }
-
-  //float event[4] = {6.,148.,72.,35.};
-  std::vector<float> event{1., 115., 70., 30.};
-  //vector<int> vect{ 10, 20, 30 };
-  //float event[4] = {1.,115.,70.,30.};
-
   for (auto& tree : trees){
-    //std::cout  << "There are: " << tree.nodes.size() << " nodes\n";
-    std::cout << "Prediction: " << tree.inference(event) << std::endl;
+    std::cout << "unique_ptr pred: " << tree.inference(event_sample) << std::endl;
   }
 
-  std::cout << "Count: "
-            //<< trees[0].nodes.back()->count
-            << std::endl;
 
-  //std::cout << std::pow(2,2) << std::endl;
+  std::cout << "\n\n ***** Create array representation ***** \n";
+  array_bdt::Tree trees_array[number_of_trees];
+  for (int i=0; i<number_of_trees; i++){
+    array_bdt::read_nodes_from_tree(json_model[i], trees_array[i]);
+  }
+  for (auto& tree : trees_array){
+    std::cout << "array pred: " << tree.inference(event_sample) << std::endl;
+  }
 
-  // Write
-  //auto now = std::chrono::system_clock::now();
-  //auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
+  std::cout << "\n\n ***** Generating text representation of trees ***** \n";
   time_t my_time = time(0);
-  std::cout << "time: "<< my_time << std::endl;
-  //std::string s_namespace_name = ;
+  std::cout << "current time used as namespace: "<< my_time << std::endl;
+  std::string s_trees[number_of_trees];
+
   for (int i = 0; i<number_of_trees; i++){
     std::filebuf fb;
     std::string filename = "./generated_files/generated_tree_"
@@ -128,11 +126,14 @@ int main() {
     fb.open (filename, std::ios::out);
     std::ostream os(&fb);
     generate_code_bdt(os, trees[i], i);
-    //generate_code_bdt(os, trees[i], i, std::to_string(my_time));
+    //generate_code_bdt(os, trees[i], i, s_namespace_name);
+    std::stringstream ss;
+    ss << os.rdbuf();
+    s_trees[i] = ss.str();
     fb.close();
   }
 
 
-  std::cout << "\n***** END *****" << std::endl;
+  std::cout << "\n ########## END MAIN.CXX ##########\n\n\n";
   return 0;
 } // End main
