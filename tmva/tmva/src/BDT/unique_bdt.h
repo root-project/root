@@ -17,36 +17,49 @@ using json = nlohmann::json;
 
 namespace unique_bdt{
   class Node{
+  private:
+    //int depth;
+    //int missing; // what is missing?
+    //int child_id_true;
+    //int child_id_false;
+    //int node_id;
+
   public:
-    static int count;
     bool is_leaf_node=0;
-    float split_value = 0;
+    float split_threshold = 0;
     int split_variable;
-    int node_id;
+    static int count;
+    void set_split_variable(int split_variable){
+      this->split_variable=split_variable;
+    }
+    void set_split_theshold(float split_threshold){
+      this->split_threshold=split_threshold;
+    }
+    void set_is_leaf_node(bool is_leaf_node){
+      this->is_leaf_node=is_leaf_node;
+    }
+
     std::unique_ptr<Node> child_true;
     std::unique_ptr<Node> child_false;
     float leaf_true, leaf_false;
-    int depth;
-    int missing; // what is missing?
-    int child_id_true;
-    int child_id_false;
+
 
     float inference(float event[]){
       if (this->is_leaf_node){
-        return ((event[split_variable] < split_value) ? leaf_true : leaf_false);
+        return ((event[split_variable] < split_threshold) ? leaf_true : leaf_false);
       }
       else{
-        return ((event[split_variable] < split_value) ?
+        return ((event[split_variable] < split_threshold) ?
                 child_true->inference(event) : child_false->inference(event));
       }
     }
 
     float inference(std::vector<float> event){
       if (this->is_leaf_node){
-        return ((event[split_variable] < split_value) ? leaf_true : leaf_false);
+        return ((event[split_variable] < split_threshold) ? leaf_true : leaf_false);
       }
       else{
-        return ((event[split_variable] < split_value) ?
+        return ((event[split_variable] < split_threshold) ?
                 child_true->inference(event) : child_false->inference(event));
       }
     }

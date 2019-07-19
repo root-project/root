@@ -26,7 +26,7 @@ void generate_if_statement_for_bdt (std::ostream& fout,
 
   std::string condition = "(event[" + std::to_string(node->split_variable) + "]"
                         + " < "
-                        + std::to_string(node->split_value)
+                        + std::to_string(node->split_threshold)
                         + ")";
 
   // IF part of statement
