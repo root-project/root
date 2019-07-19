@@ -683,6 +683,24 @@ void REveManager::ClearROOTClassSaved()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Register new directory to THttpServer
+//  For example: AddLocation("mydir/", "/test/EveWebApp/ui5");
+//
+void REveManager::AddLocation(std::string locationName, std::string path)
+{
+   fWebWindow->GetServer()->AddLocation(locationName.c_str(), path.c_str());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set content of default window HTML page
+//  Got example: SetDefaultHtmlPage("file:currentdir/test.html")
+//
+void REveManager::SetDefaultHtmlPage(std::string path)
+{
+   fWebWindow->SetDefaultPage(path.c_str());
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// If global REveManager* REX::gEve is not set initialize it.
 /// Returns REX::gEve.
 
