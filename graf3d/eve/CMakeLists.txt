@@ -288,4 +288,7 @@ else()
       RGL
       Physics
   )
+
+  target_include_directories(Eve PRIVATE
+    ${FTGL_INCLUDE_DIRS} ${GLEW_INCLUDE_DIRS})
 endif()
