@@ -7,7 +7,7 @@ include_directories(${VDT_INCLUDE_DIRS})
 
 ROOTTEST_GENERATE_EXECUTABLE(${testname}
                              ${testname}.cxx
-                             ADDITIONAL_COMPILE_FLAGS ${additional_compile_flags}
+                             COMPILE_FLAGS ${additional_compile_flags}
                              LIBRARIES Core Hist Gpad MathCore ${VDT_LIBRARIES})
 
 ROOTTEST_ADD_TEST(${testname}
