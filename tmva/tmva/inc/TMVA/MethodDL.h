@@ -155,6 +155,10 @@ private:
    void ParseLstmLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
                        std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString, TString delim);
 
+   template <typename Architecture_t, typename Layer_t>
+   void ParseGruLayer(DNN::TDeepNet<Architecture_t, Layer_t> & deepNet,
+                      std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> & nets, TString layerString, TString delim);
+
    /// train of deep neural network using the defined architecture
    template <typename Architecture_t>
    void TrainDeepNet();

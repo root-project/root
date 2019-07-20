@@ -44,6 +44,7 @@
 
 #include "TMVA/DNN/RNN/RNNLayer.h"
 #include "TMVA/DNN/LSTM/LSTMLayer.h"
+#include "TMVA/DNN/GRU/GRULayer.h" 
 
 #ifdef HAVE_DAE
 #include "TMVA/DNN/DAE/CompressionLayer.h"
@@ -62,6 +63,7 @@ namespace DNN {
    using namespace CNN;
    using namespace RNN;
    using namespace LSTM;
+   using namespace GRU;
    //using namespace DAE;
 
 /** \class TDeepNet
@@ -161,7 +163,14 @@ public:
     * when the layer is already created. */
    void AddBasicLSTMLayer(TBasicLSTMLayer<Architecture_t> *basicLSTMLayer);
 
+   /*! Function for adding GRU Layer in the Deep Neural Network,
+    * with given parameters */
+   TBasicGRULayer<Architecture_t> *AddBasicGRULayer(size_t stateSize, size_t inputSize, size_t timeSteps,
+                                                    bool rememberState = false);
 
+   /*! Function for adding GRU Layer in the Deep Neural Network,
+    * when the layer is already created. */
+   void AddBasicGRULayer(TBasicGRULayer<Architecture_t> *basicGRULayer);
 
    /*! Function for adding Dense Connected Layer in the Deep Neural Network,
     *  with a given width, activation function and dropout probability.
@@ -591,6 +600,45 @@ template <typename Architecture_t, typename Layer_t>
 void TDeepNet<Architecture_t, Layer_t>::AddBasicLSTMLayer(TBasicLSTMLayer<Architecture_t> *basicLSTMLayer)
 {
    fLayers.push_back(basicLSTMLayer);
+}
+
+
+//______________________________________________________________________________
+template <typename Architecture_t, typename Layer_t>
+TBasicGRULayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBasicGRULayer(size_t stateSize, size_t inputSize,
+                                                                                      size_t timeSteps, bool rememberState)
+{
+   // should check if input and time size are consistent
+   size_t inputHeight, inputWidth;
+   if (fLayers.size() == 0) {
+      inputHeight = this->GetInputHeight();
+      inputWidth = this->GetInputWidth();
+   } else {
+      Layer_t *lastLayer = fLayers.back();
+      inputHeight = lastLayer->GetHeight();
+      inputWidth = lastLayer->GetWidth();
+   }
+   if (inputSize != inputWidth) {
+      Error("AddBasicGRULayer", "Inconsistent input size with input layout  - it should be %zu instead of %zu", inputSize, inputWidth);
+   }
+   if (timeSteps != inputHeight) {
+      Error("AddBasicGRULayer", "Inconsistent time steps with input layout - it should be %zu instead of %zu", timeSteps, inputHeight);
+   }
+
+   TBasicGRULayer<Architecture_t> *basicGRULayer =
+      new TBasicGRULayer<Architecture_t>(this->GetBatchSize(), stateSize, inputSize, timeSteps, rememberState,
+                                         DNN::EActivationFunction::kSigmoid, 
+                                         DNN::EActivationFunction::kTanh,
+                                         fIsTraining, this->GetInitialization());
+   fLayers.push_back(basicGRULayer);
+   return basicGRULayer;
+}
+
+//______________________________________________________________________________
+template <typename Architecture_t, typename Layer_t>
+void TDeepNet<Architecture_t, Layer_t>::AddBasicGRULayer(TBasicGRULayer<Architecture_t> *basicGRULayer)
+{
+   fLayers.push_back(basicGRULayer);
 }
   
 
