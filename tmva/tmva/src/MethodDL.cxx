@@ -573,6 +573,8 @@ void MethodDL::CreateDeepNet(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
          ParseRnnLayer(deepNet, nets, layerString->GetString(), subDelimiter);
       } else if (strLayerType == "LSTM") {
          ParseLstmLayer(deepNet, nets, layerString->GetString(), subDelimiter);
+      } else if (strLayerType == "GRU") {
+         ParseGruLayer(deepNet, nets, layerString->GetString(), subDelimiter);
       } else {
          // no type of layer specified - assume is dense layer as in old DNN interface
          ParseDenseLayer(deepNet, nets, layerString->GetString(), subDelimiter);
@@ -992,10 +994,15 @@ void MethodDL::ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> & deepNet,
 ////////////////////////////////////////////////////////////////////////////////
 /// Pases the layer string and creates the appropriate lstm layer
 template <typename Architecture_t, typename Layer_t>
-void MethodDL::ParseLstmLayer(DNN::TDeepNet<Architecture_t, Layer_t> & /*deepNet*/,
+void MethodDL::ParseLstmLayer(DNN::TDeepNet<Architecture_t, Layer_t> & deepNet,
                               std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> & /*nets*/, TString layerString,
                               TString delim)
 {
+   int stateSize = 0;
+   int inputSize = 0;
+   int timeSteps = 0;
+   bool rememberState = false;
+
    // Split layer details
    TObjArray *subStrings = layerString.Tokenize(delim);
    TIter nextToken(subStrings);
@@ -1004,9 +1011,91 @@ void MethodDL::ParseLstmLayer(DNN::TDeepNet<Architecture_t, Layer_t> & /*deepNet
 
    for (; token != nullptr; token = (TObjString *)nextToken()) {
       switch (idxToken) {
+         case 1:  // state size 
+         {
+            TString strstateSize(token->GetString());
+            stateSize = strstateSize.Atoi();
+         } break;
+         case 2:  // input size
+         {
+            TString strinputSize(token->GetString());
+            inputSize = strinputSize.Atoi();
+         } break;
+         case 3:  // time steps
+         {
+            TString strtimeSteps(token->GetString());
+            timeSteps = strtimeSteps.Atoi();
+         }
+         case 4: // remember state (1 or 0)
+         {
+            TString strrememberState(token->GetString());
+            rememberState = (bool) strrememberState.Atoi();
+         } break;
       }
       ++idxToken;
    }
+
+   // Add the lstm layer, initialize the weights and biases and copy
+   TBasicLSTMLayer<Architecture_t> *basicLSTMLayer = deepNet.AddBasicLSTMLayer(stateSize, inputSize,
+                                                                        timeSteps, rememberState);
+   basicLSTMLayer->Initialize();
+    
+   // Add same layer to fNet
+   if (fBuildNet) fNet->AddBasicLSTMLayer(stateSize, inputSize, timeSteps, rememberState);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Pases the layer string and creates the appropriate gru layer
+template <typename Architecture_t, typename Layer_t>
+void MethodDL::ParseGruLayer(DNN::TDeepNet<Architecture_t, Layer_t> & deepNet,
+                              std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> & /*nets*/, TString layerString,
+                              TString delim)
+{
+   int stateSize = 0;
+   int inputSize = 0;
+   int timeSteps = 0;
+   bool rememberState = false;
+
+   // Split layer details
+   TObjArray *subStrings = layerString.Tokenize(delim);
+   TIter nextToken(subStrings);
+   TObjString *token = (TObjString *)nextToken();
+   int idxToken = 0;
+
+   for (; token != nullptr; token = (TObjString *)nextToken()) {
+      switch (idxToken) {
+         case 1:  // state size 
+         {
+            TString strstateSize(token->GetString());
+            stateSize = strstateSize.Atoi();
+         } break;
+         case 2:  // input size
+         {
+            TString strinputSize(token->GetString());
+            inputSize = strinputSize.Atoi();
+         } break;
+         case 3:  // time steps
+         {
+            TString strtimeSteps(token->GetString());
+            timeSteps = strtimeSteps.Atoi();
+         }
+         case 4: // remember state (1 or 0)
+         {
+            TString strrememberState(token->GetString());
+            rememberState = (bool) strrememberState.Atoi();
+         } break;
+      }
+      ++idxToken;
+   }
+
+   // Add the gru layer, initialize the weights and biases and copy
+   TBasicGRULayer<Architecture_t> *basicGRULayer = deepNet.AddBasicGRULayer(stateSize, inputSize,
+                                                                        timeSteps, rememberState);
+   basicGRULayer->Initialize();
+    
+   // Add same layer to fNet
+   if (fBuildNet) fNet->AddBasicGRULayer(stateSize, inputSize, timeSteps, rememberState);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2275,13 +2364,39 @@ void MethodDL::ReadWeightsFromXML(void * rootXML)
          fNet->AddBasicRNNLayer(stateSize, inputSize, timeSteps, rememberState, returnSequence);
 
       }
+HEAD
+      else if (layerName == "LSTMLayer") {
+
+         // read RNN layer info
+         size_t  stateSize,inputSize, timeSteps = 0;
+         int rememberState= 0;   
+         gTools().ReadAttr(layerXML, "StateSize", stateSize);
+         gTools().ReadAttr(layerXML, "InputSize", inputSize);
+         gTools().ReadAttr(layerXML, "TimeSteps", timeSteps);
+         gTools().ReadAttr(layerXML, "RememberState", rememberState );
+         
+         fNet->AddBasicLSTMLayer(stateSize, inputSize, timeSteps, rememberState);
+         
+      }
+      else if (layerName == "GRULayer") {
+
+         // read RNN layer info
+         size_t  stateSize,inputSize, timeSteps = 0;
+         int rememberState= 0;   
+         gTools().ReadAttr(layerXML, "StateSize", stateSize);
+         gTools().ReadAttr(layerXML, "InputSize", inputSize);
+         gTools().ReadAttr(layerXML, "TimeSteps", timeSteps);
+         gTools().ReadAttr(layerXML, "RememberState", rememberState );
+         
+         fNet->AddBasicGRULayer(stateSize, inputSize, timeSteps, rememberState);
+      }
        // BatchNorm Layer
       else if (layerName == "BatchNormLayer") {
          // use some dammy value which will be overwrittem in BatchNormLayer::ReadWeightsFromXML
          fNet->AddBatchNormLayer(0., 0.0);
-      }
-
-
+      }      
+LSTM full testing done, GRU forward pass testing done
+      
       // read eventually weights and biases
       fNet->GetLayers().back()->ReadWeightsFromXML(layerXML);
 
