@@ -86,18 +86,17 @@ private:
    Matrix_t &fWeightsInputGateState;            ///< Input Gate weights for prev state, fWeights[1]
    Matrix_t &fInputGateBias;                    ///< Input Gate bias
 
-   Matrix_t &fWeightsForgetGate;                ///< Forget Gate weights for input, fWeights[0]
-   Matrix_t &fWeightsForgetGateState;           ///< Forget Gate weights for prev state, fWeights[1]
+   Matrix_t &fWeightsForgetGate;                ///< Forget Gate weights for input, fWeights[2]
+   Matrix_t &fWeightsForgetGateState;           ///< Forget Gate weights for prev state, fWeights[3]
    Matrix_t &fForgetGateBias;                   ///< Forget Gate bias
 
-   Matrix_t &fWeightsCandidate;                 ///< Candidate Gate weights for input, fWeights[0]
-   Matrix_t &fWeightsCandidateState;            ///< Candidate Gate weights for prev state, fWeights[1]
+   Matrix_t &fWeightsCandidate;                 ///< Candidate Gate weights for input, fWeights[4]
+   Matrix_t &fWeightsCandidateState;            ///< Candidate Gate weights for prev state, fWeights[5]
    Matrix_t &fCandidateBias;                    ///< Candidate Gate bias
 
-   Matrix_t &fWeightsOutputGate;                ///< Output Gate weights for input, fWeights[0]
-   Matrix_t &fWeightsOutputGateState;           ///< Output Gate weights for prev state, fWeights[1]
+   Matrix_t &fWeightsOutputGate;                ///< Output Gate weights for input, fWeights[6]
+   Matrix_t &fWeightsOutputGateState;           ///< Output Gate weights for prev state, fWeights[7]
    Matrix_t &fOutputGateBias;                   ///< Output Gate bias
-
 
    std::vector<Matrix_t> input_gate_value;      ///< input gate value for every time step
    std::vector<Matrix_t> forget_gate_value;     ///< forget gate value for every time step
@@ -268,8 +267,6 @@ public:
    const Matrix_t                    & GetCellTensorAt(size_t i)          const { return cell_value[i]; }
    Matrix_t                          & GetCellTensorAt(size_t i)                { return cell_value[i]; }
    
-
-
    const Matrix_t                   & GetInputGateBias()         const { return fInputGateBias; }
    Matrix_t                         & GetInputGateBias()               { return fInputGateBias; }
    const Matrix_t                   & GetForgetGateBias()        const { return fForgetGateBias; }
@@ -723,11 +720,12 @@ auto inline TBasicLSTMLayer<Architecture_t>::CellBackward(Matrix_t & state_gradi
     *  values obtained from each gate during forward propagation. */
 
     
-   // Update hidden state.
+   // cell gradient for current time step
    const DNN::EActivationFunction fAT = this->GetActivationFunctionF2();   
    Matrix_t cell_gradient(this->GetCellTensorAt(t).GetNrows(), this->GetCellTensorAt(t).GetNcols());
    DNN::evaluateDerivative<Architecture_t>(cell_gradient, fAT, this->GetCellTensorAt(t));
 
+   // cell tanh value for current time step
    Matrix_t cell_tanh(this->GetCellTensorAt(t).GetNrows(), this->GetCellTensorAt(t).GetNcols());
    Architecture_t::Copy(cell_tanh, this->GetCellTensorAt(t));
    DNN::evaluate<Architecture_t>(cell_tanh, fAT);
@@ -759,11 +757,11 @@ template<typename Architecture_t>
 auto TBasicLSTMLayer<Architecture_t>::Print() const
 -> void
 {
-   std::cout << "Batch Size: " << this->GetBatchSize() << "\n"
-             << "Input Size: " << this->GetInputSize() << "\n"
-             << "Hidden State Size: " << this->GetStateSize() << "\n"
-             << "Cell State Size: " << this->GetCellSize() << "\n"
-             << "Timesteps: " << this->GetTimeSteps() << "\n";
+   std::cout << " LSTM Layer: \t ";
+   std::cout << " (NInput = " << this->GetInputSize();  // input size 
+   std::cout << ", NState = " << this->GetStateSize();  // hidden state size
+   std::cout << ", NTime  = " << this->GetTimeSteps() << " )";  // time size
+   std::cout << "\tOutput = ( " << this->GetOutput().size() << " , " << this->GetOutput()[0].GetNrows() << " , " << this->GetOutput()[0].GetNcols() << " )\n";
 }
 
  //______________________________________________________________________________
@@ -774,7 +772,7 @@ auto inline TBasicLSTMLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
    auto layerxml = gTools().xmlengine().NewChild(parent, 0, "LSTMLayer");
     
    // Write all other info like outputSize, cellSize, inputSize, timeSteps, rememberState
-   gTools().xmlengine().NewAttr(layerxml, 0, "OutputSize", gTools().StringFromInt(this->GetStateSize()));
+   gTools().xmlengine().NewAttr(layerxml, 0, "StateSize", gTools().StringFromInt(this->GetStateSize()));
    gTools().xmlengine().NewAttr(layerxml, 0, "CellSize", gTools().StringFromInt(this->GetCellSize()));
    gTools().xmlengine().NewAttr(layerxml, 0, "InputSize", gTools().StringFromInt(this->GetInputSize()));
    gTools().xmlengine().NewAttr(layerxml, 0, "TimeSteps", gTools().StringFromInt(this->GetTimeSteps()));
@@ -787,7 +785,7 @@ auto inline TBasicLSTMLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
    this->WriteMatrixToXML(layerxml, "ForgetWeights", this->GetWeightsAt(2));
    this->WriteMatrixToXML(layerxml, "ForgetStateWeights", this->GetWeightsAt(3));
    this->WriteMatrixToXML(layerxml, "ForgetBiases", this->GetBiasesAt(1));
-   this->WriteMatrixToXML(layerxml, "Candidateeights", this->GetWeightsAt(4));
+   this->WriteMatrixToXML(layerxml, "CandidateWeights", this->GetWeightsAt(4));
    this->WriteMatrixToXML(layerxml, "CandidateStateWeights", this->GetWeightsAt(5));
    this->WriteMatrixToXML(layerxml, "CandidateBiases", this->GetBiasesAt(2));
    this->WriteMatrixToXML(layerxml, "OuputWeights", this->GetWeightsAt(6));
@@ -807,7 +805,7 @@ auto inline TBasicLSTMLayer<Architecture_t>::ReadWeightsFromXML(void *parent)
    this->ReadMatrixXML(parent, "ForgetWeights", this->GetWeightsAt(2));
    this->ReadMatrixXML(parent, "ForgetStateWeights", this->GetWeightsAt(3));
    this->ReadMatrixXML(parent, "ForgetBiases", this->GetBiasesAt(1));
-   this->ReadMatrixXML(parent, "Candidateeights", this->GetWeightsAt(4));
+   this->ReadMatrixXML(parent, "CandidateWeights", this->GetWeightsAt(4));
    this->ReadMatrixXML(parent, "CandidateStateWeights", this->GetWeightsAt(5));
    this->ReadMatrixXML(parent, "CandidateBiases", this->GetBiasesAt(2));
    this->ReadMatrixXML(parent, "OuputWeights", this->GetWeightsAt(6));
