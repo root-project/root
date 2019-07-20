@@ -192,5 +192,42 @@ auto inline TCpu<AFloat>::LSTMLayerBackward(TCpuMatrix<AFloat> & state_gradients
    
    return input_gradient;
 }
+
+
+//______________________________________________________________________________
+template <typename AFloat>
+auto inline TCpu<AFloat>::GRULayerBackward(TCpuMatrix<AFloat> & state_gradients_backward,
+                                     TCpuMatrix<AFloat> & reset_weight_gradients,
+                                     TCpuMatrix<AFloat> & update_weight_gradients,
+                                     TCpuMatrix<AFloat> & candidate_weight_gradients,
+                                     TCpuMatrix<AFloat> & reset_state_weight_gradients,
+                                     TCpuMatrix<AFloat> & update_state_weight_gradients,
+                                     TCpuMatrix<AFloat> & candidate_state_weight_gradients,
+                                     TCpuMatrix<AFloat> & reset_bias_gradients,
+                                     TCpuMatrix<AFloat> & update_bias_gradients,
+                                     TCpuMatrix<AFloat> & candidate_bias_gradients,
+                                     TCpuMatrix<AFloat> & dr,
+                                     TCpuMatrix<AFloat> & du,
+                                     TCpuMatrix<AFloat> & dc,
+                                     const TCpuMatrix<AFloat> & precStateActivations,
+                                     const TCpuMatrix<AFloat> & fReset,
+                                     const TCpuMatrix<AFloat> & fUpdate,
+                                     const TCpuMatrix<AFloat> & fCandidate,
+                                     const TCpuMatrix<AFloat> & weights_reset,
+                                     const TCpuMatrix<AFloat> & weights_update,
+                                     const TCpuMatrix<AFloat> & weights_candidate,
+                                     const TCpuMatrix<AFloat> & weights_reset_state,
+                                     const TCpuMatrix<AFloat> & weights_update_state,
+                                     const TCpuMatrix<AFloat> & weights_candidate_state,
+                                     const TCpuMatrix<AFloat> & input,
+                                     TCpuMatrix<AFloat> & input_gradient)
+-> TCpuMatrix<AFloat> &
+{
+
+   return input_gradient;
+}
+
+
+
 } // namespace DNN
 } // namespace TMVA

@@ -152,6 +152,35 @@ public:
                                        TMatrixT<Scalar_t> & cell_gradient,
                                        TMatrixT<Scalar_t> & cell_tanh);
 
+
+ /** Backward pass for GRU Network */
+   static Matrix_t & GRULayerBackward(TMatrixT<Scalar_t> & state_gradients_backward,
+                                      TMatrixT<Scalar_t> & reset_weight_gradients,
+                                      TMatrixT<Scalar_t> & update_weight_gradients,
+                                      TMatrixT<Scalar_t> & candidate_weight_gradients,
+                                      TMatrixT<Scalar_t> & reset_state_weight_gradients,
+                                      TMatrixT<Scalar_t> & update_state_weight_gradients,
+                                      TMatrixT<Scalar_t> & candidate_state_weight_gradients,
+                                      TMatrixT<Scalar_t> & reset_bias_gradients,
+                                      TMatrixT<Scalar_t> & update_bias_gradients,
+                                      TMatrixT<Scalar_t> & candidate_bias_gradients,
+                                      TMatrixT<Scalar_t> & dr,
+                                      TMatrixT<Scalar_t> & du,
+                                      TMatrixT<Scalar_t> & dc,
+                                      const TMatrixT<Scalar_t> & precStateActivations,
+                                      const TMatrixT<Scalar_t> & fReset,
+                                      const TMatrixT<Scalar_t> & fUpdate,
+                                      const TMatrixT<Scalar_t> & fCandidate,
+                                      const TMatrixT<Scalar_t> & weights_reset,
+                                      const TMatrixT<Scalar_t> & weights_update,
+                                      const TMatrixT<Scalar_t> & weights_candidate,
+                                      const TMatrixT<Scalar_t> & weights_reset_state,
+                                      const TMatrixT<Scalar_t> & weights_update_state,
+                                      const TMatrixT<Scalar_t> & weights_candidate_state,
+                                      const TMatrixT<Scalar_t> & input,
+                                      TMatrixT<Scalar_t> & input_gradient);
+  
+
    /** Adds a the elements in matrix B scaled by c to the elements in
     *  the matrix A. This is required for the weight update in the gradient
     *  descent step.*/

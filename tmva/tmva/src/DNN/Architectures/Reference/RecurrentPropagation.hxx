@@ -219,5 +219,45 @@ auto TReference<Scalar_t>::LSTMLayerBackward(TMatrixT<Scalar_t> & state_gradient
    
    return input_gradient;
 }
+
+
+
+//______________________________________________________________________________
+template <typename Scalar_t>
+auto TReference<Scalar_t>::GRULayerBackward(TMatrixT<Scalar_t> & state_gradients_backward,
+                                     TMatrixT<Scalar_t> & reset_weight_gradients,
+                                     TMatrixT<Scalar_t> & update_weight_gradients,
+                                     TMatrixT<Scalar_t> & candidate_weight_gradients,
+                                     TMatrixT<Scalar_t> & reset_state_weight_gradients,
+                                     TMatrixT<Scalar_t> & update_state_weight_gradients,
+                                     TMatrixT<Scalar_t> & candidate_state_weight_gradients,
+                                     TMatrixT<Scalar_t> & reset_bias_gradients,
+                                     TMatrixT<Scalar_t> & update_bias_gradients,
+                                     TMatrixT<Scalar_t> & candidate_bias_gradients,
+                                     TMatrixT<Scalar_t> & dr,
+                                     TMatrixT<Scalar_t> & du,
+                                     TMatrixT<Scalar_t> & dc,
+                                     const TMatrixT<Scalar_t> & precStateActivations,
+                                     const TMatrixT<Scalar_t> & fReset,
+                                     const TMatrixT<Scalar_t> & fUpdate,
+                                     const TMatrixT<Scalar_t> & fCandidate,
+                                     const TMatrixT<Scalar_t> & weights_reset,
+                                     const TMatrixT<Scalar_t> & weights_update,
+                                     const TMatrixT<Scalar_t> & weights_candidate,
+                                     const TMatrixT<Scalar_t> & weights_reset_state,
+                                     const TMatrixT<Scalar_t> & weights_update_state,
+                                     const TMatrixT<Scalar_t> & weights_candidate_state,
+                                     const TMatrixT<Scalar_t> & input,
+                                     TMatrixT<Scalar_t> & input_gradient)
+-> Matrix_t &
+{
+
+   return input_gradient;
+}
+
+
+
+
+
 } // namespace DNN
 } // namespace TMVA
