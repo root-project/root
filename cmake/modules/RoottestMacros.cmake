@@ -399,15 +399,14 @@ endmacro(ROOTTEST_GENERATE_REFLEX_DICTIONARY)
 macro(ROOTTEST_GENERATE_EXECUTABLE executable)
   CMAKE_PARSE_ARGUMENTS(ARG "" "" "LIBRARIES;COMPILE_FLAGS;DEPENDS" ${ARGN})
 
-  set(exec_sources)
-  foreach(exec_src_file ${ARGN})
-    get_filename_component(exec_src_file ${exec_src_file} ABSOLUTE)
-    if(EXISTS ${exec_src_file})
-      list(APPEND exec_sources ${exec_src_file})
+  add_executable(${executable} EXCLUDE_FROM_ALL)
+  foreach(exec_src_file ${ARG_UNPARSED_ARGUMENTS})
+    if(NOT IS_ABSOLUTE ${exec_src_file})
+      get_filename_component(exec_src_file ${exec_src_file} ABSOLUTE)
     endif()
+    target_sources(${executable} PRIVATE ${exec_src_file})
   endforeach()
 
-  add_executable(${executable} EXCLUDE_FROM_ALL ${exec_sources})
   set_target_properties(${executable} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
   set_property(TARGET ${executable}
