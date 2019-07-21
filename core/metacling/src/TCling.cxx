@@ -6997,6 +6997,15 @@ static std::string GetSharedLibImmediateDepsSlow(std::string lib,
          if (SymName.empty())
             continue;
 
+         // Skip the symbols which are part of the C/C++ runtime and have a
+         // fixed library version. See binutils ld VERSION. Those reside in
+         // 'system' libraries, which we avoid in ResolveSymbol.
+         if (BinObjFile->isELF() && (SymName.contains("@@GLIBCXX") ||
+                                     SymName.contains("@@CXXABI") ||
+                                     SymName.contains("@@GLIBC") ||
+                                     SymName.contains("@@GCC")))
+            continue;
+
          // If we can find the address of the symbol, we have loaded it. Skip.
          if (skipLoadedLibs && llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(SymName))
             continue;
