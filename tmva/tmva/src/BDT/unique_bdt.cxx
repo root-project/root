@@ -20,8 +20,8 @@ namespace unique_bdt{
   }
 
   // Reading functions
-  void write_node_members(json &jTree, std::unique_ptr<Node> &tmp_node){
-    //tmp_node->split_threshold = jTree["split_condition"];
+  void write_node_members(json const &jTree, std::unique_ptr<Node> &tmp_node){
+    tmp_node->split_threshold = jTree["split_condition"];
     //tmp_node->node_id = jTree["nodeid"];
     //tmp_node->child_id_true = jTree["yes"];
     //tmp_node->child_id_false = jTree["no"];
@@ -32,7 +32,7 @@ namespace unique_bdt{
   }
 
   /// Need a nlohmann::json object from an xgboost saved format
-  std::unique_ptr<Node> _read_nodes(json &jTree, Tree &tree){
+  std::unique_ptr<Node> _read_nodes(json const &jTree, Tree &tree){
     bool is_leaf_node = (
       (jTree["children"][0].find("leaf") != jTree["children"][0].end())
       && (jTree["children"][0].find("nodeid") != jTree["children"][0].end())
@@ -53,7 +53,7 @@ namespace unique_bdt{
   }
 
   /// read tree structure from xgboost json file
-  void read_nodes_from_tree(json &jTree,Tree &tree){
+  void read_nodes_from_tree(json const &jTree,Tree &tree){
     tree.nodes = _read_nodes(jTree, tree);
   }
 

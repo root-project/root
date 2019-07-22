@@ -26,7 +26,7 @@ namespace unique_bdt{
 
   public:
     bool is_leaf_node=0;
-    float split_threshold = 0;
+    float split_threshold;
     int split_variable;
     static int count;
     void set_split_variable(int split_variable){
@@ -44,15 +44,7 @@ namespace unique_bdt{
     float leaf_true, leaf_false;
 
 
-    float inference(float event[]){
-      if (this->is_leaf_node){
-        return ((event[split_variable] < split_threshold) ? leaf_true : leaf_false);
-      }
-      else{
-        return ((event[split_variable] < split_threshold) ?
-                child_true->inference(event) : child_false->inference(event));
-      }
-    }
+
 
     float inference(std::vector<float> event){
       if (this->is_leaf_node){
@@ -83,15 +75,13 @@ namespace unique_bdt{
     float inference(std::vector<float> event){
       return nodes->inference(event);
     }
-    float inference(float event[]){
-      return nodes->inference(event);
-    }
+
   };
 
   // Reading functions
-  void write_node_members(json &jTree, std::unique_ptr<Node> &tmp_node);
-  std::unique_ptr<Node> _read_nodes(json &jTree, Tree &tree);
-  void read_nodes_from_tree(json &jTree,Tree &tree);
+  void write_node_members(json const &jTree, std::unique_ptr<Node> &tmp_node);
+  std::unique_ptr<Node> _read_nodes(json const &jTree, Tree &tree);
+  void read_nodes_from_tree(json const &jTree,Tree &tree);
 }
 
 #endif

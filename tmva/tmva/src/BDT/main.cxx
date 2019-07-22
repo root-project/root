@@ -99,6 +99,8 @@ int main() {
 
   for (int i=0; i<number_of_trees; i++){
     unique_bdt::read_nodes_from_tree(json_model[i], trees[i]);
+    std::cout << trees[i].nodes->split_variable
+              << "  " << trees[i].nodes->split_threshold << "\n";
   }
   for (auto& tree : trees){
     std::cout << "unique_ptr pred: " << tree.inference(event_sample) << std::endl;
@@ -113,6 +115,7 @@ int main() {
   for (auto& tree : trees_array){
     std::cout << "array pred: " << tree.inference(event_sample) << std::endl;
   }
+
 
   std::cout << "\n\n ***** Generating text representation of trees ***** \n";
   time_t my_time = time(0);
