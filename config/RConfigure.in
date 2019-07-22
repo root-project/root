@@ -2,6 +2,9 @@
 #define ROOT_RConfigure
 
 /* Configurations file for @architecture@ */
+
+#cmakedefine R__HAVE_CONFIG
+
 #ifdef R__HAVE_CONFIG
 #define ROOTPREFIX    "@prefix@"
 #define ROOTBINDIR    "@bindir@"

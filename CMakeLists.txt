@@ -163,7 +163,6 @@ ROOT_CHECK_OUT_OF_SOURCE_BUILD()
 
 #---Here we look for installed software and switch on and of the different build options--------
 include(SearchInstalledSoftware)
-ROOT_SHOW_ENABLED_OPTIONS()
 
 #---Here we add tcmalloc to the linker flags if needed------------------------------------------
 if (TCMALLOC_FOUND)
@@ -478,7 +477,7 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   endif()
   install(DIRECTORY man/    DESTINATION ${CMAKE_INSTALL_MANDIR})
   install(DIRECTORY tutorials/ DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
-  install(DIRECTORY cmake/modules DESTINATION ${CMAKE_INSTALL_CMAKEDIR} PATTERN "Find*.cmake" EXCLUDE)
+  install(FILES cmake/modules/RootMacros.cmake DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
 endif()
 
 #---Make sure the Jupyter ROOT C++ kernel runs with the same Python version as ROOT-----
@@ -503,10 +502,6 @@ configure_file(${CMAKE_SOURCE_DIR}/cmake/modules/CTestCustom.cmake ${CMAKE_BINAR
 if(testing)
   include(RootCTest)
   if(roottest)
-    find_package(Git REQUIRED)
-    execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
-                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                    OUTPUT_VARIABLE GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE)
     #---Is the roottest source directory around?
     if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
       set(roottestdir ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
@@ -521,9 +516,25 @@ if(testing)
       add_subdirectory(${roottestdir} roottest)
     else()
       message("-- Could not find roottest directory! Cloning from the repository...")
+
+      find_package(Git REQUIRED)
+
+      if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/.git)
+        execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
+                        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                        OUTPUT_VARIABLE GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE)
+      else()
+        set(GIT_BRANCH v${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-${ROOT_PATCH_VERSION})
+      endif()
+
       execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH}
                       https://github.com/root-project/roottest.git
                       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+      if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
+        message(FATAL_ERROR "Error cloning roottest")
+      endif()
+
       add_subdirectory(roottest)
     endif()
   endif()
@@ -554,6 +565,8 @@ if(testing)
     endif()
   endif()
 endif()
+
+ROOT_SHOW_ENABLED_OPTIONS()
 
 #---Packaging-------------------------------------------------------------------------------------
 include(RootCPack)

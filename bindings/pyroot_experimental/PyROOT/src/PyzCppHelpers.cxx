@@ -17,11 +17,6 @@ pythonizations.
 
 #include "PyzCppHelpers.hxx"
 
-#include "CPyCppyy.h"
-#include "CPPInstance.h"
-#include "TClass.h"
-#include "RConfig.h"
-
 // Call method with signature: obj->meth()
 PyObject *CallPyObjMethod(PyObject *obj, const char *meth)
 {

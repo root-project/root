@@ -1,4 +1,5 @@
 import types
+import sys
 
 import libcppyy as cppyy_backend
 from cppyy import gbl as gbl_namespace
@@ -44,13 +45,48 @@ class ROOTFacade(types.ModuleType):
         self.__class__.__getattr__ = self._getattr
         self.__class__.__setattr__ = self._setattr
 
+        # Setup import hook
+        self._set_import_hook()
+
+    def _set_import_hook(self):
+        # This hook allows to write e.g:
+        # from ROOT.A import a
+        # instead of the longer:
+        # from ROOT import A
+        # from A import a
+        try:
+            import __builtin__
+        except ImportError:
+            import builtins as __builtin__  # name change in p3
+        _orig_ihook = __builtin__.__import__
+        def _importhook(name, *args, **kwds):
+            if name[0:5] == 'ROOT.':
+                try:
+                    sys.modules[name] = getattr(self, name[5:])
+                except Exception:
+                    pass
+            return _orig_ihook(name, *args, **kwds)
+        __builtin__.__import__ = _importhook
+
     def _fallback_getattr(self, name):
-        # Try first in the global namespace, then in the ROOT namespace
-        # This allows to lookup e.g. ROOT.ROOT.Math as ROOT.Math
+        # Try:
+        # - in the global namespace
+        # - in the ROOT namespace
+        # - in gROOT (ROOT lists such as list of files,
+        #   memory mapped files, functions, geometries ecc.)
+        # The first two attempts allow to lookup
+        # e.g. ROOT.ROOT.Math as ROOT.Math
         try:
             return getattr(gbl_namespace, name)
-        except AttributeError:
-            return getattr(self.__dict__['ROOT_ns'], name)
+        except AttributeError as err:
+            try:
+                return getattr(self.__dict__['ROOT_ns'], name)
+            except AttributeError:
+                res = gROOT.FindObject(name)
+                if res:
+                    return res
+                else:
+                    raise AttributeError(str(err))
 
     def _finalSetup(self):
         # Setup interactive usage from Python

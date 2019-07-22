@@ -1745,11 +1745,11 @@
    }
 
    TGraphPainter.prototype.endPntHandler = function() {
-      if (this.snapid && this.interactive_bin) {
+      if (this.interactive_bin) {
          var exec = "SetPoint(" + this.interactive_bin.indx + "," + this.interactive_bin.x + "," + this.interactive_bin.y + ")";
-         var canp = this.canv_painter();
-         if (canp && !canp._readonly)
-            canp.SendWebsocket("OBJEXEC:" + this.snapid + ":" + exec);
+         if ((this.interactive_bin.indx == 0) && this.MatchObjectType('TCutG'))
+            exec += ";;SetPoint(" + (this.GetObject().fNpoints-1) + "," + this.interactive_bin.x + "," + this.interactive_bin.y + ")";
+         this.WebCanvasExec(exec);
       }
 
       delete this.interactive_bin;
@@ -1799,9 +1799,7 @@
                 usery = main && main.RevertY ? main.RevertY(pnt.y) : 0;
             canp.ShowMessage('InsertPoint(' + userx.toFixed(3) + ',' + usery.toFixed(3) + ') not yet implemented');
          } else if (this.args_menu_id && hint && (hint.binindx !== undefined)) {
-            var exec = "RemovePoint(" + hint.binindx + ")";
-            console.log('execute ' + exec + ' for object ' + this.args_menu_id);
-            canp.SendWebsocket('OBJEXEC:' + this.args_menu_id + ":" + exec);
+            this.WebCanvasExec("RemovePoint(" + hint.binindx + ")", this.args_menu_id);
          }
 
          return true; // call is processed

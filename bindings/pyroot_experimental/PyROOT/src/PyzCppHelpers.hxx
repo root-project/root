@@ -11,15 +11,12 @@
 #ifndef PYROOT_PYZCPPHELPERS
 #define PYROOT_PYZCPPHELPERS
 
+#include "CPyCppyy.h"
+#include "CPPInstance.h"
+#include "TClass.h"
+#include "RConfig.h"
+
 #include <string>
-
-struct _object;
-typedef _object PyObject;
-
-class TClass;
-namespace CPyCppyy {
-   class CPPInstance;
-}
 
 PyObject *CallPyObjMethod(PyObject *obj, const char *meth);
 PyObject *CallPyObjMethod(PyObject *obj, const char *meth, PyObject *arg1);

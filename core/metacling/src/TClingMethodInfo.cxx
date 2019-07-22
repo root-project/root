@@ -524,6 +524,8 @@ long TClingMethodInfo::ExtraProperty() const
       property |= kIsConstructor;
    } else if (llvm::isa<clang::CXXDestructorDecl>(fd)) {
       property |= kIsDestructor;
+   } else if (fd->isInlined()) {
+      property |= kIsInlined;
    }
    return property;
 }

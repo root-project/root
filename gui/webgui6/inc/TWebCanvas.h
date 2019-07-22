@@ -68,6 +68,8 @@ protected:
    Int_t fPaletteDelivery{1};      ///<! colors palette delivery 0:never, 1:once, 2:always, 3:per subpad
    Int_t fPrimitivesMerge{100};    ///<! number of PS primitives, which will be merged together
    Int_t fJsonComp{0};             ///<! compression factor for messages send to the client
+   std::string fCustomScripts;     ///<! custom JavaScript code or URL on JavaScript files to load before start drawing
+   std::vector<std::string> fCustomClasses;  ///<! list of custom classes, which can be delivered as is to client
 
    UpdatedSignal_t fUpdatedSignal; ///<! signal emitted when canvas updated or state is changed
 
@@ -158,6 +160,11 @@ public:
 
    void SetPrimitivesMerge(Int_t cnt) { fPrimitivesMerge = cnt; }
    Int_t GetPrimitivesMerge() const { return fPrimitivesMerge; }
+
+   void SetCustomScripts(const std::string &src);
+
+   void AddCustomClass(const std::string &clname, bool with_derived = false);
+   bool IsCustomClass(const TClass *cl) const;
 
    static TString CreateCanvasJSON(TCanvas *c, Int_t json_compression = 0);
    static Int_t StoreCanvasJSON(TCanvas *c, const char *filename, const char *option = "");

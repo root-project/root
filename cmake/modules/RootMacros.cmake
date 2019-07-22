@@ -426,7 +426,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     set(rootmap_name ${library_output_dir}/${libprefix}${deduced_arg_module}.rootmap)
   endif()
 
-  if(CMAKE_ROOTTEST_NOROOTMAP)
+  if(CMAKE_ROOTTEST_NOROOTMAP OR cpp_module_file)
     set(rootmap_name )
     set(rootmapargs )
   else()
