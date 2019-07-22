@@ -31,7 +31,8 @@ class ROOTFacade(types.ModuleType):
         self.gROOT = gROOT
 
         # Expose some functionality from CPyCppyy extension module
-        cppyy_exports = [ 'Double', 'Long', 'nullptr', 'addressof', 'bind_object' ]
+        cppyy_exports = [ 'Double', 'Long', 'nullptr', 'addressof', 'bind_object',
+                          'SetMemoryPolicy', 'kMemoryHeuristics', 'kMemoryStrict' ]
         for name in cppyy_exports:
             setattr(self, name, getattr(cppyy_backend, name))
 
