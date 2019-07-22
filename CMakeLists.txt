@@ -6,6 +6,12 @@
 
 cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
+  message(FATAL_ERROR
+    " ROOT must be built out-of-source.\n"
+    " Please see README/INSTALL for more information.")
+endif()
+
 set(policy_new CMP0072 CMP0077)
 foreach(policy ${policy_new})
   if(POLICY ${policy})
@@ -157,9 +163,6 @@ endif()
 if(testing)
   enable_testing()
 endif()
-
-#---Check if the user wants to build the project in the source directory------------------------
-ROOT_CHECK_OUT_OF_SOURCE_BUILD()
 
 #---Here we look for installed software and switch on and of the different build options--------
 include(SearchInstalledSoftware)
