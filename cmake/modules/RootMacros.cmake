@@ -1186,20 +1186,6 @@ function(REFLEX_BUILD_DICTIONARY dictionary headerfiles selectionfile )
   install(CODE "EXECUTE_PROCESS(COMMAND ${merge_rootmap_cmd} --do-merge --input-file ${srcRootMap} --merged-file ${mergedRootMap})")
 endfunction()
 
-#---------------------------------------------------------------------------------------------------
-#---ROOT_CHECK_OUT_OF_SOURCE_BUILD( )
-#---------------------------------------------------------------------------------------------------
-macro(ROOT_CHECK_OUT_OF_SOURCE_BUILD)
-  get_filename_component(bindir_parent ${CMAKE_BINARY_DIR} PATH)
-  if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
-     file(REMOVE_RECURSE ${CMAKE_SOURCE_DIR}/Testing)
-     file(REMOVE ${CMAKE_SOURCE_DIR}/DartConfiguration.tcl)
-     message(FATAL_ERROR "ROOT should be built as an out of source build, to keep the source directory clean. Please create a extra build directory and run the command 'cmake <path_to_source_dir>' in this newly created directory. You have also to delete the directory CMakeFiles and the file CMakeCache.txt in the source directory. Otherwise cmake will complain even if you run it from an out-of-source directory.")
-  elseif(IS_SYMLINK ${CMAKE_BINARY_DIR} AND CMAKE_SOURCE_DIR STREQUAL bindir_parent)
-     message(FATAL_ERROR "ROOT cannot be built from a sub-directory of the source tree that is a symlink. This is a current limitation of CMake. Please create a real build directory and run the command 'cmake <path_to_source_dir>' in this newly created directory.")
-  endif()
-endmacro()
-
 #----------------------------------------------------------------------------
 # function ROOT_ADD_TEST( <name> COMMAND cmd [arg1... ]
 #                        [PRECMD cmd [arg1...]] [POSTCMD cmd [arg1...]]
