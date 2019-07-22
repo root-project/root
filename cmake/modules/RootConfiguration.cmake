@@ -679,6 +679,10 @@ get_filename_component(ROOT_BINARY_DIR \"\${ROOT_BINDIR}\" ABSOLUTE)
 ")
 set(ROOT_MODULE_PATH "\${_thisdir}/modules")
 
+# used by ROOTConfig.cmake from the build directory
+configure_file(${CMAKE_SOURCE_DIR}/cmake/modules/RootMacros.cmake
+               ${CMAKE_BINARY_DIR}/RootMacros.cmake COPYONLY)
+
 configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig.cmake.in
                ${CMAKE_BINARY_DIR}/installtree/ROOTConfig.cmake @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/RootUseFile.cmake.in

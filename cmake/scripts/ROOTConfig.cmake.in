@@ -64,7 +64,7 @@ get_filename_component(_thisdir "${CMAKE_CURRENT_LIST_FILE}" PATH)
 
 #----------------------------------------------------------------------------
 # Include RootMacros.cmake to get ROOT's CMake macros
-include(@ROOT_MODULE_PATH@/RootMacros.cmake)
+include("${_thisdir}/RootMacros.cmake")
 
 #----------------------------------------------------------------------------
 # Include the file listing all the imported targets and options
