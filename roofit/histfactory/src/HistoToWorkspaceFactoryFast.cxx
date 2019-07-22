@@ -2562,8 +2562,11 @@ namespace HistFactory{
     // the 1st bin in TH1 
     // (we ignore underflow)
 
-    ErrorHist->SetBinContent( binNumber, RelativeError );
-    
+    // Error and bin content are interchanged because for some reason, the other functions
+    // use the bin content to convey the error ...
+    ErrorHist->SetBinError(binNumber, TotalVal);
+    ErrorHist->SetBinContent(binNumber, RelativeError);
+
     std::cout << "Making Total Uncertainty for bin " << binNumber
 	      << " Error = " << sqrt(ErrorsSqr)
 	      << " Val = " << TotalVal
@@ -2632,14 +2635,15 @@ namespace HistFactory{
 
     // Get the sigma from the hist
     // (the relative uncertainty)
-    Double_t sigma = uncertHist->GetBinContent( TH1BinNumber );
+    const double sigmaRel = uncertHist->GetBinContent(TH1BinNumber); 
+    const double totalN = uncertHist->GetBinError(TH1BinNumber);
 
     // If the sigma is <= 0, 
     // do cont create the term
-    if( sigma <= 0 ){
+    if( sigmaRel <= 0 ){
       std::cout << "Not creating constraint term for "
 		<< gamma.GetName() 
-		<< " because sigma = " << sigma
+		<< " because sigma = " << sigmaRel
 		<< " (sigma<=0)" 
 		<< " (TH1 bin number = " << TH1BinNumber << ")"
 		<< std::endl;
@@ -2648,8 +2652,7 @@ namespace HistFactory{
     }
   
     // set reasonable ranges for gamma parameters
-    gamma.setMax( 1 + 5*sigma );
-    //    gamma.setMin( TMath::Max(1. - 5*sigma, 0.) );    
+    gamma.setMax( 1 + 5*sigmaRel );
     gamma.setMin( 0. );         
 
     // Make Constraint Term
@@ -2664,9 +2667,7 @@ namespace HistFactory{
     
       // Make sigma
 
-      RooConstVar constrSigma( sigmaName.c_str(), sigmaName.c_str(), sigma );
-      //proto->import( constrSigma, RecycleConflictNodes() );
-      //proto->import( constrSigma );
+      RooConstVar constrSigma( sigmaName.c_str(), sigmaName.c_str(), sigmaRel );
     
       // Make "observed" value
       RooRealVar constrNom(nomName.c_str(), nomName.c_str(), 1.0,0,10);
@@ -2677,11 +2678,13 @@ namespace HistFactory{
 			 constrNom, gamma, constrSigma );
       
       proto->import( gauss, RecycleConflictNodes() );
-      //proto->import( gauss );
       
+      // Give reasonable starting point for pre-fit errors by setting it to the absolute sigma
+      // Mostly useful for pre-fit plotting.
+      gamma.setError(sigmaRel);
     } else if( type == Constraint::Poisson ) {
     
-      Double_t tau = 1/sigma/sigma; // this is correct Poisson equivalent to a Gaussian with mean 1 and stdev sigma
+      Double_t tau = 1/sigmaRel/sigmaRel; // this is correct Poisson equivalent to a Gaussian with mean 1 and stdev sigma
 
       // Make nominal "observed" value
       RooRealVar constrNom(nomName.c_str(), nomName.c_str(), tau);
@@ -2702,6 +2705,10 @@ namespace HistFactory{
       pois.setNoRounding(true);
       proto->import( pois, RecycleConflictNodes() );
       
+      // Give reasonable starting point for pre-fit errors.
+      // Mostly useful for pre-fit plotting.
+      gamma.setError(sigmaRel);
+
     } else {
 
       std::cout << "Error: Did not recognize Stat Error constraint term type: "
@@ -2712,8 +2719,8 @@ namespace HistFactory{
     // If the sigma value is less
     // than a supplied threshold,
     // set the variable to constant
-    if( sigma < minSigma ) {
-      std::cout << "Warning:  Bin " << i << " = " << sigma
+    if( sigmaRel < minSigma ) {
+      std::cout << "Warning:  Bin " << i << " = " << sigmaRel
 		<< " and is < " << minSigma
 		<< ". Setting: " << gamma.GetName() << " to constant"
 		<< std::endl;
