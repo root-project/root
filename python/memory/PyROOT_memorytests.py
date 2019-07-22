@@ -134,40 +134,50 @@ class Memory1TestCase( MyTestCase ):
       MemTester.CallPtr( b1 );
       self.assertEqual( MemTester.counter, 1 )
       del b1
-      self.assertEqual( MemTester.counter, 1 )
+      if self.exp_pyroot:
+         counter = 0
+      else:
+         counter = 1
+      self.assertEqual( MemTester.counter, counter )
 
       b2 = MemTester()
-      self.assertEqual( MemTester.counter, 2 )
+      counter += 1
+      self.assertEqual( MemTester.counter, counter )
       SetMemoryPolicy( kMemoryStrict )
       MemTester.CallPtr( b2 );
-      self.assertEqual( MemTester.counter, 2 )
+      self.assertEqual( MemTester.counter, counter )
       del b2
-      self.assertEqual( MemTester.counter, 1 )
+      counter -= 1
+      self.assertEqual( MemTester.counter, counter )
 
       b3 = MemTester()
-      self.assertEqual( MemTester.counter, 2 )
+      counter += 1
+      self.assertEqual( MemTester.counter, counter )
       SetMemoryPolicy( kMemoryHeuristics )
       MemTester.CallPtr( b3 );
-      self.assertEqual( MemTester.counter, 2 )
+      self.assertEqual( MemTester.counter, counter )
       del b3
-      self.assertEqual( MemTester.counter, 2 )
+      self.assertEqual( MemTester.counter, counter )
 
       b4 = MemTester()
-      self.assertEqual( MemTester.counter, 3 )
+      counter += 1
+      self.assertEqual( MemTester.counter, counter )
       self.set_mem_policy(MemTester.CallPtr, kMemoryStrict)
       MemTester.CallPtr( b4 );
-      self.assertEqual( MemTester.counter, 3 )
+      self.assertEqual( MemTester.counter, counter )
       del b4
-      self.assertEqual( MemTester.counter, 2 )
+      counter -= 1
+      self.assertEqual( MemTester.counter, counter )
 
       b5 = MemTester()
-      self.assertEqual( MemTester.counter, 3 )
+      counter += 1
+      self.assertEqual( MemTester.counter, counter )
       SetMemoryPolicy( kMemoryStrict )
       self.set_mem_policy(MemTester.CallPtr, kMemoryHeuristics)
       MemTester.CallPtr( b5 );
-      self.assertEqual( MemTester.counter, 3 )
+      self.assertEqual( MemTester.counter, counter )
       del b5
-      self.assertEqual( MemTester.counter, 3 )
+      self.assertEqual( MemTester.counter, counter )
 
     # test explicit destruction
       SetMemoryPolicy( kMemoryHeuristics )
