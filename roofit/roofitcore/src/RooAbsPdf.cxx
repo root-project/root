@@ -282,7 +282,6 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
     Bool_t error = traceEvalPdf(val) ;
 
     if (error) {
-//       raiseEvalError() ;
       return 0 ;
     }
     return val ;
@@ -305,21 +304,22 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
     // Evaluate denominator
     Double_t normVal(_norm->getVal()) ;
     
-    if (normVal<=0.) {
+    if (normVal < 0. || (normVal == 0. && rawVal != 0)) {
+      //Unreasonable normalisations. A zero integral can be tolerated if the function vanishes.
       error=kTRUE ;
-      logEvalError("p.d.f normalization integral is zero or negative") ;  
+      std::stringstream msg;
+      msg << "p.d.f normalization integral is zero or negative: " << normVal;
+      logEvalError(msg.str().c_str());
     }
 
     // Raise global error flag if problems occur
-    if (error) {
-//       raiseEvalError() ;
+    if (error || (rawVal == 0. && normVal == 0.)) {
       _value = 0 ;
     } else {
       _value = rawVal / normVal ;
-//       cout << "RooAbsPdf::getValV(" << GetName() << ") writing _value = " << rawVal << "/" << normVal << " = " << _value << endl ;
     }
 
-    clearValueAndShapeDirty() ; //setValueDirty(kFALSE) ;
+    clearValueAndShapeDirty();
   } 
 
   return _value ;
