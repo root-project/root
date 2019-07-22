@@ -83,6 +83,13 @@ class Memory1TestCase( MyTestCase ):
     # should no longer be accessible
       self.assert_( not gROOT.FindObject( 'memtest_th1f' ) )
 
+   def set_mem_policy(self, callable_obj, pol):
+      # Set the memory policy of the callable object received
+      if self.exp_pyroot:
+         callable_obj.__mempolicy__ = pol
+      else:
+         callable_obj._mempolicy = pol
+
    def test3ObjectCallHeuristics( self ):
       """Test memory mgmt heuristics for object calls"""
       
@@ -96,11 +103,11 @@ class Memory1TestCase( MyTestCase ):
       MemTester.CallRef( a );
       self.assertEqual( MemTester.counter, 1 )
 
-      MemTester.CallRef._mempolicy = kMemoryStrict
+      self.set_mem_policy(MemTester.CallRef, kMemoryStrict)
       MemTester.CallRef( a );
       self.assertEqual( MemTester.counter, 1 )
 
-      MemTester.CallRef._mempolicy = kMemoryHeuristics
+      self.set_mem_policy(MemTester.CallRef, kMemoryHeuristics)
       MemTester.CallRef( a );
       self.assertEqual( MemTester.counter, 1 )
 
@@ -114,11 +121,11 @@ class Memory1TestCase( MyTestCase ):
       MemTester.CallConstPtr( MemTester() )
       self.assertEqual( MemTester.counter, 0 )
 
-      MemTester.CallConstPtr._mempolicy = kMemoryStrict
+      self.set_mem_policy(MemTester.CallConstPtr, kMemoryStrict)
       MemTester.CallConstPtr( MemTester() )
       self.assertEqual( MemTester.counter, 0 )
 
-      MemTester.CallConstPtr._mempolicy = kMemoryHeuristics
+      self.set_mem_policy(MemTester.CallConstPtr, kMemoryHeuristics)
       MemTester.CallConstPtr( MemTester() )
       self.assertEqual( MemTester.counter, 0 )
 
@@ -147,7 +154,7 @@ class Memory1TestCase( MyTestCase ):
 
       b4 = MemTester()
       self.assertEqual( MemTester.counter, 3 )
-      MemTester.CallPtr._mempolicy = kMemoryStrict
+      self.set_mem_policy(MemTester.CallPtr, kMemoryStrict)
       MemTester.CallPtr( b4 );
       self.assertEqual( MemTester.counter, 3 )
       del b4
@@ -156,7 +163,7 @@ class Memory1TestCase( MyTestCase ):
       b5 = MemTester()
       self.assertEqual( MemTester.counter, 3 )
       SetMemoryPolicy( kMemoryStrict )
-      MemTester.CallPtr._mempolicy = kMemoryHeuristics
+      self.set_mem_policy(MemTester.CallPtr, kMemoryHeuristics)
       MemTester.CallPtr( b5 );
       self.assertEqual( MemTester.counter, 3 )
       del b5
@@ -165,7 +172,7 @@ class Memory1TestCase( MyTestCase ):
     # test explicit destruction
       SetMemoryPolicy( kMemoryHeuristics )
       MemTester().counter = 1      # silly way of setting it to 0
-      MemTester.CallPtr._mempolicy = kMemoryHeuristics
+      self.set_mem_policy(MemTester.CallPtr, kMemoryHeuristics)
       self.assertEqual( MemTester.counter, 0 )
       c = MemTester()
       self.assertEqual( MemTester.counter, 1 )
