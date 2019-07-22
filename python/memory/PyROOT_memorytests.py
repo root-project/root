@@ -37,6 +37,10 @@ else:
 
 ### Memory management test cases =============================================
 class Memory1TestCase( MyTestCase ):
+   @classmethod
+   def setUpClass(cls):
+      cls.exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
+
    def test1ObjectCreationDestruction( self ):
       """Test object creation and destruction"""
 
