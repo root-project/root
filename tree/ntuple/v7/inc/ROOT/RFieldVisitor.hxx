@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 
+class TBrowser;
 namespace ROOT {
 namespace Experimental {
 class RFieldRoot;
@@ -128,6 +129,12 @@ public:
 };
 
 std::string FitString(const std::string &str, int availableSpace);
+   
+class RBrowseVisitor: public Detail::RNTupleVisitor {
+   TBrowser* b;
+   void VisitField(const Detail::RFieldBase &field, int level) final;
+   void VisitRootField(const RFieldRoot &/*field*/, int /*level*/) final { }
+};
 } // namespace Experimental
 } // namespace ROOT
 

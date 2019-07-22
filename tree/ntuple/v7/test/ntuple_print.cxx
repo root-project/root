@@ -51,11 +51,11 @@ TEST(RNtuplePrint, FullString)
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff", "test.root");
       *fieldPt = 5.0f;
       ntuple->Fill();
-   }
+   } // flushes content to test.root
    auto ntuple2 = RNTupleReader::Open("Staff", "test.root");
    std::ostringstream os;
    ntuple2->PrintInfo(os);
-   std::string fString{"************************************ NTUPLE ************************************\n* N-Tuple  : Staff                                                             *\n* Entries : 1                                                                  *\n********************************************************************************\n* Field 1   : pt (float)                                                       *\n********************************************************************************\n"};
+   std::string fString{"************************************ NTUPLE ************************************\n* N-Tuple : Staff                                                              *\n* Entries : 1                                                                  *\n********************************************************************************\n* Field 1   : pt (float)                                                       *\n********************************************************************************\n"};
    EXPECT_EQ(fString, os.str());
 }
 

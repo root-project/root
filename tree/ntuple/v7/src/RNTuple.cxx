@@ -116,7 +116,7 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(std::ostream &output, const EN
             output << frameSymbol;
          output << std::endl;
          // FitString defined in RFieldVisitor.cxx
-         output << frameSymbol << " N-Tuple  : " << FitString(name, width-14) << frameSymbol << std::endl; // prints line with name of ntuple
+         output << frameSymbol << " N-Tuple : " << FitString(name, width-13) << frameSymbol << std::endl; // prints line with name of ntuple
          output << frameSymbol << " Entries : " << FitString(std::to_string(GetNEntries()), width - 13) << frameSymbol << std::endl;  // prints line with number of entries
          GetModel()->GetRootField()->TraverseVisitor(prepVisitor);
          //To make code more understandable, all the parameter setting is done here instead of inside the constructor
@@ -137,6 +137,12 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(std::ostream &output, const EN
    // Never here
    return;
 }
+
+void Browse(TBrowser* b) {
+   
+}
+
+
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RNTupleWriter::RNTupleWriter(
