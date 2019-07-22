@@ -83,6 +83,7 @@
 #include "RooBrentRootFinder.h"
 #include "RooVectorDataStore.h"
 #include "RooCachedReal.h"
+#include "RooHelpers.h"
 
 #include "Riostream.h"
 
@@ -554,15 +555,12 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* n
   // Integral over multiple ranges
   RooArgSet components ;
 
-  TObjArray* oa = TString(rangeName).Tokenize(",");
+  auto tokens = RooHelpers::tokenise(rangeName, ",");
 
-  for( Int_t i=0; i < oa->GetEntries(); ++i) {
-    TObjString* os = (TObjString*) (*oa)[i];
-    if(!os) break;
-    RooAbsReal* compIntegral = createIntObj(iset,nset,cfg,os->GetString().Data()) ;
-    components.add(*compIntegral) ;
+  for (const std::string& token : tokens) {
+    RooAbsReal* compIntegral = createIntObj(iset,nset,cfg, token.c_str());
+    components.add(*compIntegral);
   }
-  delete oa;
 
   TString title(GetTitle()) ;
   title.Prepend("Integral of ") ;
@@ -1695,21 +1693,17 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
     RooCmdArg rnorm = RooFit::NormRange(rcmd->getString(0)) ;
     argList.Add(&rnorm) ;
 
-    list<string> rlist ;
+    std::vector<string> rlist;
 
     // Separate named ranges using strtok
-    char buf[1024] ;
-    strlcpy(buf,rcmd->getString(0),1024) ;
-    char* oneRange = strtok(buf,",") ;
-    while(oneRange) {
-      rlist.push_back(oneRange) ;
-      oneRange = strtok(0,",") ;
+    for (const std::string& rangeNameToken : RooHelpers::tokenise(rcmd->getString(0), ",")) {
+      rlist.emplace_back(rangeNameToken);
     }
 
-    for (list<string>::iterator riter=rlist.begin() ; riter!=rlist.end() ; ++riter) {
+    for (const auto& rangeString : rlist) {
       // Process each range with a separate command with a single range to be plotted
-      rcmd->setString(0,riter->c_str()) ;
-      RooAbsReal::plotOn(frame,argList) ;
+      rcmd->setString(0, rangeString.c_str());
+      RooAbsReal::plotOn(frame,argList);
     }
     return frame ;
 
@@ -1930,26 +1924,26 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
 
 
 
-
+/// Plotting engine function for internal use
+///
+/// Plot ourselves on given frame. If frame contains a histogram, all dimensions of the plotted
+/// function that occur in the previously plotted dataset are projected via partial integration,
+/// otherwise no projections are performed. Optionally, certain projections can be performed
+/// by summing over the values present in a provided dataset ('projData'), to correctly
+/// project out data dependents that are not properly described by the PDF (e.g. per-event errors).
+///
+/// The functions value can be multiplied with an optional scale factor. The interpretation
+/// of the scale factor is unique for generic real functions, for PDFs there are various interpretations
+/// possible, which can be selection with 'stype' (see RooAbsPdf::plotOn() for details).
+///
+/// The default projection behaviour can be overriden by supplying an optional set of dependents
+/// to project. For most cases, plotSliceOn() and plotProjOn() provide a more intuitive interface
+/// to modify the default projection behaviour.
 //_____________________________________________________________________________
 // coverity[PASS_BY_VALUE]
 RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
 {
-  // Plotting engine function for internal use
-  //
-  // Plot ourselves on given frame. If frame contains a histogram, all dimensions of the plotted
-  // function that occur in the previously plotted dataset are projected via partial integration,
-  // otherwise no projections are performed. Optionally, certain projections can be performed
-  // by summing over the values present in a provided dataset ('projData'), to correctly
-  // project out data dependents that are not properly described by the PDF (e.g. per-event errors).
-  //
-  // The functions value can be multiplied with an optional scale factor. The interpretation
-  // of the scale factor is unique for generic real functions, for PDFs there are various interpretations
-  // possible, which can be selection with 'stype' (see RooAbsPdf::plotOn() for details).
-  //
-  // The default projection behaviour can be overriden by supplying an optional set of dependents
-  // to project. For most cases, plotSliceOn() and plotProjOn() provide a more intuitive interface
-  // to modify the default projection behavour.
+
 
   // Sanity checks
   if (plotSanityChecks(frame)) return frame ;
