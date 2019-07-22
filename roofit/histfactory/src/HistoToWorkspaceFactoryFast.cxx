@@ -2636,7 +2636,6 @@ namespace HistFactory{
     // Get the sigma from the hist
     // (the relative uncertainty)
     const double sigmaRel = uncertHist->GetBinContent(TH1BinNumber); 
-    const double totalN = uncertHist->GetBinError(TH1BinNumber);
 
     // If the sigma is <= 0, 
     // do cont create the term
