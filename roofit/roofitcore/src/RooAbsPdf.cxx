@@ -173,6 +173,7 @@ the proxy holds a function, and will trigger an assert.
 #include "RooWorkspace.h"
 #include "Math/CholeskyDecomp.h"
 #include <string>
+#include "RooHelpers.h"
 
 using namespace std;
 
@@ -770,7 +771,7 @@ Double_t RooAbsPdf::extendedTerm(Double_t observed, const RooArgSet* nset) const
 /// <tr><td> `Verbose(Bool_t flag)`           <td> Controls RooFit informational messages in likelihood construction
 /// <tr><td> `CloneData(Bool flag)`           <td> Use clone of dataset in NLL (default is true)
 /// <tr><td> `Offset(Bool_t)`                 <td> Offset likelihood by initial value (so that starting value of FCN in minuit is zero).
-///                                              This can improve numeric stability in simultaneously fits with components with large likelihood values
+///                                              This can improve numeric stability in simultaneous fits with components with large likelihood values
 /// </table>
 /// 
 /// 
@@ -2410,6 +2411,34 @@ RooDataSet* RooAbsPdf::generateSimGlobal(const RooArgSet& whatVars, Int_t nEvent
   return generate(whatVars,nEvents) ;
 }
 
+namespace {
+void removeRangeOverlap(std::vector<std::pair<double, double>>& ranges) {
+  //Sort from left to right
+  std::sort(ranges.begin(), ranges.end());
+
+  for (auto it = ranges.begin(); it != ranges.end(); ++it) {
+    double& startL = it->first;
+    double& endL   = it->second;
+
+    for (auto innerIt = it+1; innerIt != ranges.end(); ++innerIt) {
+      const double startR = innerIt->first;
+      const double endR   = innerIt->second;
+
+      if (startL <= startR && startR <= endL) {
+        //Overlapping ranges, extend left one
+        endL = std::max(endL, endR);
+        *innerIt = make_pair(0., 0.);
+      }
+    }
+  }
+
+  auto newEnd = std::remove_if(ranges.begin(), ranges.end(),
+      [](const std::pair<double,double>& input){
+          return input.first == input.second;
+      });
+  ranges.erase(newEnd, ranges.end());
+}
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2440,14 +2469,16 @@ RooDataSet* RooAbsPdf::generateSimGlobal(const RooArgSet& whatVars, Int_t nEvent
 ///               observables in dataset 'd' for projection through data averaging
 /// <tr><td> `ProjectionRange(const char* rn)`  <td>  Override default range of projection integrals to a different
 ///               range specified by given range name. This technique allows you to project a finite width slice in a real-valued observable
-/// <tr><td> `NormRange(const char* name)`      <td>  Calculate curve normalization w.r.t. only in specified ranges.
-///               \note A Range() by default implies a NormRange() on the same range, but this option allows
-///               to override the default, or specify a normalization ranges when the full curve is to be drawn
+/// <tr><td> `NormRange(const char* name)`      <td>  Calculate curve normalization w.r.t. specified range[s].
+///               \note A Range() by default sets a NormRange() on the same range, but this option allows
+///               to override the default, or specify normalization ranges when the full curve is to be drawn.
 ///
 ///
 /// <tr><th><th> Misc content control
 /// <tr><td> `Normalization(Double_t scale, ScaleType code)`   <td>  Adjust normalization by given scale factor.
-///               Interpretation of number depends on code: Relative: relative adjustment factor, NumEvent: scale to match given number of events.
+///               Interpretation of number depends on code:
+///                 `RooAbsReal::Relative`: relative adjustment factor
+///                 `RooAbsReal::NumEvent`: scale to match given number of events.
 /// <tr><td> `Name(const chat* name)`           <td>  Give curve specified name in frame. Useful if curve is to be referenced later
 /// <tr><td> `Asymmetry(const RooCategory& c)`  <td>  Show the asymmetry of the PDF in given two-state category
 ///               \f$ \frac{F(+)-F(-)}{F(+)+F(-)} \f$ rather than the PDF projection. Category must have two
@@ -2464,7 +2495,7 @@ RooDataSet* RooAbsPdf::generateSimGlobal(const RooArgSet& whatVars, Int_t nEvent
 /// <tr><td> `FillStyle(Int_t style)`           <td>  Select fill style, default is not filled. If a filled style is selected,
 ///                                                 also use VLines() to add vertical downward lines at end of curve to ensure proper closure
 /// <tr><td> `FillColor(Int_t color)`           <td>  Select fill color by ROOT color code
-/// <tr><td> `Range(const char* name)`          <td>  Only draw curve in range defined by given name
+/// <tr><td> `Range(const char* name)`          <td>  Only draw curve in range defined by given name. Multiple comma-separated ranges can be given.
 /// <tr><td> `Range(double lo, double hi)`      <td>  Only draw curve in specified range
 /// <tr><td> `VLines()`                         <td>  Add vertical lines to y=0 at end points of curve
 /// <tr><td> `Precision(Double_t eps)`          <td>  Control precision of drawn curve w.r.t to scale of plot, default is 1e-3. Higher precision will
@@ -2576,82 +2607,111 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 
       Bool_t hasCustomRange(kFALSE), adjustNorm(kFALSE) ;
 
-      list<pair<Double_t,Double_t> > rangeLim ;
+      std::vector<pair<Double_t,Double_t> > rangeLim;
 
       // Retrieve plot range to be able to adjust normalization to data
       if (pc.hasProcessed("Range")) {
 
-	Double_t rangeLo = pc.getDouble("rangeLo") ;
-	Double_t rangeHi = pc.getDouble("rangeHi") ;
-	rangeLim.push_back(make_pair(rangeLo,rangeHi)) ;
-	adjustNorm = pc.getInt("rangeAdjustNorm") ;
-	hasCustomRange = kTRUE ;
+        Double_t rangeLo = pc.getDouble("rangeLo") ;
+        Double_t rangeHi = pc.getDouble("rangeHi") ;
+        rangeLim.push_back(make_pair(rangeLo,rangeHi)) ;
+        adjustNorm = pc.getInt("rangeAdjustNorm") ;
+        hasCustomRange = kTRUE ;
 
-	coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") only plotting range [" 
-			<< rangeLo << "," << rangeHi << "]" ;
-	if (!pc.hasProcessed("NormRange")) {	  
-	  ccoutI(Plotting) << ", curve is normalized to data in " << (adjustNorm?"given":"full") << " given range" << endl ;
-	} else {
-	  ccoutI(Plotting) << endl ;
-	}
+        coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") only plotting range ["
+            << rangeLo << "," << rangeHi << "]" ;
+        if (!pc.hasProcessed("NormRange")) {
+          ccoutI(Plotting) << ", curve is normalized to data in " << (adjustNorm?"given":"full") << " range" << endl ;
+        } else {
+          ccoutI(Plotting) << endl ;
+        }
 
-	nameSuffix.Append(Form("_Range[%f_%f]",rangeLo,rangeHi)) ;
+        nameSuffix.Append(Form("_Range[%f_%f]",rangeLo,rangeHi)) ;
 
       } else if (pc.hasProcessed("RangeWithName")) {    
+        for (const std::string& rangeNameToken : RooHelpers::tokenise(pc.getString("rangeName",0,true), ",")) {
+          if (!frame->getPlotVar()->hasRange(rangeNameToken.c_str())) {
+            coutE(Plotting) << "Range '" << rangeNameToken << "' not defined for variable '"
+                << frame->getPlotVar()->GetName() << "'. Ignoring ..." << std::endl;
+            continue;
+          }
+          const double rangeLo = frame->getPlotVar()->getMin(rangeNameToken.c_str());
+          const double rangeHi = frame->getPlotVar()->getMax(rangeNameToken.c_str());
+          rangeLim.push_back(make_pair(rangeLo,rangeHi));
+        }
+        adjustNorm = pc.getInt("rangeWNAdjustNorm") ;
+        hasCustomRange = kTRUE ;
 
-	char tmp[1024] ;
-	strlcpy(tmp,pc.getString("rangeName",0,kTRUE),1024) ;
-	char* rangeNameToken = strtok(tmp,",") ;
-	while(rangeNameToken) {
-	  Double_t rangeLo = frame->getPlotVar()->getMin(rangeNameToken) ;
-	  Double_t rangeHi = frame->getPlotVar()->getMax(rangeNameToken) ;
-	  rangeLim.push_back(make_pair(rangeLo,rangeHi)) ;
-	  rangeNameToken = strtok(0,",") ;
-	}
-	adjustNorm = pc.getInt("rangeWNAdjustNorm") ;
-	hasCustomRange = kTRUE ;
+        coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") only plotting range '" << pc.getString("rangeName",0,kTRUE) << "'" ;
+        if (!pc.hasProcessed("NormRange")) {
+          ccoutI(Plotting) << ", curve is normalized to data in " << (adjustNorm?"given":"full") << " range" << endl ;
+        } else {
+          ccoutI(Plotting) << endl ;
+        }
 
-	coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") only plotting range '" << pc.getString("rangeName",0,kTRUE) << "'" ;
-	if (!pc.hasProcessed("NormRange")) {	  
-	  ccoutI(Plotting) << ", curve is normalized to data in " << (adjustNorm?"given":"full") << " given range" << endl ;
-	} else {
-	  ccoutI(Plotting) << endl ;
-	}
-
-	nameSuffix.Append(Form("_Range[%s]",pc.getString("rangeName"))) ;
+        nameSuffix.Append(Form("_Range[%s]",pc.getString("rangeName"))) ;
       } 
-      // Specification of a normalization range override those in a regular ranage
+      // Specification of a normalization range override those in a regular range
       if (pc.hasProcessed("NormRange")) {    
-	char tmp[1024] ;
-	strlcpy(tmp,pc.getString("normRangeName",0,kTRUE),1024) ;
-	char* rangeNameToken = strtok(tmp,",") ;
-	rangeLim.clear() ;
-	while(rangeNameToken) {
-	  Double_t rangeLo = frame->getPlotVar()->getMin(rangeNameToken) ;
-	  Double_t rangeHi = frame->getPlotVar()->getMax(rangeNameToken) ;
-	  rangeLim.push_back(make_pair(rangeLo,rangeHi)) ;
-	  rangeNameToken = strtok(0,",") ;
-	}
-	adjustNorm = kTRUE ;
-	hasCustomRange = kTRUE ;	
-	coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") p.d.f. curve is normalized using explicit choice of ranges '" << pc.getString("normRangeName",0,kTRUE) << "'" << endl ;
+        rangeLim.clear();
+        for (const auto& rangeNameToken : RooHelpers::tokenise(pc.getString("normRangeName",0,true), ",")) {
+          if (!frame->getPlotVar()->hasRange(rangeNameToken.c_str())) {
+            coutE(Plotting) << "Range '" << rangeNameToken << "' not defined for variable '"
+                << frame->getPlotVar()->GetName() << "'. Ignoring ..." << std::endl;
+            continue;
+          }
+          const double rangeLo = frame->getPlotVar()->getMin(rangeNameToken.c_str());
+          const double rangeHi = frame->getPlotVar()->getMax(rangeNameToken.c_str());
+          rangeLim.push_back(make_pair(rangeLo,rangeHi));
+        }
+        adjustNorm = kTRUE ;
+        hasCustomRange = kTRUE ;
+        coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") p.d.f. curve is normalized using explicit choice of ranges '" << pc.getString("normRangeName",0,kTRUE) << "'" << endl ;
 
-	nameSuffix.Append(Form("_NormRange[%s]",pc.getString("rangeName"))) ;
+        nameSuffix.Append(Form("_NormRange[%s]",pc.getString("rangeName"))) ;
 
       }
 
-      if (hasCustomRange && adjustNorm) {	
+      if (hasCustomRange && adjustNorm) {
+        const std::size_t oldSize = rangeLim.size();
+        removeRangeOverlap(rangeLim);
 
-	Double_t rangeNevt(0) ;
-	list<pair<Double_t,Double_t> >::iterator riter = rangeLim.begin() ;
-	for (;riter!=rangeLim.end() ; ++riter) {
-	  Double_t nevt= frame->getFitRangeNEvt(riter->first,riter->second) ;
-	  rangeNevt += nevt ;
-	}
-	scaleFactor *= rangeNevt/nExpected ;
+        if (oldSize != rangeLim.size()) {
+          // User gave overlapping ranges. This leads to double-counting events and integrals, and must
+          // therefore be avoided.
+          coutE(Plotting) << "Requested ranges overlap. For correct plotting, new ranges "
+              "will be defined." << std::endl;
+          auto plotVar = dynamic_cast<RooRealVar*>(frame->getPlotVar());
+          assert(plotVar);
+          std::string rangesNoOverlap;
+          for (auto it = rangeLim.begin(); it != rangeLim.end(); ++it) {
+            std::stringstream rangeName;
+            rangeName << "Remove_overlap_range_" << it - rangeLim.begin();
+            plotVar->setRange(rangeName.str().c_str(), it->first, it->second);
+            if (!rangesNoOverlap.empty())
+              rangesNoOverlap += ",";
+            rangesNoOverlap += rangeName.str();
+          }
+
+          auto rangeArg = static_cast<RooCmdArg*>(cmdList.FindObject("RangeWithName"));
+          if (rangeArg)
+            rangeArg->setString(0, rangesNoOverlap.c_str());
+          else {
+            plotRange = new RooCmdArg(RooFit::Range(rangesNoOverlap.c_str()));
+            cmdList.Add(plotRange);
+          }
+        }
+
+        Double_t rangeNevt(0) ;
+        for (const auto& riter : rangeLim) {
+          Double_t nevt= frame->getFitRangeNEvt(riter.first, riter.second);
+          rangeNevt += nevt ;
+        }
+
+        scaleFactor *= rangeNevt/nExpected ;
 
       } else {
-	scaleFactor *= frame->getFitRangeNEvt()/nExpected ;
+        scaleFactor *= frame->getFitRangeNEvt()/nExpected ;
       }
     } else if (stype==RelativeExpected) {
       scaleFactor *= nExpected ; 
@@ -2675,14 +2735,11 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
     branchNodeServerList(&branchNodeSet) ;
     
     // Discard any non-RooAbsReal nodes
-    TIterator* iter = branchNodeSet.createIterator() ;
-    RooAbsArg* arg ;
-    while((arg=(RooAbsArg*)iter->Next())) {
+    for (const auto arg : branchNodeSet) {
       if (!dynamic_cast<RooAbsReal*>(arg)) {
-	branchNodeSet.remove(*arg) ;
+        branchNodeSet.remove(*arg) ;
       }
     }
-    delete iter ;
     
     // Obtain direct selection
     RooArgSet* dirSelNodes ;
@@ -2728,22 +2785,21 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 }
 
 
-
-
 //_____________________________________________________________________________
+/// Plot oneself on 'frame'. In addition to features detailed in  RooAbsReal::plotOn(),
+/// the scale factor for a PDF can be interpreted in three different ways. The interpretation
+/// is controlled by ScaleType
+/// ```
+///  Relative  -  Scale factor is applied on top of PDF normalization scale factor
+///  NumEvent  -  Scale factor is interpreted as a number of events. The surface area
+///               under the PDF curve will match that of a histogram containing the specified
+///               number of event
+///  Raw       -  Scale factor is applied to the raw (projected) probability density.
+///               Not too useful, option provided for completeness.
+/// ```
 // coverity[PASS_BY_VALUE]
 RooPlot* RooAbsPdf::plotOn(RooPlot *frame, PlotOpt o) const
 {
-  // Plot oneself on 'frame'. In addition to features detailed in  RooAbsReal::plotOn(),
-  // the scale factor for a PDF can be interpreted in three different ways. The interpretation
-  // is controlled by ScaleType
-  //
-  //  Relative  -  Scale factor is applied on top of PDF normalization scale factor 
-  //  NumEvent  -  Scale factor is interpreted as a number of events. The surface area
-  //               under the PDF curve will match that of a histogram containing the specified
-  //               number of event
-  //  Raw       -  Scale factor is applied to the raw (projected) probability density.
-  //               Not too useful, option provided for completeness.
 
   // Sanity checks
   if (plotSanityChecks(frame)) return frame ;
