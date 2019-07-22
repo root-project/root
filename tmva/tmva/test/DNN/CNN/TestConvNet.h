@@ -384,6 +384,86 @@ auto testConvLayerForward(const std::vector<typename Architecture::Matrix_t> &in
     return true;
 }
 
+template <typename Architecture>
+auto testTransConvLayerForward(const std::vector<typename Architecture::Matrix_t> &input,
+                          const std::vector<typename Architecture::Matrix_t> &expectedOutput,
+                          const typename Architecture::Matrix_t &weights, const typename Architecture::Matrix_t &biases,
+                          size_t inputHeight, size_t inputWidth, size_t inputDepth, size_t fltHeight,
+                          size_t fltWidth, size_t numberFilters, size_t strideRows, size_t strideCols,
+                          size_t zeroPaddingHeight, size_t zeroPaddingWidth) -> bool
+{
+    size_t nRows = expectedOutput[0].GetNrows();
+    size_t nCols = expectedOutput[0].GetNcols();
+    // batchSize == 1.
+    std::vector<typename Architecture::Matrix_t> computedOutput;
+    computedOutput.emplace_back(nRows, nCols);
+
+    std::vector<typename Architecture::Matrix_t> computedDerivatives;
+    computedDerivatives.emplace_back(nRows, nCols);
+
+    TConvParams params(1, inputDepth, inputHeight, inputWidth, numberFilters, fltHeight, fltWidth, strideRows,
+                       strideCols, zeroPaddingHeight, zeroPaddingWidth);
+
+
+    size_t height = ( ( inputHeight - 1)*strideRows )- 2* zeroPaddingHeight +  fltHeight;
+    size_t width = ( ( inputWidth - 1)*strideCols )- 2* zeroPaddingWidth +  fltWidth;
+    size_t nLocalViews = height * width;
+    size_t nLocalViewPixels = inputDepth * fltHeight * fltWidth;
+
+    std::vector<typename Architecture::Matrix_t> forwardMatrices;
+    forwardMatrices.emplace_back(nLocalViews, nLocalViewPixels);
+
+    Architecture::TransConvLayerForward(computedOutput, computedDerivatives, input, weights, biases, params,
+                                   EActivationFunction::kIdentity, forwardMatrices);
+
+    for (size_t slice = 0; slice < nRows; slice++) {
+        for (size_t localView = 0; localView < nCols; localView++) {
+            if (expectedOutput[0](slice, localView) != computedOutput[0](slice, localView)) return false;
+        }
+    }
+    return true;
+}
+
+template <typename Architecture>
+auto testTransConvLayerBackward(const std::vector<typename Architecture::Matrix_t> &input,
+                          const std::vector<typename Architecture::Matrix_t> &expectedOutput,
+                          const typename Architecture::Matrix_t &weights, const typename Architecture::Matrix_t &biases,
+                          size_t inputHeight, size_t inputWidth, size_t inputDepth, size_t fltHeight,
+                          size_t fltWidth, size_t numberFilters, size_t strideRows, size_t strideCols,
+                          size_t zeroPaddingHeight, size_t zeroPaddingWidth) -> bool
+{
+    size_t nRows = expectedOutput[0].GetNrows();
+    size_t nCols = expectedOutput[0].GetNcols();
+    // batchSize == 1.
+    std::vector<typename Architecture::Matrix_t> computedOutput;
+    computedOutput.emplace_back(nRows, nCols);
+
+    std::vector<typename Architecture::Matrix_t> computedDerivatives;
+    computedDerivatives.emplace_back(nRows, nCols);
+
+    TConvParams params(1, inputDepth, inputHeight, inputWidth, numberFilters, fltHeight, fltWidth, strideRows,
+                       strideCols, zeroPaddingHeight, zeroPaddingWidth);
+
+
+    size_t height = ( ( inputHeight - 1)*strideRows )- 2* zeroPaddingHeight +  fltHeight;
+    size_t width = ( ( inputWidth - 1)*strideCols )- 2* zeroPaddingWidth +  fltWidth;
+    size_t nLocalViews = height * width;
+    size_t nLocalViewPixels = inputDepth * fltHeight * fltWidth;
+
+    std::vector<typename Architecture::Matrix_t> forwardMatrices;
+    forwardMatrices.emplace_back(nLocalViews, nLocalViewPixels);
+
+    Architecture::TransConvLayerBackward(computedOutput, computedDerivatives, input, weights, biases, params,
+                                   EActivationFunction::kIdentity, forwardMatrices);
+
+    for (size_t slice = 0; slice < nRows; slice++) {
+        for (size_t localView = 0; localView < nCols; localView++) {
+            if (expectedOutput[0](slice, localView) != computedOutput[0](slice, localView)) return false;
+        }
+    }
+    return true;
+}
+
 /** Deflatten the 2D tensor A using the Deflatten function and compare it to
  *  the result in the 3D tensor B. */
 //______________________________________________________________________________
