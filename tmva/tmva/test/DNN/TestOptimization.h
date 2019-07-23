@@ -139,9 +139,12 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
    TensorInput trainingInput(XTrain, YTrain, WTrain);
    TensorInput testInput(XTest, YTest, WTest);
 
-   DataLoader_t trainingData(trainingInput, nSamples, batchSize, batchDepth, batchHeight, batchWidth, nOutput,
+   std::vector<size_t> shape {batchSize, 1, 1, 1, 1};
+
+   DataLoader_t trainingData(trainingInput, nSamples, batchDepth, batchHeight, batchWidth, nOutput, shape,
                              nThreads);
-   DataLoader_t testingData(testInput, nSamples, batchSize, batchDepth, batchHeight, batchWidth, nOutput, nThreads);
+   DataLoader_t testingData(testInput,  nSamples, batchDepth, batchHeight, batchWidth, nOutput, shape,
+                             nThreads);
 
    // create a pointer to base class VOptimizer
    std::unique_ptr<VOptimizer<Architecture_t, Layer_t, DeepNet_t>> optimizer;

@@ -71,7 +71,7 @@ void TTensorDataLoader<TensorInput, TReference<Real_t>>::CopyTensorOutput(TMatri
    const TMatrixT<Double_t> &loutputMatrix = std::get<1>(fData);
    size_t n = loutputMatrix.GetNcols();
 
-   for (size_t i = 0; i < fBatchSize; i++) {
+   for (size_t i = 0; i < fInputShape[0]; i++) {
       size_t sampleIndex = *sampleIterator;
       for (size_t j = 0; j < n; j++) {
          matrix(i, j) = static_cast<Real_t>(loutputMatrix(sampleIndex, j));
@@ -88,7 +88,7 @@ void TTensorDataLoader<TensorInput, TReference<Real_t>>::CopyTensorWeights(TMatr
 {
    const TMatrixT<Double_t> &lweightMatrix = std::get<2>(fData);
 
-   for (size_t i = 0; i < fBatchSize; i++) {
+   for (size_t i = 0; i < fInputShape[0]; i++) {
       size_t sampleIndex = *sampleIterator;
       matrix(i, 0) = static_cast<Real_t>(lweightMatrix(sampleIndex, 0));
       sampleIterator++;
@@ -131,7 +131,7 @@ void TTensorDataLoader<TensorInput, TReference<Double_t>>::CopyTensorOutput(TMat
    const TMatrixT<Double_t> &loutputMatrix = std::get<1>(fData);
    size_t n = loutputMatrix.GetNcols();
 
-   for (size_t i = 0; i < fBatchSize; i++) {
+   for (size_t i = 0; i < fInputShape[0]; i++) {
       size_t sampleIndex = *sampleIterator;
       for (size_t j = 0; j < n; j++) {
          matrix(i, j) = loutputMatrix(sampleIndex, j);
@@ -148,7 +148,7 @@ void TTensorDataLoader<TensorInput, TReference<Double_t>>::CopyTensorWeights(TMa
 {
    const TMatrixT<Double_t> &lweightMatrix = std::get<2>(fData);
 
-   for (size_t i = 0; i < fBatchSize; i++) {
+   for (size_t i = 0; i < fInputShape[0]; i++) {
       size_t sampleIndex = *sampleIterator;
       matrix(i, 0) = lweightMatrix(sampleIndex, 0);
       sampleIterator++;
@@ -194,7 +194,7 @@ void TTensorDataLoader<TMVAInput_t, TReference<Real_t>>::CopyTensorOutput(TMatri
    const DataSetInfo &info = std::get<1>(fData);
    Int_t n = matrix.GetNcols();
 
-   for (size_t i = 0; i < fBatchSize; i++) {
+   for (size_t i = 0; i < fInputShape[0]; i++) {
       size_t sampleIndex = *sampleIterator++;
       Event *event = std::get<0>(fData)[sampleIndex];
 
@@ -220,7 +220,7 @@ template <>
 void TTensorDataLoader<TMVAInput_t, TReference<Real_t>>::CopyTensorWeights(TMatrixT<Real_t> &matrix,
                                                                            IndexIterator_t sampleIterator)
 {
-   for (size_t i = 0; i < fBatchSize; i++) {
+   for (size_t i = 0; i < fInputShape[0]; i++) {
       size_t sampleIndex = *sampleIterator++;
       Event *event = std::get<0>(fData)[sampleIndex];
       matrix(i, 0) = static_cast<Real_t>(event->GetWeight());
@@ -266,7 +266,7 @@ void TTensorDataLoader<TMVAInput_t, TReference<Double_t>>::CopyTensorOutput(TMat
    const DataSetInfo &info = std::get<1>(fData);
    Int_t n = matrix.GetNcols();
 
-   for (size_t i = 0; i < fBatchSize; i++) {     
+   for (size_t i = 0; i < fInputShape[0]; i++) {     
       size_t sampleIndex = *sampleIterator++;
       Event *event = std::get<0>(fData)[sampleIndex];
 
@@ -292,7 +292,7 @@ template <>
 void TTensorDataLoader<TMVAInput_t, TReference<Double_t>>::CopyTensorWeights(TMatrixT<Double_t> &matrix,
                                                                              IndexIterator_t sampleIterator)
 {
-   for (size_t i = 0; i < fBatchSize; i++) {
+   for (size_t i = 0; i < fInputShape[0]; i++) {
       size_t sampleIndex = *sampleIterator++;
       Event *event = std::get<0>(fData)[sampleIndex];
       matrix(i, 0) = event->GetWeight();

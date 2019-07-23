@@ -15,7 +15,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "TMVA/DNN/Architectures/Cudnn.h"
-#include "Cudnn/Propagation.cu"
+/*#include "Cudnn/Propagation.cu"
 #include "Cudnn/Arithmetic.cu"
 #include "Cudnn/ActivationFunctions.cu"
 #include "Cudnn/OutputFunctions.cu"
@@ -23,7 +23,7 @@
 #include "Cudnn/Regularization.cu"
 #include "Cudnn/Initialization.cu"
 #include "Cudnn/Dropout.cu"
-#include "Cudnn/RecurrentPropagation.cu"
+#include "Cudnn/RecurrentPropagation.cu"*/
 
 namespace TMVA {
 namespace DNN  {
