@@ -2,6 +2,7 @@
 *.pkl
 *.pdf
 *.json
+callgrind.out.*
 
 # Prerequisites
 *.d
