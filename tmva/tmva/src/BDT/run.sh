@@ -8,6 +8,8 @@ colorize(){
     BLUE="\033[0;34m"
     YELLOW="\033[0;33m"
     NORMAL="\033[m"
+    RED="\033[0;31m"
+
     color=\$${1:-NORMAL}
     # activate color passed as argument
     echo -ne "`eval echo ${color}`"
@@ -21,27 +23,31 @@ colorize(){
 }
 
 function bPrint() { echo && echo "$1" | colorize CYAN; }
+function rPrint() { echo && echo "$1" | colorize RED; }
+function gPrint() { echo && echo "$1" | colorize GREEN; }
 
 
-bPrint " ***** Running python ***** "
-python train.py
+echo "Coloring: python(cyan); c++(yellow); messages(green); normal for the rest"
+
+gPrint " ***** Running python ***** "
+python train.py | colorize CYAN
 
 
 #g++ main.cxx -o main -std=c++11
 make distclean && make
-bPrint " ***** Running main C++ ***** "
-./main.exe
+gPrint " ***** Running main C++ ***** "
+./main.exe | colorize YELLOW
 
 
 rm ./test.exe
 g++ test.cxx -std=c++11 `root-config --libs --cflags` -o test.exe
-bPrint "***** Running test.cxx *****"
-./test.exe
+gPrint "***** Running test.cxx *****"
+./test.exe | colorize YELLOW
 
-bPrint "***** Running check_preds.py *****"
-python check_preds.py
+gPrint "***** Running check_preds.py *****"
+python check_preds.py | colorize CYAN
 
-bPrint "***** Benchmarking *****"
+gPrint "***** Benchmarking *****"
 rm ./mybenchmark.exe
 g++ -std=c++11 -isystem benchmark/include -Lbuild/src benchmark.cxx -lbenchmark -lpthread -O2 -o mybenchmark.exe
 ./mybenchmark.exe
