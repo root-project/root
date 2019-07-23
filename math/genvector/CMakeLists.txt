@@ -8,7 +8,28 @@
 # CMakeLists.txt file for building ROOT math/genvector package
 ############################################################################
 
-include_directories(BEFORE "inc")
+ROOT_LINKER_LIBRARY(GenVector
+    src/3DConversions.cxx
+    src/3DDistances.cxx
+    src/AxisAngle.cxx
+    src/AxisAngleXother.cxx
+    src/BitReproducible.cxx
+    src/Boost.cxx
+    src/BoostX.cxx
+    src/BoostY.cxx
+    src/BoostZ.cxx
+    src/EulerAngles.cxx
+    src/LorentzRotation.cxx
+    src/Quaternion.cxx
+    src/QuaternionXaxial.cxx
+    src/Rotation3D.cxx
+    src/Rotation3DxAxial.cxx
+    src/RotationZYX.cxx
+    src/VectorUtil.cxx
+  DEPENDENCIES
+    Core
+    MathCore
+)
 
 ROOT_GENERATE_DICTIONARY(G__GenVector
     Math/AxisAngle.h
@@ -121,6 +142,7 @@ ROOT_GENERATE_DICTIONARY(G__GenVector
     Math/Vector4Dfwd.h
     Math/Vector4D.h
     Math/VectorUtil.h
+  NOTARGET
   MODULE
     GenVector
   LINKDEF
@@ -138,6 +160,7 @@ ROOT_GENERATE_DICTIONARY(G__GenVector32
     Math/Vector2D.h
     Math/Vector3D.h
     Math/Vector4D.h
+  NOTARGET
   MODULE
     GenVector
   MULTIDICT
@@ -145,31 +168,6 @@ ROOT_GENERATE_DICTIONARY(G__GenVector32
     Math/LinkDef_GenVector32.h
   OPTIONS
     -writeEmptyRootPCM
-  DEPENDENCIES
-    Core
-    MathCore
-)
-
-ROOT_LINKER_LIBRARY(GenVector
-    G__GenVector.cxx
-    G__GenVector32.cxx
-    src/3DConversions.cxx
-    src/3DDistances.cxx
-    src/AxisAngle.cxx
-    src/AxisAngleXother.cxx
-    src/BitReproducible.cxx
-    src/Boost.cxx
-    src/BoostX.cxx
-    src/BoostY.cxx
-    src/BoostZ.cxx
-    src/EulerAngles.cxx
-    src/LorentzRotation.cxx
-    src/Quaternion.cxx
-    src/QuaternionXaxial.cxx
-    src/Rotation3D.cxx
-    src/Rotation3DxAxial.cxx
-    src/RotationZYX.cxx
-    src/VectorUtil.cxx
   DEPENDENCIES
     Core
     MathCore
