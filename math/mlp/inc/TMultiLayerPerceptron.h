@@ -23,28 +23,6 @@ class TEventList;
 class TTreeFormula;
 class TTreeFormulaManager;
 
-//____________________________________________________________________
-//
-// TMultiLayerPerceptron
-//
-// This class decribes a Neural network.
-// There are facilities to train the network and use the output.
-//
-// The input layer is made of inactive neurons (returning the
-// normalized input), hidden layers are made of sigmoids and output
-// neurons are linear.
-//
-// The basic input is a TTree and two (training and test) TEventLists.
-// For classification jobs, a branch (maybe in a TFriend) must contain
-// the expected output.
-// 6 learning methods are available: kStochastic, kBatch,
-// kSteepestDescent, kRibierePolak, kFletcherReeves and kBFGS.
-//
-// This implementation is *inspired* from the mlpfit package from
-// J.Schwindling et al.
-//
-//____________________________________________________________________
-
 class TMultiLayerPerceptron : public TObject {
  friend class TMLPAnalyzer;
 
@@ -142,33 +120,34 @@ class TMultiLayerPerceptron : public TObject {
    void Shuffle(Int_t*, Int_t) const;
    void MLP_Line(Double_t*, Double_t*, Double_t);
 
-   TTree* fData;                   //! pointer to the tree used as datasource
-   Int_t fCurrentTree;             //! index of the current tree in a chain
-   Double_t fCurrentTreeWeight;    //! weight of the current tree in a chain
-   TObjArray fNetwork;             // Collection of all the neurons in the network
-   TObjArray fFirstLayer;          // Collection of the input neurons; subset of fNetwork
-   TObjArray fLastLayer;           // Collection of the output neurons; subset of fNetwork
-   TObjArray fSynapses;            // Collection of all the synapses in the network
-   TString fStructure;             // String containing the network structure
-   TString fWeight;                // String containing the event weight
-   TNeuron::ENeuronType fType;     // Type of hidden neurons
-   TNeuron::ENeuronType fOutType;  // Type of output neurons
-   TString fextF;                  // String containing the function name
-   TString fextD;                  // String containing the derivative name
-   TEventList *fTraining;          //! EventList defining the events in the training dataset
-   TEventList *fTest;              //! EventList defining the events in the test dataset
-   ELearningMethod fLearningMethod; //! The Learning Method
-   TTreeFormula* fEventWeight;     //! formula representing the event weight
-   TTreeFormulaManager* fManager;  //! TTreeFormulaManager for the weight and neurons
-   Double_t fEta;                  //! Eta - used in stochastic minimisation - Default=0.1
-   Double_t fEpsilon;              //! Epsilon - used in stochastic minimisation - Default=0.
-   Double_t fDelta;                //! Delta - used in stochastic minimisation - Default=0.
-   Double_t fEtaDecay;             //! EtaDecay - Eta *= EtaDecay at each epoch - Default=1.
-   Double_t fTau;                  //! Tau - used in line search - Default=3.
-   Double_t fLastAlpha;            //! internal parameter used in line search
-   Int_t fReset;                   //! number of epochs between two resets of the search direction to the steepest descent - Default=50
-   Bool_t fTrainingOwner;          //! internal flag whether one has to delete fTraining or not
-   Bool_t fTestOwner;              //! internal flag whether one has to delete fTest or not
+   TTree* fData;                    ///<! pointer to the tree used as datasource
+   Int_t fCurrentTree;              ///<! index of the current tree in a chain
+   Double_t fCurrentTreeWeight;     ///<! weight of the current tree in a chain
+   TObjArray fNetwork;              ///< Collection of all the neurons in the network
+   TObjArray fFirstLayer;           ///< Collection of the input neurons; subset of fNetwork
+   TObjArray fLastLayer;            ///< Collection of the output neurons; subset of fNetwork
+   TObjArray fSynapses;             ///< Collection of all the synapses in the network
+   TString fStructure;              ///< String containing the network structure
+   TString fWeight;                 ///< String containing the event weight
+   TNeuron::ENeuronType fType;      ///< Type of hidden neurons
+   TNeuron::ENeuronType fOutType;   ///< Type of output neurons
+   TString fextF;                   ///< String containing the function name
+   TString fextD;                   ///< String containing the derivative name
+   TEventList *fTraining;           ///<! EventList defining the events in the training dataset
+   TEventList *fTest;               ///<! EventList defining the events in the test dataset
+   ELearningMethod fLearningMethod; ///<! The Learning Method
+   TTreeFormula* fEventWeight;      ///<! formula representing the event weight
+   TTreeFormulaManager* fManager;   ///<! TTreeFormulaManager for the weight and neurons
+   Double_t fEta;                   ///<! Eta - used in stochastic minimisation - Default=0.1
+   Double_t fEpsilon;               ///<! Epsilon - used in stochastic minimisation - Default=0.
+   Double_t fDelta;                 ///<! Delta - used in stochastic minimisation - Default=0.
+   Double_t fEtaDecay;              ///<! EtaDecay - Eta *= EtaDecay at each epoch - Default=1.
+   Double_t fTau;                   ///<! Tau - used in line search - Default=3.
+   Double_t fLastAlpha;             ///<! internal parameter used in line search
+   Int_t fReset;                    ///<! number of epochs between two resets of the search direction to the steepest descent - Default=50
+   Bool_t fTrainingOwner;           ///<! internal flag whether one has to delete fTraining or not
+   Bool_t fTestOwner;               ///<! internal flag whether one has to delete fTest or not
+
    ClassDef(TMultiLayerPerceptron, 4) // a Neural Network
 };
 
