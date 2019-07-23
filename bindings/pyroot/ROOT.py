@@ -22,7 +22,11 @@ __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 ### system and interpreter setup ------------------------------------------------
 import os, sys, types
 import cppyy
-
+# Import numpy lazily (needed for `ndarray` class)
+try:
+    import numpy
+except:
+    raise ImportError("Failed to import numpy.")
 
 ## there's no version_info in 1.5.2
 if sys.version[0:3] < '2.2':
@@ -369,6 +373,24 @@ def _TTreeAsMatrix(self, columns=None, exclude=None, dtype="double", return_labe
     else:
         return reshaped_matrix_np
 
+
+class ndarray(numpy.ndarray):
+    """
+    A wrapper class that inherits from numpy.ndarray and allows to attach the
+    result pointer of the `Take` action in an `RDataFrame` event loop to the
+    collection of values returned by that action.
+    """
+    def __new__(cls, numpy_array, result_ptr):
+        obj = numpy.asarray(numpy_array).view(cls)
+        obj.result_ptr = result_ptr
+        obj.__class__.__name__ = "numpy.array"
+        return obj
+
+    def __array_finalize__(self, obj):
+        if obj is None: return
+        self.result_ptr = getattr(obj, "result_ptr", None)
+
+
 # RDataFrame.AsNumpy feature
 def _RDataFrameAsNumpy(df, columns=None, exclude=None):
     """Read-out the RDataFrame as a collection of numpy arrays.
@@ -394,12 +416,6 @@ def _RDataFrameAsNumpy(df, columns=None, exclude=None):
     Returns:
         dict: Dict with column names as keys and 1D numpy arrays with content as values
     """
-    # Import numpy lazily
-    try:
-        import numpy
-    except:
-        raise ImportError("Failed to import numpy during call of RDataFrame.AsNumpy.")
-
     # Find all column names in the dataframe if no column are specified
     if not columns:
         columns = [c for c in df.GetColumnNames()]
@@ -417,19 +433,6 @@ def _RDataFrameAsNumpy(df, columns=None, exclude=None):
     for column in columns:
         column_type = df_rnode.GetColumnType(column)
         result_ptrs[column] = _root.ROOT.Internal.RDF.RDataFrameTake(column_type)(df_rnode, column)
-
-    # This wrapper class inherits from numpy.ndarray and enables us to attach
-    # the result pointer of the Take action to the object.
-    class ndarray(numpy.ndarray):
-        def __new__(cls, numpy_array, result_ptr):
-            obj = numpy.asarray(numpy_array).view(cls)
-            obj.result_ptr = result_ptr
-            obj.__class__.__name__ = "numpy.array"
-            return obj
-
-        def __array_finalize__(self, obj):
-            if obj is None: return
-            self.result_ptr = getattr(obj, "result_ptr", None)
 
     # Convert the C++ vectors to numpy arrays
     py_arrays = {}
