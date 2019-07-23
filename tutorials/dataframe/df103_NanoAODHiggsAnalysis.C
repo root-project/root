@@ -334,7 +334,7 @@ template <typename T>
 void plot(T sig, T bkg, T data, const std::string &x_label, const std::string &filename)
 {
    // Canvas and general style options
-   // gStyle->SetOptStat(0);
+   gStyle->SetOptStat(0);
    gStyle->SetTextFont(42);
    auto c = new TCanvas("c", "", 800, 700);
    c->SetLeftMargin(0.15);
