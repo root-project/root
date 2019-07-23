@@ -17,10 +17,11 @@
 #ifndef ROO_CMD_ARG
 #define ROO_CMD_ARG
 
-#include <string>
 #include "TNamed.h"
 #include "TString.h"
 #include "RooLinkedList.h"
+
+#include <string>
 class RooAbsData ;
 class RooArgSet ;
 
@@ -95,6 +96,8 @@ public:
   }
 
   const RooArgSet* getSet(Int_t idx) const ;
+
+  void Print(const char* = "") const;
 
 protected:
 
