@@ -1346,7 +1346,7 @@ void TMultiLayerPerceptron::ExpandStructure()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Instanciates the network from the description
+/// Instantiates the network from the description
 
 void TMultiLayerPerceptron::BuildNetwork()
 {
@@ -1375,7 +1375,7 @@ void TMultiLayerPerceptron::BuildNetwork()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Instanciates the neurons in input
+/// Instantiates the neurons in input
 /// Inputs are normalised and the type is set to kOff
 /// (simple forward of the formula value)
 
