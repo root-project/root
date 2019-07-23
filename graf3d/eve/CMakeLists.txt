@@ -216,17 +216,39 @@ set(EVE_SOURCES
 )
 
 if(MSVC)
-  include_directories(BEFORE "inc")
+  ROOT_LINKER_LIBRARY(Eve
+    ${EVE_SOURCES}
+    LIBRARIES
+      OpenGL::GL
+      OpenGL::GLU
+      ${FTGL_LIBRARIES}
+      ${GLEW_LIBRARIES}
+    DEPENDENCIES
+      Core
+      EG
+      Ged
+      Geom
+      RGL
+      Physics
+  )
 
   ROOT_GENERATE_DICTIONARY(G__Eve1
     ${EVE_HEADERS1}
+    NOTARGET
     LINKDEF
       LinkDef1.h
+    MODULE
+      Eve
   )
+
   ROOT_GENERATE_DICTIONARY(G__Eve2
     ${EVE_HEADERS2}
+    NOTARGET
     LINKDEF
       LinkDef2.h
+    MODULE
+      Eve
+    MULTIDICT
   )
 
   ROOT_GENERATE_ROOTMAP(Eve
@@ -249,24 +271,6 @@ if(MSVC)
       Rint
       Tree
       TreePlayer
-  )
-
-  ROOT_LINKER_LIBRARY(Eve
-    ${EVE_SOURCES}
-    G__Eve1.cxx
-    G__Eve2.cxx
-    LIBRARIES
-      OpenGL::GL
-      OpenGL::GLU
-      ${FTGL_LIBRARIES}
-      ${GLEW_LIBRARIES}
-    DEPENDENCIES
-      Core
-      EG
-      Ged
-      Geom
-      RGL
-      Physics
   )
 
   ROOT_INSTALL_HEADERS()
