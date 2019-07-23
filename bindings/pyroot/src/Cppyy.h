@@ -13,6 +13,7 @@ namespace Cppyy {
    typedef TCppScope_t TCppType_t;
    typedef void*       TCppObject_t;
    typedef ptrdiff_t   TCppMethod_t;
+   typedef void*       TCppEnum_t;
 
    typedef Long_t      TCppIndex_t;
    typedef void* (*TCppMethPtrGetter_t)( TCppObject_t );
@@ -126,6 +127,12 @@ namespace Cppyy {
    Bool_t IsConstData( TCppScope_t scope, TCppIndex_t idata );
    Bool_t IsEnumData( TCppScope_t scope, TCppIndex_t idata );
    Int_t  GetDimensionSize( TCppScope_t scope, TCppIndex_t idata, int dimension );
+
+// enum properties -----------------------------------------------------------
+   TCppEnum_t  GetEnum(TCppScope_t scope, const std::string& enum_name);
+   TCppIndex_t GetNumEnumData(TCppEnum_t);
+   std::string GetEnumDataName(TCppEnum_t, TCppIndex_t idata);
+   long long   GetEnumDataValue(TCppEnum_t, TCppIndex_t idata);
 
 } // namespace Cppyy
 
