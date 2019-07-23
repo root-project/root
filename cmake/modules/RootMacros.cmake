@@ -245,7 +245,7 @@ endfunction(ROOT_GET_INSTALL_DIR)
 #   no error is emitted. The dictionary does not depend on these headers.
 #---------------------------------------------------------------------------------------------------
 function(ROOT_GENERATE_DICTIONARY dictionary)
-  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL" "MODULE;LINKDEF" "NODEPHEADERS;OPTIONS;DEPENDENCIES;BUILTINS" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL;NOTARGET" "MODULE;LINKDEF" "NODEPHEADERS;OPTIONS;DEPENDENCIES;BUILTINS" ${ARGN})
 
   # Check if OPTIONS start with a dash.
   if (ARG_OPTIONS)
@@ -489,10 +489,19 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
                      DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCINTDEP} ${MODULE_LIB_DEPENDENCY})
   get_filename_component(dictname ${dictionary} NAME)
 
-  #---roottest compability
-  add_custom_target(${dictname} DEPENDS ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file})
+  if(ARG_NOTARGET)
+    if(TARGET ${ARG_MODULE})
+      target_sources(${ARG_MODULE} PRIVATE ${dictionary}.cxx)
+    else()
+      message(FATAL_ERROR
+        " When used with NOTARGET, the MODULE option must be passed with the name of an existing target.\n"
+        " The dictionary source is then attached to this target instead of a custom dictionary target.")
+    endif()
+  else()
+    add_custom_target(${dictname} DEPENDS ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file})
+  endif()
 
-  if (runtime_cxxmodules AND ARG_MULTIDICT)
+  if (runtime_cxxmodules AND ARG_MULTIDICT AND NOT ARG_NOTARGET)
     set (main_pcm_target "G__${ARG_MODULE}")
     if (NOT TARGET ${main_pcm_target})
       message(FATAL_ERROR "Target ${main_pcm_target} not found! Please move ${main_pcm_target} before specifying MULTIDICT.")
@@ -519,13 +528,14 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif()
   endif()
 
-  if(ARG_BUILTINS)
+  if(ARG_BUILTINS AND NOT ARG_NOTARGET)
     foreach(arg1 ${ARG_BUILTINS})
-      if(${arg1}_TARGET)
+      if(TARGET ${${arg1}_TARGET})
         add_dependencies(${dictname} ${${arg1}_TARGET})
       endif()
     endforeach()
   endif()
+
   # FIXME: Support mulptiple dictionaries. In some cases (libSMatrix and
   # libGenVector) we have to have two or more dictionaries (eg. for math,
   # we need the two for double vs Double32_t template specializations).
