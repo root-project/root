@@ -13,43 +13,7 @@
 #include "bdt_helpers.h"
 #include "TInterpreter.h" // for gInterpreter
 //# include "generated_code.h"
-
-
-
-using namespace std;
-
-
-// jit finction and evaluate
-float testJitting(std::vector<float> event, int tree_index){
-   std::string filename = "generated_files/generated_tree_" + std::to_string(tree_index) + ".h";
-   string tojit = read_file_string(filename);
-   gInterpreter->Declare(tojit.c_str());
-
-   std::string func_ref_name = "&generated_tree_"+std::to_string(tree_index);
-
-   auto ptr = gInterpreter->Calc(func_ref_name.c_str());
-   float (*func)(std::vector<float>) = reinterpret_cast<float(*)(std::vector<float>)>(ptr);
-   return func(event);
-}
-
-// return the jitted function
-std::function<float (std::vector<float>)> jit_function_reader(int tree_index){
-   std::string filename = "generated_files/generated_tree_" + std::to_string(tree_index) + ".h";
-   string tojit = read_file_string(filename);
-   gInterpreter->Declare(tojit.c_str());
-
-   std::string func_ref_name = "&generated_tree_"+std::to_string(tree_index);
-
-   auto ptr = gInterpreter->Calc(func_ref_name.c_str());
-   float (*func)(std::vector<float>) = reinterpret_cast<float(*)(std::vector<float>)>(ptr);
-   std::function<float (std::vector<float>)> fWrapped{func};
-   return fWrapped;
-}
-
-
-
-
-
+#include "bdt_generator.h"
 
 
 int main() {
@@ -72,7 +36,7 @@ int main() {
   std::function<float (std::vector<float>)> func;
   std::vector<std::function<float (std::vector<float>)>> function_vector;
   for (int i=0; i<trees_number; i++){
-    func = jit_function_reader(i);
+    func = jit_function_reader_file(i);
     function_vector.push_back(func);
   }
 

@@ -13,15 +13,12 @@
 
 //#include "bdt.h"
 #include "unique_bdt.h"
+#include "TInterpreter.h" // for gInterpreter
 
-using namespace unique_bdt;
-
-//  /*
-
-
+/// generates if then else statements for bdts
 void generate_if_statement_for_bdt (std::ostream& fout,
                                           //std::shared_ptr<Node> node
-                                          const Node* node
+                                          const unique_bdt::Node* node
                                         ){
 
   std::string condition = "(event[" + std::to_string(node->split_variable) + "]"
@@ -53,11 +50,11 @@ void generate_if_statement_for_bdt (std::ostream& fout,
 }
 
 
-// */
 
 
+/// Generate the code for BDTs evaluation
 void generate_code_bdt(std::ostream& fout,
-                        Tree &tree,
+                        unique_bdt::Tree &tree,
                         int tree_number,
                         std::string s_id=""
                       ) {
@@ -85,5 +82,41 @@ void generate_code_bdt(std::ostream& fout,
   if (use_namespaces){
     fout << "} // end of s_" << s_id << " namespace" << std::endl;
   }
+}
 
+
+/// JIT function and and wrapp it in std::functions
+std::function<float (std::vector<float>)> jit_function_reader_file(int tree_index){
+   std::string filename = "generated_files/generated_tree_" + std::to_string(tree_index) + ".h";
+   std::string tojit = read_file_string(filename);
+   gInterpreter->Declare(tojit.c_str());
+
+   std::string func_ref_name = "&generated_tree_"+std::to_string(tree_index);
+
+   auto ptr = gInterpreter->Calc(func_ref_name.c_str());
+   float (*func)(std::vector<float>) = reinterpret_cast<float(*)(std::vector<float>)>(ptr);
+   std::function<float (std::vector<float>)> fWrapped{func};
+   return fWrapped;
+}
+
+
+std::function<float (std::vector<float>)> jit_function_reader_string(int tree_index,
+                                                            std::string tojit,
+                                                            std::string s_namespace=""
+                                                          ){
+   gInterpreter->Declare(tojit.c_str());
+   bool use_namespaces = (!s_namespace.empty());
+
+   std::string func_ref_name;
+   if (use_namespaces){
+     func_ref_name = "&s_" + s_namespace+"::generated_tree_"+std::to_string(tree_index);
+   }
+   else{
+     func_ref_name = "&generated_tree_"+std::to_string(tree_index);
+   }
+
+   auto ptr = gInterpreter->Calc(func_ref_name.c_str());
+   float (*func)(std::vector<float>) = reinterpret_cast<float(*)(std::vector<float>)>(ptr);
+   std::function<float (std::vector<float>)> fWrapped{func};
+   return fWrapped;
 }

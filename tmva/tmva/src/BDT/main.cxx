@@ -120,9 +120,10 @@ int main() {
   }
 
 
-  std::cout << "\n\n ***** Generating text representation of trees ***** \n";
+  std::cout << "\n\n ***** Create Jitted representation ***** \n";
   time_t my_time = time(0);
-  std::cout << "current time used as namespace: "<< my_time << std::endl;
+  std::string s_namespace_name = std::to_string(my_time);
+  std::cout << "current time used as namespace: "<< s_namespace_name << std::endl;
   std::string s_trees[number_of_trees];
 
   for (int i = 0; i<number_of_trees; i++){
@@ -132,12 +133,27 @@ int main() {
     fb.open (filename, std::ios::out);
     std::ostream os(&fb);
     generate_code_bdt(os, trees[i], i);
-    //generate_code_bdt(os, trees[i], i, s_namespace_name);
-    std::stringstream ss;
-    ss << os.rdbuf();
-    s_trees[i] = ss.str();
     fb.close();
+
+    std::stringstream ss;
+    generate_code_bdt(ss, trees[i], i, s_namespace_name);
+    s_trees[i] = ss.str();
+
   }
+  // Read functions
+  std::function<float (std::vector<float>)> func;
+  std::vector<std::function<float (std::vector<float>)>> function_vector;
+  for (int i=0; i<number_of_trees; i++){
+    //func = jit_function_reader_file(i); //, s_trees[i]);
+    func = jit_function_reader_string(i, s_trees[i], s_namespace_name);
+
+    function_vector.push_back(func);
+  }
+
+  for (auto& tree : function_vector){
+    std::cout << "jitted pred: " << tree(event_sample) << std::endl;
+  }
+
 
   std::cout << "\n\n ***** Entering benchmarking section ***** \n";
   std::string data_folder = "./data_files/";
@@ -148,6 +164,9 @@ int main() {
   std::vector<float> preds_tmp;
   std::vector<std::vector<bool>> preds;
   float preds_sum;
+
+
+
 
   std::cout << "\n\n ***** Benchmarking unique ***** \n";
   preds.clear();
@@ -162,6 +181,9 @@ int main() {
   }
   std::string preds_unique_file = data_folder+"preds_unique_file.csv";
   write_csv(preds_unique_file, preds); // write predictions
+
+
+
 
   std::cout << "\n\n ***** Benchmarking array ***** \n";
   preds.clear();
