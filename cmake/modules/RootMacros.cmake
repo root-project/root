@@ -1042,9 +1042,8 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
 
   # Don't pass the MODULE arg to ROOT_GENERATE_DICTIONARY when
   # NO_MODULE is set.
-  set(MODULE_GEN_ARG MODULE ${libname})
-  if(ARG_NO_MODULE)
-    set(MODULE_GEN_ARG)
+  if(NOT ARG_NO_MODULE)
+    set(MODULE_GEN_ARG NOTARGET MODULE ${libname})
   endif()
 
   if(runtime_cxxmodules)
@@ -1059,6 +1058,21 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
     endif()
   endif()
 
+  if (ARG_OBJECT_LIBRARY)
+    ROOT_OBJECT_LIBRARY(${libname}Objs ${ARG_SOURCES})
+    ROOT_LINKER_LIBRARY(${libname} $<TARGET_OBJECTS:${libname}Objs>
+                        LIBRARIES ${ARG_LIBRARIES}
+                        DEPENDENCIES ${ARG_DEPENDENCIES}
+                        BUILTINS ${ARG_BUILTINS}
+                       )
+  else(ARG_OBJECT_LIBRARY)
+    ROOT_LINKER_LIBRARY(${libname} ${ARG_SOURCES}
+                        LIBRARIES ${ARG_LIBRARIES}
+                        DEPENDENCIES ${ARG_DEPENDENCIES}
+                        BUILTINS ${ARG_BUILTINS}
+                       )
+  endif(ARG_OBJECT_LIBRARY)
+
   ROOT_GENERATE_DICTIONARY(G__${libname} ${ARG_HEADERS}
                           ${MODULE_GEN_ARG}
                           ${STAGE1_FLAG}
@@ -1069,20 +1083,9 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
                           BUILTINS ${ARG_BUILTINS}
                           )
 
-  if (ARG_OBJECT_LIBRARY)
-    ROOT_OBJECT_LIBRARY(${libname}Objs ${ARG_SOURCES} G__${libname}.cxx)
-    ROOT_LINKER_LIBRARY(${libname} $<TARGET_OBJECTS:${libname}Objs>
-                        LIBRARIES ${ARG_LIBRARIES}
-                        DEPENDENCIES ${ARG_DEPENDENCIES}
-                        BUILTINS ${ARG_BUILTINS}
-                       )
-  else(ARG_OBJECT_LIBRARY)
-    ROOT_LINKER_LIBRARY(${libname} ${ARG_SOURCES} G__${libname}.cxx
-                        LIBRARIES ${ARG_LIBRARIES}
-                        DEPENDENCIES ${ARG_DEPENDENCIES}
-                        BUILTINS ${ARG_BUILTINS}
-                       )
-  endif(ARG_OBJECT_LIBRARY)
+  if(ARG_NO_MODULE)
+    target_sources(${libname} PRIVATE G__${libname}.cxx)
+  endif()
 
   # Dictionary might include things from the current src dir, e.g. tests. Alas
   # there is no way to set the include directory for a source file (except for
