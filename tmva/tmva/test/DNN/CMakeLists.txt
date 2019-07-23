@@ -22,7 +22,7 @@ if (CUDA_FOUND AND tmva-gpu)
 
 
   #if using CUDA_ADD_EXECUTABLE CUDA_LIBRARIES are added automatically
-  SET(DNN_CUDA_LIBRARIES ${CUDA_CUBLAS_LIBRARIES})
+  SET(DNN_CUDA_LIBRARIES ${CUDA_CUBLAS_LIBRARIES} /usr/local/cuda/lib64/libcudnn.so)
 
 
   # DNN - Activation Functions Cuda
@@ -69,6 +69,16 @@ if (CUDA_FOUND AND tmva-gpu)
   CUDA_ADD_EXECUTABLE(testDataLoaderCuda TestDataLoaderCuda.cxx)
   TARGET_LINK_LIBRARIES(testDataLoaderCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
   ROOT_ADD_TEST(TMVA-DNN-DataLoaderCuda COMMAND testDataLoaderCuda)
+  
+  # DNN - Cudnn
+  CUDA_ADD_EXECUTABLE(testCudnn TestCudnn.cxx)
+  TARGET_LINK_LIBRARIES(testCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
+  ROOT_ADD_TEST(TMVA-DNN-Cudnn COMMAND testCudnn)
+  
+  # DNN - TensorDataLoader Cudnn
+  #CUDA_ADD_EXECUTABLE(testTensorDataLoaderCudnn TestTensorDataLoaderCudnn.cxx)
+  #TARGET_LINK_LIBRARIES(testTensorDataLoaderCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
+  #ROOT_ADD_TEST(TMVA-DNN-TensorDataLoaderCudnn COMMAND testTensorDataLoaderCudnn)
 
 endif ()
 

@@ -63,11 +63,8 @@ namespace DNN {
    //using namespace DAE;
 
 /** \class TDeepNet
-
     Generic Deep Neural Network class.
-
     This classs encapsulates the information for all types of Deep Neural Networks.
-
     \tparam Architecture The Architecture type that holds the
     architecture-specific data types.
  */
@@ -712,6 +709,26 @@ TReshapeLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddReshapeLaye
 
    return reshapeLayer;
 }
+
+//______________________________________________________________________________
+/*template <typename Architecture_t, typename Layer_t>
+TBatchNormLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBatchNormLayer(Scalar_t momentum, Scalar_t epsilon)
+{
+   size_t batchSize = this->GetBatchSize();
+   size_t inputWidth = 0; 
+   if (fLayers.size() == 0) {
+      inputWidth = this->GetInputWidth();
+   } else {
+      Layer_t *lastLayer = fLayers.back();
+      inputWidth = lastLayer->GetWidth();
+   }
+
+   auto bnormLayer = new TBatchNormLayer<Architecture_t>(batchSize, inputWidth, momentum, epsilon);
+
+   fLayers.push_back(bnormLayer);
+
+   return bnormLayer;
+}*/
 
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
