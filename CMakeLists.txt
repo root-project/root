@@ -345,7 +345,6 @@ file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" "${__modulemap_e
 set(ROOT_CXXMODULES_WRITE_TO_CURRENT_DIR ON)
 
 #---Global PCH-----------------------------------------------------------------------------------
-get_property(__allTargets GLOBAL PROPERTY ROOT_DICTIONARY_TARGETS)
 get_property(__allFiles GLOBAL PROPERTY ROOT_DICTIONARY_FILES)
 get_property(__clingetcpch GLOBAL PROPERTY CLINGETCPCH)
 
@@ -406,7 +405,6 @@ else()
                             rootcling)
   add_custom_target(onepcm ALL DEPENDS etc/allDict.cxx.pch)
   set_source_files_properties(${__allFiles} PROPERTIES GENERATED TRUE)
-  add_dependencies(onepcm ${__allTargets})
   install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
   install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 endif()
