@@ -11,8 +11,8 @@
 set(Clib_dict_headers strlcpy.h
                       snprintf.h PARENT_SCOPE)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res)
-
 ROOT_OBJECT_LIBRARY(Clib *.c)
+
+target_include_directories(Clib PRIVATE res)
 
 ROOT_INSTALL_HEADERS()
