@@ -645,7 +645,6 @@ set(ROOT_BINARY_DIR_SETUP "
 # Deprecated value, please don't use it and use ROOT_BINDIR instead.
 set(ROOT_BINARY_DIR ${ROOT_BINDIR})
 ")
-set(ROOT_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules")
 
 get_property(exported_targets GLOBAL PROPERTY ROOT_EXPORTED_TARGETS)
 export(TARGETS ${exported_targets} NAMESPACE ROOT:: FILE ${PROJECT_BINARY_DIR}/ROOTConfig-targets.cmake)
@@ -677,7 +676,6 @@ set(ROOT_BINARY_DIR_SETUP "
 # Deprecated value, please don't use it and use ROOT_BINDIR instead.
 get_filename_component(ROOT_BINARY_DIR \"\${ROOT_BINDIR}\" ABSOLUTE)
 ")
-set(ROOT_MODULE_PATH "\${_thisdir}/modules")
 
 # used by ROOTConfig.cmake from the build directory
 configure_file(${CMAKE_SOURCE_DIR}/cmake/modules/RootMacros.cmake
