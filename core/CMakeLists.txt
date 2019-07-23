@@ -103,9 +103,6 @@ ROOT_GENERATE_DICTIONARY(G__Core
     base/inc/LinkDef.h
 )
 
-# This is needed becuase LinkDef.h includes other LinkDef starting from  ${CMAKE_SOURCE_DIR}
-set_property(TARGET G__Core PROPERTY INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR})
-
 set(objectlibs $<TARGET_OBJECTS:Base>
                $<TARGET_OBJECTS:Clib>
                $<TARGET_OBJECTS:Cont>
@@ -177,6 +174,9 @@ add_subdirectory(rootcling_stage1)
 
 #-------------------------------------------------------------------------------
 ROOT_LINKER_LIBRARY(Core G__Core.cxx $<TARGET_OBJECTS:BaseTROOT> ${objectlibs} BUILTINS LZMA)
+
+# This is needed because LinkDef.h includes other LinkDef starting from ${CMAKE_SOURCE_DIR}
+target_include_directories(Core PRIVATE ${CMAKE_SOURCE_DIR})
 
 target_link_libraries(Core
   PRIVATE
