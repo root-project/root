@@ -150,7 +150,7 @@ bool pt_cuts(rvec_f mu_pt, rvec_f el_pt)
 bool dr_cuts(rvec_f mu_eta, rvec_f mu_phi, rvec_f el_eta, rvec_f el_phi)
 {
    auto mu_dr = DeltaR(mu_eta[0], mu_eta[1], mu_phi[0], mu_phi[1]);
-   auto el_dr = DeltaR(el_eta[0], el_eta[1], el_eta[0], el_eta[1]);
+   auto el_dr = DeltaR(el_eta[0], el_eta[1], el_phi[0], el_phi[1]);
    if (mu_dr < 0.02 || el_dr < 0.02) {
       return false;
    }
