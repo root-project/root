@@ -14,7 +14,7 @@ Run `bash run.sh`!
 - [] Benchmark against xgboost (google bench?)
 - [] Check correctness on huge datasets
 - [] Benchmark against Atlas and CMS codes
-- [] For Jitting we can swich to arrays instead of vectors
+- [] For Jitting we can switch to arrays instead of vectors
 
 
 ### Aknowledgements

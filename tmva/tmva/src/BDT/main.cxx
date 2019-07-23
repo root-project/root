@@ -11,7 +11,10 @@
 #include <ctime> // for date
 #include <functional> // for std::fucntion
 
+
 #include "bdt_helpers.h"
+#include "TInterpreter.h" // for gInterpreter
+//#include "TMVA/RTensor.hxx"
 
 
 #define BDT_KIND 2
@@ -135,6 +138,44 @@ int main() {
     s_trees[i] = ss.str();
     fb.close();
   }
+
+  std::cout << "\n\n ***** Entering benchmarking section ***** \n";
+  std::string data_folder = "./data_files/";
+  std::string events_file = data_folder+"events.csv";
+  std::vector<std::vector<float>> events_vector = read_csv(events_file);
+
+  float prediction = 0; // define used variables
+  std::vector<float> preds_tmp;
+  std::vector<std::vector<bool>> preds;
+  float preds_sum;
+
+  std::cout << "\n\n ***** Benchmarking unique ***** \n";
+  preds.clear();
+  for (auto &event : events_vector){
+    preds_tmp.clear();
+    for (auto & tree : trees){
+      prediction = tree.inference(event);
+      preds_tmp.push_back(prediction);
+    }
+    preds_sum = vec_sum(preds_tmp);
+    preds.push_back(std::vector<bool>{binary_logistic(preds_sum)});
+  }
+  std::string preds_unique_file = data_folder+"preds_unique_file.csv";
+  write_csv(preds_unique_file, preds); // write predictions
+
+  std::cout << "\n\n ***** Benchmarking array ***** \n";
+  preds.clear();
+  for (auto &event : events_vector){
+    preds_tmp.clear();
+    for (auto & tree : trees_array){
+      prediction = tree.inference(event);
+      preds_tmp.push_back(prediction);
+    }
+    preds_sum = vec_sum(preds_tmp);
+    preds.push_back(std::vector<bool>{binary_logistic(preds_sum)});
+  }
+  std::string preds_array_file = data_folder+"preds_array_file.csv";
+  write_csv(preds_unique_file, preds); // write predictions
 
 
   std::cout << "\n ########## END MAIN.CXX ##########\n\n\n";
