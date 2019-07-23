@@ -73,6 +73,8 @@ public:
 
    /** Return sub-buffer of the current buffer. */
    TCudaHostBuffer GetSubBuffer(size_t offset, size_t size);
+   /** Sets the entire buffer to a constant value */
+   void            SetConstVal(const AFloat constVal);
 
    operator AFloat * () const;
 
@@ -134,6 +136,7 @@ public:
    void CopyFrom(const TCudaHostBuffer<AFloat> &) const;
    void CopyTo(const TCudaHostBuffer<AFloat> &)   const;
 
+   size_t GetSize() const {return fSize;}
    cudaStream_t GetComputeStream() const {return fComputeStream;}
    void SetComputeStream(cudaStream_t stream) {fComputeStream = stream;}
 

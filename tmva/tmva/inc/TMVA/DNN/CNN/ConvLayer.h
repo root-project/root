@@ -27,6 +27,7 @@
 #ifndef TMVA_CNN_CONVLAYER
 #define TMVA_CNN_CONVLAYER
 
+//#include "cudnn.h"
 #include "TMatrix.h"
 
 #include "TMVA/DNN/GeneralLayer.h"
@@ -45,6 +46,8 @@ public:
    using Tensor_t = typename Architecture_t::Tensor_t;
    using Matrix_t = typename Architecture_t::Matrix_t;
    using Scalar_t = typename Architecture_t::Scalar_t;
+   using FilterDescriptor_t = typename Architecture_t::FilterDescriptor_t;
+   using ConvolutionDescriptor_t = typename Architecture_t::ConvolutionDescriptor_t;
 
 private:
    /* Calculate the output dimension of the convolutional layer */
@@ -83,6 +86,10 @@ private:
    Scalar_t fWeightDecay;  ///< The weight decay.
 
    Tensor_t fForwardTensor; ///< Cache tensor used for speeding-up the forward pass.
+
+   // specific opaque data structures (for CuDNN))
+   FilterDescriptor_t      fFilterDescriptor;           // Layout of the Kernel
+   ConvolutionDescriptor_t fConvolutionDescriptor;      // Params of the convolution (can be reused in backward pass)
 
 public:
    /*! Constructor. */
@@ -151,6 +158,9 @@ public:
    EActivationFunction GetActivationFunction() const { return fF; }
    ERegularization GetRegularization() const { return fReg; }
    Scalar_t GetWeightDecay() const { return fWeightDecay; }
+   
+   ConvolutionDescriptor_t& GetConvDescriptor()   {return fConvolutionDescriptor;}
+   FilterDescriptor_t&      GetFilterDescriptor() {return fFilterDescriptor;}
 };
 
 typedef struct TConvParams {
@@ -163,11 +173,11 @@ public:
    size_t inputWidth;  ///< The width of the previous layer or input.
 
    size_t numberFilters; ///< The number of the filters, which is equal to the output's depth.
-   size_t filterHeight; ///< The height of the filter.
-   size_t filterWidth;  ///< The width of the filter.
+   size_t filterHeight;  ///< The height of the filter.
+   size_t filterWidth;   ///< The width of the filter.
 
-   size_t strideRows; ///< The number of row pixels to slid the filter each step.
-   size_t strideCols; ///< The number of column pixels to slid the filter each step.
+   size_t strideRows;    ///< The number of row pixels to slid the filter each step.
+   size_t strideCols;    ///< The number of column pixels to slid the filter each step.
    size_t paddingHeight; ///< The number of zero layers added top and bottom of the input.
    size_t paddingWidth;  ///< The number of zero layers left and right of the input.
 
@@ -207,6 +217,9 @@ TConvLayer<Architecture_t>::TConvLayer(size_t batchSize, size_t inputDepth, size
      fDropoutProbability(dropoutProbability), fPaddingHeight(paddingHeight), fPaddingWidth(paddingWidth),
      fDerivatives(), fF(f), fReg(reg), fWeightDecay(weightDecay)
 {
+   //CUDNNCHECK(cudnnCreateFilterDescriptor(&fFilterDescriptor));
+   //CUDNNCHECK(cudnnCreateConvolutionDescriptor(&fConvolutionDescriptor));
+   
    /** Each element in the vector is a `T_Matrix` representing an event, therefore `vec.size() == batchSize`.
     *  Cells in these matrices are distributed in the following manner:
     *  Each row represents a single feature map, therefore we have `nRows == depth`.
@@ -245,6 +258,8 @@ TConvLayer<Architecture_t>::TConvLayer(TConvLayer<Architecture_t> *layer)
    //    fDerivatives.emplace_back(outputNRows, outputNCols);
    //    fForwardMatrices.emplace_back(layer->GetNLocalViews(), layer->GetNLocalViewPixels());
    // }
+   //CUDNNCHECK(cudnnCreateFilterDescriptor(&fFilterDescriptor));
+   //CUDNNCHECK(cudnnCreateConvolutionDescriptor(&fConvolutionDescriptor));
 }
 
 //______________________________________________________________________________
@@ -274,6 +289,9 @@ TConvLayer<Architecture_t>::TConvLayer(const TConvLayer &convLayer)
 template <typename Architecture_t>
 TConvLayer<Architecture_t>::~TConvLayer()
 {
+   // Release cuDNN resources
+   //CUDNNCHECK(cudnnDestroyFilterDescriptor(fFilterDescriptor));
+   //CUDNNCHECK(cudnnDestroyConvolutionDescriptor(fConvolutionDescriptor));
 }
 
 //______________________________________________________________________________
