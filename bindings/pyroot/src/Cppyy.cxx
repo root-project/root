@@ -12,6 +12,8 @@
 #include "TCollection.h"
 #include "TDataMember.h"
 #include "TDataType.h"
+#include "TEnum.h"
+#include "TEnumConstant.h"
 #include "TError.h"
 #include "TFunction.h"
 #include "TGlobal.h"
@@ -1075,4 +1077,33 @@ Int_t Cppyy::GetDimensionSize( TCppScope_t scope, TCppIndex_t idata, int dimensi
       return m->GetMaxIndex( dimension );
    }
    return (Int_t)-1;
+}
+
+// enum properties -----------------------------------------------------------
+Cppyy::TCppEnum_t Cppyy::GetEnum(TCppScope_t scope, const std::string& enum_name)
+{
+    if (scope == GLOBAL_HANDLE)
+        return (TCppEnum_t)gROOT->GetListOfEnums(kTRUE)->FindObject(enum_name.c_str());
+
+    TClassRef& cr = type_from_handle(scope);
+    if (cr.GetClass())
+        return (TCppEnum_t)cr->GetListOfEnums(kTRUE)->FindObject(enum_name.c_str());
+
+    return (TCppEnum_t)0;
+}
+
+Cppyy::TCppIndex_t Cppyy::GetNumEnumData(TCppEnum_t etype)
+{
+    return (TCppIndex_t)((TEnum*)etype)->GetConstants()->GetSize();
+}
+
+std::string Cppyy::GetEnumDataName(TCppEnum_t etype, TCppIndex_t idata)
+{
+    return ((TEnumConstant*)((TEnum*)etype)->GetConstants()->At(idata))->GetName();
+}
+
+long long Cppyy::GetEnumDataValue(TCppEnum_t etype, TCppIndex_t idata)
+{
+     TEnumConstant* ecst = (TEnumConstant*)((TEnum*)etype)->GetConstants()->At(idata);
+     return (long long)ecst->GetValue();
 }
