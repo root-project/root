@@ -151,7 +151,7 @@ public:
   // Generate random perturbations of the final parameters using the covariance matrix
   const RooArgList& randomizePars() const;
 
-  Bool_t isIdentical(const RooFitResult& other, Double_t tol=5e-5, Double_t tolCorr=1e-4, Bool_t verbose=kTRUE) const ;
+  Bool_t isIdentical(const RooFitResult& other, Double_t tol=1e-6, Double_t tolCorr=1e-4, Bool_t verbose=kTRUE) const ;
 
   void SetName(const char *name) ;
   void SetNameTitle(const char *name, const char* title) ;
