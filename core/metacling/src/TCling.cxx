@@ -6092,6 +6092,9 @@ static StringRef GetGnuHashSection(llvm::object::ObjectFile *file) {
 // PE and Mach-O files doesn't have .gnu.hash bloomfilter section, so this is a specific optimization for ELF.
 // This is fine because performance critical part (data centers) are running on Linux :)
 static bool LookupBloomFilter(llvm::object::ObjectFile *soFile, uint32_t hash) {
+   if (!soFile->isELF())
+      return true;
+
    // LLVM9: soFile->makeTriple().is64Bit()
    const int bits = 8 * soFile->getBytesInAddress();
 
