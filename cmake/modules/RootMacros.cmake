@@ -662,7 +662,6 @@ function(ROOT_LINKER_LIBRARY library)
   if(ARG_TEST) # we are building a test, so add EXCLUDE_FROM_ALL
     set(_all EXCLUDE_FROM_ALL)
   endif()
-  include_directories(BEFORE ${CMAKE_BINARY_DIR}/include)
   set(library_name ${library})
   if(TARGET ${library})
     message("Target ${library} already exists. Renaming target name to ${library}_new")
@@ -708,6 +707,28 @@ function(ROOT_LINKER_LIBRARY library)
 
   if(DEFINED CMAKE_CXX_STANDARD)
     target_compile_features(${library} INTERFACE cxx_std_${CMAKE_CXX_STANDARD})
+  endif()
+
+  if(PROJECT_NAME STREQUAL "ROOT")
+    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+      target_include_directories(${library}
+        PRIVATE
+          ${CMAKE_CURRENT_SOURCE_DIR}/inc
+        INTERFACE
+          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+      )
+    endif()
+    if(root7 AND IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
+      target_include_directories(${library}
+        PRIVATE
+          ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc
+        INTERFACE
+          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>
+      )
+    endif()
+
+    # needed for generated headers like RConfigure.h and ROOT/RConfig.hxx
+    target_include_directories(${library} PRIVATE ${CMAKE_BINARY_DIR}/include)
   endif()
 
   if(TARGET G__${library})
