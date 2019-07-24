@@ -6085,13 +6085,15 @@ static StringRef GetGnuHashSection(llvm::object::ObjectFile *file) {
    return "";
 }
 
-// Bloom filter. See https://blogs.oracle.com/solaris/gnu-hash-elf-sections-v2
-// for detailed desctiption. In short, there is a .gnu.hash section in so files which contains
-// bloomfilter hash value that we can compare with our mangled_name hash. This is a false positive
-// probability data structure and enables us to skip libraries which doesn't contain mangled_name definition!
-// PE and Mach-O files doesn't have .gnu.hash bloomfilter section, so this is a specific optimization for ELF.
-// This is fine because performance critical part (data centers) are running on Linux :)
-static bool LookupBloomFilter(llvm::object::ObjectFile *soFile, uint32_t hash) {
+/// Bloom filter in a stohastic data structure which can tell us if a symbol
+/// name does not exist in a library with 100% certainty. If it tells us it exists
+/// this may not be true: https://blogs.oracle.com/solaris/gnu-hash-elf-sections-v2
+///
+/// ELF has this optimization in the new linkers by default, It is stored in the
+/// gnu.hash section of the object file.
+///
+///\returns true true if the symbol may be in the library.
+static bool MayExistInObjectFile(llvm::object::ObjectFile *soFile, uint32_t hash) {
    if (!soFile->isELF())
       return true;
 
@@ -6131,8 +6133,8 @@ static bool FindSymbol(const std::string &library_filename,
    llvm::object::ObjectFile *BinObjFile = ObjF.get().getBinary();
 
    uint32_t hashedMangle = GNUHash(mangled_name);
-   // Check Bloom filter. If false, it means that this library doesn't contain mangled_name defenition
-   if (!LookupBloomFilter(BinObjFile, hashedMangle))
+   // If the symbol does not exist, exit early. In case it may exist, iterate.
+   if (!MayExistInObjectFile(BinObjFile, hashedMangle))
       return false;
 
    for (const auto &S : BinObjFile->symbols()) {
