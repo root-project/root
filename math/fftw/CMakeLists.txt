@@ -20,8 +20,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(FFTW
     src/TFFTComplexReal.cxx
     src/TFFTReal.cxx
     src/TFFTRealComplex.cxx
-  DICTIONARY_OPTIONS
-    -I${FFTW_INCLUDE_DIR}
   DEPENDENCIES
     Core
     MathCore
