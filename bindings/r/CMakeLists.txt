@@ -25,10 +25,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RInterface
     src/TRFunctionImport.cxx
     src/TRInterface.cxx
     src/TRObject.cxx
-  DICTIONARY_OPTIONS
-    -I${R_INCLUDE_DIR}
-    -I${R_Rcpp_INCLUDE_DIR}
-    -I${R_RInside_INCLUDE_DIR}
   DEPENDENCIES
     Core
     Matrix

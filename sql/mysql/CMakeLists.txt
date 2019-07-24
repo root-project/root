@@ -19,8 +19,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RMySQL
     src/TMySQLRow.cxx
     src/TMySQLServer.cxx
     src/TMySQLStatement.cxx
-  DICTIONARY_OPTIONS
-    -I${MYSQL_INCLUDE_DIR}
   DEPENDENCIES
     Core
     Net
