@@ -10,27 +10,6 @@
 
 from ROOT import pythonization
 from libROOTPython import MakeNumpyDataFrame
-# Import numpy lazily (needed for `ndarray` class)
-try:
-    import numpy
-except:
-    raise ImportError("Failed to import numpy.")
-
-class ndarray(numpy.ndarray):
-    """
-    A wrapper class that inherits from numpy.ndarray and allows to attach the
-    result pointer of the `Take` action in an `RDataFrame` event loop to the
-    collection of values returned by that action.
-    """
-    def __new__(cls, numpy_array, result_ptr):
-        obj = numpy.asarray(numpy_array).view(cls)
-        obj.result_ptr = result_ptr
-        obj.__class__.__name__ = "numpy.array"
-        return obj
-
-    def __array_finalize__(self, obj):
-        if obj is None: return
-        self.result_ptr = getattr(obj, "result_ptr", None)
 
 
 def RDataFrameAsNumpy(df, columns=None, exclude=None):
@@ -57,6 +36,13 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None):
     Returns:
         dict: Dict with column names as keys and 1D numpy arrays with content as values
     """
+    # Import numpy and numpy.array derived class lazily
+    try:
+        import numpy
+        from ROOT.pythonization._ndarray import ndarray
+    except:
+        raise ImportError("Failed to import numpy during call of RDataFrame.AsNumpy.")
+
     # Find all column names in the dataframe if no column are specified
     if not columns:
         columns = [c for c in df.GetColumnNames()]
