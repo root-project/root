@@ -19,8 +19,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RODBC
     src/TODBCRow.cxx
     src/TODBCServer.cxx
     src/TODBCStatement.cxx
-  DICTIONARY_OPTIONS
-    -I${ODBC_INCLUDE_DIR}
   DEPENDENCIES
     Net
     RIO

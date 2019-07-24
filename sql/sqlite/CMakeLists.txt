@@ -19,8 +19,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RSQLite
     src/TSQLiteRow.cxx
     src/TSQLiteServer.cxx
     src/TSQLiteStatement.cxx
-  DICTIONARY_OPTIONS
-    -I${SQLITE_INCLUDE_DIR}
   DEPENDENCIES
     Core
     Net

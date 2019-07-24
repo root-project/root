@@ -19,8 +19,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Oracle
     src/TOracleRow.cxx
     src/TOracleServer.cxx
     src/TOracleStatement.cxx
-  DICTIONARY_OPTIONS
-    -I${ORACLE_INCLUDE_DIR}
   DEPENDENCIES
     Core
     Net

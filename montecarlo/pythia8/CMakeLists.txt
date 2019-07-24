@@ -16,8 +16,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(EGPythia8
   SOURCES
     src/TPythia8.cxx
     src/TPythia8Decayer.cxx
-  DICTIONARY_OPTIONS
-    -I${PYTHIA8_INCLUDE_DIR}
   DEPENDENCIES
     Core
     EG

@@ -22,7 +22,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTVecOps
     src/RVec.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
-    -I${VDT_INCLUDE_DIR}
   DEPENDENCIES
     Core
 )

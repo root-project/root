@@ -19,8 +19,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PgSQL
     src/TPgSQLRow.cxx
     src/TPgSQLServer.cxx
     src/TPgSQLStatement.cxx
-  DICTIONARY_OPTIONS
-    -I${PostgreSQL_INCLUDE_DIR}
   DEPENDENCIES
     Core
     Net
