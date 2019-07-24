@@ -225,15 +225,14 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   // Store normalization set  
   _normSet = (RooArgSet*) indata.get()->snapshot(kFALSE) ;
 
-  // Expand list of observables with any observables used in parameterized ranges
-  RooAbsArg* realDep ;
-  RooFIter iter = _funcObsSet->fwdIterator() ;
-  while((realDep=iter.next())) {
-    RooAbsRealLValue* realDepRLV = dynamic_cast<RooAbsRealLValue*>(realDep) ;
+  // Expand list of observables with any observables used in parameterized ranges.
+  // This NEEDS to be a counting loop since we are inserting during the loop.
+  for (std::size_t i = 0; i < _funcObsSet->size(); ++i) {
+    auto realDepRLV = dynamic_cast<const RooAbsRealLValue*>((*_funcObsSet)[i]);
     if (realDepRLV && realDepRLV->isDerived()) {
-      RooArgSet tmp2 ;
-      realDepRLV->leafNodeServerList(&tmp2, 0, kTRUE) ;
-      _funcObsSet->add(tmp2,kTRUE) ;
+      RooArgSet tmp2;
+      realDepRLV->leafNodeServerList(&tmp2, 0, kTRUE);
+      _funcObsSet->add(tmp2,kTRUE);
     }
   }
 
@@ -245,9 +244,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   
   // Check if the fit ranges of the dependents in the data and in the FUNC are consistent
   const RooArgSet* dataDepSet = indata.get() ;
-  iter = _funcObsSet->fwdIterator() ;
-  RooAbsArg* arg ;
-  while((arg=iter.next())) {
+  for (const auto arg : *_funcObsSet) {
 
     // Check that both dataset and function argument are of type RooRealVar
     RooRealVar* realReal = dynamic_cast<RooRealVar*>(arg) ;
@@ -295,8 +292,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
     //cout << "now adjusting observable ranges to requested fit range" << endl ;
 
     // Adjust FUNC normalization ranges to requested fitRange, store original ranges for RooAddPdf coefficient interpretation
-    iter = _funcObsSet->fwdIterator() ;
-    while((arg=iter.next())) {
+    for (const auto arg : *_funcObsSet) {
 
       RooRealVar* realObs = dynamic_cast<RooRealVar*>(arg) ;
       if (realObs) {
@@ -379,15 +375,6 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
     
     //RooArgSet* tobedel = (RooArgSet*) _normSet->selectCommon(*_projDeps) ;
     _normSet->remove(*_projDeps,kTRUE,kTRUE) ;
-
-//     // Delete owned projected dependent copy in _normSet
-//     TIterator* ii = tobedel->createIterator() ;
-//     RooAbsArg* aa ;
-//     while((aa=(RooAbsArg*)ii->Next())) {
-//       delete aa ;
-//     }
-//     delete ii ;
-//     delete tobedel ;
 
     // Mark all projected dependents as such
     RooArgSet *projDataDeps = (RooArgSet*) _funcObsSet->selectCommon(*_projDeps) ;
