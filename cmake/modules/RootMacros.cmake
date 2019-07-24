@@ -479,14 +479,23 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
   if(ARG_MODULE)
     set(MODULE_LIB_DEPENDENCY ${ARG_DEPENDENCIES})
+
+    # get target properties added after call to ROOT_GENERATE_DICTIONARY()
+    if(TARGET ${ARG_MODULE})
+      set(module_incs $<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>)
+      set(module_defs $<TARGET_PROPERTY:${ARG_MODULE},COMPILE_DEFINITIONS>)
+    endif()
   endif()
 
   #---call rootcint------------------------------------------
   add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file}
                      COMMAND ${command} -v2 -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
-                                        ${definitions} ${includedirs} ${ARG_OPTIONS} ${headerfiles} ${_linkdef}
+                                        ${definitions} "$<$<BOOL:${module_defs}>:-D$<JOIN:${module_defs},;-D>>"
+                                        ${includedirs} "$<$<BOOL:${module_incs}>:-I$<JOIN:${module_incs},;-I>>"
+                                        ${ARG_OPTIONS} ${headerfiles} ${_linkdef}
                      IMPLICIT_DEPENDS ${_implicitdeps}
-                     DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCINTDEP} ${MODULE_LIB_DEPENDENCY})
+                     DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCINTDEP} ${MODULE_LIB_DEPENDENCY}
+                     COMMAND_EXPAND_LISTS)
   get_filename_component(dictname ${dictionary} NAME)
 
   if(ARG_NOTARGET)
