@@ -22,9 +22,10 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
+#include "ROOT/TTreeReaderFast.hxx"
+#include "ROOT/TBulkBranchRead.hxx"
+
 #include "TBufferFile.h"
-#include "TTreeReaderFast.hxx"
-#include "TBulkBranchRead.hxx"
 
 #include <type_traits>
 
