@@ -1322,8 +1322,9 @@ TH1 *RooAbsData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char
       RooAbsArg *clone= plotClones.addClone(*realVar,kTRUE); // do not complain about duplicates
       assert(0 != clone);
       if(!clone->dependsOn(_vars)) {
-   coutW(InputArguments) << ClassName() << "::" << GetName()
-        << ":fillHistogram: WARNING: data does not contain variable: " << realVar->GetName() << endl;
+        coutE(InputArguments) << ClassName() << "::" << GetName()
+            << ":fillHistogram: Data does not contain the variable '" << realVar->GetName() << "'." << endl;
+        return nullptr;
       }
       else {
    clone->recursiveRedirectServers(_vars);
