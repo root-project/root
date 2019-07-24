@@ -12,15 +12,6 @@
 #define ROOT_TFitter
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TFitter                                                              //
-//                                                                      //
-// The ROOT standard fitter based on TMinuit                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-
 #include "TVirtualFitter.h"
 
 class TMinuit;
