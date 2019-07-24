@@ -9,52 +9,54 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//
-// TFFTReal
-// One of the interface classes to the FFTW package, can be used directly
-// or via the TVirtualFFT class. Only the basic interface of FFTW is implemented.
-//
-// Computes transforms called r2r in FFTW manual:
-// - transforms of real input and output in "halfcomplex" format i.e.
-//   real and imaginary parts for a transform of size n stored as
-//   (r0, r1, r2, ..., rn/2, i(n+1)/2-1, ..., i2, i1)
-// - discrete Hartley transform
-// - sine and cosine transforms (DCT-I,II,III,IV and DST-I,II,III,IV)
-// For the detailed information on the computed
-// transforms please refer to the FFTW manual, chapter "What FFTW really computes".
-//
-// How to use it:
-// 1) Create an instance of TFFTReal - this will allocate input and output
-//    arrays (unless an in-place transform is specified)
-// 2) Run the Init() function with the desired flags and settings (see function
-//    comments for possible kind parameters)
-// 3) Set the data (via SetPoints()or SetPoint() functions)
-// 4) Run the Transform() function
-// 5) Get the output (via GetPoints() or GetPoint() functions)
-// 6) Repeat steps 3)-5) as needed
-// For a transform of the same size, but of different kind (or with different flags),
-// rerun the Init() function and continue with steps 3)-5)
-//
-// NOTE: 1) running Init() function will overwrite the input array! Don't set any data
-//          before running the Init() function!
-//       2) FFTW computes unnormalized transform, so doing a transform followed by
-//          its inverse will lead to the original array scaled BY:
-//          - transform size (N) for R2HC, HC2R, DHT transforms
-//          - 2*(N-1) for DCT-I (REDFT00)
-//          - 2*(N+1) for DST-I (RODFT00)
-//          - 2*N for the remaining transforms
-// Transform inverses:
-// R2HC<-->HC2R
-// DHT<-->DHT
-// DCT-I<-->DCT-I
-// DCT-II<-->DCT-III
-// DCT-IV<-->DCT-IV
-// DST-I<-->DST-I
-// DST-II<-->DST-III
-// DST-IV<-->DST-IV
-//
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/// \class TFFTReal
+/// One of the interface classes to the FFTW package, can be used directly
+/// or via the TVirtualFFT class. Only the basic interface of FFTW is implemented.
+///
+/// Computes transforms called r2r in FFTW manual:
+/// - transforms of real input and output in "halfcomplex" format i.e.
+///   real and imaginary parts for a transform of size n stored as
+///   (r0, r1, r2, ..., rn/2, i(n+1)/2-1, ..., i2, i1)
+/// - discrete Hartley transform
+/// - sine and cosine transforms (DCT-I,II,III,IV and DST-I,II,III,IV)
+/// For the detailed information on the computed
+/// transforms please refer to the FFTW manual, chapter "What FFTW really computes".
+///
+/// How to use it:
+/// 1. Create an instance of TFFTReal - this will allocate input and output
+///    arrays (unless an in-place transform is specified)
+/// 2. Run the Init() function with the desired flags and settings (see function
+///    comments for possible kind parameters)
+/// 3. Set the data (via SetPoints()or SetPoint() functions)
+/// 4. Run the Transform() function
+/// 5. Get the output (via GetPoints() or GetPoint() functions)
+/// 6. Repeat steps 3)-5) as needed
+///
+/// For a transform of the same size, but of different kind (or with different flags),
+/// rerun the Init() function and continue with steps 3)-5)
+///
+/// NOTE:
+///       1. running Init() function will overwrite the input array! Don't set any data
+///          before running the Init() function!
+///       2. FFTW computes unnormalized transform, so doing a transform followed by
+///          its inverse will lead to the original array scaled BY:
+///          - transform size (N) for R2HC, HC2R, DHT transforms
+///          - 2*(N-1) for DCT-I (REDFT00)
+///          - 2*(N+1) for DST-I (RODFT00)
+///          - 2*N for the remaining transforms
+///
+/// Transform inverses:
+/// - R2HC<-->HC2R
+/// - DHT<-->DHT
+/// - DCT-I<-->DCT-I
+/// - DCT-II<-->DCT-III
+/// - DCT-IV<-->DCT-IV
+/// - DST-I<-->DST-I
+/// - DST-II<-->DST-III
+/// - DST-IV<-->DST-IV
+///
+////////////////////////////////////////////////////////////////////////////////
 
 #include "TFFTReal.h"
 #include "fftw3.h"
@@ -143,27 +145,33 @@ TFFTReal::~TFFTReal()
 ///NOTE:  input and output arrays are overwritten during initialisation,
 ///       so don't set any points, before running this function!!!!!
 ///
-///1st parameter:
-///  Possible flag_options:
-///  "ES" (from "estimate") - no time in preparing the transform, but probably sub-optimal
+/// #### 1st parameter:
+///    Possible flag_options:
+///
+/// - "ES" (from "estimate") - no time in preparing the transform, but probably sub-optimal
 ///       performance
-///  "M" (from "measure") - some time spend in finding the optimal way to do the transform
-///  "P" (from "patient") - more time spend in finding the optimal way to do the transform
-///  "EX" (from "exhaustive") - the most optimal way is found
+/// - "M" (from "measure") - some time spend in finding the optimal way to do the transform
+/// - "P" (from "patient") - more time spend in finding the optimal way to do the transform
+/// - "EX" (from "exhaustive") - the most optimal way is found
+///
 ///  This option should be chosen depending on how many transforms of the same size and
 ///  type are going to be done. Planning is only done once, for the first transform of this
 ///  size and type.
-///2nd parameter is dummy and doesn't need to be specified
-///3rd parameter- transform kind for each dimension
+///
+/// #### 2nd parameter:
+///    is dummy and doesn't need to be specified
+///
+/// #### 3rd parameter:
+///    transform kind for each dimension
 ///     4 different kinds of sine and cosine transforms are available
-///     DCT-I   - kind=0
-///     DCT-II  - kind=1
-///     DCT-III - kind=2
-///     DCT-IV  - kind=3
-///     DST-I   - kind=4
-///     DST-II  - kind=5
-///     DSTIII  - kind=6
-///     DSTIV   - kind=7
+///  -   DCT-I   - kind=0
+///  -   DCT-II  - kind=1
+///  -   DCT-III - kind=2
+///  -   DCT-IV  - kind=3
+///  -   DST-I   - kind=4
+///  -   DST-II  - kind=5
+///  -   DSTIII  - kind=6
+///  -   DSTIV   - kind=7
 
 void TFFTReal::Init( Option_t* flags,Int_t /*sign*/, const Int_t *kind)
 {
@@ -278,14 +286,15 @@ void TFFTReal::GetPointComplex(const Int_t *ipoint, Double_t &re, Double_t &im, 
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Returns the output (or input) array
+/// we have 4 different cases:
+///
+/// - fromInput = false; fOut = !NULL (transformed is not in place) : return fOut
+///  - fromInput = false; fOut = NULL (transformed is in place) : return fIn
+/// - fromInput = true; fOut = !NULL :   return fIn
+/// - fromInput = true; fOut = NULL return an error since input array is overwritten
 
 Double_t* TFFTReal::GetPointsReal(Bool_t fromInput) const
 {
-   // we have 4 different cases
-   // fromInput = false; fOut = !NULL (transformed is not in place) : return fOut
-   // fromInput = false; fOut = NULL (transformed is in place) : return fIn
-   // fromInput = true; fOut = !NULL :   return fIn
-   // fromInput = true; fOut = NULL return an error since input array is overwritten
 
    if (!fromInput && fOut)
       return (Double_t*)fOut;
@@ -386,10 +395,10 @@ Int_t TFFTReal::MapOptions(const Int_t *kind)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///allowed options:
-///"ES" - FFTW_ESTIMATE
-///"M" - FFTW_MEASURE
-///"P" - FFTW_PATIENT
-///"EX" - FFTW_EXHAUSTIVE
+/// - "ES" - FFTW_ESTIMATE
+/// - "M" - FFTW_MEASURE
+/// - "P" - FFTW_PATIENT
+/// - "EX" - FFTW_EXHAUSTIVE
 
 UInt_t TFFTReal::MapFlag(Option_t *flag)
 {
