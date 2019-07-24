@@ -12,33 +12,6 @@
 #ifndef ROOT_TFFTComplex
 #define ROOT_TFFTComplex
 
-//////////////////////////////////////////////////////////////////////////
-//
-// TFFTComplex
-// One of the interface classes to the FFTW package, can be used directly
-// or via the TVirtualFFT class. Only the basic interface of FFTW is implemented.
-// Computes complex input/output discrete Fourier transforms (DFT)
-// in one or more dimensions. For the detailed information on the computed
-// transforms please refer to the FFTW manual, chapter "What FFTW really computes".
-//
-// How to use it:
-// 1) Create an instance of TFFTComplex - this will allocate input and output
-//    arrays (unless an in-place transform is specified)
-// 2) Run the Init() function with the desired flags and settings
-// 3) Set the data (via SetPoints(), SetPoint() or SetPointComplex() functions)
-// 4) Run the Transform() function
-// 5) Get the output (via GetPoints(), GetPoint() or GetPointComplex() functions)
-// 6) Repeat steps 3)-5) as needed
-//
-// For a transform of the same size, but with different flags or sign, rerun the Init()
-// function and continue with steps 3)-5)
-// NOTE: 1) running Init() function will overwrite the input array! Don't set any data
-//          before running the Init() function
-//       2) FFTW computes unnormalized transform, so doing a transform followed by
-//          its inverse will lead to the original array scaled by the transform size
-//
-//////////////////////////////////////////////////////////////////////////
-
 #include "TVirtualFFT.h"
 #include "TString.h"
 
