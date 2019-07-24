@@ -404,7 +404,6 @@ else()
                             etc/dictpch/allCppflags.txt
                             rootcling)
   add_custom_target(onepcm ALL DEPENDS etc/allDict.cxx.pch)
-  set_source_files_properties(${__allFiles} PROPERTIES GENERATED TRUE)
   install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
   install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 endif()
