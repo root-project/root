@@ -492,6 +492,9 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   if(ARG_NOTARGET)
     if(TARGET ${ARG_MODULE})
       target_sources(${ARG_MODULE} PRIVATE ${dictionary}.cxx)
+      if(PROJECT_NAME STREQUAL "ROOT")
+        set_property(GLOBAL APPEND PROPERTY ROOT_PCH_DEPENDENCIES ${ARG_MODULE})
+      endif()
     else()
       message(FATAL_ERROR
         " When used with NOTARGET, the MODULE option must be passed with the name of an existing target.\n"
@@ -499,6 +502,9 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif()
   else()
     add_custom_target(${dictname} DEPENDS ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file})
+    if(PROJECT_NAME STREQUAL "ROOT")
+      set_property(GLOBAL APPEND PROPERTY ROOT_PCH_DEPENDENCIES ${dictname})
+    endif()
   endif()
 
   if (runtime_cxxmodules AND ARG_MULTIDICT AND NOT ARG_NOTARGET)
@@ -510,8 +516,6 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
 
   if(NOT ARG_NOINSTALL AND NOT CMAKE_ROOTTEST_DICT AND DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
-    set_property(GLOBAL APPEND PROPERTY ROOT_DICTIONARY_FILES ${CMAKE_CURRENT_BINARY_DIR}/${dictionary}.cxx)
-
     ROOT_GET_INSTALL_DIR(shared_lib_install_dir)
     # Install the C++ module if we generated one.
     if (cpp_module_file)

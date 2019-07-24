@@ -345,9 +345,8 @@ file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" "${__modulemap_e
 set(ROOT_CXXMODULES_WRITE_TO_CURRENT_DIR ON)
 
 #---Global PCH-----------------------------------------------------------------------------------
-get_property(__allFiles GLOBAL PROPERTY ROOT_DICTIONARY_FILES)
 get_property(__clingetcpch GLOBAL PROPERTY CLINGETCPCH)
-
+get_property(__pch_dependencies GLOBAL PROPERTY ROOT_PCH_DEPENDENCIES)
 
 set (CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS}")
 if(cxxmodules)
@@ -371,7 +370,7 @@ add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
                           etc/dictpch/allHeaders.h
                           etc/dictpch/allCppflags.txt
                    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${CMAKE_SOURCE_DIR} . ${pyroot_experimental} ${__clingetcpch} -- ${CMAKE_CXX_FLAGS_SEPARATE}
-                   DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${__allFiles})
+                   DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${__pch_dependencies})
 
 get_property(incdirs DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
 foreach(d ${incdirs})
