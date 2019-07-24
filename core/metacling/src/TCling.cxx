@@ -6284,9 +6284,18 @@ static std::string ResolveSymbol(const std::string& mangled_name,
    return ""; // Search found no match.
 }
 
-static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_name,
+static void* LazyFunctionCreatorAutoloadForModule(const std::string &mangled_name,
                                                   cling::Interpreter *interp) {
-   std::string LibName = ResolveSymbol(mangled_name, interp);
+// The JIT gives us a mangled name which has only one leading underscore on
+// all platforms, for instance _ZN8TRandom34RndmEv. However, on OSX the
+// linker stores this symbol as __ZN8TRandom34RndmEv (adding an extra _).
+   std::string maybe_prefixed_mangled_name = mangled_name;
+#ifdef R__MACOSX
+   assert(llvm::StringRef(mangled_name).startswith("__"));
+   maybe_prefixed_mangled_name = "_" + maybe_prefixed_mangled_name;
+#endif
+
+   std::string LibName = ResolveSymbol(maybe_prefixed_mangled_name, interp);
    if (LibName.empty())
       return nullptr;
 
