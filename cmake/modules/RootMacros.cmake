@@ -268,6 +268,11 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   # no matter what.
   list(APPEND incdirs ${CMAKE_CURRENT_SOURCE_DIR})
 
+  if(TARGET ${ARG_MODULE})
+    get_target_property(target_incdirs ${ARG_MODULE} INCLUDE_DIRECTORIES)
+    list(APPEND incdirs ${target_incdirs})
+  endif()
+
   #---Get the list of header files-------------------------
   # CMake needs dependencies from ${CMAKE_CURRENT_SOURCE_DIR} while rootcling wants
   # header files "as included" (and thus as passed as argument to this CMake function).
