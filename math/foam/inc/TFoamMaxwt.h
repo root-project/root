@@ -4,12 +4,6 @@
 #ifndef ROOT_TFoamMaxwt
 #define ROOT_TFoamMaxwt
 
-//////////////////////////////////////////////////////////////////
-//                                                              //
-// Small auxiliary class for controlling MC weight.             //
-//                                                              //
-//////////////////////////////////////////////////////////////////
-
 #include "TObject.h"
 
 class TH1D;
@@ -17,12 +11,12 @@ class TH1D;
 
 class TFoamMaxwt : public TObject {
 private:
-   Double_t  fNent;      // No. of MC events
-   Int_t     fnBin;      // No. of bins on the weight distribution
-   Double_t  fwmax;      // Maximum analyzed weight
+   Double_t  fNent;      ///< No. of MC events
+   Int_t     fnBin;      ///< No. of bins on the weight distribution
+   Double_t  fwmax;      ///< Maximum analyzed weight
 public:
-   TH1D   *fWtHst1;      // Histogram of the weight wt
-   TH1D   *fWtHst2;      // Histogram of wt filled with wt
+   TH1D   *fWtHst1;      ///< Histogram of the weight wt
+   TH1D   *fWtHst2;      ///< Histogram of wt filled with wt
 
 public:
    TFoamMaxwt();                            // NOT IMPLEMENTED (NEVER USED)
