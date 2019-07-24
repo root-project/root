@@ -12,38 +12,6 @@
 #ifndef ROOT_TFFTRealComplex
 #define ROOT_TFFTRealComplex
 
-//////////////////////////////////////////////////////////////////////////
-//
-// TFFTRealComplex
-//
-// One of the interface classes to the FFTW package, can be used directly
-// or via the TVirtualFFT class. Only the basic interface of FFTW is implemented.
-//
-// Computes a real input/complex output discrete Fourier transform in 1 or more
-// dimensions. However, only out-of-place transforms are now supported for transforms
-// in more than 1 dimension. For detailed information about the computed transforms,
-// please refer to the FFTW manual
-//
-// How to use it:
-// 1) Create an instance of TFFTRealComplex - this will allocate input and output
-//    arrays (unless an in-place transform is specified)
-// 2) Run the Init() function with the desired flags and settings (see function
-//    comments for possible kind parameters)
-// 3) Set the data (via SetPoints()or SetPoint() functions)
-// 4) Run the Transform() function
-// 5) Get the output (via GetPoints() or GetPoint() functions)
-// 6) Repeat steps 3)-5) as needed
-// For a transform of the same size, but with different flags,
-// rerun the Init() function and continue with steps 3)-5)
-//
-// NOTE: 1) running Init() function will overwrite the input array! Don't set any data
-//          before running the Init() function
-//       2) FFTW computes unnormalized transform, so doing a transform followed by
-//          its inverse will lead to the original array scaled by the transform size
-//
-//
-//////////////////////////////////////////////////////////////////////////
-
 #include "TVirtualFFT.h"
 #include "TString.h"
 
