@@ -1,3 +1,5 @@
+#ifndef __JITTED_BDT_H_
+#define __JITTED_BDT_H_
 
 #include <string>
 #include <map>
@@ -120,3 +122,6 @@ std::function<float (std::vector<float>)> jit_function_reader_string(int tree_in
    std::function<float (std::vector<float>)> fWrapped{func};
    return fWrapped;
 }
+
+#endif
+// End of file

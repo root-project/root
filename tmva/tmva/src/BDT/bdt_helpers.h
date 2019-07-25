@@ -113,5 +113,20 @@ void write_csv(std::string &filename, std::vector<std::vector<T>> values_vec)
   fout.close();
 }
 
+template <class T>
+void write_csv(std::string &filename, std::vector<T> values_vec)
+{
+  std::ofstream fout;
+  // opens an existing csv file or creates a new file.
+  fout.open(filename, std::ios::out); // | std::ios::app if you want to append"reportcard.csv"
+  // Read the input
+  //for (auto it = begin (values_vec); it != end (values_vec); ++it) {
+  for (auto  line : values_vec) {
+    fout << line;
+    fout << "\n";
+  }
+  fout.close();
+}
+
 // TODO
 // write string to file

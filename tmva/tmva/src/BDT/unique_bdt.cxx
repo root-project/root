@@ -10,14 +10,7 @@ namespace unique_bdt{
   // counter
   int Node::count=0;
 
-  // constructor
-  Node::Node(){
-    //std::cout << "CREATION\n";
-  }
-  // Destructor
-  Node::~Node(){
-    //std::cout << "DESTROYED\n";
-  }
+
 
   // Reading functions
   void write_node_members(json const &jTree, std::unique_ptr<Node> &tmp_node){

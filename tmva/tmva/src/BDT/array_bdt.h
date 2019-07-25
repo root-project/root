@@ -1,3 +1,7 @@
+#ifndef __ARRAY_BDT_H_
+#define __ARRAY_BDT_H_
+
+
 #include "json.hpp"
 #include <fstream>
 #include <iostream>
@@ -12,18 +16,21 @@ using json = nlohmann::json;
 
 namespace array_bdt{
   // Create one for thresholds, one for features number
+  /*
   template <class T>
   T * tree_creator(int depth){
     int node_number = std::pow(2, depth);
     T tree[node_number] = {0};
     return tree;
   }
-
+  */
+  /*
   int get_node_index(int depth, int previous_row_index, int child_number){
     if (depth==0){return 0;}
     int row_index = (previous_row_index-1)*2+child_number;
     return std::pow(2, depth-1) + row_index;
   }
+  */
   /*
   float recursive_inference(std::vector event, int index=0){
     index = index*2
@@ -127,7 +134,7 @@ namespace array_bdt{
     return depth;
   } // end function
 
-  
+
   void read_nodes_from_tree(json &jTree, Tree &tree){
 
     int depth = _get_tree_max_depth(jTree);
@@ -140,3 +147,4 @@ namespace array_bdt{
     tree.features.swap(Feats);
   }
 } // end namespace
+#endif

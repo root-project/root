@@ -39,7 +39,7 @@ gPrint " ***** Running main C++ ***** "
 ./main.exe | colorize YELLOW
 
 
-rm ./test.exe
+#rm ./test.exe
 g++ test.cxx -std=c++11 `root-config --libs --cflags` -o test.exe
 gPrint "***** Running test.cxx *****"
 ./test.exe | colorize YELLOW
@@ -49,5 +49,7 @@ python check_preds.py | colorize CYAN
 
 gPrint "***** Benchmarking *****"
 rm ./mybenchmark.exe
-g++ -std=c++11 -isystem benchmark/include -Lbuild/src benchmark.cxx -lbenchmark -lpthread -O2 -o mybenchmark.exe
+#make -f makefile_bench.make distclean
+make -f makefile_bench.make
+#g++ -std=c++11 -isystem benchmark/include -Lbuild/src benchmark.cxx -lbenchmark -lpthread -O2 -o mybenchmark.exe
 ./mybenchmark.exe

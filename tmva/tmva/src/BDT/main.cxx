@@ -31,7 +31,8 @@
 #endif
 
 //#include "array_bdt.h"
-#include "bdt_generator.h"
+#include "jitted_bdt.h"
+#include "forest.h"
 
 
 using json = nlohmann::json;
@@ -162,7 +163,7 @@ int main() {
 
   float prediction = 0; // define used variables
   std::vector<float> preds_tmp;
-  std::vector<std::vector<bool>> preds;
+  std::vector<bool> preds;
   float preds_sum;
 
 
@@ -177,7 +178,7 @@ int main() {
       preds_tmp.push_back(prediction);
     }
     preds_sum = vec_sum(preds_tmp);
-    preds.push_back(std::vector<bool>{binary_logistic(preds_sum)});
+    preds.push_back(binary_logistic(preds_sum));
   }
   std::string preds_unique_file = data_folder+"preds_unique_file.csv";
   write_csv(preds_unique_file, preds); // write predictions
@@ -194,11 +195,31 @@ int main() {
       preds_tmp.push_back(prediction);
     }
     preds_sum = vec_sum(preds_tmp);
-    preds.push_back(std::vector<bool>{binary_logistic(preds_sum)});
+    preds.push_back(binary_logistic(preds_sum));
   }
   std::string preds_array_file = data_folder+"preds_array_file.csv";
   write_csv(preds_unique_file, preds); // write predictions
 
+  std::cout << "\n\n ***** tests ***** \n";
+  TreeWrapper<int> test;
+  test.test();
+  test.get_Forest();
+
+  TreeWrapper<unique_bdt::Tree> test2;
+  test2.test();
+  test2.get_Forest("model.json");
+  preds.clear();
+  std::string preds_file = "./data_files/test2.csv";
+  preds=test2.do_predictions(events_vector);
+  write_csv(preds_file, preds);
+
+  TreeWrapper<unique_bdt::Tree> test3;
+  test3.test();
+  test3.get_Forest("model.json");
+  preds.clear();
+  preds=test3.do_predictions(events_vector);
+  preds_file = "./data_files/test3.csv";
+  write_csv(preds_file, preds);
 
   std::cout << "\n ########## END MAIN.CXX ##########\n\n\n";
   return 0;

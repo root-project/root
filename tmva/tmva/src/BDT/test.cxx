@@ -13,7 +13,7 @@
 #include "bdt_helpers.h"
 #include "TInterpreter.h" // for gInterpreter
 //# include "generated_code.h"
-#include "bdt_generator.h"
+#include "jitted_bdt.h"
 
 
 int main() {

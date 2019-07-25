@@ -55,10 +55,6 @@ namespace unique_bdt{
                 child_true->inference(event) : child_false->inference(event));
       }
     }
-    Node();
-    Node(Node const & node);
-    Node(Node&& other);
-    ~Node();
 
     //friend void swap(Node &first, Node& second);
     //Node& operator= (const Node& other);
@@ -70,7 +66,6 @@ namespace unique_bdt{
 
   class Tree{
   public:
-    //std::vector<std::unique_ptr<Node>> nodes;
     std::unique_ptr<Node> nodes;
     float inference(std::vector<float> event){
       return nodes->inference(event);
