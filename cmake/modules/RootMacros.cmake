@@ -121,7 +121,7 @@ endfunction()
 #---REFLEX_GENERATE_DICTIONARY( dictionary headerfiles SELECTION selectionfile OPTIONS opt1 opt2 ...)
 #---------------------------------------------------------------------------------------------------
 macro(REFLEX_GENERATE_DICTIONARY dictionary)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "SELECTION" "OPTIONS" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "" "SELECTION" "OPTIONS;DEPENDS" ${ARGN})
   #---Get List of header files---------------
   set(headerfiles)
   foreach(fp ${ARG_UNPARSED_ARGUMENTS})
@@ -177,7 +177,7 @@ macro(REFLEX_GENERATE_DICTIONARY dictionary)
     COMMAND ${ROOT_genreflex_CMD}
     ARGS ${headerfiles} -o ${gensrcdict} ${rootmapopts} --select=${selectionfile}
          --gccxmlpath=${GCCXML_home}/bin ${ARG_OPTIONS} ${include_dirs} ${definitions}
-    DEPENDS ${headerfiles} ${selectionfile})
+    DEPENDS ${headerfiles} ${selectionfile} ${ARG_DEPENDS})
 
   #---roottest compability---------------------------------
   if(CMAKE_ROOTTEST_DICT)
