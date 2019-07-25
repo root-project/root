@@ -397,7 +397,7 @@ def _RDataFrameAsNumpy(df, columns=None, exclude=None):
     # Import numpy and numpy.array derived class lazily
     try:
         import numpy
-        from _helpers import ndarray
+        from _rdf_utils import ndarray
     except:
         raise ImportError("Failed to import numpy during call of RDataFrame.AsNumpy.")
 
