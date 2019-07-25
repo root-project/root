@@ -34,7 +34,7 @@ python train.py | colorize CYAN
 
 
 #g++ main.cxx -o main -std=c++11
-#make distclean
+make distclean
 make
 gPrint " ***** Running main C++ ***** "
 ./main.exe | colorize YELLOW
@@ -53,4 +53,4 @@ rm ./mybenchmark.exe
 #make -f makefile_bench.make distclean
 make -f makefile_bench.make
 #g++ -std=c++11 -isystem benchmark/include -Lbuild/src benchmark.cxx -lbenchmark -lpthread -O2 -o mybenchmark.exe
-./mybenchmark.exe
+./mybenchmark.exe --benchmark_repetitions=5 --benchmark_filter=Bdt

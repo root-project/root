@@ -26,9 +26,13 @@ template <class T>
 class Forest {
 public:
    std::string    events_file = "./data_files/events.csv";
-   std::vector<T> Forest;
+   std::vector<T> trees;
+   static int     counter;
 
-   std::function<bool(float)> objective_func = binary_logistic; // this could be changed
+   Forest() { counter++; }
+   ~Forest() {}
+
+   // std::function<bool(float)> objective_func = binary_logistic; // this could be changed
 
    void test() { std::cout << "test \n"; }
    void get_Forest(std::string json_file = "aaa") { std::cout << json_file << std::endl; }
@@ -51,15 +55,19 @@ public:
       preds.reserve(events_vector.size());
       for (auto &event : events_vector) {
          preds_tmp.clear();
-         for (auto &tree : this->Forest) {
+         for (auto &tree : this->trees) {
             prediction = tree.inference(event);
             preds_tmp.push_back(prediction);
          }
-         preds.push_back(this->objective_func(vec_sum(preds_tmp)));
+         preds.push_back(binary_logistic(vec_sum(preds_tmp)));
       }
       return preds;
    }
+   // Forest() { counter++; }
 };
+
+template <class T>
+int Forest<T>::counter = 0;
 
 // ------------------ Specialization unique_ptr -------------------- //
 template <>
@@ -75,7 +83,7 @@ void Forest<unique_bdt::Tree>::get_Forest(std::string json_file)
    for (int i = 0; i < number_of_trees; i++) {
       unique_bdt::read_nodes_from_tree(json_model[i], trees[i]);
    }
-   this->Forest = std::move(trees);
+   this->trees = std::move(trees);
 }
 
 // ------------------------ Specialization array ------------------ //
@@ -92,7 +100,7 @@ void Forest<array_bdt::Tree>::get_Forest(std::string json_file)
    for (int i = 0; i < number_of_trees; i++) {
       array_bdt::read_nodes_from_tree(json_model[i], trees[i]);
    }
-   this->Forest = trees;
+   this->trees = trees;
 }
 
 // ------------------------ Specialization Jitted ------------------ //
@@ -114,7 +122,7 @@ void Forest<std::function<float(std::vector<float>)>>::get_Forest(std::string js
    std::vector<std::string> s_trees;
    s_trees.resize(number_of_trees);
    time_t      my_time          = time(0);
-   std::string s_namespace_name = std::to_string(my_time);
+   std::string s_namespace_name = std::to_string(this->counter) + std::to_string(my_time);
    std::cout << "current time used as namespace: " << s_namespace_name << std::endl;
 
    for (int i = 0; i < number_of_trees; i++) {
@@ -131,7 +139,7 @@ void Forest<std::function<float(std::vector<float>)>>::get_Forest(std::string js
       function_vector.push_back(func);
    }
 
-   this->Forest = function_vector;
+   this->trees = function_vector;
 }
 
 template <>
@@ -141,16 +149,22 @@ std::vector<bool> Forest<std::function<float(std::vector<float>)>>::do_predictio
    // preds.clear();
    std::vector<bool>  preds;
    std::vector<float> preds_tmp;
-   preds_tmp.reserve(this->Forest.size());
+   preds_tmp.reserve(this->trees.size());
    preds.reserve(events_vector.size());
    for (auto &event : events_vector) {
       preds_tmp.clear();
-      for (auto &tree : this->Forest) {
+      for (auto &tree : this->trees) {
          preds_tmp.push_back(tree(event));
       }
       preds.push_back(binary_logistic(vec_sum(preds_tmp)));
    }
    return preds;
+}
+
+template <>
+void Forest<std::function<float(std::vector<float>)>>::test()
+{
+   std::cout << "AAAAAA\n";
 }
 
 #endif

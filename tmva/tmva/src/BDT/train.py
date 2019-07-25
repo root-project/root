@@ -6,7 +6,44 @@ from sklearn.metrics import accuracy_score
 from xgboost import plot_tree
 import matplotlib.pyplot as plt
 import xgboost as xgb
+import timeit
 
+setup = """
+import numpy as np
+from xgboost import XGBClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+from xgboost import plot_tree
+import matplotlib.pyplot as plt
+import xgboost as xgb
+
+# load data
+dataset = np.loadtxt("pima-indians-diabetes.data.csv", delimiter=",")
+
+# split data into X and y
+num_features = 4  # max is 8
+X = dataset[:, 0:num_features]
+Y = dataset[:, 8]
+# print(X)
+# print(Y)
+
+# split data into train and test sets
+seed = 7
+test_size = 0.33
+X_train, X_test, y_train, y_test = train_test_split(
+    X, Y, test_size=test_size, random_state=seed
+)
+
+# fit model no training data
+model = xgb.XGBClassifier(n_estimators=4)
+model.fit(X_train, y_train)
+
+# make predictions for test data
+"""
+
+it_number = 100
+my_time = timeit.timeit("model.predict(X_test)", setup=setup, number=it_number)
+print(f"{my_time / it_number * 1000}  ms")
 # load data
 dataset = np.loadtxt("pima-indians-diabetes.data.csv", delimiter=",")
 

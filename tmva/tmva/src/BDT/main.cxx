@@ -222,10 +222,17 @@ int main()
    test4.test();
    test4.get_Forest("model.json");
    preds.clear();
+   preds = test4.do_predictions(events_vector);
+   preds.clear();
+   preds = test4.do_predictions(events_vector);
+   preds.clear();
    preds      = test4.do_predictions(events_vector);
    preds_file = "./data_files/test4.csv";
    write_csv(preds_file, preds);
 
+   std::cout << std::to_string(get_time()) << std::endl;
+   std::cout << get_time_string() << std::endl;
+   std::cout << test4.counter << std::endl;
    std::cout << "\n ########## END MAIN.CXX ##########\n\n\n";
    return 0;
 } // End main

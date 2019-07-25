@@ -15,6 +15,8 @@
 #include <array>
 #include <algorithm>
 #include <cmath>
+#include <ctime>
+#include <chrono>
 
 //
 /// sums internal values of vector
@@ -56,6 +58,21 @@ std::string read_file_string(const std::string &filename)
    std::stringstream buffer;
    buffer << t.rdbuf();
    return buffer.str();
+}
+
+/// get linux time
+float get_time()
+{
+   auto unix_timestamp        = std::chrono::seconds(std::time(NULL));
+   int  unix_timestamp_x_1000 = std::chrono::milliseconds(unix_timestamp).count();
+   return static_cast<float>(unix_timestamp_x_1000);
+}
+
+std::string get_time_string()
+{
+   std::string s_time = std::to_string(get_time());
+   s_time.erase(std::remove(s_time.begin(), s_time.end(), '.'), s_time.end());
+   return s_time;
 }
 
 /// read a line of a "csv file" format
