@@ -17,7 +17,7 @@ EXE = mybenchmark.exe
 all: $(EXE)
 
 $(EXE): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@  $^  $(LIBFLAGS) #$(ROOT_FLAGS)
+	$(CXX) $(CXXFLAGS) -o $@  $^  $(LIBFLAGS) $(ROOT_FLAGS)
 
 $(OBJS) : build/%.o: %.cxx
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(ROOT_FLAGS) -c $< -o $@

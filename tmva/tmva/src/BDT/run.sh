@@ -34,7 +34,8 @@ python train.py | colorize CYAN
 
 
 #g++ main.cxx -o main -std=c++11
-make distclean && make
+#make distclean
+make
 gPrint " ***** Running main C++ ***** "
 ./main.exe | colorize YELLOW
 
