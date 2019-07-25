@@ -245,7 +245,8 @@ endfunction(ROOT_GET_INSTALL_DIR)
 #   no error is emitted. The dictionary does not depend on these headers.
 #---------------------------------------------------------------------------------------------------
 function(ROOT_GENERATE_DICTIONARY dictionary)
-  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL;NOTARGET" "MODULE;LINKDEF" "NODEPHEADERS;OPTIONS;DEPENDENCIES;BUILTINS" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL;NOTARGET"
+    "MODULE;LINKDEF" "NODEPHEADERS;OPTIONS;DEPENDENCIES;EXTRA_DEPENDENCIES;BUILTINS" ${ARGN})
 
   # Check if OPTIONS start with a dash.
   if (ARG_OPTIONS)
@@ -494,7 +495,8 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
                                         ${includedirs} "$<$<BOOL:${module_incs}>:-I$<JOIN:${module_incs},;-I>>"
                                         ${ARG_OPTIONS} ${headerfiles} ${_linkdef}
                      IMPLICIT_DEPENDS ${_implicitdeps}
-                     DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCINTDEP} ${MODULE_LIB_DEPENDENCY}
+                     DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCINTDEP}
+                             ${MODULE_LIB_DEPENDENCY} ${ARG_EXTRA_DEPENDENCIES}
                      COMMAND_EXPAND_LISTS)
   get_filename_component(dictname ${dictionary} NAME)
 
