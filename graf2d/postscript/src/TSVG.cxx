@@ -238,7 +238,7 @@ void TSVG::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
          PrintFast(10,"\" height=\"");
          WriteReal(iy1-iy2, kFALSE);
          PrintFast(7,"\" fill=");
-         SetColor(5);
+         SetColorAlpha(5);
          PrintFast(2,"/>");
       }
    }
@@ -253,7 +253,7 @@ void TSVG::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
       PrintFast(10,"\" height=\"");
       WriteReal(iy1-iy2, kFALSE);
       PrintFast(7,"\" fill=");
-      SetColor(fFillColor);
+      SetColorAlpha(fFillColor);
       PrintFast(2,"/>");
    }
    if (fillis == 0) {
@@ -268,7 +268,7 @@ void TSVG::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
       PrintFast(10,"\" height=\"");
       WriteReal(iy1-iy2, kFALSE);
       PrintFast(21,"\" fill=\"none\" stroke=");
-      SetColor(fLineColor);
+      SetColorAlpha(fLineColor);
       PrintFast(2,"/>");
    }
 }
@@ -349,9 +349,9 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    if( idy ) MovePS(0,idy);
    PrintFast(8,"z\" fill=");
    if (mode == -1) {
-      SetColor(dark);
+      SetColorAlpha(dark);
    } else {
-      SetColor(light);
+      SetColorAlpha(light);
    }
    PrintFast(2,"/>");
 
@@ -413,9 +413,9 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    if( idy ) MovePS(0,idy);
    PrintFast(8,"z\" fill=");
    if (mode == -1) {
-      SetColor(light);
+      SetColorAlpha(light);
    } else {
-      SetColor(dark);
+      SetColorAlpha(dark);
    }
    PrintFast(2,"/>");
 }
@@ -597,7 +597,7 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
        ms == 39 || ms == 41 || ms == 43 || ms == 45 ||
        ms == 47 || ms == 48 || ms == 49) {
       PrintStr("<g stroke=");
-      SetColor(Int_t(fMarkerColor));
+      SetColorAlpha(Int_t(fMarkerColor));
       PrintStr(" stroke-width=\"");
       WriteReal(fLineWidth, kFALSE);
       PrintStr("\" fill=");
@@ -605,7 +605,7 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
       PrintStr(">");
    } else {
       PrintStr("<g stroke=");
-      SetColor(Int_t(fMarkerColor));
+      SetColorAlpha(Int_t(fMarkerColor));
       PrintStr(" stroke-width=\"");
       WriteReal(fLineWidth, kFALSE);
       PrintStr("\" fill=\"none\"");
@@ -1001,7 +1001,7 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
        ms == 39 || ms == 41 || ms == 43 || ms == 45 ||
        ms == 47 || ms == 48 || ms == 49) {
       PrintStr("<g stroke=");
-      SetColor(Int_t(fMarkerColor));
+      SetColorAlpha(Int_t(fMarkerColor));
       PrintStr(" stroke-width=\"");
       WriteReal(fLineWidth, kFALSE);
       PrintStr("\" fill=");
@@ -1009,7 +1009,7 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       PrintStr(">");
    } else {
       PrintStr("<g stroke=");
-      SetColor(Int_t(fMarkerColor));
+      SetColorAlpha(Int_t(fMarkerColor));
       PrintStr(" stroke-width=\"");
       WriteReal(fLineWidth, kFALSE);
       PrintStr("\" fill=\"none\"");
@@ -1441,7 +1441,7 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
    if (nn > 0 ) {
       if (xw[0] == xw[n-1] && yw[0] == yw[n-1]) PrintFast(1,"z");
       PrintFast(21,"\" fill=\"none\" stroke=");
-      SetColor(fLineColor);
+      SetColorAlpha(fLineColor);
       if(fLineWidth > 1.) {
          PrintFast(15," stroke-width=\"");
          WriteReal(fLineWidth, kFALSE);
@@ -1465,9 +1465,9 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
       PrintFast(8,"z\" fill=");
       if (fais == 0) {
          PrintFast(14,"\"none\" stroke=");
-         SetColor(fFillColor);
+         SetColorAlpha(fFillColor);
       } else {
-         SetColor(fFillColor);
+         SetColorAlpha(fFillColor);
       }
       PrintFast(2,"/>");
    }
@@ -1663,9 +1663,9 @@ void TSVG::SetMarkerColor( Color_t cindex )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set color with its color index
+/// Set RGBa color with its color index
 
-void TSVG::SetColor(Int_t color)
+void TSVG::SetColorAlpha(Int_t color)
 {
    if (color < 0) color = 0;
    TColor *col = gROOT->GetColor(color);
@@ -1673,6 +1673,20 @@ void TSVG::SetColor(Int_t color)
       SetColor(col->GetRed(), col->GetGreen(), col->GetBlue());
       Float_t a = col->GetAlpha();
       if (a<1.) PrintStr(Form(" fill-opacity=\"%3.2f\" stroke-opacity=\"%3.2f\"",a,a));
+   } else {
+      SetColor(1., 1., 1.);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set RGB (without alpha channel) color with its color index
+
+void TSVG::SetColor(Int_t color)
+{
+   if (color < 0) color = 0;
+   TColor *col = gROOT->GetColor(color);
+   if (col) {
+      SetColor(col->GetRed(), col->GetGreen(), col->GetBlue());
    } else {
       SetColor(1., 1., 1.);
    }
@@ -1785,7 +1799,7 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
       PrintFast(18," text-anchor=\"end\"");
    }
    PrintFast(6," fill=");
-   SetColor(Int_t(fTextColor));
+   SetColorAlpha(Int_t(fTextColor));
    PrintFast(12," font-size=\"");
    WriteReal(fontsize, kFALSE);
    PrintFast(15,"\" font-family=\"");
