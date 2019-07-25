@@ -343,7 +343,7 @@ Int_t SPlot::GetNumSWeightVars() const
 /// Method which adds the sWeights to the dataset.
 ///
 /// The SPlot will contain two new variables for each yield parameter:
-/// - `L_<varname>` is the value of the pdf for the variable "varname" for each event.
+/// - `L_<varname>` is the the likelihood for each event, *i.e.*, the pdf evaluated for the a given value of the variable "varname".
 /// - `<varname>_sw` is the value of the sWeight for the variable "varname" for each event.
 ///
 /// Find Parameters in the PDF to be considered fixed when calculating the SWeights

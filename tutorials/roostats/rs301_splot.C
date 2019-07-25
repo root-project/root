@@ -6,7 +6,7 @@
 /// This tutorial shows an example of using SPlot to unfold two distributions.
 /// The physics context for the example is that we want to know
 /// the isolation distribution for real electrons from Z events
-/// and fake electrons from QCD.  Isolation is our 'control' variable
+/// and fake electrons from QCD.  Isolation is our 'control' variable.
 /// To unfold them, we need a model for an uncorrelated variable that
 /// discriminates between Z and QCD.  To do this, we use the invariant
 /// mass of two electrons.  We model the Z with a Gaussian and the QCD
@@ -18,8 +18,8 @@
 /// not be needed if we had real data.
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \author Kyle Cranmer
 
@@ -40,6 +40,7 @@
 #include "RooFitResult.h"
 #include "RooWorkspace.h"
 #include "RooConstVar.h"
+#include <iomanip>
 
 // use this order for safety on library loading
 using namespace RooFit;
@@ -58,7 +59,7 @@ void rs301_splot()
    RooWorkspace *wspace = new RooWorkspace("myWS");
 
    // add the signal and background models to the workspace.
-   // Inside this function you will find a description our model.
+   // Inside this function you will find a description of our model.
    AddModel(wspace);
 
    // add some toy data to the workspace
@@ -68,7 +69,7 @@ void rs301_splot()
    //  wspace->Print();
 
    // do sPlot.
-   // This wil make a new dataset with sWeights added for every event.
+   // This will make a new dataset with sWeights added for every event.
    DoSPlot(wspace);
 
    // Make some plots showing the discriminating variable and
@@ -88,7 +89,7 @@ void AddModel(RooWorkspace *ws)
    // of signal and background -- this is only an example.
 
    // set range of observable
-   Double_t lowRange = 00, highRange = 200;
+   Double_t lowRange = 0., highRange = 200.;
 
    // make a RooRealVar for the observables
    RooRealVar invMass("invMass", "M_{inv}", lowRange, highRange, "GeV");
@@ -115,7 +116,7 @@ void AddModel(RooWorkspace *ws)
    RooExponential zIsolationModel("zIsolationModel", "z isolation model", isolation, zIsolDecayConst);
 
    // make the combined Z model
-   RooProdPdf zModel("zModel", "4-d model for Z", RooArgSet(mZModel, zIsolationModel));
+   RooProdPdf zModel("zModel", "2-d model for Z", RooArgSet(mZModel, zIsolationModel));
 
    // --------------------------------------
    // make QCD model
@@ -207,26 +208,34 @@ void DoSPlot(RooWorkspace *ws)
    // qcdMassDecayConst->setConstant();
 
    RooMsgService::instance().setSilentMode(true);
-
+   
+   std::cout << "\n\n------------------------------------------\nThe dataset before creating sWeights:\n";
+   data->Print();
+   
+   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
+   
    // Now we use the SPlot class to add SWeights to our data set
    // based on our model and our yield variables
    RooStats::SPlot *sData = new RooStats::SPlot("sData", "An SPlot", *data, model, RooArgList(*zYield, *qcdYield));
 
+   std::cout << "\n\nThe dataset after creating sWeights:\n";
+   data->Print();
+
    // Check that our weights have the desired properties
 
-   std::cout << "Check SWeights:" << std::endl;
+   std::cout << "\n\n------------------------------------------\n\nCheck SWeights:" << std::endl;
 
    std::cout << std::endl
-             << "Yield of Z is " << zYield->getVal() << ".  From sWeights it is "
+             << "Yield of Z is\t" << zYield->getVal() << ".  From sWeights it is "
              << sData->GetYieldFromSWeight("zYield") << std::endl;
 
-   std::cout << "Yield of QCD is " << qcdYield->getVal() << ".  From sWeights it is "
+   std::cout << "Yield of QCD is\t" << qcdYield->getVal() << ".  From sWeights it is "
              << sData->GetYieldFromSWeight("qcdYield") << std::endl
              << std::endl;
 
    for (Int_t i = 0; i < 10; i++) {
-      std::cout << "z Weight   " << sData->GetSWeight(i, "zYield") << "   qcd Weight   "
-                << sData->GetSWeight(i, "qcdYield") << "  Total Weight   " << sData->GetSumOfEventSWeight(i)
+      std::cout << "z Weight for event " << i << std::right << std::setw(12) << sData->GetSWeight(i, "zYield") << "  qcd Weight"
+                << std::setw(12) << sData->GetSWeight(i, "qcdYield") << "  Total Weight" << std::setw(12) << sData->GetSumOfEventSWeight(i)
                 << std::endl;
    }
 
@@ -235,6 +244,8 @@ void DoSPlot(RooWorkspace *ws)
    // import this new dataset with sWeights
    std::cout << "import new dataset with sWeights" << std::endl;
    ws->import(*data, Rename("dataWithSWeights"));
+   
+   RooMsgService::instance().setGlobalKillBelow(RooFit::INFO);
 }
 
 void MakePlots(RooWorkspace *ws)
@@ -261,19 +272,27 @@ void MakePlots(RooWorkspace *ws)
 
    // this shouldn't be necessary, need to fix something with workspace
    // do this to set parameters back to their fitted values.
-   model->fitTo(*data, Extended());
+//   model->fitTo(*data, Extended());
 
    // plot invMass for data with full model and individual components overlaid
    //  TCanvas* cdata = new TCanvas();
    cdata->cd(1);
    RooPlot *frame = invMass->frame();
    data->plotOn(frame);
-   model->plotOn(frame);
-   model->plotOn(frame, Components(*zModel), LineStyle(kDashed), LineColor(kRed));
-   model->plotOn(frame, Components(*qcdModel), LineStyle(kDashed), LineColor(kGreen));
+   model->plotOn(frame, Name("FullModel"));
+   model->plotOn(frame, Components(*zModel), LineStyle(kDashed), LineColor(kRed), Name("ZModel"));
+   model->plotOn(frame, Components(*qcdModel), LineStyle(kDashed), LineColor(kGreen), Name("QCDModel"));
+
+   TLegend leg(0.11, 0.5, 0.5, 0.8);
+   leg.AddEntry(frame->findObject("FullModel"), "Full model", "L");
+   leg.AddEntry(frame->findObject("ZModel"), "Z model", "L");
+   leg.AddEntry(frame->findObject("QCDModel"), "QCD model", "L");
+   leg.SetBorderSize(0);
+   leg.SetFillStyle(0);
 
    frame->SetTitle("Fit of model to discriminating variable");
    frame->Draw();
+   leg.DrawClone();
 
    // Now use the sWeights to show isolation distribution for Z and QCD.
    // The SPlot class can make this easier, but here we demonstrate in more
@@ -290,9 +309,10 @@ void MakePlots(RooWorkspace *ws)
    RooDataSet *dataw_z = new RooDataSet(data->GetName(), data->GetTitle(), data, *data->get(), 0, "zYield_sw");
 
    RooPlot *frame2 = isolation->frame();
+   // Since the data are weighted, we use SumW2 to compute the errors.
    dataw_z->plotOn(frame2, DataError(RooAbsData::SumW2));
 
-   frame2->SetTitle("isolation distribution for Z");
+   frame2->SetTitle("Isolation distribution with s weights to project out Z");
    frame2->Draw();
 
    // Plot isolation for QCD component.
@@ -304,7 +324,7 @@ void MakePlots(RooWorkspace *ws)
    RooPlot *frame3 = isolation->frame();
    dataw_qcd->plotOn(frame3, DataError(RooAbsData::SumW2));
 
-   frame3->SetTitle("isolation distribution for QCD");
+   frame3->SetTitle("Isolation distribution with s weights to project out QCD");
    frame3->Draw();
 
    //  cdata->SaveAs("SPlot.gif");
