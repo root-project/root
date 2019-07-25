@@ -92,7 +92,7 @@ endif()
 
 #---Install python modules--------------------------------------------------
 
-foreach(pyfile cppyy.py _pythonization.py ROOT.py)
+foreach(pyfile cppyy.py _pythonization.py ROOT.py _rdf_utils.py)
   install(FILES ${pyfile} DESTINATION ${runtimedir})
   if(IS_ABSOLUTE ${runtimedir})
     set(absruntimedir ${runtimedir})
