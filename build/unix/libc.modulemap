@@ -1,4 +1,4 @@
-module "libc" [system] {
+module "libc" [system] [extern_c] {
   export *
   module "assert.h" {
     export *
@@ -44,23 +44,23 @@ module "libc" [system] {
 
 // glib specific header. In it's own module because it
 // doesn't exist on some systems with unpatched glib 2.26+
-module "xlocale.h" [system] {
+module "xlocale.h" [system] [extern_c] {
   export *
   header "xlocale.h"
 }
 
 // System header that we have difficult with merging.
-module "sys_types.h" [system] {
+module "sys_types.h" [system] [extern_c] {
   export *
   header "sys/types.h"
 }
 
-module "signal.h" [system] {
+module "signal.h" [system] [extern_c] {
   export *
   header "signal.h"
 }
 
-module "stdlib.h" [system] {
+module "stdlib.h" [system] [extern_c] {
   export *
   header "stdlib.h"
 }
