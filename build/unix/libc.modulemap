@@ -55,12 +55,6 @@ module "xlocale.h" [system] [extern_c] {
   header "xlocale.h"
 }
 
-// System header that we have difficult with merging.
-module "sys_types.h" [system] [extern_c] {
-  export *
-  header "sys/types.h"
-}
-
 module "signal.h" [system] [extern_c] {
   export *
   header "signal.h"
