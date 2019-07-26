@@ -792,7 +792,7 @@ Bool_t RooAbsArg::observableOverlaps(const RooArgSet* nset, const RooAbsArg& tes
 /// change to all of our clients. If the object is not in automatic dirty
 /// state propagation mode, this call has no effect
 
-void RooAbsArg::setValueDirty(const RooAbsArg* source) const
+void RooAbsArg::setValueDirty(const RooAbsArg* source)
 {
   if (_operMode!=Auto || _inhibitDirty) return ;
 
@@ -834,7 +834,7 @@ void RooAbsArg::setValueDirty(const RooAbsArg* source) const
 /// Mark this object as having changed its shape, and propagate this status
 /// change to all of our clients.
 
-void RooAbsArg::setShapeDirty(const RooAbsArg* source) const
+void RooAbsArg::setShapeDirty(const RooAbsArg* source)
 {
   if (_verboseDirty) {
     cxcoutD(LinkStateMgmt) << "RooAbsArg::setShapeDirty(" << GetName()
@@ -2470,7 +2470,7 @@ void RooRefArray::Streamer(TBuffer &R__b)
    }
 }
 
-/// Print a RDataFrame at the prompt
+/// Print at the prompt
 namespace cling {
 std::string printValue(RooAbsArg *raa)
 {
