@@ -3,6 +3,7 @@
 *.pdf
 *.json
 callgrind.out.*
+*.png
 
 # Prerequisites
 *.d

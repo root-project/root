@@ -218,46 +218,5 @@
         { "nodeid": 14, "leaf": 0.089539364 }
       ]}
     ]}
-  ]},
-  { "nodeid": 0, "depth": 0, "split": "f1", "split_condition": 114.5, "yes": 1, "no": 2, "missing": 1, "children": [
-    { "nodeid": 1, "depth": 1, "split": "f0", "split_condition": 4.5, "yes": 3, "no": 4, "missing": 3, "children": [
-      { "nodeid": 3, "depth": 2, "split": "f3", "split_condition": 41.5, "yes": 7, "no": 8, "missing": 7, "children": [
-        { "nodeid": 7, "leaf": -0.0911733508 },
-        { "nodeid": 8, "leaf": 0.0100890277 }
-      ]},
-      { "nodeid": 4, "depth": 2, "split": "f4", "split_condition": 127.5, "yes": 9, "no": 10, "missing": 9, "children": [
-        { "nodeid": 9, "leaf": -0.0447440483 },
-        { "nodeid": 10, "leaf": 0.0455242433 }
-      ]}
-    ]},
-    { "nodeid": 2, "depth": 1, "split": "f1", "split_condition": 166.5, "yes": 5, "no": 6, "missing": 5, "children": [
-      { "nodeid": 5, "depth": 2, "split": "f2", "split_condition": 53, "yes": 11, "no": 12, "missing": 11, "children": [
-        { "nodeid": 11, "leaf": 0.0650451705 },
-        { "nodeid": 12, "leaf": -0.0151451919 }
-      ]},
-      { "nodeid": 6, "depth": 2, "split": "f3", "split_condition": 25.5, "yes": 13, "no": 14, "missing": 13, "children": [
-        { "nodeid": 13, "leaf": 0.00903311465 },
-        { "nodeid": 14, "leaf": 0.106379382 }
-      ]}
-    ]}
-  ]},
-  { "nodeid": 0, "depth": 0, "split": "f1", "split_condition": 101.5, "yes": 1, "no": 2, "missing": 1, "children": [
-    { "nodeid": 1, "depth": 1, "split": "f4", "split_condition": 170, "yes": 3, "no": 4, "missing": 3, "children": [
-      { "nodeid": 3, "depth": 2, "split": "f3", "split_condition": 30.5, "yes": 7, "no": 8, "missing": 7, "children": [
-        { "nodeid": 7, "leaf": -0.105527796 },
-        { "nodeid": 8, "leaf": -0.0314773135 }
-      ]},
-      { "nodeid": 4, "leaf": 0.0332234129 }
-    ]},
-    { "nodeid": 2, "depth": 1, "split": "f1", "split_condition": 144.5, "yes": 5, "no": 6, "missing": 5, "children": [
-      { "nodeid": 5, "depth": 2, "split": "f3", "split_condition": 34.5, "yes": 9, "no": 10, "missing": 9, "children": [
-        { "nodeid": 9, "leaf": -0.0317749493 },
-        { "nodeid": 10, "leaf": 0.0202491581 }
-      ]},
-      { "nodeid": 6, "depth": 2, "split": "f0", "split_condition": 6.5, "yes": 11, "no": 12, "missing": 11, "children": [
-        { "nodeid": 11, "leaf": 0.0186111815 },
-        { "nodeid": 12, "leaf": 0.0830915794 }
-      ]}
-    ]}
   ]}
 ]
