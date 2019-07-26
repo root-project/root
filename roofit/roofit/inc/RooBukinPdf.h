@@ -51,8 +51,7 @@ protected:
 
 private:
 
-  ClassDef(RooBukinPdf,1) // Variation of Novosibirsk PDF
-  double consts;
+  ClassDef(RooBukinPdf,2) // Variation of Novosibirsk PDF
 };
 
 #endif
