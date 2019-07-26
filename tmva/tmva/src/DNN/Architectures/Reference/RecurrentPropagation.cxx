@@ -252,6 +252,27 @@ auto TReference<Scalar_t>::GRULayerBackward(TMatrixT<Scalar_t> & state_gradients
 -> Matrix_t &
 {
 
+   //to do multiply by delh_t
+   TMatrixT<Scalar_t> reset_gradient(fUpdate);
+   TMatrixT<Scalar_t> tmpMul(precStateActivations);
+   tmpMul.Mult(dr, weights_candidate_state);
+   Hadamard(reset_gradient, tmpMul);
+   Hadamard(reset_gradient, dc);
+   Hadamard(reset_gradient, precStateActivations);
+
+   TMatrixT<Scalar_t> update_gradient(precStateActivations); // H X 1
+   for (size_t j = 0; j < (size_t) tmp.GetNcols(); j++) {
+      for (size_t i = 0; i < (size_t) tmp.GetNrows(); i++) {
+         tmp(i,j) = fCandidate(i,j) - tmp(i,j);
+      }
+   }
+   Hadamard(update_gradient, du);
+
+   TMatrixT<Scalar_t> candidate_gradient(fUpdate);
+   Hadamard(candidate_gradient, dc);
+   
+   
+
    return input_gradient;
 }
 
