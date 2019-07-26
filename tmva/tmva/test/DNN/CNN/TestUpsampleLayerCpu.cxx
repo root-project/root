@@ -46,21 +46,10 @@ int main()
         return -1;
     }
 
-    std::cout << "Test Forward-Propagation 2: " << std::endl;
-    if (!testUpsample2<TCpu<Scalar_t>>()) {
-        std::cerr << "ERROR - Forward-Propagation 2 failed " << std::endl;
-        return -1;
-    }
-
     std::cout << "Test Back-propagation 1: " << std::endl;
     if (!testBackward1<TCpu<Scalar_t>>()) {
         std::cerr << "ERROR - Back-propagation failed " << std::endl;
         return -1;
     }
 
-    std::cout << "Test Back-propagation 2: " << std::endl;
-    if (!testBackward2<TCpu<Scalar_t>>()) {
-        std::cerr << "ERROR - Back-propagation failed " << std::endl;
-        return -1;
-    }
 }

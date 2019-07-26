@@ -11,7 +11,7 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      Testing the Pooling layer in an architecture agnostic manner.             *
+ *      Testing the Upsample layer in an architecture agnostic manner.             *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Ashish Kshirsagar      <ashishkshirsagar10@gmail.com>                     *
@@ -42,8 +42,11 @@ using namespace TMVA::DNN::CNN;
 
 /*************************************************************************
  * Test 1:
+ *  batch size = 2
  *  input depth = 2, input image height = 3, input image width = 3,
  *  output depth = 4, output image height = 6, output image width = 6,
+ *  input depth = 2, input image height = 4, input image width = 2,
+ *  output depth = 4, output image height = 8, output image width = 2,
  *  zero-padding height = 0, zero-padding width = 0,
  *************************************************************************/
 template<typename Architecture>
@@ -77,112 +80,108 @@ bool testUpsample1()
        }
      };
 
-      size_t imgDepthTest1 = 2;
-      size_t imgHeightTest1 = 3;
-      size_t imgWidthTest1 = 3;
-      size_t answerDepthTest1 = 4;
-      size_t answerHeightTest1 = 6;
-      size_t answerWidthTest1 = 6;
+    double imgTest2[][8] =
+      {
+        {
+          212,  213,  213,  150,
+         227,  250,  250,  235
+       },
+        
+        {
+          255,  255,  192,  204,
+         153,  246,  246,  175
+       }
+      };
 
-      Matrix_t A(imgDepthTest1, imgHeightTest1 * imgWidthTest1);
-
-      for (size_t i = 0; i < (size_t)A.GetNrows(); i++) {
-          for (size_t j = 0; j < (size_t)A.GetNcols(); j++) {
-            A(i, j) = imgTest1[i][j];
-          }
-      }
-
-      Matrix_t B(answerDepthTest1, answerHeightTest1 * answerWidthTest1);
-
-      for (size_t i = 0; i < (size_t)B.GetNrows(); i++) {
-        for (size_t j = 0; j < (size_t)B.GetNcols(); j++) {
-            B(i, j) = answerTest1[i][j];
-        }
-      }
-
-      bool status = testUpsample<Architecture>(A, B);
-
-      return status;
-}
-
-/*************************************************************************
- * Test 2:
- *  input depth = 2, input image height = 4, input image width = 2,
- *  output depth = 4, output image height = 8, output image width = 2,
- *  zero-padding height = 0, zero-padding width = 0,
- *************************************************************************/
-template<typename Architecture>
-bool testUpsample2()
-{
-    using Matrix_t = typename Architecture::Matrix_t;
-
-  double imgTest2[][8] =
+    double answerTest2[][16] = 
     {
       {
-        212,  213,  213,  150,
-       227,  250,  250,  235
-     },
-      
+          212, 212, 213, 213, 213, 213, 150, 150, 
+          227, 227, 250, 250, 250, 250, 235, 235 
+      },
       {
-        255,  255,  192,  204,
-       153,  246,  246,  175
-     }
+          212, 212, 213, 213, 213, 213, 150, 150, 
+          227, 227, 250, 250, 250, 250, 235, 235 
+      },
+      {
+          255, 255, 255, 255, 192, 192, 204, 204, 
+          153, 153, 246, 246, 246, 246, 175, 175 
+      },
+      {
+          255, 255, 255, 255, 192, 192, 204, 204, 
+          153, 153, 246, 246, 246, 246, 175, 175
+      }
     };
 
+    size_t imgDepthTest1 = 2;
+    size_t imgHeightTest1 = 3;
+    size_t imgWidthTest1 = 3;
+    size_t answerDepthTest1 = 4;
+    size_t answerHeightTest1 = 6;
+    size_t answerWidthTest1 = 6;
+    size_t imgDepthTest2 = 2;
+    size_t imgHeightTest2 = 4;
+    size_t imgWidthTest2 = 2;
+    size_t answerDepthTest2 = 4;
+    size_t answerHeightTest2 = 8;
+    size_t answerWidthTest2 = 2;
 
 
-  double answerTest2[][16] = 
-  {
-    {
-        212, 212, 213, 213, 213, 213, 150, 150, 
-        227, 227, 250, 250, 250, 250, 235, 235 
-    },
-    {
-        212, 212, 213, 213, 213, 213, 150, 150, 
-        227, 227, 250, 250, 250, 250, 235, 235 
-    },
-    {
-        255, 255, 255, 255, 192, 192, 204, 204, 
-        153, 153, 246, 246, 246, 246, 175, 175 
-    },
-    {
-        255, 255, 255, 255, 192, 192, 204, 204, 
-        153, 153, 246, 246, 246, 246, 175, 175
-    }
-  };
+    Matrix_t A1(imgDepthTest1, imgHeightTest1 * imgWidthTest1);
 
-   size_t imgDepthTest2 = 2;
-   size_t imgHeightTest2 = 4;
-   size_t imgWidthTest2 = 2;
-   size_t answerDepthTest2 = 4;
-   size_t answerHeightTest2 = 8;
-   size_t answerWidthTest2 = 2;
-
-    Matrix_t A(imgDepthTest2, imgHeightTest2 * imgWidthTest2);
-
-    for (size_t i = 0; i < (size_t)A.GetNrows(); i++) {
-        for (size_t j = 0; j < (size_t)A.GetNcols(); j++) {
-            A(i, j) = imgTest2[i][j];
+    for (size_t i = 0; i < (size_t)A1.GetNrows(); i++) {
+        for (size_t j = 0; j < (size_t)A1.GetNcols(); j++) {
+          A1(i, j) = imgTest1[i][j];
         }
     }
 
-    Matrix_t B(answerDepthTest2, answerHeightTest2 * answerWidthTest2);
+    Matrix_t A2(imgDepthTest2, imgHeightTest2 * imgWidthTest2);
 
-    for (size_t i = 0; i < (size_t)B.GetNrows(); i++) {
-        for (size_t j = 0; j < (size_t)B.GetNcols(); j++) {
-            B(i, j) = answerTest2[i][j];
+    for (size_t i = 0; i < (size_t)A2.GetNrows(); i++) {
+        for (size_t j = 0; j < (size_t)A2.GetNcols(); j++) {
+            A2(i, j) = imgTest2[i][j];
         }
     }
 
-    bool status = testUpsample<Architecture>(A, B);
+    std::vector<Matrix_t> input;
+    input.emplace_back(A1);
+    input.emplace_back(A2);
+
+    Matrix_t B1(answerDepthTest1, answerHeightTest1 * answerWidthTest1);
+
+    for (size_t i = 0; i < (size_t)B1.GetNrows(); i++) {
+      for (size_t j = 0; j < (size_t)B1.GetNcols(); j++) {
+          B1(i, j) = answerTest1[i][j];
+      }
+    }
+
+    Matrix_t B2(answerDepthTest2, answerHeightTest2 * answerWidthTest2);
+
+    for (size_t i = 0; i < (size_t)B2.GetNrows(); i++) {
+        for (size_t j = 0; j < (size_t)B2.GetNcols(); j++) {
+            B2(i, j) = answerTest2[i][j];
+        }
+    }
+
+    std::vector<Matrix_t> output;
+    output.emplace_back(B1);
+    output.emplace_back(B2);
+
+    std::cout<<"Batch size "<<input.size()<<std::endl;
+
+    bool status = testUpsample<Architecture>(input, output);
 
     return status;
 }
 
+
 /*************************************************************************
  * Test 1:
+ *  batch size = 2
  *  input depth = 4, input image height = 8, input image width = 2,
  *  output depth = 2, output image height = 4, output image width = 2,
+ *  input depth = 4, input image height = 6, input image width = 6,
+ *  output depth = 2, output image height = 3, output image width = 3,
  *  zero-padding height = 0, zero-padding width = 0,
  *************************************************************************/
 template<typename Architecture>
@@ -225,46 +224,6 @@ bool testBackward1()
     }
   };
 
-   size_t imgDepthTest1 = 4;
-   size_t imgHeightTest1 = 8;
-   size_t imgWidthTest1 = 2;
-   size_t answerDepthTest1 = 2;
-   size_t answerHeightTest1 = 4;
-   size_t answerWidthTest1 = 2;
-
-
-    Matrix_t A(imgDepthTest1, imgHeightTest1 * imgWidthTest1);
-
-    for (size_t i = 0; i < (size_t)A.GetNrows(); i++) {
-        for (size_t j = 0; j < (size_t)A.GetNcols(); j++) {
-            A(i, j) = imgTest1[i][j];
-        }
-    }
-
-    Matrix_t B(answerDepthTest1, answerHeightTest1 * answerWidthTest1);
-
-    for (size_t i = 0; i < (size_t)B.GetNrows(); i++) {
-        for (size_t j = 0; j < (size_t)B.GetNcols(); j++) {
-            B(i, j) = answerTest1[i][j];
-        }
-    }
-
-    bool status = testUpsampleBackward<Architecture>(A, B);
-
-    return status;
-}
-
-/*************************************************************************
- * Test 2:
- *  input depth = 4, input image height = 6, input image width = 6,
- *  output depth = 2, output image height = 3, output image width = 3,
- *  zero-padding height = 0, zero-padding width = 0,
- *************************************************************************/
-template<typename Architecture>
-bool testBackward2()
-{
-    using Matrix_t = typename Architecture::Matrix_t;
-
     double imgTest2[][36] = 
     {
       {
@@ -291,6 +250,12 @@ bool testBackward2()
       }
     };
 
+    size_t imgDepthTest1 = 4;
+    size_t imgHeightTest1 = 8;
+    size_t imgWidthTest1 = 2;
+    size_t answerDepthTest1 = 2;
+    size_t answerHeightTest1 = 4;
+    size_t answerWidthTest1 = 2;
     size_t imgDepthTest2 = 4;
     size_t imgHeightTest2 = 6;
     size_t imgWidthTest2 = 6;
@@ -298,23 +263,48 @@ bool testBackward2()
     size_t answerHeightTest2 = 3;
     size_t answerWidthTest2 = 3;
 
-    Matrix_t A(imgDepthTest2, imgHeightTest2 * imgWidthTest2);
 
-    for (size_t i = 0; i < (size_t)A.GetNrows(); i++) {
-        for (size_t j = 0; j < (size_t)A.GetNcols(); j++) {
-            A(i, j) = imgTest2[i][j];
+    Matrix_t A1(imgDepthTest1, imgHeightTest1 * imgWidthTest1);
+
+    for (size_t i = 0; i < (size_t)A1.GetNrows(); i++) {
+        for (size_t j = 0; j < (size_t)A1.GetNcols(); j++) {
+            A1(i, j) = imgTest1[i][j];
         }
     }
 
-    Matrix_t B(answerDepthTest2, answerHeightTest2 * answerWidthTest2);
+    Matrix_t A2(imgDepthTest2, imgHeightTest2 * imgWidthTest2);
 
-    for (size_t i = 0; i < (size_t)B.GetNrows(); i++) {
-        for (size_t j = 0; j < (size_t)B.GetNcols(); j++) {
-            B(i, j) = answerTest2[i][j];
+    for (size_t i = 0; i < (size_t)A2.GetNrows(); i++) {
+        for (size_t j = 0; j < (size_t)A2.GetNcols(); j++) {
+            A2(i, j) = imgTest2[i][j];
         }
     }
 
-    bool status = testUpsampleBackward<Architecture>(A, B);
+    std::vector<Matrix_t> input;
+    input.emplace_back(A1);
+    input.emplace_back(A2);
+    
+    Matrix_t B1(answerDepthTest1, answerHeightTest1 * answerWidthTest1);
+
+    for (size_t i = 0; i < (size_t)B1.GetNrows(); i++) {
+        for (size_t j = 0; j < (size_t)B1.GetNcols(); j++) {
+            B1(i, j) = answerTest1[i][j];
+        }
+    }
+
+    Matrix_t B2(answerDepthTest2, answerHeightTest2 * answerWidthTest2);
+
+    for (size_t i = 0; i < (size_t)B2.GetNrows(); i++) {
+        for (size_t j = 0; j < (size_t)B2.GetNcols(); j++) {
+            B2(i, j) = answerTest2[i][j];
+        }
+    }
+    
+    std::vector<Matrix_t> output;
+    output.emplace_back(B1);
+    output.emplace_back(B2);
+
+    bool status = testUpsampleBackward<Architecture>(input,output);
 
     return status;
 }

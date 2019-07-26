@@ -165,15 +165,17 @@ auto testPoolingBackward(const typename Architecture::Matrix_t &input, const typ
 + *  is equal to B, and if the winning indices are equal to the matrix ind. */
 //______________________________________________________________________________
 template <typename Architecture>
-auto testUpsample(const typename Architecture::Matrix_t &input, const typename Architecture::Matrix_t &output) -> bool 
+auto testUpsample(const std::vector<typename Architecture::Matrix_t> &input, const std::vector<typename Architecture::Matrix_t> &output) -> bool 
 {
+
+  for(size_t v_i = 0; v_i < input.size(); v_i++){
     size_t m1,n1;
-    m1 = input.GetNrows();
-    n1 = input.GetNcols();
+    m1 = input[v_i].GetNrows();
+    n1 = input[v_i].GetNcols();
 
     size_t m2,n2;
-    m2 = output.GetNrows();
-    n2 = output.GetNcols();
+    m2 = output[v_i].GetNrows();
+    n2 = output[v_i].GetNcols();
 
     std::cout<<m1<<", "<<n1<<" & "<<m2<<", "<<n2<<std::endl;
 
@@ -183,7 +185,7 @@ auto testUpsample(const typename Architecture::Matrix_t &input, const typename A
       std::cout<<"Output Matrix"<<std::endl;
       for ( size_t i = 0; i < m2; i++){
         for ( size_t j = 0; j < n2; j++){
-          std::cout<<output(i,j)<<" ";
+          std::cout<<output[v_i](i,j)<<" ";
         }
         std::cout<<std::endl;
       }
@@ -192,7 +194,7 @@ auto testUpsample(const typename Architecture::Matrix_t &input, const typename A
       std::cout<<"Input Matrix"<<std::endl;
       for ( size_t i = 0; i < m1; i++){
         for ( size_t j = 0; j < n1; j++){
-          std::cout<<input(i,j)<<" ";
+          std::cout<<input[v_i](i,j)<<" ";
         }
         std::cout<<std::endl;
       }
@@ -203,7 +205,7 @@ auto testUpsample(const typename Architecture::Matrix_t &input, const typename A
 
       std::vector< typename Architecture::Matrix_t > AOutput;
 
-      Architecture::Upsample(AUpVector,input);
+      Architecture::Upsample(AUpVector,input[v_i]);
 
       std::cout<<"AUpVector output"<<std::endl;
       for ( size_t i = 0; i < m2; i++){
@@ -218,33 +220,39 @@ auto testUpsample(const typename Architecture::Matrix_t &input, const typename A
       for ( size_t i = 0; i < m2; i++){
         for ( size_t j = 0; j < n2; j++){
           std::cout<<AUpVector[0](i,j)<<" ";
-          if ( AUpVector[0](i,j) != output(i,j) ){
+          if ( AUpVector[0](i,j) != output[v_i](i,j) ){
             return false;
           }
         }
         std::cout<<std::endl;
       }
       std::cout<<std::endl;
-      return true;
+      
     }
     else{
       return false;
     }
+
+  }
+  return true;
 }
 
 /** Back propagate the activation gradients through the upsample layer and check whether the
 + * computed gradients are equal to the matrix A. */
 //______________________________________________________________________________
 template <typename Architecture>
-auto testUpsampleBackward(const typename Architecture::Matrix_t &input, const typename Architecture::Matrix_t &output) -> bool 
+auto testUpsampleBackward(const std::vector<typename Architecture::Matrix_t> &input, const std::vector<typename Architecture::Matrix_t> &output) -> bool 
 {
+
+  for(size_t v_i = 0; v_i < input.size(); v_i++){
+
     size_t m1,n1;
-    m1 = input.GetNrows();
-    n1 = input.GetNcols();
+    m1 = input[v_i].GetNrows();
+    n1 = input[v_i].GetNcols();
 
     size_t m2,n2;
-    m2 = output.GetNrows();
-    n2 = output.GetNcols();
+    m2 = output[v_i].GetNrows();
+    n2 = output[v_i].GetNcols();
 
     std::cout<<m1<<", "<<n1<<" & "<<m2<<", "<<n2<<std::endl;
 
@@ -254,7 +262,7 @@ auto testUpsampleBackward(const typename Architecture::Matrix_t &input, const ty
       std::cout<<"Output Matrix"<<std::endl;
       for ( size_t i = 0; i < m2; i++){
         for ( size_t j = 0; j < n2; j++){
-          std::cout<<output(i,j)<<" ";
+          std::cout<<output[v_i](i,j)<<" ";
         }
         std::cout<<std::endl;
       }
@@ -263,7 +271,7 @@ auto testUpsampleBackward(const typename Architecture::Matrix_t &input, const ty
       std::cout<<"Input Matrix"<<std::endl;
       for ( size_t i = 0; i < m1; i++){
         for ( size_t j = 0; j < n1; j++){
-          std::cout<<input(i,j)<<" ";
+          std::cout<<input[v_i](i,j)<<" ";
         }
         std::cout<<std::endl;
       }
@@ -274,24 +282,26 @@ auto testUpsampleBackward(const typename Architecture::Matrix_t &input, const ty
 
       std::vector< typename Architecture::Matrix_t > AOutput;
 
-      Architecture::UpsampleLayerBackward(AVector,input);
+      Architecture::UpsampleLayerBackward(AVector,input[v_i]);
 
       std::cout<<"Verifying output"<<std::endl;
       for ( size_t i = 0; i < m2; i++){
         for ( size_t j = 0; j < n2; j++){
           std::cout<<AVector[0](i,j)<<" ";
-          if ( AVector[0](i,j) != output(i,j) ){
+          if ( AVector[0](i,j) != output[v_i](i,j) ){
             return false;
           }
         }
         std::cout<<std::endl;
       }
       std::cout<<std::endl;
-      return true;
+      
     }
     else{
       return false;
     }
+  }
+  return true;
 }
 
 /** Reshape the matrix A using the Reshape function and compare it to
@@ -392,8 +402,10 @@ auto testTransConvLayerForward(const std::vector<typename Architecture::Matrix_t
                           size_t fltWidth, size_t numberFilters, size_t strideRows, size_t strideCols,
                           size_t zeroPaddingHeight, size_t zeroPaddingWidth) -> bool
 {
-    size_t nRows = expectedOutput[0].GetNrows();
-    size_t nCols = expectedOutput[0].GetNcols();
+   for(size_t v_i = 0; v_i < expectedOutput.size(); v_i++)
+   {
+    size_t nRows = expectedOutput[v_i].GetNrows();
+    size_t nCols = expectedOutput[v_i].GetNcols();
     // batchSize == 1.
     std::vector<typename Architecture::Matrix_t> computedOutput;
     computedOutput.emplace_back(nRows, nCols);
@@ -418,9 +430,10 @@ auto testTransConvLayerForward(const std::vector<typename Architecture::Matrix_t
 
     for (size_t slice = 0; slice < nRows; slice++) {
         for (size_t localView = 0; localView < nCols; localView++) {
-            if (expectedOutput[0](slice, localView) != computedOutput[0](slice, localView)) return false;
+            if (expectedOutput[v_i](slice, localView) != computedOutput[v_i](slice, localView)) return false;
         }
     }
+  }
     return true;
 }
 
@@ -432,8 +445,10 @@ auto testTransConvLayerBackward(const std::vector<typename Architecture::Matrix_
                           size_t fltWidth, size_t numberFilters, size_t strideRows, size_t strideCols,
                           size_t zeroPaddingHeight, size_t zeroPaddingWidth) -> bool
 {
-    size_t nRows = expectedOutput[0].GetNrows();
-    size_t nCols = expectedOutput[0].GetNcols();
+   for(size_t v_i = 0 ; v_i < expectedOutput.size(); v_i++)
+   {
+    size_t nRows = expectedOutput[v_i].GetNrows();
+    size_t nCols = expectedOutput[v_i].GetNcols();
     // batchSize == 1.
     std::vector<typename Architecture::Matrix_t> computedOutput;
     computedOutput.emplace_back(nRows, nCols);
@@ -458,9 +473,11 @@ auto testTransConvLayerBackward(const std::vector<typename Architecture::Matrix_
 
     for (size_t slice = 0; slice < nRows; slice++) {
         for (size_t localView = 0; localView < nCols; localView++) {
-            if (expectedOutput[0](slice, localView) != computedOutput[0](slice, localView)) return false;
+            if (expectedOutput[v_i](slice, localView) != computedOutput[v_i](slice, localView)) return false;
         }
     }
+
+  }
     return true;
 }
 
