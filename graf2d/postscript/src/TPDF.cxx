@@ -872,14 +872,14 @@ void TPDF::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
          MoveTo(ix-m6, iy-m6);
          LineTo(ix-m6, iy-m2);
       }
-   }
 
-   if ((ms > 19 && ms < 24) || ms == 29 || ms == 33 || ms == 34 ||
-       ms == 39 || ms == 41 || ms == 43 || ms == 45 ||
-       ms == 47 || ms == 48 || ms == 49) {
-      PrintFast(2," f");
-   } else {
-      PrintFast(2," S");
+      if ((ms > 19 && ms < 24) || ms == 29 || ms == 33 || ms == 34 ||
+          ms == 39 || ms == 41 || ms == 43 || ms == 45 ||
+          ms == 47 || ms == 48 || ms == 49) {
+         PrintFast(2," f");
+      } else {
+         PrintFast(2," S");
+      }
    }
 
    SetLineStyle(linestylesav);
@@ -1172,14 +1172,13 @@ void TPDF::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          MoveTo(ix-1, iy);
          LineTo(ix  , iy);
       }
-   }
-
-   if ((ms > 19 && ms < 24) || ms == 29 || ms == 33 || ms == 34 ||
-       ms == 39 || ms == 41 || ms == 43 || ms == 45 ||
-       ms == 47 || ms == 48 || ms == 49) {
-      PrintFast(2," f");
-   } else {
-      PrintFast(2," S");
+      if ((ms > 19 && ms < 24) || ms == 29 || ms == 33 || ms == 34 ||
+          ms == 39 || ms == 41 || ms == 43 || ms == 45 ||
+          ms == 47 || ms == 48 || ms == 49) {
+         PrintFast(2," f");
+      } else {
+         PrintFast(2," S");
+      }
    }
 
    SetLineStyle(linestylesav);
