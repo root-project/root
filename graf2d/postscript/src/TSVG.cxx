@@ -593,15 +593,11 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
 
    // Draw the marker according to the type
    PrintStr("@");
-   if ((ms > 19 && ms < 24) || ms == 29 || ms == 33 || ms == 34 ||//) {
+   if ((ms > 19 && ms < 24) || ms == 29 || ms == 33 || ms == 34 ||
        ms == 39 || ms == 41 || ms == 43 || ms == 45 ||
        ms == 47 || ms == 48 || ms == 49) {
-      PrintStr("<g stroke=");
+      PrintStr("<g fill=");
       SetColorAlpha(Int_t(fMarkerColor));
-      PrintStr(" stroke-width=\"");
-      WriteReal(fLineWidth, kFALSE);
-      PrintStr("\" fill=");
-      SetColor(Int_t(fMarkerColor));
       PrintStr(">");
    } else {
       PrintStr("<g stroke=");
@@ -997,15 +993,11 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 
    // Draw the marker according to the type
    PrintStr("@");
-   if ((ms > 19 && ms < 24) || ms == 29 || ms == 33 || ms == 34 ||//) {
+   if ((ms > 19 && ms < 24) || ms == 29 || ms == 33 || ms == 34 ||
        ms == 39 || ms == 41 || ms == 43 || ms == 45 ||
        ms == 47 || ms == 48 || ms == 49) {
-      PrintStr("<g stroke=");
+      PrintStr("<g fill=");
       SetColorAlpha(Int_t(fMarkerColor));
-      PrintStr(" stroke-width=\"");
-      WriteReal(fLineWidth, kFALSE);
-      PrintStr("\" fill=");
-      SetColor(Int_t(fMarkerColor));
       PrintStr(">");
    } else {
       PrintStr("<g stroke=");
