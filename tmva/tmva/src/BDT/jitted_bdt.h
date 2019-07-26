@@ -67,6 +67,8 @@ void generate_code_bdt(std::ostream& fout,
        << " inference of a single tree" << std::endl;
   fout << std::endl << std::endl;
 
+  fout << "#pragma cling optimize(3)" << std::endl << std::endl;
+
   //fout << "#include <vector>" << std::endl;
   if (use_namespaces){
     // add "s_" to have a valid name
@@ -74,7 +76,7 @@ void generate_code_bdt(std::ostream& fout,
   }
 
   fout << "float generated_tree_" << std::to_string(tree_number)
-       << "(std::vector<float> event){" << std::endl;
+       << "(const std::vector<float>& event){" << std::endl;
   fout << "float result = 0; // variable to store the result" << std::endl;
 
   generate_if_statement_for_bdt(fout, tree.nodes.get());

@@ -44,7 +44,7 @@ public:
          this->events_vector = read_csv(this->events_file);
       }
    }
-   std::vector<bool> do_predictions(std::vector<std::vector<float>> events_vector)
+   std::vector<bool> do_predictions(const std::vector<std::vector<float>> &events_vector)
    {
 
       // preds.clear();
@@ -144,7 +144,7 @@ void Forest<std::function<float(std::vector<float>)>>::get_Forest(std::string js
 
 template <>
 std::vector<bool> Forest<std::function<float(std::vector<float>)>>::do_predictions(
-   std::vector<std::vector<float>> events_vector)
+   const std::vector<std::vector<float>> &events_vector)
 {
    // preds.clear();
    std::vector<bool>  preds;

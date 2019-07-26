@@ -38,7 +38,7 @@ public:
    std::unique_ptr<Node> child_true;
    std::unique_ptr<Node> child_false;
 
-   float inference(std::vector<float> event)
+   float inference(const std::vector<float> &event)
    {
       if (this->is_leaf_node) {
          return ((event[split_variable] < split_threshold) ? leaf_true : leaf_false);
@@ -58,7 +58,7 @@ public:
 class Tree {
 public:
    std::unique_ptr<Node> nodes;
-   float                 inference(std::vector<float> event) { return nodes->inference(event); }
+   float                 inference(const std::vector<float> &event) { return nodes->inference(event); }
 };
 
 // Reading functions
@@ -69,3 +69,32 @@ void                  read_nodes_from_tree(json const &jTree, Tree &tree);
 
 #endif
 // end
+/*
+5 features
+7 trees
+P: 0.216
+0.022
+0.025
+0.069
+
+9 trees
+0.221
+0.028 ms
+0.029 ms
+0.124 ms
+
+1 tree
+0.1979
+0.011
+0.012
+0.020 ms
+
+3 trees
+0.213
+0.016
+0.017
+0.036
+
+
+
+*/

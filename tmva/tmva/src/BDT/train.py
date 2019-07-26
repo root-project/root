@@ -21,7 +21,7 @@ import xgboost as xgb
 dataset = np.loadtxt("pima-indians-diabetes.data.csv", delimiter=",")
 
 # split data into X and y
-num_features = 4  # max is 8
+num_features = 5  # max is 8
 X = dataset[:, 0:num_features]
 Y = dataset[:, 8]
 # print(X)
@@ -35,20 +35,20 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 # fit model no training data
-model = xgb.XGBClassifier(n_estimators=4)
+model = xgb.XGBClassifier(n_estimators=10)
 model.fit(X_train, y_train)
 
 # make predictions for test data
 """
 
-it_number = 100
+it_number = 100_000
 my_time = timeit.timeit("model.predict(X_test)", setup=setup, number=it_number)
 print(f"{my_time / it_number * 1000}  ms")
 # load data
 dataset = np.loadtxt("pima-indians-diabetes.data.csv", delimiter=",")
 
 # split data into X and y
-num_features = 4  # max is 8
+num_features = 5  # max is 8
 X = dataset[:, 0:num_features]
 Y = dataset[:, 8]
 # print(X)
@@ -62,7 +62,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 # fit model no training data
-model = xgb.XGBClassifier(n_estimators=4)
+model = xgb.XGBClassifier(n_estimators=10)
 model.fit(X_train, y_train)
 
 # make predictions for test data

@@ -98,21 +98,20 @@ BENCHMARK(BM_EvalUniqueBdt)->Unit(benchmark::kMillisecond);
 /// Benchmark eval array_bdts
 static void BM_EvalArrayBdt(benchmark::State &state)
 {
+
+   Forest<array_bdt::Tree> Forest;
+
+   Forest.get_Forest("model.json");
+   std::vector<bool> preds;
+   preds.clear();
+   std::string events_file = "./data_files/events.csv";
+   std::string preds_file  = "./data_files/test.csv";
+
+   std::vector<std::vector<float>> events_vector = read_csv(events_file);
    for (auto _ : state) { // only bench what is inside the loop
-
-      Forest<array_bdt::Tree> Forest;
-
-      Forest.get_Forest("model.json");
-      std::vector<bool> preds;
-      preds.clear();
-      std::string events_file = "./data_files/events.csv";
-      std::string preds_file  = "./data_files/test.csv";
-
-      std::vector<std::vector<float>> events_vector = read_csv(events_file);
-
       preds = Forest.do_predictions(events_vector);
-      write_csv(preds_file, preds);
    }
+   write_csv(preds_file, preds);
 }
 BENCHMARK(BM_EvalArrayBdt)->Unit(benchmark::kMillisecond);
 
