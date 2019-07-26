@@ -1,9 +1,15 @@
-/* -*- mode: c++ -*- *********************************************************
+/*****************************************************************************
  * Project: RooFit                                                           *
  *                                                                           *
  * authors:                                                                  *
  *  Lydia Brenner (lbrenner@cern.ch), Carsten Burgard (cburgard@cern.ch)     *
  *  Katharina Ecker (kecker@cern.ch), Adam Kaluza      (akaluza@cern.ch)     *
+ * Copyright (c) 2000-2007, Regents of the University of California          *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
 #ifndef ROO_LAGRANGIAN_MORPH
@@ -497,7 +503,7 @@ class RooSMEFTggfMorphFunc : public RooLagrangianMorphFunc {
   protected:
   void makeCouplings(){
     RooArgSet kappas("ggf");
-    this->setup(kappas,RooLagrangianMorphing::makeSMEFTggFCouplings(kappas),true);
+    this->setup(kappas,RooLagrangianMorphing::makeSMEFTggfCouplings(kappas),true);
   }
 };
 class RooSMEFTggfMorphPdf : public RooLagrangianMorphPdf {
@@ -515,7 +521,7 @@ class RooSMEFTvbfMorphFunc : public RooLagrangianMorphFunc {
   protected:
   void makeCouplings(){
     RooArgSet kappas("vbf");
-    this->setup(kappas,RooLagrangianMorphing::makeSMEFTVBFCouplings(kappas),true);
+    this->setup(kappas,RooLagrangianMorphing::makeSMEFTvbfCouplings(kappas),true);
   }
 };
 class RooSMEFTvbfMorphPdf : public RooLagrangianMorphPdf {
@@ -524,7 +530,7 @@ class RooSMEFTvbfMorphPdf : public RooLagrangianMorphPdf {
   protected:
   void makeCouplings(){
     RooArgSet kappas("vbf");
-    this->setup(kappas,RooLagrangianMorphing::makeSMEFTVBFCouplings(kappas),true);
+    this->setup(kappas,RooLagrangianMorphing::makeSMEFTvbfCouplings(kappas),true);
   }
 };
 
@@ -534,7 +540,7 @@ class RooSMEFTggfWWMorphFunc : public RooLagrangianMorphFunc {
   protected:
   void makeCouplings(){
     RooArgSet kappas("ggfWW");
-    this->setup(kappas,RooLagrangianMorphing::makeSMEFTggFCouplings(kappas),RooLagrangianMorphing::makeSMEFTHWWCouplings(kappas),true);
+    this->setup(kappas,RooLagrangianMorphing::makeSMEFTggfCouplings(kappas),RooLagrangianMorphing::makeSMEFTHWWCouplings(kappas),true);
   }
 };
 class RooSMEFTggfWWMorphPdf : public RooLagrangianMorphPdf {
@@ -543,7 +549,7 @@ class RooSMEFTggfWWMorphPdf : public RooLagrangianMorphPdf {
   protected:
   void makeCouplings(){
     RooArgSet kappas("ggfWW");
-    this->setup(kappas,RooLagrangianMorphing::makeSMEFTggFCouplings(kappas),RooLagrangianMorphing::makeSMEFTHWWCouplings(kappas),true);
+    this->setup(kappas,RooLagrangianMorphing::makeSMEFTggfCouplings(kappas),RooLagrangianMorphing::makeSMEFTHWWCouplings(kappas),true);
   }
 };
 
@@ -553,7 +559,7 @@ class RooSMEFTvbfWWMorphFunc : public RooLagrangianMorphFunc {
   protected:
   void makeCouplings(){
     RooArgSet kappas("vbfWW");
-    this->setup(kappas,RooLagrangianMorphing::makeSMEFTVBFCouplings(kappas),RooLagrangianMorphing::makeSMEFTHWWCouplings(kappas),true);
+    this->setup(kappas,RooLagrangianMorphing::makeSMEFTvbfCouplings(kappas),RooLagrangianMorphing::makeSMEFTHWWCouplings(kappas),true);
   }
 };
 class RooSMEFTvbfWWMorphPdf : public RooLagrangianMorphPdf {
@@ -562,20 +568,28 @@ class RooSMEFTvbfWWMorphPdf : public RooLagrangianMorphPdf {
   protected:
   void makeCouplings(){
     RooArgSet kappas("vbfWW");
-    this->setup(kappas,RooLagrangianMorphing::makeSMEFTVBFCouplings(kappas),RooLagrangianMorphing::makeSMEFTHWWCouplings(kappas),true);
+    this->setup(kappas,RooLagrangianMorphing::makeSMEFTvbfCouplings(kappas),RooLagrangianMorphing::makeSMEFTHWWCouplings(kappas),true);
   }
 };
 
 #ifndef __CINT__
 ClassImp(RooSMEFTggfMorphFunc)
 ClassImp(RooSMEFTvbfMorphFunc) 
+ClassImp(RooSMEFTzhlepMorphFunc)
+ClassImp(RooSMEFTwhlepMorphFunc)
+ClassImp(RooSMEFTtthMorphFunc)
+
 ClassImp(RooSMEFTggfMorphPdf)
 ClassImp(RooSMEFTvbfMorphPdf) 
+ClassImp(RooSMEFTzhlepMorphPdf)
+ClassImp(RooSMEFTwhlepMorphPdf)
+ClassImp(RooSMEFTtthMorphPdf)
 
 ClassImp(RooSMEFTggfWWMorphFunc)
 ClassImp(RooSMEFTvbfWWMorphFunc) 
+
 ClassImp(RooSMEFTggfWWMorphPdf)
-ClassImp(RooSMEFTvbfWWMorphPdf) 
+ClassImp(RooSMEFTvbfWWMorphPdf)
 #endif
 
 #endif
