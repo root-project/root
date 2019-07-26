@@ -641,7 +641,7 @@ auto inline TBasicGRULayer<Architecture_t>::AddWeightsXMLTo(void *parent)
    auto layerxml = gTools().xmlengine().NewChild(parent, 0, "GRULayer");
     
    // Write all other info like outputSize, cellSize, inputSize, timeSteps, rememberState
-   gTools().xmlengine().NewAttr(layerxml, 0, "OutputSize", gTools().StringFromInt(this->GetStateSize()));
+   gTools().xmlengine().NewAttr(layerxml, 0, "StateSize", gTools().StringFromInt(this->GetStateSize()));
    gTools().xmlengine().NewAttr(layerxml, 0, "InputSize", gTools().StringFromInt(this->GetInputSize()));
    gTools().xmlengine().NewAttr(layerxml, 0, "TimeSteps", gTools().StringFromInt(this->GetTimeSteps()));
    gTools().xmlengine().NewAttr(layerxml, 0, "RememberState", gTools().StringFromInt(this->DoesRememberState()));
