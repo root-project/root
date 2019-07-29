@@ -12,19 +12,17 @@
 #ifndef ROOSTATS_CONFIGPARSER_h
 #define ROOSTATS_CONFIGPARSER_h
 
-
-#include <cstdlib>
-#include <string>
-#include <TXMLNode.h>
-
-#include "TList.h"
-#include "TFile.h"
-#include "TXMLAttr.h"
-
 #include "RooStats/HistFactory/Channel.h"
 #include "RooStats/HistFactory/Measurement.h"
 #include "RooStats/HistFactory/Sample.h"
 
+#include "TList.h"
+#include "TFile.h"
+#include "TXMLAttr.h"
+#include <TXMLNode.h>
+
+#include <cstdlib>
+#include <string>
 
 namespace RooStats{
    namespace HistFactory {
