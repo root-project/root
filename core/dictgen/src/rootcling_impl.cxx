@@ -6039,8 +6039,7 @@ int ROOT_rootcling_Driver(int argc, char **argv, const ROOT::Internal::RootCling
 
    gDriverConfig = nullptr;
 
-   auto nerrors = ROOT::TMetaUtils::GetNumberOfErrors();
-   if (nerrors > 0){
+   if (ROOT::TMetaUtils::GetNumberOfErrors()){
       ROOT::TMetaUtils::Info(0,"Problems have been detected during the generation of the dictionary.\n");
       return 1;
    }
