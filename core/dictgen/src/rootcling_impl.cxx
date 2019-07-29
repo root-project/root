@@ -3736,7 +3736,6 @@ static void MaybeSuppressWin32CrashDialogs() {
 
 int RootClingMain(int argc,
               char **argv,
-              bool isDeep = false,
               bool isGenreflex = false)
 {
    // Copied from cling driver.
@@ -5150,7 +5149,6 @@ namespace genreflex {
                        const std::string &rootmapLibName,
                        bool interpreteronly,
                        bool doSplit,
-                       bool isDeep,
                        bool isCxxmodule,
                        bool writeEmptyRootPCM,
                        bool selSyntaxOnly,
@@ -5274,8 +5272,7 @@ namespace genreflex {
       char **argv =  & (argvVector[0]);
       int rootclingReturnCode = RootClingMain(argc,
                                               argv,
-                                              isDeep,
-                                              true);
+                                              /*isGenReflex=*/true);
 
       for (int i = 0; i < argc; i++)
          delete [] argvVector[i];
@@ -5301,7 +5298,6 @@ namespace genreflex {
                            const std::string &rootmapLibName,
                            bool interpreteronly,
                            bool doSplit,
-                           bool isDeep,
                            bool isCxxmodule,
                            bool writeEmptyRootPCM,
                            bool selSyntaxOnly,
@@ -5338,7 +5334,6 @@ namespace genreflex {
                                           rootmapLibName,
                                           interpreteronly,
                                           doSplit,
-                                          isDeep,
                                           isCxxmodule,
                                           writeEmptyRootPCM,
                                           selSyntaxOnly,
@@ -5966,9 +5961,6 @@ int GenReflexMain(int argc, char **argv)
    int returnValue = 0;
    std::string ofileName(options[OFILENAME] ? options[OFILENAME].arg : "");
 
-   // Now check if the --deep option was selected
-   bool isDeep = false; //options[DEEP];
-
    // If not empty and not a directory (therefore it's a file)
    // call rootcling directly. The number of headers files is irrelevant.
    if (!ofileName.empty() && !llvm::sys::fs::is_directory(ofileName)) {
@@ -5985,7 +5977,6 @@ int GenReflexMain(int argc, char **argv)
                                     rootmapLibName,
                                     interpreteronly,
                                     doSplit,
-                                    isDeep,
                                     isCxxmodule,
                                     writeEmptyRootPCM,
                                     selSyntaxOnly,
@@ -6008,7 +5999,6 @@ int GenReflexMain(int argc, char **argv)
                                         rootmapLibName,
                                         interpreteronly,
                                         doSplit,
-                                        isDeep,
                                         isCxxmodule,
                                         writeEmptyRootPCM,
                                         selSyntaxOnly,
