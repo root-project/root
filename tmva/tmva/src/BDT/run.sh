@@ -53,4 +53,4 @@ rm ./mybenchmark.exe
 #make -f makefile_bench.make distclean
 make -f makefile_bench.make
 #g++ -std=c++11 -isystem benchmark/include -Lbuild/src benchmark.cxx -lbenchmark -lpthread -O2 -o mybenchmark.exe
-./mybenchmark.exe --benchmark_repetitions=10 --benchmark_filter=Bdt --benchmark_format=console
+./mybenchmark.exe --benchmark_repetitions=1 --benchmark_filter=Bdt --benchmark_format=console

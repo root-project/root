@@ -123,7 +123,7 @@ void Forest<std::function<float(std::vector<float>)>>::get_Forest(std::string js
    s_trees.resize(number_of_trees);
    time_t      my_time          = time(0);
    std::string s_namespace_name = std::to_string(this->counter) + std::to_string(my_time);
-   std::cout << "current time used as namespace: " << s_namespace_name << std::endl;
+   // std::cout << "current time used as namespace: " << s_namespace_name << std::endl;
 
    for (int i = 0; i < number_of_trees; i++) {
       std::stringstream ss;

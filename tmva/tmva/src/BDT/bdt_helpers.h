@@ -28,14 +28,14 @@ T vec_sum(std::vector<T> vec)
 
 /// logistic function
 template <class T>
-T logistic_function(T value)
+inline T logistic_function(T value)
 {
    return 1. / (1. + (1. / std::exp(value)));
 }
 
 /// binary logistic
 template <class T>
-bool binary_logistic(T value)
+inline bool binary_logistic(T value)
 {
    return (logistic_function(value) > 0.5) ? 1 : 0;
 }

@@ -16,12 +16,6 @@ using json = nlohmann::json;
 
 namespace unique_bdt {
 class Node {
-private:
-   // int depth;
-   // int missing; // what is missing?
-   // int child_id_true;
-   // int child_id_false;
-   // int node_id;
 
 public:
    static int count;
@@ -47,12 +41,6 @@ public:
                                                            : child_false->inference(event));
       }
    }
-
-   // friend void swap(Node &first, Node& second);
-   // Node& operator= (const Node& other);
-   // Node& operator=(Node other);
-   // Node& operator=(Node&& other);
-   // Node& operator=(const Node&& other);
 };
 
 class Tree {
@@ -69,32 +57,3 @@ void                  read_nodes_from_tree(json const &jTree, Tree &tree);
 
 #endif
 // end
-/*
-5 features
-7 trees
-P: 0.216
-0.022
-0.025
-0.069
-
-9 trees
-0.221
-0.028 ms
-0.029 ms
-0.124 ms
-
-1 tree
-0.1979
-0.011
-0.012
-0.020 ms
-
-3 trees
-0.213
-0.016
-0.017
-0.036
-
-
-
-*/
