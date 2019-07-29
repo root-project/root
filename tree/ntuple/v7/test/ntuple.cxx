@@ -519,9 +519,13 @@ TEST(RNTuple, Descriptor)
 {
    RNTupleDescriptorBuilder descBuilder;
    descBuilder.SetNTuple("MyTuple", "Description", RNTupleVersion(1, 2, 3), ROOT::Experimental::RNTupleUuid());
+   descBuilder.AddField(1, RNTupleVersion(), RNTupleVersion(), "list", "std::vector<std::int32_t>",
+                        ENTupleStructure::kCollection);
+   descBuilder.AddField(2, RNTupleVersion(), RNTupleVersion(), "list", "std::int32_t", ENTupleStructure::kLeaf);
    descBuilder.AddField(42, RNTupleVersion(), RNTupleVersion(), "x", "std::string", ENTupleStructure::kLeaf);
-   descBuilder.AddColumn(3, 42, RNTupleVersion(), RColumnModel("idx_x", EColumnType::kIndex, true));
-   descBuilder.AddColumn(4, 42, RNTupleVersion(), RColumnModel("x", EColumnType::kByte, true));
+   descBuilder.SetFieldParent(2, 1);
+   descBuilder.AddColumn(3, 42, RNTupleVersion(), RColumnModel("idx_x", EColumnType::kIndex, true), 0);
+   descBuilder.AddColumn(4, 42, RNTupleVersion(), RColumnModel("x", EColumnType::kByte, true), 1);
 
    ROOT::Experimental::RClusterDescriptor::RColumnRange columnRange;
    ROOT::Experimental::RClusterDescriptor::RPageRange pageRange;
@@ -597,6 +601,13 @@ TEST(RNTuple, Descriptor)
    reco.SetFromHeader(headerBuffer);
    reco.AddClustersFromFooter(footerBuffer);
    EXPECT_EQ(reference, reco.GetDescriptor());
+
+   auto model = RNTupleModel::Create();
+   model->MakeField<std::vector<std::int32_t>>("list");
+   model->MakeField<std::string>("x");
+   for (const auto &f : *model->GetRootField()) {
+      EXPECT_NE(ROOT::Experimental::kInvalidDescriptorId, reference.FindFieldId(f));
+   }
 
    delete[] footerBuffer;
    delete[] headerBuffer;
