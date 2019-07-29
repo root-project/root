@@ -332,9 +332,9 @@ BUILDTABLE     := @buildtable@
 BUILDTMVA      := @buildtmva@
 
 BUILDHTTP      := @buildhttp@
-USEFASCGI      := @usefastcgi@
-FASTCGIINCDIR  := @fastcgiincdir@
-ifeq ($(USEFASCGI), no)
+USEFASTCGI     := @buildfcgi@
+FASTCGIINCDIR  := @fcgiincdir@
+ifeq ($(USEFASTCGI), no)
 FASTCGIFLAGS   := -DHTTP_WITHOUT_FASTCGI
 endif
 
