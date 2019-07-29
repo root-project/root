@@ -79,7 +79,7 @@ ROOT::Experimental::Detail::RPageSinkRoot::AddColumn(const RColumn &column)
 
    /// We use the fact the AddColumn is called during Create() just after the field that corresponds to the
    /// current set of columns has been added.
-   fDescriptorBuilder.AddColumn(fLastColumnId, fLastFieldId, column.GetVersion(), column.GetModel());
+   fDescriptorBuilder.AddColumn(fLastColumnId, fLastFieldId, column.GetVersion(), column.GetModel(), column.GetIndex());
 
    //printf("Added column %s type %d\n", columnHeader.fName.c_str(), (int)columnHeader.fType);
    auto columnId = fLastColumnId++;

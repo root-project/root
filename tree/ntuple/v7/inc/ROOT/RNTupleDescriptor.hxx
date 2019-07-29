@@ -26,6 +26,9 @@
 
 namespace ROOT {
 namespace Experimental {
+namespace Detail {
+class RFieldBase;
+}
 
 class RNTupleDescriptorBuilder;
 
@@ -208,6 +211,8 @@ public:
    std::size_t GetNFields() const { return fFieldDescriptors.size(); }
    std::size_t GetNColumns() const { return fColumnDescriptors.size(); }
    std::size_t GetNClusters() const { return fClusterDescriptors.size(); }
+
+   DescriptorId_t FindFieldId(const Detail::RFieldBase &field) const;
 };
 
 
@@ -231,7 +236,7 @@ public:
    void AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId);
 
    void AddColumn(DescriptorId_t columnId, DescriptorId_t fieldId,
-                  const RNTupleVersion &version, const RColumnModel &model);
+                  const RNTupleVersion &version, const RColumnModel &model, std::uint32_t index);
    void SetColumnOffset(DescriptorId_t columnId, DescriptorId_t offsetId);
    void AddColumnLink(DescriptorId_t columnId, DescriptorId_t linkId);
 

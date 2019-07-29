@@ -13,6 +13,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <ROOT/RField.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RStringView.hxx>
@@ -23,12 +24,10 @@
 #include <cstring>
 #include <iostream>
 
-namespace ROOT {
-namespace Experimental {
-
 namespace {
 
-std::uint32_t SerializeInt64(std::int64_t val, void* buffer) {
+std::uint32_t SerializeInt64(std::int64_t val, void* buffer)
+{
    if (buffer != nullptr) {
       auto bytes = reinterpret_cast<unsigned char *>(buffer);
       bytes[0] = (val & 0x00000000000000FF);
@@ -44,12 +43,14 @@ std::uint32_t SerializeInt64(std::int64_t val, void* buffer) {
 }
 
 
-std::uint32_t SerializeUInt64(std::uint64_t val, void* buffer) {
+std::uint32_t SerializeUInt64(std::uint64_t val, void* buffer)
+{
    return SerializeInt64(val, buffer);
 }
 
 
-std::uint32_t DeserializeInt64(void* buffer, std::int64_t *val) {
+std::uint32_t DeserializeInt64(void* buffer, std::int64_t *val)
+{
    auto bytes = reinterpret_cast<unsigned char *>(buffer);
    *val = std::int64_t(bytes[0]) + (std::int64_t(bytes[1]) << 8) +
           (std::int64_t(bytes[2]) << 16) + (std::int64_t(bytes[3]) << 24) +
@@ -59,12 +60,14 @@ std::uint32_t DeserializeInt64(void* buffer, std::int64_t *val) {
 }
 
 
-std::uint32_t DeserializeUInt64(void* buffer, std::uint64_t *val) {
+std::uint32_t DeserializeUInt64(void* buffer, std::uint64_t *val)
+{
    return DeserializeInt64(buffer, reinterpret_cast<std::int64_t*>(val));
 }
 
 
-std::uint32_t SerializeInt32(std::int32_t val, void* buffer) {
+std::uint32_t SerializeInt32(std::int32_t val, void* buffer)
+{
    if (buffer != nullptr) {
       auto bytes = reinterpret_cast<unsigned char *>(buffer);
       bytes[0] = (val & 0x000000FF);
@@ -76,12 +79,14 @@ std::uint32_t SerializeInt32(std::int32_t val, void* buffer) {
 }
 
 
-std::uint32_t SerializeUInt32(std::uint32_t val, void* buffer) {
+std::uint32_t SerializeUInt32(std::uint32_t val, void* buffer)
+{
    return SerializeInt32(val, buffer);
 }
 
 
-std::uint32_t DeserializeInt32(void* buffer, std::int32_t *val) {
+std::uint32_t DeserializeInt32(void* buffer, std::int32_t *val)
+{
    auto bytes = reinterpret_cast<unsigned char *>(buffer);
    *val = std::int32_t(bytes[0]) + (std::int32_t(bytes[1]) << 8) +
           (std::int32_t(bytes[2]) << 16) + (std::int32_t(bytes[3]) << 24);
@@ -89,12 +94,14 @@ std::uint32_t DeserializeInt32(void* buffer, std::int32_t *val) {
 }
 
 
-std::uint32_t DeserializeUInt32(void* buffer, std::uint32_t *val) {
+std::uint32_t DeserializeUInt32(void* buffer, std::uint32_t *val)
+{
    return DeserializeInt32(buffer, reinterpret_cast<std::int32_t*>(val));
 }
 
 
-std::uint32_t SerializeString(const std::string &val, void* buffer) {
+std::uint32_t SerializeString(const std::string &val, void* buffer)
+{
    if (buffer != nullptr) {
       auto pos = reinterpret_cast<unsigned char *>(buffer);
       pos += SerializeUInt32(val.length(), pos);
@@ -103,7 +110,8 @@ std::uint32_t SerializeString(const std::string &val, void* buffer) {
    return SerializeUInt32(val.length(), nullptr) + val.length();
 }
 
-std::uint32_t DeserializeString(void* buffer, std::string *val) {
+std::uint32_t DeserializeString(void* buffer, std::string *val)
+{
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto bytes = base;
    std::uint32_t length;
@@ -113,7 +121,8 @@ std::uint32_t DeserializeString(void* buffer, std::string *val) {
    return bytes + length - base;
 }
 
-std::uint32_t SerializeVersion(const RNTupleVersion &val, void* buffer) {
+std::uint32_t SerializeVersion(const ROOT::Experimental::RNTupleVersion &val, void* buffer)
+{
    if (buffer != nullptr) {
       auto pos = reinterpret_cast<unsigned char *>(buffer);
       pos += SerializeUInt32(val.GetVersionUse(), pos);
@@ -123,7 +132,8 @@ std::uint32_t SerializeVersion(const RNTupleVersion &val, void* buffer) {
    return 16;
 }
 
-std::uint32_t DeserializeVersion(void* buffer, RNTupleVersion *version) {
+std::uint32_t DeserializeVersion(void* buffer, ROOT::Experimental::RNTupleVersion *version)
+{
    auto bytes = reinterpret_cast<unsigned char *>(buffer);
    std::uint32_t versionUse;
    std::uint32_t versionMin;
@@ -131,11 +141,12 @@ std::uint32_t DeserializeVersion(void* buffer, RNTupleVersion *version) {
    bytes += DeserializeUInt32(bytes, &versionUse);
    bytes += DeserializeUInt32(bytes, &versionMin);
    bytes += DeserializeUInt64(bytes, &flags);
-   *version = RNTupleVersion(versionUse, versionMin, flags);
+   *version = ROOT::Experimental::RNTupleVersion(versionUse, versionMin, flags);
    return 16;
 }
 
-std::uint32_t SerializeField(const RFieldDescriptor &val, void* buffer) {
+std::uint32_t SerializeField(const ROOT::Experimental::RFieldDescriptor &val, void* buffer)
+{
    auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
@@ -154,7 +165,8 @@ std::uint32_t SerializeField(const RFieldDescriptor &val, void* buffer) {
    return pos - base;
 }
 
-std::uint32_t SerializeColumn(const RColumnDescriptor &val, void* buffer) {
+std::uint32_t SerializeColumn(const ROOT::Experimental::RColumnDescriptor &val, void* buffer)
+{
    auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
@@ -179,7 +191,7 @@ std::uint32_t SerializeColumn(const RColumnDescriptor &val, void* buffer) {
 ////////////////////////////////////////////////////////////////////////////////
 
 
-bool RFieldDescriptor::operator==(const RFieldDescriptor &other) const {
+bool ROOT::Experimental::RFieldDescriptor::operator==(const RFieldDescriptor &other) const {
    return fFieldId == other.fFieldId &&
           fFieldVersion == other.fFieldVersion &&
           fTypeVersion == other.fTypeVersion &&
@@ -195,7 +207,7 @@ bool RFieldDescriptor::operator==(const RFieldDescriptor &other) const {
 ////////////////////////////////////////////////////////////////////////////////
 
 
-bool RColumnDescriptor::operator==(const RColumnDescriptor &other) const {
+bool ROOT::Experimental::RColumnDescriptor::operator==(const RColumnDescriptor &other) const {
    return fColumnId == other.fColumnId &&
           fVersion == other.fVersion &&
           fModel == other.fModel &&
@@ -209,7 +221,7 @@ bool RColumnDescriptor::operator==(const RColumnDescriptor &other) const {
 ////////////////////////////////////////////////////////////////////////////////
 
 
-bool RClusterDescriptor::operator==(const RClusterDescriptor &other) const {
+bool ROOT::Experimental::RClusterDescriptor::operator==(const RClusterDescriptor &other) const {
    return fClusterId == other.fClusterId &&
           fVersion == other.fVersion &&
           fFirstEntryIndex == other.fFirstEntryIndex &&
@@ -222,7 +234,7 @@ bool RClusterDescriptor::operator==(const RClusterDescriptor &other) const {
 ////////////////////////////////////////////////////////////////////////////////
 
 
-bool RNTupleDescriptor::operator==(const RNTupleDescriptor &other) const {
+bool ROOT::Experimental::RNTupleDescriptor::operator==(const RNTupleDescriptor &other) const {
    return fName == other.fName &&
           fDescription == other.fDescription &&
           fVersion == other.fVersion &&
@@ -234,7 +246,7 @@ bool RNTupleDescriptor::operator==(const RNTupleDescriptor &other) const {
 }
 
 
-std::uint32_t RNTupleDescriptor::SerializeHeader(void* buffer) const
+std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeHeader(void* buffer) const
 {
    auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
    auto pos = base;
@@ -262,7 +274,7 @@ std::uint32_t RNTupleDescriptor::SerializeHeader(void* buffer) const
    return size;
 }
 
-std::uint32_t RNTupleDescriptor::SerializeFooter(void* buffer) const
+std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeFooter(void* buffer) const
 {
    auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
    auto pos = base;
@@ -306,10 +318,27 @@ std::uint32_t RNTupleDescriptor::SerializeFooter(void* buffer) const
 }
 
 
+ROOT::Experimental::DescriptorId_t
+ROOT::Experimental::RNTupleDescriptor::FindFieldId(const Detail::RFieldBase &field) const
+{
+   DescriptorId_t parentId = kInvalidDescriptorId;
+   if (field.GetParent() != nullptr)
+      parentId = FindFieldId(*field.GetParent());
+   for (const auto &fd : fFieldDescriptors) {
+      if (fd.second.GetParentId() == parentId &&
+          fd.second.GetFieldName() == Detail::RFieldBase::GetLeafName(field.GetName()))
+      {
+         return fd.second.GetId();
+      }
+   }
+   return kInvalidDescriptorId;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 
-void RNTupleDescriptorBuilder::SetFromHeader(void* headerBuffer) {
+void ROOT::Experimental::RNTupleDescriptorBuilder::SetFromHeader(void* headerBuffer) {
    auto pos = reinterpret_cast<unsigned char *>(headerBuffer);
    std::uint32_t byteProtocol;
    pos += DeserializeUInt32(pos, &byteProtocol);
@@ -379,7 +408,7 @@ void RNTupleDescriptorBuilder::SetFromHeader(void* headerBuffer) {
 }
 
 
-void RNTupleDescriptorBuilder::AddClustersFromFooter(void* footerBuffer) {
+void ROOT::Experimental::RNTupleDescriptorBuilder::AddClustersFromFooter(void* footerBuffer) {
    auto pos = reinterpret_cast<unsigned char *>(footerBuffer);
    std::uint32_t byteProtocol;
    pos += DeserializeUInt32(pos, &byteProtocol);
@@ -430,7 +459,7 @@ void RNTupleDescriptorBuilder::AddClustersFromFooter(void* footerBuffer) {
 }
 
 
-void RNTupleDescriptorBuilder::SetNTuple(
+void ROOT::Experimental::RNTupleDescriptorBuilder::SetNTuple(
    const std::string_view &name, const std::string_view &description, const RNTupleVersion &version,
    const RNTupleUuid &uuid)
 {
@@ -441,7 +470,7 @@ void RNTupleDescriptorBuilder::SetNTuple(
    fDescriptor.fGroupUuid = uuid;
 }
 
-void RNTupleDescriptorBuilder::AddField(
+void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(
    DescriptorId_t fieldId, const RNTupleVersion &fieldVersion, const RNTupleVersion &typeVersion,
    std::string_view fieldName, std::string_view typeName, ENTupleStructure structure)
 {
@@ -455,38 +484,40 @@ void RNTupleDescriptorBuilder::AddField(
    fDescriptor.fFieldDescriptors[fieldId] = f;
 }
 
-void RNTupleDescriptorBuilder::SetFieldParent(DescriptorId_t fieldId, DescriptorId_t parentId)
+void ROOT::Experimental::RNTupleDescriptorBuilder::SetFieldParent(DescriptorId_t fieldId, DescriptorId_t parentId)
 {
    fDescriptor.fFieldDescriptors[fieldId].fParentId = parentId;
 }
 
-void RNTupleDescriptorBuilder::AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId)
+void ROOT::Experimental::RNTupleDescriptorBuilder::AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId)
 {
    fDescriptor.fFieldDescriptors[fieldId].fLinkIds.push_back(linkId);
 }
 
-void RNTupleDescriptorBuilder::AddColumn(
-   DescriptorId_t columnId, DescriptorId_t fieldId, const RNTupleVersion &version, const RColumnModel &model)
+void ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(
+   DescriptorId_t columnId, DescriptorId_t fieldId, const RNTupleVersion &version, const RColumnModel &model,
+   std::uint32_t index)
 {
    RColumnDescriptor c;
    c.fColumnId = columnId;
    c.fFieldId = fieldId;
    c.fVersion = version;
    c.fModel = model;
+   c.fIndex = index;
    fDescriptor.fColumnDescriptors[columnId] = c;
 }
 
-void RNTupleDescriptorBuilder::SetColumnOffset(DescriptorId_t columnId, DescriptorId_t offsetId)
+void ROOT::Experimental::RNTupleDescriptorBuilder::SetColumnOffset(DescriptorId_t columnId, DescriptorId_t offsetId)
 {
    fDescriptor.fColumnDescriptors[columnId].fOffsetId = offsetId;
 }
 
-void RNTupleDescriptorBuilder::AddColumnLink(DescriptorId_t columnId, DescriptorId_t linkId)
+void ROOT::Experimental::RNTupleDescriptorBuilder::AddColumnLink(DescriptorId_t columnId, DescriptorId_t linkId)
 {
    fDescriptor.fColumnDescriptors[columnId].fLinkIds.push_back(linkId);
 }
 
-void RNTupleDescriptorBuilder::AddCluster(
+void ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(
    DescriptorId_t clusterId, RNTupleVersion version, NTupleSize_t firstEntryIndex, ClusterSize_t nEntries)
 {
    RClusterDescriptor c;
@@ -497,17 +528,14 @@ void RNTupleDescriptorBuilder::AddCluster(
    fDescriptor.fClusterDescriptors[clusterId] = c;
 }
 
-void RNTupleDescriptorBuilder::AddClusterColumnRange(
+void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterColumnRange(
    DescriptorId_t clusterId, const RClusterDescriptor::RColumnRange &columnRange)
 {
    fDescriptor.fClusterDescriptors[clusterId].fColumnRanges[columnRange.fColumnId] = columnRange;
 }
 
-void RNTupleDescriptorBuilder::AddClusterPageRange(
+void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterPageRange(
    DescriptorId_t clusterId, const RClusterDescriptor::RPageRange &pageRange)
 {
    fDescriptor.fClusterDescriptors[clusterId].fPageRanges[pageRange.fColumnId] = pageRange;
 }
-
-} // namespace Experimental
-} // namespace ROOT
