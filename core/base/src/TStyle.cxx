@@ -400,11 +400,17 @@ TStyle::~TStyle()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor.
+/// Copy constructor and assignment operator.
 
 TStyle::TStyle(const TStyle &style) : TNamed(style), TAttLine(style), TAttFill(style), TAttMarker(style), TAttText(style)
 {
    ((TStyle&)style).Copy(*this);
+}
+
+TStyle& TStyle::operator=(const TStyle& style)
+{
+   ((TStyle&)style).Copy(*this);
+   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

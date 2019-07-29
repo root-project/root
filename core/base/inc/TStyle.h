@@ -141,6 +141,7 @@ public:
    TStyle();
    TStyle(const char *name, const char *title);
    TStyle(const TStyle &style);
+   TStyle& operator=(const TStyle& style);
    virtual          ~TStyle();
    inline Int_t     AxisChoice(Option_t *axis) const {
       // Return axis number (1 for X, 2 for Y, 3 for Z)
