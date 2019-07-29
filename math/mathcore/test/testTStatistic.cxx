@@ -33,10 +33,13 @@ void testTStatistic(Int_t n = 10000)
    double sum = 0; // Sum of values in the vector
    double eps_sum = eps_min_max;
 
+   double weighted_sum = 0; // Sum of (value*weight) pairs in the vector
+
    for (Int_t i = 0; i < n; ++i) {
       min = (xx[i] < min) ? xx[i] : min;
       max = (xx[i] > max) ? xx[i] : max;
       sum += xx[i];
+      weighted_sum += xx[i] * ww[i];
    }
 
    TStopwatch stp;
@@ -52,7 +55,12 @@ void testTStatistic(Int_t n = 10000)
    if (!TMath::AreEqualAbs(st0.GetMin(), min, eps_min_max) )   { Error("TestTStatistic-GetMin","Different value obtained for the unweighted data"); error = true; }
    if (!TMath::AreEqualAbs(st0.GetMax(), max, eps_min_max) )   { Error("TestTStatistic-GetMax","Different value obtained for the unweighted data"); error = true; }
    if (!TMath::AreEqualAbs(st0.GetSum(), sum, eps_sum)) {
-      Error("TestTStatistic-GetMax", "Different value obtained for the unweighted data");
+      Error("TestTStatistic-GetSum", "Different value obtained for the unweighted data");
+      error = true;
+   }
+   // fM and fSum should hold the same value in the unweighted test
+   if (!TMath::AreEqualAbs(st0.GetM(), sum, eps_sum)) {
+      Error("TestTStatistic-GetM", "Different value obtained for the unweighted data");
       error = true;
    }
    if (error) printf("Failed\n");
@@ -81,13 +89,17 @@ void testTStatistic(Int_t n = 10000)
 
    // Test using Weights
    printf("\nTest using Weights :                ");
-   error = false; 
+   error = false;
    stp.Start();
    TStatistic st1("st1", n, xx.data(), ww.data());
    stp.Stop();
 
    if (!TMath::AreEqualAbs(st1.GetMean(),true_mean, eps1) )  {  Error("TestTStatistic-GetMean","Different value obtained for the weighted data"); error = true; }
    if (!TMath::AreEqualAbs(st1.GetRMS(),true_sigma, eps2) )  {  Error("TestTStatistic-GetRMS","Different value obtained for the weighted data"); error = true; }
+   if (!TMath::AreEqualAbs(st1.GetM(), weighted_sum, eps_sum)) {
+      Error("TestTStatistic-GetM", "Different value obtained for the weighted data");
+      error = true;
+   }
 
    if (error) printf("Failed\n");
    else

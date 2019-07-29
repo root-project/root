@@ -74,10 +74,11 @@ TStatistic::~TStatistic()
 ///
 /// The minimum(maximum) is computed by checking that the fill value is either
 /// less(greater) than the current minimum(maximum).
-void TStatistic::Fill(Double_t val, Double_t w) {
+void TStatistic::Fill(Double_t val, Double_t w)
+{
 
-
-   if (w == 0) return;
+   if (w == 0)
+      return;
    // Increase data count
    fN++;
 
@@ -93,19 +94,19 @@ void TStatistic::Fill(Double_t val, Double_t w) {
 
    // Check sum of weights
    if (tW == 0) {
-      Warning("Fill","Sum of weights is zero - ignore current data point");
+      Warning("Fill", "Sum of weights is zero - ignore current data point");
       fN--;
       return;
    }
 
    if (fW != 0) { // From the second time
-      Double_t rr = ( tW * val - fM);
+      Double_t rr = (tW * val - fM);
       fM2 += w * rr * rr / (tW * fW);
    }
    // Update sum of weights in the TStatistic object
    fW = tW;
    // Update sum of weights squared
-   fW2 += w*w;
+   fW2 += w * w;
    // Update sum of values
    fSum += val;
 }
@@ -113,19 +114,21 @@ void TStatistic::Fill(Double_t val, Double_t w) {
 ////////////////////////////////////////////////////////////////////////////////
 /// \brief Print the content of the object
 ///
-/// Prints the statistics held by the object in one line. These include the
-/// mean, mean error, RMS, the total number of values and their sum, the minimum
-/// and the maximum.
-void TStatistic::Print(Option_t *) const {
+/// Prints the statistics held by the object in one line. These include the mean,
+/// mean error, RMS, the total number of values, their sum (both unweighted and
+/// weighted), the minimum and the maximum.
+void TStatistic::Print(Option_t *) const
+{
    TROOT::IndentLevel();
-   Printf("OBJ: TStatistic\t %s \t Mean = %.5g +- %.4g \t RMS = %.5g \t Count = %lld \t Sum = %.5g \t Min = %.5g \t "
-          "Max = %.5g",
-          fName.Data(), GetMean(), GetMeanErr(), GetRMS(), GetN(), GetSum(), GetMin(), GetMax());
+   Printf("OBJ: TStatistic\t %s \t Mean = %.5g +- %.4g \t RMS = %.5g \t Count = %lld \t Sum(values) = %.5g \t"
+          "Sum(weighted values) = %.5g \t Min = %.5g \t Max = %.5g",
+          fName.Data(), GetMean(), GetMeanErr(), GetRMS(), GetN(), GetSum(), GetM(), GetMin(), GetMax());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \brief Merge implementation of TStatistic
 /// \param[in] in Other TStatistic objects to be added to the current one
+/// \return The number of TStatistic objects that have been merged
 ///
 /// The function merges the statistics of all objects together to form a new
 /// one. Merging quantities is done via simple addition for the following class
@@ -142,11 +145,13 @@ void TStatistic::Print(Option_t *) const {
 /// The minimum(maximum) is updated by checking that the minimum(maximum) of
 /// the next TStatistic object in the queue is either less(greater) than the
 /// current minimum(maximum).
-Int_t TStatistic::Merge(TCollection *in) {
+Int_t TStatistic::Merge(TCollection *in)
+{
 
    // Let's organise the list of objects to merge excluding the empty ones
-   std::vector<TStatistic*> statPtrs;
-   if (this->fN != 0LL) statPtrs.push_back(this);
+   std::vector<TStatistic *> statPtrs;
+   if (this->fN != 0LL)
+      statPtrs.push_back(this);
    TStatistic *statPtr;
    for (auto o : *in) {
       if ((statPtr = dynamic_cast<TStatistic *>(o)) && statPtr->fN != 0LL) {
@@ -158,7 +163,8 @@ Int_t TStatistic::Merge(TCollection *in) {
    const auto nStatsPtrs = statPtrs.size();
 
    // Early return possible in case nothing has been filled
-   if (nStatsPtrs == 0) return 0;
+   if (nStatsPtrs == 0)
+      return 0;
 
    // Merge the statistic quantities into local variables to then
    // update the data members of this object
@@ -196,5 +202,4 @@ Int_t TStatistic::Merge(TCollection *in) {
    fSum = Sum;
 
    return nStatsPtrs;
-
 }

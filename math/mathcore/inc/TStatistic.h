@@ -12,7 +12,6 @@
 #ifndef ROOT_TStatistic
 #define ROOT_TStatistic
 
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TStatistic                                                           //
@@ -23,27 +22,23 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TObject.h"
-
 #include "TCollection.h"
-
 #include "TMath.h"
-
 #include "TString.h"
-
 #include "TROOT.h"
 
 class TStatistic : public TObject {
 
 private:
-   TString     fName;    ///< Name given to the TStatistic object
-   Long64_t    fN;       ///< Number of fills
-   Double_t    fW;       ///< Sum of weights
-   Double_t    fW2;      ///< Sum of squared weights
-   Double_t    fM;       ///< Sum of elements (i.e. sum of (val * weight) pairs
-   Double_t    fM2;      ///< Second order momentum
-   Double_t    fMin;     ///< Minimum value in the Tstatistic object
-   Double_t    fMax;     ///< Maximum value in the TStatistic object
-   Double_t fSum;        ///< Sum of the values in the TStatistic object
+   TString fName; ///< Name given to the TStatistic object
+   Long64_t fN;   ///< Number of fills
+   Double_t fW;   ///< Sum of weights
+   Double_t fW2;  ///< Sum of squared weights
+   Double_t fM;   ///< Sum of elements (i.e. sum of (val * weight)) pairs
+   Double_t fM2;  ///< Second order momentum
+   Double_t fMin; ///< Minimum value in the Tstatistic object
+   Double_t fMax; ///< Maximum value in the TStatistic object
+   Double_t fSum; ///< Sum of the values in the TStatistic object
 
 public:
    TStatistic(const char *name = "")
@@ -55,21 +50,26 @@ public:
    ~TStatistic();
 
    // Getters
-   const char    *GetName() const { return fName; }
-   ULong_t        Hash() const { return fName.Hash(); }
+   const char *GetName() const { return fName; }
+   ULong_t Hash() const { return fName.Hash(); }
 
-   inline       Long64_t GetN() const { return fN; }
-   inline       Long64_t GetNeff() const { return fW*fW/fW2; }
-   inline       Double_t GetM2() const { return fM2; }
-   inline       Double_t GetMean() const { return (fW > 0) ? fM/fW : 0; }
-   inline       Double_t GetMeanErr() const { return  (fW > 0.) ?  TMath::Sqrt( GetVar()/ GetNeff() ) : 0; }
-   inline       Double_t GetRMS() const { double var = GetVar(); return (var>0) ? TMath::Sqrt(var) : -1; }
-   inline       Double_t GetVar() const { return (fW>0) ? ( (fN>1) ? (fM2 / fW)*(fN / (fN-1.)) : 0 ) : -1; }
-   inline       Double_t GetW() const { return fW; }
-   inline       Double_t GetW2() const { return fW2; }
-   inline       Double_t GetMin() const { return fMin; }
-   inline       Double_t GetMax() const { return fMax; }
+   inline Long64_t GetN() const { return fN; }
+   inline Long64_t GetNeff() const { return fW * fW / fW2; }
+   inline Double_t GetM() const { return fM; }
+   inline Double_t GetM2() const { return fM2; }
+   inline Double_t GetMean() const { return (fW > 0) ? fM / fW : 0; }
+   inline Double_t GetMeanErr() const { return (fW > 0.) ? TMath::Sqrt(GetVar() / GetNeff()) : 0; }
+   inline Double_t GetVar() const { return (fW > 0) ? ((fN > 1) ? (fM2 / fW) * (fN / (fN - 1.)) : 0) : -1; }
+   inline Double_t GetW() const { return fW; }
+   inline Double_t GetW2() const { return fW2; }
+   inline Double_t GetMin() const { return fMin; }
+   inline Double_t GetMax() const { return fMax; }
    inline Double_t GetSum() const { return fSum; }
+   inline Double_t GetRMS() const
+   {
+      auto var = GetVar();
+      return (var > 0) ? TMath::Sqrt(var) : -1;
+   }
 
    // Merging
    Int_t Merge(TCollection *in);
