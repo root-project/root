@@ -477,14 +477,7 @@ if(ROOT_python_FOUND)
   set(roofit-rf104_classfactory-depends tutorial-roofit-rf104_classfactory) #Race condition
 
   #---Tutorials expected to fail in PyROOT experimental
-  set(pyexp_fail tutorial-dataframe-df002_dataModel-py
-                 tutorial-dataframe-df003_profiles-py
-                 tutorial-dataframe-df010_trivialDataSource-py
-                 tutorial-dataframe-df011_ROOTDataSource-py
-                 tutorial-dataframe-df014_CSVDataSource-py
-                 tutorial-dataframe-df016_vecOps-py
-                 tutorial-dataframe-df017_vecOpsHEP-py
-                 tutorial-dataframe-df102_NanoAODDimuonAnalysis-py
+  set(pyexp_fail tutorial-dataframe-df017_vecOpsHEP-py
                  tutorial-dataframe-df103_NanoAODHiggsAnalysis-py
                  tutorial-pyroot-benchmarks-py
                  tutorial-pyroot-pyroot002_TTreeAsMatrix-py
