@@ -41,9 +41,15 @@ model.fit(X_train, y_train)
 # make predictions for test data
 """
 
-it_number = 100
-# my_time = timeit.timeit("model.predict(X_test)", setup=setup, number=it_number)
-# print(f"{my_time / it_number * 1000}  ms")
+it_number = 1
+my_time = timeit.timeit("model.predict(X_test)", setup=setup, number=it_number)
+print(f"{my_time / it_number * 1000}  ms")
+my_time = timeit.timeit("model.predict(X_test)", setup=setup, number=it_number)
+print(f"{my_time / it_number * 1000}  ms")
+my_time = timeit.timeit("model.predict(X_test)", setup=setup, number=it_number)
+print(f"{my_time / it_number * 1000}  ms")
+my_time = timeit.timeit("model.predict(X_test)", setup=setup, number=it_number)
+print(f"{my_time / it_number * 1000}  ms")
 # load data
 dataset = np.loadtxt("pima-indians-diabetes.data.csv", delimiter=",")
 

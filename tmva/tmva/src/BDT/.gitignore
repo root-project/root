@@ -4,6 +4,7 @@
 *.json
 callgrind.out.*
 *.png
+data/
 
 # Prerequisites
 *.d

@@ -16,7 +16,6 @@ using json = nlohmann::json;
 
 namespace unique_bdt {
 class Node {
-
 public:
    static int count;
 
@@ -46,13 +45,16 @@ public:
 class Tree {
 public:
    std::unique_ptr<Node> nodes;
-   float                 inference(const std::vector<float> &event) { return nodes->inference(event); }
+
+   float inference(const std::vector<float> &event) { return nodes->inference(event); }
 };
 
 // Reading functions
-void                  write_node_members(json const &jTree, std::unique_ptr<Node> &tmp_node);
+void write_node_members(json const &jTree, std::unique_ptr<Node> &tmp_node);
+void read_nodes_from_tree(json const &jTree, Tree &tree);
+
 std::unique_ptr<Node> _read_nodes(json const &jTree, Tree &tree);
-void                  read_nodes_from_tree(json const &jTree, Tree &tree);
+
 } // namespace unique_bdt
 
 #endif
