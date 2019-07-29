@@ -164,6 +164,7 @@ std::uint32_t SerializeColumn(const RColumnDescriptor &val, void* buffer) {
    pos += SerializeString(val.GetModel().GetName(), *where);
    pos += SerializeInt32(static_cast<int>(val.GetModel().GetType()), *where);
    pos += SerializeInt32(static_cast<int>(val.GetModel().GetIsSorted()), *where);
+   pos += SerializeUInt32(val.GetIndex(), *where);
    pos += SerializeUInt64(val.GetFieldId(), *where);
    pos += SerializeUInt64(val.GetOffsetId(), *where);
    pos += SerializeUInt32(val.GetLinkIds().size(), *where);
@@ -198,6 +199,7 @@ bool RColumnDescriptor::operator==(const RColumnDescriptor &other) const {
    return fColumnId == other.fColumnId &&
           fVersion == other.fVersion &&
           fModel == other.fModel &&
+          fIndex == other.fIndex &&
           fFieldId == other.fFieldId &&
           fOffsetId == other.fOffsetId &&
           fLinkIds == other.fLinkIds;
@@ -361,6 +363,7 @@ void RNTupleDescriptorBuilder::SetFromHeader(void* headerBuffer) {
       pos += DeserializeInt32(pos, &type);
       pos += DeserializeInt32(pos, &isSorted);
       c.fModel = RColumnModel(name, static_cast<EColumnType>(type), isSorted);
+      pos += DeserializeUInt32(pos, &c.fIndex);
       pos += DeserializeUInt64(pos, &c.fFieldId);
       pos += DeserializeUInt64(pos, &c.fOffsetId);
 

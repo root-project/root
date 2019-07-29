@@ -151,7 +151,8 @@ void ROOT::Experimental::Detail::RFieldBase::Flush() const
 
 void ROOT::Experimental::Detail::RFieldBase::ConnectColumns(RPageStorage *pageStorage)
 {
-   if (fColumns.empty()) DoGenerateColumns();
+   if (fColumns.empty())
+      DoGenerateColumns();
    for (auto& column : fColumns) {
       if ((fParent != nullptr) && (column->GetOffsetColumn() == nullptr))
          column->SetOffsetColumn(fParent->fPrincipalColumn);
@@ -227,7 +228,7 @@ ROOT::Experimental::REntry* ROOT::Experimental::RFieldRoot::GenerateEntry()
 void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::DoGenerateColumns()
 {
    RColumnModel model(GetName(), EColumnType::kIndex, true /* isSorted*/);
-   fColumns.emplace_back(std::make_unique<Detail::RColumn>(model));
+   fColumns.emplace_back(std::make_unique<Detail::RColumn>(model, 0));
    fPrincipalColumn = fColumns[0].get();
 }
 
@@ -238,7 +239,7 @@ void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::DoGenerateCo
 void ROOT::Experimental::RField<float>::DoGenerateColumns()
 {
    RColumnModel model(GetName(), EColumnType::kReal32, false /* isSorted*/);
-   fColumns.emplace_back(std::make_unique<Detail::RColumn>(model));
+   fColumns.emplace_back(std::make_unique<Detail::RColumn>(model, 0));
    fPrincipalColumn = fColumns[0].get();
 }
 
@@ -247,7 +248,7 @@ void ROOT::Experimental::RField<float>::DoGenerateColumns()
 void ROOT::Experimental::RField<double>::DoGenerateColumns()
 {
    RColumnModel model(GetName(), EColumnType::kReal64, false /* isSorted*/);
-   fColumns.emplace_back(std::make_unique<Detail::RColumn>(model));
+   fColumns.emplace_back(std::make_unique<Detail::RColumn>(model, 0));
    fPrincipalColumn = fColumns[0].get();
 }
 
@@ -257,7 +258,7 @@ void ROOT::Experimental::RField<double>::DoGenerateColumns()
 void ROOT::Experimental::RField<std::int32_t>::DoGenerateColumns()
 {
    RColumnModel model(GetName(), EColumnType::kInt32, false /* isSorted*/);
-   fColumns.emplace_back(std::make_unique<Detail::RColumn>(model));
+   fColumns.emplace_back(std::make_unique<Detail::RColumn>(model, 0));
    fPrincipalColumn = fColumns[0].get();
 }
 
@@ -266,7 +267,7 @@ void ROOT::Experimental::RField<std::int32_t>::DoGenerateColumns()
 void ROOT::Experimental::RField<std::uint32_t>::DoGenerateColumns()
 {
    RColumnModel model(GetName(), EColumnType::kInt32, false /* isSorted*/);
-   fColumns.emplace_back(std::make_unique<Detail::RColumn>(model));
+   fColumns.emplace_back(std::make_unique<Detail::RColumn>(model, 0));
    fPrincipalColumn = fColumns[0].get();
 }
 
@@ -275,7 +276,7 @@ void ROOT::Experimental::RField<std::uint32_t>::DoGenerateColumns()
 void ROOT::Experimental::RField<std::uint64_t>::DoGenerateColumns()
 {
    RColumnModel model(GetName(), EColumnType::kInt64, false /* isSorted*/);
-   fColumns.emplace_back(std::make_unique<Detail::RColumn>(model));
+   fColumns.emplace_back(std::make_unique<Detail::RColumn>(model, 0));
    fPrincipalColumn = fColumns[0].get();
 }
 
@@ -285,10 +286,10 @@ void ROOT::Experimental::RField<std::uint64_t>::DoGenerateColumns()
 void ROOT::Experimental::RField<std::string>::DoGenerateColumns()
 {
    RColumnModel modelIndex(GetName(), EColumnType::kIndex, true /* isSorted*/);
-   fColumns.emplace_back(std::make_unique<Detail::RColumn>(modelIndex));
+   fColumns.emplace_back(std::make_unique<Detail::RColumn>(modelIndex, 0));
 
    RColumnModel modelChars(GetCollectionName(GetName()), EColumnType::kByte, false /* isSorted*/);
-   fColumns.emplace_back(std::make_unique<Detail::RColumn>(modelChars));
+   fColumns.emplace_back(std::make_unique<Detail::RColumn>(modelChars, 1));
    fPrincipalColumn = fColumns[0].get();
    fColumns[1]->SetOffsetColumn(fPrincipalColumn);
 }
@@ -440,7 +441,7 @@ void ROOT::Experimental::RFieldVector::DoRead(NTupleSize_t index, Detail::RField
 void ROOT::Experimental::RFieldVector::DoGenerateColumns()
 {
    RColumnModel modelIndex(GetName(), EColumnType::kIndex, true /* isSorted*/);
-   fColumns.emplace_back(std::make_unique<Detail::RColumn>(modelIndex));
+   fColumns.emplace_back(std::make_unique<Detail::RColumn>(modelIndex, 0));
    fPrincipalColumn = fColumns[0].get();
 }
 
@@ -506,7 +507,7 @@ ROOT::Experimental::RFieldCollection::RFieldCollection(
 void ROOT::Experimental::RFieldCollection::DoGenerateColumns()
 {
    RColumnModel modelIndex(GetName(), EColumnType::kIndex, true /* isSorted*/);
-   fColumns.emplace_back(std::make_unique<Detail::RColumn>(modelIndex));
+   fColumns.emplace_back(std::make_unique<Detail::RColumn>(modelIndex, 0));
    fPrincipalColumn = fColumns[0].get();
 }
 

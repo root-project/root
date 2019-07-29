@@ -71,6 +71,7 @@ private:
    DescriptorId_t fColumnId = kInvalidDescriptorId;;
    RNTupleVersion fVersion;
    RColumnModel fModel;
+   std::uint32_t fIndex;
    /// Every column belongs to one and only one field
    DescriptorId_t fFieldId = kInvalidDescriptorId;;
    /// Pointer to the parent column with offsets
@@ -84,6 +85,7 @@ public:
    DescriptorId_t GetId() const { return fColumnId; }
    RNTupleVersion GetVersion() const { return fVersion; }
    RColumnModel GetModel() const { return fModel; }
+   std::uint32_t GetIndex() const { return fIndex; }
    DescriptorId_t GetFieldId() const { return fFieldId; }
    DescriptorId_t GetOffsetId() const { return fOffsetId; }
    std::vector<DescriptorId_t> GetLinkIds() const { return fLinkIds; }

@@ -685,7 +685,7 @@ public:
 
    void DoGenerateColumns() final {
       RColumnModel modelIndex(GetName(), EColumnType::kIndex, true /* isSorted*/);
-      fColumns.emplace_back(std::make_unique<Detail::RColumn>(modelIndex));
+      fColumns.emplace_back(std::make_unique<Detail::RColumn>(modelIndex, 0));
       fPrincipalColumn = fColumns[0].get();
    }
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final {

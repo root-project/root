@@ -21,8 +21,8 @@
 
 #include <iostream>
 
-ROOT::Experimental::Detail::RColumn::RColumn(const RColumnModel& model)
-   : fModel(model), fPageSink(nullptr), fPageSource(nullptr), fHeadPage(), fNElements(0),
+ROOT::Experimental::Detail::RColumn::RColumn(const RColumnModel& model, std::uint32_t index)
+   : fModel(model), fIndex(index), fPageSink(nullptr), fPageSource(nullptr), fHeadPage(), fNElements(0),
      fCurrentPage(),
      fColumnIdSource(kInvalidColumnId),
      fOffsetColumn(nullptr)
