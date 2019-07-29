@@ -3725,20 +3725,7 @@ public:
    virtual bool IncludeInDiagnosticCounts() const override { return fChild->IncludeInDiagnosticCounts(); }
 };
 
-////////////////////////////////////////////////////////////////////////////////
-
-int RootClingMain(int argc,
-              char **argv,
-              bool isDeep = false,
-              bool isGenreflex = false)
-{
-   // Copied from cling driver.
-   // FIXME: Uncomment once we fix ROOT's teardown order.
-   //llvm::llvm_shutdown_obj shutdownTrigger;
-
-   llvm::sys::PrintStackTraceOnErrorSignal(argv[0]);
-   llvm::PrettyStackTraceProgram X(argc, argv);
-
+static void MaybeSuppressWin32CrashDialogs() {
 #if defined(_WIN32) && defined(_MSC_VER)
    // Suppress error dialogs to avoid hangs on build nodes.
    // One can use an environment variable (Cling_GuiOnAssert) to enable
@@ -3754,6 +3741,22 @@ int RootClingMain(int argc,
       _CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
    }
 #endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+int RootClingMain(int argc,
+              char **argv,
+              bool isDeep = false,
+              bool isGenreflex = false)
+{
+   // Copied from cling driver.
+   // FIXME: Uncomment once we fix ROOT's teardown order.
+   //llvm::llvm_shutdown_obj shutdownTrigger;
+
+   llvm::sys::PrintStackTraceOnErrorSignal(argv[0]);
+   llvm::PrettyStackTraceProgram X(argc, argv);
+   MaybeSuppressWin32CrashDialogs();
 
    if (argc < 2) {
       fprintf(stderr,
@@ -3765,11 +3768,12 @@ int RootClingMain(int argc,
 
    std::string dictname;
    std::string dictpathname;
-   int ic, force = 0, onepcm = 0;
+   int ic = 1; // skip the binary name.
+   unsigned force = 0;
+   unsigned onepcm = 0;
    bool ignoreExistingDict = false;
    bool requestAllSymbols = isDeep;
 
-   ic = 1;
    if (!gDriverConfig->fBuildingROOTStage1) {
       if (strcmp("-rootbuild", argv[ic]) == 0) {
          // running rootcling for ROOT itself.
