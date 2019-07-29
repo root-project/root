@@ -3796,13 +3796,13 @@ int RootClingMain(int argc,
    }
    if (ic < argc) {
       if (!strcmp(argv[ic], "-cint")) {
-         // Flag is ignored, should warn of deprecation.
+         ROOT::TMetaUtils::Warning(0, "-cint has no effect. Please remove the deprecated flag!\n");
          ic++;
       } else if (!strcmp(argv[ic], "-reflex")) {
-         // Flag is ignored, should warn of deprecation.
+         ROOT::TMetaUtils::Warning(0, "-reflex has no effect. Please remove the deprecated flag!\n");
          ic++;
       } else if (!strcmp(argv[ic], "-gccxml")) {
-         // Flag is ignored, should warn of deprecation.
+         ROOT::TMetaUtils::Warning(0, "-gccxml has no effect. Please remove the deprecated flag!\n");
          ic++;
       }
    }
@@ -5847,6 +5847,8 @@ int GenReflexMain(int argc, char **argv)
 
    ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kNote;
 
+   if (options[DEEP])
+      ROOT::TMetaUtils::Warning(0, "--deep has no effect. Please remove the deprecated flag!\n");
    // The verbosity: debug wins over quiet
    //std::string verbosityOption("-v4"); // To be uncommented for the testing phase. It should be -v
    std::string verbosityOption("-v2");
