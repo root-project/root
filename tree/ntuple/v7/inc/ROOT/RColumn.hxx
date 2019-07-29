@@ -44,6 +44,11 @@ logical data layer.
 class RColumn {
 private:
    RColumnModel fModel;
+   /**
+    * Columns belonging to the same field are distinguished by their order.  E.g. for an std::string field, there is
+    * the offset column with index 0 and the character value column with index 1.
+    */
+   std::uint32_t fIndex;
    RPageSink* fPageSink;
    RPageSource* fPageSource;
    RPageStorage::ColumnHandle_t fHandleSink;
@@ -60,7 +65,7 @@ private:
    RColumn* fOffsetColumn;
 
 public:
-   explicit RColumn(const RColumnModel& model);
+   explicit RColumn(const RColumnModel& model, std::uint32_t index);
    RColumn(const RColumn&) = delete;
    RColumn& operator =(const RColumn&) = delete;
    ~RColumn();
@@ -164,6 +169,7 @@ public:
    void MapPage(const NTupleSize_t index);
    NTupleSize_t GetNElements() { return fNElements; }
    const RColumnModel& GetModel() const { return fModel; }
+   std::uint32_t GetIndex() const { return fIndex; }
    ColumnId_t GetColumnIdSource() const { return fColumnIdSource; }
    RPageSource* GetPageSource() const { return fPageSource; }
    RPageStorage::ColumnHandle_t GetHandleSource() const { return fHandleSource; }
