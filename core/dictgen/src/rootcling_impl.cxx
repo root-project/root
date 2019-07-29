@@ -6032,13 +6032,10 @@ int ROOT_rootcling_Driver(int argc, char **argv, const ROOT::Internal::RootCling
 
    int retVal = 0;
 
-   if (std::string::npos != exeName.find("rootcling")) {
-      retVal = RootClingMain(argc, argv);
-   } else if (std::string::npos != exeName.find("genreflex")) {
+   if (std::string::npos != exeName.find("genreflex"))
       retVal = GenReflexMain(argc, argv);
-   } else { //default
+   else // rootcling or default
       retVal = RootClingMain(argc, argv);
-   }
 
    gDriverConfig = nullptr;
 
