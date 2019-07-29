@@ -3761,7 +3761,6 @@ int RootClingMain(int argc,
    unsigned force = 0;
    unsigned onepcm = 0;
    bool ignoreExistingDict = false;
-   bool requestAllSymbols = isDeep;
 
    if (!gDriverConfig->fBuildingROOTStage1) {
       if (strcmp("-rootbuild", argv[ic]) == 0) {
@@ -4590,9 +4589,7 @@ int RootClingMain(int argc,
 
    int rootclingRetCode(0);
 
-   if (requestAllSymbols && !isSelXML) {
-      selectionRules.SetDeep(true);
-   } else if (!linkdefLoc) {
+   if (!linkdefLoc) {
       // There is no linkdef file, we added the 'default' #pragma to
       // interpPragmaSource.
 
@@ -4726,10 +4723,6 @@ int RootClingMain(int argc,
    if (liblistPrefix.length()) {
       LoadLibraryMap(liblistPrefix + ".in", gAutoloads);
       scan.SetRecordDeclCallback(RecordDeclCallback);
-   }
-
-   if (requestAllSymbols) {
-      selectionRules.SetDeep(true);
    }
 
    scan.Scan(CI->getASTContext());
