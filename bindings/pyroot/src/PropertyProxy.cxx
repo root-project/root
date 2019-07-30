@@ -201,7 +201,8 @@ void PyROOT::PropertyProxy::Set( Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t id
 
    std::string fullType = Cppyy::GetDatamemberType( scope, idata );
    if ( Cppyy::IsEnumData( scope, idata ) ) {
-      fullType = "UInt_t";
+      // Get underlying type of enum
+      fullType = Cppyy::ResolveEnum(fullType);
       fProperty |= kIsEnumData;
    }
 
