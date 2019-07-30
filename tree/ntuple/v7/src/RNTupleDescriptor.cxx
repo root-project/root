@@ -340,6 +340,19 @@ ROOT::Experimental::RNTupleDescriptor::FindColumnId(DescriptorId_t fieldId, std:
 }
 
 
+ROOT::Experimental::DescriptorId_t
+ROOT::Experimental::RNTupleDescriptor::FindClusterId(DescriptorId_t columnId, NTupleSize_t index) const
+{
+   // TODO(jblomer): binary search?
+   for (const auto &cd : fClusterDescriptors) {
+      auto columnRange = cd.second.GetColumnRange(columnId);
+      if (columnRange.Contains(index))
+         return cd.second.GetId();
+   }
+   return kInvalidDescriptorId;
+}
+
+
 std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDescriptor::GenerateModel() const
 {
    auto model = std::make_unique<RNTupleModel>();
