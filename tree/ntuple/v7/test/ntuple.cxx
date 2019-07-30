@@ -21,6 +21,7 @@
 #include <string>
 #include <utility>
 
+using DescriptorId_t = ROOT::Experimental::DescriptorId_t;
 using EColumnType = ROOT::Experimental::EColumnType;
 using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
 using RColumnModel = ROOT::Experimental::RColumnModel;
@@ -602,12 +603,16 @@ TEST(RNTuple, Descriptor)
    reco.AddClustersFromFooter(footerBuffer);
    EXPECT_EQ(reference, reco.GetDescriptor());
 
-   auto model = RNTupleModel::Create();
-   model->MakeField<std::vector<std::int32_t>>("list");
-   model->MakeField<std::string>("x");
-   for (const auto &f : *model->GetRootField()) {
-      EXPECT_NE(ROOT::Experimental::kInvalidDescriptorId, reference.FindFieldId(f));
-   }
+   EXPECT_EQ(DescriptorId_t(1), reference.FindFieldId("list", ROOT::Experimental::kInvalidDescriptorId));
+   EXPECT_EQ(DescriptorId_t(2), reference.FindFieldId("list", 1));
+   EXPECT_EQ(DescriptorId_t(42), reference.FindFieldId("x", ROOT::Experimental::kInvalidDescriptorId));
+   EXPECT_EQ(ROOT::Experimental::kInvalidDescriptorId, reference.FindFieldId("listX", 1));
+   EXPECT_EQ(ROOT::Experimental::kInvalidDescriptorId, reference.FindFieldId("list", 1024));
+
+   EXPECT_EQ(DescriptorId_t(3), reference.FindColumnId(42, 0));
+   EXPECT_EQ(DescriptorId_t(4), reference.FindColumnId(42, 1));
+   EXPECT_EQ(ROOT::Experimental::kInvalidDescriptorId, reference.FindColumnId(42, 2));
+   EXPECT_EQ(ROOT::Experimental::kInvalidDescriptorId, reference.FindColumnId(43, 0));
 
    delete[] footerBuffer;
    delete[] headerBuffer;

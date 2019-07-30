@@ -37,17 +37,17 @@ ROOT::Experimental::Detail::RColumn::~RColumn()
       fPageSource->ReleasePage(fCurrentPage);
 }
 
-void ROOT::Experimental::Detail::RColumn::Connect(RPageStorage* pageStorage)
+void ROOT::Experimental::Detail::RColumn::Connect(DescriptorId_t fieldId, RPageStorage *pageStorage)
 {
    switch (pageStorage->GetType()) {
    case EPageStorageType::kSink:
       fPageSink = static_cast<RPageSink*>(pageStorage); // the page sink initializes fHeadPage on AddColumn
-      fHandleSink = fPageSink->AddColumn(*this);
+      fHandleSink = fPageSink->AddColumn(fieldId, *this);
       fHeadPage = fPageSink->ReservePage(fHandleSink);
       break;
    case EPageStorageType::kSource:
       fPageSource = static_cast<RPageSource*>(pageStorage);
-      fHandleSource = fPageSource->AddColumn(*this);
+      fHandleSource = fPageSource->AddColumn(fieldId, *this);
       fNElements = fPageSource->GetNElements(fHandleSource);
       fColumnIdSource = fPageSource->GetColumnId(fHandleSource);
       break;

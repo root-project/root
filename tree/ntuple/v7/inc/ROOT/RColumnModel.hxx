@@ -84,7 +84,7 @@ public:
 
    Detail::RColumnElementBase *GenerateElement();
    bool operator ==(const RColumnModel &other) const {
-      return (fName == other.fName) && (fType == other.fType) && (fIsSorted == other.fIsSorted);
+      return /*(fName == other.fName) &&*/ (fType == other.fType) && (fIsSorted == other.fIsSorted);
    }
 };
 
