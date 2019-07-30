@@ -77,9 +77,7 @@ ROOT::Experimental::Detail::RPageSinkRoot::AddColumn(DescriptorId_t fieldId, con
    }
    fNTupleHeader.fColumns.emplace_back(columnHeader);
 
-   /// We use the fact the AddColumn is called during Create() just after the field that corresponds to the
-   /// current set of columns has been added.
-   fDescriptorBuilder.AddColumn(fLastColumnId, fLastFieldId, column.GetVersion(), column.GetModel(), column.GetIndex());
+   fDescriptorBuilder.AddColumn(fLastColumnId, fieldId, column.GetVersion(), column.GetModel(), column.GetIndex());
 
    //printf("Added column %s type %d\n", columnHeader.fName.c_str(), (int)columnHeader.fType);
    auto columnId = fLastColumnId++;
@@ -279,7 +277,6 @@ ROOT::Experimental::Detail::RPageSourceRoot::AddColumn(DescriptorId_t fieldId, c
 {
    R__ASSERT(fieldId != kInvalidDescriptorId);
    auto& model = column.GetModel();
-   //auto columnId = fMapper.fColumnName2Id[model.GetName()];
    auto columnId = fDescriptor.FindColumnId(fieldId, column.GetIndex());
    R__ASSERT(columnId != kInvalidDescriptorId);
    R__ASSERT(model == *fMapper.fId2ColumnModel[columnId]);
@@ -383,16 +380,6 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
    delete ntupleHeader;
 }
 
-
-std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::Detail::RPageSourceRoot::GenerateModel()
-{
-   auto model = std::make_unique<RNTupleModel>();
-   for (auto& f : fMapper.fRootFields) {
-      auto field = Detail::RFieldBase::Create(f.fFieldName, f.fTypeName);
-      model->AddField(std::unique_ptr<Detail::RFieldBase>(field));
-   }
-   return model;
-}
 
 ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::PopulatePage(
    ColumnHandle_t columnHandle, NTupleSize_t index)

@@ -82,7 +82,7 @@ TEST(RNTuple, ReconstructModel)
    RPageSourceRoot sourceRoot("myTree", "test.root");
    sourceRoot.Attach();
 
-   auto modelReconstructed = sourceRoot.GenerateModel();
+   auto modelReconstructed = sourceRoot.GetDescriptor().GenerateModel();
    EXPECT_EQ(nullptr, modelReconstructed->GetDefaultEntry()->Get<float>("xyz"));
    auto vecPtr = modelReconstructed->GetDefaultEntry()->Get<std::vector<std::vector<float>>>("nnlo");
    EXPECT_TRUE(vecPtr != nullptr);
