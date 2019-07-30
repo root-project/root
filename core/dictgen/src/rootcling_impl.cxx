@@ -57,7 +57,6 @@ const char *shortHelp =
 #endif
 
 #ifdef __APPLE__
-#include <libgen.h> // Needed for basename
 #include <mach-o/dyld.h>
 #endif
 
@@ -113,7 +112,6 @@ const std::string gLibraryExtension(".so");  // no dylib for the moment
 const std::string gPathSeparator(ROOT::TMetaUtils::GetPathSeparator());
 
 #ifdef __APPLE__
-#include <libgen.h> // Needed for basename
 #include <mach-o/dyld.h>
 #endif
 
