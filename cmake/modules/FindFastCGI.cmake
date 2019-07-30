@@ -7,41 +7,20 @@
 # Find the FastCGI includes and library
 #
 #  FASTCGI_INCLUDE_DIR - where to find fcgiapp.h
-#  FASTCGI_LIBRARY     - librart when using MySQL.
-#  FASTCGI_FOUND       - True if FASTCGI found.
+#  FASTCGI_LIBRARY     - library when using FastCGI.
+#  FASTCGI_FOUND       - true if FASTCGI found.
 
-if(FASTCGI_INCLUDE_DIR OR FASTCGI_)
-  # Already in cache, be silent
-  SET(FASTCGI_FIND_QUIETLY TRUE)
+if(NOT FASTCGI_INCLUDE_DIR)
+   find_path(FASTCGI_INCLUDE_DIR NAME fcgiapp.h PATH_SUFFIXES include)
 endif()
 
-find_path(FASTCGI_INCLUDE_DIR fcgiapp.h
-  $ENV{FASTCGI_DIR}/include
-  /usr/local/include
-  /usr/include/fastcgi
-  /usr/local/include/fastcgi
-  /opt/fastcgi/include
-  DOC "Specify the directory containing fcgiapp.h"
-)
+if(NOT FASTCGI_LIBRARY)
+   find_library(FASTCGI_LIBRARY NAMES fcgi PATHS PATH_SUFFIXES lib)
+endif()
 
-find_library(FASTCGI_LIBRARY NAMES fcgi PATHS
-  $ENV{FASTCGI_DIR}/lib
-  /usr/local/fastcgi/lib
-  /usr/local/lib
-  /usr/lib/fastcgi
-  /usr/local/lib/fastcgi
-  /usr/fastcgi/lib /usr/lib
-  /usr/fastcgi /usr/local/fastcgi
-  /opt/fastcgi /opt/fastcgi/lib
-  DOC "Specify the FastCGI library here."
-)
+mark_as_advanced(FASTCGI_INCLUDE_DIR)
 
-# handle the QUIETLY and REQUIRED arguments and set DCAP_FOUND to TRUE if
-# all listed variables are TRUE
-INCLUDE(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(FASTCGI DEFAULT_MSG FASTCGI_INCLUDE_DIR FASTCGI_LIBRARY)
+include(FindPackageHandleStandardArgs)
 
-mark_as_advanced(
-  FASTCGI_LIBRARY
-  FASTCGI_INCLUDE_DIR
-)
+find_package_handle_standard_args(FASTCGI
+  REQUIRED_VARS FASTCGI_LIBRARY FASTCGI_INCLUDE_DIR)
