@@ -9,10 +9,9 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-if(fcgi AND FASTCGI_INCLUDE_DIR AND FASTCGI_LIBRARY)
+if(FASTCGI_FOUND)
   include_directories(${FASTCGI_INCLUDE_DIR})
 else()
-  set(_nofcgi "ON")
   set(FASTCGI_LIBRARY "")
 endif()
 
@@ -71,6 +70,6 @@ if(ssl)
   endif()
 endif()
 
-if(_nofcgi)
+if(NOT FASTCGI_FOUND)
   target_compile_definitions(RHTTP PUBLIC -DHTTP_WITHOUT_FASTCGI)
 endif()

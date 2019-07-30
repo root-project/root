@@ -332,8 +332,8 @@ BUILDTABLE     := @buildtable@
 BUILDTMVA      := @buildtmva@
 
 BUILDHTTP      := @buildhttp@
-USEFASTCGI     := @buildfcgi@
-FASTCGIINCDIR  := @fcgiincdir@
+USEFASTCGI     := @usefastcgi@
+FASTCGIINCDIR  := @fastcgiincdir@
 ifeq ($(USEFASTCGI), no)
 FASTCGIFLAGS   := -DHTTP_WITHOUT_FASTCGI
 endif

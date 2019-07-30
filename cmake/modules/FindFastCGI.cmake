@@ -18,9 +18,17 @@ if(NOT FASTCGI_LIBRARY)
    find_library(FASTCGI_LIBRARY NAMES fcgi PATHS PATH_SUFFIXES lib)
 endif()
 
-mark_as_advanced(FASTCGI_INCLUDE_DIR)
+mark_as_advanced(FASTCGI_INCLUDE_DIR FASTCGI_LIBRARY)
 
 include(FindPackageHandleStandardArgs)
 
 find_package_handle_standard_args(FASTCGI
   REQUIRED_VARS FASTCGI_LIBRARY FASTCGI_INCLUDE_DIR)
+
+if(FASTCGI_FOUND)
+  set(FASTCGI_INCLUDE_DIRS "${FASTCGI_INCLUDE_DIR}")
+
+  if(NOT FASTCGI_LIBRARIES)
+    set(FASTCGI_LIBRARIES ${FASTCGI_LIBRARY})
+  endif()
+endif()

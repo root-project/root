@@ -596,8 +596,8 @@ if(mysql)
   endif()
 endif()
 
-#---Check for FastCGI (only when HTTP enabled)-----------------------------------------------------------
-if(http AND fcgi)
+#---Check for FastCGI-----------------------------------------------------------
+if(fcgi)
   message(STATUS "Looking for FastCGI")
   find_package(FastCGI)
   if(NOT FASTCGI_FOUND)
