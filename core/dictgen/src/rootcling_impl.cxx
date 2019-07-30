@@ -3814,7 +3814,7 @@ int RootClingMain(int argc,
           && strcmp(argv[ic], "-f") != 0  && strcmp(argv[ic], "-r") != 0)  {
       if (!strcmp(argv[ic], "-l")) {
          ic++;
-      } else if (!strcmp(argv[ic], "-1")) {
+      } else if (!strcmp(argv[ic], "-generate-pch")) {
          onepcm = 1;
          ic++;
       } else if (!strncmp(argv[ic], libprefixOption, strlen(libprefixOption))) {
