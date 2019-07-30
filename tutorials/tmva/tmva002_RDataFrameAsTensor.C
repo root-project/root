@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_dataframe
+/// \ingroup tutorial_tmva
 /// \notebook -nodraw
 /// This tutorial shows how the content of an RDataFrame can be converted to an
 /// RTensor object.

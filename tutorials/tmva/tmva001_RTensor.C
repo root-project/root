@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_dataframe
+/// \ingroup tutorial_tmva
 /// \notebook -nodraw
 /// This tutorial illustrates the basic features of the RTensor class,
 /// RTensor is a std::vector-like container with additional shape information.
