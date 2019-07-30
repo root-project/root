@@ -94,8 +94,8 @@ void ROOT::Experimental::Detail::RPageSinkRoot::Create(RNTupleModel &model)
 
    std::unordered_map<const RFieldBase *, DescriptorId_t> fieldPtr2Id; // necessary to find parent field ids
    for (auto& f : *model.GetRootField()) {
-      fDescriptorBuilder.AddField(fLastFieldId, f.GetFieldVersion(), f.GetTypeVersion(),
-                                  RFieldBase::GetLeafName(f.GetName()), f.GetType(), f.GetStructure());
+      fDescriptorBuilder.AddField(fLastFieldId, f.GetFieldVersion(), f.GetTypeVersion(), f.GetName(), f.GetType(),
+                                  f.GetStructure());
       if (f.GetParent() != model.GetRootField()) {
          fDescriptorBuilder.SetFieldParent(fLastFieldId, fieldPtr2Id[f.GetParent()]);
       }

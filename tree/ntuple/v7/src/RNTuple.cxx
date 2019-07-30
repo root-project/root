@@ -42,7 +42,7 @@ void ROOT::Experimental::RNTupleReader::ConnectModel() {
    fieldPtr2Id[fModel->GetRootField()] = kInvalidDescriptorId;
    for (auto& field : *fModel->GetRootField()) {
       auto parentId = fieldPtr2Id[field.GetParent()];
-      auto fieldId = fSource->GetDescriptor().FindFieldId(Detail::RFieldBase::GetLeafName(field.GetName()), parentId);
+      auto fieldId = fSource->GetDescriptor().FindFieldId(field.GetName(), parentId);
       R__ASSERT(fieldId != kInvalidDescriptorId);
       fieldPtr2Id[&field] = fieldId;
       Detail::RFieldFuse::Connect(fieldId, *fSource, field);

@@ -85,13 +85,13 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    if (normalizedType == "std::string") return new RField<std::string>(fieldName);
    if (normalizedType.substr(0, 12) == "std::vector<") {
       std::string itemTypeName = normalizedType.substr(12, normalizedType.length() - 13);
-      auto itemField = Create(GetCollectionName(fieldName), itemTypeName);
+      auto itemField = Create(itemTypeName, itemTypeName);
       return new RFieldVector(fieldName, std::unique_ptr<Detail::RFieldBase>(itemField));
    }
    // For the time being, we silently read RVec fields as std::vector
    if (normalizedType.substr(0, 19) == "ROOT::VecOps::RVec<") {
       std::string itemTypeName = normalizedType.substr(19, normalizedType.length() - 20);
-      auto itemField = Create(GetCollectionName(fieldName), itemTypeName);
+      auto itemField = Create(itemTypeName, itemTypeName);
       return new RFieldVector(fieldName, std::unique_ptr<Detail::RFieldBase>(itemField));
    }
    // TODO: create an RFieldCollection?
@@ -141,20 +141,6 @@ void ROOT::Experimental::Detail::RFieldBase::Attach(
 {
    child->fParent = this;
    fSubFields.emplace_back(std::move(child));
-}
-
-std::string ROOT::Experimental::Detail::RFieldBase::GetLeafName(const std::string &fullName)
-{
-   auto idx = fullName.find_last_of(kCollectionSeparator);
-   return (idx == std::string::npos) ? fullName : fullName.substr(idx + 1);
-}
-
-std::string ROOT::Experimental::Detail::RFieldBase::GetCollectionName(const std::string &parentName)
-{
-   std::string result(parentName);
-   result.push_back(kCollectionSeparator);
-   result.append(GetLeafName(parentName));
-   return result;
 }
 
 void ROOT::Experimental::Detail::RFieldBase::Flush() const
@@ -411,7 +397,7 @@ ROOT::Experimental::RFieldVector::RFieldVector(
 
 ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RFieldVector::Clone(std::string_view newName)
 {
-   auto newItemField = fSubFields[0]->Clone(GetCollectionName(std::string(newName)));
+   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
    return new RFieldVector(newName, std::unique_ptr<Detail::RFieldBase>(newItemField));
 }
 
@@ -495,14 +481,8 @@ ROOT::Experimental::RFieldCollection::RFieldCollection(
    : RFieldBase(name, ":Collection:", ENTupleStructure::kCollection, true /* isSimple */)
    , fCollectionNTuple(collectionNTuple)
 {
-   std::string namePrefix(name);
-   namePrefix.push_back(kCollectionSeparator);
    for (unsigned i = 0; i < collectionModel->GetRootField()->fSubFields.size(); ++i) {
       auto& subField = collectionModel->GetRootField()->fSubFields[i];
-      subField->fName = namePrefix + subField->fName;
-      for (auto& grandChild : subField->fSubFields) {
-         grandChild->fName = namePrefix + grandChild->fName;
-      }
       Attach(std::move(subField));
    }
 }

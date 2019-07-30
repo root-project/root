@@ -70,7 +70,7 @@ class RFieldBase {
    friend class ROOT::Experimental::RFieldCollection; // to change the field names when collections are attached
 
 private:
-   /// The field name is a unique within a tree and also the basis for the column name(s)
+   /// The field name relative to its parent field
    std::string fName;
    /// The C++ type captured by this field
    std::string fType;
@@ -99,9 +99,6 @@ protected:
    virtual void DoReadV(NTupleSize_t index, NTupleSize_t count, void* dst);
 
 public:
-   /// Field names convey the level of subfields; sub fields (nested collections) are separated by a dot
-   static constexpr char kCollectionSeparator = '/';
-
    /// Iterates over the sub fields in depth-first search order
    class RIterator : public std::iterator<std::forward_iterator_tag, Detail::RFieldBase> {
    private:
@@ -143,10 +140,6 @@ public:
 
    /// Factory method to resurrect a field from the stored on-disk type information
    static RFieldBase *Create(const std::string &fieldName, const std::string &typeName);
-   /// Get the tail of the field name up to the last dot
-   static std::string GetLeafName(const std::string &fullName);
-   /// Get the name for an item sub field that is part of a collection, e.g. the float field of std::vector<float>
-   static std::string GetCollectionName(const std::string &parentName);
 
    /// Generates a tree value of the field type and allocates new initialized memory according to the type.
    RFieldValue GenerateValue();
@@ -621,7 +614,7 @@ class RField<std::vector<ItemT>> : public RFieldVector {
 public:
    static std::string MyTypeName() { return "std::vector<" + RField<ItemT>::MyTypeName() + ">"; }
    explicit RField(std::string_view name)
-      : RFieldVector(name, std::make_unique<RField<ItemT>>(GetCollectionName(std::string(name))))
+      : RFieldVector(name, std::make_unique<RField<ItemT>>(RField<ItemT>::MyTypeName()))
    {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
@@ -687,14 +680,14 @@ public:
       Attach(std::move(itemField));
    }
    explicit RField(std::string_view name)
-      : RField(name, std::make_unique<RField<ItemT>>(GetCollectionName(std::string(name))))
+      : RField(name, std::make_unique<RField<ItemT>>(RField<ItemT>::MyTypeName()))
    {
    }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
    RFieldBase* Clone(std::string_view newName) final {
-      auto newItemField = fSubFields[0]->Clone(GetCollectionName(std::string(newName)));
+      auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
       return new RField<ROOT::VecOps::RVec<ItemT>>(newName, std::unique_ptr<Detail::RFieldBase>(newItemField));
    }
 
