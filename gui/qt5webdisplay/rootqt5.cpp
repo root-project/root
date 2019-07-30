@@ -126,6 +126,8 @@ protected:
             if (!fHandler) {
                fHandler = std::make_unique<RootUrlSchemeHandler>();
                QWebEngineProfile::defaultProfile()->installUrlSchemeHandler("rootscheme", fHandler.get());
+               QWebEngineProfile::defaultProfile()->connect(QWebEngineProfile::defaultProfile(), &QWebEngineProfile::downloadRequested,
+                              [](QWebEngineDownloadItem *item) { item->accept(); });
             }
 
             fullurl = fHandler->MakeFullUrl(args.GetHttpServer(), fullurl);
