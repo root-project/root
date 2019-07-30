@@ -1,7 +1,7 @@
 // Authors: Axel Naumann, Philippe Canal, Danilo Piparo
 
 /*************************************************************************
- * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -3726,6 +3726,23 @@ int RootClingMain(int argc,
    llvm::PrettyStackTraceProgram X(argc, argv);
    MaybeSuppressWin32CrashDialogs();
 
+   int ic = 1; // skip the binary name.
+#if defined(R__WIN32) && !defined(R__WINGCC)
+   // FIXME: This is terrible hack allocating and changing the argument set.
+   // We should remove it and use standard llvm facilities to convert the paths.
+   // cygwin's make is presenting us some cygwin paths even though
+   // we are windows native. Convert them as good as we can.
+   for (int iic = ic; iic < argc; ++iic) {
+      std::string iiarg(argv[iic]);
+      if (FromCygToNativePath(iiarg)) {
+         size_t len = iiarg.length();
+         // yes, we leak.
+         char *argviic = new char[len + 1];
+         strlcpy(argviic, iiarg.c_str(), len + 1);
+         argv[iic] = argviic;
+      }
+   }
+#endif
    if (argc < 2) {
       fprintf(stderr,
               shortHelp,
@@ -3736,7 +3753,6 @@ int RootClingMain(int argc,
 
    std::string dictname;
    std::string dictpathname;
-   int ic = 1; // skip the binary name.
    unsigned force = 0;
    unsigned onepcm = 0;
    bool ignoreExistingDict = false;
@@ -3840,21 +3856,6 @@ int RootClingMain(int argc,
       fprintf(stderr, "%s\n", shortHelp);
       return 1;
    }
-
-#if defined(R__WIN32) && !defined(R__WINGCC)
-   // cygwin's make is presenting us some cygwin paths even though
-   // we are windows native. Convert them as good as we can.
-   for (int iic = ic; iic < argc; ++iic) {
-      std::string iiarg(argv[iic]);
-      if (FromCygToNativePath(iiarg)) {
-         size_t len = iiarg.length();
-         // yes, we leak.
-         char *argviic = new char[len + 1];
-         strlcpy(argviic, iiarg.c_str(), len + 1);
-         argv[iic] = argviic;
-      }
-   }
-#endif
 
    // Store the temp files
    tempFileNamesCatalog tmpCatalog;
