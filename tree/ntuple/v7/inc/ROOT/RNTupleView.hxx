@@ -88,14 +88,20 @@ class RNTupleView {
    friend class RNTupleViewCollection;
 
 protected:
+   /**
+    * fFieldId has fParent always set to null; views access nested fields without looking at the parent
+    */
    RField<T> fField;
    Detail::RFieldValue fValue;
-   RNTupleView(std::string_view fieldName, Detail::RPageSource* pageSource)
-     : fField(fieldName), fValue(fField.GenerateValue())
+
+   RNTupleView(DescriptorId_t fieldId, Detail::RPageSource* pageSource)
+     : fField(pageSource->GetDescriptor().GetFieldDescriptor(fieldId).GetFieldName()), fValue(fField.GenerateValue())
    {
-      Detail::RFieldFuse::Connect(*pageSource, fField);
-      for (auto& f : fField) {
-         Detail::RFieldFuse::Connect(*pageSource, f);
+      Detail::RFieldFuse::Connect(fieldId, *pageSource, fField);
+      for (auto &f : fField) {
+         auto subFieldId =
+            pageSource->GetDescriptor().FindFieldId(Detail::RFieldBase::GetLeafName(f.GetName()), fieldId);
+         Detail::RFieldFuse::Connect(subFieldId, *pageSource, f);
       }
    }
 
@@ -121,8 +127,10 @@ class RNTupleView<float> {
 
 protected:
    RField<float> fField;
-   RNTupleView(std::string_view fieldName, Detail::RPageSource* pageSource) : fField(fieldName) {
-      Detail::RFieldFuse::Connect(*pageSource, fField);
+   RNTupleView(DescriptorId_t fieldId, Detail::RPageSource* pageSource)
+      : fField(pageSource->GetDescriptor().GetFieldDescriptor(fieldId).GetFieldName())
+   {
+      Detail::RFieldFuse::Connect(fieldId, *pageSource, fField);
    }
 
 public:
@@ -191,20 +199,14 @@ class RNTupleViewCollection : public RNTupleView<ClusterSize_t> {
     friend class RNTupleReader;
 
 private:
-   std::string fCollectionName;
    Detail::RPageSource* fSource;
+   DescriptorId_t fCollectionFieldId;
 
-   RNTupleViewCollection(std::string_view fieldName, Detail::RPageSource* source)
-      : RNTupleView<ClusterSize_t>(fieldName, source)
-      , fCollectionName(fieldName)
+   RNTupleViewCollection(DescriptorId_t fieldId, Detail::RPageSource* source)
+      : RNTupleView<ClusterSize_t>(fieldId, source)
       , fSource(source)
+      , fCollectionFieldId(fieldId)
    {}
-
-   std::string GetSubName(std::string_view name) {
-      std::string prefix(fCollectionName);
-      prefix.push_back(Detail::RFieldBase::kCollectionSeparator);
-      return prefix + std::string(name);
-   }
 
 public:
    RNTupleViewCollection(const RNTupleViewCollection& other) = delete;
@@ -220,9 +222,13 @@ public:
       return RNTupleViewRange(idxStart, idxStart + size);
    }
    template <typename T>
-   RNTupleView<T> GetView(std::string_view fieldName) { return RNTupleView<T>(GetSubName(fieldName), fSource); }
+   RNTupleView<T> GetView(std::string_view fieldName) {
+      auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName, fCollectionFieldId);
+      return RNTupleView<T>(fieldId, fSource);
+   }
    RNTupleViewCollection GetViewCollection(std::string_view fieldName) {
-      return RNTupleViewCollection(GetSubName(fieldName), fSource);
+      auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName, fCollectionFieldId);
+      return RNTupleViewCollection(fieldId, fSource);
    }
 
    ClusterSize_t operator()(NTupleSize_t index) {
