@@ -28,7 +28,7 @@ class UrlRequestJobHolder : public QObject {
 public:
    UrlRequestJobHolder(QWebEngineUrlRequestJob *req);
 
-   QWebEngineUrlRequestJob *req() { return fRequest; }
+   QWebEngineUrlRequestJob *req() const { return fRequest; }
 
    void reset();
 

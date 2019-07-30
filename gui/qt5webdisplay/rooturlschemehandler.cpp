@@ -20,7 +20,6 @@
 #include <QByteArray>
 #include <QFile>
 #include <QWebEngineUrlRequestJob>
-#include <QWebEngineProfile>
 
 #include <ROOT/RLogger.hxx>
 
@@ -36,17 +35,27 @@
 /// from the request to clear pointer
 ////////////////////////////////////////////////////////////////////////////////////
 
+
+/////////////////////////////////////////////////////////////////
+/// Constructor
+
 UrlRequestJobHolder::UrlRequestJobHolder(QWebEngineUrlRequestJob *req) : QObject(), fRequest(req)
 {
    if (fRequest)
       connect(fRequest, &QObject::destroyed, this, &UrlRequestJobHolder::onRequestDeleted);
 }
 
+/////////////////////////////////////////////////////////////////
+/// destroyed signal handler
+
 void UrlRequestJobHolder::onRequestDeleted(QObject *obj)
 {
    if (fRequest == obj)
       fRequest = nullptr;
 }
+
+/////////////////////////////////////////////////////////////////
+/// Reset holder
 
 void UrlRequestJobHolder::reset()
 {
@@ -56,6 +65,11 @@ void UrlRequestJobHolder::reset()
 }
 
 // ===================================================================
+
+/////////////////////////////////////////////////////////////////////////////////////
+/// Class TWebGuiCallArg
+/// Specialized handler of requests in THttpServer with QWebEngine
+////////////////////////////////////////////////////////////////////////////////////
 
 class TWebGuiCallArg : public THttpCallArg {
 
@@ -99,7 +113,7 @@ public:
       }
    }
 
-   virtual void HttpReplied()
+   void HttpReplied() override
    {
       QWebEngineUrlRequestJob *req = fRequest.req();
 
