@@ -34,21 +34,25 @@ int main()
    int use_gpu = 0; // set to 1 to use the GPU for training
    //   xgboost ------------------------------------------------
    // create the train data
-   std::vector<std::vector<float>> events;
-   std::vector<std::vector<float>> labels;
 
    std::string events_fname = "data_files/events.csv";
-   events                   = read_csv(events_fname);
    std::string preds_fname  = "data_files/python_predictions.csv";
-   labels                   = read_csv(preds_fname);
 
-   int rows2 = events.size();
-   int cols  = events[0].size();
+   std::cout << "***** Reading events *****\n";
+   std::vector<std::vector<float>> events;
+   std::vector<std::vector<float>> labels;
+   events = read_csv(events_fname);
+   labels = read_csv(preds_fname);
 
-   std::cout << "c: " << cols << "   r: " << rows2 << std::endl;
+   int cols = events[0].size();
+   int rows = events.size();
 
-   int rows = 5;
-   // read events in arrays
+   std::cout << rows << " rows but using only";
+   rows = 5;
+   std::cout << rows << " rows \n";
+   std::cout << cols << " columns \n";
+
+   std::cout << "Converting to XGDMatrix \n";
    float train[rows][cols];
    for (int i = 0; i < rows; i++)
       for (int j = 0; j < cols; j++) train[i][j] = events[i][j];
@@ -64,6 +68,7 @@ int main()
    XGDMatrixSetFloatInfo(h_train[0], "label", train_labels, rows);
 
    // read back the labels, just a sanity check
+   std::cout << "Check the labels as sanity check \n";
    bst_ulong    bst_result;
    const float *out_floats;
    XGDMatrixGetFloatInfo(h_train[0], "label", &bst_result, &out_floats);
@@ -97,19 +102,45 @@ int main()
    bst_ulong    out_len;
    const float *f;
    XGBoosterPredict(h_booster, h_test, 0, 0, &out_len, &f);
-
    for (unsigned int i = 0; i < out_len; i++) std::cout << "prediction[" << i << "]=" << f[i] << std::endl;
 
-   int results = 2;
-   std::cout << "Dumping 1 \n";
-   // const char **out_dump_array;
-   //           results = XGBoosterDumpModel(&h_booster, "", 3, &out_len, &out_dump_array);
-   std::cout << "Dump Moldel: " << results << std::endl;
-   // std::cout << "BB " << **out_dump_array << std::endl;
-   // delete out_dump_array;
-
    // results = XGBoosterSaveModel(&h_booster, fname2);
-   std::cout << "Save Moldel: " << results << std::endl;
+   safe_xgboost(XGBoosterSaveModel(h_booster, "./data/model2.txt"));
+   std::cout << "Model saved \n";
+
+   // ----------------------
+   BoosterHandle boosterHandle;
+   safe_xgboost(XGBoosterCreate(h_train, 1, &boosterHandle));
+   std::cout << "Loading model \n";
+   // safe_xgboost(XGBoosterLoadModel(boosterHandle, "./model3.baba"));
+   safe_xgboost(XGBoosterLoadModel(boosterHandle, "./data/model2.txt"));
+   std::cout << "Model loaded \n";
+
+   XGBoosterPredict(boosterHandle, h_test, 0, 0, &out_len, &f);
+   for (unsigned int i = 0; i < out_len; i++) std::cout << "prediction[" << i << "]=" << f[i] << std::endl;
+
+   // predict
+   /*
+   bst_ulong     out_len3 = 0;
+   const float * out_res  = NULL;
+   int           n_print2 = 10;
+   DMatrixHandle h_test2;
+   std::cout << "Loading \n";
+   XGDMatrixCreateFromMat((float *)train, rows, cols, -1, &h_test2);
+   bst_ulong    out_len4;
+   const float *f2;
+   std::cout << "Predicting \n";
+   XGBoosterPredict(boosterHandle, h_test2, 0, 0, &out_len4, &f2);
+   // std::cout << "predicting\n";
+   // safe_xgboost(XGBoosterPredict(boosterHandle, h_train, 0, 0, &out_len3, &out_res));
+   printf("y_pred: ");
+   for (int i = 0; i < n_print2; ++i) {
+      printf("%1.4f ", out_res[i]);
+   }
+   */
+   safe_xgboost(XGBoosterFree(boosterHandle));
+
+   // ---------------------
 
    // free xgboost internal structures
    XGDMatrixFree(h_train[0]);
@@ -167,6 +198,8 @@ int main()
    std::cout << "CC " << out_dptr << std::endl;
 
    safe_xgboost(XGBoosterPredict(booster, dtest, 0, 0, &out_len2, &out_result));
+   safe_xgboost(XGBoosterSaveModel(booster, "./data/model2.txt"));
+   std::cout << "Model saved \n";
    printf("y_pred: ");
    for (int i = 0; i < n_print; ++i) {
       printf("%1.4f ", out_result[i]);
@@ -181,16 +214,28 @@ int main()
    }
    printf("\n");
    // safe_xgboost(XGDMatrixCreateFromFile("./data/agaricus.txt.test", silent, &dtest));
-   safe_xgboost(XGBoosterSaveModel(booster, "./data/model.txt"));
+   // safe_xgboost(XGBoosterSaveModel(booster, "./data/model.txt"));
 
    const char **out_dump_array;
-   safe_xgboost(XGBoosterDumpModel(booster, "", 0, &out_len2, &out_dump_array));
-   std::cout << "BB " << **out_dump_array << std::endl;
+   // safe_xgboost(XGBoosterDumpModel(booster, "", 0, &out_len2, &out_dump_array));
+   // std::cout << "BB " << **out_dump_array << std::endl;
+
+   // safe_xgboost(XGBoosterLoadModel(&booster2, "./model3.baba"));
+
+   /*
+   safe_xgboost(XGBoosterPredict(booster, dtest, 0, 0, &out_len2, &out_result));
+   printf("y_pred: ");
+   for (int i = 0; i < n_print; ++i) {
+      printf("%1.4f ", out_result[i]);
+   }
+   */
 
    // free everything
    safe_xgboost(XGBoosterFree(booster));
    safe_xgboost(XGDMatrixFree(dtrain));
    safe_xgboost(XGDMatrixFree(dtest));
+
+   // safe_xgboost(XGBoosterSaveModel(booster, "./data/model.txt"));
 
    return 0;
 }
