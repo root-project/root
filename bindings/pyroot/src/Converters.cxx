@@ -1495,11 +1495,13 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
           result = new TValueCppObjectConverter( klass, kTRUE );
       }
    } else if ( Cppyy::IsEnum( realType ) ) {
-   // special case (Cling): represent enums as unsigned integers
-      if ( cpd == "&" )
-         h = isConst ? gConvFactories.find( "const long&" ) : gConvFactories.find( "long&" );
-      else
-         h = gConvFactories.find( "UInt_t" );
+      // Get underlying type of enum
+      std::string et(TClassEdit::ResolveTypedef(Cppyy::ResolveEnum(realType).c_str()));
+      if (cpd == "&") {
+         auto reft = et + "&";
+         h = isConst ? gConvFactories.find("const " + reft) : gConvFactories.find(reft);
+      } else
+         h = gConvFactories.find(et);
    } else if ( realType.find( "(*)" ) != std::string::npos ||
              ( realType.find( "::*)" ) != std::string::npos ) ) {
    // this is a function function pointer
@@ -1629,7 +1631,6 @@ namespace {
       NFp_t( "const int&",                &CreateConstIntRefConverter        ),
       NFp_t( "unsigned int",              &CreateUIntConverter               ),
       NFp_t( "const unsigned int&",       &CreateConstUIntRefConverter       ),
-      NFp_t( "UInt_t", /* enum */         &CreateIntConverter /* yes: Int */ ),
       NFp_t( "long",                      &CreateLongConverter               ),
       NFp_t( "long&",                     &CreateLongRefConverter            ),
       NFp_t( "const long&",               &CreateConstLongRefConverter       ),

@@ -722,8 +722,9 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType,
             result = new TCppObjectExecutor( klass );
       }
    } else if ( Cppyy::IsEnum( realType ) ) {
-   // enums don't resolve to unsigned ints, but that's what they are ...
-      h = gExecFactories.find( "UInt_t" + cpd );
+      // Get underlying type of enum
+      std::string et(TClassEdit::ResolveTypedef(Cppyy::ResolveEnum(realType).c_str()));
+      h = gExecFactories.find( et + cpd );
    } else {
    // handle (with warning) unknown types
       std::stringstream s;
