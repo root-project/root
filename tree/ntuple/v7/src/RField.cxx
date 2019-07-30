@@ -34,14 +34,14 @@
 #include <iostream>
 #include <utility>
 
-void ROOT::Experimental::Detail::RFieldFuse::Connect(RPageStorage &pageStorage, RFieldBase &field)
+void ROOT::Experimental::Detail::RFieldFuse::Connect(DescriptorId_t fieldId, RPageStorage &pageStorage, RFieldBase &field)
 {
    if (field.fColumns.empty())
       field.DoGenerateColumns();
    for (auto& column : field.fColumns) {
       if ((field.fParent != nullptr) && (column->GetOffsetColumn() == nullptr))
          column->SetOffsetColumn(field.fParent->fPrincipalColumn);
-      column->Connect(&pageStorage);
+      column->Connect(fieldId, &pageStorage);
    }
 }
 

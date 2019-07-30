@@ -95,6 +95,8 @@ class RNTupleReader : public Detail::RNTuple {
 private:
    std::unique_ptr<Detail::RPageSource> fSource;
 
+   void ConnectModel();
+
 public:
    // Browse through the entries
    class RIterator : public std::iterator<std::forward_iterator_tag, NTupleSize_t> {
@@ -146,9 +148,13 @@ public:
    /// GetView<double>("particles.pt") or GetView<std::vector<double>>("particle").  It can as well be the index
    /// field of a collection itself, like GetView<NTupleSize_t>("particle")
    template <typename T>
-   RNTupleView<T> GetView(std::string_view fieldName) { return RNTupleView<T>(fieldName, fSource.get()); }
+   RNTupleView<T> GetView(std::string_view fieldName) {
+      auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName, kInvalidDescriptorId);
+      return RNTupleView<T>(fieldId, fSource.get());
+   }
    RNTupleViewCollection GetViewCollection(std::string_view fieldName) {
-      return RNTupleViewCollection(fieldName, fSource.get());
+      auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName, kInvalidDescriptorId);
+      return RNTupleViewCollection(fieldId, fSource.get());
    }
 
    RIterator begin() { return RIterator(0); }

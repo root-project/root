@@ -70,7 +70,7 @@ public:
    RColumn& operator =(const RColumn&) = delete;
    ~RColumn();
 
-   void Connect(RPageStorage* pageStorage);
+   void Connect(DescriptorId_t fieldId, RPageStorage *pageStorage);
 
    void Append(const RColumnElementBase& element) {
       void* dst = fHeadPage.TryGrow(1);

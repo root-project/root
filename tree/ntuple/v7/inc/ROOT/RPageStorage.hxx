@@ -74,7 +74,7 @@ public:
 
    /// Register a new column.  When reading, the column must exist in the ntuple on disk corresponding to the meta-data.
    /// When writing, every column can only be attached once.
-   virtual ColumnHandle_t AddColumn(const RColumn &column) = 0;
+   virtual ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) = 0;
    /// Whether the concrete implementation is a sink or a source
    virtual EPageStorageType GetType() = 0;
 

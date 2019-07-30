@@ -22,6 +22,7 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <utility>
 
 ROOT::Experimental::Detail::RNTuple::RNTuple(std::unique_ptr<ROOT::Experimental::RNTupleModel> model)
@@ -36,6 +37,18 @@ ROOT::Experimental::Detail::RNTuple::~RNTuple()
 
 //------------------------------------------------------------------------------
 
+void ROOT::Experimental::RNTupleReader::ConnectModel() {
+   std::unordered_map<const Detail::RFieldBase *, DescriptorId_t> fieldPtr2Id;
+   fieldPtr2Id[fModel->GetRootField()] = kInvalidDescriptorId;
+   for (auto& field : *fModel->GetRootField()) {
+      auto parentId = fieldPtr2Id[field.GetParent()];
+      auto fieldId = fSource->GetDescriptor().FindFieldId(Detail::RFieldBase::GetLeafName(field.GetName()), parentId);
+      R__ASSERT(fieldId != kInvalidDescriptorId);
+      fieldPtr2Id[&field] = fieldId;
+      Detail::RFieldFuse::Connect(fieldId, *fSource, field);
+   }
+}
+
 ROOT::Experimental::RNTupleReader::RNTupleReader(
    std::unique_ptr<ROOT::Experimental::RNTupleModel> model,
    std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
@@ -43,9 +56,7 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(
    , fSource(std::move(source))
 {
    fSource->Attach();
-   for (auto& field : *fModel->GetRootField()) {
-      Detail::RFieldFuse::Connect(*fSource, field);
-   }
+   ConnectModel();
    fNEntries = fSource->GetNEntries();
 }
 
@@ -55,9 +66,7 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimen
 {
    fSource->Attach();
    fModel = fSource->GenerateModel();
-   for (auto& field : *fModel->GetRootField()) {
-      Detail::RFieldFuse::Connect(*fSource, field);
-   }
+   ConnectModel();
    fNEntries = fSource->GetNEntries();
 }
 

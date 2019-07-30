@@ -66,7 +66,7 @@ ROOT::Experimental::Detail::RPageSinkRoot::~RPageSinkRoot()
 }
 
 ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
-ROOT::Experimental::Detail::RPageSinkRoot::AddColumn(const RColumn &column)
+ROOT::Experimental::Detail::RPageSinkRoot::AddColumn(DescriptorId_t fieldId, const RColumn &column)
 {
    ROOT::Experimental::Internal::RColumnHeader columnHeader;
    columnHeader.fName = column.GetModel().GetName();
@@ -104,13 +104,13 @@ void ROOT::Experimental::Detail::RPageSinkRoot::Create(RNTupleModel &model)
       //printf("Added field %s type [%s]\n", f.GetName().c_str(), f.GetType().c_str());
       if (f.GetParent()) fieldHeader.fParentName = f.GetParent()->GetName();
       fNTupleHeader.fFields.emplace_back(fieldHeader);
-      fDescriptorBuilder.AddField(fLastFieldId, f.GetFieldVersion(), f.GetTypeVersion(), f.GetName(), f.GetType(),
-                                  f.GetStructure());
+      fDescriptorBuilder.AddField(fLastFieldId, f.GetFieldVersion(), f.GetTypeVersion(),
+                                  RFieldBase::GetLeafName(f.GetName()), f.GetType(), f.GetStructure());
       if (f.GetParent() != model.GetRootField()) {
          fDescriptorBuilder.SetFieldParent(fLastFieldId, fFieldPtr2Id[f.GetParent()]);
       }
 
-      Detail::RFieldFuse::Connect(*this, f); // issues in turn one or several calls to AddColumn()
+      Detail::RFieldFuse::Connect(fLastFieldId, *this, f); // issues in turn one or several calls to AddColumn()
       fFieldPtr2Id[&f] = fLastFieldId++;
    }
 
@@ -275,10 +275,13 @@ ROOT::Experimental::Detail::RPageSourceRoot::~RPageSourceRoot()
 
 
 ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
-ROOT::Experimental::Detail::RPageSourceRoot::AddColumn(const RColumn &column)
+ROOT::Experimental::Detail::RPageSourceRoot::AddColumn(DescriptorId_t fieldId, const RColumn &column)
 {
+   R__ASSERT(fieldId != kInvalidDescriptorId);
    auto& model = column.GetModel();
-   auto columnId = fMapper.fColumnName2Id[model.GetName()];
+   //auto columnId = fMapper.fColumnName2Id[model.GetName()];
+   auto columnId = fDescriptor.FindColumnId(fieldId, column.GetIndex());
+   R__ASSERT(columnId != kInvalidDescriptorId);
    R__ASSERT(model == *fMapper.fId2ColumnModel[columnId]);
    //printf("Attaching column %s id %d type %d length %lu\n",
    //   column->GetModel().GetName().c_str(), columnId, (int)(column->GetModel().GetType()),

@@ -13,7 +13,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RField.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RStringView.hxx>
@@ -319,17 +318,22 @@ std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeFooter(void* buffe
 
 
 ROOT::Experimental::DescriptorId_t
-ROOT::Experimental::RNTupleDescriptor::FindFieldId(const Detail::RFieldBase &field) const
+ROOT::Experimental::RNTupleDescriptor::FindFieldId(std::string_view fieldName, DescriptorId_t parentId) const
 {
-   DescriptorId_t parentId = kInvalidDescriptorId;
-   if (field.GetParent() != nullptr)
-      parentId = FindFieldId(*field.GetParent());
    for (const auto &fd : fFieldDescriptors) {
-      if (fd.second.GetParentId() == parentId &&
-          fd.second.GetFieldName() == Detail::RFieldBase::GetLeafName(field.GetName()))
-      {
+      if (fd.second.GetParentId() == parentId && fd.second.GetFieldName() == fieldName)
          return fd.second.GetId();
-      }
+   }
+   return kInvalidDescriptorId;
+}
+
+
+ROOT::Experimental::DescriptorId_t
+ROOT::Experimental::RNTupleDescriptor::FindColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex)
+{
+   for (const auto &cd : fColumnDescriptors) {
+      if (cd.second.GetFieldId() == fieldId && cd.second.GetIndex() == columnIndex)
+        return cd.second.GetId();
    }
    return kInvalidDescriptorId;
 }

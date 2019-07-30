@@ -229,12 +229,12 @@ can be read or written.
 // clang-format on
 class RFieldFuse {
 public:
-   static void Connect(RPageStorage &pageStorage, RFieldBase &field);
+   static void Connect(DescriptorId_t fieldId, RPageStorage &pageStorage, RFieldBase &field);
 };
 
 } // namespace Detail
 
-/// The container field for a tree model, which itself has no physical representation
+/// The container field for an ntuple model, which itself has no physical representation
 class RFieldRoot : public Detail::RFieldBase {
 public:
    RFieldRoot() : Detail::RFieldBase("", "", ENTupleStructure::kRecord, false /* isSimple */) {}
