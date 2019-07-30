@@ -20,6 +20,7 @@
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RStringView.hxx>
 
+#include <memory>
 #include <vector>
 #include <string>
 #include <unordered_map>
@@ -28,6 +29,7 @@ namespace ROOT {
 namespace Experimental {
 
 class RNTupleDescriptorBuilder;
+class RNTupleModel;
 
 class RFieldDescriptor {
    friend class RNTupleDescriptorBuilder;
@@ -210,7 +212,10 @@ public:
    std::size_t GetNClusters() const { return fClusterDescriptors.size(); }
 
    DescriptorId_t FindFieldId(std::string_view fieldName, DescriptorId_t parentId) const;
-   DescriptorId_t FindColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex);
+   DescriptorId_t FindColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex) const;
+
+   /// Re-create the C++ model from the stored meta-data
+   std::unique_ptr<RNTupleModel> GenerateModel() const;
 };
 
 

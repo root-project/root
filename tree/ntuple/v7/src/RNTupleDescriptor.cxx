@@ -14,6 +14,7 @@
  *************************************************************************/
 
 #include <ROOT/RNTupleDescriptor.hxx>
+#include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RStringView.hxx>
 
@@ -329,13 +330,26 @@ ROOT::Experimental::RNTupleDescriptor::FindFieldId(std::string_view fieldName, D
 
 
 ROOT::Experimental::DescriptorId_t
-ROOT::Experimental::RNTupleDescriptor::FindColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex)
+ROOT::Experimental::RNTupleDescriptor::FindColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex) const
 {
    for (const auto &cd : fColumnDescriptors) {
       if (cd.second.GetFieldId() == fieldId && cd.second.GetIndex() == columnIndex)
         return cd.second.GetId();
    }
    return kInvalidDescriptorId;
+}
+
+
+std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDescriptor::GenerateModel() const
+{
+   auto model = std::make_unique<RNTupleModel>();
+   for (const auto& fd : fFieldDescriptors) {
+      if (fd.second.GetParentId() != kInvalidDescriptorId)
+         continue;
+      auto field = Detail::RFieldBase::Create(fd.second.GetFieldName(), fd.second.GetTypeName());
+      model->AddField(std::unique_ptr<Detail::RFieldBase>(field));
+   }
+   return model;
 }
 
 

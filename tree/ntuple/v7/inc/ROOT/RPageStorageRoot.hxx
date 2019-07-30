@@ -231,7 +231,6 @@ public:
 
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
    void Attach() final;
-   std::unique_ptr<ROOT::Experimental::RNTupleModel> GenerateModel() final;
    NTupleSize_t GetNEntries() final;
    NTupleSize_t GetNElements(ColumnHandle_t columnHandle) final;
    ColumnId_t GetColumnId(ColumnHandle_t columnHandle) final;

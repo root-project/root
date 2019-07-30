@@ -135,9 +135,6 @@ public:
    /// Open the physical storage container for the tree
    virtual void Attach() = 0;
 
-   /// Re-create the C++ model from the stored meta-data
-   virtual std::unique_ptr<ROOT::Experimental::RNTupleModel> GenerateModel() = 0;
-
    virtual NTupleSize_t GetNEntries() = 0;
    virtual NTupleSize_t GetNElements(ColumnHandle_t columnHandle) = 0;
    virtual ColumnId_t GetColumnId(ColumnHandle_t columnHandle) = 0;
