@@ -110,7 +110,7 @@ void ROOT::Experimental::Detail::RPageSinkRoot::Create(RNTupleModel &model)
          fDescriptorBuilder.SetFieldParent(fLastFieldId, fFieldPtr2Id[f.GetParent()]);
       }
 
-      f.ConnectColumns(this); // issues in turn one or several calls to AddColumn()
+      Detail::RFieldFuse::Connect(*this, f); // issues in turn one or several calls to AddColumn()
       fFieldPtr2Id[&f] = fLastFieldId++;
    }
 

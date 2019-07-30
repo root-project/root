@@ -93,9 +93,9 @@ protected:
    RNTupleView(std::string_view fieldName, Detail::RPageSource* pageSource)
      : fField(fieldName), fValue(fField.GenerateValue())
    {
-      fField.ConnectColumns(pageSource);
+      Detail::RFieldFuse::Connect(*pageSource, fField);
       for (auto& f : fField) {
-         f.ConnectColumns(pageSource);
+         Detail::RFieldFuse::Connect(*pageSource, f);
       }
    }
 
@@ -122,7 +122,7 @@ class RNTupleView<float> {
 protected:
    RField<float> fField;
    RNTupleView(std::string_view fieldName, Detail::RPageSource* pageSource) : fField(fieldName) {
-      fField.ConnectColumns(pageSource);
+      Detail::RFieldFuse::Connect(*pageSource, fField);
    }
 
 public:

@@ -44,7 +44,7 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(
 {
    fSource->Attach();
    for (auto& field : *fModel->GetRootField()) {
-      field.ConnectColumns(fSource.get());
+      Detail::RFieldFuse::Connect(*fSource, field);
    }
    fNEntries = fSource->GetNEntries();
 }
@@ -56,7 +56,7 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimen
    fSource->Attach();
    fModel = fSource->GenerateModel();
    for (auto& field : *fModel->GetRootField()) {
-      field.ConnectColumns(fSource.get());
+      Detail::RFieldFuse::Connect(*fSource, field);
    }
    fNEntries = fSource->GetNEntries();
 }
