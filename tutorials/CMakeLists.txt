@@ -385,6 +385,8 @@ set (tmva-TMVAClassificationCategoryApplication-depends tutorial-tmva-TMVAClassi
 set (tmva-TMVAMulticlass-depends tutorial-tmva-TMVAMultipleBackgroundExample)
 set (tmva-TMVAMulticlassApplication-depends tutorial-tmva-TMVAMulticlass)
 set (tmva-TMVARegressionApplication-depends tutorial-tmva-TMVARegression)
+set (tmva-tmva101_Training-depends tutorial-tmva-tmva100_DataPreparation-py)
+set (tmva-tmva102_Testing-depends tutorial-tmva-tmva101_Training-py)
 
 
 #---Loop over all tutorials and define the corresponding test---------
@@ -462,6 +464,12 @@ if(ROOT_python_FOUND)
     file(GLOB dataframe_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*.py tmva/tmva*.py)
     list(REMOVE_ITEM pytutorials ${dataframe_veto_py})
     list(REMOVE_ITEM pytutorials pyroot/pyroot002_TTreeAsMatrix.py)
+  endif()
+
+  find_python_module(xgboost QUIET)
+  if (NOT PY_XGBOOST_FOUND OR NOT dataframe)
+    file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*.py tmva/tmva10*.py)
+    list(REMOVE_ITEM pytutorials ${tmva_veto_py})
   endif()
 
   #---Python tutorials dependencies--------------------------------------
