@@ -215,6 +215,10 @@ public:
    std::size_t GetNColumns() const { return fColumnDescriptors.size(); }
    std::size_t GetNClusters() const { return fClusterDescriptors.size(); }
 
+   // Note that this is the number of entries as seen with the currently loaded cluster meta-data; there might be more
+   NTupleSize_t GetNEntries() const;
+   NTupleSize_t GetNElements(DescriptorId_t columnId) const;
+
    DescriptorId_t FindFieldId(std::string_view fieldName, DescriptorId_t parentId) const;
    DescriptorId_t FindColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex) const;
    DescriptorId_t FindClusterId(DescriptorId_t columnId, NTupleSize_t index) const;

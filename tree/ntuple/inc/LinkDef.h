@@ -26,11 +26,5 @@
 #pragma link C++ class ROOT::Experimental::RNTupleModel-;
 
 #pragma link C++ class ROOT::Experimental::Internal::RNTupleBlob+;
-#pragma link C++ class ROOT::Experimental::Internal::RNTupleHeader+;
-#pragma link C++ class ROOT::Experimental::Internal::RNTupleFooter+;
-#pragma link C++ class ROOT::Experimental::Internal::RFieldHeader+;
-#pragma link C++ class ROOT::Experimental::Internal::RColumnHeader+;
-#pragma link C++ class ROOT::Experimental::Internal::RClusterFooter+;
-#pragma link C++ class ROOT::Experimental::Internal::RPageInfo+;
 
 #endif

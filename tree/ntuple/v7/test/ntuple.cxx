@@ -24,6 +24,7 @@
 using DescriptorId_t = ROOT::Experimental::DescriptorId_t;
 using EColumnType = ROOT::Experimental::EColumnType;
 using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
+using NTupleSize_t = ROOT::Experimental::NTupleSize_t;
 using RColumnModel = ROOT::Experimental::RColumnModel;
 using RNTupleDescriptor = ROOT::Experimental::RNTupleDescriptor;
 using RNTupleDescriptorBuilder = ROOT::Experimental::RNTupleDescriptorBuilder;
@@ -602,6 +603,10 @@ TEST(RNTuple, Descriptor)
    reco.SetFromHeader(headerBuffer);
    reco.AddClustersFromFooter(footerBuffer);
    EXPECT_EQ(reference, reco.GetDescriptor());
+
+   EXPECT_EQ(NTupleSize_t(1100), reference.GetNEntries());
+   EXPECT_EQ(NTupleSize_t(1100), reference.GetNElements(3));
+   EXPECT_EQ(NTupleSize_t(3300), reference.GetNElements(4));
 
    EXPECT_EQ(DescriptorId_t(1), reference.FindFieldId("list", ROOT::Experimental::kInvalidDescriptorId));
    EXPECT_EQ(DescriptorId_t(2), reference.FindFieldId("list", 1));

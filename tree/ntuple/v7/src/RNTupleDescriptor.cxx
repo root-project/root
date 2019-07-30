@@ -20,6 +20,7 @@
 
 #include <TError.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
 #include <iostream>
@@ -317,6 +318,25 @@ std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeFooter(void* buffe
    return size;
 }
 
+
+ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleDescriptor::GetNEntries() const
+{
+   NTupleSize_t result = 0;
+   for (const auto &cd : fClusterDescriptors) {
+      result = std::max(result, cd.second.GetFirstEntryIndex() + cd.second.GetNEntries());
+   }
+   return result;
+}
+
+ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleDescriptor::GetNElements(DescriptorId_t columnId) const
+{
+   NTupleSize_t result = 0;
+   for (const auto &cd : fClusterDescriptors) {
+      auto columnRange = cd.second.GetColumnRange(columnId);
+      result = std::max(result, columnRange.fFirstElementIndex + columnRange.fNElements);
+   }
+   return result;
+}
 
 ROOT::Experimental::DescriptorId_t
 ROOT::Experimental::RNTupleDescriptor::FindFieldId(std::string_view fieldName, DescriptorId_t parentId) const

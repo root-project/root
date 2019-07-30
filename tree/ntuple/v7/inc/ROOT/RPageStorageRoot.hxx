@@ -34,46 +34,6 @@ namespace Experimental {
 
 namespace Internal {
 
-struct RFieldHeader {
-   std::int32_t fVersion = 0;
-   std::string fName;
-   std::string fType;
-   std::string fParentName;
-};
-
-struct RColumnHeader {
-   std::int32_t fVersion = 0;
-   std::string fName;
-   EColumnType fType;
-   bool fIsSorted;
-   std::string fOffsetColumn;
-};
-
-struct RNTupleHeader {
-   std::int32_t fVersion = 0;
-   std::string fModelUuid;
-   std::vector<RFieldHeader> fFields;
-   std::vector<RColumnHeader> fColumns;
-};
-
-struct RNTupleFooter {
-   std::int32_t fVersion = 0;
-   std::int32_t fNClusters = 0;
-   NTupleSize_t fNEntries = 0;
-   std::vector<NTupleSize_t> fNElementsPerColumn;
-};
-
-struct RPageInfo {
-   std::vector<NTupleSize_t> fRangeStarts;
-};
-
-struct RClusterFooter {
-   std::int32_t fVersion = 0;
-   NTupleSize_t fEntryRangeStart = 0;
-   NTupleSize_t fNEntries = 0;
-   std::vector<RPageInfo> fPagesPerColumn;
-};
-
 struct RNTupleBlob {
    RNTupleBlob() {}
    RNTupleBlob(int size, unsigned char *content) : fSize(size), fContent(content) {}
@@ -92,41 +52,6 @@ struct RNTupleBlob {
 namespace Detail {
 
 class RPagePool;
-
-/**
- * Maps the ntuple meta-data to and from TFile
- */
-class RMapper {
-public:
-   static constexpr const char* kKeySeparator = "_";
-   static constexpr const char* kKeyNTupleHeader = "RFH";
-   static constexpr const char* kKeyNTupleFooter = "RFF";
-   static constexpr const char* kKeyClusterFooter = "RFCF";
-   static constexpr const char* kKeyPagePayload = "RFP";
-
-   struct RColumnIndex {
-      NTupleSize_t fNElements = 0;
-      std::vector<NTupleSize_t> fRangeStarts;
-      std::vector<NTupleSize_t> fClusterId;
-      std::vector<NTupleSize_t> fPageInCluster;
-      std::vector<NTupleSize_t> fSelfClusterOffset;
-      std::vector<NTupleSize_t> fPointeeClusterOffset;
-   };
-
-   struct RFieldDescriptor {
-      RFieldDescriptor(const std::string &f, const std::string &t) : fFieldName(f), fTypeName(t) {}
-      std::string fFieldName;
-      std::string fTypeName;
-   };
-
-   NTupleSize_t fNEntries = 0;
-   std::unordered_map<std::int32_t, std::unique_ptr<RColumnModel>> fId2ColumnModel;
-   std::unordered_map<std::string, std::int32_t> fColumnName2Id;
-   std::unordered_map<std::int32_t, std::int32_t> fColumn2Pointee;
-   std::vector<RColumnIndex> fColumnIndex;
-   std::vector<RFieldDescriptor> fRootFields;
-};
-
 
 // clang-format off
 /**
@@ -150,19 +75,13 @@ private:
    /// Currently, an ntuple is stored as a directory in a TFile
    TDirectory *fDirectory;
    RSettings fSettings;
-   /// Updated on CommitPage and written and reset on CommitCluster
-   ROOT::Experimental::Internal::RClusterFooter fCurrentCluster;
-   ROOT::Experimental::Internal::RNTupleHeader fNTupleHeader;
-   ROOT::Experimental::Internal::RNTupleFooter fNTupleFooter;
-
-   RMapper fMapper;
-   NTupleSize_t fPrevClusterNEntries = 0;
 
    /// Field, column, cluster ids and page indexes per cluster are issued sequentially starting with 0
    DescriptorId_t fLastFieldId = 0;
    DescriptorId_t fLastColumnId = 0;
    DescriptorId_t fLastClusterId = 0;
    DescriptorId_t fLastPageIdx = 0;
+   NTupleSize_t fPrevClusterNEntries = 0;
    RNTupleDescriptorBuilder fDescriptorBuilder;
 
    /// Keeps track of the number of elements in the currently open cluster. Indexed by column id.
@@ -222,7 +141,6 @@ private:
    TDirectory *fDirectory;
    RSettings fSettings;
 
-   RMapper fMapper;
    RNTupleDescriptor fDescriptor;
 
 public:
