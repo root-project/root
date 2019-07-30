@@ -614,6 +614,10 @@ TEST(RNTuple, Descriptor)
    EXPECT_EQ(ROOT::Experimental::kInvalidDescriptorId, reference.FindColumnId(42, 2));
    EXPECT_EQ(ROOT::Experimental::kInvalidDescriptorId, reference.FindColumnId(43, 0));
 
+   EXPECT_EQ(DescriptorId_t(0), reference.FindClusterId(3, 0));
+   EXPECT_EQ(DescriptorId_t(1), reference.FindClusterId(3, 100));
+   EXPECT_EQ(ROOT::Experimental::kInvalidDescriptorId, reference.FindClusterId(3, 40000));
+
    delete[] footerBuffer;
    delete[] headerBuffer;
 }
