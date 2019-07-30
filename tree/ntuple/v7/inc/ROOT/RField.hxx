@@ -50,6 +50,7 @@ class RFieldCollection;
 
 namespace Detail {
 
+class RFieldFuse;
 class RPageStorage;
 
 // clang-format off
@@ -65,7 +66,9 @@ The field knows based on its type and the field name the type(s) and name(s) of 
 */
 // clang-format on
 class RFieldBase {
+   friend class ROOT::Experimental::Detail::RFieldFuse; // to connect the columns to a page storage
    friend class ROOT::Experimental::RFieldCollection; // to change the field names when collections are attached
+
 private:
    /// The field name is a unique within a tree and also the basis for the column name(s)
    std::string fName;
@@ -145,9 +148,6 @@ public:
    /// Get the name for an item sub field that is part of a collection, e.g. the float field of std::vector<float>
    static std::string GetCollectionName(const std::string &parentName);
 
-   /// Registeres (or re-registers) the backing columns with the physical storage
-   void ConnectColumns(Detail::RPageStorage *pageStorage);
-
    /// Generates a tree value of the field type and allocates new initialized memory according to the type.
    RFieldValue GenerateValue();
    /// Generates a tree value in a given location of size at least GetValueSize(). Assumes that where has been
@@ -215,6 +215,21 @@ public:
 
    RIterator begin();
    RIterator end();
+};
+
+// clang-format off
+/**
+\class ROOT::Experimental::RFieldFuse
+\ingroup NTuple
+\brief A friend of RFieldBase responsible for connecting a field's columns to the physical page storage
+
+Fields and their columns live in the void until connected to a physical page storage.  Only once connected, data
+can be read or written.
+*/
+// clang-format on
+class RFieldFuse {
+public:
+   static void Connect(RPageStorage &pageStorage, RFieldBase &field);
 };
 
 } // namespace Detail
