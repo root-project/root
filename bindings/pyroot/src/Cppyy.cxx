@@ -175,6 +175,18 @@ std::string Cppyy::ResolveName( const std::string& cppitem_name )
    return TClassEdit::ResolveTypedef( tclean.c_str(), true );
 }
 
+std::string Cppyy::ResolveEnum(const std::string& enum_type)
+{
+   auto en = TEnum::GetEnum(enum_type.c_str());
+   if (en) {
+      auto ut = en->GetUnderlyingType();
+      if (ut != EDataType::kNumDataTypes)
+         return TDataType::GetTypeName(ut);
+   }
+   // Can't get type of enum, use int as default
+   return "int";
+}
+
 Cppyy::TCppScope_t Cppyy::GetScope( const std::string& sname )
 {
    std::string scope_name;
