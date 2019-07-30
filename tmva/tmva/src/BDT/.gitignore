@@ -5,6 +5,7 @@
 callgrind.out.*
 *.png
 data/
+.ipynb_checkpoints/
 
 # Prerequisites
 *.d

@@ -27,16 +27,12 @@
          exit(1);                                                                                   \
       }                                                                                             \
    }
-
+/// Example on how to read and play with xgboost
 int main()
 {
-   int silent  = 0;
-   int use_gpu = 0; // set to 1 to use the GPU for training
-   //   xgboost ------------------------------------------------
-   // create the train data
-
    std::string events_fname = "data_files/events.csv";
    std::string preds_fname  = "data_files/python_predictions.csv";
+   const char *model_fname  = "./data/model.rabbit";
 
    std::cout << "***** Reading events *****\n";
    std::vector<std::vector<float>> events;
@@ -52,190 +48,160 @@ int main()
    std::cout << rows << " rows \n";
    std::cout << cols << " columns \n";
 
-   std::cout << "Converting to XGDMatrix \n";
+   std::cout << "***** Converting to XGDMatrix *****\n";
    float train[rows][cols];
    for (int i = 0; i < rows; i++)
       for (int j = 0; j < cols; j++) train[i][j] = events[i][j];
 
-   float train_labels[rows];
-   for (int i = 0; i < rows; i++) train_labels[i] = labels[i][0];
+   float m_labels[rows];
+   for (int i = 0; i < rows; i++) m_labels[i] = labels[i][0];
 
-   // convert to DMatrix
-   DMatrixHandle h_train[1];
-   XGDMatrixCreateFromMat((float *)train, rows, cols, -1, &h_train[0]);
-
-   // load the labels
-   XGDMatrixSetFloatInfo(h_train[0], "label", train_labels, rows);
+   DMatrixHandle h_train;
+   XGDMatrixCreateFromMat((float *)train, rows, cols, -1, &h_train);
 
    // read back the labels, just a sanity check
-   std::cout << "Check the labels as sanity check \n";
-   bst_ulong    bst_result;
-   const float *out_floats;
-   XGDMatrixGetFloatInfo(h_train[0], "label", &bst_result, &out_floats);
-   for (unsigned int i = 0; i < bst_result; i++) std::cout << "label[" << i << "]=" << out_floats[i] << std::endl;
-
-   BoosterHandle h_booster2;
-   char *        fname2 = "model2.json";
-   // XGBoosterLoadModel(&h_booster2, &fname2);
-   // create the booster and load some parameters
-   BoosterHandle h_booster;
-   XGBoosterCreate(h_train, 1, &h_booster);
-   XGBoosterSetParam(h_booster, "booster", "gbtree");
-   XGBoosterSetParam(h_booster, "objective", "reg:linear");
-   XGBoosterSetParam(h_booster, "max_depth", "3");
-   XGBoosterSetParam(h_booster, "eta", "0.1");
-   XGBoosterSetParam(h_booster, "min_child_weight", "1");
-   XGBoosterSetParam(h_booster, "subsample", "0.5");
-   XGBoosterSetParam(h_booster, "colsample_bytree", "1");
-   XGBoosterSetParam(h_booster, "num_parallel_tree", "1");
-
-   // perform 200 learning iterations
-   for (int iter = 0; iter < 200; iter++) XGBoosterUpdateOneIter(h_booster, iter, h_train[0]);
+   std::cout << "The labels are: \n";
+   for (int i = 0; i < rows; i++) std::cout << "label[" << i << "]=" << m_labels[i] << std::endl;
 
    // predict
-   const int sample_rows = 5;
-   float     test[sample_rows][cols];
-   for (int i = 0; i < sample_rows; i++)
-      for (int j = 0; j < cols; j++) test[i][j] = (i + 1) * (j + 1);
-   DMatrixHandle h_test;
-   XGDMatrixCreateFromMat((float *)test, sample_rows, cols, -1, &h_test);
-   bst_ulong    out_len;
-   const float *f;
-   XGBoosterPredict(h_booster, h_test, 0, 0, &out_len, &f);
-   for (unsigned int i = 0; i < out_len; i++) std::cout << "prediction[" << i << "]=" << f[i] << std::endl;
-
-   // results = XGBoosterSaveModel(&h_booster, fname2);
-   safe_xgboost(XGBoosterSaveModel(h_booster, "./data/model2.txt"));
-   std::cout << "Model saved \n";
 
    // ----------------------
+   std::cout << "***** Reading booster ***** \n";
    BoosterHandle boosterHandle;
-   safe_xgboost(XGBoosterCreate(h_train, 1, &boosterHandle));
+   safe_xgboost(XGBoosterCreate(0, 0, &boosterHandle));
    std::cout << "Loading model \n";
-   // safe_xgboost(XGBoosterLoadModel(boosterHandle, "./model3.baba"));
-   safe_xgboost(XGBoosterLoadModel(boosterHandle, "./data/model2.txt"));
+
+   safe_xgboost(XGBoosterLoadModel(boosterHandle, model_fname));
    std::cout << "Model loaded \n";
 
-   XGBoosterPredict(boosterHandle, h_test, 0, 0, &out_len, &f);
+   std::cout << "***** Predicts ***** \n";
+   bst_ulong    out_len;
+   const float *f;
+   XGBoosterPredict(boosterHandle, h_train, 0, 0, &out_len, &f);
    for (unsigned int i = 0; i < out_len; i++) std::cout << "prediction[" << i << "]=" << f[i] << std::endl;
 
-   // predict
-   /*
-   bst_ulong     out_len3 = 0;
-   const float * out_res  = NULL;
-   int           n_print2 = 10;
-   DMatrixHandle h_test2;
-   std::cout << "Loading \n";
-   XGDMatrixCreateFromMat((float *)train, rows, cols, -1, &h_test2);
-   bst_ulong    out_len4;
-   const float *f2;
-   std::cout << "Predicting \n";
-   XGBoosterPredict(boosterHandle, h_test2, 0, 0, &out_len4, &f2);
-   // std::cout << "predicting\n";
-   // safe_xgboost(XGBoosterPredict(boosterHandle, h_train, 0, 0, &out_len3, &out_res));
-   printf("y_pred: ");
-   for (int i = 0; i < n_print2; ++i) {
-      printf("%1.4f ", out_res[i]);
-   }
-   */
-   safe_xgboost(XGBoosterFree(boosterHandle));
-
-   // ---------------------
-
    // free xgboost internal structures
-   XGDMatrixFree(h_train[0]);
-   XGDMatrixFree(h_test);
-   XGBoosterFree(h_booster);
-
-   // ------------------ example 2 -----------------------------------------------
-   // load the data
-   DMatrixHandle dtrain, dtest;
-   safe_xgboost(XGDMatrixCreateFromFile("./data/agaricus.txt.train", silent, &dtrain));
-   safe_xgboost(XGDMatrixCreateFromFile("./data/agaricus.txt.test", silent, &dtest));
-
-   // create the booster
-   BoosterHandle booster;
-   DMatrixHandle eval_dmats[2] = {dtrain, dtest};
-   safe_xgboost(XGBoosterCreate(eval_dmats, 2, &booster));
-
-   // configure the training
-   // available parameters are described here:
-   //   https://xgboost.readthedocs.io/en/latest/parameter.html
-   safe_xgboost(XGBoosterSetParam(booster, "tree_method", use_gpu ? "gpu_hist" : "hist"));
-   if (use_gpu) {
-      // set the number of GPUs and the first GPU to use;
-      // this is not necessary, but provided here as an illustration
-      safe_xgboost(XGBoosterSetParam(booster, "n_gpus", "1"));
-      safe_xgboost(XGBoosterSetParam(booster, "gpu_id", "0"));
-   } else {
-      // avoid evaluating objective and metric on a GPU
-      safe_xgboost(XGBoosterSetParam(booster, "n_gpus", "0"));
-   }
-
-   safe_xgboost(XGBoosterSetParam(booster, "objective", "binary:logistic"));
-   safe_xgboost(XGBoosterSetParam(booster, "min_child_weight", "1"));
-   safe_xgboost(XGBoosterSetParam(booster, "gamma", "0.1"));
-   safe_xgboost(XGBoosterSetParam(booster, "max_depth", "3"));
-   safe_xgboost(XGBoosterSetParam(booster, "verbosity", silent ? "0" : "1"));
-
-   // train and evaluate for 10 iterations
-   int         n_trees       = 10;
-   const char *eval_names[2] = {"train", "test"};
-   const char *eval_result   = NULL;
-   for (int i = 0; i < n_trees; ++i) {
-      safe_xgboost(XGBoosterUpdateOneIter(booster, i, dtrain));
-      safe_xgboost(XGBoosterEvalOneIter(booster, i, eval_dmats, eval_names, 2, &eval_result));
-      printf("%s\n", eval_result);
-   }
-
-   // predict
-   bst_ulong    out_len2   = 0;
-   const float *out_result = NULL;
-   int          n_print    = 10;
-
-   const char *out_dptr = NULL;
-   safe_xgboost(XGBoosterGetModelRaw(booster, &out_len2, &out_dptr));
-   std::cout << "CC " << out_dptr << std::endl;
-
-   safe_xgboost(XGBoosterPredict(booster, dtest, 0, 0, &out_len2, &out_result));
-   safe_xgboost(XGBoosterSaveModel(booster, "./data/model2.txt"));
-   std::cout << "Model saved \n";
-   printf("y_pred: ");
-   for (int i = 0; i < n_print; ++i) {
-      printf("%1.4f ", out_result[i]);
-   }
-   printf("\n");
-
-   // print true labels
-   safe_xgboost(XGDMatrixGetFloatInfo(dtest, "label", &out_len2, &out_result));
-   printf("y_test: ");
-   for (int i = 0; i < n_print; ++i) {
-      printf("%1.4f ", out_result[i]);
-   }
-   printf("\n");
-   // safe_xgboost(XGDMatrixCreateFromFile("./data/agaricus.txt.test", silent, &dtest));
-   // safe_xgboost(XGBoosterSaveModel(booster, "./data/model.txt"));
-
-   const char **out_dump_array;
-   // safe_xgboost(XGBoosterDumpModel(booster, "", 0, &out_len2, &out_dump_array));
-   // std::cout << "BB " << **out_dump_array << std::endl;
-
-   // safe_xgboost(XGBoosterLoadModel(&booster2, "./model3.baba"));
-
-   /*
-   safe_xgboost(XGBoosterPredict(booster, dtest, 0, 0, &out_len2, &out_result));
-   printf("y_pred: ");
-   for (int i = 0; i < n_print; ++i) {
-      printf("%1.4f ", out_result[i]);
-   }
-   */
-
-   // free everything
-   safe_xgboost(XGBoosterFree(booster));
-   safe_xgboost(XGDMatrixFree(dtrain));
-   safe_xgboost(XGDMatrixFree(dtest));
-
-   // safe_xgboost(XGBoosterSaveModel(booster, "./data/model.txt"));
+   safe_xgboost(XGBoosterFree(boosterHandle));
 
    return 0;
 }
+
+/* // Fits to the data
+std::cout << "***** Creating booster ***** \n";
+// create the booster and load some parameters
+BoosterHandle h_booster;
+XGBoosterCreate(h_train, 1, &h_booster);
+XGBoosterSetParam(h_booster, "booster", "gbtree");
+XGBoosterSetParam(h_booster, "objective", "reg:linear");
+XGBoosterSetParam(h_booster, "max_depth", "3");
+XGBoosterSetParam(h_booster, "eta", "0.1");
+XGBoosterSetParam(h_booster, "min_child_weight", "1");
+XGBoosterSetParam(h_booster, "subsample", "0.5");
+XGBoosterSetParam(h_booster, "colsample_bytree", "1");
+XGBoosterSetParam(h_booster, "num_parallel_tree", "1");
+
+// perform 200 learning iterations
+for (int iter = 0; iter < 200; iter++) XGBoosterUpdateOneIter(h_booster, iter, h_train[0]);
+
+XGBoosterPredict(h_booster, h_test, 0, 0, &out_len, &f);
+for (unsigned int i = 0; i < out_len; i++) std::cout << "prediction[" << i << "]=" << f[i] << std::endl;
+
+// results = XGBoosterSaveModel(&h_booster, fname2);
+safe_xgboost(XGBoosterSaveModel(h_booster, "./data/model2.txt"));
+std::cout << "Model saved \n";
+XGDMatrixFree(h_train[0]);
+XGDMatrixFree(h_test);
+XGBoosterFree(h_booster);
+// */
+
+/*
+// ------------------ example 2 -----------------------------------------------
+// load the data
+DMatrixHandle dtrain, dtest;
+safe_xgboost(XGDMatrixCreateFromFile("./data/agaricus.txt.train", silent, &dtrain));
+safe_xgboost(XGDMatrixCreateFromFile("./data/agaricus.txt.test", silent, &dtest));
+
+// create the booster
+BoosterHandle booster;
+DMatrixHandle eval_dmats[2] = {dtrain, dtest};
+safe_xgboost(XGBoosterCreate(eval_dmats, 2, &booster));
+
+// configure the training
+// available parameters are described here:
+//   https://xgboost.readthedocs.io/en/latest/parameter.html
+safe_xgboost(XGBoosterSetParam(booster, "tree_method", use_gpu ? "gpu_hist" : "hist"));
+if (use_gpu) {
+   // set the number of GPUs and the first GPU to use;
+   // this is not necessary, but provided here as an illustration
+   safe_xgboost(XGBoosterSetParam(booster, "n_gpus", "1"));
+   safe_xgboost(XGBoosterSetParam(booster, "gpu_id", "0"));
+} else {
+   // avoid evaluating objective and metric on a GPU
+   safe_xgboost(XGBoosterSetParam(booster, "n_gpus", "0"));
+}
+
+safe_xgboost(XGBoosterSetParam(booster, "objective", "binary:logistic"));
+safe_xgboost(XGBoosterSetParam(booster, "min_child_weight", "1"));
+safe_xgboost(XGBoosterSetParam(booster, "gamma", "0.1"));
+safe_xgboost(XGBoosterSetParam(booster, "max_depth", "3"));
+safe_xgboost(XGBoosterSetParam(booster, "verbosity", silent ? "0" : "1"));
+
+// train and evaluate for 10 iterations
+int         n_trees       = 10;
+const char *eval_names[2] = {"train", "test"};
+const char *eval_result   = NULL;
+for (int i = 0; i < n_trees; ++i) {
+   safe_xgboost(XGBoosterUpdateOneIter(booster, i, dtrain));
+   safe_xgboost(XGBoosterEvalOneIter(booster, i, eval_dmats, eval_names, 2, &eval_result));
+   printf("%s\n", eval_result);
+}
+
+// predict
+bst_ulong    out_len2   = 0;
+const float *out_result = NULL;
+int          n_print    = 10;
+
+const char *out_dptr = NULL;
+safe_xgboost(XGBoosterGetModelRaw(booster, &out_len2, &out_dptr));
+std::cout << "CC " << out_dptr << std::endl;
+
+safe_xgboost(XGBoosterPredict(booster, dtest, 0, 0, &out_len2, &out_result));
+safe_xgboost(XGBoosterSaveModel(booster, "./data/model2.txt"));
+std::cout << "Model saved \n";
+printf("y_pred: ");
+for (int i = 0; i < n_print; ++i) {
+   printf("%1.4f ", out_result[i]);
+}
+printf("\n");
+
+// print true labels
+safe_xgboost(XGDMatrixGetFloatInfo(dtest, "label", &out_len2, &out_result));
+printf("y_test: ");
+for (int i = 0; i < n_print; ++i) {
+   printf("%1.4f ", out_result[i]);
+}
+printf("\n");
+// safe_xgboost(XGDMatrixCreateFromFile("./data/agaricus.txt.test", silent, &dtest));
+// safe_xgboost(XGBoosterSaveModel(booster, "./data/model.txt"));
+
+const char **out_dump_array;
+// safe_xgboost(XGBoosterDumpModel(booster, "", 0, &out_len2, &out_dump_array));
+// std::cout << "BB " << **out_dump_array << std::endl;
+
+// safe_xgboost(XGBoosterLoadModel(&booster2, "./model3.baba"));
+
+
+//safe_xgboost(XGBoosterPredict(booster, dtest, 0, 0, &out_len2, &out_result));
+//printf("y_pred: ");
+//for (int i = 0; i < n_print; ++i) {
+//   printf("%1.4f ", out_result[i]);
+//}
+
+
+// free everything
+safe_xgboost(XGBoosterFree(booster));
+safe_xgboost(XGDMatrixFree(dtrain));
+safe_xgboost(XGDMatrixFree(dtest));
+
+// safe_xgboost(XGBoosterSaveModel(booster, "./data/model.txt"));
+*/
