@@ -450,7 +450,9 @@ if(ROOT_python_FOUND)
   endif()
 
  if(NOT XROOTD_FOUND)
-   list(APPEND pyveto dataframe/df102_NanoAODDimuonAnalysis.py)
+   list(APPEND pyveto
+       dataframe/df102_NanoAODDimuonAnalysis.py
+       dataframe/df103_NanoAODHiggsAnalysis.py)
  endif()
 
   list(REMOVE_ITEM pytutorials ${pyveto})
@@ -483,6 +485,7 @@ if(ROOT_python_FOUND)
                  tutorial-dataframe-df016_vecOps-py
                  tutorial-dataframe-df017_vecOpsHEP-py
                  tutorial-dataframe-df102_NanoAODDimuonAnalysis-py
+                 tutorial-dataframe-df103_NanoAODHiggsAnalysis-py
                  tutorial-pyroot-benchmarks-py
                  tutorial-pyroot-pyroot002_TTreeAsMatrix-py
                  tutorial-pyroot-shapes-py
