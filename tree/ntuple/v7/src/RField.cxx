@@ -34,6 +34,21 @@
 #include <iostream>
 #include <utility>
 
+void ROOT::Experimental::Detail::RFieldFuse::Connect(RPageStorage &pageStorage, RFieldBase &field)
+{
+   if (field.fColumns.empty())
+      field.DoGenerateColumns();
+   for (auto& column : field.fColumns) {
+      if ((field.fParent != nullptr) && (column->GetOffsetColumn() == nullptr))
+         column->SetOffsetColumn(field.fParent->fPrincipalColumn);
+      column->Connect(&pageStorage);
+   }
+}
+
+
+//------------------------------------------------------------------------------
+
+
 ROOT::Experimental::Detail::RFieldBase::RFieldBase(
    std::string_view name, std::string_view type, ENTupleStructure structure, bool isSimple)
    : fName(name), fType(type), fStructure(structure), fIsSimple(isSimple), fParent(nullptr), fPrincipalColumn(nullptr)
@@ -146,17 +161,6 @@ void ROOT::Experimental::Detail::RFieldBase::Flush() const
 {
    for (auto& column : fColumns) {
       column->Flush();
-   }
-}
-
-void ROOT::Experimental::Detail::RFieldBase::ConnectColumns(RPageStorage *pageStorage)
-{
-   if (fColumns.empty())
-      DoGenerateColumns();
-   for (auto& column : fColumns) {
-      if ((fParent != nullptr) && (column->GetOffsetColumn() == nullptr))
-         column->SetOffsetColumn(fParent->fPrincipalColumn);
-      column->Connect(pageStorage);
    }
 }
 
