@@ -77,10 +77,15 @@ ROOT::Experimental::Detail::RPageSinkRoot::AddColumn(DescriptorId_t fieldId, con
    }
    fNTupleHeader.fColumns.emplace_back(columnHeader);
 
-   fDescriptorBuilder.AddColumn(fLastColumnId, fieldId, column.GetVersion(), column.GetModel(), column.GetIndex());
+   auto columnId = fLastColumnId++;
+   fDescriptorBuilder.AddColumn(columnId, fieldId, column.GetVersion(), column.GetModel(), column.GetIndex());
+   if (column.GetOffsetColumn() != nullptr) {
+      auto parentId = column.GetOffsetColumn()->GetHandleSink().fId;
+      fDescriptorBuilder.SetColumnOffset(columnId, parentId);
+      fDescriptorBuilder.AddColumnLink(parentId, columnId);
+   }
 
    //printf("Added column %s type %d\n", columnHeader.fName.c_str(), (int)columnHeader.fType);
-   auto columnId = fLastColumnId++;
    return ColumnHandle_t(columnId, &column);
 }
 
@@ -138,23 +143,21 @@ void ROOT::Experimental::Detail::RPageSinkRoot::Create(RNTupleModel &model)
 
 void ROOT::Experimental::Detail::RPageSinkRoot::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
 {
-   auto columnId = columnHandle.fId;
-
    ROOT::Experimental::Internal::RNTupleBlob pagePayload(
       page.GetSize(), static_cast<unsigned char *>(page.GetBuffer()));
-   std::string key = std::string(RMapper::kKeyPagePayload) +
+   std::string keyName = std::string(RMapper::kKeyPagePayload) +
       std::to_string(fLastClusterId) + RMapper::kKeySeparator +
-      std::to_string(columnId) + RMapper::kKeySeparator +
-      std::to_string(fCurrentCluster.fPagesPerColumn[columnId].fRangeStarts.size());
-   fDirectory->WriteObject(&pagePayload, key.c_str());
+      std::to_string(fLastPageIdx);
+   fDirectory->WriteObject(&pagePayload, keyName.c_str());
 
+   auto columnId = columnHandle.fId;
    fCurrentCluster.fPagesPerColumn[columnId].fRangeStarts.push_back(page.GetRangeFirst());
    fNTupleFooter.fNElementsPerColumn[columnId] += page.GetNElements();
 
    fOpenColumnRanges[columnId].fNElements += page.GetNElements();
    RClusterDescriptor::RPageRange::RPageInfo pageInfo;
    pageInfo.fNElements = page.GetNElements();
-   pageInfo.fLocator = fOpenPageRanges[columnId].fPageInfos.size();
+   pageInfo.fLocator = fLastPageIdx++;
    fOpenPageRanges[columnId].fPageInfos.emplace_back(pageInfo);
 }
 
@@ -171,6 +174,9 @@ void ROOT::Experimental::Detail::RPageSinkRoot::CommitCluster(ROOT::Experimental
       fDescriptorBuilder.AddClusterPageRange(fLastClusterId, range);
       range.fPageInfos.clear();
    }
+   for (auto &range : fOpenColumnRanges) {
+      range.fNElements = 0;
+   }
    ++fLastClusterId;
 
    fCurrentCluster.fNEntries = nEntries - fPrevClusterNEntries;
@@ -184,6 +190,7 @@ void ROOT::Experimental::Detail::RPageSinkRoot::CommitCluster(ROOT::Experimental
       pageInfo.fRangeStarts.clear();
    }
    fCurrentCluster.fEntryRangeStart = fNTupleFooter.fNEntries;
+   fLastPageIdx = 0;
 }
 
 void ROOT::Experimental::Detail::RPageSinkRoot::CommitDataset()
@@ -389,53 +396,43 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::P
    if (!cachedPage.IsNull())
       return cachedPage;
 
-   auto nElems = fMapper.fColumnIndex[columnId].fNElements;
-   R__ASSERT(index < nElems);
+   auto columnDescriptor = fDescriptor.GetColumnDescriptor(columnId);
 
-   NTupleSize_t firstInPage = 0;
-   NTupleSize_t firstOutsidePage = nElems;
-   NTupleSize_t pageIdx = 0;
+   // TODO(jblomer): save last used cluster id and check it first
+   auto clusterId = fDescriptor.FindClusterId(columnId, index);
+   R__ASSERT(clusterId != kInvalidDescriptorId);
+   auto clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
+   auto pageRange = clusterDescriptor.GetPageRange(columnId);
+   auto selfOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
 
-   std::size_t iLower = 0;
-   std::size_t iUpper = fMapper.fColumnIndex[columnId].fRangeStarts.size() - 1;
-   R__ASSERT(iLower <= iUpper);
-   unsigned iLast = iUpper;
-   while (iLower <= iUpper) {
-      std::size_t iPivot = (iLower + iUpper) / 2;
-      NTupleSize_t pivot = fMapper.fColumnIndex[columnId].fRangeStarts[iPivot];
-      if (pivot > index) {
-         iUpper = iPivot - 1;
-      } else {
-         auto next = nElems;
-         if (iPivot < iLast) next = fMapper.fColumnIndex[columnId].fRangeStarts[iPivot + 1];
-         if ((pivot == index) || (next > index)) {
-            firstOutsidePage = next;
-            firstInPage = pivot;
-            pageIdx = iPivot;
-            break;
-         } else {
-            iLower = iPivot + 1;
-         }
+   // TODO(jblomer): binary search
+   RClusterDescriptor::RPageRange::RPageInfo pageInfo;
+   auto firstInPage = selfOffset;
+   for (const auto &pi : pageRange.fPageInfos) {
+      if (firstInPage + pi.fNElements > index) {
+         pageInfo = pi;
+         break;
       }
+      firstInPage += pi.fNElements;
    }
+   R__ASSERT(firstInPage <= index);
+   R__ASSERT((firstInPage + pageInfo.fNElements) > index);
 
-   auto elemsInPage = firstOutsidePage - firstInPage;
-   auto clusterId = fMapper.fColumnIndex[columnId].fClusterId[pageIdx];
-   auto pageInCluster = fMapper.fColumnIndex[columnId].fPageInCluster[pageIdx];
-   auto selfOffset = fMapper.fColumnIndex[columnId].fSelfClusterOffset[pageIdx];
-   auto pointeeOffset = fMapper.fColumnIndex[columnId].fPointeeClusterOffset[pageIdx];
+   NTupleSize_t pointeeOffset = 0;
+   // TODO(jblomer): deal with multiple linked columns
+   if (!columnDescriptor.GetLinkIds().empty())
+      pointeeOffset = clusterDescriptor.GetColumnRange(columnDescriptor.GetLinkIds()[0]).fFirstElementIndex;
 
    //printf("Populating page %lu/%lu [%lu] for column %d starting at %lu\n", clusterId, pageInCluster, pageIdx, columnId, firstInPage);
 
    std::string keyName = std::string(RMapper::kKeyPagePayload) +
       std::to_string(clusterId) + RMapper::kKeySeparator +
-      std::to_string(columnId) + RMapper::kKeySeparator +
-      std::to_string(pageInCluster);
+      std::to_string(pageInfo.fLocator);
    auto pageKey = fDirectory->GetKey(keyName.c_str());
    auto pagePayload = pageKey->ReadObject<ROOT::Experimental::Internal::RNTupleBlob>();
-   auto elementSize = pagePayload->fSize / elemsInPage;
-   R__ASSERT(pagePayload->fSize % elemsInPage == 0);
-   auto newPage = fPageAllocator->NewPage(columnId, pagePayload->fContent, elementSize, elemsInPage);
+   auto elementSize = pagePayload->fSize / pageInfo.fNElements;
+   R__ASSERT(pagePayload->fSize % pageInfo.fNElements == 0);
+   auto newPage = fPageAllocator->NewPage(columnId, pagePayload->fContent, elementSize, pageInfo.fNElements);
    newPage.SetWindow(firstInPage, RPage::RClusterInfo(clusterId, selfOffset, pointeeOffset));
    fPagePool->RegisterPage(newPage,
       RPageDeleter([](const RPage &page, void *userData)

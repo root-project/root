@@ -109,6 +109,10 @@ public:
          return fColumnId == other.fColumnId && fFirstElementIndex == other.fFirstElementIndex &&
                 fNElements == other.fNElements;
       }
+
+      bool Contains(NTupleSize_t index) const {
+         return (fFirstElementIndex <= index && (fFirstElementIndex + fNElements) > index);
+      }
    };
 
    struct RPageRange {
@@ -213,6 +217,7 @@ public:
 
    DescriptorId_t FindFieldId(std::string_view fieldName, DescriptorId_t parentId) const;
    DescriptorId_t FindColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex) const;
+   DescriptorId_t FindClusterId(DescriptorId_t columnId, NTupleSize_t index) const;
 
    /// Re-create the C++ model from the stored meta-data
    std::unique_ptr<RNTupleModel> GenerateModel() const;

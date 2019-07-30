@@ -173,6 +173,7 @@ public:
    ColumnId_t GetColumnIdSource() const { return fColumnIdSource; }
    RPageSource* GetPageSource() const { return fPageSource; }
    RPageStorage::ColumnHandle_t GetHandleSource() const { return fHandleSource; }
+   RPageStorage::ColumnHandle_t GetHandleSink() const { return fHandleSink; }
    void SetOffsetColumn(RColumn* offsetColumn) { fOffsetColumn = offsetColumn; }
    RColumn* GetOffsetColumn() const { return fOffsetColumn; }
    RNTupleVersion GetVersion() const { return RNTupleVersion(); }
