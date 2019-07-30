@@ -3857,9 +3857,6 @@ int RootClingMain(int argc,
       return 1;
    }
 
-   // Store the temp files
-   tempFileNamesCatalog tmpCatalog;
-
    if (ic < argc && IsImplementationName(argv[ic])) {
       FILE *fp;
       if (!ignoreExistingDict && (fp = fopen(argv[ic], "r")) != 0) {
@@ -4487,6 +4484,8 @@ int RootClingMain(int argc,
    std::ofstream fileout;
    string main_dictname(dictpathname);
    std::ostream *dictStreamPtr = NULL;
+   // Store the temp files
+   tempFileNamesCatalog tmpCatalog;
    if (!ignoreExistingDict) {
       if (!dictpathname.empty()) {
          tmpCatalog.addFileName(dictpathname);
