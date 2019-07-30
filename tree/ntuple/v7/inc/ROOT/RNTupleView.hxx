@@ -99,8 +99,7 @@ protected:
    {
       Detail::RFieldFuse::Connect(fieldId, *pageSource, fField);
       for (auto &f : fField) {
-         auto subFieldId =
-            pageSource->GetDescriptor().FindFieldId(Detail::RFieldBase::GetLeafName(f.GetName()), fieldId);
+         auto subFieldId = pageSource->GetDescriptor().FindFieldId(f.GetName(), fieldId);
          Detail::RFieldFuse::Connect(subFieldId, *pageSource, f);
       }
    }
