@@ -1520,7 +1520,7 @@ void TMVA::MethodBDT::UpdateTargets(std::vector<const TMVA::Event*>& eventSample
       std::map<const TMVA::Event *, std::vector<double>> & residuals = this->fResiduals;
       DecisionTree & lastTree = *(this->fForest.back());
 
-      UInt_t signalClass = DataSetInfo().GetSignalClassIndex();
+      UInt_t signalClass = DataInfo().GetSignalClassIndex();
 
       #ifdef R__USE_IMT
       auto update_residuals = [&residuals, &lastTree, signalClass](const TMVA::Event * e) {
