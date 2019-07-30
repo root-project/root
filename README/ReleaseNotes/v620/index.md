@@ -60,7 +60,9 @@ instead of the splash screen. The splash screen can still be seen with `root -a`
 or in `TBrowser` by opening `Browser Help → About ROOT`.
 
 ## Deprecation and Removal
- * rootcling flags `-cint`, `-reflex` and `-gccxml` have no effect and will be
+ * rootcling flags `-cint`, `-reflex`, `-gccxml`, `-p` and `-c` have no effect
+   and will be removed. Please remove them from the rootcling invocations.
+ * rootcling legacy cint flags `+P`, `+V` and `+STUB` have no effect and will be
    removed. Please remove them from the rootcling invocations.
  * genreflex flag `--deep` has no effect and will be removed. Please remove it
    from the genreflex invocation.
