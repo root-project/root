@@ -596,6 +596,21 @@ if(mysql)
   endif()
 endif()
 
+#---Check for FastCGI-----------------------------------------------------------
+if(fcgi)
+  message(STATUS "Looking for FastCGI")
+  find_package(FastCGI)
+  if(NOT FASTCGI_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "FastCGI library not found and they are required (fcgi option enabled)")
+    else()
+      message(STATUS "FastCGI not found. Switching off fcgi option")
+      set(fcgi OFF CACHE BOOL "Disabled because FastCGI not found" FORCE)
+    endif()
+  endif()
+endif()
+
+
 #---Check for Oracle-------------------------------------------------------------------
 if(oracle)
   message(STATUS "Looking for Oracle")
