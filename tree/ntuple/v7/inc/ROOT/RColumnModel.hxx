@@ -68,23 +68,20 @@ constexpr std::size_t kColumnElementSizes[] =
 // clang-format on
 class RColumnModel {
 private:
-   std::string fName;  // TODO(jblomer): remove me
    EColumnType fType;
    bool fIsSorted;
 
 public:
    RColumnModel() : fType(EColumnType::kUnknown), fIsSorted(false) {}
-   RColumnModel(std::string_view name, EColumnType type, bool isSorted)
-      : fName(name), fType(type), fIsSorted(isSorted) {}
+   RColumnModel(EColumnType type, bool isSorted) : fType(type), fIsSorted(isSorted) {}
 
    std::size_t GetElementSize() const { return kColumnElementSizes[static_cast<int>(fType)]; }
-   std::string GetName() const { return fName; }
    EColumnType GetType() const { return fType; }
    bool GetIsSorted() const { return fIsSorted; }
 
    Detail::RColumnElementBase *GenerateElement();
    bool operator ==(const RColumnModel &other) const {
-      return /*(fName == other.fName) &&*/ (fType == other.fType) && (fIsSorted == other.fIsSorted);
+      return (fType == other.fType) && (fIsSorted == other.fIsSorted);
    }
 };
 

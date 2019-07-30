@@ -526,8 +526,8 @@ TEST(RNTuple, Descriptor)
    descBuilder.AddField(2, RNTupleVersion(), RNTupleVersion(), "list", "std::int32_t", ENTupleStructure::kLeaf);
    descBuilder.AddField(42, RNTupleVersion(), RNTupleVersion(), "x", "std::string", ENTupleStructure::kLeaf);
    descBuilder.SetFieldParent(2, 1);
-   descBuilder.AddColumn(3, 42, RNTupleVersion(), RColumnModel("idx_x", EColumnType::kIndex, true), 0);
-   descBuilder.AddColumn(4, 42, RNTupleVersion(), RColumnModel("x", EColumnType::kByte, true), 1);
+   descBuilder.AddColumn(3, 42, RNTupleVersion(), RColumnModel(EColumnType::kIndex, true), 0);
+   descBuilder.AddColumn(4, 42, RNTupleVersion(), RColumnModel(EColumnType::kByte, true), 1);
 
    ROOT::Experimental::RClusterDescriptor::RColumnRange columnRange;
    ROOT::Experimental::RClusterDescriptor::RPageRange pageRange;
