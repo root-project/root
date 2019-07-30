@@ -174,7 +174,6 @@ std::uint32_t SerializeColumn(const ROOT::Experimental::RColumnDescriptor &val, 
 
    pos += SerializeUInt64(val.GetId(), *where);
    pos += SerializeVersion(val.GetVersion(), *where);
-   pos += SerializeString(val.GetModel().GetName(), *where);
    pos += SerializeInt32(static_cast<int>(val.GetModel().GetType()), *where);
    pos += SerializeInt32(static_cast<int>(val.GetModel().GetIsSorted()), *where);
    pos += SerializeUInt32(val.GetIndex(), *where);
@@ -436,13 +435,11 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::SetFromHeader(void* headerBuf
       RColumnDescriptor c;
       pos += DeserializeUInt64(pos, &c.fColumnId);
       pos += DeserializeVersion(pos, &c.fVersion);
-      std::string name;
       std::int32_t type;
       std::int32_t isSorted;
-      pos += DeserializeString(pos, &name);
       pos += DeserializeInt32(pos, &type);
       pos += DeserializeInt32(pos, &isSorted);
-      c.fModel = RColumnModel(name, static_cast<EColumnType>(type), isSorted);
+      c.fModel = RColumnModel(static_cast<EColumnType>(type), isSorted);
       pos += DeserializeUInt32(pos, &c.fIndex);
       pos += DeserializeUInt64(pos, &c.fFieldId);
       pos += DeserializeUInt64(pos, &c.fOffsetId);
