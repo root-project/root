@@ -9,5 +9,5 @@ if(ROOT_python_FOUND)
                     MACRO PyROOT_smartptrtest.py
                     COPY_TO_BUILDDIR SmartPtr.C SmartPtr.h
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ SmartPtr.C+
-                    ${PYTESTS_WILLFAIL})
+                    ENVIRONMENT EXP_PYROOT=${exp_pyroot})
 endif()
