@@ -12,8 +12,8 @@
 
 void Deconvolution2_HR() {
    Int_t i, j;
-   Double_t nbinsx = 64;
-   Double_t nbinsy = 64;
+   const Int_t nbinsx = 64;
+   const Int_t nbinsy = 64;
    Double_t xmin = 0;
    Double_t xmax = (Double_t)nbinsx;
    Double_t ymin = 0;
