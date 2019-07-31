@@ -13,8 +13,8 @@
 
 void Src2() {
    Int_t i, j, nfound;
-   Double_t nbinsx = 256;
-   Double_t nbinsy = 256;
+   const Int_t nbinsx = 256;
+   const Int_t nbinsy = 256;
    Double_t xmin = 0;
    Double_t xmax = (Double_t)nbinsx;
    Double_t ymin = 0;
