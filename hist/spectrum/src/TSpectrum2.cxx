@@ -1069,18 +1069,13 @@ const char *TSpectrum2::Deconvolution(Double_t **source, Double_t **resp,
 /// ../../../tutorials/spectrum/Src3.C
 /// End_Macro
 ///
-/// ### Example 11 - Src4.c
+/// ### Example 11 - Src4.C
 ///
 /// Begin_Macro(source)
 /// ../../../tutorials/spectrum/Src4.C
 /// End_Macro
 ///
-/// ### Example 12 - Src5.c`
-///
-/// \image html TSpectrum2_Searching13.jpg Fig. 30 Two-dimensional spectrum with peaks positioned close to the edges denoted by markers (sigma=2, threshold=5%, 10 iterations steps in the deconvolution)
-/// \image html TSpectrum2_Searching14.jpg Fig. 31 Spectrum from Fig. 30 after deconvolution.
-///
-/// #### Script:
+/// ### Example 12 - Src5.C
 ///
 /// Begin_Macro(source)
 /// ../../../tutorials/spectrum/Src5.C
