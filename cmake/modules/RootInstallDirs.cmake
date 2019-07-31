@@ -19,7 +19,6 @@
 #  FONTDIR          - fonts (DATAROOTDIR/fonts)
 #  DOCDIR           - documentation root (DATAROOTDIR/doc/PROJECT_NAME)
 #  TUTDIR           - tutorials (DOCDIR/tutorials)
-#  ACLOCALDIR       - locale-dependent data (DATAROOTDIR/aclocal)
 #  CMAKEDIR         - cmake modules (DATAROOTDIR/cmake)
 #  ELISPDIR         - lisp files (DATAROOTDIR/emacs/site-lisp)
 #
@@ -167,15 +166,6 @@ if(NOT CMAKE_INSTALL_SRCDIR)
   endif()
 endif()
 
-if(NOT CMAKE_INSTALL_ACLOCALDIR)
-  set(CMAKE_INSTALL_ACLOCALDIR "" CACHE PATH "locale-dependent data (DATAROOTDIR/aclocal)")
-  if(gnuinstall)
-    set(CMAKE_INSTALL_ACLOCALDIR "${CMAKE_INSTALL_DATAROOTDIR}/aclocal")
-  else()
-    set(CMAKE_INSTALL_ACLOCALDIR "aclocal")
-  endif()
-endif()
-
 if(NOT CMAKE_INSTALL_CMAKEDIR)
   set(CMAKE_INSTALL_CMAKEDIR "" CACHE PATH "CMake modules (DATAROOTDIR/cmake)")
   if(gnuinstall)
@@ -230,7 +220,6 @@ mark_as_advanced(
   CMAKE_INSTALL_SRCDIR
   CMAKE_INSTALL_DOCDIR
   CMAKE_INSTALL_TUTDIR
-  CMAKE_INSTALL_ACLOCALDIR
   CMAKE_INSTALL_ELISPDIR
   CMAKE_INSTALL_CMAKEDIR
   )
@@ -251,7 +240,6 @@ foreach(dir BINDIR
             SRCDIR
             DOCDIR
             TUTDIR
-            ACLOCALDIR
             ELISPDIR
             CMAKEDIR )
   if(NOT IS_ABSOLUTE ${CMAKE_INSTALL_${dir}})

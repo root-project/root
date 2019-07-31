@@ -87,7 +87,6 @@ SRCDIR         := @srcdir@
 ICONPATH       := @iconpath@
 DOCDIR         := @docdir@
 TUTDIR         := @tutdir@
-ACLOCALDIR     := @aclocaldir@
 
 BUILDX11       := @buildx11@
 X11INCDIR      := $(filter-out /usr/include, @x11incdir@)
