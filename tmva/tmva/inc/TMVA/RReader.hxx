@@ -23,6 +23,7 @@ enum AnalysisType : unsigned int { Undefined = 0, Classification, Regression, Mu
 struct XMLConfig {
    unsigned int numVariables;
    std::vector<std::string> variables;
+   std::vector<std::string> expressions;
    unsigned int numClasses;
    std::vector<std::string> classes;
    AnalysisType analysisType;
@@ -54,9 +55,11 @@ inline XMLConfig ParseXMLConfig(const std::string &filename)
       if (nodeName.compare("Variables") == 0) {
          c.numVariables = std::atoi(xml.GetAttr(node, "NVar"));
          c.variables = std::vector<std::string>(c.numVariables);
+         c.expressions = std::vector<std::string>(c.numVariables);
          for (auto thisNode = xml.GetChild(node); thisNode; thisNode = xml.GetNext(thisNode)) {
             const auto iVariable = std::atoi(xml.GetAttr(thisNode, "VarIndex"));
             c.variables[iVariable] = xml.GetAttr(thisNode, "Title");
+            c.expressions[iVariable] = xml.GetAttr(thisNode, "Expression");
          }
       }
       // Read out output classes
@@ -113,6 +116,7 @@ private:
    std::unique_ptr<Reader> fReader;
    std::vector<float> fValues;
    std::vector<std::string> fVariables;
+   std::vector<std::string> fExpressions;
    unsigned int fNumClasses;
    const char *name = "RReader";
    Internal::AnalysisType fAnalysisType;
@@ -124,6 +128,7 @@ public:
       // Load config
       auto c = Internal::ParseXMLConfig(path);
       fVariables = c.variables;
+      fExpressions = c.expressions;
       fAnalysisType = c.analysisType;
       fNumClasses = c.numClasses;
 
@@ -132,7 +137,7 @@ public:
       const auto numVars = fVariables.size();
       fValues = std::vector<float>(numVars);
       for (std::size_t i = 0; i < numVars; i++) {
-         fReader->AddVariable(TString(fVariables[i]), &fValues[i]);
+         fReader->AddVariable(TString(fExpressions[i]), &fValues[i]);
       }
       fReader->BookMVA(name, path.c_str());
    }
