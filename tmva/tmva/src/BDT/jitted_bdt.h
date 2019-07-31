@@ -23,6 +23,36 @@ void generate_if_statement_for_bdt (std::ostream& fout,
                                           const unique_bdt::Node* node
                                         ){
 
+  if (node->is_leaf_node){
+    fout << "// This is a leaf node" << std::endl;
+    fout << "result = " << std::to_string(node->leaf) << ";" << std::endl;
+  }
+  else { // if node is not a leaf node
+    std::string condition = "(event[" + std::to_string(node->split_variable) + "]"
+                          + " < "
+                          + std::to_string(node->split_threshold)
+                          + ")";
+
+    // IF part of statement
+    fout << "if " << condition << "{" << std::endl;
+    generate_if_statement_for_bdt(fout, node->child_true.get());
+
+    fout << "}" << std::endl;
+
+    // ELSE part of statement
+    fout << "else " << "{ // if condition is not respected" << std::endl;
+    generate_if_statement_for_bdt(fout, node->child_false.get());
+    fout << "}" << std::endl;
+  }
+}
+
+/// generates if then else statements for bdts
+/*
+void generate_if_statement_for_bdt_old (std::ostream& fout,
+                                          //std::shared_ptr<Node> node
+                                          const unique_bdt::Node* node
+                                        ){
+
   std::string condition = "(event[" + std::to_string(node->split_variable) + "]"
                         + " < "
                         + std::to_string(node->split_threshold)
@@ -50,7 +80,7 @@ void generate_if_statement_for_bdt (std::ostream& fout,
   }
   fout << "}" << std::endl;
 }
-
+*/
 
 
 

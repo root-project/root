@@ -22,7 +22,7 @@ public:
    bool  is_leaf_node = 0;
    float split_threshold;
    int   split_variable;
-   float leaf_true, leaf_false;
+   // float leaf_true, leaf_false;
    float leaf;
 
    // void set_split_variable(int split_variable) { this->split_variable = split_variable; }
@@ -42,6 +42,7 @@ public:
       }
    }
 
+   /*
    float inference_old(const std::vector<float> &event)
    {
       if (this->is_leaf_node) {
@@ -51,6 +52,7 @@ public:
                                                            : child_false->inference(event));
       }
    }
+   */
 };
 
 class Tree {

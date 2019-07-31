@@ -8,6 +8,10 @@ import matplotlib.pyplot as plt
 import xgboost as xgb
 import timeit
 
+
+num_features = 5  # max is 8
+n_estimators = 100
+
 setup = """
 import numpy as np
 from xgboost import XGBClassifier
@@ -54,7 +58,6 @@ print(f"{my_time / it_number * 1000}  ms")
 dataset = np.loadtxt("pima-indians-diabetes.data.csv", delimiter=",")
 
 # split data into X and y
-num_features = 5  # max is 8
 X = dataset[:, 0:num_features]
 Y = dataset[:, 8]
 # print(X)
@@ -68,7 +71,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 # fit model no training data
-model = xgb.XGBClassifier(n_estimators=100)
+model = xgb.XGBClassifier(n_estimators=n_estimators)
 model.fit(X_train, y_train)
 
 # make predictions for test data
@@ -89,6 +92,7 @@ accuracy = accuracy_score(y_test, predictions)
 print("Accuracy: %.2f%%" % (accuracy * 100.0))
 
 model.get_booster().dump_model("model.json", dump_format="json")
+model.get_booster().save_model("./data/model.rabbit")
 # xgboostModel.booster.saveModel("/tmp/xgbm")
 
 fig, ax = plt.subplots(figsize=(30, 30))

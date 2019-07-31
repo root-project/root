@@ -49,7 +49,13 @@ static void BM_EvalUniqueBdt(benchmark::State &state)
    }
    write_csv(preds_file, preds);
 }
-BENCHMARK(BM_EvalUniqueBdt)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_EvalUniqueBdt)
+   ->Unit(benchmark::kMillisecond)
+   ->ComputeStatistics("min",
+                       [](const std::vector<double> &v) -> double {
+                          return *(std::min_element(std::begin(v), std::end(v)));
+                       })
+   ->Arg(512);
 
 /// Benchmark eval array_bdts
 static void BM_EvalArrayBdt(benchmark::State &state)
@@ -69,7 +75,13 @@ static void BM_EvalArrayBdt(benchmark::State &state)
    }
    write_csv(preds_file, preds);
 }
-BENCHMARK(BM_EvalArrayBdt)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_EvalArrayBdt)
+   ->Unit(benchmark::kMillisecond)
+   ->ComputeStatistics("min",
+                       [](const std::vector<double> &v) -> double {
+                          return *(std::min_element(std::begin(v), std::end(v)));
+                       })
+   ->Arg(512);
 
 /// Benchmark eval Jitted_bdts
 static void BM_EvalJittedBdt(benchmark::State &state)
@@ -88,7 +100,13 @@ static void BM_EvalJittedBdt(benchmark::State &state)
    }
    write_csv(preds_file, preds);
 }
-BENCHMARK(BM_EvalJittedBdt)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_EvalJittedBdt)
+   ->Unit(benchmark::kMillisecond)
+   ->ComputeStatistics("min",
+                       [](const std::vector<double> &v) -> double {
+                          return *(std::min_element(std::begin(v), std::end(v)));
+                       })
+   ->Arg(512);
 //
 
 /// Benchmark eval xgboost_bdt
@@ -139,6 +157,12 @@ static void BM_EvalXgboostBdt(benchmark::State &state)
    // free xgboost internal structures
    safe_xgboost(XGBoosterFree(boosterHandle));
 }
-BENCHMARK(BM_EvalXgboostBdt)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_EvalXgboostBdt)
+   ->Unit(benchmark::kMillisecond)
+   ->ComputeStatistics("min",
+                       [](const std::vector<double> &v) -> double {
+                          return *(std::min_element(std::begin(v), std::end(v)));
+                       })
+   ->Arg(512);
 
 BENCHMARK_MAIN();
