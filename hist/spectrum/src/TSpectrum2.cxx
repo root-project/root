@@ -346,139 +346,23 @@ void TSpectrum2::SetResolution(Double_t resolution)
 /// Background elimination methods for multidimensional gamma-ray spectra. NIM,
 /// A401 (1997) 113-132.
 ///
-/// ### Example 1 - script Back_gamma64.c
+/// ### Example 1 - Background_gamma64.C
 ///
-/// \image html TSpectrum2_Background1.jpg Fig. 1 Original two-dimensional gamma-gamma-ray spectrum
-/// \image html TSpectrum2_Background2.jpg Fig. 2 Background estimated from data from Fig. 1 using decreasing clipping window with widths 4, 4 and algorithm based on successive comparisons. The estimate includes not only continuously changing background but also one-dimensional ridges.
-/// \image html TSpectrum2_Background3.jpg Fig. 3 Resulting peaks after subtraction of the estimated background (Fig. 2) from original two-dimensional gamma-gamma-ray spectrum (Fig. 1).
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/Background_gamma64.C
+/// End_Macro
 ///
-/// #### Script:
+/// ### Example 2- Background_gamma256.C
 ///
-/// Example to illustrate the background estimator (class TSpectrum). To execute this example, do:
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/Background_gamma256.C
+/// End_Macro
 ///
-/// `root > .x Back_gamma64.C`
+/// ### Example 3- Background_synt256.C
 ///
-/// ~~~ {.cpp}
-///   #include <TSpectrum>
-///   void Back_gamma64() {
-///      Int_t i, j;
-///      Double_t nbinsx = 64;
-///      Double_t nbinsy = 64;
-///      Double_t xmin = 0;
-///      Double_t xmax = (Double_t)nbinsx;
-///      Double_t ymin = 0;
-///      Double_t ymax = (Double_t)nbinsy;
-///      Double_t ** source = new Double_t*[nbinsx];
-///      for (i=0;i<nbinsx;i++)
-///         source[i]=new Double_t[nbinsy];
-///      TH2F *back = new TH2F("back","Background estimation",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
-///      TFile *f = new TFile("spectra2/TSpectrum2.root");
-///      back=(TH2F*) f->Get("back1;1");
-///      TCanvas *Background = new TCanvas("Background","Estimation of background with increasing window",10,10,1000,700);
-///      TSpectrum *s = new TSpectrum();
-///      for (i = 0; i < nbinsx; i++){
-///         for (j = 0; j < nbinsy; j++){
-///            source[i][j] = back->GetBinContent(i + 1,j + 1);
-///         }
-///      }
-///      s->Background(source,nbinsx,nbinsy,4,4,kBackDecreasingWindow,kBackSuccessiveFiltering);
-///      for (i = 0; i < nbinsx; i++){
-///         for (j = 0; j < nbinsy; j++)
-///            back->SetBinContent(i + 1,j + 1, source[i][j]);
-///      }
-///      back->Draw("SURF");
-///   }
-/// ~~~
-///
-/// ### Example 2- script Back_gamma256.c
-///
-/// \image html TSpectrum2_Background4.jpg Fig. 4 Original two-dimensional gamma-gamma-ray spectrum 256x256 channels
-/// \image html TSpectrum2_Background5.jpg Fig. 5 Peaks after subtraction of the estimated background (increasing clipping window with widths 8, 8 and algorithm based on successive comparisons) from original two-dimensional gamma-gamma-ray spectrum (Fig. 4).
-///
-/// #### Script:
-///
-// Example to illustrate the background estimator (class TSpectrum).
-/// To execute this example, do
-///
-/// `root > .x Back_gamma256.C`
-///
-/// ~~~ {.cpp}
-///   #include <TSpectrum>
-///   void Back_gamma256() {
-///      Int_t i, j;
-///      Double_t nbinsx = 64;
-///      Double_t nbinsy = 64;
-///      Double_t xmin = 0;
-///      Double_t xmax = (Double_t)nbinsx;
-///      Double_t ymin = 0;
-///      Double_t ymax = (Double_t)nbinsy;
-///      Double_t** source = new Double_t*[nbinsx];
-///      for (i=0;i<nbinsx;i++)
-///         source[i]=new Double_t[nbinsy];
-///      TH2F *back = new TH2F("back","Background estimation",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
-///      TFile *f = new TFile("spectra2/TSpectrum2.root");
-///      back=(TH2F*) f->Get("back2;1");
-///      TCanvas *Background = new TCanvas("Background","Estimation of background with increasing window",10,10,1000,700);
-///      TSpectrum *s = new TSpectrum();
-///      for (i = 0; i < nbinsx; i++){
-///         for (j = 0; j < nbinsy; j++){
-///            source[i][j] = back->GetBinContent(i + 1,j + 1);
-///         }
-///      }
-///      s->Background(source,nbinsx,nbinsy,8,8,kBackIncreasingWindow,kBackSuccessiveFiltering);
-///      for (i = 0; i < nbinsx; i++){
-///         for (j = 0; j < nbinsy; j++)
-///            back->SetBinContent(i + 1,j + 1, source[i][j]);
-///      }
-///      back->Draw("SURF");
-///   }
-/// ~~~
-///
-/// Example 3- script Back_synt256.c
-///
-/// \image html TSpectrum2_Background6.jpg Fig. 6 Original two-dimensional synthetic spectrum 256x256 channels
-/// \image html TSpectrum2_Background7.jpg Fig. 7 Peaks after subtraction of the estimated background (increasing clipping window with widths 8, 8 and algorithm based on successive comparisons) from original two-dimensional gamma-gamma-ray spectrum (Fig. 6). One can observe artefacts (ridges) around the peaks due to the employed algorithm.
-/// \image html TSpectrum2_Background8.jpg Fig. 8 Peaks after subtraction of the estimated background (increasing clipping window with widths 8, 8 and algorithm based on one step filtering) from original two-dimensional gamma-gamma-ray spectrum (Fig. 6). The artefacts from the above given Fig. 7 disappeared.
-///
-/// #### Script:
-///
-/// Example to illustrate the background estimator (class TSpectrum).
-/// To execute this example, do
-///
-/// `root > .x Back_synt256.C`
-///
-/// ~~~ {.cpp}
-///   #include <TSpectrum>
-///   void Back_synt256() {
-///      Int_t i, j;
-///      Double_t nbinsx = 64;
-///      Double_t nbinsy = 64;
-///      Double_t xmin = 0;
-///      Double_t xmax = (Double_t)nbinsx;
-///      Double_t ymin = 0;
-///      Double_t ymax = (Double_t)nbinsy;
-///      Double_t** source = new Double_t*[nbinsx];
-///      for (i=0;i<nbinsx;i++)
-///         source[i]=new Double_t[nbinsy];
-///      TH2F *back = new TH2F("back","Background estimation",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
-///      TFile *f = new TFile("spectra2/TSpectrum2.root");
-///      back=(TH2F*) f->Get("back3;1");
-///      TCanvas *Background = new TCanvas("Background","Estimation of background with increasing window",10,10,1000,700);
-///      TSpectrum *s = new TSpectrum();
-///      for (i = 0; i < nbinsx; i++){
-///         for (j = 0; j < nbinsy; j++){
-///            source[i][j] = back->GetBinContent(i + 1,j + 1);
-///         }
-///      }
-///      s->Background(source,nbinsx,nbinsy,8,8,
-///                    kBackIncreasingWindow,kBackSuccessiveFiltering);//kBackOneStepFiltering
-///      for (i = 0; i < nbinsx; i++){
-///         for (j = 0; j < nbinsy; j++)
-///            back->SetBinContent(i + 1,j + 1, source[i][j]);
-///      }
-///      back->Draw("SURF");
-///   }
-/// ~~~
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/Background_synt256.C
+/// End_Macro
 
 const char *TSpectrum2::Background(Double_t **spectrum,
                        Int_t ssizex, Int_t ssizey,
@@ -687,51 +571,11 @@ const char *TSpectrum2::Background(Double_t **spectrum,
 ///
 /// [1] Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376 (1996), 451.
 ///
-/// ### Example 4 - script Smooth.c
+/// ### Example 4 - Smooth.C
 ///
-/// \image html TSpectrum2_Smoothing1.jpg Fig. 9 Original noisy spectrum.
-/// \image html TSpectrum2_Smoothing2.jpg Fig. 10 Smoothed spectrum m=3 Peaks can hardly be observed. Peaks become apparent.
-/// \image html TSpectrum2_Smoothing3.jpg Fig. 11 Smoothed spectrum m=5
-/// \image html TSpectrum2_Smoothing4.jpg Fig.12 Smoothed spectrum m=7
-///
-/// #### Script:
-///
-/// Example to illustrate the Markov smoothing (class TSpectrum).
-/// To execute this example, do
-///
-/// `root > .x Smooth.C`
-///
-/// ~~~ {.cpp}
-///   #include <TSpectrum>
-///   void Smooth() {
-///      Int_t i, j;
-///      Double_t nbinsx = 256;
-///      Double_t nbinsy = 256;
-///      Double_t xmin = 0;
-///      Double_t xmax = (Double_t)nbinsx;
-///      Double_t ymin = 0;
-///      Double_t ymax = (Double_t)nbinsy;
-///      Double_t** source = new Double_t*[nbinsx];
-///      for (i=0;i<nbinsx;i++)
-///         source[i] = new Double_t[nbinsy];
-///      TH2F *smooth = new TH2F("smooth","Background estimation",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
-///      TFile *f = new TFile("spectra2/TSpectrum2.root");
-///      smooth=(TH2F*) f->Get("smooth1;1");
-///      TCanvas *Smoothing = new TCanvas("Smoothing","Markov smoothing",10,10,1000,700);
-///      TSpectrum *s = new TSpectrum();
-///      for (i = 0; i < nbinsx; i++){
-///         for (j = 0; j < nbinsy; j++){
-///            source[i][j] = smooth->GetBinContent(i + 1,j + 1);
-///         }
-///      }
-///      s->SmoothMarkov(source,nbinsx,nbinsx,3); //5,7
-///      for (i = 0; i < nbinsx; i++){
-///         for (j = 0; j < nbinsy; j++)
-///            smooth->SetBinContent(i + 1,j + 1, source[i][j]);
-///      }
-///      smooth->Draw("SURF");
-///   }
-/// ~~~
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/Smooth.C
+/// End_Macro
 
 const char* TSpectrum2::SmoothMarkov(Double_t **source, Int_t ssizex, Int_t ssizey, Int_t averWindow)
 {
@@ -966,170 +810,23 @@ const char* TSpectrum2::SmoothMarkov(Double_t **source, Int_t ssizex, Int_t ssiz
 /// deconvolution and its application to nuclear data processing, Digital Signal
 /// Processing 13 (2003) 144.
 ///
-/// ### Example 5 - script Decon.c
+/// ### Example 5 - Deconvolution2_1.c
 ///
-/// response function (usually peak) should be shifted to the beginning of the coordinate system (see Fig. 13)
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/Deconvolution2_1.C
+/// End_Macro
 ///
-/// \image html TSpectrum2_Deconvolution1.jpg Fig. 13 2-dimensional response spectrum
-/// \image html TSpectrum2_Deconvolution2.jpg Fig. 14 2-dimensional gamma-gamma-ray input spectrum (before deconvolution)
-/// \image html TSpectrum2_Deconvolution3.jpg Fig. 15 Spectrum from Fig. 14 after deconvolution (1000 iterations)
+/// ### Example 6 - Deconvolution2_2.C
 ///
-/// #### Script:
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/Deconvolution2_2.C
+/// End_Macro
 ///
-/// Example to illustrate the Gold deconvolution (class TSpectrum2).
-/// To execute this example, do
+/// ### Example 7 - Deconvolution2_HR.C
 ///
-/// `root > .x Decon.C`
-///
-/// ~~~ {.cpp}
-///   #include <TSpectrum2>
-///   void Decon() {
-///      Int_t i, j;
-///      Double_t nbinsx = 256;
-///      Double_t nbinsy = 256;
-///      Double_t xmin = 0;
-///      Double_t xmax = (Double_t)nbinsx;
-///      Double_t ymin = 0;
-///      Double_t ymax = (Double_t)nbinsy;
-///      Double_t** source = new Double_t*[nbinsx];
-///      for (i=0;i<nbinsx;i++)
-///         source[i]=new Double_t[nbinsy];
-///      TH2F *decon = new TH2F("decon","Gold deconvolution",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
-///      TFile *f = new TFile("spectra2/TSpectrum2.root");
-///      decon=(TH2F*) f->Get("decon1;1");
-///      Double_t** response = new Double_t*[nbinsx];
-///      for (i=0;i<nbinsx;i++)
-///         response[i]=new Double_t[nbinsy];
-///      TH2F *resp = new TH2F("resp","Response matrix",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
-///      resp=(TH2F*) f->Get("resp1;1");
-///      TCanvas *Deconvol = new TCanvas("Deconvolution","Gold deconvolution",10,10,1000,700);
-///      TSpectrum *s = new TSpectrum();
-///      for (i = 0; i < nbinsx; i++){
-///         for (j = 0; j < nbinsy; j++){
-///            source[i][j] = decon->GetBinContent(i + 1,j + 1);
-///         }
-///      }
-///      for (i = 0; i < nbinsx; i++){
-///         for (j = 0; j < nbinsy; j++){
-///            response[i][j] = resp->GetBinContent(i + 1,j + 1);
-///         }
-///      }
-///      s->Deconvolution(source,response,nbinsx,nbinsy,1000,1,1);
-///      for (i = 0; i < nbinsx; i++){
-///         for (j = 0; j < nbinsy; j++)
-///            decon->SetBinContent(i + 1,j + 1, source[i][j]);
-///      }
-///      decon->Draw("SURF");
-///   }
-/// ~~~
-///
-/// ### Example 6 - script Decon2.c
-///
-/// \image html TSpectrum2_Deconvolution4.jpg Fig. 16 Response spectrum
-/// \image html TSpectrum2_Deconvolution5.jpg Fig. 17 Original synthetic input spectrum (before deconvolution). It is composed of 17 peaks. 5 peaks are overlapping in the outlined multiplet and two peaks in doublet.
-/// \image html TSpectrum2_Deconvolution6.jpg Fig. 18 Spectrum from Fig. 17 after deconvolution (1000 iterations). Resolution is improved but the peaks in multiplet remained unresolved.
-///
-/// #### Script:
-///
-/// Example to illustrate the Gold deconvolution (class TSpectrum2).
-/// To execute this example, do
-///
-/// `root > .x Decon2.C`
-///
-/// ~~~ {.cpp}
-///   #include <TSpectrum2>
-///   void Decon2() {
-///      Int_t i, j;
-///      Double_t nbinsx = 64;
-///      Double_t nbinsy = 64;
-///      Double_t xmin = 0;
-///      Double_t xmax = (Double_t)nbinsx;
-///      Double_t ymin = 0;
-///      Double_t ymax = (Double_t)nbinsy;
-///      Double_t** source = new Double_t*[nbinsx];
-///      for (i=0;i<nbinsx;i++)
-///         source[i]=new Double_t[nbinsy];
-///      TH2F *decon = new TH2F("decon","Gold deconvolution",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
-///      TFile *f = new TFile("spectra2/TSpectrum2.root");
-///      decon=(TH2F*) f->Get("decon2;1");
-///      Double_t** response = new Double_t*[nbinsx];
-///      for (i=0;i<nbinsx;i++)
-///         response[i]=new Double_t[nbinsy];
-///      TH2F *resp = new TH2F("resp","Response matrix",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
-///      resp=(TH2F*) f->Get("resp2;1");
-///      TCanvas *Deconvol = new TCanvas("Deconvolution","Gold deconvolution",10,10,1000,700);
-///      TSpectrum *s = new TSpectrum();
-///      for (i = 0; i < nbinsx; i++){
-///         for (j = 0; j < nbinsy; j++){
-///            source[i][j] = decon->GetBinContent(i + 1,j + 1);
-///         }
-///      }
-///      for (i = 0; i < nbinsx; i++){
-///         for (j = 0; j < nbinsy; j++){
-///            response[i][j] = resp->GetBinContent(i + 1,j + 1);
-///         }
-///      }
-///      s->Deconvolution(source,response,nbinsx,nbinsy,1000,1,1);
-///      for (i = 0; i < nbinsx; i++){
-///         for (j = 0; j < nbinsy; j++)
-///            decon->SetBinContent(i + 1,j + 1, source[i][j]);
-///      }
-///      decon->Draw("SURF");
-///   }
-/// ~~~
-///
-/// ### Example 7 - script Decon2HR.c
-///
-/// \image html TSpectrum2_Deconvolution7.jpg Fig. 19 Spectrum from Fig. 17 after boosted deconvolution (50 iterations repeated 20 times, boosting coefficient was 1.2). All the peaks in multiplet as well as in doublet are completely decomposed.
-///
-/// #### Script:
-///
-/// Example to illustrate boosted Gold deconvolution (class TSpectrum2).
-/// To execute this example, do
-///
-/// `root > .x Decon2HR.C`
-///
-/// ~~~ {.cpp}
-///   #include <TSpectrum2>
-///   void Decon2HR() {
-///      Int_t i, j;
-///      Double_t nbinsx = 64;
-///      Double_t nbinsy = 64;
-///      Double_t xmin = 0;
-///      Double_t xmax = (Double_t)nbinsx;
-///      Double_t ymin = 0;
-///      Double_t ymax = (Double_t)nbinsy;
-///      Double_t** source = new Double_t*[nbinsx];
-///      for (i=0;i<nbinsx;i++)
-///         source[i]=new Double_t[nbinsy];
-///      TH2F *decon = new TH2F("decon","Boosted Gold deconvolution",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
-///      TFile *f = new TFile("spectra2/TSpectrum2.root");
-///      decon=(TH2F*) f->Get("decon2;1");
-///      Double_t** response = new Double_t*[nbinsx];
-///      for (i=0;i<nbinsx;i++)
-///         response[i]=new Double_t[nbinsy];
-///      TH2F *resp = new TH2F("resp","Response matrix",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
-///      resp=(TH2F*) f->Get("resp2;1");
-///      TCanvas *Deconvol = new TCanvas("Deconvolution","Gold deconvolution",10,10,1000,700);
-///      TSpectrum *s = new TSpectrum();
-///      for (i = 0; i < nbinsx; i++){
-///         for (j = 0; j < nbinsy; j++){
-///            source[i][j] = decon->GetBinContent(i + 1,j + 1);
-///         }
-///      }
-///      for (i = 0; i < nbinsx; i++){
-///         for (j = 0; j < nbinsy; j++){
-///            response[i][j] = resp->GetBinContent(i + 1,j + 1);
-///         }
-///      }
-///      s->Deconvolution(source,response,nbinsx,nbinsy,1000,1,1);
-///      for (i = 0; i < nbinsx; i++){
-///         for (j = 0; j < nbinsy; j++)
-///            dec   on->SetBinContent(i + 1,j + 1, source[i][j]);
-///      }
-///      decon->Draw("SURF");
-///   }
-/// ~~~
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/Deconvolution2_HR.C
+/// End_Macro
 
 const char *TSpectrum2::Deconvolution(Double_t **source, Double_t **resp,
                                        Int_t ssizex, Int_t ssizey,
@@ -1354,237 +1051,40 @@ const char *TSpectrum2::Deconvolution(Double_t **source, Double_t **resp,
 /// in the destination spectrum. Based on the output data one can tune the
 /// parameters.
 ///
-/// ### Example 8 - script Src.c
+/// ### Example 8 - Src.C
 ///
-/// \image html TSpectrum2_Searching1.jpg Fig. 20 Two-dimensional spectrum with found peaks denoted by markers (sigma=2, threshold=5%, 3 iterations steps in the deconvolution)
-/// \image html TSpectrum2_Searching3.jpg Fig. 21 Spectrum from Fig. 20 after background elimination and deconvolution
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/Src.C
+/// End_Macro
 ///
-/// #### Script:
+/// ### Example 9 - Src2.C
 ///
-/// Example to illustrate high resolution peak searching function (class TSpectrum).
-/// To execute this example, do
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/Src2.C
+/// End_Macro
 ///
-/// `root > .x Src.C
+/// ### Example 10 - Src3.C
 ///
-/// ~~~ {.cpp}
-///   #include <TSpectrum2>
-///   void Src() {
-///      Int_t i, j, nfound;
-///      Double_t nbinsx = 64;
-///      Double_t nbinsy = 64;
-///      Double_t xmin = 0;
-///      Double_t xmax = (Double_t)nbinsx;
-///      Double_t ymin = 0;
-///      Double_t ymax = (Double_t)nbinsy;
-///      Double_t** source = new Double_t*[nbinsx];
-///      for (i=0;i<nbinsx;i++)
-///         source[i]=new Double_t[nbinsy];
-///      Double_t** dest = new Double_t*[nbinsx];
-///      for (i=0;i<nbinsx;i++)
-///         dest[i]=new Double_t[nbinsy];
-///      TH2F *search = new TH2F("search","High resolution peak searching",nbinsx,xmin,xmax,nbinsy,ymin,ymax);/
-///      TFile *f = new TFile("spectra2/TSpectrum2.root");
-///      search=(TH2F*) f->Get("search4;1");
-///      TCanvas *Searching = new TCanvas("Searching","High resolution peak searching",10,10,1000,700);
-///      TSpectrum2 *s = new TSpectrum2();
-///      for (i = 0; i < nbinsx; i++){
-///         for (j = 0; j < nbinsy; j++){
-///            source[i][j] = search->GetBinContent(i + 1,j + 1);
-///         }
-///      }
-///      nfound = s->SearchHighRes(source, dest, nbinsx, nbinsy, 2, 5, kTRUE, 3, kFALSE, 3);
-///      printf("Found %d candidate peaks\n",nfound);
-///      for(i=0;i<nfound;i++)
-///         printf("posx= %d, posy= %d, value=%d\n",(Int_t)(fPositionX[i]+0.5), (Int_t)(fPositionY[i]+0.5),
-///         (Int_t)source[(Int_t)(fPositionX[i]+0.5)][(Int_t)(fPositionY[i]+0.5)]);
-///  }
-/// ~~~
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/Src3.C
+/// End_Macro
 ///
-/// ### Example 9 - script Src2.c
+/// ### Example 11 - Src4.c
 ///
-/// \image html TSpectrum2_Searching4.jpg Fig. 22 Two-dimensional noisy spectrum with found peaks denoted by markers (sigma=2, threshold=10%, 10 iterations steps in the deconvolution). One can observe that the algorithm is insensitive to the crossings of one-dimensional ridges. It identifies only two-coincidence peaks.
-/// \image html TSpectrum2_Searching5.jpg Fig. 23 Spectrum from Fig. 22 after background elimination and deconvolution
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/Src4.C
+/// End_Macro
 ///
-/// #### Script:
-///
-/// Example to illustrate high resolution peak searching function (class TSpectrum).
-/// To execute this example, do
-///
-/// `root > .x Src2.C`
-///
-/// ~~~ {.cpp}
-///   #include <TSpectrum2>
-///   void Src2() {
-///      Int_t i, j, nfound;
-///      Double_t nbinsx = 256;
-///      Double_t nbinsy = 256;
-///      Double_t xmin = 0;
-///      Double_t xmax = (Double_t)nbinsx;
-///      Double_t ymin = 0;
-///      Double_t ymax = (Double_t)nbinsy;
-///      Double_t** source = new Double_t*[nbinsx];
-///      for (i=0;i<nbinsx;i++)
-///         source[i]=new Double_t[nbinsy];
-///      Double_t** dest = new Double_t*[nbinsx];
-///      for (i=0;i<nbinsx;i++)
-///         dest[i]=new Double_t[nbinsy];
-///      TH2F *search = new TH2F("search","High resolution peak searching",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
-///      TFile *f = new TFile("spectra2/TSpectrum2.root");
-///      search=(TH2F*) f->Get("back3;1");
-///      TCanvas *Searching = new TCanvas("Searching","High resolution peak searching",10,10,1000,700);
-///      TSpectrum2 *s = new TSpectrum2();
-///      for (i = 0; i < nbinsx; i++){
-///         for (j = 0; j < nbinsy; j++){
-///            source[i][j] = search->GetBinContent(i + 1,j + 1);
-///         }
-///      }
-///      nfound = s->SearchHighRes(source, dest, nbinsx, nbinsy, 2, 10, kTRUE, 10, kFALSE, 3);
-///      printf("Found %d candidate peaks\n",nfound);
-///      for(i=0;i<nfound;i++)
-///         printf("posx= %d, posy= %d, value=%d\n",(Int_t)(fPositionX[i]+0.5), (Int_t)(fPositionY[i]+0.5),
-///         (Int_t)source[(Int_t)(fPositionX[i]+0.5)][(Int_t)(fPositionY[i]+0.5)]);
-///   }
-/// ~~~
-///
-/// ### Example 10 - script Src3.c
-///
-/// \image html TSpectrum2_Searching6.jpg Fig. 24 Two-dimensional spectrum with 15 found peaks denoted by markers. Some peaks are positioned close to each other. It is necessary to increase number of iterations in the deconvolution. In next 3 Figs. we shall study the influence of this parameter.
-/// \image html TSpectrum2_Searching7.jpg Fig. 25 Spectrum from Fig. 24 after deconvolution (# of iterations = 3). Number of identified peaks = 13.
-/// \image html TSpectrum2_Searching8.jpg Fig. 26 Spectrum from Fig. 24 after deconvolution (# of iterations = 10). Number of identified peaks = 13.
-/// \image html TSpectrum2_Searching9.jpg Fig. 27 Spectrum from Fig. 24 after deconvolution (# of iterations = 100). Number of identified peaks = 15. Now the algorithm is able to decompose two doublets in the spectrum.
-///
-/// #### Script:
-///
-/// Example to illustrate high resolution peak searching function (class TSpectrum).
-/// To execute this example, do
-///
-/// `root > .x Src3.C`
-///
-/// ~~~ {.cpp}
-///   #include <TSpectrum2>
-///   void Src3() {
-///      Int_t i, j, nfound;
-///      Double_t nbinsx = 64;
-///      Double_t nbinsy = 64;
-///      Double_t xmin = 0;
-///      Double_t xmax = (Double_t)nbinsx;
-///      Double_t ymin = 0;
-///      Double_t ymax = (Double_t)nbinsy;
-///      Double_t** source = new Double_t*[nbinsx];
-///      for (i=0;i<nbinsx;i++)
-///         source[i]=new Double_t[nbinsy];
-///      Double_t** dest = new Double_t*[nbinsx];
-///      for (i=0;i<nbinsx;i++)
-///         dest[i]=new Double_t[nbinsy];
-///      TH2F *search = new TH2F("search","High resolution peak searching",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
-///      TFile *f = new TFile("spectra2/TSpectrum2.root");
-///      search=(TH2F*) f->Get("search1;1");
-///      TCanvas *Searching = new TCanvas("Searching","High resolution peak searching",10,10,1000,700);
-///      TSpectrum2 *s = new TSpectrum2();
-///      for (i = 0; i < nbinsx; i++){
-///         for (j = 0; j < nbinsy; j++){
-///            source[i][j] = search->GetBinContent(i + 1,j + 1);
-///         }
-///      }
-///      nfound = s->SearchHighRes(source, dest, nbinsx, nbinsy, 2, 2, kFALSE, 3, kFALSE, 1);//3, 10, 100
-///      printf("Found %d candidate peaks\n",nfound);
-///      for(i=0;i<nfound;i++)
-///         printf("posx= %d, posy= %d, value=%d\n",(Int_t)(fPositionX[i]+0.5), (Int_t)(fPositionY[i]+0.5),
-///         (Int_t)source[(Int_t)(fPositionX[i]+0.5)][(Int_t)(fPositionY[i]+0.5)]);
-///  }
-/// ~~~
-///
-/// ### Example 11 - script Src4.c
-///
-/// \image html TSpectrum2_Searching10.jpg Fig. 28 Two-dimensional spectrum with peaks with different sigma denoted by markers (sigma=3, threshold=5%, 10 iterations steps in the deconvolution, Markov smoothing with window=3)
-/// \image html TSpectrum2_Searching12.jpg Fig. 29 Spectrum from Fig. 28 after smoothing and deconvolution.
-///
-/// #### Script:
-///
-/// Example to illustrate high resolution peak searching function (class TSpectrum).
-/// To execute this example, do
-///
-/// `root > .x Src4.C`
-///
-/// ~~~ {.cpp}
-///   #include <TSpectrum2>
-///   void Src4() {
-///   Int_t i, j, nfound;
-///      Double_t nbinsx = 64;
-///      Double_t nbinsy = 64;
-///      Double_t xmin = 0;
-///      Double_t xmax = (Double_t)nbinsx;
-///      Double_t ymin = 0;
-///      Double_t ymax = (Double_t)nbinsy;
-///      Double_t** source = new Double_t*[nbinsx];
-///      for (i=0;i<nbinsx;i++)
-///         source[i]=new Double_t[nbinsy];
-///      Double_t** dest = new Double_t*[nbinsx];
-///      for (i=0;i<nbinsx;i++)
-///         dest[i]=new Double_t[nbinsy];
-///      TH2F *search = new TH2F("search","High resolution peak searching",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
-///      TFile *f = new TFile("spectra2/TSpectrum2.root");
-///      search=(TH2F*) f->Get("search2;1");
-///      TCanvas *Searching = new TCanvas("Searching","High resolution peak searching",10,10,1000,700);
-///      TSpectrum2 *s = new TSpectrum2();
-///      for (i = 0; i < nbinsx; i++){
-///         for (j = 0; j < nbinsy; j++){
-///            source[i][j] = search->GetBinContent(i + 1,j + 1);
-///         }
-///       }
-///      nfound = s->SearchHighRes(source, dest, nbinsx, nbinsy, 3, 5, kFALSE, 10, kTRUE, 3);
-///      printf("Found %d candidate peaks\n",nfound);
-///      for(i=0;i<nfound;i++)
-///         printf("posx= %d, posy= %d, value=%d\n",(Int_t)(fPositionX[i]+0.5), (Int_t)(fPositionY[i]+0.5),
-///         (Int_t)source[(Int_t)(fPositionX[i]+0.5)][(Int_t)(fPositionY[i]+0.5)]);
-///  }
-/// ~~~
-///
-/// ### Example 12 - script Src5.c`
+/// ### Example 12 - Src5.c`
 ///
 /// \image html TSpectrum2_Searching13.jpg Fig. 30 Two-dimensional spectrum with peaks positioned close to the edges denoted by markers (sigma=2, threshold=5%, 10 iterations steps in the deconvolution)
 /// \image html TSpectrum2_Searching14.jpg Fig. 31 Spectrum from Fig. 30 after deconvolution.
 ///
 /// #### Script:
 ///
-/// Example to illustrate high resolution peak searching function (class TSpectrum).
-/// To execute this example, do
-///
-/// `root > .x Src5.C`
-///
-/// ~~~ {.cpp}
-///   #include <TSpectrum2>
-///   void Src5() {
-///      Int_t i, j, nfound;
-///      Double_t nbinsx = 64;
-///      Double_t nbinsy = 64;
-///      Double_t xmin = 0;
-///      Double_t xmax = (Double_t)nbinsx;
-///      Double_t ymin = 0;
-///      Double_t ymax = (Double_t)nbinsy;
-///      Double_t** source = new Double_t*[nbinsx];
-///      for (i=0;i<nbinsx;i++)
-///         source[i]=new Double_t[nbinsy];
-///      Double_t** dest = new Double_t*[nbinsx];
-///      for (i=0;i<nbinsx;i++)
-///         dest[i]=new Double_t[nbinsy];
-///      TH2F *search = new TH2F("search","High resolution peak searching",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
-///      TFile *f = new TFile("spectra2/TSpectrum2.root");
-///      search=(TH2F*) f->Get("search3;1");
-///      TCanvas *Searching = new TCanvas("Searching","High resolution peak searching",10,10,1000,700);
-///      TSpectrum2 *s = new TSpectrum2();
-///      for (i = 0; i < nbinsx; i++){
-///         for (j = 0; j < nbinsy; j++){
-///            source[i][j] = search->GetBinContent(i + 1,j + 1);
-///         }
-///      }
-///      nfound = s->SearchHighRes(source, dest, nbinsx, nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);
-///      printf("Found %d candidate peaks\n",nfound);
-///      for(i=0;i<nfound;i++)
-///         printf("posx= %d, posy= %d, value=%d\n",(Int_t)(fPositionX[i]+0.5), (Int_t)(fPositionY[i]+0.5),
-///         (Int_t)source[(Int_t)(fPositionX[i]+0.5)][(Int_t)(fPositionY[i]+0.5)]);
-///  }
-/// ~~~
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/Src5.C
+/// End_Macro
 
 Int_t TSpectrum2::SearchHighRes(Double_t **source, Double_t **dest, Int_t ssizex, Int_t ssizey,
                                  Double_t sigma, Double_t threshold,
