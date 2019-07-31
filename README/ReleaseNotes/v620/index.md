@@ -114,6 +114,9 @@ The following people have contributed to this new version:
 - As the tutorial `palettes.C` is often hit when searching the keyword `palette`
   in the reference guide, a direct link from this example to the full list of
   predefined palettes given in `TColor` has been added.
+- Revisited the TSpectrum2 documentation. All the static images have been replaced
+  by macros generating images at reference guide build time. These macros have
+  been added in the tutorial section of the reference guide.
 
 
 ## Build, Configuration and Testing Infrastructure
