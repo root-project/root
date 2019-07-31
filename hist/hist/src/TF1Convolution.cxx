@@ -43,23 +43,23 @@ ClassImp(TF1Convolution);
 
 class TF1Convolution_EvalWrapper
 {
-   std::unique_ptr<TF1> fFunction1;
-   std::unique_ptr<TF1> fFunction2;
+   TF1 *  fFunc1;
+   TF1 *  fFunc2;
    Double_t fT0;
 
 public:
-   TF1Convolution_EvalWrapper(std::unique_ptr<TF1> &f1, std::unique_ptr<TF1> &f2, Double_t t) : fT0(t)
-   {
-      fFunction1 = std::unique_ptr<TF1>((TF1 *)f1->Clone());
-      fFunction2 = std::unique_ptr<TF1>((TF1 *)f2->Clone());
-   }
+   TF1Convolution_EvalWrapper(TF1 &f1, TF1 &f2, Double_t t) : 
+      fFunc1(&f1),
+      fFunc2(&f2),
+      fT0(t)
+   {}
    Double_t operator()(Double_t x) const
    {
       // use EvalPar that is faster
       Double_t xx[2];
       xx[0] = x;
       xx[1] = fT0-x;
-      return fFunction1->EvalPar(xx,nullptr) * fFunction2->EvalPar(xx+1,nullptr);
+      return fFunc1->EvalPar(xx,nullptr) * fFunc2->EvalPar(xx+1,nullptr);
    }
 };
 
@@ -69,14 +69,20 @@ public:
 void TF1Convolution::InitializeDataMembers(TF1* function1, TF1* function2, Bool_t useFFT)
 {
    if (function1) {
-      TF1 * fnew1 = (TF1*) function1->IsA()->New();
-      function1->Copy(*fnew1);
-      fFunction1 = std::unique_ptr<TF1>(fnew1);
+      // functions must be 1d- if not flag an error
+      if (function1->GetNdim() != 1)
+         Error("InitializeDataMembers","function1 %s is not of dimension 1 ",function1->GetName());
+      //TF1 * fnew1 = (TF1*) function1->IsA()->New();
+      // since function1 is a TF1 (cannot be a derived class) we can instantiate it directly
+      fFunction1 = std::unique_ptr<TF1> (new TF1());
+      function1->Copy(*fFunction1);
    }
    if (function2) {
-      TF1 * fnew2 = (TF1*) function2->IsA()->New();
-      function2->Copy(*fnew2);
-      fFunction2 = std::unique_ptr<TF1>(fnew2);
+       if (function2->GetNdim() != 1)
+         Error("InitializeDataMembers","function2 %s is not of dimension 1 ",function2->GetName());
+      //TF1 * fnew2 = (TF1*) function2->IsA()->New();
+      fFunction2 = std::unique_ptr<TF1>(new TF1());
+      function2->Copy(*fFunction2);
    }
    if (fFunction1.get() == nullptr|| fFunction2.get() == nullptr)
       Fatal("InitializeDataMembers","Invalid functions - Abort");
@@ -330,7 +336,7 @@ Double_t TF1Convolution::EvalFFTConv(Double_t t)
 
 Double_t TF1Convolution::EvalNumConv(Double_t t)
 {
-   TF1Convolution_EvalWrapper fconv( fFunction1, fFunction2, t);
+   TF1Convolution_EvalWrapper fconv( *fFunction1, *fFunction2, t);
    Double_t result = 0;
 
    ROOT::Math::IntegratorOneDim integrator(fconv, ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType(), 1e-9, 1e-9);
@@ -480,8 +486,10 @@ void TF1Convolution::Copy(TObject &obj) const
    ((TF1Convolution &)obj).fParams2 = fParams2;
    ((TF1Convolution &)obj).fParNames = fParNames;
 
-   // Clone unique_ptr's
-   ((TF1Convolution &)obj).fFunction1 = std::unique_ptr<TF1>((TF1 *)fFunction1->Clone());
-   ((TF1Convolution &)obj).fFunction2 = std::unique_ptr<TF1>((TF1 *)fFunction2->Clone());
+   // we need to copy the content of the  unique_ptr's
+   ((TF1Convolution &)obj).fFunction1 = std::unique_ptr<TF1>((TF1 *)new TF1() );
+   ((TF1Convolution &)obj).fFunction2 = std::unique_ptr<TF1>((TF1 *)new TF1() );
+   fFunction1->Copy(*(((TF1Convolution &)obj).fFunction1 ) ); 
+   fFunction2->Copy(*(((TF1Convolution &)obj).fFunction2 ) ); 
    // fGraphConv is transient anyway, so we don't bother to copy it
 }
