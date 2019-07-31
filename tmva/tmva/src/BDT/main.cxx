@@ -105,24 +105,27 @@ int main()
    int                number_of_trees = json_model.size();
    std::vector<float> event_sample{1., 115., 70., 30.}; // event to test trees
 
-   std::cout << "\n\n ***** Create unique_ptr representation ***** \n";
-   unique_bdt::Tree trees[number_of_trees];
-
-   for (int i = 0; i < number_of_trees; i++) {
-      unique_bdt::read_nodes_from_tree(json_model[i], trees[i]);
-      std::cout << trees[i].nodes->split_variable << "  " << trees[i].nodes->split_threshold << "\n";
-   }
-   for (auto &tree : trees) {
-      std::cout << "unique_ptr pred: " << tree.inference(event_sample) << std::endl;
-   }
-
    std::cout << "\n\n ***** Create array representation ***** \n";
    array_bdt::Tree trees_array[number_of_trees];
    for (int i = 0; i < number_of_trees; i++) {
+      std::cout << "READIND tree num " << i << std::endl;
       array_bdt::read_nodes_from_tree(json_model[i], trees_array[i]);
    }
    for (auto &tree : trees_array) {
       std::cout << "array pred: " << tree.inference(event_sample) << std::endl;
+   }
+
+   std::cout << "\n\n ***** Create unique_ptr representation ***** \n";
+   unique_bdt::Tree trees[number_of_trees];
+
+   for (int i = 0; i < number_of_trees; i++) {
+      std::cout << "READIND tree num " << i << std::endl;
+      unique_bdt::read_nodes_from_tree(json_model[i], trees[i]);
+      // std::cout << trees[i].nodes->split_variable << "  " << trees[i].nodes->split_threshold << "\n";
+   }
+
+   for (auto &tree : trees) {
+      std::cout << "unique_ptr pred: " << tree.inference(event_sample) << std::endl;
    }
 
    std::cout << "\n\n ***** Create Jitted representation ***** \n";
@@ -198,11 +201,13 @@ int main()
    write_csv(preds_unique_file, preds); // write predictions
 
    std::cout << "\n\n ***** tests ***** \n";
+   std::cout << "test1\n";
    Forest<int> test1;
    test1.test();
    test1.get_Forest();
 
    Forest<unique_bdt::Tree> test2;
+   std::cout << "test2\n";
    test2.test();
    test2.get_Forest("model.json");
    preds.clear();
@@ -211,6 +216,7 @@ int main()
    write_csv(preds_file, preds);
 
    Forest<array_bdt::Tree> test3;
+   std::cout << "test3\n";
    test3.test();
    test3.get_Forest("model.json");
    preds.clear();
@@ -219,6 +225,7 @@ int main()
    write_csv(preds_file, preds);
 
    Forest<std::function<float(std::vector<float>)>> test4;
+   std::cout << "test4\n";
    test4.test();
    test4.get_Forest("model.json");
    preds.clear();
@@ -230,7 +237,7 @@ int main()
    preds_file = "./data_files/test4.csv";
    write_csv(preds_file, preds);
 
-   std::cout << std::to_string(get_time()) << std::endl;
+   std::cout << "Time: " << std::to_string(get_time()) << std::endl;
    std::cout << get_time_string() << std::endl;
    std::cout << test4.counter << std::endl;
 

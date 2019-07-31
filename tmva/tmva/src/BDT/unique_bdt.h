@@ -23,15 +23,26 @@ public:
    float split_threshold;
    int   split_variable;
    float leaf_true, leaf_false;
+   float leaf;
 
-   void set_split_variable(int split_variable) { this->split_variable = split_variable; }
-   void set_split_theshold(float split_threshold) { this->split_threshold = split_threshold; }
-   void set_is_leaf_node(bool is_leaf_node) { this->is_leaf_node = is_leaf_node; }
+   // void set_split_variable(int split_variable) { this->split_variable = split_variable; }
+   // void set_split_theshold(float split_threshold) { this->split_threshold = split_threshold; }
+   // void set_is_leaf_node(bool is_leaf_node) { this->is_leaf_node = is_leaf_node; }
 
    std::unique_ptr<Node> child_true;
    std::unique_ptr<Node> child_false;
 
    float inference(const std::vector<float> &event)
+   {
+      if (this->is_leaf_node) {
+         return this->leaf;
+      } else {
+         return ((event[split_variable] < split_threshold) ? child_true->inference(event)
+                                                           : child_false->inference(event));
+      }
+   }
+
+   float inference_old(const std::vector<float> &event)
    {
       if (this->is_leaf_node) {
          return ((event[split_variable] < split_threshold) ? leaf_true : leaf_false);

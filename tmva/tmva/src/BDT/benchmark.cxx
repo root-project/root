@@ -19,48 +19,18 @@
 #include "array_bdt.h"
 #include "forest.h"
 
-//#include <xgboost/c_api.h> // for xgboost
+#include <xgboost/c_api.h> // for xgboost
 
 using json = nlohmann::json;
 
-/// Benchmark unique_bdts
-static void BM_UniqueBdt(benchmark::State &state)
-{
-   std::string my_config       = read_file_string("model.json");
-   auto        json_model      = json::parse(my_config);
-   int         number_of_trees = json_model.size();
-
-   unique_bdt::Tree trees[number_of_trees];
-
-   for (int i = 0; i < number_of_trees; i++) {
-      unique_bdt::read_nodes_from_tree(json_model[i], trees[i]);
+#define safe_xgboost(call)                                                                          \
+   {                                                                                                \
+      int err = (call);                                                                             \
+      if (err != 0) {                                                                               \
+         fprintf(stderr, "%s:%d: error in %s: %s\n", __FILE__, __LINE__, #call, XGBGetLastError()); \
+         exit(1);                                                                                   \
+      }                                                                                             \
    }
-
-   std::string                     data_folder   = "./data_files/";
-   std::string                     events_file   = data_folder + "events.csv";
-   std::vector<std::vector<float>> events_vector = read_csv(events_file);
-
-   float                          prediction = 0; // define used variables
-   std::vector<float>             preds_tmp;
-   std::vector<std::vector<bool>> preds;
-   float                          preds_sum;
-
-   for (auto _ : state) { // only bench what is inside the loop
-      preds.clear();
-      for (auto &event : events_vector) {
-         preds_tmp.clear();
-         for (auto &tree : trees) {
-            prediction = tree.inference(event);
-            preds_tmp.push_back(prediction);
-         }
-         preds_sum = vec_sum(preds_tmp);
-         preds.push_back(std::vector<bool>{binary_logistic(preds_sum)});
-      }
-   }
-   std::string preds_unique_file = data_folder + "preds_unique_file.csv";
-   write_csv(preds_unique_file, preds); // write predictions
-}
-BENCHMARK(BM_UniqueBdt);
 
 /// Benchmark eval unique_bdts
 static void BM_EvalUniqueBdt(benchmark::State &state)
@@ -119,5 +89,56 @@ static void BM_EvalJittedBdt(benchmark::State &state)
    write_csv(preds_file, preds);
 }
 BENCHMARK(BM_EvalJittedBdt)->Unit(benchmark::kMillisecond);
+//
+
+/// Benchmark eval xgboost_bdt
+static void BM_EvalXgboostBdt(benchmark::State &state)
+{
+   std::string events_fname = "data_files/events.csv";
+   std::string preds_fname  = "data_files/python_predictions.csv";
+   const char *model_fname  = "./data/model.rabbit";
+
+   std::vector<std::vector<float>> events;
+   std::vector<std::vector<float>> labels;
+   events = read_csv(events_fname);
+   labels = read_csv(preds_fname);
+
+   int cols = events[0].size();
+   int rows = events.size();
+   // std::cout << rows << std::endl;
+
+   float train[rows][cols];
+   for (int i = 0; i < rows; i++)
+      for (int j = 0; j < cols; j++) train[i][j] = events[i][j];
+
+   float m_labels[rows];
+   // for (int i = 0; i < rows; i++) m_labels[i] = labels[i][0];
+
+   DMatrixHandle h_train;
+   XGDMatrixCreateFromMat((float *)train, rows, cols, -1, &h_train);
+
+   BoosterHandle boosterHandle;
+   safe_xgboost(XGBoosterCreate(0, 0, &boosterHandle));
+   // std::cout << "Loading model \n";
+   safe_xgboost(XGBoosterLoadModel(boosterHandle, model_fname));
+   XGBoosterSetParam(boosterHandle, "objective", "binary:logistic");
+
+   // std::cout << "***** Predicts ***** \n";
+   bst_ulong    out_len;
+   const float *f;
+
+   for (auto _ : state) { // only bench what is inside the loop
+      XGBoosterPredict(boosterHandle, h_train, 0, 0, &out_len, &f);
+   }
+
+   std::vector<float> preds;
+   for (int i = 0; i < out_len; i++) preds.push_back(f[i]);
+   std::string preds_file = "data_files/test.csv";
+   write_csv(preds_file, preds);
+
+   // free xgboost internal structures
+   safe_xgboost(XGBoosterFree(boosterHandle));
+}
+BENCHMARK(BM_EvalXgboostBdt)->Unit(benchmark::kMillisecond);
 
 BENCHMARK_MAIN();

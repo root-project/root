@@ -13,14 +13,13 @@
 #include <map>
 #include <vector>
 
-
 //#include "bdt.h"
 #include "unique_bdt.h"
 #include "TInterpreter.h" // for gInterpreter
 
+
 /// generates if then else statements for bdts
 void generate_if_statement_for_bdt (std::ostream& fout,
-                                          //std::shared_ptr<Node> node
                                           const unique_bdt::Node* node
                                         ){
 
@@ -67,7 +66,7 @@ void generate_code_bdt(std::ostream& fout,
        << " inference of a single tree" << std::endl;
   fout << std::endl << std::endl;
 
-  fout << "#pragma cling optimize(3)" << std::endl << std::endl;
+  //fout << "#pragma cling optimize(3)" << std::endl << std::endl;
 
   //fout << "#include <vector>" << std::endl;
   if (use_namespaces){

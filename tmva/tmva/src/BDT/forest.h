@@ -48,11 +48,12 @@ public:
    {
 
       // preds.clear();
-      std::vector<bool>  preds;
+      std::vector<bool> preds;
+      preds.reserve(events_vector.size());
       float              prediction = 0;
       std::vector<float> preds_tmp;
+      preds.reserve(events_vector[0].size());
 
-      preds.reserve(events_vector.size());
       for (auto &event : events_vector) {
          preds_tmp.clear();
          for (auto &tree : this->trees) {
@@ -60,6 +61,7 @@ public:
             preds_tmp.push_back(prediction);
          }
          preds.push_back(binary_logistic(vec_sum(preds_tmp)));
+         // preds.push_back(vec_sum(preds_tmp));
       }
       return preds;
    }

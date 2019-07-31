@@ -35,6 +35,7 @@ SOFTWARE.
 #define NLOHMANN_JSON_VERSION_PATCH 0
 
 #include <algorithm> // all_of, find, for_each
+#define NDEBUG
 #include <cassert> // assert
 #include <ciso646> // and, not, or
 #include <cstddef> // nullptr_t, ptrdiff_t, size_t

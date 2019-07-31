@@ -21,7 +21,7 @@
 //
 /// sums internal values of vector
 template <class T>
-T vec_sum(std::vector<T> vec)
+inline T vec_sum(std::vector<T> vec)
 {
    return std::accumulate(vec.begin(), vec.end(), 0.0);
 }

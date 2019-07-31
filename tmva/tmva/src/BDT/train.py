@@ -35,7 +35,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 # fit model no training data
-model = xgb.XGBClassifier(n_estimators=5)
+model = xgb.XGBClassifier(n_estimators=11)
 model.fit(X_train, y_train)
 
 # make predictions for test data
@@ -68,7 +68,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 # fit model no training data
-model = xgb.XGBClassifier(n_estimators=5)
+model = xgb.XGBClassifier(n_estimators=100)
 model.fit(X_train, y_train)
 
 # make predictions for test data

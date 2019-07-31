@@ -1,13 +1,14 @@
 CXX = g++ #mpicxx
-CXXFLAGS = -std=c++11 -Wall -g
+CXXFLAGS = -std=c++11 -Wall -g -ggdb
 
 
 ROOT_FLAGS = `root-config --cflags --glibs`
 
 CPPFLAGS = -I./include \
  -Wno-deprecated \
+ -I.
 
-LIBFLAGS = -L
+LIBFLAGS = -L -L.
 
 OBJS = build/main.o build/bdt.o build/unique_bdt.o
 EXE = main.exe
@@ -19,7 +20,7 @@ EXE = main.exe
 all: $(EXE)
 
 $(EXE): $(OBJS)
-	$(CXX) $(CXXFLAGS) $(LIBFLAGS) -o $@  $^  $(ROOT_FLAGS) 
+	$(CXX) $(CXXFLAGS) $(LIBFLAGS) -o $@  $^  $(ROOT_FLAGS)
 
 #$(TEST_EXE) : $(OBJS)
 #	$(CXX) $(CXXFLAGS) $(ROOT_FLAGS) -o $@ $^

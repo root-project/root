@@ -82,8 +82,31 @@ std::pair<int, float> get_node_members(json &jTree)
 /// Need a nlohmann::json object from an xgboost saved format
 void _read_nodes(json &jTree, std::vector<int> &tree_features, std::vector<float> &tree_thresholds, int index = 0)
 {
-   bool is_leaf_node = ((jTree["children"][0].find("leaf") != jTree["children"][0].end()) &&
-                        (jTree["children"][0].find("nodeid") != jTree["children"][0].end()));
+
+   int true_index  = 2 * index + 1;
+   int false_index = 2 * index + 2;
+
+   if (jTree.find("children") != jTree.end()) {
+      std::pair<int, float> features_thresholds = get_node_members(jTree);
+      tree_features.at(index)                   = features_thresholds.first;
+      tree_thresholds.at(index)                 = features_thresholds.second;
+      _read_nodes(jTree.at("children").at(0), tree_features, tree_thresholds, true_index);
+      _read_nodes(jTree.at("children").at(1), tree_features, tree_thresholds, false_index);
+   } else {
+      if (jTree.find("leaf") != jTree.end()) {
+         tree_features.at(index)   = -1;
+         tree_thresholds.at(index) = jTree["leaf"];
+      } else {
+         std::cout << "Error! Unexpected node key\n";
+      }
+   }
+}
+
+/*
+void _read_nodes_old(json &jTree, std::vector<int> &tree_features, std::vector<float> &tree_thresholds, int index = 0)
+{
+   // bool is_leaf_node = ((jTree["children"][0].find("leaf") != jTree["children"][0].end()) &&
+   //                    (jTree["children"][0].find("nodeid") != jTree["children"][0].end()));
 
    std::pair<int, float> features_thresholds = get_node_members(jTree);
 
@@ -93,32 +116,35 @@ void _read_nodes(json &jTree, std::vector<int> &tree_features, std::vector<float
    int true_index  = 2 * index + 1;
    int false_index = 2 * index + 2;
 
-   if (is_leaf_node) {
-      tree_features.at(true_index)    = -1;
-      tree_features.at(false_index)   = -1;
-      tree_thresholds.at(true_index)  = jTree["children"][0]["leaf"];
-      tree_thresholds.at(false_index) = jTree["children"][1]["leaf"];
+   if (jTree.at("children")[0].find("leaf") != jTree.at("children")[0].end()) {
+      tree_features.at(true_index)   = -1;
+      tree_thresholds.at(true_index) = jTree["children"][0]["leaf"];
    } else {
       _read_nodes(jTree["children"][0], tree_features, tree_thresholds, true_index);
+   }
+   if (jTree["children"][1].find("leaf") != jTree["children"][1].end()) {
+      tree_features.at(false_index)   = -1;
+      tree_thresholds.at(false_index) = jTree["children"][1]["leaf"];
+   } else {
       _read_nodes(jTree["children"][1], tree_features, tree_thresholds, false_index);
-   } // end if-else
-} // end function
+   }
+}
+*/
 
 /// Get the depth of a tree
 int _get_tree_max_depth(json &jTree, int depth = 0)
 {
-   int  depth_tmp    = 0;
-   bool is_leaf_node = ((jTree["children"][0].find("leaf") != jTree["children"][0].end()) &&
-                        (jTree["children"][0].find("nodeid") != jTree["children"][0].end()));
-   depth_tmp         = jTree["depth"].get<int>() + 1;
-   depth             = (depth < depth_tmp) ? depth_tmp : depth;
-
-   if (!is_leaf_node) {
+   int depth_tmp = 0;
+   // bool is_leaf_node = ((jTree["children"][0].find("leaf") != jTree["children"][0].end()) &&
+   //                      (jTree["children"][0].find("nodeid") != jTree["children"][0].end()));
+   if (jTree.find("children") != jTree.end()) {
+      depth_tmp = jTree["depth"].get<int>() + 1;
+      depth     = (depth < depth_tmp) ? depth_tmp : depth;
       depth_tmp = _get_tree_max_depth(jTree["children"][0], depth);
       depth     = (depth < depth_tmp) ? depth_tmp : depth;
       depth_tmp = _get_tree_max_depth(jTree["children"][1], depth);
       depth     = (depth < depth_tmp) ? depth_tmp : depth;
-   } // end if-else
+   }
    return depth;
 } // end function
 

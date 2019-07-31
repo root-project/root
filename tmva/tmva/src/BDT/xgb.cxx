@@ -44,7 +44,7 @@ int main()
    int rows = events.size();
 
    std::cout << rows << " rows but using only";
-   rows = 5;
+   // rows = 5;
    std::cout << rows << " rows \n";
    std::cout << cols << " columns \n";
 
@@ -54,14 +54,14 @@ int main()
       for (int j = 0; j < cols; j++) train[i][j] = events[i][j];
 
    float m_labels[rows];
-   for (int i = 0; i < rows; i++) m_labels[i] = labels[i][0];
+   // for (int i = 0; i < rows; i++) m_labels[i] = labels[i][0];
 
    DMatrixHandle h_train;
    XGDMatrixCreateFromMat((float *)train, rows, cols, -1, &h_train);
 
    // read back the labels, just a sanity check
    std::cout << "The labels are: \n";
-   for (int i = 0; i < rows; i++) std::cout << "label[" << i << "]=" << m_labels[i] << std::endl;
+   // for (int i = 0; i < rows; i++) std::cout << "label[" << i << "]=" << m_labels[i] << std::endl;
 
    // predict
 
@@ -73,12 +73,14 @@ int main()
 
    safe_xgboost(XGBoosterLoadModel(boosterHandle, model_fname));
    std::cout << "Model loaded \n";
+   XGBoosterSetParam(boosterHandle, "objective", "binary:logistic");
+   XGBoosterSetParam(boosterHandle, "eval_metric", "mlogloss");
 
    std::cout << "***** Predicts ***** \n";
    bst_ulong    out_len;
    const float *f;
    XGBoosterPredict(boosterHandle, h_train, 0, 0, &out_len, &f);
-   for (unsigned int i = 0; i < out_len; i++) std::cout << "prediction[" << i << "]=" << f[i] << std::endl;
+   for (unsigned int i = 0; i < 5 /*out_len*/; i++) std::cout << "prediction[" << i << "]=" << f[i] << std::endl;
 
    // free xgboost internal structures
    safe_xgboost(XGBoosterFree(boosterHandle));

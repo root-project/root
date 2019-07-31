@@ -1,9 +1,16 @@
 CXX = g++ #mpicxx
-CXXFLAGS = -std=c++11 -g
+CXXFLAGS = -std=c++11 -g -fopenmp -O3
 
 CPPFLAGS = -I./include \
  -Wno-deprecated \
- -isystem benchmark/include -O3
+ -isystem benchmark/include \
+  -I$(XGBOOST_ROOT)/include -I$(XGBOOST_ROOT)/rabit/include
+
+ XGBOOST_ROOT=/home/zampieri/Documents/CERN/xgboost
+ INCLUDE_DIR=-I$(XGBOOST_ROOT)/include -I$(XGBOOST_ROOT)/dmlc-core/include -I$(XGBOOST_ROOT)/rabit/include
+ LIB_DIR=-L$(XGBOOST_ROOT)/lib
+
+
 
 ROOT_FLAGS = `root-config --cflags --glibs`
 
@@ -17,7 +24,7 @@ EXE = mybenchmark.exe
 all: $(EXE)
 
 $(EXE): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@  $^  $(LIBFLAGS) $(ROOT_FLAGS)
+	$(CXX) $(CXXFLAGS) -o $@  $^  $(LIBFLAGS) $(ROOT_FLAGS) $(XGBOOST_ROOT)/lib/libxgboost.so
 
 $(OBJS) : build/%.o: %.cxx
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(ROOT_FLAGS) -c $< -o $@

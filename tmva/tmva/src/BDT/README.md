@@ -17,6 +17,9 @@ Run `bash run.sh`!
 - [ ] Benchmark against Atlas and CMS codes
 - [ ] For Jitting we can switch to arrays instead of vectors
 
+# Known problems
+- Non-unique namespace when jitting 
+
 
 ## From xgboost doc we have:
 ************************
