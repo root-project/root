@@ -12,9 +12,9 @@
 #include <TSpectrum2.h>
 
 void Src4() {
-Int_t i, j, nfound;
-   Double_t nbinsx = 64;
-   Double_t nbinsy = 64;
+   Int_t i, j, nfound;
+   const Int_t nbinsx = 64;
+   const Int_t nbinsy = 64;
    Double_t xmin = 0;
    Double_t xmax = (Double_t)nbinsx;
    Double_t ymin = 0;
