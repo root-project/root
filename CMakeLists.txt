@@ -473,7 +473,10 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   endif()
   install(DIRECTORY man/    DESTINATION ${CMAKE_INSTALL_MANDIR})
   install(DIRECTORY tutorials/ DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
-  install(FILES cmake/modules/RootMacros.cmake DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
+  install(FILES
+    cmake/modules/RootMacros.cmake
+    cmake/modules/RootTestDriver.cmake
+    DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
 endif()
 
 #---Make sure the Jupyter ROOT C++ kernel runs with the same Python version as ROOT-----
