@@ -84,7 +84,7 @@ PyTypeObject InstanceArrayIter_Type = {
 
 //= support for C-style arrays of objects ====================================
 PyObject* TupleOfInstances_New(
-    Cppyy::TCppObject_t address, Cppyy::TCppType_t klass, long ndims, long* dims)
+    Cppyy::TCppObject_t address, Cppyy::TCppType_t klass, dim_t ndims, dims_t dims)
 {
 // recursively set up tuples of instances on all dimensions
     if (ndims == -1 /* unknown shape */ || dims[0] == -1 /* unknown size */) {

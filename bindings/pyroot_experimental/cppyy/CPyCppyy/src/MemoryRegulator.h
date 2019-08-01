@@ -1,12 +1,18 @@
 #ifndef CPYCPPYY_MEMORYREGULATOR_H
 #define CPYCPPYY_MEMORYREGULATOR_H
 
+#include <functional>
+#include <utility>
 
 namespace CPyCppyy {
 
 class CPPInstance;
 
+typedef std::function<std::pair<bool, bool>(Cppyy::TCppObject_t, Cppyy::TCppType_t)> MemHook_t;
+
 class MemoryRegulator {
+private:
+    static MemHook_t registerHook, unregisterHook;
 public:
     MemoryRegulator();
 
@@ -24,6 +30,10 @@ public:
 
 // callback when weak refs to managed objects are destroyed
     static PyObject* EraseCallback(PyObject*, PyObject* pyref);
+
+// set hooks for custom memory regulation
+    static void SetRegisterHook(MemHook_t h) { registerHook = h; }
+    static void SetUnregisterHook(MemHook_t h) { unregisterHook = h; }
 };
 
 } // namespace CPyCppyy

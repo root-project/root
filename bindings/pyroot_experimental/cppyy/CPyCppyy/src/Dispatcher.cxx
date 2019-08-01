@@ -3,6 +3,7 @@
 #include "Dispatcher.h"
 #include "CPPScope.h"
 #include "PyStrings.h"
+#include "ProxyWrappers.h"
 #include "TypeManip.h"
 #include "Utility.h"
 
@@ -41,7 +42,7 @@ static inline void InjectMethod(Cppyy::TCppMethod_t method, const std::string& m
 #else
     code << "    PyObject* mtPyName = PyUnicode_FromString(\"" << mtCppName << "\");\n"
 #endif
-            "    PyObject* pyresult = PyObject_CallMethodObjArgs(m_self, mtPyName";
+            "    PyObject* pyresult = PyObject_CallMethodObjArgs((PyObject*)m_self, mtPyName";
     for (Cppyy::TCppIndex_t i = 0; i < nArgs; ++i)
         code << ", pyargs[" << i << "]";
     code << ", NULL);\n    Py_DECREF(mtPyName);\n";
@@ -55,8 +56,17 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* dct)
 {
 // Scan all methods in dct and where it overloads base methods in klass, create
 // dispatchers on the C++ side. Then interject the dispatcher class.
-    if (Cppyy::IsNamespace(klass->fCppType) || !PyDict_Check(dct))
+    if (Cppyy::IsNamespace(klass->fCppType) || !PyDict_Check(dct)) {
+        PyErr_Format(PyExc_TypeError,
+            "%s not an acceptable base: is namespace or has no dict", Cppyy::GetScopedFinalName(klass->fCppType).c_str());
         return false;
+    }
+
+    if (!Cppyy::HasVirtualDestructor(klass->fCppType)) {
+        PyErr_Format(PyExc_TypeError,
+            "%s not an acceptable base: no virtual destructor", Cppyy::GetScopedFinalName(klass->fCppType).c_str());
+        return false;
+    }
 
     if (!Utility::IncludePython())
         return false;
@@ -77,11 +87,11 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* dct)
 // start class declaration
     code << "namespace __cppyy_internal {\n"
          << "class " << derivedName << " : public ::" << baseNameScoped << " {\n"
-            "  PyObject* m_self;\n"
+            "  CPyCppyy::DispatchPtr m_self;\n"
             "public:\n";
 
-// constructors are simply inherited
-    code << "  using " << baseName << "::" << baseName << ";\n";
+// add a virtual destructor for good measure
+    code << "  virtual ~" << derivedName << "() {}\n";
 
 // methods: first collect all callables, then get overrides from base class, for
 // those that are still missing, search the hierarchy
@@ -97,12 +107,27 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* dct)
         PyErr_Clear();
 
 // simple case: methods from current class
+    bool has_default = false;
+    bool has_cctor = false;
+    bool has_constructors = false;
     const Cppyy::TCppIndex_t nMethods = Cppyy::GetNumMethods(klass->fCppType);
     for (Cppyy::TCppIndex_t imeth = 0; imeth < nMethods; ++imeth) {
         Cppyy::TCppMethod_t method = Cppyy::GetMethod(klass->fCppType, imeth);
 
+        if (Cppyy::IsConstructor(method)) {
+            has_constructors = true;
+            Cppyy::TCppIndex_t nreq = Cppyy::GetMethodReqArgs(method);
+            if (nreq == 0)
+                has_default = true;
+            else if (nreq == 1) {
+                if (TypeManip::clean_type(Cppyy::GetMethodArgType(method, 0), false) == baseNameScoped)
+                    has_cctor = true;
+            }
+            continue;
+        }
+
         std::string mtCppName = Cppyy::GetMethodName(method);
-        PyObject* key = CPyCppyy_PyUnicode_FromString(mtCppName.c_str());
+        PyObject* key = CPyCppyy_PyText_FromString(mtCppName.c_str());
         int contains = PyDict_Contains(dct, key);
         if (contains == -1) PyErr_Clear();
         if (contains != 1) {
@@ -128,7 +153,7 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* dct)
             for (Py_ssize_t i = 0; i < PyList_GET_SIZE(keys); ++i) {
             // TODO: should probably invert this looping; but that makes handling overloads clunky
                 PyObject* key = PyList_GET_ITEM(keys, i);
-                std::string mtCppName = CPyCppyy_PyUnicode_AsString(key);
+                std::string mtCppName = CPyCppyy_PyText_AsString(key);
                 const auto& v = Cppyy::GetMethodIndicesFromName(tbase, mtCppName);
                 for (auto idx : v)
                     InjectMethod(Cppyy::GetMethod(tbase, idx), mtCppName, code);
@@ -140,6 +165,24 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* dct)
         }
     }
     Py_DECREF(clbs);
+
+// constructors: most are simply inherited, for use by the Python derived class
+    code << "  using " << baseName << "::" << baseName << ";\n";
+
+// for working with C++ templates, additional constructors are needed to make
+// sure the python object is properly carried, but they can only be generated
+// if the base class supports them
+    if (has_default || !has_constructors)
+        code << "  " << derivedName << "() {}\n"
+             << "  " << derivedName << "(PyObject* pyobj) : m_self(pyobj) {}\n";
+    if (has_default || has_cctor || !has_constructors) {
+        code << "  " << derivedName << "(const " << derivedName << "& other) : ";
+        if (has_cctor)
+            code << baseName << "(other), ";
+        code << "m_self(other.m_self, this) {}\n";
+    }
+
+// destructor: default is fine
 
 // finish class declaration
     code << "};\n}";
@@ -153,6 +196,12 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* dct)
     Cppyy::TCppScope_t disp = Cppyy::GetScope("__cppyy_internal::"+derivedName);
     if (!disp) return false;
     klass->fCppType = disp;
+
+// at this point, the dispatcher only lives in C++, as opposed to regular classes
+// that are part of the hierarchy in Python, so create it, which will cache it for
+// later use by e.g. the MemoryRegulator
+    PyObject* disp_proxy = CPyCppyy::CreateScopeProxy(disp);
+    Py_XDECREF(disp_proxy);
 
     return true;
 }

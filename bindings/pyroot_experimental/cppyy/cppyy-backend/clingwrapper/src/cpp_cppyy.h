@@ -128,6 +128,8 @@ namespace Cppyy {
     RPY_EXPORTED
     std::string GetScopedFinalName(TCppType_t type);
     RPY_EXPORTED
+    bool        HasVirtualDestructor(TCppType_t type);
+    RPY_EXPORTED
     bool        HasComplexHierarchy(TCppType_t type);
     RPY_EXPORTED
     TCppIndex_t GetNumBases(TCppType_t type);
@@ -136,7 +138,9 @@ namespace Cppyy {
     RPY_EXPORTED
     bool        IsSubtype(TCppType_t derived, TCppType_t base);
     RPY_EXPORTED
-    bool        GetSmartPtrInfo(const std::string&, TCppType_t& raw, TCppMethod_t& deref);
+    bool        IsSmartPtr(TCppType_t type);
+    RPY_EXPORTED
+    bool        GetSmartPtrInfo(const std::string&, TCppType_t* raw, TCppMethod_t* deref);
     RPY_EXPORTED
     void        AddSmartPtrType(const std::string&);
 
@@ -195,7 +199,7 @@ namespace Cppyy {
 
     RPY_EXPORTED
     TCppIndex_t  GetGlobalOperator(
-        TCppType_t scope, TCppType_t lc, TCppScope_t rc, const std::string& op);
+        TCppType_t scope, const std::string& lc, const std::string& rc, const std::string& op);
 
 // method properties ---------------------------------------------------------
     RPY_EXPORTED

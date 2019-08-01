@@ -9,16 +9,50 @@ level packages, which have their own releases.
 See :doc:`packages <packages>`, for details on the package structure.
 PyPy support lags CPython support.
 
+master: 1.5.1
+-------------
+
+* Instantiate templates with larger integer types if argument values require
+* Improve cppyy.interactive and partially enable it on PyPy, IPython, etc.
+* Let __overload__ be more flexible in signature matching
+* Make list filtering of dir(cppyy.gbl) on Windows same as Linux/Mac
+* Extended documentation
+
+
+2019-08-18: 1.5.0
+-----------------
+
+* Upgrade cppyy-cling to 6.18
+* Allow python-derived classes to be used in templates
+* Stricter template resolution and better caching/performance
+* Detailed memory management for make_shared and shared_ptr
+* Two-way memory management for cross-inherited objects
+* Reduced memory footprint of proxy objects in most common cases
+* Allow implicit conversion from a tuple of arguments
+* Data set on namespaces reflected on C++ even if data not yet bound
+* Generalized resolution of binary operators in wrapper generation
+* Proper naming of arguments in namespaces for std::function<>
+* Cover more cases of STL-liker iterators
+* Allow std::vector initialization with a list of constructor arguments
+* Consistent naming of ``__cppname__`` to ``__cpp_name__``
+* Added __set_lifeline__ attribute to overloads
+* Fixes to the cmake fragments for Ubuntu
+* Fixes linker errors on Windows in some configurations
+* Support C++ naming of typedef of bool types
+* Basic views of 2D arrays of builtin types
+* Extended documentation
+
+
 2019-07-01 : 1.4.12
 -------------------
 
-* automatic conversion of python functions to std::function arguments
-* fix for templated operators that can map to different python names
-* fix on p3 crash when setting a detailed exception during exception handling
-* fix lookup of std::nullopt
-* fix bug that prevented certain templated constructors from being considered
-* support for enum values as data members on "enum class" enums
-* support for implicit conversion when passing by-value
+* Automatic conversion of python functions to std::function arguments
+* Fix for templated operators that can map to different python names
+* Fix on p3 crash when setting a detailed exception during exception handling
+* Fix lookup of std::nullopt
+* Fix bug that prevented certain templated constructors from being considered
+* Support for enum values as data members on "enum class" enums
+* Support for implicit conversion when passing by-value
 
 
 2019-05-23 : 1.4.11
@@ -93,7 +127,7 @@ PyPy support lags CPython support.
 * More support for 'using' declarations (methods and inner namespaces)
 * Fix overload resolution for std::set::rbegin()/rend() operator ==
 * Fixes for bugs #61, #67
-* Several pointer truncation fixes fo 64b Windows
+* Several pointer truncation fixes for 64b Windows
 * Linker and lookup fixes for Windows
 
 

@@ -57,10 +57,11 @@ public:
 
 public:
     void Set(const std::string& name, std::vector<PyCallable*>& methods);
+    void AdoptMethod(PyCallable* pc);
+    void MergeOverload(CPPOverload* meth);
 
     const std::string& GetName() const { return fMethodInfo->fName; }
-    void AddMethod(PyCallable* pc);
-    void AddMethod(CPPOverload* meth);
+    bool HasMethods() const { return !fMethodInfo->fMethods.empty(); }
 
 public:                 // public, as the python C-API works with C structs
     PyObject_HEAD

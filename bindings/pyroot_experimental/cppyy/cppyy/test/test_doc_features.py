@@ -97,6 +97,11 @@ int call_int_int(int (*f)(int, int), int i1, int i2) {
     return f(i1, i2);
 }
 
+template<class A, class B, class C = A>
+C multiply(A a, B b) {
+    return C{a*b};
+}
+
 //-----
 namespace Namespace {
 
@@ -167,7 +172,7 @@ namespace Namespace {
         assert 'Namespace.Concrete.NestedClass' in str(type(n))
         assert 'NestedClass' == type(n).__name__
         assert 'cppyy.gbl.Namespace.Concrete' == type(n).__module__
-        assert 'Namespace::Concrete::NestedClass' == type(n).__cppname__
+        assert 'Namespace::Concrete::NestedClass' == type(n).__cpp_name__
 
     def test_data_members(self):
         import cppyy
@@ -568,3 +573,77 @@ namespace Zoo {
 
         assert Zoo.identify_animal(Zoo.free_lion) == "the animal is a lion"
         assert Zoo.identify_animal_smart(Zoo.free_lion) == "the animal is a lion"
+
+    def test09_templated_function(self):
+        """Templated free function"""
+
+        import cppyy
+
+        mul = cppyy.gbl.multiply
+
+        assert 'multiply' in cppyy.gbl.__dict__
+
+        assert mul(1,  2) == 2
+        assert 'multiply<int,int,int>' in cppyy.gbl.__dict__
+        assert mul(1., 5) == 5.
+        assert 'multiply<double,int,double>' in cppyy.gbl.__dict__
+
+        assert mul[int]     (1, 1) == 1
+        assert 'multiply<int>' in cppyy.gbl.__dict__
+        assert mul[int, int](1, 1) == 1
+        assert 'multiply<int,int>' in cppyy.gbl.__dict__
+
+      # make sure cached values are actually looked up
+        old = getattr(cppyy.gbl, 'multiply<int,int>')
+        setattr(cppyy.gbl, 'multiply<int,int>', staticmethod(lambda x, y: 2*x*y))
+        assert mul[int, int](2, 2) == 8
+        setattr(cppyy.gbl, 'multiply<int,int>', old)
+        assert mul[int, int](2, 2) == 4
+
+        assert raises(TypeError, mul[int, int, int, int], 1, 1)
+        assert raises(TypeError, mul[int, int], 1, 1.)
+        assert type(mul[int, int, float](1, 1)) == float
+        # TODO: the following error message is rather confusing :(
+        assert raises(TypeError, mul[int, int], 1, 'a')
+
+        assert mul['double, double, double'](1., 5) == 5.
+
+    def test10_stl_algorithm(self):
+        """Test STL algorithm on std::string"""
+
+        import cppyy
+
+        cppstr = cppyy.gbl.std.string
+        n = cppstr('this is a C++ string')
+        assert n == 'this is a C++ string'
+        n.erase(cppyy.gbl.std.remove(n.begin(), n.end(), cppstr.value_type(' ')))
+        assert n == 'thisisaC++stringing'
+
+
+class TestADVERTISED:
+    def setup_class(cls):
+        import cppyy
+
+    def test01_reduction_of_overloads(self):
+        """Reduce available overloads to 1"""
+
+        import cppyy
+
+        cppyy.cppdef("""namespace Advert01 {
+        class A {
+        public:
+             A(int) {}
+            A(double) {}
+        };
+        }""")
+
+        def pythonize_A(klass, name):
+            if name == 'A':
+                klass.__init__ = klass.__init__.__overload__("int")
+
+        cppyy.py.add_pythonization(pythonize_A, 'Advert01')
+
+        from cppyy.gbl import Advert01
+
+        assert Advert01.A(1)
+        raises(TypeError, Advert01.A, 1.)

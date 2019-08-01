@@ -55,3 +55,24 @@ int CrossInheritance::TDerived1::get_value() {
     return 27;
 }
 
+int CrossInheritance::CountableBase::s_count = 0;
+
+CrossInheritance::CountableBase::CountableBase() {
+    ++s_count;
+}
+
+CrossInheritance::CountableBase::CountableBase(const CountableBase&) {
+    ++s_count;
+}
+
+CrossInheritance::CountableBase& CrossInheritance::CountableBase::operator=(const CountableBase&) {
+    return *this;
+}
+
+CrossInheritance::CountableBase::~CountableBase() {
+    --s_count;
+}
+
+int CrossInheritance::CountableBase::call() {
+    return -1;
+}

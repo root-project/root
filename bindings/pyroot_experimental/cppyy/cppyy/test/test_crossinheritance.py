@@ -262,3 +262,161 @@ class TestCROSSINHERITANCE:
 
         d = Derived(4)
         assert raises(TypeError, Base1.call_get_value, d)
+
+    def test11_python_in_templates(self):
+        """Usage of Python derived objects in std::vector"""
+
+        import cppyy, gc
+
+        CB = cppyy.gbl.CrossInheritance.CountableBase
+
+        class PyCountable(CB):
+            def call(self):
+                try:
+                    return self.extra + 42
+                except AttributeError:
+                    return 42
+
+        start_count = CB.s_count
+
+        v = cppyy.gbl.std.vector[PyCountable]()
+        v.emplace_back(PyCountable())     # uses copy ctor
+        assert len(v) == 1
+        gc.collect()
+        assert CB.s_count == 1 + start_count
+
+        p = PyCountable()
+        assert p.call() == 42
+        p.extra = 42
+        assert p.call() == 84
+        v.emplace_back(p)
+        assert len(v) == 2
+        assert v[1].call() == 84          # copy ctor copies python state
+        p.extra = 13
+        assert p.call() == 55
+        assert v[1].call() == 84
+        del p
+        gc.collect()
+        assert CB.s_count == 2 + start_count
+
+        v.push_back(PyCountable())        # uses copy ctor
+        assert len(v) == 3
+        gc.collect()
+        assert CB.s_count == 3 + start_count
+
+        del v
+        gc.collect()
+        assert CB.s_count == 0 + start_count
+
+    def test12_python_in_make_shared(self):
+        """Usage of Python derived objects with std::make_shared"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+        namespace MakeSharedTest {
+        class Abstract {
+        public:
+            virtual ~Abstract() = 0;
+            virtual int some_imp() = 0;
+        };
+
+        Abstract::~Abstract() {}
+
+        int call_shared(std::shared_ptr<Abstract>& ptr) {
+            return ptr->some_imp();
+        } }
+        """)
+
+        from cppyy.gbl import std, MakeSharedTest
+        from cppyy.gbl.MakeSharedTest import Abstract, call_shared
+
+        class PyDerived(Abstract):
+            def __init__(self, val):
+                super(PyDerived, self).__init__()
+                self.val = val
+            def some_imp(self):
+                return self.val
+
+        v = std.make_shared[PyDerived](42)
+
+        assert call_shared(v) == 42
+        assert v.some_imp() == 42
+
+        p = PyDerived(13)
+        v = std.make_shared[PyDerived](p)
+        assert call_shared(v) == 13
+        assert v.some_imp() == 13
+
+    def test13_python_shared_ptr_memory(self):
+        """Usage of Python derived objects with std::shared_ptr"""
+
+        import cppyy, gc
+
+        std = cppyy.gbl.std
+        CB  = cppyy.gbl.CrossInheritance.CountableBase
+
+        class PyCountable(CB):
+            def call(self):
+                try:
+                    return self.extra + 42
+                except AttributeError:
+                    return 42
+
+        start_count = CB.s_count
+
+        v = std.vector[std.shared_ptr[PyCountable]]()
+        v.push_back(std.make_shared[PyCountable]())
+
+        gc.collect()
+        assert CB.s_count == 1 + start_count
+
+        del v
+        gc.collect()
+        assert CB.s_count == 0 + start_count
+
+    def test14_virtual_dtors_and_del(self):
+        """Usage of virtual destructors and Python-side del."""
+
+        import cppyy
+
+        cppyy.cppdef("""
+        namespace VirtualDtor {
+        class MyClass1 {};    // no virtual dtor ...
+
+        class MyClass2 {
+        public:
+            virtual ~MyClass2() {}
+        };
+
+        class MyClass3 : public MyClass2 {};
+
+        template<class T>
+        class MyClass4 {
+        public:
+            virtual ~MyClass4() {}
+        }; }
+        """)
+
+        VD = cppyy.gbl.VirtualDtor
+
+        try:
+            class MyPyDerived1(VD.MyClass1):
+                pass
+        except TypeError:
+            pass
+        else:
+            assert not "should have failed"
+
+        class MyPyDerived2(VD.MyClass2):
+            pass
+
+        d = MyPyDerived2()
+        del d                 # used to crash
+
+      # check a few more derivations that should not fail
+        class MyPyDerived3(VD.MyClass3):
+            pass
+
+        class MyPyDerived4(VD.MyClass4[int]):
+            pass

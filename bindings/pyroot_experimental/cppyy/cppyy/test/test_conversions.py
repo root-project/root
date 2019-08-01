@@ -13,7 +13,7 @@ class TestCONVERSIONS:
     def setup_class(cls):
         cls.test_dct = test_dct
         import cppyy
-        cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
+        cls.conversion = cppyy.load_reflection_info(cls.test_dct)
 
     def test01_implicit_vector_conversions(self):
         """Test implicit conversions of std::vector"""
@@ -85,3 +85,13 @@ class TestCONVERSIONS:
         raises(TypeError, CNS.sumints, [CC()], range(N))
         gc.collect()
         assert CC.s_count == 0
+
+    def test04_implicit_conversion_from_tuple(self):
+        """Allow implicit conversions from tuples as arguments {}-like"""
+
+        import cppyy
+
+        m = cppyy.gbl.std.map[str, str]()
+        m.insert(('a', 'b'))      # implicit conversion to std::pair
+
+        assert m['a'] == 'b'

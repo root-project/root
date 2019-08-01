@@ -45,7 +45,7 @@ __all__ = [
 
 from ._version import __version__
 
-import os, sys, sysconfig
+import os, sys, sysconfig, warnings
 
 if not 'CLING_STANDARD_PCH' in os.environ:
     local_pch = os.path.join(os.path.dirname(__file__), 'allDict.cxx.pch')
@@ -106,6 +106,26 @@ if not ispypy:
 # TODO: PyPy still has the old-style pythonizations, which require the full
 # class name (not possible for std::tuple ...)
 
+# std::make_shared creates needless templates: rely on Python's introspection
+# instead. This also allows Python derived classes to be handled correctly.
+class py_make_shared(object):
+    def __init__(self, cls):
+        self.cls = cls
+    def __call__(self, *args):
+        if len(args) == 1 and type(args[0]) == self.cls:
+            obj = args[0]
+        else:
+            obj = self.cls(*args)
+        obj.__python_owns__ = False     # C++ to take ownership
+        return gbl.std.shared_ptr[self.cls](obj)
+
+class make_shared(object):
+    def __getitem__(self, cls):
+        return py_make_shared(cls)
+
+gbl.std.make_shared = make_shared()
+del make_shared
+
 
 #--- CFFI style interface ----------------------------------------------------
 def cppdef(src):
@@ -149,6 +169,36 @@ elif ispypy:
     apipath = os.path.dirname(apipath)
     if os.path.exists(apipath) and os.path.exists(os.path.join(apipath, 'Python.h')):
         add_include_path(apipath)
+
+# add access to extra headers for dispatcher (CPyCppyy only (?))
+if not ispypy:
+    if 'CPPYY_API_PATH' in os.environ:
+        apipath_extra = os.environ['CPPYY_API_PATH']
+    else:
+        apipath_extra = os.path.join(os.path.dirname(apipath), 'site', os.path.basename(apipath))
+        if not os.path.exists(os.path.join(apipath_extra, 'CPyCppyy')):
+            import libcppyy
+            apipath_extra = os.path.dirname(libcppyy.__file__)
+          # a "normal" structure finds the include directory 3 levels up,
+          # ie. from lib/pythonx.y/site-packages
+            for i in range(3):
+                if not os.path.exists(os.path.join(apipath_extra, 'include')):
+                    apipath_extra = os.path.dirname(apipath_extra)
+
+            apipath_extra = os.path.join(apipath_extra, 'include')
+          # add back pythonx.y or site/pythonx.y if available
+            if os.path.exists(os.path.join(apipath_extra, 'python'+sys.version[:3], 'CPyCppyy')):
+                apipath_extra = os.path.join(apipath_extra, 'python'+sys.version[:3])
+            elif os.path.exists(os.path.join(apipath_extra, 'site', 'python'+sys.version[:3], 'CPyCppyy')):
+                apipath_extra = os.path.join(apipath_extra, 'site', 'python'+sys.version[:3])
+
+    cpycppyy_path = os.path.join(apipath_extra, 'CPyCppyy')
+    if apipath_extra.lower() != 'none':
+        if not os.path.exists(cpycppyy_path):
+            warnings.warn("CPyCppyy API path not found (tried: %s); set CPPYY_API_PATH to fix" % os.path.dirname(cpycppyy_path))
+        else:
+            add_include_path(apipath_extra)
+
 del ispypy, apipath
 
 def add_autoload_map(fname):
@@ -161,7 +211,7 @@ def _get_name(tt):
     if type(tt) == str:
         return tt
     try:
-        ttname = tt.__cppname__
+        ttname = tt.__cpp_name__
     except AttributeError:
         ttname = tt.__name__
     return ttname

@@ -90,6 +90,59 @@ public:
     value_type& end() { return fData + sz; }
 };
 
+class stl_like_class4 {
+public:
+    struct iterator {
+       iterator(int p) : pos(p) {}
+       int operator++() { ++pos; return pos; }
+       bool operator!=(const iterator& other) { return pos != other.pos; }
+       int operator*() { return pos; }
+       int pos;
+    };
+    iterator begin() { return iterator{0}; }
+    iterator end() { return iterator{10}; }
+};
+
+class stl_like_class5 {
+public:
+    struct iterator {
+        iterator(int p) : pos(p) {}
+        int operator++(int) { int val = pos; ++pos; return val; }
+        bool operator!=(const iterator& other) { return pos != other.pos; }
+        int operator*() { return pos; }
+        int pos;
+    };
+    iterator begin() { return iterator{0}; }
+    iterator end() { return iterator{10}; }
+};
+
+class stl_like_class6 {
+public:
+    struct some_name {
+        some_name(int p) : pos(p) {}
+        int operator++() { ++pos; return pos; }
+        bool operator!=(const some_name& other) { return pos != other.pos; }
+        int operator*() { return pos; }
+        int pos;
+    };
+    some_name begin() { return some_name{0}; }
+    some_name end() { return some_name{10}; }
+};
+
+struct some_name7 {
+    some_name7(int p) : pos(p) {}
+    int operator++() { ++pos; return pos; }
+    bool operator!=(const some_name7& other) { return pos != other.pos; }
+    int operator*() { return pos; }
+    int pos;
+};
+
+class stl_like_class7 {
+public:
+    some_name7 begin() { return some_name7{0}; }
+    some_name7 end() { return some_name7{10}; }
+};
+
 
 //- helpers for testing array
 namespace ArrayTest {

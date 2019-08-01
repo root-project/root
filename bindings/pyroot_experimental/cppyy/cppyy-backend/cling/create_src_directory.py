@@ -38,8 +38,8 @@ ROOT_KEEP = ['build', 'cmake', 'config', 'core', 'etc', 'interpreter',
 ROOT_CORE_KEEP = ['CMakeLists.txt', 'base', 'clib', 'clingutils', 'cont',
                   'dictgen', 'foundation', 'macosx', 'meta',
                   'metacling', 'metautils', 'rootcling_stage1', 'textinput',
-                  'thread', 'unix', 'utils', 'winnt', 'zip', 'pcre']
-ROOT_BUILTINS_KEEP = ['openssl', 'xxhash', 'zlib']
+                  'thread', 'unix', 'utils', 'winnt', 'zip']
+ROOT_BUILTINS_KEEP = ['openssl', 'pcre', 'xxhash', 'zlib']
 ROOT_IO_KEEP = ['CMakeLists.txt', 'io', 'rootpcm']
 ROOT_MATH_KEEP = ['CMakeLists.txt', 'mathcore']
 ROOT_ETC_KEEP = ['Makefile.arch', 'class.rules', 'cmake', 'dictpch',
@@ -179,10 +179,18 @@ for entry in os.listdir(os.path.join('main', 'src')):
 inp = os.path.join('main', 'CMakeLists.txt')
 outp = inp+'.new'
 new_cml = open(outp, 'w')
+now_stripping = False
 for line in open(inp).readlines():
     if ('ROOT_EXECUTABLE' in line or 'root.exe' in line or \
         'SET_TARGET_PROPERTIES' in line) and\
        not 'rootcling' in line:
+        line = '#'+line
+    elif '#---CreateHadd' == line[0:14]:
+        now_stripping = True
+    elif now_stripping and line == ')\n':
+        line = '#'+line
+        now_stripping = False
+    if now_stripping:
         line = '#'+line
     new_cml.write(line)
 new_cml.close()
@@ -216,6 +224,11 @@ for line in open(inp).readlines():
         now_stripping = True
     elif 'if(root7)' == line[0:9]:
         now_stripping = False
+    elif 'RLogger' in line or \
+         ('BASE_HEADER_DIRS' in line and 'v7' in line) or \
+         'TVirtualGL' in line or \
+         ('argparse' in line and 'Man' in line):
+        line = '#'+line
     if now_stripping:
         line = '#'+line
     new_cml.write(line)
@@ -293,7 +306,7 @@ for line in open(inp).readlines():
         now_stripping = False
     if now_stripping:
         line = '#'+line
-    elif 'kernel.json' in line:
+    elif 'root_kernel' in line:
         line = '#'+line
     new_cml.write(line)
 new_cml.close()
@@ -451,9 +464,9 @@ except ImportError:
 
 for fdiff in ('scanner', 'scanner_2', 'faux_typedef', 'classrules', 'template_fwd', 'dep_template',
               'no_long64_t', 'using_decls', 'sfinae', 'typedef_of_private', 'optlevel2_forced',
-              'explicit_template', 'alias_template', 'lambda', 'templ_ops', 'templ_ctor',
+              'silence', 'explicit_template', 'alias_template', 'lambda', 'templ_ops', 'templ_ctor',
               'private_type_args', 'incomplete_types', 'helpers', 'clang_printing', 'resolution',
-              'pch', 'strip_lz4_lzma', 'msvc', 'win64rtti', 'win64', 'win64s2', 'using_directives'):
+              'stdfunc_printhack', 'pch', 'strip_lz4_lzma', 'msvc', 'win64rtti', 'win64', 'win64s2'):
     fpatch = os.path.join('patches', fdiff+'.diff')
     print(' ==> applying patch:', fpatch)
     pset = patch.fromfile(fpatch)

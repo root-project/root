@@ -90,7 +90,7 @@ TPyArg::TPyArg(double value)
 TPyArg::TPyArg(const char* value)
 {
 // Construct a TPyArg from a C-string.
-    fPyObject = CPyCppyy_PyUnicode_FromString(value);
+    fPyObject = CPyCppyy_PyText_FromString(value);
 }
 
 //----------------------------------------------------------------------------

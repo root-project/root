@@ -475,6 +475,18 @@ void set_global_pod(CppyyTestPod* t);
 CppyyTestPod* get_global_pod();
 CppyyTestPod* get_null_pod();
 
+extern std::string g_some_global_string;
+std::string get_some_global_string();
+extern std::string g_some_global_string2;
+std::string get_some_global_string2();
+
+namespace SomeStaticDataNS {
+    extern std::string s_some_static_string;
+    std::string get_some_static_string();
+    extern std::string s_some_static_string2;
+    std::string get_some_static_string2();
+}
+
 
 //= function pointer passing ================================================
 int sum_of_int(int i1, int i2);

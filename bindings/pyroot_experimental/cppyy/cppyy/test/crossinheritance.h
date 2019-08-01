@@ -70,6 +70,7 @@ public:
 template<typename T>
 class TBase1 {
 public:
+    virtual ~TBase1() {}
     virtual int get_value() {
         return 42;
     }
@@ -81,6 +82,18 @@ public:
 };
 
 using TBase1_I = TBase1<int>;
+
+class CountableBase {
+public:
+    CountableBase();
+    CountableBase(const CountableBase&);
+    CountableBase& operator=(const CountableBase&);
+    virtual ~CountableBase();
+
+    virtual int call();
+
+    static int s_count;
+};
 
 } // namespace CrossInheritance
 

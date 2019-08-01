@@ -22,6 +22,10 @@ class TestTEMPLATES:
 
         m = cppyy.gbl.MyTemplatedMethodClass()
 
+      # implicit (called before other tests to check caching)
+        assert m.get_size(1)          == m.get_int_size()+1
+        assert 'get_size<int>' in dir(cppyy.gbl.MyTemplatedMethodClass)
+
       # pre-instantiated
         assert m.get_size['char']()   == m.get_char_size()
         assert m.get_size[int]()      == m.get_int_size()
@@ -41,9 +45,12 @@ class TestTEMPLATES:
         assert m.get_size[float]()    == m.get_float_size()
         assert m.get_size['double']() == m.get_double_size()
         assert m.get_size['MyTemplatedMethodClass']() == m.get_self_size()
+        assert 'get_size<MyTemplatedMethodClass>' in dir(cppyy.gbl.MyTemplatedMethodClass)
 
       # auto through typedef
         assert m.get_size['MyTMCTypedef_t']() == m.get_self_size()
+        assert 'get_size<MyTMCTypedef_t>' in dir(cppyy.gbl.MyTemplatedMethodClass)
+        assert m.get_size['MyTemplatedMethodClass']() == m.get_self_size()
 
     def test02_non_type_template_args(self):
         """Use of non-types as template arguments"""
@@ -346,7 +353,6 @@ class TestTEMPLATES:
         is_valid = cppyy.gbl.T_WithRValue.is_valid
 
       # bit of regression testing
-        assert is_valid['int&'](3)
         assert is_valid(3)
         assert is_valid['int'](3)      # used to crash
 
@@ -487,6 +493,38 @@ class TestTEMPLATES:
 
         assert cppyy.gbl.TemplatedCtor.C(0)
 
+    def test20_type_deduction_with_conversion(self):
+        """Template instantiation with [] -> std::vector conversion"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+        namespace l2v {
+           struct Base {};
+           struct Derived : Base {};
+
+           int test1(const std::vector<Base*>& v) { return (int)v.size(); }
+
+           template <typename T>
+           int test2(const std::vector<Derived*>& v) { return (int)v.size(); }
+
+           template <typename T>
+           int test3(const std::vector<Base*>& v) { return (int)v.size(); }
+        }""")
+
+        from cppyy.gbl import l2v
+
+        d1 = l2v.Derived()
+
+        assert l2v.test1([d1])     == 1
+        assert l2v.test1([d1, d1]) == 2
+
+        assert l2v.test2[int]([d1])     == 1
+        assert l2v.test2[int]([d1, d1]) == 2
+
+        assert l2v.test3[int]([d1])     == 1
+        assert l2v.test3[int]([d1, d1]) == 2
+
 
 class TestTEMPLATED_TYPEDEFS:
     def setup_class(cls):
@@ -508,13 +546,13 @@ class TestTEMPLATED_TYPEDEFS:
         assert 'in_type' in dir(tct[int, dum, 4])
 
         assert in_type.__name__ == 'in_type'
-        assert in_type.__cppname__ == 'TemplatedTypedefs::DerivedWithUsing<int,TemplatedTypedefs::SomeDummy,4>::in_type'
+        assert in_type.__cpp_name__ == 'TemplatedTypedefs::DerivedWithUsing<int,TemplatedTypedefs::SomeDummy,4>::in_type'
 
         in_type_tt = tct[int, dum, 4].in_type_tt
         assert 'in_type_tt' in dir(tct[int, dum, 4])
 
         assert in_type_tt.__name__ == 'in_type_tt'
-        assert in_type_tt.__cppname__ == 'TemplatedTypedefs::DerivedWithUsing<int,TemplatedTypedefs::SomeDummy,4>::in_type_tt'
+        assert in_type_tt.__cpp_name__ == 'TemplatedTypedefs::DerivedWithUsing<int,TemplatedTypedefs::SomeDummy,4>::in_type_tt'
 
     def test02_mapped_type_as_internal(self):
         """Test that mapped types can be used as builting"""

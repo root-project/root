@@ -61,6 +61,8 @@ typedef long long          Long64_t; //Portable signed long integer 8 bytes
 typedef unsigned long long ULong64_t;//Portable unsigned long integer 8 bytes
 #endif
 
+typedef Py_ssize_t dim_t;
+typedef dim_t* dims_t;
 
 // for 3.3 support
 #if PY_VERSION_HEX < 0x03030000
@@ -90,24 +92,20 @@ typedef unsigned long long ULong64_t;//Portable unsigned long integer 8 bytes
 
 #define PyBytes_Type    PyString_Type
 
-#define CPyCppyy_PyUnicode_Check              PyString_Check
-#define CPyCppyy_PyUnicode_CheckExact         PyString_CheckExact
-#define CPyCppyy_PyUnicode_AsString           PyString_AS_STRING
-#define CPyCppyy_PyUnicode_AsStringChecked    PyString_AsString
-#define CPyCppyy_PyUnicode_GET_SIZE           PyString_GET_SIZE
-#define CPyCppyy_PyUnicode_GetSize            PyString_Size
-#define CPyCppyy_PyUnicode_FromFormat         PyString_FromFormat
-#define CPyCppyy_PyUnicode_FromString         PyString_FromString
-#define CPyCppyy_PyUnicode_InternFromString   PyString_InternFromString
-#define CPyCppyy_PyUnicode_Append             PyString_Concat
-#define CPyCppyy_PyUnicode_AppendAndDel       PyString_ConcatAndDel
-#define CPyCppyy_PyUnicode_FromStringAndSize  PyString_FromStringAndSize
-static inline Py_ssize_t CPyCppyy_PyUnicode_AsWideChar(PyObject* pyobj, wchar_t* w, Py_ssize_t size)
-{
-     return PyUnicode_AsWideChar((PyUnicodeObject*)pyobj, w, size);
-}
+#define CPyCppyy_PyText_Check                 PyString_Check
+#define CPyCppyy_PyText_CheckExact            PyString_CheckExact
+#define CPyCppyy_PyText_AsString              PyString_AS_STRING
+#define CPyCppyy_PyText_AsStringChecked       PyString_AsString
+#define CPyCppyy_PyText_GET_SIZE              PyString_GET_SIZE
+#define CPyCppyy_PyText_GetSize               PyString_Size
+#define CPyCppyy_PyText_FromFormat            PyString_FromFormat
+#define CPyCppyy_PyText_FromString            PyString_FromString
+#define CPyCppyy_PyText_InternFromString      PyString_InternFromString
+#define CPyCppyy_PyText_Append                PyString_Concat
+#define CPyCppyy_PyText_AppendAndDel          PyString_ConcatAndDel
+#define CPyCppyy_PyText_FromStringAndSize     PyString_FromStringAndSize
 
-#define CPyCppyy_PyUnicode_Type PyString_Type
+#define CPyCppyy_PyText_Type PyString_Type
 
 static inline PyObject* CPyCppyy_PyCapsule_New(
         void* cobj, const char* /* name */, void (*destr)(void*))
@@ -129,21 +127,20 @@ static inline void* CPyCppyy_PyCapsule_GetPointer(PyObject* capsule, const char*
 
 // for 3.0 support (backwards compatibility, really)
 #if PY_VERSION_HEX >= 0x03000000
-#define CPyCppyy_PyUnicode_Check              PyUnicode_Check
-#define CPyCppyy_PyUnicode_CheckExact         PyUnicode_CheckExact
-#define CPyCppyy_PyUnicode_AsString           _PyUnicode_AsString
-#define CPyCppyy_PyUnicode_AsStringChecked    _PyUnicode_AsString
-#define CPyCppyy_PyUnicode_GetSize            PyUnicode_GetSize
-#define CPyCppyy_PyUnicode_GET_SIZE           PyUnicode_GET_SIZE
-#define CPyCppyy_PyUnicode_FromFormat         PyUnicode_FromFormat
-#define CPyCppyy_PyUnicode_FromString         PyUnicode_FromString
-#define CPyCppyy_PyUnicode_InternFromString   PyUnicode_InternFromString
-#define CPyCppyy_PyUnicode_Append             PyUnicode_Append
-#define CPyCppyy_PyUnicode_AppendAndDel       PyUnicode_AppendAndDel
-#define CPyCppyy_PyUnicode_FromStringAndSize  PyUnicode_FromStringAndSize
-#define CPyCppyy_PyUnicode_AsWideChar         PyUnicode_AsWideChar
+#define CPyCppyy_PyText_Check              PyUnicode_Check
+#define CPyCppyy_PyText_CheckExact         PyUnicode_CheckExact
+#define CPyCppyy_PyText_AsString           _PyUnicode_AsString
+#define CPyCppyy_PyText_AsStringChecked    _PyUnicode_AsString
+#define CPyCppyy_PyText_GetSize            PyUnicode_GetSize
+#define CPyCppyy_PyText_GET_SIZE           PyUnicode_GET_SIZE
+#define CPyCppyy_PyText_FromFormat         PyUnicode_FromFormat
+#define CPyCppyy_PyText_FromString         PyUnicode_FromString
+#define CPyCppyy_PyText_InternFromString   PyUnicode_InternFromString
+#define CPyCppyy_PyText_Append             PyUnicode_Append
+#define CPyCppyy_PyText_AppendAndDel       PyUnicode_AppendAndDel
+#define CPyCppyy_PyText_FromStringAndSize  PyUnicode_FromStringAndSize
 
-#define CPyCppyy_PyUnicode_Type PyUnicode_Type
+#define CPyCppyy_PyText_Type PyUnicode_Type
 
 #define PyIntObject          PyLongObject
 #define PyInt_Check          PyLong_Check
@@ -185,6 +182,20 @@ static inline void* CPyCppyy_PyCapsule_GetPointer(PyObject* capsule, const char*
 #define PyVarObject_HEAD_INIT(type, size)                                     \
     PyObject_HEAD_INIT(type) size,
 #define Py_TYPE(ob)             (((PyObject*)(ob))->ob_type)
+#endif
+
+// API changes in 2.5 (int -> Py_ssize_t) and 3.6 (PyUnicodeObject -> PyObject)
+#if PY_VERSION_HEX < 0x03060000
+static inline Py_ssize_t CPyCppyy_PyUnicode_AsWideChar(PyObject* pyobj, wchar_t* w, Py_ssize_t size)
+{
+#if PY_VERSION_HEX < 0x02050000
+     return (Py_ssize_t)PyUnicode_AsWideChar((PyUnicodeObject*)pyobj, w, (int)size);
+#else
+     return PyUnicode_AsWideChar((PyUnicodeObject*)pyobj, w, size);
+#endif
+}
+#else
+#define CPyCppyy_PyUnicode_AsWideChar PyUnicode_AsWideChar
 #endif
 
 // backwards compatibility, pre python 2.5

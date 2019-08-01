@@ -768,6 +768,9 @@ class TestADVANCEDCPP:
             tst[0].__lshiftc__(s, tst[0]())
             assert s.str() == tst[1]
 
+      # print through base class (used to fail with compilation error)
+        assert str(cppyy.gbl.Printable5()) == "Ok."
+
     def test26_using_directive(self):
         """Test using directive in namespaces"""
 

@@ -11,7 +11,3 @@ bool InsertDispatcher(CPPScope* klass, PyObject* dct);
 } // namespace CPyCppyy
 
 #endif // !CPYCPPYY_DISPATCHER_H
-
-
-
-

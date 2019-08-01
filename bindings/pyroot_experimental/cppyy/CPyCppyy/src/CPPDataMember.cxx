@@ -29,7 +29,7 @@ static PyObject* pp_get(CPPDataMember* pyprop, CPPInstance* pyobj, PyObject* /* 
 {
 // cache lookup for low level views
     if (pyprop->fProperty & kIsCachable) {
-        CPyCppyy::CI_DatamemberCache_t& cache = pyobj->fDatamemberCache;
+        CPyCppyy::CI_DatamemberCache_t& cache = pyobj->GetDatamemberCache();
         for (auto it = cache.begin(); it != cache.end(); ++it) {
             if (it->first == pyprop->fOffset) {
                 if (it->second) {
@@ -67,7 +67,7 @@ static PyObject* pp_get(CPPDataMember* pyprop, CPPInstance* pyobj, PyObject* /* 
         bool isLLView = LowLevelView_CheckExact(result);
         if (isLLView && CPPInstance_Check(pyobj)) {
             Py_INCREF(result);
-            pyobj->fDatamemberCache.push_back(std::make_pair(pyprop->fOffset, result));
+            pyobj->GetDatamemberCache().push_back(std::make_pair(pyprop->fOffset, result));
             pyprop->fProperty |= kIsCachable;
         }
 
@@ -103,7 +103,7 @@ static int pp_set(CPPDataMember* pyprop, CPPInstance* pyobj, PyObject* value)
 
 // remove cached low level view, if any (will be restored upon reaeding)
     if (pyprop->fProperty & kIsCachable) {
-        CPyCppyy::CI_DatamemberCache_t& cache = pyobj->fDatamemberCache;
+        CPyCppyy::CI_DatamemberCache_t& cache = pyobj->GetDatamemberCache();
         for (auto it = cache.begin(); it != cache.end(); ++it) {
             if (it->first == pyprop->fOffset) {
                 Py_XDECREF(it->second);
@@ -226,12 +226,12 @@ PyTypeObject CPPDataMember_Type = {
 void CPyCppyy::CPPDataMember::Set(Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t idata)
 {
     fEnclosingScope = scope;
-    fName           = CPyCppyy_PyUnicode_FromString(Cppyy::GetDatamemberName(scope, idata).c_str());
+    fName           = CPyCppyy_PyText_FromString(Cppyy::GetDatamemberName(scope, idata).c_str());
     fOffset         = Cppyy::GetDatamemberOffset(scope, idata); // TODO: make lazy
     fProperty       = Cppyy::IsStaticData(scope, idata) ? kIsStaticData : 0;
 
-    std::vector<long> dims;
-    int ndim = 0; long size = 0;
+    std::vector<dim_t> dims;
+    int ndim = 0; dim_t size = 0;
     while (0 < (size = Cppyy::GetDimensionSize(scope, idata, ndim))) {
          ndim += 1;
          if (size == INT_MAX)      // meaning: incomplete array type
@@ -260,7 +260,7 @@ void CPyCppyy::CPPDataMember::Set(Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t i
 void CPyCppyy::CPPDataMember::Set(Cppyy::TCppScope_t scope, const std::string& name, void* address)
 {
     fEnclosingScope = scope;
-    fName           = CPyCppyy_PyUnicode_FromString(name.c_str());
+    fName           = CPyCppyy_PyText_FromString(name.c_str());
     fOffset         = (intptr_t)address;
     fProperty       = (kIsStaticData | kIsConstData | kIsEnumData /* true, but may chance */);
     fConverter      = CreateConverter("internal_enum_type_t");

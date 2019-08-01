@@ -19,6 +19,17 @@
   <variable name="g_int" />
   <variable name="g_pod" />
 
+  <variable name="g_some_global_string" />
+  <function name="get_some_global_string" />
+  <variable name="g_some_global_string2" />
+  <function name="get_some_global_string2" />
+
+  <namespace name="SomeStaticDataNS" />
+  <variable name="SomeStaticDataNS::s_some_static_string" />
+  <function name="SomeStaticDataNS::get_some_static_string" />
+  <variable name="SomeStaticDataNS::s_some_static_string2" />
+  <function name="SomeStaticDataNS::get_some_static_string2" />
+
   <function name="sum_of_int" />
   <variable name="sum_of_int_ptr" />
   <function name="sum_of_double" />

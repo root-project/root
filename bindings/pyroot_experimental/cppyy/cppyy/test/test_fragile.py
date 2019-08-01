@@ -253,33 +253,33 @@ class TestFRAGILE:
         assert cppyy.gbl.fragile.nested1 is nested1
         assert nested1.__name__ == 'nested1'
         assert nested1.__module__ == 'cppyy.gbl.fragile'
-        assert nested1.__cppname__ == 'fragile::nested1'
+        assert nested1.__cpp_name__ == 'fragile::nested1'
 
         from cppyy.gbl.fragile.nested1 import A, nested2
         assert cppyy.gbl.fragile.nested1.A is A
         assert A.__name__ == 'A'
         assert A.__module__ == 'cppyy.gbl.fragile.nested1'
-        assert A.__cppname__ == 'fragile::nested1::A'
+        assert A.__cpp_name__ == 'fragile::nested1::A'
         assert cppyy.gbl.fragile.nested1.nested2 is nested2
         assert nested2.__name__ == 'nested2'
         assert nested2.__module__ == 'cppyy.gbl.fragile.nested1'
-        assert nested2.__cppname__ == 'fragile::nested1::nested2'
+        assert nested2.__cpp_name__ == 'fragile::nested1::nested2'
 
         from cppyy.gbl.fragile.nested1.nested2 import A, nested3
         assert cppyy.gbl.fragile.nested1.nested2.A is A
         assert A.__name__ == 'A'
         assert A.__module__ == 'cppyy.gbl.fragile.nested1.nested2'
-        assert A.__cppname__ == 'fragile::nested1::nested2::A'
+        assert A.__cpp_name__ == 'fragile::nested1::nested2::A'
         assert cppyy.gbl.fragile.nested1.nested2.nested3 is nested3
         assert nested3.__name__ == 'nested3'
         assert nested3.__module__ == 'cppyy.gbl.fragile.nested1.nested2'
-        assert nested3.__cppname__ == 'fragile::nested1::nested2::nested3'
+        assert nested3.__cpp_name__ == 'fragile::nested1::nested2::nested3'
 
         from cppyy.gbl.fragile.nested1.nested2.nested3 import A
         assert cppyy.gbl.fragile.nested1.nested2.nested3.A is nested3.A
         assert A.__name__ == 'A'
         assert A.__module__ == 'cppyy.gbl.fragile.nested1.nested2.nested3'
-        assert A.__cppname__ == 'fragile::nested1::nested2::nested3::A'
+        assert A.__cpp_name__ == 'fragile::nested1::nested2::nested3::A'
 
         # test writability of __module__
         nested3.__module__ = "peanut butter"
@@ -379,3 +379,36 @@ class TestFRAGILE:
         assert hasattr(o, 'm_int')
 
         assert 'OpaqueType' in cppyy.gbl.fragile.__dict__
+
+    def test17_interactive(self):
+        """Test the usage of 'from cppyy.interactive import *'"""
+
+        import assert_interactive
+
+    def test18_overload(self):
+        """Test usage of __overload__"""
+
+        import cppyy
+
+        cppyy.cppdef("""struct Variable {
+            Variable(double lb, double ub, double value, bool binary, bool integer, const string& name) {}
+            Variable(int) {}
+        };""")
+
+        for sig in ['double, double, double, bool, bool, const string&',
+                    'double,double,double,bool,bool,const string&',
+                    'double lb, double ub, double value, bool binary, bool integer, const string& name']:
+            assert cppyy.gbl.Variable.__init__.__overload__(sig)
+
+    def test19_gbl_contents(self):
+        """Assure cppyy.gbl is mostly devoid of ROOT thingies"""
+
+
+        import cppyy
+
+        dd = dir(cppyy.gbl)
+
+        assert not 'TCanvasImp' in dd
+        assert not 'ESysConstants' in dd
+        assert not 'kDoRed' in dd
+

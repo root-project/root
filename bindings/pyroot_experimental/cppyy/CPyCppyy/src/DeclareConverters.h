@@ -7,11 +7,10 @@
 // Standard
 #include <complex>
 #include <string>
-#include "ROOT/RStringView.hxx"
 
 // ROOT
+#include "ROOT/RStringView.hxx"
 #include "TString.h"
-
 
 namespace CPyCppyy {
 
@@ -53,19 +52,22 @@ public:                                                                      \
 };
 
 #define CPPYY_DECLARE_ARRAY_CONVERTER(name)                                  \
-class name##Converter : public Converter {                                   \
+class name##ArrayConverter : public Converter {                              \
 public:                                                                      \
-    name##Converter(Py_ssize_t size = -1) { fSize = size; }                  \
+    name##ArrayConverter(dims_t shape);                                      \
+    name##ArrayConverter(const name##ArrayConverter&) = delete;              \
+    name##ArrayConverter& operator=(const name##ArrayConverter&) = delete;   \
+    virtual ~name##ArrayConverter() { delete [] fShape; }                    \
     virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);      \
     virtual PyObject* FromMemory(void*);                                     \
     virtual bool ToMemory(PyObject*, void*);                                 \
 private:                                                                     \
-    Py_ssize_t fSize;                                                        \
+    Py_ssize_t* fShape;                                                      \
 };                                                                           \
                                                                              \
-class name##RefConverter : public name##Converter {                          \
+class name##ArrayRefConverter : public name##ArrayConverter {                \
 public:                                                                      \
-    using name##Converter::name##Converter;                                  \
+    using name##ArrayConverter::name##ArrayConverter;                        \
     virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);      \
 }
 
@@ -128,7 +130,9 @@ public:
 class WCStringConverter : public Converter {
 public:
     WCStringConverter(long maxSize = -1) : fBuffer(nullptr), fMaxSize(maxSize) {}
-    ~WCStringConverter() { free(fBuffer); }
+    WCStringConverter(const WCStringConverter&) = delete;
+    WCStringConverter& operator=(const WCStringConverter&) = delete;
+    virtual ~WCStringConverter() { free(fBuffer); }
 
 public:
     virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);
@@ -142,19 +146,19 @@ protected:
 
 
 // pointer/array conversions
-CPPYY_DECLARE_ARRAY_CONVERTER(BoolArray);
-CPPYY_DECLARE_ARRAY_CONVERTER(UCharArray);
-CPPYY_DECLARE_ARRAY_CONVERTER(ShortArray);
-CPPYY_DECLARE_ARRAY_CONVERTER(UShortArray);
-CPPYY_DECLARE_ARRAY_CONVERTER(IntArray);
-CPPYY_DECLARE_ARRAY_CONVERTER(UIntArray);
-CPPYY_DECLARE_ARRAY_CONVERTER(LongArray);
-CPPYY_DECLARE_ARRAY_CONVERTER(ULongArray);
-CPPYY_DECLARE_ARRAY_CONVERTER(LLongArray);
-CPPYY_DECLARE_ARRAY_CONVERTER(ULLongArray);
-CPPYY_DECLARE_ARRAY_CONVERTER(FloatArray);
-CPPYY_DECLARE_ARRAY_CONVERTER(DoubleArray);
-CPPYY_DECLARE_ARRAY_CONVERTER(ComplexDArray);
+CPPYY_DECLARE_ARRAY_CONVERTER(Bool);
+CPPYY_DECLARE_ARRAY_CONVERTER(UChar);
+CPPYY_DECLARE_ARRAY_CONVERTER(Short);
+CPPYY_DECLARE_ARRAY_CONVERTER(UShort);
+CPPYY_DECLARE_ARRAY_CONVERTER(Int);
+CPPYY_DECLARE_ARRAY_CONVERTER(UInt);
+CPPYY_DECLARE_ARRAY_CONVERTER(Long);
+CPPYY_DECLARE_ARRAY_CONVERTER(ULong);
+CPPYY_DECLARE_ARRAY_CONVERTER(LLong);
+CPPYY_DECLARE_ARRAY_CONVERTER(ULLong);
+CPPYY_DECLARE_ARRAY_CONVERTER(Float);
+CPPYY_DECLARE_ARRAY_CONVERTER(Double);
+CPPYY_DECLARE_ARRAY_CONVERTER(ComplexD);
 
 class LongLongArrayConverter : public VoidArrayConverter {
 public:
@@ -162,6 +166,11 @@ public:
 };
 
 // converters for special cases
+class NullptrConverter : public Converter {
+public:
+    virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);
+};
+
 class InstanceConverter : public StrictInstancePtrConverter {
 public:
     using StrictInstancePtrConverter::StrictInstancePtrConverter;
@@ -204,17 +213,19 @@ extern template class InstancePtrPtrConverter<false>;
 
 class InstanceArrayConverter : public InstancePtrConverter {
 public:
-    InstanceArrayConverter(Cppyy::TCppType_t klass, long* dims, bool keepControl = false) :
+    InstanceArrayConverter(Cppyy::TCppType_t klass, dims_t dims, bool keepControl = false) :
             InstancePtrConverter(klass, keepControl) {
-        long size = (dims && 0 < dims[0]) ? dims[0]+1: 1;
-        m_dims = new long[size];
+        dim_t size = (dims && 0 < dims[0]) ? dims[0]+1: 1;
+        m_dims = new dim_t[size];
         if (dims) {
-            for (long i = 0; i < size; ++i) m_dims[i] = dims[i];
+            for (int i = 0; i < size; ++i) m_dims[i] = dims[i];
         } else {
             m_dims[0] = -1;
         }
     }
-    ~InstanceArrayConverter() { delete [] m_dims; }
+    InstanceArrayConverter(const InstanceArrayConverter&) = delete;
+    InstanceArrayConverter& operator=(const InstanceArrayConverter&) = delete;
+    virtual ~InstanceArrayConverter() { delete [] m_dims; }
 
 public:
     virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);
@@ -222,7 +233,7 @@ public:
     virtual bool ToMemory(PyObject* value, void* address);
 
 protected:
-    long* m_dims;
+    dims_t m_dims;
 };
 
 
@@ -315,7 +326,7 @@ public:
         FunctionPointerConverter(ret, sig), fConverter(cnv), fFuncWrap(nullptr) {}
     StdFunctionConverter(const StdFunctionConverter&) = delete;
     StdFunctionConverter& operator=(const StdFunctionConverter&) = delete;
-    ~StdFunctionConverter() { Py_XDECREF(fFuncWrap); delete fConverter; }
+    virtual ~StdFunctionConverter() { Py_XDECREF(fFuncWrap); delete fConverter; }
 
 public:
     virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);
@@ -332,11 +343,10 @@ protected:
 class SmartPtrConverter : public Converter {
 public:
     SmartPtrConverter(Cppyy::TCppType_t smart,
-                      Cppyy::TCppType_t raw,
-                      Cppyy::TCppMethod_t deref,
+                      Cppyy::TCppType_t underlying,
                       bool keepControl = false,
                       bool isRef = false)
-        : fSmartPtrType(smart), fRawPtrType(raw), fDereferencer(deref),
+        : fSmartPtrType(smart), fUnderlyingType(underlying),
           fKeepControl(keepControl), fIsRef(isRef) {}
 
 public:
@@ -348,8 +358,7 @@ protected:
     virtual bool GetAddressSpecialCase(PyObject*, void*&) { return false; }
 
     Cppyy::TCppType_t   fSmartPtrType;
-    Cppyy::TCppType_t   fRawPtrType;
-    Cppyy::TCppMethod_t fDereferencer;
+    Cppyy::TCppType_t   fUnderlyingType;
     bool                fKeepControl;
     bool                fIsRef;
 };
@@ -362,7 +371,7 @@ public:
         fConverter(cnv), fValueSize(sz) {}
     InitializerListConverter(const InitializerListConverter&) = delete;
     InitializerListConverter& operator=(const InitializerListConverter&) = delete;
-    ~InitializerListConverter() { delete fConverter; }
+    virtual ~InitializerListConverter() { delete fConverter; }
 
 public:
     virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);

@@ -334,7 +334,6 @@ class TestPYTHONIFY:
        assert 2 == e.fresh(1)
        assert 3 == e.fresh(2)
 
-
     def test16_subclassing(self):
         """A sub-class on the python side should have that class as type"""
 
@@ -375,6 +374,23 @@ class TestPYTHONIFY:
         o.__destruct__()
 
         assert example01.getCount() == 0
+
+    def test17_chaining(self):
+        """Respective return values of temporaries should not go away"""
+
+        import cppyy
+
+        cppyy.cppdef("""namespace Lifeline {
+        struct A1 { A1(int x) : x(x) {} int x; };
+        struct A2 { A2(int x) { v.emplace_back(x); } std::vector<A1> v; std::vector<A1>& get() { return v; } };
+        struct A3 { A3(int x) { v.emplace_back(x); } std::vector<A2> v; std::vector<A2>& get() { return v; } };
+        struct A4 { A4(int x) { v.emplace_back(x); } std::vector<A3> v; std::vector<A3>& get() { return v; } };
+        struct A5 { A5(int x) { v.emplace_back(x); } std::vector<A4> v; std::vector<A4>& get() { return v; } };
+
+        A5 gime(int i) { return A5(i); }
+        }""")
+
+        assert cppyy.gbl.Lifeline.gime(42).get()[0].get()[0].get()[0].get()[0].x == 42
 
 
 class TestPYTHONIFY_UI:
