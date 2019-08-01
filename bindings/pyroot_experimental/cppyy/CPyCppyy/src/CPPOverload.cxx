@@ -56,10 +56,10 @@ public:
     }
 
     virtual PyObject* GetSignature(bool /*show_formalargs*/ = true) {
-        return CPyCppyy_PyUnicode_FromString("*args, **kwargs");
+        return CPyCppyy_PyText_FromString("*args, **kwargs");
     }
     virtual PyObject* GetPrototype(bool /*show_formalargs*/ = true) {
-        return CPyCppyy_PyUnicode_FromString("<callback>");
+        return CPyCppyy_PyText_FromString("<callback>");
     }
     virtual PyObject* GetDocString() {
         if (PyObject_HasAttrString(fCallable, "__doc__")) {
@@ -141,6 +141,7 @@ static inline PyObject* HandleReturn(
     CPPOverload* pymeth, CPPInstance* oldSelf, PyObject* result)
 {
 // special case for python exceptions, propagated through C++ layer
+    int ll_action = 0;
     if (result) {
 
     // if this method creates new objects, always take ownership
@@ -158,14 +159,35 @@ static inline PyObject* HandleReturn(
         }
 
     // if this new object falls inside self, make sure its lifetime is proper
-        if (CPPInstance_Check(pymeth->fSelf) && CPPInstance_Check(result)) {
-            ptrdiff_t offset = (ptrdiff_t)(
-                (CPPInstance*)result)->GetObject() - (ptrdiff_t)pymeth->fSelf->GetObject();
-            if (0 <= offset && offset < (ptrdiff_t)Cppyy::SizeOf(pymeth->fSelf->ObjectIsA())) {
-                if (PyObject_SetAttr(result, PyStrings::gLifeLine, (PyObject*)pymeth->fSelf) == -1)
-                    PyErr_Clear();     // ignored
+        if (pymeth->fMethodInfo->fFlags & CallContext::kSetLifeline)
+            ll_action = 1;
+        else if (CPPInstance_Check(pymeth->fSelf) && CPPInstance_Check(result)) {
+        // if self was a by-value return and result is not, pro-actively protect result;
+        // else if the return value falls within the memory of 'this', force a lifeline
+            CPPInstance* cppself = (CPPInstance*)pymeth->fSelf;
+            CPPInstance* cppres  = (CPPInstance*)result;
+            if (!(cppres->fFlags & CPPInstance::kIsValue)) {  // no need if the result is a full copy
+                if (cppself->fFlags & CPPInstance::kIsValue)
+                    ll_action = 2;
+                else if (cppself->fFlags & CPPInstance::kHasLifeline)
+                    ll_action = 3;
+                else {
+                    ptrdiff_t offset = (ptrdiff_t)cppres->GetObject() - (ptrdiff_t)cppself->GetObject();
+                    if (0 <= offset && offset < (ptrdiff_t)Cppyy::SizeOf(cppself->ObjectIsA()))
+                         ll_action = 4;
+                }
             }
+            if (ll_action) cppres->fFlags |= CPPInstance::kHasLifeline;    // for chaining
         }
+    }
+
+    if (ll_action) {
+        if (PyObject_SetAttr(result, PyStrings::gLifeLine, (PyObject*)pymeth->fSelf) == -1)
+            PyErr_Clear();         // ignored
+        if (ll_action == 1 /* directly set */ && CPPInstance_Check(result))
+            ((CPPInstance*)result)->fFlags |= CPPInstance::kHasLifeline;   // for chaining
+        else
+            pymeth->fMethodInfo->fFlags |= CallContext::kSetLifeline;      // for next time
     }
 
 // reset self as necessary to allow re-use of the CPPOverload
@@ -178,7 +200,7 @@ static inline PyObject* HandleReturn(
 //= CPyCppyy method proxy object behaviour ===================================
 static PyObject* mp_name(CPPOverload* pymeth, void*)
 {
-    return CPyCppyy_PyUnicode_FromString(pymeth->GetName().c_str());
+    return CPyCppyy_PyText_FromString(pymeth->GetName().c_str());
 }
 
 //-----------------------------------------------------------------------------
@@ -205,10 +227,10 @@ static PyObject* mp_doc(CPPOverload* pymeth, void*)
         return doc;
 
 // overloaded method
-    PyObject* separator = CPyCppyy_PyUnicode_FromString("\n");
+    PyObject* separator = CPyCppyy_PyText_FromString("\n");
     for (CPPOverload::Methods_t::size_type i = 1; i < nMethods; ++i) {
-        CPyCppyy_PyUnicode_Append(&doc, separator);
-        CPyCppyy_PyUnicode_AppendAndDel(&doc, methods[i]->GetDocString());
+        CPyCppyy_PyText_Append(&doc, separator);
+        CPyCppyy_PyText_AppendAndDel(&doc, methods[i]->GetDocString());
     }
     Py_DECREF(separator);
 
@@ -285,8 +307,8 @@ static PyObject* mp_func_code(CPPOverload* pymeth, void*)
     if (!co_varnames) {
     // TODO: static methods need no 'self' (but is harmless otherwise)
         co_varnames = PyTuple_New(1 /* self */ + 1 /* fake */);
-        PyTuple_SET_ITEM(co_varnames, 0, CPyCppyy_PyUnicode_FromString("self"));
-        PyTuple_SET_ITEM(co_varnames, 1, CPyCppyy_PyUnicode_FromString("*args"));
+        PyTuple_SET_ITEM(co_varnames, 0, CPyCppyy_PyText_FromString("self"));
+        PyTuple_SET_ITEM(co_varnames, 1, CPyCppyy_PyText_FromString("*args"));
     }
 
     int co_argcount = (int)PyTuple_Size(co_varnames);
@@ -381,7 +403,30 @@ static PyObject* mp_func_globals(CPPOverload* /* pymeth */, void*)
 }
 
 //-----------------------------------------------------------------------------
-PyObject* mp_getcreates(CPPOverload* pymeth, void*)
+static inline int set_flag(CPPOverload* pymeth, PyObject* value, CallContext::ECallFlags flag, const char* name)
+{
+// Generic setter of a (boolean) flag.
+    if (!value) {        // accept as false (delete)
+        pymeth->fMethodInfo->fFlags &= ~flag;
+        return 0;
+    }
+
+    long istrue = PyLong_AsLong(value);
+    if (istrue == -1 && PyErr_Occurred()) {
+        PyErr_Format(PyExc_ValueError, "a boolean 1 or 0 is required for %s", name);
+        return -1;
+    }
+
+    if (istrue)
+        pymeth->fMethodInfo->fFlags |= flag;
+    else
+        pymeth->fMethodInfo->fFlags &= ~flag;
+
+    return 0;
+}
+
+//-----------------------------------------------------------------------------
+static PyObject* mp_getcreates(CPPOverload* pymeth, void*)
 {
 // Get '__creates__' boolean, which determines ownership of return values.
     return PyInt_FromLong((long)IsCreator(pymeth->fMethodInfo->fFlags));
@@ -391,23 +436,7 @@ PyObject* mp_getcreates(CPPOverload* pymeth, void*)
 static int mp_setcreates(CPPOverload* pymeth, PyObject* value, void*)
 {
 // Set '__creates__' boolean, which determines ownership of return values.
-    if (!value) {        // means that __creates__ is being deleted
-        pymeth->fMethodInfo->fFlags &= ~CallContext::kIsCreator;
-        return 0;
-    }
-
-    long iscreator = PyLong_AsLong(value);
-    if (iscreator == -1 && PyErr_Occurred()) {
-        PyErr_SetString(PyExc_ValueError, "a boolean 1 or 0 is required for __creates__");
-        return -1;
-    }
-
-    if (iscreator)
-        pymeth->fMethodInfo->fFlags |= CallContext::kIsCreator;
-    else
-        pymeth->fMethodInfo->fFlags &= ~CallContext::kIsCreator;
-
-    return 0;
+    return set_flag(pymeth, value, CallContext::kIsCreator, "__creates__");
 }
 
 //-----------------------------------------------------------------------------
@@ -444,9 +473,26 @@ static int mp_setmempolicy(CPPOverload* pymeth, PyObject* value, void*)
 }
 
 //-----------------------------------------------------------------------------
+static PyObject* mp_getlifeline(CPPOverload* pymeth, void*)
+{
+// Get '__set_lifeline__' boolean, which determines whether a lifeline should be
+// set on self from the return value.
+    return PyInt_FromLong(
+        (long)(pymeth->fMethodInfo->fFlags & CallContext::kSetLifeline));
+}
+
+//-----------------------------------------------------------------------------
+static int mp_setlifeline(CPPOverload* pymeth, PyObject* value, void*)
+{
+// Set '__set_lifeline__' boolean, which determines whether a lifeline should be
+// set on self from the return value.
+    return set_flag(pymeth, value, CallContext::kSetLifeline, "__set_lifeline__");
+}
+
+//-----------------------------------------------------------------------------
 static PyObject* mp_getthreaded(CPPOverload* pymeth, void*)
 {
-// Get '_threaded' boolean, which determines whether the GIL will be released.
+// Get '__release_gil__' boolean, which determines whether the GIL will be released.
     return PyInt_FromLong(
         (long)(pymeth->fMethodInfo->fFlags & CallContext::kReleaseGIL));
 }
@@ -454,19 +500,8 @@ static PyObject* mp_getthreaded(CPPOverload* pymeth, void*)
 //-----------------------------------------------------------------------------
 static int mp_setthreaded(CPPOverload* pymeth, PyObject* value, void*)
 {
-// Set '_threaded' boolean, which determines whether the GIL will be released.
-    long isthreaded = PyLong_AsLong(value);
-    if (isthreaded == -1 && PyErr_Occurred()) {
-        PyErr_SetString(PyExc_ValueError, "a boolean 1 or 0 is required for __release_gil__");
-        return -1;
-    }
-
-    if (isthreaded)
-        pymeth->fMethodInfo->fFlags |= CallContext::kReleaseGIL;
-    else
-        pymeth->fMethodInfo->fFlags &= ~CallContext::kReleaseGIL;
-
-    return 0;
+// Set '__release_gil__' boolean, which determines whether the GIL will be released.
+    return set_flag(pymeth, value, CallContext::kReleaseGIL, "__release_gil__");
 }
 
 //-----------------------------------------------------------------------------
@@ -506,6 +541,8 @@ static PyGetSetDef mp_getset[] = {
       (char*)"For ownership rules of result: if true, objects are python-owned", nullptr},
     {(char*)"__mempolicy__",       (getter)mp_getmempolicy, (setter)mp_setmempolicy,
       (char*)"For argument ownership rules: like global, either heuristic or strict", nullptr},
+    {(char*)"__set_lifeline__",    (getter)mp_getlifeline, (setter)mp_setlifeline,
+      (char*)"If true, set a lifeline from the return value onto self", nullptr},
     {(char*)"__release_gil__",     (getter)mp_getthreaded, (setter)mp_setthreaded,
       (char*)"If true, releases GIL on call into C++", nullptr},
     {(char*)"__useffi__",          (getter)mp_getuseffi, (setter)mp_setuseffi,
@@ -546,7 +583,7 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
 
 // simple case
     if (nMethods == 1) {
-        ctxt.fFlags |= CallContext::kAllowImplicit;   // no two rounds needed
+        if (!NoImplicit(&ctxt)) ctxt.fFlags |= CallContext::kAllowImplicit;    // no two rounds needed
         PyObject* result = methods[0]->Call(pymeth->fSelf, args, kwds, &ctxt);
         return HandleReturn(pymeth, oldSelf, result);
     }
@@ -556,15 +593,15 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
 
 // look for known signatures ...
     auto& dispatchMap = pymeth->fMethodInfo->fDispatchMap;
-    PyCallable* pc = nullptr;
+    PyCallable* memoized_pc = nullptr;
     for (const auto& p : dispatchMap) {
         if (p.first == sighash) {
-            pc = p.second;
+            memoized_pc = p.second;
             break;
         }
     }
-    if (pc != nullptr) {
-        PyObject* result = pc->Call(pymeth->fSelf, args, kwds, &ctxt);
+    if (memoized_pc) {
+        PyObject* result = memoized_pc->Call(pymeth->fSelf, args, kwds, &ctxt);
         result = HandleReturn(pymeth, oldSelf, result);
 
         if (result != 0)
@@ -587,7 +624,20 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
 
             if (result != 0) {
             // success: update the dispatch map for subsequent calls
-                dispatchMap.push_back(std::make_pair(sighash, methods[i]));
+                if (!memoized_pc)
+                    dispatchMap.push_back(std::make_pair(sighash, methods[i]));
+                else {
+                // debatable: apparently there are two methods that map onto the same sighash
+                // and preferring the latest may result in "ping pong."
+                    for (auto& p : dispatchMap) {
+                        if (p.first == sighash) {
+                            p.second = methods[i];
+                            break;
+                        }
+                    }
+                }
+
+            // clear collected errors
                 if (!errors.empty())
                     std::for_each(errors.begin(), errors.end(), Utility::PyError_t::Clear);
                 return HandleReturn(pymeth, oldSelf, result);
@@ -604,7 +654,7 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
             // this should not happen; set an error to prevent core dump and report
                 PyObject* sig = methods[i]->GetPrototype();
                 PyErr_Format(PyExc_SystemError, "%s =>\n    %s",
-                    CPyCppyy_PyUnicode_AsString(sig), (char*)"nullptr result without error in mp_call");
+                    CPyCppyy_PyText_AsString(sig), (char*)"nullptr result without error in mp_call");
                 Py_DECREF(sig);
             }
             Utility::FetchError(errors);
@@ -619,7 +669,7 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
     }
 
 // first summarize, then add details
-    PyObject* topmsg = CPyCppyy_PyUnicode_FromFormat(
+    PyObject* topmsg = CPyCppyy_PyText_FromFormat(
         "none of the %d overloaded methods succeeded. Full details:", (int)nMethods);
     SetDetailedException(errors, topmsg /* steals */, PyExc_TypeError /* default error */);
 
@@ -633,7 +683,7 @@ static PyObject* mp_str(CPPOverload* cppinst)
 // Print a description that includes the C++ name
      std::ostringstream s;
      s << "<C++ overload \"" << cppinst->fMethodInfo->fName << "\" at " << (void*)cppinst << ">";
-     return CPyCppyy_PyUnicode_FromString(s.str().c_str());
+     return CPyCppyy_PyText_FromString(s.str().c_str());
 }
 
 //-----------------------------------------------------------------------------
@@ -753,21 +803,35 @@ static PyObject* mp_richcompare(CPPOverload* self, CPPOverload* other, int op)
 static PyObject* mp_overload(CPPOverload* pymeth, PyObject* sigarg)
 {
 // Select and call a specific C++ overload, based on its signature.
-    if (!CPyCppyy_PyUnicode_Check(sigarg)) {
+    if (!CPyCppyy_PyText_Check(sigarg)) {
         PyErr_Format(PyExc_TypeError, "__overload__() argument 1 must be string, not %.50s",
             sigarg == Py_None ? "None" : Py_TYPE(sigarg)->tp_name);
         return nullptr;
     }
 
-    PyObject* sig1 = CPyCppyy_PyUnicode_FromFormat("(%s)", CPyCppyy_PyUnicode_AsString(sigarg));
+    std::string sig1{"("}; sig1.append(CPyCppyy_PyText_AsString(sigarg)); sig1.append(")");
+    sig1.erase(std::remove(sig1.begin(), sig1.end(), ' '), std::end(sig1));
 
     CPPOverload::Methods_t& methods = pymeth->fMethodInfo->fMethods;
     for (auto& meth : methods) {
 
-        PyObject* sig2 = meth->GetSignature(false);
-        if (PyObject_RichCompareBool(sig1, sig2, Py_EQ)) {
-            Py_DECREF(sig2);
+        bool found = false;
 
+        PyObject* pysig2 = meth->GetSignature(false);
+        std::string sig2(CPyCppyy_PyText_AsString(pysig2));
+        sig2.erase(std::remove(sig2.begin(), sig2.end(), ' '), std::end(sig2));
+        Py_DECREF(pysig2);
+        if (sig1 == sig2) found = true;
+
+        if (!found) {
+            pysig2 = meth->GetSignature(true);
+            std::string sig3(CPyCppyy_PyText_AsString(pysig2));
+            sig3.erase(std::remove(sig3.begin(), sig3.end(), ' '), std::end(sig3));
+            Py_DECREF(pysig2);
+            if (sig1 == sig3) found = true;
+        }
+
+        if (found) {
             CPPOverload* newmeth = mp_new(nullptr, nullptr, nullptr);
             CPPOverload::Methods_t vec; vec.push_back(meth->Clone());
             newmeth->Set(pymeth->fMethodInfo->fName, vec);
@@ -778,16 +842,12 @@ static PyObject* mp_overload(CPPOverload* pymeth, PyObject* sigarg)
             }
             newmeth->fMethodInfo->fFlags = pymeth->fMethodInfo->fFlags;
 
-            Py_DECREF(sig1);
             return (PyObject*)newmeth;
         }
-
-        Py_DECREF(sig2);
     }
 
-    Py_DECREF(sig1);
     PyErr_Format(PyExc_LookupError,
-        "signature \"%s\" not found", CPyCppyy_PyUnicode_AsString(sigarg));
+        "signature \"%s\" not found", CPyCppyy_PyText_AsString(sigarg));
     return nullptr;
 }
 
@@ -795,7 +855,7 @@ static PyObject* mp_overload(CPPOverload* pymeth, PyObject* sigarg)
 static PyObject* mp_add_overload(CPPOverload* pymeth, PyObject* new_overload)
 {
     TPythonCallback* cb = new TPythonCallback(new_overload);
-    pymeth->AddMethod(cb);
+    pymeth->AdoptMethod(cb);
     Py_RETURN_NONE;
 }
 
@@ -890,7 +950,7 @@ void CPyCppyy::CPPOverload::Set(const std::string& name, std::vector<PyCallable*
 }
 
 //-----------------------------------------------------------------------------
-void CPyCppyy::CPPOverload::AddMethod(PyCallable* pc)
+void CPyCppyy::CPPOverload::AdoptMethod(PyCallable* pc)
 {
 // Fill in the data of a freshly created method proxy.
     fMethodInfo->fMethods.push_back(pc);
@@ -898,11 +958,14 @@ void CPyCppyy::CPPOverload::AddMethod(PyCallable* pc)
 }
 
 //-----------------------------------------------------------------------------
-void CPyCppyy::CPPOverload::AddMethod(CPPOverload* meth)
+void CPyCppyy::CPPOverload::MergeOverload(CPPOverload* meth)
 {
+    if (!HasMethods()) // if fresh method being filled: also copy flags
+        fMethodInfo->fFlags = meth->fMethodInfo->fFlags;
     fMethodInfo->fMethods.insert(fMethodInfo->fMethods.end(),
         meth->fMethodInfo->fMethods.begin(), meth->fMethodInfo->fMethods.end());
     fMethodInfo->fFlags &= ~CallContext::kIsSorted;
+    meth->fMethodInfo->fDispatchMap.clear();
     meth->fMethodInfo->fMethods.clear();
 }
 

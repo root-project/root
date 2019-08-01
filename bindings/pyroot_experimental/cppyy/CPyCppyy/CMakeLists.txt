@@ -24,6 +24,7 @@ set(sources
     src/CPyCppyyModule.cxx
     src/CustomPyTypes.cxx
     src/Dispatcher.cxx
+    src/DispatchPtr.cxx
     src/Executors.cxx
     src/LowLevelViews.cxx
     src/MemoryRegulator.cxx

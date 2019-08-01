@@ -9,13 +9,15 @@
 //                                                                          //
 //////////////////////////////////////////////////////////////////////////////
 
-
 // Python
 struct _object;
 typedef _object PyObject;
 
+// Bindings
+#include "CPyCppyy/CommonDefs.h"
 
-class TPyReturn {
+
+class CPYCPPYY_CLASS_EXPORT TPyReturn {
 public:
     TPyReturn();
     TPyReturn(PyObject* pyobject);

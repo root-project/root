@@ -4,9 +4,9 @@
 Type Conversions
 ================
 
-Most type conversions are done implicitly, e.g. between Python ``str`` and
-C++ ``std::string`` and ``const char*``, but low-level APIs exist to perform
-explicit conversions.
+Most type conversions are done automatically, e.g. between Python ``str``
+and C++ ``std::string`` and ``const char*``, but low-level APIs exist to
+perform explicit conversions.
 
 The C++ code used for the examples below can be found
 :doc:`here <cppyy_features_header>`, and it is assumed that that code is
@@ -20,8 +20,10 @@ Download it, save it under the name ``features.h``, and load it:
     >>>
 
 
-`Casting`
----------
+ .. _sec-auto-casting-label:
+
+`Auto-casting`
+--------------
 
 Object pointer returns from functions provide the most derived class known
 (i.e. exposed in header files) in the hierarchy of the object being returned.

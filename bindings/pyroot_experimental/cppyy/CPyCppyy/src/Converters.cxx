@@ -22,11 +22,6 @@
 #include <sstream>
 #include "ROOT/RStringView.hxx"
 
-// FIXME: Should refer to CPyCppyy::Parameter in the code.
-#ifdef R__CXXMODULES
-  #define Parameter CPyCppyy::Parameter
-#endif
-
 #define UNKNOWN_SIZE         -1
 #define UNKNOWN_ARRAY_SIZE   -2
 
@@ -35,7 +30,7 @@
 namespace CPyCppyy {
 
 // factories
-    typedef Converter* (*cf_t)(long size);
+    typedef Converter* (*cf_t)(dims_t d);
     typedef std::map<std::string, cf_t> ConvFactories_t;
     static ConvFactories_t gConvFactories;
     extern PyObject* gNullPtrObject;
@@ -84,9 +79,9 @@ static inline bool CPyCppyy_PyLong_AsBool(PyObject* pyobject)
     return (bool)l;
 }
 
-static inline char CPyCppyy_PyUnicode_AsChar(PyObject* pyobject) {
+static inline char CPyCppyy_PyText_AsChar(PyObject* pyobject) {
 // python string to C++ char conversion
-    return (char)CPyCppyy_PyUnicode_AsString(pyobject)[0];
+    return (char)CPyCppyy_PyText_AsString(pyobject)[0];
 }
 
 static inline uint8_t CPyCppyy_PyLong_AsUInt8(PyObject* pyobject)
@@ -198,7 +193,7 @@ static inline bool ConvertImplicit(Cppyy::TCppType_t klass,
     using namespace CPyCppyy;
 
     if (!AllowImplicit(ctxt)) {
-        ctxt->fFlags |= CallContext::kHaveImplicit;
+        if (!NoImplicit(ctxt)) ctxt->fFlags |= CallContext::kHaveImplicit;
         return false;
     }
 
@@ -217,6 +212,13 @@ static inline bool ConvertImplicit(Cppyy::TCppType_t klass,
 
 // call constructor of argument type to attempt implicit conversion
     CPPInstance* pytmp = (CPPInstance*)PyObject_Call(pyscope, args, kwds);
+    if (!pytmp && PyTuple_Check(pyobject)) {
+    // special case: allow implicit conversion from given set of arguments in tuple
+        PyErr_Clear();
+        PyDict_SetItem(kwds, PyStrings::gNoImplicit, Py_True); // was deleted
+        pytmp = (CPPInstance*)PyObject_Call(pyscope, pyobject, kwds);
+    }
+
     Py_DECREF(args);
     Py_DECREF(kwds);
     Py_DECREF(pyscope);
@@ -295,12 +297,12 @@ bool CPyCppyy::name##Converter::ToMemory(PyObject* value, void* address)     \
 static inline int ExtractChar(PyObject* pyobject, const char* tname, int low, int high)
 {
     int lchar = -1;
-    if (CPyCppyy_PyUnicode_Check(pyobject)) {
-        if (CPyCppyy_PyUnicode_GET_SIZE(pyobject) == 1)
-            lchar = (int)CPyCppyy_PyUnicode_AsChar(pyobject);
+    if (CPyCppyy_PyText_Check(pyobject)) {
+        if (CPyCppyy_PyText_GET_SIZE(pyobject) == 1)
+            lchar = (int)CPyCppyy_PyText_AsChar(pyobject);
         else
             PyErr_Format(PyExc_ValueError, "%s expected, got string of size " PY_SSIZE_T_FORMAT,
-                tname, CPyCppyy_PyUnicode_GET_SIZE(pyobject));
+                tname, CPyCppyy_PyText_GET_SIZE(pyobject));
     } else if (!PyFloat_Check(pyobject)) {   // don't allow truncating conversion
         lchar = (int)PyLong_AsLong(pyobject);
         if (lchar == -1 && PyErr_Occurred())
@@ -382,16 +384,16 @@ bool CPyCppyy::name##Converter::SetArg(                                      \
                                                                              \
 PyObject* CPyCppyy::name##Converter::FromMemory(void* address)               \
 {                                                                            \
-    return CPyCppyy_PyUnicode_FromFormat("%c", *((type*)address));           \
+    return CPyCppyy_PyText_FromFormat("%c", *((type*)address));              \
 }                                                                            \
                                                                              \
 bool CPyCppyy::name##Converter::ToMemory(PyObject* value, void* address)     \
 {                                                                            \
-    if (CPyCppyy_PyUnicode_Check(value)) {                                   \
-        const char* buf = CPyCppyy_PyUnicode_AsString(value);                \
+    if (CPyCppyy_PyText_Check(value)) {                                      \
+        const char* buf = CPyCppyy_PyText_AsString(value);                   \
         if (PyErr_Occurred())                                                \
             return false;                                                    \
-        Py_ssize_t len = CPyCppyy_PyUnicode_GET_SIZE(value);                 \
+        Py_ssize_t len = CPyCppyy_PyText_GET_SIZE(value);                    \
         if (len != 1) {                                                      \
             PyErr_Format(PyExc_TypeError, #type" expected, got string of size %ld", len);\
             return false;                                                    \
@@ -783,11 +785,11 @@ bool CPyCppyy::CStringConverter::SetArg(
     PyObject* pyobject, Parameter& para, CallContext* /* ctxt */)
 {
 // construct a new string and copy it in new memory
-    const char* s = CPyCppyy_PyUnicode_AsStringChecked(pyobject);
+    const char* s = CPyCppyy_PyText_AsStringChecked(pyobject);
     if (PyErr_Occurred())
         return false;
 
-    fBuffer = std::string(s, CPyCppyy_PyUnicode_GET_SIZE(pyobject));
+    fBuffer = std::string(s, CPyCppyy_PyText_GET_SIZE(pyobject));
 
 // verify (too long string will cause truncation, no crash)
     if (fMaxSize != -1 && fMaxSize < (long)fBuffer.size())
@@ -807,10 +809,10 @@ PyObject* CPyCppyy::CStringConverter::FromMemory(void* address)
     if (address && *(char**)address) {
         if (fMaxSize != -1) {      // need to prevent reading beyond boundary
             std::string buf(*(char**)address, fMaxSize);    // cut on fMaxSize
-            return CPyCppyy_PyUnicode_FromString(buf.c_str());   // cut on \0
+            return CPyCppyy_PyText_FromString(buf.c_str());   // cut on \0
         }
 
-        return CPyCppyy_PyUnicode_FromString(*(char**)address);
+        return CPyCppyy_PyText_FromString(*(char**)address);
     }
 
 // empty string in case there's no address
@@ -821,12 +823,12 @@ PyObject* CPyCppyy::CStringConverter::FromMemory(void* address)
 bool CPyCppyy::CStringConverter::ToMemory(PyObject* value, void* address)
 {
 // convert <value> to C++ const char*, write it at <address>
-    const char* s = CPyCppyy_PyUnicode_AsStringChecked(value);
+    const char* s = CPyCppyy_PyText_AsStringChecked(value);
     if (PyErr_Occurred())
         return false;
 
 // verify (too long string will cause truncation, no crash)
-    if (fMaxSize != -1 && fMaxSize < (long)CPyCppyy_PyUnicode_GET_SIZE(value))
+    if (fMaxSize != -1 && fMaxSize < (long)CPyCppyy_PyText_GET_SIZE(value))
         PyErr_Warn(PyExc_RuntimeWarning, (char*)"string too long for char array (truncated)");
 
     if (fMaxSize != -1)
@@ -947,7 +949,7 @@ PyObject* CPyCppyy::NonConstCStringConverter::FromMemory(void* address)
 {
 // assume this is a buffer access if the size is known; otherwise assume string
     if (fMaxSize != -1)
-        return CPyCppyy_PyUnicode_FromStringAndSize(*(char**)address, fMaxSize);
+        return CPyCppyy_PyText_FromStringAndSize(*(char**)address, fMaxSize);
     return this->CStringConverter::FromMemory(address);
 }
 
@@ -1059,6 +1061,16 @@ bool CPyCppyy::VoidArrayConverter::ToMemory(PyObject* value, void* address)
 
 //----------------------------------------------------------------------------
 #define CPPYY_IMPL_ARRAY_CONVERTER(name, type, code)                         \
+CPyCppyy::name##ArrayConverter::name##ArrayConverter(dims_t dims) {          \
+    int nalloc = (dims && 0 < dims[0]) ? (int)dims[0]+1: 2;                  \
+    fShape = new Py_ssize_t[nalloc];                                         \
+    if (dims) {                                                              \
+        for (int i = 0; i < nalloc; ++i) fShape[i] = (Py_ssize_t)dims[i];    \
+    } else {                                                                 \
+        fShape[0] = 1; fShape[1] = -1;                                       \
+    }                                                                        \
+}                                                                            \
+                                                                             \
 bool CPyCppyy::name##ArrayConverter::SetArg(                                 \
     PyObject* pyobject, Parameter& para, CallContext* /* ctxt */)            \
 {                                                                            \
@@ -1067,22 +1079,23 @@ bool CPyCppyy::name##ArrayConverter::SetArg(                                 \
                                                                              \
 PyObject* CPyCppyy::name##ArrayConverter::FromMemory(void* address)          \
 {                                                                            \
-    Py_ssize_t shape[] = {1, fSize};                                         \
-    if (fSize == UNKNOWN_SIZE)                                               \
-        return CreateLowLevelView((type**)address, shape);                   \
-    else if (fSize == UNKNOWN_ARRAY_SIZE)                                    \
-        shape[1] = UNKNOWN_SIZE;                                             \
-    return CreateLowLevelView(*(type**)address, shape);                      \
+    if (fShape[1] == UNKNOWN_SIZE)                                           \
+        return CreateLowLevelView((type**)address, fShape);                  \
+    return CreateLowLevelView(*(type**)address, fShape);                     \
 }                                                                            \
                                                                              \
 bool CPyCppyy::name##ArrayConverter::ToMemory(PyObject* value, void* address)\
 {                                                                            \
+    if (fShape[0] != 1) {                                                    \
+        PyErr_SetString(PyExc_ValueError, "only 1-dim arrays supported");    \
+        return false;                                                        \
+    }                                                                        \
     void* buf = nullptr;                                                     \
     Py_ssize_t buflen = Utility::GetBuffer(value, code, sizeof(type), buf);  \
     if (buflen == 0)                                                         \
         return false;                                                        \
-    if (0 <= fSize) {                                                        \
-        if (fSize < buflen) {                                                \
+    if (0 <= fShape[1]) {                                                    \
+        if (fShape[1] < buflen) {                                            \
             PyErr_SetString(PyExc_ValueError, "buffer too large for value"); \
             return false;                                                    \
         }                                                                    \
@@ -1121,6 +1134,19 @@ CPPYY_IMPL_ARRAY_CONVERTER (ComplexD, std::complex<double>, 'Z')
 
 
 //- converters for special cases ---------------------------------------------
+bool NullptrConverter::SetArg(PyObject* pyobject, Parameter& para, CallContext* /* ctxt */)
+{
+// Only allow C++11 style nullptr to pass
+    if (pyobject == gNullPtrObject) {
+        para.fValue.fVoidp = nullptr;
+        para.fTypeCode = 'p';
+        return true;
+    }
+    return false;
+}
+
+
+//----------------------------------------------------------------------------
 #define CPPYY_IMPL_STRING_AS_PRIMITIVE_CONVERTER(name, type, F1, F2)         \
 CPyCppyy::name##Converter::name##Converter(bool keepControl) :               \
     InstancePtrConverter(Cppyy::GetScope(#type), keepControl) {}             \
@@ -1128,9 +1154,9 @@ CPyCppyy::name##Converter::name##Converter(bool keepControl) :               \
 bool CPyCppyy::name##Converter::SetArg(                                      \
     PyObject* pyobject, Parameter& para, CallContext* ctxt)                  \
 {                                                                            \
-    if (CPyCppyy_PyUnicode_Check(pyobject)) {                                \
-        fBuffer = type(CPyCppyy_PyUnicode_AsString(pyobject),                \
-                       CPyCppyy_PyUnicode_GET_SIZE(pyobject));               \
+    if (CPyCppyy_PyText_Check(pyobject)) {                                   \
+        fBuffer = type(CPyCppyy_PyText_AsString(pyobject),                   \
+                       CPyCppyy_PyText_GET_SIZE(pyobject));                  \
         para.fValue.fVoidp = &fBuffer;                                       \
         para.fTypeCode = 'V';                                                \
         return true;                                                         \
@@ -1147,15 +1173,15 @@ bool CPyCppyy::name##Converter::SetArg(                                      \
 PyObject* CPyCppyy::name##Converter::FromMemory(void* address)               \
 {                                                                            \
     if (address)                                                             \
-        return CPyCppyy_PyUnicode_FromStringAndSize(((type*)address)->F1(), ((type*)address)->F2()); \
+        return CPyCppyy_PyText_FromStringAndSize(((type*)address)->F1(), ((type*)address)->F2()); \
     Py_INCREF(PyStrings::gEmptyString);                                      \
     return PyStrings::gEmptyString;                                          \
 }                                                                            \
                                                                              \
 bool CPyCppyy::name##Converter::ToMemory(PyObject* value, void* address)     \
 {                                                                            \
-    if (CPyCppyy_PyUnicode_Check(value)) {                                   \
-        *((type*)address) = CPyCppyy_PyUnicode_AsString(value);              \
+    if (CPyCppyy_PyText_Check(value)) {                                      \
+        *((type*)address) = CPyCppyy_PyText_AsString(value);                 \
         return true;                                                         \
     }                                                                        \
                                                                              \
@@ -1452,10 +1478,10 @@ bool CPyCppyy::InstancePtrPtrConverter<ISREFERENCE>::SetArg(
             pyobj->CppOwns();
 
     // set pointer (may be null) and declare success
-        if (pyobj->fFlags & CPPInstance::kIsReference)
-            para.fValue.fVoidp = pyobj->fObject; // already a ptr to object
+        if (pyobj->fFlags & CPPInstance::kIsReference) // already a ptr to object?
+            para.fValue.fVoidp = pyobj->GetObjectRaw();
         else
-            para.fValue.fVoidp = &pyobj->fObject;
+            para.fValue.fVoidp = &pyobj->GetObjectRaw();
         para.fTypeCode = ISREFERENCE ? 'V' : 'p';
         return true;
     }
@@ -1521,7 +1547,7 @@ bool CPyCppyy::InstanceArrayConverter::SetArg(
 
     if (Cppyy::IsSubtype(((CPPInstance*)first)->ObjectIsA(), fClass)) {
     // no memory policies supported; set pointer (may be null) and declare success
-        para.fValue.fVoidp = ((CPPInstance*)first)->fObject;
+        para.fValue.fVoidp = ((CPPInstance*)first)->GetObject();
         para.fTypeCode = 'p';
         return true;
     }
@@ -1570,7 +1596,7 @@ bool CPyCppyy::VoidPtrRefConverter::SetArg(
 {
 // convert <pyobject> to C++ void*&, set arg for call
     if (CPPInstance_Check(pyobject)) {
-        para.fValue.fVoidp = &((CPPInstance*)pyobject)->fObject;
+        para.fValue.fVoidp = &((CPPInstance*)pyobject)->GetObjectRaw();
         para.fTypeCode = 'V';
         return true;
     }
@@ -1585,7 +1611,7 @@ bool CPyCppyy::VoidPtrPtrConverter::SetArg(
 // convert <pyobject> to C++ void**, set arg for call
     if (CPPInstance_Check(pyobject)) {
     // this is a C++ object, take and set its address
-        para.fValue.fVoidp = &((CPPInstance*)pyobject)->fObject;
+        para.fValue.fVoidp = &((CPPInstance*)pyobject)->GetObjectRaw();
         para.fTypeCode = 'p';
         return true;
     }
@@ -1686,7 +1712,7 @@ bool CPyCppyy::FunctionPointerConverter::SetArg(
     // find the overload with matching signature
         for (auto& m : ol->fMethodInfo->fMethods) {
             PyObject* sig = m->GetSignature(false);
-            bool found = fSignature == CPyCppyy_PyUnicode_AsString(sig);
+            bool found = fSignature == CPyCppyy_PyText_AsString(sig);
             Py_DECREF(sig);
             if (found) {
                 para.fValue.fVoidp = (void*)m->GetFunctionAddress();
@@ -1702,10 +1728,10 @@ bool CPyCppyy::FunctionPointerConverter::SetArg(
     if (TemplateProxy_Check(pyobject)) {
     // get the actual underlying template matching the signature
         TemplateProxy* pytmpl = (TemplateProxy*)pyobject;
-        std::string fullname = CPyCppyy_PyUnicode_AsString(pytmpl->fCppName);
+        std::string fullname = CPyCppyy_PyText_AsString(pytmpl->fTI->fCppName);
         if (pytmpl->fTemplateArgs)
-            fullname += CPyCppyy_PyUnicode_AsString(pytmpl->fTemplateArgs);
-        Cppyy::TCppScope_t scope = ((CPPClass*)pytmpl->fPyClass)->fCppType;
+            fullname += CPyCppyy_PyText_AsString(pytmpl->fTemplateArgs);
+        Cppyy::TCppScope_t scope = ((CPPClass*)pytmpl->fTI->fPyClass)->fCppType;
         Cppyy::TCppMethod_t cppmeth = Cppyy::GetMethodTemplate(scope, fullname, fSignature);
         if (cppmeth) {
             para.fValue.fVoidp = (void*)Cppyy::GetFunctionAddress(cppmeth);
@@ -1910,6 +1936,8 @@ bool CPyCppyy::SmartPtrConverter::SetArg(
     char typeCode = fIsRef ? 'p' : 'V';
 
     if (!CPPInstance_Check(pyobject)) {
+        // TODO: not sure how this is correct for pass-by-ref nor does it help with
+        // implicit conversions for pass-by-value
         if (fIsRef && GetAddressSpecialCase(pyobject, para.fValue.fVoidp)) {
             para.fTypeCode = typeCode;      // allow special cases such as nullptr
             return true;
@@ -1921,26 +1949,27 @@ bool CPyCppyy::SmartPtrConverter::SetArg(
     CPPInstance* pyobj = (CPPInstance*)pyobject;
 
 // for the case where we have a 'hidden' smart pointer:
-    if ((pyobj->fFlags & CPPInstance::kIsSmartPtr) &&
-            Cppyy::IsSubtype(pyobj->fSmartPtrType, fSmartPtrType)) {
-    // depending on memory policy, some objects need releasing when passed into functions
-        if (fKeepControl && !UseStrictOwnership(ctxt))
-            ((CPPInstance*)pyobject)->CppOwns();
+    if (Cppyy::TCppType_t tsmart = pyobj->GetSmartIsA()) {
+        if (Cppyy::IsSubtype(tsmart, fSmartPtrType)) {
+        // depending on memory policy, some objects need releasing when passed into functions
+            if (fKeepControl && !UseStrictOwnership(ctxt))
+                ((CPPInstance*)pyobject)->CppOwns();
 
-    // calculate offset between formal and actual arguments
-        para.fValue.fVoidp = pyobj->fObject;
-        if (pyobj->fSmartPtrType != fSmartPtrType) {
-            para.fValue.fIntPtr += Cppyy::GetBaseOffset(
-                pyobj->fSmartPtrType, fSmartPtrType, para.fValue.fVoidp, 1 /* up-cast */);
+        // calculate offset between formal and actual arguments
+            para.fValue.fVoidp = pyobj->GetSmartObject();
+            if (tsmart != fSmartPtrType) {
+                para.fValue.fIntPtr += Cppyy::GetBaseOffset(
+                    tsmart, fSmartPtrType, para.fValue.fVoidp, 1 /* up-cast */);
+            }
+
+        // set pointer (may be null) and declare success
+            para.fTypeCode = typeCode;
+            return true;
         }
-
-    // set pointer (may be null) and declare success
-        para.fTypeCode = typeCode;
-        return true;
     }
 
 // for the case where we have an 'exposed' smart pointer:
-    if (pyobj->ObjectIsA() && Cppyy::IsSubtype(pyobj->ObjectIsA(), fSmartPtrType)) {
+    if (!pyobj->IsSmart() && Cppyy::IsSubtype(pyobj->ObjectIsA(), fSmartPtrType)) {
     // calculate offset between formal and actual arguments
         para.fValue.fVoidp = pyobj->GetObject();
         if (pyobj->ObjectIsA() != fSmartPtrType) {
@@ -1954,8 +1983,8 @@ bool CPyCppyy::SmartPtrConverter::SetArg(
     }
 
 // final option, try mapping pointer types held (TODO: do not allow for non-const ref)
-    if (pyobj->fSmartPtrType && Cppyy::IsSubtype(pyobj->ObjectIsA(), fRawPtrType)) {
-        para.fValue.fVoidp = ((CPPInstance*)pyobject)->fObject;
+    if (pyobj->IsSmart() && Cppyy::IsSubtype(pyobj->ObjectIsA(), fUnderlyingType)) {
+        para.fValue.fVoidp = ((CPPInstance*)pyobject)->GetSmartObject();
         para.fTypeCode = 'V';
         return true;
     }
@@ -1968,13 +1997,7 @@ PyObject* CPyCppyy::SmartPtrConverter::FromMemory(void* address)
     if (!address || !fSmartPtrType)
         return nullptr;
 
-// TODO: note the mismatch between address, which is the smart pointer, and the
-// declared type, which is the raw pointer
-    CPPInstance* pyobj = (CPPInstance*)BindCppObjectNoCast(address, fRawPtrType);
-    if (pyobj)
-        pyobj->SetSmartPtr(fSmartPtrType, fDereferencer);
-
-    return (PyObject*)pyobj;
+    return BindCppObjectNoCast(address, fSmartPtrType);
 }
 
 
@@ -2010,7 +2033,7 @@ bool CPyCppyy::InitializerListConverter::SetArg(
     return false;
 #else
 // convert the given argument to an initializer list temporary
-    if (!PySequence_Check(pyobject) || CPyCppyy_PyUnicode_Check(pyobject)
+    if (!PySequence_Check(pyobject) || CPyCppyy_PyText_Check(pyobject)
 #if PY_VERSION_HEX >= 0x03000000
         || PyBytes_Check(pyobject)
 #endif
@@ -2081,7 +2104,7 @@ bool CPyCppyy::NotImplementedConverter::SetArg(PyObject*, Parameter&, CallContex
 
 //- helper to refactor some code from CreateConverter ------------------------
 static inline CPyCppyy::Converter* selectInstanceCnv(
-    Cppyy::TCppScope_t klass, const std::string& cpd, long size, long* dims, bool isConst, bool control)
+    Cppyy::TCppScope_t klass, const std::string& cpd, long size, dims_t dims, bool isConst, bool control)
 {
     using namespace CPyCppyy;
     Converter* result = nullptr;
@@ -2106,7 +2129,7 @@ static inline CPyCppyy::Converter* selectInstanceCnv(
 
 //- factories ----------------------------------------------------------------
 CPYCPPYY_EXPORT
-CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, long* dims)
+CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, dims_t dims)
 {
 // The matching of the fulltype to a converter factory goes through up to five levels:
 //   1) full, exact match
@@ -2117,12 +2140,12 @@ CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, long
 //
 // If all fails, void is used, which will generate a run-time warning when used.
 
-    long size = (dims && dims[0] != -1) ? dims[1] : -1;
+    dim_t size = (dims && dims[0] != -1) ? dims[1] : -1;
 
 // an exactly matching converter is best
     ConvFactories_t::iterator h = gConvFactories.find(fullType);
     if (h != gConvFactories.end())
-        return (h->second)(size);
+        return (h->second)(dims);
 
 // resolve typedefs etc.
     const std::string& resolvedType = Cppyy::ResolveName(fullType);
@@ -2131,7 +2154,7 @@ CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, long
     if (resolvedType != fullType) {
         h = gConvFactories.find(resolvedType);
         if (h != gConvFactories.end())
-            return (h->second)(size);
+            return (h->second)(dims);
     }
 
 //-- nothing? ok, collect information about the type and possible qualifiers/decorators
@@ -2142,7 +2165,7 @@ CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, long
 // accept unqualified type (as python does not know about qualifiers)
     h = gConvFactories.find(realType + cpd);
     if (h != gConvFactories.end())
-        return (h->second)(size);
+        return (h->second)(dims);
 
 // drop const, as that is mostly meaningless to python (with the exception
 // of c-strings, but those are specialized in the converter map)
@@ -2150,15 +2173,35 @@ CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, long
         realType = TypeManip::remove_const(realType);
         h = gConvFactories.find(realType + cpd);
         if (h != gConvFactories.end())
-            return (h->second)(size);
+            return (h->second)(dims);
     }
 
 //-- still nothing? try pointer instead of array (for builtins)
     if (cpd == "[]") {
+    // simple array
         h = gConvFactories.find(realType + "*");
         if (h != gConvFactories.end()) {
-            if (size == -1) size = -2;
-            return (h->second)(size);
+            if (dims && dims[1] == UNKNOWN_SIZE) dims[1] = UNKNOWN_ARRAY_SIZE;
+            return (h->second)(dims);
+        }
+    } else if (cpd == "*[]") {
+    // array of pointers
+        h = gConvFactories.find(realType + "*");
+        if (h != gConvFactories.end()) {
+        // upstream treats the pointer type as the array element type, but that pointer is
+        // treated as a low-level view as well, so adjust the dims
+            dim_t newdim = (dims && 0 < dims[0]) ? dims[0]+1 : 2;
+            dims_t newdims = new dim_t[newdim+1];
+            newdims[0] = newdim;
+            newdims[1] = (0 < size ? size : UNKNOWN_ARRAY_SIZE);      // the array
+            newdims[2] = UNKNOWN_SIZE;                                // the pointer
+            if (dims && 2 < newdim) {
+                for (int i = 2; i < (newdim-1); ++i)
+                    newdims[i+1] = dims[i];
+            }
+            Converter* cnv = (h->second)(newdims);
+            delete [] newdims;
+            return cnv;
         }
     }
 
@@ -2210,14 +2253,14 @@ CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, long
 // converters for known C++ classes and default (void*)
     Converter* result = nullptr;
     if (Cppyy::TCppScope_t klass = Cppyy::GetScope(realType)) {
-        Cppyy::TCppType_t raw; Cppyy::TCppMethod_t deref;
-        if (Cppyy::GetSmartPtrInfo(realType, raw, deref)) {
+        Cppyy::TCppType_t raw{0};
+        if (Cppyy::GetSmartPtrInfo(realType, &raw, nullptr)) {
             if (cpd == "") {
-                result = new SmartPtrConverter(klass, raw, deref, control);
+                result = new SmartPtrConverter(klass, raw, control);
             } else if (cpd == "&") {
-                result = new SmartPtrConverter(klass, raw, deref);
+                result = new SmartPtrConverter(klass, raw);
             } else if (cpd == "*" && size <= 0) {
-                result = new SmartPtrConverter(klass, raw, deref, control, true);
+                result = new SmartPtrConverter(klass, raw, control, true);
             }
         }
 
@@ -2243,14 +2286,14 @@ CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, long
     // for builting, can use const-ref for r-ref
         h = gConvFactories.find("const " + realType + "&");
         if (h != gConvFactories.end())
-            return (h->second)(size);
+            return (h->second)(dims);
     // else, unhandled moves
         result = new NotImplementedConverter();
     }
 
     if (!result && h != gConvFactories.end())
     // converter factory available, use it to create converter
-        result = (h->second)(size);
+        result = (h->second)(dims);
     else if (!result) {
         if (cpd != "") {
             result = new VoidArrayConverter();        // "user knows best"
@@ -2277,78 +2320,79 @@ public:
         CPyCppyy::ConvFactories_t& gf = gConvFactories;
 
     // factories for built-ins
-        gf["bool"] =                        (cf_t)+[](long) { return new BoolConverter{}; };
-        gf["const bool&"] =                 (cf_t)+[](long) { return new ConstBoolRefConverter{}; };
-        gf["char"] =                        (cf_t)+[](long) { return new CharConverter{}; };
-        gf["const char&"] =                 (cf_t)+[](long) { return new ConstCharRefConverter{}; };
-        gf["signed char"] =                 (cf_t)+[](long) { return new CharConverter{}; };
-        gf["const signed char&"] =          (cf_t)+[](long) { return new ConstCharRefConverter{}; };
-        gf["unsigned char"] =               (cf_t)+[](long) { return new UCharConverter{}; };
-        gf["const unsigned char&"] =        (cf_t)+[](long) { return new ConstUCharRefConverter{}; };
-        gf["UCharAsInt"] =                  (cf_t)+[](long) { return new UCharAsIntConverter{}; };
-        gf["wchar_t"] =                     (cf_t)+[](long) { return new WCharConverter{}; };
-        gf["int8_t"] =                      (cf_t)+[](long) { return new Int8Converter{}; };
-        gf["uint8_t"] =                     (cf_t)+[](long) { return new UInt8Converter{}; };
-        gf["short"] =                       (cf_t)+[](long) { return new ShortConverter{}; };
-        gf["const short&"] =                (cf_t)+[](long) { return new ConstShortRefConverter{}; };
-        gf["unsigned short"] =              (cf_t)+[](long) { return new UShortConverter{}; };
-        gf["const unsigned short&"] =       (cf_t)+[](long) { return new ConstUShortRefConverter{}; };
-        gf["int"] =                         (cf_t)+[](long) { return new IntConverter{}; };
-        gf["int&"] =                        (cf_t)+[](long) { return new IntRefConverter{}; };
-        gf["const int&"] =                  (cf_t)+[](long) { return new ConstIntRefConverter{}; };
-        gf["unsigned int"] =                (cf_t)+[](long) { return new UIntConverter{}; };
-        gf["const unsigned int&"] =         (cf_t)+[](long) { return new ConstUIntRefConverter{}; };
-        gf["internal_enum_type_t"] =        (cf_t)+[](long) { return new IntConverter{}; };
-        gf["internal_enum_type_t&"] =       (cf_t)+[](long) { return new IntRefConverter{}; };
-        gf["const internal_enum_type_t&"] = (cf_t)+[](long) { return new ConstIntRefConverter{}; };
-        gf["long"] =                        (cf_t)+[](long) { return new LongConverter{}; };
-        gf["long&"] =                       (cf_t)+[](long) { return new LongRefConverter{}; };
-        gf["const long&"] =                 (cf_t)+[](long) { return new ConstLongRefConverter{}; };
-        gf["unsigned long"] =               (cf_t)+[](long) { return new ULongConverter{}; };
-        gf["const unsigned long&"] =        (cf_t)+[](long) { return new ConstULongRefConverter{}; };
-        gf["long long"] =                   (cf_t)+[](long) { return new LongLongConverter{}; };
-        gf["const long long&"] =            (cf_t)+[](long) { return new ConstLongLongRefConverter{}; };
-        gf["unsigned long long"] =          (cf_t)+[](long) { return new ULongLongConverter{}; };
-        gf["const unsigned long long&"] =   (cf_t)+[](long) { return new ConstULongLongRefConverter{}; };
+        gf["bool"] =                        (cf_t)+[](dims_t) { return new BoolConverter{}; };
+        gf["const bool&"] =                 (cf_t)+[](dims_t) { return new ConstBoolRefConverter{}; };
+        gf["char"] =                        (cf_t)+[](dims_t) { return new CharConverter{}; };
+        gf["const char&"] =                 (cf_t)+[](dims_t) { return new ConstCharRefConverter{}; };
+        gf["signed char"] =                 (cf_t)+[](dims_t) { return new CharConverter{}; };
+        gf["const signed char&"] =          (cf_t)+[](dims_t) { return new ConstCharRefConverter{}; };
+        gf["unsigned char"] =               (cf_t)+[](dims_t) { return new UCharConverter{}; };
+        gf["const unsigned char&"] =        (cf_t)+[](dims_t) { return new ConstUCharRefConverter{}; };
+        gf["UCharAsInt"] =                  (cf_t)+[](dims_t) { return new UCharAsIntConverter{}; };
+        gf["wchar_t"] =                     (cf_t)+[](dims_t) { return new WCharConverter{}; };
+        gf["int8_t"] =                      (cf_t)+[](dims_t) { return new Int8Converter{}; };
+        gf["uint8_t"] =                     (cf_t)+[](dims_t) { return new UInt8Converter{}; };
+        gf["short"] =                       (cf_t)+[](dims_t) { return new ShortConverter{}; };
+        gf["const short&"] =                (cf_t)+[](dims_t) { return new ConstShortRefConverter{}; };
+        gf["unsigned short"] =              (cf_t)+[](dims_t) { return new UShortConverter{}; };
+        gf["const unsigned short&"] =       (cf_t)+[](dims_t) { return new ConstUShortRefConverter{}; };
+        gf["int"] =                         (cf_t)+[](dims_t) { return new IntConverter{}; };
+        gf["int&"] =                        (cf_t)+[](dims_t) { return new IntRefConverter{}; };
+        gf["const int&"] =                  (cf_t)+[](dims_t) { return new ConstIntRefConverter{}; };
+        gf["unsigned int"] =                (cf_t)+[](dims_t) { return new UIntConverter{}; };
+        gf["const unsigned int&"] =         (cf_t)+[](dims_t) { return new ConstUIntRefConverter{}; };
+        gf["internal_enum_type_t"] =        (cf_t)+[](dims_t) { return new IntConverter{}; };
+        gf["internal_enum_type_t&"] =       (cf_t)+[](dims_t) { return new IntRefConverter{}; };
+        gf["const internal_enum_type_t&"] = (cf_t)+[](dims_t) { return new ConstIntRefConverter{}; };
+        gf["long"] =                        (cf_t)+[](dims_t) { return new LongConverter{}; };
+        gf["long&"] =                       (cf_t)+[](dims_t) { return new LongRefConverter{}; };
+        gf["const long&"] =                 (cf_t)+[](dims_t) { return new ConstLongRefConverter{}; };
+        gf["unsigned long"] =               (cf_t)+[](dims_t) { return new ULongConverter{}; };
+        gf["const unsigned long&"] =        (cf_t)+[](dims_t) { return new ConstULongRefConverter{}; };
+        gf["long long"] =                   (cf_t)+[](dims_t) { return new LongLongConverter{}; };
+        gf["const long long&"] =            (cf_t)+[](dims_t) { return new ConstLongLongRefConverter{}; };
+        gf["unsigned long long"] =          (cf_t)+[](dims_t) { return new ULongLongConverter{}; };
+        gf["const unsigned long long&"] =   (cf_t)+[](dims_t) { return new ConstULongLongRefConverter{}; };
 
-        gf["float"] =                       (cf_t)+[](long) { return new FloatConverter{}; };
-        gf["const float&"] =                (cf_t)+[](long) { return new ConstFloatRefConverter{}; };
-        gf["double"] =                      (cf_t)+[](long) { return new DoubleConverter{}; };
-        gf["double&"] =                     (cf_t)+[](long) { return new DoubleRefConverter{}; };
-        gf["const double&"] =               (cf_t)+[](long) { return new ConstDoubleRefConverter{}; };
-        gf["long double"] =                 (cf_t)+[](long) { return new LongDoubleConverter{}; };
-        gf["const long double&"] =          (cf_t)+[](long) { return new ConstLongDoubleRefConverter{}; };
-        gf["std::complex<double>"] =        (cf_t)+[](long) { return new ComplexDConverter{}; };
-        gf["complex<double>"] =             (cf_t)+[](long) { return new ComplexDConverter{}; };
-        gf["const std::complex<double>&"] = (cf_t)+[](long) { return new ComplexDConverter{}; };
-        gf["const complex<double>&"] =      (cf_t)+[](long) { return new ComplexDConverter{}; };
-        gf["void"] =                        (cf_t)+[](long) { return new VoidConverter{}; };
+        gf["float"] =                       (cf_t)+[](dims_t) { return new FloatConverter{}; };
+        gf["const float&"] =                (cf_t)+[](dims_t) { return new ConstFloatRefConverter{}; };
+        gf["double"] =                      (cf_t)+[](dims_t) { return new DoubleConverter{}; };
+        gf["double&"] =                     (cf_t)+[](dims_t) { return new DoubleRefConverter{}; };
+        gf["const double&"] =               (cf_t)+[](dims_t) { return new ConstDoubleRefConverter{}; };
+        gf["long double"] =                 (cf_t)+[](dims_t) { return new LongDoubleConverter{}; };
+        gf["const long double&"] =          (cf_t)+[](dims_t) { return new ConstLongDoubleRefConverter{}; };
+        gf["std::complex<double>"] =        (cf_t)+[](dims_t) { return new ComplexDConverter{}; };
+        gf["complex<double>"] =             (cf_t)+[](dims_t) { return new ComplexDConverter{}; };
+        gf["const std::complex<double>&"] = (cf_t)+[](dims_t) { return new ComplexDConverter{}; };
+        gf["const complex<double>&"] =      (cf_t)+[](dims_t) { return new ComplexDConverter{}; };
+        gf["void"] =                        (cf_t)+[](dims_t) { return new VoidConverter{}; };
 
     // pointer/array factories
-        gf["bool*"] =                       (cf_t)+[](long sz) { return new BoolArrayConverter{sz}; };
-        gf["bool&"] =                       (cf_t)+[](long sz) { return new BoolArrayRefConverter{sz}; };
-        gf["const unsigned char*"] =        (cf_t)+[](long sz) { return new UCharArrayConverter{sz}; };
-        gf["unsigned char*"] =              (cf_t)+[](long sz) { return new UCharArrayConverter{sz}; };
-        gf["short*"] =                      (cf_t)+[](long sz) { return new ShortArrayConverter{sz}; };
-        gf["short&"] =                      (cf_t)+[](long sz) { return new ShortArrayRefConverter{sz}; };
-        gf["unsigned short*"] =             (cf_t)+[](long sz) { return new UShortArrayConverter{sz}; };
-        gf["unsigned short&"] =             (cf_t)+[](long sz) { return new UShortArrayRefConverter{sz}; };
-        gf["int*"] =                        (cf_t)+[](long sz) { return new IntArrayConverter{sz}; };
-        gf["unsigned int*"] =               (cf_t)+[](long sz) { return new UIntArrayConverter{sz}; };
-        gf["unsigned int&"] =               (cf_t)+[](long sz) { return new UIntArrayRefConverter{sz}; };
-        gf["long*"] =                       (cf_t)+[](long sz) { return new LongArrayConverter{sz}; };
-        gf["unsigned long*"] =              (cf_t)+[](long sz) { return new ULongArrayConverter{sz}; };
-        gf["unsigned long&"] =              (cf_t)+[](long sz) { return new ULongArrayRefConverter{sz}; };
-        gf["long long*"] =                  (cf_t)+[](long sz) { return new LLongArrayConverter{sz}; };
-        gf["long long&"] =                  (cf_t)+[](long sz) { return new LLongArrayRefConverter{sz}; };
-        gf["unsigned long long*"] =         (cf_t)+[](long sz) { return new ULLongArrayConverter{sz}; };
-        gf["unsigned long long&"] =         (cf_t)+[](long sz) { return new ULLongArrayRefConverter{sz}; };
-        gf["float*"] =                      (cf_t)+[](long sz) { return new FloatArrayConverter{sz}; };
-        gf["float&"] =                      (cf_t)+[](long sz) { return new FloatArrayRefConverter{sz}; };
-        gf["double*"] =                     (cf_t)+[](long sz) { return new DoubleArrayConverter{sz}; };
-        gf["std::complex<double>*"] =       (cf_t)+[](long sz) { return new ComplexDArrayConverter{sz}; };
-        gf["complex<double>*"] =            (cf_t)+[](long sz) { return new ComplexDArrayConverter{sz}; };
-        gf["void*"] =                       (cf_t)+[](long sz) { return new VoidArrayConverter{static_cast<bool>(sz)}; };
+        gf["bool*"] =                       (cf_t)+[](dims_t d) { return new BoolArrayConverter{d}; };
+        gf["bool&"] =                       (cf_t)+[](dims_t d) { return new BoolArrayRefConverter{d}; };
+        gf["const unsigned char*"] =        (cf_t)+[](dims_t d) { return new UCharArrayConverter{d}; };
+        gf["unsigned char*"] =              (cf_t)+[](dims_t d) { return new UCharArrayConverter{d}; };
+        gf["UCharAsInt*"] =                 (cf_t)+[](dims_t d) { return new UCharArrayConverter{d}; };
+        gf["short*"] =                      (cf_t)+[](dims_t d) { return new ShortArrayConverter{d}; };
+        gf["short&"] =                      (cf_t)+[](dims_t d) { return new ShortArrayRefConverter{d}; };
+        gf["unsigned short*"] =             (cf_t)+[](dims_t d) { return new UShortArrayConverter{d}; };
+        gf["unsigned short&"] =             (cf_t)+[](dims_t d) { return new UShortArrayRefConverter{d}; };
+        gf["int*"] =                        (cf_t)+[](dims_t d) { return new IntArrayConverter{d}; };
+        gf["unsigned int*"] =               (cf_t)+[](dims_t d) { return new UIntArrayConverter{d}; };
+        gf["unsigned int&"] =               (cf_t)+[](dims_t d) { return new UIntArrayRefConverter{d}; };
+        gf["long*"] =                       (cf_t)+[](dims_t d) { return new LongArrayConverter{d}; };
+        gf["unsigned long*"] =              (cf_t)+[](dims_t d) { return new ULongArrayConverter{d}; };
+        gf["unsigned long&"] =              (cf_t)+[](dims_t d) { return new ULongArrayRefConverter{d}; };
+        gf["long long*"] =                  (cf_t)+[](dims_t d) { return new LLongArrayConverter{d}; };
+        gf["long long&"] =                  (cf_t)+[](dims_t d) { return new LLongArrayRefConverter{d}; };
+        gf["unsigned long long*"] =         (cf_t)+[](dims_t d) { return new ULLongArrayConverter{d}; };
+        gf["unsigned long long&"] =         (cf_t)+[](dims_t d) { return new ULLongArrayRefConverter{d}; };
+        gf["float*"] =                      (cf_t)+[](dims_t d) { return new FloatArrayConverter{d}; };
+        gf["float&"] =                      (cf_t)+[](dims_t d) { return new FloatArrayRefConverter{d}; };
+        gf["double*"] =                     (cf_t)+[](dims_t d) { return new DoubleArrayConverter{d}; };
+        gf["std::complex<double>*"] =       (cf_t)+[](dims_t d) { return new ComplexDArrayConverter{d}; };
+        gf["complex<double>*"] =            (cf_t)+[](dims_t d) { return new ComplexDArrayConverter{d}; };
+        gf["void*"] =                       (cf_t)+[](dims_t d) { return new VoidArrayConverter{(bool)d}; };
 
     // aliases
         gf["Long64_t"] =                    gf["long long"];
@@ -2364,49 +2408,50 @@ public:
         gf["TString"] =                     (cf_t)+[](long) { return new TStringConverter{}; };
         gf["TString&"] =                    (cf_t)+[](long) { return new TStringConverter{}; };
         gf["const TString&"] =              (cf_t)+[](long) { return new TStringConverter{}; };
-        gf["const char*"] =                 (cf_t)+[](long) { return new CStringConverter{}; };
-        gf["const char[]"] =                (cf_t)+[](long) { return new CStringConverter{}; };
-        gf["char*"] =                       (cf_t)+[](long) { return new NonConstCStringConverter{}; };
-        gf["wchar_t*"] =                    (cf_t)+[](long) { return new WCStringConverter{}; };
+        gf["nullptr_t"] =                   (cf_t)+[](dims_t) { return new NullptrConverter{}; };
+        gf["const char*"] =                 (cf_t)+[](dims_t) { return new CStringConverter{}; };
+        gf["const char[]"] =                (cf_t)+[](dims_t) { return new CStringConverter{}; };
+        gf["char*"] =                       (cf_t)+[](dims_t) { return new NonConstCStringConverter{}; };
+        gf["wchar_t*"] =                    (cf_t)+[](dims_t) { return new WCStringConverter{}; };
 // TODO: Figure out these char types (as well as char8_t coming in C++20) on all platforms; using wchar
 // isn't properly tested, but based on https://en.cppreference.com/w/cpp/language/types .
 #ifdef WIN32
-        gf["char16_t*"] =                   (cf_t)+[](long) { return new WCStringConverter{}; };
-        gf["char32_t*"] =                   (cf_t)+[](long) { return new NotImplementedConverter{}; };
+        gf["char16_t*"] =                   (cf_t)+[](dims_t) { return new WCStringConverter{}; };
+        gf["char32_t*"] =                   (cf_t)+[](dims_t) { return new NotImplementedConverter{}; };
 #else
-        gf["char16_t*"] =                   (cf_t)+[](long) { return new NotImplementedConverter{}; };
-        gf["char32_t*"] =                   (cf_t)+[](long) { return new WCStringConverter{}; };
+        gf["char16_t*"] =                   (cf_t)+[](dims_t) { return new NotImplementedConverter{}; };
+        gf["char32_t*"] =                   (cf_t)+[](dims_t) { return new WCStringConverter{}; };
 #endif
-        gf["std::string"] =                 (cf_t)+[](long) { return new STLStringConverter{}; };
-        gf["string"] =                      (cf_t)+[](long) { return new STLStringConverter{}; };
-        gf["const std::string&"] =          (cf_t)+[](long) { return new STLStringConverter{}; };
-        gf["const string&"] =               (cf_t)+[](long) { return new STLStringConverter{}; };
-        gf["string&&"] =                    (cf_t)+[](long) { return new STLStringMoveConverter{}; };
-        gf["std::string&&"] =               (cf_t)+[](long) { return new STLStringMoveConverter{}; };
-        gf["std::string_view"] =            (cf_t)+[](long) { return new STLStringViewConverter{}; };
-        gf["string_view"] =                 (cf_t)+[](long) { return new STLStringViewConverter{}; };
-        gf[STRINGVIEW] =                    (cf_t)+[](long) { return new STLStringViewConverter{}; };
+        gf["std::string"] =                 (cf_t)+[](dims_t) { return new STLStringConverter{}; };
+        gf["string"] =                      (cf_t)+[](dims_t) { return new STLStringConverter{}; };
+        gf["const std::string&"] =          (cf_t)+[](dims_t) { return new STLStringConverter{}; };
+        gf["const string&"] =               (cf_t)+[](dims_t) { return new STLStringConverter{}; };
+        gf["string&&"] =                    (cf_t)+[](dims_t) { return new STLStringMoveConverter{}; };
+        gf["std::string&&"] =               (cf_t)+[](dims_t) { return new STLStringMoveConverter{}; };
+        gf["std::string_view"] =            (cf_t)+[](dims_t) { return new STLStringViewConverter{}; };
+        gf["string_view"] =                 (cf_t)+[](dims_t) { return new STLStringViewConverter{}; };
+        gf[STRINGVIEW] =                    (cf_t)+[](dims_t) { return new STLStringViewConverter{}; };
         gf["experimental::" STRINGVIEW] =   (cf_t)+[](long) { return new STLStringViewConverter{}; };
-        gf["std::string_view&"] =           (cf_t)+[](long) { return new STLStringViewConverter{}; };
-        gf["const string_view&"] =          (cf_t)+[](long) { return new STLStringViewConverter{}; };
-        gf["const " STRINGVIEW "&"] =       (cf_t)+[](long) { return new STLStringViewConverter{}; };
-        gf["std::wstring"] =                (cf_t)+[](long) { return new STLWStringConverter{}; };
-        gf[WSTRING] =                       (cf_t)+[](long) { return new STLWStringConverter{}; };
-        gf["std::" WSTRING] =               (cf_t)+[](long) { return new STLWStringConverter{}; };
-        gf["const std::wstring&"] =         (cf_t)+[](long) { return new STLWStringConverter{}; };
-        gf["const std::" WSTRING "&"] =     (cf_t)+[](long) { return new STLWStringConverter{}; };
-        gf["const " WSTRING "&"] =          (cf_t)+[](long) { return new STLWStringConverter{}; };
-        gf["void*&"] =                      (cf_t)+[](long) { return new VoidPtrRefConverter{}; };
-        gf["void**"] =                      (cf_t)+[](long) { return new VoidPtrPtrConverter{}; };
-        gf["void*[]"] =                     (cf_t)+[](long) { return new VoidPtrPtrConverter{}; };
-        gf["PyObject*"] =                   (cf_t)+[](long) { return new PyObjectConverter{}; };
-        gf["_object*"] =                    (cf_t)+[](long) { return new PyObjectConverter{}; };
-        gf["FILE*"] =                       (cf_t)+[](long) { return new VoidArrayConverter{}; };
-        gf["Float16_t"] =                   (cf_t)+[](long) { return new FloatConverter{}; };
-        gf["const Float16_t&"] =            (cf_t)+[](long) { return new ConstFloatRefConverter{}; };
-        gf["Double32_t"] =                  (cf_t)+[](long) { return new DoubleConverter{}; };
-        gf["Double32_t&"] =                 (cf_t)+[](long) { return new DoubleRefConverter{}; };
-        gf["const Double32_t&"] =           (cf_t)+[](long) { return new ConstDoubleRefConverter{}; };
+        gf["std::string_view&"] =           (cf_t)+[](dims_t) { return new STLStringViewConverter{}; };
+        gf["const string_view&"] =          (cf_t)+[](dims_t) { return new STLStringViewConverter{}; };
+        gf["const " STRINGVIEW "&"] =       (cf_t)+[](dims_t) { return new STLStringViewConverter{}; };
+        gf["std::wstring"] =                (cf_t)+[](dims_t) { return new STLWStringConverter{}; };
+        gf[WSTRING] =                       (cf_t)+[](dims_t) { return new STLWStringConverter{}; };
+        gf["std::" WSTRING] =               (cf_t)+[](dims_t) { return new STLWStringConverter{}; };
+        gf["const std::wstring&"] =         (cf_t)+[](dims_t) { return new STLWStringConverter{}; };
+        gf["const std::" WSTRING "&"] =     (cf_t)+[](dims_t) { return new STLWStringConverter{}; };
+        gf["const " WSTRING "&"] =          (cf_t)+[](dims_t) { return new STLWStringConverter{}; };
+        gf["void*&"] =                      (cf_t)+[](dims_t) { return new VoidPtrRefConverter{}; };
+        gf["void**"] =                      (cf_t)+[](dims_t) { return new VoidPtrPtrConverter{}; };
+        gf["void*[]"] =                     (cf_t)+[](dims_t) { return new VoidPtrPtrConverter{}; };
+        gf["PyObject*"] =                   (cf_t)+[](dims_t) { return new PyObjectConverter{}; };
+        gf["_object*"] =                    (cf_t)+[](dims_t) { return new PyObjectConverter{}; };
+        gf["FILE*"] =                       (cf_t)+[](dims_t) { return new VoidArrayConverter{}; };
+        gf["Float16_t"] =                   (cf_t)+[](dims_t) { return new FloatConverter{}; };
+        gf["const Float16_t&"] =            (cf_t)+[](dims_t) { return new ConstFloatRefConverter{}; };
+        gf["Double32_t"] =                  (cf_t)+[](dims_t) { return new DoubleConverter{}; };
+        gf["Double32_t&"] =                 (cf_t)+[](dims_t) { return new DoubleRefConverter{}; };
+        gf["const Double32_t&"] =           (cf_t)+[](dims_t) { return new ConstDoubleRefConverter{}; };
     }
 } initConvFactories_;
 

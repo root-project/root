@@ -8,4 +8,10 @@
   <class pattern="TestMoving*" />
   <class name="TestData" />
 
+  <struct name="FNTestStruct" />
+  <function name="FNCreateTestStructFunc()" />
+  <namespace name="FunctionNS" />
+  <struct name="FunctionNS::FNTestStruct" />
+  <function name="FunctionNS::FNCreateTestStructFunc()" />
+
 </lcgdict>

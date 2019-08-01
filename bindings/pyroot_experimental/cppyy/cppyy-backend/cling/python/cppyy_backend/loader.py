@@ -8,35 +8,25 @@ __all__ = [
     'ensure_precompiled_header'   # build precompiled header as necessary
 ]
 
-import os, sys, ctypes, subprocess, warnings
+import os, sys, ctypes, subprocess, sysconfig, warnings
 
 if 'win32' in sys.platform:
     soext = '.dll'
 else:
     soext = '.so'
 
+soabi = sysconfig.get_config_var("SOABI")
 
-_precompiled_header_ensured = False
-def load_cpp_backend():
-    set_cling_compile_options()
 
-    if not _precompiled_header_ensured:
-     # the precompiled header of standard and system headers is not part of the
-     # distribution as there are too many varieties; create it now if needed
-        ensure_precompiled_header()
-
+def _load_helper(bkname):
+ # normal load, allowing for user overrides of LD_LIBRARY_PATH
     try:
-        bkname = os.environ['CPPYY_BACKEND_LIBRARY']
-        if bkname.rfind(soext) < 0:
-            bkname += soext
-    except KeyError:
-        bkname = 'libcppyy_backend'+soext
-
-    try:
-      # normal load, allowing for user overrides of LD_LIBRARY_PATH
-        c = ctypes.CDLL(bkname, ctypes.RTLD_GLOBAL)
+        return ctypes.CDLL(bkname, ctypes.RTLD_GLOBAL)
     except OSError:
-      # failed ... load dependencies explicitly
+         pass
+
+ # failed ... load dependencies explicitly
+    try:
         pkgpath = os.path.dirname(bkname)
         if not pkgpath:
             pkgpath = os.path.dirname(__file__)
@@ -49,7 +39,38 @@ def load_cpp_backend():
                     dep = fpath
                     ctypes.CDLL(dep, ctypes.RTLD_GLOBAL)
                     break
-        c = ctypes.CDLL(os.path.join(pkgpath, 'lib', bkname), ctypes.RTLD_GLOBAL)
+        return ctypes.CDLL(os.path.join(pkgpath, 'lib', bkname), ctypes.RTLD_GLOBAL)
+    except OSError:
+        pass
+
+    return None
+
+
+_precompiled_header_ensured = False
+def load_cpp_backend():
+    set_cling_compile_options()
+
+    if not _precompiled_header_ensured:
+     # the precompiled header of standard and system headers is not part of the
+     # distribution as there are too many varieties; create it now if needed
+        ensure_precompiled_header()
+
+    altbkname = None
+    try:
+        bkname = os.environ['CPPYY_BACKEND_LIBRARY']
+        if bkname.rfind(soext) < 0:
+            bkname += soext
+    except KeyError:
+        bkname = 'libcppyy_backend'+soext
+        if soabi:
+            altbkname = 'libcppyy_backend.'+soabi+soext
+
+    c = _load_helper(bkname)
+    if not c and altbkname is not None:
+        c = _load_helper(altbkname)
+
+    if not c:
+        raise RuntimeError("could not load cppyy_backend library")
 
     return c
 
@@ -81,8 +102,15 @@ def set_cling_compile_options(add_defaults = False):
         os.environ['EXTRA_CLING_ARGS'] = CURRENT_ARGS
 
 
-def _warn_no_pch(msg):
-    warnings.warn('No precompiled header available (%s); this may impact performance.' % msg)
+def _disable_pch():
+    os.putenv('CLING_STANDARD_PCH', 'none')
+
+def _warn_no_pch(msg, pchname=None):
+    if pchname is None or not os.path.exists(pchname):
+        _disable_pch()
+        warnings.warn('No precompiled header available (%s); this may impact performance.' % msg)
+    else:
+        warnings.warn('Precompiled header may be out of date (%s).' % msg)
 
 def _is_uptodate(pchname, incpath):
   # test whether the pch is older than the include directory
@@ -92,9 +120,6 @@ def _is_uptodate(pchname, incpath):
         if not os.path.exists(incpath):
             return True     # no point in updating as it will fail 
     return False
-
-def _disable_pch():
-    os.putenv('CLING_STANDARD_PCH', 'none')
 
 def ensure_precompiled_header(pchdir = '', pchname = ''):
   # the precompiled header of standard and system headers is not part of the
@@ -125,16 +150,14 @@ def ensure_precompiled_header(pchdir = '', pchname = ''):
          is_uptodate = _is_uptodate(full_pchname, incpath)
          if not os.path.exists(full_pchname) or not is_uptodate:
              if os.access(pchdir, os.R_OK|os.W_OK):
-                 print('(Re-)building pre-compiled headers (options:%s); this make take a minute ...' % os.environ.get('EXTRA_CLING_ARGS', ' none'))
+                 print('(Re-)building pre-compiled headers (options:%s); this may take a minute ...' % os.environ.get('EXTRA_CLING_ARGS', ' none'))
                  makepch = os.path.join(pkgpath, 'etc', 'dictpch', 'makepch.py')
                  if subprocess.call(['python', makepch, full_pchname, '-I'+incpath]) != 0:
-                     _warn_no_pch('failed to build')
+                     _warn_no_pch('failed to build', full_pchname)
              else:
-                 _disable_pch()
-                 _warn_no_pch('%s not writable' % pchdir)
+                 _warn_no_pch('%s not writable' % pchdir, full_pchname)
 
      except Exception as e:
-         _disable_pch()
          _warn_no_pch(str(e))
      finally:
          os.chdir(olddir)

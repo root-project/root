@@ -415,6 +415,16 @@ CppyyTestPod* get_null_pod() {
     return (CppyyTestPod*)0;
 }
 
+std::string g_some_global_string = "C++";
+std::string get_some_global_string() { return g_some_global_string; }
+std::string g_some_global_string2 = "C++";
+std::string get_some_global_string2() { return g_some_global_string2; }
+
+std::string SomeStaticDataNS::s_some_static_string = "C++";
+std::string SomeStaticDataNS::get_some_static_string() { return s_some_static_string; }
+std::string SomeStaticDataNS::s_some_static_string2 = "C++";
+std::string SomeStaticDataNS::get_some_static_string2() { return s_some_static_string2; }
+
 
 //= function pointer passing ================================================
 int sum_of_int(int i1, int i2) {

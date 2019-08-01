@@ -67,7 +67,7 @@
 //- data -----------------------------------------------------------------------
 static PyObject* nullptr_repr(PyObject*)
 {
-    return CPyCppyy_PyUnicode_FromString("nullptr");
+    return CPyCppyy_PyText_FromString("nullptr");
 }
 
 static void nullptr_dealloc(PyObject*)
@@ -293,7 +293,7 @@ PyDictEntry* CPyCppyyLookDictString(PyDictObject* mp, PyObject* key, Long_t hash
         PyObject* buf[maxinsert];
         for (int varmax = 1; varmax <= maxinsert; ++varmax) {
             for (int ivar = 0; ivar < varmax; ++ivar) {
-                buf[ivar] = CPyCppyy_PyUnicode_FromFormat("__CPYCPPYY_FORCE_RESIZE_%d", ivar);
+                buf[ivar] = CPyCppyy_PyText_FromFormat("__CPYCPPYY_FORCE_RESIZE_%d", ivar);
                 PyDict_SetItem((PyObject*)mp, buf[ivar], Py_None);
             }
             for (int ivar = 0; ivar < varmax; ++ivar) {
@@ -363,7 +363,7 @@ void* GetCPPInstanceAddress(PyObject*, PyObject* args)
     CPPInstance* pyobj = 0;
     PyObject* pyname = 0;
     if (PyArg_ParseTuple(args, const_cast<char*>("O|O!"), &pyobj,
-                         &CPyCppyy_PyUnicode_Type, &pyname) && CPPInstance_Check(pyobj)) {
+                         &CPyCppyy_PyText_Type, &pyname) && CPPInstance_Check(pyobj)) {
 
         if (pyname != 0) {
         // locate property proxy for offset info
@@ -384,13 +384,13 @@ void* GetCPPInstanceAddress(PyObject*, PyObject* args)
             Py_XDECREF(pyprop);
 
             PyErr_Format(PyExc_TypeError,
-                "%s is not a valid data member", CPyCppyy_PyUnicode_AsString(pyname));
+                "%s is not a valid data member", CPyCppyy_PyText_AsString(pyname));
             return nullptr;
         }
 
     // this is an address of an address (i.e. &myobj, with myobj of type MyObj*)
-    // note that pyobject->fObject may be null
-        return (void*)pyobj->fObject;
+    // note that the return result may be null
+        return ((CPPInstance*)pyobj)->GetObject();
     }
 
     PyErr_SetString(PyExc_ValueError, "invalid argument for addressof()");
@@ -417,8 +417,8 @@ PyObject* addressof(PyObject* pyobj, PyObject* args)
 
 // error message
     PyObject* str = PyObject_Str(pyobj);
-    if (str && CPyCppyy_PyUnicode_Check(str))
-        PyErr_Format(PyExc_TypeError, "unknown object %s", CPyCppyy_PyUnicode_AsString(str));
+    if (str && CPyCppyy_PyText_Check(str))
+        PyErr_Format(PyExc_TypeError, "unknown object %s", CPyCppyy_PyText_AsString(str));
     else
         PyErr_Format(PyExc_TypeError, "unknown object at %p", (void*)pyobj);
     Py_XDECREF(str);
@@ -473,7 +473,7 @@ PyObject* BindObject(PyObject*, PyObject* args, PyObject* kwds)
 
     Cppyy::TCppType_t klass = 0;
     PyObject* pyname = PyTuple_GET_ITEM(args, 1);
-    if (!CPyCppyy_PyUnicode_Check(pyname)) {      // not string, then class
+    if (!CPyCppyy_PyText_Check(pyname)) {         // not string, then class
         if (CPPScope_Check(pyname))
             klass = ((CPPClass*)pyname)->fCppType;
         else
@@ -482,7 +482,7 @@ PyObject* BindObject(PyObject*, PyObject* args, PyObject* kwds)
         Py_INCREF(pyname);
 
     if (!klass && pyname) {
-        klass = (Cppyy::TCppType_t)Cppyy::GetScope(CPyCppyy_PyUnicode_AsString(pyname));
+        klass = (Cppyy::TCppType_t)Cppyy::GetScope(CPyCppyy_PyText_AsString(pyname));
         Py_DECREF(pyname);
     }
 
@@ -530,7 +530,7 @@ static PyObject* AddPythonization(PyObject*, PyObject* args)
     if (!PyCallable_Check(pythonizor)) {
         PyObject* pystr = PyObject_Str(pythonizor);
         PyErr_Format(PyExc_TypeError,
-            "given \'%s\' object is not callable", CPyCppyy_PyUnicode_AsString(pystr));
+            "given \'%s\' object is not callable", CPyCppyy_PyText_AsString(pystr));
         Py_DECREF(pystr);
         return nullptr;
     }
