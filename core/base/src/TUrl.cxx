@@ -139,8 +139,10 @@ tryfile:
    u = u0;
 
    // Handle special protocol cases: "file:", etc.
-   for (int i = 0; i < GetSpecialProtocols()->GetEntriesFast(); i++) {
-      TObjString *os = (TObjString*) GetSpecialProtocols()->UncheckedAt(i);
+   const auto protocols = GetSpecialProtocols();
+   const int n = protocols->GetEntriesFast();
+   for (int i = 0; i < n; i++) {
+      TObjString *os = (TObjString*) protocols->UncheckedAt(i);
       TString s1 = os->GetString();
       int l = s1.Length();
       Bool_t stripoff = kFALSE;
@@ -391,8 +393,10 @@ const char *TUrl::GetUrl(Bool_t withDeflt) const
 
    if (IsValid() && fUrl == "") {
       // Handle special protocol cases: file:, etc.
-      for (int i = 0; i < GetSpecialProtocols()->GetEntriesFast(); i++) {
-         TObjString *os = (TObjString*) GetSpecialProtocols()->UncheckedAt(i);
+      const auto protocols = GetSpecialProtocols();
+      const int n = protocols->GetEntriesFast();
+      for (int i = 0; i < n; i++) {
+         TObjString *os = (TObjString*) protocols->UncheckedAt(i);
          TString &s = os->String();
          int l = s.Length();
          if (fProtocol == s(0, l-1)) {
