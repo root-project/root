@@ -119,7 +119,7 @@ static PyObject *WrapLeaf(TLeaf *leaf)
 }
 
 // Allow access to branches/leaves as if they were data members
-PyObject *GetAttr(const CPPInstance *self, PyObject *pyname)
+PyObject *GetAttr(CPPInstance *self, PyObject *pyname)
 {
    const char *name_possibly_alias = CPyCppyy_PyUnicode_AsString(pyname);
    if (!name_possibly_alias)
