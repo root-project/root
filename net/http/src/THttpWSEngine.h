@@ -33,7 +33,6 @@ private:
 
    std::thread fSendThrd;    ///<! dedicated thread for all send operations
    bool fHasSendThrd{false}; ///<! if thread was started one have to call join method for it
-   std::mutex fCondMutex;    ///<! mutex used to access condition
    std::condition_variable fCond; ///<! condition used to sync with sending thread
 
    std::mutex fDataMutex;                              ///<! protects data submitted for send operation
