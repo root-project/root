@@ -112,7 +112,7 @@ class my_cmake_build(_build):
             log.fatal('FATAL: envar STDCXX should be one of 11, 14, or 17')
             sys.exit(1)
 
-        stdcxx='-Dcxx'+stdcxx+'=ON'
+        stdcxx='-DCMAKE_CXX_STANDARD='+stdcxx
 
         # extra optimization flags for Cling
         if not 'EXTRA_CLING_ARGS' in os.environ:
@@ -248,8 +248,8 @@ class my_install(_install):
             outp = inp+'.new'
             outfile = open(outp, 'w')
             for line in open(inp).readlines():
-                if line.find('cxxversion=', 0, 11) == 0:
-                    line = 'cxxversion=cxx17\n'
+                if line.find('cxxversionflag=', 0, 15) == 0:
+                    line = 'cxxversionflag="-std=c++1z "\n'
                 elif line.find('features=', 0, 9) == 0:
                     line = line.replace('cxx11', 'cxx17')
                 outfile.write(line)
@@ -345,7 +345,7 @@ setup(
     author='ROOT Developers',
     author_email='rootdev@cern.ch',
 
-    version='6.15.2.9',
+    version='6.18.0.0',
 
     license='LLVM: UoI-NCSA; ROOT: LGPL 2.1',
 

@@ -264,6 +264,76 @@ class TestSTLVECTOR:
         assert std.distance(v.begin(), v.end()) == v.size()
         assert std.distance[type(v).iterator](v.begin(), v.end()) == v.size()
 
+    def test11_vector_of_pair(self):
+        """Use of std::vector<std::pair>"""
+
+        import cppyy
+
+      # after the original bug report
+        cppyy.cppdef("""
+        class PairVector {
+        public:
+            std::vector<std::pair<double, double>> vector_pair(const std::vector<std::pair<double, double>>& a) {
+                return a;
+            }
+        };
+        """)
+
+        from cppyy.gbl import PairVector
+        a = PairVector()
+        ll = [[1., 2.], [2., 3.], [3., 4.], [4., 5.]]
+        v = a.vector_pair(ll)
+
+        assert len(v) == 4
+        i = 0
+        for p in v:
+            p.first  == ll[i][0]
+            p.second == ll[i][1]
+            i += 1
+        assert i == 4
+
+      # TODO: nicer error handling for the following (current: template compilation failure trying
+      # to assign a pair with <double, string> to <double, double>)
+        # ll2 = ll[:]
+        # ll2[2] = ll[2][:]
+        # ll2[2][1] = 'a'
+        # v = a.vector_pair(ll2)
+
+        ll3 = ll[:]
+        ll3[0] = 'a'
+        raises(TypeError, a.vector_pair, ll3)
+
+        ll4 = ll[:]
+        ll4[1] = 'a'
+        raises(TypeError, a.vector_pair, ll4)
+
+    def test12_vector_lifeline(self):
+        """Check lifeline setting on vectors of objects."""
+
+        import cppyy
+
+        cppyy.cppdef("""namespace Lifeline {
+        static int count = 0;
+        template <typename T>
+        struct C {
+            C(int x) : x(x) { ++count; }
+            C(const C& c) : x(c.x) { ++count; }
+            ~C() { --count; }
+            int x;
+        };
+        auto foo() { return std::vector<C<int>>({C<int>(1337)}); }
+        }""")
+
+        assert cppyy.gbl.Lifeline.count == 0
+        assert not cppyy.gbl.Lifeline.foo()._getitem__unchecked.__set_lifeline__
+        assert cppyy.gbl.Lifeline.foo()[0].x == 1337
+        raises(IndexError, cppyy.gbl.Lifeline.foo().__getitem__, 1)
+        assert cppyy.gbl.Lifeline.foo()._getitem__unchecked.__set_lifeline__
+
+        import gc
+        gc.collect()
+        assert cppyy.gbl.Lifeline.count == 0
+
 
 class TestSTLSTRING:
     def setup_class(cls):
@@ -434,9 +504,14 @@ class TestSTLLIST:
             }""")
 
         a = cppyy.gbl.std.list[int]()
-        assert a.begin() == a.end()
         a.begin().__class__.__eq__ = cppyy.gbl.cont_eq[cppyy.gbl.std.list[int]]
         assert not (a.begin() == a.end())
+
+        a = cppyy.gbl.std.list[float]()
+        assert a.begin() == a.end()
+        assert not cppyy.gbl.cont_eq[cppyy.gbl.std.list[float]](a.begin(), a.begin())
+        a.push_back(1)
+        assert     cppyy.gbl.cont_eq[cppyy.gbl.std.list[float]](a.begin(), a.end())
 
 
 class TestSTLMAP:
@@ -522,7 +597,34 @@ class TestSTLMAP:
 
         raises(ValueError, mul.__setitem__, 'minus two', -2)
 
-    def test05_STL_like_class_indexing_overloads(self):
+    def test05_bool_typemap(self):
+        """Test mapping of bool type typedefs"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+        struct BoolTypeMapTest {
+            typedef bool BoolType;
+        };
+        """)
+
+        bt = cppyy.gbl.BoolTypeMapTest.BoolType
+
+        assert bt.__name__ == 'BoolType'
+        assert bt.__cpp_name__ == 'BoolTypeMapTest::BoolType'
+        assert bt(1)
+        assert bt(1) == True
+        assert bt(1) != False
+        assert bt(1) is True
+        assert bt() == bt(0)
+        assert not bt()
+        assert bt() == False
+        assert bt() != True
+        assert bt() is False
+        assert str(bt(1)) == 'True'
+        assert str(bt(0)) == 'False'
+
+    def test06_STL_like_class_indexing_overloads(self):
         """Test overloading of operator[] in STL like class"""
 
         import cppyy
@@ -532,7 +634,7 @@ class TestSTLMAP:
         assert a["some string" ] == 'string'
         assert a[3.1415] == 'double'
 
-    def test06_STL_like_class_iterators(self):
+    def test07_STL_like_class_iterators(self):
         """Test the iterator protocol mapping for an STL like class"""
 
         import cppyy
@@ -554,6 +656,13 @@ class TestSTLMAP:
                 assert x in [27, 42]
             assert x == 42
             del x, b
+
+        for num in [4, 5, 6, 7]:
+            cls = getattr(cppyy.gbl, 'stl_like_class%d' % num)
+            count = 0
+            for i in cls():
+                count += 1
+            assert count == 10
 
 
 class TestSTLITERATOR:

@@ -141,7 +141,7 @@ PyObject* DeRefGetAttr(PyObject* self, PyObject* name)
 {
 // Follow operator*() if present (available in python as __deref__), so that
 // smart pointers behave as expected.
-    if (!CPyCppyy_PyUnicode_Check(name))
+    if (!CPyCppyy_PyText_Check(name))
         PyErr_SetString(PyExc_TypeError, "getattr(): attribute name must be string");
 
     PyObject* pyptr = PyObject_CallMethodObjArgs(self, PyStrings::gDeref, nullptr);
@@ -153,7 +153,7 @@ PyObject* DeRefGetAttr(PyObject* self, PyObject* name)
         PyObject* val1 = PyObject_Str(self);
         PyObject* val2 = PyObject_Str(name);
         PyErr_Format(PyExc_AttributeError, "%s has no attribute \'%s\'",
-            CPyCppyy_PyUnicode_AsString(val1), CPyCppyy_PyUnicode_AsString(val2));
+            CPyCppyy_PyText_AsString(val1), CPyCppyy_PyText_AsString(val2));
         Py_DECREF(val2);
         Py_DECREF(val1);
 
@@ -171,10 +171,10 @@ PyObject* FollowGetAttr(PyObject* self, PyObject* name)
 {
 // Follow operator->() if present (available in python as __follow__), so that
 // smart pointers behave as expected.
-    if (!CPyCppyy_PyUnicode_Check(name))
+    if (!CPyCppyy_PyText_Check(name))
         PyErr_SetString(PyExc_TypeError, "getattr(): attribute name must be string");
 
-    PyObject* pyptr = PyObject_CallMethodObjArgs(self, PyStrings::gDeref, nullptr);
+    PyObject* pyptr = PyObject_CallMethodObjArgs(self, PyStrings::gFollow, nullptr);
     if (!pyptr)
          return nullptr;
 
@@ -276,7 +276,7 @@ PyObject* VectorInit(PyObject* self, PyObject* args, PyObject* /* kwds */)
 // std::vector, this implements construction from python iterables directly, except
 // for arrays, which can be passed wholesale, and strings, which shouldn't be used
     if (PyTuple_GET_SIZE(args) == 1 &&                              \
-            (CPyCppyy_PyUnicode_Check(PyTuple_GET_ITEM(args, 0)) || \
+            (CPyCppyy_PyText_Check(PyTuple_GET_ITEM(args, 0)) || \
              PyBytes_Check(PyTuple_GET_ITEM(args, 0)))) {
         PyErr_SetString(PyExc_TypeError, "can not convert string to vector");
         return 0;
@@ -284,7 +284,7 @@ PyObject* VectorInit(PyObject* self, PyObject* args, PyObject* /* kwds */)
 
     if (PyTuple_GET_SIZE(args) == 1 && PySequence_Check(PyTuple_GET_ITEM(args, 0)) && \
             !Py_TYPE(PyTuple_GET_ITEM(args, 0))->tp_as_buffer) {
-        PyObject* mname = CPyCppyy_PyUnicode_FromString("__real_init");
+        PyObject* mname = CPyCppyy_PyText_FromString("__real_init");
         PyObject* result = PyObject_CallMethodObjArgs(self, mname, nullptr);
         Py_DECREF(mname);
         if (!result)
@@ -292,33 +292,84 @@ PyObject* VectorInit(PyObject* self, PyObject* args, PyObject* /* kwds */)
 
         PyObject* ll = PyTuple_GET_ITEM(args, 0);
         Py_ssize_t sz = PySequence_Size(ll);
+        if (!sz)
+            return result;
+
         PyObject* res = PyObject_CallMethod(self, (char*)"reserve", (char*)"n", sz);
         Py_DECREF(res);
 
         bool fill_ok = true;
-        PyObject* pb_call = PyObject_GetAttrString(self, (char*)"push_back");
-        if (pb_call) {
-            PyObject* pb_args = PyTuple_New(1);
-            for (Py_ssize_t i = 0; i < sz; ++i) {
-                PyObject* item = PySequence_GetItem(ll, i);
-                if (item) {
-                    PyTuple_SET_ITEM(pb_args, 0, item);
-                    PyObject* pbres = PyObject_CallObject(pb_call, pb_args);
-                    Py_DECREF(item);
-                    if (!pbres) {
+
+    // two main options: a list of lists (or tuples), or a list of objects; the former
+    // are emplace_back'ed, the latter push_back'ed
+        PyObject* fi = PySequence_GetItem(ll, 0);
+        if (PyTuple_CheckExact(fi) || PyList_CheckExact(fi)) {
+        // use emplace_back to construct the vector entries one by one
+            PyObject* eb_call = PyObject_GetAttrString(self, (char*)"emplace_back");
+            if (eb_call) {
+                PyObject* eb_args;
+                for (Py_ssize_t i = 0; i < sz; ++i) {
+                    PyObject* item = PySequence_GetItem(ll, i);
+                    if (item) {
+                        if (PyTuple_CheckExact(item)) {
+                            Py_INCREF(item);
+                            eb_args = item;
+                        } else if (PyList_CheckExact(item)) {
+                            Py_ssize_t isz = PyList_GET_SIZE(item);
+                            eb_args = PyTuple_New(isz);
+                            for (Py_ssize_t j = 0; j < isz; ++j) {
+                                PyObject* iarg = PyList_GET_ITEM(item, j);
+                                Py_INCREF(iarg);
+                                PyTuple_SET_ITEM(eb_args, j, iarg);
+                            }
+                        } else {
+                            Py_DECREF(item);
+                            PyErr_Format(PyExc_TypeError, "argument %d is not a tuple or list", (int)i);
+                            fill_ok = false;
+                            break;
+                        }
+                        PyObject* ebres = PyObject_CallObject(eb_call, eb_args);
+                        Py_DECREF(item);
+                        Py_DECREF(eb_args);
+                        if (!ebres) {
+                            fill_ok = false;
+                            break;
+                        }
+                        Py_DECREF(ebres);
+                    } else {
                         fill_ok = false;
                         break;
                     }
-                    Py_DECREF(pbres);
-                } else {
-                    fill_ok = false;
-                    break;
                 }
+                Py_DECREF(eb_call);
             }
-            PyTuple_SET_ITEM(pb_args, 0, nullptr);
-            Py_DECREF(pb_args);
+        } else {
+        // use push_back to add the vector entries one by one
+            PyObject* pb_call = PyObject_GetAttrString(self, (char*)"push_back");
+            if (pb_call) {
+                PyObject* pb_args = PyTuple_New(1);
+                for (Py_ssize_t i = 0; i < sz; ++i) {
+                    PyObject* item = PySequence_GetItem(ll, i);
+                    if (item) {
+                        PyTuple_SET_ITEM(pb_args, 0, item);
+                        PyObject* pbres = PyObject_CallObject(pb_call, pb_args);
+                        Py_DECREF(item);
+                        if (!pbres) {
+                            fill_ok = false;
+                            break;
+                        }
+                        Py_DECREF(pbres);
+                    } else {
+                        fill_ok = false;
+                        break;
+                    }
+                }
+                PyTuple_SET_ITEM(pb_args, 0, nullptr);
+                Py_DECREF(pb_args);
+                Py_DECREF(pb_call);
+            }
         }
-        Py_DECREF(pb_call);
+        Py_DECREF(fi);
 
         if (!fill_ok) {
             Py_DECREF(result);
@@ -380,7 +431,7 @@ static PyObject* vector_iter(PyObject* v) {
             vi->vi_data = nullptr;
         Py_XDECREF(pydata);
 
-        vi->vi_converter = CPyCppyy::CreateConverter(CPyCppyy_PyUnicode_AsString(pyvalue_type));
+        vi->vi_converter = CPyCppyy::CreateConverter(CPyCppyy_PyText_AsString(pyvalue_type));
         vi->vi_stride    = PyLong_AsLong(pyvalue_size);
     } else {
         PyErr_Clear();
@@ -555,7 +606,7 @@ PyObject* StlSequenceIter(PyObject* self)
         Py_XDECREF(end);
 
     // add iterated collection as attribute so its refcount stays >= 1 while it's being iterated over
-        PyObject_SetAttr(iter, CPyCppyy_PyUnicode_FromString("_collection"), self);
+        PyObject_SetAttr(iter, CPyCppyy_PyText_FromString("_collection"), self);
     }
     return iter;
 }
@@ -657,7 +708,7 @@ static int PyObject_Compare(PyObject* one, PyObject* other) {
 }
 #endif
 static inline PyObject* CPyCppyy_PyString_FromCppString(std::string* s) {
-    return CPyCppyy_PyUnicode_FromStringAndSize(s->c_str(), s->size());
+    return CPyCppyy_PyText_FromStringAndSize(s->c_str(), s->size());
 }
 
 static inline PyObject* CPyCppyy_PyString_FromCppString(std::wstring* s) {
@@ -683,7 +734,7 @@ PyObject* name##StringRepr(PyObject* self)                                   \
 {                                                                            \
     PyObject* data = name##GetData(self);                                    \
     if (data) {                                                              \
-        PyObject* repr = CPyCppyy_PyUnicode_FromFormat("\'%s\'", CPyCppyy_PyUnicode_AsString(data));\
+        PyObject* repr = CPyCppyy_PyText_FromFormat("\'%s\'", CPyCppyy_PyText_AsString(data));\
         Py_DECREF(data);                                                     \
         return repr;                                                         \
     }                                                                        \
@@ -840,7 +891,7 @@ static PyObject* ComplexRepr(PyObject* self) {
 
     std::ostringstream s;
     s << '(' << r << '+' << i << "j)";
-    return CPyCppyy_PyUnicode_FromString(s.str().c_str());
+    return CPyCppyy_PyText_FromString(s.str().c_str());
 }
 
 static PyObject* ComplexDRealGet(CPPInstance* self, void*)
@@ -899,12 +950,14 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
 
 //- method name based pythonization ------------------------------------------
 
-// for smart pointer style classes (note fall-through)
-    if (HasAttrDirect(pyclass, PyStrings::gDeref)) {
+// for smart pointer style classes that are otherwise not known as such; would
+// prefer operator-> as that returns a pointer (which is simpler since it never
+// has to deal with ref-assignment), but operator* plays better with STL iters
+// and algorithms
+    if (HasAttrDirect(pyclass, PyStrings::gDeref) && !Cppyy::IsSmartPtr(((CPPScope*)pyclass)->fCppType))
         Utility::AddToClass(pyclass, "__getattr__", (PyCFunction)DeRefGetAttr, METH_O);
-    } else if (HasAttrDirect(pyclass, PyStrings::gFollow)) {
+    else if (HasAttrDirect(pyclass, PyStrings::gFollow) && !Cppyy::IsSmartPtr(((CPPScope*)pyclass)->fCppType))
         Utility::AddToClass(pyclass, "__getattr__", (PyCFunction)FollowGetAttr, METH_O);
-    }
 
 // for STL containers, and user classes modeled after them
     if (HasAttrDirect(pyclass, PyStrings::gSize))
@@ -994,7 +1047,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
                 PyObject_SetAttrString(pyclass, "value_size", pyvalue_size);
                 Py_DECREF(pyvalue_size);
 
-                PyObject* pyvalue_type = CPyCppyy_PyUnicode_FromString(vtype.c_str());
+                PyObject* pyvalue_type = CPyCppyy_PyText_FromString(vtype.c_str());
                 PyObject_SetAttrString(pyclass, "value_type", pyvalue_type);
                 Py_DECREF(pyvalue_type);
             }
@@ -1038,7 +1091,9 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
     }
 
     else if (name == "complex<double>" || name == "std::complex<double>") {
+        Utility::AddToClass(pyclass, "__cpp_real", "real");
         PyObject_SetAttrString(pyclass, "real",  PyDescr_NewGetSet((PyTypeObject*)pyclass, &ComplexDReal));
+        Utility::AddToClass(pyclass, "__cpp_imag", "imag");
         PyObject_SetAttrString(pyclass, "imag",  PyDescr_NewGetSet((PyTypeObject*)pyclass, &ComplexDImag));
         Utility::AddToClass(pyclass, "__complex__", (PyCFunction)ComplexDComplex, METH_NOARGS);
         Utility::AddToClass(pyclass, "__repr__", (PyCFunction)ComplexRepr, METH_NOARGS);
@@ -1048,7 +1103,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
         Utility::AddToClass(pyclass, "__cpp_real", "real");
         PyObject_SetAttrString(pyclass, "real", PyDescr_NewGetSet((PyTypeObject*)pyclass, &realComplex));
         Utility::AddToClass(pyclass, "__cpp_imag", "imag");
-        PyObject_SetAttrString(pyclass, "imag", PyDescr_NewGetSet((PyTypeObject*)pyclass, &imagComplex));
+        PyObject_SetAttrString(pyclass, "imag", PyDescr_NewGetSet((PyTypeObject*)pyclass, &imagComplex)); 
         Utility::AddToClass(pyclass, "__complex__", (PyCFunction)ComplexComplex, METH_NOARGS);
         Utility::AddToClass(pyclass, "__repr__", (PyCFunction)ComplexRepr, METH_NOARGS);
     }
@@ -1063,9 +1118,9 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
     auto p = outer_scope.empty() ? gPythonizations.end() : gPythonizations.find(outer_scope);
     if (p == gPythonizations.end()) {
         p = gPythonizations.find("");
-        PyTuple_SET_ITEM(args, 1, CPyCppyy_PyUnicode_FromString(name.c_str()));
+        PyTuple_SET_ITEM(args, 1, CPyCppyy_PyText_FromString(name.c_str()));
     } else {
-        PyTuple_SET_ITEM(args, 1, CPyCppyy_PyUnicode_FromString(
+        PyTuple_SET_ITEM(args, 1, CPyCppyy_PyText_FromString(
                              name.substr(outer_scope.size()+2, std::string::npos).c_str()));
     }
 

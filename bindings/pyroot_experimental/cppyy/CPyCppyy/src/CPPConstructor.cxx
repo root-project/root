@@ -4,6 +4,9 @@
 #include "CPPInstance.h"
 #include "Executors.h"
 #include "MemoryRegulator.h"
+#include "ProxyWrappers.h"
+
+#include "CPyCppyy/DispatchPtr.h"
 
 // Standard
 #include <string>
@@ -22,7 +25,7 @@ PyObject* CPyCppyy::CPPConstructor::GetDocString()
 {
 // GetMethod() may return an empty function if this is just a special case place holder
     const std::string& clName = Cppyy::GetFinalName(this->GetScope());
-    return CPyCppyy_PyUnicode_FromFormat("%s::%s%s",
+    return CPyCppyy_PyText_FromFormat("%s::%s%s",
         clName.c_str(), clName.c_str(), this->GetMethod() ? this->GetSignatureString().c_str() : "()");
 }
 
@@ -44,8 +47,15 @@ PyObject* CPyCppyy::CPPConstructor::Call(
         return nullptr;
     }
 
+// verify existence of self (i.e. tp_new called)
+    if (!self) {
+        PyErr_Print();
+        PyErr_SetString(PyExc_ReferenceError, "no python object allcoated");
+        return nullptr;
+    }
+
 // perform the call, nullptr 'this' makes the other side allocate the memory
-    Cppyy::TCppScope_t disp = self->ObjectIsA();
+    Cppyy::TCppScope_t disp = self->ObjectIsA(false /* check_smart */);
     Cppyy::TCppMethod_t curMethod = GetMethod();
     if (GetScope() != disp) {
     // happens for Python derived types, which have a dispatcher inserted that
@@ -77,11 +87,12 @@ PyObject* CPyCppyy::CPPConstructor::Call(
     // restore the original constructor
         SetMethod(curMethod);
 
-    // set m_self (TODO: get this from the compiler in case of some
-    // unorthodox padding or if the inheritance hierarchy extends back
-    // into C++ land)
-        if (address)
-            *((void**)(address + Cppyy::SizeOf(GetScope()))) = self;
+    // set m_self (TODO: get this from the compiler in case of some unorthodox padding
+    // or if the inheritance hierarchy extends back into C++ land)
+        if (address) {
+            ptrdiff_t self_address = address + Cppyy::SizeOf(GetScope());
+            new ((void*)self_address) DispatchPtr{(PyObject*)self};
+        }
     }
 
 // done with filtered args
@@ -97,6 +108,17 @@ PyObject* CPyCppyy::CPPConstructor::Call(
 
     // TODO: consistent up or down cast ...
         MemoryRegulator::RegisterPyObject(self, (Cppyy::TCppObject_t)address);
+
+    // handling smart types this way is deeply fugly, but if CPPInstance sets the proper
+    // types in op_new first, then the wrong init is called
+        if (((CPPClass*)Py_TYPE(self))->fFlags & CPPScope::kIsSmart) {
+            PyObject* pyclass = CreateScopeProxy(((CPPSmartClass*)Py_TYPE(self))->fUnderlyingType);
+            if (pyclass) {
+                self->SetSmart((PyObject*)Py_TYPE(self));
+                Py_DECREF((PyObject*)Py_TYPE(self));
+                Py_TYPE(self) = (PyTypeObject*)pyclass;
+            }
+        }
 
     // done with self
         Py_DECREF(self);

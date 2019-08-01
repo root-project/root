@@ -9,12 +9,12 @@
 //                                                                          //
 //////////////////////////////////////////////////////////////////////////////
 
-
 // Bindings
 #include "TPyReturn.h"
+#include "CPyCppyy/CommonDefs.h"
 
 
-class TPython {
+class CPYCPPYY_CLASS_EXPORT TPython {
 
 private:
     static bool Initialize();

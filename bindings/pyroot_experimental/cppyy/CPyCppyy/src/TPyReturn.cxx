@@ -92,7 +92,7 @@ TPyReturn::operator const char*() const
     if (fPyObject == Py_None)      // for void returns
         return nullptr;
 
-    const char* s = CPyCppyy_PyUnicode_AsString(fPyObject);
+    const char* s = CPyCppyy_PyText_AsString(fPyObject);
     if (PyErr_Occurred()) {
         PyErr_Print();
         return nullptr;

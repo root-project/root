@@ -64,6 +64,7 @@
   <class pattern="Using*" />
   <class name="TypedefToPrivateClass" />
 
+  <class pattern="Printable*" />
   <namespace name="Cpp2PyPrinting" />
   <class pattern="Cpp2PyPrinting::*" />
   <function name="Cpp2PyPrinting::operator<<" />
