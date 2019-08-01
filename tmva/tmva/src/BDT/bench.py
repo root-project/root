@@ -1,135 +1,75 @@
-print(__doc__)
-
-
-# Code source: Gaël Varoquaux
-#              Andreas Müller
-# Modified for documentation by Jaques Grobler
-# License: BSD 3 clause
-
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
+from xgboost import XGBClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.datasets import make_moons, make_circles, make_classification
-from sklearn.neural_network import MLPClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVC
-from sklearn.gaussian_process import GaussianProcessClassifier
-from sklearn.gaussian_process.kernels import RBF
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from sklearn.metrics import accuracy_score
+from xgboost import plot_tree
+import matplotlib.pyplot as plt
+import xgboost as xgb
+import timeit
 
-h = 0.02  # step size in the mesh
+import subprocess
 
-names = ["Decision Tree", "Random Forest", "Neural Net", "AdaBoost"]
-
-classifiers = [
-    DecisionTreeClassifier(max_depth=5),
-    RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1),
-    MLPClassifier(alpha=1, max_iter=1000),
-    AdaBoostClassifier(),
-]
-
-X, y = make_classification(
-    n_features=2, n_redundant=0, n_informative=2, random_state=1, n_clusters_per_class=1
-)
-rng = np.random.RandomState(2)
-X += 2 * rng.uniform(size=X.shape)
-linearly_separable = (X, y)
-
-datasets = [
-    make_moons(noise=0.3, random_state=0),
-    make_circles(noise=0.2, factor=0.5, random_state=1),
-    linearly_separable,
-]
-
-figure = plt.figure(figsize=(27, 9))
-i = 1
-# iterate over datasets
-for ds_cnt, ds in enumerate(datasets):
-    # preprocess dataset, split into training and test part
-    X, y = ds
-    X = StandardScaler().fit_transform(X)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.4, random_state=42
-    )
-
-    x_min, x_max = X[:, 0].min() - 0.5, X[:, 0].max() + 0.5
-    y_min, y_max = X[:, 1].min() - 0.5, X[:, 1].max() + 0.5
-    xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
-
-    # just plot the dataset first
-    cm = plt.cm.RdBu
-    cm_bright = ListedColormap(["#FF0000", "#0000FF"])
-    ax = plt.subplot(len(datasets), len(classifiers) + 1, i)
-    if ds_cnt == 0:
-        ax.set_title("Input data")
-    # Plot the training points
-    ax.scatter(X_train[:, 0], X_train[:, 1], c=y_train, cmap=cm_bright, edgecolors="k")
-    # Plot the testing points
-    ax.scatter(
-        X_test[:, 0], X_test[:, 1], c=y_test, cmap=cm_bright, alpha=0.6, edgecolors="k"
-    )
-    ax.set_xlim(xx.min(), xx.max())
-    ax.set_ylim(yy.min(), yy.max())
-    ax.set_xticks(())
-    ax.set_yticks(())
-    i += 1
-
-    # iterate over classifiers
-    for name, clf in zip(names, classifiers):
-        ax = plt.subplot(len(datasets), len(classifiers) + 1, i)
-        clf.fit(X_train, y_train)
-        score = clf.score(X_test, y_test)
-
-        # Plot the decision boundary. For that, we will assign a color to each
-        # point in the mesh [x_min, x_max]x[y_min, y_max].
-        if hasattr(clf, "decision_function"):
-            Z = clf.decision_function(np.c_[xx.ravel(), yy.ravel()])
-        else:
-            Z = clf.predict_proba(np.c_[xx.ravel(), yy.ravel()])[:, 1]
-
-        # Put the result into a color plot
-        Z = Z.reshape(xx.shape)
-        ax.contourf(xx, yy, Z, cmap=cm, alpha=0.8)
-
-        # Plot the training points
-        ax.scatter(
-            X_train[:, 0], X_train[:, 1], c=y_train, cmap=cm_bright, edgecolors="k"
-        )
-        # Plot the testing points
-        ax.scatter(
-            X_test[:, 0],
-            X_test[:, 1],
-            c=y_test,
-            cmap=cm_bright,
-            edgecolors="k",
-            alpha=0.6,
-        )
-
-        ax.set_xlim(xx.min(), xx.max())
-        ax.set_ylim(yy.min(), yy.max())
-        ax.set_xticks(())
-        ax.set_yticks(())
-        if ds_cnt == 0:
-            ax.set_title(name)
-        ax.text(
-            xx.max() - 0.3,
-            yy.min() + 0.3,
-            ("%.2f" % score).lstrip("0"),
-            size=15,
-            horizontalalignment="right",
-        )
-        i += 1
-
-plt.tight_layout()
-plt.show()
-
-"""
-0.228
+import json # for testing jsonness
 
 
-"""
+
+def get_benchs_data(bench_name="benchs/a.txt"):
+    with open(bench_name, 'r') as file:
+        data = file.read().replace('\n', '')
+    benchs =  json.loads(data)
+    fname = benchs["context"]["date"].replace(" ", "")
+    mins = []
+    means = []
+    stddev = []
+    for i, bench in enumerate(benchs["benchmarks"]):
+        if bench["aggregate_name"] == 'min':
+            mins.append(bench["cpu_time"])
+        if bench["aggregate_name"] == 'stddev':
+            stddev.append(bench["cpu_time"])
+        if bench["aggregate_name"] == 'mean':
+            means.append(bench["cpu_time"])
+    return fname, mins, means, stddev
+
+def create_model_gaussian(num_samples=100, num_features=5, num_trees=10):
+    mu, sigma = 0, 1 # mean and standard deviation
+
+    training_samples = max(1000,num_samples)
+    X = np.random.normal(mu, sigma, (training_samples,num_features))
+
+    p=0.5
+    Y = np.random.choice(a=[0, 1], size=(training_samples), p=[p, 1-p])
+
+    # fit model no training data
+    model = xgb.XGBClassifier(n_estimators=num_trees)
+    model.fit(X, Y)
+
+    X = X[:num_samples]
+    Y = Y[:num_samples]
+
+    y_pred = model.predict(X)
+    y_scores = model.apply(X)
+
+    # print(y_pred)
+    predictions = [round(value) for value in y_pred]
+
+    # evaluate predictions
+    accuracy = accuracy_score(Y, predictions)
+    print("For curiosity: Accuracy: %.2f%%" % (accuracy * 100.0))
+
+    # saving files
+    np.savetxt("data_files/events.csv", X, delimiter=",", fmt="%f")
+    np.savetxt("data_files/python_predictions.csv", y_pred, delimiter=",", fmt="%d")
+    np.savetxt("data_files/python_groundtruths.csv", Y, delimiter=",", fmt="%d")
+    model.get_booster().dump_model("model.json", dump_format="json")
+    model.save_model("./data/model.rabbit")
+    print("Saved files")
+
+
+if __name__ == "__main__":
+
+    for i,num_samples in enumerate([1,10,30,40,50,60,70]):
+        create_model_gaussian(num_samples=num_samples, num_features=5, num_trees=100)
+        subprocess.call("./bench.sh".split(), shell=True)
+        fname, mins , means, stddevs = get_benchs_data("benchs/a.txt")
+        #np.save("tmp/"+"{0:03}".format(i)+"_"+fname, mins)
+        np.save("tmp/"+"{0:03}".format(i)+"_", mins)

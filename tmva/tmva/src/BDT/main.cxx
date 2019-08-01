@@ -42,11 +42,6 @@ json read_file(const std::string &filename)
    return j;
 }
 
-void print(const std::string message)
-{
-   std::cout << message << std::endl;
-}
-
 void print_json_type(json j)
 {
    std::string my_type = "unknown";

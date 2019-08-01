@@ -96,7 +96,7 @@ void generate_code_bdt(std::ostream& fout,
        << " inference of a single tree" << std::endl;
   fout << std::endl << std::endl;
 
-  //fout << "#pragma cling optimize(3)" << std::endl << std::endl;
+  fout << "#pragma cling optimize(3)" << std::endl << std::endl;
 
   //fout << "#include <vector>" << std::endl;
   if (use_namespaces){
@@ -118,6 +118,74 @@ void generate_code_bdt(std::ostream& fout,
   }
 }
 
+// /*
+/// Generate the code for BDTs evaluation
+void generate_code_forest(std::ostream& fout,
+                        std::vector<unique_bdt::Tree> &trees,
+                        int number_of_trees,
+                        std::string s_id=""
+                      ) {
+  bool use_namespaces = (!s_id.empty());
+  fout << "// File automatically generated! " << std::endl;
+  fout << "/// Functions that defines the"
+       << " inference of a single tree" << std::endl;
+  fout << std::endl << std::endl;
+
+  fout << "#pragma cling optimize(3)" << std::endl << std::endl;
+
+  //fout << "#include <vector>" << std::endl;
+  if (use_namespaces){
+    // add "s_" to have a valid name
+    fout << "namespace s_" << s_id << "{" << std::endl;
+  }
+
+  for (int i = 0; i < number_of_trees; i++) {
+    // Function starts here
+    fout << "float generated_tree_" << std::to_string(i)
+         << "(const std::vector<float>& event){" << std::endl;
+    fout << "float result = 0; // variable to store the result" << std::endl;
+
+    generate_if_statement_for_bdt(fout, trees[i].nodes.get());
+
+    fout << "return result;" << std::endl;
+    fout << "}" << std::endl; // close function scope
+  }
+
+  fout << "bool generated_forest (const std::vector<float>& event){"
+       << "float preds_tmp = 0;"
+       << "for (int i = 0; i< " << std::to_string(number_of_trees) << "; i++){" << std::endl
+       << "    preds_tmp += generated_tree_ std::to_string(i) (event)"<< std::endl
+       << "}"<< std::endl
+       << "preds_tmp = 1. / (1. + (1. / std::exp(preds_tmp)));"<< std::endl
+       << "return (preds_tmp > 0.5) ? 1 : 0;" << std::endl;
+
+  // close namespace
+  if (use_namespaces){
+    fout << "} // end of s_" << s_id << " namespace" << std::endl;
+  }
+}
+// */
+///*
+std::function<float (std::vector<float>)> jit_forest_string(int tree_index,
+                                                            std::string tojit,
+                                                            std::string s_namespace=""
+                                                          ){
+   gInterpreter->Declare(tojit.c_str());
+   bool use_namespaces = (!s_namespace.empty());
+
+   std::string func_ref_name;
+   if (use_namespaces){
+     func_ref_name = "&s_" + s_namespace+"::generated_forest";
+   }
+   else{
+     func_ref_name = "&generated_forest";
+   }
+   auto ptr = gInterpreter->Calc(func_ref_name.c_str());
+   bool (*func)(std::vector<float>) = reinterpret_cast<bool(*)(std::vector<float>)>(ptr);
+   std::function<bool (std::vector<float>)> fWrapped{func};
+   return fWrapped;
+}
+// */
 
 /// JIT function and and wrapp it in std::functions
 std::function<float (std::vector<float>)> jit_function_reader_file(int tree_index){

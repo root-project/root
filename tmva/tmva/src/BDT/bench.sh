@@ -1,14 +1,8 @@
 #!/bin/bash
-echo " ***** Running python ***** "
-python train.py
-
-
-echo "***** Running check_preds.py *****"
-python check_preds.py
-
-echo "***** Benchmarking *****"
 make -f makefile_bench.make
-./mybenchmark.exe --benchmark_repetitions=1 \
-                  --benchmark_filter=Bdt \
+./mybenchmark.exe --benchmark_repetitions=5 \
                   --benchmark_format=console \
-                  --benchmark_report_aggregates_only=true
+                  --benchmark_out=benchs/a.txt \
+                  --benchmark_filter=Bdt \
+                  --benchmark_report_aggregates_only=true \
+                  --benchmark_counters_tabular=true

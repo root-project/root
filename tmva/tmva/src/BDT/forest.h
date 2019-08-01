@@ -36,37 +36,39 @@ public:
 
    void test() { std::cout << "test \n"; }
    void get_Forest(std::string json_file = "aaa") { std::cout << json_file << std::endl; }
-   void read_events_csv(std::string csv_file = "")
-   {
-      if (!csv_file.empty()) {
-         this->events_vector = read_csv(events_file);
-      } else {
-         this->events_vector = read_csv(this->events_file);
-      }
-   }
-   std::vector<bool> do_predictions(const std::vector<std::vector<float>> &events_vector)
-   {
+   void read_events_csv(std::string csv_file);
 
-      // preds.clear();
-      std::vector<bool> preds;
-      preds.reserve(events_vector.size());
-      float              prediction = 0;
-      std::vector<float> preds_tmp;
-      preds.reserve(events_vector[0].size());
-
-      for (auto &event : events_vector) {
-         preds_tmp.clear();
-         for (auto &tree : this->trees) {
-            prediction = tree.inference(event);
-            preds_tmp.push_back(prediction);
-         }
-         preds.push_back(binary_logistic(vec_sum(preds_tmp)));
-         // preds.push_back(vec_sum(preds_tmp));
-      }
-      return preds;
-   }
-   // Forest() { counter++; }
+   std::vector<bool> do_predictions(const std::vector<std::vector<float>> &events_vector);
 };
+
+// ----------------- Generic ------------------
+template <class T>
+void Forest<T>::read_events_csv(std::string csv_file)
+{
+   if (!csv_file.empty()) {
+      this->events_vector = read_csv(events_file);
+   } else {
+      this->events_vector = read_csv(this->events_file);
+   }
+}
+
+template <class T>
+std::vector<bool> Forest<T>::do_predictions(const std::vector<std::vector<float>> &events_vector)
+{
+   std::vector<bool> preds;
+   preds.reserve(events_vector.size());
+   float preds_tmp;
+   preds.reserve(events_vector[0].size());
+
+   for (auto &event : events_vector) {
+      preds_tmp = 0;
+      for (auto &tree : this->trees) {
+         preds_tmp += tree.inference(event);
+      }
+      preds.push_back(binary_logistic(preds_tmp));
+   }
+   return preds;
+}
 
 template <class T>
 int Forest<T>::counter = 0;
@@ -148,11 +150,24 @@ template <>
 std::vector<bool> Forest<std::function<float(std::vector<float>)>>::do_predictions(
    const std::vector<std::vector<float>> &events_vector)
 {
-   // preds.clear();
-   std::vector<bool>  preds;
-   std::vector<float> preds_tmp;
-   preds_tmp.reserve(this->trees.size());
+   std::vector<bool> preds;
+   float             preds_tmp = 0;
    preds.reserve(events_vector.size());
+   for (auto &event : events_vector) {
+      preds_tmp = 0;
+      for (auto &tree : this->trees) {
+         preds_tmp += tree(event);
+      }
+      preds.push_back(binary_logistic(preds_tmp));
+   }
+   return preds;
+}
+
+template <>
+std::vector<bool> Forest<std::function<float(std::vector<float>)>>::do_predictions_bis(
+   const std::vector<std::vector<float>> &events_vector, std::vector<bool> &preds, std::vector<float> &preds_tmp)
+{
+   preds.clear();
    for (auto &event : events_vector) {
       preds_tmp.clear();
       for (auto &tree : this->trees) {

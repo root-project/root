@@ -10,7 +10,8 @@ import timeit
 
 
 num_features = 5  # max is 8
-n_estimators = 100
+n_estimators = 500
+max_depth = 3
 
 setup = """
 import numpy as np
@@ -71,7 +72,9 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 # fit model no training data
-model = xgb.XGBClassifier(n_estimators=n_estimators)
+model = xgb.XGBClassifier(
+    n_estimators=n_estimators, max_depth=max_depth, objective="binary:logistic"
+)
 model.fit(X_train, y_train)
 
 # make predictions for test data

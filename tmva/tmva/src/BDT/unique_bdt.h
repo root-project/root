@@ -29,8 +29,8 @@ public:
    // void set_split_theshold(float split_threshold) { this->split_threshold = split_threshold; }
    // void set_is_leaf_node(bool is_leaf_node) { this->is_leaf_node = is_leaf_node; }
 
-   std::unique_ptr<Node> child_true;
-   std::unique_ptr<Node> child_false;
+   std::unique_ptr<Node> child_true  = nullptr;
+   std::unique_ptr<Node> child_false = nullptr;
 
    float inference(const std::vector<float> &event)
    {

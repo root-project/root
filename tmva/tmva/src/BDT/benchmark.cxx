@@ -51,11 +51,9 @@ static void BM_EvalUniqueBdt(benchmark::State &state)
 }
 BENCHMARK(BM_EvalUniqueBdt)
    ->Unit(benchmark::kMillisecond)
-   ->ComputeStatistics("min",
-                       [](const std::vector<double> &v) -> double {
-                          return *(std::min_element(std::begin(v), std::end(v)));
-                       })
-   ->Arg(512);
+   ->ComputeStatistics("min", [](const std::vector<double> &v) -> double {
+      return *(std::min_element(std::begin(v), std::end(v)));
+   });
 
 /// Benchmark eval array_bdts
 static void BM_EvalArrayBdt(benchmark::State &state)
@@ -71,17 +69,15 @@ static void BM_EvalArrayBdt(benchmark::State &state)
 
    std::vector<std::vector<float>> events_vector = read_csv(events_file);
    for (auto _ : state) { // only bench what is inside the loop
-      preds = Forest.do_predictions(events_vector);
+      for (int i = 0; i < 1000; i++) preds = Forest.do_predictions(events_vector);
    }
    write_csv(preds_file, preds);
 }
 BENCHMARK(BM_EvalArrayBdt)
    ->Unit(benchmark::kMillisecond)
-   ->ComputeStatistics("min",
-                       [](const std::vector<double> &v) -> double {
-                          return *(std::min_element(std::begin(v), std::end(v)));
-                       })
-   ->Arg(512);
+   ->ComputeStatistics("min", [](const std::vector<double> &v) -> double {
+      return *(std::min_element(std::begin(v), std::end(v)));
+   });
 
 /// Benchmark eval Jitted_bdts
 static void BM_EvalJittedBdt(benchmark::State &state)
@@ -102,11 +98,9 @@ static void BM_EvalJittedBdt(benchmark::State &state)
 }
 BENCHMARK(BM_EvalJittedBdt)
    ->Unit(benchmark::kMillisecond)
-   ->ComputeStatistics("min",
-                       [](const std::vector<double> &v) -> double {
-                          return *(std::min_element(std::begin(v), std::end(v)));
-                       })
-   ->Arg(512);
+   ->ComputeStatistics("min", [](const std::vector<double> &v) -> double {
+      return *(std::min_element(std::begin(v), std::end(v)));
+   });
 //
 
 /// Benchmark eval xgboost_bdt
@@ -146,7 +140,7 @@ static void BM_EvalXgboostBdt(benchmark::State &state)
    const float *f;
 
    for (auto _ : state) { // only bench what is inside the loop
-      XGBoosterPredict(boosterHandle, h_train, 0, 0, &out_len, &f);
+      for (int i = 0; i < 1000; i++) XGBoosterPredict(boosterHandle, h_train, 0, 0, &out_len, &f);
    }
 
    std::vector<float> preds;
@@ -159,10 +153,9 @@ static void BM_EvalXgboostBdt(benchmark::State &state)
 }
 BENCHMARK(BM_EvalXgboostBdt)
    ->Unit(benchmark::kMillisecond)
-   ->ComputeStatistics("min",
-                       [](const std::vector<double> &v) -> double {
-                          return *(std::min_element(std::begin(v), std::end(v)));
-                       })
-   ->Arg(512);
+   ->ComputeStatistics("min", [](const std::vector<double> &v) -> double {
+      return *(std::min_element(std::begin(v), std::end(v)));
+   });
+;
 
 BENCHMARK_MAIN();
