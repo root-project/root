@@ -113,6 +113,11 @@ void ROOT::Experimental::RBrowser::Build(const std::string &path)
          item.islink   = stat.fIsLink;
          item.isdir    = R_ISDIR(stat.fMode);
 
+         if (item.isdir)
+            item.icon = "sap-icon://folder-blank";
+         else
+            item.icon = GetFileIcon(name);
+
          // file size
          _fsize = bsize = item.size;
          if (_fsize > 1024) {
@@ -196,6 +201,37 @@ void ROOT::Experimental::RBrowser::Build(const std::string &path)
       if (!item.isdir)
          fSorted.emplace_back(&item);
 }
+
+
+const char *ROOT::Experimental::RBrowser::GetFileIcon(const char *name)
+{
+   TString filename(name);
+   if ((filename.EndsWith(".c")) ||
+       (filename.EndsWith(".cpp")) ||
+       (filename.EndsWith(".cxx")) ||
+       (filename.EndsWith(".c++")) ||
+       (filename.EndsWith(".cxx")) ||
+       (filename.EndsWith(".h")) ||
+       (filename.EndsWith(".hpp")) ||
+       (filename.EndsWith(".hxx")) ||
+       (filename.EndsWith(".h++")) ||
+       (filename.EndsWith(".py")) ||
+       (filename.EndsWith(".txt")) ||
+       (filename.EndsWith(".cmake")) ||
+       (filename.EndsWith(".dat")) ||
+       (filename.EndsWith(".log")) ||
+       (filename.EndsWith(".js")))
+      return "sap-icon://document-text";
+   else if ((filename.EndsWith(".bmp")) ||
+            (filename.EndsWith(".gif")) ||
+            (filename.EndsWith(".jpg")) ||
+            (filename.EndsWith(".png")) ||
+            (filename.EndsWith(".svg")))
+      return "sap-icon://picture";
+   else
+      return "sap-icon://document";
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// constructor

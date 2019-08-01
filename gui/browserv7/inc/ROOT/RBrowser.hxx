@@ -39,6 +39,7 @@ public:
    int64_t size{0};         ///<! file size
 
    // this is part for browser, visible for I/O
+   std::string icon;     ///< icon name
    std::string fsize;    ///< file size
    std::string mtime;    ///< modification time
    std::string ftype;    ///< file attributes
@@ -71,6 +72,7 @@ protected:
    void AddFolder(const char *name);
    void AddFile(const char *name);
    void Build(const std::string &path);
+   const char *GetFileIcon(const char *name);
    std::string ProcessBrowserRequest(const std::string &msg);
 
    bool IsBuild() const { return fDesc.size() > 0; }

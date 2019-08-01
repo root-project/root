@@ -1,6 +1,7 @@
 sap.ui.define(['sap/ui/core/Component',
                'sap/ui/core/mvc/Controller',
                'sap/ui/core/Control',
+               'sap/ui/core/Icon',
                'sap/m/Text',
 					'sap/m/CheckBox',
 					'sap/m/MessageBox',
@@ -12,7 +13,7 @@ sap.ui.define(['sap/ui/core/Component',
 					"sap/ui/core/util/File",
 					"sap/ui/model/json/JSONModel",
                "rootui5/browser/model/BrowserModel"
-],function(Component, Controller, CoreControl, mText, mCheckBox, MessageBox, MessageToast, Splitter,
+],function(Component, Controller, CoreControl, CoreIcon, mText, mCheckBox, MessageBox, MessageToast, Splitter,
 	        ResizeHandler, HorizontalLayout, tableColumn, File, JSONModel, BrowserModel) {
 
    "use strict";
@@ -47,6 +48,7 @@ sap.ui.define(['sap/ui/core/Component',
             // copy extra attributes from element to node in the browser
             // later can be done automatically
             this.model.addNodeAttributes = function(node, elem) {
+               node.icon = elem.icon;
                node.fsize = elem.fsize;
                node.mtime = elem.mtime;
                node.ftype = elem.ftype;
@@ -65,7 +67,8 @@ sap.ui.define(['sap/ui/core/Component',
 					visible: true,
                template: new HorizontalLayout({
                   content: [
-                     new mText({text:"{name}", wrapping: false })
+                     new CoreIcon({src:"{icon}"}),
+                     new mText({text:" {name}", renderWhitespace: true, wrapping: false })
                   ]
                })
 				}));
