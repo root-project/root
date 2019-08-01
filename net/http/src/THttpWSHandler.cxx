@@ -298,8 +298,9 @@ Int_t THttpWSHandler::RunSendingThrd(std::shared_ptr<THttpWSEngine> engine)
       while (!IsDisabled() && !engine->fDisabled) {
          PerformSend(engine);
          if (IsDisabled() || engine->fDisabled) break;
-         std::unique_lock<std::mutex> lk(engine->fCondMutex);
-         engine->fCond.wait(lk);
+         std::unique_lock<std::mutex> lk(engine->fDataMutex);
+         if (engine->fKind == THttpWSEngine::kNone)
+            engine->fCond.wait(lk);
       }
    });
 
