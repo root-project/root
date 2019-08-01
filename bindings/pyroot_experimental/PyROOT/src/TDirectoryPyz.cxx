@@ -29,7 +29,7 @@ using namespace CPyCppyy;
 /// ~~~{.python}
 /// myDir.WriteObject(myObj, "myKeyName")
 /// ~~~
-PyObject *TDirectoryWriteObject(const CPPInstance *self, PyObject *args)
+PyObject *TDirectoryWriteObject(CPPInstance *self, PyObject *args)
 {
    CPPInstance *wrt = nullptr;
    PyObject *name = nullptr;

@@ -32,7 +32,7 @@ using namespace CPyCppyy;
 /// invoked from Python, returns an object of the derived class (e.g. TH1F)
 /// and not a generic TObject.
 /// In case the object is not found, a null pointer is returned.
-PyObject *TDirectoryFileGetPyz(const CPPInstance *self, PyObject *pynamecycle)
+PyObject *TDirectoryFileGetPyz(CPPInstance *self, PyObject *pynamecycle)
 {
    // Pythonization of TDirectoryFile::Get that handles non-TObject deriveds
    if (!CPPInstance_Check(self)) {
