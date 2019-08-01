@@ -2,13 +2,24 @@ cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
 project(roottest)
 
-# Treat ROOT as a dependency for roottest.git
-find_package(ROOT REQUIRED CONFIG)
-
-# Deprecation of directly using ROOTSYS for roottest.git
+# Use ${ROOTSYS} environment variable to search for ROOT.
+# This may be set by sourcing thisroot.sh from an installation.
 if(DEFINED ENV{ROOTSYS})
-  message(STATUS "Using directly ROOTSYS for roottest.git is under deprecation, please add ROOT in PATH.")
+  list(INSERT CMAKE_PREFIX_PATH 0 $ENV{ROOTSYS})
 endif()
+
+# Use ${ROOTSYS} CMake variable to search for ROOT. This is set when roottest is
+# built as part of ROOT, i.e., when ROOT is configured with -Droottest=ON. It
+# may also be set by passing -DROOTSYS=<PATH> to CMake when configuring a
+# standalone roottest against an installation of ROOT. If this is set, it takes
+# precedence over the environment to ensure that when roottest is being built in
+# a ROOT build configured with -Droottest=ON, it will find the ROOT being built,
+# and not a ROOT installation sourced with thisroot.sh or found in $PATH.
+if(DEFINED ROOTSYS)
+  list(INSERT CMAKE_PREFIX_PATH 0 ${ROOTSYS})
+endif()
+
+find_package(ROOT REQUIRED CONFIG)
 
 # If ROOT_SOURCE_DIR is set, roottest is built as part of the root build.
 # If ROOT_SOURCE_DIR is not set, search for an installation.
