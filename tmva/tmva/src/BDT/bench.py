@@ -65,11 +65,33 @@ def create_model_gaussian(num_samples=100, num_features=5, num_trees=10):
     print("Saved files")
 
 
-if __name__ == "__main__":
-
-    for i,num_samples in enumerate([1,10,30,40,50,60,70]):
+def bench_1():
+    test_list = [1,10,30,40,50,60,70,100, 120, 130, 150, 160, 180, 200]
+    offset=0
+    for i,num_samples in enumerate(test_list):
         create_model_gaussian(num_samples=num_samples, num_features=5, num_trees=100)
         subprocess.call("./bench.sh".split(), shell=True)
         fname, mins , means, stddevs = get_benchs_data("benchs/a.txt")
         #np.save("tmp/"+"{0:03}".format(i)+"_"+fname, mins)
-        np.save("tmp/"+"{0:03}".format(i)+"_", mins)
+        np.save("tmp/"+"{0:03}".format(i+offset)+"_", mins)
+
+if __name__ == "__main__":
+    # bench_1()
+
+    #test_list = [1,10,30,40,50,60,70,100, 120, 130, 150, 160, 180, 200]
+    offset=0
+    i=1
+    #for i,num_samples in enumerate(test_list):
+    create_model_gaussian(num_samples=10000, num_features=5, num_trees=100)
+    subprocess.call("./bench.sh".split(), shell=True)
+    fname, mins , means, stddevs = get_benchs_data("benchs/a.txt")
+    #np.save("tmp/"+"{0:03}".format(i)+"_"+fname, mins)
+    np.save("tmp/"+"{0:03}".format(i+offset)+"_", mins)
+
+
+
+
+
+
+
+# end

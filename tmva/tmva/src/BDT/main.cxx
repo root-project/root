@@ -236,6 +236,15 @@ int main()
    std::cout << get_time_string() << std::endl;
    std::cout << test4.counter << std::endl;
 
+   Forest<std::function<bool(std::vector<float>)>> test5;
+   std::cout << "test5\n";
+   test5.test();
+   test5.get_Forest("model.json");
+   preds.clear();
+   preds      = test5.do_predictions(events_vector);
+   preds_file = "./data_files/test5.csv";
+   write_csv(preds_file, preds);
+
    // */
    std::cout << "\n ########## END MAIN.CXX ##########\n\n\n";
    return 0;

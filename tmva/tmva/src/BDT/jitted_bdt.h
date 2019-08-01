@@ -136,7 +136,7 @@ void generate_code_forest(std::ostream& fout,
   //fout << "#include <vector>" << std::endl;
   if (use_namespaces){
     // add "s_" to have a valid name
-    fout << "namespace s_" << s_id << "{" << std::endl;
+    fout << "namespace s_f_" << s_id << "{" << std::endl;
   }
 
   for (int i = 0; i < number_of_trees; i++) {
@@ -151,13 +151,15 @@ void generate_code_forest(std::ostream& fout,
     fout << "}" << std::endl; // close function scope
   }
 
-  fout << "bool generated_forest (const std::vector<float>& event){"
-       << "float preds_tmp = 0;"
-       << "for (int i = 0; i< " << std::to_string(number_of_trees) << "; i++){" << std::endl
-       << "    preds_tmp += generated_tree_ std::to_string(i) (event)"<< std::endl
-       << "}"<< std::endl
-       << "preds_tmp = 1. / (1. + (1. / std::exp(preds_tmp)));"<< std::endl
-       << "return (preds_tmp > 0.5) ? 1 : 0;" << std::endl;
+  fout << "bool generated_forest (const std::vector<float>& event){" << std::endl
+       << "float preds_tmp = 0;" << std::endl;
+  for (int i = 0; i<number_of_trees; i++){
+       fout << "preds_tmp += generated_tree_" << std::to_string(i) << " (event);"<< std::endl;
+  }
+  fout << "preds_tmp = 1. / (1. + (1. / std::exp(preds_tmp)));"<< std::endl
+       << "return (preds_tmp > 0.5) ? 1 : 0;" << std::endl
+       << "}" << std::endl;
+
 
   // close namespace
   if (use_namespaces){
@@ -166,8 +168,7 @@ void generate_code_forest(std::ostream& fout,
 }
 // */
 ///*
-std::function<float (std::vector<float>)> jit_forest_string(int tree_index,
-                                                            std::string tojit,
+std::function<float (std::vector<float>)> jit_forest_string(std::string tojit,
                                                             std::string s_namespace=""
                                                           ){
    gInterpreter->Declare(tojit.c_str());
@@ -175,7 +176,7 @@ std::function<float (std::vector<float>)> jit_forest_string(int tree_index,
 
    std::string func_ref_name;
    if (use_namespaces){
-     func_ref_name = "&s_" + s_namespace+"::generated_forest";
+     func_ref_name = "&s_f_" + s_namespace+"::generated_forest";
    }
    else{
      func_ref_name = "&generated_forest";

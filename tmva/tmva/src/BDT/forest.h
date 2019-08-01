@@ -164,24 +164,53 @@ std::vector<bool> Forest<std::function<float(std::vector<float>)>>::do_predictio
 }
 
 template <>
-std::vector<bool> Forest<std::function<float(std::vector<float>)>>::do_predictions_bis(
-   const std::vector<std::vector<float>> &events_vector, std::vector<bool> &preds, std::vector<float> &preds_tmp)
-{
-   preds.clear();
-   for (auto &event : events_vector) {
-      preds_tmp.clear();
-      for (auto &tree : this->trees) {
-         preds_tmp.push_back(tree(event));
-      }
-      preds.push_back(binary_logistic(vec_sum(preds_tmp)));
-   }
-   return preds;
-}
-
-template <>
 void Forest<std::function<float(std::vector<float>)>>::test()
 {
    std::cout << "AAAAAA\n";
+}
+
+// ------------------------ Specialization FORESTJIT ------------------ //
+template <>
+void Forest<std::function<bool(std::vector<float>)>>::get_Forest(std::string json_file)
+{
+   std::string my_config       = read_file_string(json_file);
+   auto        json_model      = json::parse(my_config);
+   int         number_of_trees = json_model.size();
+
+   // create tmp unique trees
+   std::vector<unique_bdt::Tree> trees;
+   trees.resize(number_of_trees);
+   for (int i = 0; i < number_of_trees; i++) {
+      unique_bdt::read_nodes_from_tree(json_model[i], trees[i]);
+   }
+
+   // JIT
+   std::string s_trees;
+   time_t      my_time          = time(0);
+   std::string s_namespace_name = std::to_string(this->counter) + std::to_string(my_time);
+   // std::cout << "current time used as namespace: " << s_namespace_name << std::endl;
+
+   std::stringstream ss;
+   generate_code_forest(ss, trees, number_of_trees, s_namespace_name);
+   s_trees = ss.str();
+
+   // Read functions
+   std::function<bool(std::vector<float>)> func;
+   func = jit_forest_string(s_trees, s_namespace_name);
+   std::vector<std::function<bool(std::vector<float>)>> tmp{func};
+   this->trees = tmp;
+}
+
+template <>
+std::vector<bool> Forest<std::function<bool(std::vector<float>)>>::do_predictions(
+   const std::vector<std::vector<float>> &events_vector)
+{
+   std::vector<bool> preds;
+   preds.reserve(events_vector.size());
+   for (auto &event : events_vector) {
+      preds.push_back(this->trees[0](event));
+   }
+   return preds;
 }
 
 #endif
