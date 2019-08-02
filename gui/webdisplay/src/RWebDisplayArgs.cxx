@@ -50,6 +50,17 @@ ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs(const char *browser)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
+/// Constructor - specify window width and height
+
+ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs(int width, int height, const std::string &browser)
+{
+   SetBrowserKind(browser);
+   SetWidth(width);
+   SetHeight(height);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
 /// Set browser kind as string argument
 /// Recognized values:
 ///  chrome  - use Google Chrome web browser, supports headless mode from v60, default

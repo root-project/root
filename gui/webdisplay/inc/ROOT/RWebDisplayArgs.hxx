@@ -56,6 +56,8 @@ public:
 
    RWebDisplayArgs(const char *browser);
 
+   RWebDisplayArgs(int width, int height, const std::string &browser = "");
+
    void SetBrowserKind(const std::string &kind);
    /// set browser kind, see EBrowserKind for allowed values
    void SetBrowserKind(EBrowserKind kind) { fKind = kind; }
