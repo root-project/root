@@ -155,11 +155,9 @@ void R__zipLZ4BS(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, 
    R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
    if (*irep > 0) {
        if (bs_variant < *irep) {
-         fprintf(stderr, "R__zipLZ4BS: Using bitshuffle variant - %d bs versus %d orig.\n", bs_variant, *irep);
          R__zipLZ4(cxlevel, srcsize, temp_buffer, tgtsize, tgt, irep);
          tgt[2] = 'B';
        } else {
-         fprintf(stderr, "R__zipLZ4BS: NOT Using bitshuffle variant - %d bs versus %d orig.\n", bs_variant, *irep);
          R__zipLZ4(cxlevel, srcsize, temp_buffer, tgtsize, tgt, irep);
          tgt[2] = 'B';
        }
