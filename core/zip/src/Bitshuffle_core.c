@@ -37,7 +37,7 @@
 #include <arm_neon.h>
 #endif
 
-#if defined(_OPENMP) && defined(_MSC_VER)
+#if defined(_MSC_VER)
 typedef int64_t omp_size_t;
 #else
 typedef size_t omp_size_t;
@@ -1686,10 +1686,6 @@ int64_t bshuf_blocked_wrap_fun(bshufBlockFunDef fun, const void* in, void* out, 
     }
     if (block_size % BSHUF_BLOCKED_MULT) return -81;
 
-#if defined(_OPENMP)
-    #pragma omp parallel for schedule(dynamic, 1) \
-            private(count) reduction(+ : cum_count)
-#endif
     for (ii = 0; ii < (omp_size_t)( size / block_size ); ii ++) {
         count = fun(&C, block_size, elem_size);
         if (count < 0) err = count;
