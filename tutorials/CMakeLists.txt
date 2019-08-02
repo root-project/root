@@ -478,7 +478,6 @@ if(ROOT_python_FOUND)
 
   #---Tutorials expected to fail in PyROOT experimental
   set(pyexp_fail tutorial-dataframe-df017_vecOpsHEP-py
-                 tutorial-dataframe-df103_NanoAODHiggsAnalysis-py
                  tutorial-pyroot-benchmarks-py
                  tutorial-pyroot-pyroot002_TTreeAsMatrix-py
                  tutorial-pyroot-shapes-py
