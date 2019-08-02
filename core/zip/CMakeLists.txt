@@ -15,6 +15,7 @@ ROOT_OBJECT_LIBRARY(Zip
   src/Compression.cxx
   src/RZip.cxx
   src/Bitshuffle.c
+  src/Bitshuffle_core.c
   src/Bitshuffle_iochain.c
 )
 

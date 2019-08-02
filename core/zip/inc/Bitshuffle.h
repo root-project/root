@@ -25,121 +25,99 @@
  */
 
 
-#ifndef BITSHUFFLE_CORE_H
-#define BITSHUFFLE_CORE_H
+#ifndef BITSHUFFLE_H
+#define BITSHUFFLE_H
 
-#include <stdint.h>
 #include <stdlib.h>
-
-
-// These are usually set in the setup.py.
-#ifndef BSHUF_VERSION_MAJOR
-#define BSHUF_VERSION_MAJOR 0
-#define BSHUF_VERSION_MINOR 3
-#define BSHUF_VERSION_POINT 5
-#endif
+#include "Bitshuffle_core.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* --- bshuf_using_SSE2 ----
+/* ---- bshuf_compress_lz4_bound ----
  *
- * Whether routines where compiled with the SSE2 instruction set.
- *
- * Returns
- * -------
- *  1 if using SSE2, 0 otherwise.
- *
- */
-int bshuf_using_SSE2(void);
-
-
-/* ---- bshuf_using_AVX2 ----
- *
- * Whether routines where compiled with the AVX2 instruction set.
- *
- * Returns
- * -------
- *  1 if using AVX2, 0 otherwise.
- *
- */
-int bshuf_using_AVX2(void);
-
-
-/* ---- bshuf_default_block_size ----
- *
- * The default block size as function of element size.
- *
- * This is the block size used by the blocked routines (any routine
- * taking a *block_size* argument) when the block_size is not provided
- * (zero is passed).
- *
- * The results of this routine are guaranteed to be stable such that
- * shuffled/compressed data can always be decompressed.
+ * Bound on size of data compressed with *bshuf_compress_lz4*.
  *
  * Parameters
  * ----------
- *  elem_size : element size of data to be shuffled/compressed.
- *
- */
-size_t bshuf_default_block_size(const size_t elem_size);
-
-
-/* ---- bshuf_bitshuffle ----
- *
- * Bitshuffle the data.
- *
- * Transpose the bits within elements, in blocks of *block_size*
- * elements.
- *
- * Parameters
- * ----------
- *  in : input buffer, must be of size * elem_size bytes
- *  out : output buffer, must be of size * elem_size bytes
  *  size : number of elements in input
  *  elem_size : element size of typed data
- *  block_size : Do transpose in blocks of this many elements. Pass 0 to
+ *  block_size : Process in blocks of this many elements. Pass 0 to
  *  select automatically (recommended).
  *
  * Returns
  * -------
- *  number of bytes processed, negative error-code if failed.
+ *  Bound on compressed data size.
  *
  */
-int64_t bshuf_bitshuffle(const void* in, void* out, const size_t size,
+size_t bshuf_compress_lz4_bound(const size_t size,
         const size_t elem_size, size_t block_size);
 
 
-/* ---- bshuf_bitunshuffle ----
+/* ---- bshuf_compress_lz4 ----
  *
- * Unshuffle bitshuffled data.
+ * Bitshuffled and compress the data using LZ4.
  *
- * Untranspose the bits within elements, in blocks of *block_size*
- * elements.
+ * Transpose within elements, in blocks of data of *block_size* elements then
+ * compress the blocks using LZ4.  In the output buffer, each block is prefixed
+ * by a 4 byte integer giving the compressed size of that block.
  *
- * To properly unshuffle bitshuffled data, *size*, *elem_size* and *block_size*
- * must match the parameters used to shuffle the data.
+ * Output buffer must be large enough to hold the compressed data.  This could
+ * be in principle substantially larger than the input buffer.  Use the routine
+ * *bshuf_compress_lz4_bound* to get an upper limit.
  *
  * Parameters
  * ----------
  *  in : input buffer, must be of size * elem_size bytes
- *  out : output buffer, must be of size * elem_size bytes
+ *  out : output buffer, must be large enough to hold data.
  *  size : number of elements in input
  *  elem_size : element size of typed data
- *  block_size : Do transpose in blocks of this many elements. Pass 0 to
+ *  block_size : Process in blocks of this many elements. Pass 0 to
  *  select automatically (recommended).
  *
  * Returns
  * -------
- *  number of bytes processed, negative error-code if failed.
+ *  number of bytes used in output buffer, negative error-code if failed.
  *
  */
-int64_t bshuf_bitunshuffle(const void* in, void* out, const size_t size,
+int64_t bshuf_compress_lz4(const void* in, void* out, const size_t size, const size_t
+        elem_size, size_t block_size);
+
+
+/* ---- bshuf_decompress_lz4 ----
+ *
+ * Undo compression and bitshuffling.
+ *
+ * Decompress data then un-bitshuffle it in blocks of *block_size* elements.
+ *
+ * To properly unshuffle bitshuffled data, *size*, *elem_size* and *block_size*
+ * must patch the parameters used to compress the data.
+ *
+ * NOT TO BE USED WITH UNTRUSTED DATA: This routine uses the function
+ * LZ4_decompress_fast from LZ4, which does not protect against maliciously
+ * formed datasets. By modifying the compressed data, this function could be
+ * coerced into leaving the boundaries of the input buffer.
+ *
+ * Parameters
+ * ----------
+ *  in : input buffer
+ *  out : output buffer, must be of size * elem_size bytes
+ *  size : number of elements in input
+ *  elem_size : element size of typed data
+ *  block_size : Process in blocks of this many elements. Pass 0 to
+ *  select automatically (recommended).
+ *
+ * Returns
+ * -------
+ *  number of bytes consumed in *input* buffer, negative error-code if failed.
+ *
+ */
+int64_t bshuf_decompress_lz4(const void* in, void* out, const size_t size,
         const size_t elem_size, size_t block_size);
 
 #ifdef __cplusplus
 } // extern "C"
 #endif
 
-#endif  // BITSHUFFLE_CORE_H
+#endif  // BITSHUFFLE_H
