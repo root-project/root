@@ -3908,6 +3908,9 @@ int RootClingMain(int argc,
    }
 #endif
 
+   // Hide options from llvm which we got from static initialization of libCling.
+   llvm::cl::HideUnrelatedOptions(/*keep*/gRootclingOptions);
+
    llvm::cl::ParseCommandLineOptions(argc, argv, "rootcling");
 
    std::string dictname;
