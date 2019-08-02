@@ -101,7 +101,7 @@ void compute(RooSpan<double> output, Tx x, Tc c) {
   const int n = output.size();
 
   #pragma omp simd
-  for (int i = 0; i < n; ++i) {
+  for (int i = 0; i < n; ++i) { //CHECK_VECTORISE
 #ifdef USE_VDT
     output[i] = vdt::fast_exp(x[i]*c[i]);
 #else
