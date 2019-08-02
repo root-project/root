@@ -27,6 +27,7 @@ class THttpServer;
 class BaseHandler : public CefClient, public CefLifeSpanHandler, public CefLoadHandler, public CefDisplayHandler {
 protected:
    THttpServer *fServer{nullptr};
+   int fConsole{0};
 
 public:
    explicit BaseHandler(THttpServer *serv = nullptr);

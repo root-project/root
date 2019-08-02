@@ -21,11 +21,12 @@
 class RootWebPage : public QWebEnginePage {
    Q_OBJECT
 protected:
+   int fConsole{0};
    virtual void javaScriptConsoleMessage(QWebEnginePage::JavaScriptConsoleMessageLevel level, const QString &message,
                                          int lineNumber, const QString &sourceID);
 
 public:
-   RootWebPage(QObject *parent = nullptr) : QWebEnginePage(parent) {}
+   RootWebPage(QObject *parent = nullptr);
    virtual ~RootWebPage() = default;
 };
 
