@@ -16,12 +16,13 @@
 
 namespace PyROOT {
 
-PyObject* AddCPPInstancePickling(PyObject *self, PyObject *args);
+PyObject *AddCPPInstancePickling(PyObject *self, PyObject *args);
 
 PyObject *AddPrettyPrintingPyz(PyObject *self, PyObject *args);
 
-PyObject *AddDirectoryAttrSyntaxPyz(PyObject *self, PyObject *args);
+PyObject *AddDirectoryGetAttrPyz(PyObject *self, PyObject *args);
 PyObject *AddDirectoryWritePyz(PyObject *self, PyObject *args);
+PyObject *AddTDirectoryFileGetPyz(PyObject *self, PyObject *args);
 PyObject *AddFileOpenPyz(PyObject *self, PyObject *args);
 
 PyObject *AddBranchAttrSyntax(PyObject *self, PyObject *args);
@@ -37,7 +38,7 @@ PyObject *AddSetItemTCAPyz(PyObject *self, PyObject *args);
 PyObject *AsRVec(PyObject *self, PyObject *obj);
 PyObject *AsRTensor(PyObject *self, PyObject *obj);
 
-PyObject* CPPInstanceExpand(PyObject *self, PyObject *args);
+PyObject *CPPInstanceExpand(PyObject *self, PyObject *args);
 
 PyObject *GetCppCallableClass(PyObject *self, PyObject *args);
 
