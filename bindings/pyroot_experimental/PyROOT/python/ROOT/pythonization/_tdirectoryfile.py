@@ -1,4 +1,4 @@
-# Author: Danilo Piparo, Stefan Wunsch CERN  08/2018
+# Author: Danilo Piparo, Stefan Wunsch, Massimiliano Galli CERN  08/2018
 
 ################################################################################
 # Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.                      #
@@ -8,6 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
+from libROOTPython import AddTDirectoryFileGetPyz
 from ROOT import pythonization
 
 # TDirectoryFile inherits from TDirectory the pythonized attr syntax (__getattr__)
@@ -17,15 +18,11 @@ from ROOT import pythonization
 # only their key name is available (we think that the getattr(myDir, myKeyName) is
 # a bit more awkward than myDir.Get("myKeyName"))
 
-# TDirectoryFile::Get method, based on the attr syntax
-def _TDirectoryFile_Get(self, objName):
-    return getattr(self, objName)
-
 # Pythonizor function
 @pythonization()
 def pythonize_tfile(klass, name):
 
     if name == 'TDirectoryFile':
-       klass.Get = _TDirectoryFile_Get
+        AddTDirectoryFileGetPyz(klass)
 
     return True

@@ -47,6 +47,8 @@ PyObject *GetSizeOfType(PyObject *self, PyObject *args);
 
 PyObject *MakeNumpyDataFrame(PyObject *self, PyObject *obj);
 
+PyObject *AddTDirectoryFileGetPyz(PyObject *self, PyObject *args);
+
 } // namespace PyROOT
 
 #endif // !PYROOT_PYTHONIZE_H
