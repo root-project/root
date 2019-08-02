@@ -3262,8 +3262,9 @@
                      setdefaults(chld);
                   }
                }
-            } else
-            if ((obj.$jsroot_depth===undefined) || (obj.$jsroot_depth < lvl)) traverse(chld, lvl, arr);
+            } else if ((obj.$jsroot_depth===undefined) || (obj.$jsroot_depth < lvl)) {
+               traverse(chld, lvl, arr);
+            }
          }
       }
 
@@ -3271,12 +3272,11 @@
          // resort meshes using ray caster and camera position
          // idea to identify meshes which are in front or behind
 
-         if (arr.length>300) {
+         if (arr.length > 300) {
             // too many of them, just set basic level and exit
             for (var i=0;i<arr.length;++i) arr[i].renderOrder = (minorder + maxorder)/2;
             return false;
          }
-
 
          var tmp_vect = new THREE.Vector3();
 

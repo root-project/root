@@ -2072,7 +2072,6 @@
       this.nbinsy = 0;
       this.accept_drops = true; // indicate that one can drop other objects like doing Draw("same")
       this.mode3d = false;
-      this.DecomposeTitle();
    }
 
    THistPainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
@@ -2315,8 +2314,6 @@
             histo.fBins = obj.fBins;
          }
 
-         this.DecomposeTitle();
-
          if (obj.fFunctions && this.options.Func) {
             for (var n=0;n<obj.fFunctions.arr.length;++n) {
                var func = obj.fFunctions.arr[n];
@@ -2445,21 +2442,6 @@
       if (arg==='only-check') return !histo.TestBit(JSROOT.TH1StatusBits.kNoTitle);
       histo.InvertBit(JSROOT.TH1StatusBits.kNoTitle);
       this.DrawTitle();
-   }
-
-   THistPainter.prototype.DecomposeTitle = function() {
-      // if histogram title includes ;, set axis title
-
-      var histo = this.GetHisto();
-
-      if (!histo || !histo.fTitle) return;
-
-      var arr = histo.fTitle.split(';');
-      if (arr.length===3) {
-         histo.fTitle = arr[0];
-         histo.fXaxis.fTitle = arr[1];
-         histo.fYaxis.fTitle = arr[2];
-      }
    }
 
    THistPainter.prototype.DrawTitle = function() {
