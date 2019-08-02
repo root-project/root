@@ -676,23 +676,18 @@ ROOT::Experimental::REveGeomDescription::MakeShapeDescr(TGeoShape *shape, bool a
 
       if (!rd && (elem.nfaces == 1)) {
          ri.shape = shape;
-         ri.rnr_func.clear();
-         ri.rnr_offset = 0;
-         ri.vert_size = ri.norm_size = ri.index_size = 0;
-      } else if (rd && (ri.rnr_offset < 0)) {
+         ri.init = true;
+         ri.v = ri.n = ri.i = 0;
+      } else if (rd && !ri.init) {
          ri.shape = nullptr;
-         ri.rnr_offset = 0;
-
-         // fRndrOffest += rd->GetBinarySize();
-         // fRndrShapes.emplace_back(rd.get());
+         ri.init = true;
 
          ri.raw.resize(rd->GetBinarySize());
          rd->Write( reinterpret_cast<char *>(ri.raw.data()), ri.raw.size() );
 
-         ri.rnr_func = rd->GetRnrFunc();
-         ri.vert_size = rd->SizeV();
-         ri.norm_size = rd->SizeN();
-         ri.index_size = rd->SizeI();
+         ri.v = rd->SizeV();
+         ri.n = rd->SizeN();
+         ri.i = rd->SizeI();
       }
    }
 
@@ -738,11 +733,7 @@ void ROOT::Experimental::REveGeomDescription::CopyMaterialProperties(TGeoVolume 
 void ROOT::Experimental::REveGeomDescription::ResetRndrInfos()
 {
    for (auto &s: fShapes)
-      s.fRenderInfo.rnr_offset = -1;
-
-   fRndrShapes.clear();
-
-   fRndrOffest = 0;
+      s.fRenderInfo.init = false;
 }
 
 /////////////////////////////////////////////////////////////////////
