@@ -81,14 +81,12 @@ public:
 class REveShapeRenderInfo {
 public:
    // render data, equivalent of REveElement::WriteCoreJson
-   int rnr_offset{-1};        ///< rnr_offset;
-   std::string rnr_func;      ///< fRenderData->GetRnrFunc();
-   int vert_size{0};          ///< fRenderData->SizeV();
-   int norm_size{0};          ///< fRenderData->SizeN();
-   int index_size{0};         ///< fRenderData->SizeI();
+   bool init{false};          ///<! indicates if data initialized
+   int v{0};                  ///< fRenderData->SizeV();
+   int n{0};                  ///< fRenderData->SizeN();
+   int i{0};                  ///< fRenderData->SizeI();
    TGeoShape *shape{nullptr}; ///< original shape - can be much less than binary data
    std::vector<unsigned char> raw;  ///< raw shape data with render information, JSON_base64
-   // int trans_size{0};      ///< fRenderData->SizeT(); not used in GeomViewer
 };
 
 /** REveGeomVisible contains description of visible node
@@ -155,7 +153,7 @@ class REveGeomDescription {
       ShapeDescr(TGeoShape *s) : fShape(s) {}
 
       /// Provide render info for visible item
-      REveShapeRenderInfo *rndr_info() { return (nfaces>0) && (fRenderInfo.rnr_offset>=0) ? &fRenderInfo : nullptr; }
+      REveShapeRenderInfo *rndr_info() { return (nfaces>0) && fRenderInfo.init ? &fRenderInfo : nullptr; }
    };
 
    std::vector<TGeoNode *> fNodes;  ///<! flat list of all nodes
@@ -166,8 +164,6 @@ class REveGeomDescription {
    std::vector<int> fSortMap;       ///<! nodes in order large -> smaller volume
    int fNSegments{0};               ///<! number of segments for cylindrical shapes
    std::vector<ShapeDescr> fShapes; ///<! shapes with created descriptions
-   std::vector<REveRenderData*> fRndrShapes; ///<! list of shapes which should be packet into binary
-   int fRndrOffest{0};              ///<! current render offset
 
    std::string fDrawJson;           ///<! JSON with main nodes drawn by client
    int fDrawIdCut{0};               ///<! sortid used for selection of most-significant nodes
