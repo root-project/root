@@ -33,8 +33,14 @@ If the number of coefficients is one less than the number of functions, the PDF 
 
 ### Extending the PDF
 If an \f$ n^\mathrm{th} \f$ coefficient is provided, the PDF **can** be used as an extended PDF, *i.e.* the total number of events will be measured in addition
-to the fractions of the various functions. This requires setting the last argument of the constructor
+to the fractions of the various functions. **This requires setting the last argument of the constructor to `true`.**
+\note For the RooAddPdf, the extension happens automatically.
 
+### Difference to RooAddPdf / RooRealSumFunc
+- RooAddPdf is a PDF of PDFs, *i.e.* its components need to be normalised and non-negative.
+- RooRealSumPdf is a PDF of functions, *i.e.*, its components can be negative, but their sum cannot be. The normalisation
+  is computed automatically, unless the PDF is extended (see above).
+- RooRealSumFunc is a sum of functions. It is neither normalised, nor need it be positive.
 
 */
 
