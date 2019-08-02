@@ -342,7 +342,7 @@ sap.ui.define(['sap/ui/core/Component',
             }
 
             item.server_shape = rd.server_shape =
-               this.createServerShape(rd, draw_msg.raw, draw_msg.offset);
+               this.createServerShape(rd /*, draw_msg.raw, draw_msg.offset*/);
          }
 
          if (old_gradpersegm)
@@ -352,7 +352,7 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       /** Create single shape from provided raw data */
-      createServerShape: function(rd, raw, off) {
+      createServerShape: function(rd) {
 
          if (rd.shape) {
             // case when TGeoShape provided as is
@@ -365,20 +365,30 @@ sap.ui.define(['sap/ui/core/Component',
             }
          }
 
-         off = (off || 0) + rd.rnr_offset;
+         if (!rd.raw || (rd.raw.length==0)) {
+            console.error('No raw data at all');
+            return null;
+         }
+
+         if (!rd.raw.buffer) {
+            console.error('No raw buffer');
+            return null;
+         }
+
+         var off = 0;
 
          if (rd.vert_size) {
-            rd.vtxBuff = new Float32Array(raw, off, rd.vert_size);
+            rd.vtxBuff = new Float32Array(rd.raw.buffer, off, rd.vert_size);
             off += rd.vert_size*4;
          }
 
          if (rd.norm_size) {
-            rd.nrmBuff = new Float32Array(raw, off, rd.norm_size);
+            rd.nrmBuff = new Float32Array(rd.raw.buffer, off, rd.norm_size);
             off += rd.norm_size*4;
          }
 
          if (rd.index_size) {
-            rd.idxBuff = new Uint32Array(raw, off, rd.index_size);
+            rd.idxBuff = new Uint32Array(rd.raw.buffer, off, rd.index_size);
             off += rd.index_size*4;
          }
 
@@ -892,8 +902,8 @@ sap.ui.define(['sap/ui/core/Component',
 
          var server_shape = null;
 
-         if (info.ri && info.rndr_binary)
-            server_shape = this.createServerShape(info.ri, info.rndr_binary.buffer, 0);
+         if (info.ri /* && info.rndr_binary*/)
+            server_shape = this.createServerShape(info.ri /*, info.rndr_binary.buffer, 0*/);
 
          this.drawNodeShape(server_shape, false);
       },
