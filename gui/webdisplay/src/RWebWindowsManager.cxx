@@ -370,6 +370,7 @@ std::string ROOT::Experimental::RWebWindowsManager::GetUrl(const ROOT::Experimen
 ///   WebGui.RecordData: if specified enables data recording for each web window 0 - off, 1 - on
 ///   WebGui.JsonComp: compression factor for JSON conversion, if not specified - each widget uses own default values
 ///   WebGui.ForceHttp: 0 - off (default), 1 - always create real http server to run web window
+///   WebGui.Console: -1 - output only console.error(), 0 - add console.warn(), 1  - add console.log() output
 ///
 ///   HTTP-server related parameters documented in RWebWindowsManager::CreateServer() method
 

@@ -16,23 +16,32 @@
 #include "rootwebpage.h"
 
 #include <ROOT/RLogger.hxx>
-#include <TString.h>
+#include "TString.h"
+#include "TEnv.h"
+
+RootWebPage::RootWebPage(QObject *parent) : QWebEnginePage(parent)
+{
+   fConsole = gEnv->GetValue("WebGui.Console", (int)0);
+}
 
 void RootWebPage::javaScriptConsoleMessage(JavaScriptConsoleMessageLevel lvl, const QString &message, int lineNumber,
                                            const QString &src)
 {
    switch (lvl) {
    case InfoMessageLevel:
-      //if (gDebug > 0)
+      if (fConsole > 0)
          R__DEBUG_HERE("Qt") << Form("%s:%d: %s", src.toLatin1().constData(), lineNumber,
                                      message.toLatin1().constData());
       break;
    case WarningMessageLevel:
-      R__WARNING_HERE("Qt") << Form("%s:%d: %s", src.toLatin1().constData(), lineNumber,
-                                    message.toLatin1().constData());
+      if (fConsole > -1)
+         R__WARNING_HERE("Qt") << Form("%s:%d: %s", src.toLatin1().constData(), lineNumber,
+                                       message.toLatin1().constData());
       break;
    case ErrorMessageLevel:
-      R__ERROR_HERE("Qt") << Form("%s:%d: %s", src.toLatin1().constData(), lineNumber, message.toLatin1().constData());
+      if (fConsole > -2)
+         R__ERROR_HERE("Qt") << Form("%s:%d: %s", src.toLatin1().constData(), lineNumber,
+                                     message.toLatin1().constData());
       break;
    }
 }

@@ -23,6 +23,7 @@
 #include "TString.h"
 #include "TError.h"
 #include "TBase64.h"
+#include "TEnv.h"
 
 #include <ROOT/RLogger.hxx>
 
@@ -38,6 +39,7 @@
 
 BaseHandler::BaseHandler(THttpServer *serv) : fServer(serv), is_closing_(false)
 {
+   fConsole = gEnv->GetValue("WebGui.Console", (int)0);
 }
 
 void BaseHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser)
@@ -132,13 +134,15 @@ bool BaseHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
 {
    switch (level) {
    case LOGSEVERITY_WARNING:
-      R__WARNING_HERE("CEF") << Form("CEF: %s:%d: %s", source.ToString().c_str(), line, message.ToString().c_str());
+      if (fConsole > -1)
+         R__WARNING_HERE("CEF") << Form("CEF: %s:%d: %s", source.ToString().c_str(), line, message.ToString().c_str());
       break;
    case LOGSEVERITY_ERROR:
-      R__ERROR_HERE("CEF") << Form("CEF: %s:%d: %s", source.ToString().c_str(), line, message.ToString().c_str());
+      if (fConsole > -2)
+         R__ERROR_HERE("CEF") << Form("CEF: %s:%d: %s", source.ToString().c_str(), line, message.ToString().c_str());
       break;
    default:
-      // if (gDebug > 0)
+      if (fConsole > 0)
          R__DEBUG_HERE("CEF") << Form("CEF: %s:%d: %s", source.ToString().c_str(), line, message.ToString().c_str());
       break;
    }
