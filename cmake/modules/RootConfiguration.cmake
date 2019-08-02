@@ -684,6 +684,10 @@ get_filename_component(ROOT_BINARY_DIR \"\${ROOT_BINDIR}\" ABSOLUTE)
 configure_file(${CMAKE_SOURCE_DIR}/cmake/modules/RootMacros.cmake
                ${CMAKE_BINARY_DIR}/RootMacros.cmake COPYONLY)
 
+# used by roottest to run tests against ROOT build
+configure_file(${CMAKE_SOURCE_DIR}/cmake/modules/RootTestDriver.cmake
+               ${CMAKE_BINARY_DIR}/RootTestDriver.cmake COPYONLY)
+
 configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig.cmake.in
                ${CMAKE_BINARY_DIR}/installtree/ROOTConfig.cmake @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/RootUseFile.cmake.in
