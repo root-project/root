@@ -85,8 +85,9 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
 
       self.assertEqual(ROOT.foo.__cppname__, 'foo')
 
-      self.assertEqual(ROOT.foo.aa, 0)
-      self.assertEqual(ROOT.foo.bb, 1)
+      if not self.exp_pyroot:
+         self.assertEqual(ROOT.foo.aa, 0)
+         self.assertEqual(ROOT.foo.bb, 1)
 
    def test04NsEnumType(self):
       """Test lookup type of enum in namespace"""
@@ -97,8 +98,9 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
 
       self.assertEqual(ROOT.myns.foo.__cppname__, 'myns::foo')
 
-      self.assertEqual(ROOT.myns.foo.aa, 0)
-      self.assertEqual(ROOT.myns.foo.bb, 1)
+      if not self.exp_pyroot:
+         self.assertEqual(ROOT.myns.foo.aa, 0)
+         self.assertEqual(ROOT.myns.foo.bb, 1)
 
    def test05EnumSignedUnsigned(self):
       """Test lookup of enums with signed & unsigned underlying types"""
