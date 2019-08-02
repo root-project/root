@@ -114,7 +114,6 @@ public:
    int numnodes{0};                         ///< total number of nodes in description
    std::string drawopt;                     ///< draw options for TGeoPainter
    int nsegm{0};                            ///< number of segments for cylindrical shapes
-   int binlen{0};                           ///< extra binary data for that drawing
    std::vector<REveGeomNode*> nodes;        ///< all used nodes to display visible items and not known for client
    std::vector<REveGeomVisible> visibles;   ///< all visible items
 };
@@ -137,8 +136,6 @@ public:
    std::string shape_name; ///< shape class name (if any)
 
    REveShapeRenderInfo *ri{nullptr}; ///< rendering information (if applicable)
-
-   std::vector<unsigned char> rndr_binary; ///<  binary render data (if available)
 };
 
 using REveGeomScanFunc_t = std::function<bool(REveGeomNode &, std::vector<int> &, bool)>;
@@ -173,7 +170,6 @@ class REveGeomDescription {
    int fRndrOffest{0};              ///<! current render offset
 
    std::string fDrawJson;           ///<! JSON with main nodes drawn by client
-   std::vector<unsigned char> fDrawBinary;   ///<! binary data for main draw nodes
    int fDrawIdCut{0};               ///<! sortid used for selection of most-significant nodes
    int fFacesLimit{0};              ///<! maximal number of faces to be selected for drawing
    int fNodesLimit{0};              ///<! maximal number of nodes to be selected for drawing
@@ -195,8 +191,6 @@ class REveGeomDescription {
    ShapeDescr &FindShapeDescr(TGeoShape *shape);
 
    ShapeDescr &MakeShapeDescr(TGeoShape *shape, bool acc_rndr = false);
-
-   void BuildRndrBinary(std::vector<unsigned char> &buf);
 
    void CopyMaterialProperties(TGeoVolume *vol, REveGeomNode &node);
 
@@ -238,12 +232,11 @@ public:
 
    std::string ProcessBrowserRequest(const std::string &req = "");
 
-   bool HasDrawData() const { return (fDrawJson.length() > 0) && (fDrawBinary.size() > 0) && (fDrawIdCut > 0); }
+   bool HasDrawData() const { return (fDrawJson.length() > 0) && (fDrawIdCut > 0); }
    const std::string &GetDrawJson() const { return fDrawJson; }
-   const std::vector<unsigned char> &GetDrawBinary() const { return fDrawBinary; }
-   void ClearRawData();
+   void ClearDrawData();
 
-   int SearchVisibles(const std::string &find, std::string &hjson, std::string &json, std::vector<unsigned char> &binary);
+   int SearchVisibles(const std::string &find, std::string &hjson, std::string &json);
 
    int FindNodeId(const std::vector<int> &stack);
 
@@ -257,7 +250,7 @@ public:
 
    std::string MakePathByStack(const std::vector<int> &stack);
 
-   bool ProduceDrawingFor(int nodeid, std::string &json, std::vector<unsigned char> &binary, bool check_volume = false);
+   bool ProduceDrawingFor(int nodeid, std::string &json, bool check_volume = false);
 
    bool ChangeNodeVisibility(int nodeid, bool selected);
 
