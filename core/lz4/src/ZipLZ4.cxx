@@ -169,6 +169,54 @@ void R__zipLZ4BS(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, 
 
 void R__unzipLZ4BS(int * srcsize, unsigned char * src, int * tgtsize, unsigned char * tgt, int * irep)
 {
-  *irep = 0;
-  return;
+     // NOTE: We don't check that srcsize / tgtsize is reasonable or within the ROOT-imposed limits.
+     // This is assumed to be handled by the upper layers.
+
+     int LZ4_version = LZ4_versionNumber() / (100 * 100);
+     *irep = 0;
+
+     if (R__unlikely(src[0] != 'L' || src[1] != '4' || src[2] != 'B')) {
+        fprintf(stderr, "R__unzipLZ4BS: algorithm run against buffer with incorrect header (got %d%d%d; expected %d%d%d).\n",
+                src[0], src[1], src[2], 'L', '4', 'B');
+        return;
+     }
+
+     if (R__unlikely(src[2] != LZ4_version)) {
+        fprintf(stderr,
+                "R__unzipLZ4: This version of LZ4 is incompatible with the on-disk version (got %d; expected %d).\n",
+                src[2], LZ4_version);
+        return;
+     }
+
+     int inputBufferSize = *srcsize - kHeaderSize;
+
+     // TODO: The checksum followed by the decompression means we iterate through the buffer twice.
+     // We should perform some performance tests to see whether we can interleave the two -- i.e., at
+     // what size of chunks does interleaving (avoiding two fetches from RAM) improve enough for the
+     // extra function call costs?  NOTE that ROOT limits the buffer size to 16MB.
+     XXH64_hash_t checksumResult = XXH64(src + kHeaderSize, inputBufferSize, 0);
+     XXH64_hash_t checksumFromFile =
+        XXH64_hashFromCanonical(reinterpret_cast<XXH64_canonical_t *>(src + kChecksumOffset));
+
+     if (R__unlikely(checksumFromFile != checksumResult)) {
+        fprintf(
+           stderr,
+           "R__unzipLZ4: Buffer corruption error!  Calculated checksum %llu; checksum calculated in the file was %llu.\n",
+           checksumResult, checksumFromFile);
+        return;
+     }
+       size_t elem_count = *srcsize / sizeof(float);
+       char *temp_buffer = (char *)malloc(*tgtsize);
+       int returnStatus = bshuf_decompress_lz4((const char *)(&src[kHeaderSize]), (char *)(tgt), elem_count, sizeof(float), 0);
+       return;
+
+       //int returnStatus = LZ4_decompress_safe((char *)(&src[kHeaderSize]), (char *)(tgt), inputBufferSize, *tgtsize);
+
+     if (R__unlikely(returnStatus < 0)) {
+        fprintf(stderr, "R__unzipLZ4: error in decompression around byte %d out of maximum %d.\n", -returnStatus,
+                *tgtsize);
+        return;
+     }
+
+     *irep = returnStatus;
 }
