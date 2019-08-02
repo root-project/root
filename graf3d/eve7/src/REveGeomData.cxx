@@ -681,9 +681,13 @@ ROOT::Experimental::REveGeomDescription::MakeShapeDescr(TGeoShape *shape, bool a
          ri.vert_size = ri.norm_size = ri.index_size = 0;
       } else if (rd && (ri.rnr_offset < 0)) {
          ri.shape = nullptr;
-         ri.rnr_offset = fRndrOffest;
-         fRndrOffest += rd->GetBinarySize();
-         fRndrShapes.emplace_back(rd.get());
+         ri.rnr_offset = 0;
+
+         // fRndrOffest += rd->GetBinarySize();
+         // fRndrShapes.emplace_back(rd.get());
+
+         ri.raw.resize(rd->GetBinarySize());
+         rd->Write( reinterpret_cast<char *>(ri.raw.data()), ri.raw.size() );
 
          ri.rnr_func = rd->GetRnrFunc();
          ri.vert_size = rd->SizeV();

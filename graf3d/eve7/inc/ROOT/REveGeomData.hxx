@@ -76,18 +76,19 @@ public:
 };
 
 
-/** Information block for render data, stored in binarz buffer */
+/** Information block for render data, stored in binary buffer */
 
 class REveShapeRenderInfo {
 public:
    // render data, equivalent of REveElement::WriteCoreJson
-   int rnr_offset{-1};   ///< rnr_offset;
-   std::string rnr_func; ///< fRenderData->GetRnrFunc();
-   int vert_size{0};     ///< fRenderData->SizeV();
-   int norm_size{0};     ///< fRenderData->SizeN();
-   int index_size{0};    ///< fRenderData->SizeI();
+   int rnr_offset{-1};        ///< rnr_offset;
+   std::string rnr_func;      ///< fRenderData->GetRnrFunc();
+   int vert_size{0};          ///< fRenderData->SizeV();
+   int norm_size{0};          ///< fRenderData->SizeN();
+   int index_size{0};         ///< fRenderData->SizeI();
    TGeoShape *shape{nullptr}; ///< original shape - can be much less than binary data
-   // int trans_size{0};     ///< fRenderData->SizeT(); not used in GeomViewer
+   std::vector<unsigned char> raw;  ///< raw shape data with render information, JSON_base64
+   // int trans_size{0};      ///< fRenderData->SizeT(); not used in GeomViewer
 };
 
 /** REveGeomVisible contains description of visible node

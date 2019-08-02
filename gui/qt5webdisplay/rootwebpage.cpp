@@ -23,7 +23,7 @@ void RootWebPage::javaScriptConsoleMessage(JavaScriptConsoleMessageLevel lvl, co
 {
    switch (lvl) {
    case InfoMessageLevel:
-      if (gDebug > 0)
+      //if (gDebug > 0)
          R__DEBUG_HERE("Qt") << Form("%s:%d: %s", src.toLatin1().constData(), lineNumber,
                                      message.toLatin1().constData());
       break;
