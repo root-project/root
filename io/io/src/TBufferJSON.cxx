@@ -3008,6 +3008,8 @@ R__ALWAYS_INLINE void TBufferJSON::JsonWriteArrayCompress(const T *vname, Int_t 
          JsonWriteBasic(vname[indx]);
       }
       fValue.Append("]");
+   } else if (is_base64 && !arrsize) {
+      fValue.Append("[]");
    } else {
       fValue.Append("{");
       fValue.Append(TString::Format("\"$arr\":\"%s\"%s\"len\":%d", typname, fArraySepar.Data(), arrsize));
