@@ -189,10 +189,8 @@ sap.ui.define(['sap/ui/core/Component',
       /** Entry point for all data from server */
       OnWebsocketMsg: function(handle, msg, offset) {
 
-         // binary data can be send only as addition to draw message
-         // here data can be placed in the queue and processed when all other prerequicities are done
          if (typeof msg != "string")
-            return this.checkDrawMsg("binary", null, msg, offset);
+            return console.error("Browser do not uses binary messages len = " + mgs.byteLength);
 
          var mhdr = msg.substr(0,6);
          msg = msg.substr(6);
@@ -221,12 +219,6 @@ sap.ui.define(['sap/ui/core/Component',
                   //    tt.autoResizeColumn(k);
                }
             }
-            break;
-         case "MODIF:":
-            this.modifyDescription(msg);
-            break;
-         case "APPND:":
-            this.checkDrawMsg("append", JSROOT.parse(msg));
             break;
          default:
             console.error('Non recognized msg ' + mhdr + ' len=' + msg.length);

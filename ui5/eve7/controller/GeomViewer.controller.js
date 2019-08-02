@@ -377,19 +377,19 @@ sap.ui.define(['sap/ui/core/Component',
 
          var off = 0;
 
-         if (rd.vert_size) {
-            rd.vtxBuff = new Float32Array(rd.raw.buffer, off, rd.vert_size);
-            off += rd.vert_size*4;
+         if (rd.v) {
+            rd.vtxBuff = new Float32Array(rd.raw.buffer, off, rd.v);
+            off += rd.v*4;
          }
 
-         if (rd.norm_size) {
-            rd.nrmBuff = new Float32Array(rd.raw.buffer, off, rd.norm_size);
-            off += rd.norm_size*4;
+         if (rd.n) {
+            rd.nrmBuff = new Float32Array(rd.raw.buffer, off, rd.n);
+            off += rd.n*4;
          }
 
-         if (rd.index_size) {
-            rd.idxBuff = new Uint32Array(rd.raw.buffer, off, rd.index_size);
-            off += rd.index_size*4;
+         if (rd.i) {
+            rd.idxBuff = new Uint32Array(rd.raw.buffer, off, rd.i);
+            off += rd.i*4;
          }
 
          // shape handle is similar to created in JSROOT.GeoPainter
@@ -397,18 +397,15 @@ sap.ui.define(['sap/ui/core/Component',
             _typename: "$$Shape$$", // indicate that shape can be used as is
             ready: true,
             geom: this.creator.makeEveGeometry(rd),
-            nfaces: (rd.index_size-2)/3
+            nfaces: (rd.i-2)/3
          };
       },
 
       /** function to accumulate and process all drawings messages
        * if not all scripts are loaded, messages are quied and processed later */
 
-      checkDrawMsg: function(kind, msg, _raw, _offset) {
-         if (kind == "binary") {
-            if (_raw)
-               return console.error("Did not process raw data " + _raw.byteLength + " offset " + _offset);
-         } else if (kind) {
+      checkDrawMsg: function(kind, msg) {
+         if (kind) {
             if (!msg)
                return console.error("No message is provided for " + kind);
 
@@ -483,7 +480,7 @@ sap.ui.define(['sap/ui/core/Component',
          // binary data can be send only as addition to draw message
          // here data can be placed in the queue and processed when all other prerequicities are done
          if (typeof msg != "string")
-            return this.checkDrawMsg("binary", null, msg, offset);
+            return console.error("Geom viewer do not uses binary messages len = " + mgs.byteLength);
 
          var mhdr = msg.substr(0,6);
          msg = msg.substr(6);
