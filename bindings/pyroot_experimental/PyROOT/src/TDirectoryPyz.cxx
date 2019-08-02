@@ -1,4 +1,4 @@
-// Author: Danilo Piparo, Stefan Wunsch CERN  08/2018
+// Author: Danilo Piparo, Stefan Wunsch, Massimiliano Galli CERN  08/2018
 // Original PyROOT code by Wim Lavrijsen, LBL
 
 /*************************************************************************
@@ -36,10 +36,10 @@ PyObject *TDirectoryWriteObject(const CPPInstance *self, PyObject *args)
    PyObject *option = nullptr;
    Int_t bufsize = 0;
    if (!PyArg_ParseTuple(args, const_cast<char *>("O!O!|O!i:TDirectory::WriteObject"),
-                         &CPPInstance_Type, &wrt,
-                         &CPyCppyy_PyUnicode_Type, &name,
-                         &CPyCppyy_PyUnicode_Type, &option,
-                         &bufsize))
+                        &CPPInstance_Type, &wrt,
+                        &CPyCppyy_PyUnicode_Type, &name,
+                        &CPyCppyy_PyUnicode_Type, &option,
+                        &bufsize))
       return nullptr;
    auto dir = (TDirectory *)GetTClass(self)->DynamicCast(TDirectory::Class(), self->GetObject());
    if (!dir) {
@@ -58,36 +58,32 @@ PyObject *TDirectoryWriteObject(const CPPInstance *self, PyObject *args)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \brief Implement the Get method for TDirectory
-/// This allows to seamlessly read from a TDirectory, and therefore a TDirectoryFile
-/// and file objects inputting their key name, being them TObjects or not.
-PyObject *TDirectoryGet(const CPPInstance *self, PyObject *pynamecycle)
+/// \brief Implements a getter to assign to TDirectory.__getattr__
+/// Method that will be assigned to TDirectory.__getattr__: it modifies its
+/// behavior by raising an AttributeError if the object does not exist and
+/// by caching the result of a successful get in case of other attempts.
+/// In this last case, the same object (and not a copy) is called every time.
+/// It is inherited by TDirectoryFile and TFile.
+PyObject *TDirectoryGetAttr(PyObject *self, PyObject *attr)
 {
-   // Pythonization of TDirectory::Get that handles non-TObject deriveds
-   if (!CPPInstance_Check(self)) {
-      PyErr_SetString(PyExc_TypeError, "TDirectory::Get must be called with a TDirectory instance as first argument");
+   // Injection of TDirectory.__getattr__ that raises AttributeError on failure.
+   PyObject *result = CallPyObjMethod(self, "Get", attr);
+   if (!result)
+      return result;
+
+   if (!PyObject_IsTrue(result)) {
+      PyObject *astr = PyObject_Str(attr);
+      PyObject *stypestr = PyObject_Str(PyObject_Type(self));
+      PyErr_Format(PyExc_AttributeError, "%s object has no attribute \'%s\'", CPyCppyy_PyUnicode_AsString(stypestr),
+                   CPyCppyy_PyUnicode_AsString(astr));
+      Py_DECREF(astr);
+      Py_DECREF(result);
       return nullptr;
    }
-   auto dirf = (TDirectory *)GetTClass(self)->DynamicCast(TDirectory::Class(), self->GetObject());
-   if (!dirf) {
-      PyErr_SetString(PyExc_ReferenceError, "attempt to access a null-pointer");
-      return nullptr;
-   }
-   const char *namecycle = CPyCppyy_PyUnicode_AsString(pynamecycle);
-   if (!namecycle)
-      return nullptr; // TypeError already set
-   auto key = dirf->GetKey(namecycle);
-   // We take this branch if the object is a TDirectoryFile (or daughters)
-   if (key) {
-      void *addr = dirf->GetObjectChecked(namecycle, key->GetClassName());
-      return BindCppObjectNoCast(addr, (Cppyy::TCppType_t)Cppyy::GetScope(key->GetClassName()), kFALSE);
-   }
-   // This branch is taken if the object is a TDirectory. The objects within TDirectories can only be TObjects.
-   // Of course that statement is not their daughters which can contain anything - for example TFile is a daugher of TDirectory!
-   // BindCppObject internally is able to cast the TObject pointer to the right type after interrogating the
-   // type system of ROOT via TClass.
-   void *addr = dirf->Get(namecycle);
-   return BindCppObject(addr, (Cppyy::TCppType_t)Cppyy::GetScope("TObject"), kFALSE);
+   // caching behavior seems to be more clear to the user; can always override said
+   // behavior (i.e. re-read from file) with an explicit Get() call
+   PyObject_SetAttr(self, attr, result);
+   return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -99,10 +95,10 @@ PyObject *TDirectoryGet(const CPPInstance *self, PyObject *pynamecycle)
 /// ~~~{.python}
 /// myfile.mydir.mysubdir.myHist.Draw()
 /// ~~~
-PyObject *PyROOT::AddDirectoryAttrSyntaxPyz(PyObject * /* self */, PyObject *args)
+PyObject *PyROOT::AddDirectoryGetAttrPyz(PyObject * /* self */, PyObject *args)
 {
    PyObject *pyclass = PyTuple_GetItem(args, 0);
-   Utility::AddToClass(pyclass, "__getattr__", (PyCFunction)TDirectoryGet, METH_O);
+   Utility::AddToClass(pyclass, "__getattr__", (PyCFunction)TDirectoryGetAttr, METH_O);
    Py_RETURN_NONE;
 }
 
