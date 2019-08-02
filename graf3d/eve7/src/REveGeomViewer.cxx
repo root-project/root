@@ -260,5 +260,8 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
 
       auto json = fDesc.ProcessBrowserRequest(arg.substr(6));
       if (json.length() > 0) fWebWindow->Send(connid, json);
+   } else if (arg == "RELOAD") {
+
+      SendGeometry(connid);
    }
 }
