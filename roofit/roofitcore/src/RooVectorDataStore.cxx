@@ -1363,9 +1363,7 @@ void RooVectorDataStore::setArgStatus(const RooArgSet& /*set*/, Bool_t /*active*
 
 void RooVectorDataStore::attachBuffers(const RooArgSet& extObs) 
 {
-  RooFIter iter = _varsww.fwdIterator() ;
-  RooAbsArg* arg ;
-  while((arg=iter.next())) {
+  for (auto arg : _varsww) {
     RooAbsArg* extArg = extObs.find(arg->GetName()) ;
     if (extArg) {
       extArg->attachToVStore(*this) ;
@@ -1379,10 +1377,8 @@ void RooVectorDataStore::attachBuffers(const RooArgSet& extObs)
 
 void RooVectorDataStore::resetBuffers() 
 { 
-  RooFIter iter = _varsww.fwdIterator() ;
-  RooAbsArg* arg ;
-  while((arg=iter.next())) {
-    arg->attachToVStore(*this) ;
+  for (auto arg : _varsww) {
+    arg->attachToVStore(*this);
   }
 }  
 
@@ -1508,7 +1504,6 @@ void RooVectorDataStore::CatVector::Streamer(TBuffer &R__b)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a batch of the data columns for all events in [firstEvent, lastEvent[.
-/// The
 
 std::vector<RooSpan<const double>> RooVectorDataStore::getBatch(std::size_t firstEvent, std::size_t lastEvent) const
 {

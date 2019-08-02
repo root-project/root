@@ -96,8 +96,6 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
 /// \param[in] sumSet2 Right-hand element of the pair-wise products
 /// \param[in] takeOwnership If true, the RooAddition object will take ownership of the arguments in the `sumSets`
 ///
-
-
 RooAddition::RooAddition(const char* name, const char* title, const RooArgList& sumSet1, const RooArgList& sumSet2, Bool_t takeOwnership) 
     : RooAbsReal(name, title)
     , _set("!set","set of components",this)
@@ -108,16 +106,16 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
     RooErrorHandler::softAbort() ;    
   }
 
-  std::unique_ptr<TIterator> inputIter1( sumSet1.createIterator() );
-  std::unique_ptr<TIterator> inputIter2( sumSet2.createIterator() );
-  RooAbsArg *comp1(0),*comp2(0) ;
-  while((comp1 = (RooAbsArg*)inputIter1->Next())) {
+  for (unsigned int i = 0; i < sumSet1.size(); ++i) {
+    const auto comp1 = &sumSet1[i];
+    const auto comp2 = &sumSet2[i];
+
     if (!dynamic_cast<RooAbsReal*>(comp1)) {
       coutE(InputArguments) << "RooAddition::ctor(" << GetName() << ") ERROR: component " << comp1->GetName() 
 			    << " in first list is not of type RooAbsReal" << endl ;
       RooErrorHandler::softAbort() ;
     }
-    comp2 = (RooAbsArg*)inputIter2->Next();
+
     if (!dynamic_cast<RooAbsReal*>(comp2)) {
       coutE(InputArguments) << "RooAddition::ctor(" << GetName() << ") ERROR: component " << comp2->GetName() 
 			    << " in first list is not of type RooAbsReal" << endl ;
