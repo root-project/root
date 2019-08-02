@@ -132,14 +132,10 @@ void ROOT::Experimental::REveGeomViewer::SendGeometry(unsigned connid)
       fDesc.CollectVisibles();
 
    auto &json = fDesc.GetDrawJson();
-   auto &binary = fDesc.GetDrawBinary();
 
-   printf("Produce JSON %d binary %d\n", (int) json.length(), (int) binary.size());
+   printf("Produce geometry JSON %d\n", (int) json.length());
 
    fWebWindow->Send(connid, json);
-
-   if (binary.size() > 0)
-      fWebWindow->SendBinary(connid, binary.data(), binary.size());
 }
 
 
@@ -163,20 +159,16 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
       std::string query = arg.substr(7);
 
       std::string hjson, json;
-      std::vector<unsigned char> binary;
 
-      auto nmatches = fDesc.SearchVisibles(query, hjson, json, binary);
+      auto nmatches = fDesc.SearchVisibles(query, hjson, json);
 
-      printf("Searches %s found %d hjson %d json %d binary %d\n", query.c_str(), nmatches, (int) hjson.length(), (int) json.length(), (int) binary.size());
+      printf("Searches %s found %d hjson %d json %d\n", query.c_str(), nmatches, (int) hjson.length(), (int) json.length());
 
       // send reply with appropriate header - NOFOUND, FOUND0:, FOUND1:
       fWebWindow->Send(connid, hjson);
 
       if (!json.empty())
          fWebWindow->Send(connid, json);
-
-      if (binary.size() > 0)
-         fWebWindow->SendBinary(connid, binary.data(), binary.size());
 
    } else if (arg.compare(0,4,"GET:") == 0) {
       // provide exact shape
@@ -186,16 +178,12 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
       auto nodeid = fDesc.FindNodeId(stack);
 
       std::string json{"SHAPE:"};
-      std::vector<unsigned char> binary;
 
-      fDesc.ProduceDrawingFor(nodeid, json, binary);
+      fDesc.ProduceDrawingFor(nodeid, json);
 
-      printf("Produce shape for stack json %d binary %d\n", (int) json.length(), (int) binary.size());
+      printf("Produce shape for stack json %d\n", (int) json.length());
 
       fWebWindow->Send(connid, json);
-
-      if (binary.size() > 0)
-         fWebWindow->SendBinary(connid, binary.data(), binary.size());
 
    } else if (arg.compare(0, 6, "GVREQ:") == 0) {
 
@@ -245,15 +233,12 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
             // there can be many elements, which reference same volume
 
             std::string json{"APPND:"};
-            std::vector<unsigned char> binary;
 
-            fDesc.ProduceDrawingFor(nodeid, json, binary, true);
+            if (fDesc.ProduceDrawingFor(nodeid, json, true)) {
 
-            if (binary.size() > 0) {
-               printf("Send appending JSON %d binary %d\n", (int) json.length(), (int) binary.size());
+               printf("Send appending JSON %d\n", (int) json.length());
 
                fWebWindow->Send(connid, json);
-               fWebWindow->SendBinary(connid, binary.data(), binary.size());
             }
          } else if (selected) {
 

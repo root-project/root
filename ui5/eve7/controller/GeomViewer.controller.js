@@ -342,7 +342,7 @@ sap.ui.define(['sap/ui/core/Component',
             }
 
             item.server_shape = rd.server_shape =
-               this.createServerShape(rd /*, draw_msg.raw, draw_msg.offset*/);
+               this.createServerShape(rd);
          }
 
          if (old_gradpersegm)
@@ -406,15 +406,6 @@ sap.ui.define(['sap/ui/core/Component',
 
       checkDrawMsg: function(kind, msg, _raw, _offset) {
          if (kind == "binary") {
-            for (var k = 0; k < this.queue.length; ++k) {
-               if (this.queue[k].binlen && !this.queue[k].raw) {
-                  this.queue[k].raw = _raw;
-                  this.queue[k].offset = _offset;
-                  _raw = null;
-                  break;
-               }
-            }
-
             if (_raw)
                return console.error("Did not process raw data " + _raw.byteLength + " offset " + _offset);
          } else if (kind) {
@@ -429,10 +420,6 @@ sap.ui.define(['sap/ui/core/Component',
          if (!this.creator ||            // complete JSROOT/EVE7 TGeo functionality is loaded
             !this.queue.length ||        // drawing messages are created
             !this.renderingDone) return; // UI5 rendering is performed
-
-         // first message in the queue still waiting for raw data
-         if (this.queue[0].binlen && !this.queue[0].raw)
-            return;
 
          // only from here we can start to analyze messages and create TGeo painter, clones objects and so on
 
@@ -460,7 +447,7 @@ sap.ui.define(['sap/ui/core/Component',
             case "found":
                // only extend nodes and decode shapes
                if (this.extractRawShapes(msg))
-                  this.paintFoundNodes(msg.visibles, true, msg.binlen > 0);
+                  this.paintFoundNodes(msg.visibles, true);
                break;
 
             case "append":
@@ -742,10 +729,10 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       /** Paint extra node - or remove them from painting */
-      paintFoundNodes: function(visibles, append_more, with_binaries) {
+      paintFoundNodes: function(visibles, append_more) {
          if (!this.geo_painter) return;
 
-         if (append_more && (with_binaries || !visibles))
+         if (append_more)
             this.geo_painter.appendMoreNodes(visibles || null);
 
          if (visibles && visibles.length && (visibles.length < 100)) {
@@ -902,8 +889,8 @@ sap.ui.define(['sap/ui/core/Component',
 
          var server_shape = null;
 
-         if (info.ri /* && info.rndr_binary*/)
-            server_shape = this.createServerShape(info.ri /*, info.rndr_binary.buffer, 0*/);
+         if (info.ri)
+            server_shape = this.createServerShape(info.ri);
 
          this.drawNodeShape(server_shape, false);
       },
