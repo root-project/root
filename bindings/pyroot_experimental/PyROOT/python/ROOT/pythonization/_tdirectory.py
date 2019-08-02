@@ -8,7 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from libROOTPython import AddDirectoryAttrSyntaxPyz, AddDirectoryWritePyz
+from libROOTPython import AddDirectoryGetAttrPyz, AddDirectoryWritePyz
 from ROOT import pythonization
 import cppyy
 
@@ -19,6 +19,6 @@ import cppyy
 @pythonization(lazy = False)
 def pythonize_tdirectory():
     klass = cppyy.gbl.TDirectory
-    AddDirectoryAttrSyntaxPyz(klass)
+    AddDirectoryGetAttrPyz(klass)
     AddDirectoryWritePyz(klass)
     return True
