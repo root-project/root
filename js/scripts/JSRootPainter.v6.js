@@ -685,10 +685,10 @@
       }
 
       if (JSROOT.gStyle.Zooming && !this.disable_zooming) {
-         var r =  axis_g.append("svg:rect")
-                        .attr("class", "axis_zoom")
-                        .style("opacity", "0")
-                        .style("cursor", "crosshair");
+         var r = axis_g.append("svg:rect")
+                       .attr("class", "axis_zoom")
+                       .style("opacity", "0")
+                       .style("cursor", "crosshair");
 
          if (vertical)
             r.attr("x", (side>0) ? (-2*labelsize - 3) : 3)
@@ -772,10 +772,10 @@
    TAxisPainter.prototype.Redraw = function() {
 
       var gaxis = this.GetObject(),
-          x1 = this.AxisToSvg("x", gaxis.fX1, "pad"),
-          y1 = this.AxisToSvg("y", gaxis.fY1, "pad"),
-          x2 = this.AxisToSvg("x", gaxis.fX2, "pad"),
-          y2 = this.AxisToSvg("y", gaxis.fY2, "pad"),
+          x1 = this.AxisToSvg("x", gaxis.fX1),
+          y1 = this.AxisToSvg("y", gaxis.fY1),
+          x2 = this.AxisToSvg("x", gaxis.fX2),
+          y2 = this.AxisToSvg("y", gaxis.fY2),
           w = x2 - x1, h = y1 - y2,
           vertical = Math.abs(w) < Math.abs(h),
           func = null, reverse = false, kind = "normal",
@@ -1167,8 +1167,7 @@
 
       if (this.x_kind == 'time') {
          this.x = d3.scaleTime();
-      } else
-      if (this.swap_xy ? pad.fLogy : pad.fLogx) {
+      } else if (this.swap_xy ? pad.fLogy : pad.fLogx) {
          this.logx = true;
 
          if (this.scale_xmax <= 0) this.scale_xmax = 0;
@@ -1196,8 +1195,7 @@
       if (this.x_kind == 'time') {
          // we emulate scale functionality
          this.grx = function(val) { return this.x(this.ConvertX(val)); }
-      } else
-      if (this.logx) {
+      } else if (this.logx) {
          this.grx = function(val) { return (val < this.scale_xmin) ? (this.swap_xy ? this.x.range()[0]+5 : -5) : this.x(val); }
       } else {
          this.grx = this.x;
@@ -1672,9 +1670,10 @@
               .attr("height", h)
               .attr("viewBox", "0 0 " + w + " " + h);
 
-      var tooltip_rect = this.draw_g.select(".interactive_rect");
+      // var tooltip_rect = this.draw_g.select(".interactive_rect");
+      // if (JSROOT.BatchMode) return tooltip_rect.remove();
 
-      if (JSROOT.BatchMode) return tooltip_rect.remove();
+      if (JSROOT.BatchMode) return;
 
       this.draw_g.attr("x", lm)
                  .attr("y", tm)
@@ -1685,15 +1684,19 @@
          this.AddDrag({ obj: this, only_resize: true, minwidth: 20, minheight: 20,
                         redraw: this.SizeChanged.bind(this) });
 
-      if (tooltip_rect.empty())
-         tooltip_rect =
-            this.draw_g
-                .append("rect")
-                .attr("class","interactive_rect")
-                .style('opacity',0)
-                .style('fill',"none")
-                .style("pointer-events","visibleFill")
-                .property('handlers_set', 0);
+      var tooltip_rect = main_svg;
+      tooltip_rect.style("pointer-events","visibleFill")
+                  .property('handlers_set', 0);
+
+      //  if (tooltip_rect.empty())
+      //     tooltip_rect =
+      //       this.draw_g
+      //          .append("rect")
+      //          .attr("class","interactive_rect")
+      //          .style('opacity',0)
+      //          .style('fill',"none")
+      //          .style("pointer-events","visibleFill")
+      //          .property('handlers_set', 0);
 
       var handlers_set = (pp && pp._fast_drawing) ? 0 : 1;
 

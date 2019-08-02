@@ -2903,6 +2903,8 @@
          this.draw_g.attr('objtype', encodeURI(this.draw_object._typename || "type"));
       }
 
+      this.draw_g.property('in_frame', !!frame_layer); // indicates coordinate system
+
       return this.draw_g;
    }
 
@@ -2971,68 +2973,118 @@
       return pad_painter ? pad_painter.pad : null;
    }
 
-   /** @summary Converts pad x or y coordinate into NDC value
-    * @private */
-   TObjectPainter.prototype.ConvertToNDC = function(axis, value, isndc) {
-      if (isndc) return value;
-      var pad = this.root_pad();
-      if (!pad) return value;
-
-      if (axis=="y") {
-         if (pad.fLogy)
-            value = (value>0) ? JSROOT.log10(value) : pad.fUymin;
-         return (value - pad.fY1) / (pad.fY2 - pad.fY1);
-      }
-      if (pad.fLogx)
-         value = (value>0) ? JSROOT.log10(value) : pad.fUxmin;
-      return (value - pad.fX1) / (pad.fX2 - pad.fX1);
-   }
-
-   /** @summary Converts x or y coordinate into SVG pad or frame coordinates.
+   /** @summary Converts x or y coordinate into SVG pad coordinates.
     *
     *  @param {string} axis - name like "x" or "y"
     *  @param {number} value - axis value to convert.
-    *  @param {boolean|string} kind - false or undefined is coordinate inside frame, true - when NDC pad coordinates are used, "pad" - when pad coordinates relative to pad ranges are specified
-    *  @returns {number} rounded value of requested coordiantes
+    *  @param {boolean} ndc - is value in NDC coordinates
+    *  @param {boolean} noround - skip rounding
+    *  @returns {number} value of requested coordiantes, rounded if kind.noround not specified
     *  @private
     */
-   TObjectPainter.prototype.AxisToSvg = function(axis, value, kind) {
-      var main = this.frame_painter();
-      if (main && !kind && main["gr"+axis]) {
-         // this is frame coordinates
-         value = (axis=="y") ? main.gry(value) + main.frame_y()
-                             : main.grx(value) + main.frame_x();
+   TObjectPainter.prototype.AxisToSvg = function(axis, value, ndc, noround) {
+      var use_frame = this.draw_g && this.draw_g.property('in_frame'),
+          main = use_frame ? this.frame_painter() : null;
+
+      if (use_frame && main && main["gr"+axis]) {
+         value = (axis=="y") ? main.gry(value) + (use_frame ? 0 : main.frame_y())
+                             : main.grx(value) + (use_frame ? 0 : main.frame_x());
+      } else if (use_frame) {
+         value = 0; // in principal error, while frame calculation requested
       } else {
-         if (kind !== true) value = this.ConvertToNDC(axis, value);
+         var pad = ndc ? null : this.root_pad();
+         if (pad) {
+            if (axis=="y") {
+               if (pad.fLogy)
+                  value = (value>0) ? JSROOT.log10(value) : pad.fUymin;
+               value = (value - pad.fY1) / (pad.fY2 - pad.fY1);
+            } else {
+               if (pad.fLogx)
+                  value = (value>0) ? JSROOT.log10(value) : pad.fUxmin;
+               value = (value - pad.fX1) / (pad.fX2 - pad.fX1);
+            }
+         }
          value = (axis=="y") ? (1-value)*this.pad_height() : value*this.pad_width();
       }
-      return Math.round(value);
+
+      return noround ? value : Math.round(value);
+   }
+
+   /** @summary Converts pad SVG x or y coordinates into axis values.
+   *
+   *  @param {string} axis - name like "x" or "y"
+   *  @param {number} coord - graphics coordiante.
+   *  @param {boolean} ndc - kind of return value
+   *  @returns {number} value of requested coordiantes
+   *  @private
+   */
+
+   TObjectPainter.prototype.SvgToAxis = function(axis, coord, ndc) {
+      var use_frame = this.draw_g && this.draw_g.property('in_frame'),
+          main = use_frame ? this.frame_painter() : null;
+
+      if (use_frame) main = this.frame_painter();
+
+      if (use_frame && main) {
+         return  (axis=="y") ? main.RevertY(coord - (use_frame ? 0 : main.frame_y()))
+                             : main.RevertX(coord - (use_frame ? 0 : main.frame_x()));
+      } else if (use_frame) {
+         return 0; // in principal error, while frame calculation requested
+      }
+
+      var value = (axis=="y") ? (1 - coord / this.pad_height()) : coord / this.pad_width();
+      var pad = ndc ? null : this.root_pad();
+
+      if (pad) {
+         if (axis=="y") {
+            value = pad.fY1  + value * (pad.fY2 - pad.fY1);
+            if (pad.fLogy) value = Math.pow(10, value);
+         } else {
+            value = pad.fX1 + value * (pad.fX2 - pad.fX1);
+            if (pad.fLogx) value = Math.pow(10, value);
+         }
+      }
+
+      return value;
    }
 
   /** @summary Return functor, which can convert x and y coordinates into pixels, used for drawing
    *
    * Produce functor can convert x and y value by calling func.x(x) and func.y(y)
-   *  @param {boolean|string} kind - false or undefined is coordinate inside frame, true - when NDC pad coordinates are used, "pad" - when pad coordinates relative to pad ranges are specified
+   *  @param {boolean} isndc - if NDC coordinates will be used
    *  @private
    */
-  TObjectPainter.prototype.AxisToSvgFunc = function(kind) {
-     var func = { kind: kind }, main = this.frame_painter();
-     if (main && !kind && main.grx && main.gry) {
-        func.main = main;
-        func.offx = main.frame_x();
-        func.offy = main.frame_y();
+  TObjectPainter.prototype.AxisToSvgFunc = function(isndc) {
+     var func = {isndc: isndc}, use_frame = this.draw_g && this.draw_g.property('in_frame');
+     if (use_frame) func.main = this.frame_painter();
+     if (func.main && !isndc && func.main.grx && func.main.gry) {
+        func.offx = func.main.frame_x();
+        func.offy = func.main.frame_y();
         func.x = function(x) { return Math.round(this.main.grx(x) + this.offx); }
         func.y = function(y) { return Math.round(this.main.gry(y) + this.offy); }
      } else {
-        if (kind !== true) func.p = this; // need for NDC conversion
+        if (!isndc) func.pad = this.root_pad(); // need for NDC conversion
         func.padh = this.pad_height();
         func.padw = this.pad_width();
-        func.x = function(x) { if (this.p) x = this.p.ConvertToNDC("x", x); return Math.round(x*this.padw); }
-        func.y = function(y) { if (this.p) y = this.p.ConvertToNDC("y", y); return Math.round((1-y)*this.padh); }
+        func.x = function(value) {
+           if (this.pad) {
+              if (this.pad.fLogx)
+                 value = (value>0) ? JSROOT.log10(value) : this.pad.fUxmin;
+              value = (value - this.pad.fX1) / (this.pad.fX2 - this.pad.fX1);
+           }
+           return Math.round(value*this.padw);
+        }
+        func.y = function(value) {
+           if (this.pad) {
+              if (this.pad.fLogy)
+                 value = (value>0) ? JSROOT.log10(value) : this.pad.fUymin;
+               value = (value - this.pad.fY1) / (this.pad.fY2 - this.pad.fY1);
+           }
+           return Math.round((1-value)*this.padh);
+        }
      }
      return func;
   }
-
 
    /** @summary Returns svg element for the frame.
     *
@@ -3601,10 +3653,54 @@
          this.control.SwitchTooltip(on);
    }
 
-   /** @summary Add drag interactive elements
+   /** @summary Add move handlers for drawn element
+    * @private */
+   TObjectPainter.prototype.AddMove = function(args) {
+
+      if (!JSROOT.gStyle.MoveResize || JSROOT.BatchMode) return;
+
+      function detectRightButton(event) {
+         if ('buttons' in event) return event.buttons === 2;
+         else if ('which' in event) return event.which === 3;
+         else if ('button' in event) return event.button === 2;
+         return false;
+      }
+
+      var prefix = "", drag_move;
+      if (JSROOT._test_d3_ === 3) {
+         prefix = "drag";
+         drag_move = d3.behavior.drag().origin(Object);
+      } else {
+         drag_move = d3.drag().subject(Object);
+      }
+
+      drag_move
+        .on(prefix+"start",  function() {
+            if (detectRightButton(d3.event.sourceEvent)) return;
+            JSROOT.Painter.closeMenu(); // close menu
+            this.SwitchTooltip(false); // disable tooltip
+            d3.event.sourceEvent.preventDefault();
+            d3.event.sourceEvent.stopPropagation();
+            if (args.begin) {
+               var pos = d3.mouse(this.draw_g.node());
+               args.begin(pos[0], pos[1]);
+            }
+       }.bind(this)).on("drag", function() {
+            d3.event.sourceEvent.preventDefault();
+            d3.event.sourceEvent.stopPropagation();
+            if (args.move) args.move(d3.event.dx, d3.event.dy);
+       }).on(prefix+"end", function() {
+            d3.event.sourceEvent.preventDefault();
+            if (args.complete) args.complete();
+      });
+
+      this.draw_g.style("cursor", "move").call(drag_move);
+   }
+
+   /** @summary Add drag for interactive rectangular elements
     * @private */
    TObjectPainter.prototype.AddDrag = function(callback) {
-      if (!JSROOT.gStyle.MoveResize) return;
+      if (!JSROOT.gStyle.MoveResize || JSROOT.BatchMode) return;
 
       var pthis = this, drag_rect = null, pp = this.pad_painter();
       if (pp && pp._fast_drawing) return;
@@ -5561,7 +5657,7 @@
 
       if (pnt && pnt.handler) {
          // special use of interactive handler in the frame painter
-         var rect = this.draw_g ? this.draw_g.select(".interactive_rect") : null;
+         var rect = this.draw_g ? this.draw_g.select(".main_layer") : null;
          if (!rect || rect.empty()) {
             pnt = null; // disable
          } else if (pnt.touch) {

@@ -157,8 +157,8 @@
          res.renderer = res.usewebgl ? new THREE.WebGLRenderer(args) : new THREE.SoftwareRenderer(args);
       }
 
-      //renderer.setClearColor(0xffffff, 1);
-      // renderer.setClearColor(0x0, 0);
+      // res.renderer.setClearColor("#000000", 1);
+      // res.renderer.setClearColor(0x0, 0);
       res.renderer.setSize(width, height);
 
       if (!res.dom) {
@@ -951,10 +951,44 @@
       this.indx+=3;
    }
 
-   PointsCreator.prototype.CreatePoints = function(mcolor) {
-      // only plain geometry and sprite material is supported by SoftwareRenderer, but it cannot be scaled
+   PointsCreator.prototype.CreatePoints = function(args) {
 
-      var material = new THREE.PointsMaterial( { size: (this.webgl ? 3 : 1) * this.scale, color: mcolor || 'black' } );
+      if (typeof args !== 'object') args = { color: args };
+      if (!args.color) args.color = 'black';
+
+      var material = null, k = 1;
+
+      // special dots
+      if (args.style === 1) k = 0.3; else
+      if (args.style === 6) k = 0.5; else
+      if (args.style === 7) k = 0.7;
+
+      if (!args.style || (k !== 1) || JSROOT.BatchMode) {
+
+         material = new THREE.PointsMaterial( { size: (this.webgl ? 3 : 1) * this.scale * k, color: args.color } );
+         JSROOT.CallBack(args.callback, false);
+      } else {
+
+         var handler = new JSROOT.TAttMarkerHandler({ style: args.style, color: args.color, size: 8 });
+
+         var plainSVG = '<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">' +
+                        '<path d="' + handler.create(32,32) + '" stroke="none" fill="' + args.color + '"/></svg>';
+
+         var texture = new THREE.Texture();
+         texture.needsUpdate = true;
+         texture.format = THREE.RGBAFormat;
+         texture.image = document.createElement('img');
+
+         texture.image.onload = function() {
+            if ( texture.onUpdate ) texture.onUpdate( texture );
+            JSROOT.CallBack(args.callback, true);
+         }
+         texture.image.src = 'data:image/svg+xml;utf8,' + plainSVG;
+
+         // JPEGs can't have an alpha channel, so memory can be saved by storing them as RGB.
+         material = new THREE.PointsMaterial( { size: (this.webgl ? 3 : 1) * this.scale, map: texture, transparent: true } );
+      }
+
       var pnts = new THREE.Points(this.geom, material);
       pnts.nvertex = 1;
       return pnts;
@@ -1013,6 +1047,7 @@
    // ==============================================================================================
 
 
+
    JSROOT.Painter.PointsCreator = PointsCreator;
    JSROOT.Painter.InteractiveControl = InteractiveControl;
    JSROOT.Painter.PointsControl = PointsControl;
@@ -1020,7 +1055,6 @@
    JSROOT.Painter.drawPolyLine3D = drawPolyLine3D;
 
    JSROOT.Painter.Create3DLineMaterial = Create3DLineMaterial;
-
 
    return JSROOT;
 

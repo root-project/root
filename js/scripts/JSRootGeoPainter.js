@@ -812,10 +812,10 @@
       });
 
       appearance.addColor(this.options, 'background').name('Background').onChange( function() {
-          painter._renderer.setClearColor(painter.options.background, 1);
-          painter.Render3D(0);
-          var bkgr = new THREE.Color(painter.options.background);
-          painter._toolbar.changeBrightness((bkgr.r + bkgr.g + bkgr.b) < 1);
+         painter._renderer.setClearColor(painter.options.background, 1);
+         painter.Render3D(0);
+         var bkgr = new THREE.Color(painter.options.background);
+         painter._toolbar.changeBrightness((bkgr.r + bkgr.g + bkgr.b) < 1);
       });
 
       appearance.add(this, 'focusCamera').name('Reset camera position');
@@ -854,7 +854,7 @@
             'Mesh size': "size",
             'Central point': "pnt"
         } ).name("Rendering order").onChange( function ( value ) {
-           delete painter._last_camera_position; // used for testing depth
+           painter._forceProduceRenderOrder();
            painter.Render3D();
         } );
 
@@ -2102,14 +2102,11 @@
 
       if (!this._lookat || !this._camera0pos || !this._camera || !this.options) return;
 
-      var pos1 = new THREE.Vector3().add(this._camera0pos);
-      var pos2 = new THREE.Vector3().add(this._camera.position);
+      var pos1 = new THREE.Vector3().add(this._camera0pos).sub(this._lookat),
+          pos2 = new THREE.Vector3().add(this._camera.position).sub(this._lookat),
+          len1 = pos1.length(), len2 = pos2.length(),
+          zoom = this.options.zoom * len2 / len1 * 100;
 
-      pos1.sub(this._lookat);
-      pos2.sub(this._lookat);
-
-      var len1 = pos1.length(), len2 = pos2.length();
-      var zoom = this.options.zoom * len2 / len1 * 100;
       if (zoom < 1) zoom = 1; else if (zoom>10000) zoom = 10000;
 
       pos1.normalize();
@@ -2170,7 +2167,14 @@
 
       this._camera.updateProjectionMatrix();
 
-      var k = 2*this.options.zoom, max_all = Math.max(sizex,sizey,sizez);
+      var k = 2, max_all = Math.max(sizex,sizey,sizez);
+
+      if (this.options.zoom1) {
+         k = 2*this.options.zoom1;
+         delete this.options.zoom1;
+      } else {
+         k = 2*this.options.zoom;
+      }
 
       if ((this.options.rotatey || this.options.rotatez) && this.options.can_rotate) {
 
@@ -2197,7 +2201,7 @@
       }
 
       this._lookat = new THREE.Vector3(midx, midy, midz);
-      this._camera0pos = new THREE.Vector3(-k*max_all, 0, 0); // virtual 0 position, where rotation starts
+      this._camera0pos = new THREE.Vector3(-2*max_all, 0, 0); // virtual 0 position, where rotation starts
       this._camera.lookAt(this._lookat);
 
       this._pointLight.position.set(sizex/5, sizey/5, sizez/5);
@@ -2216,7 +2220,14 @@
       if (!this.options) return;
       this.options.rotatey = rotatey || 0;
       this.options.rotatez = rotatez || 0;
-      if (zoom && !isNaN(zoom)) this.options.zoom = zoom;
+      if (zoom && !isNaN(zoom)) {
+         this.options.zoom = zoom;
+      } else if (this._camera0pos && this._camera && this._lookat) {
+         var pos1 = new THREE.Vector3().add(this._camera0pos).sub(this._lookat),
+             pos2 = new THREE.Vector3().add(this._camera.position).sub(this._lookat);
+
+         this.options.zoom1 = pos2.length() / pos1.length();
+      }
       this.adjustCameraPosition();
    }
 
@@ -2664,6 +2675,7 @@
       var lineMaterial = new THREE.LineBasicMaterial({ color: track_color, linewidth: track_width }),
           line = JSROOT.Painter.createLineSegments(buf, lineMaterial);
 
+      line.renderOrder = 1000000; // to bring line to the front
       line.geo_name = itemname;
       line.geo_object = track;
       line.hightlightWidthScale = 2;
@@ -2703,6 +2715,7 @@
       var lineMaterial = new THREE.LineBasicMaterial({ color: track_color, linewidth: track_width }),
           line = JSROOT.Painter.createLineSegments(buf, lineMaterial);
 
+      line.renderOrder = 1000000; // to bring line to the front
       line.geo_name = itemname;
       line.geo_object = track;
       line.hightlightWidthScale = 2;
@@ -2734,8 +2747,11 @@
                        projy ? projv : hit.fP[i*3+1],
                        projz ? projv : hit.fP[i*3+2]);
 
-      var mesh = pnts.CreatePoints(JSROOT.Painter.root_colors[hit.fMarkerColor] || "rgb(0,0,255)");
+      var mesh = pnts.CreatePoints({ color: JSROOT.Painter.root_colors[hit.fMarkerColor] || "rgb(0,0,255)",
+                                     style: hit.fMarkerStyle,
+                                     callback: function(delayed) { if (delayed) this.Render3D(100); }.bind(this) });
 
+      mesh.renderOrder = 1000000; // to bring points to the front
       mesh.highlightScale = 2;
 
       mesh.geo_name = itemname;
@@ -3105,15 +3121,18 @@
       this.completeDraw(true);
    }
 
+   /** @brief Checks camera position and recalculate rendering order if needed
+    * @param force - if specified, forces calculations of render order
+    * @private
+    */
    TGeoPainter.prototype.TestCameraPosition = function(force) {
-
       this._camera.updateMatrixWorld();
       var origin = this._camera.position.clone();
 
       if (!force && this._last_camera_position) {
          // if camera position does not changed a lot, ignore such change
          var dist = this._last_camera_position.distanceTo(origin);
-         if (dist < (this._overall_size || 1000)/1e4) return;
+         if (dist < (this._overall_size || 1000)*1e-4) return;
       }
 
       this._last_camera_position = origin; // remember current camera position
@@ -3476,13 +3495,18 @@
          this.options._axis = true;
          this.drawSimpleAxis();
          if (force_draw !== true) {
-            this.TestCameraPosition(true);
+            this._forceProduceRenderOrder(); // used for testing depth
             this.Render3D();
          }
       }
    }
 
-   /** set axes visibility */
+   /** @brief Forces recalculation of rendering order before next rendering @private */
+   TGeoPainter.prototype._forceProduceRenderOrder = function() {
+      delete this._last_camera_position;
+   }
+
+   /** @brief Set axes visibility */
    TGeoPainter.prototype.setAxesDraw = function(on) {
       if (on != this.options._axis)
          this.toggleAxesDraw();
@@ -3523,7 +3547,7 @@
       if (this._full_redrawing) {
          this._full_redrawing = false;
          full_redraw = true;
-         this.TestCameraPosition(true); // recheck position
+         this._forceProduceRenderOrder();
       }
 
       if (this._first_drawing) {
@@ -3696,9 +3720,11 @@
       this._scene_height = 0;
       this._renderer = null;
       this._toplevel = null;
-      this._full_geom = null;
-      this._camera = null;
-      this._selected_mesh = null;
+      delete this._full_geom;
+      delete this._camera;
+      delete this._camera0pos;
+      delete this._lookat;
+      delete this._selected_mesh;
 
       if (this._clones && this._clones_owner)
          this._clones.Cleanup(this._draw_nodes, this._build_shapes);

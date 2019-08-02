@@ -37,7 +37,6 @@
       this.accept_drops = true; // indicate that one can drop other objects like doing Draw("same")
       this.mode3d = false;
       this.zoom_changed_interactive = 0;
-      // this.DecomposeTitle();
    }
 
    THistPainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
@@ -295,9 +294,6 @@
 
    THistPainter.prototype.ToggleTitle = function(arg) {
       return false;
-   }
-
-   THistPainter.prototype.DecomposeTitle = function() {
    }
 
    THistPainter.prototype.DrawTitle = function() {

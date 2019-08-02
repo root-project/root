@@ -2619,7 +2619,6 @@
          return tip;
       }
 
-
       return true;
    }
 
@@ -3208,9 +3207,14 @@
       var main = this.main_painter(),
           fp = this.frame_painter(),
           graph = this.GetObject(),
-          step = 1;
+          step = 1, cb_cnt = 0;
 
-      if (!graph || !main  || !fp || !fp.mode3d) return;
+      if (!graph || !main || !fp || !fp.mode3d) return;
+
+      function PointsCallBack() {
+         cb_cnt--;
+         if (!cb_cnt && !graph) fp.Render3D(100); //
+      }
 
       function CountSelected(zmin, zmax) {
          var cnt = 0;
@@ -3371,7 +3375,9 @@
                fcolor = palette ? palette.calcColor(lvl, levels.length) :
                                   this.get_color(graph.fMarkerColor);
 
-            var mesh = pnts.CreatePoints(fcolor);
+            cb_cnt++;
+
+            var mesh = pnts.CreatePoints({ color: fcolor, style: this.options.Circles ? 4 : graph.fMarkerStyle, callback: PointsCallBack });
 
             fp.toplevel.add(mesh);
 
@@ -3386,7 +3392,9 @@
          }
       }
 
-      fp.Render3D(100); // set large timeout to be able draw other points
+      fp.Render3D(cb_cnt ? 1000 : 100); // set large timeout to be able draw other points
+
+      graph = null; // used in callback to detect that rendering is completed
    }
 
    JSROOT.Painter.drawGraph2D = function(divid, gr, opt) {
@@ -3465,7 +3473,9 @@
             pnts.AddPoint(fp.grx(poly.fP[i]), fp.gry(poly.fP[i+1]), fp.grz(poly.fP[i+2]));
          }
 
-         var mesh = pnts.CreatePoints(this.get_color(poly.fMarkerColor));
+         var mesh = pnts.CreatePoints({ color: this.get_color(poly.fMarkerColor),
+                                        style: poly.fMarkerStyle,
+                                        callback: function(delayed) { if (delayed) fp.Render3D(100); } });
 
          fp.toplevel.add(mesh);
 

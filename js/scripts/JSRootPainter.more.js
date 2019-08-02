@@ -38,25 +38,31 @@
 
       if (text.TestBit(JSROOT.BIT(14))) {
          // NDC coordinates
-         pos_x = pos_x * w;
-         pos_y = (1 - pos_y) * h;
+         this.isndc = true;
       } else if (main && !main.mode3d) {
-         w = this.frame_width(); h = this.frame_height(); use_frame = "upper_layer";
-         pos_x = main.grx(pos_x);
-         pos_y = main.gry(pos_y);
+         // frame coordiantes
+         w = this.frame_width();
+         h = this.frame_height();
+         use_frame = "upper_layer";
       } else if (this.root_pad() !== null) {
-         pos_x = this.ConvertToNDC("x", pos_x) * w;
-         pos_y = (1 - this.ConvertToNDC("y", pos_y)) * h;
+         // force pad coordiantes
       } else {
+         // place in the middle
+         this.isndc = true;
+         pos_x = pos_y = 0.5;
          text.fTextAlign = 22;
-         pos_x = w/2;
-         pos_y = h/2;
          if (!tcolor) tcolor = 'black';
       }
 
       this.CreateG(use_frame);
 
-      var arg = { align: text.fTextAlign, x: Math.round(pos_x), y: Math.round(pos_y), text: text.fTitle, color: tcolor, latex: 0 };
+      this.draw_g.attr("transform",null); // remove transofrm from interactive changes
+
+      this.pos_x = this.AxisToSvg("x", pos_x, this.isndc);
+      this.pos_y = this.AxisToSvg("y", pos_y, this.isndc);
+      this.pos_dx = this.pos_dy = 0;
+
+      var arg = { align: text.fTextAlign, x: this.pos_x, y: this.pos_y, text: text.fTitle, color: tcolor, latex: 0 };
 
       if (text.fTextAngle) arg.rotate = -text.fTextAngle;
 
@@ -68,6 +74,19 @@
       this.DrawText(arg);
 
       this.FinishTextDrawing();
+
+      this.AddMove({
+         move: function(dx,dy) {
+            this.pos_dx += dx;
+            this.pos_dy += dy;
+            this.draw_g.attr("transform", "translate(" + this.pos_dx + "," + this.pos_dy + ")");
+         }.bind(this),
+         complete: function() {
+            var text = this.GetObject();
+            text.fX = this.SvgToAxis("x", this.pos_x + this.pos_dx, this.isndc),
+            text.fY = this.SvgToAxis("y", this.pos_y + this.pos_dy, this.isndc);
+            this.WebCanvasExec("SetX(" + text.fX + ");;SetY(" + text.fY + ");;");
+         }.bind(this)});
    }
 
    // =====================================================================================
@@ -95,15 +114,15 @@
 
    function drawPolyLine() {
 
+      // create svg:g container for polyline drawing
+      this.CreateG();
+
       var polyline = this.GetObject(),
           lineatt = new JSROOT.TAttLineHandler(polyline),
           fillatt = this.createAttFill(polyline),
           kPolyLineNDC = JSROOT.BIT(14),
           isndc = polyline.TestBit(kPolyLineNDC),
           cmd = "", func = this.AxisToSvgFunc(isndc);
-
-      // create svg:g container for polyline drawing
-      this.CreateG();
 
       for (var n=0;n<=polyline.fLastPoint;++n)
          cmd += ((n>0) ? "L" : "M") + func.x(polyline.fX[n]) + "," + func.y(polyline.fY[n]);
@@ -131,24 +150,25 @@
       // create svg:g container for ellipse drawing
       this.CreateG();
 
-      var x = this.AxisToSvg("x", ellipse.fX1, false),
-          y = this.AxisToSvg("y", ellipse.fY1, false),
-          rx = this.AxisToSvg("x", ellipse.fX1 + ellipse.fR1, false) - x,
-          ry = y - this.AxisToSvg("y", ellipse.fY1 + ellipse.fR2, false);
+      var x = this.AxisToSvg("x", ellipse.fX1),
+          y = this.AxisToSvg("y", ellipse.fY1),
+          rx = this.AxisToSvg("x", ellipse.fX1 + ellipse.fR1) - x,
+          ry = y - this.AxisToSvg("y", ellipse.fY1 + ellipse.fR2);
 
       if (ellipse._typename == "TCrown") {
          if (ellipse.fR1 <= 0) {
             // handle same as ellipse with equal radius
-            rx = this.AxisToSvg("x", ellipse.fX1 + ellipse.fR2, false) - x;
+            rx = this.AxisToSvg("x", ellipse.fX1 + ellipse.fR2) - x;
          } else {
             var rx1 = rx, ry2 = ry,
-                ry1 = y - this.AxisToSvg("y", ellipse.fY1 + ellipse.fR1, false),
-                rx2 = this.AxisToSvg("x", ellipse.fX1 + ellipse.fR2, false) - x;
+                ry1 = y - this.AxisToSvg("y", ellipse.fY1 + ellipse.fR1),
+                rx2 = this.AxisToSvg("x", ellipse.fX1 + ellipse.fR2) - x;
 
             var elem = this.draw_g
                           .attr("transform","translate("+x+","+y+")")
                           .append("svg:path")
-                          .call(this.lineatt.func).call(this.fillatt.func);
+                          .call(this.lineatt.func)
+                          .call(this.fillatt.func);
 
             if ((ellipse.fPhimin == 0) && (ellipse.fPhimax == 360)) {
                elem.attr("d", "M-"+rx1+",0" +
@@ -162,15 +182,15 @@
                var large_arc = (ellipse.fPhimax-ellipse.fPhimin>=180) ? 1 : 0;
 
                var a1 = ellipse.fPhimin*Math.PI/180, a2 = ellipse.fPhimax*Math.PI/180,
-                   dx1 = rx1 * Math.cos(a1), dy1 = ry1 * Math.sin(a1),
-                   dx2 = rx1 * Math.cos(a2), dy2 = ry1 * Math.sin(a2),
-                   dx3 = rx2 * Math.cos(a1), dy3 = ry2 * Math.sin(a1),
-                   dx4 = rx2 * Math.cos(a2), dy4 = ry2 * Math.sin(a2);
+                   dx1 = Math.round(rx1*Math.cos(a1)), dy1 = Math.round(ry1*Math.sin(a1)),
+                   dx2 = Math.round(rx1*Math.cos(a2)), dy2 = Math.round(ry1*Math.sin(a2)),
+                   dx3 = Math.round(rx2*Math.cos(a1)), dy3 = Math.round(ry2*Math.sin(a1)),
+                   dx4 = Math.round(rx2*Math.cos(a2)), dy4 = Math.round(ry2*Math.sin(a2));
 
-               elem.attr("d", "M"+Math.round(dx2)+","+Math.round(dy2)+
-                              "A"+rx1+","+ry1+",0,"+large_arc+",0,"+Math.round(dx1)+","+Math.round(dy1)+
-                              "L"+Math.round(dx3)+","+Math.round(dy3) +
-                              "A"+rx2+","+ry2+",0,"+large_arc+",1,"+Math.round(dx4)+","+Math.round(dy4)+"Z");
+               elem.attr("d", "M"+dx2+","+dy2+
+                              "A"+rx1+","+ry1+",0,"+large_arc+",0,"+dx1+","+dy1+
+                              "L"+dx3+","+dy3 +
+                              "A"+rx2+","+ry2+",0,"+large_arc+",1,"+dx4+","+dy4+"Z");
             }
 
             return;
@@ -188,8 +208,8 @@
 
       // here svg:path is used to draw more complex figure
 
-      var ct = Math.cos(Math.PI*ellipse.fTheta/180),
-          st = Math.sin(Math.PI*ellipse.fTheta/180),
+      var ct = Math.cos(ellipse.fTheta*Math.PI/180),
+          st = Math.sin(ellipse.fTheta*Math.PI/180),
           dx1 = rx * Math.cos(ellipse.fPhimin*Math.PI/180),
           dy1 = ry * Math.sin(ellipse.fPhimin*Math.PI/180),
           x1 =  dx1*ct - dy1*st,
@@ -217,45 +237,35 @@
       // create svg:g container for ellipse drawing
       this.CreateG();
 
-      var xc = this.AxisToSvg("x", pie.fX, false),
-          yc = this.AxisToSvg("y", pie.fY, false),
-          rx = this.AxisToSvg("x", pie.fX + pie.fRadius, false) - xc,
-          ry = this.AxisToSvg("y", pie.fY + pie.fRadius, false) - yc;
+      var xc = this.AxisToSvg("x", pie.fX),
+          yc = this.AxisToSvg("y", pie.fY),
+          rx = this.AxisToSvg("x", pie.fX + pie.fRadius) - xc,
+          ry = this.AxisToSvg("y", pie.fY + pie.fRadius) - yc;
 
       this.draw_g.attr("transform","translate("+xc+","+yc+")");
 
       // Draw the slices
-      var nb = pie.fPieSlices.length,
-          slice, title, value, total = 0, lineatt, fillatt;
+      var nb = pie.fPieSlices.length, total = 0,
+          af = (pie.fAngularOffset*Math.PI)/180,
+          x1 = Math.round(rx*Math.cos(af)), y1 = Math.round(ry*Math.sin(af));
 
-      for (var n=0;n<nb; n++) {
-         slice = pie.fPieSlices[n];
-         total = total + slice.fValue;
-      }
+      for (var n=0;n<nb; n++)
+         total += pie.fPieSlices[n].fValue;
 
-      var af = (pie.fAngularOffset*Math.PI)/180.;
-      var x1 = rx*Math.cos(af);
-      var y1 = ry*Math.sin(af);
-      var x2, y2, a = af;
+      for (var n=0; n<nb; n++) {
+         var slice = pie.fPieSlices[n],
+             lineatt = new JSROOT.TAttLineHandler({attr: slice}),
+             fillatt = this.createAttFill(slice);
 
-      for (var n=0;n<nb; n++) {
-         slice = pie.fPieSlices[n];
-         lineatt = new JSROOT.TAttLineHandler(slice);
-         fillatt = this.createAttFill(slice);
-         value   = slice.fValue;
-         a       = a + ((2*Math.PI)/total)*value;
-         x2      = rx*Math.cos(a);
-         y2      = ry*Math.sin(a);
-         title   = slice.fTitle;
+         af += slice.fValue/total*2*Math.PI;
+         var x2 = Math.round(rx*Math.cos(af)), y2 = Math.round(ry*Math.sin(af));
+
          this.draw_g
              .append("svg:path")
-             .attr("d", "M0,0L"+x1.toFixed(1)+","+y1.toFixed(1)+"A"+
-                         rx.toFixed(1)+","+ry.toFixed(1)+",0,0,0,"+x2.toFixed(1)+","+y2.toFixed(1)+
-                        "Z")
+             .attr("d", "M0,0L"+x1+","+y1+"A"+rx+","+ry+",0,0,0,"+x2+","+y2+"z")
              .call(lineatt.func)
              .call(fillatt.func);
-         x1 = x2;
-         y1 = y2;
+         x1 = x2; y1 = y2;
       }
    }
 
@@ -272,10 +282,10 @@
       // create svg:g container for box drawing
       this.CreateG();
 
-      var x1 = this.AxisToSvg("x", box.fX1, false),
-          x2 = this.AxisToSvg("x", box.fX2, false),
-          y1 = this.AxisToSvg("y", box.fY1, false),
-          y2 = this.AxisToSvg("y", box.fY2, false),
+      var x1 = this.AxisToSvg("x", box.fX1),
+          x2 = this.AxisToSvg("x", box.fX2),
+          y1 = this.AxisToSvg("y", box.fY1),
+          y2 = this.AxisToSvg("y", box.fY2),
           xx = Math.min(x1,x2), yy = Math.min(y1,y2),
           ww = Math.abs(x2-x1), hh = Math.abs(y1-y2);
 
@@ -337,13 +347,14 @@
    // =============================================================================
 
    function drawPolyMarker() {
-      var poly = this.GetObject(),
-          att = new JSROOT.TAttMarkerHandler(poly),
-          func = this.AxisToSvgFunc(false),
-          path = "";
 
       // create svg:g container for box drawing
       this.CreateG();
+
+      var poly = this.GetObject(),
+          att = new JSROOT.TAttMarkerHandler(poly),
+          path = "",
+          func = this.AxisToSvgFunc();
 
       for (var n=0;n<poly.fN;++n)
          path += att.create(func.x(poly.fX[n]), func.y(poly.fY[n]));
@@ -357,123 +368,105 @@
    // ======================================================================================
 
    function drawArrow() {
-      var arrow = this.GetObject(),
-          wsize = Math.max(3, Math.round(Math.max(this.pad_width(), this.pad_height()) * arrow.fArrowSize)),
-          hsize = Math.round(wsize * Math.tan(arrow.fAngle/2*Math.PI/180));
+      var arrow = this.GetObject(), kLineNDC = JSROOT.BIT(14), oo = arrow.fOption;
+
+      this.wsize = Math.max(3, Math.round(Math.max(this.pad_width(), this.pad_height()) * arrow.fArrowSize*0.8));
+      this.isndc = arrow.TestBit(kLineNDC);
+      this.angle2 = arrow.fAngle/2/180 * Math.PI;
+      this.beg = this.mid = this.end = 0;
+
+      if (oo.indexOf("<")==0)
+         this.beg = (oo.indexOf("<|") == 0) ? 12 : 2;
+      if (oo.indexOf("->-")>=0)  this.mid = 1; else
+      if (oo.indexOf("-|>-")>=0) this.mid = 11; else
+      if (oo.indexOf("-<-")>=0) this.mid = 2; else
+      if (oo.indexOf("-<|-")>=0) this.mid = 12;
+      if (oo.lastIndexOf(">") == oo.length-1)
+         this.end = ((oo.lastIndexOf("|>") == oo.length-2) && (oo.length>1)) ? 11 : 1;
 
       this.createAttLine({ attr: arrow });
-      this.createAttFill({ attr: arrow });
 
-      // create svg:g container for line drawing
       this.CreateG();
 
-      var x1 = this.AxisToSvg("x", arrow.fX1, false),
-          y1 = this.AxisToSvg("y", arrow.fY1, false),
-          x2 = this.AxisToSvg("x", arrow.fX2, false),
-          y2 = this.AxisToSvg("y", arrow.fY2, false),
-          right_arrow = "M0,0" + "L"+wsize+","+hsize + "L0,"+(2*hsize),
-          left_arrow =  "M"+wsize+",0" + "L0,"+hsize + "L"+wsize+","+(2*hsize),
-          m_start = null, m_mid = null, m_end = null, defs = null,
-          oo = arrow.fOption, oolen = oo.length;
+      this.x1 = this.AxisToSvg("x", arrow.fX1, this.isndc, true);
+      this.y1 = this.AxisToSvg("y", arrow.fY1, this.isndc, true);
+      this.x2 = this.AxisToSvg("x", arrow.fX2, this.isndc, true);
+      this.y2 = this.AxisToSvg("y", arrow.fY2, this.isndc, true);
 
-      if (oo.indexOf("<")==0) {
-         var closed = (oo.indexOf("<|") == 0);
-         if (!defs) defs = this.draw_g.append("defs");
-         m_start = "jsroot_arrowmarker_" +  JSROOT.id_counter++;
-         var mbeg = defs.append("svg:marker")
-                       .attr("id", m_start)
-                       .attr("markerWidth", wsize)
-                       .attr("markerHeight", 2*hsize)
-                       .attr("refX", 0)
-                       .attr("refY", hsize)
-                       .attr("orient", "auto")
-                       .attr("markerUnits", "userSpaceOnUse");
-         var pbeg = mbeg.append("svg:path")
-                       .style("fill","none")
-                       .attr("d", left_arrow + (closed ? "Z" : ""))
-                       .call(this.lineatt.func);
-         if (closed) {
-            pbeg.call(this.fillatt.func);
-            if ((this.fillatt.color == this.lineatt.color) && this.fillatt.isSolid()) pbeg.style('stroke-width',1);
-            var dx = x2-x1, dy = y2-y1, len = Math.sqrt(dx*dx + dy*dy);
-            if (len>wsize) {
-               var ratio = wsize/len;
-               x1 += ratio*dx;
-               y1 += ratio*dy;
-               mbeg.attr("refX", wsize);
-            }
+      this.rotate = function(angle, x0, y0) {
+         var dx = this.wsize * Math.cos(angle), dy = this.wsize * Math.sin(angle), res = "";
+         if ((x0 !== undefined) && (y0 !== undefined)) {
+            res =  "M" + Math.round(x0-dx) + "," + Math.round(y0-dy);
+         } else {
+            dx = -dx; dy = -dy;
          }
+         res += "l"+Math.round(dx)+","+Math.round(dy);
+         if (x0 && (y0===undefined)) res+="z";
+         return res;
       }
 
-      var midkind = 0;
-      if (oo.indexOf("->-")>=0)  midkind = 1; else
-      if (oo.indexOf("-|>-")>=0) midkind = 11; else
-      if (oo.indexOf("-<-")>=0) midkind = 2; else
-      if (oo.indexOf("-<|-")>=0) midkind = 12;
+      this.createPath = function() {
+         var angle = Math.atan2(this.y2 - this.y1, this.x2 - this.x1),
+             dlen = this.wsize * Math.cos(this.angle2),
+             dx = dlen*Math.cos(angle), dy = dlen*Math.sin(angle),
+             path = "";
 
-      if (midkind > 0) {
-         var closed = midkind > 10;
-         if (!defs) defs = this.draw_g.append("defs");
-         m_mid = "jsroot_arrowmarker_" + JSROOT.id_counter++;
+         if (this.beg)
+            path += this.rotate(angle - Math.PI - this.angle2, this.x1, this.y1) +
+                    this.rotate(angle - Math.PI + this.angle2, this.beg > 10);
 
-         var pmid = defs.append("svg:marker")
-                      .attr("id", m_mid)
-                      .attr("markerWidth", wsize)
-                      .attr("markerHeight", 2*hsize)
-                      .attr("refX", Math.round(wsize*0.5))
-                      .attr("refY", hsize)
-                      .attr("orient", "auto")
-                      .attr("markerUnits", "userSpaceOnUse")
-                      .append("svg:path")
-                      .style("fill","none")
-                      .attr("d", ((midkind % 10 == 1) ? right_arrow : left_arrow) +
-                            ((midkind > 10) ? "Z" : ""))
-                            .call(this.lineatt.func);
-         if (midkind > 10) {
-            pmid.call(this.fillatt.func);
-            if (this.fillatt.isSolid(this.lineatt.color)) pmid.style('stroke-width',1);
-         }
+         if (this.mid % 10 == 2)
+            path += this.rotate(angle - Math.PI - this.angle2, (this.x1+this.x2-dx)/2, (this.y1+this.y2-dy)/2) +
+                    this.rotate(angle - Math.PI + this.angle2, this.mid > 10);
+
+         if (this.mid % 10 == 1)
+            path += this.rotate(angle - this.angle2, (this.x1+this.x2+dx)/2, (this.y1+this.y2+dy)/2) +
+                    this.rotate(angle + this.angle2, this.mid > 10);
+
+         if (this.end)
+            path += this.rotate(angle - this.angle2, this.x2, this.y2) +
+                    this.rotate(angle + this.angle2, this.end > 10);
+
+         return "M" + Math.round(this.x1 + (this.beg > 10 ? dx : 0)) + "," +
+                      Math.round(this.y1 + (this.beg > 10 ? dy : 0)) +
+                "L" + Math.round(this.x2 - (this.end > 10 ? dx : 0)) + "," +
+                      Math.round(this.y2 - (this.end > 10 ? dy : 0)) +
+                path;
       }
 
-      if (oo.lastIndexOf(">") == oolen-1) {
-         var closed = (oo.lastIndexOf("|>") == oolen-2) && (oolen>1);
-         if (!defs) defs = this.draw_g.append("defs");
-         m_end = "jsroot_arrowmarker_" + JSROOT.id_counter++;
-         var mend = defs.append("svg:marker")
-                       .attr("id", m_end)
-                       .attr("markerWidth", wsize)
-                       .attr("markerHeight", 2*hsize)
-                       .attr("refX", wsize)
-                       .attr("refY", hsize)
-                       .attr("orient", "auto")
-                       .attr("markerUnits", "userSpaceOnUse");
-         var pend = mend.append("svg:path")
-                       .style("fill","none")
-                       .attr("d", right_arrow + (closed ? "Z" : ""))
-                       .call(this.lineatt.func);
-         if (closed) {
-            pend.call(this.fillatt.func);
-            if (this.fillatt.isSolid(this.lineatt.color)) pend.style('stroke-width',1);
-            var dx = x2-x1, dy = y2-y1, len = Math.sqrt(dx*dx + dy*dy);
-            if (len>wsize) {
-               var ratio = wsize/len;
-               x2 -= ratio*dx;
-               y2 -= ratio*dy;
-               mend.attr("refX", 0);
-            }
-         }
+      var elem = this.draw_g.append("svg:path")
+                     .attr("d", this.createPath())
+                     .call(this.lineatt.func);
+
+      if ((this.beg > 10) || (this.end > 10)) {
+         this.createAttFill({ attr: arrow });
+         elem.call(this.fillatt.func);
+      } else {
+         elem.style('fill','none');
       }
 
-      var path = this.draw_g
-           .append("svg:path")
-           .attr("d",  "M"+Math.round(x1)+","+Math.round(y1) +
-                       ((m_mid == null) ? "" : "L" + Math.round(x1/2+x2/2) + "," + Math.round(y1/2+y2/2)) +
-                       "L"+Math.round(x2)+","+Math.round(y2))
-            .call(this.lineatt.func);
-
-      if (m_start) path.style("marker-start","url(#" + m_start + ")");
-      if (m_mid) path.style("marker-mid","url(#" + m_mid + ")");
-      if (m_end) path.style("marker-end","url(#" + m_end + ")");
+      this.AddMove({
+         begin: function(x,y) {
+            var fullsize = Math.sqrt(Math.pow(this.x1-this.x2,2) + Math.pow(this.y1-this.y2,2)),
+                sz1 = Math.sqrt(Math.pow(x-this.x1,2) + Math.pow(y-this.y1,2))/fullsize,
+                sz2 = Math.sqrt(Math.pow(x-this.x2,2) + Math.pow(y-this.y2,2))/fullsize;
+            if (sz1>0.9) this.side = 1; else if (sz2>0.9) this.side = -1; else this.side = 0;
+         }.bind(this),
+         move: function(dx,dy) {
+            if (this.side != 1) { this.x1 += dx; this.y1 += dy; }
+            if (this.side != -1) { this.x2 += dx; this.y2 += dy; }
+            this.draw_g.select('path').attr("d", this.createPath());
+         }.bind(this),
+         complete: function() {
+            var arrow = this.GetObject(), exec = "";
+            arrow.fX1 = this.SvgToAxis("x", this.x1, this.isndc);
+            arrow.fX2 = this.SvgToAxis("x", this.x2, this.isndc);
+            arrow.fY1 = this.SvgToAxis("y", this.y1, this.isndc);
+            arrow.fY2 = this.SvgToAxis("y", this.y2, this.isndc);
+            if (this.side != 1) exec += "SetX1(" + arrow.fX1 + ");;SetY1(" + arrow.fY1 + ");;";
+            if (this.side != -1) exec += "SetX2(" + arrow.fX2 + ");;SetY2(" + arrow.fY2 + ");;";
+            this.WebCanvasExec(exec + "Notify();;");
+         }.bind(this)});
    }
 
    // =================================================================================
@@ -813,6 +806,12 @@
 
    TGraphPainter.prototype.Redraw = function() {
       this.DrawBins();
+   }
+
+   TGraphPainter.prototype.Cleanup = function() {
+      delete this.interactive_bin; // break mouse handling
+      delete this.bins;
+      JSROOT.TObjectPainter.prototype.Cleanup.call(this);
    }
 
    TGraphPainter.prototype.DecodeOptions = function(opt) {
@@ -1768,8 +1767,8 @@
       var pos = d3.mouse(this.svg_frame().node()),
           main = this.frame_painter();
 
-      this.interactive_delta_x = main ? main.x(this.interactive_bin.x) - pos[0] : 0;
-      this.interactive_delta_y = main ? main.y(this.interactive_bin.y) - pos[1] : 0;
+      this.interactive_delta_x = main ? main.grx(this.interactive_bin.x) - pos[0] : 0;
+      this.interactive_delta_y = main ? main.gry(this.interactive_bin.y) - pos[1] : 0;
    }
 
    TGraphPainter.prototype.FillContextMenu = function(menu) {
@@ -3341,7 +3340,7 @@
 
       painter.Redraw = function() {
 
-         var obj = this.GetObject(), func = this.AxisToSvgFunc(false);
+         var obj = this.GetObject(), func = this.AxisToSvgFunc();
 
          if (!obj || !obj.fOper || !func) return;
 
