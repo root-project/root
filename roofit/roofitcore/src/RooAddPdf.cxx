@@ -53,6 +53,12 @@ no normalization other than calculating the proper last coefficient \f$ c_n \f$,
 An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ is independent
 of each \f$ c_i \f$.
 
+### Difference between RooAddPdf / RooRealSum{Func|Pdf}
+- RooAddPdf is a PDF of PDFs, *i.e.* its components need to be normalised and non-negative.
+- RooRealSumPdf is a PDF of functions, *i.e.*, its components can be negative, but their sum cannot be. The normalisation
+  is computed automatically, unless the PDF is extended (see above).
+- RooRealSumFunc is a sum of functions. It is neither normalised, nor need it be positive.
+
 */
 
 
