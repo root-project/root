@@ -126,26 +126,8 @@ bool testForward1()
       }
    }
    
-   std::cout<<"Expected Output Matrix "<<std::endl;
-   for (size_t i = 0; i < numberFilters; i++) {
-      for (size_t j = 0; j < height * width; j++) {
-         std::cout<<outputEvent(i,j)<<" ";
-      }
-      std::cout<<std::endl;
-   }   
-   std::cout<<std::endl;
-
    std::vector<Matrix_t> expectedOutput;
    expectedOutput.push_back(outputEvent);
-    std::cout<<std::endl;
-    std::cout<<"Input image dimensions: "<<imgHeight<<" "<<imgWidth<<" "<<imgDepth<<std::endl;
-    std::cout<<"Filter image dimensions: "<<fltHeight<<" "<<fltWidth<<" "<<numberFilters<<std::endl;
-    std::cout<<"Stride "<<strideRows<<" "<<strideCols<<std::endl;
-    std::cout<<"Padding "<<zeroPaddingHeight<<" "<<zeroPaddingWidth<<std::endl;
-
-
-   std::cout<<"================================================================"<<std::endl;
-
 
    bool status = testTransConvLayerForward<Architecture>(input, expectedOutput, weightsMatrix, biasesMatrix, imgHeight,
                                                     imgWidth, imgDepth, fltHeight, fltWidth, numberFilters, strideRows,
@@ -243,26 +225,8 @@ bool testBackward1()
       }
    }
    
-   std::cout<<"Expected Output Matrix "<<std::endl;
-   for (size_t i = 0; i < numberFilters; i++) {
-      for (size_t j = 0; j < height * width; j++) {
-         std::cout<<outputEvent(i,j)<<" ";
-      }
-      std::cout<<std::endl;
-   }   
-   std::cout<<std::endl;
-
    std::vector<Matrix_t> expectedOutput;
    expectedOutput.push_back(outputEvent);
-    std::cout<<std::endl;
-    std::cout<<"Input image dimensions: "<<imgHeight<<" "<<imgWidth<<" "<<imgDepth<<std::endl;
-    std::cout<<"Filter image dimensions: "<<fltHeight<<" "<<fltWidth<<" "<<numberFilters<<std::endl;
-    std::cout<<"Stride "<<strideRows<<" "<<strideCols<<std::endl;
-    std::cout<<"Padding "<<zeroPaddingHeight<<" "<<zeroPaddingWidth<<std::endl;
-
-
-   std::cout<<"================================================================"<<std::endl;
-
 
    bool status = testTransConvLayerBackward<Architecture>(input, expectedOutput, weightsMatrix, biasesMatrix, imgHeight,
                                                     imgWidth, imgDepth, fltHeight, fltWidth, numberFilters, strideRows,

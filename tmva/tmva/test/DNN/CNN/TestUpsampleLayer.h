@@ -167,8 +167,6 @@ bool testUpsample1()
     output.emplace_back(B1);
     output.emplace_back(B2);
 
-    std::cout<<"Batch size "<<input.size()<<std::endl;
-
     bool status = testUpsample<Architecture>(input, output);
 
     return status;

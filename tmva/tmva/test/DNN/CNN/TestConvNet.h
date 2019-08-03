@@ -177,28 +177,8 @@ auto testUpsample(const std::vector<typename Architecture::Matrix_t> &input, con
     m2 = output[v_i].GetNrows();
     n2 = output[v_i].GetNcols();
 
-    std::cout<<m1<<", "<<n1<<" & "<<m2<<", "<<n2<<std::endl;
-
     if ( m1 <= m2 && n1 <= n2){
       typename Architecture::Matrix_t AUp(m2,n2);
-
-      std::cout<<"Output Matrix"<<std::endl;
-      for ( size_t i = 0; i < m2; i++){
-        for ( size_t j = 0; j < n2; j++){
-          std::cout<<output[v_i](i,j)<<" ";
-        }
-        std::cout<<std::endl;
-      }
-      std::cout<<std::endl;
-
-      std::cout<<"Input Matrix"<<std::endl;
-      for ( size_t i = 0; i < m1; i++){
-        for ( size_t j = 0; j < n1; j++){
-          std::cout<<input[v_i](i,j)<<" ";
-        }
-        std::cout<<std::endl;
-      }
-      std::cout<<std::endl;    
 
       std::vector< typename Architecture::Matrix_t > AUpVector;
       AUpVector.emplace_back(AUp);
@@ -207,27 +187,13 @@ auto testUpsample(const std::vector<typename Architecture::Matrix_t> &input, con
 
       Architecture::Upsample(AUpVector,input[v_i]);
 
-      std::cout<<"AUpVector output"<<std::endl;
       for ( size_t i = 0; i < m2; i++){
         for ( size_t j = 0; j < n2; j++){
-          std::cout<<AUpVector[0](i,j)<<" ";
-        }
-        std::cout<<std::endl;
-      }
-      std::cout<<std::endl;
-
-      std::cout<<"Verifying output"<<std::endl;
-      for ( size_t i = 0; i < m2; i++){
-        for ( size_t j = 0; j < n2; j++){
-          std::cout<<AUpVector[0](i,j)<<" ";
           if ( AUpVector[0](i,j) != output[v_i](i,j) ){
             return false;
           }
         }
-        std::cout<<std::endl;
       }
-      std::cout<<std::endl;
-      
     }
     else{
       return false;
@@ -254,28 +220,8 @@ auto testUpsampleBackward(const std::vector<typename Architecture::Matrix_t> &in
     m2 = output[v_i].GetNrows();
     n2 = output[v_i].GetNcols();
 
-    std::cout<<m1<<", "<<n1<<" & "<<m2<<", "<<n2<<std::endl;
-
     if ( m1 >= m2 && n1 >= n2){
       typename Architecture::Matrix_t AUp(m2,n2);
-
-      std::cout<<"Output Matrix"<<std::endl;
-      for ( size_t i = 0; i < m2; i++){
-        for ( size_t j = 0; j < n2; j++){
-          std::cout<<output[v_i](i,j)<<" ";
-        }
-        std::cout<<std::endl;
-      }
-      std::cout<<std::endl;
-
-      std::cout<<"Input Matrix"<<std::endl;
-      for ( size_t i = 0; i < m1; i++){
-        for ( size_t j = 0; j < n1; j++){
-          std::cout<<input[v_i](i,j)<<" ";
-        }
-        std::cout<<std::endl;
-      }
-      std::cout<<std::endl;    
 
       std::vector< typename Architecture::Matrix_t > AVector;
       AVector.emplace_back(AUp);
@@ -284,18 +230,13 @@ auto testUpsampleBackward(const std::vector<typename Architecture::Matrix_t> &in
 
       Architecture::UpsampleLayerBackward(AVector,input[v_i]);
 
-      std::cout<<"Verifying output"<<std::endl;
       for ( size_t i = 0; i < m2; i++){
         for ( size_t j = 0; j < n2; j++){
-          std::cout<<AVector[0](i,j)<<" ";
           if ( AVector[0](i,j) != output[v_i](i,j) ){
             return false;
           }
         }
-        std::cout<<std::endl;
       }
-      std::cout<<std::endl;
-      
     }
     else{
       return false;
