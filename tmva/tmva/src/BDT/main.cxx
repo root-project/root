@@ -245,6 +245,15 @@ int main()
    preds_file = "./data_files/test5.csv";
    write_csv(preds_file, preds);
 
+   Forest<std::function<std::vector<bool>(std::vector<std::vector<float>>)>> test6;
+   std::cout << "test6\n";
+   test6.test();
+   test6.get_Forest("model.json");
+   preds.clear();
+   preds      = test6.do_predictions(events_vector);
+   preds_file = "./data_files/test6.csv";
+   write_csv(preds_file, preds);
+
    // */
    std::cout << "\n ########## END MAIN.CXX ##########\n\n\n";
    return 0;

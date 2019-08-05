@@ -20,6 +20,7 @@
 #include "forest.h"
 
 #include <xgboost/c_api.h> // for xgboost
+#include "generated_files/evaluate_forest2.h"
 
 using json = nlohmann::json;
 
@@ -45,7 +46,7 @@ static void BM_EvalUniqueBdt(benchmark::State &state)
    std::vector<std::vector<float>> events_vector = read_csv(events_file);
 
    for (auto _ : state) { // only bench what is inside the loop
-      preds = Forest.do_predictions(events_vector);
+      Forest.do_predictions(events_vector, preds);
    }
    write_csv(preds_file, preds);
 }
@@ -70,7 +71,7 @@ static void BM_EvalArrayBdt(benchmark::State &state)
    std::vector<std::vector<float>> events_vector = read_csv(events_file);
    for (auto _ : state) { // only bench what is inside the loop
       // for (int i = 0; i < 1000; i++)
-      preds = Forest.do_predictions(events_vector);
+      Forest.do_predictions(events_vector, preds);
    }
    write_csv(preds_file, preds);
 }
@@ -93,7 +94,7 @@ static void BM_EvalJittedBdt(benchmark::State &state)
    std::vector<std::vector<float>> events_vector = read_csv(events_file);
 
    for (auto _ : state) { // only bench what is inside the loop
-      preds = Forest.do_predictions(events_vector);
+      Forest.do_predictions(events_vector, preds);
    }
    write_csv(preds_file, preds);
 }
@@ -116,9 +117,18 @@ static void BM_EvalJitForestBdt(benchmark::State &state)
 
    std::vector<std::vector<float>> events_vector = read_csv(events_file);
 
+   std::function<bool(std::vector<float>)> my_func = Forest.trees[0];
+   preds.reserve(events_vector.size());
+   for (auto _ : state) { // only bench what is inside the loop
+      for (size_t i = 0; i < events_vector.size(); i++) {
+         preds[i] = my_func(events_vector[i]);
+      }
+   }
+   /*
    for (auto _ : state) { // only bench what is inside the loop
       preds = Forest.do_predictions(events_vector);
    }
+   */
    write_csv(preds_file, preds);
 }
 BENCHMARK(BM_EvalJitForestBdt)
@@ -127,6 +137,57 @@ BENCHMARK(BM_EvalJitForestBdt)
       return *(std::min_element(std::begin(v), std::end(v)));
    });
 //
+
+/// Benchmark eval Jitted_bdts
+static void BM_EvalJitForestWholeBdt(benchmark::State &state)
+{
+   Forest<std::function<std::vector<bool>(std::vector<std::vector<float>>)>> Forest;
+   Forest.get_Forest("model.json");
+   std::vector<bool> preds;
+   preds.clear();
+   std::string preds_file  = "./data_files/test.csv";
+   std::string events_file = "./data_files/events.csv";
+
+   std::vector<std::vector<float>> events_vector = read_csv(events_file);
+
+   std::function<std::vector<bool>(std::vector<std::vector<float>>)> my_func = Forest.trees[0];
+   preds.reserve(events_vector.size());
+   for (auto _ : state) { // only bench what is inside the loop
+      preds = my_func(events_vector);
+   }
+   write_csv(preds_file, preds);
+}
+BENCHMARK(BM_EvalJitForestWholeBdt)
+   ->Unit(benchmark::kMillisecond)
+   ->ComputeStatistics("min", [](const std::vector<double> &v) -> double {
+      return *(std::min_element(std::begin(v), std::end(v)));
+   });
+
+/// Benchmark eval Jitted_bdts
+static void BM_StaticForestWholeBdt(benchmark::State &state)
+{
+   std::vector<bool> preds;
+   preds.clear();
+   std::string preds_file  = "./data_files/test.csv";
+   std::string events_file = "./data_files/events.csv";
+
+   std::vector<std::vector<float>> events_vector = read_csv(events_file);
+   preds.reserve(events_vector.size());
+
+   std::function<std::vector<bool>(std::vector<std::vector<float>>)> my_func = s_f_event_31564752128::evaluate_forest;
+
+   for (auto _ : state) { // only bench what is inside the loop
+      preds = my_func(events_vector);
+   }
+   write_csv(preds_file, preds);
+}
+/*
+BENCHMARK(BM_StaticForestWholeBdt)
+   ->Unit(benchmark::kMillisecond)
+   ->ComputeStatistics("min", [](const std::vector<double> &v) -> double {
+      return *(std::min_element(std::begin(v), std::end(v)));
+   });
+*/
 
 /// Benchmark eval xgboost_bdt
 static void BM_EvalXgboostBdt(benchmark::State &state)
