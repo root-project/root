@@ -1052,7 +1052,7 @@ TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_
 {
    char *linear;
    linear = (char*) strstr(fname, "++");
-   if (linear) { 
+   if (linear) {
       TF1 f1(fname, fname, xmin, xmax);
       return Fit(&f1, option, "", xmin, xmax);
    }
@@ -2471,6 +2471,7 @@ Int_t TGraph::Merge(TCollection* li)
    }
    return GetN();
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 ///  protected function to perform the merge operation of a graph
 
@@ -2483,6 +2484,32 @@ Bool_t TGraph::DoMerge(const TGraph* g)
    }
    return kTRUE;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Move all graph points on specified values dx,dy
+/// If log argument specified, calculation done in logarithmic scale like:
+///  new_value = exp( log(old_value) + delta );
+
+void TGraph::MovePoints(Double_t dx, Double_t dy, Bool_t logx, Bool_t logy)
+{
+   Double_t x, y;
+   for (Int_t i = 0 ; i < GetN(); i++) {
+      GetPoint(i, x, y);
+      if (!logx) {
+         x += dx;
+      } else if (x > 0) {
+         x = TMath::Exp(TMath::Log(x) + dx);
+      }
+      if (!logy) {
+         y += dy;
+      } else if (y > 0) {
+         y = TMath::Exp(TMath::Log(y) + dx);
+      }
+      SetPoint(i, x, y);
+   }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Find zero of a continuous function.
 /// This function finds a real zero of the continuous real
