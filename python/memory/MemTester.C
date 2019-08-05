@@ -11,7 +11,7 @@ public:
       ++counter;
    }
 
-   ~MemTester() {
+   virtual ~MemTester() {
       --counter;
    }
 
