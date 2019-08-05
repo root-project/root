@@ -59,11 +59,11 @@ PyObject *PyROOT::MakeNumpyDataFrame(PyObject * /*self*/, PyObject * pydata)
    auto counter = 0u;
    while (PyDict_Next(pydata, &pos, &key, &value)) {
       // Get name of key
-      if (!CPyCppyy_PyUnicode_Check(key)) {
+      if (!CPyCppyy_PyText_Check(key)) {
          PyErr_SetString(PyExc_RuntimeError, "Object not convertible: Dictionary key is not convertible to a string.");
          return NULL;
       }
-      std::string keystr = CPyCppyy_PyUnicode_AsString(key);
+      std::string keystr = CPyCppyy_PyText_AsString(key);
 
       // Convert value to RVec and attach to dictionary
       auto pyvec = PyROOT::AsRVec(NULL, value);

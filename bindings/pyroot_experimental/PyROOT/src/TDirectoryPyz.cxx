@@ -36,10 +36,10 @@ PyObject *TDirectoryWriteObject(CPPInstance *self, PyObject *args)
    PyObject *option = nullptr;
    Int_t bufsize = 0;
    if (!PyArg_ParseTuple(args, const_cast<char *>("O!O!|O!i:TDirectory::WriteObject"),
-                        &CPPInstance_Type, &wrt,
-                        &CPyCppyy_PyUnicode_Type, &name,
-                        &CPyCppyy_PyUnicode_Type, &option,
-                        &bufsize))
+                         &CPPInstance_Type, &wrt,
+                         &CPyCppyy_PyText_Type, &name,
+                         &CPyCppyy_PyText_Type, &option,
+                         &bufsize))
       return nullptr;
    auto dir = (TDirectory *)GetTClass(self)->DynamicCast(TDirectory::Class(), self->GetObject());
    if (!dir) {
@@ -49,10 +49,10 @@ PyObject *TDirectoryWriteObject(CPPInstance *self, PyObject *args)
    }
    Int_t result = 0;
    if (option != nullptr) {
-      result = dir->WriteObjectAny(wrt->GetObject(), GetTClass(wrt), CPyCppyy_PyUnicode_AsString(name),
-                                   CPyCppyy_PyUnicode_AsString(option), bufsize);
+      result = dir->WriteObjectAny(wrt->GetObject(), GetTClass(wrt), CPyCppyy_PyText_AsString(name),
+                                   CPyCppyy_PyText_AsString(option), bufsize);
    } else {
-      result = dir->WriteObjectAny(wrt->GetObject(), GetTClass(wrt), CPyCppyy_PyUnicode_AsString(name));
+      result = dir->WriteObjectAny(wrt->GetObject(), GetTClass(wrt), CPyCppyy_PyText_AsString(name));
    }
    return PyInt_FromLong((Long_t)result);
 }
@@ -75,13 +75,14 @@ PyObject *TDirectoryGetAttr(PyObject *self, PyObject *attr)
    if (!PyObject_IsTrue(result)) {
       PyObject *astr = PyObject_Str(attr);
       PyObject *stypestr = PyObject_Str(PyObject_Type(self));
-      PyErr_Format(PyExc_AttributeError, "%s object has no attribute \'%s\'", CPyCppyy_PyUnicode_AsString(stypestr),
-                   CPyCppyy_PyUnicode_AsString(astr));
+      PyErr_Format(PyExc_AttributeError, "%s object has no attribute \'%s\'", CPyCppyy_PyText_AsString(stypestr),
+                   CPyCppyy_PyText_AsString(astr));
       Py_DECREF(astr);
       Py_DECREF(result);
       return nullptr;
    }
-   // caching behavior seems to be more clear to the user; can always override said
+
+   // Caching behavior seems to be more clear to the user; can always override said
    // behavior (i.e. re-read from file) with an explicit Get() call
    PyObject_SetAttr(self, attr, result);
    return result;

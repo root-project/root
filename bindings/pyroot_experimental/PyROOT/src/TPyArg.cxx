@@ -105,7 +105,7 @@ TPyArg::TPyArg(Double_t value)
 
 TPyArg::TPyArg(const char *value)
 {
-   fPyObject = CPyCppyy_PyUnicode_FromString(value);
+   fPyObject = CPyCppyy_PyText_FromString(value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
