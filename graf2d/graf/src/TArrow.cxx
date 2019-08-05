@@ -158,13 +158,17 @@ void TArrow::DrawArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 
 void TArrow::Paint(Option_t *option)
 {
-
    Option_t *opt;
    if (option && strlen(option)) opt = option;
    else                          opt = (char*)GetOption();
-   PaintArrow(gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2), fArrowSize, opt);
+   if (TestBit(kLineNDC))
+      PaintArrow(gPad->GetX1() + fX1 * (gPad->GetX2() - gPad->GetX1()),
+                 gPad->GetY1() + fY1 * (gPad->GetY2() - gPad->GetY1()),
+                 gPad->GetX1() + fX2 * (gPad->GetX2() - gPad->GetX1()),
+                 gPad->GetY1() + fY2 * (gPad->GetY2() - gPad->GetY1()), fArrowSize, opt);
+   else
+      PaintArrow(gPad->XtoPad(fX1), gPad->YtoPad(fY1), gPad->XtoPad(fX2), gPad->YtoPad(fY2), fArrowSize, opt);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this arrow
