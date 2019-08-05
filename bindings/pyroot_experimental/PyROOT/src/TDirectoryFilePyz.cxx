@@ -45,7 +45,7 @@ PyObject *TDirectoryFileGetPyz(CPPInstance *self, PyObject *pynamecycle)
       PyErr_SetString(PyExc_ReferenceError, "attempt to access a null-pointer");
       return nullptr;
    }
-   const char *namecycle = CPyCppyy_PyUnicode_AsString(pynamecycle);
+   const char *namecycle = CPyCppyy_PyText_AsString(pynamecycle);
    if (!namecycle)
       return nullptr; // TypeError already set
    auto key = dirf->GetKey(namecycle);

@@ -38,7 +38,7 @@ PyObject *ClingPrintValue(CPPInstance *self, PyObject * /* args */)
       Py_DECREF(method);
       return res;
    } else {
-      return CPyCppyy_PyUnicode_FromString(printResult.c_str());
+      return CPyCppyy_PyText_FromString(printResult.c_str());
    }
 }
 

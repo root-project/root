@@ -76,7 +76,7 @@ bool ParseKeywordArguments(PyObject* args, PyObject* kwargs)
    auto instance = PyTuple_GetItem(args, 0);
    PyObject* p;
    if ((p = PyDict_GetItemString(kwargs, "name"))) {
-      if (!CPyCppyy_PyUnicode_Check(p)) {
+      if (!CPyCppyy_PyText_Check(p)) {
          PyErr_SetString(PyExc_RuntimeError,
                  "Failed to parse arguments: Given name is not a valid string.");
          return false;
@@ -183,7 +183,7 @@ std::string ExtractName(PyObject* instance, PyObject* pyfunc)
       }
       pyname = PyObject_GetAttrString(pyfunc, "__name__");
    }
-   std::string name = CPyCppyy_PyUnicode_AsString(pyname);
+   std::string name = CPyCppyy_PyText_AsString(pyname);
    Py_DECREF(pyname);
    return name;
 }
@@ -210,11 +210,11 @@ PyObject* GenericCallableImpl_call(PyObject * /*self*/, PyObject *args)
    if (name.compare("") == 0) return NULL;
 
    // Get C++ return type
-   if (!CPyCppyy_PyUnicode_Check(returnType)) {
+   if (!CPyCppyy_PyText_Check(returnType)) {
       PyErr_SetString(PyExc_RuntimeError, "Failed to create C++ callable: Return type argument cannot be interpreted as string.");
       return NULL;
    }
-   std::string returnTypeStr = CPyCppyy_PyUnicode_AsString(returnType);
+   std::string returnTypeStr = CPyCppyy_PyText_AsString(returnType);
    Py_DECREF(returnType);
    if (returnTypeStr.compare("") == 0) {
       returnTypeStr = "void";
@@ -259,14 +259,14 @@ PyObject* GenericCallableImpl_call(PyObject * /*self*/, PyObject *args)
    std::stringstream vars;
    while ((item = PyIter_Next(iter))) {
       // Convert argument to string
-      if (!CPyCppyy_PyUnicode_Check(item)) {
+      if (!CPyCppyy_PyText_Check(item)) {
          Py_DECREF(iter);
          Py_DECREF(item);
          PyErr_SetString(PyExc_RuntimeError, "Failed to create C++ callable: Failed to interpret input type as string.");
          return NULL;
       }
 
-      inputTypesStr[idx] = CPyCppyy_PyUnicode_AsString(item);
+      inputTypesStr[idx] = CPyCppyy_PyText_AsString(item);
       Py_DECREF(item);
 
       auto pytype = typemap.find(inputTypesStr[idx]);
@@ -390,7 +390,7 @@ PyObject* GenericCallableImpl_call(PyObject * /*self*/, PyObject *args)
    // Attach C++ wrapper code to callable
    auto code_str = code.str();
    auto code_cstr = code_str.c_str();
-   auto pycode = CPyCppyy_PyUnicode_FromString(code_cstr);
+   auto pycode = CPyCppyy_PyText_FromString(code_cstr);
    PyObject_SetAttrString(pyfunc, "__cpp_wrapper__", pycode);
    Py_DECREF(pycode);
 
@@ -440,11 +440,11 @@ PyObject* NumbaCallableImpl_call(PyObject * /*self*/, PyObject *args)
    if (name.compare("") == 0) return NULL;
 
    // Get C++ return type
-   if (!CPyCppyy_PyUnicode_Check(returnType)) {
+   if (!CPyCppyy_PyText_Check(returnType)) {
       PyErr_SetString(PyExc_RuntimeError, "Failed to create C++ callable: Return type argument cannot be interpreted as string.");
       return NULL;
    }
-   std::string returnTypeStr = CPyCppyy_PyUnicode_AsString(returnType);
+   std::string returnTypeStr = CPyCppyy_PyText_AsString(returnType);
    Py_DECREF(returnType);
    if (returnTypeStr.compare("") == 0) {
       returnTypeStr = "void";
@@ -473,14 +473,14 @@ PyObject* NumbaCallableImpl_call(PyObject * /*self*/, PyObject *args)
    std::vector<std::string> cppTypes;
    while ((item = PyIter_Next(iter))) {
       // Convert argument to string
-      if (!CPyCppyy_PyUnicode_Check(item)) {
+      if (!CPyCppyy_PyText_Check(item)) {
          Py_DECREF(iter);
          Py_DECREF(item);
          PyErr_SetString(PyExc_RuntimeError, "Failed to create C++ callable: Failed to interpret input type as string.");
          return NULL;
       }
 
-      const std::string cpptype = CPyCppyy_PyUnicode_AsString(item);
+      const std::string cpptype = CPyCppyy_PyText_AsString(item);
       Py_DECREF(item);
 
       auto t = typemap.find(cpptype);
@@ -551,7 +551,7 @@ PyObject* NumbaCallableImpl_call(PyObject * /*self*/, PyObject *args)
       PyObject *type, *value, *traceback;
       PyErr_Fetch(&type, &value, &traceback);
       auto pyerr = PyObject_Str(value);
-      std::string pyerrstr = CPyCppyy_PyUnicode_AsString(pyerr);
+      std::string pyerrstr = CPyCppyy_PyText_AsString(pyerr);
       PyErr_SetString(PyExc_RuntimeError,
               ("Failed to create C++ callable: Unable to jit function using numba.cfunc with signature "
                + numbaSignatureStr + ":\n" + pyerrstr).c_str());
@@ -623,7 +623,7 @@ PyObject* NumbaCallableImpl_call(PyObject * /*self*/, PyObject *args)
    }
 
    // Attach code function to callable
-   auto pycode = CPyCppyy_PyUnicode_FromString(code_cstr);
+   auto pycode = CPyCppyy_PyText_FromString(code_cstr);
    PyObject_SetAttrString(pyfunc, "__cpp_wrapper__", pycode);
    Py_DECREF(pycode);
 
@@ -706,7 +706,7 @@ PyObject *PyROOT::GetCppCallableClass(PyObject * /*self*/, PyObject * args) {
 
    // Create wrapper class for decorator
    auto classDict = PyDict_New();
-   auto className = CPyCppyy_PyUnicode_FromString("CppCallableImpl");
+   auto className = CPyCppyy_PyText_FromString("CppCallableImpl");
    auto classBases = PyTuple_New(0);
 
    // Add methods

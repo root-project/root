@@ -23,7 +23,7 @@ PyObject *PyROOT::PyStrings::gTClassDynCast = nullptr;
 PyObject *PyROOT::PyStrings::gClass = nullptr;
 
 #define PYROOT_INITIALIZE_STRING(var, str)                                    \
-   if (!(PyStrings::var = CPyCppyy_PyUnicode_InternFromString((char *)#str))) \
+   if (!(PyStrings::var = CPyCppyy_PyText_InternFromString((char *)#str))) \
    return false
 
 bool PyROOT::CreatePyStrings()
