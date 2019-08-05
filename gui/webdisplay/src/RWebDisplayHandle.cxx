@@ -340,9 +340,32 @@ ROOT::Experimental::RWebDisplayHandle::ChromeCreator::ChromeCreator() : BrowserC
    fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog --window-size=$width,$height --app=$url");
 #else
    fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "fork:--headless $url");
-   fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog --window-size=$width,$height --app=\'$url\' &");
+   fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog --window-size=$width,$height --user-data-dir=$profile --app=\'$url\' &");
 #endif
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Handle profile argument
+
+std::string ROOT::Experimental::RWebDisplayHandle::ChromeCreator::MakeProfile(std::string &exec, bool)
+{
+   std::string rmdir, profile_arg;
+
+   if (exec.find("$profile") == std::string::npos)
+      return rmdir;
+
+   const char *chrome_profile = gEnv->GetValue("WebGui.ChromeProfile", "");
+   if (chrome_profile && *chrome_profile) {
+      profile_arg = chrome_profile;
+   } else {
+      rmdir = profile_arg = std::string(gSystem->TempDirectory()) + "/root_chrome_profile_"s + std::to_string(gRandom->Integer(0x100000));
+   }
+
+   exec = std::regex_replace(exec, std::regex("\\$profile"), profile_arg);
+
+   return rmdir;
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Constructor
@@ -377,12 +400,10 @@ ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : Browse
 
 std::string ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::MakeProfile(std::string &exec, bool batch_mode)
 {
-   std::string rmdir;
+   std::string rmdir, profile_arg;
 
    if (exec.find("$profile") == std::string::npos)
       return rmdir;
-
-   std::string profile_arg;
 
    const char *ff_profile = gEnv->GetValue("WebGui.FirefoxProfile", "");
    const char *ff_profilepath = gEnv->GetValue("WebGui.FirefoxProfilePath", "");
@@ -392,8 +413,6 @@ std::string ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::MakeProfile(s
    } else if (ff_profilepath && *ff_profilepath) {
       profile_arg = "-profile "s + ff_profilepath;
    } else if ((ff_randomprofile > 0) || (batch_mode && (ff_randomprofile >= 0))) {
-
-      gRandom->SetSeed(0);
 
       std::string rnd_profile = "root_ff_profile_"s + std::to_string(gRandom->Integer(0x100000));
       std::string profile_dir = std::string(gSystem->TempDirectory()) + "/"s + rnd_profile;
