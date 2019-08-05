@@ -2503,7 +2503,7 @@ void TGraph::MovePoints(Double_t dx, Double_t dy, Bool_t logx, Bool_t logy)
       if (!logy) {
          y += dy;
       } else if (y > 0) {
-         y = TMath::Exp(TMath::Log(y) + dx);
+         y = TMath::Exp(TMath::Log(y) + dy);
       }
       SetPoint(i, x, y);
    }
