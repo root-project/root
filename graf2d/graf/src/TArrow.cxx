@@ -372,9 +372,11 @@ void TArrow::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    SaveFillAttributes(out,"arrow",0,1);
    SaveLineAttributes(out,"arrow",1,1,1);
 
-   if (fAngle !=60) {
+   if (TestBit(kLineNDC))
+      out<<"   arrow->SetNDC();"<<std::endl;
+
+   if (fAngle!=60)
       out << "   arrow->SetAngle(" << GetAngle() << ");" << std::endl;
-   }
 
    out<<"   arrow->Draw();"<<std::endl;
 }

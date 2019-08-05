@@ -409,10 +409,12 @@ void TLine::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    } else {
       out<<"   TLine *";
    }
-   out<<"line = new TLine("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
-      <<");"<<std::endl;
+   out<<"line = new TLine("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2<<");"<<std::endl;
 
    SaveLineAttributes(out,"line",1,1,1);
+
+   if (TestBit(kLineNDC))
+      out<<"   line->SetNDC();"<<std::endl;
 
    out<<"   line->Draw();"<<std::endl;
 }
