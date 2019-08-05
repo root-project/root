@@ -2967,14 +2967,12 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
    TCutG *gcut = (TCutG*)gROOT->GetListOfSpecials()->FindObject(name.Data());
    if (gcut) {
       if (gcut->GetObjectX()) {
-         if(!gcut->GetObjectX()->InheritsFrom(TTreeFormula::Class())) {
-            delete gcut->GetObjectX(); gcut->SetObjectX(0);
-         }
+         if(!gcut->GetObjectX()->InheritsFrom(TTreeFormula::Class()))
+            gcut->SetObjectX(nullptr);
       }
       if (gcut->GetObjectY()) {
-         if(!gcut->GetObjectY()->InheritsFrom(TTreeFormula::Class())) {
-            delete gcut->GetObjectY(); gcut->SetObjectY(0);
-         }
+         if(!gcut->GetObjectY()->InheritsFrom(TTreeFormula::Class()))
+            gcut->SetObjectY(nullptr);
       }
 
       Int_t code = fNcodes;
