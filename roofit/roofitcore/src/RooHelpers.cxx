@@ -15,6 +15,7 @@
  *****************************************************************************/
 
 #include "RooHelpers.h"
+#include "RooAbsRealLValue.h"
 
 namespace RooHelpers {
 
@@ -65,6 +66,16 @@ HijackMessageStream::~HijackMessageStream() {
 }
 
 
-
+void checkRangeOfParameters(const RooAbsReal* callingClass, std::initializer_list<const RooAbsReal*> pars,
+    double min, double max) {
+  for (auto parameter : pars) {
+    auto par = dynamic_cast<const RooAbsRealLValue*>(parameter);
+    if (par && (par->getMin() <= min || par->getMax() >= max) ) {
+      oocoutE(callingClass, Eval) << "The parameter '" << par->GetName() << "' with range [" << par->getMin("") << ", "
+          << par->getMax() << "] of the " << callingClass->IsA()->GetName() << " '" << callingClass->GetName()
+          << "' exceeds the safe range of [" << min << ", " << max << "]. Advise to limit its range." << std::endl;
+    }
+  }
+}
 
 }

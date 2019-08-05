@@ -22,9 +22,9 @@
 
 #define MAKE_JOHNSON_AND_VARS RooRealVar mass("mass", "mass", 0., -200., 200.);\
 RooRealVar mu("mu", "Location parameter of normal distribution", 100., -200., 200.);\
-RooRealVar sigma("sigma", "Two sigma of normal distribution", 2., 0., 100.);\
+RooRealVar sigma("sigma", "Two sigma of normal distribution", 2., 1.E-6, 100.);\
 RooRealVar gamma("gamma", "gamma", -10., -100., 100.);\
-RooRealVar delta("delta", "delta", 3., 0., 100.);\
+RooRealVar delta("delta", "delta", 3., 1.E-6, 100.);\
 RooJohnson johnson("johnson", "johnson", mass, mu, sigma, gamma, delta, -1.E300);
 
 const char* originalFormula = "delta/(sigma*TMath::Sqrt(TMath::Pi()))"
