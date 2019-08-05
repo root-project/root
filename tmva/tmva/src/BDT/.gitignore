@@ -9,6 +9,9 @@ data/
 __pycache__
 tmp/
 benchs
+dataset/
+files/
+*.root
 
 # Prerequisites
 *.d
