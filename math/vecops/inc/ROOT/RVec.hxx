@@ -24,9 +24,11 @@
 #include <ROOT/RAdoptAllocator.hxx>
 #include <ROOT/RIntegerSequence.hxx>
 #include <ROOT/RStringView.hxx>
+#include <TError.h> // R__ASSERT
 #include <ROOT/TypeTraits.hxx>
 
 #include <algorithm>
+#include <cmath>
 #include <numeric> // for inner_product
 #include <sstream>
 #include <stdexcept>
@@ -1555,25 +1557,36 @@ RVec<T> InvariantMasses(
         const RVec<T>& pt1, const RVec<T>& eta1, const RVec<T>& phi1, const RVec<T>& mass1,
         const RVec<T>& pt2, const RVec<T>& eta2, const RVec<T>& phi2, const RVec<T>& mass2)
 {
-   // Conversion from (pt, eta, phi, mass) to (x, y, z, e) coordinate system
-   const auto x1 = pt1 * cos(phi1);
-   const auto y1 = pt1 * sin(phi1);
-   const auto z1 = pt1 * sinh(eta1);
-   const auto e1 = sqrt(x1 * x1 + y1 * y1 + z1 * z1 + mass1 * mass1);
+   std::size_t size = pt1.size();
 
-   const auto x2 = pt2 * cos(phi2);
-   const auto y2 = pt2 * sin(phi2);
-   const auto z2 = pt2 * sinh(eta2);
-   const auto e2 = sqrt(x2 * x2 + y2 * y2 + z2 * z2 + mass2 * mass2);
+   R__ASSERT(eta1.size() == size && phi1.size() == size && mass1.size() == size);
+   R__ASSERT(pt2.size() == size && phi2.size() == size && mass2.size() == size);
 
-   // Addition of particle four-vectors
-   const auto e = e1 + e2;
-   const auto x = x1 + x2;
-   const auto y = y1 + y2;
-   const auto z = z1 + z2;
+   RVec<T> inv_masses(size);
+
+   for (std::size_t i = 0u; i < size; ++i) {
+      // Conversion from (pt, eta, phi, mass) to (x, y, z, e) coordinate system
+      const auto x1 = pt1[i] * std::cos(phi1[i]);
+      const auto y1 = pt1[i] * std::sin(phi1[i]);
+      const auto z1 = pt1[i] * std::sinh(eta1[i]);
+      const auto e1 = std::sqrt(x1 * x1 + y1 * y1 + z1 * z1 + mass1[i] * mass1[i]);
+
+      const auto x2 = pt2[i] * std::cos(phi2[i]);
+      const auto y2 = pt2[i] * std::sin(phi2[i]);
+      const auto z2 = pt2[i] * std::sinh(eta2[i]);
+      const auto e2 = std::sqrt(x2 * x2 + y2 * y2 + z2 * z2 + mass2[i] * mass2[i]);
+
+      // Addition of particle four-vector elements
+      const auto e = e1 + e2;
+      const auto x = x1 + x2;
+      const auto y = y1 + y2;
+      const auto z = z1 + z2;
+
+      inv_masses[i] = std::sqrt(e * e - x * x - y * y - z * z);
+   }
 
    // Return invariant mass with (+, -, -, -) metric
-   return sqrt(e * e - x * x - y * y - z * z);
+   return inv_masses;
 }
 
 /// Return the invariant mass of multiple particles given the collections of the
@@ -1584,20 +1597,29 @@ RVec<T> InvariantMasses(
 template <typename T>
 T InvariantMass(const RVec<T>& pt, const RVec<T>& eta, const RVec<T>& phi, const RVec<T>& mass)
 {
-   // Conversion from (mass, pt, eta, phi) to (e, x, y, z) coordinate system
-   const auto x = pt * cos(phi);
-   const auto y = pt * sin(phi);
-   const auto z = pt * sinh(eta);
-   const auto e = sqrt(x * x + y * y + z * z + mass * mass);
+   const std::size_t size = pt.size();
 
-   // Addition of particle four-vectors
-   const auto xs = Sum(x);
-   const auto ys = Sum(y);
-   const auto zs = Sum(z);
-   const auto es = Sum(e);
+   R__ASSERT(eta.size() == size && phi.size() == size && mass.size() == size);
+
+   T x_sum = 0.;
+   T y_sum = 0.;
+   T z_sum = 0.;
+   T e_sum = 0.;
+
+   for (std::size_t i = 0u; i < size; ++ i) {
+      // Convert to (e, x, y, z) coordinate system and update sums
+      const auto x = pt[i] * std::cos(phi[i]);
+      x_sum += x;
+      const auto y = pt[i] * std::sin(phi[i]);
+      y_sum += y;
+      const auto z = pt[i] * std::sinh(eta[i]);
+      z_sum += z;
+      const auto e = std::sqrt(x * x + y * y + z * z + mass[i] * mass[i]);
+      e_sum += e;
+   }
 
    // Return invariant mass with (+, -, -, -) metric
-   return std::sqrt(es * es - xs * xs - ys * ys - zs * zs);
+   return std::sqrt(e_sum * e_sum - x_sum * x_sum - y_sum * y_sum - z_sum * z_sum);
 }
 
 ////////////////////////////////////////////////////////////////////////////
