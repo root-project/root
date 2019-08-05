@@ -150,8 +150,10 @@ class RNTupleView<double> {
 
 protected:
    RField<double> fField;
-   RNTupleView(std::string_view fieldName, Detail::RPageSource* pageSource) : fField(fieldName) {
-      fField.ConnectColumns(pageSource);
+   RNTupleView(DescriptorId_t fieldId, Detail::RPageSource* pageSource)
+      : fField(pageSource->GetDescriptor().GetFieldDescriptor(fieldId).GetFieldName())
+   {
+      Detail::RFieldFuse::Connect(fieldId, *pageSource, fField);
    }
 
 public:
@@ -172,8 +174,10 @@ class RNTupleView<int> {
 
 protected:
    RField<int> fField;
-   RNTupleView(std::string_view fieldName, Detail::RPageSource* pageSource) : fField(fieldName) {
-      fField.ConnectColumns(pageSource);
+   RNTupleView(DescriptorId_t fieldId, Detail::RPageSource* pageSource)
+      : fField(pageSource->GetDescriptor().GetFieldDescriptor(fieldId).GetFieldName())
+   {
+      Detail::RFieldFuse::Connect(fieldId, *pageSource, fField);
    }
 
 public:
