@@ -59,6 +59,7 @@ protected:
       ChromeCreator();
       virtual ~ChromeCreator() = default;
       bool IsActive() const override { return !fProg.empty(); }
+      std::string MakeProfile(std::string &exec, bool) override;
    };
 
    class FirefoxCreator : public BrowserCreator {
