@@ -257,8 +257,8 @@ TCutG &TCutG::operator=(const TCutG &rhs)
       TGraph::operator=(rhs);
       delete fObjectX;
       delete fObjectY;
-      fObjectX = rhs.fObjectX->Clone();
-      fObjectY = rhs.fObjectY->Clone();
+      fObjectX = rhs.fObjectX ? rhs.fObjectX->Clone() : nullptr;
+      fObjectY = rhs.fObjectY ? rhs.fObjectY->Clone() : nullptr;
    }
    return *this;
 }
