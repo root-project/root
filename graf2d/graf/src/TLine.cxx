@@ -134,10 +134,10 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kArrowKeyPress:
    case kButton1Down:
-      oldX1 = fX1;
-      oldY1 = fY1;
-      oldX2 = fX2;
-      oldY2 = fY2;
+      oldX1 = GetX1();
+      oldY1 = GetY1();
+      oldX2 = GetX2();
+      oldY2 = GetY2();
       ndcsav = TestBit(kLineNDC);
       if (!opaque) {
          gVirtualX->SetLineColor(-1);
@@ -149,15 +149,15 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    case kMouseMotion:
 
       if (TestBit(kLineNDC)) {
-         px1 = gPad->UtoPixel(fX1);
-         py1 = gPad->VtoPixel(fY1);
-         px2 = gPad->UtoPixel(fX2);
-         py2 = gPad->VtoPixel(fY2);
+         px1 = gPad->UtoPixel(GetX1());
+         py1 = gPad->VtoPixel(GetY1());
+         px2 = gPad->UtoPixel(GetX2());
+         py2 = gPad->VtoPixel(GetY2());
       } else {
-         px1 = gPad->XtoAbsPixel(gPad->XtoPad(fX1));
-         py1 = gPad->YtoAbsPixel(gPad->YtoPad(fY1));
-         px2 = gPad->XtoAbsPixel(gPad->XtoPad(fX2));
-         py2 = gPad->YtoAbsPixel(gPad->YtoPad(fY2));
+         px1 = gPad->XtoAbsPixel(gPad->XtoPad(GetX1()));
+         py1 = gPad->YtoAbsPixel(gPad->YtoPad(GetY1()));
+         px2 = gPad->XtoAbsPixel(gPad->XtoPad(GetX2()));
+         py2 = gPad->YtoAbsPixel(gPad->YtoPad(GetY2()));
       }
       p1 = p2 = pL = kFALSE;
 
@@ -235,13 +235,13 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (opaque) {
          if (p1) {
             //check in which corner the BBox is edited
-            if (fX1>fX2) {
-               if (fY1>fY2)
+            if (GetX1() > GetX2()) {
+               if (GetY1() > GetY2())
                   gPad->ShowGuidelines(this, event, '2', true);
                else
                   gPad->ShowGuidelines(this, event, '3', true);
             } else {
-               if (fY1>fY2)
+               if (GetY1() > GetY2())
                   gPad->ShowGuidelines(this, event, '1', true);
                else
                   gPad->ShowGuidelines(this, event, '4', true);
@@ -249,13 +249,13 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          }
          if (p2) {
             //check in which corner the BBox is edited
-            if (fX1>fX2) {
-               if (fY1>fY2)
+            if (GetX1() > GetX2()) {
+               if (GetY1() > GetY2())
                   gPad->ShowGuidelines(this, event, '4', true);
                else
                   gPad->ShowGuidelines(this, event, '1', true);
             } else {
-               if (fY1>fY2)
+               if (GetY1() > GetY2())
                   gPad->ShowGuidelines(this, event, '3', true);
                else
                   gPad->ShowGuidelines(this, event, '2', true);
@@ -285,10 +285,10 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
       if (opaque) {
          if (ndcsav && !TestBit(kLineNDC)) {
-            SetX1((fX1 - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
-            SetX2((fX2 - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
-            SetY1((fY1 - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1()));
-            SetY2((fY2 - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1()));
+            SetX1((GetX1() - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
+            SetX2((GetX2() - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
+            SetY1((GetY1() - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1()));
+            SetY2((GetY2() - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1()));
             SetNDC();
          }
          gPad->ShowGuidelines(this, event);
@@ -299,42 +299,42 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             xp1  = gPad->GetX1();
             yp1  = gPad->GetY1();
             if (p1) {
-               fX1 = (gPad->AbsPixeltoX(px)-xp1)/dpx;
-               fY1 = (gPad->AbsPixeltoY(py)-yp1)/dpy;
+               SetX1((gPad->AbsPixeltoX(px)-xp1)/dpx);
+               SetY1((gPad->AbsPixeltoY(py)-yp1)/dpy);
             }
             if (p2) {
-               fX2 = (gPad->AbsPixeltoX(px)-xp1)/dpx;
-               fY2 = (gPad->AbsPixeltoY(py)-yp1)/dpy;
+               SetX2((gPad->AbsPixeltoX(px)-xp1)/dpx);
+               SetY2((gPad->AbsPixeltoY(py)-yp1)/dpy);
             }
             if (pL) {
-               fX1 = (gPad->AbsPixeltoX(px1)-xp1)/dpx;
-               fY1 = (gPad->AbsPixeltoY(py1)-yp1)/dpy;
-               fX2 = (gPad->AbsPixeltoX(px2)-xp1)/dpx;
-               fY2 = (gPad->AbsPixeltoY(py2)-yp1)/dpy;
+               SetX1((gPad->AbsPixeltoX(px1)-xp1)/dpx);
+               SetY1((gPad->AbsPixeltoY(py1)-yp1)/dpy);
+               SetX2((gPad->AbsPixeltoX(px2)-xp1)/dpx);
+               SetY2((gPad->AbsPixeltoY(py2)-yp1)/dpy);
             }
          } else {
             if (p1) {
-               fX1 = gPad->PadtoX(gPad->AbsPixeltoX(px));
-               fY1 = gPad->PadtoY(gPad->AbsPixeltoY(py));
+               SetX1(gPad->PadtoX(gPad->AbsPixeltoX(px)));
+               SetY1(gPad->PadtoY(gPad->AbsPixeltoY(py)));
             }
             if (p2) {
-               fX2 = gPad->PadtoX(gPad->AbsPixeltoX(px));
-               fY2 = gPad->PadtoY(gPad->AbsPixeltoY(py));
+               SetX2(gPad->PadtoX(gPad->AbsPixeltoX(px)));
+               SetY2(gPad->PadtoY(gPad->AbsPixeltoY(py)));
             }
             if (pL) {
-               fX1 = gPad->PadtoX(gPad->AbsPixeltoX(px1));
-               fY1 = gPad->PadtoY(gPad->AbsPixeltoY(py1));
-               fX2 = gPad->PadtoX(gPad->AbsPixeltoX(px2));
-               fY2 = gPad->PadtoY(gPad->AbsPixeltoY(py2));
+               SetX1(gPad->PadtoX(gPad->AbsPixeltoX(px1)));
+               SetY1(gPad->PadtoY(gPad->AbsPixeltoY(py1)));
+               SetX2(gPad->PadtoX(gPad->AbsPixeltoX(px2)));
+               SetY2(gPad->PadtoY(gPad->AbsPixeltoY(py2)));
             }
          }
          if (TestBit(kVertical)) {
-            if (p1) fX2 = fX1;
-            if (p2) fX1 = fX2;
+            if (p1) SetX2(GetX1());
+            if (p2) SetX1(GetX2());
          }
          if (TestBit(kHorizontal)) {
-            if (p1) fY2 = fY1;
-            if (p2) fY1 = fY2;
+            if (p1) SetY2(GetY1());
+            if (p2) SetY1(GetY2());
          }
          gPad->Modified(kTRUE);
          gPad->Update();
