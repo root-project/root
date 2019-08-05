@@ -190,9 +190,13 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             gVirtualX->DrawLine(px1old, py1old, px2, py2);
             gVirtualX->DrawLine(px, py, px2, py2);
          } else {
-            if (ndcsav) this->SetNDC(kFALSE);
-            this->SetX1(gPad->AbsPixeltoX(px));
-            this->SetY1(gPad->AbsPixeltoY(py));
+            if (ndcsav) {
+               SetNDC(kFALSE);
+               SetX2(gPad->GetX1() + oldX2*(gPad->GetX2()-gPad->GetX1()));
+               SetY2(gPad->GetY1() + oldY2*(gPad->GetY2()-gPad->GetY1()));
+            }
+            SetX1(gPad->AbsPixeltoX(px));
+            SetY1(gPad->AbsPixeltoY(py));
          }
          px1old = px;
          py1old = py;
@@ -202,9 +206,13 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             gVirtualX->DrawLine(px1, py1, px2old, py2old);
             gVirtualX->DrawLine(px1, py1, px, py);
          } else {
-            if (ndcsav) this->SetNDC(kFALSE);
-            this->SetX2(gPad->AbsPixeltoX(px));
-            this->SetY2(gPad->AbsPixeltoY(py));
+            if (ndcsav) {
+               SetNDC(kFALSE);
+               SetX1(gPad->GetX1() + oldX1*(gPad->GetX2()-gPad->GetX1()));
+               SetY1(gPad->GetY1() + oldY1*(gPad->GetY2()-gPad->GetY1()));
+            }
+            SetX2(gPad->AbsPixeltoX(px));
+            SetY2(gPad->AbsPixeltoY(py));
          }
          px2old = px;
          py2old = py;
@@ -217,11 +225,11 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          pxold = px;
          pyold = py;
          if (opaque) {
-            if (ndcsav) this->SetNDC(kFALSE);
-            this->SetX1(gPad->AbsPixeltoX(px1));
-            this->SetY1(gPad->AbsPixeltoY(py1));
-            this->SetX2(gPad->AbsPixeltoX(px2));
-            this->SetY2(gPad->AbsPixeltoY(py2));
+            if (ndcsav) SetNDC(kFALSE);
+            SetX1(gPad->AbsPixeltoX(px1));
+            SetY1(gPad->AbsPixeltoY(py1));
+            SetX2(gPad->AbsPixeltoX(px2));
+            SetY2(gPad->AbsPixeltoY(py2));
          }
       }
       if (opaque) {
@@ -266,22 +274,22 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
          if (opaque) {
-            this->SetX1(oldX1);
-            this->SetY1(oldY1);
-            this->SetX2(oldX2);
-            this->SetY2(oldY2);
+            SetX1(oldX1);
+            SetY1(oldY1);
+            SetX2(oldX2);
+            SetY2(oldY2);
             gPad->Modified(kTRUE);
             gPad->Update();
          }
          break;
       }
       if (opaque) {
-         if (ndcsav && !this->TestBit(kLineNDC)) {
-            this->SetX1((fX1 - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
-            this->SetX2((fX2 - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
-            this->SetY1((fY1 - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1()));
-            this->SetY2((fY2 - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1()));
-            this->SetNDC();
+         if (ndcsav && !TestBit(kLineNDC)) {
+            SetX1((fX1 - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
+            SetX2((fX2 - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
+            SetY1((fY1 - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1()));
+            SetY2((fY2 - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1()));
+            SetNDC();
          }
          gPad->ShowGuidelines(this, event);
       } else {
