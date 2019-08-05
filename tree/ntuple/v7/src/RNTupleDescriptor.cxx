@@ -18,6 +18,7 @@
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RStringView.hxx>
 
+#include <RZip.h>
 #include <TError.h>
 
 #include <algorithm>
@@ -27,7 +28,7 @@
 
 namespace {
 
-std::uint32_t SerializeInt64(std::int64_t val, void* buffer)
+std::uint32_t SerializeInt64(std::int64_t val, void *buffer)
 {
    if (buffer != nullptr) {
       auto bytes = reinterpret_cast<unsigned char *>(buffer);
@@ -43,16 +44,14 @@ std::uint32_t SerializeInt64(std::int64_t val, void* buffer)
    return 8;
 }
 
-
-std::uint32_t SerializeUInt64(std::uint64_t val, void* buffer)
+std::uint32_t SerializeUInt64(std::uint64_t val, void *buffer)
 {
    return SerializeInt64(val, buffer);
 }
 
-
-std::uint32_t DeserializeInt64(void* buffer, std::int64_t *val)
+std::uint32_t DeserializeInt64(const void *buffer, std::int64_t *val)
 {
-   auto bytes = reinterpret_cast<unsigned char *>(buffer);
+   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
    *val = std::int64_t(bytes[0]) + (std::int64_t(bytes[1]) << 8) +
           (std::int64_t(bytes[2]) << 16) + (std::int64_t(bytes[3]) << 24) +
           (std::int64_t(bytes[4]) << 32) + (std::int64_t(bytes[5]) << 40) +
@@ -60,14 +59,12 @@ std::uint32_t DeserializeInt64(void* buffer, std::int64_t *val)
    return 8;
 }
 
-
-std::uint32_t DeserializeUInt64(void* buffer, std::uint64_t *val)
+std::uint32_t DeserializeUInt64(const void *buffer, std::uint64_t *val)
 {
-   return DeserializeInt64(buffer, reinterpret_cast<std::int64_t*>(val));
+   return DeserializeInt64(buffer, reinterpret_cast<std::int64_t *>(val));
 }
 
-
-std::uint32_t SerializeInt32(std::int32_t val, void* buffer)
+std::uint32_t SerializeInt32(std::int32_t val, void *buffer)
 {
    if (buffer != nullptr) {
       auto bytes = reinterpret_cast<unsigned char *>(buffer);
@@ -79,29 +76,52 @@ std::uint32_t SerializeInt32(std::int32_t val, void* buffer)
    return 4;
 }
 
-
-std::uint32_t SerializeUInt32(std::uint32_t val, void* buffer)
+std::uint32_t SerializeUInt32(std::uint32_t val, void *buffer)
 {
    return SerializeInt32(val, buffer);
 }
 
-
-std::uint32_t DeserializeInt32(void* buffer, std::int32_t *val)
+std::uint32_t DeserializeInt32(const void *buffer, std::int32_t *val)
 {
-   auto bytes = reinterpret_cast<unsigned char *>(buffer);
+   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
    *val = std::int32_t(bytes[0]) + (std::int32_t(bytes[1]) << 8) +
           (std::int32_t(bytes[2]) << 16) + (std::int32_t(bytes[3]) << 24);
    return 4;
 }
 
-
-std::uint32_t DeserializeUInt32(void* buffer, std::uint32_t *val)
+std::uint32_t DeserializeUInt32(const void *buffer, std::uint32_t *val)
 {
-   return DeserializeInt32(buffer, reinterpret_cast<std::int32_t*>(val));
+   return DeserializeInt32(buffer, reinterpret_cast<std::int32_t *>(val));
 }
 
+std::uint32_t SerializeInt16(std::int16_t val, void *buffer)
+{
+   if (buffer != nullptr) {
+      auto bytes = reinterpret_cast<unsigned char *>(buffer);
+      bytes[0] = (val & 0x00FF);
+      bytes[1] = (val & 0xFF00) >> 8;
+   }
+   return 2;
+}
 
-std::uint32_t SerializeString(const std::string &val, void* buffer)
+std::uint32_t SerializeUInt16(std::uint16_t val, void *buffer)
+{
+   return SerializeInt16(val, buffer);
+}
+
+std::uint32_t DeserializeInt16(const void *buffer, std::int16_t *val)
+{
+   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
+   *val = std::int16_t(bytes[0]) + (std::int16_t(bytes[1]) << 8);
+   return 2;
+}
+
+std::uint32_t DeserializeUInt16(const void *buffer, std::uint16_t *val)
+{
+   return DeserializeInt16(buffer, reinterpret_cast<std::int16_t *>(val));
+}
+
+std::uint32_t SerializeString(const std::string &val, void *buffer)
 {
    if (buffer != nullptr) {
       auto pos = reinterpret_cast<unsigned char *>(buffer);
@@ -111,9 +131,9 @@ std::uint32_t SerializeString(const std::string &val, void* buffer)
    return SerializeUInt32(val.length(), nullptr) + val.length();
 }
 
-std::uint32_t DeserializeString(void* buffer, std::string *val)
+std::uint32_t DeserializeString(const void *buffer, std::string *val)
 {
-   auto base = reinterpret_cast<unsigned char *>(buffer);
+   auto base = reinterpret_cast<const unsigned char *>(buffer);
    auto bytes = base;
    std::uint32_t length;
    bytes += DeserializeUInt32(buffer, &length);
@@ -122,20 +142,56 @@ std::uint32_t DeserializeString(void* buffer, std::string *val)
    return bytes + length - base;
 }
 
-std::uint32_t SerializeVersion(const ROOT::Experimental::RNTupleVersion &val, void* buffer)
+std::uint32_t SerializeFrame(std::uint16_t protocolVersionCurrent, std::uint16_t protocolVersionMin, void *buffer,
+   void **ptrSize)
 {
    if (buffer != nullptr) {
       auto pos = reinterpret_cast<unsigned char *>(buffer);
-      pos += SerializeUInt32(val.GetVersionUse(), pos);
-      pos += SerializeUInt32(val.GetVersionMin(), pos);
-      pos += SerializeUInt64(val.GetFlags(), pos);
+      pos += SerializeUInt16(protocolVersionCurrent, pos); // The protocol version used to write the structure
+      pos += SerializeUInt16(protocolVersionMin, pos); // The minimum protocol version required to read the data
+      *ptrSize = pos;
+      pos += SerializeUInt32(0, pos); // placeholder for the size of the frame
    }
-   return 16;
+   return 8;
 }
 
-std::uint32_t DeserializeVersion(void* buffer, ROOT::Experimental::RNTupleVersion *version)
+std::uint32_t DeserializeFrame(std::uint16_t protocolVersion, const void *buffer, std::uint32_t *size)
 {
-   auto bytes = reinterpret_cast<unsigned char *>(buffer);
+   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
+   std::uint16_t protocolVersionAtWrite;
+   std::uint16_t protocolVersionMinRequired;
+   bytes += DeserializeUInt16(bytes, &protocolVersionAtWrite);
+   bytes += DeserializeUInt16(bytes, &protocolVersionMinRequired);
+   R__ASSERT(protocolVersionAtWrite >= protocolVersionMinRequired);
+   R__ASSERT(protocolVersion >= protocolVersionMinRequired);
+   bytes += DeserializeUInt32(bytes, size);
+   return 8;
+}
+
+std::uint32_t SerializeVersion(const ROOT::Experimental::RNTupleVersion &val, void *buffer)
+{
+   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto pos = base;
+   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+
+   void *ptrSize = nullptr;
+   pos += SerializeFrame(0, 0, *where, &ptrSize);
+
+   pos += SerializeUInt32(val.GetVersionUse(), *where);
+   pos += SerializeUInt32(val.GetVersionMin(), *where);
+   pos += SerializeUInt64(val.GetFlags(), *where);
+
+   auto size = pos - base;
+   SerializeUInt32(size, ptrSize);
+   return size;
+}
+
+std::uint32_t DeserializeVersion(const void *buffer, ROOT::Experimental::RNTupleVersion *version)
+{
+   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
+   std::uint32_t frameSize;
+   bytes += DeserializeFrame(0, bytes, &frameSize);
+
    std::uint32_t versionUse;
    std::uint32_t versionMin;
    std::uint64_t flags;
@@ -143,14 +199,110 @@ std::uint32_t DeserializeVersion(void* buffer, ROOT::Experimental::RNTupleVersio
    bytes += DeserializeUInt32(bytes, &versionMin);
    bytes += DeserializeUInt64(bytes, &flags);
    *version = ROOT::Experimental::RNTupleVersion(versionUse, versionMin, flags);
-   return 16;
+
+   return frameSize;
 }
 
-std::uint32_t SerializeField(const ROOT::Experimental::RFieldDescriptor &val, void* buffer)
+std::uint32_t SerializeUuid(const ROOT::Experimental::RNTupleUuid &val, void *buffer)
 {
    auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+
+   void *ptrSize = nullptr;
+   pos += SerializeFrame(0, 0, *where, &ptrSize);
+
+   pos += SerializeString(val, *where);
+
+   auto size = pos - base;
+   SerializeUInt32(size, ptrSize);
+   return size;
+}
+
+std::uint32_t DeserializeUuid(const void *buffer, ROOT::Experimental::RNTupleUuid *uuid)
+{
+   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
+   std::uint32_t frameSize;
+   bytes += DeserializeFrame(0, bytes, &frameSize);
+
+   bytes += DeserializeString(bytes, uuid);
+
+   return frameSize;
+}
+
+std::uint32_t SerializeColumnModel(const ROOT::Experimental::RColumnModel &val, void *buffer)
+{
+   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto pos = base;
+   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+
+   void *ptrSize = nullptr;
+   pos += SerializeFrame(0, 0, *where, &ptrSize);
+
+   pos += SerializeInt32(static_cast<int>(val.GetType()), *where);
+   pos += SerializeInt32(static_cast<int>(val.GetIsSorted()), *where);
+
+   auto size = pos - base;
+   SerializeUInt32(size, ptrSize);
+   return size;
+}
+
+std::uint32_t DeserializeColumnModel(const void *buffer, ROOT::Experimental::RColumnModel *columnModel)
+{
+   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
+   std::uint32_t frameSize;
+   bytes += DeserializeFrame(0, bytes, &frameSize);
+
+   std::int32_t type;
+   std::int32_t isSorted;
+   bytes += DeserializeInt32(bytes, &type);
+   bytes += DeserializeInt32(bytes, &isSorted);
+   *columnModel = ROOT::Experimental::RColumnModel(static_cast<ROOT::Experimental::EColumnType>(type), isSorted);
+
+   return frameSize;
+}
+
+std::uint32_t SerializeTimeStamp(const std::chrono::system_clock::time_point &val, void *buffer)
+{
+   return SerializeUInt64(std::chrono::system_clock::to_time_t(val), buffer);
+}
+
+std::uint32_t DeserializeTimeStamp(const void *buffer, std::chrono::system_clock::time_point *timeStamp)
+{
+   std::int64_t secSinceUnixEpoch;
+   auto size = DeserializeInt64(buffer, &secSinceUnixEpoch);
+   *timeStamp = std::chrono::system_clock::from_time_t(secSinceUnixEpoch);
+   return size;
+}
+
+std::uint32_t SerializeCrc32(const unsigned char *data, std::uint32_t length, void *buffer)
+{
+   auto checksum = R__crc32(0, nullptr, 0);
+   if (buffer != nullptr) {
+      checksum = R__crc32(checksum, data, length);
+      SerializeUInt32(checksum, buffer);
+   }
+   return 4;
+}
+
+void VerifyCrc32(const unsigned char *data, std::uint32_t length)
+{
+   auto checksumReal = R__crc32(0, nullptr, 0);
+   checksumReal = R__crc32(checksumReal, data, length);
+   std::uint32_t checksumFound;
+   DeserializeUInt32(data + length, &checksumFound);
+   R__ASSERT(checksumFound == checksumReal);
+}
+
+std::uint32_t SerializeField(const ROOT::Experimental::RFieldDescriptor &val, void *buffer)
+{
+   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto pos = base;
+   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+
+   void *ptrSize = nullptr;
+   pos += SerializeFrame(ROOT::Experimental::RFieldDescriptor::kFrameVersionCurrent,
+      ROOT::Experimental::RFieldDescriptor::kFrameVersionMin, *where, &ptrSize);
 
    pos += SerializeUInt64(val.GetId(), *where);
    pos += SerializeVersion(val.GetFieldVersion(), *where);
@@ -158,32 +310,58 @@ std::uint32_t SerializeField(const ROOT::Experimental::RFieldDescriptor &val, vo
    pos += SerializeString(val.GetFieldName(), *where);
    pos += SerializeString(val.GetFieldDescription(), *where);
    pos += SerializeString(val.GetTypeName(), *where);
+   pos += SerializeUInt64(val.GetNRepetitions(), *where);
    pos += SerializeUInt32(static_cast<int>(val.GetStructure()), *where);
    pos += SerializeUInt64(val.GetParentId(), *where);
    pos += SerializeUInt32(val.GetLinkIds().size(), *where);
    for (const auto& l : val.GetLinkIds())
       pos += SerializeUInt64(l, *where);
-   return pos - base;
+
+   auto size = pos - base;
+   SerializeUInt32(size, ptrSize);
+   return size;
 }
 
-std::uint32_t SerializeColumn(const ROOT::Experimental::RColumnDescriptor &val, void* buffer)
+std::uint32_t SerializeColumn(const ROOT::Experimental::RColumnDescriptor &val, void *buffer)
 {
    auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
+   void *ptrSize = nullptr;
+   pos += SerializeFrame(ROOT::Experimental::RColumnDescriptor::kFrameVersionCurrent,
+      ROOT::Experimental::RColumnDescriptor::kFrameVersionMin, *where, &ptrSize);
+
    pos += SerializeUInt64(val.GetId(), *where);
    pos += SerializeVersion(val.GetVersion(), *where);
-   pos += SerializeInt32(static_cast<int>(val.GetModel().GetType()), *where);
-   pos += SerializeInt32(static_cast<int>(val.GetModel().GetIsSorted()), *where);
-   pos += SerializeUInt32(val.GetIndex(), *where);
+   pos += SerializeColumnModel(val.GetModel(), *where);
    pos += SerializeUInt64(val.GetFieldId(), *where);
+   pos += SerializeUInt32(val.GetIndex(), *where);
    pos += SerializeUInt64(val.GetOffsetId(), *where);
    pos += SerializeUInt32(val.GetLinkIds().size(), *where);
    for (const auto& l : val.GetLinkIds())
       pos += SerializeUInt64(l, *where);
-   return pos - base;
+
+   auto size = pos - base;
+   SerializeUInt32(size, ptrSize);
+   return size;
 }
+
+/* std::uint32_t SerializeCluster(const ROOT::Experimental::RClusterDescriptor &val,
+   const ROOT::Experimental::RColumnDescriptor &columnDescriptor, void *buffer)
+{
+   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto pos = base;
+   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+
+   void *ptrSize = nullptr;
+   pos += SerializeFrame(ROOT::Experimental::RClusterDescriptor::kFrameVersionCurrent,
+      ROOT::Experimental::RClusterDescriptor::kFrameVersionMin, *where, &ptrSize);
+
+   auto size = pos - base;
+   SerializeUInt32(size, ptrSize);
+   return size;
+}*/
 
 } // anonymous namespace
 
@@ -198,6 +376,7 @@ bool ROOT::Experimental::RFieldDescriptor::operator==(const RFieldDescriptor &ot
           fFieldName == other.fFieldName &&
           fFieldDescription == other.fFieldDescription &&
           fTypeName == other.fTypeName &&
+          fNRepetitions == other.fNRepetitions &&
           fStructure == other.fStructure &&
           fParentId == other.fParentId &&
           fLinkIds == other.fLinkIds;
@@ -211,8 +390,8 @@ bool ROOT::Experimental::RColumnDescriptor::operator==(const RColumnDescriptor &
    return fColumnId == other.fColumnId &&
           fVersion == other.fVersion &&
           fModel == other.fModel &&
-          fIndex == other.fIndex &&
           fFieldId == other.fFieldId &&
+          fIndex == other.fIndex &&
           fOffsetId == other.fOffsetId &&
           fLinkIds == other.fLinkIds;
 }
@@ -237,6 +416,8 @@ bool ROOT::Experimental::RClusterDescriptor::operator==(const RClusterDescriptor
 bool ROOT::Experimental::RNTupleDescriptor::operator==(const RNTupleDescriptor &other) const {
    return fName == other.fName &&
           fDescription == other.fDescription &&
+          fAuthor == other.fAuthor &&
+          fTimeStampData == other.fTimeStampData &&
           fVersion == other.fVersion &&
           fOwnUuid == other.fOwnUuid &&
           fGroupUuid == other.fGroupUuid &&
@@ -252,13 +433,18 @@ std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeHeader(void* buffe
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
-   pos += SerializeUInt32(kByteProtocol, *where);
-   void *ptrSize = *where;
-   pos += SerializeUInt32(0, *where); // placeholder for the size
+   void *ptrSize = nullptr;
+   pos += SerializeFrame(RNTupleDescriptor::kFrameVersionCurrent, RNTupleDescriptor::kFrameVersionMin, pos, &ptrSize);
 
    pos += SerializeString(fName, *where);
    pos += SerializeString(fDescription, *where);
+   pos += SerializeString(fAuthor, *where);
+   pos += SerializeString(fCustodian, *where);
+   pos += SerializeTimeStamp(fTimeStampData, *where);
+   pos += SerializeTimeStamp(fTimeStampWritten, *where);
    pos += SerializeVersion(fVersion, *where);
+   pos += SerializeUuid(fOwnUuid, *where);
+   pos += SerializeUuid(fGroupUuid, *where);
    pos += SerializeUInt32(fFieldDescriptors.size(), *where);
    for (const auto& f : fFieldDescriptors) {
       pos += SerializeField(f.second, *where);
@@ -268,9 +454,10 @@ std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeHeader(void* buffe
       pos += SerializeColumn(c.second, *where);
    }
 
-   pos += SerializeUInt32(0 /* TODO CRC32 */, *where);
    std::uint32_t size = pos - base;
    SerializeUInt32(size, ptrSize);
+   size += SerializeCrc32(base, size, *where);
+
    return size;
 }
 
@@ -280,28 +467,29 @@ std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeFooter(void* buffe
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
-   pos += SerializeUInt32(kByteProtocol, *where);
-   void *ptrSize = *where;
-   pos += SerializeUInt32(0, *where); // placeholder for the size
+   void *ptrSize = nullptr;
+   pos += SerializeFrame(RNTupleDescriptor::kFrameVersionCurrent, RNTupleDescriptor::kFrameVersionMin, pos, &ptrSize);
 
-   // TODO UUid again
    pos += SerializeUInt64(fClusterDescriptors.size(), *where);
    for (const auto& cluster : fClusterDescriptors) {
+      pos += SerializeUuid(fOwnUuid, *where); // in order to verify that header and footer belong together
       pos += SerializeUInt64(cluster.second.GetId(), *where);
       pos += SerializeVersion(cluster.second.GetVersion(), *where);
       pos += SerializeUInt64(cluster.second.GetFirstEntryIndex(), *where);
       pos += SerializeUInt64(cluster.second.GetNEntries(), *where);
+
       pos += SerializeUInt32(fColumnDescriptors.size(), *where);
       for (const auto& column : fColumnDescriptors) {
-         pos += SerializeUInt64(column.first, *where);
+         auto columnId = column.first;
+         pos += SerializeUInt64(columnId, *where);
 
-         auto columnRange = cluster.second.GetColumnRange(column.first);
-         R__ASSERT(columnRange.fColumnId == column.first);
+         auto columnRange = cluster.second.GetColumnRange(columnId);
+         R__ASSERT(columnRange.fColumnId == columnId);
          pos += SerializeUInt64(columnRange.fFirstElementIndex, *where);
          pos += SerializeUInt64(columnRange.fNElements, *where);
 
-         auto pageRange = cluster.second.GetPageRange(column.first);
-         R__ASSERT(pageRange.fColumnId == column.first);
+         auto pageRange = cluster.second.GetPageRange(columnId);
+         R__ASSERT(pageRange.fColumnId == columnId);
          auto nPages = pageRange.fPageInfos.size();
          pos += SerializeUInt32(nPages, *where);
          for (unsigned int i = 0; i < nPages; ++i) {
@@ -311,9 +499,10 @@ std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeFooter(void* buffe
       }
    }
 
-   pos += SerializeUInt32(0 /* TODO CRC32 */, *where);
    std::uint32_t size = pos - base;
    SerializeUInt32(size, ptrSize);
+   size += SerializeCrc32(base, size, *where);
+
    return size;
 }
 
@@ -388,25 +577,31 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDes
 ////////////////////////////////////////////////////////////////////////////////
 
 
-void ROOT::Experimental::RNTupleDescriptorBuilder::SetFromHeader(void* headerBuffer) {
+void ROOT::Experimental::RNTupleDescriptorBuilder::SetFromHeader(void* headerBuffer)
+{
    auto pos = reinterpret_cast<unsigned char *>(headerBuffer);
-   std::uint32_t byteProtocol;
-   pos += DeserializeUInt32(pos, &byteProtocol);
-   R__ASSERT(byteProtocol == 0);
-   std::uint32_t size;
-   pos += DeserializeUInt32(pos, &size);
-   // TODO: verify crc32
+   auto base = pos;
+
+   std::uint32_t frameSize;
+   pos += DeserializeFrame(RNTupleDescriptor::kFrameVersionCurrent, base, &frameSize);
+   VerifyCrc32(base, frameSize);
 
    pos += DeserializeString(pos, &fDescriptor.fName);
    pos += DeserializeString(pos, &fDescriptor.fDescription);
+   pos += DeserializeString(pos, &fDescriptor.fAuthor);
+   pos += DeserializeString(pos, &fDescriptor.fCustodian);
+   pos += DeserializeTimeStamp(pos, &fDescriptor.fTimeStampData);
+   pos += DeserializeTimeStamp(pos, &fDescriptor.fTimeStampWritten);
    pos += DeserializeVersion(pos, &fDescriptor.fVersion);
-   // TODO
-   fDescriptor.fOwnUuid = RNTupleUuid();
-   fDescriptor.fGroupUuid = RNTupleUuid();
+   pos += DeserializeUuid(pos, &fDescriptor.fOwnUuid);
+   pos += DeserializeUuid(pos, &fDescriptor.fGroupUuid);
 
    std::uint32_t nFields;
    pos += DeserializeUInt32(pos, &nFields);
    for (std::uint32_t i = 0; i < nFields; ++i) {
+      auto fieldBase = pos;
+      pos += DeserializeFrame(RFieldDescriptor::kFrameVersionCurrent, fieldBase, &frameSize);
+
       RFieldDescriptor f;
       pos += DeserializeUInt64(pos, &f.fFieldId);
       pos += DeserializeVersion(pos, &f.fFieldVersion);
@@ -414,6 +609,7 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::SetFromHeader(void* headerBuf
       pos += DeserializeString(pos, &f.fFieldName);
       pos += DeserializeString(pos, &f.fFieldDescription);
       pos += DeserializeString(pos, &f.fTypeName);
+      pos += DeserializeUInt64(pos, &f.fNRepetitions);
       std::int32_t structure;
       pos += DeserializeInt32(pos, &structure);
       f.fStructure = static_cast<ENTupleStructure>(structure);
@@ -426,22 +622,22 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::SetFromHeader(void* headerBuf
          pos += DeserializeUInt64(pos, &f.fLinkIds[j]);
       }
 
+      pos = fieldBase + frameSize;
       fDescriptor.fFieldDescriptors[f.fFieldId] = f;
    }
 
    std::uint32_t nColumns;
    pos += DeserializeUInt32(pos, &nColumns);
    for (std::uint32_t i = 0; i < nColumns; ++i) {
+      auto columnBase = pos;
+      pos += DeserializeFrame(RColumnDescriptor::kFrameVersionCurrent, columnBase, &frameSize);
+
       RColumnDescriptor c;
       pos += DeserializeUInt64(pos, &c.fColumnId);
       pos += DeserializeVersion(pos, &c.fVersion);
-      std::int32_t type;
-      std::int32_t isSorted;
-      pos += DeserializeInt32(pos, &type);
-      pos += DeserializeInt32(pos, &isSorted);
-      c.fModel = RColumnModel(static_cast<EColumnType>(type), isSorted);
-      pos += DeserializeUInt32(pos, &c.fIndex);
+      pos += DeserializeColumnModel(pos, &c.fModel);
       pos += DeserializeUInt64(pos, &c.fFieldId);
+      pos += DeserializeUInt32(pos, &c.fIndex);
       pos += DeserializeUInt64(pos, &c.fOffsetId);
 
       std::uint32_t nLinks;
@@ -451,23 +647,28 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::SetFromHeader(void* headerBuf
          pos += DeserializeUInt64(pos, &c.fLinkIds[j]);
       }
 
+      pos = columnBase + frameSize;
       fDescriptor.fColumnDescriptors[c.fColumnId] = c;
    }
 }
 
-
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddClustersFromFooter(void* footerBuffer) {
    auto pos = reinterpret_cast<unsigned char *>(footerBuffer);
-   std::uint32_t byteProtocol;
-   pos += DeserializeUInt32(pos, &byteProtocol);
-   R__ASSERT(byteProtocol == 0);
-   std::uint32_t size;
-   pos += DeserializeUInt32(pos, &size);
-   // TODO: verify crc32
+   auto base = pos;
+
+   std::uint32_t frameSize;
+   pos += DeserializeFrame(RNTupleDescriptor::kFrameVersionCurrent, pos, &frameSize);
+   VerifyCrc32(base, frameSize);
 
    std::uint64_t nClusters;
    pos += DeserializeUInt64(pos, &nClusters);
    for (std::uint64_t i = 0; i < nClusters; ++i) {
+      RNTupleUuid uuid;
+      pos += DeserializeUuid(pos, &uuid);
+      R__ASSERT(uuid == fDescriptor.fOwnUuid);
+      //auto clusterBase = pos;
+      //pos += DeserializeFrame(RClusterDescriptor::kFrameVersionCurrent, clusterBase, &frameSize);
+
       std::uint64_t clusterId;
       RNTupleVersion version;
       std::uint64_t firstEntry;
@@ -503,16 +704,18 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddClustersFromFooter(void* f
          }
          AddClusterPageRange(clusterId, pageRange);
       }
+
+      //pos = clusterBase + frameSize;
    }
 }
 
-
 void ROOT::Experimental::RNTupleDescriptorBuilder::SetNTuple(
-   const std::string_view &name, const std::string_view &description, const RNTupleVersion &version,
-   const RNTupleUuid &uuid)
+   const std::string_view name, const std::string_view description, const std::string_view author,
+   const RNTupleVersion &version, const RNTupleUuid &uuid)
 {
    fDescriptor.fName = std::string(name);
    fDescriptor.fDescription = std::string(description);
+   fDescriptor.fAuthor = std::string(author);
    fDescriptor.fVersion = version;
    fDescriptor.fOwnUuid = uuid;
    fDescriptor.fGroupUuid = uuid;
@@ -520,7 +723,7 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::SetNTuple(
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(
    DescriptorId_t fieldId, const RNTupleVersion &fieldVersion, const RNTupleVersion &typeVersion,
-   std::string_view fieldName, std::string_view typeName, ENTupleStructure structure)
+   std::string_view fieldName, std::string_view typeName, std::uint64_t nRepetitions, ENTupleStructure structure)
 {
    RFieldDescriptor f;
    f.fFieldId = fieldId;
@@ -528,6 +731,7 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(
    f.fTypeVersion = typeVersion;
    f.fFieldName = std::string(fieldName);
    f.fTypeName = std::string(typeName);
+   f.fNRepetitions = nRepetitions;
    f.fStructure = structure;
    fDescriptor.fFieldDescriptors[fieldId] = f;
 }

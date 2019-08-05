@@ -20,6 +20,7 @@
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RStringView.hxx>
 
+#include <chrono>
 #include <memory>
 #include <vector>
 #include <string>
@@ -44,6 +45,8 @@ private:
    std::string fFieldDescription;
    /// The C++ type that was used when writing the field
    std::string fTypeName;
+   /// The number of elements for fixed-size arrays
+   std::uint64_t fNRepetitions;
    /// The structural information carried by this field in the data model tree
    ENTupleStructure fStructure;
    /// Establishes sub field relationships, such as classes and collections
@@ -52,6 +55,10 @@ private:
    std::vector<DescriptorId_t> fLinkIds;
 
 public:
+   /// In order to handle changes to the serialization routine in future ntuple versions
+   static constexpr std::uint16_t kFrameVersionCurrent = 0;
+   static constexpr std::uint16_t kFrameVersionMin = 0;
+
    bool operator==(const RFieldDescriptor &other) const;
 
    DescriptorId_t GetId() const { return fFieldId; }
@@ -60,6 +67,7 @@ public:
    std::string GetFieldName() const { return fFieldName; }
    std::string GetFieldDescription() const { return fFieldDescription; }
    std::string GetTypeName() const { return fTypeName; }
+   std::uint64_t GetNRepetitions() const { return fNRepetitions; }
    ENTupleStructure GetStructure() const { return fStructure; }
    DescriptorId_t GetParentId() const { return fParentId; }
    std::vector<DescriptorId_t> GetLinkIds() const { return fLinkIds; }
@@ -73,15 +81,20 @@ private:
    DescriptorId_t fColumnId = kInvalidDescriptorId;;
    RNTupleVersion fVersion;
    RColumnModel fModel;
-   std::uint32_t fIndex;
    /// Every column belongs to one and only one field
-   DescriptorId_t fFieldId = kInvalidDescriptorId;;
+   DescriptorId_t fFieldId = kInvalidDescriptorId;
+   /// A field can be serialized into several columns, which are numbered from zero to $n$
+   std::uint32_t fIndex;
    /// Pointer to the parent column with offsets
-   DescriptorId_t fOffsetId = kInvalidDescriptorId;;
+   DescriptorId_t fOffsetId = kInvalidDescriptorId;
    /// For index and offset columns of collections, pointers and variants, the pointee field(s)
    std::vector<DescriptorId_t> fLinkIds;
 
 public:
+   /// In order to handle changes to the serialization routine in future ntuple versions
+   static constexpr std::uint16_t kFrameVersionCurrent = 0;
+   static constexpr std::uint16_t kFrameVersionMin = 0;
+
    bool operator==(const RColumnDescriptor &other) const;
 
    DescriptorId_t GetId() const { return fColumnId; }
@@ -147,6 +160,10 @@ private:
    std::unordered_map<DescriptorId_t, RPageRange> fPageRanges;
 
 public:
+   /// In order to handle changes to the serialization routine in future ntuple versions
+   static constexpr std::uint16_t kFrameVersionCurrent = 0;
+   static constexpr std::uint16_t kFrameVersionMin = 0;
+
    bool operator==(const RClusterDescriptor &other) const;
 
    DescriptorId_t GetId() const { return fClusterId; }
@@ -166,11 +183,12 @@ class RNTupleDescriptor {
    friend class RNTupleDescriptorBuilder;
 
 private:
-   /// In order to handle changes to the serialization routine in future ntuple versions
-   static constexpr std::uint32_t kByteProtocol = 0;
-
    std::string fName;
    std::string fDescription;
+   std::string fAuthor;
+   std::string fCustodian;
+   std::chrono::system_clock::time_point fTimeStampData;
+   std::chrono::system_clock::time_point fTimeStampWritten;
    RNTupleVersion fVersion;
    /// Every NTuple gets a unique identifier
    RNTupleUuid fOwnUuid;
@@ -185,6 +203,10 @@ private:
    std::unordered_map<DescriptorId_t, RClusterDescriptor> fClusterDescriptors;
 
 public:
+   /// In order to handle changes to the serialization routine in future ntuple versions
+   static constexpr std::uint16_t kFrameVersionCurrent = 0;
+   static constexpr std::uint16_t kFrameVersionMin = 0;
+
    bool operator ==(const RNTupleDescriptor &other) const;
 
    // We deliberately do not use ROOT's built-in serialization in order to allow for use of RNTuple's outside ROOT
@@ -207,6 +229,10 @@ public:
    }
    std::string GetName() const { return fName; }
    std::string GetDescription() const { return fDescription; }
+   std::string GetAuthor() const { return fAuthor; }
+   std::string GetCustodian() const { return fCustodian; }
+   std::chrono::system_clock::time_point GetTimeStampData() const { return fTimeStampData; }
+   std::chrono::system_clock::time_point GetTimeStampWritten() const { return fTimeStampWritten; }
    RNTupleVersion GetVersion() const { return fVersion; }
    RNTupleUuid GetOwnUuid() const { return fOwnUuid; }
    RNTupleUuid GetGroupUuid() const { return fGroupUuid; }
@@ -239,11 +265,12 @@ public:
    bool IsValid() const { return true; /* TODO(jblomer) */}
    const RNTupleDescriptor& GetDescriptor() const { return fDescriptor; }
 
-   void SetNTuple(const std::string_view &name, const std::string_view &description, const RNTupleVersion &version,
-                  const RNTupleUuid &uuid);
+   void SetNTuple(const std::string_view name, const std::string_view description, const std::string_view author,
+                  const RNTupleVersion &version, const RNTupleUuid &uuid);
 
    void AddField(DescriptorId_t fieldId, const RNTupleVersion &fieldVersion, const RNTupleVersion &typeVersion,
-                 std::string_view fieldName, std::string_view typeName, ENTupleStructure structure);
+                 std::string_view fieldName, std::string_view typeName, std::uint64_t nRepetitions,
+                 ENTupleStructure structure);
    void SetFieldParent(DescriptorId_t fieldId, DescriptorId_t parentId);
    void AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId);
 

@@ -90,12 +90,13 @@ void ROOT::Experimental::Detail::RPageSinkRoot::Create(RNTupleModel &model)
    fDirectory->SetBit(TDirectoryFile::kCustomBrowse);
    fDirectory->SetTitle("ROOT::Experimental::Detail::RNTupleBrowser");
 
-   fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription(), model.GetVersion(), model.GetUuid());
+   fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription(), "undefined author",
+                                model.GetVersion(), model.GetUuid());
 
    std::unordered_map<const RFieldBase *, DescriptorId_t> fieldPtr2Id; // necessary to find parent field ids
    for (auto& f : *model.GetRootField()) {
       fDescriptorBuilder.AddField(fLastFieldId, f.GetFieldVersion(), f.GetTypeVersion(), f.GetName(), f.GetType(),
-                                  f.GetStructure());
+                                  0 /* TODO(jblomer) */, f.GetStructure());
       if (f.GetParent() != model.GetRootField()) {
          fDescriptorBuilder.SetFieldParent(fLastFieldId, fieldPtr2Id[f.GetParent()]);
       }
