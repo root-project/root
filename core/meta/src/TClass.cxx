@@ -2283,7 +2283,7 @@ Bool_t TClass::CanSplit() const
 
    }
 
-   if (GetStreamer()!=0) {
+   if (GetStreamer() != nullptr || fStreamerFunc != nullptr) {
 
       // We have an external custom streamer provided by the user, we must not
       // split it.
