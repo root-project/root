@@ -58,7 +58,7 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent
 
    // first, check whether the name is of a module
    PyObject *modules = PySys_GetObject(const_cast<char *>("modules"));
-   PyObject *pyname = CPyCppyy_PyUnicode_FromString(name);
+   PyObject *pyname = CPyCppyy_PyText_FromString(name);
    PyObject *keys = PyDict_Keys(modules);
    Bool_t isModule = PySequence_Contains(keys, pyname);
    Py_DECREF(keys);
@@ -88,7 +88,7 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent
 
          // TODO: refactor the code below with the class method code
          if (PyCallable_Check(attr) && !(PyClass_Check(attr) || PyObject_HasAttr(attr, CPyCppyy::PyStrings::gBases))) {
-            std::string func_name = CPyCppyy_PyUnicode_AsString(key);
+            std::string func_name = CPyCppyy_PyText_AsString(key);
 
             // figure out number of variables required
             PyObject *func_code = PyObject_GetAttrString(attr, (char *)"func_code");
@@ -192,7 +192,7 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent
 
       // collect only member functions (i.e. callable elements in __dict__)
       if (PyCallable_Check(attr)) {
-         std::string mtName = CPyCppyy_PyUnicode_AsString(label);
+         std::string mtName = CPyCppyy_PyText_AsString(label);
 
          if (mtName == "__del__") {
             hasDestructor = kTRUE;

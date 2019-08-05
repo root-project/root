@@ -39,7 +39,7 @@ PyObject *PyROOT::GetSizeOfType(PyObject * /*self*/, PyObject *args)
 {
    // Get name of data-type
    PyObject *pydtype = PyTuple_GetItem(args, 0);
-   std::string dtype = CPyCppyy_PyUnicode_AsString(pydtype);
+   std::string dtype = CPyCppyy_PyText_AsString(pydtype);
 
    // Call interpreter to get size of data-type using `sizeof`
    long size = 0;
@@ -70,11 +70,11 @@ PyObject *PyROOT::GetDataPointer(PyObject * /*self*/, PyObject *args)
 
    // Get name of C++ object as string
    PyObject *pycppname = PyTuple_GetItem(args, 1);
-   std::string cppname = CPyCppyy_PyUnicode_AsString(pycppname);
+   std::string cppname = CPyCppyy_PyText_AsString(pycppname);
 
    // Get name of method to be called to get the data pointer
    PyObject *pymethodname = PyTuple_GetItem(args, 2);
-   std::string methodname = CPyCppyy_PyUnicode_AsString(pymethodname);
+   std::string methodname = CPyCppyy_PyText_AsString(pymethodname);
 
    // Call interpreter to get pointer to data
    unsigned long long pointer = 0;
@@ -99,9 +99,9 @@ PyObject *PyROOT::GetDataPointer(PyObject * /*self*/, PyObject *args)
 PyObject *PyROOT::GetEndianess(PyObject * /* self */, PyObject * /* args */)
 {
 #ifdef R__BYTESWAP
-   return CPyCppyy_PyUnicode_FromString("<");
+   return CPyCppyy_PyText_FromString("<");
 #else
-   return CPyCppyy_PyUnicode_FromString(">");
+   return CPyCppyy_PyText_FromString(">");
 #endif
 }
 

@@ -55,7 +55,7 @@ bool PyROOT::RPyROOTApplication::CreateApplication(int ignoreCmdLineOpts)
 
          argv = new char *[argc];
          for (int i = 1; i < argc; ++i) {
-            char *argi = const_cast<char *>(CPyCppyy_PyUnicode_AsString(PyList_GET_ITEM(argl, i)));
+            char *argi = const_cast<char *>(CPyCppyy_PyText_AsString(PyList_GET_ITEM(argl, i)));
             if (strcmp(argi, "-") == 0 || strcmp(argi, "--") == 0) {
                // Stop collecting options, the remaining are for the Python script
                argc = i; // includes program name

@@ -115,7 +115,7 @@ std::string GetTypestrFromArrayInterface(PyObject *obj)
       PyErr_SetString(PyExc_RuntimeError, "Object not convertible: __array_interface__['typestr'] does not exist.");
       return "";
    }
-   std::string typestr = CPyCppyy_PyUnicode_AsString(pytypestr);
+   std::string typestr = CPyCppyy_PyText_AsString(pytypestr);
    const auto length = typestr.length();
    if(length != 3) {
       PyErr_SetString(PyExc_RuntimeError,

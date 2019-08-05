@@ -138,7 +138,7 @@ PyObject *PyROOT::AddCPPInstancePickling(PyObject * /*self*/, PyObject *args)
    // attribute assignment using PyObject_SetAttr
    // for more info refer to:
    // https://bitbucket.org/wlav/cppyy/issues/110/user-defined-classes-in-c-dont-seem-to-be
-   PyObject_GenericSetAttr(pyclass, PyUnicode_FromString(attr), method);
+   PyObject_GenericSetAttr(pyclass, CPyCppyy_PyText_FromString(attr), method);
    Py_DECREF(method);
    Py_DECREF(func);
 
