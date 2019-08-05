@@ -520,11 +520,11 @@ TEST(RNTuple, RDF)
 TEST(RNTuple, Descriptor)
 {
    RNTupleDescriptorBuilder descBuilder;
-   descBuilder.SetNTuple("MyTuple", "Description", RNTupleVersion(1, 2, 3), ROOT::Experimental::RNTupleUuid());
+   descBuilder.SetNTuple("MyTuple", "Description", "Me", RNTupleVersion(1, 2, 3), ROOT::Experimental::RNTupleUuid());
    descBuilder.AddField(1, RNTupleVersion(), RNTupleVersion(), "list", "std::vector<std::int32_t>",
-                        ENTupleStructure::kCollection);
-   descBuilder.AddField(2, RNTupleVersion(), RNTupleVersion(), "list", "std::int32_t", ENTupleStructure::kLeaf);
-   descBuilder.AddField(42, RNTupleVersion(), RNTupleVersion(), "x", "std::string", ENTupleStructure::kLeaf);
+                        0, ENTupleStructure::kCollection);
+   descBuilder.AddField(2, RNTupleVersion(), RNTupleVersion(), "list", "std::int32_t", 0, ENTupleStructure::kLeaf);
+   descBuilder.AddField(42, RNTupleVersion(), RNTupleVersion(), "x", "std::string", 0, ENTupleStructure::kLeaf);
    descBuilder.SetFieldParent(2, 1);
    descBuilder.AddColumn(3, 42, RNTupleVersion(), RColumnModel(EColumnType::kIndex, true), 0);
    descBuilder.AddColumn(4, 42, RNTupleVersion(), RColumnModel(EColumnType::kByte, true), 1);
