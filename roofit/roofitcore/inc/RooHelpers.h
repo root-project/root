@@ -143,6 +143,11 @@ class FormatPdfTree {
     std::ostringstream _stream;
 };
 
+
+/// Check if the parameters have a range, and warn if the range extends below / above the set limits.
+void checkRangeOfParameters(const RooAbsReal* callingClass, std::initializer_list<const RooAbsReal*> pars,
+    double min = -std::numeric_limits<double>::max(), double max = std::numeric_limits<double>::max());
+
 }
 
 #endif /* ROOFIT_ROOFITCORE_INC_ROOHELPERS_H_ */
