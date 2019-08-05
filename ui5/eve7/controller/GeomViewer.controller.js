@@ -285,14 +285,18 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       createGeoPainter: function(drawopt) {
-         if (this.geo_painter) return;
+         if (this.geo_painter) {
+            this.geo_painter.ClearDrawings();
+         } else {
 
-         var geomDrawing = this.byId("geomDrawing");
+            var geomDrawing = this.byId("geomDrawing");
 
-         this.geo_painter = JSROOT.Painter.CreateGeoPainter(geomDrawing.getDomRef(), null, drawopt);
-         geomDrawing.setGeomPainter(this.geo_painter);
+            this.geo_painter = JSROOT.Painter.CreateGeoPainter(geomDrawing.getDomRef(), null, drawopt);
+            geomDrawing.setGeomPainter(this.geo_painter);
 
-         this.geo_painter.AddHighlightHandler(this);
+            this.geo_painter.AddHighlightHandler(this);
+         }
+
          this.geo_painter.ActivateInBrowser = this.activateInTreeTable.bind(this);
 
          this.geo_painter.assignClones(this.geo_clones);
@@ -300,13 +304,13 @@ sap.ui.define(['sap/ui/core/Component',
 
       /** Extract shapes from binary data using appropriate draw message
        * Draw message is vector of REveGeomVisible objects, including info where shape is in raw data */
-      extractRawShapes: function(draw_msg) {
+      extractRawShapes: function(draw_msg, recreate) {
 
          var nodes = null, old_gradpersegm = 0;
 
          // array for descriptors for each node
          // if array too large (>1M), use JS object while only ~1K nodes are expected to be used
-         if (!this.geo_clones) {
+         if (recreate) {
             if (draw_msg.kind !== "draw") return false;
             nodes = (draw_msg.numnodes > 1e6) ? { length: draw_msg.numnodes } : new Array(draw_msg.numnodes); // array for all nodes
          }
@@ -320,7 +324,7 @@ sap.ui.define(['sap/ui/core/Component',
                this.geo_clones.updateNode(node);
          }
 
-         if (!this.geo_clones) {
+         if (recreate) {
             this.geo_clones = new JSROOT.GEO.ClonedNodes(null, nodes);
             this.geo_clones.name_prefix = this.geo_clones.GetNodeName(0);
          }
@@ -429,7 +433,7 @@ sap.ui.define(['sap/ui/core/Component',
                this.last_draw_msg = msg;
 
                // here we should decode render data
-               this.extractRawShapes(msg);
+               this.extractRawShapes(msg, true);
 
                // after clones are existing - ensure geo painter is there
                this.createGeoPainter(msg.drawopt);
