@@ -83,7 +83,11 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       self.assertEqual(ROOT.aa, 0)
       self.assertEqual(ROOT.bb, 1)
 
-      self.assertEqual(ROOT.foo.__cppname__, 'foo')
+      if self.exp_pyroot:
+         cppname = ROOT.foo.__cpp_name__
+      else:
+         cppname = ROOT.foo.__cppname__
+      self.assertEqual(cppname, 'foo')
 
       if not self.exp_pyroot:
          self.assertEqual(ROOT.foo.aa, 0)
@@ -96,7 +100,11 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       self.assertEqual(ROOT.myns.aa, 0)
       self.assertEqual(ROOT.myns.bb, 1)
 
-      self.assertEqual(ROOT.myns.foo.__cppname__, 'myns::foo')
+      if self.exp_pyroot:
+         cppname = ROOT.myns.foo.__cpp_name__
+      else:
+         cppname = ROOT.myns.foo.__cppname__
+      self.assertEqual(cppname, 'myns::foo')
 
       if not self.exp_pyroot:
          self.assertEqual(ROOT.myns.foo.aa, 0)
