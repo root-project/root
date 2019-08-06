@@ -112,7 +112,7 @@ public:
     return _span.end();
   }
 
-  constexpr typename std::span<T>::pointer data() const {
+  constexpr typename std::span<T>::pointer __restrict__ data() const {
     return _span.data();
   }
 

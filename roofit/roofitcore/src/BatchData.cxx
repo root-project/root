@@ -24,7 +24,9 @@ namespace BatchHelpers {
 
 RooSpan<const double> BatchData::getBatch(std::size_t begin, std::size_t size) const {
   if (_foreignData) {
-    assert(begin + size <= _foreignData->size());
+    if (begin >= _foreignData->size())
+      return {};
+
     const double* dataBegin = &*(_foreignData->begin()+begin);
     const std::size_t maxSize = std::min(size, _foreignData->size() - begin);
     return RooSpan<const double>(dataBegin, maxSize);
@@ -36,11 +38,10 @@ RooSpan<const double> BatchData::getBatch(std::size_t begin, std::size_t size) c
     return findSpanInsideExistingBatch(begin, size);
   }
 
-
   const auto& batch = item->second;
-  assert(size <= batch.data.size());
+  const std::size_t maxSize = std::min(size, batch.data.size() - (begin-batch.begin));
 
-  return RooSpan<const double>(batch.data);
+  return RooSpan<const double>(batch.data.data(), maxSize);
 }
 
 
@@ -97,6 +98,8 @@ void BatchData::attachForeignStorage(const std::vector<double>& vec) {
   _ownedBatches.clear();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Print to given output stream.
 void BatchData::print(std::ostream& os, const std::string& indent) const {
   os << indent << "Batch data access";
   if (_ownedBatches.empty() && !_foreignData) {

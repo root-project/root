@@ -102,7 +102,7 @@ public:
 
   virtual Double_t getValV(const RooArgSet* normalisationSet = nullptr) const ;
 
-  virtual RooSpan<const double> getValBatch(std::size_t begin, std::size_t batchSize, const RooArgSet* normSet = nullptr) const;
+  virtual RooSpan<const double> getValBatch(std::size_t begin, std::size_t maxSize, const RooArgSet* normSet = nullptr) const;
 
   Double_t getPropagatedError(const RooFitResult &fr, const RooArgSet &nset = RooArgSet());
 
@@ -403,7 +403,7 @@ protected:
 //  }
   /// Evaluate this PDF / function / constant. Needs to be overridden by all derived classes.
   virtual Double_t evaluate() const = 0;
-  virtual RooSpan<double> evaluateBatch(std::size_t begin, std::size_t batchSize) const;
+  virtual RooSpan<double> evaluateBatch(std::size_t begin, std::size_t maxSize) const;
 
   //---------- Interface to access batch data ---------------------------
   //
@@ -415,15 +415,6 @@ protected:
       auto absReal = dynamic_cast<RooAbsReal*>(arg);
       if (absReal)
         absReal->clearBatchMemory();
-    }
-  }
-  virtual void markBatchesStale() {
-    _batchData.markDirty();
-    for (auto arg : _serverList) {
-      //TODO get rid of this cast?
-      auto absReal = dynamic_cast<RooAbsReal*>(arg);
-      if (absReal)
-        absReal->_batchData.markDirty();
     }
   }
 
@@ -453,7 +444,7 @@ protected:
   Double_t _plotMax ;       // Maximum of plot range
   Int_t    _plotBins ;      // Number of plot bins
   mutable Double_t _value ; // Cache for current value of object
-  mutable BatchHelpers::BatchData _batchData; //! Value storage for all data events
+  mutable BatchHelpers::BatchData _batchData; //! Value storage for batches of events
   TString  _unit ;          // Unit for objects value
   TString  _label ;         // Plot label for objects value
   Bool_t   _forceNumInt ;   // Force numerical integration if flag set
