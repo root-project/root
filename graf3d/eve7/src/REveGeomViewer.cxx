@@ -73,6 +73,8 @@ void ROOT::Experimental::REveGeomViewer::SetGeometry(TGeoManager *mgr)
    fDesc.SetMaxVisNodes(maxnodes);
    fDesc.SetMaxVisFaces(maxnodes * 100);
    fDesc.SetNSegments(fGeoManager->GetNsegments());
+
+   Update();
 }
 
 
@@ -95,14 +97,16 @@ void ROOT::Experimental::REveGeomViewer::SelectVolume(const std::string &volname
 
 void ROOT::Experimental::REveGeomViewer::Show(const RWebDisplayArgs &args, bool always_start_new_browser)
 {
-   auto number = fWebWindow->NumConnections();
-
-   if ((number == 0) || always_start_new_browser) {
+   if ((fWebWindow->NumConnections() == 0) || always_start_new_browser)
       fWebWindow->Show(args);
-   } else {
-      for (int n=0;n<number;++n)
-         WebWindowCallback(fWebWindow->GetConnectionId(n),"RELOAD");
-   }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Update geometry drawings in all web displays
+
+void ROOT::Experimental::REveGeomViewer::Update()
+{
+   fWebWindow->Send(0, "RELOAD");
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
