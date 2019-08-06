@@ -209,7 +209,7 @@ class Cpp02TemplateLookup( MyTestCase ):
       except TypeError as e:
          if self.exp_pyroot:
             # The error message has changed in new Cppyy
-            self.assert_( "cannot resolve method template call" in str(e) )
+            self.assert_( "Template method resolution failed" in str(e) )
          else:
             self.assert_( "must be explicit" in str(e) )
 
