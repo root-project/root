@@ -47,6 +47,14 @@ protected:
          arg->ReplaceAllinContent(search, replace, true);
          arg->AddNoCacheHeader();
       }
+
+      auto user_args = fWindow.GetUserArgs();
+      if (!user_args.empty()) {
+         std::string search = "JSROOT.ConnectWebWindow({"s;
+         std::string replace = search + "user_args: " + user_args + ",";
+         arg->ReplaceAllinContent(search, replace, true);
+         arg->AddNoCacheHeader();
+      }
    }
 
 public:
