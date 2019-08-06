@@ -541,10 +541,10 @@ TEST(RNTuple, Descriptor)
    pageRange.fPageInfos.clear();
    pageRange.fColumnId = 3;
    pageInfo.fNElements = 40;
-   pageInfo.fLocator = 0;
+   pageInfo.fLocator.fPosition = 0;
    pageRange.fPageInfos.emplace_back(pageInfo);
    pageInfo.fNElements = 60;
-   pageInfo.fLocator = 1024;
+   pageInfo.fLocator.fPosition = 1024;
    pageRange.fPageInfos.emplace_back(pageInfo);
    descBuilder.AddClusterPageRange(0, pageRange);
 
@@ -555,10 +555,10 @@ TEST(RNTuple, Descriptor)
    pageRange.fPageInfos.clear();
    pageRange.fColumnId = 4;
    pageInfo.fNElements = 200;
-   pageInfo.fLocator = 2048;
+   pageInfo.fLocator.fPosition = 2048;
    pageRange.fPageInfos.emplace_back(pageInfo);
    pageInfo.fNElements = 100;
-   pageInfo.fLocator = 4096;
+   pageInfo.fLocator.fPosition = 4096;
    pageRange.fPageInfos.emplace_back(pageInfo);
    descBuilder.AddClusterPageRange(0, pageRange);
 
@@ -571,7 +571,7 @@ TEST(RNTuple, Descriptor)
    pageRange.fPageInfos.clear();
    pageRange.fColumnId = 3;
    pageInfo.fNElements = 1000;
-   pageInfo.fLocator = 8192;
+   pageInfo.fLocator.fPosition = 8192;
    pageRange.fPageInfos.emplace_back(pageInfo);
    descBuilder.AddClusterPageRange(1, pageRange);
 
@@ -582,7 +582,7 @@ TEST(RNTuple, Descriptor)
    pageRange.fPageInfos.clear();
    pageRange.fColumnId = 4;
    pageInfo.fNElements = 3000;
-   pageInfo.fLocator = 16384;
+   pageInfo.fLocator.fPosition = 16384;
    pageRange.fPageInfos.emplace_back(pageInfo);
    descBuilder.AddClusterPageRange(1, pageRange);
 

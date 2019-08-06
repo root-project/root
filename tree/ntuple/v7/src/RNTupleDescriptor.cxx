@@ -121,6 +121,19 @@ std::uint32_t DeserializeUInt16(const void *buffer, std::uint16_t *val)
    return DeserializeInt16(buffer, reinterpret_cast<std::int16_t *>(val));
 }
 
+std::uint32_t SerializeClusterSize(ROOT::Experimental::ClusterSize_t val, void *buffer)
+{
+   return SerializeUInt32(val, buffer);
+}
+
+std::uint32_t DeserializeClusterSize(const void *buffer, ROOT::Experimental::ClusterSize_t *val)
+{
+   std::uint32_t size;
+   auto nbytes = DeserializeUInt32(buffer, &size);
+   *val = size;
+   return nbytes;
+}
+
 std::uint32_t SerializeString(const std::string &val, void *buffer)
 {
    if (buffer != nullptr) {
@@ -140,6 +153,25 @@ std::uint32_t DeserializeString(const void *buffer, std::string *val)
    val->resize(length);
    memcpy(&(*val)[0], bytes, length);
    return bytes + length - base;
+}
+
+std::uint32_t SerializeLocator(const ROOT::Experimental::RClusterDescriptor::RLocator &val, void *buffer)
+{
+   // In order to keep the meta-data small, we don't wrap the locator in a frame
+   if (buffer != nullptr) {
+      auto pos = reinterpret_cast<unsigned char *>(buffer);
+      pos += SerializeString(val.fUrl, pos);
+      pos += SerializeInt64(val.fPosition, pos);
+   }
+   return SerializeString(val.fUrl, nullptr) + 8;
+}
+
+std::uint32_t DeserializeLocator(const void *buffer, ROOT::Experimental::RClusterDescriptor::RLocator *val)
+{
+   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
+   bytes += DeserializeString(bytes, &val->fUrl);
+   bytes += DeserializeInt64(bytes, &val->fPosition);
+   return SerializeString(val->fUrl, nullptr) + 8;
 }
 
 std::uint32_t SerializeFrame(std::uint16_t protocolVersionCurrent, std::uint16_t protocolVersionMin, void *buffer,
@@ -275,6 +307,51 @@ std::uint32_t DeserializeTimeStamp(const void *buffer, std::chrono::system_clock
    return size;
 }
 
+std::uint32_t SerializeColumnRange(const ROOT::Experimental::RClusterDescriptor::RColumnRange &val, void *buffer)
+{
+   // To keep the cluster footers small, we don't put a frame around individual column ranges.
+   if (buffer != nullptr) {
+      auto pos = reinterpret_cast<unsigned char *>(buffer);
+      // The column id is stored in SerializeFooter() for the column range and the page range altogether
+      pos += SerializeUInt64(val.fFirstElementIndex, pos);
+      pos += SerializeClusterSize(val.fNElements, pos);
+   }
+   return 12;
+}
+
+std::uint32_t DeserializeColumnRange(const void *buffer,
+   ROOT::Experimental::RClusterDescriptor::RColumnRange *columnRange)
+{
+   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
+   // The column id is set elsewhere (see AddClustersFromFooter())
+   bytes += DeserializeUInt64(bytes, &columnRange->fFirstElementIndex);
+   bytes += DeserializeClusterSize(bytes, &columnRange->fNElements);
+   return 12;
+}
+
+std::uint32_t SerializePageInfo(const ROOT::Experimental::RClusterDescriptor::RPageRange::RPageInfo &val, void *buffer)
+{
+   // To keep the cluster footers small, we don't put a frame around individual page infos.
+   if (buffer != nullptr) {
+      auto pos = reinterpret_cast<unsigned char *>(buffer);
+      // The column id is stored in SerializeFooter() for the column range and the page range altogether
+      pos += SerializeClusterSize(val.fNElements, pos);
+      pos += SerializeLocator(val.fLocator, pos);
+   }
+   return 4 + SerializeLocator(val.fLocator, nullptr);
+}
+
+std::uint32_t DeserializePageInfo(const void *buffer,
+   ROOT::Experimental::RClusterDescriptor::RPageRange::RPageInfo *pageInfo)
+{
+   auto base = reinterpret_cast<const unsigned char *>(buffer);
+   auto bytes = base;
+   // The column id is set elsewhere (see AddClustersFromFooter())
+   bytes += DeserializeClusterSize(bytes, &pageInfo->fNElements);
+   bytes += DeserializeLocator(bytes, &pageInfo->fLocator);
+   return bytes - base;
+}
+
 std::uint32_t SerializeCrc32(const unsigned char *data, std::uint32_t length, void *buffer)
 {
    auto checksum = R__crc32(0, nullptr, 0);
@@ -347,8 +424,7 @@ std::uint32_t SerializeColumn(const ROOT::Experimental::RColumnDescriptor &val, 
    return size;
 }
 
-/* std::uint32_t SerializeCluster(const ROOT::Experimental::RClusterDescriptor &val,
-   const ROOT::Experimental::RColumnDescriptor &columnDescriptor, void *buffer)
+std::uint32_t SerializeClusterSummary(const ROOT::Experimental::RClusterDescriptor &val, void *buffer)
 {
    auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
    auto pos = base;
@@ -358,10 +434,17 @@ std::uint32_t SerializeColumn(const ROOT::Experimental::RColumnDescriptor &val, 
    pos += SerializeFrame(ROOT::Experimental::RClusterDescriptor::kFrameVersionCurrent,
       ROOT::Experimental::RClusterDescriptor::kFrameVersionMin, *where, &ptrSize);
 
+   pos += SerializeUInt64(val.GetId(), *where);
+   pos += SerializeVersion(val.GetVersion(), *where);
+   pos += SerializeUInt64(val.GetFirstEntryIndex(), *where);
+   pos += SerializeUInt64(val.GetNEntries(), *where);
+   pos += SerializeLocator(val.GetLocator(), *where);
+   pos += SerializeInt64(val.GetBytesOnStorage(), *where);
+
    auto size = pos - base;
    SerializeUInt32(size, ptrSize);
    return size;
-}*/
+}
 
 } // anonymous namespace
 
@@ -405,6 +488,8 @@ bool ROOT::Experimental::RClusterDescriptor::operator==(const RClusterDescriptor
           fVersion == other.fVersion &&
           fFirstEntryIndex == other.fFirstEntryIndex &&
           fNEntries == other.fNEntries &&
+          fLocator == other.fLocator &&
+          fBytesOnStorage == other.fBytesOnStorage &&
           fColumnRanges == other.fColumnRanges &&
           fPageRanges == other.fPageRanges;
 }
@@ -417,7 +502,9 @@ bool ROOT::Experimental::RNTupleDescriptor::operator==(const RNTupleDescriptor &
    return fName == other.fName &&
           fDescription == other.fDescription &&
           fAuthor == other.fAuthor &&
+          fCustodian == other.fCustodian &&
           fTimeStampData == other.fTimeStampData &&
+          fTimeStampWritten == other.fTimeStampWritten &&
           fVersion == other.fVersion &&
           fOwnUuid == other.fOwnUuid &&
           fGroupUuid == other.fGroupUuid &&
@@ -434,7 +521,9 @@ std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeHeader(void* buffe
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
    void *ptrSize = nullptr;
-   pos += SerializeFrame(RNTupleDescriptor::kFrameVersionCurrent, RNTupleDescriptor::kFrameVersionMin, pos, &ptrSize);
+   pos += SerializeFrame(
+      RNTupleDescriptor::kFrameVersionCurrent, RNTupleDescriptor::kFrameVersionMin, *where, &ptrSize);
+   pos += SerializeUInt64(0, *where); // reserved; can be at some point used, e.g., for compression flags
 
    pos += SerializeString(fName, *where);
    pos += SerializeString(fDescription, *where);
@@ -468,15 +557,14 @@ std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeFooter(void* buffe
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
    void *ptrSize = nullptr;
-   pos += SerializeFrame(RNTupleDescriptor::kFrameVersionCurrent, RNTupleDescriptor::kFrameVersionMin, pos, &ptrSize);
+   pos += SerializeFrame(
+      RNTupleDescriptor::kFrameVersionCurrent, RNTupleDescriptor::kFrameVersionMin, *where, &ptrSize);
+   pos += SerializeUInt64(0, *where); // reserved; can be at some point used, e.g., for compression flags
 
    pos += SerializeUInt64(fClusterDescriptors.size(), *where);
    for (const auto& cluster : fClusterDescriptors) {
       pos += SerializeUuid(fOwnUuid, *where); // in order to verify that header and footer belong together
-      pos += SerializeUInt64(cluster.second.GetId(), *where);
-      pos += SerializeVersion(cluster.second.GetVersion(), *where);
-      pos += SerializeUInt64(cluster.second.GetFirstEntryIndex(), *where);
-      pos += SerializeUInt64(cluster.second.GetNEntries(), *where);
+      pos += SerializeClusterSummary(cluster.second, *where);
 
       pos += SerializeUInt32(fColumnDescriptors.size(), *where);
       for (const auto& column : fColumnDescriptors) {
@@ -485,16 +573,14 @@ std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeFooter(void* buffe
 
          auto columnRange = cluster.second.GetColumnRange(columnId);
          R__ASSERT(columnRange.fColumnId == columnId);
-         pos += SerializeUInt64(columnRange.fFirstElementIndex, *where);
-         pos += SerializeUInt64(columnRange.fNElements, *where);
+         pos += SerializeColumnRange(columnRange, *where);
 
          auto pageRange = cluster.second.GetPageRange(columnId);
          R__ASSERT(pageRange.fColumnId == columnId);
          auto nPages = pageRange.fPageInfos.size();
          pos += SerializeUInt32(nPages, *where);
          for (unsigned int i = 0; i < nPages; ++i) {
-            pos += SerializeUInt64(pageRange.fPageInfos[i].fNElements, *where);
-            pos += SerializeUInt64(pageRange.fPageInfos[i].fLocator, *where);
+            pos += SerializePageInfo(pageRange.fPageInfos[i], *where);
          }
       }
    }
@@ -585,6 +671,8 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::SetFromHeader(void* headerBuf
    std::uint32_t frameSize;
    pos += DeserializeFrame(RNTupleDescriptor::kFrameVersionCurrent, base, &frameSize);
    VerifyCrc32(base, frameSize);
+   std::uint64_t reserved;
+   pos += DeserializeUInt64(pos, &reserved);
 
    pos += DeserializeString(pos, &fDescriptor.fName);
    pos += DeserializeString(pos, &fDescriptor.fDescription);
@@ -659,6 +747,8 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddClustersFromFooter(void* f
    std::uint32_t frameSize;
    pos += DeserializeFrame(RNTupleDescriptor::kFrameVersionCurrent, pos, &frameSize);
    VerifyCrc32(base, frameSize);
+   std::uint64_t reserved;
+   pos += DeserializeUInt64(pos, &reserved);
 
    std::uint64_t nClusters;
    pos += DeserializeUInt64(pos, &nClusters);
@@ -666,8 +756,8 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddClustersFromFooter(void* f
       RNTupleUuid uuid;
       pos += DeserializeUuid(pos, &uuid);
       R__ASSERT(uuid == fDescriptor.fOwnUuid);
-      //auto clusterBase = pos;
-      //pos += DeserializeFrame(RClusterDescriptor::kFrameVersionCurrent, clusterBase, &frameSize);
+      auto clusterBase = pos;
+      pos += DeserializeFrame(RClusterDescriptor::kFrameVersionCurrent, clusterBase, &frameSize);
 
       std::uint64_t clusterId;
       RNTupleVersion version;
@@ -678,17 +768,24 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddClustersFromFooter(void* f
       pos += DeserializeUInt64(pos, &firstEntry);
       pos += DeserializeUInt64(pos, &nEntries);
       AddCluster(clusterId, version, firstEntry, ROOT::Experimental::ClusterSize_t(nEntries));
+      RClusterDescriptor::RLocator locator;
+      pos += DeserializeLocator(pos, &locator);
+      SetClusterLocator(clusterId, locator);
+      std::int64_t bytesOnStorage;
+      pos += DeserializeInt64(pos, &bytesOnStorage);
+      SetClusterSize(clusterId, bytesOnStorage);
+
+      pos = clusterBase + frameSize;
+
       std::uint32_t nColumns;
       pos += DeserializeUInt32(pos, &nColumns);
       for (std::uint32_t j = 0; j < nColumns; ++j) {
-         RClusterDescriptor::RColumnRange columnRange;
          uint64_t columnId;
-         uint64_t nElements;
          pos += DeserializeUInt64(pos, &columnId);
+
+         RClusterDescriptor::RColumnRange columnRange;
          columnRange.fColumnId = columnId;
-         pos += DeserializeUInt64(pos, &columnRange.fFirstElementIndex);
-         pos += DeserializeUInt64(pos, &nElements);
-         columnRange.fNElements = nElements;
+         pos += DeserializeColumnRange(pos, &columnRange);
          AddClusterColumnRange(clusterId, columnRange);
 
          RClusterDescriptor::RPageRange pageRange;
@@ -697,15 +794,11 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddClustersFromFooter(void* f
          pos += DeserializeUInt32(pos, &nPages);
          for (unsigned int k = 0; k < nPages; ++k) {
             RClusterDescriptor::RPageRange::RPageInfo pageInfo;
-            pos += DeserializeUInt64(pos, &nElements);
-            pageInfo.fNElements = nElements;
-            pos += DeserializeInt64(pos, &pageInfo.fLocator);
+            pos += DeserializePageInfo(pos, &pageInfo);
             pageRange.fPageInfos.emplace_back(pageInfo);
          }
          AddClusterPageRange(clusterId, pageRange);
       }
-
-      //pos = clusterBase + frameSize;
    }
 }
 
@@ -778,6 +871,18 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(
    c.fFirstEntryIndex = firstEntryIndex;
    c.fNEntries = nEntries;
    fDescriptor.fClusterDescriptors[clusterId] = c;
+}
+
+void ROOT::Experimental::RNTupleDescriptorBuilder::SetClusterLocator(DescriptorId_t clusterId,
+   RClusterDescriptor::RLocator locator)
+{
+   fDescriptor.fClusterDescriptors[clusterId].fLocator = locator;
+}
+
+void ROOT::Experimental::RNTupleDescriptorBuilder::SetClusterSize(DescriptorId_t clusterId,
+   std::int64_t bytesOnStorage)
+{
+   fDescriptor.fClusterDescriptors[clusterId].fBytesOnStorage = bytesOnStorage;
 }
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterColumnRange(

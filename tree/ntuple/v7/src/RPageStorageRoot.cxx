@@ -139,7 +139,7 @@ void ROOT::Experimental::Detail::RPageSinkRoot::CommitPage(ColumnHandle_t column
    fOpenColumnRanges[columnId].fNElements += page.GetNElements();
    RClusterDescriptor::RPageRange::RPageInfo pageInfo;
    pageInfo.fNElements = page.GetNElements();
-   pageInfo.fLocator = fLastPageIdx++;
+   pageInfo.fLocator.fPosition = fLastPageIdx++;
    fOpenPageRanges[columnId].fPageInfos.emplace_back(pageInfo);
 }
 
@@ -319,7 +319,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::P
 
    std::string keyName = std::string(kKeyPagePayload) +
       std::to_string(clusterId) + kKeySeparator +
-      std::to_string(pageInfo.fLocator);
+      std::to_string(pageInfo.fLocator.fPosition);
    auto pageKey = fDirectory->GetKey(keyName.c_str());
    auto pagePayload = pageKey->ReadObject<ROOT::Experimental::Internal::RNTupleBlob>();
    auto elementSize = pagePayload->fSize / pageInfo.fNElements;
