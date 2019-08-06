@@ -21,8 +21,8 @@
 class RootWebView : public QWebEngineView {
    Q_OBJECT
 protected:
-   unsigned fWidth;
-   unsigned fHeight;
+   unsigned fWidth, fHeight;
+   int fX, fY;
 
    virtual void closeEvent(QCloseEvent *);
 
@@ -39,7 +39,7 @@ signals:
    void drop(QDropEvent* event);
 
 public:
-   RootWebView(QWidget *parent = nullptr, unsigned width = 0, unsigned height = 0);
+   RootWebView(QWidget *parent = nullptr, unsigned width = 0, unsigned height = 0, int x = -1, int y = -1);
    virtual ~RootWebView() = default;
 
    virtual QSize  sizeHint() const;
