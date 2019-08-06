@@ -416,7 +416,7 @@ unsigned ROOT::Experimental::RWebWindow::AddDisplayHandle(bool batch_mode, const
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Returns true if provided key value already exists (in processes map or in existing connections)
 
-bool ROOT::Experimental::RWebWindow::HasKey(const std::string &key)
+bool ROOT::Experimental::RWebWindow::HasKey(const std::string &key) const
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
@@ -816,7 +816,7 @@ void ROOT::Experimental::RWebWindow::Sync()
 /// Address can be required if one needs to access data from one window into another window
 /// Used for instance when inserting panel into canvas
 
-std::string ROOT::Experimental::RWebWindow::RelativeAddr(std::shared_ptr<RWebWindow> &win)
+std::string ROOT::Experimental::RWebWindow::RelativeAddr(std::shared_ptr<RWebWindow> &win) const
 {
    if (fMgr != win->fMgr) {
       R__ERROR_HERE("WebDisplay") << "Same web window manager should be used";
@@ -829,10 +829,52 @@ std::string ROOT::Experimental::RWebWindow::RelativeAddr(std::shared_ptr<RWebWin
    return res;
 }
 
+/////////////////////////////////////////////////////////////////////////
+/// Set client version, used as prefix in scripts URL
+/// When changed, web browser will reload all related JS files while full URL will be different
+/// Default is empty value - no extra string in URL
+/// Version should be string like "1.2" or "ver1.subv2" and not contain any special symbols
+
+void ROOT::Experimental::RWebWindow::SetClientVersion(const std::string &vers)
+{
+   std::lock_guard<std::mutex> grd(fConnMutex);
+   fClientVersion = vers;
+}
+
+/////////////////////////////////////////////////////////////////////////
+/// Returns current client version
+
+std::string ROOT::Experimental::RWebWindow::GetClientVersion() const
+{
+   std::lock_guard<std::mutex> grd(fConnMutex);
+   return fClientVersion;
+}
+
+/////////////////////////////////////////////////////////////////////////
+/// Set arbitrary JSON code, which is accessible via conn.GetUserArgs() method
+/// This JSON code injected into main HTML document into JSROOT.ConnectWebWindow()
+/// Must be called before RWebWindow::Show() method is called
+
+void ROOT::Experimental::RWebWindow::SetUserArgs(const std::string &args)
+{
+   std::lock_guard<std::mutex> grd(fConnMutex);
+   fUserArgs = args;
+}
+
+/////////////////////////////////////////////////////////////////////////
+/// Returns configured user arguments for web window
+/// See \ref SetUserArgs method for more details
+
+std::string ROOT::Experimental::RWebWindow::GetUserArgs() const
+{
+   std::lock_guard<std::mutex> grd(fConnMutex);
+   return fUserArgs;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////
 /// Returns current number of active clients connections
 
-int ROOT::Experimental::RWebWindow::NumConnections(bool with_pending)
+int ROOT::Experimental::RWebWindow::NumConnections(bool with_pending) const
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
    auto sz = fConn.size();
@@ -863,7 +905,7 @@ void ROOT::Experimental::RWebWindow::RecordData(const std::string &fname, const 
 /// Only active connections are returned - where clients confirms connection
 /// Total number of connections can be retrieved with NumConnections() method
 
-unsigned ROOT::Experimental::RWebWindow::GetConnectionId(int num)
+unsigned ROOT::Experimental::RWebWindow::GetConnectionId(int num) const
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
    return ((num >= 0) && (num < (int)fConn.size()) && fConn[num]->fActive) ? fConn[num]->fConnId : 0;
@@ -874,7 +916,7 @@ unsigned ROOT::Experimental::RWebWindow::GetConnectionId(int num)
 /// connid is connection (0 - any)
 /// if only_active==false, also inactive connections check or connections which should appear
 
-bool ROOT::Experimental::RWebWindow::HasConnection(unsigned connid, bool only_active)
+bool ROOT::Experimental::RWebWindow::HasConnection(unsigned connid, bool only_active) const
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
@@ -917,30 +959,27 @@ void ROOT::Experimental::RWebWindow::CloseConnection(unsigned connid)
 ///////////////////////////////////////////////////////////////////////////////////
 /// returns connection (or all active connections)
 
-ROOT::Experimental::RWebWindow::ConnectionsList ROOT::Experimental::RWebWindow::GetConnections(unsigned connid)
+ROOT::Experimental::RWebWindow::ConnectionsList ROOT::Experimental::RWebWindow::GetConnections(unsigned connid) const
 {
    std::vector<std::shared_ptr<WebConn>> arr;
 
-   std::lock_guard<std::mutex> grd(fConnMutex);
+   {
+      std::lock_guard<std::mutex> grd(fConnMutex);
 
-   if (!connid) {
-      arr = fConn;
-   } else {
       for (auto &conn : fConn)
-         if ((conn->fConnId == connid) && conn->fActive)
+         if (conn->fActive && (!connid || (conn->fConnId == connid)))
             arr.push_back(conn);
    }
 
    return arr;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////////
 /// returns true if sending via specified connection can be performed
 /// if direct==true, checks if direct sending (without queuing) is possible
 /// if connid==0, all existing connections are checked
 
-bool ROOT::Experimental::RWebWindow::CanSend(unsigned connid, bool direct)
+bool ROOT::Experimental::RWebWindow::CanSend(unsigned connid, bool direct) const
 {
    auto arr = GetConnections(connid);
 
@@ -963,7 +1002,7 @@ bool ROOT::Experimental::RWebWindow::CanSend(unsigned connid, bool direct)
 /// if connid==0, maximal value for all connections is returned
 /// If wrong connection is specified, -1 is return
 
-int ROOT::Experimental::RWebWindow::GetSendQueueLength(unsigned connid)
+int ROOT::Experimental::RWebWindow::GetSendQueueLength(unsigned connid) const
 {
    int maxq = -1;
 

@@ -79,7 +79,7 @@ private:
       bool fActive{false};                 ///<! flag indicates if connection is active
       unsigned fWSId{0};                   ///<! websocket id
       int fReady{0};                       ///<! 0 - not ready, 1..9 - interim, 10 - done
-      std::mutex fMutex;                   ///<! mutex must be used to protect all following data
+      mutable std::mutex fMutex;           ///<! mutex must be used to protect all following data
       timestamp_t fRecvStamp;              ///<! last receive operation, protected with connection mutex
       int fRecvCount{0};                   ///<! number of received packets, should return back with next sending
       int fSendCredits{0};                 ///<! how many send operation can be performed without confirmation from other side
@@ -121,7 +121,7 @@ private:
    unsigned fConnCnt{0};                            ///<! counter of new connections to assign ids
    ConnectionsList fPendingConn;                    ///<! list of pending connection with pre-assigned keys
    ConnectionsList fConn;                           ///<! list of all accepted connections
-   std::mutex fConnMutex;                           ///<! mutex used to protect connection list
+   mutable std::mutex fConnMutex;                   ///<! mutex used to protect connection list
    unsigned fConnLimit{1};                          ///<! number of allowed active connections
    bool fNativeOnlyConn{false};                     ///<! only native connection are allowed, created by Show() method
    unsigned fMaxQueueLength{10};                    ///<! maximal number of queue entries
@@ -141,6 +141,7 @@ private:
    unsigned fProtocolConnId{0};                     ///<! connection id, which is used for writing protocol
    std::string fProtocolPrefix;                     ///<! prefix for created files names
    std::string fProtocol;                           ///<! protocol
+   std::string fUserArgs;                           ///<! arbitrary JSON code, which is accessible via conn.getUserArgs() method
 
    std::shared_ptr<RWebWindowWSHandler> CreateWSHandler(std::shared_ptr<RWebWindowsManager> mgr, unsigned id, double tmout);
 
@@ -148,7 +149,7 @@ private:
 
    void CompleteWSSend(unsigned wsid);
 
-   ConnectionsList GetConnections(unsigned connid = 0);
+   ConnectionsList GetConnections(unsigned connid = 0) const;
 
    std::shared_ptr<WebConn> FindOrCreateConnection(unsigned wsid, bool make_new, const char *query);
 
@@ -168,7 +169,7 @@ private:
 
    void CheckDataToSend(bool only_once = false);
 
-   bool HasKey(const std::string &key);
+   bool HasKey(const std::string &key) const;
 
    void CheckPendingConnections();
 
@@ -239,22 +240,19 @@ public:
    /// returns true if only native (own-created) connections are allowed
    bool IsNativeOnlyConn() const { return fNativeOnlyConn; }
 
-   /////////////////////////////////////////////////////////////////////////
-   /// Set client version, used as prefix in scripts URL
-   /// When changed, web browser will reload all related JS files while full URL will be different
-   /// Default is empty value - no extra string in URL
-   /// Version should be string like "1.2" or "ver1.subv2" and not contain any special symbols
-   void SetClientVersion(const std::string &vers) { fClientVersion = vers; }
+   void SetClientVersion(const std::string &vers);
 
-   /////////////////////////////////////////////////////////////////////////
-   /// Returns current client version
-   std::string GetClientVersion() const { return fClientVersion; }
+   std::string GetClientVersion() const;
 
-   int NumConnections(bool with_pending = false);
+   void SetUserArgs(const std::string &args);
 
-   unsigned GetConnectionId(int num = 0);
+   std::string GetUserArgs() const;
 
-   bool HasConnection(unsigned connid = 0, bool only_active = true);
+   int NumConnections(bool with_pending = false) const;
+
+   unsigned GetConnectionId(int num = 0) const;
+
+   bool HasConnection(unsigned connid = 0, bool only_active = true) const;
 
    void CloseConnections();
 
@@ -285,9 +283,9 @@ public:
 
    unsigned FindBatch();
 
-   bool CanSend(unsigned connid, bool direct = true);
+   bool CanSend(unsigned connid, bool direct = true) const;
 
-   int GetSendQueueLength(unsigned connid);
+   int GetSendQueueLength(unsigned connid) const;
 
    void Send(unsigned connid, const std::string &data);
 
@@ -297,7 +295,7 @@ public:
 
    void RecordData(const std::string &fname = "protocol.json", const std::string &fprefix = "");
 
-   std::string RelativeAddr(std::shared_ptr<RWebWindow> &win);
+   std::string RelativeAddr(std::shared_ptr<RWebWindow> &win) const;
 
    void SetCallBacks(WebWindowConnectCallback_t conn, WebWindowDataCallback_t data, WebWindowConnectCallback_t disconn = nullptr);
 
