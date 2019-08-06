@@ -830,6 +830,9 @@ if(xrootd)
         message(STATUS "                  Alternatively, you can also enable the option 'builtin_xrootd' to build XROOTD internally")
         message(STATUS "                  For the time being switching OFF 'xrootd' option")
         set(xrootd OFF CACHE BOOL "Disabled because external XROOTD not found and builtin_xrootd disabled (${xrootd_description})" FORCE)
+        if(alien)
+          set(alien OFF CACHE BOOL "Disabled because external XROOTD not found and builtin_xrootd disabled (${alien_description})" FORCE)
+        endif()
       endif()
     else()
       set(XROOTD_VERSIONNUM ${xrdversnum})  # variable used internally
@@ -896,18 +899,17 @@ endif()
 
 #---Alien support----------------------------------------------------------------
 if(alien)
-  if(NOT xrootd)
-    message(FATAL_ERROR "The Alien plugin requires option 'xrootd' to be enabled. Re-run the configuration with 'xrootd=ON'")
-  endif()
   find_package(Alien)
   if(NOT ALIEN_FOUND)
     if(fail-on-missing)
-      message(FATAL_ERROR "Alien API not found and is required. Set the variable ALIEN_DIR to point to your Alien installation,"
-                          "or include the installation of Alien in the CMAKE_PREFIX_PATH. ")
+      message(FATAL_ERROR " Alien API not found and is required."
+        " Set the variable ALIEN_DIR to point to your Alien installation,"
+        " or include the installation of Alien in the CMAKE_PREFIX_PATH.")
     else()
-      message(STATUS "Alien API not found. Set variable ALIEN_DIR to point to your Alien installation,"
-                     "or include the installation of Alien in the CMAKE_PREFIX_PATH.")
-      message(STATUS "For the time being switching OFF 'alien' option")
+      message(STATUS " Alien API not found."
+        " Set variable ALIEN_DIR to point to your Alien installation,"
+        " or include the installation of Alien in the CMAKE_PREFIX_PATH."
+        " For the time being switching OFF 'alien' option")
       set(alien OFF CACHE BOOL "Disabled because Alien API not found (${alien_description})" FORCE)
     endif()
   endif()
