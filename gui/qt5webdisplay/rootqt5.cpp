@@ -146,7 +146,7 @@ protected:
             page->settings()->resetAttribute(QWebEngineSettings::PluginsEnabled);
             page->load(QUrl(fullurl));
          } else {
-            RootWebView *view = new RootWebView(qparent, args.GetWidth(), args.GetHeight());
+            RootWebView *view = new RootWebView(qparent, args.GetWidth(), args.GetHeight(), args.GetX(), args.GetY());
             view->load(QUrl(fullurl));
             view->show();
          }

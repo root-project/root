@@ -58,11 +58,11 @@ public:
 
    RWebDisplayArgs(const char *browser);
 
-   RWebDisplayArgs(int width, int height, int x = -1, int y = -1);
+   RWebDisplayArgs(int width, int height, int x = -1, int y = -1, const std::string &browser = "");
 
-   void SetBrowserKind(const std::string &kind);
+   RWebDisplayArgs &SetBrowserKind(const std::string &kind);
    /// set browser kind, see EBrowserKind for allowed values
-   void SetBrowserKind(EBrowserKind kind) { fKind = kind; }
+   RWebDisplayArgs &SetBrowserKind(EBrowserKind kind) { fKind = kind; return *this; }
    /// returns configured browser kind, see EBrowserKind for supported values
    EBrowserKind GetBrowserKind() const { return fKind; }
    std::string GetBrowserName() const;

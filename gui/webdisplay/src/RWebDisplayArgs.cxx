@@ -52,10 +52,11 @@ ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs(const char *browser)
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Constructor - specify window width and height
 
-ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs(int width, int height, int x, int y)
+ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs(int width, int height, int x, int y, const std::string &browser)
 {
    SetSize(width, height);
    SetPos(x, y);
+   SetBrowserKind(browser);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -70,7 +71,7 @@ ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs(int width, int height, int 
 ///    local - either cef or qt5
 ///   <prog> - any program name which will be started instead of default browser, like /usr/bin/opera
 
-void ROOT::Experimental::RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
+ROOT::Experimental::RWebDisplayArgs &ROOT::Experimental::RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
 {
    std::string kind = _kind;
 
@@ -97,6 +98,8 @@ void ROOT::Experimental::RWebDisplayArgs::SetBrowserKind(const std::string &_kin
       SetBrowserKind(kQt5);
    else
       SetCustomExec(kind);
+
+   return *this;
 }
 
 /////////////////////////////////////////////////////////////////////
