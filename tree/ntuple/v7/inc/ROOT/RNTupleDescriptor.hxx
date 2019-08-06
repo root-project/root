@@ -111,6 +111,15 @@ class RClusterDescriptor {
    friend class RNTupleDescriptorBuilder;
 
 public:
+   struct RLocator {
+      std::string fUrl;
+      std::int64_t fPosition = 0;
+
+      bool operator==(const RLocator &other) const {
+         return fUrl == other.fUrl && fPosition == other.fPosition;
+      }
+   };
+
    struct RColumnRange {
       DescriptorId_t fColumnId = kInvalidDescriptorId;
       NTupleSize_t fFirstElementIndex = kInvalidNTupleIndex;
@@ -136,7 +145,7 @@ public:
          ClusterSize_t fNElements = kInvalidClusterIndex;
          /// The meaning of fLocator depends on the storage backend.  It indicates where on the storage
          /// medium the page resides.  For file based storage, for instance, it can be the offset in the file.
-         std::int64_t fLocator = 0;
+         RLocator fLocator;
 
          bool operator==(const RPageInfo &other) const {
             return fNElements == other.fNElements && fLocator == other.fLocator;
@@ -156,6 +165,9 @@ private:
    RNTupleVersion fVersion;
    NTupleSize_t fFirstEntryIndex = kInvalidNTupleIndex;
    ClusterSize_t fNEntries = kInvalidClusterIndex;
+   RLocator fLocator;
+   std::int64_t fBytesOnStorage = 0;
+
    std::unordered_map<DescriptorId_t, RColumnRange> fColumnRanges;
    std::unordered_map<DescriptorId_t, RPageRange> fPageRanges;
 
@@ -170,6 +182,8 @@ public:
    RNTupleVersion GetVersion() const { return fVersion; }
    NTupleSize_t GetFirstEntryIndex() const { return fFirstEntryIndex; }
    ClusterSize_t GetNEntries() const { return fNEntries; }
+   RLocator GetLocator() const { return fLocator; }
+   std::int64_t GetBytesOnStorage() const { return fBytesOnStorage; }
    RColumnRange GetColumnRange(DescriptorId_t columnId) const { return fColumnRanges.at(columnId); }
    RPageRange GetPageRange(DescriptorId_t columnId) const { return fPageRanges.at(columnId); }
 };
@@ -283,6 +297,8 @@ public:
 
    void AddCluster(DescriptorId_t clusterId, RNTupleVersion version,
                    NTupleSize_t firstEntryIndex, ClusterSize_t nEntries);
+   void SetClusterLocator(DescriptorId_t clusterId, RClusterDescriptor::RLocator locator);
+   void SetClusterSize(DescriptorId_t clusterId, std::int64_t bytesOnStorage);
    void AddClusterColumnRange(DescriptorId_t clusterId, const RClusterDescriptor::RColumnRange &columnRange);
    void AddClusterPageRange(DescriptorId_t clusterId, const RClusterDescriptor::RPageRange &pageRange);
 
