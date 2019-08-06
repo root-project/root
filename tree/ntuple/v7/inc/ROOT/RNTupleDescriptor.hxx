@@ -32,12 +32,21 @@ namespace Experimental {
 class RNTupleDescriptorBuilder;
 class RNTupleModel;
 
+// clang-format off
+/**
+\class ROOT::Experimental::RFieldDescriptor
+\ingroup NTuple
+\brief Meta-data stored for every field of an ntuple
+*/
+// clang-format on
 class RFieldDescriptor {
    friend class RNTupleDescriptorBuilder;
 
 private:
    DescriptorId_t fFieldId = kInvalidDescriptorId;
+   /// The version of the C++-type-to-column translation mechanics
    RNTupleVersion fFieldVersion;
+   /// The version of the C++ type itself
    RNTupleVersion fTypeVersion;
    /// The leaf name, not including parent fields
    std::string fFieldName;
@@ -74,12 +83,21 @@ public:
 };
 
 
+// clang-format off
+/**
+\class ROOT::Experimental::RColumnDescriptor
+\ingroup NTuple
+\brief Meta-data stored for every column of an ntuple
+*/
+// clang-format on
 class RColumnDescriptor {
    friend class RNTupleDescriptorBuilder;
 
 private:
-   DescriptorId_t fColumnId = kInvalidDescriptorId;;
+   DescriptorId_t fColumnId = kInvalidDescriptorId;
+   /// Versions can change, e.g., when new column types are added
    RNTupleVersion fVersion;
+   /// Contains the column type and whether it is sorted
    RColumnModel fModel;
    /// Every column belongs to one and only one field
    DescriptorId_t fFieldId = kInvalidDescriptorId;
@@ -107,10 +125,22 @@ public:
 };
 
 
+// clang-format off
+/**
+\class ROOT::Experimental::RClusterDescriptor
+\ingroup NTuple
+\brief Meta-data for a set of ntuple clusters
+
+The cluster descriptor might carry information of only a subset of available clusters, for instance if multiple
+files are chained and not all of them have been processed yet.
+*/
+// clang-format on
 class RClusterDescriptor {
    friend class RNTupleDescriptorBuilder;
 
 public:
+   /// Generic information about the physical location of data. Values depend on the concrete storage type.  E.g.,
+   /// for a local file fUrl might be unsused and fPosition might be a file offset.
    struct RLocator {
       std::string fUrl;
       std::int64_t fPosition = 0;
@@ -120,10 +150,14 @@ public:
       }
    };
 
+   /// The window of element indexes of a particular column in a particular cluster
    struct RColumnRange {
       DescriptorId_t fColumnId = kInvalidDescriptorId;
+      /// A 64bit element index
       NTupleSize_t fFirstElementIndex = kInvalidNTupleIndex;
+      /// A 32bit value for the number of column elements in the cluster
       ClusterSize_t fNElements = kInvalidClusterIndex;
+
       // TODO(jblomer): we perhaps want to store summary information, such as average, min/max, etc.
       // Should this be done on the field level?
 
@@ -137,14 +171,14 @@ public:
       }
    };
 
+   /// Records the parition of data into pages for a particular column in a particular cluster
    struct RPageRange {
       /// We do not need to store the element size / page size because we know to which column
       /// the page belongs
       struct RPageInfo {
          /// The sum of the elements of all the pages must match the corresponding fNElements field in fColumnRanges
          ClusterSize_t fNElements = kInvalidClusterIndex;
-         /// The meaning of fLocator depends on the storage backend.  It indicates where on the storage
-         /// medium the page resides.  For file based storage, for instance, it can be the offset in the file.
+         /// The meaning of fLocator depends on the storage backend.
          RLocator fLocator;
 
          bool operator==(const RPageInfo &other) const {
@@ -161,10 +195,13 @@ public:
    };
 
 private:
-   DescriptorId_t fClusterId = kInvalidDescriptorId;;
+   DescriptorId_t fClusterId = kInvalidDescriptorId;
+   /// Future versions of the cluster descriptor might add more meta-data, e.g. a semantic checksum
    RNTupleVersion fVersion;
+   /// Clusters can be swapped by adjusting the entry offsets
    NTupleSize_t fFirstEntryIndex = kInvalidNTupleIndex;
    ClusterSize_t fNEntries = kInvalidClusterIndex;
+   /// For pre-fetching / caching an entire contiguous cluster
    RLocator fLocator;
    std::int64_t fBytesOnStorage = 0;
 
@@ -189,10 +226,26 @@ public:
 };
 
 
+// clang-format off
 /**
- * Represents the on-disk (on storage) information about an ntuple.  This can, for instance, be used
- * by 3rd party utilies.
- */
+\class ROOT::Experimental::RNTupleDescriptor
+\ingroup NTuple
+\brief The on-storage meta-data of an ntuple
+
+Represents the on-disk (on storage) information about an ntuple. The meta-data consists of a header and one or
+several footers. The header carries the ntuple schema, i.e. the fields and the associated columns and their
+relationships. The footer(s) carry information about one or several clusters. For every cluster, a footer stores
+its location and size, and for every column the range of element indexes as well as a list of pages and page
+locations.
+
+The descriptor provide machine-independent (de-)serialization of headers and footers, and it provides lookup routines
+for ntuple objects (pages, clusters, ...).  It is supposed to be usable by all RPageStorage implementations.
+
+The serialization does not use standard ROOT streamers in order to not let it depend on libCore. The serialization uses
+the concept of frames: header, footer, and substructures have a preamble with version numbers and the size of the
+writte struct. This allows for forward and backward compatibility when the meta-data evolves.
+*/
+// clang-format on
 class RNTupleDescriptor {
    friend class RNTupleDescriptorBuilder;
 
@@ -268,9 +321,15 @@ public:
 };
 
 
+// clang-format off
 /**
- * Used by RPageStorage implementations in order to construct the RNTupleDescriptor from the various header parts.
- */
+\class ROOT::Experimental::RNTupleDescriptorBuilder
+\ingroup NTuple
+\brief A helper class for piece-wise construction of an RNTupleDescriptor
+
+Used by RPageStorage implementations in order to construct the RNTupleDescriptor from the various header parts.
+*/
+// clang-format on
 class RNTupleDescriptorBuilder {
 private:
    RNTupleDescriptor fDescriptor;
