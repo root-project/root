@@ -28,6 +28,22 @@
 
 namespace {
 
+/// The machine-independent serialization of meta-data wraps the header and footer as well as sub structures in
+/// frames.  The frame layout is
+///
+/// -----------------------------------------------------------
+/// |  TYPE           | DESCRIPTION                           |
+/// |----------------------------------------------------------
+/// | std::uint16_t   | Version used to write the frame       |
+/// | std::uint16_t   | Minimum version for reading the frame |
+/// | std::uint32_t   | Length of the frame incl. preamble    |
+/// -----------------------------------------------------------
+///
+/// In addition, the header and footer store a 4 byte CRC32 checksum of the frame immediately after the frame.
+/// Within the frames, integers of different lengths are stored in a machine-independent representation. Strings and
+/// vectors store the number of items followed by the items. Time stamps are stored in number of seconds since the
+/// UNIX epoch.
+
 std::uint32_t SerializeInt64(std::int64_t val, void *buffer)
 {
    if (buffer != nullptr) {
