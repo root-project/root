@@ -36,6 +36,7 @@ sap.ui.define([
            this.fullModel = true;
            this.h.nchilds = 1;
            this.h.childs = [ topnode ];
+           delete this.h._requested; // reply on top element can be full description
 
            if (!this.mainModel) {
               this.mainModel = this.h.childs;
@@ -51,6 +52,8 @@ sap.ui.define([
         },
 
         clearFullModel: function() {
+           if (!this.fullModel) return;
+
            delete this.h.childs;
            delete this.h.nchilds;
            delete this.fullModel;
@@ -157,6 +160,7 @@ sap.ui.define([
               this.h.expanded = true;
               this.reset_nodes = true;
               this.fullModel = this.mainFullModel;
+              console.log('assign this.fullModel = ' + this.fullModel);
               delete this.noData;
               this.scanShifts();
               if (this.oBinding)
@@ -177,6 +181,8 @@ sap.ui.define([
            } else {
               delete this._expanding_path;
            }
+
+           console.log('submit request path = ' + path + ' was requested = ' + !!elem._requested);
 
            if (!this._websocket || elem._requested || this.fullModel) return;
            elem._requested = true;
@@ -199,9 +205,9 @@ sap.ui.define([
 
            this.loadDataCounter--;
 
-           // console.log('PROCESS BR RESPONSE', reply.path, reply);
-
            var elem = this.getNodeByPath(reply.path);
+
+           // console.log('PROCESS RESPONSE', reply.path, reply);
 
            if (!elem) { console.error('DID NOT FOUND ' + reply.path); return; }
 
