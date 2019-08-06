@@ -529,6 +529,9 @@ sap.ui.define(['sap/ui/core/Component',
             this.paintFoundNodes(null);
             this.doReload(true);
             break;
+         case "DROPT:":
+            this.applyDrawOptions(msg);
+            break;
          default:
             console.error('Non recognized msg ' + mhdr + ' len=' + msg.length);
          }
@@ -816,6 +819,15 @@ sap.ui.define(['sap/ui/core/Component',
          delete this.search_handler;
 
          this.websocket.Send("SEARCH:" + (query || ""));
+      },
+
+      /** when new draw options send from server */
+      applyDrawOptions: function(opt) {
+         if (!this.geo_painter) return;
+
+         this.geo_painter.setAxesDraw(opt.indexOf("axis") >= 0);
+
+         this.geo_painter.setAutoRotate(opt.indexOf("rotate") >= 0);
       },
 
       /** when new query entered in the seach field */
