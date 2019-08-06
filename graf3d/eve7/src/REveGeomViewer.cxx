@@ -97,7 +97,11 @@ void ROOT::Experimental::REveGeomViewer::SelectVolume(const std::string &volname
 
 void ROOT::Experimental::REveGeomViewer::Show(const RWebDisplayArgs &args, bool always_start_new_browser)
 {
-   if ((fWebWindow->NumConnections() == 0) || always_start_new_browser)
+   std::string user_args = "";
+   if (!GetShowHierarchy()) user_args = "{ nobrowser: true }";
+   fWebWindow->SetUserArgs(user_args);
+
+   if ((fWebWindow->NumConnections(true) == 0) || always_start_new_browser)
       fWebWindow->Show(args);
 }
 
