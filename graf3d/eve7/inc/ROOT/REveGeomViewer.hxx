@@ -33,6 +33,7 @@ protected:
 
    TGeoManager *fGeoManager{nullptr};        ///<! geometry to show
    REveGeomDescription fDesc;                ///<! geometry description, send to the client as first message
+   bool fShowHierarchy{true};                ///<! if hierarchy visible by default
 
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to show geometry
 
@@ -57,6 +58,12 @@ public:
       fDesc.SetMaxVisNodes(nnodes);
       fDesc.SetMaxVisFaces(nfaces);
    }
+
+   /** Configures default hierarchy browser visibility, only has effect before showing web window */
+   void SetShowHierarchy(bool on = true) { fShowHierarchy = on; }
+
+   /** Returns default hierarchy browser visibility */
+   bool GetShowHierarchy() const { return fShowHierarchy; }
 
    /** Configures default draw option for geometry */
    void SetDrawOptions(const std::string &opt) { fDesc.SetDrawOptions(opt); }

@@ -42,6 +42,7 @@ auto geomViewer = std::make_shared<ROOT::Experimental::REveGeomViewer>();
 
 void display()
 {
+   // geomViewer->SetShowHierarchy(false);
    geomViewer->SetGeometry(gGeoManager);
    geomViewer->Show({600,600});
 }

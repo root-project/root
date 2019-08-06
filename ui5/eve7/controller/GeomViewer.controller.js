@@ -85,7 +85,9 @@ sap.ui.define(['sap/ui/core/Component',
          // if true, most operations are performed locally without involving server
          this.standalone = this.websocket.kind == "file";
 
-         if (JSROOT.GetUrlOption('nobrowser') !== null) {
+         var nobrowser = this.websocket.GetUserArgs('nobrowser') || (JSROOT.GetUrlOption('nobrowser') !== null);
+
+         if (nobrowser) {
             // remove complete area - plain geometry drawing
             this.byId("geomViewerApp").setMode(sap.m.SplitAppMode.HideMode);
          } else {
@@ -464,9 +466,8 @@ sap.ui.define(['sap/ui/core/Component',
          if (this.model)
             this.model.sendFirstRequest(this.websocket);
 
-         // when connection established, checked if we can submit requested
+         // when connection established, checked if we can submit request
          this.checkSendRequest();
-
       },
 
       OnWebsocketClosed: function() {
