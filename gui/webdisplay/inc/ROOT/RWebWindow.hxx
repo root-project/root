@@ -250,7 +250,7 @@ public:
    /// Returns current client version
    std::string GetClientVersion() const { return fClientVersion; }
 
-   int NumConnections();
+   int NumConnections(bool with_pending = false);
 
    unsigned GetConnectionId(int num = 0);
 

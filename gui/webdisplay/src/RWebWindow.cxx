@@ -832,12 +832,14 @@ std::string ROOT::Experimental::RWebWindow::RelativeAddr(std::shared_ptr<RWebWin
 ///////////////////////////////////////////////////////////////////////////////////
 /// Returns current number of active clients connections
 
-int ROOT::Experimental::RWebWindow::NumConnections()
+int ROOT::Experimental::RWebWindow::NumConnections(bool with_pending)
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
-   return fConn.size();
+   auto sz = fConn.size();
+   if (with_pending)
+      sz += fPendingConn.size();
+   return sz;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////
 /// Configures recording of communication data in protocol file
@@ -857,14 +859,14 @@ void ROOT::Experimental::RWebWindow::RecordData(const std::string &fname, const 
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
-/// returns connection for specified connection number
+/// Returns connection for specified connection number
+/// Only active connections are returned - where clients confirms connection
 /// Total number of connections can be retrieved with NumConnections() method
 
 unsigned ROOT::Experimental::RWebWindow::GetConnectionId(int num)
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
-   if (num>=(int)fConn.size() || !fConn[num]->fActive) return 0;
-   return fConn[num]->fConnId;
+   return ((num >= 0) && (num < (int)fConn.size()) && fConn[num]->fActive) ? fConn[num]->fConnId : 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
