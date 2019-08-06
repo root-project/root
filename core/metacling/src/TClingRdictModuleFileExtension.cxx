@@ -73,20 +73,21 @@ void TClingRdictModuleFileExtension::Writer::writeExtensionContents(clang::Sema 
    // Write a dict files into the extension block.
    std::error_code EC;
    for (llvm::sys::fs::directory_iterator DirIt(CachePath, EC), DirEnd; DirIt != DirEnd && !EC; DirIt.increment(EC)) {
-      StringRef FileName(DirIt->path());
-      if (!llvm::sys::fs::is_directory(FileName) && llvm::sys::path::filename(FileName).startswith(RdictsStart) &&
-          FileName.endswith(RdictsEnd)) {
+      StringRef FilePath(DirIt->path());
+      if (llvm::sys::fs::is_directory(FilePath))
+         continue;
+      StringRef FileName = llvm::sys::path::filename(FilePath);
+      if (FileName.startswith(RdictsStart) && FileName.endswith(RdictsEnd)) {
 
          uint64_t Record[] = {FIRST_EXTENSION_RECORD_ID};
-         Stream.EmitRecordWithBlob(Abbrev, Record, llvm::sys::path::filename(FileName));
+         Stream.EmitRecordWithBlob(Abbrev, Record, FileName);
 
          uint64_t Record1[] = {FIRST_EXTENSION_RECORD_ID + 1};
-         Twine rdictFileName = Twine(FileName);
-         auto MBOrErr = MemoryBuffer::getFile(rdictFileName);
+         auto MBOrErr = MemoryBuffer::getFile(FilePath);
          MemoryBuffer &MB = *MBOrErr.get();
          Stream.EmitRecordWithBlob(Abbrev1, Record1, MB.getBuffer());
 
-         llvm::sys::fs::remove(rdictFileName);
+         llvm::sys::fs::remove(FilePath);
       }
    }
 }
