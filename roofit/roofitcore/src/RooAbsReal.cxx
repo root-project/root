@@ -270,6 +270,9 @@ Double_t RooAbsReal::getValV(const RooArgSet* nset) const
 /// \param[in] normSet Variables to normalise over.
 RooSpan<const double> RooAbsReal::getValBatch(std::size_t begin, std::size_t maxSize,
     const RooArgSet* normSet) const {
+  // Some PDFs do preprocessing by overriding this:
+  getValV(normSet);
+
   if (_allBatchesDirty || _operMode == ADirty) {
     _batchData.markDirty();
     _allBatchesDirty = false;
