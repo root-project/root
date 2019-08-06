@@ -146,6 +146,17 @@ void ROOT::Experimental::REveGeomViewer::SendGeometry(unsigned connid)
    fWebWindow->Send(connid, json);
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Configures draw option for geometry
+/// Normally has effect before first drawing of the geometry
+/// When geometry displayed, only "axis" and "rotate" options are updated
+
+void ROOT::Experimental::REveGeomViewer::SetDrawOptions(const std::string &opt)
+{
+   fDesc.SetDrawOptions(opt);
+
+   fWebWindow->Send(0, "DROPT:"s + opt);
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// receive data from client
