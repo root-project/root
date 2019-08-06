@@ -266,23 +266,28 @@ Double_t RooAbsReal::getValV(const RooArgSet* nset) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return value of object for all data events in the batch.
 /// \param[in] begin First event in the batch.
-/// \param[in] batchSize Size of the batch to be computed.
+/// \param[in] maxSize Size of the batch to be computed. May come out smaller.
 /// \param[in] normSet Variables to normalise over.
-RooSpan<const double> RooAbsReal::getValBatch(std::size_t begin, std::size_t batchSize,
+RooSpan<const double> RooAbsReal::getValBatch(std::size_t begin, std::size_t maxSize,
     const RooArgSet* normSet) const {
+  if (_allBatchesDirty || _operMode == ADirty) {
+    _batchData.markDirty();
+    _allBatchesDirty = false;
+  }
+
   if (normSet && normSet != _lastNSet) {
     const_cast<RooAbsReal*>(this)->setProxyNormSet(normSet);
     _lastNSet = (RooArgSet*) normSet;
   }
 
-  //TODO check and wait if computation is running
-  if (isValueDirty() || _batchData.status(begin, batchSize) < BatchHelpers::BatchData::kReady) {
-    auto ret = evaluateBatch(begin, batchSize);
-    _batchData.setStatus(begin, batchSize, BatchHelpers::BatchData::kReady);
-    return ret;
+  //TODO check and wait if computation is running?
+  if (_batchData.status(begin, maxSize) < BatchHelpers::BatchData::kReady) {
+    auto ret = evaluateBatch(begin, maxSize);
+    maxSize = ret.size();
+    _batchData.setStatus(begin, maxSize, BatchHelpers::BatchData::kReady);
   }
 
-  return _batchData.getBatch(begin, batchSize);
+  return _batchData.getBatch(begin, maxSize);
 }
 
 
@@ -3143,12 +3148,13 @@ RooAbsFunc *RooAbsReal::bindVars(const RooArgSet &vars, const RooArgSet* nset, B
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy the cached value of another RooAbsArg to our cache.
-/// Warning: This function copies the cached values of source,
-/// it is the callers responsibility to make sure the cache is clean
+/// Warning: This function just copies the cached values of source,
+/// it is the callers responsibility to make sure the cache is clean.
 
 void RooAbsReal::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/, Bool_t setValDirty)
 {
-  RooAbsReal* other = static_cast<RooAbsReal*>(const_cast<RooAbsArg*>(source)) ;
+  const RooAbsReal* other = static_cast<const RooAbsReal*>(source);
+  assert(dynamic_cast<const RooAbsReal*>(source));
 
   if (!other->_treeVar) {
     _value = other->_value ;
@@ -4795,64 +4801,56 @@ void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
 /// Evaluate function for a batch of input data points. If not overridden by
 /// derived classes, this will call the slow, single-valued evaluate() in a loop.
 /// \param[in]  begin First event of batch.
-/// \param[in]  batchSize   First event not inside the batch.
+/// \param[in]  maxSize Maximum size of the desired batch. May come out smaller.
 /// \return     Span pointing to the results. The memory is held by the object, on which this
 /// function is called.
-RooSpan<double> RooAbsReal::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
-  auto batchStatus = _batchData.status(begin, batchSize);
-  assert(batchStatus != BatchHelpers::BatchData::kReadyAndConstant);
-
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+RooSpan<double> RooAbsReal::evaluateBatch(std::size_t begin, std::size_t maxSize) const {
+  assert(_batchData.status(begin, maxSize) != BatchHelpers::BatchData::kReadyAndConstant);
 
   RooArgSet allLeafs;
   leafNodeServerList(&allLeafs);
 
-#ifndef NDEBUG
-  static unsigned int msgCount = 0;
-  if (msgCount < 5) {
-    std::cout << "Falling back to slow compatibility mode for evaluateBatch() in class " << IsA()->GetName()
-          << "\n\tLeafs: ";
-    allLeafs.Print("");
+  if (RooMsgService::instance().isActive(this, RooFit::Optimization, RooFit::INFO)) {
+    coutI(Optimization) << "The class " << IsA()->GetName() << " does not have the faster batch evaluation interface."
+          << " Consider requesting this feature on ROOT's JIRA tracker." << std::endl;
   }
-#endif
 
 
-  // TODO Make faster by using batch computation results also on intermediate nodes
-  std::vector<std::pair<RooRealVar*, RooSpan<const double>>> leafsAndBatches;
+  // TODO Make faster by using batch computation results also on intermediate nodes?
+  std::vector<std::tuple<RooRealVar*, RooSpan<const double>, double>> batchLeafs;
   for (auto leaf : allLeafs) {
-    auto leafRRV = static_cast<RooRealVar*>(leaf);
-    assert(dynamic_cast<RooRealVar*>(leaf));
+    auto leafRRV = dynamic_cast<RooRealVar*>(leaf);
+    if (!leafRRV)
+      continue;
 
-    auto leafBatch = leafRRV->getValBatch(begin, batchSize);
+    auto leafBatch = leafRRV->getValBatch(begin, maxSize);
+    if (leafBatch.empty())
+      continue;
 
-#ifndef NDEBUG
-    if (msgCount < 5) {
-      std::cout << "\tBatch " << leafRRV->GetName() << "?: ";
-      if (leafBatch.size() == 0)
-        std::cout << "No";
-      else std::cout << "Yes size=" << leafBatch.size();
-    }
-    assert(leafBatch.size() == 0 || leafBatch.size() == output.size());
-#endif
-
-    if (leafBatch.size() == output.size()) {
-      leafsAndBatches.emplace_back(leafRRV, leafBatch);
-    }
+    maxSize = std::min(maxSize, leafBatch.size());
+    batchLeafs.emplace_back(leafRRV, leafBatch, leafRRV->_value);
   }
-#ifndef NDEBUG
-  if (msgCount++ < 5) std::cout << std::endl;
-#endif
+
+  if (batchLeafs.empty() || maxSize == 0)
+    return {};
 
 
-  for (auto i = 0u; i < output.size(); ++i) {
-    for (auto& leafAndBatch : leafsAndBatches) {
-      RooRealVar* leaf = leafAndBatch.first;
-      auto batch = leafAndBatch.second;
+  auto output = _batchData.makeWritableBatchUnInit(begin, maxSize);
+
+  for (std::size_t i = 0; i < output.size(); ++i) {
+    for (auto& tup : batchLeafs) {
+      RooRealVar* leaf = std::get<0>(tup);
+      auto batch = std::get<1>(tup);
 
       leaf->setVal(batch[i]);
     }
 
     output[i] = evaluate();
+  }
+
+  // Reset values
+  for (auto& tup : batchLeafs) {
+    std::get<0>(tup)->setVal(std::get<2>(tup));
   }
 
   return output;
@@ -4888,8 +4886,11 @@ Double_t RooAbsReal::getVal(const RooArgSet* normalisationSet) const {
     gSystem->StackTrace();
     FormatPdfTree formatter;
     formatter << "--> (Scalar computation wrong here:)\n"
-            << GetName() << " " << this << " _fast=" << tmpFast << " _value=" << tmp << " ret=" << ret
-            << " actual=" << fullEval << " new _value=" << _value << "] ";
+            << GetName() << " " << this << " _fast=" << tmpFast
+            << "\n\tcached _value=" << std::setprecision(16) << tmp
+            << "\n\treturning    =" << ret
+            << "\n\trecomputed   =" << fullEval
+            << "\n\tnew _value   =" << _value << "] ";
     formatter << "\nServers:";
     for (const auto server : _serverList) {
       formatter << "\n  ";
@@ -4915,12 +4916,13 @@ void RooAbsReal::checkBatchComputation(std::size_t evtNo, const RooArgSet* normS
     }
   }
 
-  if (_batchData.status(evtNo, evtNo+1) >= BatchHelpers::BatchData::kReady) {
+  if (!_allBatchesDirty && _batchData.status(evtNo, 1) >= BatchHelpers::BatchData::kReady) {
     RooSpan<const double> batch = _batchData.getBatch(evtNo, 1);
     RooSpan<const double> enclosingBatch = _batchData.getBatch(evtNo-1, 3);
     const double batchVal = batch[0];
 
-    if (fabs( _value != 0. ? (_value - batchVal)/_value : _value - batchVal) > 1.E-14) {
+    if (fabs( _value != 0. ? (_value - batchVal)/_value : _value - batchVal) > 1.E-13
+        && fabs(_value) > 1.E-300) {
 //      gSystem->StackTrace();
       FormatPdfTree formatter;
       formatter << "--> (Batch computation wrong here:)\n";
@@ -4929,12 +4931,13 @@ void RooAbsReal::checkBatchComputation(std::size_t evtNo, const RooArgSet* normS
           << "\n _batch[" << std::setw(7) << evtNo-1 << "]=     " << (enclosingBatch.empty() ? 0 : enclosingBatch[0])
           << "\n _batch[" << std::setw(7) << evtNo   << "]=     " << batchVal << " !!!"
           << "\n expected ('_value'): " << _value
+          << "\n delta         " <<                     " =     " << _value - batchVal
           << "\n _batch[" << std::setw(7) << evtNo+1 << "]=     " << (enclosingBatch.empty() ? 0 : enclosingBatch[2]);
 
       formatter << "\n" << std::left << std::setw(24) << "evaluate(unnorm.)" << '=' << evaluate();
 
-      auto result = evaluateBatch(evtNo, evtNo+1);
-      formatter << "\nevaluateBatch(" << std::right << std::setw(9) << evtNo << ")=" << result[0];
+//      auto result = evaluateBatch(evtNo, evtNo+1);
+//      formatter << "\nevaluateBatch(" << std::right << std::setw(9) << evtNo << ")=" << result[0];
 
       formatter << "\nServers: ";
       for (const auto server : _serverList) {

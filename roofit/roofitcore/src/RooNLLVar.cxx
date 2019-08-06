@@ -247,12 +247,6 @@ class BatchInterfaceAccessor {
     static void clearBatchMemory(RooAbsReal* theReal) {
       theReal->clearBatchMemory();
     }
-
-    static void markBatchesStale(RooAbsReal* theReal) {
-      theReal->markBatchesStale();
-    }
-
-
 };
 
 
@@ -339,18 +333,21 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
       std::tie(resultScalar, carryScalar, sumWeightScalar) =
           computeScalar(stepSize, firstEvent, lastEvent);
 
-      bool alwaysPrint = false;
+      constexpr bool alwaysPrint = false;
 
       if (alwaysPrint || fabs(result - resultScalar)/resultScalar > 1.E-15) {
-        std::cerr << "result is off " << result << "\t" << resultScalar << std::endl;
+        std::cerr << "RooNLLVar: result is off\n\t" << std::setprecision(15) << result
+            << "\n\t" << resultScalar << std::endl;
       }
 
       if (alwaysPrint || fabs(carry - carryScalar)/carryScalar > 10.) {
-        std::cerr << "carry is far off " << carry << "\t" << carryScalar << std::endl;
+        std::cerr << "RooNLLVar: carry is far off\n\t" << std::setprecision(15) << carry
+            << "\n\t" << carryScalar << std::endl;
       }
 
       if (alwaysPrint || fabs(sumWeight - sumWeightScalar)/sumWeightScalar > 1.E-15) {
-        std::cerr << "sumWeight is off " << sumWeight << "\t" << sumWeightScalar << std::endl;
+        std::cerr << "RooNLLVar: sumWeight is off\n\t" << std::setprecision(15) << sumWeight
+            << "\n\t" << sumWeightScalar << std::endl;
       }
 
 #endif
@@ -455,11 +452,6 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
 {
   assert(stepSize == 1);
   auto pdfClone = static_cast<const RooAbsPdf*>(_funcClone);
-
-  //TODO do properly. Not here, but in base.
-  //TODO don't redo for every partition, anyway
-  BatchInterfaceAccessor::markBatchesStale(const_cast<RooAbsPdf*>(pdfClone));
-
 
   auto results = pdfClone->getLogValBatch(firstEvent, lastEvent-firstEvent, _normSet);
 
