@@ -18,7 +18,8 @@ Run `bash run.sh`!
 - [ ] For Jitting we can switch to arrays instead of vectors
 
 # Known problems
-- Non-unique namespace when jitting 
+- Non-unique namespace when jitting
+- When setting more than 30 features the json reading can fail
 
 
 ## From xgboost doc we have:
