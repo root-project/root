@@ -52,13 +52,11 @@ ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs(const char *browser)
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Constructor - specify window width and height
 
-ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs(int width, int height, const std::string &browser)
+ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs(int width, int height, int x, int y)
 {
-   SetBrowserKind(browser);
-   SetWidth(width);
-   SetHeight(height);
+   SetSize(width, height);
+   SetPos(x, y);
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Set browser kind as string argument

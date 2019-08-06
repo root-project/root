@@ -213,14 +213,20 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
    if (exec.empty())
       return nullptr;
 
-   std::string swidth = std::to_string(args.GetWidth() > 0 ? args.GetWidth() : 800);
-   std::string sheight = std::to_string(args.GetHeight() > 0 ? args.GetHeight() : 600);
+   std::string swidth = std::to_string(args.GetWidth() > 0 ? args.GetWidth() : 800),
+               sheight = std::to_string(args.GetHeight() > 0 ? args.GetHeight() : 600),
+               sposx = std::to_string(args.GetX() >= 0 ? args.GetX() : 0),
+               sposy = std::to_string(args.GetY() >= 0 ? args.GetY() : 0);
+
+   ProcessGeometry(exec, args);
 
    std::string rmdir = MakeProfile(exec, args.IsHeadless());
 
    exec = std::regex_replace(exec, std::regex("\\$url"), url);
    exec = std::regex_replace(exec, std::regex("\\$width"), swidth);
    exec = std::regex_replace(exec, std::regex("\\$height"), sheight);
+   exec = std::regex_replace(exec, std::regex("\\$posx"), sposx);
+   exec = std::regex_replace(exec, std::regex("\\$posy"), sposy);
 
    if (exec.compare(0,5,"fork:") == 0) {
       if (fProg.empty()) {
@@ -337,12 +343,26 @@ ROOT::Experimental::RWebDisplayHandle::ChromeCreator::ChromeCreator() : BrowserC
 
 #ifdef _MSC_VER
    fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "fork: --headless --disable-gpu $url");
-   fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog --window-size=$width,$height --app=$url");
+   fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog $geometry --app=$url");
 #else
    fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "fork:--headless $url");
-   fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog --window-size=$width,$height --user-data-dir=$profile --app=\'$url\' &");
+   fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog $geometry --user-data-dir=$profile --app=\'$url\' &");
 #endif
 }
+
+void ROOT::Experimental::RWebDisplayHandle::ChromeCreator::ProcessGeometry(std::string &exec, const RWebDisplayArgs &args)
+{
+   std::string size, pos;
+   if ((args.GetWidth() > 0) || (args.GetHeight() > 0))
+      size = "--window-size="s + std::to_string(args.GetWidth() > 0 ? args.GetWidth() : 800) + ","s +
+                                 std::to_string(args.GetHeight() > 0 ? args.GetHeight() : 600);
+   if ((args.GetX() >= 0) || (args.GetY() >= 0))
+      pos = " --window-position="s + std::to_string(args.GetX() >= 0 ? args.GetX() : 0) + ","s +
+                                      std::to_string(args.GetY() >= 0 ? args.GetY() : 0);
+
+   exec = std::regex_replace(exec, std::regex("\\$geometry"), size + pos);
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Handle profile argument
@@ -388,10 +408,10 @@ ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : Browse
    // there is a problem when specifying the window size with wmic on windows:
    // It gives: Invalid format. Hint: <paramlist> = <param> [, <paramlist>].
    fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "fork: -headless -no-remote $profile $url");
-   fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -width=$width -height=$height $profile $url");
+   fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -no-remote $profile $url");
 #else
    fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "fork:-headless -no-remote $profile $url");
-   fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -width $width -height $height $profile \'$url\' &");
+   fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -no-remote $profile \'$url\' &");
 #endif
 }
 
@@ -418,8 +438,6 @@ std::string ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::MakeProfile(s
       std::string profile_dir = std::string(gSystem->TempDirectory()) + "/"s + rnd_profile;
 
       profile_arg = "-profile "s + profile_dir;
-      if (!batch_mode)
-         profile_arg = "-no-remote "s + profile_arg;
 
       if (!fProg.empty()) {
          gSystem->Exec(Form("%s %s -no-remote -CreateProfile \"%s %s\"", fProg.c_str(), (batch_mode ? "-headless" : ""),

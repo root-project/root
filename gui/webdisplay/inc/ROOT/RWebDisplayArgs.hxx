@@ -45,6 +45,8 @@ protected:
    THttpServer *fServer{nullptr}; ///<! http server which handle all requests
    int fWidth{0};                 ///<! custom window width, when not specified - used RWebWindow geometry
    int fHeight{0};                ///<! custom window height, when not specified - used RWebWindow geometry
+   int fX{-1};                    ///<! custom window x position, negative is default
+   int fY{-1};                    ///<! custom window y position, negative is default
    std::string fUrlOpt;           ///<! extra URL options, which are append to window URL
    std::string fExec;             ///<! string to run browser, used with kCustom type
    void *fDriverData{nullptr};    ///<! special data delivered to driver, can be used for QWebEngine
@@ -56,7 +58,7 @@ public:
 
    RWebDisplayArgs(const char *browser);
 
-   RWebDisplayArgs(int width, int height, const std::string &browser = "");
+   RWebDisplayArgs(int width, int height, int x = -1, int y = -1);
 
    void SetBrowserKind(const std::string &kind);
    /// set browser kind, see EBrowserKind for allowed values
@@ -78,7 +80,7 @@ public:
    }
 
    /// set window url
-   void SetUrl(const std::string &url) { fUrl = url; }
+   RWebDisplayArgs &SetUrl(const std::string &url) { fUrl = url; return *this; }
    /// returns window url
    std::string GetUrl() const { return fUrl; }
 
@@ -89,7 +91,7 @@ public:
    bool IsStandalone() const { return fStandalone; }
 
    /// set window url options
-   void SetUrlOpt(const std::string &opt) { fUrlOpt = opt; }
+   RWebDisplayArgs &SetUrlOpt(const std::string &opt) { fUrlOpt = opt; return *this; }
    /// returns window url options
    std::string GetUrlOpt() const { return fUrlOpt; }
 
@@ -105,14 +107,25 @@ public:
    bool IsHeadless() const { return fHeadless; }
 
    /// set preferable web window width
-   void SetWidth(int w = 0) { fWidth = w; }
+   RWebDisplayArgs &SetWidth(int w = 0) { fWidth = w; return *this; }
    /// set preferable web window height
-   void SetHeight(int h = 0) { fHeight = h; }
+   RWebDisplayArgs &SetHeight(int h = 0) { fHeight = h; return *this; }
+   RWebDisplayArgs &SetSize(int w, int h) { fWidth = w; fHeight = h; return *this; }
+
+   /// set preferable web window x position, negative is default
+   RWebDisplayArgs &SetX(int x = -1) { fX = x; return *this; }
+   /// set preferable web window y position, negative is default
+   RWebDisplayArgs &SetY(int y = -1) { fY = y; return *this; }
+   RWebDisplayArgs &SetPos(int x = -1, int y = -1) { fX = x; fY = y; return *this; }
 
    /// returns preferable web window width
    int GetWidth() const { return fWidth; }
    /// returns preferable web window height
    int GetHeight() const { return fHeight; }
+   /// set preferable web window x position
+   int GetX() const { return fX; }
+   /// set preferable web window y position
+   int GetY() const { return fY; }
 
    /// set custom executable to start web browser
    void SetCustomExec(const std::string &exec);
