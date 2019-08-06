@@ -393,6 +393,9 @@ void RooAbsPdf::fixOutputsAndLogErrors(RooSpan<double>& outputs, std::size_t beg
 RooSpan<const double> RooAbsPdf::getValBatch(std::size_t begin, std::size_t maxSize,
     const RooArgSet* normSet) const
 {
+  // Some PDFs do preprocessing here:
+  getValV(normSet);
+
   if (_allBatchesDirty || _operMode == ADirty) {
     _batchData.markDirty();
     _allBatchesDirty = false;
