@@ -1084,6 +1084,11 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
                        )
   endif(ARG_OBJECT_LIBRARY)
 
+  if (NOT (ARG_HEADERS OR ARG_NODEPHEADERS))
+    message(AUTHOR_WARNING "Called with no HEADERS and no NODEPHEADER. The generated "
+      "dictionary will be empty. Consider using ROOT_LINKER_LIBRARY instead.")
+  endif()
+
   ROOT_GENERATE_DICTIONARY(G__${libname} ${ARG_HEADERS}
                           ${MODULE_GEN_ARG}
                           ${STAGE1_FLAG}
