@@ -158,38 +158,38 @@ public:
     return _clientListShape;
   }
 
+  /// List of all servers of this object.
   const RefCountList_t& servers() const {
     return _serverList;
   }
-
+  /// Return server of `this` with name `name`. Returns nullptr if not found.
   inline RooAbsArg* findServer(const char *name) const {
-    // Return server of this arg with given name. Returns null if not found
     const auto serverIt = _serverList.findByName(name);
     return serverIt != _serverList.end() ? *serverIt : nullptr;
   }
+  /// Return server of `this` that has the same name as `arg`. Returns `nullptr` if not found.
   inline RooAbsArg* findServer(const RooAbsArg& arg) const {
-    // Return server of this arg with name of given input arg. Returns null if not found
     const auto serverIt = _serverList.findByNamePointer(&arg);
     return serverIt != _serverList.end() ? *serverIt : nullptr;
   }
+  /// Return i-th server from server list.
   inline RooAbsArg* findServer(Int_t index) const {
-    // Return i-th server from server list
     return _serverList.containedObjects()[index];
   }
+  /// Check if `this` is serving values to `arg`.
   inline Bool_t isValueServer(const RooAbsArg& arg) const {
-    // If true, arg is a value server of self
     return _clientListValue.containsByNamePtr(&arg);
   }
+  /// Check if `this` is serving values to an object with name `name`.
   inline Bool_t isValueServer(const char* name) const {
-    // If true, we have a server with given name
     return _clientListValue.containsSameName(name);
   }
+  /// Check if `this` is serving shape to `arg`.
   inline Bool_t isShapeServer(const RooAbsArg& arg) const {
-    // If true arg is a shape server of self
     return _clientListShape.containsByNamePtr(&arg);
   }
+  /// Check if `this` is serving shape to an object with name `name`.
   inline Bool_t isShapeServer(const char* name) const {
-    // If true, we have a shape server with given name
     return _clientListShape.containsSameName(name);
   }
   void leafNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0, Bool_t recurseNonDerived=kFALSE) const ;
@@ -613,6 +613,7 @@ private:
 
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) = 0 ;
   virtual void attachToVStore(RooVectorDataStore& vstore) = 0 ;
+  /// Attach this argument to the data store such that it reads data from there.
   void attachToStore(RooAbsDataStore& store) ;
 
   virtual void setTreeBranchStatus(TTree& t, Bool_t active) = 0 ;
@@ -639,6 +640,7 @@ private:
 
   mutable Bool_t _valueDirty ;  // Flag set if value needs recalculating because input values modified
   mutable Bool_t _shapeDirty ;  // Flag set if value needs recalculating because input shapes modified
+  mutable bool _allBatchesDirty{true}; //! Mark batches as dirty (only meaningful for RooAbsReal).
 
   friend class RooRealProxy ;
   mutable OperMode _operMode ; // Dirty state propagation mode

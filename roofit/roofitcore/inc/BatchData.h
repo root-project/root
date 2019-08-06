@@ -58,7 +58,7 @@ class BatchData {
 
       if (item == _ownedBatches.end()) {
         // We didn't find a batch that starts with `begin`. Check if there's
-        // a batch that's enclosing the event.
+        // a batch that's enclosing the requested range.
         // This can be slow, but a subset of a batch is asked for:
         item = findEnclosingBatch(begin);
         if (item == _ownedBatches.end())

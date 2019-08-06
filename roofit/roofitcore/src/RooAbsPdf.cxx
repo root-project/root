@@ -336,7 +336,9 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check
+/// Check for infinity or NaN.
+/// \param[in] inputs Array to check
+/// \return True if either infinity or NaN were found.
 namespace {
 template<class T>
 bool checkInfNaN(const T& inputs)
@@ -383,24 +385,32 @@ void RooAbsPdf::fixOutputsAndLogErrors(RooSpan<double>& outputs, std::size_t beg
 /// are returned. All elements of `nset` must be lvalues.
 ///
 /// \param[in] begin Begin of the batch.
-/// \param[in] batchSize Size of the batch (not included).
-/// \param[in] normSet    If not nullptr, normalise results by integrating over
+/// \param[in] maxSize Size of the requested range. May come out smaller.
+/// \param[in] normSet   If not nullptr, normalise results by integrating over
 /// the variables in this set. The normalisation is only computed once, and applied
 /// to the full batch.
 ///
-RooSpan<const double> RooAbsPdf::getValBatch(std::size_t begin, std::size_t batchSize,
+RooSpan<const double> RooAbsPdf::getValBatch(std::size_t begin, std::size_t maxSize,
     const RooArgSet* normSet) const
 {
+  if (_allBatchesDirty || _operMode == ADirty) {
+    _batchData.markDirty();
+    _allBatchesDirty = false;
+  }
+
   // Special handling of case without normalization set (used in numeric integration of pdfs)
   if (!normSet) {
     RooArgSet* tmp = _normSet ;
     _normSet = nullptr;
-    auto outputs = evaluateBatch(begin, batchSize);
+    auto outputs = evaluateBatch(begin, maxSize);
+    maxSize = outputs.size();
     _normSet = tmp;
 
     if (checkInfNaN(outputs)) {
       fixOutputsAndLogErrors(outputs, begin);
     }
+
+    _batchData.setStatus(begin, maxSize, BatchHelpers::BatchData::kReady);
 
     return outputs;
   }
@@ -408,40 +418,42 @@ RooSpan<const double> RooAbsPdf::getValBatch(std::size_t begin, std::size_t batc
 
   // Process change in last data set used
   Bool_t nsetChanged(kFALSE) ;
-  if (normSet!=_normSet || _norm==0) {
+  if (normSet != _normSet || _norm == nullptr) {
     nsetChanged = syncNormalization(normSet) ;
   }
 
-  //TODO wait if batch is computing
-  const auto batchStatus = _batchData.status(begin, batchSize);
-  if (batchStatus <= BatchHelpers::BatchData::kDirty
+  // TODO wait if batch is computing?
+  if (_batchData.status(begin, maxSize) <= BatchHelpers::BatchData::kDirty
       || nsetChanged || _norm->isValueDirty()) {
 
-    auto outputs = evaluateBatch(begin, batchSize);
+    auto outputs = evaluateBatch(begin, maxSize);
+    maxSize = outputs.size();
     if (checkInfNaN(outputs)) {
       fixOutputsAndLogErrors(outputs, begin);
     }
 
     // Evaluate denominator
-    const double normDenom = _norm->getVal();
-    if (normDenom <= 0.) {
+    const double normVal = _norm->getVal();
+
+    if (normVal < 0.
+        || (normVal == 0. && std::any_of(outputs.begin(), outputs.end(), [](double val){return val != 0;}))) {
       logEvalError(Form("p.d.f normalization integral is zero or negative."
-          "\n\tInt(%s) = %f", GetName(), normDenom));
+          "\n\tInt(%s) = %f", GetName(), normVal));
     }
 
-    if (normDenom != 1. && normDenom > 0.) {
-      const double normVal = 1./normDenom;
+    if (normVal != 1. && normVal > 0.) {
+      const double invNorm = 1./normVal;
       for (double& val : outputs) { //CHECK_VECTORISE
-        val *= normVal;
+        val *= invNorm;
       }
     }
 
-    const bool statusSet = _batchData.setStatus(begin, batchSize, BatchHelpers::BatchData::kReady);
-    assert(statusSet);
+    _batchData.setStatus(begin, maxSize, BatchHelpers::BatchData::kReady);
   }
-  assert(_batchData.status(begin, batchSize) != BatchHelpers::BatchData::kWriting);
 
-  return _batchData.getBatch(begin, batchSize);
+  const auto ret = _batchData.getBatch(begin, maxSize);
+
+  return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -744,24 +756,23 @@ Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const
   }
 
   if(prob < 0) {
-
     logEvalError("getLogVal() top-level p.d.f evaluates to a negative number") ;
 
     return 0;
   }
-  if(prob == 0) {
 
+  if(prob == 0) {
     logEvalError("getLogVal() top-level p.d.f evaluates to zero") ;
 
-    return log((double)0);
+    return -std::numeric_limits<double>::infinity();
   }
 
   if (TMath::IsNaN(prob)) {
     logEvalError("getLogVal() top-level p.d.f evaluates to NaN") ;
 
-    return log((double)0);
-    
+    return -std::numeric_limits<double>::infinity();
   }
+
   return log(prob);
 }
 
@@ -1147,7 +1158,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   RooAbsReal* nllCons(0) ;
   if (allConstraints.getSize()>0 && cPars) {   
 
-    coutI(Minimization) << " Including the following contraint terms in minimization: " << allConstraints << endl ;
+    coutI(Minimization) << " Including the following constraint terms in minimization: " << allConstraints << endl ;
     if (glObs) {
       coutI(Minimization) << "The following global observables have been defined: " << *glObs << endl ;
     }
