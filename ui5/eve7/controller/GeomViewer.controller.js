@@ -123,7 +123,7 @@ sap.ui.define(['sap/ui/core/Component',
             sap.ui.define(['rootui5/eve7/lib/EveElements'], function(EveElements) {
                this.creator = new EveElements();
                this.creator.useIndexAsIs = (JSROOT.GetUrlOption('useindx') !== null);
-               this.checkRequestMsg();
+               this.checkSendRequest();
             }.bind(this));
          }.bind(this));
       },
@@ -465,7 +465,7 @@ sap.ui.define(['sap/ui/core/Component',
             this.model.sendFirstRequest(this.websocket);
 
          // when connection established, checked if we can submit requested
-         this.checkRequestMsg();
+         this.checkSendRequest();
 
       },
 
@@ -523,6 +523,10 @@ sap.ui.define(['sap/ui/core/Component',
             break;
          case "NINFO:":
             this.provideNodeInfo(JSROOT.parse(msg));
+            break;
+         case "RELOAD":
+            this.paintFoundNodes(null);
+            this.doReload(true);
             break;
          default:
             console.error('Non recognized msg ' + mhdr + ' len=' + msg.length);
@@ -585,7 +589,7 @@ sap.ui.define(['sap/ui/core/Component',
 
          if (!arr || !this.geo_clones) return;
 
-         console.error('modifyDescription should be modified');
+         console.error('modifyDescription should be changed');
 
          return;
 
@@ -769,10 +773,12 @@ sap.ui.define(['sap/ui/core/Component',
       onAfterRendering: function() {
          this.renderingDone = true;
 
-         this.checkRequestMsg();
+         this.checkSendRequest();
       },
 
-      checkRequestMsg: function() {
+      checkSendRequest: function(force) {
+         if (force) this.ask_getdraw = false;
+
          if (this.isConnected && this.renderingDone) {
 
             if (this.creator && !this.ask_getdraw) {
@@ -918,9 +924,18 @@ sap.ui.define(['sap/ui/core/Component',
          if (this.standalone) {
             this.showTextInBrowser();
             this.paintFoundNodes(null);
-            this.model.setFullModel(this.fullModel);
+            if (this.model)
+               this.model.setFullModel(this.fullModel);
          } else {
-            this.model.reloadMainModel(force);
+            this.checkSendRequest(force);
+
+            if (this.model) {
+               this.model.clearFullModel();
+               console.log('Calling reload model');
+               this.model.reloadMainModel(force);
+
+            }
+
          }
       },
 

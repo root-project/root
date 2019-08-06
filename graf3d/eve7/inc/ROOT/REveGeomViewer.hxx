@@ -63,6 +63,8 @@ public:
 
    void Show(const RWebDisplayArgs &args = "", bool always_start_new_browser = false);
 
+   void Update();
+
 };
 
 }}
