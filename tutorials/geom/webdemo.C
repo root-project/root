@@ -38,19 +38,42 @@
 #include <ROOT/RWebWindow.hxx>
 #include <ROOT/REveGeomViewer.hxx>
 
+Bool_t comments = kTRUE;
+Bool_t grotate = kFALSE;
+Bool_t axis = kTRUE;
+
+std::string getOptions()
+{
+   std::string opt;
+   if (grotate) opt.append("rotate;");
+   if (axis) opt.append("axis;");
+   return opt;
+}
+
 auto geomViewer = std::make_shared<ROOT::Experimental::REveGeomViewer>();
+
+auto helpWindow = ROOT::Experimental::RWebWindow::Create();
 
 void display()
 {
-   // geomViewer->SetShowHierarchy(false);
+   geomViewer->SetShowHierarchy(false);
    geomViewer->SetGeometry(gGeoManager);
-   geomViewer->Show({600,600});
+   geomViewer->Show({600, 600, 160, 0});
 }
 
-Bool_t comments = kTRUE;
-Bool_t raytracing = kFALSE;
-Bool_t grotate = kFALSE;
-Bool_t axis = kTRUE;
+//______________________________________________________________________________
+void autorotate()
+{
+   grotate = !grotate;
+   geomViewer->SetDrawOptions(getOptions());
+}
+
+//______________________________________________________________________________
+void axes()
+{
+   axis = !axis;
+   geomViewer->SetDrawOptions(getOptions());
+}
 
 //______________________________________________________________________________
 void SavePicture(const char *name, TObject *objcanvas, TObject *objvol, Int_t iaxis, Double_t step)
@@ -66,30 +89,8 @@ Int_t randomColor()
 }
 
 //______________________________________________________________________________
-void raytrace() {
-   raytracing = !raytracing;
-
-   // TDOD: provide in geom  viewer
-}
-
-//______________________________________________________________________________
 void help() {
    // TDOD: provide in geom  viewer
-}
-
-//______________________________________________________________________________
-void autorotate()
-{
-   grotate = !grotate;
-   // TODO:
-}
-
-//______________________________________________________________________________
-void axes()
-{
-   axis = !axis;
-   // TODO:
-
 }
 
 //______________________________________________________________________________
@@ -1453,7 +1454,9 @@ void webdemo ()
       gROOT->ProcessLine(arg.c_str());
    });
 
-   mainWindow->Show({150,800});
+   mainWindow->Show({150,700, 0,0});
+
+   geomViewer->SetDrawOptions(getOptions());
 
    gRandom = new TRandom3();
 }

@@ -65,8 +65,7 @@ public:
    /** Returns default hierarchy browser visibility */
    bool GetShowHierarchy() const { return fShowHierarchy; }
 
-   /** Configures default draw option for geometry */
-   void SetDrawOptions(const std::string &opt) { fDesc.SetDrawOptions(opt); }
+   void SetDrawOptions(const std::string &opt);
 
    void Show(const RWebDisplayArgs &args = "", bool always_start_new_browser = false);
 
