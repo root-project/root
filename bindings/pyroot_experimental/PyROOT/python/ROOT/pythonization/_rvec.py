@@ -25,7 +25,7 @@ _array_interface_dtype_map = {
 
 
 def get_array_interface(self):
-    cppname = type(self).__cppname__
+    cppname = type(self).__cpp_name__
     for dtype in _array_interface_dtype_map:
         if cppname.endswith("<{}>".format(dtype)):
             dtype_numpy = _array_interface_dtype_map[dtype]

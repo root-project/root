@@ -23,7 +23,7 @@ def get_array_interface(self):
     Returns:
         Dictionary following the Numpy array interface specifications
     """
-    cppname = type(self).__cppname__
+    cppname = type(self).__cpp_name__
     idx1 = cppname.find("RTensor<")
     idx2 = cppname.find(",", idx1)
     dtype = cppname[idx1 + 8:idx2]
