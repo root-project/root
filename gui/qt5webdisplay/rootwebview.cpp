@@ -20,10 +20,12 @@
 #include <QDragEnterEvent>
 #include <QDropEvent>
 
-RootWebView::RootWebView(QWidget *parent, unsigned width, unsigned height) :
+RootWebView::RootWebView(QWidget *parent, unsigned width, unsigned height, int x, int y) :
    QWebEngineView(parent),
    fWidth(width),
-   fHeight(height)
+   fHeight(height),
+   fX(x),
+   fY(y)
 {
    setObjectName("RootWebView");
 
@@ -34,6 +36,8 @@ RootWebView::RootWebView(QWidget *parent, unsigned width, unsigned height) :
    connect(page(), &QWebEnginePage::loadFinished /*   loadStarted */, this, &RootWebView::onLoadStarted);
 
    setAcceptDrops(true);
+
+   if ((fX >= 0) || (fY >= 0)) move(fX > 0 ? fX : 0, fY > 0 ? fY : 0);
 }
 
 QSize RootWebView::sizeHint() const

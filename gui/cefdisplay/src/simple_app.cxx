@@ -475,7 +475,10 @@ protected:
                return nullptr;
             }
 
-            CefRect rect(0, 0, args.GetWidth(), args.GetHeight());
+            CefRect rect((args.GetX() > 0) ? args.GetX() : 0,
+                         (args.GetY() > 0) ? args.GetY() : 0,
+                         (args.GetWidth() > 0) ? args.GetWidth() : 800,
+                         (args.GetHeight() > 0) ? args.GetHeight() : 600);
             fCefApp->StartWindow(args.GetFullUrl(), args.IsHeadless(), rect);
             return std::make_unique<RCefWebDisplayHandle>(args.GetFullUrl());
          }
