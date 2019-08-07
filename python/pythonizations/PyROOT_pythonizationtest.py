@@ -64,7 +64,12 @@ class TestClassPYTHONIZATIONS:
         """Verify pinnability of returns"""
 
         import cppyy
-        cppyy.gbl.pythonizables.GimeDerived._creates = True
+        exp_pyroot = self.exp_pyroot
+
+        if exp_pyroot:
+            cppyy.gbl.pythonizables.GimeDerived.__creates__ = True
+        else:
+            cppyy.gbl.pythonizables.GimeDerived._creates = True
 
         result = cppyy.gbl.pythonizables.GimeDerived()
         assert type(result) == cppyy.gbl.pythonizables.MyDerived
