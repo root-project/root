@@ -138,12 +138,12 @@ RooSpan<double> RooPoisson::evaluateBatch(std::size_t begin, std::size_t batchSi
   if (batchX && batchMean) {
     compute(output, xData, meanData, _protectNegative, _noRounding);
   } else if (batchX && !batchMean) {
-    compute(output, xData, BatchHelpers::BracketAdapter<RooRealProxy>(mean), _protectNegative, _noRounding);
+    compute(output, xData, BatchHelpers::BracketAdapter<double>(mean), _protectNegative, _noRounding);
   }
   else if (!batchX && batchMean) {
-    compute(output, BatchHelpers::BracketAdapter<RooRealProxy>(x), meanData, _protectNegative, _noRounding);
+    compute(output, BatchHelpers::BracketAdapter<double>(x), meanData, _protectNegative, _noRounding);
   } else if (!batchX && !batchMean) {
-    compute(output, BatchHelpers::BracketAdapter<RooRealProxy>(x), BatchHelpers::BracketAdapter<RooRealProxy>(mean), _protectNegative, _noRounding);
+    compute(output, BatchHelpers::BracketAdapter<double>(x), BatchHelpers::BracketAdapter<double>(mean), _protectNegative, _noRounding);
   } else {
     //Should not happen
     assert(false);

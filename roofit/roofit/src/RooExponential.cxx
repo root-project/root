@@ -129,13 +129,13 @@ RooSpan<double> RooExponential::evaluateBatch(std::size_t begin, std::size_t bat
   const bool batchC = !cData.empty();
 
   if (batchX && !batchC) {
-    compute(output, xData, BatchHelpers::BracketAdapter<RooRealProxy>(c));
+    compute(output, xData, BatchHelpers::BracketAdapter<double>(c));
   } else if (!batchX && batchC) {
-    compute(output, BatchHelpers::BracketAdapter<RooRealProxy>(x), cData);
+    compute(output, BatchHelpers::BracketAdapter<double>(x), cData);
   } else if (!batchX && !batchC) {
     compute(output,
-        BatchHelpers::BracketAdapter<RooRealProxy>(x),
-        BatchHelpers::BracketAdapter<RooRealProxy>(c));
+        BatchHelpers::BracketAdapter<double>(x),
+        BatchHelpers::BracketAdapter<double>(c));
   } else {
     compute(output, xData, cData);
   }

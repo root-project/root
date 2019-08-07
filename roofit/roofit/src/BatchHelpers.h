@@ -27,26 +27,12 @@ class RooArgSet;
 namespace BatchHelpers {
 
 ///Little adapter that gives a bracket operator to types that don't
-///have one. This is helpful for template programming, where one might
-///encounter variables that sometimes have one changing value have constants that don't change inside a loop
-template <class T>
+///have one. It completely ignores the index and returns a constant.
+template <class T = double>
 class BracketAdapter {
   public:
-    constexpr BracketAdapter(T& payload) :
-    _payload{payload} { }
 
-    constexpr double operator[](std::size_t i) const {
-      return _payload[i];
-    }
-
-  private:
-    const T& _payload;
-};
-
-template <>
-class BracketAdapter<double> {
-  public:
-    constexpr BracketAdapter(double payload) :
+    constexpr BracketAdapter(T payload) noexcept :
     _payload{payload} { }
 
     constexpr double operator[](std::size_t) const {
@@ -54,34 +40,20 @@ class BracketAdapter<double> {
     }
 
   private:
-    const double _payload;
-};
-
-template <>
-class BracketAdapter<RooRealProxy> {
-  public:
-    constexpr BracketAdapter(const RooRealProxy& payload) :
-    _payload{payload} { }
-
-    constexpr double operator[](std::size_t) const {
-      return _payload;
-    }
-
-  private:
-    const double _payload;
+    const T _payload;
 };
 
 
 class BracketAdapterWithBranch {
   public:
-    constexpr explicit BracketAdapterWithBranch(double payload, const RooSpan<const double>& batch) :
+    explicit BracketAdapterWithBranch(double payload, const RooSpan<const double>& batch) noexcept :
     _payload(payload),
     _span(batch),
     _batchEmpty(batch.empty())
     {
     }
 
-    constexpr double operator[](std::size_t i) const {
+    constexpr double operator[](std::size_t i) const noexcept {
       return _batchEmpty ? _payload : _span[i];
     }
 
