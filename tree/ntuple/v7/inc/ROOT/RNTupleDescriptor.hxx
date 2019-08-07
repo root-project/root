@@ -157,13 +157,16 @@ public:
       NTupleSize_t fFirstElementIndex = kInvalidNTupleIndex;
       /// A 32bit value for the number of column elements in the cluster
       ClusterSize_t fNElements = kInvalidClusterIndex;
+      /// The usual format for ROOT compression settings (see TCompression.h).
+      /// The pages of a particular column in a particular cluster are all compressed with the same settings.
+      std::int64_t fCompressionSettings = 0;
 
       // TODO(jblomer): we perhaps want to store summary information, such as average, min/max, etc.
       // Should this be done on the field level?
 
       bool operator==(const RColumnRange &other) const {
          return fColumnId == other.fColumnId && fFirstElementIndex == other.fFirstElementIndex &&
-                fNElements == other.fNElements;
+                fNElements == other.fNElements && fCompressionSettings == other.fCompressionSettings;
       }
 
       bool Contains(NTupleSize_t index) const {
