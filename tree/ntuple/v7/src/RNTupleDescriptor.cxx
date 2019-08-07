@@ -179,18 +179,20 @@ std::uint32_t SerializeLocator(const ROOT::Experimental::RClusterDescriptor::RLo
    // In order to keep the meta-data small, we don't wrap the locator in a frame
    if (buffer != nullptr) {
       auto pos = reinterpret_cast<unsigned char *>(buffer);
-      pos += SerializeString(val.fUrl, pos);
       pos += SerializeInt64(val.fPosition, pos);
+      pos += SerializeUInt32(val.fBytesOnStorage, pos);
+      pos += SerializeString(val.fUrl, pos);
    }
-   return SerializeString(val.fUrl, nullptr) + 8;
+   return SerializeString(val.fUrl, nullptr) + 12;
 }
 
 std::uint32_t DeserializeLocator(const void *buffer, ROOT::Experimental::RClusterDescriptor::RLocator *val)
 {
    auto bytes = reinterpret_cast<const unsigned char *>(buffer);
-   bytes += DeserializeString(bytes, &val->fUrl);
    bytes += DeserializeInt64(bytes, &val->fPosition);
-   return SerializeString(val->fUrl, nullptr) + 8;
+   bytes += DeserializeUInt32(bytes, &val->fBytesOnStorage);
+   bytes += DeserializeString(bytes, &val->fUrl);
+   return SerializeString(val->fUrl, nullptr) + 12;
 }
 
 std::uint32_t SerializeFrame(std::uint16_t protocolVersionCurrent, std::uint16_t protocolVersionMin, void *buffer,
@@ -460,7 +462,6 @@ std::uint32_t SerializeClusterSummary(const ROOT::Experimental::RClusterDescript
    pos += SerializeUInt64(val.GetFirstEntryIndex(), *where);
    pos += SerializeUInt64(val.GetNEntries(), *where);
    pos += SerializeLocator(val.GetLocator(), *where);
-   pos += SerializeInt64(val.GetBytesOnStorage(), *where);
 
    auto size = pos - base;
    SerializeUInt32(size, ptrSize);
@@ -510,7 +511,6 @@ bool ROOT::Experimental::RClusterDescriptor::operator==(const RClusterDescriptor
           fFirstEntryIndex == other.fFirstEntryIndex &&
           fNEntries == other.fNEntries &&
           fLocator == other.fLocator &&
-          fBytesOnStorage == other.fBytesOnStorage &&
           fColumnRanges == other.fColumnRanges &&
           fPageRanges == other.fPageRanges;
 }
@@ -794,9 +794,6 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddClustersFromFooter(void* f
       RClusterDescriptor::RLocator locator;
       pos += DeserializeLocator(pos, &locator);
       SetClusterLocator(clusterId, locator);
-      std::int64_t bytesOnStorage;
-      pos += DeserializeInt64(pos, &bytesOnStorage);
-      SetClusterSize(clusterId, bytesOnStorage);
 
       pos = clusterBase + frameSize;
 
@@ -900,12 +897,6 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::SetClusterLocator(DescriptorI
    RClusterDescriptor::RLocator locator)
 {
    fDescriptor.fClusterDescriptors[clusterId].fLocator = locator;
-}
-
-void ROOT::Experimental::RNTupleDescriptorBuilder::SetClusterSize(DescriptorId_t clusterId,
-   std::int64_t bytesOnStorage)
-{
-   fDescriptor.fClusterDescriptors[clusterId].fBytesOnStorage = bytesOnStorage;
 }
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterColumnRange(
