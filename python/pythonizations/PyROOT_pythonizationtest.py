@@ -32,8 +32,12 @@ class TestClassPYTHONIZATIONS:
 
         import cppyy
 
+        exp_pyroot = self.exp_pyroot
         def set_size(self, buf):
-            buf.SetSize(self.GetN())
+            if exp_pyroot:
+                buf.reshape((self.GetN(),))
+            else:
+                buf.SetSize(self.GetN())
             return buf
 
         cppyy.add_pythonization(
