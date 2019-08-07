@@ -74,7 +74,10 @@ class TestClassPYTHONIZATIONS:
         result = cppyy.gbl.pythonizables.GimeDerived()
         assert type(result) == cppyy.gbl.pythonizables.MyDerived
 
-        cppyy.make_interface(cppyy.gbl.pythonizables.MyBase)
+        if exp_pyroot:
+            cppyy.py.pin_type(cppyy.gbl.pythonizables.MyBase)
+        else:
+            cppyy.make_interface(cppyy.gbl.pythonizables.MyBase)
         assert type(result) == cppyy.gbl.pythonizables.MyDerived
 
 
