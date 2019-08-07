@@ -312,7 +312,7 @@ std::uint32_t DeserializeColumnModel(const void *buffer, ROOT::Experimental::RCo
 
 std::uint32_t SerializeTimeStamp(const std::chrono::system_clock::time_point &val, void *buffer)
 {
-   return SerializeUInt64(std::chrono::system_clock::to_time_t(val), buffer);
+   return SerializeInt64(std::chrono::system_clock::to_time_t(val), buffer);
 }
 
 std::uint32_t DeserializeTimeStamp(const void *buffer, std::chrono::system_clock::time_point *timeStamp)
