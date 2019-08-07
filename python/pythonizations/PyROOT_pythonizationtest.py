@@ -25,6 +25,7 @@ class TestClassPYTHONIZATIONS:
         import cppyy
         cls.test_dct = "Pythonizables_C"
         cls.pythonizables = cppyy.load_reflection_info(cls.test_dct)
+        cls.exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
 
     def test01_size_mapping(self):
         """Use composites to map GetSize() onto buffer returns"""
