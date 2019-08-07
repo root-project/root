@@ -40,8 +40,14 @@ class TestClassPYTHONIZATIONS:
                 buf.SetSize(self.GetN())
             return buf
 
-        cppyy.add_pythonization(
-            cppyy.compose_method("pythonizables::MyBufferReturner$", "Get[XY]$", set_size))
+        if exp_pyroot:
+            cppyy.py.add_pythonization(
+                cppyy.py.compose_method("pythonizables::MyBufferReturner$", "Get[XY]$", set_size)
+                )
+        else:
+            cppyy.add_pythonization(
+                cppyy.compose_method("pythonizables::MyBufferReturner$", "Get[XY]$", set_size)
+                )
 
         bsize, xval, yval = 3, 2, 5
         m = cppyy.gbl.pythonizables.MyBufferReturner(bsize, xval, yval)
