@@ -140,13 +140,15 @@ class RClusterDescriptor {
 
 public:
    /// Generic information about the physical location of data. Values depend on the concrete storage type.  E.g.,
-   /// for a local file fUrl might be unsused and fPosition might be a file offset.
+   /// for a local file fUrl might be unsused and fPosition might be a file offset. Objects on storage can be compressed
+   /// and therefore we need to store their actual size.
    struct RLocator {
-      std::string fUrl;
       std::int64_t fPosition = 0;
+      std::uint32_t fBytesOnStorage = 0;
+      std::string fUrl;
 
       bool operator==(const RLocator &other) const {
-         return fUrl == other.fUrl && fPosition == other.fPosition;
+         return fPosition == other.fPosition && fBytesOnStorage == other.fBytesOnStorage && fUrl == other.fUrl;
       }
    };
 
@@ -176,7 +178,7 @@ public:
 
    /// Records the parition of data into pages for a particular column in a particular cluster
    struct RPageRange {
-      /// We do not need to store the element size / page size because we know to which column
+      /// We do not need to store the element size / uncompressed page size because we know to which column
       /// the page belongs
       struct RPageInfo {
          /// The sum of the elements of all the pages must match the corresponding fNElements field in fColumnRanges
@@ -206,7 +208,6 @@ private:
    ClusterSize_t fNEntries = kInvalidClusterIndex;
    /// For pre-fetching / caching an entire contiguous cluster
    RLocator fLocator;
-   std::int64_t fBytesOnStorage = 0;
 
    std::unordered_map<DescriptorId_t, RColumnRange> fColumnRanges;
    std::unordered_map<DescriptorId_t, RPageRange> fPageRanges;
@@ -223,7 +224,6 @@ public:
    NTupleSize_t GetFirstEntryIndex() const { return fFirstEntryIndex; }
    ClusterSize_t GetNEntries() const { return fNEntries; }
    RLocator GetLocator() const { return fLocator; }
-   std::int64_t GetBytesOnStorage() const { return fBytesOnStorage; }
    RColumnRange GetColumnRange(DescriptorId_t columnId) const { return fColumnRanges.at(columnId); }
    RPageRange GetPageRange(DescriptorId_t columnId) const { return fPageRanges.at(columnId); }
 };
@@ -363,7 +363,6 @@ public:
    void AddCluster(DescriptorId_t clusterId, RNTupleVersion version,
                    NTupleSize_t firstEntryIndex, ClusterSize_t nEntries);
    void SetClusterLocator(DescriptorId_t clusterId, RClusterDescriptor::RLocator locator);
-   void SetClusterSize(DescriptorId_t clusterId, std::int64_t bytesOnStorage);
    void AddClusterColumnRange(DescriptorId_t clusterId, const RClusterDescriptor::RColumnRange &columnRange);
    void AddClusterPageRange(DescriptorId_t clusterId, const RClusterDescriptor::RPageRange &pageRange);
 
