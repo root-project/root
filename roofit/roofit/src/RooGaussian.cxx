@@ -34,6 +34,7 @@ Plain Gaussian p.d.f
 #include "RooRandom.h"
 #include "RooMath.h"
 
+#define USE_VDT
 #ifdef USE_VDT
 #include "vdt/exp.h"
 #endif
@@ -121,25 +122,25 @@ RooSpan<double> RooGaussian::evaluateBatch(std::size_t begin, std::size_t batchS
   const bool batchSigma = !sigmaData.empty();
 
   if (batchX && !batchMean && !batchSigma) {
-    compute(output, xData, BracketAdapter<RooRealProxy>(mean), BracketAdapter<RooRealProxy>(sigma));
+    compute(output, xData, BracketAdapter<double>(mean), BracketAdapter<double>(sigma));
   }
   else if (batchX && batchMean && !batchSigma) {
-    compute(output, xData, meanData, BracketAdapter<RooRealProxy>(sigma));
+    compute(output, xData, meanData, BracketAdapter<double>(sigma));
   }
   else if (batchX && !batchMean && batchSigma) {
-    compute(output, xData, BracketAdapter<RooRealProxy>(mean), sigmaData);
+    compute(output, xData, BracketAdapter<double>(mean), sigmaData);
   }
   else if (batchX && batchMean && batchSigma) {
     compute(output, xData, meanData, sigmaData);
   }
   else if (!batchX && batchMean && !batchSigma) {
-    compute(output, BracketAdapter<RooRealProxy>(x), meanData, BracketAdapter<RooRealProxy>(sigma));
+    compute(output, BracketAdapter<double>(x), meanData, BracketAdapter<double>(sigma));
   }
   else if (!batchX && !batchMean && batchSigma) {
-    compute(output, BracketAdapter<RooRealProxy>(x), BracketAdapter<RooRealProxy>(mean), sigmaData);
+    compute(output, BracketAdapter<double>(x), BracketAdapter<double>(mean), sigmaData);
   }
   else if (!batchX && batchMean && batchSigma) {
-    compute(output, BracketAdapter<RooRealProxy>(x), meanData, sigmaData);
+    compute(output, BracketAdapter<double>(x), meanData, sigmaData);
   } else {
     throw std::logic_error("Requested a batch computation, but no batch data available.");
   }
