@@ -907,7 +907,7 @@ XMLNodePointer_t TGDMLWrite::CreateMixtureN(TGeoMixture * mixture, XMLNodePointe
 
 XMLNodePointer_t TGDMLWrite::CreateMaterialN(TGeoMaterial * material, TString mname)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "material", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "material", nullptr);
    fGdmlE->NewAttr(mainN, nullptr, "name", mname);
    Double_t valZ = material->GetZ();
    //Z can't be zero in Geant4 so this is workaround for vacuum
@@ -954,7 +954,7 @@ XMLNodePointer_t TGDMLWrite::CreateMaterialN(TGeoMaterial * material, TString mn
 
 XMLNodePointer_t TGDMLWrite::CreateBoxN(TGeoBBox * geoShape)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "box", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "box", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
@@ -976,7 +976,7 @@ XMLNodePointer_t TGDMLWrite::CreateBoxN(TGeoBBox * geoShape)
 
 XMLNodePointer_t TGDMLWrite::CreateParaboloidN(TGeoParaboloid * geoShape)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "paraboloid", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "paraboloid", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
@@ -997,7 +997,7 @@ XMLNodePointer_t TGDMLWrite::CreateParaboloidN(TGeoParaboloid * geoShape)
 
 XMLNodePointer_t TGDMLWrite::CreateSphereN(TGeoSphere * geoShape)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "sphere", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "sphere", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
@@ -1022,7 +1022,7 @@ XMLNodePointer_t TGDMLWrite::CreateSphereN(TGeoSphere * geoShape)
 
 XMLNodePointer_t TGDMLWrite::CreateArb8N(TGeoArb8 * geoShape)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "arb8", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "arb8", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
@@ -1057,7 +1057,7 @@ XMLNodePointer_t TGDMLWrite::CreateArb8N(TGeoArb8 * geoShape)
 
 XMLNodePointer_t TGDMLWrite::CreateConeN(TGeoConeSeg * geoShape)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "cone", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "cone", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
@@ -1083,7 +1083,7 @@ XMLNodePointer_t TGDMLWrite::CreateConeN(TGeoConeSeg * geoShape)
 
 XMLNodePointer_t TGDMLWrite::CreateConeN(TGeoCone * geoShape)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "cone", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "cone", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
@@ -1109,7 +1109,7 @@ XMLNodePointer_t TGDMLWrite::CreateConeN(TGeoCone * geoShape)
 
 XMLNodePointer_t TGDMLWrite::CreateParaN(TGeoPara * geoShape)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "para", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "para", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    fGdmlE->NewAttr(mainN, nullptr, "name", GenName(geoShape->GetName(), TString::Format("%p", geoShape)));
 
@@ -1146,7 +1146,7 @@ XMLNodePointer_t TGDMLWrite::CreateTrapN(TGeoTrap * geoShape)
       return mainN;
    }
 
-   mainN = fGdmlE->NewChild(nullptr, nullptr, "trap", 0);
+   mainN = fGdmlE->NewChild(nullptr, nullptr, "trap", nullptr);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
    if (IsNullParam(geoShape->GetDz(), "Dz", lname)) {
@@ -1198,7 +1198,7 @@ XMLNodePointer_t TGDMLWrite::CreateTwistedTrapN(TGeoGtra * geoShape)
       return mainN;
    }
 
-   mainN = fGdmlE->NewChild(nullptr, nullptr, "twistedtrap", 0);
+   mainN = fGdmlE->NewChild(nullptr, nullptr, "twistedtrap", nullptr);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
    if (IsNullParam(geoShape->GetDz(), "Dz", lname)) {
@@ -1236,7 +1236,7 @@ XMLNodePointer_t TGDMLWrite::CreateTwistedTrapN(TGeoGtra * geoShape)
 
 XMLNodePointer_t TGDMLWrite::CreateTrdN(TGeoTrd1 * geoShape)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "trd", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "trd", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
@@ -1259,7 +1259,7 @@ XMLNodePointer_t TGDMLWrite::CreateTrdN(TGeoTrd1 * geoShape)
 
 XMLNodePointer_t TGDMLWrite::CreateTrdN(TGeoTrd2 * geoShape)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "trd", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "trd", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
@@ -1282,7 +1282,7 @@ XMLNodePointer_t TGDMLWrite::CreateTrdN(TGeoTrd2 * geoShape)
 
 XMLNodePointer_t TGDMLWrite::CreateTubeN(TGeoTubeSeg * geoShape)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "tube", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "tube", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
@@ -1310,7 +1310,7 @@ XMLNodePointer_t TGDMLWrite::CreateCutTubeN(TGeoCtub * geoShape)
    XMLNodePointer_t mainN;
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
 
-   mainN = fGdmlE->NewChild(nullptr, nullptr, "cutTube", 0);
+   mainN = fGdmlE->NewChild(nullptr, nullptr, "cutTube", nullptr);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
    if (IsNullParam(geoShape->GetRmax(), "Rmax", lname) ||
@@ -1352,7 +1352,7 @@ XMLNodePointer_t TGDMLWrite::CreateCutTubeN(TGeoCtub * geoShape)
 
 XMLNodePointer_t TGDMLWrite::CreateTubeN(TGeoTube * geoShape)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "tube", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "tube", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
@@ -1377,7 +1377,7 @@ XMLNodePointer_t TGDMLWrite::CreateTubeN(TGeoTube * geoShape)
 
 XMLNodePointer_t TGDMLWrite::CreateZplaneN(Double_t z, Double_t rmin, Double_t rmax)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "zplane", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "zplane", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
 
    fGdmlE->NewAttr(mainN, nullptr, "z", TString::Format(fltPrecision.Data(), z));
@@ -1392,7 +1392,7 @@ XMLNodePointer_t TGDMLWrite::CreateZplaneN(Double_t z, Double_t rmin, Double_t r
 
 XMLNodePointer_t TGDMLWrite::CreatePolyconeN(TGeoPcon * geoShape)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "polycone", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "polycone", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
@@ -1445,7 +1445,7 @@ XMLNodePointer_t TGDMLWrite::CreatePolyconeN(TGeoPcon * geoShape)
 
 XMLNodePointer_t TGDMLWrite::CreateTorusN(TGeoTorus * geoShape)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "torus", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "torus", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
@@ -1470,7 +1470,7 @@ XMLNodePointer_t TGDMLWrite::CreateTorusN(TGeoTorus * geoShape)
 
 XMLNodePointer_t TGDMLWrite::CreatePolyhedraN(TGeoPgon * geoShape)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "polyhedra", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "polyhedra", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    fGdmlE->NewAttr(mainN, nullptr, "name", GenName(geoShape->GetName(), TString::Format("%p", geoShape)));
 
@@ -1492,7 +1492,7 @@ XMLNodePointer_t TGDMLWrite::CreatePolyhedraN(TGeoPgon * geoShape)
 
 XMLNodePointer_t TGDMLWrite::CreateEltubeN(TGeoEltu * geoShape)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "eltube", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "eltube", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
@@ -1516,7 +1516,7 @@ XMLNodePointer_t TGDMLWrite::CreateEltubeN(TGeoEltu * geoShape)
 
 XMLNodePointer_t TGDMLWrite::CreateHypeN(TGeoHype * geoShape)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "hype", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "hype", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
@@ -1542,7 +1542,7 @@ XMLNodePointer_t TGDMLWrite::CreateHypeN(TGeoHype * geoShape)
 
 XMLNodePointer_t TGDMLWrite::CreateXtrusionN(TGeoXtru * geoShape)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "xtru", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "xtru", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
@@ -1559,14 +1559,14 @@ XMLNodePointer_t TGDMLWrite::CreateXtrusionN(TGeoXtru * geoShape)
    }
    for (Int_t it = 0; it < vertNum; it++) {
       //add twoDimVertex child node
-      childN = fGdmlE->NewChild(nullptr, nullptr, "twoDimVertex", 0);
+      childN = fGdmlE->NewChild(nullptr, nullptr, "twoDimVertex", nullptr);
       fGdmlE->NewAttr(childN, nullptr, "x", TString::Format(fltPrecision.Data(), geoShape->GetX(it)));
       fGdmlE->NewAttr(childN, nullptr, "y", TString::Format(fltPrecision.Data(), geoShape->GetY(it)));
       fGdmlE->AddChild(mainN, childN);
    }
    for (Int_t it = 0; it < secNum; it++) {
       //add section child node
-      childN = fGdmlE->NewChild(nullptr, nullptr, "section", 0);
+      childN = fGdmlE->NewChild(nullptr, nullptr, "section", nullptr);
       fGdmlE->NewAttr(childN, nullptr, "zOrder", TString::Format("%i", it));
       fGdmlE->NewAttr(childN, nullptr, "zPosition", TString::Format(fltPrecision.Data(), geoShape->GetZ(it)));
       fGdmlE->NewAttr(childN, nullptr, "xOffset", TString::Format(fltPrecision.Data(), geoShape->GetXOffset(it)));
@@ -1585,7 +1585,7 @@ XMLNodePointer_t TGDMLWrite::CreateXtrusionN(TGeoXtru * geoShape)
 
 XMLNodePointer_t TGDMLWrite::CreateEllipsoidN(TGeoCompositeShape * geoShape, TString elName)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "ellipsoid", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "ellipsoid", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    TGeoScaledShape *leftS = (TGeoScaledShape *)geoShape->GetBoolNode()->GetLeftShape(); //ScaledShape
    TGeoBBox *rightS = (TGeoBBox *)geoShape->GetBoolNode()->GetRightShape(); //BBox
@@ -1624,7 +1624,7 @@ XMLNodePointer_t TGDMLWrite::CreateEllipsoidN(TGeoCompositeShape * geoShape, TSt
 
 XMLNodePointer_t TGDMLWrite::CreateElConeN(TGeoScaledShape * geoShape)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "elcone", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "elcone", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    fGdmlE->NewAttr(mainN, nullptr, "name", GenName(geoShape->GetName(), TString::Format("%p", geoShape)));
    Double_t zcut = ((TGeoCone *) geoShape->GetShape())->GetDz();
@@ -1735,16 +1735,16 @@ XMLNodePointer_t TGDMLWrite::CreateCommonBoolN(TGeoCompositeShape *geoShape)
     *   <rotation .../>
     * </union>
    */
-   mainN = fGdmlE->NewChild(nullptr, nullptr, lboolType.Data(), 0);
+   mainN = fGdmlE->NewChild(nullptr, nullptr, lboolType.Data(), nullptr);
    fGdmlE->NewAttr(mainN, nullptr, "name", nodeName);
 
    //<first> (left)
-   childN = fGdmlE->NewChild(nullptr, nullptr, "first", 0);
+   childN = fGdmlE->NewChild(nullptr, nullptr, "first", nullptr);
    fGdmlE->NewAttr(childN, nullptr, "ref", lname);
    fGdmlE->AddChild(mainN, childN);
 
    //<second> (right)
-   childN = fGdmlE->NewChild(nullptr, nullptr, "second", 0);
+   childN = fGdmlE->NewChild(nullptr, nullptr, "second", nullptr);
    fGdmlE->NewAttr(childN, nullptr, "ref", rname);
    fGdmlE->AddChild(mainN, childN);
 
@@ -1777,7 +1777,7 @@ XMLNodePointer_t TGDMLWrite::CreateCommonBoolN(TGeoCompositeShape *geoShape)
 
 XMLNodePointer_t TGDMLWrite::CreateOpticalSurfaceN(TGeoOpticalSurface * geoSurf)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "opticalsurface", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "opticalsurface", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    fGdmlE->NewAttr(mainN, nullptr, "name", geoSurf->GetName());
    fGdmlE->NewAttr(mainN, nullptr, "model", TGeoOpticalSurface::ModelToString(geoSurf->GetModel()));
@@ -1801,11 +1801,11 @@ XMLNodePointer_t TGDMLWrite::CreateOpticalSurfaceN(TGeoOpticalSurface * geoSurf)
 
 XMLNodePointer_t TGDMLWrite::CreateSkinSurfaceN(TGeoSkinSurface * geoSurf)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "skinsurface", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "skinsurface", nullptr);
    fGdmlE->NewAttr(mainN, nullptr, "name", geoSurf->GetName());
    fGdmlE->NewAttr(mainN, nullptr, "surfaceproperty", geoSurf->GetTitle());
    // Cretate the logical volume reference node
-   auto childN = fGdmlE->NewChild(nullptr, nullptr, "volumeref", 0);
+   auto childN = fGdmlE->NewChild(nullptr, nullptr, "volumeref", nullptr);
    fGdmlE->NewAttr(childN, nullptr, "ref", geoSurf->GetVolume()->GetName());
    fGdmlE->AddChild(mainN, childN);
    return mainN;
@@ -1816,11 +1816,11 @@ XMLNodePointer_t TGDMLWrite::CreateSkinSurfaceN(TGeoSkinSurface * geoSurf)
 
 XMLNodePointer_t TGDMLWrite::CreateBorderSurfaceN(TGeoBorderSurface * geoSurf)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "bordersurface", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "bordersurface", nullptr);
    fGdmlE->NewAttr(mainN, nullptr, "name", geoSurf->GetName());
    fGdmlE->NewAttr(mainN, nullptr, "surfaceproperty", geoSurf->GetTitle());
    // Cretate the logical volume reference node
-   auto childN = fGdmlE->NewChild(nullptr, nullptr, "physvolref", 0);
+   auto childN = fGdmlE->NewChild(nullptr, nullptr, "physvolref", nullptr);
    fGdmlE->NewAttr(childN, nullptr, "ref", geoSurf->GetNode1()->GetName());
    fGdmlE->NewAttr(childN, nullptr, "ref", geoSurf->GetNode2()->GetName());
    fGdmlE->AddChild(mainN, childN);
@@ -1832,7 +1832,7 @@ XMLNodePointer_t TGDMLWrite::CreateBorderSurfaceN(TGeoBorderSurface * geoSurf)
 
 XMLNodePointer_t TGDMLWrite::CreatePositionN(const char * name, Xyz position, const char * type, const char * unit)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, type, 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, type, nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    fGdmlE->NewAttr(mainN, nullptr, "name", name);
    fGdmlE->NewAttr(mainN, nullptr, "x", TString::Format(fltPrecision.Data(), position.x));
@@ -1847,7 +1847,7 @@ XMLNodePointer_t TGDMLWrite::CreatePositionN(const char * name, Xyz position, co
 
 XMLNodePointer_t TGDMLWrite::CreateRotationN(const char * name, Xyz rotation, const char * type, const char * unit)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, type, 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, type, nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    fGdmlE->NewAttr(mainN, nullptr, "name", name);
    fGdmlE->NewAttr(mainN, nullptr, "x", TString::Format(fltPrecision.Data(), rotation.x));
@@ -1865,7 +1865,7 @@ XMLNodePointer_t TGDMLWrite::CreateMatrixN(TGDMLMatrix const *matrix)
    std::stringstream vals;
    size_t cols = matrix->GetCols();
    size_t rows = matrix->GetRows();
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "matrix", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "matrix", nullptr);
    fGdmlE->NewAttr(mainN, nullptr, "name", matrix->GetName());
    fGdmlE->NewAttr(mainN, nullptr, "coldim", TString::Format("%zu", cols));
    for(size_t i=0; i<rows; ++i)  {
@@ -1884,7 +1884,7 @@ XMLNodePointer_t TGDMLWrite::CreateMatrixN(TGDMLMatrix const *matrix)
 
 XMLNodePointer_t TGDMLWrite::CreateConstantN(const char *name, Double_t value)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "constant", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "constant", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    fGdmlE->NewAttr(mainN, nullptr, "name", name);
    fGdmlE->NewAttr(mainN, nullptr, "value", TString::Format(fltPrecision.Data(), value));
@@ -1896,10 +1896,10 @@ XMLNodePointer_t TGDMLWrite::CreateConstantN(const char *name, Double_t value)
 
 XMLNodePointer_t TGDMLWrite::CreateSetupN(const char * topVolName, const char * name, const char * version)
 {
-   XMLNodePointer_t setupN = fGdmlE->NewChild(nullptr, nullptr, "setup", 0);
+   XMLNodePointer_t setupN = fGdmlE->NewChild(nullptr, nullptr, "setup", nullptr);
    fGdmlE->NewAttr(setupN, nullptr, "name", name);
    fGdmlE->NewAttr(setupN, nullptr, "version", version);
-   XMLNodePointer_t fworldN = fGdmlE->NewChild(setupN, 0, "world", 0);
+   XMLNodePointer_t fworldN = fGdmlE->NewChild(setupN, 0, "world", nullptr);
    fGdmlE->NewAttr(fworldN, nullptr, "ref", topVolName);
    return setupN;
 }
@@ -1910,14 +1910,14 @@ XMLNodePointer_t TGDMLWrite::CreateSetupN(const char * topVolName, const char * 
 XMLNodePointer_t TGDMLWrite::StartVolumeN(const char * name, const char * solid, const char * material)
 {
    XMLNodePointer_t childN;
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "volume", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "volume", nullptr);
    fGdmlE->NewAttr(mainN, nullptr, "name", name);
 
-   childN = fGdmlE->NewChild(nullptr, nullptr, "materialref", 0);
+   childN = fGdmlE->NewChild(nullptr, nullptr, "materialref", nullptr);
    fGdmlE->NewAttr(childN, nullptr, "ref", material);
    fGdmlE->AddChild(mainN, childN);
 
-   childN = fGdmlE->NewChild(nullptr, nullptr, "solidref", 0);
+   childN = fGdmlE->NewChild(nullptr, nullptr, "solidref", nullptr);
    fGdmlE->NewAttr(childN, nullptr, "ref", solid);
    fGdmlE->AddChild(mainN, childN);
 
@@ -1929,7 +1929,7 @@ XMLNodePointer_t TGDMLWrite::StartVolumeN(const char * name, const char * solid,
 
 XMLNodePointer_t TGDMLWrite::StartAssemblyN(const char * name)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "assembly", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "assembly", nullptr);
    fGdmlE->NewAttr(mainN, nullptr, "name", name);
 
    return mainN;
@@ -1942,21 +1942,21 @@ XMLNodePointer_t TGDMLWrite::CreatePhysVolN(const char *name, Int_t copyno, cons
 {
    fPhysVolCnt++;
    XMLNodePointer_t childN;
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "physvol", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "physvol", nullptr);
    fGdmlE->NewAttr(mainN, nullptr, "name", name);
    fGdmlE->NewAttr(mainN, nullptr, "copynumber", TString::Format("%d",copyno));
 
-   childN = fGdmlE->NewChild(nullptr, nullptr, "volumeref", 0);
+   childN = fGdmlE->NewChild(nullptr, nullptr, "volumeref", nullptr);
    fGdmlE->NewAttr(childN, nullptr, "ref", volref);
    fGdmlE->AddChild(mainN, childN);
 
-   childN = fGdmlE->NewChild(nullptr, nullptr, "positionref", 0);
+   childN = fGdmlE->NewChild(nullptr, nullptr, "positionref", nullptr);
    fGdmlE->NewAttr(childN, nullptr, "ref", posref);
    fGdmlE->AddChild(mainN, childN);
 
    //if is not empty string add this node
    if (strcmp(rotref, "") != 0) {
-      childN = fGdmlE->NewChild(nullptr, nullptr, "rotationref", 0);
+      childN = fGdmlE->NewChild(nullptr, nullptr, "rotationref", nullptr);
       fGdmlE->NewAttr(childN, nullptr, "ref", rotref);
       fGdmlE->AddChild(mainN, childN);
    }
@@ -1973,7 +1973,7 @@ XMLNodePointer_t TGDMLWrite::CreatePhysVolN(const char *name, Int_t copyno, cons
 XMLNodePointer_t TGDMLWrite::CreateDivisionN(Double_t offset, Double_t width, Int_t number, const char * axis, const char * unit, const char * volref)
 {
    XMLNodePointer_t childN = 0;
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "divisionvol", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "divisionvol", nullptr);
    fGdmlE->NewAttr(mainN, nullptr, "axis", axis);
    fGdmlE->NewAttr(mainN, nullptr, "number", TString::Format("%i", number));
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
@@ -1993,7 +1993,7 @@ XMLNodePointer_t TGDMLWrite::CreateDivisionN(Double_t offset, Double_t width, In
    fGdmlE->NewAttr(mainN, nullptr, "offset", TString::Format(fltPrecision.Data(), offset));
    fGdmlE->NewAttr(mainN, nullptr, "unit", unit);
    if (strcmp(volref, "") != 0) {
-      childN = fGdmlE->NewChild(nullptr, nullptr, "volumeref", 0);
+      childN = fGdmlE->NewChild(nullptr, nullptr, "volumeref", nullptr);
       fGdmlE->NewAttr(childN, nullptr, "ref", volref);
    }
    fGdmlE->AddChild(mainN, childN);
