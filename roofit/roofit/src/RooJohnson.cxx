@@ -121,6 +121,8 @@ double RooJohnson::evaluate() const
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 namespace {
 
 ///Actual computations for the batch evaluation of the Johnson.
