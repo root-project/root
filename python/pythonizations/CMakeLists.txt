@@ -3,7 +3,7 @@ if(ROOT_python_FOUND)
                     MACRO PyROOT_pythonizationtest.py
                     COPY_TO_BUILDDIR Pythonizables.C Pythonizables.h
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ Pythonizables.C+
-                    ${PYTESTS_WILLFAIL})
+                    ENVIRONMENT EXP_PYROOT=${exp_pyroot})
 
   ROOTTEST_ADD_TEST(smartptr
                     MACRO PyROOT_smartptrtest.py
