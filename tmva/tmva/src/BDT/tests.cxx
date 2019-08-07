@@ -1,4 +1,3 @@
-#include <benchmark/benchmark.h>
 #include <iostream>
 #include "json.hpp"
 #include <fstream>
@@ -19,4 +18,19 @@
 #include "array_bdt.h"
 #include "forest.h"
 
-#include <xgboost/c_api.h> // for xgboost
+#include "gtest/gtest.h"
+
+//#include <xgboost/c_api.h> // for xgboost
+//#include "generated_files/evaluate_forest2.h"
+
+using json = nlohmann::json;
+
+int square(int v)
+{
+   return v * v;
+}
+
+TEST(someTest, testOne)
+{
+   ASSERT_EQ(5, 5);
+}

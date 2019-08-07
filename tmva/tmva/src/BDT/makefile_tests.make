@@ -1,9 +1,9 @@
 CXX = g++ #mpicxx # clang #
-CXXFLAGS =  -std=c++11 -g -fopenmp -O3 # -stdlib=libc++
+CXXFLAGS =  -std=c++11 -g -fopenmp -O3 -Winline # -stdlib=libc++
 
 CPPFLAGS = -I./include \
  -Wno-deprecated \
- -isystem benchmark/include \
+ -gtest/include
   -I$(XGBOOST_ROOT)/include -I$(XGBOOST_ROOT)/rabit/include
 
  XGBOOST_ROOT=/home/zampieri/Documents/CERN/xgboost
@@ -16,8 +16,8 @@ ROOT_FLAGS = `root-config --cflags --glibs`
 
 LIBFLAGS = -L -Lbuild/src -lbenchmark -lpthread -O3
 
-OBJS = build/benchmark.o build/bdt.o build/unique_bdt.o #build/test.o
-EXE = mybenchmark.exe
+OBJS = build/tests.o build/bdt.o build/unique_bdt.o #build/test.o
+EXE = tests.exe
 
 .PHONY : all clean distclean
 

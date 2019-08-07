@@ -21,8 +21,8 @@ public: // TODO: switch to private
    bool  is_leaf_node = 0;
    float split_threshold;
    int   split_variable;
-   float leaf_true, leaf_false;
-
+   // float leaf_true, leaf_false;
+   float                 leaf;
    std::unique_ptr<Node> child_true  = nullptr;
    std::unique_ptr<Node> child_false = nullptr;
 
@@ -35,17 +35,11 @@ public:
    float inference(const std::vector<float> &event)
    ///*
    {
-      if (event[split_variable] < this->split_threshold) {
-         if (child_true)
-            child_true->inference(event);
-         else
-            return this->leaf_true;
-
+      if (this->is_leaf_node) {
+         return this->leaf;
       } else {
-         if (child_false)
-            child_false->inference(event);
-         else
-            return this->leaf_false;
+         return ((event[split_variable] < split_threshold) ? child_true->inference(event)
+                                                           : child_false->inference(event));
       }
    }
    //*/

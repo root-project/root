@@ -19,13 +19,13 @@
 
 
 /// generates if then else statements for bdts
+/*
 void generate_if_statement_for_bdt (std::ostream& fout,
                                           const unique_bdt::Node* node
                                         ){
 
   if (node->is_leaf_node){
     fout << "// This is a leaf node" << std::endl;
-    //fout << "result = " << std::to_string(node->leaf) << ";" << std::endl;
     fout << "result += " << std::to_string(node->leaf) << ";" << std::endl;
 
   }
@@ -47,10 +47,11 @@ void generate_if_statement_for_bdt (std::ostream& fout,
     fout << "}" << std::endl;
   }
 }
+*/
 
 /// generates if then else statements for bdts
-/*
-void generate_if_statement_for_bdt_old (std::ostream& fout,
+// /*
+void generate_if_statement_for_bdt (std::ostream& fout,
                                           //std::shared_ptr<Node> node
                                           const unique_bdt::Node* node
                                         ){
@@ -62,9 +63,10 @@ void generate_if_statement_for_bdt_old (std::ostream& fout,
 
   // IF part of statement
   fout << "if " << condition << "{" << std::endl;
-  if (node->is_leaf_node){
+  //if (node->is_leaf_node){
+  if (!node->child_true){
     fout << "// This is a leaf node" << std::endl;
-    fout << "result = " << std::to_string(node->leaf_true) << ";" << std::endl;
+    fout << "result += " << std::to_string(node->leaf_true) << ";" << std::endl;
   }
   else { // if node is not a leaf node
     generate_if_statement_for_bdt(fout, node->child_true.get());
@@ -73,16 +75,17 @@ void generate_if_statement_for_bdt_old (std::ostream& fout,
 
   // ELSE part of statement
   fout << "else " << "{ // if condition is not respected" << std::endl;
-  if (node->is_leaf_node){
+  //if (node->is_leaf_node){
+  if (!node->child_false){
     fout << "// This is a leaf node" << std::endl;
-    fout << "result = " << std::to_string(node->leaf_false) << ";" << std::endl;
+    fout << "result += " << std::to_string(node->leaf_false) << ";" << std::endl;
   }
   else { // if node is not a leaf node
     generate_if_statement_for_bdt(fout, node->child_false.get());
   }
   fout << "}" << std::endl;
 }
-*/
+// */
 
 
 
@@ -92,7 +95,7 @@ void generate_code_bdt(std::ostream& fout,
                         int tree_number,
                         std::string s_id=""
                       ) {
-                        
+
   bool use_namespaces = (!s_id.empty());
   fout << "// File automatically generated! " << std::endl;
   fout << "/// Functions that defines the"

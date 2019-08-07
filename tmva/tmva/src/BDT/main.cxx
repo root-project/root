@@ -29,7 +29,7 @@ using namespace shared;
 #endif
 
 //#include "array_bdt.h"
-#include "jitted_bdt.h"
+//#include "jitted_bdt.h"
 #include "forest.h"
 
 using json = nlohmann::json;
@@ -207,7 +207,7 @@ int main()
    test2.get_Forest("model.json");
    preds.clear();
    std::string preds_file = "./data_files/test2.csv";
-   preds                  = test2.do_predictions(events_vector);
+   test2.do_predictions(events_vector, preds);
    write_csv(preds_file, preds);
 
    Forest<array_bdt::Tree> test3;
@@ -215,7 +215,7 @@ int main()
    test3.test();
    test3.get_Forest("model.json");
    preds.clear();
-   preds      = test3.do_predictions(events_vector);
+   test3.do_predictions(events_vector, preds);
    preds_file = "./data_files/test3.csv";
    write_csv(preds_file, preds);
 
@@ -224,11 +224,11 @@ int main()
    test4.test();
    test4.get_Forest("model.json");
    preds.clear();
-   preds = test4.do_predictions(events_vector);
+   test4.do_predictions(events_vector, preds);
    preds.clear();
-   preds = test4.do_predictions(events_vector);
+   test4.do_predictions(events_vector, preds);
    preds.clear();
-   preds      = test4.do_predictions(events_vector);
+   test4.do_predictions(events_vector, preds);
    preds_file = "./data_files/test4.csv";
    write_csv(preds_file, preds);
 
@@ -241,7 +241,7 @@ int main()
    test5.test();
    test5.get_Forest("model.json");
    preds.clear();
-   preds      = test5.do_predictions(events_vector);
+   test5.do_predictions(events_vector, preds);
    preds_file = "./data_files/test5.csv";
    write_csv(preds_file, preds);
 
@@ -250,9 +250,14 @@ int main()
    test6.test();
    test6.get_Forest("model.json");
    preds.clear();
-   preds      = test6.do_predictions(events_vector);
+   test6.do_predictions(events_vector, preds);
    preds_file = "./data_files/test6.csv";
    write_csv(preds_file, preds);
+
+   std::cout << "Testing array arythmetics\n";
+   int a[5];
+   std::cout << &a[0] << "   " << a << std::endl;
+   std::cout << &a[0] + 1 << "   " << a + 1 << std::endl;
 
    // */
    std::cout << "\n ########## END MAIN.CXX ##########\n\n\n";

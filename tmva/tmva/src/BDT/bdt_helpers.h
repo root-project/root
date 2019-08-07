@@ -26,13 +26,14 @@ inline T vec_sum(std::vector<T> vec)
    return std::accumulate(vec.begin(), vec.end(), 0.0);
 }
 
+///////////////////////////////////////////////////////
+/// Objective functions
 /// logistic function
 template <class T>
 inline T logistic_function(T value)
 {
    return 1. / (1. + (1. / std::exp(value)));
 }
-
 /// binary logistic
 template <class T>
 inline bool binary_logistic(T value)
@@ -50,6 +51,8 @@ std::function<bool(float)> get_classification_function(std::string &s_class_func
    }
    return classification_function;
 }
+/// END objective functions
+/////////////////////////////////////////////////////77//
 
 // --------------- READING FILES ----------------------------
 std::string read_file_string(const std::string &filename)
@@ -75,8 +78,11 @@ std::string get_time_string()
    return s_time;
 }
 
+//////////////////////////////////////////////////////
+/// CSV helpers
+
 /// read a line of a "csv file" format
-std::vector<float> read_csv_line(std::string &s_line)
+std::vector<float> _read_csv_line(std::string &s_line)
 {
    std::vector<float> vector_line;
    std::stringstream  sstream_line(s_line);
@@ -98,15 +104,16 @@ std::vector<std::vector<float>> read_csv(std::string &filename)
    // std::ifstream fin;
    std::ifstream                   file(filename);
    std::vector<std::vector<float>> out;
-   std::string                     cell, line;
-   // std::stringstream sstream_line;
+
+   std::string cell, line;
    while (file.good()) {
       getline(file, line);
-      if (!line.empty()) out.push_back(read_csv_line(line));
+      if (!line.empty()) out.push_back(_read_csv_line(line));
    }
    return out;
 }
 
+/// write vector of vectors to csv file
 template <class T>
 void write_csv(std::string &filename, std::vector<std::vector<T>> values_vec)
 {
@@ -131,6 +138,7 @@ void write_csv(std::string &filename, std::vector<std::vector<T>> values_vec)
    fout.close();
 }
 
+/// write vector to csv file
 template <class T>
 void write_csv(std::string &filename, std::vector<T> values_vec)
 {
@@ -138,7 +146,6 @@ void write_csv(std::string &filename, std::vector<T> values_vec)
    // opens an existing csv file or creates a new file.
    fout.open(filename, std::ios::out); // | std::ios::app if you want to append"reportcard.csv"
    // Read the input
-   // for (auto it = begin (values_vec); it != end (values_vec); ++it) {
    for (auto line : values_vec) {
       fout << line;
       fout << "\n";
@@ -146,7 +153,5 @@ void write_csv(std::string &filename, std::vector<T> values_vec)
    fout.close();
 }
 
-// TODO
-// write string to file
 #endif
 // end
