@@ -331,8 +331,9 @@ std::uint32_t SerializeColumnRange(const ROOT::Experimental::RClusterDescriptor:
       // The column id is stored in SerializeFooter() for the column range and the page range altogether
       pos += SerializeUInt64(val.fFirstElementIndex, pos);
       pos += SerializeClusterSize(val.fNElements, pos);
+      pos += SerializeInt64(val.fCompressionSettings, pos);
    }
-   return 12;
+   return 20;
 }
 
 std::uint32_t DeserializeColumnRange(const void *buffer,
@@ -342,7 +343,8 @@ std::uint32_t DeserializeColumnRange(const void *buffer,
    // The column id is set elsewhere (see AddClustersFromFooter())
    bytes += DeserializeUInt64(bytes, &columnRange->fFirstElementIndex);
    bytes += DeserializeClusterSize(bytes, &columnRange->fNElements);
-   return 12;
+   bytes += DeserializeInt64(bytes, &columnRange->fCompressionSettings);
+   return 20;
 }
 
 std::uint32_t SerializePageInfo(const ROOT::Experimental::RClusterDescriptor::RPageRange::RPageInfo &val, void *buffer)
