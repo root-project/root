@@ -28,7 +28,7 @@ public:
   RooJohnson() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
 
   RooJohnson(const char *name, const char *title,
-            RooAbsReal& mass, RooAbsReal& mu, RooAbsReal& sigma,
+            RooAbsReal& mass, RooAbsReal& mu, RooAbsReal& lambda,
             RooAbsReal& gamma, RooAbsReal& delta,
             double massThreshold = -std::numeric_limits<double>::max());
 
@@ -59,7 +59,7 @@ private:
   double _massThreshold{-1.E300};
 
   Double_t evaluate() const override;
-//  RooSpan<double> evaluateBatch(std::size_t begin, std::size_t end) const override;
+  RooSpan<double> evaluateBatch(std::size_t begin, std::size_t end) const override;
 
   ClassDefOverride(RooJohnson,1)
 };
