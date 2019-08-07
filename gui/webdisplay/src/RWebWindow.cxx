@@ -86,8 +86,10 @@ ROOT::Experimental::RWebWindow::~RWebWindow()
       auto lst = GetConnections();
 
       {
+         // clear connections vector under mutex
          std::lock_guard<std::mutex> grd(fConnMutex);
-         fConn.clear(); // remove all connections under mutex
+         fConn.clear();
+         fPendingConn.clear();
       }
 
       for (auto &conn : lst)
@@ -204,7 +206,7 @@ unsigned ROOT::Experimental::RWebWindow::FindBatch()
 /// Batch jobs will be ignored here
 /// Returns 0 if connection not exists
 
-unsigned ROOT::Experimental::RWebWindow::GetDisplayConnection()
+unsigned ROOT::Experimental::RWebWindow::GetDisplayConnection() const
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
@@ -782,8 +784,8 @@ bool ROOT::Experimental::RWebWindow::CheckDataToSend(std::shared_ptr<WebConn> &c
 
 void ROOT::Experimental::RWebWindow::CheckDataToSend(bool only_once)
 {
-   // make copy of all connections to be independent later
-   auto arr = GetConnections();
+   // make copy of all connections to be independent later, only active connections are checked
+   auto arr = GetConnections(0, true);
 
    do {
       bool isany = false;
@@ -959,16 +961,22 @@ void ROOT::Experimental::RWebWindow::CloseConnection(unsigned connid)
 ///////////////////////////////////////////////////////////////////////////////////
 /// returns connection (or all active connections)
 
-ROOT::Experimental::RWebWindow::ConnectionsList ROOT::Experimental::RWebWindow::GetConnections(unsigned connid) const
+ROOT::Experimental::RWebWindow::ConnectionsList ROOT::Experimental::RWebWindow::GetConnections(unsigned connid, bool only_active) const
 {
-   std::vector<std::shared_ptr<WebConn>> arr;
+   ConnectionsList arr;
 
    {
       std::lock_guard<std::mutex> grd(fConnMutex);
 
-      for (auto &conn : fConn)
-         if (conn->fActive && (!connid || (conn->fConnId == connid)))
+      for (auto &conn : fConn) {
+         if ((conn->fActive || !only_active) && (!connid || (conn->fConnId == connid)))
             arr.push_back(conn);
+      }
+
+      if (!only_active)
+         for (auto &conn : fPendingConn)
+            if (!connid || (conn->fConnId == connid))
+               arr.push_back(conn);
    }
 
    return arr;
@@ -981,7 +989,9 @@ ROOT::Experimental::RWebWindow::ConnectionsList ROOT::Experimental::RWebWindow::
 
 bool ROOT::Experimental::RWebWindow::CanSend(unsigned connid, bool direct) const
 {
-   auto arr = GetConnections(connid);
+   auto arr = GetConnections(connid, direct); // for direct sending connection has to be active
+
+   auto maxqlen = GetMaxQueueLength();
 
    for (auto &conn : arr) {
 
@@ -990,7 +1000,7 @@ bool ROOT::Experimental::RWebWindow::CanSend(unsigned connid, bool direct) const
       if (direct && (!conn->fQueue.empty() || (conn->fSendCredits == 0) || conn->fDoingSend))
          return false;
 
-      if (conn->fQueue.size() >= GetMaxQueueLength())
+      if (conn->fQueue.size() >= maxqlen)
          return false;
    }
 
@@ -1024,8 +1034,8 @@ int ROOT::Experimental::RWebWindow::GetSendQueueLength(unsigned connid) const
 void ROOT::Experimental::RWebWindow::SubmitData(unsigned connid, bool txt, std::string &&data, int chid)
 {
    auto arr = GetConnections(connid);
-
    auto cnt = arr.size();
+   auto maxqlen = GetMaxQueueLength();
 
    timestamp_t stamp = std::chrono::system_clock::now();
 
@@ -1056,7 +1066,7 @@ void ROOT::Experimental::RWebWindow::SubmitData(unsigned connid, bool txt, std::
 
       std::lock_guard<std::mutex> grd(conn->fMutex);
 
-      if (conn->fQueue.size() < GetMaxQueueLength()) {
+      if (conn->fQueue.size() < maxqlen) {
          if (--cnt)
             conn->fQueue.emplace(chid, txt, std::string(data)); // make copy
          else
