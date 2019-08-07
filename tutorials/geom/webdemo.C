@@ -37,6 +37,8 @@
 
 #include <ROOT/RWebWindow.hxx>
 #include <ROOT/REveGeomViewer.hxx>
+#include <vector>
+#include <string>
 
 Bool_t comments = kTRUE;
 Bool_t grotate = kFALSE;
@@ -50,9 +52,12 @@ std::string getOptions()
    return opt;
 }
 
+// create here to keep it in memory
 auto geomViewer = std::make_shared<ROOT::Experimental::REveGeomViewer>();
 
 auto helpWindow = ROOT::Experimental::RWebWindow::Create();
+
+auto mainWindow = ROOT::Experimental::RWebWindow::Create();
 
 void display()
 {
@@ -76,6 +81,14 @@ void axes()
 }
 
 //______________________________________________________________________________
+void gcomments()
+{
+   comments = !comments;
+   if (!comments)
+      helpWindow->CloseConnections();
+}
+
+//______________________________________________________________________________
 void SavePicture(const char *name, TObject *objcanvas, TObject *objvol, Int_t iaxis, Double_t step)
 {
    // TDOD: provide in geom  viewer
@@ -89,8 +102,61 @@ Int_t randomColor()
 }
 
 //______________________________________________________________________________
-void help() {
-   // TDOD: provide in geom  viewer
+void help(const std::vector<std::string> &info = {})
+{
+   if (!info.empty() && !comments)
+      return;
+
+   helpWindow->SetDefaultPage("file:webhelp.html");
+
+   unsigned connid = helpWindow->GetDisplayConnection();
+
+   if (!connid) connid = helpWindow->Show({600, 200, 160, 650});
+
+   std::string msg = "";
+   bool first = true;
+   for (auto &line : info) {
+      if (line.empty()) continue;
+      std::string style = "", p = "<p style='";
+      if (first) { style = "font-size:150%;color:red"; first = false; }
+      else if (line.find("----")==0) { style = "color:red"; }
+      else if (line.find("Execute")==0) { style = "color:blue"; }
+      else if (line.find("Division")==0) { style = "font-size:120%;color:green"; }
+      if (style.empty()) p = "<p>"; else { p.append(style); p.append("'>"); }
+      p.append(line);
+      p.append("</p>");
+      msg.append(p);
+   }
+
+   if (msg.empty())
+      helpWindow->Send(connid, "Initial text");
+   else
+      helpWindow->Send(connid, msg);
+}
+
+//______________________________________________________________________________
+std::string AddText(const char *datamember, Double_t value, const char *comment)
+{
+   return TString::Format("%10s = %5.2f => %s", datamember, value, comment).Data();
+}
+
+//______________________________________________________________________________
+std::string AddText(const char *datamember, Int_t value, const char *comment)
+{
+   return TString::Format("%10s = %5d => %s", datamember, value, comment).Data();
+}
+
+//______________________________________________________________________________
+std::string Finder(TGeoVolume *vol, Int_t iaxis, Int_t nline)
+{
+   TGeoPatternFinder *finder = vol->GetFinder();
+   if (!finder) return "";
+   if (nline == 1) return AddText("fNdiv",finder->GetNdiv(),"number of divisions");
+   if (nline == 2) return AddText("fStart",finder->GetStart(),"start divisioning position");
+   if (nline == 3) return AddText("fStep",finder->GetStep(),"division step");
+   TGeoVolume *volume = finder->GetVolume();
+   TGeoShape *sh = volume->GetShape();
+   return TString::Format("Division of %s on axis %d (%s)", volume->GetName(), iaxis, sh->GetAxisName(iaxis)).Data();
 }
 
 //______________________________________________________________________________
@@ -112,47 +178,25 @@ void box(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       slice->SetLineColor(randomColor());
    }
    gGeoManager->CloseGeometry();
-   gGeoManager->SetNsegments(80);
 
    display();
 
+   TGeoBBox *bbox = (TGeoBBox*)(vol->GetShape());
 
-/*
-   top->Draw();
-   MakePicture();
-   if (!comments) return;
-   c->cd(2);
-   TPaveText *pt = new TPaveText(0.01,0.01,0.99,0.99);
-   pt->SetLineColor(1);
-   TGeoBBox *box = (TGeoBBox*)(vol->GetShape());
-   TText *text = pt->AddText("TGeoBBox - box class");
-   text->SetTextColor(2);
-   AddText(pt,"fDX",box->GetDX(),"half length in X");
-   AddText(pt,"fDY",box->GetDY(),"half length in Y");
-   AddText(pt,"fDZ",box->GetDZ(),"half length in Z");
-   AddText(pt,"fOrigin[0]",(box->GetOrigin())[0],"box origin on X");
-   AddText(pt,"fOrigin[1]",(box->GetOrigin())[1],"box origin on Y");
-   AddText(pt,"fOrigin[2]",(box->GetOrigin())[2],"box origin on Z");
-   if (iaxis) AddText(pt, vol->GetFinder(), iaxis);
-   pt->AddText("Execute: box(iaxis, ndiv, start, step) to divide this.");
-   pt->AddText("----- IAXIS can be 1, 2 or 3 (X, Y, Z)");
-   pt->AddText("----- NDIV must be a positive integer");
-   pt->AddText("----- START must be a valid axis offset within shape range on divided axis");
-   pt->AddText("----- STEP is the division step. START+NDIV*STEP must be in range also");
-   pt->AddText("----- If START and STEP are omitted, all range of the axis will be divided");
-   pt->AddText(" ");
-   pt->SetTextSize(0.044);
-   pt->SetAllWith("-----","color",2);
-   pt->SetAllWith("-----","font",72);
-   pt->SetAllWith("-----","size",0.04);
-   pt->SetAllWith("Execute","color",4);
-   pt->SetTextAlign(12);
-   pt->Draw();
-//   SavePicture("box",c,vol,iaxis,step);
-   c->cd(1);
-   gROOT->SetInterrupt(kTRUE);
-
-*/
+   help({"TGeoBBox - box class",
+         AddText("fDX",bbox->GetDX(),"half length in X"),
+         AddText("fDY",bbox->GetDY(),"half length in Y"),
+         AddText("fDZ",bbox->GetDZ(),"half length in Z"),
+         AddText("fOrigin[0]",(bbox->GetOrigin())[0],"box origin on X"),
+         AddText("fOrigin[1]",(bbox->GetOrigin())[1],"box origin on Y"),
+         AddText("fOrigin[2]",(bbox->GetOrigin())[2],"box origin on Z"),
+         Finder(vol, iaxis, 0), Finder(vol, iaxis, 1), Finder(vol, iaxis, 2), Finder(vol, iaxis, 3),
+         "Execute: box(iaxis, ndiv, start, step) to divide this.",
+         "----- IAXIS can be 1, 2 or 3 (X, Y, Z)",
+         "----- NDIV must be a positive integer",
+         "----- START must be a valid axis offset within shape range on divided axis",
+         "----- STEP is the division step. START+NDIV*STEP must be in range also",
+         "----- If START and STEP are omitted, all range of the axis will be divided"});
 }
 
 //______________________________________________________________________________
@@ -1435,10 +1479,8 @@ void align()
 }
 
 
-// create here to keep it in memory
-auto mainWindow = ROOT::Experimental::RWebWindow::Create();
-
-void quit() {
+void quit()
+{
    mainWindow->TerminateROOT();
 }
 
@@ -1454,7 +1496,7 @@ void webdemo ()
       gROOT->ProcessLine(arg.c_str());
    });
 
-   mainWindow->Show({150,700, 0,0});
+   mainWindow->Show({150,750, 0,0});
 
    geomViewer->SetDrawOptions(getOptions());
 
