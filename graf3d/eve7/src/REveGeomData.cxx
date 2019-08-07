@@ -320,6 +320,8 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr)
    // later visibility can be controlled by other means
    mgr->GetTopNode()->GetVolume()->SetVisibility(kFALSE);
 
+   fVisLevel = mgr->GetVisLevel();
+
    // build flat list of all nodes
    ScanNode(mgr->GetTopNode(), numbers, offset);
 
@@ -513,7 +515,7 @@ void ROOT::Experimental::REveGeomDescription::ScanNodes(bool only_visible, REveG
       return res;
    };
 
-   scan_func(0, 999999);
+   scan_func(0, (fVisLevel > 0) ? fVisLevel+1 : 4);
 }
 
 /////////////////////////////////////////////////////////////////////
