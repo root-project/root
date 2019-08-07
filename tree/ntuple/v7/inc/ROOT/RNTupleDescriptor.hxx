@@ -250,12 +250,19 @@ class RNTupleDescriptor {
    friend class RNTupleDescriptorBuilder;
 
 private:
+   /// The ntuple name needs to be unique in a given storage location (file)
    std::string fName;
+   /// Free text from the user
    std::string fDescription;
+   /// The origin of the data
    std::string fAuthor;
+   /// The current responsible for storing the data
    std::string fCustodian;
+   /// The time stamp of the ntuple data (immutable)
    std::chrono::system_clock::time_point fTimeStampData;
+   /// The time stamp of writing the data to storage, which gets updated when re-written
    std::chrono::system_clock::time_point fTimeStampWritten;
+   /// The version evolves with the ntuple summary meta-data
    RNTupleVersion fVersion;
    /// Every NTuple gets a unique identifier
    RNTupleUuid fOwnUuid;
@@ -276,15 +283,11 @@ public:
 
    bool operator ==(const RNTupleDescriptor &other) const;
 
-   // We deliberately do not use ROOT's built-in serialization in order to allow for use of RNTuple's outside ROOT
-   /**
-    * Serializes the global ntuple information as well as the column and field schemata
-    * Returns the number of bytes and fills buffer if it is not nullptr.
-    */
+   /// We deliberately do not use ROOT's built-in serialization in order to allow for use of RNTuple's without libCore
+   /// Serializes the global ntuple information as well as the column and field schemata
+   /// Returns the number of bytes and fills buffer if it is not nullptr.
    std::uint32_t SerializeHeader(void* buffer) const;
-   /**
-    * Serializes cluster meta data. Returns the number of bytes and fills buffer if it is not nullptr.
-    */
+   /// Serializes cluster meta data. Returns the number of bytes and fills buffer if it is not nullptr.
    std::uint32_t SerializeFooter(void* buffer) const;
 
    const RFieldDescriptor& GetFieldDescriptor(DescriptorId_t fieldId) const { return fFieldDescriptors.at(fieldId); }
@@ -308,7 +311,7 @@ public:
    std::size_t GetNColumns() const { return fColumnDescriptors.size(); }
    std::size_t GetNClusters() const { return fClusterDescriptors.size(); }
 
-   // Note that this is the number of entries as seen with the currently loaded cluster meta-data; there might be more
+   // The number of entries as seen with the currently loaded cluster meta-data; there might be more
    NTupleSize_t GetNEntries() const;
    NTupleSize_t GetNElements(DescriptorId_t columnId) const;
 
