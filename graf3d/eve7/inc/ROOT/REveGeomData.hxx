@@ -155,6 +155,7 @@ class REveGeomDescription {
    std::string fDrawOptions;        ///< default draw options for client
    std::vector<REveGeomNode> fDesc; ///< converted description, send to client
 
+   int fVisLevel{0};                ///<! maximal visibility depth
    int fTopDrawNode{0};             ///<! selected top node
    std::vector<int> fSortMap;       ///<! nodes in order large -> smaller volume
    int fNSegments{0};               ///<! number of segments for cylindrical shapes
@@ -208,6 +209,12 @@ public:
 
    /** Returns maximal visible number of faces, ignored when non-positive */
    int GetMaxVisFaces() const { return fFacesLimit; }
+
+   /** Set maximal visible level */
+   void SetVisLevel(int lvl = 3) { fVisLevel = lvl; }
+
+   /** Returns maximal visible level */
+   int GetVisLevel() const { return fVisLevel; }
 
    /** Set preference of offline operations.
     * Server provides more info to client from the begin on to avoid communication */

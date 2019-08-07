@@ -59,6 +59,12 @@ public:
       fDesc.SetMaxVisFaces(nfaces);
    }
 
+   /** Configures maximal visible level */
+   void SetVisLevel(int lvl = 3)
+   {
+      fDesc.SetVisLevel(lvl);
+   }
+
    /** Configures default hierarchy browser visibility, only has effect before showing web window */
    void SetShowHierarchy(bool on = true) { fShowHierarchy = on; }
 
