@@ -1899,7 +1899,7 @@ XMLNodePointer_t TGDMLWrite::CreateSetupN(const char * topVolName, const char * 
    XMLNodePointer_t setupN = fGdmlE->NewChild(nullptr, nullptr, "setup", nullptr);
    fGdmlE->NewAttr(setupN, nullptr, "name", name);
    fGdmlE->NewAttr(setupN, nullptr, "version", version);
-   XMLNodePointer_t fworldN = fGdmlE->NewChild(setupN, 0, "world", nullptr);
+   XMLNodePointer_t fworldN = fGdmlE->NewChild(setupN, nullptr, "world", nullptr);
    fGdmlE->NewAttr(fworldN, nullptr, "ref", topVolName);
    return setupN;
 }
