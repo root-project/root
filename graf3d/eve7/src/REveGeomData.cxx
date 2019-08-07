@@ -424,26 +424,25 @@ int ROOT::Experimental::REveGeomDescription::MarkVisible(bool on_screen)
    for (auto &node: fNodes) {
       auto &desc = fDesc[cnt++];
 
-      desc.vis = REveGeomNode::vis_off;
+      desc.vis = 0;
       desc.numvischld = 1;
       desc.idshift = 0;
+      desc.depth = -1;
 
       if (on_screen) {
          if (node->IsOnScreen())
-            desc.vis = REveGeomNode::vis_this;
+            desc.vis = 2;
       } else {
          auto vol = node->GetVolume();
 
-         if (vol->IsVisible() && !vol->TestAttBit(TGeoAtt::kVisNone) && !node->GetFinder())
-            desc.vis = REveGeomNode::vis_this;
+         if (vol->IsVisible() && !vol->TestAttBit(TGeoAtt::kVisNone))
+            desc.vis = 2;
 
-         if (desc.chlds.size() > 0) {
-            if (vol->IsVisDaughters()) {
-               desc.vis |= REveGeomNode::vis_chlds;
-            } else if (vol->TestAttBit(TGeoAtt::kVisOneLevel)) {
-               desc.vis |= REveGeomNode::vis_lvl1;
-            }
-         }
+         if (!vol->IsVisDaughters())
+            desc.depth  = vol->TestAttBit(TGeoAtt::kVisOneLevel) ? 1 : 0;
+
+         if ((desc.vis == 2) && (desc.chlds.size() > 0) && (desc.depth != 0))
+            desc.vis = 1;
       }
 
       if (desc.IsVisible() && desc.CanDisplay()) res++;
@@ -453,7 +452,7 @@ int ROOT::Experimental::REveGeomDescription::MarkVisible(bool on_screen)
 }
 
 /////////////////////////////////////////////////////////////////////
-/// Iterate over all visible nodes and call function
+/// Iterate over all nodes and call function for visibles
 
 void ROOT::Experimental::REveGeomDescription::ScanNodes(bool only_visible, REveGeomScanFunc_t func)
 {
@@ -469,7 +468,10 @@ void ROOT::Experimental::REveGeomDescription::ScanNodes(bool only_visible, REveG
 
       auto &desc = fDesc[nodeid];
       int res = 0;
-      bool is_visible = (desc.IsVisible() && desc.CanDisplay() && (lvl >= 0) && (inside_visisble_branch > 0));
+
+      // same logic as in JSROOT.GEO.ClonedNodes.prototype.ScanVisible
+      bool is_visible = (desc.IsVisible() && desc.CanDisplay() && (lvl >= 0) && (inside_visisble_branch > 0))
+            && ((desc.vis > 1) || (lvl == 0));
 
       if (is_visible || !only_visible)
          if (func(desc, stack, is_visible))
@@ -481,8 +483,8 @@ void ROOT::Experimental::REveGeomDescription::ScanNodes(bool only_visible, REveG
       //   printf("%*s %s vis %d chlds %d lvl %d inside %d isvis %d candispl %d\n", (int) stack.size()*2+1, "", desc.name.c_str(), desc.vis, (int) desc.chlds.size(), lvl, inside_visisble_branch, desc.IsVisible(), desc.CanDisplay());
 
       // limit depth to which it scans
-      if (lvl > desc.GetVisDepth())
-         lvl = desc.GetVisDepth();
+      if ((desc.depth >= 0) && (lvl > desc.depth))
+         lvl = desc.depth;
 
       if ((desc.chlds.size() > 0) && ((desc.numvischld > 0) || !only_visible)) {
          auto pos = stack.size();
@@ -1237,20 +1239,18 @@ bool ROOT::Experimental::REveGeomDescription::ChangeNodeVisibility(int nodeid, b
 {
    auto &dnode = fDesc[nodeid];
 
-   bool isoff = dnode.vis & REveGeomNode::vis_off;
-
-   // nothing changed
-   if ((!isoff && selected) || (isoff && !selected))
-      return false;
-
    auto vol = fNodes[nodeid]->GetVolume();
 
-   dnode.vis = selected ? REveGeomNode::vis_this : REveGeomNode::vis_off;
+   // nothing changed
+   if (vol->IsVisible() == selected)
+      return false;
+
+   dnode.vis = selected ? 2 : 0;
    vol->SetVisibility(selected);
    if (dnode.chlds.size() > 0) {
+      dnode.vis = selected ? 1 : 0; // visibility disabled when any child
       vol->SetVisDaughters(selected);
       vol->SetAttBit(TGeoAtt::kVisOneLevel, kFALSE); // disable one level when toggling visibility
-      if (selected) dnode.vis |= REveGeomNode::vis_chlds;
    }
 
    int id{0};

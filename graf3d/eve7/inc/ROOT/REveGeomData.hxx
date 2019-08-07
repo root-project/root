@@ -37,24 +37,19 @@ class RGeomBrowserIter;
 
 class REveGeomNodeBase {
 public:
-   enum EVis { vis_off = 0, vis_this = 1, vis_chlds = 2, vis_lvl1 = 4 };
-
    int id{0};               ///< node id, index in array
    std::string name;        ///< node name
    std::vector<int> chlds;  ///< list of childs id
-   int vis{vis_off};        ///< visibility flag, combination of EVis flags
+   int vis{0};              ///< visibility flag, 0 - off, 1 - when no childs, 2 - always
+   int depth{-1};           ///<! how far in hierarchy depth should be scanned
    std::string color;       ///< rgb code without rgb() prefix
    int sortid{0};           ///<! place in sorted array, to check cuts, or id of original node when used search structures
 
    REveGeomNodeBase(int _id = 0) : id(_id) {}
 
-   bool IsVisible() const { return vis & vis_this; }
+   bool IsVisible() const { return vis > 0; }
 
-   int GetVisDepth() const { return (vis & vis_chlds) ? 999999 : ((vis & vis_lvl1) ? 1 : 0); }
-
-   /** Set indication if node really rendered - depends from selection */
-   // void SetDisplayed(bool on) { vis = on ? (vis | vis_displayed) : (vis & ~vis_displayed); }
-   // bool IsDisplayed() const { return vis & vis_displayed; }
+   int GetVisDepth() const { return depth; }
 };
 
 /** Full node description including matrices and other attributes */
