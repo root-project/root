@@ -54,7 +54,7 @@ private:
    std::string fFieldDescription;
    /// The C++ type that was used when writing the field
    std::string fTypeName;
-   /// The number of elements for fixed-size arrays
+   /// The number of elements per entry for fixed-size arrays
    std::uint64_t fNRepetitions;
    /// The structural information carried by this field in the data model tree
    ENTupleStructure fStructure;
