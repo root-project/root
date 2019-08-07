@@ -40,6 +40,9 @@ namespace {
 /// -----------------------------------------------------------
 ///
 /// In addition, the header and footer store a 4 byte CRC32 checksum of the frame immediately after the frame.
+/// The footer also repeats the frame size just before the CRC32 checksum.  That means, one can read the last 8 bytes
+/// to determine the footer length, and the first 8 bytes to determine the header length.
+///
 /// Within the frames, integers of different lengths are stored in a machine-independent representation. Strings and
 /// vectors store the number of items followed by the items. Time stamps are stored in number of seconds since the
 /// UNIX epoch.
@@ -603,7 +606,9 @@ std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeFooter(void* buffe
       }
    }
 
-   std::uint32_t size = pos - base;
+   // Write the footer size in the frame preamble and repeat it before the CRC32 checksum
+   std::uint32_t size = pos - base + 4;
+   pos += SerializeUInt32(size, *where);
    SerializeUInt32(size, ptrSize);
    size += SerializeCrc32(base, size, *where);
 
