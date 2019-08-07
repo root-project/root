@@ -581,7 +581,8 @@ XMLNodePointer_t TGDMLParse::MatrixProcess(TXMLEngine* gdml, XMLNodePointer_t no
    {
       std::string matrixValue;
       valueStream >> matrixValue;
-
+      // protect against trailing '\n' and other white spaces
+      if ( matrixValue.empty() ) continue;
       valueList.push_back(Value(matrixValue.c_str()));
    }
 
@@ -1664,8 +1665,10 @@ XMLNodePointer_t TGDMLParse::BorderSurfaceProcess(TXMLEngine* gdml, XMLNodePoint
    TGeoNode *node1 = fpvolmap[nodename[0].Data()];
    TGeoNode *node2 = fpvolmap[nodename[1].Data()];
    if (!node1 || !node2)
-      Fatal("BorderSurfaceProcess", "Border surface %s: not found nodes %s or %s",
-            name.Data(), nodename[0].Data(), nodename[1].Data());
+      Fatal("BorderSurfaceProcess", "Border surface %s: not found nodes %s [%s] or %s [%s]",
+            name.Data(),
+            nodename[0].Data(), node1 ? "present" : "missing",
+            nodename[1].Data(), node2 ? "present" : "missing");
 
    TGeoBorderSurface *border = new TGeoBorderSurface(name, surfname, surf, node1, node2);
    gGeoManager->AddBorderSurface(border);

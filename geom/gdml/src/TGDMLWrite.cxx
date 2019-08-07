@@ -163,6 +163,7 @@ See that function for details.
 #include <map>
 #include <set>
 #include <ctime>
+#include <sstream>
 
 ClassImp(TGDMLWrite);
 
@@ -235,19 +236,20 @@ void TGDMLWrite::SetNamingSpeed(ENamingType naming)
 void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, const char* filename, TString option)
 {
   TList* materials = geomanager->GetListOfMaterials();
-  TGeoVolume* volume = geomanager->GetTopVolume();
-  if ( !volume )   {
+  TGeoNode* node = geomanager->GetTopNode();
+  if ( !node )   {
     Info("WriteGDMLfile", "Top volume does not exist!");
     return;
   }
   fTopVolumeName = "";
-  WriteGDMLfile(geomanager, volume, materials, filename, option);
+  WriteGDMLfile(geomanager, node, materials, filename, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Wrapper to only selectively write one branch of the volume hierarchy to file
-void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* volume, const char* filename, TString option)
+void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, TGeoNode* node, const char* filename, TString option)
 {
+  TGeoVolume* volume = node->GetVolume();
   TList materials, volumes, nodes;
   MaterialExtractor extract;
   if ( !volume )   {
@@ -261,7 +263,7 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* volume, con
   fSurfaceList.clear();
   fVolumeList.clear();
   fNodeList.clear();
-  WriteGDMLfile(geomanager, volume, &materials, filename, option);
+  WriteGDMLfile(geomanager, node, &materials, filename, option);
   materials.Clear("nodelete");
   volumes.Clear("nodelete");
   nodes.Clear("nodelete");
@@ -273,7 +275,7 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* volume, con
 /// to GDML structure of xml nodes
 
 void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager,
-                               TGeoVolume* volume,
+                               TGeoNode* node,
                                TList* materialsLst,
                                const char* filename,
                                TString option)
@@ -363,7 +365,7 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager,
    fMaterialsNode = ExtractMaterials(materialsLst);
 
    Info("WriteGDMLfile", "Extracting volumes");
-   ExtractVolumes(volume);
+   ExtractVolumes(node);
    Info("WriteGDMLfile", "%i solids added", fSolCnt);
    Info("WriteGDMLfile", "%i volumes added", fVolCnt);
    Info("WriteGDMLfile", "%i physvolumes added", fPhysVolCnt);
@@ -403,8 +405,8 @@ void TGDMLWrite::ExtractMatrices(TObjArray* matrixList)
    TIter next(matrixList);
    TGDMLMatrix *matrix;
    while ((matrix = (TGDMLMatrix*)next())) {
-      matrixN = CreateMatrixN(matrix);
-      fGdmlE->AddChild(fDefineNode, matrixN);
+     matrixN = CreateMatrixN(matrix);
+     fGdmlE->AddChild(fDefineNode, matrixN);
    }
 }
 
@@ -544,14 +546,16 @@ TString TGDMLWrite::ExtractSolid(TGeoShape* volShape)
 ////////////////////////////////////////////////////////////////////////////////
 /// Method extracting geometry structure recursively
 
-void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
+void TGDMLWrite::ExtractVolumes(TGeoNode* node)
 {
    XMLNodePointer_t volumeN, childN;
+   TGeoVolume * volume = node->GetVolume();
    TString volname, matname, solname, pattClsName, nodeVolNameBak;
    TGeoPatternFinder *pattFinder = 0;
    Bool_t isPattern = kFALSE;
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    
+   fNodeList.insert(node);
    fVolumeList.insert(volume);
    //create the name for volume/assembly
    if (volume->IsTopVolume()) {
@@ -563,7 +567,7 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
    } else {
       volname = GenName(volume->GetName(), TString::Format("%p", volume));
    }
-
+   
    //start to create main volume/assembly node
    if (volume->IsAssembly()) {
       volumeN = StartAssemblyN(volname);
@@ -606,7 +610,7 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
       fNodeList.insert(geoNode);
       if (subvol->TestAttBit(fgkProcBitVol) == kFALSE) {
          subvol->SetAttBit(fgkProcBitVol);
-         ExtractVolumes(subvol);
+         ExtractVolumes(geoNode);
       }
 
       //volume of this node has to exist because it was processed recursively
@@ -886,6 +890,14 @@ XMLNodePointer_t TGDMLWrite::CreateMixtureN(TGeoMixture * mixture, XMLNodePointe
       while ((property = (TNamed*)next()))
         fGdmlE->AddChild(mainN, CreatePropertyN(*property));
    }
+   // Write CONST properties
+   TList const &const_properties = mixture->GetConstProperties();
+   if (const_properties.GetSize()) {
+      TIter next(&const_properties);
+      TNamed *property;
+      while ((property = (TNamed*)next()))
+        fGdmlE->AddChild(mainN, CreatePropertyN(*property));
+   }
 
    return mainN;
 }
@@ -922,6 +934,14 @@ XMLNodePointer_t TGDMLWrite::CreateMaterialN(TGeoMaterial * material, TString mn
    TList const &properties = material->GetProperties();
    if (properties.GetSize()) {
       TIter next(&properties);
+      TNamed *property;
+      while ((property = (TNamed*)next()))
+        fGdmlE->AddChild(mainN, CreatePropertyN(*property));
+   }
+   // Write CONST properties
+   TList const &const_properties = material->GetConstProperties();
+   if (const_properties.GetSize()) {
+      TIter next(&const_properties);
       TNamed *property;
       while ((property = (TNamed*)next()))
         fGdmlE->AddChild(mainN, CreatePropertyN(*property));
@@ -1773,7 +1793,6 @@ XMLNodePointer_t TGDMLWrite::CreateOpticalSurfaceN(TGeoOpticalSurface * geoSurf)
       while ((property = (TNamed*)next()))
         fGdmlE->AddChild(mainN, CreatePropertyN(*property));
    }
-
    return mainN;
 }
 
@@ -1843,10 +1862,20 @@ XMLNodePointer_t TGDMLWrite::CreateRotationN(const char * name, Xyz rotation, co
 
 XMLNodePointer_t TGDMLWrite::CreateMatrixN(TGDMLMatrix const *matrix)
 {
+   std::stringstream vals;
+   size_t cols = matrix->GetCols();
+   size_t rows = matrix->GetRows();
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "matrix", 0);
    fGdmlE->NewAttr(mainN, 0, "name", matrix->GetName());
-   fGdmlE->NewAttr(mainN, 0, "coldim", TString::Format("%zu", matrix->GetCols()));
-   fGdmlE->NewAttr(mainN, 0, "values", matrix->GetMatrixAsString());
+   fGdmlE->NewAttr(mainN, 0, "coldim", TString::Format("%zu", cols));
+   for(size_t i=0; i<rows; ++i)  {
+     for(size_t j=0; j<cols; ++j)  {
+       vals << matrix->Get(i,j);
+       if ( j < cols-1 ) vals << ' ';
+     }
+     if ( i < rows-1 ) vals << '\n';
+   }
+   fGdmlE->NewAttr(mainN, 0, "values", vals.str().c_str());
    return mainN;
 }
 
