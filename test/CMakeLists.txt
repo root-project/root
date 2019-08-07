@@ -54,6 +54,15 @@ ROOT_ADD_TEST(test-event COMMAND eventexe)
 #ROOT_EXECUTABLE(hsimple hsimple.cxx LIBRARIES RIO Tree Hist)
 #ROOT_ADD_TEST(test-hsimple COMMAND hsimple)
 
+#---invalid pointer checks---------------------------------------------------------------------
+ROOT_ADD_TEST(test-check-nullptr
+  COMMAND ${ROOT_root_CMD} -b -q -l -e "int*ptr=(int*)0" -e "*ptr"
+  PASSREGEX "dereference null pointer")
+
+ROOT_ADD_TEST(test-check-invalidptr
+  COMMAND ${ROOT_root_CMD} -b -q -l -e "int*ptr=(int*)1" -e "*ptr"
+  PASSREGEX "invalid memory address")
+
 #--minexam-------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(minexam minexam.cxx LIBRARIES Minuit)
 ROOT_ADD_TEST(test-minexam COMMAND minexam)
