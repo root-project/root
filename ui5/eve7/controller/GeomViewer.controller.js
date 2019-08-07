@@ -329,6 +329,7 @@ sap.ui.define(['sap/ui/core/Component',
          if (recreate) {
             this.geo_clones = new JSROOT.GEO.ClonedNodes(null, nodes);
             this.geo_clones.name_prefix = this.geo_clones.GetNodeName(0);
+            // this.geo_clones.maxdepth = 20;
          }
 
          if (draw_msg.nsegm) {
@@ -540,6 +541,7 @@ sap.ui.define(['sap/ui/core/Component',
       /** Format REveGeomNode data to be able use it in list of clones */
       formatNodeElement: function(elem) {
          elem.kind = 2; // special element for geom viewer, used in TGeoPainter
+         elem.vis = 2; // visibility is alwys on
          var m = elem.matr;
          delete elem.matr;
          if (!m || !m.length) return;
