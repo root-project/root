@@ -149,7 +149,7 @@ private:
 
    void CompleteWSSend(unsigned wsid);
 
-   ConnectionsList GetConnections(unsigned connid = 0) const;
+   ConnectionsList GetConnections(unsigned connid = 0, bool only_active = false) const;
 
    std::shared_ptr<WebConn> FindOrCreateConnection(unsigned wsid, bool make_new, const char *query);
 
@@ -274,10 +274,10 @@ public:
 
    unsigned Show(const RWebDisplayArgs &args = "");
 
-   unsigned GetDisplayConnection();
+   unsigned GetDisplayConnection() const;
 
    /// Returns true when window was shown at least once
-   bool IsShown() { return GetDisplayConnection() != 0; }
+   bool IsShown() const { return GetDisplayConnection() != 0; }
 
    unsigned MakeBatch(bool create_new = false, const RWebDisplayArgs &args = "");
 
