@@ -59,11 +59,12 @@ PyObject *TDirectoryWriteObject(const CPPInstance *self, PyObject *args)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \brief Implements a getter to assign to TDirectory.__getattr__
-/// Method that will be assigned to TDirectory.__getattr__: it modifies its
-/// behavior by raising an AttributeError if the object does not exist and
-/// by caching the result of a successful get in case of other attempts.
-/// In this last case, the same object (and not a copy) is called every time.
-/// It is inherited by TDirectoryFile and TFile.
+/// Method that is assigned to TDirectory.__getattr__. It relies on Get to
+/// obtain the object from the TDirectory and adds on top:
+/// - Raising an AttributeError if the object does not exist
+/// - Caching the result of a successful get for future re-attempts.
+/// Once cached, the same object is retrieved every time.
+/// This pythonisation is inherited by TDirectoryFile and TFile.
 PyObject *TDirectoryGetAttr(PyObject *self, PyObject *attr)
 {
    // Injection of TDirectory.__getattr__ that raises AttributeError on failure.
