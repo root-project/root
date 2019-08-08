@@ -38,7 +38,7 @@
          kVisNone         : JSROOT.BIT(1),           // the volume/node is invisible, as well as daughters
          kVisThis         : JSROOT.BIT(2),           // this volume/node is visible
          kVisDaughters    : JSROOT.BIT(3),           // all leaves are visible
-         kVisOneLevel     : JSROOT.BIT(4),           // first level daughters are visible
+         kVisOneLevel     : JSROOT.BIT(4),           // first level daughters are visible (not used)
          kVisStreamed     : JSROOT.BIT(5),           // true if attributes have been streamed
          kVisTouched      : JSROOT.BIT(6),           // true if attributes are changed after closing geom
          kVisOnScreen     : JSROOT.BIT(7),           // true if volume is visible on screen
@@ -72,15 +72,13 @@
       if (flag===undefined) flag = true;
 
       JSROOT.GEO.SetBit(this, JSROOT.GEO.BITS.kVisThis, !flag);
-      JSROOT.GEO.SetBit(this, JSROOT.GEO.BITS.kVisDaughters, !flag);
-      JSROOT.GEO.SetBit(this, JSROOT.GEO.BITS.kVisOneLevel, false);
+      // JSROOT.GEO.SetBit(this, JSROOT.GEO.BITS.kVisDaughters, !flag);
 
       if (this.fNodes)
          for (var n=0;n<this.fNodes.arr.length;++n) {
             var sub = this.fNodes.arr[n].fVolume;
             JSROOT.GEO.SetBit(sub, JSROOT.GEO.BITS.kVisThis, !flag);
             // JSROOT.GEO.SetBit(sub, JSROOT.GEO.BITS.kVisDaughters, !flag);
-            //JSROOT.GEO.SetBit(sub, JSROOT.GEO.BITS.kVisOneLevel, false);
          }
    }
 
@@ -1562,7 +1560,7 @@
 
          matrix = new THREE.Matrix4();
 
-         if (node.fTrans!==null) {
+         if (node.fTrans) {
             matrix.set(node.fTrans[0],  node.fTrans[4],  node.fTrans[8],  0,
                        node.fTrans[1],  node.fTrans[5],  node.fTrans[9],  0,
                        node.fTrans[2],  node.fTrans[6],  node.fTrans[10], 0,
@@ -1570,11 +1568,9 @@
             // second - set position with proper sign
             matrix.setPosition({ x: node.fTrans[12], y: node.fTrans[13], z: node.fTrans[14] });
          }
-      } else
-      if (('fMatrix' in node) && (node.fMatrix !== null))
+      } else if (node.fMatrix) {
          matrix = JSROOT.GEO.createMatrix(node.fMatrix);
-      else
-      if ((node._typename == "TGeoNodeOffset") && (node.fFinder !== null)) {
+      } else if ((node._typename == "TGeoNodeOffset") && node.fFinder) {
          var kPatternReflected = JSROOT.BIT(14);
          if ((node.fFinder.fBits & kPatternReflected) !== 0)
             JSROOT.GEO.warn('Unsupported reflected pattern ' + node.fFinder._typename);
@@ -2171,7 +2167,9 @@
    JSROOT.GEO.ClonedNodes = function(obj, clones) {
       this.toplevel = true; // indicate if object creates top-level structure with Nodes and Volumes folder
       this.name_prefix = ""; // name prefix used for nodes names
-      this.maxdepth = 1; // maximal hierarchy depth, required for transparency
+      this.maxdepth = 1;  // maximal hierarchy depth, required for transparency
+      this.fVisLevel = 4;  // maximal depth of nodes visibility aka gGeoManager->SetVisLevel, same default
+      this.fMaxVisNodes = 10000; // maximal number of visisble nodes aka gGeoManager->fMaxVisNodes
 
       if (obj) {
          if (obj.$geoh) this.toplevel = false;
@@ -2179,6 +2177,24 @@
       } else if (clones) {
          this.nodes = clones;
       }
+   }
+
+   /** Set maximal depth for nodes visibility */
+   JSROOT.GEO.ClonedNodes.prototype.SetVisLevel = function(lvl) {
+      this.fVisLevel = lvl && !isNaN(lvl) ? lvl : 4;
+   }
+
+   JSROOT.GEO.ClonedNodes.prototype.GetVisLevel = function() {
+      return this.fVisLevel;
+   }
+
+   /** Set maximal depth for nodes visibility */
+   JSROOT.GEO.ClonedNodes.prototype.SetMaxVisNodes = function(v) {
+      this.fMaxVisNodes = !isNaN(v) ? v : 10000;
+   }
+
+   JSROOT.GEO.ClonedNodes.prototype.GetMaxVisNodes = function() {
+      return this.fMaxVisNodes;
    }
 
    /** Insert node into existing array */
@@ -2218,9 +2234,12 @@
          }
       }
 
-      if (this.nodes)
-         for (var n=0;n<this.nodes.length;++n)
-            delete this.nodes[n].chlds;
+      if (this.nodes) {
+         for (var n=0;n<this.nodes.length;++n) {
+            if (this.nodes[n])
+               delete this.nodes[n].chlds;
+         }
+      }
 
       delete this.nodes;
       delete this.origin;
@@ -2268,7 +2287,7 @@
        // first create nodes objects
        for (var n=0; n<this.origin.length; ++n) {
           var obj = this.origin[n];
-          var node = { id: n, kind: kind, vol: 0, nfaces: 0, numvischld: 1, idshift: 0 };
+          var node = { id: n, kind: kind, vol: 0, nfaces: 0 };
           this.nodes.push(node);
           sortarr.push(node); // array use to produce sortmap
        }
@@ -2306,14 +2325,12 @@
                 shape.$nfaces = JSROOT.GEO.createGeometry(shape, -1);
              clone.nfaces = shape.$nfaces;
              if (clone.nfaces <= 0) clone.vol = 0;
-
-             // if (clone.nfaces < -10) console.log('Problem  with node ' + obj.fName + ':' + obj.fMother.fName);
           }
 
           if (!chlds) continue;
 
           // in cloned object children is only list of ids
-          clone.chlds = new Int32Array(chlds.length);
+          clone.chlds = new Array(chlds.length);
           for (var k=0;k<chlds.length;++k)
              clone.chlds[k] = chlds[k]._refid;
        }
@@ -2326,7 +2343,7 @@
        sortarr.sort(function(a,b) { return b.vol - a.vol; });
 
        // remember sort map and also sortid
-       this.sortmap = new Int32Array(this.nodes.length);
+       this.sortmap = new Array(this.nodes.length);
        for (var n=0;n<this.nodes.length;++n) {
           this.sortmap[n] = sortarr[n].id;
           sortarr[n].sortid = n;
@@ -2342,7 +2359,7 @@
       this.plain_shape = obj;
 
       var node = {
-            id: 0, sortid: 0, kind: 2, numvischld: 0, idshift: 0,
+            id: 0, sortid: 0, kind: 2,
             name: "Shape",
             nfaces: obj.nfaces,
             fDX: 1, fDY: 1, fDZ: 1, vol: 1,
@@ -2362,7 +2379,7 @@
       return cnt;
    }
 
-   /** Mark visisble nodes */
+   /** Mark visisble nodes. Set only basic flags, actual visibility depends from hierarchy  */
    JSROOT.GEO.ClonedNodes.prototype.MarkVisibles = function(on_screen, copy_bits, cloning, hide_top_volume) {
       if (!this.nodes) return 0;
       if (this.plain_shape) return 1;
@@ -2374,14 +2391,12 @@
       for (var n=0;n<this.nodes.length;++n) {
          var clone = this.nodes[n];
 
-         clone.vis = false;
-         clone.numvischld = 1; // reset vis counter, will be filled with next scan
-         clone.idshift = 0;
-         delete clone.depth;
+         clone.vis = 0; // 1 - only with last level
+         delete clone.nochlds;
 
          if (simple_copy) {
             clone.vis = cloning[n].vis;
-            if (cloning[n].depth !== undefined) clone.depth = cloning[n].depth;
+            clone.nochlds = cloning[n].nochlds;
             if (clone.vis) res++;
             continue;
          }
@@ -2391,31 +2406,42 @@
          if (clone.kind === 0) {
             if (obj.fVolume) {
                if (on_screen) {
-                  clone.vis = JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisOnScreen);
+                  // on screen bits used always, childs always checked
+                  clone.vis = JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisOnScreen) ? 99 : 0;
+
                   if (copy_bits) {
                      JSROOT.GEO.SetBit(obj.fVolume, JSROOT.GEO.BITS.kVisNone, false);
-                     JSROOT.GEO.SetBit(obj.fVolume, JSROOT.GEO.BITS.kVisThis, clone.vis);
+                     JSROOT.GEO.SetBit(obj.fVolume, JSROOT.GEO.BITS.kVisThis, (clone.vis > 0));
                      JSROOT.GEO.SetBit(obj.fVolume, JSROOT.GEO.BITS.kVisDaughters, true);
                   }
                } else {
                   clone.vis = !JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisNone) &&
-                               JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisThis) && !obj.fFinder;
-                  // special handling for TGeoManager, which top module always hidden
-                  if (hide_top_volume && (n==0))
-                     clone.vis = false;
-                  if (!JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisDaughters))
-                     clone.depth = JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisOneLevel) ? 1 : 0;
+                               JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisThis) ? 99 : 0;
+
+                  if (!JSROOT.GEO.TestBit(obj, JSROOT.GEO.BITS.kVisDaughters) ||
+                      !JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisDaughters)) clone.nochlds = true;
+
+                  // node with childs only shown in case if it is last level in hierarchy
+                  if ((clone.vis > 0) && clone.chlds && !clone.nochlds) clone.vis = 1;
+
+                  // special handling for top node
+                  if (n==0) {
+                     if (hide_top_volume) clone.vis = 0;
+                     delete clone.nochlds;
+                  }
                }
             }
          } else {
-            clone.vis = obj.fRnrSelf;
+            clone.vis = obj.fRnrSelf ? 99 : 0;
 
             // when the only node is selected, draw it
-            if ((n===0) && (this.nodes.length===1)) clone.vis = true;
+            if ((n===0) && (this.nodes.length===1)) clone.vis = 99;
+
+            this.vislevel = 9999; // automatically take all volumes
          }
 
          // shape with zero volume or without faces will not be observed
-         if ((clone.vol <= 0) || (clone.nfaces <= 0)) clone.vis = false;
+         if ((clone.vol <= 0) || (clone.nfaces <= 0)) clone.vis = 0;
 
          if (clone.vis) res++;
       }
@@ -2423,32 +2449,52 @@
       return res;
    }
 
-   JSROOT.GEO.ClonedNodes.prototype.GetVisibleFlags = function() {
-      // function extract only visibility flags, used to transfer them to the worker
-      var res = [];
-      for (var n=0;n<this.nodes.length;++n) {
-         var elem = { vis: this.nodes[n].vis };
-         if ('depth' in this.nodes[n]) elem.depth = this.nodes[n].depth;
-         res.push(elem);
+   /** After visibility flags is set, produce idshift for all nodes as it would be maximum level @private */
+   JSROOT.GEO.ClonedNodes.prototype.ProduceIdShits = function() {
+      for (var k=0;k<this.nodes.length;++k)
+         this.nodes[k].idshift = -1;
+
+      function scan_func(nodes, node) {
+         if (node.idshift < 0) {
+            node.idshift = 0;
+            if (node.chlds)
+               for(var k = 0; k<node.chlds.length; ++k)
+                  node.idshift += scan_func(nodes, nodes[node.chlds[k]]);
+         }
+
+         return node.idshift + 1;
       }
+
+      scan_func(this.nodes, this.nodes[0]);
+   }
+
+   /** Extract only visibility flags, used to transfer them to the worker @private */
+   JSROOT.GEO.ClonedNodes.prototype.GetVisibleFlags = function() {
+      var res = new Array(this.nodes.length);
+      for (var n=0;n<this.nodes.length;++n)
+         res[n] = { vis: this.nodes[n].vis, nochlds: this.nodes[n].nochlds };
       return res;
    }
 
+   /** Scan visible nodes in hierarchy, starting from nodeid
+     * Each entry in hierarchy get its unique id, which is not changed with visibility flags
+     * @private */
    JSROOT.GEO.ClonedNodes.prototype.ScanVisible = function(arg, vislvl) {
-      // Scan visible nodes in hierarchy, starting from nodeid
-      // Each entry in hierarchy get its unique id, which is not changed with visibility flags
 
       if (!this.nodes) return 0;
 
       if (vislvl === undefined) {
-         vislvl = 99999;
          if (!arg) arg = {};
+
+         vislvl = arg.vislvl || this.vislevel || 4; // default 3 in ROOT
+         if (vislvl > 88) vislvl = 88;
+
          arg.stack = new Array(100); // current stack
          arg.nodeid = 0;
          arg.counter = 0; // sequence ID of the node, used to identify it later
          arg.last = 0;
          arg.CopyStack = function(factor) {
-            var entry = { nodeid: this.nodeid, seqid: this.counter, stack: (this.last>10) ? new Int32Array(this.last) : new Array(this.last) };
+            var entry = { nodeid: this.nodeid, seqid: this.counter, stack: new Array(this.last) };
             if (factor) entry.factor = factor; // factor used to indicate importance of entry, will be build as first
             for (var n=0;n<this.last;++n) entry.stack[n] = this.stack[n+1]; // copy stack
             return entry;
@@ -2476,33 +2522,24 @@
          }
       }
 
-      if (node.vis && (vislvl>=0)) {
+      if (node.nochlds) vislvl = 0;
+
+      if (node.vis > vislvl) {
          if (!arg.func || arg.func(node)) res++;
       }
 
       arg.counter++;
 
-      if ((node.depth !== undefined) && (vislvl > node.depth)) vislvl = node.depth;
-
-      //if (arg.last > arg.stack.length - 2)
-      //   throw 'ScanVisible: stack capacity ' + arg.stack.length + ' is not enough';
-
-      if (node.chlds && (node.numvischld > 0)) {
-         var currid = arg.counter, numvischld = 0;
+      if ((vislvl > 0) && node.chlds) {
          arg.last++;
          for (var i = 0; i < node.chlds.length; ++i) {
             arg.nodeid = node.chlds[i];
             arg.stack[arg.last] = i; // in the stack one store index of child, it is path in the hierarchy
-            numvischld += this.ScanVisible(arg, vislvl-1);
+            res += this.ScanVisible(arg, vislvl-1);
          }
          arg.last--;
-         res += numvischld;
-         if (numvischld === 0) {
-            node.numvischld = 0;
-            node.idshift = arg.counter - currid;
-         }
       } else {
-         arg.counter += node.idshift;
+         arg.counter += (node.idshift || 0);
       }
 
       if (arg.last === 0) {
@@ -2855,30 +2892,49 @@
 
    /** @brief Collects visible nodes, using maxlimit
      * @desc One can use map to define cut based on the volume or serious of cuts */
-   JSROOT.GEO.ClonedNodes.prototype.CollectVisibles = function(maxnumfaces, frustum, maxnumnodes) {
+   JSROOT.GEO.ClonedNodes.prototype.CollectVisibles = function(maxnumfaces, frustum) {
 
       // in simple case shape as it is
       if (this.plain_shape)
          return { lst: [ { nodeid: 0, seqid: 0, stack: [], factor: 1, shapeid: 0, server_shape: this.plain_shape } ], complete: true };
 
-      if (!maxnumnodes) maxnumnodes = maxnumfaces/100;
-
-      var arg = {
+      var total = 0, arg = {
          facecnt: 0,
-         viscnt: new Int32Array(this.nodes.length), // counter for each node
+         viscnt: new Array(this.nodes.length), // counter for each node
+         reset: function() {
+            this.total = 0;
+            this.facecnt = 0;
+            for (var n=0;n<this.viscnt.length;++n) this.viscnt[n] = 0;
+         },
          // nodes: this.nodes,
          func: function(node) {
+            this.total++;
             this.facecnt += node.nfaces;
             this.viscnt[node.id]++;
             return true;
          }
       };
 
-      for (var n=0;n<arg.viscnt.length;++n) arg.viscnt[n] = 0;
+      arg.vislvl = this.GetVisLevel();
 
-      var total = this.ScanVisible(arg), minVol = 0, maxVol = 0, camVol = -1, camFact = 10, sortidcut = this.nodes.length + 1;
+      arg.reset();
+      total = this.ScanVisible(arg);
 
-      // console.log('Total visible nodes ' + total + ' numfaces ' + arg.facecnt);
+      var maxnumnodes = this.GetMaxVisNodes();
+
+      if (maxnumnodes > 0) {
+         while ((total > maxnumnodes) && (arg.vislvl > 1)) {
+            arg.vislvl--;
+            arg.reset();
+            total = this.ScanVisible(arg);
+         }
+      }
+
+      this.actual_level = arg.vislvl; // not used, can be shown somewhere in the gui
+
+      var minVol = 0, maxVol = 0, camVol = -1, camFact = 10, sortidcut = this.nodes.length + 1;
+
+      console.log('Total visible nodes ' + total + ' numfaces ' + arg.facecnt);
 
       if (arg.facecnt > maxnumfaces) {
 
@@ -3430,6 +3486,7 @@
       if (!opt) opt = {};
       if (!opt.numfaces) opt.numfaces = 100000;
       if (!opt.numnodes) opt.numnodes = 1000;
+      if (!opt.frustum) opt.frustum = null;
 
       opt.res_mesh = opt.res_faces = 0;
 
@@ -3464,6 +3521,8 @@
          obj = { _typename:"TGeoNode", fVolume: obj, fName: obj.fName, $geoh: obj.$geoh, _proxy: true };
 
       var clones = new JSROOT.GEO.ClonedNodes(obj);
+      clones.SetVisLevel(opt.vislevel);
+      clones.SetMaxVisNodes(opt.numnodes);
 
       var uniquevis = opt.no_screen ? 0 : clones.MarkVisibles(true);
       if (uniquevis <= 0)
@@ -3471,10 +3530,10 @@
       else
          uniquevis = clones.MarkVisibles(true, true); // copy bits once and use normal visibility bits
 
-      var frustum = null;
+      clones.ProduceIdShits();
 
       // collect visible nodes
-      var res = clones.CollectVisibles(opt.numfaces, frustum, opt.numnodes);
+      var res = clones.CollectVisibles(opt.numfaces, opt.frustum);
 
       var draw_nodes = res.lst;
 
