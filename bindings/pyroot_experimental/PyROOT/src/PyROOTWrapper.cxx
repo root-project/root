@@ -11,6 +11,7 @@
 
 // Bindings
 #include "PyROOTWrapper.h"
+#include "TMemoryRegulator.h"
 
 // Cppyy
 #include "CPyCppyy.h"
@@ -44,6 +45,10 @@ void PyROOT::Init()
 {
    // Initialize and acquire the GIL to allow for threading in ROOT
    PyEval_InitThreads();
+
+   // Memory management
+   static TMemoryRegulator m;
+   gROOT->GetListOfCleanups()->Add(&m);
 
    // Bind ROOT globals that will be needed in ROOT.py
    AddToGlobalScope("gROOT", "TROOT.h", gROOT, Cppyy::GetScope(gROOT->IsA()->GetName()));
