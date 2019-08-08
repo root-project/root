@@ -228,6 +228,11 @@ private:
    UInt_t GetFltPrecision() const { return fFltPrecision; }
    void SetFltPrecision(UInt_t prec) { fFltPrecision = prec; }
 
+   ////////////////////////////////////////////////////////////////////////////////
+   //
+   // Backwards compatibility for old DD4hep version (to be removed in the future)
+   //
+   ////////////////////////////////////////////////////////////////////////////////
 public:
    // Backwards compatibility (to be removed in the future): Wrapper to only selectively write one branch
    void WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* top_vol, const char* filename = "test.gdml", TString option = "");

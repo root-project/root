@@ -315,7 +315,7 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager,
    fGdmlFile = fGdmlE->NewDoc();
 
    //create root node and add it to blank GDML file
-   XMLNodePointer_t rootNode = fGdmlE->NewChild(nullptr, nullptr, krootNodeName, 0);
+   XMLNodePointer_t rootNode = fGdmlE->NewChild(nullptr, nullptr, krootNodeName, nullptr);
    fGdmlE->DocSetRootElement(fGdmlFile, rootNode);
 
    //add namespaces to root node
@@ -328,9 +328,9 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager,
 
    fNameList     = new NameLst;
 
-   fDefineNode = fGdmlE->NewChild(nullptr, nullptr, "define", 0);
-   fSolidsNode = fGdmlE->NewChild(nullptr, nullptr, "solids", 0);
-   fStructureNode = fGdmlE->NewChild(nullptr, nullptr, "structure", 0);
+   fDefineNode = fGdmlE->NewChild(nullptr, nullptr, "define", nullptr);
+   fSolidsNode = fGdmlE->NewChild(nullptr, nullptr, "solids", nullptr);
+   fStructureNode = fGdmlE->NewChild(nullptr, nullptr, "structure", nullptr);
    //========================
 
    //initialize list of accepted patterns for divisions (in ExtractVolumes)
@@ -500,7 +500,7 @@ XMLNodePointer_t TGDMLWrite::ExtractMaterials(TList* materialsLst)
 {
    Info("ExtractMaterials", "Extracting materials");
    //crate main <materials> node
-   XMLNodePointer_t materialsN = fGdmlE->NewChild(nullptr, nullptr, "materials", 0);
+   XMLNodePointer_t materialsN = fGdmlE->NewChild(nullptr, nullptr, "materials", nullptr);
    Int_t matcnt = 0;
 
    //go through materials  - iterator and object declaration
@@ -650,7 +650,7 @@ void TGDMLWrite::ExtractVolumes(TGeoNode* node)
          lz = geoNode->GetMatrix()->GetRotationMatrix()[8];
          if (geoNode->GetMatrix()->IsReflection()
              && TMath::Abs(lx) == 1 &&  TMath::Abs(ly) == 1 && TMath::Abs(lz) == 1) {
-            scaleN = fGdmlE->NewChild(nullptr, nullptr, "scale", 0);
+            scaleN = fGdmlE->NewChild(nullptr, nullptr, "scale", nullptr);
             fGdmlE->NewAttr(scaleN, nullptr, "name", (nodename + "scl").Data());
             fGdmlE->NewAttr(scaleN, nullptr, "x", TString::Format(fltPrecision.Data(), lx));
             fGdmlE->NewAttr(scaleN, nullptr, "y", TString::Format(fltPrecision.Data(), ly));
@@ -714,7 +714,7 @@ void TGDMLWrite::ExtractVolumes(TGeoNode* node)
 XMLNodePointer_t TGDMLWrite::CreateAtomN(Double_t atom, const char * unit)
 {
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
-   XMLNodePointer_t atomN = fGdmlE->NewChild(nullptr, nullptr, "atom", 0);
+   XMLNodePointer_t atomN = fGdmlE->NewChild(nullptr, nullptr, "atom", nullptr);
    fGdmlE->NewAttr(atomN, nullptr, "unit", unit);
    fGdmlE->NewAttr(atomN, nullptr, "value", TString::Format(fltPrecision.Data(), atom));
    return atomN;
@@ -726,7 +726,7 @@ XMLNodePointer_t TGDMLWrite::CreateAtomN(Double_t atom, const char * unit)
 XMLNodePointer_t TGDMLWrite::CreateDN(Double_t density, const char * unit)
 {
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
-   XMLNodePointer_t densN = fGdmlE->NewChild(nullptr, nullptr, "D", 0);
+   XMLNodePointer_t densN = fGdmlE->NewChild(nullptr, nullptr, "D", nullptr);
    fGdmlE->NewAttr(densN, nullptr, "unit", unit);
    fGdmlE->NewAttr(densN, nullptr, "value", TString::Format(fltPrecision.Data(), density));
    return densN;
@@ -738,7 +738,7 @@ XMLNodePointer_t TGDMLWrite::CreateDN(Double_t density, const char * unit)
 XMLNodePointer_t TGDMLWrite::CreateFractionN(Double_t percentage, const char * refName)
 {
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
-   XMLNodePointer_t fractN = fGdmlE->NewChild(nullptr, nullptr, "fraction", 0);
+   XMLNodePointer_t fractN = fGdmlE->NewChild(nullptr, nullptr, "fraction", nullptr);
    fGdmlE->NewAttr(fractN, nullptr, "n", TString::Format(fltPrecision.Data(), percentage));
    fGdmlE->NewAttr(fractN, nullptr, "ref", refName);
    return fractN;
@@ -749,7 +749,7 @@ XMLNodePointer_t TGDMLWrite::CreateFractionN(Double_t percentage, const char * r
 
 XMLNodePointer_t TGDMLWrite::CreatePropertyN(TNamed const &property)
 {
-  XMLNodePointer_t propertyN = fGdmlE->NewChild(nullptr, nullptr, "property", 0);
+  XMLNodePointer_t propertyN = fGdmlE->NewChild(nullptr, nullptr, "property", nullptr);
   fGdmlE->NewAttr(propertyN, nullptr, "name", property.GetName());
   fGdmlE->NewAttr(propertyN, nullptr, "ref", property.GetTitle());
   return propertyN;
@@ -760,7 +760,7 @@ XMLNodePointer_t TGDMLWrite::CreatePropertyN(TNamed const &property)
 
 XMLNodePointer_t TGDMLWrite::CreateIsotopN(TGeoIsotope * isotope, const char * name)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "isotope", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "isotope", nullptr);
    fGdmlE->NewAttr(mainN, nullptr, "name", name);
    fGdmlE->NewAttr(mainN, nullptr, "N", TString::Format("%i", isotope->GetN()));
    fGdmlE->NewAttr(mainN, nullptr, "Z", TString::Format("%i", isotope->GetZ()));
@@ -774,7 +774,7 @@ XMLNodePointer_t TGDMLWrite::CreateIsotopN(TGeoIsotope * isotope, const char * n
 
 XMLNodePointer_t TGDMLWrite::CreateElementN(TGeoElement * element, XMLNodePointer_t materials, const char * name)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "element", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "element", nullptr);
    fGdmlE->NewAttr(mainN, nullptr, "name", name);
    //local associative arrays for saving isotopes and their weight
    //inside element
@@ -837,7 +837,7 @@ XMLNodePointer_t TGDMLWrite::CreateElementN(TGeoElement * element, XMLNodePointe
 
 XMLNodePointer_t TGDMLWrite::CreateMixtureN(TGeoMixture * mixture, XMLNodePointer_t materials, TString mname)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "material", 0);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "material", nullptr);
    fGdmlE->NewAttr(mainN, nullptr, "name", mname);
    fGdmlE->AddChild(mainN, CreateDN(mixture->GetDensity()));
    //local associative arrays for saving elements and their weight
@@ -2360,7 +2360,7 @@ void TGDMLWrite::UnsetTemporaryBits(TGeoManager * geoMng)
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Backwards compatibility (to be removed in the future)
+// Backwards compatibility for old DD4hep version (to be removed in the future)
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2434,7 +2434,7 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager,
    fGdmlFile = fGdmlE->NewDoc();
 
    //create root node and add it to blank GDML file
-   XMLNodePointer_t rootNode = fGdmlE->NewChild(nullptr, nullptr, krootNodeName, 0);
+   XMLNodePointer_t rootNode = fGdmlE->NewChild(nullptr, nullptr, krootNodeName, nullptr);
    fGdmlE->DocSetRootElement(fGdmlFile, rootNode);
 
    //add namespaces to root node
@@ -2447,9 +2447,9 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager,
 
    fNameList     = new NameLst;
 
-   fDefineNode = fGdmlE->NewChild(nullptr, nullptr, "define", 0);
-   fSolidsNode = fGdmlE->NewChild(nullptr, nullptr, "solids", 0);
-   fStructureNode = fGdmlE->NewChild(nullptr, nullptr, "structure", 0);
+   fDefineNode = fGdmlE->NewChild(nullptr, nullptr, "define", nullptr);
+   fSolidsNode = fGdmlE->NewChild(nullptr, nullptr, "solids", nullptr);
+   fStructureNode = fGdmlE->NewChild(nullptr, nullptr, "structure", nullptr);
    //========================
 
    //initialize list of accepted patterns for divisions (in ExtractVolumes)
@@ -2620,7 +2620,7 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
          lz = geoNode->GetMatrix()->GetRotationMatrix()[8];
          if (geoNode->GetMatrix()->IsReflection()
              && TMath::Abs(lx) == 1 &&  TMath::Abs(ly) == 1 && TMath::Abs(lz) == 1) {
-            scaleN = fGdmlE->NewChild(0, 0, "scale", 0);
+            scaleN = fGdmlE->NewChild(0, 0, "scale", nullptr);
             fGdmlE->NewAttr(scaleN, 0, "name", (nodename + "scl").Data());
             fGdmlE->NewAttr(scaleN, 0, "x", TString::Format(fltPrecision.Data(), lx));
             fGdmlE->NewAttr(scaleN, 0, "y", TString::Format(fltPrecision.Data(), ly));
