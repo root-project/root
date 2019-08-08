@@ -2356,3 +2356,323 @@ void TGDMLWrite::UnsetTemporaryBits(TGeoManager * geoMng)
    }
 
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Backwards compatibility (to be removed in the future)
+//
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+// Backwards compatibility (to be removed in the future): Wrapper to only selectively write one branch
+void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* volume, const char* filename, TString option)
+{
+  TList materials, volumes, nodes;
+  MaterialExtractor extract;
+  if ( !volume )   {
+    Info("WriteGDMLfile", "Invalid Volume reference to extract GDML information!");
+    return;
+  }
+  extract(volume);
+  for(TGeoMaterial* m : extract.materials)
+    materials.Add(m);
+  fTopVolumeName = volume->GetName();
+  fSurfaceList.clear();
+  fVolumeList.clear();
+  fNodeList.clear();
+  WriteGDMLfile(geomanager, volume, &materials, filename, option);
+  materials.Clear("nodelete");
+  volumes.Clear("nodelete");
+  nodes.Clear("nodelete");
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Wrapper of all exporting methods
+/// Creates blank GDML file and fills it with gGeoManager structure converted
+/// to GDML structure of xml nodes
+
+void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager,
+                               TGeoVolume* volume,
+                               TList* materialsLst,
+                               const char* filename,
+                               TString option)
+{
+   //option processing
+   option.ToLower();
+   if (option.Contains("g")) {
+      SetG4Compatibility(kTRUE);
+      Info("WriteGDMLfile", "Geant4 compatibility mode set");
+   } else {
+      SetG4Compatibility(kFALSE);
+   }
+   if (option.Contains("f")) {
+      SetNamingSpeed(kfastButUglySufix);
+      Info("WriteGDMLfile", "Fast naming convention with pointer suffix set");
+   } else if (option.Contains("n")) {
+      SetNamingSpeed(kwithoutSufixNotUniq);
+      Info("WriteGDMLfile", "Naming without prefix set - be careful uniqness of name is not ensured");
+   } else {
+      SetNamingSpeed(kelegantButSlow);
+      Info("WriteGDMLfile", "Potentially slow with incremental suffix naming convention set");
+   }
+
+   //local variables
+   Int_t outputLayout = 1;
+   const char * krootNodeName = "gdml";
+   const char * knsRefGeneral = "http://www.w3.org/2001/XMLSchema-instance";
+   const char * knsNameGeneral = "xsi";
+   const char * knsRefGdml = "http://service-spi.web.cern.ch/service-spi/app/releases/GDML/schema/gdml.xsd";
+   const char * knsNameGdml = "xsi:noNamespaceSchemaLocation";
+
+   // First create engine
+   fGdmlE = new TXMLEngine;
+   fGdmlE->SetSkipComments(kTRUE);
+
+   //create blank GDML file
+   fGdmlFile = fGdmlE->NewDoc();
+
+   //create root node and add it to blank GDML file
+   XMLNodePointer_t rootNode = fGdmlE->NewChild(nullptr, nullptr, krootNodeName, 0);
+   fGdmlE->DocSetRootElement(fGdmlFile, rootNode);
+
+   //add namespaces to root node
+   fGdmlE->NewNS(rootNode, knsRefGeneral, knsNameGeneral);
+   fGdmlE->NewAttr(rootNode, nullptr, knsNameGdml, knsRefGdml);
+
+   //initialize general lists and <define>, <solids>, <structure> nodes
+   fIsotopeList  = new StructLst;
+   fElementList  = new StructLst;
+
+   fNameList     = new NameLst;
+
+   fDefineNode = fGdmlE->NewChild(nullptr, nullptr, "define", 0);
+   fSolidsNode = fGdmlE->NewChild(nullptr, nullptr, "solids", 0);
+   fStructureNode = fGdmlE->NewChild(nullptr, nullptr, "structure", 0);
+   //========================
+
+   //initialize list of accepted patterns for divisions (in ExtractVolumes)
+   fAccPatt   = new StructLst;
+   fAccPatt->fLst["TGeoPatternX"] = kTRUE;
+   fAccPatt->fLst["TGeoPatternY"] = kTRUE;
+   fAccPatt->fLst["TGeoPatternZ"] = kTRUE;
+   fAccPatt->fLst["TGeoPatternCylR"] = kTRUE;
+   fAccPatt->fLst["TGeoPatternCylPhi"] = kTRUE;
+   //========================
+
+   //initialize list of rejected shapes for divisions (in ExtractVolumes)
+   fRejShape     = new StructLst;
+   //this shapes are rejected because, it is not possible to divide trd2
+   //in Y axis and while only trd2 object is imported from GDML
+   //it causes a problem when TGeoTrd1 is divided in Y axis
+   fRejShape->fLst["TGeoTrd1"] = kTRUE;
+   fRejShape->fLst["TGeoTrd2"] = kTRUE;
+   //=========================
+
+   //Initialize global counters
+   fActNameErr = 0;
+   fVolCnt = 0;
+   fPhysVolCnt = 0;
+   fSolCnt = 0;
+
+   //calling main extraction functions (with measuring time)
+   time_t startT, endT;
+   startT = time(NULL);
+   ExtractMatrices(geomanager->GetListOfGDMLMatrices());
+   ExtractConstants(geomanager);
+   fMaterialsNode = ExtractMaterials(materialsLst);
+
+   Info("WriteGDMLfile", "Extracting volumes");
+   ExtractVolumes(volume);
+   Info("WriteGDMLfile", "%i solids added", fSolCnt);
+   Info("WriteGDMLfile", "%i volumes added", fVolCnt);
+   Info("WriteGDMLfile", "%i physvolumes added", fPhysVolCnt);
+   ExtractSkinSurfaces(geomanager->GetListOfSkinSurfaces());
+   ExtractBorderSurfaces(geomanager->GetListOfBorderSurfaces());
+   ExtractOpticalSurfaces(geomanager->GetListOfOpticalSurfaces());
+   endT = time(NULL);
+   //<gdml>
+   fGdmlE->AddChild(rootNode, fDefineNode);                 //  <define>...</define>
+   fGdmlE->AddChild(rootNode, fMaterialsNode);              //  <materials>...</materials>
+   fGdmlE->AddChild(rootNode, fSolidsNode);                 //  <solids>...</solids>
+   fGdmlE->AddChild(rootNode, fStructureNode);              //  <structure>...</structure>
+   fGdmlE->AddChild(rootNode, CreateSetupN(fTopVolumeName.Data())); //  <setup>...</setup>
+   //</gdml>
+   Double_t tdiffI = difftime(endT, startT);
+   TString tdiffS = (tdiffI == 0 ? TString("< 1 s") : TString::Format("%.0lf s", tdiffI));
+   Info("WriteGDMLfile", "Exporting time: %s", tdiffS.Data());
+   //=========================
+
+   //Saving document
+   fGdmlE->SaveDoc(fGdmlFile, filename, outputLayout);
+   Info("WriteGDMLfile", "File %s saved", filename);
+   //cleaning
+   fGdmlE->FreeDoc(fGdmlFile);
+   //unset processing bits:
+   UnsetTemporaryBits(geomanager);
+   delete fGdmlE;
+}
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Method extracting geometry structure recursively
+
+void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
+{
+   XMLNodePointer_t volumeN, childN;
+   TString volname, matname, solname, pattClsName, nodeVolNameBak;
+   TGeoPatternFinder *pattFinder = 0;
+   Bool_t isPattern = kFALSE;
+   const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
+
+   //create the name for volume/assembly
+   if (volume->IsTopVolume()) {
+      //not needed a special function for generating name
+      volname = volume->GetName();
+      fTopVolumeName = volname;
+      //register name to the pointer
+      fNameList->fLst[TString::Format("%p", volume)] = volname;
+   } else {
+      volname = GenName(volume->GetName(), TString::Format("%p", volume));
+   }
+
+   //start to create main volume/assembly node
+   if (volume->IsAssembly()) {
+      volumeN = StartAssemblyN(volname);
+   } else {
+      //get reference material and add solid to <solids> + get name
+      matname = fNameList->fLst[TString::Format("%p", volume->GetMaterial())];
+      solname = ExtractSolid(volume->GetShape());
+      //If solid is not supported or corrupted
+      if (solname == "-1") {
+         Info("ExtractVolumes", "ERROR! %s volume was not added, because solid is either not supported or corrupted",
+              volname.Data());
+         //set volume as missing volume
+         fNameList->fLst[TString::Format("%p", volume)] = "missing_" + volname;
+         return;
+      }
+      volumeN = StartVolumeN(volname, solname, matname);
+
+      //divisionvol can't be in assembly
+      pattFinder = volume->GetFinder();
+      //if found pattern
+      if (pattFinder) {
+         pattClsName = TString::Format("%s", pattFinder->ClassName());
+         TString shapeCls = TString::Format("%s", volume->GetShape()->ClassName());
+         //if pattern in accepted pattern list and not in shape rejected list
+         if ((fAccPatt->fLst[pattClsName] == kTRUE) &&
+             (fRejShape->fLst[shapeCls] != kTRUE)) {
+            isPattern = kTRUE;
+         }
+      }
+   }
+   //get all nodes in volume
+   TObjArray *nodeLst = volume->GetNodes();
+   TIter next(nodeLst);
+   TGeoNode *geoNode;
+   Int_t nCnt = 0;
+   //loop through all nodes
+   while ((geoNode = (TGeoNode *) next())) {
+      //get volume of current node and if not processed then process it
+      TGeoVolume * subvol = geoNode->GetVolume();
+      if (subvol->TestAttBit(fgkProcBitVol) == kFALSE) {
+         subvol->SetAttBit(fgkProcBitVol);
+         ExtractVolumes(subvol);
+      }
+
+      //volume of this node has to exist because it was processed recursively
+      TString nodevolname = fNameList->fLst[TString::Format("%p", geoNode->GetVolume())];
+      if (nodevolname.Contains("missing_")) {
+         continue;
+      }
+      if (nCnt == 0) { //save name of the first node for divisionvol
+         nodeVolNameBak = nodevolname;
+      }
+
+      if (isPattern == kFALSE) {
+         //create name for node
+         TString nodename, posname, rotname;
+         nodename = GenName(geoNode->GetName(), TString::Format("%p", geoNode));
+         nodename = nodename + "in" + volname;
+
+         //create name for position and clear rotation
+         posname = nodename + "pos";
+         rotname = "";
+
+         //position
+         const Double_t * pos = geoNode->GetMatrix()->GetTranslation();
+         Xyz nodPos;
+         nodPos.x = pos[0];
+         nodPos.y = pos[1];
+         nodPos.z = pos[2];
+         childN = CreatePositionN(posname.Data(), nodPos);
+         fGdmlE->AddChild(fDefineNode, childN); //adding node to <define> node
+         //Deal with reflection
+         XMLNodePointer_t scaleN = NULL;
+         Double_t lx, ly, lz;
+         Double_t xangle = 0;
+         Double_t zangle = 0;
+         lx = geoNode->GetMatrix()->GetRotationMatrix()[0];
+         ly = geoNode->GetMatrix()->GetRotationMatrix()[4];
+         lz = geoNode->GetMatrix()->GetRotationMatrix()[8];
+         if (geoNode->GetMatrix()->IsReflection()
+             && TMath::Abs(lx) == 1 &&  TMath::Abs(ly) == 1 && TMath::Abs(lz) == 1) {
+            scaleN = fGdmlE->NewChild(0, 0, "scale", 0);
+            fGdmlE->NewAttr(scaleN, 0, "name", (nodename + "scl").Data());
+            fGdmlE->NewAttr(scaleN, 0, "x", TString::Format(fltPrecision.Data(), lx));
+            fGdmlE->NewAttr(scaleN, 0, "y", TString::Format(fltPrecision.Data(), ly));
+            fGdmlE->NewAttr(scaleN, 0, "z", TString::Format(fltPrecision.Data(), lz));
+            //experimentally found out, that rotation should be updated like this
+            if (lx == -1) {
+               zangle = 180;
+            }
+            if (lz == -1) {
+               xangle = 180;
+            }
+         }
+
+         //rotation
+         TGDMLWrite::Xyz lxyz = GetXYZangles(geoNode->GetMatrix()->GetRotationMatrix());
+         lxyz.x -= xangle;
+         lxyz.z -= zangle;
+         if ((lxyz.x != 0.0) || (lxyz.y != 0.0) || (lxyz.z != 0.0)) {
+            rotname = nodename + "rot";
+            childN = CreateRotationN(rotname.Data(), lxyz);
+            fGdmlE->AddChild(fDefineNode, childN); //adding node to <define> node
+         }
+
+         //create physvol for main volume/assembly node
+         childN = CreatePhysVolN(geoNode->GetName(), geoNode->GetNumber(), nodevolname.Data(), posname.Data(), rotname.Data(), scaleN);
+         fGdmlE->AddChild(volumeN, childN);
+      }
+      nCnt++;
+   }
+   //create only one divisionvol node
+   if (isPattern && pattFinder) {
+      //retrieve attributes of division
+      Int_t ndiv, divaxis;
+      Double_t offset, width, xlo, xhi;
+      TString axis, unit;
+
+      ndiv = pattFinder->GetNdiv();
+      width = pattFinder->GetStep();
+
+      divaxis = pattFinder->GetDivAxis();
+      volume->GetShape()->GetAxisRange(divaxis, xlo, xhi);
+
+      //compute relative start (not positional)
+      offset = pattFinder->GetStart() - xlo;
+      axis = GetPattAxis(divaxis, pattClsName, unit);
+
+      //create division node
+      childN = CreateDivisionN(offset, width, ndiv, axis.Data(), unit.Data(), nodeVolNameBak.Data());
+      fGdmlE->AddChild(volumeN, childN);
+   }
+
+   fVolCnt++;
+   //add volume/assembly node into the <structure> node
+   fGdmlE->AddChild(fStructureNode, volumeN);
+}

@@ -228,6 +228,14 @@ private:
    UInt_t GetFltPrecision() const { return fFltPrecision; }
    void SetFltPrecision(UInt_t prec) { fFltPrecision = prec; }
 
+public:
+   // Backwards compatibility (to be removed in the future): Wrapper to only selectively write one branch
+   void WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* top_vol, const char* filename = "test.gdml", TString option = "");
+private:
+   // Backwards compatibility (to be removed in the future): Combined implementation to extract GDML information from the geometry tree
+   void WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* top_vol, TList* materialsLst, const char* filename, TString option);
+   void ExtractVolumes(TGeoVolume* topVolume);    //result <volume> node...  + corresp. shape
+  
    ClassDef(TGDMLWrite, 0)    //imports GDML using DOM and binds it to ROOT
 };
 
