@@ -26,7 +26,7 @@ using namespace std::string_literals;
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-ROOT::Experimental::REveGeomViewer::REveGeomViewer(TGeoManager *mgr)
+ROOT::Experimental::REveGeomViewer::REveGeomViewer(TGeoManager *mgr, const std::string &volname)
 {
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/eve7/geom.html");
@@ -37,11 +37,11 @@ ROOT::Experimental::REveGeomViewer::REveGeomViewer(TGeoManager *mgr)
    fWebWindow->SetConnLimit(1); // the only connection is allowed
    fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
 
-   if (mgr) SetGeometry(mgr);
-
    fDesc.SetPreferredOffline(gEnv->GetValue("WebGui.PreferredOffline",0) != 0);
    fDesc.SetJsonComp(gEnv->GetValue("WebGui.JsonComp", TBufferJSON::kSkipTypeInfo + TBufferJSON::kNoSpaces));
    fDesc.SetBuildShapes(gEnv->GetValue("WebGui.GeomBuildShapes", 1) > 0);
+
+   if (mgr) SetGeometry(mgr, volname);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -55,24 +55,12 @@ ROOT::Experimental::REveGeomViewer::~REveGeomViewer()
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// assign new geometry to the viewer
 
-void ROOT::Experimental::REveGeomViewer::SetGeometry(TGeoManager *mgr)
+void ROOT::Experimental::REveGeomViewer::SetGeometry(TGeoManager *mgr, const std::string &volname)
 {
    fGeoManager = mgr;
+   fSelectedVolume = volname;
 
-   fDesc.Build(fGeoManager);
-
-   if (!fGeoManager) return;
-
-   // take maximal setting
-   auto maxnodes = fGeoManager->GetMaxVisNodes();
-   if (maxnodes > 5000)
-      maxnodes = 5000;
-   else if (maxnodes < 1000)
-      maxnodes = 1000;
-
-   fDesc.SetMaxVisNodes(maxnodes);
-   fDesc.SetMaxVisFaces(maxnodes * 100);
-   fDesc.SetNSegments(fGeoManager->GetNsegments());
+   fDesc.Build(mgr, volname);
 
    Update();
 }
@@ -83,11 +71,8 @@ void ROOT::Experimental::REveGeomViewer::SetGeometry(TGeoManager *mgr)
 
 void ROOT::Experimental::REveGeomViewer::SelectVolume(const std::string &volname)
 {
-   if (!fGeoManager || volname.empty()) {
-      fDesc.SelectVolume(nullptr);
-   } else {
-      fDesc.SelectVolume(fGeoManager->GetVolume(volname.c_str()));
-   }
+   if (volname != fSelectedVolume)
+      SetGeometry(fGeoManager, volname);
 }
 
 /////////////////////////////////////////////////////////////////////////////////

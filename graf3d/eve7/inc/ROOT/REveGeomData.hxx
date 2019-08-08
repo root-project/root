@@ -154,7 +154,6 @@ class REveGeomDescription {
    std::string fDrawOptions;        ///< default draw options for client
    std::vector<REveGeomNode> fDesc; ///< converted description, send to client
 
-   int fTopDrawNode{0};             ///<! selected top node
    std::vector<int> fSortMap;       ///<! nodes in order large -> smaller volume
    int fNSegments{0};               ///<! number of segments for cylindrical shapes
    std::vector<ShapeDescr> fShapes; ///<! shapes with created descriptions
@@ -171,8 +170,6 @@ class REveGeomDescription {
    int fJsonComp{0};                ///<! default JSON compression
 
    void PackMatrix(std::vector<float> &arr, TGeoMatrix *matr);
-
-   void ScanNode(TGeoNode *node, std::vector<int> &numbers, int offset);
 
    int MarkVisible(bool on_screen = false);
 
@@ -193,7 +190,7 @@ class REveGeomDescription {
 public:
    REveGeomDescription() = default;
 
-   void Build(TGeoManager *mgr);
+   void Build(TGeoManager *mgr, const std::string &volname = "");
 
    /** Number of unique nodes in the geometry */
    int GetNumNodes() const { return fDesc.size(); }
@@ -253,10 +250,6 @@ public:
    bool ProduceDrawingFor(int nodeid, std::string &json, bool check_volume = false);
 
    bool ChangeNodeVisibility(int nodeid, bool selected);
-
-   void SelectVolume(TGeoVolume *);
-
-   void SelectNode(TGeoNode *);
 
    /** Set number of segments for cylindrical shapes, if 0 - default value will be used */
    void SetNSegments(int n = 0) { fNSegments = n; }

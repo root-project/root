@@ -290,10 +290,10 @@ sap.ui.define(['sap/ui/core/Component',
          if (this.geo_painter) {
             this.geo_painter.ClearDrawings();
          } else {
-
             var geomDrawing = this.byId("geomDrawing");
-
             this.geo_painter = JSROOT.Painter.CreateGeoPainter(geomDrawing.getDomRef(), null, drawopt);
+            this.geo_painter.setMouseTmout(0);
+            this.geo_painter.setDepthMethod("dflt");
             geomDrawing.setGeomPainter(this.geo_painter);
 
             this.geo_painter.AddHighlightHandler(this);
