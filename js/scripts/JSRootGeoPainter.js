@@ -411,13 +411,14 @@
                   _full: false, _axis: false, _axis_center: false,
                   _count: false, wireframe: false,
                    scale: new THREE.Vector3(1,1,1), zoom: 1.0, rotatey: 0, rotatez: 0,
-                   more: 1, maxlimit: 100000, maxnodeslimit: 3000,
+                   more: 1, maxlimit: 100000,
+                   vislevel: undefined, maxnodes: undefined,
                    use_worker: false, update_browser: true, show_controls: false,
                    highlight: false, highlight_scene: false, select_in_view: false, no_screen: false,
                    project: '', is_main: false, tracks: false, showtop: false, can_rotate: true, ortho_camera: false,
                    clipx: false, clipy: false, clipz: false, ssao: false, outline: false,
                    script_name: "", transparency: 0, autoRotate: false, background: '#FFFFFF',
-                   depthMethod: "ray" };
+                   depthMethod: "ray", mouse_tmout: 50 };
 
       var _opt = JSROOT.GetUrlOption('_grid');
       if (_opt !== null && _opt == "true") res._grid = true;
@@ -471,6 +472,7 @@
       if (d.check("ZOOM", true)) res.zoom = d.partAsFloat(0, 100) / 100;
       if (d.check("ROTY", true)) res.rotatey = d.partAsFloat();
       if (d.check("ROTZ", true)) res.rotatez = d.partAsFloat();
+      if (d.check("VISLVL", true)) res.vislevel = d.partAsInt();
 
       if (d.check('BLACK')) res.background = "#000000";
       if (d.check('WHITE')) res.background = "#FFFFFF";
@@ -485,7 +487,7 @@
 
       if (d.check("MORE3")) res.more = 3;
       if (d.check("MORE")) res.more = 2;
-      if (d.check("ALL")) res.more = 100;
+      if (d.check("ALL")) { res.more = 10; res.vislevel = 9; }
 
       if (d.check("CONTROLS") || d.check("CTRL")) res.show_controls = true;
 
@@ -648,8 +650,7 @@
       });
       if (!this.options.project)
          menu.addchk(this.options.autoRotate, "Autorotate", function() {
-            this.options.autoRotate = !this.options.autoRotate;
-            this.autorotate(2.5);
+            this.setAutoRotate(!this.options.autoRotate);
          });
       menu.addchk(this.options.select_in_view, "Select in view", function() {
          this.options.select_in_view = !this.options.select_in_view;
@@ -1219,6 +1220,22 @@
       ctrl.evnt = null;
    }
 
+   /** Configure mouse delay, required for complex geometries */
+   TGeoPainter.prototype.setMouseTmout = function(val) {
+      if (this.options)
+         this.options.mouse_tmout = val;
+
+      if (this._controls)
+         this._controls.mouse_tmout = val;
+   }
+
+   /** Configure depth method, used for render order production.
+    * Allowed values: "ray", "box","pnt", "size","dflt" */
+   TGeoPainter.prototype.setDepthMethod = function(val) {
+      if (this.options)
+         this.options.depthMethod = val;
+   }
+
    TGeoPainter.prototype.addOrbitControls = function() {
 
       if (this._controls || this._usesvg || JSROOT.BatchMode) return;
@@ -1229,7 +1246,7 @@
 
       this._controls = JSROOT.Painter.CreateOrbitControl(this, this._camera, this._scene, this._renderer, this._lookat);
 
-      this._controls.mouse_tmout = 100; // set larger timeout for geometry processing
+      this._controls.mouse_tmout = this.options.mouse_tmout; // set larger timeout for geometry processing
 
       if (!this.options.can_rotate) this._controls.enableRotate = false;
 
@@ -1392,11 +1409,7 @@
          }
 
          this._current_face_limit = this.options.maxlimit;
-         this._current_nodes_limit = this.options.maxnodeslimit;
-         if (matrix) {
-            this._current_face_limit*=1.25;
-            this._current_nodes_limit*=1.25;
-         }
+         if (matrix) this._current_face_limit*=1.25;
 
          // here we decide if we need worker for the drawings
          // main reason - too large geometry and large time to scan all camera positions
@@ -1413,7 +1426,7 @@
 
          if (!need_worker || !this._worker_ready) {
             // var tm1 = new Date().getTime();
-            var res = this._clones.CollectVisibles(this._current_face_limit, frustum, this._current_nodes_limit);
+            var res = this._clones.CollectVisibles(this._current_face_limit, frustum);
             this._new_draw_nodes = res.lst;
             this._draw_all_nodes = res.complete;
             // var tm2 = new Date().getTime();
@@ -1424,7 +1437,6 @@
 
          var job = {
                collect: this._current_face_limit,   // indicator for the command
-               collect_nodes: this._current_nodes_limit,
                visible: this._clones.GetVisibleFlags(),
                matrix: matrix ? matrix.elements : null
          };
@@ -2895,8 +2907,13 @@
             },
 
             SetMaxVisNodes: function(limit) {
-               console.log('Automatic visible depth for ' + limit + ' nodes');
-               if (limit>0) painter.options.maxnodeslimit = limit;
+               if (!painter.options.maxnodes)
+                  painter.options.maxnodes = pasrseInt(limit) || 0;
+            },
+
+            SetVisLevel: function(limit) {
+               if (!painter.options.vislevel)
+                  painter.options.vislevel = parseInt(limit) || 0;
             }
           };
 
@@ -2926,6 +2943,7 @@
                line = line.replace('->Draw','.Draw');
                line = line.replace('->SetTransparency','.SetTransparency');
                line = line.replace('->SetLineColor','.SetLineColor');
+               line = line.replace('->SetVisLevel','.SetVisLevel');
                if (line.indexOf('->')>=0) continue;
 
                // console.log(line);
@@ -2996,6 +3014,17 @@
 
          this._clones = new JSROOT.GEO.ClonedNodes(draw_obj);
 
+         var lvl = this.options.vislevel, maxnodes = this.options.maxnodes;
+         if (this.geo_manager) {
+            if (!lvl && this.geo_manager.fVisLevel)
+               lvl = this.geo_manager.fVisLevel;
+            if (maxnodes === undefined)
+               maxnodes = this.geo_manager.fMaxVisNodes;
+         }
+
+         this._clones.SetVisLevel(lvl);
+         this._clones.SetMaxVisNodes(maxnodes);
+
          this._clones.name_prefix = name_prefix;
 
          var uniquevis = this.options.no_screen ? 0 : this._clones.MarkVisibles(true);
@@ -3004,6 +3033,8 @@
             uniquevis = this._clones.MarkVisibles(false, false, null, !!this.geo_manager && !this.options.showtop);
          else
             uniquevis = this._clones.MarkVisibles(true, true); // copy bits once and use normal visibility bits
+
+         this._clones.ProduceIdShits();
 
          var spent = new Date().getTime() - this._start_drawing_time;
 
@@ -3232,7 +3263,14 @@
       };
 
       // send initialization message with clones
-      this._worker.postMessage( { init: true, browser: JSROOT.browser, tm0: new Date().getTime(), clones: this._clones.nodes, sortmap: this._clones.sortmap  } );
+      this._worker.postMessage( {
+         init: true,   // indicate init command for worker
+         browser: JSROOT.browser,
+         tm0: new Date().getTime(),
+         vislevel: this._clones.GetVisLevel(),
+         maxvisnodes: this._clones.GetMaxVisNodes(),
+         clones: this._clones.nodes,
+         sortmap: this._clones.sortmap  } );
    }
 
    TGeoPainter.prototype.canSubmitToWorker = function(force) {
@@ -3512,6 +3550,13 @@
          this.toggleAxesDraw();
    }
 
+   /** @brief Set auto rotate mode */
+   TGeoPainter.prototype.setAutoRotate = function(on) {
+      if (this.options.project) return;
+      this.options.autoRotate = on;
+      this.autorotate(2.5);
+   }
+
    /** Toggle wireframe mode */
    TGeoPainter.prototype.toggleWireFrame = function() {
       this.options.wireframe = !this.options.wireframe;
@@ -3690,6 +3735,7 @@
          }
 
          delete this.geo_manager;
+         delete this._highlight_handlers;
 
          JSROOT.TObjectPainter.prototype.Cleanup.call(this);
 
@@ -3844,10 +3890,7 @@
       return true;
    }
 
-   TGeoPainter.prototype.RedrawObject = function(obj) {
-      if (!this.UpdateObject(obj))
-         return false;
-
+   TGeoPainter.prototype.ClearDrawings = function() {
       if (this._clones && this._clones_owner)
          this._clones.Cleanup(this._draw_nodes, this._build_shapes);
       delete this._clones;
@@ -3862,6 +3905,13 @@
       JSROOT.Painter.DisposeThreejsObject(this._toplevel, true);
 
       this._full_redrawing = true;
+   }
+
+   TGeoPainter.prototype.RedrawObject = function(obj) {
+      if (!this.UpdateObject(obj))
+         return false;
+
+      this.ClearDrawings();
 
       var draw_obj = this.GetGeometry(), name_prefix = "";
       if (this.geo_manager) name_prefix = draw_obj.fName;
@@ -3897,14 +3947,14 @@
    JSROOT.Painter.drawGeoObject = function(divid, obj, opt) {
       if (!obj) return null;
 
-      var shape = null, extras = null, extras_path = "";
+      var shape = null, extras = null, extras_path = "", is_eve = false;
 
       if (('fShapeBits' in obj) && ('fShapeId' in obj)) {
          shape = obj; obj = null;
       } else if ((obj._typename === 'TGeoVolumeAssembly') || (obj._typename === 'TGeoVolume')) {
          shape = obj.fShape;
       } else if ((obj._typename === "TEveGeoShapeExtract") || (obj._typename === "ROOT::Experimental::TEveGeoShapeExtract")) {
-         shape = obj.fShape;
+         shape = obj.fShape; is_eve = true;
       } else if (obj._typename === 'TGeoManager') {
          shape = obj.fMasterVolume.fShape;
       } else if (obj._typename === 'TGeoOverlap') {
@@ -3937,6 +3987,9 @@
          painter._main_painter = obj.$geo_painter;
          painter._main_painter._slave_painters.push(painter);
       }
+
+      if (is_eve && !painter.options.vislevel || (painter.options.vislevel < 9))
+         painter.options.vislevel = 9;
 
       if (extras) {
          painter._splitColors = true;
@@ -4023,10 +4076,8 @@
          return obj.fRnrSelf ? " geovis_this" : "";
 
       var vis = !JSROOT.GEO.TestBit(obj, JSROOT.GEO.BITS.kVisNone) &&
-                JSROOT.GEO.TestBit(obj, JSROOT.GEO.BITS.kVisThis);
-
-      var chld = JSROOT.GEO.TestBit(obj, JSROOT.GEO.BITS.kVisDaughters) ||
-                 JSROOT.GEO.TestBit(obj, JSROOT.GEO.BITS.kVisOneLevel);
+                JSROOT.GEO.TestBit(obj, JSROOT.GEO.BITS.kVisThis),
+          chld = JSROOT.GEO.TestBit(obj, JSROOT.GEO.BITS.kVisDaughters);
 
       if (chld && (!obj.fNodes || (obj.fNodes.arr.length === 0))) chld = false;
 
@@ -4266,8 +4317,6 @@
                JSROOT.GEO.BITS.kVisThis, ToggleMenuBit);
          menu.addchk(JSROOT.GEO.TestBit(vol, JSROOT.GEO.BITS.kVisDaughters), "Daughters",
                JSROOT.GEO.BITS.kVisDaughters, ToggleMenuBit);
-         menu.addchk(JSROOT.GEO.TestBit(vol, JSROOT.GEO.BITS.kVisOneLevel), "1lvl daughters",
-               JSROOT.GEO.BITS.kVisOneLevel, ToggleMenuBit);
       }
 
       return true;
