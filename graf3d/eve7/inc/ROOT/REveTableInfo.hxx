@@ -87,21 +87,18 @@ protected:
 class REveTableViewInfo : public REveElement
 {
 public:
-   REveTableViewInfo(const std::string &name = "TableViewManager", const std::string &title = "")
-      : REveElement(name, title)
-   {
-   }
+   REveTableViewInfo(const std::string &name = "TableViewManager", const std::string &title = "");
 
-   typedef std::function<void (ElementId_t)> Delegate_t;
+   typedef std::function<void ()> Delegate_t;
 
    void SetDisplayedCollection(ElementId_t);
    ElementId_t GetDisplayedCollection() const  { return fDisplayedCollection; }
 
+   void AddNewColumnToCurrentCollection(const std::string& expr, const std::string& title, int prec = 2);
+
    void AddDelegate(Delegate_t d) { fDelegates.push_back(d); }
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
-
-   void SetTableId(ElementId_t id);
 
    // read
    REveTableHandle::Entries_t &RefTableEntries(std::string cname) { return fSpecs[cname]; }
@@ -113,11 +110,14 @@ public:
       return handle;
    }
 
+   bool GetConfigChanged() const { return fConfigChanged; }
+
+
 private:
    int fDisplayedCollection{0};
-   int fTableId{0};
    std::vector<Delegate_t> fDelegates;
    REveTableHandle::Specs_t  fSpecs;
+   bool                      fConfigChanged;
 };
 
 
