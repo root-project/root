@@ -1135,6 +1135,10 @@ const RooArgSet* RooDataSet::get() const
 /// \param[in] wgt Event weight. Defaults to 1, and ignores the actual value of the
 /// weight variable. To obtain weighted events, a weight variable must be defined in the constructor.
 /// \param[in] wgtError Optional weight error.
+/// CAUTION: DO NOT SET THIS VALUE IF YOU DID NOT INCLUDE THE WeightVar IN A CALL TO RooFit::StoreError
+/// IN THE RooDataSet CONSTRUCTOR!
+/// This can result in all entries being assigned the last weight error value passed with RooDataSet::add
+/// instead of storing the given per-entry weight error.
 
 void RooDataSet::add(const RooArgSet& data, Double_t wgt, Double_t wgtError) 
 {
@@ -1163,7 +1167,9 @@ void RooDataSet::add(const RooArgSet& data, Double_t wgt, Double_t wgtError)
 /// To obtain weighted events, a weight variable must be defined in the constructor.
 /// \param[in] wgtErrorLo Asymmetric weight error.
 /// \param[in] wgtErrorHi Asymmetric weight error.
-///
+/// CAUTION: DO NOT SET THIS VALUE IF YOU DID NOT INCLUDE THE WeightVar IN A CALL TO RooFit::StoreAsymError
+/// IN THE RooDataSet CONSTRUCTOR!
+/// This may result in unexpected behaviour.
 
 void RooDataSet::add(const RooArgSet& indata, Double_t inweight, Double_t weightErrorLo, Double_t weightErrorHi) 
 {
