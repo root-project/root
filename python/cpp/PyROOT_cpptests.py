@@ -26,11 +26,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
    def setUpClass(cls):
       cls.exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
 
-      if cls.exp_pyroot:
-         # New Cppyy's nomenclature
-         cls.AddressOf = ROOT.addressof
-      else:
-         cls.AddressOf = ROOT.AddressOf
+      cls.AddressOf = ROOT.AddressOf
 
       if cls.exp_pyroot:
          # MakeNullPointer(klass) does not exist anymore in new Cppyy,
