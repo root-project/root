@@ -45,6 +45,7 @@ struct EvaluateInfo {
 };
   
 size_t findSize(std::vector< RooSpan<const double> > parameters);
+
 EvaluateInfo getInfo(std::vector<const RooRealProxy*> parameters, size_t begin, size_t batchSize);
 EvaluateInfo init(std::vector< RooRealProxy > parameters, 
                   std::vector<  ArrayWrapper* > wrappers,
@@ -63,29 +64,39 @@ class BracketAdapter {
     constexpr double operator[](std::size_t) const {
       return _payload;
     }
+    
+    constexpr bool isBatch() const noexcept {
+      return false;
+    }
 
   private:
     const T _payload;
 };
 
 
-class BracketAdapterWithBranch {
+class BracketAdapterWithMask {
   public:
-    explicit BracketAdapterWithBranch(double payload, const RooSpan<const double>& batch) noexcept :
+    explicit BracketAdapterWithMask(double payload, const RooSpan<const double>& batch) noexcept :
+    _isBatch(!batch.empty()),
     _payload(payload),
-    _pointer(batch.data()),
-    _batchEmpty(batch.empty())
+    _pointer(batch.empty() ? &_payload : batch.data()),
+    _mask(batch.empty() ? 0 : ~static_cast<size_t>(0))
     {
     }
 
-    inline double operator[](std::size_t i) const noexcept {
-      return _batchEmpty ? _payload : _pointer[i];
+    constexpr double operator[](std::size_t i) const noexcept {
+      return _pointer[ i & _mask];
+    }
+    
+    constexpr bool isBatch() const noexcept {
+      return _isBatch;
     }
 
   private:
+    const bool _isBatch;
     const double _payload;
     const double* __restrict__ const _pointer;
-    const bool _batchEmpty;
+    const size_t _mask;
 };
 
 }
