@@ -359,7 +359,7 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager,
 
    //calling main extraction functions (with measuring time)
    time_t startT, endT;
-   startT = time(NULL);
+   startT = time(nullptr);
    ExtractMatrices(geomanager->GetListOfGDMLMatrices());
    ExtractConstants(geomanager);
    fMaterialsNode = ExtractMaterials(materialsLst);
@@ -372,7 +372,7 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager,
    ExtractSkinSurfaces(geomanager->GetListOfSkinSurfaces());
    ExtractBorderSurfaces(geomanager->GetListOfBorderSurfaces());
    ExtractOpticalSurfaces(geomanager->GetListOfOpticalSurfaces());
-   endT = time(NULL);
+   endT = time(nullptr);
    //<gdml>
    fGdmlE->AddChild(rootNode, fDefineNode);                 //  <define>...</define>
    fGdmlE->AddChild(rootNode, fMaterialsNode);              //  <materials>...</materials>
@@ -534,7 +534,7 @@ TString TGDMLWrite::ExtractSolid(TGeoShape* volShape)
    TString solname = "";
    solidN = ChooseObject(volShape);  //volume->GetShape()
    fGdmlE->AddChild(fSolidsNode, solidN);
-   if (solidN != NULL) fSolCnt++;
+   if (solidN != nullptr) fSolCnt++;
    solname = fNameList->fLst[TString::Format("%p", volShape)];
    if (solname.Contains("missing_")) {
       solname = "-1";
@@ -641,7 +641,7 @@ void TGDMLWrite::ExtractVolumes(TGeoNode* node)
          childN = CreatePositionN(posname.Data(), nodPos);
          fGdmlE->AddChild(fDefineNode, childN); //adding node to <define> node
          //Deal with reflection
-         XMLNodePointer_t scaleN = NULL;
+         XMLNodePointer_t scaleN = nullptr;
          Double_t lx, ly, lz;
          Double_t xangle = 0;
          Double_t zangle = 0;
@@ -961,7 +961,7 @@ XMLNodePointer_t TGDMLWrite::CreateBoxN(TGeoBBox * geoShape)
    if (IsNullParam(geoShape->GetDX(), "DX", lname) ||
        IsNullParam(geoShape->GetDY(), "DY", lname) ||
        IsNullParam(geoShape->GetDZ(), "DZ", lname)) {
-      return NULL;
+      return nullptr;
    }
    fGdmlE->NewAttr(mainN, nullptr, "x", TString::Format(fltPrecision.Data(), 2 * geoShape->GetDX()));
    fGdmlE->NewAttr(mainN, nullptr, "y", TString::Format(fltPrecision.Data(), 2 * geoShape->GetDY()));
@@ -982,7 +982,7 @@ XMLNodePointer_t TGDMLWrite::CreateParaboloidN(TGeoParaboloid * geoShape)
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
    if (IsNullParam(geoShape->GetRhi(), "Rhi", lname) ||
        IsNullParam(geoShape->GetDz(), "Dz", lname)) {
-      return NULL;
+      return nullptr;
    }
    fGdmlE->NewAttr(mainN, nullptr, "rlo", TString::Format(fltPrecision.Data(), geoShape->GetRlo()));
    fGdmlE->NewAttr(mainN, nullptr, "rhi", TString::Format(fltPrecision.Data(), geoShape->GetRhi()));
@@ -1002,7 +1002,7 @@ XMLNodePointer_t TGDMLWrite::CreateSphereN(TGeoSphere * geoShape)
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
    if (IsNullParam(geoShape->GetRmax(), "Rmax", lname)) {
-      return NULL;
+      return nullptr;
    }
 
    fGdmlE->NewAttr(mainN, nullptr, "rmin", TString::Format(fltPrecision.Data(), geoShape->GetRmin()));
@@ -1027,7 +1027,7 @@ XMLNodePointer_t TGDMLWrite::CreateArb8N(TGeoArb8 * geoShape)
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
    if (IsNullParam(geoShape->GetDz(), "Dz", lname)) {
-      return NULL;
+      return nullptr;
    }
 
    fGdmlE->NewAttr(mainN, nullptr, "v1x", TString::Format(fltPrecision.Data(), geoShape->GetVertices()[0]));
@@ -1062,7 +1062,7 @@ XMLNodePointer_t TGDMLWrite::CreateConeN(TGeoConeSeg * geoShape)
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
    if (IsNullParam(geoShape->GetDz(), "Dz", lname)) {
-      return NULL;
+      return nullptr;
    }
 
    fGdmlE->NewAttr(mainN, nullptr, "z", TString::Format(fltPrecision.Data(), 2 * geoShape->GetDz()));
@@ -1088,7 +1088,7 @@ XMLNodePointer_t TGDMLWrite::CreateConeN(TGeoCone * geoShape)
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
    if (IsNullParam(geoShape->GetDz(), "Dz", lname)) {
-      return NULL;
+      return nullptr;
    }
 
    fGdmlE->NewAttr(mainN, nullptr, "z", TString::Format(fltPrecision.Data(), 2 * geoShape->GetDz()));
@@ -1150,7 +1150,7 @@ XMLNodePointer_t TGDMLWrite::CreateTrapN(TGeoTrap * geoShape)
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
    if (IsNullParam(geoShape->GetDz(), "Dz", lname)) {
-      return NULL;
+      return nullptr;
    }
 
    fGdmlE->NewAttr(mainN, nullptr, "z", TString::Format(fltPrecision.Data(), 2 * geoShape->GetDz()));
@@ -1202,7 +1202,7 @@ XMLNodePointer_t TGDMLWrite::CreateTwistedTrapN(TGeoGtra * geoShape)
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
    if (IsNullParam(geoShape->GetDz(), "Dz", lname)) {
-      return NULL;
+      return nullptr;
    }
 
    fGdmlE->NewAttr(mainN, nullptr, "z", TString::Format(fltPrecision.Data(), 2 * geoShape->GetDz()));
@@ -1241,7 +1241,7 @@ XMLNodePointer_t TGDMLWrite::CreateTrdN(TGeoTrd1 * geoShape)
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
    if (IsNullParam(geoShape->GetDz(), "Dz", lname)) {
-      return NULL;
+      return nullptr;
    }
 
    fGdmlE->NewAttr(mainN, nullptr, "x1", TString::Format(fltPrecision.Data(), 2 * geoShape->GetDx1()));
@@ -1264,7 +1264,7 @@ XMLNodePointer_t TGDMLWrite::CreateTrdN(TGeoTrd2 * geoShape)
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
    if (IsNullParam(geoShape->GetDz(), "Dz", lname)) {
-      return NULL;
+      return nullptr;
    }
 
    fGdmlE->NewAttr(mainN, nullptr, "x1", TString::Format(fltPrecision.Data(), 2 * geoShape->GetDx1()));
@@ -1288,7 +1288,7 @@ XMLNodePointer_t TGDMLWrite::CreateTubeN(TGeoTubeSeg * geoShape)
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
    if (IsNullParam(geoShape->GetRmax(), "Rmax", lname) ||
        IsNullParam(geoShape->GetDz(), "Dz", lname)) {
-      return NULL;
+      return nullptr;
    }
 
    fGdmlE->NewAttr(mainN, nullptr, "rmin", TString::Format(fltPrecision.Data(), geoShape->GetRmin()));
@@ -1315,7 +1315,7 @@ XMLNodePointer_t TGDMLWrite::CreateCutTubeN(TGeoCtub * geoShape)
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
    if (IsNullParam(geoShape->GetRmax(), "Rmax", lname) ||
        IsNullParam(geoShape->GetDz(), "Dz", lname)) {
-      return NULL;
+      return nullptr;
    }
    //This is not needed, because cutTube is already supported by Geant4 9.5
    if (fgG4Compatibility == kTRUE && kFALSE) {
@@ -1358,7 +1358,7 @@ XMLNodePointer_t TGDMLWrite::CreateTubeN(TGeoTube * geoShape)
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
    if (IsNullParam(geoShape->GetRmax(), "Rmax", lname) ||
        IsNullParam(geoShape->GetDz(), "Dz", lname)) {
-      return NULL;
+      return nullptr;
    }
 
    fGdmlE->NewAttr(mainN, nullptr, "rmin", TString::Format(fltPrecision.Data(), geoShape->GetRmin()));
@@ -1450,7 +1450,7 @@ XMLNodePointer_t TGDMLWrite::CreateTorusN(TGeoTorus * geoShape)
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
    if (IsNullParam(geoShape->GetRmax(), "Rmax", lname)) {
-      return NULL;
+      return nullptr;
    }
 
    fGdmlE->NewAttr(mainN, nullptr, "rtor", TString::Format(fltPrecision.Data(), geoShape->GetR()));
@@ -1499,7 +1499,7 @@ XMLNodePointer_t TGDMLWrite::CreateEltubeN(TGeoEltu * geoShape)
    if (IsNullParam(geoShape->GetA(), "A", lname) ||
        IsNullParam(geoShape->GetB(), "B", lname) ||
        IsNullParam(geoShape->GetDz(), "Dz", lname)) {
-      return NULL;
+      return nullptr;
    }
 
    fGdmlE->NewAttr(mainN, nullptr, "dx", TString::Format(fltPrecision.Data(), geoShape->GetA()));
@@ -1521,7 +1521,7 @@ XMLNodePointer_t TGDMLWrite::CreateHypeN(TGeoHype * geoShape)
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, nullptr, "name", lname);
    if (IsNullParam(geoShape->GetDz(), "Dz", lname)) {
-      return NULL;
+      return nullptr;
    }
 
 
@@ -1554,7 +1554,7 @@ XMLNodePointer_t TGDMLWrite::CreateXtrusionN(TGeoXtru * geoShape)
    if (vertNum < 3 || secNum < 2) {
       Info("CreateXtrusionN", "ERROR! TGeoXtru %s has only %i vertices and %i sections. It was not exported",
            lname.Data(), vertNum, secNum);
-      mainN = NULL;
+      mainN = nullptr;
       return mainN;
    }
    for (Int_t it = 0; it < vertNum; it++) {
@@ -1706,22 +1706,22 @@ XMLNodePointer_t TGDMLWrite::CreateCommonBoolN(TGeoCompositeShape *geoShape)
    TString rname = fNameList->fLst[TString::Format("%p", geoShape->GetBoolNode()->GetRightShape())];
 
    //left and right nodes appended to main structure of nodes (if they are not already there)
-   if (ndL != NULL) {
+   if (ndL != nullptr) {
       fGdmlE->AddChild(fSolidsNode, ndL);
       fSolCnt++;
    } else {
       if (lname.Contains("missing_") || lname == "") {
          Info("CreateCommonBoolN", "ERROR! Left node is NULL - Boolean Shape will be skipped");
-         return NULL;
+         return nullptr;
       }
    }
-   if (ndR != NULL) {
+   if (ndR != nullptr) {
       fGdmlE->AddChild(fSolidsNode, ndR);
       fSolCnt++;
    } else {
       if (rname.Contains("missing_") || rname == "") {
          Info("CreateCommonBoolN", "ERROR! Right node is NULL - Boolean Shape will be skipped");
-         return NULL;
+         return nullptr;
       }
    }
 
@@ -1960,7 +1960,7 @@ XMLNodePointer_t TGDMLWrite::CreatePhysVolN(const char *name, Int_t copyno, cons
       fGdmlE->NewAttr(childN, nullptr, "ref", rotref);
       fGdmlE->AddChild(mainN, childN);
    }
-   if (scaleN != NULL) {
+   if (scaleN != nullptr) {
       fGdmlE->AddChild(mainN, scaleN);
    }
 
@@ -2011,7 +2011,7 @@ XMLNodePointer_t TGDMLWrite::ChooseObject(TGeoShape *geoShape)
    XMLNodePointer_t solidN;
 
    if (CanProcess((TObject *)geoShape) == kFALSE) {
-      return NULL;
+      return nullptr;
    }
 
    //process different shapes
@@ -2080,9 +2080,9 @@ XMLNodePointer_t TGDMLWrite::ChooseObject(TGeoShape *geoShape)
    } else {
       Info("ChooseObject", "ERROR! %s Solid CANNOT be processed, solid is NOT supported",
            clsname);
-      solidN = NULL;
+      solidN = nullptr;
    }
-   if (solidN == NULL) {
+   if (solidN == nullptr) {
       if (fNameList->fLst[TString::Format("%p", geoShape)] == "") {
          TString missingName = geoShape->GetName();
          GenName("missing_" + missingName, TString::Format("%p", geoShape));
@@ -2478,7 +2478,7 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager,
 
    //calling main extraction functions (with measuring time)
    time_t startT, endT;
-   startT = time(NULL);
+   startT = time(nullptr);
    ExtractMatrices(geomanager->GetListOfGDMLMatrices());
    ExtractConstants(geomanager);
    fMaterialsNode = ExtractMaterials(materialsLst);
@@ -2491,7 +2491,7 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager,
    ExtractSkinSurfaces(geomanager->GetListOfSkinSurfaces());
    ExtractBorderSurfaces(geomanager->GetListOfBorderSurfaces());
    ExtractOpticalSurfaces(geomanager->GetListOfOpticalSurfaces());
-   endT = time(NULL);
+   endT = time(nullptr);
    //<gdml>
    fGdmlE->AddChild(rootNode, fDefineNode);                 //  <define>...</define>
    fGdmlE->AddChild(rootNode, fMaterialsNode);              //  <materials>...</materials>
@@ -2524,7 +2524,7 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
 {
    XMLNodePointer_t volumeN, childN;
    TString volname, matname, solname, pattClsName, nodeVolNameBak;
-   TGeoPatternFinder *pattFinder = 0;
+   TGeoPatternFinder *pattFinder = nullptr;
    Bool_t isPattern = kFALSE;
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
 
@@ -2611,7 +2611,7 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
          childN = CreatePositionN(posname.Data(), nodPos);
          fGdmlE->AddChild(fDefineNode, childN); //adding node to <define> node
          //Deal with reflection
-         XMLNodePointer_t scaleN = NULL;
+         XMLNodePointer_t scaleN = nullptr;
          Double_t lx, ly, lz;
          Double_t xangle = 0;
          Double_t zangle = 0;
@@ -2620,11 +2620,11 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
          lz = geoNode->GetMatrix()->GetRotationMatrix()[8];
          if (geoNode->GetMatrix()->IsReflection()
              && TMath::Abs(lx) == 1 &&  TMath::Abs(ly) == 1 && TMath::Abs(lz) == 1) {
-            scaleN = fGdmlE->NewChild(0, 0, "scale", nullptr);
-            fGdmlE->NewAttr(scaleN, 0, "name", (nodename + "scl").Data());
-            fGdmlE->NewAttr(scaleN, 0, "x", TString::Format(fltPrecision.Data(), lx));
-            fGdmlE->NewAttr(scaleN, 0, "y", TString::Format(fltPrecision.Data(), ly));
-            fGdmlE->NewAttr(scaleN, 0, "z", TString::Format(fltPrecision.Data(), lz));
+            scaleN = fGdmlE->NewChild(nullptr, nullptr, "scale", nullptr);
+            fGdmlE->NewAttr(scaleN, nullptr, "name", (nodename + "scl").Data());
+            fGdmlE->NewAttr(scaleN, nullptr, "x", TString::Format(fltPrecision.Data(), lx));
+            fGdmlE->NewAttr(scaleN, nullptr, "y", TString::Format(fltPrecision.Data(), ly));
+            fGdmlE->NewAttr(scaleN, nullptr, "z", TString::Format(fltPrecision.Data(), lz));
             //experimentally found out, that rotation should be updated like this
             if (lx == -1) {
                zangle = 180;
