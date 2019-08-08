@@ -22,6 +22,9 @@ def setup_module(mod):
 
 class TestClassPYTHONIZATIONS:
     def setup_class(cls):
+        # we need to import ROOT because in macOS if a cppyy env
+        # variable is not set libcppyy_backend cannot be found
+        import ROOT
         import cppyy
         cls.test_dct = "Pythonizables_C"
         cls.pythonizables = cppyy.load_reflection_info(cls.test_dct)
