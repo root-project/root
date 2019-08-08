@@ -45,7 +45,7 @@ public:
    REveDataProxyBuilderBase(const std::string &type);
    virtual ~REveDataProxyBuilderBase() {}
 
-   void SetCollection(REveDataCollection*);
+   virtual void SetCollection(REveDataCollection*);
    //   virtual void SetInteractionList(REveDataInteractionList*, const std::string&);
 
    virtual void CollectionBeingDestroyed(const REveDataCollection*);

@@ -350,6 +350,7 @@ public:
    void NextEvent()
    {
       m_inEventLoading = true;
+
       for (auto &el: m_collections->RefChildren())
       {
          auto c = dynamic_cast<REX::REveDataCollection *>(el);
@@ -360,11 +361,14 @@ public:
       for (auto proxy : m_builders) {
          proxy->Build();
       }
+
       m_inEventLoading = false;
    }
 
-   void addCollection(REX::REveDataCollection* collection, bool makeTable)
+   void addCollection(REX::REveDataCollection* collection, bool showInTable)
    {
+      m_collections->AddElement(collection);
+
       // load data
       LoadCurrentEvent(collection);
 
@@ -385,28 +389,24 @@ public:
       m_builders.push_back(glBuilder);
       glBuilder->Build();
 
-      if (makeTable) {
-         // Table view types      {
-         auto tableBuilder = new REX::REveTableProxyBuilder();
-         tableBuilder->SetHaveAWindow(true);
-         tableBuilder->SetCollection(collection);
-         REX::REveElement* tablep = tableBuilder->CreateProduct("table-type", m_viewContext);
-
-         auto tableMng =  m_viewContext->GetTableViewInfo();
+      // Table view types
+      auto tableBuilder = new REX::REveTableProxyBuilder();
+      tableBuilder->SetHaveAWindow(true);
+      tableBuilder->SetCollection(collection);
+      REX::REveElement* tablep = tableBuilder->CreateProduct("table-type", m_viewContext);
+      auto tableMng =  m_viewContext->GetTableViewInfo();
+      if (showInTable)
          tableMng->SetDisplayedCollection(collection->GetElementId());
-         tableMng->AddDelegate([=](REX::ElementId_t elId) { tableBuilder->DisplayedCollectionChanged(elId); });
-
-         for (REX::REveScene* scene : m_scenes) {
-            if (strncmp(scene->GetCTitle(), "Table", 5) == 0) {
-               scene->AddElement(tablep);
-               tableBuilder->Build(collection, tablep, m_viewContext );
-            }
-         }
-
-         m_builders.push_back(tableBuilder);
       }
+      tableMng->AddDelegate([=]() { tableBuilder->ConfigChanged(); });
+      for (REX::REveScene* scene : m_scenes) {
+         if (strncmp(scene->GetCTitle(), "Table", 5) == 0) {
+            scene->AddElement(tablep);
+            tableBuilder->Build(collection, tablep, m_viewContext );
+         }
+      }
+      m_builders.push_back(tableBuilder);
 
-      m_collections->AddElement(collection);
       collection->SetHandlerFunc([&] (REX::REveDataCollection* collection) { this->CollectionChanged( collection ); });
       collection->SetHandlerFuncIds([&] (REX::REveDataCollection* collection, const REX::REveDataCollection::Ids_t& ids) { this->ModelChanged( collection, ids ); });
    }
