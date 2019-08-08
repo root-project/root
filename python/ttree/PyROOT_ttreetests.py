@@ -205,8 +205,14 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
       myarray = f.Get( 'myarray' )
       self.assert_( isinstance( myarray, TArrayI ) )
 
-      myarray = MakeNullPointer( TArrayI )
-      f.GetObject( 'myarray', myarray )
+      if exp_pyroot:
+         # New PyROOT does not implement a pythonisation for GetObject.
+         # Just use the getattr syntax, which is much nicer
+         arr = f.myarray
+         self.assert_( isinstance( arr, TArrayI ) )
+      else:
+         myarray = MakeNullPointer( TArrayI )
+         f.GetObject( 'myarray', myarray )
 
       f.Close()
 
