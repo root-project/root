@@ -274,35 +274,11 @@ void ROOT::Experimental::REveGeomDescription::PackMatrix(std::vector<float> &vec
    vect[3] = 0;         vect[7] = 0;         vect[11] = 0;         vect[15] = 1;
 }
 
-
-/////////////////////////////////////////////////////////////////////
-/// Add node and all its childs to the flat list, exclude duplication
-
-void ROOT::Experimental::REveGeomDescription::ScanNode(TGeoNode *node, std::vector<int> &numbers, int offset)
-{
-   if (!node)
-      return;
-
-   // artificial offset, used as identifier
-   if (node->GetNumber() >= offset) return;
-
-   numbers.emplace_back(node->GetNumber());
-
-   node->SetNumber(offset + fNodes.size()); // use id with shift 1e9
-   fNodes.emplace_back(node);
-
-   auto chlds = node->GetNodes();
-   if (chlds) {
-      for (int n = 0; n <= chlds->GetLast(); ++n)
-         ScanNode(dynamic_cast<TGeoNode *>(chlds->At(n)), numbers, offset);
-   }
-}
-
 /////////////////////////////////////////////////////////////////////
 /// Collect information about geometry hierarchy into flat list
 /// like it done JSROOT.GEO.ClonedNodes.prototype.CreateClones
 
-void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr)
+void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr, const std::string &volname)
 {
    fDesc.clear();
    fNodes.clear();
@@ -312,19 +288,48 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr)
 
    if (!mgr) return;
 
-   // vector to remember numbers
-   std::vector<int> numbers;
-   int offset = 1000000000;
+   auto topnode = mgr->GetTopNode();
+   if (!volname.empty()) {
+      auto vol = mgr->GetVolume(volname.c_str());
+      if (vol) {
+         TGeoNode *node;
+         TGeoIterator next(mgr->GetTopVolume());
+         while ((node=next())) {
+            if (node->GetVolume() == vol) break;
+         }
+         if (node) { topnode = node; printf("Find node with volume\n"); }
+      }
+   }
 
    // by top node visibility always enabled and harm logic
    // later visibility can be controlled by other means
    // mgr->GetTopNode()->GetVolume()->SetVisibility(kFALSE);
 
-   SetVisLevel(mgr->GetVisLevel());
-   SetMaxVisNodes(mgr->GetMaxVisNodes());
+   int maxnodes = mgr->GetMaxVisNodes();
 
-   // build flat list of all nodes
-   ScanNode(mgr->GetTopNode(), numbers, offset);
+   SetNSegments(mgr->GetNsegments());
+   SetVisLevel(mgr->GetVisLevel());
+   SetMaxVisNodes(maxnodes);
+   SetMaxVisFaces( (maxnodes > 5000 ? 5000 : (maxnodes < 1000 ? 1000 : maxnodes)) * 100);
+
+
+   // vector to remember numbers
+   std::vector<int> numbers;
+   int offset = 1000000000;
+
+   // try to build flat list of all nodes
+   TGeoNode *snode = topnode;
+   TGeoIterator iter(topnode->GetVolume());
+   do {
+      // artificial offset, used as identifier
+      if (snode->GetNumber() >= offset) {
+         iter.Skip(); // no need to look inside
+      } else {
+         numbers.emplace_back(snode->GetNumber());
+         snode->SetNumber(offset + fNodes.size()); // use id with shift 1e9
+         fNodes.emplace_back(snode);
+      }
+   } while ((snode = iter()) != nullptr);
 
    fDesc.reserve(fNodes.size());
    numbers.reserve(fNodes.size());
@@ -381,36 +386,6 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr)
    MarkVisible(); // set visibility flags
 
    ProduceIdShifts();
-}
-
-/////////////////////////////////////////////////////////////////////
-/// Select top visible volume, other volumes will not be shown
-
-void ROOT::Experimental::REveGeomDescription::SelectVolume(TGeoVolume *vol)
-{
-   fTopDrawNode = 0;
-   if (!vol) return;
-
-   for (auto &desc: fDesc)
-      if (fNodes[desc.id]->GetVolume() == vol) {
-         fTopDrawNode = desc.id;
-         break;
-      }
-}
-
-/////////////////////////////////////////////////////////////////////
-/// Select top visible node, other nodes will not be shown
-
-void ROOT::Experimental::REveGeomDescription::SelectNode(TGeoNode *node)
-{
-   fTopDrawNode = 0;
-   if (!node) return;
-
-   for (auto &desc: fDesc)
-      if (fNodes[desc.id] == node) {
-         fTopDrawNode = desc.id;
-         break;
-      }
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -477,21 +452,18 @@ int ROOT::Experimental::REveGeomDescription::ScanNodes(bool only_visible, int ma
 {
    std::vector<int> stack;
    stack.reserve(25); // reserve enough space for most use-cases
-   int counter{0}, inside_visisble_branch{0};
+   int counter{0};
 
    using ScanFunc_t = std::function<int(int, int)>;
 
    ScanFunc_t scan_func = [&, this](int nodeid, int lvl) {
-      if (nodeid == fTopDrawNode)
-         inside_visisble_branch++;
-
       auto &desc = fDesc[nodeid];
       int res = 0;
 
       if (desc.nochlds && (lvl > 0)) lvl = 0;
 
       // same logic as in JSROOT.GEO.ClonedNodes.prototype.ScanVisible
-      bool is_visible = (lvl >= 0) && (desc.vis > lvl) && desc.CanDisplay() && (inside_visisble_branch > 0);
+      bool is_visible = (lvl >= 0) && (desc.vis > lvl) && desc.CanDisplay();
 
       if (is_visible || !only_visible)
          if (func(desc, stack, is_visible, counter))
@@ -511,9 +483,6 @@ int ROOT::Experimental::REveGeomDescription::ScanNodes(bool only_visible, int ma
          counter += desc.idshift;
       }
 
-      if (nodeid == fTopDrawNode)
-         inside_visisble_branch--;
-
       return res;
    };
 
@@ -521,7 +490,7 @@ int ROOT::Experimental::REveGeomDescription::ScanNodes(bool only_visible, int ma
    if (!maxlvl) maxlvl = 4;
    if (maxlvl > 97) maxlvl = 97; // check while vis property of node is 99 normally
 
-   return scan_func(0, maxlvl+1);
+   return scan_func(0, maxlvl);
 }
 
 /////////////////////////////////////////////////////////////////////

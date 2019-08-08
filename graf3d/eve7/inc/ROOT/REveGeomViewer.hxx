@@ -32,6 +32,7 @@ class REveGeomViewer {
 protected:
 
    TGeoManager *fGeoManager{nullptr};        ///<! geometry to show
+   std::string fSelectedVolume;              ///<! name of selected volume
    REveGeomDescription fDesc;                ///<! geometry description, send to the client as first message
    bool fShowHierarchy{true};                ///<! if hierarchy visible by default
 
@@ -45,10 +46,10 @@ protected:
 
 public:
 
-   REveGeomViewer(TGeoManager *mgr = nullptr);
+   REveGeomViewer(TGeoManager *mgr = nullptr, const std::string &volname = "");
    virtual ~REveGeomViewer();
 
-   void SetGeometry(TGeoManager *mgr);
+   void SetGeometry(TGeoManager *mgr, const std::string &volname = "");
 
    void SelectVolume(const std::string &volname);
 
