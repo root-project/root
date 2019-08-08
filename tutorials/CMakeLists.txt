@@ -481,7 +481,6 @@ if(ROOT_python_FOUND)
                  tutorial-pyroot-benchmarks-py
                  tutorial-pyroot-pyroot002_TTreeAsMatrix-py
                  tutorial-pyroot-shapes-py
-                 tutorial-pyroot-staff-py
                  tutorial-roofit-rf106_plotdecoration-py
                  tutorial-roofit-rf315_projectpdf-py
                  tutorial-roofit-rf402_datahandling-py
