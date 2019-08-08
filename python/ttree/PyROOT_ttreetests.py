@@ -175,7 +175,14 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
             self.assertEqual( i, int(entry) )
             i += 1
 
-         label = event.Label[0:event.Label.find('\0')]
+         if exp_pyroot:
+            # In new cppyy, character arrays are read as Python strings,
+            # ignoring the size of the branch buffer.
+            # Here, no character '\0' is part of the returned string.
+            # https://sft.its.cern.ch/jira/browse/ROOT-9768
+            label = event.Label
+         else:
+            label = event.Label[0:event.Label.find('\0')]
          self.assertEqual( label, str(int(event.NLabel)) )
 
       f.Close()
