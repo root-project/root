@@ -26,6 +26,8 @@ onmessage = function(e) {
       if (nodes) {
          // console.log('get clones ' + nodes.length);
          clones = new JSROOT.GEO.ClonedNodes(null, nodes);
+         clones.SetVisLevel(e.data.vislevel);
+         clones.SetMaxVisNodes(e.data.maxvisnodes);
          delete e.data.clones;
          clones.sortmap = e.data.sortmap;
       }
@@ -88,12 +90,14 @@ onmessage = function(e) {
       clones.MarkVisibles(false, false, e.data.visible);
       delete e.data.visible;
 
+      clones.ProduceIdShits();
+
       var matrix = null;
       if (e.data.matrix)
          matrix = new THREE.Matrix4().fromArray(e.data.matrix);
       delete e.data.matrix;
 
-      var res = clones.CollectVisibles(e.data.collect, JSROOT.GEO.CreateFrustum(matrix), e.data.collect_nodes);
+      var res = clones.CollectVisibles(e.data.collect, JSROOT.GEO.CreateFrustum(matrix));
 
       e.data.new_nodes = res.lst;
       e.data.complete = res.complete; // inform if all nodes are selected

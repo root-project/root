@@ -1821,13 +1821,23 @@
       this.ackn = 10;
    }
 
+   /** Returns arguments specified in the RWebWindow::SetUserArgs() method
+    * Can be any valid JSON expression. Undefined by default.
+    * If field parameter specified and user args is object, returns correspondent member of the user args object */
+   WebWindowHandle.prototype.GetUserArgs = function(field) {
+      if (field && (typeof field == 'string')) {
+         return (this.user_args && (typeof this.user_args == 'object')) ? this.user_args[field] : undefined;
+      }
+
+      return this.user_args;
+   }
+
    /** Set callbacks reciever.
     *
     * Following function can be defined in receiver object:
     *    - OnWebsocketMsg
     *    - OnWebsocketOpened,
-    *    - OnWebsocketClosed
-    */
+    *    - OnWebsocketClosed */
    WebWindowHandle.prototype.SetReceiver = function(obj) {
       this.receiver = obj;
    }
@@ -1881,7 +1891,6 @@
 
    /** Close connection. */
    WebWindowHandle.prototype.Close = function(force) {
-
       if (this.timerid) {
          clearTimeout(this.timerid);
          delete this.timerid;
@@ -2136,6 +2145,7 @@
       // arg.socket_kind = "longpoll";
 
       var handle = new WebWindowHandle(arg.socket_kind);
+      handle.user_args = arg.user_args;
 
       if (window) {
          window.onbeforeunload = handle.Close.bind(handle, true);
