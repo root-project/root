@@ -40,16 +40,15 @@ public:
    int id{0};               ///< node id, index in array
    std::string name;        ///< node name
    std::vector<int> chlds;  ///< list of childs id
-   int vis{0};              ///< visibility flag, 0 - off, 1 - when no childs, 2 - always
-   int depth{-1};           ///<! how far in hierarchy depth should be scanned
+   int vis{0};              ///< visibility flag, 0 - off, 1 - only when level==0, 99 - always
+   bool nochlds{false};     ///< how far in hierarchy depth should be scanned
+
    std::string color;       ///< rgb code without rgb() prefix
    int sortid{0};           ///<! place in sorted array, to check cuts, or id of original node when used search structures
 
    REveGeomNodeBase(int _id = 0) : id(_id) {}
 
    bool IsVisible() const { return vis > 0; }
-
-   int GetVisDepth() const { return depth; }
 };
 
 /** Full node description including matrices and other attributes */
@@ -59,8 +58,7 @@ public:
    std::vector<float> matr; ///< matrix for the node, can have reduced number of elements
    double vol{0};           ///<! volume estimation
    int nfaces{0};           ///<! number of shape faces
-   int numvischld{0};       ///<! number of visible childs, if all can be jump over
-   int idshift{0};          ///<! used to jump over then scan all geom hierarchy
+   int idshift{-1};         ///<! used to jump over then scan all geom hierarchy
    bool useflag{false};     ///<! extra flag, used for selection
    float opacity{1.};       ///<! opacity of the color
 
@@ -90,13 +88,14 @@ public:
 class REveGeomVisible {
 public:
    int nodeid{0};                    ///< selected node id,
+   int seqid{0};                     ///< sequence id, used for merging later
    std::vector<int> stack;           ///< path to the node, index in list of childs
    std::string color;                ///< color in rgb format
    double opacity{1};                ///< opacity
    REveShapeRenderInfo *ri{nullptr}; ///< render information for the shape, can be same for different nodes
 
    REveGeomVisible() = default;
-   REveGeomVisible(int id, const std::vector<int> &_stack) : nodeid(id), stack(_stack) {}
+   REveGeomVisible(int _nodeid, int _seqid, const std::vector<int> &_stack) : nodeid(_nodeid), seqid(_seqid), stack(_stack) {}
 };
 
 /** Object with full description for drawing geometry
@@ -131,7 +130,7 @@ public:
    REveShapeRenderInfo *ri{nullptr}; ///< rendering information (if applicable)
 };
 
-using REveGeomScanFunc_t = std::function<bool(REveGeomNode &, std::vector<int> &, bool)>;
+using REveGeomScanFunc_t = std::function<bool(REveGeomNode &, std::vector<int> &, bool, int)>;
 
 
 class REveGeomDescription {
@@ -155,7 +154,6 @@ class REveGeomDescription {
    std::string fDrawOptions;        ///< default draw options for client
    std::vector<REveGeomNode> fDesc; ///< converted description, send to client
 
-   int fVisLevel{0};                ///<! maximal visibility depth
    int fTopDrawNode{0};             ///<! selected top node
    std::vector<int> fSortMap;       ///<! nodes in order large -> smaller volume
    int fNSegments{0};               ///<! number of segments for cylindrical shapes
@@ -163,8 +161,10 @@ class REveGeomDescription {
 
    std::string fDrawJson;           ///<! JSON with main nodes drawn by client
    int fDrawIdCut{0};               ///<! sortid used for selection of most-significant nodes
-   int fFacesLimit{0};              ///<! maximal number of faces to be selected for drawing
+   int fVisLevel{0};                ///<! maximal visibility depth
+   int fActualLevel{0};             ///<! level can be reduced when selecting nodes
    int fNodesLimit{0};              ///<! maximal number of nodes to be selected for drawing
+   int fFacesLimit{0};              ///<! maximal number of faces to be selected for drawing
    bool fPreferredOffline{false};   ///<! indicates that full description should be provided to client
    bool fBuildShapes{true};         ///<! if TGeoShape build already on server (default) or send as is to client
 
@@ -176,7 +176,9 @@ class REveGeomDescription {
 
    int MarkVisible(bool on_screen = false);
 
-   void ScanNodes(bool only_visible, REveGeomScanFunc_t func);
+   void ProduceIdShifts();
+
+   int ScanNodes(bool only_visible, int maxlvl, REveGeomScanFunc_t func);
 
    void ResetRndrInfos();
 

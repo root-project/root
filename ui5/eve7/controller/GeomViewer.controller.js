@@ -329,7 +329,12 @@ sap.ui.define(['sap/ui/core/Component',
          if (recreate) {
             this.geo_clones = new JSROOT.GEO.ClonedNodes(null, nodes);
             this.geo_clones.name_prefix = this.geo_clones.GetNodeName(0);
-            // this.geo_clones.maxdepth = 20;
+            // normally only need when making selection, not used in geo viewer
+            this.geo_clones.SetMaxVisNodes(draw_msg.maxvisnodes);
+            this.geo_clones.SetVisLevel(draw_msg.vislevel);
+            // parameter need for visualization with transparency
+            // TODO: provide from server
+            this.geo_clones.maxdepth = 20;
          }
 
          if (draw_msg.nsegm) {
