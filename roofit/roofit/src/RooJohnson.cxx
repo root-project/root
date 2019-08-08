@@ -121,7 +121,6 @@ double RooJohnson::evaluate() const
   return result;
 }
 
-
 namespace {
 
 ///Actual computations for the batch evaluation of the Johnson.
@@ -196,11 +195,11 @@ RooSpan<double> RooJohnson::evaluateBatch(std::size_t begin, std::size_t maxSize
   }
   else {
     compute(output,
-        BracketAdapterWithBranch(_mass, massData),
-        BracketAdapterWithBranch(_mu, muData),
-        BracketAdapterWithBranch(_lambda, lambdaData),
-        BracketAdapterWithBranch(_gamma, gammaData),
-        BracketAdapterWithBranch(_delta, deltaData), _massThreshold);
+        BracketAdapterWithMask(_mass, massData),
+        BracketAdapterWithMask(_mu, muData),
+        BracketAdapterWithMask(_lambda, lambdaData),
+        BracketAdapterWithMask(_gamma, gammaData),
+        BracketAdapterWithMask(_delta, deltaData), _massThreshold);
   }
 
   return output;

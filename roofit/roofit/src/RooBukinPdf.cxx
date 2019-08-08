@@ -252,3 +252,33 @@ RooSpan<double> RooBukinPdf::evaluateBatch(std::size_t begin, std::size_t batchS
   }
   return output;
 }
+
+RooSpan<double> RooBukinPdf::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
+  using namespace BatchHelpers;
+  using namespace BukinBatchEvaluate;
+    
+  EvaluateInfo info = getInfo( {x,Xp,sigp,xi,rho1,rho2}, begin, batchSize );
+  auto output = _batchData.makeWritableBatchUnInit(begin, info.size);
+  auto xData = x.getValBatch(begin, info.size);
+  if (info.nBatches == 0) {
+    throw std::logic_error("Requested a batch computation, but no batch data available.");
+  }
+  else if (info.nBatches==1 && !xData.empty()) {
+    compute(info.size, output.data(), xData.data(), 
+    BracketAdapter<double> (Xp), 
+    BracketAdapter<double> (sigp), 
+    BracketAdapter<double> (xi), 
+    BracketAdapter<double> (rho1), 
+    BracketAdapter<double> (rho2));
+  }
+  else {
+    compute(info.size, output.data(), 
+    BracketAdapterWithMask (x,x.getValBatch(begin,batchSize)), 
+    BracketAdapterWithMask (Xp,Xp.getValBatch(begin,batchSize)), 
+    BracketAdapterWithMask (sigp,sigp.getValBatch(begin,batchSize)), 
+    BracketAdapterWithMask (xi,xi.getValBatch(begin,batchSize)), 
+    BracketAdapterWithMask (rho1,rho1.getValBatch(begin,batchSize)), 
+    BracketAdapterWithMask (rho2,rho2.getValBatch(begin,batchSize)));
+  }
+  return output;
+}
