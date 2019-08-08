@@ -46,8 +46,7 @@
               selectionMode="None"
               editable="false"
               height="100%"
-              rowHeight="25"
-              minAutoRowCount="100"
+              minAutoRowCount="15"
               showColumnVisibilityMenu="true"
               visibleRowCountMode="Auto"
             />
