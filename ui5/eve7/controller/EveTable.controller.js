@@ -51,24 +51,23 @@ sap.ui.define([
          // console.log(">>>table scene", scene);
          if (scene.childs[0]._typename == "ROOT::Experimental::REveTableViewInfo") {
             // presume table view manger is first child of table scene
-            this.collectionMgr = scene.childs[0];
-            this.eveTable =  this.mgr.GetElement(this.collectionMgr.fTableId);
-            this.collection = this.mgr.GetElement(this.eveTable.fCollectionId);
+            this.viewInfo = scene.childs[0];
          }
+         
+         console.log("table viewinfo", this.viewInfo  );
+         this.collection = this.mgr.GetElement(this.viewInfo.fDisplayedCollection);
+         // loop over products
+         for (var i = 1; i < scene.childs.length; ++i) {
+            var product = scene.childs[i];
+            if (product.childs && product.childs.length && product.childs[0].fCollectionId == this.viewInfo.fDisplayedCollection) {
+               console.log("table found  ",product.childs[0] );
+               this.eveTable =  product.childs[0];
+               break;
+            }
+         }
+         
       },
-/*
-      build: function()
-      {
-         // console.log("EveTable controller build()");
-         this.locateEveTable();
-         if (this.eveTable) {
-            this.buildTableBody();
-         }
-         else {
-            console.log("ERROR can't find table in table scene !!!!");
-         }
-      },
-*/
+
       buildTableBody: function(doBind)
       {
 
@@ -96,7 +95,6 @@ sap.ui.define([
          {
             rowData[i].Name =  this.collection.childs[i].fName;
             rowData[i].Filtered =  this.collection.childs[i].fFiltered === true ? "--" : "*";
-            if (i > 10) break;
          }
 
          // table model
@@ -283,11 +281,11 @@ sap.ui.define([
             title = expr;
          }
 
-         var mir = "AddNewColumn( \"" + expr + "\", \"" + title + "\" )";
+         var mir = "AddNewColumnToCurrentCollection( \"" + expr + "\", \"" + title + "\" )";
 
          // console.log("table element id ", pthis.eveTable.fElementId);
 
-         var obj = {"mir" : mir, "fElementId" : pthis.eveTable.fElementId, "class" : pthis.eveTable._typename};
+         var obj = {"mir" : mir, "fElementId" :pthis.viewInfo.fElementId, "class" : pthis.eveTable._typename};
          // console.log("MIR obj ", obj);
          pthis.mgr.handle.Send(JSON.stringify(obj));
       },
@@ -298,7 +296,7 @@ sap.ui.define([
          var path = model.getPath();
          var entry = model.getProperty(path);
          var coll = entry.elementId;
-         var mng =  this.collectionMgr;
+         var mng =  this.viewInfo;
          var mir = {"elementid" : mng.fElementId, "elementclass":mng._typename};
          mir.func = "SetDisplayedCollection(" + coll + ")";
 

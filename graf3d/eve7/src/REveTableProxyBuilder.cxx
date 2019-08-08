@@ -8,33 +8,54 @@
 
 using namespace ROOT::Experimental;
 
+REveTableProxyBuilder::REveTableProxyBuilder() : REveDataProxyBuilderBase("Table"), fTable(0)
+{
+    fTable = new REveDataTable("ProxyTable");
+}
+
+REveTableProxyBuilder::~REveTableProxyBuilder()
+{
+}
+
+// reuse table product
+void REveTableProxyBuilder::Clean()
+{
+}
+
 void REveTableProxyBuilder::Build(const REveDataCollection* collection, REveElement* product, const REveViewContext* context)
 {
    REveTableViewInfo* info = context->GetTableViewInfo();
-
-   // printf("-----REveTableProxyBuilder::Build() body for %s (%p, %p)\n",collection->GetCName(), collection, Collection() );
-   auto table = new REveDataTable("testTable");
-   table->SetCollection(collection);
-   product->AddElement(table);
-   product->SetName("product for " + collection->GetName());
-   auto tableEntries =  context->GetTableViewInfo()->RefTableEntries(collection->GetName());
-
-   for (const REveTableEntry& spec : tableEntries) {
-      auto c = new REveDataColumn(spec.fName.c_str());
-      table->AddElement(c);
-      std::string exp  = "i." + spec.fExpression + "()";
-      c->SetExpressionAndType(exp.c_str(), spec.fType);
-      c->SetPrecision(spec.fPrecision);
+   if (info->GetDisplayedCollection() != Collection()->GetElementId())
+   {
+      return;
    }
 
-   info->SetTableId(table->GetElementId());
-   fTable = table;
+   if (product->NumChildren() == 0) {
+      product->AddElement(fTable);
+   }
+
+   // printf("-----REveTableProxyBuilder::Build() body for %s (%p, %p)\n",collection->GetCName(), collection, Collection() );
+
+   if (info->GetConfigChanged() || fTable->NumChildren() == 0) {
+      fTable->DestroyElements();
+      auto tableEntries =  context->GetTableViewInfo()->RefTableEntries(collection->GetName());
+      for (const REveTableEntry& spec : tableEntries) {
+         auto c = new REveDataColumn(spec.fName.c_str());
+         fTable->AddElement(c);
+         std::string exp  = "i." + spec.fExpression + "()";
+         c->SetExpressionAndType(exp.c_str(), spec.fType);
+         c->SetPrecision(spec.fPrecision);
+      }
+   }
+   fTable->StampObjProps();
 }
 
-void REveTableProxyBuilder::CleanLocal()
+
+
+void REveTableProxyBuilder::SetCollection(REveDataCollection* collection)
 {
-   // all product elements are destroyed in Clean(), here is just a reset of cached variable
-   fTable = 0;
+   REveDataProxyBuilderBase::SetCollection(collection);
+   fTable->SetCollection(collection);
 }
 
 void REveTableProxyBuilder::ModelChanges(const REveDataCollection::Ids_t&, REveDataProxyBuilderBase::Product*)
@@ -43,9 +64,6 @@ void REveTableProxyBuilder::ModelChanges(const REveDataCollection::Ids_t&, REveD
    if (fTable) fTable->StampObjProps();
 }
 
-void REveTableProxyBuilder::DisplayedCollectionChanged(ElementId_t id) {
-   // printf("-- displayed collection changed %d (%p) \n", id, Collection());
-   REveDataCollection* c = dynamic_cast<REveDataCollection*>(gEve->FindElementById(id));
-   SetCollection(c);
+void REveTableProxyBuilder::ConfigChanged() {
    Build();
 }
