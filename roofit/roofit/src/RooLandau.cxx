@@ -121,8 +121,8 @@ void compute(RooSpan<double> output, Tx x, TMean mean, TSig sigma) {
   
     double u, ue, us;
     for (int j=0; j<stop; j++) { //CHECK_VECTORISE
-      // if branch written in way to quickly process the most popular case -1 < v[j] < 1
-      if (v[j] > 1) {
+      // if branch written in way to quickly process the most popular case -1 <= v[j] < 1
+      if (v[j] >= 1) {
         if (v[j] < 5) {
           output[i+j] = (p3[0]+(p3[1]+(p3[2]+(p3[3]+p3[4]*v[j])*v[j])*v[j])*v[j]) /
                    (q3[0]+(q3[1]+(q3[2]+(q3[3]+q3[4]*v[j])*v[j])*v[j])*v[j]);
@@ -143,7 +143,7 @@ void compute(RooSpan<double> output, Tx x, TMean mean, TSig sigma) {
             output[i+j] = u*u*(1 +(a2[0] +a2[1]*u)*u );
         }
       } else if (v[j] < -1) {
-          if (v[j] > -5.5) {
+          if (v[j] >= -5.5) {
             u   = std::exp(-v[j]-1);
             output[i+j] = std::exp(-u)*std::sqrt(u)*
               (p1[0]+(p1[1]+(p1[2]+(p1[3]+p1[4]*v[j])*v[j])*v[j])*v[j])/
@@ -176,11 +176,13 @@ void compute(RooSpan<double> output, Tx x, TMean mean, TSig sigma) {
 
 RooSpan<double> RooLandau::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
   using namespace LandauBatchEvaluate;
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
-
   auto xData = x.getValBatch(begin, batchSize);
   auto meanData = mean.getValBatch(begin, batchSize);
   auto sigmaData = sigma.getValBatch(begin, batchSize);
+  
+  batchSize = findSize({ xData, meanData, sigmaData });
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+  
   const bool batchX = !xData.empty();
   const bool batchMean = !meanData.empty();
   const bool batchSigma = !sigmaData.empty();

@@ -25,6 +25,31 @@
 class RooArgSet;
 
 namespace BatchHelpers {
+  
+constexpr size_t block = 1024;
+
+struct ArrayWrapper {
+    const double * __restrict__ ptr;
+    bool _batch;
+    
+    constexpr double operator[](std::size_t i) const {
+      return ptr[i];
+    }
+    constexpr bool batch() const {
+      return _batch;
+    }
+};
+
+struct EvaluateInfo {
+  size_t size, nBatches;
+};
+  
+size_t findSize(std::vector< RooSpan<const double> > parameters);
+EvaluateInfo getInfo(std::vector< RooRealProxy > parameters, size_t begin, size_t batchSize);
+EvaluateInfo init(std::vector< RooRealProxy > parameters, 
+                  std::vector<  ArrayWrapper* > wrappers,
+                  std::vector< double*> arrays,
+                  size_t begin, size_t batchSize );
 
 ///Little adapter that gives a bracket operator to types that don't
 ///have one. It completely ignores the index and returns a constant.
@@ -48,18 +73,18 @@ class BracketAdapterWithBranch {
   public:
     explicit BracketAdapterWithBranch(double payload, const RooSpan<const double>& batch) noexcept :
     _payload(payload),
-    _span(batch),
+    _pointer(batch.data()),
     _batchEmpty(batch.empty())
     {
     }
 
     constexpr double operator[](std::size_t i) const noexcept {
-      return _batchEmpty ? _payload : _span[i];
+      return _batchEmpty ? _payload : _pointer[i];
     }
 
   private:
     const double _payload;
-    const RooSpan<const double>& _span;
+    const double* __restrict__ const _pointer;
     const bool _batchEmpty;
 };
 
