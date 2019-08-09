@@ -71,8 +71,6 @@ public:
 /** Base class for render info block */
 class RGeomRenderInfo {
 public:
-   // render data, equivalent of REveElement::WriteCoreJson
-   bool init{false};          ///<! indicates if data initialized
    /// virtual destructor required for the I/O
    virtual ~RGeomRenderInfo() = default;
 };
@@ -154,13 +152,12 @@ class REveGeomDescription {
       int id{0};                                   ///<! sequential id
       TGeoShape *fShape{nullptr};                  ///<! original shape
       int nfaces{0};                               ///<! number of faces in render data
-      std::unique_ptr<REveRenderData> fRenderData; ///<! binary render data
       RGeomRawRenderInfo fRawInfo;                 ///<! raw render info
       RGeomShapeRenderInfo fShapeInfo;             ///<! shape itself as info
       ShapeDescr(TGeoShape *s) : fShape(s) {}
 
-      bool has_shape() const { return (nfaces == 1) && fShapeInfo.init; }
-      bool has_raw() const { return (nfaces > 1) && fRawInfo.init; }
+      bool has_shape() const { return nfaces == 1; }
+      bool has_raw() const { return nfaces > 1; }
 
       /// Provide render info for visible item
       RGeomRenderInfo *rndr_info()
@@ -172,8 +169,9 @@ class REveGeomDescription {
 
       void reset()
       {
-         fRawInfo.init = false;
-         fShapeInfo.init = false;
+         nfaces = 0;
+         fShapeInfo.shape = nullptr;
+         fRawInfo.raw.clear();
       }
    };
 
@@ -192,7 +190,7 @@ class REveGeomDescription {
    int fNodesLimit{0};              ///<! maximal number of nodes to be selected for drawing
    int fFacesLimit{0};              ///<! maximal number of faces to be selected for drawing
    bool fPreferredOffline{false};   ///<! indicates that full description should be provided to client
-   bool fBuildShapes{true};         ///<! if TGeoShape build already on server (default) or send as is to client
+   int fBuildShapes{1};             ///<! where shapes are build 0 - client, 1 - TGeoComposite on server, 2 - all on server
 
    int fJsonComp{0};                ///<! default JSON compression
 
@@ -208,7 +206,7 @@ class REveGeomDescription {
 
    ShapeDescr &FindShapeDescr(TGeoShape *shape);
 
-   ShapeDescr &MakeShapeDescr(TGeoShape *shape, bool acc_rndr = false);
+   ShapeDescr &MakeShapeDescr(TGeoShape *shape);
 
    void CopyMaterialProperties(TGeoVolume *vol, REveGeomNode &node);
 
@@ -294,9 +292,9 @@ public:
    std::string GetDrawOptions() const { return fDrawOptions; }
 
    /** Instruct to build binary 3D model already on the server (true) or send TGeoShape as is to client, which can build model itself */
-   void SetBuildShapes(bool on = true) { fBuildShapes = on; }
+   void SetBuildShapes(int lvl = 1) { fBuildShapes = lvl; }
    /** Returns true if binary 3D model build already by C++ server (default) */
-   bool IsBuildShapes() const { return fBuildShapes; }
+   int IsBuildShapes() const { return fBuildShapes; }
 
    std::unique_ptr<REveGeomNodeInfo> MakeNodeInfo(const std::string &path);
 };

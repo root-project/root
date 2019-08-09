@@ -624,14 +624,17 @@ ROOT::Experimental::REveGeomDescription::ShapeDescr &ROOT::Experimental::REveGeo
 /// Find description object and create render information
 
 ROOT::Experimental::REveGeomDescription::ShapeDescr &
-ROOT::Experimental::REveGeomDescription::MakeShapeDescr(TGeoShape *shape, bool acc_rndr)
+ROOT::Experimental::REveGeomDescription::MakeShapeDescr(TGeoShape *shape)
 {
    auto &elem = FindShapeDescr(shape);
 
    if (elem.nfaces == 0) {
       TGeoCompositeShape *comp = dynamic_cast<TGeoCompositeShape *>(shape);
 
-      if (IsBuildShapes() || (comp != nullptr)) {
+      if (IsBuildShapes() < (comp ? 1 : 2)) {
+         elem.nfaces = 1;
+         elem.fShapeInfo.shape = shape;
+      } else {
 
          auto poly = std::make_unique<REveGeoPolyShape>();
 
@@ -641,30 +644,18 @@ ROOT::Experimental::REveGeomDescription::MakeShapeDescr(TGeoShape *shape, bool a
             poly->BuildFromShape(shape, GetNSegments());
          }
 
-         elem.fRenderData = std::make_unique<REveRenderData>();
+         REveRenderData rd;
 
-         poly->FillRenderData(*elem.fRenderData);
+         poly->FillRenderData(rd);
 
          elem.nfaces = poly->GetNumFaces();
-      } else {
-         elem.nfaces = 1;
-      }
-   }
 
-   if (acc_rndr && (elem.nfaces > 0)) {
-      auto &rd = elem.fRenderData;
-      auto &ri = elem.fRawInfo;
+         elem.fRawInfo.raw.resize(rd.GetBinarySize());
+         rd.Write( reinterpret_cast<char *>(elem.fRawInfo.raw.data()), elem.fRawInfo.raw.size() );
+         elem.fRawInfo.sz[0] = rd.SizeV();
+         elem.fRawInfo.sz[1] = rd.SizeN();
+         elem.fRawInfo.sz[2] = rd.SizeI();
 
-      if (!rd && (elem.nfaces == 1)) {
-         elem.fShapeInfo.shape = shape;
-         elem.fShapeInfo.init = true;
-      } else if (rd && (elem.nfaces > 1) && !ri.init) {
-         ri.init = true;
-         ri.raw.resize(rd->GetBinarySize());
-         rd->Write( reinterpret_cast<char *>(ri.raw.data()), ri.raw.size() );
-         ri.sz[0] = rd->SizeV();
-         ri.sz[1] = rd->SizeN();
-         ri.sz[2] = rd->SizeI();
       }
    }
 
@@ -795,7 +786,7 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
 
          auto volume = fNodes[node.id]->GetVolume();
 
-         auto &sd = MakeShapeDescr(volume->GetShape(), true);
+         auto &sd = MakeShapeDescr(volume->GetShape());
 
          item.ri = sd.rndr_info();
          if (sd.has_shape()) has_shape = true;
@@ -985,7 +976,7 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
       item.color = node.color;
       item.opacity = node.opacity;
 
-      auto &sd = MakeShapeDescr(volume->GetShape(), true);
+      auto &sd = MakeShapeDescr(volume->GetShape());
 
       item.ri = sd.rndr_info();
       if (sd.has_shape()) has_shape = true;
@@ -1194,7 +1185,7 @@ bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std:
 
    bool has_shape = false, has_raw = false;
 
-   auto &sd = MakeShapeDescr(vol->GetShape(), true);
+   auto &sd = MakeShapeDescr(vol->GetShape());
 
    // assign shape data
    for (auto &item : drawing.visibles) {
@@ -1273,7 +1264,7 @@ std::unique_ptr<ROOT::Experimental::REveGeomNodeInfo> ROOT::Experimental::REveGe
 
       if (shape && desc.CanDisplay()) {
 
-         auto &shape_descr = MakeShapeDescr(shape, true);
+         auto &shape_descr = MakeShapeDescr(shape);
 
          res->ri = shape_descr.rndr_info(); // temporary pointer, can be used preserved for short time
       }
