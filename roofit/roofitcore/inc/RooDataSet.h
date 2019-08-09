@@ -160,6 +160,8 @@ private:
   typedef MemPoolForRooSets<RooDataSet, 5*150> MemPool; // 150 = about 100kb
   static MemPool * memPool();
 #endif
+  unsigned short _errorMsgCount{0}; //! Counter to silence error messages when filling dataset.
+  bool _doWeightErrorCheck{true}; //! When adding events with weights, check that weights can actually be stored.
 
   ClassDef(RooDataSet,2) // Unbinned data set
 };
