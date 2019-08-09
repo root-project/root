@@ -4127,6 +4127,8 @@ int RootClingMain(int argc,
    clingArgs.push_back("-DSYSTEM_TYPE_macosx");
 #elif defined(R__WIN32)
    clingArgs.push_back("-DSYSTEM_TYPE_winnt");
+   // Tell windows.h not to #define min and max, it clashes with numerical_limits.
+   clingArgs.push_back("-DNOMINMAX");
 #else // assume UNIX
    clingArgs.push_back("-DSYSTEM_TYPE_unix");
 #endif
