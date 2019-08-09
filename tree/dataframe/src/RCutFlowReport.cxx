@@ -49,6 +49,28 @@ const TCutInfo &RCutFlowReport::operator[](std::string_view cutName)
    return *it;
 }
 
+void RCutFlowReport::Merge(RCutFlowReport &other)
+{
+   auto old_infos = fCutInfos;
+
+   fCutInfos.clear();
+   for (auto &&this_info : old_infos) {
+
+      const auto &this_name = this_info.GetName();
+      auto this_all = this_info.GetAll();
+      auto this_pass = this_info.GetPass();
+
+      auto other_info = other.At(this_name);
+      auto other_all = other_info.GetAll();
+      auto other_pass = other_info.GetPass();
+
+      this_all += other_all;
+      this_pass += other_pass;
+
+      this->AddCut({this_name, this_pass, this_all});
+   }
+}
+
 } // End NS RDF
 
 } // End NS ROOT

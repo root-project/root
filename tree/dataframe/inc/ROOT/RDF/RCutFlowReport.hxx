@@ -58,6 +58,7 @@ public:
    const TCutInfo &At(std::string_view cutName) { return operator[](cutName); }
    const_iterator begin() const { return fCutInfos.begin(); }
    const_iterator end() const { return fCutInfos.end(); }
+   void Merge(RCutFlowReport &other);
 };
 
 } // End NS RDF

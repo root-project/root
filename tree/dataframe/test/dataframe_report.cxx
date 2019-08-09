@@ -97,3 +97,28 @@ TEST(RDataFrameReport, ActionLazyness)
    EXPECT_TRUE(hasRun);
 
 }
+
+TEST(RDataFrameReport, Merging)
+{
+   ROOT::RDataFrame d(10);
+   auto rep = d.Define("a", "rdfentry_")
+               .Filter("a < 5", "less_than_5")
+               .Report();
+
+   auto this_rep_val = *rep;
+   auto other_rep_val = this_rep_val;
+
+   auto cut = this_rep_val.At("less_than_5");
+
+   auto old_all = cut.GetAll();
+   auto old_pass = cut.GetPass();
+   auto old_eff = cut.GetEff();
+
+   this_rep_val.Merge(other_rep_val);
+
+   auto merged_cut = this_rep_val.At("less_than_5");
+
+   EXPECT_EQ(merged_cut.GetAll(), old_all*2);
+   EXPECT_EQ(merged_cut.GetPass(), old_pass*2);
+   EXPECT_EQ(merged_cut.GetEff(), old_eff);
+}
