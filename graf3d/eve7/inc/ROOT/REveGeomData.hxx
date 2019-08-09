@@ -68,19 +68,31 @@ public:
    bool CanDisplay() const { return (vol > 0.) && (nfaces > 0); }
 };
 
-
-/** Information block for render data, stored in binary buffer */
-
-class REveShapeRenderInfo {
+/** Base class for render info block */
+class RGeomRenderInfo {
 public:
    // render data, equivalent of REveElement::WriteCoreJson
    bool init{false};          ///<! indicates if data initialized
-   int v{0};                  ///< fRenderData->SizeV();
-   int n{0};                  ///< fRenderData->SizeN();
-   int i{0};                  ///< fRenderData->SizeI();
-   TGeoShape *shape{nullptr}; ///< original shape - can be much less than binary data
-   std::vector<unsigned char> raw;  ///< raw shape data with render information, JSON_base64
+   /// virtual destructor required for the I/O
+   virtual ~RGeomRenderInfo() = default;
 };
+
+/** Render info with raw data */
+class RGeomRawRenderInfo : public RGeomRenderInfo  {
+public:
+   // render data, equivalent of REveElement::WriteCoreJson
+   int sz[3]={0,0, 0};        ///< fRenderData: [SizeV(), SizeN(), SizeI()];
+   std::vector<unsigned char> raw;  ///< raw shape data with render information, JSON_base64
+   virtual ~RGeomRawRenderInfo() = default;
+};
+
+/** Render info with shape itself - client can produce shape better */
+class RGeomShapeRenderInfo : public RGeomRenderInfo  {
+public:
+   TGeoShape *shape{nullptr}; ///< original shape - can be much less than binary data
+   virtual ~RGeomShapeRenderInfo() = default;
+};
+
 
 /** REveGeomVisible contains description of visible node
  * It is path to the node plus reference to shape rendering data */
@@ -92,7 +104,7 @@ public:
    std::vector<int> stack;           ///< path to the node, index in list of childs
    std::string color;                ///< color in rgb format
    double opacity{1};                ///< opacity
-   REveShapeRenderInfo *ri{nullptr}; ///< render information for the shape, can be same for different nodes
+   RGeomRenderInfo *ri{nullptr};     ///< render information for the shape, can be same for different nodes
 
    REveGeomVisible() = default;
    REveGeomVisible(int _nodeid, int _seqid, const std::vector<int> &_stack) : nodeid(_nodeid), seqid(_seqid), stack(_stack) {}
@@ -127,7 +139,7 @@ public:
    std::string shape_type; ///< shape type (if any)
    std::string shape_name; ///< shape class name (if any)
 
-   REveShapeRenderInfo *ri{nullptr}; ///< rendering information (if applicable)
+   RGeomRenderInfo *ri{nullptr};  ///< rendering information (if applicable)
 };
 
 using REveGeomScanFunc_t = std::function<bool(REveGeomNode &, std::vector<int> &, bool, int)>;
@@ -143,11 +155,26 @@ class REveGeomDescription {
       TGeoShape *fShape{nullptr};                  ///<! original shape
       int nfaces{0};                               ///<! number of faces in render data
       std::unique_ptr<REveRenderData> fRenderData; ///<! binary render data
-      REveShapeRenderInfo fRenderInfo;             ///<! render information for client
+      RGeomRawRenderInfo fRawInfo;                 ///<! raw render info
+      RGeomShapeRenderInfo fShapeInfo;             ///<! shape itself as info
       ShapeDescr(TGeoShape *s) : fShape(s) {}
 
+      bool has_shape() const { return (nfaces == 1) && fShapeInfo.init; }
+      bool has_raw() const { return (nfaces > 1) && fRawInfo.init; }
+
       /// Provide render info for visible item
-      REveShapeRenderInfo *rndr_info() { return (nfaces>0) && fRenderInfo.init ? &fRenderInfo : nullptr; }
+      RGeomRenderInfo *rndr_info()
+      {
+         if (has_shape()) return &fShapeInfo;
+         if (has_raw()) return &fRawInfo;
+         return nullptr;
+      }
+
+      void reset()
+      {
+         fRawInfo.init = false;
+         fShapeInfo.init = false;
+      }
    };
 
    std::vector<TGeoNode *> fNodes;  ///<! flat list of all nodes
@@ -268,7 +295,7 @@ public:
 
    /** Instruct to build binary 3D model already on the server (true) or send TGeoShape as is to client, which can build model itself */
    void SetBuildShapes(bool on = true) { fBuildShapes = on; }
-   /** Retuns true if binary 3D model build already by C++ server (default) */
+   /** Returns true if binary 3D model build already by C++ server (default) */
    bool IsBuildShapes() const { return fBuildShapes; }
 
    std::unique_ptr<REveGeomNodeInfo> MakeNodeInfo(const std::string &path);

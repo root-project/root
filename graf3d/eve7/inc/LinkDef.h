@@ -220,7 +220,9 @@
 #pragma link C++ class ROOT::Experimental::REveGeomNodeBase+;
 #pragma link C++ class ROOT::Experimental::REveGeomNode+;
 #pragma link C++ class ROOT::Experimental::REveGeomVisible+;
-#pragma link C++ class ROOT::Experimental::REveShapeRenderInfo+;
+#pragma link C++ class ROOT::Experimental::RGeomRenderInfo+;
+#pragma link C++ class ROOT::Experimental::RGeomRawRenderInfo+;
+#pragma link C++ class ROOT::Experimental::RGeomShapeRenderInfo;
 #pragma link C++ class ROOT::Experimental::REveGeomDescription+;
 #pragma link C++ class ROOT::Experimental::REveGeomDrawing+;
 #pragma link C++ class ROOT::Experimental::REveGeomRequest+;

@@ -653,22 +653,18 @@ ROOT::Experimental::REveGeomDescription::MakeShapeDescr(TGeoShape *shape, bool a
 
    if (acc_rndr && (elem.nfaces > 0)) {
       auto &rd = elem.fRenderData;
-      auto &ri = elem.fRenderInfo;
+      auto &ri = elem.fRawInfo;
 
       if (!rd && (elem.nfaces == 1)) {
-         ri.shape = shape;
+         elem.fShapeInfo.shape = shape;
+         elem.fShapeInfo.init = true;
+      } else if (rd && (elem.nfaces > 1) && !ri.init) {
          ri.init = true;
-         ri.v = ri.n = ri.i = 0;
-      } else if (rd && !ri.init) {
-         ri.shape = nullptr;
-         ri.init = true;
-
          ri.raw.resize(rd->GetBinarySize());
          rd->Write( reinterpret_cast<char *>(ri.raw.data()), ri.raw.size() );
-
-         ri.v = rd->SizeV();
-         ri.n = rd->SizeN();
-         ri.i = rd->SizeI();
+         ri.sz[0] = rd->SizeV();
+         ri.sz[1] = rd->SizeN();
+         ri.sz[2] = rd->SizeI();
       }
    }
 
@@ -714,7 +710,7 @@ void ROOT::Experimental::REveGeomDescription::CopyMaterialProperties(TGeoVolume 
 void ROOT::Experimental::REveGeomDescription::ResetRndrInfos()
 {
    for (auto &s: fShapes)
-      s.fRenderInfo.init = false;
+      s.reset();
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -802,7 +798,7 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
          auto &sd = MakeShapeDescr(volume->GetShape(), true);
 
          item.ri = sd.rndr_info();
-         if (item.ri->shape) has_shape = true;
+         if (sd.has_shape()) has_shape = true;
       }
       return true;
    });
@@ -992,7 +988,7 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
       auto &sd = MakeShapeDescr(volume->GetShape(), true);
 
       item.ri = sd.rndr_info();
-      if (item.ri->shape) has_shape = true;
+      if (sd.has_shape()) has_shape = true;
       return true;
    });
 
@@ -1203,8 +1199,8 @@ bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std:
    // assign shape data
    for (auto &item : drawing.visibles) {
       item.ri = sd.rndr_info();
-      if (item.ri->shape) has_shape = true;
-      if (!item.ri->raw.empty()) has_raw = true;
+      if (sd.has_shape()) has_shape = true;
+      if (sd.has_raw()) has_raw = true;
    }
 
    CollectNodes(drawing);
@@ -1279,7 +1275,7 @@ std::unique_ptr<ROOT::Experimental::REveGeomNodeInfo> ROOT::Experimental::REveGe
 
          auto &shape_descr = MakeShapeDescr(shape, true);
 
-         res->ri = &shape_descr.fRenderInfo; // temporary pointer, can be used preserved for short time
+         res->ri = shape_descr.rndr_info(); // temporary pointer, can be used preserved for short time
       }
 
    }
