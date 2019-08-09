@@ -25,6 +25,10 @@ enum EVoxelsType {
    kGeoRebuildVoxels = BIT(16)
 };
 
+private:
+TGeoVoxelFinder(const TGeoVoxelFinder&); // not implemented
+TGeoVoxelFinder& operator=(const TGeoVoxelFinder&); // not implemented
+
 protected:
    TGeoVolume      *fVolume;          // volume to which applies
 
@@ -61,9 +65,6 @@ protected:
    UChar_t          *fIndcX;          //[fNx] array of slices bits on X
    UChar_t          *fIndcY;          //[fNy] array of slices bits on Y
    UChar_t          *fIndcZ;          //[fNz] array of slices bits on Z
-
-   TGeoVoxelFinder(const TGeoVoxelFinder&);
-   TGeoVoxelFinder& operator=(const TGeoVoxelFinder&);
 
    void                BuildVoxelLimits();
    Int_t              *GetExtraX(Int_t islice, Bool_t left, Int_t &nextra) const;
