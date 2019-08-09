@@ -190,7 +190,7 @@ class REveGeomDescription {
    int fNodesLimit{0};              ///<! maximal number of nodes to be selected for drawing
    int fFacesLimit{0};              ///<! maximal number of faces to be selected for drawing
    bool fPreferredOffline{false};   ///<! indicates that full description should be provided to client
-   int fBuildShapes{1};             ///<! where shapes are build 0 - client, 1 - TGeoComposite on server, 2 - all on server
+   int fBuildShapes{1};             ///<! when shapes build on server  0 - never, 1 - TGeoComposite, 2 - plus non-cylindrical, 3 - all
 
    int fJsonComp{0};                ///<! default JSON compression
 
