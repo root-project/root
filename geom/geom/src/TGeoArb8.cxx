@@ -209,12 +209,13 @@ TGeoArb8::TGeoArb8(const char *name, Double_t dz, Double_t *vertices)
 TGeoArb8::TGeoArb8(const TGeoArb8& ga8) :
   TGeoBBox(ga8),
   fDz(ga8.fDz),
-  fTwist(ga8.fTwist)
+  fTwist(nullptr)
 {
    for(Int_t i=0; i<8; i++) {
       fXY[i][0]=ga8.fXY[i][0];
       fXY[i][1]=ga8.fXY[i][1];
    }
+   CopyTwist(ga8.fTwist);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -225,7 +226,7 @@ TGeoArb8& TGeoArb8::operator=(const TGeoArb8& ga8)
    if(this!=&ga8) {
       TGeoBBox::operator=(ga8);
       fDz=ga8.fDz;
-      fTwist=ga8.fTwist;
+      CopyTwist(ga8.fTwist);
       for(Int_t i=0; i<8; i++) {
          fXY[i][0]=ga8.fXY[i][0];
          fXY[i][1]=ga8.fXY[i][1];
@@ -240,6 +241,20 @@ TGeoArb8& TGeoArb8::operator=(const TGeoArb8& ga8)
 TGeoArb8::~TGeoArb8()
 {
    if (fTwist) delete [] fTwist;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy twist values from source array
+
+void TGeoArb8::CopyTwist(Double_t *twist)
+{
+   if (twist) {
+      if (!fTwist) fTwist = new Double_t[4];
+      memcpy(fTwist, twist, 4*sizeof(Double_t));
+   } else if (fTwist) {
+      delete [] fTwist;
+      fTwist = nullptr;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

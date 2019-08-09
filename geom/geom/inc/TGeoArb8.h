@@ -31,6 +31,8 @@ protected:
    TGeoArb8(const TGeoArb8&);
    TGeoArb8& operator=(const TGeoArb8&);
 
+   void CopyTwist(Double_t *twist = nullptr);
+
 public:
    // constructors
    TGeoArb8();
