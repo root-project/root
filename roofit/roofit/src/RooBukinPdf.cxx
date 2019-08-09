@@ -36,7 +36,7 @@ http://www.slac.stanford.edu/BFROOT/www/Organization/CollabMtgs/2003/detJuly2003
 
 #include "BatchHelpers.h"
 #include "vdt/exp.h"
-
+#include "vdt/log.h"
 
 using namespace std;
 
@@ -175,7 +175,7 @@ void compute(  size_t batchSize,
     
     output[i] = rho*y*y/Yp/Yp -r3 + factor*4*r3*y*hp*r5*r4/yi/yi;
     if (X[i]>=x1 && X[i]<x2) {
-      output[i] = log(1 + 4*XI[i]*r4*(X[i]-XP[i])*hp) / log(1 +2*XI[i]*( XI[i]-r4 ));
+      output[i] = vdt::fast_log(1 + 4*XI[i]*r4*(X[i]-XP[i])*hp) / vdt::fast_log(1 +2*XI[i]*( XI[i]-r4 ));
       output[i] *= -output[i]*r3;
     }
     if (X[i]>=x1 && X[i]<x2 && XI[i]<r6 && XI[i]>-r6) {
@@ -188,76 +188,12 @@ void compute(  size_t batchSize,
 }
 };
 
-/* Actual copied code
- * 
- *const double r1 = xi/sqrt(xi*xi+1);
-        double r2 = 0;
-  const double r3 = log(2.0);
-  const double r4 = sqrt(xi*xi+1);
-  const double r5 = fabs(xi) > exp(-6.0) ? xi/log(r4+xi) : 1.0;
-
-  const double hp = sigp * 2*sqrt(2*log(2.0));
-
-  const double x1 = Xp + (hp / 2) * (r1-1);
-  const double x2 = Xp + (hp / 2) * (r1+1);
-
-  if(x < x1){
-    //--- Left Side
-    r2 = rho1* (x-x1)/(Xp-x1)*(x-x1)/(Xp-x1) -r3 + 4 * r3 * (x-x1)/hp * r5 * r4/(r4-xi)/(r4-xi);
-  } else if(x >= x2) {
-    //--- Right Side
-    r2 = rho2* (x-x2)/(Xp-x2)*(x-x2)/(Xp-x2) -r3 - 4 * r3 * (x-x2)/hp * r5 * r4/(r4+xi)/(r4+xi);
-  } else {
-    //--- Center
-    if(TMath::Abs(xi) > exp(-6.0)) {
-      r2=log(1 + 4 * xi * r4 * (x-Xp)/hp)/log(1+2*xi*(xi-r4));
-      r2=-r3*r2*r2;
-    }
-    else{
-      r2=-4*r3* ((x-Xp)/hp)*((x-Xp)/hp);
-    }
-  }
-
-  const double fit_result = fabs(r2) > 100 ? 0.0 : exp(r2);
-
-  return fit_result;
-  */
 
 RooSpan<double> RooBukinPdf::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
   using namespace BatchHelpers;
   using namespace BukinBatchEvaluate;
     
   EvaluateInfo info = getInfo( {&x,&Xp,&sigp,&xi,&rho1,&rho2}, begin, batchSize );
-  auto output = _batchData.makeWritableBatchUnInit(begin, info.size);
-  auto xData = x.getValBatch(begin, info.size);
-  if (info.nBatches == 0) {
-    throw std::logic_error("Requested a batch computation, but no batch data available.");
-  }
-  else if (info.nBatches==1 && !xData.empty()) {
-    compute(info.size, output.data(), xData.data(), 
-    BracketAdapter<double> (Xp), 
-    BracketAdapter<double> (sigp), 
-    BracketAdapter<double> (xi), 
-    BracketAdapter<double> (rho1), 
-    BracketAdapter<double> (rho2));
-  }
-  else {
-    compute(info.size, output.data(), 
-    BracketAdapterWithBranch (x,x.getValBatch(begin,batchSize)), 
-    BracketAdapterWithBranch (Xp,Xp.getValBatch(begin,batchSize)), 
-    BracketAdapterWithBranch (sigp,sigp.getValBatch(begin,batchSize)), 
-    BracketAdapterWithBranch (xi,xi.getValBatch(begin,batchSize)), 
-    BracketAdapterWithBranch (rho1,rho1.getValBatch(begin,batchSize)), 
-    BracketAdapterWithBranch (rho2,rho2.getValBatch(begin,batchSize)));
-  }
-  return output;
-}
-
-RooSpan<double> RooBukinPdf::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
-  using namespace BatchHelpers;
-  using namespace BukinBatchEvaluate;
-    
-  EvaluateInfo info = getInfo( {x,Xp,sigp,xi,rho1,rho2}, begin, batchSize );
   auto output = _batchData.makeWritableBatchUnInit(begin, info.size);
   auto xData = x.getValBatch(begin, info.size);
   if (info.nBatches == 0) {
