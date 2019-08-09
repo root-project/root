@@ -13,23 +13,10 @@
 
 #include "bdt_helpers.h"
 #include "TInterpreter.h" // for gInterpreter
-//#include "TMVA/RTensor.hxx"
-
-#define BDT_KIND 2
 
 #include "unique_bdt.h"
 #include "array_bdt.h"
-#if BDT_KIND == 1
-#include "bdt.h"
-using namespace shared;
-#elif BDT_KIND == 2
-// using namespace unique_bdt;
-#elif BDT_KIND == 3
-// using namespace array_bdt;
-#endif
-
-//#include "array_bdt.h"
-//#include "jitted_bdt.h"
+#include "jitted_bdt.h"
 #include "forest.h"
 
 using json = nlohmann::json;
@@ -252,6 +239,16 @@ int main()
    preds.clear();
    test6.do_predictions(events_vector, preds);
    preds_file = "./data_files/test6.csv";
+   write_csv(preds_file, preds);
+
+   /// Forest batch batch
+   Forest<std::function<std::vector<bool>(std::vector<std::vector<float>>)>> test7;
+   std::cout << "test7\n";
+   test7.test();
+   test7.get_Forest("model.json", events_vector);
+   preds.clear();
+   test7.do_predictions(events_vector, preds);
+   preds_file = "./data_files/test7.csv";
    write_csv(preds_file, preds);
 
    std::cout << "Testing array arythmetics\n";

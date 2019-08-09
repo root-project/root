@@ -46,6 +46,7 @@ public:
                              int loop_size);
    void do_predictions_batch2(const std::vector<std::vector<float>> &events_vector, std::vector<bool> &preds,
                               int loop_size);
+   void get_Forest(std::string json_file, const std::vector<std::vector<float>> &events_vector) {}
 
    // For debug:
    void test() { std::cout << "test \n"; }
@@ -109,7 +110,7 @@ void Forest<T>::do_predictions_batch(const std::vector<std::vector<float>> &even
 
 template <class T>
 void Forest<T>::do_predictions_batch2(const std::vector<std::vector<float>> &events_vector, std::vector<bool> &preds,
-                                      int loop_size)
+                                      const int loop_size)
 {
    int rest = events_vector.size() % loop_size;
 
@@ -117,7 +118,8 @@ void Forest<T>::do_predictions_batch2(const std::vector<std::vector<float>> &eve
    int   num_trees = this->trees.size();
    float preds_tmp = 0;
 
-   float preds_tmp_arr[loop_size] = {0};
+   // float preds_tmp_arr[loop_size] = {0};
+   float *preds_tmp_arr = new float[loop_size]{0};
 
    for (; index < events_vector.size() - rest; index += loop_size) {
       for (int i = 0; i < num_trees; i++) {
@@ -140,6 +142,7 @@ void Forest<T>::do_predictions_batch2(const std::vector<std::vector<float>> &eve
       }
       preds.push_back(this->objective_func(preds_tmp));
    }
+   delete[] preds_tmp_arr;
 }
 
 ////////////////////////////////////////////////////////////////
@@ -328,6 +331,45 @@ void Forest<std::function<std::vector<bool>(std::vector<std::vector<float>>)>>::
    this->trees.push_back(func);
 }
 
+/// accept more parameters
+template <>
+void Forest<std::function<std::vector<bool>(std::vector<std::vector<float>>)>>::get_Forest(
+   std::string json_file, const std::vector<std::vector<float>> &events_vector)
+{
+   std::string my_config       = read_file_string(json_file);
+   auto        json_model      = json::parse(my_config);
+   int         number_of_trees = json_model.size();
+
+   // create tmp unique trees
+   std::vector<unique_bdt::Tree> trees;
+   trees.resize(number_of_trees);
+   for (int i = 0; i < number_of_trees; i++) {
+      unique_bdt::read_nodes_from_tree(json_model[i], trees[i]);
+   }
+
+   // Generate code
+   std::string s_trees;
+   time_t      my_time          = time(0);
+   std::string s_namespace_name = std::to_string(this->counter) + std::to_string(my_time);
+
+   std::stringstream ss;
+   generate_code_forest_batch_array(ss, trees, number_of_trees, events_vector.size(), s_namespace_name);
+   s_trees = ss.str();
+
+   // write to file for debug
+   std::filebuf fb;
+   std::string  filename = "./generated_files/evaluate_forest_batch.h";
+   fb.open(filename, std::ios::out);
+   std::ostream os(&fb);
+   generate_code_forest_batch_array(os, trees, number_of_trees, events_vector.size(), s_namespace_name);
+   fb.close();
+
+   // JIT functions
+   std::function<std::vector<bool>(std::vector<std::vector<float>>)> func;
+   func = jit_event_forest_string_batch(s_trees, s_namespace_name);
+   this->trees.push_back(func);
+}
+
 template <>
 void Forest<std::function<std::vector<bool>(std::vector<std::vector<float>>)>>::do_predictions(
    const std::vector<std::vector<float>> &events_vector, std::vector<bool> &preds)
@@ -335,5 +377,12 @@ void Forest<std::function<std::vector<bool>(std::vector<std::vector<float>>)>>::
    preds = std::move(this->trees[0](events_vector));
 }
 
+template <>
+void Forest<std::function<std::vector<bool>(std::vector<std::vector<float>>)>>::do_predictions_batch(
+   const std::vector<std::vector<float>> &events_vector, std::vector<bool> &preds, int loop_size)
+{
+   // preds = std::move(this->trees[0](events_vector, loop_size));
+}
+// */
 #endif
 // End file

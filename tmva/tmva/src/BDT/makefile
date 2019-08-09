@@ -1,8 +1,7 @@
-CXX = g++ #mpicxx
+CXX=g++ #g++ #clang++-libc++ #g++ #mpicxx
 CXXFLAGS = -std=c++11 -Wall -g -ggdb
 
-
-ROOT_FLAGS = `root-config --cflags --glibs`
+USE_CLANG=0
 
 CPPFLAGS = -I./include \
  -Wno-deprecated \
@@ -13,6 +12,12 @@ LIBFLAGS = -L -L.
 OBJS = build/main.o build/bdt.o build/unique_bdt.o
 EXE = main.exe
 
+ROOT_FLAGS = `root-config --cflags --glibs`
+ifeq ($(USECLANG),1)
+        ROOT_FLAGS =
+else
+        ROOT_FLAGS = `root-config --cflags --glibs`
+endif
 
 
 .PHONY : all clean distclean
@@ -27,7 +32,7 @@ $(EXE): $(OBJS)
 
 $(OBJS) : build/%.o: %.cxx
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(ROOT_FLAGS) -c $< -o $@
-	#$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(ROOT_FLAGS) -c $< -o $@
+	#$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 
 
