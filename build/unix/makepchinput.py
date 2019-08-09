@@ -40,19 +40,9 @@ def getParams():
    """
    argv = sys.argv
    rootSrcDir, modules, expPyROOT = argv[1:4]
-   posDelim = argv.index('--')
-   clingetpchList = argv[4:posDelim]
-   cxxflags = argv[posDelim + 1:]
-   #print (', '.join(cxxflags))
-   cxxflagsNoW = [flag for flag in cxxflags if (flag[0:2] != '-W' and flag[0:3] != '-wd' and \
-                                                flag[0:2] != '-x' and flag[0:3] != '-ax' and \
-                                                flag[0:2] != '-O' and flag[0:5] != '-arch') \
-                                                or flag[0:4] == '-Wno']
-   if '-Wno-noexcept-type' in cxxflagsNoW:
-      cxxflagsNoW.remove('-Wno-noexcept-type')
-   #print (', '.join(cxxflagsNoW))
+   clingetpchList = argv[4:]
 
-   return rootSrcDir, modules, expPyROOT == 'ON', clingetpchList, cxxflagsNoW
+   return rootSrcDir, modules, expPyROOT == 'ON', clingetpchList
 
 #-------------------------------------------------------------------------------
 def getGuardedStlInclude(headerName):
@@ -454,7 +444,7 @@ def makePCHInput():
       * etc/dictpch/allHeaders.h
       * etc/dictpch/allCppflags.txt
    """
-   rootSrcDir, modules, expPyROOT, clingetpchList, cxxflags = getParams()
+   rootSrcDir, modules, expPyROOT, clingetpchList = getParams()
 
    outdir = os.path.join("etc","dictpch")
    allHeadersFilename = os.path.join(outdir,"allHeaders.h")
@@ -498,7 +488,7 @@ def makePCHInput():
 
    copyLinkDefs(rootSrcDir, outdir)
 
-   cppFlagsContent = getCppFlags(rootSrcDir,allIncPathsList) + '\n'.join(cxxflags) + '\n'
+   cppFlagsContent = getCppFlags(rootSrcDir, allIncPathsList) + '\n'
 
    writeFiles(((allHeadersContent, allHeadersFilename),
                (allLinkdefsContent, allLinkdefsFilename),
