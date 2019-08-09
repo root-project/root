@@ -39,7 +39,7 @@ ROOT::Experimental::REveGeomViewer::REveGeomViewer(TGeoManager *mgr, const std::
 
    fDesc.SetPreferredOffline(gEnv->GetValue("WebGui.PreferredOffline",0) != 0);
    fDesc.SetJsonComp(gEnv->GetValue("WebGui.JsonComp", TBufferJSON::kSkipTypeInfo + TBufferJSON::kNoSpaces));
-   fDesc.SetBuildShapes(gEnv->GetValue("WebGui.GeomBuildShapes", 1) > 0);
+   fDesc.SetBuildShapes(gEnv->GetValue("WebGui.GeomBuildShapes", 1));
 
    if (mgr) SetGeometry(mgr, volname);
 }
