@@ -40,7 +40,7 @@ const char* fixedFormula = "delta/(sigma*TMath::Sqrt(TMath::TwoPi()))"
 
 // This test needs to stay disabled until ROOT-10144 in TFormula v5 is fixed
 // or until RooFit is updated to use TFormula v6 (ROOT-10164)
-TEST(RooJohnson, DISABLED_ReferenceImplementation)
+TEST(RooJohnson, ReferenceImplementation)
 {
   MAKE_JOHNSON_AND_VARS
   // Note: Ownership bug. Deleting this might crash on Mac.
