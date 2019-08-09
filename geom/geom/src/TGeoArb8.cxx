@@ -145,7 +145,6 @@ End_Macro
 TGeoArb8::TGeoArb8()
 {
    fDz = 0;
-   fTwist = 0;
    for (Int_t i=0; i<8; i++) {
       fXY[i][0] = 0.0;
       fXY[i][1] = 0.0;
@@ -161,7 +160,6 @@ TGeoArb8::TGeoArb8(Double_t dz, Double_t *vertices)
          :TGeoBBox(0,0,0)
 {
    fDz = dz;
-   fTwist = 0;
    SetShapeBit(kGeoArb8);
    if (vertices) {
       for (Int_t i=0; i<8; i++) {
@@ -186,7 +184,6 @@ TGeoArb8::TGeoArb8(const char *name, Double_t dz, Double_t *vertices)
          :TGeoBBox(name, 0,0,0)
 {
    fDz = dz;
-   fTwist = 0;
    SetShapeBit(kGeoArb8);
    if (vertices) {
       for (Int_t i=0; i<8; i++) {
@@ -208,8 +205,7 @@ TGeoArb8::TGeoArb8(const char *name, Double_t dz, Double_t *vertices)
 
 TGeoArb8::TGeoArb8(const TGeoArb8& ga8) :
   TGeoBBox(ga8),
-  fDz(ga8.fDz),
-  fTwist(nullptr)
+  fDz(ga8.fDz)
 {
    for(Int_t i=0; i<8; i++) {
       fXY[i][0]=ga8.fXY[i][0];
@@ -334,11 +330,9 @@ void TGeoArb8::ComputeTwist()
       twist[i] = TMath::Sign(1.,twist[i]);
       twisted = kTRUE;
    }
-   if (twisted) {
-      if (fTwist) delete [] fTwist;
-      fTwist = new Double_t[4];
-      memcpy(fTwist, &twist[0], 4*sizeof(Double_t));
-   }
+
+   CopyTwist(twisted ? twist : nullptr);
+
    if (singleBottom) {
       for (i=0; i<4; i++) {
          fXY[i][0] += 1.E-8*fXY[i+4][0];
@@ -397,9 +391,7 @@ void TGeoArb8::ComputeTwist()
 
 Double_t TGeoArb8::GetTwist(Int_t iseg) const
 {
-   if (!fTwist) return 0.;
-   if (iseg<0 || iseg>3) return 0.;
-   return fTwist[iseg];
+   return (!fTwist || iseg<0 || iseg>3) ? 0. : fTwist[iseg];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
