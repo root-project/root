@@ -212,6 +212,8 @@ class REveGeomDescription {
 
    void CollectNodes(REveGeomDrawing &drawing);
 
+   std::string MakeDrawingJson(REveGeomDrawing &drawing, bool has_shapes = false);
+
 public:
    REveGeomDescription() = default;
 

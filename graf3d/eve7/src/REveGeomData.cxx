@@ -807,8 +807,7 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
 
    CollectNodes(drawing);
 
-   int compcut = has_shape ? 100 : 1000;
-   fDrawJson = "GDRAW:"s + TBufferJSON::ToJSON(&drawing, GetJsonComp() % compcut).Data();
+   fDrawJson = "GDRAW:"s + MakeDrawingJson(drawing, has_shape);
 
    return true;
 }
@@ -994,12 +993,11 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
       return true;
    });
 
-   int compcut = has_shape ? 100 : 1000;
-   hjson = "FESCR:"s + TBufferJSON::ToJSON(&found_desc, GetJsonComp() % compcut).Data();
+   hjson = "FESCR:"s + TBufferJSON::ToJSON(&found_desc, GetJsonComp()).Data();
 
    CollectNodes(drawing);
 
-   json = "FDRAW:"s + TBufferJSON::ToJSON(&drawing, GetJsonComp()).Data();
+   json = "FDRAW:"s + MakeDrawingJson(drawing, has_shape);
 
    return nmatches;
 }
@@ -1207,10 +1205,35 @@ bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std:
 
    CollectNodes(drawing);
 
-   int compcut = has_shape ? 100 : 1000;
-   json.append(TBufferJSON::ToJSON(&drawing, GetJsonComp() % compcut).Data());
+   json.append(MakeDrawingJson(drawing, has_shape));
 
    return has_raw || has_shape;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Produce JSON for the drawing
+/// If TGeoShape appears in the drawing, one has to keep typeinfo
+/// But in this case one can exclude several classes which are not interesting,
+/// but appears very often
+
+std::string ROOT::Experimental::REveGeomDescription::MakeDrawingJson(REveGeomDrawing &drawing, bool has_shapes)
+{
+   int comp = GetJsonComp();
+
+   if (!has_shapes || (comp < TBufferJSON::kSkipTypeInfo))
+      return TBufferJSON::ToJSON(&drawing, comp).Data();
+
+   comp = comp % TBufferJSON::kSkipTypeInfo; // no typeingo skipping
+
+   TBufferJSON json;
+   json.SetCompact(comp);
+   json.SetSkipClassInfo(TClass::GetClass<REveGeomDrawing>());
+   json.SetSkipClassInfo(TClass::GetClass<REveGeomNode>());
+   json.SetSkipClassInfo(TClass::GetClass<REveGeomVisible>());
+   json.SetSkipClassInfo(TClass::GetClass<RGeomShapeRenderInfo>());
+   json.SetSkipClassInfo(TClass::GetClass<RGeomRawRenderInfo>());
+
+   return json.StoreObject(&drawing, TClass::GetClass<REveGeomDrawing>()).Data();
 }
 
 /////////////////////////////////////////////////////////////////////////////////
