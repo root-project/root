@@ -57,6 +57,7 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <iostream>
 
 Int_t TBranch::fgCount = 0;
 
@@ -1117,8 +1118,8 @@ Int_t TBranch::FlushBaskets()
    Int_t nbytes = 0;
 
    Int_t maxbasket = fWriteBasket + 1;
-   if (fIOFeatures.Test(ROOT::Experimental::EIOFeatures::kCompressionTraining) &&
-         GetCompressionAlgorithm() == ROOT::ECompressionAlgorithm::kZSTD && !fCompression.get()) {
+   if (/*fIOFeatures.Test(ROOT::Experimental::EIOFeatures::kCompressionTraining) &&
+         */GetCompressionAlgorithm() == ROOT::ECompressionAlgorithm::kZSTD && !fCompression.get()) {
       // TODO: Refactor training interface to allow multiple baskets of training.
       TBasket *writeBasket = static_cast<TBasket*>(fBaskets.UncheckedAt(fWriteBasket));
       if (writeBasket) {
@@ -1132,6 +1133,9 @@ Int_t TBranch::FlushBaskets()
             fCompTraining.resize(trainingSize);
             memcpy(&fCompTraining[0], trainingBuffer, trainingSize);
          }
+         /*else {
+            std::cout << "Error during training" << std::endl;
+         }*/
       }
    }
 

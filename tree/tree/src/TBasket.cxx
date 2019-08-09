@@ -29,6 +29,7 @@
 #include "RZip.h"
 
 #include <bitset>
+#include <iostream>
 
 const UInt_t kDisplacementMask = 0xFF000000;  // In the streamer the two highest bytes of
                                               // the fEntryOffset are used to stored displacement.
@@ -1170,6 +1171,7 @@ Int_t TBasket::WriteBuffer()
          // USE_IMT is defined, we are guaranteed that the compression buffer is unique per-branch.
          // (see fCompressedBufferRef in constructor).
          if (engine) {
+            //std::cout << "Write buffer" << std::endl;
             engine->SetTarget(bufcur, bufmax);
             nout = engine->StreamFull(objbuf, bufmax);
             if (nout < 0) nout = 0;
