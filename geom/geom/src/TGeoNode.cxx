@@ -132,11 +132,10 @@ TGeoNode::TGeoNode(const TGeoNode& gn) :
   fVolume(gn.fVolume),
   fMother(gn.fMother),
   fNumber(gn.fNumber),
-  fNovlp(gn.fNovlp),
-  fOverlaps(gn.fOverlaps),
   fUserExtension(gn.fUserExtension->Grab()),
   fFWExtension(gn.fFWExtension->Grab())
 {
+   CopyOverlaps(gn.fOverlaps, gn.fNovlp);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -150,8 +149,7 @@ TGeoNode& TGeoNode::operator=(const TGeoNode& gn)
       fVolume=gn.fVolume;
       fMother=gn.fMother;
       fNumber=gn.fNumber;
-      fNovlp=gn.fNovlp;
-      fOverlaps=gn.fOverlaps;
+      CopyOverlaps(gn.fOverlaps, gn.fNovlp);
       fUserExtension=gn.fUserExtension->Grab();
       fFWExtension=gn.fFWExtension->Grab();
    }
@@ -670,6 +668,19 @@ Double_t TGeoNode::Safety(const Double_t *point, Bool_t in) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Copy content of lst of overlaps from source array
+
+void TGeoNode::CopyOverlaps(Int_t *src, Int_t novlp)
+{
+   Int_t *ovlps = nullptr;
+   if (src && (novlp > 0)) {
+      ovlps = new Int_t[novlp];
+      memcpy(ovlps, src, novlp*sizeof(Int_t));
+   }
+   SetOverlaps(ovlps, novlp);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// set the list of overlaps for this node (ovlp must be created with operator new)
 
 void TGeoNode::SetOverlaps(Int_t *ovlp, Int_t novlp)
@@ -791,15 +802,8 @@ TGeoNode *TGeoNodeMatrix::MakeCopyNode() const
    // set the copy number
    node->SetNumber(fNumber);
    // copy overlaps
-   if (fNovlp>0) {
-      if (fOverlaps) {
-         Int_t *ovlps = new Int_t[fNovlp];
-         memcpy(ovlps, fOverlaps, fNovlp*sizeof(Int_t));
-         node->SetOverlaps(ovlps, fNovlp);
-      } else {
-         node->SetOverlaps(fOverlaps, fNovlp);
-      }
-   }
+   node->CopyOverlaps(fOverlaps, fNovlp);
+
    // copy VC
    if (IsVirtual()) node->SetVirtual();
    if (IsOverlapping()) node->SetOverlapping(); // <--- ADDED

@@ -51,6 +51,8 @@ protected:
    TGeoNode(const TGeoNode&);
    TGeoNode& operator=(const TGeoNode&);
 
+   void              CopyOverlaps(Int_t *ovlp, Int_t novlp);
+
 public:
    enum {
       kGeoNodeMatrix = BIT(14),
