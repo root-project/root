@@ -4127,6 +4127,9 @@ int RootClingMain(int argc,
    clingArgs.push_back("-DSYSTEM_TYPE_macosx");
 #elif defined(R__WIN32)
    clingArgs.push_back("-DSYSTEM_TYPE_winnt");
+
+   // Prevent the following #error: The C++ Standard Library forbids macroizing keywords.
+   clingArgs.push_back("-D_XKEYCHECK_H");
    // Tell windows.h not to #define min and max, it clashes with numerical_limits.
    clingArgs.push_back("-DNOMINMAX");
 #else // assume UNIX
@@ -4321,10 +4324,6 @@ int RootClingMain(int argc,
    // flags used only for the pragma parser:
    clingArgs.push_back("-D__CINT__");
    clingArgs.push_back("-D__MAKECINT__");
-#ifdef R__WIN32
-   // Prevent the following #error: The C++ Standard Library forbids macroizing keywords.
-   clingArgs.push_back("-D_XKEYCHECK_H");
-#endif
 
    AddPlatformDefines(clingArgs);
 
