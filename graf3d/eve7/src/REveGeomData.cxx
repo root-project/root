@@ -629,9 +629,20 @@ ROOT::Experimental::REveGeomDescription::MakeShapeDescr(TGeoShape *shape)
    auto &elem = FindShapeDescr(shape);
 
    if (elem.nfaces == 0) {
-      TGeoCompositeShape *comp = dynamic_cast<TGeoCompositeShape *>(shape);
 
-      if (IsBuildShapes() < (comp ? 1 : 2)) {
+      TGeoCompositeShape *comp = nullptr;
+
+      int boundary = 3; //
+      if (shape->IsComposite()) {
+         comp = dynamic_cast<TGeoCompositeShape *>(shape);
+         // composite is most complex for client, therefore by default build on server
+         boundary = 1;
+      } else if (!shape->IsCylType()) {
+         // simple box geometry is compact and can be delivered as raw
+         boundary = 2;
+      }
+
+      if (IsBuildShapes() < boundary) {
          elem.nfaces = 1;
          elem.fShapeInfo.shape = shape;
       } else {
