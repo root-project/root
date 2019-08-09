@@ -83,7 +83,7 @@ public:
                             {return ( fShape->GetNmeshVertices() );}
    virtual Bool_t        IsAssembly() const { return ( fShape->IsAssembly() ); }
    virtual Bool_t        IsComposite() const { return ( fShape->IsComposite() ); }
-   virtual Bool_t        IsCylType() const { return ( fShape->IsComposite() ); }
+   virtual Bool_t        IsCylType() const { return ( fShape->IsCylType() ); }
    virtual Bool_t        IsReflected() const { return ( fShape->IsReflected() ); }
    virtual Bool_t        IsValidBox() const  { return ( fShape->IsValidBox() ); }
    virtual Bool_t        IsVecGeom() const {return kTRUE;}
@@ -98,7 +98,7 @@ public:
 
    TGeoShape            *GetShape() const { return fShape; }
    vecgeom::cxx::VPlacedVolume *GetVGShape() const { return fVGShape; }
-   
+
    ClassDef(TGeoVGShape, 0) // Adapter for a VecGeom shape
 };
 #endif
