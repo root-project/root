@@ -389,19 +389,19 @@ sap.ui.define(['sap/ui/core/Component',
 
          var off = 0;
 
-         if (rd.v) {
-            rd.vtxBuff = new Float32Array(rd.raw.buffer, off, rd.v);
-            off += rd.v*4;
+         if (rd.sz[0]) {
+            rd.vtxBuff = new Float32Array(rd.raw.buffer, off, rd.sz[0]);
+            off += rd.sz[0]*4;
          }
 
-         if (rd.n) {
-            rd.nrmBuff = new Float32Array(rd.raw.buffer, off, rd.n);
-            off += rd.n*4;
+         if (rd.sz[1]) {
+            rd.nrmBuff = new Float32Array(rd.raw.buffer, off, rd.sz[1]);
+            off += rd.sz[1]*4;
          }
 
-         if (rd.i) {
-            rd.idxBuff = new Uint32Array(rd.raw.buffer, off, rd.i);
-            off += rd.i*4;
+         if (rd.sz[2]) {
+            rd.idxBuff = new Uint32Array(rd.raw.buffer, off, rd.sz[2]);
+            off += rd.sz[2]*4;
          }
 
          // shape handle is similar to created in JSROOT.GeoPainter
