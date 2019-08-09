@@ -124,39 +124,6 @@ TGeoNode::TGeoNode(const TGeoVolume *vol)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///copy constructor
-
-TGeoNode::TGeoNode(const TGeoNode& gn) :
-  TNamed(gn),
-  TGeoAtt(gn),
-  fVolume(gn.fVolume),
-  fMother(gn.fMother),
-  fNumber(gn.fNumber),
-  fUserExtension(gn.fUserExtension->Grab()),
-  fFWExtension(gn.fFWExtension->Grab())
-{
-   CopyOverlaps(gn.fOverlaps, gn.fNovlp);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///assignment operator
-
-TGeoNode& TGeoNode::operator=(const TGeoNode& gn)
-{
-   if(this!=&gn) {
-      TNamed::operator=(gn);
-      TGeoAtt::operator=(gn);
-      fVolume=gn.fVolume;
-      fMother=gn.fMother;
-      fNumber=gn.fNumber;
-      CopyOverlaps(gn.fOverlaps, gn.fNovlp);
-      fUserExtension=gn.fUserExtension->Grab();
-      fFWExtension=gn.fFWExtension->Grab();
-   }
-   return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
 TGeoNode::~TGeoNode()
@@ -737,27 +704,6 @@ TGeoNodeMatrix::TGeoNodeMatrix(const TGeoVolume *vol, const TGeoMatrix *matrix) 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy ctor.
-
-TGeoNodeMatrix::TGeoNodeMatrix(const TGeoNodeMatrix& gnm)
-               :TGeoNode(gnm),
-                fMatrix(gnm.fMatrix)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Assignment.
-
-TGeoNodeMatrix& TGeoNodeMatrix::operator=(const TGeoNodeMatrix& gnm)
-{
-   if (this!=&gnm) {
-      TGeoNode::operator=(gnm);
-      fMatrix=gnm.fMatrix;
-   }
-   return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
 TGeoNodeMatrix::~TGeoNodeMatrix()
@@ -851,31 +797,6 @@ TGeoNodeOffset::TGeoNodeOffset(const TGeoVolume *vol, Int_t index, Double_t offs
    fOffset = offset;
    fIndex = index;
    fFinder = 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///copy constructor
-
-TGeoNodeOffset::TGeoNodeOffset(const TGeoNodeOffset& gno) :
-  TGeoNode(gno),
-  fOffset(gno.fOffset),
-  fIndex(gno.fIndex),
-  fFinder(gno.fFinder)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Assignment operator
-
-TGeoNodeOffset& TGeoNodeOffset::operator=(const TGeoNodeOffset& gno)
-{
-   if(this!=&gno) {
-      TGeoNode::operator=(gno);
-      fOffset=gno.fOffset;
-      fIndex=gno.fIndex;
-      fFinder=gno.fFinder;
-   }
-   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
