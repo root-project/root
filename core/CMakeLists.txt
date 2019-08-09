@@ -35,24 +35,19 @@ add_subdirectory(base)
 if(UNIX)
   add_subdirectory(unix)
   set(unix_objects $<TARGET_OBJECTS:Unix>)
-  set(dict_opts -DSYSTEM_TYPE_unix)
 endif()
 if(WIN32)
   add_subdirectory(winnt)
   set(winnt_objects $<TARGET_OBJECTS:Winnt>)
-  set(dict_opts -DSYSTEM_TYPE_winnt)
 endif()
 if(cocoa)
   add_subdirectory(macosx)
   set(macosx_objects $<TARGET_OBJECTS:Macosx>)
-  set(dict_opts -DSYSTEM_TYPE_macosx)
 endif()
 
 if(CMAKE_CXX_STANDARD GREATER 11)
   set(dict_v7dirs base/v7/inc)
 endif()
-
-set(CORE_OS_DICT_CXX_FLAGS ${dict_opts} PARENT_SCOPE)
 
 #---G__Core--------------------------------------------------------------------
 

@@ -4123,6 +4123,14 @@ int RootClingMain(int argc,
    if (!onepcm) {
       clingArgs.push_back("-D__ROOTCLING__");
    }
+#ifdef R__MACOSX
+   clingArgs.push_back("-DSYSTEM_TYPE_macosx");
+#elif defined(R__WIN32)
+   clingArgs.push_back("-DSYSTEM_TYPE_winnt");
+#else // assume UNIX
+   clingArgs.push_back("-DSYSTEM_TYPE_unix");
+#endif
+
    clingArgs.push_back("-fsyntax-only");
 #ifndef R__WIN32
    clingArgs.push_back("-fPIC");
