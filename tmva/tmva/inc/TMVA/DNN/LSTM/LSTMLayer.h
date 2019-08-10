@@ -164,8 +164,6 @@ public:
                            const Matrix_t & input, Matrix_t & input_gradient,
                            Matrix_t &di, Matrix_t &df, Matrix_t &dc, Matrix_t &dout, size_t t);
 
-  
-    
    /*! Decides the values we'll update (NN with Sigmoid) */
    void InputGate(const Matrix_t &input, Matrix_t &di);
     
@@ -445,7 +443,8 @@ TBasicLSTMLayer<Architecture_t>::TBasicLSTMLayer(const TBasicLSTMLayer &layer)
    Architecture_t::Copy(fForgetValue, layer.GetForgetGateValue());
    Architecture_t::Copy(fOutputValue, layer.GetOutputGateValue());
 }
- 
+
+
 //______________________________________________________________________________
 template <typename Architecture_t>
 auto inline TBasicLSTMLayer<Architecture_t>::InputGate(const Matrix_t &input, Matrix_t &di)
@@ -517,6 +516,8 @@ auto inline TBasicLSTMLayer<Architecture_t>::OutputGate(const Matrix_t &input, M
    DNN::evaluateDerivative<Architecture_t>(dout, fOut, fOutputValue);
    DNN::evaluate<Architecture_t>(fOutputValue, fOut);
 }
+
+
 
  //______________________________________________________________________________
 template <typename Architecture_t>
@@ -704,6 +705,7 @@ auto inline TBasicLSTMLayer<Architecture_t>::Backward(Tensor_t &gradients_backwa
 
 }
 
+
  //______________________________________________________________________________
 template <typename Architecture_t>
 auto inline TBasicLSTMLayer<Architecture_t>::CellBackward(Matrix_t & state_gradients_backward,
@@ -813,7 +815,7 @@ auto inline TBasicLSTMLayer<Architecture_t>::ReadWeightsFromXML(void *parent)
    this->ReadMatrixXML(parent, "OutputBiases", this->GetBiasesAt(3));
 }
 
-} // namespace RNN
+} // namespace LSTM
 } // namespace DNN
 } // namespace TMVA
 

@@ -15,6 +15,8 @@
 #include <algorithm>
 
 #include "Math/Error.h"
+#include <iostream>
+
 
 namespace ROOT {
 namespace Math {
@@ -86,8 +88,9 @@ double RichardsonDerivator::Derivative1 (const IGenFunction & function, double x
    xx = x+h;     double f1 = (function)(xx);
 
    xx = x-h;     double f2 = (function)(xx);
-
+   
    xx = x+h/2;   double g1 = (function)(xx);
+ 
    xx = x-h/2;   double g2 = (function)(xx);
 
    //compute the central differences
