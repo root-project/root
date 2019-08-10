@@ -2178,6 +2178,7 @@ void MethodDL::ReadWeightsFromXML(void * rootXML)
 
          fNet->AddMaxPoolLayer(filterHeight, filterWidth, strideRows, strideCols);
       }
+      // Reshape Layer
       else if (layerName == "ReshapeLayer") {
 
          // read reshape layer info
@@ -2191,6 +2192,7 @@ void MethodDL::ReadWeightsFromXML(void * rootXML)
          fNet->AddReshapeLayer(depth, height, width, flattening);
 
       }
+      // RNN Layer
       else if (layerName == "RNNLayer") {
 
          // read RNN layer info
@@ -2204,7 +2206,7 @@ void MethodDL::ReadWeightsFromXML(void * rootXML)
          fNet->AddBasicRNNLayer(stateSize, inputSize, timeSteps, rememberState);
          
       }
-HEAD
+      // LSTM Layer
       else if (layerName == "LSTMLayer") {
 
          // read RNN layer info
@@ -2218,6 +2220,7 @@ HEAD
          fNet->AddBasicLSTMLayer(stateSize, inputSize, timeSteps, rememberState);
          
       }
+      // GRU Layer
       else if (layerName == "GRULayer") {
 
          // read RNN layer info
@@ -2230,13 +2233,11 @@ HEAD
          
          fNet->AddBasicGRULayer(stateSize, inputSize, timeSteps, rememberState);
       }
-       // BatchNorm Layer
+      // BatchNorm Layer
       else if (layerName == "BatchNormLayer") {   
          // use some dammy value which will be overwrittem in BatchNormLayer::ReadWeightsFromXML
          fNet->AddBatchNormLayer(0., 0.0);
       }      
-LSTM full testing done, GRU forward pass testing done
-      
       // read eventually weights and biases
       fNet->GetLayers().back()->ReadWeightsFromXML(layerXML);
 
