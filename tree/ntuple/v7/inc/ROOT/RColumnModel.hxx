@@ -23,10 +23,6 @@
 namespace ROOT {
 namespace Experimental {
 
-namespace Detail {
-class RColumnElementBase;
-}
-
 // clang-format off
 /**
 \class ROOT::Experimental::EColumnType
@@ -38,10 +34,10 @@ More complex types, such as classes, get translated into columns of such simple 
 // clang-format on
 enum class EColumnType {
    kUnknown = 0,
-   // type for root columns of (nested) collections; 32bit integers that count
-   // relative to the current cluster
+   // type for root columns of (nested) collections; 32bit integers that count relative to the current cluster
    kIndex,
    kByte,
+   kBit,
    kReal64,
    kReal32,
    kReal16,
@@ -51,13 +47,6 @@ enum class EColumnType {
    kInt16,
    //...
 };
-
-/**
- * Lookup table for the element size in bytes for column types. The array has to correspond to EColumnTypes.
- */
-constexpr std::size_t kColumnElementSizes[] =
-  {0 /* kUnknown */, 4 /* kIndex */, 1 /* kByte */, 8 /* kReal64 */, 4 /* kReal32 */, 2 /* kReal16 */,
-   1 /* kReal8 */, 8 /* kInt64 */, 4 /* kInt32 */, 2 /* kInt16 */};
 
 // clang-format off
 /**
@@ -75,11 +64,9 @@ public:
    RColumnModel() : fType(EColumnType::kUnknown), fIsSorted(false) {}
    RColumnModel(EColumnType type, bool isSorted) : fType(type), fIsSorted(isSorted) {}
 
-   std::size_t GetElementSize() const { return kColumnElementSizes[static_cast<int>(fType)]; }
    EColumnType GetType() const { return fType; }
    bool GetIsSorted() const { return fIsSorted; }
 
-   Detail::RColumnElementBase *GenerateElement();
    bool operator ==(const RColumnModel &other) const {
       return (fType == other.fType) && (fIsSorted == other.fIsSorted);
    }

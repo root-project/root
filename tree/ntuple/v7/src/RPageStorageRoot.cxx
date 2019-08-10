@@ -181,7 +181,7 @@ ROOT::Experimental::Detail::RPageSinkRoot::ReservePage(ColumnHandle_t columnHand
 {
    if (nElements == 0)
       nElements = kDefaultElementsPerPage;
-   auto elementSize = columnHandle.fColumn->GetModel().GetElementSize();
+   auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
    return fPageAllocator->NewPage(columnHandle.fId, elementSize, nElements);
 }
 

@@ -64,26 +64,37 @@ private:
    /// Optional link to a parent offset column that points into this column
    RColumn* fOffsetColumn;
 
+   std::unique_ptr<RColumnElementBase> fElement;
+
+   RColumn(const RColumnModel& model, std::uint32_t index);
+
 public:
-   explicit RColumn(const RColumnModel& model, std::uint32_t index);
+   template <typename CppT, EColumnType ColumnT>
+   static RColumn *Create(const RColumnModel& model, std::uint32_t index) {
+      R__ASSERT(model.GetType() == ColumnT);
+      auto column = new RColumn(model, index);
+      column->fElement = std::unique_ptr<RColumnElementBase>(new RColumnElement<CppT, ColumnT>(nullptr));
+      return column;
+   }
+
    RColumn(const RColumn&) = delete;
    RColumn& operator =(const RColumn&) = delete;
    ~RColumn();
 
    void Connect(DescriptorId_t fieldId, RPageStorage *pageStorage);
 
-   void Append(const RColumnElementBase& element) {
+   void Append(const RColumnElementBase &element) {
       void* dst = fHeadPage.TryGrow(1);
       if (dst == nullptr) {
          Flush();
          dst = fHeadPage.TryGrow(1);
          R__ASSERT(dst != nullptr);
       }
-      element.Serialize(dst, 1);
+      element.WriteTo(dst, 1);
       fNElements++;
    }
 
-   void AppendV(const RColumnElementBase& elemArray, std::size_t count) {
+   void AppendV(const RColumnElementBase &elemArray, std::size_t count) {
       void* dst = fHeadPage.TryGrow(count);
       if (dst == nullptr) {
          for (unsigned i = 0; i < count; ++i) {
@@ -91,20 +102,20 @@ public:
          }
          return;
       }
-      elemArray.Serialize(dst, count);
+      elemArray.WriteTo(dst, count);
       fNElements += count;
    }
 
-   void Read(const NTupleSize_t index, RColumnElementBase* element) {
+   void Read(const NTupleSize_t index, RColumnElementBase *element) {
       if (!fCurrentPage.Contains(index)) {
          MapPage(index);
       }
       void* src = static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
                   (index - fCurrentPage.GetRangeFirst()) * element->GetSize();
-      element->Deserialize(src, 1);
+      element->ReadFrom(src, 1);
    }
 
-   void ReadV(const NTupleSize_t index, const NTupleSize_t count, RColumnElementBase* elemArray) {
+   void ReadV(const NTupleSize_t index, const NTupleSize_t count, RColumnElementBase *elemArray) {
       if (!fCurrentPage.Contains(index)) {
          MapPage(index);
       }
@@ -112,10 +123,10 @@ public:
 
       void* src = static_cast<unsigned char *>(fCurrentPage.GetBuffer()) + idxInPage * elemArray->GetSize();
       if (index + count <= fCurrentPage.GetRangeLast() + 1) {
-         elemArray->Deserialize(src, count);
+         elemArray->ReadFrom(src, count);
       } else {
          NTupleSize_t nBatch = fCurrentPage.GetRangeLast() - idxInPage;
-         elemArray->Deserialize(src, nBatch);
+         elemArray->ReadFrom(src, nBatch);
          RColumnElementBase elemTail(*elemArray, nBatch);
          ReadV(index + nBatch, count - nBatch, &elemTail);
       }
@@ -123,12 +134,7 @@ public:
 
    /// Map may fall back to Read() and therefore requires a valid element
    template <typename CppT, EColumnType ColumnT>
-   CppT* Map(const NTupleSize_t index, RColumnElementBase* element) {
-      if (!RColumnElement<CppT, ColumnT>::kIsMappable) {
-         Read(index, element);
-         return static_cast<CppT*>(element->GetRawContent());
-      }
-
+   CppT *Map(const NTupleSize_t index) {
       if (!fCurrentPage.Contains(index)) {
          MapPage(index);
       }
@@ -138,7 +144,7 @@ public:
    }
 
    /// MapV may fail if there are less than count consecutive elements or if the type pair is not mappable
-   template <typename CppT, EColumnType ColumnT>
+   /*template <typename CppT, EColumnType ColumnT>
    void* MapV(const NTupleSize_t index, const NTupleSize_t count) {
       if (!RColumnElement<CppT, ColumnT>::kIsMappable) return nullptr;
       if (!fCurrentPage.Contains(index)) {
@@ -146,15 +152,13 @@ public:
       }
       if (index + count > fCurrentPage.GetRangeLast() + 1) return nullptr;
       return static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
-             (index - fCurrentPage.GetRangeFirst()) * kColumnElementSizes[static_cast<int>(ColumnT)];
-   }
+             (index - fCurrentPage.GetRangeFirst()) * RColumnElement<CppT, ColumnT>::kSize;
+   }*/
 
    /// For offset columns only, do index arithmetic from cluster-local to global indizes
    void GetCollectionInfo(const NTupleSize_t index, NTupleSize_t* collectionStart, ClusterSize_t* collectionSize) {
-      ClusterSize_t dummy;
-      RColumnElement<ClusterSize_t, EColumnType::kIndex> elemDummy(&dummy);
-      auto idxStart = (index == 0) ? 0 : *Map<ClusterSize_t, EColumnType::kIndex>(index - 1, &elemDummy);
-      auto idxEnd = *Map<ClusterSize_t, EColumnType::kIndex>(index, &elemDummy);
+      auto idxStart = (index == 0) ? 0 : *Map<ClusterSize_t, EColumnType::kIndex>(index - 1);
+      auto idxEnd = *Map<ClusterSize_t, EColumnType::kIndex>(index);
       auto selfOffset = fCurrentPage.GetClusterInfo().GetSelfOffset();
       auto pointeeOffset = fCurrentPage.GetClusterInfo().GetPointeeOffset();
       if (index == selfOffset) {
@@ -167,7 +171,8 @@ public:
 
    void Flush();
    void MapPage(const NTupleSize_t index);
-   NTupleSize_t GetNElements() { return fNElements; }
+   NTupleSize_t GetNElements() const { return fNElements; }
+   RColumnElementBase *GetElement() const { return fElement.get(); }
    const RColumnModel& GetModel() const { return fModel; }
    std::uint32_t GetIndex() const { return fIndex; }
    ColumnId_t GetColumnIdSource() const { return fColumnIdSource; }
