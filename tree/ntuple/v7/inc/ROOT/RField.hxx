@@ -361,10 +361,8 @@ public:
 
    void DoGenerateColumns() final;
 
-   ClusterSize_t* Map(NTupleSize_t index) {
-      static_assert(Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex>::kIsMappable,
-                    "(ClusterSize_t, EColumnType::kIndex) is not identical on this platform");
-      return fPrincipalColumn->Map<ClusterSize_t, EColumnType::kIndex>(index, nullptr);
+   ClusterSize_t *Map(NTupleSize_t index) {
+      return fPrincipalColumn->Map<ClusterSize_t, EColumnType::kIndex>(index);
    }
 
    using Detail::RFieldBase::GenerateValue;
@@ -402,10 +400,8 @@ public:
 
    void DoGenerateColumns() final;
 
-   float* Map(NTupleSize_t index) {
-      static_assert(Detail::RColumnElement<float, EColumnType::kReal32>::kIsMappable,
-                    "(float, EColumnType::kReal32) is not identical on this platform");
-      return fPrincipalColumn->Map<float, EColumnType::kReal32>(index, nullptr);
+   float *Map(NTupleSize_t index) {
+      return fPrincipalColumn->Map<float, EColumnType::kReal32>(index);
    }
 
    using Detail::RFieldBase::GenerateValue;
@@ -438,10 +434,8 @@ public:
 
    void DoGenerateColumns() final;
 
-   double* Map(NTupleSize_t index) {
-      static_assert(Detail::RColumnElement<double, EColumnType::kReal64>::kIsMappable,
-                    "(double, EColumnType::kReal64) is not identical on this platform");
-      return fPrincipalColumn->Map<double, EColumnType::kReal64>(index, nullptr);
+   double *Map(NTupleSize_t index) {
+      return fPrincipalColumn->Map<double, EColumnType::kReal64>(index);
    }
 
    using Detail::RFieldBase::GenerateValue;
@@ -473,10 +467,8 @@ public:
 
    void DoGenerateColumns() final;
 
-   std::int32_t* Map(NTupleSize_t index) {
-      static_assert(Detail::RColumnElement<std::int32_t, EColumnType::kInt32>::kIsMappable,
-                    "(std::int32_t, EColumnType::kInt32) is not identical on this platform");
-      return fPrincipalColumn->Map<std::int32_t, EColumnType::kInt32>(index, nullptr);
+   std::int32_t *Map(NTupleSize_t index) {
+      return fPrincipalColumn->Map<std::int32_t, EColumnType::kInt32>(index);
    }
 
    using Detail::RFieldBase::GenerateValue;
@@ -508,10 +500,8 @@ public:
 
    void DoGenerateColumns() final;
 
-   std::uint32_t* Map(NTupleSize_t index) {
-      static_assert(Detail::RColumnElement<std::uint32_t, EColumnType::kInt32>::kIsMappable,
-                    "(std::uint32_t, EColumnType::kInt32) is not identical on this platform");
-      return fPrincipalColumn->Map<std::uint32_t, EColumnType::kInt32>(index, nullptr);
+   std::uint32_t *Map(NTupleSize_t index) {
+      return fPrincipalColumn->Map<std::uint32_t, EColumnType::kInt32>(index);
    }
 
    using Detail::RFieldBase::GenerateValue;
@@ -543,10 +533,8 @@ public:
 
    void DoGenerateColumns() final;
 
-   std::uint64_t* Map(NTupleSize_t index) {
-      static_assert(Detail::RColumnElement<std::uint64_t, EColumnType::kInt64>::kIsMappable,
-                    "(std::uint64_t, EColumnType::kInt64) is not identical on this platform");
-      return fPrincipalColumn->Map<std::uint64_t, EColumnType::kInt64>(index, nullptr);
+   std::uint64_t *Map(NTupleSize_t index) {
+      return fPrincipalColumn->Map<std::uint64_t, EColumnType::kInt64>(index);
    }
 
    using Detail::RFieldBase::GenerateValue;
@@ -693,7 +681,8 @@ public:
 
    void DoGenerateColumns() final {
       RColumnModel modelIndex(EColumnType::kIndex, true /* isSorted*/);
-      fColumns.emplace_back(std::make_unique<Detail::RColumn>(modelIndex, 0));
+      fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
+         Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(modelIndex, 0)));
       fPrincipalColumn = fColumns[0].get();
    }
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final {
