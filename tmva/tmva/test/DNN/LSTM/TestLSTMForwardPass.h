@@ -84,7 +84,7 @@ auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize, size_
    //______________________________________________________________________________
 
    // Defining inputs.
-   std::vector<TMatrixT<Double_t>> XRef(timeSteps, TMatrixT<Double_t>(batchSize, inputSize));  // T x B x D
+   Tensor_t XRef(timeSteps, Matrix_t(batchSize, inputSize));  // T x B x D
    Tensor_t XArch, arr_XArch;
 
 
@@ -105,37 +105,37 @@ auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize, size_
    layer->Initialize();
 
    /*! unpack weights for each gate. */
-   TMatrixT<Double_t> weightsInput = layer->GetWeightsInputGate();         // H x D
-   TMatrixT<Double_t> weightsCandidate = layer->GetWeightsCandidate();     // H x D
-   TMatrixT<Double_t> weightsForget = layer->GetWeightsForgetGate();       // H x D
-   TMatrixT<Double_t> weightsOutput = layer->GetWeightsOutputGate();       // H x D
-   TMatrixT<Double_t> weightsInputState = layer->GetWeightsInputGateState();       // H x H
-   TMatrixT<Double_t> weightsCandidateState = layer->GetWeightsCandidateState();   // H x H
-   TMatrixT<Double_t> weightsForgetState = layer->GetWeightsForgetGateState();     // H x H
-   TMatrixT<Double_t> weightsOutputState = layer->GetWeightsOutputGateState();     // H x H
-   TMatrixT<Double_t> inputBiases = layer->GetInputGateBias();                     // H x 1
-   TMatrixT<Double_t> candidateBiases = layer->GetCandidateBias();                 // H x 1
-   TMatrixT<Double_t> forgetBiases = layer->GetForgetGateBias();                   // H x 1
-   TMatrixT<Double_t> outputBiases = layer->GetOutputGateBias();                   // H x 1
+   Matrix_t weightsInput = layer->GetWeightsInputGate();         // H x D
+   Matrix_t weightsCandidate = layer->GetWeightsCandidate();     // H x D
+   Matrix_t weightsForget = layer->GetWeightsForgetGate();       // H x D
+   Matrix_t weightsOutput = layer->GetWeightsOutputGate();       // H x D
+   Matrix_t weightsInputState = layer->GetWeightsInputGateState();       // H x H
+   Matrix_t weightsCandidateState = layer->GetWeightsCandidateState();   // H x H
+   Matrix_t weightsForgetState = layer->GetWeightsForgetGateState();     // H x H
+   Matrix_t weightsOutputState = layer->GetWeightsOutputGateState();     // H x H
+   Matrix_t inputBiases = layer->GetInputGateBias();                     // H x 1
+   Matrix_t candidateBiases = layer->GetCandidateBias();                 // H x 1
+   Matrix_t forgetBiases = layer->GetForgetGateBias();                   // H x 1
+   Matrix_t outputBiases = layer->GetOutputGateBias();                   // H x 1
  
    /*! Get previous hidden state and previous cell state. */
-   TMatrixT<Double_t> hiddenState = layer->GetState();       // B x H
-   TMatrixT<Double_t> cellState = layer->GetCell();          // B x H
-  
+   Matrix_t hiddenState(batchSize, stateSize);       // B x H
+   Architecture::Copy(hiddenState, layer->GetState());
+   Matrix_t cellState(batchSize, stateSize);          // B x H
+   Architecture::Copy(cellState, layer->GetCell());
 
    /*! Get each gate values. */
-   TMatrixT<Double_t> inputGate = layer->GetInputGateValue();            // B x H
-   TMatrixT<Double_t> candidateValue = layer->GetCandidateValue();       // B x H
-   TMatrixT<Double_t> forgetGate = layer->GetForgetGateValue();          // B x H
-   TMatrixT<Double_t> outputGate = layer->GetOutputGateValue();          // B x H
+   Matrix_t inputGate = layer->GetInputGateValue();            // B x H
+   Matrix_t candidateValue = layer->GetCandidateValue();       // B x H
+   Matrix_t forgetGate = layer->GetForgetGateValue();          // B x H
+   Matrix_t outputGate = layer->GetOutputGateValue();          // B x H
 
    /*! Temporary Matrices. */
-   TMatrixT<Double_t> inputTmp(batchSize, stateSize);
-   TMatrixT<Double_t> candidateTmp(batchSize, stateSize);
-   TMatrixT<Double_t> forgetTmp(batchSize, stateSize);
-   TMatrixT<Double_t> outputTmp(batchSize, stateSize);
-   TMatrixT<Double_t> Tmp(batchSize, stateSize);
-
+   Matrix_t inputTmp(batchSize, stateSize);
+   Matrix_t candidateTmp(batchSize, stateSize);
+   Matrix_t forgetTmp(batchSize, stateSize);
+   Matrix_t outputTmp(batchSize, stateSize);
+   Matrix_t Tmp(batchSize, stateSize);
    lstm.Forward(arr_XArch);
 
    Tensor_t outputArch = layer->GetOutput();
@@ -153,66 +153,48 @@ auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize, size_
     *  state and weights of previous state followed by computing
     *  next hidden state and next cell state. */
    for (size_t t = 0; t < timeSteps; ++t) {
-      inputTmp.MultT(hiddenState, weightsInputState);
-      inputGate.MultT(XRef[t], weightsInput);
-      inputGate += inputTmp;
 
-      candidateTmp.MultT(hiddenState, weightsCandidateState);
-      candidateValue.MultT(XRef[t], weightsCandidate);
-      candidateValue += candidateTmp;
+      Architecture::MultiplyTranspose(inputTmp, hiddenState, weightsInputState);
+      Architecture::MultiplyTranspose(inputGate, XRef[t], weightsInput);
+      Architecture::ScaleAdd(inputGate, inputTmp);
 
-      forgetTmp.MultT(hiddenState, weightsForgetState);
-      forgetGate.MultT(XRef[t], weightsForget);
-      forgetGate += forgetTmp;
+      Architecture::MultiplyTranspose(candidateTmp, hiddenState, weightsCandidateState);
+      Architecture::MultiplyTranspose(candidateValue, XRef[t], weightsCandidate);
+      Architecture::ScaleAdd(candidateValue, candidateTmp);
 
-      outputTmp.MultT(hiddenState, weightsOutputState);
-      outputGate.MultT(XRef[t], weightsOutput);
-      outputGate += outputTmp;
+      Architecture::MultiplyTranspose(forgetTmp, hiddenState, weightsForgetState);
+      Architecture::MultiplyTranspose(forgetGate, XRef[t], weightsForget);
+      Architecture::ScaleAdd(forgetGate, forgetTmp);
+
+      Architecture::MultiplyTranspose(outputTmp, hiddenState, weightsOutputState);
+      Architecture::MultiplyTranspose(outputGate, XRef[t], weightsOutput);
+      Architecture::ScaleAdd(outputGate, outputTmp);
 
       /*! Adding bias in each gate. */
-      for (size_t i = 0; i < (size_t) inputGate.GetNrows(); ++i) {
-         for (size_t j = 0; j < (size_t) inputGate.GetNcols(); ++j) {
-            inputGate(i, j) += inputBiases(j, 0);
-         }
-      }
-    
-      for (size_t i = 0; i < (size_t) candidateValue.GetNrows(); ++i) {
-         for (size_t j = 0; j < (size_t) candidateValue.GetNcols(); ++j) {
-            candidateValue(i, j) += candidateBiases(j, 0);
-        }
-      }
+      Architecture::AddRowWise(inputGate, inputBiases);
+      Architecture::AddRowWise(candidateValue, candidateBiases);
+      Architecture::AddRowWise(forgetGate, forgetBiases);
+      Architecture::AddRowWise(outputGate, outputBiases);
 
-      for (size_t i = 0; i < (size_t) forgetGate.GetNrows(); ++i) {
-         for (size_t j = 0; j < (size_t) forgetGate.GetNcols(); ++j) {
-            forgetGate(i, j) += forgetBiases(j, 0);
-         }
-      }
-    
-      for (size_t i = 0; i < (size_t) outputGate.GetNrows(); ++i) {
-         for (size_t j = 0; j < (size_t) outputGate.GetNcols(); ++j) {
-           outputGate(i, j) += outputBiases(j, 0);
-         }
-      }
-
+      
       /*! Apply activation function to each computed gate values. */
       applyMatrix(inputGate, [](double i) { return sigmoid(i); });
       applyMatrix(candidateValue, [](double c) { return tanh(c); });
       applyMatrix(forgetGate, [](double f) { return sigmoid(f); });
       applyMatrix(outputGate, [](double o) { return sigmoid(o); });
-    
+ 
       /*! Computing next cell state and next hidden state. */
-
-    
       Architecture::Hadamard(inputGate, candidateValue);
       Architecture::Hadamard(forgetGate, cellState);
-      cellState = inputGate + forgetGate;
+      Architecture::Copy(cellState, inputGate);
+      Architecture::ScaleAdd(cellState, forgetGate);
 
-      Tmp = cellState;
+      Architecture::Copy(Tmp, cellState);
       applyMatrix(Tmp, [](double y) { return tanh(y); }); 
       Architecture::Hadamard(outputGate, Tmp);
-      hiddenState = outputGate;
+      Architecture::Copy(hiddenState, outputGate);
 
-      TMatrixT<Double_t> output = arr_outputArch[t]; 
+      Matrix_t output = arr_outputArch[t]; 
       Double_t error = maximumRelativeError(output, hiddenState);
       std::cout << "Time " << t << " Error: " << error << "\n";
 

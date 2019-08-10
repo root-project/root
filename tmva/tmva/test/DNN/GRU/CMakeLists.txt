@@ -14,12 +14,12 @@ ROOT_EXECUTABLE(testGRUForwardPass TestGRUForwardPass.cxx LIBRARIES ${Libraries}
 ROOT_ADD_TEST(TMVA-DNN-GRU-Forward COMMAND testGRUForwardPass)
 
 # GRU - Backpropagation Reference
-#ROOT_EXECUTABLE(testGRUBackpropagation TestGRUBackpropagation.cxx LIBRARIES ${Libraries})
-#ROOT_ADD_TEST(TMVA-DNN-GRU-Backpropagation COMMAND testGRUBackpropagation)
+ROOT_EXECUTABLE(testGRUBackpropagation TestGRUBackpropagation.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-GRU-Backpropagation COMMAND testGRUBackpropagation)
 
 # GRU - Full Test Reference
-#ROOT_EXECUTABLE(testFullGRU TestFullGRU.cxx LIBRARIES ${Libraries})
-#ROOT_ADD_TEST(TMVA-DNN-GRU-FullGRU COMMAND testFullGRU)
+ROOT_EXECUTABLE(testFullGRU TestFullGRU.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-GRU-FullGRU COMMAND testFullGRU)
 
 
 #--- CUDA tests. ---------------------------
@@ -38,11 +38,11 @@ if (BLAS_FOUND AND imt)
     ROOT_ADD_TEST(TMVA-DNN-GRU-Forward-Cpu COMMAND testGRUForwardPassCpu)
 
     # GRU - Backward CPU
-    #ROOT_EXECUTABLE(testGRUBackpropagationCpu TestGRUBackpropagationCpu.cxx LIBRARIES ${Libraries})
-    #ROOT_ADD_TEST(TMVA-DNN-GRU-Backward-Cpu COMMAND testGRUBackpropagationCpu)
+    ROOT_EXECUTABLE(testGRUBackpropagationCpu TestGRUBackpropagationCpu.cxx LIBRARIES ${Libraries})
+    ROOT_ADD_TEST(TMVA-DNN-GRU-Backward-Cpu COMMAND testGRUBackpropagationCpu)
 
     # GRU - Full Test Reference
-    #ROOT_EXECUTABLE(testFullGRUCpu TestFullGRUCpu.cxx LIBRARIES ${Libraries})
-    #ROOT_ADD_TEST(TMVA-DNN-GRU-FullGRU-Cpu COMMAND testFullGRUCpu)
+    ROOT_EXECUTABLE(testFullGRUCpu TestFullGRUCpu.cxx LIBRARIES ${Libraries})
+    ROOT_ADD_TEST(TMVA-DNN-GRU-FullGRU-Cpu COMMAND testFullGRUCpu)
 
 endif (BLAS_FOUND AND imt)

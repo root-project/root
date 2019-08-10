@@ -49,6 +49,7 @@ class TReference
 private:
    static TRandom * fgRandomGen;
 public:
+
    using Scalar_t     = AReal;
    using Matrix_t     = TMatrixT<AReal>;
 

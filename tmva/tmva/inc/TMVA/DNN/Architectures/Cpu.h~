@@ -49,6 +49,7 @@ class TCpu
 private:
    static TRandom * fgRandomGen;
 public:
+
    using Scalar_t       = AReal;
    using Matrix_t       = TCpuMatrix<AReal>;
    using HostBuffer_t   = TCpuBuffer<AReal>;
@@ -170,7 +171,8 @@ public:
                                       const TCpuMatrix<Scalar_t> & weights_update_state,
                                       const TCpuMatrix<Scalar_t> & weights_candidate_state,
                                       const TCpuMatrix<Scalar_t> & input,
-                                      TCpuMatrix<Scalar_t> & input_gradient);  
+                                      TCpuMatrix<Scalar_t> & input_gradient);
+  
 
    /** Adds a the elements in matrix B scaled by c to the elements in
     *  the matrix A. This is required for the weight update in the gradient
