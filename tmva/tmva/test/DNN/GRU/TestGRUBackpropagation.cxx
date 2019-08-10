@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Surya S Dwivedi 07/06/2019
+// Author: Surya S Dwivedi 26/06219
 
 /*************************************************************************
  * Copyright (C) 2019, Surya S Dwivedi                                    *
@@ -10,24 +10,31 @@
  *************************************************************************/
 
 ////////////////////////////////////////////////////////////////////
-// Testing LSTM-Layer forward pass for Reference implementation   //
+// Testing GRULayer backpropagation                               //
 ////////////////////////////////////////////////////////////////////
 
 #include <iostream>
 #include "TMVA/DNN/Architectures/Reference.h"
-#include "TestLSTMForwardPass.h"
+#include "TestGRUBackpropagation.h"
 
 using namespace TMVA::DNN;
-using namespace TMVA::DNN::LSTM;
+using namespace TMVA::DNN::GRU;
 
 int main() {
+   std::cout << "Testing GRU backward pass\n";
 
-   std::cout << "Testing LSTM Forward pass:\n";
-   
    // timesteps, batchsize, statesize, inputsize
-   std::cout << testForwardPass<TReference<double>>(1, 2, 3, 2)  << "\n";
-   //std::cout << testForwardPass<TReference<double>>(1, 8, 100, 50)  << "\n";
-   //std::cout << testForwardPass<TReference<double>>(5, 9, 128, 64)  << "\n";
+   testGRUBackpropagation<TReference<double>>(1, 2, 1, 10, 1e-5);
+   
+   testGRUBackpropagation<TReference<double>>(2, 1, 1, 2, 1e-5);
+  
+   testGRUBackpropagation<TReference<double>>(4, 2, 3, 10, 1e-5);
+   // using a fixed input 
+   testGRUBackpropagation<TReference<double>>(3, 1, 4, 5, 1e-5, {true});
+   // with a dense layer 
+   testGRUBackpropagation<TReference<double>>(4, 32, 10, 5, 1e-5, {false, true});
+   // with an additional GRU layer 
+   testGRUBackpropagation<TReference<double>>(4, 32, 10, 5, 1e-5, {false, true, true});
 
    return 0;
 }

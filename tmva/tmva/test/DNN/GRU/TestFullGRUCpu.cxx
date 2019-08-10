@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Surya S Dwivedi 07/06/2019
+// Author: Surya S Dwivedi 02/07/19
 
 /*************************************************************************
  * Copyright (C) 2019, Surya S Dwivedi                                    *
@@ -10,25 +10,32 @@
  *************************************************************************/
 
 ////////////////////////////////////////////////////////////////////
-// Testing GRU-Layer forward pass for CPU implementation   //
+// Testing full GRU network (for CPU)                            //
 ////////////////////////////////////////////////////////////////////
 
 #include <iostream>
 #include "TMVA/DNN/Architectures/Cpu.h"
-#include "TestGRUForwardPass.h"
+#include "TestFullGRU.h"
 
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::GRU;
 
+
 int main() {
+   std::cout << "Training GRU to identity first";
 
-   using Scalar_t = Double_t;
+   //testFullGRU(size_t batchSize, size_t stateSize, size_t inputSize, size_t outputSize)
+   // reconstruct 8 bit vector
+   // batchsize, statesize, inputsize, outputsize
+   testFullGRU<TCpu<double>>(2, 3, 2, 2) ;
+   //testFullGRU<TReference<double>>(64, 10, 8, 8) ;
+   //testFullGRU<TReference<double>>(3, 8, 100, 50) ;
 
-   std::cout << "Testing GRU Forward pass\n";
+   // test a full GRU with 5 time steps and different signal/backgrund time dependent shapes
+   // batchsize, statesize , inputsize, seed
+   int seed = 111;
+   std::cout << "Training GRU to simple time dependent data ";
+   testFullGRU2<TCpu<double>>(64, 10, 5, seed) ;
 
-   // timesteps, batchsize, statesize, inputsize
-   std::cout << testForwardPass<TCpu<Scalar_t>>(1, 2, 3, 2)  << "\n";
-   std::cout << testForwardPass<TCpu<Scalar_t>>(1, 8, 100, 50)  << "\n";
-   std::cout << testForwardPass<TCpu<Scalar_t>>(5, 9, 128, 64)  << "\n";
    return 0;
 }
