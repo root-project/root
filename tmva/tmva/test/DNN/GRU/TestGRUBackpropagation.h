@@ -10,11 +10,11 @@
  *************************************************************************/
 
 ////////////////////////////////////////////////////////////////////
-// Generic tests of the LSTMLayer Backward pass                    //
+// Generic tests of the GRULayer Backward pass                    //
 ////////////////////////////////////////////////////////////////////
 
-#ifndef TMVA_TEST_DNN_TEST_LSTM_TEST_BWDPASS_H
-#define TMVA_TEST_DNN_TEST_LSTM_TEST_BWDPASS_H
+#ifndef TMVA_TEST_DNN_TEST_GRU_TEST_BWDPASS_H
+#define TMVA_TEST_DNN_TEST_GRU_TEST_BWDPASS_H
 
 #include <iostream>
 #include <vector>
@@ -27,7 +27,7 @@
 #include "TMVA/DNN/DeepNet.h"
 
 using namespace TMVA::DNN;
-using namespace TMVA::DNN::LSTM;
+using namespace TMVA::DNN::GRU;
 
 template <typename Architecture>
 auto printTensor(const std::vector<typename Architecture::Matrix_t> &A, const std::string name = "matrix")
@@ -98,7 +98,7 @@ auto evaluate_net_bias(TDeepNet<Architecture> &net, std::vector<typename Archite
 /*! Generate a DeepNet, test backward pass */
 //______________________________________________________________________________
 template <typename Architecture>
-bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize,
+bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize,
                                   size_t inputSize, typename Architecture::Scalar_t dx = 1.E-5,
                                   std::vector<bool> options = {}, bool debug = false)
 
@@ -107,11 +107,11 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
    if (options.size() == 0) options = std::vector<bool>(4); 
    bool randomInput = !options[0];
    bool addDenseLayer = options[1];
-   bool addExtraLSTM = options[2];
+   bool addExtraGRU = options[2];
    
    using Matrix_t   = typename Architecture::Matrix_t;
    using Tensor_t   = std::vector<Matrix_t>;
-   using LSTMLayer_t = TBasicLSTMLayer<Architecture>; 
+   using GRULayer_t = TBasicGRULayer<Architecture>; 
    using DenseLayer_t = TDenseLayer<Architecture>; 
    using Net_t      = TDeepNet<Architecture>;
    using Scalar_t = typename Architecture::Scalar_t;
@@ -128,6 +128,8 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
          for (size_t l = 0; l < (size_t) XArch[i].GetNrows(); ++l) {
             for (size_t m = 0; m < (size_t) XArch[i].GetNcols(); ++m) {
                XArch[i](l, m) = gRandom->Uniform(-1,1);
+               //XArch[i](0, 0) = 0.5;
+               //XArch[i](1, 0) = 0.5;
             }
          } 
       }
@@ -162,6 +164,8 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
    for (size_t i = 0; i < (size_t) Y.GetNrows(); ++i) {
       for (size_t j = 0; j < (size_t) Y.GetNcols(); ++j) {
          Y(i, j) = gRandom->Integer(2);
+         //Y(0, 0) = 1;
+         //Y(0, 1) = 1;
       }
    }
     if (debug) printTensor<Architecture>(Y,"ground truth ");
@@ -169,35 +173,33 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
 
 
 
-   std::cout << "Testing Weight Backprop using LSTM with batchsize = " << batchSize << " input = " << inputSize << " state = " << stateSize << " time = " << timeSteps;
+   std::cout << "Testing Weight Backprop using GRU with batchsize = " << batchSize << " input = " << inputSize << " state = " << stateSize << " time = " << timeSteps;
    if (randomInput) std::cout << "\tusing a random input";
    else std::cout << "\twith a fixed input";
    if (addDenseLayer)
       std::cout << " and a dense layer";
-   if (addExtraLSTM)
-      std::cout << " and an extra LSTM";
+   if (addExtraGRU)
+      std::cout << " and an extra GRU";
    std::cout << std::endl;
 
-   Net_t lstm(batchSize, batchSize, timeSteps, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kGauss);
-   LSTMLayer_t* layer = lstm.AddBasicLSTMLayer(stateSize, inputSize, timeSteps);
+   Net_t gru(batchSize, batchSize, timeSteps, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kGauss);
+   GRULayer_t* layer = gru.AddBasicGRULayer(stateSize, inputSize, timeSteps);
    //size_t input2 = stateSize;
-   if (addExtraLSTM) lstm.AddBasicLSTMLayer(stateSize, stateSize, timeSteps);
+   if (addExtraGRU) gru.AddBasicGRULayer(stateSize, stateSize, timeSteps);
    //layer->Print();
-   lstm.AddReshapeLayer(1, 1, timeSteps*stateSize, true);
+   gru.AddReshapeLayer(1, 1, timeSteps*stateSize, true);
 
    DenseLayer_t * dlayer1 = nullptr;
    DenseLayer_t * dlayer2 = nullptr;
    if (addDenseLayer) {
-      dlayer1 = lstm.AddDenseLayer(10, TMVA::DNN::EActivationFunction::kTanh);
-      dlayer2 = lstm.AddDenseLayer(1, TMVA::DNN::EActivationFunction::kIdentity);
+      dlayer1 = gru.AddDenseLayer(10, TMVA::DNN::EActivationFunction::kTanh);
+      dlayer2 = gru.AddDenseLayer(1, TMVA::DNN::EActivationFunction::kIdentity);
    }
 
 
-   lstm.Initialize();
-
-lstm.Forward(XArch);
-lstm.Backward(XArch, Y, weights);
-
+   gru.Initialize();
+   gru.Forward(XArch);
+   gru.Backward(XArch, Y, weights);
 
    if (debug)  {
       auto & out = layer->GetOutput();
@@ -210,26 +212,24 @@ lstm.Backward(XArch, Y, weights);
       }
    }
 
-   
    Scalar_t maximum_error = 0.0;
    std::string maxerrorType; 
 
    ROOT::Math::RichardsonDerivator deriv;
-   
-
-   // Weights Input Gate, k = 0
+ 
+   // Weights Reset Gate, k = 0
 
    auto & Wi = layer->GetWeightsAt(0);
    auto & dWi = layer->GetWeightGradientsAt(0);
    for (size_t i = 0; i < (size_t) Wi.GetNrows(); ++i) {
       for (size_t j = 0; j < (size_t) Wi.GetNcols(); ++j) {
-         auto f = [&lstm, &XArch, &Y, &weights, i, j](Scalar_t x) {
-             return evaluate_net_weight(lstm, XArch, Y, weights, 0, 0, i, j, x);
+         auto f = [&gru, &XArch, &Y, &weights, i, j](Scalar_t x) {
+             return evaluate_net_weight(gru, XArch, Y, weights, 0, 0, i, j, x);
          };
 
 
          ROOT::Math::Functor1D func(f);
-         double dy = deriv.Derivative1(func, Wi(i,j), 1.E-3);
+         double dy = deriv.Derivative1(func, Wi(i,j), dx);
          Scalar_t dy_ref = dWi(i, j);
 
          // Compute the relative error if dy != 0.
@@ -243,7 +243,7 @@ lstm.Backward(XArch, Y, weights);
             errorType = "absolute";
          }
 
-         if (debug) std::cout << "Weights input gate gradient (" << i << "," << j << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
+         if (debug) std::cout << "Weights Reset gate gradient (" << i << "," << j << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
 
          if (error >= maximum_error) {
             maximum_error = error;
@@ -252,14 +252,14 @@ lstm.Backward(XArch, Y, weights);
       }
    }
 
-   std::cout << "\rTesting weights input gate gradients:      ";
+   std::cout << "\rTesting weights reset gate gradients:      ";
    std::cout << "maximum error (" << maxerrorType << "): "  << print_error(maximum_error) << std::endl;
    if (maximum_error > 1.E-2) {
-      std::cerr << "\e[31m Error \e[39m in weights input gate gradients" << std::endl;
+      std::cerr << "\e[31m Error \e[39m in weights reset gate gradients" << std::endl;
       failed = true;
    }
    
-   // Weights Input Gate State, k = 1
+   // Weights Reset Gate State, k = 1
    maximum_error = 0; 
 
   
@@ -268,8 +268,8 @@ lstm.Backward(XArch, Y, weights);
    for (size_t i = 0; i < (size_t) Wis.GetNrows(); ++i) {
       for (size_t j = 0; j < (size_t) Wis.GetNcols(); ++j) {
 
-         auto f = [&lstm, &XArch, &Y, &weights, i, j](Scalar_t x) {
-             return evaluate_net_weight(lstm, XArch, Y, weights, 0, 1, i, j, x);
+         auto f = [&gru, &XArch, &Y, &weights, i, j](Scalar_t x) {
+             return evaluate_net_weight(gru, XArch, Y, weights, 0, 1, i, j, x);
          };
 
          ROOT::Math::Functor1D func(f);
@@ -291,25 +291,25 @@ lstm.Backward(XArch, Y, weights);
             maximum_error = error; 
             maxerrorType = errorType; 
          }
-         if (debug) std::cout << "Weights input gate-state gradient (" << i << "," << j << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
+         if (debug) std::cout << "Weights reset gate-state gradient (" << i << "," << j << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
       }
    }
 
-   std::cout << "\rTesting weights input gate-state gradients:      ";
+   std::cout << "\rTesting weights reset gate-state gradients:      ";
    std::cout << "maximum error (" << maxerrorType << "): "  << print_error(maximum_error) << std::endl;
    if (maximum_error > 1.E-2) {
-      std::cerr << "\e[31m Error \e[39m in weights input gate-state gradients" << std::endl;
+      std::cerr << "\e[31m Error \e[39m in weights reset gate-state gradients" << std::endl;
       failed = true;
    }
 
-    // Weights Forget Gate State, k = 2
+    // Weights Update gate, k = 2
    maximum_error = 0; 
    auto & Wf = layer->GetWeightsAt(2);
    auto & dWf = layer->GetWeightGradientsAt(2);
    for (size_t i = 0; i < (size_t) Wf.GetNrows(); ++i) {
       for (size_t j = 0; j < (size_t) Wf.GetNcols(); ++j) {
-         auto f = [&lstm, &XArch, &Y, &weights, i, j](Scalar_t x) {
-             return evaluate_net_weight(lstm, XArch, Y, weights, 0, 2, i, j, x);
+         auto f = [&gru, &XArch, &Y, &weights, i, j](Scalar_t x) {
+             return evaluate_net_weight(gru, XArch, Y, weights, 0, 2, i, j, x);
          };
          ROOT::Math::Functor1D func(f);
          double dy = deriv.Derivative1(func, Wf(i,j), dx);
@@ -330,25 +330,25 @@ lstm.Backward(XArch, Y, weights);
             maximum_error = error; 
             maxerrorType = errorType; 
          }
-         if (debug) std::cout << "Weights forget gate gradient (" << i << "," << j << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
+         if (debug) std::cout << "Weights update gate gradient (" << i << "," << j << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
       }
    }
 
-   std::cout << "\rTesting weights forget gate gradients:      ";
+   std::cout << "\rTesting weights update gate gradients:      ";
    std::cout << "maximum error (" << maxerrorType << "): "  << print_error(maximum_error) << std::endl;
    if (maximum_error > 1.E-2) {
-      std::cerr << "\e[31m Error \e[39m in weights forget gate gradients" << std::endl;
+      std::cerr << "\e[31m Error \e[39m in weights update gate gradients" << std::endl;
       failed = true;
    }
 
-    // Weights Forget Gate State, k = 3
+    // Weights Update Gate State, k = 3
    maximum_error = 0; 
    auto & Wfs = layer->GetWeightsAt(3);
    auto & dWfs = layer->GetWeightGradientsAt(3);
    for (size_t i = 0; i < (size_t) Wfs.GetNrows(); ++i) {
       for (size_t j = 0; j < (size_t) Wfs.GetNcols(); ++j) {
-         auto f = [&lstm, &XArch, &Y, &weights, i, j](Scalar_t x) {
-             return evaluate_net_weight(lstm, XArch, Y, weights, 0, 3, i, j, x);
+         auto f = [&gru, &XArch, &Y, &weights, i, j](Scalar_t x) {
+             return evaluate_net_weight(gru, XArch, Y, weights, 0, 3, i, j, x);
          };
          ROOT::Math::Functor1D func(f);
          double dy = deriv.Derivative1(func, Wfs(i,j), dx);
@@ -369,14 +369,14 @@ lstm.Backward(XArch, Y, weights);
             maximum_error = error; 
             maxerrorType = errorType; 
          }
-         if (debug) std::cout << "Weights forget gate-state gradient (" << i << "," << j << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
+         if (debug) std::cout << "Weights update gate-state gradient (" << i << "," << j << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
       }
    }
 
-   std::cout << "\rTesting weights forget gate-state gradients:      ";
+   std::cout << "\rTesting weights update gate-state gradients:      ";
    std::cout << "maximum error (" << maxerrorType << "): "  << print_error(maximum_error) << std::endl;
    if (maximum_error > 1.E-2) {
-      std::cerr << "\e[31m Error \e[39m in weights forget gate-state gradients" << std::endl;
+      std::cerr << "\e[31m Error \e[39m in weights update gate-state gradients" << std::endl;
       failed = true;
    }
 
@@ -387,8 +387,8 @@ lstm.Backward(XArch, Y, weights);
    auto & dWc = layer->GetWeightGradientsAt(4);
    for (size_t i = 0; i < (size_t) Wc.GetNrows(); ++i) {
       for (size_t j = 0; j < (size_t) Wc.GetNcols(); ++j) {
-         auto f = [&lstm, &XArch, &Y, &weights, i, j](Scalar_t x) {
-             return evaluate_net_weight(lstm, XArch, Y, weights, 0, 4, i, j, x);
+         auto f = [&gru, &XArch, &Y, &weights, i, j](Scalar_t x) {
+             return evaluate_net_weight(gru, XArch, Y, weights, 0, 4, i, j, x);
          };
          ROOT::Math::Functor1D func(f);
          double dy = deriv.Derivative1(func, Wc(i,j), dx);
@@ -427,8 +427,8 @@ lstm.Backward(XArch, Y, weights);
    auto & dWcs = layer->GetWeightGradientsAt(5);
    for (size_t i = 0; i < (size_t) Wcs.GetNrows(); ++i) {
       for (size_t j = 0; j < (size_t) Wcs.GetNcols(); ++j) {
-         auto f = [&lstm, &XArch, &Y, &weights, i, j](Scalar_t x) {
-             return evaluate_net_weight(lstm, XArch, Y, weights, 0, 5, i, j, x);
+         auto f = [&gru, &XArch, &Y, &weights, i, j](Scalar_t x) {
+             return evaluate_net_weight(gru, XArch, Y, weights, 0, 5, i, j, x);
          };
          ROOT::Math::Functor1D func(f);
          double dy = deriv.Derivative1(func, Wcs(i,j), dx);
@@ -461,92 +461,13 @@ lstm.Backward(XArch, Y, weights);
    }
 
 
-   // Weights Output Gate, k = 6
-   maximum_error = 0; 
-   auto & Wo = layer->GetWeightsAt(6);
-   auto & dWo = layer->GetWeightGradientsAt(6);
-   for (size_t i = 0; i < (size_t) Wo.GetNrows(); ++i) {
-      for (size_t j = 0; j < (size_t) Wo.GetNcols(); ++j) {
-         auto f = [&lstm, &XArch, &Y, &weights, i, j](Scalar_t x) {
-             return evaluate_net_weight(lstm, XArch, Y, weights, 0, 6, i, j, x);
-         };
-         ROOT::Math::Functor1D func(f);
-         double dy = deriv.Derivative1(func, Wo(i,j), dx);
-         Scalar_t dy_ref = dWo(i, j);
-
-         // Compute the relative error if dy != 0.
-         Scalar_t error;
-         std::string errorType;  
-         if (std::fabs(dy_ref) > 1e-15) {
-            error = std::fabs((dy - dy_ref) / dy_ref);
-            errorType = "relative";
-         } else {
-            error = std::fabs(dy - dy_ref);
-            errorType = "absolute";
-         }
-
-         if ( error >= maximum_error) {
-            maximum_error = error; 
-            maxerrorType = errorType; 
-         }
-         if (debug) std::cout << "Weights output gate gradient (" << i << "," << j << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
-      }
-   }
-
-   std::cout << "\rTesting weights output gate gradients:      ";
-   std::cout << "maximum error (" << maxerrorType << "): "  << print_error(maximum_error) << std::endl;
-   if (maximum_error > 1.E-2) {
-      std::cerr << "\e[31m Error \e[39m in weights output gate gradients" << std::endl;
-      failed = true;
-   }
-
-   // Weights Output Gate State, k = 7
-   maximum_error = 0; 
-   auto & Wos = layer->GetWeightsAt(7);
-   auto & dWos = layer->GetWeightGradientsAt(7);
-   for (size_t i = 0; i < (size_t) Wos.GetNrows(); ++i) {
-      for (size_t j = 0; j < (size_t) Wos.GetNcols(); ++j) {
-         auto f = [&lstm, &XArch, &Y, &weights, i, j](Scalar_t x) {
-             return evaluate_net_weight(lstm, XArch, Y, weights, 0, 7, i, j, x);
-         };
-         ROOT::Math::Functor1D func(f);
-         double dy = deriv.Derivative1(func, Wos(i,j), dx);
-         Scalar_t dy_ref = dWos(i, j);
-
-         // Compute the relative error if dy != 0.
-         Scalar_t error;
-         std::string errorType;  
-         if (std::fabs(dy_ref) > 1e-15) {
-            error = std::fabs((dy - dy_ref) / dy_ref);
-            errorType = "relative";
-         } else {
-            error = std::fabs(dy - dy_ref);
-            errorType = "absolute";
-         }
-
-         if ( error >= maximum_error) {
-            maximum_error = error; 
-            maxerrorType = errorType; 
-         }
-         if (debug) std::cout << "Weights output gate-state gradient (" << i << "," << j << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
-      }
-   }
-
-   std::cout << "\rTesting weights output gate-state gradients:      ";
-   std::cout << "maximum error (" << maxerrorType << "): "  << print_error(maximum_error) << std::endl;
-   if (maximum_error > 1.E-2) {
-      std::cerr << "\e[31m Error \e[39m in weights output gate-state gradients" << std::endl;
-      failed = true;
-   }
-
-
-   // testing input gate bias gradients
+   // testing reset gate bias gradients
    maximum_error = 0; 
    auto &Bi = layer->GetBiasesAt(0);
    auto &dBi = layer->GetBiasGradientsAt(0);
    for (size_t i = 0;  i < (size_t) Bi.GetNrows(); ++i) {
-      auto f = [&lstm, &XArch, &Y, &weights, i](Scalar_t x) {
-          return evaluate_net_bias(lstm, XArch, Y, weights, 0, 0, i, x);
+      auto f = [&gru, &XArch, &Y, &weights, i](Scalar_t x) {
+          return evaluate_net_bias(gru, XArch, Y, weights, 0, 0, i, x);
       };
       ROOT::Math::Functor1D func(f);
       double dy = deriv.Derivative1(func, Bi(i,0), 1.E-5);
@@ -567,23 +488,23 @@ lstm.Backward(XArch, Y, weights);
             maximum_error = error; 
             maxerrorType = errorType; 
       }
-      if (debug) std::cout << "input gate bias gradient (" << i << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
+      if (debug) std::cout << "reset gate bias gradient (" << i << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
    }
 
-   std::cout << "\rTesting input gate bias gradients:      ";
+   std::cout << "\rTesting reset gate bias gradients:      ";
    std::cout << "maximum error (" << maxerrorType << "): "  << print_error(maximum_error) << std::endl;
    if (maximum_error > 1.E-2) {
-      std::cerr << "\e[31m Error \e[39m in input gate bias gradients" << std::endl;
+      std::cerr << "\e[31m Error \e[39m in reset gate bias gradients" << std::endl;
       failed = true;
    }
 
-   // testing foget gate bias gradients
+   // testing update gate bias gradients
    maximum_error = 0; 
    auto & Bf = layer->GetBiasesAt(1);
    auto & dBf = layer->GetBiasGradientsAt(1);
    for (size_t i = 0;  i < (size_t) Bf.GetNrows(); ++i) {
-      auto f = [&lstm, &XArch, &Y, &weights, i](Scalar_t x) {
-          return evaluate_net_bias(lstm, XArch, Y, weights, 0, 1, i, x);
+      auto f = [&gru, &XArch, &Y, &weights, i](Scalar_t x) {
+          return evaluate_net_bias(gru, XArch, Y, weights, 0, 1, i, x);
       };
       ROOT::Math::Functor1D func(f);
       double dy = deriv.Derivative1(func, Bf(i,0), 1.E-5);
@@ -604,13 +525,13 @@ lstm.Backward(XArch, Y, weights);
             maximum_error = error; 
             maxerrorType = errorType; 
       }
-      if (debug) std::cout << "Forget gate bias gradient (" << i << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
+      if (debug) std::cout << "Update gate bias gradient (" << i << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
    }
 
-   std::cout << "\rTesting forget gate bias gradients:      ";
+   std::cout << "\rTesting Update gate bias gradients:      ";
    std::cout << "maximum error (" << maxerrorType << "): "  << print_error(maximum_error) << std::endl;
    if (maximum_error > 1.E-2) {
-      std::cerr << "\e[31m Error \e[39m in forget gate bias gradients" << std::endl;
+      std::cerr << "\e[31m Error \e[39m in Update gate bias gradients" << std::endl;
       failed = true;
    }
 
@@ -619,8 +540,8 @@ lstm.Backward(XArch, Y, weights);
    auto & Bc = layer->GetBiasesAt(2);
    auto & dBc = layer->GetBiasGradientsAt(2);
    for (size_t i = 0;  i < (size_t) Bc.GetNrows(); ++i) {
-      auto f = [&lstm, &XArch, &Y, &weights, i](Scalar_t x) {
-          return evaluate_net_bias(lstm, XArch, Y, weights, 0, 2, i, x);
+      auto f = [&gru, &XArch, &Y, &weights, i](Scalar_t x) {
+          return evaluate_net_bias(gru, XArch, Y, weights, 0, 2, i, x);
       };
       ROOT::Math::Functor1D func(f);
       double dy = deriv.Derivative1(func, Bc(i,0), 1.E-5);
@@ -650,44 +571,6 @@ lstm.Backward(XArch, Y, weights);
       std::cerr << "\e[31m Error \e[39m in candidate gate bias gradients" << std::endl;
       failed = true;
    }
-
-   // testing output gate bias gradients
-   maximum_error = 0; 
-   auto & Bo = layer->GetBiasesAt(3);
-   auto & dBo = layer->GetBiasGradientsAt(3);
-   for (size_t i = 0;  i < (size_t) Bo.GetNrows(); ++i) {
-      auto f = [&lstm, &XArch, &Y, &weights, i](Scalar_t x) {
-          return evaluate_net_bias(lstm, XArch, Y, weights, 0, 3, i, x);
-      };
-      ROOT::Math::Functor1D func(f);
-      double dy = deriv.Derivative1(func, Bo(i,0), 1.E-5);
-      Scalar_t dy_ref = dBo(i, 0);
-
-      // Compute the relative error if dy != 0.
-      Scalar_t error;
-      std::string errorType;  
-      if (std::fabs(dy_ref) > 1e-15) {
-         error = std::fabs((dy - dy_ref) / dy_ref);
-         errorType = "relative";
-      } else {
-         error = std::fabs(dy - dy_ref);
-         errorType = "absolute";
-      }
-
-      if ( error >= maximum_error) {
-            maximum_error = error; 
-            maxerrorType = errorType; 
-      }
-      if (debug) std::cout << "Output gate bias gradient (" << i << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
-   }
-
-   std::cout << "\rTesting output gate bias gradients:      ";
-   std::cout << "maximum error (" << maxerrorType << "): "  << print_error(maximum_error) << std::endl;
-   if (maximum_error > 1.E-2) {
-      std::cerr << "\e[31m Error \e[39m in output gate bias gradients" << std::endl;
-      failed = true;
-   }
-
 
    //return std::max(maximum_error, smaximum_error);
    return failed;
