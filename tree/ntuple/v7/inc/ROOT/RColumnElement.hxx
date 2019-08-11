@@ -21,8 +21,6 @@
 
 #include <TError.h>
 
-#include <algorithm>
-#include <bitset>
 #include <cstring> // for memcpy
 #include <cstdint>
 #include <type_traits>
@@ -210,39 +208,8 @@ public:
    bool IsMappable() const final { return kIsMappable; }
    std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
 
-   void Pack(void *dst, void *src, std::size_t count)
-      const final
-   {
-      bool *boolArray = reinterpret_cast<bool *>(src);
-      char *charArray = reinterpret_cast<char *>(dst);
-      std::bitset<8> bitSet;
-      std::size_t i = 0;
-      for (; i < count; ++i) {
-         bitSet.set(i % 8, boolArray[i]);
-         if (i % 8 == 7) {
-            char packed = bitSet.to_ulong();
-            charArray[i / 8] = packed;
-         }
-      }
-      if (i % 8 != 0) {
-         char packed = bitSet.to_ulong();
-         charArray[i / 8] = packed;
-      }
-   }
-
-   void Unpack(void *dst, void *src, std::size_t count)
-      const final
-   {
-      bool *boolArray = reinterpret_cast<bool *>(dst);
-      char *charArray = reinterpret_cast<char *>(src);
-      std::bitset<8> bitSet;
-      for (std::size_t i = 0; i < count; i += 8) {
-         bitSet = charArray[i / 8];
-         for (std::size_t j = i; j < std::min(count, i + 8); ++j) {
-            boolArray[j] = bitSet[j % 8];
-         }
-      }
-   }
+   void Pack(void *dst, void *src, std::size_t count) const final;
+   void Unpack(void *dst, void *src, std::size_t count) const final;
 };
 
 } // namespace Detail
