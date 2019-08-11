@@ -33,6 +33,7 @@ HEADERS
   ROOT/RPageStorageRoot.hxx
 SOURCES
   v7/src/RColumn.cxx
+  v7/src/RColumnElement.cxx
   v7/src/RField.cxx
   v7/src/REntry.cxx
   v7/src/RNTuple.cxx
