@@ -1479,6 +1479,24 @@ static bool R__InitStreamerInfoFactory()
    return doneFactory; // avoid unused variable warning.
 }
 
+static std::string ResolveSymlink(const std::string &path)
+{
+#ifdef R__WIN32
+   // No symlinks on Windows.
+   return path;
+#else
+   assert(llvm::sys::fs::is_symlink_file(path));
+   char Buffer[kMAXPATHLEN];
+   ssize_t CharCount = ::readlink(path.c_str(), Buffer, sizeof(Buffer));
+   // readlink does not append a NUL character to Buffer.
+   if (CharCount > 0)
+      return std::string(Buffer, Buffer + CharCount - 1);
+
+   ::Error("TCling__ResolveSymlink", "Could not resolve symlink '%s'.", path.c_str());
+   return {};
+#endif // R__WIN32
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Register Rdict data for future loading by LoadPCM;
 
@@ -1488,11 +1506,14 @@ void TCling::RegisterRdictForLoadPCM(const std::string &pcmFileNameFullPath, llv
       return;
 
    if (llvm::sys::fs::exists(pcmFileNameFullPath)) {
-      ::Error("TCling::LoadPCM", "Rdict '%s' is both in Module extension and in File system.", pcmFileNameFullPath.c_str());
+      ::Error("TCling::RegisterRdictForLoadPCM", "Rdict '%s' is both in Module extension and in File system.", pcmFileNameFullPath.c_str());
       return;
    }
 
-   fPendingRdicts[pcmFileNameFullPath] = *pcmContent;
+   if (llvm::sys::fs::is_symlink_file(pcmFileNameFullPath))
+      fPendingRdicts[ResolveSymlink(pcmFileNameFullPath)] = *pcmContent;
+   else
+      fPendingRdicts[pcmFileNameFullPath] = *pcmContent;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1615,7 +1636,7 @@ bool TCling::LoadPCMImpl(TFile &pcmFile)
 ////////////////////////////////////////////////////////////////////////////////
 /// Tries to load a rdict PCM; returns true on success.
 
-bool TCling::LoadPCM(const std::string &pcmFileNameFullPath)
+bool TCling::LoadPCM(std::string pcmFileNameFullPath)
 {
    SuspendAutoloadingRAII autoloadOff(this);
    SuspendAutoParsing autoparseOff(this);
@@ -1638,6 +1659,9 @@ bool TCling::LoadPCM(const std::string &pcmFileNameFullPath)
    } else {
       gDebug = 0;
    }
+
+   if (llvm::sys::fs::is_symlink_file(pcmFileNameFullPath))
+      pcmFileNameFullPath = ResolveSymlink(pcmFileNameFullPath);
 
    auto pendingRdict = fPendingRdicts.find(pcmFileNameFullPath);
    if (pendingRdict != fPendingRdicts.end()) {
