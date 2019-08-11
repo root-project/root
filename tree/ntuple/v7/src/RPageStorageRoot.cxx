@@ -128,18 +128,33 @@ void ROOT::Experimental::Detail::RPageSinkRoot::Create(RNTupleModel &model)
 
 void ROOT::Experimental::Detail::RPageSinkRoot::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
 {
-   ROOT::Experimental::Internal::RNTupleBlob pagePayload(
-      page.GetSize(), static_cast<unsigned char *>(page.GetBuffer()));
+   unsigned char *buffer = reinterpret_cast<unsigned char *>(page.GetBuffer());
+   auto packedBytes = page.GetSize();
+   auto element = columnHandle.fColumn->GetElement();
+   const auto isMappable = element->IsMappable();
+
+   if (!isMappable) {
+      packedBytes = (page.GetNElements() * element->GetBitsOnStorage() + 7) / 8;
+      buffer = new unsigned char[packedBytes];
+      element->Pack(buffer, page.GetBuffer(), page.GetNElements(), 0);
+   }
+
+   ROOT::Experimental::Internal::RNTupleBlob pagePayload(packedBytes, buffer);
    std::string keyName = std::string(kKeyPagePayload) +
       std::to_string(fLastClusterId) + kKeySeparator +
       std::to_string(fLastPageIdx);
    fDirectory->WriteObject(&pagePayload, keyName.c_str());
+
+   if (!isMappable) {
+      delete[] buffer;
+   }
 
    auto columnId = columnHandle.fId;
    fOpenColumnRanges[columnId].fNElements += page.GetNElements();
    RClusterDescriptor::RPageRange::RPageInfo pageInfo;
    pageInfo.fNElements = page.GetNElements();
    pageInfo.fLocator.fPosition = fLastPageIdx++;
+   pageInfo.fLocator.fBytesOnStorage = packedBytes;
    fOpenPageRanges[columnId].fPageInfos.emplace_back(pageInfo);
 }
 
@@ -322,8 +337,20 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::P
       std::to_string(pageInfo.fLocator.fPosition);
    auto pageKey = fDirectory->GetKey(keyName.c_str());
    auto pagePayload = pageKey->ReadObject<ROOT::Experimental::Internal::RNTupleBlob>();
-   auto elementSize = pagePayload->fSize / pageInfo.fNElements;
-   R__ASSERT(pagePayload->fSize % pageInfo.fNElements == 0);
+
+   unsigned char *buffer = pagePayload->fContent;
+   auto element = columnHandle.fColumn->GetElement();
+   auto elementSize = element->GetSize();
+   if (!element->IsMappable()) {
+      auto pageSize = elementSize * pageInfo.fNElements;
+      buffer = reinterpret_cast<unsigned char *>(malloc(pageSize));
+      R__ASSERT(buffer != nullptr);
+      element->Unpack(buffer, pagePayload->fContent, pageInfo.fNElements, 0);
+      free(pagePayload->fContent);
+      pagePayload->fContent = buffer;
+      pagePayload->fSize = pageSize;
+   }
+
    auto newPage = fPageAllocator->NewPage(columnId, pagePayload->fContent, elementSize, pageInfo.fNElements);
    newPage.SetWindow(firstInPage, RPage::RClusterInfo(clusterId, selfOffset, pointeeOffset));
    fPagePool->RegisterPage(newPage,
