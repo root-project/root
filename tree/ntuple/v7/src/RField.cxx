@@ -65,6 +65,7 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    std::string normalizedType(typeName);
    normalizedType.erase(remove_if(normalizedType.begin(), normalizedType.end(), isspace), normalizedType.end());
    // TODO(jblomer): use a type translation map
+   if (normalizedType == "Bool_t") normalizedType = "bool";
    if (normalizedType == "Float_t") normalizedType = "float";
    if (normalizedType == "Double_t") normalizedType = "double";
    if (normalizedType == "Int_t") normalizedType = "std::int32_t";
@@ -77,6 +78,7 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    if (normalizedType.substr(0, 7) == "vector<") normalizedType = "std::" + normalizedType;
 
    if (normalizedType == "ROOT::Experimental::ClusterSize_t") return new RField<ClusterSize_t>(fieldName);
+   if (normalizedType == "bool") return new RField<bool>(fieldName);
    if (normalizedType == "std::int32_t") return new RField<std::int32_t>(fieldName);
    if (normalizedType == "std::uint32_t") return new RField<std::uint32_t>(fieldName);
    if (normalizedType == "std::uint64_t") return new RField<std::uint64_t>(fieldName);
@@ -241,6 +243,18 @@ void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::DoGenerateCo
    RColumnModel model(EColumnType::kIndex, true /* isSorted*/);
    fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
       Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(model, 0)));
+   fPrincipalColumn = fColumns[0].get();
+}
+
+
+//------------------------------------------------------------------------------
+
+
+void ROOT::Experimental::RField<bool>::DoGenerateColumns()
+{
+   RColumnModel model(EColumnType::kBit, false /* isSorted*/);
+   fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
+      Detail::RColumn::Create<bool, EColumnType::kBit>(model, 0)));
    fPrincipalColumn = fColumns[0].get();
 }
 

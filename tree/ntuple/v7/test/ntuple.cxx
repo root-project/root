@@ -126,6 +126,7 @@ TEST(RNTuple, WriteRead)
    FileRaii fileGuard("test.root");
 
    auto modelWrite = RNTupleModel::Create();
+   auto wrSignal = modelWrite->MakeField<bool>("signal", true);
    auto wrPt = modelWrite->MakeField<float>("pt", 42.0);
    auto wrEnergy = modelWrite->MakeField<float>("energy", 7.0);
    auto wrTag = modelWrite->MakeField<std::string>("tag", "xyz");
@@ -146,6 +147,7 @@ TEST(RNTuple, WriteRead)
       ntuple.Fill();
    }
 
+   auto rdSignal = modelRead->MakeField<bool>("signal");
    auto rdPt = modelRead->Get<float>("pt");
    auto rdEnergy = modelRead->Get<float>("energy");
    auto rdTag = modelRead->Get<std::string>("tag");
@@ -157,6 +159,7 @@ TEST(RNTuple, WriteRead)
    EXPECT_EQ(1U, ntuple.GetNEntries());
    ntuple.LoadEntry(0);
 
+   EXPECT_TRUE(*rdSignal);
    EXPECT_EQ(42.0, *rdPt);
    EXPECT_EQ(7.0, *rdEnergy);
    EXPECT_STREQ("xyz", rdTag->c_str());
@@ -436,6 +439,7 @@ TEST(RNTuple, RealWorld1)
    // See https://github.com/olifre/root-io-bench/blob/master/benchmark.cpp
    auto modelWrite = RNTupleModel::Create();
    auto& wrEvent   = *modelWrite->MakeField<std::uint32_t>("event");
+   auto& wrSignal  = *modelWrite->MakeField<bool>("signal");
    auto& wrEnergy  = *modelWrite->MakeField<double>("energy");
    auto& wrTimes   = *modelWrite->MakeField<std::vector<double>>("times");
    auto& wrIndices = *modelWrite->MakeField<std::vector<std::uint32_t>>("indices");
@@ -448,8 +452,10 @@ TEST(RNTuple, RealWorld1)
       for (unsigned int i = 0; i < nEvents; ++i) {
          wrEvent = i;
          wrEnergy = rnd.Rndm() * 1000.;
+         wrSignal = i % 2;
 
          chksumWrite += double(wrEvent);
+         chksumWrite += double(wrSignal);
          chksumWrite += wrEnergy;
 
          auto nTimes = 1 + floor(rnd.Rndm() * 1000.);
@@ -472,6 +478,7 @@ TEST(RNTuple, RealWorld1)
 
    auto modelRead  = RNTupleModel::Create();
    auto& rdEvent   = *modelRead->MakeField<std::uint32_t>("event");
+   auto& rdSignal  = *modelRead->MakeField<bool>("signal");
    auto& rdEnergy  = *modelRead->MakeField<double>("energy");
    auto& rdTimes   = *modelRead->MakeField<std::vector<double>>("times");
    auto& rdIndices = *modelRead->MakeField<std::vector<std::uint32_t>>("indices");
@@ -480,7 +487,7 @@ TEST(RNTuple, RealWorld1)
    auto ntuple = RNTupleReader::Open(std::move(modelRead), "f", "test.root");
    for (auto entryId : *ntuple) {
       ntuple->LoadEntry(entryId);
-      chksumRead += double(rdEvent) + rdEnergy;
+      chksumRead += double(rdEvent) + double(rdSignal) + rdEnergy;
       for (auto t : rdTimes) chksumRead += t;
       for (auto ind : rdIndices) chksumRead += double(ind);
    }

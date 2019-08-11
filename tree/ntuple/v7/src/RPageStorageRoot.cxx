@@ -136,7 +136,7 @@ void ROOT::Experimental::Detail::RPageSinkRoot::CommitPage(ColumnHandle_t column
    if (!isMappable) {
       packedBytes = (page.GetNElements() * element->GetBitsOnStorage() + 7) / 8;
       buffer = new unsigned char[packedBytes];
-      element->Pack(buffer, page.GetBuffer(), page.GetNElements(), 0);
+      element->Pack(buffer, page.GetBuffer(), page.GetNElements());
    }
 
    ROOT::Experimental::Internal::RNTupleBlob pagePayload(packedBytes, buffer);
@@ -345,7 +345,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::P
       auto pageSize = elementSize * pageInfo.fNElements;
       buffer = reinterpret_cast<unsigned char *>(malloc(pageSize));
       R__ASSERT(buffer != nullptr);
-      element->Unpack(buffer, pagePayload->fContent, pageInfo.fNElements, 0);
+      element->Unpack(buffer, pagePayload->fContent, pageInfo.fNElements);
       free(pagePayload->fContent);
       pagePayload->fContent = buffer;
       pagePayload->fSize = pageSize;

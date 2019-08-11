@@ -435,6 +435,39 @@ public:
 
 
 template <>
+class RField<bool> : public Detail::RFieldBase {
+public:
+   static std::string MyTypeName() { return "bool"; }
+   explicit RField(std::string_view name)
+     : Detail::RFieldBase(name, MyTypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+   RField(RField&& other) = default;
+   RField& operator =(RField&& other) = default;
+   ~RField() = default;
+   RFieldBase *Clone(std::string_view newName) final { return new RField(newName); }
+
+   void DoGenerateColumns() final;
+
+   bool *Map(NTupleSize_t index) {
+      return fPrincipalColumn->Map<bool, EColumnType::kBit>(index);
+   }
+
+   using Detail::RFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where, ArgsT&&... args)
+   {
+      return Detail::RFieldValue(
+         Detail::RColumnElement<bool, EColumnType::kBit>(static_cast<bool*>(where)),
+         this, static_cast<bool*>(where), std::forward<ArgsT>(args)...);
+   }
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final { return GenerateValue(where, false); }
+   Detail::RFieldValue CaptureValue(void *where) final {
+      return Detail::RFieldValue(true /* captureFlag */,
+         Detail::RColumnElement<bool, EColumnType::kBit>(static_cast<bool*>(where)), this, where);
+   }
+   size_t GetValueSize() const final { return sizeof(bool); }
+};
+
+template <>
 class RField<float> : public Detail::RFieldBase {
 public:
    static std::string MyTypeName() { return "float"; }
