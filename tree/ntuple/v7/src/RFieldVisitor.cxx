@@ -21,7 +21,10 @@
 #include <vector>
 
 #include "ROOT/RFieldVisitor.hxx"
+#include "ROOT/RField.hxx"
 #include "ROOT/RNTuple.hxx"
+#include "ROOT/RNTupleBrowser.hxx"
+#include "TBrowser.h"
 
 static std::string HierarchialFieldOrder(const ROOT::Experimental::Detail::RFieldBase &field);
 
@@ -72,6 +75,13 @@ void ROOT::Experimental::RPrepareVisitor::VisitField(const ROOT::Experimental::D
 {
    ++fNumFields;
    if (level > fDeepestLevel) fDeepestLevel = level;
+}
+
+//------------------------ RBrowseVisitor -------------------------------
+
+void ROOT::Experimental::RBrowseVisitor::VisitField(const ROOT::Experimental::Detail::RFieldBase &field, int level)
+{
+   
 }
 
 //------------------------ Helper functions -----------------------------

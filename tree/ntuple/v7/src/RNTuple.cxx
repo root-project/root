@@ -13,9 +13,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "ROOT/RNTuple.hxx"
 
 #include "ROOT/RFieldVisitor.hxx"
-#include "ROOT/RNTuple.hxx"
 #include "ROOT/RNTupleModel.hxx"
 #include "ROOT/RPageStorage.hxx"
 #include "ROOT/RPageStorageRoot.hxx"
@@ -136,6 +136,10 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(std::ostream &output, const EN
    }
    // Never here
    return;
+}
+
+void Browse(TBrowser* b) {
+   
 }
 
 
