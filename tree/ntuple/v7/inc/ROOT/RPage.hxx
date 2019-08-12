@@ -46,7 +46,7 @@ public:
    class RClusterInfo {
    private:
       /// The cluster number
-      NTupleSize_t fId;
+      DescriptorId_t fId;
       /// The first element index of the column in this cluster
       NTupleSize_t fSelfOffset;
       /// For offset columns, also store the cluster offset of the column being referenced
@@ -62,49 +62,45 @@ public:
 
 private:
    ColumnId_t fColumnId;
-   void* fBuffer;
-   std::size_t fCapacity;
-   std::size_t fSize;
-   std::size_t fElementSize;
+   void *fBuffer;
+   ClusterSize_t::ValueType fCapacity;
+   ClusterSize_t::ValueType fElementSize;
+   ClusterSize_t::ValueType fNElements;
    NTupleSize_t fRangeFirst;
-   NTupleSize_t fNElements;
    RClusterInfo fClusterInfo;
 
 public:
-   RPage()
-     : fColumnId(kInvalidColumnId), fBuffer(nullptr), fCapacity(0), fSize(0), fElementSize(0),
-       fRangeFirst(0), fNElements(0)
+   RPage() : fColumnId(kInvalidColumnId), fBuffer(nullptr), fCapacity(0), fElementSize(0), fNElements(0), fRangeFirst(0)
    {}
-   RPage(ColumnId_t columnId, void* buffer, std::size_t capacity, std::size_t elementSize)
-      : fColumnId(columnId), fBuffer(buffer), fCapacity(capacity), fSize(0), fElementSize(elementSize),
-        fRangeFirst(0), fNElements(0)
-      {}
+   RPage(ColumnId_t columnId, void* buffer, ClusterSize_t::ValueType capacity, ClusterSize_t::ValueType elementSize)
+      : fColumnId(columnId), fBuffer(buffer), fCapacity(capacity), fElementSize(elementSize), fNElements(0),
+        fRangeFirst(0)
+   {}
    ~RPage() = default;
 
-   std::int64_t GetColumnId() { return fColumnId; }
+   ColumnId_t GetColumnId() { return fColumnId; }
    /// The total space available in the page
-   std::size_t GetCapacity() const { return fCapacity; }
+   ClusterSize_t::ValueType GetCapacity() const { return fCapacity; }
    /// The space taken by column elements in the buffer
-   std::size_t GetSize() const { return fSize; }
-   std::size_t GetElementSize() const { return fElementSize; }
-   NTupleSize_t GetNElements() const { return fSize / fElementSize; }
+   ClusterSize_t::ValueType GetSize() const { return fElementSize * fNElements; }
+   ClusterSize_t::ValueType GetElementSize() const { return fElementSize; }
+   ClusterSize_t::ValueType GetNElements() const { return fNElements; }
    NTupleSize_t GetRangeFirst() const { return fRangeFirst; }
-   NTupleSize_t GetRangeLast() const { return fRangeFirst + fNElements - 1; }
+   NTupleSize_t GetRangeLast() const { return fRangeFirst + NTupleSize_t(fNElements) - 1; }
    const RClusterInfo& GetClusterInfo() const { return fClusterInfo; }
    bool Contains(NTupleSize_t index) const {
-      return (index >= fRangeFirst) && (index < fRangeFirst + fNElements);
+      return (index >= fRangeFirst) && (index < fRangeFirst + NTupleSize_t(fNElements));
    }
    void* GetBuffer() const { return fBuffer; }
    /// Return a pointer after the last element that has space for nElements new elements. If there is not enough capacity,
    /// return nullptr
-   void* TryGrow(std::size_t nElements) {
-      size_t offset = fSize;
-      size_t nbyte = nElements * fElementSize;
+   void* TryGrow(ClusterSize_t::ValueType nElements) {
+      auto offset = GetSize();
+      auto nbyte = nElements * fElementSize;
       if (offset + nbyte > fCapacity) {
         return nullptr;
       }
-      fSize += nbyte;
-      fNElements = nElements;
+      fNElements += nElements;
       return static_cast<unsigned char *>(fBuffer) + offset;
    }
    /// Seek the page to a certain position of the column
@@ -113,8 +109,8 @@ public:
       fRangeFirst = rangeFirst;
    }
    /// Forget all currently stored elements (size == 0) and set a new starting index.
-   void Reset(NTupleSize_t rangeFirst) { fSize = 0; fRangeFirst = rangeFirst; }
-   void ResetCluster(const RClusterInfo &clusterInfo) { fSize = 0; fClusterInfo = clusterInfo; }
+   void Reset(NTupleSize_t rangeFirst) { fNElements = 0; fRangeFirst = rangeFirst; }
+   void ResetCluster(const RClusterInfo &clusterInfo) { fNElements = 0; fClusterInfo = clusterInfo; }
 
    bool IsNull() const { return fBuffer == nullptr; }
    bool operator ==(const RPage &other) const { return fBuffer == other.fBuffer; }
