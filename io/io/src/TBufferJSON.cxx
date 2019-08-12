@@ -1953,13 +1953,16 @@ void TBufferJSON::JsonReadTObjectMembers(TObject *tobj, void *node)
    UInt_t bits = json->at("fBits").get<unsigned>();
    // UInt32_t pid = json->at("fPID").get<unsigned>(); // ignore PID for the moment
 
-   tobj->SetUniqueID(uid);
-   // there is no method to set all bits directly - do it one by one
-   for (unsigned n = 0; n < 24; n++)
-      tobj->SetBit(BIT(n), (bits & BIT(n)) != 0);
+   static auto tobj_fbits_offset = TObject::Class()->GetDataMemberOffset("fBits");
 
-   if (gDebug > 2)
-      Info("JsonReadTObjectMembers", "Reading TObject part bits %u kMustCleanup %d", bits, tobj->TestBit(kMustCleanup));
+   tobj->SetUniqueID(uid);
+
+   // there is no method to set all bits directly - do it differently
+   if (tobj_fbits_offset > 0) {
+      UInt_t *fbits = (UInt_t *) ((char* ) tobj + tobj_fbits_offset);
+      *fbits = bits | TObject::kIsOnHeap | TObject::kNotDeleted;
+   }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2372,8 +2375,7 @@ void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack, const TClass *obj_
          AppendOutput(stack->NextMemberSeparator(), "\"fBits\"");
          AppendOutput(fSemicolon.Data());
          auto tbits = std::atol((stack->fValues.size() > 1) ? stack->fValues[1].c_str() : fValue.Data());
-         tbits = tbits & TObject::kBitMask;
-         AppendOutput(std::to_string(tbits).c_str());
+         AppendOutput(std::to_string(tbits & ~TObject::kNotDeleted & ~TObject::kIsOnHeap).c_str());
          if (cnt == 3) {
             AppendOutput(stack->NextMemberSeparator(), "\"fPID\"");
             AppendOutput(fSemicolon.Data());
