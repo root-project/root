@@ -119,14 +119,6 @@ void ROOT::Experimental::Detail::RFieldBase::DoRead(
    R__ASSERT(false);
 }
 
-void ROOT::Experimental::Detail::RFieldBase::DoReadV(
-   ROOT::Experimental::NTupleSize_t /*index*/,
-   ROOT::Experimental::NTupleSize_t /*count*/,
-   void* /*dst*/)
-{
-   R__ASSERT(false);
-}
-
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::Detail::RFieldBase::GenerateValue()
 {
    void *where = malloc(GetValueSize());
