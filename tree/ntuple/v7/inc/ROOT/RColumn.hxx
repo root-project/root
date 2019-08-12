@@ -143,18 +143,6 @@ public:
          (index - fCurrentPage.GetRangeFirst()) * RColumnElement<CppT, ColumnT>::kSize);
    }
 
-   /// MapV may fail if there are less than count consecutive elements or if the type pair is not mappable
-   /*template <typename CppT, EColumnType ColumnT>
-   void* MapV(const NTupleSize_t index, const NTupleSize_t count) {
-      if (!RColumnElement<CppT, ColumnT>::kIsMappable) return nullptr;
-      if (!fCurrentPage.Contains(index)) {
-         MapPage(index);
-      }
-      if (index + count > fCurrentPage.GetRangeLast() + 1) return nullptr;
-      return static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
-             (index - fCurrentPage.GetRangeFirst()) * RColumnElement<CppT, ColumnT>::kSize;
-   }*/
-
    /// For offset columns only, do index arithmetic from cluster-local to global indizes
    void GetCollectionInfo(const NTupleSize_t index, NTupleSize_t* collectionStart, ClusterSize_t* collectionSize) {
       auto idxStart = (index == 0) ? 0 : *Map<ClusterSize_t, EColumnType::kIndex>(index - 1);
