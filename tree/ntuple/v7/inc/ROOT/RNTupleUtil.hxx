@@ -45,14 +45,16 @@ using NTupleSize_t = std::uint64_t;
 constexpr NTupleSize_t kInvalidNTupleIndex = std::uint64_t(-1);
 /// Wrap the 32bit integer in a struct in order to avoid template specialization clash with std::uint32_t
 struct RClusterSize {
-   RClusterSize() : fValue(0) {}
-   explicit constexpr RClusterSize(std::uint32_t value) : fValue(value) {}
-   RClusterSize& operator =(const std::uint32_t value) { fValue = value; return *this; }
-   RClusterSize& operator +=(const std::uint32_t value) { fValue += value; return *this; }
-   RClusterSize operator++(int) { auto result = *this; fValue++; return result; }
-   operator std::uint32_t() const { return fValue; }
+   using ValueType = std::uint32_t;
 
-   std::uint32_t fValue;
+   RClusterSize() : fValue(0) {}
+   explicit constexpr RClusterSize(ValueType value) : fValue(value) {}
+   RClusterSize& operator =(const ValueType value) { fValue = value; return *this; }
+   RClusterSize& operator +=(const ValueType value) { fValue += value; return *this; }
+   RClusterSize operator++(int) { auto result = *this; fValue++; return result; }
+   operator ValueType() const { return fValue; }
+
+   ValueType fValue;
 };
 using ClusterSize_t = RClusterSize;
 constexpr ClusterSize_t kInvalidClusterIndex(std::uint32_t(-1));
