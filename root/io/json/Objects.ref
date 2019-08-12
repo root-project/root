@@ -444,124 +444,124 @@ TJsonEx6 store/read/store MATCHED len1:20826 len2:20826
 }
 
  ====== ROOT TObject/TNamed/TString as class members TJsonEx10 ===== 
-TJsonEx10 store/read/store MATCHED len1:2545 len2:2545
+TJsonEx10 store/read/store MATCHED len1:2391 len2:2391
 {
   "_typename" : "TJsonEx10",
   "fStr0" : "SimpleString",
   "fName0" : {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "SimpleName",
     "fTitle" : "SimpleTitle"
   },
   "fObj0" : {
     "_typename" : "TObject",
     "fUniqueID" : 10000,
-    "fBits" : 33554432
+    "fBits" : 0
   },
   "fStr" : ["String0", "String1", "String2", "String3", "String4", "String5", "String6", "String7", "String8", "String9"],
   "fName" : [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name0",
     "fTitle" : "Title0"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name1",
     "fTitle" : "Title1"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name2",
     "fTitle" : "Title2"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name3",
     "fTitle" : "Title3"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name4",
     "fTitle" : "Title4"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name5",
     "fTitle" : "Title5"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name6",
     "fTitle" : "Title6"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name7",
     "fTitle" : "Title7"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name8",
     "fTitle" : "Title8"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name9",
     "fTitle" : "Title9"
   }],
   "fObj" : [{
     "_typename" : "TObject",
     "fUniqueID" : 100,
-    "fBits" : 33554432
+    "fBits" : 0
   }, {
     "_typename" : "TObject",
     "fUniqueID" : 101,
-    "fBits" : 33554432
+    "fBits" : 0
   }, {
     "_typename" : "TObject",
     "fUniqueID" : 102,
-    "fBits" : 33554432
+    "fBits" : 0
   }, {
     "_typename" : "TObject",
     "fUniqueID" : 103,
-    "fBits" : 33554432
+    "fBits" : 0
   }, {
     "_typename" : "TObject",
     "fUniqueID" : 104,
-    "fBits" : 33554432
+    "fBits" : 0
   }, {
     "_typename" : "TObject",
     "fUniqueID" : 105,
-    "fBits" : 33554432
+    "fBits" : 0
   }, {
     "_typename" : "TObject",
     "fUniqueID" : 106,
-    "fBits" : 33554432
+    "fBits" : 0
   }, {
     "_typename" : "TObject",
     "fUniqueID" : 107,
-    "fBits" : 33554432
+    "fBits" : 0
   }, {
     "_typename" : "TObject",
     "fUniqueID" : 108,
-    "fBits" : 33554432
+    "fBits" : 0
   }, {
     "_typename" : "TObject",
     "fUniqueID" : 109,
-    "fBits" : 33554432
+    "fBits" : 0
   }]
 }
 

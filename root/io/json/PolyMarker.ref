@@ -3,7 +3,7 @@ Processing runPolyMarker.C...
 {
   "_typename" : "TPolyMarker3D",
   "fUniqueID" : 0,
-  "fBits" : 50331649,
+  "fBits" : 1,
   "fMarkerColor" : 1,
   "fMarkerStyle" : 1,
   "fMarkerSize" : 1,

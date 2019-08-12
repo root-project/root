@@ -1,19 +1,19 @@
 
 Processing runRootClasses.C...
  ====== TObject representation ===== 
-TObject store/read/store MATCHED len1:70 len2:70
+TObject store/read/store MATCHED len1:63 len2:63
 {
   "_typename" : "TObject",
   "fUniqueID" : 0,
-  "fBits" : 50331648
+  "fBits" : 0
 }
 
  ====== TH1I representation ===== 
-TH1I store/read/store MATCHED len1:2957 len2:2957
+TH1I store/read/store MATCHED len1:2929 len2:2929
 {
   "_typename" : "TH1I",
   "fUniqueID" : 0,
-  "fBits" : 50331648,
+  "fBits" : 0,
   "fName" : "histo1",
   "fTitle" : "histo title",
   "fLineColor" : 602,
@@ -28,7 +28,7 @@ TH1I store/read/store MATCHED len1:2957 len2:2957
   "fXaxis" : {
     "_typename" : "TAxis",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "xaxis",
     "fTitle" : "",
     "fNdivisions" : 510,
@@ -57,7 +57,7 @@ TH1I store/read/store MATCHED len1:2957 len2:2957
   "fYaxis" : {
     "_typename" : "TAxis",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "yaxis",
     "fTitle" : "",
     "fNdivisions" : 510,
@@ -86,7 +86,7 @@ TH1I store/read/store MATCHED len1:2957 len2:2957
   "fZaxis" : {
     "_typename" : "TAxis",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "zaxis",
     "fTitle" : "",
     "fNdivisions" : 510,
@@ -139,11 +139,11 @@ TH1I store/read/store MATCHED len1:2957 len2:2957
 }
 
  ====== TBox representation ===== 
-TBox store/read/store MATCHED len1:227 len2:227
+TBox store/read/store MATCHED len1:220 len2:220
 {
   "_typename" : "TBox",
   "fUniqueID" : 0,
-  "fBits" : 50331648,
+  "fBits" : 0,
   "fLineColor" : 1,
   "fLineStyle" : 1,
   "fLineWidth" : 1,
@@ -156,14 +156,14 @@ TBox store/read/store MATCHED len1:227 len2:227
 }
 
  ====== TList representation ===== 
-TList store/read/store MATCHED len1:2835 len2:2835
+TList store/read/store MATCHED len1:2765 len2:2765
 {
   "_typename" : "TList",
   "name" : "TList",
   "arr" : [{
     "_typename" : "TBox",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fLineColor" : 1,
     "fLineStyle" : 1,
     "fLineWidth" : 1,
@@ -176,7 +176,7 @@ TList store/read/store MATCHED len1:2835 len2:2835
   }, {
     "_typename" : "TBox",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fLineColor" : 1,
     "fLineStyle" : 1,
     "fLineWidth" : 1,
@@ -189,7 +189,7 @@ TList store/read/store MATCHED len1:2835 len2:2835
   }, {
     "_typename" : "TBox",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fLineColor" : 1,
     "fLineStyle" : 1,
     "fLineWidth" : 1,
@@ -202,7 +202,7 @@ TList store/read/store MATCHED len1:2835 len2:2835
   }, {
     "_typename" : "TBox",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fLineColor" : 1,
     "fLineStyle" : 1,
     "fLineWidth" : 1,
@@ -215,7 +215,7 @@ TList store/read/store MATCHED len1:2835 len2:2835
   }, {
     "_typename" : "TBox",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fLineColor" : 1,
     "fLineStyle" : 1,
     "fLineWidth" : 1,
@@ -228,7 +228,7 @@ TList store/read/store MATCHED len1:2835 len2:2835
   }, {
     "_typename" : "TBox",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fLineColor" : 1,
     "fLineStyle" : 1,
     "fLineWidth" : 1,
@@ -241,7 +241,7 @@ TList store/read/store MATCHED len1:2835 len2:2835
   }, {
     "_typename" : "TBox",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fLineColor" : 1,
     "fLineStyle" : 1,
     "fLineWidth" : 1,
@@ -254,7 +254,7 @@ TList store/read/store MATCHED len1:2835 len2:2835
   }, {
     "_typename" : "TBox",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fLineColor" : 1,
     "fLineStyle" : 1,
     "fLineWidth" : 1,
@@ -267,7 +267,7 @@ TList store/read/store MATCHED len1:2835 len2:2835
   }, {
     "_typename" : "TBox",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fLineColor" : 1,
     "fLineStyle" : 1,
     "fLineWidth" : 1,
@@ -280,7 +280,7 @@ TList store/read/store MATCHED len1:2835 len2:2835
   }, {
     "_typename" : "TBox",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fLineColor" : 1,
     "fLineStyle" : 1,
     "fLineWidth" : 1,
@@ -295,14 +295,14 @@ TList store/read/store MATCHED len1:2835 len2:2835
 }
 
  ====== TClonesArray representation ===== 
-TClonesArray store/read/store MATCHED len1:2640 len2:2640
+TClonesArray store/read/store MATCHED len1:2570 len2:2570
 {
   "_typename" : "TClonesArray",
   "name" : "TBoxs",
   "arr" : [{
     "_typename" : "TBox",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fLineColor" : 1,
     "fLineStyle" : 1,
     "fLineWidth" : 1,
@@ -315,7 +315,7 @@ TClonesArray store/read/store MATCHED len1:2640 len2:2640
   }, {
     "_typename" : "TBox",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fLineColor" : 1,
     "fLineStyle" : 1,
     "fLineWidth" : 1,
@@ -328,7 +328,7 @@ TClonesArray store/read/store MATCHED len1:2640 len2:2640
   }, {
     "_typename" : "TBox",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fLineColor" : 1,
     "fLineStyle" : 1,
     "fLineWidth" : 1,
@@ -341,7 +341,7 @@ TClonesArray store/read/store MATCHED len1:2640 len2:2640
   }, {
     "_typename" : "TBox",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fLineColor" : 1,
     "fLineStyle" : 1,
     "fLineWidth" : 1,
@@ -354,7 +354,7 @@ TClonesArray store/read/store MATCHED len1:2640 len2:2640
   }, {
     "_typename" : "TBox",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fLineColor" : 1,
     "fLineStyle" : 1,
     "fLineWidth" : 1,
@@ -367,7 +367,7 @@ TClonesArray store/read/store MATCHED len1:2640 len2:2640
   }, {
     "_typename" : "TBox",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fLineColor" : 1,
     "fLineStyle" : 1,
     "fLineWidth" : 1,
@@ -380,7 +380,7 @@ TClonesArray store/read/store MATCHED len1:2640 len2:2640
   }, {
     "_typename" : "TBox",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fLineColor" : 1,
     "fLineStyle" : 1,
     "fLineWidth" : 1,
@@ -393,7 +393,7 @@ TClonesArray store/read/store MATCHED len1:2640 len2:2640
   }, {
     "_typename" : "TBox",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fLineColor" : 1,
     "fLineStyle" : 1,
     "fLineWidth" : 1,
@@ -406,7 +406,7 @@ TClonesArray store/read/store MATCHED len1:2640 len2:2640
   }, {
     "_typename" : "TBox",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fLineColor" : 1,
     "fLineStyle" : 1,
     "fLineWidth" : 1,
@@ -419,7 +419,7 @@ TClonesArray store/read/store MATCHED len1:2640 len2:2640
   }, {
     "_typename" : "TBox",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fLineColor" : 1,
     "fLineStyle" : 1,
     "fLineWidth" : 1,
@@ -433,7 +433,7 @@ TClonesArray store/read/store MATCHED len1:2640 len2:2640
 }
 
  ====== TMap representation ===== 
-TMap store/read/store MATCHED len1:2937 len2:2937
+TMap store/read/store MATCHED len1:2797 len2:2797
 {
   "_typename" : "TMap",
   "name" : "TMap",
@@ -442,13 +442,13 @@ TMap store/read/store MATCHED len1:2937 len2:2937
   "first" : {
     "_typename" : "TObjString",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fString" : "Str4"
   }, 
   "second" : {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name4",
     "fTitle" : "Title4"
   }
@@ -457,13 +457,13 @@ TMap store/read/store MATCHED len1:2937 len2:2937
   "first" : {
     "_typename" : "TObjString",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fString" : "Str5"
   }, 
   "second" : {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name5",
     "fTitle" : "Title5"
   }
@@ -472,13 +472,13 @@ TMap store/read/store MATCHED len1:2937 len2:2937
   "first" : {
     "_typename" : "TObjString",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fString" : "Str6"
   }, 
   "second" : {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name6",
     "fTitle" : "Title6"
   }
@@ -487,13 +487,13 @@ TMap store/read/store MATCHED len1:2937 len2:2937
   "first" : {
     "_typename" : "TObjString",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fString" : "Str7"
   }, 
   "second" : {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name7",
     "fTitle" : "Title7"
   }
@@ -502,13 +502,13 @@ TMap store/read/store MATCHED len1:2937 len2:2937
   "first" : {
     "_typename" : "TObjString",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fString" : "Str8"
   }, 
   "second" : {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name8",
     "fTitle" : "Title8"
   }
@@ -517,13 +517,13 @@ TMap store/read/store MATCHED len1:2937 len2:2937
   "first" : {
     "_typename" : "TObjString",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fString" : "Str9"
   }, 
   "second" : {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name9",
     "fTitle" : "Title9"
   }
@@ -532,13 +532,13 @@ TMap store/read/store MATCHED len1:2937 len2:2937
   "first" : {
     "_typename" : "TObjString",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fString" : "Str0"
   }, 
   "second" : {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name0",
     "fTitle" : "Title0"
   }
@@ -547,13 +547,13 @@ TMap store/read/store MATCHED len1:2937 len2:2937
   "first" : {
     "_typename" : "TObjString",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fString" : "Str1"
   }, 
   "second" : {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name1",
     "fTitle" : "Title1"
   }
@@ -562,13 +562,13 @@ TMap store/read/store MATCHED len1:2937 len2:2937
   "first" : {
     "_typename" : "TObjString",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fString" : "Str2"
   }, 
   "second" : {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name2",
     "fTitle" : "Title2"
   }
@@ -577,13 +577,13 @@ TMap store/read/store MATCHED len1:2937 len2:2937
   "first" : {
     "_typename" : "TObjString",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fString" : "Str3"
   }, 
   "second" : {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name3",
     "fTitle" : "Title3"
   }
@@ -591,7 +591,7 @@ TMap store/read/store MATCHED len1:2937 len2:2937
 }
 
  ====== TJsonEx14 with different ROOT collections ===== 
-TJsonEx14 store/read/store MATCHED len1:7725 len2:7725
+TJsonEx14 store/read/store MATCHED len1:7480 len2:7480
 {
   "_typename" : "TJsonEx14",
   "fObjArray" : {
@@ -600,43 +600,43 @@ TJsonEx14 store/read/store MATCHED len1:7725 len2:7725
     "arr" : [{
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fName" : "ObjArr0",
       "fTitle" : "ObjArrTitle0"
     }, {
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fName" : "ObjArr1",
       "fTitle" : "ObjArrTitle1"
     }, {
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fName" : "ObjArr2",
       "fTitle" : "ObjArrTitle2"
     }, {
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fName" : "ObjArr3",
       "fTitle" : "ObjArrTitle3"
     }, {
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fName" : "ObjArr4",
       "fTitle" : "ObjArrTitle4"
     }, {
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fName" : "ObjArr5",
       "fTitle" : "ObjArrTitle5"
     }, {
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fName" : "ObjArr6",
       "fTitle" : "ObjArrTitle6"
     }]
@@ -647,7 +647,7 @@ TJsonEx14 store/read/store MATCHED len1:7725 len2:7725
     "arr" : [{
       "_typename" : "TBox",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fLineColor" : 1,
       "fLineStyle" : 1,
       "fLineWidth" : 1,
@@ -660,7 +660,7 @@ TJsonEx14 store/read/store MATCHED len1:7725 len2:7725
     }, {
       "_typename" : "TBox",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fLineColor" : 1,
       "fLineStyle" : 1,
       "fLineWidth" : 1,
@@ -673,7 +673,7 @@ TJsonEx14 store/read/store MATCHED len1:7725 len2:7725
     }, {
       "_typename" : "TBox",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fLineColor" : 1,
       "fLineStyle" : 1,
       "fLineWidth" : 1,
@@ -686,7 +686,7 @@ TJsonEx14 store/read/store MATCHED len1:7725 len2:7725
     }, {
       "_typename" : "TBox",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fLineColor" : 1,
       "fLineStyle" : 1,
       "fLineWidth" : 1,
@@ -699,7 +699,7 @@ TJsonEx14 store/read/store MATCHED len1:7725 len2:7725
     }, {
       "_typename" : "TBox",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fLineColor" : 1,
       "fLineStyle" : 1,
       "fLineWidth" : 1,
@@ -712,7 +712,7 @@ TJsonEx14 store/read/store MATCHED len1:7725 len2:7725
     }, {
       "_typename" : "TBox",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fLineColor" : 1,
       "fLineStyle" : 1,
       "fLineWidth" : 1,
@@ -725,7 +725,7 @@ TJsonEx14 store/read/store MATCHED len1:7725 len2:7725
     }, {
       "_typename" : "TBox",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fLineColor" : 1,
       "fLineStyle" : 1,
       "fLineWidth" : 1,
@@ -744,7 +744,7 @@ TJsonEx14 store/read/store MATCHED len1:7725 len2:7725
     "arr" : [{
       "_typename" : "TBox",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fLineColor" : 1,
       "fLineStyle" : 1,
       "fLineWidth" : 1,
@@ -757,7 +757,7 @@ TJsonEx14 store/read/store MATCHED len1:7725 len2:7725
     }, {
       "_typename" : "TBox",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fLineColor" : 1,
       "fLineStyle" : 1,
       "fLineWidth" : 1,
@@ -770,7 +770,7 @@ TJsonEx14 store/read/store MATCHED len1:7725 len2:7725
     }, {
       "_typename" : "TBox",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fLineColor" : 1,
       "fLineStyle" : 1,
       "fLineWidth" : 1,
@@ -783,7 +783,7 @@ TJsonEx14 store/read/store MATCHED len1:7725 len2:7725
     }, {
       "_typename" : "TBox",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fLineColor" : 1,
       "fLineStyle" : 1,
       "fLineWidth" : 1,
@@ -796,7 +796,7 @@ TJsonEx14 store/read/store MATCHED len1:7725 len2:7725
     }, {
       "_typename" : "TBox",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fLineColor" : 1,
       "fLineStyle" : 1,
       "fLineWidth" : 1,
@@ -809,7 +809,7 @@ TJsonEx14 store/read/store MATCHED len1:7725 len2:7725
     }, {
       "_typename" : "TBox",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fLineColor" : 1,
       "fLineStyle" : 1,
       "fLineWidth" : 1,
@@ -822,7 +822,7 @@ TJsonEx14 store/read/store MATCHED len1:7725 len2:7725
     }, {
       "_typename" : "TBox",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fLineColor" : 1,
       "fLineStyle" : 1,
       "fLineWidth" : 1,
@@ -842,13 +842,13 @@ TJsonEx14 store/read/store MATCHED len1:7725 len2:7725
     "first" : {
       "_typename" : "TObjString",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fString" : "Str4"
     }, 
     "second" : {
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fName" : "Name4",
       "fTitle" : "Title4"
     }
@@ -857,13 +857,13 @@ TJsonEx14 store/read/store MATCHED len1:7725 len2:7725
     "first" : {
       "_typename" : "TObjString",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fString" : "Str5"
     }, 
     "second" : {
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fName" : "Name5",
       "fTitle" : "Title5"
     }
@@ -872,13 +872,13 @@ TJsonEx14 store/read/store MATCHED len1:7725 len2:7725
     "first" : {
       "_typename" : "TObjString",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fString" : "Str6"
     }, 
     "second" : {
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fName" : "Name6",
       "fTitle" : "Title6"
     }
@@ -887,13 +887,13 @@ TJsonEx14 store/read/store MATCHED len1:7725 len2:7725
     "first" : {
       "_typename" : "TObjString",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fString" : "Str0"
     }, 
     "second" : {
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fName" : "Name0",
       "fTitle" : "Title0"
     }
@@ -902,13 +902,13 @@ TJsonEx14 store/read/store MATCHED len1:7725 len2:7725
     "first" : {
       "_typename" : "TObjString",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fString" : "Str1"
     }, 
     "second" : {
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fName" : "Name1",
       "fTitle" : "Title1"
     }
@@ -917,13 +917,13 @@ TJsonEx14 store/read/store MATCHED len1:7725 len2:7725
     "first" : {
       "_typename" : "TObjString",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fString" : "Str2"
     }, 
     "second" : {
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fName" : "Name2",
       "fTitle" : "Title2"
     }
@@ -932,13 +932,13 @@ TJsonEx14 store/read/store MATCHED len1:7725 len2:7725
     "first" : {
       "_typename" : "TObjString",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fString" : "Str3"
     }, 
     "second" : {
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fName" : "Name3",
       "fTitle" : "Title3"
     }

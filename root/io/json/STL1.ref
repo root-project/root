@@ -1,7 +1,7 @@
 
 Processing runSTL1.C...
  ====== different STL containers TJsonEx7 (len=1) ===== 
-TJsonEx7 store/read/store MATCHED len1:5950 len2:5950
+TJsonEx7 store/read/store MATCHED len1:5936 len2:5936
 {
   "_typename" : "TJsonEx7",
   "fStr1" : "String with special characters: \" & < >",
@@ -62,7 +62,7 @@ TJsonEx7 store/read/store MATCHED len1:5950 len2:5950
   "fVectBox" : [{
     "_typename" : "TBox",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fLineColor" : 1,
     "fLineStyle" : 1,
     "fLineWidth" : 1,
@@ -76,7 +76,7 @@ TJsonEx7 store/read/store MATCHED len1:5950 len2:5950
   "fVectNames" : [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name0",
     "fTitle" : "Title0"
   }],
@@ -177,7 +177,7 @@ TJsonEx8 store/read/store MATCHED len1:121 len2:121
 }
 
  ====== STL vector of complex classes TJsonEx12 (len=1) ===== 
-TJsonEx12 store/read/store MATCHED len1:3393 len2:3393
+TJsonEx12 store/read/store MATCHED len1:3288 len2:3288
 {
   "_typename" : "TJsonEx12",
   "vect1" : [{
@@ -200,93 +200,93 @@ TJsonEx12 store/read/store MATCHED len1:3393 len2:3393
     "fNm2" : [[{
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 33554432,
+      "fBits" : 0,
       "fName" : "Name[0][0]",
       "fTitle" : "Title[0][0]"
     }], [{
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 33554432,
+      "fBits" : 0,
       "fName" : "Name[1][0]",
       "fTitle" : "Title[1][0]"
     }], [{
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 33554432,
+      "fBits" : 0,
       "fName" : "Name[2][0]",
       "fTitle" : "Title[2][0]"
     }]],
     "fNm4" : [[[{
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 33554432,
+      "fBits" : 0,
       "fName" : "Name[0][0][0]",
       "fTitle" : "Name[0][0][0]"
     }], [{
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 33554432,
+      "fBits" : 0,
       "fName" : "Name[0][1][0]",
       "fTitle" : "Name[0][1][0]"
     }], [{
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 33554432,
+      "fBits" : 0,
       "fName" : "Name[0][2][0]",
       "fTitle" : "Name[0][2][0]"
     }], [{
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 33554432,
+      "fBits" : 0,
       "fName" : "Name[0][3][0]",
       "fTitle" : "Name[0][3][0]"
     }], [{
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 33554432,
+      "fBits" : 0,
       "fName" : "Name[0][4][0]",
       "fTitle" : "Name[0][4][0]"
     }]], [[{
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 33554432,
+      "fBits" : 0,
       "fName" : "Name[1][0][0]",
       "fTitle" : "Name[1][0][0]"
     }], [{
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 33554432,
+      "fBits" : 0,
       "fName" : "Name[1][1][0]",
       "fTitle" : "Name[1][1][0]"
     }], [{
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 33554432,
+      "fBits" : 0,
       "fName" : "Name[1][2][0]",
       "fTitle" : "Name[1][2][0]"
     }], [{
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 33554432,
+      "fBits" : 0,
       "fName" : "Name[1][3][0]",
       "fTitle" : "Name[1][3][0]"
     }], [{
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 33554432,
+      "fBits" : 0,
       "fName" : "Name[1][4][0]",
       "fTitle" : "Name[1][4][0]"
     }]]],
     "fNm6" : [[null], [{
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fName" : "Name[1][0]",
       "fTitle" : "Title[1][0]"
     }], [{
       "_typename" : "TNamed",
       "fUniqueID" : 0,
-      "fBits" : 50331648,
+      "fBits" : 0,
       "fName" : "Name[2][0]",
       "fTitle" : "Title[2][0]"
     }]],
@@ -297,7 +297,7 @@ TJsonEx12 store/read/store MATCHED len1:3393 len2:3393
 }
 
  ====== More exotic STL containers as set or map with TRef inside TJsonEx13 (len=1) ===== 
-TJsonEx13 store/read/store MATCHED len1:951 len2:951
+TJsonEx13 store/read/store MATCHED len1:937 len2:937
 {
   "_typename" : "TJsonEx13",
   "set1" : [{
@@ -332,14 +332,14 @@ TJsonEx13 store/read/store MATCHED len1:951 len2:951
   "map2" : [{"$pair" : "pair<int,TNamed>", "first" : 0, "second" : {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "name0",
     "fTitle" : "title0"
   }}],
   "vect1" : [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "name0",
     "fTitle" : "title0"
   }]
