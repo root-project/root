@@ -45,7 +45,7 @@
  * for the top level fields in RBrowseVisitor.cxx. RNTupleFieldElement and RNTupleFieldElementFolder then call
  * AddBrowse(), which adds them on the TBrowser with an icon and name.
  *
- * Clicking on an RNTupleFieldElement in TBrowser (field without child):
+ * Clicking on RNTupleFieldElement in TBrowser (field without child):
  * This calls the Browse() method of RNTupleFieldElement. This function draws a histogram of type TH1F for suited fields
  * and does nothing for unsuited fields. If a field is suited for drawing is checked by fType, which is set when the
  * RNTupleFieldElement is created. To check in which cases a histogram is drawn, see RNTupleFieldElement::Browse().
@@ -53,7 +53,7 @@
  * Clicking on RNTupleFieldElementFolder in TBrowser (field with child, currently displayed as folder):
  * This calls the TraverseVisitor() function (defined in RField.cxx) starting from the current field and displays it's
  * direct child fields on the TBrowser via the AddBrowse() function in RNTupleBrowser.cxx via RBrowseVisitor.cxx.
- * Again if the child fields contain child fields themselves, they are displayed as RNTupleFieldElementFolder and if not as
+ * Again if the child fields contain child fields, they are displayed as RNTupleFieldElementFolder and if not as
  * RNTupleFieldElement. (Left-click on an element in TBrowser allows to see its class.)
  */
 
@@ -81,12 +81,12 @@ private:
    std::shared_ptr<RNTupleReader>               fReaderPtr;
    // holds previously used RNTupleReader pointers. This allows the destructor for RNTupleReader to be called when the destructor for RNTupleBrowser is called. The problems when deleting a RNTupleReader earlier are:
    // 1. deleting RNTupleReader causes a chain reaction of destrors being called, which even deletes the currently displayed TH1F Histo. Instead of modifying code on other places which could influence other parts of the program, the problem was fixed here.
-   // 2. Coming back to a field in rntuple after a field from a different ntuple and not calling SetDirectory(TDirectory*) results in segmentation faults in any possible way, if the associated RNTupleReader is deleted.
+   // 2. Coming back to a field in rntuple after visiting a second one and not calling SetDirectory(TDirectory*) results in segmentation faults in any possible way.
    /// Stores pointers of created RNTupleReaders so they can be deleted in ~RNTupleBrowser.
    std::vector<std::shared_ptr<RNTupleReader>>  fReaderPtrVec;
    // For normal use the value is always set to 0. In case of a unit test, the value is >0 and can give feedback to the unittest if something worked or not. For details, see test/ntuplebrowse.cxx
    /// Used for testing. Should always be 0 during normal use.
-   int                                          fUnitTest = 0;
+   int                                          fUnitTest;
    
 public:
    // Allows to keep created TH1F histo outside created function. Else user gets to see the histogram for less than a second. Only points to histograms created through RNTupleElementField.
@@ -116,7 +116,7 @@ class RNTupleFieldElementFolder: public TNamed {
 private:
    const Detail::RFieldBase*  fFieldPtr;
    std::string                fFieldName;
-   /// Pointer to the instance of RNTupleBrowser which created it through RBrowseVisitor::VisitField().
+   // Pointer to the instance of RNTupleBrowser which created it through RBrowseVisitor::VisitField().
    RNTupleBrowser*            fRNTupleBrowserPtr;
    RNTupleReader*             fNtupleReaderPtr;
 public:
