@@ -11,7 +11,7 @@ sap.ui.define([
    "sap/ui/core/ResizeHandler",
    "sap/ui/layout/VerticalLayout",
    "sap/ui/layout/HorizontalLayout"
-], function (Controller, JSONModel, CheckBox, Menu, MenuItem, coreItem, Column, 
+], function (Controller, JSONModel, CheckBox, Menu, MenuItem, coreItem, Column,
              mInput, mButton, ResizeHandler, VerticalLayout, HorizontalLayout) {
 
    "use strict";
@@ -53,7 +53,7 @@ sap.ui.define([
             // presume table view manger is first child of table scene
             this.viewInfo = scene.childs[0];
          }
-         
+
          console.log("table viewinfo", this.viewInfo  );
          this.collection = this.mgr.GetElement(this.viewInfo.fDisplayedCollection);
          // loop over products
@@ -65,7 +65,7 @@ sap.ui.define([
                break;
             }
          }
-         
+
       },
 
       buildTableBody: function(doBind)
@@ -200,7 +200,7 @@ sap.ui.define([
                // oModel.setData(aData);
                this.getView().setModel(oModel);
 
-               var exprIn = new mInput("expression", { 
+               var exprIn = new mInput("expression", {
                                          width:"98%",
                                          type : sap.m.InputType.Text,
                                          placeholder: "Expression",
@@ -312,7 +312,7 @@ sap.ui.define([
 
       endChanges : function(oEvent) {
          console.log("table controller endChanges ",this.eveTable );
-          this.locateEveTable();
+         this.locateEveTable();
          this.buildTableBody(false);
       },
 
