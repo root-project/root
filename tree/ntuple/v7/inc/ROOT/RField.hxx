@@ -832,6 +832,86 @@ public:
    size_t GetValueSize() const final { return sizeof(ContainerT); }
 };
 
+/**
+ * RVec<bool> needs special treatment due to std::vector<bool> sepcialization
+ */
+template <>
+class RField<ROOT::VecOps::RVec<bool>> : public Detail::RFieldBase {
+   using ContainerT = typename ROOT::VecOps::RVec<bool>;
+private:
+   ClusterSize_t fNWritten{0};
+
+protected:
+   void DoAppend(const Detail::RFieldValue& value) final {
+      auto typedValue = value.Get<ContainerT>();
+      auto count = typedValue->size();
+      for (unsigned i = 0; i < count; ++i) {
+         bool bval = (*typedValue)[i];
+         auto itemValue = fSubFields[0]->CaptureValue(&bval);
+         fSubFields[0]->Append(itemValue);
+      }
+      Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex> elemIndex(&fNWritten);
+      fNWritten += count;
+      fColumns[0]->Append(elemIndex);
+   }
+   void DoRead(NTupleSize_t index, Detail::RFieldValue* value) final {
+      auto typedValue = value->Get<ContainerT>();
+      ClusterSize_t nItems;
+      NTupleSize_t idxStart;
+      fPrincipalColumn->GetCollectionInfo(index, &idxStart, &nItems);
+      typedValue->resize(nItems);
+      for (unsigned i = 0; i < nItems; ++i) {
+         bool bval = (*typedValue)[i];
+         auto itemValue = fSubFields[0]->GenerateValue(&bval);
+         fSubFields[0]->Read(idxStart + i, &itemValue);
+         (*typedValue)[i] = bval;
+      }
+   }
+
+public:
+   RField(std::string_view name)
+      : ROOT::Experimental::Detail::RFieldBase(name, "ROOT::VecOps::RVec<bool>", ENTupleStructure::kCollection, false)
+   {
+      Attach(std::make_unique<RField<bool>>("bool"));
+   }
+   RField(RField&& other) = default;
+   RField& operator =(RField&& other) = default;
+   ~RField() = default;
+   RFieldBase* Clone(std::string_view newName) final {
+      return new RField<ROOT::VecOps::RVec<bool>>(newName);
+   }
+
+   void DoGenerateColumns() final {
+      RColumnModel modelIndex(EColumnType::kIndex, true /* isSorted*/);
+      fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
+         Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(modelIndex, 0)));
+      fPrincipalColumn = fColumns[0].get();
+   }
+   void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final {
+      auto vec = reinterpret_cast<ContainerT*>(value.GetRawPtr());
+      vec->~RVec();
+      if (!dtorOnly)
+         free(vec);
+   }
+   void CommitCluster() final { fNWritten = 0; }
+
+   static std::string MyTypeName() { return "ROOT::VecOps::RVec<bool>"; }
+
+   using Detail::RFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where, ArgsT&&... args)
+   {
+      return Detail::RFieldValue(this, static_cast<ContainerT*>(where), std::forward<ArgsT>(args)...);
+   }
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final {
+      return GenerateValue(where, ContainerT());
+   }
+   Detail::RFieldValue CaptureValue(void *where) final {
+      return Detail::RFieldValue(true /* captureFlag */, this, static_cast<ContainerT*>(where));
+   }
+   size_t GetValueSize() const final { return sizeof(ContainerT); }
+};
+
 } // namespace Experimental
 } // namespace ROOT
 

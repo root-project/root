@@ -234,11 +234,16 @@ TEST(RNTuple, BoolVector)
    FileRaii fileGuard("test.root");
 
    auto modelWrite = RNTupleModel::Create();
-   auto wrBoolVec = modelWrite->MakeField<std::vector<bool>>("boolVec");
-   wrBoolVec->push_back(true);
-   wrBoolVec->push_back(false);
-   wrBoolVec->push_back(true);
-   wrBoolVec->push_back(false);
+   auto wrBoolStdVec = modelWrite->MakeField<std::vector<bool>>("boolStdVec");
+   auto wrBoolRVec = modelWrite->MakeField<ROOT::RVec<bool>>("boolRVec");
+   wrBoolStdVec->push_back(true);
+   wrBoolStdVec->push_back(false);
+   wrBoolStdVec->push_back(true);
+   wrBoolStdVec->push_back(false);
+   wrBoolRVec->push_back(true);
+   wrBoolRVec->push_back(false);
+   wrBoolRVec->push_back(true);
+   wrBoolRVec->push_back(false);
 
    auto modelRead = std::unique_ptr<RNTupleModel>(modelWrite->Clone());
 
@@ -247,16 +252,22 @@ TEST(RNTuple, BoolVector)
       ntuple.Fill();
    }
 
-   auto rdBoolVec = modelRead->Get<std::vector<bool>>("boolVec");
+   auto rdBoolStdVec = modelRead->Get<std::vector<bool>>("boolStdVec");
+   auto rdBoolRVec = modelRead->Get<ROOT::RVec<bool>>("boolRVec");
    RNTupleReader ntuple(std::move(modelRead), std::make_unique<RPageSourceRoot>("f", "test.root"));
    EXPECT_EQ(1U, ntuple.GetNEntries());
    ntuple.LoadEntry(0);
 
-   EXPECT_EQ(4U, rdBoolVec->size());
-   EXPECT_TRUE((*rdBoolVec)[0]);
-   EXPECT_FALSE((*rdBoolVec)[1]);
-   EXPECT_TRUE((*rdBoolVec)[2]);
-   EXPECT_FALSE((*rdBoolVec)[3]);
+   EXPECT_EQ(4U, rdBoolStdVec->size());
+   EXPECT_TRUE((*rdBoolStdVec)[0]);
+   EXPECT_FALSE((*rdBoolStdVec)[1]);
+   EXPECT_TRUE((*rdBoolStdVec)[2]);
+   EXPECT_FALSE((*rdBoolStdVec)[3]);
+   EXPECT_EQ(4U, rdBoolRVec->size());
+   EXPECT_TRUE((*rdBoolRVec)[0]);
+   EXPECT_FALSE((*rdBoolRVec)[1]);
+   EXPECT_TRUE((*rdBoolRVec)[2]);
+   EXPECT_FALSE((*rdBoolRVec)[3]);
 }
 
 TEST(RNTuple, Clusters)

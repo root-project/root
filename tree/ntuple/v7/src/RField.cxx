@@ -85,12 +85,14 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    if (normalizedType == "float") return new RField<float>(fieldName);
    if (normalizedType == "double") return new RField<double>(fieldName);
    if (normalizedType == "std::string") return new RField<std::string>(fieldName);
+   if (normalizedType == "std::vector<bool>") return new RField<std::vector<bool>>(fieldName);
    if (normalizedType.substr(0, 12) == "std::vector<") {
       std::string itemTypeName = normalizedType.substr(12, normalizedType.length() - 13);
       auto itemField = Create(itemTypeName, itemTypeName);
       return new RFieldVector(fieldName, std::unique_ptr<Detail::RFieldBase>(itemField));
    }
    // For the time being, we silently read RVec fields as std::vector
+   if (normalizedType == "ROOT::VecOps::RVec<bool>") return new RField<ROOT::VecOps::RVec<bool>>(fieldName);
    if (normalizedType.substr(0, 19) == "ROOT::VecOps::RVec<") {
       std::string itemTypeName = normalizedType.substr(19, normalizedType.length() - 20);
       auto itemField = Create(itemTypeName, itemTypeName);
