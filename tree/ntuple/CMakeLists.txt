@@ -23,7 +23,6 @@ HEADERS
   ROOT/RFieldValue.hxx
   ROOT/RFieldVisitor.hxx
   ROOT/RNTuple.hxx
-  ROOT/RNTupleBrowser.hxx
   ROOT/RNTupleDescriptor.hxx
   ROOT/RNTupleModel.hxx
   ROOT/RNTupleUtil.hxx
@@ -39,7 +38,6 @@ SOURCES
   v7/src/RFieldVisitor.cxx
   v7/src/REntry.cxx
   v7/src/RNTuple.cxx
-  v7/src/RNTupleBrowser.cxx
   v7/src/RNTupleDescriptor.cxx
   v7/src/RNTupleModel.cxx
   v7/src/RPage.cxx
@@ -55,3 +53,5 @@ DEPENDENCIES
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
+
+

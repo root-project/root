@@ -279,6 +279,11 @@ void ROOT::Experimental::RField<float>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
+void ROOT::Experimental::RField<float>::AcceptVisitor(ROOT::Experimental::Detail::RNTupleVisitor &v, int level) const
+{
+   v.VisitFloatField(*this, level);
+}
+
 //------------------------------------------------------------------------------
 
 void ROOT::Experimental::RField<double>::DoGenerateColumns()
@@ -286,6 +291,11 @@ void ROOT::Experimental::RField<double>::DoGenerateColumns()
    RColumnModel model(EColumnType::kReal64, false /* isSorted*/);
    fColumns.emplace_back(std::make_unique<Detail::RColumn>(model, 0));
    fPrincipalColumn = fColumns[0].get();
+}
+
+void ROOT::Experimental::RField<double>::AcceptVisitor(ROOT::Experimental::Detail::RNTupleVisitor &v, int level) const
+{
+   v.VisitDoubleField(*this, level);
 }
 
 
@@ -298,6 +308,11 @@ void ROOT::Experimental::RField<std::int32_t>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
+void ROOT::Experimental::RField<std::int32_t>::AcceptVisitor(ROOT::Experimental::Detail::RNTupleVisitor &v, int level) const
+{
+   v.VisitInt32Field(*this, level);
+}
+
 //------------------------------------------------------------------------------
 
 void ROOT::Experimental::RField<std::uint32_t>::DoGenerateColumns()
@@ -307,6 +322,11 @@ void ROOT::Experimental::RField<std::uint32_t>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
+void ROOT::Experimental::RField<std::uint32_t>::AcceptVisitor(ROOT::Experimental::Detail::RNTupleVisitor &v, int level) const
+{
+   v.VisitUInt32Field(*this, level);
+}
+
 //------------------------------------------------------------------------------
 
 void ROOT::Experimental::RField<std::uint64_t>::DoGenerateColumns()
@@ -314,6 +334,11 @@ void ROOT::Experimental::RField<std::uint64_t>::DoGenerateColumns()
    RColumnModel model(EColumnType::kInt64, false /* isSorted*/);
    fColumns.emplace_back(std::make_unique<Detail::RColumn>(model, 0));
    fPrincipalColumn = fColumns[0].get();
+}
+
+void ROOT::Experimental::RField<std::uint64_t>::AcceptVisitor(ROOT::Experimental::Detail::RNTupleVisitor &v, int level) const
+{
+   v.VisitUInt64Field(*this, level);
 }
 
 //------------------------------------------------------------------------------

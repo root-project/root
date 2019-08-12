@@ -39,7 +39,7 @@
 #include "TVirtualPad.h"
 #include "Getline.h"
 #include "TDirectoryFile.h"
-#include "ROOT/RNTupleBrowser.hxx"
+#include <ROOT/RNTupleBrowser.hxx>
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
@@ -256,13 +256,13 @@ TGFileBrowser::~TGFileBrowser()
       TQObject::Disconnect("TGHtmlBrowser", "Clicked(char*)");
    TQObject::Disconnect("TPad", "Modified()");
 
-   delete fNTupleBrowserPtr;
    delete fContextMenu;
    delete fListTree;
    if (fRootIcon) fClient->FreePicture(fRootIcon);
    if (fCachedPic && (fCachedPic != fFileIcon))
       fClient->FreePicture(fCachedPic);
    if (fFileIcon) fClient->FreePicture(fFileIcon);
+   delete static_cast<ROOT::Experimental::RNTupleBrowser*>(fNTupleBrowserPtr);
    Cleanup();
 }
 
@@ -1232,7 +1232,6 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
          if (obj->TestBit(9/*TDirectoryFile::kCustomBrowse*/)) {
             is_rntuple = kTRUE;
             static void *rbrowser = 0;
-            //gSystem->Load("libTree");
             if (!rbrowser) rbrowser = (void *)gROOT->ProcessLine(TString::Format("new ROOT::Experimental::RNTupleBrowser((TDirectory *)%#tx);", (uintptr_t)obj));
             if (rbrowser) {
                gROOT->ProcessLine(TString::Format("((ROOT::Experimental::RNTupleBrowser *)%#tx)->SetDirectory((TDirectory *)%#tx);", (uintptr_t)rbrowser, (uintptr_t)obj));
@@ -1333,7 +1332,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
             // than a canvas already embedded in one of the browser's tab
             obj->DrawClone();
          }
-         else if (fBrowser && !obj->InheritsFrom("TFormula") && !is_rntuple)
+         else if (fBrowser && !obj->InheritsFrom("TFormula") && !is_rntuple) //!is_rntuple prevents the browse method from being called here.
             obj->Browse(fBrowser);
          fDblClick = kFALSE;
          fNKeys = 0;

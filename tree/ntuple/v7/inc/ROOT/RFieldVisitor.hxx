@@ -22,12 +22,11 @@
 #include <string>
 #include <vector>
 
-class TBrowser;
+#include "ROOT/RField.hxx"
+
 namespace ROOT {
 namespace Experimental {
-class RFieldRoot;
 namespace Detail {
-class RFieldBase;
 
 
 // clang-format off
@@ -43,6 +42,21 @@ class RNTupleVisitor {
 public:
    virtual void VisitField(const Detail::RFieldBase &field, int level) = 0;
    virtual void VisitRootField(const RFieldRoot &field, int level) = 0;
+   virtual void VisitFloatField(const RField<float> &field, int level) {
+      VisitField(field, level);
+   }
+   virtual void VisitDoubleField(const RField<double> &field, int level) {
+      VisitField(field, level);
+   }
+   virtual void VisitInt32Field(const RField<std::int32_t> &field, int level) {
+      VisitField(field, level);
+   }
+   virtual void VisitUInt32Field(const RField<std::uint32_t> &field, int level) {
+      VisitField(field, level);
+   }
+   virtual void VisitUInt64Field(const RField<std::uint64_t> &field, int level) {
+      VisitField(field, level);
+   }
 };
 } // namespace Detail
 // clang-format off
@@ -130,11 +144,6 @@ public:
 
 std::string FitString(const std::string &str, int availableSpace);
    
-class RBrowseVisitor: public Detail::RNTupleVisitor {
-   TBrowser* b;
-   void VisitField(const Detail::RFieldBase &field, int level) final;
-   void VisitRootField(const RFieldRoot &/*field*/, int /*level*/) final { }
-};
 } // namespace Experimental
 } // namespace ROOT
 

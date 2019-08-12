@@ -19,11 +19,7 @@
 #include <list>
 #include <map>
 
-namespace ROOT {
-   namespace Experimental {
-      class RNTupleBrowser;
-   }
-}
+
 class TGCanvas;
 class TGListTree;
 class TGListTreeItem;
@@ -78,7 +74,7 @@ protected:
    mFiltered_t        fFilteredItems;     // List of filtered list-tree items.
    TString            fFilterStr;         // Filter expression string
    
-   ROOT::Experimental::RNTupleBrowser    *fNTupleBrowserPtr = nullptr;  // Points to instance of RNTupleBrowser used by TBrowser
+   void              *fNTupleBrowserPtr = nullptr;  // Points to instance of RNTupleBrowser used by TBrowser
 
    void CreateBrowser();
 
