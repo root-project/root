@@ -1314,6 +1314,7 @@ void TBufferXML::PerformPostProcessing()
       str = fXML->GetAttr(bitsnode, xmlio::v);
       UInt_t bits;
       sscanf(str.Data(), "%u", &bits);
+      bits = bits & TObject::kBitMask;
 
       char sbuf[20];
       snprintf(sbuf, sizeof(sbuf), "%x", bits);
