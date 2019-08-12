@@ -331,9 +331,18 @@ void Forest<std::function<std::vector<bool>(std::vector<std::vector<float>>)>>::
    this->trees.push_back(func);
 }
 
-/// accept more parameters
 template <>
-void Forest<std::function<std::vector<bool>(std::vector<std::vector<float>>)>>::get_Forest(
+void Forest<std::function<std::vector<bool>(std::vector<std::vector<float>>)>>::do_predictions(
+   const std::vector<std::vector<float>> &events_vector, std::vector<bool> &preds)
+{
+   // preds = std::move(this->trees[0](events_vector));
+   preds = this->trees[0](events_vector);
+}
+
+////////////////////////////////////////////////////////////////
+/// ---------- Specialization JIT Forest&events&batch ------------- //
+template <>
+void Forest<std::function<void(const std::vector<std::vector<float>> &, std::vector<bool> &)>>::get_Forest(
    std::string json_file, const std::vector<std::vector<float>> &events_vector)
 {
    std::string my_config       = read_file_string(json_file);
@@ -365,23 +374,16 @@ void Forest<std::function<std::vector<bool>(std::vector<std::vector<float>>)>>::
    fb.close();
 
    // JIT functions
-   std::function<std::vector<bool>(std::vector<std::vector<float>>)> func;
+   std::function<void(const std::vector<std::vector<float>> &, std::vector<bool> &)> func;
    func = jit_event_forest_string_batch(s_trees, s_namespace_name);
    this->trees.push_back(func);
 }
 
 template <>
-void Forest<std::function<std::vector<bool>(std::vector<std::vector<float>>)>>::do_predictions(
+void Forest<std::function<void(const std::vector<std::vector<float>> &, std::vector<bool> &)>>::do_predictions(
    const std::vector<std::vector<float>> &events_vector, std::vector<bool> &preds)
 {
-   preds = std::move(this->trees[0](events_vector));
-}
-
-template <>
-void Forest<std::function<std::vector<bool>(std::vector<std::vector<float>>)>>::do_predictions_batch(
-   const std::vector<std::vector<float>> &events_vector, std::vector<bool> &preds, int loop_size)
-{
-   // preds = std::move(this->trees[0](events_vector, loop_size));
+   this->trees[0](events_vector, preds);
 }
 // */
 #endif

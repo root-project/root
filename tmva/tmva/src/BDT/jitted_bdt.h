@@ -214,9 +214,10 @@ void generate_code_forest_batch_array(std::ostream& fout,
   }
 
   // main function
-  fout << "std::vector<bool> evaluate_forest_array (const std::vector<std::vector<float>>& events_vector){" << std::endl
-       << "std::vector<bool> preds;" << std::endl
-       << "preds.reserve(" << std::to_string(rows) << ");" << std::endl; // reserve
+  fout << "void evaluate_forest_array ( "
+       << "const std::vector<std::vector<float>>& events_vector, std::vector<bool> &preds){" << std::endl;
+  //fout << "std::vector<bool> preds;" << std::endl
+  //     << "preds.reserve(" << std::to_string(rows) << ");" << std::endl; // reserve
 
   fout << "std::vector<float> event;" << std::endl;
   fout  << "float result;" << std::endl;
@@ -230,8 +231,8 @@ void generate_code_forest_batch_array(std::ostream& fout,
   fout << "     result = 1. / (1. + (1. / std::exp(result)));" << std::endl
        << "     preds.push_back((result > 0.5) ? 1 : 0);" << std::endl
        << "     }" << std::endl;
-  fout << "return preds;" << std::endl
-       << "}" << std::endl;
+  // fout << "return preds;" << std::endl  // for references
+  fout << "}" << std::endl;
 
 
   // close namespace
@@ -319,7 +320,7 @@ std::function<std::vector<bool> (std::vector<std::vector<float>>)> jit_event_for
 
 
 /// JIT forest on all events from sringed code
-std::function<std::vector<bool> (std::vector<std::vector<float>>)> jit_event_forest_string_batch(std::string tojit,
+std::function<void(const std::vector<std::vector<float>>&,std::vector<bool>&)> jit_event_forest_string_batch(std::string tojit,
                                                             std::string s_namespace=""
                                                           ){
    gInterpreter->Declare(tojit.c_str());
@@ -331,8 +332,8 @@ std::function<std::vector<bool> (std::vector<std::vector<float>>)> jit_event_for
    else
      func_ref_name = "&evaluate_forest_array";
    auto ptr = gInterpreter->Calc(func_ref_name.c_str());
-   std::vector<bool> (*func)(std::vector<std::vector<float>>) = reinterpret_cast<std::vector<bool>(*)(std::vector<std::vector<float>>)>(ptr);
-   std::function<std::vector<bool> (std::vector<std::vector<float>>)> fWrapped{func};
+   void (*func)(const std::vector<std::vector<float>>&, std::vector<bool>&) = reinterpret_cast<void(*)(const std::vector<std::vector<float>>&, std::vector<bool>&)>(ptr);
+   std::function<void (const std::vector<std::vector<float>>&, std::vector<bool>&)> fWrapped{func};
    return fWrapped;
 }
 

@@ -242,7 +242,7 @@ int main()
    write_csv(preds_file, preds);
 
    /// Forest batch batch
-   Forest<std::function<std::vector<bool>(std::vector<std::vector<float>>)>> test7;
+   Forest<std::function<void(const std::vector<std::vector<float>> &, std::vector<bool> &)>> test7;
    std::cout << "test7\n";
    test7.test();
    test7.get_Forest("model.json", events_vector);

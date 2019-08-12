@@ -25,7 +25,8 @@ EXE = mybenchmark.exe
 .PHONY : all clean distclean
 
 ifeq ($(USECLANG),1)
-				 CXXFLAGS += -v -stdlib=libc++
+				 CXX=clang++
+				 CXXFLAGS += -v -stdlib=libstdc++
          ROOT_FLAGS =
 				 LIBFLAGS = -L -Lbuild/src -lpthread -O3
 				 XGBOOST_ROOT =
