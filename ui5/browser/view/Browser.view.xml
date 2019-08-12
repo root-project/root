@@ -43,12 +43,13 @@
               addNewButtonPress="addNewButtonPressHandler"
               itemClose="tabCloseHandler">
               <items >
-                <TabContainerItem name="Editor" icon="sap-icon://write-new-document" additionalText="Code Editor" >
+                <TabContainerItem name="Code Editor" icon="sap-icon://write-new-document" additionalText="untitled" >
                   <content>
                     <l:Splitter orientation="Vertical">
                     <Toolbar>
                       <layoutData><l:SplitterLayoutData size="35px" resizable="false"/></layoutData>
                       <u:FileUploader change="onChangeFile"/>
+                      <Button text="Save as..." tooltip="Save current file as..." press="onSaveAs" />
                     </Toolbar>
                     <e:CodeEditor
                       id="aCodeEditor"
@@ -59,7 +60,7 @@
                   </l:Splitter>
                   </content>
                 </TabContainerItem>
-                <TabContainerItem name="Canvas" icon="sap-icon://column-chart-dual-axis" additionalText="ROOT Canvas" >
+                <TabContainerItem name="ROOT Canvas" icon="sap-icon://column-chart-dual-axis" additionalText="" >
                   <content>
                         
                   </content>
