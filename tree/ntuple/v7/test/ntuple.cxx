@@ -147,7 +147,7 @@ TEST(RNTuple, WriteRead)
       ntuple.Fill();
    }
 
-   auto rdSignal = modelRead->MakeField<bool>("signal");
+   auto rdSignal = modelRead->Get<bool>("signal");
    auto rdPt = modelRead->Get<float>("pt");
    auto rdEnergy = modelRead->Get<float>("energy");
    auto rdTag = modelRead->Get<std::string>("tag");
@@ -227,6 +227,36 @@ TEST(RNTuple, RVec)
    ntupleStdVector.LoadEntry(1);
    EXPECT_EQ(1U, rdJetsAsStdVector->size());
    EXPECT_EQ(1.0, (*rdJetsAsStdVector)[0]);
+}
+
+TEST(RNTuple, BoolVector)
+{
+   FileRaii fileGuard("test.root");
+
+   auto modelWrite = RNTupleModel::Create();
+   auto wrBoolVec = modelWrite->MakeField<std::vector<bool>>("boolVec");
+   wrBoolVec->push_back(true);
+   wrBoolVec->push_back(false);
+   wrBoolVec->push_back(true);
+   wrBoolVec->push_back(false);
+
+   auto modelRead = std::unique_ptr<RNTupleModel>(modelWrite->Clone());
+
+   {
+      RNTupleWriter ntuple(std::move(modelWrite), std::make_unique<RPageSinkRoot>("f", "test.root"));
+      ntuple.Fill();
+   }
+
+   auto rdBoolVec = modelRead->Get<std::vector<bool>>("boolVec");
+   RNTupleReader ntuple(std::move(modelRead), std::make_unique<RPageSourceRoot>("f", "test.root"));
+   EXPECT_EQ(1U, ntuple.GetNEntries());
+   ntuple.LoadEntry(0);
+
+   EXPECT_EQ(4U, rdBoolVec->size());
+   EXPECT_TRUE((*rdBoolVec)[0]);
+   EXPECT_FALSE((*rdBoolVec)[1]);
+   EXPECT_TRUE((*rdBoolVec)[2]);
+   EXPECT_FALSE((*rdBoolVec)[3]);
 }
 
 TEST(RNTuple, Clusters)

@@ -518,6 +518,62 @@ void ROOT::Experimental::RFieldVector::CommitCluster()
 //------------------------------------------------------------------------------
 
 
+ROOT::Experimental::RField<std::vector<bool>>::RField(std::string_view name)
+   : ROOT::Experimental::Detail::RFieldBase(name, "std::vector<bool>", ENTupleStructure::kCollection,
+                                            false /* isSimple */)
+{
+   Attach(std::make_unique<RField<bool>>("bool"));
+}
+
+void ROOT::Experimental::RField<std::vector<bool>>::DoAppend(const Detail::RFieldValue& value) {
+   auto typedValue = value.Get<std::vector<bool>>();
+   auto count = typedValue->size();
+   for (unsigned i = 0; i < count; ++i) {
+      bool bval = (*typedValue)[i];
+      auto itemValue = fSubFields[0]->CaptureValue(&bval);
+      fSubFields[0]->Append(itemValue);
+   }
+   Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex> elemIndex(&fNWritten);
+   fNWritten += count;
+   fColumns[0]->Append(elemIndex);
+}
+
+void ROOT::Experimental::RField<std::vector<bool>>::DoRead(NTupleSize_t index, Detail::RFieldValue* value) {
+   auto typedValue = value->Get<std::vector<bool>>();
+
+   ClusterSize_t nItems;
+   NTupleSize_t idxStart;
+   fPrincipalColumn->GetCollectionInfo(index, &idxStart, &nItems);
+
+   typedValue->resize(nItems);
+   for (unsigned i = 0; i < nItems; ++i) {
+      bool bval;
+      auto itemValue = fSubFields[0]->GenerateValue(&bval);
+      fSubFields[0]->Read(idxStart + i, &itemValue);
+      (*typedValue)[i] = bval;
+   }
+}
+
+void ROOT::Experimental::RField<std::vector<bool>>::DoGenerateColumns()
+{
+   RColumnModel modelIndex(EColumnType::kIndex, true /* isSorted*/);
+   fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
+      Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(modelIndex, 0)));
+   fPrincipalColumn = fColumns[0].get();
+}
+
+void ROOT::Experimental::RField<std::vector<bool>>::DestroyValue(const Detail::RFieldValue& value, bool dtorOnly)
+{
+   auto vec = static_cast<std::vector<bool>*>(value.GetRawPtr());
+   vec->~vector();
+   if (!dtorOnly)
+      free(vec);
+}
+
+
+//------------------------------------------------------------------------------
+
+
 ROOT::Experimental::RFieldCollection::RFieldCollection(
    std::string_view name,
    std::shared_ptr<RCollectionNTuple> collectionNTuple,
