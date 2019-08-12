@@ -1,5 +1,5 @@
 CXX = g++ #mpicxx # clang #
-CXXFLAGS =  -std=c++11 -g -fopenmp -O3 -Winline # -stdlib=libc++
+CXXFLAGS =  -std=c++11 -g -fopenmp -O3 # -stdlib=libc++
 
 CPPFLAGS = -I./include \
  -Wno-deprecated \
