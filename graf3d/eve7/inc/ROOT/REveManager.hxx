@@ -212,6 +212,7 @@ public:
 
    void AddLocation(const std::string& name, const std::string& path);
    void SetDefaultHtmlPage(const std::string& path);
+   void SetClientVersion(const std::string& version);
    
    static REveManager* Create();
    static void         Terminate();

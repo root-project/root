@@ -700,6 +700,17 @@ void REveManager::SetDefaultHtmlPage(const std::string& path)
    fWebWindow->SetDefaultPage(path.c_str());
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set client version, used as prefix in scripts URL
+/// When changed, web browser will reload all related JS files while full URL will be different
+/// Default is empty value - no extra string in URL
+/// Version should be string like "1.2" or "ver1.subv2" and not contain any special symbols
+void REveManager::SetClientVersion(const std::string& version)
+{
+   fWebWindow->SetClientVersion(version);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// If global REveManager* REX::gEve is not set initialize it.
 /// Returns REX::gEve.
