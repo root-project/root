@@ -436,7 +436,7 @@ if(mathmore OR builtin_gsl)
       endif()
     endif()
   else()
-    set(gsl_version 2.1)
+    set(gsl_version 2.5)
     message(STATUS "Downloading and building GSL version ${gsl_version}")
     foreach(l gsl gslcblas)
       list(APPEND GSL_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
@@ -448,7 +448,7 @@ if(mathmore OR builtin_gsl)
       GSL
       # http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
       URL ${lcgpackages}/gsl-${gsl_version}.tar.gz
-      URL_HASH SHA256=59ad06837397617f698975c494fe7b2b698739a59e2fcf830b776428938a0c66
+      URL_HASH SHA256=0460ad7c2542caaddc6729762952d345374784100223995eb14d614861f2258d
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
                         --libdir=<INSTALL_DIR>/lib
