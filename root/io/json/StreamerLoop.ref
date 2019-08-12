@@ -18,7 +18,7 @@ TJsonEx9 store/read/store MATCHED len1:484 len2:484
 }
 
  ====== kStreamerLoop members with Counter==1 TJsonEx9 ===== 
-TJsonEx9 store/read/store MATCHED len1:2947 len2:2947
+TJsonEx9 store/read/store MATCHED len1:2842 len2:2842
 {
   "_typename" : "TJsonEx9",
   "fCnt" : 1,
@@ -29,93 +29,93 @@ TJsonEx9 store/read/store MATCHED len1:2947 len2:2947
   "fNm2" : [[{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][0]",
     "fTitle" : "Title[0][0]"
   }], [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][0]",
     "fTitle" : "Title[1][0]"
   }], [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[2][0]",
     "fTitle" : "Title[2][0]"
   }]],
   "fNm4" : [[[{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][0][0]",
     "fTitle" : "Name[0][0][0]"
   }], [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][1][0]",
     "fTitle" : "Name[0][1][0]"
   }], [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][2][0]",
     "fTitle" : "Name[0][2][0]"
   }], [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][3][0]",
     "fTitle" : "Name[0][3][0]"
   }], [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][4][0]",
     "fTitle" : "Name[0][4][0]"
   }]], [[{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][0][0]",
     "fTitle" : "Name[1][0][0]"
   }], [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][1][0]",
     "fTitle" : "Name[1][1][0]"
   }], [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][2][0]",
     "fTitle" : "Name[1][2][0]"
   }], [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][3][0]",
     "fTitle" : "Name[1][3][0]"
   }], [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][4][0]",
     "fTitle" : "Name[1][4][0]"
   }]]],
   "fNm6" : [[null], [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name[1][0]",
     "fTitle" : "Title[1][0]"
   }], [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name[2][0]",
     "fTitle" : "Title[2][0]"
   }]],
@@ -125,7 +125,7 @@ TJsonEx9 store/read/store MATCHED len1:2947 len2:2947
 }
 
  ====== kStreamerLoop members with Counter==7 TJsonEx9 ===== 
-TJsonEx9 store/read/store MATCHED len1:18901 len2:18901
+TJsonEx9 store/read/store MATCHED len1:18166 len2:18166
 {
   "_typename" : "TJsonEx9",
   "fCnt" : 7,
@@ -136,633 +136,633 @@ TJsonEx9 store/read/store MATCHED len1:18901 len2:18901
   "fNm2" : [[{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][0]",
     "fTitle" : "Title[0][0]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][1]",
     "fTitle" : "Title[0][1]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][2]",
     "fTitle" : "Title[0][2]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][3]",
     "fTitle" : "Title[0][3]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][4]",
     "fTitle" : "Title[0][4]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][5]",
     "fTitle" : "Title[0][5]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][6]",
     "fTitle" : "Title[0][6]"
   }], [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][0]",
     "fTitle" : "Title[1][0]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][1]",
     "fTitle" : "Title[1][1]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][2]",
     "fTitle" : "Title[1][2]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][3]",
     "fTitle" : "Title[1][3]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][4]",
     "fTitle" : "Title[1][4]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][5]",
     "fTitle" : "Title[1][5]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][6]",
     "fTitle" : "Title[1][6]"
   }], [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[2][0]",
     "fTitle" : "Title[2][0]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[2][1]",
     "fTitle" : "Title[2][1]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[2][2]",
     "fTitle" : "Title[2][2]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[2][3]",
     "fTitle" : "Title[2][3]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[2][4]",
     "fTitle" : "Title[2][4]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[2][5]",
     "fTitle" : "Title[2][5]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[2][6]",
     "fTitle" : "Title[2][6]"
   }]],
   "fNm4" : [[[{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][0][0]",
     "fTitle" : "Name[0][0][0]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][0][1]",
     "fTitle" : "Name[0][0][1]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][0][2]",
     "fTitle" : "Name[0][0][2]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][0][3]",
     "fTitle" : "Name[0][0][3]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][0][4]",
     "fTitle" : "Name[0][0][4]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][0][5]",
     "fTitle" : "Name[0][0][5]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][0][6]",
     "fTitle" : "Name[0][0][6]"
   }], [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][1][0]",
     "fTitle" : "Name[0][1][0]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][1][1]",
     "fTitle" : "Name[0][1][1]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][1][2]",
     "fTitle" : "Name[0][1][2]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][1][3]",
     "fTitle" : "Name[0][1][3]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][1][4]",
     "fTitle" : "Name[0][1][4]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][1][5]",
     "fTitle" : "Name[0][1][5]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][1][6]",
     "fTitle" : "Name[0][1][6]"
   }], [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][2][0]",
     "fTitle" : "Name[0][2][0]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][2][1]",
     "fTitle" : "Name[0][2][1]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][2][2]",
     "fTitle" : "Name[0][2][2]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][2][3]",
     "fTitle" : "Name[0][2][3]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][2][4]",
     "fTitle" : "Name[0][2][4]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][2][5]",
     "fTitle" : "Name[0][2][5]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][2][6]",
     "fTitle" : "Name[0][2][6]"
   }], [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][3][0]",
     "fTitle" : "Name[0][3][0]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][3][1]",
     "fTitle" : "Name[0][3][1]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][3][2]",
     "fTitle" : "Name[0][3][2]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][3][3]",
     "fTitle" : "Name[0][3][3]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][3][4]",
     "fTitle" : "Name[0][3][4]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][3][5]",
     "fTitle" : "Name[0][3][5]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][3][6]",
     "fTitle" : "Name[0][3][6]"
   }], [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][4][0]",
     "fTitle" : "Name[0][4][0]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][4][1]",
     "fTitle" : "Name[0][4][1]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][4][2]",
     "fTitle" : "Name[0][4][2]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][4][3]",
     "fTitle" : "Name[0][4][3]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][4][4]",
     "fTitle" : "Name[0][4][4]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][4][5]",
     "fTitle" : "Name[0][4][5]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[0][4][6]",
     "fTitle" : "Name[0][4][6]"
   }]], [[{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][0][0]",
     "fTitle" : "Name[1][0][0]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][0][1]",
     "fTitle" : "Name[1][0][1]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][0][2]",
     "fTitle" : "Name[1][0][2]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][0][3]",
     "fTitle" : "Name[1][0][3]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][0][4]",
     "fTitle" : "Name[1][0][4]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][0][5]",
     "fTitle" : "Name[1][0][5]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][0][6]",
     "fTitle" : "Name[1][0][6]"
   }], [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][1][0]",
     "fTitle" : "Name[1][1][0]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][1][1]",
     "fTitle" : "Name[1][1][1]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][1][2]",
     "fTitle" : "Name[1][1][2]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][1][3]",
     "fTitle" : "Name[1][1][3]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][1][4]",
     "fTitle" : "Name[1][1][4]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][1][5]",
     "fTitle" : "Name[1][1][5]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][1][6]",
     "fTitle" : "Name[1][1][6]"
   }], [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][2][0]",
     "fTitle" : "Name[1][2][0]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][2][1]",
     "fTitle" : "Name[1][2][1]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][2][2]",
     "fTitle" : "Name[1][2][2]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][2][3]",
     "fTitle" : "Name[1][2][3]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][2][4]",
     "fTitle" : "Name[1][2][4]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][2][5]",
     "fTitle" : "Name[1][2][5]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][2][6]",
     "fTitle" : "Name[1][2][6]"
   }], [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][3][0]",
     "fTitle" : "Name[1][3][0]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][3][1]",
     "fTitle" : "Name[1][3][1]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][3][2]",
     "fTitle" : "Name[1][3][2]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][3][3]",
     "fTitle" : "Name[1][3][3]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][3][4]",
     "fTitle" : "Name[1][3][4]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][3][5]",
     "fTitle" : "Name[1][3][5]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][3][6]",
     "fTitle" : "Name[1][3][6]"
   }], [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][4][0]",
     "fTitle" : "Name[1][4][0]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][4][1]",
     "fTitle" : "Name[1][4][1]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][4][2]",
     "fTitle" : "Name[1][4][2]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][4][3]",
     "fTitle" : "Name[1][4][3]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][4][4]",
     "fTitle" : "Name[1][4][4]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][4][5]",
     "fTitle" : "Name[1][4][5]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 33554432,
+    "fBits" : 0,
     "fName" : "Name[1][4][6]",
     "fTitle" : "Name[1][4][6]"
   }]]],
   "fNm6" : [[null, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name[0][1]",
     "fTitle" : "Title[0][1]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name[0][2]",
     "fTitle" : "Title[0][2]"
   }, null, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name[0][4]",
     "fTitle" : "Title[0][4]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name[0][5]",
     "fTitle" : "Title[0][5]"
   }, null], [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name[1][0]",
     "fTitle" : "Title[1][0]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name[1][1]",
     "fTitle" : "Title[1][1]"
   }, null, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name[1][3]",
     "fTitle" : "Title[1][3]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name[1][4]",
     "fTitle" : "Title[1][4]"
   }, null, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name[1][6]",
     "fTitle" : "Title[1][6]"
   }], [{
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name[2][0]",
     "fTitle" : "Title[2][0]"
   }, null, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name[2][2]",
     "fTitle" : "Title[2][2]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name[2][3]",
     "fTitle" : "Title[2][3]"
   }, null, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name[2][5]",
     "fTitle" : "Title[2][5]"
   }, {
     "_typename" : "TNamed",
     "fUniqueID" : 0,
-    "fBits" : 50331648,
+    "fBits" : 0,
     "fName" : "Name[2][6]",
     "fTitle" : "Title[2][6]"
   }]],
