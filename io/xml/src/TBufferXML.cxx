@@ -1314,7 +1314,7 @@ void TBufferXML::PerformPostProcessing()
       str = fXML->GetAttr(bitsnode, xmlio::v);
       UInt_t bits;
       sscanf(str.Data(), "%u", &bits);
-      bits = bits & TObject::kBitMask;
+      bits = bits & ~TObject::kNotDeleted & ~TObject::kIsOnHeap;
 
       char sbuf[20];
       snprintf(sbuf, sizeof(sbuf), "%x", bits);
@@ -1390,8 +1390,9 @@ void TBufferXML::PerformPreProcessing(const TStreamerElement *elem, XMLNodePoint
       node = fXML->NewChild(elemnode, nullptr, xmlio::UInt);
       fXML->NewAttr(node, nullptr, xmlio::v, idstr);
 
-      UInt_t bits;
+      UInt_t bits = 0;
       sscanf(bitsstr.Data(), "%x", &bits);
+      bits = bits | TObject::kNotDeleted | TObject::kIsOnHeap;
       char sbuf[20];
       snprintf(sbuf, sizeof(sbuf), "%u", bits);
 
