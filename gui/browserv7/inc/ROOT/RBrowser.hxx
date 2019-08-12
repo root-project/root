@@ -23,6 +23,8 @@
 #include <vector>
 #include <stdint.h>
 
+class TString;
+
 namespace ROOT {
 namespace Experimental {
 
@@ -71,8 +73,10 @@ protected:
 
    void AddFolder(const char *name);
    void AddFile(const char *name);
+   void Browse(const std::string &path);
    void Build(const std::string &path);
-   const char *GetFileIcon(const char *name);
+   std::string GetClassIcon(std::string &classname);
+   std::string GetFileIcon(TString &name);
    std::string ProcessBrowserRequest(const std::string &msg);
 
    bool IsBuild() const { return fDesc.size() > 0; }

@@ -19,6 +19,7 @@
 #include <ROOT/RLogger.hxx>
 #include "ROOT/RMakeUnique.hxx"
 
+#include "TKey.h"
 #include "TString.h"
 #include "TSystem.h"
 #include "TROOT.h"
@@ -30,7 +31,7 @@
 #include <memory>
 #include <mutex>
 #include <thread>
-
+#include <fstream>
 
 /** \class ROOT::Experimental::RBrowser
 \ingroup webdisplay
@@ -62,6 +63,54 @@ ROOT::Experimental::RBrowser::~RBrowser()
 {
 }
 
+
+/////////////////////////////////////////////////////////////////////
+/// Collect information for provided root file
+
+void ROOT::Experimental::RBrowser::Browse(const std::string &path)
+{
+   fDescPath = path;
+   fDesc.clear();
+   fSorted.clear();
+   std::string keyname, classname, filename = path.substr(1, path.size()-2);
+   TDirectory *rfile = (TDirectory *)gROOT->ProcessLine(TString::Format("TFile::Open(\"%s\", \"READ\")",
+                                                       filename.c_str()));
+   if (rfile) {
+      // replace actual user data (TObjString) by the TDirectory...
+      int nkeys = rfile->GetListOfKeys()->GetEntries();
+      for (int i=0; i<nkeys; ++i) {
+         TKey *key = (TKey *)rfile->GetListOfKeys()->At(i);
+         keyname = key->GetName();
+         if (keyname.back() == '.')
+            keyname.pop_back();
+         keyname += ";";
+         keyname += std::to_string(key->GetCycle());
+         classname = key->GetClassName();
+         if (classname == "TTree" || classname == "TNtuple" ||
+             classname == "TDirectory" || classname == "TDirectoryFile")
+            fDesc.emplace_back(keyname, 0);// 1);
+         else
+            fDesc.emplace_back(keyname, 0);
+         auto &item   = fDesc.back();
+         item.type    = 0;
+         item.size    = 0;
+         item.uid     = 0;
+         item.gid     = 0;
+         item.modtime = 0;
+         item.islink  = 0;
+         item.isdir   = 0;
+         item.icon    = GetClassIcon(classname);
+         item.fsize   = "";
+         item.mtime   = "";
+         item.ftype   = "";
+         item.fuid    = "";
+         item.fgid    = "";
+      }
+   }
+   for (auto &item : fDesc)
+      fSorted.emplace_back(&item);
+}
+
 /////////////////////////////////////////////////////////////////////
 /// Collect information for provided directory
 
@@ -70,7 +119,7 @@ void ROOT::Experimental::RBrowser::Build(const std::string &path)
    fDescPath = path;
 
    void *dirp;
-   const char *name;
+   TString name;
    std::string spath = path;
    spath.insert(0, ".");
    fDesc.clear();
@@ -80,8 +129,8 @@ void ROOT::Experimental::RBrowser::Build(const std::string &path)
    if (!gSystem->ChangeDirectory(spath.c_str())) return;
 
    if ((dirp = gSystem->OpenDirectory(".")) != nullptr) {
-      while ((name = gSystem->GetDirEntry(dirp)) != nullptr) {
-         if ((strncmp(name, ".", 1)==0) || (strncmp(name, "..", 2)==0)) continue;
+      while ((name = gSystem->GetDirEntry(dirp)) != "") {
+         if ((name == ".") || (name == "..")) continue;
 
          FileStat_t stat;
 
@@ -95,8 +144,10 @@ void ROOT::Experimental::RBrowser::Build(const std::string &path)
          }
 
          int nchilds = R_ISDIR(stat.fMode) ? 1 : 0;
+         if (name.EndsWith(".root"))
+            nchilds = 1;
 
-         fDesc.emplace_back(name, nchilds);
+         fDesc.emplace_back(name.Data(), nchilds);
 
          auto &item = fDesc.back();
 
@@ -202,34 +253,54 @@ void ROOT::Experimental::RBrowser::Build(const std::string &path)
          fSorted.emplace_back(&item);
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+/// Get icon for the given class name
 
-const char *ROOT::Experimental::RBrowser::GetFileIcon(const char *name)
+std::string ROOT::Experimental::RBrowser::GetClassIcon(std::string &classname)
 {
-   TString filename(name);
-   if ((filename.EndsWith(".c")) ||
-       (filename.EndsWith(".cpp")) ||
-       (filename.EndsWith(".cxx")) ||
-       (filename.EndsWith(".c++")) ||
-       (filename.EndsWith(".cxx")) ||
-       (filename.EndsWith(".h")) ||
-       (filename.EndsWith(".hpp")) ||
-       (filename.EndsWith(".hxx")) ||
-       (filename.EndsWith(".h++")) ||
-       (filename.EndsWith(".py")) ||
-       (filename.EndsWith(".txt")) ||
-       (filename.EndsWith(".cmake")) ||
-       (filename.EndsWith(".dat")) ||
-       (filename.EndsWith(".log")) ||
-       (filename.EndsWith(".js")))
-      return "sap-icon://document-text";
-   else if ((filename.EndsWith(".bmp")) ||
-            (filename.EndsWith(".gif")) ||
-            (filename.EndsWith(".jpg")) ||
-            (filename.EndsWith(".png")) ||
-            (filename.EndsWith(".svg")))
-      return "sap-icon://picture";
+   std::string res;
+   if (classname == "TTree" || classname == "TNtuple")
+      res = "sap-icon://tree";
+   else if (classname == "TDirectory" || classname == "TDirectoryFile")
+      res = "sap-icon://folder-blank";
    else
-      return "sap-icon://document";
+      res = "sap-icon://electronic-medical-record";
+   return res;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Get icon for the type of given file name
+
+std::string ROOT::Experimental::RBrowser::GetFileIcon(TString &name)
+{
+   std::string res;
+   if ((name.EndsWith(".c")) ||
+       (name.EndsWith(".cpp")) ||
+       (name.EndsWith(".cxx")) ||
+       (name.EndsWith(".c++")) ||
+       (name.EndsWith(".cxx")) ||
+       (name.EndsWith(".h")) ||
+       (name.EndsWith(".hpp")) ||
+       (name.EndsWith(".hxx")) ||
+       (name.EndsWith(".h++")) ||
+       (name.EndsWith(".py")) ||
+       (name.EndsWith(".txt")) ||
+       (name.EndsWith(".cmake")) ||
+       (name.EndsWith(".dat")) ||
+       (name.EndsWith(".log")) ||
+       (name.EndsWith(".js")))
+      res ="sap-icon://document-text";
+   else if ((name.EndsWith(".bmp")) ||
+            (name.EndsWith(".gif")) ||
+            (name.EndsWith(".jpg")) ||
+            (name.EndsWith(".png")) ||
+            (name.EndsWith(".svg")))
+      res = "sap-icon://picture";
+   else if (name.EndsWith(".root"))
+      res = "sap-icon://org-chart";
+   else
+      res = "sap-icon://document";
+   return res;
 }
 
 
@@ -254,10 +325,27 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
    if (!request)
       return res;
 
+   if (request->sort == "DBLCLK") {
+      res = "FREAD:";
+      if (request->path.size() > 5 && request->path.compare(request->path.size() - 5, 5, ".root") == 0) {
+
+      } else {
+         std::ifstream t(request->path);
+         std::string str((std::istreambuf_iterator<char>(t)),
+                          std::istreambuf_iterator<char>());
+         res.append(str.c_str());
+      }
+      return res;
+   }
+
    // rebuild list only when selected directory changed
    if (!IsBuild() || (request->path != fDescPath)) {
       fDescPath = request->path;
-      Build(request->path);
+      if (fDescPath.size() > 6 &&
+           fDescPath.compare(fDescPath.size() - 6, 6, ".root/") == 0)
+         Browse(request->path);
+      else
+         Build(request->path);
    }
 
    RBrowserReply reply;
