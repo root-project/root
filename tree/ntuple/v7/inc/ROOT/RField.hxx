@@ -312,7 +312,7 @@ public:
    size_t GetValueSize() const override;
 };
 
-/// The generic field for a (nested) std::vector<Type>
+/// The generic field for a (nested) std::vector<Type> except for std::vector<bool>
 class RFieldVector : public Detail::RFieldBase {
 private:
    size_t fItemSize;
@@ -701,6 +701,43 @@ public:
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
    size_t GetValueSize() const final { return sizeof(ContainerT); }
+};
+
+// std::vector<bool> is a template specialization and needs special treatment
+template <>
+class RField<std::vector<bool>> : public Detail::RFieldBase {
+private:
+   ClusterSize_t fNWritten{0};
+
+protected:
+   void DoAppend(const Detail::RFieldValue& value) final;
+   void DoRead(NTupleSize_t index, Detail::RFieldValue* value) final;
+   void DoGenerateColumns() final;
+
+public:
+   static std::string MyTypeName() { return "std::vector<bool>"; }
+   explicit RField(std::string_view name);
+   RField(RField&& other) = default;
+   RField& operator =(RField&& other) = default;
+   ~RField() = default;
+   RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
+
+   using Detail::RFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where, ArgsT&&... args)
+   {
+      return Detail::RFieldValue(this, static_cast<std::vector<bool>*>(where), std::forward<ArgsT>(args)...);
+   }
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final {
+      return GenerateValue(where, std::vector<bool>());
+   }
+   Detail::RFieldValue CaptureValue(void *where) final {
+      return Detail::RFieldValue(true /* captureFlag */, this, where);
+   }
+   void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
+
+   size_t GetValueSize() const final { return sizeof(std::vector<bool>); }
+   void CommitCluster() final { fNWritten = 0; }
 };
 
 
