@@ -78,14 +78,17 @@ public:
       std::memcpy(fRawContent, source, fSize * count);
    }
 
+   /// Derived, typed classes tell whether the on-storage layout is bitwise identical to the memory layout
    virtual bool IsMappable() const { R__ASSERT(false); return false; }
    virtual std::size_t GetBitsOnStorage() const { R__ASSERT(false); return 0; }
 
+   /// If the on-storage layout and the in-memory layout differ, packing creates an on-disk page from an in-memory page
    virtual void Pack(void *destination, void *source, std::size_t count) const
    {
       std::memcpy(destination, source, count);
    }
 
+   /// If the on-storage layout and the in-memory layout differ, unpacking creates a memory page from an on-storage page
    virtual void Unpack(void *destination, void *source, std::size_t count) const
    {
       std::memcpy(destination, source, count);
