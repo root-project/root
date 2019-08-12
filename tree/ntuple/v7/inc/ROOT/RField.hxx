@@ -80,24 +80,40 @@ private:
    bool fIsSimple;
    /// Describes where the field is located inside the ntuple.
    struct RLevelInfo {
+   private:
       /// Tells how deep the field is in the ntuple. Rootfield has fLevel 0, direct subfield of Rootfield has fLevel 1, etc.
       int fLevel;
-      /// First subfield of parentfield has fOrder 0, the next fOrder 1, etc. Value set by RFieldBase::Attach()
+      /// First subfield of parentfield has fOrder 1, the next fOrder 2, etc. Value set by RFieldBase::fOrder
       int fOrder;
       /// The field itself is also included in this number.
       int fNumSiblingFields;
+   public:
       RLevelInfo(): fLevel{1}, fOrder{1}, fNumSiblingFields{1} {}
-      RLevelInfo(int level, int order, int sibling): fLevel{level}, fOrder{order}, fNumSiblingFields{sibling} {}
-      int GetNumSiblings(const RFieldBase* field) const { return static_cast<int>(field->GetParent()->fSubFields.size());
+      RLevelInfo(const RFieldBase* field): fLevel{GetLevel(field)}, fOrder{GetOrder(field)}, fNumSiblingFields{GetNumSiblings(field)} {}
+      int GetNumSiblings(const RFieldBase *field = nullptr) const {
+         if(field)
+            return static_cast<int>(field->GetParent()->fSubFields.size());
+         return fNumSiblingFields;
       }
-      int GetLevel(const RFieldBase* field) const {
+      int GetLevel(const RFieldBase *field = nullptr) const {
+         if(!field)
+            return fLevel;
          int level{0};
-         const RFieldBase* parentPtr{field};
-         while ((parentPtr = parentPtr->GetParent())) { ++level; }
+         const RFieldBase *parentPtr{field->GetParent()};
+         while (parentPtr) {
+            parentPtr = parentPtr->GetParent();
+            ++level;
+            }
          return level;
       }
+      int GetOrder(const RFieldBase *field = nullptr) const {
+         if(field)
+            return field->fOrder;
+         return fOrder;
+      }
    };
-   RLevelInfo fLevelInfo;
+   /// First subfield of parentfield has fOrder 1, the next fOrder 2, etc. Value set by RFieldBase::Attach()
+   int fOrder = 1;
 protected:
    /// Collections and classes own sub fields
    std::vector<std::unique_ptr<RFieldBase>> fSubFields;
@@ -240,8 +256,9 @@ public:
    int GetLevel() const {return fLevelInfo.fLevel;}
    int GetNumSiblings() const {return fLevelInfo.GetNumSiblingFields(this);}
    RLevelInfo GetLevelInfo() const {
-      return RLevelInfo((fLevelInfo.GetLevel(this)), fLevelInfo.fOrder, fLevelInfo.GetNumSiblings(this));
+      return RLevelInfo(this);
    }
+   void SetOrder(int o) { fOrder = o; }
   };
 } // namespace Detail
    

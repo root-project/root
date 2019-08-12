@@ -93,7 +93,7 @@ private:
    // * |__Field 2.4
    // *   |__Field 2 <- no '|' in position 1
    // *     |__Field
-   std::vector<bool> fFlagforVerticalLines;
+   std::vector<bool> fFlagForVerticalLines;
    /// KeyString refers to the left side containing the word "Field" and its hierarchial order
    std::string MakeKeyString(const Detail::RFieldBase &field, int level);
    /// ValueString refers to the right side containing the type and name
@@ -103,12 +103,12 @@ public:
    : fOutput{out}, fFrameSymbol{fillSymbol}, fWidth{width}, fDeepestLevel{deepestLevel}, fNumFields{numFields}
    {SetAvailableSpaceForStrings();}
    /// Prints summary of Field
-   void VisitField(const Detail::RFieldBase &field, int level) override;
-   void VisitRootField(const RFieldRoot &/*field*/, int /*level*/) override { };
+   void VisitField(const Detail::RFieldBase &field, int level) final;
+   void VisitRootField(const RFieldRoot &/*field*/, int /*level*/) final { };
    void SetFrameSymbol(char s) {fFrameSymbol = s;}
    void SetWidth(int w) {fWidth = w;}
-   void SetDeepestLevel(int d) {fDeepestLevel = d; fFlagforVerticalLines.resize(d - 1); SetAvailableSpaceForStrings();}
-   void SetNumFields(int n) {fNumFields = n; SetAvailableSpaceForStrings();}
+   void SetDeepestLevel(int d);
+   void SetNumFields(int n);
    /// Computes how many characters should be placed between the frame symbol and ':' for left and right side of ':' for visually pleasing output.
    // E.g.
    // * Field 1       : vpx (std::vector<float>)                                     *
@@ -127,7 +127,12 @@ public:
    }
 };
 
-std::string FitString(const std::string &str, int availableSpace);
+class RNTupleFormatter {
+public:
+   static std::string FitString(const std::string &str, int availableSpace);
+   static std::string HierarchialFieldOrder(const Detail::RFieldBase &field);
+};
+
 } // namespace Experimental
 } // namespace ROOT
 

@@ -20,65 +20,84 @@
 #include <string>
 #include <vector>
 
-#include "ROOT/RFieldVisitor.hxx"
 #include "ROOT/RField.hxx"
+#include "ROOT/RFieldVisitor.hxx"
 #include "ROOT/RNTuple.hxx"
 
-static std::string HierarchialFieldOrder(const ROOT::Experimental::Detail::RFieldBase &field);
 
 //---------------------------- RPrintVisitor ------------------------------------
 
-std::string ROOT::Experimental::RPrintVisitor::MakeKeyString(const ROOT::Experimental::Detail::RFieldBase &field, int level)
+void ROOT::Experimental::RPrintVisitor::SetDeepestLevel(int d) {
+   fDeepestLevel = d;
+   fFlagForVerticalLines.resize(d - 1);
+}
+
+void ROOT::Experimental::RPrintVisitor::SetNumFields(int n) {
+   fNumFields = n;
+   SetAvailableSpaceForStrings();
+}
+
+std::string ROOT::Experimental::RPrintVisitor::MakeKeyString(const Detail::RFieldBase &field, int level)
 {
    std::string result{""};
    if (level==1) {
       result += "Field ";
-      result += std::to_string(field.GetLevelInfo().fOrder);
+      result += std::to_string(field.GetLevelInfo().GetOrder());
    } else {
-      if (field.GetLevelInfo().fOrder == field.GetLevelInfo().fNumSiblingFields) fFlagforVerticalLines.at(level-2) = false;
-      else fFlagforVerticalLines.at(level-2) = true;
+      if (field.GetLevelInfo().GetOrder() == field.GetLevelInfo().GetNumSiblings()) { fFlagForVerticalLines.at(level-2) = false;
+      } else {
+         fFlagForVerticalLines.at(level-2) = true;
+      }
       for(int i = 0; i < level-2; ++i) {
-         if(fFlagforVerticalLines.at(i)) result+= "| "; else result += "  ";
+         if (fFlagForVerticalLines.at(i)) {
+            result+= "| ";
+         } else {
+            result += "  ";
+         }
       }
       result += "|__Field ";
-      result += HierarchialFieldOrder(field);
+      result += RNTupleFormatter::HierarchialFieldOrder(field);
    }
    return result;
 }
 
-std::string ROOT::Experimental::RPrintVisitor::MakeValueString(const ROOT::Experimental::Detail::RFieldBase &field)
+std::string ROOT::Experimental::RPrintVisitor::MakeValueString(const Detail::RFieldBase &field)
 {
    std::string nameAndType{field.GetName() + " (" + field.GetType() + ")"};
    return nameAndType;
 }
 
 // Entire function only prints 1 Line, when if statement is disregarded.
-void ROOT::Experimental::RPrintVisitor::VisitField(const ROOT::Experimental::Detail::RFieldBase &field, int level)
+void ROOT::Experimental::RPrintVisitor::VisitField(const Detail::RFieldBase &field, int level)
 {
-   if (level==1)
+   if (level == 1)
    {
-      for (int i = 0; i < fWidth; ++i) fOutput << fFrameSymbol; fOutput << std::endl;
+      for (int i = 0; i < fWidth; ++i) {
+         fOutput << fFrameSymbol;
+      }
+      fOutput << std::endl;
    }
    fOutput << fFrameSymbol << ' ';
-   fOutput << FitString(MakeKeyString(field, level), fAvailableSpaceKeyString);
+   fOutput << RNTupleFormatter::FitString(MakeKeyString(field, level), fAvailableSpaceKeyString);
    fOutput << " : ";
-   fOutput << FitString(MakeValueString(field), fAvailableSpaceValueString);
+   fOutput << RNTupleFormatter::FitString(MakeValueString(field), fAvailableSpaceValueString);
    fOutput << fFrameSymbol << std::endl;
 }
 
 //---------------------- RPrepareVisitor -------------------------------
 
 
-void ROOT::Experimental::RPrepareVisitor::VisitField(const ROOT::Experimental::Detail::RFieldBase &/*field*/, int level)
+void ROOT::Experimental::RPrepareVisitor::VisitField(const Detail::RFieldBase &/*field*/, int level)
 {
    ++fNumFields;
-   if (level > fDeepestLevel) fDeepestLevel = level;
+   if (level > fDeepestLevel)
+      fDeepestLevel = level;
 }
 
-//------------------------ Helper functions -----------------------------
+//------------------------ RNTupleFormatter -----------------------------
 
 //E.g. ("ExampleString" , space= 8) => "Examp..."
-std::string ROOT::Experimental::FitString(const std::string &str, int availableSpace) {
+std::string ROOT::Experimental::RNTupleFormatter::FitString(const std::string &str, int availableSpace) {
    int strSize{static_cast<int>(str.size())};
    if (strSize <= availableSpace)
       return str + std::string(availableSpace - strSize, ' ');
@@ -88,13 +107,13 @@ std::string ROOT::Experimental::FitString(const std::string &str, int availableS
 }
 
 //Returns std::string of form "1" or "2.1.1"
-std::string HierarchialFieldOrder(const ROOT::Experimental::Detail::RFieldBase &field)
+std::string ROOT::Experimental::RNTupleFormatter::HierarchialFieldOrder(const ROOT::Experimental::Detail::RFieldBase &field)
 {
-   std::string hierarchialOrder{std::to_string(field.GetLevelInfo().fOrder)};
+   std::string hierarchialOrder{std::to_string(field.GetLevelInfo().GetOrder())};
    const ROOT::Experimental::Detail::RFieldBase* parentPtr{field.GetParent()};
    // To avoid having the index of the RootField (-1) in the return value, it is checked if the grandparent is a nullptr (in that case RootField is parent)
    while (parentPtr && parentPtr->GetParent()) {
-      hierarchialOrder = std::to_string(parentPtr->GetLevelInfo().fOrder) + "." + hierarchialOrder;
+      hierarchialOrder = std::to_string(parentPtr->GetLevelInfo().GetOrder()) + "." + hierarchialOrder;
       parentPtr = parentPtr->GetParent();
    }
    return hierarchialOrder;

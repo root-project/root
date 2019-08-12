@@ -132,7 +132,7 @@ public:
    NTupleSize_t GetNEntries() const { return fNEntries; }
    
    /// Prints a detailed summary of the ntuple, including a list of fields.
-   void PrintInfo(std::ostream &output = std::cout, const ENTupleInfo what = ENTupleInfo::kSummary, char frameSymbol = '*', int width = 80);
+   void PrintInfo(const ENTupleInfo what = ENTupleInfo::kSummary, std::ostream &output = std::cout);
    
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the ntuple.
    /// On I/O errors, raises an expection.

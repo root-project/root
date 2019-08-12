@@ -90,7 +90,7 @@ void Analyze() {
 
    // Create an ntuple and attach the read model to it
    auto ntuple = RNTupleReader::Open(std::move(model), "Staff", kNTupleFileName);
-    
+
    // Quick overview of the ntuple and list of fields.
    ntuple->PrintInfo();
    // In a future version of RNTuple, there will be support for ntuple->Show() and ntuple->Scan()
