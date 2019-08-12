@@ -227,6 +227,18 @@ class Regression05LoKiNamespace( MyTestCase ):
       self.assertEqual(
          LoKi.BooleanConstant( rcp ).__name__, 'BooleanConstant<%s>' % rcp )
 
+   def test2TemplateWithNamespaceReturnValue(self):
+      """Test the return value of a templated function in a namespace"""
+      # ROOT-10256
+      ROOT.gInterpreter.Declare("""
+      namespace bar {
+         template<typename T>
+         T foo(T a) { return a; }
+      }
+      """)
+      self.assertEqual(ROOT.bar.foo(1), 1)
+
+
 ### Test conversion of int64 objects to ULong64_t and ULong_t ================
 class Regression06Int64Conversion( MyTestCase ):
    limit1  = 4294967295
