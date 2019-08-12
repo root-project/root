@@ -63,7 +63,7 @@ private:
    ColumnId_t fColumnIdSource;
    /// Optional link to a parent offset column that points into this column
    RColumn* fOffsetColumn;
-
+   /// Used to pack and unpack pages on writing/reading
    std::unique_ptr<RColumnElementBase> fElement;
 
    RColumn(const RColumnModel& model, std::uint32_t index);
