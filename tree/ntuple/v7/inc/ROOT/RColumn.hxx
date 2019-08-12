@@ -37,7 +37,7 @@ namespace Detail {
 \ingroup NTuple
 \brief A column is a storage-backed array of a simple, fixed-size type, from which pages can be mapped into memory.
 
-On the primitives data layer, the RColumn and RColumnElement are the equivalents to RField and RFieldValue on the
+On the primitives data layer, the RColumn and RColumnElement are the equivalents to RField and RTreeValue on the
 logical data layer.
 */
 // clang-format on

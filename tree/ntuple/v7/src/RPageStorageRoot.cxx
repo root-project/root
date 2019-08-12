@@ -85,7 +85,6 @@ ROOT::Experimental::Detail::RPageSinkRoot::AddColumn(DescriptorId_t fieldId, con
 
 void ROOT::Experimental::Detail::RPageSinkRoot::Create(RNTupleModel &model)
 {
-   if(fDirectory == nullptr)
    fDirectory = fSettings.fFile->mkdir(fNTupleName.c_str());
    // In TBrowser, use RNTupleBrowser(TDirectory *directory) in order to show the ntuple contents
    fDirectory->SetBit(TDirectoryFile::kCustomBrowse);
@@ -226,11 +225,11 @@ ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view nt
 {
 }
 
-ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, std::string_view path, TDirectory* fDirectory)
+ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, std::string_view path)
    : RPageSource(ntupleName)
    , fPageAllocator(std::make_unique<RPageAllocatorKey>())
    , fPagePool(std::make_shared<RPagePool>())
-   , fDirectory(fDirectory)
+   , fDirectory(nullptr)
 {
    TFile *file = TFile::Open(std::string(path).c_str(), "READ");
    fSettings.fFile = file;

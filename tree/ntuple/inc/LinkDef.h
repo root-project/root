@@ -17,9 +17,6 @@
 #pragma link C++ nestedtypedefs;
 #pragma link C++ nestedclasses;
 
-#pragma link C++ class ROOT::Experimental::RNTupleBrowser;
-#pragma link C++ class ROOT::Experimental::RNTupleBrowseField;
-
 // Support for auto-loading in the RNTuple tutorials
 #pragma link C++ class ROOT::Experimental::Detail::RFieldBase-;
 #pragma link C++ class ROOT::Experimental::Detail::RFieldBase::RIterator-;

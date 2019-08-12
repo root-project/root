@@ -33,7 +33,7 @@ namespace Detail {
 \brief A page is a slice of a column that is mapped into memory
 
 The page provides an opaque memory buffer for uncompressed, unpacked data. It does not interpret
-the contents but it does know about the size (and thus the number) of the elements inside as well as the element
+the contents but it does now about the size (and thus the number) of the elements inside as well as the element
 number range within the backing column/cluster. The memory buffer is not managed by the page. It is normally registered
 with the page pool and allocated/freed by the page storage.
 */
