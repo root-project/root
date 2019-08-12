@@ -1050,8 +1050,9 @@ bool testJsonReading(TString &json)
    if (!res) {
       Int_t errcnt = 0, minlen = json.Length() < json2.Length() ? json.Length() : json2.Length();
       for (Int_t p = 0; p < minlen-30; p+=30) {
-         if (json(p,30) != json2(p,30)) {
-            printf("DIFF pos:%d\n%s\n%s\n", p, json(p,30).Data(), json2(p,30).Data());
+         TString part1 = json(p,30), part2 = json2(p,30);
+         if (part1 != part2) {
+            printf("DIFF at pos:%d\n%s\n%s\n", p, part1.Data(), part2.Data());
             if (++errcnt > 5) break;
          }
       }
