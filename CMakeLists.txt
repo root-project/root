@@ -526,9 +526,19 @@ if(testing)
         set(GIT_BRANCH v${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-${ROOT_PATCH_VERSION})
       endif()
 
-      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH}
-                      https://github.com/root-project/roottest.git
-                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+      execute_process(COMMAND
+        ${GIT_EXECUTABLE} ls-remote --heads
+        https://github.com/root-project/roottest.git ${GIT_BRANCH}
+        OUTPUT_VARIABLE ROOTTEST_GIT_BRANCH)
+
+      if(NOT "${ROOTTEST_GIT_BRANCH}" STREQUAL "")
+        set(ROOTTEST_GIT_BRANCH -b ${GIT_BRANCH})
+      endif()
+
+      execute_process(COMMAND
+        ${GIT_EXECUTABLE} clone ${ROOTTEST_GIT_BRANCH}
+        https://github.com/root-project/roottest.git
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
       if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
         message(FATAL_ERROR "Error cloning roottest")
