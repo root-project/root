@@ -98,6 +98,7 @@ class Container {
 #include <locale.h>
 #include <cmath>
 #include <memory>
+#include <cstdlib>
 
 #include <ROOT/RMakeUnique.hxx>
 
@@ -1954,7 +1955,7 @@ void TBufferJSON::JsonReadTObjectMembers(TObject *tobj, void *node)
 
    tobj->SetUniqueID(uid);
    // there is no method to set all bits directly - do it one by one
-   for (unsigned n = 0; n < 32; n++)
+   for (unsigned n = 0; n < 24; n++)
       tobj->SetBit(BIT(n), (bits & BIT(n)) != 0);
 
    if (gDebug > 2)
@@ -2370,7 +2371,9 @@ void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack, const TClass *obj_
          AppendOutput(stack->fValues[0].c_str());
          AppendOutput(stack->NextMemberSeparator(), "\"fBits\"");
          AppendOutput(fSemicolon.Data());
-         AppendOutput((stack->fValues.size() > 1) ? stack->fValues[1].c_str() : fValue.Data());
+         auto tbits = std::atol((stack->fValues.size() > 1) ? stack->fValues[1].c_str() : fValue.Data());
+         tbits = tbits & TObject::kBitMask;
+         AppendOutput(std::to_string(tbits).c_str());
          if (cnt == 3) {
             AppendOutput(stack->NextMemberSeparator(), "\"fPID\"");
             AppendOutput(fSemicolon.Data());
