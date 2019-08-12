@@ -12,7 +12,7 @@ Run `bash run.sh`!
 - [x] implement jitting implementation
 - [ ] implement some basic tests for future changes (google test?)
 - [ ] implement other objectives (see below)
-- [ ] Benchmark against xgboost (google bench?)
+- [x] Benchmark against xgboost (google bench?)
 - [ ] Check correctness on huge datasets
 - [ ] Benchmark against Atlas and CMS codes
 - [ ] For Jitting we can switch to arrays instead of vectors
