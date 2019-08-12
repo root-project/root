@@ -395,7 +395,7 @@ public:
       tableBuilder->SetCollection(collection);
       REX::REveElement* tablep = tableBuilder->CreateProduct("table-type", m_viewContext);
       auto tableMng =  m_viewContext->GetTableViewInfo();
-      if (showInTable)
+      if (showInTable) {
          tableMng->SetDisplayedCollection(collection->GetElementId());
       }
       tableMng->AddDelegate([=]() { tableBuilder->ConfigChanged(); });
