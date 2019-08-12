@@ -2,7 +2,7 @@
 Processing runPolyMarker.C...
 <Object class="TPolyMarker3D">
   <TPolyMarker3D version="3">
-    <TObject fUniqueID="0" fBits="3000001"/>
+    <TObject fUniqueID="0" fBits="1"/>
     <TAttMarker version="2">
       <fMarkerColor v="1"/>
       <fMarkerStyle v="1"/>
