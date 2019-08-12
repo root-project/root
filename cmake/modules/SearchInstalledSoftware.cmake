@@ -714,13 +714,13 @@ if(fftw3)
   endif()
 endif()
 if(builtin_fftw3)
-  set(FFTW_VERSION 3.1.2)
+  set(FFTW_VERSION 3.3.8)
   message(STATUS "Downloading and building FFTW version ${FFTW_VERSION}")
   set(FFTW_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libfftw3.a)
   ExternalProject_Add(
     FFTW3
     URL ${lcgpackages}/fftw-${FFTW_VERSION}.tar.gz
-    URL_HASH SHA256=e1b92e97fe27efcbd150212d0d287ac907bd2fef0af32e16284fef5d1c1c26bf
+    URL_HASH SHA256=6113262f6e92c5bd474f2875fa1b01054c4ad5040f6b0da7c03c98821d9ae303
     INSTALL_DIR ${CMAKE_BINARY_DIR}
     CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR>
     BUILD_COMMAND make CFLAGS=-fPIC
