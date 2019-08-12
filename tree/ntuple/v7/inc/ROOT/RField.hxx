@@ -131,7 +131,6 @@ protected:
    /// column type exists.
    virtual void DoAppend(const RFieldValue& value);
    virtual void DoRead(NTupleSize_t index, RFieldValue* value);
-   virtual void DoReadV(NTupleSize_t index, NTupleSize_t count, void* dst);
 
 public:
    /// Iterates over the sub fields in depth-first search order
@@ -171,7 +170,7 @@ public:
    virtual ~RFieldBase();
 
    ///// Copies the field and its sub fields using a possibly new name and a new, unconnected set of columns
-   virtual RFieldBase* Clone(std::string_view newName) = 0;
+   virtual RFieldBase *Clone(std::string_view newName) = 0;
 
    /// Factory method to resurrect a field from the stored on-disk type information
    static RFieldBase *Create(const std::string &fieldName, const std::string &typeName);
@@ -200,7 +199,7 @@ public:
    }
 
    /// Populate a single value with data from the tree, which needs to be of the fitting type.
-   /// Reading copies data into the memory wrapped by the tree value.
+   /// Reading copies data into the memory wrapped by the ntuple value.
    void Read(NTupleSize_t index, RFieldValue* value) {
       if (!fIsSimple) {
          DoRead(index, value);
@@ -208,20 +207,6 @@ public:
       }
       fPrincipalColumn->Read(index, &value->fMappedElement);
    }
-
-   /// Type unsafe bulk read interface; dst must point to a vector of objects of the field type.
-   /// TODO(jblomer): can this be type safe?
-   void ReadV(NTupleSize_t index, NTupleSize_t count, void *dst)
-   {
-      if (!fIsSimple) {
-         DoReadV(index, count, dst);
-         return;
-      }
-      //fPrincipalColumn->ReadV(index, count, dst);
-   }
-
-   /// The number of elements in the principal column. For top level fields, the number of entries.
-   NTupleSize_t GetNItems();
 
    /// Ensure that all received items are written from page buffers to the storage.
    void Flush() const;
