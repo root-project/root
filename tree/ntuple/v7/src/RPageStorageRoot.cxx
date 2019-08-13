@@ -295,36 +295,27 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
 }
 
 
-ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::PopulatePage(
-   ColumnHandle_t columnHandle, NTupleSize_t index)
+ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::DoPopulatePage(
+   ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor, ClusterSize_t::ValueType clusterIndex)
 {
    auto columnId = columnHandle.fId;
-   auto cachedPage = fPagePool->GetPage(columnId, index);
-   if (!cachedPage.IsNull())
-      return cachedPage;
-
-   auto columnDescriptor = fDescriptor.GetColumnDescriptor(columnId);
-
-   // TODO(jblomer): save last used cluster id and check it first
-   auto clusterId = fDescriptor.FindClusterId(columnId, index);
-   R__ASSERT(clusterId != kInvalidDescriptorId);
-   auto clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
+   auto clusterId = clusterDescriptor.GetId();
    auto pageRange = clusterDescriptor.GetPageRange(columnId);
-   auto selfOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
 
    // TODO(jblomer): binary search
    RClusterDescriptor::RPageRange::RPageInfo pageInfo;
-   auto firstInPage = selfOffset;
+   decltype(clusterIndex) firstInPage = 0;
    for (const auto &pi : pageRange.fPageInfos) {
-      if (firstInPage + pi.fNElements > index) {
+      if (firstInPage + pi.fNElements > clusterIndex) {
          pageInfo = pi;
          break;
       }
       firstInPage += pi.fNElements;
    }
-   R__ASSERT(firstInPage <= index);
-   R__ASSERT((firstInPage + pageInfo.fNElements) > index);
+   R__ASSERT(firstInPage <= clusterIndex);
+   R__ASSERT((firstInPage + pageInfo.fNElements) > clusterIndex);
 
+   auto columnDescriptor = fDescriptor.GetColumnDescriptor(columnId);
    NTupleSize_t pointeeOffset = 0;
    // TODO(jblomer): deal with multiple linked columns
    if (!columnDescriptor.GetLinkIds().empty())
@@ -351,14 +342,46 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::P
       pagePayload->fSize = pageSize;
    }
 
+   auto selfOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
    auto newPage = fPageAllocator->NewPage(columnId, pagePayload->fContent, elementSize, pageInfo.fNElements);
-   newPage.SetWindow(firstInPage, RPage::RClusterInfo(clusterId, selfOffset, pointeeOffset));
+   newPage.SetWindow(selfOffset + firstInPage, RPage::RClusterInfo(clusterId, selfOffset, pointeeOffset));
    fPagePool->RegisterPage(newPage,
       RPageDeleter([](const RPage &page, void *userData)
       {
          RPageAllocatorKey::DeletePage(page, reinterpret_cast<ROOT::Experimental::Internal::RNTupleBlob *>(userData));
       }, pagePayload));
    return newPage;
+}
+
+
+ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::PopulatePage(
+   ColumnHandle_t columnHandle, NTupleSize_t globalIndex)
+{
+   auto columnId = columnHandle.fId;
+   auto cachedPage = fPagePool->GetPage(columnId, globalIndex);
+   if (!cachedPage.IsNull())
+      return cachedPage;
+
+   auto clusterId = fDescriptor.FindClusterId(columnId, globalIndex);
+   R__ASSERT(clusterId != kInvalidDescriptorId);
+   auto clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
+   auto selfOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
+   R__ASSERT(selfOffset <= globalIndex);
+   return DoPopulatePage(columnHandle, clusterDescriptor, globalIndex - selfOffset);
+}
+
+
+ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::PopulatePage(
+   ColumnHandle_t columnHandle, DescriptorId_t clusterId, ClusterSize_t::ValueType clusterIndex)
+{
+   auto columnId = columnHandle.fId;
+   auto cachedPage = fPagePool->GetPage(columnId, clusterId, clusterIndex);
+   if (!cachedPage.IsNull())
+      return cachedPage;
+
+   R__ASSERT(clusterId != kInvalidDescriptorId);
+   auto clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
+   return DoPopulatePage(columnHandle, clusterDescriptor, clusterIndex);
 }
 
 void ROOT::Experimental::Detail::RPageSourceRoot::ReleasePage(RPage &page)

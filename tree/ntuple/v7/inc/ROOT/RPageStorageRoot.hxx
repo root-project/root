@@ -143,6 +143,9 @@ private:
 
    RNTupleDescriptor fDescriptor;
 
+   RPage DoPopulatePage(ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor,
+                        ClusterSize_t::ValueType clusterIndex);
+
 public:
    RPageSourceRoot(std::string_view ntupleName, RSettings settings);
    RPageSourceRoot(std::string_view ntupleName, std::string_view path);
@@ -155,7 +158,9 @@ public:
    ColumnId_t GetColumnId(ColumnHandle_t columnHandle) final;
    const RNTupleDescriptor& GetDescriptor() const final { return fDescriptor; }
 
-   RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t index) final;
+   RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
+   RPage PopulatePage(ColumnHandle_t columnHandle, DescriptorId_t clusterId,
+                      ClusterSize_t::ValueType clusterIndex) final;
    void ReleasePage(RPage &page) final;
 };
 
