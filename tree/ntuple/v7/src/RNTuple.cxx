@@ -15,11 +15,14 @@
 
 #include "ROOT/RNTuple.hxx"
 
+#include "ROOT/RFieldVisitor.hxx"
 #include "ROOT/RNTupleModel.hxx"
 #include "ROOT/RPageStorage.hxx"
 #include "ROOT/RPageStorageRoot.hxx"
 
+#include <algorithm>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -93,25 +96,50 @@ std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleRe
    return std::make_unique<RNTupleReader>(std::make_unique<Detail::RPageSourceRoot>(ntupleName, storage));
 }
 
-std::string ROOT::Experimental::RNTupleReader::GetInfo(const ENTupleInfo what) {
-   std::ostringstream os;
-   auto name = fSource->GetDescriptor().GetName();
-
+void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::ostream &output)
+{
+   // TODO(lesimon): In a later version, these variables may be defined by the user or the ideal width may be read out from the terminal.
+   char frameSymbol = '*';
+   int width = 80;
+   /*
+   if (width < 30) {
+      output << "The width is too small! Should be at least 30." << std::endl;
+      return;
+   }
+   */
+   std::string name = fSource->GetDescriptor().GetName();
+   //prepVisitor traverses through all fields to gather information needed for printing.
+   RPrepareVisitor prepVisitor;
+   //printVisitor traverses through all fields to do the actual printing.
+   RPrintVisitor printVisitor(output);
    switch (what) {
    case ENTupleInfo::kSummary:
-      os << "****************************** NTUPLE *******************************"  << std::endl
-         << "* Name:    " << name << std::setw(57 - name.length())           << "*" << std::endl
-         << "* Entries: " << std::setw(10) << fNEntries << std::setw(47)     << "*" << std::endl
-         << "********************************************************************"  << std::endl;
-      return os.str();
+      for (int i = 0; i < (width/2 + width%2 - 4); ++i)
+            output << frameSymbol;
+      output << " NTUPLE ";
+      for (int i = 0; i < (width/2 - 4); ++i)
+         output << frameSymbol;
+      output << std::endl;
+      // FitString defined in RFieldVisitor.cxx
+         output << frameSymbol << " N-Tuple : " << RNTupleFormatter::FitString(name, width-13) << frameSymbol << std::endl; // prints line with name of ntuple
+         output << frameSymbol << " Entries : " << RNTupleFormatter::FitString(std::to_string(GetNEntries()), width - 13) << frameSymbol << std::endl;  // prints line with number of entries
+      GetModel()->GetRootField()->TraverseVisitor(prepVisitor);
+         
+      printVisitor.SetFrameSymbol(frameSymbol);
+      printVisitor.SetWidth(width);
+      printVisitor.SetDeepestLevel(prepVisitor.GetDeepestLevel());
+      printVisitor.SetNumFields(prepVisitor.GetNumFields());
+      GetModel()->GetRootField()->TraverseVisitor(printVisitor);
+   
+      for (int i = 0; i < width; ++i)
+         output << frameSymbol;
+      output << std::endl;
+      return;
    default:
       // Unhandled case, internal error
       assert(false);
    }
-   // Never here
-   return "";
 }
-
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RNTupleWriter::RNTupleWriter(

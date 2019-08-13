@@ -21,6 +21,7 @@ HEADERS
   ROOT/REntry.hxx
   ROOT/RField.hxx
   ROOT/RFieldValue.hxx
+  ROOT/RFieldVisitor.hxx
   ROOT/RNTuple.hxx
   ROOT/RNTupleDescriptor.hxx
   ROOT/RNTupleModel.hxx
@@ -34,6 +35,7 @@ HEADERS
 SOURCES
   v7/src/RColumn.cxx
   v7/src/RField.cxx
+  v7/src/RFieldVisitor.cxx
   v7/src/REntry.cxx
   v7/src/RNTuple.cxx
   v7/src/RNTupleDescriptor.cxx

@@ -18,6 +18,7 @@
 #include <ROOT/REntry.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldValue.hxx>
+#include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
 
@@ -140,6 +141,7 @@ void ROOT::Experimental::Detail::RFieldBase::Attach(
    std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> child)
 {
    child->fParent = this;
+   child->SetOrder(fSubFields.size()+1);
    fSubFields.emplace_back(std::move(child));
 }
 
@@ -148,6 +150,21 @@ void ROOT::Experimental::Detail::RFieldBase::Flush() const
    for (auto& column : fColumns) {
       column->Flush();
    }
+}
+
+void ROOT::Experimental::Detail::RFieldBase::TraverseVisitor(RNTupleVisitor &visitor, int level) const
+{
+   // The level is passed as a parameter so that AcceptVisitor() can access to the relative level of the field instead of the absolute one.
+   this->AcceptVisitor(visitor, level);
+   ++level;
+   for (const auto &fieldPtr: fSubFields) {
+      fieldPtr->TraverseVisitor(visitor, level);
+   }
+}
+
+void ROOT::Experimental::Detail::RFieldBase::AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const
+{
+    visitor.VisitField(*this, level);
 }
 
 ROOT::Experimental::Detail::RFieldBase::RIterator ROOT::Experimental::Detail::RFieldBase::begin()
@@ -209,6 +226,11 @@ ROOT::Experimental::REntry* ROOT::Experimental::RFieldRoot::GenerateEntry()
       entry->AddValue(f->GenerateValue());
    }
    return entry;
+}
+
+void ROOT::Experimental::RFieldRoot::AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const
+{
+   visitor.VisitRootField(*this, level);
 }
 
 

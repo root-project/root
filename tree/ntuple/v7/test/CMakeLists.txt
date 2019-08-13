@@ -18,3 +18,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(CustomStruct
                               DEPENDENCIES RIO)
 ROOT_ADD_GTEST(ntuple ntuple.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
 ROOT_ADD_GTEST(ntuple_pages ntuple_pages.cxx LIBRARIES ROOTNTuple)
+ROOT_ADD_GTEST(ntuple_print ntuple_print.cxx LIBRARIES ROOTNTuple)

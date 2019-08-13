@@ -45,12 +45,13 @@ namespace Experimental {
 
 class RCollectionNTuple;
 class REntry;
-class RNTupleModel;
 class RFieldCollection;
+class RNTupleModel;
 
 namespace Detail {
 
 class RFieldFuse;
+class RNTupleVisitor;
 class RPageStorage;
 
 // clang-format off
@@ -68,7 +69,6 @@ The field knows based on its type and the field name the type(s) and name(s) of 
 class RFieldBase {
    friend class ROOT::Experimental::Detail::RFieldFuse; // to connect the columns to a page storage
    friend class ROOT::Experimental::RFieldCollection; // to change the field names when collections are attached
-
 private:
    /// The field name relative to its parent field
    std::string fName;
@@ -78,7 +78,42 @@ private:
    ENTupleStructure fStructure;
    /// A field on a trivial type that maps as-is to a single column
    bool fIsSimple;
-
+   /// Describes where the field is located inside the ntuple.
+   struct RLevelInfo {
+   private:
+      /// Tells how deep the field is in the ntuple. Rootfield has fLevel 0, direct subfield of Rootfield has fLevel 1, etc.
+      int fLevel;
+      /// First subfield of parentfield has fOrder 1, the next fOrder 2, etc. Value set by RFieldBase::fOrder
+      int fOrder;
+      /// The field itself is also included in this number.
+      int fNumSiblingFields;
+   public:
+      RLevelInfo(): fLevel{1}, fOrder{1}, fNumSiblingFields{1} {}
+      RLevelInfo(const RFieldBase* field): fLevel{GetLevel(field)}, fOrder{GetOrder(field)}, fNumSiblingFields{GetNumSiblings(field)} {}
+      int GetNumSiblings(const RFieldBase *field = nullptr) const {
+         if(field)
+            return static_cast<int>(field->GetParent()->fSubFields.size());
+         return fNumSiblingFields;
+      }
+      int GetLevel(const RFieldBase *field = nullptr) const {
+         if(!field)
+            return fLevel;
+         int level{0};
+         const RFieldBase *parentPtr{field->GetParent()};
+         while (parentPtr) {
+            parentPtr = parentPtr->GetParent();
+            ++level;
+         }
+         return level;
+      }
+      int GetOrder(const RFieldBase *field = nullptr) const {
+         if(field)
+            return field->fOrder;
+         return fOrder;
+      }
+   };
+   /// First subfield of parentfield has fOrder 1, the next fOrder 2, etc. Value set by RFieldBase::Attach()
+   int fOrder = 1;
 protected:
    /// Collections and classes own sub fields
    std::vector<std::unique_ptr<RFieldBase>> fSubFields;
@@ -208,8 +243,17 @@ public:
 
    RIterator begin();
    RIterator end();
-};
 
+   /// Used for the visitor design pattern, see for example RNTupleReader::Print()
+   virtual void TraverseVisitor(RNTupleVisitor &visitor, int level = 0) const;
+   virtual void AcceptVisitor(RNTupleVisitor &visitor, int level) const;
+
+   RLevelInfo GetLevelInfo() const {
+      return RLevelInfo(this);
+   }
+   void SetOrder(int o) { fOrder = o; }
+};
+   
 // clang-format off
 /**
 \class ROOT::Experimental::RFieldFuse
@@ -226,11 +270,13 @@ public:
 };
 
 } // namespace Detail
+   
+
 
 /// The container field for an ntuple model, which itself has no physical representation
 class RFieldRoot : public Detail::RFieldBase {
 public:
-   RFieldRoot() : Detail::RFieldBase("", "", ENTupleStructure::kRecord, false /* isSimple */) {}
+   RFieldRoot() : Detail::RFieldBase("", "", ENTupleStructure::kRecord, false /* isSimple */) { SetOrder(-1); }
    RFieldBase* Clone(std::string_view newName);
 
    void DoGenerateColumns() final {}
@@ -241,6 +287,7 @@ public:
 
    /// Generates managed values for the top-level sub fields
    REntry* GenerateEntry();
+   void AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const final;
 };
 
 /// The field for a class with dictionary

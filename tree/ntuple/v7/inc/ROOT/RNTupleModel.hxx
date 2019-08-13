@@ -96,7 +96,7 @@ public:
    RNTupleUuid GetUuid() const { return RNTupleUuid(); /* TODO */ }
 };
 
-} // namespace Exerimental
+} // namespace Experimental
 } // namespace ROOT
 
 #endif

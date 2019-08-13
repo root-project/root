@@ -120,7 +120,7 @@ void Read()
    auto ntuple = RNTupleReader::Open(std::move(model), "F", kNTupleFileName);
 
    // Quick overview of the ntuple's key meta-data
-   std::cout << ntuple->GetInfo();
+   ntuple->PrintInfo();
    // In a future version of RNTuple, there will be support for ntuple->Show() and ntuple->Scan()
 
    TCanvas *c2 = new TCanvas("c2", "Dynamic Filling Example", 200, 10, 700, 500);
