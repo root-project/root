@@ -85,19 +85,24 @@ public:
    ClusterSize_t::ValueType GetSize() const { return fElementSize * fNElements; }
    ClusterSize_t::ValueType GetElementSize() const { return fElementSize; }
    ClusterSize_t::ValueType GetNElements() const { return fNElements; }
-   NTupleSize_t GetRangeFirst() const { return fRangeFirst; }
-   NTupleSize_t GetRangeLast() const { return fRangeFirst + NTupleSize_t(fNElements) - 1; }
+   NTupleSize_t GetGlobalRangeFirst() const { return fRangeFirst; }
+   NTupleSize_t GetGlobalRangeLast() const { return fRangeFirst + NTupleSize_t(fNElements) - 1; }
+   ClusterSize_t::ValueType GetClusterRangeFirst() const { return fRangeFirst - fClusterInfo.GetSelfOffset(); }
+   ClusterSize_t::ValueType GetClusterRangeLast() const {
+      return GetClusterRangeFirst() + NTupleSize_t(fNElements) - 1;
+   }
    const RClusterInfo& GetClusterInfo() const { return fClusterInfo; }
 
    bool Contains(NTupleSize_t globalIndex) const {
       return (globalIndex >= fRangeFirst) && (globalIndex < fRangeFirst + NTupleSize_t(fNElements));
    }
 
-   bool Contains(DescriptorId_t clusterId, ClusterSize_t::ValueType clusterIndex) const {
-      if (fClusterInfo.GetId() != clusterId)
+   bool Contains(const RClusterIndex &clusterIndex) const {
+      if (fClusterInfo.GetId() != clusterIndex.GetClusterId())
          return false;
-      auto localRangeFirst = ClusterSize_t(fRangeFirst - fClusterInfo.GetSelfOffset());
-      return (clusterIndex >= localRangeFirst) && (clusterIndex < localRangeFirst + fNElements);
+      auto clusterRangeFirst = ClusterSize_t(fRangeFirst - fClusterInfo.GetSelfOffset());
+      return (clusterIndex.GetIndex() >= clusterRangeFirst) &&
+             (clusterIndex.GetIndex() < clusterRangeFirst + fNElements);
     }
 
    void* GetBuffer() const { return fBuffer; }

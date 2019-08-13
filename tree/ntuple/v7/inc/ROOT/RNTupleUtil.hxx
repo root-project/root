@@ -67,6 +67,19 @@ constexpr ColumnId_t kInvalidColumnId = -1;
 using DescriptorId_t = std::uint64_t;
 constexpr DescriptorId_t kInvalidDescriptorId = std::uint64_t(-1);
 
+/// Addresses a column element or field item relative to a particular cluster, instead of a global NTupleSize_t index
+class RClusterIndex {
+private:
+   DescriptorId_t fClusterId = kInvalidDescriptorId;
+   ClusterSize_t::ValueType fIndex = kInvalidClusterIndex;
+public:
+   RClusterIndex() = delete;
+   constexpr RClusterIndex(DescriptorId_t clusterId, ClusterSize_t::ValueType index)
+      : fClusterId(clusterId), fIndex(index) {}
+   DescriptorId_t GetClusterId() const { return fClusterId; }
+   ClusterSize_t::ValueType GetIndex() const { return fIndex; }
+};
+
 /// Every NTuple is identified by a UUID.  TODO(jblomer): should this be a TUUID?
 using RNTupleUuid = std::string;
 

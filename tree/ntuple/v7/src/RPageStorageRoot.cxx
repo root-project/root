@@ -372,16 +372,18 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::P
 
 
 ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::PopulatePage(
-   ColumnHandle_t columnHandle, DescriptorId_t clusterId, ClusterSize_t::ValueType clusterIndex)
+   ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex)
 {
+   auto clusterId = clusterIndex.GetClusterId();
+   auto index = clusterIndex.GetIndex();
    auto columnId = columnHandle.fId;
-   auto cachedPage = fPagePool->GetPage(columnId, clusterId, clusterIndex);
+   auto cachedPage = fPagePool->GetPage(columnId, clusterIndex);
    if (!cachedPage.IsNull())
       return cachedPage;
 
    R__ASSERT(clusterId != kInvalidDescriptorId);
    auto clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
-   return DoPopulatePage(columnHandle, clusterDescriptor, clusterIndex);
+   return DoPopulatePage(columnHandle, clusterDescriptor, index);
 }
 
 void ROOT::Experimental::Detail::RPageSourceRoot::ReleasePage(RPage &page)

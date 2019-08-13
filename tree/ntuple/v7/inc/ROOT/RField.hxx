@@ -129,8 +129,11 @@ protected:
 
    /// Operations on values of complex types, e.g. ones that involve multiple columns or for which no direct
    /// column type exists.
-   virtual void DoAppend(const RFieldValue& value);
-   virtual void DoRead(NTupleSize_t index, RFieldValue* value);
+   virtual void DoAppend(const RFieldValue &value);
+   virtual void DoReadGlobal(NTupleSize_t globalIndex, RFieldValue *value);
+   virtual void DoReadInCluster(const RClusterIndex &clusterIndex, RFieldValue *value) {
+      DoReadGlobal(fPrincipalColumn->GetGlobalIndex(clusterIndex), value);
+   }
 
 public:
    /// Iterates over the sub fields in depth-first search order
@@ -200,12 +203,20 @@ public:
 
    /// Populate a single value with data from the tree, which needs to be of the fitting type.
    /// Reading copies data into the memory wrapped by the ntuple value.
-   void Read(NTupleSize_t index, RFieldValue* value) {
+   void Read(NTupleSize_t globalIndex, RFieldValue *value) {
       if (!fIsSimple) {
-         DoRead(index, value);
+         DoReadGlobal(globalIndex, value);
          return;
       }
-      fPrincipalColumn->Read(index, &value->fMappedElement);
+      fPrincipalColumn->Read(globalIndex, &value->fMappedElement);
+   }
+
+   void Read(const RClusterIndex &clusterIndex, RFieldValue *value) {
+      if (!fIsSimple) {
+         DoReadInCluster(clusterIndex, value);
+         return;
+      }
+      fPrincipalColumn->Read(clusterIndex, &value->fMappedElement);
    }
 
    /// Ensure that all received items are written from page buffers to the storage.
@@ -281,7 +292,8 @@ private:
    TClass* fClass;
 protected:
    void DoAppend(const Detail::RFieldValue& value) final;
-   void DoRead(NTupleSize_t index, Detail::RFieldValue* value) final;
+   void DoReadGlobal(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
+   void DoReadInCluster(const RClusterIndex &clusterIndex, Detail::RFieldValue *value) final;
 public:
    RFieldClass(std::string_view fieldName, std::string_view className);
    RFieldClass(RFieldClass&& other) = default;
@@ -305,7 +317,7 @@ private:
 
 protected:
    void DoAppend(const Detail::RFieldValue& value) final;
-   void DoRead(NTupleSize_t index, Detail::RFieldValue* value) final;
+   void DoReadGlobal(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
 
 public:
    RFieldVector(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField);
@@ -626,7 +638,8 @@ private:
    Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex> fElemIndex;
 
    void DoAppend(const ROOT::Experimental::Detail::RFieldValue& value) final;
-   void DoRead(ROOT::Experimental::NTupleSize_t index, ROOT::Experimental::Detail::RFieldValue* value) final;
+   void DoReadGlobal(ROOT::Experimental::NTupleSize_t globalIndex,
+                     ROOT::Experimental::Detail::RFieldValue *value) final;
 
 public:
    static std::string MyTypeName() { return "std::string"; }
@@ -696,7 +709,7 @@ private:
 
 protected:
    void DoAppend(const Detail::RFieldValue& value) final;
-   void DoRead(NTupleSize_t index, Detail::RFieldValue* value) final;
+   void DoReadGlobal(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
    void DoGenerateColumns() final;
 
 public:
@@ -749,11 +762,11 @@ protected:
       fNWritten += count;
       fColumns[0]->Append(elemIndex);
    }
-   void DoRead(NTupleSize_t index, Detail::RFieldValue* value) final {
+   void DoReadGlobal(NTupleSize_t globalIndex, Detail::RFieldValue *value) final {
       auto typedValue = value->Get<ContainerT>();
       ClusterSize_t nItems;
       NTupleSize_t idxStart;
-      fPrincipalColumn->GetCollectionInfo(index, &idxStart, &nItems);
+      fPrincipalColumn->GetCollectionInfo(globalIndex, &idxStart, &nItems);
       typedValue->resize(nItems);
       for (unsigned i = 0; i < nItems; ++i) {
          auto itemValue = fSubFields[0]->GenerateValue(&typedValue->data()[i]);
@@ -839,11 +852,11 @@ protected:
       fNWritten += count;
       fColumns[0]->Append(elemIndex);
    }
-   void DoRead(NTupleSize_t index, Detail::RFieldValue* value) final {
+   void DoReadGlobal(NTupleSize_t globalIndex, Detail::RFieldValue *value) final {
       auto typedValue = value->Get<ContainerT>();
       ClusterSize_t nItems;
       NTupleSize_t idxStart;
-      fPrincipalColumn->GetCollectionInfo(index, &idxStart, &nItems);
+      fPrincipalColumn->GetCollectionInfo(globalIndex, &idxStart, &nItems);
       typedValue->resize(nItems);
       for (unsigned i = 0; i < nItems; ++i) {
          bool bval = (*typedValue)[i];
