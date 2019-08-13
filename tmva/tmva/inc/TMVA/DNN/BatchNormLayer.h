@@ -62,13 +62,16 @@ namespace DNN {
 template <typename Architecture_t>
 class TBatchNormLayer : public VGeneralLayer<Architecture_t> {
 public:
+
    using Scalar_t = typename Architecture_t::Scalar_t;
    using Matrix_t = typename Architecture_t::Matrix_t;
+   using Tensor_t = typename Architecture_t::Tensor_t;
 
    //using Matrix_t = TMatrixD;
 
 private:
-   std::vector<Matrix_t> fDerivatives; ///< First fDerivatives of the activations of this layer.
+
+   Tensor_t fDerivatives; ///< First fDerivatives of the activations of this layer.
 
    Scalar_t fMomentum; ///< The weight decay.
    Scalar_t fEpsilon;
@@ -107,14 +110,14 @@ public:
     * different events in the batch. Computes activations as well as
     * the first partial derivative of the activation function at those
     * activations. */
-   void Forward(std::vector<Matrix_t> &input, bool inTraining = true);
+   void Forward(Tensor_t &input, bool inTraining = true);
 
    /*! Compute weight, bias and activation gradients. Uses the precomputed
     *  first partial derviatives of the activation function computed during
     *  forward propagation and modifies them. Must only be called directly
     *  a the corresponding call to Forward(...). */
-   void Backward(std::vector<Matrix_t> &gradients_backward, const std::vector<Matrix_t> &activations_backward,
-                 std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2);
+   void Backward(Tensor_t &gradients_backward, const Tensor_t &activations_backward);
+   //              Tensor_t &inp1, Tensor_t &inp2);
 
   
    /* reset at end of training the batch counter */
@@ -212,9 +215,9 @@ auto TBatchNormLayer<Architecture_t>::Initialize() -> void
 
 //______________________________________________________________________________
 template <typename Architecture_t>
-auto TBatchNormLayer<Architecture_t>::Forward(std::vector<Matrix_t> &x, bool inTraining) -> void
+auto TBatchNormLayer<Architecture_t>::Forward(Tensor_t &x, bool inTraining) -> void
 {
-   Matrix_t &input = x[0];
+   Matrix_t input = x.At(0).GetMatrix(); 
 
    Matrix_t &gamma = this->GetWeightsAt(0);
    Matrix_t &beta = this->GetWeightsAt(1);
@@ -222,7 +225,7 @@ auto TBatchNormLayer<Architecture_t>::Forward(std::vector<Matrix_t> &x, bool inT
    // gamma.Print();
    // beta.Print();
 
-   Matrix_t &out = this->GetOutputAt(0);
+   Matrix_t out = this->GetOutputAt(0);
    double epsilon = fEpsilon;
 
    int n = input.GetNrows();
@@ -278,24 +281,24 @@ auto TBatchNormLayer<Architecture_t>::Forward(std::vector<Matrix_t> &x, bool inT
    if (inTraining) fTrainedBatches++;
    else fTrainedBatches = 0; 
    // fVar.Print();
-   if (inTraining) 
-      std::cout << " training batch " << fTrainedBatches << " mu var0" << fMu_Training[0] << std::endl;
-   else
-      std::cout << " testing batch  " << fTrainedBatches << " mu var0" << fMu_Training[0] << std::endl;
+   // if (inTraining) 
+   //    std::cout << " training batch " << fTrainedBatches << " mu var0" << fMu_Training[0] << std::endl;
+   // else
+   //    std::cout << " testing batch  " << fTrainedBatches << " mu var0" << fMu_Training[0] << std::endl;
 }
 
 //______________________________________________________________________________
 template <typename Architecture_t>
-auto TBatchNormLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_backward,
-                                               const std::vector<Matrix_t> & /*  activations_backward */,
-                                               std::vector<Matrix_t> &, std::vector<Matrix_t> &) -> void
+auto TBatchNormLayer<Architecture_t>::Backward(Tensor_t &gradients_backward,
+                                               const Tensor_t & /*  activations_backward */) -> void 
+//                                               Tensor_t &, Tensor_t &) -> void
 {
 
    double epsilon = fEpsilon;
 
 
    // inputs
-   const Matrix_t &dout = this->GetActivationGradients()[0];
+   const Matrix_t &dout = this->GetActivationGradients().At(0).GetMatrix();
    const Matrix_t &gamma = this->GetWeightsAt(0);
    //const Matrix_t &x = activations_backward[0];
    int d = dout.GetNcols();
@@ -304,7 +307,7 @@ auto TBatchNormLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_
    // outputs gradients
    Matrix_t &dgamma = this->GetWeightGradientsAt(0);
    Matrix_t &dbeta = this->GetWeightGradientsAt(1);
-   Matrix_t &dx = gradients_backward[0];
+   Matrix_t dx = gradients_backward.At(0).GetMatrix();
 
    // compute first gradients for gamma and beta
    for (int k = 0; k < d; k++) {
@@ -347,6 +350,7 @@ void TBatchNormLayer<Architecture_t>::Print() const
 template <typename Architecture_t>
 void TBatchNormLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
 {
+
    // write layer width activation function + weigbht and bias matrices
 
    auto layerxml = gTools().xmlengine().NewChild(parent, 0, "BatchNormLayer");
@@ -360,14 +364,18 @@ void TBatchNormLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
 
    // write stored mean and variances
    //using Scalar_t = typename Architecture_t::Scalar_t;
+
    TMatrixT<Scalar_t> muMat(1, fMu_Training.size(), fMu_Training.data());
-   VGeneralLayer<TMVA::DNN::TReference<Scalar_t> >::WriteMatrixToXML(layerxml, "Training-mu", muMat);
+   //VGeneralLayer<TMVA::DNN::TReference<Scalar_t> >::WriteMatrixToXML(layerxml, "Training-mu", muMat);
+   this->WriteMatrixToXML(layerxml, "Training-mu", Matrix_t(muMat) );
    TMatrixT<Scalar_t> varMat(1, fVar_Training.size(), fVar_Training.data());
-   VGeneralLayer<TMVA::DNN::TReference<Scalar_t> >::WriteMatrixToXML(layerxml, "Training-variance", varMat);
+   //VGeneralLayer<TMVA::DNN::TReference<Scalar_t> >::WriteMatrixToXML(layerxml, "Training-variance", varMat);
+   this->WriteMatrixToXML(layerxml, "Training-variance", Matrix_t(varMat) );
 
    // write weights (gamma and beta)
    this->WriteMatrixToXML(layerxml, "Gamma", this->GetWeightsAt(0));
    this->WriteMatrixToXML(layerxml, "Beta", this->GetWeightsAt(1));
+
 }
 
 //______________________________________________________________________________
@@ -378,11 +386,14 @@ void TBatchNormLayer<Architecture_t>::ReadWeightsFromXML(void *parent)
    gTools().ReadAttr(parent, "Momentum", fMomentum);
    gTools().ReadAttr(parent, "Epsilon", fEpsilon);
    // Read layer weights and biases from XML
-   //using Scalar_t = typename Architecture_t::Scalar_t;
-   TMatrixT<Scalar_t> muMat(1, fMu_Training.size(), fMu_Training.data());
-   VGeneralLayer<TMVA::DNN::TReference<Scalar_t> >::ReadMatrixXML(parent, "Training-mu", muMat);
-   TMatrixT<Scalar_t> varMat(1, fVar_Training.size(), fVar_Training.data());
-   VGeneralLayer<TMVA::DNN::TReference<Scalar_t> >::ReadMatrixXML(parent, "Training-variance", varMat);
+ 
+   Matrix_t muMat(1, fMu_Training.size());
+   this->ReadMatrixXML(parent, "Training-mu", muMat);
+   std::copy(muMat.GetRawDataPointer(), muMat.GetRawDataPointer()+fMu_Training.size(), fMu_Training.begin() );
+
+   Matrix_t varMat(1, fVar_Training.size());
+   this->ReadMatrixXML(parent, "Training-variance", varMat);
+   std::copy(varMat.GetRawDataPointer(), varMat.GetRawDataPointer()+fVar_Training.size(), fVar_Training.begin() );
 
    this->ReadMatrixXML(parent, "Gamma", this->GetWeightsAt(0));
    this->ReadMatrixXML(parent, "Beta", this->GetWeightsAt(1));

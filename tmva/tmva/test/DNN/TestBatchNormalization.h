@@ -37,7 +37,7 @@ using namespace TMVA::DNN;
  *  layer l. dx is added as an offset to the current value of the weight. */
 //______________________________________________________________________________
 template <typename Architecture>
-auto evaluate_net_weight(TDeepNet<Architecture> &net, std::vector<typename Architecture::Matrix_t> & X,
+auto evaluate_net_weight(TDeepNet<Architecture> &net, typename Architecture::Tensor_t & X,
                          const typename Architecture::Matrix_t &Y, const typename Architecture::Matrix_t &W, size_t l,
                          size_t k, size_t i, size_t j, typename Architecture::Scalar_t xvalue) ->
    typename Architecture::Scalar_t
@@ -66,6 +66,7 @@ auto testBackpropagationWeights(typename Architecture::Scalar_t dx_eps)
 {
    using Scalar_t = typename Architecture::Scalar_t;
    using Matrix_t = typename Architecture::Matrix_t;
+   using Tensor_t = typename Architecture::Tensor_t;
    using Net_t = TDeepNet<Architecture>;
    // using FCLayer_t  = TDenseLayer<Architecture>;
 
@@ -86,10 +87,10 @@ auto testBackpropagationWeights(typename Architecture::Scalar_t dx_eps)
    net.Print(); 
 
    // Random training data.
-   std::vector<Matrix_t> X(1, Matrix_t(tbatchSize, inputSize)); // T x B x D
+   Tensor_t X(1, tbatchSize, inputSize); // T x B x D
    Matrix_t Y(tbatchSize, 1), weights(tbatchSize, 1);
    net.Initialize();
-   randomBatch(X[0]);
+   randomBatch(X);
    // Matrix_t & input = X[0];
    // for (int i = 0; i < tbatchSize; ++i) { 
    //    for (int j = 0; j < inputSize; ++j) { 
@@ -102,7 +103,7 @@ auto testBackpropagationWeights(typename Architecture::Scalar_t dx_eps)
    fillMatrix(weights, 1.0);
 
    std::cout << "input \n";
-   X[0].Print();
+   //X[0].Print();
 
    //auto & w2 = net.GetLayerAt(2)->GetWeightsAt(0);
   

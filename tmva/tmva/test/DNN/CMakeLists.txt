@@ -110,6 +110,7 @@ if ( (BLAS_FOUND OR mathmore) AND imt AND tmva-cpu)
   ROOT_EXECUTABLE(testBatchNormalizationCpu TestBatchNormalizationCpu.cxx LIBRARIES ${Libraries})
   ROOT_ADD_TEST(TMVA-DNN-BatchNormalization-Cpu COMMAND testBatchNormalizationCpu)
 
+if ( old-dnn-test ) 
   # DNN - DataLoader CPU
   ROOT_EXECUTABLE(testDataLoaderCpu TestDataLoaderCpu.cxx
     LIBRARIES ${Libraries})
@@ -119,6 +120,10 @@ if ( (BLAS_FOUND OR mathmore) AND imt AND tmva-cpu)
   ROOT_EXECUTABLE(testMinimizationCpu TestMinimizationCpu.cxx
     LIBRARIES ${Libraries})
   ROOT_ADD_TEST(TMVA-DNN-Minimization-Cpu COMMAND testMinimizationCpu)
+  
+endif ()
+
+  
 
   # DNN - Optimization CPU
   ROOT_EXECUTABLE(testOptimizationCpu TestOptimizationCpu.cxx
@@ -157,6 +162,8 @@ if ( (BLAS_FOUND OR mathmore) AND imt AND tmva-cpu)
 
 endif ()
 
+if ( reference-tests)
+
   # DNN - Activation Functions
   ROOT_EXECUTABLE(testActivationFunctions TestActivationFunctions.cxx LIBRARIES ${Libraries})
   ROOT_ADD_TEST(TMVA-DNN-Activation-Functions COMMAND testActivationFunctions)
@@ -191,3 +198,4 @@ endif ()
 #  if (NOT (CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" AND CMAKE_BUILD_TYPE STREQUAL "Debug") )
 #    ROOT_ADD_TEST(TMVA-DNN-Minimization COMMAND testMinimization)
 #  endif()
+endif()

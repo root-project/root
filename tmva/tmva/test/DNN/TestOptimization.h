@@ -63,7 +63,8 @@ template <typename Architecture_t>
 auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer optimizerType, Bool_t debug) ->
    typename Architecture_t::Scalar_t
 {
-   using Matrix_t = typename Architecture_t::Matrix_t;
+   //using Matrix_t = typename Architecture_t::Matrix_t;
+   using Tensor_t = typename Architecture_t::Tensor_t;
    using Scalar_t = typename Architecture_t::Scalar_t; 
    using Layer_t = VGeneralLayer<Architecture_t>;
    using DeepNet_t = TDeepNet<Architecture_t, Layer_t>;
@@ -198,14 +199,23 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
    // Logic : Y = X * K
    // Let X = I, Then Y = I * K => Y = K
    // I = (1 x batchSize x nFeatures)
+#if 0
    std::vector<Matrix_t> I;
    I.reserve(1);
    I.emplace_back(batchSize, nFeatures);
    for (size_t i = 0; i < batchSize; i++) {
       I[0](i, i) = 1.0;
    }
+#endif
 
-   deepNet.Forward(I, false);
+   Tensor_t tI(1, batchSize, nFeatures);
+   for (size_t i = 0; i < batchSize; ++i) { 
+      //for (size_t j = 0; j < nFeatures; ++j) { 
+        tI(0,i,i) =  1.;
+      //}
+   } 
+
+   deepNet.Forward(tI, false);
 
    // get the output of the last layer of the deepNet
    TMatrixT<Scalar_t> Ytemp(deepNet.GetLayerAt(deepNet.GetLayers().size() - 1)->GetOutputAt(0));
@@ -310,7 +320,7 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
 
    std::cout << " No of Epochs = " << optimizer->GetGlobalStep() << ", ";
 
-   deepNet.Forward(I, false);
+   deepNet.Forward(tI, false);
 
    // get the output of the last layer of the deepNet
    TMatrixT<Scalar_t> Y(deepNet.GetLayerAt(deepNet.GetLayers().size() - 1)->GetOutputAt(0));

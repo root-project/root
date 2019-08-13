@@ -24,7 +24,7 @@
 #define TMVA_TEST_DNN_TEST_ACTIVATION_FUNCTIONS
 
 #include "TMatrixT.h"
-#include "TMVA/DNN/Architectures/Reference.h"
+//#include "TMVA/DNN/Architectures/Reference.h"
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/Net.h"
 #include "Utility.h"
@@ -43,6 +43,8 @@ auto testIdentity(size_t ntests)
 -> typename Architecture::Scalar_t
 {
    using Matrix_t = typename Architecture::Matrix_t;
+   using Tensor_t = typename Architecture::Tensor_t;
+
    Double_t maximumError = 0.0;
 
    for (size_t i = 0; i < ntests; i++) {
@@ -52,10 +54,11 @@ auto testIdentity(size_t ntests)
       TMatrixT<Double_t> ARef(m, n);
       randomMatrix(ARef);
       Matrix_t AArch(ARef);
+      Tensor_t tAArch(AArch);
 
-      evaluate<Architecture>(AArch, EActivationFunction::kIdentity);
+      evaluate<Architecture>(tAArch, EActivationFunction::kIdentity);
 
-      TMatrixT<Double_t> A = AArch;
+      TMatrixT<Double_t> A = tAArch.GetMatrix();
       Double_t error = maximumRelativeError(A, ARef);
       maximumError = std::max(error, maximumError);
    }
@@ -69,6 +72,7 @@ auto testIdentityDerivative(size_t ntests)
     -> typename Architecture::Scalar_t
 {
    using Matrix_t = typename Architecture::Matrix_t;
+   using Tensor_t = typename Architecture::Tensor_t;
    Double_t maximumError = 0.0;
 
    for (size_t i = 0; i < ntests; i++) {
@@ -80,8 +84,9 @@ auto testIdentityDerivative(size_t ntests)
       Matrix_t AArch(ARef), BArch(BRef);
 
       evaluateDerivative<Architecture>(BArch, EActivationFunction::kIdentity, AArch);
+      
       evaluateDerivative<TReference<Double_t>>(BRef, EActivationFunction::kIdentity,
-                                               ARef);
+                                                ARef);
 
       TMatrixT<Double_t> B = BArch;
       Double_t error = maximumRelativeError(B, BRef);

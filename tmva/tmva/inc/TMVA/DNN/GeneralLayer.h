@@ -44,6 +44,8 @@ namespace DNN {
  */
 template <typename Architecture_t>
 class VGeneralLayer {
+
+   using Tensor_t = typename Architecture_t::Tensor_t;
    using Matrix_t = typename Architecture_t::Matrix_t;
    using Scalar_t = typename Architecture_t::Scalar_t;
 
@@ -58,7 +60,7 @@ protected:
    size_t fHeight; ///< The height of the layer.
    size_t fWidth;  ///< The width of this layer.
 
-   bool fIsTraining; ///< Flag indicatig the mode
+   bool fIsTraining; ///< Flag indicating the mode
 
    std::vector<Matrix_t> fWeights; ///< The weights associated to the layer.
    std::vector<Matrix_t> fBiases;  ///< The biases associated to the layer.
@@ -66,8 +68,8 @@ protected:
    std::vector<Matrix_t> fWeightGradients; ///< Gradients w.r.t. the weights of the layer.
    std::vector<Matrix_t> fBiasGradients;   ///< Gradients w.r.t. the bias values of the layer.
 
-   std::vector<Matrix_t> fOutput;              ///< Activations of this layer.
-   std::vector<Matrix_t> fActivationGradients; ///< Gradients w.r.t. the activations of this layer.
+   Tensor_t fOutput;              ///< Activations of this layer.
+   Tensor_t fActivationGradients; ///< Gradients w.r.t. the activations of this layer.
 
    EInitialization fInit; ///< The initialization method.
 
@@ -100,14 +102,14 @@ public:
    /*! Computes activation of the layer for the given input. The input
     * must be in 3D tensor form with the different matrices corresponding to
     * different events in the batch.  */
-   virtual void Forward(std::vector<Matrix_t> &input, bool isTraining = false) = 0;
+   virtual void Forward(Tensor_t &input, bool applyDropout = false) = 0;
 
    /*! Backpropagates the error. Must only be called directly at the corresponding
     *  call to Forward(...). */
-   virtual void Backward(std::vector<Matrix_t> &gradients_backward, const std::vector<Matrix_t> &activations_backward,
-                         std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2) = 0;
+   virtual void Backward(Tensor_t &gradients_backward, const Tensor_t &activations_backward ) = 0;
+   /////                      std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2) = 0;
 
-   /*! Reset some training flags after a loop on all batches
+    /*! Reset some training flags after a loop on all batches
        Some layer (e.g. batchnormalization) might need to implement the function in case some operations 
        are needed after looping an all batches                                                 */
    virtual void ResetTraining() {}
@@ -126,7 +128,6 @@ public:
 
    /*! Updates the bias gradients, given some other weight gradients and learning rate. */
    void UpdateBiasGradients(const std::vector<Matrix_t> &biasGradients, const Scalar_t learningRate);
-
 
    /*! Copies the weights provided as an input.  */
    void CopyWeights(const std::vector<Matrix_t> &otherWeights);
@@ -180,17 +181,18 @@ public:
    const Matrix_t &GetBiasGradientsAt(size_t i) const { return fBiasGradients[i]; }
    Matrix_t &GetBiasGradientsAt(size_t i) { return fBiasGradients[i]; }
 
-   const std::vector<Matrix_t> &GetOutput() const { return fOutput; }
-   std::vector<Matrix_t> &GetOutput() { return fOutput; }
+   const Tensor_t &GetOutput() const { return fOutput; }
+   Tensor_t &GetOutput() { return fOutput; }
 
-   const std::vector<Matrix_t> &GetActivationGradients() const { return fActivationGradients; }
-   std::vector<Matrix_t> &GetActivationGradients() { return fActivationGradients; }
+   const Tensor_t &GetActivationGradients() const { return fActivationGradients; }
+   Tensor_t &GetActivationGradients() { return fActivationGradients; }
 
-   Matrix_t &GetOutputAt(size_t i) { return fOutput[i]; }
-   const Matrix_t &GetOutputAt(size_t i) const { return fOutput[i]; }
+   Matrix_t GetOutputAt(size_t i) { return fOutput.At(i).GetMatrix(); }
+   const Matrix_t &GetOutputAt(size_t i) const { return fOutput.At(i).GetMatrix(); }
 
-   Matrix_t &GetActivationGradientsAt(size_t i) { return fActivationGradients[i]; }
-   const Matrix_t &GetActivationGradientsAt(size_t i) const { return fActivationGradients[i]; }
+   Matrix_t GetActivationGradientsAt(size_t i) { return fActivationGradients.At(i).GetMatrix(); }
+   const Matrix_t &GetActivationGradientsAt(size_t i) const { return fActivationGradients.At(i).GetMatrix(); }
+
 
    EInitialization GetInitialization() const { return fInit; }
 
@@ -205,10 +207,10 @@ public:
    void SetIsTraining(bool isTraining) { fIsTraining = isTraining; }
 
    /// helper functions for XML
-   static void WriteTensorToXML( void * node, const char * name, const std::vector<Matrix_t> & tensor); 
-   static void WriteMatrixToXML( void * node, const char * name, const Matrix_t & matrix);
+   void WriteTensorToXML( void * node, const char * name, const std::vector<Matrix_t> & tensor); 
+   void WriteMatrixToXML( void * node, const char * name, const Matrix_t & matrix);
 
-   static void ReadMatrixXML( void * node, const char * name, Matrix_t & matrix);
+   void ReadMatrixXML( void * node, const char * name, Matrix_t & matrix);
    
 };
 
@@ -222,9 +224,11 @@ VGeneralLayer<Architecture_t>::VGeneralLayer(size_t batchSize, size_t inputDepth
                                              size_t weightsNRows, size_t weightsNCols, size_t biasesNSlices,
                                              size_t biasesNRows, size_t biasesNCols, size_t outputNSlices,
                                              size_t outputNRows, size_t outputNCols, EInitialization init)
-   : fBatchSize(batchSize), fInputDepth(inputDepth), fInputHeight(inputHeight), fInputWidth(inputWidth), fDepth(depth),
-     fHeight(height), fWidth(width), fIsTraining(true), fWeights(), fBiases(), fWeightGradients(), fBiasGradients(),
-     fOutput(), fActivationGradients(), fInit(init)
+   :  fBatchSize(batchSize), fInputDepth(inputDepth), fInputHeight(inputHeight), fInputWidth(inputWidth), fDepth(depth),
+      fHeight(height), fWidth(width), fIsTraining(true), fWeights(), fBiases(), fWeightGradients(), fBiasGradients(),
+      fOutput( outputNSlices, outputNRows, outputNCols ),
+      fActivationGradients( outputNSlices, outputNRows, outputNCols ),
+      fInit(init)
 {
 
    for (size_t i = 0; i < weightsNSlices; i++) {
@@ -236,11 +240,6 @@ VGeneralLayer<Architecture_t>::VGeneralLayer(size_t batchSize, size_t inputDepth
       fBiases.emplace_back(biasesNRows, biasesNCols);
       fBiasGradients.emplace_back(biasesNRows, biasesNCols);
    }
-
-   for (size_t i = 0; i < outputNSlices; i++) {
-      fOutput.emplace_back(outputNRows, outputNCols);
-      fActivationGradients.emplace_back(outputNRows, outputNCols);
-   }
 }
 
 //_________________________________________________________________________________________________
@@ -251,11 +250,13 @@ VGeneralLayer<Architecture_t>::VGeneralLayer(size_t batchSize, size_t inputDepth
                                              size_t biasesNSlices, std::vector<size_t> biasesNRows,
                                              std::vector<size_t> biasesNCols, size_t outputNSlices, size_t outputNRows,
                                              size_t outputNCols, EInitialization init)
-   : fBatchSize(batchSize), fInputDepth(inputDepth), fInputHeight(inputHeight), fInputWidth(inputWidth), fDepth(depth),
-     fHeight(height), fWidth(width), fIsTraining(true), fWeights(), fBiases(), fWeightGradients(), fBiasGradients(),
-     fOutput(), fActivationGradients(), fInit(init)
+   :  fBatchSize(batchSize), fInputDepth(inputDepth), fInputHeight(inputHeight), fInputWidth(inputWidth), fDepth(depth),
+      fHeight(height), fWidth(width), fIsTraining(true), fWeights(), fBiases(), fWeightGradients(), fBiasGradients(),
+      fOutput( outputNSlices, outputNRows, outputNCols ),
+      fActivationGradients( outputNSlices, outputNRows, outputNCols ),
+      fInit(init)
 {
-
+   // add constructor for weights with different shapes (e.g. in recurrent layers)
    for (size_t i = 0; i < weightsNSlices; i++) {
       fWeights.emplace_back(weightsNRows[i], weightsNCols[i]);
       fWeightGradients.emplace_back(weightsNRows[i], weightsNCols[i]);
@@ -266,20 +267,24 @@ VGeneralLayer<Architecture_t>::VGeneralLayer(size_t batchSize, size_t inputDepth
       fBiasGradients.emplace_back(biasesNRows[i], biasesNCols[i]);
    }
 
-   for (size_t i = 0; i < outputNSlices; i++) {
-      fOutput.emplace_back(outputNRows, outputNCols);
-      fActivationGradients.emplace_back(outputNRows, outputNCols);
-   }
+   // for (size_t i = 0; i < outputNSlices; i++) {
+   //    fOutput.emplace_back(outputNRows, outputNCols);
+   //    fActivationGradients.emplace_back(outputNRows, outputNCols);
+   // }
 }
 
 //_________________________________________________________________________________________________
 template <typename Architecture_t>
 VGeneralLayer<Architecture_t>::VGeneralLayer(VGeneralLayer<Architecture_t> *layer)
-   : fBatchSize(layer->GetBatchSize()), fInputDepth(layer->GetInputDepth()), fInputHeight(layer->GetInputHeight()),
-     fInputWidth(layer->GetInputWidth()), fDepth(layer->GetDepth()), fHeight(layer->GetHeight()),
-     fWidth(layer->GetWidth()), fIsTraining(layer->IsTraining()), fWeights(), fBiases(), fWeightGradients(),
-     fBiasGradients(), fOutput(), fActivationGradients(), fInit(layer->GetInitialization())
+   :  fBatchSize(layer->GetBatchSize()), fInputDepth(layer->GetInputDepth()), fInputHeight(layer->GetInputHeight()),
+      fInputWidth(layer->GetInputWidth()), fDepth(layer->GetDepth()), fHeight(layer->GetHeight()),
+      fWidth(layer->GetWidth()), fIsTraining(layer->IsTraining()), fWeights(), fBiases(), fWeightGradients(),
+      fBiasGradients(),
+      fOutput( layer->GetOutput().GetShape() ),   // construct from shape of other tensor   
+      fActivationGradients( layer->GetActivationGradients().GetShape() ),
+      fInit(layer->GetInitialization() )
 {
+   // Constructor from another layer pointer of a different architecture
    size_t weightsNSlices = (layer->GetWeights()).size();
    size_t weightsNRows = 0;
    size_t weightsNCols = 0;
@@ -307,28 +312,19 @@ VGeneralLayer<Architecture_t>::VGeneralLayer(VGeneralLayer<Architecture_t> *laye
 
       Architecture_t::Copy(fBiases[i], layer->GetBiasesAt(i));
    }
-
-   size_t outputNSlices = (layer->GetOutput()).size();
-   size_t outputNRows = 0;
-   size_t outputNCols = 0;
-
-   for (size_t i = 0; i < outputNSlices; i++) {
-      outputNRows = (layer->GetOutputAt(i)).GetNrows();
-      outputNCols = (layer->GetOutputAt(i)).GetNcols();
-
-      fOutput.emplace_back(outputNRows, outputNCols);
-      fActivationGradients.emplace_back(outputNRows, outputNCols);
-   }
 }
 
 //_________________________________________________________________________________________________
 template <typename Architecture_t>
 VGeneralLayer<Architecture_t>::VGeneralLayer(const VGeneralLayer &layer)
-   : fBatchSize(layer.fBatchSize), fInputDepth(layer.fInputDepth), fInputHeight(layer.fInputHeight),
-     fInputWidth(layer.fInputWidth), fDepth(layer.fDepth), fHeight(layer.fHeight), fWidth(layer.fWidth),
-     fIsTraining(layer.fIsTraining), fWeights(), fBiases(), fWeightGradients(), fBiasGradients(), fOutput(),
-     fActivationGradients(), fInit(layer.fInit)
+   :  fBatchSize(layer.fBatchSize), fInputDepth(layer.fInputDepth), fInputHeight(layer.fInputHeight),
+      fInputWidth(layer.fInputWidth), fDepth(layer.fDepth), fHeight(layer.fHeight), fWidth(layer.fWidth),
+      fIsTraining(layer.fIsTraining), fWeights(), fBiases(), fWeightGradients(), fBiasGradients(),
+      fOutput( layer.GetOutput() ),
+      fActivationGradients( layer.GetActivationGradients() ),
+      fInit( layer.GetInitialization())
 {
+   // copy constructor
    size_t weightsNSlices = layer.fWeights.size();
    size_t weightsNRows = 0;
    size_t weightsNCols = 0;
@@ -536,6 +532,13 @@ auto VGeneralLayer<Architecture_t>::ReadMatrixXML(void * node, const char * name
 
       }
    }
+}
+
+
+template <typename Architecture>
+auto debugTensor(const typename Architecture::Tensor_t & A, const std::string name = "tensor") -> void
+{
+   Architecture::PrintTensor(A,name);
 }
 
 } // namespace DNN

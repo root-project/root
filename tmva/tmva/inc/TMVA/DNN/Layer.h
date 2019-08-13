@@ -55,6 +55,8 @@ template<typename Architecture_t>
 public:
    using Scalar_t = typename Architecture_t::Scalar_t;
    using Matrix_t = typename Architecture_t::Matrix_t;
+   using Tensor_t = typename Architecture_t::Tensor_t;
+
 
 private:
 
@@ -149,6 +151,8 @@ public:
 
    using Scalar_t = typename Architecture_t::Scalar_t;
    using Matrix_t = typename Architecture_t::Matrix_t;
+   using Tensor_t = typename Architecture_t::Tensor_t;
+
 
 private:
 
@@ -283,13 +287,19 @@ auto TLayer<Architecture_t>::Backward(Matrix_t & gradients_backward,
                                     Scalar_t weightDecay)
 -> void
 {
-   Architecture_t::Backward(gradients_backward,
+
+   Tensor_t tGradBw(gradients_backward);
+   Tensor_t tActBw(activations_backward);
+   Tensor_t tActGrad(fActivationGradients);
+   Tensor_t tDeriv(fDerivatives);
+
+   Architecture_t::Backward( tGradBw,
                             fWeightGradients,
                             fBiasGradients,
-                            fDerivatives,
-                            fActivationGradients,
+                            tDeriv,
+                            tActGrad,
                             fWeights,
-                            activations_backward);
+                            tActBw);
    addRegularizationGradients<Architecture_t>(fWeightGradients,
                                               fWeights,
                                               weightDecay, r);
