@@ -644,8 +644,12 @@ void TStreamerInfo::Build()
       } else {
          // Tell clone we should rerun BuildOld
          infoalloc->SetBit(kBuildOldUsed,false);
+         // Temporarily mark it as built to avoid the BuildCheck from removing
+         // Technically we only need to do this for the 'current' StreamerInfo
+         fIsBuilt = kTRUE;
          infoalloc->BuildCheck();
          infoalloc->BuildOld();
+         fIsBuilt = kFALSE;
          TClass *allocClass = infoalloc->GetClass();
 
          {
