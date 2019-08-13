@@ -121,7 +121,7 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
          output << frameSymbol;
       output << std::endl;
       // FitString defined in RFieldVisitor.cxx
-         output << frameSymbol << " N-Tuple  : " << RNTupleFormatter::FitString(name, width-14) << frameSymbol << std::endl; // prints line with name of ntuple
+         output << frameSymbol << " N-Tuple : " << RNTupleFormatter::FitString(name, width-13) << frameSymbol << std::endl; // prints line with name of ntuple
          output << frameSymbol << " Entries : " << RNTupleFormatter::FitString(std::to_string(GetNEntries()), width - 13) << frameSymbol << std::endl;  // prints line with number of entries
       GetModel()->GetRootField()->TraverseVisitor(prepVisitor);
          

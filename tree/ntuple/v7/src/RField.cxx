@@ -152,16 +152,6 @@ void ROOT::Experimental::Detail::RFieldBase::Flush() const
    }
 }
 
-void ROOT::Experimental::Detail::RFieldBase::ConnectColumns(RPageStorage *pageStorage)
-{
-   if (fColumns.empty()) DoGenerateColumns();
-   for (auto& column : fColumns) {
-      if ((fParent != nullptr) && (column->GetOffsetColumn() == nullptr))
-         column->SetOffsetColumn(fParent->fPrincipalColumn);
-      column->Connect(pageStorage);
-   }
-}
-
 void ROOT::Experimental::Detail::RFieldBase::TraverseVisitor(RNTupleVisitor &visitor, int level) const
 {
    // The level is passed as a parameter so that AcceptVisitor() can access to the relative level of the field instead of the absolute one.
@@ -175,20 +165,6 @@ void ROOT::Experimental::Detail::RFieldBase::TraverseVisitor(RNTupleVisitor &vis
 void ROOT::Experimental::Detail::RFieldBase::AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const
 {
     visitor.VisitField(*this, level);
-}
-
-void ROOT::Experimental::Detail::RFieldBase::TraverseVisitor(RNTupleVisitor &visitor, int level) const
-{
-   this->AcceptVisitor(visitor, level);
-   ++level;
-   for (const auto &fieldPtr: fSubFields) {
-      fieldPtr->TraverseVisitor(visitor, level);
-   }
-}
-
-void ROOT::Experimental::Detail::RFieldBase::AcceptVisitor(RNTupleVisitor &visitor, int level) const
-{
-    visitor.visitField(*this, level);
 }
 
 ROOT::Experimental::Detail::RFieldBase::RIterator ROOT::Experimental::Detail::RFieldBase::begin()

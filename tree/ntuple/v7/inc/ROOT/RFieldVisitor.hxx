@@ -127,6 +127,16 @@ public:
    }
 };
 
+   
+// clang-format off
+/**
+\class ROOT::Experimental::RNTupleFormatter
+\ingroup NTuple
+\brief Contains helper functions for RNTupleReader::PrintInfo() and RPrintVisitor::VisitField()
+    
+ The functions in this class format strings which are displayed when RNTupleReader::PrinfInfo() is called.
+*/
+// clang-format on
 class RNTupleFormatter {
 public:
    static std::string FitString(const std::string &str, int availableSpace);

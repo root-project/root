@@ -56,7 +56,7 @@ TEST(RNtuplePrint, FullString)
    ntuple2->PrintInfo(ROOT::Experimental::ENTupleInfo::kSummary, os);
    std::string fString{std::string("")
        + "************************************ NTUPLE ************************************\n"
-       + "* N-Tuple  : Staff                                                             *\n"
+       + "* N-Tuple : Staff                                                              *\n"
        + "* Entries : 1                                                                  *\n"
        + "********************************************************************************\n"
        + "* Field 1   : pt (float)                                                       *\n"
@@ -126,7 +126,7 @@ TEST(RNtuplePrint, VecTraverse)
    std::string expected{std::string("")
        + "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n"
        + "$ Field 1       : floatVecTest (std::vector<float>)                            $\n"
-       + "$ |__Field 1    : floatVecTest/floatVecTest (float)                            $\n"};
+       + "$ |__Field 1    : float (float)                                                $\n"};
    EXPECT_EQ(expected, os.str());
 }
 
@@ -143,8 +143,8 @@ TEST(RNtuplePrint, VecVecTraverse)
    std::string expected{std::string("")
        + "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n"
        + "x Field 1           : floatVecVecTest (std::vector<std::vector<float>>)        x\n"
-       + "x |__Field 1        : floatVecVecTest/floatVecVecTest (std::vector<float>)     x\n"
-       + "x   |__Field 1.1    : floatVecVecTest/floatVecVecTest/floatVecVecTest (float)  x\n"};
+       + "x |__Field 1        : std::vector<float> (std::vector<float>)                  x\n"
+       + "x   |__Field 1.1    : float (float)                                            x\n"};
    EXPECT_EQ(expected, os.str());
 }
 
@@ -161,12 +161,12 @@ TEST(RNtuplePrint, NarrowManyEntriesVecVecTraverse)
    std::string expected{std::string("")
        + "                              \n"
        + "  Field 1         : floatV... \n"
-       + "  |__Field 1      : floatV... \n"
-       + "    |__Field 1.1  : floatV... \n"};
+       + "  |__Field 1      : std::v... \n"
+       + "    |__Field 1.1  : float ... \n"};
    EXPECT_EQ(expected, os.str());
 }
 
-/* Currently the width can't be set by PrintInfo()
+/* Currently the width can't be set by PrintInfo(). Will be enabled when this feature is added.
 TEST(RNTuplePrint, TooShort)
 {
 FileRaii fileGuard("test.root");

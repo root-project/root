@@ -247,35 +247,31 @@ public:
    /// Used for the visitor design pattern, see for example RNTupleReader::Print()
    virtual void TraverseVisitor(RNTupleVisitor &visitor, int level = 0) const;
    virtual void AcceptVisitor(RNTupleVisitor &visitor, int level) const;
-   int GetIndex() const {return fNTupleIndex;}
-   bool IsLastInParentSubField() const {
-      return fNTupleIndex == static_cast<int>(fParent->fSubFields.size());
-   }
 
-   int GetIndex() const {return fLevelInfo.fOrder;}
-   int GetLevel() const {return fLevelInfo.fLevel;}
-   int GetNumSiblings() const {return fLevelInfo.GetNumSiblingFields(this);}
    RLevelInfo GetLevelInfo() const {
       return RLevelInfo(this);
    }
    void SetOrder(int o) { fOrder = o; }
-  };
+};
+   
+// clang-format off
+/**
+\class ROOT::Experimental::RFieldFuse
+\ingroup NTuple
+\brief A friend of RFieldBase responsible for connecting a field's columns to the physical page storage
+
+Fields and their columns live in the void until connected to a physical page storage.  Only once connected, data
+can be read or written.
+*/
+// clang-format on
+class RFieldFuse {
+public:
+   static void Connect(DescriptorId_t fieldId, RPageStorage &pageStorage, RFieldBase &field);
+};
+
 } // namespace Detail
    
-   // clang-format off
-   /**
-    \class ROOT::Experimental::RFieldFuse
-    \ingroup NTuple
-    \brief A friend of RFieldBase responsible for connecting a field's columns to the physical page storage
-    
-    Fields and their columns live in the void until connected to a physical page storage.  Only once connected, data
-    can be read or written.
-    */
-   // clang-format on
-   class RFieldFuse {
-   public:
-      static void Connect(DescriptorId_t fieldId, RPageStorage &pageStorage, RFieldBase &field);
-   };
+
 
 /// The container field for an ntuple model, which itself has no physical representation
 class RFieldRoot : public Detail::RFieldBase {
