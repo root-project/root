@@ -117,7 +117,7 @@ private:
    int fDisplayedCollection{0};
    std::vector<Delegate_t> fDelegates;
    REveTableHandle::Specs_t  fSpecs;
-   bool                      fConfigChanged;
+   bool                      fConfigChanged{false};
 };
 
 
