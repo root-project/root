@@ -38,11 +38,13 @@ int main()
    if (error > 1e-10)
        return 1;
 
+#if 0   // disable now (uses TReference)
    error = testIdentityDerivative<TCpu<Scalar_t>>(10);
    std::cout << "Testing identity activation derivative: ";
    std::cout << "maximum relative error = " << error << std::endl;
    if (error > 1e-10)
        return 1;
+#endif
 
    // ReLU.
 

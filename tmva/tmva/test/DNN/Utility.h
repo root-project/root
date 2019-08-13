@@ -352,10 +352,13 @@ void uniformMatrix(AMatrix &X)
 
 /*! Generate a random batch as input for a neural net. */
 //______________________________________________________________________________
-template <typename AMatrix>
-void randomBatch(AMatrix &X)
+template <typename ATensor>
+void randomBatch(ATensor &X)
 {
-   randomMatrix(X);
+   for (size_t i = 0; i < X.GetFirstSize(); ++i) { 
+      typename ATensor::Matrix_t mX = X.At(i).GetMatrix();
+      randomMatrix(mX);  
+   }
 }
 
 /*! Generate a random batch as input for a neural net. */
@@ -372,6 +375,14 @@ void copyMatrix(AMatrix &X, const AMatrix &Y)
          X(i, j) = Y(i, j);
       }
    }
+}
+
+template <typename ATensor>
+void copyTensor(ATensor &X, const ATensor &Y)
+{
+   size_t n = Y.GetSize(); 
+   assert (n == X.GetSize());
+   std::copy(Y.GetData(), Y.GetData()+n, X.GetData());
 }
 
 /*! Apply functional to each element in the matrix. */

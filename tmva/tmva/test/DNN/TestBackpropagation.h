@@ -80,7 +80,7 @@ auto testBackpropagationWeightsLinear(typename Architecture::Scalar_t dx)
 
    // Random training data.
    Matrix_t X(50, 50), Y(50, net.GetOutputWidth()), weights(50, 1);
-   randomBatch(X);
+   randomMatrix(X);
    randomMatrix(Y);
    fillMatrix(weights, 1.0);
 
@@ -144,7 +144,7 @@ auto testBackpropagationL1Regularization(typename Architecture::Scalar_t dx)
 
    // Random training data.
    Matrix_t X(50, 50), Y(50, net.GetOutputWidth()), weights(50, 1);
-   randomBatch(X);
+   randomMatrix(X);
    randomMatrix(Y);
    fillMatrix(weights, 1.0);
 
@@ -217,7 +217,7 @@ auto testBackpropagationL2Regularization(typename Architecture::Scalar_t dx)
 
    // Random training data.
    Matrix_t X(50, 50), Y(50, net.GetOutputWidth()), weights(50, 1);
-   randomBatch(X);
+   randomMatrix(X);
    randomMatrix(Y);
    fillMatrix(weights, 1.0);
 
@@ -288,7 +288,7 @@ auto testBackpropagationBiasesLinear(typename Architecture::Scalar_t dx)
 
    // Random training data.
    Matrix_t X(50, 50), Y(50, net.GetOutputWidth()), weights(50, 1);
-   randomBatch(X);
+   randomMatrix(X);
    randomMatrix(Y);
    fillMatrix(weights, 1.0);
 

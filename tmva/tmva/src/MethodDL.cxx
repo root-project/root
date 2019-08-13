@@ -995,7 +995,8 @@ MethodDL::MethodDL(const TString &jobName, const TString &methodTitle, DataSetIn
    : MethodBase(jobName, Types::kDL, methodTitle, theData, theOption), fInputDepth(), fInputHeight(), fInputWidth(),
      fBatchDepth(), fBatchHeight(), fBatchWidth(), fRandomSeed(0), fWeightInitialization(), fOutputFunction(), fLossFunction(),
      fInputLayoutString(), fBatchLayoutString(), fLayoutString(), fErrorStrategy(), fTrainingStrategyString(),
-     fWeightInitializationString(), fArchitectureString(), fResume(false), fBuildNet(true), fTrainingSettings()
+     fWeightInitializationString(), fArchitectureString(), fResume(false), fBuildNet(true), fTrainingSettings(), 
+     fXInput({0})
 {
    // Nothing to do here
 }
@@ -1006,7 +1007,8 @@ MethodDL::MethodDL(DataSetInfo &theData, const TString &theWeightFile)
    : MethodBase(Types::kDL, theData, theWeightFile), fInputDepth(), fInputHeight(), fInputWidth(), fBatchDepth(),
      fBatchHeight(), fBatchWidth(), fRandomSeed(0), fWeightInitialization(), fOutputFunction(), fLossFunction(), fInputLayoutString(),
      fBatchLayoutString(), fLayoutString(), fErrorStrategy(), fTrainingStrategyString(), fWeightInitializationString(),
-     fArchitectureString(), fResume(false), fBuildNet(true), fTrainingSettings()
+     fArchitectureString(), fResume(false), fBuildNet(true), fTrainingSettings(),
+     fXInput({0})
 {
    // Nothing to do here
 }
@@ -1278,7 +1280,7 @@ void MethodDL::TrainDeepNet()
          int n2 = batchWidth; 
          // treat case where batchHeight is the batchSize in case of first Dense layers (then we need to set to fNet batch size)
          if (batchDepth == 1 && GetInputHeight() == 1 && GetInputDepth() == 1) n1 = fNet->GetBatchSize();
-         fXInput.emplace_back(MatrixImpl_t(n1,n2));
+         fXInput = TensorImpl_t(1,n1,n2);
          // create pointer to output matrix used for the predictions
          fYHat = std::unique_ptr<MatrixImpl_t>(new MatrixImpl_t(fNet->GetBatchSize(),  fNet->GetOutputWidth() ) );
 
@@ -1311,6 +1313,8 @@ void MethodDL::TrainDeepNet()
          auto inputTensor = batch.GetInput();
          auto outputMatrix = batch.GetOutput();
          auto weights = batch.GetWeights();
+
+         //std::cout << " input use count " << inputTensor.GetBufferUseCount() << std::endl;
          // should we apply droput to the loss ??
          minValError += deepNet.Loss(inputTensor, outputMatrix, weights, false, false);
       }
@@ -1580,7 +1584,9 @@ void MethodDL::Train()
 #endif
    } else if (this->GetArchitectureString() == "STANDARD") {
       Log() << kINFO << "Start of deep neural network training on the STANDARD architecture" << Endl << Endl;
-      TrainDeepNet<DNN::TReference<ScalarImpl_t> >(); 
+#if HAVE_REFERENCE
+      TrainDeepNet<DNN::TReference<ScalarImpl_t> >();
+#endif 
    }
    else {
       Log() << kFATAL << this->GetArchitectureString() << 
@@ -1613,7 +1619,7 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
    }
 
    // input  size must be equal to  1 which is the batch size of fNet 
-   R__ASSERT(fXInput.size() == 1 && fNet->GetBatchSize() == 1);
+   R__ASSERT(fXInput.GetFirstSize() == 1 && fNet->GetBatchSize() == 1);
 
    // int batchWidth = fNet->GetBatchWidth();
    // int batchDepth = fNet->GetBatchDepth();
@@ -1624,8 +1630,8 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
    // get current event
    const std::vector<Float_t> &inputValues = GetEvent()->GetValues();
 
-   int n1 = fXInput[0].GetNrows();
-   int n2 = fXInput[0].GetNcols();
+   int n1 = fXInput.GetHSize();
+   int n2 = fXInput.GetWSize();
 
    int nVariables = GetEvent()->GetNVariables();
 
@@ -1638,7 +1644,7 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
    // get the event data in input matrix 
    for (int j = 0; j < n1; ++j) {
       for (int k = 0; k < n2; k++) {
-         fXInput[0](j, k) = inputValues[j*n2+k];
+         fXInput(j, k, 0) = inputValues[j*n2+k];  // for column layout !!!
       }
    }
 
@@ -1826,13 +1832,14 @@ const std::vector<Float_t> & TMVA::MethodDL::GetRegressionValues()
 {
    size_t nVariables = GetEvent()->GetNVariables();
    MatrixImpl_t X(1, nVariables);
-   std::vector<MatrixImpl_t> X_vec;
+   TensorImpl_t X_vec ( 1,  1, nVariables);  // needs to be really 1 
    const Event *ev = GetEvent();
    const std::vector<Float_t>& inputValues = ev->GetValues();
    for (size_t i = 0; i < nVariables; i++) {
-       X(0,i) = inputValues[i];
+       X_vec(0,i,0) = inputValues[i];   // in case of column format !!
    }
-   X_vec.emplace_back(X);
+   //X_vec.emplace_back(X);
+
    size_t nTargets = std::max(1u, ev->GetNTargets());
    MatrixImpl_t YHat(1, nTargets);
    std::vector<Float_t> output(nTargets);
@@ -1863,7 +1870,7 @@ const std::vector<Float_t> & TMVA::MethodDL::GetMulticlassValues()
 {
    size_t nVariables = GetEvent()->GetNVariables();
    MatrixImpl_t X(1, nVariables);
-   std::vector<MatrixImpl_t> X_vec;
+   TensorImpl_t X_vec ( 1, 1, nVariables);
    MatrixImpl_t YHat(1, DataInfo().GetNClasses());
    if (fMulticlassReturnVal == NULL) {
       fMulticlassReturnVal = new std::vector<Float_t>(DataInfo().GetNClasses());
@@ -1871,9 +1878,9 @@ const std::vector<Float_t> & TMVA::MethodDL::GetMulticlassValues()
 
    const std::vector<Float_t>& inputValues = GetEvent()->GetValues();
    for (size_t i = 0; i < nVariables; i++) {
-      X(0,i) = inputValues[i];
+      X_vec(0,i, 0) = inputValues[i];
    }
-   X_vec.emplace_back(X);
+   //X_vec.emplace_back(X);
    fNet->Prediction(YHat, X_vec, fOutputFunction);
    for (size_t i = 0; i < (size_t) YHat.GetNcols(); i++) {
       (*fMulticlassReturnVal)[i] = YHat(0, i);
@@ -1912,7 +1919,9 @@ std::vector<Double_t> MethodDL::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt
    }
    Log() << kINFO << "Evaluate deep neural network on the STANDARD architecture  using batches with size = " << batchSize
          << Endl << Endl;
+#if HAVE_REFERENCE
    return PredictDeepNet<DNN::TReference<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
+#endif
 }
 ////////////////////////////////////////////////////////////////////////////////
 void MethodDL::AddWeightsXMLTo(void * parent) const
@@ -2143,8 +2152,9 @@ void MethodDL::ReadWeightsFromXML(void * rootXML)
    int n2 = batchWidth; 
    // treat case where batchHeight is the batchSize in case of first Dense layers (then we need to set to fNet batch size)
    if (batchDepth == 1 && GetInputHeight() == 1 && GetInputDepth() == 1) n1 = fNet->GetBatchSize();
-   if (fXInput.size() > 0) fXInput.clear(); 
-   fXInput.emplace_back(MatrixImpl_t(n1,n2));
+   //if (fXInput.size() > 0) fXInput.clear(); 
+   //fXInput.emplace_back(MatrixImpl_t(n1,n2));
+   fXInput = TensorImpl_t(1, n1, n2);
    // create pointer to output matrix used for the predictions
    fYHat = std::unique_ptr<MatrixImpl_t>(new MatrixImpl_t(fNet->GetBatchSize(),  fNet->GetOutputWidth() ) );
 

@@ -30,32 +30,18 @@ using namespace TMVA::DNN;
 using namespace TMVA::DNN::RNN;
 
 template <typename Architecture>
-auto printTensor(const std::vector<typename Architecture::Matrix_t> &A, const std::string name = "matrix")
+auto printTensor(const typename Architecture::Tensor_t &A, const std::string name = "matrix")
 -> void
 {
-  std::cout << name << "\n";
-  for (size_t l = 0; l < A.size(); ++l) {
-     for (size_t i = 0; i < (size_t) A[l].GetNrows(); ++i) {
-        for (size_t j = 0; j < (size_t) A[l].GetNcols(); ++j) {
-            std::cout << A[l](i, j) << " ";
-        }
-        std::cout << "\n";
-      }
-      std::cout << "********\n";
-  } 
+   Architecture::PrintTensor(A,name);
+   std::cout << "********\n";
 }
 
 template <typename Architecture>
-auto printTensor(const typename Architecture::Matrix_t &A, const std::string name = "matrix")
+auto printMatrix(const typename Architecture::Matrix_t &A, const std::string name = "matrix")
 -> void
 {
-  std::cout << name << "\n";
-  for (size_t i = 0; i < (size_t) A.GetNrows(); ++i) {
-    for (size_t j = 0; j < (size_t) A.GetNcols(); ++j) {
-        std::cout << A(i, j) << " ";
-    }
-    std::cout << "\n";
-  }
+  Architecture::PrintTensor(typename Architecture::Tensor_t(A),name);
   std::cout << "********\n";
 }
 
@@ -63,7 +49,7 @@ auto printTensor(const typename Architecture::Matrix_t &A, const std::string nam
  *  layer l. dx is added as an offset to the current value of the weight. */
 //______________________________________________________________________________
 template <typename Architecture>
-auto evaluate_net_weight(TDeepNet<Architecture> &net, std::vector<typename Architecture::Matrix_t> & X,
+auto evaluate_net_weight(TDeepNet<Architecture> &net, typename Architecture::Tensor_t & X,
                          const typename Architecture::Matrix_t &Y, const typename Architecture::Matrix_t &W, size_t l,
                          size_t k, size_t i, size_t j, typename Architecture::Scalar_t xvalue) ->
    typename Architecture::Scalar_t
@@ -82,7 +68,7 @@ auto evaluate_net_weight(TDeepNet<Architecture> &net, std::vector<typename Archi
  *  layer l. dx is added as an offset to the current value of the weight. */
 //______________________________________________________________________________
 template <typename Architecture>
-auto evaluate_net_bias(TDeepNet<Architecture> &net, std::vector<typename Architecture::Matrix_t> & X,
+auto evaluate_net_bias(TDeepNet<Architecture> &net, typename Architecture::Tensor_t & X,
                        const typename Architecture::Matrix_t &Y, const typename Architecture::Matrix_t &W, size_t l,
                        size_t k, size_t i, typename Architecture::Scalar_t xvalue) -> typename Architecture::Scalar_t
 {
@@ -110,25 +96,22 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
    bool addExtraRNN = options[2];
    
    using Matrix_t   = typename Architecture::Matrix_t;
-   using Tensor_t   = std::vector<Matrix_t>;
+   using Tensor_t   = typename Architecture::Tensor_t;
    using RNNLayer_t = TBasicRNNLayer<Architecture>; 
    using DenseLayer_t = TDenseLayer<Architecture>; 
    using Net_t      = TDeepNet<Architecture>;
    using Scalar_t = typename Architecture::Scalar_t;
 
    //std::vector<Matrix_t<Double_t>> XRef(batchSize, Matrix_t<Double_t>(timeSteps, inputSize));    // B x T x D
-   Tensor_t XArch;  // B x T x D
-   for (size_t i = 0; i < batchSize; ++i) {
-      XArch.emplace_back(timeSteps, inputSize);
-   }
+   Tensor_t XArch (batchSize, timeSteps, inputSize); // B x T x D
 
    // for random input (default) 
    if (randomInput) { 
    for (size_t i = 0; i < batchSize; ++i) {
-         for (size_t l = 0; l < (size_t) XArch[i].GetNrows(); ++l) {
-            for (size_t m = 0; m < (size_t) XArch[i].GetNcols(); ++m) {
+         for (size_t l = 0; l < (size_t) timeSteps; ++l) {
+            for (size_t m = 0; m < (size_t) inputSize; ++m) {
                //XArch[i](l, m) = i + l + m;
-               XArch[i](l, m) = gRandom->Uniform(-1,1);
+               XArch(i, l, m) = gRandom->Uniform(-1,1);
             }
          } 
       }
@@ -143,11 +126,9 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
 
       TMatrixD Input(3,6,x_input);
       for (size_t i = 0; i < batchSize; ++i) {
-         auto & mat = XArch[i];
-         // time 0
          for (size_t l = 0; l < timeSteps; ++l) {
             for (size_t m = 0; m < inputSize; ++m) {
-               mat(l,m) = Input(l,m);
+               XArch(i,l,m) = Input(l,m);
             }
          }
       }
@@ -376,18 +357,17 @@ auto testRecurrentBackpropagationBiases(size_t timeSteps, size_t batchSize, size
 -> Double_t
 {
    using Matrix_t   = typename Architecture::Matrix_t;
-   using Tensor_t   = std::vector<Matrix_t>;
+   using Tensor_t   = typename Architecture::Tensor_t;
    using RNNLayer_t = TBasicRNNLayer<Architecture>; 
    using Net_t      = TDeepNet<Architecture>;
    using Scalar_t = typename Architecture::Scalar_t;
 
-   std::vector<TMatrixT<Double_t>> XRef(batchSize, TMatrixT<Double_t>(timeSteps, inputSize));    // T x B x D
-   Tensor_t XArch;
+   //std::vector<TMatrixT<Double_t>> XRef(batchSize, TMatrixT<Double_t>(timeSteps, inputSize));    // T x B x D
+   //Tensor_t XRef( batchSize, timeSteps, inputSize);
+   Tensor_t XArch( batchSize, timeSteps, inputSize);
    //for (size_t i = 0; i < batchSize; ++i) XArch.emplace_back(timeSteps, inputSize); // B x T x D
-   for (size_t i = 0; i < batchSize; ++i) {
-      randomMatrix(XRef[i]);
-      XArch.emplace_back(XRef[i]);
-   }
+   randomBatch(XArch);
+   
 
    Matrix_t Y(batchSize, stateSize), weights(batchSize, 1);
    randomMatrix(Y);

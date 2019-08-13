@@ -32,8 +32,8 @@ namespace DNN
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCpu<AFloat>::IdentityDerivative(TCpuMatrix<AFloat> & B,
-                                      const TCpuMatrix<AFloat> &/*A*/)
+void TCpu<AFloat>::IdentityDerivative(TCpuTensor<AFloat> & B,
+                                      const TCpuTensor<AFloat> &/*A*/)
 {
    auto f = [](AFloat) {return 1.0;};
    B.Map(f);
@@ -41,7 +41,7 @@ void TCpu<AFloat>::IdentityDerivative(TCpuMatrix<AFloat> & B,
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCpu<AFloat>::Relu(TCpuMatrix<AFloat> & B)
+void TCpu<AFloat>::Relu(TCpuTensor<AFloat> & B)
 {
    auto f = [](AFloat x) {return (x < 0.0) ? 0.0 : x;};
    B.Map(f);
@@ -49,8 +49,8 @@ void TCpu<AFloat>::Relu(TCpuMatrix<AFloat> & B)
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCpu<AFloat>::ReluDerivative(TCpuMatrix<AFloat> & B,
-                                               const TCpuMatrix<AFloat> &A)
+void TCpu<AFloat>::ReluDerivative(TCpuTensor<AFloat> & B,
+                                               const TCpuTensor<AFloat> &A)
 {
    auto f = [](AFloat x) {return (x < 0.0) ? 0.0 : 1.0;};
    B.MapFrom(f, A);
@@ -58,7 +58,7 @@ void TCpu<AFloat>::ReluDerivative(TCpuMatrix<AFloat> & B,
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCpu<AFloat>::Sigmoid(TCpuMatrix<AFloat> & B)
+void TCpu<AFloat>::Sigmoid(TCpuTensor<AFloat> & B)
 {
    auto f = [](AFloat x) {return 1.0 / (1.0 + exp(-x));};
    B.Map(f);
@@ -66,8 +66,8 @@ void TCpu<AFloat>::Sigmoid(TCpuMatrix<AFloat> & B)
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCpu<AFloat>::SigmoidDerivative(TCpuMatrix<AFloat> & B,
-                                     const TCpuMatrix<AFloat> &A)
+void TCpu<AFloat>::SigmoidDerivative(TCpuTensor<AFloat> & B,
+                                     const TCpuTensor<AFloat> &A)
 {
    auto f = [](AFloat x) {
       AFloat sig = 1.0 / (1.0 + exp(-x));
@@ -78,7 +78,7 @@ void TCpu<AFloat>::SigmoidDerivative(TCpuMatrix<AFloat> & B,
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCpu<AFloat>::Tanh(TCpuMatrix<AFloat> & B)
+void TCpu<AFloat>::Tanh(TCpuTensor<AFloat> & B)
 {
    auto f = [](AFloat x) {return TANH_IMPL_X;};
    B.Map(f);
@@ -86,8 +86,8 @@ void TCpu<AFloat>::Tanh(TCpuMatrix<AFloat> & B)
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCpu<AFloat>::TanhDerivative(TCpuMatrix<AFloat> & B,
-                                  const TCpuMatrix<AFloat> &A)
+void TCpu<AFloat>::TanhDerivative(TCpuTensor<AFloat> & B,
+                                  const TCpuTensor<AFloat> &A)
 {
    auto f = [](AFloat x) {
       AFloat t = TANH_IMPL_X;
@@ -98,7 +98,7 @@ void TCpu<AFloat>::TanhDerivative(TCpuMatrix<AFloat> & B,
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCpu<AFloat>::SymmetricRelu(TCpuMatrix<AFloat> & B)
+void TCpu<AFloat>::SymmetricRelu(TCpuTensor<AFloat> & B)
 {
    auto f = [](AFloat x) {return fabs(x);};
    B.Map(f);
@@ -106,8 +106,8 @@ void TCpu<AFloat>::SymmetricRelu(TCpuMatrix<AFloat> & B)
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCpu<AFloat>::SymmetricReluDerivative(TCpuMatrix<AFloat> & B,
-                                           const TCpuMatrix<AFloat> &A)
+void TCpu<AFloat>::SymmetricReluDerivative(TCpuTensor<AFloat> & B,
+                                           const TCpuTensor<AFloat> &A)
 {
    auto f = [](AFloat x) {
       return (x < 0.0) ? -1.0 : 1.0;
@@ -117,7 +117,7 @@ void TCpu<AFloat>::SymmetricReluDerivative(TCpuMatrix<AFloat> & B,
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCpu<AFloat>::SoftSign(TCpuMatrix<AFloat> & B)
+void TCpu<AFloat>::SoftSign(TCpuTensor<AFloat> & B)
 {
    auto f = [](AFloat x) {return x / (1 + fabs(x));};
    B.Map(f);
@@ -125,8 +125,8 @@ void TCpu<AFloat>::SoftSign(TCpuMatrix<AFloat> & B)
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCpu<AFloat>::SoftSignDerivative(TCpuMatrix<AFloat> & B,
-                                      const TCpuMatrix<AFloat> &A)
+void TCpu<AFloat>::SoftSignDerivative(TCpuTensor<AFloat> & B,
+                                      const TCpuTensor<AFloat> &A)
 {
    auto f = [](AFloat x) {
       x = 1.0 + fabs(x);
@@ -138,7 +138,7 @@ void TCpu<AFloat>::SoftSignDerivative(TCpuMatrix<AFloat> & B,
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCpu<AFloat>::Gauss(TCpuMatrix<AFloat> & B)
+void TCpu<AFloat>::Gauss(TCpuTensor<AFloat> & B)
 {
    auto f = [](AFloat x) {return exp(- x * x);};
    B.Map(f);
@@ -146,8 +146,8 @@ void TCpu<AFloat>::Gauss(TCpuMatrix<AFloat> & B)
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCpu<AFloat>::GaussDerivative(TCpuMatrix<AFloat> & B,
-                                   const TCpuMatrix<AFloat> &A)
+void TCpu<AFloat>::GaussDerivative(TCpuTensor<AFloat> & B,
+                                   const TCpuTensor<AFloat> &A)
 {
    auto f = [](AFloat x) {return - 2.0 * x * exp(- x * x);};
    B.MapFrom(f, A);

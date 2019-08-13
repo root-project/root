@@ -20,6 +20,9 @@ else()
 include_directories(${ROOT_INCLUDE_DIRS})
 endif()
 
+#---Reference test
+
+if (Test_Reference)
 
 # RNN - BackPropagation Reference
 ROOT_EXECUTABLE(testRecurrentBackpropagation TestRecurrentBackpropagation.cxx LIBRARIES ${Libraries})
@@ -44,6 +47,8 @@ ROOT_ADD_TEST(TMVA-DNN-RNN-FullRNN COMMAND testFullRNN)
 ## RNN - Prediction Reference
 #ROOT_EXECUTABLE(testRecurrentNetPred TestRecurrentNetPrediction.cxx LIBRARIES ${Libraries})
 #ROOT_ADD_TEST(TMVA-DNN-RNN-Pred COMMAND testRecurrentNetPred)
+
+endif()
 
 #--- CUDA tests. ---------------------------
 if (CUDA_FOUND AND tmva-gpu)

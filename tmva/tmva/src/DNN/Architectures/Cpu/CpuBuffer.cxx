@@ -44,7 +44,7 @@ TCpuBuffer<AReal>::TCpuBuffer(size_t size) : fSize(size), fOffset(0)
 
 //______________________________________________________________________________
 template <typename AReal>
-TCpuBuffer<AReal> TCpuBuffer<AReal>::GetSubBuffer(size_t offset, size_t size)
+TCpuBuffer<AReal> TCpuBuffer<AReal>::GetSubBuffer(size_t offset, size_t size) const
 {
    TCpuBuffer buffer = *this;
    buffer.fOffset = offset;
