@@ -420,7 +420,7 @@ protected:
 
 #ifdef ROOFIT_CHECK_CACHED_VALUES
  public:
-  void checkBatchComputation(std::size_t evtNo, const RooArgSet* normSet = nullptr) const;
+  void checkBatchComputation(std::size_t evtNo, const RooArgSet* normSet = nullptr, double relAccuracy = 1.E-13) const;
   const BatchHelpers::BatchData& batchData() const {
     return _batchData;
   }
