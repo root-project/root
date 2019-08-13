@@ -8,13 +8,15 @@
 
 using namespace ROOT::Experimental;
 
-REveTableProxyBuilder::REveTableProxyBuilder() : REveDataProxyBuilderBase("Table"), fTable(0)
+REveTableProxyBuilder::REveTableProxyBuilder() : REveDataProxyBuilderBase("Table"), fTable(nullptr)
 {
     fTable = new REveDataTable("ProxyTable");
 }
 
 REveTableProxyBuilder::~REveTableProxyBuilder()
 {
+   fTable->Destroy();
+   fTable = nullptr;
 }
 
 // reuse table product
@@ -42,7 +44,8 @@ void REveTableProxyBuilder::Build(const REveDataCollection* collection, REveElem
       for (const REveTableEntry& spec : tableEntries) {
          auto c = new REveDataColumn(spec.fName.c_str());
          fTable->AddElement(c);
-         std::string exp  = "i." + spec.fExpression + "()";
+         using namespace std::string_literals;
+         std::string exp  = "i."s + spec.fExpression + "()"s;
          c->SetExpressionAndType(exp.c_str(), spec.fType);
          c->SetPrecision(spec.fPrecision);
       }

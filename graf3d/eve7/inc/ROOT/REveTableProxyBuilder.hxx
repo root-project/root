@@ -12,7 +12,6 @@ class REveTableInfo;
 class REveTableProxyBuilder : public REveDataProxyBuilderBase
 {
 private:
-   //TableHandle::TableEntries m_specs;
    REveDataTable* fTable; // cached
 
 protected:
