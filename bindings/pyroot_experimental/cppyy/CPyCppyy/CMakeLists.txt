@@ -4,17 +4,12 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
+set(headers
+    inc/CPyCppyy/CommonDefs.h
+    inc/CPyCppyy/TPyException.h
+)
 
-#include_directories(BEFORE include)
-
-ROOT_STANDARD_LIBRARY_PACKAGE(cppyy
-  HEADERS
-    CPyCppyy/CommonDefs.h
-    CPyCppyy/TPyArg.h
-    CPyCppyy/TPyException.h
-    CPyCppyy/TPyReturn.h
-    CPyCppyy/API.h
-  SOURCES
+set(sources
     src/CallContext.cxx
     src/Converters.cxx
     src/CPPClassMethod.cxx
@@ -36,17 +31,13 @@ ROOT_STANDARD_LIBRARY_PACKAGE(cppyy
     src/PyStrings.cxx
     src/Pythonize.cxx
     src/TemplateProxy.cxx
-    src/TPyArg.cxx
-    src/TPyClassGenerator.cxx
     src/TPyException.cxx
-    src/TPyReturn.cxx
-    src/API.cxx
     src/TupleOfInstances.cxx
     src/TypeManip.cxx
     src/Utility.cxx
-  DICTIONARY_OPTIONS
-    -writeEmptyRootPCM
 )
+
+add_library(cppyy SHARED ${headers} ${sources})
 
 if(NOT MSVC)
   target_compile_options(cppyy PRIVATE
@@ -72,3 +63,10 @@ target_include_directories(cppyy PUBLIC ${PYTHON_INCLUDE_DIRS}
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
 target_link_libraries(cppyy cppyy_backend ${PYTHON_LIBRARIES})
+
+set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS cppyy)
+install(TARGETS cppyy EXPORT ${CMAKE_PROJECT_NAME}Exports DESTINATION ${runtimedir})
+
+file(COPY ${headers} DESTINATION ${CMAKE_BINARY_DIR}/include)
+install(FILES ${headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
