@@ -1,40 +1,26 @@
-/// Test the behavior of arrayBDTs
-
-#include <iostream>
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <sstream>
-#include <streambuf>
-#include <map>
-#include <vector>
-#include <array>
-#include <utility>
-
-#include "json.hpp"
-#include "TInterpreter.h" // for gInterpreter
-
-#include "bdt_helpers.h"
-
-#include "unique_bdt.h"
-#include "array_bdt.h"
-#include "forest.h"
-
 #include "gtest/gtest.h"
+#include "forest.h"
 
 //#include <xgboost/c_api.h> // for xgboost
 //#include "generated_files/evaluate_forest2.h"
+std::string events_file     = "./data/events.csv";
+std::string preds_file      = "./data/python_predictions.csv";
+std::string json_model_file = "./data/model.json";
 
-using json = nlohmann::json;
-
-int square(int v)
+TEST(forestBDT, JitPredictions)
 {
-   return v * v;
-}
+   std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
+   Forest<std::function<void(const std::vector<std::vector<float>> &, std::vector<bool> &)>> Forest;
+   Forest.get_Forest(json_model_file, events_vector);
 
-TEST(someTest, testOne)
-{
-   ASSERT_EQ(square(2), 4);
+   std::vector<bool> preds;
+   preds.reserve(events_vector.size());
+   Forest.do_predictions(events_vector, preds);
+
+   std::vector<std::vector<bool>> groundtruth = read_csv<bool>(preds_file);
+   for (size_t i = 0; i < preds.size(); i++) {
+      ASSERT_EQ(preds[i], groundtruth[i][0]);
+   }
 }
 
 int main(int argc, char **argv)

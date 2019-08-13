@@ -20,8 +20,8 @@
 #include "forest.h"
 
 #include <xgboost/c_api.h> // for xgboost
-#include "generated_files/evaluate_forest2.h"
-#include "generated_files/evaluate_forest_batch.h"
+#include "../generated_files/evaluate_forest2.h"
+#include "../generated_files/evaluate_forest_batch.h"
 
 using json = nlohmann::json;
 
@@ -44,7 +44,7 @@ static void BM_EvalUniqueBdt(benchmark::State &state)
    std::string preds_file  = "./data_files/test.csv";
    std::string events_file = "./data_files/events.csv";
 
-   std::vector<std::vector<float>> events_vector = read_csv(events_file);
+   std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
 
    for (auto _ : state) { // only bench what is inside the loop
       Forest.do_predictions(events_vector, preds);
@@ -69,7 +69,7 @@ static void BM_EvalUnique_Bdt_batch_32(benchmark::State &state)
    std::string preds_file  = "./data_files/test.csv";
    std::string events_file = "./data_files/events.csv";
 
-   std::vector<std::vector<float>> events_vector = read_csv(events_file);
+   std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
 
    for (auto _ : state) { // only bench what is inside the loop
       Forest.do_predictions_batch2(events_vector, preds, 32);
@@ -92,7 +92,7 @@ static void BM_EvalUnique_Bdt_batch_128(benchmark::State &state)
    std::string preds_file  = "./data_files/test.csv";
    std::string events_file = "./data_files/events.csv";
 
-   std::vector<std::vector<float>> events_vector = read_csv(events_file);
+   std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
 
    for (auto _ : state) { // only bench what is inside the loop
       Forest.do_predictions_batch2(events_vector, preds, 128);
@@ -116,7 +116,7 @@ static void BM_EvalUnique_Bdt_batch_128_branch(benchmark::State &state)
    std::string events_file  = "./data_files/events.csv";
    std::string events_file2 = "./data_files/events2.csv";
 
-   std::vector<std::vector<float>> events_vector = read_csv(events_file);
+   std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
 
    std::sort(events_vector.begin(), events_vector.end(),
              [](const std::vector<float> &a, const std::vector<float> &b) { return a[0] < b[0]; });
@@ -142,7 +142,7 @@ static void BM_EvalUnique_Bdt_batch_256(benchmark::State &state)
    std::string preds_file  = "./data_files/test.csv";
    std::string events_file = "./data_files/events.csv";
 
-   std::vector<std::vector<float>> events_vector = read_csv(events_file);
+   std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
 
    for (auto _ : state) { // only bench what is inside the loop
       Forest.do_predictions_batch2(events_vector, preds, 256);
@@ -167,7 +167,7 @@ static void BM_EvalArrayBdt(benchmark::State &state)
    std::string events_file = "./data_files/events.csv";
    std::string preds_file  = "./data_files/test.csv";
 
-   std::vector<std::vector<float>> events_vector = read_csv(events_file);
+   std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
    for (auto _ : state) { // only bench what is inside the loop
       // for (int i = 0; i < 1000; i++)
       Forest.do_predictions(events_vector, preds);
@@ -192,7 +192,7 @@ static void BM_EvalJittedBdt(benchmark::State &state)
    std::string preds_file  = "./data_files/test.csv";
    std::string events_file = "./data_files/events.csv";
 
-   std::vector<std::vector<float>> events_vector = read_csv(events_file);
+   std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
    preds.reserve(events_vector.size());
    for (auto _ : state) { // only bench what is inside the loop
       Forest.do_predictions(events_vector, preds);
@@ -218,7 +218,7 @@ static void BM_EvalJitForestBdt(benchmark::State &state)
    std::string preds_file  = "./data_files/test.csv";
    std::string events_file = "./data_files/events.csv";
 
-   std::vector<std::vector<float>> events_vector = read_csv(events_file);
+   std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
 
    std::function<bool(std::vector<float>)> my_func = Forest.trees[0];
    preds.reserve(events_vector.size());
@@ -251,7 +251,7 @@ static void BM_EvalJitForestWholeBdt(benchmark::State &state)
    std::string preds_file  = "./data_files/test.csv";
    std::string events_file = "./data_files/events.csv";
 
-   std::vector<std::vector<float>> events_vector = read_csv(events_file);
+   std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
 
    std::function<std::vector<bool>(std::vector<std::vector<float>>)> my_func = Forest.trees[0];
    preds.reserve(events_vector.size());
@@ -274,7 +274,7 @@ static void BM_StaticForestWholeBdt_batch(benchmark::State &state)
    std::string preds_file  = "./data_files/test.csv";
    std::string events_file = "./data_files/events.csv";
 
-   std::vector<std::vector<float>> events_vector = read_csv(events_file);
+   std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
    Forest<std::function<void(const std::vector<std::vector<float>> &, std::vector<bool> &)>> Forest;
    Forest.get_Forest("model.json", events_vector);
    std::vector<bool> preds;
@@ -301,7 +301,7 @@ static void BM_StaticForestWholeBdt_batch_branch(benchmark::State &state)
    std::string preds_file  = "./data_files/test.csv";
    std::string events_file = "./data_files/events.csv";
 
-   std::vector<std::vector<float>> events_vector = read_csv(events_file);
+   std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
    Forest<std::function<void(const std::vector<std::vector<float>> &, std::vector<bool> &)>> Forest;
    Forest.get_Forest("model.json", events_vector);
    std::vector<bool> preds;
@@ -330,7 +330,7 @@ static void BM_StaticForestWholeBdt_static(benchmark::State &state)
    std::string preds_file  = "./data_files/test.csv";
    std::string events_file = "./data_files/events.csv";
 
-   std::vector<std::vector<float>> events_vector = read_csv(events_file);
+   std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
    preds.reserve(events_vector.size());
 
    std::function<std::vector<bool>(std::vector<std::vector<float>>)> my_func = s_f_event_61565384376::evaluate_forest;
@@ -357,7 +357,7 @@ static void BM_StaticForestWholeBdt_static_batch(benchmark::State &state)
    std::string preds_file  = "./data_files/test.csv";
    std::string events_file = "./data_files/events.csv";
 
-   std::vector<std::vector<float>> events_vector = read_csv(events_file);
+   std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
    preds.reserve(events_vector.size());
 
    std::function<void(const std::vector<std::vector<float>> &, std::vector<bool> &)> my_func =
@@ -386,9 +386,9 @@ static void BM_EvalXgboostBdt(benchmark::State &state)
    const char *model_fname  = "./data/model.rabbit";
 
    std::vector<std::vector<float>> events;
-   std::vector<std::vector<float>> labels;
-   events = read_csv(events_fname);
-   labels = read_csv(preds_fname);
+   std::vector<std::vector<int>>   labels;
+   events = read_csv<float>(events_fname);
+   labels = read_csv<int>(preds_fname);
 
    int cols = events[0].size();
    int rows = events.size();

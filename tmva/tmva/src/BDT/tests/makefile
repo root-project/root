@@ -26,22 +26,29 @@ CPPFLAGS = -I../include \
  -I$(GOOGLE_TEST_LIB) \
  #-I$(GOOGLE_TEST_INCLUDE)
 
-OBJS = build/arrayBDT.o
-EXE = arrayBDT.exe #helpersBDT.exe
+OBJS = build/arrayBDT.o  build/helpersBDT.o  build/unique_bdt.o
+EXE = arrayBDT.exe helpersBDT.exe
 
 .PHONY : all clean distclean
 
 all: $(EXE)
 
-$(EXE): $(OBJS)
+arrayBDT.exe: build/arrayBDT.o build/unique_bdt.o
 	$(CXX) $(CXXFLAGS) -o $@  $^  $(LD_FLAGS) $(ROOT_FLAGS) $(XGBOOST_ROOT)/lib/libxgboost.so
 
-$(OBJS): build/%.o: %.cxx
+helpersBDT.exe: build/helpersBDT.o build/unique_bdt.o
+		$(CXX) $(CXXFLAGS) -o $@  $^  $(LD_FLAGS) $(ROOT_FLAGS) $(XGBOOST_ROOT)/lib/libxgboost.so
+#$(OBJS): build/%.o: %.cxx $(DEPS)
+#		$(CXX) $(CXXFLAGS) $(ROOT_FLAGS) -c $< -o $@ $(CPPFLAGS)
+
+build/arrayBDT.o: arrayBDT.cxx
 		$(CXX) $(CXXFLAGS) $(ROOT_FLAGS) -c $< -o $@ $(CPPFLAGS)
 
-build/unique_bdt.o : ../src/unique_bdt.cxx
-	$(CXX) $(CXXFLAGS) $(ROOT_FLAGS) -c $< -o $@ $(CPPFLAGS)
+build/helpersBDT.o:  helpersBDT.cxx
+		$(CXX) $(CXXFLAGS) $(ROOT_FLAGS) -c $< -o $@ $(CPPFLAGS)
 
+build/unique_bdt.o:  ../src/unique_bdt.cxx
+		$(CXX) $(CXXFLAGS) $(ROOT_FLAGS) -c $< -o $@ $(CPPFLAGS)
 
 clean :
 	$(RM) build/*.o *.o

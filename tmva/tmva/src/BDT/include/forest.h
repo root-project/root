@@ -61,9 +61,9 @@ template <class T>
 void Forest<T>::read_events_csv(std::string csv_file)
 {
    if (!csv_file.empty()) {
-      this->events_vector = read_csv(events_file);
+      this->events_vector = read_csv<float>(events_file);
    } else {
-      this->events_vector = read_csv(this->events_file);
+      this->events_vector = read_csv<float>(this->events_file);
    }
 }
 

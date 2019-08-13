@@ -109,7 +109,7 @@ if __name__ == "__main__":
     for i, value_test in enumerate(test_list):
         print(f"***** bench value {value_test} *****")
         create_model_gaussian(
-            num_samples=100_000, num_features=value_test, num_trees=100, max_depth=3
+            num_samples=1000, num_features=value_test, num_trees=100, max_depth=3
         )
         subprocess.call("./bench.sh".split(), shell=True)
         # fname, mins, means, stddevs = get_benchs_data("benchs/a.txt")

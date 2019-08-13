@@ -15,11 +15,11 @@ CPPFLAGS = -I./include \
 
 ROOT_FLAGS = `root-config --cflags --glibs`
 
-LIBFLAGS = -L -Lbuild/src -lpthread -O3 -lbenchmark # /home/zampieri/Documents/CERN/root/tmva/tmva/src/BDT/libbenchmark.a#
+LIBFLAGS = -L -Llib  -lpthread -lbenchmark
 
 DEPS = include/jitted_bdt.h include/forest.h
 
-OBJS = build/benchmark.o build/bdt.o build/unique_bdt.o #build/test.o
+OBJS = build/benchmark.o build/unique_bdt.o
 EXE = mybenchmark.exe
 
 .PHONY : all clean distclean
@@ -36,19 +36,13 @@ else
          # ROOT_FLAGS = `root-config --cflags --glibs`
 endif
 
-
 all: $(EXE)
 
 $(EXE): $(OBJS) $(DEPS)
-	#$(CXX) $(CXXFLAGS) -o $@  $^  $(LIBFLAGS) -lbenchmark
 	$(CXX) $(CXXFLAGS) -o $@  $^  $(LIBFLAGS) $(ROOT_FLAGS) $(XGBOOST_ROOT)/lib/libxgboost.so
 
 $(OBJS) : build/%.o: src/%.cxx
-	#$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(ROOT_FLAGS) -c $< -o $@
-
-
-
 
 clean :
 	$(RM) build/*.o *.o

@@ -17,27 +17,6 @@ void write_node_members(json const &jTree, std::unique_ptr<Node> &tmp_node)
    tmp_node->split_variable = std::stoi(tmp_str);
 }
 
-/// Need a nlohmann::json object from an xgboost saved format
-/*
-std::unique_ptr<Node> _read_nodes_old(json const &jTree, Tree &tree)
-{
-   std::unique_ptr<Node> tmp_node(new Node);
-   if (jTree.find("children") != jTree.end()) {
-      write_node_members(jTree, tmp_node);
-      tmp_node->child_true  = _read_nodes(jTree.at("children").at(0), tree);
-      tmp_node->child_false = _read_nodes(jTree.at("children").at(1), tree);
-   } else {
-      if (jTree.find("leaf") != jTree.end()) {
-         tmp_node->leaf         = jTree.at("leaf");
-         tmp_node->is_leaf_node = 1;
-      } else {
-         std::cout << "unaccepted wrong key\n";
-      }
-   }
-   return std::move(tmp_node);
-}
-// */
-
 // /*
 std::unique_ptr<Node> _read_nodes(json const &jTree, Tree &tree)
 {

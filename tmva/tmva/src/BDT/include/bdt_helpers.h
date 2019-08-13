@@ -82,14 +82,15 @@ std::string get_time_string()
 /// CSV helpers
 
 /// read a line of a "csv file" format
-std::vector<float> _read_csv_line(std::string &s_line)
+template <class T>
+std::vector<T> _read_csv_line(std::string &s_line)
 {
-   std::vector<float> vector_line;
-   std::stringstream  sstream_line(s_line);
-   std::string        cell;
+   std::vector<T>    vector_line;
+   std::stringstream sstream_line(s_line);
+   std::string       cell;
    while (getline(sstream_line, cell, ',')) {
       if (!cell.empty()) {
-         vector_line.push_back(std::stod(cell));
+         vector_line.push_back(std::stod(cell)); // Warning: using stod
       } else {
          vector_line.push_back(666);
          std::cerr << "Cell is empty" << std::endl;
@@ -99,16 +100,17 @@ std::vector<float> _read_csv_line(std::string &s_line)
 }
 
 /// reads csv file contaning floats into vector<vector<float>>
-std::vector<std::vector<float>> read_csv(std::string &filename)
+template <class T>
+std::vector<std::vector<T>> read_csv(std::string &filename)
 {
    // std::ifstream fin;
-   std::ifstream                   file(filename);
-   std::vector<std::vector<float>> out;
+   std::ifstream               file(filename);
+   std::vector<std::vector<T>> out;
 
    std::string cell, line;
    while (file.good()) {
       getline(file, line);
-      if (!line.empty()) out.push_back(_read_csv_line(line));
+      if (!line.empty()) out.push_back(_read_csv_line<T>(line));
    }
    return out;
 }
@@ -122,6 +124,7 @@ void write_csv(std::string &filename, std::vector<std::vector<T>> values_vec)
    fout.open(filename, std::ios::out); // | std::ios::app if you want to append"reportcard.csv"
    // Read the input
    // for (auto it = begin (values_vec); it != end (values_vec); ++it) {
+   fout.precision(10); // set precision for floats
    int counter = 0;
    for (auto &line : values_vec) {
       counter = 0;
