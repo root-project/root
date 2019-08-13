@@ -22,12 +22,12 @@ class ndarray(numpy.ndarray):
     def __new__(cls, numpy_array, result_ptr):
         """
         Dunder method invoked at the creation of an instance of this class. It
-        creates a `numpy.array` with an `RResultPtr` as an additional
+        creates a numpy array with an `RResultPtr` as an additional
         attribute.
         """
         obj = numpy.asarray(numpy_array).view(cls)
         obj.result_ptr = result_ptr
-        obj.__class__.__name__ = "numpy.array"
+        data = numpy_array
         return obj
 
     def __array_finalize__(self, obj):
