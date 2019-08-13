@@ -27,12 +27,13 @@ namespace RooHelpers {
 /// Switches the message service to verbose while the instance alive.
 class MakeVerbose {
   public:
-    MakeVerbose() {
+    MakeVerbose(RooFit::MsgTopic extraTopics = static_cast<RooFit::MsgTopic>(0u)) {
       auto& msg = RooMsgService::instance();
       fOldKillBelow = msg.globalKillBelow();
       msg.setGlobalKillBelow(RooFit::DEBUG);
       fOldConf = msg.getStream(0);
       msg.getStream(0).minLevel= RooFit::DEBUG;
+      msg.getStream(0).addTopic(extraTopics);
       msg.setStreamStatus(0, true);
     }
 
@@ -40,7 +41,6 @@ class MakeVerbose {
       auto& msg = RooMsgService::instance();
       msg.setGlobalKillBelow(fOldKillBelow);
       msg.getStream(0) = fOldConf;
-      msg.setStreamStatus(0, true);
     }
 
   private:
@@ -50,7 +50,7 @@ class MakeVerbose {
 
 
 /// Hijacks all messages with given level and topic (and optionally object name) while alive.
-/// Use like ostringstream afterwards. Useful for unit tests and debugging.
+/// Use this like an ostringstream afterwards. Useful for unit tests and debugging.
 class HijackMessageStream : public std::ostringstream {
   public:
     HijackMessageStream(RooFit::MsgLevel level, RooFit::MsgTopic topics, const char* objectName = nullptr);
