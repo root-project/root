@@ -20,6 +20,7 @@ PyObject *PyROOT::PyStrings::gROOTns = nullptr;
 PyObject *PyROOT::PyStrings::gSetBranchAddress = nullptr;
 PyObject *PyROOT::PyStrings::gSetFCN = nullptr;
 PyObject *PyROOT::PyStrings::gTClassDynCast = nullptr;
+PyObject *PyROOT::PyStrings::gClass = nullptr;
 
 #define PYROOT_INITIALIZE_STRING(var, str)                                    \
    if (!(PyStrings::var = CPyCppyy_PyUnicode_InternFromString((char *)#str))) \
@@ -35,6 +36,7 @@ bool PyROOT::CreatePyStrings()
    PYROOT_INITIALIZE_STRING(gSetBranchAddress, SetBranchAddress);
    PYROOT_INITIALIZE_STRING(gSetFCN, SetFCN);
    PYROOT_INITIALIZE_STRING(gTClassDynCast, _TClass__DynamicCast);
+   PYROOT_INITIALIZE_STRING(gClass, __class__);
 
    return true;
 }
@@ -55,6 +57,8 @@ PyObject *PyROOT::DestroyPyStrings()
    PyStrings::gSetFCN = nullptr;
    Py_DECREF(PyStrings::gTClassDynCast);
    PyStrings::gTClassDynCast = nullptr;
+   Py_DECREF(PyStrings::gClass);
+   PyStrings::gClass = nullptr;
 
    Py_INCREF(Py_None);
    return Py_None;
