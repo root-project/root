@@ -69,3 +69,9 @@ void ROOT::Experimental::Detail::RColumn::MapPage(const NTupleSize_t index)
    fPageSource->ReleasePage(fCurrentPage);
    fCurrentPage = fPageSource->PopulatePage(fHandleSource, index);
 }
+
+void ROOT::Experimental::Detail::RColumn::MapPage(const RClusterIndex &clusterIndex)
+{
+   fPageSource->ReleasePage(fCurrentPage);
+   fCurrentPage = fPageSource->PopulatePage(fHandleSource, clusterIndex);
+}

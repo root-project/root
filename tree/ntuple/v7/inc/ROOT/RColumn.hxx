@@ -106,44 +106,87 @@ public:
       fNElements += count;
    }
 
-   void Read(const NTupleSize_t index, RColumnElementBase *element) {
-      if (!fCurrentPage.Contains(index)) {
-         MapPage(index);
+   void Read(const NTupleSize_t globalIndex, RColumnElementBase *element) {
+      if (!fCurrentPage.Contains(globalIndex)) {
+         MapPage(globalIndex);
       }
       void* src = static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
-                  (index - fCurrentPage.GetRangeFirst()) * element->GetSize();
+                  (globalIndex - fCurrentPage.GetGlobalRangeFirst()) * element->GetSize();
       element->ReadFrom(src, 1);
    }
 
-   void ReadV(const NTupleSize_t index, const NTupleSize_t count, RColumnElementBase *elemArray) {
-      if (!fCurrentPage.Contains(index)) {
-         MapPage(index);
+   void Read(const RClusterIndex &clusterIndex, RColumnElementBase *element) {
+      if (!fCurrentPage.Contains(clusterIndex)) {
+         MapPage(clusterIndex);
       }
-      NTupleSize_t idxInPage = index - fCurrentPage.GetRangeFirst();
+      void* src = static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
+                  (clusterIndex.GetIndex() - fCurrentPage.GetClusterRangeFirst()) * element->GetSize();
+      element->ReadFrom(src, 1);
+   }
+
+   void ReadV(const NTupleSize_t globalIndex, const ClusterSize_t::ValueType count, RColumnElementBase *elemArray) {
+      if (!fCurrentPage.Contains(globalIndex)) {
+         MapPage(globalIndex);
+      }
+      NTupleSize_t idxInPage = globalIndex - fCurrentPage.GetGlobalRangeFirst();
 
       void* src = static_cast<unsigned char *>(fCurrentPage.GetBuffer()) + idxInPage * elemArray->GetSize();
-      if (index + count <= fCurrentPage.GetRangeLast() + 1) {
+      if (globalIndex + count <= fCurrentPage.GetGlobalRangeLast() + 1) {
          elemArray->ReadFrom(src, count);
       } else {
-         NTupleSize_t nBatch = fCurrentPage.GetRangeLast() - idxInPage;
+         ClusterSize_t::ValueType nBatch = fCurrentPage.GetGlobalRangeLast() - idxInPage;
          elemArray->ReadFrom(src, nBatch);
          RColumnElementBase elemTail(*elemArray, nBatch);
-         ReadV(index + nBatch, count - nBatch, &elemTail);
+         ReadV(globalIndex + nBatch, count - nBatch, &elemTail);
       }
    }
 
-   /// Map may fall back to Read() and therefore requires a valid element
+   void ReadV(const RClusterIndex &clusterIndex, const ClusterSize_t::ValueType count, RColumnElementBase *elemArray)
+   {
+      if (!fCurrentPage.Contains(clusterIndex)) {
+         MapPage(clusterIndex);
+      }
+      NTupleSize_t idxInPage = clusterIndex.GetIndex() - fCurrentPage.GetClusterRangeFirst();
+
+      void* src = static_cast<unsigned char *>(fCurrentPage.GetBuffer()) + idxInPage * elemArray->GetSize();
+      if (clusterIndex.GetIndex() + count <= fCurrentPage.GetClusterRangeLast() + 1) {
+         elemArray->ReadFrom(src, count);
+      } else {
+         ClusterSize_t::ValueType nBatch = fCurrentPage.GetClusterRangeLast() - idxInPage;
+         elemArray->ReadFrom(src, nBatch);
+         RColumnElementBase elemTail(*elemArray, nBatch);
+         ReadV(RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndex() + nBatch), count - nBatch, &elemTail);
+      }
+   }
+
    template <typename CppT, EColumnType ColumnT>
-   CppT *Map(const NTupleSize_t index) {
-      if (!fCurrentPage.Contains(index)) {
-         MapPage(index);
+   CppT *Map(const NTupleSize_t globalIndex) {
+      if (!fCurrentPage.Contains(globalIndex)) {
+         MapPage(globalIndex);
       }
       return reinterpret_cast<CppT*>(
          static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
-         (index - fCurrentPage.GetRangeFirst()) * RColumnElement<CppT, ColumnT>::kSize);
+         (globalIndex - fCurrentPage.GetGlobalRangeFirst()) * RColumnElement<CppT, ColumnT>::kSize);
    }
 
-   /// For offset columns only, do index arithmetic from cluster-local to global indizes
+   template <typename CppT, EColumnType ColumnT>
+   CppT *Map(const RClusterIndex &clusterIndex) {
+      if (!fCurrentPage.Contains(clusterIndex)) {
+         MapPage(clusterIndex);
+      }
+      return reinterpret_cast<CppT*>(
+         static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
+         (clusterIndex.GetIndex() - fCurrentPage.GetClusterRangeFirst()) * RColumnElement<CppT, ColumnT>::kSize);
+   }
+
+   NTupleSize_t GetGlobalIndex(const RClusterIndex &clusterIndex) {
+      if (!fCurrentPage.Contains(clusterIndex)) {
+         MapPage(clusterIndex);
+      }
+      return fCurrentPage.GetClusterInfo().GetSelfOffset() + clusterIndex.GetIndex();
+   }
+
+   /// For offset columns only, look at the two adjacent values that define a collection's coordinates
    void GetCollectionInfo(const NTupleSize_t index, NTupleSize_t* collectionStart, ClusterSize_t* collectionSize) {
       auto idxStart = (index == 0) ? 0 : *Map<ClusterSize_t, EColumnType::kIndex>(index - 1);
       auto idxEnd = *Map<ClusterSize_t, EColumnType::kIndex>(index);
@@ -159,6 +202,7 @@ public:
 
    void Flush();
    void MapPage(const NTupleSize_t index);
+   void MapPage(const RClusterIndex &clusterIndex);
    NTupleSize_t GetNElements() const { return fNElements; }
    RColumnElementBase *GetElement() const { return fElement.get(); }
    const RColumnModel& GetModel() const { return fModel; }
