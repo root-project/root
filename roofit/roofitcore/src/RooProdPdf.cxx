@@ -514,6 +514,50 @@ Double_t RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, Bool_t /*verb
   }
 }
 
+RooSpan<double> RooProdPdf::evaluateBatch(std::size_t begin, std::size_t size) const {
+  int code;
+  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(_curNormSet,0,&code);
+
+  // If cache doesn't have our configuration, recalculate here
+  if (!cache) {
+    code = getPartIntList(_curNormSet, nullptr);
+    cache = (CacheElem*) _cacheMgr.getObj(_curNormSet,0,&code);
+  }
+
+  if (cache->_isRearranged) {
+    if (dologD(Eval)) {
+      cxcoutD(Eval) << "RooProdPdf::calculate(" << GetName() << ") rearranged product calculation"
+                    << " calculate: num = " << cache->_rearrangedNum->GetName() << " = " << cache->_rearrangedNum->getVal() << endl ;
+      cxcoutD(Eval) << "calculate: den = " << cache->_rearrangedDen->GetName() << " = " << cache->_rearrangedDen->getVal() << endl ;
+    }
+
+    auto outputs = _batchData.makeWritableBatchUnInit(begin, size);
+    auto numerator = cache->_rearrangedNum->getValBatch(begin, size);
+    auto denominator = cache->_rearrangedDen->getValBatch(begin, size);
+
+    for (std::size_t i=0; i < outputs.size(); ++i) {
+      outputs[i] = numerator[i] / denominator[i];
+    }
+
+    return outputs;
+  } else {
+
+    auto outputs = _batchData.makeWritableBatchInit(begin, size, 1.);
+    assert(cache->_normList.size() == cache->_partList.size());
+    for (std::size_t i = 0; i < cache->_partList.size(); ++i) {
+      const auto& partInt = static_cast<const RooAbsReal&>(cache->_partList[i]);
+      const auto normSet = cache->_normList[i].get();
+
+      const auto partialInts = partInt.getValBatch(begin, size, normSet->getSize() > 0 ? normSet : nullptr);
+      for (std::size_t j=0; j < outputs.size(); ++j) {
+        outputs[j] *= partialInts[j];
+      }
+    }
+
+    return outputs;
+  }
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2055,7 +2099,7 @@ RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet& c
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return all parameter constraint p.d.f.s on parameters listed in constrainedParams
+/// Return all parameter constraint p.d.f.s on parameters listed in constrainedParams.
 /// The observables set is required to distinguish unambiguously p.d.f in terms
 /// of observables and parameters, which are not constraints, and p.d.fs in terms
 /// of parameters only, which can serve as constraints p.d.f.s
