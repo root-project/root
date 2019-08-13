@@ -30,7 +30,7 @@ def get_benchs_data(bench_name="benchs/a.txt"):
     return fname, mins, means, stddev
 
 
-def create_model_gaussian(num_samples=100, num_features=5, num_trees=10):
+def create_model_gaussian(num_samples=100, num_features=5, num_trees=10, max_depth=3):
     mu, sigma = 0, 1  # mean and standard deviation
 
     training_samples = max(1000, num_samples)
@@ -40,7 +40,7 @@ def create_model_gaussian(num_samples=100, num_features=5, num_trees=10):
     Y = np.random.choice(a=[0, 1], size=(training_samples), p=[p, 1 - p])
 
     # fit model no training data
-    model = xgb.XGBClassifier(n_estimators=num_trees)
+    model = xgb.XGBClassifier(n_estimators=num_trees, max_depth=max_depth)
     model.fit(X, Y)
 
     X = X[:num_samples]
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     for i, value_test in enumerate(test_list):
         print(f"***** bench value {value_test} *****")
         create_model_gaussian(
-            num_samples=100_000, num_features=value_test, num_trees=100
+            num_samples=100_000, num_features=value_test, num_trees=100, max_depth=3
         )
         subprocess.call("./bench.sh".split(), shell=True)
         # fname, mins, means, stddevs = get_benchs_data("benchs/a.txt")

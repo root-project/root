@@ -218,8 +218,8 @@ void generate_code_forest_batch_array(std::ostream& fout,
        << "const std::vector<std::vector<float>>& events_vector, std::vector<bool> &preds){" << std::endl;
   //fout << "std::vector<bool> preds;" << std::endl
   //     << "preds.reserve(" << std::to_string(rows) << ");" << std::endl; // reserve
-
-  fout << "std::vector<float> event;" << std::endl;
+  // TODO: change event to events_vector[i]
+  fout  << "std::vector<float> event;" << std::endl;
   fout  << "float result;" << std::endl;
 
   fout << "for (size_t i=0; i<" << std::to_string(rows) << "; i++){" << std::endl

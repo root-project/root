@@ -1,5 +1,6 @@
+/// Test the behavior of arrayBDTs
+
 #include <iostream>
-#include "json.hpp"
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -10,6 +11,7 @@
 #include <array>
 #include <utility>
 
+#include "json.hpp"
 #include "TInterpreter.h" // for gInterpreter
 
 #include "bdt_helpers.h"
@@ -32,5 +34,11 @@ int square(int v)
 
 TEST(someTest, testOne)
 {
-   ASSERT_EQ(5, 5);
+   ASSERT_EQ(square(2), 4);
+}
+
+int main(int argc, char **argv)
+{
+   ::testing::InitGoogleTest(&argc, argv);
+   return RUN_ALL_TESTS();
 }

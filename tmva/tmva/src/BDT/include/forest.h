@@ -271,7 +271,7 @@ void Forest<std::function<bool(std::vector<float>)>>::get_Forest(std::string jso
 
    // write to file for debug
    std::filebuf fb;
-   std::string  filename = "./generated_files/generated_forest.h";
+   std::string  filename = "../generated_files/generated_forest.h";
    fb.open(filename, std::ios::out);
    std::ostream os(&fb);
    generate_code_forest(os, trees, number_of_trees, s_namespace_name);
@@ -319,7 +319,7 @@ void Forest<std::function<std::vector<bool>(std::vector<std::vector<float>>)>>::
 
    // write to file for debug
    std::filebuf fb;
-   std::string  filename = "./generated_files/evaluate_forest.h";
+   std::string  filename = "../generated_files/evaluate_forest.h";
    fb.open(filename, std::ios::out);
    std::ostream os(&fb);
    generate_code_forest_batch(os, trees, number_of_trees, s_namespace_name);
@@ -367,7 +367,7 @@ void Forest<std::function<void(const std::vector<std::vector<float>> &, std::vec
 
    // write to file for debug
    std::filebuf fb;
-   std::string  filename = "./generated_files/evaluate_forest_batch.h";
+   std::string  filename = "../generated_files/evaluate_forest_batch.h";
    fb.open(filename, std::ios::out);
    std::ostream os(&fb);
    generate_code_forest_batch_array(os, trees, number_of_trees, events_vector.size(), s_namespace_name);

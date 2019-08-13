@@ -1,5 +1,5 @@
 CXX =  g++ # g++ clang++ #  #mpicxx #
-CXXFLAGS = -std=c++11 -lstdc++ -g -fopenmp -O3 #  -lc++abi -stdlib=libc++
+CXXFLAGS = -std=c++11 -fopenmp -O3 #  -lc++abi -stdlib=libc++
 
 USE_CLANG = 0
 
@@ -17,7 +17,7 @@ ROOT_FLAGS = `root-config --cflags --glibs`
 
 LIBFLAGS = -L -Lbuild/src -lpthread -O3 -lbenchmark # /home/zampieri/Documents/CERN/root/tmva/tmva/src/BDT/libbenchmark.a#
 
-DEPS = jitted_bdt.h forest.h
+DEPS = include/jitted_bdt.h include/forest.h
 
 OBJS = build/benchmark.o build/bdt.o build/unique_bdt.o #build/test.o
 EXE = mybenchmark.exe
@@ -43,10 +43,9 @@ $(EXE): $(OBJS) $(DEPS)
 	#$(CXX) $(CXXFLAGS) -o $@  $^  $(LIBFLAGS) -lbenchmark
 	$(CXX) $(CXXFLAGS) -o $@  $^  $(LIBFLAGS) $(ROOT_FLAGS) $(XGBOOST_ROOT)/lib/libxgboost.so
 
-$(OBJS) : build/%.o: %.cxx
+$(OBJS) : build/%.o: src/%.cxx
 	#$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(ROOT_FLAGS) -c $< -o $@
-
 
 
 
