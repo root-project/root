@@ -69,6 +69,7 @@ TEST(RNtuplePrint, IntPrint)
    std::stringstream os;
    RPrintVisitor visitor(os);
    RField<int> testField("intTest");
+   testField.SetOrder(1);
    testField.AcceptVisitor(visitor, 1);
    std::string expected{std::string("")
        + "********************************************************************************\n"
@@ -81,6 +82,7 @@ TEST(RNtuplePrint, FloatPrint)
    std::stringstream os;
    RPrintVisitor visitor(os);
    RField<float> testField("floatTest");
+   testField.SetOrder(1);
    testField.AcceptVisitor(visitor, 1);
    std::string expected{std::string("")
        + "********************************************************************************\n"
@@ -94,6 +96,7 @@ TEST(RNtuplePrint, FloatTraverse)
    std::stringstream os;
    RPrintVisitor visitor(os, 'a');
    RField<float> testField("floatTest");
+   testField.SetOrder(1);
    testField.TraverseVisitor(visitor, 1);
    std::string expected{std::string("")
        + "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n"
@@ -106,6 +109,7 @@ TEST(RNtuplePrint, VecAccept)
    std::stringstream os;
    RPrintVisitor visitor(os, 'a');
    RField<std::vector<float>> testField("floatTest");
+   testField.SetOrder(1);
    testField.AcceptVisitor(visitor, 1);
    std::string expected{std::string("")
        + "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n"
@@ -118,6 +122,7 @@ TEST(RNtuplePrint, VecTraverse)
    std::stringstream os;
    RPrepareVisitor prepVisitor;
    RField<std::vector<float>> testField("floatVecTest");
+   testField.SetOrder(1);
    testField.TraverseVisitor(prepVisitor, 1);
    RPrintVisitor visitor(os, '$');
    visitor.SetDeepestLevel(prepVisitor.GetDeepestLevel());
@@ -126,7 +131,7 @@ TEST(RNtuplePrint, VecTraverse)
    std::string expected{std::string("")
        + "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n"
        + "$ Field 1       : floatVecTest (std::vector<float>)                            $\n"
-       + "$ |__Field 1    : float (float)                                                $\n"};
+       + "$ |__Field 1.1  : float (float)                                                $\n"};
    EXPECT_EQ(expected, os.str());
 }
 
@@ -135,6 +140,7 @@ TEST(RNtuplePrint, VecVecTraverse)
    std::stringstream os;
    RPrepareVisitor prepVisitor;
    RField<std::vector<std::vector<float>>> testField("floatVecVecTest");
+   testField.SetOrder(1);
    testField.TraverseVisitor(prepVisitor, 1);
    RPrintVisitor visitor(os, 'x');
    visitor.SetDeepestLevel(prepVisitor.GetDeepestLevel());
@@ -143,8 +149,8 @@ TEST(RNtuplePrint, VecVecTraverse)
    std::string expected{std::string("")
        + "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n"
        + "x Field 1           : floatVecVecTest (std::vector<std::vector<float>>)        x\n"
-       + "x |__Field 1        : std::vector<float> (std::vector<float>)                  x\n"
-       + "x   |__Field 1.1    : float (float)                                            x\n"};
+       + "x |__Field 1.1      : std::vector<float> (std::vector<float>)                  x\n"
+       + "x   |__Field 1.1.1  : float (float)                                            x\n"};
    EXPECT_EQ(expected, os.str());
 }
 
@@ -153,6 +159,7 @@ TEST(RNtuplePrint, NarrowManyEntriesVecVecTraverse)
    std::stringstream os;
    RPrepareVisitor prepVisitor;
    RField<std::vector<std::vector<float>>> testField("floatVecVecTest");
+   testField.SetOrder(1);
    testField.TraverseVisitor(prepVisitor, 1);
    RPrintVisitor visitor(os, ' ', 30);
    visitor.SetDeepestLevel(prepVisitor.GetDeepestLevel());
@@ -161,8 +168,8 @@ TEST(RNtuplePrint, NarrowManyEntriesVecVecTraverse)
    std::string expected{std::string("")
        + "                              \n"
        + "  Field 1         : floatV... \n"
-       + "  |__Field 1      : std::v... \n"
-       + "    |__Field 1.1  : float ... \n"};
+       + "  |__Field 1.1    : std::v... \n"
+       + "    |__Field 1... : float ... \n"};
    EXPECT_EQ(expected, os.str());
 }
 

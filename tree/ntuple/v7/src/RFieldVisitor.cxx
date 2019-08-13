@@ -106,13 +106,13 @@ std::string ROOT::Experimental::RNTupleFormatter::FitString(const std::string &s
    return std::string(str, 0, availableSpace - 3) + "...";
 }
 
-//Returns std::string of form "1" or "2.1.1"
+// Returns std::string of form "1" or "2.1.1"
 std::string ROOT::Experimental::RNTupleFormatter::HierarchialFieldOrder(const ROOT::Experimental::Detail::RFieldBase &field)
 {
    std::string hierarchialOrder{std::to_string(field.GetLevelInfo().GetOrder())};
    const ROOT::Experimental::Detail::RFieldBase* parentPtr{field.GetParent()};
    // To avoid having the index of the RootField (-1) in the return value, it is checked if the grandparent is a nullptr (in that case RootField is parent)
-   while (parentPtr && parentPtr->GetParent()) {
+   while (parentPtr && (parentPtr->GetLevelInfo().GetOrder() != -1)) {
       hierarchialOrder = std::to_string(parentPtr->GetLevelInfo().GetOrder()) + "." + hierarchialOrder;
       parentPtr = parentPtr->GetParent();
    }

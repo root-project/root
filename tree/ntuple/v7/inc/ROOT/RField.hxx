@@ -103,7 +103,7 @@ private:
          while (parentPtr) {
             parentPtr = parentPtr->GetParent();
             ++level;
-            }
+         }
          return level;
       }
       int GetOrder(const RFieldBase *field = nullptr) const {
@@ -113,7 +113,7 @@ private:
       }
    };
    /// First subfield of parentfield has fOrder 1, the next fOrder 2, etc. Value set by RFieldBase::Attach()
-   int fOrder = 1;
+   int fOrder = -1;
 protected:
    /// Collections and classes own sub fields
    std::vector<std::unique_ptr<RFieldBase>> fSubFields;

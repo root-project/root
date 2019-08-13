@@ -31,7 +31,7 @@ class RFieldBase;
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleVisitor
+\class ROOT::Experimental::Detail::RNTupleVisitor
 \ingroup NTuple
 \brief Abstract base class for classes implementing the visitor design pattern.
      
