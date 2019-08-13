@@ -88,9 +88,18 @@ public:
    NTupleSize_t GetRangeFirst() const { return fRangeFirst; }
    NTupleSize_t GetRangeLast() const { return fRangeFirst + NTupleSize_t(fNElements) - 1; }
    const RClusterInfo& GetClusterInfo() const { return fClusterInfo; }
-   bool Contains(NTupleSize_t index) const {
-      return (index >= fRangeFirst) && (index < fRangeFirst + NTupleSize_t(fNElements));
+
+   bool Contains(NTupleSize_t globalIndex) const {
+      return (globalIndex >= fRangeFirst) && (globalIndex < fRangeFirst + NTupleSize_t(fNElements));
    }
+
+   bool Contains(DescriptorId_t clusterId, ClusterSize_t::ValueType clusterIndex) const {
+      if (fClusterInfo.GetId() != clusterId)
+         return false;
+      auto localRangeFirst = ClusterSize_t(fRangeFirst - fClusterInfo.GetSelfOffset());
+      return (clusterIndex >= localRangeFirst) && (clusterIndex < localRangeFirst + fNElements);
+    }
+
    void* GetBuffer() const { return fBuffer; }
    /// Return a pointer after the last element that has space for nElements new elements. If there is not enough capacity,
    /// return nullptr
