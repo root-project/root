@@ -4904,12 +4904,12 @@ Double_t RooAbsReal::getVal(const RooArgSet* normalisationSet) const {
 }
 
 
-void RooAbsReal::checkBatchComputation(std::size_t evtNo, const RooArgSet* normSet) const {
+void RooAbsReal::checkBatchComputation(std::size_t evtNo, const RooArgSet* normSet, double relAccuracy) const {
   for (const auto server : _serverList) {
     try {
       auto realServer = dynamic_cast<RooAbsReal*>(server);
       if (realServer)
-        realServer->checkBatchComputation(evtNo, normSet);
+        realServer->checkBatchComputation(evtNo, normSet, relAccuracy);
     } catch (CachingError& error) {
       throw CachingError(std::move(error),
           FormatPdfTree() << *this);
@@ -4920,10 +4920,9 @@ void RooAbsReal::checkBatchComputation(std::size_t evtNo, const RooArgSet* normS
     RooSpan<const double> batch = _batchData.getBatch(evtNo, 1);
     RooSpan<const double> enclosingBatch = _batchData.getBatch(evtNo-1, 3);
     const double batchVal = batch[0];
+    const double relDiff = _value != 0. ? (_value - batchVal)/_value : _value - batchVal;
 
-    if (fabs( _value != 0. ? (_value - batchVal)/_value : _value - batchVal) > 1.E-13
-        && fabs(_value) > 1.E-300) {
-//      gSystem->StackTrace();
+    if (fabs(relDiff) > relAccuracy && fabs(_value) > 1.E-300) {
       FormatPdfTree formatter;
       formatter << "--> (Batch computation wrong here:)\n";
       printStream(formatter.stream(), kName | kClassName | kArgs | kExtras | kAddress, kInline);
@@ -4932,12 +4931,10 @@ void RooAbsReal::checkBatchComputation(std::size_t evtNo, const RooArgSet* normS
           << "\n _batch[" << std::setw(7) << evtNo   << "]=     " << batchVal << " !!!"
           << "\n expected ('_value'): " << _value
           << "\n delta         " <<                     " =     " << _value - batchVal
+          << "\n rel delta     " <<                     " =     " << relDiff
           << "\n _batch[" << std::setw(7) << evtNo+1 << "]=     " << (enclosingBatch.empty() ? 0 : enclosingBatch[2]);
 
       formatter << "\n" << std::left << std::setw(24) << "evaluate(unnorm.)" << '=' << evaluate();
-
-//      auto result = evaluateBatch(evtNo, evtNo+1);
-//      formatter << "\nevaluateBatch(" << std::right << std::setw(9) << evtNo << ")=" << result[0];
 
       formatter << "\nServers: ";
       for (const auto server : _serverList) {

@@ -150,6 +150,11 @@ public:
     _list.reserve(count);
   }
 
+  /// Clear contents. If the collection is owning, it will also delete the contents.
+  void clear() {
+    removeAll();
+  }
+
   inline Int_t getSize() const { 
     // Return the number of elements in the collection
     return _list.size();
