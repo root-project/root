@@ -89,9 +89,8 @@ Bool_t RooWorkspace::_autoClass = kFALSE ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add 'dir' to search path for class declaration (header) files, when
-/// attempting to import class code with importClassClode()
-
+/// Add `dir` to search path for class declaration (header) files. This is needed
+/// to find class headers custom classes are imported into the workspace.
 void RooWorkspace::addClassDeclImportDir(const char* dir) 
 {
   _classDeclDirList.push_back(dir) ;
@@ -99,9 +98,8 @@ void RooWorkspace::addClassDeclImportDir(const char* dir)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add 'dir' to search path for class implementation (.cxx) files, when
-/// attempting to import class code with importClassClode()
-
+/// Add `dir` to search path for class implementation (.cxx) files. This is needed
+/// to find class headers custom classes are imported into the workspace.
 void RooWorkspace::addClassImplImportDir(const char* dir) 
 {
   _classImplDirList.push_back(dir) ;
@@ -1684,8 +1682,8 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
 	  ++diter ;
 	}
       }
-      ooccoutW(_wspace,ObjectHandling) << ". To fix this problem add the required directory to the search "
-				       << "path using RooWorkspace::addClassDeclDir(const char* dir)" << endl ;
+      ooccoutW(_wspace,ObjectHandling) << ". To fix this problem, add the required directory to the search "
+				       << "path using RooWorkspace::addClassDeclImportDir(const char* dir)" << endl ;
       
       return kFALSE ;
     }
@@ -1731,7 +1729,7 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
 	}
       }
       ooccoutW(_wspace,ObjectHandling) << ". To fix this problem add the required directory to the search "
-				       << "path using RooWorkspace::addClassImplDir(const char* dir)" << endl ;    
+				       << "path using RooWorkspace::addClassImplImportDir(const char* dir)" << endl ;    
       return kFALSE ;
     }
   }
