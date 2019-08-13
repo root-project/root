@@ -21,6 +21,7 @@
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/CNN/ConvLayer.h"
 
+
 #include "cuda.h"
 #include "Cuda/CudaBuffers.h"
 #include "Cuda/CudaMatrix.h"
@@ -42,15 +43,18 @@ namespace DNN
  * for this architecture as well as the remaining functions in the low-level
  * interface in the form of static members.
  */
-template<typename AFloat = Real_t>
+template<typename AReal = Real_t>
 class TCuda
 {
 private:
    static TRandom * fgRandomGen;
 public:
 
+    using AFloat         = AReal;
     using Scalar_t       = AFloat;
+    
     using Matrix_t       = TCudaMatrix<AFloat>;
+    using Tensor_t       = std::vector<TCudaMatrix<AFloat>>;
     using DeviceBuffer_t = TCudaDeviceBuffer<AFloat>;
     using HostBuffer_t   = TCudaHostBuffer<AFloat>;
 

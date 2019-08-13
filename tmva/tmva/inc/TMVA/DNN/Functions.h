@@ -91,9 +91,9 @@ enum class EOptimizer {
 //______________________________________________________________________________
 
 /*! Apply the given activation function to each value in the given
-*  matrix A. */
+*  tensor A. */
 template<typename Architecture_t>
-inline void evaluate(typename Architecture_t::Matrix_t &A,
+inline void evaluate(typename Architecture_t::Tensor_t &A,
                     EActivationFunction f)
 {
     switch(f)
@@ -113,15 +113,23 @@ inline void evaluate(typename Architecture_t::Matrix_t &A,
         break;
     }
 }
+/*  impl using Matrix */
+template<typename Architecture_t>
+inline void evaluate(typename Architecture_t::Matrix_t &A,
+                    EActivationFunction f)
+{
+    typename Architecture_t::Tensor_t tA(A);
+    evaluate<Architecture_t>(tA,f);
+}
 
 
 /*! Compute the first partial derivative of the activation function for
-*  the values given in matrix A and write the results into B. */
+*  the values given in tensor A and write the results into B. */
 //______________________________________________________________________________
 template<typename Architecture_t>
-inline void evaluateDerivative(typename Architecture_t::Matrix_t & B,
+inline void evaluateDerivative(typename Architecture_t::Tensor_t & B,
                                 EActivationFunction f,
-                                const typename Architecture_t::Matrix_t & A)
+                                const typename Architecture_t::Tensor_t & A)
 {
     switch(f)
     {
@@ -141,14 +149,23 @@ inline void evaluateDerivative(typename Architecture_t::Matrix_t & B,
         break;
     }
 }
-
+/*  impl using Matrix */
+template<typename Architecture_t>
+inline void evaluateDerivative(typename Architecture_t::Matrix_t & B,
+                                EActivationFunction f,
+                                const typename Architecture_t::Matrix_t & A)
+{
+    typename Architecture_t::Tensor_t tA(A);
+    typename Architecture_t::Tensor_t tB(B);
+    evaluateDerivative<Architecture_t>(tB, f, tA);
+}
 //______________________________________________________________________________
 //
 //  Output Functions
 //______________________________________________________________________________
 
 /*! Apply the given output function to each value in the given
-*  matrix A. */
+*  tensor A. */
 template<typename Architecture_t>
 inline void evaluate(typename Architecture_t::Matrix_t &A,
                     EOutputFunction f,

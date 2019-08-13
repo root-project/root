@@ -72,7 +72,8 @@ auto testFullRNN(size_t batchSize, size_t stateSize,
 -> void
 {
    using Matrix_t   = typename Architecture::Matrix_t;
-   using Tensor_t   = std::vector<Matrix_t>;
+   using Tensor_t   = typename Architecture::Tensor_t;
+   
    // using RNNLayer_t = TBasicRNNLayer<Architecture>;
    // using FCLayer_t  = TDenseLayer<Architecture>;
    // using Reshape_t  = TReshapeLayer<Architecture>;
@@ -82,16 +83,21 @@ auto testFullRNN(size_t batchSize, size_t stateSize,
    // check, denselayer takes only first one as input, 
    // so make sure time = 1, in the current case
    size_t timeSteps = 1;
-   std::vector<TMatrixT<Double_t>> XRef(batchSize, TMatrixT<Double_t>(timeSteps, inputSize));    // B x T x D
+   
+   Tensor_t XArch(batchSize, timeSteps, inputSize); // B x T x D
+   
+   randomBatch(XArch); 
+   Tensor_t XRef = XArch; 
+
+     // B x T x D
    //TMatrixT<Double_t> YRef(batchSize, outputSize);    // B x O  (D = O)
-   Tensor_t XArch;
+   
    Matrix_t YArch(batchSize, outputSize);             // B x O  (D = O)
+
+   std::cerr << "Copying output into input\n";
    for (size_t i = 0; i < batchSize; ++i) {
-      randomMatrix(XRef[i]);
-      std::cerr << "Copying output into input\n";
-      XArch.emplace_back(XRef[i]);
       for (size_t j = 0; j < outputSize; ++j) {
-         YArch(i, j) = XArch[i](0, j);
+         YArch(i, j) = XArch(i, 0, j);  // time steps is 1 
       }
    }
 
@@ -136,7 +142,7 @@ auto testFullRNN2(size_t batchSize, size_t stateSize,
 -> void
 {
    using Matrix_t   = typename Architecture::Matrix_t;
-   using Tensor_t   = std::vector<Matrix_t>;
+   using Tensor_t   = typename Architecture::Tensor_t;
    // using RNNLayer_t = TBasicRNNLayer<Architecture>;
    // using FCLayer_t  = TDenseLayer<Architecture>;
    // using Reshape_t  = TReshapeLayer<Architecture>;
@@ -151,9 +157,11 @@ auto testFullRNN2(size_t batchSize, size_t stateSize,
    // so make sure time = 1, in the current case
    size_t timeSteps = 5;
   
-   std::vector<TMatrixT<Double_t>> XRef(batchSize, TMatrixT<Double_t>(timeSteps, inputSize));    // B x T x D
+   Tensor_t XRef(batchSize, timeSteps, inputSize); // B x T x D
+
+  ///std::vector<TMatrixT<Double_t>> XRef(batchSize, TMatrixT<Double_t>(timeSteps, inputSize));    // B x T x D
    //TMatrixT<Double_t> YRef(batchSize, outputSize);    // B x O  (D = O)
-   Tensor_t XArch;
+   //Tensor_t XArch;
    Matrix_t YArch(batchSize, 1);             // B x O  (D = O)
    for (size_t i = 0; i < batchSize; ++i) {
       // provide input data and labels Yarch
@@ -164,12 +172,12 @@ auto testFullRNN2(size_t batchSize, size_t stateSize,
          double mu = (label == 0) ? 4 : 2*l;
          for (size_t m = 0; m < inputSize; ++m) {
             mu += m;   // shift the varouous inputs
-            XRef[i](l,m) = rndm.Gaus( mu, 1);
+            XRef(i,l,m) = rndm.Gaus( mu, 1);
          }
       }
       //std::cerr << "Copying output into input\n";
-      XArch.emplace_back(XRef[i]);
    }
+   Tensor_t XArch = XRef; 
 
    bool useRegularization = false;
    double weightDecay = (useRegularization) ? 1. : 0; 
@@ -255,7 +263,6 @@ auto testFullRNN2(size_t batchSize, size_t stateSize,
    else std::cout << "ERROR : Test full RNN failed : "; 
    std::cout << "Efficiencies are " << eff1 << " and " << eff2 << std::endl;
    
-
 }
 
 

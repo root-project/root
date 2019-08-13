@@ -69,6 +69,8 @@ template<typename Architecture>
 bool testForward1()
 {
    using Matrix_t = typename Architecture::Matrix_t;
+   using Tensor_t = typename Architecture::Tensor_t;
+
    double img[][16] = {
            {166, 212, 213, 150,
             114, 119, 109, 115,
@@ -135,8 +137,7 @@ bool testForward1()
          inputEvent(i, j) = img[i][j];
       }
    }
-   std::vector<Matrix_t> input;
-   input.push_back(inputEvent);
+   Tensor_t input(inputEvent, 3);
 
    Matrix_t weightsMatrix(numberFilters, fltHeight * fltWidth * imgDepth);
    Matrix_t biasesMatrix(numberFilters, 1);
@@ -157,8 +158,7 @@ bool testForward1()
          outputEvent(i, j) = expected[i][j];
       }
    }
-   std::vector<Matrix_t> expectedOutput;
-   expectedOutput.push_back(outputEvent);
+   Tensor_t expectedOutput (outputEvent, 3);
 
    bool status = testConvLayerForward<Architecture>(input, expectedOutput, weightsMatrix, biasesMatrix, imgHeight,
                                                     imgWidth, imgDepth, fltHeight, fltWidth, numberFilters, strideRows,
@@ -179,6 +179,7 @@ template<typename Architecture>
 bool testBackward1()
 {
     using Matrix_t = typename Architecture::Matrix_t;
+    using Tensor_t = typename Architecture::Tensor_t;
 
     size_t imgDepth = 2;
     size_t imgHeight = 5;
@@ -208,8 +209,7 @@ bool testBackward1()
             gradEvent(i, j) = grad[i][j];
         }
     }
-    std::vector<Matrix_t> activationGradients;
-    activationGradients.push_back(gradEvent);
+    Tensor_t activationGradients(gradEvent, 3);
 
     double derivatives[][9] = {
             {1, 1, 1, 1 , 1, 1, 1, 1, 1},
@@ -223,8 +223,7 @@ bool testBackward1()
             dfEvent(i, j) = derivatives[i][j];
         }
     }
-    std::vector<Matrix_t> df;
-    df.push_back(dfEvent);
+    Tensor_t df (dfEvent, 3);
 
     double W[][18] = {
             {1, 0.31, -0.35, -0.33, 0.40, 0.26, -0.30, 0.29, -0.31,
@@ -259,8 +258,8 @@ bool testBackward1()
             activationsBackwardEvent(i, j) = activationsPreviousLayer[i][j];
         }
     }
-    std::vector<Matrix_t> activationsBackward;
-    activationsBackward.push_back(activationsBackwardEvent);
+    Tensor_t activationsBackward ( activationsBackwardEvent, 3);
+   
 
     /////////////////////// Fill the expected output //////////////////////////
     double expectedActivationGradsBackward[][25] = {
@@ -279,7 +278,7 @@ bool testBackward1()
         }
     }
 
-    std::vector<Matrix_t> computedActivationGradientsBackward;
+    Tensor_t computedActivationGradientsBackward (1,imgDepth, imgHeight * imgWidth);
 
     /////////////////////// Fill the expected weights gradients //////////////////////////
     double expectedWeightGrads[][18] = {
@@ -310,7 +309,6 @@ bool testBackward1()
 
 
     // Init outputs - these should be filled by the computation.
-    computedActivationGradientsBackward.emplace_back(imgDepth, imgHeight * imgWidth);
     Matrix_t computedWeightGradients(numberFilters, imgDepth * fltHeight * fltWidth);
     Matrix_t computedBiasGradients(numberFilters, 1);
 
@@ -322,7 +320,7 @@ bool testBackward1()
 
     // Check correctness.
     bool status = true;
-    status &= Architecture::AlmostEquals(expectedActivationGradientsBackwardEvent, computedActivationGradientsBackward[0]);
+    status &= Architecture::AlmostEquals(expectedActivationGradientsBackwardEvent, computedActivationGradientsBackward.At(0).GetMatrix());
     status &= Architecture::AlmostEquals(expectedWeightGradients, computedWeightGradients);
     status &= Architecture::AlmostEquals(expectedWeightGradients, computedWeightGradients);
     return status;

@@ -57,11 +57,12 @@ template <typename Architecture_t>
 class TMaxPoolLayer : public TConvLayer<Architecture_t> {
 
 public:
+    using Tensor_t = typename Architecture_t::Tensor_t;
     using Matrix_t = typename Architecture_t::Matrix_t;
     using Scalar_t = typename Architecture_t::Scalar_t;
 
 private:
-   std::vector<Matrix_t> indexMatrix; ///< Matrix of indices for the backward pass.
+   Tensor_t fIndexTensor; ///< Matrix of indices for the backward pass.
 
 public:
    /*! Constructor. */
@@ -81,14 +82,14 @@ public:
     *  must be in 3D tensor form with the different matrices corresponding to
     *  different events in the batch. It spatially downsamples the input
     *  matrices. */
-   void Forward(std::vector<Matrix_t> &input, bool applyDropout = false);
+   void Forward(Tensor_t &input, bool applyDropout = false);
 
    /*! Depending on the winning units determined during the Forward pass,
     *  it only forwards the derivatives to the right units in the previous
     *  layer. Must only be called directly at the corresponding call
     *  to Forward(...). */
-   void Backward(std::vector<Matrix_t> &gradients_backward, const std::vector<Matrix_t> &activations_backward,
-                 std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2);
+   void Backward(Tensor_t &gradients_backward, const Tensor_t &activations_backward);
+    //             Tensor_t &inp1, Tensor_t &inp2);
 
    /*! Writes the information and the weights about the layer in an XML node. */
    virtual void AddWeightsXMLTo(void *parent);
@@ -100,8 +101,8 @@ public:
    void Print() const;
 
    /*! Getters */
-   const std::vector<Matrix_t> &GetIndexMatrix() const { return indexMatrix; }
-   std::vector<Matrix_t> &GetIndexMatrix() { return indexMatrix; }
+   const Tensor_t & GetIndexTensor() const { return fIndexTensor; }
+   Tensor_t & GetIndexTensor() { return fIndexTensor; }
 
 };
 
@@ -114,31 +115,24 @@ TMaxPoolLayer<Architecture_t>::TMaxPoolLayer(size_t batchSize, size_t inputDepth
         : TConvLayer<Architecture_t>(batchSize, inputDepth, inputHeight, inputWidth, inputDepth, EInitialization::kZero,
                                      filterHeight, filterWidth, strideRows, strideCols, 0, 0, dropoutProbability,
                                      EActivationFunction::kIdentity, ERegularization::kNone, 0),
-          indexMatrix()
+          fIndexTensor(  this->GetBatchSize(), this->GetDepth(), this->GetNLocalViews() )
 {
-   for (size_t i = 0; i < this->GetBatchSize(); i++) {
-      indexMatrix.emplace_back(this->GetDepth(), this->GetNLocalViews());
-   }
 }
 
 //______________________________________________________________________________
 template <typename Architecture_t>
 TMaxPoolLayer<Architecture_t>::TMaxPoolLayer(TMaxPoolLayer<Architecture_t> *layer)
-   : TConvLayer<Architecture_t>(layer), indexMatrix()
+   : TConvLayer<Architecture_t>(layer), 
+   fIndexTensor( layer->GetIndexTensor().GetShape())
 {
-   for (size_t i = 0; i < layer->GetBatchSize(); i++) {
-      indexMatrix.emplace_back(layer->GetDepth(), layer->GetNLocalViews());
-   }
 }
 
 //______________________________________________________________________________
 template <typename Architecture_t>
 TMaxPoolLayer<Architecture_t>::TMaxPoolLayer(const TMaxPoolLayer &layer)
-   : TConvLayer<Architecture_t>(layer), indexMatrix()
+   : TConvLayer<Architecture_t>(layer), 
+   fIndexTensor( layer.GetIndexTensor().GetShape() )
 {
-   for (size_t i = 0; i < layer.fBatchSize; i++) {
-      indexMatrix.emplace_back(layer.fDepth, layer.fNLocalViews);
-   }
 }
 
 //______________________________________________________________________________
@@ -149,34 +143,32 @@ TMaxPoolLayer<Architecture_t>::~TMaxPoolLayer()
 
 //______________________________________________________________________________
 template <typename Architecture_t>
-auto TMaxPoolLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool applyDropout) -> void
+auto TMaxPoolLayer<Architecture_t>::Forward(Tensor_t &input, bool applyDropout) -> void
 {
-   for (size_t i = 0; i < this->GetBatchSize(); i++) {
+   
 
-      if (applyDropout && (this->GetDropoutProbability() != 1.0)) {
-         Architecture_t::Dropout(input[i], this->GetDropoutProbability());
-      }
-
-      Architecture_t::Downsample(this->GetOutputAt(i), indexMatrix[i], input[i], this->GetInputHeight(),
-                                 this->GetInputWidth(), this->GetFilterHeight(), this->GetFilterWidth(),
-                                 this->GetStrideRows(), this->GetStrideCols());
+   if (applyDropout && (this->GetDropoutProbability() != 1.0)) {
+         Architecture_t::Dropout(input, this->GetDropoutProbability());
    }
+
+   
+
+   Architecture_t::Downsample(this->GetOutput(), fIndexTensor, input, this->GetInputHeight(),
+                              this->GetInputWidth(), this->GetFilterHeight(), this->GetFilterWidth(),
+                              this->GetStrideRows(), this->GetStrideCols());
+   
 }
 
 //______________________________________________________________________________
 template <typename Architecture_t>
-auto TMaxPoolLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_backward,
-                                             const std::vector<Matrix_t> & /*activations_backward*/,
-                                             std::vector<Matrix_t> & /*inp1*/, std::vector<Matrix_t> &
-                                             /*inp2*/) -> void
+auto TMaxPoolLayer<Architecture_t>::Backward(Tensor_t &gradients_backward,
+                                             const Tensor_t & /*activations_backward*/) -> void
+//                                             Tensor_t & /*inp1*/, Tensor_t &
 {
-   for (size_t i = 0; i < this->GetBatchSize(); i++) {
-      Architecture_t::MaxPoolLayerBackward(gradients_backward[i], this->GetActivationGradients()[i],
-                                           this->GetIndexMatrix()[i],
-                                           this->GetInputHeight(), this->GetInputWidth(),
-                                           this->GetFilterHeight(), this->GetFilterWidth(),
-                                           this->GetStrideRows(), this->GetStrideCols(), this->GetNLocalViews());
-   }
+   Architecture_t::MaxPoolLayerBackward(gradients_backward, this->GetActivationGradients(), fIndexTensor,
+                                       this->GetInputHeight(), this->GetInputWidth(),      
+                                       this->GetFilterHeight(), this->GetFilterWidth(),
+                                       this->GetStrideRows(), this->GetStrideCols(), this->GetNLocalViews());
 }
 
 //______________________________________________________________________________
@@ -191,8 +183,8 @@ auto TMaxPoolLayer<Architecture_t>::Print() const -> void
    std::cout << "\t Filter ( W = " << this->GetFilterWidth() << " , ";
    std::cout << " H = " << this->GetFilterHeight() << " ) ";
 
-   if (this->GetOutput().size() > 0) {
-      std::cout << "\tOutput = ( " << this->GetOutput().size() << " , " << this->GetOutput()[0].GetNrows() << " , " << this->GetOutput()[0].GetNcols() << " ) ";
+   if (this->GetOutput().GetSize() > 0) {
+      std::cout << "\tOutput = ( " << this->GetOutput().GetFirstSize() << " , " << this->GetOutput().GetHSize() << " , " << this->GetOutput().GetWSize() << " ) ";
    }
    std::cout << std::endl;
 }

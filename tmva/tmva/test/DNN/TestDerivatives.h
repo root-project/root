@@ -49,22 +49,26 @@ template<typename Architecture, typename F, typename dF>
 {
    using Scalar_t   = typename Architecture::Scalar_t;
    using Matrix_t   = typename Architecture::Matrix_t;
+   using Tensor_t = typename Architecture::Tensor_t;
 
    Scalar_t maximum_error = 0.0;
 
    for (size_t i = 0; i < 100; i++)
    {
-      Matrix_t X(10,10), Y(10,10);
-      randomMatrix(Y);
+      Matrix_t mX(10,10), mY(10,10);
+      randomMatrix(mY);
+      
+      Tensor_t X(mX,2); 
+      Tensor_t Y(mY,2); 
 
       df(X, Y);
       Scalar_t dy = X(0,0);
 
-      copyMatrix(X, Y);
+      copyTensor(X, Y);
       X(0,0) += dx;
       f(X);
       Scalar_t y1 = X(0,0);
-      copyMatrix(X, Y);
+      copyTensor(X, Y);
       X(0,0) -= dx;
       f(X);
       Scalar_t y0 = X(0,0);
@@ -84,7 +88,8 @@ auto testActivationFunctionDerivatives(bool useFastTanh = false)
     -> typename Architecture::Scalar_t
 {
    using Scalar_t   = typename Architecture::Scalar_t;
-   using Matrix_t = typename Architecture::Matrix_t;
+   //using Matrix_t = typename Architecture::Matrix_t;
+   using Tensor_t = typename Architecture::Tensor_t;
 
    // Test only differentiable activation functions.
    std::vector<EActivationFunction> EActivationFunctions
@@ -99,8 +104,8 @@ auto testActivationFunctionDerivatives(bool useFastTanh = false)
 
    for (auto & af : EActivationFunctions)
    {
-      auto f = [&af](Matrix_t &X) { evaluate<Architecture>(X, af); };
-      auto df = [& af](Matrix_t &X, const Matrix_t &Y)
+      auto f = [&af](Tensor_t &X) { evaluate<Architecture>(X, af); };
+      auto df = [& af](Tensor_t &X, const Tensor_t &Y)
       {
          evaluateDerivative<Architecture>(X, af, Y);
       };

@@ -27,35 +27,35 @@
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::RNN;
 
-template <typename Architecture>
-auto printTensor1(const std::vector<typename Architecture::Matrix_t> &A, const std::string name = "matrix")
--> void
-{
-  std::cout << name << "\n";
-  for (size_t l = 0; l < A.size(); ++l) {
-      for (size_t i = 0; i < A[l].GetNrows(); ++i) {
-        for (size_t j = 0; j < A[l].GetNcols(); ++j) {
-            std::cout << A[l](i, j) << " ";
-        }
-        std::cout << "\n";
-      }
-      std::cout << "********\n";
-  } 
-}
+// template <typename Architecture>
+// auto printTensor1(const std::vector<typename Architecture::Matrix_t> &A, const std::string name = "matrix")
+// -> void
+// {
+//   std::cout << name << "\n";
+//   for (size_t l = 0; l < A.size(); ++l) {
+//       for (size_t i = 0; i < A[l].GetNrows(); ++i) {
+//         for (size_t j = 0; j < A[l].GetNcols(); ++j) {
+//             std::cout << A[l](i, j) << " ";
+//         }
+//         std::cout << "\n";
+//       }
+//       std::cout << "********\n";
+//   } 
+// }
 
-template <typename Architecture>
-auto printMatrix1(const typename Architecture::Matrix_t &A, const std::string name = "matrix")
--> void
-{
-  std::cout << name << "\n";
-  for (size_t i = 0; i < A.GetNrows(); ++i) {
-    for (size_t j = 0; j < A.GetNcols(); ++j) {
-        std::cout << A(i, j) << " ";
-    }
-    std::cout << "\n";
-  }
-  std::cout << "********\n";
-}
+// template <typename Architecture>
+// auto printMatrix1(const typename Architecture::Matrix_t &A, const std::string name = "matrix")
+// -> void
+// {
+//   std::cout << name << "\n";
+//   for (size_t i = 0; i < A.GetNrows(); ++i) {
+//     for (size_t j = 0; j < A.GetNcols(); ++j) {
+//         std::cout << A(i, j) << " ";
+//     }
+//     std::cout << "\n";
+//   }
+//   std::cout << "********\n";
+// }
 
 
 /*! Generate a DeepNet, test forward pass */
@@ -65,21 +65,17 @@ auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize,
                                size_t inputSize)
 -> Double_t
 {
-   using Matrix_t   = typename Architecture::Matrix_t;
-   using Tensor_t   = std::vector<Matrix_t>;
+   //using Matrix_t   = typename Architecture::Matrix_t;
+   using Tensor_t   = typename Architecture::Tensor_t;
    using RNNLayer_t = TBasicRNNLayer<Architecture>; 
    using Net_t      = TDeepNet<Architecture>;
  
-   std::vector<TMatrixT<Double_t>> XRef(timeSteps, TMatrixT<Double_t>(batchSize, inputSize));    // T x B x D
-   Tensor_t XArch, arr_XArch;
-   // arr_XArch(batchSize, Matrix_t(timeSteps, inputSize)) does not work! initializes both 
-   // elements of array to same matrix!!
-   for (size_t i = 0; i < batchSize; ++i) arr_XArch.emplace_back(timeSteps, inputSize); // B x T x D
+   // std::vector<TMatrixT<Double_t>> XRef(timeSteps, TMatrixT<Double_t>(batchSize, inputSize));    // T x B x D
+   Tensor_t XArch (timeSteps, batchSize, inputSize);    // T x B x D
+   Tensor_t XRef = XArch; 
+   Tensor_t arr_XArch(batchSize, timeSteps, inputSize); // B x T x D
 
-   for (size_t i = 0; i < timeSteps; ++i) {
-      randomMatrix(XRef[i]);
-      XArch.emplace_back(XRef[i]);
-   }
+   randomBatch(XArch);
 
 
    Architecture::Rearrange(arr_XArch, XArch);     // B x T x D
@@ -89,22 +85,22 @@ auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize,
 
    layer->Initialize();
 
-   TMatrixT<Double_t> weightsInput = layer->GetWeightsInput();  // H x D
-   TMatrixT<Double_t> weightsState = layer->GetWeightsState();  // H x H
-   TMatrixT<Double_t> biases = layer->GetBiasesAt(0);           // H x 1
-   TMatrixT<Double_t> state = layer->GetState();                // B x H 
-   TMatrixT<Double_t> tmp(batchSize, stateSize);
+   auto weightsInput = layer->GetWeightsInput();  // H x D
+   TMatrixD weightsState = layer->GetWeightsState();  // H x H
+   TMatrixD biases = layer->GetBiasesAt(0);           // H x 1
+   TMatrixD state = layer->GetState();                // B x H 
+   TMatrixD tmp(batchSize, stateSize);
 
    rnn.Forward(arr_XArch);
    Tensor_t outputArch = layer->GetOutput();    // B x T x H
-   Tensor_t arr_outputArch;
-   for (size_t t = 0; t < timeSteps; ++t) arr_outputArch.emplace_back(batchSize, stateSize); // T x B x H
+   Tensor_t arr_outputArch (timeSteps, batchSize, stateSize); // T x B x H
+   
    Architecture::Rearrange(arr_outputArch, outputArch);
 
    Double_t maximumError = 0.0;
    for (size_t t = 0; t < timeSteps; ++t) {
       tmp.MultT(state, weightsState);
-      state.MultT(XRef[t], weightsInput);
+      state.MultT(XRef.At(t).GetMatrix(), weightsInput);
       state += tmp;
       // adding bias
       for (size_t i = 0; i < (size_t) state.GetNrows(); i++) {
@@ -114,7 +110,7 @@ auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize,
       }
       // activation fn
       applyMatrix(state, [](double x){return tanh(x);});
-      TMatrixT<Double_t> output = arr_outputArch[t];
+      TMatrixD output = arr_outputArch.At(t).GetMatrix();
       
       Double_t error = maximumRelativeError(output, state);
       std::cout << "Time " << t << " Error: " << error << "\n";

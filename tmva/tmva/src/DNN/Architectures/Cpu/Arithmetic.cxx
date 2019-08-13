@@ -121,6 +121,41 @@ void TCpu<Real_t>::Hadamard(TCpuMatrix<Real_t> &B,
    }
 }
 
+//____________________________________________________________________________
+template<typename Real_t>
+void TCpu<Real_t>::Hadamard(TCpuTensor<Real_t> &B,
+                            const TCpuTensor<Real_t> &A)
+{
+   const Real_t *dataA      = A.GetRawDataPointer();
+   Real_t *dataB      = B.GetRawDataPointer();
+
+   size_t nElements =  A.GetNoElements();
+   R__ASSERT(B.GetNoElements() == nElements); 
+   size_t nSteps = TCpuMatrix<Real_t>::GetNWorkItems(nElements);
+
+   auto f = [&](UInt_t workerID)
+   {
+      for (size_t j = 0; j < nSteps; ++j) {
+         size_t idx = workerID+j;
+         if (idx >= nElements) break; 
+         dataB[idx] *= dataA[idx];
+      }
+      return 0;
+   };
+
+   if (nSteps < nElements) { 
+#ifdef DL_USE_MTE
+      TMVA::Config::Instance().GetThreadExecutor().Foreach(f, ROOT::TSeqI(0,nElements,nSteps));
+#else
+      for (size_t i = 0;  i < nElements ; i+= nSteps)
+         f(i);
+#endif
+   }
+   else {
+      f(0); 
+   }
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// \brief Checks two matrices for element-wise equality.
 /// \tparam Real_t An architecture-specific floating point number type.
@@ -195,23 +230,25 @@ void TCpu<Real_t>::Copy(TCpuMatrix<Real_t> &B,
 
 //____________________________________________________________________________
 template<typename Real_t>
-void TCpu<Real_t>::ScaleAdd(std::vector<TCpuMatrix<Real_t>> &B,
-                            const std::vector<TCpuMatrix<Real_t>> &A,
+void TCpu<Real_t>::ScaleAdd(TCpuTensor<Real_t> &B,
+                            const TCpuTensor<Real_t> &A,
                             Real_t alpha)
 {
-   for (size_t i = 0; i < B.size(); ++i) {
-      ScaleAdd(B[i], A[i], alpha);
+   // should re-implemented at tensor level
+   for (size_t i = 0; i < B.GetFirstSize(); ++i) {
+      TCpuMatrix<Real_t> B_m = B.At(i).GetMatrix(); 
+      ScaleAdd(B_m, A.At(i).GetMatrix(), alpha);
    }
 }
 
 //____________________________________________________________________________
 template<typename Real_t>
-void TCpu<Real_t>::Copy(std::vector<TCpuMatrix<Real_t>> &B,
-                            const std::vector<TCpuMatrix<Real_t>> &A)
+void TCpu<Real_t>::Copy(TCpuTensor<Real_t> &B,
+                            const TCpuTensor<Real_t> &A)
 {
-   for (size_t i = 0; i < B.size(); ++i) {
-      Copy(B[i], A[i]);
-   }
+
+   auto f = [](Real_t x) {return x;};
+   B.MapFrom(f, A);
 }
 
 //____________________________________________________________________________
