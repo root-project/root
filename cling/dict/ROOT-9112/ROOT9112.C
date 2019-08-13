@@ -1,0 +1,3 @@
+class OUTER {
+  class INNER {};
+};
