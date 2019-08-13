@@ -23,6 +23,7 @@
 
 #include <iterator>
 #include <memory>
+#include <sstream>
 #include <utility>
 
 namespace ROOT {
@@ -128,10 +129,11 @@ public:
    RNTupleReader(std::unique_ptr<Detail::RPageSource> source);
    ~RNTupleReader();
 
-   NTupleSize_t GetNEntries() { return fNEntries; }
-
-   std::string GetInfo(const ENTupleInfo what = ENTupleInfo::kSummary);
-
+   NTupleSize_t GetNEntries() const { return fNEntries; }
+   
+   /// Prints a detailed summary of the ntuple, including a list of fields.
+   void PrintInfo(const ENTupleInfo what = ENTupleInfo::kSummary, std::ostream &output = std::cout);
+   
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the ntuple.
    /// On I/O errors, raises an expection.
    void LoadEntry(NTupleSize_t index) { LoadEntry(index, fModel->GetDefaultEntry()); }
@@ -144,7 +146,7 @@ public:
 
    RNTupleViewRange GetViewRange() { return RNTupleViewRange(0, fNEntries); }
 
-   /// Provides access to an individual field that can contain either a skalar value or a collection, e.g.
+   /// Provides access to an individual field that can contain either a scalar value or a collection, e.g.
    /// GetView<double>("particles.pt") or GetView<std::vector<double>>("particle").  It can as well be the index
    /// field of a collection itself, like GetView<NTupleSize_t>("particle")
    template <typename T>
