@@ -95,7 +95,8 @@ public:
    /// move on to next order, return reference to new value
    inline ChebychevIterator &operator++() noexcept
    {
-      T newval = fast_fma(_twox, _curr, -_last);
+      //T newval = fast_fma(_twox, _curr, -_last);
+      T newval = _twox*_curr -_last;
       _last = _curr;
       _curr = newval;
       return *this;
@@ -183,12 +184,68 @@ Double_t RooChebychev::evaluate() const
      ++chit;
      for (size_type i = 0; iend != i; ++i, ++chit) {
         auto c = static_cast<const RooAbsReal &>(_coefList[i]).getVal();
-        sum = fast_fma(*chit, c, sum);
+        //sum = fast_fma(*chit, c, sum);
+        sum += *chit*c;
      }
   }
   return sum;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+namespace ChebychevEvaluate {
+//Author: Emmanouil Michalainas, CERN 12 AUGUST 2019  
+
+void compute(  size_t batchSize, double xmax, double xmin,
+               double * __restrict__ output,
+               const double * __restrict__ const xData,
+               const RooListProxy& _coefList)
+{
+  constexpr size_t block = 128;
+  const size_t nCoef = _coefList.size();
+  double prev[block][2], X[block];
+  
+  for (size_t i=0; i<batchSize; i+=block) {
+    size_t stop = (i+block >= batchSize) ? batchSize-i : block;
+    
+    // set a0-->prev[j][0] and a1-->prev[j][1]
+    // and x tranfsformed to range[-1..1]-->X[j]
+    for (size_t j=0; j<stop; j++) {
+      prev[j][0] = output[i+j] = 1.0;
+      prev[j][1] = X[j] = (xData[i+j] -0.5*(xmax + xmin)) / (0.5*(xmax - xmin));
+    }
+    
+    for (size_t k=0; k<nCoef; k++) {
+      const double coef = static_cast<const RooAbsReal &>(_coefList[k]).getVal();
+      for (size_t j=0; j<stop; j++) {
+        output[i+j] += prev[j][1]*coef;
+        
+        //compute next order
+        const double next = 2*X[j]*prev[j][1] -prev[j][0];
+        prev[j][0] = prev[j][1];
+        prev[j][1] = next;
+      }
+    }
+  }
+}
+};
+
+
+RooSpan<double> RooChebychev::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
+  auto xData = _x.getValBatch(begin, batchSize);
+  batchSize = xData.size();
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+
+  if (xData.empty()) {
+        throw std::logic_error("Requested a batch computation, but no batch data available.");
+  }
+  else {
+    const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName():0);
+    const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName():0);
+    ChebychevEvaluate::compute(batchSize, xmax, xmin, output.data(), xData.data(), _coefList);
+  }
+  return output;
+}
 ////////////////////////////////////////////////////////////////////////////////
 
 Int_t RooChebychev::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /* rangeName */) const
