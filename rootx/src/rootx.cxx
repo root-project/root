@@ -58,7 +58,7 @@ extern void PopdownLogo();
 extern void CloseDisplay();
 
 
-static bool gNoLogo = false;
+static bool gNoLogo = true;
       //const  int  kMAXPATHLEN = 8192; defined in Rtypes.h
 
 
