@@ -112,7 +112,7 @@ void ROOT::Experimental::Detail::RFieldBase::DoAppend(const ROOT::Experimental::
    R__ASSERT(false);
 }
 
-void ROOT::Experimental::Detail::RFieldBase::DoRead(
+void ROOT::Experimental::Detail::RFieldBase::DoReadGlobal(
    ROOT::Experimental::NTupleSize_t /*index*/,
    RFieldValue* /*value*/)
 {
@@ -331,13 +331,13 @@ void ROOT::Experimental::RField<std::string>::DoAppend(const ROOT::Experimental:
    fColumns[0]->Append(fElemIndex);
 }
 
-void ROOT::Experimental::RField<std::string>::DoRead(
-   ROOT::Experimental::NTupleSize_t index, ROOT::Experimental::Detail::RFieldValue* value)
+void ROOT::Experimental::RField<std::string>::DoReadGlobal(
+   ROOT::Experimental::NTupleSize_t globalIndex, ROOT::Experimental::Detail::RFieldValue *value)
 {
    auto typedValue = value->Get<std::string>();
    NTupleSize_t idxStart;
    ClusterSize_t nChars;
-   fPrincipalColumn->GetCollectionInfo(index, &idxStart, &nChars);
+   fPrincipalColumn->GetCollectionInfo(globalIndex, &idxStart, &nChars);
    typedValue->resize(nChars);
    Detail::RColumnElement<char, EColumnType::kByte> elemChars(const_cast<char*>(typedValue->data()));
    fColumns[1]->ReadV(idxStart, nChars, &elemChars);
@@ -383,12 +383,24 @@ void ROOT::Experimental::RFieldClass::DoAppend(const Detail::RFieldValue& value)
    }
 }
 
-void ROOT::Experimental::RFieldClass::DoRead(NTupleSize_t index, Detail::RFieldValue* value) {
+void ROOT::Experimental::RFieldClass::DoReadGlobal(NTupleSize_t globalIndex, Detail::RFieldValue *value)
+{
    TIter next(fClass->GetListOfDataMembers());
    unsigned i = 0;
    while (auto dataMember = static_cast<TDataMember *>(next())) {
       auto memberValue = fSubFields[i]->GenerateValue(value->Get<unsigned char>() + dataMember->GetOffset());
-      fSubFields[i]->Read(index, &memberValue);
+      fSubFields[i]->Read(globalIndex, &memberValue);
+      i++;
+   }
+}
+
+void ROOT::Experimental::RFieldClass::DoReadInCluster(const RClusterIndex &clusterIndex, Detail::RFieldValue *value)
+{
+   TIter next(fClass->GetListOfDataMembers());
+   unsigned i = 0;
+   while (auto dataMember = static_cast<TDataMember *>(next())) {
+      auto memberValue = fSubFields[i]->GenerateValue(value->Get<unsigned char>() + dataMember->GetOffset());
+      fSubFields[i]->Read(clusterIndex, &memberValue);
       i++;
    }
 }
@@ -451,12 +463,13 @@ void ROOT::Experimental::RFieldVector::DoAppend(const Detail::RFieldValue& value
    fColumns[0]->Append(elemIndex);
 }
 
-void ROOT::Experimental::RFieldVector::DoRead(NTupleSize_t index, Detail::RFieldValue* value) {
+void ROOT::Experimental::RFieldVector::DoReadGlobal(NTupleSize_t globalIndex, Detail::RFieldValue *value)
+{
    auto typedValue = value->Get<std::vector<char>>();
 
    ClusterSize_t nItems;
    NTupleSize_t idxStart;
-   fPrincipalColumn->GetCollectionInfo(index, &idxStart, &nItems);
+   fPrincipalColumn->GetCollectionInfo(globalIndex, &idxStart, &nItems);
 
    typedValue->resize(nItems * fItemSize);
    for (unsigned i = 0; i < nItems; ++i) {
@@ -532,12 +545,13 @@ void ROOT::Experimental::RField<std::vector<bool>>::DoAppend(const Detail::RFiel
    fColumns[0]->Append(elemIndex);
 }
 
-void ROOT::Experimental::RField<std::vector<bool>>::DoRead(NTupleSize_t index, Detail::RFieldValue* value) {
+void ROOT::Experimental::RField<std::vector<bool>>::DoReadGlobal(NTupleSize_t globalIndex, Detail::RFieldValue* value)
+{
    auto typedValue = value->Get<std::vector<bool>>();
 
    ClusterSize_t nItems;
    NTupleSize_t idxStart;
-   fPrincipalColumn->GetCollectionInfo(index, &idxStart, &nItems);
+   fPrincipalColumn->GetCollectionInfo(globalIndex, &idxStart, &nItems);
 
    typedValue->resize(nItems);
    for (unsigned i = 0; i < nItems; ++i) {

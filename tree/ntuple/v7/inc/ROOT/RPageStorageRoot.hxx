@@ -159,8 +159,7 @@ public:
    const RNTupleDescriptor& GetDescriptor() const final { return fDescriptor; }
 
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
-   RPage PopulatePage(ColumnHandle_t columnHandle, DescriptorId_t clusterId,
-                      ClusterSize_t::ValueType clusterIndex) final;
+   RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;
    void ReleasePage(RPage &page) final;
 };
 
