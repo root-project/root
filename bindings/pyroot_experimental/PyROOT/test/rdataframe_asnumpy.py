@@ -1,6 +1,7 @@
 import unittest
 import ROOT
 import numpy as np
+import pickle
 
 
 def make_tree(*dtypes):
@@ -255,6 +256,18 @@ class RDataFrameAsNumpy(unittest.TestCase):
         df = ROOT.ROOT.RDataFrame(10).Define("x", "1.0").Filter("x<0")
         npy = df.AsNumpy(["x"])
         self.assertEqual(npy["x"].size, 0)
+
+    def test_pickle(self):
+        """
+        Testing pickling of returned numpy array
+        """
+        df = ROOT.ROOT.RDataFrame(10).Define("x", "1.0")
+        npy = df.AsNumpy(["x"])
+        arr = npy["x"]
+
+        pickle.dump(arr, open("rdataframe_asnumpy.pickle", "wb"))
+        arr2 = pickle.load(open("rdataframe_asnumpy.pickle", "rb"))
+        self.assertTrue(all(arr == arr2))
 
 
 if __name__ == '__main__':
