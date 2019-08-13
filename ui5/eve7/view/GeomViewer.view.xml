@@ -8,20 +8,24 @@
    <SplitApp id="geomViewerApp" initialMaster="geomHierarchy"
       initialDetail="geomDraw" orientationChange="onOrientationChange">
       <masterPages>
-         <Page id="geomHierarchy" title="" showNavButton="false"
-            showFooter="false" showSubHeader="false" showHeader="false">
+         <Page id="geomHierarchy" title="Hierarchy" showNavButton="false"
+            showFooter="false" showSubHeader="false" showHeader="true" icon="sap-icon://action" class="sapUiStdPage">
+            <headerContent>
+               <Button icon="sap-icon://settings" type="Transparent"
+                        tooltip="Show control page" press="showControl" />
+            </headerContent>
             <content>
                <Toolbar>
+                  <Button icon="sap-icon://log" type="Transparent"
+                          tooltip="Quit ROOT session" press="onQuitRootPress" />
                   <Button icon="sap-icon://synchronize" type="Transparent"
-                     tooltip="Reload geometry drawing" press="onRealoadPress" />
+                          tooltip="Reload geometry drawing" press="onRealoadPress" />
                   <Button icon="sap-icon://show" type="Transparent"
                      tooltip="Toggle with info page" press="onInfoPress" />
-                  <Button icon="sap-icon://log" type="Transparent"
-                     tooltip="Quit ROOT session" press="onQuitRootPress" />
                   <ToolbarSpacer />
                   <SearchField liveChange="onSearch" />
                </Toolbar>
-               <t:TreeTable id="treeTable" title="Browser"
+               <t:TreeTable id="treeTable"
                   columnHeaderVisible="false" editable="false"
                   enableSelectAll="false" selectionBehavior="RowOnly"
                   selectionMode="Single" visibleRowCountMode="Auto"
@@ -30,16 +34,47 @@
                </t:TreeTable>
             </content>
          </Page>
+         <Page id="geomControl" title="Control" showHeader="true" showFooter="false" showSubHeader="false"
+                showNavButton="true" navButtonText="Back to hierarchy" navButtonPress="onPressMasterBack"
+                class="sapUiStdPage">
+            <content>
+            <IconTabBar
+                id="idIconTabBarNoIcons"
+                expanded="{device>/isNoPhone}"
+                class="sapUiResponsiveContentPadding">
+                <items>
+                  <IconTabFilter text="Clipping">
+                    <VBox>
+                       <CheckBox text="Clip x" selected="{/clip/0/enabled}"/>
+                       <Slider min="{/clip/0/min}" max="{/clip/0/max}" value="{/clip/0/value}" width="100%" showAdvancedTooltip="true" showHandleTooltip="false"/>
+                       <CheckBox text="Clip y" selected="{/clip/1/enabled}"/>
+                       <Slider min="{/clip/1/min}" max="{/clip/1/max}" value="{/clip/1/value}" width="100%" showAdvancedTooltip="true" showHandleTooltip="false"/>
+                       <CheckBox text="Clip z" selected="{/clip/2/enabled}"/>
+                       <Slider min="{/clip/2/min}" max="{/clip/2/max}" value="{/clip/2/value}" width="100%" showAdvancedTooltip="true" showHandleTooltip="false"/>
+                    </VBox>
+                  </IconTabFilter>
+                  <IconTabFilter text="Control">
+                    <Text text="Attachments go here ..." />
+                  </IconTabFilter>
+                  <IconTabFilter text="Extras">
+                    <Text text="Extras go here ..." />
+                  </IconTabFilter>
+                </items>
+              </IconTabBar>
+            </content>
+         </Page>
+
       </masterPages>
       <detailPages>
-         <Page id="geomDraw" title="" showNavButton="false"
-            showFooter="false" showSubHeader="false" showHeader="false">
+         <Page id="geomDraw" title="GL drawing" showNavButton="false"
+            showFooter="false" showSubHeader="false" showHeader="true" class="sapUiStdPage">
             <content>
                <eve7:GeomDrawing id="geomDrawing" color="white"/>
             </content>
          </Page>
-         <Page id="geomInfo" title="Node information" showNavButton="false"
-            showFooter="false" showSubHeader="false" showHeader="true">
+         <Page id="geomInfo" title="Node information"
+                showNavButton="true" navButtonText="Back to GL view" navButtonPress="onPressDetailBack"
+            showFooter="false" showSubHeader="false" showHeader="true" class="sapUiStdPage">
             <content>
                <l:Splitter orientation="Vertical" width="100%" height="100%">
                   <VBox>

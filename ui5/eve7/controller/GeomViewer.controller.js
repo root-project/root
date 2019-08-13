@@ -294,6 +294,11 @@ sap.ui.define(['sap/ui/core/Component',
             this.geo_painter = JSROOT.Painter.CreateGeoPainter(geomDrawing.getDomRef(), null, drawopt);
             this.geo_painter.setMouseTmout(0);
             this.geo_painter.setDepthMethod("dflt");
+            this.geo_painter.showControlOptions = this.showControl.bind(this);
+
+            this.geom_model = new JSONModel(this.geo_painter.ctrl);
+            this.byId("geomControl").setModel(this.geom_model);
+
             geomDrawing.setGeomPainter(this.geo_painter);
 
             this.geo_painter.AddHighlightHandler(this);
@@ -983,6 +988,18 @@ sap.ui.define(['sap/ui/core/Component',
       onQuitRootPress: function() {
          if (!this.standalone)
             this.websocket.Send("QUIT_ROOT");
+      },
+
+      onPressMasterBack: function() {
+         this.byId("geomViewerApp").backMaster();
+      },
+
+      onPressDetailBack: function() {
+         this.byId("geomViewerApp").backDetail();
+      },
+
+      showControl: function() {
+         this.byId("geomViewerApp").toMaster(this.createId("geomControl"));
       }
 
    });
