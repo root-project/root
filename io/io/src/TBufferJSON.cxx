@@ -1945,6 +1945,10 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    return obj;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Read TObject data members from JSON.
+/// Do not call TObject::Streamer() to avoid special tweaking of TBufferJSON interface
+
 void TBufferJSON::JsonReadTObjectMembers(TObject *tobj, void *node)
 {
    nlohmann::json *json = node ? (nlohmann::json *)node : Stack()->fNode;
@@ -1953,16 +1957,15 @@ void TBufferJSON::JsonReadTObjectMembers(TObject *tobj, void *node)
    UInt_t bits = json->at("fBits").get<unsigned>();
    // UInt32_t pid = json->at("fPID").get<unsigned>(); // ignore PID for the moment
 
-   static auto tobj_fbits_offset = TObject::Class()->GetDataMemberOffset("fBits");
-
    tobj->SetUniqueID(uid);
+
+   static auto tobj_fbits_offset = TObject::Class()->GetDataMemberOffset("fBits");
 
    // there is no method to set all bits directly - do it differently
    if (tobj_fbits_offset > 0) {
       UInt_t *fbits = (UInt_t *) ((char* ) tobj + tobj_fbits_offset);
-      *fbits = bits | TObject::kIsOnHeap | TObject::kNotDeleted;
+      *fbits = (*fbits & (TObject::kIsOnHeap | TObject::kNotDeleted)) | bits;
    }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
