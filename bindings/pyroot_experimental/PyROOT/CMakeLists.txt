@@ -48,25 +48,40 @@ set(py_sources
   ${PYROOT_EXTRA_PYSOURCE}
 )
 
-set(sources
-  src/CppCallablePyz.cxx
-  src/PyROOTModule.cxx
-  src/PyROOTStrings.cxx
-  src/PyROOTWrapper.cxx
-  src/RPyROOTApplication.cxx
-  src/GenericPyz.cxx
-  src/RVecPyz.cxx
-  src/TClassPyz.cxx
-  src/TClonesArrayPyz.cxx
-  src/TDirectoryFilePyz.cxx
-  src/TDirectoryPyz.cxx
-  src/TFilePyz.cxx
-  src/TObjectPyz.cxx
-  src/TTreePyz.cxx
-  src/PyzCppHelpers.cxx
-  src/PyzPythonHelpers.cxx
-  src/CPPInstancePyz.cxx
-  ${PYROOT_EXTRA_SOURCE}
+ROOT_STANDARD_LIBRARY_PACKAGE(ROOTPython
+  HEADERS
+    TPyArg.h
+    TPyReturn.h
+    TPython.h
+  SOURCES
+    src/CppCallablePyz.cxx
+    src/PyROOTModule.cxx
+    src/PyROOTStrings.cxx
+    src/PyROOTWrapper.cxx
+    src/RPyROOTApplication.cxx
+    src/GenericPyz.cxx
+    src/RVecPyz.cxx
+    src/TClassPyz.cxx
+    src/TClonesArrayPyz.cxx
+    src/TDirectoryFilePyz.cxx
+    src/TDirectoryPyz.cxx
+    src/TFilePyz.cxx
+    src/TPyArg.cxx
+    src/TPyClassGenerator.cxx
+    src/TPyReturn.cxx
+    src/TPython.cxx
+    src/TObjectPyz.cxx
+    src/TTreePyz.cxx
+    src/PyzCppHelpers.cxx
+    src/PyzPythonHelpers.cxx
+    src/CPPInstancePyz.cxx
+    ${PYROOT_EXTRA_SOURCE}
+  DICTIONARY_OPTIONS
+    -writeEmptyRootPCM
+  DEPENDENCIES
+    Core
+    Tree
+    cppyy
 )
 
 file(COPY python/ROOT DESTINATION ${localruntimedir})
@@ -77,9 +92,6 @@ foreach(py_source ${py_sources})
   install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -m py_compile ${d}/${py_source})")
   install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -O -m py_compile ${d}/${py_source})")
 endforeach()
-
-ROOT_LINKER_LIBRARY(ROOTPython ${sources} LIBRARIES Core Tree cppyy)
-ROOT_INSTALL_HEADERS(inc)
 
 # Disables warnings caused by Py_RETURN_TRUE/Py_RETURN_FALSE
 if(NOT MSVC)

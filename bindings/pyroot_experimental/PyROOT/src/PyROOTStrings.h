@@ -28,6 +28,8 @@ R__EXTERN PyObject *gSetBranchAddress;
 R__EXTERN PyObject *gSetFCN;
 R__EXTERN PyObject *gTClassDynCast;
 
+R__EXTERN PyObject* gClass;
+
 } // namespace PyStrings
 
 bool CreatePyStrings();
