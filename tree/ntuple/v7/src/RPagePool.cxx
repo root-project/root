@@ -50,13 +50,27 @@ void ROOT::Experimental::Detail::RPagePool::ReturnPage(const RPage& page)
 }
 
 ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPagePool::GetPage(
-   ColumnId_t columnId, NTupleSize_t index)
+   ColumnId_t columnId, NTupleSize_t globalIndex)
 {
    unsigned int N = fPages.size();
    for (unsigned int i = 0; i < N; ++i) {
       if (fReferences[i] == 0) continue;
       if (fPages[i].GetColumnId() != columnId) continue;
-      if (!fPages[i].Contains(index)) continue;
+      if (!fPages[i].Contains(globalIndex)) continue;
+      fReferences[i]++;
+      return fPages[i];
+   }
+   return RPage();
+}
+
+ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPagePool::GetPage(
+   ColumnId_t columnId, DescriptorId_t clusterId, ClusterSize_t::ValueType clusterIndex)
+{
+   unsigned int N = fPages.size();
+   for (unsigned int i = 0; i < N; ++i) {
+      if (fReferences[i] == 0) continue;
+      if (fPages[i].GetColumnId() != columnId) continue;
+      if (!fPages[i].Contains(clusterId, clusterIndex)) continue;
       fReferences[i]++;
       return fPages[i];
    }

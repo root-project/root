@@ -141,7 +141,10 @@ public:
    virtual const RNTupleDescriptor& GetDescriptor() const = 0;
 
    /// Allocates and fills a page that contains the index-th element
-   virtual RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t index) = 0;
+   virtual RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) = 0;
+   /// Another version of PopulatePage that allows to specify cluster-relative indexes
+   virtual RPage PopulatePage(ColumnHandle_t columnHandle, DescriptorId_t clusterId,
+                              ClusterSize_t::ValueType clusterIndex) = 0;
 };
 
 } // namespace Detail
