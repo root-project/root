@@ -287,6 +287,8 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       createGeoPainter: function(drawopt) {
+
+
          if (this.geo_painter) {
             this.geo_painter.ClearDrawings();
          } else {
@@ -297,7 +299,12 @@ sap.ui.define(['sap/ui/core/Component',
             this.geo_painter.showControlOptions = this.showControl.bind(this);
 
             this.geom_model = new JSONModel(this.geo_painter.ctrl);
+
+            console.log('transparency', this.geo_painter.ctrl.transparency);
+
             this.byId("geomControl").setModel(this.geom_model);
+
+
 
             geomDrawing.setGeomPainter(this.geo_painter);
 
@@ -1002,27 +1009,40 @@ sap.ui.define(['sap/ui/core/Component',
          this.byId("geomViewerApp").toMaster(this.createId("geomControl"));
       },
 
-      processSliderChange: function(iaxis) {
-         console.log('slider change ' + iaxis);
 
-         if (this.geo_painter)
-            this.geo_painter.changedClipping(iaxis);
+      // different handlers of Config page
+
+      processPainterChange: function(func, arg) {
+         if (this.geo_painter && (typeof this.geo_painter[func] == 'function'))
+            this.geo_painter[func](arg);
       },
 
       sliderXchange: function() {
-         this.processSliderChange(0);
+         this.processPainterChange('changedClipping', 0);
       },
 
       sliderYchange: function() {
-         this.processSliderChange(1);
+         this.processPainterChange('changedClipping', 1);
       },
 
       sliderZchange: function() {
-         this.processSliderChange(2);
+         this.processPainterChange('changedClipping', 2);
       },
 
       clipChanged: function() {
-         this.processSliderChange(-1);
+         this.processPainterChange('changedClipping', -1);
+      },
+
+      hightlightChanged: function() {
+         this.processPainterChange('changedHighlight');
+      },
+
+      transparencyChange: function() {
+         this.processPainterChange('changedGlobalTransparency');
+      },
+
+      ssaoChanged: function() {
+         this.processPainterChange('changedSSAO');
       }
    });
 

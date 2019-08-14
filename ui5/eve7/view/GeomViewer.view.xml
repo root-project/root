@@ -3,6 +3,7 @@
    xmlns="sap.m"
    xmlns:mvc="sap.ui.core.mvc"
    xmlns:eve7="rootui5.eve7.lib"
+   xmlns:core="sap.ui.core"
    xmlns:l="sap.ui.layout"
    xmlns:t="sap.ui.table">
    <SplitApp id="geomViewerApp" initialMaster="geomHierarchy"
@@ -38,10 +39,7 @@
                 showNavButton="true" navButtonText="Back to hierarchy" navButtonPress="onPressMasterBack"
                 class="sapUiStdPage">
             <content>
-            <IconTabBar
-                id="idIconTabBarNoIcons"
-                expanded="{device>/isNoPhone}"
-                class="sapUiResponsiveContentPadding">
+            <IconTabBar class="sapUiResponsiveContentPadding" expanded="true">
                 <items>
                   <IconTabFilter text="Clipping">
                     <VBox>
@@ -57,16 +55,73 @@
                        <Slider min="{/clip/2/min}" max="{/clip/2/max}" value="{/clip/2/value}" width="100%"
                                showAdvancedTooltip="true" showHandleTooltip="false" inputsAsTooltips="true"
                                change="sliderZchange" liveChange="sliderZchange"/>
+                       <CheckBox text="Clip intersection" selected="{/clip_intersect}" select="clipChanged"/>
                     </VBox>
                   </IconTabFilter>
-                  <IconTabFilter text="Control">
-                    <Text text="Attachments go here ..." />
+               </items>
+            </IconTabBar>
+            <IconTabBar class="sapUiResponsiveContentPadding" expanded="false">
+                <items>
+                  <IconTabFilter text="Appearance">
+                    <VBox>
+                    <CheckBox text="Highlight selection" selected="{/hightlight}" select="hightlightChanged"/>
+                    <Text text="Transparency:"/>
+                    <Slider min="0" max="1" step="0.01" value="{/transparency}" width="100%"
+                               showAdvancedTooltip="true" showHandleTooltip="false" inputsAsTooltips="true"
+                               change="transparencyChange" liveChange="transparencyChange"/>
+                    <CheckBox text="Wireframe" selected="{/wireframe}" select="wireframeChanged"/>
+                    <Label text="Background"/>
+                    <ColorPalette colorSelect="backgroundChanged"/>
+                    <Button text="Reset camera"/>
+                    </VBox>
                   </IconTabFilter>
-                  <IconTabFilter text="Extras">
-                    <Text text="Extras go here ..." />
+               </items>
+            </IconTabBar>
+            <IconTabBar class="sapUiResponsiveContentPadding" expanded="false">
+                <items>
+                  <IconTabFilter text="Advanced">
+                     <VBox>
+                     <CheckBox text="Depth test" selected="{/depthtest}" select="depthtestChanged"/>
+                     <Text text="Render order:" />
+                     <ComboBox selectedKey="{/renderorder}"
+                               change="renderorderChanged"
+                               items="{ path: '/renderorderItems' }">
+                                 <core:Item key="{value}" text="{value}" />
+                     </ComboBox>
+                     <Button text="Reset"/>
+                     </VBox>
                   </IconTabFilter>
-                </items>
-              </IconTabBar>
+               </items>
+            </IconTabBar>
+            <IconTabBar class="sapUiResponsiveContentPadding" expanded="false">
+                <items>
+                  <IconTabFilter text="SSAO">
+                     <VBox>
+                     <CheckBox text="Smooth Lightning (SSAO)" selected="{/ssao/enabled}" select="ssaoChanged"/>
+                     <Text text="Output:" />
+                     <ComboBox selectedKey="{/ssao/output}"
+                               change="ssaoChanged"
+                               items="{ path: '/ssao/outputItems' }">
+                                 <core:Item key="{value}" text="{name}" />
+                     </ComboBox>
+                     <Button text="Reset"/>
+                     <Text text="kernelRadius"/>
+                     <Slider id="debugId1"  min="0" max="32" value="{/ssao/kernelRadius}" width="100%"
+                             showAdvancedTooltip="true" showHandleTooltip="false" inputsAsTooltips="true"
+                             change="ssaoChanged" liveChange="ssaoChanged"/>
+                     <Text text="minDistance:"/>
+                     <Slider id="debugId2" min="0.001" max="0.02" step="0.001" value="{/ssao/minDistance}" width="100%"
+                             showAdvancedTooltip="true" showHandleTooltip="false" inputsAsTooltips="true"
+                             change="ssaoChanged" liveChange="ssaoChanged"/>
+                     <Text text="maxDistance:"/>
+                     <Slider id="debugId3" min="0.01" max="0.3" step="0.01" value="{/ssao/maxDistance}" width="100%"
+                             showAdvancedTooltip="true" showHandleTooltip="false" inputsAsTooltips="true"
+                             change="ssaoChanged" liveChange="ssaoChanged"/>
+                     </VBox>
+                  </IconTabFilter>
+               </items>
+            </IconTabBar>
+
             </content>
          </Page>
 
