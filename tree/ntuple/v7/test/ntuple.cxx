@@ -585,11 +585,14 @@ TEST(RNTuple, Descriptor)
 {
    RNTupleDescriptorBuilder descBuilder;
    descBuilder.SetNTuple("MyTuple", "Description", "Me", RNTupleVersion(1, 2, 3), ROOT::Experimental::RNTupleUuid());
+   descBuilder.AddField(0, RNTupleVersion(), RNTupleVersion(), "", "", 0, ENTupleStructure::kRecord);
    descBuilder.AddField(1, RNTupleVersion(), RNTupleVersion(), "list", "std::vector<std::int32_t>",
                         0, ENTupleStructure::kCollection);
+   descBuilder.AddFieldLink(0, 1);
    descBuilder.AddField(2, RNTupleVersion(), RNTupleVersion(), "list", "std::int32_t", 0, ENTupleStructure::kLeaf);
-   descBuilder.AddField(42, RNTupleVersion(), RNTupleVersion(), "x", "std::string", 0, ENTupleStructure::kLeaf);
    descBuilder.AddFieldLink(1, 2);
+   descBuilder.AddField(42, RNTupleVersion(), RNTupleVersion(), "x", "std::string", 0, ENTupleStructure::kLeaf);
+   descBuilder.AddFieldLink(0, 42);
    descBuilder.AddColumn(3, 42, RNTupleVersion(), RColumnModel(EColumnType::kIndex, true), 0);
    descBuilder.AddColumn(4, 42, RNTupleVersion(), RColumnModel(EColumnType::kByte, true), 1);
 
@@ -672,9 +675,12 @@ TEST(RNTuple, Descriptor)
    EXPECT_EQ(NTupleSize_t(1100), reference.GetNElements(3));
    EXPECT_EQ(NTupleSize_t(3300), reference.GetNElements(4));
 
-   EXPECT_EQ(DescriptorId_t(1), reference.FindFieldId("list", ROOT::Experimental::kInvalidDescriptorId));
+   EXPECT_EQ(DescriptorId_t(0), reference.FindFieldId("", ROOT::Experimental::kInvalidDescriptorId));
+   EXPECT_EQ(DescriptorId_t(1), reference.FindFieldId("list", 0));
+   EXPECT_EQ(DescriptorId_t(1), reference.FindFieldId("list"));
    EXPECT_EQ(DescriptorId_t(2), reference.FindFieldId("list", 1));
-   EXPECT_EQ(DescriptorId_t(42), reference.FindFieldId("x", ROOT::Experimental::kInvalidDescriptorId));
+   EXPECT_EQ(DescriptorId_t(42), reference.FindFieldId("x", 0));
+   EXPECT_EQ(DescriptorId_t(42), reference.FindFieldId("x"));
    EXPECT_EQ(ROOT::Experimental::kInvalidDescriptorId, reference.FindFieldId("listX", 1));
    EXPECT_EQ(ROOT::Experimental::kInvalidDescriptorId, reference.FindFieldId("list", 1024));
 

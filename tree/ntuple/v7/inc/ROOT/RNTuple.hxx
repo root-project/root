@@ -130,10 +130,10 @@ public:
    ~RNTupleReader();
 
    NTupleSize_t GetNEntries() const { return fNEntries; }
-   
+
    /// Prints a detailed summary of the ntuple, including a list of fields.
    void PrintInfo(const ENTupleInfo what = ENTupleInfo::kSummary, std::ostream &output = std::cout);
-   
+
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the ntuple.
    /// On I/O errors, raises an expection.
    void LoadEntry(NTupleSize_t index) { LoadEntry(index, fModel->GetDefaultEntry()); }
@@ -151,11 +151,11 @@ public:
    /// field of a collection itself, like GetView<NTupleSize_t>("particle")
    template <typename T>
    RNTupleView<T> GetView(std::string_view fieldName) {
-      auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName, kInvalidDescriptorId);
+      auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName);
       return RNTupleView<T>(fieldId, fSource.get());
    }
    RNTupleViewCollection GetViewCollection(std::string_view fieldName) {
-      auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName, kInvalidDescriptorId);
+      auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName);
       return RNTupleViewCollection(fieldId, fSource.get());
    }
 

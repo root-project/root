@@ -80,7 +80,7 @@ public:
    std::uint64_t GetNRepetitions() const { return fNRepetitions; }
    ENTupleStructure GetStructure() const { return fStructure; }
    DescriptorId_t GetParentId() const { return fParentId; }
-   std::vector<DescriptorId_t> GetLinkIds() const { return fLinkIds; }
+   const std::vector<DescriptorId_t> &GetLinkIds() const { return fLinkIds; }
 };
 
 
@@ -314,6 +314,8 @@ public:
    NTupleSize_t GetNElements(DescriptorId_t columnId) const;
 
    DescriptorId_t FindFieldId(std::string_view fieldName, DescriptorId_t parentId) const;
+   /// Searches for a top-level field
+   DescriptorId_t FindFieldId(std::string_view fieldName) const;
    DescriptorId_t FindColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex) const;
    DescriptorId_t FindClusterId(DescriptorId_t columnId, NTupleSize_t index) const;
 
