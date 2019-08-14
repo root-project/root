@@ -36,7 +36,7 @@
               rows="{/nodes}">
             </t:TreeTable>
           </l:Splitter>
-          <!-- here place for Geom drawing, custom controller append in initializer -->
+          <!-- here comes the tab container for canvases and editor, custom controller append in initializer -->
           <!--l:Splitter orientation="Vertical"-->
             <TabContainer id="myTabContainer"
               showAddNewButton="true"
