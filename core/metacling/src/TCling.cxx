@@ -1300,11 +1300,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    interpArgs.push_back("-ffast-math");
 #endif
 
-#ifdef R__EXTERN_LLVMDIR
-   TString llvmResourceDir = R__EXTERN_LLVMDIR;
-#else
    TString llvmResourceDir = TROOT::GetEtcDir() + "/cling";
-#endif
    // Add statically injected extra arguments, usually coming from rootcling.
    for (const char** extraArgs = TROOT::GetExtraInterpreterArgs();
         extraArgs && *extraArgs; ++extraArgs) {
