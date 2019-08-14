@@ -19,6 +19,7 @@
 #include <QThread>
 #include <QWebEngineSettings>
 #include <QWebEngineProfile>
+#include <QWebEngineDownloadItem>
 #include <QtGlobal>
 
 #if QT_VERSION >= 0x050C00
