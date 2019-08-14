@@ -72,7 +72,7 @@
                     <CheckBox text="Wireframe" selected="{/wireframe}" select="wireframeChanged"/>
                     <Label text="Background"/>
                     <ColorPalette colorSelect="backgroundChanged"/>
-                    <Button text="Reset camera"/>
+                    <Button text="Reset camera" press="cameraReset" tooltip="Set default camera position"/>
                     </VBox>
                   </IconTabFilter>
                </items>

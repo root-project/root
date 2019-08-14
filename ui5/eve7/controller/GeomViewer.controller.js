@@ -1041,6 +1041,19 @@ sap.ui.define(['sap/ui/core/Component',
          this.processPainterChange('changedGlobalTransparency');
       },
 
+      wireframeChanged: function() {
+         this.processPainterChange('changedWireFrame');
+      },
+
+      backgroundChanged: function(oEvent) {
+         console.log('color ', oEvent.getParameter('value'));
+         this.processPainterChange('changedBackground', oEvent.getParameter('value'));
+      },
+
+      cameraReset: function() {
+         this.processPainterChange('focusCamera');
+      },
+
       ssaoChanged: function() {
          this.processPainterChange('changedSSAO');
       }
