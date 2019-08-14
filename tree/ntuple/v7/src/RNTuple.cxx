@@ -42,7 +42,7 @@ ROOT::Experimental::Detail::RNTuple::~RNTuple()
 
 void ROOT::Experimental::RNTupleReader::ConnectModel() {
    std::unordered_map<const Detail::RFieldBase *, DescriptorId_t> fieldPtr2Id;
-   fieldPtr2Id[fModel->GetRootField()] = kInvalidDescriptorId;
+   fieldPtr2Id[fModel->GetRootField()] = fSource->GetDescriptor().FindFieldId("", kInvalidDescriptorId);
    for (auto& field : *fModel->GetRootField()) {
       auto parentId = fieldPtr2Id[field.GetParent()];
       auto fieldId = fSource->GetDescriptor().FindFieldId(field.GetName(), parentId);
@@ -124,13 +124,13 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
          output << frameSymbol << " N-Tuple : " << RNTupleFormatter::FitString(name, width-13) << frameSymbol << std::endl; // prints line with name of ntuple
          output << frameSymbol << " Entries : " << RNTupleFormatter::FitString(std::to_string(GetNEntries()), width - 13) << frameSymbol << std::endl;  // prints line with number of entries
       GetModel()->GetRootField()->TraverseVisitor(prepVisitor);
-         
+
       printVisitor.SetFrameSymbol(frameSymbol);
       printVisitor.SetWidth(width);
       printVisitor.SetDeepestLevel(prepVisitor.GetDeepestLevel());
       printVisitor.SetNumFields(prepVisitor.GetNumFields());
       GetModel()->GetRootField()->TraverseVisitor(printVisitor);
-   
+
       for (int i = 0; i < width; ++i)
          output << frameSymbol;
       output << std::endl;
