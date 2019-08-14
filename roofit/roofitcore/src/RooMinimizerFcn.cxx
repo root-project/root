@@ -530,7 +530,7 @@ double RooMinimizerFcn::DoEval(const double *x) const
   double fvalue = _funct->getVal();
   RooAbsReal::setHideOffset(kTRUE) ;
 
-  if (RooAbsPdf::evalError() || RooAbsReal::numEvalErrors()>0 || fvalue>1e30) {
+  if (RooAbsReal::numEvalErrors()>0 || fvalue > 1e30) {
 
     if (_printEvalErrors>=0) {
 
@@ -542,15 +542,13 @@ double RooMinimizerFcn::DoEval(const double *x) const
         oocoutW(_context,Minimization) << "RooMinimizerFcn: Minimized function has error status but is ignored" << endl ;
       } 
 
-      TIterator* iter = _floatParamList->createIterator() ;
-      RooRealVar* var ;
       Bool_t first(kTRUE) ;
       ooccoutW(_context,Minimization) << "Parameter values: " ;
-      while((var=(RooRealVar*)iter->Next())) {
+      for (const auto par : *_floatParamList) {
+        auto var = static_cast<const RooRealVar*>(par);
         if (first) { first = kFALSE ; } else ooccoutW(_context,Minimization) << ", " ;
         ooccoutW(_context,Minimization) << var->GetName() << "=" << var->getVal() ;
       }
-      delete iter ;
       ooccoutW(_context,Minimization) << endl ;
       
       RooAbsReal::printEvalErrors(ooccoutW(_context,Minimization),_printEvalErrors) ;
@@ -558,14 +556,13 @@ double RooMinimizerFcn::DoEval(const double *x) const
     } 
 
     if (_doEvalErrorWall) {
-      fvalue = _maxFCN+1 ;
+      fvalue = _maxFCN+1;
     }
 
-    RooAbsPdf::clearEvalError() ;
     RooAbsReal::clearEvalErrorLog() ;
     _numBadNLL++ ;
-  } else if (fvalue>_maxFCN) {
-    _maxFCN = fvalue ;
+  } else {
+    _maxFCN = std::max(fvalue, _maxFCN);
   }
       
   // Optional logging
