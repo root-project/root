@@ -110,6 +110,12 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       ROOT.gInterpreter.Declare("enum bar2 { ee=4294967286,ff };")
       self.assertEqual(ROOT.ee, 4294967286)
 
+      ROOT.gInterpreter.Declare("namespace myns { enum bar { cc=-10,dd }; }")
+      self.assertEqual(ROOT.myns.cc, -10)
+
+      ROOT.gInterpreter.Declare("namespace myns { enum bar2 { ee=4294967286,ff }; }")
+      self.assertEqual(ROOT.myns.ee, 4294967286)
+
    def test06CopyContructor( self ):
       """Test copy constructor"""
 
