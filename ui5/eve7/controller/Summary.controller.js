@@ -414,27 +414,6 @@ sap.ui.define([
                     */
       },
 
-      event: function(lst) {
-         this._event = lst;
-         // console.log("summary event lst \n", lst);
-
-         var oTreeData = {fName: "unset"}
-
-         oTreeData.arr = [];
-         this.addNodesToTreeItemModel(lst, oTreeData);
-         // console.log("event model ", { "top" : oTreeData});
-
-         this.model.setData({ fName: "Top", arr: oTreeData }); // ??? is this necessary
-
-         this.model.refresh(true);
-         this.tree.expandToLevel(this.expandLevel);
-         this.getView().setModel(this.model, "treeModel");
-
-         this.oProductModel = new JSONModel();
-         this.oProductModel.setData([this._event]);
-         this.getView().setModel(this.oProductModel, "event");
-      },
-
       makeDataForGED: function (element) {
          // remove ROOT::Experimental::
          var shtype = element._typename.substring(20);
