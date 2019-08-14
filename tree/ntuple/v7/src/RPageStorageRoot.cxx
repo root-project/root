@@ -72,12 +72,6 @@ ROOT::Experimental::Detail::RPageSinkRoot::AddColumn(DescriptorId_t fieldId, con
 {
    auto columnId = fLastColumnId++;
    fDescriptorBuilder.AddColumn(columnId, fieldId, column.GetVersion(), column.GetModel(), column.GetIndex());
-   if (column.GetOffsetColumn() != nullptr) {
-      auto parentId = column.GetOffsetColumn()->GetHandleSink().fId;
-      fDescriptorBuilder.SetColumnOffset(columnId, parentId);
-      fDescriptorBuilder.AddColumnLink(parentId, columnId);
-   }
-
    //printf("Added column %s type %d\n", columnHeader.fName.c_str(), (int)columnHeader.fType);
    return ColumnHandle_t(columnId, &column);
 }
@@ -98,7 +92,7 @@ void ROOT::Experimental::Detail::RPageSinkRoot::Create(RNTupleModel &model)
       fDescriptorBuilder.AddField(fLastFieldId, f.GetFieldVersion(), f.GetTypeVersion(), f.GetName(), f.GetType(),
                                   0 /* TODO(jblomer) */, f.GetStructure());
       if (f.GetParent() != model.GetRootField()) {
-         fDescriptorBuilder.SetFieldParent(fLastFieldId, fieldPtr2Id[f.GetParent()]);
+         fDescriptorBuilder.AddFieldLink(fieldPtr2Id[f.GetParent()], fLastFieldId);
       }
 
       Detail::RFieldFuse::Connect(fLastFieldId, *this, f); // issues in turn one or several calls to AddColumn()
@@ -315,12 +309,6 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::D
    R__ASSERT(firstInPage <= clusterIndex);
    R__ASSERT((firstInPage + pageInfo.fNElements) > clusterIndex);
 
-   auto columnDescriptor = fDescriptor.GetColumnDescriptor(columnId);
-   NTupleSize_t pointeeOffset = 0;
-   // TODO(jblomer): deal with multiple linked columns
-   if (!columnDescriptor.GetLinkIds().empty())
-      pointeeOffset = clusterDescriptor.GetColumnRange(columnDescriptor.GetLinkIds()[0]).fFirstElementIndex;
-
    //printf("Populating page %lu/%lu [%lu] for column %d starting at %lu\n", clusterId, pageInCluster, pageIdx, columnId, firstInPage);
 
    std::string keyName = std::string(kKeyPagePayload) +
@@ -342,9 +330,9 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::D
       pagePayload->fSize = pageSize;
    }
 
-   auto selfOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
+   auto indexOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
    auto newPage = fPageAllocator->NewPage(columnId, pagePayload->fContent, elementSize, pageInfo.fNElements);
-   newPage.SetWindow(selfOffset + firstInPage, RPage::RClusterInfo(clusterId, selfOffset, pointeeOffset));
+   newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
    fPagePool->RegisterPage(newPage,
       RPageDeleter([](const RPage &page, void *userData)
       {

@@ -437,10 +437,6 @@ std::uint32_t SerializeColumn(const ROOT::Experimental::RColumnDescriptor &val, 
    pos += SerializeColumnModel(val.GetModel(), *where);
    pos += SerializeUInt64(val.GetFieldId(), *where);
    pos += SerializeUInt32(val.GetIndex(), *where);
-   pos += SerializeUInt64(val.GetOffsetId(), *where);
-   pos += SerializeUInt32(val.GetLinkIds().size(), *where);
-   for (const auto& l : val.GetLinkIds())
-      pos += SerializeUInt64(l, *where);
 
    auto size = pos - base;
    SerializeUInt32(size, ptrSize);
@@ -496,9 +492,7 @@ bool ROOT::Experimental::RColumnDescriptor::operator==(const RColumnDescriptor &
           fVersion == other.fVersion &&
           fModel == other.fModel &&
           fFieldId == other.fFieldId &&
-          fIndex == other.fIndex &&
-          fOffsetId == other.fOffsetId &&
-          fLinkIds == other.fLinkIds;
+          fIndex == other.fIndex;
 }
 
 
@@ -749,14 +743,6 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::SetFromHeader(void* headerBuf
       pos += DeserializeColumnModel(pos, &c.fModel);
       pos += DeserializeUInt64(pos, &c.fFieldId);
       pos += DeserializeUInt32(pos, &c.fIndex);
-      pos += DeserializeUInt64(pos, &c.fOffsetId);
-
-      std::uint32_t nLinks;
-      pos += DeserializeUInt32(pos, &nLinks);
-      c.fLinkIds.resize(nLinks);
-      for (std::uint32_t j = 0; j < nLinks; ++j) {
-         pos += DeserializeUInt64(pos, &c.fLinkIds[j]);
-      }
 
       pos = columnBase + frameSize;
       fDescriptor.fColumnDescriptors[c.fColumnId] = c;
@@ -849,13 +835,10 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(
    fDescriptor.fFieldDescriptors[fieldId] = f;
 }
 
-void ROOT::Experimental::RNTupleDescriptorBuilder::SetFieldParent(DescriptorId_t fieldId, DescriptorId_t parentId)
-{
-   fDescriptor.fFieldDescriptors[fieldId].fParentId = parentId;
-}
-
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId)
 {
+   R__ASSERT(fDescriptor.fFieldDescriptors[linkId].fParentId == kInvalidDescriptorId);
+   fDescriptor.fFieldDescriptors[linkId].fParentId = fieldId;
    fDescriptor.fFieldDescriptors[fieldId].fLinkIds.push_back(linkId);
 }
 
@@ -870,16 +853,6 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(
    c.fModel = model;
    c.fIndex = index;
    fDescriptor.fColumnDescriptors[columnId] = c;
-}
-
-void ROOT::Experimental::RNTupleDescriptorBuilder::SetColumnOffset(DescriptorId_t columnId, DescriptorId_t offsetId)
-{
-   fDescriptor.fColumnDescriptors[columnId].fOffsetId = offsetId;
-}
-
-void ROOT::Experimental::RNTupleDescriptorBuilder::AddColumnLink(DescriptorId_t columnId, DescriptorId_t linkId)
-{
-   fDescriptor.fColumnDescriptors[columnId].fLinkIds.push_back(linkId);
 }
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(

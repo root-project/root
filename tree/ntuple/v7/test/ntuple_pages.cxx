@@ -28,7 +28,7 @@ TEST(Pages, Pool)
    EXPECT_TRUE(page.IsNull());
    pool.ReturnPage(page); // should not crash
 
-   RPage::RClusterInfo clusterInfo(2, 40, 0);
+   RPage::RClusterInfo clusterInfo(2, 40);
    page = RPage(1, &page, 10, 1);
    EXPECT_NE(nullptr, page.TryGrow(10));
    page.SetWindow(50, clusterInfo);

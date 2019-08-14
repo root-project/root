@@ -38,11 +38,8 @@ void ROOT::Experimental::Detail::RFieldFuse::Connect(DescriptorId_t fieldId, RPa
 {
    if (field.fColumns.empty())
       field.DoGenerateColumns();
-   for (auto& column : field.fColumns) {
-      if ((field.fParent != nullptr) && (column->GetOffsetColumn() == nullptr))
-         column->SetOffsetColumn(field.fParent->fPrincipalColumn);
+   for (auto& column : field.fColumns)
       column->Connect(fieldId, &pageStorage);
-   }
 }
 
 
@@ -318,7 +315,6 @@ void ROOT::Experimental::RField<std::string>::DoGenerateColumns()
    fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
       Detail::RColumn::Create<char, EColumnType::kByte>(modelChars, 1)));
    fPrincipalColumn = fColumns[0].get();
-   fColumns[1]->SetOffsetColumn(fPrincipalColumn);
 }
 
 void ROOT::Experimental::RField<std::string>::DoAppend(const ROOT::Experimental::Detail::RFieldValue& value)

@@ -61,8 +61,6 @@ private:
    RPage fCurrentPage;
    /// The column id is used to find matching pages with content when reading
    ColumnId_t fColumnIdSource;
-   /// Optional link to a parent offset column that points into this column
-   RColumn* fOffsetColumn;
    /// Used to pack and unpack pages on writing/reading
    std::unique_ptr<RColumnElementBase> fElement;
 
@@ -183,7 +181,7 @@ public:
       if (!fCurrentPage.Contains(clusterIndex)) {
          MapPage(clusterIndex);
       }
-      return fCurrentPage.GetClusterInfo().GetSelfOffset() + clusterIndex.GetIndex();
+      return fCurrentPage.GetClusterInfo().GetIndexOffset() + clusterIndex.GetIndex();
    }
 
    RClusterIndex GetClusterIndex(NTupleSize_t globalIndex) {
@@ -191,7 +189,7 @@ public:
          MapPage(globalIndex);
       }
       return RClusterIndex(fCurrentPage.GetClusterInfo().GetId(),
-                           globalIndex - fCurrentPage.GetClusterInfo().GetSelfOffset());
+                           globalIndex - fCurrentPage.GetClusterInfo().GetIndexOffset());
    }
 
    /// For offset columns only, look at the two adjacent values that define a collection's coordinates
@@ -199,7 +197,7 @@ public:
    {
       auto idxStart = (globalIndex == 0) ? 0 : *Map<ClusterSize_t, EColumnType::kIndex>(globalIndex - 1);
       auto idxEnd = *Map<ClusterSize_t, EColumnType::kIndex>(globalIndex);
-      auto selfOffset = fCurrentPage.GetClusterInfo().GetSelfOffset();
+      auto selfOffset = fCurrentPage.GetClusterInfo().GetIndexOffset();
       if (globalIndex == selfOffset) {
          // Passed cluster boundary
          idxStart = 0;
@@ -229,8 +227,6 @@ public:
    RPageSource* GetPageSource() const { return fPageSource; }
    RPageStorage::ColumnHandle_t GetHandleSource() const { return fHandleSource; }
    RPageStorage::ColumnHandle_t GetHandleSink() const { return fHandleSink; }
-   void SetOffsetColumn(RColumn* offsetColumn) { fOffsetColumn = offsetColumn; }
-   RColumn* GetOffsetColumn() const { return fOffsetColumn; }
    RNTupleVersion GetVersion() const { return RNTupleVersion(); }
 };
 
