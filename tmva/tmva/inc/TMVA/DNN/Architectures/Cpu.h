@@ -33,6 +33,9 @@ namespace DNN
 {
    //class EActivationFunction;
 
+ struct DummyFilterDescriptor {};
+ struct DummyConvolutionDescriptor {}; 
+
 /** The TCpu architecture class.
  *
  * Low-level interface class for multi-threaded CPU architectures. Contains as
@@ -52,6 +55,9 @@ public:
    using Matrix_t       = TCpuMatrix<AReal>;
    using HostBuffer_t   = TCpuBuffer<AReal>;
    using DeviceBuffer_t = TCpuBuffer<AReal>;
+
+   using ConvolutionDescriptor_t = DummyConvolutionDescriptor;
+   using FilterDescriptor_t = DummyFilterDescriptor; 
 
 
    // // Utility function to convert from a Matrix to a Tensor

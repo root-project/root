@@ -364,12 +364,12 @@ TTensorBatch<TCpu<Real_t> > TTensorDataLoader<TensorInput, TCpu<Real_t> >::GetTe
    // architectures matrix type
    DeviceBufferTuple DeviceBuffers = CopyTensorBatches();
    
-   std::vector<Matrix_t> inputTensor;
-   size_t jump = fBatchHeight * fBatchWidth;
-   for (size_t i = 0; i < fInputShape[0]; i++) {
-      DeviceBuffer_t subInputDeviceBuffer = std::get<0>(DeviceBuffers).GetSubBuffer(i * jump, jump);
-      inputTensor.emplace_back(subInputDeviceBuffer, fBatchHeight, fBatchWidth);
-   }
+   Tensor_t inputTensor( std::get<0>(DeviceBuffers), { fBatchHeight, fBatchWidth, fInputShape[0] } ); 
+   // size_t jump = fBatchHeight * fBatchWidth;
+   // for (size_t i = 0; i < fInputShape[0]; i++) {
+   //    DeviceBuffer_t subInputDeviceBuffer = std::get<0>(DeviceBuffers).GetSubBuffer(i * jump, jump);
+   //    inputTensor.emplace_back(subInputDeviceBuffer, fBatchHeight, fBatchWidth);
+   // }
    Matrix_t outputMatrix(std::get<1>(DeviceBuffers), fInputShape[0], fNOutputFeatures);
    Matrix_t weightMatrix(std::get<2>(DeviceBuffers), fInputShape[0], fNOutputFeatures);
 
@@ -447,12 +447,13 @@ TTensorBatch<TCpu<Double_t> > TTensorDataLoader<TensorInput, TCpu<Double_t> >::G
    // architectures matrix type
    DeviceBufferTuple DeviceBuffers = CopyTensorBatches();
    
-   std::vector<Matrix_t> inputTensor;
-   size_t jump = fBatchHeight * fBatchWidth;
-   for (size_t i = 0; i < fInputShape[0]; i++) {
-      DeviceBuffer_t subInputDeviceBuffer = std::get<0>(DeviceBuffers).GetSubBuffer(i * jump, jump);
-      inputTensor.emplace_back(subInputDeviceBuffer, fBatchHeight, fBatchWidth);
-   }
+   Tensor_t inputTensor( std::get<0>(DeviceBuffers), { fBatchHeight, fBatchWidth, fInputShape[0] } ); 
+   // size_t jump = fBatchHeight * fBatchWidth;
+   // for (size_t i = 0; i < fInputShape[0]; i++) {
+   //    DeviceBuffer_t subInputDeviceBuffer = std::get<0>(DeviceBuffers).GetSubBuffer(i * jump, jump);
+   //    inputTensor.emplace_back(subInputDeviceBuffer, fBatchHeight, fBatchWidth);
+   // }
+   
    Matrix_t outputMatrix(std::get<1>(DeviceBuffers), fInputShape[0], fNOutputFeatures);
    Matrix_t weightMatrix(std::get<2>(DeviceBuffers), fInputShape[0], fNOutputFeatures);
 
@@ -553,12 +554,13 @@ TTensorBatch<TCpu<Double_t> > TTensorDataLoader<TMVAInput_t, TCpu<Double_t> >::G
    // architectures matrix type
    DeviceBufferTuple DeviceBuffers = CopyTensorBatches();
    
-   std::vector<Matrix_t> inputTensor;
-   size_t jump = fBatchHeight * fBatchWidth;
-   for (size_t i = 0; i < fInputShape[0]; i++) {
-      DeviceBuffer_t subInputDeviceBuffer = std::get<0>(DeviceBuffers).GetSubBuffer(i * jump, jump);
-      inputTensor.emplace_back(subInputDeviceBuffer, fBatchHeight, fBatchWidth);
-   }
+
+   Tensor_t inputTensor( std::get<0>(DeviceBuffers), { fBatchHeight, fBatchWidth, fInputShape[0] } ); 
+   // size_t jump = fBatchHeight * fBatchWidth;
+   // for (size_t i = 0; i < fInputShape[0]; i++) {
+   //    DeviceBuffer_t subInputDeviceBuffer = std::get<0>(DeviceBuffers).GetSubBuffer(i * jump, jump);
+   //    inputTensor.emplace_back(subInputDeviceBuffer, fBatchHeight, fBatchWidth);
+   // }
    Matrix_t outputMatrix(std::get<1>(DeviceBuffers), fInputShape[0], fNOutputFeatures);
    Matrix_t weightMatrix(std::get<2>(DeviceBuffers), fInputShape[0], fNOutputFeatures);
 
@@ -659,12 +661,13 @@ TTensorBatch<TCpu<Real_t> > TTensorDataLoader<TMVAInput_t, TCpu<Real_t> >::GetTe
    // architectures matrix type
    DeviceBufferTuple DeviceBuffers = CopyTensorBatches();
    
-   std::vector<Matrix_t> inputTensor;
-   size_t jump = fBatchHeight * fBatchWidth;
-   for (size_t i = 0; i < fInputShape[0]; i++) {
-      DeviceBuffer_t subInputDeviceBuffer = std::get<0>(DeviceBuffers).GetSubBuffer(i * jump, jump);
-      inputTensor.emplace_back(subInputDeviceBuffer, fBatchHeight, fBatchWidth);
-   }
+   Tensor_t inputTensor( std::get<0>(DeviceBuffers), { fBatchHeight, fBatchWidth, fInputShape[0] } ); 
+   // std::vector<Matrix_t> inputTensor;
+   // size_t jump = fBatchHeight * fBatchWidth;
+   // for (size_t i = 0; i < fInputShape[0]; i++) {
+   //    DeviceBuffer_t subInputDeviceBuffer = std::get<0>(DeviceBuffers).GetSubBuffer(i * jump, jump);
+   //    inputTensor.emplace_back(subInputDeviceBuffer, fBatchHeight, fBatchWidth);
+   // }
    Matrix_t outputMatrix(std::get<1>(DeviceBuffers), fInputShape[0], fNOutputFeatures);
    Matrix_t weightMatrix(std::get<2>(DeviceBuffers), fInputShape[0], fNOutputFeatures);
 
