@@ -198,7 +198,6 @@ ClassImp(RooAbsPdf::GenSpec);
 ;
 
 Int_t RooAbsPdf::_verboseEval = 0;
-Bool_t RooAbsPdf::_evalError = kFALSE ;
 TString RooAbsPdf::_normRangeOverride ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -335,49 +334,6 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
   return _value ;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Check for infinity or NaN.
-/// \param[in] inputs Array to check
-/// \return True if either infinity or NaN were found.
-namespace {
-template<class T>
-bool checkInfNaN(const T& inputs)
-{
-  // check for a math error or negative value
-  bool nan = false;
-  bool neg = false;
-
-  for (double val : inputs) { //CHECK_VECTORISE
-    nan |= std::isnan(val);
-    neg |= val < 0;
-  }
-
-  return nan || neg;
-}
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Scan through outputs and fix+log all nans and negative values.
-/// \param[in/out] outputs Array to be scanned & fixed.
-/// \param[in] begin Begin of event range. Only needed to print the correct event number
-/// where the error occurred.
-void RooAbsPdf::fixOutputsAndLogErrors(RooSpan<double>& outputs, std::size_t begin) const {
-  for (unsigned int i=0; i<outputs.size(); ++i) {
-    const double value = outputs[i];
-    if (std::isnan(outputs[i])) {
-      logEvalError(Form("p.d.f value of (%s) is Not-a-Number (%f), forcing value to zero for entry %zu",
-          GetName(), value, begin+i));
-      outputs[i] = 0;
-    }
-    if (outputs[i] < 0.) {
-      logEvalError(Form("p.d.f value of (%s) is less than zero (%f), forcing value to zero for entry %zu",
-          GetName(), value, begin+i));
-      outputs[i] = 0;
-    }
-  }
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute batch of values for given range, and normalise by integrating over
@@ -409,10 +365,6 @@ RooSpan<const double> RooAbsPdf::getValBatch(std::size_t begin, std::size_t maxS
     maxSize = outputs.size();
     _normSet = tmp;
 
-    if (checkInfNaN(outputs)) {
-      fixOutputsAndLogErrors(outputs, begin);
-    }
-
     _batchData.setStatus(begin, maxSize, BatchHelpers::BatchData::kReady);
 
     return outputs;
@@ -431,9 +383,6 @@ RooSpan<const double> RooAbsPdf::getValBatch(std::size_t begin, std::size_t maxS
 
     auto outputs = evaluateBatch(begin, maxSize);
     maxSize = outputs.size();
-    if (checkInfNaN(outputs)) {
-      fixOutputsAndLogErrors(outputs, begin);
-    }
 
     // Evaluate denominator
     const double normVal = _norm->getVal();
@@ -781,54 +730,86 @@ Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Check for infinity or NaN.
+/// \param[in] inputs Array to check
+/// \return True if either infinity or NaN were found.
+namespace {
+template<class T>
+bool checkInfNaNNeg(const T& inputs) {
+  // check for a math error or negative value
+  bool inf = false;
+  bool nan = false;
+  bool neg = false;
+
+  for (double val : inputs) { //CHECK_VECTORISE
+    inf |= !std::isfinite(val);
+    nan |= TMath::IsNaN(val); // Works also during fast math
+    neg |= val < 0;
+  }
+
+  return inf || nan || neg;
+}
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Scan through outputs and fix+log all nans and negative values.
+/// \param[in/out] outputs Array to be scanned & fixed.
+/// \param[in] begin Begin of event range. Only needed to print the correct event number
+/// where the error occurred.
+void RooAbsPdf::logBatchComputationErrors(RooSpan<const double>& outputs, std::size_t begin) const {
+  for (unsigned int i=0; i<outputs.size(); ++i) {
+    const double value = outputs[i];
+    if (TMath::IsNaN(outputs[i])) {
+      logEvalError(Form("p.d.f value of (%s) is Not-a-Number (%f) for entry %zu",
+          GetName(), value, begin+i));
+    } else if (!std::isfinite(outputs[i])){
+      logEvalError(Form("p.d.f value of (%s) is (%f) for entry %zu",
+          GetName(), value, begin+i));
+    } else if (outputs[i] < 0.) {
+      logEvalError(Form("p.d.f value of (%s) is less than zero (%f) for entry %zu",
+          GetName(), value, begin+i));
+    }
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Compute the log-likelihoods for all events in the requested batch.
 /// The arguments are passed over to getValBatch().
 /// \param[in] begin Start of the batch.
-/// \param[in] size  Maximum size of the batch.
+/// \param[in] size  Maximum size of the batch. Depending on data layout and memory, the batch
+/// may come back smaller.
 /// \return    Returns a batch of doubles that contains the log probabilities.
-RooSpan<double> RooAbsPdf::getLogValBatch(std::size_t begin, std::size_t batchSize,
+RooSpan<const double> RooAbsPdf::getLogValBatch(std::size_t begin, std::size_t maxSize,
     const RooArgSet* normSet) const
 {
-  auto pdfValues = getValBatch(begin, batchSize, normSet);
+  auto pdfValues = getValBatch(begin, maxSize, normSet);
 
-  //TODO avoid allocate&destroy?
-  std::vector<double> outputs(pdfValues.size());
-
-  /* TODO
-  if (fabs(prob)>1e6) {
-    coutW(Eval) << "RooAbsPdf::getLogVal(" << GetName() << ") WARNING: large likelihood value: " << prob << endl ;
+  if (checkInfNaNNeg(pdfValues)) {
+    logBatchComputationErrors(pdfValues, begin);
   }
 
-  if(prob < 0) {
+  auto output = _batchData.makeWritableBatchUnInit(begin, pdfValues.size());
 
-    logEvalError("getLogVal() top-level p.d.f evaluates to a negative number") ;
+  for (std::size_t i = 0; i < pdfValues.size(); ++i) { //CHECK_VECTORISE
+    const double prob = pdfValues[i];
 
-    return 0;
-  }
-  if(prob == 0) {
-
-    logEvalError("getLogVal() top-level p.d.f evaluates to zero") ;
-
-    return log((double)0);
-  }
-
-  if (TMath::IsNaN(prob)) {
-    logEvalError("getLogVal() top-level p.d.f evaluates to NaN") ;
-
-    return log((double)0);
-
-  }
-  */
-
-  for (unsigned int i = 0; i < pdfValues.size(); ++i) { //CHECK_VECTORISE
 #ifdef USE_VDT
-    outputs[i] = vdt::fast_log(pdfValues[i]);
+    double theLog = vdt::fast_log(prob);
 #else
-    outputs[i] = log(pdfValues[i]);
+    double theLog = log(prob);
 #endif
+
+    if (prob < 0) {
+      theLog = prob;
+    } else if (prob == 0 || TMath::IsNaN(prob)) {
+      theLog = -std::numeric_limits<double>::infinity();
+    }
+
+    output[i] = theLog;
   }
 
-  return RooSpan<double>(std::move(outputs));
+  return output;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3417,36 +3398,6 @@ RooArgSet* RooAbsPdf::getAllConstraints(const RooArgSet& observables, RooArgSet&
 
   return ret ;
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Clear the evaluation error flag
-
-void RooAbsPdf::clearEvalError() 
-{ 
-  _evalError = kFALSE ; 
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return the evaluation error flag
-
-Bool_t RooAbsPdf::evalError() 
-{ 
-  return _evalError ; 
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Raise the evaluation error flag
-
-void RooAbsPdf::raiseEvalError() 
-{ 
-  _evalError = kTRUE ; 
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
