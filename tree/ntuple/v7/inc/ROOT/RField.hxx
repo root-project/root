@@ -29,6 +29,7 @@
 #include <TError.h>
 
 #include <algorithm>
+#include <array>
 #include <iostream>
 #include <iterator>
 #include <memory>
@@ -76,6 +77,8 @@ private:
    std::string fType;
    /// The role of this field in the data model structure
    ENTupleStructure fStructure;
+   /// For fixed sized arrays, the array length
+   std::size_t fNRepetitions;
    /// A field on a trivial type that maps as-is to a single column
    bool fIsSimple;
    /// Describes where the field is located inside the ntuple.
@@ -165,7 +168,8 @@ public:
    };
 
    /// The constructor creates the underlying column objects and connects them to either a sink or a source.
-   RFieldBase(std::string_view name, std::string_view type, ENTupleStructure structure, bool isSimple);
+   RFieldBase(std::string_view name, std::string_view type, ENTupleStructure structure, bool isSimple,
+              std::size_t nRepetitions = 0);
    RFieldBase(const RFieldBase&) = delete;
    RFieldBase(RFieldBase&&) = default;
    RFieldBase& operator =(const RFieldBase&) = delete;
@@ -229,6 +233,7 @@ public:
    std::string GetName() const { return fName; }
    std::string GetType() const { return fType; }
    ENTupleStructure GetStructure() const { return fStructure; }
+   std::size_t GetNRepetitions() const { return fNRepetitions; }
    const RFieldBase* GetParent() const { return fParent; }
    bool IsSimple() const { return fIsSimple; }
 
@@ -312,7 +317,7 @@ public:
 /// The generic field for a (nested) std::vector<Type> except for std::vector<bool>
 class RFieldVector : public Detail::RFieldBase {
 private:
-   size_t fItemSize;
+   std::size_t fItemSize;
    ClusterSize_t fNWritten;
 
 protected:
@@ -333,6 +338,33 @@ public:
    Detail::RFieldValue CaptureValue(void *where) override;
    size_t GetValueSize() const override;
    void CommitCluster() final;
+};
+
+
+/// The generic field for fixed size arrays, which do not need an offset column
+class RFieldArray : public Detail::RFieldBase {
+private:
+   std::size_t fItemSize;
+   std::size_t fArrayLength;
+
+protected:
+   void DoAppend(const Detail::RFieldValue& value) final;
+   void DoReadGlobal(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
+   void DoReadInCluster(const RClusterIndex &clusterIndex, Detail::RFieldValue *value) final;
+
+public:
+   RFieldArray(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField, std::size_t arrayLength);
+   RFieldArray(RFieldArray &&other) = default;
+   RFieldArray& operator =(RFieldArray &&other) = default;
+   ~RFieldArray() = default;
+   RFieldBase *Clone(std::string_view newName) final;
+
+   void DoGenerateColumns() final;
+   using Detail::RFieldBase::GenerateValue;
+   Detail::RFieldValue GenerateValue(void *where) override;
+   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
+   Detail::RFieldValue CaptureValue(void *where) final;
+   size_t GetValueSize() const final { return fItemSize * fArrayLength; }
 };
 
 
@@ -695,6 +727,32 @@ public:
    }
    size_t GetValueSize() const final { return sizeof(std::string); }
    void CommitCluster() final;
+};
+
+
+template <typename ItemT, std::size_t N>
+class RField<std::array<ItemT, N>> : public RFieldArray {
+   using ContainerT = typename std::array<ItemT, N>;
+public:
+   static std::string MyTypeName() {
+      return "std::array<" + RField<ItemT>::MyTypeName() + "," + std::to_string(N) + ">";
+   }
+   explicit RField(std::string_view name)
+      : RFieldArray(name, std::make_unique<RField<ItemT>>(RField<ItemT>::MyTypeName()), N)
+   {}
+   RField(RField&& other) = default;
+   RField& operator =(RField&& other) = default;
+   ~RField() = default;
+
+   using Detail::RFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where, ArgsT&&... args)
+   {
+      return Detail::RFieldValue(this, static_cast<ContainerT*>(where), std::forward<ArgsT>(args)...);
+   }
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final {
+      return GenerateValue(where, ContainerT());
+   }
 };
 
 

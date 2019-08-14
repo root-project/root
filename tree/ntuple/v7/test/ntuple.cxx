@@ -16,6 +16,7 @@
 
 #include "CustomStruct.hxx"
 
+#include <array>
 #include <exception>
 #include <memory>
 #include <string>
@@ -70,6 +71,7 @@ TEST(RNTuple, ReconstructModel)
    auto fieldPt = model->MakeField<float>("pt", 42.0);
    auto fieldNnlo = model->MakeField<std::vector<std::vector<float>>>("nnlo");
    auto fieldKlass = model->MakeField<CustomStruct>("klass");
+   auto fieldArray = model->MakeField<std::array<double, 2>>("array");
    {
       RPageSinkRoot sinkRoot("myTree", fileGuard.GetPath());
       sinkRoot.Create(*model.get());
@@ -86,6 +88,8 @@ TEST(RNTuple, ReconstructModel)
    EXPECT_TRUE(vecPtr != nullptr);
    // Don't crash
    vecPtr->push_back(std::vector<float>{1.0});
+   auto array = modelReconstructed->GetDefaultEntry()->Get<std::array<double, 2>>("array");
+   EXPECT_TRUE(array != nullptr);
 }
 
 TEST(RNTuple, StorageRoot)
@@ -276,9 +280,14 @@ TEST(RNTuple, Clusters)
    auto wrPt = modelWrite->MakeField<float>("pt", 42.0);
    auto wrTag = modelWrite->MakeField<std::string>("tag", "xyz");
    auto wrNnlo = modelWrite->MakeField<std::vector<std::vector<float>>>("nnlo");
+   auto wrFourVec = modelWrite->MakeField<std::array<float, 4>>("fourVec");
    wrNnlo->push_back(std::vector<float>());
    wrNnlo->push_back(std::vector<float>{1.0});
    wrNnlo->push_back(std::vector<float>{1.0, 2.0, 4.0, 8.0});
+   wrFourVec->at(0) = 0.0;
+   wrFourVec->at(1) = 1.0;
+   wrFourVec->at(2) = 2.0;
+   wrFourVec->at(3) = 3.0;
 
    auto modelRead = std::unique_ptr<RNTupleModel>(modelWrite->Clone());
 
@@ -289,16 +298,19 @@ TEST(RNTuple, Clusters)
       *wrPt = 24.0;
       wrNnlo->clear();
       *wrTag = "";
+      wrFourVec->at(2) = 42.0;
       ntuple.Fill();
       *wrPt = 12.0;
       wrNnlo->push_back(std::vector<float>{42.0});
       *wrTag = "12345";
+      wrFourVec->at(1) = 24.0;
       ntuple.Fill();
    }
 
    auto rdPt = modelRead->Get<float>("pt");
    auto rdTag = modelRead->Get<std::string>("tag");
    auto rdNnlo = modelRead->Get<std::vector<std::vector<float>>>("nnlo");
+   auto rdFourVec = modelRead->Get<std::array<float, 4>>("fourVec");
 
    RNTupleReader ntuple(std::move(modelRead), std::make_unique<RPageSourceRoot>("f", fileGuard.GetPath()));
    EXPECT_EQ(3U, ntuple.GetNEntries());
@@ -315,11 +327,16 @@ TEST(RNTuple, Clusters)
    EXPECT_EQ(2.0, (*rdNnlo)[2][1]);
    EXPECT_EQ(4.0, (*rdNnlo)[2][2]);
    EXPECT_EQ(8.0, (*rdNnlo)[2][3]);
+   EXPECT_EQ(0.0, (*rdFourVec)[0]);
+   EXPECT_EQ(1.0, (*rdFourVec)[1]);
+   EXPECT_EQ(2.0, (*rdFourVec)[2]);
+   EXPECT_EQ(3.0, (*rdFourVec)[3]);
 
    ntuple.LoadEntry(1);
    EXPECT_EQ(24.0, *rdPt);
    EXPECT_STREQ("", rdTag->c_str());
    EXPECT_TRUE(rdNnlo->empty());
+   EXPECT_EQ(42.0, (*rdFourVec)[2]);
 
    ntuple.LoadEntry(2);
    EXPECT_EQ(12.0, *rdPt);
@@ -327,6 +344,7 @@ TEST(RNTuple, Clusters)
    EXPECT_EQ(1U, rdNnlo->size());
    EXPECT_EQ(1U, (*rdNnlo)[0].size());
    EXPECT_EQ(42.0, (*rdNnlo)[0][0]);
+   EXPECT_EQ(24.0, (*rdFourVec)[1]);
 }
 
 

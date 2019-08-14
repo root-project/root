@@ -47,8 +47,9 @@ void ROOT::Experimental::Detail::RFieldFuse::Connect(DescriptorId_t fieldId, RPa
 
 
 ROOT::Experimental::Detail::RFieldBase::RFieldBase(
-   std::string_view name, std::string_view type, ENTupleStructure structure, bool isSimple)
-   : fName(name), fType(type), fStructure(structure), fIsSimple(isSimple), fParent(nullptr), fPrincipalColumn(nullptr)
+   std::string_view name, std::string_view type, ENTupleStructure structure, bool isSimple, std::size_t nRepetitions)
+   : fName(name), fType(type), fStructure(structure), fNRepetitions(nRepetitions), fIsSimple(isSimple),
+     fParent(nullptr), fPrincipalColumn(nullptr)
 {
 }
 
@@ -94,6 +95,14 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       std::string itemTypeName = normalizedType.substr(19, normalizedType.length() - 20);
       auto itemField = Create(itemTypeName, itemTypeName);
       return new RFieldVector(fieldName, std::unique_ptr<Detail::RFieldBase>(itemField));
+   }
+   if (normalizedType.substr(0, 11) == "std::array<") {
+      std::string arrayDef = normalizedType.substr(11, normalizedType.length() - 12);
+      auto posSeparator = arrayDef.find(',');
+      std::string itemTypeName = arrayDef.substr(0, posSeparator);
+      auto arrayLength = std::stoi(arrayDef.substr(posSeparator + 1));
+      auto itemField = Create(itemTypeName, itemTypeName);
+      return new RFieldArray(fieldName, std::unique_ptr<Detail::RFieldBase>(itemField), arrayLength);
    }
    // TODO: create an RFieldCollection?
    if (normalizedType == ":Collection:") return new RField<ClusterSize_t>(fieldName);
@@ -484,7 +493,6 @@ void ROOT::Experimental::RFieldVector::DoGenerateColumns()
 
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RFieldVector::GenerateValue(void* where)
 {
-   // The memory location can be used as a vector of any type except bool (TODO)
    return Detail::RFieldValue(this, reinterpret_cast<std::vector<char>*>(where));
 }
 
@@ -515,6 +523,82 @@ size_t ROOT::Experimental::RFieldVector::GetValueSize() const
 void ROOT::Experimental::RFieldVector::CommitCluster()
 {
    fNWritten = 0;
+}
+
+
+//------------------------------------------------------------------------------
+
+
+ROOT::Experimental::RFieldArray::RFieldArray(
+   std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField, std::size_t arrayLength)
+   : ROOT::Experimental::Detail::RFieldBase(
+      fieldName, "std::array<" + itemField->GetType() + "," + std::to_string(arrayLength) + ">",
+      ENTupleStructure::kLeaf, false /* isSimple */, arrayLength)
+   , fItemSize(itemField->GetValueSize()), fArrayLength(arrayLength)
+{
+   Attach(std::move(itemField));
+}
+
+ROOT::Experimental::Detail::RFieldBase *ROOT::Experimental::RFieldArray::Clone(std::string_view newName)
+{
+   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
+   return new RFieldArray(newName, std::unique_ptr<Detail::RFieldBase>(newItemField), fArrayLength);
+}
+
+void ROOT::Experimental::RFieldArray::DoAppend(const Detail::RFieldValue& value) {
+   auto arrayPtr = value.Get<unsigned char>();
+   for (unsigned i = 0; i < fArrayLength; ++i) {
+      auto itemValue = fSubFields[0]->CaptureValue(arrayPtr + (i * fItemSize));
+      fSubFields[0]->Append(itemValue);
+   }
+}
+
+void ROOT::Experimental::RFieldArray::DoReadGlobal(NTupleSize_t globalIndex, Detail::RFieldValue *value)
+{
+   auto arrayPtr = value->Get<unsigned char>();
+   for (unsigned i = 0; i < fArrayLength; ++i) {
+      auto itemValue = fSubFields[0]->GenerateValue(arrayPtr + (i * fItemSize));
+      fSubFields[0]->Read(globalIndex * fArrayLength + i, &itemValue);
+   }
+}
+
+void ROOT::Experimental::RFieldArray::DoReadInCluster(const RClusterIndex &clusterIndex, Detail::RFieldValue *value)
+{
+   auto arrayPtr = value->Get<unsigned char>();
+   for (unsigned i = 0; i < fArrayLength; ++i) {
+      auto itemValue = fSubFields[0]->GenerateValue(arrayPtr + (i * fItemSize));
+      fSubFields[0]->Read(RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndex() * fArrayLength + i),
+                          &itemValue);
+   }
+}
+
+void ROOT::Experimental::RFieldArray::DoGenerateColumns()
+{
+}
+
+ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RFieldArray::GenerateValue(void *where)
+{
+   auto arrayPtr = reinterpret_cast<unsigned char *>(where);
+   for (unsigned i = 0; i < fArrayLength; ++i) {
+      fSubFields[0]->GenerateValue(arrayPtr + (i * fItemSize));
+   }
+   return Detail::RFieldValue(true /* captureFlag */, this, where);
+}
+
+void ROOT::Experimental::RFieldArray::DestroyValue(const Detail::RFieldValue& value, bool dtorOnly)
+{
+   auto arrayPtr = value.Get<unsigned char>();
+   for (unsigned i = 0; i < fArrayLength; ++i) {
+      auto itemValue = fSubFields[0]->CaptureValue(arrayPtr + (i * fItemSize));
+      fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
+   }
+   if (!dtorOnly)
+      free(arrayPtr);
+}
+
+ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RFieldArray::CaptureValue(void *where)
+{
+   return Detail::RFieldValue(true /* captureFlag */, this, where);
 }
 
 
