@@ -6,6 +6,7 @@ sap.ui.define(['sap/ui/core/Component',
                'sap/m/CheckBox',
                'sap/m/MessageBox',
                'sap/m/MessageToast',
+               'sap/m/TabContainerItem',
                'sap/ui/layout/Splitter',
                "sap/ui/core/ResizeHandler",
                "sap/ui/layout/HorizontalLayout",
@@ -13,8 +14,8 @@ sap.ui.define(['sap/ui/core/Component',
                "sap/ui/core/util/File",
                "sap/ui/model/json/JSONModel",
                "rootui5/browser/model/BrowserModel"
-],function(Component, Controller, CoreControl, CoreIcon, mText, mCheckBox, MessageBox, MessageToast, Splitter,
-           ResizeHandler, HorizontalLayout, tableColumn, File, JSONModel, BrowserModel) {
+],function(Component, Controller, CoreControl, CoreIcon, mText, mCheckBox, MessageBox, MessageToast, TabContainerItem,
+           Splitter, ResizeHandler, HorizontalLayout, tableColumn, File, JSONModel, BrowserModel) {
 
    "use strict";
 
@@ -382,7 +383,12 @@ sap.ui.define(['sap/ui/core/Component',
 
       /** @brief Add Tab event handler */
       addNewButtonPressHandler: function(oEvent) {
-         MessageToast.show("Adding a new tab element is not yet implemented...", {duration: 1000});
+         var oTabContainer = this.byId("myTabContainer");
+         var oTabContainerItem = new TabContainerItem({
+            name: "ROOT Canvas",
+            icon: "sap-icon://column-chart-dual-axis"
+         });
+         oTabContainer.addItem(oTabContainerItem);
       },
 
       /** @brief Close Tab event handler */
@@ -394,17 +400,15 @@ sap.ui.define(['sap/ui/core/Component',
          var oItemToClose = oEvent.getParameter('item');
          // prevent closing the Code Editor
          if (oItemToClose.getName() == "Code Editor") {
-            MessageToast.show("Sorry, you cannot close the Code Editor", {duration: 1000});
+            MessageToast.show("Sorry, you cannot close the Code Editor", {duration: 1500});
             return;
          }
 
-         MessageBox.confirm("Do you want to close the tab '" + oItemToClose.getName() + "'?", {
+         MessageBox.confirm('Do you really want to close the "' + oItemToClose.getName() + '" tab?', {
             onClose: function (oAction) {
                if (oAction === MessageBox.Action.OK) {
                   oTabContainer.removeItem(oItemToClose);
-                  MessageToast.show("Item closed: " + oItemToClose.getName(), {duration: 500});
-               } else {
-                  MessageToast.show("Item close canceled: " + oItemToClose.getName(), {duration: 500});
+                  MessageToast.show('Closed the "' + oItemToClose.getName() + '" tab', {duration: 1500});
                }
             }
          });
