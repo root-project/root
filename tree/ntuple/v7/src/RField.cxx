@@ -335,12 +335,12 @@ void ROOT::Experimental::RField<std::string>::DoReadGlobal(
    ROOT::Experimental::NTupleSize_t globalIndex, ROOT::Experimental::Detail::RFieldValue *value)
 {
    auto typedValue = value->Get<std::string>();
-   NTupleSize_t idxStart;
+   RClusterIndex collectionStart;
    ClusterSize_t nChars;
-   fPrincipalColumn->GetCollectionInfo(globalIndex, &idxStart, &nChars);
+   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nChars);
    typedValue->resize(nChars);
    Detail::RColumnElement<char, EColumnType::kByte> elemChars(const_cast<char*>(typedValue->data()));
-   fColumns[1]->ReadV(idxStart, nChars, &elemChars);
+   fColumns[1]->ReadV(collectionStart, nChars, &elemChars);
 }
 
 void ROOT::Experimental::RField<std::string>::CommitCluster()
@@ -468,13 +468,13 @@ void ROOT::Experimental::RFieldVector::DoReadGlobal(NTupleSize_t globalIndex, De
    auto typedValue = value->Get<std::vector<char>>();
 
    ClusterSize_t nItems;
-   NTupleSize_t idxStart;
-   fPrincipalColumn->GetCollectionInfo(globalIndex, &idxStart, &nItems);
+   RClusterIndex collectionStart;
+   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
 
    typedValue->resize(nItems * fItemSize);
    for (unsigned i = 0; i < nItems; ++i) {
       auto itemValue = fSubFields[0]->GenerateValue(typedValue->data() + (i * fItemSize));
-      fSubFields[0]->Read(idxStart + i, &itemValue);
+      fSubFields[0]->Read(collectionStart + i, &itemValue);
    }
 }
 
@@ -550,14 +550,14 @@ void ROOT::Experimental::RField<std::vector<bool>>::DoReadGlobal(NTupleSize_t gl
    auto typedValue = value->Get<std::vector<bool>>();
 
    ClusterSize_t nItems;
-   NTupleSize_t idxStart;
-   fPrincipalColumn->GetCollectionInfo(globalIndex, &idxStart, &nItems);
+   RClusterIndex collectionStart;
+   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
 
    typedValue->resize(nItems);
    for (unsigned i = 0; i < nItems; ++i) {
       bool bval;
       auto itemValue = fSubFields[0]->GenerateValue(&bval);
-      fSubFields[0]->Read(idxStart + i, &itemValue);
+      fSubFields[0]->Read(collectionStart + i, &itemValue);
       (*typedValue)[i] = bval;
    }
 }
