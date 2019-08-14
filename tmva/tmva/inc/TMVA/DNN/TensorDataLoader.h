@@ -30,7 +30,7 @@
 #include "TMatrix.h"
 #include "TMVA/Event.h"
 #include <algorithm>
-#include "TMVA/DNN/Architectures/Cudnn.h"
+//#include "TMVA/DNN/Architectures/Cudnn.h"
 
 namespace TMVA {
    class DataSetInfo; 
