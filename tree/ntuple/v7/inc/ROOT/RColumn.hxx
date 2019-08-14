@@ -186,18 +186,36 @@ public:
       return fCurrentPage.GetClusterInfo().GetSelfOffset() + clusterIndex.GetIndex();
    }
 
+   RClusterIndex GetClusterIndex(NTupleSize_t globalIndex) {
+      if (!fCurrentPage.Contains(globalIndex)) {
+         MapPage(globalIndex);
+      }
+      return RClusterIndex(fCurrentPage.GetClusterInfo().GetId(),
+                           globalIndex - fCurrentPage.GetClusterInfo().GetSelfOffset());
+   }
+
    /// For offset columns only, look at the two adjacent values that define a collection's coordinates
-   void GetCollectionInfo(const NTupleSize_t index, NTupleSize_t* collectionStart, ClusterSize_t* collectionSize) {
-      auto idxStart = (index == 0) ? 0 : *Map<ClusterSize_t, EColumnType::kIndex>(index - 1);
-      auto idxEnd = *Map<ClusterSize_t, EColumnType::kIndex>(index);
+   void GetCollectionInfo(const NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *collectionSize)
+   {
+      auto idxStart = (globalIndex == 0) ? 0 : *Map<ClusterSize_t, EColumnType::kIndex>(globalIndex - 1);
+      auto idxEnd = *Map<ClusterSize_t, EColumnType::kIndex>(globalIndex);
       auto selfOffset = fCurrentPage.GetClusterInfo().GetSelfOffset();
-      auto pointeeOffset = fCurrentPage.GetClusterInfo().GetPointeeOffset();
-      if (index == selfOffset) {
+      if (globalIndex == selfOffset) {
          // Passed cluster boundary
          idxStart = 0;
       }
       *collectionSize = idxEnd - idxStart;
-      *collectionStart = pointeeOffset + idxStart;
+      *collectionStart = RClusterIndex(fCurrentPage.GetClusterInfo().GetId(), idxStart);
+   }
+
+   void GetCollectionInfo(const RClusterIndex &clusterIndex,
+                          RClusterIndex *collectionStart, ClusterSize_t *collectionSize)
+   {
+      auto index = clusterIndex.GetIndex();
+      auto idxStart = (index == 0) ? 0 : *Map<ClusterSize_t, EColumnType::kIndex>(clusterIndex - 1);
+      auto idxEnd = *Map<ClusterSize_t, EColumnType::kIndex>(clusterIndex);
+      *collectionSize = idxEnd - idxStart;
+      *collectionStart = RClusterIndex(clusterIndex.GetClusterId(), idxStart);
    }
 
    void Flush();
