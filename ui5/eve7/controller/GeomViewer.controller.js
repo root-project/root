@@ -1000,8 +1000,30 @@ sap.ui.define(['sap/ui/core/Component',
 
       showControl: function() {
          this.byId("geomViewerApp").toMaster(this.createId("geomControl"));
-      }
+      },
 
+      processSliderChange: function(iaxis) {
+         console.log('slider change ' + iaxis);
+
+         if (this.geo_painter)
+            this.geo_painter.changedClipping(iaxis);
+      },
+
+      sliderXchange: function() {
+         this.processSliderChange(0);
+      },
+
+      sliderYchange: function() {
+         this.processSliderChange(1);
+      },
+
+      sliderZchange: function() {
+         this.processSliderChange(2);
+      },
+
+      clipChanged: function() {
+         this.processSliderChange(-1);
+      }
    });
 
 });
