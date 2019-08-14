@@ -8,7 +8,7 @@ if(ROOT_python_FOUND)
   ROOTTEST_ADD_TEST(regression
                     MACRO PyROOT_regressiontests.py OPTS -b
                     LABELS longtest
-                    COPY_TO_BUILDDIR ${scott_file} Scott2.C Scott3.C MuonTileID.C LoKiNamespace.C ULongLong.C 
+                    COPY_TO_BUILDDIR ${scott_file} Scott2.C Scott3.C MuonTileID.C LoKiNamespace.C ULongLong.C
                                      Till.C CoralAttributeList.C NestedNamespace.h Marco.C
                     PRECMD ${ROOT_root_CMD} -b -q -l -e gSystem->AddLinkedLibs\(\"${PYTHON_LIBRARIES}\"\)
                                          -e .L\ ${scott_file}+
@@ -27,6 +27,6 @@ if(ROOT_python_FOUND)
                     PRECMD ${ROOT_root_CMD} -b -q -l -e gSystem->AddLinkedLibs\(\"${PYTHON_LIBRARIES}\"\)
                                                      -e .L\ root_6023.h+
                     ENVIRONMENT CLING_STANDARD_PCH=none
-                                CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend.so)
+                    CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/${python_version}/libcppyy_backend.so)
 
 endif()
