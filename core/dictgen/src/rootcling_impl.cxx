@@ -4207,16 +4207,16 @@ int RootClingMain(int argc,
       clingArgsC.push_back(clingArg.c_str());
    }
 
-   std::string resourceDir = std::string(gDriverConfig->fTROOT__GetEtcDir()) + "/cling";
 
    std::unique_ptr<cling::Interpreter> owningInterpPtr;
    cling::Interpreter* interpPtr = nullptr;
 
    std::list<std::string> filesIncludedByLinkdef;
+   std::string llvmResourceDir = std::string(gDriverConfig->fTROOT__GetEtcDir()) + "/cling";
    if (!gDriverConfig->fBuildingROOTStage1) {
       // Pass the interpreter arguments to TCling's interpreter:
       clingArgsC.push_back("-resource-dir");
-      clingArgsC.push_back(resourceDir.c_str());
+      clingArgsC.push_back(llvmResourceDir.c_str());
       clingArgsC.push_back(0); // signal end of array
       const char ** &extraArgs = *gDriverConfig->fTROOT__GetExtraInterpreterArgs();
       extraArgs = &clingArgsC[1]; // skip binary name
@@ -4232,7 +4232,7 @@ int RootClingMain(int argc,
 #endif
 
       owningInterpPtr.reset(new cling::Interpreter(clingArgsC.size(), &clingArgsC[0],
-                                                   resourceDir.c_str()));
+                                                   llvmResourceDir.c_str()));
       interpPtr = owningInterpPtr.get();
    }
    cling::Interpreter &interp = *interpPtr;
@@ -4582,7 +4582,7 @@ int RootClingMain(int argc,
       clingArgs.push_back("-Ietc/cling/cint"); // For multiset and multimap
 
       if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs,
-                       resourceDir.c_str())) {
+                       llvmResourceDir.c_str())) {
          ROOT::TMetaUtils::Error(0, "Parsing #pragma failed %s\n", linkdefFilename.c_str());
          rootclingRetCode += 1;
       } else {
@@ -4630,7 +4630,7 @@ int RootClingMain(int argc,
       clingArgs.push_back("-Ietc/cling/cint"); // For multiset and multimap
 
       if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs,
-                       resourceDir.c_str())) {
+                       llvmResourceDir.c_str())) {
          ROOT::TMetaUtils::Error(0, "Parsing Linkdef file %s\n", linkdefFilename.c_str());
          rootclingRetCode += 1;
       } else {
@@ -4857,7 +4857,7 @@ int RootClingMain(int argc,
          if (modGen.IsPCH()) {
             if (!GenerateAllDict(modGen, CI, currentDirectory)) return 1;
          } else if (cxxmodule) {
-            if (!CheckModuleValid(modGen, resourceDir, interp, linkdefFilename, moduleName.str()))
+            if (!CheckModuleValid(modGen, llvmResourceDir, interp, linkdefFilename, moduleName.str()))
                return 1;
          }
       }
