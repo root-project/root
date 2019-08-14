@@ -399,6 +399,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
   #---Set the library output directory-----------------------
   ROOT_GET_LIBRARY_OUTPUT_DIR(library_output_dir)
+  set (runtime_cxxmodule_dependencies )
   if(ARG_MODULE)
     set(cpp_module)
     set(library_name ${libprefix}${ARG_MODULE}${libsuffix})
@@ -423,6 +424,10 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
             set(cpp_module_file)
           endif()
         endif(APPLE)
+        # The module depends on its modulemap file.
+        if (cpp_module_file)
+          set (runtime_cxxmodule_dependencies copymodulemap "${CMAKE_BINARY_DIR}/include/module.modulemap")
+        endif()
       endif(cpp_module)
     endif()
   else()
@@ -497,6 +502,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
                      IMPLICIT_DEPENDS ${_implicitdeps}
                      DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCINTDEP}
                              ${MODULE_LIB_DEPENDENCY} ${ARG_EXTRA_DEPENDENCIES}
+                             ${runtime_cxxmodule_dependencies}
                      COMMAND_EXPAND_LISTS)
   get_filename_component(dictname ${dictionary} NAME)
 
