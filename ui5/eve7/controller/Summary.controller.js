@@ -11,12 +11,12 @@ sap.ui.define([
    "sap/ui/layout/SplitterLayoutData",
    "sap/ui/layout/VerticalLayout",
    "sap/ui/layout/HorizontalLayout"
-], function(Controller, JSONModel, Button, ColorPalettePopover, StandardTreeItem, 
-            mInput, mCheckBox, mPanel, mText, 
+], function(Controller, JSONModel, Button, ColorPalettePopover, StandardTreeItem,
+            mInput, mCheckBox, mPanel, mText,
             SplitterLayoutData, VerticalLayout, HorizontalLayout) {
 
    "use strict";
-   
+
    var UI5PopupColors = {
          aliceblue: 'f0f8ff',
          antiquewhite: 'faebd7',
@@ -167,8 +167,8 @@ sap.ui.define([
          yellowgreen: '9acd32',
          transparent: '00000000'
    };// colorButton colors
-   
-   
+
+
    // TODO: move to separate file
    var EVEColorButton = Button.extend("rootui5.eve7.controller.EVEColorButton", {
       // when default value not specified - openui tries to load custom
@@ -213,6 +213,7 @@ sap.ui.define([
          var oTree = this.getView().byId("tree");
          oTree.setMode(sap.m.ListMode.Single);
          oTree.setIncludeItemInSelection(true);
+         this.expandLevel = 2;
 
          if (false) {
             var oModel = new JSONModel();
@@ -247,7 +248,7 @@ sap.ui.define([
 
          this.oModelGED = new JSONModel({ "widgetlist" : [] });
          this.getView().setModel(this.oModelGED, "ged");
-         
+
          this.oGuiClassDef = {
             "REveElement" : [{
                name : "RnrSelf",
@@ -359,7 +360,7 @@ sap.ui.define([
          model.refresh();
 
          var oTree = this.getView().byId("tree");
-         oTree.expandToLevel(2);
+         oTree.expandToLevel(this.expandLevel);
 
          // hide editor
          if (this.ged) {
@@ -426,7 +427,7 @@ sap.ui.define([
          this.model.setData({ fName: "Top", arr: oTreeData }); // ??? is this necessary
 
          this.model.refresh(true);
-         this.tree.expandToLevel(2);
+         this.tree.expandToLevel(this.expandLevel);
          this.getView().setModel(this.model, "treeModel");
 
          this.oProductModel = new JSONModel();
@@ -483,12 +484,12 @@ sap.ui.define([
                name: arrw[i].name,
                data: arrw[i]
             };
-            
+
             modelw.push({ value: v, name: arrw[i].name, data: arrw[i]});
 
             if (this.maxLabelLength < arrw[i].name.length) this.maxLabelLength = arrw[i].name.length;
           }
-          
+
           this.oModelGED.setData({ "widgetlist": modelw });
       },
 
@@ -546,7 +547,7 @@ sap.ui.define([
          var model = oEvent.getParameter("listItem").getBindingContext("treeModel"),
              path =  model.getPath(),
              ttt = model.getProperty(path);
-         
+
          console.log("Summary::onItemPressed ", this.mgr.GetElement(ttt.id));
          if (!ttt || (ttt.childs !== undefined) || !ttt.masterid) return;
 
@@ -750,7 +751,7 @@ sap.ui.define([
          var label = new mText(sId + "label", { text: { path: "ged>name" } });
          label.setWidth(this.maxLabelLength +"ex");
          label.addStyleClass("sapUiTinyMargin");
-         
+
          return new HorizontalLayout({
             content : [label, widget]
          });
