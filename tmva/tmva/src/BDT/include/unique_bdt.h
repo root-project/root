@@ -35,7 +35,7 @@ public:
    float inference(const std::vector<float> &event)
    ///*
    {
-      if (event[split_variable] < this->split_threshold) {
+      if (event[split_variable] <= this->split_threshold) {
          if (child_true)
             child_true->inference(event);
          else

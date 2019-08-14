@@ -38,7 +38,7 @@ public:
    Forest() { counter++; }
    ~Forest() {}
 
-   void get_Forest(std::string json_file = "aaa") { std::cout << json_file << std::endl; }
+   void get_Forest(std::string json_file) { std::cout << "Function not specialized!\n"; }
    void read_events_csv(std::string csv_file);
 
    void do_predictions(const std::vector<std::vector<float>> &events_vector, std::vector<bool> &);
@@ -46,7 +46,10 @@ public:
                              int loop_size);
    void do_predictions_batch2(const std::vector<std::vector<float>> &events_vector, std::vector<bool> &preds,
                               int loop_size);
-   void get_Forest(std::string json_file, const std::vector<std::vector<float>> &events_vector) {}
+   void get_Forest(std::string json_file, const std::vector<std::vector<float>> &events_vector)
+   {
+      std::cout << "Function not specialized!\n";
+   }
 
    // For debug:
    void test() { std::cout << "test \n"; }
@@ -128,13 +131,13 @@ void Forest<T>::do_predictions_batch2(const std::vector<std::vector<float>> &eve
          }
       }
       for (int j = 0; j < loop_size; j++) {
-         preds_tmp_arr[j] = this->objective_func(preds_tmp_arr[j]);
+         preds.push_back(this->objective_func(preds_tmp_arr[j]));
+         // preds_tmp_arr[j] = this->objective_func(preds_tmp_arr[j]);
          preds_tmp_arr[j] = 0;
       }
-      std::copy(preds_tmp_arr, preds_tmp_arr + loop_size, std::back_inserter(preds));
-      // preds.push_back(this->objective_func(preds_tmp_arr));
+      // std::copy(preds_tmp_arr, preds_tmp_arr + loop_size, std::back_inserter(preds));
    }
-   // reminder loop
+   // rest loop
    for (int j = index; j < events_vector.size(); j++) {
       preds_tmp = 0;
       for (auto &tree : this->trees) {
@@ -154,6 +157,8 @@ void Forest<unique_bdt::Tree>::get_Forest(std::string json_file)
    std::string my_config       = read_file_string(json_file);
    auto        json_model      = json::parse(my_config);
    int         number_of_trees = json_model.size();
+
+   // std::cout << "### trees: " << number_of_trees << std::endl;
 
    std::vector<unique_bdt::Tree> trees;
    trees.resize(number_of_trees);
