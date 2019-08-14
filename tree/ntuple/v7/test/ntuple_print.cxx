@@ -6,6 +6,7 @@
 #include "gtest/gtest.h"
 
 #include <iostream>
+#include <random>
 #include <sstream>
 #include <vector>
 
@@ -20,38 +21,42 @@ template <class T>
 using RField = ROOT::Experimental::RField<T>;
 
 namespace {
-    
-/*
+
+/**
  * An RAII wrapper around an open temporary file on disk. It cleans up the guarded file when the wrapper object
  * goes out of scope.
  */
 class FileRaii {
 private:
    std::string fPath;
-   TFile *file = TFile::Open("test.root", "RECREATE");
 public:
-   FileRaii(const std::string &path) : fPath(path) { }
+   FileRaii() {
+      std::random_device r;
+      std::default_random_engine e(r());
+      std::uniform_int_distribution<std::uint64_t> uniform_dist(0, std::uint64_t(-1));
+      fPath = "ntuple_test" + std::to_string(uniform_dist(e)) + ".root";
+   }
    FileRaii(const FileRaii&) = delete;
    FileRaii& operator=(const FileRaii&) = delete;
    ~FileRaii() {
-      file->Close();
       std::remove(fPath.c_str());
    }
+   std::string GetPath() const { return fPath; }
 };
-    
+
 } // anonymous namespace
 
 TEST(RNtuplePrint, FullString)
 {
-   FileRaii fileGuard("test.root");
+   FileRaii fileGuard;
    {
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<float>("pt");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff", "test.root");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff", fileGuard.GetPath());
       *fieldPt = 5.0f;
       ntuple->Fill();
    }
-   auto ntuple2 = RNTupleReader::Open("Staff", "test.root");
+   auto ntuple2 = RNTupleReader::Open("Staff", fileGuard.GetPath());
    std::ostringstream os;
    ntuple2->PrintInfo(ROOT::Experimental::ENTupleInfo::kSummary, os);
    std::string fString{std::string("")
@@ -86,7 +91,7 @@ TEST(RNtuplePrint, FloatPrint)
        + "********************************************************************************\n"
        + "* Field 1   : floatTest (float)                                                *\n"};
    EXPECT_EQ(expected, os.str());
-   
+
 }
 
 TEST(RNtuplePrint, FloatTraverse)
