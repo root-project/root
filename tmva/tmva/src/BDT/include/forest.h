@@ -46,10 +46,7 @@ public:
                              int loop_size);
    void do_predictions_batch2(const std::vector<std::vector<float>> &events_vector, std::vector<bool> &preds,
                               int loop_size);
-   void get_Forest(std::string json_file, const std::vector<std::vector<float>> &events_vector)
-   {
-      std::cout << "Function not specialized!\n";
-   }
+   void get_Forest(std::string json_file, const std::vector<std::vector<float>> &events_vector);
 
    // For debug:
    void test() { std::cout << "test \n"; }

@@ -11,6 +11,8 @@ import subprocess
 
 import json  # for testing jsonness
 
+DATA_FOLDER = "./data/"
+
 
 def get_benchs_data(bench_name="benchs/a.txt"):
     with open(bench_name, "r") as file:
@@ -30,7 +32,9 @@ def get_benchs_data(bench_name="benchs/a.txt"):
     return fname, mins, means, stddev
 
 
-def create_model_gaussian(num_samples=100, num_features=5, num_trees=10, max_depth=3):
+def create_model_gaussian(
+    num_samples=100, num_features=5, num_trees=10, max_depth=3, data_folder="./data/"
+):
     mu, sigma = 0, 1  # mean and standard deviation
 
     training_samples = max(1000, num_samples)
@@ -57,11 +61,11 @@ def create_model_gaussian(num_samples=100, num_features=5, num_trees=10, max_dep
     print("For curiosity: Accuracy: %.2f%%" % (accuracy * 100.0))
 
     # saving files
-    np.savetxt("data_files/events.csv", X, delimiter=",", fmt="%f")
-    np.savetxt("data_files/python_predictions.csv", y_pred, delimiter=",", fmt="%d")
-    np.savetxt("data_files/python_groundtruths.csv", Y, delimiter=",", fmt="%d")
-    model.get_booster().dump_model("model.json", dump_format="json")
-    model.save_model("./data/model.rabbit")
+    np.savetxt(data_folder + "events.csv", X, delimiter=",", fmt="%f")
+    np.savetxt(data_folder + "python_predictions.csv", y_pred, delimiter=",", fmt="%d")
+    np.savetxt(data_folder + "python_groundtruths.csv", Y, delimiter=",", fmt="%d")
+    model.get_booster().dump_model(data_folder + "model.json", dump_format="json")
+    model.save_model(data_folder + "model.rabbit")
     print("Saved files")
 
 
@@ -85,7 +89,10 @@ def bench_2():
         mins_list = []
         for j in range(4):
             create_model_gaussian(
-                num_samples=100_000, num_features=5, num_trees=num_trees
+                num_samples=100_000,
+                num_features=5,
+                num_trees=num_trees,
+                data_folder="./data/",
             )
             subprocess.call("./bench.sh".split(), shell=True)
             fname, mins, means, stddevs = get_benchs_data("benchs/a.txt")
@@ -109,10 +116,14 @@ if __name__ == "__main__":
     for i, value_test in enumerate(test_list):
         print(f"***** bench value {value_test} *****")
         create_model_gaussian(
-            num_samples=1000, num_features=value_test, num_trees=100, max_depth=3
+            num_samples=1000,
+            num_features=value_test,
+            num_trees=100,
+            max_depth=3,
+            data_folder=DATA_FOLDER,
         )
         subprocess.call("./bench.sh".split(), shell=True)
-        # fname, mins, means, stddevs = get_benchs_data("benchs/a.txt")
+        # fname, mins, means, stddevs = get_benchs_data("data/a.txt")
         # np.save("tmp/"+"{0:03}".format(i)+"_"+fname, mins)
         # np.save("tmp/" + "{0:03}".format(i + offset) + "_", mins)
 
