@@ -236,8 +236,8 @@ public:
 
    // Access properties
    std::size_t GetSize() const { return fSize; }
-   Shape_t GetShape() const { return fShape; }
-   Shape_t GetStrides() const { return fStrides; }
+   const Shape_t &GetShape() const { return fShape; }
+   const Shape_t &GetStrides() const { return fStrides; }
    Value_t *GetData() { return fData; }
    const Value_t *GetData() const { return fData; }
    std::shared_ptr<Container_t> GetContainer() { return fContainer; }
