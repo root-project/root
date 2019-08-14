@@ -46,18 +46,14 @@ public:
    class RClusterInfo {
    private:
       /// The cluster number
-      DescriptorId_t fId;
+      DescriptorId_t fId = 0;
       /// The first element index of the column in this cluster
-      NTupleSize_t fSelfOffset;
-      /// For offset columns, also store the cluster offset of the column being referenced
-      NTupleSize_t fPointeeOffset;
+      NTupleSize_t fIndexOffset = 0;
    public:
-      RClusterInfo() : fId(0), fSelfOffset(0), fPointeeOffset(0) {}
-      RClusterInfo(NTupleSize_t id, NTupleSize_t selfOffset, NTupleSize_t pointeeOffset)
-         : fId(id), fSelfOffset(selfOffset), fPointeeOffset(pointeeOffset) {}
+      RClusterInfo() = default;
+      RClusterInfo(NTupleSize_t id, NTupleSize_t indexOffset) : fId(id), fIndexOffset(indexOffset) {}
       NTupleSize_t GetId() const { return fId; }
-      NTupleSize_t GetSelfOffset() const { return fSelfOffset; }
-      NTupleSize_t GetPointeeOffset() const { return fPointeeOffset; }
+      NTupleSize_t GetIndexOffset() const { return fIndexOffset; }
    };
 
 private:
@@ -87,7 +83,7 @@ public:
    ClusterSize_t::ValueType GetNElements() const { return fNElements; }
    NTupleSize_t GetGlobalRangeFirst() const { return fRangeFirst; }
    NTupleSize_t GetGlobalRangeLast() const { return fRangeFirst + NTupleSize_t(fNElements) - 1; }
-   ClusterSize_t::ValueType GetClusterRangeFirst() const { return fRangeFirst - fClusterInfo.GetSelfOffset(); }
+   ClusterSize_t::ValueType GetClusterRangeFirst() const { return fRangeFirst - fClusterInfo.GetIndexOffset(); }
    ClusterSize_t::ValueType GetClusterRangeLast() const {
       return GetClusterRangeFirst() + NTupleSize_t(fNElements) - 1;
    }
@@ -100,7 +96,7 @@ public:
    bool Contains(const RClusterIndex &clusterIndex) const {
       if (fClusterInfo.GetId() != clusterIndex.GetClusterId())
          return false;
-      auto clusterRangeFirst = ClusterSize_t(fRangeFirst - fClusterInfo.GetSelfOffset());
+      auto clusterRangeFirst = ClusterSize_t(fRangeFirst - fClusterInfo.GetIndexOffset());
       return (clusterIndex.GetIndex() >= clusterRangeFirst) &&
              (clusterIndex.GetIndex() < clusterRangeFirst + fNElements);
     }

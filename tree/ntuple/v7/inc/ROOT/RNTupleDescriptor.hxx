@@ -60,7 +60,8 @@ private:
    ENTupleStructure fStructure;
    /// Establishes sub field relationships, such as classes and collections
    DescriptorId_t fParentId = kInvalidDescriptorId;
-   /// For pointers and optional/variant fields, the pointee field(s)
+   /// The pointers in the other direction from parent to children. They are serialized, too, to keep the
+   /// order of sub fields.
    std::vector<DescriptorId_t> fLinkIds;
 
 public:
@@ -103,10 +104,6 @@ private:
    DescriptorId_t fFieldId = kInvalidDescriptorId;
    /// A field can be serialized into several columns, which are numbered from zero to $n$
    std::uint32_t fIndex;
-   /// Pointer to the parent column with offsets
-   DescriptorId_t fOffsetId = kInvalidDescriptorId;
-   /// For index and offset columns of collections, pointers and variants, the pointee field(s)
-   std::vector<DescriptorId_t> fLinkIds;
 
 public:
    /// In order to handle changes to the serialization routine in future ntuple versions
@@ -120,8 +117,6 @@ public:
    RColumnModel GetModel() const { return fModel; }
    std::uint32_t GetIndex() const { return fIndex; }
    DescriptorId_t GetFieldId() const { return fFieldId; }
-   DescriptorId_t GetOffsetId() const { return fOffsetId; }
-   std::vector<DescriptorId_t> GetLinkIds() const { return fLinkIds; }
 };
 
 
@@ -350,13 +345,10 @@ public:
    void AddField(DescriptorId_t fieldId, const RNTupleVersion &fieldVersion, const RNTupleVersion &typeVersion,
                  std::string_view fieldName, std::string_view typeName, std::uint64_t nRepetitions,
                  ENTupleStructure structure);
-   void SetFieldParent(DescriptorId_t fieldId, DescriptorId_t parentId);
    void AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId);
 
    void AddColumn(DescriptorId_t columnId, DescriptorId_t fieldId,
                   const RNTupleVersion &version, const RColumnModel &model, std::uint32_t index);
-   void SetColumnOffset(DescriptorId_t columnId, DescriptorId_t offsetId);
-   void AddColumnLink(DescriptorId_t columnId, DescriptorId_t linkId);
 
    void SetFromHeader(void* headerBuffer);
 

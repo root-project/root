@@ -571,7 +571,7 @@ TEST(RNTuple, Descriptor)
                         0, ENTupleStructure::kCollection);
    descBuilder.AddField(2, RNTupleVersion(), RNTupleVersion(), "list", "std::int32_t", 0, ENTupleStructure::kLeaf);
    descBuilder.AddField(42, RNTupleVersion(), RNTupleVersion(), "x", "std::string", 0, ENTupleStructure::kLeaf);
-   descBuilder.SetFieldParent(2, 1);
+   descBuilder.AddFieldLink(1, 2);
    descBuilder.AddColumn(3, 42, RNTupleVersion(), RColumnModel(EColumnType::kIndex, true), 0);
    descBuilder.AddColumn(4, 42, RNTupleVersion(), RColumnModel(EColumnType::kByte, true), 1);
 
