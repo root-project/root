@@ -45,12 +45,18 @@
                 <items>
                   <IconTabFilter text="Clipping">
                     <VBox>
-                       <CheckBox text="Clip x" selected="{/clip/0/enabled}"/>
-                       <Slider min="{/clip/0/min}" max="{/clip/0/max}" value="{/clip/0/value}" width="100%" showAdvancedTooltip="true" showHandleTooltip="false"/>
-                       <CheckBox text="Clip y" selected="{/clip/1/enabled}"/>
-                       <Slider min="{/clip/1/min}" max="{/clip/1/max}" value="{/clip/1/value}" width="100%" showAdvancedTooltip="true" showHandleTooltip="false"/>
-                       <CheckBox text="Clip z" selected="{/clip/2/enabled}"/>
-                       <Slider min="{/clip/2/min}" max="{/clip/2/max}" value="{/clip/2/value}" width="100%" showAdvancedTooltip="true" showHandleTooltip="false"/>
+                       <CheckBox text="Clip x" selected="{/clip/0/enabled}" select="clipChanged"/>
+                       <Slider min="{/clip/0/min}" max="{/clip/0/max}" value="{/clip/0/value}" width="100%"
+                               showAdvancedTooltip="true" showHandleTooltip="false" inputsAsTooltips="true"
+                               change="sliderXchange" liveChange="sliderXchange"/>
+                       <CheckBox text="Clip y" selected="{/clip/1/enabled}" select="clipChanged"/>
+                       <Slider min="{/clip/1/min}" max="{/clip/1/max}" value="{/clip/1/value}" width="100%"
+                               showAdvancedTooltip="true" showHandleTooltip="false" inputsAsTooltips="true"
+                               change="sliderYchange" liveChange="sliderYchange"/>
+                       <CheckBox text="Clip z" selected="{/clip/2/enabled}" select="clipChanged"/>
+                       <Slider min="{/clip/2/min}" max="{/clip/2/max}" value="{/clip/2/value}" width="100%"
+                               showAdvancedTooltip="true" showHandleTooltip="false" inputsAsTooltips="true"
+                               change="sliderZchange" liveChange="sliderZchange"/>
                     </VBox>
                   </IconTabFilter>
                   <IconTabFilter text="Control">
