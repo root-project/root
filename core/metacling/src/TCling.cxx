@@ -7934,8 +7934,9 @@ Bool_t TCling::ClassInfo_Contains(ClassInfo_t *info, DeclId_t declid) const
    if (!decl || !ctxt) return kFALSE;
    if (decl->getDeclContext()->Equals(ctxt))
       return kTRUE;
-   else if (decl->getDeclContext()->isTransparentContext() &&
-            decl->getDeclContext()->getParent()->Equals(ctxt))
+   else if ((decl->getDeclContext()->isTransparentContext()
+             || decl->getDeclContext()->isInlineNamespace())
+            && decl->getDeclContext()->getParent()->Equals(ctxt))
       return kTRUE;
    return kFALSE;
 }
