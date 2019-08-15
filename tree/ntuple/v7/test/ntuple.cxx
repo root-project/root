@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <variant>
 
 using DescriptorId_t = ROOT::Experimental::DescriptorId_t;
 using EColumnType = ROOT::Experimental::EColumnType;
@@ -288,6 +289,8 @@ TEST(RNTuple, Clusters)
    wrFourVec->at(1) = 1.0;
    wrFourVec->at(2) = 2.0;
    wrFourVec->at(3) = 3.0;
+   auto wrVariant = modelWrite->MakeField<std::variant<float>>("variant");
+   *wrVariant = 2.0;
 
    auto modelRead = std::unique_ptr<RNTupleModel>(modelWrite->Clone());
 
@@ -299,11 +302,13 @@ TEST(RNTuple, Clusters)
       wrNnlo->clear();
       *wrTag = "";
       wrFourVec->at(2) = 42.0;
+      *wrVariant = 4.0;
       ntuple.Fill();
       *wrPt = 12.0;
       wrNnlo->push_back(std::vector<float>{42.0});
       *wrTag = "12345";
       wrFourVec->at(1) = 24.0;
+      *wrVariant = 8.0;
       ntuple.Fill();
    }
 
@@ -311,6 +316,7 @@ TEST(RNTuple, Clusters)
    auto rdTag = modelRead->Get<std::string>("tag");
    auto rdNnlo = modelRead->Get<std::vector<std::vector<float>>>("nnlo");
    auto rdFourVec = modelRead->Get<std::array<float, 4>>("fourVec");
+   auto rdVariant = modelRead->Get<std::variant<float>>("variant");
 
    RNTupleReader ntuple(std::move(modelRead), std::make_unique<RPageSourceRoot>("f", fileGuard.GetPath()));
    EXPECT_EQ(3U, ntuple.GetNEntries());
@@ -331,12 +337,14 @@ TEST(RNTuple, Clusters)
    EXPECT_EQ(1.0, (*rdFourVec)[1]);
    EXPECT_EQ(2.0, (*rdFourVec)[2]);
    EXPECT_EQ(3.0, (*rdFourVec)[3]);
+   EXPECT_EQ(2.0, std::get<0>(*rdVariant));
 
    ntuple.LoadEntry(1);
    EXPECT_EQ(24.0, *rdPt);
    EXPECT_STREQ("", rdTag->c_str());
    EXPECT_TRUE(rdNnlo->empty());
    EXPECT_EQ(42.0, (*rdFourVec)[2]);
+   EXPECT_EQ(4.0, std::get<0>(*rdVariant));
 
    ntuple.LoadEntry(2);
    EXPECT_EQ(12.0, *rdPt);
@@ -345,6 +353,7 @@ TEST(RNTuple, Clusters)
    EXPECT_EQ(1U, (*rdNnlo)[0].size());
    EXPECT_EQ(42.0, (*rdNnlo)[0][0]);
    EXPECT_EQ(24.0, (*rdFourVec)[1]);
+   EXPECT_EQ(8.0, std::get<0>(*rdVariant));
 }
 
 
