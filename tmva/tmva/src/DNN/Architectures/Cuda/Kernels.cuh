@@ -1170,7 +1170,7 @@ __global__ void Reshape(AFloat * A, const AFloat * B, int nRowsA, int nColsA, in
 /// appropriate input index.
 //////////////////////////////////////////////////////////////////////////////////
 template<typename AFloat>
-__global__ void Flatten(AFloat * A, const AFloat ** B, int size, int nRows, int nCols)
+__global__ void Flatten(AFloat * A, const AFloat *B, int size, int nRows, int nCols)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
@@ -1181,7 +1181,8 @@ __global__ void Flatten(AFloat * A, const AFloat ** B, int size, int nRows, int 
    // Get a transposed view on matrix B[i].
    int row = j / nCols;
    int col = j % nCols;
-   AFloat element = B[i][col * nRows + row];
+   // AFloat element = B[i][col * nRows + row];
+   AFloat element = B[ i * nColsA + col * nRows + row ];
 
    size_t index = j * size + i;
    A[index] = element;
@@ -1202,7 +1203,7 @@ __global__ void Flatten(AFloat * A, const AFloat ** B, int size, int nRows, int 
 /// by locating the appropriate input index.
 //////////////////////////////////////////////////////////////////////////////////
 template<typename AFloat>
-__global__ void Deflatten(AFloat ** A, const AFloat * B, int size, int nRows, int nCols)
+__global__ void Deflatten(AFloat * A, const AFloat * B, int size, int nRows, int nCols)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
@@ -1215,7 +1216,7 @@ __global__ void Deflatten(AFloat ** A, const AFloat * B, int size, int nRows, in
    // Get a transposed view on matrix A[i].
    int row = j / nCols;
    int col = j % nCols;
-   A[i][col * nRows + row] = element;
+   A[ i * nColsB + col * nRows + row] = element;
 }
 
 } // namespace Cuda

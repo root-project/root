@@ -286,44 +286,28 @@ std::tuple<typename Architecture_t::DeviceBuffer_t, typename Architecture_t::Dev
 }
  
 //______________________________________________________________________________
-/*template <typename Data_t, typename Architecture_t>
+template <typename Data_t, typename Architecture_t>
 TTensorBatch<Architecture_t> TTensorDataLoader<Data_t, Architecture_t>::GetTensorBatch()
 {
-   // After copying the data to the device, wrap the device buffer in the respective 
+      // After copying the data to the device, wrap the device buffer in the respective 
    // architectures matrix type
    DeviceBufferTuple DeviceBuffers = CopyTensorBatches();
-<<<<<<< HEAD
-
-   // now we build tensors with columnmajor layout . Note Batch depth is the major shape (last of the shape)
 
    //--? fBatchDepth or fINputShape[0] ????
-   Tensor_t inputTensor (std::get<0>(DeviceBuffers), { fBatchHeight, fBatchWidth, fInputShape[0] } );
-
-//   std::vector<Matrix_t> inputTensor;
-//   size_t jump = fBatchHeight * fBatchWidth;
-//   for (size_t i = 0; i < fInputShape[0]; i++) {
-//      DeviceBuffer_t subInputDeviceBuffer = std::get<0>(DeviceBuffers).GetSubBuffer(i * jump, jump);
-//      inputTensor.emplace_back(subInputDeviceBuffer, fBatchHeight, fBatchWidth);
-//   }
+   Tensor_t inputTensor( std::get<0>(DeviceBuffers), { fBatchHeight, fBatchWidth, fInputShape[0] } ); 
+   // std::vector<Matrix_t> inputTensor;
+   // size_t jump = fBatchHeight * fBatchWidth;
+   // for (size_t i = 0; i < fInputShape[0]; i++) {
+   //    DeviceBuffer_t subInputDeviceBuffer = std::get<0>(DeviceBuffers).GetSubBuffer(i * jump, jump);
+   //    inputTensor.emplace_back(subInputDeviceBuffer, fBatchHeight, fBatchWidth);
+   // }
    Matrix_t outputMatrix(std::get<1>(DeviceBuffers), fInputShape[0], fNOutputFeatures);
    Matrix_t weightMatrix(std::get<2>(DeviceBuffers), fInputShape[0], fNOutputFeatures);
-=======
-   
-   std::vector<Matrix_t> inputTensor;
-   size_t jump = fBatchHeight * fBatchWidth;
-   for (size_t i = 0; i < fInputShape[0]; i++) {
-      DeviceBuffer_t subInputDeviceBuffer = std::get<0>(DeviceBuffers).GetSubBuffer(i * jump, jump);
-      inputTensor.emplace_back(subInputDeviceBuffer, fBatchHeight, fBatchWidth);
-   }
-   Matrix_t outputMatrix(std::get<1>(DeviceBuffers), fInputShape[0], fNOutputFeatures);
-   Matrix_t weightMatrix(std::get<2>(DeviceBuffers), fInputShape[0], fNOutputFeatures);
->>>>>>> Fixing some concurrency issues
-
 
    fBatchIndex++;
    return TTensorBatch<Architecture_t>(inputTensor, outputMatrix, weightMatrix);
-}*/
-  
+}
+
 //______________________________________________________________________________
 template <typename Data_t, typename Architecture_t>
 template <typename RNG>

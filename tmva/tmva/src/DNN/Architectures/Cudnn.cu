@@ -14,7 +14,9 @@
 // for Double_t and Real_t floating point types.                 //
 ///////////////////////////////////////////////////////////////////
 
-#include "TMVA/DNN/Architectures/Cudnn.h"
+
+
+#include "TMVA/DNN/Architectures/TCudnn.h"
 /*#include "Cudnn/Propagation.cu"
 #include "Cudnn/Arithmetic.cu"
 #include "Cudnn/ActivationFunctions.cu"
@@ -28,14 +30,13 @@
 namespace TMVA {
 namespace DNN  {
 
-template class TCudnn<Real_t>;
-template class TCudnn<Double_t>;
+//template class TCudnn<Real_t>;
+//template class TCudnn<Double_t>;
 
 #ifndef R__HAS_TMVAGPU
    // if R__HAS_TMVAGPU is not defined this file should not be compiled 
    static_assert(false,"GPU/CUDA architecture is not enabled"); 
 #endif
-
 
 } // namespace tmva
 } // namespace dnn

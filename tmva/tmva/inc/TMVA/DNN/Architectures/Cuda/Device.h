@@ -59,8 +59,8 @@ public:
 
    /* Return 1D dim3 object representing the block grid covering the row-range
     * of the matrix A along the y-dimension. */
-   template<typename AFloat>
-   static dim3 GridDims1D(const TCudaMatrix<AFloat> &A)
+   template<typename AMatrix>
+   static dim3 GridDims1D(const AMatrix &A)
    {
       int gridDim = A.GetNrows() / TDevice::BlockSize;
       if ((A.GetNrows() % TDevice::BlockSize) != 0) {
@@ -71,8 +71,8 @@ public:
 
    /* Return 2D dim3 object representing the block grid consisting of two-dimensional
     * BlockDimX x BlockDimY blocks covering the matrix A */
-   template<typename AFloat>
-   static dim3 GridDims2D(const TCudaMatrix<AFloat> &A)
+   template<typename AMatrix>
+   static dim3 GridDims2D(const AMatrix &A)
    {
       int gridDimX = A.GetNcols() / TDevice::BlockDimX;
       if ((A.GetNcols() % TDevice::BlockDimX) != 0)
@@ -84,8 +84,8 @@ public:
    }
 
    /* Return the number of threads that will be launched for a given matrix \p A */
-   template<typename AFloat>
-   static int NThreads(const TCudaMatrix<AFloat> &A)
+   template<typename AMatrix>
+   static int NThreads(const AMatrix &A)
    {
       int gridDimX = A.GetNcols() / TDevice::BlockDimX;
       if ((A.GetNcols() % TDevice::BlockDimX) != 0) {

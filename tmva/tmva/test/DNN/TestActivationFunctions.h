@@ -65,6 +65,7 @@ auto testIdentity(size_t ntests)
    return maximumError;
 }
 
+#if 0  // fix to not use reference architecture
 /*! Test computation of the first derivative of the identity function. */
 //______________________________________________________________________________
 template <typename Architecture>
@@ -94,7 +95,7 @@ auto testIdentityDerivative(size_t ntests)
    }
    return maximumError;
 }
-
+#endif
 //______________________________________________________________________________
 //
 //  ReLU Activation Function

@@ -156,6 +156,8 @@ public:
    AFloat *       GetDataPointer()       {return fElementBuffer;}
    const cublasHandle_t & GetCublasHandle() const    {return fCublasHandle;}
 
+   inline  TCudaDeviceBuffer<AFloat> GetDeviceBuffer() const { return fElementBuffer;}
+
    /** Access to elements of device matrices provided through TCudaDeviceReference
     *  class. Note that access is synchronous end enforces device synchronization
     *  on all streams. Only used for testing. */

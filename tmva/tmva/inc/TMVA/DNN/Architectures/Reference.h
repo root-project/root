@@ -19,7 +19,7 @@
 #define TMVA_DNN_ARCHITECTURES_REFERENCE
 
 #include "TMatrix.h"
-#include "TMVA/RTensor.hxx"
+//#include "TMVA/RTensor.hxx"
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/CNN/ConvLayer.h"
 #include "TMVA/DNN/Architectures/Reference/DataLoader.h"
@@ -50,7 +50,7 @@ public:
 
    using Scalar_t     = AReal;
    using Matrix_t     = TMatrixT<AReal>;
-   using Tensor_t     = TMVA::Experimental::RTensor<AReal>;
+   //using Tensor_t     = TMVA::Experimental::RTensor<AReal>;
 
    //____________________________________________________________________________
    //

@@ -447,9 +447,6 @@ if(tmva-gpu)
     src/DNN/Architectures/Cuda/CudaMatrix.cu
     src/DNN/Architectures/Cuda/CudaTensor.cu
     src/DNN/Architectures/Cudnn.cu
-    src/DNN/Architectures/Cudnn/ActivationFunctions.cu
-    src/DNN/Architectures/Cudnn/Arithmetic.cu
-    src/DNN/Architectures/Cudnn/Propagate.cu
   )
   target_include_directories(TMVA PRIVATE ${CUDA_INCLUDE_DIRS})
   target_link_libraries(TMVA PRIVATE ${CUDA_CUBLAS_LIBRARIES})

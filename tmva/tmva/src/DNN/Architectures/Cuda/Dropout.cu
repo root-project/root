@@ -22,7 +22,7 @@ namespace DNN  {
 
 //____________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::Dropout(TCudaMatrix<AFloat> &A,
+void TCuda<AFloat>::Dropout(TCudaTensor<AFloat> &A,
                             AFloat dropoutProbability)
 {
    dim3 blockDims = TDevice::BlockDims2D();
