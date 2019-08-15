@@ -4190,10 +4190,28 @@ int RootClingMain(int argc,
       clingArgsInterpreter.push_back("-fmodule-name");
       clingArgsInterpreter.push_back(moduleName.str());
 
+      std::string moduleCachePath = llvm::sys::path::parent_path(sharedLibraryPathName).str();
+      // FIXME: This is a horrible workaround to fix the incremental builds.
+      // The enumerated modules are built by clang impicitly based on #include of
+      // a header which is contained within that module. The build system has
+      // no way to track dependencies on them and trigger a rebuild.
+      // A possible solution can be to disable completely the implicit build of
+      // modules and each module to be built by rootcling. We need to teach
+      // rootcling how to build modules with no IO support.
+      if (moduleName == "Core") {
+         assert(gDriverConfig->fBuildingROOTStage1);
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "_Builtin_stddef_max_align_t.pcm").str().c_str());
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "libc.pcm").str().c_str());
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "std.pcm").str().c_str());
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "ROOT_Config.pcm").str().c_str());
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "ROOT_Rtypes.pcm").str().c_str());
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "ROOT_Foundation_C.pcm").str().c_str());
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "ROOT_Foundation_Stage1_NoRTTI.pcm").str().c_str());
+      }
+
       // Set the C++ modules output directory to the directory where we generate
       // the shared library.
-      clingArgsInterpreter.push_back("-fmodules-cache-path=" +
-                                     llvm::sys::path::parent_path(sharedLibraryPathName).str());
+      clingArgsInterpreter.push_back("-fmodules-cache-path=" + moduleCachePath);
    }
 
    // Convert arguments to a C array and check if they are sane
