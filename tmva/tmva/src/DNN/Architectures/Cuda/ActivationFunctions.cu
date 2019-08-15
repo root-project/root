@@ -25,8 +25,8 @@ namespace DNN
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::IdentityDerivative(TCudaMatrix<AFloat> & B,
-                                           const TCudaMatrix<AFloat> & A)
+void TCuda<AFloat>::IdentityDerivative(TCudaTensor<AFloat> & B,
+                                           const TCudaTensor<AFloat> & A)
 {
    dim3 blockDims = TDevice::BlockDims2D();
    dim3 gridDims  = TDevice::GridDims2D(B);
@@ -40,7 +40,7 @@ void TCuda<AFloat>::IdentityDerivative(TCudaMatrix<AFloat> & B,
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::Relu(TCudaMatrix<AFloat> & A)
+void TCuda<AFloat>::Relu(TCudaTensor<AFloat> & A)
 {
    dim3 blockDims = TDevice::BlockDims2D();
    dim3 gridDims  = TDevice::GridDims2D(A);
@@ -53,8 +53,8 @@ void TCuda<AFloat>::Relu(TCudaMatrix<AFloat> & A)
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::ReluDerivative(TCudaMatrix<AFloat> & B,
-                                       const TCudaMatrix<AFloat> & A)
+void TCuda<AFloat>::ReluDerivative(TCudaTensor<AFloat> & B,
+                                       const TCudaTensor<AFloat> & A)
 {
    dim3 blockDims = TDevice::BlockDims2D();
    dim3 gridDims  = TDevice::GridDims2D(B);
@@ -69,7 +69,7 @@ void TCuda<AFloat>::ReluDerivative(TCudaMatrix<AFloat> & B,
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::Sigmoid(TCudaMatrix<AFloat> & A)
+void TCuda<AFloat>::Sigmoid(TCudaTensor<AFloat> & A)
 {
    dim3 blockDims = TDevice::BlockDims2D();
    dim3 gridDims  = TDevice::GridDims2D(A);
@@ -82,8 +82,8 @@ void TCuda<AFloat>::Sigmoid(TCudaMatrix<AFloat> & A)
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::SigmoidDerivative(TCudaMatrix<AFloat> & B,
-                                          const TCudaMatrix<AFloat> & A)
+void TCuda<AFloat>::SigmoidDerivative(TCudaTensor<AFloat> & B,
+                                          const TCudaTensor<AFloat> & A)
 {
    dim3 blockDims = TDevice::BlockDims2D();
    dim3 gridDims  = TDevice::GridDims2D(B);
@@ -98,7 +98,7 @@ void TCuda<AFloat>::SigmoidDerivative(TCudaMatrix<AFloat> & B,
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::Tanh(TCudaMatrix<AFloat> & A)
+void TCuda<AFloat>::Tanh(TCudaTensor<AFloat> & A)
 {
    dim3 blockDims = TDevice::BlockDims2D();
    dim3 gridDims  = TDevice::GridDims2D(A);
@@ -111,8 +111,8 @@ void TCuda<AFloat>::Tanh(TCudaMatrix<AFloat> & A)
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::TanhDerivative(TCudaMatrix<AFloat> & B,
-                                       const TCudaMatrix<AFloat> & A)
+void TCuda<AFloat>::TanhDerivative(TCudaTensor<AFloat> & B,
+                                       const TCudaTensor<AFloat> & A)
 {
    dim3 blockDims = TDevice::BlockDims2D();
    dim3 gridDims  = TDevice::GridDims2D(B);
@@ -127,7 +127,7 @@ void TCuda<AFloat>::TanhDerivative(TCudaMatrix<AFloat> & B,
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::SymmetricRelu(TCudaMatrix<AFloat> & A)
+void TCuda<AFloat>::SymmetricRelu(TCudaTensor<AFloat> & A)
 {
    dim3 blockDims = TDevice::BlockDims2D();
    dim3 gridDims  = TDevice::GridDims2D(A);
@@ -140,8 +140,8 @@ void TCuda<AFloat>::SymmetricRelu(TCudaMatrix<AFloat> & A)
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::SymmetricReluDerivative(TCudaMatrix<AFloat> & B,
-                                                const TCudaMatrix<AFloat> & A)
+void TCuda<AFloat>::SymmetricReluDerivative(TCudaTensor<AFloat> & B,
+                                                const TCudaTensor<AFloat> & A)
 {
    dim3 blockDims = TDevice::BlockDims2D();
    dim3 gridDims  = TDevice::GridDims2D(B);
@@ -156,7 +156,7 @@ void TCuda<AFloat>::SymmetricReluDerivative(TCudaMatrix<AFloat> & B,
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::SoftSign(TCudaMatrix<AFloat> & A)
+void TCuda<AFloat>::SoftSign(TCudaTensor<AFloat> & A)
 {
    dim3 blockDims = TDevice::BlockDims2D();
    dim3 gridDims  = TDevice::GridDims2D(A);
@@ -169,8 +169,8 @@ void TCuda<AFloat>::SoftSign(TCudaMatrix<AFloat> & A)
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::SoftSignDerivative(TCudaMatrix<AFloat> & B,
-                                           const TCudaMatrix<AFloat> & A)
+void TCuda<AFloat>::SoftSignDerivative(TCudaTensor<AFloat> & B,
+                                           const TCudaTensor<AFloat> & A)
 {
    dim3 blockDims = TDevice::BlockDims2D();
    dim3 gridDims  = TDevice::GridDims2D(B);
@@ -185,7 +185,7 @@ void TCuda<AFloat>::SoftSignDerivative(TCudaMatrix<AFloat> & B,
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::Gauss(TCudaMatrix<AFloat> & A)
+void TCuda<AFloat>::Gauss(TCudaTensor<AFloat> & A)
 {
    dim3 blockDims = TDevice::BlockDims2D();
    dim3 gridDims  = TDevice::GridDims2D(A);
@@ -198,8 +198,8 @@ void TCuda<AFloat>::Gauss(TCudaMatrix<AFloat> & A)
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::GaussDerivative(TCudaMatrix<AFloat> & B,
-                                    const TCudaMatrix<AFloat> & A)
+void TCuda<AFloat>::GaussDerivative(TCudaTensor<AFloat> & B,
+                                    const TCudaTensor<AFloat> & A)
 {
    dim3 blockDims = TDevice::BlockDims2D();
    dim3 gridDims  = TDevice::GridDims2D(B);

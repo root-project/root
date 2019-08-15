@@ -7,7 +7,7 @@
 #include <type_traits>
 #include "stdlib.h"
 #include "TRandom.h"
-#include "TMVA/DNN/Architectures/Reference.h"
+//#include "TMVA/DNN/Architectures/Reference.h"
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/Net.h"
 #include "TMVA/DNN/DeepNet.h"
@@ -356,7 +356,7 @@ template <typename ATensor>
 void randomBatch(ATensor &X)
 {
    for (size_t i = 0; i < X.GetFirstSize(); ++i) { 
-      typename ATensor::Matrix_t mX = X.At(i).GetMatrix();
+      auto mX = X.At(i).GetMatrix();
       randomMatrix(mX);  
    }
 }

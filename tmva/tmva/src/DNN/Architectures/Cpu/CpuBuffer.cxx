@@ -356,6 +356,7 @@ void TTensorDataLoader<TensorInput, TCpu<Real_t>>::CopyTensorWeights(TCpuBuffer<
    }
 }
 
+#if 0 
 //______________________________________________________________________________
 template <>
 TTensorBatch<TCpu<Real_t> > TTensorDataLoader<TensorInput, TCpu<Real_t> >::GetTensorBatch()
@@ -376,6 +377,7 @@ TTensorBatch<TCpu<Real_t> > TTensorDataLoader<TensorInput, TCpu<Real_t> >::GetTe
    fBatchIndex++;
    return TTensorBatch<TCpu<Real_t> >(inputTensor, outputMatrix, weightMatrix);
 }
+#endif
 
 //______________________________________________________________________________
 template <>
@@ -438,7 +440,7 @@ void TTensorDataLoader<TensorInput, TCpu<Double_t>>::CopyTensorWeights(TCpuBuffe
       sampleIterator++;
    }
 }
-
+#if 0
 //______________________________________________________________________________
 template <>
 TTensorBatch<TCpu<Double_t> > TTensorDataLoader<TensorInput, TCpu<Double_t> >::GetTensorBatch()
@@ -460,6 +462,9 @@ TTensorBatch<TCpu<Double_t> > TTensorDataLoader<TensorInput, TCpu<Double_t> >::G
    fBatchIndex++;
    return TTensorBatch<TCpu<Double_t> >(inputTensor, outputMatrix, weightMatrix);
 }
+#endif
+
+
 ///- re-implement specialization for Double_t
 //______________________________________________________________________________
 template <>
@@ -546,6 +551,7 @@ void TTensorDataLoader<TMVAInput_t, TCpu<Double_t>>::CopyTensorWeights(TCpuBuffe
    }
 }
 
+#if 0
 //______________________________________________________________________________
 template <>
 TTensorBatch<TCpu<Double_t> > TTensorDataLoader<TMVAInput_t, TCpu<Double_t> >::GetTensorBatch()
@@ -567,6 +573,8 @@ TTensorBatch<TCpu<Double_t> > TTensorDataLoader<TMVAInput_t, TCpu<Double_t> >::G
    fBatchIndex++;
    return TTensorBatch<TCpu<Double_t> >(inputTensor, outputMatrix, weightMatrix);
 }
+#endif
+
 ///- re-implement specialization for Real_t
 //______________________________________________________________________________
 template <>
@@ -653,6 +661,7 @@ void TTensorDataLoader<TMVAInput_t, TCpu<Real_t>>::CopyTensorWeights(TCpuBuffer<
    }
 }
 
+#if 0 
 //______________________________________________________________________________
 template <>
 TTensorBatch<TCpu<Real_t> > TTensorDataLoader<TMVAInput_t, TCpu<Real_t> >::GetTensorBatch()
@@ -674,6 +683,7 @@ TTensorBatch<TCpu<Real_t> > TTensorDataLoader<TMVAInput_t, TCpu<Real_t> >::GetTe
    fBatchIndex++;
    return TTensorBatch<TCpu<Real_t> >(inputTensor, outputMatrix, weightMatrix);
 }
+#endif
 
 //______________________________________________________________________________
 // Explicit instantiations.

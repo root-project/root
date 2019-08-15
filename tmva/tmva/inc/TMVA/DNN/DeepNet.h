@@ -934,7 +934,7 @@ auto TDeepNet<Architecture_t, Layer_t>::Backward(const Tensor_t &input, const Ma
 
    // need to have a dummy tensor (size=0) to pass for activation gradient backward which
    // are not computed for the first layer 
-   Tensor_t dummy ( {0});
+   Tensor_t dummy;
    fLayers[0]->Backward(dummy, input);
 }
 

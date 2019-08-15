@@ -15,7 +15,7 @@
  // for CUDA architectures using cuDNN library.                  //
  //////////////////////////////////////////////////////////////////
 
-#include "TMVA/DNN/Architectures/Cudnn.h"
+#include "TMVA/DNN/Architectures/TCudnn.h"
 /*#include "TMVA/DNN/Architectures/Cuda.h"
 #include "TMVA/DNN/Architectures/Cuda/Device.h"
 #include "Kernels.cuh"*/

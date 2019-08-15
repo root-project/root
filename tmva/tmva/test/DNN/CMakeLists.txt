@@ -71,10 +71,12 @@ if (CUDA_FOUND AND tmva-gpu)
   ROOT_ADD_TEST(TMVA-DNN-DataLoaderCuda COMMAND testDataLoaderCuda)
   
   # DNN - Cudnn
+if (Have_cudnn) 
   CUDA_ADD_EXECUTABLE(testCudnn TestCudnn.cxx)
   TARGET_LINK_LIBRARIES(testCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
   ROOT_ADD_TEST(TMVA-DNN-Cudnn COMMAND testCudnn)
-  
+endif()
+
   # DNN - TensorDataLoader Cudnn
   #CUDA_ADD_EXECUTABLE(testTensorDataLoaderCudnn TestTensorDataLoaderCudnn.cxx)
   #TARGET_LINK_LIBRARIES(testTensorDataLoaderCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})

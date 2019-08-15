@@ -81,13 +81,14 @@ void TCuda<double>::Multiply(TCudaMatrix<double> &C,
 template<>
 void TCuda<float>::TransposeMultiply(TCudaMatrix<float> & C,
                                       const TCudaMatrix<float> & A,
-                                      const TCudaMatrix<float> & B)
+                                      const TCudaMatrix<float> & B,
+                                      float alpha, float beta)
 {
    int m, n, k;
    k = A.GetNrows();
    m = A.GetNcols();
    n = B.GetNcols();
-   float alpha = 1.0, beta = 0.0;
+   //float alpha = 1.0, beta = 0.0;
 
    cudaStream_t s = A.GetComputeStream();
    cublasSetStream(A.GetCublasHandle(), s);
@@ -107,13 +108,14 @@ void TCuda<float>::TransposeMultiply(TCudaMatrix<float> & C,
 template<>
 void TCuda<double>::TransposeMultiply(TCudaMatrix<double> & C,
                                       const TCudaMatrix<double> & A,
-                                      const TCudaMatrix<double> & B)
+                                      const TCudaMatrix<double> & B,
+                                      double alpha, double beta)
 {
    int m, n, k;
    k = A.GetNrows();
    m = A.GetNcols();
    n = B.GetNcols();
-   double alpha = 1.0, beta = 0.0;
+   //double alpha = 1.0, beta = 0.0;
 
    cudaStream_t s = A.GetComputeStream();
    cublasSetStream(A.GetCublasHandle(), s);
@@ -134,6 +136,20 @@ void TCuda<double>::TransposeMultiply(TCudaMatrix<double> & C,
 template<typename AFloat>
 void TCuda<AFloat>::Hadamard(TCudaMatrix<AFloat> & B,
                              const TCudaMatrix<AFloat> &A)
+{
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(B);
+   cudaStream_t s = A.GetComputeStream();
+   ::TMVA::DNN::Cuda::Hadamard<<<gridDims, blockDims, 0, s>>>(B.GetDataPointer(),
+                                                              A.GetDataPointer(),
+                                                              A.GetNrows(),
+                                                              A.GetNcols());
+   B.SetComputeStream(s);
+}
+//____________________________________________________________________________
+template<typename AFloat>
+void TCuda<AFloat>::Hadamard(TCudaTensor<AFloat> & B,
+                             const TCudaTensor<AFloat> &A)
 {
    dim3 blockDims = TDevice::BlockDims2D();
    dim3 gridDims  = TDevice::GridDims2D(B);
@@ -165,12 +181,13 @@ AFloat TCuda<AFloat>::Sum(const TCudaMatrix<AFloat> & A)
 //____________________________________________________________________________
 template<>
 void TCuda<float>::SumColumns(TCudaMatrix<float> & B,
-                              const TCudaMatrix<float> & A)
+                              const TCudaMatrix<float> & A,
+                              float alpha, float beta)
 {
    int m, n;
    m = A.GetNrows();
    n = A.GetNcols();
-   float alpha = 1.0, beta = 0.0;
+   //float alpha = 1.0, beta = 0.0;
 
    cudaStream_t s = A.GetComputeStream();
    cublasSetStream(A.GetCublasHandle(), s);
@@ -188,12 +205,13 @@ void TCuda<float>::SumColumns(TCudaMatrix<float> & B,
 //____________________________________________________________________________
 template<>
 void TCuda<double>::SumColumns(TCudaMatrix<double> & B,
-                               const TCudaMatrix<double> & A)
+                               const TCudaMatrix<double> & A,
+                               double alpha, double beta)
 {
    int m, n;
    m = A.GetNrows();
    n = A.GetNcols();
-   double alpha = 1.0, beta = 0.0;
+   //double alpha = 1.0, beta = 0.0;
 
    cudaStream_t s = A.GetComputeStream();
    cublasSetStream(A.GetCublasHandle(), s);
@@ -252,6 +270,8 @@ void TCuda<double>::SumRows(TCudaMatrix<double> & B,
 
     B.SetComputeStream(s);
 }
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// \brief Checks two matrices for element-wise equality.
@@ -313,24 +333,16 @@ void TCuda<double>::ScaleAdd(TCudaMatrix<double> & B,
 }
 
 //____________________________________________________________________________
-template<>
-void TCuda<float>::ScaleAdd(std::vector<TCudaMatrix<float>> & B,
-                            const std::vector<TCudaMatrix<float>> & A,
-                            float alpha)
+template<typename AFloat>
+void TCuda<AFloat>::ScaleAdd(TCudaTensor<AFloat> & B,
+                            const TCudaTensor<AFloat> & A,
+                            AFloat alpha)
 {
-   for (size_t i = 0; i < A.size(); ++i) {
-      ScaleAdd(B[i], A[i], alpha);
-   }
-}
-
-//____________________________________________________________________________
-template<>
-void TCuda<double>::ScaleAdd(std::vector<TCudaMatrix<double>> & B,
-                            const std::vector<TCudaMatrix<double>> & A,
-                            double alpha)
-{
-   for (size_t i = 0; i < A.size(); ++i) {
-      ScaleAdd(B[i], A[i], alpha);
+   // should re-implemented at tensor level
+   for (size_t i = 0; i < A.GetFirstSize(); ++i) {
+      TCudaMatrix<AFloat> B_m = B.At(i).GetMatrix();
+      TCudaMatrix<AFloat> A_m = A.At(i).GetMatrix();  
+      ScaleAdd(B_m, A_m, alpha);
    }
 }
 

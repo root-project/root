@@ -49,7 +49,7 @@
 
 #ifdef R__HAS_TMVAGPU
 #include "TMVA/DNN/Architectures/Cuda.h"
-#include "TMVA/DNN/Architectures/Cudnn.h"
+#include "TMVA/DNN/Architectures/TCudnn.h"
 #endif
 
 #include "TMVA/DNN/Functions.h"
