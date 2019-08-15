@@ -74,8 +74,7 @@
      if (norjs || !require.specified("jsroot"))
         define('jsroot', [], jsroot);
 
-   } else
-   if (typeof exports === 'object' /*&& typeof module !== 'undefined'*/) {
+   } else if (typeof exports === 'object' /*&& typeof module !== 'undefined'*/) {
       // processing with Node.js or CommonJS
 
       //  mark JSROOT as used with Node.js
@@ -96,7 +95,7 @@
 
    "use strict";
 
-   JSROOT.version = "dev 9/08/2019";
+   JSROOT.version = "dev 15/08/2019";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -1251,14 +1250,19 @@
          modules.push('JSRootPainter.hist3d');
       }
 
-      if ((kind.indexOf("geom;")>=0) && (jsroot.sources.indexOf("geom")<0)) {
-         if (!JSROOT.nodjs && (typeof window !='undefined'))
+      if (kind.indexOf("datgui;")>=0) {
+         if (!JSROOT.nodejs && (typeof window !='undefined'))
             mainfiles += (use_bower ? "###dat.gui" : "&&&scripts") + "/dat.gui.min.js;";
+         // console.log('extra loading module dat.gui');
+         modules.push('dat.gui');
+      }
+
+      if ((kind.indexOf("geom;")>=0) && (jsroot.sources.indexOf("geom")<0)) {
          mainfiles += "$$$scripts/ThreeCSG" + ext + ".js;" +
                       "$$$scripts/JSRootGeoBase" + ext + ".js;" +
                       "$$$scripts/JSRootGeoPainter" + ext + ".js;";
          extrafiles += "$$$style/JSRootGeoPainter" + ext + ".css;";
-         modules.push('dat.gui', 'ThreeCSG', 'JSRootGeoBase', 'JSRootGeoPainter');
+         modules.push('ThreeCSG', 'JSRootGeoBase', 'JSRootGeoPainter');
       }
 
       if (kind.indexOf("mathjax;")>=0) {
@@ -1299,9 +1303,9 @@
             jsroot.console('Reuse existing jQuery ' + jQuery.fn.jquery + ", required 3.1.1", debugout);
          else
             lst_jq += (use_bower ? "###jquery/dist" : "&&&scripts") + "/jquery.min.js;";
-         if (has_jq && typeof $.ui != 'undefined')
+         if (has_jq && typeof $.ui != 'undefined') {
             jsroot.console('Reuse existing jQuery-ui ' + $.ui.version + ", required 1.12.1", debugout);
-         else {
+         } else {
             lst_jq += (use_bower ? "###jquery-ui" : "&&&scripts") + '/jquery-ui.min.js;';
             extrafiles += '$$$style/jquery-ui' + ext + '.css;';
          }

@@ -4,20 +4,15 @@
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
       define( ['JSRootPainter', 'd3'], factory );
-   } else
-   if (typeof exports === 'object' && typeof module !== 'undefined') {
+   } else if (typeof exports === 'object' && typeof module !== 'undefined') {
        factory(require("./JSRootCore.js"), require("d3"));
    } else {
-
       if (typeof d3 != 'object')
          throw new Error('This extension requires d3.js', 'JSRootPainter.v6.js');
-
       if (typeof JSROOT == 'undefined')
          throw new Error('JSROOT is not defined', 'JSRootPainter.v6.js');
-
       if (typeof JSROOT.Painter != 'object')
          throw new Error('JSROOT.Painter not defined', 'JSRootPainter.v6.js');
-
       factory(JSROOT, d3);
    }
 } (function(JSROOT, d3) {
@@ -1967,22 +1962,6 @@
       return true; // just process any key press
    }
 
-   TFramePainter.prototype.FindAlternativeClickHandler = function(pos) {
-      var pp = this.pad_painter();
-      if (!pp) return false;
-
-      var pnt = { x: pos[0], y: pos[1], painters: true, disabled: true, click_handler: true };
-
-      var hints = pp.GetTooltips(pnt);
-      for (var k=0;k<hints.length;++k)
-         if (hints[k] && (typeof hints[k].click_handler == 'function')) {
-            hints[k].click_handler(hints[k]);
-            return true;
-         }
-
-      return false;
-   }
-
    TFramePainter.prototype.clearInteractiveElements = function() {
       JSROOT.Painter.closeMenu();
       if (this.zoom_rect) { this.zoom_rect.remove(); this.zoom_rect = null; }
@@ -2003,8 +1982,6 @@
       d3.event.preventDefault();
 
       var pos = d3.mouse(this.svg_frame().node());
-
-      if (this.FindAlternativeClickHandler(pos)) return;
 
       this.clearInteractiveElements();
       this.zoom_origin = pos;
@@ -3502,9 +3479,9 @@
       return isany;
    }
 
+   /** Fnction called when drawing next snapshot from the list
+     * it is also used as callback for drawing of previous snap */
    TPadPainter.prototype.DrawNextSnap = function(lst, indx, call_back, objpainter) {
-      // function called when drawing next snapshot from the list
-      // it is also used as callback for drawing of previous snap
 
       if (indx === -1) {
          // flag used to prevent immediate pad redraw during first draw
