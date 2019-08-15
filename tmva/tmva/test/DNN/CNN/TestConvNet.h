@@ -516,7 +516,7 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
       auto & actGrad = layer.GetActivationGradients();
       if (actGrad.GetFirstSize() > 0)  {
          std::cout << "Activation gradient from back-propagation  - vector size is " << actGrad.GetFirstSize() << std::endl;
-         if (actGrad.GetNoElements() < 100 ) { 
+         if (actGrad.GetSize() < 100 ) { 
             for (size_t ii = 0; ii < actGrad.GetFirstSize(); ++ii) 
                actGrad.At(ii).GetMatrix().Print();
          } else
@@ -531,7 +531,7 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
       auto & outL = layer.GetOutput();
       std::cout << "layer output size " << outL.GetFirstSize() << std::endl;
       if (outL.GetFirstSize() > 0) {
-         if (outL.GetNoElements() < 100 ) { 
+         if (outL.GetSize() < 100 ) { 
             outL.At(0).GetMatrix().Print();
          } else
             std::cout << "Layer Output ( " << outL.GetHSize() << " x " << outL.GetWSize() << " ) , ...... skip printing (too many elements ) " << std::endl;

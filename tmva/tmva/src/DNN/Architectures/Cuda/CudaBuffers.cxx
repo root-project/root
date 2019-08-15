@@ -18,7 +18,7 @@
 
 #include "TMVA/DNN/TensorDataLoader.h"
 #include "TMVA/DNN/Architectures/Cuda.h"
-#include "TMVA/DNN/Architectures/Cudnn.h"
+#include "TMVA/DNN/Architectures/TCudnn.h"
 #include "TMVA/DNN/Architectures/Cuda/CudaBuffers.h"
 
 #include "cuda_runtime.h"
@@ -637,7 +637,7 @@ void TTensorDataLoader<TMVAInput_t, TCuda<double>>::CopyTensorWeights(TCudaHostB
    }
 }
 
-
+#if 0
 //______________________________________________________________________________
 template <>
 TTensorBatch<TCuda<float> > TTensorDataLoader<TensorInput, TCuda<float> >::GetTensorBatch()
@@ -646,7 +646,7 @@ TTensorBatch<TCuda<float> > TTensorDataLoader<TensorInput, TCuda<float> >::GetTe
    // architectures matrix type
    DeviceBufferTuple DeviceBuffers = CopyTensorBatches();
    
-   std::vector<Matrix_t> inputTensor;
+   std::vector<Matrix_t> inputTensor(std::get<0>(DeviceBuffers), fInputShape[0], )
    size_t jump = fBatchHeight * fBatchWidth;
    for (size_t i = 0; i < fInputShape[0]; i++) {
       DeviceBuffer_t subInputDeviceBuffer = std::get<0>(DeviceBuffers).GetSubBuffer(i * jump, jump);
@@ -721,6 +721,7 @@ TTensorBatch<TCuda<double> > TTensorDataLoader<TMVAInput_t, TCuda<double> >::Get
    fBatchIndex++;
    return TTensorBatch<TCuda<double>>(inputTensor, outputMatrix, weightMatrix);
 }
+#endif
 
 //______________________________________________________________________________
 //
@@ -992,6 +993,7 @@ void TTensorDataLoader<TMVAInput_t, TCudnn<double> >::CopyTensorWeights(TCudaHos
    }
 }
 
+#if 0 
 //______________________________________________________________________________
 template <>
 TTensorBatch<TCudnn<float> > TTensorDataLoader<TensorInput, TCudnn<float> >::GetTensorBatch()
@@ -1063,6 +1065,7 @@ TTensorBatch<TCudnn<double> > TTensorDataLoader<TMVAInput_t, TCudnn<double> >::G
    fBatchIndex++;
    return TTensorBatch<TCudnn<double> >(inputTensor, outputMatrix, weightMatrix);
 }
+#endif
 
 //______________________________________________________________________________
 // Explicit Instantiations.
@@ -1082,10 +1085,10 @@ template class TTensorDataLoader<TensorInput, TCuda<float> >;
 template class TTensorDataLoader<TMVAInput_t, TCuda<float> >;
 template class TTensorDataLoader<TensorInput, TCuda<double >>;
 template class TTensorDataLoader<TMVAInput_t, TCuda<double> >;
-template class TTensorDataLoader<TensorInput, TCudnn<float> >;
-template class TTensorDataLoader<TMVAInput_t, TCudnn<float> >;
-template class TTensorDataLoader<TensorInput, TCudnn<double> >;
-template class TTensorDataLoader<TMVAInput_t, TCudnn<double> >;
+// template class TTensorDataLoader<TensorInput, TCudnn<float> >;
+// template class TTensorDataLoader<TMVAInput_t, TCudnn<float> >;
+// template class TTensorDataLoader<TensorInput, TCudnn<double> >;
+// template class TTensorDataLoader<TMVAInput_t, TCudnn<double> >;
 
 } // TMVA
 } // DNN

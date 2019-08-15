@@ -37,11 +37,13 @@ int main()
     if (error > 1e-5)
         return 1;
 
+#if 0 // fix to not use reference arch
     error = testIdentityDerivative<TCuda<Scalar_t>>(10);
     std::cout << "Testing identity activation derivative: ";
     std::cout << "maximum relative error = " << error << std::endl;
     if (error > 1e-5)
         return 1;
+#endif
 
     // ReLU.
 

@@ -14,7 +14,7 @@
 // neural network implementation.                                //
 ///////////////////////////////////////////////////////////////////
 
-#include "TMVA/DNN/Architectures/Cudnn.h"
+#include "TMVA/DNN/Architectures/TCudnn.h"
 #include "TMVA/DNN/Architectures/Cuda/CudaTensor.h"
 //#include "TMVA/DNN/Architectures/Cuda/CudaMatrix.h"
 //#include "TMVA/DNN/Architectures/Cuda/Device.h"

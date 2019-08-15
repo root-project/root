@@ -389,11 +389,13 @@ void TBatchNormLayer<Architecture_t>::ReadWeightsFromXML(void *parent)
  
    Matrix_t muMat(1, fMu_Training.size());
    this->ReadMatrixXML(parent, "Training-mu", muMat);
-   std::copy(muMat.GetRawDataPointer(), muMat.GetRawDataPointer()+fMu_Training.size(), fMu_Training.begin() );
+   TMatrixT<Scalar_t> tmp = muMat; 
+   std::copy(tmp.GetMatrixArray(), tmp.GetMatrixArray()+fMu_Training.size(), fMu_Training.begin() );
 
    Matrix_t varMat(1, fVar_Training.size());
    this->ReadMatrixXML(parent, "Training-variance", varMat);
-   std::copy(varMat.GetRawDataPointer(), varMat.GetRawDataPointer()+fVar_Training.size(), fVar_Training.begin() );
+   TMatrixT<Scalar_t> tmp2 = varMat; 
+   std::copy(tmp2.GetMatrixArray(), tmp2.GetMatrixArray()+fVar_Training.size(), fVar_Training.begin() );
 
    this->ReadMatrixXML(parent, "Gamma", this->GetWeightsAt(0));
    this->ReadMatrixXML(parent, "Beta", this->GetWeightsAt(1));

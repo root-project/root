@@ -51,6 +51,7 @@ public:
 
     using Scalar_t       = AFloat;
     using Matrix_t       = TCudaTensor<AFloat>;
+    using Tensor_t       = TCudaTensor<AFloat>;
     using DeviceBuffer_t = TCudaDeviceBuffer<AFloat>;
     using HostBuffer_t   = TCudaHostBuffer<AFloat>;
 
