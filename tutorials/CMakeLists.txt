@@ -477,19 +477,12 @@ if(ROOT_python_FOUND)
   set(roofit-rf104_classfactory-depends tutorial-roofit-rf104_classfactory) #Race condition
 
   #---Tutorials expected to fail in PyROOT experimental
-  set(pyexp_fail tutorial-dataframe-df017_vecOpsHEP-py
-                 tutorial-pyroot-benchmarks-py
+  set(pyexp_fail tutorial-pyroot-benchmarks-py
                  tutorial-pyroot-pyroot002_TTreeAsMatrix-py
-                 tutorial-pyroot-shapes-py
                  tutorial-roofit-rf106_plotdecoration-py
                  tutorial-roofit-rf315_projectpdf-py
                  tutorial-roofit-rf402_datahandling-py
                  tutorial-roofit-rf610_visualerror-py)
-
-  if(${PYTHON_VERSION_MAJOR} GREATER_EQUAL 3)
-    # These tests only fail in Py3 with PyROOT experimental
-    list(APPEND pyexp_fail tutorial-pyroot-hsimple-py)
-  endif()
 
   foreach(t ${pytutorials})
     list(FIND returncode_1 ${t} index)
