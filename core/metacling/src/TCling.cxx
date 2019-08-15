@@ -1529,7 +1529,7 @@ bool TCling::LoadPCMImpl(TFile &pcmFile)
 
    TObjArray *protoClasses;
    if (gDebug > 1)
-      ::Info("TCling::LoadPCM", "reading protoclasses for %s \n", pcmFile.GetName());
+      ::Info("TCling::LoadPCMImpl", "reading protoclasses for %s \n", pcmFile.GetName());
 
    pcmFile.GetObject("__ProtoClasses", protoClasses);
 
@@ -1630,9 +1630,9 @@ bool TCling::LoadPCMImpl(TFile &pcmFile)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Tries to load a rdict PCM; returns true on success.
+/// Tries to load a rdict PCM, issues diagnostics if it fails.
 
-bool TCling::LoadPCM(std::string pcmFileNameFullPath)
+void TCling::LoadPCM(std::string pcmFileNameFullPath)
 {
    SuspendAutoloadingRAII autoloadOff(this);
    SuspendAutoParsing autoparseOff(this);
@@ -1666,20 +1666,26 @@ bool TCling::LoadPCM(std::string pcmFileNameFullPath)
       std::string RDictFileOpts = pcmFileNameFullPath + "?filetype=pcm";
       TMemFile pcmMemFile(RDictFileOpts.c_str(), range);
 
-      bool result = LoadPCMImpl(pcmMemFile);
+      if (!LoadPCMImpl(pcmMemFile)) {
+         ::Error("TCling::LoadPCM", "Loading ROOT PCM %s from C++ module file failed",
+                 pcmFileNameFullPath.data());
+         return;
+      }
 
       fPendingRdicts.erase(pendingRdict);
 
-      return result;
+      return;
    }
 
    if (!llvm::sys::fs::exists(pcmFileNameFullPath)) {
-      return false;
+      ::Error("TCling::LoadPCM", "ROOT PCM %s file does not exist",
+              pcmFileNameFullPath.data());
+      return;
    }
 
    if (!gROOT->IsRootFile(pcmFileName)) {
       Fatal("LoadPCM", "The file %s is not a ROOT as was expected\n", pcmFileName.Data());
-      return false;
+      return;
    }
    TFile pcmFile(pcmFileName + "?filetype=pcm", "READ");
    return LoadPCMImpl(pcmFile);
@@ -2085,10 +2091,7 @@ void TCling::RegisterModule(const char* modulename,
       llvm::sys::path::remove_filename(pcmFileNameFullPath);
       llvm::sys::path::append(pcmFileNameFullPath,
                               ROOT::TMetaUtils::GetModuleFileName(modulename));
-      if (!LoadPCM(pcmFileNameFullPath.str().str())) {
-         ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
-                 ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
-      }
+      LoadPCM(pcmFileNameFullPath.str().str());
    }
 
    { // scope within which diagnostics are de-activated
