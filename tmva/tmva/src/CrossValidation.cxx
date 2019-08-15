@@ -516,8 +516,8 @@ TMVA::CrossValidationFoldResult TMVA::CrossValidation::ProcessFold(UInt_t iFold,
 
    if (fFoldFileOutput and fOutputFile != nullptr) {
       TString path = std::string("") + gSystem->DirName(fOutputFile->GetName()) + "/" + foldTitle + ".root";
-      std::cout << "PATH: " << path << std::endl;
       foldOutputFile = TFile::Open(path, "RECREATE");
+      Log() << kINFO << "Creating fold output at:" << path << Endl;
       fFoldFactory = std::make_unique<TMVA::Factory>(fJobName, foldOutputFile, fCvFactoryOptions);
    }
 
@@ -603,7 +603,12 @@ void TMVA::CrossValidation::Evaluate()
       }
 
       TMVA::MsgLogger::EnableOutput();
-      Log() << kINFO << "Evaluate method: " << methodTitle << Endl;
+      Log() << kINFO << Endl;
+      Log() << kINFO << Endl;
+      Log() << kINFO << "========================================" << Endl;
+      Log() << kINFO << "Processing folds for method " << methodTitle << Endl;
+      Log() << kINFO << "========================================" << Endl;
+      Log() << kINFO << Endl;
 
       // Process K folds
       auto nWorkers = fNumWorkerProcs;
@@ -650,6 +655,13 @@ void TMVA::CrossValidation::Evaluate()
 
       method->fEventToFoldMapping = fSplit->fEventToFoldMapping;
    }
+
+   Log() << kINFO << Endl;
+   Log() << kINFO << Endl;
+   Log() << kINFO << "========================================" << Endl;
+   Log() << kINFO << "Folds processed for all methods, evaluating." << Endl;
+   Log() << kINFO << "========================================" << Endl;
+   Log() << kINFO << Endl;
 
    // Recombination of data (making sure there is data in training and testing trees).
    fDataLoader->RecombineKFoldDataSet(*fSplit);
