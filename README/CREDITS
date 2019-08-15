@@ -590,6 +590,10 @@ N: Constantin Loizides
 E: loizides@MIT.EDU
 D: PROOF testing and debugging
 
+N: Javier Lopez-Gomez
+E: jalopezg@inf.uc3m.es
+D: Cling support for redefinitions
+
 N: Johan Lundberg
 E: johan.lundberg@cern.ch
 D: Additions to the TRolke class
