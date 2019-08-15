@@ -591,7 +591,7 @@ private: // Private Utility Functions and Classes
    friend void TCling__RegisterRdictForLoadPCM(const std::string &pcmFileNameFullPath, llvm::StringRef *pcmContent);
    void RegisterRdictForLoadPCM(const std::string &pcmFileNameFullPath, llvm::StringRef *pcmContent);
    void LoadPCM(std::string pcmFileNameFullPath);
-   bool LoadPCMImpl(TFile &pcmFile);
+   void LoadPCMImpl(TFile &pcmFile);
 
    void InitRootmapFile(const char *name);
    int  ReadRootmapFile(const char *rootmapfile, TUniqueString* uniqueString = nullptr);
