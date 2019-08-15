@@ -5657,6 +5657,9 @@ int GenReflexMain(int argc, char **argv)
       },
 
       {
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,00)
+# error "Remove this deprecated code"
+#endif
          DEEP,  // Not active. Will be removed for 6.2
          NOTYPE ,
          "" , "deep",
