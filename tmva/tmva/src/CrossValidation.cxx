@@ -439,7 +439,7 @@ void TMVA::CrossValidation::ParseOptions()
       fOutputFactoryOptions += Form("Silent:");
    }
 
-   fCvFactoryOptions += "!Correlations:!ROC:!Color:!DrawProgressBar:Silent";
+   fCvFactoryOptions += "!Correlations:!ROC:!Color:!DrawProgressBar";
 
    // CE specific options
    if (fFoldFileOutput and fOutputFile == nullptr) {
