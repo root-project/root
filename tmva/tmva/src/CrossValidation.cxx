@@ -410,6 +410,7 @@ void TMVA::CrossValidation::ParseOptions()
    fOutputFactoryOptions += Form("AnalysisType=%s:", fAnalysisTypeStr.Data());
 
    if (not fDrawProgressBar) {
+      fCvFactoryOptions += "!DrawProgressBar:";
       fOutputFactoryOptions += "!DrawProgressBar:";
    }
 
@@ -419,27 +420,25 @@ void TMVA::CrossValidation::ParseOptions()
    }
 
    if (fCorrelations) {
-      // fCvFactoryOptions += "Correlations:";
+      fCvFactoryOptions += "Correlations:";
       fOutputFactoryOptions += "Correlations:";
    } else {
-      // fCvFactoryOptions += "!Correlations:";
+      fCvFactoryOptions += "!Correlations:";
       fOutputFactoryOptions += "!Correlations:";
    }
 
    if (fROC) {
-      // fCvFactoryOptions += "ROC:";
+      fCvFactoryOptions += "ROC:";
       fOutputFactoryOptions += "ROC:";
    } else {
-      // fCvFactoryOptions += "!ROC:";
+      fCvFactoryOptions += "!ROC:";
       fOutputFactoryOptions += "!ROC:";
    }
 
    if (fSilent) {
-      // fCvFactoryOptions += Form("Silent:");
+      fCvFactoryOptions += Form("Silent:");
       fOutputFactoryOptions += Form("Silent:");
    }
-
-   fCvFactoryOptions += "!Correlations:!ROC:!Color:!DrawProgressBar";
 
    // CE specific options
    if (fFoldFileOutput and fOutputFile == nullptr) {
