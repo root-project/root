@@ -234,17 +234,9 @@ RooHist::RooHist(const RooHist& hist1, const RooHist& hist2, Double_t wgt1, Doub
     Int_t i,n=hist1.GetN() ;
     for(i=0 ; i<n ; i++) {
       Double_t x1,y1,x2,y2,dx1 ;
-#if ROOT_VERSION_CODE >= ROOT_VERSION(4,0,1)
       hist1.GetPoint(i,x1,y1) ;
-#else
-      const_cast<RooHist&>(hist1).GetPoint(i,x1,y1) ;
-#endif
       dx1 = hist1.GetErrorX(i) ;
-#if ROOT_VERSION_CODE >= ROOT_VERSION(4,0,1)
       hist2.GetPoint(i,x2,y2) ;
-#else
-      const_cast<RooHist&>(hist2).GetPoint(i,x2,y2) ;
-#endif
       addBin(x1,roundBin(wgt1*y1+wgt2*y2),2*dx1/xErrorFrac,xErrorFrac) ;
     }
 
@@ -255,19 +247,11 @@ RooHist::RooHist(const RooHist& hist1, const RooHist& hist2, Double_t wgt1, Doub
     Int_t i,n=hist1.GetN() ;
     for(i=0 ; i<n ; i++) {
       Double_t x1,y1,x2,y2,dx1,dy1,dy2 ;
-#if ROOT_VERSION_CODE >= ROOT_VERSION(4,0,1)
       hist1.GetPoint(i,x1,y1) ;
-#else
-      const_cast<RooHist&>(hist1).GetPoint(i,x1,y1) ;
-#endif
       dx1 = hist1.GetErrorX(i) ;
       dy1 = hist1.GetErrorY(i) ;
       dy2 = hist2.GetErrorY(i) ;
-#if ROOT_VERSION_CODE >= ROOT_VERSION(4,0,1)
       hist2.GetPoint(i,x2,y2) ;
-#else
-      const_cast<RooHist&>(hist2).GetPoint(i,x2,y2) ;
-#endif
       Double_t dy = sqrt(wgt1*wgt1*dy1*dy1+wgt2*wgt2*dy2*dy2) ;
       addBinWithError(x1,wgt1*y1+wgt2*y2,dy,dy,2*dx1/xErrorFrac,xErrorFrac) ;
     }
@@ -306,11 +290,7 @@ Double_t RooHist::getFitRangeNEvt(Double_t xlo, Double_t xhi) const
   for (int i=0 ; i<GetN() ; i++) {
     Double_t x,y ;
 
-#if ROOT_VERSION_CODE >= ROOT_VERSION(4,0,1)
     GetPoint(i,x,y) ;
-#else
-    const_cast<RooHist*>(this)->GetPoint(i,x,y) ;
-#endif
 
     if (x>=xlo && x<=xhi) {
       sum += y ;
@@ -588,13 +568,8 @@ Bool_t RooHist::hasIdenticalBinning(const RooHist& other) const
   for (i=0 ; i<GetN() ; i++) {
     Double_t x1,x2,y1,y2 ;
 
-#if ROOT_VERSION_CODE >= ROOT_VERSION(4,0,1)
     GetPoint(i,x1,y1) ;
     other.GetPoint(i,x2,y2) ;
-#else
-    const_cast<RooHist&>(*this).GetPoint(i,x1,y1) ;
-    const_cast<RooHist&>(other).GetPoint(i,x2,y2) ;
-#endif
 
     if (fabs(x1-x2)>1e-10) {
       return kFALSE ;
@@ -714,22 +689,13 @@ RooHist* RooHist::makeResidHist(const RooCurve& curve, bool normalize, bool useA
 
   // Determine range of curve
   Double_t xstart,xstop,y ;
-#if ROOT_VERSION_CODE >= ROOT_VERSION(4,0,1)
   curve.GetPoint(0,xstart,y) ;
   curve.GetPoint(curve.GetN()-1,xstop,y) ;
-#else
-  const_cast<RooCurve&>(curve).GetPoint(0,xstart,y) ;
-  const_cast<RooCurve&>(curve).GetPoint(curve.GetN()-1,xstop,y) ;
-#endif
 
   // Add histograms, calculate Poisson confidence interval on sum value
   for(Int_t i=0 ; i<GetN() ; i++) {
     Double_t x,point;
-#if ROOT_VERSION_CODE >= ROOT_VERSION(4,0,1)
     GetPoint(i,x,point) ;
-#else
-    const_cast<RooHist&>(*this).GetPoint(i,x,point) ;
-#endif
 
     // Only calculate pull for bins inside curve range
     if (x<xstart || x>xstop) continue ;

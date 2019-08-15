@@ -68,12 +68,6 @@ This process is also organized by the workspace through the
 
 using namespace std ;
 
-
-#if ROOT_VERSION_CODE <= ROOT_VERSION(5,19,02)
-#include "Api.h"
-#endif
-
-
 #include "TClass.h"
 #include "Riostream.h"
 #include <string.h>
@@ -2947,23 +2941,14 @@ Bool_t RooWorkspace::CodeRepo::compileClasses()
 
 void RooWorkspace::WSDir::InternalAppend(TObject* obj) 
 {
-#if ROOT_VERSION_CODE <= ROOT_VERSION(5,19,02)
-  TDirectory::Append(obj) ;
-#else
   TDirectory::Append(obj,kFALSE) ;
-#endif
-
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Overload TDirectory interface method to prohibit insertion of objects in read-only directory workspace representation
 
-#if ROOT_VERSION_CODE <= ROOT_VERSION(5,19,02)
-void RooWorkspace::WSDir::Add(TObject* obj) 
-#else
 void RooWorkspace::WSDir::Add(TObject* obj,Bool_t) 
-#endif
 {
   if (dynamic_cast<RooAbsArg*>(obj) || dynamic_cast<RooAbsData*>(obj)) {
     coutE(ObjectHandling) << "RooWorkspace::WSDir::Add(" << GetName() << ") ERROR: Directory is read-only representation of a RooWorkspace, use RooWorkspace::import() to add objects" << endl ;
@@ -2976,11 +2961,7 @@ void RooWorkspace::WSDir::Add(TObject* obj,Bool_t)
 ////////////////////////////////////////////////////////////////////////////////
 /// Overload TDirectory interface method to prohibit insertion of objects in read-only directory workspace representation
 
-#if ROOT_VERSION_CODE <= ROOT_VERSION(5,19,02)
-void RooWorkspace::WSDir::Append(TObject* obj) 
-#else
 void RooWorkspace::WSDir::Append(TObject* obj,Bool_t) 
-#endif
 {
   if (dynamic_cast<RooAbsArg*>(obj) || dynamic_cast<RooAbsData*>(obj)) {
     coutE(ObjectHandling) << "RooWorkspace::WSDir::Add(" << GetName() << ") ERROR: Directory is read-only representation of a RooWorkspace, use RooWorkspace::import() to add objects" << endl ;

@@ -550,13 +550,8 @@ Double_t RooCurve::chiSquare(const RooHist& hist, Int_t nFitParam) const
   // Find starting and ending bin of histogram based on range of RooCurve
   Double_t xstart,xstop ;
 
-#if ROOT_VERSION_CODE >= ROOT_VERSION(4,0,1)
   GetPoint(0,xstart,y) ;
   GetPoint(GetN()-1,xstop,y) ;
-#else
-  const_cast<RooCurve*>(this)->GetPoint(0,xstart,y) ;
-  const_cast<RooCurve*>(this)->GetPoint(GetN()-1,xstop,y) ;
-#endif
 
   Int_t nbin(0) ;
 
