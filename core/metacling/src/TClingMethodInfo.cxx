@@ -409,6 +409,12 @@ int TClingMethodInfo::InternalNext()
          // Iterator is now valid.
          return 1;
       }
+
+      // Collect internal `__cling_N5xxx' inline namespaces; they will be traversed later
+      if (auto NS = dyn_cast<NamespaceDecl>(*fIter)) {
+         if (NS->getDeclContext()->isTranslationUnit() && NS->isInlineNamespace())
+            fContexts.push_back(NS);
+      }
 //      if (clang::FunctionDecl *fdecl = llvm::dyn_cast<clang::FunctionDecl>(*fIter)) {
 //         if (fdecl->getAccess() == clang::AS_public || fdecl->getAccess() == clang::AS_none) {
 //            // Iterator is now valid.
