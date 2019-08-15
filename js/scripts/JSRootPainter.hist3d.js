@@ -4,22 +4,17 @@
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
       define( [ 'JSRootCore', 'd3', 'JSRootPainter.hist', 'threejs', 'threejs_all'], factory );
-   } else
-   if (typeof exports === 'object' && typeof module !== 'undefined') {
+   } else if (typeof exports === 'object' && typeof module !== 'undefined') {
       var jsroot = require("./JSRootCore.js");
       factory(jsroot, require("d3"), require("./JSRootPainter.hist.js"), require("three"), require("./three.extra.min.js"),
               jsroot.nodejs || (typeof document=='undefined') ? jsroot.nodejs_document : document);
    } else {
-
       if (typeof JSROOT == 'undefined')
          throw new Error('JSROOT is not defined', 'JSRootPainter.hist3d.js');
-
       if (typeof d3 != 'object')
          throw new Error('This extension requires d3.js', 'JSRootPainter.hist3d.js');
-
       if (typeof THREE == 'undefined')
          throw new Error('THREE is not defined', 'JSRoot3DPainter.js');
-
       factory(JSROOT, d3, JSROOT, THREE, THREE);
    }
 } (function(JSROOT, d3, __DUMMY__, THREE, THREE_MORE, document) {
@@ -3202,19 +3197,46 @@
       }
    }
 
+   /** Called when new mesh with points is created. */
+   TGraph2DPainter.prototype.PointsCallback = function(args, mesh) {
+      // mesh.graph = args.graph;
+      // mesh.index = args.index;
+      // mesh.painter = args.painter;
+      // mesh.scale0 = args.scale0;
+      // mesh.tip_color = args.tip_color;
+
+      JSROOT.extend(mesh, args);
+
+      mesh.tip_name = this.GetTipName();
+      mesh.tooltip = this.Graph2DTooltip;
+
+      mesh.painter.toplevel.add(mesh);
+
+      this.points_callback_cnt--;
+
+      this.CheckCallbacks();
+   }
+
+   TGraph2DPainter.prototype.CheckCallbacks = function() {
+      if (this.points_callback_cnt > 0) return;
+
+      var fp = this.frame_painter();
+      if (fp) fp.Render3D(100);
+
+      if (!this._drawing_ready) {
+         this.DrawingReady();
+         this._drawing_ready = true;
+      }
+   }
+
    TGraph2DPainter.prototype.Redraw = function() {
 
       var main = this.main_painter(),
           fp = this.frame_painter(),
           graph = this.GetObject(),
-          step = 1, cb_cnt = 0;
+          step = 1;
 
       if (!graph || !main || !fp || !fp.mode3d) return;
-
-      function PointsCallBack() {
-         cb_cnt--;
-         if (!cb_cnt && !graph) fp.Render3D(100); //
-      }
 
       function CountSelected(zmin, zmax) {
          var cnt = 0;
@@ -3253,12 +3275,18 @@
          palette = main.GetPalette();
       }
 
+      // how many callbacks are expected
+      this.points_callback_cnt = levels.length-1;
+
       for (var lvl=0;lvl<levels.length-1;++lvl) {
 
          var lvl_zmin = Math.max(levels[lvl], fp.scale_zmin),
              lvl_zmax = Math.min(levels[lvl+1], fp.scale_zmax);
 
-         if (lvl_zmin >= lvl_zmax) continue;
+         if (lvl_zmin >= lvl_zmax) {
+            this.points_callback_cnt--;
+            continue;
+         }
 
          var size = Math.floor(CountSelected(lvl_zmin, lvl_zmax) / step),
              pnts = null, select = 0,
@@ -3367,7 +3395,9 @@
             errmesh.tooltip = this.Graph2DTooltip;
          }
 
-         if (pnts) {
+         if (!pnts) {
+            this.points_callback_cnt--;
+         } else {
 
             var fcolor = 'blue';
 
@@ -3375,26 +3405,19 @@
                fcolor = palette ? palette.calcColor(lvl, levels.length) :
                                   this.get_color(graph.fMarkerColor);
 
-            cb_cnt++;
+            pnts.AssignCallback(this.PointsCallback.bind(this, {
+               graph: graph,
+               index: index,
+               painter: fp,
+               scale0: 0.3*scale,
+               tip_color: (graph.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00
+            }));
 
-            var mesh = pnts.CreatePoints({ color: fcolor, style: this.options.Circles ? 4 : graph.fMarkerStyle, callback: PointsCallBack });
-
-            fp.toplevel.add(mesh);
-
-            mesh.graph = graph;
-            mesh.index = index;
-            mesh.painter = fp;
-            mesh.scale0 = 0.3*scale;
-            mesh.tip_name = this.GetTipName();
-            mesh.tip_color = (graph.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00;
-
-            mesh.tooltip = this.Graph2DTooltip;
+            pnts.CreatePoints({ color: fcolor, style: this.options.Circles ? 4 : graph.fMarkerStyle });
          }
       }
 
-      fp.Render3D(cb_cnt ? 1000 : 100); // set large timeout to be able draw other points
-
-      graph = null; // used in callback to detect that rendering is completed
+      this.CheckCallbacks();
    }
 
    JSROOT.Painter.drawGraph2D = function(divid, gr, opt) {
@@ -3408,7 +3431,7 @@
       if (painter.main_painter()) {
          painter.SetDivId(divid);
          painter.Redraw();
-         return painter.DrawingReady();
+         return painter;
       }
 
       if (!gr.fHistogram)
@@ -3418,7 +3441,6 @@
          painter.ownhisto = true;
          painter.SetDivId(divid);
          painter.Redraw();
-         return painter.DrawingReady();
       });
 
       return painter;
@@ -3436,7 +3458,11 @@
 
          var fp = this.frame_painter();
 
-         if (!fp || !fp.mode3d) return;
+         if (!fp || !fp.mode3d) {
+            if (!this._did_redraw) this.DrawingReady();
+            this._did_redraw = true;
+            return;
+         }
 
          var step = 1, sizelimit = 50000, numselect = 0;
 
@@ -3473,58 +3499,63 @@
             pnts.AddPoint(fp.grx(poly.fP[i]), fp.gry(poly.fP[i+1]), fp.grz(poly.fP[i+2]));
          }
 
-         var mesh = pnts.CreatePoints({ color: this.get_color(poly.fMarkerColor),
-                                        style: poly.fMarkerStyle,
-                                        callback: function(delayed) { if (delayed) fp.Render3D(100); } });
+         pnts.AssignCallback(function(mesh) {
+            fp.toplevel.add(mesh);
 
-         fp.toplevel.add(mesh);
+            mesh.tip_color = (poly.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00;
+            mesh.tip_name = poly.fName || "Poly3D";
+            mesh.poly = poly;
+            mesh.painter = fp;
+            mesh.scale0 = 0.7*pnts.scale;
+            mesh.index = index;
 
-         mesh.tip_color = (poly.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00;
-         mesh.tip_name = poly.fName || "Poly3D";
-         mesh.poly = poly;
-         mesh.painter = fp;
-         mesh.scale0 = 0.7*pnts.scale;
-         mesh.index = index;
+            mesh.tooltip = function(intersect) {
+               if (isNaN(intersect.index)) {
+                  console.error('intersect.index not provided, check three.js version', THREE.REVISION, 'expected r97');
+                  return null;
+               }
+               var indx = Math.floor(intersect.index / this.nvertex);
+               if ((indx<0) || (indx >= this.index.length)) return null;
 
-         mesh.tooltip = function(intersect) {
-            if (isNaN(intersect.index)) {
-               console.error('intersect.index not provided, check three.js version', THREE.REVISION, 'expected r97');
-               return null;
+               indx = this.index[indx];
+
+               var p = this.painter,
+                   grx = p.grx(this.poly.fP[indx]),
+                   gry = p.gry(this.poly.fP[indx+1]),
+                   grz = p.grz(this.poly.fP[indx+2]);
+
+               return  {
+                  x1: grx - this.scale0,
+                  x2: grx + this.scale0,
+                  y1: gry - this.scale0,
+                  y2: gry + this.scale0,
+                  z1: grz - this.scale0,
+                  z2: grz + this.scale0,
+                  color: this.tip_color,
+                  lines: [ this.tip_name,
+                           "pnt: " + indx/3,
+                           "x: " + p.AxisAsText("x", this.poly.fP[indx]),
+                           "y: " + p.AxisAsText("y", this.poly.fP[indx+1]),
+                           "z: " + p.AxisAsText("z", this.poly.fP[indx+2])
+                         ]
+               }
+
             }
-            var indx = Math.floor(intersect.index / this.nvertex);
-            if ((indx<0) || (indx >= this.index.length)) return null;
 
-            indx = this.index[indx];
+            fp.Render3D(100); // set large timeout to be able draw other points
 
-            var p = this.painter,
-                grx = p.grx(this.poly.fP[indx]),
-                gry = p.gry(this.poly.fP[indx+1]),
-                grz = p.grz(this.poly.fP[indx+2]);
+            if (!painter._did_redraw) painter.DrawingReady();
+            painter._did_redraw = true;
 
-            return  {
-               x1: grx - this.scale0,
-               x2: grx + this.scale0,
-               y1: gry - this.scale0,
-               y2: gry + this.scale0,
-               z1: grz - this.scale0,
-               z2: grz + this.scale0,
-               color: this.tip_color,
-               lines: [ this.tip_name,
-                        "pnt: " + indx/3,
-                        "x: " + p.AxisAsText("x", this.poly.fP[indx]),
-                        "y: " + p.AxisAsText("y", this.poly.fP[indx+1]),
-                        "z: " + p.AxisAsText("z", this.poly.fP[indx+2])
-                      ]
-            }
+         });
 
-         }
-
-         fp.Render3D(100); // set large timeout to be able draw other points
+         pnts.CreatePoints({ color: this.get_color(poly.fMarkerColor),
+                             style: poly.fMarkerStyle });
       }
 
       painter.Redraw();
 
-      return painter.DrawingReady();
+      return painter;
    }
 
    JSROOT.TH3Painter = TH3Painter;

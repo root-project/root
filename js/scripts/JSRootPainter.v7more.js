@@ -4,20 +4,15 @@
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
       define( ['JSRootPainter', 'd3'], factory );
-   } else
-   if (typeof exports === 'object' && typeof module !== 'undefined') {
+   } else if (typeof exports === 'object' && typeof module !== 'undefined') {
        factory(require("./JSRootCore.js"), require("d3"));
    } else {
-
       if (typeof d3 != 'object')
          throw new Error('This extension requires d3.js', 'JSRootPainter.v7hist.js');
-
       if (typeof JSROOT == 'undefined')
          throw new Error('JSROOT is not defined', 'JSRootPainter.v7hist.js');
-
       if (typeof JSROOT.Painter != 'object')
          throw new Error('JSROOT.Painter not defined', 'JSRootPainter.v7hist.js');
-
       factory(JSROOT, d3);
    }
 } (function(JSROOT, d3) {
@@ -27,7 +22,6 @@
    JSROOT.sources.push("v7more");
 
    // =================================================================================
-
 
    function drawText() {
       var text         = this.GetObject(),

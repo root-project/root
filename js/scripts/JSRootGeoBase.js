@@ -4,20 +4,15 @@
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
       define( [ 'JSRootCore', 'threejs', 'ThreeCSG' ], factory );
-   } else
-   if (typeof exports === 'object' && typeof module !== 'undefined') {
+   } else if (typeof exports === 'object' && typeof module !== 'undefined') {
       factory(require("./JSRootCore.js"), require("three"), require("./ThreeCSG.js"));
    } else {
-
       if (typeof JSROOT == 'undefined')
          throw new Error('JSROOT is not defined', 'JSRootGeoBase.js');
-
       if (typeof THREE == 'undefined')
          throw new Error('THREE is not defined', 'JSRootGeoBase.js');
-
       if (typeof ThreeBSP == 'undefined')
          throw new Error('ThreeBSP is not defined', 'JSRootGeoBase.js');
-
       factory(JSROOT, THREE, ThreeBSP);
    }
 } (function( JSROOT, THREE, ThreeBSP ) {

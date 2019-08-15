@@ -10,6 +10,16 @@
 7. Implement interactive movement of TArrow class
 8. New and simpler TArrow drawing without use of svg markers
 9. Use TGeoManager::fVisLevel in geometry painter
+10. Support "texte" and "texte0" draw options for TH2/TProfile2D classes
+
+
+## Changes in 5.7.1
+1. Fix - cover for WebVR API inconsistencies in Android devices (#184)
+2. Fix - add more checks in TF1 GetParName/GetParValue methods (#185)
+3. Fix - bins highlight in lego drawing with "zero" option
+4. Fix - drawing tracks with geometry from TObjArray
+5. Fix - interactive TGraph point move on time scale
+6. Fix - arb8 shapes faces building
 
 
 ## Changes in 5.7.0

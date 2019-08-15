@@ -4,22 +4,17 @@
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
       define( ['JSRootPainter', 'd3', 'threejs', 'threejs_all'], factory );
-   } else
-   if (typeof exports === 'object' && typeof module !== 'undefined') {
+   } else if (typeof exports === 'object' && typeof module !== 'undefined') {
       var jsroot = require("./JSRootCore.js");
       factory(jsroot, require("d3"), require("three"), require("./three.extra.min.js"),
               jsroot.nodejs || (typeof document=='undefined') ? jsroot.nodejs_document : document);
    } else {
-
       if (typeof JSROOT == 'undefined')
          throw new Error('JSROOT is not defined', 'JSRoot3DPainter.js');
-
       if (typeof d3 != 'object')
          throw new Error('This extension requires d3.js', 'JSRoot3DPainter.js');
-
       if (typeof THREE == 'undefined')
          throw new Error('THREE is not defined', 'JSRoot3DPainter.js');
-
       factory(JSROOT, d3, THREE);
    }
 } (function(JSROOT, d3, THREE, THREE_MORE, document) {
@@ -951,47 +946,70 @@
       this.indx+=3;
    }
 
+   /** If callback function assigned, created mesh always will be returned as callback */
+   PointsCreator.prototype.AssignCallback = function(callback) {
+      this.callback = callback;
+   }
+
+   PointsCreator.prototype.Complete = function(arg) {
+
+      var material;
+
+      if (this.texture) {
+         if ((arg == 'loaded') && this.texture.onUpdate) this.texture.onUpdate( this.texture );
+         if (this._did_create) return;
+         material = new THREE.PointsMaterial( { size: (this.webgl ? 3 : 1) * this.scale, map: this.texture, transparent: true } );
+      } else {
+         if (this._did_create) return;
+         material = new THREE.PointsMaterial( { size: (this.webgl ? 3 : 1) * this.scale * this.k, color: this.color } );
+      }
+
+      this._did_create = true;
+
+      var pnts = new THREE.Points(this.geom, material);
+      pnts.nvertex = 1;
+
+      if (!this.callback)
+         return pnts;
+
+      JSROOT.CallBack(this.callback, pnts);
+   }
+
    PointsCreator.prototype.CreatePoints = function(args) {
 
       if (typeof args !== 'object') args = { color: args };
       if (!args.color) args.color = 'black';
 
-      var material = null, k = 1;
+      this.k = 1;
+      this.color = args.color;
+
+      this._did_create = false;
 
       // special dots
-      if (args.style === 1) k = 0.3; else
-      if (args.style === 6) k = 0.5; else
-      if (args.style === 7) k = 0.7;
+      if (args.style === 1) this.k = 0.3; else
+      if (args.style === 6) this.k = 0.5; else
+      if (args.style === 7) this.k = 0.7;
 
-      if (!args.style || (k !== 1) || JSROOT.BatchMode) {
+      // this is plain creation of points, no texture loading
+      if (!args.style || (this.k !== 1) || JSROOT.BatchMode)
+         return this.Complete();
 
-         material = new THREE.PointsMaterial( { size: (this.webgl ? 3 : 1) * this.scale * k, color: args.color } );
-         JSROOT.CallBack(args.callback, false);
-      } else {
+      var handler = new JSROOT.TAttMarkerHandler({ style: args.style, color: args.color, size: 8 });
 
-         var handler = new JSROOT.TAttMarkerHandler({ style: args.style, color: args.color, size: 8 });
+      var plainSVG = '<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">' +
+                     '<path d="' + handler.create(32,32) + '" stroke="' + handler.getStrokeColor() + '" fill="' + handler.getFillColor() + '"/></svg>';
 
-         var plainSVG = '<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">' +
-                        '<path d="' + handler.create(32,32) + '" stroke="none" fill="' + args.color + '"/></svg>';
+      this.texture = new THREE.Texture();
+      this.texture.needsUpdate = true;
+      this.texture.format = THREE.RGBAFormat;
+      this.texture.image = document.createElement('img');
 
-         var texture = new THREE.Texture();
-         texture.needsUpdate = true;
-         texture.format = THREE.RGBAFormat;
-         texture.image = document.createElement('img');
+      this.texture.image.onload = this.Complete.bind(this,'loaded')
 
-         texture.image.onload = function() {
-            if ( texture.onUpdate ) texture.onUpdate( texture );
-            JSROOT.CallBack(args.callback, true);
-         }
-         texture.image.src = 'data:image/svg+xml;utf8,' + plainSVG;
+      this.texture.image.src = 'data:image/svg+xml;utf8,' + plainSVG;
 
-         // JPEGs can't have an alpha channel, so memory can be saved by storing them as RGB.
-         material = new THREE.PointsMaterial( { size: (this.webgl ? 3 : 1) * this.scale, map: texture, transparent: true } );
-      }
-
-      var pnts = new THREE.Points(this.geom, material);
-      pnts.nvertex = 1;
-      return pnts;
+      if (!this.callback)
+         return this.Complete();
    }
 
    // ==============================================================================
