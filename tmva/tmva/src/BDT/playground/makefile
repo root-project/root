@@ -6,21 +6,30 @@ ROOT_FLAGS = `root-config --cflags --glibs`
 LD_FLAGS = -L -L.. -lpthread
 
 CPPFLAGS = -I../include \
- -Wno-deprecated
+ -Wno-deprecated \
+ -I$(XGBOOST_ROOT)/include -I$(XGBOOST_ROOT)/rabit/include
+
+ XGBOOST_ROOT= /home/zampieri/Documents/CERN/xgboost
+ INCLUDE_DIR= -I$(XGBOOST_ROOT)/include -I$(XGBOOST_ROOT)/dmlc-core/include -I$(XGBOOST_ROOT)/rabit/include
+ LIB_DIR= -L$(XGBOOST_ROOT)/lib
 
 OBJS = build/arrayBdtPreds.o build/uniqueBdtPreds.o \
 			build/uniqueBdtBatch.o build/unique_bdt.o \
 			 build/JitForestBdtPreds.o build/JitForestBdtAll.o\
-			 build/JitForestBdtAll_Static.o
+			 build/JitForestBdtAll_Static.o build/xgboostBdt.o
 EXE = arrayBdtPreds.exe uniqueBdtPreds.exe \
       uniqueBdtBatch.exe JitForestBdtPreds.exe \
-			JitForestBdtAll.exe JitForestBdtAll_Static.exe
+			JitForestBdtAll.exe JitForestBdtAll_Static.exe \
+			xgboostBdt.exe
 
 .PHONY : all clean distclean
 
 all: $(EXE)
 
 # linking
+xgboostBdt.exe: build/xgboostBdt.o build/unique_bdt.o
+	$(CXX) $(CXXFLAGS) -o $@  $^  $(LD_FLAGS) $(ROOT_FLAGS) $(XGBOOST_ROOT)/lib/libxgboost.so
+
 JitForestBdtAll_Static.exe: build/JitForestBdtAll_Static.o build/unique_bdt.o
 	$(CXX) $(CXXFLAGS) -o $@  $^  $(LD_FLAGS) $(ROOT_FLAGS)
 
@@ -39,7 +48,11 @@ uniqueBdtPreds.exe: build/uniqueBdtPreds.o build/unique_bdt.o
 uniqueBdtBatch.exe: build/uniqueBdtBatch.o build/unique_bdt.o
 	$(CXX) $(CXXFLAGS) -o $@  $^  $(LD_FLAGS) $(ROOT_FLAGS)
 
+
 # compilation
+build/xgboostBdt.o: xgboostBdt.cxx
+		$(CXX) $(CXXFLAGS) $(ROOT_FLAGS) -c $< -o $@ $(CPPFLAGS)
+
 build/JitForestBdtAll_Static.o: JitForestBdtAll_Static.cxx
 		$(CXX) $(CXXFLAGS) $(ROOT_FLAGS) -c $< -o $@ $(CPPFLAGS)
 

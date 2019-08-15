@@ -6,13 +6,14 @@ import bench
 
 DATA_FOLDER = "./data/"
 
+print("Generating data!")
 bench.create_model_gaussian(
-    num_samples=1000,
+    num_samples=500_000,
     num_features=5,
-    num_trees=100,
+    num_trees=500,
     max_depth=3,
     data_folder=DATA_FOLDER,
 )
-
+print("Data generated!")
 
 # end

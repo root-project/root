@@ -320,8 +320,8 @@ BENCHMARK(BM_StaticForestWholeBdt_static_batch)
 /// Benchmark eval xgboost_bdt
 static void BM_EvalXgboostBdt(benchmark::State &state)
 {
-   std::string events_fname = "data_files/events.csv";
-   std::string preds_fname  = "data_files/python_predictions.csv";
+   std::string events_fname = "./data/events.csv";
+   std::string preds_fname  = "./data/python_predictions.csv";
    const char *model_fname  = "./data/model.rabbit";
 
    std::vector<std::vector<float>> events_vector;

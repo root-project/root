@@ -21,6 +21,15 @@
 
 using json = nlohmann::json;
 
+bool unique_cmp(const unique_bdt::Tree &a, const unique_bdt::Tree &b)
+{
+   if (a.nodes->split_variable == b.nodes->split_variable) {
+      return a.nodes->split_threshold < b.nodes->split_threshold;
+   } else {
+      return a.nodes->split_variable < b.nodes->split_variable;
+   }
+}
+
 ///////////////////////////////////////////////////
 /// Wrapping class that contains the forest.
 /// It support different kind of specialization, one for each forest kind
@@ -38,7 +47,8 @@ public:
    Forest() { counter++; }
    ~Forest() {}
 
-   void get_Forest(std::string json_file) { std::cout << "Function not specialized!\n"; }
+   void get_Forest(std::string json_file, bool bool_sort_trees = false);
+   // void get_Forest(std::string json_file, bool bool_sort_trees = false);
    void read_events_csv(std::string csv_file);
 
    void do_predictions(const std::vector<std::vector<float>> &events_vector, std::vector<bool> &);
@@ -149,7 +159,7 @@ void Forest<T>::do_predictions_batch2(const std::vector<std::vector<float>> &eve
 /// ----------- Specialization unique_ptr ------------------- //
 /// Unique pointer representation of the Forest
 template <>
-void Forest<unique_bdt::Tree>::get_Forest(std::string json_file)
+void Forest<unique_bdt::Tree>::get_Forest(std::string json_file, bool bool_sort_trees)
 {
    std::string my_config       = read_file_string(json_file);
    auto        json_model      = json::parse(my_config);
@@ -163,13 +173,21 @@ void Forest<unique_bdt::Tree>::get_Forest(std::string json_file)
    for (int i = 0; i < number_of_trees; i++) {
       unique_bdt::read_nodes_from_tree(json_model[i], trees[i]);
    }
+
+   if (bool_sort_trees == true) {
+      std::sort(trees.begin(), trees.end(), unique_cmp);
+   }
+   for (int i = 0; i < number_of_trees; i++) {
+      std::cout << trees[i].nodes->split_variable << " :  " << trees[i].nodes->split_threshold << std::endl;
+   }
+
    this->trees = std::move(trees);
 }
 
 ////////////////////////////////////////////////////////////////
 /// ---------------- Specialization array ------------------- //
 template <>
-void Forest<array_bdt::Tree>::get_Forest(std::string json_file)
+void Forest<array_bdt::Tree>::get_Forest(std::string json_file, bool bool_sort_trees)
 {
    std::string my_config       = read_file_string(json_file);
    auto        json_model      = json::parse(my_config);
@@ -187,7 +205,7 @@ void Forest<array_bdt::Tree>::get_Forest(std::string json_file)
 ////////////////////////////////////////////////////////////////
 /// -------- Specialization JITTED tree by tree ------------- //
 template <>
-void Forest<std::function<float(std::vector<float>)>>::get_Forest(std::string json_file)
+void Forest<std::function<float(std::vector<float>)>>::get_Forest(std::string json_file, bool bool_sort_trees)
 {
    std::string my_config       = read_file_string(json_file);
    auto        json_model      = json::parse(my_config);
@@ -248,7 +266,7 @@ void Forest<std::function<float(std::vector<float>)>>::test()
 ////////////////////////////////////////////////////////////////
 /// ----------- Specialization JIT Forest ------------------- //
 template <>
-void Forest<std::function<bool(std::vector<float>)>>::get_Forest(std::string json_file)
+void Forest<std::function<bool(std::vector<float>)>>::get_Forest(std::string json_file, bool bool_sort_trees)
 {
    std::string my_config       = read_file_string(json_file);
    auto        json_model      = json::parse(my_config);
@@ -297,7 +315,8 @@ void Forest<std::function<bool(std::vector<float>)>>::do_predictions(
 ////////////////////////////////////////////////////////////////
 /// ---------- Specialization JIT Forest&events ------------- //
 template <>
-void Forest<std::function<std::vector<bool>(std::vector<std::vector<float>>)>>::get_Forest(std::string json_file)
+void Forest<std::function<std::vector<bool>(std::vector<std::vector<float>>)>>::get_Forest(std::string json_file,
+                                                                                           bool        bool_sort_trees)
 {
    std::string my_config       = read_file_string(json_file);
    auto        json_model      = json::parse(my_config);

@@ -16,7 +16,7 @@ TEST(forestBDT, UniquePredictions)
    preds.reserve(events_vector.size());
 
    Forest<unique_bdt::Tree> Forest;
-   Forest.get_Forest(json_model_file);
+   Forest.get_Forest(json_model_file, true);
    Forest.do_predictions(events_vector, preds);
 
    for (size_t i = 0; i < preds.size(); i++) {

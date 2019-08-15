@@ -116,9 +116,9 @@ if __name__ == "__main__":
     for i, value_test in enumerate(test_list):
         print(f"***** bench value {value_test} *****")
         create_model_gaussian(
-            num_samples=1000,
+            num_samples=500_000,
             num_features=value_test,
-            num_trees=100,
+            num_trees=500,
             max_depth=3,
             data_folder=DATA_FOLDER,
         )
