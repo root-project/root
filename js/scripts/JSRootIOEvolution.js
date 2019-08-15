@@ -4,21 +4,16 @@
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
       define( ['JSRootCore', 'rawinflate'], factory );
-   } else
-   if (typeof exports === 'object' && typeof module !== 'undefined') {
+   } else if (typeof exports === 'object' && typeof module !== 'undefined') {
       require("./rawinflate.min.js");
-
       factory(require("./JSRootCore.js"));
    } else {
       if (typeof JSROOT == 'undefined')
          throw new Error("JSROOT I/O requires JSRootCore.js", "JSRootIOEvolution.js");
-
       if (typeof JSROOT.ZIP == 'undefined')
          throw new Error("JSROOT I/O requires rawinflate.js", "JSRootIOEvolution.js");
-
       if (typeof JSROOT.IO == "object")
          throw new Error("This JSROOT IO already loaded", "JSRootIOEvolution.js");
-
       factory(JSROOT);
    }
 } (function(JSROOT) {

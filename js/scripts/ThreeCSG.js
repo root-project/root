@@ -1,14 +1,11 @@
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
       define( [ 'threejs' ], factory );
-   } else
-   if (typeof exports === 'object' && typeof module !== 'undefined') {
+   } else if (typeof exports === 'object' && typeof module !== 'undefined') {
       factory(require("three"), exports);
    } else {
-
       if (typeof THREE == 'undefined')
          throw new Error('THREE is not defined', 'ThreeCSG.js');
-
       ThreeBSP = factory(THREE);
    }
 } (function(THREE, ThreeBSP) {

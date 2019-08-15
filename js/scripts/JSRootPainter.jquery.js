@@ -878,14 +878,13 @@
          d3a.node().scrollIntoView(false);
    }
 
+   /** Handler for click event of item in the hierarchy */
    HierarchyPainter.prototype.tree_click = function(node, place) {
       if (!node) return;
 
-      var d3cont = d3.select(node.parentNode.parentNode);
-      var itemname = d3cont.attr('item');
-      if (!itemname) return;
-
-      var hitem = this.Find(itemname);
+      var d3cont = d3.select(node.parentNode.parentNode),
+          itemname = d3cont.attr('item'),
+          hitem = itemname ? this.Find(itemname) : null;
       if (!hitem) return;
 
       if (hitem._break_point) {
@@ -941,6 +940,7 @@
       }
 
       if (place == "item") {
+
          if ('_player' in hitem)
             return this.player(itemname);
 
@@ -964,7 +964,7 @@
          if (handle && handle.ctrl && d3.event.ctrlKey) drawopt = handle.ctrl;
 
          if (!drawopt) {
-            for (var pitem = hitem._parent; pitem; pitem = pitem._parent) {
+            for (var pitem = hitem._parent; !!pitem; pitem = pitem._parent) {
                if (pitem._painter) { can_draw = false; if (can_expand===undefined) can_expand = false; break; }
             }
          }

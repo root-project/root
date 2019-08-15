@@ -5,20 +5,15 @@
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
       define( ['JSRootPainter', 'd3', 'JSRootMath'], factory );
-   } else
-   if (typeof exports === 'object' && typeof module !== 'undefined') {
+   } else if (typeof exports === 'object' && typeof module !== 'undefined') {
        factory(require("./JSRootCore.js"), require("d3"), require("./JSRootMath.js"));
    } else {
-
       if (typeof d3 != 'object')
-         throw new Error('This extension requires d3.v3.js', 'JSRootPainter.more.js');
-
+         throw new Error('This extension requires d3.js', 'JSRootPainter.more.js');
       if (typeof JSROOT == 'undefined')
          throw new Error('JSROOT is not defined', 'JSRootPainter.more.js');
-
       if (typeof JSROOT.Painter != 'object')
          throw new Error('JSROOT.Painter not defined', 'JSRootPainter.more.js');
-
       factory(JSROOT, d3);
    }
 } (function(JSROOT, d3) {
@@ -60,7 +55,6 @@
 
       this.pos_x = this.AxisToSvg("x", pos_x, this.isndc);
       this.pos_y = this.AxisToSvg("y", pos_y, this.isndc);
-      this.pos_dx = this.pos_dy = 0;
 
       var arg = { align: text.fTextAlign, x: this.pos_x, y: this.pos_y, text: text.fTitle, color: tcolor, latex: 0 };
 
@@ -75,18 +69,25 @@
 
       this.FinishTextDrawing();
 
-      this.AddMove({
-         move: function(dx,dy) {
+      this.pos_dx = this.pos_dy = 0;
+
+      if (!this.moveDrag)
+         this.moveDrag = function(dx,dy) {
             this.pos_dx += dx;
             this.pos_dy += dy;
             this.draw_g.attr("transform", "translate(" + this.pos_dx + "," + this.pos_dy + ")");
-         }.bind(this),
-         complete: function() {
+        }
+
+      if (!this.moveEnd)
+         this.moveEnd = function(not_changed) {
+            if (not_changed) return;
             var text = this.GetObject();
             text.fX = this.SvgToAxis("x", this.pos_x + this.pos_dx, this.isndc),
             text.fY = this.SvgToAxis("y", this.pos_y + this.pos_dy, this.isndc);
             this.WebCanvasExec("SetX(" + text.fX + ");;SetY(" + text.fY + ");;");
-         }.bind(this)});
+         }
+
+      this.AddMove();
    }
 
    // =====================================================================================
@@ -445,19 +446,24 @@
          elem.style('fill','none');
       }
 
-      this.AddMove({
-         begin: function(x,y) {
+      if (!this.moveStart)
+         this.moveStart = function(x,y) {
             var fullsize = Math.sqrt(Math.pow(this.x1-this.x2,2) + Math.pow(this.y1-this.y2,2)),
                 sz1 = Math.sqrt(Math.pow(x-this.x1,2) + Math.pow(y-this.y1,2))/fullsize,
                 sz2 = Math.sqrt(Math.pow(x-this.x2,2) + Math.pow(y-this.y2,2))/fullsize;
             if (sz1>0.9) this.side = 1; else if (sz2>0.9) this.side = -1; else this.side = 0;
-         }.bind(this),
-         move: function(dx,dy) {
+         }
+
+      if (!this.moveDrag)
+         this.moveDrag = function(dx,dy) {
             if (this.side != 1) { this.x1 += dx; this.y1 += dy; }
             if (this.side != -1) { this.x2 += dx; this.y2 += dy; }
             this.draw_g.select('path').attr("d", this.createPath());
-         }.bind(this),
-         complete: function() {
+         }
+
+      if (!this.moveEnd)
+         this.moveEnd = function(not_changed) {
+            if (not_changed) return;
             var arrow = this.GetObject(), exec = "";
             arrow.fX1 = this.SvgToAxis("x", this.x1, this.isndc);
             arrow.fX2 = this.SvgToAxis("x", this.x2, this.isndc);
@@ -466,7 +472,9 @@
             if (this.side != 1) exec += "SetX1(" + arrow.fX1 + ");;SetY1(" + arrow.fY1 + ");;";
             if (this.side != -1) exec += "SetX2(" + arrow.fX2 + ");;SetY2(" + arrow.fY2 + ");;";
             this.WebCanvasExec(exec + "Notify();;");
-         }.bind(this)});
+         }
+
+      this.AddMove();
    }
 
    // =================================================================================
@@ -1483,9 +1491,6 @@
       res.bin = d;
       res.binindx = d.indx;
 
-      if (pnt.click_handler && res.exact && this.TestEditable())
-         res.click_handler = this.InvokeClickHandler.bind(this);
-
       return res;
    }
 
@@ -1664,9 +1669,6 @@
 
          res.menu = res.exact;
          res.menu_dist = Math.sqrt((pnt.x-res.x)*(pnt.x-res.x) + Math.pow(Math.min(Math.abs(pnt.y-res.gry1),Math.abs(pnt.y-res.gry2)),2));
-
-         if (pnt.click_handler && res.exact && this.TestEditable())
-            res.click_handler = this.InvokeClickHandler.bind(this);
       }
 
       if (this.fillatt && this.fillatt.used && !this.fillatt.empty()) res.color2 = this.fillatt.fillcolor();
@@ -1732,43 +1734,67 @@
       }
    }
 
-   TGraphPainter.prototype.movePntHandler = function(first_time) {
-      var pos = d3.mouse(this.svg_frame().node()),
-          main = this.frame_painter();
-
-      if (!main || !this.interactive_bin) return;
-
-      this.interactive_bin.x = main.RevertX(pos[0] + this.interactive_delta_x);
-      this.interactive_bin.y = main.RevertY(pos[1] + this.interactive_delta_y);
-      this.DrawBins();
+   /** Start moving of TGraph */
+   TGraphPainter.prototype.moveStart = function(x,y) {
+      this.pos_dx = this.pos_dy = 0;
+      var hint = this.ExtractTooltip({x:x, y:y});
+      if (hint && hint.exact && (hint.binindx !== undefined)) {
+         this.move_binindx = hint.binindx;
+         this.move_bin = hint.bin;
+         var main = this.frame_painter();
+         this.move_x0 = main ? main.grx(this.move_bin.x) : x;
+         this.move_y0 = main ? main.gry(this.move_bin.y) : y;
+      } else {
+         delete this.move_binindx;
+      }
    }
 
-   TGraphPainter.prototype.endPntHandler = function() {
-      if (this.interactive_bin) {
-         var exec = "SetPoint(" + this.interactive_bin.indx + "," + this.interactive_bin.x + "," + this.interactive_bin.y + ")";
-         if ((this.interactive_bin.indx == 0) && this.MatchObjectType('TCutG'))
-            exec += ";;SetPoint(" + (this.GetObject().fNpoints-1) + "," + this.interactive_bin.x + "," + this.interactive_bin.y + ")";
-         this.WebCanvasExec(exec);
+   /** Perform moving */
+   TGraphPainter.prototype.moveDrag = function(dx,dy) {
+      this.pos_dx += dx;
+      this.pos_dy += dy;
+
+      if (this.move_binindx === undefined) {
+         this.draw_g.attr("transform", "translate(" + this.pos_dx + "," + this.pos_dy + ")");
+      } else {
+         var main = this.frame_painter();
+         if (main && this.move_bin) {
+            this.move_bin.x = main.RevertX(this.move_x0 + this.pos_dx);
+            this.move_bin.y = main.RevertY(this.move_y0 + this.pos_dy);
+            this.DrawBins();
+         }
+      }
+   }
+
+   /** Complete moving */
+   TGraphPainter.prototype.moveEnd = function(not_changed) {
+      var exec = "";
+
+      if (this.move_binindx === undefined) {
+
+         this.draw_g.attr("transform", null);
+
+         var main = this.frame_painter();
+         if (main && this.bins && !not_changed) {
+            for (var k=0;k<this.bins.length;++k) {
+               var bin = this.bins[k];
+               bin.x = main.RevertX(main.grx(bin.x) + this.pos_dx);
+               bin.y = main.RevertY(main.gry(bin.y) + this.pos_dy);
+               exec += "SetPoint(" + bin.indx + "," + bin.x + "," + bin.y + ");;";
+               if ((bin.indx == 0) && this.MatchObjectType('TCutG'))
+                  exec += "SetPoint(" + (this.GetObject().fNpoints-1) + "," + bin.x + "," + bin.y + ");;";
+            }
+            this.DrawBins();
+         }
+      } else {
+         var exec = "SetPoint(" + this.move_bin.indx + "," + this.move_bin.x + "," + this.move_bin.y + ")";
+         if ((this.move_bin.indx == 0) && this.MatchObjectType('TCutG'))
+            exec += ";;SetPoint(" + (this.GetObject().fNpoints-1) + "," + this.move_bin.x + "," + this.move_bin.y + ")";
+         delete this.move_binindx;
       }
 
-      delete this.interactive_bin;
-      d3.select(window).on("mousemove.graphPnt", null)
-                       .on("mouseup.graphPnt", null);
-   }
-
-   TGraphPainter.prototype.InvokeClickHandler = function(hint) {
-      if (!hint.bin) return; //
-
-      this.interactive_bin = hint.bin;
-
-      d3.select(window).on("mousemove.graphPnt", this.movePntHandler.bind(this))
-                       .on("mouseup.graphPnt", this.endPntHandler.bind(this), true);
-
-      var pos = d3.mouse(this.svg_frame().node()),
-          main = this.frame_painter();
-
-      this.interactive_delta_x = main ? main.grx(this.interactive_bin.x) - pos[0] : 0;
-      this.interactive_delta_y = main ? main.gry(this.interactive_bin.y) - pos[1] : 0;
+      if (exec && !not_changed)
+         this.WebCanvasExec(exec);
    }
 
    TGraphPainter.prototype.FillContextMenu = function(menu) {
@@ -1968,6 +1994,7 @@
       }
       this.SetDivId(divid);
       this.DrawBins();
+      if (this.TestEditable()) this.AddMove();
       this.DrawNextFunction(0, this.DrawingReady.bind(this));
       return this;
    }

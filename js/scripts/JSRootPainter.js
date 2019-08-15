@@ -1,22 +1,17 @@
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
       define( ['JSRootCore', 'd3'], factory );
-   } else
-   if (typeof exports === 'object' && typeof module !== 'undefined') {
+   } else if (typeof exports === 'object' && typeof module !== 'undefined') {
       var jsroot = require("./JSRootCore.js");
       factory(jsroot, require("d3"));
       if (jsroot.nodejs) jsroot.Painter.readStyleFromURL("?interactive=0&tooltip=0&nomenu&noprogress&notouch&toolbar=0&webgl=0");
    } else {
-
       if (typeof JSROOT == 'undefined')
          throw new Error('JSROOT is not defined', 'JSRootPainter.js');
-
       if (typeof d3 != 'object')
          throw new Error('d3 is not defined', 'JSRootPainter.js');
-
       if (typeof JSROOT.Painter == 'object')
          throw new Error('JSROOT.Painter already defined', 'JSRootPainter.js');
-
       factory(JSROOT, d3);
    }
 } (function(JSROOT, d3) {
@@ -849,6 +844,14 @@
       }
 
       return true;
+   }
+
+   TAttMarkerHandler.prototype.getStrokeColor = function() {
+      return this.stroke ? this.color : "none";
+   }
+
+   TAttMarkerHandler.prototype.getFillColor = function() {
+      return this.fill ? this.color : "none";
    }
 
    /** @summary Apply marker styles to created element */
@@ -3663,11 +3666,11 @@
          this.control.SwitchTooltip(on);
    }
 
-   /** @summary Add move handlers for drawn element
-    * @private */
-   TObjectPainter.prototype.AddMove = function(args) {
+   /** @summary Add move handlers for drawn element @private */
+   TObjectPainter.prototype.AddMove = function() {
 
-      if (!JSROOT.gStyle.MoveResize || JSROOT.BatchMode) return;
+      if (!JSROOT.gStyle.MoveResize || JSROOT.BatchMode ||
+          !this.draw_g || this.draw_g.property("assigned_move")) return;
 
       function detectRightButton(event) {
          if ('buttons' in event) return event.buttons === 2;
@@ -3676,7 +3679,7 @@
          return false;
       }
 
-      var prefix = "", drag_move;
+      var prefix = "", drag_move, not_changed = true;
       if (JSROOT._test_d3_ === 3) {
          prefix = "drag";
          drag_move = d3.behavior.drag().origin(Object);
@@ -3687,24 +3690,31 @@
       drag_move
         .on(prefix+"start",  function() {
             if (detectRightButton(d3.event.sourceEvent)) return;
-            JSROOT.Painter.closeMenu(); // close menu
-            this.SwitchTooltip(false); // disable tooltip
             d3.event.sourceEvent.preventDefault();
             d3.event.sourceEvent.stopPropagation();
-            if (args.begin) {
-               var pos = d3.mouse(this.draw_g.node());
-               args.begin(pos[0], pos[1]);
-            }
+            var pos = d3.mouse(this.draw_g.node());
+            not_changed = true;
+            if (this.moveStart)
+               this.moveStart(pos[0], pos[1]);
        }.bind(this)).on("drag", function() {
             d3.event.sourceEvent.preventDefault();
             d3.event.sourceEvent.stopPropagation();
-            if (args.move) args.move(d3.event.dx, d3.event.dy);
-       }).on(prefix+"end", function() {
+            not_changed = false;
+            if (this.moveDrag)
+               this.moveDrag(d3.event.dx, d3.event.dy);
+       }.bind(this)).on(prefix+"end", function() {
             d3.event.sourceEvent.preventDefault();
-            if (args.complete) args.complete();
-      });
+            d3.event.sourceEvent.stopPropagation();
+            if (this.moveEnd)
+               this.moveEnd(not_changed);
+            var cp = this.canv_painter();
+            if (cp) cp.SelectObjectPainter(this);
+      }.bind(this));
 
-      this.draw_g.style("cursor", "move").call(drag_move);
+      this.draw_g
+          .style("cursor", "move")
+          .property("assigned_move", true)
+          .call(drag_move);
    }
 
    /** @summary Add drag for interactive rectangular elements
@@ -4062,10 +4072,8 @@
       if (!snapid || (typeof snapid != 'string')) return;
 
       var canp = this.canv_painter();
-      if (canp && !canp._readonly && canp._websocket) {
-         console.log('execute ' + exec + ' for object ' + snapid);
+      if (canp && !canp._readonly && canp._websocket)
          canp.SendWebsocket("OBJEXEC:" + snapid + ":" + exec);
-      }
    }
 
    /** @summary Fill object menu in web canvas
@@ -6093,7 +6101,7 @@
    JSROOT.addDrawFunc({ name: "TH2Poly", icon: "img_histo2d", prereq: "v6;hist", func: "JSROOT.Painter.drawHistogram2D", opt:";COL;COL0;COLZ;LCOL;LCOL0;LCOLZ;LEGO;TEXT;same", expand_item: "fBins", theonly: true });
    JSROOT.addDrawFunc({ name: "TProfile2Poly", sameas: "TH2Poly" });
    JSROOT.addDrawFunc({ name: "TH2PolyBin", icon: "img_histo2d", draw_field: "fPoly" });
-   JSROOT.addDrawFunc({ name: /^TH2/, icon: "img_histo2d", prereq: "v6;hist", func: "JSROOT.Painter.drawHistogram2D", opt:";COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;BOX;BOX1;PROJ;PROJX1;PROJX2;PROJX3;PROJY1;PROJY2;PROJY3;SCAT;TEXT;CONT;CONT1;CONT2;CONT3;CONT4;ARR;SURF;SURF1;SURF2;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same", ctrl: "colz" });
+   JSROOT.addDrawFunc({ name: /^TH2/, icon: "img_histo2d", prereq: "v6;hist", func: "JSROOT.Painter.drawHistogram2D", opt:";COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;BOX;BOX1;PROJ;PROJX1;PROJX2;PROJX3;PROJY1;PROJY2;PROJY3;SCAT;TEXT;TEXTE;TEXTE0;CONT;CONT1;CONT2;CONT3;CONT4;ARR;SURF;SURF1;SURF2;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same", ctrl: "colz" });
    JSROOT.addDrawFunc({ name: "TProfile2D", sameas: "TH2" });
    JSROOT.addDrawFunc({ name: /^TH3/, icon: 'img_histo3d', prereq: "v6;hist3d", func: "JSROOT.Painter.drawHistogram3D", opt:";SCAT;BOX;BOX2;BOX3;GLBOX1;GLBOX2;GLCOL" });
    JSROOT.addDrawFunc({ name: "THStack", icon: "img_histo1d", prereq: "v6;hist", func: "JSROOT.Painter.drawHStack", expand_item: "fHists", opt: "NOSTACK;HIST;E;PFC;PLC" });

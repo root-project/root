@@ -4,20 +4,15 @@
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
       define( ['JSRootPainter', 'd3'], factory );
-   } else
-   if (typeof exports === 'object' && typeof module !== 'undefined') {
+   } else if (typeof exports === 'object' && typeof module !== 'undefined') {
        factory(require("./JSRootCore.js"), require("d3"));
    } else {
-
       if (typeof d3 != 'object')
          throw new Error('This extension requires d3.js', 'JSRootPainter.hist.js');
-
       if (typeof JSROOT == 'undefined')
          throw new Error('JSROOT is not defined', 'JSRootPainter.hist.js');
-
       if (typeof JSROOT.Painter != 'object')
          throw new Error('JSROOT.Painter not defined', 'JSRootPainter.hist.js');
-
       factory(JSROOT, d3);
    }
 } (function(JSROOT, d3) {
@@ -1906,6 +1901,7 @@
          this.Hist = false;
          this.TextAngle = Math.min(d.partAsInt(), 90);
          if (d.part.indexOf('N')>=0) this.TextKind = "N";
+         if (d.part.indexOf('E0')>=0) this.TextLine = true;
          if (d.part.indexOf('E')>=0) this.TextKind = "E";
       }
 
@@ -2293,7 +2289,8 @@
          CopyAxis(histo.fXaxis, obj.fXaxis);
          CopyAxis(histo.fYaxis, obj.fYaxis);
          CopyAxis(histo.fZaxis, obj.fZaxis);
-         if (!fp.zoom_changed_interactive) {
+
+         if (this.snapid || !fp || !fp.zoom_changed_interactive) {
             function CopyZoom(tgt,src) {
                tgt.fFirst = src.fFirst;
                tgt.fLast = src.fLast;
@@ -2335,7 +2332,8 @@
             this.DecodeOptions(opt || histo.fOption);
       }
 
-      // if (!fp.zoom_changed_interactive) this.CheckPadRange();
+      if (this.snapid || !fp || !fp.zoom_changed_interactive)
+         this.CheckPadRange();
 
       this.ScanContent();
 
@@ -5565,12 +5563,14 @@
 
    TH2Painter.prototype.DrawBinsText = function(w, h, handle) {
       var histo = this.GetObject(),
-          i,j,binz,colindx,binw,binh,lbl,posx,posy,sizex,sizey,
+          i,j,binz,errz,colindx,binw,binh,lbl,lble,posx,posy,sizex,sizey,
           text_col = this.get_color(histo.fMarkerColor),
           text_angle = -1*this.options.TextAngle,
           text_g = this.draw_g.append("svg:g").attr("class","th2_text"),
           text_size = 20, text_offset = 0,
-          profile2d = (this.options.TextKind == "E") && this.MatchObjectType('TProfile2D') && (typeof histo.getBinEntries=='function');
+          profile2d = this.MatchObjectType('TProfile2D') && (typeof histo.getBinEntries=='function'),
+          show_err = (this.options.TextKind == "E"),
+          use_latex = (show_err && !this.options.TextLine) ? 1 : 0;
 
       if (handle===null) handle = this.PrepareColorDraw({ rounding: false });
 
@@ -5595,6 +5595,16 @@
             lbl = (binz === Math.round(binz)) ? binz.toString() :
                       JSROOT.FFormat(binz, JSROOT.gStyle.fPaintTextFormat);
 
+            if (show_err) {
+               errz = histo.getBinError(histo.getBin(i+1,j+1));
+               lble = (errz === Math.round(errz)) ? errz.toString() :
+                            JSROOT.FFormat(errz, JSROOT.gStyle.fPaintTextFormat);
+               if (this.options.TextLine)
+                  lbl += '\xB1' + lble;
+               else
+                  lbl = "#splitline{" + lbl + "}{#pm" + lble + "}";
+            }
+
             if (text_angle /*|| (histo.fMarkerSize!==1)*/) {
                posx = Math.round(handle.grx[i] + binw*0.5);
                posy = Math.round(handle.gry[j+1] + binh*(0.5 + text_offset));
@@ -5607,7 +5617,7 @@
                sizey = Math.round(binh*0.8);
             }
 
-            this.DrawText({ align: 22, x: posx, y: posy, width: sizex, height: sizey, rotate: text_angle, text: lbl, color: text_col, latex: 0, draw_g: text_g });
+            this.DrawText({ align: 22, x: posx, y: posy, width: sizex, height: sizey, rotate: text_angle, text: lbl, color: text_col, latex: use_latex, draw_g: text_g });
          }
 
       this.FinishTextDrawing(text_g, null);
@@ -6085,6 +6095,7 @@
       this.tt_handle = handle;
    }
 
+   /** Return text information about histogram bin */
    TH2Painter.prototype.GetBinTips = function (i, j) {
       var lines = [], pmain = this.frame_painter(),
           histo = this.GetHisto(),
@@ -6106,10 +6117,12 @@
 
       if (histo.$baseh) binz -= histo.$baseh.getBinContent(i+1,j+1);
 
-      if (binz === Math.round(binz))
-         lines.push("entries = " + binz);
-      else
-         lines.push("entries = " + JSROOT.FFormat(binz, JSROOT.gStyle.fStatFormat));
+      lines.push("entries = " + ((binz === Math.round(binz)) ? binz : JSROOT.FFormat(binz, JSROOT.gStyle.fStatFormat)));
+
+      if ((this.options.TextKind == "E") || this.MatchObjectType('TProfile2D')) {
+         var errz = histo.getBinError(histo.getBin(i+1,j+1));
+         lines.push("error = " + ((errz === Math.round(errz)) ? errz.toString() : JSROOT.FFormat(errz, JSROOT.gStyle.fPaintTextFormat)));
+      }
 
       return lines;
    }
