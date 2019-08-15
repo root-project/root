@@ -18,7 +18,6 @@
 
 #include <exception>
 #include <memory>
-#include <random>
 #include <string>
 #include <utility>
 
@@ -48,17 +47,10 @@ class FileRaii {
 private:
    std::string fPath;
 public:
-   FileRaii() {
-      std::random_device r;
-      std::default_random_engine e(r());
-      std::uniform_int_distribution<std::uint64_t> uniform_dist(0, std::uint64_t(-1));
-      fPath = "ntuple_test" + std::to_string(uniform_dist(e)) + ".root";
-   }
+   explicit FileRaii(const std::string &path) : fPath(path) { }
    FileRaii(const FileRaii&) = delete;
    FileRaii& operator=(const FileRaii&) = delete;
-   ~FileRaii() {
-      std::remove(fPath.c_str());
-   }
+   ~FileRaii() { std::remove(fPath.c_str()); }
    std::string GetPath() const { return fPath; }
 };
 
@@ -73,7 +65,7 @@ TEST(RNTuple, Basics)
 
 TEST(RNTuple, ReconstructModel)
 {
-   FileRaii fileGuard;
+   FileRaii fileGuard("test_ntuple_reconstruct.root");
    auto model = RNTupleModel::Create();
    auto fieldPt = model->MakeField<float>("pt", 42.0);
    auto fieldNnlo = model->MakeField<std::vector<std::vector<float>>>("nnlo");
@@ -98,7 +90,7 @@ TEST(RNTuple, ReconstructModel)
 
 TEST(RNTuple, StorageRoot)
 {
-   FileRaii fileGuard;
+   FileRaii fileGuard("test_ntuple_storage.root");
    TFile *file = TFile::Open(fileGuard.GetPath().c_str(), "RECREATE");
    RPageSinkRoot::RSettings settingsWrite;
    settingsWrite.fFile = file;
@@ -128,7 +120,7 @@ TEST(RNTuple, StorageRoot)
 
 TEST(RNTuple, WriteRead)
 {
-   FileRaii fileGuard;
+   FileRaii fileGuard("test_ntuple_writeread.root");
 
    auto modelWrite = RNTupleModel::Create();
    auto wrSignal = modelWrite->MakeField<bool>("signal", true);
@@ -188,7 +180,7 @@ TEST(RNTuple, WriteRead)
 
 TEST(RNTuple, RVec)
 {
-   FileRaii fileGuard;
+   FileRaii fileGuard("test_ntuple_rvec.root");
 
    auto modelWrite = RNTupleModel::Create();
    auto wrJets = modelWrite->MakeField<ROOT::VecOps::RVec<float>>("jets");
@@ -237,7 +229,7 @@ TEST(RNTuple, RVec)
 
 TEST(RNTuple, BoolVector)
 {
-   FileRaii fileGuard;
+   FileRaii fileGuard("test_ntuple_boolvec.root");
 
    auto modelWrite = RNTupleModel::Create();
    auto wrBoolStdVec = modelWrite->MakeField<std::vector<bool>>("boolStdVec");
@@ -278,7 +270,7 @@ TEST(RNTuple, BoolVector)
 
 TEST(RNTuple, Clusters)
 {
-   FileRaii fileGuard;
+   FileRaii fileGuard("test_ntuple_clusters.root");
 
    auto modelWrite = RNTupleModel::Create();
    auto wrPt = modelWrite->MakeField<float>("pt", 42.0);
@@ -340,7 +332,7 @@ TEST(RNTuple, Clusters)
 
 TEST(RNTuple, View)
 {
-   FileRaii fileGuard;
+   FileRaii fileGuard("test_ntuple_view.root");
 
    auto model = RNTupleModel::Create();
    auto fieldPt = model->MakeField<float>("pt", 42.0);
@@ -389,7 +381,7 @@ TEST(RNTuple, Capture) {
 
 TEST(RNTuple, Composable)
 {
-   FileRaii fileGuard;
+   FileRaii fileGuard("test_ntuple_composable.root");
 
    auto eventModel = RNTupleModel::Create();
    auto fldPt = eventModel->MakeField<float>("pt", 0.0);
@@ -474,14 +466,14 @@ TEST(RNTuple, TClass) {
    auto model = RNTupleModel::Create();
    auto ptrKlass = model->MakeField<CustomStruct>("klass");
 
-   FileRaii fileGuard;
+   FileRaii fileGuard("test_ntuple_tclass.root");
    RNTupleWriter ntuple(std::move(model), std::make_unique<RPageSinkRoot>("f", fileGuard.GetPath()));
 }
 
 
 TEST(RNTuple, RealWorld1)
 {
-   FileRaii fileGuard;
+   FileRaii fileGuard("test_ntuple_realworld1.root");
 
    // See https://github.com/olifre/root-io-bench/blob/master/benchmark.cpp
    auto modelWrite = RNTupleModel::Create();
@@ -545,7 +537,7 @@ TEST(RNTuple, RealWorld1)
 
 TEST(RNTuple, RDF)
 {
-   FileRaii fileGuard;
+   FileRaii fileGuard("test_ntuple_rdf.root");
 
    auto modelWrite = RNTupleModel::Create();
    auto wrPt = modelWrite->MakeField<float>("pt", 42.0);

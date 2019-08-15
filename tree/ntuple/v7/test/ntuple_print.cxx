@@ -30,17 +30,10 @@ class FileRaii {
 private:
    std::string fPath;
 public:
-   FileRaii() {
-      std::random_device r;
-      std::default_random_engine e(r());
-      std::uniform_int_distribution<std::uint64_t> uniform_dist(0, std::uint64_t(-1));
-      fPath = "ntuple_test" + std::to_string(uniform_dist(e)) + ".root";
-   }
+   explicit FileRaii(const std::string &path) : fPath(path) { }
    FileRaii(const FileRaii&) = delete;
    FileRaii& operator=(const FileRaii&) = delete;
-   ~FileRaii() {
-      std::remove(fPath.c_str());
-   }
+   ~FileRaii() { std::remove(fPath.c_str()); }
    std::string GetPath() const { return fPath; }
 };
 
@@ -48,7 +41,7 @@ public:
 
 TEST(RNtuplePrint, FullString)
 {
-   FileRaii fileGuard;
+   FileRaii fileGuard("test_ntuple_print_fullstring.root");
    {
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<float>("pt");
