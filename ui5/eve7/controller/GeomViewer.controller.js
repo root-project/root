@@ -1054,6 +1054,18 @@ sap.ui.define(['sap/ui/core/Component',
          this.processPainterChange('focusCamera');
       },
 
+      depthTestChanged: function() {
+         this.processPainterChange('changedDepthTest');
+      },
+
+      depthMethodChanged: function() {
+         this.processPainterChange('changedDepthMethod');
+      },
+
+      pressReset: function() {
+         this.processPainterChange('resetAdvanced');
+      },
+
       ssaoChanged: function() {
          this.processPainterChange('changedSSAO');
       }
