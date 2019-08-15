@@ -267,6 +267,7 @@ RooPlot::RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+<<<<<<< HEAD
 /// Create a new frame for a given variable in x. This is just a
 /// wrapper for the RooPlot constructor with the same interface.
 /// 
@@ -287,6 +288,13 @@ RooPlot* RooPlot::frame(const RooAbsRealLValue &var, Double_t xmin, Double_t xma
 ///
 /// More details.
 /// \param[in] var The variable on the x-axis
+=======
+//
+
+RooPlot* RooPlot::frame(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nBins){
+  return new RooPlot(var,xmin,xmax,nBins);
+}
+>>>>>>> 14a2590a6c... added option for alphanumeric axes in RooPlot
 RooPlot* RooPlot::frameWithLabels(const RooAbsRealLValue &var){
   RooPlot* pl = new RooPlot();
   int nbins = var.getBinning().numBins();
@@ -297,6 +305,7 @@ RooPlot* RooPlot::frameWithLabels(const RooAbsRealLValue &var){
   pl->_hist->Sumw2(kFALSE) ;
   pl->_hist->GetSumw2()->Set(0) ;
   TH1::AddDirectory(histAddDirStatus) ;
+<<<<<<< HEAD
 
   pl->_hist->SetNdivisions(-nbins);
   for(int i=0; i<nbins; ++i){
@@ -317,6 +326,28 @@ RooPlot* RooPlot::frameWithLabels(const RooAbsRealLValue &var){
   pl->SetTitle(title.Data());
   pl->initialize();
 
+=======
+
+  pl->_hist->SetNdivisions(-nbins);
+  for(int i=0; i<nbins; ++i){
+    TString s = TString::Format("%g-%g",var.getBinning().binLow(i),var.getBinning().binHigh(i));
+    pl->_hist->GetXaxis()->SetBinLabel(i+1,s);
+  }
+
+  // plotVar can be a composite in case of a RooDataSet::plot, need deepClone
+  pl->_plotVarSet = (RooArgSet*) RooArgSet(var).snapshot() ;
+  pl->_plotVarClone= (RooAbsRealLValue*)pl->_plotVarSet->find(var.GetName()) ;
+
+  TString xtitle= var.getTitle(kTRUE);
+  pl->SetXTitle(xtitle.Data());
+
+  TString title("A RooPlot of \"");
+  title.Append(var.getTitle());
+  title.Append("\"");
+  pl->SetTitle(title.Data());
+  pl->initialize();
+
+>>>>>>> 14a2590a6c... added option for alphanumeric axes in RooPlot
   pl->_normBinWidth = 1.;
   return pl;
 }
@@ -589,6 +620,37 @@ namespace {
 /// is zero unless we are plotting an object that takes on negative values.
 /// This call transfers ownership of the plotable object to this class.
 /// The plotable object will be deleted when this plot object is deleted.
+
+namespace {
+  void translateGraph(TH1* hist, RooAbsRealLValue* xvar, TGraph* graph){
+    int n = graph->GetN();
+    double x, y;
+    for(int i=0; i<n; ++i){
+      if(graph->GetPoint(i,x,y)!=i) break;
+      int bin = xvar->getBinning().binNumber(x);
+      graph->SetPoint(i,hist->GetXaxis()->GetBinCenter(bin+1),y);
+    }
+    double xmin = hist->GetXaxis()->GetXmin();
+    double xminVal = graph->Eval(xmin);
+    double xmax = hist->GetXaxis()->GetXmax();
+    double xmaxVal = graph->Eval(xmax);
+    graph->SetPoint(n,xmax,xmaxVal);
+    graph->SetPoint(n+1,xmin,xminVal);
+    graph->Sort();
+  }
+  void translateGraph(TH1* hist, RooAbsRealLValue* xvar, TGraphAsymmErrors* graph){
+    int n = graph->GetN();
+    double x, y;
+    for(int i=0; i<n; ++i){
+      if(graph->GetPoint(i,x,y)!=i) break;
+      int bin = xvar->getBinning().binNumber(x);
+      graph->SetPoint(i,hist->GetXaxis()->GetBinCenter(bin+1),y);
+      graph->SetPointEXhigh(i,0.5*hist->GetXaxis()->GetBinWidth(bin+1));
+      graph->SetPointEXlow(i,0.5*hist->GetXaxis()->GetBinWidth(bin+1));
+    }
+  }
+}
+
 void RooPlot::addPlotable(RooPlotable *plotable, Option_t *drawOptions, Bool_t invisible, Bool_t refreshNorm)
 {
   // update our y-axis label and limits
