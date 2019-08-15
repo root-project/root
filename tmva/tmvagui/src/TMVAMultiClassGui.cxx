@@ -247,12 +247,6 @@ void TMVA::TMVAMultiClassGui(const char* fName ,TString dataset)
    "Plots parallel coordinates for classifiers and input variables (macro paracoor.cxx, requires ROOT >= 5.17)",
    buttonType, defaultRequiredClassifier );
 
-   // parallel coordinates only exist since ROOT 5.17
-   #if ROOT_VERSION_CODE < ROOT_VERSION(5,17,0)
-   TMVAMultiClassGui_inactiveButtons.push_back( title );
-   #endif
-
-
    title =Form( "(%i) PDFs of Classifiers (requires \"CreateMVAPdfs\" option set)", ++ic );
    MultiClassActionButton( cbar,
    title,

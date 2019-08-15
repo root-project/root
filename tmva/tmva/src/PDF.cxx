@@ -498,11 +498,7 @@ void TMVA::PDF::SmoothHistogram()
             else MaxBin=bin;
          }
          else if (MaxBin >= 0) {
-#if ROOT_VERSION_CODE > ROOT_VERSION(5,19,2)
             fHist->Smooth(1,"R");
-#else
-            fHist->Smooth(1,MinBin+1,MaxBin+1);
-#endif
             MinBin=MaxBin=-1;
          }
          else     // can't smooth a single bin
