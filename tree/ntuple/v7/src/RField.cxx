@@ -74,6 +74,7 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    if (normalizedType == "ULong64_t") normalizedType = "std::uint64_t";
    if (normalizedType == "string") normalizedType = "std::string";
    if (normalizedType.substr(0, 7) == "vector<") normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 6) == "array<") normalizedType = "std::" + normalizedType;
 
    if (normalizedType == "ROOT::Experimental::ClusterSize_t") return new RField<ClusterSize_t>(fieldName);
    if (normalizedType == "bool") return new RField<bool>(fieldName);
@@ -98,7 +99,7 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    }
    if (normalizedType.substr(0, 11) == "std::array<") {
       std::string arrayDef = normalizedType.substr(11, normalizedType.length() - 12);
-      auto posSeparator = arrayDef.find(',');
+      auto posSeparator = arrayDef.find_last_of(',');
       std::string itemTypeName = arrayDef.substr(0, posSeparator);
       auto arrayLength = std::stoi(arrayDef.substr(posSeparator + 1));
       auto itemField = Create(itemTypeName, itemTypeName);
