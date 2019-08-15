@@ -82,8 +82,10 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
   fTitle(""), fContextIdx(0U), fIoType(""), fIoName(""){
 
    using namespace llvm;
-   assert((ci || isa<TranslationUnitDecl>(ValD->getDeclContext()) ||
-          (ValD->getDeclContext()->isTransparentContext() && isa<TranslationUnitDecl>(ValD->getDeclContext()->getParent()) ) ||
+   const auto DC = ValD->getDeclContext();
+   (void)DC;
+   assert((ci || isa<TranslationUnitDecl>(DC) ||
+          ((DC->isTransparentContext() || DC->isInlineNamespace()) && isa<TranslationUnitDecl>(DC->getParent()) ) ||
            isa<EnumConstantDecl>(ValD)) && "Not TU?");
    assert((isa<VarDecl>(ValD) ||
            isa<FieldDecl>(ValD) ||
@@ -294,6 +296,11 @@ int TClingDataMemberInfo::InternalNext()
          // Stop on class data members, enumerator values,
          // and namespace variable members.
          return 1;
+      }
+      // Collect internal `__cling_N5xxx' inline namespaces; they will be traversed later
+      if (auto NS = dyn_cast<NamespaceDecl>(*fIter)) {
+         if (NS->getDeclContext()->isTranslationUnit() && NS->isInlineNamespace())
+            fContexts.push_back(NS);
       }
    }
    return 0;
