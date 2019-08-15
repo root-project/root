@@ -295,16 +295,13 @@ sap.ui.define(['sap/ui/core/Component',
             var geomDrawing = this.byId("geomDrawing");
             this.geo_painter = JSROOT.Painter.CreateGeoPainter(geomDrawing.getDomRef(), null, drawopt);
             this.geo_painter.setMouseTmout(0);
-            this.geo_painter.setDepthMethod("dflt");
-            this.geo_painter.showControlOptions = this.showControl.bind(this);
+            // this.geo_painter.setDepthMethod("dflt");
+            this.geo_painter.ctrl.notoolbar = true;
+            // this.geo_painter.showControlOptions = this.showControl.bind(this);
 
             this.geom_model = new JSONModel(this.geo_painter.ctrl);
 
-            console.log('transparency', this.geo_painter.ctrl.transparency);
-
             this.byId("geomControl").setModel(this.geom_model);
-
-
 
             geomDrawing.setGeomPainter(this.geo_painter);
 
@@ -1064,6 +1061,7 @@ sap.ui.define(['sap/ui/core/Component',
 
       pressReset: function() {
          this.processPainterChange('resetAdvanced');
+         if (this.geom_model) this.geom_model.refresh();
       },
 
       ssaoChanged: function() {
