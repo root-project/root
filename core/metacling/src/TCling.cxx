@@ -8674,19 +8674,16 @@ Long_t TCling::FuncTempInfo_ExtraProperty(FuncTempInfo_t* ft_info) const
    const clang::FunctionTemplateDecl *ft = (clang::FunctionTemplateDecl*)ft_info;
    const clang::FunctionDecl *fd = ft->getTemplatedDecl();
 
-   if (fd->isOverloadedOperator()) {
+   if (fd->isOverloadedOperator())
       property |= kIsOperator;
-   }
-   else if (llvm::isa<clang::CXXConversionDecl>(fd)) {
+   if (llvm::isa<clang::CXXConversionDecl>(fd))
       property |= kIsConversion;
-   } else if (llvm::isa<clang::CXXConstructorDecl>(fd)) {
+   if (llvm::isa<clang::CXXConstructorDecl>(fd))
       property |= kIsConstructor;
-   } else if (llvm::isa<clang::CXXDestructorDecl>(fd)) {
+   if (llvm::isa<clang::CXXDestructorDecl>(fd))
       property |= kIsDestructor;
-   } else if (fd->isInlined()) {
+   if (fd->isInlined())
       property |= kIsInlined;
-   }
-
    return property;
 }
 

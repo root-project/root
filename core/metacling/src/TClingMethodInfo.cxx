@@ -515,18 +515,16 @@ long TClingMethodInfo::ExtraProperty() const
    }
    long property = 0;
    const clang::FunctionDecl *fd = GetMethodDecl();
-   if (fd->isOverloadedOperator()) {
+   if (fd->isOverloadedOperator())
       property |= kIsOperator;
-   }
-   else if (llvm::isa<clang::CXXConversionDecl>(fd)) {
+   if (llvm::isa<clang::CXXConversionDecl>(fd))
       property |= kIsConversion;
-   } else if (llvm::isa<clang::CXXConstructorDecl>(fd)) {
+   if (llvm::isa<clang::CXXConstructorDecl>(fd))
       property |= kIsConstructor;
-   } else if (llvm::isa<clang::CXXDestructorDecl>(fd)) {
+   if (llvm::isa<clang::CXXDestructorDecl>(fd))
       property |= kIsDestructor;
-   } else if (fd->isInlined()) {
+   if (fd->isInlined())
       property |= kIsInlined;
-   }
    return property;
 }
 
