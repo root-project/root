@@ -1159,7 +1159,8 @@ void RooDataSet::add(const RooArgSet& data, Double_t wgt, Double_t wgtError)
   }
 
   if (_wgtVar && _doWeightErrorCheck
-      && wgtError != 0. && wgtError != wgt*wgt //Exception for standard weight error, which need not be stored
+      && wgtError != 0.
+      && fabs(wgt*wgt - wgtError)/wgtError > 1.E-15 //Exception for standard wgt^2 errors, which need not be stored.
       && _errorMsgCount < 5 && !_wgtVar->getAttribute("StoreError")) {
     coutE(DataHandling) << "An event weight error was passed to the RooDataSet '" << GetName()
         << "', but the weight variable '" << _wgtVar->GetName()
