@@ -21,6 +21,7 @@
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldValue.hxx>
 #include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RSpan.hxx>
 #include <ROOT/RStringView.hxx>
 #include <ROOT/RVec.hxx>
 #include <ROOT/TypeTraits.hxx>
@@ -36,6 +37,9 @@
 #include <string>
 #include <type_traits>
 #include <typeinfo>
+#if __cplusplus >= 201703L
+#include <variant>
+#endif
 #include <vector>
 #include <utility>
 
@@ -198,6 +202,8 @@ public:
    virtual RFieldValue CaptureValue(void *where) = 0;
    /// The number of bytes taken by a value of the appropriate type
    virtual size_t GetValueSize() const = 0;
+   /// For many types, the alignment requirement is equal to the size; otherwise override.
+   virtual size_t GetAlignment() const { return GetValueSize(); }
 
    /// Write the given value into columns. The value object has to be of the same type as the field.
    void Append(const RFieldValue& value) {
@@ -316,6 +322,7 @@ public:
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) final;
    size_t GetValueSize() const override;
+   size_t GetAlignment() const final { return 1; /* TODO(jblomer) */ }
 };
 
 /// The generic field for a (nested) std::vector<Type> except for std::vector<bool>
@@ -340,7 +347,8 @@ public:
    Detail::RFieldValue GenerateValue(void* where) override;
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) override;
-   size_t GetValueSize() const override;
+   size_t GetValueSize() const override { return sizeof(std::vector<char>); }
+   size_t GetAlignment() const final { return std::alignment_of<std::vector<char>>(); }
    void CommitCluster() final;
 };
 
@@ -369,7 +377,46 @@ public:
    void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) final;
    size_t GetValueSize() const final { return fItemSize * fArrayLength; }
+   size_t GetAlignment() const final { return fSubFields[0]->GetAlignment(); }
 };
+
+#if __cplusplus >= 201703L
+/// The generic field for std::variant types
+class RFieldVariant : public Detail::RFieldBase {
+private:
+   size_t fMaxItemSize = 0;
+   size_t fMaxAlignment = 1;
+   /// In the std::variant memory layout, at which byte number is the index stored
+   size_t fTagOffset = 0;
+   std::vector<ClusterSize_t::ValueType> fNWritten;
+
+   static std::string GetTypeList(Detail::RFieldBase *itemFields, std::size_t nFields);
+   /// Extracts the index from an std::variant and transforms it into the 1-based index used for the switch column
+   std::uint32_t GetTag(void *variantPtr) const;
+   void SetTag(void *variantPtr, std::uint32_t tag) const;
+
+protected:
+   void DoAppend(const Detail::RFieldValue& value) final;
+   void DoReadGlobal(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
+
+public:
+   // TODO(jblomer): use std::span in signature
+   RFieldVariant(std::string_view fieldName, Detail::RFieldBase *itemFields, std::size_t nFields);
+   RFieldVariant(RFieldVariant &&other) = default;
+   RFieldVariant& operator =(RFieldVariant &&other) = default;
+   ~RFieldVariant() = default;
+   RFieldBase *Clone(std::string_view newName) final;
+
+   void DoGenerateColumns() final;
+   using Detail::RFieldBase::GenerateValue;
+   Detail::RFieldValue GenerateValue(void *where) override;
+   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
+   Detail::RFieldValue CaptureValue(void *where) final;
+   size_t GetValueSize() const final;
+   size_t GetAlignment() const final { return 1; /* TODO(jblomer) */}
+   void CommitCluster() final;
+};
+#endif
 
 
 /// Classes with dictionaries that can be inspected by TClass
@@ -730,6 +777,7 @@ public:
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::string); }
+   size_t GetAlignment() const final { return std::alignment_of<std::string>(); }
    void CommitCluster() final;
 };
 
@@ -759,6 +807,31 @@ public:
    }
 };
 
+
+#if __cplusplus >= 201703L
+template <typename ItemT>
+class RField<std::variant<ItemT>> : public RFieldVariant {
+   using ContainerT = typename std::variant<ItemT>;
+public:
+   static std::string MyTypeName() { return "std::variant<" + RField<ItemT>::MyTypeName() + ">"; }
+   explicit RField(std::string_view name)
+      : RFieldVariant(name, new RField<ItemT>("1"), 1)
+   {}
+   RField(RField&& other) = default;
+   RField& operator =(RField&& other) = default;
+   ~RField() = default;
+
+   using Detail::RFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where, ArgsT&&... args)
+   {
+      return Detail::RFieldValue(this, static_cast<ContainerT*>(where), std::forward<ArgsT>(args)...);
+   }
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final {
+      return GenerateValue(where, ContainerT());
+   }
+};
+#endif
 
 template <typename ItemT>
 class RField<std::vector<ItemT>> : public RFieldVector {
@@ -821,6 +894,7 @@ public:
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
 
    size_t GetValueSize() const final { return sizeof(std::vector<bool>); }
+   size_t GetAlignment() const final { return std::alignment_of<std::vector<bool>>(); }
    void CommitCluster() final { fNWritten = 0; }
 };
 
@@ -914,6 +988,7 @@ public:
       return Detail::RFieldValue(true /* captureFlag */, this, static_cast<ContainerT*>(where));
    }
    size_t GetValueSize() const final { return sizeof(ContainerT); }
+   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
 };
 
 /**
@@ -994,6 +1069,7 @@ public:
       return Detail::RFieldValue(true /* captureFlag */, this, static_cast<ContainerT*>(where));
    }
    size_t GetValueSize() const final { return sizeof(ContainerT); }
+   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
 };
 
 } // namespace Experimental

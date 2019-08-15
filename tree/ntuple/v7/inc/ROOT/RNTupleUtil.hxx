@@ -34,10 +34,9 @@ enum ENTupleStructure {
   kLeaf,
   kCollection,
   kRecord,
+  kVariant,
   // unimplemented so far
   kReference,
-  kOptional,
-  kVariant,
 };
 
 /// Integer type long enough to hold the maximum number of entries in a column
@@ -58,6 +57,19 @@ struct RClusterSize {
 };
 using ClusterSize_t = RClusterSize;
 constexpr ClusterSize_t kInvalidClusterIndex(std::uint32_t(-1));
+
+/// Holds the index and the tag of a kSwitch column
+class RColumnSwitch {
+private:
+   ClusterSize_t fIndex;
+   std::uint32_t fTag = 0;
+
+public:
+   RColumnSwitch() = default;
+   RColumnSwitch(ClusterSize_t index, std::uint32_t tag) : fIndex(index), fTag(tag) { }
+   ClusterSize_t GetIndex() const { return fIndex; }
+   std::uint32_t GetTag() const { return fTag; }
+};
 
 /// Uniquely identifies a physical column within the scope of the current process, used to tag pages
 using ColumnId_t = std::int64_t;
