@@ -55,7 +55,7 @@
                        <Slider min="{/clip/2/min}" max="{/clip/2/max}" value="{/clip/2/value}" width="100%"
                                showAdvancedTooltip="true" showHandleTooltip="false" inputsAsTooltips="true"
                                change="sliderZchange" liveChange="sliderZchange"/>
-                       <CheckBox text="Clip intersection" selected="{/clip_intersect}" select="clipChanged"/>
+                       <CheckBox text="Clip intersection" selected="{/clipIntersect}" select="clipChanged"/>
                     </VBox>
                   </IconTabFilter>
                </items>
@@ -64,7 +64,7 @@
                 <items>
                   <IconTabFilter text="Appearance">
                     <VBox>
-                    <CheckBox text="Highlight selection" selected="{/hightlight}" select="hightlightChanged"/>
+                    <!-- CheckBox text="Highlight selection" selected="{/hightlight}" select="hightlightChanged"/-->
                     <Text text="Transparency:"/>
                     <Slider min="0" max="1" step="0.01" value="{/transparency}" width="100%"
                                showAdvancedTooltip="true" showHandleTooltip="false" inputsAsTooltips="true"
@@ -81,14 +81,14 @@
                 <items>
                   <IconTabFilter text="Advanced">
                      <VBox>
-                     <CheckBox text="Depth test" selected="{/depthtest}" select="depthtestChanged"/>
-                     <Text text="Render order:" />
-                     <ComboBox selectedKey="{/renderorder}"
-                               change="renderorderChanged"
-                               items="{ path: '/renderorderItems' }">
-                                 <core:Item key="{value}" text="{value}" />
+                     <CheckBox text="Depth test" selected="{/depthTest}" select="depthTestChanged"/>
+                     <Text text="Depth method:" />
+                     <ComboBox selectedKey="{/depthMethod}"
+                               change="depthMethodChanged"
+                               items="{ path: '/depthMethodItems' }">
+                                 <core:Item key="{value}" text="{name}" />
                      </ComboBox>
-                     <Button text="Reset"/>
+                     <Button text="Reset" press="pressReset" tooltip="Reset advanced settings to default"/>
                      </VBox>
                   </IconTabFilter>
                </items>
