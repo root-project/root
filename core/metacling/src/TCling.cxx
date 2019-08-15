@@ -1515,7 +1515,7 @@ void TCling::RegisterRdictForLoadPCM(const std::string &pcmFileNameFullPath, llv
 ////////////////////////////////////////////////////////////////////////////////
 /// Tries to load a PCM from TFile; returns true on success.
 
-bool TCling::LoadPCMImpl(TFile &pcmFile)
+void TCling::LoadPCMImpl(TFile &pcmFile)
 {
    auto listOfKeys = pcmFile.GetListOfKeys();
 
@@ -1524,7 +1524,7 @@ bool TCling::LoadPCMImpl(TFile &pcmFile)
                       ((listOfKeys->GetSize() == 1) &&                          // only one, and
                        !strcmp(((TKey *)listOfKeys->At(0))->GetName(), "EMPTY") // name is EMPTY
                        ))) {
-      return kTRUE;
+      return;
    }
 
    TObjArray *protoClasses;
@@ -1625,8 +1625,6 @@ bool TCling::LoadPCMImpl(TFile &pcmFile)
       enums->Clear();
       delete enums;
    }
-
-   return kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1666,11 +1664,7 @@ void TCling::LoadPCM(std::string pcmFileNameFullPath)
       std::string RDictFileOpts = pcmFileNameFullPath + "?filetype=pcm";
       TMemFile pcmMemFile(RDictFileOpts.c_str(), range);
 
-      if (!LoadPCMImpl(pcmMemFile)) {
-         ::Error("TCling::LoadPCM", "Loading ROOT PCM %s from C++ module file failed",
-                 pcmFileNameFullPath.data());
-         return;
-      }
+      LoadPCMImpl(pcmMemFile);
 
       fPendingRdicts.erase(pendingRdict);
 
@@ -1688,7 +1682,7 @@ void TCling::LoadPCM(std::string pcmFileNameFullPath)
       return;
    }
    TFile pcmFile(pcmFileName + "?filetype=pcm", "READ");
-   return LoadPCMImpl(pcmFile);
+   LoadPCMImpl(pcmFile);
 }
 
 //______________________________________________________________________________
