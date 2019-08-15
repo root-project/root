@@ -19,7 +19,7 @@ void tmva005_RVariablePlotter()
    ROOT::RDataFrame bkg1("TreeB", filename);
 
    // Apply transformations on the datasets to be included in the study
-   auto transform = [](auto df) { return df.Define("var5", "var1 * var2"); };
+   auto transform = [](ROOT::RDF::RNode df) { return df.Define("var5", "var1 * var2"); };
    auto sig2 = transform(sig1);
    auto bkg2 = transform(bkg1);
    auto sig3 = sig2.Filter("var1 > 0");
