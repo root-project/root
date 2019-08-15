@@ -1486,7 +1486,7 @@ static std::string ResolveSymlink(const std::string &path)
    ssize_t CharCount = ::readlink(path.c_str(), Buffer, sizeof(Buffer));
    // readlink does not append a NUL character to Buffer.
    if (CharCount > 0)
-      return std::string(Buffer, Buffer + CharCount - 1);
+      return std::string(Buffer, Buffer + CharCount);
 
    ::Error("TCling__ResolveSymlink", "Could not resolve symlink '%s'.", path.c_str());
    return {};
