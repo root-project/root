@@ -55,7 +55,7 @@ sap.ui.define([
                this.gedFragments[_kind] = oFragm;
                this.addFragment(_page, _kind, _model);
             }.bind(this, page, kind, model));
-            
+
          fragm.ged_fragment = true; // mark as ged fragment
 
          var html = new HTML();
@@ -82,10 +82,29 @@ sap.ui.define([
             data._handle.changed = true;
          }
 
-         if (data._painter && (typeof data._painter.AttributeChange === 'function'))
-            data._painter.AttributeChange(data._kind, pars.path.substr(1), pars.value);
+         var exec = "", item = pars.path.substr(1), obj;
 
-         if (this.currentPadPainter)
+         if (data._painter) {
+            obj = data._painter.snapid ? data._painter.GetObject() : null;
+
+            if (typeof data._painter.AttributeChange === 'function')
+               data._painter.AttributeChange(data._kind, item, pars.value);
+         }
+
+         if (obj) {
+            if ((data._kind === "TAttLine") && (obj.fLineColor!==undefined) && (obj.fLineStyle!==undefined) && (obj.fLineWidth!==undefined)) {
+               if (item == "attline/width") exec = "exec:SetLineWidth(" + pars.value + ")";
+               else if (item == "attline/style") exec = "exec:SetLineStyle(" + pars.value + ")";
+               else if (item == "attline/color") exec = data._painter.GetColorExec(pars.value, "SetLineColor");
+            } else if ((data._kind === "TAttFill") && (obj.fFillColor!==undefined) && (obj.fFillStyle!==undefined))  {
+               if (item == "attfill/pattern") exec = "exec:SetFillStyle(" + pars.value + ")";
+               else if (item == "attfill/color") exec = data._painter.GetColorExec(pars.value, "SetFillColor");
+            }
+         }
+
+         if (data._painter)
+            data._painter.InteractiveRedraw("pad", exec); // TODO: some objects can readraw directly, no need to redraw pad
+         else if (this.currentPadPainter)
             this.currentPadPainter.Redraw();
       },
 
@@ -116,7 +135,7 @@ sap.ui.define([
          var oPage = this.getView().byId("ged_page");
          oPage.removeAllContent();
 
-         if (painter.lineatt && painter.lineatt.used) {
+         if (painter.lineatt && painter.lineatt.used && !painter.lineatt.not_standard) {
             var model = new JSONModel( { attline: painter.lineatt } );
             model.attachPropertyChange({ _kind: "TAttLine", _painter: painter, _handle: painter.lineatt }, this.modelPropertyChange, this);
 
