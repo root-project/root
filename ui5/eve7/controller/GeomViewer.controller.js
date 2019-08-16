@@ -88,8 +88,13 @@ sap.ui.define(['sap/ui/core/Component',
          var nobrowser = this.websocket.GetUserArgs('nobrowser') || (JSROOT.GetUrlOption('nobrowser') !== null);
 
          if (nobrowser) {
-            // remove complete area - plain geometry drawing
-            this.byId("geomViewerApp").setMode(sap.m.SplitAppMode.HideMode);
+            // remove main area - plain geometry drawing
+            // if master activated - immediately show control
+
+            var app = this.byId("geomViewerApp");
+            app.setMode(sap.m.SplitAppMode.HideMode);
+            app.setInitialMaster(this.createId("geomControl"));
+            this.byId("geomControl").setShowNavButton(false);
          } else {
 
             // create model only for browser - no need for anybody else
