@@ -2045,6 +2045,7 @@
       if (!this._renderer) return;
       this.Render3D(0);
       var dataUrl = this._renderer.domElement.toDataURL("image/png");
+      if (filename==="asis") return dataUrl;
       dataUrl.replace("image/png", "image/octet-stream");
       var link = document.createElement('a');
       if (typeof link.download === 'string') {

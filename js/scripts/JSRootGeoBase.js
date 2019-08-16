@@ -1100,12 +1100,14 @@
    JSROOT.GEO.createPolygonBuffer = function( shape, faces_limit ) {
       var thetaStart = shape.fPhi1,
           thetaLength = shape.fDphi,
-          radiusSegments = 60;
+          radiusSegments = 60, factor = 1;
 
-      if ( shape._typename == "TGeoPgon" )
+      if (shape._typename == "TGeoPgon") {
          radiusSegments = shape.fNedges;
-      else
+         factor = 1. / Math.cos(Math.PI/180 * thetaLength / radiusSegments / 2);
+      } else {
          radiusSegments = Math.max(5, Math.round(thetaLength/JSROOT.GEO.GradPerSegm));
+      }
 
       var usage = new Int16Array(2*shape.fNz), numusedlayers = 0, hasrmin = false;
 
@@ -1146,10 +1148,9 @@
 
             if (pnts !== null) {
                if (side === 0) {
-                  pnts.push(new THREE.Vector2(rad, layerz));
-               } else
-               if (rad < shape.fRmax[layer]) {
-                  pnts.unshift(new THREE.Vector2(rad, layerz));
+                  pnts.push(new THREE.Vector2(factor*rad, layerz));
+               } else if (rad < shape.fRmax[layer]) {
+                  pnts.unshift(new THREE.Vector2(factor*rad, layerz));
                }
             }
          }
@@ -1195,14 +1196,14 @@
       // add sides
       for (var side = 0; side < 2; ++side) {
          var rside = (side === 0) ? 'fRmax' : 'fRmin',
-             z1 = shape.fZ[0], r1 = shape[rside][0],
+             z1 = shape.fZ[0], r1 = factor*shape[rside][0],
              d1 = 1 - side, d2 = side;
 
          for (var layer=0; layer < shape.fNz; ++layer) {
 
             if (usage[layer*2+side] === 0) continue;
 
-            var z2 = shape.fZ[layer], r2 = shape[rside][layer],
+            var z2 = shape.fZ[layer], r2 = factor*shape[rside][layer],
                 nxy = 1, nz = 0;
 
             if ((r2 !== r1)) {
@@ -1228,7 +1229,7 @@
       // add top/bottom
       for (var layer=0; layer < shape.fNz; layer += (shape.fNz-1)) {
 
-         var rmin = shape.fRmin[layer], rmax = shape.fRmax[layer];
+         var rmin = factor*shape.fRmin[layer], rmax = factor*shape.fRmax[layer];
 
          if (rmin === rmax) continue;
 

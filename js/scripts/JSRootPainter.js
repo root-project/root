@@ -2325,13 +2325,6 @@
    TBasePainter.prototype.CheckResize = function(arg) {
    }
 
-   /** @summary Method called when interactively changes attribute in given class
-    * @abstract
-    * @private */
-   TBasePainter.prototype.AttributeChange = function(class_name, member_name, new_value) {
-      // console.log("Changed attribute", class_name, member_name, new_value);
-   }
-
    /** @summary access to main HTML element used for drawing - typically <div> element
      * @desc if main element was layouted, returns main element inside layout
     * @param {string} is_direct - if 'origin' specified, returns original element even if actual drawing moved to some other place
@@ -2847,7 +2840,13 @@
       return cp.custom_palette;
    }
 
-
+   /** @summary Method called when interactively changes attribute in given class
+    * @abstract
+    * @private */
+   TObjectPainter.prototype.AttributeChange = function(class_name, member_name, new_value) {
+      // only for objects in web canvas make sense to handle attributes changes from GED
+      // console.log("Changed attribute class = " + class_name + " member = " + member_name + " value = " + new_value);
+   }
 
    /** @summary Checks if draw elements were resized and drawing should be updated.
     *
@@ -4136,7 +4135,7 @@
                }
                if (lastclname != item.fClassName) {
                   lastclname = item.fClassName;
-                  _menu.add("sub:" + lastclname, undefined, null, "Context menu for class " + lastclname);
+                  _menu.add("sub:" + lastclname);
                }
 
                if ((item.fChecked === undefined) || (item.fChecked < 0))
@@ -4183,15 +4182,17 @@
          if (!col || (col == "none")) id = 0; else
          for (var k=1;k<arr.length;++k)
             if (arr[k] == col) { id = k; break; }
+         if ((id < 0) && (col.indexOf("rgb")==0)) id = 9999;
       } else if (!isNaN(col) && arr[col]) {
          id = col;
+         col = arr[id];
       }
 
       if (id < 0) return "";
 
       if (id >= 50) {
          // for higher color numbers ensure that such color exists
-         var c = d3.color(arr[id]);
+         var c = d3.color(col);
          id = "TColor::GetColor(" + c.r + "," + c.g + "," + c.b + ")";
       }
 

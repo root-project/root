@@ -2492,6 +2492,8 @@
       pt.AddText(histo.fTitle);
 
       tpainter.Redraw();
+
+      this.WebCanvasExec('SetTitle("' + histo.fTitle + '")');
    }
 
    THistPainter.prototype.UpdateStatWebCanvas = function() {
