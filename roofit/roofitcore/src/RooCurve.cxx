@@ -50,6 +50,7 @@ To retrieve a RooCurve from a RooPlot, use RooPlot::getCurve().
 #include "Riostream.h"
 #include "TClass.h"
 #include "TMath.h"
+#include "TAxis.h"
 #include "TMatrixD.h"
 #include "TVectorD.h"
 #include <iomanip>
@@ -148,6 +149,7 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Doubl
     GetPoint(i,x2,y2) ;
     updateYAxisLimits(y2);
   }
+  this->Sort();
 }
 
 
@@ -178,6 +180,7 @@ RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
     GetPoint(i,x,y) ;
     updateYAxisLimits(y);
   }
+  this->Sort();
 }
 
 
@@ -227,7 +230,7 @@ RooCurve::RooCurve(const char* name, const char* title, const RooCurve& c1, cons
     }
     last = *iter ;
   }
-
+  this->Sort();
 }
 
 
@@ -749,7 +752,14 @@ RooCurve* RooCurve::makeErrorBand(const vector<RooCurve*>& variations, Double_t 
   }
   for (int i=GetN()-1 ; i>=0 ; i--) {
     band->addPoint(GetX()[i],bandHi[i]) ;
-  }	   
+  }	 
+
+  if(this->GetXaxis() && this->GetXaxis()->IsAlphanumeric()){
+    band->GetXaxis()->Set(this->GetXaxis()->GetNbins(),this->GetXaxis()->GetXmin(),this->GetXaxis()->GetXmax());
+    for(int i=0; i<this->GetXaxis()->GetNbins(); ++i){
+      band->GetXaxis()->SetBinLabel(i+1,this->GetXaxis()->GetBinLabel(i+1));
+    }
+  }
   
   return band ;
 }
@@ -764,6 +774,7 @@ RooCurve* RooCurve::makeErrorBand(const vector<RooCurve*>& variations, Double_t 
 
 RooCurve* RooCurve::makeErrorBand(const vector<RooCurve*>& plusVar, const vector<RooCurve*>& minusVar, const TMatrixD& C, Double_t Z) const
 {
+  
   RooCurve* band = new RooCurve ;
   band->SetName(Form("%s_errorband",GetName())) ;
   band->SetLineWidth(1) ;
@@ -783,6 +794,13 @@ RooCurve* RooCurve::makeErrorBand(const vector<RooCurve*>& plusVar, const vector
     band->addPoint(GetX()[i],bandHi[i]) ;
   }	   
   
+  if(this->GetXaxis() && this->GetXaxis()->IsAlphanumeric()){
+    band->GetXaxis()->Set(this->GetXaxis()->GetNbins(),this->GetXaxis()->GetXmin(),this->GetXaxis()->GetXmax());
+    for(int i=0; i<this->GetXaxis()->GetNbins(); ++i){
+      band->GetXaxis()->SetBinLabel(i+1,this->GetXaxis()->GetBinLabel(i+1));
+    }
+  }
+
   return band ;
 }
 
