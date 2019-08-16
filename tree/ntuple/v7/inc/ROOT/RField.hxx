@@ -390,7 +390,7 @@ private:
    size_t fTagOffset = 0;
    std::vector<ClusterSize_t::ValueType> fNWritten;
 
-   static std::string GetTypeList(Detail::RFieldBase *itemFields, std::size_t nFields);
+   static std::string GetTypeList(const std::vector<Detail::RFieldBase *> &itemFields);
    /// Extracts the index from an std::variant and transforms it into the 1-based index used for the switch column
    std::uint32_t GetTag(void *variantPtr) const;
    void SetTag(void *variantPtr, std::uint32_t tag) const;
@@ -401,7 +401,7 @@ protected:
 
 public:
    // TODO(jblomer): use std::span in signature
-   RFieldVariant(std::string_view fieldName, Detail::RFieldBase *itemFields, std::size_t nFields);
+   RFieldVariant(std::string_view fieldName, const std::vector<Detail::RFieldBase *> &itemFields);
    RFieldVariant(RFieldVariant &&other) = default;
    RFieldVariant& operator =(RFieldVariant &&other) = default;
    ~RFieldVariant() = default;
@@ -809,14 +809,34 @@ public:
 
 
 #if __cplusplus >= 201703L
-template <typename ItemT>
-class RField<std::variant<ItemT>> : public RFieldVariant {
-   using ContainerT = typename std::variant<ItemT>;
+template <typename... ItemTs>
+class RField<std::variant<ItemTs...>> : public RFieldVariant {
+   using ContainerT = typename std::variant<ItemTs...>;
+private:
+   template <typename HeadT, typename... TailTs>
+   static std::string BuildItemTypes()
+   {
+      std::string result = RField<HeadT>::MyTypeName();
+      if constexpr(sizeof...(TailTs) > 0)
+         result += "," + BuildItemTypes<TailTs...>();
+      return result;
+   }
+
+   template <typename HeadT, typename... TailTs>
+   static std::vector<Detail::RFieldBase *> BuildItemFields(unsigned int index = 0)
+   {
+      std::vector<Detail::RFieldBase *> result;
+      result.emplace_back(new RField<HeadT>("variant" + std::to_string(index)));
+      if constexpr(sizeof...(TailTs) > 0) {
+         auto tailFields = BuildItemFields<TailTs...>(index + 1);
+         result.insert(result.end(), tailFields.begin(), tailFields.end());
+      }
+      return result;
+   }
+
 public:
-   static std::string MyTypeName() { return "std::variant<" + RField<ItemT>::MyTypeName() + ">"; }
-   explicit RField(std::string_view name)
-      : RFieldVariant(name, new RField<ItemT>("1"), 1)
-   {}
+   static std::string MyTypeName() { return "std::variant<" + BuildItemTypes<ItemTs...>() + ">"; }
+   explicit RField(std::string_view name) : RFieldVariant(name, BuildItemFields<ItemTs...>()) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
