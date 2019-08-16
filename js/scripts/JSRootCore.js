@@ -1251,7 +1251,7 @@
 
          if (typeof MathJax == 'undefined') {
             mainfiles += (use_bower ? "###MathJax/MathJax.js" : "https://root.cern/js/mathjax/latest/MathJax.js") +
-                           "?config=TeX-AMS-MML_SVG&delayStartupUntil=configured";
+                           "?config=TeX-AMS-MML_SVG&delayStartupUntil=configured;";
             modules.push('MathJax');
 
             load_callback = function() {

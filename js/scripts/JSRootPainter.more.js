@@ -1768,8 +1768,8 @@
       var pos = d3.mouse(this.svg_frame().node()),
           main = this.frame_painter();
 
-      this.interactive_delta_x = main ? main.x(this.interactive_bin.x) - pos[0] : 0;
-      this.interactive_delta_y = main ? main.y(this.interactive_bin.y) - pos[1] : 0;
+      this.interactive_delta_x = main ? main.grx(this.interactive_bin.x) - pos[0] : 0;
+      this.interactive_delta_y = main ? main.gry(this.interactive_bin.y) - pos[1] : 0;
    }
 
    TGraphPainter.prototype.FillContextMenu = function(menu) {
