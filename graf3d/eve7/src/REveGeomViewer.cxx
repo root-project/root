@@ -147,6 +147,18 @@ void ROOT::Experimental::REveGeomViewer::SetDrawOptions(const std::string &opt)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+/// Produce PNG image of drawn geometry
+/// Drawing should be completed at the moment
+/// Executed asynchronous - method returns immediately, image stored when received from the client
+
+void ROOT::Experimental::REveGeomViewer::SaveImage(const std::string &fname)
+{
+    unsigned connid = fWebWindow->GetConnectionId();
+    if (connid)
+       fWebWindow->Send(connid, "IMAGE:"s + fname);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
 /// receive data from client
 
 void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
@@ -271,7 +283,6 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
       auto separ = arg.find("::",6);
       if (separ == std::string::npos) return;
 
-      TString binary = TBase64::Decode(arg.c_str() + separ + 2);
       std::string fname = arg.substr(6, separ-6);
       if (fname.empty()) {
          int cnt = 0;
@@ -281,6 +292,8 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
             fname += ".png"s;
          } while (!gSystem->AccessPathName(fname.c_str()));
       }
+
+      TString binary = TBase64::Decode(arg.c_str() + separ + 2);
 
       std::ofstream ofs(fname);
       ofs.write(binary.Data(), binary.Length());
