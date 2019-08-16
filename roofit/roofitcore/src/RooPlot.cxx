@@ -624,18 +624,23 @@ namespace {
 namespace {
   void translateGraph(TH1* hist, RooAbsRealLValue* xvar, TGraph* graph){
     int n = graph->GetN();
+    std::map<int,double> values;
     double x, y;
     for(int i=0; i<n; ++i){
       if(graph->GetPoint(i,x,y)!=i) break;
       int bin = xvar->getBinning().binNumber(x);
-      graph->SetPoint(i,hist->GetXaxis()->GetBinCenter(bin+1),y);
+      values[bin+1] = y;
     }
     double xmin = hist->GetXaxis()->GetXmin();
-    double xminVal = graph->Eval(xmin);
     double xmax = hist->GetXaxis()->GetXmax();
-    double xmaxVal = graph->Eval(xmax);
-    graph->SetPoint(n,xmax,xmaxVal);
-    graph->SetPoint(n+1,xmin,xminVal);
+    double xminY = graph->Eval(xmin);
+    double xmaxY = graph->Eval(xmax);
+    graph->Set(values.size()+2);
+    graph->SetPoint(0,xmin,xminY);
+    for(auto it:values){
+      graph->SetPoint(it.first,hist->GetXaxis()->GetBinCenter(it.first),it.second);
+    }
+    graph->SetPoint(hist->GetNbinsX()+1,xmax,xmaxY);
     graph->Sort();
   }
   void translateGraph(TH1* hist, RooAbsRealLValue* xvar, TGraphAsymmErrors* graph){
