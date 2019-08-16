@@ -147,6 +147,78 @@ Double_t RooPolynomial::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+namespace PolynomialEvaluate{
+//Author: Emmanouil Michalainas, CERN 15 AUGUST 2019  
+
+void compute(  size_t batchSize, const int lowestOrder,
+               double * __restrict__ output,
+               const double * __restrict__ const X,
+               const RooListProxy& coefList )
+{
+  const int nCoef = coefList.getSize();
+  const RooArgSet* normSet = coefList.nset();
+
+  double fill;
+  if (nCoef==0 && lowestOrder==0) fill = 0;
+  else if (nCoef==0 && lowestOrder>0) fill = 1.0;
+  else fill = static_cast<RooAbsReal&>(coefList[nCoef-1]).getVal(normSet);
+  for (size_t i=0; i<batchSize; i++) {
+    output[i] = fill;
+  }
+  if (nCoef == 0) return;
+  
+  /* Indexes are in range 0..nCoef-1 but coefList[nCoef-1]
+   * has already been processed. In order to traverse the list,
+   * with step of 2 we have to start at index nCoef-3 and use
+   * coefList[k+1] and coefList[k]
+   */
+  for (int k=nCoef-3; k>=0; k-=2) {
+    double coef1 = static_cast<RooAbsReal&>(coefList[k+1]).getVal(normSet);
+    double coef2 = static_cast<RooAbsReal&>(coefList[ k ]).getVal(normSet);
+    for (size_t i=0; i<batchSize; i++) {
+      output[i] = X[i]*(output[i]*X[i] + coef1) + coef2;
+    }
+  }
+  // If nCoef is odd, then the coefList[0] didn't get processed
+  if (nCoef%2 == 0) {
+    double coef = static_cast<RooAbsReal&>(coefList[0]).getVal(normSet);
+    for (size_t i=0; i<batchSize; i++) {
+      output[i] = output[i]*X[i] + coef;
+    }
+  }
+  //Increase the order of the polynomial, first by myltiplying with X[i]^2
+  if (lowestOrder == 0) return;
+  for (int k=2; k<=lowestOrder; k+=2) {
+    for (size_t i=0; i<batchSize; i++) {
+      output[i] *= X[i]*X[i];
+    }
+  }
+  bool isOdd = lowestOrder%2;
+  for (size_t i=0; i<batchSize; i++) {
+    if (isOdd) output[i] *= X[i];
+    output[i] += 1.0;
+  }
+}
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+RooSpan<double> RooPolynomial::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
+  RooSpan<const double> xData = _x.getValBatch(begin, batchSize);
+  batchSize = xData.size();
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+  
+  if (xData.empty()) {
+    throw std::logic_error("Requested a batch computation, but no batch data available.");
+  }
+  else {
+    PolynomialEvaluate::compute(batchSize, _lowestOrder, output.data(), xData.data(), _coefList);
+  }
+  return output;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Advertise to RooFit that this function can be analytically integrated.
 Int_t RooPolynomial::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
 {
