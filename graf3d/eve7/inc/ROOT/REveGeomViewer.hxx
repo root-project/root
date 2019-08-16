@@ -78,6 +78,8 @@ public:
 
    void Update();
 
+   void SaveImage(const std::string &fname = "geometry.png");
+
 };
 
 }}
