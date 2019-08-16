@@ -19,6 +19,8 @@
                <Toolbar>
                   <Button icon="sap-icon://log" type="Transparent" visible="{= !${/standalone} }"
                           tooltip="Quit ROOT session" press="onQuitRootPress" />
+                  <Button icon="sap-icon://save" type="Transparent"
+                          tooltip="Save drawing as png image" press="pressSaveButton" />
                   <Button icon="sap-icon://synchronize" type="Transparent"
                           tooltip="Reload geometry drawing" press="onRealoadPress" />
                   <Button icon="sap-icon://show" type="Transparent"

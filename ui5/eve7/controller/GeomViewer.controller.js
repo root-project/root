@@ -552,6 +552,9 @@ sap.ui.define(['sap/ui/core/Component',
          case "DROPT:":
             this.applyDrawOptions(msg);
             break;
+         case "IMAGE:":
+            this.produceImage(msg);
+            break;
          default:
             console.error('Non recognized msg ' + mhdr + ' len=' + msg.length);
          }
@@ -967,8 +970,24 @@ sap.ui.define(['sap/ui/core/Component',
          this.node_painter.prepareObjectDraw(server_shape, "");
       },
 
+      /** Save as png image */
+      pressSaveButton: function() {
+         this.produceImage("");
+      },
+
+      produceImage: function(name) {
+         var painter = (this.node_painter_active && this.node_painter) ? this.node_painter : this.geo_painter;
+         if (!painter) return;
+
+         var dataUrl = painter.createSnapshot(this.standalone ? "geometry.png" : "asis");
+         if (!dataUrl) return;
+         var separ = dataUrl.indexOf("base64,");
+         if ((separ>=0) && this.websocket && !this.standalone)
+            this.websocket.Send("IMAGE:" + name + "::" + dataUrl.substr(separ+7));
+      },
+
       /** Reload geometry description and base drawing, normally not required */
-      onRealoadPress: function (oEvent) {
+      onRealoadPress: function () {
          this.doReload(true);
       },
 
@@ -985,9 +1004,7 @@ sap.ui.define(['sap/ui/core/Component',
                this.model.clearFullModel();
                console.log('Calling reload model');
                this.model.reloadMainModel(force);
-
             }
-
          }
       },
 
@@ -1045,9 +1062,7 @@ sap.ui.define(['sap/ui/core/Component',
       // different handlers of Config page
 
       processPainterChange: function(func, arg) {
-         var painter = this.geo_painter;
-         if (this.node_painter_active && this.node_painter)
-            painter = this.node_painter;
+         var painter = (this.node_painter_active && this.node_painter) ? this.node_painter : this.geo_painter;
 
          if (painter && (typeof painter[func] == 'function'))
             painter[func](arg);

@@ -15,11 +15,14 @@
 #include <ROOT/RWebWindow.hxx>
 
 #include "TSystem.h"
+#include "TBase64.h"
 #include "TROOT.h"
 #include "TEnv.h"
 #include "THttpServer.h"
 #include "TBufferJSON.h"
 #include "TGeoManager.h"
+
+#include <fstream>
 
 using namespace std::string_literals;
 
@@ -148,7 +151,7 @@ void ROOT::Experimental::REveGeomViewer::SetDrawOptions(const std::string &opt)
 
 void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
 {
-   printf("Recv %s\n", arg.c_str());
+   printf("Recv %s\n", arg.substr(0,100).c_str());
 
    if (arg == "GETDRAW") {
 
@@ -264,6 +267,27 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
 
       auto json = fDesc.ProcessBrowserRequest(arg.substr(6));
       if (json.length() > 0) fWebWindow->Send(connid, json);
+   } else if (arg.compare(0,6, "IMAGE:") == 0) {
+      auto separ = arg.find("::",6);
+      if (separ == std::string::npos) return;
+
+      TString binary = TBase64::Decode(arg.c_str() + separ + 2);
+      std::string fname = arg.substr(6, separ-6);
+      if (fname.empty()) {
+         int cnt = 0;
+         do {
+            fname = "geometry"s;
+            if (cnt++>0) fname += std::to_string(cnt);
+            fname += ".png"s;
+         } while (!gSystem->AccessPathName(fname.c_str()));
+      }
+
+      std::ofstream ofs(fname);
+      ofs.write(binary.Data(), binary.Length());
+      ofs.close();
+
+      printf("Image file %s size %d has been created\n", fname.c_str(), (int) binary.Length());
+
    } else if (arg == "RELOAD") {
 
       SendGeometry(connid);
