@@ -85,6 +85,10 @@ sap.ui.define(['sap/ui/core/Component',
          // if true, most operations are performed locally without involving server
          this.standalone = this.websocket.kind == "file";
 
+         this.cfg = { standalone: this.websocket.kind == "file" };
+         this.cfg_model = new JSONModel(this.cfg);
+         this.getView().setModel(this.cfg_model);
+
          var nobrowser = this.websocket.GetUserArgs('nobrowser') || (JSROOT.GetUrlOption('nobrowser') !== null);
 
          if (nobrowser) {
@@ -293,7 +297,6 @@ sap.ui.define(['sap/ui/core/Component',
 
       createGeoPainter: function(drawopt) {
 
-
          if (this.geo_painter) {
             this.geo_painter.ClearDrawings();
          } else {
@@ -305,11 +308,8 @@ sap.ui.define(['sap/ui/core/Component',
             // this.geo_painter.showControlOptions = this.showControl.bind(this);
 
             this.geom_model = new JSONModel(this.geo_painter.ctrl);
-
             this.byId("geomControl").setModel(this.geom_model);
-
             geomDrawing.setGeomPainter(this.geo_painter);
-
             this.geo_painter.AddHighlightHandler(this);
          }
 
@@ -766,8 +766,8 @@ sap.ui.define(['sap/ui/core/Component',
             this.geo_painter.appendMoreNodes(visibles || null);
 
          if (visibles && visibles.length && (visibles.length < 100)) {
-            var dflt = Math.max(this.geo_painter.options.transparency, 0.98);
-            this.geo_painter.changeGlobalTransparency(function(node) {
+            var dflt = Math.max(this.geo_painter.ctrl.transparency, 0.98);
+            this.geo_painter.changedGlobalTransparency(function(node) {
                if (node.stack)
                   for (var n=0;n<visibles.length;++n)
                      if (JSROOT.GEO.IsSameStack(node.stack, visibles[n].stack))
@@ -776,7 +776,7 @@ sap.ui.define(['sap/ui/core/Component',
             });
 
          } else {
-            this.geo_painter.changeGlobalTransparency();
+            this.geo_painter.changedGlobalTransparency();
          }
       },
 
@@ -942,11 +942,29 @@ sap.ui.define(['sap/ui/core/Component',
 
          nodeDrawing.setGeomPainter(null);
 
-         if (server_shape) {
-            var node_painter = JSROOT.Painter.CreateGeoPainter(nodeDrawing.getDomRef(), server_shape, "");
-            nodeDrawing.setGeomPainter(node_painter, skip_cleanup);
-            node_painter.prepareObjectDraw(server_shape, "");
+         this.node_painter_active = false;
+         if (this.node_painter) {
+            this.node_painter.ClearDrawings();
+            delete this.node_painter;
+            delete this.node_model;
          }
+
+         if (!server_shape) {
+            this.byId("geomControl").setModel(this.geom_model);
+            return;
+         }
+
+         this.node_painter = JSROOT.Painter.CreateGeoPainter(nodeDrawing.getDomRef(), server_shape, "");
+         this.node_painter.setMouseTmout(0);
+         this.node_painter.ctrl.notoolbar = true;
+         this.node_painter_active = true;
+
+         // this.node_painter.setDepthMethod("dflt");
+         this.node_model = new JSONModel(this.node_painter.ctrl);
+
+         nodeDrawing.setGeomPainter(this.node_painter, skip_cleanup);
+         this.byId("geomControl").setModel(this.node_model);
+         this.node_painter.prepareObjectDraw(server_shape, "");
       },
 
       /** Reload geometry description and base drawing, normally not required */
@@ -986,11 +1004,23 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       onInfoPress: function() {
-         var app = this.byId("geomViewerApp");
-         if (this.isInfoPageActive())
+         var app = this.byId("geomViewerApp"), ctrlmodel;
+
+         if (this.isInfoPageActive()) {
             app.toDetail(this.createId("geomDraw"));
-         else
+            this.node_painter_active = false;
+            ctrlmodel = this.geom_model;
+         } else {
             app.toDetail(this.createId("geomInfo"));
+            this.node_painter_active = true;
+            ctrlmodel = this.node_model;
+         }
+
+         if (ctrlmodel) {
+            this.byId("geomControl").setModel(ctrlmodel);
+            ctrlmodel.refresh();
+         }
+
       },
 
       /** Quit ROOT session */
@@ -1015,8 +1045,12 @@ sap.ui.define(['sap/ui/core/Component',
       // different handlers of Config page
 
       processPainterChange: function(func, arg) {
-         if (this.geo_painter && (typeof this.geo_painter[func] == 'function'))
-            this.geo_painter[func](arg);
+         var painter = this.geo_painter;
+         if (this.node_painter_active && this.node_painter)
+            painter = this.node_painter;
+
+         if (painter && (typeof painter[func] == 'function'))
+            painter[func](arg);
       },
 
       sliderXchange: function() {
@@ -1048,7 +1082,6 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       backgroundChanged: function(oEvent) {
-         console.log('color ', oEvent.getParameter('value'));
          this.processPainterChange('changedBackground', oEvent.getParameter('value'));
       },
 
@@ -1066,7 +1099,7 @@ sap.ui.define(['sap/ui/core/Component',
 
       pressReset: function() {
          this.processPainterChange('resetAdvanced');
-         if (this.geom_model) this.geom_model.refresh();
+         this.byId("geomControl").getModel().refresh();
       },
 
       ssaoChanged: function() {
