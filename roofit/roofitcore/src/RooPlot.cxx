@@ -267,7 +267,6 @@ RooPlot::RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-<<<<<<< HEAD
 /// Create a new frame for a given variable in x. This is just a
 /// wrapper for the RooPlot constructor with the same interface.
 /// 
@@ -288,13 +287,6 @@ RooPlot* RooPlot::frame(const RooAbsRealLValue &var, Double_t xmin, Double_t xma
 ///
 /// More details.
 /// \param[in] var The variable on the x-axis
-=======
-//
-
-RooPlot* RooPlot::frame(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nBins){
-  return new RooPlot(var,xmin,xmax,nBins);
-}
->>>>>>> 14a2590a6c... added option for alphanumeric axes in RooPlot
 RooPlot* RooPlot::frameWithLabels(const RooAbsRealLValue &var){
   RooPlot* pl = new RooPlot();
   int nbins = var.getBinning().numBins();
@@ -305,7 +297,6 @@ RooPlot* RooPlot::frameWithLabels(const RooAbsRealLValue &var){
   pl->_hist->Sumw2(kFALSE) ;
   pl->_hist->GetSumw2()->Set(0) ;
   TH1::AddDirectory(histAddDirStatus) ;
-<<<<<<< HEAD
 
   pl->_hist->SetNdivisions(-nbins);
   for(int i=0; i<nbins; ++i){
@@ -326,28 +317,6 @@ RooPlot* RooPlot::frameWithLabels(const RooAbsRealLValue &var){
   pl->SetTitle(title.Data());
   pl->initialize();
 
-=======
-
-  pl->_hist->SetNdivisions(-nbins);
-  for(int i=0; i<nbins; ++i){
-    TString s = TString::Format("%g-%g",var.getBinning().binLow(i),var.getBinning().binHigh(i));
-    pl->_hist->GetXaxis()->SetBinLabel(i+1,s);
-  }
-
-  // plotVar can be a composite in case of a RooDataSet::plot, need deepClone
-  pl->_plotVarSet = (RooArgSet*) RooArgSet(var).snapshot() ;
-  pl->_plotVarClone= (RooAbsRealLValue*)pl->_plotVarSet->find(var.GetName()) ;
-
-  TString xtitle= var.getTitle(kTRUE);
-  pl->SetXTitle(xtitle.Data());
-
-  TString title("A RooPlot of \"");
-  title.Append(var.getTitle());
-  title.Append("\"");
-  pl->SetTitle(title.Data());
-  pl->initialize();
-
->>>>>>> 14a2590a6c... added option for alphanumeric axes in RooPlot
   pl->_normBinWidth = 1.;
   return pl;
 }
@@ -623,28 +592,73 @@ namespace {
 
 namespace {
   void translateGraph(TH1* hist, RooAbsRealLValue* xvar, TGraph* graph){
-    int n = graph->GetN();
-    std::map<int,double> values;
-    double x, y;
-    for(int i=0; i<n; ++i){
-      if(graph->GetPoint(i,x,y)!=i) break;
-      int bin = xvar->getBinning().binNumber(x);
-      values[bin+1] = y;
+    if(graph->GetXaxis()->IsAlphanumeric()){
+      return;
     }
     double xmin = hist->GetXaxis()->GetXmin();
     double xmax = hist->GetXaxis()->GetXmax();
-    double xminY = graph->Eval(xmin);
-    double xmaxY = graph->Eval(xmax);
-    graph->Set(values.size()+2);
-    graph->SetPoint(0,xmin,xminY);
-    for(auto it:values){
-      graph->SetPoint(it.first,hist->GetXaxis()->GetBinCenter(it.first),it.second);
+    if(graph->TestBit(TGraph::kIsSortedX)){
+      // sorted graphs are "line graphs"
+      std::vector<double> x;
+      std::vector<double> y;
+      x.push_back(xmin);
+      y.push_back(graph->Eval(xvar->getBinning().binLow(0)));
+      for(int i=0; i<hist->GetNbinsX(); ++i){
+        x.push_back(hist->GetXaxis()->GetBinUpEdge(i+1));
+        y.push_back(graph->Eval(xvar->getBinning().binHigh(i)));
+        x.push_back(hist->GetXaxis()->GetBinCenter(i+1));
+        y.push_back(graph->Eval(xvar->getBinning().binCenter(i)));                
+      }
+      int n = x.size();
+      graph->Set(n);
+      for(int i=0; i<n; ++i){
+        graph->SetPoint(i,x[i],y[i]);
+      }
+      graph->Sort();
+    } else {
+      // unsorted graphs are "area graphs"
+      std::map<int,double> minValues;
+      std::map<int,double> maxValues;
+      int n = graph->GetN();
+      double x, y;
+      for(int i=0; i<n; ++i){
+        graph->GetPoint(i,x,y);
+        int bin = xvar->getBinning().binNumber(x)+1;
+        if(maxValues.find(bin)!=maxValues.end()){
+          maxValues[bin] = std::max(maxValues[bin],y);
+        } else {
+          maxValues[bin] = y;
+        }
+        if(minValues.find(bin)!=minValues.end()){
+          minValues[bin] = std::min(minValues[bin],y);
+        } else {
+          minValues[bin] = y;
+        }
+      }
+      double xminY = graph->Eval(xmin);
+      double xmaxY = graph->Eval(xmax);
+      graph->Set(hist->GetNbinsX()+2);
+      int np=0;
+      graph->SetPoint(np,xmin,xminY);
+      for(auto it = maxValues.begin(); it != maxValues.end(); ++it){
+        graph->SetPoint(++np,hist->GetXaxis()->GetBinCenter(it->first),it->second);
+      }
+      graph->SetPoint(++np,xmax,xmaxY);
+      for(auto it = minValues.rbegin(); it != minValues.rend(); ++it){
+        graph->SetPoint(++np,hist->GetXaxis()->GetBinCenter(it->first),it->second);
+      }
+      graph->SetPoint(++np,xmin,xminY);
     }
-    graph->SetPoint(hist->GetNbinsX()+1,xmax,xmaxY);
-    graph->Sort();
+    graph->GetXaxis()->Set(hist->GetNbinsX(),xmin,xmax);
+    for(int i=0; i<hist->GetNbinsX(); ++i){
+      graph->GetXaxis()->SetBinLabel(i+1,hist->GetXaxis()->GetBinLabel(i+1));
+    }
   }
   void translateGraph(TH1* hist, RooAbsRealLValue* xvar, TGraphAsymmErrors* graph){
+    if(graph->GetXaxis()->IsAlphanumeric()) return; 
     int n = graph->GetN();
+    double xmin = hist->GetXaxis()->GetXmin();
+    double xmax = hist->GetXaxis()->GetXmax();
     double x, y;
     for(int i=0; i<n; ++i){
       if(graph->GetPoint(i,x,y)!=i) break;
@@ -652,6 +666,10 @@ namespace {
       graph->SetPoint(i,hist->GetXaxis()->GetBinCenter(bin+1),y);
       graph->SetPointEXhigh(i,0.5*hist->GetXaxis()->GetBinWidth(bin+1));
       graph->SetPointEXlow(i,0.5*hist->GetXaxis()->GetBinWidth(bin+1));
+    }
+    graph->GetXaxis()->Set(hist->GetNbinsX(),xmin,xmax);
+    for(int i=0; i<hist->GetNbinsX(); ++i){
+      graph->GetXaxis()->SetBinLabel(i+1,hist->GetXaxis()->GetBinLabel(i+1));
     }
   }
 }
