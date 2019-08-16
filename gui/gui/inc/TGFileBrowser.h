@@ -72,6 +72,8 @@ protected:
    sLTI_t             fSortedItems;       // List of sorted list-tree items.
    mFiltered_t        fFilteredItems;     // List of filtered list-tree items.
    TString            fFilterStr;         // Filter expression string
+   
+   void              *fNTupleBrowserPtr = nullptr;  // Points to instance of RNTupleBrowser used by TBrowser
 
    void CreateBrowser();
 

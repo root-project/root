@@ -270,6 +270,11 @@ void ROOT::Experimental::RField<float>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
+void ROOT::Experimental::RField<float>::AcceptVisitor(Detail::RNTupleVisitor &v, int level) const
+{
+   v.VisitFloatField(*this, level);
+}
+
 //------------------------------------------------------------------------------
 
 void ROOT::Experimental::RField<double>::DoGenerateColumns()
@@ -280,6 +285,10 @@ void ROOT::Experimental::RField<double>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
+void ROOT::Experimental::RField<double>::AcceptVisitor(Detail::RNTupleVisitor &v, int level) const
+{
+   v.VisitDoubleField(*this, level);
+}
 
 //------------------------------------------------------------------------------
 
@@ -289,6 +298,11 @@ void ROOT::Experimental::RField<std::int32_t>::DoGenerateColumns()
    fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(Detail::RColumn::Create<
       std::int32_t, EColumnType::kInt32>(model, 0)));
    fPrincipalColumn = fColumns[0].get();
+}
+
+void ROOT::Experimental::RField<std::int32_t>::AcceptVisitor(Detail::RNTupleVisitor &v, int level) const
+{
+   v.VisitInt32Field(*this, level);
 }
 
 //------------------------------------------------------------------------------
@@ -301,6 +315,11 @@ void ROOT::Experimental::RField<std::uint32_t>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
+void ROOT::Experimental::RField<std::uint32_t>::AcceptVisitor(Detail::RNTupleVisitor &v, int level) const
+{
+   v.VisitUInt32Field(*this, level);
+}
+
 //------------------------------------------------------------------------------
 
 void ROOT::Experimental::RField<std::uint64_t>::DoGenerateColumns()
@@ -310,6 +329,12 @@ void ROOT::Experimental::RField<std::uint64_t>::DoGenerateColumns()
       Detail::RColumn::Create<std::uint64_t, EColumnType::kInt64>(model, 0)));
    fPrincipalColumn = fColumns[0].get();
 }
+
+void ROOT::Experimental::RField<std::uint64_t>::AcceptVisitor(Detail::RNTupleVisitor &v, int level) const
+{
+   v.VisitUInt64Field(*this, level);
+}
+
 
 //------------------------------------------------------------------------------
 

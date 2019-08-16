@@ -38,6 +38,7 @@
 #include "TKeyMapFile.h"
 #include "TVirtualPad.h"
 #include "Getline.h"
+#include <ROOT/RNTupleBrowser.hxx>
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
@@ -260,6 +261,7 @@ TGFileBrowser::~TGFileBrowser()
    if (fCachedPic && (fCachedPic != fFileIcon))
       fClient->FreePicture(fCachedPic);
    if (fFileIcon) fClient->FreePicture(fFileIcon);
+   delete static_cast<ROOT::Experimental::RNTupleBrowser*>(fNTupleBrowserPtr);
    Cleanup();
 }
 
@@ -1208,6 +1210,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
    char action[512];
    TString act;
    Bool_t is_link = kFALSE;
+   Bool_t is_rntuple = kFALSE;
    if (!gSystem->GetPathInfo(item->GetText(), sbuf) && sbuf.fIsLink) {
       is_link = kTRUE;
       fullpath = gSystem->ExpandPathName(item->GetText());
@@ -1225,10 +1228,21 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
    if (obj && !obj->InheritsFrom("TSystemFile")) {
       TString ext = obj->GetName();
       if (obj->InheritsFrom("TDirectory") && (obj->IsA() != TClass::Class())) {
-         if (((TDirectory *)obj)->GetListOfKeys())
-            fNKeys = ((TDirectory *)obj)->GetListOfKeys()->GetEntries();
-         else
-            fNKeys = 0;
+         if (obj->TestBit(9/*TDirectoryFile::kCustomBrowse*/)) {
+            is_rntuple = kTRUE;
+            static void *rbrowser = 0;
+            if (!rbrowser) rbrowser = (void *)gROOT->ProcessLine(TString::Format("new ROOT::Experimental::RNTupleBrowser((TDirectory *)%#tx);", (uintptr_t)obj));
+            if (rbrowser) {
+               gROOT->ProcessLine(TString::Format("((ROOT::Experimental::RNTupleBrowser *)%#tx)->SetDirectory((TDirectory *)%#tx);", (uintptr_t)rbrowser, (uintptr_t)obj));
+               gROOT->ProcessLine(TString::Format("((ROOT::Experimental::RNTupleBrowser *)%#tx)->Browse((TBrowser *)%#tx);", (uintptr_t)rbrowser, (uintptr_t)fBrowser));
+            }
+            fNTupleBrowserPtr = static_cast<ROOT::Experimental::RNTupleBrowser*>(rbrowser);
+         } else {
+            if (((TDirectory *)obj)->GetListOfKeys())
+               fNKeys = ((TDirectory *)obj)->GetListOfKeys()->GetEntries();
+            else
+               fNKeys = 0;
+         }
       }
       else if (obj->InheritsFrom("TKey") && (obj->IsA() != TClass::Class())) {
          Chdir(item);
@@ -1317,7 +1331,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
             // than a canvas already embedded in one of the browser's tab
             obj->DrawClone();
          }
-         else if (fBrowser && !obj->InheritsFrom("TFormula"))
+         else if (fBrowser && !obj->InheritsFrom("TFormula") && !is_rntuple) //!is_rntuple prevents the browse method from being called here.
             obj->Browse(fBrowser);
          fDblClick = kFALSE;
          fNKeys = 0;

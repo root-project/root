@@ -20,7 +20,6 @@
 #include <string>
 #include <vector>
 
-#include "ROOT/RField.hxx"
 #include "ROOT/RFieldVisitor.hxx"
 #include "ROOT/RNTuple.hxx"
 

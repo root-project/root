@@ -236,11 +236,11 @@ ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view nt
 {
 }
 
-ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, std::string_view path)
+ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, std::string_view path, TDirectory* directory)
    : RPageSource(ntupleName)
    , fPageAllocator(std::make_unique<RPageAllocatorKey>())
    , fPagePool(std::make_shared<RPagePool>())
-   , fDirectory(nullptr)
+   , fDirectory(directory)
 {
    TFile *file = TFile::Open(std::string(path).c_str(), "READ");
    fSettings.fFile = file;

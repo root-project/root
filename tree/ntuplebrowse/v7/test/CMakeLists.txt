@@ -4,9 +4,10 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-add_subdirectory(tree)
-add_subdirectory(treeplayer)
-add_subdirectory(treeviewer)
-add_subdirectory(dataframe)
-add_subdirectory(ntuple)
-add_subdirectory(ntuplebrowse)
+# @author Simon Leisibach CERN
+
+if(NOT dataframe)
+  return()
+endif()
+
+ROOT_ADD_GTEST(ntuple_browse ntuple_browse.cxx LIBRARIES Hist ROOTNTuple ROOTNTupleBrowse)

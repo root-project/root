@@ -90,16 +90,18 @@ private:
       int fOrder;
       /// The field itself is also included in this number.
       int fNumSiblingFields;
+      /// Children refers to elements of fSubField
+      int fNumChildren;
    public:
-      RLevelInfo(): fLevel{1}, fOrder{1}, fNumSiblingFields{1} {}
-      RLevelInfo(const RFieldBase* field): fLevel{GetLevel(field)}, fOrder{GetOrder(field)}, fNumSiblingFields{GetNumSiblings(field)} {}
+      RLevelInfo(): fLevel{1}, fOrder{1}, fNumSiblingFields{1}, fNumChildren{0} {}
+      RLevelInfo(const RFieldBase* field): fLevel{GetLevel(field)}, fOrder{GetOrder(field)}, fNumSiblingFields{GetNumSiblings(field)}, fNumChildren{GetNumChildren(field)} {}
       int GetNumSiblings(const RFieldBase *field = nullptr) const {
-         if(field)
+         if (field)
             return static_cast<int>(field->GetParent()->fSubFields.size());
          return fNumSiblingFields;
       }
       int GetLevel(const RFieldBase *field = nullptr) const {
-         if(!field)
+         if (!field)
             return fLevel;
          int level{0};
          const RFieldBase *parentPtr{field->GetParent()};
@@ -110,9 +112,15 @@ private:
          return level;
       }
       int GetOrder(const RFieldBase *field = nullptr) const {
-         if(field)
+         if (field)
             return field->fOrder;
          return fOrder;
+      }
+      int GetNumChildren(const RFieldBase *field = nullptr) const {
+         if (field) {
+            return static_cast<int>(field->fSubFields.size());
+         }
+         return fNumChildren;
       }
    };
    /// First subfield of parentfield has fOrder 1, the next fOrder 2, etc. Value set by RFieldBase::Attach()
@@ -539,6 +547,7 @@ public:
          Detail::RColumnElement<float, EColumnType::kReal32>(static_cast<float*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(float); }
+   void AcceptVisitor(Detail::RNTupleVisitor &v, int level = 1) const override;
 };
 
 
@@ -576,6 +585,7 @@ public:
          Detail::RColumnElement<double, EColumnType::kReal64>(static_cast<double*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(double); }
+   void AcceptVisitor(Detail::RNTupleVisitor &v, int level = 1) const override;
 };
 
 template <>
@@ -612,6 +622,7 @@ public:
          Detail::RColumnElement<std::int32_t, EColumnType::kInt32>(static_cast<std::int32_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::int32_t); }
+   void AcceptVisitor(Detail::RNTupleVisitor &v, int level = 1) const override;
 };
 
 template <>
@@ -648,6 +659,7 @@ public:
          Detail::RColumnElement<std::uint32_t, EColumnType::kInt32>(static_cast<std::uint32_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::uint32_t); }
+   void AcceptVisitor(Detail::RNTupleVisitor &v, int level = 1) const override;
 };
 
 template <>
@@ -684,6 +696,7 @@ public:
          Detail::RColumnElement<std::uint64_t, EColumnType::kInt64>(static_cast<std::uint64_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::uint64_t); }
+   void AcceptVisitor(Detail::RNTupleVisitor &v, int level = 1) const override;
 };
 
 
