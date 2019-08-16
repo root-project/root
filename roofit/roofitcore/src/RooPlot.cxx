@@ -483,28 +483,73 @@ void RooPlot::addTH1(TH1 *hist, Option_t *drawOptions, Bool_t invisible)
 
 namespace {
   void translateGraph(TH1* hist, RooAbsRealLValue* xvar, TGraph* graph){
-    int n = graph->GetN();
-    std::map<int,double> values;
-    double x, y;
-    for(int i=0; i<n; ++i){
-      if(graph->GetPoint(i,x,y)!=i) break;
-      int bin = xvar->getBinning().binNumber(x);
-      values[bin+1] = y;
+    if(graph->GetXaxis()->IsAlphanumeric()){
+      return;
     }
     double xmin = hist->GetXaxis()->GetXmin();
     double xmax = hist->GetXaxis()->GetXmax();
-    double xminY = graph->Eval(xmin);
-    double xmaxY = graph->Eval(xmax);
-    graph->Set(values.size()+2);
-    graph->SetPoint(0,xmin,xminY);
-    for(auto it:values){
-      graph->SetPoint(it.first,hist->GetXaxis()->GetBinCenter(it.first),it.second);
+    if(graph->TestBit(TGraph::kIsSortedX)){
+      // sorted graphs are "line graphs"
+      std::vector<double> x;
+      std::vector<double> y;
+      x.push_back(xmin);
+      y.push_back(graph->Eval(xvar->getBinning().binLow(0)));
+      for(int i=0; i<hist->GetNbinsX(); ++i){
+        x.push_back(hist->GetXaxis()->GetBinUpEdge(i+1));
+        y.push_back(graph->Eval(xvar->getBinning().binHigh(i)));
+        x.push_back(hist->GetXaxis()->GetBinCenter(i+1));
+        y.push_back(graph->Eval(xvar->getBinning().binCenter(i)));                
+      }
+      int n = x.size();
+      graph->Set(n);
+      for(int i=0; i<n; ++i){
+        graph->SetPoint(i,x[i],y[i]);
+      }
+      graph->Sort();
+    } else {
+      // unsorted graphs are "area graphs"
+      std::map<int,double> minValues;
+      std::map<int,double> maxValues;
+      int n = graph->GetN();
+      double x, y;
+      for(int i=0; i<n; ++i){
+        graph->GetPoint(i,x,y);
+        int bin = xvar->getBinning().binNumber(x)+1;
+        if(maxValues.find(bin)!=maxValues.end()){
+          maxValues[bin] = std::max(maxValues[bin],y);
+        } else {
+          maxValues[bin] = y;
+        }
+        if(minValues.find(bin)!=minValues.end()){
+          minValues[bin] = std::min(minValues[bin],y);
+        } else {
+          minValues[bin] = y;
+        }
+      }
+      double xminY = graph->Eval(xmin);
+      double xmaxY = graph->Eval(xmax);
+      graph->Set(hist->GetNbinsX()+2);
+      int np=0;
+      graph->SetPoint(np,xmin,xminY);
+      for(auto it = maxValues.begin(); it != maxValues.end(); ++it){
+        graph->SetPoint(++np,hist->GetXaxis()->GetBinCenter(it->first),it->second);
+      }
+      graph->SetPoint(++np,xmax,xmaxY);
+      for(auto it = minValues.rbegin(); it != minValues.rend(); ++it){
+        graph->SetPoint(++np,hist->GetXaxis()->GetBinCenter(it->first),it->second);
+      }
+      graph->SetPoint(++np,xmin,xminY);
     }
-    graph->SetPoint(hist->GetNbinsX()+1,xmax,xmaxY);
-    graph->Sort();
+    graph->GetXaxis()->Set(hist->GetNbinsX(),xmin,xmax);
+    for(int i=0; i<hist->GetNbinsX(); ++i){
+      graph->GetXaxis()->SetBinLabel(i+1,hist->GetXaxis()->GetBinLabel(i+1));
+    }
   }
   void translateGraph(TH1* hist, RooAbsRealLValue* xvar, TGraphAsymmErrors* graph){
+    if(graph->GetXaxis()->IsAlphanumeric()) return; 
     int n = graph->GetN();
+    double xmin = hist->GetXaxis()->GetXmin();
+    double xmax = hist->GetXaxis()->GetXmax();
     double x, y;
     for(int i=0; i<n; ++i){
       if(graph->GetPoint(i,x,y)!=i) break;
@@ -512,6 +557,10 @@ namespace {
       graph->SetPoint(i,hist->GetXaxis()->GetBinCenter(bin+1),y);
       graph->SetPointEXhigh(i,0.5*hist->GetXaxis()->GetBinWidth(bin+1));
       graph->SetPointEXlow(i,0.5*hist->GetXaxis()->GetBinWidth(bin+1));
+    }
+    graph->GetXaxis()->Set(hist->GetNbinsX(),xmin,xmax);
+    for(int i=0; i<hist->GetNbinsX(); ++i){
+      graph->GetXaxis()->SetBinLabel(i+1,hist->GetXaxis()->GetBinLabel(i+1));
     }
   }
 }
@@ -530,7 +579,6 @@ void RooPlot::addPlotable(RooPlotable *plotable, Option_t *drawOptions, Bool_t i
     coutE(InputArguments) << fName << "::add: cross-cast to TObject failed (nothing added)" << endl;
   }
   else {
-
     if(this->_hist->GetXaxis()->IsAlphanumeric()){
       if(obj->InheritsFrom(RooCurve::Class())){
         ::translateGraph(this->_hist,_plotVarClone,static_cast<RooCurve*>(obj));
