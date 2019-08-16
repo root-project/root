@@ -659,11 +659,11 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RFieldArray::Capture
 //------------------------------------------------------------------------------
 
 #if __cplusplus >= 201703L
-std::string ROOT::Experimental::RFieldVariant::GetTypeList(Detail::RFieldBase *itemFields, std::size_t nFields)
+std::string ROOT::Experimental::RFieldVariant::GetTypeList(const std::vector<Detail::RFieldBase *> &itemFields)
 {
    std::string result;
-   for (size_t i = 0;  i < nFields; ++i) {
-      result += itemFields/*[i]*/->GetType() + ",";
+   for (size_t i = 0; i < itemFields.size(); ++i) {
+      result += itemFields[i]->GetType() + ",";
    }
    R__ASSERT(!result.empty()); // there is always at least one variant
    result.pop_back(); // remove trailing comma
@@ -671,16 +671,17 @@ std::string ROOT::Experimental::RFieldVariant::GetTypeList(Detail::RFieldBase *i
 }
 
 ROOT::Experimental::RFieldVariant::RFieldVariant(
-   std::string_view fieldName, Detail::RFieldBase *itemFields, std::size_t nFields)
+   std::string_view fieldName, const std::vector<Detail::RFieldBase *> &itemFields)
    : ROOT::Experimental::Detail::RFieldBase(fieldName,
-      "std::variant<" + GetTypeList(itemFields, nFields) + ">", ENTupleStructure::kVariant, false /* isSimple */)
+      "std::variant<" + GetTypeList(itemFields) + ">", ENTupleStructure::kVariant, false /* isSimple */)
 {
+   auto nFields = itemFields.size();
    R__ASSERT(nFields > 0);
    fNWritten.resize(nFields, 0);
    for (unsigned int i = 0; i < nFields; ++i) {
-      fMaxItemSize = std::max(fMaxItemSize, itemFields/*[i]*/->GetValueSize());
-      fMaxAlignment = std::max(fMaxAlignment, itemFields/*[i]*/->GetAlignment());
-      Attach(std::unique_ptr<Detail::RFieldBase>(itemFields/*[i]*/));
+      fMaxItemSize = std::max(fMaxItemSize, itemFields[i]->GetValueSize());
+      fMaxAlignment = std::max(fMaxAlignment, itemFields[i]->GetAlignment());
+      Attach(std::unique_ptr<Detail::RFieldBase>(itemFields[i]));
    }
    fTagOffset = (fMaxItemSize < fMaxAlignment) ? fMaxAlignment : fMaxItemSize;
 }
@@ -692,7 +693,7 @@ ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RFieldVariant::Clone
    for (unsigned i = 0; i < nFields; ++i) {
       itemFields.emplace_back(fSubFields[i]->Clone(fSubFields[i]->GetName()));
    }
-   return new RFieldVariant(newName, /*&*/itemFields[0], nFields);
+   return new RFieldVariant(newName, itemFields);
 }
 
 std::uint32_t ROOT::Experimental::RFieldVariant::GetTag(void *variantPtr) const
@@ -704,7 +705,7 @@ std::uint32_t ROOT::Experimental::RFieldVariant::GetTag(void *variantPtr) const
 void ROOT::Experimental::RFieldVariant::SetTag(void *variantPtr, std::uint32_t tag) const
 {
    auto index = reinterpret_cast<char *>(variantPtr) + fTagOffset;
-   *index = static_cast<char>(tag);
+   *index = static_cast<char>(tag - 1);
 }
 
 void ROOT::Experimental::RFieldVariant::DoAppend(const Detail::RFieldValue& value)
@@ -714,7 +715,7 @@ void ROOT::Experimental::RFieldVariant::DoAppend(const Detail::RFieldValue& valu
    if (tag > 0) {
       auto itemValue = fSubFields[tag - 1]->CaptureValue(value.GetRawPtr());
       fSubFields[tag - 1]->Append(itemValue);
-      index = ++fNWritten[tag - 1];
+      index = fNWritten[tag - 1]++;
    }
    RColumnSwitch varSwitch(ClusterSize_t(index), tag);
    Detail::RColumnElement<RColumnSwitch, EColumnType::kSwitch> elemSwitch(&varSwitch);
@@ -723,14 +724,13 @@ void ROOT::Experimental::RFieldVariant::DoAppend(const Detail::RFieldValue& valu
 
 void ROOT::Experimental::RFieldVariant::DoReadGlobal(NTupleSize_t globalIndex, Detail::RFieldValue *value)
 {
-   RClusterIndex varIndex;
+   RClusterIndex variantIndex;
    std::uint32_t tag;
-   fPrincipalColumn->GetSwitchInfo(globalIndex, &varIndex, &tag);
+   fPrincipalColumn->GetSwitchInfo(globalIndex, &variantIndex, &tag);
    R__ASSERT(tag > 0); // TODO(jblomer): deal with invalid variants
-   auto index = tag - 1;
 
-   auto itemValue = fSubFields[index]->GenerateValue(value->GetRawPtr());
-   fSubFields[index]->Read(varIndex, &itemValue);
+   auto itemValue = fSubFields[tag - 1]->GenerateValue(value->GetRawPtr());
+   fSubFields[tag - 1]->Read(variantIndex, &itemValue);
    SetTag(value->GetRawPtr(), tag);
 }
 
