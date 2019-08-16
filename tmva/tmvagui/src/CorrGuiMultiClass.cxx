@@ -54,12 +54,6 @@ void TMVA::CorrGuiMultiClass(TString dataset,  TString fin , TString dirName , T
                              dataset.Data(), fin.Data(), (*iter).Data(), dirName.Data(), title.Data(), (Int_t)isRegression ),
                        buttonType );
    }
-      
-   // *** problems with this button below ROOT 5.19 ***
-#if ROOT_VERSION_CODE < ROOT_VERSION(5,19,0)
-   cbar->AddButton( "Close", "CorrGui_DeleteTBar()", "Close this control bar", "button" );
-#endif
-   // **********************************************
 
    // set the style 
    cbar->SetTextColor("blue");
