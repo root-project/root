@@ -6140,7 +6140,7 @@ static bool MayExistInObjectFile(llvm::object::ObjectFile *soFile, uint32_t hash
 /// Looks up symbols from a an object file, representing the library.
 ///\returns true on success.
 static bool FindSymbol(const std::string &library_filename,
-                       const std::string &mangled_name)
+                       const std::string &mangled_name, unsigned IgnoreSymbolFlags = 0)
 {
    auto ObjF = llvm::object::ObjectFile::createObjectFile(library_filename);
    if (!ObjF) {
@@ -6157,8 +6157,8 @@ static bool FindSymbol(const std::string &library_filename,
 
    for (const auto &S : BinObjFile->symbols()) {
       uint32_t Flags = S.getFlags();
-      // DO NOT insert to table if symbol was undefined
-      if (Flags & llvm::object::SymbolRef::SF_Undefined)
+      // Do not insert in the table symbols flagged to ignore.
+      if (Flags & IgnoreSymbolFlags)
          continue;
 
       // Note, we are at last resort and loading library based on a weak
@@ -6280,7 +6280,9 @@ static std::string ResolveSymbol(const std::string& mangled_name,
       // libraries. However, it seems to be redundant for the moment as we do
       // not strictly require symbols from those sections. Enable after checking
       // performance!
-      if (FindSymbol(LibName, mangled_name)) {
+      if (FindSymbol(LibName, mangled_name, /*ignore*/
+                     llvm::object::SymbolRef::SF_Undefined |
+                     llvm::object::SymbolRef::SF_Weak)) {
          sQueriedLibraries.push_back(P);
          return LibName;
       }
@@ -6298,7 +6300,9 @@ static std::string ResolveSymbol(const std::string& mangled_name,
    for (const LibraryPath &P : sSysLibraries) {
       const std::string LibName = GetLibFileName(P, sPaths);
 
-      if (FindSymbol(LibName, mangled_name)) {
+      if (FindSymbol(LibName, mangled_name, /*ignore*/
+                     llvm::object::SymbolRef::SF_Undefined |
+                     llvm::object::SymbolRef::SF_Weak)) {
          sQueriedLibraries.push_back(P);
          return LibName;
       }
