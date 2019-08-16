@@ -17,7 +17,7 @@
             </headerContent>
             <content>
                <Toolbar>
-                  <Button icon="sap-icon://log" type="Transparent"
+                  <Button icon="sap-icon://log" type="Transparent" visible="{= !${/standalone} }"
                           tooltip="Quit ROOT session" press="onQuitRootPress" />
                   <Button icon="sap-icon://synchronize" type="Transparent"
                           tooltip="Reload geometry drawing" press="onRealoadPress" />
