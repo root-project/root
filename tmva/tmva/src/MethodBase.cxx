@@ -1425,11 +1425,7 @@ void TMVA::MethodBase::ReadStateFromFile()
          << gTools().Color("lightblue") << tfname << gTools().Color("reset") << Endl;
 
    if (tfname.EndsWith(".xml") ) {
-#if ROOT_VERSION_CODE >= ROOT_VERSION(5,29,0)
       void* doc = gTools().xmlengine().ParseFile(tfname,gTools().xmlenginebuffersize()); // the default buffer size in TXMLEngine::ParseFile is 100k. Starting with ROOT 5.29 one can set the buffer size, see: http://savannah.cern.ch/bugs/?78864. This might be necessary for large XML files
-#else
-      void* doc = gTools().xmlengine().ParseFile(tfname);
-#endif
       if (!doc) {
          Log() << kFATAL << "Error parsing XML file " << tfname << Endl;
       }
@@ -1462,15 +1458,10 @@ void TMVA::MethodBase::ReadStateFromFile()
 /// for reading from memory
 
 void TMVA::MethodBase::ReadStateFromXMLString( const char* xmlstr ) {
-#if ROOT_VERSION_CODE >= ROOT_VERSION(5,26,00)
    void* doc = gTools().xmlengine().ParseString(xmlstr);
    void* rootnode = gTools().xmlengine().DocGetRootElement(doc); // node "MethodSetup"
    ReadStateFromXML(rootnode);
    gTools().xmlengine().FreeDoc(doc);
-#else
-   Log() << kFATAL<<Form("Dataset[%s] : ",DataInfo().GetName()) << "Method MethodBase::ReadStateFromXMLString( const char* xmlstr = "
-         << xmlstr << " ) is not available for ROOT versions prior to 5.26/00." << Endl;
-#endif
 
    return;
 }

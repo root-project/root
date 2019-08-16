@@ -33,13 +33,7 @@
 #ifndef ROOT_TMVA_RuleFitParams
 #define ROOT_TMVA_RuleFitParams
 
-// #if ROOT_VERSION_CODE >= 364802
 #include "TMathBase.h"
-// #else
-// #ifndef ROOT_TMath
-// #include "TMath.h"
-// #endif
-// #endif
 
 #include "TMVA/Event.h"
 

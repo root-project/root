@@ -431,12 +431,6 @@ void TMVA::BDT(TString dataset, const TString& fin  )
       cbar->AddButton( fname, macro, "Plot decision trees from this weight file", "button" );
    }
 
-   // *** problems with this button in ROOT 5.19 ***
-#if ROOT_VERSION_CODE < ROOT_VERSION(5,19,0)
-   cbar->AddButton( "Close", Form("BDT_DeleteTBar(%i)", BDT_Global__cbar.size()-1), "Close this control bar", "button" );
-#endif
-   // **********************************************
-
    // set the style 
    cbar->SetTextColor("blue");
 

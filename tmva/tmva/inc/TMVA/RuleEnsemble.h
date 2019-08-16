@@ -29,13 +29,7 @@
 #ifndef ROOT_TMVA_RuleEnsemble
 #define ROOT_TMVA_RuleEnsemble
 
-// #if ROOT_VERSION_CODE >= 364802
-// #ifndef ROOT_TMathBase
-// #include "TMathBase.h"
-// #endif
-// #else
 #include "TMath.h"
-// #endif
 
 #include "TMVA/DecisionTree.h"
 #include "TMVA/Event.h"
