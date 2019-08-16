@@ -1720,6 +1720,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   pc.defineString("curveNameSuffix","CurveNameSuffix",0,"") ;
   pc.defineString("sliceCatState","SliceCat",0,"",kTRUE) ;
   pc.defineDouble("scaleFactor","Normalization",0,1.0) ;
+  pc.defineInt("scaleType","Normalization",0,Relative) ; 
   pc.defineObject("sliceSet","SliceVars",0) ;
   pc.defineObject("sliceCatList","SliceCat",0,0,kTRUE) ;
   pc.defineObject("projSet","Project",0) ;
@@ -1789,6 +1790,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   o.drawOptions = drawOpt.Data();
   o.curveNameSuffix = pc.getString("curveNameSuffix") ;
   o.scaleFactor = pc.getDouble("scaleFactor") ;
+  o.stype = (ScaleType) pc.getInt("scaleType")  ;
   o.projData = (const RooAbsData*) pc.getObject("projData") ;
   o.binProjData = pc.getInt("binProjData") ;
   o.projDataSet = (const RooArgSet*) pc.getObject("projDataSet") ;
@@ -2248,7 +2250,9 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
       GlobalSelectComponentRAII selectCompRAII(true);
       RooAbsReal* intFrac = projection->createIntegral(*plotVar,*plotVar,o.normRangeName) ;
       _globalSelectComp = true; //It's unclear why this is done a second time. Maybe unnecessary.
-      o.scaleFactor /= intFrac->getVal() ;
+      if(o.stype != RooAbsReal::Raw){
+        o.scaleFactor /= intFrac->getVal() ;
+      }
       delete intFrac ;
 
     }
