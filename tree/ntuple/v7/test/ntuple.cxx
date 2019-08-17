@@ -21,7 +21,9 @@
 #include <memory>
 #include <string>
 #include <utility>
+#if __cplusplus >= 201703L
 #include <variant>
+#endif
 
 using DescriptorId_t = ROOT::Experimental::DescriptorId_t;
 using EColumnType = ROOT::Experimental::EColumnType;
@@ -289,8 +291,6 @@ TEST(RNTuple, Clusters)
    wrFourVec->at(1) = 1.0;
    wrFourVec->at(2) = 2.0;
    wrFourVec->at(3) = 3.0;
-   auto wrVariant = modelWrite->MakeField<std::variant<double, int>>("variant");
-   *wrVariant = 2.0;
 
    auto modelRead = std::unique_ptr<RNTupleModel>(modelWrite->Clone());
 
@@ -302,13 +302,11 @@ TEST(RNTuple, Clusters)
       wrNnlo->clear();
       *wrTag = "";
       wrFourVec->at(2) = 42.0;
-      *wrVariant = 4;
       ntuple.Fill();
       *wrPt = 12.0;
       wrNnlo->push_back(std::vector<float>{42.0});
       *wrTag = "12345";
       wrFourVec->at(1) = 24.0;
-      *wrVariant = 8.0;
       ntuple.Fill();
    }
 
@@ -316,7 +314,6 @@ TEST(RNTuple, Clusters)
    auto rdTag = modelRead->Get<std::string>("tag");
    auto rdNnlo = modelRead->Get<std::vector<std::vector<float>>>("nnlo");
    auto rdFourVec = modelRead->Get<std::array<float, 4>>("fourVec");
-   auto rdVariant = modelRead->Get<std::variant<double, int>>("variant");
 
    RNTupleReader ntuple(std::move(modelRead), std::make_unique<RPageSourceRoot>("f", fileGuard.GetPath()));
    EXPECT_EQ(3U, ntuple.GetNEntries());
@@ -337,14 +334,12 @@ TEST(RNTuple, Clusters)
    EXPECT_EQ(1.0, (*rdFourVec)[1]);
    EXPECT_EQ(2.0, (*rdFourVec)[2]);
    EXPECT_EQ(3.0, (*rdFourVec)[3]);
-   EXPECT_EQ(2.0, std::get<0>(*rdVariant));
 
    ntuple.LoadEntry(1);
    EXPECT_EQ(24.0, *rdPt);
    EXPECT_STREQ("", rdTag->c_str());
    EXPECT_TRUE(rdNnlo->empty());
    EXPECT_EQ(42.0, (*rdFourVec)[2]);
-   EXPECT_EQ(4, std::get<1>(*rdVariant));
 
    ntuple.LoadEntry(2);
    EXPECT_EQ(12.0, *rdPt);
@@ -353,8 +348,42 @@ TEST(RNTuple, Clusters)
    EXPECT_EQ(1U, (*rdNnlo)[0].size());
    EXPECT_EQ(42.0, (*rdNnlo)[0][0]);
    EXPECT_EQ(24.0, (*rdFourVec)[1]);
+}
+
+
+#if __cplusplus >= 201703L
+TEST(RNTuple, Variant)
+{
+   FileRaii fileGuard("test_ntuple_variant.root");
+
+   auto modelWrite = RNTupleModel::Create();
+   auto wrVariant = modelWrite->MakeField<std::variant<double, int>>("variant");
+   *wrVariant = 2.0;
+
+   auto modelRead = std::unique_ptr<RNTupleModel>(modelWrite->Clone());
+
+   {
+      RNTupleWriter ntuple(std::move(modelWrite), std::make_unique<RPageSinkRoot>("f", fileGuard.GetPath()));
+      ntuple.Fill();
+      ntuple.CommitCluster();
+      *wrVariant = 4;
+      ntuple.Fill();
+      *wrVariant = 8.0;
+      ntuple.Fill();
+   }
+   auto rdVariant = modelRead->Get<std::variant<double, int>>("variant");
+
+   RNTupleReader ntuple(std::move(modelRead), std::make_unique<RPageSourceRoot>("f", fileGuard.GetPath()));
+   EXPECT_EQ(3U, ntuple.GetNEntries());
+
+   ntuple.LoadEntry(0);
+   EXPECT_EQ(2.0, std::get<0>(*rdVariant));
+   ntuple.LoadEntry(1);
+   EXPECT_EQ(4, std::get<1>(*rdVariant));
+   ntuple.LoadEntry(2);
    EXPECT_EQ(8.0, std::get<0>(*rdVariant));
 }
+#endif
 
 
 TEST(RNTuple, View)
