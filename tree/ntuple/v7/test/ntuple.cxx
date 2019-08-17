@@ -377,11 +377,11 @@ TEST(RNTuple, Variant)
    EXPECT_EQ(3U, ntuple.GetNEntries());
 
    ntuple.LoadEntry(0);
-   EXPECT_EQ(2.0, std::get<0>(*rdVariant));
+   EXPECT_EQ(2.0, *std::get_if<double>(rdVariant));
    ntuple.LoadEntry(1);
-   EXPECT_EQ(4, std::get<1>(*rdVariant));
+   EXPECT_EQ(4, *std::get_if<int>(rdVariant));
    ntuple.LoadEntry(2);
-   EXPECT_EQ(8.0, std::get<0>(*rdVariant));
+   EXPECT_EQ(8.0, *std::get_if<double>(rdVariant));
 }
 #endif
 
