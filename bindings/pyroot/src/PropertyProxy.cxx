@@ -216,14 +216,11 @@ void PyROOT::PropertyProxy::Set( Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t id
 
 void PyROOT::PropertyProxy::Set( Cppyy::TCppScope_t scope, const std::string& name, void* address )
 {
-   Cppyy::TCppIndex_t idata = Cppyy::GetDatamemberIndex(scope, name);
-   std::string cppType = Cppyy::ResolveEnum(Cppyy::GetDatamemberType(scope, idata));
-
    fEnclosingScope = scope;
    fName           = name;
    fOffset         = (ptrdiff_t)address;
    fProperty       = (kIsStaticData | kIsConstData | kIsEnumData /* true, but may chance */ );
-   fConverter      = CreateConverter( cppType, -1 );
+   fConverter      = CreateConverter( "UInt_t", -1 );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
