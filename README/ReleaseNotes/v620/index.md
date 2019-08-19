@@ -147,6 +147,24 @@ or in `TBrowser` by opening `Browser Help → About ROOT`.
   `explicitlink`).
 - ROOT library targets now export which C++ standard they were built with via
   the target compile features `cxx_std_11`, `cxx_std_14`, and `cxx_std_17`.
+- The file `RootNewMacros.cmake` has been renamed to `RootMacros.cmake`.
+  Including the old file by name is deprecated and will generate a warning.
+  Including `RootMacros.cmake` is not necessary, as now it is already included
+  when calling `find_package(ROOT)`. If you still need to inherit ROOT's compile
+  options, however, you may use `include(${ROOT_USE_FILE})` as before.
+- ROOT's internal CMake modules (e.g. CheckCompiler.cmake, SetUpLinux.cmake, etc)
+  are no longer installed with `make install`. Only the necessary files by
+  dependent projects are installed by default now, and they are installed
+  directly into the cmake/ directory, not cmake/modules/ as before.
+- The macro `ROOT_GENERATE_DICTIONARY()` can now attach the generated source
+  file directly to a library target by using the options `NOTARGET MODULE
+  <library>`, where `<library>` is an existing library target. This then allows
+  the dictionary to inherit target properties such as compile options and
+  include directories directly from the library target, even when they are added
+  after the call to `ROOT_GENERATE_DICTIONARY()`.
+- The macros `REFLEX_GENERATE_DICTIONARY()` and `ROOT_GENERATE_DICTIONARY()` can
+  now have custom extra dependencies added with the options `DEPENDS` and
+  `EXTRA_DEPENDENCIES`, respectively.
 
 The following builtins have been updated:
 
