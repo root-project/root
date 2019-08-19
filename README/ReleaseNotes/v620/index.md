@@ -150,6 +150,11 @@ or in `TBrowser` by opening `Browser Help → About ROOT`.
 
 The following builtins have been updated:
 
-- Intel TBB 2019 U7
+- FFTW3 3.3.8
+- GSL 2.5
+- Intel TBB 2019 U8
+- PCRE 8.43
 - OpenSSL 1.0.2s
-- XRootD 4.9.1
+- Vdt 0.4.3
+- VecCore 0.6.0
+- XRootD 4.10.0
