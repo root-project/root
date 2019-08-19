@@ -48,6 +48,17 @@ The following people have contributed to this new version:
  Zhe Zhang, Nebraska,\
  Stefan Wunsch, CERN/SFT
 
+## ROOT
+
+### Splash screen
+
+The venerable splash screen is now disabled by default to make ROOT's startup
+faster. Many users already use `root -l` to start ROOT, but this also hides the
+useful text banner with version information along with the splash screen. With
+this new default, starting up ROOT as just `root` will show only the text banner
+instead of the splash screen. The splash screen can still be seen with `root -a`
+or in `TBrowser` by opening `Browser Help → About ROOT`.
+
 ## Deprecation and Removal
  * rootcling flags `-cint`, `-reflex` and `-gccxml` have no effect and will be
    removed. Please remove them from the rootcling invocations.
