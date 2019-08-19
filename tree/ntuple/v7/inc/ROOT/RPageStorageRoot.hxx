@@ -149,6 +149,7 @@ private:
 public:
    RPageSourceRoot(std::string_view ntupleName, RSettings settings);
    RPageSourceRoot(std::string_view ntupleName, std::string_view path);
+   std::unique_ptr<RPageSource> Clone() const final;
    virtual ~RPageSourceRoot();
 
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
