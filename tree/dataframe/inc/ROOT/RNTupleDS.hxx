@@ -33,17 +33,19 @@ class REntry;
 
 
 class RNTupleDS final : public ROOT::RDF::RDataSource {
-   std::unique_ptr<ROOT::Experimental::RNTupleReader> fNTuple;
-   std::unique_ptr<ROOT::Experimental::REntry> fEntry;
-   unsigned fNSlots;
-   bool fHasSeenAllRanges;
+   /// Clones of the first reader, one for each slot
+   std::vector<std::unique_ptr<ROOT::Experimental::RNTupleReader>> fReaders;
+   std::vector<std::unique_ptr<ROOT::Experimental::REntry>> fEntries;
+   /// The raw pointers wrapped by the RValue items of fEntries
+   std::vector<std::vector<void*>> fValuePtrs;
+   unsigned fNSlots = 0;
+   bool fHasSeenAllRanges = false;
    std::vector<std::string> fColumnNames;
    std::vector<std::string> fColumnTypes;
-   std::vector<void*> fValuePtrs;
 
 public:
-   RNTupleDS(std::unique_ptr<ROOT::Experimental::RNTupleReader> ntuple);
-   ~RNTupleDS();
+   explicit RNTupleDS(std::unique_ptr<ROOT::Experimental::RNTupleReader> ntuple);
+   ~RNTupleDS() = default;
    void SetNSlots(unsigned int nSlots) final;
    const std::vector<std::string> &GetColumnNames() const final;
    bool HasColumn(std::string_view colName) const final;

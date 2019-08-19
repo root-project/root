@@ -27,24 +27,17 @@
 namespace ROOT {
 namespace Experimental {
 
-RNTupleDS::RNTupleDS(std::unique_ptr<ROOT::Experimental::RNTupleReader> ntuple)
-  : fNTuple(std::move(ntuple)), fEntry(fNTuple->GetModel()->CreateEntry()), fNSlots(1), fHasSeenAllRanges(false)
+ROOT::Experimental::RNTupleDS::RNTupleDS(std::unique_ptr<ROOT::Experimental::RNTupleReader> ntuple)
 {
-   auto rootField = fNTuple->GetModel()->GetRootField();
-   for (auto& f : *rootField) {
+   fReaders.emplace_back(std::move(ntuple));
+   auto rootField = fReaders[0]->GetModel()->GetRootField();
+   for (auto &f : *rootField) {
       if (f.GetParent() != rootField)
          continue;
       fColumnNames.push_back(f.GetName());
       fColumnTypes.push_back(f.GetType());
-      fValuePtrs.push_back(fEntry->GetValue(f.GetName()).GetRawPtr());
    }
 }
-
-
-RNTupleDS::~RNTupleDS()
-{
-}
-
 
 const std::vector<std::string>& RNTupleDS::GetColumnNames() const
 {
@@ -60,14 +53,15 @@ RDF::RDataSource::Record_t RNTupleDS::GetColumnReadersImpl(std::string_view name
    // There is a problem extracting the type info for std::int32_t and company though
 
    std::vector<void*> ptrs;
-   R__ASSERT(fNSlots == 1);
-   ptrs.push_back(&fValuePtrs[index]);
+   for (unsigned i = 0; i < fNSlots; ++i)
+      ptrs.push_back(&fValuePtrs[i][index]);
 
    return ptrs;
 }
 
-bool RNTupleDS::SetEntry(unsigned int /*slot*/, ULong64_t entryIndex) {
-   fNTuple->LoadEntry(entryIndex, fEntry.get());
+bool RNTupleDS::SetEntry(unsigned int slot, ULong64_t entryIndex)
+{
+   fReaders[slot]->LoadEntry(entryIndex, fEntries[slot].get());
    return true;
 }
 
@@ -76,7 +70,7 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RNTupleDS::GetEntryRanges()
    std::vector<std::pair<ULong64_t, ULong64_t>> ranges;
    if (fHasSeenAllRanges) return ranges;
 
-   auto nEntries = fNTuple->GetNEntries();
+   auto nEntries = fReaders[0]->GetNEntries();
    const auto chunkSize = nEntries / fNSlots;
    const auto reminder = 1U == fNSlots ? 0 : nEntries % fNSlots;
    auto start = 0UL;
@@ -116,11 +110,27 @@ void RNTupleDS::Initialise()
 
 void RNTupleDS::SetNSlots(unsigned int nSlots)
 {
+   R__ASSERT(fNSlots == 0);
+   R__ASSERT(nSlots > 0);
    fNSlots = nSlots;
+
+   for (unsigned int i = 1; i < fNSlots; ++i) {
+      fReaders.emplace_back(std::make_unique<RNTupleReader>(fReaders[0]->GetPageSource()->Clone()));
+   }
+
+   for (unsigned int i = 0; i < fNSlots; ++i) {
+      auto entry = fReaders[i]->GetModel()->CreateEntry();
+      fValuePtrs.emplace_back(std::vector<void*>());
+      for (unsigned j = 0; j < fColumnNames.size(); ++j) {
+         fValuePtrs[i].emplace_back(entry->GetValue(fColumnNames[j]).GetRawPtr());
+      }
+      fEntries.emplace_back(std::move(entry));
+   }
 }
 
 
-RDataFrame MakeNTupleDataFrame(std::string_view ntupleName, std::string_view fileName) {
+RDataFrame MakeNTupleDataFrame(std::string_view ntupleName, std::string_view fileName)
+{
    auto ntuple = RNTupleReader::Open(ntupleName, fileName);
    ROOT::RDataFrame rdf(std::make_unique<RNTupleDS>(std::move(ntuple)));
    return rdf;

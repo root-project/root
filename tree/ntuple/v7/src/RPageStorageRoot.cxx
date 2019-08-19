@@ -396,3 +396,12 @@ ROOT::Experimental::ColumnId_t ROOT::Experimental::Detail::RPageSourceRoot::GetC
    // TODO(jblomer) distinguish trees
    return columnHandle.fId;
 }
+
+std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSourceRoot::Clone() const
+{
+   RSettings settings;
+   auto file = TFile::Open(fSettings.fFile->GetName(), "READ");
+   settings.fFile = file;
+   settings.fTakeOwnership = true;
+   return std::make_unique<RPageSourceRoot>(fNTupleName, settings);
+}
