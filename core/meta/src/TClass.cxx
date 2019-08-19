@@ -17,19 +17,20 @@ TClass instances are created starting from different sources of information:
 2. From TProtoClass instances saved in a ROOT pcm file created by the dictionary generator and the dictionary itself.
 3. From a lookup in the AST built by cling.
 
-If a TClass instance is built through the mechanisms 1. and 2., it does not contain information about methods of the 
+If a TClass instance is built through the mechanisms 1. and 2., it does not contain information about methods of the
 class/struct/namespace it represents. Conversely, if built through 3. or 1., it does not carry the information which is necessary
 to ROOT to perform I/O of instances of the class/struct it represents.
-The mechanisms 1., 2. and 3. are not mutually exclusive: it can happen that during the execution of the program, all 
+The mechanisms 1., 2. and 3. are not mutually exclusive: it can happen that during the execution of the program, all
 the three are triggered, modifying the state of the TClass instance.
 
-In order to retrieve a TClass instance from the type system, a query can be executed as follows through the static 
+In order to retrieve a TClass instance from the type system, a query can be executed as follows through the static
 TClass::GetClass method:
-```{.cpp}
+
+~~~ {.cpp}
 auto myClassTClass_0 = TClass::GetClass("myClass");
 auto myClassTClass_1 = TClass::GetClass<myClass>();
 auto myClassTClass_2 = TClass::GetClass(myClassTypeInfo);
-```
+~~~
 
 The name of classes is crucial for ROOT. A careful procedure of *name normalization* is carried out for
 each and every class. A *normalized name* is a valid C++ class name.
