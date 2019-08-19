@@ -35,6 +35,7 @@ void tmva005_RBDT()
    // purpose, TMVA makes use of the RTensor class. For convenience, we use RDataFrame
    // and the AsTensor utility to make the read-out from the ROOT file.
    const std::string filename = "http://root.cern.ch/files/tmva_class_example.root";
+   const std::vector<std::string> variables = {"var1", "var2", "var3", "var4"};
    ROOT::RDataFrame df("TreeS", filename);
    auto df2 = df.Range(3); // Read only a small subset of the dataset
    auto x = AsTensor<float>(df2, variables);

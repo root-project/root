@@ -36,4 +36,4 @@ public:
 } // namespace Experimental
 } // namespace TMVA
 
-#endif // TMVA_RREADER
+#endif // TMVA_RBDT
