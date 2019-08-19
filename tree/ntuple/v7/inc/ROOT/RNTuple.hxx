@@ -161,6 +161,8 @@ public:
 
    RIterator begin() { return RIterator(0); }
    RIterator end() { return RIterator(fNEntries); }
+
+   const Detail::RPageSource *GetPageSource() { return fSource.get(); }
 };
 
 // clang-format off

@@ -129,8 +129,10 @@ class RPageSource : public RPageStorage {
 public:
    explicit RPageSource(std::string_view ntupleName);
    virtual ~RPageSource();
+   /// Open the same storage multiple time, e.g. for reading in multiple threads
+   virtual std::unique_ptr<RPageSource> Clone() const = 0;
+
    EPageStorageType GetType() final { return EPageStorageType::kSource; }
-   /// TODO: copy/assignment for creating clones in multiple threads.
 
    /// Open the physical storage container for the tree
    virtual void Attach() = 0;

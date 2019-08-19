@@ -166,8 +166,7 @@ void Convert() {
 
 
 void ntpl004_dimuon() {
-   // Support for multi-threading comes at a later point, for the time being do not enable
-   // ROOT::EnableImplicitMT();
+   ROOT::EnableImplicitMT();
 
    if (gSystem->AccessPathName(kNTupleFileName))
       Convert();
