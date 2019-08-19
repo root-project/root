@@ -1053,7 +1053,7 @@ void *TRootSniffer::FindInHierarchy(const char *path, TClass **cl, TDataMember *
 
    if (res_member && res_cl && !member) {
       res_cl = (res_member->IsBasic() || res_member->IsSTLContainer()) ? nullptr : gROOT->GetClass(res_member->GetTypeName());
-      TRealData *rdata = res_cl->GetRealData(res_member->GetName());
+      TRealData *rdata = res_cl ? res_cl->GetRealData(res_member->GetName()) : nullptr;
       if (rdata) {
          res = (char *)res + rdata->GetThisOffset();
          if (res_member->IsaPointer())
