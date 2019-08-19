@@ -56,8 +56,6 @@ protected:
 
 protected:
    const   char  *GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex);
-   void           TakeAction(Int_t nfill, Int_t &npoints, Int_t &action, TObject *obj, Option_t *option);
-   void           TakeEstimate(Int_t nfill, Int_t &npoints, Int_t action, TObject *obj, Option_t *option);
    void           DeleteSelectorFromFile();
 
 public:
