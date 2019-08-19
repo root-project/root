@@ -144,6 +144,7 @@ public:
    size_t GetNrows() const { return fNRows; }
    size_t GetNcols() const { return fNCols; }
    size_t GetNoElements() const { return fNRows * fNCols; }
+   size_t GetSize() const { return fNRows * fNCols; }
 
    /** Return matrix element in row \p i and column \p j. */
    AFloat operator()(size_t i, size_t j) const { return fBuffer[j * fNRows + i]; }

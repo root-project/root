@@ -32,11 +32,22 @@
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/DeepNet.h"
 
+/*#include "TMVA/DNN/Architectures/TCudnn.h"
+#include "TMVA/DNN/Architectures/Cuda.h"
+#include "TMVA/DNN/Architectures/Cpu.h"*/
+
+
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::CNN;
 
 enum ETestType { kLinearNet, kRndmActNet };
 
+/*template class TConvLayer<TCudnn<float>>;
+template class TConvLayer<TCudnn<double>>;
+template class TConvLayer<TCuda<float>>;
+template class TConvLayer<TCuda<double>>;
+template class TConvLayer<TCpu<float>>;
+template class TConvLayer<TCpu<double>>;*/
 /** Testing the image to column function. Check wheether the matrix A after
  *  the transformation will be equal to the matrix B. */
 //______________________________________________________________________________
@@ -246,9 +257,14 @@ auto testConvLayerForward(const typename Architecture::Tensor_t &input,
     size_t nLocalViewPixels = inputDepth * fltHeight * fltWidth;
 
     typename Architecture::Tensor_t forwardMatrices (1 , nLocalViews, nLocalViewPixels);
+    
+    TDescriptors * convDescriptors = nullptr;
+    
+    TConvLayer<Architecture> *layer = nullptr;
+    Architecture::InitializeCNNDescriptors(convDescriptors, layer);
 
     Architecture::ConvLayerForward(computedOutput, computedDerivatives, input, weights, biases, params,
-                                   EActivationFunction::kIdentity, forwardMatrices);
+                                   EActivationFunction::kIdentity, forwardMatrices, (typename Architecture::ConvDescriptors_t &) * convDescriptors);
 
     for (size_t slice = 0; slice < nRows; slice++) {
         for (size_t localView = 0; localView < nCols; localView++) {

@@ -19,6 +19,8 @@
 #define TMVA_DNN_ARCHITECTURES_CPU
 
 #include "TMVA/DNN/Functions.h"
+#include "TMVA/DNN/CNN/ContextHandles.h"
+//#include "TMVA/DNN/CNN/Descriptors.h"
 #include "TMVA/DNN/CNN/ConvLayer.h"
 
 #include "Cpu/CpuBuffer.h"
@@ -32,9 +34,12 @@ namespace TMVA
 namespace DNN
 {
    //class EActivationFunction;
-
+ struct DummyActivationDescriptor {};
  struct DummyFilterDescriptor {};
- struct DummyConvolutionDescriptor {}; 
+ struct DummyConvolutionDescriptor {};
+ struct DummyPoolingDescriptor {};
+ 
+ struct DummyEmptyDescriptor {}; 
 
 /** The TCpu architecture class.
  *
@@ -56,10 +61,26 @@ public:
    using HostBuffer_t   = TCpuBuffer<AReal>;
    using DeviceBuffer_t = TCpuBuffer<AReal>;
 
+   using ActivationDescriptor_t  = DummyActivationDescriptor;
    using ConvolutionDescriptor_t = DummyConvolutionDescriptor;
-   using FilterDescriptor_t = DummyFilterDescriptor; 
+   using FilterDescriptor_t      = DummyFilterDescriptor;
+   /*using DropoutDescriptor_t     = DummyDropoutDescriptor;
+   using OpTensorDescriptor_t    = DummyOpTensorDescriptor;*/
+   using PoolingDescriptor_t     = DummyPoolingDescriptor;
+   //using ReductionDescriptor_t   = DummyReduceTensorDescriptor;
+   
+   using EmptyDescriptor_t       = DummyEmptyDescriptor;        // Used if a descriptor is not needed in a class
+   
+   using ConvDescriptors_t       =  CNN::TCNNDescriptors<CNN::TConvLayer<TCpu<AReal>>>;
 
-
+   //____________________________________________________________________________
+   //
+   // Architecture Initialization
+   //____________________________________________________________________________
+   
+   template<typename Layer_t>
+   static void InitializeCNNDescriptors(CNN::TDescriptors *& /*descriptors*/, Layer_t *L = nullptr) {}
+   
    // // Utility function to convert from a Matrix to a Tensor
    // static Tensor_t  MatrixToTensor(Matrix_t & A) { 
    //    return Tensor_t(A.GetRawDataPointer(), Shape_t({A.GetNrows(), A.GetNcols() }), RTensor::MemoryLayout::ColumnMajor);
@@ -166,6 +187,13 @@ public:
     * and writes the results into the result matrix.
     */
    ///@{
+   /*  impl using Matrix */
+   /*inline void evaluate(Matrix_t &A, EActivationFunction f)
+   {
+    Tensor_t tA(A);
+    evaluate<TCpu<AReal>>(tA,f);
+   }*/
+
    static void IdentityDerivative(Tensor_t & B,
                                   const Tensor_t &A);
 
@@ -368,7 +396,8 @@ public:
                                 const Tensor_t &input,
                                 const Matrix_t &weights, const Matrix_t & biases,
                                 const DNN::CNN::TConvParams & params, EActivationFunction activFunc,
-                                Tensor_t & /* inputPrime */);
+                                Tensor_t & /* inputPrime */,
+                                const ConvDescriptors_t & descriptors);
 
    /** @name Backward Propagation in Convolutional Layer
     */
