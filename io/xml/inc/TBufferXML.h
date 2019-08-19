@@ -15,11 +15,8 @@
 #include "Compression.h"
 #include "TBufferText.h"
 #include "TXMLSetup.h"
-#include "TXMLEngine.h"
 #include "TString.h"
-#include "TObjArray.h"
-#include "TArrayC.h"
-#include "TClonesArray.h"
+#include "TXMLEngine.h"
 
 #include <string>
 #include <deque>
