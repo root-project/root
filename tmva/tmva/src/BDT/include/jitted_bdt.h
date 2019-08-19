@@ -283,7 +283,7 @@ std::function<float (std::vector<float>)> jit_function_reader_string(int tree_in
 }
 
 /// JIT forest from sringed code
-std::function<float (std::vector<float>)> jit_forest_string(std::string tojit,
+std::function<bool (const std::vector<float>&)> jit_forest_string(std::string tojit,
                                                             std::string s_namespace=""
                                                           ){
    gInterpreter->Declare(tojit.c_str());
@@ -295,8 +295,8 @@ std::function<float (std::vector<float>)> jit_forest_string(std::string tojit,
    else
      func_ref_name = "&generated_forest";
    auto ptr = gInterpreter->Calc(func_ref_name.c_str());
-   bool (*func)(std::vector<float>) = reinterpret_cast<bool(*)(std::vector<float>)>(ptr);
-   std::function<bool (std::vector<float>)> fWrapped{func};
+   bool (*func)(const std::vector<float>&) = reinterpret_cast<bool(*)(const std::vector<float>&)>(ptr);
+   std::function<bool (const std::vector<float>&)> fWrapped{func};
    return fWrapped;
 }
 

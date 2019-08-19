@@ -116,7 +116,7 @@ if __name__ == "__main__":
         print(f"***** bench value {value_test} *****")
         mins_list = []
         create_model_gaussian(
-            num_samples=1000,
+            num_samples=10000,
             num_features=value_test,
             num_trees=500,
             max_depth=3,

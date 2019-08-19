@@ -72,6 +72,9 @@ TEST(forestBDT, ArrayPredictions)
    Forest.get_Forest(json_model_file);
    Forest.do_predictions(events_vector, preds);
 
+   std::string tmp_filename = "data/tmp3.csv";
+   write_csv(tmp_filename, preds);
+
    for (size_t i = 0; i < preds.size(); i++) {
       ASSERT_EQ(preds[i], groundtruth[i][0]);
    }
@@ -84,7 +87,7 @@ TEST(forestBDT, JitForestPredictions)
    std::vector<bool>               preds;
    preds.reserve(events_vector.size());
 
-   Forest<std::function<bool(std::vector<float>)>> Forest;
+   Forest<std::function<bool(const std::vector<float> &)>> Forest;
    Forest.get_Forest(json_model_file);
    Forest.do_predictions(events_vector, preds);
 

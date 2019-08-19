@@ -18,15 +18,19 @@ namespace array_bdt {
 class Tree {
 private:
    size_t array_length;
+   int    tree_depth;
 
 public:
    void               set_array_length(const size_t &array_length) { this->array_length = array_length; }
-   float              inference(const std::vector<float> &);
+   void               set_tree_depth(const int &tree_depth) { this->tree_depth = tree_depth; }
+   inline float       inference(const std::vector<float> &);
+   float              inference2(const std::vector<float> &);
+   float              inference3(const std::vector<float> &);
    std::vector<float> thresholds; // scores if it is a leaf
    std::vector<int>   features;   // -1 if it is a leaf
 };
 
-float Tree::inference(const std::vector<float> &event)
+float Tree::inference2(const std::vector<float> &event)
 {
    size_t index = 0;
    while (index < this->array_length) {
@@ -41,6 +45,27 @@ float Tree::inference(const std::vector<float> &event)
    } // end while
 }
 
+float Tree::inference3(const std::vector<float> &event)
+{
+   size_t index = 0;
+   while (index < this->array_length) {
+      if (this->features[index] == -1) {
+         return this->thresholds[index];
+      }
+      index = 2 * index + 1 + (int)(event[this->features[index]] > this->thresholds[index]);
+   } // end while
+}
+
+inline float Tree::inference(const std::vector<float> &event)
+{
+   size_t index = 0;
+   // for (unsigned int iLevel = 0; iLevel < log2(this->array_length); ++Level) {
+   for (unsigned int iLevel = 0; iLevel < this->tree_depth; ++iLevel) {
+      index = 2 * index + 1 + (int)(event[this->features[index]] > this->thresholds[index]);
+   }
+   return this->thresholds[index];
+}
+
 // ----- Reading functions -----
 std::pair<int, float> get_node_members(json &jTree)
 {
@@ -49,6 +74,23 @@ std::pair<int, float> get_node_members(json &jTree)
    tmp_str.erase(tmp_str.begin(), tmp_str.begin() + 1); // remove initial "f"
    int variable = std::stoi(tmp_str);
    return std::make_pair(variable, threshold);
+}
+
+void _read_empty_nodes(std::vector<int> &tree_features, std::vector<float> &tree_thresholds, const int index,
+                       const float &value)
+{
+   int true_index  = 2 * index + 1;
+   int false_index = 2 * index + 2;
+
+   if (false_index < tree_features.size()) {
+      tree_features.at(true_index)  = -1;
+      tree_features.at(true_index)  = value;
+      tree_features.at(false_index) = -1;
+      tree_features.at(false_index) = value;
+
+      _read_empty_nodes(tree_features, tree_thresholds, true_index, value);
+      _read_empty_nodes(tree_features, tree_thresholds, false_index, value);
+   }
 }
 
 /// read a model into the class
@@ -68,6 +110,7 @@ void _read_nodes(json &jTree, std::vector<int> &tree_features, std::vector<float
       if (jTree.find("leaf") != jTree.end()) {
          tree_features.at(index)   = -1;
          tree_thresholds.at(index) = jTree["leaf"];
+         _read_empty_nodes(tree_features, tree_thresholds, index, jTree["leaf"]);
       } else {
          std::cout << "Error! Unexpected node key\n";
       }
@@ -95,6 +138,7 @@ void read_nodes_from_tree(json &jTree, Tree &tree)
    int    depth        = _get_tree_max_depth(jTree);
    size_t array_length = std::pow(2, depth + 1) - 1; // (2^0+2^1+2^2+...)
    tree.set_array_length(array_length);
+   tree.set_tree_depth(depth);
    std::vector<float> thresholds(array_length);
    std::vector<int>   features(array_length);
    _read_nodes(jTree, features, thresholds);

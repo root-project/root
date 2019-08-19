@@ -32,7 +32,7 @@ public:
    // void set_split_theshold(float split_threshold) { this->split_threshold = split_threshold; }
    // void set_is_leaf_node(bool is_leaf_node) { this->is_leaf_node = is_leaf_node; }
 
-   float inference(const std::vector<float> &event)
+   inline float inference(const std::vector<float> &event)
    ///*
    {
       if (event[split_variable] <= this->split_threshold) {

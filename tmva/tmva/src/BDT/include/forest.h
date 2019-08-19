@@ -21,6 +21,8 @@
 
 using json = nlohmann::json;
 
+std::string generated_files_path = "generated_files/";
+
 bool unique_cmp(const unique_bdt::Tree &a, const unique_bdt::Tree &b)
 {
    if (a.nodes->split_variable == b.nodes->split_variable) {
@@ -33,6 +35,16 @@ bool unique_cmp(const unique_bdt::Tree &a, const unique_bdt::Tree &b)
 bool unique_cmp_feats(const unique_bdt::Tree &a, const unique_bdt::Tree &b)
 {
    return a.nodes->split_variable < b.nodes->split_variable;
+}
+
+
+bool array_cmp(const array_bdt::Tree &a, const array_bdt::Tree &b)
+{
+   if (a.features[0] == b.features[0]) {
+      return a.thresholds[0] < b.thresholds[0];
+   } else {
+      return a.features[0] < b.features[0];
+   }
 }
 
 ///////////////////////////////////////////////////
@@ -131,7 +143,6 @@ void Forest<T>::do_predictions(const std::vector<std::vector<float>> &events_vec
    int   num_trees = this->trees.size();
    float preds_tmp = 0;
 
-   // float preds_tmp_arr[loop_size] = {0};
    float *preds_tmp_arr = new float[loop_size]{0};
 
    for (; index < events_vector.size() - rest; index += loop_size) {
@@ -203,67 +214,22 @@ void Forest<array_bdt::Tree>::get_Forest(std::string json_file, bool bool_sort_t
    for (int i = 0; i < number_of_trees; i++) {
       array_bdt::read_nodes_from_tree(json_model[i], trees[i]);
    }
+
+   if (bool_sort_trees == true) {
+      std::sort(trees.begin(), trees.end(), array_cmp);
+   }
+
+   //for (int i = 0; i < number_of_trees; i++) {
+    //   std::cout << trees[i].features[0] << " :  " << trees[i].thresholds[0] << std::endl;
+   //}
+
    this->trees = trees;
-}
-
-////////////////////////////////////////////////////////////////
-/// -------- Specialization JITTED tree by tree ------------- //
-template <>
-void Forest<std::function<float(std::vector<float>)>>::get_Forest(std::string json_file, bool bool_sort_trees)
-{
-   std::string my_config       = read_file_string(json_file);
-   auto        json_model      = json::parse(my_config);
-   int         number_of_trees = json_model.size();
-
-   // create tmp unique trees
-   std::vector<unique_bdt::Tree> trees;
-   trees.resize(number_of_trees);
-   for (int i = 0; i < number_of_trees; i++) {
-      unique_bdt::read_nodes_from_tree(json_model[i], trees[i]);
-   }
-
-   // Generate code
-   std::vector<std::string> s_trees;
-   s_trees.resize(number_of_trees);
-   time_t      my_time          = time(0);
-   std::string s_namespace_name = std::to_string(this->counter) + std::to_string(my_time);
-   // std::cout << "current time used as namespace: " << s_namespace_name << std::endl;
-
-   for (int i = 0; i < number_of_trees; i++) {
-      std::stringstream ss;
-      generate_code_bdt(ss, trees[i], i, s_namespace_name);
-      s_trees[i] = ss.str();
-   }
-
-   // JIT functions
-   std::function<float(std::vector<float>)>              func;
-   std::vector<std::function<float(std::vector<float>)>> function_vector;
-   for (int i = 0; i < number_of_trees; i++) {
-      func = jit_function_reader_string(i, s_trees[i], s_namespace_name);
-      function_vector.push_back(func);
-   }
-
-   this->trees = function_vector;
-}
-
-template <>
-void Forest<std::function<float(std::vector<float>)>>::do_predictions(
-   const std::vector<std::vector<float>> &events_vector, std::vector<bool> &preds)
-{
-   float preds_tmp = 0;
-   for (auto &event : events_vector) {
-      preds_tmp = 0;
-      for (auto &tree : this->trees) {
-         preds_tmp += tree(event);
-      }
-      preds.push_back(binary_logistic(preds_tmp));
-   }
 }
 
 ////////////////////////////////////////////////////////////////
 /// ----------- Specialization JIT Forest ------------------- //
 template <>
-void Forest<std::function<bool(std::vector<float>)>>::get_Forest(std::string json_file, bool bool_sort_trees)
+void Forest<std::function<bool(const std::vector<float>&)>>::get_Forest(std::string json_file, bool bool_sort_trees)
 {
    std::string my_config       = read_file_string(json_file);
    auto        json_model      = json::parse(my_config);
@@ -291,20 +257,25 @@ void Forest<std::function<bool(std::vector<float>)>>::get_Forest(std::string jso
 
    // write to file for debug
    std::filebuf fb;
-   std::string  filename = "../generated_files/generated_forest.h";
+   std::string  filename;
+   if (bool_sort_trees == true)
+     filename = generated_files_path+"generated_ordered_forest.h";
+   else
+    filename = generated_files_path+"generated_forest.h";
+
    fb.open(filename, std::ios::out);
    std::ostream os(&fb);
    generate_code_forest(os, trees, number_of_trees, s_namespace_name);
    fb.close();
 
    // JIT functions
-   std::function<bool(std::vector<float>)> func;
+   std::function<bool(const std::vector<float>&)> func;
    func = jit_forest_string(s_trees, s_namespace_name);
    this->trees.push_back(func);
 }
 
 template <>
-void Forest<std::function<bool(std::vector<float>)>>::do_predictions(
+void Forest<std::function<bool(const std::vector<float>&)>>::do_predictions(
    const std::vector<std::vector<float>> &events_vector, std::vector<bool> &preds)
 {
    for (auto &event : events_vector) {
@@ -340,7 +311,7 @@ void Forest<std::function<std::vector<bool>(std::vector<std::vector<float>>)>>::
 
    // write to file for debug
    std::filebuf fb;
-   std::string  filename = "../generated_files/evaluate_forest.h";
+   std::string  filename = generated_files_path+"/evaluate_forest.h";
    fb.open(filename, std::ios::out);
    std::ostream os(&fb);
    generate_code_forest_batch(os, trees, number_of_trees, s_namespace_name);
@@ -388,7 +359,7 @@ void Forest<std::function<void(const std::vector<std::vector<float>> &, std::vec
 
    // write to file for debug
    std::filebuf fb;
-   std::string  filename = "../generated_files/evaluate_forest_batch.h";
+   std::string  filename = generated_files_path+"evaluate_forest_batch.h";
    fb.open(filename, std::ios::out);
    std::ostream os(&fb);
    generate_code_forest_batch_array(os, trees, number_of_trees, events_vector.size(), s_namespace_name);
