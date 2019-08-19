@@ -19,6 +19,8 @@
 #define TMVA_DNN_ARCHITECTURES_CUDA
 
 #include "TMVA/DNN/Functions.h"
+#include "TMVA/DNN/CNN/ContextHandles.h"
+//#include "TMVA/DNN/CNN/Descriptors.h"
 #include "TMVA/DNN/CNN/ConvLayer.h"
 
 
@@ -36,10 +38,12 @@ namespace TMVA
 {
 namespace DNN
 {
-
+ struct CudaActivationDescriptor {};
  struct CudaFilterDescriptor {};
- struct CudaConvolutionDescriptor {}; 
-
+ struct CudaConvolutionDescriptor {};
+ struct CudaPoolingDescriptor {};
+ 
+ struct CudaEmptyDescriptor {}; 
 
 /** The TCuda architecture class.
  *
@@ -63,9 +67,17 @@ public:
     using DeviceBuffer_t = TCudaDeviceBuffer<AFloat>;
     using HostBuffer_t   = TCudaHostBuffer<AFloat>;
 
+    using ActivationDescriptor_t  = CudaActivationDescriptor;
     using ConvolutionDescriptor_t = CudaConvolutionDescriptor;
-    using FilterDescriptor_t = CudaFilterDescriptor; 
+    using FilterDescriptor_t      = CudaFilterDescriptor;
+    /*using DropoutDescriptor_t     = CudaDropoutDescriptor;
+    using OpTensorDescriptor_t    = CudaOpTensorDescriptor;*/
+    using PoolingDescriptor_t     = CudaPoolingDescriptor;
+    //using ReductionDescriptor_t   = CudaReduceTensorDescriptor;
 
+    using EmptyDescriptor_t       = CudaEmptyDescriptor;        // Used if a descriptor is not needed in a class
+    
+    using ConvDescriptors_t       =  CNN::TCNNDescriptors<CNN::TConvLayer<TCuda<AReal>>>;
 
 #if 0 // old definitions
 
@@ -551,10 +563,19 @@ public:
    // new definitions
 //////////////////////////////////////////////////////////////////////////////////////////
 
-      //____________________________________________________________________________
-      //
-      // Propagation
-      //____________________________________________________________________________
+
+   //____________________________________________________________________________
+   //
+   // Architecture Initialization
+   //____________________________________________________________________________
+
+   template<typename Layer_t>
+   static void InitializeCNNDescriptors(CNN::TDescriptors *& /*descriptors*/, Layer_t *L = nullptr) {}
+   
+   //____________________________________________________________________________
+   //
+   // Propagation
+   //____________________________________________________________________________
 
    /** @name Forward Propagation
     * Low-level functions required for the forward propagation of activations
@@ -600,10 +621,6 @@ public:
                         const Tensor_t & activationGradients,
                         const Matrix_t & weights,
                         const Tensor_t & activationBackward);
-
-
-
-
 
    /** Adds a the elements in matrix B scaled by c to the elements in
     *  the matrix A. This is required for the weight update in the gradient
@@ -652,6 +669,13 @@ public:
     * and writes the results into the result matrix.
     */
       ///@{
+         /*  impl using Matrix */
+   /*inline void evaluate(Matrix_t &A, EActivationFunction f)
+   {
+    Tensor_t tA(A);
+    evaluate<TCuda<AReal>>(tA,f);
+   }*/
+   
    static void IdentityDerivative(Tensor_t & B,
                                   const Tensor_t &A);
 
@@ -854,7 +878,8 @@ public:
                                 const Tensor_t &input,
                                 const Matrix_t &weights, const Matrix_t & biases,
                                 const DNN::CNN::TConvParams & params, EActivationFunction activFunc,
-                                Tensor_t & /* inputPrime */);
+                                Tensor_t & /* inputPrime */,
+                                const ConvDescriptors_t & descriptors);
 
    /** @name Backward Propagation in Convolutional Layer
     */

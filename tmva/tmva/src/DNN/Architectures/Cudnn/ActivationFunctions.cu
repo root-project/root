@@ -26,11 +26,10 @@ namespace DNN
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCudnn<AFloat>::Activation(TCudaTensor<AFloat> & A, EActivationFunction activFunct, const double coef, const AFloat alpha, const AFloat beta)
+void TCudnn<AFloat>::Activation(TCudaTensor<AFloat> & A, EActivationFunction activFunct, ActivationDescriptor_t activationDescr,  const double coef, const AFloat alpha, const AFloat beta)
 {
-   cudnnActivationDescriptor_t activationDescriptor;
-   
-   CUDNNCHECK(cudnnCreateActivationDescriptor(&activationDescriptor));
+   //cudnnActivationDescriptor_t activationDescriptor;
+   //CUDNNCHECK(cudnnCreateActivationDescriptor(&activationDescriptor));
    
    cudnnActivationMode_t activationMode;
    switch(activFunct) {
@@ -41,13 +40,14 @@ void TCudnn<AFloat>::Activation(TCudaTensor<AFloat> & A, EActivationFunction act
       // The activations otherwise used are not supported by cuDNN
       default:    activationMode = CUDNN_ACTIVATION_IDENTITY;     
    };
-   CUDNNCHECK(cudnnSetActivationDescriptor(activationDescriptor,
+   
+   CUDNNCHECK(cudnnSetActivationDescriptor(activationDescr,
                                            activationMode,
                                            CUDNN_PROPAGATE_NAN,
                                            coef));
                                            
    CUDNNCHECK(cudnnActivationForward(A.GetCudnnHandle(),
-                                     activationDescriptor,
+                                     activationDescr,
                                      &alpha,
                                      A.GetTensorDescriptor(),
                                      A.GetDataPointer(),
@@ -55,7 +55,7 @@ void TCudnn<AFloat>::Activation(TCudaTensor<AFloat> & A, EActivationFunction act
                                      A.GetTensorDescriptor(),     // Can be computed in place
                                      A.GetDataPointer()));
 
-   CUDNNCHECK(cudnnDestroyActivationDescriptor(activationDescriptor));
+   //CUDNNCHECK(cudnnDestroyActivationDescriptor(activationDescr));
 }
 
 //______________________________________________________________________________
@@ -75,9 +75,9 @@ void TCudnn<AFloat>::IdentityDerivative(TCudaTensor<AFloat> & B,
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCudnn<AFloat>::Relu(TCudaTensor<AFloat> & A, const double coef, const AFloat alpha, const AFloat beta)
+void TCudnn<AFloat>::Relu(TCudaTensor<AFloat> & A, ActivationDescriptor_t activationDescr, const double coef, const AFloat alpha, const AFloat beta)
 {
-   Activation(A, EActivationFunction::kRelu, coef, alpha, beta);
+   Activation(A, EActivationFunction::kRelu, activationDescr, coef, alpha, beta);
 }
 
 //______________________________________________________________________________
@@ -98,9 +98,9 @@ void TCudnn<AFloat>::ReluDerivative(TCudaTensor<AFloat> & B,
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCudnn<AFloat>::Sigmoid(TCudaTensor<AFloat> & A, const double coef, const AFloat alpha, const AFloat beta)
+void TCudnn<AFloat>::Sigmoid(TCudaTensor<AFloat> & A, ActivationDescriptor_t activationDescr, const double coef, const AFloat alpha, const AFloat beta)
 {
-   Activation(A, EActivationFunction::kSigmoid, coef, alpha, beta);
+   Activation(A, EActivationFunction::kSigmoid, activationDescr, coef, alpha, beta);
 }
 
 //______________________________________________________________________________
@@ -121,9 +121,9 @@ void TCudnn<AFloat>::SigmoidDerivative(TCudaTensor<AFloat> & B,
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCudnn<AFloat>::Tanh(TCudaTensor<AFloat> & A, const double coef, const AFloat alpha, const AFloat beta)
+void TCudnn<AFloat>::Tanh(TCudaTensor<AFloat> & A, ActivationDescriptor_t activationDescr, const double coef, const AFloat alpha, const AFloat beta)
 {
-   Activation(A, EActivationFunction::kTanh, coef, alpha, beta);
+   Activation(A, EActivationFunction::kTanh, activationDescr, coef, alpha, beta);
 }
 
 //______________________________________________________________________________

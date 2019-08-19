@@ -234,7 +234,8 @@ void TCuda<AFloat>::ConvLayerForward(TCudaTensor<AFloat> & output,
                                      const TCudaTensor<AFloat> &input,
                                      const TCudaMatrix<AFloat> &weights, const TCudaMatrix<AFloat> & biases,
                                      const DNN::CNN::TConvParams & params, EActivationFunction activFunc,
-                                     TCudaTensor<AFloat> & inputPrime)
+                                     TCudaTensor<AFloat> & inputPrime,
+                                     const ConvDescriptors_t & descriptors)
 {
    size_t height = calculateDimension(params.inputHeight, params.filterHeight, params.paddingHeight, params.strideRows);
    size_t width = calculateDimension(params.inputWidth, params.filterWidth, params.paddingWidth, params.strideCols);
