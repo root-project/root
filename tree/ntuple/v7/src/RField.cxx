@@ -31,6 +31,7 @@
 #include <algorithm>
 #include <cctype> // for isspace
 #include <cstdlib> // for malloc, free
+#include <cstring> // for memset
 #include <exception>
 #include <iostream>
 #include <type_traits>
@@ -744,6 +745,7 @@ void ROOT::Experimental::RFieldVariant::DoGenerateColumns()
 
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RFieldVariant::GenerateValue(void *where)
 {
+   memset(where, 0, GetValueSize());
    fSubFields[0]->GenerateValue(where);
    SetTag(where, 1);
    return Detail::RFieldValue(this, reinterpret_cast<unsigned char *>(where));
