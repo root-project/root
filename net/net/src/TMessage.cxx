@@ -22,8 +22,8 @@
 #include "TMessage.h"
 #include "Compression.h"
 #include "TVirtualStreamerInfo.h"
+#include "TList.h"
 #include "Bytes.h"
-#include "TFile.h"
 #include "TProcessID.h"
 #include "RZip.h"
 
@@ -34,11 +34,11 @@ ClassImp(TMessage);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a TMessage object for storing objects. The "what" integer
-/// describes the type of message. Predifined ROOT system message types
+/// describes the type of message. Predefined ROOT system message types
 /// can be found in MessageTypes.h. Make sure your own message types are
 /// unique from the ROOT defined message types (i.e. 0 - 10000 are
 /// reserved by ROOT). In case you OR "what" with kMESS_ACK, the message
-/// will wait for an acknowledgement from the remote side. This makes
+/// will wait for an acknowledgment from the remote side. This makes
 /// the sending process synchronous. In case you OR "what" with kMESS_ZIP,
 /// the message will be compressed in TSocket using the zip algorithm
 /// (only if message is > 256 bytes).
@@ -101,7 +101,7 @@ TMessage::TMessage(void *buf, Int_t bufsize) : TBufferFile(TBuffer::kRead, bufsi
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Clean up compression buffer.
+/// Destructor
 
 TMessage::~TMessage()
 {
@@ -164,6 +164,7 @@ void TMessage::Forward()
 /// relevant TClass in case the TClass does not know yet about a particular
 /// class version. This feature is implemented to support clients and servers
 /// with either different ROOT versions or different user classes versions.
+
 void TMessage::TagStreamerInfo(TVirtualStreamerInfo *info)
 {
    if (fgEvolution || fEvolution) {
@@ -212,9 +213,9 @@ void TMessage::SetLength() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Using this method one can change the message type a-posteriory.
+/// Using this method one can change the message type a-posteriori
 /// In case you OR "what" with kMESS_ACK, the message will wait for
-/// an acknowledgement from the remote side. This makes the sending
+/// an acknowledgment from the remote side. This makes the sending
 /// process synchronous.
 
 void TMessage::SetWhat(UInt_t what)
@@ -233,6 +234,7 @@ void TMessage::SetWhat(UInt_t what)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set compression algorithm
 
 void TMessage::SetCompressionAlgorithm(Int_t algorithm)
 {
@@ -254,6 +256,7 @@ void TMessage::SetCompressionAlgorithm(Int_t algorithm)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set compression level
 
 void TMessage::SetCompressionLevel(Int_t level)
 {
@@ -277,6 +280,7 @@ void TMessage::SetCompressionLevel(Int_t level)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set compression settings
 
 void TMessage::SetCompressionSettings(Int_t settings)
 {
