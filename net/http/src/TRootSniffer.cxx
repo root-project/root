@@ -24,7 +24,6 @@
 #include "TObjString.h"
 #include "TUrl.h"
 #include "TImage.h"
-#include "RVersion.h"
 #include "TVirtualMutex.h"
 #include "TRootSnifferStore.h"
 #include "THttpCallArg.h"
@@ -389,7 +388,7 @@ TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj, const ch
       SetField("_fullname", full_name);
 
    if (topelement)
-      SetField(item_prop_rootversion, TString::Format("%d", ROOT_VERSION_CODE), kFALSE);
+      SetField(item_prop_rootversion, TString::Format("%d", gROOT->GetVersionCode()), kFALSE);
 
    if (topelement && sniffer->GetAutoLoad())
       SetField(item_prop_autoload, sniffer->GetAutoLoad());
