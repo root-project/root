@@ -113,14 +113,6 @@ inline void evaluate(typename Architecture_t::Tensor_t &A,
         break;
     }
 }
-/*  impl using Matrix */
-template<typename Architecture_t>
-inline void evaluate(typename Architecture_t::Matrix_t &A,
-                    EActivationFunction f)
-{
-    typename Architecture_t::Tensor_t tA(A);
-    evaluate<Architecture_t>(tA,f);
-}
 
 
 /*! Compute the first partial derivative of the activation function for

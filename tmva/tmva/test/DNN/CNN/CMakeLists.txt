@@ -43,6 +43,10 @@ CUDA_ADD_EXECUTABLE(testConvBackpropagationCuda TestConvBackpropagationCuda.cxx)
 target_link_libraries(testConvBackpropagationCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
 ROOT_ADD_TEST(TMVA-DNN-CNN-ConvBackpropagationCuda COMMAND testConvBackpropagationCuda)
 
+CUDA_ADD_EXECUTABLE(testConvLayerCudnn TestConvLayerCudnn.cxx)
+target_link_libraries(testConvLayerCudnn ${Libraries} ${DNN_CUDA_LIBRARIES} /usr/local/cuda/lib64/libcudnn.so)
+ROOT_ADD_TEST(TMVA-DNN-CNN-ConvLayerCudnn COMMAND testConvLayerCudnn)
+
 include_directories(${ROOT_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
 
 else()

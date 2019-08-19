@@ -60,10 +60,16 @@ public:
     using Tensor_t = typename Architecture_t::Tensor_t;
     using Matrix_t = typename Architecture_t::Matrix_t;
     using Scalar_t = typename Architecture_t::Scalar_t;
+    
+    using LayerDescriptor_t   = typename Architecture_t::PoolingDescriptor_t;
+    using WeightsDescriptor_t = typename Architecture_t::EmptyDescriptor_t;
+    using HelperDescriptor_t  = typename Architecture_t::EmptyDescriptor_t;
 
 private:
    Tensor_t fIndexTensor; ///< Matrix of indices for the backward pass.
-
+   
+   /*TDescriptors<TMaxPoolLayer<Architecture_t> > fDescriptors; ///< Keeps the descriptor for the pooling operation in cudnn
+   void InitializeDescriptors();    */                             ///< Initializes cudnn descriptors
 public:
    /*! Constructor. */
    TMaxPoolLayer(size_t BatchSize, size_t InputDepth, size_t InputHeight, size_t InputWidth, size_t FilterHeight,

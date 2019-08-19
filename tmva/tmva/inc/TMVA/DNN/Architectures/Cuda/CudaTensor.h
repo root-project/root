@@ -30,6 +30,7 @@
 #include <vector>
 #include <cstring>
 #include <cassert>
+#include <iostream>
 
 #include "TMatrixT.h"
 #include "CudaBuffers.h"
@@ -70,7 +71,7 @@ inline void cudnnError(cudnnStatus_t status, const char *file, int line, bool ab
 
 /** TCudaTensor Class
  *
- * The TCudaTGensor class extends the TCudaMatrix class for dimensions > 2. 
+ * The TCudaTensor class extends the TCudaMatrix class for dimensions > 2. 
  *
  */
 template<typename AFloat>
@@ -85,7 +86,7 @@ public:
 private:
 
    //static size_t                         fInstances;        ///< Current number of matrix instances.
-   static std::vector<cudnnHandle_t>     fCudnnHandle;      ///< Holds the cuddn library context (one for every CUDA stream and device)
+   static std::vector<cudnnHandle_t>     fCudnnHandle;      ///< Holds the cuddn library context (one for every CUDA stream)
    //static AFloat                         * fDeviceReturn;   ///< Buffer for kernel return values.
    //static AFloat                         * fOnes;           ///< Vector used for summations of columns.
    //static size_t                         fNOnes;            ///< Current length of the one vector.
@@ -106,7 +107,7 @@ private:
    size_t              fNDim;             ///< Dimension of the tensor (first dimension is the batch size, second is the no. channels)
    size_t              fSize;             ///< No. of elements
    int                 fDevice;           ///< Device associated with current tensor instance
-   int                 fStreamIndx;           ///< Cuda stream associated with current instance
+   int                 fStreamIndx;       ///< Cuda stream associated with current instance
 
    cudnnTensorDescriptor_t   fTensorDescriptor;
    TCudaDeviceBuffer<AFloat> fElementBuffer;
@@ -161,7 +162,7 @@ public:
    TCudaTensor(const TCudaMatrix<AFloat> & m, size_t dim = 2); 
 
 
-   TCudaTensor(const TCudaTensor  &);
+   TCudaTensor(const TCudaTensor  &, size_t dim = 0);
    TCudaTensor(      TCudaTensor &&) = default;
    TCudaTensor & operator=(const TCudaTensor  &) = default;
    TCudaTensor & operator=(      TCudaTensor &&) = default;
@@ -223,9 +224,51 @@ public:
     *  on all streams. Only used for testing. */
    //TCudaDeviceReference<AFloat> operator()(size_t i, size_t j) const;
 
+   // FIXME: Change to on device division and reduction
+   bool isEqual (TCudaTensor<AFloat> & other) {
+      if (fSize != other.GetSize()) return false;
+      
+      /*TCudaHostBuffer<AFloat> hostBufferThis(fSize);
+      TCudaHostBuffer<AFloat> hostBufferOther(fSize);
+      fElementBuffer.CopyTo(hostBufferThis);
+      other.GetDeviceBuffer().CopyTo(hostBufferOther);*/
+      
+      AFloat * hostBufferThis = new AFloat[fSize];
+      AFloat * hostBufferOther = new AFloat[fSize]; 
+      cudaMemcpy(hostBufferThis, fElementBuffer, fSize * sizeof(AFloat),
+                 cudaMemcpyDeviceToHost);
+      cudaMemcpy(hostBufferOther, other.GetDeviceBuffer(), fSize * sizeof(AFloat),
+                 cudaMemcpyDeviceToHost);
+      
+      for (size_t i = 0; i < fSize; i++) {
+         if (hostBufferThis[i] != hostBufferOther[i]) return false;
+      }
+      return true; 
+   }
+   
+   bool isEqual (const AFloat * hostBufferOther, size_t otherSize) {
+      if (fSize != otherSize) return false;
+      
+      /*TCudaHostBuffer<AFloat> hostBufferThis (fSize);
+      fElementBuffer.CopyTo(hostBufferThis);*/
+      AFloat * hostBufferThis = new AFloat[fSize];
+      cudaMemcpy(hostBufferThis, fElementBuffer, fSize * sizeof(AFloat),
+                 cudaMemcpyDeviceToHost);
+      
+      for (size_t i = 0; i < fSize; i++) {
+         if (hostBufferThis[i] != hostBufferOther[i]) return false;
+      }
+      return true; 
+   }
+
    void Print() const {
-      //TMatrixT<AFloat> mat(*this);
-      //mat.Print();
+      /*TCudaBuffer<AFloat> hostBuffer (fSize);
+      fElementBuffer.CopyTo(hostBuffer);*/
+      AFloat * hostBuffer = new AFloat[fSize]; 
+      cudaMemcpy(hostBuffer, fElementBuffer, fSize * sizeof(AFloat),
+                 cudaMemcpyDeviceToHost);
+   
+      for (size_t i = 0; i < fSize; i++) std::cout << hostBuffer[i] << std::endl;
    }
 
    void Zero() {
@@ -258,7 +301,7 @@ public:
       if  (fShape.size() == 3) return fShape[1]; //(GetLayout() == MemoryLayout::ColumnMajor ) ? fShape[1] : fShape[2] ; 
       if  (fShape.size() == 4) return (GetLayout() == MemoryLayout::ColumnMajor ) ? fShape[1] : fShape[2] ;
       return 0; 
-}
+   }
 
    // for backward compatibility (assume column-major 
    size_t GetNrows() const { return (GetLayout() == MemoryLayout::ColumnMajor ) ? fStrides.back() : fStrides.front();}
@@ -379,15 +422,6 @@ inline void TCudaTensor<AFloat>::Synchronize(const TCudaTensor &A) const
 //    AFloat buffer;
 //    cudaMemcpy(& buffer, fDeviceReturn, sizeof(AFloat), cudaMemcpyDeviceToHost);
 //    return buffer;
-// }
-
-//______________________________________________________________________________
-// template<typename AFloat>
-// TCudaDeviceReference<AFloat> TCudaTensor<AFloat>::operator()(size_t i, size_t j) const
-// {
-//     AFloat * elementPointer = fElementBuffer;
-//     elementPointer += j * fNRows + i;
-//     return TCudaDeviceReference<AFloat>(elementPointer);
 // }
 
 } // namespace DNN
