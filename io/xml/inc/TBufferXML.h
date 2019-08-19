@@ -30,7 +30,7 @@ class TMemberStreamer;
 class TXMLFile;
 class TXMLStackObj;
 
-class TBufferXML : public TBufferText, public TXMLSetup {
+class TBufferXML final : public TBufferText, public TXMLSetup {
 
    friend class TKeyXML;
 
@@ -67,153 +67,153 @@ public:
 
    // suppress class writing/reading
 
-   virtual TClass *ReadClass(const TClass *cl = nullptr, UInt_t *objTag = nullptr);
-   virtual void WriteClass(const TClass *cl);
+   TClass *ReadClass(const TClass *cl = nullptr, UInt_t *objTag = nullptr) final;
+   void WriteClass(const TClass *cl) final;
 
    // redefined virtual functions of TBuffer
 
-   virtual Version_t ReadVersion(UInt_t *start = nullptr, UInt_t *bcnt = nullptr, const TClass *cl = nullptr);
-   virtual UInt_t WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);
+   Version_t ReadVersion(UInt_t *start = nullptr, UInt_t *bcnt = nullptr, const TClass *cl = nullptr) final;
+   UInt_t WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE) final;
 
-   virtual void *ReadObjectAny(const TClass *clCast);
-   virtual void SkipObjectAny();
+   void *ReadObjectAny(const TClass *clCast) final;
+   void SkipObjectAny() final;
 
-   virtual void IncrementLevel(TVirtualStreamerInfo *);
-   virtual void SetStreamerElementNumber(TStreamerElement *elem, Int_t comp_type);
-   virtual void DecrementLevel(TVirtualStreamerInfo *);
+   void IncrementLevel(TVirtualStreamerInfo *) final;
+   void SetStreamerElementNumber(TStreamerElement *elem, Int_t comp_type) final;
+   void DecrementLevel(TVirtualStreamerInfo *) final;
 
-   virtual void ClassBegin(const TClass *, Version_t = -1);
-   virtual void ClassEnd(const TClass *);
-   virtual void ClassMember(const char *name, const char *typeName = nullptr, Int_t arrsize1 = -1, Int_t arrsize2 = -1);
+   void ClassBegin(const TClass *, Version_t = -1) final;
+   void ClassEnd(const TClass *) final;
+   void ClassMember(const char *name, const char *typeName = nullptr, Int_t arrsize1 = -1, Int_t arrsize2 = -1) final;
 
-   virtual Int_t ReadArray(Bool_t *&b);
-   virtual Int_t ReadArray(Char_t *&c);
-   virtual Int_t ReadArray(UChar_t *&c);
-   virtual Int_t ReadArray(Short_t *&h);
-   virtual Int_t ReadArray(UShort_t *&h);
-   virtual Int_t ReadArray(Int_t *&i);
-   virtual Int_t ReadArray(UInt_t *&i);
-   virtual Int_t ReadArray(Long_t *&l);
-   virtual Int_t ReadArray(ULong_t *&l);
-   virtual Int_t ReadArray(Long64_t *&l);
-   virtual Int_t ReadArray(ULong64_t *&l);
-   virtual Int_t ReadArray(Float_t *&f);
-   virtual Int_t ReadArray(Double_t *&d);
+   Int_t ReadArray(Bool_t *&b) final;
+   Int_t ReadArray(Char_t *&c) final;
+   Int_t ReadArray(UChar_t *&c) final;
+   Int_t ReadArray(Short_t *&h) final;
+   Int_t ReadArray(UShort_t *&h) final;
+   Int_t ReadArray(Int_t *&i) final;
+   Int_t ReadArray(UInt_t *&i) final;
+   Int_t ReadArray(Long_t *&l) final;
+   Int_t ReadArray(ULong_t *&l) final;
+   Int_t ReadArray(Long64_t *&l) final;
+   Int_t ReadArray(ULong64_t *&l) final;
+   Int_t ReadArray(Float_t *&f) final;
+   Int_t ReadArray(Double_t *&d) final;
 
-   virtual Int_t ReadStaticArray(Bool_t *b);
-   virtual Int_t ReadStaticArray(Char_t *c);
-   virtual Int_t ReadStaticArray(UChar_t *c);
-   virtual Int_t ReadStaticArray(Short_t *h);
-   virtual Int_t ReadStaticArray(UShort_t *h);
-   virtual Int_t ReadStaticArray(Int_t *i);
-   virtual Int_t ReadStaticArray(UInt_t *i);
-   virtual Int_t ReadStaticArray(Long_t *l);
-   virtual Int_t ReadStaticArray(ULong_t *l);
-   virtual Int_t ReadStaticArray(Long64_t *l);
-   virtual Int_t ReadStaticArray(ULong64_t *l);
-   virtual Int_t ReadStaticArray(Float_t *f);
-   virtual Int_t ReadStaticArray(Double_t *d);
+   Int_t ReadStaticArray(Bool_t *b) final;
+   Int_t ReadStaticArray(Char_t *c) final;
+   Int_t ReadStaticArray(UChar_t *c) final;
+   Int_t ReadStaticArray(Short_t *h) final;
+   Int_t ReadStaticArray(UShort_t *h) final;
+   Int_t ReadStaticArray(Int_t *i) final;
+   Int_t ReadStaticArray(UInt_t *i) final;
+   Int_t ReadStaticArray(Long_t *l) final;
+   Int_t ReadStaticArray(ULong_t *l) final;
+   Int_t ReadStaticArray(Long64_t *l) final;
+   Int_t ReadStaticArray(ULong64_t *l) final;
+   Int_t ReadStaticArray(Float_t *f) final;
+   Int_t ReadStaticArray(Double_t *d) final;
 
-   virtual void ReadFastArray(Bool_t *b, Int_t n);
-   virtual void ReadFastArray(Char_t *c, Int_t n);
-   virtual void ReadFastArray(UChar_t *c, Int_t n);
-   virtual void ReadFastArray(Short_t *h, Int_t n);
-   virtual void ReadFastArray(UShort_t *h, Int_t n);
-   virtual void ReadFastArray(Int_t *i, Int_t n);
-   virtual void ReadFastArray(UInt_t *i, Int_t n);
-   virtual void ReadFastArray(Long_t *l, Int_t n);
-   virtual void ReadFastArray(ULong_t *l, Int_t n);
-   virtual void ReadFastArray(Long64_t *l, Int_t n);
-   virtual void ReadFastArray(ULong64_t *l, Int_t n);
-   virtual void ReadFastArray(Float_t *f, Int_t n);
-   virtual void ReadFastArray(Double_t *d, Int_t n);
-   virtual void ReadFastArrayString(Char_t *c, Int_t n);
-   virtual void ReadFastArray(void *start, const TClass *cl, Int_t n = 1, TMemberStreamer *s = nullptr,
-                              const TClass *onFileClass = nullptr);
-   virtual void ReadFastArray(void **startp, const TClass *cl, Int_t n = 1, Bool_t isPreAlloc = kFALSE,
-                              TMemberStreamer *s = nullptr, const TClass *onFileClass = nullptr);
+   void ReadFastArray(Bool_t *b, Int_t n) final;
+   void ReadFastArray(Char_t *c, Int_t n) final;
+   void ReadFastArray(UChar_t *c, Int_t n) final;
+   void ReadFastArray(Short_t *h, Int_t n) final;
+   void ReadFastArray(UShort_t *h, Int_t n) final;
+   void ReadFastArray(Int_t *i, Int_t n) final;
+   void ReadFastArray(UInt_t *i, Int_t n) final;
+   void ReadFastArray(Long_t *l, Int_t n) final;
+   void ReadFastArray(ULong_t *l, Int_t n) final;
+   void ReadFastArray(Long64_t *l, Int_t n) final;
+   void ReadFastArray(ULong64_t *l, Int_t n) final;
+   void ReadFastArray(Float_t *f, Int_t n) final;
+   void ReadFastArray(Double_t *d, Int_t n) final;
+   void ReadFastArrayString(Char_t *c, Int_t n) final;
+   void ReadFastArray(void *start, const TClass *cl, Int_t n = 1, TMemberStreamer *s = nullptr,
+                      const TClass *onFileClass = nullptr) final;
+   void ReadFastArray(void **startp, const TClass *cl, Int_t n = 1, Bool_t isPreAlloc = kFALSE,
+                      TMemberStreamer *s = nullptr, const TClass *onFileClass = nullptr) final;
 
-   virtual void WriteArray(const Bool_t *b, Int_t n);
-   virtual void WriteArray(const Char_t *c, Int_t n);
-   virtual void WriteArray(const UChar_t *c, Int_t n);
-   virtual void WriteArray(const Short_t *h, Int_t n);
-   virtual void WriteArray(const UShort_t *h, Int_t n);
-   virtual void WriteArray(const Int_t *i, Int_t n);
-   virtual void WriteArray(const UInt_t *i, Int_t n);
-   virtual void WriteArray(const Long_t *l, Int_t n);
-   virtual void WriteArray(const ULong_t *l, Int_t n);
-   virtual void WriteArray(const Long64_t *l, Int_t n);
-   virtual void WriteArray(const ULong64_t *l, Int_t n);
-   virtual void WriteArray(const Float_t *f, Int_t n);
-   virtual void WriteArray(const Double_t *d, Int_t n);
+   void WriteArray(const Bool_t *b, Int_t n) final;
+   void WriteArray(const Char_t *c, Int_t n) final;
+   void WriteArray(const UChar_t *c, Int_t n) final;
+   void WriteArray(const Short_t *h, Int_t n) final;
+   void WriteArray(const UShort_t *h, Int_t n) final;
+   void WriteArray(const Int_t *i, Int_t n) final;
+   void WriteArray(const UInt_t *i, Int_t n) final;
+   void WriteArray(const Long_t *l, Int_t n) final;
+   void WriteArray(const ULong_t *l, Int_t n) final;
+   void WriteArray(const Long64_t *l, Int_t n) final;
+   void WriteArray(const ULong64_t *l, Int_t n) final;
+   void WriteArray(const Float_t *f, Int_t n) final;
+   void WriteArray(const Double_t *d, Int_t n) final;
 
-   virtual void WriteFastArray(const Bool_t *b, Int_t n);
-   virtual void WriteFastArray(const Char_t *c, Int_t n);
-   virtual void WriteFastArray(const UChar_t *c, Int_t n);
-   virtual void WriteFastArray(const Short_t *h, Int_t n);
-   virtual void WriteFastArray(const UShort_t *h, Int_t n);
-   virtual void WriteFastArray(const Int_t *i, Int_t n);
-   virtual void WriteFastArray(const UInt_t *i, Int_t n);
-   virtual void WriteFastArray(const Long_t *l, Int_t n);
-   virtual void WriteFastArray(const ULong_t *l, Int_t n);
-   virtual void WriteFastArray(const Long64_t *l, Int_t n);
-   virtual void WriteFastArray(const ULong64_t *l, Int_t n);
-   virtual void WriteFastArray(const Float_t *f, Int_t n);
-   virtual void WriteFastArray(const Double_t *d, Int_t n);
-   virtual void WriteFastArrayString(const Char_t *c, Int_t n);
-   virtual void WriteFastArray(void *start, const TClass *cl, Int_t n = 1, TMemberStreamer *s = nullptr);
-   virtual Int_t WriteFastArray(void **startp, const TClass *cl, Int_t n = 1, Bool_t isPreAlloc = kFALSE,
-                                TMemberStreamer *s = nullptr);
+   void WriteFastArray(const Bool_t *b, Int_t n) final;
+   void WriteFastArray(const Char_t *c, Int_t n) final;
+   void WriteFastArray(const UChar_t *c, Int_t n) final;
+   void WriteFastArray(const Short_t *h, Int_t n) final;
+   void WriteFastArray(const UShort_t *h, Int_t n) final;
+   void WriteFastArray(const Int_t *i, Int_t n) final;
+   void WriteFastArray(const UInt_t *i, Int_t n) final;
+   void WriteFastArray(const Long_t *l, Int_t n) final;
+   void WriteFastArray(const ULong_t *l, Int_t n) final;
+   void WriteFastArray(const Long64_t *l, Int_t n) final;
+   void WriteFastArray(const ULong64_t *l, Int_t n) final;
+   void WriteFastArray(const Float_t *f, Int_t n) final;
+   void WriteFastArray(const Double_t *d, Int_t n) final;
+   void WriteFastArrayString(const Char_t *c, Int_t n) final;
+   void WriteFastArray(void *start, const TClass *cl, Int_t n = 1, TMemberStreamer *s = nullptr) final;
+   Int_t WriteFastArray(void **startp, const TClass *cl, Int_t n = 1, Bool_t isPreAlloc = kFALSE,
+                        TMemberStreamer *s = nullptr) final;
 
-   virtual void StreamObject(void *obj, const TClass *cl, const TClass *onFileClass = nullptr);
+   void StreamObject(void *obj, const TClass *cl, const TClass *onFileClass = nullptr) final;
    using TBufferText::StreamObject;
 
-   virtual void ReadBool(Bool_t &b);
-   virtual void ReadChar(Char_t &c);
-   virtual void ReadUChar(UChar_t &c);
-   virtual void ReadShort(Short_t &s);
-   virtual void ReadUShort(UShort_t &s);
-   virtual void ReadInt(Int_t &i);
-   virtual void ReadUInt(UInt_t &i);
-   virtual void ReadLong(Long_t &l);
-   virtual void ReadULong(ULong_t &l);
-   virtual void ReadLong64(Long64_t &l);
-   virtual void ReadULong64(ULong64_t &l);
-   virtual void ReadFloat(Float_t &f);
-   virtual void ReadDouble(Double_t &d);
-   virtual void ReadCharP(Char_t *c);
-   virtual void ReadTString(TString &s);
-   virtual void ReadStdString(std::string *s);
+   void ReadBool(Bool_t &b) final;
+   void ReadChar(Char_t &c) final;
+   void ReadUChar(UChar_t &c) final;
+   void ReadShort(Short_t &s) final;
+   void ReadUShort(UShort_t &s) final;
+   void ReadInt(Int_t &i) final;
+   void ReadUInt(UInt_t &i) final;
+   void ReadLong(Long_t &l) final;
+   void ReadULong(ULong_t &l) final;
+   void ReadLong64(Long64_t &l) final;
+   void ReadULong64(ULong64_t &l) final;
+   void ReadFloat(Float_t &f) final;
+   void ReadDouble(Double_t &d) final;
+   void ReadCharP(Char_t *c) final;
+   void ReadTString(TString &s) final;
+   void ReadStdString(std::string *s) final;
    using TBuffer::ReadStdString;
-   virtual void ReadCharStar(char *&s);
+   void ReadCharStar(char *&s) final;
 
-   virtual void WriteBool(Bool_t b);
-   virtual void WriteChar(Char_t c);
-   virtual void WriteUChar(UChar_t c);
-   virtual void WriteShort(Short_t s);
-   virtual void WriteUShort(UShort_t s);
-   virtual void WriteInt(Int_t i);
-   virtual void WriteUInt(UInt_t i);
-   virtual void WriteLong(Long_t l);
-   virtual void WriteULong(ULong_t l);
-   virtual void WriteLong64(Long64_t l);
-   virtual void WriteULong64(ULong64_t l);
-   virtual void WriteFloat(Float_t f);
-   virtual void WriteDouble(Double_t d);
-   virtual void WriteCharP(const Char_t *c);
-   virtual void WriteTString(const TString &s);
-   virtual void WriteStdString(const std::string *s);
+   void WriteBool(Bool_t b) final;
+   void WriteChar(Char_t c) final;
+   void WriteUChar(UChar_t c) final;
+   void WriteShort(Short_t s) final;
+   void WriteUShort(UShort_t s) final;
+   void WriteInt(Int_t i) final;
+   void WriteUInt(UInt_t i) final;
+   void WriteLong(Long_t l) final;
+   void WriteULong(ULong_t l) final;
+   void WriteLong64(Long64_t l) final;
+   void WriteULong64(ULong64_t l) final;
+   void WriteFloat(Float_t f) final;
+   void WriteDouble(Double_t d) final;
+   void WriteCharP(const Char_t *c) final;
+   void WriteTString(const TString &s) final;
+   void WriteStdString(const std::string *s) final;
    using TBuffer::WriteStdString;
-   virtual void WriteCharStar(char *s);
+   void WriteCharStar(char *s) final;
 
-   virtual TVirtualStreamerInfo *GetInfo();
+   TVirtualStreamerInfo *GetInfo() final;
 
 protected:
    TBufferXML();
 
    // redefined protected virtual functions
 
-   virtual void WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse);
+   void WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse) final;
 
    // end redefined protected virtual functions
 
