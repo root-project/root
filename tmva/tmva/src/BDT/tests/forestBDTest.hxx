@@ -7,6 +7,7 @@
 std::string events_file     = "./data/events.csv";
 std::string preds_file      = "./data/python_predictions.csv";
 std::string json_model_file = "./data/model.json";
+int         loop_size       = 256;
 
 TEST(forestBDT, UniquePredictions)
 {
@@ -26,7 +27,7 @@ TEST(forestBDT, UniquePredictions)
 
 TEST(forestBDT, UniqueBatchPredictions)
 {
-   int                             loop_size     = 256;
+
    std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
    std::vector<std::vector<bool>>  groundtruth   = read_csv<bool>(preds_file);
    std::vector<bool>               preds;
@@ -43,7 +44,6 @@ TEST(forestBDT, UniqueBatchPredictions)
 
 TEST(forestBDT, UniqueBatch2Predictions)
 {
-   int                             loop_size     = 256;
    std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
    std::vector<std::vector<bool>>  groundtruth   = read_csv<bool>(preds_file);
    std::vector<bool>               preds;
@@ -51,7 +51,7 @@ TEST(forestBDT, UniqueBatch2Predictions)
 
    Forest<unique_bdt::Tree> Forest;
    Forest.get_Forest(json_model_file);
-   Forest.do_predictions_batch2(events_vector, preds, loop_size);
+   Forest.do_predictions(events_vector, preds, loop_size);
 
    // std::string tmp_filename = "./data/tmp2.csv";
    // write_csv(tmp_filename, preds);

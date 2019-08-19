@@ -4,9 +4,9 @@
 int main()
 {
    Forest<unique_bdt::Tree> Forest;
-   Forest.get_Forest(json_model_file);
+   Forest.get_Forest(json_model_file, true);
    preds.reserve(events_vector.size());
-   Forest.do_predictions_batch2(events_vector, preds, 256);
+   Forest.do_predictions(events_vector, preds);
    write_csv(preds_file, preds);
    return 0;
 }

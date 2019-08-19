@@ -107,7 +107,6 @@ def bench_2():
 if __name__ == "__main__":
     # bench_1()
     # bench_2()
-
     test_list = [5]
     # test_list = np.arange(5, 8, 3)
     np.save("tmp/0_abscisse.npy", np.array(test_list))
@@ -115,17 +114,26 @@ if __name__ == "__main__":
     i = 1
     for i, value_test in enumerate(test_list):
         print(f"***** bench value {value_test} *****")
+        mins_list = []
         create_model_gaussian(
-            num_samples=500_000,
+            num_samples=1000,
             num_features=value_test,
             num_trees=500,
             max_depth=3,
             data_folder=DATA_FOLDER,
         )
         subprocess.call("./bench.sh".split(), shell=True)
-        # fname, mins, means, stddevs = get_benchs_data("data/a.txt")
+        fname, mins, means, stddevs = get_benchs_data("./data/a.txt")
         # np.save("tmp/"+"{0:03}".format(i)+"_"+fname, mins)
-        # np.save("tmp/" + "{0:03}".format(i + offset) + "_", mins)
+        mins_list.append(mins)
+        np.save(
+            "tmp/" + "{0:03}".format(i + offset) + "_",
+            np.min(np.stack(mins_list), axis=0),
+        )
+        np.save(
+            "tmp/std_" + "{0:03}".format(i + offset) + "_",
+            np.std(np.stack(mins_list), axis=0),
+        )
 
 
 # end

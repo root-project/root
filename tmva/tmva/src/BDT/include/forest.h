@@ -30,6 +30,11 @@ bool unique_cmp(const unique_bdt::Tree &a, const unique_bdt::Tree &b)
    }
 }
 
+bool unique_cmp_feats(const unique_bdt::Tree &a, const unique_bdt::Tree &b)
+{
+   return a.nodes->split_variable < b.nodes->split_variable;
+}
+
 ///////////////////////////////////////////////////
 /// Wrapping class that contains the forest.
 /// It support different kind of specialization, one for each forest kind
@@ -48,18 +53,16 @@ public:
    ~Forest() {}
 
    void get_Forest(std::string json_file, bool bool_sort_trees = false);
-   // void get_Forest(std::string json_file, bool bool_sort_trees = false);
+   void get_Forest(std::string json_file, const std::vector<std::vector<float>> &events_vector);
+
    void read_events_csv(std::string csv_file);
 
    void do_predictions(const std::vector<std::vector<float>> &events_vector, std::vector<bool> &);
+   void do_predictions(const std::vector<std::vector<float>> &events_vector, std::vector<bool> &preds,
+                              int loop_size);
+   // Remove before the last implementations
    void do_predictions_batch(const std::vector<std::vector<float>> &events_vector, std::vector<bool> &preds,
                              int loop_size);
-   void do_predictions_batch2(const std::vector<std::vector<float>> &events_vector, std::vector<bool> &preds,
-                              int loop_size);
-   void get_Forest(std::string json_file, const std::vector<std::vector<float>> &events_vector);
-
-   // For debug:
-   void test() { std::cout << "test \n"; }
 };
 
 ////////////////////////////////////////////////////
@@ -119,7 +122,7 @@ void Forest<T>::do_predictions_batch(const std::vector<std::vector<float>> &even
 }
 
 template <class T>
-void Forest<T>::do_predictions_batch2(const std::vector<std::vector<float>> &events_vector, std::vector<bool> &preds,
+void Forest<T>::do_predictions(const std::vector<std::vector<float>> &events_vector, std::vector<bool> &preds,
                                       const int loop_size)
 {
    int rest = events_vector.size() % loop_size;
@@ -177,9 +180,10 @@ void Forest<unique_bdt::Tree>::get_Forest(std::string json_file, bool bool_sort_
    if (bool_sort_trees == true) {
       std::sort(trees.begin(), trees.end(), unique_cmp);
    }
-   for (int i = 0; i < number_of_trees; i++) {
-      std::cout << trees[i].nodes->split_variable << " :  " << trees[i].nodes->split_threshold << std::endl;
-   }
+
+   // for (int i = 0; i < number_of_trees; i++) {
+   //    std::cout << trees[i].nodes->split_variable << " :  " << trees[i].nodes->split_threshold << std::endl;
+   //}
 
    this->trees = std::move(trees);
 }
@@ -256,13 +260,6 @@ void Forest<std::function<float(std::vector<float>)>>::do_predictions(
    }
 }
 
-/// For debug
-template <>
-void Forest<std::function<float(std::vector<float>)>>::test()
-{
-   std::cout << "AAAAAA\n";
-}
-
 ////////////////////////////////////////////////////////////////
 /// ----------- Specialization JIT Forest ------------------- //
 template <>
@@ -277,6 +274,9 @@ void Forest<std::function<bool(std::vector<float>)>>::get_Forest(std::string jso
    trees.resize(number_of_trees);
    for (int i = 0; i < number_of_trees; i++) {
       unique_bdt::read_nodes_from_tree(json_model[i], trees[i]);
+   }
+   if (bool_sort_trees == true) {
+      std::sort(trees.begin(), trees.end(), unique_cmp);
    }
 
    // JIT
