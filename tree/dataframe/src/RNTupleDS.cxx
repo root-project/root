@@ -67,6 +67,7 @@ bool RNTupleDS::SetEntry(unsigned int slot, ULong64_t entryIndex)
 
 std::vector<std::pair<ULong64_t, ULong64_t>> RNTupleDS::GetEntryRanges()
 {
+   // TODO(jblomer): use cluster boundaries for the entry ranges
    std::vector<std::pair<ULong64_t, ULong64_t>> ranges;
    if (fHasSeenAllRanges) return ranges;
 
