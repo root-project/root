@@ -211,10 +211,10 @@ void ROOT::Experimental::Detail::RFieldBase::RIterator::Advance()
 //------------------------------------------------------------------------------
 
 
-ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RFieldRoot::Clone(std::string_view /*newName*/)
+ROOT::Experimental::Detail::RFieldBase *ROOT::Experimental::RFieldRoot::Clone(std::string_view /*newName*/)
 {
    Detail::RFieldBase* result = new RFieldRoot();
-   for (auto& f : fSubFields) {
+   for (auto &f : fSubFields) {
       auto clone = f->Clone(f->GetName());
       result->Attach(std::unique_ptr<RFieldBase>(clone));
    }
@@ -686,7 +686,7 @@ ROOT::Experimental::RFieldVariant::RFieldVariant(
    fTagOffset = (fMaxItemSize < fMaxAlignment) ? fMaxAlignment : fMaxItemSize;
 }
 
-ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RFieldVariant::Clone(std::string_view newName)
+ROOT::Experimental::Detail::RFieldBase *ROOT::Experimental::RFieldVariant::Clone(std::string_view newName)
 {
    auto nFields = fSubFields.size();
    std::vector<Detail::RFieldBase *> itemFields;
