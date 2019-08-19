@@ -85,14 +85,18 @@ private:
    struct RLevelInfo {
    private:
       /// Tells how deep the field is in the ntuple. Rootfield has fLevel 0, direct subfield of Rootfield has fLevel 1, etc.
-      int fLevel;
+      int fLevel = 1;
       /// First subfield of parentfield has fOrder 1, the next fOrder 2, etc. Value set by RFieldBase::fOrder
-      int fOrder;
+      int fOrder = 1;
       /// The field itself is also included in this number.
-      int fNumSiblingFields;
+      int fNumSiblingFields = 1;
    public:
-      RLevelInfo(): fLevel{1}, fOrder{1}, fNumSiblingFields{1} {}
-      RLevelInfo(const RFieldBase* field): fLevel{GetLevel(field)}, fOrder{GetOrder(field)}, fNumSiblingFields{GetNumSiblings(field)} {}
+      RLevelInfo() = default;
+      RLevelInfo(const RFieldBase *field) : RLevelInfo() {
+         fLevel = GetLevel(field);
+         fOrder = GetOrder(field);
+         fNumSiblingFields = GetNumSiblings(field);
+      }
       int GetNumSiblings(const RFieldBase *field = nullptr) const {
          if(field)
             return static_cast<int>(field->GetParent()->fSubFields.size());
@@ -254,7 +258,7 @@ public:
    }
    void SetOrder(int o) { fOrder = o; }
 };
-   
+
 // clang-format off
 /**
 \class ROOT::Experimental::RFieldFuse
@@ -271,7 +275,7 @@ public:
 };
 
 } // namespace Detail
-   
+
 
 
 /// The container field for an ntuple model, which itself has no physical representation
