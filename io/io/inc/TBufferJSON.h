@@ -329,7 +329,7 @@ protected:
    TString fTypeVersionTag;            ///<! JSON member used to store class version, default empty
    std::vector<const TClass *> fSkipClasses; ///<! list of classes, which class info is not stored
 
-   ClassDefOverride(TBufferJSON, 1) // a specialized TBuffer to only write objects into JSON format
+   ClassDefOverride(TBufferJSON, 0) // a specialized TBuffer to only write objects into JSON format
 };
 
 #endif
