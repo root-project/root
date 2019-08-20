@@ -43,7 +43,7 @@ ROOT::Experimental::Detail::RNTuple::~RNTuple()
 void ROOT::Experimental::RNTupleReader::ConnectModel() {
    std::unordered_map<const Detail::RFieldBase *, DescriptorId_t> fieldPtr2Id;
    fieldPtr2Id[fModel->GetRootField()] = fSource->GetDescriptor().FindFieldId("", kInvalidDescriptorId);
-   for (auto& field : *fModel->GetRootField()) {
+   for (auto &field : *fModel->GetRootField()) {
       auto parentId = fieldPtr2Id[field.GetParent()];
       auto fieldId = fSource->GetDescriptor().FindFieldId(field.GetName(), parentId);
       R__ASSERT(fieldId != kInvalidDescriptorId);

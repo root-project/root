@@ -76,29 +76,19 @@ private:
    TDirectory *fDirectory;
    RSettings fSettings;
 
-   /// Field, column, cluster ids and page indexes per cluster are issued sequentially starting with 0
-   DescriptorId_t fLastFieldId = 0;
-   DescriptorId_t fLastColumnId = 0;
-   DescriptorId_t fLastClusterId = 0;
+   /// Instead of a physical file offset, pages in root are identified by an index which becomes part of the key
    DescriptorId_t fLastPageIdx = 0;
-   NTupleSize_t fPrevClusterNEntries = 0;
-   RNTupleDescriptorBuilder fDescriptorBuilder;
 
-   /// Keeps track of the number of elements in the currently open cluster. Indexed by column id.
-   std::vector<RClusterDescriptor::RColumnRange> fOpenColumnRanges;
-   /// Keeps track of the written pages in the currently open cluster. Indexed by column id.
-   std::vector<RClusterDescriptor::RPageRange> fOpenPageRanges;
+protected:
+   void DoCreate(const RNTupleModel &model) final;
+   RClusterDescriptor::RLocator DoCommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
+   void DoCommitCluster(NTupleSize_t nEntries) final;
+   void DoCommitDataset() final;
 
 public:
    RPageSinkRoot(std::string_view ntupleName, RSettings settings);
    RPageSinkRoot(std::string_view ntupleName, std::string_view path);
    virtual ~RPageSinkRoot();
-
-   ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
-   void Create(RNTupleModel &model) final;
-   void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
-   void CommitCluster(NTupleSize_t nEntries) final;
-   void CommitDataset() final;
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements = 0) final;
    void ReleasePage(RPage &page) final;
