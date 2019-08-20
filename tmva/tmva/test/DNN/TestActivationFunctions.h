@@ -31,6 +31,25 @@
 
 using namespace TMVA::DNN;
 
+// wrapper functions for calling on Matrix instead of tensors
+/*  impl using Matrix */
+template<typename Architecture_t>
+inline void evaluate(typename Architecture_t::Matrix_t & A,
+                                EActivationFunction f)
+{
+    typename Architecture_t::Tensor_t tA(A);
+    evaluate<Architecture_t>(tA, f);
+}
+template<typename Architecture_t>
+inline void evaluateDerivative(typename Architecture_t::Matrix_t & B,
+                                EActivationFunction f,
+                                const typename Architecture_t::Matrix_t & A)
+{
+    typename Architecture_t::Tensor_t tA(A);
+    typename Architecture_t::Tensor_t tB(B);
+    evaluateDerivative<Architecture_t>(tB, f, tA);
+}
+
 //______________________________________________________________________________
 //
 //  Identity Activation Function

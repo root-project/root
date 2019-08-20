@@ -207,10 +207,12 @@ void TCudnn<AFloat>::ConvLayerForward(Tensor_t & output,
                                      const Matrix_t &weights, const Matrix_t & biases,
                                      const DNN::CNN::TConvParams & params, EActivationFunction activFunc,
                                      Tensor_t & inputPrime,
-                                     const ConvDescriptors_t & descriptors,
-                                     const AFloat alpha,
-                                     const AFloat beta)
+                                     const ConvDescriptors_t & descriptors)
+//                                     const AFloat alpha,
+//                                     const AFloat beta)
 {
+   AFloat alpha = 1.0; 
+   AFloat beta  = 0.0; 
    cudnnHandle_t cudnnHandle = input.GetCudnnHandle();
    
    cudnnDataType_t   cudnnDataType;
@@ -251,8 +253,8 @@ void TCudnn<AFloat>::ConvLayerForward(Tensor_t & output,
                                                     (int*)&outputShape[1],
                                                     (int*)&outputShape[2],
                                                     (int*)&outputShape[3]));
-   size_t size = 1;
-   for (const auto& subDim: outputShape) size *= subDim;
+   // size_t size = 1;
+   // for (const auto& subDim: outputShape) size *= subDim;
    TCudaTensor<AFloat> outputTensor (outputShape);
    
    // cuDNN decides on which algorithm to use
@@ -296,8 +298,9 @@ void TCudnn<AFloat>::ConvLayerForward(Tensor_t & output,
                                       outputTensor.GetDataPointer()));
                                                                         
    // Apply activation
-   evaluate<TCudnn<AFloat> >(outputTensor, activFunc);
-   
+   //evaluate<TCudnn<AFloat> >(outputTensor, activFunc);
+   TCudnn<AFloat>::Activation(outputTensor, activFunc, descriptors.HelperDescriptor);
+
    cudaFree(&workspace);
 }
 

@@ -305,7 +305,7 @@ public:
 
    // for backward compatibility (assume column-major 
    size_t GetNrows() const { return (GetLayout() == MemoryLayout::ColumnMajor ) ? fStrides.back() : fStrides.front();}
-   size_t GetNcols() const { return (GetLayout() == MemoryLayout::ColumnMajor ) ? fShape.front() : fShape.back(); }
+   size_t GetNcols() const { return (GetLayout() == MemoryLayout::ColumnMajor ) ? fShape.back() : fShape.front(); }
 
 
       // Matrix conversion for tensors of shape 2
@@ -351,7 +351,7 @@ public:
    TCudaDeviceReference<AFloat> operator()(size_t k, size_t i, size_t j) const
    {
       // k is B, i is C, j is HW : 
-      assert( fNDim == 3 );
+      assert( fNDim == 3 || ( k==0 && fNDim == 2 ) );
       AFloat * elementPointer = fElementBuffer;
       elementPointer += k * GetFirstSize() + i * GetNrows() + j; 
       return TCudaDeviceReference<AFloat>(elementPointer);
