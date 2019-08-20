@@ -131,23 +131,17 @@ private:
    TDirectory *fDirectory;
    RSettings fSettings;
 
-   RNTupleDescriptor fDescriptor;
+   RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor,
+                                 ClusterSize_t::ValueType clusterIndex);
 
-   RPage DoPopulatePage(ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor,
-                        ClusterSize_t::ValueType clusterIndex);
+protected:
+   RNTupleDescriptor DoAttach() final;
 
 public:
    RPageSourceRoot(std::string_view ntupleName, RSettings settings);
    RPageSourceRoot(std::string_view ntupleName, std::string_view path);
    std::unique_ptr<RPageSource> Clone() const final;
    virtual ~RPageSourceRoot();
-
-   ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
-   void Attach() final;
-   NTupleSize_t GetNEntries() final;
-   NTupleSize_t GetNElements(ColumnHandle_t columnHandle) final;
-   ColumnId_t GetColumnId(ColumnHandle_t columnHandle) final;
-   const RNTupleDescriptor& GetDescriptor() const final { return fDescriptor; }
 
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
    RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;

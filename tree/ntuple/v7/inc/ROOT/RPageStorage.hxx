@@ -147,6 +147,11 @@ mapped into memory. The page source also gives access to the ntuple's meta-data.
 */
 // clang-format on
 class RPageSource : public RPageStorage {
+protected:
+   RNTupleDescriptor fDescriptor;
+
+   virtual RNTupleDescriptor DoAttach() = 0;
+
 public:
    explicit RPageSource(std::string_view ntupleName);
    virtual ~RPageSource();
@@ -154,14 +159,14 @@ public:
    virtual std::unique_ptr<RPageSource> Clone() const = 0;
 
    EPageStorageType GetType() final { return EPageStorageType::kSource; }
+   const RNTupleDescriptor &GetDescriptor() const { return fDescriptor; }
+   ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
 
    /// Open the physical storage container for the tree
-   virtual void Attach() = 0;
-
-   virtual NTupleSize_t GetNEntries() = 0;
-   virtual NTupleSize_t GetNElements(ColumnHandle_t columnHandle) = 0;
-   virtual ColumnId_t GetColumnId(ColumnHandle_t columnHandle) = 0;
-   virtual const RNTupleDescriptor& GetDescriptor() const = 0;
+   void Attach() { fDescriptor = DoAttach(); }
+   NTupleSize_t GetNEntries();
+   NTupleSize_t GetNElements(ColumnHandle_t columnHandle);
+   ColumnId_t GetColumnId(ColumnHandle_t columnHandle);
 
    /// Allocates and fills a page that contains the index-th element
    virtual RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) = 0;

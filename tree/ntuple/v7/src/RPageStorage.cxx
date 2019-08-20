@@ -44,6 +44,31 @@ ROOT::Experimental::Detail::RPageSource::~RPageSource()
 {
 }
 
+ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
+ROOT::Experimental::Detail::RPageSource::AddColumn(DescriptorId_t fieldId, const RColumn &column)
+{
+   R__ASSERT(fieldId != kInvalidDescriptorId);
+   auto columnId = fDescriptor.FindColumnId(fieldId, column.GetIndex());
+   R__ASSERT(columnId != kInvalidDescriptorId);
+   return ColumnHandle_t(columnId, &column);
+}
+
+ROOT::Experimental::NTupleSize_t ROOT::Experimental::Detail::RPageSource::GetNEntries()
+{
+   return fDescriptor.GetNEntries();
+}
+
+ROOT::Experimental::NTupleSize_t ROOT::Experimental::Detail::RPageSource::GetNElements(ColumnHandle_t columnHandle)
+{
+   return fDescriptor.GetNElements(columnHandle.fId);
+}
+
+ROOT::Experimental::ColumnId_t ROOT::Experimental::Detail::RPageSource::GetColumnId(ColumnHandle_t columnHandle)
+{
+   // TODO(jblomer) distinguish trees
+   return columnHandle.fId;
+}
+
 
 //------------------------------------------------------------------------------
 
