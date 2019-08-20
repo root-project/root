@@ -303,9 +303,8 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
 
    } else if (arg.compare(0,4, "CFG:") == 0) {
 
-      auto res = fDesc.ChangeConfiguration(arg.substr(4));
-
-      if (res) SendGeometry(connid);
+      if (fDesc.ChangeConfiguration(arg.substr(4)))
+         SendGeometry(connid);
 
    } else if (arg == "RELOAD") {
 

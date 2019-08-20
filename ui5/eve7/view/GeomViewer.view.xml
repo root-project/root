@@ -63,9 +63,29 @@
                           <ComboBox selectedKey="{/cfg/build_shapes}" change="configChanged" width="160px">
                              <core:Item key="0" text="never"/>
                              <core:Item key="1" text="composite"/>
-                             <core:Item key="2" text="cylindirical"/>
-                            <core:Item key="3" text="all"/>
+                             <core:Item key="2" text="non-cylindirical"/>
+                             <core:Item key="3" text="all"/>
                           </ComboBox>
+                       </HBox>
+                    </VBox>
+                  </IconTabFilter>
+               </items>
+            </IconTabBar>
+            <IconTabBar class="sapUiResponsiveContentPadding" expanded="false">
+                <items>
+                  <IconTabFilter text="Information">
+                    <VBox>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
+                          <Label text="Num nodes" wrapping="true"/>
+                          <Text text="{/info/num_meshes}"/>
+                       </HBox>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
+                          <Label text="Num shapes" wrapping="true"/>
+                          <Text text="{/info/num_shapes}"/>
+                       </HBox>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
+                          <Label text="Num faces" wrapping="true"/>
+                          <Text text="{/info/num_faces}"/>
                        </HBox>
                     </VBox>
                   </IconTabFilter>

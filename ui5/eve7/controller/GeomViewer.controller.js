@@ -307,6 +307,8 @@ sap.ui.define(['sap/ui/core/Component',
             this.geo_painter.ctrl.notoolbar = true;
             // this.geo_painter.showControlOptions = this.showControl.bind(this);
 
+            this.geo_painter.setCompleteHandler(this.completeGeoDrawing.bind(this));
+
             this.geom_model = new JSONModel(this.geo_painter.ctrl);
             this.geo_painter.ctrl.cfg = {}; // dummy config until real config is received
             this.byId("geomControl").setModel(this.geom_model);
@@ -381,50 +383,47 @@ sap.ui.define(['sap/ui/core/Component',
       /** Create single shape from provided raw data */
       createServerShape: function(rd) {
 
+         var g = null, off = 0;
+
          if (rd.shape) {
             // case when TGeoShape provided as is
-            var g = JSROOT.GEO.createGeometry(rd.shape);
-            return {
-               _typename: "$$Shape$$",
-               ready: true,
-               geom: g,
-               nfaces: JSROOT.GEO.numGeometryFaces(g)
+            g = JSROOT.GEO.createGeometry(rd.shape);
+         } else {
+
+            if (!rd.raw || (rd.raw.length==0)) {
+               console.error('No raw data at all');
+               return null;
             }
-         }
 
-         if (!rd.raw || (rd.raw.length==0)) {
-            console.error('No raw data at all');
-            return null;
-         }
+            if (!rd.raw.buffer) {
+               console.error('No raw buffer');
+               return null;
+            }
 
-         if (!rd.raw.buffer) {
-            console.error('No raw buffer');
-            return null;
-         }
+            if (rd.sz[0]) {
+               rd.vtxBuff = new Float32Array(rd.raw.buffer, off, rd.sz[0]);
+               off += rd.sz[0]*4;
+            }
 
-         var off = 0;
+            if (rd.sz[1]) {
+               rd.nrmBuff = new Float32Array(rd.raw.buffer, off, rd.sz[1]);
+               off += rd.sz[1]*4;
+            }
 
-         if (rd.sz[0]) {
-            rd.vtxBuff = new Float32Array(rd.raw.buffer, off, rd.sz[0]);
-            off += rd.sz[0]*4;
-         }
+            if (rd.sz[2]) {
+               rd.idxBuff = new Uint32Array(rd.raw.buffer, off, rd.sz[2]);
+               off += rd.sz[2]*4;
+            }
 
-         if (rd.sz[1]) {
-            rd.nrmBuff = new Float32Array(rd.raw.buffer, off, rd.sz[1]);
-            off += rd.sz[1]*4;
-         }
-
-         if (rd.sz[2]) {
-            rd.idxBuff = new Uint32Array(rd.raw.buffer, off, rd.sz[2]);
-            off += rd.sz[2]*4;
+            g = this.creator.makeEveGeometry(rd);
          }
 
          // shape handle is similar to created in JSROOT.GeoPainter
          return {
             _typename: "$$Shape$$", // indicate that shape can be used as is
             ready: true,
-            geom: this.creator.makeEveGeometry(rd),
-            nfaces: (rd.i-2)/3
+            geom: g,
+            nfaces: JSROOT.GEO.numGeometryFaces(g)
          };
       },
 
@@ -486,6 +485,11 @@ sap.ui.define(['sap/ui/core/Component',
                this.appendNodes(msg.visibles);
                break;
          }
+      },
+
+      completeGeoDrawing: function() {
+         if (this.geom_model)
+            this.geom_model.refresh();
       },
 
       OnWebsocketOpened: function(handle) {
@@ -1068,9 +1072,11 @@ sap.ui.define(['sap/ui/core/Component',
 
 
       sendConfig: function() {
-        if (!this.standalone && this.geom_painter && this.geom_painter.ctrl.cfg)
-           this.websocket.Send("CFG:" + JSROOT.toJSON(this.geom_painter.ctrl.cfg));
-
+         if (!this.standalone && this.geo_painter && this.geo_painter.ctrl.cfg) {
+            var cfg = this.geo_painter.ctrl.cfg;
+            cfg.build_shapes = parseInt(cfg.build_shapes);
+            this.websocket.Send("CFG:" + JSROOT.toJSON(cfg));
+         }
       },
 
       // configuration handler changes, after short timeout send updated config to server
