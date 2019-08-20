@@ -116,7 +116,7 @@ void RNTupleDS::SetNSlots(unsigned int nSlots)
    fNSlots = nSlots;
 
    for (unsigned int i = 1; i < fNSlots; ++i) {
-      fReaders.emplace_back(std::make_unique<RNTupleReader>(fReaders[0]->GetPageSource()->Clone()));
+      fReaders.emplace_back(fReaders[0]->Clone());
    }
 
    for (unsigned int i = 0; i < fNSlots; ++i) {

@@ -127,6 +127,7 @@ public:
    RNTupleReader(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSource> source);
    /// The model is generated from the ntuple metadata on storage
    RNTupleReader(std::unique_ptr<Detail::RPageSource> source);
+   std::unique_ptr<RNTupleReader> Clone() { return std::make_unique<RNTupleReader>(fSource->Clone()); }
    ~RNTupleReader();
 
    NTupleSize_t GetNEntries() const { return fNEntries; }
@@ -161,8 +162,6 @@ public:
 
    RIterator begin() { return RIterator(0); }
    RIterator end() { return RIterator(fNEntries); }
-
-   const Detail::RPageSource *GetPageSource() { return fSource.get(); }
 };
 
 // clang-format off
