@@ -362,6 +362,8 @@ static int BuildScopeProxyDict( Cppyy::TCppScope_t scope, PyObject* pyclass ) {
    TEnum* e = 0;
    while ( (e = (TEnum*)ienum.Next()) ) {
       const TSeqCollection* seq = e->GetConstants();
+      auto isScoped = e->Property() & kIsScopedEnum;
+      if (isScoped) continue; // scoped enum: do not add constants as properties of the enum's scope
       for ( Int_t i = 0; i < seq->GetSize(); i++ ) {
          TEnumConstant* ec = (TEnumConstant*)seq->At( i );
          AddPropertyToClass( pyclass, scope, ec->GetName(), ec->GetAddress() );
