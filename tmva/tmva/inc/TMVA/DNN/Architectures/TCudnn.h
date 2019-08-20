@@ -357,10 +357,10 @@ public:
                                 const Matrix_t &weights, const Matrix_t & biases,
                                 const DNN::CNN::TConvParams & params, EActivationFunction activFunc,
                                 Tensor_t & /* inputPrime */,
-                                const ConvDescriptors_t & descriptors,
+                                const ConvDescriptors_t & descriptors );
                                 //CNN::TDescriptors<CNN::TConvLayer<TCudnn<AFloat>>>
-                                const AFloat alpha = 1,
-                                const AFloat beta  = 1);
+                                //const AFloat alpha = 1,
+                                //const AFloat beta  = 1);
 
    /** @name Backward Propagation in Convolutional Layer
     */

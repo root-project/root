@@ -1080,7 +1080,18 @@ public:
    static void AdamUpdateSecondMom(Matrix_t & A, const Matrix_t & B, Scalar_t beta);
 
       // printing of tensor
-   static void PrintTensor( const Tensor_t & A, const std::string name = "tensor") {}
+   static void PrintTensor( const Tensor_t & A, const std::string name = "tensor") {
+         std::cout << name << " tensor size = " << A.GetSize() << " shape = { "; 
+         auto shape = A.GetShape(); 
+         for (size_t k = 0; k < shape.size()-1; ++k)
+            std::cout << shape[k] << " , ";
+         std::cout << shape.back() << " } ";
+         std::cout << " strides = { ";
+         auto strides = A.GetStrides(); 
+         for (size_t k = 0; k < strides.size()-1; ++k)
+            std::cout << strides[k] << " , ";
+         std::cout << strides.back() << " }\n ";
+   }
 
 
 
