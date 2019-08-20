@@ -73,7 +73,7 @@ private:
       ~RBlockBuffer() = default;
 
       /// Tries to copy up to nbytes starting at offset from fBuffer into buffer.  Returns number of bytes copied.
-      size_t Map(void *buffer, size_t nbytes, std::uint64_t offset);
+      size_t CopyTo(void *buffer, size_t nbytes, std::uint64_t offset);
    };
    /// To be used modulo kNumBlockBuffers, points to the last used block buffer in fBlockBuffers
    unsigned int fBlockBufferIdx;
