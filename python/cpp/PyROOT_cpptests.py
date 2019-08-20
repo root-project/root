@@ -116,7 +116,15 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       ROOT.gInterpreter.Declare("namespace myns { enum bar2 { ee=4294967286,ff }; }")
       self.assertEqual(ROOT.myns.ee, 4294967286)
 
-   def test06CopyContructor( self ):
+   def test06ScopedEnum(self):
+      """Test lookup of scoped enums and their values"""
+      ROOT.gInterpreter.Declare("enum class scopedEnum { gg=1,hh };")
+      self.assertEqual(ROOT.scopedEnum.gg, 1)
+
+      ROOT.gInterpreter.Declare("namespace myns { enum class scopedEnum { gg=1,hh }; }")
+      self.assertEqual(ROOT.myns.scopedEnum.gg, 1)
+
+   def test07CopyContructor( self ):
       """Test copy constructor"""
 
       t1 = TLorentzVector( 1., 2., 3., -4. )
@@ -137,7 +145,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
          self.assertEqual( t1[i], t3[i] )
          self.assertEqual( t4[i], t5[i] )
 
-   def test07ObjectValidity( self ):
+   def test08ObjectValidity( self ):
       """Test object validity checking"""
 
       t1 = TObject()
@@ -149,7 +157,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
 
       self.assert_( not t2 )
 
-   def test08ElementAccess( self ):
+   def test09ElementAccess( self ):
       """Test access to elements in matrix and array objects."""
 
       n = 3
@@ -162,7 +170,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
          for j in range(n):
             self.assertEqual( m[i][j], 0.0 )
 
-   def test09StaticFunctionCall( self ):
+   def test10StaticFunctionCall( self ):
       """Test call to static function."""
 
       c1 = TROOT.Class()
@@ -182,7 +190,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       self.assertEqual( 3, TROOT.GetDirLevel() )
       TROOT.SetDirLevel( old )
 
-   def test10Namespaces( self ):
+   def test11Namespaces( self ):
       """Test access to namespaces and inner classes"""
 
       gROOT.LoadMacro( "Namespace.C+" )
@@ -219,7 +227,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       self.assertEqual( getattr( PR_NS_A, "PR_ST_B::PR_ST_C" ), PR_NS_A.PR_ST_B.PR_ST_C )
       self.assertEqual( getattr( PR_NS_A.PR_ST_B,  "PR_ST_C" ), PR_NS_A.PR_ST_B.PR_ST_C )
 
-   def test11VoidPointerPassing( self ):
+   def test12VoidPointerPassing( self ):
       """Test passing of variants of void pointer arguments"""
 
       gROOT.LoadMacro( "PointerPassing.C+" )
@@ -273,7 +281,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
          Z.SetAddressPtrPtr( ptr )
          self.assertEqual( AddressOf( ptr )[0], 0x4321 )
 
-   def test12Macro( self ):
+   def test13Macro( self ):
       """Test access to cpp macro's"""
       if not self.exp_pyroot:
          # In new PyROOT, we will just provide ROOT.nullptr
@@ -298,7 +306,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
 
       ROOT.PyConfig.ExposeCppMacros = False
 
-   def test13OpaquePointerPassing( self ):
+   def test14OpaquePointerPassing( self ):
       """Test passing around of opaque pointers"""
 
       import ROOT
@@ -317,7 +325,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       self.assert_( s == self.BindObject( ad, s.__class__ ) )
       self.assert_( s == self.BindObject( ad, "TString" ) )
 
-   def test14ObjectAndPointerComparisons( self ):
+   def test15ObjectAndPointerComparisons( self ):
       """Verify object and pointer comparisons"""
       MakeNullPointer = self.MakeNullPointer
 
