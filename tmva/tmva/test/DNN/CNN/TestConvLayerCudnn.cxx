@@ -51,7 +51,6 @@ int main()
         std::cerr << "ERROR - Forward-Propagation 1 failed " << std::endl;
         return -1;
     }
-
     /*std::cout << "Test Backward-Propagation 1: " << std::endl;
     status &= testBackward1<TCudnn<Scalar_t>>();
     if (!status) {

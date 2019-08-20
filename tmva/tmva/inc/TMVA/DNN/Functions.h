@@ -114,7 +114,6 @@ inline void evaluate(typename Architecture_t::Tensor_t &A,
     }
 }
 
-
 /*! Compute the first partial derivative of the activation function for
 *  the values given in tensor A and write the results into B. */
 //______________________________________________________________________________
@@ -140,16 +139,6 @@ inline void evaluateDerivative(typename Architecture_t::Tensor_t & B,
     case EActivationFunction::kGauss    : Architecture_t::GaussDerivative(B, A);
         break;
     }
-}
-/*  impl using Matrix */
-template<typename Architecture_t>
-inline void evaluateDerivative(typename Architecture_t::Matrix_t & B,
-                                EActivationFunction f,
-                                const typename Architecture_t::Matrix_t & A)
-{
-    typename Architecture_t::Tensor_t tA(A);
-    typename Architecture_t::Tensor_t tB(B);
-    evaluateDerivative<Architecture_t>(tB, f, tA);
 }
 //______________________________________________________________________________
 //

@@ -275,8 +275,11 @@ auto inline TLayer<Architecture_t>::Forward(Matrix_t & input,
    }
    Architecture_t::MultiplyTranspose(fOutput, input, fWeights);
    Architecture_t::AddRowWise(fOutput, fBiases);
-   evaluateDerivative<Architecture_t>(fDerivatives, fF, fOutput);
-   evaluate<Architecture_t>(fOutput, fF);
+   Tensor_t tOutput(fOutput); 
+   Tensor_t tDerivatives(fDerivatives); 
+   evaluateDerivative<Architecture_t>(tDerivatives, fF, tOutput);
+  
+   evaluate<Architecture_t>(tOutput, fF);
 }
 
 //______________________________________________________________________________
@@ -358,8 +361,10 @@ auto inline TSharedLayer<Architecture_t>::Forward(Matrix_t & input,
    }
    Architecture_t::MultiplyTranspose(fOutput, input, fWeights);
    Architecture_t::AddRowWise(fOutput, fBiases);
-   evaluateDerivative<Architecture_t>(fDerivatives, fF, fOutput);
-   evaluate<Architecture_t>(fOutput, fF);
+   Tensor_t tOutput(fOutput); 
+   Tensor_t tDerivatives(fDerivatives); 
+   evaluateDerivative<Architecture_t>(tDerivatives, fF, tOutput);
+   evaluate<Architecture_t>(tOutput, fF);
 }
 
 //______________________________________________________________________________

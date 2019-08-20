@@ -23,6 +23,34 @@
 namespace TMVA {
 namespace DNN  {
 
+/// This information is needed for the multi-dimensional indexing. See here:
+/// https://en.wikipedia.org/wiki/Row-_and_column-major_order
+/// https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.strides.html
+inline std::vector<std::size_t> ComputeStridesFromShape(const std::vector<std::size_t> &shape, 
+   bool rowmajorLayout)
+{
+   const auto size = shape.size();
+   std::vector<std::size_t> strides(size);
+   if (rowmajorLayout)  {
+      for (std::size_t i = 0; i < size; i++) {
+         if (i == 0) {
+            strides[size - 1 - i] = 1;
+         } else {
+            strides[size - 1 - i] = strides[size - 1 - i + 1] * shape[size - 1 - i + 1];
+         }
+      }
+   } else  {
+      for (std::size_t i = 0; i < size; i++) {
+         if (i == 0) {
+            strides[i] = 1;
+         } else {
+            strides[i] = strides[i - 1] * shape[i - 1];
+         }
+      }
+   }
+   return strides;
+}
+
 
 // Static members.
 //____________________________________________________________________________
@@ -93,25 +121,18 @@ TCudaTensor<AFloat>::TCudaTensor(std::vector<TMatrixT<Double_t> >& inputTensor,
    std::cout << "width\t" << inputWidth << std::endl;
    std::cout << "size\t" << fSize << std::endl;
    
-   // Reduce shape size afterwards for loop and direct array access
-   //fStrides = new size_t[fNDim];
-   for (int i = 0; i < fNDim - 1; ++i) {
-       fStrides[i] = shape[i+1];
-       for (int j = 0; j < i; j++) {
-          fStrides[j] *= shape[i+1];
-       }
-   }
-   // Last stride should be one for cudnn
-   fStrides[fNDim - 1] = 1;
    
-   std::cout << "Shape:" << std::endl;
-   for (int i = 0; i < fNDim; ++i) {
-      std::cout << fShape[i] << std::endl;
-   }
-   std::cout << "Strides:" << std::endl;
-   for (int i = 0; i < fNDim; ++i) {
-      std::cout << fStrides[i] << std::endl;
-   }
+   fStrides = ComputeStridesFromShape(fShape, layout==MemoryLayout::RowMajor);
+   
+   
+   // std::cout << "Shape:" << std::endl;
+   // for (int i = 0; i < fNDim; ++i) {
+   //    std::cout << fShape[i] << std::endl;
+   // }
+   // std::cout << "Strides:" << std::endl;
+   // for (int i = 0; i < fNDim; ++i) {
+   //    std::cout << fStrides[i] << std::endl;
+   // }
    InitializeCuda();
       
    //fElementBuffer = TCudaDeviceBuffer<AFloat>(fSize);
@@ -146,18 +167,10 @@ TCudaTensor<AFloat>::TCudaTensor(const std::vector<size_t> & shape,
 // //       exit(EXIT_FAILURE);
 //   }
    
-   // Reduce shape size afterwards for loop and direct array access
-   //fStrides = new size_t[fNDim];
-   for (int i = 0; i < fNDim - 1; ++i) {
-       fStrides[i] = shape[i+1];
-       for (int j = 0; j < i; j++) {
-          fStrides[j] *= shape[i+1];
-       }
-   }
-   // Last stride should be one for cudnn
-   fStrides[fNDim - 1] = 1;
+   fStrides = ComputeStridesFromShape(fShape, layout==MemoryLayout::RowMajor);
    
-   fSize = fStrides[0]*shape[0];
+   fSize = (layout==MemoryLayout::RowMajor) ? fStrides.front()*fShape.front() : 
+                                              fStrides.back()*fShape.back(); 
 
    fElementBuffer = TCudaDeviceBuffer<AFloat>(fSize, 0);
    
@@ -202,17 +215,10 @@ TCudaTensor<AFloat>::TCudaTensor(TCudaDeviceBuffer<AFloat> buffer,
    //     //     exit(EXIT_FAILURE);
    // }
    
-   // Reduce shape size afterwards for loop and direct array access
-   for (int i = 0; i < fNDim - 1; ++i) {
-       fStrides[i] = shape[i+1];
-       for (int j = 0; j < i; j++) {
-          fStrides[j] *= shape[i+1];
-       }
-   }
-   // Last stride should be one for cudnn
-   fStrides[fNDim - 1] = 1;
+   fStrides = ComputeStridesFromShape(fShape, layout==MemoryLayout::RowMajor);
    
-   fSize = fStrides[0]*shape[0];
+   fSize = (layout==MemoryLayout::RowMajor) ? fStrides.front()*fShape.front() : 
+                                              fStrides.back()*fShape.back(); 
    
    InitializeCuda();  
 }
@@ -233,12 +239,9 @@ TCudaTensor<AFloat>::TCudaTensor(const TCudaTensor<AFloat>& oldTensor, size_t /*
 //____________________________________________________________________________
 template <typename AFloat>
 TCudaTensor<AFloat>::TCudaTensor(const TCudaMatrix<AFloat>& matrix, size_t dim) :
-   TCudaTensor( matrix.GetDeviceBuffer(), {matrix.GetNrows(), matrix.GetNcols()})
+   TCudaTensor( matrix.GetDeviceBuffer(), {matrix.GetNrows(), matrix.GetNcols()}, MemoryLayout::ColumnMajor)
 {
    // No deep copy
-   fMemoryLayout = MemoryLayout::ColumnMajor;
-   fStrides       = { 1 , matrix.GetNrows() };  //CM layout
-   fNDim = dim; 
 
    if (dim > 2) {
       // change shape from (nrows,ncols) to (nrows,ncols,1,1)
@@ -265,7 +268,8 @@ TCudaTensor<AFloat>::~TCudaTensor()
 template <typename AFloat>
 inline void TCudaTensor<AFloat>::InitializeCuda()
 {
-//#if USE_CUDNN
+
+#if 0
    
    // Also check whether a new streamIndx has been opened
    if (fInstances.size() - 1 < fStreamIndx) {
@@ -287,7 +291,9 @@ inline void TCudaTensor<AFloat>::InitializeCuda()
    //     cudaMalloc(&fCurandStates, TDevice::NThreads(*this) * sizeof(curandState_t));
    //     InitializeCurandStates();
    // }
-   
+#endif
+#if 0
+
    CUDNNCHECK(cudnnCreateTensorDescriptor(&fTensorDescriptor));
    fInstances[fStreamIndx]++;
    //fInstances++;
@@ -322,7 +328,7 @@ inline void TCudaTensor<AFloat>::InitializeCuda()
    size_t tensorSize;
    CUDNNCHECK(cudnnGetTensorSizeInBytes(fTensorDescriptor, &tensorSize));
    assert(fSize == tensorSize/sizeof(AFloat));
-//#endif
+#endif
 }
 
 //____________________________________________________________________________
