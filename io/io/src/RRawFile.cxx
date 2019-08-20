@@ -43,19 +43,19 @@ constexpr unsigned int kLineBreakTokenSizes[] = {0, 1, 1, 2};
 constexpr unsigned int kLineBuffer = 128; // On Readln, look for line-breaks in chunks of 128 bytes
 } // anonymous namespace
 
-size_t ROOT::Experimental::Detail::RRawFile::RBlockBuffer::Map(void *buffer, size_t nbytes, std::uint64_t offset)
+size_t ROOT::Experimental::Detail::RRawFile::RBlockBuffer::CopyTo(void *buffer, size_t nbytes, std::uint64_t offset)
 {
    if (offset < fBufferOffset)
       return 0;
 
-   size_t mappedBytes = 0;
+   size_t copiedBytes = 0;
    std::uint64_t offsetInBuffer = offset - fBufferOffset;
    if (offsetInBuffer < static_cast<std::uint64_t>(fBufferSize)) {
       size_t bytesInBuffer = std::min(nbytes, static_cast<size_t>(fBufferSize - offsetInBuffer));
       memcpy(buffer, fBuffer + offsetInBuffer, bytesInBuffer);
-      mappedBytes = bytesInBuffer;
+      copiedBytes = bytesInBuffer;
    }
-   return mappedBytes;
+   return copiedBytes;
 }
 
 ROOT::Experimental::Detail::RRawFile::RRawFile(std::string_view url, ROptions options)
@@ -147,15 +147,15 @@ size_t ROOT::Experimental::Detail::RRawFile::ReadAt(void *buffer, size_t nbytes,
    }
 
    size_t totalBytes = 0;
-   size_t mappedBytes = 0;
+   size_t copiedBytes = 0;
    /// Try to serve as many bytes as possible from the block buffers
    for (unsigned int idx = fBlockBufferIdx; idx < fBlockBufferIdx + kNumBlockBuffers; ++idx) {
-      mappedBytes = fBlockBuffers[idx % kNumBlockBuffers].Map(buffer, nbytes, offset);
-      buffer = reinterpret_cast<unsigned char *>(buffer) + mappedBytes;
-      nbytes -= mappedBytes;
-      offset += mappedBytes;
-      totalBytes += mappedBytes;
-      if (mappedBytes > 0)
+      copiedBytes = fBlockBuffers[idx % kNumBlockBuffers].CopyTo(buffer, nbytes, offset);
+      buffer = reinterpret_cast<unsigned char *>(buffer) + copiedBytes;
+      nbytes -= copiedBytes;
+      offset += copiedBytes;
+      totalBytes += copiedBytes;
+      if (copiedBytes > 0)
          fBlockBufferIdx = idx;
       if (nbytes == 0)
          return totalBytes;
