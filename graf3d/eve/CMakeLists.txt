@@ -239,6 +239,8 @@ if(MSVC)
       LinkDef1.h
     MODULE
       Eve
+    EXTRA_DEPENDENCIES
+      G__Eve2.cxx
   )
 
   ROOT_GENERATE_DICTIONARY(G__Eve2
