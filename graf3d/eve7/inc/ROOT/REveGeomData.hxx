@@ -108,14 +108,29 @@ public:
    REveGeomVisible(int _nodeid, int _seqid, const std::vector<int> &_stack) : nodeid(_nodeid), seqid(_seqid), stack(_stack) {}
 };
 
+
+/** Configuration parameters which can be configured on the client
+ * Send as is to-from client */
+
+class REveGeomConfig {
+public:
+   int vislevel{0};                         ///< visible level
+   int maxnumnodes{0};                      ///< maximal number of nodes
+   int maxnumfaces{0};                      ///< maximal number of faces
+   bool showtop{false};                     ///< show geometry top volume, off by default
+   int build_shapes{1};                     ///< when shapes build on server  0 - never, 1 - TGeoComposite, 2 - plus non-cylindrical, 3 - all
+   int nsegm{0};                            ///< number of segments for cylindrical shapes
+   std::string drawopt;                     ///< draw options for TGeoPainter
+};
+
+
 /** Object with full description for drawing geometry
  * It includes list of visible items and list of nodes required to build them */
 
 class REveGeomDrawing {
 public:
+   REveGeomConfig *cfg{nullptr};            ///< current configurations
    int numnodes{0};                         ///< total number of nodes in description
-   std::string drawopt;                     ///< draw options for TGeoPainter
-   int nsegm{0};                            ///< number of segments for cylindrical shapes
    std::vector<REveGeomNode*> nodes;        ///< all used nodes to display visible items and not known for client
    std::vector<REveGeomVisible> visibles;   ///< all visible items
 };
@@ -176,23 +191,18 @@ class REveGeomDescription {
    };
 
    std::vector<TGeoNode *> fNodes;  ///<! flat list of all nodes
-   std::string fDrawOptions;        ///< default draw options for client
    std::vector<REveGeomNode> fDesc; ///< converted description, send to client
 
    std::vector<int> fSortMap;       ///<! nodes in order large -> smaller volume
-   int fNSegments{0};               ///<! number of segments for cylindrical shapes
    std::vector<ShapeDescr> fShapes; ///<! shapes with created descriptions
 
    std::string fDrawJson;           ///<! JSON with main nodes drawn by client
    int fDrawIdCut{0};               ///<! sortid used for selection of most-significant nodes
-   int fVisLevel{0};                ///<! maximal visibility depth
    int fActualLevel{0};             ///<! level can be reduced when selecting nodes
-   int fNodesLimit{0};              ///<! maximal number of nodes to be selected for drawing
-   int fFacesLimit{0};              ///<! maximal number of faces to be selected for drawing
    bool fPreferredOffline{false};   ///<! indicates that full description should be provided to client
-   int fBuildShapes{1};             ///<! when shapes build on server  0 - never, 1 - TGeoComposite, 2 - plus non-cylindrical, 3 - all
-
    int fJsonComp{0};                ///<! default JSON compression
+
+   REveGeomConfig fCfg;             ///<! configuration parameter editable from GUI
 
    void PackMatrix(std::vector<float> &arr, TGeoMatrix *matr);
 
@@ -225,22 +235,22 @@ public:
    bool IsBuild() const { return GetNumNodes() > 0; }
 
    /** Set maximal number of nodes which should be selected for drawing */
-   void SetMaxVisNodes(int cnt) { fNodesLimit = cnt; }
+   void SetMaxVisNodes(int cnt) { fCfg.maxnumnodes = cnt; }
 
    /** Returns maximal visible number of nodes, ignored when non-positive */
-   int GetMaxVisNodes() const { return fNodesLimit; }
+   int GetMaxVisNodes() const { return fCfg.maxnumnodes; }
 
    /** Set maximal number of faces which should be selected for drawing */
-   void SetMaxVisFaces(int cnt) { fFacesLimit = cnt; }
+   void SetMaxVisFaces(int cnt) { fCfg.maxnumfaces = cnt; }
 
    /** Returns maximal visible number of faces, ignored when non-positive */
-   int GetMaxVisFaces() const { return fFacesLimit; }
+   int GetMaxVisFaces() const { return fCfg.maxnumfaces; }
 
    /** Set maximal visible level */
-   void SetVisLevel(int lvl = 3) { fVisLevel = lvl; }
+   void SetVisLevel(int lvl = 3) { fCfg.vislevel = lvl; }
 
    /** Returns maximal visible level */
-   int GetVisLevel() const { return fVisLevel; }
+   int GetVisLevel() const { return fCfg.vislevel; }
 
    /** Set preference of offline operations.
     * Server provides more info to client from the begin on to avoid communication */
@@ -279,9 +289,9 @@ public:
    bool ChangeNodeVisibility(int nodeid, bool selected);
 
    /** Set number of segments for cylindrical shapes, if 0 - default value will be used */
-   void SetNSegments(int n = 0) { fNSegments = n; }
+   void SetNSegments(int n = 0) { fCfg.nsegm = n; }
    /** Return of segments for cylindrical shapes, if 0 - default value will be used */
-   int GetNSegments() const { return fNSegments; }
+   int GetNSegments() const { return fCfg.nsegm; }
 
    /** Set JSON compression level for data transfer */
    void SetJsonComp(int comp = 0) { fJsonComp = comp; }
@@ -289,14 +299,16 @@ public:
    int GetJsonComp() const  { return fJsonComp; }
 
    /** Set draw options as string for JSROOT TGeoPainter */
-   void SetDrawOptions(const std::string &opt = "") { fDrawOptions = opt; }
+   void SetDrawOptions(const std::string &opt = "") { fCfg.drawopt = opt; }
    /** Returns draw options, used for JSROOT TGeoPainter */
-   std::string GetDrawOptions() const { return fDrawOptions; }
+   std::string GetDrawOptions() const { return fCfg.drawopt; }
 
    /** Instruct to build binary 3D model already on the server (true) or send TGeoShape as is to client, which can build model itself */
-   void SetBuildShapes(int lvl = 1) { fBuildShapes = lvl; }
+   void SetBuildShapes(int lvl = 1) { fCfg.build_shapes = lvl; }
    /** Returns true if binary 3D model build already by C++ server (default) */
-   int IsBuildShapes() const { return fBuildShapes; }
+   int IsBuildShapes() const { return fCfg.build_shapes; }
+
+   bool ChangeConfiguration(const std::string &json);
 
    std::unique_ptr<REveGeomNodeInfo> MakeNodeInfo(const std::string &path);
 };

@@ -41,7 +41,37 @@
                 showNavButton="true" navButtonText="Back to hierarchy" navButtonPress="onPressMasterBack"
                 class="sapUiStdPage">
             <content>
-            <IconTabBar class="sapUiResponsiveContentPadding" expanded="true">
+            <IconTabBar class="sapUiResponsiveContentPadding" expanded="true" visible="{/show_config}">
+                <items>
+                  <IconTabFilter text="Configuration">
+                    <VBox>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
+                          <Label text="Visibility level" wrapping="true"/>
+                          <StepInput min="0" max="100" value="{/cfg/vislevel}" width="120px" change="configChanged"/>
+                       </HBox>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
+                          <Label text="Maximum number of nodes"  wrapping="true"/>
+                          <StepInput min="0" max="100000" step="1000" value="{/cfg/maxnumnodes}" width="120px" change="configChanged"/>
+                       </HBox>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
+                          <Label text="Num segments"  wrapping="true"/>
+                          <StepInput min="6" max="360" step="6" value="{/cfg/nsegm}" width="120px" change="configChanged"/>
+                       </HBox>
+                       <CheckBox text="Show top volume" selected="{/cfg/showtop}" select="configChanged"/>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
+                          <Label text="Server build shapes"  wrapping="true"/>
+                          <ComboBox selectedKey="{/cfg/build_shapes}" change="configChanged" width="160px">
+                             <core:Item key="0" text="never"/>
+                             <core:Item key="1" text="composite"/>
+                             <core:Item key="2" text="cylindirical"/>
+                            <core:Item key="3" text="all"/>
+                          </ComboBox>
+                       </HBox>
+                    </VBox>
+                  </IconTabFilter>
+               </items>
+            </IconTabBar>
+            <IconTabBar class="sapUiResponsiveContentPadding" expanded="false">
                 <items>
                   <IconTabFilter text="Clipping">
                     <VBox>

@@ -308,6 +308,7 @@ sap.ui.define(['sap/ui/core/Component',
             // this.geo_painter.showControlOptions = this.showControl.bind(this);
 
             this.geom_model = new JSONModel(this.geo_painter.ctrl);
+            this.geo_painter.ctrl.cfg = {}; // dummy config until real config is received
             this.byId("geomControl").setModel(this.geom_model);
             geomDrawing.setGeomPainter(this.geo_painter);
             this.geo_painter.AddHighlightHandler(this);
@@ -458,7 +459,14 @@ sap.ui.define(['sap/ui/core/Component',
                this.extractRawShapes(msg, true);
 
                // after clones are existing - ensure geo painter is there
-               this.createGeoPainter(msg.drawopt);
+               this.createGeoPainter(msg.cfg ? msg.cfg.drawopt : "");
+
+               // assign configuration to the control
+               if (msg.cfg) {
+                  this.geo_painter.ctrl.cfg = msg.cfg;
+                  this.geo_painter.ctrl.show_config = true;
+                  this.geom_model.refresh();
+               }
 
                this.geo_painter.prepareObjectDraw(msg.visibles, "__geom_viewer_selection__");
 
@@ -1059,7 +1067,20 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
 
-      // different handlers of Config page
+      sendConfig: function() {
+        if (!this.standalone && this.geom_painter && this.geom_painter.ctrl.cfg)
+           this.websocket.Send("CFG:" + JSROOT.toJSON(this.geom_painter.ctrl.cfg));
+
+      },
+
+      // configuration handler changes, after short timeout send updated config to server
+      configChanged: function() {
+         if (this.config_tmout)
+            clearTimeout(this.config_tmout);
+
+         this.config_tmout = setTimeout(this.sendConfig.bind(this), 500);
+      },
+
 
       processPainterChange: function(func, arg) {
          var painter = (this.node_painter_active && this.node_painter) ? this.node_painter : this.geo_painter;

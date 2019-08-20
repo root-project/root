@@ -301,6 +301,12 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
 
       printf("Image file %s size %d has been created\n", fname.c_str(), (int) binary.Length());
 
+   } else if (arg.compare(0,4, "CFG:") == 0) {
+
+      auto res = fDesc.ChangeConfiguration(arg.substr(4));
+
+      if (res) SendGeometry(connid);
+
    } else if (arg == "RELOAD") {
 
       SendGeometry(connid);
