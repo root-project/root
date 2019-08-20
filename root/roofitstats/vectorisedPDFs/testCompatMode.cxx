@@ -62,8 +62,6 @@ FIT_TEST_BATCH(TestRooPolynomial, RunBatch)
 FIT_TEST_BATCH_VS_SCALAR(TestRooPolynomial, CompareBatchScalar)
 
 
-
-
 class RooNonVecGaussian : public RooAbsPdf {
 public:
     RooNonVecGaussian() { };

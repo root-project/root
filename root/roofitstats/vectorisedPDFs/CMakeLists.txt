@@ -18,4 +18,20 @@ ROOT_ADD_GTEST(testNestedPDFs testNestedPDFs.cxx
               WILLFAIL)
 ROOT_ADD_GTEST(testProductPdf testProductPdf.cxx)
 ROOT_ADD_GTEST(testJohnson testJohnson.cxx)
-
+ROOT_ADD_GTEST(testLandau testLandau.cxx)
+ROOT_ADD_GTEST(testBukin testBukin.cxx)    
+ROOT_ADD_GTEST(testChebychev testChebychev.cxx)    
+ROOT_ADD_GTEST(testPolynomial testPolynomial.cxx
+              WILLFAIL)    
+ROOT_ADD_GTEST(testBernstein testBernstein.cxx)    
+ROOT_ADD_GTEST(testArgusBG testArgusBG.cxx
+              WILLFAIL)    
+ROOT_ADD_GTEST(testBifurGauss testBifurGauss.cxx
+              WILLFAIL)    
+ROOT_ADD_GTEST(testBreitWigner testBreitWigner.cxx)    
+ROOT_ADD_GTEST(testCBShape testCBShape.cxx)    
+ROOT_ADD_GTEST(testGamma testGamma.cxx
+              WILLFAIL)    
+ROOT_ADD_GTEST(testLegendre testLegendre.cxx)    
+ROOT_ADD_GTEST(testChiSquarePdf testChiSquarePdf.cxx
+              WILLFAIL)    
