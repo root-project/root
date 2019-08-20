@@ -1301,7 +1301,6 @@ std::unique_ptr<ROOT::Experimental::REveGeomNodeInfo> ROOT::Experimental::REveGe
 
          res->ri = shape_descr.rndr_info(); // temporary pointer, can be used preserved for short time
       }
-
    }
 
    return res;
