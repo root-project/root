@@ -45,7 +45,7 @@ class PDFTest : public ::testing::Test
 
     void kickParameters();
 
-    void compareFixedValues(bool normalise, bool compareLogs, bool runTimer = true, unsigned int nChunks = 1);
+    void compareFixedValues(double& maximalError, bool normalise, bool compareLogs, bool runTimer = true, unsigned int nChunks = 1);
 
     void checkParameters();
 
@@ -90,7 +90,9 @@ class PDFTestWeightedData : public PDFTest {
 #define COMPARE_FIXED_VALUES_UNNORM(TEST_CLASS, TEST_NAME) \
     TEST_F(TEST_CLASS, TEST_NAME) {\
   resetParameters();\
-  compareFixedValues(false, false);\
+  double relativeError, maximalRelativeError=0.0;\
+  compareFixedValues(relativeError, false, false);\
+  maximalRelativeError = std::max(maximalRelativeError,relativeError);\
   \
   for (unsigned int i=0; i<5 && !HasFailure(); ++i) {\
     randomiseParameters(1337+i);\
@@ -101,15 +103,19 @@ class PDFTestWeightedData : public PDFTest {
       str << "\n\t" << p->GetName() << "\t" << p->getVal();\
     }\
     SCOPED_TRACE(str.str());\
-    compareFixedValues(false, false, false);\
+    compareFixedValues(relativeError, false, false, false);\
+      maximalRelativeError = std::max(maximalRelativeError,relativeError);\
   }\
+  std::cout << "\nMaximal relative error (scalar vs batch) is: " << maximalRelativeError << "\n\n";\
 }
 
 /// Test batch against scalar code for fixed values of observable with normalisation.
 #define COMPARE_FIXED_VALUES_NORM(TEST_CLASS, TEST_NAME) \
     TEST_F(TEST_CLASS, TEST_NAME) {\
   resetParameters();\
-  compareFixedValues(true, false);\
+  double relativeError, maximalRelativeError=0.0;\
+  compareFixedValues(relativeError, true, false);\
+  maximalRelativeError = std::max(maximalRelativeError,relativeError);\
   \
   for (unsigned int i=0; i<5 && !HasFailure(); ++i) {\
     randomiseParameters(1337+i);\
@@ -120,15 +126,19 @@ class PDFTestWeightedData : public PDFTest {
       str << "\n\t" << p->GetName() << "\t" << p->getVal();\
     }\
     SCOPED_TRACE(str.str());\
-    compareFixedValues(true, false, false);\
+    compareFixedValues(relativeError, true, false, false);\
+    maximalRelativeError = std::max(maximalRelativeError,relativeError);\
   }\
+  std::cout << "\nMaximal relative error (scalar vs batch) is: " << maximalRelativeError << "\n\n";\
 }
 
 /// Test batch against scalar code for fixed values of observable. Compute log probabilities.
 #define COMPARE_FIXED_VALUES_NORM_LOG(TEST_CLASS, TEST_NAME) \
     TEST_F(TEST_CLASS, TEST_NAME) {\
   resetParameters();\
-  compareFixedValues(true, true);\
+  double relativeError, maximalRelativeError=0.0;\
+  compareFixedValues(relativeError, true, true);\
+  maximalRelativeError = std::max(maximalRelativeError,relativeError);\
   \
   for (unsigned int i=0; i<5 && !HasFailure(); ++i) {\
     randomiseParameters(1337+i);\
@@ -139,8 +149,10 @@ class PDFTestWeightedData : public PDFTest {
       str << "\n\t" << p->GetName() << "\t" << p->getVal();\
     }\
     SCOPED_TRACE(str.str());\
-    compareFixedValues(true, true, false);\
+    compareFixedValues(relativeError, true, true, false);\
+    maximalRelativeError = std::max(maximalRelativeError,relativeError);\
   }\
+  std::cout << "\nMaximal relative error (scalar vs batch) is: " << maximalRelativeError << "\n\n";\
 }
 
 /// Run a fit for batch and scalar code and compare results.
