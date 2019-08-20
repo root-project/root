@@ -151,6 +151,11 @@ if(builtin_llvm)
   set(CMAKE_BUILD_TYPE ${LLVM_BUILD_TYPE})
   set(BUILD_SHARED_LIBS "NO")
 
+  if(CMAKE_BUILD_TYPE STREQUAL "Release" AND CMAKE_CXX_FLAGS_RELEASE STREQUAL "")
+    message(WARNING "The LLVM_BUILD_TYPE is set to release, but the CMAKE_CXX_FLAGS_RELEASE are empty."
+      "This will lead to slow builds. Check the flags in CMakeCache.txt.")
+  endif()
+
   set(CLANG_ENABLE_STATIC_ANALYZER OFF CACHE BOOL "")
   set(CLANG_ENABLE_ARCMT OFF CACHE BOOL "")
   set(CLANG_ENABLE_FORMAT OFF CACHE BOOL "")
