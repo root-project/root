@@ -32,6 +32,12 @@ class TSystemDirectory;
 class TSystemFile;
 class TGPictureButton;
 
+namespace ROOT {
+namespace Experimental {
+   class RNTupleBrowser;
+} // namespace Experimental
+} // namespace ROOT
+
 class TGFileBrowser : public TGMainFrame, public TBrowserImp {
 
 public:
@@ -73,7 +79,7 @@ protected:
    mFiltered_t        fFilteredItems;     // List of filtered list-tree items.
    TString            fFilterStr;         // Filter expression string
    
-   void              *fNTupleBrowserPtr = nullptr;  // Points to instance of RNTupleBrowser used by TBrowser
+   ROOT::Experimental::RNTupleBrowser     *fNTupleBrowserPtr = nullptr;  // Points to instance of RNTupleBrowser used by TBrowser
 
    void CreateBrowser();
 

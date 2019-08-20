@@ -38,7 +38,6 @@
 #include "TKeyMapFile.h"
 #include "TVirtualPad.h"
 #include "Getline.h"
-#include <ROOT/RNTupleBrowser.hxx>
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
@@ -261,7 +260,7 @@ TGFileBrowser::~TGFileBrowser()
    if (fCachedPic && (fCachedPic != fFileIcon))
       fClient->FreePicture(fCachedPic);
    if (fFileIcon) fClient->FreePicture(fFileIcon);
-   delete static_cast<ROOT::Experimental::RNTupleBrowser*>(fNTupleBrowserPtr);
+   gROOT->ProcessLine(TString::Format("delete (ROOT::Experimental::RNTupleBrowser*)(%p);", fNTupleBrowserPtr));
    Cleanup();
 }
 
@@ -1230,13 +1229,11 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
       if (obj->InheritsFrom("TDirectory") && (obj->IsA() != TClass::Class())) {
          if (obj->TestBit(9/*TDirectoryFile::kCustomBrowse*/)) {
             is_rntuple = kTRUE;
-            static void *rbrowser = 0;
-            if (!rbrowser) rbrowser = (void *)gROOT->ProcessLine(TString::Format("new ROOT::Experimental::RNTupleBrowser((TDirectory *)%#tx);", (uintptr_t)obj));
-            if (rbrowser) {
-               gROOT->ProcessLine(TString::Format("((ROOT::Experimental::RNTupleBrowser *)%#tx)->SetDirectory((TDirectory *)%#tx);", (uintptr_t)rbrowser, (uintptr_t)obj));
-               gROOT->ProcessLine(TString::Format("((ROOT::Experimental::RNTupleBrowser *)%#tx)->Browse((TBrowser *)%#tx);", (uintptr_t)rbrowser, (uintptr_t)fBrowser));
+            if (!fNTupleBrowserPtr) fNTupleBrowserPtr = (ROOT::Experimental::RNTupleBrowser *)gROOT->ProcessLine(TString::Format("new ROOT::Experimental::RNTupleBrowser((TDirectory *)%#tx);", (uintptr_t)obj));
+            if (fNTupleBrowserPtr) {
+               gROOT->ProcessLine(TString::Format("((ROOT::Experimental::RNTupleBrowser *)%#tx)->SetDirectory((TDirectory *)%#tx);", (uintptr_t)fNTupleBrowserPtr, (uintptr_t)obj));
+               gROOT->ProcessLine(TString::Format("((ROOT::Experimental::RNTupleBrowser *)%#tx)->Browse((TBrowser *)%#tx);", (uintptr_t)fNTupleBrowserPtr, (uintptr_t)fBrowser));
             }
-            fNTupleBrowserPtr = static_cast<ROOT::Experimental::RNTupleBrowser*>(rbrowser);
          } else {
             if (((TDirectory *)obj)->GetListOfKeys())
                fNKeys = ((TDirectory *)obj)->GetListOfKeys()->GetEntries();

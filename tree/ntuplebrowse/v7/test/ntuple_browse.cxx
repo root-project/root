@@ -42,11 +42,15 @@ namespace {
 class FileRaii {
 private:
    std::string fPath;
-   TFile *file = TFile::Open(fPath.c_str(), "RECREATE");
+   TFile *file;
 public:
-   FileRaii(const std::string &path) : fPath(path) { }
+   FileRaii(const std::string &path) :
+      fPath(path),
+      file(TFile::Open(fPath.c_str(), "RECREATE"))
+      { }
    FileRaii(const FileRaii&) = delete;
    FileRaii& operator=(const FileRaii&) = delete;
+   TFile* GetFile() const { return file; }
    ~FileRaii() {
       file->Close();
       std::remove(fPath.c_str());
@@ -62,6 +66,7 @@ class TBrowser{
 TEST(RNTupleBrowse, Floattest)
 {
    FileRaii fileGuard("test.root");
+   TDirectory *directory = fileGuard.GetFile()->mkdir("Staff");
    {
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<float>("FloatField");
@@ -70,13 +75,11 @@ TEST(RNTupleBrowse, Floattest)
       ntuple->Fill();
    } // flushes content to test.root
    
-   TDirectory directory;
-   directory.SetName("Staff");
-   RNTupleBrowser browseObject(&directory, 1000);
-   browseObject.SetDirectory(&directory);
+   RNTupleBrowser browseObject(directory, 1000);
+   browseObject.SetDirectory(directory);
    TBrowser browser;
    browseObject.Browse(&browser);
-      
+   
    ASSERT_EQ(browseObject.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(1));
    ASSERT_EQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(0))->GetType(), ROOT::Experimental::fieldDatatype_float);
    ASSERT_EQ(browseObject.GetfUnitTest(), 1001);
@@ -86,7 +89,9 @@ TEST(RNTupleBrowse, Floattest)
 
 TEST(RNTupleBrowse, Stringtest)
 {
+   
    FileRaii fileGuard("test.root");
+   TDirectory *directory = fileGuard.GetFile()->mkdir("Staff2");
    {
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<std::string>("StringField");
@@ -96,10 +101,8 @@ TEST(RNTupleBrowse, Stringtest)
       ntuple->Fill();
    } // flushes content to test.root
    
-   TDirectory directory;
-   directory.SetName("Staff2");
-   RNTupleBrowser browseObject(&directory, 1000);
-   browseObject.SetDirectory(&directory);
+   RNTupleBrowser browseObject(directory, 1000);
+   browseObject.SetDirectory(directory);
    TBrowser browser;
    browseObject.Browse(&browser);
    
@@ -114,6 +117,7 @@ TEST(RNTupleBrowse, Stringtest)
 TEST(RNTupleBrowse, MixedFieldstest)
 {
    FileRaii fileGuard("test.root");
+   TDirectory *directory = fileGuard.GetFile()->mkdir("Staff3");
    {
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<double>("DoubleField");
@@ -123,18 +127,16 @@ TEST(RNTupleBrowse, MixedFieldstest)
       auto fieldPt5 = model->MakeField<float>("floatField");
       auto fieldPt6 = model->MakeField<std::uint32_t>("uInt32Field");
       auto fieldPt7 = model->MakeField<std::uint64_t>("uInt64Field");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff2", "test.root");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff3", "test.root");
       *fieldPt = 7.9;
       ntuple->Fill();
    } // flushes content to test.root
    
-   TDirectory directory;
-   directory.SetName("Staff2");
-   RNTupleBrowser browseObject(&directory, 1000);
-   browseObject.SetDirectory(&directory);
+   RNTupleBrowser browseObject(directory, 1000);
+   browseObject.SetDirectory(directory);
    TBrowser browser;
    browseObject.Browse(&browser);
-      
+   
    ASSERT_EQ(browseObject.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(7));
    ASSERT_EQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(0))->GetType(), ROOT::Experimental::fieldDatatype_double);
    ASSERT_EQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(1))->GetType(), ROOT::Experimental::fieldDatatype_noHist);
@@ -146,9 +148,12 @@ TEST(RNTupleBrowse, MixedFieldstest)
    ASSERT_EQ(browseObject.GetfUnitTest(), 1007);
 }
 
+
+
 TEST(RNTupleBrowse, Browsetest)
 {
    FileRaii fileGuard("test.root");
+   TDirectory *directory = fileGuard.GetFile()->mkdir("Staff4");
    {
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<double>("DoubleField");
@@ -158,15 +163,13 @@ TEST(RNTupleBrowse, Browsetest)
       auto fieldPt5 = model->MakeField<float>("floatField");
       auto fieldPt6 = model->MakeField<std::uint32_t>("uInt32Field");
       auto fieldPt7 = model->MakeField<std::uint64_t>("uInt64Field");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff2", "test.root");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff4", "test.root");
       *fieldPt = 7.9;
       ntuple->Fill();
    } // flushes content to test.root
    
-   TDirectory directory;
-   directory.SetName("Staff2");
-   RNTupleBrowser browseObject(&directory, 1000);
-   browseObject.SetDirectory(&directory);
+   RNTupleBrowser browseObject(directory, 1000);
+   browseObject.SetDirectory(directory);
    TBrowser browser;
    browseObject.Browse(&browser);
    
@@ -181,15 +184,17 @@ TEST(RNTupleBrowse, Browsetest)
    ASSERT_EQ(browseObject.GetfUnitTest(), 1007);
    // situation up to here is exaclty the same as in the unit test above.
    
-   
    // no ASSERT_EQ here, it only checks if calling the Browse-method leads to an error.
-   for(int i = 0; i < 7; ++i)
-   static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i))->Browse(&browser);
+   for (int i = 0; i < 7; ++i)
+      static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i))->Browse(&browser);
 }
+
+
 
 TEST(RNTupleBrowse, MultipleBrowsetest)
 {
    FileRaii fileGuard("test.root");
+   TDirectory *directory = fileGuard.GetFile()->mkdir("Staff5");
    {
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<double>("DoubleField");
@@ -199,15 +204,13 @@ TEST(RNTupleBrowse, MultipleBrowsetest)
       auto fieldPt5 = model->MakeField<float>("floatField");
       auto fieldPt6 = model->MakeField<std::uint32_t>("uInt32Field");
       auto fieldPt7 = model->MakeField<std::uint64_t>("uInt64Field");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff2", "test.root");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff5", "test.root");
       *fieldPt = 7.9;
       ntuple->Fill();
    } // flushes content to test.root
    
-   TDirectory directory;
-   directory.SetName("Staff2");
-   RNTupleBrowser browseObject(&directory, 1000);
-   browseObject.SetDirectory(&directory);
+   RNTupleBrowser browseObject(directory, 1000);
+   browseObject.SetDirectory(directory);
    TBrowser browser;
    browseObject.Browse(&browser);
    browseObject.Browse(&browser);
@@ -225,15 +228,19 @@ TEST(RNTupleBrowse, MultipleBrowsetest)
    }
    
    // no ASSERT_EQ here, it only checks if calling the Browse-method leads to an error.
-   for(int i = 0; i < 14; ++i)
+   for (int i = 0; i < 14; ++i)
       static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i))->Browse(&browser);
-   for(int i = 0; i < 14; ++i)
+   for (int i = 0; i < 14; ++i)
       static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i))->Browse(&browser);
 }
+
+
 
 TEST(RNTupleBrowse, VecBrowsetest)
 {
    FileRaii fileGuard("test.root");
+   TDirectory *directory = fileGuard.GetFile()->mkdir("Staff6");
+
    {
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<double>("DoubleField");
@@ -241,13 +248,11 @@ TEST(RNTupleBrowse, VecBrowsetest)
       auto fieldPt3 = model->MakeField<std::vector<int>>("VecIntField");
       auto fieldPt4 = model->MakeField<std::string>("StringField2");
       auto fieldPt5 = model->MakeField<float>("floatField");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff2", "test.root");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff6", "test.root");
    } // flushes content to test.root
    
-   TDirectory directory;
-   directory.SetName("Staff2");
-   RNTupleBrowser browseObject(&directory, 1000);
-   browseObject.SetDirectory(&directory);
+   RNTupleBrowser browseObject(directory, 1000);
+   browseObject.SetDirectory(directory);
    TBrowser browser;
    browseObject.Browse(&browser);
    browseObject.Browse(&browser);
@@ -260,19 +265,30 @@ TEST(RNTupleBrowse, VecBrowsetest)
       ASSERT_EQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+3))->GetType(), ROOT::Experimental::fieldDatatype_noHist);
       ASSERT_EQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+4))->GetType(), ROOT::Experimental::fieldDatatype_float);
    }
-   for(int j = 0; j < 3; ++j) {
-   for(int i = 0; i < 10; ++i)
-      if(i%5 == 2) static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i))->Browse(&browser);
-      else
-      static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i))->Browse(&browser);
+   
+   for (int j = 0; j < 3; ++j) {
+      for (int i = 0; i < 10; ++i) {
+         if (i%5 == 2) {
+            static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i))->Browse(&browser);
+         } else {
+            static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i))->Browse(&browser);
+         }
+      }
    }
+   
    ASSERT_EQ(browseObject.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(16)); // create 2*3=6 instances of int-BrowseFields stored.
-   for(int i = 10; i < 16; ++i) ASSERT_EQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i))->GetType(), ROOT::Experimental::fieldDatatype_parentIsVec);
+   for (int i = 10; i < 16; ++i) {
+      ASSERT_EQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i))->GetType(), ROOT::Experimental::fieldDatatype_parentIsVec);
+   }
 }
+
+
 
 TEST(RNTupleBrowse, DoubleVecBrowsetest)
 {
    FileRaii fileGuard("test.root");
+   TDirectory *directory = fileGuard.GetFile()->mkdir("Staff7");
+
    {
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<double>("DoubleField");
@@ -281,19 +297,17 @@ TEST(RNTupleBrowse, DoubleVecBrowsetest)
       auto fieldPt4 = model->MakeField<std::string>("StringField2");
       auto fieldPt5 = model->MakeField<std::vector<int>>("VecIntField2");
       auto fieldPt6 = model->MakeField<float>("floatField");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff2", "test.root");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff7", "test.root");
    } // flushes content to test.root
    
-   TDirectory directory;
-   directory.SetName("Staff2");
-   RNTupleBrowser browseObject(&directory, 1000);
-   browseObject.SetDirectory(&directory);
+   RNTupleBrowser browseObject(directory, 1000);
+   browseObject.SetDirectory(directory);
    TBrowser browser;
    browseObject.Browse(&browser);
    browseObject.Browse(&browser);
    
    ASSERT_EQ(browseObject.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(12)); // instead of 16, because only fields directly attached to the RootField should be "browsed"
-   for(int i = 0; i < 7; i+=6) {
+   for (int i = 0; i < 7; i+=6) {
       ASSERT_EQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i))->GetType(), ROOT::Experimental::fieldDatatype_double);
       ASSERT_EQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+1))->GetType(), ROOT::Experimental::fieldDatatype_noHist);
       EXPECT_EQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+2))->GetFieldName(), "VecIntField");
@@ -301,12 +315,17 @@ TEST(RNTupleBrowse, DoubleVecBrowsetest)
       EXPECT_EQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+4))->GetFieldName(), "VecIntField2");
       ASSERT_EQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+5))->GetType(), ROOT::Experimental::fieldDatatype_float);
    }
-   for(int j = 0; j < 3; ++j) {
-      for(int i = 0; i < 12; ++i)
-         if(i%6 == 2 || i%6 == 4) static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i))->Browse(&browser);
-         else
+   
+   for (int j = 0; j < 3; ++j) {
+      for (int i = 0; i < 12; ++i) {
+         if (i%6 == 2 || i%6 == 4) {
+            static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i))->Browse(&browser);
+         } else {
             static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i))->Browse(&browser);
+         }
+      }
    }
+   
    ASSERT_EQ(browseObject.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(24)); // create 2*2*3=12 instances of int-BrowseFields stored.
    for(int i = 12; i < 24; ++i)
       ASSERT_EQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i))->GetType(), ROOT::Experimental::fieldDatatype_parentIsVec);
@@ -319,9 +338,11 @@ TEST(RNTupleBrowse, DoubleVecBrowsetest)
 }
 
 
+
 TEST(RNTupleBrowse, MultipleRootFiletest)
 {
    FileRaii fileGuard("test.root");
+   TDirectory *directory = fileGuard.GetFile()->mkdir("Staff8");
    {
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<double>("DoubleField");
@@ -330,10 +351,11 @@ TEST(RNTupleBrowse, MultipleRootFiletest)
       auto fieldPt4 = model->MakeField<std::string>("StringField2");
       auto fieldPt5 = model->MakeField<std::vector<int>>("VecIntField2");
       auto fieldPt6 = model->MakeField<float>("floatField");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff2", "test.root");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff8", "test.root");
    } // flushes content to test.root
    
    FileRaii fileGuard2("test2.root");
+   TDirectory *directory2 = fileGuard2.GetFile()->mkdir("Staff9");
    {
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<double>("Double2Field");
@@ -342,27 +364,23 @@ TEST(RNTupleBrowse, MultipleRootFiletest)
       auto fieldPt4 = model->MakeField<std::string>("String2Field2");
       auto fieldPt5 = model->MakeField<std::vector<int>>("VecInt2Field2");
       auto fieldPt6 = model->MakeField<float>("float2Field");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff22", "test2.root");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff9", "test2.root");
    } // flushes content to test.root
    
-   TDirectory directory;
-   directory.SetName("Staff2");
-   RNTupleBrowser browseObject(&directory, 1000);
-   browseObject.SetDirectory(&directory);
+   RNTupleBrowser browseObject(directory, 1000);
+   browseObject.SetDirectory(directory);
    TBrowser browser;
    browseObject.Browse(&browser);
    browseObject.Browse(&browser);
    
-   TDirectory directory2;
-   directory2.SetName("Staff22");
-   RNTupleBrowser browseObject2(&directory2, 2000);
-   browseObject2.SetDirectory(&directory2);
+   RNTupleBrowser browseObject2(directory2, 2000);
+   browseObject2.SetDirectory(directory2);
    TBrowser browser2;
    browseObject2.Browse(&browser2);
    browseObject2.Browse(&browser2);
    
    ASSERT_EQ(browseObject.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(12)); // instead of 16, because only fields directly attached to the RootField should be "browsed"
-   for(int i = 0; i < 7; i+=6) {
+   for (int i = 0; i < 7; i+=6) {
       ASSERT_EQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i))->GetType(), ROOT::Experimental::fieldDatatype_double);
       ASSERT_EQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+1))->GetType(), ROOT::Experimental::fieldDatatype_noHist);
       EXPECT_EQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+2))->GetFieldName(), "VecIntField");
@@ -370,8 +388,9 @@ TEST(RNTupleBrowse, MultipleRootFiletest)
       EXPECT_EQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+4))->GetFieldName(), "VecIntField2");
       ASSERT_EQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+5))->GetType(), ROOT::Experimental::fieldDatatype_float);
    }
+   
    ASSERT_EQ(browseObject2.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(10)); // instead of 12, because only fields directly attached to the RootField should be "browsed"
-   for(int i = 0; i < 7; i+=5) {
+   for (int i = 0; i < 7; i+=5) {
       ASSERT_EQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i))->GetType(), ROOT::Experimental::fieldDatatype_double);
       EXPECT_EQ(static_cast<RFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+1))->GetFieldName(), "VecInt2Field");
       ASSERT_EQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+2))->GetType(), ROOT::Experimental::fieldDatatype_noHist);
@@ -380,9 +399,12 @@ TEST(RNTupleBrowse, MultipleRootFiletest)
    }
 }
 
+
+
 TEST(RNTupleBrowse, MultipleRootFileMultipleBrowsetest)
 {
    FileRaii fileGuard("test.root");
+   TDirectory *directory = fileGuard.GetFile()->mkdir("Staff10");
    {
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<double>("DoubleField");
@@ -391,39 +413,36 @@ TEST(RNTupleBrowse, MultipleRootFileMultipleBrowsetest)
       auto fieldPt4 = model->MakeField<std::string>("StringField2");
       auto fieldPt5 = model->MakeField<std::vector<int>>("VecIntField2");
       auto fieldPt6 = model->MakeField<float>("floatField");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff2", "test.root");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff10", "test.root");
    } // flushes content to test.root
    
    FileRaii fileGuard2("test2.root");
+   TDirectory *directory2 = fileGuard2.GetFile()->mkdir("Staff11");
    {
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<double>("Double2Field");
       auto fieldPt2 = model->MakeField<std::string>("String2Field");
       auto fieldPt3 = model->MakeField<std::vector<int>>("VecInt2Field");
       auto fieldPt4 = model->MakeField<std::string>("String2Field2");
-      //auto fieldPt5 = model->MakeField<std::vector<int>>("VecInt2Field2");
+      // difference to the ntuple above: auto fieldPt5 = model->MakeField<std::vector<int>>("VecInt2Field2");
       auto fieldPt6 = model->MakeField<float>("float2Field");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff22", "test2.root");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff11", "test2.root");
    } // flushes content to test.root
    
-   TDirectory directory;
-   directory.SetName("Staff2");
-   RNTupleBrowser browseObject(&directory, 1000);
-   browseObject.SetDirectory(&directory);
+   RNTupleBrowser browseObject(directory, 1000);
+   browseObject.SetDirectory(directory);
    TBrowser browser;
    browseObject.Browse(&browser);
    browseObject.Browse(&browser);
    
-   TDirectory directory2;
-   directory2.SetName("Staff22");
-   RNTupleBrowser browseObject2(&directory2, 2000);
-   browseObject2.SetDirectory(&directory2);
+   RNTupleBrowser browseObject2(directory2, 2000);
+   browseObject2.SetDirectory(directory2);
    TBrowser browser2;
    browseObject2.Browse(&browser2);
    browseObject2.Browse(&browser2);
    
    ASSERT_EQ(browseObject.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(12)); // instead of 16, because only fields directly attached to the RootField should be "browsed"
-   for(int i = 0; i < 7; i+=6) {
+   for (int i = 0; i < 7; i+=6) {
       ASSERT_EQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i))->GetType(), ROOT::Experimental::fieldDatatype_double);
       ASSERT_EQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+1))->GetType(), ROOT::Experimental::fieldDatatype_noHist);
       EXPECT_EQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+2))->GetFieldName(), "VecIntField");
@@ -431,8 +450,9 @@ TEST(RNTupleBrowse, MultipleRootFileMultipleBrowsetest)
       EXPECT_EQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+4))->GetFieldName(), "VecIntField2");
       ASSERT_EQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+5))->GetType(), ROOT::Experimental::fieldDatatype_float);
    }
+   
    ASSERT_EQ(browseObject2.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(10)); // instead of 12, because only fields directly attached to the RootField should be "browsed"
-   for(int i = 0; i < 7; i+=5) {
+   for (int i = 0; i < 7; i+=5) {
       ASSERT_EQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i))->GetType(), ROOT::Experimental::fieldDatatype_double);
       ASSERT_EQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+1))->GetType(), ROOT::Experimental::fieldDatatype_noHist);
       EXPECT_EQ(static_cast<RFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+2))->GetFieldName(), "VecInt2Field");
@@ -441,26 +461,38 @@ TEST(RNTupleBrowse, MultipleRootFileMultipleBrowsetest)
    }
    
    // browses a couple of times the different root files.
-   for(int i = 0; i < 12; ++i)
-      if ( i%6 == 2 || i%6 == 4 ) static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i))->Browse(&browser);
-      else
+   for (int i = 0; i < 12; ++i) {
+      if ( i%6 == 2 || i%6 == 4 ) {
+         static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i))->Browse(&browser);
+      } else {
          static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i))->Browse(&browser);
-   for(int i = 0; i < 10; ++i)
-      if ( i%5 == 2 ) static_cast<RFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i))->Browse(&browser2);
-      else
+      }
+   }
+   for (int i = 0; i < 10; ++i) {
+      if ( i%5 == 2 ) {
+         static_cast<RFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i))->Browse(&browser2);
+      } else {
          static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i))->Browse(&browser2);
-   for(int i = 0; i < 12; ++i)
-      if ( i%6 == 2 || i%6 == 4 ) static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i))->Browse(&browser);
-      else
+      }
+   }
+   for (int i = 0; i < 12; ++i) {
+      if ( i%6 == 2 || i%6 == 4 ) {
+         static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i))->Browse(&browser);
+      } else {
          static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i))->Browse(&browser);
-   for(int i = 0; i < 10; ++i)
-      if ( i%5 == 2 ) static_cast<RFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i))->Browse(&browser2);
-      else
+      }
+   }
+   for (int i = 0; i < 10; ++i) {
+      if ( i%5 == 2 ) {
+         static_cast<RFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i))->Browse(&browser2);
+      } else {
          static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i))->Browse(&browser2);
+      }
+   }
    
    
    ASSERT_EQ(browseObject.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(20));
-   for(int i = 0; i < 7; i+=6) {
+   for (int i = 0; i < 7; i+=6) {
       ASSERT_EQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i))->GetType(), ROOT::Experimental::fieldDatatype_double);
       ASSERT_EQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+1))->GetType(), ROOT::Experimental::fieldDatatype_noHist);
       EXPECT_EQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+2))->GetFieldName(), "VecIntField");
@@ -470,7 +502,7 @@ TEST(RNTupleBrowse, MultipleRootFileMultipleBrowsetest)
    }
    
    ASSERT_EQ(browseObject2.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(14));
-   for(int i = 0; i < 7; i+=5) {
+   for (int i = 0; i < 7; i+=5) {
       ASSERT_EQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i))->GetType(), ROOT::Experimental::fieldDatatype_double);
       ASSERT_EQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+1))->GetType(), ROOT::Experimental::fieldDatatype_noHist);
       EXPECT_EQ(static_cast<RFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+2))->GetFieldName(), "VecInt2Field");
@@ -478,9 +510,11 @@ TEST(RNTupleBrowse, MultipleRootFileMultipleBrowsetest)
       ASSERT_EQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+4))->GetType(), ROOT::Experimental::fieldDatatype_float);
    }
    
-   for(int i = 12; i < 20; ++i)
+   for (int i = 12; i < 20; ++i) {
       ASSERT_EQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i))->GetType(), ROOT::Experimental::fieldDatatype_parentIsVec);
-   for(int i = 10; i < 14; ++i)
+   }
+   for (int i = 10; i < 14; ++i) {
       ASSERT_EQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i))->GetType(), ROOT::Experimental::fieldDatatype_parentIsVec);
+   }
 }
 

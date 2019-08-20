@@ -46,17 +46,13 @@ void ROOT::Experimental::RNTupleBrowser::SetDirectory(TDirectory* directory)
    }
    
    std::string fullPath = fDirectory->GetPath();
-   // The 5 lines below are used for unit tests in ntuplebrowse.cxx since a TDirectory can't be initialized with a path.
-   if ((fUnitTest/1000) % 10 == 1) {
-      fullPath = "test.root";
-   } else if ((fUnitTest/1000) % 10 == 2) {
-      fullPath = "test2.root";
-   }
+   
+   // name of root-file is extracted from the full path.
    std::string rootFileName = std::string(fullPath, 0, fullPath.find(".root") + 5);
    
    std::unique_ptr<ROOT::Experimental::Detail::RPageSource> sourcePtr = std::make_unique<ROOT::Experimental::Detail::RPageSourceRoot>(fDirectory->GetName(), rootFileName, fDirectory);
    
-   // These 3 lines allow lines 2 to 7 in this function to be executed in the future.
+   // Stores smart pointers of RNTupleReader in a vector, so that RNTupleReader-objects don't get destroyed at the end of this function. Because the fDirectory serves like a key to the RNTupleReader (like in a map data structure), it is also stored in a vector.
    fReaderPtrVec.emplace_back(std::make_shared<ROOT::Experimental::RNTupleReader>(std::move(sourcePtr)));
    fReaderPtr = fReaderPtrVec.back();
    fDirectoryVec.push_back(fDirectory);
