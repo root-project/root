@@ -381,7 +381,7 @@ Int_t TAxis::FindBin(const char *label)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Find bin number with label.
-/// If the List of labels does not exist or the label doe not exist just return -1 .
+/// If the List of labels does not exist or the label does not exist just return -1 .
 /// Do not attempt to modify the axis. This is different than FindBin
 
 Int_t TAxis::FindFixBin(const char *label) const
