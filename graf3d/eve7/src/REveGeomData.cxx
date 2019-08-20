@@ -312,7 +312,6 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr, const std:
    SetMaxVisNodes(maxnodes);
    SetMaxVisFaces( (maxnodes > 5000 ? 5000 : (maxnodes < 1000 ? 1000 : maxnodes)) * 100);
 
-
    // vector to remember numbers
    std::vector<int> numbers;
    int offset = 1000000000;
@@ -502,9 +501,9 @@ void ROOT::Experimental::REveGeomDescription::CollectNodes(REveGeomDrawing &draw
    for (auto &node : fDesc)
       node.useflag = false;
 
+   drawing.cfg = &fCfg;
+
    drawing.numnodes = fDesc.size();
-   drawing.drawopt = GetDrawOptions();
-   drawing.nsegm = GetNSegments();
 
    for (auto &item : drawing.visibles) {
       int nodeid{0};
@@ -1307,4 +1306,27 @@ std::unique_ptr<ROOT::Experimental::REveGeomNodeInfo> ROOT::Experimental::REveGe
 
    return res;
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Change configuration by client
+/// Returns true if any parameter was really changed
+
+bool ROOT::Experimental::REveGeomDescription::ChangeConfiguration(const std::string &json)
+{
+   auto cfg = TBufferJSON::FromJSON<REveGeomConfig>(json);
+   if (!cfg) return false;
+
+   auto json1 = TBufferJSON::ToJSON(cfg.get());
+   auto json2 = TBufferJSON::ToJSON(&fCfg);
+
+   if (json1 == json2)
+      return false;
+
+   fCfg = *cfg; // use assign
+
+   ClearDrawData();
+
+   return true;
+}
+
 
