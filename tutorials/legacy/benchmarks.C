@@ -31,6 +31,7 @@ void benchmarks() {
    TString dir = gSystem->UnixPathName(__FILE__);
    dir.ReplaceAll("benchmarks.C","");
    dir.ReplaceAll("/./","/");
+   dir.ReplaceAll("legacy","");
    bench1 = new TCanvas("bench1","Benchmarks Summary",-1000,50,200,500);
    TPaveText *summary = new TPaveText(0,0,1,1);
    summary->SetTextAlign(12);
