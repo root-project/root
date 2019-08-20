@@ -36,6 +36,42 @@
 #include <iostream>
 #include <type_traits>
 
+namespace {
+
+/// Used in CreateField() in order to get the comma-separated list of template types
+/// E.g., gets {"int", "std::variant<double,int>"} from "int,std::variant<double,int>"
+std::vector<std::string> TokenizeTypeList(std::string templateType) {
+   std::vector<std::string> result;
+   if (templateType.empty())
+      return result;
+
+   char *eol = templateType.data() + templateType.length();
+   char *typeBegin = templateType.data();
+   char *typeCursor = templateType.data();
+   unsigned int nestingLevel = 0;
+   while (typeCursor != eol) {
+      switch (*typeCursor) {
+      case '<':
+         ++nestingLevel;
+         break;
+      case '>':
+         --nestingLevel;
+         break;
+      case ',':
+         if (nestingLevel == 0) {
+            result.push_back(std::string(typeBegin, typeCursor - typeBegin));
+            typeBegin = typeCursor + 1;
+         }
+         break;
+      }
+      typeCursor++;
+   }
+   result.push_back(std::string(typeBegin, typeCursor - typeBegin));
+   return result;
+}
+
+} // anonymous namespace
+
 void ROOT::Experimental::Detail::RFieldFuse::Connect(DescriptorId_t fieldId, RPageStorage &pageStorage, RFieldBase &field)
 {
    if (field.fColumns.empty())
@@ -77,6 +113,7 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    if (normalizedType == "string") normalizedType = "std::string";
    if (normalizedType.substr(0, 7) == "vector<") normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 6) == "array<") normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 8) == "variant<") normalizedType = "std::" + normalizedType;
 
    if (normalizedType == "ROOT::Experimental::ClusterSize_t") return new RField<ClusterSize_t>(fieldName);
    if (normalizedType == "bool") return new RField<bool>(fieldName);
@@ -100,13 +137,22 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       return new RFieldVector(fieldName, std::unique_ptr<Detail::RFieldBase>(itemField));
    }
    if (normalizedType.substr(0, 11) == "std::array<") {
-      std::string arrayDef = normalizedType.substr(11, normalizedType.length() - 12);
-      auto posSeparator = arrayDef.find_last_of(',');
-      std::string itemTypeName = arrayDef.substr(0, posSeparator);
-      auto arrayLength = std::stoi(arrayDef.substr(posSeparator + 1));
-      auto itemField = Create(itemTypeName, itemTypeName);
+      auto arrayDef = TokenizeTypeList(normalizedType.substr(11, normalizedType.length() - 12));
+      R__ASSERT(arrayDef.size() == 2);
+      auto arrayLength = std::stoi(arrayDef[1]);
+      auto itemField = Create(arrayDef[0], arrayDef[0]);
       return new RFieldArray(fieldName, std::unique_ptr<Detail::RFieldBase>(itemField), arrayLength);
    }
+#if __cplusplus >= 201703L
+   if (normalizedType.substr(0, 13) == "std::variant<") {
+      auto innerTypes = TokenizeTypeList(normalizedType.substr(13, normalizedType.length() - 14));
+      std::vector<RFieldBase *> items;
+      for (unsigned int i = 0; i < innerTypes.size(); ++i) {
+         items.emplace_back(Create("variant" + std::to_string(i), innerTypes[i]));
+      }
+      return new RFieldVariant(fieldName, items);
+   }
+#endif
    // TODO: create an RFieldCollection?
    if (normalizedType == ":Collection:") return new RField<ClusterSize_t>(fieldName);
    auto cl = TClass::GetClass(normalizedType.c_str());

@@ -75,6 +75,7 @@ TEST(RNTuple, ReconstructModel)
    auto fieldNnlo = model->MakeField<std::vector<std::vector<float>>>("nnlo");
    auto fieldKlass = model->MakeField<CustomStruct>("klass");
    auto fieldArray = model->MakeField<std::array<double, 2>>("array");
+   auto fieldVariant = model->MakeField<std::variant<double, std::variant<std::string, double>>>("variant");
    {
       RPageSinkRoot sinkRoot("myTree", fileGuard.GetPath());
       sinkRoot.Create(*model.get());
@@ -93,6 +94,9 @@ TEST(RNTuple, ReconstructModel)
    vecPtr->push_back(std::vector<float>{1.0});
    auto array = modelReconstructed->GetDefaultEntry()->Get<std::array<double, 2>>("array");
    EXPECT_TRUE(array != nullptr);
+   auto variant = modelReconstructed->GetDefaultEntry()->Get<
+      std::variant<double, std::variant<std::string, double>>>("variant");
+   EXPECT_TRUE(variant != nullptr);
 }
 
 TEST(RNTuple, StorageRoot)
