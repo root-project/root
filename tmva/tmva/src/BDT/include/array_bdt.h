@@ -17,10 +17,9 @@ namespace array_bdt {
 
 class Tree {
 private:
-   size_t array_length;
-   int    tree_depth;
-
 public:
+   size_t             array_length;
+   int                tree_depth;
    void               set_array_length(const size_t &array_length) { this->array_length = array_length; }
    void               set_tree_depth(const int &tree_depth) { this->tree_depth = tree_depth; }
    inline float       inference(const std::vector<float> &);
@@ -50,6 +49,7 @@ float Tree::inference3(const std::vector<float> &event)
    size_t index = 0;
    while (index < this->array_length) {
       if (this->features[index] == -1) {
+         // std::cout << "AAA  " << index << std::endl;
          return this->thresholds[index];
       }
       index = 2 * index + 1 + (int)(event[this->features[index]] > this->thresholds[index]);
@@ -59,6 +59,9 @@ float Tree::inference3(const std::vector<float> &event)
 inline float Tree::inference(const std::vector<float> &event)
 {
    size_t index = 0;
+   if (this->tree_depth != 3) {
+      std::cout << "AAAH:  " << this->tree_depth << std::endl;
+   }
    // for (unsigned int iLevel = 0; iLevel < log2(this->array_length); ++Level) {
    for (unsigned int iLevel = 0; iLevel < this->tree_depth; ++iLevel) {
       index = 2 * index + 1 + (int)(event[this->features[index]] > this->thresholds[index]);
@@ -77,19 +80,22 @@ std::pair<int, float> get_node_members(json &jTree)
 }
 
 void _read_empty_nodes(std::vector<int> &tree_features, std::vector<float> &tree_thresholds, const int index,
-                       const float &value)
+                       const float &value, bool is_repetition = false)
 {
    int true_index  = 2 * index + 1;
    int false_index = 2 * index + 2;
-
+   // std::cout << "A: " << false_index;
    if (false_index < tree_features.size()) {
-      tree_features.at(true_index)  = -1;
-      tree_features.at(true_index)  = value;
-      tree_features.at(false_index) = -1;
-      tree_features.at(false_index) = value;
+      // if (is_repetition == false) std::cout << "A: " << index << std::endl;
+      // tree_features.at(true_index) = -1;
+      tree_features.at(true_index)   = 0;
+      tree_thresholds.at(true_index) = value;
+      // tree_features.at(false_index) = -1;
+      tree_features.at(false_index)   = 0; // for tree completion
+      tree_thresholds.at(false_index) = value;
 
-      _read_empty_nodes(tree_features, tree_thresholds, true_index, value);
-      _read_empty_nodes(tree_features, tree_thresholds, false_index, value);
+      _read_empty_nodes(tree_features, tree_thresholds, true_index, value, true);
+      _read_empty_nodes(tree_features, tree_thresholds, false_index, value, true);
    }
 }
 
@@ -108,7 +114,8 @@ void _read_nodes(json &jTree, std::vector<int> &tree_features, std::vector<float
       _read_nodes(jTree.at("children").at(1), tree_features, tree_thresholds, false_index);
    } else {
       if (jTree.find("leaf") != jTree.end()) {
-         tree_features.at(index)   = -1;
+         // tree_features.at(index) = -1;
+         tree_features.at(index)   = 0; // tree completion
          tree_thresholds.at(index) = jTree["leaf"];
          _read_empty_nodes(tree_features, tree_thresholds, index, jTree["leaf"]);
       } else {
@@ -144,6 +151,9 @@ void read_nodes_from_tree(json &jTree, Tree &tree)
    _read_nodes(jTree, features, thresholds);
    tree.thresholds.swap(thresholds);
    tree.features.swap(features);
+
+   // for (auto value : tree.features) std::cout << value << std::endl;
+   // std::cout << "------- \n";
 }
 
 } // namespace array_bdt

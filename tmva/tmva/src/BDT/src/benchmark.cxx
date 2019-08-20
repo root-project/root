@@ -271,6 +271,26 @@ BENCHMARK(BM_EvalJitForestBdt_clever)
    });
 
 /// Benchmark eval Jitted_bdts
+static void BM_EvalJitForestBdt_branchless(benchmark::State &state)
+{
+   Forest<std::function<bool(const float *)>> Forest;
+
+   Forest.get_Forest(json_model_file, true);
+   std::vector<bool> preds;
+   preds.reserve(events_vector.size());
+
+   for (auto _ : state) { // only bench what is inside the loop
+      Forest.do_predictions(events_vector, preds);
+   }
+   write_csv(preds_file, preds);
+}
+BENCHMARK(BM_EvalJitForestBdt_branchless)
+   ->Unit(benchmark::kMillisecond)
+   ->ComputeStatistics("min", [](const std::vector<double> &v) -> double {
+      return *(std::min_element(std::begin(v), std::end(v)));
+   });
+
+/// Benchmark eval Jitted_bdts
 static void BM_StaticForestWholeBdt_batch(benchmark::State &state)
 {
 
@@ -293,54 +313,56 @@ BENCHMARK(BM_StaticForestWholeBdt_batch)
    });
 // */
 
-/*
+///////////////////////////  STATIC  ////////////////////////
+///*
 /// Benchmark eval Jitted_bdts
 static void BM_ForestBdtStatic(benchmark::State &state)
 {
-  std::vector<bool> preds;
-  preds.reserve(events_vector.size());
+   std::vector<bool> preds;
+   preds.reserve(events_vector.size());
 
-  std::function<bool(const std::vector<float> &)> my_func = s_f_21566217525::generated_forest;
+   std::function<bool(const std::vector<float> &)> my_func = s_f_21566217525::generated_forest;
 
-  for (auto _ : state) { // only bench what is inside the loop
-     for (size_t i = 0; i < events_vector.size(); i++) {
-        preds.push_back(my_func(events_vector[i]));
-     }
-  }
-  write_csv(preds_file, preds);
+   for (auto _ : state) { // only bench what is inside the loop
+      for (size_t i = 0; i < events_vector.size(); i++) {
+         preds.push_back(my_func(events_vector[i]));
+      }
+   }
+   write_csv(preds_file, preds);
 }
 // /*
 BENCHMARK(BM_ForestBdtStatic)
-  ->Unit(benchmark::kMillisecond)
-  ->ComputeStatistics("min", [](const std::vector<double> &v) -> double {
-     return *(std::min_element(std::begin(v), std::end(v)));
-  });
+   ->Unit(benchmark::kMillisecond)
+   ->ComputeStatistics("min", [](const std::vector<double> &v) -> double {
+      return *(std::min_element(std::begin(v), std::end(v)));
+   });
 // */
 
-/*
+// /*
 /// Benchmark eval Jitted_bdts
 static void BM_ForestBdtOrderedStatic(benchmark::State &state)
 {
-  std::vector<bool> preds;
-  preds.reserve(events_vector.size());
+   std::vector<bool> preds;
+   preds.reserve(events_vector.size());
 
-  std::function<bool(const std::vector<float> &)> my_func = s_f_41566217527::generated_forest;
+   std::function<bool(const std::vector<float> &)> my_func = s_f_41566217527::generated_forest;
 
-  for (auto _ : state) { // only bench what is inside the loop
-     for (size_t i = 0; i < events_vector.size(); i++) {
-        preds.push_back(my_func(events_vector[i]));
-     }
-  }
-  write_csv(preds_file, preds);
+   for (auto _ : state) { // only bench what is inside the loop
+      for (size_t i = 0; i < events_vector.size(); i++) {
+         preds.push_back(my_func(events_vector[i]));
+      }
+   }
+   write_csv(preds_file, preds);
 }
 // /*
 BENCHMARK(BM_ForestBdtOrderedStatic)
-  ->Unit(benchmark::kMillisecond)
-  ->ComputeStatistics("min", [](const std::vector<double> &v) -> double {
-     return *(std::min_element(std::begin(v), std::end(v)));
-  });
+   ->Unit(benchmark::kMillisecond)
+   ->ComputeStatistics("min", [](const std::vector<double> &v) -> double {
+      return *(std::min_element(std::begin(v), std::end(v)));
+   });
 // */
 
+//////////////////////////   xgboost   ///////////////////////////
 // /*
 /// Benchmark eval xgboost_bdt
 static void BM_EvalXgboostBdt(benchmark::State &state)

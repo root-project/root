@@ -16,17 +16,21 @@ CPPFLAGS = -I../include \
 OBJS = build/arrayBdtPreds.o build/uniqueBdtPreds.o \
 			build/uniqueBdtBatch.o build/unique_bdt.o \
 			 build/JitForestBdtPreds.o build/JitForestBdtAll.o\
-			 build/JitForestBdtAll_Static.o build/xgboostBdt.o
+			 build/JitForestBdtAll_Static.o build/xgboostBdt.o\
+			 build/JitForestBranchless.o
 EXE = arrayBdtPreds.exe uniqueBdtPreds.exe \
       uniqueBdtBatch.exe JitForestBdtPreds.exe \
 			JitForestBdtAll.exe JitForestBdtAll_Static.exe \
-			xgboostBdt.exe
+			xgboostBdt.exe JitForestBranchless.exe
 
 .PHONY : all clean distclean
 
 all: $(EXE)
 
 # linking
+JitForestBranchless.exe: build/JitForestBranchless.o build/unique_bdt.o
+	$(CXX) $(CXXFLAGS) -o $@  $^  $(LD_FLAGS) $(ROOT_FLAGS)
+
 xgboostBdt.exe: build/xgboostBdt.o build/unique_bdt.o
 	$(CXX) $(CXXFLAGS) -o $@  $^  $(LD_FLAGS) $(ROOT_FLAGS) $(XGBOOST_ROOT)/lib/libxgboost.so
 
@@ -50,6 +54,9 @@ uniqueBdtBatch.exe: build/uniqueBdtBatch.o build/unique_bdt.o
 
 
 # compilation
+build/JitForestBranchless.o: JitForestBranchless.cxx
+		$(CXX) $(CXXFLAGS) $(ROOT_FLAGS) -c $< -o $@ $(CPPFLAGS)
+
 build/xgboostBdt.o: xgboostBdt.cxx
 		$(CXX) $(CXXFLAGS) $(ROOT_FLAGS) -c $< -o $@ $(CPPFLAGS)
 

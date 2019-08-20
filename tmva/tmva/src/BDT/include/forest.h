@@ -378,5 +378,59 @@ void Forest<std::function<void(const std::vector<std::vector<float>> &, std::vec
    this->trees[0](events_vector, preds);
 }
 // */
+
+
+////////////////////////////////////////////////////////////////
+/// ---------- Specialization JIT branchless ------------- //
+template <>
+void Forest<std::function<bool(const float *)>>::get_Forest(
+   std::string json_file, bool bool_sort_trees)
+{
+   std::string my_config       = read_file_string(json_file);
+   auto        json_model      = json::parse(my_config);
+   int         number_of_trees = json_model.size();
+
+
+   // Read array_trees
+   std::vector<array_bdt::Tree> trees;
+   trees.resize(number_of_trees);
+   for (int i = 0; i < number_of_trees; i++)
+      array_bdt::read_nodes_from_tree(json_model[i], trees[i]);
+   if (bool_sort_trees == true)
+      std::sort(trees.begin(), trees.end(), array_cmp);
+
+   // Generate code
+   std::string s_trees;
+   time_t      my_time          = time(0);
+   std::string s_namespace_name = std::to_string(this->counter) + std::to_string(my_time);
+
+   std::stringstream ss;
+   generate_code_branchless_forest(ss, trees, number_of_trees, s_namespace_name);
+   s_trees = ss.str();
+
+   // write to file for debug
+   std::filebuf fb;
+   std::string  filename = generated_files_path+"branchless_generated_forest.h";
+   fb.open(filename, std::ios::out);
+   std::ostream os(&fb);
+   generate_code_branchless_forest(os, trees, number_of_trees, s_namespace_name);
+   fb.close();
+
+   // JIT functions
+   std::function<bool(const float *)> func;
+   func = jit_branchless_forest(s_trees, s_namespace_name);
+   this->trees.push_back(func);
+}
+
+template <>
+void Forest<std::function<bool(const float *)>>::do_predictions(
+   const std::vector<std::vector<float>> &events_vector, std::vector<bool> &preds)
+ {
+    for (auto &event : events_vector) {
+       preds.push_back(this->trees[0](event.data()));
+    }
+ }
+// */
+
 #endif
 // End file

@@ -17,6 +17,7 @@
 #include "unique_bdt.h"
 #include "TInterpreter.h" // for gInterpreter
 #include "bdt_helpers.h"
+#include "jitted_branchless.h"
 
 //////////////////////////////////////////////////////
 /// CODE GENERATION FUNCTIONS
