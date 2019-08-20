@@ -30,6 +30,8 @@ side of maximum value
 #include "RooBifurGauss.h"
 #include "RooAbsReal.h"
 #include "RooMath.h"
+#include "vdt/exp.h"
+#include "BatchHelpers.h"
 
 using namespace std;
 
@@ -76,6 +78,59 @@ Double_t RooBifurGauss::evaluate() const {
 
   return exp(coef*arg*arg);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+namespace BifurGaussBatchEvaluate {
+//Author: Emmanouil Michalainas, CERN 20 AUGUST 2019  
+
+template<class Tx, class Tm, class Tsl, class Tsr>
+void compute(  size_t batchSize,
+               double * __restrict__ output,
+               Tx X, Tm M, Tsl SL, Tsr SR)
+{
+  for (size_t i=0; i<batchSize; i++) {
+    const double arg = X[i]-M[i];
+    output[i] = arg / ((arg < 0.0)*SL[i] + (arg >= 0.0)*SR[i]);
+  }
+  
+  for (size_t i=0; i<batchSize; i++) {
+    if (X[i]-M[i]>1e-30 || X[i]-M[i]<-1e-30) {
+      output[i] = vdt::fast_exp(-0.5*output[i]*output[i]);
+    }
+    else {
+      output[i] = 1.0;
+    }
+  }
+}
+};
+
+RooSpan<double> RooBifurGauss::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
+  using namespace BatchHelpers;
+  using namespace BifurGaussBatchEvaluate;
+    
+  EvaluateInfo info = getInfo( {&x,&mean,&sigmaL,&sigmaR}, begin, batchSize );
+  auto output = _batchData.makeWritableBatchUnInit(begin, info.size);
+  auto xData = x.getValBatch(begin, info.size);
+  if (info.nBatches == 0) {
+    throw std::logic_error("Requested a batch computation, but no batch data available.");
+  }
+  else if (info.nBatches==1 && !xData.empty()) {
+    compute(info.size, output.data(), xData.data(), 
+    BracketAdapter<double> (mean), 
+    BracketAdapter<double> (sigmaL), 
+    BracketAdapter<double> (sigmaR));
+  }
+  else {
+    compute(info.size, output.data(), 
+    BracketAdapterWithMask (x,x.getValBatch(begin,batchSize)), 
+    BracketAdapterWithMask (mean,mean.getValBatch(begin,batchSize)), 
+    BracketAdapterWithMask (sigmaL,sigmaL.getValBatch(begin,batchSize)), 
+    BracketAdapterWithMask (sigmaR,sigmaR.getValBatch(begin,batchSize)));
+  }
+  return output;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
