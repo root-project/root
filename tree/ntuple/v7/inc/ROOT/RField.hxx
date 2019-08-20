@@ -305,6 +305,8 @@ public:
 class RFieldClass : public Detail::RFieldBase {
 private:
    TClass* fClass;
+   std::size_t fMaxAlignment = 1;
+
 protected:
    void DoAppend(const Detail::RFieldValue& value) final;
    void DoReadGlobal(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
@@ -322,7 +324,7 @@ public:
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) final;
    size_t GetValueSize() const override;
-   size_t GetAlignment() const final { return 1; /* TODO(jblomer) */ }
+   size_t GetAlignment() const final { return fMaxAlignment; }
 };
 
 /// The generic field for a (nested) std::vector<Type> except for std::vector<bool>
@@ -413,7 +415,7 @@ public:
    void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) final;
    size_t GetValueSize() const final;
-   size_t GetAlignment() const final { return 1; /* TODO(jblomer) */}
+   size_t GetAlignment() const final { return fMaxAlignment; }
    void CommitCluster() final;
 };
 #endif
