@@ -202,20 +202,7 @@ ROOT::Experimental::Detail::RPageSourceRoot::~RPageSourceRoot()
 }
 
 
-ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
-ROOT::Experimental::Detail::RPageSourceRoot::AddColumn(DescriptorId_t fieldId, const RColumn &column)
-{
-   R__ASSERT(fieldId != kInvalidDescriptorId);
-   auto columnId = fDescriptor.FindColumnId(fieldId, column.GetIndex());
-   R__ASSERT(columnId != kInvalidDescriptorId);
-   //printf("Attaching column %s id %d type %d length %lu\n",
-   //   column->GetModel().GetName().c_str(), columnId, (int)(column->GetModel().GetType()),
-   //   fMapper.fColumnIndex[columnId].fNElements);
-   return ColumnHandle_t(columnId, &column);
-}
-
-
-void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
+ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceRoot::DoAttach()
 {
    fDirectory = fSettings.fFile->GetDirectory(fNTupleName.c_str());
    RNTupleDescriptorBuilder descBuilder;
@@ -232,11 +219,11 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
    free(ntupleRawFooter->fContent);
    delete ntupleRawFooter;
 
-   fDescriptor = descBuilder.GetDescriptor();
+   return descBuilder.GetDescriptor();
 }
 
 
-ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::DoPopulatePage(
+ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::PopulatePageFromCluster(
    ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor, ClusterSize_t::ValueType clusterIndex)
 {
    auto columnId = columnHandle.fId;
@@ -302,7 +289,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::P
    auto clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
    auto selfOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
    R__ASSERT(selfOffset <= globalIndex);
-   return DoPopulatePage(columnHandle, clusterDescriptor, globalIndex - selfOffset);
+   return PopulatePageFromCluster(columnHandle, clusterDescriptor, globalIndex - selfOffset);
 }
 
 
@@ -318,28 +305,12 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::P
 
    R__ASSERT(clusterId != kInvalidDescriptorId);
    auto clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
-   return DoPopulatePage(columnHandle, clusterDescriptor, index);
+   return PopulatePageFromCluster(columnHandle, clusterDescriptor, index);
 }
 
 void ROOT::Experimental::Detail::RPageSourceRoot::ReleasePage(RPage &page)
 {
    fPagePool->ReturnPage(page);
-}
-
-ROOT::Experimental::NTupleSize_t ROOT::Experimental::Detail::RPageSourceRoot::GetNEntries()
-{
-   return fDescriptor.GetNEntries();
-}
-
-ROOT::Experimental::NTupleSize_t ROOT::Experimental::Detail::RPageSourceRoot::GetNElements(ColumnHandle_t columnHandle)
-{
-   return fDescriptor.GetNElements(columnHandle.fId);
-}
-
-ROOT::Experimental::ColumnId_t ROOT::Experimental::Detail::RPageSourceRoot::GetColumnId(ColumnHandle_t columnHandle)
-{
-   // TODO(jblomer) distinguish trees
-   return columnHandle.fId;
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSourceRoot::Clone() const
