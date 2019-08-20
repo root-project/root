@@ -88,7 +88,7 @@ public:
       std::string_view fieldName,
       std::unique_ptr<RNTupleModel> collectionModel);
 
-   RFieldRoot* GetRootField() { return fRootField.get(); }
+   RFieldRoot *GetRootField() const { return fRootField.get(); }
    REntry* GetDefaultEntry() { return fDefaultEntry.get(); }
    std::unique_ptr<REntry> CreateEntry();
    RNTupleVersion GetVersion() const { return RNTupleVersion(); }

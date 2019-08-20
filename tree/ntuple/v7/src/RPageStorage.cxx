@@ -15,9 +15,14 @@
 
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RColumn.hxx>
+#include <ROOT/RField.hxx>
+#include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RPagePool.hxx>
-
 #include <ROOT/RStringView.hxx>
+
+#include <TError.h>
+
+#include <unordered_map>
 
 ROOT::Experimental::Detail::RPageStorage::RPageStorage(std::string_view name) : fNTupleName(name)
 {
@@ -27,6 +32,10 @@ ROOT::Experimental::Detail::RPageStorage::~RPageStorage()
 {
 }
 
+
+//------------------------------------------------------------------------------
+
+
 ROOT::Experimental::Detail::RPageSource::RPageSource(std::string_view name) : RPageStorage(name)
 {
 }
@@ -35,10 +44,91 @@ ROOT::Experimental::Detail::RPageSource::~RPageSource()
 {
 }
 
+
+//------------------------------------------------------------------------------
+
+
 ROOT::Experimental::Detail::RPageSink::RPageSink(std::string_view name) : RPageStorage(name)
 {
 }
 
 ROOT::Experimental::Detail::RPageSink::~RPageSink()
 {
+}
+
+ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
+ROOT::Experimental::Detail::RPageSink::AddColumn(DescriptorId_t fieldId, const RColumn &column)
+{
+   auto columnId = fLastColumnId++;
+   fDescriptorBuilder.AddColumn(columnId, fieldId, column.GetVersion(), column.GetModel(), column.GetIndex());
+   return ColumnHandle_t(columnId, &column);
+}
+
+
+void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
+{
+   fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription(), "undefined author",
+                                model.GetVersion(), model.GetUuid());
+
+   std::unordered_map<const RFieldBase *, DescriptorId_t> fieldPtr2Id; // necessary to find parent field ids
+   const auto &rootField = *model.GetRootField();
+   fDescriptorBuilder.AddField(fLastFieldId, rootField.GetFieldVersion(), rootField.GetTypeVersion(),
+      rootField.GetName(), rootField.GetType(), rootField.GetNRepetitions(), rootField.GetStructure());
+   fieldPtr2Id[&rootField] = fLastFieldId++;
+   for (auto& f : *model.GetRootField()) {
+      fDescriptorBuilder.AddField(fLastFieldId, f.GetFieldVersion(), f.GetTypeVersion(), f.GetName(), f.GetType(),
+                                  f.GetNRepetitions(), f.GetStructure());
+      fDescriptorBuilder.AddFieldLink(fieldPtr2Id[f.GetParent()], fLastFieldId);
+
+      Detail::RFieldFuse::Connect(fLastFieldId, *this, f); // issues in turn one or several calls to AddColumn()
+      fieldPtr2Id[&f] = fLastFieldId++;
+   }
+
+   auto nColumns = fLastColumnId;
+   for (DescriptorId_t i = 0; i < nColumns; ++i) {
+      RClusterDescriptor::RColumnRange columnRange;
+      columnRange.fColumnId = i;
+      columnRange.fFirstElementIndex = 0;
+      columnRange.fNElements = 0;
+      fOpenColumnRanges.emplace_back(columnRange);
+      RClusterDescriptor::RPageRange pageRange;
+      pageRange.fColumnId = i;
+      fOpenPageRanges.emplace_back(pageRange);
+   }
+
+   DoCreate(model);
+}
+
+
+void ROOT::Experimental::Detail::RPageSink::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
+{
+   auto locator = DoCommitPage(columnHandle, page);
+
+   auto columnId = columnHandle.fId;
+   fOpenColumnRanges[columnId].fNElements += page.GetNElements();
+   RClusterDescriptor::RPageRange::RPageInfo pageInfo;
+   pageInfo.fNElements = page.GetNElements();
+   pageInfo.fLocator = locator;
+   fOpenPageRanges[columnId].fPageInfos.emplace_back(pageInfo);
+}
+
+
+void ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
+{
+   R__ASSERT((nEntries - fPrevClusterNEntries) < ClusterSize_t(-1));
+   fDescriptorBuilder.AddCluster(fLastClusterId, RNTupleVersion(), fPrevClusterNEntries,
+                                 ClusterSize_t(nEntries - fPrevClusterNEntries));
+   for (auto &range : fOpenColumnRanges) {
+      fDescriptorBuilder.AddClusterColumnRange(fLastClusterId, range);
+      range.fFirstElementIndex += range.fNElements;
+      range.fNElements = 0;
+   }
+   for (auto &range : fOpenPageRanges) {
+      fDescriptorBuilder.AddClusterPageRange(fLastClusterId, range);
+      range.fPageInfos.clear();
+   }
+   ++fLastClusterId;
+   fPrevClusterNEntries = nEntries;
+
+   DoCommitCluster(nEntries);
 }

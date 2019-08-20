@@ -95,20 +95,41 @@ up to the given entry number are committed.
 */
 // clang-format on
 class RPageSink : public RPageStorage {
+protected:
+   /// Building the ntuple descriptor while writing is done in the same way for all the storage sink implementations.
+   /// Field, column, cluster ids and page indexes per cluster are issued sequentially starting with 0
+   DescriptorId_t fLastFieldId = 0;
+   DescriptorId_t fLastColumnId = 0;
+   DescriptorId_t fLastClusterId = 0;
+   NTupleSize_t fPrevClusterNEntries = 0;
+   /// Keeps track of the number of elements in the currently open cluster. Indexed by column id.
+   std::vector<RClusterDescriptor::RColumnRange> fOpenColumnRanges;
+   /// Keeps track of the written pages in the currently open cluster. Indexed by column id.
+   std::vector<RClusterDescriptor::RPageRange> fOpenPageRanges;
+   RNTupleDescriptorBuilder fDescriptorBuilder;
+
+   virtual void DoCreate(const RNTupleModel &model) = 0;
+   virtual RClusterDescriptor::RLocator DoCommitPage(ColumnHandle_t columnHandle, const RPage &page) = 0;
+   virtual void DoCommitCluster(NTupleSize_t nEntries) = 0;
+   virtual void DoCommitDataset() = 0;
+
 public:
    explicit RPageSink(std::string_view ntupleName);
    virtual ~RPageSink();
    EPageStorageType GetType() final { return EPageStorageType::kSink; }
 
+   ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
+
    /// Physically creates the storage container to hold the ntuple (e.g., a keys a TFile or an S3 bucket)
+   /// To do so, Create() calls DoCreate() after updating the descriptor.
    /// Create() associates column handles to the columns referenced by the model
-   virtual void Create(RNTupleModel &model) = 0;
+   void Create(RNTupleModel &model);
    /// Write a page to the storage. The column must have been added before.
-   virtual void CommitPage(ColumnHandle_t columnHandle, const RPage &page) = 0;
+   void CommitPage(ColumnHandle_t columnHandle, const RPage &page);
    /// Finalize the current cluster and create a new one for the following data.
-   virtual void CommitCluster(NTupleSize_t nEntries) = 0;
+   void CommitCluster(NTupleSize_t nEntries);
    /// Finalize the current cluster and the entrire data set.
-   virtual void CommitDataset() = 0;
+   void CommitDataset() { DoCommitDataset(); }
 
    /// Get a new, empty page for the given column that can be filled with up to nElements.  If nElements is zero,
    /// the page sink picks an appropriate size.

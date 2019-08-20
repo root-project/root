@@ -67,62 +67,24 @@ ROOT::Experimental::Detail::RPageSinkRoot::~RPageSinkRoot()
    }
 }
 
-ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
-ROOT::Experimental::Detail::RPageSinkRoot::AddColumn(DescriptorId_t fieldId, const RColumn &column)
-{
-   auto columnId = fLastColumnId++;
-   fDescriptorBuilder.AddColumn(columnId, fieldId, column.GetVersion(), column.GetModel(), column.GetIndex());
-   //printf("Added column %s type %d\n", columnHeader.fName.c_str(), (int)columnHeader.fType);
-   return ColumnHandle_t(columnId, &column);
-}
-
-
-void ROOT::Experimental::Detail::RPageSinkRoot::Create(RNTupleModel &model)
+void ROOT::Experimental::Detail::RPageSinkRoot::DoCreate(const RNTupleModel & /* model */)
 {
    fDirectory = fSettings.fFile->mkdir(fNTupleName.c_str());
    // In TBrowser, use RNTupleBrowser(TDirectory *directory) in order to show the ntuple contents
    fDirectory->SetBit(TDirectoryFile::kCustomBrowse);
    fDirectory->SetTitle("ROOT::Experimental::Detail::RNTupleBrowser");
 
-   fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription(), "undefined author",
-                                model.GetVersion(), model.GetUuid());
-
-   std::unordered_map<const RFieldBase *, DescriptorId_t> fieldPtr2Id; // necessary to find parent field ids
-   const auto &rootField = *model.GetRootField();
-   fDescriptorBuilder.AddField(fLastFieldId, rootField.GetFieldVersion(), rootField.GetTypeVersion(),
-      rootField.GetName(), rootField.GetType(), rootField.GetNRepetitions(), rootField.GetStructure());
-   fieldPtr2Id[&rootField] = fLastFieldId++;
-   for (auto& f : *model.GetRootField()) {
-      fDescriptorBuilder.AddField(fLastFieldId, f.GetFieldVersion(), f.GetTypeVersion(), f.GetName(), f.GetType(),
-                                  f.GetNRepetitions(), f.GetStructure());
-      fDescriptorBuilder.AddFieldLink(fieldPtr2Id[f.GetParent()], fLastFieldId);
-
-      Detail::RFieldFuse::Connect(fLastFieldId, *this, f); // issues in turn one or several calls to AddColumn()
-      fieldPtr2Id[&f] = fLastFieldId++;
-   }
-
-   auto nColumns = fLastColumnId;
-   for (DescriptorId_t i = 0; i < nColumns; ++i) {
-      RClusterDescriptor::RColumnRange columnRange;
-      columnRange.fColumnId = i;
-      columnRange.fFirstElementIndex = 0;
-      columnRange.fNElements = 0;
-      fOpenColumnRanges.emplace_back(columnRange);
-      RClusterDescriptor::RPageRange pageRange;
-      pageRange.fColumnId = i;
-      fOpenPageRanges.emplace_back(pageRange);
-   }
-
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
-   auto szFooter = descriptor.SerializeHeader(nullptr);
-   auto buffer = new unsigned char[szFooter];
+   auto szHeader = descriptor.SerializeHeader(nullptr);
+   auto buffer = new unsigned char[szHeader];
    descriptor.SerializeHeader(buffer);
-   ROOT::Experimental::Internal::RNTupleBlob blob(szFooter, buffer);
+   ROOT::Experimental::Internal::RNTupleBlob blob(szHeader, buffer);
    fDirectory->WriteObject(&blob, kKeyNTupleHeader);
    delete[] buffer;
 }
 
-void ROOT::Experimental::Detail::RPageSinkRoot::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
+ROOT::Experimental::RClusterDescriptor::RLocator
+ROOT::Experimental::Detail::RPageSinkRoot::DoCommitPage(ColumnHandle_t columnHandle, const RPage &page)
 {
    unsigned char *buffer = reinterpret_cast<unsigned char *>(page.GetBuffer());
    auto packedBytes = page.GetSize();
@@ -145,35 +107,18 @@ void ROOT::Experimental::Detail::RPageSinkRoot::CommitPage(ColumnHandle_t column
       delete[] buffer;
    }
 
-   auto columnId = columnHandle.fId;
-   fOpenColumnRanges[columnId].fNElements += page.GetNElements();
-   RClusterDescriptor::RPageRange::RPageInfo pageInfo;
-   pageInfo.fNElements = page.GetNElements();
-   pageInfo.fLocator.fPosition = fLastPageIdx++;
-   pageInfo.fLocator.fBytesOnStorage = packedBytes;
-   fOpenPageRanges[columnId].fPageInfos.emplace_back(pageInfo);
+   RClusterDescriptor::RLocator result;
+   result.fPosition = fLastPageIdx++;
+   result.fBytesOnStorage = packedBytes;
+   return result;
 }
 
-void ROOT::Experimental::Detail::RPageSinkRoot::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
+void ROOT::Experimental::Detail::RPageSinkRoot::DoCommitCluster(ROOT::Experimental::NTupleSize_t /* nEntries */)
 {
-   R__ASSERT((nEntries - fPrevClusterNEntries) < ClusterSize_t(-1));
-   fDescriptorBuilder.AddCluster(fLastClusterId, RNTupleVersion(), fPrevClusterNEntries,
-                                 ClusterSize_t(nEntries - fPrevClusterNEntries));
-   for (auto &range : fOpenColumnRanges) {
-      fDescriptorBuilder.AddClusterColumnRange(fLastClusterId, range);
-      range.fFirstElementIndex += range.fNElements;
-      range.fNElements = 0;
-   }
-   for (auto &range : fOpenPageRanges) {
-      fDescriptorBuilder.AddClusterPageRange(fLastClusterId, range);
-      range.fPageInfos.clear();
-   }
-   ++fLastClusterId;
    fLastPageIdx = 0;
-   fPrevClusterNEntries = nEntries;
 }
 
-void ROOT::Experimental::Detail::RPageSinkRoot::CommitDataset()
+void ROOT::Experimental::Detail::RPageSinkRoot::DoCommitDataset()
 {
    if (!fDirectory)
       return;
