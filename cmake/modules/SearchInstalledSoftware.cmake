@@ -1481,6 +1481,22 @@ else()
   set(tmva-rmva  OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-rmva_description})"  FORCE)
 endif()
 
+#---Check for MPI---------------------------------------------------------------------
+if (mpi)
+  message(STATUS "Looking for MPI")
+  find_package(MPI)
+  if(NOT MPI_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "MPI not found. Ensure that the installation of MPI is in the CMAKE_PREFIX_PATH")
+    else()
+      message(STATUS "MPI not found. Ensure that the installation of MPI is in the CMAKE_PREFIX_PATH")
+      message(STATUS "              example: CMAKE_PREFIX_PATH=<MPI_install_path>/lib/CMake/MPI")
+      message(STATUS "              For the time being switching OFF 'mpi' option")
+      set(mpi OFF CACHE BOOL "Disabled because MPI not found (${mpi_description})" FORCE)
+    endif()
+  endif()
+endif()
+
 #---Download googletest--------------------------------------------------------------
 if (testing)
   # FIXME: Remove our version of gtest in roottest. We can reuse this one.
