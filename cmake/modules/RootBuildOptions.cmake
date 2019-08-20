@@ -135,6 +135,7 @@ ROOT_BUILD_OPTION(memstat OFF "Build memory statistics utility (helps to detect 
 ROOT_BUILD_OPTION(mlp ON "Enable support for TMultilayerPerceptron classes' federation")
 ROOT_BUILD_OPTION(minuit2 OFF "Build Minuit2 minimization library")
 ROOT_BUILD_OPTION(monalisa OFF "Enable support for monitoring with Monalisa (requires libapmoncpp)")
+ROOT_BUILD_OPTION(mpi OFF "Enable support for Message Passing Interface (MPI)")
 ROOT_BUILD_OPTION(mysql ON "Enable support for MySQL databases")
 ROOT_BUILD_OPTION(odbc OFF "Enable support for ODBC databases (requires libiodbc or libodbc)")
 ROOT_BUILD_OPTION(opengl ON "Enable support for OpenGL (requires libGL and libGLU)")
