@@ -347,16 +347,22 @@ sap.ui.define(['sap/ui/core/Component',
             this.geo_clones = new JSROOT.GEO.ClonedNodes(null, nodes);
             this.geo_clones.name_prefix = this.geo_clones.GetNodeName(0);
             // normally only need when making selection, not used in geo viewer
-            this.geo_clones.SetMaxVisNodes(draw_msg.maxvisnodes);
-            this.geo_clones.SetVisLevel(draw_msg.vislevel);
+            // this.geo_clones.SetMaxVisNodes(draw_msg.maxvisnodes);
+            // this.geo_clones.SetVisLevel(draw_msg.vislevel);
             // parameter need for visualization with transparency
             // TODO: provide from server
             this.geo_clones.maxdepth = 20;
          }
 
-         if (draw_msg.nsegm) {
+         var nsegm = 0;
+         if (draw_msg.cfg)
+            nsegm = draw_msg.cfg.nsegm;
+         else if (this.geom_model)
+            nsegm = this.geom_model.getProperty("/cfg/nsegm");
+
+         if (nsegm) {
             old_gradpersegm = JSROOT.GEO.GradPerSegm;
-            JSROOT.GEO.GradPerSegm = 360 / Math.max(draw_msg.nsegm,6);
+            JSROOT.GEO.GradPerSegm = 360 / Math.max(nsegm,6);
          }
 
          for (var cnt = 0; cnt < draw_msg.visibles.length; ++cnt) {
@@ -365,13 +371,8 @@ sap.ui.define(['sap/ui/core/Component',
             // entry may be provided without shape - it is ok
             if (!rd) continue;
 
-            if (rd.server_shape) {
-               item.server_shape = rd.server_shape;
-               continue;
-            }
-
             item.server_shape = rd.server_shape =
-               this.createServerShape(rd);
+               this.createServerShape(rd, nsegm);
          }
 
          if (old_gradpersegm)
@@ -380,8 +381,13 @@ sap.ui.define(['sap/ui/core/Component',
          return true;
       },
 
-      /** Create single shape from provided raw data */
-      createServerShape: function(rd) {
+      /** Create single shape from provided raw data. If nsegm changed, shape will be recreated */
+      createServerShape: function(rd, nsegm) {
+
+         if (rd.server_shape && ((rd.nsegm===nsegm) || !rd.shape))
+            return rd.server_shape;
+
+         rd.nsegm = nsegm;
 
          var g = null, off = 0;
 
@@ -946,7 +952,7 @@ sap.ui.define(['sap/ui/core/Component',
          var server_shape = null;
 
          if (info.ri)
-            server_shape = this.createServerShape(info.ri);
+            server_shape = this.createServerShape(info.ri, 0);
 
          this.drawNodeShape(server_shape, false);
       },

@@ -61,7 +61,7 @@
                        <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
                           <Label text="Server build shapes"  wrapping="true"/>
                           <ComboBox selectedKey="{/cfg/build_shapes}" change="configChanged" width="160px">
-                             <core:Item key="0" text="never"/>
+                             <core:Item key="0" text="none"/>
                              <core:Item key="1" text="composite"/>
                              <core:Item key="2" text="non-cylindirical"/>
                              <core:Item key="3" text="all"/>
