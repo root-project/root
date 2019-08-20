@@ -4,9 +4,16 @@
 #include "TMVA/RTensor.hxx"
 
 #include <sstream> // std::stringstream
+#include <iostream> // DEBUG
 
 namespace TMVA {
 namespace Experimental {
+
+/// BDT backend type
+enum class BDTBackend : uint8_t {
+   Array = 0x01,
+   Jitted = 0x02
+};
 
 /// TMVA::Reader legacy interface
 class RBDT {
@@ -14,7 +21,8 @@ private:
 
 public:
    /// Construct from a weight file
-   RBDT(const std::string& modelname, const std::string& filename) {
+   RBDT(const std::string& modelname, const std::string& filename, BDTBackend backend = BDTBackend::Array)
+   {
       // TODO: Read from the file <filename> the model <modelname> using the backend
    }
 
@@ -26,7 +34,7 @@ public:
    }
 
    /// Compute model prediction on input RTensor
-   RTensor<float> Compute(RTensor<float> &x)
+   RTensor<float> Compute(const RTensor<float> &x)
    {
       // TODO: Add inference for a batch of events
       return RTensor<float>({x.GetShape()[0], 1});
