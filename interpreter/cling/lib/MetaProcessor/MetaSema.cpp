@@ -151,8 +151,8 @@ namespace cling {
 
       if (expression.empty()) {
         using namespace clang;
-        const char msg[] = "Failed to call `%0%1` to execute the macro."
-            " Add this function or rename the macro. Falling back to `.L`.";
+        const char msg[] = "Failed to call `%0%1` to execute the macro.\n"
+            "Add this function or rename the macro. Falling back to `.L`.";
 
         DiagnosticsEngine& Diags = m_Interpreter.getDiagnostics();
         unsigned diagID = Diags.getCustomDiagID(DiagnosticsEngine::Level::Warning, msg);
