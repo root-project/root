@@ -214,10 +214,10 @@ TEST_F(TClingTests, GetSharedLibDeps)
    llvm::StringRef SeenDepsRef = SeenDeps;
 
    // Depending on the configuration we expect:
-   // TreePlayer Gpad Graf Graf3d Hist [Imt] MathCore MultiProc Net [New] Tree [tbb]..
+   // TreePlayer Gpad Graf Graf3d Hist [Imt] [MathCore] MultiProc Net [New] Tree [tbb]..
    // FIXME: We should add a generic gtest regex matcher and use a regex here.
    ASSERT_TRUE(SeenDepsRef.startswith("TreePlayer Gpad Graf Graf3d Hist"));
-   ASSERT_TRUE(SeenDepsRef.contains("MathCore MultiProc Net"));
+   ASSERT_TRUE(SeenDepsRef.contains("MultiProc Net"));
    ASSERT_TRUE(SeenDepsRef.contains("Tree"));
 
    EXPECT_ROOT_ERROR(ASSERT_TRUE(nullptr == GetLibDeps("")),
