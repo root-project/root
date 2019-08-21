@@ -1,5 +1,5 @@
 CXX =  g++ # g++ clang++ #  #mpicxx #
-CXXFLAGS = -std=c++11 -fopenmp -O3 -Winline#  -lc++abi -stdlib=libc++
+CXXFLAGS = -std=c++11 -fopenmp -O3 #  -lc++abi -stdlib=libc++
 
 USE_CLANG = 0
 

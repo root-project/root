@@ -25,7 +25,8 @@ void generate_threshold_array(std::ostream& fout,
        << "] {";
   for (int j = 0; j<trees.size(); j++) {
     for (int i = 0; i<trees[j].thresholds.size(); i++){
-      fout << std::to_string(trees[j].thresholds[i]);
+      //fout << std::to_string(trees[j].thresholds[i]);
+      fout << trees[j].thresholds[i];
       if (i < trees[j].thresholds.size()-1){
           fout << ", ";
       }
