@@ -235,7 +235,8 @@ void TCuda<AFloat>::ConvLayerForward(TCudaTensor<AFloat> & output,
                                      const TCudaMatrix<AFloat> &weights, const TCudaMatrix<AFloat> & biases,
                                      const DNN::CNN::TConvParams & params, EActivationFunction activFunc,
                                      TCudaTensor<AFloat> & inputPrime,
-                                     const ConvDescriptors_t & descriptors)
+                                     const ConvDescriptors_t & /*descriptors*/,
+                                     void * /*cudnnWorkspace*/)
 {
    size_t height = calculateDimension(params.inputHeight, params.filterHeight, params.paddingHeight, params.strideRows);
    size_t width = calculateDimension(params.inputWidth, params.filterWidth, params.paddingWidth, params.strideCols);
@@ -268,9 +269,11 @@ void TCuda<AFloat>::ConvLayerBackward(TCudaTensor<AFloat> & activationGradientsB
                                       TCudaMatrix<AFloat> & weightGradients,
                                       TCudaMatrix<AFloat> & biasGradients,
                                       TCudaTensor<AFloat> & df,
-                                      const TCudaTensor<AFloat> & activationGradients,
+                                      TCudaTensor<AFloat> & activationGradients,
                                       const TCudaMatrix<AFloat> & weights,
                                       const TCudaTensor<AFloat> & activationBackward,
+                                      const Tensor_t & /*outputTensor*/,
+                                      const ConvDescriptors_t & /*descriptors*/,
                                       size_t batchSize,
                                       size_t inputHeight,
                                       size_t inputWidth,
@@ -280,7 +283,9 @@ void TCuda<AFloat>::ConvLayerBackward(TCudaTensor<AFloat> & activationGradientsB
                                       size_t filterDepth,
                                       size_t filterHeight,
                                       size_t filterWidth,
-                                      size_t nLocalViews)
+                                      size_t nLocalViews,
+                                      void * /*cudnnConvBwdWorkspaces*/, 
+                                      void * /*cudnnFilterBwdWorkspace*/)
 {
     
    // Compute element-wise product.

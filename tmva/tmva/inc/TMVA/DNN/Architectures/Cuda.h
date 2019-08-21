@@ -569,8 +569,15 @@ public:
    // Architecture Initialization
    //____________________________________________________________________________
 
+   /** Initialize CNN data/operator descriptors. Not used at the moment.*/
    template<typename Layer_t>
-   static void InitializeCNNDescriptors(CNN::TDescriptors *& /*descriptors*/, Layer_t *L = nullptr) {}
+   static void InitializeCNNDescriptors(CNN::TDescriptors *& /*descriptors*/, Layer_t */*L = nullptr*/) {}
+   
+   /** Release CNN data/operator descriptors. Not used at the moment.*/
+   template<typename Layer_t>
+   static void ReleaseCNNDescriptors(CNN::TDescriptors * & /*descriptors*/, Layer_t */*L = nullptr*/) {}
+   
+   static void FreeWorkspace(void * /*workspace*/) {}   ///< Only used for certain cudnn on-device memory
    
    //____________________________________________________________________________
    //
@@ -879,7 +886,8 @@ public:
                                 const Matrix_t &weights, const Matrix_t & biases,
                                 const DNN::CNN::TConvParams & params, EActivationFunction activFunc,
                                 Tensor_t & /* inputPrime */,
-                                const ConvDescriptors_t & descriptors);
+                                const ConvDescriptors_t & /*descriptors*/,   // Empty struct for cuda architecture
+                                void * cudnnWorkspace = nullptr);      // Remains nullptr for cuda architecture
 
    /** @name Backward Propagation in Convolutional Layer
     */
@@ -896,11 +904,18 @@ public:
    static void ConvLayerBackward(Tensor_t &activationGradientsBackward,
                                  Matrix_t &weightGradients, Matrix_t &biasGradients,
                                  Tensor_t &df,
-                                 const Tensor_t &activationGradients,
+                                 Tensor_t &activationGradients,
                                  const Matrix_t &weights,
-                                 const Tensor_t &activationBackward, size_t batchSize,
-                                 size_t inputHeight, size_t inputWidth, size_t depth, size_t height, size_t width,
-                                 size_t filterDepth, size_t filterHeight, size_t filterWidth, size_t nLocalViews);
+                                 const Tensor_t &activationBackward,
+                                 const Tensor_t & /*outputTensor*/,
+                                 const ConvDescriptors_t & /*descriptors*/,
+                                 size_t batchSize,   size_t inputHeight, 
+                                 size_t inputWidth,  size_t depth, 
+                                 size_t height,      size_t width,
+                                 size_t filterDepth, size_t filterHeight, 
+                                 size_t filterWidth, size_t nLocalViews,
+                                 void * cudnnConvBwdWorkspaces = nullptr, 
+                                 void * cudnnFilterBwdWorkspace = nullptr);
 
    /** Utility function for calculating the activation gradients of the layer
     *  before the convolutional layer. */
