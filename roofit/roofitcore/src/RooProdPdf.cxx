@@ -1848,15 +1848,16 @@ RooAbsPdf::ExtendMode RooProdPdf::extendMode() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the expected number of events associated with the extentable input p.d.f
-/// in the product. If there is no extendable term, return zero and issue and error
+/// Return the expected number of events associated with the extendable input PDF
+/// in the product. If there is no extendable term, abort.
 
 Double_t RooProdPdf::expectedEvents(const RooArgSet* nset) const
 {
   if (_extendedIndex<0) {
-    coutE(Generation) << "ERROR: Requesting expected number of events from a RooProdPdf that does not contain an extended p.d.f" << endl ;
+    coutF(Generation) << "Requesting expected number of events from a RooProdPdf that does not contain an extended p.d.f" << endl ;
+    throw std::logic_error(std::string("RooProdPdf ") + GetName() + " could not be extended.");
   }
-  assert(_extendedIndex>=0) ;
+
   return ((RooAbsPdf*)_pdfList.at(_extendedIndex))->expectedEvents(nset) ;
 }
 

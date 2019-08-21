@@ -450,7 +450,9 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
 
 std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const
 {
-  assert(stepSize == 1);
+  if (stepSize != 1)
+    throw std::invalid_argument(std::string("Error in ") + __FILE__ + ": Step size for batch computations can only be 1.");
+
   auto pdfClone = static_cast<const RooAbsPdf*>(_funcClone);
 
   auto results = pdfClone->getLogValBatch(firstEvent, lastEvent-firstEvent, _normSet);

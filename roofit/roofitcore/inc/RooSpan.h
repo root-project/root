@@ -59,25 +59,25 @@ public:
 
   /// Construct from a range. Data held by foreign object.
   template < class InputIterator>
-  constexpr RooSpan(InputIterator begin, InputIterator end) :
+  constexpr RooSpan(InputIterator beginIn, InputIterator endIn) :
   _auxStorage{},
-  _span{begin, end}
+  _span{beginIn, endIn}
   { }
 
 
   /// Construct from start and end pointers.
-  constexpr RooSpan(typename std::span<T>::pointer begin,
-      typename std::span<T>::pointer end) :
+  constexpr RooSpan(typename std::span<T>::pointer beginIn,
+      typename std::span<T>::pointer endIn) :
     _auxStorage{},
-    _span{begin, end}
+    _span{beginIn, endIn}
   { }
 
 
   /// Construct from start pointer and size.
-  constexpr RooSpan(typename std::span<T>::pointer begin,
-      typename std::span<T>::index_type size) :
+  constexpr RooSpan(typename std::span<T>::pointer beginIn,
+      typename std::span<T>::index_type sizeIn) :
   _auxStorage{},
-  _span{begin, size}
+  _span{beginIn, sizeIn}
   { }
 
 
