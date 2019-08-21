@@ -37,7 +37,7 @@ def pythonize_rbdt(klass, name):
     # klass: class to be pythonized
     # name: name of the class
 
-    if "RBDT" in name:
+    if name.startswith("TMVA::Experimental::RBDT"):
         klass._OriginalCompute = klass.Compute
         klass.Compute = Compute
 
