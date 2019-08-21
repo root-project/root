@@ -7067,14 +7067,24 @@ static std::string GetSharedLibImmediateDepsSlow(std::string lib,
          if (SymName.empty())
             continue;
 
-         // Skip the symbols which are part of the C/C++ runtime and have a
-         // fixed library version. See binutils ld VERSION. Those reside in
-         // 'system' libraries, which we avoid in ResolveSymbol.
-         if (BinObjFile->isELF() && (SymName.contains("@@GLIBCXX") ||
-                                     SymName.contains("@@CXXABI") ||
-                                     SymName.contains("@@GLIBC") ||
-                                     SymName.contains("@@GCC")))
+         if (BinObjFile->isELF()) {
+          // Skip the symbols which are part of the C/C++ runtime and have a
+          // fixed library version. See binutils ld VERSION. Those reside in
+          // 'system' libraries, which we avoid in ResolveSymbol.
+          if (SymName.contains("@@GLIBCXX") || SymName.contains("@@CXXABI") ||
+              SymName.contains("@@GLIBC") || SymName.contains("@@GCC"))
             continue;
+
+          // Those are 'weak undefined' symbols produced by gcc. We can
+          // ignore them.
+          // FIXME: It is unclear whether we can ignore all weak undefined
+          // symbols:
+          // http://lists.llvm.org/pipermail/llvm-dev/2017-October/118177.html
+          if (SymName == "_Jv_RegisterClasses" ||
+              SymName == "_ITM_deregisterTMCloneTable" ||
+              SymName == "_ITM_registerTMCloneTable")
+            continue;
+      }
 
          // If we can find the address of the symbol, we have loaded it. Skip.
          if (skipLoadedLibs && llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(SymName))
