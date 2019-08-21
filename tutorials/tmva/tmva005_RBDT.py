@@ -42,4 +42,38 @@ print("RTensor input for inference on data of multiple events:\n{}".format(x))
 print("Prediction performed on multiple events:\n{}".format(y))
 
 # 3) Perform inference as part of an RDataFrame graph
-# TODO
+variables = ROOT.std.vector["string"](("var1", "var2", "var3", "var4"))
+
+def helper(model, num_variables):
+    # TODO: Move to the pythonization layer
+    seq = ROOT.std.integer_sequence("std::size_t", *range(num_variables))()
+    seqtype = type(seq).__cppname__
+    modeltype = type(model).__cppname__
+    return ROOT.TMVA.Experimental.Internal.ComputeHelper[seqtype, "float", modeltype + "&"](ROOT.std.move(model))
+
+def make_histo(treename):
+    df = ROOT.RDataFrame(treename, "http://root.cern.ch/files/tmva_class_example.root")
+    df = df.Define("y", helper(bdt, len(variables)), variables)
+    return df.Histo1D((treename, ";BDT score;N_{Events}", 30, -0.5, 0.5), "y")
+
+sig = make_histo("TreeS")
+bkg = make_histo("TreeB")
+
+# Make plot
+ROOT.gStyle.SetOptStat(0)
+c = ROOT.TCanvas("", "", 800, 800)
+
+sig.SetLineColor(ROOT.kRed)
+bkg.SetLineColor(ROOT.kBlue)
+sig.SetLineWidth(2)
+bkg.SetLineWidth(2)
+bkg.Draw("HIST")
+sig.Draw("HIST SAME")
+
+legend = ROOT.TLegend(0.7, 0.7, 0.89, 0.89)
+legend.SetBorderSize(0)
+legend.AddEntry("TreeS", "Signal", "l")
+legend.AddEntry("TreeB", "Background", "l")
+legend.Draw()
+
+c.DrawClone()
