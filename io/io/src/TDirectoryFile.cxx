@@ -751,7 +751,7 @@ void TDirectoryFile::FillBuffer(char *&buffer)
       version += 1000;
    }
    tobuf(buffer, version);
-   if (fFile && fFile->TestBit(TFile::kReproducible)) {
+   if (TestBit(TFile::kReproducible) || (fFile && fFile->TestBit(TFile::kReproducible))) {
       fDatimeC = (UInt_t) 1;
       fDatimeM = (UInt_t) 1;
       fUUID.SetUUID("00000000-0000-0000-0000-000000000000");
