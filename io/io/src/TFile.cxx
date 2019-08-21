@@ -350,6 +350,9 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    if (strstr(fUrl.GetOptions(), "filetype=pcm"))
       fIsPcmFile = kTRUE;
 
+   if (fUrl.HasOption("reproducible"))
+      SetBit(kReproducible);
+
    // Init initialization control flag
    fInitDone   = kFALSE;
    fMustFlush  = kTRUE;
