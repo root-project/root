@@ -632,6 +632,42 @@ public:
 };
 
 template <>
+class RField<std::uint8_t> : public Detail::RFieldBase {
+public:
+   static std::string MyTypeName() { return "std::uint8_t"; }
+   explicit RField(std::string_view name)
+     : Detail::RFieldBase(name, MyTypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+   RField(RField&& other) = default;
+   RField& operator =(RField&& other) = default;
+   ~RField() = default;
+   RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
+
+   void DoGenerateColumns() final;
+
+   std::uint8_t *Map(NTupleSize_t globalIndex) {
+      return fPrincipalColumn->Map<std::uint8_t, EColumnType::kByte>(globalIndex);
+   }
+   std::uint8_t *Map(const RClusterIndex &clusterIndex) {
+      return fPrincipalColumn->Map<std::uint8_t, EColumnType::kByte>(clusterIndex);
+   }
+
+   using Detail::RFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where, ArgsT&&... args)
+   {
+      return Detail::RFieldValue(
+         Detail::RColumnElement<std::uint8_t, EColumnType::kByte>(static_cast<std::uint8_t*>(where)),
+         this, static_cast<std::uint8_t*>(where), std::forward<ArgsT>(args)...);
+   }
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final { return GenerateValue(where, 0); }
+   Detail::RFieldValue CaptureValue(void *where) final {
+      return Detail::RFieldValue(true /* captureFlag */,
+         Detail::RColumnElement<std::uint8_t, EColumnType::kByte>(static_cast<std::uint8_t*>(where)), this, where);
+   }
+   size_t GetValueSize() const final { return sizeof(std::uint8_t); }
+};
+
+template <>
 class RField<std::int32_t> : public Detail::RFieldBase {
 public:
    static std::string MyTypeName() { return "std::int32_t"; }

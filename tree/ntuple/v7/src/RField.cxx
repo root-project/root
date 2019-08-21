@@ -105,6 +105,8 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    if (normalizedType == "Bool_t") normalizedType = "bool";
    if (normalizedType == "Float_t") normalizedType = "float";
    if (normalizedType == "Double_t") normalizedType = "double";
+   if (normalizedType == "UChar_t") normalizedType = "std::uint8_t";
+   if (normalizedType == "unsigned char") normalizedType = "std::uint8_t";
    if (normalizedType == "Int_t") normalizedType = "std::int32_t";
    if (normalizedType == "int") normalizedType = "std::int32_t";
    if (normalizedType == "unsigned") normalizedType = "std::uint32_t";
@@ -118,6 +120,7 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
 
    if (normalizedType == "ROOT::Experimental::ClusterSize_t") return new RField<ClusterSize_t>(fieldName);
    if (normalizedType == "bool") return new RField<bool>(fieldName);
+   if (normalizedType == "std::uint8_t") return new RField<std::uint8_t>(fieldName);
    if (normalizedType == "std::int32_t") return new RField<std::int32_t>(fieldName);
    if (normalizedType == "std::uint32_t") return new RField<std::uint32_t>(fieldName);
    if (normalizedType == "std::uint64_t") return new RField<std::uint64_t>(fieldName);
@@ -294,6 +297,16 @@ void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::DoGenerateCo
    RColumnModel model(EColumnType::kIndex, true /* isSorted*/);
    fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
       Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(model, 0)));
+   fPrincipalColumn = fColumns[0].get();
+}
+
+//------------------------------------------------------------------------------
+
+void ROOT::Experimental::RField<std::uint8_t>::DoGenerateColumns()
+{
+   RColumnModel model(EColumnType::kByte, false /* isSorted*/);
+   fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(Detail::RColumn::Create<
+      std::uint8_t, EColumnType::kByte>(model, 0)));
    fPrincipalColumn = fColumns[0].get();
 }
 

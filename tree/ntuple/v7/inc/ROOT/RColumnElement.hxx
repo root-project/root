@@ -136,6 +136,17 @@ public:
 };
 
 template <>
+class RColumnElement<std::uint8_t, EColumnType::kByte> : public RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = true;
+   static constexpr std::size_t kSize = sizeof(std::uint8_t);
+   static constexpr std::size_t kBitsOnStorage = kSize * 8;
+   explicit RColumnElement(std::uint8_t *value) : RColumnElementBase(value, kSize) {}
+   bool IsMappable() const final { return kIsMappable; }
+   std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
+};
+
+template <>
 class RColumnElement<std::int32_t, EColumnType::kInt32> : public RColumnElementBase {
 public:
    static constexpr bool kIsMappable = true;
