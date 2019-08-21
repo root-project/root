@@ -375,9 +375,6 @@ overhead which we go in details bellow.
 
 
 ### Current limitations
-  * Incremental builds -- building ROOT, modifying the source code and rebuilding
-  might not work. To work around it remove all pcm files in the $ROOTSYS/lib
-  folder.
   * Relocatability issues -- we have fixed a few of the relocatability issues we
   found. We are aware of an obscure relocatability issue when ROOT is copied in
   another folder and we are rebuild. ROOT picks up both modulemap files in
