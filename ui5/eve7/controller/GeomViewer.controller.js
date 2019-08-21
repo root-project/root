@@ -1101,6 +1101,10 @@ sap.ui.define(['sap/ui/core/Component',
             painter[func](arg);
       },
 
+      lightChanged: function() {
+         this.processPainterChange('changedLight');
+      },
+
       sliderXchange: function() {
          this.processPainterChange('changedClipping', 0);
       },
