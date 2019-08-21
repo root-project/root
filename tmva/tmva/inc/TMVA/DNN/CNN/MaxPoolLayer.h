@@ -68,8 +68,11 @@ public:
 private:
    Tensor_t fIndexTensor; ///< Matrix of indices for the backward pass.
    
-   /*TDescriptors<TMaxPoolLayer<Architecture_t> > fDescriptors; ///< Keeps the descriptor for the pooling operation in cudnn
-   void InitializeDescriptors();    */                             ///< Initializes cudnn descriptors
+   /*TDescriptors * fDescriptors = nullptr;  ///< Keeps the pooling descriptor
+   void * fCudnnWorkspace = nullptr;       ///< On device memory needed for cudnn pooling operation
+
+   void InitializeDescriptors();
+   void ReleaseDescriptors();*/
 public:
    /*! Constructor. */
    TMaxPoolLayer(size_t BatchSize, size_t InputDepth, size_t InputHeight, size_t InputWidth, size_t FilterHeight,
@@ -123,6 +126,7 @@ TMaxPoolLayer<Architecture_t>::TMaxPoolLayer(size_t batchSize, size_t inputDepth
                                      EActivationFunction::kIdentity, ERegularization::kNone, 0),
           fIndexTensor(  this->GetBatchSize(), this->GetDepth(), this->GetNLocalViews() )
 {
+   TConvLayer<Architecture_t>::InitializeDescriptors();
 }
 
 //______________________________________________________________________________
@@ -131,6 +135,7 @@ TMaxPoolLayer<Architecture_t>::TMaxPoolLayer(TMaxPoolLayer<Architecture_t> *laye
    : TConvLayer<Architecture_t>(layer), 
    fIndexTensor( layer->GetIndexTensor().GetShape())
 {
+   TConvLayer<Architecture_t>::InitializeDescriptors();
 }
 
 //______________________________________________________________________________
@@ -139,6 +144,7 @@ TMaxPoolLayer<Architecture_t>::TMaxPoolLayer(const TMaxPoolLayer &layer)
    : TConvLayer<Architecture_t>(layer), 
    fIndexTensor( layer.GetIndexTensor().GetShape() )
 {
+   TConvLayer<Architecture_t>::InitializeDescriptors();
 }
 
 //______________________________________________________________________________
@@ -146,6 +152,17 @@ template <typename Architecture_t>
 TMaxPoolLayer<Architecture_t>::~TMaxPoolLayer()
 {
 }
+
+//______________________________________________________________________________
+/*template <typename Architecture_t>
+void TMaxPoolLayer<Architecture_t>::InitializeDescriptors() {
+      Architecture_t::InitializeCNNDescriptors(fDescriptors, this);
+}
+
+template <typename Architecture_t>
+void TMaxPoolLayer<Architecture_t>::ReleaseDescriptors() {
+      Architecture_t::ReleaseCNNDescriptors(fDescriptors, this);
+}*/
 
 //______________________________________________________________________________
 template <typename Architecture_t>

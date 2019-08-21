@@ -362,7 +362,8 @@ void TCpu<AFloat>::ConvLayerForward(TCpuTensor<AFloat> & output,
                                     const TCpuMatrix<AFloat> &weights, const TCpuMatrix<AFloat> & biases,
                                     const DNN::CNN::TConvParams & params, EActivationFunction activFunc,
                                     TCpuTensor<AFloat> & /*  */,
-                                    const ConvDescriptors_t & /*descriptors*/)
+                                    const ConvDescriptors_t & /*descriptors*/,
+                                    void * /*cudnnWorkspace*/)
 {
    size_t height = calculateDimension(params.inputHeight, params.filterHeight, params.paddingHeight, params.strideRows);
    size_t width = calculateDimension(params.inputWidth, params.filterWidth, params.paddingWidth, params.strideCols);
@@ -408,11 +409,18 @@ template <typename AFloat>
 void TCpu<AFloat>::ConvLayerBackward(TCpuTensor<AFloat> &activationGradientsBackward,
                                      TCpuMatrix<AFloat> &weightGradients, TCpuMatrix<AFloat> &biasGradients,
                                      TCpuTensor<AFloat> &df,
-                                     const TCpuTensor<AFloat> &activationGradients,
+                                     TCpuTensor<AFloat> &activationGradients,
                                      const TCpuMatrix<AFloat> &weights,
-                                     const TCpuTensor<AFloat> &activationsBackward, size_t batchSize,
-                                     size_t inputHeight, size_t inputWidth, size_t depth, size_t height, size_t width,
-                                     size_t filterDepth, size_t filterHeight, size_t filterWidth, size_t nLocalViews)
+                                     const TCpuTensor<AFloat> &activationsBackward,
+                                     const Tensor_t & /*outputTensor*/,
+                                     const ConvDescriptors_t & /*descriptors*/,
+                                     size_t batchSize,   size_t inputHeight, 
+                                     size_t inputWidth,  size_t depth, 
+                                     size_t height,      size_t width,
+                                     size_t filterDepth, size_t filterHeight, 
+                                     size_t filterWidth, size_t nLocalViews,
+                                     void * /*cudnnConvBwdWorkspaces*/, 
+                                     void * /*cudnnFilterBwdWorkspace*/)
 {
    // Update derivatives
    //    size_t m, n;

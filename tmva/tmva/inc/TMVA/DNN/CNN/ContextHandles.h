@@ -42,6 +42,7 @@ struct TCNNDescriptors : public TDescriptors {
    WeightsDescriptor_t WeightsDescriptor;
    
    void InitializeDescriptors() {Layer_t::InitializeDescriptors();};
+   void ReleaseDescriptors()    {Layer_t::ReleaseDescriptors();};
 };
 
 } // namespace CNN

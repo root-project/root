@@ -27,7 +27,6 @@
 #ifndef TMVA_CNN_CONVLAYER
 #define TMVA_CNN_CONVLAYER
 
-//#include "TMVA/DNN/Architectures/TCudnn.h"
 #include "TMatrix.h"
 
 #include "TMVA/DNN/GeneralLayer.h"
@@ -55,15 +54,14 @@ public:
    using WeightsDescriptor_t = typename Architecture_t::FilterDescriptor_t;
    using HelperDescriptor_t  = typename Architecture_t::ActivationDescriptor_t;
 
-private:
    /* Calculate the output dimension of the convolutional layer */
-   size_t calculateDimension(size_t imgDim, size_t fltDim, size_t padding, size_t stride);
+   static size_t calculateDimension(size_t imgDim, size_t fltDim, size_t padding, size_t stride);
 
    /* Calculate the number of pixels in a single receptive field */
-   size_t inline calculateNLocalViewPixels(size_t depth, size_t height, size_t width) { return depth * height * width; }
+   static size_t inline calculateNLocalViewPixels(size_t depth, size_t height, size_t width) { return depth * height * width; }
 
    /* Calculate the number of receptive fields in an image given the filter and image sizes */
-   size_t calculateNLocalViews(size_t inputHeight, size_t filterHeight, size_t paddingHeight, size_t strideRows,
+   static size_t calculateNLocalViews(size_t inputHeight, size_t filterHeight, size_t paddingHeight, size_t strideRows,
                                size_t inputWidth, size_t filterWidth, size_t paddingWidth, size_t strideCols);
 
 protected:
@@ -78,11 +76,20 @@ protected:
    size_t fNLocalViews;          ///< The number of local views in one image.
 
    Scalar_t fDropoutProbability; ///< Probability that an input is active.
+   
+   TDescriptors * fDescriptors = nullptr;  ///< Keeps the convolution, activations and filter descriptors
+   void InitializeDescriptors();
+   void ReleaseDescriptors();
+  
+   void * fCudnnConvFwdWorkspace;  
+   void * fCudnnConvBwdWorkspace; 
+   void * fCudnnFilterBwdWorkspace;  ///< On device memory needed for cudnn convolution operation backward
+   void FreeWorkspace(void * workSpaces);///< Releases the on device workspace used by cudnn functions (cannot include cuda here)
 private:
    size_t fPaddingHeight;        ///< The number of zero layers added top and bottom of the input.
    size_t fPaddingWidth;         ///< The number of zero layers left and right of the input.
 
-   Tensor_t fDerivatives;        ///< First fDerivatives of the activations of this layer.
+   Tensor_t fInputActivation;        ///< First output of this layer after conv, before activation.
 
    std::vector<int> fBackwardIndices;  ///< Vector of indices used for a fast Im2Col in backward pass
 
@@ -91,10 +98,6 @@ private:
    Scalar_t fWeightDecay;              ///< The weight decay.
 
    Tensor_t fForwardTensor;            ///< Cache tensor used for speeding-up the forward pass.
-   
-   TDescriptors * fDescriptors = nullptr; ///< Keeps the convolution, activations and filter descriptors
-
-   void InitializeDescriptors(); 
 public:
    /*! Constructor. */
    TConvLayer(size_t BatchSize, size_t InputDepth, size_t InputHeight, size_t InputWidth, size_t Depth, EInitialization Init,
@@ -150,11 +153,11 @@ public:
 
    Scalar_t GetDropoutProbability() const { return fDropoutProbability; }
 
-   const Tensor_t &GetDerivatives() const { return fDerivatives; }
-   Tensor_t &GetDerivatives() { return fDerivatives; }
+   const Tensor_t &GetInputActivation() const { return fInputActivation; }
+   Tensor_t &GetInputActivation() { return fInputActivation; }
 
-   Matrix_t &GetDerivativesAt(size_t i) { return fDerivatives[i]; }
-   const Matrix_t &GetDerivativesAt(size_t i) const { return fDerivatives[i]; }
+   Matrix_t &GetInputActivationAt(size_t i) { return fInputActivation[i]; }
+   const Matrix_t &GetInputActivationAt(size_t i) const { return fInputActivation[i]; }
 
    const Tensor_t &GetForwardMatrices() const { return fForwardTensor; }
    Tensor_t &GetForwardMatrices() { return fForwardTensor; }
@@ -216,7 +219,7 @@ TConvLayer<Architecture_t>::TConvLayer(size_t batchSize, size_t inputDepth, size
      fNLocalViews(calculateNLocalViews(inputHeight, filterHeight, paddingHeight, strideRows,
                                        inputWidth, filterWidth, paddingWidth, strideCols)),
      fDropoutProbability(dropoutProbability), fPaddingHeight(paddingHeight), fPaddingWidth(paddingWidth),
-     fDerivatives(), fF(f), fReg(reg), fWeightDecay(weightDecay)
+     fInputActivation(), fF(f), fReg(reg), fWeightDecay(weightDecay)
 {  
    InitializeDescriptors();
    /** Each element in the vector is a `T_Matrix` representing an event, therefore `vec.size() == batchSize`.
@@ -224,13 +227,19 @@ TConvLayer<Architecture_t>::TConvLayer(size_t batchSize, size_t inputDepth, size
     *  Each row represents a single feature map, therefore we have `nRows == depth`.
     *  Each column represents a single pixel in that feature map, therefore we have `nCols == nLocalViews`.
     **/
-   fDerivatives = Tensor_t( batchSize, depth, fNLocalViews);     // create tensor (shape is B x C x LV)
+   fInputActivation = Tensor_t( batchSize, depth, fNLocalViews);     // create tensor (shape is B x C x LV)
    fForwardTensor = Tensor_t ( batchSize, fNLocalViews, fNLocalViewPixels );    
    // for (size_t i = 0; i < batchSize; i++) {
-   //    fDerivatives.emplace_back(depth, fNLocalViews);
+   //    fInputActivation.emplace_back(depth, fNLocalViews);
    //    fForwardMatrices.emplace_back(fNLocalViews, fNLocalViewPixels);
    // }
-   Architecture_t::PrepareInternals(fForwardTensor);
+   TConvParams params(this->GetBatchSize(), this->GetInputDepth(), this->GetInputHeight(), this->GetInputWidth(),
+                      this->GetDepth(), this->GetFilterHeight(), this->GetFilterWidth(),
+                      this->GetStrideRows(), this->GetStrideCols(), this->GetPaddingHeight(), this->GetPaddingWidth());
+
+   // Architecture_t::PrepareInternals(this->GetOutput(), this->GetInputActivation(), this->GetWeights(),
+   //                                  this->GetBiases(), this->GetWeightGradients(), this->GetBiasGradients(), 
+   //                                  this->GetActivationGradients(), params);
 }
 
 //______________________________________________________________________________
@@ -242,20 +251,20 @@ TConvLayer<Architecture_t>::TConvLayer(TConvLayer<Architecture_t> *layer)
      fNLocalViewPixels(layer->GetNLocalViewPixels()), fNLocalViews(layer->GetNLocalViews()),
      fDropoutProbability(layer->GetDropoutProbability()), fPaddingHeight(layer->GetPaddingHeight()),
      fPaddingWidth(layer->GetPaddingWidth()),
-     fDerivatives( layer->GetDerivatives().GetShape() ),  
+     fInputActivation( layer->GetInputActivation().GetShape() ),  
      fF(layer->GetActivationFunction()),
      fReg(layer->GetRegularization()), fWeightDecay(layer->GetWeightDecay()),
      fForwardTensor( layer->GetForwardMatrices().GetShape() )
 {
    InitializeDescriptors();
-   // size_t outputNSlices = (layer->GetDerivatives()).size();
+   // size_t outputNSlices = (layer->GetInputActivation()).size();
    // size_t outputNRows = 0;
    // size_t outputNCols = 0;
 
    // for (size_t i = 0; i < outputNSlices; i++) {
-   //    outputNRows = (layer->GetDerivativesAt(i)).GetNrows();
-   //    outputNCols = (layer->GetDerivativesAt(i)).GetNcols();
-   //    fDerivatives.emplace_back(outputNRows, outputNCols);
+   //    outputNRows = (layer->GetInputActivationAt(i)).GetNrows();
+   //    outputNCols = (layer->GetInputActivationAt(i)).GetNcols();
+   //    fInputActivation.emplace_back(outputNRows, outputNCols);
    //    fForwardMatrices.emplace_back(layer->GetNLocalViews(), layer->GetNLocalViewPixels());
    // }
 }
@@ -268,31 +277,35 @@ TConvLayer<Architecture_t>::TConvLayer(const TConvLayer &convLayer)
       fStrideCols(convLayer.fStrideCols), fNLocalViewPixels(convLayer.fNLocalViewPixels),
       fNLocalViews(convLayer.fNLocalViews), fDropoutProbability(convLayer.fDropoutProbability),
       fPaddingHeight(convLayer.fPaddingHeight), fPaddingWidth(convLayer.fPaddingWidth), 
-      fDerivatives( convLayer.GetDerivatives().GetShape() ),  
+      fInputActivation( convLayer.GetInputActivation().GetShape() ),  
       fF(convLayer.fF),
       fReg(convLayer.fReg), fWeightDecay(convLayer.fWeightDecay),
       fForwardTensor( convLayer.GetForwardMatrices().GetShape() )
 {
    InitializeDescriptors();
-   // size_t outputNSlices = convLayer.fDerivatives.size();
-   // size_t outputNRows = convLayer.GetDerivativesAt(0).GetNrows();
-   // size_t outputNCols = convLayer.GetDerivativesAt(0).GetNcols();
+   // size_t outputNSlices = convLayer.fInputActivation.size();
+   // size_t outputNRows = convLayer.GetInputActivationAt(0).GetNrows();
+   // size_t outputNCols = convLayer.GetInputActivationAt(0).GetNcols();
 
    // for (size_t i = 0; i < outputNSlices; i++) {
-   //    fDerivatives.emplace_back(outputNRows, outputNCols);
+   //    fInputActivation.emplace_back(outputNRows, outputNCols);
    //    fForwardMatrices.emplace_back(convLayer.fNLocalViews, convLayer.fNLocalViewPixels);
    // }
 }
 
 //______________________________________________________________________________
-//FIXME: Do the release of cudnn resources
+//FIXME: Add function for cudaFree
 template <typename Architecture_t>
 TConvLayer<Architecture_t>::~TConvLayer()
 {
-   if (fDescriptors) delete fDescriptors;
-   // Release cuDNN resources
-   //CUDNNCHECK(cudnnDestroyFilterDescriptor(fFilterDescriptor));
-   //CUDNNCHECK(cudnnDestroyConvolutionDescriptor(fConvolutionDescriptor));
+   if (fDescriptors) {
+      ReleaseDescriptors();
+      delete fDescriptors;
+   }
+    
+   if (fCudnnConvFwdWorkspace)   FreeWorkspace(fCudnnConvFwdWorkspace);
+   if (fCudnnConvBwdWorkspace)   FreeWorkspace(fCudnnConvBwdWorkspace);
+   if (fCudnnFilterBwdWorkspace) FreeWorkspace(fCudnnFilterBwdWorkspace);
 }
 
 //______________________________________________________________________________
@@ -304,9 +317,10 @@ auto TConvLayer<Architecture_t>::Forward(Tensor_t &input, bool /*applyDropout*/)
                       this->GetStrideRows(), this->GetStrideCols(), this->GetPaddingHeight(), this->GetPaddingWidth());
 
    //R__ASSERT( input.size() > 0);
-   Architecture_t::ConvLayerForward(this->GetOutput(), this->GetDerivatives(), input, this->GetWeightsAt(0),
+   Architecture_t::ConvLayerForward(this->GetOutput(), this->GetInputActivation(), input, this->GetWeightsAt(0),
                                     this->GetBiasesAt(0), params, this->GetActivationFunction(),
-                                    this->GetForwardMatrices(), (TCNNDescriptors<TConvLayer<Architecture_t>> &) (*fDescriptors));
+                                    this->GetForwardMatrices(), (TCNNDescriptors<TConvLayer<Architecture_t>> &) (*fDescriptors),
+                                    fCudnnConvFwdWorkspace);
 
 #if 0
    // in printciple I could make the indices data member of the class
@@ -351,7 +365,6 @@ auto TConvLayer<Architecture_t>::Forward(Tensor_t &input, bool /*applyDropout*/)
       Architecture_t::MultiplyTranspose(this->GetOutputAt(i), this->GetWeightsAt(0), inputTr);
       Architecture_t::AddConvBiases(this->GetOutputAt(i), this->GetBiasesAt(0));
 
-      evaluateDerivative<Architecture_t>(this->GetDerivativesAt(i), fF, this->GetOutputAt(i));
       evaluate<Architecture_t>(this->GetOutputAt(i), fF);
    }
 #endif
@@ -365,10 +378,12 @@ auto TConvLayer<Architecture_t>::Backward(Tensor_t &gradients_backward,
 //                                          /*inp2*/) -> void
 {
    Architecture_t::ConvLayerBackward(
-      gradients_backward, this->GetWeightGradientsAt(0), this->GetBiasGradientsAt(0), this->GetDerivatives(),
-      this->GetActivationGradients(), this->GetWeightsAt(0), activations_backward, this->GetBatchSize(),
+      gradients_backward, this->GetWeightGradientsAt(0), this->GetBiasGradientsAt(0), this->GetInputActivation(),
+      this->GetActivationGradients(), this->GetWeightsAt(0), activations_backward, this->GetOutput(),
+      (TCNNDescriptors<TConvLayer<Architecture_t>> &) (*fDescriptors), this->GetBatchSize(),
       this->GetInputHeight(), this->GetInputWidth(), this->GetDepth(), this->GetHeight(), this->GetWidth(),
-      this->GetFilterDepth(), this->GetFilterHeight(), this->GetFilterWidth(), this->GetNLocalViews());
+      this->GetFilterDepth(), this->GetFilterHeight(), this->GetFilterWidth(), this->GetNLocalViews(), 
+      fCudnnConvBwdWorkspace, fCudnnFilterBwdWorkspace);
 
    addRegularizationGradients<Architecture_t>(this->GetWeightGradientsAt(0), this->GetWeightsAt(0),
                                               this->GetWeightDecay(), this->GetRegularization());
@@ -451,10 +466,24 @@ size_t TConvLayer<Architecture_t>::calculateNLocalViews(size_t inputHeight, size
     return height * width;
 }
 
+//______________________________________________________________________________
 template <typename Architecture_t>
 void TConvLayer<Architecture_t>::InitializeDescriptors() {
-      Architecture_t::InitializeCNNDescriptors(fDescriptors, this);
+   Architecture_t::InitializeCNNDescriptors(fDescriptors, this);
 }
+
+template <typename Architecture_t>
+void TConvLayer<Architecture_t>::ReleaseDescriptors() {
+   Architecture_t::ReleaseCNNDescriptors(fDescriptors, this);
+}
+
+//______________________________________________________________________________
+template <typename Architecture_t>
+void TConvLayer<Architecture_t>::FreeWorkspace(void * workSpaces) {
+   Architecture_t::FreeWorkspace(workSpaces);
+}
+
+//______________________________________________________________________________
 
 } // namespace CNN
 } // namespace DNN
