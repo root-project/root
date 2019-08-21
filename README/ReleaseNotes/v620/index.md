@@ -173,6 +173,5 @@ The following builtins have been updated:
 - Intel TBB 2019 U8
 - PCRE 8.43
 - OpenSSL 1.0.2s
-- Vdt 0.4.3
 - VecCore 0.6.0
 - XRootD 4.10.0
