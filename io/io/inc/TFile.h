@@ -174,6 +174,7 @@ private:
 public:
    /// TFile status bits. BIT(13) is taken up by TObject
    enum EStatusBits {
+      kReproducible  = BIT(9),
       kRecovered     = BIT(10),
       kHasReferences = BIT(11),
       kDevNull       = BIT(12),

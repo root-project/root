@@ -2542,6 +2542,8 @@ void TFile::WriteHeader()
       tobuf(buffer, fSeekInfo);
       tobuf(buffer, fNbytesInfo);
    }
+   if (TestBit(kReproducible))
+      fUUID.SetUUID("00000000-0000-0000-0000-000000000000");
    fUUID.FillBuffer(buffer);
    Int_t nbytes  = buffer - psave;
    Seek(0);
