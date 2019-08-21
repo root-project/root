@@ -9,17 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
-
 #include "TMPIFile.h"
 #include "TFileCacheWrite.h"
 #include "TKey.h"
 #include "TMath.h"
-
-#include <chrono>
-#include <iostream>
-#include <string>
-#include <sstream>
 
 ClassImp(TMPIFile);
 
@@ -432,6 +425,7 @@ void TMPIFile::R__DeleteObject(TDirectory *dir, Bool_t withReset)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// return True if this is the Collector rank, otherwise False
+
 Bool_t TMPIFile::IsCollector()
 {
    if (this->fMPILocalRank) {
