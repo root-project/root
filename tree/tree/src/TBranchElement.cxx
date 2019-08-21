@@ -1996,6 +1996,7 @@ static void GatherArtificialElements(const TObjArray &branches, TStreamerInfoAct
 
       TClass *elementClass = nextel->GetClassPointer();
       if (elementClass && (!be || be->GetType() == -2)) {
+         // Recurse on sub-objects.
          TStreamerInfo *nextinfo = nullptr;
 
          // nextinfo_version = ....
