@@ -69,6 +69,24 @@
                        </HBox>
                     </VBox>
                   </IconTabFilter>
+
+                  <IconTabFilter text="Light">
+                    <VBox>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
+                          <CheckBox text="Top" selected="{/light/top}" select="lightChanged"/>
+                          <CheckBox text="Bottom" selected="{/light/bottom}" select="lightChanged"/>
+                       </HBox>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
+                          <CheckBox text="Left" selected="{/light/left}" select="lightChanged"/>
+                          <CheckBox text="Right" selected="{/light/right}" select="lightChanged"/>
+                       </HBox>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
+                          <CheckBox text="Front" selected="{/light/front}" select="lightChanged"/>
+                          <CheckBox text="Specular" selected="{/light/specular}" select="lightChanged"/>
+                       </HBox>
+                    </VBox>
+                  </IconTabFilter>
+
                </items>
             </IconTabBar>
             <IconTabBar class="sapUiResponsiveContentPadding" expanded="false">
