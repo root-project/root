@@ -1644,8 +1644,10 @@ void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
 /// <tr><td> `EvalErrorValue(Double_t value)`  <td> Set curve points at which (pdf) evaluation error occur to specified value. By default the
 ///                                    function value is plotted.
 ///
-/// <tr><td> `Normalization(Double_t scale, ScaleType code)`   <td> Adjust normalization by given scale factor. Interpretation of number depends on code: Relative:
-///                     relative adjustment factor, NumEvent: scale to match given number of events.
+/// <tr><td> `Normalization(Double_t scale, ScaleType code)`   <td> Adjust normalization by given scale factor. Interpretation of number depends on code:
+///                     Relative: relative adjustment factor for a normalized function,
+///                     NumEvent: scale to match given number of events.
+///                     Raw: relative adjustment factor for an un-normalized function.
 ///
 /// <tr><td> `Name(const chat* name)`          <td> Give curve specified name in frame. Useful if curve is to be referenced later
 ///
@@ -1668,6 +1670,12 @@ void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
 /// <tr><td> `LineColor(Int_t color)`          <td> Select line color by ROOT color code, default is blue
 ///
 /// <tr><td> `LineWidth(Int_t width)`          <td> Select line with in pixels, default is 3
+///
+/// <tr><td> `MarkerStyle(Int_t style)`   <td> Select the ROOT marker style, default is 21
+///
+/// <tr><td> `MarkerColor(Int_t color)`   <td> Select the ROOT marker color, default is black
+///
+/// <tr><td> `MarkerSize(Double_t size)`   <td> Select the ROOT marker size
 ///
 /// <tr><td> `FillStyle(Int_t style)`          <td> Select fill style, default is not filled. If a filled style is selected, also use VLines()
 ///                                    to add vertical downward lines at end of curve to ensure proper closure

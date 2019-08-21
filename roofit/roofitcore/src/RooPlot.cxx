@@ -267,11 +267,26 @@ RooPlot::RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//
-
+/// Create a new frame for a given variable in x. This is just a
+/// wrapper for the RooPlot constructor with the same interface.
+/// 
+/// More details.
+/// \param[in] var The variable on the x-axis
+/// \param[in] xmin Left edge of the x-axis
+/// \param[in] xmax Right edge of the x-axis
+/// \param[in] nBins number of bins on the x-axis
 RooPlot* RooPlot::frame(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nBins){
   return new RooPlot(var,xmin,xmax,nBins);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new frame for a given variable in x, adding bin labels.
+/// The binning will be extracted from the variable given. The bin
+/// labels will be set as "%g-%g" for the left and right edges of each
+/// bin of the given variable.
+///
+/// More details.
+/// \param[in] var The variable on the x-axis
 RooPlot* RooPlot::frameWithLabels(const RooAbsRealLValue &var){
   RooPlot* pl = new RooPlot();
   int nbins = var.getBinning().numBins();
