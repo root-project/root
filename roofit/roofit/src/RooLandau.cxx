@@ -31,7 +31,6 @@ Landau distribution p.d.f
 #include "TError.h"
 
 using namespace std;
-using namespace BatchHelpers;
 
 ClassImp(RooLandau);
 
@@ -94,24 +93,26 @@ constexpr double q6[5] = {1.0         , 651.4101098,  56974.73333,    165917.472
 constexpr double a1[3] = {0.04166666667,-0.01996527778, 0.02709538966};
 constexpr double a2[2] = {-1.845568670,-4.284640743};
   
-template<class Tx, class TMean, class TSig>
-void compute(RooSpan<double> output, Tx x, TMean mean, TSig sigma) {
-  const int n = output.size();
+template<class Tx, class Tmean, class Tsigma>
+void compute(	size_t batchSize,
+              double * __restrict__ output,
+              Tx X, Tmean M, Tsigma S)
+{
   const double NaN = std::nan("");
-  constexpr int block=256;
+  constexpr size_t block=256;
   double v[block];
   
-  for (int i=0; i<n; i+=block) { //CHECK_VECTORISE
-    const int stop = (i+block < n) ? block : n-i ; 
+  for (size_t i=0; i<batchSize; i+=block) { //CHECK_VECTORISE
+    const size_t stop = (i+block < batchSize) ? block : batchSize-i ; 
     
-    for (int j=0; j<stop; j++) { //CHECK_VECTORISE
-      v[j] = (x[i+j]-mean[i+j]) / sigma[i+j];
+    for (size_t j=0; j<stop; j++) { //CHECK_VECTORISE
+      v[j] = (X[i+j]-M[i+j]) / S[i+j];
       output[i+j] = (p2[0]+(p2[1]+(p2[2]+(p2[3]+p2[4]*v[j])*v[j])*v[j])*v[j]) /
-                 (q2[0]+(q2[1]+(q2[2]+(q2[3]+q2[4]*v[j])*v[j])*v[j])*v[j]);
+                    (q2[0]+(q2[1]+(q2[2]+(q2[3]+q2[4]*v[j])*v[j])*v[j])*v[j]);
     }
     
-    for (int j=0; j<stop; j++) { //CHECK_VECTORISE
-      const bool mask = sigma[i+j] > 0;
+    for (size_t j=0; j<stop; j++) { //CHECK_VECTORISE
+      const bool mask = S[i+j] > 0;
       /*  comparison with NaN will give result false, so the next
        *  loop won't affect output, for cases where sigma <=0
        */
@@ -120,7 +121,7 @@ void compute(RooSpan<double> output, Tx x, TMean mean, TSig sigma) {
     }
   
     double u, ue, us;
-    for (int j=0; j<stop; j++) { //CHECK_VECTORISE
+    for (size_t j=0; j<stop; j++) { //CHECK_VECTORISE
       // if branch written in way to quickly process the most popular case -1 <= v[j] < 1
       if (v[j] >= 1) {
         if (v[j] < 5) {
@@ -175,37 +176,38 @@ void compute(RooSpan<double> output, Tx x, TMean mean, TSig sigma) {
 /// \return A span with the computed values.
 
 RooSpan<double> RooLandau::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
+  using namespace BatchHelpers;
   using namespace LandauBatchEvaluate;
   auto xData = x.getValBatch(begin, batchSize);
   auto meanData = mean.getValBatch(begin, batchSize);
   auto sigmaData = sigma.getValBatch(begin, batchSize);
-  
+
   batchSize = findSize({ xData, meanData, sigmaData });
   auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
-  
+
   const bool batchX = !xData.empty();
   const bool batchMean = !meanData.empty();
   const bool batchSigma = !sigmaData.empty();
   if (batchX && !batchMean && !batchSigma ) {
-    compute(output, xData, BracketAdapter<RooRealProxy>(mean), BracketAdapter<RooRealProxy>(sigma));
+    compute(batchSize, output.data(), xData, BracketAdapter<double>(mean), BracketAdapter<double>(sigma));
   }
   else if (!batchX && batchMean && !batchSigma ) {
-    compute(output, BracketAdapter<RooRealProxy>(x), meanData, BracketAdapter<RooRealProxy>(sigma));
+    compute(batchSize, output.data(), BracketAdapter<double>(x), meanData, BracketAdapter<double>(sigma));
   }
   else if (batchX && batchMean && !batchSigma ) {
-    compute(output, xData, meanData, BracketAdapter<RooRealProxy>(sigma));
+    compute(batchSize, output.data(), xData, meanData, BracketAdapter<double>(sigma));
   }
   else if (!batchX && !batchMean && batchSigma ) {
-    compute(output, BracketAdapter<RooRealProxy>(x), BracketAdapter<RooRealProxy>(mean), sigmaData);
+    compute(batchSize, output.data(), BracketAdapter<double>(x), BracketAdapter<double>(mean), sigmaData);
   }
   else if (batchX && !batchMean && batchSigma ) {
-    compute(output, xData, BracketAdapter<RooRealProxy>(mean), sigmaData);
+    compute(batchSize, output.data(), xData, BracketAdapter<double>(mean), sigmaData);
   }
   else if (!batchX && batchMean && batchSigma ) {
-    compute(output, BracketAdapter<RooRealProxy>(x), meanData, sigmaData);
+    compute(batchSize, output.data(), BracketAdapter<double>(x), meanData, sigmaData);
   }
   else if (batchX && batchMean && batchSigma ) {
-    compute(output, xData, meanData, sigmaData);
+    compute(batchSize, output.data(), xData, meanData, sigmaData);
   }
   else{
     throw std::logic_error("Requested a batch computation, but no batch data available.");
