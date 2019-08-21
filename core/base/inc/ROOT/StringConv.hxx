@@ -99,12 +99,18 @@ EFromHumanReadableSize FromHumanReadableSize(std::string_view str, T &value)
       int unit = 1000;
 
       auto result = [coeff,&exp,&unit,&value]() {
-         double v = exp ? coeff * std::pow(unit, exp / 3) : coeff;
-         if (v < std::numeric_limits<T>::max()) {
-            value = (T)v;
-            return EFromHumanReadableSize::kSuccess;
-         } else {
+         auto v = exp ? coeff * std::pow(unit, exp / 3) : coeff;
+         // protection from overflow [-Wimplicit-int-float-conversion]
+         if ((T)v >= std::numeric_limits<T>::max()) {
+            value = std::numeric_limits<T>::max();
             return EFromHumanReadableSize::kOverflow;
+         // protection from overflow [-Wimplicit-int-float-conversion]
+         } else if ((T)v <= std::numeric_limits<T>::min()) {
+            value = std::numeric_limits<T>::min();
+            return EFromHumanReadableSize::kOverflow;
+         } else {
+            value = v;
+            return EFromHumanReadableSize::kSuccess;
          }
       };
       if (cur==size) return result();
