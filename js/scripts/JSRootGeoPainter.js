@@ -149,10 +149,14 @@
          clipIntersect: true,
          clip: [{ name:"x", enabled: false, value: 0, min: -100, max: 100}, { name:"y", enabled: false, value: 0, min: -100, max: 100}, { name:"z", enabled: false, value: 0, min: -100, max: 100}],
          ssao: { enabled: false, output: THREE.SSAOPass.OUTPUT.Default, kernelRadius: 0, minDistance: 0.001, maxDistance: 0.1 },
+         info: { num_meshes: 0, num_faces: 0, num_shapes: 0 },
          highlight: false,
          highlight_scene: false,
          depthTest: true,
-         depthMethod: "dflt"
+         depthMethod: "dflt",
+         select_in_view: false,
+         update_browser: true,
+         light: { top: false, bottom: false, left: false, right: false, front: false, specular: true }
       };
 
       this.ctrl.depthMethodItems = [
@@ -412,13 +416,13 @@
                   _count: false, wireframe: false,
                    scale: new THREE.Vector3(1,1,1), zoom: 1.0, rotatey: 0, rotatez: 0,
                    more: 1, maxlimit: 100000,
-                   vislevel: undefined, maxnodes: undefined,
-                   use_worker: false, update_browser: true, show_controls: false,
-                   highlight: false, highlight_scene: false, select_in_view: false, no_screen: false,
+                   vislevel: undefined, maxnodes: undefined, dflt_colors: false,
+                   use_worker: false, show_controls: false,
+                   highlight: false, highlight_scene: false, no_screen: false,
                    project: '', is_main: false, tracks: false, showtop: false, can_rotate: true, ortho_camera: false,
                    clipx: false, clipy: false, clipz: false, usessao: false, outline: false,
                    script_name: "", transparency: 0, autoRotate: false, background: '#FFFFFF',
-                   depthMethod: "ray", mouse_tmout: 50 };
+                   depthMethod: "dflt", mouse_tmout: 50 };
 
       var _opt = JSROOT.GetUrlOption('_grid');
       if (_opt !== null && _opt == "true") res._grid = true;
@@ -501,7 +505,7 @@
       if (d.check("PROJY", true)) { res.project = 'y'; if (d.partAsInt(1)>0) res.projectPos = d.partAsInt(); res.can_rotate = false; }
       if (d.check("PROJZ", true)) { res.project = 'z'; if (d.partAsInt(1)>0) res.projectPos = d.partAsInt(); res.can_rotate = false; }
 
-      if (d.check("DFLT_COLORS") || d.check("DFLT")) this.SetRootDefaultColors();
+      if (d.check("DFLT_COLORS") || d.check("DFLT")) res.dflt_colors = true;
       if (d.check("SSAO")) res.usessao = true;
       if (d.check("OUTLINE")) res.outline = true;
 
@@ -514,7 +518,7 @@
       if (d.check("NOHSCENE")) res.highlight_scene = 0;
       if (d.check("HSCENE")) res.highlight_scene = true;
 
-      if (d.check("WIRE")) res.wireframe = true;
+      if (d.check("WIREFRAME") || d.check("WIRE")) res.wireframe = true;
       if (d.check("ROTATE")) res.autoRotate = true;
 
       if (d.check("INVX") || d.check("INVERTX")) res.scale.x = -1;
@@ -558,7 +562,7 @@
          this._hpainter.activate(names, force);
 
          // if highlight in the browser disabled, suppress in few seconds
-         if (!this.options.update_browser)
+         if (!this.ctrl.update_browser)
             setTimeout(this._hpainter.activate.bind(this._hpainter, []), 2000);
       }
    }
@@ -622,17 +626,22 @@
    TGeoPainter.prototype.FillContextMenu = function(menu) {
       menu.add("header: Draw options");
 
-      menu.addchk(this.options.update_browser, "Browser update", function() {
-         this.options.update_browser = !this.options.update_browser;
-         if (!this.options.update_browser) this.ActivateInBrowser([]);
+      menu.addchk(this.ctrl.update_browser, "Browser update", function() {
+         this.ctrl.update_browser = !this.ctrl.update_browser;
+         if (!this.ctrl.update_browser) this.ActivateInBrowser([]);
       });
-      menu.addchk(this.options.show_controls, "Show Controls", function() {
+      menu.addchk(this.ctrl.show_controls, "Show Controls", function() {
          this.showControlOptions('toggle');
       });
       menu.addchk(this.TestAxisVisibility, "Show axes", function() {
          this.toggleAxesDraw();
       });
-      menu.addchk(this.options.wireframe, "Wire frame", function() {
+      if (this.geo_manager)
+         menu.addchk(this.ctrl.showtop, "Show top volume", function() {
+            this.setShowTop(!this.ctrl.showtop);
+         });
+
+      menu.addchk(this.ctrl.wireframe, "Wire frame", function() {
          this.toggleWireFrame();
       });
       menu.addchk(this.ctrl.highlight, "Highlight volumes", function() {
@@ -647,13 +656,13 @@
       menu.add("Get camera position", function() {
          alert("Position (as url): &opt=" + this.produceCameraUrl());
       });
-      if (!this.options.project)
-         menu.addchk(this.options.autoRotate, "Autorotate", function() {
-            this.setAutoRotate(!this.options.autoRotate);
+      if (!this.ctrl.project)
+         menu.addchk(this.ctrl.autoRotate, "Autorotate", function() {
+            this.setAutoRotate(!this.ctrl.autoRotate);
          });
-      menu.addchk(this.options.select_in_view, "Select in view", function() {
-         this.options.select_in_view = !this.options.select_in_view;
-         if (this.options.select_in_view) this.startDrawGeometry();
+      menu.addchk(this.ctrl.select_in_view, "Select in view", function() {
+         this.ctrl.select_in_view = !this.ctrl.select_in_view;
+         if (this.ctrl.select_in_view) this.startDrawGeometry();
       });
    }
 
@@ -715,10 +724,10 @@
       } else if (on === 'toggle') {
          on = !this._datgui;
       } else if (on === undefined) {
-         on = this.options.show_controls;
+         on = this.ctrl.show_controls;
       }
 
-      this.options.show_controls = on;
+      this.ctrl.show_controls = on;
 
       if (this._datgui) {
          if (!on) {
@@ -749,16 +758,16 @@
 
       this._datgui.painter = this;
 
-      if (this.options.project) {
+      if (this.ctrl.project) {
 
          var bound = this.getGeomBoundingBox(this.getProjectionSource(), 0.01);
 
-         var axis = this.options.project;
+         var axis = this.ctrl.project;
 
-         if (this.options.projectPos === undefined)
-            this.options.projectPos = (bound.min[axis] + bound.max[axis])/2;
+         if (this.ctrl.projectPos === undefined)
+            this.ctrl.projectPos = (bound.min[axis] + bound.max[axis])/2;
 
-         this._datgui.add(this.options, 'projectPos', bound.min[axis], bound.max[axis])
+         this._datgui.add(this.ctrl, 'projectPos', bound.min[axis], bound.max[axis])
              .name(axis.toUpperCase() + ' projection')
              .onChange(function (value) {
                painter.startDrawGeometry();
@@ -1050,7 +1059,7 @@
       // function analyzes camera position and start redraw of geometry if
       // objects in view may be changed
 
-      if (!this.options.select_in_view || this._draw_all_nodes) return;
+      if (!this.ctrl.select_in_view || this._draw_all_nodes) return;
 
       var matrix = JSROOT.GEO.CreateProjectionMatrix(this._camera);
 
@@ -1220,8 +1229,8 @@
 
    /** Configure mouse delay, required for complex geometries */
    TGeoPainter.prototype.setMouseTmout = function(val) {
-      if (this.options)
-         this.options.mouse_tmout = val;
+      if (this.ctrl)
+         this.ctrl.mouse_tmout = val;
 
       if (this._controls)
          this._controls.mouse_tmout = val;
@@ -1234,6 +1243,7 @@
          this.ctrl.depthMethod = val;
    }
 
+   /** Add orbit control @private */
    TGeoPainter.prototype.addOrbitControls = function() {
 
       if (this._controls || this._usesvg || JSROOT.BatchMode) return;
@@ -1244,9 +1254,9 @@
 
       this._controls = JSROOT.Painter.CreateOrbitControl(this, this._camera, this._scene, this._renderer, this._lookat);
 
-      this._controls.mouse_tmout = this.options.mouse_tmout; // set larger timeout for geometry processing
+      this._controls.mouse_tmout = this.ctrl.mouse_tmout; // set larger timeout for geometry processing
 
-      if (!this.options.can_rotate) this._controls.enableRotate = false;
+      if (!this.ctrl.can_rotate) this._controls.enableRotate = false;
 
       this._controls.ContextMenu = this.OrbitContext.bind(this);
 
@@ -1281,7 +1291,7 @@
 
          painter.HighlightMesh(active_mesh, undefined, geo_object, geo_index);
 
-         if (painter.options.update_browser) {
+         if (painter.ctrl.update_browser) {
             if (painter.ctrl.highlight && tooltip) names = [ tooltip ];
             painter.ActivateInBrowser(names);
          }
@@ -1315,7 +1325,7 @@
    TGeoPainter.prototype.addTransformControl = function() {
       if (this._tcontrols) return;
 
-      if ( !this.options._debug && !this.options._grid ) return;
+      if ( !this.ctrl._debug && !this.ctrl._grid ) return;
 
       // FIXME: at the moment THREE.TransformControls is bogus in three.js, should be fixed and check again
       //return;
@@ -1366,11 +1376,13 @@
       this._tcontrols.addEventListener( 'change', function() { painter.Render3D(0); });
    }
 
+   /** Main function in geometry creation loop
+    * Return false when nothing todo
+    * return true if one could perform next action immediately
+    * return 1 when call after short timeout required
+    * return 2 when call must be done from processWorkerReply
+    * @private */
    TGeoPainter.prototype.nextDrawAction = function() {
-      // return false when nothing todo
-      // return true if one could perform next action immediately
-      // return 1 when call after short timeout required
-      // return 2 when call must be done from processWorkerReply
 
       if (!this._clones || (this.drawing_stage == 0)) return false;
 
@@ -1383,7 +1395,7 @@
          }
 
          // wait until worker is really started
-         if (this.options.use_worker > 0) {
+         if (this.ctrl.use_worker > 0) {
             if (!this._worker) { this.startWorker(); return 1; }
             if (!this._worker_ready) return 1;
          }
@@ -1392,7 +1404,7 @@
          var numvis = this._clones.CountVisibles() || this._clones.MarkVisibles(),
              matrix = null, frustum = null;
 
-         if (this.options.select_in_view && !this._first_drawing) {
+         if (this.ctrl.select_in_view && !this._first_drawing) {
             // extract camera projection matrix for selection
 
             matrix = JSROOT.GEO.CreateProjectionMatrix(this._camera);
@@ -1406,7 +1418,7 @@
             }
          }
 
-         this._current_face_limit = this.options.maxlimit;
+         this._current_face_limit = this.ctrl.maxlimit;
          if (matrix) this._current_face_limit*=1.25;
 
          // here we decide if we need worker for the drawings
@@ -1419,7 +1431,7 @@
             need_worker = false;
          }
 
-         if (need_worker && !this._worker && (this.options.use_worker >= 0))
+         if (need_worker && !this._worker && (this.ctrl.use_worker >= 0))
             this.startWorker(); // we starting worker, but it may not be ready so fast
 
          if (!need_worker || !this._worker_ready) {
@@ -1548,8 +1560,10 @@
             // building shapes
             var res = this._clones.BuildShapes(this._build_shapes, this._current_face_limit, 500);
             if (res.done) {
+               this.ctrl.info.num_shapes = this._build_shapes.length;
                this.drawing_stage = 8;
             } else {
+               this.ctrl.info.num_shapes = res.shapes;
                this.drawing_log = "Creating: " + res.shapes + " / " + this._build_shapes.length + " shapes,  "  + res.faces + " faces";
                if (res.notusedshapes < 30) return true;
             }
@@ -1558,7 +1572,7 @@
          // final stage, create all meshes
 
          var tm0 = new Date().getTime(), ready = true,
-             toplevel = this.options.project ? this._full_geom : this._toplevel;
+             toplevel = this.ctrl.project ? this._full_geom : this._toplevel;
 
          for (var n = 0; n < this._draw_nodes.length; ++n) {
             var entry = this._draw_nodes[n];
@@ -1576,8 +1590,8 @@
             shape.used = true; // indicate that shape was used in building
 
             if (this.createEntryMesh(entry, shape, toplevel)) {
-               this._num_meshes++;
-               this._num_faces += shape.nfaces;
+               this.ctrl.info.num_meshes++;
+               this.ctrl.info.num_faces += shape.nfaces;
             }
 
             var tm1 = new Date().getTime();
@@ -1585,7 +1599,7 @@
          }
 
          if (ready) {
-            if (this.options.project) {
+            if (this.ctrl.project) {
                this.drawing_log = "Build projection";
                this.drawing_stage = 10;
                return true;
@@ -1597,7 +1611,7 @@
          }
 
          if (this.drawing_stage > 7)
-            this.drawing_log = "Building meshes " + this._num_meshes + " / " + this._num_faces;
+            this.drawing_log = "Building meshes " + this.ctrl.info.num_meshes + " / " + this.ctrl.info.num_faces;
          return true;
       }
 
@@ -1643,11 +1657,11 @@
 
       var prop = this._clones.getDrawEntryProperties(entry);
 
-      var obj3d = this._clones.CreateObject3D(entry.stack, toplevel, this.options);
+      var obj3d = this._clones.CreateObject3D(entry.stack, toplevel, this.ctrl);
 
-      prop.material.wireframe = this.options.wireframe;
+      prop.material.wireframe = this.ctrl.wireframe;
 
-      prop.material.side = this.bothSides ? THREE.DoubleSide : THREE.FrontSide;
+      prop.material.side = this.ctrl.bothSides ? THREE.DoubleSide : THREE.FrontSide;
 
       var mesh;
 
@@ -1670,14 +1684,14 @@
       //mesh.$jsroot_order = mesh.renderOrder =
       //   this._clones.maxdepth - ((obj3d.$jsroot_depth !== undefined) ? obj3d.$jsroot_depth : entry.stack.length);
 
-      if (this.options._debug || this.options._full) {
+      if (this.ctrl._debug || this.ctrl._full) {
          var wfg = new THREE.WireframeGeometry( mesh.geometry ),
              wfm = new THREE.LineBasicMaterial( { color: prop.fillcolor, linewidth: prop.linewidth || 1 } ),
              helper = new THREE.LineSegments(wfg, wfm);
          obj3d.add(helper);
       }
 
-      if (this.options._bound || this.options._full) {
+      if (this.ctrl._bound || this.ctrl._full) {
          var boxHelper = new THREE.BoxHelper( mesh );
          obj3d.add( boxHelper );
       }
@@ -1759,8 +1773,8 @@
       box3.makeEmpty();
 
       topitem.traverse(function(mesh) {
-         if (check_any || (mesh.stack && (mesh instanceof THREE.Mesh))
-             || (mesh.main_track && (mesh instanceof THREE.LineSegments)))
+         if (check_any || (mesh.stack && (mesh instanceof THREE.Mesh)) ||
+             (mesh.main_track && (mesh instanceof THREE.LineSegments)))
             JSROOT.GEO.getBoundingBox(mesh, box3);
       });
 
@@ -1777,23 +1791,23 @@
 
       JSROOT.Painter.DisposeThreejsObject(this._toplevel, true);
 
-      var axis = this.options.project;
+      var axis = this.ctrl.project;
 
-      if (this.options.projectPos === undefined) {
+      if (this.ctrl.projectPos === undefined) {
 
          var bound = this.getGeomBoundingBox(toplevel),
-             min = bound.min[this.options.project], max = bound.max[this.options.project],
+             min = bound.min[this.ctrl.project], max = bound.max[this.ctrl.project],
              mean = (min+max)/2;
 
          if ((min<0) && (max>0) && (Math.abs(mean) < 0.2*Math.max(-min,max))) mean = 0; // if middle is around 0, use 0
 
-         this.options.projectPos = mean;
+         this.ctrl.projectPos = mean;
       }
 
       toplevel.traverse(function(mesh) {
          if (!(mesh instanceof THREE.Mesh) || !mesh.stack) return;
 
-         var geom2 = JSROOT.GEO.projectGeometry(mesh.geometry, mesh.parent.matrixWorld, pthis.options.project, pthis.options.projectPos, mesh._flippedMesh);
+         var geom2 = JSROOT.GEO.projectGeometry(mesh.geometry, mesh.parent.matrixWorld, pthis.ctrl.project, pthis.ctrl.projectPos, mesh._flippedMesh);
 
          if (!geom2) return;
 
@@ -1822,7 +1836,40 @@
        if ((m1 === null) || (m2 === null)) return false;
 
        return (m1.fFillStyle === m2.fFillStyle) && (m1.fFillColor === m2.fFillColor);
-    }
+   }
+
+   TGeoPainter.prototype.changedLight = function(box) {
+      if (!this._camera) return;
+
+      var need_render = !box;
+
+     if (!box) box = this.getGeomBoundingBox(this._toplevel);
+
+      var sizex = box.max.x - box.min.x,
+          sizey = box.max.y - box.min.y,
+          sizez = box.max.z - box.min.z,
+          lights = [];
+
+      for (var k=0;k<this._camera.children.length;++k) {
+         var light = this._camera.children[k], enabled = false;
+         if (!light.isPointLight) continue;
+         switch (k) {
+            case 0: light.position.set(sizex/5, sizey/5, sizez/5); enabled = this.ctrl.light.specular; break;
+            case 1: light.position.set(0, 0, sizez/2); enabled = this.ctrl.light.front; break;
+            case 2: light.position.set(0, 2*sizey, 0); enabled = this.ctrl.light.top; break;
+            case 3: light.position.set(0, -2*sizey, 0); enabled = this.ctrl.light.bottom; break;
+            case 4: light.position.set(-2*sizex, 0, 0); enabled = this.ctrl.light.left; break;
+            case 5: light.position.set(2*sizex, 0, 0); enabled = this.ctrl.light.right; break;
+         }
+         light.power = enabled ? Math.PI*4 : 0;
+         if (enabled) lights.push(light);
+      }
+
+      // keep light power of all soources constant
+      lights.forEach(function(light) { light.power = 4*Math.PI/lights.length; })
+
+      if (need_render) this.Render3D();
+   }
 
    TGeoPainter.prototype.createScene = function(w, h) {
       // three.js 3D drawing
@@ -1833,11 +1880,11 @@
       this._scene_width = w;
       this._scene_height = h;
 
-      if (this.options.ortho_camera) {
+      if (this.ctrl.ortho_camera) {
          this._camera =  new THREE.OrthographicCamera(-600, 600, -600, 600, 1, 10000);
       } else {
          this._camera = new THREE.PerspectiveCamera(25, w / h, 1, 10000);
-         this._camera.up = this.options._yup ? new THREE.Vector3(0,1,0) : new THREE.Vector3(0,0,1);
+         this._camera.up = this.ctrl._yup ? new THREE.Vector3(0,1,0) : new THREE.Vector3(0,0,1);
       }
 
       this._scene.add( this._camera );
@@ -1861,7 +1908,7 @@
       this._renderer.setSize(w, h, !this._fit_main_area);
       this._renderer.localClippingEnabled = true;
 
-      this._renderer.setClearColor(this.options.background, 1);
+      this._renderer.setClearColor(this.ctrl.background, 1);
 
 /*      if (usesvg) {
          // this._renderer = new THREE.SVGRenderer( { precision: 0, astext: true } );
@@ -1898,42 +1945,18 @@
 
       // Clipping Planes
 
-      this.bothSides = false; // which material kind should be used
+      this.ctrl.bothSides = false; // which material kind should be used
       this._clipPlanes = [ new THREE.Plane(new THREE.Vector3(1, 0, 0), 0),
-                           new THREE.Plane(new THREE.Vector3(0, this.options._yup ? -1 : 1, 0), 0),
-                           new THREE.Plane(new THREE.Vector3(0, 0, this.options._yup ? 1 : -1), 0) ];
+                           new THREE.Plane(new THREE.Vector3(0, this.ctrl._yup ? -1 : 1, 0), 0),
+                           new THREE.Plane(new THREE.Vector3(0, 0, this.ctrl._yup ? 1 : -1), 0) ];
 
-       // Lights
 
-      //var light = new THREE.HemisphereLight( 0xffffff, 0x999999, 0.5 );
-      //this._scene.add(light);
-
-      /*
-      var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.2 );
-      directionalLight.position.set( 0, 1, 0 );
-      this._scene.add( directionalLight );
-
-      this._lights = new THREE.Object3D();
-      var a = new THREE.PointLight(0xefefef, 0.2);
-      var b = new THREE.PointLight(0xefefef, 0.2);
-      var c = new THREE.PointLight(0xefefef, 0.2);
-      var d = new THREE.PointLight(0xefefef, 0.2);
-      this._lights.add(a);
-      this._lights.add(b);
-      this._lights.add(c);
-      this._lights.add(d);
-      this._camera.add( this._lights );
-      a.position.set( 20000, 20000, 20000 );
-      b.position.set( -20000, 20000, 20000 );
-      c.position.set( 20000, -20000, 20000 );
-      d.position.set( -20000, -20000, 20000 );
-      */
-      this._pointLight = new THREE.PointLight(0xefefef, 1);
-      this._camera.add( this._pointLight );
-      this._pointLight.position.set(10, 10, 10);
-
-      // Default Settings
-      if (this.options.outline) this.ctrl.outline = true;
+      // Lights - add 6 sources, place them once dimension of geometry is known
+      for (var n=0;n<6;++n) {
+         var light = new THREE.PointLight(0xefefef, n==0 ? 1 : 0);
+         if (n==0) light.position.set(10, 10, 10);
+         this._camera.add( light );
+      }
 
       // Smooth Lighting Shader (Screen Space Ambient Occlusion)
       // http://threejs.org/examples/webgl_postprocessing_ssao.html
@@ -1967,17 +1990,21 @@
          return;
       }
 
+      if (this._clones_owner && this._clones)
+         this._clones.SetDefaultColors(this.ctrl.dflt_colors);
+
       this._startm = new Date().getTime();
       this._last_render_tm = this._startm;
       this._last_render_meshes = 0;
       this.drawing_stage = 1;
       this._drawing_ready = false;
       this.drawing_log = "collect visible";
-      this._num_meshes = 0;
-      this._num_faces = 0;
+      this.ctrl.info.num_meshes = 0;
+      this.ctrl.info.num_faces = 0;
+      this.ctrl.info.num_shapes = 0;
       this._selected_mesh = null;
 
-      if (this.options.project) {
+      if (this.ctrl.project) {
          if (this._clones_owner) {
             if (this._full_geom) {
                this.drawing_stage = 10;
@@ -2062,12 +2089,12 @@
     * These parameters applied from default position which is shift along X axis */
    TGeoPainter.prototype.produceCameraUrl = function(prec) {
 
-      if (!this._lookat || !this._camera0pos || !this._camera || !this.options) return;
+      if (!this._lookat || !this._camera0pos || !this._camera || !this.ctrl) return;
 
       var pos1 = new THREE.Vector3().add(this._camera0pos).sub(this._lookat),
           pos2 = new THREE.Vector3().add(this._camera.position).sub(this._lookat),
           len1 = pos1.length(), len2 = pos2.length(),
-          zoom = this.options.zoom * len2 / len1 * 100;
+          zoom = this.ctrl.zoom * len2 / len1 * 100;
 
       if (zoom < 1) zoom = 1; else if (zoom>10000) zoom = 10000;
 
@@ -2089,8 +2116,20 @@
       return "roty" + roty.toFixed(prec || 0) + ",rotz" + rotz.toFixed(prec || 0) + ",zoom" + zoom.toFixed(prec || 0);
    }
 
-   TGeoPainter.prototype.adjustCameraPosition = function(first_time) {
+   /** Calculates current zoom factor */
+   TGeoPainter.prototype.calculateZoom = function() {
+      if (this._camera0pos && this._camera && this._lookat) {
+         var pos1 = new THREE.Vector3().add(this._camera0pos).sub(this._lookat),
+             pos2 = new THREE.Vector3().add(this._camera.position).sub(this._lookat);
+         return pos2.length() / pos1.length();
+      }
 
+      return 0;
+   }
+
+
+   /** Place camera to default position */
+   TGeoPainter.prototype.adjustCameraPosition = function(first_time, keep_zoom) {
       if (!this._toplevel) return;
 
       var box = this.getGeomBoundingBox(this._toplevel);
@@ -2128,7 +2167,7 @@
                cc.value = cc.max;
          }
 
-      if (this.options.ortho_camera) {
+      if (this.ctrl.ortho_camera) {
          this._camera.left = box.min.x;
          this._camera.right = box.max.x;
          this._camera.top = box.max.y;
@@ -2139,34 +2178,38 @@
 
       this._camera.updateProjectionMatrix();
 
-      var k = 2, max_all = Math.max(sizex,sizey,sizez);
+      var k = 2*this.ctrl.zoom,
+          max_all = Math.max(sizex,sizey,sizez);
 
-      if (this.options.zoom1) {
-         k = 2*this.options.zoom1;
-         delete this.options.zoom1;
-      } else {
-         k = 2*this.options.zoom;
-      }
+      if ((this.ctrl.rotatey || this.ctrl.rotatez) && this.ctrl.can_rotate) {
 
-      if ((this.options.rotatey || this.options.rotatez) && this.options.can_rotate) {
+         var prev_zoom = this.calculateZoom();
+         if (keep_zoom && prev_zoom) k = 2*prev_zoom;
+
+         var euler = new THREE.Euler( 0, this.ctrl.rotatey/180.*Math.PI, this.ctrl.rotatez/180.*Math.PI, 'YZX' );
 
          this._camera.position.set(-k*max_all, 0, 0);
-
-         var euler = new THREE.Euler( 0, this.options.rotatey/180.*Math.PI, this.options.rotatez/180.*Math.PI, 'YZX' );
-
          this._camera.position.applyEuler(euler);
-
          this._camera.position.add(new THREE.Vector3(midx,midy,midz));
 
-      } else if (this.options.ortho_camera) {
+         if (keep_zoom && prev_zoom) {
+            var actual_zoom = this.calculateZoom();
+            k *= prev_zoom/actual_zoom;
+
+            this._camera.position.set(-k*max_all, 0, 0);
+            this._camera.position.applyEuler(euler);
+            this._camera.position.add(new THREE.Vector3(midx,midy,midz));
+         }
+
+      } else if (this.ctrl.ortho_camera) {
          this._camera.position.set(midx, midy, Math.max(sizex,sizey));
-      } else if (this.options.project) {
-         switch (this.options.project) {
+      } else if (this.ctrl.project) {
+         switch (this.ctrl.project) {
             case 'x': this._camera.position.set(k*1.5*Math.max(sizey,sizez), 0, 0); break;
             case 'y': this._camera.position.set(0, k*1.5*Math.max(sizex,sizez), 0); break;
             case 'z': this._camera.position.set(0, 0, k*1.5*Math.max(sizex,sizey)); break;
          }
-      } else if (this.options._yup) {
+      } else if (this.ctrl._yup) {
          this._camera.position.set(midx-k*Math.max(sizex,sizez), midy+k*sizey, midz-k*Math.max(sizex,sizez));
       } else {
          this._camera.position.set(midx-k*Math.max(sizex,sizey), midy-k*Math.max(sizex,sizey), midz+k*sizez);
@@ -2176,7 +2219,7 @@
       this._camera0pos = new THREE.Vector3(-2*max_all, 0, 0); // virtual 0 position, where rotation starts
       this._camera.lookAt(this._lookat);
 
-      this._pointLight.position.set(sizex/5, sizey/5, sizez/5);
+      this.changedLight(box);
 
       if (this._controls) {
          this._controls.target.copy(this._lookat);
@@ -2184,23 +2227,21 @@
       }
 
       // recheck which elements to draw
-      if (this.options.select_in_view)
+      if (this.ctrl.select_in_view)
          this.startDrawGeometry();
    }
 
    TGeoPainter.prototype.setCameraPosition = function(rotatey, rotatez, zoom) {
-      if (!this.options) return;
-      this.options.rotatey = rotatey || 0;
-      this.options.rotatez = rotatez || 0;
+      if (!this.ctrl) return;
+      this.ctrl.rotatey = rotatey || 0;
+      this.ctrl.rotatez = rotatez || 0;
+      var preserve_zoom = false;
       if (zoom && !isNaN(zoom)) {
-         this.options.zoom = zoom;
-      } else if (this._camera0pos && this._camera && this._lookat) {
-         var pos1 = new THREE.Vector3().add(this._camera0pos).sub(this._lookat),
-             pos2 = new THREE.Vector3().add(this._camera.position).sub(this._lookat);
-
-         this.options.zoom1 = pos2.length() / pos1.length();
+         this.ctrl.zoom = zoom;
+      } else {
+         preserve_zoom = true;
       }
-      this.adjustCameraPosition();
+      this.adjustCameraPosition(false, preserve_zoom);
    }
 
    TGeoPainter.prototype.focusOnItem = function(itemname) {
@@ -2218,7 +2259,7 @@
 
    TGeoPainter.prototype.focusCamera = function( focus, autoClip ) {
 
-      if (this.options.project)
+      if (this.ctrl.project)
          return this.adjustCameraPosition();
 
       var box = new THREE.Box3();
@@ -2242,7 +2283,7 @@
           midz = (box.max.z + box.min.z)/2;
 
       var position;
-      if (this.options._yup)
+      if (this.ctrl._yup)
          position = new THREE.Vector3(midx-2*Math.max(sizex,sizez), midy+2*sizey, midz-2*Math.max(sizex,sizez));
       else
          position = new THREE.Vector3(midx-2*Math.max(sizex,sizey), midy-2*Math.max(sizex,sizey), midz+2*sizez);
@@ -2320,14 +2361,14 @@
           painter = this, last = new Date();
 
       function animate() {
-         if (!painter._renderer || !painter.options) return;
+         if (!painter._renderer || !painter.ctrl) return;
 
          var current = new Date();
 
-         if ( painter.options.autoRotate ) requestAnimationFrame( animate );
+         if ( painter.ctrl.autoRotate ) requestAnimationFrame( animate );
 
          if (painter._controls) {
-            painter._controls.autoRotate = painter.options.autoRotate;
+            painter._controls.autoRotate = painter.ctrl.autoRotate;
             painter._controls.autoRotateSpeed = rotSpeed * ( current.getTime() - last.getTime() ) / 16.6666;
             painter._controls.update();
          }
@@ -2340,8 +2381,8 @@
 
    TGeoPainter.prototype.completeScene = function() {
 
-      if ( this.options._debug || this.options._grid ) {
-         if ( this.options._full ) {
+      if ( this.ctrl._debug || this.ctrl._grid ) {
+         if ( this.ctrl._full ) {
             var boxHelper = new THREE.BoxHelper(this._toplevel);
             this._scene.add( boxHelper );
          }
@@ -2458,10 +2499,10 @@
    TGeoPainter.prototype.MouseOverHierarchy = function(on, itemname, hitem) {
       // function called when mouse is going over the item in the browser
 
-      if (!this.options) return; // protection for cleaned-up painter
+      if (!this.ctrl) return; // protection for cleaned-up painter
 
       var obj = hitem._obj;
-      if (this.options._debug)
+      if (this.ctrl._debug)
          console.log('Mouse over', on, itemname, (obj ? obj._typename : "---"));
 
       // let's highlight tracks and hits only for the time being
@@ -2529,7 +2570,7 @@
    }
 
    TGeoPainter.prototype.drawExtras = function(obj, itemname, add_objects) {
-      if (!obj || obj._typename===undefined) return false;
+      if (!obj || !obj._typename) return false;
 
       // if object was hidden via menu, do not redraw it with next draw call
       if (!add_objects && obj.$hidden_via_menu) return false;
@@ -2616,10 +2657,10 @@
 
       var npoints = Math.round(track.fNpoints/4),
           buf = new Float32Array((npoints-1)*6),
-          pos = 0, projv = this.options.projectPos,
-          projx = (this.options.project === "x"),
-          projy = (this.options.project === "y"),
-          projz = (this.options.project === "z");
+          pos = 0, projv = this.ctrl.projectPos,
+          projx = (this.ctrl.project === "x"),
+          projy = (this.ctrl.project === "y"),
+          projz = (this.ctrl.project === "z");
 
       for (var k=0;k<npoints-1;++k) {
          buf[pos]   = projx ? projv : track.fPoints[k*4];
@@ -2656,10 +2697,10 @@
       if (JSROOT.browser.isWin) track_width = 1; // not supported on windows
 
       var buf = new Float32Array((track.fN-1)*6), pos = 0,
-          projv = this.options.projectPos,
-          projx = (this.options.project === "x"),
-          projy = (this.options.project === "y"),
-          projz = (this.options.project === "z");
+          projv = this.ctrl.projectPos,
+          projx = (this.ctrl.project === "x"),
+          projy = (this.ctrl.project === "y"),
+          projz = (this.ctrl.project === "z");
 
       for (var k=0;k<track.fN-1;++k) {
          buf[pos]   = projx ? projv : track.fP[k*3];
@@ -2695,10 +2736,10 @@
       if (hit_size <= 0) hit_size = 1;
 
       var size = hit.fN,
-          projv = this.options.projectPos,
-          projx = (this.options.project === "x"),
-          projy = (this.options.project === "y"),
-          projz = (this.options.project === "z"),
+          projv = this.ctrl.projectPos,
+          projx = (this.ctrl.project === "x"),
+          projy = (this.ctrl.project === "y"),
+          projz = (this.ctrl.project === "z"),
           pnts = new JSROOT.Painter.PointsCreator(size, this._webgl, hit_size);
 
       for (var i=0;i<size;i++)
@@ -2770,46 +2811,7 @@
       return res;
    }
 
-   TGeoPainter.prototype.SetRootDefaultColors = function() {
-      // set default colors like TGeoManager::DefaultColors() does
-
-      var dflt = { kWhite:0,   kBlack:1,   kGray:920,
-                     kRed:632, kGreen:416, kBlue:600, kYellow:400, kMagenta:616, kCyan:432,
-                     kOrange:800, kSpring:820, kTeal:840, kAzure:860, kViolet:880, kPink:900 };
-
-      var nmax = 110, col = [];
-      for (var i=0;i<nmax;i++) col.push(dflt.kGray);
-
-      //here we should create a new TColor with the same rgb as in the default
-      //ROOT colors used below
-      col[ 3] = dflt.kYellow-10;
-      col[ 4] = col[ 5] = dflt.kGreen-10;
-      col[ 6] = col[ 7] = dflt.kBlue-7;
-      col[ 8] = col[ 9] = dflt.kMagenta-3;
-      col[10] = col[11] = dflt.kRed-10;
-      col[12] = dflt.kGray+1;
-      col[13] = dflt.kBlue-10;
-      col[14] = dflt.kOrange+7;
-      col[16] = dflt.kYellow+1;
-      col[20] = dflt.kYellow-10;
-      col[24] = col[25] = col[26] = dflt.kBlue-8;
-      col[29] = dflt.kOrange+9;
-      col[79] = dflt.kOrange-2;
-
-      var name = { test:function() { return true; }} // select all volumes
-
-      this.FindNodeWithVolume(name, function(arg) {
-         var vol = arg.node.fVolume;
-         var med = vol.fMedium;
-         if (!med) return null;
-         var mat = med.fMaterial;
-         var matZ = Math.round(mat.fZ);
-         vol.fLineColor = col[matZ];
-         if (mat.fDensity<0.1) mat.fFillStyle = 3000+60; // vol.SetTransparency(60)
-      });
-   }
-
-
+   /** Process script option - load and execute some gGeomManager-related calls */
    TGeoPainter.prototype.checkScript = function(script_name, call_back) {
 
       var painter = this, draw_obj = this.GetGeometry(), name_prefix = "";
@@ -2850,17 +2852,17 @@
             },
 
             DefaultColors: function() {
-               painter.SetRootDefaultColors();
+               painter.ctrl.dflt_colors = true;
             },
 
             SetMaxVisNodes: function(limit) {
-               if (!painter.options.maxnodes)
-                  painter.options.maxnodes = pasrseInt(limit) || 0;
+               if (!painter.ctrl.maxnodes)
+                  painter.ctrl.maxnodes = pasrseInt(limit) || 0;
             },
 
             SetVisLevel: function(limit) {
-               if (!painter.options.vislevel)
-                  painter.options.vislevel = parseInt(limit) || 0;
+               if (!painter.ctrl.vislevel)
+                  painter.ctrl.vislevel = parseInt(limit) || 0;
             }
           };
 
@@ -2932,12 +2934,12 @@
 
       if (name_prefix == "__geom_viewer_append__") {
          this._new_append_nodes = draw_obj;
-         this.options.use_worker = 0;
+         this.ctrl.use_worker = 0;
          this._geom_viewer = true; // indicate that working with geom viewer
       } else if ((name_prefix == "__geom_viewer_selection__") && this._clones) {
          // these are selection done from geom viewer
          this._new_draw_nodes = draw_obj;
-         this.options.use_worker = 0;
+         this.ctrl.use_worker = 0;
          this._geom_viewer = true; // indicate that working with geom viewer
       } else if (this._main_painter) {
 
@@ -2961,11 +2963,11 @@
 
          this._clones = new JSROOT.GEO.ClonedNodes(draw_obj);
 
-         var lvl = this.options.vislevel, maxnodes = this.options.maxnodes;
+         var lvl = this.ctrl.vislevel, maxnodes = this.ctrl.maxnodes;
          if (this.geo_manager) {
             if (!lvl && this.geo_manager.fVisLevel)
                lvl = this.geo_manager.fVisLevel;
-            if (maxnodes === undefined)
+            if (!maxnodes)
                maxnodes = this.geo_manager.fMaxVisNodes;
          }
 
@@ -2974,10 +2976,10 @@
 
          this._clones.name_prefix = name_prefix;
 
-         var uniquevis = this.options.no_screen ? 0 : this._clones.MarkVisibles(true);
+         var uniquevis = this.ctrl.no_screen ? 0 : this._clones.MarkVisibles(true);
 
          if (uniquevis <= 0)
-            uniquevis = this._clones.MarkVisibles(false, false, null, !!this.geo_manager && !this.options.showtop);
+            uniquevis = this._clones.MarkVisibles(false, false, null, !!this.geo_manager && !this.ctrl.showtop);
          else
             uniquevis = this._clones.MarkVisibles(true, true); // copy bits once and use normal visibility bits
 
@@ -2995,12 +2997,12 @@
       if (!this._scene) {
 
          // this is limit for the visible faces, number of volumes does not matter
-         this.options.maxlimit = (this._webgl ? 200000 : 100000) * this.options.more;
+         this.ctrl.maxlimit = (this._webgl ? 200000 : 100000) * this.ctrl.more;
 
          this._first_drawing = true;
 
          // activate worker
-         if (this.options.use_worker > 0) this.startWorker();
+         if (this.ctrl.use_worker > 0) this.startWorker();
 
          var size = this.size_for_3d(this._usesvg ? 3 : undefined);
 
@@ -3077,7 +3079,7 @@
             if (this._first_drawing && this._webgl && (this._num_meshes - this._last_render_meshes > 100) && (now - this._last_render_tm > 2.5*interval)) {
                this.adjustCameraPosition();
                this.Render3D(-1);
-               this._last_render_meshes = this._num_meshes;
+               this._last_render_meshes = this.ctrl.info.num_meshes;
             }
             if (res !== 2) setTimeout(this.continueDraw.bind(this), (res === 1) ? 100 : 1);
 
@@ -3088,7 +3090,7 @@
       var take_time = now - this._startm;
 
       if (this._first_drawing)
-         JSROOT.console('Create tm = ' + take_time + ' meshes ' + this._num_meshes + ' faces ' + this._num_faces);
+         JSROOT.console('Create tm = ' + take_time + ' meshes ' + this.ctrl.info.num_meshes + ' faces ' + this.ctrl.info.num_faces);
 
       if (take_time > 300) {
          JSROOT.progress('Rendering geometry');
@@ -3115,7 +3117,7 @@
 
       this._last_camera_position = origin; // remember current camera position
 
-      if (!this.options.project && this._webgl)
+      if (!this.ctrl.project && this._webgl)
          JSROOT.GEO.produceRenderOrder(this._toplevel, origin, this.ctrl.depthMethod, this._clones);
    }
 
@@ -3306,11 +3308,11 @@
           names = ['x','y','z'],
           labels = ['X','Y','Z'],
           colors = ["red","green","blue"],
-          ortho = this.options.ortho_camera,
-          yup = [this.options._yup, this.options._yup, this.options._yup],
+          ortho = this.ctrl.ortho_camera,
+          yup = [this.ctrl._yup, this.ctrl._yup, this.ctrl._yup],
           numaxis = 3;
 
-      if (this.options._axis_center)
+      if (this.ctrl._axis_center)
          for (var naxis=0;naxis<3;++naxis) {
             var name = names[naxis];
             if ((box.min[name]<=0) && (box.max[name]>=0)) continue;
@@ -3318,7 +3320,7 @@
          }
 
       // only two dimensions are seen by ortho camera, X draws Z, can be configured better later
-      if (this.options.ortho_camera) {
+      if (this.ctrl.ortho_camera) {
          numaxis = 2;
          labels[0] = labels[2];
          colors[0] = colors[2];
@@ -3353,7 +3355,7 @@
            case 2: buf[5] = box.max.z; lbl += " " + labels[2]; break;
          }
 
-         if (this.options._axis_center)
+         if (this.ctrl._axis_center)
             for (var k=0;k<6;++k)
                if ((k % 3) !== naxis) buf[k] = center[k%3];
 
@@ -3365,7 +3367,7 @@
          var textMaterial = new THREE.MeshBasicMaterial({ color: axiscol });
 
          if ((center[naxis]===0) && (center[naxis]>=box.min[name]) && (center[naxis]<=box.max[name]))
-           if (!this.options._axis_center || (naxis===0)) {
+           if (!this.ctrl._axis_center || (naxis===0)) {
                var geom = ortho ? new THREE.CircleBufferGeometry(text_size*0.25) :
                                   new THREE.SphereBufferGeometry(text_size*0.25);
                mesh = new THREE.Mesh(geom, textMaterial);
@@ -3474,10 +3476,10 @@
       if (this.TestAxisVisibility) {
          if (!force_draw) {
            this.TestAxisVisibility(null, this._toplevel);
-           this.options._axis = false;
+           this.ctrl._axis = false;
          }
       } else {
-         this.options._axis = true;
+         this.ctrl._axis = true;
          this.drawSimpleAxis();
          if (force_draw !== true)
             this.changedDepthMethod();
@@ -3486,14 +3488,14 @@
 
    /** @brief Set axes visibility */
    TGeoPainter.prototype.setAxesDraw = function(on) {
-      if (on != this.options._axis)
+      if (on != this.ctrl._axis)
          this.toggleAxesDraw();
    }
 
    /** @brief Set auto rotate mode */
    TGeoPainter.prototype.setAutoRotate = function(on) {
-      if (this.options.project) return;
-      this.options.autoRotate = on;
+      if (this.ctrl.project) return;
+      this.ctrl.autoRotate = on;
       this.autorotate(2.5);
    }
 
@@ -3511,7 +3513,7 @@
 
    /** Specify showtop draw options, relevant only for TGeoManager */
    TGeoPainter.prototype.setShowTop = function(on) {
-      this.options.showtop = on ? true : false;
+      this.ctrl.showtop = on ? true : false;
       this.RedrawObject('same');
    }
 
@@ -3562,7 +3564,7 @@
       if (!this._webgl) return;
 
       var clip = this.ctrl.clip, panels = [], changed = false,
-          constants = [clip[0].value, -1 * clip[1].value, (this.options._yup ? -1 : 1) * clip[2].value ],
+          constants = [ clip[0].value, -1 * clip[1].value, (this.ctrl._yup ? -1 : 1) * clip[2].value ],
           clip_cfg = this.ctrl.clipIntersect ? 16 : 0;
 
       for (var k=0;k<3;++k) {
@@ -3607,17 +3609,24 @@
          }
       });
 
-      this.bothSides = any_clipping;
+      this.ctrl.bothSides = any_clipping;
 
       if (!without_render) this.Render3D(0);
+
+      return changed;
    }
 
+   TGeoPainter.prototype.setCompleteHandler = function(callback) {
+      this._complete_handler = callback;
+   }
+
+   /** @brief complete drawing procedure @private */
    TGeoPainter.prototype.completeDraw = function(close_progress) {
 
       var first_time = false, full_redraw = false, check_extras = true;
 
-      if (!this.options) {
-         console.warn('options object does not exist in completeDraw - something went wrong');
+      if (!this.ctrl) {
+         console.warn('ctrl object does not exist in completeDraw - something went wrong');
          return;
       }
 
@@ -3628,7 +3637,7 @@
          var extras = (this._main_painter ? this._main_painter._extraObjects : null) || this._extraObjects;
          this.drawExtras(extras, "", false);
       } else if (this._first_drawing || this._full_redrawing) {
-         if (this.options.tracks && this.geo_manager && this.geo_manager.fTracks)
+         if (this.ctrl.tracks && this.geo_manager)
             this.drawExtras(this.geo_manager.fTracks, "<prnt>/Tracks");
       }
 
@@ -3652,7 +3661,7 @@
       if (first_time)
          this.completeScene();
 
-      if (full_redraw && this.options._axis)
+      if (full_redraw && this.ctrl._axis)
          this.toggleAxesDraw(true);
 
       this._scene.overrideMaterial = null;
@@ -3690,16 +3699,25 @@
             this.ctrl.highlight_scene = this.ctrl.highlight;
 
          // if rotation was enabled, do it
-         if (this._webgl && this.options.autoRotate && !this.options.project) this.autorotate(2.5);
-         if (!this._usesvg && this.options.show_controls && !JSROOT.BatchMode) this.showControlOptions(true);
+         if (this._webgl && this.ctrl.autoRotate && !this.ctrl.project) this.autorotate(2.5);
+         if (!this._usesvg && this.ctrl.show_controls && !JSROOT.BatchMode) this.showControlOptions(true);
       }
 
+      // call it every time, in reality invoked only first time
       this.DrawingReady();
+
+      if (typeof this._complete_handler == 'function')
+         this._complete_handler(this);
 
       if (this._draw_nodes_again)
          return this.startDrawGeometry(); // relaunch drawing
 
       this._drawing_ready = true; // indicate that drawing is completed
+   }
+
+   /** Returns true if geometry drawing is completed */
+   TGeoPainter.prototype.isDrawingReady = function() {
+      return this._drawing_ready || false;
    }
 
    /** Remove already drawn node. Used by geom viewer */
@@ -3758,7 +3776,7 @@
          delete this._animating;
 
          var obj = this.GetGeometry();
-         if (obj && this.options.is_main) {
+         if (obj && this.ctrl.is_main) {
             if (obj.$geo_painter===this) delete obj.$geo_painter; else
             if (obj.fVolume && obj.fVolume.$geo_painter===this) delete obj.fVolume.$geo_painter;
          }
@@ -3778,6 +3796,7 @@
 
          JSROOT.TObjectPainter.prototype.Cleanup.call(this);
 
+         delete this.ctrl;
          delete this.options;
 
          this.did_cleanup = true;
@@ -3944,6 +3963,7 @@
 
       delete this._extraObjects;
       delete this.TestAxisVisibility; // allow draw of axes again
+      delete this._clipCfg;
 
       JSROOT.Painter.DisposeThreejsObject(this._toplevel, true);
 
@@ -4033,25 +4053,25 @@
 
       var painter = JSROOT.Painter.CreateGeoPainter(divid, obj, opt);
 
-      if (painter.options.is_main && !obj.$geo_painter)
+      if (painter.ctrl.is_main && !obj.$geo_painter)
          obj.$geo_painter = painter;
 
-      if (!painter.options.is_main && painter.options.project && obj.$geo_painter) {
+      if (!painter.ctrl.is_main && painter.ctrl.project && obj.$geo_painter) {
          painter._main_painter = obj.$geo_painter;
          painter._main_painter._slave_painters.push(painter);
       }
 
-      if (is_eve && !painter.options.vislevel || (painter.options.vislevel < 9))
-         painter.options.vislevel = 9;
+      if (is_eve && !painter.ctrl.vislevel || (painter.ctrl.vislevel < 9))
+         painter.ctrl.vislevel = 9;
 
       if (extras) {
          painter._splitColors = true;
          painter.addExtra(extras, extras_path);
       }
 
-      // this.options.script_name = 'https://root.cern/js/files/geom/geomAlice.C'
+      // this.ctrl.script_name = 'https://root.cern/js/files/geom/geomAlice.C'
 
-      painter.checkScript(painter.options.script_name, painter.prepareObjectDraw.bind(painter));
+      painter.checkScript(painter.ctrl.script_name, painter.prepareObjectDraw.bind(painter));
 
       return painter;
    }

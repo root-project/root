@@ -4684,12 +4684,11 @@
       } else if (msg.substr(0,5) == "EDIT:") {
          var obj_painter = this.FindSnap(msg.substr(5));
          console.log('GET EDIT ' + msg.substr(5) +  ' found ' + !!obj_painter);
-         if (obj_painter) {
-            this.ShowSection("Editor", true);
-
-            if (this.pad_events_receiver)
-               this.pad_events_receiver({ what: "select", padpainter: this, painter: obj_painter });
-         }
+         if (obj_painter)
+            this.ShowSection("Editor", true, function() {
+               if (this.pad_events_receiver)
+                  this.pad_events_receiver({ what: "select", padpainter: this, painter: obj_painter });
+            }.bind(this));
 
       } else {
          console.log("unrecognized msg " + msg);
@@ -4720,11 +4719,13 @@
       this.ProcessChanges("sbits", this);
    }
 
+   /** Returns true if GED is present on the canvas @private */
    TCanvasPainter.prototype.HasGed = function() {
       if (this.testUI5()) return false;
       return this.brlayout ? this.brlayout.HasContent() : false;
    }
 
+   /** Function used to de-activate GED @private */
    TCanvasPainter.prototype.RemoveGed = function() {
       if (this.testUI5()) return;
 
@@ -4741,17 +4742,30 @@
       this.ProcessChanges("sbits", this);
    }
 
-   TCanvasPainter.prototype.ActivateGed = function(objpainter, kind, mode) {
-      // function used to activate GED
-      if (this.testUI5() || !this.brlayout) return;
+   /** Function used to activate GED @private */
+   TCanvasPainter.prototype.ActivateGed = function(objpainter, kind, mode, callback) {
+      if (this.testUI5() || !this.brlayout)
+         return JSROOT.CallBack(callback);
 
       if (this.brlayout.HasContent()) {
          if ((mode === "toggle") || (mode === false))
-            return this.RemoveGed();
-         return this.SelectObjectPainter(objpainter);
+            this.RemoveGed();
+         else
+            this.SelectObjectPainter(objpainter);
+
+         JSROOT.CallBack(callback, true);
       }
 
-      if (mode === false) return;
+      if (mode === false)
+         return JSROOT.CallBack(callback);
+
+      // keep all callbacks until initialization is performed
+      if (this._ged_callbacks !== undefined) {
+         this._ged_callbacks.push(callback);
+         return;
+      }
+
+      this._ged_callbacks = [ callback ];
 
       var btns = this.brlayout.CreateBrowserBtns();
 
@@ -4796,23 +4810,31 @@
                pthis.SelectObjectPainter(objpainter);
 
                pthis.ProcessChanges("sbits", pthis);
+
+               // finally invoke all callbacks
+               var arr = pthis._ged_callbacks;
+               delete pthis._ged_callbacks;
+               arr.forEach(function(func) { JSROOT.CallBack(func, true) });
             });
          });
       });
    }
 
-   TCanvasPainter.prototype.ShowSection = function(that, on) {
-      if (this.testUI5()) return;
+   TCanvasPainter.prototype.ShowSection = function(that, on, callback) {
+      if (this.testUI5())
+         return JSROOT.CallBack(callback);
 
       console.log('Show section ' + that + ' flag = ' + on);
 
       switch(that) {
          case "Menu": break;
          case "StatusBar": this.ActivateStatusBar(on); break;
-         case "Editor": this.ActivateGed(this, null, !!on); break;
+         case "Editor": this.ActivateGed(this, null, !!on, callback); callback = null; break;
          case "ToolBar": break;
          case "ToolTips": this.SetTooltipAllowed(on); break;
+
       }
+      JSROOT.CallBack(callback, true);
    }
 
    TCanvasPainter.prototype.CompeteCanvasSnapDrawing = function() {
