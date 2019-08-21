@@ -1282,7 +1282,7 @@ set(ROOT_TEST_DRIVER ${CMAKE_CURRENT_LIST_DIR}/RootTestDriver.cmake)
 #                        [TIMEOUT seconds]
 #                        [DEBUG]
 #                        [SOURCE_DIR dir] [BINARY_DIR dir]
-#                        [WORKING_DIR dir]
+#                        [WORKING_DIR dir] [COPY_TO_BUILDDIR files]
 #                        [BUILD target] [PROJECT project]
 #                        [PASSREGEX exp] [FAILREGEX epx]
 #                        [PASSRC code])
@@ -1535,12 +1535,13 @@ function(ROOT_ADD_GTEST test_suite)
         /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index")
     set_property(TARGET ${test_suite} APPEND_STRING PROPERTY LINK_FLAGS ${test_exports})
   endif()
-
+  
   ROOT_PATH_TO_STRING(mangled_name ${test_suite} PATH_SEPARATOR_REPLACEMENT "-")
   ROOT_ADD_TEST(
     gtest${mangled_name}
     COMMAND ${test_suite}
     WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
+    COPY_TO_BUILDDIR ${ARG_COPY_TO_BUILDDIR}
   )
 endfunction()
 
