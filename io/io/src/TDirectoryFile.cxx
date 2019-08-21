@@ -338,6 +338,11 @@ void TDirectoryFile::Build(TFile* motherFile, TDirectory* motherDir)
    fMother     = motherDir;
    fFile       = motherFile ? motherFile : TFile::CurrentFile();
    SetBit(kCanDelete);
+
+   if (fFile && fFile->TestBit(TFile::kReproducible)) {
+      fDatimeC = (UInt_t) 1;
+      fDatimeM = (UInt_t) 1;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -740,12 +745,17 @@ void TDirectoryFile::FillBuffer(char *&buffer)
        fSeekKeys > TFile::kStartBigFile )
    {
       // One of the address is larger than 2GB we need to use longer onfile
-      // integer, thus we increase the verison number.
+      // integer, thus we increase the version number.
       // Note that fSeekDir and fSeekKey are not necessarily correlated, if
       // some object are 'removed' from the file and the holes are reused.
       version += 1000;
    }
    tobuf(buffer, version);
+   if (fFile && fFile->TestBit(TFile::kReproducible)) {
+      fDatimeC = (UInt_t) 1;
+      fDatimeM = (UInt_t) 1;
+      fUUID.SetUUID("00000000-0000-0000-0000-000000000000");
+   }
    fDatimeC.FillBuffer(buffer);
    fDatimeM.FillBuffer(buffer);
    tobuf(buffer, fNbytesKeys);
