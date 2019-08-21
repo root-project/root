@@ -387,8 +387,6 @@ void TRint::Run(Bool_t retrn)
             }
             TObjString *file = (TObjString *)fileObj;
             char cmd[kMAXPATHLEN+50];
-            if (!fNcmd)
-               printf("\n");
             Bool_t rootfile = kFALSE;
 
             if (file->TestBit(kExpression)) {
