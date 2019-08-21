@@ -209,8 +209,13 @@ Int_t RooAbsCategoryLValue::getBin(const char* /*rangeName*/) const
   //Synchronize _value
   getLabel() ; 
   
-  // Lookup ordinal index number 
-  return _types.IndexOf(_types.FindObject(_value.GetName())) ;
+  // Lookup ordinal index number
+  std::string theName = _value.GetName();
+  auto item = std::find_if(_types.begin(), _types.end(), [&theName](const RooCatType* cat){
+    return cat->GetName() == theName;
+  });
+
+  return item - _types.begin();
 }
 
 

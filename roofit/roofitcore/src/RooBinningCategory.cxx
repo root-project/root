@@ -24,16 +24,15 @@ by a series of thresholds.
 **/
 
 
-#include "RooFit.h"
-
-#include "Riostream.h"
-#include "Riostream.h"
-#include <stdlib.h>
-#include "TString.h"
 #include "RooBinningCategory.h"
+
+#include "RooFit.h"
+#include "Riostream.h"
+#include "TString.h"
 #include "RooStreamParser.h"
-#include "RooThreshEntry.h"
 #include "RooMsgService.h"
+
+#include <stdlib.h>
 
 using namespace std;
 

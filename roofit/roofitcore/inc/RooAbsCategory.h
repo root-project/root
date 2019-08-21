@@ -16,9 +16,9 @@
 #ifndef ROO_ABS_CATEGORY
 #define ROO_ABS_CATEGORY
 
-#include "TObjArray.h"
 #include "RooAbsArg.h"
 #include "RooCatType.h"
+#include "TIterator.h"
 
 class TTree ;
 class RooArgSet ;
@@ -29,11 +29,7 @@ class RooVectorDataStore ;
 class RooAbsCategory : public RooAbsArg {
 public:
   // Constructors, assignment etc.
-  RooAbsCategory() { 
-    // Default constructor
-    _treeVar = kFALSE ; 
-    _typeIter = _types.MakeIterator() ; 
-  } ;
+  RooAbsCategory() : _byteValue(0), _treeVar(false) { };
   RooAbsCategory(const char *name, const char *title);
   RooAbsCategory(const RooAbsCategory& other, const char* name=0) ;
   virtual ~RooAbsCategory();
@@ -54,10 +50,15 @@ public:
   const RooCatType* lookupType(Int_t index, Bool_t printError=kFALSE) const ;
   const RooCatType* lookupType(const char* label, Bool_t printError=kFALSE) const ;
   const RooCatType* lookupType(const RooCatType& type, Bool_t printError=kFALSE) const ;
-  TIterator* typeIterator() const ;
+  /// \deprecated Iterator over types. Use range-based for loops instead.
+  TIterator*
+  R__SUGGEST_ALTERNATIVE("Use begin(), end() or range-based for loops.")
+  typeIterator() const {
+    return new LegacyIterator(_types);
+  }
+  /// Return number of types defined (in range named rangeName if rangeName!=0)
   Int_t numTypes(const char* /*rangeName*/=0) const { 
-    // Return number of types defined (in range named rangeName if rangeName!=0)
-    return _types.GetEntries() ; 
+    return _types.size();
   }
   Bool_t isSignType(Bool_t mustHaveZero=kFALSE) const ;
 
@@ -76,6 +77,18 @@ public:
   }
 
   RooAbsArg *createFundamental(const char* newname=0) const;
+
+  std::vector<RooCatType*>::const_iterator begin() const {
+    return _types.cbegin();
+  }
+
+  std::vector<RooCatType*>::const_iterator end() const {
+    return _types.cend();
+  }
+
+  std::size_t size() const {
+    return _types.size();
+  }
 
 protected:
 
@@ -108,12 +121,36 @@ protected:
 
   mutable UChar_t    _byteValue ; //! Transient cache for byte values from tree branches
   mutable RooCatType _value ; // Current value
-  TObjArray  _types ;         // Array of allowed values
-  TIterator* _typeIter ;      //!
+  // These need to be pointers, unfortunately, since other classes are holding pointers to the categories.
+  // That's not safe in case of reallocations.
+  std::vector<RooCatType*> _types; // Vector of allowed values.
 
   Bool_t _treeVar ;           //! do not persist
 
-  ClassDef(RooAbsCategory,1) // Abstract discrete variable
+  class LegacyIterator : public TIterator {
+    public:
+      LegacyIterator(const std::vector<RooCatType*>& vec) : _vec(vec), index(-1) { }
+      const TCollection *GetCollection() const override {
+        return nullptr;
+      }
+      TObject* Next() override {
+        ++index;
+        return this->operator*();
+      }
+      void Reset() override {
+        index = -1;
+      }
+      TObject* operator*() const override {
+        // Need to const_cast because TIterator interface broken
+        return 0 <= index && index < (int)_vec.size() ? const_cast<RooCatType*>(_vec[index]) : nullptr;
+      }
+
+    private:
+      const std::vector<RooCatType*>& _vec;
+      int index;
+  };
+
+  ClassDef(RooAbsCategory, 2) // Abstract discrete variable
 };
 
 #endif

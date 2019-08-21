@@ -44,6 +44,7 @@ is provided to modify the contents, nor a public interface to define states.
 #include "RooCategory.h"
 #include "RooMsgService.h"
 #include "RooVectorDataStore.h"
+#include "RooLinkedListIter.h"
 
 using namespace std;
 
@@ -55,9 +56,8 @@ ClassImp(RooAbsCategory);
 /// Constructor
 
 RooAbsCategory::RooAbsCategory(const char *name, const char *title) :
-  RooAbsArg(name,title), _value("NULL",0), _treeVar(kFALSE)
+  RooAbsArg(name,title), _byteValue(0), _value("NULL",0), _treeVar(kFALSE)
 {
-  _typeIter = _types.MakeIterator() ;
   setValueDirty() ;
   setShapeDirty() ;
 }
@@ -68,14 +68,10 @@ RooAbsCategory::RooAbsCategory(const char *name, const char *title) :
 /// Copy constructor, copies the registered category states from the original.
 
 RooAbsCategory::RooAbsCategory(const RooAbsCategory& other,const char* name) :
-  RooAbsArg(other,name), _value(other._value), _treeVar(other._treeVar)
+  RooAbsArg(other,name),  _byteValue(0), _value(other._value), _treeVar(other._treeVar)
 {
-  _typeIter = _types.MakeIterator() ;
-
-  other._typeIter->Reset() ;
-  TObject* obj ;
-  while ((obj=other._typeIter->Next())) {
-    _types.Add(obj->Clone()) ;
+  for (const auto cat : other._types) {
+    _types.push_back(new RooCatType(*cat));
   }
 
   setValueDirty() ;
@@ -89,9 +85,7 @@ RooAbsCategory::RooAbsCategory(const RooAbsCategory& other,const char* name) :
 
 RooAbsCategory::~RooAbsCategory()
 {
-  // We own the contents of _types
-  delete _typeIter ;
-  _types.Delete() ;
+
 }
 
 
@@ -153,16 +147,6 @@ RooCatType RooAbsCategory::traceEval() const
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return iterator over all defined states
-
-TIterator* RooAbsCategory::typeIterator() const
-{
-  return _types.MakeIterator() ;
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Equality operator with a integer (compares with state index number)
 
@@ -178,7 +162,7 @@ Bool_t RooAbsCategory::operator==(Int_t index) const
 
 Bool_t RooAbsCategory::operator==(const char* label) const
 {
-  return !TString(label).CompareTo(getLabel()) ;
+  return strcmp(label, getLabel()) == 0;
 }
 
 
@@ -250,14 +234,12 @@ const RooCatType* RooAbsCategory::defineType(const char* label)
 
 const RooCatType* RooAbsCategory::defineTypeUnchecked(const char* label, Int_t index)
 {
-  Bool_t first = _types.GetEntries()?kFALSE:kTRUE ;
-  RooCatType *newType = new RooCatType(label,index) ;
-  _types.Add(newType) ;
+  _types.push_back(new RooCatType(label, index));
 
-  if (first) _value = RooCatType(label,index) ;
-  setShapeDirty() ;
+  if (_types.size() == 1) _value = *_types.back();
+  setShapeDirty();
 
-  return newType ;
+  return _types.back();
 }
 
 
@@ -289,7 +271,9 @@ const RooCatType* RooAbsCategory::defineType(const char* label, Int_t index)
 
 void RooAbsCategory::clearTypes()
 {
-  _types.Delete() ;
+  for (auto cat : _types)
+    delete cat;
+  _types.clear();
   _value = RooCatType("",0) ;
   setShapeDirty() ;
 }
@@ -301,10 +285,8 @@ void RooAbsCategory::clearTypes()
 
 const RooCatType* RooAbsCategory::lookupType(const RooCatType &other, Bool_t printError) const
 {
-  RooCatType* type ;
-  _typeIter->Reset() ;
-  while((type=(RooCatType*)_typeIter->Next())){
-    if((*type) == other) return type; // delegate comparison to RooCatType
+  for (const auto type : _types) {
+    if (*type == other) return type; // delegate comparison to RooCatType
   }
 
   if (printError) {
@@ -323,10 +305,8 @@ const RooCatType* RooAbsCategory::lookupType(const RooCatType &other, Bool_t pri
 
 const RooCatType* RooAbsCategory::lookupType(Int_t index, Bool_t printError) const
 {
-  RooCatType* type ;
-  _typeIter->Reset() ;
-  while((type=(RooCatType*)_typeIter->Next())){
-    if((*type) == index) return type; // delegate comparison to RooCatType
+  for (const auto type : _types) {
+    if(*type == index) return type; // delegate comparison to RooCatType
   }
   if (printError) {
     coutE(InputArguments) << ClassName() << "::" << GetName() << ":lookupType: no match for index "
@@ -342,19 +322,16 @@ const RooCatType* RooAbsCategory::lookupType(Int_t index, Bool_t printError) con
 
 const RooCatType* RooAbsCategory::lookupType(const char* label, Bool_t printError) const
 {
-  RooCatType* type ;
-  _typeIter->Reset() ;
-  while((type=(RooCatType*)_typeIter->Next())){
-    if((*type) == label) return type; // delegate comparison to RooCatType
+  for (const auto type : _types) {
+    if(*type == label) return type; // delegate comparison to RooCatType
   }
 
   // Try if label represents integer number
   char* endptr ;
   Int_t idx=strtol(label,&endptr,10)  ;
   if (endptr==label+strlen(label)) {
-    _typeIter->Reset() ;
-    while((type=(RooCatType*)_typeIter->Next())){
-       if((*type) == idx) return type; // delegate comparison to RooCatType
+    for (const auto type : _types) {
+       if(*type == idx) return type; // delegate comparison to RooCatType
      }
   }
 
@@ -442,16 +419,14 @@ void RooAbsCategory::printMultiline(ostream& os, Int_t contents, Bool_t verbose,
   RooAbsArg::printMultiline(os,contents,verbose,indent);
 
   os << indent << "--- RooAbsCategory ---" << endl;
-  if (_types.GetEntries()==0) {
+  if (_types.empty()) {
     os << indent << "  ** No values defined **" << endl;
     return;
   }
   os << indent << "  Value is \"" << getLabel() << "\" (" << getIndex() << ")" << endl;
   os << indent << "  Has the following possible values:" << endl;
   indent.Append("    ");
-  RooCatType *type;
-  _typeIter->Reset() ;
-  while((type=(RooCatType*)_typeIter->Next())) {
+  for (const auto type : _types) {
     os << indent;
     type->printStream(os,kName|kValue,kSingleLine,indent);
   }
@@ -654,7 +629,7 @@ void RooAbsCategory::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/, Bo
 
 const RooCatType* RooAbsCategory::getOrdinal(UInt_t n, const char* /*rangeName*/) const
 {
-  return (const RooCatType*)_types.At(n);
+  return _types.size() > n ? _types[n] : nullptr;
 }
 
 
@@ -668,12 +643,9 @@ RooAbsArg *RooAbsCategory::createFundamental(const char* newname) const
   RooCategory *fund= new RooCategory(newname?newname:GetName(),GetTitle()) ;
 
   // Copy states
-  TIterator* tIter = typeIterator() ;
-  RooCatType* type ;
-  while ((type=(RooCatType*)tIter->Next())) {
-    ((RooAbsCategory*)fund)->defineType(type->GetName(),type->getVal()) ;
+  for (const auto type : _types) {
+    ((RooAbsCategory*)fund)->defineType(type->GetName(), type->getVal());
   }
-  delete tIter;
 
   return fund;
 }
@@ -689,12 +661,9 @@ Bool_t RooAbsCategory::isSignType(Bool_t mustHaveZero) const
   if (mustHaveZero&&numTypes()!=3) return kFALSE ;
 
   Bool_t ret(kTRUE) ;
-  TIterator* tIter = typeIterator() ;
-  RooCatType* type ;
-  while((type=(RooCatType*)tIter->Next())) {
+  for (const auto type : _types) {
     if (abs(type->getVal())>1) ret=kFALSE ;
   }
 
-  delete tIter ;
   return ret ;
 }

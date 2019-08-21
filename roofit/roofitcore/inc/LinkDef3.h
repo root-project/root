@@ -30,8 +30,16 @@
 #pragma link C++ class RooStringVar+ ;
 #pragma link C++ class RooSuperCategory+ ;
 #pragma link C++ class RooTable+ ;
-#pragma link C++ class RooThreshEntry+ ;
 #pragma link C++ class RooThresholdCategory+ ;
+#pragma read sourceClass="RooThresholdCategory" targetClass="RooThresholdCategory" version="[1]" \
+  source="TSortedList _threshList" target="_threshList" \
+  code="{class RooThreshEntry : public TObject { public: Double_t _thresh; RooCatType _cat;}; \
+         RooThreshEntry* te; \
+         auto iter = onfile._threshList.MakeIterator();\
+         while( (te = (RooThreshEntry*)iter->Next()) ) { \
+           _threshList.emplace_back(te->_thresh, te->_cat); \
+         }\
+         }";
 #pragma link C++ class RooTObjWrap+ ;
 #pragma link C++ class RooTrace+ ;
 #pragma link C++ class RooUniformBinning+ ;

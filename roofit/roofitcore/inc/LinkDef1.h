@@ -24,6 +24,13 @@
   code="{ _clientListShape = RooFit::STLRefCountListHelpers::convert(onfile._clientListShape); }"
 #pragma link C++ class RooAbsBinning- ;
 #pragma link C++ class RooAbsCategory+ ;
+#pragma read sourceClass="RooAbsCategory" targetClass="RooAbsCategory" version="[1]" \
+  source="TObjArray _types" target="_types" \
+  code="{TObject* obj; TIterator* it = onfile._types.MakeIterator();\
+         while ((obj=it->Next())) {\
+           auto cat = dynamic_cast<const RooCatType*>(obj); assert(cat);\
+           _types.push_back(new RooCatType(*cat)); }\
+         delete it; }";
 #pragma link C++ class RooAbsCategoryLValue+ ;
 #pragma link C++ class RooAbsCollection+ ;
 #pragma read sourceClass="RooAbsCollection" targetClass="RooAbsCollection" version="[1]" source="" target="_allRRV" code="{ _allRRV=kFALSE ; }"

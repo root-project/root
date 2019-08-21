@@ -16,20 +16,22 @@
 #ifndef ROO_THRESHOLD_CATEGORY
 #define ROO_THRESHOLD_CATEGORY
 
-#include "TSortedList.h"
 #include "RooAbsCategory.h"
 #include "RooRealProxy.h"
 #include "RooCatType.h"
+
+#include <vector>
+#include <utility>
 
 class RooThresholdCategory : public RooAbsCategory {
 
 public:
   // Constructors etc.
-  RooThresholdCategory();
-  RooThresholdCategory(const char *name, const char *title, RooAbsReal& inputVar, const char* defCatName="Default", Int_t defCatIdx=0);
+  RooThresholdCategory() {};
+  RooThresholdCategory(const char *name, const char *title, RooAbsReal& inputVar,
+      const char* defCatName="Default", Int_t defCatIdx=0);
   RooThresholdCategory(const RooThresholdCategory& other, const char *name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooThresholdCategory(*this, newname); }
-  virtual ~RooThresholdCategory();
 
   // Mapping function
   Bool_t addThreshold(Double_t upperLimit, const char* catName, Int_t catIdx=-99999) ;
@@ -42,13 +44,12 @@ public:
 protected:
   
   RooRealProxy _inputVar ;
-  RooCatType* _defCat ;
-  TSortedList _threshList ;
-  TIterator* _threshIter ; //! do not persist 
+  const RooCatType* _defCat{nullptr};
+  std::vector<std::pair<double,RooCatType>> _threshList;
 
   virtual RooCatType evaluate() const ; 
 
-  ClassDef(RooThresholdCategory,1) // Real-to-Category function defined by series of threshold
+  ClassDef(RooThresholdCategory, 2) // Real-to-Category function defined by series of thresholds
 };
 
 #endif
