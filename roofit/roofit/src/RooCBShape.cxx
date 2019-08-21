@@ -33,6 +33,9 @@ PDF implementing the Crystal Ball line shape.
 #include "TMath.h"
 
 #include "TError.h"
+#include "BatchHelpers.h"
+#include "vdt/exp.h"
+#include "vdt/log.h"
 
 using namespace std;
 
