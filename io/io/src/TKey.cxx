@@ -477,7 +477,10 @@ void TKey::Create(Int_t nbytes, TFile* externFile)
             nsize,GetName(),GetTitle());
       return;
    }
-   fDatime.Set();
+   if (f->TestBit(TFile::kReproducible))
+      fDatime = (UInt_t) 1; // cannot use 0, when reading from file 0 time will be reassigned
+   else
+      fDatime.Set();
    fSeekKey  = bestfree->GetFirst();
 //*-*----------------- Case Add at the end of the file
    if (fSeekKey >= f->GetEND()) {
