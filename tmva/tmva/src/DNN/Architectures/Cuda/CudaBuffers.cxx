@@ -139,7 +139,7 @@ void TCudaDeviceBuffer<AFloat>::CopyFrom(const TCudaHostBuffer<AFloat> &buffer) 
 template <typename AFloat>
 void TCudaDeviceBuffer<AFloat>::CopyTo(const TCudaHostBuffer<AFloat> &buffer) const
 {
-   cudaMemcpyAsync(*this, buffer, fSize * sizeof(AFloat), cudaMemcpyDeviceToHost, fComputeStream);
+   cudaMemcpyAsync(buffer, *this, fSize * sizeof(AFloat), cudaMemcpyDeviceToHost, fComputeStream);
    buffer.fComputeStream = fComputeStream;
 }
 
