@@ -45,9 +45,9 @@ std::vector<std::string> TokenizeTypeList(std::string templateType) {
    if (templateType.empty())
       return result;
 
-   char *eol = templateType.data() + templateType.length();
-   char *typeBegin = templateType.data();
-   char *typeCursor = templateType.data();
+   const char *eol = templateType.data() + templateType.length();
+   const char *typeBegin = templateType.data();
+   const char *typeCursor = templateType.data();
    unsigned int nestingLevel = 0;
    while (typeCursor != eol) {
       switch (*typeCursor) {
