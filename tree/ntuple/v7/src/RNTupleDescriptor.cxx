@@ -632,8 +632,15 @@ ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleDescriptor::GetNElem
 ROOT::Experimental::DescriptorId_t
 ROOT::Experimental::RNTupleDescriptor::FindFieldId(std::string_view fieldName, DescriptorId_t parentId) const
 {
+   std::string leafName(fieldName);
+   auto posDot = leafName.find_last_of('.');
+   if (posDot != std::string::npos) {
+      auto parentName = leafName.substr(0, posDot);
+      leafName = leafName.substr(posDot + 1);
+      parentId = FindFieldId(parentName, parentId);
+   }
    for (const auto &fd : fFieldDescriptors) {
-      if (fd.second.GetParentId() == parentId && fd.second.GetFieldName() == fieldName)
+      if (fd.second.GetParentId() == parentId && fd.second.GetFieldName() == leafName)
          return fd.second.GetId();
    }
    return kInvalidDescriptorId;
@@ -643,11 +650,7 @@ ROOT::Experimental::RNTupleDescriptor::FindFieldId(std::string_view fieldName, D
 ROOT::Experimental::DescriptorId_t ROOT::Experimental::RNTupleDescriptor::FindFieldId(std::string_view fieldName) const
 {
    auto rootId = FindFieldId("", kInvalidDescriptorId);
-   for (const auto &fd : fFieldDescriptors) {
-      if (fd.second.GetParentId() == rootId && fd.second.GetFieldName() == fieldName)
-         return fd.second.GetId();
-   }
-   return kInvalidDescriptorId;
+   return FindFieldId(fieldName, rootId);
 }
 
 

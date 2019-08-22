@@ -191,6 +191,36 @@ TEST(RNTuple, WriteRead)
    EXPECT_STREQ("abc", rdKlass->s.c_str());
 }
 
+TEST(RNTuple, ClassVector)
+{
+   FileRaii fileGuard("test_ntuple_classvector.root");
+
+   auto modelWrite = RNTupleModel::Create();
+   auto wrKlassVec = modelWrite->MakeField<std::vector<CustomStruct>>("klassVec");
+   CustomStruct klass;
+   klass.a = 42.0;
+   klass.v1.emplace_back(2.0);
+   wrKlassVec->emplace_back(klass);
+
+   {
+      RNTupleWriter ntuple(std::move(modelWrite), std::make_unique<RPageSinkRoot>("f", fileGuard.GetPath()));
+      ntuple.Fill();
+   }
+
+   RNTupleReader ntuple(std::make_unique<RPageSourceRoot>("f", fileGuard.GetPath()));
+   EXPECT_EQ(1U, ntuple.GetNEntries());
+
+   auto viewKlassVec = ntuple.GetViewCollection("klassVec");
+   auto viewKlass = viewKlassVec.GetView<CustomStruct>("CustomStruct");
+   auto viewKlassA = viewKlassVec.GetView<float>("CustomStruct.a");
+
+   for (auto entryId : ntuple.GetViewRange()) {
+      EXPECT_EQ(42.0, viewKlass(entryId).a);
+      EXPECT_EQ(2.0, viewKlass(entryId).v1[0]);
+      EXPECT_EQ(42.0, viewKlassA(entryId));
+   }
+}
+
 TEST(RNTuple, RVec)
 {
    FileRaii fileGuard("test_ntuple_rvec.root");
