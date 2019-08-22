@@ -87,6 +87,7 @@ enum EProperty {
    kIsVirtualBase   = 0x00200000,
    kIsConstPointer  = 0x00400000,
    kIsScopedEnum    = 0x00800000,
+   kIsConstexpr     = 0x02000000,
    kIsExplicit      = 0x04000000,
    kIsNamespace     = 0x08000000,
    kIsConstMethod   = 0x10000000,
@@ -106,6 +107,7 @@ enum EFunctionProperty {
    kIsPrivate       = 0x00000800,
    kIsStatic        = 0x00004000,
    kIsDefault       = 0x00008000,
+   kIsConstexpr     = 0x02000000
    kIsExplicit      = 0x04000000,
    kIsConstMethod   = 0x10000000,
 */
