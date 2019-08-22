@@ -89,7 +89,7 @@ protected:
 public:
    TMemFile(const char *name, Option_t *option = "", const char *ftitle = "",
             Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose, Long64_t defBlockSize = 0LL);
-   TMemFile(const char *name, char *buffer, Long64_t size, Option_t *option="", const char *ftitle="", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose);
+   TMemFile(const char *name, char *buffer, Long64_t size, Option_t *option="", const char *ftitle="", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose, Long64_t defBlockSize = 0LL);
    TMemFile(const char *name, ExternalDataPtr_t data);
    TMemFile(const char *name, const ZeroCopyView_t &datarange);
    TMemFile(const char *name, std::unique_ptr<TBufferFile> buffer);
