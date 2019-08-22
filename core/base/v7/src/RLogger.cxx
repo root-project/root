@@ -14,6 +14,9 @@
  *************************************************************************/
 
 #include "ROOT/RLogger.hxx"
+
+#include <ROOT/RMakeUnique.hxx>
+
 #include <iostream>
 #include <sstream>
 
