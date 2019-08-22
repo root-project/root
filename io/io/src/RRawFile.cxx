@@ -81,8 +81,7 @@ ROOT::Experimental::Detail::RRawFile::Create(std::string_view url, ROptions opti
 #endif
    }
    if (transport == "http" || transport == "https") {
-      TPluginHandler *h;
-      if ((h = gROOT->GetPluginManager()->FindHandler("ROOT::Experimental::Detail::RRawFile"))) {
+      if (TPluginHandler *h = gROOT->GetPluginManager()->FindHandler("ROOT::Experimental::Detail::RRawFile")) {
          if (h->LoadPlugin() == 0) {
             return reinterpret_cast<RRawFile *>(h->ExecPlugin(2, &url, &options));
          }
