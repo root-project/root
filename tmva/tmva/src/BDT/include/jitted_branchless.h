@@ -184,9 +184,9 @@ std::function<bool (const float* event)> jit_branchless_forest(std::string tojit
 
    std::string func_ref_name;
    if (use_namespaces)
-     func_ref_name = "& branchless_" + s_namespace+"::branchless_generated_forest";
+     func_ref_name = "#pragma cling optimize(3)\n & branchless_" + s_namespace+"::branchless_generated_forest";
    else
-     func_ref_name = "& branchless_generated_forest";
+     func_ref_name = "#pragma cling optimize(3)\n & branchless_generated_forest";
    auto ptr = gInterpreter->Calc(func_ref_name.c_str());
    bool (*func)(const float*) = reinterpret_cast<bool(*)(const float *)>(ptr);
    std::function<bool (const float *)> fWrapped{func};

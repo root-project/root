@@ -38,7 +38,7 @@ inline T logistic_function(T value)
 template <class T>
 inline bool binary_logistic(T value)
 {
-   return (logistic_function(value) > 0.5) ? 1 : 0;
+   return (logistic_function(value) > 0.5);
 }
 
 std::function<bool(float)> get_classification_function(std::string &s_class_func)

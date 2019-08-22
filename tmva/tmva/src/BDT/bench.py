@@ -33,7 +33,12 @@ def get_benchs_data(bench_name="benchs/a.txt"):
 
 
 def create_model_gaussian(
-    num_samples=100, num_features=5, num_trees=10, max_depth=3, data_folder="./data/"
+    num_samples=100,
+    num_features=5,
+    num_trees=3,
+    max_depth=8,
+    data_folder="./data/",
+    save_models=True,
 ):
     mu, sigma = 0, 1  # mean and standard deviation
 
@@ -64,8 +69,9 @@ def create_model_gaussian(
     np.savetxt(data_folder + "events.csv", X, delimiter=",", fmt="%f")
     np.savetxt(data_folder + "python_predictions.csv", y_pred, delimiter=",", fmt="%d")
     np.savetxt(data_folder + "python_groundtruths.csv", Y, delimiter=",", fmt="%d")
-    model.get_booster().dump_model(data_folder + "model.json", dump_format="json")
-    model.save_model(data_folder + "model.rabbit")
+    if save_models is True:
+        model.get_booster().dump_model(data_folder + "model.json", dump_format="json")
+        model.save_model(data_folder + "model.rabbit")
     print("Saved files")
 
 
@@ -118,9 +124,10 @@ if __name__ == "__main__":
         create_model_gaussian(
             num_samples=10000,
             num_features=value_test,
-            num_trees=500,
+            num_trees=100,
             max_depth=3,
             data_folder=DATA_FOLDER,
+            save_models=False,
         )
         subprocess.call("./bench.sh".split(), shell=True)
         fname, mins, means, stddevs = get_benchs_data("./data/a.txt")

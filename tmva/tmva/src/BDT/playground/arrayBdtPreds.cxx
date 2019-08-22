@@ -5,6 +5,7 @@ int main()
 {
    Forest<array_bdt::Tree> Forest;
    Forest.get_Forest(json_model_file);
+   // Forest.get_Forest(json_model_file, true); //
 
    preds.reserve(events_vector.size());
    Forest.do_predictions(events_vector, preds);

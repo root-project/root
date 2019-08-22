@@ -59,10 +59,6 @@ float Tree::inference3(const std::vector<float> &event)
 inline float Tree::inference(const std::vector<float> &event)
 {
    size_t index = 0;
-   if (this->tree_depth != 3) {
-      std::cout << "AAAH:  " << this->tree_depth << std::endl;
-   }
-   // for (unsigned int iLevel = 0; iLevel < log2(this->array_length); ++Level) {
    for (unsigned int iLevel = 0; iLevel < this->tree_depth; ++iLevel) {
       index = 2 * index + 1 + (int)(event[this->features[index]] > this->thresholds[index]);
    }

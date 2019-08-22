@@ -274,7 +274,7 @@ std::function<float (std::vector<float>)> jit_function_reader_string(int tree_in
      func_ref_name = "&s_" + s_namespace+"::generated_tree_"+std::to_string(tree_index);
    }
    else{
-     func_ref_name = "&generated_tree_"+std::to_string(tree_index);
+     func_ref_name = "#pragma cling optimize(3)\n &generated_tree_"+std::to_string(tree_index);
    }
 
    auto ptr = gInterpreter->Calc(func_ref_name.c_str());
@@ -292,9 +292,10 @@ std::function<bool (const std::vector<float>&)> jit_forest_string(std::string to
 
    std::string func_ref_name;
    if (use_namespaces)
-     func_ref_name = "&s_f_" + s_namespace+"::generated_forest";
+     //func_ref_name = "&s_f_" + s_namespace+"::generated_forest";
+     func_ref_name = "#pragma cling optimize(3)\n &s_f_" + s_namespace+"::generated_forest";
    else
-     func_ref_name = "&generated_forest";
+     func_ref_name = "#pragma cling optimize(3)\n &generated_forest";
    auto ptr = gInterpreter->Calc(func_ref_name.c_str());
    bool (*func)(const std::vector<float>&) = reinterpret_cast<bool(*)(const std::vector<float>&)>(ptr);
    std::function<bool (const std::vector<float>&)> fWrapped{func};

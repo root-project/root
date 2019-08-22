@@ -57,7 +57,7 @@ class Forest {
 public:                                                                /// TODO: change to private
    std::function<bool(float)> objective_func = binary_logistic<float>; // Default objective function
 public:
-   std::string    events_file = "./data_files/events.csv";
+   //std::string    events_file = "./data_files/events.csv";
    std::vector<T> trees;
    static int     counter;
 
