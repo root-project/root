@@ -187,7 +187,7 @@ TMemFile::TMemFile(const char *path, char *buffer, Long64_t size, Option_t *opti
       Int_t mode = O_RDWR | O_CREAT;
       if (optmode == EMode::kRecreate) mode |= O_TRUNC;
 
-      fD = SysOpen(path, O_RDWR | O_CREAT, 0644);
+      fD = TMemFile::SysOpen(path, O_RDWR | O_CREAT, 0644);
       if (fD == -1) {
          SysError("TMemFile", "file %s can not be opened", path);
          goto zombie;
@@ -195,7 +195,7 @@ TMemFile::TMemFile(const char *path, char *buffer, Long64_t size, Option_t *opti
       fWritable = kTRUE;
 
    } else {
-      fD = SysOpen(path, O_RDONLY, 0644);
+      fD = TMemFile::SysOpen(path, O_RDONLY, 0644);
       if (fD == -1) {
          SysError("TMemFile", "file %s can not be opened for reading", path);
          goto zombie;
