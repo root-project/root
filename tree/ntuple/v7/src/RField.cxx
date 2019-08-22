@@ -107,12 +107,16 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    if (normalizedType == "Double_t") normalizedType = "double";
    if (normalizedType == "UChar_t") normalizedType = "std::uint8_t";
    if (normalizedType == "unsigned char") normalizedType = "std::uint8_t";
+   if (normalizedType == "uint8_t") normalizedType = "std::uint8_t";
    if (normalizedType == "Int_t") normalizedType = "std::int32_t";
    if (normalizedType == "int") normalizedType = "std::int32_t";
+   if (normalizedType == "int32_t") normalizedType = "std::int32_t";
    if (normalizedType == "unsigned") normalizedType = "std::uint32_t";
    if (normalizedType == "unsigned int") normalizedType = "std::uint32_t";
    if (normalizedType == "UInt_t") normalizedType = "std::uint32_t";
+   if (normalizedType == "uint32_t") normalizedType = "std::uint32_t";
    if (normalizedType == "ULong64_t") normalizedType = "std::uint64_t";
+   if (normalizedType == "uint64_t") normalizedType = "std::uint64_t";
    if (normalizedType == "string") normalizedType = "std::string";
    if (normalizedType.substr(0, 7) == "vector<") normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 6) == "array<") normalizedType = "std::" + normalizedType;
