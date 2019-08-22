@@ -59,9 +59,13 @@ RooPoison(N,mu) and treating the function as a PDF in mu.
 #include <Math/PdfFuncMathCore.h>
 #include <Math/ProbFuncMathCore.h>
 
+#include "TError.h"
+#include "vdt/exp.h"
+#include "vdt/log.h"
+#include "BatchHelpers.h"
+
 #include <iostream>
 #include <cmath>
-
 using namespace std;
 
 ClassImp(RooGamma);
@@ -92,9 +96,87 @@ RooGamma::RooGamma(const RooGamma& other, const char* name) :
 
 Double_t RooGamma::evaluate() const
 {
-  Double_t arg= x ;
-  Double_t ret = TMath::GammaDist(arg, gamma, mu, beta) ;
-  return ret ;
+  return TMath::GammaDist(x, gamma, mu, beta) ;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+namespace GammaBatchEvaluate {
+//Author: Emmanouil Michalainas, CERN 22 August 2019
+
+template<class Tx, class Tgamma, class Tbeta, class Tmu>
+void compute(	size_t batchSize,
+              double * __restrict__ output,
+              Tx X, Tgamma G, Tbeta B, Tmu M)
+{
+  constexpr double NaN = std::numeric_limits<double>::quiet_NaN();
+  for (size_t i=0; i<batchSize; i++) {
+    if (X[i]<M[i] || G[i] <= 0.0 || B[i] <= 0.0) {
+      output[i] = NaN;
+    }
+    if (X[i] == M[i]) {
+      output[i] = (G[i]==1.0)/B[i];
+    } 
+    else {
+      output[i] = 0.0;
+    }
+  }
+  
+  if (G.isBatch()) {
+    for (size_t i=0; i<batchSize; i++) {
+      if (output[i] == 0.0) {
+        output[i] = -std::lgamma(G[i]);
+      }
+    }
+  }
+  else {
+    double gamma = -std::lgamma(G[2019]);
+    for (size_t i=0; i<batchSize; i++) {
+      if (output[i] == 0.0) {
+        output[i] = gamma;
+      }
+    }
+  }
+  
+  for (size_t i=0; i<batchSize; i++) {
+    if (X[i] != M[i]) {
+      const double invBeta = 1/B[i];
+      double arg = (X[i]-M[i])*invBeta;
+      output[i] -= arg;
+      arg = vdt::fast_log(arg);
+      output[i] += arg*(G[i]-1);
+      output[i] = vdt::fast_exp(output[i]);
+      output[i] *= invBeta;
+    }
+  }
+}
+};
+
+RooSpan<double> RooGamma::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
+  using namespace BatchHelpers;
+  using namespace GammaBatchEvaluate;
+
+  EvaluateInfo info = getInfo( {&x, &gamma, &beta, &mu}, begin, batchSize );
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+
+  auto xData = x.getValBatch(begin, info.size);
+  if (info.nBatches == 0) {
+    throw std::logic_error("Requested a batch computation, but no batch data available.");
+  }
+  else if (info.nBatches==1 && !xData.empty()) {
+    compute(info.size, output.data(), xData.data(),
+    BracketAdapter<double> (gamma),
+    BracketAdapter<double> (beta),
+    BracketAdapter<double> (mu));
+  }
+  else {
+    compute(info.size, output.data(),
+    BracketAdapterWithMask (x,x.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (gamma,gamma.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (beta,beta.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (mu,mu.getValBatch(begin,info.size)));
+  }
+  return output;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
