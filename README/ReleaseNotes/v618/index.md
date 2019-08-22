@@ -690,4 +690,6 @@ df.AsNumpy()
 
 These changes will be part of the future 6.18/02.
 
-None so far!
+## I/O Libraries
+
+* TMemFile: Apply customization of minimal block size also to the first block.
