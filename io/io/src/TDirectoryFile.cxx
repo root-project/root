@@ -338,11 +338,6 @@ void TDirectoryFile::Build(TFile* motherFile, TDirectory* motherDir)
    fMother     = motherDir;
    fFile       = motherFile ? motherFile : TFile::CurrentFile();
    SetBit(kCanDelete);
-
-   if (fFile && fFile->TestBit(TFile::kReproducible)) {
-      fDatimeC = (UInt_t) 1;
-      fDatimeM = (UInt_t) 1;
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -458,8 +453,6 @@ TObject *TDirectoryFile::FindObjectAnyFile(const char *name) const
    }
    return 0;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Find a directory named "apath".
@@ -751,13 +744,14 @@ void TDirectoryFile::FillBuffer(char *&buffer)
       version += 1000;
    }
    tobuf(buffer, version);
-   if (TestBit(TFile::kReproducible) || (fFile && fFile->TestBit(TFile::kReproducible))) {
-      fDatimeC = (UInt_t) 1;
-      fDatimeM = (UInt_t) 1;
-      fUUID.SetUUID("00000000-0000-0000-0000-000000000000");
+   auto reproducible = TestBit(TFile::kReproducible) || (fFile && fFile->TestBit(TFile::kReproducible));
+   if (reproducible) {
+      TDatime((UInt_t) 1).FillBuffer(buffer);
+      TDatime((UInt_t) 1).FillBuffer(buffer);
+   } else {
+      fDatimeC.FillBuffer(buffer);
+      fDatimeM.FillBuffer(buffer);
    }
-   fDatimeC.FillBuffer(buffer);
-   fDatimeM.FillBuffer(buffer);
    tobuf(buffer, fNbytesKeys);
    tobuf(buffer, fNbytesName);
    if (version > 1000) {
@@ -769,7 +763,10 @@ void TDirectoryFile::FillBuffer(char *&buffer)
       tobuf(buffer, (Int_t)fSeekParent);
       tobuf(buffer, (Int_t)fSeekKeys);
    }
-   fUUID.FillBuffer(buffer);
+   if (reproducible)
+      TUUID("00000000-0000-0000-0000-000000000000").FillBuffer(buffer);
+   else
+      fUUID.FillBuffer(buffer);
    if (fFile && fFile->GetVersion() < 40000) return;
    if (version <=1000) for (Int_t i=0;i<3;i++) tobuf(buffer,Int_t(0));
 }

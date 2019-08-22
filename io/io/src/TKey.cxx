@@ -413,9 +413,6 @@ void TKey::Build(TDirectory* motherDir, const char* classname, Long64_t filepos)
    if (filepos > TFile::kStartBigFile) fVersion += 1000;
 
    if (fTitle.Length() > kTitleMax) fTitle.Resize(kTitleMax);
-
-   if (GetFile() && GetFile()->TestBit(TFile::kReproducible))
-      fDatime = (UInt_t) 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -599,8 +596,9 @@ void TKey::FillBuffer(char *&buffer)
 
    tobuf(buffer, fObjlen);
    if (GetFile() && GetFile()->TestBit(TFile::kReproducible))
-      fDatime = (UInt_t) 1;
-   fDatime.FillBuffer(buffer);
+      TDatime((UInt_t) 1).FillBuffer(buffer);
+   else
+      fDatime.FillBuffer(buffer);
    tobuf(buffer, fKeylen);
    tobuf(buffer, fCycle);
    if (fVersion > 1000) {
