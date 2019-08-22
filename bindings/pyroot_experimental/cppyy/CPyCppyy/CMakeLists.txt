@@ -7,6 +7,8 @@
 set(headers
     inc/CPyCppyy/CommonDefs.h
     inc/CPyCppyy/TPyException.h
+    inc/CPyCppyy/DispatchPtr.h
+    inc/CPyCppyy/PyObjectPtr.h
 )
 
 set(sources
@@ -68,6 +70,6 @@ target_link_libraries(cppyy cppyy_backend ${PYTHON_LIBRARIES})
 set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS cppyy)
 install(TARGETS cppyy EXPORT ${CMAKE_PROJECT_NAME}Exports DESTINATION ${runtimedir})
 
-file(COPY ${headers} DESTINATION ${CMAKE_BINARY_DIR}/include)
-install(FILES ${headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+file(COPY ${headers} DESTINATION ${CMAKE_BINARY_DIR}/include/CPyCppyy)
+install(FILES ${headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CPyCppyy)
 
