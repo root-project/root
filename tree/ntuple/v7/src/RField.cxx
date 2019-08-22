@@ -435,8 +435,7 @@ ROOT::Experimental::RFieldClass::RFieldClass(std::string_view fieldName, std::st
    TIter next(fClass->GetListOfDataMembers());
    while (auto dataMember = static_cast<TDataMember *>(next())) {
       //printf("Now looking at %s %s\n", dataMember->GetName(), dataMember->GetFullTypeName());
-      auto subField = Detail::RFieldBase::Create(
-         GetName() + "." + dataMember->GetName(), dataMember->GetFullTypeName());
+      auto subField = Detail::RFieldBase::Create(dataMember->GetName(), dataMember->GetFullTypeName());
       fMaxAlignment = std::max(fMaxAlignment, subField->GetAlignment());
       Attach(std::unique_ptr<Detail::RFieldBase>(subField));
    }
