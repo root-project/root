@@ -169,13 +169,13 @@ TMemFile::TMemFile(const char *name, std::unique_ptr<TBufferFile> buffer)
 TMemFile::TMemFile(const char *path, Option_t *option, const char *ftitle, Int_t compress, Long64_t defBlockSize)
    : TMemFile(path, nullptr, -1, option, ftitle, compress, defBlockSize)
 {
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Usual Constructor.  See the TFile constructor for details. Copy data from buffer.
 
-TMemFile::TMemFile(const char *path, char *buffer, Long64_t size, Option_t *option, const char *ftitle, Int_t compress, Long64_t defBlockSize)
+TMemFile::TMemFile(const char *path, char *buffer, Long64_t size, Option_t *option, const char *ftitle, Int_t compress,
+                   Long64_t defBlockSize)
    : TFile(path, "WEB", ftitle, compress), fBlockList(size), fIsOwnedByROOT(true), fSize(size), fSysOffset(0),
      fBlockSeek(&(fBlockList)), fBlockOffset(0)
 {
