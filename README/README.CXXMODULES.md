@@ -387,9 +387,6 @@ overhead which we go in details bellow.
   version of libstdc++) the generation of the RooFit dictionary goes in an
   infinite loop. We have fixed a number of such situations. Please contact us if
   you see such behavior or disable roofit (`-Droofit=Off`).
-  * ROOT7 -- Due to number of layering violations, `-Droot7=On` does not work.
-  Please remember to explicitly switch it off when building with `-Dcxx14=On`
-  or `-Dcxx17=On`.
 
 ### Performance
 This section compares ROOT PCH technology with C++ Modules which is important but
