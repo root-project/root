@@ -74,6 +74,7 @@ or in `TBrowser` by opening `Browser Help → About ROOT`.
 
 ## I/O Libraries
 
+* TMemFile: Apply customization of minimal block size also to the first block.
 
 ## TTree Libraries
 
