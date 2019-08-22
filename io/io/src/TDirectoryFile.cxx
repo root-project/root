@@ -744,7 +744,7 @@ void TDirectoryFile::FillBuffer(char *&buffer)
       version += 1000;
    }
    tobuf(buffer, version);
-   auto reproducible = TestBit(TFile::kReproducible) || (fFile && fFile->TestBit(TFile::kReproducible));
+   const bool reproducible = TestBit(TFile::kReproducible) || (fFile && fFile->TestBit(TFile::kReproducible));
    if (reproducible) {
       TDatime((UInt_t) 1).FillBuffer(buffer);
       TDatime((UInt_t) 1).FillBuffer(buffer);
