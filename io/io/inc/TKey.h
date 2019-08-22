@@ -25,7 +25,8 @@ class TKey : public TNamed {
 
 private:
    enum EStatusBits {
-      kIsDirectoryFile = BIT(14)
+      kIsDirectoryFile = BIT(14),
+      kReproducible = BIT(15)
    };
    TKey(const TKey&);            // TKey objects are not copiable.
    TKey& operator=(const TKey&); // TKey objects are not copiable.
