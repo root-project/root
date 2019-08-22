@@ -6206,9 +6206,9 @@ static bool FindSymbol(const std::string &library_filename,
       }
 
       if (SymNameErr.get() == mangled_name) {
-       if (gDebug > 1)
-         Info("TCling__FindSymbol", "Symbol %s found in %s\n",
-              mangled_name.c_str(), library_filename.c_str());
+         if (gDebug > 1)
+            Info("TCling__FindSymbol", "Symbol %s found in %s\n",
+                 mangled_name.c_str(), library_filename.c_str());
          return true;
       }
    }
