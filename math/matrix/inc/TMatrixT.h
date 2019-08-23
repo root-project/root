@@ -80,7 +80,7 @@ public:
    TMatrixT(const TMatrixTSym <Element> &a,EMatrixCreatorsOp2 op,const TMatrixTSym<Element> &b);
    TMatrixT(const TMatrixTLazy<Element> &lazy_constructor);
 
-   virtual ~TMatrixT() { Clear(); }
+   virtual ~TMatrixT() { TMatrixT::Clear(); }
 
    // Elementary constructors
 

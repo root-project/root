@@ -69,7 +69,7 @@ public:
    TMatrixTSym(const TMatrixTSym<Element> &a,EMatrixCreatorsOp2 op,const TMatrixTSym<Element> &b);
    TMatrixTSym(const TMatrixTSymLazy<Element> &lazy_constructor);
 
-   virtual ~TMatrixTSym() { Clear(); }
+   virtual ~TMatrixTSym() { TMatrixTSym::Clear(); }
 
    // Elementary constructors
    void TMult(const TMatrixT   <Element> &a);
