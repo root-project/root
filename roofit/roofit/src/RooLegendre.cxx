@@ -28,8 +28,6 @@
 #include "Math/SpecFunc.h"
 #include "TMath.h"
 
-#include "TError.h"
-
 using namespace std;
 
 ClassImp(RooLegendre);
@@ -97,7 +95,7 @@ Double_t RooLegendre::evaluate() const
   if ((_m1+_m2)%2==1) r = -r;
   return r;
 #else
-  throw std::string("RooLegendre: ERROR: This class require installation of the MathMore library") ;
+  throw std::logic_error("RooLegendre: ERROR: This class require installation of the MathMore library") ;
   return 0 ;
 #endif
 }
