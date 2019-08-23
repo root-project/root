@@ -48,6 +48,7 @@ There are limitations for complex objects like TTree, which can not be converted
 #include "TMemberStreamer.h"
 #include "TStreamer.h"
 #include "RZip.h"
+#include "ROOT/RMakeUnique.hxx"
 
 ClassImp(TBufferXML);
 
@@ -84,8 +85,6 @@ TBufferXML::TBufferXML(TBuffer::EMode mode, TXMLFile *file)
 
 TBufferXML::~TBufferXML()
 {
-   while (fStack.size() > 0)
-      PopStack();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -275,7 +274,7 @@ public:
    {
    }
 
-   virtual ~TXMLStackObj()
+   ~TXMLStackObj()
    {
       if (fIsElemOwner)
          delete fElem;
@@ -303,9 +302,8 @@ TXMLStackObj *TBufferXML::PushStack(XMLNodePointer_t current, Bool_t simple)
       fXML->SkipEmpty(current);
    }
 
-   TXMLStackObj *stack = new TXMLStackObj(current);
-   fStack.push_back(stack);
-   return stack;
+   fStack.emplace_back(std::make_unique<TXMLStackObj>(current));
+   return fStack.back().get();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -313,11 +311,9 @@ TXMLStackObj *TBufferXML::PushStack(XMLNodePointer_t current, Bool_t simple)
 
 TXMLStackObj *TBufferXML::PopStack()
 {
-   if (fStack.size() > 0) {
-      delete fStack.back();
+   if (fStack.size() > 0)
       fStack.pop_back();
-   }
-   return fStack.size() > 0 ? Stack() : nullptr;
+   return fStack.size() > 0 ? fStack.back().get() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -20,6 +20,7 @@
 
 #include <string>
 #include <deque>
+#include <memory>
 
 class TExMap;
 class TVirtualStreamerInfo;
@@ -241,7 +242,7 @@ protected:
    XMLNodePointer_t StackNode();
    TXMLStackObj *Stack(UInt_t depth = 0)
    {
-      return (depth < fStack.size()) ? (depth ? fStack[fStack.size() - depth - 1] : fStack.back()) : nullptr;
+      return (depth < fStack.size()) ? (depth ? fStack[fStack.size() - depth - 1].get() : fStack.back().get()) : nullptr;
    }
 
    void WorkWithClass(TStreamerInfo *info, const TClass *cl = nullptr);
@@ -319,15 +320,15 @@ protected:
    void BeforeIOoperation();
    void CheckVersionBuf();
 
-   TXMLEngine *fXML{nullptr};           ///<! instance of TXMLEngine for working with XML structures
-   std::deque<TXMLStackObj *> fStack;   ///<! Stack of processed objects
-   Version_t fVersionBuf{-111};         ///<! Current version buffer
-   TString fValueBuf;                   ///<! Current value buffer
-   Int_t fErrorFlag{0};                 ///<! Error flag
-   Bool_t fCanUseCompact{kFALSE};       ///<! Flag indicate that basic type (like Int_t) can be placed in the same tag
-   TClass *fExpectedBaseClass{nullptr}; ///<! Pointer to class, which should be stored as parent of current
-   Int_t fCompressLevel{0};             ///<! Compression level and algorithm
-   Int_t fIOVersion{3};                 ///<! Indicates format of ROOT xml file
+   TXMLEngine *fXML{nullptr};                        ///<! instance of TXMLEngine for working with XML structures
+   std::deque<std::unique_ptr<TXMLStackObj>> fStack; ///<! Stack of processed objects
+   Version_t fVersionBuf{-111};                      ///<! Current version buffer
+   TString fValueBuf;                                ///<! Current value buffer
+   Int_t fErrorFlag{0};                              ///<! Error flag
+   Bool_t fCanUseCompact{kFALSE};                    ///<! Flag indicate that basic type (like Int_t) can be placed in the same tag
+   TClass *fExpectedBaseClass{nullptr};              ///<! Pointer to class, which should be stored as parent of current
+   Int_t fCompressLevel{0};                          ///<! Compression level and algorithm
+   Int_t fIOVersion{3};                              ///<! Indicates format of ROOT xml file
 
    ClassDefOverride(TBufferXML, 0); // a specialized TBuffer to read/write to XML files
 };
