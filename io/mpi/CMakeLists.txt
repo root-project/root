@@ -8,30 +8,19 @@
 # CMakeLists.txt file for building ROOT io/mpi package
 ############################################################################
 
-ROOT_LINKER_LIBRARY(RMPI
-  src/TClientInfo.cxx
-  src/TMPIFile.cxx
-  $<TARGET_OBJECTS:RootPcmObjs>
-  LIBRARIES
-    ${CMAKE_DL_LIBS}
+ROOT_STANDARD_LIBRARY_PACKAGE(RMPI
+  HEADERS
+     TClientInfo.h
+     TMPIFile.h
+  SOURCES
+     src/TClientInfo.cxx
+     src/TMPIFile.cxx
+  DEPENDENCIES
+     RIO
+)
+
+target_link_libraries(RMPI
+  PRIVATE
     MPI::MPI_CXX
-  DEPENDENCIES
-    RIO
+    $<$<PLATFORM_ID:Windows>:ws2_32.lib>
 )
-
-ROOT_GENERATE_DICTIONARY(G__RMPI
-  TClientInfo.h
-  TMPIFile.h
-  STAGE1
-  NOTARGET
-  MODULE
-    RMPI
-  LINKDEF
-    LinkDef.h
-  OPTIONS
-    -writeEmptyRootPCM
-  DEPENDENCIES
-    RIO
-)
-
-ROOT_INSTALL_HEADERS()
