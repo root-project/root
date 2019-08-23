@@ -1528,7 +1528,10 @@ void TGraph2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    out << "graph2d = new TGraph2D(" << fNpoints << ");" << std::endl;
    out << "   graph2d->SetName(" << quote << GetName() << quote << ");" << std::endl;
-   out << "   graph2d->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
+   out << "   graph2d->SetTitle(" << quote << GetTitle()             << ";"
+                                           << GetXaxis()->GetTitle() << ";"
+                                           << GetYaxis()->GetTitle() << ";"
+                                           << GetZaxis()->GetTitle() << quote << ");" << std::endl;
 
    if (fDirectory == 0) {
       out << "   graph2d->SetDirectory(0);" << std::endl;
