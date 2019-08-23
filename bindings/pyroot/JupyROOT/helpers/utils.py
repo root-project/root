@@ -47,7 +47,7 @@ _jsCode = """
 <div id="{jsDivId}"
      style="width: {jsCanvasWidth}px; height: {jsCanvasHeight}px">
 </div>
-
+<script src="/static/components/requirejs/require.js" type="text/javascript" charset="utf-8"></script>
 <script>
  requirejs.config({{
      paths: {{
