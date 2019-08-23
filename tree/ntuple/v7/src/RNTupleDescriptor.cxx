@@ -600,13 +600,28 @@ std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeFooter(void* buffe
       }
    }
 
-   // Write the footer size in the frame preamble and repeat it before the CRC32 checksum
+   // The next 16 bytes make the ntuple's postscript
+   pos += SerializeUInt16(kFrameVersionCurrent, *where);
+   pos += SerializeUInt16(kFrameVersionMin, *where);
+   // Add the CRC32 bytes to the header and footer sizes
+   pos += SerializeUInt32(SerializeHeader(nullptr), *where);
    std::uint32_t size = pos - base + 4;
-   pos += SerializeUInt32(size, *where);
-   SerializeUInt32(size, ptrSize);
+   pos += SerializeUInt32(size + 4, *where);
    size += SerializeCrc32(base, size, *where);
 
    return size;
+}
+
+
+void ROOT::Experimental::RNTupleDescriptor::LocateMetadata(
+   const void *postscript, std::uint32_t &szHeader, std::uint32_t &szFooter)
+{
+   auto pos = reinterpret_cast<const unsigned char *>(postscript);
+   std::uint16_t dummy;
+   pos += DeserializeUInt16(pos, &dummy);
+   pos += DeserializeUInt16(pos, &dummy);
+   pos += DeserializeUInt32(pos, &szHeader);
+   pos += DeserializeUInt32(pos, &szFooter);
 }
 
 
