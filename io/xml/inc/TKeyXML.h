@@ -17,43 +17,44 @@
 
 class TXMLFile;
 
-class TKeyXML : public TKey {
+class TKeyXML final : public TKey {
 
 private:
    TKeyXML(const TKeyXML &);            // TKeyXML objects are not copiable.
    TKeyXML &operator=(const TKeyXML &); // TKeyXML objects are not copiable.
 
 protected:
-   TKeyXML();
+   TKeyXML() = default;
 
 public:
-   TKeyXML(TDirectory *mother, Long64_t keyid, const TObject *obj, const char *name = 0, const char *title = 0);
+   TKeyXML(TDirectory *mother, Long64_t keyid, const TObject *obj, const char *name = nullptr,
+           const char *title = nullptr);
    TKeyXML(TDirectory *mother, Long64_t keyid, const void *obj, const TClass *cl, const char *name,
-           const char *title = 0);
+           const char *title = nullptr);
    TKeyXML(TDirectory *mother, Long64_t keyid, XMLNodePointer_t keynode);
    virtual ~TKeyXML();
 
    // redefined TKey Methods
-   virtual void Delete(Option_t *option = "");
-   virtual void DeleteBuffer() {}
-   virtual void FillBuffer(char *&) {}
-   virtual char *GetBuffer() const { return 0; }
-   virtual Long64_t GetSeekKey() const { return fKeyNode ? 1024 : 0; }
-   virtual Long64_t GetSeekPdir() const { return fKeyNode ? 1024 : 0; }
+   void Delete(Option_t *option = "") final;
+   void DeleteBuffer() final {}
+   void FillBuffer(char *&) final {}
+   char *GetBuffer() const final { return nullptr; }
+   Long64_t GetSeekKey() const final { return fKeyNode ? 1024 : 0; }
+   Long64_t GetSeekPdir() const final { return fKeyNode ? 1024 : 0; }
    // virtual ULong_t   Hash() const { return 0; }
-   virtual void Keep() {}
+   void Keep() final {}
    // virtual void      ls(Option_t* ="") const;
    // virtual void      Print(Option_t* ="") const {}
 
-   virtual Int_t Read(TObject *tobj);
-   virtual TObject *ReadObj();
-   virtual TObject *ReadObjWithBuffer(char *bufferRead);
-   virtual void *ReadObjectAny(const TClass *expectedClass);
+   Int_t Read(TObject *tobj) final;
+   TObject *ReadObj() final;
+   TObject *ReadObjWithBuffer(char *bufferRead) final;
+   void *ReadObjectAny(const TClass *expectedClass) final;
 
-   virtual void ReadBuffer(char *&) {}
-   virtual Bool_t ReadFile() { return kTRUE; }
-   virtual void SetBuffer() { fBuffer = 0; }
-   virtual Int_t WriteFile(Int_t = 1, TFile * = 0) { return 0; }
+   void ReadBuffer(char *&) final {}
+   Bool_t ReadFile() final { return kTRUE; }
+   void SetBuffer() final { fBuffer = nullptr; }
+   Int_t WriteFile(Int_t = 1, TFile * = nullptr) final { return 0; }
 
    // TKeyXML specific methods
 
@@ -65,18 +66,18 @@ public:
    void UpdateAttributes();
 
 protected:
-   virtual Int_t Read(const char *name) { return TKey::Read(name); }
+   Int_t Read(const char *name) final { return TKey::Read(name); }
    void StoreObject(const void *obj, const TClass *cl, Bool_t check_tobj = kFALSE);
    void StoreKeyAttributes();
    TXMLEngine *XMLEngine();
 
    void *XmlReadAny(void *obj, const TClass *expectedClass);
 
-   XMLNodePointer_t fKeyNode; //! node with stored object
-   Long64_t fKeyId;           //! unique identifier of key for search methods
-   Bool_t fSubdir;            //! indicates that key contains subdirectory
+   XMLNodePointer_t fKeyNode{nullptr}; //! node with stored object
+   Long64_t fKeyId{0};                 //! unique identifier of key for search methods
+   Bool_t fSubdir{kFALSE};             //! indicates that key contains subdirectory
 
-   ClassDef(TKeyXML, 1) // a special TKey for XML files
+   ClassDefOverride(TKeyXML, 1) // a special TKey for XML files
 };
 
 #endif
