@@ -113,9 +113,11 @@ ROOT::Experimental::Detail::RPageSinkRoot::DoCommitPage(ColumnHandle_t columnHan
    return result;
 }
 
-void ROOT::Experimental::Detail::RPageSinkRoot::DoCommitCluster(ROOT::Experimental::NTupleSize_t /* nEntries */)
+ROOT::Experimental::RClusterDescriptor::RLocator
+ROOT::Experimental::Detail::RPageSinkRoot::DoCommitCluster(ROOT::Experimental::NTupleSize_t /* nEntries */)
 {
    fLastPageIdx = 0;
+   return RClusterDescriptor::RLocator();
 }
 
 void ROOT::Experimental::Detail::RPageSinkRoot::DoCommitDataset()

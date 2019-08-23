@@ -140,9 +140,12 @@ void ROOT::Experimental::Detail::RPageSink::CommitPage(ColumnHandle_t columnHand
 
 void ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
 {
+   auto locator = DoCommitCluster(nEntries);
+
    R__ASSERT((nEntries - fPrevClusterNEntries) < ClusterSize_t(-1));
    fDescriptorBuilder.AddCluster(fLastClusterId, RNTupleVersion(), fPrevClusterNEntries,
                                  ClusterSize_t(nEntries - fPrevClusterNEntries));
+   fDescriptorBuilder.SetClusterLocator(fLastClusterId, locator);
    for (auto &range : fOpenColumnRanges) {
       fDescriptorBuilder.AddClusterColumnRange(fLastClusterId, range);
       range.fFirstElementIndex += range.fNElements;
@@ -154,6 +157,4 @@ void ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experimental::NT
    }
    ++fLastClusterId;
    fPrevClusterNEntries = nEntries;
-
-   DoCommitCluster(nEntries);
 }

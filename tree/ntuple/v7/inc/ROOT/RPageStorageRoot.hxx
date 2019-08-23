@@ -82,7 +82,7 @@ private:
 protected:
    void DoCreate(const RNTupleModel &model) final;
    RClusterDescriptor::RLocator DoCommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
-   void DoCommitCluster(NTupleSize_t nEntries) final;
+   RClusterDescriptor::RLocator DoCommitCluster(NTupleSize_t nEntries) final;
    void DoCommitDataset() final;
 
 public:
