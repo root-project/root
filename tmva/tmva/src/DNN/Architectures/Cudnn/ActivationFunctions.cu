@@ -26,7 +26,7 @@ namespace DNN
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCudnn<AFloat>::Activation(Tensor_t & X, EActivationFunction activFunct, ActivationDescriptor_t activationDescr,  const double coef, const AFloat alpha, const AFloat beta)
+void TCudnn<AFloat>::ActivationFunctionForward(Tensor_t & X, EActivationFunction activFunct, ActivationDescriptor_t activationDescr,  const double coef, const AFloat alpha, const AFloat beta)
 {
    cudnnActivationMode_t activationMode;
    //std::cout << activationDescr << std::endl;
@@ -57,8 +57,9 @@ void TCudnn<AFloat>::Activation(Tensor_t & X, EActivationFunction activFunct, Ac
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCudnn<AFloat>::ActivationFunctionBackward(const Tensor_t & Y, const Tensor_t & dY, 
-                                                const Tensor_t & X, Tensor_t & dX,
+void TCudnn<AFloat>::ActivationFunctionBackward(Tensor_t & dX, const Tensor_t & Y,  
+                                                const Tensor_t & dY, const Tensor_t & X, 
+                                                EActivationFunction /* activFunct */,
                                                 const ActivationDescriptor_t activationDescr, 
                                                 const AFloat alpha, const AFloat beta)
 {
@@ -80,6 +81,7 @@ void TCudnn<AFloat>::ActivationFunctionBackward(const Tensor_t & Y, const Tensor
                                       dX.GetDataPointer()));
 }
 
+#if 0
 //______________________________________________________________________________
 template<typename AFloat>
 void TCudnn<AFloat>::Relu(Tensor_t & X, ActivationDescriptor_t activationDescr, const double coef, const AFloat alpha, const AFloat beta)
@@ -217,6 +219,7 @@ void TCudnn<AFloat>::GaussDerivative(Tensor_t & B,
        (int) A.GetNcols());
    B.SetComputeStream(s);
 }*/
+#endif
 
 } // namespace DNN
 } // namespace TMVA

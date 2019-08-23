@@ -62,7 +62,7 @@ auto evaluate_net_bias(TDeepNet<Architecture> &net, typename Architecture::Tenso
 }
    
 // TODO pass as function params
-size_t tbatchSize = 2, timeSteps = 1, inputSize = 2, outputSize = 2;
+size_t tbatchSize = 2, timeSteps = 1, inputSize = 3, outputSize = 4;
 
 /*! Generate a random net, perform forward and backward propagation and check
  *  the weight gradients using numerical differentiation. Returns the maximum
@@ -85,16 +85,19 @@ auto testBackpropagationWeightsLinear(typename Architecture::Scalar_t dx)
    net.AddDenseLayer(outputSize, EActivationFunction::kIdentity);
 
    // Random training data.
-   Tensor_t X(timeSteps, tbatchSize, inputSize); // T x B x D
+   Tensor_t X( timeSteps, tbatchSize, inputSize); // T x B x D
    Matrix_t Y(tbatchSize, outputSize), weights(tbatchSize, 1);
    net.Initialize();
 
    randomBatch(X);
-   randomMatrix(Y);
+   //randomMatrix(Y);
    fillMatrix(weights, 1.0);
+   fillMatrix(Y, 0.0);
 
    net.Forward(X);
    net.Backward(X, Y, weights);
+
+   Architecture::PrintTensor(X);
 
    Scalar_t maximum_error = 0.0;
 

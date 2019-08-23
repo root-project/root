@@ -20,12 +20,13 @@
 #include "Cudnn/Propagate.cu"
 #include "Cudnn/Arithmetic.cu"
 #include "Cudnn/ActivationFunctions.cu"
-/*#include "Cudnn/OutputFunctions.cu"
-#include "Cudnn/LossFunctions.cu"
-#include "Cudnn/Regularization.cu"
 #include "Cudnn/Initialization.cu"
-#include "Cudnn/Dropout.cu"
-#include "Cudnn/RecurrentPropagation.cu"*/
+#include "Cudnn/LossFunctions.cu"
+//#include "Cudnn/Regularization.cu"
+#include "Cudnn/OutputFunctions.cu"
+
+//#include "Cudnn/Dropout.cu"
+//#include "Cudnn/RecurrentPropagation.cu"*/
 
 namespace TMVA {
 namespace DNN  {

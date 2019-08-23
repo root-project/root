@@ -294,7 +294,7 @@ TTensorBatch<Architecture_t> TTensorDataLoader<Data_t, Architecture_t>::GetTenso
    DeviceBufferTuple DeviceBuffers = CopyTensorBatches();
 
    //--? fBatchDepth or fINputShape[0] ????
-   Tensor_t inputTensor( std::get<0>(DeviceBuffers), { fBatchHeight, fBatchWidth, fInputShape[0] } ); 
+   Tensor_t inputTensor( std::get<0>(DeviceBuffers), { fBatchHeight, fBatchWidth, fBatchDepth } ); 
    // std::vector<Matrix_t> inputTensor;
    // size_t jump = fBatchHeight * fBatchWidth;
    // for (size_t i = 0; i < fInputShape[0]; i++) {

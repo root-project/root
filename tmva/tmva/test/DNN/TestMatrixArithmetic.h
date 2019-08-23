@@ -18,7 +18,7 @@
 #include "math.h"
 #include "TMVA/DNN/Architectures/Reference.h"
 
-/** Test multiplication (standard, transposed, hadamard) operation on
+/** Test multiplication (standard, transpose ) operation on
  *  architecture specific matrix types and compare with results
  *  obtained with TMatrixT.
  */
@@ -75,6 +75,109 @@ auto testMultiplication(size_t ntests)
       Architecture_t::Hadamard(A, A2);
       error = TMVA::DNN::maximumRelativeError(A, ARef);
       maximumError   = std::max(error, maximumError);
+   }
+
+   return maximumError;
+}
+
+/** Test  hadamard operation on
+ *  architecture specific matrix and tensor types and compare with results
+ *  obtained with TMatrixT.
+ */
+//______________________________________________________________________________
+template<typename Architecture_t>
+auto testHadamrdMultiplication(size_t ntests)
+    -> typename Architecture_t::Scalar_t
+{
+
+   using Scalar_t = typename Architecture_t::Scalar_t;
+   using Matrix_t = typename Architecture_t::Matrix_t;
+   using Tensor_t = typename Architecture_t::Tensor_t;
+
+   Scalar_t maximumError = 0.0;
+   Scalar_t mean = 5.0, sigma = 2.0;
+
+   for (size_t t = 0; t < ntests; t++) {
+      size_t m = rand() % 100 + 1;
+      size_t n = rand() % 100 + 1;
+      //k = rand() % 100 + 1;
+
+      TMatrixT<Scalar_t> ARef(m,n), A2Ref(m,n);
+      TMVA::DNN::randomMatrix(ARef, mean, sigma);
+      TMVA::DNN::randomMatrix(A2Ref, mean, sigma);
+     
+      Matrix_t A(ARef), A2(A2Ref);
+
+
+      // A .* B
+      for (size_t i = 0; i < (size_t) ARef.GetNrows(); i++) {
+         for (size_t j = 0; j < (size_t) ARef.GetNcols(); j++) {
+            ARef(i,j) *= A2Ref(i,j);
+         }
+      }
+      Architecture_t::Hadamard(A, A2);
+      Scalar_t error = TMVA::DNN::maximumRelativeError(A, ARef);
+      maximumError   = std::max(error, maximumError);
+      if (maximumError > 1.E-3) { 
+         std::cout << "Hadamard Matrix test - max error =  " << maximumError << std::endl;
+      }   
+   }
+   // tensor test
+   //ntests = 1;
+   for (size_t t = 0; t < ntests; t++) {
+      size_t m, n, k;
+      m = rand() % 10 + 1;
+      n = rand() % 100 + 1;
+      k = rand() % 100 + 1;
+      // m = 1; n= 2;  
+      // k = 3; 
+
+      std::vector<TMatrixT<Scalar_t>> ARef, A2Ref; 
+      Tensor_t A(m,n,k);
+      Tensor_t A2(m,n,k);
+      for (size_t i = 0; i < m; ++i) { 
+         ARef.emplace_back(n,k);
+         A2Ref.emplace_back(n,k);
+         TMVA::DNN::randomMatrix(ARef[i], mean, sigma);
+         TMVA::DNN::randomMatrix(A2Ref[i], mean, sigma);
+
+         Matrix_t mA = A.At(i).GetMatrix(); 
+         Matrix_t mA2 = A2.At(i).GetMatrix(); 
+         Architecture_t::CopyDiffArch(mA, ARef[i]);
+         Architecture_t::CopyDiffArch(mA2, A2Ref[i]);
+      }
+      
+
+
+      // A .* B
+      for (size_t b = 0; b < m; ++b) { 
+         for (size_t i = 0; i < (size_t) ARef[b].GetNrows(); i++) {
+            for (size_t j = 0; j < (size_t) ARef[b].GetNcols(); j++) {
+               ARef[b](i,j) *= A2Ref[b](i,j);
+            }
+         }
+      }
+      // convert ARef to the specific architecture
+      Tensor_t tARef(m,n,k);
+      for (size_t b = 0; b < m; ++b) { 
+         Matrix_t mARef = tARef.At(b).GetMatrix(); 
+         Architecture_t::CopyDiffArch(mARef, ARef[b]);
+      }
+
+      Architecture_t::Hadamard(A, A2);
+
+      
+      
+      Scalar_t error = TMVA::DNN::maximumRelativeErrorTensor(A, tARef);
+      maximumError   = std::max(error, maximumError);
+
+      if (maximumError > 1.E-3) { 
+         //Architecture_t::PrintTensor(A0, "input1");
+         Architecture_t::PrintTensor(A2, "input2");
+
+         Architecture_t::PrintTensor(A,"output");
+         Architecture_t::PrintTensor(tARef,"ref output");
+      }
    }
 
    return maximumError;

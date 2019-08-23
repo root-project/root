@@ -34,7 +34,7 @@
 // to debug  the test and print matrices
 #define DEBUG_TMVA_TCPUMATRIX
 #endif
-#include "TMVA/DNN/Architectures/Cpu.h"
+#include "TMVA/DNN/Architectures/TCudnn.h"
 #include "TestConvNet.h"
 
 using namespace TMVA::DNN;
@@ -45,50 +45,50 @@ using namespace TMVA::DNN::CNN;
 bool test1()
 {
 
-   size_t batchSizeTest = 2;
-   size_t imgDepthTest = 1;  
-   size_t imgHeightTest = 3;
-   size_t imgWidthTest = 3;
-   size_t batchDepth = batchSizeTest;
-   size_t batchHeight = imgDepthTest;
-   size_t batchWidth = imgWidthTest*  imgHeightTest;
-   double stepSize = 1.E-5; // for computing derivatives with finate differences
+    size_t batchSizeTest = 2;
+    size_t imgDepthTest = 1;
+    size_t imgHeightTest = 3;
+    size_t imgWidthTest = 3;
+    size_t batchDepth = batchSizeTest;
+    size_t batchHeight = imgDepthTest;
+    size_t batchWidth = imgWidthTest*  imgHeightTest;
+    double stepSize = 1.E-5; // for computing derivatives with finate differences
 
-   ETestType type = kLinearNet;
+    ETestType type = kLinearNet;
 
-   return testConvBackwardPass<TCpu<double>>(batchSizeTest, imgDepthTest, imgHeightTest, imgWidthTest, batchDepth,
-                                      batchHeight, batchWidth,stepSize,type);
+    return testConvBackwardPass<TCudnn<double>>(batchSizeTest, imgDepthTest, imgHeightTest, imgWidthTest, batchDepth,
+            batchHeight, batchWidth,stepSize,type);
 }
 // test in a more complex network
 bool test2()
 {
 
-   size_t batchSizeTest = 4;
-   size_t imgDepthTest = 1;
-   size_t imgHeightTest = 8;
-   size_t imgWidthTest = 8;
-   size_t batchDepth = batchSizeTest;
-   size_t batchHeight = imgDepthTest;
-   size_t batchWidth = imgHeightTest * imgWidthTest;
+    size_t batchSizeTest = 4;
+    size_t imgDepthTest = 1;
+    size_t imgHeightTest = 8;
+    size_t imgWidthTest = 8;
+    size_t batchDepth = batchSizeTest;
+    size_t batchHeight = imgDepthTest;
+    size_t batchWidth = imgHeightTest * imgWidthTest;
 
-   // testConvBackwardPass<TReference<double>>(batchSizeTest1, imgDepthTest1, imgHeightTest1, imgWidthTest1, batchDepth,
-   //                                          batchHeight, batchWidth);
+    // testConvBackwardPass<TReference<double>>(batchSizeTest1, imgDepthTest1, imgHeightTest1, imgWidthTest1, batchDepth,
+    //                                          batchHeight, batchWidth);
 
-   double stepSize = 1.E-5; // for computing derivatives with finate differences
-   ETestType type = kRndmActNet; 
+    double stepSize = 1.E-5; // for computing derivatives with finate differences
+    ETestType type = kRndmActNet;
 
-   return testConvBackwardPass<TCpu<double>>(batchSizeTest, imgDepthTest, imgHeightTest, imgWidthTest, batchDepth,
-                                      batchHeight, batchWidth,stepSize,type);
+    return testConvBackwardPass<TCudnn<double>>(batchSizeTest, imgDepthTest, imgHeightTest, imgWidthTest, batchDepth,
+            batchHeight, batchWidth,stepSize,type);
 }
 
 int main()
 {
-   std::cout << "Testing CNN Backward Pass on CPU:" << std::endl;
-   std::cout << "Test1: backward pass with linear activation network - compare with finite difference" << std::endl;
+    std::cout << "Testing CNN Backward Pass on Cuda (GPU)" << std::endl;
+    std::cout << "Test1: backward pass with linear activation network - compare with finite difference" << std::endl;
 
    // fix random initialization
    gRandom->SetSeed(12345);
-   TCpu<double>::SetRandomSeed(12346);
+   TCudnn<double>::SetRandomSeed(12346);
 
 
    if (!test1()) {

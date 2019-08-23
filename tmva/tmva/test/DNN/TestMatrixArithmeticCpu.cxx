@@ -28,6 +28,12 @@ int main()
    if (error > 1e-3)
       return 1;
 
+   error = testHadamrdMultiplication<TCpu<Double_t>>(10);
+   std::cout << "Hadamrd Multiplication:      "
+             << "Max. rel. error: " << error << std::endl;
+   if (error > 1e-3)
+      return 1;
+
    error = testSumColumns<TCpu<Double_t>>(1);
    std::cout << "Column Sum:                  "
              << "Max. rel. error: " << error << std::endl;

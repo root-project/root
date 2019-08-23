@@ -24,8 +24,14 @@ int main()
 {
    std::cout << "Testing CUDA matrix arithmetic (double):" << std::endl;
 
-   Double_t error = testMultiplication<TCuda<Double_t>>(10);
+   double error = testMultiplication<TCuda<Double_t>>(10);
    std::cout << "Multiplication:              "
+             << "Max. rel. error: " << error << std::endl;
+   if (error > 1e-3)
+      return 1;
+
+   error = testHadamrdMultiplication<TCuda<Double_t>>(10);
+   std::cout << "Hadamrd Multiplication:      "
              << "Max. rel. error: " << error << std::endl;
    if (error > 1e-3)
       return 1;

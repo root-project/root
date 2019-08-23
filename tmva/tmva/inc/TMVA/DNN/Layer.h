@@ -296,6 +296,7 @@ auto TLayer<Architecture_t>::Backward(Matrix_t & gradients_backward,
    Tensor_t tActGrad(fActivationGradients);
    Tensor_t tDeriv(fDerivatives);
 
+   Architecture_t::Hadamard( tDeriv, tActGrad); 
    Architecture_t::Backward( tGradBw,
                             fWeightGradients,
                             fBiasGradients,

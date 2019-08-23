@@ -37,9 +37,12 @@ void constructConvNet(TDeepNet<AArchitecture> &net)
    size_t zeroPaddingHeight1 = 1;
    size_t zeroPaddingWidth1 = 1;
 
-   EActivationFunction fConv1 = EActivationFunction::kIdentity;
+   //EActivationFunction fConv1 = EActivationFunction::kIdentity;
 
-   //EActivationFunction fConv1 = ActivationFunctions[rand() % ActivationFunctions.size()];
+   TRandom &  r = (AArchitecture::GetRandomGenerator());
+   r.SetSeed(123);
+
+   EActivationFunction fConv1 = ActivationFunctions[r.Uniform(ActivationFunctions.size())];
 
    net.AddConvLayer(depth1, filterHeightConv1, filterWidthConv1, strideRowsConv1, strideColsConv1, zeroPaddingHeight1,
                     zeroPaddingWidth1, fConv1);
@@ -56,8 +59,8 @@ void constructConvNet(TDeepNet<AArchitecture> &net)
    size_t zeroPaddingHeight2 = 0;
    size_t zeroPaddingWidth2 = 0;
 
-   EActivationFunction fConv2 = EActivationFunction::kIdentity;
-//   EActivationFunction fConv2 = ActivationFunctions[rand() % ActivationFunctions.size()];
+   //EActivationFunction fConv2 = EActivationFunction::kIdentity;
+   EActivationFunction fConv2 = ActivationFunctions[r.Uniform(ActivationFunctions.size())];
 
    net.AddConvLayer(depth2, filterHeightConv2, filterWidthConv2, strideRowsConv2, strideColsConv2, zeroPaddingHeight2,
                     zeroPaddingWidth2, fConv2);
@@ -71,10 +74,13 @@ void constructConvNet(TDeepNet<AArchitecture> &net)
    size_t strideRowsPool = 1;
    size_t strideColsPool = 1;
 
+   
+#if 0
    net.AddMaxPoolLayer(filterHeightPool, filterWidthPool, strideRowsPool, strideColsPool);
 
    std::cout << "added MaxPool layer " <<  net.GetLayerAt(net.GetDepth() - 1)->GetDepth() << " x " <<  net.GetLayerAt(net.GetDepth() - 1)->GetHeight()
              << " x " << net.GetLayerAt(net.GetDepth() - 1)->GetWidth() << std::endl;
+#endif
 
 
    size_t depthReshape = 1;
@@ -87,9 +93,10 @@ void constructConvNet(TDeepNet<AArchitecture> &net)
 
    size_t widthFC1 = 20;
 
-   EActivationFunction fFC1 = EActivationFunction::kIdentity;
+   //EActivationFunction fFC1 = EActivationFunction::kIdentity;
+   EActivationFunction fFC1 = EActivationFunction::kSigmoid;
 
-   //EActivationFunction fFC1 = ActivationFunctions[rand() % ActivationFunctions.size()];
+   //EActivationFunction fFC1 = ActivationFunctions[r.Uniform(ActivationFunctions.size())];
    net.AddDenseLayer(widthFC1, fFC1);
 
    size_t widthFC2 = 2;
@@ -106,8 +113,8 @@ void constructLinearConvNet(TDeepNet<AArchitecture> &net)
 {
    
    size_t depth1 = 2;
-   size_t filterHeightConv1 = 2;
-   size_t filterWidthConv1 = 2;
+   size_t filterHeightConv1 = 3;
+   size_t filterWidthConv1 = 3;
    size_t strideRowsConv1 = 1;
    size_t strideColsConv1 = 1;
    size_t zeroPaddingHeight1 = 1;
@@ -124,8 +131,8 @@ void constructLinearConvNet(TDeepNet<AArchitecture> &net)
 
 
    size_t depth2 = 2;
-   size_t filterHeightConv2 = 3;
-   size_t filterWidthConv2 = 3;
+   size_t filterHeightConv2 = 2;
+   size_t filterWidthConv2 = 2;
    size_t strideRowsConv2 = 1;
    size_t strideColsConv2 = 1;
    size_t zeroPaddingHeight2 = 0;
@@ -158,10 +165,12 @@ void constructLinearConvNet(TDeepNet<AArchitecture> &net)
    size_t strideRowsPool = 1;
    size_t strideColsPool = 1;
 
+#if 0
    net.AddMaxPoolLayer(filterHeightPool, filterWidthPool, strideRowsPool, strideColsPool);
 
    std::cout << "added MaxPool layer " <<  net.GetLayerAt(net.GetDepth() - 1)->GetDepth() << " x " <<  net.GetLayerAt(net.GetDepth() - 1)->GetHeight()
              << " x " << net.GetLayerAt(net.GetDepth() - 1)->GetWidth() << std::endl;
+#endif
 
    size_t depthReshape = 1;
    size_t heightReshape = 1;
@@ -361,6 +370,8 @@ void randomBatch(ATensor &X)
    }
 }
 
+// one should use Architecture::Copy function 
+#if 0 
 /*! Generate a random batch as input for a neural net. */
 //______________________________________________________________________________
 template <typename AMatrix>
@@ -384,6 +395,7 @@ void copyTensor(ATensor &X, const ATensor &Y)
    assert (n == X.GetSize());
    std::copy(Y.GetData(), Y.GetData()+n, X.GetData());
 }
+#endif
 
 /*! Apply functional to each element in the matrix. */
 //______________________________________________________________________________
@@ -398,6 +410,17 @@ void applyMatrix(AMatrix &X, F f)
       for (size_t j = 0; j < n; j++) {
          X(i, j) = f(X(i, j));
       }
+   }
+}
+
+template <typename ATensor, typename F>
+void applyTensor(ATensor &X, F f)
+{
+   size_t m = X.GetFirstSize();
+
+   for (size_t i = 0; i < m; i++) {
+      auto mX = X.At(i).GetMatrix(); 
+      applyMatrix(mX,f);
    }
 }
 
@@ -486,8 +509,8 @@ auto maximumRelativeError(const Matrix1 &X, const Matrix2 &Y) -> Double_t
    Int_t m = X.GetNrows();
    Int_t n = X.GetNcols();
 
-   assert(m == Y.GetNrows());
-   assert(n == Y.GetNcols());
+   assert(m == (Int_t) Y.GetNrows());
+   assert(n == (Int_t) Y.GetNcols());
 
    for (Int_t i = 0; i < m; i++) {
       for (Int_t j = 0; j < n; j++) {
@@ -495,6 +518,24 @@ auto maximumRelativeError(const Matrix1 &X, const Matrix2 &Y) -> Double_t
          maxError = std::max(curError, maxError);
       }
    }
+
+   return maxError;
+}
+
+template <typename Tensor1, typename Tensor2>
+auto maximumRelativeErrorTensor(const Tensor1 &X, const Tensor2 &Y) -> Double_t
+{
+
+   size_t fsize = X.GetFirstSize(); 
+   assert(fsize == Y.GetFirstSize());
+
+   Double_t curError, maxError = 0.0;
+
+   for (size_t i = 0; i < fsize; i++) {
+      curError = maximumRelativeError( X.At(i).GetMatrix(), Y.At(i).GetMatrix() );
+      maxError = std::max(curError, maxError);
+   }
+ 
 
    return maxError;
 }

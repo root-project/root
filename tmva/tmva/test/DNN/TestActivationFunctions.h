@@ -67,8 +67,8 @@ auto testIdentity(size_t ntests)
    Double_t maximumError = 0.0;
 
    for (size_t i = 0; i < ntests; i++) {
-      size_t m = rand() % 100 + 1;
-      size_t n = rand() % 100 + 1;
+      size_t m = Architecture::GetRandomGenerator().Uniform(100) + 1;
+      size_t n = Architecture::GetRandomGenerator().Uniform(100) + 1;
 
       TMatrixT<Double_t> ARef(m, n);
       randomMatrix(ARef);
@@ -96,8 +96,8 @@ auto testIdentityDerivative(size_t ntests)
    Double_t maximumError = 0.0;
 
    for (size_t i = 0; i < ntests; i++) {
-      size_t m = rand() % 100 + 1;
-      size_t n = rand() % 100 + 1;
+      size_t m = Architecture::GetRandomGenerator().Uniform(100) + 1;
+      size_t n = Architecture::GetRandomGenerator().Uniform(100) + 1;
 
       TMatrixT<Double_t> ARef(m, n), BRef(m, n);
       randomMatrix(ARef);
@@ -127,11 +127,13 @@ auto testRelu(size_t ntests)
 -> typename Architecture::Scalar_t
 {
    using Matrix_t = typename Architecture::Matrix_t;
+   using Tensor_t = typename Architecture::Tensor_t;
    Double_t maximumError = 0.0;
+   
 
    for (size_t i = 0; i < ntests; i++) {
-      size_t m = rand() % 100 + 1;
-      size_t n = rand() % 100 + 1;
+      size_t m = Architecture::GetRandomGenerator().Uniform(100) + 1;
+      size_t n = Architecture::GetRandomGenerator().Uniform(100) + 1;
 
       TMatrixT<Double_t> ARef(m, n);
       randomMatrix(ARef);
@@ -144,6 +146,26 @@ auto testRelu(size_t ntests)
       Double_t error = maximumRelativeError(A, ARef);
       maximumError = std::max(error, maximumError);
    }
+
+   // test the tensor API
+   for (size_t i = 0; i < ntests; i++) {
+      size_t b = Architecture::GetRandomGenerator().Uniform(10) + 1; 
+      size_t m = Architecture::GetRandomGenerator().Uniform(100) + 1;
+      size_t n = Architecture::GetRandomGenerator().Uniform(100) + 1;
+      //m=1;
+      Tensor_t ARef(b,m,n);
+
+      randomBatch(ARef);
+
+      Tensor_t AArch(ARef);
+
+      evaluate<Architecture>(AArch, EActivationFunction::kRelu);
+      applyTensor(ARef, [](double x){return x < 0.0 ? 0.0 : x;});
+
+      Double_t error = maximumRelativeErrorTensor(AArch, ARef);
+      maximumError = std::max(error, maximumError);
+   }
+
    return maximumError;
 }
 
@@ -154,11 +176,12 @@ auto testReluDerivative(size_t ntests)
 -> typename Architecture::Scalar_t
 {
    using Matrix_t = typename Architecture::Matrix_t;
+   using Tensor_t = typename Architecture::Tensor_t;
    Double_t maximumError = 0.0;
 
    for (size_t i = 0; i < ntests; i++) {
-      size_t m = rand() % 100 + 1;
-      size_t n = rand() % 100 + 1;
+      size_t m = Architecture::GetRandomGenerator().Uniform(100) + 1;
+      size_t n = Architecture::GetRandomGenerator().Uniform(100) + 1;
 
       TMatrixT<Double_t> ARef(m, n), BRef(m, n);
       randomMatrix(ARef);
@@ -171,6 +194,29 @@ auto testReluDerivative(size_t ntests)
       Double_t error = maximumRelativeError(B, ARef);
       maximumError = std::max(error, maximumError);
    }
+
+    // test the tensor API
+    
+   for (size_t i = 0; i < ntests; i++) {
+      size_t b = Architecture::GetRandomGenerator().Uniform(10) + 1; 
+      size_t m = Architecture::GetRandomGenerator().Uniform(100) + 1;
+      size_t n = Architecture::GetRandomGenerator().Uniform(100) + 1;
+      //m=1;
+      Tensor_t ARef(b,m,n);
+
+      randomBatch(ARef);
+
+      Tensor_t AArch(ARef);
+      Tensor_t BArch(ARef); 
+
+      evaluateDerivative<Architecture>(AArch, EActivationFunction::kRelu, BArch);
+      applyTensor(ARef, [](double x){return x >  0.0 ? 1.0 : 0.0;});
+
+      Double_t error = maximumRelativeErrorTensor(BArch, ARef);
+      maximumError = std::max(error, maximumError);
+   }
+
+
    return maximumError;
 }
 
@@ -186,11 +232,13 @@ auto testSigmoid(size_t ntests)
 -> typename Architecture::Scalar_t
 {
    using Matrix_t = typename Architecture::Matrix_t;
+   using Tensor_t = typename Architecture::Tensor_t;
+
    Double_t maximumError = 0.0;
 
    for (size_t i = 0; i < ntests; i++) {
-      size_t m = rand() % 100 + 1;
-      size_t n = rand() % 100 + 1;
+      size_t m = Architecture::GetRandomGenerator().Uniform(100) + 1;
+      size_t n = Architecture::GetRandomGenerator().Uniform(100) + 1;
 
       TMatrixT<Double_t> ARef(m, n);
       randomMatrix(ARef);
@@ -203,21 +251,45 @@ auto testSigmoid(size_t ntests)
       Double_t error = maximumRelativeError(A, ARef);
       maximumError = std::max(error, maximumError);
    }
+
+// test the tensor API
+
+   for (size_t i = 0; i < ntests; i++) {
+      size_t b = Architecture::GetRandomGenerator().Uniform(10) + 1; 
+      size_t m = Architecture::GetRandomGenerator().Uniform(100) + 1;
+      size_t n = Architecture::GetRandomGenerator().Uniform(100) + 1;
+      //m=1;
+      Tensor_t ARef(b,m,n);
+
+      randomBatch(ARef);
+
+      Tensor_t AArch(ARef);
+
+      evaluate<Architecture>(AArch, EActivationFunction::kSigmoid);
+      applyTensor(ARef, [](double x){return 1.0 / (1.0 + std::exp(-x));});
+
+      Double_t error = maximumRelativeErrorTensor(AArch, ARef);
+      maximumError = std::max(error, maximumError);
+   }
+
    return maximumError;
+
 }
 
-/*! Test computation of the first derivative of the ReLU function. */
+/*! Test computation of the first derivative of the Sigmoid function. */
 //______________________________________________________________________________
 template <typename Architecture>
 auto testSigmoidDerivative(size_t ntests)
 -> typename Architecture::Scalar_t
 {
    using Matrix_t = typename Architecture::Matrix_t;
+   using Tensor_t = typename Architecture::Tensor_t;
+
    Double_t maximumError = 0.0;
 
    for (size_t i = 0; i < ntests; i++) {
-      size_t m = rand() % 100 + 1;
-      size_t n = rand() % 100 + 1;
+      size_t m = Architecture::GetRandomGenerator().Uniform(100) + 1;
+      size_t n = Architecture::GetRandomGenerator().Uniform(100) + 1;
 
       TMatrixT<Double_t> ARef(m, n), BRef(m, n);
       randomMatrix(ARef);
@@ -233,6 +305,29 @@ auto testSigmoidDerivative(size_t ntests)
       Double_t error = maximumRelativeError(B, ARef);
       maximumError = std::max(error, maximumError);
    }
+
+    // test the tensor API
+   for (size_t i = 0; i < ntests; i++) {
+      size_t b = Architecture::GetRandomGenerator().Uniform(10); 
+      size_t m = Architecture::GetRandomGenerator().Uniform(100) + 1;
+      size_t n = Architecture::GetRandomGenerator().Uniform(100) + 1;
+      //m=1;
+      Tensor_t ARef(b,m,n);
+
+      randomBatch(ARef);
+
+      Tensor_t AArch(ARef);
+      Tensor_t BArch(ARef); 
+
+      evaluateDerivative<Architecture>(AArch, EActivationFunction::kRelu, BArch);
+      applyTensor(ARef, [](Double_t x){
+             Double_t sig = 1.0 / (1.0 + std::exp(-x));
+             return sig * (1.0 - sig);} ); 
+
+      Double_t error = maximumRelativeErrorTensor(BArch, ARef);
+      maximumError = std::max(error, maximumError);
+   }
+
    return maximumError;
 }
 
@@ -251,8 +346,8 @@ auto testTanh(size_t ntests)
    Double_t maximumError = 0.0;
 
    for (size_t i = 0; i < ntests; i++) {
-      size_t m = rand() % 100 + 1;
-      size_t n = rand() % 100 + 1;
+      size_t m = Architecture::GetRandomGenerator().Uniform(100) + 1;
+      size_t n = Architecture::GetRandomGenerator().Uniform(100) + 1;
 
       TMatrixT<Double_t> ARef(m, n);
       randomMatrix(ARef);
@@ -278,8 +373,8 @@ auto testTanhDerivative(size_t ntests)
    Double_t maximumError = 0.0;
 
    for (size_t i = 0; i < ntests; i++) {
-      size_t m = rand() % 100 + 1;
-      size_t n = rand() % 100 + 1;
+      size_t m = Architecture::GetRandomGenerator().Uniform(100) + 1;
+      size_t n = Architecture::GetRandomGenerator().Uniform(100) + 1;
 
       TMatrixT<Double_t> ARef(m, n), BRef(m, n);
       randomMatrix(ARef);
@@ -313,8 +408,8 @@ auto testSymmetricRelu(size_t ntests)
    Double_t maximumError = 0.0;
 
    for (size_t i = 0; i < ntests; i++) {
-      size_t m = rand() % 100 + 1;
-      size_t n = rand() % 100 + 1;
+      size_t m = Architecture::GetRandomGenerator().Uniform(100) + 1;
+      size_t n = Architecture::GetRandomGenerator().Uniform(100) + 1;
 
       TMatrixT<Double_t> ARef(m, n);
       randomMatrix(ARef);
@@ -340,8 +435,8 @@ auto testSymmetricReluDerivative(size_t ntests)
    Double_t maximumError = 0.0;
 
    for (size_t i = 0; i < ntests; i++) {
-      size_t m = rand() % 100 + 1;
-      size_t n = rand() % 100 + 1;
+      size_t m = Architecture::GetRandomGenerator().Uniform(100) + 1;
+      size_t n = Architecture::GetRandomGenerator().Uniform(100) + 1;
 
       TMatrixT<Double_t> ARef(m, n), BRef(m, n);
       randomMatrix(ARef);
@@ -374,8 +469,8 @@ auto testSoftSign(size_t ntests)
    Double_t maximumError = 0.0;
 
    for (size_t i = 0; i < ntests; i++) {
-      size_t m = rand() % 100 + 1;
-      size_t n = rand() % 100 + 1;
+      size_t m = Architecture::GetRandomGenerator().Uniform(100) + 1;
+      size_t n = Architecture::GetRandomGenerator().Uniform(100) + 1;
 
       TMatrixT<Double_t> ARef(m, n);
       randomMatrix(ARef);
@@ -401,8 +496,8 @@ auto testSoftSignDerivative(size_t ntests)
    Double_t maximumError = 0.0;
 
    for (size_t i = 0; i < ntests; i++) {
-      size_t m = rand() % 100 + 1;
-      size_t n = rand() % 100 + 1;
+      size_t m = Architecture::GetRandomGenerator().Uniform(100) + 1;
+      size_t n = Architecture::GetRandomGenerator().Uniform(100) + 1;
 
       TMatrixT<Double_t> ARef(m, n), BRef(m, n);
       randomMatrix(ARef);
@@ -436,8 +531,8 @@ auto testGauss(size_t ntests)
    Double_t maximumError = 0.0;
 
    for (size_t i = 0; i < ntests; i++) {
-      size_t m = rand() % 100 + 1;
-      size_t n = rand() % 100 + 1;
+      size_t m = Architecture::GetRandomGenerator().Uniform(100) + 1;
+      size_t n = Architecture::GetRandomGenerator().Uniform(100) + 1;
 
       TMatrixT<Double_t> ARef(m, n);
       randomMatrix(ARef);
@@ -463,8 +558,8 @@ auto testGaussDerivative(size_t ntests)
    Double_t maximumError = 0.0;
 
    for (size_t i = 0; i < ntests; i++) {
-      size_t m = rand() % 100 + 1;
-      size_t n = rand() % 100 + 1;
+      size_t m = Architecture::GetRandomGenerator().Uniform(100) + 1;
+      size_t n = Architecture::GetRandomGenerator().Uniform(100) + 1;
 
       TMatrixT<Double_t> ARef(m, n), BRef(m, n);
       randomMatrix(ARef);
