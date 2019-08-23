@@ -81,7 +81,7 @@ TArrow::TArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    fAngle       = fgDefaultAngle;
    fArrowSize   = arrowsize;
    fOption      = option;
-   SetFillColor(this->GetLineColor());
+   SetFillColor(GetLineColor());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -96,10 +96,9 @@ TArrow::~TArrow()
 
 TArrow::TArrow(const TArrow &arrow) : TLine(), TAttFill()
 {
-
    fAngle     = fgDefaultAngle;
    fArrowSize = 0.;
-   ((TArrow&)arrow).Copy(*this);
+   arrow.Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -107,7 +106,6 @@ TArrow::TArrow(const TArrow &arrow) : TLine(), TAttFill()
 
 void TArrow::Copy(TObject &obj) const
 {
-
    TLine::Copy(obj);
    TAttFill::Copy(((TArrow&)obj));
    ((TArrow&)obj).fAngle      = fAngle;
@@ -120,13 +118,11 @@ void TArrow::Copy(TObject &obj) const
 
 void TArrow::Draw(Option_t *option)
 {
-
    Option_t *opt;
    if (option && strlen(option)) opt = option;
    else                          opt = (char*)GetOption();
 
    AppendPad(opt);
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -377,7 +373,6 @@ void TArrow::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 
 void TArrow::SetDefaultAngle(Float_t Angle)
 {
-
    fgDefaultAngle = Angle;
 }
 
@@ -387,7 +382,6 @@ void TArrow::SetDefaultAngle(Float_t Angle)
 
 void TArrow::SetDefaultArrowSize (Float_t ArrowSize)
 {
-
    fgDefaultArrowSize = ArrowSize;
 }
 
