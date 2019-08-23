@@ -169,6 +169,7 @@ bool testForward1()
    return status;
 }
 
+
 template<typename Architecture>
 bool testForward1_cudnn()
 {
@@ -292,6 +293,7 @@ bool testForward1_cudnn()
 
    return computedOutput.isEqual(expectedOutput_buffer, expectedOutput_buffer.GetSize());
 }
+
 /*************************************************************************
 * Test 1: Backward Propagation
 *  batch size = 1
@@ -447,6 +449,7 @@ bool testBackward1()
 
     Architecture::ConvLayerBackward(computedActivationGradientsBackward, computedWeightGradients, computedBiasGradients,
                                     df, activationGradients, weights, activationsBackward, output,
+                                    EActivationFunction::kIdentity,
                                     (typename Architecture::ConvDescriptors_t &) * convDescriptors,
                                     batchSize, imgHeight, imgWidth, numberFilters, height,
                                     width, imgDepth, fltHeight, fltWidth, nLocalViews);
@@ -615,6 +618,7 @@ bool testBackward1_cudnn()
     TConvLayer<Architecture> *layer = nullptr;
     Architecture::InitializeCNNDescriptors(convDescriptors, layer);
     
+    // se RELU fucntion
     cudnnSetActivationDescriptor(((typename Architecture::ConvDescriptors_t &) * convDescriptors).HelperDescriptor,
                                  CUDNN_ACTIVATION_RELU,
                                  CUDNN_PROPAGATE_NAN,
@@ -656,6 +660,7 @@ bool testBackward1_cudnn()
 
     Architecture::ConvLayerBackward(computedActivationGradientsBackward, computedWeightGradients, computedBiasGradients,
                                     computedInputActivFunc , activationGradients, weights, input, computedOutput,
+                                    EActivationFunction::kIdentity,  // this is not used in cudnn
                                     (typename Architecture::ConvDescriptors_t &) * convDescriptors,
                                     batchSize, imgHeight, imgWidth, numberFilters, height,
                                     width, imgDepth, fltHeight, fltWidth, nLocalViews);

@@ -32,6 +32,30 @@ namespace DNN
 
 //______________________________________________________________________________
 template<typename AFloat>
+void TCpu<AFloat>::ActivationFunctionForward(Tensor_t & X, EActivationFunction activFunct, 
+                                             const ActivationDescriptor_t /* activationDescr */,  
+                                             const double /* coef */, const AFloat /*alpha */, const AFloat /*beta*/)
+{
+   // scaling and translation is not yet implemented
+   TMVA::DNN::evaluate<TCpu<AFloat>>( X, activFunct);
+}
+//______________________________________________________________________________
+template<typename AFloat>
+void TCpu<AFloat>::ActivationFunctionBackward(Tensor_t & dX, const Tensor_t & /* Y */,  
+                                                const Tensor_t & dY, const Tensor_t & X,
+                                                EActivationFunction activFunct,
+                                                const ActivationDescriptor_t /* activationDescr */,
+                                                const AFloat /* alpha */, const AFloat /* beta */)
+{
+   // scaling and translation not yet implemented
+   // output tensor (Y) could also be used to speed up derivative calculation
+   // compute dx = f'(x)
+   TMVA::DNN::evaluateDerivative<TCpu<AFloat>>(dX, activFunct, X); 
+    // Compute element-wise product.  dx = f'(x) * dY
+   Hadamard(dX, dY);
+}
+//______________________________________________________________________________
+template<typename AFloat>
 void TCpu<AFloat>::IdentityDerivative(TCpuTensor<AFloat> & B,
                                       const TCpuTensor<AFloat> &/*A*/)
 {

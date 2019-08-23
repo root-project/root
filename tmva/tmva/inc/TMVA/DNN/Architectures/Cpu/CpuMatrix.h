@@ -476,6 +476,12 @@ public:
    void MapFrom(Function_t &f, const TCpuTensor<AFloat> &A);
 
    size_t GetBufferUseCount() const { return fBuffer.GetUseCount(); }
+
+   void Print() const {
+      
+      for (size_t i = 0; i < fTensor.GetSize(); i++) std::cout << GetData()[i] << "  ";
+      std::cout << std::endl;
+   }
 };
 
 //______________________________________________________________________________

@@ -127,13 +127,19 @@ auto testDownsample(const typename Architecture::Matrix_t &A, const typename Arc
    typename Architecture::Tensor_t tInd(AInd,3); 
    typename Architecture::Tensor_t tA(A,3); 
 
-   Architecture::PrintTensor(tA);
+   std::cout << "Testing downsample with size = " << fltHeight << " , " << fltWidth 
+   << " stride " << strideRows << " . " << strideCols << std::endl;
 
    Architecture::Downsample(tDown, tInd, tA, imgHeight, imgWidth, fltHeight, fltWidth, strideRows, strideCols);
 
    for (size_t i = 0; i < m1; i++) {
       for (size_t j = 0; j < n1; j++) {
          if (ADown(i, j) != B(i, j)) {
+            std::cout << "Error - downsample failed for " << i << "," << j << std::endl;
+            Architecture::PrintTensor(tDown,"downsample tensor");
+            typename Architecture::Tensor_t tB(B,3); 
+            Architecture::PrintTensor(tB,"expected tensor");
+            Architecture::PrintTensor(tA,"input tensor");
             return false;
          }
       }
@@ -142,6 +148,10 @@ auto testDownsample(const typename Architecture::Matrix_t &A, const typename Arc
    for (size_t i = 0; i < m2; i++) {
       for (size_t j = 0; j < n2; j++) {
          if (AInd(i, j) != ind(i, j)) {
+            std::cout << "Error - downsample index failed for " << i << "," << j << std::endl;
+            Architecture::PrintTensor(tInd,"index tensor");
+            typename Architecture::Tensor_t texInd(ind,3); 
+            Architecture::PrintTensor(texInd,"expected tensor");
             return false;
          }
       }
@@ -217,11 +227,15 @@ auto testFlatten(typename Architecture_t::Tensor_t &A, const typename Architectu
    n = B.GetWSize();
 
    typename Architecture_t::Tensor_t AFlat( B.GetShape() );
+
    Architecture_t::Flatten(AFlat, A );
 
    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n; j++) {
          if (AFlat(0, i, j) != B(0, i, j)) {
+            std::cout << "Error - test flatten failed for element " << i << "  " << j << std::endl;
+            Architecture_t::PrintTensor(AFlat,"Flatten tensor");
+            Architecture_t::PrintTensor(A,"Input tensor");
             return false;
          }
       }
@@ -269,7 +283,13 @@ auto testConvLayerForward(const typename Architecture::Tensor_t &input,
 
     for (size_t slice = 0; slice < nRows; slice++) {
         for (size_t localView = 0; localView < nCols; localView++) {
-            if (expectedOutput(0, slice, localView) != computedOutput(0, slice, localView)) return false;
+            if (expectedOutput(0, slice, localView) != computedOutput(0, slice, localView)) { 
+               std::cout << "Error - computed output different than expected for " << slice 
+               << " , " << localView << std::endl;
+               Architecture::PrintTensor(computedOutput,"computed output tensor");
+               Architecture::PrintTensor(expectedOutput,"expected output tensor");
+               return false;
+            }
         }
     }
     return true;
@@ -452,19 +472,24 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
                           size_t batchHeight, size_t batchWidth, typename Architecture::Scalar_t dx, ETestType testType) -> bool
 {
    using Matrix_t = typename Architecture::Matrix_t;
+   using Tensor_t = typename Architecture::Tensor_t;
    using Net_t = TDeepNet<Architecture>;
    using Scalar_t = typename Architecture::Scalar_t;
 
    Net_t convNet(batchSize, imgDepth, imgHeight, imgWidth, batchDepth, batchHeight, batchWidth,
-                 ELossFunction::kMeanSquaredError, EInitialization::kGauss);
+                 ELossFunction::kMeanSquaredError, EInitialization:: kGlorotUniform);
    // tyoe of network
    if (testType == kLinearNet) 
       constructLinearConvNet(convNet);
    else
       constructConvNet(convNet);
 
+   Architecture::SetRandomSeed(111); // use fixed seed
    convNet.Initialize();
 
+   std::cout << "test backward on this network " << std::endl;
+   convNet.Print();
+   
 //    auto & w0 = convNet.GetLayerAt(0)->GetWeights();
 // #ifdef DEBUG  
 //    std::cout << "Netwrok weights for Layer 0  " << std::endl; 
@@ -483,8 +508,27 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
    // for the moment use weights equal to 1
    fillMatrix(W, 1.0);
 
+   for (size_t l = 0; l < convNet.GetLayers().size(); l++) {
+      auto & theLayer = *(convNet.GetLayers()[l]);
+      auto & vW = theLayer.GetWeights();
+      if (vW.size() > 0) {
+         TString tname = TString::Format("weight-tensor-layer-%d",l);
+         Tensor_t tW( vW[0] ); 
+         Architecture::PrintTensor( tW ,std::string(tname));
+         //vW[0].Print();
+         //tW.Print(); 
+         
+      }
+   }
+   
+   auto & lLayer = *(convNet.GetLayers().back());
+   
+   Architecture::PrintTensor(Tensor_t(lLayer.GetWeights()[0]),"weights-before-fw");  
    std::cout << "Do Forward Pass " << std::endl;
    convNet.Forward(X);
+
+   Architecture::PrintTensor(Tensor_t(lLayer.GetWeights()[0]),"weights-after-fw");  
+
 
    // print layer derivatives
 #ifdef DEBUG
@@ -501,29 +545,43 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
    //if (testType == kRndmActNet)  return true; 
 
    std::cout << "Do Backward Pass " << std::endl;
+   Architecture::PrintTensor(X,"input");
    convNet.Backward(X, Y, W);
 
+   Architecture::PrintTensor(Tensor_t(lLayer.GetWeights()[0]),"weights-after-bw");  
+  
 
    // now compare derivatives using finite differences and compare the result
    Scalar_t maximum_error = 0.0;
 
-   for (size_t l = 0; l < convNet.GetDepth(); l++) {
-      std::cout << "\rTesting weight gradients:      layer: " << l << " / " << convNet.GetDepth();
+   for (size_t l = convNet.GetDepth()-1; (int) l >= 0; l--) {
+      std::cout << "\n\n************************************* \n";
+      std::cout << "\tTesting weight gradients:      layer: " << l << " / " << convNet.GetDepth();
       std::cout << std::flush;
       auto & layer = *(convNet.GetLayerAt(l));
-     
-      std::vector<Matrix_t> &gw = layer.GetWeightGradients();
-
       std::cout << std::endl;
+      layer.Print(); 
+      std::cout << "************************************* \n\n";
+     
+      Architecture::PrintTensor(layer.GetOutput(),"output tensor");
+      Architecture::PrintTensor(layer.GetActivationGradients(),"activation gradient");
 
+      auto &gw = layer.GetWeightGradients();
       if (gw.size() > 0) { 
          std::cout << "Weight gradient from back-propagation - vector size is " << gw.size()  << std::endl;
+         Architecture::PrintTensor(Tensor_t(layer.GetWeights()[0]),"weights");  
+         Architecture::PrintTensor(Tensor_t(layer.GetWeightGradients()[0]),"weight gradients"); 
+     
 
-         if (gw[0].GetNoElements() < 100 ) {
-            gw[0].Print();
-         }
-         else
-            std::cout << "BP Weight Gradient ( " << gw[0].GetNrows() << " x " << gw[0].GetNcols() << " ) , ...... skip printing (too many elements ) " << std::endl;  
+
+         std::cout << std::endl;
+
+         // if (gw[0].GetNoElements() < 100 ) {
+            //    gw[0].Print();
+         //    // }
+         // else
+         //    std::cout << "BP Weight Gradient ( " << gw[0].GetNrows() << " x " << gw[0].GetNcols() << " ) , ...... skip printing (too many elements ) " << std::endl;  
+         // }
       }
       else {
          std::cout << "Layer " << l << " has no weights " << std::endl;

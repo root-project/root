@@ -15,9 +15,11 @@
  /////////////////////////////////////////////////////////////
 
 #include "TRandom3.h"
-#include "TMatrix.h"
-#include "TMVA/DNN/Architectures/Cuda.h"
-#include "Kernels.cuh"
+
+#include "TMVA/DNN/Architectures/TCudnn.h"
+#include "TMVA/DNN/Architectures/Cuda/CudaTensor.h"
+
+
 
 namespace TMVA
 {
@@ -25,60 +27,58 @@ namespace DNN
 {
 
 template <typename AFloat>
-TRandom * TCuda<AFloat>::fgRandomGen = nullptr;
+TRandom * TCudnn<AFloat>::fgRandomGen = nullptr;
 //______________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::SetRandomSeed(size_t seed)
+void TCudnn<AFloat>::SetRandomSeed(size_t seed)
 {
    if (!fgRandomGen) fgRandomGen = new TRandom3();
    fgRandomGen->SetSeed(seed); 
 }
 template<typename AFloat>
-TRandom & TCuda<AFloat>::GetRandomGenerator()
+TRandom & TCudnn<AFloat>::GetRandomGenerator()
 {
    if (!fgRandomGen) fgRandomGen = new TRandom3(0);
    return *fgRandomGen; 
 }
 //______________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::InitializeGauss(TCudaMatrix<AFloat> & A)
+void TCudnn<AFloat>::InitializeGauss(TCudaTensor<AFloat> & A)
 {
-   size_t m,n;
-   m = A.GetNrows();
-   n = A.GetNcols();
-
+   // n is the size of the feature map
+   size_t n = A.GetFirstStride();
+   
    TRandom &  rand = GetRandomGenerator();
-   TMatrixT<AFloat> B(m, n);
 
    Double_t sigma = sqrt(2.0 / ((Double_t) n));
 
-   for (size_t i = 0; i < m; i++) {
-      for (size_t j = 0; j < n; j++) {
-         B(i,j) = rand.Gaus(0.0, sigma);
-      }
+   size_t nelements = A.GetSize(); 
+   TCudaHostBuffer<AFloat> xhost(nelements);
+   for (size_t i = 0; i < nelements; i++) {
+      xhost[i] = rand.Gaus(0,sigma); 
    }
-   A = B;
+   A.GetDeviceBuffer().CopyFrom(xhost);
+   PrintTensor(A,"A after init Gaus");
 }
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::InitializeUniform(TCudaMatrix<AFloat> & A)
+void TCudnn<AFloat>::InitializeUniform(TCudaTensor<AFloat> & A)
 {
-   size_t m,n;
-   m = A.GetNrows();
-   n = A.GetNcols();
-
+   // n is the size of the feature map
+   size_t n = A.GetFirstStride();
+   
    TRandom &  rand = GetRandomGenerator();
-   TMatrixT<AFloat> B(m, n);
 
    Double_t range = sqrt(2.0 / ((Double_t) n));
 
-   for (size_t i = 0; i < m; i++) {
-      for (size_t j = 0; j < n; j++) {
-         B(i,j) = rand.Uniform(-range, range);
-      }
+   size_t nelements = A.GetSize(); 
+   TCudaHostBuffer<AFloat> xhost(nelements);
+   for (size_t i = 0; i < nelements; i++) {
+      xhost[i] = rand.Uniform(-range, range);
    }
-   A = B;
+   A.GetDeviceBuffer().CopyFrom(xhost);
+  
 }
 
 //______________________________________________________________________________
@@ -87,25 +87,21 @@ void TCuda<AFloat>::InitializeUniform(TCudaMatrix<AFloat> & A)
 ///   values larger than 2 * stddev are discarded 
 ///  See Glorot & Bengio, AISTATS 2010 - http://jmlr.org/proceedings/papers/v9/glorot10a/glorot10a.pdf
 template<typename AFloat>
-void TCuda<AFloat>::InitializeGlorotNormal(TCudaMatrix<AFloat> & A)
+void TCudnn<AFloat>::InitializeGlorotNormal(TCudaTensor<AFloat> & A)
 {
-   size_t m,n;
-   m = A.GetNrows();
-   n = A.GetNcols();
+   // n is the size of the tensor
+   size_t n = A.GetSize();
 
    TRandom &  rand = GetRandomGenerator();
-   TMatrixT<AFloat> B(m, n);
+   Double_t sigma = sqrt(2.0 / ((Double_t) n));  
 
-   AFloat sigma = sqrt(2.0 /( ((AFloat) n) + ((AFloat) m)) );
-
-   for (size_t i = 0; i < m; i++) {
-      for (size_t j = 0; j < n; j++) {
-         AFloat value = rand.Gaus(0.0, sigma);
-         if ( std::abs(value) > 2*sigma) continue; 
-         B(i,j) = rand.Gaus(0.0, sigma);
-      }
+   TCudaHostBuffer<AFloat> xhost(n);
+   for (size_t i = 0; i < n; i++) {
+      AFloat value =  rand.Gaus(0.0, sigma); 
+      if ( std::abs(value) > 2*sigma) continue; 
+      xhost[i] = rand.Gaus(0, sigma);
    }
-   A = B; 
+   A.GetDeviceBuffer().CopyFrom(xhost); 
 }
 
 //______________________________________________________________________________
@@ -114,51 +110,47 @@ void TCuda<AFloat>::InitializeGlorotNormal(TCudaMatrix<AFloat> & A)
 /// This initialization is also called Xavier uniform
 /// see Glorot & Bengio, AISTATS 2010 - http://jmlr.org/proceedings/papers/v9/glorot10a/glorot10a.pdf
 template<typename AFloat>
-void TCuda<AFloat>::InitializeGlorotUniform(TCudaMatrix<AFloat> & A)
-{
-   size_t m,n;
-   m = A.GetNrows();
-   n = A.GetNcols();
+void TCudnn<AFloat>::InitializeGlorotUniform(TCudaTensor<AFloat> & A)
+{\
+   // n is the size of the tensor
+   size_t n = A.GetSize();
 
    TRandom &  rand = GetRandomGenerator();
-   TMatrixT<AFloat> B(m, n);
+   Double_t range = sqrt(6.0 /( (Double_t) n) );
 
-   AFloat range = sqrt(6.0 /( ((AFloat) n) + ((AFloat) m)) );
-
-   for (size_t i = 0; i < m; i++) {
-      for (size_t j = 0; j < n; j++) {
-         B(i,j) = rand.Uniform(-range, range);
-      }
+   TCudaHostBuffer<AFloat> xhost(n);
+   for (size_t i = 0; i < n; i++) {
+      xhost[i] = rand.Uniform(-range, range);
    }
-   printf("initialize glorotuniform \n");
-   B.Print(); 
-   A = B; 
+   A.GetDeviceBuffer().CopyFrom(xhost); 
 }
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::InitializeIdentity(TCudaMatrix<AFloat> & A)
+void TCudnn<AFloat>::InitializeIdentity(TCudaTensor<AFloat> & A)
 {
    size_t m,n;
-   m = A.GetNrows();
-   n = A.GetNcols();
+   m = A.GetFirstSize();
+   n = A.GetFirstStride();
+   // assume weight trnsor is like a matrix M x N 
    TMatrixT<AFloat> B(m, n);
 
    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n ; j++) {
          B(i,j) = 0.0;
       }
-
       if (i < n) {
          B(i,i) = 1.0;
       }
    }
-   A = B;
+   TCudaMatrix<AFloat> mB = B; 
+   A.GetDeviceBuffer() = mB.GetDeviceBuffer(); 
+   PrintTensor(A,"A after init Identity");
 }
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::InitializeZero(TCudaMatrix<AFloat> & A)
+void TCudnn<AFloat>::InitializeZero(TCudaTensor<AFloat> & A)
 {
    // use fast zero initialization on the device
    A.Zero();

@@ -69,6 +69,19 @@ public:
       return dim3(1, gridDim);
    }
 
+    /* Return 2D dim3 object representing the block grid consisting of two-dimensional
+    * BlockDimX x BlockDimY blocks covering a 2D  matrix with nrows x ncols (assume columnmajor storage */
+   static dim3 GridDims2D(int nrows, int ncols)
+   {
+      int gridDimX = ncols / TDevice::BlockDimX;
+      if ((ncols % TDevice::BlockDimX) != 0)
+          gridDimX += 1;
+      int gridDimY = nrows / TDevice::BlockDimY;
+      if ((nrows % TDevice::BlockDimY) != 0)
+          gridDimY += 1;
+      return dim3(gridDimX, gridDimY);
+   }
+
    /* Return 2D dim3 object representing the block grid consisting of two-dimensional
     * BlockDimX x BlockDimY blocks covering the matrix A */
    template<typename AMatrix>

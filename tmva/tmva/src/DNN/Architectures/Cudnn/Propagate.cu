@@ -19,79 +19,35 @@
 
 #include "TMVA/DNN/CNN/ConvLayer.h"
 
-/*#include "TMVA/DNN/Architectures/Cuda.h"
-#include "TMVA/DNN/Architectures/Cuda/Device.h"
-#include "Kernels.cuh"*/
-#include <math.h>
+#include "TMVA/DNN/Architectures/Cuda.h"
+
+// #include "TMVA/DNN/Architectures/Cuda/Device.h"
+// #include "Kernels.cuh"*/
+// #include <math.h>
 
 namespace TMVA {
 namespace DNN  {
 
-//____________________________________________________________________________
-/*template<>
-void TCudnn<float>::MultiplyTranspose(TCudaTensor<float> &output,
-                                      const TCudaTensor<float> &input,
-                                      const TCudaTensor<float> &Weights)
-{
-   int m, n, k;
-   k = input.GetNcols();
-   m = input.GetNrows();
-   n = Weights.GetNrows();
-   float alpha = 1.0, beta = 0.0;
 
-   // Compute C = beta * C + alpha * (A * B^T)
-   cudaStream_t s = output.GetComputeStream();
-   cublasSetStream(input.GetCublasHandle(), s);
-   cublasSgemm(input.GetCublasHandle(),
-               CUBLAS_OP_N, CUBLAS_OP_T,
-               m, n, k, & alpha,
-               input.GetDataPointer(), m,     // *A, lda
-               Weights.GetDataPointer(), n,   // *B, ldb
-               & beta,                        // beta
-               output.GetDataPointer(), m);   // *C, ldc
+//____________________________________________________________________________
+template<typename AFloat>
+void TCudnn<AFloat>::MultiplyTranspose(TCudaTensor<AFloat> &output,
+                                       const TCudaTensor<AFloat> &input,
+                                       const TCudaTensor<AFloat> &weights)
+{
+   TCuda<AFloat>::MultiplyTranspose(output, input, weights.GetMatrix());
 }
 
 //____________________________________________________________________________
-template<>
-void TCudnn<double>::MultiplyTranspose(TCudaTensor<double> &output,
-                                       const TCudaTensor<double> &input,
-                                       const TCudaTensor<double> &Weights)
+template<typename AFloat>
+void TCudnn<AFloat>::AddRowWise(TCudaTensor<AFloat> &output,
+                                const TCudaTensor<AFloat> &biases)
 {
-   int m, n, k;
-   k = input.GetNcols();
-   m = input.GetNrows();
-   n = Weights.GetNrows();
-   double alpha = 1.0, beta = 0.0;
-
-   // Compute C = beta * C + alpha * (A * B^T)
-   cudaStream_t s = output.GetComputeStream();
-   cublasSetStream(input.GetCublasHandle(), s);
-   cublasDgemm(input.GetCublasHandle(),
-               CUBLAS_OP_N, CUBLAS_OP_T,
-               m, n, k, & alpha,
-               input.GetDataPointer(), m,     // *A, lda
-               Weights.GetDataPointer(), n,   // *B, ldb
-               & beta,                        // beta
-               output.GetDataPointer(), m);   // *C, ldc
-}*/
+   TCuda<AFloat>::AddRowWise( output, biases.GetMatrix());
+}
 
 //____________________________________________________________________________
-/*template<typename AFloat>
-void TCudnn<AFloat>::AddRowWise(TCudaTensor<AFloat> &Weights,
-                                const TCudaTensor<AFloat> &theta)
-{
-   dim3 blockDims = TDevice::BlockDims2D();
-   dim3 gridDims  = TDevice::GridDims2D(Weights);
-   cudaStream_t s = Weights.GetComputeStream();
-   ::TMVA::DNN::Cuda::AddRowWise<<<gridDims, blockDims, 0, s>>>(
-       Weights.GetDataPointer(),
-       theta.GetDataPointer(),
-       Weights.GetNrows(),
-       Weights.GetNcols());
-}*/
-
-//____________________________________________________________________________
-/*template<typename AFloat>
+template<typename AFloat>
 void TCudnn<AFloat>::Backward(TCudaTensor<AFloat> & activation_gradients_backward,
                               TCudaTensor<AFloat> & weight_gradients,
                               TCudaTensor<AFloat> & bias_gradients,
@@ -100,25 +56,17 @@ void TCudnn<AFloat>::Backward(TCudaTensor<AFloat> & activation_gradients_backwar
                               const TCudaTensor<AFloat> & weights,
                               const TCudaTensor<AFloat> & activation_backward)
 {
-   // Compute element-wise product.
-   TCudnn<AFloat>::Hadamard(df, activation_gradients);
-
-   // Activation gradients.
-   if (activation_gradients_backward.GetNoElements() > 0) {
-      TCudnn<AFloat>::Multiply(activation_gradients_backward, df, weights);
-   }
-
-   // Weight gradients.
-   if (weight_gradients.GetNoElements() > 0) {
-      TCudnn<AFloat>::TransposeMultiply(weight_gradients, df, activation_backward);
-   }
-
-   // Bias gradients.
-   if (bias_gradients.GetNoElements() > 0) {
-      TCudnn<AFloat>::SumColumns(bias_gradients, df);
-   }
-
-}*/
+   // use implentation from TCuda 
+   TCudaMatrix<AFloat> weightGradMatrix = weight_gradients.GetMatrix(); 
+   TCudaMatrix<AFloat> biasGradMatrix = bias_gradients.GetMatrix(); 
+   TCuda<AFloat>::Backward(activation_gradients_backward,
+                              weightGradMatrix,
+                              biasGradMatrix,
+                              df,
+                              activation_gradients,
+                              weights.GetMatrix(), 
+                              activation_backward);
+}
 
 //____________________________________________________________________________
 template<typename AFloat>
@@ -237,6 +185,8 @@ void TCudnn<AFloat>::ConvLayerForward(Tensor_t & outputTensor,
    cudnnDataType_t   cudnnDataType;
    if      (std::is_same<AFloat, double>::value) { cudnnDataType = CUDNN_DATA_DOUBLE;}
    else if (std::is_same<AFloat, float>::value)  { cudnnDataType = CUDNN_DATA_FLOAT;}
+
+   PrintTensor(input ,"input tensor");
   
    // Set the  filter parameters
    CUDNNCHECK(cudnnSetFilter4dDescriptor(descriptors.WeightsDescriptor,
@@ -304,7 +254,7 @@ void TCudnn<AFloat>::ConvLayerForward(Tensor_t & outputTensor,
    TCudnn<AFloat>::Copy(inputActivation, outputTensor);
 
    // Apply activation
-   TCudnn<AFloat>::Activation(outputTensor, activFunc, descriptors.HelperDescriptor, 0.0, 1.0, 0.0);
+   TCudnn<AFloat>::ActivationFunctionForward(outputTensor, activFunc, descriptors.HelperDescriptor, 0.0, 1.0, 0.0);
    
    //TCudnn<AFloat>::PrintTensor(outputTensor, "after activation");
    
@@ -321,6 +271,7 @@ void TCudnn<AFloat>::ConvLayerBackward(Tensor_t &activationGradientsBackward,
                                        const Matrix_t &weights,
                                        const Tensor_t &activationBackward,
                                        const Tensor_t &outputTensor,
+                                       EActivationFunction activFunc,
                                        const ConvDescriptors_t & descriptors,
                                        size_t /*batchSize*/,   size_t /*inputHeight*/, 
                                        size_t /*inputWidth*/,  size_t /*depth*/, 
@@ -348,7 +299,8 @@ void TCudnn<AFloat>::ConvLayerBackward(Tensor_t &activationGradientsBackward,
    // dy : Gradient of activation from the following layer (backpropagation)-> activationGradients
    
    //if (descriptors.HelperDescriptor)
-   ActivationFunctionBackward(outputTensor, activationGradients, inputActivation, activationGradients, descriptors.HelperDescriptor);  //y dy x dx
+   ActivationFunctionBackward(activationGradients, outputTensor, activationGradients, inputActivation, 
+                              activFunc, descriptors.HelperDescriptor);  //y dy x dx
    
    //--------------------------------------------------------------------------
    // Network Activation gradient
@@ -703,49 +655,14 @@ void TCudnn<AReal>::Rearrange(std::vector<TCudaTensor<AReal>> &out, const std::v
 ///
 /// \param[out] A Output matrix.
 /// \param[in] B Input vector. Each element is a matrix to be concatenated.
-/// \param[in] size Number of matrices in the input vector.
-/// \param[in] nRows Number of rows in each matrix of the input vector.
-/// \param[in] nCols Number of columns on each matrix of the input vector.
 ///
-/// Each row in the output matrix is the concatenation of the same row in
-/// each of the input matrices. Passing an std::vector to a CUDA kernel is
-/// a non trivial task that requires manually allocating and copying to device
-/// memory - details in comments within the function's body. Launching one
-/// thread per output element.
 //////////////////////////////////////////////////////////////////////////////////
-/*template<typename AFloat>
+template<typename AFloat>
 void TCudnn<AFloat>::Flatten(TCudaTensor<AFloat> &A,
-                            const std::vector<TCudaTensor<AFloat>> &B,
-                            size_t size,
-                            size_t nRows,
-                            size_t nCols)
+                            const TCudaTensor<AFloat> &B)
 {
-   dim3 blockDims = TDevice::BlockDims2D();
-   dim3 gridDims  = TDevice::GridDims2D(A);
-   cudaStream_t s = A.GetComputeStream();
-
-   // Get raw pointers from a vector of matrices - this is more challenging than it sounds.
-   //
-   // Attention: While `TCudaTensor.GetDataPointer() returns a pointer to device memory,
-   //            std::vector (and its .data() raw pointer) resides on host memory. Therefore
-   //            we need to manually copy these pointers to the device prior to invoking the kernel.
-
-   const AFloat ** dB; // device pointer to device pointers.S
-   const AFloat ** hB = new const AFloat * [size]; // host pointer to device pointers.
-
-   cudaMalloc(&dB, sizeof(AFloat *) * size);
-   for(size_t i = 0; i < size; ++i) {
-      hB[i] = B[i].GetDataPointer();
-   }
-
-   cudaMemcpy(dB, hB, sizeof(AFloat *) * size, cudaMemcpyHostToDevice);
-
-   // Launch the kernel using our device pointers.
-   ::TMVA::DNN::Cuda::Flatten<<<gridDims, blockDims>>>(A.GetDataPointer(), dB, size, nRows, nCols);
-
-   delete [] hB; 
-   cudaFree(dB); 
-}*/
+   TCuda<AFloat>::Flatten(A,B); 
+}
 
 //____________________________________________________________________________
 ////////////////////////////////////////////////////////////////////////////////
@@ -753,50 +670,14 @@ void TCudnn<AFloat>::Flatten(TCudaTensor<AFloat> &A,
 ///
 /// \param[out] A Output matrices. Each element will be a part of the input.
 /// \param[in] B Input flat matrix.
-/// \param[in] size Number of matrices in the output vector.
-/// \param[in] nRows Number of rows in each matrix of the output vector.
-/// \param[in] nCols Number of columns on each matrix of the output vector.
 ///
-/// Each row in the input matrix is the concatenation of the same row in
-/// each of the output matrices. Passing an std::vector to a CUDA kernel is
-/// a non trivial task that requires manually allocating and copying to device
-/// memory - details in comments within the function's body. Launching one
-/// thread per input element.
 //////////////////////////////////////////////////////////////////////////////////
-/*template<typename AFloat>
-void TCudnn<AFloat>::Deflatten(std::vector<TCudaTensor<AFloat>> &A,
-                              const TCudaTensor<AFloat> &B,
-                              size_t size,
-                              size_t nRows,
-                              size_t nCols)
+template<typename AFloat>
+void TCudnn<AFloat>::Deflatten(TCudaTensor<AFloat> &A,
+                              const TCudaTensor<AFloat> &B)
 {
-    dim3 blockDims = TDevice::BlockDims2D();
-    dim3 gridDims  = TDevice::GridDims2D(B);
-    cudaStream_t s = B.GetComputeStream();
-
-    // Get raw pointers from a vector of matrices - this is more challenging than it sounds.
-    //
-    // Attention: While `TCudaTensor.GetDataPointer() returns a pointer to device memory,
-    //            std::vector (and its .data() raw pointer) resides on host memory. Therefore
-    //            we need to manually copy these pointers to the device prior to invoking the kernel.
-
-    AFloat ** dA; // device pointer to device pointers.
-    AFloat ** hA = new AFloat * [size]; // host pointer to device pointers.
-
-    cudaMalloc(&dA, sizeof(AFloat *) * size);
-
-    for(size_t i = 0; i < size; ++i) {
-        hA[i] = A[i].GetDataPointer();
-    }
-
-    cudaMemcpy(dA, hA, sizeof(AFloat *) * size, cudaMemcpyHostToDevice);
-
-    // Launch the kernel using our device pointers.
-    ::TMVA::DNN::Cuda::Deflatten<<<gridDims, blockDims>>>(dA, B.GetDataPointer(), size, nRows, nCols);
-
-    cudaFree(dA); 
-    delete [] hA; 
-}*/
+   TCuda<AFloat>::Deflatten(A,B); 
+}
 
 } // namespace DNN
 } // namespace TMVA

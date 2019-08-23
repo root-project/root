@@ -46,9 +46,9 @@ bool test1()
 {
 
     size_t batchSizeTest = 2;
-    size_t imgDepthTest = 2;
-    size_t imgHeightTest = 4;
-    size_t imgWidthTest = 4;
+    size_t imgDepthTest = 1;
+    size_t imgHeightTest = 3;
+    size_t imgWidthTest = 3;
     size_t batchDepth = batchSizeTest;
     size_t batchHeight = imgDepthTest;
     size_t batchWidth = imgWidthTest*  imgHeightTest;
@@ -83,18 +83,25 @@ bool test2()
 
 int main()
 {
-    std::cout << "Testing CNN Backward Pass:" << std::endl;
-    std::cout << "Test1, backward pass with linear activation network - compare with finite difference" << std::endl;
+    std::cout << "Testing CNN Backward Pass on Cuda (GPU)" << std::endl;
+    std::cout << "Test1: backward pass with linear activation network - compare with finite difference" << std::endl;
 
-    if (!test1()) {
-        std::cerr << "ERROR - test1 failed " << std::endl;
-        return -1;
-    }
+   // fix random initialization
+   gRandom->SetSeed(12345);
+   TCuda<double>::SetRandomSeed(12346);
 
-    std::cout << "Test2, more complex network architecture no dropout" << std::endl;
-    if (!test2()) {
-        std::cerr << "ERROR - test1 failed " << std::endl;
-        return -1;
-    }
+
+   if (!test1()) {
+      std::cerr << "ERROR - test1 failed " << std::endl;
+      return -1;
+   }
+   std::cout << ">>>>>>   Test1 :    OK !!!!";
+
+   std::cout << "\n\n\n\nTest2: more complex network architecture no dropout" << std::endl;
+   if (!test2()) {
+      std::cerr << "ERROR - test2 failed " << std::endl;
+      return -1;
+   }
+    std::cout << ">>>>>>   Test2 :    OK !!!!";
 }
 
