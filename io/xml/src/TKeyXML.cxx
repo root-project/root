@@ -161,7 +161,10 @@ void TKeyXML::StoreKeyAttributes()
    if (f->GetIOVersion() > 1) {
       if (strlen(GetTitle()) > 0)
          xml->NewAttr(fKeyNode, nullptr, xmlio::Title, GetTitle());
-      xml->NewAttr(fKeyNode, nullptr, xmlio::CreateTm, fDatime.AsSQLString());
+      if (f->TestBit(TFile::kReproducible))
+         xml->NewAttr(fKeyNode, nullptr, xmlio::CreateTm, TDatime((UInt_t) 1).AsSQLString());
+      else
+         xml->NewAttr(fKeyNode, nullptr, xmlio::CreateTm, fDatime.AsSQLString());
    }
 }
 

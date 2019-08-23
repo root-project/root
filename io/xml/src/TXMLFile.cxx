@@ -479,13 +479,22 @@ void TXMLFile::SaveToFile()
    if (GetIOVersion() > 1) {
 
       fXML->FreeAttr(fRootNode, xmlio::CreateTm);
-      fXML->NewAttr(fRootNode, nullptr, xmlio::CreateTm, fDatimeC.AsSQLString());
+      if (TestBit(TFile::kReproducible))
+         fXML->NewAttr(fRootNode, nullptr, xmlio::CreateTm, TDatime((UInt_t) 1).AsSQLString());
+      else
+         fXML->NewAttr(fRootNode, nullptr, xmlio::CreateTm, fDatimeC.AsSQLString());
 
       fXML->FreeAttr(fRootNode, xmlio::ModifyTm);
-      fXML->NewAttr(fRootNode, nullptr, xmlio::ModifyTm, fDatimeM.AsSQLString());
+      if (TestBit(TFile::kReproducible))
+         fXML->NewAttr(fRootNode, nullptr, xmlio::ModifyTm, TDatime((UInt_t) 1).AsSQLString());
+      else
+         fXML->NewAttr(fRootNode, nullptr, xmlio::ModifyTm, fDatimeM.AsSQLString());
 
       fXML->FreeAttr(fRootNode, xmlio::ObjectUUID);
-      fXML->NewAttr(fRootNode, nullptr, xmlio::ObjectUUID, fUUID.AsString());
+      if (TestBit(TFile::kReproducible))
+         fXML->NewAttr(fRootNode, nullptr, xmlio::ObjectUUID, TUUID("00000000-0000-0000-0000-000000000000").AsString());
+      else
+         fXML->NewAttr(fRootNode, nullptr, xmlio::ObjectUUID, fUUID.AsString());
 
       fXML->FreeAttr(fRootNode, xmlio::Title);
       if (strlen(GetTitle()) > 0)
