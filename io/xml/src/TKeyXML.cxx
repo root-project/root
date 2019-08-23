@@ -22,7 +22,6 @@
 #include "TXMLFile.h"
 #include "TClass.h"
 #include "TROOT.h"
-#include "TBrowser.h"
 
 ClassImp(TKeyXML);
 
