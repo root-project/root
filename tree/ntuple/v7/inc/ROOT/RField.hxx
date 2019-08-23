@@ -102,7 +102,7 @@ private:
          fNumSiblingFields = GetNumSiblings(field);
       }
       int GetNumSiblings(const RFieldBase *field = nullptr) const {
-         if(field)
+         if (field && field->GetParent())
             return static_cast<int>(field->GetParent()->fSubFields.size());
          return fNumSiblingFields;
       }
