@@ -1,5 +1,5 @@
-#ifndef __FOREST_H_
-#define __FOREST_H_
+#ifndef __FOREST_OLD_H_
+#define __FOREST_OLD_H_
 
 #include "json.hpp"
 #include <fstream>

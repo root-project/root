@@ -1,5 +1,5 @@
 CXX = g++ #mpicxx # clang #
-CXXFLAGS =  -std=c++11 -fopenmp -g# -stdlib=libc++
+CXXFLAGS =  -std=c++11 -fopenmp  -O3  #-g -stdlib=libc++
 
 ROOT_FLAGS = `root-config --cflags --glibs`
 

@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "bdt_helpers.h"
+#include "bdt_helpers.hxx"
 
 TEST(helpersBDT, test_write_vector_vector)
 {

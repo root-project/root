@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
-#include "forest.h"
-#include "bdt_helpers.h"
+#include "forest.hxx"
+#include "bdt_helpers.hxx"
 
 //#include <xgboost/c_api.h> // for xgboost
 //#include "generated_files/evaluate_forest2.h"
@@ -16,15 +16,44 @@ TEST(forestBDT, UniquePredictions)
    std::vector<bool>                     preds;
    preds.reserve(events_vector.size());
 
-   Forest<unique_bdt::Tree> Forest;
-   Forest.get_Forest(json_model_file, true);
-   Forest.do_predictions(events_vector, preds);
+   ForestBranched<float> Forest;
+   Forest.LoadFromJson("lala", json_model_file);
+   int rows = 5;
+   int cols = 5;
+   Forest.inference(events_vector, rows, cols, preds);
 
    for (size_t i = 0; i < preds.size(); i++) {
       ASSERT_EQ(preds[i], groundtruth[i][0]);
    }
 }
 
+TEST(forestBDT, ArrayPredictions)
+{
+   std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
+   std::vector<std::vector<bool>>  groundtruth   = read_csv<bool>(preds_file);
+   std::vector<bool>               preds;
+   preds.reserve(events_vector.size());
+
+   ForestBranchless<float> Forest;
+   Forest.LoadFromJson("lala", json_model_file);
+   int rows = 5;
+   int cols = 5;
+   Forest.inference(events_vector, rows, cols, preds);
+
+   for (size_t i = 0; i < preds.size(); i++) {
+      ASSERT_EQ(preds[i], groundtruth[i][0]);
+   }
+
+   preds.clear();
+
+   Forest.inference(events_vector.data(), rows, cols, preds);
+
+   for (size_t i = 0; i < preds.size(); i++) {
+      ASSERT_EQ(preds[i], groundtruth[i][0]);
+   }
+}
+
+/*
 TEST(forestBDT, UniqueBatchPredictions)
 {
 
@@ -61,21 +90,7 @@ TEST(forestBDT, UniqueBatch2Predictions)
    }
 }
 
-TEST(forestBDT, ArrayPredictions)
-{
-   std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
-   std::vector<std::vector<bool>>  groundtruth   = read_csv<bool>(preds_file);
-   std::vector<bool>               preds;
-   preds.reserve(events_vector.size());
 
-   Forest<array_bdt::Tree> Forest;
-   Forest.get_Forest(json_model_file);
-   Forest.do_predictions(events_vector, preds);
-
-   for (size_t i = 0; i < preds.size(); i++) {
-      ASSERT_EQ(preds[i], groundtruth[i][0]);
-   }
-}
 
 TEST(forestBDT, JitForestPredictions)
 {
@@ -127,3 +142,4 @@ TEST(forestBDT, JitPredictionsAll)
       ASSERT_EQ(preds[i], groundtruth[i][0]);
    }
 }
+*/
