@@ -696,20 +696,20 @@ Released on August 23, 2019
 
 ### Bugs and Issues fixed in this release
 
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-4756'>ROOT-4756</a>] -         RooFit: Fitting in multiple disjoint ranges broken
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-6260'>ROOT-6260</a>] -         data looses their name when copying a RooWorkspace
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-6988'>ROOT-6988</a>] -         Make `enum`'s underlying type available
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-8935'>ROOT-8935</a>] -         cppyy confused about type of an `enum`
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-9647'>ROOT-9647</a>] -         Cannot configure with `-Droottest=ON` when using a release tarball
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-9708'>ROOT-9708</a>] -         Automatic first checkout of roottest fails if not on master
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-10188'>ROOT-10188</a>] -         `RooDataSet`s with large weight array cannot be serialised
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-10227'>ROOT-10227</a>] -         [TreeProcMT] Last cluster in processed `TTree` is dropped under specific circumstances
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-10232'>ROOT-10232</a>] -         Crash after dictionaries are not found with ROOT 6.18.00
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-10242'>ROOT-10242</a>] -         `RooMCStudy` crashes when requesting pulls for parameters that don't have pulls
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-10259'>ROOT-10259</a>] -         `RooDataSet::add` has side effects on event weight error
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-10269'>ROOT-10269</a>] -         [DF] `RSlotStack` sometimes runs out of slots (preliminary fix)
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-10279'>ROOT-10279</a>] -         `enum class` crashes PyROOT
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-8777'>ROOT-8777</a>] -         Making it possible to turn off the `stdout` message in `RooMCStudy`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-4756'>ROOT-4756</a>] -         RooFit: Fitting in multiple disjoint ranges broken
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-6260'>ROOT-6260</a>] -         data looses their name when copying a RooWorkspace
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-6988'>ROOT-6988</a>] -         Make `enum`'s underlying type available
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-8935'>ROOT-8935</a>] -         cppyy confused about type of an `enum`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9647'>ROOT-9647</a>] -         Cannot configure with `-Droottest=ON` when using a release tarball
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9708'>ROOT-9708</a>] -         Automatic first checkout of roottest fails if not on master
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10188'>ROOT-10188</a>] -         `RooDataSet`s with large weight array cannot be serialised
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10227'>ROOT-10227</a>] -         [TreeProcMT] Last cluster in processed `TTree` is dropped under specific circumstances
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10232'>ROOT-10232</a>] -         Crash after dictionaries are not found with ROOT 6.18.00
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10242'>ROOT-10242</a>] -         `RooMCStudy` crashes when requesting pulls for parameters that don't have pulls
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10259'>ROOT-10259</a>] -         `RooDataSet::add` has side effects on event weight error
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10269'>ROOT-10269</a>] -         [DF] `RSlotStack` sometimes runs out of slots (preliminary fix)
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10279'>ROOT-10279</a>] -         `enum class` crashes PyROOT
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-8777'>ROOT-8777</a>] -         Making it possible to turn off the `stdout` message in `RooMCStudy`
 
 
 ## HEAD of the v6-18-00-patches branch
