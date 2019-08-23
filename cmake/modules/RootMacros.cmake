@@ -504,16 +504,33 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
                              ${runtime_cxxmodule_dependencies}
                      COMMAND_EXPAND_LISTS)
 
+  # If we are adding to an existing target and it's not the dictionary itself,
+  # we make an object library and add its output object file as source to the target.
+  # This works around bug https://cmake.org/Bug/view.php?id=14633 in CMake by keeping
+  # the generated source at the same scope level as its owning target, something that
+  # would not happen if we used target_sources() directly with the dictionary source.
   if(ARG_NOTARGET)
-    if(TARGET ${ARG_MODULE})
-      target_sources(${ARG_MODULE} PRIVATE ${dictionary}.cxx)
-      if(PROJECT_NAME STREQUAL "ROOT")
-        set_property(GLOBAL APPEND PROPERTY ROOT_PCH_DEPENDENCIES ${ARG_MODULE})
-      endif()
-    else()
+    if(NOT TARGET "${ARG_MODULE}")
       message(FATAL_ERROR
         " When used with NOTARGET, the MODULE option must be passed with the name of an existing target.\n"
         " The dictionary source is then attached to this target instead of a custom dictionary target.")
+    endif()
+
+    add_library(${dictionary} OBJECT ${dictionary}.cxx)
+    set_target_properties(${dictionary} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+    target_sources(${ARG_MODULE} PRIVATE $<TARGET_OBJECTS:${dictionary}>)
+
+    target_compile_options(${dictionary} PRIVATE
+      $<TARGET_PROPERTY:${ARG_MODULE},COMPILE_OPTIONS>)
+
+    target_compile_definitions(${dictionary} PRIVATE
+      ${definitions} $<TARGET_PROPERTY:${ARG_MODULE},COMPILE_DEFINITIONS>)
+
+    target_include_directories(${dictionary} PRIVATE
+      ${includedirs} $<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>)
+
+    if(PROJECT_NAME STREQUAL "ROOT")
+      set_property(GLOBAL APPEND PROPERTY ROOT_PCH_DEPENDENCIES ${dictionary})
     endif()
   else()
     add_custom_target(${dictionary} DEPENDS ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file})
@@ -547,7 +564,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif()
   endif()
 
-  if(ARG_BUILTINS AND NOT ARG_NOTARGET)
+  if(ARG_BUILTINS)
     foreach(arg1 ${ARG_BUILTINS})
       if(TARGET ${${arg1}_TARGET})
         add_dependencies(${dictionary} ${${arg1}_TARGET})
