@@ -3467,26 +3467,6 @@ bool IsImplementationName(const std::string &filename)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns >0 if argument is to be ignored.
-/// If 1, just skip that argument. If 2, that argument takes a parameter
-/// "-arg param" thus skip both.
-
-int ShouldIgnoreClingArgument(const std::string& argument)
-{
-   auto vetos = {"-pipe", "-fPIC", "-fpic",
-                 "-fno-plt", "--save-temps" };
-
-   for (auto veto : vetos) {
-      if (argument == veto) return 1;
-   }
-
-   if (ROOT::TMetaUtils::BeginsWith(argument, "--gcc-toolchain="))
-      return 1;
-
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Check if the argument is a sane cling argument. Performing the following checks:
 /// 1) It does not start with "--" and is not the --param option.
 
@@ -4068,15 +4048,10 @@ int RootClingMain(int argc,
             continue;
          }
 
-         if (int skip = ShouldIgnoreClingArgument(argv[ic])) {
-            ic += skip;
-            continue;
-         } else {
-            // filter out even more undesirable options
-            if (strcmp("-p", argv[ic])) {
-               CheckForMinusW(argv[ic], diagnosticPragmas);
-               clingArgs.push_back(llvm::sys::path::convert_to_slash(argv[ic]));
-            }
+         // filter out even more undesirable options
+         if (strcmp("-p", argv[ic])) {
+            CheckForMinusW(argv[ic], diagnosticPragmas);
+            clingArgs.push_back(llvm::sys::path::convert_to_slash(argv[ic]));
          }
       } else if (nextStart == 0) {
          nextStart = ic;
@@ -4369,42 +4344,37 @@ int RootClingMain(int argc,
          // ROOT::TMetaUtils::Error(0, "%s: option -c must come directly after the output file\n", argv[0]);
          // return 1;
       }
-      if (int skip = ShouldIgnoreClingArgument(argv[ic])) {
-         i += (skip - 1); // for-loop takes care of the extra 1.
-         continue;
-      } else {
-         // filter out undesirable options
+      // filter out undesirable options
 
-         if (*argv[i] != '-' && *argv[i] != '+') {
-            // Looks like a file
+      if (*argv[i] != '-' && *argv[i] != '+') {
+         // Looks like a file
 
-            bool isSelectionFile = IsSelectionFile(argv[i]);
+         bool isSelectionFile = IsSelectionFile(argv[i]);
 
-            // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
-            std::string fullheader(argv[i]);
-            // Strip any trailing + which is only used by GeneratedLinkdef.h which currently
-            // use directly argv.
-            if (fullheader[fullheader.length() - 1] == '+') {
-               fullheader.erase(fullheader.length() - 1);
-            }
-            std::string header(
-               isSelectionFile ? fullheader
-                               : ROOT::FoundationUtils::MakePathRelative(fullheader, currentDirectory, gBuildingROOT));
+         // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
+         std::string fullheader(argv[i]);
+         // Strip any trailing + which is only used by GeneratedLinkdef.h which currently
+         // use directly argv.
+         if (fullheader[fullheader.length() - 1] == '+') {
+            fullheader.erase(fullheader.length() - 1);
+         }
+         std::string header(
+            isSelectionFile ? fullheader
+                            : ROOT::FoundationUtils::MakePathRelative(fullheader, currentDirectory, gBuildingROOT));
 
-            interpPragmaSource += std::string("#include \"") + header + "\"\n";
-            if (!isSelectionFile) {
-               // In order to not have to add the equivalent to -I${PWD} to the
-               // command line, include the complete file name, even if it is a
-               // full pathname, when we write it down in the dictionary.
-               // Note: have -I${PWD} means in that (at least in the case of
-               // ACLiC) we inadvertently pick local file that have the same
-               // name as system header (e.g. new or list) and -iquote has not
-               // equivalent on some platforms.
-               includeForSource += std::string("#include \"") + fullheader + "\"\n";
-               pcmArgs.push_back(header);
-            } else if (!IsSelectionXml(argv[i])) {
-               interpreterDeclarations += std::string("#include \"") + header + "\"\n";
-            }
+         interpPragmaSource += std::string("#include \"") + header + "\"\n";
+         if (!isSelectionFile) {
+            // In order to not have to add the equivalent to -I${PWD} to the
+            // command line, include the complete file name, even if it is a
+            // full pathname, when we write it down in the dictionary.
+            // Note: have -I${PWD} means in that (at least in the case of
+            // ACLiC) we inadvertently pick local file that have the same
+            // name as system header (e.g. new or list) and -iquote has not
+            // equivalent on some platforms.
+            includeForSource += std::string("#include \"") + fullheader + "\"\n";
+            pcmArgs.push_back(header);
+         } else if (!IsSelectionXml(argv[i])) {
+            interpreterDeclarations += std::string("#include \"") + header + "\"\n";
          }
       }
    }
