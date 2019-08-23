@@ -26,6 +26,8 @@ public:
    void inference(const T *events_vector, unsigned int rows, unsigned int cols, std::vector<bool> &preds);
    void inference(const T *events_vector, unsigned int rows, unsigned int cols, std::vector<bool> &preds,
                   unsigned int loop_size); // Batched version
+   void inference(const std::vector<std::vector<T>> &events_vector, unsigned int rows, unsigned int cols,
+                  std::vector<bool> &preds);
 };
 
 /// Branched version of the Forest (unique_ptr representation)
@@ -78,7 +80,21 @@ void ForestBase<T, Dummy>::inference(const T *events_vector, unsigned int rows, 
    for (size_t i = 0; i < rows; i++) {
       preds_tmp = 0;
       for (auto &tree : static_cast<Dummy &>(*this).trees) {
-         preds_tmp += tree.inference(events_vector[i * cols]);
+         preds_tmp += tree.inference(events_vector + i * cols); //[i * cols]
+      }
+      preds.push_back(this->objective_func(preds_tmp));
+   }
+}
+
+template <typename T, typename Dummy>
+void ForestBase<T, Dummy>::inference(const std::vector<std::vector<T>> &events_vector, unsigned int rows,
+                                     unsigned int cols, std::vector<bool> &preds)
+{
+   T preds_tmp;
+   for (size_t i = 0; i < rows; i++) {
+      preds_tmp = 0;
+      for (auto &tree : static_cast<Dummy &>(*this).trees) {
+         preds_tmp += tree.inference(events_vector[i].data()); //[i * cols]
       }
       preds.push_back(this->objective_func(preds_tmp));
    }
@@ -89,7 +105,7 @@ void ForestBranchedJIT<T>::inference(const T *events_vector, unsigned int rows, 
                                      std::vector<bool> &preds)
 {
    for (size_t i = 0; i < rows; i++) {
-      preds.push_back(this->jitted_forest(i * cols));
+      preds.push_back(this->jitted_forest(events_vector + i * cols));
    }
 }
 

@@ -24,6 +24,7 @@ public:
    void             set_array_length(const size_t &array_length) { this->array_length = array_length; }
    void             set_tree_depth(const int &tree_depth) { this->tree_depth = tree_depth; }
    inline T         inference(const std::vector<T> &);
+   inline T         inference(const T *event);
    inline T         inference_conditional(const std::vector<T> &);
    std::vector<T>   thresholds; // scores if it is a leaf
    std::vector<int> features;
@@ -43,6 +44,15 @@ inline T Tree<T>::inference_conditional(const std::vector<T> &event)
 
 template <typename T>
 inline T Tree<T>::inference(const std::vector<T> &event)
+{
+   size_t index = 0;
+   for (unsigned int iLevel = 0; iLevel < this->tree_depth; ++iLevel) {
+      index = 2 * index + 1 + (int)(event[this->features[index]] > this->thresholds[index]);
+   }
+   return this->thresholds[index];
+}
+template <typename T>
+inline T Tree<T>::inference(const T *event)
 {
    size_t index = 0;
    for (unsigned int iLevel = 0; iLevel < this->tree_depth; ++iLevel) {

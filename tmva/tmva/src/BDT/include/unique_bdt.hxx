@@ -43,6 +43,7 @@ public:
    std::unique_ptr<Node<T>> nodes;
 
    inline T inference(const std::vector<T> &event) { return nodes->inference(event); }
+   inline T inference(const T *event) { return nodes->inference(event); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
