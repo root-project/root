@@ -110,7 +110,7 @@ protected:
 
    virtual void DoCreate(const RNTupleModel &model) = 0;
    virtual RClusterDescriptor::RLocator DoCommitPage(ColumnHandle_t columnHandle, const RPage &page) = 0;
-   virtual void DoCommitCluster(NTupleSize_t nEntries) = 0;
+   virtual RClusterDescriptor::RLocator DoCommitCluster(NTupleSize_t nEntries) = 0;
    virtual void DoCommitDataset() = 0;
 
 public:
