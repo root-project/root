@@ -539,12 +539,13 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif()
   endif()
 
-  if (runtime_cxxmodules AND ARG_MULTIDICT AND NOT ARG_NOTARGET)
-    set (main_pcm_target "G__${ARG_MODULE}")
-    if (NOT TARGET ${main_pcm_target})
-      message(FATAL_ERROR "Target ${main_pcm_target} not found! Please move ${main_pcm_target} before specifying MULTIDICT.")
+  if(ARG_MULTIDICT)
+    if(NOT TARGET "G__${ARG_MODULE}")
+      message(FATAL_ERROR
+        " Target G__${ARG_MODULE} not found!\n"
+        " Please create target G__${ARG_MODULE} before using MULTIDICT.")
     endif()
-    add_dependencies(${main_pcm_target} ${dictionary})
+    add_dependencies(G__${ARG_MODULE} ${dictionary})
   endif()
 
   if(NOT ARG_NOINSTALL AND NOT CMAKE_ROOTTEST_DICT AND DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
