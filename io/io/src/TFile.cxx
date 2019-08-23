@@ -496,9 +496,9 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    // Connect to file system stream
    if (create || update) {
 #ifndef WIN32
-      fD = SysOpen(fname, O_RDWR | O_CREAT, 0644);
+      fD = TFile::SysOpen(fname, O_RDWR | O_CREAT, 0644);
 #else
-      fD = SysOpen(fname, O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
+      fD = TFile::SysOpen(fname, O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
 #endif
       if (fD == -1) {
          SysError("TFile", "file %s can not be opened", fname);
@@ -507,9 +507,9 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
       fWritable = kTRUE;
    } else {
 #ifndef WIN32
-      fD = SysOpen(fname, O_RDONLY, 0644);
+      fD = TFile::SysOpen(fname, O_RDONLY, 0644);
 #else
-      fD = SysOpen(fname, O_RDONLY | O_BINARY, S_IREAD | S_IWRITE);
+      fD = TFile::SysOpen(fname, O_RDONLY | O_BINARY, S_IREAD | S_IWRITE);
 #endif
       if (fD == -1) {
          SysError("TFile", "file %s can not be opened for reading", fname);
@@ -518,7 +518,8 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
       fWritable = kFALSE;
    }
 
-   Init(create);
+   // calling virtual methods from constructor not a good idea, but it is how code was developed
+   TFile::Init(create); // NOLINT: silence clang-tidy warnings
 
    return;
 
