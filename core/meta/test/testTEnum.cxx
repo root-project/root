@@ -12,7 +12,6 @@ TEST(TEnum, UnderlyingType)
 enum E0 { kE0One };
 enum E1 { kE1One = LONG_MAX };
 enum E2 { kE2One = ULONG_MAX };
-enum E3: char { kE3One };
 
 enum Eb: bool { kEbOne };
 enum Euc: unsigned char { kEucOne };
@@ -51,7 +50,6 @@ enum class ECcl: short;
    EXPECT_EQ(TEnum::GetEnum("E0")->GetUnderlyingType(), TDataType::GetType(typeid(std::underlying_type<E0>::type)));
    EXPECT_EQ(TEnum::GetEnum("E1")->GetUnderlyingType(), TDataType::GetType(typeid(std::underlying_type<E1>::type)));
    EXPECT_EQ(TEnum::GetEnum("E2")->GetUnderlyingType(), TDataType::GetType(typeid(std::underlying_type<E2>::type)));
-   EXPECT_EQ(TEnum::GetEnum("E3")->GetUnderlyingType(), kChar_t);
 
    EXPECT_EQ(TEnum::GetEnum("Eb")->GetUnderlyingType(), kBool_t);
    EXPECT_EQ(TEnum::GetEnum("Euc")->GetUnderlyingType(), kUChar_t);
