@@ -322,7 +322,7 @@ foreach(opt ${root_build_options})
   endif()
 endforeach()
 
-#---ROOT 7 requires C++14 standard or higher---------------------------------------------------
+#---ROOT 7 requires C++17 standard or higher---------------------------------------------------
 if(NOT CMAKE_CXX_STANDARD GREATER 14)
   set(root7_defvalue OFF)
 endif()
