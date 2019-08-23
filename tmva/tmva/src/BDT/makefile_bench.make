@@ -17,9 +17,9 @@ ROOT_FLAGS = `root-config --cflags --glibs`
 
 LIBFLAGS = -L -Llib  -lpthread -lbenchmark
 
-DEPS = include/jitted_bdt.h include/forest.h
+DEPS = #include/jitted_bdt.h include/forest.h
 
-OBJS = build/benchmark.o build/unique_bdt.o
+OBJS = build/benchmark.o
 EXE = mybenchmark.exe
 
 .PHONY : all clean distclean

@@ -449,4 +449,66 @@ BENCHMARK(BM_EvalXgboostBdt)
    });
 // */
 
+/// -----------------------------------------   Test pointers
+static volatile int global_var = 0;
+
+void my_int_func(int x)
+{
+   global_var = x + x + 3;
+   benchmark::DoNotOptimize(global_var);
+   benchmark::DoNotOptimize(x);
+}
+
+static void AAA_RawFunctionPointer(benchmark::State &state)
+{
+   void (*bar)(int) = &my_int_func;
+   srand(time(nullptr));
+   for (auto _ : state) {
+      bar(rand());
+      benchmark::DoNotOptimize(my_int_func);
+      benchmark::DoNotOptimize(bar);
+   }
+}
+
+static void AAA_StdFunction(benchmark::State &state)
+{
+   std::function<void(int)> bar = my_int_func;
+   srand(time(nullptr));
+   for (auto _ : state) {
+      bar(rand());
+      benchmark::DoNotOptimize(my_int_func);
+      benchmark::DoNotOptimize(bar);
+   }
+}
+
+static void AAA_StdBind(benchmark::State &state)
+{
+   auto bar = std::bind(my_int_func, std::placeholders::_1);
+   srand(time(nullptr));
+   for (auto _ : state) {
+      bar(rand());
+      benchmark::DoNotOptimize(my_int_func);
+      benchmark::DoNotOptimize(bar);
+   }
+}
+
+static void AAA_Lambda(benchmark::State &state)
+{
+   auto bar = [](int x) {
+      global_var = x + x + 3;
+      benchmark::DoNotOptimize(global_var);
+      benchmark::DoNotOptimize(x);
+   };
+   srand(time(nullptr));
+   for (auto _ : state) {
+      bar(rand());
+      benchmark::DoNotOptimize(my_int_func);
+      benchmark::DoNotOptimize(bar);
+   }
+}
+BENCHMARK(AAA_RawFunctionPointer);
+BENCHMARK(AAA_StdBind);
+BENCHMARK(AAA_StdFunction);
+BENCHMARK(AAA_Lambda);
+
 BENCHMARK_MAIN();

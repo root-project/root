@@ -124,10 +124,10 @@ if __name__ == "__main__":
         create_model_gaussian(
             num_samples=10000,
             num_features=value_test,
-            num_trees=100,
+            num_trees=3000,
             max_depth=3,
             data_folder=DATA_FOLDER,
-            save_models=False,
+            save_models=True,
         )
         subprocess.call("./bench.sh".split(), shell=True)
         fname, mins, means, stddevs = get_benchs_data("./data/a.txt")

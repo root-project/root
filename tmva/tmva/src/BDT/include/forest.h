@@ -12,12 +12,12 @@
 #include <array>
 #include <utility>
 
-#include "unique_bdt.h"
-#include "array_bdt.h"
-#include "jitted_bdt.h"
+#include "unique_bdt.hxx"
+#include "array_bdt.hxx"
+#include "jit_code_generators.hxx"
+#include "jit_functions.hxx"
 #include "bdt_helpers.h"
 
-#include "TInterpreter.h" // for gInterpreter
 
 using json = nlohmann::json;
 
@@ -82,6 +82,7 @@ public:
 template <class T>
 int Forest<T>::counter = 0;
 
+/*
 template <class T>
 void Forest<T>::read_events_csv(std::string csv_file)
 {
@@ -90,7 +91,7 @@ void Forest<T>::read_events_csv(std::string csv_file)
    } else {
       this->events_vector = read_csv<float>(this->events_file);
    }
-}
+}*/
 
 /// Default do_predictions (unique representation)
 template <class T>

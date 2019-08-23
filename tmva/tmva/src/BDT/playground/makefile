@@ -14,7 +14,7 @@ CPPFLAGS = -I../include \
  LIB_DIR= -L$(XGBOOST_ROOT)/lib
 
 OBJS = build/arrayBdtPreds.o build/uniqueBdtPreds.o \
-			build/uniqueBdtBatch.o build/unique_bdt.o \
+			build/uniqueBdtBatch.o \
 			 build/JitForestBdtPreds.o build/JitForestBdtAll.o\
 			 build/JitForestBdtAll_Static.o build/xgboostBdt.o\
 			 build/JitForestBranchless.o
@@ -78,9 +78,6 @@ build/uniqueBdtPreds.o: uniqueBdtPreds.cxx
 build/arrayBdtPreds.o: arrayBdtPreds.cxx
 		$(CXX) $(CXXFLAGS) $(ROOT_FLAGS) -c $< -o $@ $(CPPFLAGS)
 
-
-build/unique_bdt.o:  ../src/unique_bdt.cxx
-		$(CXX) $(CXXFLAGS) $(ROOT_FLAGS) -c $< -o $@ $(CPPFLAGS)
 
 clean :
 	$(RM) build/*.o *.o

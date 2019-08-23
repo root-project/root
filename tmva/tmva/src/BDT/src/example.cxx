@@ -14,4 +14,6 @@ int main()
 {
    JittedForest<float> model;
    model.LoadFromJson("model.json");
+
+   RBDT<float, JittedForest> bdt("model.json");
 }

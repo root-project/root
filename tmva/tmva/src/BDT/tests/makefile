@@ -26,7 +26,7 @@ CPPFLAGS = -I../include \
  -I$(GOOGLE_TEST_LIB) \
  #-I$(GOOGLE_TEST_INCLUDE)
 
-OBJS = build/testAll.o  build/unique_bdt.o
+OBJS = build/testAll.o
 EXE = testAll.exe
 
 .PHONY : all clean distclean
@@ -37,9 +37,6 @@ testAll.exe: $(OBJS)
 		$(CXX) $(CXXFLAGS) -o $@  $^  $(LD_FLAGS) $(ROOT_FLAGS) $(XGBOOST_ROOT)/lib/libxgboost.so
 
 build/testAll.o: testAll.cxx
-		$(CXX) $(CXXFLAGS) $(ROOT_FLAGS) -c $< -o $@ $(CPPFLAGS)
-
-build/unique_bdt.o:  ../src/unique_bdt.cxx
 		$(CXX) $(CXXFLAGS) $(ROOT_FLAGS) -c $< -o $@ $(CPPFLAGS)
 
 clean :
