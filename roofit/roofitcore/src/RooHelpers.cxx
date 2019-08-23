@@ -66,14 +66,30 @@ HijackMessageStream::~HijackMessageStream() {
 }
 
 
+/// \param[in] Class that's calling. Needed to include name and type name of the class in error message.
+/// \param[in] pars List of all parameters to be checked.
+/// \param[in] min Minimum of allowed range. `min` itself counts is disallowed.
+/// \param[in] max Maximum of allowed range. `max` itself counts is disallowed.
 void checkRangeOfParameters(const RooAbsReal* callingClass, std::initializer_list<const RooAbsReal*> pars,
     double min, double max) {
   for (auto parameter : pars) {
     auto par = dynamic_cast<const RooAbsRealLValue*>(parameter);
     if (par && (par->getMin() <= min || par->getMax() >= max) ) {
-      oocoutE(callingClass, Eval) << "The parameter '" << par->GetName() << "' with range [" << par->getMin("") << ", "
+      std::stringstream rangeMsg;
+      rangeMsg << "]";
+      if (min > -std::numeric_limits<double>::max())
+        rangeMsg << min << ", ";
+      else
+        rangeMsg << "-inf, ";
+
+      if (max < std::numeric_limits<double>::max())
+        rangeMsg << max << "[";
+      else
+        rangeMsg << "inf[";
+
+      oocoutE(callingClass, InputArguments) << "The parameter '" << par->GetName() << "' with range [" << par->getMin("") << ", "
           << par->getMax() << "] of the " << callingClass->IsA()->GetName() << " '" << callingClass->GetName()
-          << "' exceeds the safe range of [" << min << ", " << max << "]. Advise to limit its range." << std::endl;
+          << "' exceeds the safe range of " << rangeMsg.str() << ". Advise to limit its range." << std::endl;
     }
   }
 }

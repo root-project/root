@@ -43,26 +43,24 @@ Also note, that in this case it is equivalent to
 RooPoison(N,mu) and treating the function as a PDF in mu.
 **/
 
-#include "RooFit.h"
-
-#include "Riostream.h"
-#include "Riostream.h"
-#include <math.h>
-
 #include "RooGamma.h"
+
+#include "RooFit.h"
+#include "Riostream.h"
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooRandom.h"
 #include "RooMath.h"
+#include "RooHelpers.h"
 
-#include <iostream>
 #include "TMath.h"
 
 #include <Math/SpecFuncMathCore.h>
 #include <Math/PdfFuncMathCore.h>
 #include <Math/ProbFuncMathCore.h>
 
-#include "TError.h"
+#include <iostream>
+#include <math.h>
 
 using namespace std;
 
@@ -79,6 +77,7 @@ RooGamma::RooGamma(const char *name, const char *title,
   beta("beta","Width",this,_beta),
   mu("mu","Para",this,_mu)
 {
+  RooHelpers::checkRangeOfParameters(this, {&_gamma, &_beta}, 0.);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -170,3 +169,5 @@ void RooGamma::generateEvent(Int_t code)
 
   return;
 }
+
+
