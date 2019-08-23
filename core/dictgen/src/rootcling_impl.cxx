@@ -3081,28 +3081,6 @@ std::ostream *CreateStreamPtrForSplitDict(const std::string &dictpathname,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Transform -W statements in diagnostic pragmas for cling reacting on "-Wno-"
-/// For example
-/// -Wno-deprecated-declarations --> #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
-void CheckForMinusW(const char *arg,
-                    std::list<std::string> &diagnosticPragmas)
-{
-   static const std::string pattern("-Wno-");
-
-   std::string localArg(arg);
-   if (localArg.find(pattern) != 0) return;
-   if (localArg == "-Wno-noexcept-type") {
-      // GCC7 warning not supported by clang 3.9
-      return;
-   }
-
-   ROOT::TMetaUtils::ReplaceAll(localArg, pattern, "#pragma clang diagnostic ignored \"-W");
-   localArg += "\"";
-   diagnosticPragmas.push_back(localArg);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 std::string GetFwdDeclnArgsToKeepString(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt,
                                         cling::Interpreter &interp)
@@ -4046,12 +4024,6 @@ int RootClingMain(int argc,
             clingArgs.push_back(argv[ic++]);
             clingArgs.push_back(argv[ic++]);
             continue;
-         }
-
-         // filter out even more undesirable options
-         if (strcmp("-p", argv[ic])) {
-            CheckForMinusW(argv[ic], diagnosticPragmas);
-            clingArgs.push_back(llvm::sys::path::convert_to_slash(argv[ic]));
          }
       } else if (nextStart == 0) {
          nextStart = ic;
