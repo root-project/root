@@ -6,7 +6,7 @@
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -16,18 +16,17 @@
 #ifndef ROOT7_RPad
 #define ROOT7_RPad
 
+#include <memory>
+#include <vector>
+
 #include "ROOT/RDrawable.hxx"
 #include "ROOT/RDrawingAttr.hxx"
 #include "ROOT/RDrawingOptsBase.hxx"
 #include "ROOT/RFrame.hxx"
-#include <ROOT/RMakeUnique.hxx>
 #include "ROOT/RPadExtent.hxx"
 #include "ROOT/RPadPos.hxx"
 #include "ROOT/RPadUserAxis.hxx"
 #include "ROOT/TypeTraits.hxx"
-
-#include <memory>
-#include <vector>
 
 namespace ROOT {
 namespace Experimental {
