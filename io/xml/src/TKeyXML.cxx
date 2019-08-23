@@ -27,13 +27,6 @@
 ClassImp(TKeyXML);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// default constructor
-
-TKeyXML::TKeyXML() : TKey(), fKeyNode(nullptr), fKeyId(0), fSubdir(kFALSE)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Creates TKeyXML and convert object data to xml structures
 
 TKeyXML::TKeyXML(TDirectory *mother, Long64_t keyid, const TObject *obj, const char *name, const char *title)
