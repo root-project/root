@@ -740,6 +740,14 @@ TEST(RNTuple, Descriptor)
    auto footerBuffer = new unsigned char[szFooter];
    reference.SerializeFooter(footerBuffer);
 
+   ASSERT_GE(szFooter, RNTupleDescriptor::kNBytesPostscript);
+   std::uint32_t szPsHeader;
+   std::uint32_t szPsFooter;
+   RNTupleDescriptor::LocateMetadata(footerBuffer + szFooter - RNTupleDescriptor::kNBytesPostscript,
+                                     szPsHeader, szPsFooter);
+   EXPECT_EQ(szHeader, szPsHeader);
+   EXPECT_EQ(szFooter, szPsFooter);
+
    RNTupleDescriptorBuilder reco;
    reco.SetFromHeader(headerBuffer);
    reco.AddClustersFromFooter(footerBuffer);
