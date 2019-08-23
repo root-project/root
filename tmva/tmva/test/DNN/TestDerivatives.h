@@ -64,11 +64,12 @@ template<typename Architecture, typename F, typename dF>
       df(X, Y);
       Scalar_t dy = X(0,0);
 
-      copyTensor(X, Y);
+      // copy from 
+      Architecture::Copy(X, Y);
       X(0,0) += dx;
       f(X);
       Scalar_t y1 = X(0,0);
-      copyTensor(X, Y);
+      Architecture::Copy(X, Y);
       X(0,0) -= dx;
       f(X);
       Scalar_t y0 = X(0,0);

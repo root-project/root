@@ -88,7 +88,7 @@ public:
    static void InitializeDescriptor(PoolingDescriptor_t &     poolingDescr);
    
    template<typename Layer_t>
-   static void ReleaseCNNDescriptors(CNN::TDescriptors * & descriptors, Layer_t *L = nullptr);
+   static void ReleaseCNNDescriptors(CNN::TDescriptors * descriptors, Layer_t *L = nullptr);
    
    static void ReleaseDescriptor(EmptyDescriptor_t &       emptyDescr) {}        // Does nothing
    static void ReleaseDescriptor(ActivationDescriptor_t &  activationDescr);
@@ -109,10 +109,10 @@ public:
       ///@{
    /** Matrix-multiply \p input with the transpose of \pweights and
     *  write the results into \p output. */
-   //static void MultiplyTranspose(Tensor_t &output, const Matrix_t &input, const Matrix_t &weights);
+   static void MultiplyTranspose(Tensor_t &output, const Tensor_t &input, const Matrix_t &weights);
 
    /** Add the vectors biases row-wise to the matrix output */
-   //static void AddRowWise(Tensor_t &output,const Matrix_t &biases);
+   static void AddRowWise(Tensor_t &output,const Matrix_t &biases);
 
    /** @name Backward Propagation (Dense Layers)
     * Low-level functions required for the forward propagation of activations
@@ -127,13 +127,13 @@ public:
     *  in \p df and thus produces only a valid result, if it is applied the
     *  first time after the corresponding forward propagation has been per-
     *  formed. */
-   /*static void Backward(Tensor_t & activationGradientsBackward,
+   static void Backward(Tensor_t & activationGradientsBackward,
                         Matrix_t & weightGradients,
                         Matrix_t & biasGradients,
                         Tensor_t & df,
                         const Tensor_t & activationGradients,
                         const Matrix_t & weights,
-                        const Tensor_t & activationBackward);*/
+                        const Tensor_t & activationBackward); 
 
    /** Above functions extended to vectors */
    static void ScaleAdd(Tensor_t & A, const Tensor_t & B,
@@ -167,14 +167,15 @@ public:
                                   const AFloat alpha = 1, 
                                   const AFloat beta = 1) {}
 
-   static void Activation(Tensor_t & X, EActivationFunction activFunct,
+   static void ActivationFunctionForward(Tensor_t & X, EActivationFunction activFunct,
                           const ActivationDescriptor_t activationDescr,
                           const double coef = 0.0, const AFloat alpha = 1, 
                           const AFloat beta = 0);
                           
    /** Computes the gradient of the activation function */
-   static void ActivationFunctionBackward(const Tensor_t & Y, const Tensor_t & dY, 
-                                          const Tensor_t & X, Tensor_t & dX,
+   static void ActivationFunctionBackward(Tensor_t & dX, const Tensor_t & Y, 
+                                          const Tensor_t & dY,  const Tensor_t & X, 
+                                          EActivationFunction activFunct,
                                           const ActivationDescriptor_t activationDescr,
                                           const AFloat alpha = 1, 
                                           const AFloat beta = 0);
@@ -236,22 +237,22 @@ public:
    static Scalar_t MeanSquaredError(const Matrix_t &Y, const Matrix_t &output,
                                     const Matrix_t &weights);
    static void MeanSquaredErrorGradients(Matrix_t &dY, const Matrix_t &Y,
-                                         const Matrix_t &output, const Matrix_t &weights) {}
+                                         const Matrix_t &output, const Matrix_t &weights);
 
    /** Sigmoid transformation is implicitly applied, thus \p output should
     *  hold the linear activations of the last layer in the net. */
    static Scalar_t CrossEntropy(const Matrix_t &Y, const Matrix_t &output,
-                                const Matrix_t &weights) {}
+                                const Matrix_t &weights);
 
    static void CrossEntropyGradients(Matrix_t &dY, const Matrix_t &Y,
-                                     const Matrix_t &output, const Matrix_t &weights) {}
+                                     const Matrix_t &output, const Matrix_t &weights);
 
    /** Softmax transformation is implicitly applied, thus \p output should
     *  hold the linear activations of the last layer in the net. */
    static Scalar_t SoftmaxCrossEntropy(const Matrix_t &Y, const Matrix_t &output,
-                                       const Matrix_t &weights) {}
+                                       const Matrix_t &weights);
    static void SoftmaxCrossEntropyGradients(Matrix_t &dY, const Matrix_t &Y,
-                                            const Matrix_t &output, const Matrix_t &weights) {}
+                                            const Matrix_t &output, const Matrix_t &weights);
    ///@}
 
    //____________________________________________________________________________
@@ -268,9 +269,9 @@ public:
     */
    ///@{
    static void Sigmoid(Matrix_t &YHat,
-                       const Matrix_t & ) {}
+                       const Matrix_t & );
    static void Softmax(Matrix_t &YHat,
-                       const Matrix_t & ) {}
+                       const Matrix_t & );
    ///@}
 
    //____________________________________________________________________________
@@ -287,12 +288,12 @@ public:
     */
    ///@{
 
-   static Scalar_t L1Regularization(const Matrix_t & W);
+   static Scalar_t L1Regularization(const Matrix_t & W) { return 0;}
    static void AddL1RegularizationGradients(Matrix_t & A,
                                             const Matrix_t & W,
                                             Scalar_t weightDecay) {}
 
-   static Scalar_t L2Regularization(const Matrix_t & W);
+   static Scalar_t L2Regularization(const Matrix_t & W) { return 0; }
    static void AddL2RegularizationGradients(Matrix_t & A,
                                             const Matrix_t & W,
                                             Scalar_t weightDecay) {}
@@ -310,19 +311,19 @@ public:
     */
    ///@{
 
-   static void InitializeGauss(Matrix_t & A) {}
-   static void InitializeUniform(Matrix_t & A) {}
-   static void InitializeIdentity(Matrix_t & A) {}
-   static void InitializeZero(Matrix_t & A) {}
-   static void InitializeGlorotNormal(Matrix_t & A) {}
-   static void InitializeGlorotUniform(Matrix_t & A) {}
+   static void InitializeGauss(Matrix_t & A);
+   static void InitializeUniform(Matrix_t & A);
+   static void InitializeIdentity(Matrix_t & A);
+   static void InitializeZero(Matrix_t & A);
+   static void InitializeGlorotNormal(Matrix_t & A); 
+   static void InitializeGlorotUniform(Matrix_t & A);
 
       // return static instance of random generator used for initialization
       // if generator does not exist it is created the first time with a random seed (e.g. seed = 0)
-   //static TRandom & GetRandomGenerator();
+   static TRandom & GetRandomGenerator();
       // set random seed for the static geenrator
       // if the static geneerator does not exists it is created
-   //static void SetRandomSeed(size_t seed);
+   static void SetRandomSeed(size_t seed); 
       ///@}
 
       //____________________________________________________________________________
@@ -386,7 +387,7 @@ public:
 
    /** Forward propagation in the Convolutional layer */
    static void ConvLayerForward(Tensor_t & output,
-                                Tensor_t & derivatives,
+                                Tensor_t & inputActivationFunc, // this is output conv w/o activ func.
                                 const Tensor_t &input,
                                 const Matrix_t &weights, const Matrix_t & biases,
                                 const DNN::CNN::TConvParams & params, EActivationFunction activFunc,
@@ -416,6 +417,7 @@ public:
                                  const Matrix_t &weights,
                                  const Tensor_t &activationBackward,
                                  const Tensor_t &outputTensor,
+                                 EActivationFunction activFunc,
                                  const ConvDescriptors_t & descriptors,
                                  size_t /*batchSize*/,   size_t /*inputHeight*/, 
                                  size_t /*inputWidth*/,  size_t /*depth*/, 
@@ -499,11 +501,11 @@ public:
 
    /** Flattens the tensor \p B, such that each matrix, is stretched in
     *  one row, resulting with a matrix \p A. */
-   //static void Flatten(Tensor_t &A, const Tensor_t &B); // size_t size, size_t nRows, size_t nCols);
+   static void Flatten(Tensor_t &A, const Tensor_t &B); 
 
    /** Transforms each row of \p B to a matrix and stores it in the
     *  tensor \p B. */
-   //static void Deflatten(Tensor_t &A, const Tensor_t &B); // size_t index, size_t nRows,size_t nCols);
+   static void Deflatten(Tensor_t &A, const Tensor_t &B); // size_t index, size_t nRows,size_t nCols);
 
    /** Rearrage data accoring to time fill B x T x D out with T x B x D matrix in*/
    //static void Rearrange(Tensor_t &out, const Tensor_t &in);
@@ -661,8 +663,9 @@ void TCudnn<AFloat>::InitializeDescriptor(PoolingDescriptor_t & poolingDescr) {
 //____________________________________________________________________________
 template<typename AFloat>
 template<typename Layer_t>
-void TCudnn<AFloat>::ReleaseCNNDescriptors(CNN::TDescriptors * & descriptors, Layer_t *L) {
-   auto cnnDescriptors = static_cast<ConvDescriptors_t &>(descriptors);
+void TCudnn<AFloat>::ReleaseCNNDescriptors(CNN::TDescriptors *  descriptors, Layer_t *L) {
+   auto cnnDescriptors = static_cast<TCudnn<AFloat>::ConvDescriptors_t *>(descriptors);
+   //auto cnnDescriptors = dynamic_cast<ConvDescriptors_t *>(descriptors);
    ReleaseDescriptor(cnnDescriptors->LayerDescriptor);
    ReleaseDescriptor(cnnDescriptors->HelperDescriptor);
    ReleaseDescriptor(cnnDescriptors->WeightsDescriptor);

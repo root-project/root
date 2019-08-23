@@ -380,6 +380,7 @@ auto TConvLayer<Architecture_t>::Backward(Tensor_t &gradients_backward,
    Architecture_t::ConvLayerBackward(
       gradients_backward, this->GetWeightGradientsAt(0), this->GetBiasGradientsAt(0), this->GetInputActivation(),
       this->GetActivationGradients(), this->GetWeightsAt(0), activations_backward, this->GetOutput(),
+      this->GetActivationFunction(),
       (TCNNDescriptors<TConvLayer<Architecture_t>> &) (*fDescriptors), this->GetBatchSize(),
       this->GetInputHeight(), this->GetInputWidth(), this->GetDepth(), this->GetHeight(), this->GetWidth(),
       this->GetFilterDepth(), this->GetFilterHeight(), this->GetFilterWidth(), this->GetNLocalViews(), 

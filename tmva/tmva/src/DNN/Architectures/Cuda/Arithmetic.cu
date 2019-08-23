@@ -152,12 +152,18 @@ void TCuda<AFloat>::Hadamard(TCudaTensor<AFloat> & B,
                              const TCudaTensor<AFloat> &A)
 {
    dim3 blockDims = TDevice::BlockDims2D();
-   dim3 gridDims  = TDevice::GridDims2D(B);
+   int ncols = A.GetFirstSize();   // ncols (size X)
+   int nrows = A.GetFirstStride(); // nrows  (y size)
+   if (ncols == 1) { 
+      ncols = A.GetWSize(); 
+      nrows = A.GetHSize(); 
+   }
+   
+   dim3 gridDims  = TDevice::GridDims2D(nrows, ncols);
    cudaStream_t s = A.GetComputeStream();
    ::TMVA::DNN::Cuda::Hadamard<<<gridDims, blockDims, 0, s>>>(B.GetDataPointer(),
                                                               A.GetDataPointer(),
-                                                              A.GetNrows(),
-                                                              A.GetNcols());
+                                                              nrows,ncols);
    B.SetComputeStream(s);
 }
 

@@ -135,12 +135,12 @@ void TCpu<AFloat>::AddRowWise(TCpuMatrix<AFloat> &output, const TCpuMatrix<AFloa
 
 template <typename AFloat>
 void TCpu<AFloat>::Backward(TCpuTensor<AFloat> &activationGradientsBackward, TCpuMatrix<AFloat> &weightGradients,
-                            TCpuMatrix<AFloat> &biasGradients, TCpuTensor<AFloat> &df,
+                            TCpuMatrix<AFloat> &biasGradients, const TCpuTensor<AFloat> &df,
                             const TCpuTensor<AFloat> &activationGradients, const TCpuMatrix<AFloat> &weights,
                             const TCpuTensor<AFloat> &activationsBackward)
 {
    // Compute element-wise product.
-   Hadamard(df, activationGradients);
+   //Hadamard(df, activationGradients);
 
    Matrix_t df_m = df.GetMatrix(); 
 
@@ -158,6 +158,8 @@ void TCpu<AFloat>::Backward(TCpuTensor<AFloat> &activationGradientsBackward, TCp
    // Bias gradients.
    if (biasGradients.GetNoElements() > 0) SumColumns(biasGradients, df_m);
 }
+
+
 
 //____________________________________________________________________________
 template <typename AFloat>
@@ -357,7 +359,7 @@ size_t TCpu<AFloat>::calculateDimension(size_t imgDim, size_t fltDim, size_t pad
 //____________________________________________________________________________
 template <typename AFloat>
 void TCpu<AFloat>::ConvLayerForward(TCpuTensor<AFloat> & output,
-                                    TCpuTensor<AFloat> & derivatives,
+                                    TCpuTensor<AFloat> & inputActivationFunc,
                                     const TCpuTensor<AFloat> &input,
                                     const TCpuMatrix<AFloat> &weights, const TCpuMatrix<AFloat> & biases,
                                     const DNN::CNN::TConvParams & params, EActivationFunction activFunc,
@@ -400,20 +402,25 @@ void TCpu<AFloat>::ConvLayerForward(TCpuTensor<AFloat> & output,
 
    TCpuMatrix<AFloat>::GetThreadExecutor().Foreach(f, ROOT::TSeqI(input.GetFirstSize()));
 
-   evaluateDerivative<TCpu<AFloat>>(derivatives, activFunc, output);
-   evaluate<TCpu<AFloat>>(output, activFunc);
+   //evaluateDerivative<TCpu<AFloat>>(derivatives, activFunc, output);
+   // need to save output of convolution (input to activation function)
+   Copy(inputActivationFunc, output);
+
+   //evaluate<TCpu<AFloat>>(output, activFunc);
+   ActivationFunctionForward(output, activFunc, DummyActivationDescriptor());
 }
 
 //____________________________________________________________________________
 template <typename AFloat>
 void TCpu<AFloat>::ConvLayerBackward(TCpuTensor<AFloat> &activationGradientsBackward,
                                      TCpuMatrix<AFloat> &weightGradients, TCpuMatrix<AFloat> &biasGradients,
-                                     TCpuTensor<AFloat> &df,
+                                     TCpuTensor<AFloat> &inputActivationFunc,
                                      TCpuTensor<AFloat> &activationGradients,
                                      const TCpuMatrix<AFloat> &weights,
                                      const TCpuTensor<AFloat> &activationsBackward,
-                                     const Tensor_t & /*outputTensor*/,
-                                     const ConvDescriptors_t & /*descriptors*/,
+                                     const Tensor_t &  outputTensor,
+                                     EActivationFunction activFunc,
+                                     const ConvDescriptors_t & /* descriptors */,
                                      size_t batchSize,   size_t inputHeight, 
                                      size_t inputWidth,  size_t depth, 
                                      size_t height,      size_t width,
@@ -428,8 +435,13 @@ void TCpu<AFloat>::ConvLayerBackward(TCpuTensor<AFloat> &activationGradientsBack
    //    n = activationGradients[0].GetNcols();
 
  
-   // Compute element-wise product.
-   Hadamard(df, activationGradients);
+   // Compute activation backward pass  dx = f'(x) * dy  
+   //  put resulting dx of activation in activationgradients
+   Tensor_t df(activationGradients.GetShape() );   // this is a deep copy, could be put as data member of class
+   ActivationFunctionBackward(df, outputTensor, activationGradients, inputActivationFunc, 
+                              activFunc, DummyActivationDescriptor() );
+
+   // Hadamard(df, activationGradients);
    
 
    // Calculate the activation gradients of the previous layer

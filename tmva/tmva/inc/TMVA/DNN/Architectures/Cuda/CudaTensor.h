@@ -245,8 +245,7 @@ public:
    bool isEqual (const AFloat * hostBufferOther, size_t otherSize) {
       if (fSize != otherSize) return false;
       
-      /*TCudaHostBuffer<AFloat> hostBufferThis (fSize);
-      fElementBuffer.CopyTo(hostBufferThis);*/
+      //TCudaHostBuffer<AFloat> hostBufferThis (fSize);
       
       std::unique_ptr<AFloat[]> hostBufferThis(new AFloat[fSize]);
       cudaMemcpy(hostBufferThis.get(), fElementBuffer, fSize * sizeof(AFloat),
@@ -260,8 +259,8 @@ public:
    }
 
    void Print() const {
-      /*TCudaBuffer<AFloat> hostBuffer (fSize);
-      fElementBuffer.CopyTo(hostBuffer);*/
+      //TCudaBuffer<AFloat> hostBuffer (fSize);
+      //fElementBuffer.CopyTo(hostBuffer);
       
       AFloat hostBuffer[fSize]; 
 
@@ -309,11 +308,19 @@ public:
    size_t GetNcols() const { return (GetLayout() == MemoryLayout::ColumnMajor ) ? fShape.back() : fShape.front(); }
 
 
-      // Matrix conversion for tensors of shape 2
+   // Matrix conversion for tensors of shape 2
    TCudaMatrix<AFloat> GetMatrix() const  {
-     assert(GetShape().size() == 2 || (GetShape().size() == 3 && GetFirstSize() == 1));
-      // t.b.d should squeeze the tensor
-      return TCudaMatrix<AFloat>(fElementBuffer, GetHSize(), GetWSize());
+      if (fNDim == 2 || (fNDim == 3 && GetFirstSize() == 1)) 
+         return TCudaMatrix<AFloat>(fElementBuffer, GetHSize(), GetWSize());
+      
+      if  (GetLayout() == MemoryLayout::ColumnMajor ) { 
+         for (int i = 2; i < fNDim; ++i)  assert( fShape[i] == 1);
+         return TCudaMatrix<AFloat>(fElementBuffer, fShape[0], fShape[1]);
+      }
+      else {   // remember TCudaMatrix is always column-major
+         for (int i = 0; i < fNDim-2; ++i)  assert( fShape[i] == 1);
+         return TCudaMatrix<AFloat>(fElementBuffer, fShape[fNDim-1], fShape[fNDim-2]);
+      }
    }
 
    static inline std::vector<std::size_t> ComputeStridesFromShape(const std::vector<std::size_t> &shape, 
@@ -322,6 +329,7 @@ public:
    void Reshape(const Shape_t & newShape) {
       fShape   = newShape;
       fStrides = ComputeStridesFromShape(fShape, fMemoryLayout == MemoryLayout::RowMajor);
+      fNDim = fShape.size(); 
    }
    
    // return slice of tensor

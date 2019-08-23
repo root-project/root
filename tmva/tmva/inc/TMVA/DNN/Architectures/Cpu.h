@@ -138,7 +138,7 @@ public:
    static void Backward(Tensor_t & activationGradientsBackward,
                         Matrix_t & weightGradients,
                         Matrix_t & biasGradients,
-                        Tensor_t & df,
+                        const Tensor_t & df,
                         const Tensor_t & activationGradients,
                         const Matrix_t & weights,
                         const Tensor_t & activationBackward);
@@ -196,6 +196,19 @@ public:
     Tensor_t tA(A);
     evaluate<TCpu<AReal>>(tA,f);
    }*/
+
+   static void ActivationFunctionForward(Tensor_t & X, EActivationFunction activFunct,
+                          const ActivationDescriptor_t activationDescr,
+                          const double coef = 0.0, const Scalar_t alpha = 1, 
+                          const Scalar_t beta = 0);
+
+   /** Computes the gradient of the activation function */
+   static void ActivationFunctionBackward(Tensor_t & dX, const Tensor_t & Y, 
+                                          const Tensor_t & dY,  const Tensor_t & X, 
+                                          EActivationFunction activFunct,
+                                          const ActivationDescriptor_t activationDescr,
+                                          const Scalar_t alpha = 1, 
+                                          const Scalar_t beta = 0);
 
    static void IdentityDerivative(Tensor_t & B,
                                   const Tensor_t &A);
@@ -395,7 +408,7 @@ public:
 
    /** Forward propagation in the Convolutional layer */
    static void ConvLayerForward(Tensor_t & output,
-                                Tensor_t & derivatives,
+                                Tensor_t & inputActivationFunc,
                                 const Tensor_t &input,
                                 const Matrix_t &weights, const Matrix_t & biases,
                                 const DNN::CNN::TConvParams & params, EActivationFunction activFunc,
@@ -421,7 +434,8 @@ public:
                                  Tensor_t &activationGradients,
                                  const Matrix_t &weights,
                                  const Tensor_t &activationBackward,
-                                 const Tensor_t & /*outputTensor*/,
+                                 const Tensor_t &  outputTensor,
+                                 EActivationFunction activFunc,
                                  const ConvDescriptors_t & /*descriptors*/, 
                                  size_t batchSize,   size_t inputHeight, 
                                  size_t inputWidth,  size_t depth, 
@@ -609,7 +623,7 @@ public:
    static void AdamUpdateSecondMom(Matrix_t & A, const Matrix_t & B, Scalar_t beta);
 
    // printing of tensor
-   static void PrintTensor( const Tensor_t & A, const std::string name = "tensor");
+   static void PrintTensor( const Tensor_t & A, const std::string name = "Cpu-tensor");
 
 };
 
@@ -650,7 +664,7 @@ void TCpu<Real_t>::CopyDiffArch(std::vector<TCpuMatrix<Real_t>> &A, const std::v
 template <typename Real_t>
 void TCpu<Real_t>::PrintTensor(const typename TCpu<Real_t>::Tensor_t & A, const std::string name ) 
 {
-   std::cout << name << " tensor size = " << A.GetSize() << " shape = { "; 
+   std::cout << name << " size = " << A.GetSize() << " shape = { "; 
    auto shape = A.GetShape(); 
    for (size_t k = 0; k < shape.size()-1; ++k)
       std::cout << shape[k] << " , ";
@@ -666,7 +680,7 @@ void TCpu<Real_t>::PrintTensor(const typename TCpu<Real_t>::Tensor_t & A, const 
          for (size_t j = 0; j < A.GetShape()[1]; ++j) {
             std::cout << A(i,j) << " ";
          }
-         std::cout << " } " << std::endl;      
+         std::cout << " } " << std::endl;
       }
    } else if  (A.GetShape().size() == 3 ) {
       for (size_t i = 0; i < A.GetFirstSize(); ++i) {
@@ -679,15 +693,14 @@ void TCpu<Real_t>::PrintTensor(const typename TCpu<Real_t>::Tensor_t & A, const 
             std::cout << " } " << std::endl;
          }
          std::cout << " } " << std::endl;
-      }    
+      }
    }
    else {  
       for (size_t l = 0; l < A.GetSize(); ++l) {
          std::cout << A.GetData()[l] << " ";
       }
+      std::cout << "\n";
    }  
-   std::cout << "\n";
-   std::cout << "********\n";
 }
 
 
