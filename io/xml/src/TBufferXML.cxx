@@ -45,7 +45,6 @@ There are limitations for complex objects like TTree, which can not be converted
 #include "TMethodCall.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
-#include "TFile.h"
 #include "TMemberStreamer.h"
 #include "TStreamer.h"
 #include "RZip.h"
@@ -53,21 +52,10 @@ There are limitations for complex objects like TTree, which can not be converted
 ClassImp(TBufferXML);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-TBufferXML::TBufferXML()
-   : TBufferText(), TXMLSetup(), fXML(nullptr), fStack(), fVersionBuf(-111), fErrorFlag(0), fCanUseCompact(kFALSE),
-     fExpectedBaseClass(nullptr), fCompressLevel(0), fIOVersion(3)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Creates buffer object to serialize/deserialize data to/from xml.
 /// Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
-TBufferXML::TBufferXML(TBuffer::EMode mode)
-   : TBufferText(mode), TXMLSetup(), fXML(nullptr), fStack(), fVersionBuf(-111), fErrorFlag(0), fCanUseCompact(kFALSE),
-     fExpectedBaseClass(nullptr), fCompressLevel(0), fIOVersion(3)
+TBufferXML::TBufferXML(TBuffer::EMode mode) : TBufferText(mode)
 {
 }
 
@@ -77,8 +65,7 @@ TBufferXML::TBufferXML(TBuffer::EMode mode)
 /// Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
 TBufferXML::TBufferXML(TBuffer::EMode mode, TXMLFile *file)
-   : TBufferText(mode, file), TXMLSetup(*file), fXML(nullptr), fStack(), fVersionBuf(-111), fErrorFlag(0),
-     fCanUseCompact(kFALSE), fExpectedBaseClass(nullptr), fCompressLevel(0), fIOVersion(3)
+   : TBufferText(mode, file), TXMLSetup(*file)
 {
    // this is for the case when StreamerInfo reads elements from
    // buffer as ReadFastArray. When it checks if size of buffer is
@@ -282,11 +269,9 @@ void *TBufferXML::XmlReadAny(XMLNodePointer_t node, void *obj, TClass **cl)
 // stored in TBuffer. For example, data for parent class(es)
 // stored in subnodes, but initial object node will be kept.
 
-class TXMLStackObj : public TObject {
+class TXMLStackObj {
 public:
-   TXMLStackObj(XMLNodePointer_t node)
-      : TObject(), fNode(node), fInfo(nullptr), fElem(nullptr), fElemNumber(0), fCompressedClassNode(kFALSE),
-        fClassNs(nullptr), fIsStreamerInfo(kFALSE), fIsElemOwner(kFALSE)
+   TXMLStackObj(XMLNodePointer_t node) : fNode(node)
    {
    }
 
@@ -298,14 +283,14 @@ public:
 
    Bool_t IsStreamerInfo() const { return fIsStreamerInfo; }
 
-   XMLNodePointer_t fNode;
-   TStreamerInfo *fInfo;
-   TStreamerElement *fElem;
-   Int_t fElemNumber;
-   Bool_t fCompressedClassNode;
-   XMLNsPointer_t fClassNs;
-   Bool_t fIsStreamerInfo;
-   Bool_t fIsElemOwner;
+   XMLNodePointer_t fNode{nullptr};
+   TStreamerInfo *fInfo{nullptr};
+   TStreamerElement *fElem{nullptr};
+   Int_t fElemNumber{0};
+   Bool_t fCompressedClassNode{kFALSE};
+   XMLNsPointer_t fClassNs{nullptr};
+   Bool_t fIsStreamerInfo{kFALSE};
+   Bool_t fIsElemOwner{kFALSE};
 };
 
 ////////////////////////////////////////////////////////////////////////////////
