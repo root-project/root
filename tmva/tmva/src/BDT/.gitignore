@@ -12,6 +12,8 @@ benchs
 dataset/
 files/
 *.root
+*.svm
+./*.txt
 
 # Prerequisites
 *.d
