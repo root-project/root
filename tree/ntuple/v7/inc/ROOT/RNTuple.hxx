@@ -126,7 +126,7 @@ public:
    /// The user imposes an ntuple model, which must be compatible with the model found in the data on storage
    RNTupleReader(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSource> source);
    /// The model is generated from the ntuple metadata on storage
-   RNTupleReader(std::unique_ptr<Detail::RPageSource> source);
+   explicit RNTupleReader(std::unique_ptr<Detail::RPageSource> source);
    std::unique_ptr<RNTupleReader> Clone() { return std::make_unique<RNTupleReader>(fSource->Clone()); }
    ~RNTupleReader();
 
