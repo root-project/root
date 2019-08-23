@@ -349,7 +349,6 @@ class NotebookDrawer(object):
     Capture the canvas which is drawn and decide if it should be displayed using
     jsROOT.
     '''
-    jsUID = 0
 
     def __init__(self, theObject):
         self.drawableObject = theObject
@@ -373,10 +372,13 @@ class NotebookDrawer(object):
     def _getUID(self):
         '''
         Every DIV containing a JavaScript snippet must be unique in the
-        notebook. This methods provides a unique identifier.
+        notebook. This method provides a unique identifier.
+        With the introduction of JupyterLab, multiple Notebooks can exist
+        simultaneously on the same HTML page. In order to ensure a unique
+        identifier with the UID throughout all open Notebooks the UID is
+        generated as a timestamp.
         '''
-        NotebookDrawer.jsUID += 1
-        return NotebookDrawer.jsUID
+        return int(round(time.time() * 1000))
 
     def _canJsDisplay(self):
         if not TBufferJSONAvailable():
