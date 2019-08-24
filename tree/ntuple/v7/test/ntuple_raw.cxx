@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
 #include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleDS.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RPageStorageRaw.hxx>
 
@@ -68,9 +69,9 @@ TEST(RNTuple, Basics)
 }
 
 
-TEST(RNTuple, RealWorld1)
+TEST(RNTuple, Extended)
 {
-   FileRaii fileGuard("test_ntuple_rawfile_ext.root");
+   FileRaii fileGuard("test_ntuple_rawfile_ext.ntuple");
 
    auto model = RNTupleModel::Create();
    auto wrVector = model->MakeField<std::vector<double>>("vector");
@@ -89,6 +90,8 @@ TEST(RNTuple, RealWorld1)
             chksumWrite += val;
          }
          ntuple.Fill();
+         if (i % 1000 == 0)
+            ntuple.CommitCluster();
       }
    }
 
@@ -103,4 +106,10 @@ TEST(RNTuple, RealWorld1)
    }
 
    EXPECT_EQ(chksumRead, chksumWrite);
+
+   ROOT::EnableImplicitMT();
+   auto rdf = ROOT::Experimental::MakeNTupleDataFrame("f", fileGuard.GetPath());
+   auto minLenght = *rdf.Define("vecSize", "vector.size()").Min("vecSize");
+   EXPECT_GE(1, minLenght);
+   EXPECT_LE(minLenght, 1000);
 }
