@@ -52,6 +52,11 @@ ROOT::Experimental::Detail::RRawFileDavix::~RRawFileDavix()
       fFileDes->pos.close(fFileDes->fd, nullptr);
 }
 
+std::unique_ptr<ROOT::Experimental::Detail::RRawFile> ROOT::Experimental::Detail::RRawFileDavix::Clone() const
+{
+   return std::make_unique<RRawFileDavix>(fUrl, fOptions);
+}
+
 std::uint64_t ROOT::Experimental::Detail::RRawFileDavix::DoGetSize()
 {
    struct stat buf;

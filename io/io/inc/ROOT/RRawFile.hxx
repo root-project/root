@@ -16,6 +16,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <string>
 
 namespace ROOT {
@@ -37,7 +38,7 @@ class RRawFile;
  * If the transport protocol part and the :// separator are missing, the default protocol is local file. Files are
  * opened when required (on reading, getting file size) and closed on object destruction.
  *
- * RRawFiles manage system respources and are therefore made non-copyable.
+ * RRawFiles manage system respources and are therefore made non-copyable. They can be explicitly cloned though.
  */
 class RRawFile {
 public:
@@ -111,6 +112,9 @@ public:
    RRawFile(const RRawFile &) = delete;
    RRawFile &operator=(const RRawFile &) = delete;
    virtual ~RRawFile();
+
+   /// Create a new RawFile that accesses the same resource.  The file pointer is reset to zero.
+   virtual std::unique_ptr<RRawFile> Clone() const = 0;
 
    /// Factory method that returns a suitable concrete implementation according to the transport in the url
    static RRawFile *Create(std::string_view url, ROptions options = ROptions());

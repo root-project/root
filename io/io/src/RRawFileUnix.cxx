@@ -17,6 +17,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -35,6 +36,11 @@ ROOT::Experimental::Detail::RRawFileUnix::~RRawFileUnix()
 {
    if (fFileDes >= 0)
       close(fFileDes);
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RRawFile> ROOT::Experimental::Detail::RRawFileUnix::Clone() const
+{
+   return std::make_unique<RRawFileUnix>(fUrl, fOptions);
 }
 
 std::uint64_t ROOT::Experimental::Detail::RRawFileUnix::DoGetSize()
