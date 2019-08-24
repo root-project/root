@@ -47,24 +47,24 @@ TEST(RNTuple, Basics)
    auto wrPt = model->MakeField<float>("pt", 42.0);
 
    {
-      RNTupleWriter ntuple(std::move(model), std::make_unique<RPageSinkRaw>("f", fileGuard.GetPath()));
-      ntuple.Fill();
-      ntuple.CommitCluster();
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+      ntuple->Fill();
+      ntuple->CommitCluster();
       *wrPt = 24.0;
-      ntuple.Fill();
+      ntuple->Fill();
       *wrPt = 12.0;
-      ntuple.Fill();
+      ntuple->Fill();
    }
 
-   RNTupleReader ntuple(std::make_unique<RPageSourceRaw>("f", fileGuard.GetPath()));
-   EXPECT_EQ(3U, ntuple.GetNEntries());
-   auto rdPt = ntuple.GetModel()->GetDefaultEntry()->Get<float>("pt");
+   auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
+   EXPECT_EQ(3U, ntuple->GetNEntries());
+   auto rdPt = ntuple->GetModel()->GetDefaultEntry()->Get<float>("pt");
 
-   ntuple.LoadEntry(0);
+   ntuple->LoadEntry(0);
    EXPECT_EQ(42.0, *rdPt);
-   ntuple.LoadEntry(1);
+   ntuple->LoadEntry(1);
    EXPECT_EQ(24.0, *rdPt);
-   ntuple.LoadEntry(2);
+   ntuple->LoadEntry(2);
    EXPECT_EQ(12.0, *rdPt);
 }
 
@@ -79,7 +79,7 @@ TEST(RNTuple, Extended)
    TRandom3 rnd(42);
    double chksumWrite = 0.0;
    {
-      RNTupleWriter ntuple(std::move(model), std::make_unique<RPageSinkRaw>("f", fileGuard.GetPath()));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
       constexpr unsigned int nEvents = 32000;
       for (unsigned int i = 0; i < nEvents; ++i) {
          auto nVec = 1 + floor(rnd.Rndm() * 1000.);
@@ -89,22 +89,21 @@ TEST(RNTuple, Extended)
             (*wrVector)[n] = val;
             chksumWrite += val;
          }
-         ntuple.Fill();
+         ntuple->Fill();
          if (i % 1000 == 0)
-            ntuple.CommitCluster();
+            ntuple->CommitCluster();
       }
    }
 
-   RNTupleReader ntuple(std::make_unique<RPageSourceRaw>("f", fileGuard.GetPath()));
-   auto rdVector = ntuple.GetModel()->GetDefaultEntry()->Get<std::vector<double>>("vector");
+   auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
+   auto rdVector = ntuple->GetModel()->GetDefaultEntry()->Get<std::vector<double>>("vector");
 
    double chksumRead = 0.0;
-   for (auto entryId : ntuple) {
-      ntuple.LoadEntry(entryId);
+   for (auto entryId : *ntuple) {
+      ntuple->LoadEntry(entryId);
       for (auto v : *rdVector)
          chksumRead += v;
    }
-
    EXPECT_EQ(chksumRead, chksumWrite);
 
    ROOT::EnableImplicitMT();

@@ -62,7 +62,7 @@ class RPagePool;
 // clang-format on
 class RPageSinkRoot : public RPageSink {
 public:
-   struct RSettings {
+   struct ROptions : public RPageSink::ROptions {
       TFile *fFile = nullptr;
       bool fTakeOwnership = false;
    };
@@ -74,7 +74,7 @@ private:
 
    /// Currently, an ntuple is stored as a directory in a TFile
    TDirectory *fDirectory;
-   RSettings fSettings;
+   ROptions fOptions;
 
    /// Instead of a physical file offset, pages in root are identified by an index which becomes part of the key
    DescriptorId_t fLastPageIdx = 0;
@@ -86,7 +86,7 @@ protected:
    void DoCommitDataset() final;
 
 public:
-   RPageSinkRoot(std::string_view ntupleName, RSettings settings);
+   RPageSinkRoot(std::string_view ntupleName, ROptions options);
    RPageSinkRoot(std::string_view ntupleName, std::string_view path);
    virtual ~RPageSinkRoot();
 
@@ -118,7 +118,7 @@ public:
 // clang-format on
 class RPageSourceRoot : public RPageSource {
 public:
-   struct RSettings {
+   struct ROptions {
       TFile *fFile = nullptr;
       bool fTakeOwnership = false;
    };
@@ -129,7 +129,7 @@ private:
 
    /// Currently, an ntuple is stored as a directory in a TFile
    TDirectory *fDirectory;
-   RSettings fSettings;
+   ROptions fOptions;
 
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor,
                                  ClusterSize_t::ValueType clusterIndex);
@@ -138,7 +138,7 @@ protected:
    RNTupleDescriptor DoAttach() final;
 
 public:
-   RPageSourceRoot(std::string_view ntupleName, RSettings settings);
+   RPageSourceRoot(std::string_view ntupleName, ROptions options);
    RPageSourceRoot(std::string_view ntupleName, std::string_view path);
    std::unique_ptr<RPageSource> Clone() const final;
    virtual ~RPageSourceRoot();
