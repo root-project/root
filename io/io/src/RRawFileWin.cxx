@@ -36,6 +36,11 @@ ROOT::Experimental::Detail::RRawFileWin::~RRawFileWin()
       fclose(fFilePtr);
 }
 
+std::unique_ptr<ROOT::Experimental::Detail::RRawFile> ROOT::Experimental::Detail::RRawFileWin::Clone() const
+{
+   return std::make_unique<RRawFileWin>(fUrl, fOptions);
+}
+
 std::uint64_t ROOT::Experimental::Detail::RRawFileWin::DoGetSize()
 {
    Seek(0L, SEEK_END);

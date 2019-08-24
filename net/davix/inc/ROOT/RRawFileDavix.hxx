@@ -46,6 +46,7 @@ protected:
 public:
    RRawFileDavix(std::string_view url, RRawFile::ROptions options);
    ~RRawFileDavix();
+   std::unique_ptr<RRawFile> Clone() const final;
 };
 
 } // namespace Detail
