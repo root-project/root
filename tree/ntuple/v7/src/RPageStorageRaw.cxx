@@ -153,10 +153,15 @@ void ROOT::Experimental::Detail::RPageAllocatorFile::DeletePage(const RPage& pag
 ////////////////////////////////////////////////////////////////////////////////
 
 
-ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntupleName, std::string_view path)
+ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntupleName)
    : RPageSource(ntupleName)
    , fPageAllocator(std::make_unique<RPageAllocatorFile>())
    , fPagePool(std::make_shared<RPagePool>())
+{
+}
+
+ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntupleName, std::string_view path)
+   : RPageSourceRaw(ntupleName)
 {
    auto file = RRawFile::Create(path);
    R__ASSERT(file);
@@ -292,10 +297,7 @@ void ROOT::Experimental::Detail::RPageSourceRaw::ReleasePage(RPage &page)
 
 std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSourceRaw::Clone() const
 {
-   return std::make_unique<RPageSourceRaw>(fNTupleName, "/dev/null");
-   /*RSettings settings;
-   auto file = TFile::Open(fSettings.fFile->GetName(), "READ");
-   settings.fFile = file;
-   settings.fTakeOwnership = true;
-   return std::make_unique<RPageSourceRoot>(fNTupleName, settings);*/
+   auto clone = new RPageSourceRaw(fNTupleName);
+   clone->fSettings.fFile = fSettings.fFile->Clone();
+   return std::unique_ptr<RPageSourceRaw> (clone);
 }
