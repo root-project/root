@@ -92,6 +92,17 @@ ROOT::Experimental::Detail::RRawFile::Create(std::string_view url, ROptions opti
    throw std::runtime_error("Unsupported transport protocol: " + transport);
 }
 
+void *ROOT::Experimental::Detail::RRawFile::DoMap(size_t /* nbytes */, std::uint64_t /* offset */,
+   std::uint64_t& /* mapdOffset */)
+{
+   throw std::runtime_error("Memory mapping unsupported");
+}
+
+void ROOT::Experimental::Detail::RRawFile::DoUnmap(void * /* region */, size_t /* nbytes */)
+{
+   throw std::runtime_error("Memory mapping unsupported");
+}
+
 std::string ROOT::Experimental::Detail::RRawFile::GetLocation(std::string_view url)
 {
    auto idx = url.find(kTransportSeparator);
@@ -119,6 +130,14 @@ std::string ROOT::Experimental::Detail::RRawFile::GetTransport(std::string_view 
    std::string transport(url.substr(0, idx));
    std::transform(transport.begin(), transport.end(), transport.begin(), ::tolower);
    return transport;
+}
+
+void *ROOT::Experimental::Detail::RRawFile::Map(size_t nbytes, std::uint64_t offset, std::uint64_t &mapdOffset)
+{
+   if (!fIsOpen)
+      DoOpen();
+   fIsOpen = true;
+   return DoMap(nbytes, offset, mapdOffset);
 }
 
 size_t ROOT::Experimental::Detail::RRawFile::Read(void *buffer, size_t nbytes)
@@ -210,4 +229,11 @@ bool ROOT::Experimental::Detail::RRawFile::Readln(std::string &line)
 void ROOT::Experimental::Detail::RRawFile::Seek(std::uint64_t offset)
 {
    fFilePos = offset;
+}
+
+void ROOT::Experimental::Detail::RRawFile::Unmap(void *region, size_t nbytes)
+{
+   if (!fIsOpen)
+      throw std::runtime_error("Cannot unmap, file not open");
+   DoUnmap(region, nbytes);
 }

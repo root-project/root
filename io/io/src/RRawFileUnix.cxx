@@ -21,6 +21,7 @@
 #include <utility>
 
 #include <fcntl.h>
+#include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -51,6 +52,18 @@ std::uint64_t ROOT::Experimental::Detail::RRawFileUnix::DoGetSize()
    if (res != 0)
       throw std::runtime_error("Cannot call fstat on '" + fUrl + "', error: " + std::string(strerror(errno)));
    return info.st_size;
+}
+
+void *ROOT::Experimental::Detail::RRawFileUnix::DoMap(size_t nbytes, std::uint64_t offset, std::uint64_t &mapdOffset)
+{
+   static std::uint64_t szPageBitmap = sysconf(_SC_PAGESIZE) - 1;
+   mapdOffset = offset & ~szPageBitmap;
+   nbytes += offset & szPageBitmap;
+
+   void *result = mmap(nullptr, nbytes, PROT_READ, MAP_PRIVATE, fFileDes, mapdOffset);
+   if (result == MAP_FAILED)
+      throw std::runtime_error(std::string("Cannot perform memory mapping: ") + strerror(errno));
+   return result;
 }
 
 void ROOT::Experimental::Detail::RRawFileUnix::DoOpen()
@@ -94,4 +107,11 @@ size_t ROOT::Experimental::Detail::RRawFileUnix::DoReadAt(void *buffer, size_t n
       offset += res;
    }
    return total_bytes;
+}
+
+void ROOT::Experimental::Detail::RRawFileUnix::DoUnmap(void *region, size_t nbytes)
+{
+   int rv = munmap(region, nbytes);
+   if (rv != 0)
+      throw std::runtime_error(std::string("Cannot remove memory mapping: ") + strerror(errno));
 }
