@@ -40,15 +40,14 @@ class RRawFile;
 // clang-format on
 class RPageSinkRaw : public RPageSink {
 public:
-   struct RSettings {
+   struct ROptions : public RPageSink::ROptions {
       FILE *fFile = nullptr;  // TODO(jblomer): add write support to RRawFile
-      int fCompressionSettings = 0;
    };
 
 private:
    static constexpr std::size_t kDefaultElementsPerPage = 10000;
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
-   RSettings fSettings;
+   ROptions fOptions;
    size_t fFilePos = 0;
    size_t fClusterStart = 0;
 
@@ -61,7 +60,7 @@ protected:
    void DoCommitDataset() final;
 
 public:
-   RPageSinkRaw(std::string_view ntupleName, RSettings settings);
+   RPageSinkRaw(std::string_view ntupleName, ROptions options);
    RPageSinkRaw(std::string_view ntupleName, std::string_view path);
    virtual ~RPageSinkRaw();
 
@@ -93,14 +92,14 @@ public:
 // clang-format on
 class RPageSourceRaw : public RPageSource {
 public:
-   struct RSettings {
+   struct ROptions : public RPageSource::ROptions {
       std::unique_ptr<RRawFile> fFile;
    };
 
 private:
    std::unique_ptr<RPageAllocatorFile> fPageAllocator;
    std::shared_ptr<RPagePool> fPagePool;
-   RSettings fSettings;
+   ROptions fOptions;
 
    RPageSourceRaw(std::string_view ntupleName);
    void Read(void *buffer, std::size_t nbytes, std::uint64_t offset);
