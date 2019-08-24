@@ -18,7 +18,6 @@
 #include "ROOT/RFieldVisitor.hxx"
 #include "ROOT/RNTupleModel.hxx"
 #include "ROOT/RPageStorage.hxx"
-#include "ROOT/RPageStorageRoot.hxx"
 
 #include <algorithm>
 #include <iomanip>
@@ -27,6 +26,10 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+
+#include <TFile.h>
+#include <ROOT/RPageStorageRoot.hxx>
+
 
 ROOT::Experimental::Detail::RNTuple::RNTuple(std::unique_ptr<ROOT::Experimental::RNTupleModel> model)
    : fModel(std::move(model))
@@ -84,16 +87,14 @@ std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleRe
    std::string_view ntupleName,
    std::string_view storage)
 {
-   // TODO(jblomer): heuristics based on storage
-   return std::make_unique<RNTupleReader>(
-      std::move(model), std::make_unique<Detail::RPageSourceRoot>(ntupleName, storage));
+   return std::make_unique<RNTupleReader>(std::move(model), Detail::RPageSource::Create(ntupleName, storage));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleReader::Open(
    std::string_view ntupleName,
    std::string_view storage)
 {
-   return std::make_unique<RNTupleReader>(std::make_unique<Detail::RPageSourceRoot>(ntupleName, storage));
+   return std::make_unique<RNTupleReader>(Detail::RPageSource::Create(ntupleName, storage));
 }
 
 void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::ostream &output)
@@ -161,19 +162,12 @@ ROOT::Experimental::RNTupleWriter::~RNTupleWriter()
    fModel = nullptr;
 }
 
-
 std::unique_ptr<ROOT::Experimental::RNTupleWriter> ROOT::Experimental::RNTupleWriter::Recreate(
    std::unique_ptr<RNTupleModel> model,
    std::string_view ntupleName,
    std::string_view storage)
 {
-   // TODO(jblomer): heuristics based on storage
-   TFile *file = TFile::Open(std::string(storage).c_str(), "RECREATE");
-   Detail::RPageSinkRoot::RSettings settings;
-   settings.fFile = file;
-   settings.fTakeOwnership = true;
-   return std::make_unique<RNTupleWriter>(
-      std::move(model), std::make_unique<Detail::RPageSinkRoot>(ntupleName, settings));
+   return std::make_unique<RNTupleWriter>(std::move(model), Detail::RPageSink::Create(ntupleName, storage));
 }
 
 

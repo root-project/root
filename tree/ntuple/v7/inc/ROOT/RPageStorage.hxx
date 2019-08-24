@@ -54,6 +54,10 @@ an ntuple.  Concrete implementations can use a TFile, a raw file, an object stor
 */
 // clang-format on
 class RPageStorage {
+public:
+   struct ROptions {
+   };
+
 protected:
    std::string fNTupleName;
 
@@ -95,7 +99,13 @@ up to the given entry number are committed.
 */
 // clang-format on
 class RPageSink : public RPageStorage {
+public:
+   struct ROptions {
+   };
+
 protected:
+   ROptions fOptions;
+
    /// Building the ntuple descriptor while writing is done in the same way for all the storage sink implementations.
    /// Field, column, cluster ids and page indexes per cluster are issued sequentially starting with 0
    DescriptorId_t fLastFieldId = 0;
@@ -114,8 +124,11 @@ protected:
    virtual void DoCommitDataset() = 0;
 
 public:
-   explicit RPageSink(std::string_view ntupleName);
+   RPageSink(std::string_view ntupleName, ROptions fOptions);
    virtual ~RPageSink();
+   /// Guess the concrete derived page source from the file name (location)
+   static std::unique_ptr<RPageSink> Create(std::string_view ntupleName, std::string_view location,
+                                            const ROptions &options = ROptions());
    EPageStorageType GetType() final { return EPageStorageType::kSink; }
 
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
@@ -155,6 +168,8 @@ protected:
 public:
    explicit RPageSource(std::string_view ntupleName);
    virtual ~RPageSource();
+   /// Guess the concrete derived page source from the file name (location)
+   static std::unique_ptr<RPageSource> Create(std::string_view ntupleName, std::string_view location);
    /// Open the same storage multiple time, e.g. for reading in multiple threads
    virtual std::unique_ptr<RPageSource> Clone() const = 0;
 

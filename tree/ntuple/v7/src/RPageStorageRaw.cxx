@@ -26,36 +26,36 @@
 
 #include <cstdio>
 
-ROOT::Experimental::Detail::RPageSinkRaw::RPageSinkRaw(std::string_view ntupleName, RSettings settings)
-   : RPageSink(ntupleName)
+ROOT::Experimental::Detail::RPageSinkRaw::RPageSinkRaw(std::string_view ntupleName, ROptions options)
+   : RPageSink(ntupleName, options)
    , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
-   , fSettings(settings)
+   , fOptions(options)
 {
    R__WARNING_HERE("NTuple") << "The RNTuple file format will change. " <<
       "Do not store real data with this version of RNTuple!";
 }
 
 ROOT::Experimental::Detail::RPageSinkRaw::RPageSinkRaw(std::string_view ntupleName, std::string_view path)
-   : RPageSink(ntupleName)
+   : RPageSink(ntupleName, RPageSink::ROptions())
    , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
 {
    R__WARNING_HERE("NTuple") << "The RNTuple file format will change. " <<
       "Do not store real data with this version of RNTuple!";
    FILE *file = fopen(std::string(path).c_str(), "w");
    R__ASSERT(file);
-   fSettings.fFile = file;
+   fOptions.fFile = file;
 }
 
 ROOT::Experimental::Detail::RPageSinkRaw::~RPageSinkRaw()
 {
-   if (fSettings.fFile)
-      fclose(fSettings.fFile);
+   if (fOptions.fFile)
+      fclose(fOptions.fFile);
 }
 
 void ROOT::Experimental::Detail::RPageSinkRaw::Write(const void *buffer, std::size_t nbytes)
 {
-   R__ASSERT(fSettings.fFile);
-   auto written = fwrite(buffer, 1, nbytes, fSettings.fFile);
+   R__ASSERT(fOptions.fFile);
+   auto written = fwrite(buffer, 1, nbytes, fOptions.fFile);
    R__ASSERT(written == nbytes);
    fFilePos += written;
 }
@@ -165,7 +165,7 @@ ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntup
 {
    auto file = RRawFile::Create(path);
    R__ASSERT(file);
-   fSettings.fFile = std::unique_ptr<RRawFile>(file);
+   fOptions.fFile = std::unique_ptr<RRawFile>(file);
 }
 
 
@@ -176,7 +176,7 @@ ROOT::Experimental::Detail::RPageSourceRaw::~RPageSourceRaw()
 
 void ROOT::Experimental::Detail::RPageSourceRaw::Read(void *buffer, std::size_t nbytes, std::uint64_t offset)
 {
-   auto nread = fSettings.fFile->ReadAt(buffer, nbytes, offset);
+   auto nread = fOptions.fFile->ReadAt(buffer, nbytes, offset);
    R__ASSERT(nread == nbytes);
 }
 
@@ -184,7 +184,7 @@ void ROOT::Experimental::Detail::RPageSourceRaw::Read(void *buffer, std::size_t 
 ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceRaw::DoAttach()
 {
    unsigned char postscript[RNTupleDescriptor::kNBytesPostscript];
-   auto fileSize = fSettings.fFile->GetSize();
+   auto fileSize = fOptions.fFile->GetSize();
    R__ASSERT(fileSize != RRawFile::kUnknownFileSize);
    R__ASSERT(fileSize >= RNTupleDescriptor::kNBytesPostscript);
    auto offset = fileSize - RNTupleDescriptor::kNBytesPostscript;
@@ -298,6 +298,6 @@ void ROOT::Experimental::Detail::RPageSourceRaw::ReleasePage(RPage &page)
 std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSourceRaw::Clone() const
 {
    auto clone = new RPageSourceRaw(fNTupleName);
-   clone->fSettings.fFile = fSettings.fFile->Clone();
+   clone->fOptions.fFile = fOptions.fFile->Clone();
    return std::unique_ptr<RPageSourceRaw> (clone);
 }

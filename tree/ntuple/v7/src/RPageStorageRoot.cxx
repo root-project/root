@@ -37,39 +37,39 @@ static constexpr const char* kKeyPagePayload = "NTPLP";
 
 }
 
-ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view ntupleName, RSettings settings)
-   : RPageSink(ntupleName)
+ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view ntupleName, ROptions options)
+   : RPageSink(ntupleName, options)
    , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
    , fDirectory(nullptr)
-   , fSettings(settings)
+   , fOptions(options)
 {
    R__WARNING_HERE("NTuple") << "The RNTuple file format will change. " <<
       "Do not store real data with this version of RNTuple!";
 }
 
 ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view ntupleName, std::string_view path)
-   : RPageSink(ntupleName)
+   : RPageSink(ntupleName, RPageSink::ROptions())
    , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
    , fDirectory(nullptr)
 {
    R__WARNING_HERE("NTuple") << "The RNTuple file format will change. " <<
       "Do not store real data with this version of RNTuple!";
-   TFile *file = TFile::Open(std::string(path).c_str(), "UPDATE");
-   fSettings.fFile = file;
-   fSettings.fTakeOwnership = true;
+   TFile *file = TFile::Open(std::string(path).c_str(), "RECREATE");
+   fOptions.fFile = file;
+   fOptions.fTakeOwnership = true;
 }
 
 ROOT::Experimental::Detail::RPageSinkRoot::~RPageSinkRoot()
 {
-   if (fSettings.fTakeOwnership) {
-      fSettings.fFile->Close();
-      delete fSettings.fFile;
+   if (fOptions.fTakeOwnership) {
+      fOptions.fFile->Close();
+      delete fOptions.fFile;
    }
 }
 
 void ROOT::Experimental::Detail::RPageSinkRoot::DoCreate(const RNTupleModel & /* model */)
 {
-   fDirectory = fSettings.fFile->mkdir(fNTupleName.c_str());
+   fDirectory = fOptions.fFile->mkdir(fNTupleName.c_str());
    // In TBrowser, use RNTupleBrowser(TDirectory *directory) in order to show the ntuple contents
    fDirectory->SetBit(TDirectoryFile::kCustomBrowse);
    fDirectory->SetTitle("ROOT::Experimental::Detail::RNTupleBrowser");
@@ -174,12 +174,12 @@ void ROOT::Experimental::Detail::RPageAllocatorKey::DeletePage(
 ////////////////////////////////////////////////////////////////////////////////
 
 
-ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, RSettings settings)
+ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, ROptions options)
    : RPageSource(ntupleName)
    , fPageAllocator(std::make_unique<RPageAllocatorKey>())
    , fPagePool(std::make_shared<RPagePool>())
    , fDirectory(nullptr)
-   , fSettings(settings)
+   , fOptions(options)
 {
 }
 
@@ -190,23 +190,23 @@ ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view nt
    , fDirectory(nullptr)
 {
    TFile *file = TFile::Open(std::string(path).c_str(), "READ");
-   fSettings.fFile = file;
-   fSettings.fTakeOwnership = true;
+   fOptions.fFile = file;
+   fOptions.fTakeOwnership = true;
 }
 
 
 ROOT::Experimental::Detail::RPageSourceRoot::~RPageSourceRoot()
 {
-   if (fSettings.fTakeOwnership) {
-      fSettings.fFile->Close();
-      delete fSettings.fFile;
+   if (fOptions.fTakeOwnership) {
+      fOptions.fFile->Close();
+      delete fOptions.fFile;
    }
 }
 
 
 ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceRoot::DoAttach()
 {
-   fDirectory = fSettings.fFile->GetDirectory(fNTupleName.c_str());
+   fDirectory = fOptions.fFile->GetDirectory(fNTupleName.c_str());
    RNTupleDescriptorBuilder descBuilder;
 
    auto keyRawNTupleHeader = fDirectory->GetKey(kKeyNTupleHeader);
@@ -317,9 +317,9 @@ void ROOT::Experimental::Detail::RPageSourceRoot::ReleasePage(RPage &page)
 
 std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSourceRoot::Clone() const
 {
-   RSettings settings;
-   auto file = TFile::Open(fSettings.fFile->GetName(), "READ");
-   settings.fFile = file;
-   settings.fTakeOwnership = true;
-   return std::make_unique<RPageSourceRoot>(fNTupleName, settings);
+   ROptions options;
+   auto file = TFile::Open(fOptions.fFile->GetName(), "READ");
+   options.fFile = file;
+   options.fTakeOwnership = true;
+   return std::make_unique<RPageSourceRoot>(fNTupleName, options);
 }

@@ -18,11 +18,25 @@
 #include <ROOT/RField.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RPagePool.hxx>
+#include <ROOT/RPageStorageRaw.hxx>
+#include <ROOT/RPageStorageRoot.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <TError.h>
 
 #include <unordered_map>
+#include <utility>
+
+namespace {
+
+bool StrEndsWith(const std::string &str, const std::string &suffix)
+{
+   if (str.size() < suffix.size())
+      return false;
+   return (str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0);
+}
+
+} // anonymous namespace
 
 ROOT::Experimental::Detail::RPageStorage::RPageStorage(std::string_view name) : fNTupleName(name)
 {
@@ -42,6 +56,14 @@ ROOT::Experimental::Detail::RPageSource::RPageSource(std::string_view name) : RP
 
 ROOT::Experimental::Detail::RPageSource::~RPageSource()
 {
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSource::Create(
+   std::string_view ntupleName, std::string_view location)
+{
+   if (StrEndsWith(std::string(location), ".root"))
+      return std::make_unique<RPageSourceRoot>(ntupleName, location);
+   return std::make_unique<RPageSourceRaw>(ntupleName, location);
 }
 
 ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
@@ -73,12 +95,21 @@ ROOT::Experimental::ColumnId_t ROOT::Experimental::Detail::RPageSource::GetColum
 //------------------------------------------------------------------------------
 
 
-ROOT::Experimental::Detail::RPageSink::RPageSink(std::string_view name) : RPageStorage(name)
+ROOT::Experimental::Detail::RPageSink::RPageSink(std::string_view name, ROptions options)
+   : RPageStorage(name), fOptions(options)
 {
 }
 
 ROOT::Experimental::Detail::RPageSink::~RPageSink()
 {
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RPageSink> ROOT::Experimental::Detail::RPageSink::Create(
+   std::string_view ntupleName, std::string_view location, const ROptions & /* options */)
+{
+   if (StrEndsWith(std::string(location), ".root"))
+      return std::make_unique<RPageSinkRoot>(ntupleName, location);
+   return std::make_unique<RPageSinkRaw>(ntupleName, location);
 }
 
 ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t

@@ -105,9 +105,9 @@ TEST(RNTuple, StorageRoot)
 {
    FileRaii fileGuard("test_ntuple_storage.root");
    TFile *file = TFile::Open(fileGuard.GetPath().c_str(), "RECREATE");
-   RPageSinkRoot::RSettings settingsWrite;
-   settingsWrite.fFile = file;
-   RPageSinkRoot sinkRoot("myTree", settingsWrite);
+   RPageSinkRoot::ROptions optionsWrite;
+   optionsWrite.fFile = file;
+   RPageSinkRoot sinkRoot("myTree", optionsWrite);
 
    auto model = RNTupleModel::Create();
    auto fieldPt = model->MakeField<float>("pt", 42.0);
@@ -123,9 +123,9 @@ TEST(RNTuple, StorageRoot)
    file->Close();
 
    file = TFile::Open(fileGuard.GetPath().c_str(), "READ");
-   RPageSourceRoot::RSettings settingsRead;
-   settingsRead.fFile = file;
-   RPageSourceRoot sourceRoot("myTree", settingsRead);
+   RPageSourceRoot::ROptions optionsRead;
+   optionsRead.fFile = file;
+   RPageSourceRoot sourceRoot("myTree", optionsRead);
    sourceRoot.Attach();
    file->Close();
 }
@@ -650,6 +650,7 @@ TEST(RNTuple, RDF)
       ntuple.Fill();
    }
 
+   ROOT::EnableImplicitMT();
    auto rdf = ROOT::Experimental::MakeNTupleDataFrame("f", fileGuard.GetPath());
    EXPECT_EQ(42.0, *rdf.Min("pt"));
 }
