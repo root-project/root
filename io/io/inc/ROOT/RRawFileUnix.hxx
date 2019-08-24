@@ -37,11 +37,14 @@ protected:
    void DoOpen() final;
    size_t DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset) final;
    std::uint64_t DoGetSize() final;
+   void *DoMap(size_t nbytes, std::uint64_t offset, std::uint64_t &mapdOffset) final;
+   void DoUnmap(void *region, size_t nbytes) final;
 
 public:
    RRawFileUnix(std::string_view url, RRawFile::ROptions options);
    ~RRawFileUnix();
    std::unique_ptr<RRawFile> Clone() const final;
+   int GetFeatures() const final { return kFeatureHasSize | kFeatureHasMmap; }
 };
 
 } // namespace Detail

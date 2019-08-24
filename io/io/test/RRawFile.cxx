@@ -70,6 +70,8 @@ public:
    }
 
    std::uint64_t DoGetSize() final { return fContent.size(); }
+
+   int GetFeatures() const final { return kFeatureHasSize; }
 };
 
 } // anonymous namespace
@@ -79,6 +81,7 @@ TEST(RRawFile, Empty)
 {
    FileRaii emptyGuard("testEmpty", "");
    std::unique_ptr<RRawFile> f(RRawFile::Create("testEmpty"));
+   EXPECT_TRUE(f->GetFeatures() & RRawFile::kFeatureHasSize);
    EXPECT_EQ(0u, f->GetSize());
    EXPECT_EQ(0u, f->Read(nullptr, 0));
    EXPECT_EQ(0u, f->ReadAt(nullptr, 0, 1));
@@ -209,4 +212,26 @@ TEST(RRawFile, ReadBuffered)
    EXPECT_EQ(1u, f->ReadAt(buffer, 1, 1));
    EXPECT_STREQ("be", buffer);
    EXPECT_EQ(1u, f->fNumReadAt); f->fNumReadAt = 0;
+}
+
+
+TEST(RRawFile, Mmap)
+{
+   std::uint64_t mapdOffset;
+   std::unique_ptr<RRawFileMock> m(new RRawFileMock("", RRawFile::ROptions()));
+   EXPECT_FALSE(m->GetFeatures() & RRawFile::kFeatureHasMmap);
+   EXPECT_THROW(m->Map(1, 0, mapdOffset), std::runtime_error);
+   EXPECT_THROW(m->Unmap(this, 1), std::runtime_error);
+
+   void *region;
+   FileRaii basicGuard("test_rawfile_mmap", "foo");
+   std::unique_ptr<RRawFile> f(RRawFile::Create("test_rawfile_mmap"));
+   if (!(f->GetFeatures() & RRawFile::kFeatureHasMmap))
+      return;
+   region = f->Map(2, 1, mapdOffset);
+   auto innerOffset = 1 - mapdOffset;
+   ASSERT_NE(region, nullptr);
+   EXPECT_EQ("oo", std::string(reinterpret_cast<char *>(region) + innerOffset, 2));
+   auto mapdLength = 2 + innerOffset;
+   f->Unmap(region, mapdLength);
 }
