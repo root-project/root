@@ -41,6 +41,7 @@ protected:
 public:
    RRawFileUnix(std::string_view url, RRawFile::ROptions options);
    ~RRawFileUnix();
+   std::unique_ptr<RRawFile> Clone() const final;
 };
 
 } // namespace Detail

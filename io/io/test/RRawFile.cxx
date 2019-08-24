@@ -45,8 +45,13 @@ class RRawFileMock : public RRawFile {
 public:
    std::string fContent;
    unsigned fNumReadAt;
+
    RRawFileMock(const std::string &content, RRawFile::ROptions options)
      : RRawFile("", options), fContent(content), fNumReadAt(0) { }
+
+   std::unique_ptr<RRawFile> Clone() const final {
+      return std::make_unique<RRawFileMock>(fContent, fOptions);
+   }
 
    void DoOpen() final
    {
@@ -92,6 +97,10 @@ TEST(RRawFile, Basic)
    EXPECT_TRUE(f->Readln(line));
    EXPECT_STREQ("bar", line.c_str());
    EXPECT_FALSE(f->Readln(line));
+   auto clone = f->Clone();
+   /// file pointer is reset by clone
+   EXPECT_TRUE(clone->Readln(line));
+   EXPECT_STREQ("foo", line.c_str());
 
    std::unique_ptr<RRawFile> f2(RRawFile::Create("NoSuchFile"));
    EXPECT_THROW(f2->Readln(line), std::runtime_error);
