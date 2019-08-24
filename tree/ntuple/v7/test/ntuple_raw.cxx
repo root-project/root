@@ -109,7 +109,7 @@ TEST(RNTuple, Extended)
 
    ROOT::EnableImplicitMT();
    auto rdf = ROOT::Experimental::MakeNTupleDataFrame("f", fileGuard.GetPath());
-   auto minLenght = *rdf.Define("vecSize", "vector.size()").Min("vecSize");
-   EXPECT_GE(1, minLenght);
-   EXPECT_LE(minLenght, 1000);
+   auto minLengh = *rdf.Define("vecSize", "vector.size()").Min("vecSize");
+   EXPECT_GE(1, minLengh);
+   EXPECT_LE(minLengh, 1000);
 }
