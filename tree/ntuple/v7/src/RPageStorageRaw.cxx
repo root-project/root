@@ -191,6 +191,7 @@ ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntup
 {
    fFile = std::unique_ptr<RRawFile>(RRawFile::Create(path));
    R__ASSERT(fFile);
+   R__ASSERT(fFile->GetFeatures() & RRawFile::kFeatureHasSize);
 }
 
 
