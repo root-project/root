@@ -102,6 +102,7 @@ private:
    std::shared_ptr<RPagePool> fPagePool;
    RSettings fSettings;
 
+   RPageSourceRaw(std::string_view ntupleName);
    void Read(void *buffer, std::size_t nbytes, std::uint64_t offset);
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle,
                                  const RClusterDescriptor &clusterDescriptor,
