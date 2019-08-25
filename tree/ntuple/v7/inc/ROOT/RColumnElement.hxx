@@ -68,6 +68,8 @@ public:
    RColumnElementBase& operator =(RColumnElementBase&& other) = default;
    virtual ~RColumnElementBase() = default;
 
+   static RColumnElementBase Generate(EColumnType type);
+
    /// Write one or multiple column elements into destination
    void WriteTo(void *destination, std::size_t count) const {
       std::memcpy(destination, fRawContent, fSize * count);

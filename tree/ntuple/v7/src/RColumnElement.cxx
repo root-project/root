@@ -15,9 +15,37 @@
 
 #include <ROOT/RColumnElement.hxx>
 
+#include <TError.h>
+
 #include <algorithm>
 #include <bitset>
 #include <cstdint>
+
+ROOT::Experimental::Detail::RColumnElementBase
+ROOT::Experimental::Detail::RColumnElementBase::Generate(EColumnType type) {
+   switch (type) {
+   case EColumnType::kReal32:
+      return RColumnElement<float, EColumnType::kReal32>(nullptr);
+   case EColumnType::kReal64:
+      return RColumnElement<double, EColumnType::kReal64>(nullptr);
+   case EColumnType::kByte:
+      return RColumnElement<std::uint8_t, EColumnType::kByte>(nullptr);
+   case EColumnType::kInt32:
+      return RColumnElement<std::int32_t, EColumnType::kInt32>(nullptr);
+   case EColumnType::kInt64:
+      return RColumnElement<std::int64_t, EColumnType::kInt64>(nullptr);
+   case EColumnType::kBit:
+      return RColumnElement<bool, EColumnType::kBit>(nullptr);
+   case EColumnType::kIndex:
+      return RColumnElement<ClusterSize_t, EColumnType::kIndex>(nullptr);
+   case EColumnType::kSwitch:
+      return RColumnElement<RColumnSwitch, EColumnType::kSwitch>(nullptr);
+   default:
+      R__ASSERT(false);
+   }
+   // never here
+   return RColumnElementBase();
+}
 
 void ROOT::Experimental::Detail::RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Pack(
   void *dst, void *src, std::size_t count) const
