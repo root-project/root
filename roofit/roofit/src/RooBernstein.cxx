@@ -51,7 +51,7 @@ ClassImp(RooBernstein);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooBernstein::RooBernstein()
+RooBernstein::RooBernstein() : _refRangeName(0)
 {
 }
 
@@ -62,7 +62,8 @@ RooBernstein::RooBernstein(const char* name, const char* title,
                            RooAbsReal& x, const RooArgList& coefList):
   RooAbsPdf(name, title),
   _x("x", "Dependent", this, x),
-  _coefList("coefficients","List of coefficients",this)
+  _coefList("coefficients","List of coefficients",this),
+  _refRangeName(0)
 {
   TIterator* coefIter = coefList.createIterator() ;
   RooAbsArg* coef ;
@@ -82,16 +83,33 @@ RooBernstein::RooBernstein(const char* name, const char* title,
 RooBernstein::RooBernstein(const RooBernstein& other, const char* name) :
   RooAbsPdf(other, name),
   _x("x", this, other._x),
-  _coefList("coefList",this,other._coefList)
+  _coefList("coefList",this,other._coefList),
+  _refRangeName(other._refRangeName)
 {
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+void RooBernstein::selectNormalizationRange(const char* rangeName, Bool_t force)
+{
+  if (rangeName && (force || !_refRangeName)) {
+     _refRangeName = (TNamed*) RooNameReg::instance().constPtr(rangeName);
+  }
+  if (!rangeName) {
+     _refRangeName = 0;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Double_t RooBernstein::evaluate() const
 {
-  Double_t xmin = _x.min();
-  Double_t x = (_x - xmin) / (_x.max() - xmin); // rescale to [0,1]
+  const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName():0);
+  const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName():0);
+
+  std::cout << "evaluate at (xmin, xmax)" << "(" << xmin << "," << xmax << ")"<< std::endl;  
+  Double_t x = (_x - xmin) / (xmax - xmin); // rescale to [0,1]
   Int_t degree = _coefList.getSize() - 1; // n+1 polys of degree n
   RooFIter iter = _coefList.fwdIterator();
 
@@ -137,10 +155,13 @@ Double_t RooBernstein::evaluate() const
 Int_t RooBernstein::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
 {
   if (rangeName && strlen(rangeName)) {
-    return 0 ;
+  std::cout << "rangename: " << rangeName << " - numerical integral" << std::endl;
+  _refRangeName = 0;
+  return 0 ;
   }
 
   if (matchArgs(allVars, analVars, _x)) return 1;
+  _refRangeName = 0;
   return 0;
 }
 
@@ -149,7 +170,11 @@ Int_t RooBernstein::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVar
 Double_t RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   R__ASSERT(code==1) ;
-  Double_t xmin = _x.min(rangeName); Double_t xmax = _x.max(rangeName);
+//  const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName():0);
+//  const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName():0);
+  Double_t xmin = _x.min();
+  Double_t xmax = _x.max();
+  std::cout << "(" << xmin << "," << xmax << ")" << std::endl;
   Int_t degree= _coefList.getSize()-1; // n+1 polys of degree n
   Double_t norm(0) ;
 
@@ -166,7 +191,6 @@ Double_t RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) con
     temp *= ((RooAbsReal*)iter.next())->getVal(); // include coeff
     norm += temp; // add this basis's contribution to total
   }
-
   norm *= xmax-xmin;
   return norm;
 }
