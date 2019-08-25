@@ -17,6 +17,7 @@
 #define ROOT7_RPageStorage
 
 #include <ROOT/RNTupleDescriptor.hxx>
+#include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageAllocator.hxx>
@@ -95,13 +96,8 @@ up to the given entry number are committed.
 */
 // clang-format on
 class RPageSink : public RPageStorage {
-public:
-   struct ROptions {
-
-   };
-
 protected:
-   ROptions fOptions;
+   const RNTupleWriteOptions fOptions;
 
    /// Building the ntuple descriptor while writing is done in the same way for all the storage sink implementations.
    /// Field, column, cluster ids and page indexes per cluster are issued sequentially starting with 0
@@ -121,11 +117,11 @@ protected:
    virtual void DoCommitDataset() = 0;
 
 public:
-   RPageSink(std::string_view ntupleName, ROptions fOptions);
+   RPageSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
    virtual ~RPageSink();
    /// Guess the concrete derived page source from the file name (location)
    static std::unique_ptr<RPageSink> Create(std::string_view ntupleName, std::string_view location,
-                                            const ROptions &options = ROptions());
+                                            const RNTupleWriteOptions &options = RNTupleWriteOptions());
    EPageStorageType GetType() final { return EPageStorageType::kSink; }
 
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
@@ -157,21 +153,18 @@ mapped into memory. The page source also gives access to the ntuple's meta-data.
 */
 // clang-format on
 class RPageSource : public RPageStorage {
-public:
-   struct ROptions {
-   };
-
 protected:
-   ROptions fOptions;
+   const RNTupleReadOptions fOptions;
    RNTupleDescriptor fDescriptor;
 
    virtual RNTupleDescriptor DoAttach() = 0;
 
 public:
-   RPageSource(std::string_view ntupleName, const ROptions &fOptions);
+   RPageSource(std::string_view ntupleName, const RNTupleReadOptions &fOptions);
    virtual ~RPageSource();
    /// Guess the concrete derived page source from the file name (location)
-   static std::unique_ptr<RPageSource> Create(std::string_view ntupleName, std::string_view location);
+   static std::unique_ptr<RPageSource> Create(std::string_view ntupleName, std::string_view location,
+                                              const RNTupleReadOptions &options = RNTupleReadOptions());
    /// Open the same storage multiple time, e.g. for reading in multiple threads
    virtual std::unique_ptr<RPageSource> Clone() const = 0;
 

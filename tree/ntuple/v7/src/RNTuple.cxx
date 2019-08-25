@@ -165,9 +165,10 @@ ROOT::Experimental::RNTupleWriter::~RNTupleWriter()
 std::unique_ptr<ROOT::Experimental::RNTupleWriter> ROOT::Experimental::RNTupleWriter::Recreate(
    std::unique_ptr<RNTupleModel> model,
    std::string_view ntupleName,
-   std::string_view storage)
+   std::string_view storage,
+   const RNTupleWriteOptions &options)
 {
-   return std::make_unique<RNTupleWriter>(std::move(model), Detail::RPageSink::Create(ntupleName, storage));
+   return std::make_unique<RNTupleWriter>(std::move(model), Detail::RPageSink::Create(ntupleName, storage, options));
 }
 
 

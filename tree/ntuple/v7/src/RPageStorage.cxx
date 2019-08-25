@@ -22,6 +22,7 @@
 #include <ROOT/RPageStorageRoot.hxx>
 #include <ROOT/RStringView.hxx>
 
+#include <Compression.h>
 #include <TError.h>
 
 #include <unordered_map>
@@ -50,7 +51,7 @@ ROOT::Experimental::Detail::RPageStorage::~RPageStorage()
 //------------------------------------------------------------------------------
 
 
-ROOT::Experimental::Detail::RPageSource::RPageSource(std::string_view name, const ROptions &options)
+ROOT::Experimental::Detail::RPageSource::RPageSource(std::string_view name, const RNTupleReadOptions &options)
    : RPageStorage(name), fOptions(options)
 {
 }
@@ -60,11 +61,11 @@ ROOT::Experimental::Detail::RPageSource::~RPageSource()
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSource::Create(
-   std::string_view ntupleName, std::string_view location)
+   std::string_view ntupleName, std::string_view location, const RNTupleReadOptions &options)
 {
    if (StrEndsWith(std::string(location), ".root"))
-      return std::make_unique<RPageSourceRoot>(ntupleName, location);
-   return std::make_unique<RPageSourceRaw>(ntupleName, location);
+      return std::make_unique<RPageSourceRoot>(ntupleName, location, options);
+   return std::make_unique<RPageSourceRaw>(ntupleName, location, options);
 }
 
 ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
@@ -96,7 +97,7 @@ ROOT::Experimental::ColumnId_t ROOT::Experimental::Detail::RPageSource::GetColum
 //------------------------------------------------------------------------------
 
 
-ROOT::Experimental::Detail::RPageSink::RPageSink(std::string_view name, ROptions options)
+ROOT::Experimental::Detail::RPageSink::RPageSink(std::string_view name, const RNTupleWriteOptions &options)
    : RPageStorage(name), fOptions(options)
 {
 }
@@ -106,11 +107,11 @@ ROOT::Experimental::Detail::RPageSink::~RPageSink()
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RPageSink> ROOT::Experimental::Detail::RPageSink::Create(
-   std::string_view ntupleName, std::string_view location, const ROptions & /* options */)
+   std::string_view ntupleName, std::string_view location, const RNTupleWriteOptions &options)
 {
    if (StrEndsWith(std::string(location), ".root"))
-      return std::make_unique<RPageSinkRoot>(ntupleName, location);
-   return std::make_unique<RPageSinkRaw>(ntupleName, location);
+      return std::make_unique<RPageSinkRoot>(ntupleName, location, options);
+   return std::make_unique<RPageSinkRaw>(ntupleName, location, options);
 }
 
 ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
@@ -147,6 +148,7 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
       columnRange.fColumnId = i;
       columnRange.fFirstElementIndex = 0;
       columnRange.fNElements = 0;
+      columnRange.fCompressionSettings = fOptions.GetCompression();
       fOpenColumnRanges.emplace_back(columnRange);
       RClusterDescriptor::RPageRange pageRange;
       pageRange.fColumnId = i;

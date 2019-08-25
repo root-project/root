@@ -27,10 +27,9 @@
 #include <cstdio>
 
 ROOT::Experimental::Detail::RPageSinkRaw::RPageSinkRaw(std::string_view ntupleName, std::string_view path,
-   const ROptions &options)
+   const RNTupleWriteOptions &options)
    : RPageSink(ntupleName, options)
    , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
-   , fOptions(options)
 {
    R__WARNING_HERE("NTuple") << "The RNTuple file format will change. " <<
       "Do not store real data with this version of RNTuple!";
@@ -145,16 +144,16 @@ void ROOT::Experimental::Detail::RPageAllocatorFile::DeletePage(const RPage& pag
 ////////////////////////////////////////////////////////////////////////////////
 
 
-ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntupleName, const ROptions &options)
+ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntupleName,
+   const RNTupleReadOptions &options)
    : RPageSource(ntupleName, options)
    , fPageAllocator(std::make_unique<RPageAllocatorFile>())
    , fPagePool(std::make_shared<RPagePool>())
-   , fOptions(options)
 {
 }
 
 ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntupleName, std::string_view path,
-   const ROptions &options)
+   const RNTupleReadOptions &options)
    : RPageSourceRaw(ntupleName, options)
 {
    fFile = std::unique_ptr<RRawFile>(RRawFile::Create(path));
