@@ -26,36 +26,28 @@
 
 #include <cstdio>
 
-ROOT::Experimental::Detail::RPageSinkRaw::RPageSinkRaw(std::string_view ntupleName, ROptions options)
+ROOT::Experimental::Detail::RPageSinkRaw::RPageSinkRaw(std::string_view ntupleName, std::string_view path,
+   const ROptions &options)
    : RPageSink(ntupleName, options)
    , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
    , fOptions(options)
 {
    R__WARNING_HERE("NTuple") << "The RNTuple file format will change. " <<
       "Do not store real data with this version of RNTuple!";
-}
-
-ROOT::Experimental::Detail::RPageSinkRaw::RPageSinkRaw(std::string_view ntupleName, std::string_view path)
-   : RPageSink(ntupleName, RPageSink::ROptions())
-   , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
-{
-   R__WARNING_HERE("NTuple") << "The RNTuple file format will change. " <<
-      "Do not store real data with this version of RNTuple!";
-   FILE *file = fopen(std::string(path).c_str(), "w");
-   R__ASSERT(file);
-   fOptions.fFile = file;
+   fFile = fopen(std::string(path).c_str(), "w");
+   R__ASSERT(fFile);
 }
 
 ROOT::Experimental::Detail::RPageSinkRaw::~RPageSinkRaw()
 {
-   if (fOptions.fFile)
-      fclose(fOptions.fFile);
+   if (fFile)
+      fclose(fFile);
 }
 
 void ROOT::Experimental::Detail::RPageSinkRaw::Write(const void *buffer, std::size_t nbytes)
 {
-   R__ASSERT(fOptions.fFile);
-   auto written = fwrite(buffer, 1, nbytes, fOptions.fFile);
+   R__ASSERT(fFile);
+   auto written = fwrite(buffer, 1, nbytes, fFile);
    R__ASSERT(written == nbytes);
    fFilePos += written;
 }
@@ -153,19 +145,20 @@ void ROOT::Experimental::Detail::RPageAllocatorFile::DeletePage(const RPage& pag
 ////////////////////////////////////////////////////////////////////////////////
 
 
-ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntupleName)
-   : RPageSource(ntupleName)
+ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntupleName, const ROptions &options)
+   : RPageSource(ntupleName, options)
    , fPageAllocator(std::make_unique<RPageAllocatorFile>())
    , fPagePool(std::make_shared<RPagePool>())
+   , fOptions(options)
 {
 }
 
-ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntupleName, std::string_view path)
-   : RPageSourceRaw(ntupleName)
+ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntupleName, std::string_view path,
+   const ROptions &options)
+   : RPageSourceRaw(ntupleName, options)
 {
-   auto file = RRawFile::Create(path);
-   R__ASSERT(file);
-   fOptions.fFile = std::unique_ptr<RRawFile>(file);
+   fFile = std::unique_ptr<RRawFile>(RRawFile::Create(path));
+   R__ASSERT(fFile);
 }
 
 
@@ -176,7 +169,7 @@ ROOT::Experimental::Detail::RPageSourceRaw::~RPageSourceRaw()
 
 void ROOT::Experimental::Detail::RPageSourceRaw::Read(void *buffer, std::size_t nbytes, std::uint64_t offset)
 {
-   auto nread = fOptions.fFile->ReadAt(buffer, nbytes, offset);
+   auto nread = fFile->ReadAt(buffer, nbytes, offset);
    R__ASSERT(nread == nbytes);
 }
 
@@ -184,7 +177,7 @@ void ROOT::Experimental::Detail::RPageSourceRaw::Read(void *buffer, std::size_t 
 ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceRaw::DoAttach()
 {
    unsigned char postscript[RNTupleDescriptor::kNBytesPostscript];
-   auto fileSize = fOptions.fFile->GetSize();
+   auto fileSize = fFile->GetSize();
    R__ASSERT(fileSize != RRawFile::kUnknownFileSize);
    R__ASSERT(fileSize >= RNTupleDescriptor::kNBytesPostscript);
    auto offset = fileSize - RNTupleDescriptor::kNBytesPostscript;
@@ -297,7 +290,7 @@ void ROOT::Experimental::Detail::RPageSourceRaw::ReleasePage(RPage &page)
 
 std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSourceRaw::Clone() const
 {
-   auto clone = new RPageSourceRaw(fNTupleName);
-   clone->fOptions.fFile = fOptions.fFile->Clone();
-   return std::unique_ptr<RPageSourceRaw> (clone);
+   auto clone = new RPageSourceRaw(fNTupleName, fOptions);
+   clone->fFile = fFile->Clone();
+   return std::unique_ptr<RPageSourceRaw>(clone);
 }

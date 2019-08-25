@@ -37,39 +37,26 @@ static constexpr const char* kKeyPagePayload = "NTPLP";
 
 }
 
-ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view ntupleName, ROptions options)
+ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view ntupleName, std::string_view path,
+   const ROptions &options)
    : RPageSink(ntupleName, options)
    , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
-   , fDirectory(nullptr)
    , fOptions(options)
 {
    R__WARNING_HERE("NTuple") << "The RNTuple file format will change. " <<
       "Do not store real data with this version of RNTuple!";
-}
-
-ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view ntupleName, std::string_view path)
-   : RPageSink(ntupleName, RPageSink::ROptions())
-   , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
-   , fDirectory(nullptr)
-{
-   R__WARNING_HERE("NTuple") << "The RNTuple file format will change. " <<
-      "Do not store real data with this version of RNTuple!";
-   TFile *file = TFile::Open(std::string(path).c_str(), "RECREATE");
-   fOptions.fFile = file;
-   fOptions.fTakeOwnership = true;
+   fFile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "RECREATE"));
 }
 
 ROOT::Experimental::Detail::RPageSinkRoot::~RPageSinkRoot()
 {
-   if (fOptions.fTakeOwnership) {
-      fOptions.fFile->Close();
-      delete fOptions.fFile;
-   }
+   if (fFile)
+      fFile->Close();
 }
 
 void ROOT::Experimental::Detail::RPageSinkRoot::DoCreate(const RNTupleModel & /* model */)
 {
-   fDirectory = fOptions.fFile->mkdir(fNTupleName.c_str());
+   fDirectory = fFile->mkdir(fNTupleName.c_str());
    // In TBrowser, use RNTupleBrowser(TDirectory *directory) in order to show the ntuple contents
    fDirectory->SetBit(TDirectoryFile::kCustomBrowse);
    fDirectory->SetTitle("ROOT::Experimental::Detail::RNTupleBrowser");
@@ -174,39 +161,27 @@ void ROOT::Experimental::Detail::RPageAllocatorKey::DeletePage(
 ////////////////////////////////////////////////////////////////////////////////
 
 
-ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, ROptions options)
-   : RPageSource(ntupleName)
+ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, std::string_view path,
+   const ROptions &options)
+   : RPageSource(ntupleName, options)
    , fPageAllocator(std::make_unique<RPageAllocatorKey>())
    , fPagePool(std::make_shared<RPagePool>())
-   , fDirectory(nullptr)
    , fOptions(options)
 {
-}
-
-ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, std::string_view path)
-   : RPageSource(ntupleName)
-   , fPageAllocator(std::make_unique<RPageAllocatorKey>())
-   , fPagePool(std::make_shared<RPagePool>())
-   , fDirectory(nullptr)
-{
-   TFile *file = TFile::Open(std::string(path).c_str(), "READ");
-   fOptions.fFile = file;
-   fOptions.fTakeOwnership = true;
+   fFile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "READ"));
 }
 
 
 ROOT::Experimental::Detail::RPageSourceRoot::~RPageSourceRoot()
 {
-   if (fOptions.fTakeOwnership) {
-      fOptions.fFile->Close();
-      delete fOptions.fFile;
-   }
+   if (fFile)
+      fFile->Close();
 }
 
 
 ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceRoot::DoAttach()
 {
-   fDirectory = fOptions.fFile->GetDirectory(fNTupleName.c_str());
+   fDirectory = fFile->GetDirectory(fNTupleName.c_str());
    RNTupleDescriptorBuilder descBuilder;
 
    auto keyRawNTupleHeader = fDirectory->GetKey(kKeyNTupleHeader);
@@ -317,9 +292,5 @@ void ROOT::Experimental::Detail::RPageSourceRoot::ReleasePage(RPage &page)
 
 std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSourceRoot::Clone() const
 {
-   ROptions options;
-   auto file = TFile::Open(fOptions.fFile->GetName(), "READ");
-   options.fFile = file;
-   options.fTakeOwnership = true;
-   return std::make_unique<RPageSourceRoot>(fNTupleName, options);
+   return std::make_unique<RPageSourceRoot>(fNTupleName, fFile->GetName(), fOptions);
 }

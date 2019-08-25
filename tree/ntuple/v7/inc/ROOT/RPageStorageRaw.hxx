@@ -41,13 +41,13 @@ class RRawFile;
 class RPageSinkRaw : public RPageSink {
 public:
    struct ROptions : public RPageSink::ROptions {
-      FILE *fFile = nullptr;  // TODO(jblomer): add write support to RRawFile
    };
 
 private:
    static constexpr std::size_t kDefaultElementsPerPage = 10000;
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
    ROptions fOptions;
+   FILE *fFile = nullptr;
    size_t fFilePos = 0;
    size_t fClusterStart = 0;
 
@@ -60,8 +60,7 @@ protected:
    void DoCommitDataset() final;
 
 public:
-   RPageSinkRaw(std::string_view ntupleName, ROptions options);
-   RPageSinkRaw(std::string_view ntupleName, std::string_view path);
+   RPageSinkRaw(std::string_view ntupleName, std::string_view path, const ROptions &options = ROptions());
    virtual ~RPageSinkRaw();
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements = 0) final;
@@ -93,15 +92,15 @@ public:
 class RPageSourceRaw : public RPageSource {
 public:
    struct ROptions : public RPageSource::ROptions {
-      std::unique_ptr<RRawFile> fFile;
    };
 
 private:
    std::unique_ptr<RPageAllocatorFile> fPageAllocator;
    std::shared_ptr<RPagePool> fPagePool;
+   std::unique_ptr<RRawFile> fFile;
    ROptions fOptions;
 
-   RPageSourceRaw(std::string_view ntupleName);
+   RPageSourceRaw(std::string_view ntupleName, const ROptions &options);
    void Read(void *buffer, std::size_t nbytes, std::uint64_t offset);
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle,
                                  const RClusterDescriptor &clusterDescriptor,
@@ -111,7 +110,7 @@ protected:
    RNTupleDescriptor DoAttach() final;
 
 public:
-   RPageSourceRaw(std::string_view ntupleName, std::string_view path);
+   RPageSourceRaw(std::string_view ntupleName, std::string_view path, const ROptions &options = ROptions());
    std::unique_ptr<RPageSource> Clone() const final;
    virtual ~RPageSourceRaw();
 
