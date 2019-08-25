@@ -19,6 +19,9 @@
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RStringView.hxx>
 
+#include <RZip.h>
+
+#include <array>
 #include <cstdint>
 #include <cstdio>
 #include <memory>
@@ -42,6 +45,7 @@ class RPageSinkRaw : public RPageSink {
 private:
    static constexpr std::size_t kDefaultElementsPerPage = 10000;
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
+   std::unique_ptr<std::array<char, kMAXZIPBUF>> fZipBuffer;
    FILE *fFile = nullptr;
    size_t fFilePos = 0;
    size_t fClusterStart = 0;
@@ -88,6 +92,7 @@ class RPageSourceRaw : public RPageSource {
 private:
    std::unique_ptr<RPageAllocatorFile> fPageAllocator;
    std::shared_ptr<RPagePool> fPagePool;
+   std::unique_ptr<std::array<unsigned char, kMAXZIPBUF>> fUnzipBuffer;
    std::unique_ptr<RRawFile> fFile;
 
    RPageSourceRaw(std::string_view ntupleName, const RNTupleReadOptions &options);

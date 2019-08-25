@@ -22,14 +22,21 @@
 #include <ROOT/RPagePool.hxx>
 #include <ROOT/RRawFile.hxx>
 
+#include <Compression.h>
+#include <RZip.h>
 #include <TError.h>
+#include <ZipLZ4.h>
+#include <ZipLZMA.h>
 
 #include <cstdio>
+#include <cstring>
+#include <iostream>
 
 ROOT::Experimental::Detail::RPageSinkRaw::RPageSinkRaw(std::string_view ntupleName, std::string_view path,
    const RNTupleWriteOptions &options)
    : RPageSink(ntupleName, options)
    , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
+   , fZipBuffer(std::make_unique<std::array<char, kMAXZIPBUF>>())
 {
    R__WARNING_HERE("NTuple") << "The RNTuple file format will change. " <<
       "Do not store real data with this version of RNTuple!";
@@ -66,6 +73,7 @@ ROOT::Experimental::RClusterDescriptor::RLocator
 ROOT::Experimental::Detail::RPageSinkRaw::DoCommitPage(ColumnHandle_t columnHandle, const RPage &page)
 {
    unsigned char *buffer = reinterpret_cast<unsigned char *>(page.GetBuffer());
+   bool isAdoptedBuffer = true;
    auto packedBytes = page.GetSize();
    auto element = columnHandle.fColumn->GetElement();
    const auto isMappable = element->IsMappable();
@@ -74,6 +82,31 @@ ROOT::Experimental::Detail::RPageSinkRaw::DoCommitPage(ColumnHandle_t columnHand
       packedBytes = (page.GetNElements() * element->GetBitsOnStorage() + 7) / 8;
       buffer = new unsigned char[packedBytes];
       element->Pack(buffer, page.GetBuffer(), page.GetNElements());
+      isAdoptedBuffer = false;
+   }
+
+   if (fOptions.GetCompression() % 100 != 0) {
+      auto level = fOptions.GetCompression() % 100;
+      auto algorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(fOptions.GetCompression() / 100);
+      int szZipBuffer = kMAXZIPBUF;
+      int szSource = packedBytes;
+      char *source = reinterpret_cast<char *>(buffer);
+      int zipBytes = 0;
+      if (algorithm == ROOT::RCompressionSetting::EAlgorithm::kLZMA) {
+         R__zipLZMA(level, &szSource, source, &szZipBuffer, fZipBuffer->data(), &zipBytes);
+      } else if (algorithm == ROOT::RCompressionSetting::EAlgorithm::kLZ4) {
+         R__zipLZ4(level, &szSource, source, &szZipBuffer, fZipBuffer->data(), &zipBytes);
+      } else {
+         // TODO(jblomer)
+         R__ASSERT(false);
+      }
+      R__ASSERT(zipBytes > 0);
+
+      if (!isAdoptedBuffer)
+         delete[] buffer;
+      buffer = reinterpret_cast<unsigned char *>(fZipBuffer->data());
+      packedBytes = zipBytes;
+      isAdoptedBuffer = true;
    }
 
    RClusterDescriptor::RLocator result;
@@ -81,9 +114,8 @@ ROOT::Experimental::Detail::RPageSinkRaw::DoCommitPage(ColumnHandle_t columnHand
    result.fBytesOnStorage = packedBytes;
    Write(buffer, packedBytes);
 
-   if (!isMappable) {
+   if (!isAdoptedBuffer)
       delete[] buffer;
-   }
 
    return result;
 }
@@ -149,6 +181,7 @@ ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntup
    : RPageSource(ntupleName, options)
    , fPageAllocator(std::make_unique<RPageAllocatorFile>())
    , fPagePool(std::make_shared<RPagePool>())
+   , fUnzipBuffer(std::make_unique<std::array<unsigned char, kMAXZIPBUF>>())
 {
 }
 
@@ -208,6 +241,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::Po
    auto columnId = columnHandle.fId;
    auto clusterId = clusterDescriptor.GetId();
    auto pageRange = clusterDescriptor.GetPageRange(columnId);
+   auto columnRange = clusterDescriptor.GetColumnRange(columnId);
 
    // TODO(jblomer): binary search
    RClusterDescriptor::RPageRange::RPageInfo pageInfo;
@@ -222,13 +256,34 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::Po
    R__ASSERT(firstInPage <= clusterIndex);
    R__ASSERT((firstInPage + pageInfo.fNElements) > clusterIndex);
 
+   auto element = columnHandle.fColumn->GetElement();
+   auto elementSize = element->GetSize();
+
    auto pageSize = pageInfo.fLocator.fBytesOnStorage;
-   void *pageBuffer = malloc(pageSize);
+   void *pageBuffer = malloc(std::max(pageSize, static_cast<std::uint32_t>(elementSize * pageInfo.fNElements)));
    R__ASSERT(pageBuffer);
    Read(pageBuffer, pageSize, pageInfo.fLocator.fPosition);
 
-   auto element = columnHandle.fColumn->GetElement();
-   auto elementSize = element->GetSize();
+   if (columnRange.fCompressionSettings % 100 != 0) {
+      auto algorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(
+         columnRange.fCompressionSettings / 100);
+      int szUnzipBuffer = kMAXZIPBUF;
+      int szSource = pageSize;
+      unsigned char *source = reinterpret_cast<unsigned char *>(pageBuffer);
+      int unzipBytes = 0;
+      if (algorithm == ROOT::RCompressionSetting::EAlgorithm::kLZMA) {
+         R__unzipLZMA(&szSource, source, &szUnzipBuffer, fUnzipBuffer->data(), &unzipBytes);
+      } else if (algorithm == ROOT::RCompressionSetting::EAlgorithm::kLZ4) {
+         R__unzipLZ4(&szSource, source, &szUnzipBuffer, fUnzipBuffer->data(), &unzipBytes);
+      } else {
+         // TODO(jblomer)
+         R__ASSERT(false);
+      }
+
+      memcpy(pageBuffer, fUnzipBuffer->data(), unzipBytes);
+      pageSize = unzipBytes;
+   }
+
    if (!element->IsMappable()) {
       pageSize = elementSize * pageInfo.fNElements;
       auto unpackedBuffer = reinterpret_cast<unsigned char *>(malloc(pageSize));
