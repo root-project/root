@@ -50,7 +50,8 @@ ROOT::Experimental::Detail::RPageStorage::~RPageStorage()
 //------------------------------------------------------------------------------
 
 
-ROOT::Experimental::Detail::RPageSource::RPageSource(std::string_view name) : RPageStorage(name)
+ROOT::Experimental::Detail::RPageSource::RPageSource(std::string_view name, const ROptions &options)
+   : RPageStorage(name), fOptions(options)
 {
 }
 
