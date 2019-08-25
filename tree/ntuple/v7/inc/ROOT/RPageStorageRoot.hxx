@@ -61,10 +61,6 @@ class RPagePool;
 */
 // clang-format on
 class RPageSinkRoot : public RPageSink {
-public:
-   struct ROptions : public RPageSink::ROptions {
-   };
-
 private:
    static constexpr std::size_t kDefaultElementsPerPage = 10000;
 
@@ -73,7 +69,6 @@ private:
    /// Currently, an ntuple is stored as a directory in a TFile
    std::unique_ptr<TFile> fFile;
    TDirectory *fDirectory = nullptr;
-   ROptions fOptions;
 
    /// Instead of a physical file offset, pages in root are identified by an index which becomes part of the key
    DescriptorId_t fLastPageIdx = 0;
@@ -85,8 +80,7 @@ protected:
    void DoCommitDataset() final;
 
 public:
-   //RPageSinkRoot(std::string_view ntupleName, ROptions options);
-   RPageSinkRoot(std::string_view ntupleName, std::string_view path, const ROptions &options = ROptions());
+   RPageSinkRoot(std::string_view ntupleName, std::string_view path, const RNTupleWriteOptions &options);
    virtual ~RPageSinkRoot();
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements = 0) final;
@@ -116,10 +110,6 @@ public:
 */
 // clang-format on
 class RPageSourceRoot : public RPageSource {
-public:
-   struct ROptions : public RPageSource::ROptions {
-   };
-
 private:
    std::unique_ptr<RPageAllocatorKey> fPageAllocator;
    std::shared_ptr<RPagePool> fPagePool;
@@ -127,7 +117,6 @@ private:
    /// Currently, an ntuple is stored as a directory in a TFile
    std::unique_ptr<TFile> fFile;
    TDirectory *fDirectory = nullptr;
-   ROptions fOptions;
 
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor,
                                  ClusterSize_t::ValueType clusterIndex);
@@ -136,8 +125,7 @@ protected:
    RNTupleDescriptor DoAttach() final;
 
 public:
-   //RPageSourceRoot(std::string_view ntupleName, ROptions options);
-   RPageSourceRoot(std::string_view ntupleName, std::string_view path, const ROptions &options = ROptions());
+   RPageSourceRoot(std::string_view ntupleName, std::string_view path, const RNTupleReadOptions &options);
    std::unique_ptr<RPageSource> Clone() const final;
    virtual ~RPageSourceRoot();
 

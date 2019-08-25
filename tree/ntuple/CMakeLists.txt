@@ -23,6 +23,7 @@ HEADERS
   ROOT/RFieldValue.hxx
   ROOT/RFieldVisitor.hxx
   ROOT/RNTuple.hxx
+  ROOT/RNTupleOptions.hxx
   ROOT/RNTupleDescriptor.hxx
   ROOT/RNTupleModel.hxx
   ROOT/RNTupleUtil.hxx

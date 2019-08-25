@@ -154,7 +154,7 @@ public:
       NTupleSize_t fFirstElementIndex = kInvalidNTupleIndex;
       /// A 32bit value for the number of column elements in the cluster
       ClusterSize_t fNElements = kInvalidClusterIndex;
-      /// The usual format for ROOT compression settings (see TCompression.h).
+      /// The usual format for ROOT compression settings (see Compression.h).
       /// The pages of a particular column in a particular cluster are all compressed with the same settings.
       std::int64_t fCompressionSettings = 0;
 

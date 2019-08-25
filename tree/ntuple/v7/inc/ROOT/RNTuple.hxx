@@ -17,8 +17,10 @@
 #define ROOT7_RNTuple
 
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RNTupleView.hxx>
+#include <ROOT/RPageStorage.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <iterator>
@@ -186,7 +188,8 @@ private:
 public:
    static std::unique_ptr<RNTupleWriter> Recreate(std::unique_ptr<RNTupleModel> model,
                                                   std::string_view ntupleName,
-                                                  std::string_view storage);
+                                                  std::string_view storage,
+                                                  const RNTupleWriteOptions &options = RNTupleWriteOptions());
    RNTupleWriter(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSink> sink);
    RNTupleWriter(const RNTupleWriter&) = delete;
    RNTupleWriter& operator=(const RNTupleWriter&) = delete;
