@@ -1,5 +1,6 @@
 #include "RConfigure.h"
 #include "ROOT/RRawFile.hxx"
+#include "ROOT/RMakeUnique.hxx"
 
 #include <algorithm>
 #include <cstdio>
