@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "ROOT/RRawFileDavix.hxx"
+#include "ROOT/RMakeUnique.hxx"
 
 #include <stdexcept>
 
