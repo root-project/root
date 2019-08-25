@@ -339,7 +339,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::Po
 
 void ROOT::Experimental::Detail::RPageSourceRaw::ReleasePage(RPage &page)
 {
-   fPageAllocator->DeletePage(page);
+   fPagePool->ReturnPage(page);
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSourceRaw::Clone() const
