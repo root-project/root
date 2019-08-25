@@ -54,10 +54,6 @@ an ntuple.  Concrete implementations can use a TFile, a raw file, an object stor
 */
 // clang-format on
 class RPageStorage {
-public:
-   struct ROptions {
-   };
-
 protected:
    std::string fNTupleName;
 
@@ -101,6 +97,7 @@ up to the given entry number are committed.
 class RPageSink : public RPageStorage {
 public:
    struct ROptions {
+
    };
 
 protected:
@@ -160,13 +157,18 @@ mapped into memory. The page source also gives access to the ntuple's meta-data.
 */
 // clang-format on
 class RPageSource : public RPageStorage {
+public:
+   struct ROptions {
+   };
+
 protected:
+   ROptions fOptions;
    RNTupleDescriptor fDescriptor;
 
    virtual RNTupleDescriptor DoAttach() = 0;
 
 public:
-   explicit RPageSource(std::string_view ntupleName);
+   RPageSource(std::string_view ntupleName, const ROptions &fOptions);
    virtual ~RPageSource();
    /// Guess the concrete derived page source from the file name (location)
    static std::unique_ptr<RPageSource> Create(std::string_view ntupleName, std::string_view location);

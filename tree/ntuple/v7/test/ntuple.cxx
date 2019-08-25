@@ -9,7 +9,6 @@
 #include <ROOT/RVec.hxx>
 
 #include <TClass.h>
-#include <TFile.h>
 #include <TRandom3.h>
 
 #include "gtest/gtest.h"
@@ -104,30 +103,24 @@ TEST(RNTuple, ReconstructModel)
 TEST(RNTuple, StorageRoot)
 {
    FileRaii fileGuard("test_ntuple_storage.root");
-   TFile *file = TFile::Open(fileGuard.GetPath().c_str(), "RECREATE");
-   RPageSinkRoot::ROptions optionsWrite;
-   optionsWrite.fFile = file;
-   RPageSinkRoot sinkRoot("myTree", optionsWrite);
+   {
+      RPageSinkRoot sinkRoot("myTree", fileGuard.GetPath());
 
-   auto model = RNTupleModel::Create();
-   auto fieldPt = model->MakeField<float>("pt", 42.0);
-   auto fieldX = model->MakeField<float>("energy");
-   auto fieldStr = model->MakeField<std::string>("string", "abc");
+      auto model = RNTupleModel::Create();
+      auto fieldPt = model->MakeField<float>("pt", 42.0);
+      auto fieldX = model->MakeField<float>("energy");
+      auto fieldStr = model->MakeField<std::string>("string", "abc");
 
-   //auto fieldFail = model->AddField<int>("jets");
-   auto fieldJet = model->MakeField<std::vector<float>>("jets" /* TODO(jblomer), {1.0, 2.0}*/);
-   auto nnlo = model->MakeField<std::vector<std::vector<float>>>("nnlo");
+      //auto fieldFail = model->AddField<int>("jets");
+      auto fieldJet = model->MakeField<std::vector<float>>("jets" /* TODO(jblomer), {1.0, 2.0}*/);
+      auto nnlo = model->MakeField<std::vector<std::vector<float>>>("nnlo");
 
-   sinkRoot.Create(*model.get());
-   sinkRoot.CommitDataset();
-   file->Close();
+      sinkRoot.Create(*model.get());
+      sinkRoot.CommitDataset();
+   }
 
-   file = TFile::Open(fileGuard.GetPath().c_str(), "READ");
-   RPageSourceRoot::ROptions optionsRead;
-   optionsRead.fFile = file;
-   RPageSourceRoot sourceRoot("myTree", optionsRead);
+   RPageSourceRoot sourceRoot("myTree", fileGuard.GetPath());
    sourceRoot.Attach();
-   file->Close();
 }
 
 
