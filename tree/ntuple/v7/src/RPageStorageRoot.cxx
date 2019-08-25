@@ -38,14 +38,14 @@ static constexpr const char* kKeyPagePayload = "NTPLP";
 }
 
 ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view ntupleName, std::string_view path,
-   const ROptions &options)
+   const RNTupleWriteOptions &options)
    : RPageSink(ntupleName, options)
    , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
-   , fOptions(options)
 {
    R__WARNING_HERE("NTuple") << "The RNTuple file format will change. " <<
       "Do not store real data with this version of RNTuple!";
    fFile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "RECREATE"));
+   fFile->SetCompressionSettings(fOptions.GetCompression());
 }
 
 ROOT::Experimental::Detail::RPageSinkRoot::~RPageSinkRoot()
@@ -162,11 +162,10 @@ void ROOT::Experimental::Detail::RPageAllocatorKey::DeletePage(
 
 
 ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, std::string_view path,
-   const ROptions &options)
+   const RNTupleReadOptions &options)
    : RPageSource(ntupleName, options)
    , fPageAllocator(std::make_unique<RPageAllocatorKey>())
    , fPagePool(std::make_shared<RPagePool>())
-   , fOptions(options)
 {
    fFile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "READ"));
 }
