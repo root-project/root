@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "ROOT/RRawFileWin.hxx"
+#include "ROOT/RMakeUnique.hxx"
 
 #include "TError.h"
 

@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "ROOT/RRawFileUnix.hxx"
+#include "ROOT/RMakeUnique.hxx"
 
 #include "TError.h"
 
