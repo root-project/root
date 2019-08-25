@@ -201,11 +201,12 @@ TEST(RNTuple, ClassVector)
    wrKlassVec->emplace_back(klass);
 
    {
-      RNTupleWriter ntuple(std::move(modelWrite), std::make_unique<RPageSinkRoot>("f", fileGuard.GetPath()));
+      RNTupleWriter ntuple(std::move(modelWrite),
+         std::make_unique<RPageSinkRoot>("f", fileGuard.GetPath(), RNTupleWriteOptions()));
       ntuple.Fill();
    }
 
-   RNTupleReader ntuple(std::make_unique<RPageSourceRoot>("f", fileGuard.GetPath()));
+   RNTupleReader ntuple(std::make_unique<RPageSourceRoot>("f", fileGuard.GetPath(), RNTupleReadOptions()));
    EXPECT_EQ(1U, ntuple.GetNEntries());
 
    auto viewKlassVec = ntuple.GetViewCollection("klassVec");
