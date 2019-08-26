@@ -22,6 +22,9 @@ environ['CLING_STANDARD_PCH'] = 'none'
 # Prevent cppyy's check for extra header directory
 environ['CPPYY_API_PATH'] = 'none'
 
+# Prevent cppyy from filtering ROOT libraries
+environ['CPPYY_NO_ROOT_FILTER'] = '1'
+
 import cppyy
 import ROOT.pythonization as pyz
 
