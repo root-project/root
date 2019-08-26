@@ -162,31 +162,43 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         self.assertEqual(sc3[1], l2[0])
         self.assertEqual(sc3[2], l3[2])
 
-        # Assign with step
+        # Assign second and third items to just one item.
+        # This tests that the third item is removed
         sc4 = self.create_tseqcollection()
-        o = sc4[1]
-        len4 = 2
-        l4 = [ ROOT.TObject() for _ in range(len4) ]
+        l4 = [ ROOT.TObject() ]
+        l5 = [ elem for elem in sc4 ]
 
-        sc4[::2] = l4
+        sc4[1:3] = l4
 
-        self.assertEqual(sc4.GetEntries(), self.num_elems)
-        self.assertEqual(sc4[0], l4[0])
-        self.assertEqual(sc4[1], o)
-        self.assertEqual(sc4[2], l4[1])
+        self.assertEqual(sc4.GetEntries(), self.num_elems - 1)
+        self.assertEqual(sc4[0], l5[0])
+        self.assertEqual(sc4[1], l4[0])
+
+        # Assign with step
+        sc5 = self.create_tseqcollection()
+        o = sc5[1]
+        len6 = 2
+        l6 = [ ROOT.TObject() for _ in range(len6) ]
+
+        sc5[::2] = l6
+
+        self.assertEqual(sc5.GetEntries(), self.num_elems)
+        self.assertEqual(sc5[0], l6[0])
+        self.assertEqual(sc5[1], o)
+        self.assertEqual(sc5[2], l6[1])
 
         # Assign with step (start from end)
-        sc4[::-2] = l4
+        sc5[::-2] = l6
 
-        self.assertEqual(sc4.GetEntries(), self.num_elems)
-        self.assertEqual(sc4[0], l4[1])
-        self.assertEqual(sc4[1], o)
-        self.assertEqual(sc4[2], l4[0])
+        self.assertEqual(sc5.GetEntries(), self.num_elems)
+        self.assertEqual(sc5[0], l6[1])
+        self.assertEqual(sc5[1], o)
+        self.assertEqual(sc5[2], l6[0])
 
         # Step cannot be zero
-        sc5 = self.create_tseqcollection()
+        sc6 = self.create_tseqcollection()
         with self.assertRaises(ValueError):
-            sc5[::0] = [ ROOT.TObject() ]
+            sc6[::0] = [ ROOT.TObject() ]
 
     def test_delitem(self):
         sc = self.create_tseqcollection()
