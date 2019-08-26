@@ -216,12 +216,12 @@ public:
 
 
 template <>
-class RNTupleView<int> {
+class RNTupleView<std::int32_t> {
    friend class RNTupleReader;
    friend class RNTupleViewCollection;
 
 protected:
-   RField<int> fField;
+   RField<std::int32_t> fField;
    RNTupleView(DescriptorId_t fieldId, Detail::RPageSource* pageSource)
       : fField(pageSource->GetDescriptor().GetFieldDescriptor(fieldId).GetFieldName())
    {
@@ -235,8 +235,32 @@ public:
    RNTupleView& operator=(RNTupleView&& other) = default;
    ~RNTupleView() = default;
 
-   int operator()(NTupleSize_t globalIndex) { return *fField.Map(globalIndex); }
-   int operator()(const RClusterIndex &clusterIndex) { return *fField.Map(clusterIndex); }
+   std::int32_t operator()(NTupleSize_t globalIndex) { return *fField.Map(globalIndex); }
+   std::int32_t operator()(const RClusterIndex &clusterIndex) { return *fField.Map(clusterIndex); }
+};
+
+template <>
+class RNTupleView<ClusterSize_t> {
+   friend class RNTupleReader;
+   friend class RNTupleViewCollection;
+
+protected:
+   RField<ClusterSize_t> fField;
+   RNTupleView(DescriptorId_t fieldId, Detail::RPageSource* pageSource)
+      : fField(pageSource->GetDescriptor().GetFieldDescriptor(fieldId).GetFieldName())
+   {
+      Detail::RFieldFuse::Connect(fieldId, *pageSource, fField);
+   }
+
+public:
+   RNTupleView(const RNTupleView& other) = delete;
+   RNTupleView(RNTupleView&& other) = default;
+   RNTupleView& operator=(const RNTupleView& other) = delete;
+   RNTupleView& operator=(RNTupleView&& other) = default;
+   ~RNTupleView() = default;
+
+   ClusterSize_t operator()(NTupleSize_t globalIndex) { return *fField.Map(globalIndex); }
+   ClusterSize_t operator()(const RClusterIndex &clusterIndex) { return *fField.Map(clusterIndex); }
 };
 
 
