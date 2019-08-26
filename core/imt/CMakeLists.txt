@@ -23,7 +23,6 @@ if(imt)
     ROOT/TPoolManager.hxx
     ROOT/TTaskGroup.hxx
     ROOT/TThreadExecutor.hxx
-    NOTARGET
     LINKDEF
       LinkDef.h
     MODULE

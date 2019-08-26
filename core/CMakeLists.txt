@@ -161,7 +161,6 @@ ROOT_GENERATE_DICTIONARY(G__Core
   ${Meta_dict_headers}
   ${TextInput_dict_headers}
   STAGE1
-  NOTARGET
   MODULE
     Core
   OPTIONS
