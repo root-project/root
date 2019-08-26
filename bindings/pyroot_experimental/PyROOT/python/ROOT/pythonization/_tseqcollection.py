@@ -97,6 +97,16 @@ def _setitem_pyz(self, idx, val):
             except StopIteration:
                 # No more indices in range, just append
                 self.append(elem)
+
+        # If range is longer than the number of elements in val,
+        # we need to remove the remaining elements of the range
+        try:
+            for i in it:
+                del self[i]
+        except StopIteration:
+            # No more indices in range, we are done
+            pass
+
     # Number
     else:
         idx = _check_index(self, idx)
