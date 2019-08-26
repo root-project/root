@@ -16,16 +16,16 @@
 #ifndef ROO_DATA_HIST
 #define ROO_DATA_HIST
 
-#include <map>
-#include <vector>
-#include <string>
-#include <utility>
-
 #include "RooAbsData.h"
 #include "RooDirItem.h"
 #include "RooArgSet.h"
 #include "RooNameSet.h"
 #include "RooCacheManager.h"
+
+#include <map>
+#include <vector>
+#include <string>
+#include <utility>
 
 class TObject ;
 class RooAbsArg;
@@ -91,21 +91,12 @@ public:
   }
   virtual Bool_t isNonPoissonWeighted() const ;
 
-  virtual std::vector<RooSpan<const double>> getBatch(std::size_t first, std::size_t last) const {
-    //TODO
-    std::cerr << "Retrieving batches not yet implemented for RooDataHist." << std::endl;
-    assert(false);
-
-    std::vector<double> vec(first, last);
-    return {RooSpan<const double>(std::move(vec))};
-  }
-  virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t last) const {
+  virtual RooSpan<const double> getWeightBatch(std::size_t, std::size_t) const {
     //TODO
     std::cerr << "Retrieving weights in batches not yet implemented for RooDataHist." << std::endl;
     assert(false);
 
-    std::vector<double> vec(first, last);
-    return RooSpan<const double>(std::move(vec));
+    return {};
   }
 
   Double_t sum(Bool_t correctForBinSize, Bool_t inverseCorr=kFALSE) const ;
