@@ -181,7 +181,7 @@ triggered by Flush() or by destructing the ntuple.  On I/O errors, an exception 
 // clang-format on
 class RNTupleWriter : public Detail::RNTuple {
 private:
-   static constexpr NTupleSize_t kDefaultClusterSizeEntries = 8192;
+   static constexpr NTupleSize_t kDefaultClusterSizeEntries = 64000;
    std::unique_ptr<Detail::RPageSink> fSink;
    NTupleSize_t fClusterSizeEntries;
    NTupleSize_t fLastCommitted;
@@ -205,7 +205,8 @@ public:
          value.GetField()->Append(value);
       }
       fNEntries++;
-      if ((fNEntries % fClusterSizeEntries) == 0) CommitCluster();
+      if ((fNEntries % fClusterSizeEntries) == 0)
+         CommitCluster();
    }
    /// Ensure that the data from the so far seen Fill calls has been written to storage
    void CommitCluster();
