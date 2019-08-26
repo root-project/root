@@ -28,6 +28,7 @@ namespace {
 
 struct ClusterInfo {
    std::uint64_t fFirstEntry = 0;
+   std::uint32_t fNPages = 0;
    std::uint32_t fNEntries = 0;
    std::uint32_t fBytesOnStorage = 0;
    std::uint32_t fBytesInMemory = 0;
@@ -108,6 +109,7 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
 
    std::uint64_t bytesOnStorage = 0;
    std::uint64_t bytesInMemory = 0;
+   std::uint64_t nPages = 0;
    int compression = -1;
    for (const auto &column : fColumnDescriptors) {
       auto element = Detail::RColumnElementBase::Generate(column.second.GetModel().GetType());
@@ -132,8 +134,10 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
             bytesInMemory += page.fNElements * elementSize;
             clusters[idx].fBytesOnStorage += page.fLocator.fBytesOnStorage;
             clusters[idx].fBytesInMemory += page.fNElements * elementSize;
+            ++clusters[idx].fNPages;
             info.fBytesOnStorage += page.fLocator.fBytesOnStorage;
             ++info.fNPages;
+            ++nPages;
          }
       }
       columns.emplace_back(info);
@@ -147,6 +151,7 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
    output << "  # Entries:        " << GetNEntries() << std::endl;
    output << "  # Fields:         " << GetNFields() << std::endl;
    output << "  # Columns:        " << GetNColumns() << std::endl;
+   output << "  # Pages:          " << nPages << std::endl;
    output << "  # Clusters:       " << GetNClusters() << std::endl;
    output << "  Size on storage:  " << bytesOnStorage << " B" << std::endl;
    output << "  Compression rate: " << std::fixed << std::setprecision(2)
@@ -164,6 +169,8 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
       output << "  # " << std::setw(5) << i
              << "   Entry range:     [" << clusters[i].fFirstEntry << ".."
              << clusters[i].fFirstEntry + clusters[i].fNEntries << ")  --  " << clusters[i].fNEntries << std::endl;
+      output << "         "
+             << "   # Pages:         " << clusters[i].fNPages << std::endl;
       output << "         "
              << "   Size on storage: " << clusters[i].fBytesOnStorage << " B" << std::endl;
       output << "         "
