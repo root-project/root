@@ -158,11 +158,10 @@ or in `TBrowser` by opening `Browser Help → About ROOT`.
   dependent projects are installed by default now, and they are installed
   directly into the cmake/ directory, not cmake/modules/ as before.
 - The macro `ROOT_GENERATE_DICTIONARY()` can now attach the generated source
-  file directly to a library target by using the options `NOTARGET MODULE
-  <library>`, where `<library>` is an existing library target. This then allows
-  the dictionary to inherit target properties such as compile options and
-  include directories directly from the library target, even when they are added
-  after the call to `ROOT_GENERATE_DICTIONARY()`.
+  file directly to a library target by using the option `MODULE <library>`, where
+  `<library>` is an existing library target. This allows the dictionary to inherit
+  target properties such as compile options and include directories from the library
+  target, even when they are added after the call to `ROOT_GENERATE_DICTIONARY()`.
 - The macros `REFLEX_GENERATE_DICTIONARY()` and `ROOT_GENERATE_DICTIONARY()` can
   now have custom extra dependencies added with the options `DEPENDS` and
   `EXTRA_DEPENDENCIES`, respectively.

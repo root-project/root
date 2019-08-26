@@ -47,7 +47,6 @@ ROOT_GENERATE_DICTIONARY(G__Smatrix32
     Math/SMatrixFfwd.h
     Math/SVector.h
   MULTIDICT
-  NOTARGET
   MODULE
     Smatrix
   LINKDEF
