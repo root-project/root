@@ -8,13 +8,8 @@
 # CMakeLists.txt file for building ROOT math/smatrix package
 ############################################################################
 
-ROOT_LINKER_LIBRARY(Smatrix
-  DEPENDENCIES
-    Core
-    MathCore
-)
-
-ROOT_GENERATE_DICTIONARY(G__Smatrix
+ROOT_STANDARD_LIBRARY_PACKAGE(Smatrix
+  HEADERS
     Math/BinaryOperators.h
     Math/BinaryOpPolicy.h
     Math/CholeskyDecomp.h
@@ -36,9 +31,7 @@ ROOT_GENERATE_DICTIONARY(G__Smatrix
     Math/StaticCheck.h
     Math/SVector.h
     Math/UnaryOperators.h
-  NOTARGET
-  MODULE
-    Smatrix
+  NO_SOURCES
   LINKDEF
     LinkDef.h
   OPTIONS
@@ -65,5 +58,3 @@ ROOT_GENERATE_DICTIONARY(G__Smatrix32
     Core
     MathCore
 )
-
-ROOT_INSTALL_HEADERS()
