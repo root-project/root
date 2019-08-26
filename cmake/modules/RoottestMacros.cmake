@@ -400,7 +400,7 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
   CMAKE_PARSE_ARGUMENTS(ARG "" "" "LIBRARIES;COMPILE_FLAGS;DEPENDS" ${ARGN})
 
   set(exec_sources)
-  foreach(exec_src_file ${ARGN})
+  foreach(exec_src_file ${ARG_UNPARSED_ARGUMENTS})
     get_filename_component(exec_src_file ${exec_src_file} ABSOLUTE)
     if(EXISTS ${exec_src_file})
       list(APPEND exec_sources ${exec_src_file})
