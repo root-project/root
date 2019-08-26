@@ -2886,7 +2886,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
          fprintf(fpMAKE,"genreflex %sProjectHeaders.h -o %sProjectDict.cxx --comments --iocomments %s ",subdirname.Data(),subdirname.Data(),gSystem->GetIncludePath());
          path.Form("%s/%sSelection.xml",clean_dirname.Data(),subdirname.Data());
       } else {
-         fprintf(fpMAKE,"rootcint -v1 -f %sProjectDict.cxx -c %s ", subdirname.Data(), gSystem->GetIncludePath());
+         fprintf(fpMAKE,"rootcint -v1 -f %sProjectDict.cxx %s ", subdirname.Data(), gSystem->GetIncludePath());
          path.Form("%s/%sLinkDef.h",clean_dirname.Data(),subdirname.Data());
       }
    } else {
@@ -3302,7 +3302,7 @@ Int_t TFile::MakeProjectParMake(const char *pack, const char *filemake)
    fprintf(fmk, "\n");
    fprintf(fmk, "%sProjectDict.$(SrcSuf): %sProjectHeaders.h %sLinkDef.h\n", pack, pack, pack);
    fprintf(fmk, "\t\t@echo \"Generating dictionary $@...\"\n");
-   fprintf(fmk, "\t\t@rootcint -f $@ -c $^\n");
+   fprintf(fmk, "\t\t@rootcint -f $@ $^\n");
    fprintf(fmk, "\n");
    fprintf(fmk, ".$(SrcSuf).$(ObjSuf):\n");
    fprintf(fmk, "\t\t$(CXX) $(CXXFLAGS) -c $<\n");
