@@ -528,15 +528,12 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
     target_include_directories(${dictionary} PRIVATE
       ${includedirs} $<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>)
-
-    if(PROJECT_NAME STREQUAL "ROOT")
-      set_property(GLOBAL APPEND PROPERTY ROOT_PCH_DEPENDENCIES ${dictionary})
-    endif()
   else()
     add_custom_target(${dictionary} DEPENDS ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file})
-    if(PROJECT_NAME STREQUAL "ROOT")
-      set_property(GLOBAL APPEND PROPERTY ROOT_PCH_DEPENDENCIES ${dictionary})
-    endif()
+  endif()
+
+  if(PROJECT_NAME STREQUAL "ROOT")
+    set_property(GLOBAL APPEND PROPERTY ROOT_PCH_DEPENDENCIES ${dictionary})
   endif()
 
   if(ARG_MULTIDICT)
