@@ -1026,11 +1026,6 @@ const RooArgSet* RooDataSet::get(Int_t index) const
 }
 
 
-std::vector<RooSpan<const double>> RooDataSet::getBatch(std::size_t first, std::size_t last) const {
-  return _dstore->getBatch(first, last);
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 Double_t RooDataSet::sumEntries() const 
