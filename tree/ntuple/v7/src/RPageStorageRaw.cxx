@@ -34,7 +34,7 @@ ROOT::Experimental::Detail::RPageSinkRaw::RPageSinkRaw(std::string_view ntupleNa
    const RNTupleWriteOptions &options)
    : RPageSink(ntupleName, options)
    , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
-   , fZipBuffer(std::make_unique<std::array<char, kMAXZIPBUF>>())
+   , fZipBuffer(std::make_unique<std::array<char, kMaxPageSize>>())
 {
    R__WARNING_HERE("NTuple") << "The RNTuple file format will change. " <<
       "Do not store real data with this version of RNTuple!";
@@ -84,9 +84,10 @@ ROOT::Experimental::Detail::RPageSinkRaw::DoCommitPage(ColumnHandle_t columnHand
    }
 
    if (fOptions.GetCompression() % 100 != 0) {
+      R__ASSERT(packedBytes <= kMaxPageSize);
       auto level = fOptions.GetCompression() % 100;
       auto algorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(fOptions.GetCompression() / 100);
-      int szZipBuffer = kMAXZIPBUF;
+      int szZipBuffer = kMaxPageSize;
       int szSource = packedBytes;
       char *source = reinterpret_cast<char *>(buffer);
       int zipBytes = 0;
@@ -172,7 +173,7 @@ ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntup
    : RPageSource(ntupleName, options)
    , fPageAllocator(std::make_unique<RPageAllocatorFile>())
    , fPagePool(std::make_shared<RPagePool>())
-   , fUnzipBuffer(std::make_unique<std::array<unsigned char, kMAXZIPBUF>>())
+   , fUnzipBuffer(std::make_unique<std::array<unsigned char, kMaxPageSize>>())
 {
 }
 
@@ -257,9 +258,10 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::Po
 
    auto bytesOnStorage = (element->GetBitsOnStorage() * pageInfo.fNElements + 7) / 8;
    if (pageSize != bytesOnStorage) {
+      R__ASSERT(bytesOnStorage <= kMaxPageSize);
       // We do have the unzip information in the column range, but here we simply use the value from
       // the R__zip header
-      int szUnzipBuffer = kMAXZIPBUF;
+      int szUnzipBuffer = kMaxPageSize;
       int szSource = pageSize;
       unsigned char *source = reinterpret_cast<unsigned char *>(pageBuffer);
       int unzipBytes = 0;
