@@ -156,5 +156,21 @@ void write_csv(std::string &filename, std::vector<T> values_vec)
    fout.close();
 }
 
+template <typename T>
+std::vector<T> convert_VecMatrix2Vec(std::vector<std::vector<T>> vec_vec)
+{
+   std::vector<T> out;
+   int            rows = vec_vec.size();
+   int            cols = vec_vec[0].size();
+   out.reserve(rows * cols);
+   for (int i = 0; i < rows; i++) {
+      for (int j = 0; j < cols; j++) {
+         out.push_back(vec_vec.at(i).at(j));
+      }
+   }
+   return out;
+}
+// converts vector<vector> into vector <...>
+
 #endif
 // end

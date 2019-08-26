@@ -17,6 +17,20 @@
 /// CODE GENERATION FUNCTIONS
 //////////////////////////////////////////////////////
 
+/// Helper to write the type as string
+template <typename T>
+std::string type_as_string(); // primary template
+template <>
+std::string type_as_string<float>()
+{
+   return "float";
+}
+template <>
+std::string type_as_string<double>()
+{
+   return "double";
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 ///// BRANCHED VERSION /////////////////////////////////////////////////////////
 
@@ -56,7 +70,7 @@ void generate_if_statement_for_bdt(std::ostream &fout,
 
 /// Generate the code for Forest evaluation
 template <typename T>
-void generate_code_forest(std::ostream &fout, std::vector<unique_bdt::Tree<T>> &trees, int number_of_trees,
+void generate_code_forest(std::ostream &fout, const std::vector<unique_bdt::Tree<T>> &trees, int number_of_trees,
                           std::string s_id = "")
 {
    bool use_namespaces = (!s_id.empty());
@@ -71,10 +85,11 @@ void generate_code_forest(std::ostream &fout, std::vector<unique_bdt::Tree<T>> &
    // fout << "#include <vector>" << std::endl;
    if (use_namespaces) {
       // add "s_" to have a valid name
-      fout << "namespace s_f_" << s_id << "{" << std::endl;
+      fout << "namespace jitted_" << s_id << "{" << std::endl;
    }
 
-   fout << "bool generated_forest (const std::vector<float>& event){" << std::endl << "float result = 0;" << std::endl;
+   fout << "bool generated_forest (const " << type_as_string<T>() << " * event){" << std::endl
+        << "" << type_as_string<T>() << " result = 0;" << std::endl;
 
    for (int i = 0; i < number_of_trees; i++) {
       // Function starts here
@@ -95,9 +110,9 @@ void generate_code_forest(std::ostream &fout, std::vector<unique_bdt::Tree<T>> &
 
 /// Generates long array of thresholds
 template <typename T>
-void generate_threshold_array(std::ostream &fout, std::vector<array_bdt::Tree<T>> &trees, int total_array_length)
+void generate_threshold_array(std::ostream &fout, const std::vector<array_bdt::Tree<T>> &trees, int total_array_length)
 {
-   fout << "const float thresholds[" // I could have done it just const
+   fout << "const " << type_as_string<T>() << " thresholds[" // I could have done it just const
         << std::to_string(total_array_length) << "] {";
    for (int j = 0; j < trees.size(); j++) {
       for (int i = 0; i < trees[j].thresholds.size(); i++) {
@@ -115,7 +130,7 @@ void generate_threshold_array(std::ostream &fout, std::vector<array_bdt::Tree<T>
 }
 /// Generates long array of thresholds
 template <typename T>
-void generate_features_array(std::ostream &fout, std::vector<array_bdt::Tree<T>> &trees, int total_array_length)
+void generate_features_array(std::ostream &fout, const std::vector<array_bdt::Tree<T>> &trees, int total_array_length)
 {
    // Define long array of features
    // also possible with constexpr std::array<float,
@@ -148,8 +163,8 @@ void generate_branchless_tree(std::ostream &fout, const array_bdt::Tree<T> &tree
 
 /// Generate the code for Forest evaluation
 template <typename T>
-void generate_code_branchless_forest(std::ostream &fout, std::vector<array_bdt::Tree<T>> &trees, int number_of_trees,
-                                     std::string s_id = "")
+void generate_code_forest(std::ostream &fout, const std::vector<array_bdt::Tree<T>> &trees, int number_of_trees,
+                          std::string s_id = "")
 {
    int total_array_length = 0;
    for (auto &tree : trees) {
@@ -164,17 +179,16 @@ void generate_code_branchless_forest(std::ostream &fout, std::vector<array_bdt::
    fout << "#pragma cling optimize(3)" << std::endl << std::endl;
    fout << "   " << std::endl;
 
-   // fout << "#include <vector>" << std::endl;
    if (use_namespaces) {
-      // add "s_" to have a valid name
-      fout << "namespace branchless_" << s_id << "{" << std::endl;
+      fout << "namespace jitted_" << s_id << "{" << std::endl;
    }
 
    // Generates the arrays with all cuts, and features on which to cut
    generate_threshold_array<T>(fout, trees, total_array_length);
    generate_features_array<T>(fout, trees, total_array_length);
 
-   fout << "bool branchless_generated_forest (const float *event){" << std::endl << "float result = 0;" << std::endl;
+   fout << "bool generated_forest (const " << type_as_string<T>() << " *event){" << std::endl
+        << "" << type_as_string<T>() << " result = 0;" << std::endl;
 
    fout << "unsigned int index=0;" << std::endl;
 
@@ -183,13 +197,14 @@ void generate_code_branchless_forest(std::ostream &fout, std::vector<array_bdt::
       generate_branchless_tree<T>(fout, trees[i], current_tree_index);
       current_tree_index += trees[i].array_length;
    }
-   fout << "result = 1. / (1. + (1. / std::exp(result)));" << std::endl << "return (result > 0.5);" << std::endl;
+   fout << "result = 1. / (1. + (1. / std::exp(result)));" << std::endl;
+   fout << "return (result > 0.5);" << std::endl;
 
    fout << "} // end of function" << std::endl;
 
    // close namespace
    if (use_namespaces) {
-      fout << "} // end of s_f_" << s_id << " namespace" << std::endl;
+      fout << "} // end of <prefix>" << s_id << " namespace" << std::endl;
    }
 }
 

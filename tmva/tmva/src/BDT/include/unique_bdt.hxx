@@ -1,5 +1,5 @@
-#ifndef __UNIQUE_BDT_H_
-#define __UNIQUE_BDT_H_
+#ifndef __UNIQUE_BDT_HXX_
+#define __UNIQUE_BDT_HXX_
 
 #include <string>
 #include <map>
@@ -23,6 +23,7 @@ public: // TODO: switch to private
    T    split_threshold;
    int  split_variable;
    T    leaf_true, leaf_false;
+   // int  depth = 0;
 
    std::unique_ptr<Node<T>> child_true  = nullptr;
    std::unique_ptr<Node<T>> child_false = nullptr;

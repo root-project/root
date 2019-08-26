@@ -147,6 +147,7 @@ void read_nodes_from_tree(json &jTree, Tree<T> &tree)
    _read_nodes<T>(jTree, features, thresholds);
    tree.thresholds.swap(thresholds);
    tree.features.swap(features);
+   // std::cout << "**  " << depth << " || " << array_length << "  **\n";
 
    // for (auto value : tree.features) std::cout << value << std::endl;
    // std::cout << "------- \n";
