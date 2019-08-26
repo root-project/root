@@ -27,7 +27,7 @@ class TKeySQL;
 class TBufferSQL2;
 class TSQLClassInfo;
 
-class TSQLFile : public TFile {
+class TSQLFile final : public TFile {
 
    friend class TBufferSQL2;
    friend class TKeySQL;
@@ -41,21 +41,21 @@ protected:
    enum ELockingKinds { kLockFree = 0, kLockBusy = 1 };
 
    // Interface to basic system I/O routines, suppressed
-   virtual Int_t SysOpen(const char *, Int_t, UInt_t) { return 0; }
-   virtual Int_t SysClose(Int_t) { return 0; }
-   virtual Int_t SysRead(Int_t, void *, Int_t) { return 0; }
-   virtual Int_t SysWrite(Int_t, const void *, Int_t) { return 0; }
-   virtual Long64_t SysSeek(Int_t, Long64_t, Int_t) { return 0; }
-   virtual Int_t SysStat(Int_t, Long_t *, Long64_t *, Long_t *, Long_t *) { return 0; }
-   virtual Int_t SysSync(Int_t) { return 0; }
+   Int_t SysOpen(const char *, Int_t, UInt_t) final { return 0; }
+   Int_t SysClose(Int_t)  final { return 0; }
+   Int_t SysRead(Int_t, void *, Int_t)  final { return 0; }
+   Int_t SysWrite(Int_t, const void *, Int_t)  final { return 0; }
+   Long64_t SysSeek(Int_t, Long64_t, Int_t)  final { return 0; }
+   Int_t SysStat(Int_t, Long_t *, Long64_t *, Long_t *, Long_t *) final { return 0; }
+   Int_t SysSync(Int_t)  final { return 0; }
 
    // Overwrite methods for directory I/O
-   virtual Long64_t DirCreateEntry(TDirectory *);
-   virtual Int_t DirReadKeys(TDirectory *);
-   virtual void DirWriteKeys(TDirectory *);
-   virtual void DirWriteHeader(TDirectory *);
+   Long64_t DirCreateEntry(TDirectory *) final;
+   Int_t DirReadKeys(TDirectory *) final;
+   void DirWriteKeys(TDirectory *) final;
+   void DirWriteHeader(TDirectory *) final;
 
-   InfoListRet GetStreamerInfoListImpl(bool lookupSICache);
+   InfoListRet GetStreamerInfoListImpl(bool) final;
 
    // functions to manipulate basic tables (Configurations, Objects, Keys) in database
    void SaveToDatabase();
@@ -153,10 +153,9 @@ protected:
    Bool_t fCanChangeConfig; ///<! variable indicates can be basic configuration changed or not
    TString fTablesType;     ///<! type, used in CREATE TABLE statements
    Int_t fUseTransactions;  ///<! use transaction statements for writing data into the tables
-   Int_t fUseIndexes;    ///<! use indexes for tables: 0 - off, 1 - only for basic tables, 2  + normal class tables, 3 -
-                         ///all tables
-   Int_t fModifyCounter; ///<! indicates how many changes was done with database tables
-   Int_t fQuerisCounter; ///<! how many query was applied
+   Int_t fUseIndexes;       ///<! use indexes for tables: 0 - off, 1 - only for basic tables, 2  + normal class tables, 3 - all tables
+   Int_t fModifyCounter;    ///<! indicates how many changes was done with database tables
+   Int_t fQuerisCounter;    ///<! how many query was applied
 
    const char **fBasicTypes; ///<! pointer on list of basic types specific for currently connected SQL server
    const char **fOtherTypes; ///<! pointer on list of other SQL types like TEXT or blob
@@ -169,9 +168,8 @@ protected:
    Int_t fStmtCounter;     ///<! count numbers of active statements
 
 private:
-   // let the compiler do the job. gcc complains when the following line is activated
-   // TSQLFile(const TSQLFile &) {}            //Files cannot be copied
-   void operator=(const TSQLFile &);
+   TSQLFile(const TSQLFile &);            //Files cannot be copied - not implemented
+   void operator=(const TSQLFile &);      //Files cannot be copied - not implemented
 
 public:
    enum ETransactionKinds { kTransactionsOff = 0, kTransactionsAuto = 1, kTransactionsUser = 2 };
@@ -206,54 +204,54 @@ public:
    void StartLogFile(const char *fname); // *MENU*
    void StopLogFile();                   // *MENU*
 
-   virtual void Close(Option_t *option = ""); // *MENU*
-   virtual TKey *CreateKey(TDirectory *mother, const TObject *obj, const char *name, Int_t bufsize);
-   virtual TKey *CreateKey(TDirectory *mother, const void *obj, const TClass *cl, const char *name, Int_t bufsize);
-   virtual void DrawMap(const char * = "*", Option_t * = "") {}
-   virtual void FillBuffer(char *&) {}
-   virtual void Flush() {}
+   void Close(Option_t *option = "") final; // *MENU*
+   TKey *CreateKey(TDirectory *mother, const TObject *obj, const char *name, Int_t bufsize)  final;
+   TKey *CreateKey(TDirectory *mother, const void *obj, const TClass *cl, const char *name, Int_t bufsize) final;
+   void DrawMap(const char * = "*", Option_t * = "") final {}
+   void FillBuffer(char *&) final {}
+   void Flush() final {}
 
-   virtual Long64_t GetEND() const { return 0; }
-   virtual Int_t GetErrno() const { return 0; }
-   virtual void ResetErrno() const {}
+   Long64_t GetEND() const  final { return 0; }
+   Int_t GetErrno() const  final { return 0; }
+   void ResetErrno() const  final {}
 
    const char *GetDataBaseName() const;
-   virtual Int_t GetNfree() const { return 0; }
-   virtual Int_t GetNbytesInfo() const { return 0; }
-   virtual Int_t GetNbytesFree() const { return 0; }
-   virtual Long64_t GetSeekFree() const { return 0; }
-   virtual Long64_t GetSeekInfo() const { return 0; }
-   virtual Long64_t GetSize() const { return 0; }
+   Int_t GetNfree() const final { return 0; }
+   Int_t GetNbytesInfo() const final{ return 0; }
+   Int_t GetNbytesFree() const final { return 0; }
+   Long64_t GetSeekFree() const final { return 0; }
+   Long64_t GetSeekInfo() const final { return 0; }
+   Long64_t GetSize() const final { return 0; }
 
+   Bool_t IsOpen() const final;
    Bool_t IsMySQL() const;
-   virtual Bool_t IsOpen() const;
    Bool_t IsOracle() const;
    Bool_t IsODBC() const;
 
-   virtual void MakeFree(Long64_t, Long64_t) {}
-   virtual void MakeProject(const char *, const char * = "*", Option_t * = "new") {} // *MENU*
-   virtual void Map(Option_t *) {}                                                   //
-   virtual void Map() {}                                                             //
-   virtual void Paint(Option_t * = "") {}
-   virtual void Print(Option_t * = "") const {}
-   virtual Bool_t ReadBuffer(char *, Int_t) { return kFALSE; }
-   virtual Bool_t ReadBuffer(char *, Long64_t, Int_t) { return kFALSE; }
-   virtual void ReadFree() {}
-   virtual Int_t Recover() { return 0; }
-   virtual Int_t ReOpen(Option_t *mode);
-   virtual void Seek(Long64_t, ERelativeTo = kBeg) {}
+   void MakeFree(Long64_t, Long64_t) final {}
+   void MakeProject(const char *, const char * = "*", Option_t * = "new") final {} // *MENU*
+   void Map(Option_t *) final {}                                                   //
+   void Map() final {}                                                             //
+   void Paint(Option_t * = "") final {}
+   void Print(Option_t * = "") const final {}
+   Bool_t ReadBuffer(char *, Int_t) final { return kFALSE; }
+   Bool_t ReadBuffer(char *, Long64_t, Int_t) final { return kFALSE; }
+   void ReadFree() final {}
+   Int_t Recover() final { return 0; }
+   Int_t ReOpen(Option_t *mode) final;
+   void Seek(Long64_t, ERelativeTo = kBeg) final {}
 
-   virtual void SetEND(Long64_t) {}
-   virtual Int_t Sizeof() const { return 0; }
+   void SetEND(Long64_t) final {}
+   Int_t Sizeof() const final { return 0; }
 
-   virtual Bool_t WriteBuffer(const char *, Int_t) { return kFALSE; }
-   virtual Int_t Write(const char * = 0, Int_t = 0, Int_t = 0) { return 0; }
-   virtual Int_t Write(const char * = 0, Int_t = 0, Int_t = 0) const { return 0; }
-   virtual void WriteFree() {}
-   virtual void WriteHeader();
-   virtual void WriteStreamerInfo();
+   Bool_t WriteBuffer(const char *, Int_t) final { return kFALSE; }
+   Int_t Write(const char * = nullptr, Int_t = 0, Int_t = 0) final { return 0; }
+   Int_t Write(const char * = nullptr, Int_t = 0, Int_t = 0) const final { return 0; }
+   void WriteFree() final {}
+   void WriteHeader() final;
+   void WriteStreamerInfo() final;
 
-   ClassDef(TSQLFile, 1) // ROOT TFile interface to SQL database
+   ClassDefOverride(TSQLFile, 1) // ROOT TFile interface to SQL database
 };
 
 #endif
