@@ -25,8 +25,6 @@
 #include <Compression.h>
 #include <RZip.h>
 #include <TError.h>
-#include <ZipLZ4.h>
-#include <ZipLZMA.h>
 
 #include <cstdio>
 #include <cstring>
@@ -92,21 +90,14 @@ ROOT::Experimental::Detail::RPageSinkRaw::DoCommitPage(ColumnHandle_t columnHand
       int szSource = packedBytes;
       char *source = reinterpret_cast<char *>(buffer);
       int zipBytes = 0;
-      if (algorithm == ROOT::RCompressionSetting::EAlgorithm::kLZMA) {
-         R__zipLZMA(level, &szSource, source, &szZipBuffer, fZipBuffer->data(), &zipBytes);
-      } else if (algorithm == ROOT::RCompressionSetting::EAlgorithm::kLZ4) {
-         R__zipLZ4(level, &szSource, source, &szZipBuffer, fZipBuffer->data(), &zipBytes);
-      } else {
-         // TODO(jblomer)
-         R__ASSERT(false);
+      R__zipMultipleAlgorithm(level, &szSource, source, &szZipBuffer, fZipBuffer->data(), &zipBytes, algorithm);
+      if ((zipBytes > 0) && (zipBytes < szSource)) {
+         if (!isAdoptedBuffer)
+            delete[] buffer;
+         buffer = reinterpret_cast<unsigned char *>(fZipBuffer->data());
+         packedBytes = zipBytes;
+         isAdoptedBuffer = true;
       }
-      R__ASSERT(zipBytes > 0);
-
-      if (!isAdoptedBuffer)
-         delete[] buffer;
-      buffer = reinterpret_cast<unsigned char *>(fZipBuffer->data());
-      packedBytes = zipBytes;
-      isAdoptedBuffer = true;
    }
 
    RClusterDescriptor::RLocator result;
@@ -242,7 +233,6 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::Po
    auto columnId = columnHandle.fId;
    auto clusterId = clusterDescriptor.GetId();
    auto pageRange = clusterDescriptor.GetPageRange(columnId);
-   auto columnRange = clusterDescriptor.GetColumnRange(columnId);
 
    // TODO(jblomer): binary search
    RClusterDescriptor::RPageRange::RPageInfo pageInfo;
@@ -265,22 +255,16 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::Po
    R__ASSERT(pageBuffer);
    Read(pageBuffer, pageSize, pageInfo.fLocator.fPosition);
 
-   if (columnRange.fCompressionSettings % 100 != 0) {
-      auto algorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(
-         columnRange.fCompressionSettings / 100);
+   auto bytesOnStorage = (element->GetBitsOnStorage() * pageInfo.fNElements + 7) / 8;
+   if (pageSize != bytesOnStorage) {
+      // We do have the unzip information in the column range, but here we simply use the value from
+      // the R__zip header
       int szUnzipBuffer = kMAXZIPBUF;
       int szSource = pageSize;
       unsigned char *source = reinterpret_cast<unsigned char *>(pageBuffer);
       int unzipBytes = 0;
-      if (algorithm == ROOT::RCompressionSetting::EAlgorithm::kLZMA) {
-         R__unzipLZMA(&szSource, source, &szUnzipBuffer, fUnzipBuffer->data(), &unzipBytes);
-      } else if (algorithm == ROOT::RCompressionSetting::EAlgorithm::kLZ4) {
-         R__unzipLZ4(&szSource, source, &szUnzipBuffer, fUnzipBuffer->data(), &unzipBytes);
-      } else {
-         // TODO(jblomer)
-         R__ASSERT(false);
-      }
-
+      R__unzip(&szSource, source, &szUnzipBuffer, fUnzipBuffer->data(), &unzipBytes);
+      R__ASSERT(unzipBytes > static_cast<int>(pageSize));
       memcpy(pageBuffer, fUnzipBuffer->data(), unzipBytes);
       pageSize = unzipBytes;
    }
