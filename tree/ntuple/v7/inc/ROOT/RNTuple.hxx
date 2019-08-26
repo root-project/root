@@ -79,6 +79,7 @@ public:
  */
 enum class ENTupleInfo {
    kSummary,  // The ntuple name, description, number of entries
+   kStorageDetails, // size on storage, page sizes, compression factor, etc.
 };
 
 

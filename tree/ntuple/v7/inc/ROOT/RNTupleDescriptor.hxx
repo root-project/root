@@ -22,6 +22,7 @@
 
 #include <chrono>
 #include <memory>
+#include <ostream>
 #include <vector>
 #include <string>
 #include <unordered_map>
@@ -327,6 +328,7 @@ public:
 
    /// Re-create the C++ model from the stored meta-data
    std::unique_ptr<RNTupleModel> GenerateModel() const;
+   void PrintInfo(std::ostream &output) const;
 };
 
 
