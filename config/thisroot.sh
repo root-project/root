@@ -35,22 +35,47 @@ clean_environment()
       if [ -n "${LD_LIBRARY_PATH}" ]; then
          drop_from_path "$LD_LIBRARY_PATH" "${old_rootsys}/lib"
          LD_LIBRARY_PATH=$newpath
+         for pyroot_libs_dir in ${old_rootsys}/lib/python*
+         do
+            drop_from_path "$LD_LIBRARY_PATH" "$pyroot_libs_dir"
+            LD_LIBRARY_PATH=$newpath
+         done
       fi
       if [ -n "${DYLD_LIBRARY_PATH}" ]; then
          drop_from_path "$DYLD_LIBRARY_PATH" "${old_rootsys}/lib"
          DYLD_LIBRARY_PATH=$newpath
+         for pyroot_libs_dir in ${old_rootsys}/lib/python*
+         do
+            drop_from_path "$DYLD_LIBRARY_PATH" "$pyroot_libs_dir"
+            DYLD_LIBRARY_PATH=$newpath
+         done
       fi
       if [ -n "${SHLIB_PATH}" ]; then
          drop_from_path "$SHLIB_PATH" "${old_rootsys}/lib"
          SHLIB_PATH=$newpath
+         for pyroot_libs_dir in ${old_rootsys}/lib/python*
+         do
+            drop_from_path "$SHLIB_PATH" "$pyroot_libs_dir"
+            SHLIB_PATH=$newpath
+         done
       fi
       if [ -n "${LIBPATH}" ]; then
          drop_from_path "$LIBPATH" "${old_rootsys}/lib"
          LIBPATH=$newpath
+         for pyroot_libs_dir in ${old_rootsys}/lib/python*
+         do
+            drop_from_path "$LIBPATH" "$pyroot_libs_dir"
+            LIBPATH=$newpath
+         done
       fi
       if [ -n "${PYTHONPATH}" ]; then
          drop_from_path "$PYTHONPATH" "${old_rootsys}/lib"
          PYTHONPATH=$newpath
+         for pyroot_libs_dir in ${old_rootsys}/lib/python*
+         do
+            drop_from_path "$PYTHONPATH" "$pyroot_libs_dir"
+            PYTHONPATH=$newpath
+         done
       fi
       if [ -n "${MANPATH}" ]; then
          drop_from_path "$MANPATH" "${old_rootsys}/man"
@@ -85,6 +110,8 @@ set_environment()
       return 1
    fi
 
+   local version=$1
+
    if [ -z "${PATH}" ]; then
       PATH=@bindir@; export PATH
    else
@@ -92,42 +119,42 @@ set_environment()
    fi
 
    if [ -z "${LD_LIBRARY_PATH}" ]; then
-      LD_LIBRARY_PATH=@libdir@
+      LD_LIBRARY_PATH=@libdir@/python${version}:@libdir@
       export LD_LIBRARY_PATH       # Linux, ELF HP-UX
    else
-      LD_LIBRARY_PATH=@libdir@:$LD_LIBRARY_PATH
+      LD_LIBRARY_PATH=@libdir@/python${version}:@libdir@:$LD_LIBRARY_PATH
       export LD_LIBRARY_PATH
    fi
 
    if [ -z "${DYLD_LIBRARY_PATH}" ]; then
-      DYLD_LIBRARY_PATH=@libdir@
+      DYLD_LIBRARY_PATH=@libdir@/python${version}:@libdir@
       export DYLD_LIBRARY_PATH       # Linux, ELF HP-UX
    else
-      DYLD_LIBRARY_PATH=@libdir@:$DYLD_LIBRARY_PATH
+      DYLD_LIBRARY_PATH=@libdir@/python${version}:@libdir@:$DYLD_LIBRARY_PATH
       export DYLD_LIBRARY_PATH
    fi
 
    if [ -z "${SHLIB_PATH}" ]; then
-      SHLIB_PATH=@libdir@
+      SHLIB_PATH=@libdir@/python${version}:@libdir@
       export SHLIB_PATH       # Linux, ELF HP-UX
    else
-      SHLIB_PATH=@libdir@:$SHLIB_PATH
+      SHLIB_PATH=@libdir@/python${version}:@libdir@:$SHLIB_PATH
       export SHLIB_PATH
    fi
 
    if [ -z "${LIBPATH}" ]; then
-      LIBPATH=@libdir@
+      LIBPATH=@libdir@/python${version}:@libdir@
       export LIBPATH       # Linux, ELF HP-UX
    else
-      LIBPATH=@libdir@:$LIBPATH
+      LIBPATH=@libdir@/python${version}:@libdir@:$LIBPATH
       export LIBPATH
    fi
 
    if [ -z "${PYTHONPATH}" ]; then
-      PYTHONPATH=@libdir@
+      PYTHONPATH=@libdir@/python${version}:@libdir@
       export PYTHONPATH       # Linux, ELF HP-UX
    else
-      PYTHONPATH=@libdir@:$PYTHONPATH
+      PYTHONPATH=@libdir@/python${version}:@libdir@:$PYTHONPATH
       export PYTHONPATH
    fi
 
@@ -182,8 +209,26 @@ else
 fi
 
 
+if [ -z "${ROOT_PYTHON_VERSION}" ] ; then
+   py_localruntimedir=@py_localruntimedir@
+   ROOT_PYTHON_VERSION=${py_localruntimedir#@localruntimedir@/python}
+else
+   # check if version exists and exit if not
+   if [ ! -d "@libdir@/python${ROOT_PYTHON_VERSION}" ]; then
+      echo ERROR: build with Python version "${ROOT_PYTHON_VERSION}" not found.
+      echo Available versions:
+      for version_path in @libdir@/python*
+      do
+         version_number=${version_path#@libdir@/python}
+         echo ${version_number}
+      done
+      return 1
+   fi
+fi
+
+
 clean_environment
-set_environment
+set_environment "${ROOT_PYTHON_VERSION}"
 
 
 # Prevent Cppyy from checking the PCH (and avoid warning)
@@ -198,3 +243,4 @@ unset thisroot
 unset -f drop_from_path
 unset -f clean_environment
 unset -f set_environment
+unset ROOT_PYTHON_VERSION
