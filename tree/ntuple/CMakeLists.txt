@@ -42,6 +42,7 @@ SOURCES
   v7/src/REntry.cxx
   v7/src/RNTuple.cxx
   v7/src/RNTupleDescriptor.cxx
+  v7/src/RNTupleDescriptorFmt.cxx
   v7/src/RNTupleModel.cxx
   v7/src/RPage.cxx
   v7/src/RPageAllocator.cxx
