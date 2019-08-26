@@ -134,10 +134,7 @@ class Memory1TestCase( MyTestCase ):
       MemTester.CallPtr( b1 );
       self.assertEqual( MemTester.counter, 1 )
       del b1
-      if self.exp_pyroot:
-         counter = 0
-      else:
-         counter = 1
+      counter = 1
       self.assertEqual( MemTester.counter, counter )
 
       b2 = MemTester()
