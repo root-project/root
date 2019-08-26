@@ -519,7 +519,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    }
 
    // calling virtual methods from constructor not a good idea, but it is how code was developed
-   TFile::Init(create); // NOLINT: silence clang-tidy warnings
+   TFile::Init(create);                        // NOLINT: silence clang-tidy warnings
 
    return;
 
@@ -546,7 +546,7 @@ TFile::TFile(const TFile &) : TDirectoryFile(), fInfoCache(0)
 
 TFile::~TFile()
 {
-   Close();
+   Close();                                    // NOLINT: silence clang-tidy warnings
 
    // In case where the TFile is still open at 'tear-down' time the order of operation will be
    // call Close("nodelete")
@@ -666,9 +666,9 @@ void TFile::Init(Bool_t create)
       //*-*----------------UPDATE
       //char *header = new char[kBEGIN];
       char *header = new char[kBEGIN+200];
-      Seek(0);
+      Seek(0);                                 // NOLINT: silence clang-tidy warnings
       //ReadBuffer(header, kBEGIN);
-      if (ReadBuffer(header, kBEGIN+200)) {
+      if (ReadBuffer(header, kBEGIN+200)) {    // NOLINT: silence clang-tidy warnings
          // ReadBuffer returns kTRUE in case of failure.
          Error("Init","%s failed to read the file type data.",
                GetName());
@@ -721,7 +721,7 @@ void TFile::Init(Bool_t create)
       if (fWritable) {
          fFree = new TList;
          if (fSeekFree > fBEGIN) {
-            ReadFree();
+            ReadFree();                        // NOLINT: silence clang-tidy warnings
          } else {
             Warning("Init","file %s probably not closed, cannot read free segments",GetName());
          }
@@ -741,8 +741,8 @@ void TFile::Init(Bool_t create)
          delete [] header;
          header       = new char[nbytes];
          buffer       = header;
-         Seek(fBEGIN);
-         if (ReadBuffer(buffer,nbytes)) {
+         Seek(fBEGIN);                         // NOLINT: silence clang-tidy warnings
+         if (ReadBuffer(buffer,nbytes)) {      // NOLINT: silence clang-tidy warnings
             // ReadBuffer returns kTRUE in case of failure.
             Error("Init","%s failed to read the file header information at %lld (size=%d)",
                   GetName(),fBEGIN,nbytes);
@@ -796,7 +796,7 @@ void TFile::Init(Bool_t create)
 
       //*-* -------------Check if file is truncated
       Long64_t size;
-      if ((size = GetSize()) == -1) {
+      if ((size = GetSize()) == -1) {          // NOLINT: silence clang-tidy warnings
          Error("Init", "cannot stat the file %s", GetName());
          goto zombie;
       }
@@ -812,7 +812,7 @@ void TFile::Init(Bool_t create)
          gDirectory = this;
          if (!GetNkeys()) {
             if (tryrecover) {
-               Recover();
+               Recover();                      // NOLINT: silence clang-tidy warnings
             } else {
                Error("Init", "file %s has no keys", GetName());
                goto zombie;
@@ -842,7 +842,7 @@ void TFile::Init(Bool_t create)
                goto zombie;
             }
          }
-         Int_t nrecov = Recover();
+         Int_t nrecov = Recover();             // NOLINT: silence clang-tidy warnings
          if (nrecov) {
             Warning("Init", "successfully recovered %d keys", nrecov);
          } else {
@@ -865,7 +865,7 @@ void TFile::Init(Bool_t create)
       fClassIndex = new TArrayC(lenIndex);
       if (fgReadInfo) {
          if (fSeekInfo > fBEGIN) {
-            ReadStreamerInfo();
+            ReadStreamerInfo();                // NOLINT: silence clang-tidy warnings
             if (IsZombie()) {
                R__LOCKGUARD(gROOTMutex);
                gROOT->GetListOfFiles()->Remove(this);
@@ -1303,7 +1303,7 @@ Long64_t TFile::GetSize() const
       size = fArchive->GetMember()->GetDecompressedSize();
    } else {
       Long_t id, flags, modtime;
-      if (const_cast<TFile*>(this)->SysStat(fD, &id, &size, &flags, &modtime)) {
+      if (const_cast<TFile*>(this)->SysStat(fD, &id, &size, &flags, &modtime)) {  // NOLINT: silence clang-tidy warnings
          Error("GetSize", "cannot stat the file %s", GetName());
          return -1;
       }
@@ -1336,8 +1336,8 @@ TFile::InfoListRet TFile::GetStreamerInfoListImpl(bool lookupSICache)
       auto key = std::make_unique<TKey>(this);
       std::vector<char> buffer(fNbytesInfo+1);
       auto buf = buffer.data();
-      Seek(fSeekInfo);
-      if (ReadBuffer(buf,fNbytesInfo)) {
+      Seek(fSeekInfo);                         // NOLINT: silence clang-tidy warnings
+      if (ReadBuffer(buf,fNbytesInfo)) {       // NOLINT: silence clang-tidy warnings
          // ReadBuffer returns kTRUE in case of failure.
          Warning("GetRecordHeader","%s: failed to read the StreamerInfo data from disk.",
                  GetName());
@@ -1954,7 +1954,7 @@ Int_t TFile::Recover()
    Long64_t idcur = fBEGIN;
 
    Long64_t size;
-   if ((size = GetSize()) == -1) {
+   if ((size = GetSize()) == -1) {             // NOLINT: silence clang-tidy warnings
       Error("Recover", "cannot stat the file %s", GetName());
       return 0;
    }
@@ -1969,9 +1969,9 @@ Int_t TFile::Recover()
    Int_t nread = nwheader;
 
    while (idcur < fEND) {
-      Seek(idcur);
+      Seek(idcur);                             // NOLINT: silence clang-tidy warnings
       if (idcur+nread >= fEND) nread = fEND-idcur-1;
-      if (ReadBuffer(header, nread)) {
+      if (ReadBuffer(header, nread)) {         // NOLINT: silence clang-tidy warnings
          // ReadBuffer returns kTRUE in case of failure.
          Error("Recover","%s: failed to read the key data from disk at %lld.",
                GetName(),idcur);
@@ -2189,7 +2189,7 @@ void TFile::Seek(Long64_t offset, ERelativeTo pos)
          break;
    }
    Long64_t retpos;
-   if ((retpos = SysSeek(fD, offset, whence)) < 0)
+   if ((retpos = SysSeek(fD, offset, whence)) < 0)  // NOLINT: silence clang-tidy warnings
       SysError("Seek", "cannot seek to position %lld in file %s, retpos=%lld",
                offset, GetName(), retpos);
 
@@ -2385,8 +2385,8 @@ Bool_t TFile::WriteBuffer(const char *buf, Int_t len)
 
       ssize_t siz;
       gSystem->IgnoreInterrupt();
-      while ((siz = SysWrite(fD, buf, len)) < 0 && GetErrno() == EINTR)
-         ResetErrno();
+      while ((siz = SysWrite(fD, buf, len)) < 0 && GetErrno() == EINTR)  // NOLINT: silence clang-tidy warnings
+         ResetErrno();                                                   // NOLINT: silence clang-tidy warnings
       gSystem->IgnoreInterrupt(kFALSE);
       if (siz < 0) {
          // Write the system error only once for this file
@@ -2472,7 +2472,7 @@ void TFile::WriteFree()
    if (!largeFile && (fEND > TFile::kStartBigFile)) {
       // The free block list is large enough to bring the file to larger
       // than 2Gb, the references/offsets are now 64bits in the output
-      // so we need to redo the calculattion since the list of free block
+      // so we need to redo the calculation since the list of free block
       // information will not fit in the original size.
       key->Delete();
       delete key;
@@ -2551,9 +2551,9 @@ void TFile::WriteHeader()
    else
       fUUID.FillBuffer(buffer);
    Int_t nbytes  = buffer - psave;
-   Seek(0);
-   WriteBuffer(psave, nbytes);
-   Flush(); // Intentionally not conditional on fMustFlush, this is the 'obligatory' flush.
+   Seek(0);                                    // NOLINT: silence clang-tidy warnings
+   WriteBuffer(psave, nbytes);                 // NOLINT: silence clang-tidy warnings
+   Flush(); // NOLINT: silence clang-tidy warnings, Intentionally not conditional on fMustFlush, this is the 'obligatory' flush.
    delete [] psave;
 }
 
@@ -3503,7 +3503,7 @@ Int_t TFile::MakeProjectParProofInf(const char *pack, const char *proofinf)
 
 void TFile::ReadStreamerInfo()
 {
-   auto listRetcode = GetStreamerInfoListImpl(/*lookupSICache*/ true);
+   auto listRetcode = GetStreamerInfoListImpl(/*lookupSICache*/ true);  // NOLINT: silence clang-tidy warnings
    TList *list = listRetcode.fList;
    auto retcode = listRetcode.fReturnCode;
    if (!list) {
