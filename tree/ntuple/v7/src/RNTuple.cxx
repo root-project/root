@@ -135,7 +135,10 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       for (int i = 0; i < width; ++i)
          output << frameSymbol;
       output << std::endl;
-      return;
+      break;
+   case ENTupleInfo::kStorageDetails:
+      fSource->GetDescriptor().PrintInfo(output);
+      break;
    default:
       // Unhandled case, internal error
       assert(false);
