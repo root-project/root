@@ -1714,9 +1714,9 @@ Bool_t TSQLFile::WriteKeyData(TKeySQL *key)
 
    sqlcmd.Form("INSERT INTO %s%s%s VALUES (%lld, %lld, %lld, %s%s%s, %s%s%s, %s%s%s, %d, %s%s%s)", quote,
                sqlio::KeysTable, quote, key->GetDBKeyId(), key->GetDBDirId(), key->GetDBObjId(), valuequote,
-               key->GetName(), valuequote, valuequote, key->GetTitle(), valuequote, valuequote,
-               key->GetDatime().AsSQLString(), valuequote, key->GetCycle(), valuequote, key->GetClassName(),
-               valuequote);
+               key->GetName(), valuequote, valuequote, key->GetTitle(), valuequote,
+               valuequote, TestBit(TFile::kReproducible) ? TDatime((UInt_t) 1).AsSQLString() : key->GetDatime().AsSQLString(), valuequote,
+               key->GetCycle(), valuequote, key->GetClassName(), valuequote);
 
    Bool_t ok = kTRUE;
 
@@ -2643,13 +2643,13 @@ void TSQLFile::DirWriteHeader(TDirectory *dir)
    const char *valuequote = SQLValueQuote();
    const char *quote = SQLIdentifierQuote();
 
-   TString timeC = fDatimeC.AsSQLString();
+   TString timeC = TestBit(TFile::kReproducible) ? TDatime((UInt_t) 1).AsSQLString() : fDatimeC.AsSQLString();
    TSQLStructure::AddStrBrackets(timeC, valuequote);
 
-   TString timeM = fDatimeM.AsSQLString();
+   TString timeM = TestBit(TFile::kReproducible) ? TDatime((UInt_t) 1).AsSQLString() : fDatimeM.AsSQLString();
    TSQLStructure::AddStrBrackets(timeM, valuequote);
 
-   TString uuid = dir->GetUUID().AsString();
+   TString uuid = TestBit(TFile::kReproducible) ? TUUID("00000000-0000-0000-0000-000000000000").AsString() : dir->GetUUID().AsString();
    TSQLStructure::AddStrBrackets(uuid, valuequote);
 
    TString sqlcmd;
@@ -2707,16 +2707,17 @@ void TSQLFile::Streamer(TBuffer &b)
       b.ClassBegin(TSQLFile::Class());
 
       b.ClassMember("CreateTime", "TString");
-      sbuf = fDatimeC.AsSQLString();
+      sbuf = TestBit(TFile::kReproducible) ? TDatime((UInt_t) 1).AsSQLString() : fDatimeC.AsSQLString();
+
       sbuf.Streamer(b);
 
       b.ClassMember("ModifyTime", "TString");
       fDatimeM.Set();
-      sbuf = fDatimeM.AsSQLString();
+      sbuf = TestBit(TFile::kReproducible) ? TDatime((UInt_t) 1).AsSQLString() : fDatimeM.AsSQLString();
       sbuf.Streamer(b);
 
       b.ClassMember("UUID", "TString");
-      sbuf = fUUID.AsString();
+      sbuf = TestBit(TFile::kReproducible) ? TUUID("00000000-0000-0000-0000-000000000000").AsString() : fUUID.AsString();
       sbuf.Streamer(b);
 
       b.ClassEnd(TSQLFile::Class());
