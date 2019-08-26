@@ -1063,6 +1063,12 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
     set(MODULE_GEN_ARG NOTARGET MODULE ${libname})
   endif()
 
+  if(ARG_NO_SOURCES)
+    # Workaround bug in CMake by adding a dummy source file if all sources are generated, since
+    # in that case the initial call to add_library() may not list any sources and CMake complains.
+    add_custom_command(OUTPUT dummy.cxx COMMAND ${CMAKE_COMMAND} -E touch dummy.cxx)
+  endif()
+
   if(runtime_cxxmodules)
     # Record ROOT targets to be used as a dependency targets for "onepcm" target.
     set(ROOT_LIBRARY_TARGETS "${ROOT_LIBRARY_TARGETS};${libname}" CACHE STRING "List of ROOT targets generated from ROOT_STANDARD_LIBRARY_PACKAGE()" FORCE)
@@ -1076,7 +1082,8 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   endif()
 
   if (ARG_OBJECT_LIBRARY)
-    ROOT_OBJECT_LIBRARY(${libname}Objs ${ARG_SOURCES})
+    ROOT_OBJECT_LIBRARY(${libname}Objs ${ARG_SOURCES}
+                        $<$<BOOL:${ARG_NO_SOURCES}>:dummy.cxx>)
     ROOT_LINKER_LIBRARY(${libname} $<TARGET_OBJECTS:${libname}Objs>
                         LIBRARIES ${ARG_LIBRARIES}
                         DEPENDENCIES ${ARG_DEPENDENCIES}
@@ -1084,6 +1091,7 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
                        )
   else(ARG_OBJECT_LIBRARY)
     ROOT_LINKER_LIBRARY(${libname} ${ARG_SOURCES}
+                        $<$<BOOL:${ARG_NO_SOURCES}>:dummy.cxx>
                         LIBRARIES ${ARG_LIBRARIES}
                         DEPENDENCIES ${ARG_DEPENDENCIES}
                         BUILTINS ${ARG_BUILTINS}
