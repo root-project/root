@@ -113,6 +113,14 @@ TEST(forestBDT, JitForestBranchless)
    for (size_t i = 0; i < groundtruth.size(); i++) {
       ASSERT_EQ(preds[i], groundtruth[i][0]);
    }
+
+   std::vector<bool> preds2;
+   preds2.reserve(events_vector.size());
+   std::vector<float> vector2 = convert_VecMatrix2Vec(events_vector);
+   Forest.inference(vector2.data(), rows, cols, preds2);
+   for (size_t i = 0; i < groundtruth.size(); i++) {
+      ASSERT_EQ(preds2[i], groundtruth[i][0]);
+   }
 }
 
 /*
