@@ -91,7 +91,6 @@ public:
   virtual void weightError(Double_t& lo, Double_t& hi, ErrorType etype=Poisson) const ; 
   virtual const RooArgSet* get(Int_t index) const ;
 
-  virtual std::vector<RooSpan<const double>> getBatch(std::size_t first, std::size_t last) const = 0;
   virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t last) const = 0;
 
   virtual Int_t numEntries() const ;
