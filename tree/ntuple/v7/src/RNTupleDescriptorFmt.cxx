@@ -179,13 +179,15 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
    std::sort(columns.begin(), columns.end());
    for (const auto &col : columns) {
       auto avgPageSize = (col.fNPages == 0) ? 0 : (col.fBytesOnStorage / col.fNPages);
+      auto avgElementsPerPage = (col.fNPages == 0) ? 0 : (col.fNElements / col.fNPages);
       output << "  " << col.fFieldName << " [#" << col.fLocalOrder << "]" << "  --  "
              << GetColumnTypeName(col.fType) << std::endl;
-      output << "    # Elements:      " << col.fNElements << std::endl;
-      output << "    # Pages:         " << col.fNPages << std::endl;
-      output << "    Avg page size:   " << avgPageSize << " B" << std::endl;
-      output << "    Size on storage: " << col.fBytesOnStorage << " B" << std::endl;
-      output << "    Compression:     " << std::fixed << std::setprecision(2)
+      output << "    # Elements:          " << col.fNElements << std::endl;
+      output << "    # Pages:             " << col.fNPages << std::endl;
+      output << "    Avg elements / page: " << avgElementsPerPage << std::endl;
+      output << "    Avg page size:       " << avgPageSize << " B" << std::endl;
+      output << "    Size on storage:     " << col.fBytesOnStorage << " B" << std::endl;
+      output << "    Compression:         " << std::fixed << std::setprecision(2)
              << float(col.fElementSize * col.fNElements) / float(col.fBytesOnStorage) << std::endl;
       output << "............................................................" << std::endl;
    }
