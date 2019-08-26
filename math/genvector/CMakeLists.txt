@@ -142,7 +142,6 @@ ROOT_GENERATE_DICTIONARY(G__GenVector
     Math/Vector4Dfwd.h
     Math/Vector4D.h
     Math/VectorUtil.h
-  NOTARGET
   MODULE
     GenVector
   LINKDEF
@@ -160,7 +159,6 @@ ROOT_GENERATE_DICTIONARY(G__GenVector32
     Math/Vector2D.h
     Math/Vector3D.h
     Math/Vector4D.h
-  NOTARGET
   MODULE
     GenVector
   MULTIDICT

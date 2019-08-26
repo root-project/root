@@ -245,7 +245,7 @@ endfunction(ROOT_GET_INSTALL_DIR)
 #   no error is emitted. The dictionary does not depend on these headers.
 #---------------------------------------------------------------------------------------------------
 function(ROOT_GENERATE_DICTIONARY dictionary)
-  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL;NOTARGET"
+  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL"
     "MODULE;LINKDEF" "NODEPHEADERS;OPTIONS;DEPENDENCIES;EXTRA_DEPENDENCIES;BUILTINS" ${ARGN})
 
   # Check if OPTIONS start with a dash.
@@ -509,13 +509,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   # This works around bug https://cmake.org/Bug/view.php?id=14633 in CMake by keeping
   # the generated source at the same scope level as its owning target, something that
   # would not happen if we used target_sources() directly with the dictionary source.
-  if(ARG_NOTARGET)
-    if(NOT TARGET "${ARG_MODULE}")
-      message(FATAL_ERROR
-        " When used with NOTARGET, the MODULE option must be passed with the name of an existing target.\n"
-        " The dictionary source is then attached to this target instead of a custom dictionary target.")
-    endif()
-
+  if(TARGET "${ARG_MODULE}" AND NOT "${ARG_MODULE}" STREQUAL "${dictionary}")
     add_library(${dictionary} OBJECT ${dictionary}.cxx)
     set_target_properties(${dictionary} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
     target_sources(${ARG_MODULE} PRIVATE $<TARGET_OBJECTS:${dictionary}>)
@@ -1073,7 +1067,7 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   # Don't pass the MODULE arg to ROOT_GENERATE_DICTIONARY when
   # NO_MODULE is set.
   if(NOT ARG_NO_MODULE)
-    set(MODULE_GEN_ARG NOTARGET MODULE ${libname})
+    set(MODULE_GEN_ARG MODULE ${libname})
   endif()
 
   if(ARG_NO_SOURCES)
