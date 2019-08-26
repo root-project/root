@@ -1437,7 +1437,7 @@ void RooAbsArg::printAttribList(ostream& os) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Replace server nodes with names matching the dataset variable names
-/// with those data set variables, making this PDF directly dependent on the dataset
+/// with those data set variables, making this PDF directly dependent on the dataset.
 
 void RooAbsArg::attachDataSet(const RooAbsData &data)
 {
