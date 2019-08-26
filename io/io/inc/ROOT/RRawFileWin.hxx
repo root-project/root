@@ -44,7 +44,7 @@ public:
    RRawFileWin(std::string_view url, RRawFile::ROptions options);
    ~RRawFileWin();
    std::unique_ptr<RRawFile> Clone() const final;
-   int GetFeatures() const final { return kFeaturekHasSize; }
+   int GetFeatures() const final { return kFeatureHasSize; }
 };
 
 } // namespace Detail
