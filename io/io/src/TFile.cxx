@@ -2890,6 +2890,8 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       ngener += info->GenerateHeaderFile(clean_dirname.Data(),&subClasses,&extrainfos);
       subClasses.Clear("nodelete");
    }
+   extrainfos.Clear("nodelete"); // We are done with this list.
+
    TString path;
    path.Form("%s/%sProjectHeaders.h",clean_dirname.Data(),subdirname.Data());
    FILE *allfp = fopen(path,"a");
@@ -3257,8 +3259,6 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       }
    }
 
-   extrainfos.Clear("nodelete");
-   // filelist->Clear("nodetele");
    delete list;
    filelist->Delete();
    delete filelist;
