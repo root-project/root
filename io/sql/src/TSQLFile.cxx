@@ -174,6 +174,7 @@ Author: S.Linev, GSI Darmstadt,   S.Linev@gsi.de
 #include "TProcessID.h"
 #include "TError.h"
 #include "TClass.h"
+#include "TVirtualMutex.h"
 
 #include "TSQLServer.h"
 #include "TSQLTableInfo.h"
@@ -186,7 +187,6 @@ Author: S.Linev, GSI Darmstadt,   S.Linev@gsi.de
 #include "TKeySQL.h"
 #include "TSQLClassInfo.h"
 #include "TSQLObjectData.h"
-#include "TVirtualMutex.h"
 
 #include "Riostream.h"
 
@@ -2632,21 +2632,24 @@ void TSQLFile::DirWriteKeys(TDirectory *dir)
 void TSQLFile::DirWriteHeader(TDirectory *dir)
 {
    TSQLClassInfo *sqlinfo = FindSQLClassInfo("TDirectory", TDirectoryFile::Class()->GetClassVersion());
-   if (sqlinfo == 0)
+   if (!sqlinfo)
       return;
 
    // try to identify key with data for our directory
    TKeySQL *key = FindSQLKey(dir->GetMotherDir(), dir->GetSeekDir());
-   if (key == 0)
+   if (!key)
       return;
 
    const char *valuequote = SQLValueQuote();
    const char *quote = SQLIdentifierQuote();
 
-   TString timeC = TestBit(TFile::kReproducible) ? TDatime((UInt_t) 1).AsSQLString() : fDatimeC.AsSQLString();
-   TSQLStructure::AddStrBrackets(timeC, valuequote);
+   TDirectoryFile *fdir = dynamic_cast<TDirectoryFile *> (dir);
+   TString timeC = fdir ? fdir->GetCreationDate().AsSQLString() : fDatimeC.AsSQLString();
+   TString timeM = fdir ? fdir->GetModificationDate().AsSQLString() : fDatimeM.AsSQLString();;
+   if (TestBit(TFile::kReproducible))
+      timeC = timeM = TDatime((UInt_t) 1).AsSQLString();
 
-   TString timeM = TestBit(TFile::kReproducible) ? TDatime((UInt_t) 1).AsSQLString() : fDatimeM.AsSQLString();
+   TSQLStructure::AddStrBrackets(timeC, valuequote);
    TSQLStructure::AddStrBrackets(timeM, valuequote);
 
    TString uuid = TestBit(TFile::kReproducible) ? TUUID("00000000-0000-0000-0000-000000000000").AsString() : dir->GetUUID().AsString();
