@@ -661,9 +661,9 @@ const RooArgSet* RooTreeDataStore::get(Int_t index) const
 
     // If external array is specified use that  
     _curWgt = _extWgtArray[index] ;
-    _curWgtErrLo = _extWgtErrLoArray[index] ;
-    _curWgtErrHi = _extWgtErrHiArray[index] ;
-    _curWgtErr   = sqrt(_extSumW2Array[index]) ;
+    _curWgtErrLo = _extWgtErrLoArray ? _extWgtErrLoArray[index] : -1.;
+    _curWgtErrHi = _extWgtErrHiArray ? _extWgtErrHiArray[index] : -1.;
+    _curWgtErr   = sqrt( _extSumW2Array ? _extSumW2Array[index] : _extWgtArray[index] );
 
   } else if (_wgtVar) {
 

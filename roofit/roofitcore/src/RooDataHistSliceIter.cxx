@@ -49,7 +49,7 @@ RooDataHistSliceIter::RooDataHistSliceIter(RooDataHist& hist, RooAbsArg& sliceAr
   dynamic_cast<RooAbsLValue&>(*sliceArgInt).setBin(0) ;
 
   if (hist._vars.getSize()>1) {
-    _baseIndex = hist.calcTreeIndex() ;  
+    _baseIndex = hist.calcTreeIndex(hist._vars, true);
   } else {
     _baseIndex = 0 ;
   }
