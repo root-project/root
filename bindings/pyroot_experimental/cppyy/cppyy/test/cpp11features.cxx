@@ -27,4 +27,9 @@ int pass_shared_ptr(std::shared_ptr<TestSharedPtr> p) {
 int TestMoving1::s_move_counter = 0;
 int TestMoving2::s_move_counter = 0;
 
+
+// for std::function testing
+std::function<int(const FNTestStruct& t)> FNCreateTestStructFunc() { return [](const FNTestStruct& t) { return t.t; }; }
+std::function<int(const FunctionNS::FNTestStruct& t)> FunctionNS::FNCreateTestStructFunc() { return [](const FNTestStruct& t) { return t.t; }; }
+
 #endif // c++11 and later

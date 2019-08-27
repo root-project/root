@@ -48,6 +48,17 @@ The following people have contributed to this new version:
  Zhe Zhang, Nebraska,\
  Stefan Wunsch, CERN/SFT
 
+## ROOT
+
+### Splash screen
+
+The venerable splash screen is now disabled by default to make ROOT's startup
+faster. Many users already use `root -l` to start ROOT, but this also hides the
+useful text banner with version information along with the splash screen. With
+this new default, starting up ROOT as just `root` will show only the text banner
+instead of the splash screen. The splash screen can still be seen with `root -a`
+or in `TBrowser` by opening `Browser Help → About ROOT`.
+
 ## Deprecation and Removal
  * rootcling flags `-cint`, `-reflex` and `-gccxml` have no effect and will be
    removed. Please remove them from the rootcling invocations.
@@ -62,6 +73,18 @@ The following people have contributed to this new version:
 
 
 ## I/O Libraries
+
+* TMemFile: Apply customization of minimal block size also to the first block.
+* TFile: A new bit `TFile::kReproducible` was introduced. It can be enabled by
+  specifying the `"reproducible"` url option when creating the file:
+   ```{.cpp}
+      TFile *f = TFile::Open("name.root?reproducible","RECREATE","File title");
+   ```{.cpp}
+   Unlike regular `TFile`s, the content of such file has reproducible binary
+   content when writing exactly same data. This achieved by writing pre-defined
+   values for creation and modification date of TKey/TDirectory objects and null
+   value for TUUID objects inside TFile. As drawback, TRef objects stored in such
+   file cannot be read correctly.
 
 
 ## TTree Libraries
@@ -136,9 +159,31 @@ The following people have contributed to this new version:
   `explicitlink`).
 - ROOT library targets now export which C++ standard they were built with via
   the target compile features `cxx_std_11`, `cxx_std_14`, and `cxx_std_17`.
+- The file `RootNewMacros.cmake` has been renamed to `RootMacros.cmake`.
+  Including the old file by name is deprecated and will generate a warning.
+  Including `RootMacros.cmake` is not necessary, as now it is already included
+  when calling `find_package(ROOT)`. If you still need to inherit ROOT's compile
+  options, however, you may use `include(${ROOT_USE_FILE})` as before.
+- ROOT's internal CMake modules (e.g. CheckCompiler.cmake, SetUpLinux.cmake, etc)
+  are no longer installed with `make install`. Only the necessary files by
+  dependent projects are installed by default now, and they are installed
+  directly into the cmake/ directory, not cmake/modules/ as before.
+- The macro `ROOT_GENERATE_DICTIONARY()` can now attach the generated source
+  file directly to a library target by using the option `MODULE <library>`, where
+  `<library>` is an existing library target. This allows the dictionary to inherit
+  target properties such as compile options and include directories from the library
+  target, even when they are added after the call to `ROOT_GENERATE_DICTIONARY()`.
+- The macros `REFLEX_GENERATE_DICTIONARY()` and `ROOT_GENERATE_DICTIONARY()` can
+  now have custom extra dependencies added with the options `DEPENDS` and
+  `EXTRA_DEPENDENCIES`, respectively.
 
 The following builtins have been updated:
 
-- Intel TBB 2019 U7
+- FFTW3 3.3.8
+- GSL 2.5
+- Intel TBB 2019 U8
+- PCRE 8.43
 - OpenSSL 1.0.2s
-- XRootD 4.9.1
+- Vdt 0.4.3
+- VecCore 0.6.0
+- XRootD 4.10.0

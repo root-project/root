@@ -6,6 +6,8 @@
 #include "Utility.h"
 
 // Standard
+#include <map>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -17,12 +19,33 @@ class PyCallable;
 class CPPOverload;
 
 /** Template proxy object to return functions and methods
-      @author  WLAV
-      @date    01/15/2008
-      @version 1.0
  */
 
-typedef std::vector<std::pair<uint64_t, CPPOverload*>> TP_DispatchMap_t;
+typedef std::pair<uint64_t, CPPOverload*> TP_DispatchEntry_t;
+typedef std::map<std::string, std::vector<TP_DispatchEntry_t>> TP_DispatchMap_t;
+
+class TemplateInfo {
+public:
+    TemplateInfo();
+    TemplateInfo(const TemplateInfo&) = delete;
+    TemplateInfo& operator=(const TemplateInfo&) = delete;
+    ~TemplateInfo();
+
+public:
+    PyObject* fCppName;
+    PyObject* fPyName;
+    PyObject* fPyClass;
+    CPPOverload* fNonTemplated;   // holder for non-template overloads
+    CPPOverload* fTemplated;      // holder for templated overloads
+    CPPOverload* fLowPriority;    // low priority overloads such as void*/void**
+    PyObject* fWeakrefList;
+
+    TP_DispatchMap_t fDispatchMap;
+
+    uint64_t fFlags;              // collective for all methods
+};
+
+typedef std::shared_ptr<TemplateInfo> TP_TInfo_t;
 
 class TemplateProxy {
 private:
@@ -33,23 +56,16 @@ private:
 public:                 // public, as the python C-API works with C structs
     PyObject_HEAD
     PyObject* fSelf;              // must be first (same layout as CPPOverload)
-    PyObject* fCppName;
-    PyObject* fPyName;
     PyObject* fTemplateArgs;
-    PyObject* fPyClass;
-    CPPOverload* fNonTemplated;   // holder for non-template overloads
-    CPPOverload* fTemplated;      // holder for templated overloads
-    CPPOverload* fLowPriority;    // low priority overloads such as void*/void**
     PyObject* fWeakrefList;
-
-    TP_DispatchMap_t fDispatchMap;
+    TP_TInfo_t fTI;
 
 public:
-    void AddOverload(CPPOverload* mp);
-    void AddOverload(PyCallable* pc);
-    void AddTemplate(PyCallable* pc);
-    PyCallable* Instantiate(
-        const std::string& fullname, PyObject* tmplArgs, Utility::ArgPreference, int* pcnt = nullptr);
+    void MergeOverload(CPPOverload* mp);
+    void AdoptMethod(PyCallable* pc);
+    void AdoptTemplate(PyCallable* pc);
+    PyObject* Instantiate(const std::string& fname,
+        PyObject* tmplArgs, Utility::ArgPreference, int* pcnt = nullptr);
 
 private:                // private, as the python C-API will handle creation
     TemplateProxy() = delete;

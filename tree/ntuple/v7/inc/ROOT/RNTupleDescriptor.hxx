@@ -22,6 +22,7 @@
 
 #include <chrono>
 #include <memory>
+#include <ostream>
 #include <vector>
 #include <string>
 #include <unordered_map>
@@ -154,7 +155,7 @@ public:
       NTupleSize_t fFirstElementIndex = kInvalidNTupleIndex;
       /// A 32bit value for the number of column elements in the cluster
       ClusterSize_t fNElements = kInvalidClusterIndex;
-      /// The usual format for ROOT compression settings (see TCompression.h).
+      /// The usual format for ROOT compression settings (see Compression.h).
       /// The pages of a particular column in a particular cluster are all compressed with the same settings.
       std::int64_t fCompressionSettings = 0;
 
@@ -278,6 +279,10 @@ public:
    /// In order to handle changes to the serialization routine in future ntuple versions
    static constexpr std::uint16_t kFrameVersionCurrent = 0;
    static constexpr std::uint16_t kFrameVersionMin = 0;
+   /// The preamble is sufficient to get the length of the header
+   static constexpr unsigned int kNBytesPreamble = 8;
+   /// The last few bytes after the footer store the length of footer and header
+   static constexpr unsigned int kNBytesPostscript = 16;
 
    bool operator ==(const RNTupleDescriptor &other) const;
 
@@ -287,6 +292,8 @@ public:
    std::uint32_t SerializeHeader(void* buffer) const;
    /// Serializes cluster meta data. Returns the number of bytes and fills buffer if it is not nullptr.
    std::uint32_t SerializeFooter(void* buffer) const;
+   /// Given kNBytesPostscript bytes, extract the header and footer lengths in bytes
+   static void LocateMetadata(const void *postscript, std::uint32_t &szHeader, std::uint32_t &szFooter);
 
    const RFieldDescriptor& GetFieldDescriptor(DescriptorId_t fieldId) const { return fFieldDescriptors.at(fieldId); }
    const RColumnDescriptor& GetColumnDescriptor(DescriptorId_t columnId) const {
@@ -321,6 +328,7 @@ public:
 
    /// Re-create the C++ model from the stored meta-data
    std::unique_ptr<RNTupleModel> GenerateModel() const;
+   void PrintInfo(std::ostream &output) const;
 };
 
 

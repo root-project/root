@@ -68,6 +68,8 @@ public:
    RColumnElementBase& operator =(RColumnElementBase&& other) = default;
    virtual ~RColumnElementBase() = default;
 
+   static RColumnElementBase Generate(EColumnType type);
+
    /// Write one or multiple column elements into destination
    void WriteTo(void *destination, std::size_t count) const {
       std::memcpy(destination, fRawContent, fSize * count);
@@ -136,6 +138,17 @@ public:
 };
 
 template <>
+class RColumnElement<std::uint8_t, EColumnType::kByte> : public RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = true;
+   static constexpr std::size_t kSize = sizeof(std::uint8_t);
+   static constexpr std::size_t kBitsOnStorage = kSize * 8;
+   explicit RColumnElement(std::uint8_t *value) : RColumnElementBase(value, kSize) {}
+   bool IsMappable() const final { return kIsMappable; }
+   std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
+};
+
+template <>
 class RColumnElement<std::int32_t, EColumnType::kInt32> : public RColumnElementBase {
 public:
    static constexpr bool kIsMappable = true;
@@ -186,6 +199,17 @@ public:
    static constexpr std::size_t kSize = sizeof(ROOT::Experimental::ClusterSize_t);
    static constexpr std::size_t kBitsOnStorage = kSize * 8;
    explicit RColumnElement(ClusterSize_t *value) : RColumnElementBase(value, kSize) {}
+   bool IsMappable() const final { return kIsMappable; }
+   std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
+};
+
+template <>
+class RColumnElement<RColumnSwitch, EColumnType::kSwitch> : public RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = true;
+   static constexpr std::size_t kSize = sizeof(ROOT::Experimental::RColumnSwitch);
+   static constexpr std::size_t kBitsOnStorage = kSize * 8;
+   explicit RColumnElement(RColumnSwitch *value) : RColumnElementBase(value, kSize) {}
    bool IsMappable() const final { return kIsMappable; }
    std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
 };

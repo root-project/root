@@ -99,7 +99,7 @@ It is strongly reccomended to persistify those as objects rather than lists of l
    - `L` : a 64 bit signed integer (`Long64_t`)
    - `l` : a 64 bit unsigned integer (`ULong64_t`)
    - `O` : [the letter `o`, not a zero] a boolean (`Bool_t`)
-  
+
   Examples:
    - A int: "myVar/I"
    - A float array with fixed size: "myArrfloat[42]/F"
@@ -113,14 +113,14 @@ It is strongly reccomended to persistify those as objects rather than lists of l
 ~~~
 - If the address points to more than one numerical variable, we strongly recommend
   that the variable be sorted in decreasing order of size.  Any other order will
-  result in a non-portable TTree (i.e. you will not be able to read it back on a 
+  result in a non-portable TTree (i.e. you will not be able to read it back on a
   platform with a different padding strategy).
   We recommend to persistify objects rather than composite leaflists.
 - In case of the truncated floating point types (Float16_t and Double32_t) you can
   furthermore specify the range in the style [xmin,xmax] or [xmin,xmax,nbits] after
-  the type character. For example, for storing a variable size array `myArr` of 
-  `Double32_t` with values within a range of `[0, 2*pi]` and the size of which is 
-  stored in a branch called `myArrSize`, the syntax for the `leaflist` string would 
+  the type character. For example, for storing a variable size array `myArr` of
+  `Double32_t` with values within a range of `[0, 2*pi]` and the size of which is
+  stored in a branch called `myArrSize`, the syntax for the `leaflist` string would
   be: `myArr[myArrSize]/d[0,twopi]`. Of course the number of bits could be specified,
   the standard rules of opaque typedefs annotation are valid. For example, if only
   18 bits were sufficient, the syntax would become: `myArr[myArrSize]/d[0,twopi,18]`
@@ -3770,9 +3770,9 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///        - the default histogram drawing option is used
 ///          if the expression is of the form "e1".
 ///        - if the expression is of the form "e1:e2"or "e1:e2:e3" a cloud of
-///           unbinned 2D or 3D points is drawn respectively.
-///        - if the expression  has four fields "e1:e2:e3:e4" a 2D scatter is
-///          produced with e1 vs e2 vs e3, and e4 is mapped on the current color
+///          unbinned 2D or 3D points is drawn respectively.
+///        - if the expression  has four fields "e1:e2:e3:e4" a cloud of unbinned 3D
+///          points is produced with e1 vs e2 vs e3, and e4 is mapped on the current color
 ///          palette.
 ///    - If option COL is specified when varexp has three fields:
 ///   ~~~ {.cpp}

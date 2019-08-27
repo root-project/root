@@ -194,7 +194,7 @@ Bool_t TPython::Import(const char *mod_name)
          // build full, qualified name
          std::string fullname = mod_name;
          fullname += ".";
-         fullname += CPyCppyy_PyUnicode_AsString(pyClName);
+         fullname += CPyCppyy_PyText_AsString(pyClName);
 
          // force class creation (this will eventually call TPyClassGenerator)
          TClass::GetClass(fullname.c_str(), kTRUE);
@@ -258,12 +258,12 @@ void TPython::LoadMacro(const char *name)
             // need to check for both exact and derived (differences exist between older and newer
             // versions of python ... bug?)
             if ((pyModName && pyClName) &&
-                ((CPyCppyy_PyUnicode_CheckExact(pyModName) && CPyCppyy_PyUnicode_CheckExact(pyClName)) ||
-                 (CPyCppyy_PyUnicode_Check(pyModName) && CPyCppyy_PyUnicode_Check(pyClName)))) {
+                ((CPyCppyy_PyText_CheckExact(pyModName) && CPyCppyy_PyText_CheckExact(pyClName)) ||
+                 (CPyCppyy_PyText_Check(pyModName) && CPyCppyy_PyText_Check(pyClName)))) {
                // build full, qualified name
-               std::string fullname = CPyCppyy_PyUnicode_AsString(pyModName);
+               std::string fullname = CPyCppyy_PyText_AsString(pyModName);
                fullname += '.';
-               fullname += CPyCppyy_PyUnicode_AsString(pyClName);
+               fullname += CPyCppyy_PyText_AsString(pyClName);
 
                // force class creation (this will eventually call TPyClassGenerator)
                TClass::GetClass(fullname.c_str(), kTRUE);
@@ -411,7 +411,7 @@ const TPyReturn TPython::Eval(const char *expr)
       PyObject *module = PyObject_GetAttr(pyclass, CPyCppyy::PyStrings::gModule);
 
       // concat name
-      std::string qname = std::string(CPyCppyy_PyUnicode_AsString(module)) + '.' + CPyCppyy_PyUnicode_AsString(name);
+      std::string qname = std::string(CPyCppyy_PyText_AsString(module)) + '.' + CPyCppyy_PyText_AsString(name);
       Py_DECREF(module);
       Py_DECREF(name);
       Py_DECREF(pyclass);

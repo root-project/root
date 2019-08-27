@@ -7,6 +7,8 @@
 #include "TypeManip.h"
 #include "Utility.h"
 
+#include "CPyCppyy/DispatchPtr.h"
+
 // Standard
 #include <algorithm>
 #include <sstream>
@@ -24,31 +26,192 @@
 // In addition to encapsulation, CPPInstance offers rudimentary comparison
 // operators (based on pointer value and class comparisons); stubs (with lazy
 // lookups) for numeric operators; and a representation that prints the C++
-//  pointer values, rather than the PyObject* ones as is the default.
+// pointer values, rather than the PyObject* ones as is the default.
+//
+// Smart pointers have the underlying type as the Python type, but store the
+// pointer to the smart pointer. They carry a pointer to the Python-sode smart
+// class for dereferencing to get to the actual instance pointer.
+
+
+//- private helpers ----------------------------------------------------------
+namespace {
+
+// Several specific use cases require extra data in a CPPInstance, but can not
+// be a new type. E.g. cross-inheritance derived types are by definition added
+// a posterio, and caching of datamembers is up to the datamember, not the
+// instance type. To not have normal use of CPPInstance take extra memory, this
+// extended data can slot in place of fObject for those use cases.
+
+struct ExtendedData {
+    ExtendedData() : fObject(nullptr), fSmartClass(nullptr), fTypeSize(0), fLastState(nullptr), fDispatchPtr(nullptr) {}
+    ~ExtendedData() {
+        for (auto& pc : fDatamemberCache)
+            Py_XDECREF(pc.second);
+        fDatamemberCache.clear();
+    }
+
+// the original object reference it replaces (Note: has to be first data member, see usage
+// in GetObjectRaw(), e.g. for ptr-ptr passing)
+    void* fObject;
+
+// for smart pointer types
+    CPyCppyy::CPPSmartClass* fSmartClass;
+    size_t         fTypeSize;
+    void*          fLastState;
+
+// for caching expensive-to-create data member representations
+    CPyCppyy::CI_DatamemberCache_t fDatamemberCache;
+
+// for back-referencing from Python-derived instances
+    CPyCppyy::DispatchPtr* fDispatchPtr;
+};
+
+} // unnamed namespace
+
+#define EXT_OBJECT(pyobj)  ((ExtendedData*)((pyobj)->fObject))->fObject
+#define SMART_CLS(pyobj)   ((ExtendedData*)((pyobj)->fObject))->fSmartClass
+#define SMART_TYPE(pyobj)  SMART_CLS(pyobj)->fCppType
+#define DISPATCHPTR(pyobj) ((ExtendedData*)((pyobj)->fObject))->fDispatchPtr
+#define DATA_CACHE(pyobj)  ((ExtendedData*)((pyobj)->fObject))->fDatamemberCache
+
+inline void CPyCppyy::CPPInstance::CreateExtension() {
+    if (fFlags & kIsExtended)
+        return;
+    void* obj = fObject;
+    fObject = (void*)new ExtendedData{};
+    EXT_OBJECT(this) = obj;
+    fFlags |= kIsExtended;
+}
+
+void* CPyCppyy::CPPInstance::GetExtendedObject()
+{
+    if (IsSmart()) {
+    // We get the raw pointer from the smart pointer each time, in case it has
+    // changed or has been freed.
+        return Cppyy::CallR(SMART_CLS(this)->fDereferencer, EXT_OBJECT(this), 0, nullptr);
+    }
+    return EXT_OBJECT(this);
+}
+
+
+//- public methods -----------------------------------------------------------
+CPyCppyy::CPPInstance* CPyCppyy::CPPInstance::Copy(void* cppinst)
+{
+// create a fresh instance; args and kwds are not used by op_new (see below)
+    PyObject* self = (PyObject*)this;
+    PyTypeObject* pytype = Py_TYPE(self);
+    PyObject* newinst = pytype->tp_new(pytype, nullptr, nullptr);
+
+// set the C++ instance as given
+    ((CPPInstance*)newinst)->fObject = cppinst;
+
+// look for user-provided __cpp_copy__ (not reusing __copy__ b/c of differences
+// in semantics: need to pass in the new instance) ...
+    PyObject* cpy = PyObject_GetAttrString(self, (char*)"__cpp_copy__");
+    if (cpy && PyCallable_Check(cpy)) {
+        PyObject* args = PyTuple_New(1);
+        Py_INCREF(newinst);
+        PyTuple_SET_ITEM(args, 0, newinst);
+        PyObject* res = PyObject_CallObject(cpy, args);
+        Py_DECREF(args);
+        Py_DECREF(cpy);
+        if (res) {
+            Py_DECREF(res);
+            return (CPPInstance*)newinst;
+        }
+
+    // error already set, but need to return nullptr
+        Py_DECREF(newinst);
+        return nullptr;
+    } else if (cpy)
+        Py_DECREF(cpy);
+    else
+        PyErr_Clear();
+
+// ... otherwise, shallow copy any Python-side dictionary items
+    PyObject* selfdct = PyObject_GetAttr(self, PyStrings::gDict);
+    PyObject* newdct  = PyObject_GetAttr(newinst, PyStrings::gDict);
+    bool bMergeOk = PyDict_Merge(newdct, selfdct, 1) == 0;
+    Py_DECREF(newdct);
+    Py_DECREF(selfdct);
+
+    if (!bMergeOk) {
+    // presume error already set
+        Py_DECREF(newinst);
+        return nullptr;
+    }
+
+    MemoryRegulator::RegisterPyObject((CPPInstance*)newinst, cppinst);
+    return (CPPInstance*)newinst;
+}
+
+
+//----------------------------------------------------------------------------
+void CPyCppyy::CPPInstance::PythonOwns()
+{
+    fFlags |= kIsOwner;
+    if ((fFlags & kIsExtended) && DISPATCHPTR(this))
+        DISPATCHPTR(this)->PythonOwns();
+}
+
+//----------------------------------------------------------------------------
+void CPyCppyy::CPPInstance::CppOwns()
+{
+    fFlags &= ~kIsOwner;
+    if ((fFlags & kIsExtended) && DISPATCHPTR(this))
+        DISPATCHPTR(this)->CppOwns();
+}
+
+//----------------------------------------------------------------------------
+void CPyCppyy::CPPInstance::SetSmart(PyObject* smart_type)
+{
+    CreateExtension();
+    Py_INCREF(smart_type);
+    SMART_CLS(this) = (CPPSmartClass*)smart_type;
+    fFlags |= kIsSmartPtr;
+}
+
+//----------------------------------------------------------------------------
+Cppyy::TCppType_t CPyCppyy::CPPInstance::GetSmartIsA() const
+{
+    if (!IsSmart()) return (Cppyy::TCppType_t)0;
+    return SMART_TYPE(this);
+}
+
+//----------------------------------------------------------------------------
+CPyCppyy::CI_DatamemberCache_t& CPyCppyy::CPPInstance::GetDatamemberCache()
+{
+// Return the cache for expensive data objects (and make extended as necessary)
+    CreateExtension();
+    return DATA_CACHE(this);
+}
+
+//----------------------------------------------------------------------------
+void CPyCppyy::CPPInstance::SetDispatchPtr(void* ptr)
+{
+// Set up the dispatch pointer for memory management
+    CreateExtension();
+    DISPATCHPTR(this) = (DispatchPtr*)ptr;
+}
 
 
 //----------------------------------------------------------------------------
 void CPyCppyy::op_dealloc_nofree(CPPInstance* pyobj) {
 // Destroy the held C++ object, if owned; does not deallocate the proxy.
-    bool isSmartPtr = pyobj->fFlags & CPPInstance::kIsSmartPtr;
-    Cppyy::TCppType_t klass = isSmartPtr ? pyobj->fSmartPtrType : pyobj->ObjectIsA();
+
+    Cppyy::TCppType_t klass = pyobj->ObjectIsA(false /* check_smart */);
+    void*& cppobj = pyobj->GetObjectRaw();
 
     if (!(pyobj->fFlags & CPPInstance::kIsReference))
-        MemoryRegulator::UnregisterPyObject(pyobj->GetObject(), klass);
+        MemoryRegulator::UnregisterPyObject(cppobj, klass);
 
     if (pyobj->fFlags & CPPInstance::kIsValue) {
-        void* addr = isSmartPtr ? pyobj->fObject : pyobj->GetObject();
-        Cppyy::CallDestructor(klass, addr);
-        Cppyy::Deallocate(klass, addr);
-    } else if (pyobj->fObject && (pyobj->fFlags & CPPInstance::kIsOwner)) {
-        void* addr = isSmartPtr ? pyobj->fObject : pyobj->GetObject();
-        Cppyy::Destruct(klass, addr);
+        Cppyy::CallDestructor(klass, cppobj);
+        Cppyy::Deallocate(klass, cppobj);
+    } else if (pyobj->fFlags & CPPInstance::kIsOwner) {
+        if (cppobj) Cppyy::Destruct(klass, cppobj);
     }
-    pyobj->fObject = nullptr;
-
-    for (auto& pc : pyobj->fDatamemberCache)
-        Py_XDECREF(pc.second);
-    pyobj->fDatamemberCache.clear();
+    cppobj = nullptr;
 }
 
 
@@ -81,7 +244,7 @@ static PyObject* op_dispatch(PyObject* self, PyObject* args, PyObject* /* kdws *
 // method. The actual selection is in the __overload__() method of CPPOverload.
     PyObject *mname = nullptr, *sigarg = nullptr;
     if (!PyArg_ParseTuple(args, const_cast<char*>("O!O!:__dispatch__"),
-            &CPyCppyy_PyUnicode_Type, &mname, &CPyCppyy_PyUnicode_Type, &sigarg))
+            &CPyCppyy_PyText_Type, &mname, &CPyCppyy_PyText_Type, &sigarg))
         return nullptr;
 
 // get the named overload
@@ -104,14 +267,14 @@ static PyObject* op_dispatch(PyObject* self, PyObject* args, PyObject* /* kdws *
 }
 
 //= CPyCppyy smart pointer support ===========================================
-static PyObject* op_get_smart_ptr(CPPInstance* self)
+static PyObject* op_get_smartptr(CPPInstance* self)
 {
-    if (!(self->fFlags & CPPInstance::kIsSmartPtr)) {
+    if (!self->IsSmart()) {
     // TODO: more likely should raise
         Py_RETURN_NONE;
     }
 
-    return (PyObject*)CPyCppyy::BindCppObjectNoCast(self->fObject, self->fSmartPtrType);
+    return CPyCppyy::BindCppObjectNoCast(self->GetSmartObject(), SMART_TYPE(self), CPPInstance::kNone);
 }
 
 
@@ -122,7 +285,7 @@ static PyMethodDef op_methods[] = {
     {(char*)"__destruct__", (PyCFunction)op_destruct, METH_NOARGS, nullptr},
     {(char*)"__dispatch__", (PyCFunction)op_dispatch, METH_VARARGS,
       (char*)"dispatch to selected overload"},
-    {(char*)"__smartptr__", (PyCFunction)op_get_smart_ptr, METH_NOARGS,
+    {(char*)"__smartptr__", (PyCFunction)op_get_smartptr, METH_NOARGS,
       (char*)"get associated smart pointer, if any"},
     {(char*)nullptr, nullptr, 0, nullptr}
 };
@@ -134,10 +297,7 @@ static CPPInstance* op_new(PyTypeObject* subtype, PyObject*, PyObject*)
 // Create a new object proxy (holder only).
     CPPInstance* pyobj = (CPPInstance*)subtype->tp_alloc(subtype, 0);
     pyobj->fObject = nullptr;
-    pyobj->fFlags  = 0;
-    pyobj->fSmartPtrType = (Cppyy::TCppType_t)0;
-    pyobj->fDereferencer = (Cppyy::TCppMethod_t)0;
-    new (&pyobj->fDatamemberCache) CI_DatamemberCache_t{};
+    pyobj->fFlags = CPPInstance::kNone;
 
     return pyobj;
 }
@@ -147,7 +307,7 @@ static void op_dealloc(CPPInstance* pyobj)
 {
 // Remove (Python-side) memory held by the object proxy.
     op_dealloc_nofree(pyobj);
-    pyobj->fDatamemberCache.~CI_DatamemberCache_t();
+    if (pyobj->fFlags & CPPInstance::kIsExtended) delete (ExtendedData*)pyobj->fObject;
     Py_TYPE(pyobj)->tp_free((PyObject*)pyobj);
 }
 
@@ -192,17 +352,15 @@ static PyObject* op_repr(CPPInstance* pyobj)
         clName.append("*");
 
     PyObject* repr = nullptr;
-    if (pyobj->fFlags & CPPInstance::kIsSmartPtr) {
-        Cppyy::TCppType_t smartPtrType = pyobj->fSmartPtrType;
-        std::string smartPtrName = smartPtrType ?
-            Cppyy::GetFinalName(smartPtrType) : "unknown smart pointer";
-        repr = CPyCppyy_PyUnicode_FromFormat(
+    if (pyobj->IsSmart()) {
+        std::string smartPtrName = Cppyy::GetScopedFinalName(SMART_TYPE(pyobj));
+        repr = CPyCppyy_PyText_FromFormat(
             const_cast<char*>("<%s.%s object at %p held by %s at %p>"),
-            CPyCppyy_PyUnicode_AsString(modname), clName.c_str(),
-            pyobj->GetObject(), smartPtrName.c_str(), pyobj->fObject);
+            CPyCppyy_PyText_AsString(modname), clName.c_str(),
+            pyobj->GetObject(), smartPtrName.c_str(), pyobj->GetObjectRaw());
     } else {
-        repr = CPyCppyy_PyUnicode_FromFormat(const_cast<char*>("<%s.%s object at %p>"),
-            CPyCppyy_PyUnicode_AsString(modname), clName.c_str(), pyobj->GetObject());
+        repr = CPyCppyy_PyText_FromFormat(const_cast<char*>("<%s.%s object at %p>"),
+            CPyCppyy_PyText_AsString(modname), clName.c_str(), pyobj->GetObject());
     }
 
     Py_DECREF(modname);
@@ -212,6 +370,7 @@ static PyObject* op_repr(CPPInstance* pyobj)
 //----------------------------------------------------------------------------
 static PyObject* op_str(CPPInstance* cppinst)
 {
+#ifndef _WIN64
 // Forward to C++ insertion operator if available, otherwise forward to repr.
     PyObject* pyobj = (PyObject*)cppinst;
     PyObject* lshift = PyObject_GetAttr(pyobj, PyStrings::gLShift);
@@ -229,7 +388,7 @@ static PyObject* op_str(CPPInstance* cppinst)
                     pyclass, "std::ostream", rcname, "<<", "__lshiftc__", nullptr, rnsID)) {
                 lshift = PyObject_GetAttr(pyclass, PyStrings::gLShiftC);
             } else
-                PyObject_SetAttr(pyclass, PyStrings::gLShiftC, Py_None);
+                PyType_Type.tp_setattro(pyclass, PyStrings::gLShiftC, Py_None);
         } else if (lshift == Py_None) {
             Py_DECREF(lshift);
             lshift = nullptr;
@@ -248,11 +407,12 @@ static PyObject* op_str(CPPInstance* cppinst)
         Py_DECREF(lshift);
         if (res) {
             Py_DECREF(res);
-            return CPyCppyy_PyUnicode_FromString(s.str().c_str());
+            return CPyCppyy_PyText_FromString(s.str().c_str());
         }
         PyErr_Clear();
     }
- 
+#endif  //!_WIN64
+
     return op_repr(cppinst);
 }
 
@@ -287,7 +447,24 @@ static PyGetSetDef op_getset[] = {
 
 
 //= CPyCppyy type number stubs to allow dynamic overrides =====================
+#define CPYCPPYY_STUB_BODY(name, op, pystring)                                \
+/* place holder to lazily install __name__ if a global overload is available */\
+    if (!Utility::AddBinaryOperator(                                          \
+            left, right, #op, "__"#name"__", "__r"#name"__")) {               \
+        Py_INCREF(Py_NotImplemented);                                         \
+        return Py_NotImplemented;                                             \
+    }                                                                         \
+                                                                              \
+/* redo the call, which will now go to the newly installed method */          \
+    return PyObject_CallMethodObjArgs(left, pystring, right, nullptr);
+
 #define CPYCPPYY_STUB(name, op, pystring)                                     \
+static PyObject* op_##name##_stub(PyObject* left, PyObject* right)            \
+{                                                                             \
+    CPYCPPYY_STUB_BODY(name, op, pystring)                                    \
+}
+
+#define CPYCPPYY_ASSOCIATIVE_STUB(name, op, pystring)                         \
 static PyObject* op_##name##_stub(PyObject* left, PyObject* right)            \
 {                                                                             \
     if (!CPPInstance_Check(left)) {                                           \
@@ -298,20 +475,12 @@ static PyObject* op_##name##_stub(PyObject* left, PyObject* right)            \
             return Py_NotImplemented;                                         \
         }                                                                     \
     }                                                                         \
-/* place holder to lazily install __name__ if a global overload is available */\
-    if (!Utility::AddBinaryOperator(                                          \
-            left, right, #op, "__"#name"__", "__r"#name"__")) {               \
-        Py_INCREF(Py_NotImplemented);                                         \
-        return Py_NotImplemented;                                             \
-    }                                                                         \
-                                                                              \
-/* redo the call, which will now go to the newly installed method */          \
-    return PyObject_CallMethodObjArgs(left, pystring, right, nullptr);        \
+    CPYCPPYY_STUB_BODY(name, op, pystring)                                    \
 }
 
-CPYCPPYY_STUB(add, +, PyStrings::gAdd)
+CPYCPPYY_ASSOCIATIVE_STUB(add, +, PyStrings::gAdd)
 CPYCPPYY_STUB(sub, -, PyStrings::gSub)
-CPYCPPYY_STUB(mul, *, PyStrings::gMul)
+CPYCPPYY_ASSOCIATIVE_STUB(mul, *, PyStrings::gMul)
 CPYCPPYY_STUB(div, /, PyStrings::gDiv)
 
 //-----------------------------------------------------------------------------

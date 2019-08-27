@@ -600,13 +600,28 @@ std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeFooter(void* buffe
       }
    }
 
-   // Write the footer size in the frame preamble and repeat it before the CRC32 checksum
+   // The next 16 bytes make the ntuple's postscript
+   pos += SerializeUInt16(kFrameVersionCurrent, *where);
+   pos += SerializeUInt16(kFrameVersionMin, *where);
+   // Add the CRC32 bytes to the header and footer sizes
+   pos += SerializeUInt32(SerializeHeader(nullptr), *where);
    std::uint32_t size = pos - base + 4;
-   pos += SerializeUInt32(size, *where);
-   SerializeUInt32(size, ptrSize);
+   pos += SerializeUInt32(size + 4, *where);
    size += SerializeCrc32(base, size, *where);
 
    return size;
+}
+
+
+void ROOT::Experimental::RNTupleDescriptor::LocateMetadata(
+   const void *postscript, std::uint32_t &szHeader, std::uint32_t &szFooter)
+{
+   auto pos = reinterpret_cast<const unsigned char *>(postscript);
+   std::uint16_t dummy;
+   pos += DeserializeUInt16(pos, &dummy);
+   pos += DeserializeUInt16(pos, &dummy);
+   pos += DeserializeUInt32(pos, &szHeader);
+   pos += DeserializeUInt32(pos, &szFooter);
 }
 
 
@@ -632,8 +647,15 @@ ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleDescriptor::GetNElem
 ROOT::Experimental::DescriptorId_t
 ROOT::Experimental::RNTupleDescriptor::FindFieldId(std::string_view fieldName, DescriptorId_t parentId) const
 {
+   std::string leafName(fieldName);
+   auto posDot = leafName.find_last_of('.');
+   if (posDot != std::string::npos) {
+      auto parentName = leafName.substr(0, posDot);
+      leafName = leafName.substr(posDot + 1);
+      parentId = FindFieldId(parentName, parentId);
+   }
    for (const auto &fd : fFieldDescriptors) {
-      if (fd.second.GetParentId() == parentId && fd.second.GetFieldName() == fieldName)
+      if (fd.second.GetParentId() == parentId && fd.second.GetFieldName() == leafName)
          return fd.second.GetId();
    }
    return kInvalidDescriptorId;
@@ -643,11 +665,7 @@ ROOT::Experimental::RNTupleDescriptor::FindFieldId(std::string_view fieldName, D
 ROOT::Experimental::DescriptorId_t ROOT::Experimental::RNTupleDescriptor::FindFieldId(std::string_view fieldName) const
 {
    auto rootId = FindFieldId("", kInvalidDescriptorId);
-   for (const auto &fd : fFieldDescriptors) {
-      if (fd.second.GetParentId() == rootId && fd.second.GetFieldName() == fieldName)
-         return fd.second.GetId();
-   }
-   return kInvalidDescriptorId;
+   return FindFieldId(fieldName, rootId);
 }
 
 

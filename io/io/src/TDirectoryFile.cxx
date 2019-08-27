@@ -454,8 +454,6 @@ TObject *TDirectoryFile::FindObjectAnyFile(const char *name) const
    return 0;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Find a directory named "apath".
 ///
@@ -740,14 +738,20 @@ void TDirectoryFile::FillBuffer(char *&buffer)
        fSeekKeys > TFile::kStartBigFile )
    {
       // One of the address is larger than 2GB we need to use longer onfile
-      // integer, thus we increase the verison number.
+      // integer, thus we increase the version number.
       // Note that fSeekDir and fSeekKey are not necessarily correlated, if
       // some object are 'removed' from the file and the holes are reused.
       version += 1000;
    }
    tobuf(buffer, version);
-   fDatimeC.FillBuffer(buffer);
-   fDatimeM.FillBuffer(buffer);
+   const bool reproducible = TestBit(TFile::kReproducible) || (fFile && fFile->TestBit(TFile::kReproducible));
+   if (reproducible) {
+      TDatime((UInt_t) 1).FillBuffer(buffer);
+      TDatime((UInt_t) 1).FillBuffer(buffer);
+   } else {
+      fDatimeC.FillBuffer(buffer);
+      fDatimeM.FillBuffer(buffer);
+   }
    tobuf(buffer, fNbytesKeys);
    tobuf(buffer, fNbytesName);
    if (version > 1000) {
@@ -759,7 +763,10 @@ void TDirectoryFile::FillBuffer(char *&buffer)
       tobuf(buffer, (Int_t)fSeekParent);
       tobuf(buffer, (Int_t)fSeekKeys);
    }
-   fUUID.FillBuffer(buffer);
+   if (reproducible)
+      TUUID("00000000-0000-0000-0000-000000000000").FillBuffer(buffer);
+   else
+      fUUID.FillBuffer(buffer);
    if (fFile && fFile->GetVersion() < 40000) return;
    if (version <=1000) for (Int_t i=0;i<3;i++) tobuf(buffer,Int_t(0));
 }

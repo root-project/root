@@ -35,7 +35,6 @@
 #include "TRealData.h"
 #include "TUrl.h"
 #include "TImage.h"
-#include "RVersion.h"
 #include "TVirtualMutex.h"
 #include "TRootSnifferStore.h"
 #include "THttpCallArg.h"

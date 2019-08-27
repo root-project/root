@@ -3467,26 +3467,6 @@ bool IsImplementationName(const std::string &filename)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns >0 if argument is to be ignored.
-/// If 1, just skip that argument. If 2, that argument takes a parameter
-/// "-arg param" thus skip both.
-
-int ShouldIgnoreClingArgument(const std::string& argument)
-{
-   auto vetos = {"-pipe", "-fPIC", "-fpic",
-                 "-fno-plt", "--save-temps" };
-
-   for (auto veto : vetos) {
-      if (argument == veto) return 1;
-   }
-
-   if (ROOT::TMetaUtils::BeginsWith(argument, "--gcc-toolchain="))
-      return 1;
-
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Check if the argument is a sane cling argument. Performing the following checks:
 /// 1) It does not start with "--" and is not the --param option.
 
@@ -3736,7 +3716,6 @@ static void MaybeSuppressWin32CrashDialogs() {
 
 int RootClingMain(int argc,
               char **argv,
-              bool isDeep = false,
               bool isGenreflex = false)
 {
    // Copied from cling driver.
@@ -3761,7 +3740,6 @@ int RootClingMain(int argc,
    unsigned force = 0;
    unsigned onepcm = 0;
    bool ignoreExistingDict = false;
-   bool requestAllSymbols = isDeep;
 
    if (!gDriverConfig->fBuildingROOTStage1) {
       if (strcmp("-rootbuild", argv[ic]) == 0) {
@@ -4070,15 +4048,10 @@ int RootClingMain(int argc,
             continue;
          }
 
-         if (int skip = ShouldIgnoreClingArgument(argv[ic])) {
-            ic += skip;
-            continue;
-         } else {
-            // filter out even more undesirable options
-            if (strcmp("-p", argv[ic])) {
-               CheckForMinusW(argv[ic], diagnosticPragmas);
-               clingArgs.push_back(llvm::sys::path::convert_to_slash(argv[ic]));
-            }
+         // filter out even more undesirable options
+         if (strcmp("-p", argv[ic])) {
+            CheckForMinusW(argv[ic], diagnosticPragmas);
+            clingArgs.push_back(llvm::sys::path::convert_to_slash(argv[ic]));
          }
       } else if (nextStart == 0) {
          nextStart = ic;
@@ -4371,42 +4344,37 @@ int RootClingMain(int argc,
          // ROOT::TMetaUtils::Error(0, "%s: option -c must come directly after the output file\n", argv[0]);
          // return 1;
       }
-      if (int skip = ShouldIgnoreClingArgument(argv[ic])) {
-         i += (skip - 1); // for-loop takes care of the extra 1.
-         continue;
-      } else {
-         // filter out undesirable options
+      // filter out undesirable options
 
-         if (*argv[i] != '-' && *argv[i] != '+') {
-            // Looks like a file
+      if (*argv[i] != '-' && *argv[i] != '+') {
+         // Looks like a file
 
-            bool isSelectionFile = IsSelectionFile(argv[i]);
+         bool isSelectionFile = IsSelectionFile(argv[i]);
 
-            // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
-            std::string fullheader(argv[i]);
-            // Strip any trailing + which is only used by GeneratedLinkdef.h which currently
-            // use directly argv.
-            if (fullheader[fullheader.length() - 1] == '+') {
-               fullheader.erase(fullheader.length() - 1);
-            }
-            std::string header(
-               isSelectionFile ? fullheader
-                               : ROOT::FoundationUtils::MakePathRelative(fullheader, currentDirectory, gBuildingROOT));
+         // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
+         std::string fullheader(argv[i]);
+         // Strip any trailing + which is only used by GeneratedLinkdef.h which currently
+         // use directly argv.
+         if (fullheader[fullheader.length() - 1] == '+') {
+            fullheader.erase(fullheader.length() - 1);
+         }
+         std::string header(
+            isSelectionFile ? fullheader
+                            : ROOT::FoundationUtils::MakePathRelative(fullheader, currentDirectory, gBuildingROOT));
 
-            interpPragmaSource += std::string("#include \"") + header + "\"\n";
-            if (!isSelectionFile) {
-               // In order to not have to add the equivalent to -I${PWD} to the
-               // command line, include the complete file name, even if it is a
-               // full pathname, when we write it down in the dictionary.
-               // Note: have -I${PWD} means in that (at least in the case of
-               // ACLiC) we inadvertently pick local file that have the same
-               // name as system header (e.g. new or list) and -iquote has not
-               // equivalent on some platforms.
-               includeForSource += std::string("#include \"") + fullheader + "\"\n";
-               pcmArgs.push_back(header);
-            } else if (!IsSelectionXml(argv[i])) {
-               interpreterDeclarations += std::string("#include \"") + header + "\"\n";
-            }
+         interpPragmaSource += std::string("#include \"") + header + "\"\n";
+         if (!isSelectionFile) {
+            // In order to not have to add the equivalent to -I${PWD} to the
+            // command line, include the complete file name, even if it is a
+            // full pathname, when we write it down in the dictionary.
+            // Note: have -I${PWD} means in that (at least in the case of
+            // ACLiC) we inadvertently pick local file that have the same
+            // name as system header (e.g. new or list) and -iquote has not
+            // equivalent on some platforms.
+            includeForSource += std::string("#include \"") + fullheader + "\"\n";
+            pcmArgs.push_back(header);
+         } else if (!IsSelectionXml(argv[i])) {
+            interpreterDeclarations += std::string("#include \"") + header + "\"\n";
          }
       }
    }
@@ -4590,9 +4558,7 @@ int RootClingMain(int argc,
 
    int rootclingRetCode(0);
 
-   if (requestAllSymbols && !isSelXML) {
-      selectionRules.SetDeep(true);
-   } else if (!linkdefLoc) {
+   if (!linkdefLoc) {
       // There is no linkdef file, we added the 'default' #pragma to
       // interpPragmaSource.
 
@@ -4726,10 +4692,6 @@ int RootClingMain(int argc,
    if (liblistPrefix.length()) {
       LoadLibraryMap(liblistPrefix + ".in", gAutoloads);
       scan.SetRecordDeclCallback(RecordDeclCallback);
-   }
-
-   if (requestAllSymbols) {
-      selectionRules.SetDeep(true);
    }
 
    scan.Scan(CI->getASTContext());
@@ -5157,7 +5119,6 @@ namespace genreflex {
                        const std::string &rootmapLibName,
                        bool interpreteronly,
                        bool doSplit,
-                       bool isDeep,
                        bool isCxxmodule,
                        bool writeEmptyRootPCM,
                        bool selSyntaxOnly,
@@ -5281,8 +5242,7 @@ namespace genreflex {
       char **argv =  & (argvVector[0]);
       int rootclingReturnCode = RootClingMain(argc,
                                               argv,
-                                              isDeep,
-                                              true);
+                                              /*isGenReflex=*/true);
 
       for (int i = 0; i < argc; i++)
          delete [] argvVector[i];
@@ -5308,7 +5268,6 @@ namespace genreflex {
                            const std::string &rootmapLibName,
                            bool interpreteronly,
                            bool doSplit,
-                           bool isDeep,
                            bool isCxxmodule,
                            bool writeEmptyRootPCM,
                            bool selSyntaxOnly,
@@ -5345,7 +5304,6 @@ namespace genreflex {
                                           rootmapLibName,
                                           interpreteronly,
                                           doSplit,
-                                          isDeep,
                                           isCxxmodule,
                                           writeEmptyRootPCM,
                                           selSyntaxOnly,
@@ -5669,6 +5627,9 @@ int GenReflexMain(int argc, char **argv)
       },
 
       {
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,00)
+# error "Remove this deprecated code"
+#endif
          DEEP,  // Not active. Will be removed for 6.2
          NOTYPE ,
          "" , "deep",
@@ -5973,9 +5934,6 @@ int GenReflexMain(int argc, char **argv)
    int returnValue = 0;
    std::string ofileName(options[OFILENAME] ? options[OFILENAME].arg : "");
 
-   // Now check if the --deep option was selected
-   bool isDeep = false; //options[DEEP];
-
    // If not empty and not a directory (therefore it's a file)
    // call rootcling directly. The number of headers files is irrelevant.
    if (!ofileName.empty() && !llvm::sys::fs::is_directory(ofileName)) {
@@ -5992,7 +5950,6 @@ int GenReflexMain(int argc, char **argv)
                                     rootmapLibName,
                                     interpreteronly,
                                     doSplit,
-                                    isDeep,
                                     isCxxmodule,
                                     writeEmptyRootPCM,
                                     selSyntaxOnly,
@@ -6015,7 +5972,6 @@ int GenReflexMain(int argc, char **argv)
                                         rootmapLibName,
                                         interpreteronly,
                                         doSplit,
-                                        isDeep,
                                         isCxxmodule,
                                         writeEmptyRootPCM,
                                         selSyntaxOnly,
@@ -6049,18 +6005,14 @@ int ROOT_rootcling_Driver(int argc, char **argv, const ROOT::Internal::RootCling
 
    int retVal = 0;
 
-   if (std::string::npos != exeName.find("rootcling")) {
-      retVal = RootClingMain(argc, argv);
-   } else if (std::string::npos != exeName.find("genreflex")) {
+   if (std::string::npos != exeName.find("genreflex"))
       retVal = GenReflexMain(argc, argv);
-   } else { //default
+   else // rootcling or default
       retVal = RootClingMain(argc, argv);
-   }
 
    gDriverConfig = nullptr;
 
-   auto nerrors = ROOT::TMetaUtils::GetNumberOfErrors();
-   if (nerrors > 0){
+   if (ROOT::TMetaUtils::GetNumberOfErrors()){
       ROOT::TMetaUtils::Info(0,"Problems have been detected during the generation of the dictionary.\n");
       return 1;
    }

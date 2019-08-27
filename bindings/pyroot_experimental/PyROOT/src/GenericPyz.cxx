@@ -27,7 +27,7 @@ std::string GetCppName(const CPPInstance *self)
    return Cppyy::GetScopedFinalName(self->ObjectIsA());
 }
 
-PyObject *ClingPrintValue(const CPPInstance *self, PyObject * /* args */)
+PyObject *ClingPrintValue(CPPInstance *self, PyObject * /* args */)
 {
    const std::string className = GetCppName(self);
    auto printResult = gInterpreter->ToString(className.c_str(), self->GetObject());
@@ -38,7 +38,7 @@ PyObject *ClingPrintValue(const CPPInstance *self, PyObject * /* args */)
       Py_DECREF(method);
       return res;
    } else {
-      return CPyCppyy_PyUnicode_FromString(printResult.c_str());
+      return CPyCppyy_PyText_FromString(printResult.c_str());
    }
 }
 

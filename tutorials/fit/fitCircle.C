@@ -8,7 +8,7 @@
 /// ~~~{.cpp}
 ///   root > .x fitCircle.C   (10000 points by default)
 ///   root > .x fitCircle.C(100);  (with only 100 points
-///   root > .x fitCircle.C(100000);  with ACLIC
+///   root > .x fitCircle.C++(100000);  with ACLIC
 /// ~~~
 ///
 /// \macro_image
@@ -23,6 +23,7 @@
 #include "TMath.h"
 #include "TArc.h"
 #include "Fit/Fitter.h"
+#include <Math/Functor.h>
 
 //____________________________________________________________________
 void fitCircle(Int_t n=10000) {
@@ -58,7 +59,7 @@ void fitCircle(Int_t n=10000) {
       return f;
    };
 
-   // wrap chi2 funciton in a function object for the fit
+   // wrap chi2 function in a function object for the fit
    // 3 is the number of fit parameters (size of array par)
    ROOT::Math::Functor fcn(chi2Function,3);
    ROOT::Fit::Fitter  fitter;
@@ -70,11 +71,11 @@ void fitCircle(Int_t n=10000) {
    fitter.Config().ParSettings(1).SetName("y0");
    fitter.Config().ParSettings(2).SetName("R");
 
-   // do the fit 
+   // do the fit
    bool ok = fitter.FitFCN();
    if (!ok) {
       Error("line3Dfit","Line3D Fit failed");
-   }   
+   }
 
    const ROOT::Fit::FitResult & result = fitter.Result();
    result.Print(std::cout);
@@ -83,5 +84,6 @@ void fitCircle(Int_t n=10000) {
    TArc *arc = new TArc(result.Parameter(0),result.Parameter(1),result.Parameter(2));
    arc->SetLineColor(kRed);
    arc->SetLineWidth(4);
+   arc->SetFillStyle(0);
    arc->Draw();
 }

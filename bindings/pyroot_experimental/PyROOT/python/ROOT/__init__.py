@@ -19,6 +19,9 @@ if not any(var in environ for var in ('LD_LIBRARY_PATH','DYLD_LIBRARY_PATH')):
 # Prevent cppyy's check for the PCH
 environ['CLING_STANDARD_PCH'] = 'none'
 
+# Prevent cppyy's check for extra header directory
+environ['CPPYY_API_PATH'] = 'none'
+
 import cppyy
 import ROOT.pythonization as pyz
 

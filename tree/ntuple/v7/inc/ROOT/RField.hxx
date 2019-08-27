@@ -21,6 +21,7 @@
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldValue.hxx>
 #include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RSpan.hxx>
 #include <ROOT/RStringView.hxx>
 #include <ROOT/RVec.hxx>
 #include <ROOT/TypeTraits.hxx>
@@ -36,6 +37,9 @@
 #include <string>
 #include <type_traits>
 #include <typeinfo>
+#if __cplusplus >= 201703L
+#include <variant>
+#endif
 #include <vector>
 #include <utility>
 
@@ -92,6 +96,7 @@ private:
       int fNumSiblingFields = 1;
       /// Children refers to elements of fSubField
       int fNumChildren = 0;
+
    public:
       RLevelInfo() = default;
       RLevelInfo(const RFieldBase *field) : RLevelInfo() {
@@ -100,10 +105,8 @@ private:
          fNumSiblingFields = GetNumSiblings(field);
          fNumChildren = GetNumChildren(field);
       }
-      //RLevelInfo(): fLevel{1}, fOrder{1}, fNumSiblingFields{1}, fNumChildren{0} {}
-      //RLevelInfo(const RFieldBase* field): fLevel{GetLevel(field)}, fOrder{GetOrder(field)}, fNumSiblingFields{GetNumSiblings(field)}, fNumChildren{GetNumChildren(field)} {}
       int GetNumSiblings(const RFieldBase *field = nullptr) const {
-         if (field)
+         if (field && field->GetParent())
             return static_cast<int>(field->GetParent()->fSubFields.size());
          return fNumSiblingFields;
       }
@@ -209,6 +212,8 @@ public:
    virtual RFieldValue CaptureValue(void *where) = 0;
    /// The number of bytes taken by a value of the appropriate type
    virtual size_t GetValueSize() const = 0;
+   /// For many types, the alignment requirement is equal to the size; otherwise override.
+   virtual size_t GetAlignment() const { return GetValueSize(); }
 
    /// Write the given value into columns. The value object has to be of the same type as the field.
    void Append(const RFieldValue& value) {
@@ -269,7 +274,7 @@ public:
    }
    void SetOrder(int o) { fOrder = o; }
 };
-   
+
 // clang-format off
 /**
 \class ROOT::Experimental::RFieldFuse
@@ -286,7 +291,7 @@ public:
 };
 
 } // namespace Detail
-   
+
 
 
 /// The container field for an ntuple model, which itself has no physical representation
@@ -310,6 +315,8 @@ public:
 class RFieldClass : public Detail::RFieldBase {
 private:
    TClass* fClass;
+   std::size_t fMaxAlignment = 1;
+
 protected:
    void DoAppend(const Detail::RFieldValue& value) final;
    void DoReadGlobal(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
@@ -327,6 +334,7 @@ public:
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) final;
    size_t GetValueSize() const override;
+   size_t GetAlignment() const final { return fMaxAlignment; }
 };
 
 /// The generic field for a (nested) std::vector<Type> except for std::vector<bool>
@@ -351,7 +359,8 @@ public:
    Detail::RFieldValue GenerateValue(void* where) override;
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) override;
-   size_t GetValueSize() const override;
+   size_t GetValueSize() const override { return sizeof(std::vector<char>); }
+   size_t GetAlignment() const final { return std::alignment_of<std::vector<char>>(); }
    void CommitCluster() final;
 };
 
@@ -380,7 +389,46 @@ public:
    void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) final;
    size_t GetValueSize() const final { return fItemSize * fArrayLength; }
+   size_t GetAlignment() const final { return fSubFields[0]->GetAlignment(); }
 };
+
+#if __cplusplus >= 201703L
+/// The generic field for std::variant types
+class RFieldVariant : public Detail::RFieldBase {
+private:
+   size_t fMaxItemSize = 0;
+   size_t fMaxAlignment = 1;
+   /// In the std::variant memory layout, at which byte number is the index stored
+   size_t fTagOffset = 0;
+   std::vector<ClusterSize_t::ValueType> fNWritten;
+
+   static std::string GetTypeList(const std::vector<Detail::RFieldBase *> &itemFields);
+   /// Extracts the index from an std::variant and transforms it into the 1-based index used for the switch column
+   std::uint32_t GetTag(void *variantPtr) const;
+   void SetTag(void *variantPtr, std::uint32_t tag) const;
+
+protected:
+   void DoAppend(const Detail::RFieldValue& value) final;
+   void DoReadGlobal(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
+
+public:
+   // TODO(jblomer): use std::span in signature
+   RFieldVariant(std::string_view fieldName, const std::vector<Detail::RFieldBase *> &itemFields);
+   RFieldVariant(RFieldVariant &&other) = default;
+   RFieldVariant& operator =(RFieldVariant &&other) = default;
+   ~RFieldVariant() = default;
+   RFieldBase *Clone(std::string_view newName) final;
+
+   void DoGenerateColumns() final;
+   using Detail::RFieldBase::GenerateValue;
+   Detail::RFieldValue GenerateValue(void *where) override;
+   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
+   Detail::RFieldValue CaptureValue(void *where) final;
+   size_t GetValueSize() const final;
+   size_t GetAlignment() const final { return fMaxAlignment; }
+   void CommitCluster() final;
+};
+#endif
 
 
 /// Classes with dictionaries that can be inspected by TClass
@@ -596,6 +644,42 @@ public:
 };
 
 template <>
+class RField<std::uint8_t> : public Detail::RFieldBase {
+public:
+   static std::string MyTypeName() { return "std::uint8_t"; }
+   explicit RField(std::string_view name)
+     : Detail::RFieldBase(name, MyTypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+   RField(RField&& other) = default;
+   RField& operator =(RField&& other) = default;
+   ~RField() = default;
+   RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
+
+   void DoGenerateColumns() final;
+
+   std::uint8_t *Map(NTupleSize_t globalIndex) {
+      return fPrincipalColumn->Map<std::uint8_t, EColumnType::kByte>(globalIndex);
+   }
+   std::uint8_t *Map(const RClusterIndex &clusterIndex) {
+      return fPrincipalColumn->Map<std::uint8_t, EColumnType::kByte>(clusterIndex);
+   }
+
+   using Detail::RFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where, ArgsT&&... args)
+   {
+      return Detail::RFieldValue(
+         Detail::RColumnElement<std::uint8_t, EColumnType::kByte>(static_cast<std::uint8_t*>(where)),
+         this, static_cast<std::uint8_t*>(where), std::forward<ArgsT>(args)...);
+   }
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final { return GenerateValue(where, 0); }
+   Detail::RFieldValue CaptureValue(void *where) final {
+      return Detail::RFieldValue(true /* captureFlag */,
+         Detail::RColumnElement<std::uint8_t, EColumnType::kByte>(static_cast<std::uint8_t*>(where)), this, where);
+   }
+   size_t GetValueSize() const final { return sizeof(std::uint8_t); }
+};
+
+template <>
 class RField<std::int32_t> : public Detail::RFieldBase {
 public:
    static std::string MyTypeName() { return "std::int32_t"; }
@@ -746,6 +830,7 @@ public:
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::string); }
+   size_t GetAlignment() const final { return std::alignment_of<std::string>(); }
    void CommitCluster() final;
 };
 
@@ -775,6 +860,51 @@ public:
    }
 };
 
+
+#if __cplusplus >= 201703L
+template <typename... ItemTs>
+class RField<std::variant<ItemTs...>> : public RFieldVariant {
+   using ContainerT = typename std::variant<ItemTs...>;
+private:
+   template <typename HeadT, typename... TailTs>
+   static std::string BuildItemTypes()
+   {
+      std::string result = RField<HeadT>::MyTypeName();
+      if constexpr(sizeof...(TailTs) > 0)
+         result += "," + BuildItemTypes<TailTs...>();
+      return result;
+   }
+
+   template <typename HeadT, typename... TailTs>
+   static std::vector<Detail::RFieldBase *> BuildItemFields(unsigned int index = 0)
+   {
+      std::vector<Detail::RFieldBase *> result;
+      result.emplace_back(new RField<HeadT>("variant" + std::to_string(index)));
+      if constexpr(sizeof...(TailTs) > 0) {
+         auto tailFields = BuildItemFields<TailTs...>(index + 1);
+         result.insert(result.end(), tailFields.begin(), tailFields.end());
+      }
+      return result;
+   }
+
+public:
+   static std::string MyTypeName() { return "std::variant<" + BuildItemTypes<ItemTs...>() + ">"; }
+   explicit RField(std::string_view name) : RFieldVariant(name, BuildItemFields<ItemTs...>()) {}
+   RField(RField&& other) = default;
+   RField& operator =(RField&& other) = default;
+   ~RField() = default;
+
+   using Detail::RFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where, ArgsT&&... args)
+   {
+      return Detail::RFieldValue(this, static_cast<ContainerT*>(where), std::forward<ArgsT>(args)...);
+   }
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final {
+      return GenerateValue(where, ContainerT());
+   }
+};
+#endif
 
 template <typename ItemT>
 class RField<std::vector<ItemT>> : public RFieldVector {
@@ -837,6 +967,7 @@ public:
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
 
    size_t GetValueSize() const final { return sizeof(std::vector<bool>); }
+   size_t GetAlignment() const final { return std::alignment_of<std::vector<bool>>(); }
    void CommitCluster() final { fNWritten = 0; }
 };
 
@@ -930,6 +1061,7 @@ public:
       return Detail::RFieldValue(true /* captureFlag */, this, static_cast<ContainerT*>(where));
    }
    size_t GetValueSize() const final { return sizeof(ContainerT); }
+   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
 };
 
 /**
@@ -1010,6 +1142,7 @@ public:
       return Detail::RFieldValue(true /* captureFlag */, this, static_cast<ContainerT*>(where));
    }
    size_t GetValueSize() const final { return sizeof(ContainerT); }
+   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
 };
 
 } // namespace Experimental

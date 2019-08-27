@@ -166,11 +166,12 @@ void Convert() {
 
 
 void ntpl004_dimuon() {
-   // Support for multi-threading comes at a later point, for the time being do not enable
-   // ROOT::EnableImplicitMT();
-
    if (gSystem->AccessPathName(kNTupleFileName))
       Convert();
+
+   // Enable mutli-threading only after the conversion because we use RDF's Range() in it,
+   // which currently does not support multi-threading
+   ROOT::EnableImplicitMT();
 
    auto df = ROOT::Experimental::MakeNTupleDataFrame("Events", kNTupleFileName);
 

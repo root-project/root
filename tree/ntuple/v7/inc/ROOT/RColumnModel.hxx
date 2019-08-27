@@ -36,6 +36,9 @@ enum class EColumnType {
    kUnknown = 0,
    // type for root columns of (nested) collections; 32bit integers that count relative to the current cluster
    kIndex,
+   // 64 bit column that uses the lower 32bits as kIndex and the higher 32bits as a dispatch tag; used, e.g.,
+   // in order to serialize std::variant
+   kSwitch,
    kByte,
    kBit,
    kReal64,
@@ -45,7 +48,6 @@ enum class EColumnType {
    kInt64,
    kInt32,
    kInt16,
-   //...
 };
 
 // clang-format off

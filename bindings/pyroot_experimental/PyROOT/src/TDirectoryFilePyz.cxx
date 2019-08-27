@@ -32,7 +32,7 @@ using namespace CPyCppyy;
 /// invoked from Python, returns an object of the derived class (e.g. TH1F)
 /// and not a generic TObject.
 /// In case the object is not found, a null pointer is returned.
-PyObject *TDirectoryFileGetPyz(const CPPInstance *self, PyObject *pynamecycle)
+PyObject *TDirectoryFileGetPyz(CPPInstance *self, PyObject *pynamecycle)
 {
    // Pythonization of TDirectoryFile::Get that handles non-TObject deriveds
    if (!CPPInstance_Check(self)) {
@@ -45,7 +45,7 @@ PyObject *TDirectoryFileGetPyz(const CPPInstance *self, PyObject *pynamecycle)
       PyErr_SetString(PyExc_ReferenceError, "attempt to access a null-pointer");
       return nullptr;
    }
-   const char *namecycle = CPyCppyy_PyUnicode_AsString(pynamecycle);
+   const char *namecycle = CPyCppyy_PyText_AsString(pynamecycle);
    if (!namecycle)
       return nullptr; // TypeError already set
    auto key = dirf->GetKey(namecycle);

@@ -61,44 +61,27 @@ class RPagePool;
 */
 // clang-format on
 class RPageSinkRoot : public RPageSink {
-public:
-   struct RSettings {
-      TFile *fFile = nullptr;
-      bool fTakeOwnership = false;
-   };
-
 private:
    static constexpr std::size_t kDefaultElementsPerPage = 10000;
 
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
 
    /// Currently, an ntuple is stored as a directory in a TFile
-   TDirectory *fDirectory;
-   RSettings fSettings;
+   std::unique_ptr<TFile> fFile;
+   TDirectory *fDirectory = nullptr;
 
-   /// Field, column, cluster ids and page indexes per cluster are issued sequentially starting with 0
-   DescriptorId_t fLastFieldId = 0;
-   DescriptorId_t fLastColumnId = 0;
-   DescriptorId_t fLastClusterId = 0;
+   /// Instead of a physical file offset, pages in root are identified by an index which becomes part of the key
    DescriptorId_t fLastPageIdx = 0;
-   NTupleSize_t fPrevClusterNEntries = 0;
-   RNTupleDescriptorBuilder fDescriptorBuilder;
 
-   /// Keeps track of the number of elements in the currently open cluster. Indexed by column id.
-   std::vector<RClusterDescriptor::RColumnRange> fOpenColumnRanges;
-   /// Keeps track of the written pages in the currently open cluster. Indexed by column id.
-   std::vector<RClusterDescriptor::RPageRange> fOpenPageRanges;
+protected:
+   void DoCreate(const RNTupleModel &model) final;
+   RClusterDescriptor::RLocator DoCommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
+   RClusterDescriptor::RLocator DoCommitCluster(NTupleSize_t nEntries) final;
+   void DoCommitDataset() final;
 
 public:
-   RPageSinkRoot(std::string_view ntupleName, RSettings settings);
-   RPageSinkRoot(std::string_view ntupleName, std::string_view path);
+   RPageSinkRoot(std::string_view ntupleName, std::string_view path, const RNTupleWriteOptions &options);
    virtual ~RPageSinkRoot();
-
-   ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
-   void Create(RNTupleModel &model) final;
-   void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
-   void CommitCluster(NTupleSize_t nEntries) final;
-   void CommitDataset() final;
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements = 0) final;
    void ReleasePage(RPage &page) final;
@@ -127,38 +110,25 @@ public:
 */
 // clang-format on
 class RPageSourceRoot : public RPageSource {
-public:
-   struct RSettings {
-      TFile *fFile = nullptr;
-      bool fTakeOwnership = false;
-   };
-
 private:
    std::unique_ptr<RPageAllocatorKey> fPageAllocator;
    std::shared_ptr<RPagePool> fPagePool;
 
    /// Currently, an ntuple is stored as a directory in a TFile
-   TDirectory *fDirectory;
-   RSettings fSettings;
+   std::unique_ptr<TFile> fFile;
+   TDirectory *fDirectory = nullptr;
 
-   RNTupleDescriptor fDescriptor;
+   RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor,
+                                 ClusterSize_t::ValueType clusterIndex);
 
-   RPage DoPopulatePage(ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor,
-                        ClusterSize_t::ValueType clusterIndex);
+protected:
+   RNTupleDescriptor DoAttach() final;
 
 public:
-   RPageSourceRoot(std::string_view ntupleName, RSettings settings);
-   RPageSourceRoot(std::string_view ntupleName, std::string_view path);
+   RPageSourceRoot(std::string_view ntupleName, std::string_view path, const RNTupleReadOptions &options);
    RPageSourceRoot(TDirectory* directory);
    std::unique_ptr<RPageSource> Clone() const final;
    virtual ~RPageSourceRoot();
-
-   ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
-   void Attach() final;
-   NTupleSize_t GetNEntries() final;
-   NTupleSize_t GetNElements(ColumnHandle_t columnHandle) final;
-   ColumnId_t GetColumnId(ColumnHandle_t columnHandle) final;
-   const RNTupleDescriptor& GetDescriptor() const final { return fDescriptor; }
 
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
    RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;

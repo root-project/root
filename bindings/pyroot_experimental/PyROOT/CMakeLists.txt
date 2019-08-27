@@ -66,6 +66,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTPython
     src/TDirectoryFilePyz.cxx
     src/TDirectoryPyz.cxx
     src/TFilePyz.cxx
+    src/TMemoryRegulator.cxx
     src/TPyArg.cxx
     src/TPyClassGenerator.cxx
     src/TPyReturn.cxx

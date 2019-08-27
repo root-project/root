@@ -1429,33 +1429,61 @@ void TCling::ShutDown()
 ////////////////////////////////////////////////////////////////////////////////
 /// Wrapper around dladdr (and friends)
 
-static const char *FindLibraryName(void (*func)())
+static std::string FindLibraryName(void (*func)())
 {
 #if defined(__CYGWIN__) && defined(__GNUC__)
-   return 0;
+   return {};
 #elif defined(G__WIN32)
    MEMORY_BASIC_INFORMATION mbi;
    if (!VirtualQuery (func, &mbi, sizeof (mbi)))
    {
-      return 0;
+      return {};
    }
 
    HMODULE hMod = (HMODULE) mbi.AllocationBase;
-   TTHREAD_TLS_ARRAY(char, MAX_PATH, moduleName);
+   char moduleName[MAX_PATH];
 
    if (!GetModuleFileNameA (hMod, moduleName, sizeof (moduleName)))
    {
-      return 0;
+      return {};
    }
    return moduleName;
 #else
    Dl_info info;
-   if (dladdr((void*)func,&info)==0) {
-      // Not in a known share library, let's give up
-      return 0;
+   if (dladdr((void*)func, &info) == 0) {
+      // Not in a known shared library, let's give up
+      return {};
    } else {
-      //fprintf(stdout,"Found address in %s\n",info.dli_fname);
+      if (strchr(info.dli_fname, '/'))
+         return info.dli_fname;
+      // Else absolute path. For all we know that's a binary.
+      // Some people have dictionaries in binaries, this is how we find their path:
+      // (see also https://stackoverflow.com/a/1024937/6182509)
+# if defined(R__MACOSX)
+      char buf[PATH_MAX] = { 0 };
+      uint32_t bufsize = sizeof(buf);
+      if (_NSGetExecutablePath(buf, &bufsize) >= 0)
+         return buf;
       return info.dli_fname;
+# elif defined(R__UNIX)
+      char buf[PATH_MAX] = { 0 };
+      // Cross our fingers that /proc/self/exe exists.
+      if (readlink("/proc/self/exe", buf, sizeof(buf)) > 0)
+         return buf;
+      std::string pipeCmd = std::string("which \"") + info.dli_fname + "\"";
+      FILE* pipe = popen(pipeCmd.c_str(), "r");
+      if (!pipe)
+         return info.dli_fname;
+      std::string result;
+      while (fgets(buf, sizeof(buf), pipe)) {
+         result += buf;
+      }
+      pclose(pipe);
+      return result;
+# else
+#  error "Unsupported platform."
+# endif
+      return {};
    }
 #endif
 
@@ -1485,8 +1513,21 @@ static std::string ResolveSymlink(const std::string &path)
    char Buffer[kMAXPATHLEN];
    ssize_t CharCount = ::readlink(path.c_str(), Buffer, sizeof(Buffer));
    // readlink does not append a NUL character to Buffer.
-   if (CharCount > 0)
-      return std::string(Buffer, Buffer + CharCount);
+   if (CharCount > 0) {
+      llvm::StringRef resolved_path(Buffer, CharCount);
+      if (llvm::sys::path::is_absolute(resolved_path))
+         return resolved_path.str();
+
+      // If the symlink did not resolve to an absolute path we should convert
+      // it, because if we are embedded in a framework we will resolve the link
+      // with respect to the current dir (which is most often the one of the
+      // file descriptor. However, in a relative path in a symlink we want to
+      // resolve it with respect to the symlink parent directory.
+      llvm::StringRef current_dir = llvm::sys::path::parent_path(path);
+      llvm::SmallString<256> relative_path(resolved_path);
+      llvm::sys::fs::make_absolute(/*wrt*/current_dir, relative_path);
+      return relative_path.str().str();
+   }
 
    ::Error("TCling__ResolveSymlink", "Could not resolve symlink '%s'.", path.c_str());
    return {};
@@ -1875,8 +1916,9 @@ void TCling::RegisterModule(const char* modulename,
    if (payloadCode)
       code += payloadCode;
 
-   const char *const dyLibName = FindLibraryName(triggerFunc);
-   if (!dyLibName) {
+   std::string dyLibName = FindLibraryName(triggerFunc);
+
+   if (dyLibName.empty()) {
       ::Error("TCling::RegisterModule", "Dictionary trigger function for %s not found", modulename);
       return;
    }
@@ -1896,12 +1938,12 @@ void TCling::RegisterModule(const char* modulename,
          // requested by the JIT from it: as the library is currently being dlopen'ed,
          // its symbols are not yet reachable from the process.
          // Recursive dlopen seems to work just fine.
-         void* dyLibHandle = dlopen(dyLibName, RTLD_LAZY | RTLD_GLOBAL);
+         void* dyLibHandle = dlopen(dyLibName.c_str(), RTLD_LAZY | RTLD_GLOBAL);
          if (dyLibHandle) {
             fRegisterModuleDyLibs.push_back(dyLibHandle);
             wasDlopened = true;
          } else {
-            PrintDlError(dyLibName, modulename);
+            PrintDlError(dyLibName.c_str(), modulename);
          }
       }
    } // if (!lateRegistration)
@@ -6176,8 +6218,12 @@ static bool FindSymbol(const std::string &library_filename,
          continue;
       }
 
-      if (SymNameErr.get() == mangled_name)
+      if (SymNameErr.get() == mangled_name) {
+         if (gDebug > 1)
+            Info("TCling__FindSymbol", "Symbol %s found in %s\n",
+                 mangled_name.c_str(), library_filename.c_str());
          return true;
+      }
    }
 
    if (!BinObjFile->isELF())
@@ -7034,14 +7080,24 @@ static std::string GetSharedLibImmediateDepsSlow(std::string lib,
          if (SymName.empty())
             continue;
 
-         // Skip the symbols which are part of the C/C++ runtime and have a
-         // fixed library version. See binutils ld VERSION. Those reside in
-         // 'system' libraries, which we avoid in ResolveSymbol.
-         if (BinObjFile->isELF() && (SymName.contains("@@GLIBCXX") ||
-                                     SymName.contains("@@CXXABI") ||
-                                     SymName.contains("@@GLIBC") ||
-                                     SymName.contains("@@GCC")))
+         if (BinObjFile->isELF()) {
+          // Skip the symbols which are part of the C/C++ runtime and have a
+          // fixed library version. See binutils ld VERSION. Those reside in
+          // 'system' libraries, which we avoid in ResolveSymbol.
+          if (SymName.contains("@@GLIBCXX") || SymName.contains("@@CXXABI") ||
+              SymName.contains("@@GLIBC") || SymName.contains("@@GCC"))
             continue;
+
+          // Those are 'weak undefined' symbols produced by gcc. We can
+          // ignore them.
+          // FIXME: It is unclear whether we can ignore all weak undefined
+          // symbols:
+          // http://lists.llvm.org/pipermail/llvm-dev/2017-October/118177.html
+          if (SymName == "_Jv_RegisterClasses" ||
+              SymName == "_ITM_deregisterTMCloneTable" ||
+              SymName == "_ITM_registerTMCloneTable")
+            continue;
+      }
 
          // If we can find the address of the symbol, we have loaded it. Skip.
          if (skipLoadedLibs && llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(SymName))
@@ -8645,19 +8701,16 @@ Long_t TCling::FuncTempInfo_ExtraProperty(FuncTempInfo_t* ft_info) const
    const clang::FunctionTemplateDecl *ft = (clang::FunctionTemplateDecl*)ft_info;
    const clang::FunctionDecl *fd = ft->getTemplatedDecl();
 
-   if (fd->isOverloadedOperator()) {
+   if (fd->isOverloadedOperator())
       property |= kIsOperator;
-   }
-   else if (llvm::isa<clang::CXXConversionDecl>(fd)) {
+   if (llvm::isa<clang::CXXConversionDecl>(fd))
       property |= kIsConversion;
-   } else if (llvm::isa<clang::CXXConstructorDecl>(fd)) {
+   if (llvm::isa<clang::CXXConstructorDecl>(fd))
       property |= kIsConstructor;
-   } else if (llvm::isa<clang::CXXDestructorDecl>(fd)) {
+   if (llvm::isa<clang::CXXDestructorDecl>(fd))
       property |= kIsDestructor;
-   } else if (fd->isInlined()) {
+   if (fd->isInlined())
       property |= kIsInlined;
-   }
-
    return property;
 }
 

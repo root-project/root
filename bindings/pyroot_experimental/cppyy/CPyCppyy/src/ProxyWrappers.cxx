@@ -102,19 +102,27 @@ void AddPropertyToClass(PyObject* pyclass,
     Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t idata)
 {
     CPyCppyy::CPPDataMember* property = CPyCppyy::CPPDataMember_New(scope, idata);
+    PyObject* pname = CPyCppyy_PyText_InternFromString(const_cast<char*>(property->GetName().c_str()));
 
 // allow access at the instance level
-    PyObject_SetAttrString(pyclass,
-        const_cast<char*>(property->GetName().c_str()), (PyObject*)property);
+    PyType_Type.tp_setattro(pyclass, pname, (PyObject*)property);
 
 // allow access at the class level (always add after setting instance level)
-    if (Cppyy::IsStaticData(scope, idata)) {
-        PyObject_SetAttrString((PyObject*)Py_TYPE(pyclass),
-            const_cast<char*>(property->GetName().c_str()), (PyObject*)property);
-    }
+    if (Cppyy::IsStaticData(scope, idata))
+        PyType_Type.tp_setattro((PyObject*)Py_TYPE(pyclass), pname, (PyObject*)property);
 
-// done
+// cleanup
+    Py_DECREF(pname);
     Py_DECREF(property);
+}
+
+static inline
+void AddScopeToParent(PyObject* parent, const std::string& name, PyObject* newscope)
+{
+    PyObject* pyname = CPyCppyy_PyText_InternFromString((char*)name.c_str());
+    if (CPPScope_Check(parent)) PyType_Type.tp_setattro(parent, pyname, newscope);
+    else PyObject_SetAttr(parent, pyname, newscope);
+    Py_DECREF(pyname);
 }
 
 } // namespace CPyCppyy
@@ -127,20 +135,18 @@ static inline void sync_templates(
     PyObject* pyclass, const std::string& mtCppName, const std::string& mtName)
 {
     PyObject* dct = PyObject_GetAttr(pyclass, PyStrings::gDict);
-    if (dct) {
-        PyObject* pyname = CPyCppyy_PyUnicode_FromString(const_cast<char*>(mtName.c_str()));
-        PyObject* attr = PyObject_GetItem(dct, pyname);
-        Py_DECREF(dct);
-        if (!TemplateProxy_Check(attr)) {
-            PyErr_Clear();
-            TemplateProxy* pytmpl = TemplateProxy_New(mtCppName, mtName, pyclass);
-            if (CPPOverload_Check(attr)) pytmpl->AddOverload((CPPOverload*)attr);
-            PyObject_SetAttr(pyclass, pyname, (PyObject*)pytmpl);
-            Py_DECREF(pytmpl);
-        }
-        Py_XDECREF(attr);
-        Py_DECREF(pyname);
+    PyObject* pyname = CPyCppyy_PyText_InternFromString(const_cast<char*>(mtName.c_str()));
+    PyObject* attr = PyObject_GetItem(dct, pyname);
+    if (!attr) PyErr_Clear();
+    Py_DECREF(dct);
+    if (!TemplateProxy_Check(attr)) {
+        TemplateProxy* pytmpl = TemplateProxy_New(mtCppName, mtName, pyclass);
+        if (CPPOverload_Check(attr)) pytmpl->MergeOverload((CPPOverload*)attr);
+        PyType_Type.tp_setattro(pyclass, pyname, (PyObject*)pytmpl);
+        Py_DECREF(pytmpl);
     }
+    Py_XDECREF(attr);
+    Py_DECREF(pyname);
 }
 
 static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass)
@@ -220,7 +226,8 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass)
         }
 
     // template members; handled by adding a dispatcher to the class
-        bool storeOnTemplate = isTemplate ? true : (!isConstructor && Cppyy::ExistsMethodTemplate(scope, mtCppName));
+        bool storeOnTemplate =
+            isTemplate ? true : (!isConstructor && Cppyy::ExistsMethodTemplate(scope, mtCppName));
         if (storeOnTemplate) {
             sync_templates(pyclass, mtCppName, mtName);
         // continue processing to actually add the method so that the proxy can find
@@ -243,23 +250,25 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass)
         } else                               // member function
             pycall = new CPPMethod(scope, method);
 
-    // lookup method dispatcher and store method
-        Callables_t& md = (*(cache.insert(
-            std::make_pair(mtName, Callables_t())).first)).second;
-        md.push_back(pycall);
-
-    // special case for operator[]/() that returns by ref, use for getitem/call and setitem
-        if (setupSetItem) {
-            Callables_t& setitem = (*(cache.insert(
-                std::make_pair(std::string("__setitem__"), Callables_t())).first)).second;
-            setitem.push_back(new CPPSetItem(scope, method));
-        }
-
         if (storeOnTemplate) {
+        // template proxy was already created in sync_templates call above, so
+        // add only here, not to the cache of collected methods
             PyObject* attr = PyObject_GetAttrString(pyclass, const_cast<char*>(mtName.c_str()));
-            if (isTemplate) ((TemplateProxy*)attr)->AddTemplate(pycall->Clone());
-            else ((TemplateProxy*)attr)->AddOverload(pycall->Clone());
+            if (isTemplate) ((TemplateProxy*)attr)->AdoptTemplate(pycall);
+            else ((TemplateProxy*)attr)->AdoptMethod(pycall);
             Py_DECREF(attr);
+        } else {
+        // lookup method dispatcher and store method
+            Callables_t& md = (*(cache.insert(
+                std::make_pair(mtName, Callables_t())).first)).second;
+            md.push_back(pycall);
+
+        // special case for operator[]/() that returns by ref, use for getitem/call and setitem
+            if (setupSetItem) {
+                Callables_t& setitem = (*(cache.insert(
+                    std::make_pair(std::string("__setitem__"), Callables_t())).first)).second;
+                setitem.push_back(new CPPSetItem(scope, method));
+            }
         }
     }
 
@@ -312,19 +321,20 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass)
     // in order to prevent removing templated editions of this method (which were set earlier,
     // above, as a different proxy object), we'll check and add this method flagged as a generic
     // one (to be picked up by the templated one as appropriate) if a template exists
-        PyObject* pyname = CPyCppyy_PyUnicode_FromString(const_cast<char*>(imd->first.c_str()));
+        PyObject* pyname = CPyCppyy_PyText_FromString(const_cast<char*>(imd->first.c_str()));
         PyObject* attr = PyObject_GetItem(dct, pyname);
         Py_DECREF(pyname);
         if (TemplateProxy_Check(attr)) {
         // template exists, supply it with the non-templated method overloads
-            for (Callables_t::iterator cit = imd->second.begin(); cit != imd->second.end(); ++cit)
-                ((TemplateProxy*)attr)->AddOverload(*cit);
+            for (auto cit : imd->second)
+                ((TemplateProxy*)attr)->AdoptMethod(cit);
         } else {
             if (!attr) PyErr_Clear();
         // normal case, add a new method
             CPPOverload* method = CPPOverload_New(imd->first, imd->second);
-            PyObject_SetAttrString(
-                pyclass, const_cast<char*>(method->GetName().c_str()), (PyObject*)method);
+            PyObject* pymname = CPyCppyy_PyText_InternFromString(const_cast<char*>(method->GetName().c_str()));
+            PyType_Type.tp_setattro(pyclass, pymname, (PyObject*)method);
+            Py_DECREF(pymname);
             Py_DECREF(method);
         }
 
@@ -489,7 +499,7 @@ PyObject* CPyCppyy::CreateScopeProxy(Cppyy::TCppScope_t scope)
 PyObject* CPyCppyy::CreateScopeProxy(PyObject*, PyObject* args)
 {
 // Build a python shadow class for the named C++ class.
-    std::string cname = CPyCppyy_PyUnicode_AsString(PyTuple_GetItem(args, 0));
+    std::string cname = CPyCppyy_PyText_AsString(PyTuple_GetItem(args, 0));
     if (PyErr_Occurred())
         return nullptr;
 
@@ -514,7 +524,7 @@ PyObject* CPyCppyy::CreateScopeProxy(const std::string& name, PyObject* parent)
             }
 
         // should be a string
-            scName = CPyCppyy_PyUnicode_AsString(parname);
+            scName = CPyCppyy_PyText_AsString(parname);
             Py_DECREF(parname);
             if (PyErr_Occurred())
                 return nullptr;
@@ -536,7 +546,7 @@ PyObject* CPyCppyy::CreateScopeProxy(const std::string& name, PyObject* parent)
         Py_DECREF(pytcl);
 
     // cache the result
-        PyObject_SetAttrString(parent ? parent : gThisModule, (char*)name.c_str(), pytemplate);
+        AddScopeToParent(parent ? parent : gThisModule, name, pytemplate);
 
     // done, next step should be a call into this template
         Py_XDECREF(parent);
@@ -544,6 +554,11 @@ PyObject* CPyCppyy::CreateScopeProxy(const std::string& name, PyObject* parent)
     }
 
     if (!(bool)klass) {
+    // could be an enum, which are treated seperately in CPPScope (TODO: maybe they
+    // should be handled here instead anyway??)
+        if (Cppyy::IsEnum(lookup))
+            return nullptr;
+
     // final possibility is a typedef of a builtin; these are mapped on the python side
         std::string resolved = Cppyy::ResolveName(lookup);
         if (gPyTypeMap) {
@@ -552,7 +567,7 @@ PyObject* CPyCppyy::CreateScopeProxy(const std::string& name, PyObject* parent)
                 PyObject* nt = PyObject_CallFunction(tc, (char*)"ss", name.c_str(), scName.c_str());
                 if (nt) {
                     if (parent) {
-                        PyObject_SetAttrString(parent, (char*)name.c_str(), nt);
+                        AddScopeToParent(parent, name, nt);
                         Py_DECREF(parent);
                     }
                     return nt;
@@ -571,8 +586,8 @@ PyObject* CPyCppyy::CreateScopeProxy(const std::string& name, PyObject* parent)
     PyObject* pyscope = GetScopeProxy(klass);
     if (pyscope) {
         if (parent) {
-            PyObject_SetAttrString(parent, (char*)name.c_str(), pyscope);
-            Py_XDECREF(parent);
+            AddScopeToParent(parent, name, pyscope);
+            Py_DECREF(parent);
         }
         return pyscope;
     }
@@ -667,7 +682,7 @@ PyObject* CPyCppyy::CreateScopeProxy(const std::string& name, PyObject* parent)
         if (pyscope && !(((CPPScope*)pyscope)->fFlags & CPPScope::kIsInComplete)) {
             gPyClasses[klass] = PyWeakref_NewRef(pyscope, nullptr);
 
-            if (!Cppyy::IsNamespace(klass)) {
+            if (!(((CPPScope*)pyscope)->fFlags & CPPScope::kIsNamespace)) {
             // add python-style features to classes only
                 if (!Pythonize(pyscope, Cppyy::GetScopedFinalName(klass))) {
                     Py_DECREF(pyscope);
@@ -676,10 +691,8 @@ PyObject* CPyCppyy::CreateScopeProxy(const std::string& name, PyObject* parent)
             } else {
             // add to sys.modules to allow importing from this namespace
                 PyObject* pyfullname = PyObject_GetAttr(pyscope, PyStrings::gModule);
-                CPyCppyy_PyUnicode_AppendAndDel(
-                    &pyfullname, CPyCppyy_PyUnicode_FromString("."));
-                CPyCppyy_PyUnicode_AppendAndDel(
-                    &pyfullname, PyObject_GetAttr(pyscope, PyStrings::gName));
+                CPyCppyy_PyText_AppendAndDel(&pyfullname, CPyCppyy_PyText_FromString("."));
+                CPyCppyy_PyText_AppendAndDel(&pyfullname, PyObject_GetAttr(pyscope, PyStrings::gName));
                 PyObject* modules = PySys_GetObject(const_cast<char*>("modules"));
                 if (modules && PyDict_Check(modules))
                     PyDict_SetItem(modules, pyfullname, pyscope);
@@ -690,7 +703,7 @@ PyObject* CPyCppyy::CreateScopeProxy(const std::string& name, PyObject* parent)
 
 // store on parent if found/created and complete
     if (pyscope && !(((CPPScope*)pyscope)->fFlags & CPPScope::kIsInComplete))
-        PyObject_SetAttrString(parent, const_cast<char*>(name.c_str()), pyscope);
+        AddScopeToParent(parent, name, pyscope);
     Py_DECREF(parent);
 
 // all done
@@ -726,6 +739,17 @@ PyObject* CPyCppyy::BindCppObjectNoCast(Cppyy::TCppObject_t address,
             return oldPyObject;
     }
 
+// if smart, instantiate a Python-side object of the underlying type, carrying the smartptr
+    PyObject* smart_type = (flags != CPPInstance::kNone && (((CPPClass*)pyclass)->fFlags & CPPScope::kIsSmart)) ? pyclass : nullptr;
+    if (smart_type) {
+        pyclass = CreateScopeProxy(((CPPSmartClass*)smart_type)->fUnderlyingType);
+        if (!pyclass) {
+        // simply restore and expose as the actual smart pointer class
+            pyclass = smart_type;
+            smart_type = nullptr;
+        }
+    }
+
 // instantiate an object of this class
     PyObject* args = PyTuple_New(0);
     CPPInstance* pyobj =
@@ -741,6 +765,9 @@ PyObject* CPyCppyy::BindCppObjectNoCast(Cppyy::TCppObject_t address,
 
         if (address && !isRef)
             MemoryRegulator::RegisterPyObject(pyobj, address);
+
+        if (smart_type)
+            pyobj->SetSmart(smart_type);
     }
 
 // successful completion
@@ -785,7 +812,7 @@ PyObject* CPyCppyy::BindCppObject(Cppyy::TCppObject_t address,
 
 //----------------------------------------------------------------------------
 PyObject* CPyCppyy::BindCppObjectArray(
-    Cppyy::TCppObject_t address, Cppyy::TCppType_t klass, long* dims)
+    Cppyy::TCppObject_t address, Cppyy::TCppType_t klass, dims_t dims)
 {
 // TODO: this function exists for symmetry; need to figure out if it's useful
     return TupleOfInstances_New(address, klass, dims[0], dims+1);

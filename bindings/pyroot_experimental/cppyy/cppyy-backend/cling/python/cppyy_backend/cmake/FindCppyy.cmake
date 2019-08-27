@@ -90,10 +90,10 @@ function(cppyy_generate_init)
     get_filename_component(CPPYY_LIB_SO ${ARG_LIB_FILE} NAME)
     get_filename_component(CPPYY_MAP ${ARG_MAP_FILE} NAME)
 
-    list(JOIN ARG_NAMESPACES ", " _namespaces)
+    string(REPLACE "${ARG_NAMESPACES}" ";" ", " _namespaces)
 
     if(NOT "${ARG_NAMESPACES}" STREQUAL "")
-        list(JOIN ARG_NAMESPACES ", " _namespaces)
+        string(REPLACE "${ARG_NAMESPACES}" ";" ", " _namespaces)
         set(NAMESPACE_INJECTIONS "from cppyy.gbl import ${_namespaces}")
     else()
         set(NAMESPACE_INJECTIONS "")
@@ -511,6 +511,12 @@ function(cppyy_add_bindings pkg pkg_version author author_email)
     #
     set(setup_cfg ${CMAKE_CURRENT_BINARY_DIR}/setup.cfg)
     configure_file(${BACKEND_PREFIX}/pkg_templates/setup.cfg.in ${setup_cfg})
+
+    #
+    # Copy initializor
+    #
+    set(initializor ${CMAKE_CURRENT_BINARY_DIR}/initializor.py)
+    file(COPY ${BACKEND_PREFIX}/pkg_templates/initializor.py DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/${pkg} USE_SOURCE_PERMISSIONS)
 
     #
     # Copy README and LICENSE

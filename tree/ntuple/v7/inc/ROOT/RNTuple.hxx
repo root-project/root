@@ -17,8 +17,10 @@
 #define ROOT7_RNTuple
 
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RNTupleView.hxx>
+#include <ROOT/RPageStorage.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <iterator>
@@ -77,6 +79,7 @@ public:
  */
 enum class ENTupleInfo {
    kSummary,  // The ntuple name, description, number of entries
+   kStorageDetails, // size on storage, page sizes, compression factor, etc.
 };
 
 
@@ -126,7 +129,8 @@ public:
    /// The user imposes an ntuple model, which must be compatible with the model found in the data on storage
    RNTupleReader(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSource> source);
    /// The model is generated from the ntuple metadata on storage
-   RNTupleReader(std::unique_ptr<Detail::RPageSource> source);
+   explicit RNTupleReader(std::unique_ptr<Detail::RPageSource> source);
+   std::unique_ptr<RNTupleReader> Clone() { return std::make_unique<RNTupleReader>(fSource->Clone()); }
    ~RNTupleReader();
 
    NTupleSize_t GetNEntries() const { return fNEntries; }
@@ -177,7 +181,7 @@ triggered by Flush() or by destructing the ntuple.  On I/O errors, an exception 
 // clang-format on
 class RNTupleWriter : public Detail::RNTuple {
 private:
-   static constexpr NTupleSize_t kDefaultClusterSizeEntries = 8192;
+   static constexpr NTupleSize_t kDefaultClusterSizeEntries = 64000;
    std::unique_ptr<Detail::RPageSink> fSink;
    NTupleSize_t fClusterSizeEntries;
    NTupleSize_t fLastCommitted;
@@ -185,7 +189,8 @@ private:
 public:
    static std::unique_ptr<RNTupleWriter> Recreate(std::unique_ptr<RNTupleModel> model,
                                                   std::string_view ntupleName,
-                                                  std::string_view storage);
+                                                  std::string_view storage,
+                                                  const RNTupleWriteOptions &options = RNTupleWriteOptions());
    RNTupleWriter(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSink> sink);
    RNTupleWriter(const RNTupleWriter&) = delete;
    RNTupleWriter& operator=(const RNTupleWriter&) = delete;
@@ -200,7 +205,8 @@ public:
          value.GetField()->Append(value);
       }
       fNEntries++;
-      if ((fNEntries % fClusterSizeEntries) == 0) CommitCluster();
+      if ((fNEntries % fClusterSizeEntries) == 0)
+         CommitCluster();
    }
    /// Ensure that the data from the so far seen Fill calls has been written to storage
    void CommitCluster();

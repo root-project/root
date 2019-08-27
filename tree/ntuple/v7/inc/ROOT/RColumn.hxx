@@ -216,6 +216,13 @@ public:
       *collectionStart = RClusterIndex(clusterIndex.GetClusterId(), idxStart);
    }
 
+   /// Get the currently active cluster id
+   void GetSwitchInfo(NTupleSize_t globalIndex, RClusterIndex *varIndex, std::uint32_t *tag) {
+      auto varSwitch = Map<RColumnSwitch, EColumnType::kSwitch>(globalIndex);
+      *varIndex = RClusterIndex(fCurrentPage.GetClusterInfo().GetId(), varSwitch->GetIndex());
+      *tag = varSwitch->GetTag();
+   }
+
    void Flush();
    void MapPage(const NTupleSize_t index);
    void MapPage(const RClusterIndex &clusterIndex);

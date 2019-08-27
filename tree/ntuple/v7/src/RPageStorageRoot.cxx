@@ -37,92 +37,41 @@ static constexpr const char* kKeyPagePayload = "NTPLP";
 
 }
 
-ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view ntupleName, RSettings settings)
-   : RPageSink(ntupleName)
+ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view ntupleName, std::string_view path,
+   const RNTupleWriteOptions &options)
+   : RPageSink(ntupleName, options)
    , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
-   , fDirectory(nullptr)
-   , fSettings(settings)
 {
    R__WARNING_HERE("NTuple") << "The RNTuple file format will change. " <<
       "Do not store real data with this version of RNTuple!";
-}
-
-ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view ntupleName, std::string_view path)
-   : RPageSink(ntupleName)
-   , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
-   , fDirectory(nullptr)
-{
-   R__WARNING_HERE("NTuple") << "The RNTuple file format will change. " <<
-      "Do not store real data with this version of RNTuple!";
-   TFile *file = TFile::Open(std::string(path).c_str(), "UPDATE");
-   fSettings.fFile = file;
-   fSettings.fTakeOwnership = true;
+   fFile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "RECREATE"));
+   fFile->SetCompressionSettings(fOptions.GetCompression());
 }
 
 ROOT::Experimental::Detail::RPageSinkRoot::~RPageSinkRoot()
 {
-   if (fSettings.fTakeOwnership) {
-      fSettings.fFile->Close();
-      delete fSettings.fFile;
-   }
+   if (fFile)
+      fFile->Close();
 }
 
-ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
-ROOT::Experimental::Detail::RPageSinkRoot::AddColumn(DescriptorId_t fieldId, const RColumn &column)
+void ROOT::Experimental::Detail::RPageSinkRoot::DoCreate(const RNTupleModel & /* model */)
 {
-   auto columnId = fLastColumnId++;
-   fDescriptorBuilder.AddColumn(columnId, fieldId, column.GetVersion(), column.GetModel(), column.GetIndex());
-   //printf("Added column %s type %d\n", columnHeader.fName.c_str(), (int)columnHeader.fType);
-   return ColumnHandle_t(columnId, &column);
-}
-
-
-void ROOT::Experimental::Detail::RPageSinkRoot::Create(RNTupleModel &model)
-{
-   fDirectory = fSettings.fFile->mkdir(fNTupleName.c_str());
+   fDirectory = fFile->mkdir(fNTupleName.c_str());
    // In TBrowser, use RNTupleBrowser(TDirectory *directory) in order to show the ntuple contents
    fDirectory->SetBit(TDirectoryFile::kCustomBrowse);
    fDirectory->SetTitle("ROOT::Experimental::Detail::RNTupleBrowser");
 
-   fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription(), "undefined author",
-                                model.GetVersion(), model.GetUuid());
-
-   std::unordered_map<const RFieldBase *, DescriptorId_t> fieldPtr2Id; // necessary to find parent field ids
-   const auto &rootField = *model.GetRootField();
-   fDescriptorBuilder.AddField(fLastFieldId, rootField.GetFieldVersion(), rootField.GetTypeVersion(),
-      rootField.GetName(), rootField.GetType(), rootField.GetNRepetitions(), rootField.GetStructure());
-   fieldPtr2Id[&rootField] = fLastFieldId++;
-   for (auto& f : *model.GetRootField()) {
-      fDescriptorBuilder.AddField(fLastFieldId, f.GetFieldVersion(), f.GetTypeVersion(), f.GetName(), f.GetType(),
-                                  f.GetNRepetitions(), f.GetStructure());
-      fDescriptorBuilder.AddFieldLink(fieldPtr2Id[f.GetParent()], fLastFieldId);
-
-      Detail::RFieldFuse::Connect(fLastFieldId, *this, f); // issues in turn one or several calls to AddColumn()
-      fieldPtr2Id[&f] = fLastFieldId++;
-   }
-
-   auto nColumns = fLastColumnId;
-   for (DescriptorId_t i = 0; i < nColumns; ++i) {
-      RClusterDescriptor::RColumnRange columnRange;
-      columnRange.fColumnId = i;
-      columnRange.fFirstElementIndex = 0;
-      columnRange.fNElements = 0;
-      fOpenColumnRanges.emplace_back(columnRange);
-      RClusterDescriptor::RPageRange pageRange;
-      pageRange.fColumnId = i;
-      fOpenPageRanges.emplace_back(pageRange);
-   }
-
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
-   auto szFooter = descriptor.SerializeHeader(nullptr);
-   auto buffer = new unsigned char[szFooter];
+   auto szHeader = descriptor.SerializeHeader(nullptr);
+   auto buffer = new unsigned char[szHeader];
    descriptor.SerializeHeader(buffer);
-   ROOT::Experimental::Internal::RNTupleBlob blob(szFooter, buffer);
+   ROOT::Experimental::Internal::RNTupleBlob blob(szHeader, buffer);
    fDirectory->WriteObject(&blob, kKeyNTupleHeader);
    delete[] buffer;
 }
 
-void ROOT::Experimental::Detail::RPageSinkRoot::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
+ROOT::Experimental::RClusterDescriptor::RLocator
+ROOT::Experimental::Detail::RPageSinkRoot::DoCommitPage(ColumnHandle_t columnHandle, const RPage &page)
 {
    unsigned char *buffer = reinterpret_cast<unsigned char *>(page.GetBuffer());
    auto packedBytes = page.GetSize();
@@ -145,35 +94,20 @@ void ROOT::Experimental::Detail::RPageSinkRoot::CommitPage(ColumnHandle_t column
       delete[] buffer;
    }
 
-   auto columnId = columnHandle.fId;
-   fOpenColumnRanges[columnId].fNElements += page.GetNElements();
-   RClusterDescriptor::RPageRange::RPageInfo pageInfo;
-   pageInfo.fNElements = page.GetNElements();
-   pageInfo.fLocator.fPosition = fLastPageIdx++;
-   pageInfo.fLocator.fBytesOnStorage = packedBytes;
-   fOpenPageRanges[columnId].fPageInfos.emplace_back(pageInfo);
+   RClusterDescriptor::RLocator result;
+   result.fPosition = fLastPageIdx++;
+   result.fBytesOnStorage = packedBytes;
+   return result;
 }
 
-void ROOT::Experimental::Detail::RPageSinkRoot::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
+ROOT::Experimental::RClusterDescriptor::RLocator
+ROOT::Experimental::Detail::RPageSinkRoot::DoCommitCluster(ROOT::Experimental::NTupleSize_t /* nEntries */)
 {
-   R__ASSERT((nEntries - fPrevClusterNEntries) < ClusterSize_t(-1));
-   fDescriptorBuilder.AddCluster(fLastClusterId, RNTupleVersion(), fPrevClusterNEntries,
-                                 ClusterSize_t(nEntries - fPrevClusterNEntries));
-   for (auto &range : fOpenColumnRanges) {
-      fDescriptorBuilder.AddClusterColumnRange(fLastClusterId, range);
-      range.fFirstElementIndex += range.fNElements;
-      range.fNElements = 0;
-   }
-   for (auto &range : fOpenPageRanges) {
-      fDescriptorBuilder.AddClusterPageRange(fLastClusterId, range);
-      range.fPageInfos.clear();
-   }
-   ++fLastClusterId;
    fLastPageIdx = 0;
-   fPrevClusterNEntries = nEntries;
+   return RClusterDescriptor::RLocator();
 }
 
-void ROOT::Experimental::Detail::RPageSinkRoot::CommitDataset()
+void ROOT::Experimental::Detail::RPageSinkRoot::DoCommitDataset()
 {
    if (!fDirectory)
       return;
@@ -227,24 +161,13 @@ void ROOT::Experimental::Detail::RPageAllocatorKey::DeletePage(
 ////////////////////////////////////////////////////////////////////////////////
 
 
-ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, RSettings settings)
-   : RPageSource(ntupleName)
+ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, std::string_view path,
+   const RNTupleReadOptions &options)
+   : RPageSource(ntupleName, options)
    , fPageAllocator(std::make_unique<RPageAllocatorKey>())
    , fPagePool(std::make_shared<RPagePool>())
-   , fDirectory(nullptr)
-   , fSettings(settings)
 {
-}
-
-ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, std::string_view path)
-   : RPageSource(ntupleName)
-   , fPageAllocator(std::make_unique<RPageAllocatorKey>())
-   , fPagePool(std::make_shared<RPagePool>())
-   , fDirectory(nullptr)
-{
-   TFile *file = TFile::Open(std::string(path).c_str(), "READ");
-   fSettings.fFile = file;
-   fSettings.fTakeOwnership = true;
+   fFile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "READ"));
 }
 
 ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(TDirectory* directory)
@@ -263,29 +186,14 @@ ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(TDirectory* directo
 
 ROOT::Experimental::Detail::RPageSourceRoot::~RPageSourceRoot()
 {
-   if (fSettings.fTakeOwnership) {
-      fSettings.fFile->Close();
-      delete fSettings.fFile;
-   }
+   if (fFile)
+      fFile->Close();
 }
 
 
-ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
-ROOT::Experimental::Detail::RPageSourceRoot::AddColumn(DescriptorId_t fieldId, const RColumn &column)
+ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceRoot::DoAttach()
 {
-   R__ASSERT(fieldId != kInvalidDescriptorId);
-   auto columnId = fDescriptor.FindColumnId(fieldId, column.GetIndex());
-   R__ASSERT(columnId != kInvalidDescriptorId);
-   //printf("Attaching column %s id %d type %d length %lu\n",
-   //   column->GetModel().GetName().c_str(), columnId, (int)(column->GetModel().GetType()),
-   //   fMapper.fColumnIndex[columnId].fNElements);
-   return ColumnHandle_t(columnId, &column);
-}
-
-
-void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
-{
-   fDirectory = fSettings.fFile->GetDirectory(fNTupleName.c_str());
+   fDirectory = fFile->GetDirectory(fNTupleName.c_str());
    RNTupleDescriptorBuilder descBuilder;
 
    auto keyRawNTupleHeader = fDirectory->GetKey(kKeyNTupleHeader);
@@ -300,11 +208,11 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
    free(ntupleRawFooter->fContent);
    delete ntupleRawFooter;
 
-   fDescriptor = descBuilder.GetDescriptor();
+   return descBuilder.GetDescriptor();
 }
 
 
-ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::DoPopulatePage(
+ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::PopulatePageFromCluster(
    ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor, ClusterSize_t::ValueType clusterIndex)
 {
    auto columnId = columnHandle.fId;
@@ -370,7 +278,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::P
    auto clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
    auto selfOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
    R__ASSERT(selfOffset <= globalIndex);
-   return DoPopulatePage(columnHandle, clusterDescriptor, globalIndex - selfOffset);
+   return PopulatePageFromCluster(columnHandle, clusterDescriptor, globalIndex - selfOffset);
 }
 
 
@@ -386,7 +294,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::P
 
    R__ASSERT(clusterId != kInvalidDescriptorId);
    auto clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
-   return DoPopulatePage(columnHandle, clusterDescriptor, index);
+   return PopulatePageFromCluster(columnHandle, clusterDescriptor, index);
 }
 
 void ROOT::Experimental::Detail::RPageSourceRoot::ReleasePage(RPage &page)
@@ -394,20 +302,9 @@ void ROOT::Experimental::Detail::RPageSourceRoot::ReleasePage(RPage &page)
    fPagePool->ReturnPage(page);
 }
 
-ROOT::Experimental::NTupleSize_t ROOT::Experimental::Detail::RPageSourceRoot::GetNEntries()
+std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSourceRoot::Clone() const
 {
-   return fDescriptor.GetNEntries();
-}
-
-ROOT::Experimental::NTupleSize_t ROOT::Experimental::Detail::RPageSourceRoot::GetNElements(ColumnHandle_t columnHandle)
-{
-   return fDescriptor.GetNElements(columnHandle.fId);
-}
-
-ROOT::Experimental::ColumnId_t ROOT::Experimental::Detail::RPageSourceRoot::GetColumnId(ColumnHandle_t columnHandle)
-{
-   // TODO(jblomer) distinguish trees
-   return columnHandle.fId;
+   return std::make_unique<RPageSourceRoot>(fNTupleName, fFile->GetName(), fOptions);
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSourceRoot::Clone() const

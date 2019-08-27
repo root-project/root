@@ -245,7 +245,7 @@ endfunction(ROOT_GET_INSTALL_DIR)
 #   no error is emitted. The dictionary does not depend on these headers.
 #---------------------------------------------------------------------------------------------------
 function(ROOT_GENERATE_DICTIONARY dictionary)
-  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL;NOTARGET"
+  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL"
     "MODULE;LINKDEF" "NODEPHEADERS;OPTIONS;DEPENDENCIES;EXTRA_DEPENDENCIES;BUILTINS" ${ARGN})
 
   # Check if OPTIONS start with a dash.
@@ -390,11 +390,10 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endforeach()
 
   #---Build the names for library, pcm and rootmap file ----
-  get_filename_component(dict_base_name ${dictionary} NAME_WE)
-  if(dict_base_name MATCHES "^G__")
+  if(dictionary MATCHES "^G__")
     string(SUBSTRING ${dictionary} 3 -1 deduced_arg_module)
   else()
-    set(deduced_arg_module ${dict_base_name})
+    get_filename_component(deduced_arg_module ${dictionary} NAME_WE)
   endif()
 
   #---Set the library output directory-----------------------
@@ -504,32 +503,40 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
                              ${MODULE_LIB_DEPENDENCY} ${ARG_EXTRA_DEPENDENCIES}
                              ${runtime_cxxmodule_dependencies}
                      COMMAND_EXPAND_LISTS)
-  get_filename_component(dictname ${dictionary} NAME)
 
-  if(ARG_NOTARGET)
-    if(TARGET ${ARG_MODULE})
-      target_sources(${ARG_MODULE} PRIVATE ${dictionary}.cxx)
-      if(PROJECT_NAME STREQUAL "ROOT")
-        set_property(GLOBAL APPEND PROPERTY ROOT_PCH_DEPENDENCIES ${ARG_MODULE})
-      endif()
-    else()
-      message(FATAL_ERROR
-        " When used with NOTARGET, the MODULE option must be passed with the name of an existing target.\n"
-        " The dictionary source is then attached to this target instead of a custom dictionary target.")
-    endif()
+  # If we are adding to an existing target and it's not the dictionary itself,
+  # we make an object library and add its output object file as source to the target.
+  # This works around bug https://cmake.org/Bug/view.php?id=14633 in CMake by keeping
+  # the generated source at the same scope level as its owning target, something that
+  # would not happen if we used target_sources() directly with the dictionary source.
+  if(TARGET "${ARG_MODULE}" AND NOT "${ARG_MODULE}" STREQUAL "${dictionary}")
+    add_library(${dictionary} OBJECT ${dictionary}.cxx)
+    set_target_properties(${dictionary} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+    target_sources(${ARG_MODULE} PRIVATE $<TARGET_OBJECTS:${dictionary}>)
+
+    target_compile_options(${dictionary} PRIVATE
+      $<TARGET_PROPERTY:${ARG_MODULE},COMPILE_OPTIONS>)
+
+    target_compile_definitions(${dictionary} PRIVATE
+      ${definitions} $<TARGET_PROPERTY:${ARG_MODULE},COMPILE_DEFINITIONS>)
+
+    target_include_directories(${dictionary} PRIVATE
+      ${includedirs} $<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>)
   else()
-    add_custom_target(${dictname} DEPENDS ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file})
-    if(PROJECT_NAME STREQUAL "ROOT")
-      set_property(GLOBAL APPEND PROPERTY ROOT_PCH_DEPENDENCIES ${dictname})
-    endif()
+    add_custom_target(${dictionary} DEPENDS ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file})
   endif()
 
-  if (runtime_cxxmodules AND ARG_MULTIDICT AND NOT ARG_NOTARGET)
-    set (main_pcm_target "G__${ARG_MODULE}")
-    if (NOT TARGET ${main_pcm_target})
-      message(FATAL_ERROR "Target ${main_pcm_target} not found! Please move ${main_pcm_target} before specifying MULTIDICT.")
+  if(PROJECT_NAME STREQUAL "ROOT")
+    set_property(GLOBAL APPEND PROPERTY ROOT_PCH_DEPENDENCIES ${dictionary})
+  endif()
+
+  if(ARG_MULTIDICT)
+    if(NOT TARGET "G__${ARG_MODULE}")
+      message(FATAL_ERROR
+        " Target G__${ARG_MODULE} not found!\n"
+        " Please create target G__${ARG_MODULE} before using MULTIDICT.")
     endif()
-    add_dependencies(${main_pcm_target} ${dictname})
+    add_dependencies(G__${ARG_MODULE} ${dictionary})
   endif()
 
   if(NOT ARG_NOINSTALL AND NOT CMAKE_ROOTTEST_DICT AND DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
@@ -549,10 +556,10 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif()
   endif()
 
-  if(ARG_BUILTINS AND NOT ARG_NOTARGET)
+  if(ARG_BUILTINS)
     foreach(arg1 ${ARG_BUILTINS})
       if(TARGET ${${arg1}_TARGET})
-        add_dependencies(${dictname} ${${arg1}_TARGET})
+        add_dependencies(${dictionary} ${${arg1}_TARGET})
       endif()
     endforeach()
   endif()
@@ -1060,7 +1067,13 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   # Don't pass the MODULE arg to ROOT_GENERATE_DICTIONARY when
   # NO_MODULE is set.
   if(NOT ARG_NO_MODULE)
-    set(MODULE_GEN_ARG NOTARGET MODULE ${libname})
+    set(MODULE_GEN_ARG MODULE ${libname})
+  endif()
+
+  if(ARG_NO_SOURCES)
+    # Workaround bug in CMake by adding a dummy source file if all sources are generated, since
+    # in that case the initial call to add_library() may not list any sources and CMake complains.
+    add_custom_command(OUTPUT dummy.cxx COMMAND ${CMAKE_COMMAND} -E touch dummy.cxx)
   endif()
 
   if(runtime_cxxmodules)
@@ -1076,7 +1089,8 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   endif()
 
   if (ARG_OBJECT_LIBRARY)
-    ROOT_OBJECT_LIBRARY(${libname}Objs ${ARG_SOURCES})
+    ROOT_OBJECT_LIBRARY(${libname}Objs ${ARG_SOURCES}
+                        $<$<BOOL:${ARG_NO_SOURCES}>:dummy.cxx>)
     ROOT_LINKER_LIBRARY(${libname} $<TARGET_OBJECTS:${libname}Objs>
                         LIBRARIES ${ARG_LIBRARIES}
                         DEPENDENCIES ${ARG_DEPENDENCIES}
@@ -1084,6 +1098,7 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
                        )
   else(ARG_OBJECT_LIBRARY)
     ROOT_LINKER_LIBRARY(${libname} ${ARG_SOURCES}
+                        $<$<BOOL:${ARG_NO_SOURCES}>:dummy.cxx>
                         LIBRARIES ${ARG_LIBRARIES}
                         DEPENDENCIES ${ARG_DEPENDENCIES}
                         BUILTINS ${ARG_BUILTINS}
@@ -1185,20 +1200,6 @@ function(REFLEX_BUILD_DICTIONARY dictionary headerfiles selectionfile )
   set(srcRootMap ${CMAKE_CURRENT_BINARY_DIR}/${rootmapname})
   install(CODE "EXECUTE_PROCESS(COMMAND ${merge_rootmap_cmd} --do-merge --input-file ${srcRootMap} --merged-file ${mergedRootMap})")
 endfunction()
-
-#---------------------------------------------------------------------------------------------------
-#---ROOT_CHECK_OUT_OF_SOURCE_BUILD( )
-#---------------------------------------------------------------------------------------------------
-macro(ROOT_CHECK_OUT_OF_SOURCE_BUILD)
-  get_filename_component(bindir_parent ${CMAKE_BINARY_DIR} PATH)
-  if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
-     file(REMOVE_RECURSE ${CMAKE_SOURCE_DIR}/Testing)
-     file(REMOVE ${CMAKE_SOURCE_DIR}/DartConfiguration.tcl)
-     message(FATAL_ERROR "ROOT should be built as an out of source build, to keep the source directory clean. Please create a extra build directory and run the command 'cmake <path_to_source_dir>' in this newly created directory. You have also to delete the directory CMakeFiles and the file CMakeCache.txt in the source directory. Otherwise cmake will complain even if you run it from an out-of-source directory.")
-  elseif(IS_SYMLINK ${CMAKE_BINARY_DIR} AND CMAKE_SOURCE_DIR STREQUAL bindir_parent)
-     message(FATAL_ERROR "ROOT cannot be built from a sub-directory of the source tree that is a symlink. This is a current limitation of CMake. Please create a real build directory and run the command 'cmake <path_to_source_dir>' in this newly created directory.")
-  endif()
-endmacro()
 
 #----------------------------------------------------------------------------
 # function ROOT_ADD_TEST( <name> COMMAND cmd [arg1... ]

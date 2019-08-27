@@ -43,7 +43,7 @@ static void ll_dealloc(CPyCppyy::LowLevelView* pyobj)
 //---------------------------------------------------------------------------
 static PyObject* ll_typecode(CPyCppyy::LowLevelView* self, void*)
 {
-    return CPyCppyy_PyUnicode_FromString((char*)self->fBufInfo.format);
+    return CPyCppyy_PyText_FromString((char*)self->fBufInfo.format);
 }
 
 //---------------------------------------------------------------------------
@@ -63,7 +63,7 @@ static PyObject* ll_reshape(CPyCppyy::LowLevelView* self, PyObject* shape)
             PyObject* pystr = PyObject_Str(shape);
             if (pystr) {
                 PyErr_Format(PyExc_TypeError, "tuple object of length 1 expected, received %s",
-                    CPyCppyy_PyUnicode_AsStringChecked(pystr));
+                    CPyCppyy_PyText_AsStringChecked(pystr));
                 Py_DECREF(pystr);
                 return nullptr;
             }
@@ -368,17 +368,11 @@ static PyObject* ll_item(CPyCppyy::LowLevelView* self, Py_ssize_t index)
         return nullptr;
     }
 
-    if (view.ndim == 1) {
-        void* ptr = ptr_from_index(self, index);
-        if (!ptr)
-            return nullptr;
+    void* ptr = ptr_from_index(self, index);
+    if (ptr)
         return self->fConverter->FromMemory(ptr);
-    }
 
-// TODO: implement sub-views
-    PyErr_SetString(PyExc_NotImplementedError,
-        "multi-dimensional sub-views are not implemented");
-    return nullptr;
+    return nullptr;      // error already set by lookup_dimension
 }
 
 // Return the item at position *key* (a tuple of indices).
@@ -770,19 +764,36 @@ static inline PyObject* CreateLowLevelViewT(T* address, Py_ssize_t* shape)
     Py_buffer& view = llp->fBufInfo;
     view.buf            = address;
     view.obj            = nullptr;
-    view.len            = nx * sizeof(T);
     view.readonly       = 0;
-    view.itemsize       = sizeof(T);
     view.format         = (char*)typecode_traits<T>::format;
     view.ndim           = shape ? (int)shape[0] : 1;
     view.shape          = (Py_ssize_t*)PyMem_Malloc(view.ndim * sizeof(Py_ssize_t));
-    view.shape[0]       = nx; // view.len / view.itemsize
+    view.shape[0]       = nx;      // view.len / view.itemsize
     view.strides        = (Py_ssize_t*)PyMem_Malloc(view.ndim * sizeof(Py_ssize_t));
-    view.strides[0]     = view.itemsize;
     view.suboffsets     = nullptr;
     view.internal       = nullptr;
 
-    llp->fConverter = CreateConverter(typecode_traits<T>::name);
+    if (view.ndim == 1) {
+    // simple 1-dim array of the declared type
+        view.len        = nx * sizeof(T);
+        view.itemsize   = sizeof(T);
+        llp->fConverter = CreateConverter(typecode_traits<T>::name);
+    } else {
+    // multi-dim array; sub-views are projected by using more LLViews
+        view.len        = nx * sizeof(void*);
+        view.itemsize   = sizeof(void*);
+
+    // peel off one dimension and create a new LLView converter
+        Py_ssize_t res = shape[1];
+        shape[1] = shape[0] - 1;
+        std::string tname{typecode_traits<T>::name};
+        tname.append("*");        // make sure to ask for another array
+    // TODO: although this will work, it means that "naive" loops are expensive
+        llp->fConverter = CreateConverter(tname, &shape[1]);
+        shape[1] = res;
+    }
+
+    view.strides[0]     = view.itemsize;
 
     return (PyObject*)llp;
 }

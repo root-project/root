@@ -179,7 +179,8 @@ public:
       kDevNull       = BIT(12),
       kWriteError    = BIT(14),
       kBinaryFile    = BIT(15),
-      kRedirected    = BIT(16)
+      kRedirected    = BIT(16),
+      kReproducible  = BIT(17)
    };
    enum ERelativeTo { kBeg = 0, kCur = 1, kEnd = 2 };
    enum { kStartBigFile  = 2000000000 };

@@ -375,9 +375,6 @@ overhead which we go in details bellow.
 
 
 ### Current limitations
-  * Incremental builds -- building ROOT, modifying the source code and rebuilding
-  might not work. To work around it remove all pcm files in the $ROOTSYS/lib
-  folder.
   * Relocatability issues -- we have fixed a few of the relocatability issues we
   found. We are aware of an obscure relocatability issue when ROOT is copied in
   another folder and we are rebuild. ROOT picks up both modulemap files in
@@ -390,9 +387,6 @@ overhead which we go in details bellow.
   version of libstdc++) the generation of the RooFit dictionary goes in an
   infinite loop. We have fixed a number of such situations. Please contact us if
   you see such behavior or disable roofit (`-Droofit=Off`).
-  * ROOT7 -- Due to number of layering violations, `-Droot7=On` does not work.
-  Please remember to explicitly switch it off when building with `-Dcxx14=On`
-  or `-Dcxx17=On`.
 
 ### Performance
 This section compares ROOT PCH technology with C++ Modules which is important but
