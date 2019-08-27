@@ -1,7 +1,7 @@
 if (ROOT_vdt_FOUND AND NOT ROOT_CLASSIC_BUILD AND NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 
 set (testname stressVdt)
-set(additional_compile_flags "-Ofast")
+set(additional_compile_flags "-O3")
 
 include_directories(${VDT_INCLUDE_DIRS})
 
