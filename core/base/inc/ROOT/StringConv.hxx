@@ -99,9 +99,9 @@ EFromHumanReadableSize FromHumanReadableSize(std::string_view str, T &value)
       int unit = 1000;
 
       auto result = [coeff,&exp,&unit,&value]() {
-         double v = exp ? coeff * std::pow(unit, exp / 3) : coeff;
+         T v = static_cast<T>(exp ? coeff * std::pow(unit, exp / 3) : coeff);
          if (v < std::numeric_limits<T>::max()) {
-            value = (T)v;
+            value = v;
             return EFromHumanReadableSize::kSuccess;
          } else {
             return EFromHumanReadableSize::kOverflow;
