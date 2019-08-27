@@ -3,6 +3,7 @@ if(ROOT_python_FOUND)
                     MACRO PyROOT_basictests.py
                     COPY_TO_BUILDDIR ArgumentPassingCompiled.C ReturnValues.C SimpleClass.C ArgumentPassingInterpreted.C
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ ArgumentPassingCompiled.C+
+                    ENVIRONMENT EXP_PYROOT=${exp_pyroot}
                     ${PYTESTS_WILLFAIL})
 
   ROOTTEST_ADD_TEST(datatype
