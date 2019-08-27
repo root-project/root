@@ -76,7 +76,7 @@ or in `TBrowser` by opening `Browser Help → About ROOT`.
 
 * TMemFile: Apply customization of minimal block size also to the first block.
 * TFile: A new bit `TFile::kReproducible` was introduced. It can be enabled by
-  specifying "reproducible" url option when creating file:
+  specifying the `"reproducible"` url option when creating the file:
    ```{.cpp}
       TFile *f = TFile::Open("name.root?reproducible","RECREATE","File title");
    ```{.cpp}
