@@ -86,6 +86,11 @@ class TSeqCollectionListMethods(unittest.TestCase):
         with self.assertRaises(TypeError):
             sc2.pop(1.0)
 
+        # Pop a repeated element
+        sc2.append(ROOT.TObjString('2'))
+        elem = sc2.pop()
+        self.assertEqual(sc2.At(0), elem)
+
     def test_reverse(self):
         sc = self.create_tseqcollection()
         l = [ elem for elem in sc ]
