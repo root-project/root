@@ -197,9 +197,14 @@ class TestClassDATATYPES:
         c.set_uchar(45);  assert c.m_uchar     == chr(45)
 
         # limits and checks
-        raises(TypeError,  'c.set_char("string")')
+        if self.exp_pyroot:
+           # This throws ValueError in new Cppyy
+           raises(ValueError,  'c.set_char("string")')
+           raises(ValueError,  'c.set_uchar("string")')
+        else:
+           raises(TypeError,  'c.set_char("string")')
+           raises(TypeError,  'c.set_uchar("string")')
         raises(ValueError, 'c.set_char(500)')
-        raises(TypeError,  'c.set_uchar("string")')
         raises(ValueError, 'c.set_uchar(-1)')
         c.set_char_cr(-128); assert c.get_char()  == chr(0x80)
         assert c.get_char_r() == chr(0x80); assert c.get_char_cr()  == chr(0x80)
