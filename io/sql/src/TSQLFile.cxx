@@ -337,7 +337,7 @@ TSQLFile::TSQLFile(const char *dbname, Option_t *option, const char *user, const
    fClassIndex = 0;
    fSeekInfo = 0;
    fNbytesInfo = 0;
-   fProcessIDs = 0;
+   fProcessIDs = nullptr;
    fNProcessIDs = 0;
    fSeekDir = sqlio::Ids_RootDir;
    SetBit(kBinaryFile, kFALSE);
@@ -660,7 +660,7 @@ void TSQLFile::Close(Option_t *option)
 
    if (fClassIndex) {
       delete fClassIndex;
-      fClassIndex = 0;
+      fClassIndex = nullptr;
    }
 
    {
@@ -694,24 +694,18 @@ TSQLFile::~TSQLFile()
 {
    Close();
 
-   if (fSQLClassInfos != 0) {
+   if (fSQLClassInfos) {
       fSQLClassInfos->Delete();
       delete fSQLClassInfos;
+      fSQLClassInfos = nullptr;
    }
 
    StopLogFile();
 
-   if (fSQL != 0) {
+   if (fSQL) {
       delete fSQL;
-      fSQL = 0;
+      fSQL = nullptr;
    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// make private to exclude copy operator
-
-void TSQLFile::operator=(const TSQLFile &)
-{
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -719,7 +713,7 @@ void TSQLFile::operator=(const TSQLFile &)
 
 Bool_t TSQLFile::IsOpen() const
 {
-   return fSQL != 0;
+   return fSQL != nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -839,7 +833,7 @@ void TSQLFile::WriteStreamerInfo()
 Bool_t TSQLFile::WriteSpecialObject(Long64_t keyid, TObject *obj, const char *name, const char *title)
 {
    DeleteKeyFromDB(keyid);
-   if (obj == 0)
+   if (!obj)
       return kTRUE;
 
    Long64_t objid = StoreObjectInTables(keyid, obj, obj->IsA());
@@ -860,21 +854,21 @@ Bool_t TSQLFile::WriteSpecialObject(Long64_t keyid, TObject *obj, const char *na
 
 TObject *TSQLFile::ReadSpecialObject(Long64_t keyid, TObject *obj)
 {
-   TKeySQL *key = 0;
+   TKeySQL *key = nullptr;
 
    StreamKeysForDirectory(this, kFALSE, keyid, &key);
-   if (key == 0)
+   if (!key)
       return obj;
 
    TBufferSQL2 buffer(TBuffer::kRead, this);
 
    buffer.InitMap();
 
-   TClass *cl = 0;
+   TClass *cl = nullptr;
 
    void *res = buffer.SqlReadAny(key->GetDBKeyId(), key->GetDBObjId(), &cl, obj);
 
-   if ((cl == TSQLFile::Class()) && (res != 0) && (obj == this)) {
+   if ((cl == TSQLFile::Class()) && (res != nullptr) && (obj == this)) {
       // name should not be preserved while name of database may be changed
       SetTitle(key->GetTitle());
    }
@@ -901,7 +895,7 @@ TFile::InfoListRet TSQLFile::GetStreamerInfoListImpl(bool /* lookupSICache */)
    TObject *obj = ReadSpecialObject(sqlio::Ids_StreamerInfos);
 
    TList *list = dynamic_cast<TList *>(obj);
-   if (list == 0) {
+   if (!list) {
       delete obj;
       return {nullptr, 1, hash};
    }
@@ -915,7 +909,7 @@ TFile::InfoListRet TSQLFile::GetStreamerInfoListImpl(bool /* lookupSICache */)
 
 void TSQLFile::SaveToDatabase()
 {
-   if (fSQL == 0)
+   if (!fSQL)
       return;
 
    WriteStreamerInfo();
@@ -929,7 +923,7 @@ void TSQLFile::SaveToDatabase()
 
 Int_t TSQLFile::StreamKeysForDirectory(TDirectory *dir, Bool_t doupdate, Long64_t specialkeyid, TKeySQL **specialkey)
 {
-   if (dir == 0)
+   if (!dir)
       return -1;
 
    const char *quote = SQLIdentifierQuote();
@@ -947,14 +941,14 @@ Int_t TSQLFile::StreamKeysForDirectory(TDirectory *dir, Bool_t doupdate, Long64_
 
    TSQLResult *res = SQLQuery(sqlcmd.Data(), 2);
 
-   if (res == 0)
+   if (!res)
       return -1;
 
    Int_t nkeys = 0;
 
-   TSQLRow *row = 0;
+   TSQLRow *row = nullptr;
 
-   while ((row = res->Next()) != 0) {
+   while ((row = res->Next()) != nullptr) {
       nkeys++;
 
       Long64_t keyid = sqlio::atol64((*row)[0]);
@@ -973,7 +967,7 @@ Int_t TSQLFile::StreamKeysForDirectory(TDirectory *dir, Bool_t doupdate, Long64_
          if (doupdate) {
             TKeySQL *key = FindSQLKey(dir, keyid);
 
-            if (key == 0) {
+            if (!key) {
                Error("StreamKeysForDirectory", "Key with id %lld not exist in list", keyid);
                nkeys = -1; // this will finish execution
             } else if (key->IsKeyModified(keyname, keytitle, keydatime, cycle, classname))
@@ -981,7 +975,7 @@ Int_t TSQLFile::StreamKeysForDirectory(TDirectory *dir, Bool_t doupdate, Long64_
 
          } else {
             TKeySQL *key = new TKeySQL(dir, keyid, objid, keyname, keytitle, keydatime, cycle, classname);
-            if (specialkey != 0) {
+            if (specialkey) {
                *specialkey = key;
                nkeys = 1;
             } else
@@ -1048,9 +1042,9 @@ void TSQLFile::InitSqlDatabase(Bool_t create)
    cd();
 
    fNProcessIDs = 0;
-   TKey *key = 0;
+   TKey *key = nullptr;
    TIter iter(fKeys);
-   while ((key = (TKey *)iter()) != 0) {
+   while ((key = (TKey *)iter()) != nullptr) {
       if (!strcmp(key->GetClassName(), "TProcessID"))
          fNProcessIDs++;
    }
@@ -1069,7 +1063,7 @@ Bool_t TSQLFile::ReadConfigurations()
    sqlcmd.Form("SELECT * FROM %s%s%s", quote, sqlio::ConfigTable, quote);
    TSQLResult *res = SQLQuery(sqlcmd.Data(), 2);
 
-   if (res == 0)
+   if (!res)
       return kFALSE;
 
    // should be found, otherwise will be error
@@ -1092,9 +1086,9 @@ Bool_t TSQLFile::ReadConfigurations()
       target = value;                                      \
    else
 
-   TSQLRow *row = 0;
+   TSQLRow *row = nullptr;
 
-   while ((row = res->Next()) != 0) {
+   while ((row = res->Next()) != nullptr) {
 
       TString field = row->GetField(0);
       TString value = row->GetField(1);
@@ -1226,7 +1220,7 @@ TString TSQLFile::MakeSelectQuery(TClass *cl)
 {
    TString res = "";
    TSQLClassInfo *sqlinfo = FindSQLClassInfo(cl);
-   if (sqlinfo == 0)
+   if (!sqlinfo)
       return res;
 
    TString columns, tables;
@@ -1247,7 +1241,7 @@ TString TSQLFile::MakeSelectQuery(TClass *cl)
 Bool_t TSQLFile::ProduceClassSelectQuery(TVirtualStreamerInfo *info, TSQLClassInfo *sqlinfo, TString &columns,
                                          TString &tables, Int_t &tablecnt)
 {
-   if ((info == 0) || (sqlinfo == 0))
+   if (!info || !sqlinfo)
       return kFALSE;
 
    if (!sqlinfo->IsClassTableExist())
@@ -1258,7 +1252,7 @@ Bool_t TSQLFile::ProduceClassSelectQuery(TVirtualStreamerInfo *info, TSQLClassIn
    TString table_syn;
    table_syn.Form("t%d", ++tablecnt);
 
-   Bool_t start = tables.Length() == 0;
+   Bool_t start = (tables.Length() == 0);
 
    TString buf;
 
@@ -1284,9 +1278,9 @@ Bool_t TSQLFile::ProduceClassSelectQuery(TVirtualStreamerInfo *info, TSQLClassIn
    }
 
    TIter iter(info->GetElements());
-   TStreamerElement *elem = 0;
+   TStreamerElement *elem = nullptr;
 
-   while ((elem = (TStreamerElement *)iter()) != 0) {
+   while ((elem = (TStreamerElement *)iter()) != nullptr) {
       Int_t coltype = TSQLStructure::DefineElementColumnType(elem, this);
       TString colname = TSQLStructure::DefineElementColumnName(elem, this);
 
@@ -1394,18 +1388,18 @@ Bool_t TSQLFile::IsReadAccess()
 /// | 2 | results is may be necessary for long time Oracle plugin do not support working with several TSQLResult
 /// objects, therefore explicit deep copy will be produced|
 ///
-/// If ok!=0, it will contains kTRUE is Query was successfull, otherwise kFALSE
+/// If ok!=0, it will contains kTRUE is Query was successful, otherwise kFALSE
 
 TSQLResult *TSQLFile::SQLQuery(const char *cmd, Int_t flag, Bool_t *ok)
 {
-   if (fLogFile != 0)
+   if (fLogFile)
       *fLogFile << cmd << std::endl;
 
-   if (ok != 0)
+   if (ok)
       *ok = kFALSE;
 
-   if (fSQL == 0)
-      return 0;
+   if (!fSQL)
+      return nullptr;
 
    if (gDebug > 2)
       Info("SQLQuery", "%s", cmd);
@@ -1414,16 +1408,16 @@ TSQLResult *TSQLFile::SQLQuery(const char *cmd, Int_t flag, Bool_t *ok)
 
    if (flag == 0) {
       Bool_t res = fSQL->Exec(cmd);
-      if (ok != 0)
+      if (ok)
          *ok = res;
-      return 0;
+      return nullptr;
    }
 
    TSQLResult *res = fSQL->Query(cmd);
-   if (ok != 0)
+   if (ok)
       *ok = res != 0;
-   if (res == 0)
-      return 0;
+   if (!res)
+      return nullptr;
    //   if ((flag==2) && IsOracle())
    //      res = new TSQLResultCopy(res);
    return res;
@@ -1434,7 +1428,7 @@ TSQLResult *TSQLFile::SQLQuery(const char *cmd, Int_t flag, Bool_t *ok)
 
 Bool_t TSQLFile::SQLCanStatement()
 {
-   if (fSQL == 0)
+   if (!fSQL)
       return kFALSE;
 
    if (!fSQL->HasStatement())
@@ -1448,8 +1442,8 @@ Bool_t TSQLFile::SQLCanStatement()
 
 TSQLStatement *TSQLFile::SQLStatement(const char *cmd, Int_t bufsize)
 {
-   if (fSQL == 0)
-      return 0;
+   if (!fSQL)
+      return nullptr;
 
    if (!fSQL->HasStatement())
       return 0;
@@ -1468,7 +1462,7 @@ TSQLStatement *TSQLFile::SQLStatement(const char *cmd, Int_t bufsize)
 
 void TSQLFile::SQLDeleteStatement(TSQLStatement *stmt)
 {
-   if (stmt == 0)
+   if (!stmt)
       return;
 
    fStmtCounter--;
@@ -1482,13 +1476,13 @@ void TSQLFile::SQLDeleteStatement(TSQLStatement *stmt)
 
 Bool_t TSQLFile::SQLApplyCommands(TObjArray *cmds)
 {
-   if ((cmds == 0) || (fSQL == 0))
+   if (!cmds || !fSQL)
       return kFALSE;
 
    Bool_t ok = kTRUE;
    TIter iter(cmds);
-   TObject *cmd = 0;
-   while ((cmd = iter()) != 0) {
+   TObject *cmd = nullptr;
+   while ((cmd = iter()) != nullptr) {
       SQLQuery(cmd->GetName(), 0, &ok);
       if (!ok)
          break;
@@ -1502,7 +1496,7 @@ Bool_t TSQLFile::SQLApplyCommands(TObjArray *cmds)
 
 Bool_t TSQLFile::SQLTestTable(const char *tablename)
 {
-   if (fSQL == 0)
+   if (!fSQL)
       return kFALSE;
 
    if (fSQL->HasTable(tablename))
@@ -1522,7 +1516,7 @@ Bool_t TSQLFile::SQLTestTable(const char *tablename)
 
 Long64_t TSQLFile::SQLMaximumValue(const char *tablename, const char *columnname)
 {
-   if (fSQL == 0)
+   if (!fSQL)
       return -1;
 
    if (gDebug > 2)
@@ -1534,7 +1528,7 @@ Long64_t TSQLFile::SQLMaximumValue(const char *tablename, const char *columnname
    query.Form("SELECT MAX(%s%s%s) FROM %s%s%s", quote, columnname, quote, quote, tablename, quote);
    TSQLResult *res = SQLQuery(query.Data(), 1);
 
-   if (res == 0)
+   if (!res)
       return -1;
 
    TSQLRow *row = res->Next();
@@ -1549,7 +1543,6 @@ Long64_t TSQLFile::SQLMaximumValue(const char *tablename, const char *columnname
 
    if (gDebug > 2)
       Info("SQLMaximumValue", "Result = %lld", maxid);
-   ;
 
    return maxid;
 }
@@ -1559,19 +1552,19 @@ Long64_t TSQLFile::SQLMaximumValue(const char *tablename, const char *columnname
 
 void TSQLFile::SQLDeleteAllTables()
 {
-   if (fSQL == 0)
+   if (!fSQL)
       return;
 
    TList *tables = fSQL->GetTablesList();
-   if (tables == 0)
+   if (!tables)
       return;
 
    TString sqlcmd;
    const char *quote = SQLIdentifierQuote();
 
    TIter iter(tables);
-   TObject *obj = 0;
-   while ((obj = iter()) != 0) {
+   TObject *obj = nullptr;
+   while ((obj = iter()) != nullptr) {
       sqlcmd.Form("DROP TABLE %s%s%s", quote, obj->GetName(), quote);
       SQLQuery(sqlcmd.Data());
    }
@@ -1607,7 +1600,7 @@ Bool_t TSQLFile::SQLRollback()
 
 Int_t TSQLFile::SQLMaxIdentifierLength()
 {
-   Int_t maxlen = fSQL == 0 ? 32 : fSQL->GetMaxIdentifierLength();
+   Int_t maxlen = !fSQL ? 32 : fSQL->GetMaxIdentifierLength();
 
    // lets exclude absolute ubnormal data
    if (maxlen < 10)
@@ -1622,7 +1615,7 @@ Int_t TSQLFile::SQLMaxIdentifierLength()
 
 void TSQLFile::DeleteKeyFromDB(Long64_t keyid)
 {
-   if (!IsWritable() || (keyid < 0) || (fSQL == 0))
+   if (!IsWritable() || (keyid < 0) || !fSQL)
       return;
 
    TString sqlcmd;
@@ -1635,7 +1628,7 @@ void TSQLFile::DeleteKeyFromDB(Long64_t keyid)
    TSQLRow *row = res == 0 ? 0 : res->Next();
    Long64_t minid(1), maxid(0);
 
-   if ((row != 0) && (row->GetField(0) != 0) && (row->GetField(1) != 0)) {
+   if (row && (row->GetField(0) != 0) && (row->GetField(1) != 0)) {
       minid = sqlio::atol64(row->GetField(0));
       maxid = sqlio::atol64(row->GetField(1));
    }
@@ -1646,12 +1639,12 @@ void TSQLFile::DeleteKeyFromDB(Long64_t keyid)
    // can be that object tables does not include any entry this that keyid
    if (minid <= maxid) {
       TIter iter(fSQLClassInfos);
-      TSQLClassInfo *info = 0;
+      TSQLClassInfo *info = nullptr;
       TString querymask, query;
       querymask.Form("DELETE FROM %s%s%s WHERE %s%s%s BETWEEN %lld AND %lld", quote, "%s", quote, quote,
                      SQLObjectIdColumn(), quote, minid, maxid);
 
-      while ((info = (TSQLClassInfo *)iter()) != 0) {
+      while ((info = (TSQLClassInfo *)iter()) != nullptr) {
 
          if (info->IsClassTableExist()) {
             query.Form(querymask.Data(), info->GetClassTableName());
@@ -1681,20 +1674,19 @@ void TSQLFile::DeleteKeyFromDB(Long64_t keyid)
 
 TKeySQL *TSQLFile::FindSQLKey(TDirectory *dir, Long64_t keyid)
 {
-   if (dir == 0)
-      return 0;
+   if (!dir)
+      return nullptr;
 
    TIter next(dir->GetListOfKeys());
-   TObject *obj = 0;
+   TObject *obj = nullptr;
 
-   while ((obj = next()) != 0) {
+   while ((obj = next()) != nullptr) {
       TKeySQL *key = dynamic_cast<TKeySQL *>(obj);
-      if (key != 0)
-         if (key->GetDBKeyId() == keyid)
-            return key;
+      if (key && (key->GetDBKeyId() == keyid))
+         return key;
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1702,7 +1694,7 @@ TKeySQL *TSQLFile::FindSQLKey(TDirectory *dir, Long64_t keyid)
 
 Bool_t TSQLFile::WriteKeyData(TKeySQL *key)
 {
-   if ((fSQL == 0) || (key == 0))
+   if (!fSQL || !key)
       return kFALSE;
 
    if (!IsTablesExists())
@@ -1733,7 +1725,7 @@ Bool_t TSQLFile::WriteKeyData(TKeySQL *key)
 
 Bool_t TSQLFile::UpdateKeyData(TKeySQL *key)
 {
-   if ((fSQL == 0) || (key == 0))
+   if (!fSQL || !key)
       return kFALSE;
 
    TString sqlcmd;
@@ -1784,18 +1776,18 @@ Long64_t TSQLFile::DefineNextKeyId()
 
 TSQLClassInfo *TSQLFile::FindSQLClassInfo(const char *clname, Int_t version)
 {
-   if (fSQLClassInfos == 0)
-      return 0;
+   if (!fSQLClassInfos)
+      return nullptr;
 
    TIter iter(fSQLClassInfos);
-   TSQLClassInfo *info = 0;
+   TSQLClassInfo *info = nullptr;
 
-   while ((info = (TSQLClassInfo *)iter()) != 0) {
+   while ((info = (TSQLClassInfo *)iter()) != nullptr) {
       if (strcmp(info->GetName(), clname) == 0)
          if (info->GetClassVersion() == version)
             return info;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1812,18 +1804,17 @@ TSQLClassInfo *TSQLFile::FindSQLClassInfo(const TClass *cl)
 TSQLClassInfo *TSQLFile::RequestSQLClassInfo(const char *clname, Int_t version)
 {
    TSQLClassInfo *info = FindSQLClassInfo(clname, version);
-   if (info != 0)
+   if (info)
       return info;
 
-   if (fSQL == 0)
-      return 0;
+   if (!fSQL)
+      return nullptr;
 
    Long64_t maxid = 0;
 
-   if (fSQLClassInfos != 0) {
+   if (fSQLClassInfos) {
       TIter iter(fSQLClassInfos);
-      info = 0;
-      while ((info = (TSQLClassInfo *)iter()) != 0) {
+      while ((info = (TSQLClassInfo *)iter()) != nullptr) {
          if (info->GetClassId() > maxid)
             maxid = info->GetClassId();
       }
@@ -1834,7 +1825,7 @@ TSQLClassInfo *TSQLFile::RequestSQLClassInfo(const char *clname, Int_t version)
    info->SetClassTableName(DefineTableName(clname, version, kFALSE));
    info->SetRawTableName(DefineTableName(clname, version, kTRUE));
 
-   if (fSQLClassInfos == 0)
+   if (!fSQLClassInfos)
       fSQLClassInfos = new TList;
    fSQLClassInfos->Add(info);
 
@@ -1895,12 +1886,12 @@ TString TSQLFile::DefineTableName(const char *clname, Int_t version, Bool_t rawt
 
 Bool_t TSQLFile::HasTable(const char *name)
 {
-   if (fSQLClassInfos == 0)
+   if (!fSQLClassInfos)
       return kFALSE;
 
    TIter iter(fSQLClassInfos);
-   TSQLClassInfo *info = 0;
-   while ((info = (TSQLClassInfo *)iter()) != 0) {
+   TSQLClassInfo *info = nullptr;
+   while ((info = (TSQLClassInfo *)iter()) != nullptr) {
       if (strcmp(info->GetClassTableName(), name) == 0)
          return kTRUE;
       if (strcmp(info->GetRawTableName(), name) == 0)
@@ -1923,7 +1914,7 @@ TSQLClassInfo *TSQLFile::RequestSQLClassInfo(const TClass *cl)
 
 void TSQLFile::ReadSQLClassInfos()
 {
-   if (fSQL == 0)
+   if (!fSQL)
       return;
 
    fIdsTableExists = SQLTestTable(sqlio::IdsTable);
@@ -1939,10 +1930,10 @@ void TSQLFile::ReadSQLClassInfos()
 
    TSQLResult *res = SQLQuery(sqlcmd.Data(), 1);
 
-   TSQLRow *row = 0;
+   TSQLRow *row = nullptr;
 
-   if (res != 0)
-      while ((row = res->Next()) != 0) {
+   if (res)
+      while ((row = res->Next()) != nullptr) {
          Long64_t tableid = sqlio::atol64(row->GetField(0));
          Int_t version = atoi(row->GetField(1));
 
@@ -1952,7 +1943,7 @@ void TSQLFile::ReadSQLClassInfos()
          TSQLClassInfo *info = new TSQLClassInfo(tableid, classname, version);
          info->SetClassTableName(classtable);
 
-         if (fSQLClassInfos == 0)
+         if (!fSQLClassInfos)
             fSQLClassInfos = new TList;
          fSQLClassInfos->Add(info);
 
@@ -1961,17 +1952,17 @@ void TSQLFile::ReadSQLClassInfos()
    delete res;
 
    TIter next(fSQLClassInfos);
-   TSQLClassInfo *info = 0;
+   TSQLClassInfo *info = nullptr;
 
-   while ((info = (TSQLClassInfo *)next()) != 0) {
+   while ((info = (TSQLClassInfo *)next()) != nullptr) {
       sqlcmd.Form("SELECT * FROM %s%s%s WHERE %s%s%s = %lld ORDER BY %s%s%s", quote, sqlio::IdsTable, quote, quote,
                   sqlio::IT_TableID, quote, info->GetClassId(), quote, sqlio::IT_SubID, quote);
       res = SQLQuery(sqlcmd.Data(), 1);
 
-      TObjArray *cols = 0;
+      TObjArray *cols = nullptr;
 
-      if (res != 0)
-         while ((row = res->Next()) != 0) {
+      if (res)
+         while ((row = res->Next()) != nullptr) {
 
             Int_t typ = atoi(row->GetField(2));
 
@@ -1980,7 +1971,7 @@ void TSQLFile::ReadSQLClassInfos()
             const char *info2 = row->GetField(5);
 
             if (typ == TSQLStructure::kIdColumn) {
-               if (cols == 0)
+               if (!cols)
                   cols = new TObjArray;
                cols->Add(new TSQLClassColumnInfo(fullname, sqlname, info2));
             }
@@ -1998,8 +1989,8 @@ void TSQLFile::ReadSQLClassInfos()
 
    res = SQLQuery(sqlcmd.Data(), 1);
 
-   if (res != 0)
-      while ((row = res->Next()) != 0) {
+   if (res)
+      while ((row = res->Next()) != nullptr) {
          Long64_t tableid = sqlio::atol64(row->GetField(0));
          Int_t version = atoi(row->GetField(1));
 
@@ -2008,10 +1999,10 @@ void TSQLFile::ReadSQLClassInfos()
 
          TSQLClassInfo *info2 = FindSQLClassInfo(classname, version);
 
-         if (info2 == 0) {
+         if (!info2) {
             info2 = new TSQLClassInfo(tableid, classname, version);
 
-            if (fSQLClassInfos == 0)
+            if (!fSQLClassInfos)
                fSQLClassInfos = new TList;
             fSQLClassInfos->Add(info2);
          }
@@ -2031,7 +2022,7 @@ void TSQLFile::ReadSQLClassInfos()
 void TSQLFile::AddIdEntry(Long64_t tableid, Int_t subid, Int_t type, const char *name, const char *sqlname,
                           const char *info)
 {
-   if ((fSQL == 0) || !IsWritable())
+   if (!fSQL || !IsWritable())
       return;
 
    TString sqlcmd;
@@ -2071,15 +2062,15 @@ void TSQLFile::AddIdEntry(Long64_t tableid, Int_t subid, Int_t type, const char 
 
 Bool_t TSQLFile::CreateClassTable(TSQLClassInfo *sqlinfo, TObjArray *colinfos)
 {
-   if (sqlinfo == 0)
+   if (!sqlinfo)
       return kFALSE;
 
    // this is normal situation, when no extra column infos was created when not necessary
-   if (colinfos == 0)
+   if (!colinfos)
       return sqlinfo->IsClassTableExist();
 
    if (sqlinfo->IsClassTableExist()) {
-      if (colinfos != 0) {
+      if (colinfos) {
          colinfos->Delete();
          delete colinfos;
          // Error("CreateClassTable","Why colinfos for table %s", sqlinfo->GetClassTableName());
@@ -2103,7 +2094,7 @@ Bool_t TSQLFile::CreateClassTable(TSQLClassInfo *sqlinfo, TObjArray *colinfos)
    Bool_t first = kTRUE;
    Bool_t forcequote = IsOracle();
    Int_t colid = 0;
-   while ((col = (TSQLClassColumnInfo *)iter()) != 0) {
+   while ((col = (TSQLClassColumnInfo *)iter()) != nullptr) {
       if (!first)
          sqlcmd += ", ";
       else
@@ -2153,7 +2144,7 @@ Bool_t TSQLFile::CreateClassTable(TSQLClassInfo *sqlinfo, TObjArray *colinfos)
 
 Bool_t TSQLFile::CreateRawTable(TSQLClassInfo *sqlinfo)
 {
-   if (sqlinfo == 0)
+   if (!sqlinfo)
       return kFALSE;
 
    if (sqlinfo->IsRawTableExist())
@@ -2199,7 +2190,7 @@ Bool_t TSQLFile::CreateRawTable(TSQLClassInfo *sqlinfo)
 
 Bool_t TSQLFile::VerifyLongStringTable()
 {
-   if (fSQL == 0)
+   if (!fSQL)
       return kFALSE;
 
    if (SQLTestTable(sqlio::StringsTable))
@@ -2237,7 +2228,7 @@ TString TSQLFile::CodeLongString(Long64_t objid, Int_t strid)
 
 Int_t TSQLFile::IsLongStringCode(Long64_t objid, const char *value)
 {
-   if (value == 0)
+   if (!value)
       return 0;
    if (strlen(value) < strlen(sqlio::LongStrPrefix) * 3 + 6)
       return 0;
@@ -2295,10 +2286,10 @@ Bool_t TSQLFile::GetLongString(Long64_t objid, Int_t strid, TString &value)
             quote, SQLObjectIdColumn(), quote, objid, quote, SQLStrIdColumn(), quote, strid);
 
    TSQLResult *res = SQLQuery(cmd.Data(), 1);
-   if (res == 0)
+   if (!res)
       return kFALSE;
    TSQLRow *row = res->Next();
-   if (row == 0) {
+   if (!row) {
       delete res;
       return kFALSE;
    }
@@ -2317,7 +2308,7 @@ Bool_t TSQLFile::GetLongString(Long64_t objid, Int_t strid, TString &value)
 
 Long64_t TSQLFile::VerifyObjectTable()
 {
-   if (fSQL == 0)
+   if (!fSQL)
       return -1;
 
    Long64_t maxid = -1;
@@ -2356,7 +2347,7 @@ Long64_t TSQLFile::VerifyObjectTable()
 
 Bool_t TSQLFile::SQLObjectInfo(Long64_t objid, TString &clname, Version_t &version)
 {
-   if (fSQL == 0)
+   if (!fSQL)
       return kFALSE;
 
    TString sqlcmd;
@@ -2364,17 +2355,17 @@ Bool_t TSQLFile::SQLObjectInfo(Long64_t objid, TString &clname, Version_t &versi
    sqlcmd.Form("SELECT %s%s%s, %s%s%s FROM %s%s%s WHERE %s%s%s=%lld", quote, sqlio::OT_Class, quote, quote,
                sqlio::OT_Version, quote, quote, sqlio::ObjectsTable, quote, quote, SQLObjectIdColumn(), quote, objid);
    TSQLResult *res = SQLQuery(sqlcmd.Data(), 1);
-   if (res == 0)
+   if (!res)
       return kFALSE;
    TSQLRow *row = res->Next();
-   if (row != 0) {
+   if (row) {
       clname = row->GetField(0);
       version = atoi(row->GetField(1));
    }
 
    delete row;
    delete res;
-   return row != 0;
+   return row != nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2383,8 +2374,8 @@ Bool_t TSQLFile::SQLObjectInfo(Long64_t objid, TString &clname, Version_t &versi
 
 TObjArray *TSQLFile::SQLObjectsInfo(Long64_t keyid)
 {
-   if (fSQL == 0)
-      return 0;
+   if (!fSQL)
+      return nullptr;
 
    TString sqlcmd;
    const char *quote = SQLIdentifierQuote();
@@ -2392,9 +2383,9 @@ TObjArray *TSQLFile::SQLObjectsInfo(Long64_t keyid)
                SQLObjectIdColumn(), quote, quote, sqlio::OT_Class, quote, quote, sqlio::OT_Version, quote, quote,
                sqlio::ObjectsTable, quote, quote, SQLKeyIdColumn(), quote, keyid, quote, SQLObjectIdColumn(), quote);
 
-   TObjArray *arr = 0;
+   TObjArray *arr = nullptr;
 
-   if (fLogFile != 0)
+   if (fLogFile)
       *fLogFile << sqlcmd << std::endl;
    if (gDebug > 2)
       Info("SQLObjectsInfo", "%s", sqlcmd.Data());
@@ -2402,7 +2393,7 @@ TObjArray *TSQLFile::SQLObjectsInfo(Long64_t keyid)
 
    TSQLStatement *stmt = SQLStatement(sqlcmd.Data(), 1000);
 
-   if (stmt != 0) {
+   if (stmt) {
       stmt->Process();
       stmt->StoreResult();
 
@@ -2412,7 +2403,7 @@ TObjArray *TSQLFile::SQLObjectsInfo(Long64_t keyid)
          Int_t version = stmt->GetInt(2);
 
          TSQLObjectInfo *info = new TSQLObjectInfo(objid, clname, version);
-         if (arr == 0)
+         if (!arr)
             arr = new TObjArray();
          arr->Add(info);
       }
@@ -2422,11 +2413,11 @@ TObjArray *TSQLFile::SQLObjectsInfo(Long64_t keyid)
    }
 
    TSQLResult *res = SQLQuery(sqlcmd.Data(), 1);
-   if (res == 0)
-      return 0;
+   if (!res)
+      return nullptr;
 
-   TSQLRow *row = 0;
-   while ((row = res->Next()) != 0) {
+   TSQLRow *row = nullptr;
+   while ((row = res->Next()) != nullptr) {
       Long64_t objid = atoi(row->GetField(0));
       const char *clname = row->GetField(1);
       Int_t version = atoi(row->GetField(2));
@@ -2462,7 +2453,7 @@ TSQLResult *TSQLFile::GetNormalClassData(Long64_t objid, TSQLClassInfo *sqlinfo)
 TSQLResult *TSQLFile::GetNormalClassDataAll(Long64_t minobjid, Long64_t maxobjid, TSQLClassInfo *sqlinfo)
 {
    if (!sqlinfo->IsClassTableExist())
-      return 0;
+      return nullptr;
    TString sqlcmd;
    const char *quote = SQLIdentifierQuote();
    sqlcmd.Form("SELECT * FROM %s%s%s WHERE %s%s%s BETWEEN %lld AND %lld ORDER BY %s%s%s", quote,
@@ -2477,7 +2468,7 @@ TSQLResult *TSQLFile::GetNormalClassDataAll(Long64_t minobjid, Long64_t maxobjid
 TSQLResult *TSQLFile::GetBlobClassData(Long64_t objid, TSQLClassInfo *sqlinfo)
 {
    if (!sqlinfo->IsRawTableExist())
-      return 0;
+      return nullptr;
    TString sqlcmd;
    const char *quote = SQLIdentifierQuote();
    sqlcmd.Form("SELECT %s, %s FROM %s%s%s WHERE %s%s%s=%lld ORDER BY %s%s%s", sqlio::BT_Field, sqlio::BT_Value, quote,
@@ -2493,7 +2484,7 @@ TSQLResult *TSQLFile::GetBlobClassData(Long64_t objid, TSQLClassInfo *sqlinfo)
 TSQLStatement *TSQLFile::GetBlobClassDataStmt(Long64_t objid, TSQLClassInfo *sqlinfo)
 {
    if (!sqlinfo->IsRawTableExist())
-      return 0;
+      return nullptr;
 
    TString sqlcmd;
    const char *quote = SQLIdentifierQuote();
@@ -2501,15 +2492,15 @@ TSQLStatement *TSQLFile::GetBlobClassDataStmt(Long64_t objid, TSQLClassInfo *sql
                sqlinfo->GetRawTableName(), quote, quote, SQLObjectIdColumn(), quote, objid, quote, SQLRawIdColumn(),
                quote);
 
-   if (fLogFile != 0)
+   if (fLogFile)
       *fLogFile << sqlcmd << std::endl;
    if (gDebug > 2)
       Info("BuildStatement", "%s", sqlcmd.Data());
    fQuerisCounter++;
 
    TSQLStatement *stmt = SQLStatement(sqlcmd.Data(), 1000);
-   if (stmt == 0)
-      return 0;
+   if (!stmt)
+      return nullptr;
 
    stmt->Process();
 
@@ -2523,7 +2514,7 @@ TSQLStatement *TSQLFile::GetBlobClassDataStmt(Long64_t objid, TSQLClassInfo *sql
 
 Long64_t TSQLFile::StoreObjectInTables(Long64_t keyid, const void *obj, const TClass *cl)
 {
-   if (fSQL == 0)
+   if (!fSQL)
       return -1;
 
    Long64_t objid = VerifyObjectTable();
@@ -2595,7 +2586,7 @@ const char *TSQLFile::SQLIntType() const
 Long64_t TSQLFile::DirCreateEntry(TDirectory *dir)
 {
    TDirectory *mother = dir->GetMotherDir();
-   if (mother == 0)
+   if (!mother)
       mother = this;
 
    // key will be added to mother directory
@@ -2680,7 +2671,6 @@ void TSQLFile::DirWriteHeader(TDirectory *dir)
 
 void TSQLFile::Streamer(TBuffer &b)
 {
-
    TString sbuf;
 
    if (b.IsReading()) {
