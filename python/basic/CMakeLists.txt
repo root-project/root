@@ -20,5 +20,6 @@ if(ROOT_python_FOUND)
                     MACRO PyROOT_overloadtests.py
                     COPY_TO_BUILDDIR Overloads.C Overloads.h
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ Overloads.C+
+                    ENVIRONMENT EXP_PYROOT=${exp_pyroot}
                     ${PYTESTS_WILLFAIL})
 endif()
