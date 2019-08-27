@@ -18,27 +18,18 @@
 
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldVisitor.hxx>
+#include <ROOT/RNTupleBrowser.hxx>
 
+#include <limits.h>
+#include <TH1.h>
+
+#include <cassert>
+#include <cmath>
 
 class TBrowser;
 
 namespace ROOT {
 namespace Experimental {
-   class RNTupleBrowser;
-   
-   
-// Indicate the type of data a field contains. It is used to deduce if a histogram for that field can/should be displayed and also how.
-enum fieldDatatype {
-   fieldDatatype_nonNumeric,   //0
-   fieldDatatype_float,        //1
-   fieldDatatype_double,       //2
-   fieldDatatype_Int32,        //3
-   fieldDatatype_UInt32,       //4
-   fieldDatatype_UInt64,       //5
-   fieldDatatype_notkLeaf,     //6
-   fieldDatatype_parentIsVec,  //7
-   fieldDatatype_noHist        //8, default one, has always this value when the first Visit-function is called.
-};
 
 // clang-format off
 /**
@@ -46,45 +37,92 @@ enum fieldDatatype {
 \ingroup NTupleBrowse
 \brief Visitor class which traverses fields to display them on the TBrowser.
     
-RBrowseVisitor uses information about a field and creates an instance of RNTupleFieldElement or RNTupleFieldElementFolder.
+RBrowseVisitor uses information about a field and creates an instance of RNTupleBrowseLeaf or RNTupleBrowseFolder.
 */
 // clang-format on
-
 class RBrowseVisitor: public Detail::RNTupleVisitor {
 private:
-   /// Is passed down to RNTupleFieldElement or RNTupleFieldElementFolder.
+   /// Is passed down to RNTupleBrowseLeaf or RNTupleBrowseFolder.
    TBrowser*            fBrowser;
-   /// Keeps track of data type stored in field.
-   fieldDatatype        fType;
-   /// Used to save created instance of RNTupleFieldElement or RNTupleFieldElementFolder in RNTupleBrowser and also passed down to RNTupleFieldElement and RNTupleFieldElementFolder.
+   /// Used to save created instance of RNTupleBrowseLeaf or RNTupleBrowseFolder in RNTupleBrowser and also passed down to RNTupleBrowseLeaf and RNTupleBrowseFolder.
    RNTupleBrowser*      fNTupleBrowserPtr;
    
 public:
-   RBrowseVisitor(TBrowser* parb, RNTupleBrowser* parntplb): fBrowser{parb}, fType{fieldDatatype_noHist}, fNTupleBrowserPtr{parntplb} {}
+   RBrowseVisitor(TBrowser* parb, RNTupleBrowser* parntplb): fBrowser{parb}, fNTupleBrowserPtr{parntplb} {}
    
-   /// Creates instance of RNTupleFieldElement or RNTupleFieldElementFolder and displays it in TBrowser.
+   /// Creates instance of RNTupleBrowseLeaf or RNTupleBrowseFolder and displays it in TBrowser.
    void VisitField(const Detail::RFieldBase &field, int level) final;
    // Do nothing for RootField
    void VisitRootField(const RFieldRoot &/*field*/, int /*level*/) final { }
-   void VisitFloatField(const RField<float> &field, int level) {
-      fType = fieldDatatype_float;
-      VisitField(field, level);
-   }
-   void VisitDoubleField(const RField<double> &field, int level) {
-      fType = fieldDatatype_double;
-      VisitField(field, level);
-   }
-   void VisitInt32Field(const RField<std::int32_t> &field, int level) {
-      fType = fieldDatatype_Int32;
-      VisitField(field, level);
-   }
-   void VisitUInt32Field(const RField<std::uint32_t> &field, int level) {
-      fType = fieldDatatype_UInt32;
-      VisitField(field, level);
-   }
-   void VisitUInt64Field(const RField<std::uint64_t> &field, int level) {
-      fType = fieldDatatype_UInt64;
-      VisitField(field, level);
+};
+
+   
+   
+// clang-format off
+/**
+\class ROOT::Experimental::RDisplayHistoVisitor
+\ingroup NTupleBrowse
+\brief Visitor class which draws a histogram for fields with numerical data.
+    
+ Visits fields displayed in TBrowser and draws a histogram for appropriate fields. Instances of this class are created when a field without subfields is double-clicked in TBrowser. (called by RNTupleBrowseLeaf::Browse(TBrowser* b))
+*/
+// clang-format on
+class RDisplayHistoVisitor: public Detail::RNTupleVisitor {
+private:
+   /// Allows to access RNTupleBrowser::fCurrentTH1F.
+   RNTupleBrowser*      fNTupleBrowserPtr;
+   /// Allows to get entries of a field which will be displayed in the histogram.
+   RNTupleReader*       fNTupleReaderPtr; // Note: fNTupleBrowserPtr->GetReaderPtr() returns the last created RNTupleReader. This can be another RNTupleReader than the one which contains information about the visited field. Therefore a separate member had to be created.
+
+public:
+   RDisplayHistoVisitor(RNTupleBrowser* parntplb, RNTupleReader* readerPtr):
+      fNTupleBrowserPtr{parntplb},
+      fNTupleReaderPtr{readerPtr}
+      {}
+   
+   void VisitField(const Detail::RFieldBase &/*field*/, int /*level*/) final { }
+   void VisitRootField(const RFieldRoot &/*field*/, int /*level*/) final { }
+   void VisitFloatField(const RField<float> &field, int /*level*/) { DrawHistogram<float>(field, false); }
+   void VisitDoubleField(const RField<double> &field, int /*level*/) { DrawHistogram<double>(field, false); }
+   void VisitInt32Field(const RField<std::int32_t> &field, int /*level*/) { DrawHistogram<std::int32_t>(field, true); }
+   void VisitUInt32Field(const RField<std::uint32_t> &field, int /*level*/) { DrawHistogram<std::uint32_t>(field, true); }
+   void VisitUInt64Field(const RField<std::uint64_t> &field, int /*level*/) { DrawHistogram<std::uint64_t>(field, true); }
+   
+   template <typename T>
+   void DrawHistogram(const Detail::RFieldBase &field, bool isIntegraltype)
+   {
+      // only leaf-fields should display a histogram.
+      if (field.GetStructure() != kLeaf)
+         return;
+      // Currently subfield of a vector field shouldn't display a histogram. TODO (lesimon): think if it should be displayed and if so how.
+      if (std::string(field.GetParent()->GetType(), 0, 12).compare("std::vector<") == 0)
+         return;
+      
+      // for now only print fields directly attached to RootField, until RNTupleView is fixed. TODO(lesimon): Remove this later.
+      if (field.GetLevelInfo().GetLevel() != 1)
+         return;
+      
+      auto ntupleView = fNTupleReaderPtr->GetView<T>(field.GetName());
+      
+      // if min = 3 and max = 10, a histogram with a x-axis range of 3 to 10 is created with 8 bins (3, 4, 5, 6, 7, 8, 9, 10)
+      double max{LONG_MIN}, min{LONG_MAX};
+      for (auto i : fNTupleReaderPtr->GetViewRange()) {
+         max = std::max(max, static_cast<double>(ntupleView(i)));
+         min = std::min(min, static_cast<double>(ntupleView(i)));
+      }
+      if (min > max) return; // no histogram for empty field.
+      
+      // It doesn't make sense to create 100 bins if only integers from 3 to 10 are used to fill the histogram.
+      int nbins = isIntegraltype ? std::min(100, static_cast<int>(std::round(max - min)+1)) : 100;
+      // deleting the old TH1-histogram after creating a new one makes cling complain if both histograms have the same name.
+      delete fNTupleBrowserPtr->fCurrentTH1F;
+      auto h1 = new TH1F(field.GetName().c_str(), field.GetName().c_str(), nbins, min - 0.5, max + 0.5);
+      for (auto i : fNTupleReaderPtr->GetViewRange()) {
+         h1->Fill(ntupleView(i));
+      }
+      h1->Draw();
+      fNTupleBrowserPtr->fCurrentTH1F = h1;
+      
    }
 };
    
@@ -92,3 +130,5 @@ public:
 } // namespace ROOT
 
 #endif /* ROOT7_RBrowseVisitor */
+
+

@@ -10,4 +10,5 @@ if(NOT dataframe)
   return()
 endif()
 
-ROOT_ADD_GTEST(ntuple_browse ntuple_browse.cxx LIBRARIES Hist ROOTNTuple ROOTNTupleBrowse)
+ROOT_ADD_GTEST(ntuple_browse ntuple_browse.cxx LIBRARIES ROOTNTupleBrowse)
+

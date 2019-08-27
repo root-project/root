@@ -148,7 +148,8 @@ private:
 
 public:
    RPageSourceRoot(std::string_view ntupleName, RSettings settings);
-   RPageSourceRoot(std::string_view ntupleName, std::string_view path, TDirectory* directory = nullptr);
+   RPageSourceRoot(std::string_view ntupleName, std::string_view path);
+   RPageSourceRoot(TDirectory* directory);
    std::unique_ptr<RPageSource> Clone() const final;
    virtual ~RPageSourceRoot();
 

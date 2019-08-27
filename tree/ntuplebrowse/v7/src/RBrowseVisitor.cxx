@@ -14,37 +14,26 @@
  *************************************************************************/
 
 #include <ROOT/RBrowseVisitor.hxx>
-#include <ROOT/RNTupleBrowser.hxx>
 
 //------------------------ RBrowseVisitor -------------------------------
 
 void ROOT::Experimental::RBrowseVisitor::VisitField(const ROOT::Experimental::Detail::RFieldBase &field, int level)
 {
-   // only print direct subfields. fType is reset to its default value.
+   // only print direct subfields (direct subfield <=> (level == 1)).
    if (level != 1) {
-      fType = fieldDatatype_noHist;
       return;
    }
    
-   // only leaf-fields should display a histogram. fType = fieldDatatype_notkLeaf ensures no histogram is displayed.
-   if (field.GetStructure() != kLeaf)
-      fType = fieldDatatype_notkLeaf;
-   
-   // Currently subfield of a vector field shouldn't display a histogram. TODO (lesimon): think if it should be displayed and if so how.
-   if (std::string(field.GetParent()->GetType(), 0, 12).compare("std::vector<") == 0) { fType = fieldDatatype_parentIsVec;
-   }
-   
-   // if the field has no children/subfields a RNTupleFielElement is created, which displays a histrogram upon double-click. If the field has children/subfields a RNTupleElementFolder is created, which displays it's subfields when double-clicked.
+   // if the field has no children/subfields a RNTupleBrowseLeaf is created, which displays a histrogram upon double-click. If the field has children/subfields a RNTupleBrowseFolder is created, which displays it's subfields when double-clicked.
    if (field.GetLevelInfo().GetNumChildren() == 0) {
-      ROOT::Experimental::RNTupleFieldElement* f = new ROOT::Experimental::RNTupleFieldElement(field.GetName(), fNTupleBrowserPtr, fType);
+      ROOT::Experimental::RNTupleBrowseLeaf* f = new ROOT::Experimental::RNTupleBrowseLeaf(fNTupleBrowserPtr, &field);
       f->AddBrowse(fBrowser);
       fNTupleBrowserPtr->fNTupleBrowsePtrVec.emplace_back(f);
    } else {
-      ROOT::Experimental::RNTupleFieldElementFolder* f = new ROOT::Experimental::RNTupleFieldElementFolder(field.GetName(), &field, fNTupleBrowserPtr);
+      ROOT::Experimental::RNTupleBrowseFolder* f = new ROOT::Experimental::RNTupleBrowseFolder(fNTupleBrowserPtr, &field);
       f->AddBrowse(fBrowser);
       fNTupleBrowserPtr->fNTupleBrowsePtrVec.emplace_back(f);
    }
-   
-   // fType is set to its default value, or else it's possible that e.g. std::string field retains the previous fType fieldDatatype_float. fType is only changed when it passes a field with numerical value, non-kLeaf, or field which has a std::vector parent.
-   fType = fieldDatatype_noHist;
 }
+
+

@@ -17,9 +17,9 @@
 #pragma link C++ nestedtypedefs;
 #pragma link C++ nestedclasses;
 
-// allows the classes below to inherit from TNamed
+// Generate dictionaries for following classes
 #pragma link C++ class ROOT::Experimental::RNTupleBrowser;
-#pragma link C++ class ROOT::Experimental::RNTupleFieldElementFolder;
-#pragma link C++ class ROOT::Experimental::RNTupleFieldElement;
+#pragma link C++ class ROOT::Experimental::RNTupleBrowseFolder;
+#pragma link C++ class ROOT::Experimental::RNTupleBrowseLeaf;
 
 #endif

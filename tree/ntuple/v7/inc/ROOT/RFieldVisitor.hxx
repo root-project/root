@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-#include "ROOT/RField.hxx"
+#include <ROOT/RField.hxx>
 
 namespace ROOT {
 namespace Experimental {

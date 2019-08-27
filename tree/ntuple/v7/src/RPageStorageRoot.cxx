@@ -236,13 +236,26 @@ ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view nt
 {
 }
 
-ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, std::string_view path, TDirectory* directory)
+ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, std::string_view path)
    : RPageSource(ntupleName)
+   , fPageAllocator(std::make_unique<RPageAllocatorKey>())
+   , fPagePool(std::make_shared<RPagePool>())
+   , fDirectory(nullptr)
+{
+   TFile *file = TFile::Open(std::string(path).c_str(), "READ");
+   fSettings.fFile = file;
+   fSettings.fTakeOwnership = true;
+}
+
+ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(TDirectory* directory)
+   : RPageSource(directory->GetName())
    , fPageAllocator(std::make_unique<RPageAllocatorKey>())
    , fPagePool(std::make_shared<RPagePool>())
    , fDirectory(directory)
 {
-   TFile *file = TFile::Open(std::string(path).c_str(), "READ");
+   std::string fullPath = fDirectory->GetPath();
+   std::string fileName = std::string(fullPath, 0, fullPath.find(".root") + 5);
+   TFile *file = TFile::Open(fileName.c_str(), "READ");
    fSettings.fFile = file;
    fSettings.fTakeOwnership = true;
 }

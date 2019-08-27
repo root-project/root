@@ -34,7 +34,7 @@ class TGPictureButton;
 
 namespace ROOT {
 namespace Experimental {
-   class RNTupleBrowser;
+class RNTupleBrowser;
 } // namespace Experimental
 } // namespace ROOT
 
