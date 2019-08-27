@@ -477,8 +477,7 @@ if(ROOT_python_FOUND)
   set(roofit-rf104_classfactory-depends tutorial-roofit-rf104_classfactory) #Race condition
 
   #---Tutorials expected to fail in PyROOT experimental
-  set(pyexp_fail tutorial-pyroot-benchmarks-py
-                 tutorial-pyroot-pyroot002_TTreeAsMatrix-py
+  set(pyexp_fail tutorial-pyroot-pyroot002_TTreeAsMatrix-py
                  tutorial-vecops-vo004_SortAndSelect-py
                  tutorial-vecops-vo005_Combinations-py)
 
