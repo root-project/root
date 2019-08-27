@@ -1632,7 +1632,7 @@ void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
 /// <tr><td> `Components(const RooArgSet& compSet)` <td> As above, but pass a RooArgSet of the components themselves.
 ///
 /// <tr><th><th> Plotting control
-/// <tr><td> `DrawOption(const char* opt)`     <td> Select ROOT draw option for resulting TGraph object
+/// <tr><td> `DrawOption(const char* opt)`     <td> Select ROOT draw option for resulting TGraph object. Currently supported options are "F" (fill), "L" (line), and "P" (points). <i>Caution: Choosing option "P" will cause RooFit to plot (and treat) this pdf as if it were data! This is intended for plotting "corrected data"-type pdfs such as "data-minus-background" or unfolded datasets.</i> 
 ///
 /// <tr><td> `LineStyle(Int_t style)`          <td> Select line style by ROOT line style code, default is solid
 ///
