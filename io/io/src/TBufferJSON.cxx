@@ -1435,7 +1435,19 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
 
          auto size = std::stoi(stack->fValues[0]);
 
-         if ((stack->fValues.size() == 1) && ((size > 1) || (fValue.Index("[") == 0))) {
+         bool trivial_format = false;
+
+         if ((stack->fValues.size() == 1) && ((size > 1) || ((fValue.Length() > 1) && (fValue[0]=='[')))) {
+            // prevent case of vector<vector<value_class>>
+            const auto proxy = cl->GetCollectionProxy();
+            TClass *value_class = proxy ? proxy->GetValueClass() : nullptr;
+            if (value_class && TClassEdit::IsStdClass(value_class->GetName()) && (value_class->GetCollectionType() != ROOT::kNotSTL))
+               trivial_format = false;
+            else
+               trivial_format = true;
+         }
+
+         if (trivial_format) {
             // case of simple vector, array already in the value
             stack->fValues.clear();
             if (fValue.Length() == 0) {
