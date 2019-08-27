@@ -884,7 +884,11 @@ class TestClassDATATYPES:
             if not PYTEST_MIGRATION:
                 arr = arr.shape.fromaddress(arr.itemaddress(0), self.N)
             if PYTEST_MIGRATION:
-                arr.SetSize(self.N)
+                if self.exp_pyroot:
+                    # In new Cpyy, buffers have a reshape method
+                    arr.reshape((self.N,))
+                else:
+                    arr.SetSize(self.N)
             assert len(arr) == self.N
 
             l = list(arr)
