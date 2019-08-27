@@ -129,7 +129,7 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
          }
          const auto &pageRange = cluster.second.GetPageRange(column.first);
          auto idx = cluster2Idx[cluster.first];
-         for (const auto page : pageRange.fPageInfos) {
+         for (const auto &page : pageRange.fPageInfos) {
             bytesOnStorage += page.fLocator.fBytesOnStorage;
             bytesInMemory += page.fNElements * elementSize;
             clusters[idx].fBytesOnStorage += page.fLocator.fBytesOnStorage;
