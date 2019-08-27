@@ -78,7 +78,7 @@ class BracketAdapterWithBranch {
     {
     }
 
-    constexpr double operator[](std::size_t i) const noexcept {
+    inline double operator[](std::size_t i) const noexcept {
       return _batchEmpty ? _payload : _pointer[i];
     }
 

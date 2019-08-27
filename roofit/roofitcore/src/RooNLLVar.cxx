@@ -510,7 +510,7 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
   }
 
 
-  return {kahanProb.Sum(), kahanProb.Carry(), kahanWeight.Sum()};
+  return std::tuple<double, double, double>{kahanProb.Sum(), kahanProb.Carry(), kahanWeight.Sum()};
 }
 
 
@@ -535,5 +535,5 @@ std::tuple<double, double, double> RooNLLVar::computeScalar(std::size_t stepSize
     kahanProb.Add(term);
   }
 
-  return {kahanProb.Sum(), kahanProb.Carry(), kahanWeight.Sum()};
+  return std::tuple<double, double, double>{kahanProb.Sum(), kahanProb.Carry(), kahanWeight.Sum()};
 }

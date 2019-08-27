@@ -129,7 +129,7 @@ protected:
 
   class LegacyIterator : public TIterator {
     public:
-      LegacyIterator(const std::vector<RooCatType*>& vec) : _vec(vec), index(-1) { }
+      LegacyIterator(const std::vector<RooCatType*>& vec) : _vec(&vec), index(-1) { }
       const TCollection *GetCollection() const override {
         return nullptr;
       }
@@ -141,12 +141,20 @@ protected:
         index = -1;
       }
       TObject* operator*() const override {
-        // Need to const_cast because TIterator interface broken
-        return 0 <= index && index < (int)_vec.size() ? const_cast<RooCatType*>(_vec[index]) : nullptr;
+        // Need to const_cast, unfortunately because TIterator interface is too permissive
+        return 0 <= index && index < (int)_vec->size() ? const_cast<RooCatType*>((*_vec)[index]) : nullptr;
+      }
+      LegacyIterator& operator=(const LegacyIterator&) = default;
+      TIterator& operator=(const TIterator& other) override {
+        auto otherLeg = dynamic_cast<LegacyIterator*>(*other);
+        if (otherLeg)
+          return this->operator=(*otherLeg);
+
+        throw std::logic_error("Cannot assign to category iterators from incompatible types.");
       }
 
     private:
-      const std::vector<RooCatType*>& _vec;
+      const std::vector<RooCatType*>* _vec;
       int index;
   };
 
