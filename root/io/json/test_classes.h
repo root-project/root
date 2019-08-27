@@ -25,13 +25,13 @@
 
 class TJsonEx1 {
    protected:
-     bool       fBool;
-     char       fChar;
-     short      fShort;
-     int        fInt;      // *OPTION={SetMethod="SetI";GetMethod="GetI"}
-     long       fLong;     // *OPTION={SetMethod="SetLong";GetMethod="GetLong"}
-     float      fFloat;
-     double     fDouble;
+     bool       fBool{false};
+     char       fChar{0};
+     short      fShort{0};
+     int        fInt{0};      // *OPTION={SetMethod="SetI";GetMethod="GetI"}
+     long       fLong{0};     // *OPTION={SetMethod="SetLong";GetMethod="GetLong"}
+     float      fFloat{0};
+     double     fDouble{0};
 
    public:
      int        GetI() { return fInt; }
@@ -40,16 +40,7 @@ class TJsonEx1 {
      void       SetI(int zn) { fInt = zn; }
      void       SetLong(long zn) { fLong = zn; }
 
-     TJsonEx1()
-     {
-        fBool = false;
-        fChar = 0;
-        fShort = 0;
-        fInt = 0;
-        fLong = 0;
-        fFloat = 0;
-        fDouble = 0;
-     }
+     TJsonEx1() = default;
      virtual ~TJsonEx1() {}
 
      void Init(int n = 1)
@@ -287,18 +278,14 @@ class TJsonEx3 {
 class TJsonEx4 : public TJsonEx1 {
    protected:
       char        fStr1[100];
-      const char* fStr2;
-      int         fDummy2;
-      const char* fStr3;
-      const char* fStr4;
+      const char* fStr2{nullptr};
+      int         fDummy2{0};
+      const char* fStr3{nullptr};
+      const char* fStr4{nullptr};
    public:
-      TJsonEx4() : TJsonEx1()
+      TJsonEx4()
       {
         memset(fStr1, 0, sizeof(fStr1));
-        fStr2 = nullptr;
-        fDummy2 = 0;
-        fStr3 = nullptr;
-        fStr4 = nullptr;
       }
 
       virtual ~TJsonEx4()
@@ -337,23 +324,19 @@ class TJsonEx5 {
      TJsonEx1    fObj1;
      TJsonEx2    fObj2;
 
-     TJsonEx1    *fPtr1;
-     TJsonEx2    *fPtr2;
+     TJsonEx1    *fPtr1{nullptr};
+     TJsonEx2    *fPtr2{nullptr};
 
      TJsonEx1    *fSafePtr1;   //->
      TJsonEx2    *fSafePtr2;   //->
 
    public:
      TJsonEx1    fObj3;
-     TJsonEx1    *fPtr3;
+     TJsonEx1    *fPtr3{nullptr};
      TJsonEx1    *fSafePtr3;   //->
 
      TJsonEx5()
      {
-        fPtr1 = nullptr;
-        fPtr2 = nullptr;
-        fPtr3 = nullptr;
-
         fSafePtr1 = new TJsonEx1;
         fSafePtr2 = new TJsonEx2;
         fSafePtr3 = new TJsonEx1;
@@ -534,8 +517,8 @@ class TJsonEx7 {
    public:
       std::string            fStr1;
       std::string            fStr2;
-      std::string           *fStrPtr1;
-      std::string           *fStrPtr2;
+      std::string           *fStrPtr1{nullptr};
+      std::string           *fStrPtr2{nullptr};
 
       std::string            fStrArr[3];
       std::string           *fStrPtrArr[3];
@@ -545,7 +528,7 @@ class TJsonEx7 {
       std::vector<bool>           fVectBool;
       std::vector<double>         fVectDoubleArr[3];
 
-      std::vector< double >      *fVectPtrDouble;
+      std::vector< double >      *fVectPtrDouble{nullptr};
       std::vector< double >      *fVectPtrDoubleArr[3];
 
       std::vector<TJsonEx1>        fVectEx1;
@@ -559,7 +542,7 @@ class TJsonEx7 {
 
       std::vector<TJsonEx11>      fVectEx11;
 
-      int fABC;
+      int                         fABC{0};
 
       std::vector<std::string>    fVectString;
       std::vector<std::string*>   fVectStringPtr;
@@ -589,17 +572,13 @@ class TJsonEx7 {
 
    TJsonEx7()
    {
-      fStrPtr1 = nullptr;
-      fStrPtr2 = nullptr;
 
-      fVectPtrDouble = nullptr;
       for (int n=0;n<3;n++) {
         fStrPtrArr[n] = nullptr;
         fVectPtrDoubleArr[n] = nullptr;
       }
 
       for (int n=0;n<10;n++) fBoolArr[n] = false;
-      fABC = 0;
 
       for (int k=0;k<16;++k)
          fBitsSet16.set(k, false);
@@ -757,14 +736,10 @@ class TJsonEx7 {
 
 class TJsonEx8 : public std::vector<int> {
    public:
-     int                    fInt;
+     int                    fInt{0};
      std::string            fStdString;
 
-   TJsonEx8()
-   {
-      fInt = 0;
-      fStdString = "";
-   }
+   TJsonEx8() = default;
 
    virtual ~TJsonEx8() {}
 
@@ -791,8 +766,8 @@ class TJsonEx8 : public std::vector<int> {
 
 class TJsonEx9 {
    public:
-      int fCnt;
-      TString* fStr;     //[fCnt]
+      int fCnt{0};
+      TString* fStr{nullptr};     //[fCnt]
       TString* fStr2[3]; //[fCnt]
 //      TString** fStr3;   //[fCnt]
       TString* fStr4[2][5]; //[fCnt]
@@ -807,8 +782,6 @@ class TJsonEx9 {
 
    TJsonEx9()
    {
-      fCnt = 0;
-      fStr = nullptr;
       for (int k=0;k<3;++k) {
          fStr2[k] = nullptr;
          fNm2[k] = nullptr;
@@ -936,7 +909,7 @@ public:
    std::vector<TJsonEx1> vect1;
    std::vector<TJsonEx9> vect9;
 
-   TJsonEx12() : vect1(), vect9() {}
+   TJsonEx12() = default;
    virtual ~TJsonEx12() {}
 
     void Init(int cnt = 7)
