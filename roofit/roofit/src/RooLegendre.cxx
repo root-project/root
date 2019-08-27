@@ -100,6 +100,66 @@ Double_t RooLegendre::evaluate() const
 #endif
 }
 
+//~ double assoc_legendre(unsigned l, unsigned m, double x) {
+   //~ // add  (-1)^m
+   //~ return (m%2 == 0) ? gsl_sf_legendre_Plm(l, m, x) : -gsl_sf_legendre_Plm(l, m, x);
+
+//~ }
+
+////////////////////////////////////////////////////////////////////////////////
+
+namespace LegendreBatchEvaluate {
+//Author: Emmanouil Michalainas, CERN 26 August 2019
+
+void compute(	size_t batchSize, const int l1, const int m1, const int l2, const int m2,
+              double * __restrict__ output,
+              double const * __restrict__ TH)
+{
+  double legendre1=1.0, legendreMinus1=1.0;
+  if (l1+m1 > 0) {
+    legendre1      = ROOT::Math::internal::legendre(l1,m1,1.0);
+    legendreMinus1 = ROOT::Math::internal::legendre(l1,m1,-1.0); 
+  }
+  if (l2+m2 > 0) {
+    legendre1      *= ROOT::Math::internal::legendre(l2,m2,1.0); 
+    legendreMinus1 *= ROOT::Math::internal::legendre(l2,m2,-1.0); 
+  }
+  
+  for (size_t i=0; i<batchSize; i++) {
+    if (TH[i] <= -1.0) {
+      output[i] = legendreMinus1;
+    } else if (TH[i] >= 1.0) {
+      output[i] = legendre1;
+    }
+    else {
+      output[i] = 1.0;
+      if (l1+m1 > 0) {
+        output[i] *= ROOT::Math::internal::legendre(l1,m1,TH[i]);
+      }
+      if (l2+m2 > 0) {
+        output[i] *= ROOT::Math::internal::legendre(l2,m2,TH[i]);
+      }
+    }
+  }
+}
+};
+
+RooSpan<double> RooLegendre::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
+  using namespace LegendreBatchEvaluate;
+  auto cthetaData = _ctheta.getValBatch(begin, batchSize);
+  batchSize = cthetaData.size();
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+
+  if (!cthetaData.empty()) {
+    compute(batchSize, _l1, _m1, _l2, _m2, output.data(), cthetaData.data());
+  }
+  else{
+    throw std::logic_error("Requested a batch computation, but no batch data available.");
+  }
+  return output;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace {
