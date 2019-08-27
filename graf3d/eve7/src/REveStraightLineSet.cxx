@@ -165,7 +165,7 @@ Int_t REveStraightLineSet::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    j["fLineStyle"] = fLineStyle;
    j["fMarkerSize"] = fMarkerSize;
    j["fMarkerStyle"] = fMarkerStyle;
-   printf("REveStraightLineSet::WriteCoreJson %d \n", ret);
+   // printf("REveStraightLineSet::WriteCoreJson %d \n", ret);
    return ret;
 }
 
@@ -177,7 +177,7 @@ void REveStraightLineSet::BuildRenderData()
    int nVertices =  fLinePlex.Size() * 2 + fMarkerPlex.Size();
    fRenderData = std::make_unique<REveRenderData>("makeStraightLineSet", 3 * nVertices, 0, nVertices);
 
-   printf("REveStraightLineSet::BuildRenderData id = %d \n", GetElementId());
+   // printf("REveStraightLineSet::BuildRenderData id = %d \n", GetElementId());
    REveChunkManager::iterator li(fLinePlex);
    while (li.next()) {
       Line_t* l = (Line_t*)li();
@@ -197,7 +197,7 @@ void REveStraightLineSet::BuildRenderData()
 
    REveElement::BuildRenderData();
 
-   printf("REveStraightLineSet::BuildRenderData size= %d\n", fRenderData->GetBinarySize());
+   // printf("REveStraightLineSet::BuildRenderData size= %d\n", fRenderData->GetBinarySize());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
