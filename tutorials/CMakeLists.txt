@@ -479,10 +479,6 @@ if(ROOT_python_FOUND)
   #---Tutorials expected to fail in PyROOT experimental
   set(pyexp_fail tutorial-pyroot-benchmarks-py
                  tutorial-pyroot-pyroot002_TTreeAsMatrix-py
-                 tutorial-roofit-rf106_plotdecoration-py
-                 tutorial-roofit-rf315_projectpdf-py
-                 tutorial-roofit-rf402_datahandling-py
-                 tutorial-roofit-rf610_visualerror-py
                  tutorial-vecops-vo004_SortAndSelect-py
                  tutorial-vecops-vo005_Combinations-py)
 

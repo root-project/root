@@ -101,7 +101,7 @@ if(roofit)
   ROOT_ADD_PYUNITTEST(pyroot_pyz_rooabscollection_len rooabscollection_len.py)
 
   # RooDataHist pythonisations
-  ROOT_ADD_PYUNITTEST(pyroot_pyz_roodatahist_ploton roodatahist_ploton.py ${PYTESTS_WILLFAIL})
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_roodatahist_ploton roodatahist_ploton.py)
 endif()
 
 # std::string_view backport in CPyCppyy
