@@ -1,14 +1,14 @@
 #include "TBufferJSON.h"
 #include "TArrayI.h"
 
-bool testReading(TArrayI &arr, TString &json) 
+bool testReading(TArrayI &arr, TString &json)
 {
    TArrayI *arr2 = nullptr;
 
    TBufferJSON::FromJSON(arr2, json);
-   if (!arr2) { 
-      cout << "Fail to read array from JSON" << endl; 
-      return false; 
+   if (!arr2) {
+      cout << "Fail to read array from JSON" << endl;
+      return false;
    }
    if (arr2->GetSize() != arr.GetSize()) {
       cout << "Array sizes mismatch " << arr.GetSize() << " != " << arr2->GetSize() << endl;
@@ -16,7 +16,7 @@ bool testReading(TArrayI &arr, TString &json)
       return false;
    }
 
-   for (int n=0;n<arr.GetSize();++n) 
+   for (int n=0;n<arr.GetSize();++n)
      if (arr.At(n) != arr2->At(n)) {
       cout << "Array content mismatch indx=" << n << "  " <<  arr.At(n) << " != " << arr2->At(n) << endl;
       delete arr2;
@@ -33,7 +33,7 @@ void runArrayCompress()
    // Check creation of JSON for object, where TObject is not first parent
    // Also verify instrumented custom streamer of TPolyMarker3D
 
-   TArrayI arr(100), *arr2;
+   TArrayI arr(100);
    for (Int_t n=0;n<arr.GetSize();++n) arr[n] = n;
 
    cout << "Plain and compressed array" << endl;
