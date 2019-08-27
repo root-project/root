@@ -20,8 +20,8 @@ class TXMLFile;
 class TKeyXML final : public TKey {
 
 private:
-   TKeyXML(const TKeyXML &);            // TKeyXML objects are not copiable.
-   TKeyXML &operator=(const TKeyXML &); // TKeyXML objects are not copiable.
+   TKeyXML(const TKeyXML &) = delete;            // TKeyXML objects are not copiable.
+   TKeyXML &operator=(const TKeyXML &) = delete; // TKeyXML objects are not copiable.
 
 protected:
    TKeyXML() = default;

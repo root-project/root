@@ -45,9 +45,8 @@ protected:
    InfoListRet GetStreamerInfoListImpl(bool lookupSICache) final;
 
 private:
-   // let the compiler do the job. gcc complains when the following line is activated
-   TXMLFile(const TXMLFile &);            // TXMLFile cannot be copied, not implemented
-   void operator=(const TXMLFile &);      // TXMLFile cannot be copied, not implemented
+   TXMLFile(const TXMLFile &) = delete;            // TXMLFile cannot be copied, not implemented
+   void operator=(const TXMLFile &) = delete;      // TXMLFile cannot be copied, not implemented
 
 public:
    TXMLFile() = default;
@@ -107,8 +106,8 @@ public:
    void SetUseNamespaces(Bool_t iUseNamespaces = kTRUE) final;
 
    Bool_t AddXmlComment(const char *comment);
-   Bool_t AddXmlStyleSheet(const char *href, const char *type = "text/css", const char *title = 0, int alternate = -1,
-                           const char *media = 0, const char *charset = 0);
+   Bool_t AddXmlStyleSheet(const char *href, const char *type = "text/css", const char *title = nullptr, int alternate = -1,
+                           const char *media = nullptr, const char *charset = nullptr);
    Bool_t AddXmlLine(const char *line);
 
    TXMLEngine *XML() { return fXML.get(); }
