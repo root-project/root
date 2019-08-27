@@ -170,17 +170,15 @@ ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view nt
    fFile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "READ"));
 }
 
-ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(TDirectory* directory)
-   : RPageSource(directory->GetName())
+ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(TDirectory* directory, const RNTupleReadOptions &options)
+   : RPageSource(directory->GetName(), options)
    , fPageAllocator(std::make_unique<RPageAllocatorKey>())
    , fPagePool(std::make_shared<RPagePool>())
    , fDirectory(directory)
 {
    std::string fullPath = fDirectory->GetPath();
    std::string fileName = std::string(fullPath, 0, fullPath.find(".root") + 5);
-   TFile *file = TFile::Open(fileName.c_str(), "READ");
-   fSettings.fFile = file;
-   fSettings.fTakeOwnership = true;
+   fFile = std::unique_ptr<TFile>(TFile::Open(fileName.c_str(), "READ"));
 }
 
 
@@ -307,11 +305,4 @@ std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Det
    return std::make_unique<RPageSourceRoot>(fNTupleName, fFile->GetName(), fOptions);
 }
 
-std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSourceRoot::Clone() const
-{
-   RSettings settings;
-   auto file = TFile::Open(fSettings.fFile->GetName(), "READ");
-   settings.fFile = file;
-   settings.fTakeOwnership = true;
-   return std::make_unique<RPageSourceRoot>(fNTupleName, settings);
-}
+

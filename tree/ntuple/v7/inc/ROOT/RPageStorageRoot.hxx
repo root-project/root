@@ -126,7 +126,7 @@ protected:
 
 public:
    RPageSourceRoot(std::string_view ntupleName, std::string_view path, const RNTupleReadOptions &options);
-   RPageSourceRoot(TDirectory* directory);
+   RPageSourceRoot(TDirectory* directory, const RNTupleReadOptions &options = RNTupleReadOptions());
    std::unique_ptr<RPageSource> Clone() const final;
    virtual ~RPageSourceRoot();
 

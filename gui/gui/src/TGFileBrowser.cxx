@@ -1229,7 +1229,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
       TString ext = obj->GetName();
       if (obj->InheritsFrom("TDirectory") && (obj->IsA() != TClass::Class())) {
          // strcmp(obj->ClassName(), "TFile") in the if statement below prevents double-clicked .root files to call: fNTupleBrowserPtr->SetDirectory(...), which leads to a segmentation fault for that case.
-         if (obj->TestBit(9/*TDirectoryFile::kCustomBrowse*/) && (strcmp(obj->ClassName(), "TFile"))) {
+         if (obj->TestBit(9/*TDirectoryFile::kCustomBrowse*/) && (strcmp(obj->ClassName(), "TFile") != 0)) {
             is_rntuple = kTRUE;
             if (!fNTupleBrowserPtr) {
                fNTupleBrowserPtr = (ROOT::Experimental::RNTupleBrowser *)gROOT->ProcessLine(TString::Format("new ROOT::Experimental::RNTupleBrowser((TDirectory *)%#tx);", (uintptr_t)obj));
