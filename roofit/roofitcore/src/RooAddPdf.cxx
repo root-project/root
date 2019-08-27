@@ -210,11 +210,11 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
       assert(0) ;
     }
     if (!dynamic_cast<RooAbsReal*>(coef)) {
-      coutE(InputArguments) << "RooAddPdf::RooAddPdf(" << GetName() << ") coefficient " << coef->GetName() << " is not of type RooAbsReal, ignored" << endl ;
+      coutE(InputArguments) << "RooAddPdf::RooAddPdf(" << GetName() << ") coefficient " << (coef ? coef->GetName() : "") << " is not of type RooAbsReal, ignored" << endl ;
       continue ;
     }
     if (!dynamic_cast<RooAbsReal*>(pdf)) {
-      coutE(InputArguments) << "RooAddPdf::RooAddPdf(" << GetName() << ") pdf " << pdf->GetName() << " is not of type RooAbsPdf, ignored" << endl ;
+      coutE(InputArguments) << "RooAddPdf::RooAddPdf(" << GetName() << ") pdf " << (pdf ? pdf->GetName() : "") << " is not of type RooAbsPdf, ignored" << endl ;
       continue ;
     }
     _pdfList.add(*pdf) ;
@@ -301,7 +301,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
     auto pdf = static_cast<const RooAbsPdf*>(pdfArg);
 
     if (!dynamic_cast<const RooAbsReal*>(pdf)) {
-      coutE(InputArguments) << "RooAddPdf::RooAddPdf(" << GetName() << ") pdf " << pdf->GetName() << " is not of type RooAbsPdf, ignored" << endl ;
+      coutE(InputArguments) << "RooAddPdf::RooAddPdf(" << GetName() << ") pdf " << (pdf ? pdf->GetName() : "") << " is not of type RooAbsPdf, ignored" << endl ;
       continue ;
     }
     if (!pdf->canBeExtended()) {

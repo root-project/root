@@ -32,8 +32,6 @@ by a series of thresholds.
 #include "RooStreamParser.h"
 #include "RooMsgService.h"
 
-#include <stdlib.h>
-
 using namespace std;
 
 ClassImp(RooBinningCategory);

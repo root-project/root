@@ -36,11 +36,11 @@ size_t findSize(std::vector< RooSpan<const double> > parameters)
  * EvaluateInfo struct (see BatchHelpers.h). It will be used when the 
  * number of parameters is > 3 and the BracketAdapterWithBranch will be used.
  */
-EvaluateInfo getInfo(std::vector< RooRealProxy > parameters, size_t begin, size_t batchSize) 
+EvaluateInfo getInfo(std::vector<const RooRealProxy*> parameters, size_t begin, size_t batchSize)
 {
   EvaluateInfo ret = {SIZE_MAX, 0};
-  for (size_t i=0; i<parameters.size(); i++) {
-    RooSpan<const double> span = parameters[i].getValBatch(begin,batchSize);
+  for (const auto par : parameters) {
+    RooSpan<const double> span = par->getValBatch(begin,batchSize);
     if ( !span.empty() ) {
       ret.nBatches++;
       if (span.size() < ret.size) ret.size = span.size();

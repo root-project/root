@@ -227,7 +227,7 @@ RooSpan<double> RooBukinPdf::evaluateBatch(std::size_t begin, std::size_t batchS
   using namespace BatchHelpers;
   using namespace BukinBatchEvaluate;
     
-  EvaluateInfo info = getInfo( {x,Xp,sigp,xi,rho1,rho2}, begin, batchSize );
+  EvaluateInfo info = getInfo( {&x,&Xp,&sigp,&xi,&rho1,&rho2}, begin, batchSize );
   auto output = _batchData.makeWritableBatchUnInit(begin, info.size);
   auto xData = x.getValBatch(begin, info.size);
   if (info.nBatches == 0) {
