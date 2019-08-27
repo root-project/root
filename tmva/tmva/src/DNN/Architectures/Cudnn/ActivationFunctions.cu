@@ -28,6 +28,7 @@ namespace DNN
 template<typename AFloat>
 void TCudnn<AFloat>::ActivationFunctionForward(Tensor_t & X, EActivationFunction activFunct, ActivationDescriptor_t activationDescr,  const double coef, const AFloat alpha, const AFloat beta)
 {
+/*
    cudnnActivationMode_t activationMode;
    //std::cout << activationDescr << std::endl;
    //activationDescr = (ActivationDescriptor_t) nullptr;
@@ -44,7 +45,11 @@ void TCudnn<AFloat>::ActivationFunctionForward(Tensor_t & X, EActivationFunction
                                            activationMode,
                                            CUDNN_PROPAGATE_NAN,
                                            coef));
-                                           
+*/
+  
+   // Nothing to do for identity function
+   if (activFunct == EActivationFunction::kIdentity) return;
+
    CUDNNCHECK(cudnnActivationForward(X.GetCudnnHandle(),
                                      activationDescr,
                                      &alpha,
@@ -57,13 +62,14 @@ void TCudnn<AFloat>::ActivationFunctionForward(Tensor_t & X, EActivationFunction
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCudnn<AFloat>::ActivationFunctionBackward(Tensor_t & dX, const Tensor_t & Y,  
+void TCudnn<AFloat>::ActivationFunctionBackward(Tensor_t & dX, const Tensor_t & Y,
                                                 const Tensor_t & dY, const Tensor_t & X, 
-                                                EActivationFunction /* activFunct */,
+                                                EActivationFunction activFunct ,
                                                 const ActivationDescriptor_t activationDescr, 
                                                 const AFloat alpha, const AFloat beta)
 {
-   //if (!activationDescr) return;
+   // Nothing to do for identity function
+   if (activFunct == EActivationFunction::kIdentity) return;
    //std::cout << "No identityy\n";
    //Y.Print();
    // The activation descriptor is set in the forward pass                                        
@@ -83,7 +89,7 @@ void TCudnn<AFloat>::ActivationFunctionBackward(Tensor_t & dX, const Tensor_t & 
 
 #if 0
 //______________________________________________________________________________
-template<typename AFloat>
+/*template<typename AFloat>
 void TCudnn<AFloat>::Relu(Tensor_t & X, ActivationDescriptor_t activationDescr, const double coef, const AFloat alpha, const AFloat beta)
 {
    Activation(X, EActivationFunction::kRelu, activationDescr, coef, alpha, beta);
@@ -131,7 +137,7 @@ void TCudnn<AFloat>::TanhDerivative(const Tensor_t & Y, const Tensor_t & dY,
                                     const AFloat alpha, const AFloat beta)
 {
    ActivationFunctionBackward(Y, dY, X, dX, activationDescr, alpha, beta);
-}
+}*/
 
 //______________________________________________________________________________
 /*template<typename AFloat>

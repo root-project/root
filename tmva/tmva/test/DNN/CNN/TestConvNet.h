@@ -273,13 +273,16 @@ auto testConvLayerForward(const typename Architecture::Tensor_t &input,
     typename Architecture::Tensor_t forwardMatrices (1 , nLocalViews, nLocalViewPixels);
     
     TDescriptors * convDescriptors = nullptr;
+    TWorkspace   * convWorkspace   = nullptr;
     
     TConvLayer<Architecture> *layer = nullptr;
-    Architecture::InitializeCNNDescriptors(convDescriptors, layer);
+    Architecture::InitializeConvDescriptors(convDescriptors, 0.0, layer);
+    Architecture::InitializeConvWorkspace(convWorkspace, convDescriptors, params, layer);
 
     Architecture::ConvLayerForward(computedOutput, computedDerivatives, input, weights, biases, params,
-                                 EActivationFunction::kIdentity, forwardMatrices,
-                                 (typename Architecture::ConvDescriptors_t &) *convDescriptors);
+                                   EActivationFunction::kIdentity, forwardMatrices,
+                                   (typename Architecture::ConvDescriptors_t &) *convDescriptors,
+                                   (typename Architecture::ConvWorkspace_t &) *convWorkspace);
 
     for (size_t slice = 0; slice < nRows; slice++) {
         for (size_t localView = 0; localView < nCols; localView++) {
@@ -498,7 +501,8 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
 //       TMVA_DNN_PrintTCpuMatrix(w0[i],"weight-layer0");
 // #endif  
    
-   typename Architecture::Tensor_t X(batchSize, imgDepth, imgHeight * imgWidth);
+   //typename Architecture::Tensor_t X(batchSize, imgDepth, imgHeight * imgWidth, Architecture::GetTensorLayout() );
+   auto X =  Architecture::CreateTensor( batchSize, imgDepth, imgHeight , imgWidth);
    randomBatch(X);
 
    Matrix_t Y(batchSize, convNet.GetOutputWidth());
