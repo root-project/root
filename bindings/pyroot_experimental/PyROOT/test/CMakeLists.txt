@@ -32,6 +32,7 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_setbranchaddress ttree_setbranchaddress.py
                     COPY_TO_BUILDDIR TreeHelper.h)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch ttree_branch.py
                     COPY_TO_BUILDDIR TreeHelper.h)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_asmatrix ttree_asmatrix.py)
 
 # TH1 and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th1_operators th1_operators.py)
