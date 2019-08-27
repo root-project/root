@@ -30,6 +30,7 @@ class TestClassOVERLOADS:
         import cppyy
         cls.test_dct = "Overloads_C"
         cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
+        cls.exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
 
     def test01_class_based_overloads(self):
         """Functions overloaded on different C++ class arguments"""
@@ -100,8 +101,13 @@ class TestClassOVERLOADS:
         from cppyy.gbl import get_OlBB, get_OlDD
 
         # first verify that BB and DD are indeed unknown
-        raises(RuntimeError, OlBB)
-        raises(RuntimeError, OlDD )
+        if self.exp_pyroot:
+            # In new Cppyy, this raises a TypeError
+            raises(TypeError, OlBB)
+            raises(TypeError, OlDD)
+        else:
+            raises(RuntimeError, OlBB)
+            raises(RuntimeError, OlDD)
 
         # then try overloads based on them
         assert MoreOverloads().call(OlAA())     == "OlAA"
