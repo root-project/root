@@ -792,7 +792,12 @@ class TestClassDATATYPES:
 
         import cppyy
 
-        for o in (0, None):
+        if self.exp_pyroot:
+            # New Cppyy does not allow conversion from None to null pointer anymore
+            t = (0, )
+        else:
+            t = (0, None)
+        for o in t:
             c = cppyy.gbl.CppyyTestData()
             assert c.m_pod.m_int == 888
             assert c.m_pod.m_double == 3.14
