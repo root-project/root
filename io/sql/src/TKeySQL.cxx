@@ -34,21 +34,14 @@ from database tables.
 ClassImp(TKeySQL);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// default constructor
-
-TKeySQL::TKeySQL() : TKey(), fKeyId(-1), fObjId(-1)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Creates TKeySQL and convert obj data to TSQLStructure via TBufferSQL2
 
 TKeySQL::TKeySQL(TDirectory *mother, const TObject *obj, const char *name, const char *title)
-   : TKey(mother), fKeyId(-1), fObjId(-1)
+   : TKey(mother)
 {
    if (name)
       SetName(name);
-   else if (obj != 0) {
+   else if (obj) {
       SetName(obj->GetName());
       fClassName = obj->ClassName();
    } else
@@ -64,7 +57,7 @@ TKeySQL::TKeySQL(TDirectory *mother, const TObject *obj, const char *name, const
 /// Creates TKeySQL and convert obj data to TSQLStructure via TBufferSQL2
 
 TKeySQL::TKeySQL(TDirectory *mother, const void *obj, const TClass *cl, const char *name, const char *title)
-   : TKey(mother), fKeyId(-1), fObjId(-1)
+   : TKey(mother)
 {
    if (name && *name)
       SetName(name);
@@ -91,13 +84,6 @@ TKeySQL::TKeySQL(TDirectory *mother, Long64_t keyid, Long64_t objid, const char 
    fDatime = dt;
    fCycle = cycle;
    fClassName = classname;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// TKeySQL destructor
-
-TKeySQL::~TKeySQL()
-{
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -220,7 +206,7 @@ TObject *TKeySQL::ReadObj()
 {
    TObject *tobj = (TObject *)ReadKeyObject(0, TObject::Class());
 
-   if (tobj != 0) {
+   if (tobj) {
       if (gROOT->GetForceStyle())
          tobj->UseCurrentStyle();
       if (tobj->IsA() == TDirectoryFile::Class()) {
@@ -245,7 +231,7 @@ TObject *TKeySQL::ReadObjWithBuffer(char * /*bufferRead*/)
 {
    TObject *tobj = (TObject *)ReadKeyObject(0, TObject::Class());
 
-   if (tobj != 0) {
+   if (tobj) {
       if (gROOT->GetForceStyle())
          tobj->UseCurrentStyle();
       if (tobj->IsA() == TDirectoryFile::Class()) {
@@ -300,8 +286,8 @@ void *TKeySQL::ReadKeyObject(void *obj, const TClass *expectedClass)
 
    void *res = buffer.SqlReadAny(GetDBKeyId(), GetDBObjId(), &cl, obj);
 
-   if ((cl == 0) || (res == 0))
-      return 0;
+   if (!cl || !res)
+      return nullptr;
 
    Int_t delta = 0;
 

@@ -168,8 +168,8 @@ protected:
    Int_t fStmtCounter;     ///<! count numbers of active statements
 
 private:
-   TSQLFile(const TSQLFile &);            //Files cannot be copied - not implemented
-   void operator=(const TSQLFile &);      //Files cannot be copied - not implemented
+   TSQLFile(const TSQLFile &) = delete;            //Files cannot be copied - not implemented
+   void operator=(const TSQLFile &) = delete;      //Files cannot be copied - not implemented
 
 public:
    enum ETransactionKinds { kTransactionsOff = 0, kTransactionsAuto = 1, kTransactionsUser = 2 };
