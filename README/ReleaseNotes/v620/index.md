@@ -83,7 +83,7 @@ or in `TBrowser` by opening `Browser Help → About ROOT`.
    Unlike regular `TFile`s, the content of such file has reproducible binary content when writing
    exactly same data. This achieved by writing pre-defined values for creation
    and modification date of TKey/TDirectory objects and null value for TUUID
-   objects inside TFile. As drawback TRef object stored in such file cannot be
+   objects inside TFile. As drawback, TRef objects stored in such file cannot be
    read correctly. This feature dedicated for testing of ROOT I/O functionality.
 
 
