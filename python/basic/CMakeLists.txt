@@ -9,6 +9,7 @@ if(ROOT_python_FOUND)
                     MACRO PyROOT_datatypetest.py
                     COPY_TO_BUILDDIR DataTypes.C DataTypes.h
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ DataTypes.C+
+                    ENVIRONMENT EXP_PYROOT=${exp_pyroot}
                     ${PYTESTS_WILLFAIL})
 
   ROOTTEST_ADD_TEST(operator

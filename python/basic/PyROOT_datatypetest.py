@@ -33,6 +33,14 @@ class TestClassDATATYPES:
         cls.test_dct = "DataTypes_C"
         cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
         cls.N = cppyy.gbl.N
+        cls.exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
+        if cls.exp_pyroot:
+            # In new Cppyy, nullptr can't be found in gbl.
+            # Take it from libcppyy (we could also use ROOT.nullptr)
+            import libcppyy
+            cls.nullptr = libcppyy.nullptr
+        else:
+            cls.nullptr = cppyy.gbl.nullptr
 
     def test01_load_reflection_cache(self):
         """Loading reflection info twice should result in the same object"""
@@ -303,8 +311,8 @@ class TestClassDATATYPES:
             raises(Exception, c.pass_array(0).__getitem__, 0)    # raises SegfaultException
             assert not c.pass_array(None)
             raises(Exception, c.pass_array(None).__getitem__, 0) # id.
-            assert not c.pass_array(cppyy.gbl.nullptr)
-            raises(Exception, c.pass_array(cppyy.gbl.nullptr).__getitem__, 0) # id. id.
+            assert not c.pass_array(self.nullptr)
+            raises(Exception, c.pass_array(self.nullptr).__getitem__, 0) # id. id.
 
         c.__destruct__()
 
@@ -557,9 +565,9 @@ class TestClassDATATYPES:
            assert gbl.g_c_enum == gbl.kApple
 
         # void pointer
-        assert gbl.g_voidp   == gbl.nullptr
+        assert gbl.g_voidp   == self.nullptr
         if not FIXCLING:
-           assert gbl.g_c_voidp == gbl.nullptr
+           assert gbl.g_c_voidp == self.nullptr
 
         # boundary checks
         raises(ValueError, setattr, gbl, 'g_uchar',   -1)
@@ -891,22 +899,22 @@ class TestClassDATATYPES:
 
         c = CppyyTestData()
 
-        assert not cppyy.gbl.nullptr
+        assert not self.nullptr
 
-        assert c.s_voidp                is cppyy.gbl.nullptr
-        assert CppyyTestData.s_voidp    is cppyy.gbl.nullptr
+        assert c.s_voidp                is self.nullptr
+        assert CppyyTestData.s_voidp    is self.nullptr
 
-        assert c.m_voidp                is cppyy.gbl.nullptr
-        assert c.get_voidp()            is cppyy.gbl.nullptr
+        assert c.m_voidp                is self.nullptr
+        assert c.get_voidp()            is self.nullptr
 
         c2 = CppyyTestData()
-        assert c2.m_voidp               is cppyy.gbl.nullptr
+        assert c2.m_voidp               is self.nullptr
         c.set_voidp(c2.m_voidp)
-        assert c.m_voidp                is cppyy.gbl.nullptr
+        assert c.m_voidp                is self.nullptr
         c.set_voidp(c2.get_voidp())
-        assert c.m_voidp                is cppyy.gbl.nullptr
-        c.set_voidp(cppyy.gbl.nullptr)
-        assert c.m_voidp                is cppyy.gbl.nullptr
+        assert c.m_voidp                is self.nullptr
+        c.set_voidp(self.nullptr)
+        assert c.m_voidp                is self.nullptr
 
         c.set_voidp(c2)
         def address_equality_test(a, b):
@@ -928,8 +936,8 @@ class TestClassDATATYPES:
 
         def null_test(null):
             c.m_voidp = null
-            assert c.m_voidp is cppyy.gbl.nullptr
-        map(null_test, [0, None, cppyy.gbl.nullptr])
+            assert c.m_voidp is self.nullptr
+        map(null_test, [0, None, self.nullptr])
 
         c.m_voidp = c2
         address_equality_test(c.m_voidp,     c2)
