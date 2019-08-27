@@ -1519,7 +1519,7 @@ endfunction()
 # function ROOT_ADD_GTEST(<testsuite> source1 source2... COPY_TO_BUILDDIR file1 file2 LIBRARIES)
 #
 function(ROOT_ADD_GTEST test_suite)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "" "COPY_TO_BUILDDIR;LIBRARIES" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL" "" "COPY_TO_BUILDDIR;LIBRARIES" ${ARGN})
   include_directories(${CMAKE_CURRENT_BINARY_DIR} ${GTEST_INCLUDE_DIR} ${GMOCK_INCLUDE_DIR})
 
   ROOT_GET_SOURCES(source_files . ${ARG_UNPARSED_ARGUMENTS})
@@ -1535,13 +1535,18 @@ function(ROOT_ADD_GTEST test_suite)
         /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index")
     set_property(TARGET ${test_suite} APPEND_STRING PROPERTY LINK_FLAGS ${test_exports})
   endif()
-  
+
+  if(ARG_WILLFAIL)
+    set(willfail WILLFAIL)
+  endif()
+
   ROOT_PATH_TO_STRING(mangled_name ${test_suite} PATH_SEPARATOR_REPLACEMENT "-")
   ROOT_ADD_TEST(
     gtest${mangled_name}
     COMMAND ${test_suite}
     WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
-    COPY_TO_BUILDDIR ${ARG_COPY_TO_BUILDDIR}
+    COPY_TO_BUILDDIR ${ARG_COPY_TO_BUiILDDIR}
+    ${willfail}
   )
 endfunction()
 
