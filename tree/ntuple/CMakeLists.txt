@@ -23,9 +23,10 @@ HEADERS
   ROOT/RFieldValue.hxx
   ROOT/RFieldVisitor.hxx
   ROOT/RNTuple.hxx
-  ROOT/RNTupleOptions.hxx
   ROOT/RNTupleDescriptor.hxx
+  ROOT/RNTupleMetrics.hxx
   ROOT/RNTupleModel.hxx
+  ROOT/RNTupleOptions.hxx
   ROOT/RNTupleUtil.hxx
   ROOT/RNTupleView.hxx
   ROOT/RPage.hxx
@@ -43,6 +44,7 @@ SOURCES
   v7/src/RNTuple.cxx
   v7/src/RNTupleDescriptor.cxx
   v7/src/RNTupleDescriptorFmt.cxx
+  v7/src/RNTupleMetrics.cxx
   v7/src/RNTupleModel.cxx
   v7/src/RPage.cxx
   v7/src/RPageAllocator.cxx
