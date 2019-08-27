@@ -1447,7 +1447,7 @@ static std::string FindLibraryName(void (*func)())
    {
       return {};
    }
-   return moduleName;
+   return ROOT::TMetaUtils::ResolveSymlink(moduleName);
 #else
    Dl_info info;
    if (dladdr((void*)func, &info) == 0) {
@@ -1455,7 +1455,7 @@ static std::string FindLibraryName(void (*func)())
       return {};
    } else {
       if (strchr(info.dli_fname, '/'))
-         return info.dli_fname;
+         return ROOT::TMetaUtils::ResolveSymlink(info.dli_fname);
       // Else absolute path. For all we know that's a binary.
       // Some people have dictionaries in binaries, this is how we find their path:
       // (see also https://stackoverflow.com/a/1024937/6182509)
@@ -1463,23 +1463,23 @@ static std::string FindLibraryName(void (*func)())
       char buf[PATH_MAX] = { 0 };
       uint32_t bufsize = sizeof(buf);
       if (_NSGetExecutablePath(buf, &bufsize) >= 0)
-         return buf;
-      return info.dli_fname;
+         return ROOT::TMetaUtils::ResolveSymlink(buf);
+      return ROOT::TMetaUtils::ResolveSymlink(info.dli_fname);
 # elif defined(R__UNIX)
       char buf[PATH_MAX] = { 0 };
       // Cross our fingers that /proc/self/exe exists.
       if (readlink("/proc/self/exe", buf, sizeof(buf)) > 0)
-         return buf;
+         return ROOT::TMetaUtils::ResolveSymlink(buf);
       std::string pipeCmd = std::string("which \"") + info.dli_fname + "\"";
       FILE* pipe = popen(pipeCmd.c_str(), "r");
       if (!pipe)
-         return info.dli_fname;
+         return ROOT::TMetaUtils::ResolveSymlink(info.dli_fname);
       std::string result;
       while (fgets(buf, sizeof(buf), pipe)) {
          result += buf;
       }
       pclose(pipe);
-      return result;
+      return ROOT::TMetaUtils::ResolveSymlink(result);
 # else
 #  error "Unsupported platform."
 # endif
@@ -1503,37 +1503,6 @@ static bool R__InitStreamerInfoFactory()
    return doneFactory; // avoid unused variable warning.
 }
 
-static std::string ResolveSymlink(const std::string &path)
-{
-#ifdef R__WIN32
-   // No symlinks on Windows.
-   return path;
-#else
-   assert(llvm::sys::fs::is_symlink_file(path));
-   char Buffer[kMAXPATHLEN];
-   ssize_t CharCount = ::readlink(path.c_str(), Buffer, sizeof(Buffer));
-   // readlink does not append a NUL character to Buffer.
-   if (CharCount > 0) {
-      llvm::StringRef resolved_path(Buffer, CharCount);
-      if (llvm::sys::path::is_absolute(resolved_path))
-         return resolved_path.str();
-
-      // If the symlink did not resolve to an absolute path we should convert
-      // it, because if we are embedded in a framework we will resolve the link
-      // with respect to the current dir (which is most often the one of the
-      // file descriptor. However, in a relative path in a symlink we want to
-      // resolve it with respect to the symlink parent directory.
-      llvm::StringRef current_dir = llvm::sys::path::parent_path(path);
-      llvm::SmallString<256> relative_path(resolved_path);
-      llvm::sys::fs::make_absolute(/*wrt*/current_dir, relative_path);
-      return relative_path.str().str();
-   }
-
-   ::Error("TCling__ResolveSymlink", "Could not resolve symlink '%s'.", path.c_str());
-   return {};
-#endif // R__WIN32
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Register Rdict data for future loading by LoadPCM;
 
@@ -1547,10 +1516,9 @@ void TCling::RegisterRdictForLoadPCM(const std::string &pcmFileNameFullPath, llv
       return;
    }
 
-   if (llvm::sys::fs::is_symlink_file(pcmFileNameFullPath))
-      fPendingRdicts[ResolveSymlink(pcmFileNameFullPath)] = *pcmContent;
-   else
-      fPendingRdicts[pcmFileNameFullPath] = *pcmContent;
+   // The pcmFileNameFullPath must be resolved already because we cannot resolve
+   // a link to a non-existent file.
+   fPendingRdicts[pcmFileNameFullPath] = *pcmContent;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1696,7 +1664,7 @@ void TCling::LoadPCM(std::string pcmFileNameFullPath)
    }
 
    if (llvm::sys::fs::is_symlink_file(pcmFileNameFullPath))
-      pcmFileNameFullPath = ResolveSymlink(pcmFileNameFullPath);
+      pcmFileNameFullPath = ROOT::TMetaUtils::ResolveSymlink(pcmFileNameFullPath);
 
    auto pendingRdict = fPendingRdicts.find(pcmFileNameFullPath);
    if (pendingRdict != fPendingRdicts.end()) {
@@ -1917,6 +1885,7 @@ void TCling::RegisterModule(const char* modulename,
       code += payloadCode;
 
    std::string dyLibName = FindLibraryName(triggerFunc);
+   assert(!llvm::sys::fs::is_symlink_file(dyLibName));
 
    if (dyLibName.empty()) {
       ::Error("TCling::RegisterModule", "Dictionary trigger function for %s not found", modulename);
