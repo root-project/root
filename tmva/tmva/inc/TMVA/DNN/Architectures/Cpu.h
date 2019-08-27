@@ -22,6 +22,7 @@
 #include "TMVA/DNN/CNN/ContextHandles.h"
 //#include "TMVA/DNN/CNN/Descriptors.h"
 #include "TMVA/DNN/CNN/ConvLayer.h"
+#include "TMVA/DNN/CNN/MaxPoolLayer.h"
 
 #include "Cpu/CpuBuffer.h"
 #include "Cpu/CpuMatrix.h"
@@ -38,8 +39,12 @@ namespace DNN
  struct DummyFilterDescriptor {};
  struct DummyConvolutionDescriptor {};
  struct DummyPoolingDescriptor {};
+ struct DummyConvolutionFwdAlgo {};
+ struct DummyConvolutionBwdDataAlgo {};
+ struct DummyConvolutionBwdFilterAlgo {};
+ struct DummyDataType {};
  
- struct DummyEmptyDescriptor {}; 
+ struct DummyEmptyDescriptor {};
 
 /** The TCpu architecture class.
  *
@@ -68,25 +73,46 @@ public:
    using OpTensorDescriptor_t    = DummyOpTensorDescriptor;*/
    using PoolingDescriptor_t     = DummyPoolingDescriptor;
    //using ReductionDescriptor_t   = DummyReduceTensorDescriptor;
+   using AlgorithmForward_t      = DummyConvolutionFwdAlgo;
+   using AlgorithmBackward_t     = DummyConvolutionBwdDataAlgo;
+   using AlgorithmHelper_t       = DummyConvolutionBwdFilterAlgo;
+   using AlgorithmDataType_t     = DummyDataType;
    
    using EmptyDescriptor_t       = DummyEmptyDescriptor;        // Used if a descriptor is not needed in a class
    
-   using ConvDescriptors_t       =  CNN::TCNNDescriptors<CNN::TConvLayer<TCpu<AReal>>>;
+   using ConvLayer_t             = CNN::TConvLayer<TCpu<AReal>>;
+   using ConvDescriptors_t       = CNN::TCNNDescriptors<ConvLayer_t>;
+   using ConvWorkspace_t         = CNN::TCNNWorkspace<ConvLayer_t>;
+   using PoolingLayer_t          = CNN::TMaxPoolLayer<TCpu<AReal>>;
+   using PoolingDescriptors_t    = CNN::TCNNDescriptors<PoolingLayer_t>;
+   using PoolingWorkspace_t      = CNN::TCNNWorkspace<PoolingLayer_t>;
 
+   static TMVA::Experimental::MemoryLayout GetTensorLayout() { return TMVA::Experimental::MemoryLayout::ColumnMajor; }
+
+   static Tensor_t CreateTensor(size_t n, size_t c, size_t h, size_t w) { 
+      return Tensor_t( {c,h*w,n}, GetTensorLayout()); 
+   }
    //____________________________________________________________________________
    //
    // Architecture Initialization
    //____________________________________________________________________________
    
    /** Initialize CNN data/operator descriptors. Not used at the moment.*/
-   template<typename Layer_t>
-   static void InitializeCNNDescriptors(CNN::TDescriptors *& /*descriptors*/, Layer_t */*L = nullptr*/) {}
-   
+   static void InitializeConvDescriptors(TDescriptors * & /*descriptors*/, double /*coef = 0.0*/, 
+                                         ConvLayer_t */*L = nullptr*/) {}
+
+   static void InitializePoolingDescriptors(TDescriptors * & /*descriptors*/, double /*coef = 0.0*/, 
+                                            PoolingLayer_t */*L = nullptr*/) {}
+
    /** Release CNN data/operator descriptors. Not used at the moment.*/
    template<typename Layer_t>
-   static void ReleaseCNNDescriptors(CNN::TDescriptors * & /*descriptors*/, Layer_t */*L = nullptr*/) {}
+   static void ReleaseConvDescriptors(TDescriptors * & /*descriptors*/, Layer_t */*L = nullptr*/) {}
    
-   static void FreeWorkspace(void * /*workspace*/) {}   ///< Only used for certain cudnn on-device memory
+   static void InitializeConvWorkspace(TWorkspace * & /*workspace*/,
+                                       TDescriptors * & /*descriptors*/,
+                                       const DNN::CNN::TConvParams & /*params*/,
+                                       ConvLayer_t */*L = nullptr*/) {}
+   static void FreeConvWorkspace(TWorkspace * & /*workspace*/, ConvLayer_t */*L = nullptr*/) {}   ///< Only used for certain cudnn on-device memory
    
    // // Utility function to convert from a Matrix to a Tensor
    // static Tensor_t  MatrixToTensor(Matrix_t & A) { 
@@ -413,8 +439,9 @@ public:
                                 const Matrix_t &weights, const Matrix_t & biases,
                                 const DNN::CNN::TConvParams & params, EActivationFunction activFunc,
                                 Tensor_t & /* inputPrime */,
-                                const ConvDescriptors_t & /*descriptors*/,   // Empty struct for cpu architecture
-                                void * cudnnWorkspace = nullptr);      // Remains nullptr for cpu architecture
+                                const ConvDescriptors_t & /*descriptors*/,   // Empty struct for cuda architecture   
+                                ConvWorkspace_t & /*workspace*/);       // Empty struct for cuda architecture
+                                //void * cudnnWorkspace = nullptr);          // Remains nullptr for cuda architecture
 
    /** @name Backward Propagation in Convolutional Layer
     */
@@ -436,14 +463,13 @@ public:
                                  const Tensor_t &activationBackward,
                                  const Tensor_t &  outputTensor,
                                  EActivationFunction activFunc,
-                                 const ConvDescriptors_t & /*descriptors*/, 
+                                 const ConvDescriptors_t & /*descriptors*/,
+                                 ConvWorkspace_t & /*workspace*/,
                                  size_t batchSize,   size_t inputHeight, 
                                  size_t inputWidth,  size_t depth, 
                                  size_t height,      size_t width,
                                  size_t filterDepth, size_t filterHeight, 
-                                 size_t filterWidth, size_t nLocalViews,
-                                 void * cudnnConvBwdWorkspaces = nullptr, 
-                                 void * cudnnFilterBwdWorkspace = nullptr);
+                                 size_t filterWidth, size_t nLocalViews );
 
    /** Utility function for calculating the activation gradients of the layer
     *  before the convolutional layer. */

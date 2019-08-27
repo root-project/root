@@ -109,7 +109,7 @@ private:
    int          fDevice;           ///< Device associated with current tensor instance
    int          fStreamIndx;       ///< Cuda stream associated with current instance
 
-   cudnnTensorDescriptor_t   fTensorDescriptor;
+   cudnnTensorDescriptor_t   fTensorDescriptor = nullptr;
    TCudaDeviceBuffer<AFloat> fElementBuffer;
 
    MemoryLayout fMemoryLayout; 
@@ -206,6 +206,7 @@ public:
    const cudnnHandle_t             & GetCudnnHandle()      const {return fCudnnHandle[fStreamIndx];}
    const cudnnTensorDescriptor_t   & GetTensorDescriptor() const {return fTensorDescriptor;}
 
+   static cudnnDataType_t   GetDataType() { return fDataType; }
 
    cudaStream_t GetComputeStream() const { 
       return fElementBuffer.GetComputeStream();
@@ -330,7 +331,18 @@ public:
       fShape   = newShape;
       fStrides = ComputeStridesFromShape(fShape, fMemoryLayout == MemoryLayout::RowMajor);
       fNDim = fShape.size(); 
+      // reset the descritor for Cudnn
+      std::cout << "reshaping tensor to a new shape " << std::endl;
+      std::cout << "old shape : "; 
+      for (size_t i = 0; i < fNDim; i++) std::cout << fShape[i] << "  ";
+      std::cout << std::endl;
+      std::cout << "new shape : "; 
+      for (size_t i = 0; i < fNDim; i++) std::cout << fShape[i] << "  ";
+      std::cout << std::endl;
+      SetTensorDescriptor(); 
    }
+
+   void SetTensorDescriptor();
    
    // return slice of tensor
    // return slices in the first dimension (if row wise) or last dimension if colun wise
