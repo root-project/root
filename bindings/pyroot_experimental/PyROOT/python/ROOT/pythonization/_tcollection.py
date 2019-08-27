@@ -75,8 +75,10 @@ def _imul_pyz(self, n):
     # - n: factor to multiply the collection by
     # Returns:
     # - self *= n
+    c = self.__class__()
+    c.AddAll(self)
     for _ in range(n - 1):
-        _extend_pyz(self, self)
+        _extend_pyz(self, c)
     return self
 
 # Python iteration
