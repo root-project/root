@@ -120,6 +120,7 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Doubl
   // calculate the points to add to our curve
   Double_t prevYMax = getYAxisMax() ;
   if(xbins > 0){
+    // regular mode - use the sampling hint to decide where to evaluate the pdf
     list<Double_t>* hint = f.plotSamplingHint(x,xlo,xhi) ;
     addPoints(*funcPtr,xlo,xhi,xbins+1,prec,resolution,wmode,nEvalError,doEEVal,eeVal,hint);
     if (_showProgress) {
@@ -129,6 +130,8 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Doubl
       delete hint ;
     }
   } else {
+    // if number of bins is set to <= 0, skip any interpolation and just evaluate the pdf at the bin centers
+    // this is useful when plotting a pdf like a histogram
     int nBinsX = x.numBins();
     for(int i=0; i<nBinsX; ++i){
       double xval = x.getBinning().binCenter(i);
@@ -753,7 +756,7 @@ RooCurve* RooCurve::makeErrorBand(const vector<RooCurve*>& variations, Double_t 
   for (int i=GetN()-1 ; i>=0 ; i--) {
     band->addPoint(GetX()[i],bandHi[i]) ;
   }	 
-
+  // if the axis of the old graph is alphanumeric, copy the labels to the new one as well
   if(this->GetXaxis() && this->GetXaxis()->IsAlphanumeric()){
     band->GetXaxis()->Set(this->GetXaxis()->GetNbins(),this->GetXaxis()->GetXmin(),this->GetXaxis()->GetXmax());
     for(int i=0; i<this->GetXaxis()->GetNbins(); ++i){
@@ -794,6 +797,7 @@ RooCurve* RooCurve::makeErrorBand(const vector<RooCurve*>& plusVar, const vector
     band->addPoint(GetX()[i],bandHi[i]) ;
   }	   
   
+  // if the axis of the old graph is alphanumeric, copy the labels to the new one as well
   if(this->GetXaxis() && this->GetXaxis()->IsAlphanumeric()){
     band->GetXaxis()->Set(this->GetXaxis()->GetNbins(),this->GetXaxis()->GetXmin(),this->GetXaxis()->GetXmax());
     for(int i=0; i<this->GetXaxis()->GetNbins(); ++i){
