@@ -27,13 +27,6 @@ List of this objects are kept by TSQLFile class.
 ClassImp(TSQLClassColumnInfo);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// default constructor
-
-TSQLClassColumnInfo::TSQLClassColumnInfo() : TObject(), fName(), fSQLName(), fSQLType()
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// normal constructor
 
 TSQLClassColumnInfo::TSQLClassColumnInfo(const char *name, const char *sqlname, const char *sqltype)
@@ -41,31 +34,15 @@ TSQLClassColumnInfo::TSQLClassColumnInfo(const char *name, const char *sqlname, 
 {
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// destructor
-
-TSQLClassColumnInfo::~TSQLClassColumnInfo()
-{
-}
-
 ClassImp(TSQLClassInfo);
 
-////////////////////////////////////////////////////////////////////////////////
-/// default constructor
-
-TSQLClassInfo::TSQLClassInfo()
-   : TObject(), fClassName(), fClassVersion(0), fClassId(0), fClassTable(), fRawTable(), fColumns(0),
-     fRawtableExist(kFALSE)
-{
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// normal constructor of TSQLClassInfo class
 /// Sets names of tables, which are used for that version of class
 
 TSQLClassInfo::TSQLClassInfo(Long64_t classid, const char *classname, Int_t version)
-   : TObject(), fClassName(classname), fClassVersion(version), fClassId(classid), fClassTable(), fRawTable(),
-     fColumns(0), fRawtableExist(kFALSE)
+   : TObject(), fClassName(classname), fClassVersion(version), fClassId(classid)
 {
    fClassTable.Form("%s_ver%d", classname, version);
    fRawTable.Form("%s_raw%d", classname, version);
@@ -76,10 +53,7 @@ TSQLClassInfo::TSQLClassInfo(Long64_t classid, const char *classname, Int_t vers
 
 TSQLClassInfo::~TSQLClassInfo()
 {
-   if (fColumns != 0) {
-      fColumns->Delete();
-      delete fColumns;
-   }
+   SetColumns(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -87,7 +61,7 @@ TSQLClassInfo::~TSQLClassInfo()
 
 void TSQLClassInfo::SetColumns(TObjArray *columns)
 {
-   if (fColumns != 0) {
+   if (fColumns) {
       fColumns->Delete();
       delete fColumns;
    }
@@ -112,16 +86,16 @@ void TSQLClassInfo::SetTableStatus(TObjArray *columns, Bool_t israwtable)
 
 Int_t TSQLClassInfo::FindColumn(const char *name, Bool_t sqlname)
 {
-   if ((name == 0) || (fColumns == 0))
+   if (!name || !fColumns)
       return -1;
 
    TIter next(fColumns);
 
-   TSQLClassColumnInfo *col = 0;
+   TSQLClassColumnInfo *col = nullptr;
 
    Int_t indx = 0;
 
-   while ((col = (TSQLClassColumnInfo *)next()) != 0) {
+   while ((col = (TSQLClassColumnInfo *)next()) != nullptr) {
       const char *colname = sqlname ? col->GetSQLName() : col->GetName();
       if (strcmp(colname, name) == 0)
          return indx;

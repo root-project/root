@@ -18,14 +18,13 @@
 
 class TObjArray;
 
-class TSQLClassColumnInfo : public TObject {
+class TSQLClassColumnInfo final : public TObject {
 
 public:
-   TSQLClassColumnInfo();
+   TSQLClassColumnInfo() = default;
    TSQLClassColumnInfo(const char *name, const char *sqlname, const char *sqltype);
-   virtual ~TSQLClassColumnInfo();
 
-   virtual const char *GetName() const { return fName.Data(); }
+   const char *GetName() const final { return fName.Data(); }
    const char *GetSQLName() const { return fSQLName.Data(); }
    const char *GetSQLType() const { return fSQLType.Data(); }
 
@@ -34,20 +33,20 @@ protected:
    TString fSQLName;
    TString fSQLType;
 
-   ClassDef(TSQLClassColumnInfo, 1); //  Keeps information about single column in class table
+   ClassDefOverride(TSQLClassColumnInfo, 1); //  Keeps information about single column in class table
 };
 
 //_________________________________________________________________________________
 
-class TSQLClassInfo : public TObject {
+class TSQLClassInfo final : public TObject {
 public:
-   TSQLClassInfo();
+   TSQLClassInfo() = default;
    TSQLClassInfo(Long64_t classid, const char *classname, Int_t version);
    virtual ~TSQLClassInfo();
 
    Long64_t GetClassId() const { return fClassId; }
 
-   virtual const char *GetName() const { return fClassName.Data(); }
+   const char *GetName() const final { return fClassName.Data(); }
    Int_t GetClassVersion() const { return fClassVersion; }
 
    void SetClassTableName(const char *name) { fClassTable = name; }
@@ -67,15 +66,15 @@ public:
    Int_t FindColumn(const char *name, Bool_t sqlname = kFALSE);
 
 protected:
-   TString fClassName;    ///<! class name
-   Int_t fClassVersion;   ///<! class version
-   Long64_t fClassId;     ///<! sql class id
-   TString fClassTable;   ///<! name of table with class data
-   TString fRawTable;     ///<! name of table with raw data
-   TObjArray *fColumns;   ///<! name and type of columns - array of TNamed
-   Bool_t fRawtableExist; ///<! indicate that raw table is exist
+   TString fClassName;             ///<! class name
+   Int_t fClassVersion{0};         ///<! class version
+   Long64_t fClassId{0};           ///<! sql class id
+   TString fClassTable;            ///<! name of table with class data
+   TString fRawTable;              ///<! name of table with raw data
+   TObjArray *fColumns{nullptr};   ///<! name and type of columns - array of TNamed
+   Bool_t fRawtableExist{kFALSE};  ///<! indicate that raw table is exist
 
-   ClassDef(TSQLClassInfo, 1); //  Keeps the table information relevant for one class
+   ClassDefOverride(TSQLClassInfo, 1); //  Keeps the table information relevant for one class
 };
 
 #endif
