@@ -86,6 +86,14 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTPython
     cppyy
 )
 
+set(JupyROOTDirName python/JupyROOT)
+add_library(JupyROOT SHARED ${JupyROOTDirName}/src/IOHandler.cxx)
+target_include_directories(JupyROOT PRIVATE ${JupyROOTDirName}/src)
+target_link_libraries(JupyROOT Core ${CMAKE_DL_LIBS})
+set_property(GLOBAL APPEND PROPERTY CMAKENOEXPORT JupyROOT)
+
+#---Install python modules----------------------------------------------------------------------
+
 file(COPY python/ROOT DESTINATION ${localruntimedir})
 install(DIRECTORY python/ROOT DESTINATION ${runtimedir})
 
@@ -94,6 +102,9 @@ foreach(py_source ${py_sources})
   install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -m py_compile ${d}/${py_source})")
   install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -O -m py_compile ${d}/${py_source})")
 endforeach()
+
+file(COPY ${JupyROOTDirName} DESTINATION ${localruntimedir})
+install(DIRECTORY ${JupyROOTDirName} DESTINATION ${runtimedir})
 
 # Disables warnings caused by Py_RETURN_TRUE/Py_RETURN_FALSE
 if(NOT MSVC)

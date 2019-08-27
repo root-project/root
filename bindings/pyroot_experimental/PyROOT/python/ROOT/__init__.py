@@ -60,7 +60,15 @@ def pythonization(lazy = True):
 for _, module_name, _ in  pkgutil.walk_packages(pyz.__path__):
     module = importlib.import_module(pyz.__name__ + '.' + module_name)
 
-# Configure ROOT facade module
+# Configuration for usage from Jupyter notebooks
 import sys
+is_ipython = hasattr(__builtins__, '__IPYTHON__') or 'IPython' in sys.modules
+if is_ipython:
+    from IPython import get_ipython
+    ip = get_ipython()
+    if hasattr(ip,"kernel"):
+        import JupyROOT
+
+# Configure ROOT facade module
 from ._facade import ROOTFacade
 sys.modules[__name__] = ROOTFacade(sys.modules[__name__])
