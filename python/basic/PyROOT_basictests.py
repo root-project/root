@@ -258,6 +258,10 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
 
 ### basic extension features test cases ======================================
 class Basic5PythonizationTestCase( MyTestCase ):
+   @classmethod
+   def setUpClass(cls):
+      cls.exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
+
    def test1Strings( self ):
       """Test string/TString/TObjString compatibility"""
 
@@ -334,7 +338,20 @@ class Basic5PythonizationTestCase( MyTestCase ):
       l.insert(  3, TObjString('6') )
       l.insert( 20, TObjString('7') )
       l.insert( -1, TObjString('8') )
-      self.assertEqual( list(l), ['8', 'a', 'b', '1', '6', '2', 'i', 'j', '3', '4', '5', 'j', '7'] )
+      if self.exp_pyroot:
+         # The pythonisation of TSeqCollection in experimental PyROOT mimics the
+         # behaviour of the Python list, in this case for insert.
+         # The Python list insert always inserts before the specified index, so if
+         # -1 is specified, insert will place the new element right before the last
+         # element of the list.
+         self.assertEqual(list(l), ['a', 'b', '1', '6', '2', 'i', 'j', '3', '4', '5', 'j', '8', '7'])
+         # Re-synchronize with current PyROOT's list
+         l.insert(0, TObjString('8'))
+         self.assertEqual(list(l), ['8', 'a', 'b', '1', '6', '2', 'i', 'j', '3', '4', '5', 'j', '8', '7'])
+         l.pop(-2)
+         self.assertEqual(list(l), ['8', 'a', 'b', '1', '6', '2', 'i', 'j', '3', '4', '5', 'j', '7'])
+      else:
+         self.assertEqual(list(l), ['8', 'a', 'b', '1', '6', '2', 'i', 'j', '3', '4', '5', 'j', '7'])
       self.assertEqual( l.pop(), '7' )
       self.assertEqual( l.pop(3), '1' )
       self.assertEqual( list(l), ['8', 'a', 'b', '6', '2', 'i', 'j', '3', '4', '5', 'j'] )
