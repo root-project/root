@@ -16,10 +16,7 @@ class TSeqCollectionListMethods(unittest.TestCase):
     def create_tseqcollection(self):
         sc = ROOT.TList()
         for i in reversed(range(self.num_elems)):
-            o = ROOT.TObjString(str(i))
-            # Prevent immediate deletion of C++ TObjStrings
-            SetOwnership(o, False)
-            sc.Add(o)
+            sc.Add(ROOT.TObjString(str(i)))
 
         return sc
 
