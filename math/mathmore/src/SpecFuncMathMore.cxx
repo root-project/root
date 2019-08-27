@@ -55,8 +55,11 @@ double assoc_legendre(unsigned l, unsigned m, double x) {
 
 }
 
-
-
+namespace internal{
+  double legendre(unsigned l, unsigned m, double x) {
+    return gsl_sf_legendre_Plm(l, m, x);
+  }
+}
 
 
 // [5.2.1.4] (complete) elliptic integral of the first kind

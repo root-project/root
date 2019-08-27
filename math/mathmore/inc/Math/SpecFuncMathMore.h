@@ -121,7 +121,9 @@ namespace Math {
   double assoc_legendre(unsigned l, unsigned m, double x);
 
 
-
+  namespace internal{
+    double legendre(unsigned l, unsigned m, double x);
+  }
 
 
   /**
