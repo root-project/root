@@ -80,7 +80,7 @@ or in `TBrowser` by opening `Browser Help → About ROOT`.
    ```{.cpp}
       TFile *f = TFile::Open("name.root?reproducible","RECREATE","File title");
    ```{.cpp}
-   Content of such file should always have same binary content when writing
+   Unlike regular `TFile`s, the content of such file has reproducible binary content when writing
    exactly same data. This achieved by writing pre-defined values for creation
    and modification date of TKey/TDirectory objects and null value for TUUID
    objects inside TFile. As drawback TRef object stored in such file cannot be
