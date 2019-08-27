@@ -240,8 +240,8 @@ RooSpan<double> RooChebychev::evaluateBatch(std::size_t begin, std::size_t batch
         throw std::logic_error("Requested a batch computation, but no batch data available.");
   }
   else {
-    const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName():0);
-    const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName():0);
+    const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName() : nullptr);
+    const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName() : nullptr);
     ChebychevEvaluate::compute(batchSize, xmax, xmin, output.data(), xData.data(), _coefList);
   }
   return output;

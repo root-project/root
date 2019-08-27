@@ -1169,11 +1169,9 @@ Bool_t RooWorkspace::importClassCode(const char* pat, Bool_t doReplace)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Save snapshot of values and attributes (including "Constant") of parameters 'params'
-/// If importValues is FALSE, the present values from the object in the workspace are
-/// saved. If importValues is TRUE, the values of the objects passed in the 'params'
-/// argument are saved
-
+/// Save snapshot of values and attributes (including "Constant") of given parameters.
+/// \param[in] name Name of the snapshot.
+/// \param[in] paramNames Comma-separated list of parameter names to be snapshot.
 Bool_t RooWorkspace::saveSnapshot(const char* name, const char* paramNames) 
 {
   return saveSnapshot(name,argSet(paramNames),kFALSE) ;
@@ -1184,7 +1182,7 @@ Bool_t RooWorkspace::saveSnapshot(const char* name, const char* paramNames)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Save snapshot of values and attributes (including "Constant") of parameters 'params'
+/// Save snapshot of values and attributes (including "Constant") of parameters 'params'.
 /// If importValues is FALSE, the present values from the object in the workspace are
 /// saved. If importValues is TRUE, the values of the objects passed in the 'params'
 /// argument are saved

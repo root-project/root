@@ -3156,7 +3156,7 @@ RooAbsFunc *RooAbsReal::bindVars(const RooArgSet &vars, const RooArgSet* nset, B
 
 void RooAbsReal::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/, Bool_t setValDirty)
 {
-  const RooAbsReal* other = static_cast<const RooAbsReal*>(source);
+  auto other = static_cast<const RooAbsReal*>(source);
   assert(dynamic_cast<const RooAbsReal*>(source));
 
   if (!other->_treeVar) {

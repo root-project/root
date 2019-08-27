@@ -284,7 +284,7 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const Ro
   _forcedUpdate(kFALSE)
 {
   for (const auto realVec : other._realStoreList) {
-    RooAbsReal* real = (RooAbsReal*) vars.find(realVec->bufArg()->GetName()) ;
+    auto real = static_cast<RooAbsReal*>(vars.find(realVec->bufArg()->GetName()));
     if (real) {
       // Clone vector
       _realStoreList.push_back(new RealVector(*realVec, real)) ;
@@ -1312,7 +1312,7 @@ void RooVectorDataStore::attachCache(const RooAbsArg* newOwner, const RooArgSet&
   cacheElements.insert(cacheElements.end(), _cache->_realfStoreList.begin(), _cache->_realfStoreList.end());
 
   for (const auto elm : cacheElements) {
-    RooAbsReal* real = (RooAbsReal*) cachedVarsIn.find(elm->bufArg()->GetName()) ;
+    auto real = static_cast<RooAbsReal*>(cachedVarsIn.find(elm->bufArg()->GetName()));
     if (real) {
       // Adjust buffer pointer
       real->attachToVStore(*_cache) ;
@@ -1320,7 +1320,7 @@ void RooVectorDataStore::attachCache(const RooAbsArg* newOwner, const RooArgSet&
   }
 
   for (const auto catVec : _cache->_catStoreList) {
-    RooAbsCategory* cat = (RooAbsCategory*) cachedVarsIn.find(catVec->bufArg()->GetName()) ;
+    auto cat = static_cast<RooAbsCategory*>(cachedVarsIn.find(catVec->bufArg()->GetName()));
     if (cat) {
       // Adjust buffer pointer
       cat->attachToVStore(*_cache) ;

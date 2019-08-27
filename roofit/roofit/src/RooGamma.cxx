@@ -60,7 +60,7 @@ RooPoison(N,mu) and treating the function as a PDF in mu.
 #include <Math/ProbFuncMathCore.h>
 
 #include <iostream>
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 
