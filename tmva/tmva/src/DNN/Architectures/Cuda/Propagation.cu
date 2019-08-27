@@ -240,7 +240,7 @@ void TCuda<AFloat>::ConvLayerForward(TCudaTensor<AFloat> & output,
                                      const DNN::CNN::TConvParams & params, EActivationFunction activFunc,
                                      TCudaTensor<AFloat> & inputPrime,
                                      const ConvDescriptors_t & /*descriptors*/,
-                                     void * /*cudnnWorkspace*/)
+                                     ConvWorkspace_t & /*workspace*/)
 {
    size_t height = calculateDimension(params.inputHeight, params.filterHeight, params.paddingHeight, params.strideRows);
    size_t width = calculateDimension(params.inputWidth, params.filterWidth, params.paddingWidth, params.strideCols);
@@ -283,6 +283,7 @@ void TCuda<AFloat>::ConvLayerBackward(TCudaTensor<AFloat> & activationGradientsB
                                       const Tensor_t & outputTensor,
                                       EActivationFunction activFunc,
                                       const ConvDescriptors_t & /*descriptors*/,
+                                      ConvWorkspace_t & /*workspace*/,
                                       size_t batchSize,
                                       size_t inputHeight,
                                       size_t inputWidth,
@@ -292,9 +293,7 @@ void TCuda<AFloat>::ConvLayerBackward(TCudaTensor<AFloat> & activationGradientsB
                                       size_t filterDepth,
                                       size_t filterHeight,
                                       size_t filterWidth,
-                                      size_t nLocalViews,
-                                      void * /*cudnnConvBwdWorkspaces*/, 
-                                      void * /*cudnnFilterBwdWorkspace*/)
+                                      size_t nLocalViews)
 {
     
    // Compute activation backward

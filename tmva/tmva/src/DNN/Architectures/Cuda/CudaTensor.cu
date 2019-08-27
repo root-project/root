@@ -224,7 +224,9 @@ template <typename AFloat>
 TCudaTensor<AFloat>::~TCudaTensor() 
 {
 //#if USE_CUDNN
-   CUDNNCHECK(cudnnDestroyTensorDescriptor(fTensorDescriptor));
+
+   // to be fixed !!
+   //CUDNNCHECK(cudnnDestroyTensorDescriptor(fTensorDescriptor));
 
    // When all tensors in a streamIndx are destroyed, release cudnn resources 
    //if (--fInstances[fStreamIndx] <= 0) CUDNNCHECK(cudnnDestroy(fCudnnHandle[fStreamIndx]));
@@ -267,20 +269,39 @@ inline void TCudaTensor<AFloat>::InitializeCuda()
       if      (std::is_same<AFloat, double>::value) {fDataType = CUDNN_DATA_DOUBLE;}
       else if (std::is_same<AFloat, float>::value)  {fDataType = CUDNN_DATA_FLOAT;}
 
+      SetTensorDescriptor();
+   }
+
+}
+template<typename AFloat>
+void TCudaTensor<AFloat>::SetTensorDescriptor() {
+      if (!fTensorDescriptor) return; 
+
       // cuDNN NdTensor format has a minsize of 4 tensor dimensions
       // 4D tensor is more performant on lower dimensions and supports all folowing operations
       if (fNDim == 4) {
-         CUDNNCHECK(cudnnSetTensor4dDescriptor(fTensorDescriptor,
+         if (fMemoryLayout == MemoryLayout::RowMajor)  {
+            CUDNNCHECK(cudnnSetTensor4dDescriptor(fTensorDescriptor,
                                                CUDNN_TENSOR_NCHW,// Layout of the tensor in memory
                                                fDataType,
                                                (int)fShape[0],   // batch size
                                                (int)fShape[1],   // no. channels
                                                (int)fShape[2],   // image height
                                                (int)fShape[3])); // image width
+            }
+         else {
+            CUDNNCHECK(cudnnSetTensor4dDescriptor(fTensorDescriptor,
+                       CUDNN_TENSOR_NCHW,// Layout of the tensor in memory
+                       fDataType,
+                       (int)fShape[3],   // batch size
+                       (int)fShape[2],   // no. channels
+                       (int)fShape[1],   // image height
+                       (int)fShape[0])); // image width
+            }
       }
       // Some operations in cudnn may not work with this tensor description
       else {
-        std::cout << "Dim = "<< fNDim 
+        std::cout << "Error : Dim = "<< fNDim 
                   <<". Currently only 4D tensors are supported for the TMVA cuDNN backend."
                   << std::endl;
         /*CUDNNCHECK(cudnnSetTensorNdDescriptor(fTensorDescriptor,
@@ -293,9 +314,16 @@ inline void TCudaTensor<AFloat>::InitializeCuda()
       size_t tensorSize;
       CUDNNCHECK(cudnnGetTensorSizeInBytes(fTensorDescriptor, &tensorSize));
       assert(fSize == tensorSize/sizeof(AFloat));
-   }
 
-}
+      std::cout << "set tensor descriptor " << std::endl;
+      int n,c,h,w = 0; 
+   int s1,s2,s3,s4 = 0; 
+   cudnnDataType_t  dataType; 
+   cudnnGetTensor4dDescriptor( fTensorDescriptor, &dataType,&n,&c,&h,&w,&s1,&s2,&s3,&s4 );
+   std::vector<size_t>  shape_input = {n,c,h,w}; 
+   assert (shape_input == GetShape());
+
+   }
 
 //____________________________________________________________________________
 template<typename AFloat>

@@ -365,8 +365,17 @@ template <typename ATensor>
 void randomBatch(ATensor &X)
 {
    for (size_t i = 0; i < X.GetFirstSize(); ++i) { 
-      auto mX = X.At(i).GetMatrix();
-      randomMatrix(mX);  
+      auto rX = X.At(i);
+      if (X.GetShape().size() == 3 || rX.GetFirstSize() == 1) { 
+         auto mX = rX.GetMatrix();
+         randomMatrix(mX); 
+      }
+      else { 
+         for (size_t j = 0; j < rX.GetFirstSize(); ++j ) {
+            auto mX = rX.At(j).GetMatrix(); 
+            randomMatrix(mX); 
+         }
+      } 
    }
 }
 
