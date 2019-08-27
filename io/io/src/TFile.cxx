@@ -310,14 +310,24 @@ TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorit
 ///    exit(-1);
 /// }
 /// ~~~
-///  When opening the file, the system checks the validity of this directory.
-///  If something wrong is detected, an automatic Recovery is performed. In
-///  this case, the file is scanned sequentially reading all logical blocks
-///  and attempting to rebuild a correct directory (see TFile::Recover).
-///  One can disable the automatic recovery procedure when reading one
-///  or more files by setting the environment variable "TFile.Recover: 0"
-///  in the system.rootrc file.
+/// When opening the file, the system checks the validity of this directory.
+/// If something wrong is detected, an automatic Recovery is performed. In
+/// this case, the file is scanned sequentially reading all logical blocks
+/// and attempting to rebuild a correct directory (see TFile::Recover).
+/// One can disable the automatic recovery procedure when reading one
+/// or more files by setting the environment variable "TFile.Recover: 0"
+/// in the system.rootrc file.
 ///
+/// A bit `TFile::kReproducible` can be enabled specifying
+/// the `"reproducible"` url option when creating the file:
+/// ~~~{.cpp}
+///   TFile *f = TFile::Open("name.root?reproducible","RECREATE","File title");
+/// ~~~
+/// Unlike regular `TFile`s, the content of such file has reproducible binary
+/// content when writing exactly same data. This achieved by writing pre-defined
+/// values for creation and modification date of TKey/TDirectory objects and
+/// null value for TUUID objects inside TFile. As drawback, TRef objects stored
+/// in such file cannot be read correctly.
 
 TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t compress)
            : TDirectoryFile(), fCompress(compress), fUrl(fname1,kTRUE), fInfoCache(0), fOpenPhases(0)

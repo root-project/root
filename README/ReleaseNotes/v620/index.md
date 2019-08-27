@@ -75,6 +75,17 @@ or in `TBrowser` by opening `Browser Help → About ROOT`.
 ## I/O Libraries
 
 * TMemFile: Apply customization of minimal block size also to the first block.
+* TFile: A new bit `TFile::kReproducible` was introduced. It can be enabled by
+  specifying the `"reproducible"` url option when creating the file:
+   ```{.cpp}
+      TFile *f = TFile::Open("name.root?reproducible","RECREATE","File title");
+   ```{.cpp}
+   Unlike regular `TFile`s, the content of such file has reproducible binary
+   content when writing exactly same data. This achieved by writing pre-defined
+   values for creation and modification date of TKey/TDirectory objects and null
+   value for TUUID objects inside TFile. As drawback, TRef objects stored in such
+   file cannot be read correctly.
+
 
 ## TTree Libraries
 
