@@ -756,11 +756,7 @@ RooCurve* RooCurve::makeErrorBand(const vector<RooCurve*>& variations, Double_t 
   for (int i=GetN()-1 ; i>=0 ; i--) {
     band->addPoint(GetX()[i],bandHi[i]) ;
   }	 
-<<<<<<< HEAD
   // if the axis of the old graph is alphanumeric, copy the labels to the new one as well
-=======
-
->>>>>>> edd96c5e07... added sorting of points, added copying bin labels for alphanumeric axes
   if(this->GetXaxis() && this->GetXaxis()->IsAlphanumeric()){
     band->GetXaxis()->Set(this->GetXaxis()->GetNbins(),this->GetXaxis()->GetXmin(),this->GetXaxis()->GetXmax());
     for(int i=0; i<this->GetXaxis()->GetNbins(); ++i){

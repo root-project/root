@@ -591,14 +591,16 @@ namespace {
 /// The plotable object will be deleted when this plot object is deleted.
 
 namespace {
+  // this helper function is intended to translate a graph from a regular axis to a labelled axis
+  // this version uses TGraph, which is a parent of RooCurve
   void translateGraph(TH1* hist, RooAbsRealLValue* xvar, TGraph* graph){
-    if(graph->GetXaxis()->IsAlphanumeric()){
-      return;
-    }
+    // if the graph already has a labelled axis, don't do anything
+    if(graph->GetXaxis()->IsAlphanumeric()) return;
     double xmin = hist->GetXaxis()->GetXmin();
     double xmax = hist->GetXaxis()->GetXmax();
     if(graph->TestBit(TGraph::kIsSortedX)){
       // sorted graphs are "line graphs"
+      // evaluate the graph at the lower and upper edge as well as the center of each bin
       std::vector<double> x;
       std::vector<double> y;
       x.push_back(xmin);
@@ -621,6 +623,7 @@ namespace {
       std::map<int,double> maxValues;
       int n = graph->GetN();
       double x, y;
+      // for each bin, find the min and max points to form an envelope
       for(int i=0; i<n; ++i){
         graph->GetPoint(i,x,y);
         int bin = xvar->getBinning().binNumber(x)+1;
@@ -640,6 +643,7 @@ namespace {
       graph->Set(hist->GetNbinsX()+2);
       int np=0;
       graph->SetPoint(np,xmin,xminY);
+      // assign the calculated envelope boundaries to the bin centers of the bins
       for(auto it = maxValues.begin(); it != maxValues.end(); ++it){
         graph->SetPoint(++np,hist->GetXaxis()->GetBinCenter(it->first),it->second);
       }
@@ -649,17 +653,22 @@ namespace {
       }
       graph->SetPoint(++np,xmin,xminY);
     }
+    // make sure that the graph also has the labels set, such that subsequent calls to translate this graph will not do anything
     graph->GetXaxis()->Set(hist->GetNbinsX(),xmin,xmax);
     for(int i=0; i<hist->GetNbinsX(); ++i){
       graph->GetXaxis()->SetBinLabel(i+1,hist->GetXaxis()->GetBinLabel(i+1));
     }
   }
+  // this version uses TGraphErrors, which is a parent of RooHist
   void translateGraph(TH1* hist, RooAbsRealLValue* xvar, TGraphAsymmErrors* graph){
+    // if the graph already has a labelled axis, don't do anything
     if(graph->GetXaxis()->IsAlphanumeric()) return; 
     int n = graph->GetN();
     double xmin = hist->GetXaxis()->GetXmin();
     double xmax = hist->GetXaxis()->GetXmax();
     double x, y;
+    // as this graph is histogram-like, we expect there to be one point per bin
+    // we just move these points to the respective bin centers
     for(int i=0; i<n; ++i){
       if(graph->GetPoint(i,x,y)!=i) break;
       int bin = xvar->getBinning().binNumber(x);
@@ -668,12 +677,19 @@ namespace {
       graph->SetPointEXlow(i,0.5*hist->GetXaxis()->GetBinWidth(bin+1));
     }
     graph->GetXaxis()->Set(hist->GetNbinsX(),xmin,xmax);
+    // make sure that the graph also has the labels set, such that subsequent calls to translate this graph will not do anything    
     for(int i=0; i<hist->GetNbinsX(); ++i){
       graph->GetXaxis()->SetBinLabel(i+1,hist->GetXaxis()->GetBinLabel(i+1));
     }
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Add the specified plotable object to our plot. Increase our y-axis
+/// limits to fit this object if necessary. The default lower-limit
+/// is zero unless we are plotting an object that takes on negative values.
+/// This call transfers ownership of the plotable object to this class.
+/// The plotable object will be deleted when this plot object is deleted.
 void RooPlot::addPlotable(RooPlotable *plotable, Option_t *drawOptions, Bool_t invisible, Bool_t refreshNorm)
 {
   // update our y-axis label and limits
