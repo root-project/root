@@ -2291,6 +2291,8 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
       RooAbsReal* intFrac = projection->createIntegral(*plotVar,*plotVar,o.normRangeName) ;
       _globalSelectComp = true; //It's unclear why this is done a second time. Maybe unnecessary.
       if(o.stype != RooAbsReal::Raw){
+        // this scaling should only be !=1  when plotting partial ranges
+        // still, raw means raw
         o.scaleFactor /= intFrac->getVal() ;
       }
       delete intFrac ;
