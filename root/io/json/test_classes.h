@@ -932,12 +932,16 @@ public:
    std::map<TJsonEx1, std::set<TJsonEx1>> map1;
    std::map<int, TNamed> map2;
    std::vector<TNamed> vect1;
+   std::vector<std::vector<std::vector<std::vector<int>>>> vvvv;
 
    TJsonEx13() = default;
    virtual ~TJsonEx13() {}
 
    void Init(int cnt = 4)
    {
+      std::vector<int> v;
+      std::vector<std::vector<int>> vv;
+      std::vector<std::vector<std::vector<int>>> vvv;
       TJsonEx1 ex1;
       for (int n=0;n<cnt;++n) {
          TNamed named(Form("name%d",n), Form("title%d",n));
@@ -946,7 +950,19 @@ public:
          map1[ex1] = set1;
          map2[n] = named;
          vect1.push_back(named);
+         v.emplace_back(n);
       }
+
+      for (int n=0;n<cnt;++n)
+         vv.emplace_back(v);
+      if (cnt>1) cnt--;
+
+      for (int n=0;n<cnt;++n)
+         vvv.emplace_back(vv);
+
+      if (cnt>1) cnt--;
+      for (int n=0;n<cnt;++n)
+         vvvv.emplace_back(vvv);
    }
 };
 

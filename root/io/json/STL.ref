@@ -1916,7 +1916,7 @@ TJsonEx12 store/read/store MATCHED len1:39076 len2:39076
 }
 
  ====== More exotic STL containers as set or map with TRef inside TJsonEx13 ===== 
-TJsonEx13 store/read/store MATCHED len1:4680 len2:4680
+TJsonEx13 store/read/store MATCHED len1:5045 len2:5045
 {
   "_typename" : "TJsonEx13",
   "set1" : [{
@@ -2132,6 +2132,7 @@ TJsonEx13 store/read/store MATCHED len1:4680 len2:4680
     "fBits" : 0,
     "fName" : "name3",
     "fTitle" : "title3"
-  }]
+  }],
+  "vvvv" : [[[[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]], [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]], [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]], [[[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]], [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]], [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]]]
 }
 
