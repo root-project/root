@@ -84,7 +84,7 @@ or in `TBrowser` by opening `Browser Help → About ROOT`.
    exactly same data. This achieved by writing pre-defined values for creation
    and modification date of TKey/TDirectory objects and null value for TUUID
    objects inside TFile. As drawback, TRef objects stored in such file cannot be
-   read correctly. This feature dedicated for testing of ROOT I/O functionality.
+   read correctly.
 
 
 ## TTree Libraries
