@@ -1,11 +1,17 @@
 if(ROOT_python_FOUND)
+  if (ROOT_pyroot_experimental_FOUND)
+    set(scott_file ScottCppyy.C) # Uses Cppyy header
+  else()
+    set(scott_file Scott.C)
+  endif()
+
   ROOTTEST_ADD_TEST(regression
                     MACRO PyROOT_regressiontests.py OPTS -b
                     LABELS longtest
-                    COPY_TO_BUILDDIR Scott.C Scott2.C Scott3.C MuonTileID.C LoKiNamespace.C ULongLong.C 
+                    COPY_TO_BUILDDIR ${scott_file} Scott2.C Scott3.C MuonTileID.C LoKiNamespace.C ULongLong.C 
                                      Till.C CoralAttributeList.C NestedNamespace.h Marco.C
                     PRECMD ${ROOT_root_CMD} -b -q -l -e gSystem->AddLinkedLibs\(\"${PYTHON_LIBRARY}\"\)
-                                         -e .L\ Scott.C+
+                                         -e .L\ ${scott_file}+
                                          -e .L\ Scott2.C+
                                          -e .L\ Scott3.C+
                                          -e .L\ MuonTileID.C+
