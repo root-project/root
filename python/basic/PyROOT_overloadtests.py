@@ -111,7 +111,12 @@ class TestClassOVERLOADS:
 
         # then try overloads based on them
         assert MoreOverloads().call(OlAA())     == "OlAA"
-        assert MoreOverloads().call(get_OlBB()) == "OlDD"   # <- has an unknown + void*
+        if self.exp_pyroot:
+            # New Cppyy calls the same overload as C++: (const OlBB&, void*)
+            get_olbb_res = "OlBB"
+        else:
+            get_olbb_res = "OlDD"   # <- has an unknown + void*
+        assert MoreOverloads().call(get_OlBB()) == get_olbb_res
         assert MoreOverloads().call(OlCC())     == "OlCC"
         assert MoreOverloads().call(get_OlDD()) == "OlDD"   # <- has an unknown
 
