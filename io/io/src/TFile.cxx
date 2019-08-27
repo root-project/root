@@ -318,6 +318,16 @@ TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorit
 ///  or more files by setting the environment variable "TFile.Recover: 0"
 ///  in the system.rootrc file.
 ///
+/// For testing purposes one could enable TFile::kReproducible flag
+/// specifying "reproducible" url option when creating file:
+/// ~~~{.cpp}
+///   TFile *f = TFile::Open("name.root?reproducible","RECREATE","File title");
+/// ~~~
+/// Content of such file should always have same binary content when writing
+/// exactly same data. This achieved by writing pre-defined values for creation
+/// and modification date of TKey/TDirectory objects and null value for TUUID
+/// objects inside TFile. As drawback TRef object stored in such file cannot be
+/// read correctly. This feature dedicated for testing of ROOT I/O functionality.
 
 TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t compress)
            : TDirectoryFile(), fCompress(compress), fUrl(fname1,kTRUE), fInfoCache(0), fOpenPhases(0)
