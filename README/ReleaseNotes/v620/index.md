@@ -75,6 +75,17 @@ or in `TBrowser` by opening `Browser Help → About ROOT`.
 ## I/O Libraries
 
 * TMemFile: Apply customization of minimal block size also to the first block.
+* TFile: For testing purposes one could enable TFile::kReproducible flag
+  specifying "reproducible" url option when creating file:
+   ```{.cpp}
+      TFile *f = TFile::Open("name.root?reproducible","RECREATE","File title");
+   ```{.cpp}
+   Content of such file should always have same binary content when writing
+   exactly same data. This achieved by writing pre-defined values for creation
+   and modification date of TKey/TDirectory objects and null value for TUUID
+   objects inside TFile. As drawback TRef object stored in such file cannot be
+   read correctly. This feature dedicated for testing of ROOT I/O functionality.
+
 
 ## TTree Libraries
 
