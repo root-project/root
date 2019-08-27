@@ -960,11 +960,7 @@ public:
    std::map<int, TNamed> map2;
    std::vector<TNamed> vect1;
 
-   TJsonEx13() : set1(), map1(), map2(), vect1() {
-      // make sure we avoid mis-detection for IsOnHeap.
-      vect1.reserve(10);
-      bzero( (void*)vect1.data(), vect1.capacity() * sizeof(TNamed));
-   }
+   TJsonEx13() = default;
    virtual ~TJsonEx13() {}
 
    void Init(int cnt = 4)
