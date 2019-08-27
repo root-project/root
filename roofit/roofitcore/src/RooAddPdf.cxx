@@ -857,7 +857,6 @@ RooSpan<double> RooAddPdf::evaluateBatch(std::size_t begin, std::size_t batchSiz
         1.);
 
     if (pdf.isSelectedComp()) {
-      #pragma omp simd
       for (std::size_t i = 0; i < n; ++i) { //CHECK_VECTORISE
         output[i] += pdfOutputs[i] * coef;
       }

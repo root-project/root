@@ -940,7 +940,6 @@ void RooAbsCollection::printMultiline(ostream&os, Int_t contents, Bool_t /*verbo
     os << indent << ClassName() << "::" << GetName() << ":" << (_ownCont?" (Owning contents)":"") << endl;
   }
 
-  int index= 0;
   TString deeper(indent);
   deeper.Append("     ");
 
@@ -955,8 +954,9 @@ void RooAbsCollection::printMultiline(ostream&os, Int_t contents, Bool_t /*verbo
     RooPrintable::nameFieldLength(maxNameLen+1) ;
   }
 
+  unsigned int idx = 0;
   for (auto next : _list) {
-    os << indent << std::setw(3) << ++index << ") ";
+    os << indent << std::setw(3) << ++idx << ") ";
     next->printStream(os,contents,kSingleLine,"");
   }
 
