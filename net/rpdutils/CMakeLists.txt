@@ -9,7 +9,7 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-include_directories(res ../auth/res)
+include_directories(res ../auth/inc ../auth/res)
 
 if(MACOSX_SSL_DEPRECATED)
   set_source_files_properties(src/rpdutils.cxx COMPILE_FLAGS "-Wno-deprecated-declarations")
