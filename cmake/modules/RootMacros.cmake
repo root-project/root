@@ -836,12 +836,41 @@ endfunction()
 function(ROOT_OBJECT_LIBRARY library)
   CMAKE_PARSE_ARGUMENTS(ARG "" "" "BUILTINS"  ${ARGN})
   ROOT_GET_SOURCES(lib_srcs src ${ARG_UNPARSED_ARGUMENTS})
-  include_directories(BEFORE ${CMAKE_BINARY_DIR}/include)
   add_library( ${library} OBJECT ${lib_srcs})
   if(lib_srcs MATCHES "(^|/)(G__[^.]*)[.]cxx.*")
      add_dependencies(${library} ${CMAKE_MATCH_2})
   endif()
   add_dependencies(${library} move_headers)
+
+  if(PROJECT_NAME STREQUAL "ROOT")
+    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+      target_include_directories(${library}
+        PRIVATE
+          ${CMAKE_CURRENT_SOURCE_DIR}/inc
+        INTERFACE
+          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+      )
+    endif()
+
+    if(root7 AND IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
+      target_include_directories(${library}
+        PRIVATE
+          ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc
+        INTERFACE
+          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>
+      )
+    endif()
+
+    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/res)
+      target_include_directories(${library}
+        PRIVATE
+          ${CMAKE_CURRENT_SOURCE_DIR}/res
+      )
+    endif()
+
+    # needed for generated headers like RConfigure.h and ROOT/RConfig.hxx
+    target_include_directories(${library} PRIVATE ${CMAKE_BINARY_DIR}/include)
+  endif()
 
   #--- Only for building shared libraries
   set_property(TARGET ${library} PROPERTY POSITION_INDEPENDENT_CODE 1)
@@ -896,7 +925,6 @@ endfunction()
 function(ROOT_MODULE_LIBRARY library)
   CMAKE_PARSE_ARGUMENTS(ARG "" "" "LIBRARIES" ${ARGN})
   ROOT_GET_SOURCES(lib_srcs src ${ARG_UNPARSED_ARGUMENTS})
-  include_directories(BEFORE ${CMAKE_BINARY_DIR}/include)
   add_library(${library} SHARED ${lib_srcs})
   add_dependencies(${library} move_headers)
   set_target_properties(${library}  PROPERTIES ${ROOT_LIBRARY_PROPERTIES})
@@ -905,6 +933,36 @@ function(ROOT_MODULE_LIBRARY library)
   # creates extra module variants, and not useful because we don't use these
   # macros.
   set_target_properties(${library} PROPERTIES DEFINE_SYMBOL "")
+
+  if(PROJECT_NAME STREQUAL "ROOT")
+    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+      target_include_directories(${library}
+        PRIVATE
+          ${CMAKE_CURRENT_SOURCE_DIR}/inc
+        INTERFACE
+          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+      )
+    endif()
+
+    if(root7 AND IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
+      target_include_directories(${library}
+        PRIVATE
+          ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc
+        INTERFACE
+          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>
+      )
+    endif()
+
+    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/res)
+      target_include_directories(${library}
+        PRIVATE
+          ${CMAKE_CURRENT_SOURCE_DIR}/res
+      )
+    endif()
+
+    # needed for generated headers like RConfigure.h and ROOT/RConfig.hxx
+    target_include_directories(${library} PRIVATE ${CMAKE_BINARY_DIR}/include)
+  endif()
 
   target_link_libraries(${library} PUBLIC ${ARG_LIBRARIES})
   #----Installation details-------------------------------------------------------
