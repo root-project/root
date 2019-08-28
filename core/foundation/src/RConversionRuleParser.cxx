@@ -15,6 +15,7 @@
 
 #include "RConversionRuleParser.h"
 #include "TSchemaRuleProcessor.h"
+#include "TClassEdit.h"
 
 #include <algorithm>
 #include <iostream>
@@ -900,12 +901,15 @@ namespace ROOT
       //////////////////////////////////////////////////////////////////////////
 
       SchemaRuleClassMap_t::iterator it;
-      std::string                    targetClass = rule["targetClass"];
-      it = gReadRules.find( targetClass );
+      std::string targetClass = rule["targetClass"];
+      std::string normalizedTargetName;
+      TClassEdit::GetNormalizedName(normalizedTargetName, targetClass);
+
+      it = gReadRules.find( normalizedTargetName );
       if( it == gReadRules.end() ) {
          std::list<SchemaRuleMap_t> lst;
          lst.push_back( rule );
-         gReadRules[targetClass] = lst;
+         gReadRules[normalizedTargetName] = lst;
       }
       else
          it->second.push_back( rule );
@@ -934,11 +938,13 @@ namespace ROOT
 
       SchemaRuleClassMap_t::iterator it;
       std::string                    targetClass = rule["targetClass"];
-      it = gReadRawRules.find( targetClass );
+      std::string normalizedTargetName;
+      TClassEdit::GetNormalizedName(normalizedTargetName, targetClass);
+      it = gReadRawRules.find( normalizedTargetName );
       if( it == gReadRawRules.end() ) {
          std::list<SchemaRuleMap_t> lst;
          lst.push_back( rule );
-         gReadRawRules[targetClass] = lst;
+         gReadRawRules[normalizedTargetName] = lst;
       }
       else
          it->second.push_back( rule );
