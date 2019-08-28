@@ -6,4 +6,6 @@ ROOTTEST_ADD_TEST(cxxmodules-implicit-build-error
                   WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
                   PASSREGEX "Had to build non-system module A implicitly")
 # Remove the the implicitly built module to make the test work for incremental builds and testing.
-file(REMOVE out.pcm out_rdict.pcm A.pcm)
+file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/out.pcm
+            ${CMAKE_CURRENT_BINARY_DIR}/out_rdict.pcm
+            ${CMAKE_CURRENT_BINARY_DIR}/A.pcm)
