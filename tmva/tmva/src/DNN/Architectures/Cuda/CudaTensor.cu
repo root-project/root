@@ -315,13 +315,12 @@ void TCudaTensor<AFloat>::SetTensorDescriptor() {
       CUDNNCHECK(cudnnGetTensorSizeInBytes(fTensorDescriptor, &tensorSize));
       assert(fSize == tensorSize/sizeof(AFloat));
 
-      std::cout << "set tensor descriptor " << std::endl;
-      int n,c,h,w = 0; 
-   int s1,s2,s3,s4 = 0; 
-   cudnnDataType_t  dataType; 
-   cudnnGetTensor4dDescriptor( fTensorDescriptor, &dataType,&n,&c,&h,&w,&s1,&s2,&s3,&s4 );
-   std::vector<size_t>  shape_input = {n,c,h,w}; 
-   assert (shape_input == GetShape());
+   //    int n,c,h,w = 0; 
+   // int s1,s2,s3,s4 = 0; 
+   // cudnnDataType_t  dataType; 
+   // cudnnGetTensor4dDescriptor( fTensorDescriptor, &dataType,&n,&c,&h,&w,&s1,&s2,&s3,&s4 );
+   // std::vector<size_t>  shape_input = {n,c,h,w}; 
+   // assert (shape_input == GetShape());
 
    }
 
