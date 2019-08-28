@@ -15,34 +15,22 @@
 
 #include <ROOT/RNTupleMetrics.hxx>
 
-#include <TError.h>
-
-#include <algorithm>
-#include <ctime>
 #include <ostream>
-#include <utility>
 
-std::string ROOT::Experimental::Detail::RNTupleTickCounter::ToString() const {
-   auto clocks = GetValue();
-   return std::to_string(std::uint64_t(
-      (double(clocks) / double(CLOCKS_PER_SEC)) / (1000. * 1000. * 1000.)));
-}
-
-ROOT::Experimental::Detail::RNTuplePerfCounter *
-ROOT::Experimental::Detail::RNTupleMetrics::Lookup(const std::string &name) const
+bool ROOT::Experimental::Detail::RNTupleMetrics::Contains(const std::string &name) const
 {
-   const auto itr = std::find(fCounterInfos.begin(), fCounterInfos.end(), name);
-   if (itr == fCounterInfos.end())
-      return nullptr;
-   return fCounters[std::distance(fCounterInfos.begin(), itr)].get();
+   for (const auto &c : fCounters) {
+      if (c->GetName() == name)
+         return true;
+   }
+   return false;
 }
 
 void ROOT::Experimental::Detail::RNTupleMetrics::Print(std::ostream &output) const
 {
-   const unsigned int N = fCounters.size();
-   for (unsigned int i = 0; i < N; ++i) {
-      output << fName << "." << fCounterInfos[i].fName << "|" << fCounterInfos[i].fUnit << "|"
-             << fCounterInfos[i].fDescription << "|" << fCounters[i]->ToString() << std::endl;
+   for (const auto &c : fCounters) {
+      output << fName << "." << c->GetName() << "|" << c->GetUnit() << "|" << c->GetDescription()
+             << "|" << c->ToString() << std::endl;
    }
 }
 
