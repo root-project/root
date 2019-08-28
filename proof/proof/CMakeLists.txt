@@ -87,3 +87,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Proof
     Thread
     Tree
 )
+
+target_include_directories(Proof PRIVATE ../proofplayer/inc)

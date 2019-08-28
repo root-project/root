@@ -52,3 +52,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Proofx
   BUILTINS
     XROOTD
 )
+
+target_include_directories(Proofx PRIVATE ../proofplayer/inc)
