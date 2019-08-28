@@ -760,12 +760,20 @@ function(ROOT_LINKER_LIBRARY library)
           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
       )
     endif()
+
     if(root7 AND IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
       target_include_directories(${library}
         PRIVATE
           ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc
         INTERFACE
           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>
+      )
+    endif()
+
+    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/res)
+      target_include_directories(${library}
+        PRIVATE
+          ${CMAKE_CURRENT_SOURCE_DIR}/res
       )
     endif()
 
