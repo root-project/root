@@ -68,6 +68,7 @@ if is_ipython:
     ip = get_ipython()
     if hasattr(ip,"kernel"):
         import JupyROOT
+        import JsMVA
 
 # Configure ROOT facade module
 from ._facade import ROOTFacade

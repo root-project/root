@@ -106,6 +106,9 @@ endforeach()
 file(COPY ${JupyROOTDirName} DESTINATION ${localruntimedir})
 install(DIRECTORY ${JupyROOTDirName} DESTINATION ${runtimedir})
 
+file(COPY python/JsMVA DESTINATION ${localruntimedir})
+install(DIRECTORY python/JsMVA DESTINATION ${runtimedir})
+
 # Disables warnings caused by Py_RETURN_TRUE/Py_RETURN_FALSE
 if(NOT MSVC)
     target_compile_options(ROOTPython PRIVATE -Wno-strict-aliasing)
