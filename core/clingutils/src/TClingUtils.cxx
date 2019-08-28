@@ -1752,10 +1752,8 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    // Check if we have any schema evolution rules for this class
    /////////////////////////////////////////////////////////////////////////////
 
-   std::string declName;
-   ROOT::TMetaUtils::GetQualifiedName(declName,*decl);
-   ROOT::SchemaRuleClassMap_t::iterator rulesIt1 = ROOT::gReadRules.find( declName.c_str() );
-   ROOT::SchemaRuleClassMap_t::iterator rulesIt2 = ROOT::gReadRawRules.find( declName.c_str() );
+   ROOT::SchemaRuleClassMap_t::iterator rulesIt1 = ROOT::gReadRules.find( classname.c_str() );
+   ROOT::SchemaRuleClassMap_t::iterator rulesIt2 = ROOT::gReadRawRules.find( classname.c_str() );
 
    ROOT::MembersTypeMap_t nameTypeMap;
    CreateNameTypeMap( *decl, nameTypeMap ); // here types for schema evo are written
