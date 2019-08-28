@@ -878,13 +878,13 @@ function(ROOT_OBJECT_LIBRARY library)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_MODULE_LIBRARY( <name> source1 source2 ... [DLLEXPORT] LIBRARIES library1 library2 ...)
+#---ROOT_MODULE_LIBRARY(<library> source1 source2 ... LIBRARIES library1 library2 ...)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_MODULE_LIBRARY library)
   CMAKE_PARSE_ARGUMENTS(ARG "" "" "LIBRARIES" ${ARGN})
   ROOT_GET_SOURCES(lib_srcs src ${ARG_UNPARSED_ARGUMENTS})
   include_directories(BEFORE ${CMAKE_BINARY_DIR}/include)
-  add_library( ${library} SHARED ${lib_srcs})
+  add_library(${library} SHARED ${lib_srcs})
   add_dependencies(${library} move_headers)
   set_target_properties(${library}  PROPERTIES ${ROOT_LIBRARY_PROPERTIES})
   # Do not add -Dname_EXPORTS to the command-line when building files in this
