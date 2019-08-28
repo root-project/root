@@ -1,5 +1,5 @@
-#ifndef __BRANCHLESSTREE_HXX_
-#define __BRANCHLESSTREE_HXX_
+#ifndef __BRANCHLESS_TREE_HXX_
+#define __BRANCHLESS_TREE_HXX_
 
 #include "json.hpp"
 #include <fstream>
@@ -11,6 +11,7 @@
 #include <vector>
 #include <array>
 #include <utility>
+
 using json = nlohmann::json;
 
 namespace BranchlessTree {

@@ -3,8 +3,8 @@
 
 #include "BranchedTree.hxx"
 #include "BranchlessTree.hxx"
-#include "bdt_helpers.hxx"
-#include "jit_code_generators.hxx"
+#include "TreeHelpers.hxx"
+#include "CodeGeneratorsJIT.hxx"
 
 #include <memory>
 

@@ -1,5 +1,5 @@
-#ifndef __BDT_HELPERS_H_
-#define __BDT_HELPERS_H_
+#ifndef __TREE_HELPERS_H_
+#define __TREE_HELPERS_H_
 
 #include <numeric>
 #include <iostream>

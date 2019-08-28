@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include "RForestInference.hxx"
-#include "bdt_helpers.hxx"
+#include "TreeHelpers.hxx"
 
 //#include <xgboost/c_api.h> // for xgboost
 //#include "generated_files/evaluate_forest2.h"

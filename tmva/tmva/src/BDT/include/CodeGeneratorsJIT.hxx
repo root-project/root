@@ -12,7 +12,7 @@
 
 #include "BranchlessTree.hxx"
 #include "BranchedTree.hxx"
-#include "bdt_helpers.hxx"
+#include "TreeHelpers.hxx"
 
 #include "TInterpreter.h" // for gInterpreter
 

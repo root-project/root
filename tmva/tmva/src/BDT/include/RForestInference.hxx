@@ -1,7 +1,8 @@
 #ifndef __RFORESTINFERENCE_HXX_
 #define __RFORESTINFERENCE_HXX_
 
-#include "forest_helpers.hxx"
+#include "ForestHelpers.hxx"
+
 // using json = nlohmann::json;
 
 std::string generated_files_path = "generated_files/"; // For DEBUG
