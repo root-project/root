@@ -21,6 +21,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PgSQL
     src/TPgSQLStatement.cxx
   DEPENDENCIES
     Core
+    MathCore
     Net
     RIO
 )
