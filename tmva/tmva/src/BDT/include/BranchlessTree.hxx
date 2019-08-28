@@ -1,5 +1,5 @@
-#ifndef __ARRAY_BDT_H_
-#define __ARRAY_BDT_H_
+#ifndef __BRANCHLESSTREE_HXX_
+#define __BRANCHLESSTREE_HXX_
 
 #include "json.hpp"
 #include <fstream>
@@ -13,7 +13,7 @@
 #include <utility>
 using json = nlohmann::json;
 
-namespace array_bdt {
+namespace BranchlessTree {
 
 template <typename T>
 class Tree {
@@ -164,5 +164,5 @@ bool cmp(const Tree<T> &a, const Tree<T> &b)
    }
 }
 
-} // namespace array_bdt
+} // namespace BranchlessTree
 #endif

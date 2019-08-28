@@ -1,5 +1,5 @@
-#ifndef __UNIQUE_BDT_HXX_
-#define __UNIQUE_BDT_HXX_
+#ifndef __BRANCHEDTREE_HXX_
+#define __BRANCHEDTREE_HXX_
 
 #include <string>
 #include <map>
@@ -14,7 +14,7 @@
 
 using json = nlohmann::json;
 
-namespace unique_bdt {
+namespace BranchedTree {
 
 template <typename T>
 class Node {
@@ -135,7 +135,7 @@ bool cmp(const Tree<T> &a, const Tree<T> &b)
    }
 }
 
-} // namespace unique_bdt
+} // namespace BranchedTree
 
 #endif
 // end

@@ -101,7 +101,7 @@ std::vector<T> _read_csv_line(std::string &s_line)
 
 /// reads csv file contaning floats into vector<vector<float>>
 template <class T>
-std::vector<std::vector<T>> read_csv(std::string &filename)
+std::vector<std::vector<T>> read_csv(const std::string &filename)
 {
    // std::ifstream fin;
    std::ifstream               file(filename);
@@ -117,7 +117,7 @@ std::vector<std::vector<T>> read_csv(std::string &filename)
 
 /// write vector of vectors to csv file
 template <class T>
-void write_csv(std::string &filename, std::vector<std::vector<T>> values_vec)
+void write_csv(const std::string &filename, std::vector<std::vector<T>> values_vec)
 {
    std::ofstream fout;
    // opens an existing csv file or creates a new file.
@@ -143,7 +143,7 @@ void write_csv(std::string &filename, std::vector<std::vector<T>> values_vec)
 
 /// write vector to csv file
 template <class T>
-void write_csv(std::string &filename, std::vector<T> values_vec)
+void write_csv(const std::string &filename, std::vector<T> values_vec)
 {
    std::ofstream fout;
    // opens an existing csv file or creates a new file.

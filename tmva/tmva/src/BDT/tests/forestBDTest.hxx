@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "forest.hxx"
+#include "RForestInference.hxx"
 #include "bdt_helpers.hxx"
 
 //#include <xgboost/c_api.h> // for xgboost
@@ -11,116 +11,64 @@ int         loop_size       = 256;
 
 int tree_number = 1;
 
-TEST(forestBDT, UniquePredictions)
-{
-   const std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
-   std::vector<std::vector<bool>>        groundtruth   = read_csv<bool>(preds_file);
-   std::vector<bool>                     preds;
-   preds.reserve(events_vector.size());
+template <typename T>
+struct DataStruct {
+   const std::vector<std::vector<T>>    events_vec_vec;
+   const std::vector<T>                 events_vector;
+   const T *                            events_pointer = nullptr;
+   const std::vector<std::vector<bool>> groundtruth;
+   std::vector<bool>                    preds;
+   const int                            rows, cols;
 
-   ForestBranched<float> Forest;
-   Forest.LoadFromJson("lala", json_model_file);
-   int rows = 5;
-   int cols = 5;
-   Forest.inference(events_vector, rows, cols, preds);
-
-   for (size_t i = 0; i < preds.size(); i++) {
-      ASSERT_EQ(preds[i], groundtruth[i][0]);
+   DataStruct(const std::string &events_file, const std::string &preds_file)
+      : events_vec_vec(read_csv<T>(events_file)), events_vector(convert_VecMatrix2Vec<T>(events_vec_vec)),
+        events_pointer(events_vector.data()), groundtruth(read_csv<bool>(preds_file)), rows(events_vec_vec.size()),
+        cols(events_vec_vec[0].size())
+   {
+      preds.reserve(rows);
    }
+};
 
-   // for (int i = 0; i < Forest.trees.size(); i++) {
-   //  std::cout << get_max_depth(Forest.trees[i].nodes) << "  \n";
-   //}
-}
-
-TEST(forestBDT, ArrayPredictions)
+template <typename T, typename ForestType>
+void test_predictions()
 {
-   std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
-   std::vector<std::vector<bool>>  groundtruth   = read_csv<bool>(preds_file);
-   std::vector<bool>               preds;
-   preds.reserve(events_vector.size());
+   DataStruct<T> _data(events_file, preds_file);
 
-   ForestBranchless<float> Forest;
+   ForestType Forest;
    Forest.LoadFromJson("lala", json_model_file);
-   int rows = events_vector.size();
-   int cols = events_vector[0].size();
-   Forest.inference(events_vector, rows, cols, preds);
+   Forest.inference(_data.events_pointer, _data.rows, _data.cols, _data.preds);
 
-   for (size_t i = 0; i < preds.size(); i++) {
-      ASSERT_EQ(preds[i], groundtruth[i][0]);
-   }
-
-   std::vector<bool> preds2;
-   preds2.reserve(events_vector.size());
-   std::vector<float> vector2 = convert_VecMatrix2Vec(events_vector);
-   Forest.inference(vector2.data(), rows, cols, preds2);
-   for (size_t i = 0; i < groundtruth.size(); i++) {
-      ASSERT_EQ(preds2[i], groundtruth[i][0]);
+   for (size_t i = 0; i < _data.preds.size(); i++) {
+      ASSERT_EQ(_data.preds[i], _data.groundtruth[i][0]);
    }
 }
 
-TEST(forestBDT, ArrayTranslation)
+TEST(forestBDT, BranchedPredictions)
 {
-   std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
-   std::vector<std::vector<bool>>  groundtruth   = read_csv<bool>(preds_file);
-   std::vector<bool>               preds;
-   preds.reserve(events_vector.size());
+   test_predictions<float, ForestBranched<float>>();
+   test_predictions<double, ForestBranched<double>>();
+   test_predictions<long double, ForestBranched<long double>>();
+}
 
-   ForestBranchless<float> Forest;
-   Forest.LoadFromJson2("my_key", json_model_file);
-   array_bdt::Tree<float> test = Forest.trees[tree_number];
-
-   int rows = events_vector.size();
-   int cols = events_vector[0].size();
-   Forest.inference(events_vector, rows, cols, preds);
-
-   for (size_t i = 0; i < preds.size(); i++) {
-      ASSERT_EQ(preds[i], groundtruth[i][0]);
-   }
+TEST(forestBDT, BranchlessPredictions)
+{
+   test_predictions<float, ForestBranchless<float>>();
+   test_predictions<double, ForestBranchless<double>>();
+   test_predictions<long double, ForestBranchless<long double>>();
 }
 
 TEST(forestBDT, JitForestPredictions)
 {
-   std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
-   std::vector<std::vector<bool>>  groundtruth   = read_csv<bool>(preds_file);
-   std::vector<bool>               preds;
-   preds.reserve(events_vector.size());
-
-   ForestBranchedJIT<float> Forest;
-   Forest.LoadFromJson("lala", json_model_file);
-   int rows = events_vector.size();
-   int cols = events_vector[0].size();
-   Forest.inference(events_vector, rows, cols, preds);
-
-   for (size_t i = 0; i < groundtruth.size(); i++) {
-      ASSERT_EQ(preds[i], groundtruth[i][0]);
-   }
+   test_predictions<float, ForestBranchedJIT<float>>();
+   test_predictions<double, ForestBranchedJIT<double>>();
+   // test_predictions<long double, ForestBranchedJIT<long double>>();
 }
 
 TEST(forestBDT, JitForestBranchless)
 {
-   std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
-   std::vector<std::vector<bool>>  groundtruth   = read_csv<bool>(preds_file);
-   std::vector<bool>               preds;
-   preds.reserve(events_vector.size());
-
-   ForestBranchlessJIT<float> Forest;
-   Forest.LoadFromJson("lala", json_model_file);
-   int rows = events_vector.size();
-   int cols = events_vector[0].size();
-   Forest.inference(events_vector, rows, cols, preds);
-
-   for (size_t i = 0; i < groundtruth.size(); i++) {
-      ASSERT_EQ(preds[i], groundtruth[i][0]);
-   }
-
-   std::vector<bool> preds2;
-   preds2.reserve(events_vector.size());
-   std::vector<float> vector2 = convert_VecMatrix2Vec(events_vector);
-   Forest.inference(vector2.data(), rows, cols, preds2);
-   for (size_t i = 0; i < groundtruth.size(); i++) {
-      ASSERT_EQ(preds2[i], groundtruth[i][0]);
-   }
+   test_predictions<float, ForestBranchlessJIT<float>>();
+   test_predictions<double, ForestBranchlessJIT<double>>();
+   // test_predictions<long double, ForestBranchlessJIT<long double>>();
 }
 
 /*
@@ -135,64 +83,6 @@ TEST(forestBDT, UniqueBatchPredictions)
    Forest<unique_bdt::Tree> Forest;
    Forest.get_Forest(json_model_file);
    Forest.do_predictions_batch(events_vector, preds, loop_size);
-
-   for (size_t i = 0; i < preds.size(); i++) {
-      ASSERT_EQ(preds[i], groundtruth[i][0]);
-   }
-}
-
-TEST(forestBDT, UniqueBatch2Predictions)
-{
-   std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
-   std::vector<std::vector<bool>>  groundtruth   = read_csv<bool>(preds_file);
-   std::vector<bool>               preds;
-   preds.reserve(events_vector.size());
-
-   Forest<unique_bdt::Tree> Forest;
-   Forest.get_Forest(json_model_file);
-   Forest.do_predictions(events_vector, preds, loop_size);
-
-   // std::string tmp_filename = "./data/tmp2.csv";
-   // write_csv(tmp_filename, preds);
-
-   for (size_t i = 0; i < preds.size(); i++) {
-      ASSERT_EQ(preds[i], groundtruth[i][0]);
-   }
-}
-
-
-
-
-
-TEST(forestBDT, JitPredictionsBranchless)
-{
-   std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
-   std::vector<std::vector<bool>>  groundtruth   = read_csv<bool>(preds_file);
-   std::vector<bool>               preds;
-   preds.reserve(events_vector.size());
-
-   Forest<std::function<bool(const float *)>> Forest;
-   Forest.get_Forest(json_model_file);
-   Forest.do_predictions(events_vector, preds);
-
-   std::string tmp_filename = "data/tmp3.csv";
-   write_csv(tmp_filename, preds);
-
-   for (size_t i = 0; i < preds.size(); i++) {
-      ASSERT_EQ(preds[i], groundtruth[i][0]);
-   }
-}
-
-TEST(forestBDT, JitPredictionsAll)
-{
-   std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
-   std::vector<std::vector<bool>>  groundtruth   = read_csv<bool>(preds_file);
-   std::vector<bool>               preds;
-   preds.reserve(events_vector.size());
-
-   Forest<std::function<void(const std::vector<std::vector<float>> &, std::vector<bool> &)>> Forest;
-   Forest.get_Forest(json_model_file, events_vector);
-   Forest.do_predictions(events_vector, preds);
 
    for (size_t i = 0; i < preds.size(); i++) {
       ASSERT_EQ(preds[i], groundtruth[i][0]);

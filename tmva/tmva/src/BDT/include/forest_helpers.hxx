@@ -1,17 +1,16 @@
 #ifndef __FOREST_HELPERS_HXX_
 #define __FOREST_HELPERS_HXX_
 
-#include "unique_bdt.hxx"
-#include "array_bdt.hxx"
+#include "BranchedTree.hxx"
+#include "BranchlessTree.hxx"
 #include "bdt_helpers.hxx"
-#include "jit_functions.hxx"
 #include "jit_code_generators.hxx"
 
 #include <memory>
 
 ///// To convert brached to branchless /////
 template <typename T>
-int get_max_depth(const std::unique_ptr<unique_bdt::Node<T>> &node, int index = 1, int final_index = 0)
+int get_max_depth(const std::unique_ptr<BranchedTree::Node<T>> &node, int index = 1, int final_index = 0)
 {
    if (index > final_index) final_index = index;
 
@@ -37,7 +36,7 @@ void fill_tree(const int &index, const int &max_index, std::vector<T> &threshold
 }
 
 template <typename T>
-void recurse_through_tree(const unique_bdt::Node<T> &node, std::vector<T> &thresholds, std::vector<int> &features,
+void recurse_through_tree(const BranchedTree::Node<T> &node, std::vector<T> &thresholds, std::vector<int> &features,
                           int index = 0)
 {
    thresholds.at(index) = node.split_threshold;
@@ -58,9 +57,9 @@ void recurse_through_tree(const unique_bdt::Node<T> &node, std::vector<T> &thres
 }
 
 template <typename T>
-void convert_uniquePtrTree_2_arrayTree(const unique_bdt::Tree<T> &tree_unique, array_bdt::Tree<T> &tree)
+void convert_uniquePtrTree_2_arrayTree(const BranchedTree::Tree<T> &tree_unique, BranchlessTree::Tree<T> &tree)
 {
-   // array_bdt::Tree<T> tree;
+   // BranchlessTree::Tree<T> tree;
 
    int    depth        = get_max_depth(tree_unique.nodes);
    size_t array_length = std::pow(2, depth + 1) - 1; // (2^0+2^1+2^2+...)
@@ -74,9 +73,9 @@ void convert_uniquePtrTree_2_arrayTree(const unique_bdt::Tree<T> &tree_unique, a
 }
 
 template <typename T>
-std::vector<array_bdt::Tree<T>> Branched2BranchlessTrees(const std::vector<unique_bdt::Tree<T>> &trees_unique)
+std::vector<BranchlessTree::Tree<T>> Branched2BranchlessTrees(const std::vector<BranchedTree::Tree<T>> &trees_unique)
 {
-   std::vector<array_bdt::Tree<T>> trees;
+   std::vector<BranchlessTree::Tree<T>> trees;
    trees.resize(trees_unique.size());
    for (int i = 0; i < trees.size(); i++) {
       convert_uniquePtrTree_2_arrayTree(trees_unique[i], trees[i]);
