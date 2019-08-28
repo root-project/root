@@ -1,5 +1,5 @@
-#ifndef __FOREST_HXX_
-#define __FOREST_HXX_
+#ifndef __RFORESTINFERENCE_HXX_
+#define __RFORESTINFERENCE_HXX_
 
 #include "forest_helpers.hxx"
 // using json = nlohmann::json;
@@ -15,17 +15,18 @@ protected:
    /// Event by event prediction
 
    /// these two possibilities can take place:
-   // std::function<T(T)> objective_func = binary_logistic<T>; // Default objective function
-   std::function<bool(T)> objective_func = binary_logistic<T>; // Default objective function
+   std::function<T(T)> objective_func = logistic_function<T>; // Default objective function
+   // std::function<bool(T)> objective_func = binary_logistic<T>; // Default objective function
+   std::string s_obj_func = "logistic";
 
 public:
    forestType trees;
    void       set_objective_function(std::string func_name); // or int KIND
-   void       inference(const T *events_vector, unsigned int rows, unsigned int cols, std::vector<bool> &preds);
-   void       inference(const T *events_vector, unsigned int rows, unsigned int cols, std::vector<bool> &preds,
+   void       inference(const T *events_vector, unsigned int rows, unsigned int cols, std::vector<T> &preds);
+   void       inference(const T *events_vector, unsigned int rows, unsigned int cols, std::vector<T> &preds,
                         unsigned int loop_size); // Batched version
    void       inference(const std::vector<std::vector<T>> &events_vector, unsigned int rows, unsigned int cols,
-                        std::vector<bool> &preds);
+                        std::vector<T> &preds);
    void       _predict(T *predictions, const unsigned int num_predictions, unsigned int *classified_data);
 };
 
@@ -46,8 +47,8 @@ class ForestBranchless : public ForestBase<T, std::vector<BranchlessTree::Tree<T
 
 private:
 public:
-   void LoadFromJson(const std::string &key, const std::string &filename, bool bool_sort_trees = true);
-   void LoadFromJson2(const std::string &key, const std::string &json_filename, bool bool_sort_trees = true);
+   void LoadFromJson2(const std::string &key, const std::string &filename, bool bool_sort_trees = true);
+   void LoadFromJson(const std::string &key, const std::string &json_filename, bool bool_sort_trees = true);
 };
 
 template <typename T>
@@ -55,9 +56,9 @@ template <typename T>
 class ForestBaseJIT : public ForestBase<T, std::function<bool(const T *)>> {
 private:
 public:
-   void inference(const T *events_vector, unsigned int rows, unsigned int cols, std::vector<bool> &preds);
+   void inference(const T *events_vector, unsigned int rows, unsigned int cols, std::vector<T> &preds);
    void inference(const std::vector<std::vector<T>> &events_vector, unsigned int rows, unsigned int cols,
-                  std::vector<bool> &preds);
+                  std::vector<T> &preds);
    // void LoadFromJson(const std::string &key, const std::string &filename, bool bool_sort_trees = true);
 };
 
@@ -81,7 +82,7 @@ public:
 /// Inference for non-jitted functions
 template <typename T, typename treeType>
 void ForestBase<T, treeType>::inference(const T *events_vector, unsigned int rows, unsigned int cols,
-                                        std::vector<bool> &preds)
+                                        std::vector<T> &preds)
 {
    T preds_tmp;
    for (size_t i = 0; i < rows; i++) {
@@ -95,7 +96,7 @@ void ForestBase<T, treeType>::inference(const T *events_vector, unsigned int row
 
 template <typename T, typename treeType>
 void ForestBase<T, treeType>::inference(const std::vector<std::vector<T>> &events_vector, unsigned int rows,
-                                        unsigned int cols, std::vector<bool> &preds)
+                                        unsigned int cols, std::vector<T> &preds)
 {
    T preds_tmp;
    for (size_t i = 0; i < rows; i++) {
@@ -109,7 +110,7 @@ void ForestBase<T, treeType>::inference(const std::vector<std::vector<T>> &event
 
 template <typename T>
 void ForestBaseJIT<T>::inference(const T *events_vector, unsigned int rows, unsigned int cols,
-                                 std::vector<bool> &preds) // T *preds)
+                                 std::vector<T> &preds) // T *preds)
 {
    for (size_t i = 0; i < rows; i++) {
       // preds[i]
@@ -119,7 +120,7 @@ void ForestBaseJIT<T>::inference(const T *events_vector, unsigned int rows, unsi
 
 template <typename T>
 void ForestBaseJIT<T>::inference(const std::vector<std::vector<T>> &events_vector, unsigned int rows, unsigned int cols,
-                                 std::vector<bool> &preds)
+                                 std::vector<T> &preds)
 {
    for (size_t i = 0; i < rows; i++) {
       preds.push_back(this->trees(events_vector[i].data())); // .data()
@@ -130,7 +131,7 @@ void ForestBaseJIT<T>::inference(const std::vector<std::vector<T>> &events_vecto
 /// Load to unique_ptr implementation
 template <typename T, typename treeType>
 std::vector<BranchedTree::Tree<T>> ForestBase<T, treeType>::_LoadFromJson(const std::string &json_file,
-                                                                        const bool &       bool_sort_trees)
+                                                                          const bool &       bool_sort_trees)
 {
    std::string my_config       = read_file_string(json_file);
    auto        json_model      = json::parse(my_config);
@@ -185,9 +186,9 @@ void ForestBranchedJIT<T>::LoadFromJson(const std::string &key, const std::strin
 
    // write to file for debug
    std::string filename = generated_files_path + "generated_forest.h";
-   write_generated_code_to_file<T, BranchedTree::Tree<T>>(trees, filename);
+   write_generated_code_to_file<T, BranchedTree::Tree<T>>(trees, this->s_obj_func, filename);
 
-   this->trees = JitTrees<T, BranchedTree::Tree<T>>(trees);
+   this->trees = JitTrees<T, BranchedTree::Tree<T>>(trees, this->s_obj_func);
 }
 
 /*
@@ -201,28 +202,14 @@ template <typename T>
 void ForestBranchlessJIT<T>::LoadFromJson(const std::string &key, const std::string &json_filename,
                                           bool bool_sort_trees)
 {
-   std::vector<BranchedTree::Tree<T>> trees_unique = this->_LoadFromJson(json_filename, bool_sort_trees);
-   std::vector<BranchlessTree::Tree<T>>  trees        = Branched2BranchlessTrees(trees_unique);
+   std::vector<BranchedTree::Tree<T>>   trees_unique = this->_LoadFromJson(json_filename, bool_sort_trees);
+   std::vector<BranchlessTree::Tree<T>> trees        = Branched2BranchlessTrees(trees_unique);
 
    // write to file for debug
    std::string filename = generated_files_path + "generated_forest.h";
-   write_generated_code_to_file<T, BranchlessTree::Tree<T>>(trees, filename);
+   write_generated_code_to_file<T, BranchlessTree::Tree<T>>(trees, this->s_obj_func, filename);
 
-   this->trees = JitTrees<T, BranchlessTree::Tree<T>>(trees);
-}
-
-template <typename T>
-inline bool classify(T value)
-{
-   return (value > 0.5);
-}
-
-template <typename T>
-void _predict(T *predictions, const unsigned int num_predictions, unsigned int *classified_data)
-{
-   for (unsigned int i = 0; i < num_predictions; i++) {
-      classified_data[i] = classify(predictions[i]);
-   }
+   this->trees = JitTrees<T, BranchlessTree::Tree<T>>(trees, this->s_obj_func);
 }
 
 #endif

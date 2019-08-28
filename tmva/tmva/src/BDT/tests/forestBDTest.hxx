@@ -17,6 +17,7 @@ struct DataStruct {
    const std::vector<T>                 events_vector;
    const T *                            events_pointer = nullptr;
    const std::vector<std::vector<bool>> groundtruth;
+   std::vector<T>                       scores;
    std::vector<bool>                    preds;
    const int                            rows, cols;
 
@@ -26,6 +27,7 @@ struct DataStruct {
         cols(events_vec_vec[0].size())
    {
       preds.reserve(rows);
+      scores.reserve(rows);
    }
 };
 
@@ -35,9 +37,10 @@ void test_predictions()
    DataStruct<T> _data(events_file, preds_file);
 
    ForestType Forest;
-   Forest.LoadFromJson("lala", json_model_file);
-   Forest.inference(_data.events_pointer, _data.rows, _data.cols, _data.preds);
+   Forest.LoadFromJson("my_key", json_model_file);
+   Forest.inference(_data.events_pointer, _data.rows, _data.cols, _data.scores);
 
+   _predict(_data.scores.data(), _data.preds.size(), _data.preds);
    for (size_t i = 0; i < _data.preds.size(); i++) {
       ASSERT_EQ(_data.preds[i], _data.groundtruth[i][0]);
    }
@@ -61,14 +64,14 @@ TEST(forestBDT, JitForestPredictions)
 {
    test_predictions<float, ForestBranchedJIT<float>>();
    test_predictions<double, ForestBranchedJIT<double>>();
-   // test_predictions<long double, ForestBranchedJIT<long double>>();
+   test_predictions<long double, ForestBranchedJIT<long double>>();
 }
 
 TEST(forestBDT, JitForestBranchless)
 {
    test_predictions<float, ForestBranchlessJIT<float>>();
    test_predictions<double, ForestBranchlessJIT<double>>();
-   // test_predictions<long double, ForestBranchlessJIT<long double>>();
+   test_predictions<long double, ForestBranchlessJIT<long double>>();
 }
 
 /*

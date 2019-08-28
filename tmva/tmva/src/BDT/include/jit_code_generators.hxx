@@ -44,10 +44,11 @@ std::function<bool(const T *event)> jit_forest(const std::string &tojit, const s
 
 /// Helper to write the type as string
 template <typename T> // primary template
-std::string type_as_string();
-//{
-// static_assert(false, "This function has not been specialized for the provided type");
-//}
+std::string type_as_string()
+{
+   static_assert(std::is_floating_point<T>::value,
+                 "This function has not been specialized for the provided type. Type has to be a floating_point type");
+}
 
 template <>
 std::string type_as_string<float>()
@@ -92,11 +93,15 @@ void generate_objective_function(std::ostream &fout, const std::string &s_obj_fu
    }
 }
 
-void generate_file_footer(std::ostream &fout, const std::string &s_id)
+void generate_file_footer(std::ostream &fout, const std::string &s_id, const std::string &s_obj_func)
 {
    bool use_namespaces = (!s_id.empty());
-   fout << "result = 1. / (1. + (1. / std::exp(result)));" << std::endl;
-   fout << "return (result > 0.5);" << std::endl;
+   // fout << "result = 1. / (1. + (1. / std::exp(result)));" << std::endl;
+   // fout << "return (result > 0.5);" << std::endl;
+
+   fout << "return ";
+   generate_objective_function(fout, s_obj_func);
+   fout << std::endl;
 
    fout << "} // end of function" << std::endl;
 
@@ -144,15 +149,15 @@ void generate_if_statement_for_bdt(std::ostream &fout,
 /// Generate the code for Forest evaluation
 template <typename T>
 void generate_code_forest(std::ostream &fout, const std::vector<BranchedTree::Tree<T>> &trees, int number_of_trees,
-                          std::string s_id = "")
+                          std::string s_id = "", const std::string &s_obj_func = "logistic")
 {
    generate_file_header(fout, s_id);
-   fout << "bool generated_forest (const " << type_as_string<T>() << " * event){" << std::endl
+   fout << type_as_string<T>() << " generated_forest (const " << type_as_string<T>() << " * event){" << std::endl
         << "" << type_as_string<T>() << " result = 0;" << std::endl;
    for (int i = 0; i < number_of_trees; i++) {
       generate_if_statement_for_bdt<T>(fout, trees[i].nodes.get());
    }
-   generate_file_footer(fout, s_id);
+   generate_file_footer(fout, s_id, s_obj_func);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -214,7 +219,7 @@ void generate_branchless_tree(std::ostream &fout, const BranchlessTree::Tree<T> 
 /// Generate the code for Forest evaluation
 template <typename T>
 void generate_code_forest(std::ostream &fout, const std::vector<BranchlessTree::Tree<T>> &trees, int number_of_trees,
-                          std::string s_id = "")
+                          std::string s_id = "", const std::string &s_obj_func = "logistic")
 {
    int total_array_length = 0;
    for (auto &tree : trees) {
@@ -225,7 +230,7 @@ void generate_code_forest(std::ostream &fout, const std::vector<BranchlessTree::
    generate_threshold_array<T>(fout, trees, total_array_length);
    generate_features_array<T>(fout, trees, total_array_length);
 
-   fout << "bool generated_forest (const " << type_as_string<T>() << " *event){" << std::endl
+   fout << type_as_string<T>() << " generated_forest (const " << type_as_string<T>() << " *event){" << std::endl
         << "" << type_as_string<T>() << " result = 0;" << std::endl;
 
    fout << "unsigned int index=0;" << std::endl;
@@ -235,7 +240,7 @@ void generate_code_forest(std::ostream &fout, const std::vector<BranchlessTree::
       generate_branchless_tree<T>(fout, trees[i], current_tree_index);
       current_tree_index += trees[i].array_length;
    }
-   generate_file_footer(fout, s_id);
+   generate_file_footer(fout, s_id, s_obj_func);
 }
 
 #endif

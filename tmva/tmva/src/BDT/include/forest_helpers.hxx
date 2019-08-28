@@ -8,6 +8,21 @@
 
 #include <memory>
 
+/// to make binary predictions
+template <typename T>
+inline unsigned int classify(T value)
+{
+   return (unsigned int)(value > 0.5);
+}
+
+template <typename T>
+void _predict(T *predictions, const size_t num_predictions, std::vector<bool> &classified_data)
+{
+   for (size_t i = 0; i < num_predictions; i++) {
+      classified_data[i] = classify(predictions[i]);
+   }
+}
+
 ///// To convert brached to branchless /////
 template <typename T>
 int get_max_depth(const std::unique_ptr<BranchedTree::Node<T>> &node, int index = 1, int final_index = 0)
@@ -85,14 +100,15 @@ std::vector<BranchlessTree::Tree<T>> Branched2BranchlessTrees(const std::vector<
 
 ///// For JIT /////
 template <typename T, typename trees_kind>
-void write_generated_code_to_file(const std::vector<trees_kind> &trees, std::string &filename)
+void write_generated_code_to_file(const std::vector<trees_kind> &trees, const std::string &s_obj_func,
+                                  std::string &filename)
 {
    std::filebuf fb;
    // std::string  filename;
    // filename = generated_files_path + "generated_forest.h";
    fb.open(filename, std::ios::out);
    std::ostream os(&fb);
-   generate_code_forest<T>(os, trees, trees.size());
+   generate_code_forest<T>(os, trees, trees.size(), s_obj_func);
    fb.close();
 }
 
@@ -105,12 +121,12 @@ std::string generate_namespace_name()
 }
 
 template <typename T, typename trees_kind>
-std::function<bool(const T *)> JitTrees(const std::vector<trees_kind> &trees)
+std::function<T(const T *)> JitTrees(const std::vector<trees_kind> &trees, const std::string &s_obj_func)
 {
    // JIT
    std::string       s_namespace_name = generate_namespace_name();
    std::stringstream ss;
-   generate_code_forest(ss, trees, trees.size(), s_namespace_name);
+   generate_code_forest<T>(ss, trees, trees.size(), s_namespace_name, s_obj_func);
    std::string s_trees = ss.str();
    return jit_forest<T>(s_trees, s_namespace_name);
 }
