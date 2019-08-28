@@ -375,6 +375,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     TreePlayer
     Tree
     Hist
+    HistPainter
     Matrix
     Minuit
     MLP
