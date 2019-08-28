@@ -19,7 +19,7 @@ except ImportError:
    def WEXITSTATUS(arg): return arg
 
 import ROOT
-from ROOT import gROOT, gInterpreter, PyROOT
+from ROOT import gROOT, gInterpreter
 from ROOT import Long, TClass, TObject, TFile
 from ROOT import TH1I, TVector3, TGraph, TMatrixD
 
@@ -376,7 +376,15 @@ class Regression14TPyException( MyTestCase ):
    def test1PythonAccessToTPyException( self ):
       """Load TPyException into python and make sure its usable"""
 
-      e = PyROOT.TPyException()
+      exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
+      if exp_pyroot:
+         # In exp PyROOT, TPyException belongs to the CPyCppyy namespace.
+         # Also, it is not included in the PCH, so we need to include the
+         # header first
+         ROOT.gInterpreter.Declare("#include \"CPyCppyy/TPyException.h\"")
+         e = ROOT.CPyCppyy.TPyException()
+      else:
+         e = ROOT.PyROOT.TPyException()
       self.assert_( e )
       self.assertEqual( e.what(), "python exception" )
 

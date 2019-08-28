@@ -19,6 +19,7 @@ if(ROOT_python_FOUND)
                                          -e .L\ ULongLong.C+
                                          -e .L\ Till.C+
                                          -e .L\ CoralAttributeList.C+
+                    ENVIRONMENT EXP_PYROOT=${exp_pyroot}
                     ${PYTESTS_WILLFAIL})
 
   ROOTTEST_ADD_TEST(root_6023
