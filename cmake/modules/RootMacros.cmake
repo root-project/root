@@ -893,7 +893,7 @@ function(ROOT_MODULE_LIBRARY library)
   # macros.
   set_target_properties(${library} PROPERTIES DEFINE_SYMBOL "")
 
-  target_link_libraries(${library} ${ARG_LIBRARIES})
+  target_link_libraries(${library} PUBLIC ${ARG_LIBRARIES})
   #----Installation details-------------------------------------------------------
   install(TARGETS ${library} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
                              LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
