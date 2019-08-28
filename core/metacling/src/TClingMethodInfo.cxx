@@ -169,6 +169,10 @@ void TClingMethodInfo::CreateSignature(TString &signature) const
       }
       ++idx;
    }
+   auto decl = GetMethodDecl();
+   if (decl && decl->isVariadic())
+      signature += ",...";
+
    signature += ")";
 }
 
