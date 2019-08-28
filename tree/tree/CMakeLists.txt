@@ -118,6 +118,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Tree
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   DEPENDENCIES
+    MathCore
     Imt
     Net
     RIO
