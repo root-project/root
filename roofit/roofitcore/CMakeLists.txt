@@ -453,13 +453,16 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
   DEPENDENCIES
     Core
     Hist
+    Gpad
     Graf
     Matrix
+    Smatrix
     Tree
     Minuit
     RIO
     MathCore
     Foam
+    Proof
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
