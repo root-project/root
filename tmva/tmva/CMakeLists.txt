@@ -392,6 +392,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     ${installoptions}
 )
 
+target_include_directories(TMVA PRIVATE ../tmvagui/inc)
+
 if(builtin_vdt)
   # cannot export include for vdt, as it points to build dir
   target_include_directories(TMVA PRIVATE ${VDT_INCLUDE_DIRS})
