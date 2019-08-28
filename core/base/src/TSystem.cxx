@@ -1162,8 +1162,9 @@ again:
                strlcpy(x, p, kBufSize);
                x += kBufSize;
                break;
-            } else
+            } else {
                strcpy(x,p); x += lp; c = (b==c+1) ? e-1 : e;
+            }
          }
       }
    }
