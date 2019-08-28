@@ -155,35 +155,35 @@
 
 
 #pragma link C++ class    ROOT::Math::SMatrix<Double32_t,3,3,ROOT::Math::MatRepSym<Double32_t,3> >+;
-#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,3,3,ROOT::Math::MatRepSym<double,3> >"    \
+#pragma read sourceClass="ROOT::Math::SMatrix<double,3,3,ROOT::Math::MatRepSym<double,3> >"        \
              targetClass="ROOT::Math::SMatrix<Double32_t,3,3,ROOT::Math::MatRepSym<Double32_t,3> >";
-#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,3,3,ROOT::Math::MatRepSym<float,3> >"     \
+#pragma read sourceClass="ROOT::Math::SMatrix<float,3,3,ROOT::Math::MatRepSym<float,3> >"          \
              targetClass="ROOT::Math::SMatrix<Double32_t,3,3,ROOT::Math::MatRepSym<Double32_t,3> >";
-#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,3,3,ROOT::Math::MatRepSym<Float16_t,3> >" \
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,3,3,ROOT::Math::MatRepSym<Float16_t,3> >"  \
              targetClass="ROOT::Math::SMatrix<Double32_t,3,3,ROOT::Math::MatRepSym<Double32_t,3> >";
 
 #pragma link C++ class    ROOT::Math::SMatrix<Double32_t,4,4,ROOT::Math::MatRepSym<Double32_t,4> >+;
-#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,4,4,ROOT::Math::MatRepSym<double,4> >"    \
+#pragma read sourceClass="ROOT::Math::SMatrix<double,4,4,ROOT::Math::MatRepSym<double,4> >"        \
              targetClass="ROOT::Math::SMatrix<Double32_t,4,4,ROOT::Math::MatRepSym<Double32_t,4> >";
-#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,4,4,ROOT::Math::MatRepSym<float,4> >"     \
+#pragma read sourceClass="ROOT::Math::SMatrix<float,4,4,ROOT::Math::MatRepSym<float,4> >"          \
              targetClass="ROOT::Math::SMatrix<Double32_t,4,4,ROOT::Math::MatRepSym<Double32_t,4> >";
-#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,4,4,ROOT::Math::MatRepSym<Float16_t,4> >" \
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,4,4,ROOT::Math::MatRepSym<Float16_t,4> >"  \
              targetClass="ROOT::Math::SMatrix<Double32_t,4,4,ROOT::Math::MatRepSym<Double32_t,4> >";
 
 #pragma link C++ class    ROOT::Math::SMatrix<Double32_t,5,5,ROOT::Math::MatRepSym<Double32_t,5> >+;
-#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,5,5,ROOT::Math::MatRepSym<double,5> >"    \
+#pragma read sourceClass="ROOT::Math::SMatrix<double,5,5,ROOT::Math::MatRepSym<double,5> >"        \
              targetClass="ROOT::Math::SMatrix<Double32_t,5,5,ROOT::Math::MatRepSym<Double32_t,5> >";
-#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,5,5,ROOT::Math::MatRepSym<float,5> >"     \
+#pragma read sourceClass="ROOT::Math::SMatrix<float,5,5,ROOT::Math::MatRepSym<float,5> >"          \
              targetClass="ROOT::Math::SMatrix<Double32_t,5,5,ROOT::Math::MatRepSym<Double32_t,5> >";
-#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,5,5,ROOT::Math::MatRepSym<Float16_t,5> >" \
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,5,5,ROOT::Math::MatRepSym<Float16_t,5> >"  \
              targetClass="ROOT::Math::SMatrix<Double32_t,5,5,ROOT::Math::MatRepSym<Double32_t,5> >";
 
 #pragma link C++ class    ROOT::Math::SMatrix<Double32_t,6,6,ROOT::Math::MatRepSym<Double32_t,6> >+;
-#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,6,6,ROOT::Math::MatRepSym<double,6> >"    \
+#pragma read sourceClass="ROOT::Math::SMatrix<double,6,6,ROOT::Math::MatRepSym<double,6> >"        \
              targetClass="ROOT::Math::SMatrix<Double32_t,6,6,ROOT::Math::MatRepSym<Double32_t,6> >";
-#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,6,6,ROOT::Math::MatRepSym<float,6> >"     \
+#pragma read sourceClass="ROOT::Math::SMatrix<float,6,6,ROOT::Math::MatRepSym<float,6> >"          \
              targetClass="ROOT::Math::SMatrix<Double32_t,6,6,ROOT::Math::MatRepSym<Double32_t,6> >";
-#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,6,6,ROOT::Math::MatRepSym<Float16_t,6> >" \
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,6,6,ROOT::Math::MatRepSym<Float16_t,6> >"  \
              targetClass="ROOT::Math::SMatrix<Double32_t,6,6,ROOT::Math::MatRepSym<Double32_t,6> >";
 
 
