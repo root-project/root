@@ -52,7 +52,6 @@ endif()
 
 set(ROOTSYS ${CMAKE_BINARY_DIR})
 set(HEADER_OUTPUT_PATH ${CMAKE_BINARY_DIR}/include)
-set(ROOT_INCLUDE_DIR ${HEADER_OUTPUT_PATH})
 
 #---Set the ROOT version--------------------------------------------------------------------
 find_package(Git)
