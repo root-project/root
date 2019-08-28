@@ -410,8 +410,9 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
          // this also will add the default template parameter if any needs to
          // be added.
          string typeresult;
-         if (gInterpreterHelper->ExistingTypeCheck(fElements[i], typeresult)
-             || gInterpreterHelper->GetPartiallyDesugaredNameWithScopeHandling(fElements[i], typeresult)) {
+         if (gInterpreterHelper &&
+             (gInterpreterHelper->ExistingTypeCheck(fElements[i], typeresult)
+              || gInterpreterHelper->GetPartiallyDesugaredNameWithScopeHandling(fElements[i], typeresult))) {
             if (!typeresult.empty()) fElements[i] = typeresult;
          }
       }
