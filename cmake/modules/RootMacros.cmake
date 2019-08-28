@@ -775,12 +775,6 @@ function(ROOT_LINKER_LIBRARY library)
 
   if(TARGET G__${library})
     add_dependencies(${library} G__${library})
-  else()
-    # Uncomment to see if we maybe forgot to add a dependency between linking
-    # a dictionary and generating the G__*.cxx file. We can't have this by
-    # default because right now quite few dictionaries don't have the associated
-    # ROOT_GENERATE_DICTIONARY call that prevents this warning.
-    #message(AUTHOR_WARNING "Couldn't find target: " ${library} "\n Forgot to call ROOT_GENERATE_DICTIONARY?")
   endif()
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
     add_dependencies(${library} move_headers)
