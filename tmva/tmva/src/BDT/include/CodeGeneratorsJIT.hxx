@@ -85,8 +85,8 @@ void generate_file_header(std::ostream &fout, const std::string &s_id)
 
 void generate_objective_function(std::ostream &fout, const std::string &s_obj_func)
 {
-   std::string s_logistic = "logistic";
-   std::string s_identity = "identity";
+   const std::string s_logistic = "logistic";
+   const std::string s_identity = "identity";
    if (s_obj_func.compare(s_logistic)) {
       fout << "1. / (1. + (1. / std::exp(result)));" << std::endl;
    } else if (s_obj_func.compare(s_identity)) {
@@ -187,6 +187,8 @@ void generate_threshold_array(std::ostream &fout, const std::vector<BranchlessTr
    }
    fout << "};" << std::endl;
 }
+
+/// \todo these two next functions perform code duplication: solve this!
 /// Generates long array of thresholds
 /// also possible with constexpr std::array<float,
 template <typename T>
@@ -212,7 +214,7 @@ template <typename T>
 void generate_branchless_tree(std::ostream &fout, const BranchlessTree::Tree<T> &tree, int tree_index)
 {
    fout << "index=0;" << std::endl;
-   for (unsigned int j = 0; j < tree.tree_depth; ++j) {
+   for (size_t j = 0; j < tree.tree_depth; ++j) {
       fout << "index = 2*index + 1 + (event[features[" << std::to_string(tree_index) << "+index]] > thresholds["
            << std::to_string(tree_index) << "+index]);" << std::endl; // write
    }
