@@ -90,6 +90,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TreePlayer
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   DEPENDENCIES
+    Gui
     Gpad
     Graf
     Graf3d
