@@ -31,12 +31,14 @@
 
 #include "TMVA/DNN/CNN/ConvLayer.h"
 #include "TMVA/DNN/Functions.h"
+#include "TMVA/DNN/CNN/ContextHandles.h"
 
 #include <iostream>
 
 namespace TMVA {
 namespace DNN {
 namespace CNN {
+
 
 /** \class TMaxPoolLayer
 
@@ -63,16 +65,15 @@ public:
     
     using LayerDescriptor_t   = typename Architecture_t::PoolingDescriptor_t;
     using WeightsDescriptor_t = typename Architecture_t::EmptyDescriptor_t;
-    using HelperDescriptor_t  = typename Architecture_t::EmptyDescriptor_t;
+    using HelperDescriptor_t  = typename Architecture_t::DropoutDescriptor_t;
 
 private:
    Tensor_t fIndexTensor; ///< Matrix of indices for the backward pass.
    
-   /*TDescriptors * fDescriptors = nullptr;  ///< Keeps the pooling descriptor
-   void * fCudnnWorkspace = nullptr;       ///< On device memory needed for cudnn pooling operation
-
    void InitializeDescriptors();
-   void ReleaseDescriptors();*/
+   void ReleaseDescriptors();
+   void InitializeWorkspace();
+   void FreeWorkspace();  
 public:
    /*! Constructor. */
    TMaxPoolLayer(size_t BatchSize, size_t InputDepth, size_t InputHeight, size_t InputWidth, size_t FilterHeight,
@@ -126,7 +127,8 @@ TMaxPoolLayer<Architecture_t>::TMaxPoolLayer(size_t batchSize, size_t inputDepth
                                      EActivationFunction::kIdentity, ERegularization::kNone, 0),
           fIndexTensor(  this->GetBatchSize(), this->GetDepth(), this->GetNLocalViews() )
 {
-   TConvLayer<Architecture_t>::InitializeDescriptors();
+   InitializeDescriptors();
+   InitializeWorkspace();
 }
 
 //______________________________________________________________________________
@@ -135,7 +137,8 @@ TMaxPoolLayer<Architecture_t>::TMaxPoolLayer(TMaxPoolLayer<Architecture_t> *laye
    : TConvLayer<Architecture_t>(layer), 
    fIndexTensor( layer->GetIndexTensor().GetShape())
 {
-   TConvLayer<Architecture_t>::InitializeDescriptors();
+   InitializeDescriptors();
+   InitializeWorkspace();
 }
 
 //______________________________________________________________________________
@@ -144,25 +147,26 @@ TMaxPoolLayer<Architecture_t>::TMaxPoolLayer(const TMaxPoolLayer &layer)
    : TConvLayer<Architecture_t>(layer), 
    fIndexTensor( layer.GetIndexTensor().GetShape() )
 {
-   TConvLayer<Architecture_t>::InitializeDescriptors();
+   InitializeDescriptors();
+   InitializeWorkspace();
 }
 
 //______________________________________________________________________________
 template <typename Architecture_t>
 TMaxPoolLayer<Architecture_t>::~TMaxPoolLayer()
 {
-}
+   if (TConvLayer<Architecture_t>::fDescriptors) {
+      ReleaseDescriptors();
+      delete TConvLayer<Architecture_t>::fDescriptors;
+      TConvLayer<Architecture_t>::fDescriptors = nullptr;     // Prevents double release in the TConvLayer Destructor
+   }   
 
-//______________________________________________________________________________
-/*template <typename Architecture_t>
-void TMaxPoolLayer<Architecture_t>::InitializeDescriptors() {
-      Architecture_t::InitializeCNNDescriptors(fDescriptors, this);
+   if (TConvLayer<Architecture_t>::fWorkspace) {
+      FreeWorkspace();
+      delete TConvLayer<Architecture_t>::fWorkspace;
+      TConvLayer<Architecture_t>::fWorkspace = nullptr;
+   }
 }
-
-template <typename Architecture_t>
-void TMaxPoolLayer<Architecture_t>::ReleaseDescriptors() {
-      Architecture_t::ReleaseCNNDescriptors(fDescriptors, this);
-}*/
 
 //______________________________________________________________________________
 template <typename Architecture_t>
@@ -176,8 +180,11 @@ auto TMaxPoolLayer<Architecture_t>::Forward(Tensor_t &input, bool applyDropout) 
 
    
 
-   Architecture_t::Downsample(this->GetOutput(), fIndexTensor, input, this->GetInputHeight(),
-                              this->GetInputWidth(), this->GetFilterHeight(), this->GetFilterWidth(),
+   Architecture_t::Downsample(this->GetOutput(), fIndexTensor, input, 
+                              (TCNNDescriptors<TMaxPoolLayer<Architecture_t>> &) (*TConvLayer<Architecture_t>::fDescriptors),
+                              (TCNNWorkspace<TMaxPoolLayer<Architecture_t>> &) (*TConvLayer<Architecture_t>::fWorkspace),
+                              this->GetInputHeight(), this->GetInputWidth(), 
+                              this->GetFilterHeight(), this->GetFilterWidth(),
                               this->GetStrideRows(), this->GetStrideCols());
    
 }
@@ -188,10 +195,12 @@ auto TMaxPoolLayer<Architecture_t>::Backward(Tensor_t &gradients_backward,
                                              const Tensor_t & /*activations_backward*/) -> void
 //                                             Tensor_t & /*inp1*/, Tensor_t &
 {
-   Architecture_t::MaxPoolLayerBackward(gradients_backward, this->GetActivationGradients(), fIndexTensor,
-                                       this->GetInputHeight(), this->GetInputWidth(),      
-                                       this->GetFilterHeight(), this->GetFilterWidth(),
-                                       this->GetStrideRows(), this->GetStrideCols(), this->GetNLocalViews());
+   Architecture_t::MaxPoolLayerBackward(gradients_backward, this->GetActivationGradients(), fIndexTensor, this->GetInputActivation(), this->GetOutput(),
+                                        (TCNNDescriptors<TMaxPoolLayer<Architecture_t>> &) (*TConvLayer<Architecture_t>::fDescriptors),
+                                        (TCNNWorkspace<TMaxPoolLayer<Architecture_t>> &) (*TConvLayer<Architecture_t>::fWorkspace),
+                                        this->GetInputHeight(), this->GetInputWidth(),      
+                                        this->GetFilterHeight(), this->GetFilterWidth(),
+                                        this->GetStrideRows(), this->GetStrideCols(), this->GetNLocalViews());
 }
 
 //______________________________________________________________________________
@@ -231,6 +240,32 @@ template <typename Architecture_t>
 void TMaxPoolLayer<Architecture_t>::ReadWeightsFromXML(void * /*parent */)
 {
    // all info is read before - nothing to do 
+}
+
+//______________________________________________________________________________
+template <typename Architecture_t>
+void TMaxPoolLayer<Architecture_t>::InitializeDescriptors() {
+   Architecture_t::InitializePoolDescriptors(TConvLayer<Architecture_t>::fDescriptors, this);
+}
+
+template <typename Architecture_t>
+void TMaxPoolLayer<Architecture_t>::ReleaseDescriptors() {
+   Architecture_t::ReleasePoolDescriptors(TConvLayer<Architecture_t>::fDescriptors, this);
+}
+
+//______________________________________________________________________________
+template <typename Architecture_t>
+void TMaxPoolLayer<Architecture_t>::InitializeWorkspace() {
+   TConvParams params(this->GetBatchSize(), this->GetInputDepth(), this->GetInputHeight(), this->GetInputWidth(),
+                      this->GetDepth(), this->GetFilterHeight(), this->GetFilterWidth(),
+                      this->GetStrideRows(), this->GetStrideCols(), this->GetPaddingHeight(), this->GetPaddingWidth());
+
+   Architecture_t::InitializePoolWorkspace(TConvLayer<Architecture_t>::fWorkspace, TConvLayer<Architecture_t>::fDescriptors, params, this);
+}
+
+template <typename Architecture_t>
+void TMaxPoolLayer<Architecture_t>::FreeWorkspace() {
+   Architecture_t::FreePoolWorkspace(TConvLayer<Architecture_t>::fWorkspace, this);
 }
 
 } // namespace CNN

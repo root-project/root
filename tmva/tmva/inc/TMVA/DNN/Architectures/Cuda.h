@@ -42,6 +42,7 @@ namespace DNN
  struct CudaActivationDescriptor {};
  struct CudaFilterDescriptor {};
  struct CudaConvolutionDescriptor {};
+ struct CudaDropoutDescriptor {};
  struct CudaPoolingDescriptor {};
  struct CudaConvolutionFwdAlgo {};
  struct CudaConvolutionBwdDataAlgo {};
@@ -75,8 +76,8 @@ public:
    using ActivationDescriptor_t  = CudaActivationDescriptor;
    using ConvolutionDescriptor_t = CudaConvolutionDescriptor;
    using FilterDescriptor_t      = CudaFilterDescriptor;
-   /*using DropoutDescriptor_t     = CudaDropoutDescriptor;
-   using OpTensorDescriptor_t    = CudaOpTensorDescriptor;*/
+   using DropoutDescriptor_t     = CudaDropoutDescriptor;
+   //using OpTensorDescriptor_t    = CudaOpTensorDescriptor;
    using PoolingDescriptor_t     = CudaPoolingDescriptor;
    //using ReductionDescriptor_t   = CudaReduceTensorDescriptor;
    using AlgorithmForward_t      = CudaConvolutionFwdAlgo;
@@ -592,19 +593,24 @@ public:
    /** Initialize CNN data/operator descriptors. Not used at the moment.*/
    static void InitializeConvDescriptors(TDescriptors * & /*descriptors*/, double /*coef = 0.0*/, 
                                          ConvLayer_t */*L = nullptr*/) {}
-
-   static void InitializePoolingDescriptors(TDescriptors * & /*descriptors*/, double /*coef = 0.0*/, 
-                                            PoolingLayer_t */*L = nullptr*/) {}
+   static void InitializePoolDescriptors(TDescriptors * & /*descriptors*/,
+                                         PoolingLayer_t */*L = nullptr*/) {}
 
    /** Release CNN data/operator descriptors. Not used at the moment.*/
-   template<typename Layer_t>
-   static void ReleaseConvDescriptors(TDescriptors * & /*descriptors*/, Layer_t */*L = nullptr*/) {}
-   
+   static void ReleaseConvDescriptors(TDescriptors * & /*descriptors*/, ConvLayer_t */*L = nullptr*/) {}
+   static void ReleasePoolDescriptors(TDescriptors * & /*descriptors*/, PoolingLayer_t */*L = nullptr*/) {}
+
    static void InitializeConvWorkspace(TWorkspace * & /*workspace*/,
                                        TDescriptors * & /*descriptors*/,
                                        const DNN::CNN::TConvParams & /*params*/,
                                        ConvLayer_t */*L = nullptr*/) {}
-   static void FreeConvWorkspace(TWorkspace * & /*workspace*/, ConvLayer_t */*L = nullptr*/) {}   ///< Only used for certain cudnn on-device memory
+   static void InitializePoolWorkspace(TWorkspace * & /*workspace*/,
+                                       TDescriptors * & /*descriptors*/,
+                                       const DNN::CNN::TConvParams & /*params*/,
+                                       PoolingLayer_t */*L = nullptr*/) {}
+
+   static void FreeConvWorkspace(TWorkspace * & /*workspace*/, ConvLayer_t */*L = nullptr*/) {}     ///< Only used for certain cudnn on-device memory
+   static void FreePoolWorkspace(TWorkspace * & /*workspace*/, PoolingLayer_t */*L = nullptr*/) {}
    
    //____________________________________________________________________________
    //
@@ -991,8 +997,11 @@ public:
    /** Downsample the matrix \p C to the matrix \p A, using max
     * operation, such that the winning indices are stored in matrix
     * \p B. */
-   static void Downsample(Tensor_t &A, Tensor_t &B, const Tensor_t &C, size_t imgHeight,
-                          size_t imgWidth, size_t fltHeight, size_t fltWidth, size_t strideRows, size_t strideCols);
+   static void Downsample(Tensor_t &A, Tensor_t &B, const Tensor_t &C, 
+                          const PoolingDescriptors_t & /*descriptors*/,
+                          PoolingWorkspace_t & /*workspace*/,
+                          size_t imgHeight, size_t imgWidth, size_t fltHeight, 
+                          size_t fltWidth, size_t strideRows, size_t strideCols);
 
       ///@}
 
@@ -1005,6 +1014,10 @@ public:
    static void MaxPoolLayerBackward(Tensor_t &activationGradientsBackward,
                                     const Tensor_t &activationGradients,
                                     const Tensor_t &indexMatrix,
+                                    const Tensor_t & /*inputActivation*/,
+                                    const Tensor_t & /*outputTensor*/,
+                                    const PoolingDescriptors_t & /*descriptors*/,
+                                    PoolingWorkspace_t & /*workspace*/,
                                     size_t imgHeight,
                                     size_t imgWidth,
                                     size_t fltHeight,
