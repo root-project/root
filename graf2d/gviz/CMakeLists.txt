@@ -25,6 +25,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gviz
   LIBRARIES
     ${GRAPHVIZ_LIBRARIES}
   DEPENDENCIES
-    Hist
+    Gpad
     Graf
+    Hist
 )
