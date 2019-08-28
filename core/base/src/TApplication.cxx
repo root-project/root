@@ -712,8 +712,6 @@ static TString FormatMethodForDoxygen(const TString &className, TFunction *func)
    methodArguments.ReplaceAll("& ", " &");
    methodArguments.ReplaceAll("ostream", "std::ostream");
    methodArguments.ReplaceAll("istream", "std::istream");
-   // FIXME Replace all "*msgfmt" with "*msgfmt,...".
-   // We need to take the regular expression of the arguments (mostly if enumeration appears).
    TString classNameRE("\\b");
    classNameRE.Append(className);
    classNameRE.Append("::\\b");
@@ -785,9 +783,7 @@ namespace {
 /// \param[in] dataMember pointer to the enumerator
 /// \param[in] scopeType enumerator to the scope type
 
-
-
-static TString URLforEnumerator(const TString &className, const TString &enumeratorName, TDataMember *dataMember, EUrl scopeType)
+static TString URLforEnumerator(TString &className, const TString &enumeratorName, TDataMember *dataMember, EUrl scopeType)
 {
    // We create a TString with the name of the class and the enumeration from which "enumeratorName" is.
    TString classEnumeration = dataMember->GetTrueTypeName();
@@ -808,26 +804,36 @@ static TString URLforEnumerator(const TString &className, const TString &enumera
       // The syntax is "Class::EnumeratorEnumerator
       md5EnumClass.Append(enumOnlyName);
    }
-   // We make the URL for the "className".
-   TString url = UrlGenerator(className, scopeType);
-   // Then we have to append the crypted text for the enumerator.
-   url.Append("#a");
-   url.Append(md5EnumClass.MD5());
-   // We append "a" and then the next crypted text.
-   url.Append("a");
    // The next part of the URL is crypted "@ className::EnumeratorEnumerator".
    TString md5Enumerator("@ ");
    md5Enumerator.Append(className);
    md5Enumerator.Append("::");
    md5Enumerator.Append(enumeratorName);
    md5Enumerator.Append(enumeratorName);
+   // We make the URL for the "className".
+   className.ReplaceAll("::","_1_1");
+   TString url = UrlGenerator(className, scopeType);
+   // Then we have to append the crypted text for the enumerator.
+   url.Append("#a");
+   url.Append(md5EnumClass.MD5());
+   // We append "a" and then the next crypted text.
+   url.Append("a");
    url.Append(md5Enumerator.MD5());
    return url;
 }
 }
 
 namespace {
-static TString URLforEnumeration(const TString &className, const TString &enumeration, EUrl scopeType){
+////////////////////////////////////////////////////////////////////////////////
+/// The function generates URL for enumeration. The hashed text consist of:
+/// "Class::EnumerationEnumeration".
+///
+/// \param[in] className the name of the class
+/// \param[in] enumeration the name of the enumeration
+/// \param[in] scopeType enumerator for class or namespace
+
+
+static TString URLforEnumeration(TString &className, const TString &enumeration, EUrl scopeType){
    // The URL consists of URL for the "className", "#a" and crypted with MD5 text.
    // The text is "Class::EnumerationEnumeration.
    TString md5Enumeration(className);
@@ -835,6 +841,7 @@ static TString URLforEnumeration(const TString &className, const TString &enumer
    md5Enumeration.Append(enumeration);
    md5Enumeration.Append(enumeration);
    // We make the URL for the class "className".
+   className.ReplaceAll("::","_1_1");
    TString url(UrlGenerator(className, scopeType));
    // Then we have to append "#a" and the crypted text.
    url.Append("#a");
@@ -842,6 +849,7 @@ static TString URLforEnumeration(const TString &className, const TString &enumer
    return url;
 }
 }
+
 namespace {
 enum EClassURL {kURLforMethod, kURLforConstructor};
 ////////////////////////////////////////////////////////////////////////////////
@@ -856,21 +864,21 @@ enum EClassURL {kURLforMethod, kURLforConstructor};
 /// \param[in] className the name of the class
 /// \param[in] methodName the name of the method from the class
 /// \param[in] func pointer to the method
-/// \param[in] type enumerator for method or constructor
+/// \param[in] methodType enumerator for method or constructor
+/// \param[in] scopeType enumerator for class or namespace
 
-static TString URLforMember(const TString &className, const TString &methodName, TFunction *func, EClassURL methodType, EUrl scopeType)
+static TString URLforMember(TString &className, const TString &methodName, TFunction *func, EClassURL methodType, EUrl scopeType)
 {
-   // We generate the URL for the class/namespace.
-   TString url = UrlGenerator(className, scopeType);
-   url.Append("#a");
    TString md5Text;
       if (methodType == kURLforMethod) {
          // In the case of method, we append the return type too.
          // "FormatReturnTypeForDoxygen" modifies the return type with respect to Doxygen's reqirement.
          md5Text.Append((FormatReturnTypeForDoxygen(className, func)));
-         if (scopeType == kURLforNameSpace){
-            //FIXME  is it only for namespace?
+         if (scopeType == kURLforNameSpace) {
             // We need to append "constexpr"!
+            if ((func->Property() & kIsConstexpr)>0) {
+               md5Text.Prepend("constexpr ");
+            }
          }
          md5Text.Append(" ");
       }
@@ -880,6 +888,10 @@ static TString URLforMember(const TString &className, const TString &methodName,
    md5Text.Append(methodName);
    // We use "FormatMethodForDoxygen" to modify the arguments of Method with respect of Doxygen.
    md5Text.Append(FormatMethodForDoxygen(className, func));
+   // We generate the URL for the class/namespace.
+   className.ReplaceAll("::","_1_1");
+   TString url = UrlGenerator(className, scopeType);
+   url.Append("#a");
    url.Append(md5Text.MD5());
    return url;
 }
@@ -892,7 +904,6 @@ static TString URLforMember(const TString &className, const TString &methodName,
 /// (".help NameSpace").
 ///
 /// \param[in] line command from the command line
-
 
 void TApplication::Help(const char *line)
 {
@@ -923,15 +934,15 @@ void TApplication::Help(const char *line)
          return;
       }
    }
-   // We remove the command ".help"/".?" from the TString.
+   // We remove the command ".help" or ".?" from the TString.
    if (strippedCommand.BeginsWith(".? ")){
       strippedCommand.Remove(0, 3);
    } else {
       strippedCommand.Remove(0, 5);
    }
-
    // We strip the TString and substract the name of the method.
    TString strippedClass = strippedCommand.Strip(TString::kBoth);
+   TString stripped = strippedClass;
    TString memberName = TClassEdit::GetUnqualifiedName(strippedClass.Data());
    TString className;
    // If after stripping the string is the same, user is searching for a class/namespace.
@@ -939,8 +950,7 @@ void TApplication::Help(const char *line)
       className = memberName;
    } else {
       // Otherwise we already have the name of the method and extract the name of the class.
-      strippedClass.Remove(strippedClass.Length() - memberName.Length() - 2);
-      className = strippedClass;
+      className = strippedClass.Remove(strippedClass.Length() - memberName.Length() - 2);
    }
 
    // We check if "className" exists.
@@ -950,7 +960,6 @@ void TApplication::Help(const char *line)
       Warning("TApplication::Help", "\"%s\" does not exist in ROOT!", className.Data());
       return;
    }
-
    // We have enumerators for the two available cases - class and namespace.
    // We check what is the used mode and define "scopeType".
    EUrl scopeType;
@@ -959,9 +968,8 @@ void TApplication::Help(const char *line)
    } else {
       scopeType = kURLforClass;
    }
-
    // We check if the user doesn't want to search for a certain method.
-   if (strippedClass == memberName){
+   if (stripped == memberName){
       // If so, we open the browser with the URL for the class/namespace
       // with respect to the "scopeType".
       OpenInBrowser(UrlGenerator(className, scopeType));
@@ -970,12 +978,35 @@ void TApplication::Help(const char *line)
    // If the user wants to search for a method, we take its name (memberName) and
    // modify if - we delete everything after the first "(" so the user won't have to
    // do it by hand when he uses Tab.
-
    int bracket = memberName.First("(");
    if (bracket > 0) {
       memberName.Remove(bracket,(memberName.Length()-bracket));
    }
-
+   // We check if "memberName" is a member fuction of "cl" or any of its base classes.
+   if (TFunction *func = (TFunction *)(cl->GetMethodAllAny(memberName))) {
+      // If so we find the name of the class that it belongs to.
+      TString baseClName = ((TMethod *)func)->GetClass()->GetName();
+      TString baseDestructor("~");
+      baseDestructor.Append(baseClName);
+      // We define an enumerator to distinguish between constructor and method.
+      EClassURL methodType;
+      // We check if "memberName" is a constructor.
+      if (baseClName == memberName) {
+         std::cout << memberName.Data() << " is the constructor of " << baseClName.Data() << "."<< std::endl;
+         methodType = kURLforConstructor;
+         // We check if "memberName" is a destructor.
+      } else if (baseDestructor == memberName) {
+         std::cout << memberName.Data() << " is the destructor of " << baseClName.Data() << "."<< std::endl;
+         methodType = kURLforConstructor;
+         // We check if "memberName" is a method.
+      } else {
+         std::cout << memberName.Data() << " is a method from " << baseClName.Data() << "." << std::endl;
+         methodType = kURLforMethod;
+      }
+      // We call "URLforMember" for the correct class and scope.
+      OpenInBrowser(URLforMember (baseClName, memberName, func, methodType, scopeType));
+      return;
+   }
    // We check if "memberName" is an enumeration.
    if (cl->GetListOfEnums()->FindObject(memberName)) {
       // If so with OpenInBrowser we open the URL generated with URLforEnumeration
@@ -997,34 +1028,9 @@ void TApplication::Help(const char *line)
       OpenInBrowser(URLforEnumerator(baseClName, memberName, enumerator, scopeType));
       return;
    }
-
-   // We check if "memberName" is a member fuction of "cl" or any of its base classes.
-   if (TFunction *func = (TFunction *)(cl->GetMethodAllAny(memberName))) {
-      // If so we find the name of the class that it belongs to.
-      TString baseClName = ((TMethod *)func)->GetClass()->GetName();
-      // We define an enumerator to distinguish between constructor and method.
-      EClassURL methodType;
-      // We check if "memberName" is a constructor.
-      if (baseClName == memberName) {
-         std::cout << memberName.Data() << " is the constructor of " << baseClName.Data() << " class."<< std::endl;
-         methodType = kURLforConstructor;
-         // We check if "memberName" is a destructor.
-      } else if (baseClName[0] == '~' && baseClName(1) == memberName) {
-         std::cout << memberName.Data() << " is the destructor of " << baseClName.Data() << "."<< std::endl;
-         methodType = kURLforConstructor;
-         // We check if "memberName" is a method.
-      } else {
-         std::cout << memberName.Data() << " is a method from " << baseClName.Data() << "." << std::endl;
-         methodType = kURLforMethod;
-      }
-      // We call "URLforMember" for the correct class and scope.
-      OpenInBrowser(URLforMember (baseClName, memberName, func, methodType, scopeType));
-      return;
-   }
-
    // Warning message will appear if the user types the function name incorrectly
    // or the function is not a member function of "cl" or any of its base classes.
-   Warning("Help", "The function \"%s\" has incorrect format or is not a member function of %s or its base classes!", memberName.Data(), className.Data());
+   Warning("Help", "The function \"%s\" has incorrect format or is not a member of %s or its base classes!", memberName.Data(), className.Data());
    // We will open a browser with the URL for the class only if the user types "y".
    std::cout << "Would you like to open the online reference guide for " << className.Data()<< "? <y/n>" << std::endl;
    std::string open;
