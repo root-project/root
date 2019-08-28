@@ -465,4 +465,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     Proof
 )
 
+target_include_directories(RooFitCore PRIVATE ../roofit/inc)
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)
