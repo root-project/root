@@ -23,12 +23,11 @@ protected:
 public:
    forestType trees;
    void       set_objective_function(std::string func_name); // or int KIND
-   void       inference(const T *events_vector, unsigned int rows, unsigned int cols, std::vector<T> &preds);
-   void       inference(const T *events_vector, unsigned int rows, unsigned int cols, std::vector<T> &preds,
+   void       inference(const T *events_vector, unsigned int rows, unsigned int cols, T *preds);
+   void       inference(const T *events_vector, unsigned int rows, unsigned int cols, T *preds,
                         unsigned int loop_size); // Batched version
-   void       inference(const std::vector<std::vector<T>> &events_vector, unsigned int rows, unsigned int cols,
-                        std::vector<T> &preds);
-   void       _predict(T *predictions, const unsigned int num_predictions, unsigned int *classified_data);
+   void inference(const std::vector<std::vector<T>> &events_vector, unsigned int rows, unsigned int cols, T *preds);
+   void _predict(T *predictions, const unsigned int num_predictions, unsigned int *);
 };
 
 /// Branched version of the Forest (unique_ptr representation)
@@ -57,9 +56,8 @@ template <typename T>
 class ForestBaseJIT : public ForestBase<T, std::function<bool(const T *)>> {
 private:
 public:
-   void inference(const T *events_vector, unsigned int rows, unsigned int cols, std::vector<T> &preds);
-   void inference(const std::vector<std::vector<T>> &events_vector, unsigned int rows, unsigned int cols,
-                  std::vector<T> &preds);
+   void inference(const T *events_vector, unsigned int rows, unsigned int cols, T *preds);
+   void inference(const std::vector<std::vector<T>> &events_vector, unsigned int rows, unsigned int cols, T *preds);
    // void LoadFromJson(const std::string &key, const std::string &filename, bool bool_sort_trees = true);
 };
 
@@ -82,8 +80,7 @@ public:
 
 /// Inference for non-jitted functions
 template <typename T, typename treeType>
-void ForestBase<T, treeType>::inference(const T *events_vector, unsigned int rows, unsigned int cols,
-                                        std::vector<T> &preds)
+void ForestBase<T, treeType>::inference(const T *events_vector, unsigned int rows, unsigned int cols, T *preds)
 {
    T preds_tmp;
    for (size_t i = 0; i < rows; i++) {
@@ -91,13 +88,13 @@ void ForestBase<T, treeType>::inference(const T *events_vector, unsigned int row
       for (auto &tree : this->trees) {
          preds_tmp += tree.inference(events_vector + i * cols); //[i * cols]
       }
-      preds.push_back(this->objective_func(preds_tmp));
+      preds[i] = this->objective_func(preds_tmp);
    }
 }
 
 template <typename T, typename treeType>
 void ForestBase<T, treeType>::inference(const std::vector<std::vector<T>> &events_vector, unsigned int rows,
-                                        unsigned int cols, std::vector<T> &preds)
+                                        unsigned int cols, T *preds)
 {
    T preds_tmp;
    for (size_t i = 0; i < rows; i++) {
@@ -105,26 +102,26 @@ void ForestBase<T, treeType>::inference(const std::vector<std::vector<T>> &event
       for (auto &tree : this->trees) {
          preds_tmp += tree.inference(events_vector[i].data()); //[i * cols]
       }
-      preds.push_back(this->objective_func(preds_tmp));
+      preds[i] = this->objective_func(preds_tmp);
    }
 }
 
 template <typename T>
 void ForestBaseJIT<T>::inference(const T *events_vector, unsigned int rows, unsigned int cols,
-                                 std::vector<T> &preds) // T *preds)
+                                 T *preds) // T *preds)
 {
    for (size_t i = 0; i < rows; i++) {
       // preds[i]
-      preds.push_back(this->trees(events_vector + i * cols));
+      preds[i] = this->trees(events_vector + i * cols);
    }
 }
 
 template <typename T>
 void ForestBaseJIT<T>::inference(const std::vector<std::vector<T>> &events_vector, unsigned int rows, unsigned int cols,
-                                 std::vector<T> &preds)
+                                 T *preds)
 {
    for (size_t i = 0; i < rows; i++) {
-      preds.push_back(this->trees(events_vector[i].data())); // .data()
+      preds[i] = this->trees(events_vector[i].data());
    }
 }
 

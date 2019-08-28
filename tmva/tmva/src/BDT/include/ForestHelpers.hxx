@@ -10,16 +10,16 @@
 
 /// to make binary predictions
 template <typename T>
-inline unsigned int classify(T value)
+inline bool classify(T value)
 {
-   return (unsigned int)(value > 0.5);
+   return (value > 0.5);
 }
 
 template <typename T>
-void _predict(T *predictions, const size_t num_predictions, std::vector<bool> &classified_data)
+void _predict(T *scores, const size_t num_predictions, std::vector<bool> &predictions)
 {
    for (size_t i = 0; i < num_predictions; i++) {
-      classified_data[i] = classify(predictions[i]);
+      predictions[i] = classify(scores[i]);
    }
 }
 

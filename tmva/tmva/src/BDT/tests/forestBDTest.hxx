@@ -38,7 +38,7 @@ void test_predictions()
 
    ForestType Forest;
    Forest.LoadFromJson("my_key", json_model_file);
-   Forest.inference(_data.events_pointer, _data.rows, _data.cols, _data.scores);
+   Forest.inference(_data.events_pointer, _data.rows, _data.cols, _data.scores.data());
 
    _predict(_data.scores.data(), _data.preds.size(), _data.preds);
    for (size_t i = 0; i < _data.preds.size(); i++) {

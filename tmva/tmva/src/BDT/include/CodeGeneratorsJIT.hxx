@@ -86,10 +86,13 @@ void generate_file_header(std::ostream &fout, const std::string &s_id)
 void generate_objective_function(std::ostream &fout, const std::string &s_obj_func)
 {
    std::string s_logistic = "logistic";
+   std::string s_identity = "identity";
    if (s_obj_func.compare(s_logistic)) {
       fout << "1. / (1. + (1. / std::exp(result)));" << std::endl;
-   } else {
+   } else if (s_obj_func.compare(s_identity)) {
       fout << "result;" << std::endl;
+   } else {
+      throw std::invalid_argument("Unknown objective function for JITTING");
    }
 }
 
