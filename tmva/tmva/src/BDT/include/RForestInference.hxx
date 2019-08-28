@@ -23,11 +23,11 @@ protected:
 public:
    forestType trees;
    void       set_objective_function(std::string func_name); // or int KIND
-   void       inference(const T *events_vector, unsigned int rows, unsigned int cols, T *preds);
-   void       inference(const T *events_vector, unsigned int rows, unsigned int cols, T *preds,
-                        unsigned int loop_size); // Batched version
-   // void inference(const std::vector<std::vector<T>> &events_vector, unsigned int rows, unsigned int cols, T *preds);
-   void _predict(T *predictions, const unsigned int num_predictions, unsigned int *);
+   void       inference(const T *events_vector, int rows, int cols, T *preds);
+   void       inference(const T *events_vector, int rows, int cols, T *preds,
+                        int loop_size); // Batched version
+   // void inference(const std::vector<std::vector<T>> &events_vector, int rows, int cols, T *preds);
+   void _predict(T *predictions, const int num_predictions, unsigned int *);
 };
 
 /// Branched version of the Forest (unique_ptr representation)
@@ -56,8 +56,9 @@ template <typename T>
 class ForestBaseJIT : public ForestBase<T, std::function<bool(const T *)>> {
 private:
 public:
-   void inference(const T *events_vector, unsigned int rows, unsigned int cols, T *preds);
-   // void inference(const std::vector<std::vector<T>> &events_vector, unsigned int rows, unsigned int cols, T *preds);
+   void inference(const T *events_vector, int rows, int cols, T *preds);
+   void inference(const T *events_vector, int rows, int cols, T *preds, int loop_size);
+   // void inference(const std::vector<std::vector<T>> &events_vector, int rows, int cols, T *preds);
    // void LoadFromJson(const std::string &key, const std::string &filename, bool bool_sort_trees = true);
 };
 
@@ -80,7 +81,7 @@ public:
 
 /// Inference for non-jitted functions
 template <typename T, typename treeType>
-void ForestBase<T, treeType>::inference(const T *events_vector, unsigned int rows, unsigned int cols, T *preds)
+void ForestBase<T, treeType>::inference(const T *events_vector, int rows, int cols, T *preds)
 {
    T preds_tmp;
    for (size_t i = 0; i < rows; i++) {
@@ -92,28 +93,62 @@ void ForestBase<T, treeType>::inference(const T *events_vector, unsigned int row
    }
 }
 
-/*
 template <typename T, typename treeType>
-void ForestBase<T, treeType>::inference(const T *events_vector, unsigned int rows, unsigned int cols, T *preds)
+void ForestBase<T, treeType>::inference(const T *events_vector, int rows, int cols, T *preds, int loop_size)
 {
-   T preds_tmp;
-   for (size_t i = 0; i < rows; i++) {
+   int rest = rows % loop_size;
+
+   int index     = 0;
+   int num_trees = this->trees.size();
+   T   preds_tmp = 0;
+
+   T *preds_tmp_arr = new T[loop_size]{0};
+
+   for (; index < rows - rest; index += loop_size) {
+      for (int i = 0; i < num_trees; i++) {
+         for (int j = index; j < index + loop_size; j++) {
+            preds_tmp_arr[j - index] += trees[i].inference(events_vector + i * cols);
+         }
+      }
+      for (int j = 0; j < loop_size; j++) {
+         preds[index + j] = (this->objective_func(preds_tmp_arr[j]));
+         preds_tmp_arr[j] = 0;
+      }
+   }
+   /// rest loop
+   for (int j = index; j < rows; j++) {
       preds_tmp = 0;
       for (auto &tree : this->trees) {
-         preds_tmp += tree.inference(events_vector + i * cols); //[i * cols]
+         preds_tmp += tree.inference(events_vector + j * cols);
       }
-      preds[i] = this->objective_func(preds_tmp);
+      preds[j] = this->objective_func(preds_tmp);
    }
+   delete[] preds_tmp_arr;
 }
-// */
 
 template <typename T>
-void ForestBaseJIT<T>::inference(const T *events_vector, unsigned int rows, unsigned int cols,
+void ForestBaseJIT<T>::inference(const T *events_vector, int rows, int cols,
                                  T *preds) // T *preds)
 {
-   for (size_t i = 0; i < rows; i++) {
+   for (int i = 0; i < rows; i++) {
       // preds[i]
       preds[i] = this->trees(events_vector + i * cols);
+   }
+}
+
+template <typename T>
+void ForestBaseJIT<T>::inference(const T *events_vector, int rows, int cols, T *preds, int loop_size)
+{
+   int rest  = rows % loop_size;
+   int index = 0;
+   for (; index < rows - rest; index += loop_size) {
+      for (int j = index; j < index + loop_size; j++) {
+         preds[j] = this->trees(events_vector + j * cols);
+      }
+   }
+   // reminder loop
+   for (int j = index; j < rows; j++) {
+      preds[j] = this->trees(events_vector + j * cols);
    }
 }
 
@@ -202,8 +237,8 @@ void ForestBranchless<T>::LoadFromJson2(const std::string &key, const std::strin
 /*
 /// inference on a vector of vectors for non jitted
 template <typename T, typename treeType>
-void ForestBase<T, treeType>::inference(const std::vector<std::vector<T>> &events_vector, unsigned int rows,
-                                        unsigned int cols, T *preds)
+void ForestBase<T, treeType>::inference(const std::vector<std::vector<T>> &events_vector, int rows,
+                                        int cols, T *preds)
 {
    T preds_tmp;
    for (size_t i = 0; i < rows; i++) {
@@ -219,7 +254,7 @@ void ForestBase<T, treeType>::inference(const std::vector<std::vector<T>> &event
 /*
 /// inference on a vector of vectors for jitted
 template <typename T>
-void ForestBaseJIT<T>::inference(const std::vector<std::vector<T>> &events_vector, unsigned int rows, unsigned int cols,
+void ForestBaseJIT<T>::inference(const std::vector<std::vector<T>> &events_vector, int rows, int cols,
                                  T *preds)
 {
    for (size_t i = 0; i < rows; i++) {

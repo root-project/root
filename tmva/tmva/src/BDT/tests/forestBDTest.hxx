@@ -32,13 +32,17 @@ struct DataStruct {
 };
 
 template <typename T, typename ForestType>
-void test_predictions()
+void test_predictions(int loop_size = 1)
 {
    DataStruct<T> _data(events_file, preds_file);
 
    ForestType Forest;
    Forest.LoadFromJson("my_key", json_model_file);
-   Forest.inference(_data.events_pointer, _data.rows, _data.cols, _data.scores.data());
+   if (loop_size > 1) {
+      Forest.inference(_data.events_pointer, _data.rows, _data.cols, _data.scores.data(), loop_size);
+   } else {
+      Forest.inference(_data.events_pointer, _data.rows, _data.cols, _data.scores.data());
+   }
 
    _predict(_data.scores.data(), _data.preds.size(), _data.preds);
    for (size_t i = 0; i < _data.preds.size(); i++) {
@@ -51,6 +55,10 @@ TEST(forestBDT, BranchedPredictions)
    test_predictions<float, ForestBranched<float>>();
    test_predictions<double, ForestBranched<double>>();
    test_predictions<long double, ForestBranched<long double>>();
+
+   test_predictions<float, ForestBranched<float>>(loop_size);
+   test_predictions<double, ForestBranched<double>>(loop_size);
+   test_predictions<long double, ForestBranched<long double>>(loop_size);
 }
 
 TEST(forestBDT, BranchlessPredictions)
@@ -58,6 +66,10 @@ TEST(forestBDT, BranchlessPredictions)
    test_predictions<float, ForestBranchless<float>>();
    test_predictions<double, ForestBranchless<double>>();
    test_predictions<long double, ForestBranchless<long double>>();
+
+   test_predictions<float, ForestBranchless<float>>(loop_size);
+   test_predictions<double, ForestBranchless<double>>(loop_size);
+   test_predictions<long double, ForestBranchless<long double>>(loop_size);
 }
 
 TEST(forestBDT, JitForestPredictions)
@@ -65,6 +77,10 @@ TEST(forestBDT, JitForestPredictions)
    test_predictions<float, ForestBranchedJIT<float>>();
    test_predictions<double, ForestBranchedJIT<double>>();
    test_predictions<long double, ForestBranchedJIT<long double>>();
+
+   test_predictions<float, ForestBranchedJIT<float>>(loop_size);
+   test_predictions<double, ForestBranchedJIT<double>>(loop_size);
+   test_predictions<long double, ForestBranchedJIT<long double>>(loop_size);
 }
 
 TEST(forestBDT, JitForestBranchless)
@@ -72,23 +88,8 @@ TEST(forestBDT, JitForestBranchless)
    test_predictions<float, ForestBranchlessJIT<float>>();
    test_predictions<double, ForestBranchlessJIT<double>>();
    test_predictions<long double, ForestBranchlessJIT<long double>>();
+
+   test_predictions<float, ForestBranchlessJIT<float>>(loop_size);
+   test_predictions<double, ForestBranchlessJIT<double>>(loop_size);
+   test_predictions<long double, ForestBranchlessJIT<long double>>(loop_size);
 }
-
-/*
-TEST(forestBDT, UniqueBatchPredictions)
-{
-
-   std::vector<std::vector<float>> events_vector = read_csv<float>(events_file);
-   std::vector<std::vector<bool>>  groundtruth   = read_csv<bool>(preds_file);
-   std::vector<bool>               preds;
-   preds.reserve(events_vector.size());
-
-   Forest<unique_bdt::Tree> Forest;
-   Forest.get_Forest(json_model_file);
-   Forest.do_predictions_batch(events_vector, preds, loop_size);
-
-   for (size_t i = 0; i < preds.size(); i++) {
-      ASSERT_EQ(preds[i], groundtruth[i][0]);
-   }
-}
-*/
