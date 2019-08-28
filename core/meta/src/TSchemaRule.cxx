@@ -4,6 +4,7 @@
 #include "TSchemaRule.h"
 
 #include "RConversionRuleParser.h"
+#include "TClassEdit.h"
 #include "TSchemaRuleProcessor.h"
 #include "TSchemaType.h"
 #include "TObjArray.h"
@@ -454,7 +455,9 @@ Bool_t TSchemaRule::TestChecksum( UInt_t checksum ) const
 
 void TSchemaRule::SetSourceClass( const TString& classname )
 {
-   fSourceClass = classname;
+   std::string normalizedName;
+   TClassEdit::GetNormalizedName(normalizedName, classname);
+   fSourceClass = normalizedName;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -470,7 +473,9 @@ const char *TSchemaRule::GetSourceClass() const
 
 void TSchemaRule::SetTargetClass( const TString& classname )
 {
-   fTargetClass = classname;
+   std::string normalizedName;
+   TClassEdit::GetNormalizedName(normalizedName, classname);
+   fTargetClass = normalizedName;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
