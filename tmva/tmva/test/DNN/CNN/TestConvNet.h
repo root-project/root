@@ -32,22 +32,12 @@
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/DeepNet.h"
 
-/*#include "TMVA/DNN/Architectures/TCudnn.h"
-#include "TMVA/DNN/Architectures/Cuda.h"
-#include "TMVA/DNN/Architectures/Cpu.h"*/
-
 
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::CNN;
 
 enum ETestType { kLinearNet, kRndmActNet };
 
-/*template class TConvLayer<TCudnn<float>>;
-template class TConvLayer<TCudnn<double>>;
-template class TConvLayer<TCuda<float>>;
-template class TConvLayer<TCuda<double>>;
-template class TConvLayer<TCpu<float>>;
-template class TConvLayer<TCpu<double>>;*/
 /** Testing the image to column function. Check wheether the matrix A after
  *  the transformation will be equal to the matrix B. */
 //______________________________________________________________________________
@@ -130,7 +120,19 @@ auto testDownsample(const typename Architecture::Matrix_t &A, const typename Arc
    std::cout << "Testing downsample with size = " << fltHeight << " , " << fltWidth 
    << " stride " << strideRows << " . " << strideCols << std::endl;
 
-   Architecture::Downsample(tDown, tInd, tA, imgHeight, imgWidth, fltHeight, fltWidth, strideRows, strideCols);
+   TDescriptors * poolDescriptors = nullptr;
+   TWorkspace   * poolWorkspace   = nullptr;
+   TConvParams params(1, imgHeight, imgWidth, imgWidth, 1, fltHeight, fltWidth, strideRows,
+                      strideCols, 0, 0);
+
+   TMaxPoolLayer<Architecture> *layer = nullptr;
+   Architecture::InitializePoolDescriptors(poolDescriptors, layer);
+   Architecture::InitializePoolWorkspace(poolWorkspace, poolDescriptors, params, layer);
+
+   Architecture::Downsample(tDown, tInd, tA, 
+                            (typename Architecture::PoolingDescriptors_t &) *poolDescriptors,
+                            (typename Architecture::PoolingWorkspace_t &) *poolWorkspace,
+                            imgHeight, imgWidth, fltHeight, fltWidth, strideRows, strideCols);
 
    for (size_t i = 0; i < m1; i++) {
       for (size_t j = 0; j < n1; j++) {
@@ -173,8 +175,23 @@ auto testPoolingBackward(const typename Architecture::Matrix_t &input, const typ
     typename Architecture::Tensor_t ABack(1,output.GetNrows(), output.GetNcols());
     typename Architecture::Tensor_t tInput( input, 3);
     typename Architecture::Tensor_t tIndexMatrix( indexMatrix, 3);
+    // only needed in cuDNN backward pass
+    typename Architecture::Tensor_t inputActivation;  
+    typename Architecture::Tensor_t outputActivation;
 
-    Architecture::MaxPoolLayerBackward(ABack, tInput, tIndexMatrix, imgHeight, imgWidth, fltHeight, fltWidth,
+    TDescriptors * poolDescriptors = nullptr;
+    TWorkspace   * poolWorkspace   = nullptr;
+    TConvParams params(1, imgHeight, imgWidth, imgWidth, 1, fltHeight, fltWidth, strideRows,
+                      strideCols, 0, 0);
+
+    TMaxPoolLayer<Architecture> *layer = nullptr;
+    Architecture::InitializePoolDescriptors(poolDescriptors, layer);
+    Architecture::InitializePoolWorkspace(poolWorkspace, poolDescriptors, params, layer);
+
+    Architecture::MaxPoolLayerBackward(ABack, tInput, tIndexMatrix, inputActivation, outputActivation,
+                                       (typename Architecture::PoolingDescriptors_t &) *poolDescriptors,
+                                       (typename Architecture::PoolingWorkspace_t &) *poolWorkspace,
+                                       imgHeight, imgWidth, fltHeight, fltWidth,
                                        strideRows, strideCols, nLocalViews);
 
     /* Needed to support double (almost) equality */
@@ -257,8 +274,6 @@ auto testConvLayerForward(const typename Architecture::Tensor_t &input,
     size_t batchSize = 1;
 
     typename Architecture::Tensor_t computedOutput( batchSize, nRows, nCols);
-    
-
     typename Architecture::Tensor_t computedDerivatives(batchSize, nRows, nCols);
 
     TConvParams params(1, inputDepth, inputHeight, inputWidth, numberFilters, fltHeight, fltWidth, strideRows,

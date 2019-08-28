@@ -51,6 +51,10 @@ CUDA_ADD_EXECUTABLE(testConvLayerCudnn TestConvLayerCudnn.cxx)
 target_link_libraries(testConvLayerCudnn ${Libraries} ${DNN_CUDA_LIBRARIES} /usr/local/cuda/lib64/libcudnn.so)
 ROOT_ADD_TEST(TMVA-DNN-CNN-ConvLayerCudnn COMMAND testConvLayerCudnn)
 
+CUDA_ADD_EXECUTABLE(testPoolingLayerCudnn TestPoolingLayerCudnn.cxx)
+target_link_libraries(testPoolingLayerCudnn ${Libraries} ${DNN_CUDA_LIBRARIES} /usr/local/cuda/lib64/libcudnn.so)
+ROOT_ADD_TEST(TMVA-DNN-CNN-PoolingLayerCudnn COMMAND testPoolingLayerCudnn)
+
 include_directories(${ROOT_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
 
 else()

@@ -115,14 +115,6 @@ protected:
    TDescriptors * fDescriptors = nullptr;  ///< Keeps the convolution, activations and filter descriptors
   
    TWorkspace * fWorkspace = nullptr;
-   /*void * fCudnnConvFwdWorkspace;  
-   void * fCudnnConvBwdWorkspace; 
-   void * fCudnnFilterBwdWorkspace;*/  ///< On device memory needed for cudnn convolution operation backward
-  
-   void InitializeDescriptors();
-   void ReleaseDescriptors();
-   void InitializeWorkspace();
-   void FreeWorkspace();               ///< Releases the on device workspace used by cudnn functions (cannot include cuda here)
 private:
    size_t fPaddingHeight;        ///< The number of zero layers added top and bottom of the input.
    size_t fPaddingWidth;         ///< The number of zero layers left and right of the input.
@@ -136,6 +128,11 @@ private:
    Scalar_t fWeightDecay;              ///< The weight decay.
 
    Tensor_t fForwardTensor;            ///< Cache tensor used for speeding-up the forward pass.
+
+   void InitializeDescriptors();
+   void ReleaseDescriptors();
+   void InitializeWorkspace();
+   void FreeWorkspace();  
 public:
    /*! Constructor. */
    TConvLayer(size_t BatchSize, size_t InputDepth, size_t InputHeight, size_t InputWidth, size_t Depth, EInitialization Init,
@@ -328,10 +325,6 @@ TConvLayer<Architecture_t>::~TConvLayer()
       FreeWorkspace();
       delete fWorkspace;
    }
-    
-   /*if (fWorkspace && fWorkspace->ForwardWorkspace)  FreeWorkspace(fWorkspace->ForwardWorkspace);
-   if (fWorkspace && fWorkspace->BackwardWorkspace) FreeWorkspace(fWorkspace->BackwardWorkspace);
-   if (fWorkspace && fWorkspace->HelperWorkspace)   FreeWorkspace(fWorkspace->HelperWorkspace);*/
 }
 
 //______________________________________________________________________________
@@ -513,7 +506,6 @@ void TConvLayer<Architecture_t>::InitializeWorkspace() {
                       this->GetStrideRows(), this->GetStrideCols(), this->GetPaddingHeight(), this->GetPaddingWidth());
 
    Architecture_t::InitializeConvWorkspace(fWorkspace, fDescriptors, params, this);
-   //Architecture_t::InitializeConvBackwardWorkspace(fWorkspace, this);
 }
 
 template <typename Architecture_t>

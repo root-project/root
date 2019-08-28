@@ -97,42 +97,31 @@ public:
    static void InitializeConvDescriptors(TDescriptors * & descriptors, double coef = 0.0, 
                                          ConvLayer_t *L = nullptr);
 
-   static void InitializePoolingDescriptors(TDescriptors * & descriptors, double coef = 0.0, 
-                                            PoolingLayer_t *L = nullptr);
+   static void InitializePoolDescriptors(TDescriptors * & descriptors, 
+                                        PoolingLayer_t *L = nullptr);
 
 
-#if 0
-   <<<<<<< HEAD
-   template<typename Layer_t>
-   static void InitializeCNNDescriptors(TDescriptors * & descriptors, Layer_t *L = nullptr);
-   
-   static void InitializeDescriptor(EmptyDescriptor_t &       emptyDescr) {}      // Does nothing
-   static void InitializeDescriptor(ActivationDescriptor_t &  activationDescr);
-   static void InitializeDescriptor(ConvolutionDescriptor_t & convolutionDescr);
-   static void InitializeDescriptor(FilterDescriptor_t &      filterDescr);
-   static void InitializeDescriptor(PoolingDescriptor_t &     poolingDescr);
-   
-   template<typename Layer_t>
-   static void ReleaseCNNDescriptors(TDescriptors * descriptors, Layer_t *L = nullptr);
-
-   //static void ReleaseCNNDescriptors(TDescriptors * descriptors, Layer_t *L = nullptr);
-=======
-#endif
-   template<typename Layer_t>
-   static void ReleaseConvDescriptors(TDescriptors * descriptors, Layer_t *L = nullptr);
-   
+   static void ReleaseConvDescriptors(TDescriptors    * descriptors, ConvLayer_t    *L = nullptr);
+   static void ReleasePoolDescriptors(TDescriptors * descriptors, PoolingLayer_t *L = nullptr);
    static void ReleaseDescriptor(EmptyDescriptor_t &       emptyDescr) {}        // Does nothing
    static void ReleaseDescriptor(ActivationDescriptor_t &  activationDescr);
    static void ReleaseDescriptor(ConvolutionDescriptor_t & convolutionDescr);
+   static void ReleaseDescriptor(DropoutDescriptor_t & dropoutDescr) {}
    static void ReleaseDescriptor(FilterDescriptor_t &      filterDescr);
    static void ReleaseDescriptor(PoolingDescriptor_t &     poolingDescr);
+   
    
    static void InitializeConvWorkspace(TWorkspace * & workspace,
                                        TDescriptors * & descriptors,
                                        const DNN::CNN::TConvParams & params,
                                        ConvLayer_t *L = nullptr);
+   static void InitializePoolWorkspace(TWorkspace * & workspace,
+                                       TDescriptors * & descriptors,
+                                       const DNN::CNN::TConvParams & params,
+                                       PoolingLayer_t *L = nullptr);
 
    static void FreeConvWorkspace(TWorkspace * workspace, ConvLayer_t *L = nullptr);
+   static void FreePoolWorkspace(TWorkspace * workspace, PoolingLayer_t *L = nullptr);
    //____________________________________________________________________________
    //
    // Propagation
@@ -434,7 +423,6 @@ public:
                                 Tensor_t & /* inputPrime */,
                                 const ConvDescriptors_t & descriptors,
                                 ConvWorkspace_t & workspace);
-                                //void * cudnnWorkspace = nullptr);
                                 //const AFloat alpha = 1,
                                 //const AFloat beta  = 1);
 
@@ -466,33 +454,8 @@ public:
                                  size_t /*height*/,      size_t /*width*/, 
                                  size_t /*filterDepth*/, size_t /*filterHeight*/, 
                                  size_t /*filterWidth*/, size_t /*nLocalViews*/ );
-                                 //EActivationFunction activFunct = EActivationFunction::kIdentity);
-                                 /*void * cudnnConvBwdWorkspaces = nullptr, 
-                                 void * cudnnFilterBwdWorkspace = nullptr);*/
 
-   /** Utility function for calculating the activation gradients of the layer
-    *  before the convolutional layer. */
-   /*static void CalculateConvActivationGradients(Tensor_t &activationGradientsBackward,
-                                                const Tensor_t &df,
-                                                const Matrix_t &weights, size_t batchSize,
-                                                size_t inputHeight, size_t inputWidth, size_t depth, size_t height,
-                                                size_t width, size_t filterDepth, size_t filterHeight,
-                                                size_t filterWidth) {}*/
-                                                
-   /** Utility function for calculating the weight gradients of the convolutional
-    * layer. */
-   /*static void CalculateConvWeightGradients(Matrix_t &weightGradients,
-                                            const Tensor_t &df,
-                                            const Tensor_t &activations_backward,
-                                            size_t batchSize, size_t inputHeight, size_t inputWidth, size_t depth,
-                                            size_t height, size_t width, size_t filterDepth, size_t filterHeight,
-                                            size_t filterWidth, size_t nLocalViews) {}*/
-
-   /** Utility function for calculating the bias gradients of the convolutional
-    *  layer */
-   /*static void CalculateConvBiasGradients(Matrix_t &biasGradients, const Tensor_t &df,
-                                          size_t batchSize, size_t depth, size_t nLocalViews) {}*/
-      ///@}
+   
    
    ///@}
 
@@ -506,9 +469,12 @@ public:
 
    /** Downsample the matrix \p C to the matrix \p A, using max
     * operation, such that the winning indices are stored in matrix
-    * \p B. */
-   static void Downsample(Tensor_t &A, Tensor_t &B, const Tensor_t &C, size_t imgHeight,
-                          size_t imgWidth, size_t fltHeight, size_t fltWidth, size_t strideRows, size_t strideCols) {}
+    * \p B. No winning indices needed for cuDNN. */
+   static void Downsample(Tensor_t & A, Tensor_t & /*B*/, const Tensor_t & C,
+                          const PoolingDescriptors_t & descriptors,
+                          PoolingWorkspace_t & workspace,
+                          size_t imgHeight, size_t imgWidth, size_t fltHeight, 
+                          size_t fltWidth, size_t strideRows, size_t strideCols);
 
       ///@}
 
@@ -516,18 +482,22 @@ public:
     */
       ///@{
    /** Perform the complete backward propagation step in a Pooling Layer. Based on the
-    *  winning idices stored in the index matrix, it just forwards the actiovation
-    *  gradients to the previous layer. */
-   static void MaxPoolLayerBackward(Tensor_t &activationGradientsBackward,
-                                    const Tensor_t &activationGradients,
-                                    const Tensor_t &indexMatrix,
+    *  input to and output from the MaxPoolLayer, the gradients for the winning pixels 
+    *  are computed. */
+   static void MaxPoolLayerBackward(Tensor_t & activationGradientsBackward,
+                                    const Tensor_t & activationGradients,
+                                    const Tensor_t & /*indexMatrix*/,
+                                    const Tensor_t & inputActivation,
+                                    const Tensor_t & outputTensor,
+                                    const PoolingDescriptors_t & descriptors,
+                                    PoolingWorkspace_t & workspace,
                                     size_t imgHeight,
                                     size_t imgWidth,
                                     size_t fltHeight,
                                     size_t fltWidth,
                                     size_t strideRows,
                                     size_t strideCols,
-                                    size_t nLocalViews)  {}
+                                    size_t nLocalViews);
 
       ///@}
 
@@ -664,9 +634,9 @@ public:
    static void SumRows(Matrix_t & B, const Matrix_t & A);
 
 
-
 };
 
+#if 0
 //____________________________________________________________________________
 template<typename AFloat>
 void TCudnn<AFloat>::InitializeConvDescriptors(TDescriptors * & descriptors, double coef,
@@ -898,6 +868,7 @@ void TCudnn<AFloat>::FreeConvWorkspace(TWorkspace * workspace, ConvLayer_t *L) {
    if(convWorkspace->BackwardWorkspace) cudaFree(convWorkspace->BackwardWorkspace);
    if(convWorkspace->HelperWorkspace)   cudaFree(convWorkspace->HelperWorkspace);
 }
+#endif
 
 //____________________________________________________________________________
 /*template <typename AFloat>
