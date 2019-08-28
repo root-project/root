@@ -600,25 +600,11 @@ const char *TClingMethodInfo::GetPrototype()
       buf += "::";
    }
    buf += Name();
-   buf += '(';
-   TClingMethodArgInfo arg(fInterp, this);
-   int idx = 0;
-   while (arg.Next()) {
-      if (idx) {
-         buf += ", ";
-      }
-      buf += arg.Type()->Name();
-      if (arg.Name() && strlen(arg.Name())) {
-         buf += ' ';
-         buf += arg.Name();
-      }
-      if (arg.DefaultValue()) {
-         buf += " = ";
-         buf += arg.DefaultValue();
-      }
-      ++idx;
-   }
-   buf += ')';
+
+   TString signature;
+   CreateSignature(signature);
+   buf += signature;
+
    if (const clang::CXXMethodDecl *md =
        llvm::dyn_cast<clang::CXXMethodDecl>( GetMethodDecl())) {
       if (md->getTypeQualifiers() & clang::Qualifiers::Const) {
