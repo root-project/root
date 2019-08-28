@@ -16,6 +16,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(SpectrumPainter
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   DEPENDENCIES
+    Gpad
     Graf
     Hist
 )
