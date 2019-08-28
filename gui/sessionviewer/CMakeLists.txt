@@ -30,5 +30,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(SessionViewer
     Gpad
     Graf
     Tree
+    TreePlayer
     MathCore
 )
