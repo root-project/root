@@ -105,7 +105,9 @@ private:
    std::unique_ptr<RRawFile> fFile;
 
    RNTupleMetrics fMetrics;
+   Detail::RNTuplePlainCounter *fCtrNRead = nullptr;
    Detail::RNTuplePlainCounter *fCtrSzRead = nullptr;
+   Detail::RNTuplePlainCounter *fCtrSzUnzip = nullptr;
    Detail::RNTuplePlainCounter *fCtrNPages = nullptr;
    Detail::RNTuplePlainCounter *fCtrTimeWallRead = nullptr;
    Detail::RNTuplePlainCounter *fCtrTimeWallUnzip = nullptr;
