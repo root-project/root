@@ -51,6 +51,7 @@ private:
 public:
    RNTuplePerfCounter(const std::string &name, const std::string &unit, const std::string &desc)
       : fName(name), fUnit(unit), fDescription(desc) {}
+   virtual ~RNTuplePerfCounter();
    void Enable() { fIsEnabled = true; }
    bool IsEnabled() const { return fIsEnabled; }
    std::string GetName() const { return fName; }
