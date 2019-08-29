@@ -95,7 +95,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf
     mathtext
   DEPENDENCIES
     Hist
-    Matrix
     MathCore
     RIO
   BUILTINS
