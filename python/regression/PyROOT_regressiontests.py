@@ -238,6 +238,26 @@ class Regression05LoKiNamespace( MyTestCase ):
       """)
       self.assertEqual(ROOT.bar.foo(1), 1)
 
+   def test3TemplatedMethodWithReferenceParameter(self):
+      """Test templated method with reference parameter"""
+      # ROOT-10292
+      ROOT.gInterpreter.Declare("""
+      struct TriggerResults {};
+      struct Tag {};
+
+      template <typename T> struct Handle {};
+
+      struct Event {
+         template <typename T> int getByLabel(const Tag&, Handle<T>&) { return 0; }
+      };
+      """)
+
+      ev = ROOT.Event()
+      tag = ROOT.Tag()
+      result = ROOT.Handle(ROOT.TriggerResults)()
+
+      self.assertEqual(ev.getByLabel(tag, result), 0)
+
 
 ### Test conversion of int64 objects to ULong64_t and ULong_t ================
 class Regression06Int64Conversion( MyTestCase ):
