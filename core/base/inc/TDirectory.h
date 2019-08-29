@@ -79,11 +79,11 @@ public:
 
 protected:
 
-   TObject      *fMother;          //pointer to mother of the directory
-   TList        *fList;            //List of objects in memory
-   TUUID         fUUID;            //Unique identifier
-   TString       fPathBuffer;      //!Buffer for GetPath() function
-   TContext     *fContext;         //!Pointer to a list of TContext object pointing to this TDirectory
+   TObject      *fMother{nullptr};   // pointer to mother of the directory
+   TList        *fList{nullptr};     // List of objects in memory
+   TUUID         fUUID;              // Unique identifier
+   TString       fPathBuffer;        //! Buffer for GetPath() function
+   TContext     *fContext{nullptr};  //! Pointer to a list of TContext object pointing to this TDirectory
 
    std::atomic<size_t> fContextPeg;   //!Counter delaying the TDirectory destructor from finishing.
    mutable std::atomic_flag fSpinLock; //! MSVC doesn't support = ATOMIC_FLAG_INIT;
@@ -100,8 +100,8 @@ protected:
    friend class TContext;
 
 protected:
-   TDirectory(const TDirectory &directory);  //Directories cannot be copied
-   void operator=(const TDirectory &); //Directorise cannot be copied
+   TDirectory(const TDirectory &directory) = delete;  //Directories cannot be copied
+   void operator=(const TDirectory &) = delete; //Directories cannot be copied
 
 public:
 

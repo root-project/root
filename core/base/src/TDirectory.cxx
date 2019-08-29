@@ -43,7 +43,7 @@ ClassImp(TDirectory);
 ////////////////////////////////////////////////////////////////////////////////
 /// Directory default constructor.
 
-TDirectory::TDirectory() : TNamed(), fMother(0),fList(0),fContext(0)
+TDirectory::TDirectory() : TNamed()
 {
    // MSVC doesn't support fSpinLock=ATOMIC_FLAG_INIT; in the class definition
    std::atomic_flag_clear( &fSpinLock );
@@ -63,36 +63,25 @@ TDirectory::TDirectory() : TNamed(), fMother(0),fList(0),fContext(0)
 ///  Note that the directory name cannot contain slashes.
 
 TDirectory::TDirectory(const char *name, const char *title, Option_t * /*classname*/, TDirectory* initMotherDir)
-   : TNamed(name, title), fMother(0), fList(0),fContext(0)
+   : TNamed(name, title)
 {
    // MSVC doesn't support fSpinLock=ATOMIC_FLAG_INIT; in the class definition
    std::atomic_flag_clear( &fSpinLock );
 
-   if (initMotherDir==0) initMotherDir = gDirectory;
+   if (!initMotherDir) initMotherDir = gDirectory;
 
    if (strchr(name,'/')) {
       ::Error("TDirectory::TDirectory","directory name (%s) cannot contain a slash", name);
-      gDirectory = 0;
+      gDirectory = nullptr;
       return;
    }
    if (strlen(GetName()) == 0) {
       ::Error("TDirectory::TDirectory","directory name cannot be \"\"");
-      gDirectory = 0;
+      gDirectory = nullptr;
       return;
    }
 
    Build(initMotherDir ? initMotherDir->GetFile() : 0, initMotherDir);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor.
-
-TDirectory::TDirectory(const TDirectory &directory) : TNamed(directory)
-{
-   // MSVC doesn't support fSpinLock=ATOMIC_FLAG_INIT; in the class definition
-   std::atomic_flag_clear( &fSpinLock );
-
-   directory.Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
