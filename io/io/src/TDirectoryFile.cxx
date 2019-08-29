@@ -1189,19 +1189,15 @@ TDirectory *TDirectoryFile::mkdir(const char *name, const char *title)
    }
    TDirectoryFile *newdir = nullptr;
    if (const char *slash = strchr(name,'/')) {
-      Long_t size = Long_t(slash-name);
-      char *workname = new char[size+1];
-      strncpy(workname, name, size);
-      workname[size] = 0;
+      TString workname(name, Long_t(slash-name));
       TDirectoryFile *tmpdir = nullptr;
-      GetObject(workname,tmpdir);
+      GetObject(workname.Data(), tmpdir);
       if (!tmpdir) {
-         tmpdir = (TDirectoryFile*)mkdir(workname,title);
+         tmpdir = (TDirectoryFile*)mkdir(workname.Data(),title);
          if (!tmpdir) return nullptr;
       }
       if (!newdir) newdir = tmpdir;
       tmpdir->mkdir(slash+1);
-      delete[] workname;
       return newdir;
    }
 
