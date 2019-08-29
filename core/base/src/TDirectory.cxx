@@ -81,7 +81,7 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t * /*classna
       return;
    }
 
-   TDirectory::Build(initMotherDir ? initMotherDir->GetFile() : 0, initMotherDir);
+   TDirectory::Build(initMotherDir ? initMotherDir->GetFile() : nullptr, initMotherDir);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -160,7 +160,7 @@ TDirectory::TContext::~TContext()
 /// to the list of objects in memory.
 /// Note that in the classes like TH1, TGraph2D supporting this facility,
 /// one object can be removed from its support directory
-/// by calling object->SetDirectory(0) or object->SetDirectory(dir) to add it
+/// by calling object->SetDirectory(nullptr) or object->SetDirectory(dir) to add it
 /// to the list of objects in the directory dir.
 ///
 ///  NOTE that this is a static function. To call it, use:
@@ -816,7 +816,7 @@ TObject *TDirectory::Get(const char *namecycle)
          TDirectory* dirToSearch=GetDirectory(name);
          namobj = name + i + 1;
          name[i] = '/';
-         return dirToSearch?dirToSearch->Get(namobj):0;
+         return dirToSearch ? dirToSearch->Get(namobj) : nullptr;
       }
    }
 
@@ -828,14 +828,14 @@ TObject *TDirectory::Get(const char *namecycle)
          // The object has the same name has the directory and
          // that's what we picked-up!  We just need to ignore
          // it ...
-         idcur = 0;
+         idcur = nullptr;
       } else if (cycle == 9999) {
          return idcur;
       } else {
          if (idcur->InheritsFrom(TCollection::Class()))
             idcur->Delete();  // delete also list elements
          delete idcur;
-         idcur = 0;
+         idcur = nullptr;
       }
    }
    return idcur;
@@ -859,7 +859,7 @@ TObject *TDirectory::Get(const char *namecycle)
 
 void *TDirectory::GetObjectUnchecked(const char *namecycle)
 {
-   return GetObjectChecked(namecycle,(TClass*)0);
+   return GetObjectChecked(namecycle,(TClass *)nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -867,7 +867,7 @@ void *TDirectory::GetObjectUnchecked(const char *namecycle)
 
 void *TDirectory::GetObjectChecked(const char *namecycle, const char* classname)
 {
-   return GetObjectChecked(namecycle,TClass::GetClass(classname));
+   return GetObjectChecked(namecycle, TClass::GetClass(classname));
 }
 
 
@@ -918,7 +918,7 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const TClass* expected
 
 //*-*---------------------Case of Object in memory---------------------
 //                        ========================
-   if (expectedClass==0 || expectedClass->IsTObject()) {
+   if (!expectedClass || expectedClass->IsTObject()) {
       TObject *objcur = fList->FindObject(namobj);
       if (objcur) {
          if (objcur==this && strlen(namobj)!=0) {
