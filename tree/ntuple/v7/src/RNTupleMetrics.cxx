@@ -26,17 +26,28 @@ bool ROOT::Experimental::Detail::RNTupleMetrics::Contains(const std::string &nam
    return false;
 }
 
-void ROOT::Experimental::Detail::RNTupleMetrics::Print(std::ostream &output) const
+void ROOT::Experimental::Detail::RNTupleMetrics::Print(std::ostream &output, const std::string &prefix) const
 {
+
    for (const auto &c : fCounters) {
-      output << fName << "." << c->GetName() << "|" << c->GetUnit() << "|" << c->GetDescription()
+      output << prefix << fName << "." << c->GetName() << "|" << c->GetUnit() << "|" << c->GetDescription()
              << "|" << c->ToString() << std::endl;
+   }
+   for (const auto c : fObservedMetrics) {
+      c->Print(output, prefix + fName + ".");
    }
 }
 
-void ROOT::Experimental::Detail::RNTupleMetrics::Activate()
+void ROOT::Experimental::Detail::RNTupleMetrics::Enable()
 {
    for (auto &c: fCounters)
-      c->Activate();
-   fIsActive = true;
+      c->Enable();
+   fIsEnabled = true;
+   for (auto m: fObservedMetrics)
+      m->Enable();
+}
+
+void ROOT::Experimental::Detail::RNTupleMetrics::ObserveMetrics(RNTupleMetrics &observee)
+{
+   fObservedMetrics.push_back(&observee);
 }

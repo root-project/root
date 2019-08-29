@@ -17,6 +17,7 @@
 #define ROOT7_RPageStorageRaw
 
 #include <ROOT/RPageStorage.hxx>
+#include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <array>
@@ -45,6 +46,7 @@ private:
    /// Cannot process pages larger than 1MB
    static constexpr std::size_t kMaxPageSize = 1024 * 1024;
 
+   RNTupleMetrics fMetrics;
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
    std::unique_ptr<std::array<char, kMaxPageSize>> fZipBuffer;
    FILE *fFile = nullptr;
@@ -65,6 +67,8 @@ public:
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements = 0) final;
    void ReleasePage(RPage &page) final;
+
+   RNTupleMetrics &GetMetrics() final { return fMetrics; }
 };
 
 
@@ -100,6 +104,10 @@ private:
    std::unique_ptr<std::array<unsigned char, kMaxPageSize>> fUnzipBuffer;
    std::unique_ptr<RRawFile> fFile;
 
+   RNTupleMetrics fMetrics;
+   Detail::RNTuplePlainCounter *fCtrTimeWallUnzip = nullptr;
+   Detail::RNTupleTickCounter<Detail::RNTuplePlainCounter> *fCtrTimeCpuUnzip = nullptr;
+
    RPageSourceRaw(std::string_view ntupleName, const RNTupleReadOptions &options);
    void Read(void *buffer, std::size_t nbytes, std::uint64_t offset);
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle,
@@ -117,6 +125,8 @@ public:
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
    RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;
    void ReleasePage(RPage &page) final;
+
+   RNTupleMetrics &GetMetrics() final { return fMetrics; }
 };
 
 } // namespace Detail
