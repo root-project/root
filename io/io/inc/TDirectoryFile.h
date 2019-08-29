@@ -45,7 +45,7 @@ protected:
    TFile      *fFile{nullptr};           ///< Pointer to current file in memory
    TList      *fKeys{nullptr};           ///< Pointer to keys list in memory
 
-   void        CleanTargets() override;
+   void        CleanTargets();
    void        Init(TClass *cl = nullptr);
 
 private:

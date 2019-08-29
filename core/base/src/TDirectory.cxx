@@ -102,7 +102,7 @@ TDirectory::~TDirectory()
       SafeDelete(fList);
    }
 
-   TDirectory::CleanTargets();
+   CleanTargets();
 
    TDirectory* mom = TDirectory::GetMotherDir();
 

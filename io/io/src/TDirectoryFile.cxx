@@ -170,7 +170,7 @@ TDirectoryFile::~TDirectoryFile()
       SafeDelete(fKeys);
    }
 
-   TDirectoryFile::CleanTargets();
+   CleanTargets();
 
    // Delete our content before we become somewhat invalid
    // since some those objects (TTree for example) needs information
@@ -338,12 +338,12 @@ Bool_t TDirectoryFile::cd(const char *path)
 
 void TDirectoryFile::CleanTargets()
 {
-
    // After CleanTargets either gFile was changed appropriately
    // by a cd() or needs to be set to zero.
    if (gFile == this) {
       gFile = nullptr;
    }
+
    TDirectory::CleanTargets();
 }
 
