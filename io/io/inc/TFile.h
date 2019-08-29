@@ -127,11 +127,12 @@ protected:
    static std::atomic<Int_t>     fgReadCalls;             ///<Number of bytes read from all TFile objects
    static Int_t     fgReadaheadSize;         ///<Readahead buffer size
    static Bool_t    fgReadInfo;              ///<if true (default) ReadStreamerInfo is called when opening a file
+
    virtual EAsyncOpenStatus GetAsyncOpenStatus() { return fAsyncOpenStatus; }
-   virtual void  Init(Bool_t create);
-   Bool_t                    FlushWriteCache();
-   Int_t                     ReadBufferViaCache(char *buf, Int_t len);
-   Int_t                     WriteBufferViaCache(const char *buf, Int_t len);
+   virtual void        Init(Bool_t create);
+           Bool_t      FlushWriteCache();
+           Int_t       ReadBufferViaCache(char *buf, Int_t len);
+           Int_t       WriteBufferViaCache(const char *buf, Int_t len);
 
    ////////////////////////////////////////////////////////////////////////////////
    /// \brief Simple struct of the return value of GetStreamerInfoListImpl
@@ -144,32 +145,32 @@ protected:
    virtual InfoListRet GetStreamerInfoListImpl(bool lookupSICache);
 
    // Creating projects
-   Int_t         MakeProjectParMake(const char *packname, const char *filename);
-   Int_t         MakeProjectParProofInf(const char *packname, const char *proofinfdir);
+           Int_t       MakeProjectParMake(const char *packname, const char *filename);
+           Int_t       MakeProjectParProofInf(const char *packname, const char *proofinfdir);
 
    // Interface to basic system I/O routines
-   virtual Int_t    SysOpen(const char *pathname, Int_t flags, UInt_t mode);
-   virtual Int_t    SysClose(Int_t fd);
-   virtual Int_t    SysRead(Int_t fd, void *buf, Int_t len);
-   virtual Int_t    SysWrite(Int_t fd, const void *buf, Int_t len);
-   virtual Long64_t SysSeek(Int_t fd, Long64_t offset, Int_t whence);
-   virtual Int_t    SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags, Long_t *modtime);
-   virtual Int_t    SysSync(Int_t fd);
+   virtual Int_t       SysOpen(const char *pathname, Int_t flags, UInt_t mode);
+   virtual Int_t       SysClose(Int_t fd);
+   virtual Int_t       SysRead(Int_t fd, void *buf, Int_t len);
+   virtual Int_t       SysWrite(Int_t fd, const void *buf, Int_t len);
+   virtual Long64_t    SysSeek(Int_t fd, Long64_t offset, Int_t whence);
+   virtual Int_t       SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags, Long_t *modtime);
+   virtual Int_t       SysSync(Int_t fd);
 
    // Interface for text-based TDirectory I/O
-   virtual Long64_t DirCreateEntry(TDirectory*) { return 0; }
-   virtual Int_t    DirReadKeys(TDirectory*) { return 0; }
-   virtual void     DirWriteKeys(TDirectory*) {}
-   virtual void     DirWriteHeader(TDirectory*) {}
+   virtual Long64_t    DirCreateEntry(TDirectory*) { return 0; }
+   virtual Int_t       DirReadKeys(TDirectory*) { return 0; }
+   virtual void        DirWriteKeys(TDirectory*) {}
+   virtual void        DirWriteHeader(TDirectory*) {}
 
 private:
-   TFile(const TFile &);            //Files cannot be copied
-   void operator=(const TFile &);
+   TFile(const TFile &) = delete;            //Files cannot be copied
+   void operator=(const TFile &) = delete;
 
-   static void   CpProgress(Long64_t bytesread, Long64_t size, TStopwatch &watch);
-   static TFile *OpenFromCache(const char *name, Option_t * = "",
-                               const char *ftitle = "", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose,
-                               Int_t netopt = 0);
+   static  void        CpProgress(Long64_t bytesread, Long64_t size, TStopwatch &watch);
+   static  TFile      *OpenFromCache(const char *name, Option_t * = "",
+                                     const char *ftitle = "", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose,
+                                     Int_t netopt = 0);
 
 public:
    /// TFile status bits. BIT(13) is taken up by TObject
@@ -185,55 +186,56 @@ public:
    enum ERelativeTo { kBeg = 0, kCur = 1, kEnd = 2 };
    enum { kStartBigFile  = 2000000000 };
    /// File type
-   enum EFileType { kDefault = 0, kLocal = 1, kNet = 2, kWeb = 3, kFile = 4, kMerge = 5};
+   enum EFileType { kDefault = 0, kLocal = 1, kNet = 2, kWeb = 3, kFile = 4, kMerge = 5 };
 
    TFile();
    TFile(const char *fname, Option_t *option="", const char *ftitle="", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose);
    virtual ~TFile();
-   virtual void        Close(Option_t *option=""); // *MENU*
-   virtual void        Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
+
+           void        Close(Option_t *option="") override; // *MENU*
+           void        Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }
    virtual Bool_t      Cp(const char *dst, Bool_t progressbar = kTRUE,UInt_t buffersize = 1000000);
    virtual TKey*       CreateKey(TDirectory* mother, const TObject* obj, const char* name, Int_t bufsize);
    virtual TKey*       CreateKey(TDirectory* mother, const void* obj, const TClass* cl,
                                  const char* name, Int_t bufsize);
    static TFile      *&CurrentFile(); // Return the current file for this thread.
-   virtual void        Delete(const char *namecycle="");
-   virtual void        Draw(Option_t *option="");
+           void        Delete(const char *namecycle="") override;
+           void        Draw(Option_t *option="") override;
    virtual void        DrawMap(const char *keys="*",Option_t *option=""); // *MENU*
-   virtual void        FillBuffer(char *&buffer);
+           void        FillBuffer(char *&buffer) override;
    virtual void        Flush();
-   TArchiveFile       *GetArchive() const { return fArchive; }
-   Long64_t            GetArchiveOffset() const { return fArchiveOffset; }
-   Int_t               GetBestBuffer() const;
+         TArchiveFile *GetArchive() const { return fArchive; }
+           Long64_t    GetArchiveOffset() const { return fArchiveOffset; }
+           Int_t       GetBestBuffer() const;
    virtual Int_t       GetBytesToPrefetch() const;
-   TFileCacheRead     *GetCacheRead(const TObject* tree = 0) const;
-   TFileCacheWrite    *GetCacheWrite() const;
-   TArrayC            *GetClassIndex() const { return fClassIndex; }
-   Int_t               GetCompressionAlgorithm() const;
-   Int_t               GetCompressionLevel() const;
-   Int_t               GetCompressionSettings() const;
-   Float_t             GetCompressionFactor();
+       TFileCacheRead *GetCacheRead(const TObject* tree = nullptr) const;
+      TFileCacheWrite *GetCacheWrite() const;
+           TArrayC    *GetClassIndex() const { return fClassIndex; }
+           Int_t       GetCompressionAlgorithm() const;
+           Int_t       GetCompressionLevel() const;
+           Int_t       GetCompressionSettings() const;
+           Float_t     GetCompressionFactor();
    virtual Long64_t    GetEND() const { return fEND; }
    virtual Int_t       GetErrno() const;
    virtual void        ResetErrno() const;
-   Int_t               GetFd() const { return fD; }
+           Int_t       GetFd() const { return fD; }
    virtual const TUrl *GetEndpointUrl() const { return &fUrl; }
-   TObjArray          *GetListOfProcessIDs() const {return fProcessIDs;}
-   TList              *GetListOfFree() const { return fFree; }
+           TObjArray  *GetListOfProcessIDs() const {return fProcessIDs;}
+           TList      *GetListOfFree() const { return fFree; }
    virtual Int_t       GetNfree() const { return fFree->GetSize(); }
    virtual Int_t       GetNProcessIDs() const { return fNProcessIDs; }
-   Option_t           *GetOption() const { return fOption.Data(); }
+           Option_t   *GetOption() const override { return fOption.Data(); }
    virtual Long64_t    GetBytesRead() const { return fBytesRead; }
    virtual Long64_t    GetBytesReadExtra() const { return fBytesReadExtra; }
    virtual Long64_t    GetBytesWritten() const;
    virtual Int_t       GetReadCalls() const { return fReadCalls; }
-   Int_t               GetVersion() const { return fVersion; }
-   Int_t               GetRecordHeader(char *buf, Long64_t first, Int_t maxbytes,
+           Int_t       GetVersion() const { return fVersion; }
+           Int_t       GetRecordHeader(char *buf, Long64_t first, Int_t maxbytes,
                                        Int_t &nbytes, Int_t &objlen, Int_t &keylen);
    virtual Int_t       GetNbytesInfo() const {return fNbytesInfo;}
    virtual Int_t       GetNbytesFree() const {return fNbytesFree;}
    virtual TString     GetNewUrl() { return ""; }
-   Long64_t            GetRelOffset() const { return fOffset - fArchiveOffset; }
+           Long64_t    GetRelOffset() const { return fOffset - fArchiveOffset; }
    virtual Long64_t    GetSeekFree() const {return fSeekFree;}
    virtual Long64_t    GetSeekInfo() const {return fSeekInfo;}
    virtual Long64_t    GetSize() const;
@@ -244,7 +246,7 @@ public:
            Bool_t      IsBinary() const { return TestBit(kBinaryFile); }
            Bool_t      IsRaw() const { return !fIsRootFile; }
    virtual Bool_t      IsOpen() const;
-   virtual void        ls(Option_t *option="") const;
+           void        ls(Option_t *option="") const override;
    virtual void        MakeFree(Long64_t first, Long64_t last);
    virtual void        MakeProject(const char *dirname, const char *classes="*",
                                    Option_t *option="new"); // *MENU*
@@ -252,8 +254,8 @@ public:
    virtual void        Map() { Map(""); }; // *MENU*
    virtual Bool_t      Matches(const char *name);
    virtual Bool_t      MustFlush() const {return fMustFlush;}
-   virtual void        Paint(Option_t *option="");
-   virtual void        Print(Option_t *option="") const;
+           void        Paint(Option_t *option="") override;
+           void        Print(Option_t *option="") const override;
    virtual Bool_t      ReadBufferAsync(Long64_t offs, Int_t len);
    virtual Bool_t      ReadBuffer(char *buf, Int_t len);
    virtual Bool_t      ReadBuffer(char *buf, Long64_t pos, Int_t len);
@@ -274,11 +276,11 @@ public:
    virtual void        SetOption(Option_t *option=">") { fOption = option; }
    virtual void        SetReadCalls(Int_t readcalls = 0) { fReadCalls = readcalls; }
    virtual void        ShowStreamerInfo();
-   virtual Int_t       Sizeof() const;
-   void                SumBuffer(Int_t bufsize);
+           Int_t       Sizeof() const override;
+           void        SumBuffer(Int_t bufsize);
    virtual Bool_t      WriteBuffer(const char *buf, Int_t len);
-   virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0);
-   virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0) const;
+           Int_t       Write(const char *name=nullptr, Int_t opt=0, Int_t bufsiz=0) override;
+           Int_t       Write(const char *name=nullptr, Int_t opt=0, Int_t bufsiz=0) const override;
    virtual void        WriteFree();
    virtual void        WriteHeader();
    virtual UShort_t    WriteProcessID(TProcessID *pid);
@@ -329,7 +331,7 @@ public:
    static Bool_t       SetOnlyStaged(Bool_t onlystaged);
    static Bool_t       GetOnlyStaged();
 
-   ClassDef(TFile,8)  //ROOT file
+   ClassDefOverride(TFile,8)  //ROOT file
 };
 
 #ifndef __CINT__
@@ -351,18 +353,18 @@ friend class TFile;
 friend class TAlienFile;
 
 private:
-   TString  fOpt;        ///< Options
-   Int_t    fCompress;   ///< Compression level and algorithm
-   Int_t    fNetOpt;     ///< Network options
-   TFile   *fFile;       ///< TFile instance of the file being opened
+   TString  fOpt;            ///< Options
+   Int_t    fCompress{0};    ///< Compression level and algorithm
+   Int_t    fNetOpt{0};      ///< Network options
+   TFile   *fFile{nullptr};  ///< TFile instance of the file being opened
 
    TFileOpenHandle(TFile *f) : TNamed("",""), fOpt(""), fCompress(ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose),
                                fNetOpt(0), fFile(f) { }
    TFileOpenHandle(const char *n, const char *o, const char *t, Int_t cmp,
                    Int_t no) : TNamed(n,t), fOpt(o), fCompress(cmp),
-                               fNetOpt(no), fFile(0) { }
-   TFileOpenHandle(const TFileOpenHandle&);
-   TFileOpenHandle& operator=(const TFileOpenHandle&);
+                               fNetOpt(no), fFile(nullptr) { }
+   TFileOpenHandle(const TFileOpenHandle&) = delete;
+   TFileOpenHandle& operator=(const TFileOpenHandle&) = delete;
 
    TFile      *GetFile() const { return fFile; }
 
