@@ -271,7 +271,7 @@ auto inline TLayer<Architecture_t>::Forward(Matrix_t & input,
 -> void
 {
    if (applyDropout && (fDropoutProbability != 1.0)) {
-      Architecture_t::Dropout(input, fDropoutProbability);
+      Architecture_t::DropoutForward(input, fDropoutProbability);
    }
    Architecture_t::MultiplyTranspose(fOutput, input, fWeights);
    Architecture_t::AddRowWise(fOutput, fBiases);
@@ -358,7 +358,7 @@ auto inline TSharedLayer<Architecture_t>::Forward(Matrix_t & input,
 -> void
 {
    if (applyDropout && (fDropoutProbability != 1.0)) {
-      Architecture_t::Dropout(input, fDropoutProbability);
+      Architecture_t::DropoutForward(input, fDropoutProbability);
    }
    Architecture_t::MultiplyTranspose(fOutput, input, fWeights);
    Architecture_t::AddRowWise(fOutput, fBiases);

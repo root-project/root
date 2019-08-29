@@ -92,7 +92,7 @@ public:
     *  must be in 3D tensor form with the different matrices corresponding to
     *  different events in the batch. It spatially downsamples the input
     *  matrices. */
-   void Forward(Tensor_t &input, bool applyDropout = false);
+   void Forward(Tensor_t &input, bool applyDropout = true);
 
    /*! Depending on the winning units determined during the Forward pass,
     *  it only forwards the derivatives to the right units in the previous
@@ -172,17 +172,15 @@ TMaxPoolLayer<Architecture_t>::~TMaxPoolLayer()
 template <typename Architecture_t>
 auto TMaxPoolLayer<Architecture_t>::Forward(Tensor_t &input, bool applyDropout) -> void
 {
-   
-
    if (applyDropout && (this->GetDropoutProbability() != 1.0)) {
-         Architecture_t::Dropout(input, this->GetDropoutProbability());
+         Architecture_t::DropoutForward(input, TConvLayer<Architecture_t>::fDescriptors,
+                                        TConvLayer<Architecture_t>::fWorkspace,
+                                        this->GetDropoutProbability());
    }
 
-   
-
    Architecture_t::Downsample(this->GetOutput(), fIndexTensor, input, 
-                              (TCNNDescriptors<TMaxPoolLayer<Architecture_t>> &) (*TConvLayer<Architecture_t>::fDescriptors),
-                              (TCNNWorkspace<TMaxPoolLayer<Architecture_t>> &) (*TConvLayer<Architecture_t>::fWorkspace),
+                              (TCNNDescriptors<TMaxPoolLayer<Architecture_t>> &) *TConvLayer<Architecture_t>::fDescriptors,
+                              (TCNNWorkspace<TMaxPoolLayer<Architecture_t>> &) *TConvLayer<Architecture_t>::fWorkspace,
                               this->GetInputHeight(), this->GetInputWidth(), 
                               this->GetFilterHeight(), this->GetFilterWidth(),
                               this->GetStrideRows(), this->GetStrideCols());
@@ -195,6 +193,12 @@ auto TMaxPoolLayer<Architecture_t>::Backward(Tensor_t &gradients_backward,
                                              const Tensor_t & activations_backward) -> void
 //                                             Tensor_t & /*inp1*/, Tensor_t &
 {
+   
+   if (this->GetDropoutProbability() != 1.0) {
+      Architecture_t::DropoutBackward(this->GetActivationGradients(), 
+                                      TConvLayer<Architecture_t>::fDescriptors,
+                                      TConvLayer<Architecture_t>::fWorkspace);
+   }
    Architecture_t::MaxPoolLayerBackward(gradients_backward, this->GetActivationGradients(), fIndexTensor, activations_backward, this->GetOutput(),
                                         (TCNNDescriptors<TMaxPoolLayer<Architecture_t>> &) (*TConvLayer<Architecture_t>::fDescriptors),
                                         (TCNNWorkspace<TMaxPoolLayer<Architecture_t>> &) (*TConvLayer<Architecture_t>::fWorkspace),
@@ -260,7 +264,7 @@ void TMaxPoolLayer<Architecture_t>::InitializeWorkspace() {
                       this->GetDepth(), this->GetFilterHeight(), this->GetFilterWidth(),
                       this->GetStrideRows(), this->GetStrideCols(), this->GetPaddingHeight(), this->GetPaddingWidth());
 
-   Architecture_t::InitializePoolWorkspace(TConvLayer<Architecture_t>::fWorkspace, TConvLayer<Architecture_t>::fDescriptors, params, this);
+   Architecture_t::InitializeDropoutWorkspace(TConvLayer<Architecture_t>::fWorkspace, TConvLayer<Architecture_t>::fDescriptors, params, this);
 }
 
 template <typename Architecture_t>

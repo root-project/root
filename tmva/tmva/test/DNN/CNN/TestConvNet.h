@@ -127,7 +127,7 @@ auto testDownsample(const typename Architecture::Matrix_t &A, const typename Arc
 
    TMaxPoolLayer<Architecture> *layer = nullptr;
    Architecture::InitializePoolDescriptors(poolDescriptors, layer);
-   Architecture::InitializePoolWorkspace(poolWorkspace, poolDescriptors, params, layer);
+   Architecture::InitializeDropoutWorkspace(poolWorkspace, poolDescriptors, params, layer);
 
    Architecture::Downsample(tDown, tInd, tA, 
                             (typename Architecture::PoolingDescriptors_t &) *poolDescriptors,
@@ -186,7 +186,7 @@ auto testPoolingBackward(const typename Architecture::Matrix_t &input, const typ
 
     TMaxPoolLayer<Architecture> *layer = nullptr;
     Architecture::InitializePoolDescriptors(poolDescriptors, layer);
-    Architecture::InitializePoolWorkspace(poolWorkspace, poolDescriptors, params, layer);
+    Architecture::InitializeDropoutWorkspace(poolWorkspace, poolDescriptors, params, layer);
 
     Architecture::MaxPoolLayerBackward(ABack, tInput, tIndexMatrix, inputActivation, outputActivation,
                                        (typename Architecture::PoolingDescriptors_t &) *poolDescriptors,

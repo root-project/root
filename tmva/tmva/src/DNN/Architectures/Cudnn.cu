@@ -18,6 +18,7 @@
 
 #include "TMVA/DNN/Architectures/TCudnn.h"
 #include "Cudnn/Propagate.cu"
+#include "Cudnn/Dropout.cu"
 #include "Cudnn/Arithmetic.cu"
 #include "Cudnn/ActivationFunctions.cu"
 #include "Cudnn/Initialization.cu"

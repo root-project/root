@@ -60,9 +60,9 @@ struct TCNNWorkspace : public TMVA::DNN::TWorkspace {
 
    AlgorithmDataType_t DataType;
 
-   void * ForwardWorkspace;
-   void * BackwardWorkspace;
-   void * HelperWorkspace;
+   size_t * ForwardWorkspace;
+   size_t * BackwardWorkspace;
+   size_t * HelperWorkspace;
 
    size_t ForwardWorkspaceSize;
    size_t BackwardWorkspaceSize;
