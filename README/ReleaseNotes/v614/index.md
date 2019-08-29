@@ -607,3 +607,47 @@ Released on November 22, 2018
 ## HEAD of the v6-14-00-patches branch
 
 These changes will be part of the future 6.14/10.
+
+## Core Libraries
+
+* Speed-up startup, in particular in case of no or poor network accesibility, by avoiding
+a network access that was used as input to generate a globally unique ID for the current
+process.
+ * This network access is replaced by a passive scan of the network interface. This
+reduces somewhat the uniqueness of the unique ID as the IP address is no longer
+guaranteed by the DNS server to be unique.   Note that this was already the case when
+the network access (used to look up the hostname and its IP address) failed.
+
+## I/O Libraries
+
+* Add renaming rule for instances of the math classes from `genvector` and `smatrix` to
+instance for one floating point type (`float`, `double`, `Double32_t`, `Float16_t`) to
+instances for any other floating point type.
+* Corrected the application of  `I/O customization rules` when the target classes contained
+typedefs (in particular `Double32_t`)
+* Prevent splitting of objects when a `Streamer Function` was explicitly attached to their
+`TClass`.
+* Set offset of the used-for-write element in case of `I/O` rule on 'current' `StreamerInfo.`
+* Fix `TTreeReader`'s use of `Set[Local]Entry`
+* Avoid deleted memory access in `MakeProject` and in handling of
+`I/O customization rules`.
+
+## TTree Libraries
+
+* Reset the `TCutG` in `TTreeFormula::ResetLoading`.
+* Properly handle `TTree` aliases contain just function calls.
+* Prevent a situation in `TTreeFormula` when stale cached information was re-used.
+
+## Histogram Libraries
+
+* Update all `TH1` derived class version number.
+ * The files produced by `v6.14/00, v6.14/02, v6.14/04, v6.14/06, v6.14/08` when read by
+older version of `ROOT` (eg. `v5.34`) will put the `Core/Meta` in a state that prevent writing
+of any histogram (from within that process).
+ * The files produced by this version and later no longer suffer from this deficiency.
+
+## Geometry Libraries
+
+* Fix incorrect navigation when exactly on the frontier of an overlapping volume
+* create TGeoCone with name in TGeoBuilder
+* Added `"Up"`  operation in TGeoIterator.
