@@ -8,6 +8,36 @@
 # CMakeLists.txt file for building ROOT (global) core package
 ############################################################################
 
+file(WRITE ${CMAKE_BINARY_DIR}/etc/gitinfo.txt
+  "${GIT_DESCRIBE_ALL}\n${GIT_DESCRIBE_ALWAYS}\n${GIT_TIMESTAMP}\n")
+
+file(WRITE ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
+"#ifndef ROOT_RGITCOMMIT_H
+#define ROOT_RGITCOMMIT_H
+  #define ROOT_GIT_BRANCH \"${GIT_DESCRIBE_ALL}\"
+  #define ROOT_GIT_COMMIT \"${GIT_DESCRIBE_ALWAYS}\"
+#endif"
+)
+
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RGitCommit.h
+  COMMAND
+    ${CMAKE_COMMAND} -E copy_if_different
+    ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
+    ${CMAKE_BINARY_DIR}/include/RGitCommit.h
+  DEPENDS
+    ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
+)
+
+add_custom_target(gitcommit ALL DEPENDS ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp)
+
+set_source_files_properties(${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
+  PROPERTIES GENERATED TRUE)
+set_source_files_properties(${CMAKE_BINARY_DIR}/include/RGitCommit.h
+  PROPERTIES GENERATED TRUE HEADER_FILE_ONLY TRUE)
+
+install(FILES ${CMAKE_BINARY_DIR}/include/RGitCommit.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
 add_subdirectory(clib)
 add_subdirectory(clingutils)
 add_subdirectory(cont)
@@ -90,41 +120,8 @@ set(objectlibs $<TARGET_OBJECTS:Base>
                ${unix_objects}
                ${winnt_objects})
 
-#---Generation of RGitCommit.h-----------------------------------------------------------
-
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RGitCommit.h
-                   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp ${CMAKE_BINARY_DIR}/include/RGitCommit.h
-                   COMMENT ""
-                   DEPENDS ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
-                   WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-
-message("Recording the git revision now")
-
-file(WRITE ${CMAKE_BINARY_DIR}/etc/gitinfo.txt
-     "${GIT_DESCRIBE_ALL}
-${GIT_DESCRIBE_ALWAYS}
-${GIT_TIMESTAMP}
-"
-    )
-
-file(WRITE ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
-     "#ifndef ROOT_RGITCOMMIT_H
-#define ROOT_RGITCOMMIT_H
-#define ROOT_GIT_BRANCH \"${GIT_DESCRIBE_ALL}\"
-#define ROOT_GIT_COMMIT \"${GIT_DESCRIBE_ALWAYS}\"
-#endif
-"
-    )
-
-add_custom_target(gitcommit ALL DEPENDS ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp)
-set_source_files_properties(${CMAKE_BINARY_DIR}/RGitCommit.h.tmp PROPERTIES GENERATED TRUE)
-
-set_source_files_properties(${CMAKE_BINARY_DIR}/include/RGitCommit.h
-                            PROPERTIES GENERATED TRUE HEADER_FILE_ONLY TRUE)
-
 ROOT_OBJECT_LIBRARY(BaseTROOT ${CMAKE_SOURCE_DIR}/core/base/src/TROOT.cxx ${CMAKE_BINARY_DIR}/include/RGitCommit.h)
 add_dependencies(BaseTROOT gitcommit)
-install(FILES ${CMAKE_BINARY_DIR}/include/RGitCommit.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 #----------------------------------------------------------------------------------------
 
 if(WIN32)
