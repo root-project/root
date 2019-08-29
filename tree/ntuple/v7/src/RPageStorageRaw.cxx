@@ -177,7 +177,9 @@ ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntup
    , fUnzipBuffer(std::make_unique<std::array<unsigned char, kMaxPageSize>>())
    , fMetrics("RPageSourceRaw")
 {
+   fMetrics.MakeCounter("nRead", "", "number of read() calls", fCtrNRead);
    fMetrics.MakeCounter("szRead", "B", "volume read from file", fCtrSzRead);
+   fMetrics.MakeCounter("szUnzip", "B", "volume after unzipping", fCtrSzUnzip);
    fMetrics.MakeCounter("nPages", "", "number of populated pages", fCtrNPages);
    fMetrics.MakeCounter("timeWallRead", "ns", "wall clock time spent reading", fCtrTimeWallRead);
    fMetrics.MakeCounter("timeCpuRead", "ns", "CPU time spent reading", fCtrTimeCpuRead);
@@ -206,6 +208,7 @@ void ROOT::Experimental::Detail::RPageSourceRaw::Read(void *buffer, std::size_t 
    auto nread = fFile->ReadAt(buffer, nbytes, offset);
    R__ASSERT(nread == nbytes);
    fCtrSzRead->Add(nread);
+   fCtrNRead->Inc();
 }
 
 
@@ -282,6 +285,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::Po
       R__ASSERT(unzipBytes > static_cast<int>(pageSize));
       memcpy(pageBuffer, fUnzipBuffer->data(), unzipBytes);
       pageSize = unzipBytes;
+      fCtrSzUnzip->Add(unzipBytes);
    }
 
    if (!element->IsMappable()) {
