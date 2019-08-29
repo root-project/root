@@ -81,7 +81,7 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t * /*classna
       return;
    }
 
-   Build(initMotherDir ? initMotherDir->GetFile() : 0, initMotherDir);
+   TDirectory::Build(initMotherDir ? initMotherDir->GetFile() : 0, initMotherDir);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,9 +102,9 @@ TDirectory::~TDirectory()
       SafeDelete(fList);
    }
 
-   CleanTargets();
+   TDirectory::CleanTargets();
 
-   TDirectory* mom = GetMotherDir();
+   TDirectory* mom = TDirectory::GetMotherDir();
 
    if (mom) {
       mom->Remove(this);
