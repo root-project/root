@@ -117,7 +117,7 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
    fBufferSize  = 0;
    fWritable    = kTRUE;
 
-   Init(cl);
+   InitDirectory(cl);
 
    fModified = kFALSE;
 
@@ -133,7 +133,7 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
 /// Initialize the key associated with this directory (and the related
 /// data members.
 
-void TDirectoryFile::Init(TClass *cl)
+void TDirectoryFile::InitDirectory(TClass *cl)
 {
    TFile* f = GetFile(); // NOLINT: silence clang-tidy warnings
    if (f->IsBinary()) {
@@ -1437,7 +1437,7 @@ void TDirectoryFile::ResetAfterMerge(TFileMergeInfo *info)
       fKeys->Delete("slow");
    }
 
-   Init(cl);
+   InitDirectory(cl);
 
    // Do the same with the sub-directories.
    TIter   next(GetList());
