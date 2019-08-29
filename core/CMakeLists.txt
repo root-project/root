@@ -91,12 +91,6 @@ set(objectlibs $<TARGET_OBJECTS:Base>
                ${winnt_objects})
 
 #---Generation of RGitCommit.h-----------------------------------------------------------
-foreach(exp ${objectlibs})
-  string(REGEX REPLACE "^[$]<TARGET_OBJECTS:(.+)>" "\\1" lib ${exp})
-  get_target_property(objs ${lib} OBJECTS)
-  list(APPEND dep_objects ${objs})
-  list(APPEND dep_targets ${lib})
-endforeach()
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RGitCommit.h
                    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp ${CMAKE_BINARY_DIR}/include/RGitCommit.h
@@ -124,7 +118,6 @@ file(WRITE ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
 
 add_custom_target(gitcommit ALL DEPENDS ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp)
 set_source_files_properties(${CMAKE_BINARY_DIR}/RGitCommit.h.tmp PROPERTIES GENERATED TRUE)
-add_dependencies(gitcommit ${dep_targets})
 
 set_source_files_properties(${CMAKE_BINARY_DIR}/include/RGitCommit.h
                             PROPERTIES GENERATED TRUE HEADER_FILE_ONLY TRUE)
