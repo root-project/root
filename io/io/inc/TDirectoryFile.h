@@ -49,8 +49,8 @@ protected:
    void Init(TClass *cl = 0);
 
 private:
-   TDirectoryFile(const TDirectoryFile &directory);  //Directories cannot be copied
-   void operator=(const TDirectoryFile &); //Directories cannot be copied
+   TDirectoryFile(const TDirectoryFile &directory) = delete;  //Directories cannot be copied
+   void operator=(const TDirectoryFile &) = delete; //Directories cannot be copied
 
 public:
    // TDirectory status bits
