@@ -11,7 +11,27 @@
 set(Clib_dict_headers strlcpy.h
                       snprintf.h PARENT_SCOPE)
 
-ROOT_OBJECT_LIBRARY(Clib *.c)
+ROOT_OBJECT_LIBRARY(Clib
+  src/Demangle.c
+  src/attach.c
+  src/detach.c
+  src/getpagesize.c
+  src/keys.c
+  src/mcalloc.c
+  src/mfree.c
+  src/mmalloc.c
+  src/mmapsup.c
+  src/mmcheck.c
+  src/mmemalign.c
+  src/mmstats.c
+  src/mmtrace.c
+  src/mrealloc.c
+  src/mvalloc.c
+  src/sbrksup.c
+  src/snprintf.c
+  src/strlcat.c
+  src/strlcpy.c
+)
 
 target_include_directories(Clib PRIVATE res)
 
