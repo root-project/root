@@ -1582,13 +1582,15 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
   std::vector<Double_t> rangeLo(_vars.getSize(), -std::numeric_limits<Double_t>::infinity());
   std::vector<Double_t> rangeHi(_vars.getSize(), +std::numeric_limits<Double_t>::infinity());
 
-  for (Int_t i = 0; _vars.size(); ++i) {
+  for (std::size_t i = 0; i < _vars.size(); ++i) {
     const auto arg = _vars[i];
     RooAbsArg* sumsetv = sumSet.find(*arg);
     RooAbsArg* slicesetv = sliceSet.find(*arg);
     mask[i] = !sumsetv;
     if (mask[i]) {
-      refBin[i] = (dynamic_cast<RooAbsLValue*>(arg))->getBin();
+      auto argLV = dynamic_cast<const RooAbsLValue*>(arg);
+      assert(argLV);
+      refBin[i] = argLV->getBin();
     }
     std::map<const RooAbsArg*, std::pair<Double_t, Double_t> >::const_iterator
 	it = ranges.find(sumsetv ? sumsetv : slicesetv);
