@@ -158,7 +158,6 @@ ROOT_GENERATE_DICTIONARY(G__Core
     Core
   OPTIONS
     -writeEmptyRootPCM
-    ${dict_opts}
   LINKDEF
     base/inc/LinkDef.h
 )
