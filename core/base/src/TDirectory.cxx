@@ -81,7 +81,7 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t * /*classna
       return;
    }
 
-   BuildImp(initMotherDir ? initMotherDir->GetFile() : nullptr, initMotherDir);
+   BuildDirectory(initMotherDir ? initMotherDir->GetFile() : nullptr, initMotherDir);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +102,7 @@ TDirectory::~TDirectory()
       SafeDelete(fList);
    }
 
-   CleanTargets();
+   TDirectory::CleanTargets();
 
    TDirectory* mom = TDirectory::GetMotherDir();
 
@@ -234,7 +234,7 @@ void TDirectory::Browse(TBrowser *b)
 /// don't add it here to the directory since its name is not yet known.
 /// It will be added to the directory in TKey::ReadObj().
 
-void TDirectory::BuildImp(TFile* /*motherFile*/, TDirectory* motherDir)
+void TDirectory::BuildDirectory(TFile* /*motherFile*/, TDirectory* motherDir)
 {
    fList       = new THashList(100,50);
    fList->UseRWLock();
@@ -615,7 +615,7 @@ void TDirectory::Close(Option_t *option)
       else      fList->Delete();
    }
 
-   CleanTargets();
+   TDirectory::CleanTargets();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
