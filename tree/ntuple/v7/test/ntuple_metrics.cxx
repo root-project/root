@@ -14,7 +14,7 @@ using RNTupleMetrics = ROOT::Experimental::Detail::RNTupleMetrics;
 TEST(Metrics, Counters)
 {
 	RNTupleMetrics metrics("test");
-	EXPECT_FALSE(metrics.IsActive());
+	EXPECT_FALSE(metrics.IsEnabled());
 
 	RNTuplePlainCounter *ctrOne = nullptr;
 	RNTupleAtomicCounter *ctrTwo = nullptr;
@@ -22,16 +22,16 @@ TEST(Metrics, Counters)
 	metrics.MakeCounter("atomic", "s", "example 2", ctrTwo);
 	ASSERT_NE(nullptr, ctrOne);
 	ASSERT_NE(nullptr, ctrTwo);
-	EXPECT_TRUE(ctrOne->IsActive());
-	EXPECT_FALSE(ctrTwo->IsActive());
+	EXPECT_TRUE(ctrOne->IsEnabled());
+	EXPECT_FALSE(ctrTwo->IsEnabled());
 
 	EXPECT_EQ(0, ctrOne->GetValue());
 	ctrOne->Inc();
 	ctrTwo->Inc();
 	EXPECT_EQ(1, ctrOne->GetValue());
 	EXPECT_EQ(0, ctrTwo->GetValue());
-	metrics.Activate();
-	EXPECT_TRUE(metrics.IsActive());
+	metrics.Enable();
+	EXPECT_TRUE(metrics.IsEnabled());
 	ctrTwo->Inc();
 	EXPECT_EQ(1, ctrTwo->XAdd(5));
 	EXPECT_EQ(1, ctrOne->GetValue());
@@ -48,8 +48,8 @@ TEST(Metrics, Timer)
 	}
 	EXPECT_EQ(0U, ctrWallTime.GetValue());
 	EXPECT_EQ(0U, ctrCpuTicks.GetValue());
-	ctrWallTime.Activate();
-	ctrCpuTicks.Activate();
+	ctrWallTime.Enable();
+	ctrCpuTicks.Enable();
 	{
 		RNTupleAtomicTimer timer(ctrWallTime, ctrCpuTicks);
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));

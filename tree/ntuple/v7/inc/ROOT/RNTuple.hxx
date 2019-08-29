@@ -16,6 +16,7 @@
 #ifndef ROOT7_RNTuple
 #define ROOT7_RNTuple
 
+#include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleUtil.hxx>
@@ -80,6 +81,7 @@ public:
 enum class ENTupleInfo {
    kSummary,  // The ntuple name, description, number of entries
    kStorageDetails, // size on storage, page sizes, compression factor, etc.
+   kMetrics, // internals performance counters, requires that EnableMetrics() was called
 };
 
 
@@ -98,6 +100,7 @@ Individual fields can be read as well by instantiating a tree view.
 class RNTupleReader : public Detail::RNTuple {
 private:
    std::unique_ptr<Detail::RPageSource> fSource;
+   Detail::RNTupleMetrics fMetrics;
 
    void ConnectModel();
 
@@ -166,6 +169,8 @@ public:
 
    RIterator begin() { return RIterator(0); }
    RIterator end() { return RIterator(fNEntries); }
+
+   void EnableMetrics() { fMetrics.Enable(); }
 };
 
 // clang-format off

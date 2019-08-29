@@ -46,13 +46,13 @@ private:
    std::string fName;
    std::string fUnit;
    std::string fDescription;
-   bool fIsActive = false;
+   bool fIsEnabled = false;
 
 public:
    RNTuplePerfCounter(const std::string &name, const std::string &unit, const std::string &desc)
       : fName(name), fUnit(unit), fDescription(desc) {}
-   void Activate() { fIsActive = true; }
-   bool IsActive() const { return fIsActive; }
+   void Enable() { fIsEnabled = true; }
+   bool IsEnabled() const { return fIsEnabled; }
    std::string GetName() const { return fName; }
    std::string GetDescription() const { return fDescription; }
    std::string GetUnit() const { return fUnit; }
@@ -77,7 +77,7 @@ public:
       : RNTuplePerfCounter(name, unit, desc)
    {
       // There is no performance gain in checking the active status
-      Activate();
+      Enable();
    }
 
    void Inc() { ++fCounter; }
@@ -105,29 +105,29 @@ public:
       : RNTuplePerfCounter(name, unit, desc) { }
 
    void Inc() {
-      if (IsActive())
+      if (IsEnabled())
          ++fCounter;
    }
    void Dec() {
-      if (IsActive())
+      if (IsEnabled())
          --fCounter;
    }
    void Add(int64_t delta) {
-      if (IsActive())
+      if (IsEnabled())
          fCounter += delta;
    }
    int64_t XAdd(int64_t delta) {
-      if (IsActive())
+      if (IsEnabled())
          return fCounter.fetch_add(delta);
       return 0;
    }
    int64_t GetValue() const {
-      if (IsActive())
+      if (IsEnabled())
          return fCounter.load();
       return 0;
    }
    void SetValue(int64_t val) {
-      if (IsActive())
+      if (IsEnabled())
          fCounter.store(val);
    }
    std::string ToString() const override { return std::to_string(GetValue()); }
@@ -155,7 +155,7 @@ public:
    std::string ToString() const final {
       auto ticks = BaseCounterT::GetValue();
       return std::to_string(std::uint64_t(
-         (double(ticks) / double(CLOCKS_PER_SEC)) / (1000. * 1000. * 1000.)));
+         (double(ticks) / double(CLOCKS_PER_SEC)) * (1000. * 1000. * 1000.)));
    }
 };
 
@@ -185,14 +185,14 @@ public:
    RNTupleTimer(WallTimeT &ctrWallTime, CpuTimeT &ctrCpuTicks)
       : fCtrWallTime(ctrWallTime), fCtrCpuTicks(ctrCpuTicks)
    {
-      if (!fCtrWallTime.IsActive())
+      if (!fCtrWallTime.IsEnabled())
          return;
       fStartTime = Clock_t::now();
       fStartTicks = clock();
    }
 
    ~RNTupleTimer() {
-      if (!fCtrWallTime.IsActive())
+      if (!fCtrWallTime.IsEnabled())
          return;
       auto wallTimeNs = std::chrono::duration_cast<std::chrono::nanoseconds>(Clock_t::now() - fStartTime);
       fCtrWallTime.Add(wallTimeNs.count());
@@ -219,8 +219,9 @@ The class owns the counters; on registration of a new
 class RNTupleMetrics {
 private:
    std::vector<std::unique_ptr<RNTuplePerfCounter>> fCounters;
+   std::vector<RNTupleMetrics *> fObservedMetrics;
    std::string fName;
-   bool fIsActive = false;
+   bool fIsEnabled = false;
 
    bool Contains(const std::string &name) const;
 
@@ -240,9 +241,11 @@ public:
       fCounters.emplace_back(std::move(counter));
    }
 
-   void Print(std::ostream &output) const;
-   void Activate();
-   bool IsActive() const { return fIsActive; }
+   void ObserveMetrics(RNTupleMetrics &observee);
+
+   void Print(std::ostream &output, const std::string &prefix = "") const;
+   void Enable();
+   bool IsEnabled() const { return fIsEnabled; }
 };
 
 } // namespace Detail

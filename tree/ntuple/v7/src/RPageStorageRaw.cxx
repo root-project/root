@@ -33,6 +33,7 @@
 ROOT::Experimental::Detail::RPageSinkRaw::RPageSinkRaw(std::string_view ntupleName, std::string_view path,
    const RNTupleWriteOptions &options)
    : RPageSink(ntupleName, options)
+   , fMetrics("RPageSinkRaw")
    , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
    , fZipBuffer(std::make_unique<std::array<char, kMaxPageSize>>())
 {
@@ -174,7 +175,10 @@ ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntup
    , fPageAllocator(std::make_unique<RPageAllocatorFile>())
    , fPagePool(std::make_shared<RPagePool>())
    , fUnzipBuffer(std::make_unique<std::array<unsigned char, kMaxPageSize>>())
+   , fMetrics("RPageSourceRaw")
 {
+   fMetrics.MakeCounter("timeWallUnzip", "ns", "", fCtrTimeWallUnzip);
+   fMetrics.MakeCounter("timeCpuUnzip", "ns", "", fCtrTimeCpuUnzip);
 }
 
 ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntupleName, std::string_view path,
@@ -258,6 +262,8 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::Po
 
    auto bytesOnStorage = (element->GetBitsOnStorage() * pageInfo.fNElements + 7) / 8;
    if (pageSize != bytesOnStorage) {
+      RNTuplePlainTimer timer(*fCtrTimeWallUnzip, *fCtrTimeCpuUnzip);
+
       R__ASSERT(bytesOnStorage <= kMaxPageSize);
       // We do have the unzip information in the column range, but here we simply use the value from
       // the R__zip header

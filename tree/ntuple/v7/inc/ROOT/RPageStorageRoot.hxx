@@ -20,6 +20,7 @@
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RColumnModel.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
+#include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
 #include <TDirectory.h>
@@ -64,6 +65,7 @@ class RPageSinkRoot : public RPageSink {
 private:
    static constexpr std::size_t kDefaultElementsPerPage = 10000;
 
+   RNTupleMetrics fMetrics;
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
 
    /// Currently, an ntuple is stored as a directory in a TFile
@@ -85,6 +87,8 @@ public:
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements = 0) final;
    void ReleasePage(RPage &page) final;
+
+   RNTupleMetrics &GetMetrics() final { return fMetrics; }
 };
 
 
@@ -111,6 +115,7 @@ public:
 // clang-format on
 class RPageSourceRoot : public RPageSource {
 private:
+   RNTupleMetrics fMetrics;
    std::unique_ptr<RPageAllocatorKey> fPageAllocator;
    std::shared_ptr<RPagePool> fPagePool;
 
@@ -132,6 +137,8 @@ public:
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
    RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;
    void ReleasePage(RPage &page) final;
+
+   RNTupleMetrics &GetMetrics() final { return fMetrics; }
 };
 
 } // namespace Detail
