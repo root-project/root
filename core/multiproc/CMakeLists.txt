@@ -28,4 +28,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MultiProc
   DEPENDENCIES
     Core
     Net
+    RIO
 )
