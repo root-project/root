@@ -68,6 +68,9 @@ def create_model_gaussian(
     accuracy = accuracy_score(Y, predictions)
     print("For curiosity: Accuracy: %.2f%%" % (accuracy * 100.0))
 
+    # Create data folder
+    if not os.path.exists(data_folder):
+        os.makedirs(data_folder)
     # saving files
     np.savetxt(data_folder + "events.csv", X, delimiter=",", fmt="%f")
     np.savetxt(data_folder + "python_predictions.csv", y_pred, delimiter=",", fmt="%d")

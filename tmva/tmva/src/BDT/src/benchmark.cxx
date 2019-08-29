@@ -189,8 +189,8 @@ static void BM_EvalXgboostBdt(benchmark::State &state)
    }
 
    std::vector<float> preds;
+   preds.reserve(events_vector.size());
    for (int i = 0; i < out_len; i++) preds.push_back(f[i]);
-   std::string preds_file = "./test.csv";
    write_csv(preds_file, preds);
 
    // free xgboost internal structures
