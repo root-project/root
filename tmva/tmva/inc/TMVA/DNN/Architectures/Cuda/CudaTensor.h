@@ -315,11 +315,11 @@ public:
          return TCudaMatrix<AFloat>(fElementBuffer, GetHSize(), GetWSize());
       
       if  (GetLayout() == MemoryLayout::ColumnMajor ) { 
-         for (int i = 2; i < fNDim; ++i)  assert( fShape[i] == 1);
+         for (size_t i = 2; i < fNDim; ++i)  assert( fShape[i] == 1);
          return TCudaMatrix<AFloat>(fElementBuffer, fShape[0], fShape[1]);
       }
       else {   // remember TCudaMatrix is always column-major
-         for (int i = 0; i < fNDim-2; ++i)  assert( fShape[i] == 1);
+         for (size_t i = 0; i < fNDim-2; ++i)  assert( fShape[i] == 1);
          return TCudaMatrix<AFloat>(fElementBuffer, fShape[fNDim-1], fShape[fNDim-2]);
       }
    }
@@ -365,10 +365,13 @@ public:
    // element access ( for debugging)
    TCudaDeviceReference<AFloat> operator()(size_t i, size_t j) const
    {
-      assert(fNDim == 2);
+      // like this works also for multi-dim tensors 
+      // and consider the tensor as a multidim one
+      size_t nrows = GetNrows(); 
+      size_t ncols = GetNcols(); 
       
       size_t offset = (GetLayout() == MemoryLayout::RowMajor) ? 
-         i * fShape[1] + j  : j * fShape[0] + i; 
+         i * ncols + j  : j * nrows + i; 
      
       AFloat * elementPointer = fElementBuffer + offset;
       return TCudaDeviceReference<AFloat>(elementPointer);

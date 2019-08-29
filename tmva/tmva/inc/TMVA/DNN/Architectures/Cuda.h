@@ -591,10 +591,11 @@ public:
    //____________________________________________________________________________
 
    /** Initialize CNN data/operator descriptors. Not used at the moment.*/
-   static void InitializeConvDescriptors(TDescriptors * & /*descriptors*/, double /*coef = 0.0*/, 
-                                         ConvLayer_t */*L = nullptr*/) {}
-   static void InitializePoolDescriptors(TDescriptors * & /*descriptors*/,
-                                         PoolingLayer_t */*L = nullptr*/) {}
+   static void  InitializeConvDescriptors(TDescriptors *& /*descriptors*/, double /*coef = 0.0*/, ConvLayer_t * /*L = nullptr*/) {}
+   
+   static void InitializePoolDescriptors(TDescriptors *& /*descriptors*/, PoolingLayer_t * /*L = nullptr*/) {}
+   
+   static void InitializeActivationDescriptor(ActivationDescriptor_t &/*descriptors*/, EActivationFunction /*activFunc */ , double /*coef*/ = 0.0) {}
 
    /** Release CNN data/operator descriptors. Not used at the moment.*/
    static void ReleaseConvDescriptors(TDescriptors * & /*descriptors*/, ConvLayer_t */*L = nullptr*/) {}
@@ -608,6 +609,8 @@ public:
                                        TDescriptors * & /*descriptors*/,
                                        const DNN::CNN::TConvParams & /*params*/,
                                        PoolingLayer_t */*L = nullptr*/) {}
+
+   static void ReleaseDescriptor(ActivationDescriptor_t &  /*activationDescr*/) {}
 
    static void FreeConvWorkspace(TWorkspace * & /*workspace*/, ConvLayer_t */*L = nullptr*/) {}     ///< Only used for certain cudnn on-device memory
    static void FreePoolWorkspace(TWorkspace * & /*workspace*/, PoolingLayer_t */*L = nullptr*/) {}

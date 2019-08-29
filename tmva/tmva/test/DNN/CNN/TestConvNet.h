@@ -606,30 +606,38 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
          std::cout << "Layer " << l << " has no weights " << std::endl;
          continue;
       }
-     
+
+      std::cout << "Layer " << l << " :  output  D x H x W " << layer.GetDepth() << "  " << layer.GetHeight() << "  "
+                << layer.GetWidth() << "\t input D x H x W " << layer.GetInputDepth() << "  " << layer.GetInputHeight()
+                << "  " << layer.GetInputWidth() << std::endl;
+
+      // print output and activation gradients
+      auto &outL = layer.GetOutput();
       auto & actGrad = layer.GetActivationGradients();
-      if (actGrad.GetFirstSize() > 0)  {
-         std::cout << "Activation gradient from back-propagation  - vector size is " << actGrad.GetFirstSize() << std::endl;
-         if (actGrad.GetSize() < 100 ) { 
-            for (size_t ii = 0; ii < actGrad.GetFirstSize(); ++ii) 
-               actGrad.At(ii).GetMatrix().Print();
-         } else
-            std::cout << "Activation Gradient ( " << actGrad.GetHSize() << " x " << actGrad.GetWSize() << " ) , ...... skip printing (too many elements ) " << std::endl;
+      if (Architecture::GetTensorLayout() == TMVA::Experimental::MemoryLayout::ColumnMajor) {
+         std::cout << "layer output size " << outL.GetFirstSize() << std::endl;
+         if (outL.GetFirstSize() > 0) {
+            if (outL.GetSize() < 100) {
+               outL.At(0).GetMatrix().Print();
+            } else
+               std::cout << "Layer Output ( " << outL.GetHSize() << " x " << outL.GetWSize()
+                         << " ) , ...... skip printing (too many elements ) " << std::endl;
+         }
+         if (actGrad.GetFirstSize() > 0) {
+            std::cout << "Activation gradient from back-propagation  - vector size is " << actGrad.GetFirstSize()
+                      << std::endl;
+            if (actGrad.GetSize() < 100) {
+               for (size_t ii = 0; ii < actGrad.GetFirstSize(); ++ii)
+                  actGrad.At(ii).GetMatrix().Print();
+            } else
+               std::cout << "Activation Gradient ( " << actGrad.GetHSize() << " x " << actGrad.GetWSize()
+                         << " ) , ...... skip printing (too many elements ) " << std::endl;
+         }
+      } else {
+         Architecture::PrintTensor(outL, "layer output");
+         Architecture::PrintTensor(actGrad,"activation gradients");
       }
 
-      std::cout << "Layer " << l << " :  output  D x H x W " << layer.GetDepth() << "  " << layer.GetHeight() << "  " << layer.GetWidth()
-                << "\t input D x H x W " << layer.GetInputDepth() << "  " << layer.GetInputHeight() << "  " << layer.GetInputWidth() << std::endl;
-      
-
-      // print output
-      auto & outL = layer.GetOutput();
-      std::cout << "layer output size " << outL.GetFirstSize() << std::endl;
-      if (outL.GetFirstSize() > 0) {
-         if (outL.GetSize() < 100 ) { 
-            outL.At(0).GetMatrix().Print();
-         } else
-            std::cout << "Layer Output ( " << outL.GetHSize() << " x " << outL.GetWSize() << " ) , ...... skip printing (too many elements ) " << std::endl;
-      }
       
       std::cout << "Evaluate the Derivatives with Finite difference and compare with BP for Layer " << l << std::endl;
       int nerrors = 0;
@@ -644,6 +652,8 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
       // for (size_t i = 0; i < layer.GetWidth(); i++) {
       size_t k = 0;
       Matrix_t & gwm = gw[k]; 
+      //Matrix_t & wm = layer.GetWeightsAt(k);
+      // make matrices in case they are not
       for (size_t i = 0; i < gwm.GetNrows(); i++) {
          // for (size_t j = 0; j < layer.GetInputWidth(); j++) {
          for (size_t j = 0; j < gwm.GetNcols(); j++) {

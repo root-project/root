@@ -100,6 +100,7 @@ public:
    static void InitializePoolDescriptors(TDescriptors * & descriptors, 
                                         PoolingLayer_t *L = nullptr);
 
+   static void InitializeActivationDescriptor(ActivationDescriptor_t & descriptors, EActivationFunction activFunc, double coef = 0.0); 
 
    static void ReleaseConvDescriptors(TDescriptors    * descriptors, ConvLayer_t    *L = nullptr);
    static void ReleasePoolDescriptors(TDescriptors * descriptors, PoolingLayer_t *L = nullptr);

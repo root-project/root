@@ -71,6 +71,8 @@ private:
    ERegularization fReg;   ///< The regularization method.
    Scalar_t fWeightDecay;  ///< The weight decay.
 
+   typename Architecture_t::ActivationDescriptor_t fActivationDesc; // the descriptor for the activation function  
+
 public:
    /*! Constructor */
    TDenseLayer(size_t BatchSize, size_t InputWidth, size_t Width, EInitialization init, Scalar_t DropoutProbability,
@@ -138,6 +140,8 @@ TDenseLayer<Architecture_t>::TDenseLayer(size_t batchSize, size_t inputWidth, si
    // should be  {1, batchSize, width} but take from output
    fInputActivation = Tensor_t ( this->GetOutput().GetShape() );
    fDerivatives = Tensor_t ( this->GetOutput().GetShape() );
+
+   Architecture_t::InitializeActivationDescriptor(fActivationDesc,fF);
 }
 
 //______________________________________________________________________________
@@ -149,6 +153,7 @@ TDenseLayer<Architecture_t>::TDenseLayer(TDenseLayer<Architecture_t> *layer) :
    fF(layer->GetActivationFunction()), fReg(layer->GetRegularization()), fWeightDecay(layer->GetWeightDecay())
 {
    fDerivatives = Tensor_t ( this->GetOutput().GetShape() );
+   Architecture_t::InitializeActivationDescriptor(fActivationDesc,fF);
 }
 
 //______________________________________________________________________________
@@ -160,13 +165,15 @@ TDenseLayer<Architecture_t>::TDenseLayer(const TDenseLayer &layer) :
    fF(layer.fF), fReg(layer.fReg), fWeightDecay(layer.fWeightDecay)
 {
    fDerivatives = Tensor_t ( this->GetOutput().GetShape() );
+   Architecture_t::InitializeActivationDescriptor(fActivationDesc,fF);
 }
 
 //______________________________________________________________________________
 template <typename Architecture_t>
 TDenseLayer<Architecture_t>::~TDenseLayer()
 {
-   // Nothing to do here.
+   // release activation descriptor
+   Architecture_t::ReleaseDescriptor(fActivationDesc);
 }
 
 
@@ -184,8 +191,8 @@ auto TDenseLayer<Architecture_t>::Forward( Tensor_t &input, bool applyDropout) -
   
    //evaluate<Architecture_t>(this->GetOutput(), this->GetActivationFunction());
    Architecture_t::Copy(this->GetInputActivation(),this->GetOutput());
-   typename Architecture_t::ActivationDescriptor_t activDesc; // use for the moment a dummy descriptor
-   Architecture_t::ActivationFunctionForward(this->GetOutput(), this->GetActivationFunction(), activDesc);
+   
+   Architecture_t::ActivationFunctionForward(this->GetOutput(), this->GetActivationFunction(), fActivationDesc);
 }
 
 //______________________________________________________________________________
@@ -195,10 +202,9 @@ auto TDenseLayer<Architecture_t>::Backward(Tensor_t &gradients_backward, const T
 ////                                           /*inp2*/) -> void
 {
 
-   typename Architecture_t::ActivationDescriptor_t activDesc; // use for the moment a dummy descriptor
    Architecture_t::ActivationFunctionBackward(fDerivatives, this->GetOutput(), 
                                               this->GetActivationGradients(), this->GetInputActivation(),
-                                              this->GetActivationFunction(), activDesc);
+                                              this->GetActivationFunction(), fActivationDesc);
 
    Architecture_t::Backward(gradients_backward, this->GetWeightGradientsAt(0), this->GetBiasGradientsAt(0),
                             fDerivatives, this->GetActivationGradients(), this->GetWeightsAt(0),
@@ -253,6 +259,7 @@ void TDenseLayer<Architecture_t>::ReadWeightsFromXML(void *parent)
    this->ReadMatrixXML(parent,"Biases", this -> GetBiasesAt(0));
    
 }
+
 
 } // namespace DNN
 } // namespace TMVA
