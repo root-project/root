@@ -115,6 +115,79 @@ BENCHMARK(BM_BranchlessJIT)
    });
 // */
 
+/// Benchmark eval unique_bdts
+static void BM_Branched_batch(benchmark::State &state)
+{
+   auto              Forest = get_forest<float, ForestBranched<float>>();
+   DataStruct<float> _data(events_file, GT_file);
+
+   for (auto _ : state) { // only bench what is inside the loop
+      Forest.inference(_data.events_pointer, _data.rows, _data.cols, _data.scores.data(), loop_size);
+   }
+   write_csv(preds_file, _data.scores);
+}
+// /*
+BENCHMARK(BM_Branched_batch)
+   ->Unit(benchmark::kMillisecond)
+   ->ComputeStatistics("min", [](const std::vector<double> &v) -> double {
+      return *(std::min_element(std::begin(v), std::end(v)));
+   });
+// */
+
+static void BM_Branchless_batch(benchmark::State &state)
+{
+
+   auto              Forest = get_forest<float, ForestBranchless<float>>();
+   DataStruct<float> _data(events_file, GT_file);
+
+   for (auto _ : state) { // only bench what is inside the loop
+      Forest.inference(_data.events_pointer, _data.rows, _data.cols, _data.scores.data(), loop_size);
+   }
+   write_csv(preds_file, _data.scores);
+}
+// /*
+BENCHMARK(BM_Branchless_batch)
+   ->Unit(benchmark::kMillisecond)
+   ->ComputeStatistics("min", [](const std::vector<double> &v) -> double {
+      return *(std::min_element(std::begin(v), std::end(v)));
+   });
+// */
+
+static void BM_BranchedJIT_batch(benchmark::State &state)
+{
+   auto              Forest = get_forest<float, ForestBranchedJIT<float>>();
+   DataStruct<float> _data(events_file, GT_file);
+
+   for (auto _ : state) { // only bench what is inside the loop
+      Forest.inference(_data.events_pointer, _data.rows, _data.cols, _data.scores.data(), loop_size);
+   }
+   write_csv(preds_file, _data.scores);
+}
+// /*
+BENCHMARK(BM_BranchedJIT_batch)
+   ->Unit(benchmark::kMillisecond)
+   ->ComputeStatistics("min", [](const std::vector<double> &v) -> double {
+      return *(std::min_element(std::begin(v), std::end(v)));
+   });
+// */
+
+static void BM_BranchlessJIT_batch(benchmark::State &state)
+{
+   auto              Forest = get_forest<float, ForestBranchlessJIT<float>>();
+   DataStruct<float> _data(events_file, GT_file);
+
+   for (auto _ : state) { // only bench what is inside the loop
+      Forest.inference(_data.events_pointer, _data.rows, _data.cols, _data.scores.data(), loop_size);
+   }
+   write_csv(preds_file, _data.scores);
+}
+// /*
+BENCHMARK(BM_BranchlessJIT_batch)
+   ->Unit(benchmark::kMillisecond)
+   ->ComputeStatistics("min", [](const std::vector<double> &v) -> double {
+      return *(std::min_element(std::begin(v), std::end(v)));
+   });
+// */
 ///////////////////////////  STATIC  ////////////////////////
 //
 /*

@@ -16,7 +16,7 @@ from utils import *
 DATA_FOLDER = "./data/"
 
 
-def execute_bench(TMP_FOLDER, test_list, repetitions, kwargs):
+def execute_bench(TMP_FOLDER, test_list, repetitions, key, kwargs):
     # TMP_FOLDER = "./tmp/timeVSdepth/"
     if not os.path.exists(TMP_FOLDER):
         os.makedirs(TMP_FOLDER)
@@ -35,9 +35,10 @@ def execute_bench(TMP_FOLDER, test_list, repetitions, kwargs):
     np.save(TMP_FOLDER + "0_abscisse.npy", np.array(test_list))
     for i, value_test in enumerate(test_list):
         print(f"***** bench value {value_test} *****")
+        kwargs[key] = value_test
         mins_list = []
         for j in range(repetitions):
-            create_model_gaussian(max_depth=value_test, **kwargs)
+            create_model_gaussian(**kwargs)
             subprocess.call("./bench.sh".split(), shell=True)
             fname, mins, means, stddevs = get_benchs_data("./data/a.txt")
             mins_list.append(mins)
@@ -51,31 +52,36 @@ def execute_bench(TMP_FOLDER, test_list, repetitions, kwargs):
         )
 
 
+STD_NUM_SAMPLES = 100_000
+STD_NUM_FEATURES = 5
+STD_DEPTH = 3
+STD_NUM_TREES = 200
+
 timeVSdepth = dict(
-    num_samples=100_000,
-    num_features=10,
-    num_trees=250,
+    num_samples=STD_NUM_SAMPLES,
+    num_features=STD_NUM_FEATURES,
+    num_trees=STD_NUM_TREES,
     data_folder=DATA_FOLDER,
     save_models=True,
 )
 timeVSfeats = dict(
-    num_samples=100_000,
-    max_depth=3,
-    num_trees=100,
+    num_samples=STD_NUM_SAMPLES,
+    max_depth=STD_DEPTH,
+    num_trees=STD_NUM_TREES,
     data_folder=DATA_FOLDER,
     save_models=True,
 )
 timeVSevents = dict(
-    num_features=10,
-    max_depth=3,
-    num_trees=250,
+    num_features=STD_NUM_FEATURES,
+    max_depth=STD_DEPTH,
+    num_trees=STD_NUM_TREES,
     data_folder=DATA_FOLDER,
     save_models=True,
 )
 timeVStrees = dict(
-    num_samples=100_000,
-    num_features=10,
-    max_depth=3,
+    num_samples=STD_NUM_SAMPLES,
+    num_features=STD_NUM_FEATURES,
+    max_depth=STD_DEPTH,
     data_folder=DATA_FOLDER,
     save_models=True,
 )
@@ -83,31 +89,46 @@ timeVStrees = dict(
 if __name__ == "__main__":
     # timeVSdepth
     execute_bench(
-        "./tmp/timeVSdepth/", [2, 3, 4, 5, 6, 7], 3, timeVSdepth  # repetitions
+        "./tmp/timeVSdepth/",
+        [2, 4, 6, 8, 10, 12],
+        3,
+        "max_depth",
+        timeVSdepth,  # repetitions
     )
 
     execute_bench(
-        "./tmp/timeVSfeats/", [5, 15, 25, 35, 45, 55], 4, timeVSfeats  # repetitions
+        "./tmp/timeVSfeats/",
+        [5, 25, 45, 65, 85, 105],
+        3,
+        "num_features",
+        timeVSfeats,  # repetitions
     )
     execute_bench(
-        "./tmp/timeVStrees/", [100, 300, 500, 700, 900], 2, timeVStrees  # repetitions
+        "./tmp/timeVStrees/",
+        [100, 300, 600, 900],
+        3,
+        "num_trees",
+        timeVStrees,  # repetitions
     )
     execute_bench(
         "./tmp/timeVSfewEvents/",
-        [2, 4, 6, 8, 10, 12, 14, 16],
-        10,  # repetitions
+        [2, 4, 6, 8, 10, 12, 14, 16, 18],
+        2,  # repetitions
+        "num_samples",
         timeVSevents,
     )
     execute_bench(
         "./tmp/timeVSmiddleEvents/",
-        [20, 40, 60, 80, 100, 120, 140, 160, 180, 200],
-        5,  # repetitions
+        [20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 400, 600, 800, 1000],
+        2,  # repetitions
+        "num_samples",
         timeVSevents,
     )
     execute_bench(
         "./tmp/timeVSevents/",
-        [1000, 10000, 100_000, 300_000, 500_000],
+        [1000, 10000, 50000, 100_000, 200_000, 500_000],
         2,  # repetitions
+        "num_samples",
         timeVSevents,
     )
     # """
