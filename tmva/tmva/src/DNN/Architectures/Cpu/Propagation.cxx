@@ -726,6 +726,151 @@ void TCpu<AFloat>::MaxPoolLayerBackward(TCpuTensor<AFloat> &activationGradientsB
 
 //____________________________________________________________________________
 template <typename AFloat>
+void TCpu<AFloat>::BatchNormLayerForwardTraining(Matrix_t input,
+                                                 Matrix_t & gamma,
+                                                 Matrix_t & beta,
+                                                 Matrix_t outputActivation,
+                                                 Matrix_t & Xmu,
+                                                 Matrix_t & output,
+                                                 Matrix_t & Variance,
+                                                 Matrix_t & IVariance,
+                                                 # if 0
+                                                 const BNormDescriptors_t & /*descriptors*/,
+                                                 BNormWorkspace_t & /*workspace*/,
+                                                 # endif
+                                                 std::vector<Scalar_t> & RunningMeans,
+                                                 std::vector<Scalar_t> & RunningVars,
+                                                 Scalar_t nTrainedBatches,
+                                                 Scalar_t momentum,
+                                                 Scalar_t epsilon) 
+{
+   int n = input.GetNrows();
+   int d = input.GetNcols();
+
+   for (int k = 0; k < d; ++k) {
+
+      double mean = 0;
+      for (int i = 0; i < n; i++) {
+         mean = mean + input(i, k);
+      }
+      mean = mean / n;
+
+      for (int i = 0; i < n; i++) {
+         Xmu(i, k) = input(i, k) - mean;
+      }
+      double sq = 0;
+      for (int i = 0; i < n; i++) {
+         sq = sq + (Xmu(i, k) * Xmu(i, k));
+      }
+      Variance(0, k) = sq / n;
+      // fVar(0,k) = fVar(0,k) + epsilon;
+      // sqrtvar(0,k) =
+      IVariance(0, k) = 1. / std::sqrt(Variance(0, k) + epsilon);
+      for (int i = 0; i < n; i++) {
+         output(i, k) = Xmu(i, k) * IVariance(0, k);
+         outputActivation(i, k) = gamma(0, k) * output(i, k) + beta(0, k);
+      }
+
+      // fVar(0,k) -= epsilon;
+
+      if (nTrainedBatches == 0) {
+         RunningMeans[k] = mean;
+         RunningVars[k] = Variance(0, k) * (n) / (Scalar_t(n - 1) + epsilon);
+      } else {
+         Scalar_t decay = momentum; 
+         if (momentum < 0) decay = nTrainedBatches/Scalar_t(nTrainedBatches+1);
+         RunningMeans[k] = decay * RunningMeans[k] + (1. - decay) * mean;
+         RunningVars[k] = decay * RunningVars[k] + (1.-decay) * Variance(0, k) * (n) / (Scalar_t(n - 1) + epsilon);
+      }
+
+   } // end loop on k
+   nTrainedBatches++;
+
+   // fVar.Print();
+   // std::cout << " training batch " << fTrainedBatches << " mu var0" << fMu_Training[0] << std::endl;
+}
+
+//____________________________________________________________________________
+template <typename AFloat>
+void TCpu<AFloat>::BatchNormLayerForwardInference(Matrix_t input,
+                                                  Matrix_t & gamma,
+                                                  Matrix_t & beta,
+                                                  Matrix_t outputActivation,
+                                                  # if 0
+                                                  const BNormDescriptors_t & /*descriptors*/,
+                                                  BNormWorkspace_t & /*workspace*/,
+                                                  # endif
+                                                  std::vector<Scalar_t> & RunningMeans,
+                                                  std::vector<Scalar_t> & RunningVars,
+                                                  Scalar_t nTrainedBatches,
+                                                  Scalar_t epsilon) 
+{
+   int n = input.GetNrows();
+   int d = input.GetNcols();
+
+   for (int k = 0; k < d; ++k) {
+      // during inference just use stored mu and variance
+      for (int i = 0; i < n; i++) {
+         outputActivation(i, k) =
+            gamma(0, k) * ((input(i, k) - RunningMeans[k]) / (sqrt(RunningVars[k] + epsilon))) + beta(0, k);
+      }
+   }
+
+   nTrainedBatches = 0;
+
+   // std::cout << " testing batch  " << fTrainedBatches << " mu var0" << fMu_Training[0] << std::endl;
+}
+
+//____________________________________________________________________________
+template <typename AFloat>
+void TCpu<AFloat>::BatchNormLayerForwardBackward(const Matrix_t & outputGrad,
+                                                 const Matrix_t & gamma,
+                                                 Matrix_t &dgamma,
+                                                 Matrix_t &dbeta,
+                                                 Matrix_t dx,
+                                                 Matrix_t & output,
+                                                 Matrix_t & Xmu,
+                                                 Matrix_t & IVariance,
+                                                 Matrix_t & Variance,
+                                                 # if 0
+                                                 const BNormDescriptors_t & /*descriptors*/,
+                                                 BNormWorkspace_t & /*workspace*/,
+                                                 # endif
+                                                 Scalar_t epsilon) 
+{
+   //const Matrix_t &x = activations_backward[0];
+   int d = outputGrad.GetNcols();
+   int n = outputGrad.GetNrows();
+
+   // compute first gradients for gamma and beta
+   for (int k = 0; k < d; k++) {
+      dgamma(0, k) = 0;
+      dbeta(0, k) = 0;
+      for (int i = 0; i < n; i++) {
+         dbeta(0, k) += outputGrad(i, k);
+         dgamma(0, k) += outputGrad(i, k) * output(i, k);
+         // dxhat(i,k) = dout(i,k) * gamma(0,k);
+      }
+   }
+
+   // compute gradients with respect to input
+   double npSumDy = 0;
+   double npSumDyHMu = 0;
+
+   for (int k = 0; k < d; k++) {
+      for (int i = 0; i < n; i++) {
+         npSumDy += outputGrad(i, k);
+         npSumDyHMu += outputGrad(i, k) * Xmu(i, k);
+      }
+      for (int i = 0; i < n; i++) {
+         dx(i, k) = (1. / double(n) * gamma(0, k) * IVariance(0, k)) *
+                    (n * outputGrad(i, k) - npSumDy - Xmu(i, k) / (Variance(0, k) + epsilon) * npSumDyHMu);
+      }
+   }
+}
+
+//____________________________________________________________________________
+template <typename AFloat>
 void TCpu<AFloat>::Reshape(TCpuMatrix<AFloat> &A, const TCpuMatrix<AFloat> &B)
 {
    size_t nColsA = A.GetNcols();

@@ -135,6 +135,26 @@ public:
    /* initialize weights */
    virtual void Initialize();
 
+   /*  get number of trained batches */
+   const int & GetNTrainedBatches() const { return fTrainedBatches;}
+   int & GetNTrainedBatches() { return fTrainedBatches;}
+
+   /*  get batch means for the training phase */
+   const Matrix_t & GetBatchMean() const { return fXmu;}
+   Matrix_t & GetBatchMean() { return fXmu;}
+
+   /*  Get the normalized batch examples */
+   const Matrix_t & GetNormedBatch() const { return fXhat;}
+   Matrix_t & GetNormedBatch() { return fXhat;}
+
+   /*  Get the gradient of gamma for backpropagation */
+   const Matrix_t & GetVariance() const { return fVar;}
+   Matrix_t & GetVariance() { return fVar;}
+
+   /*  Get the sqrt of the batch variances for the training phase */
+   const Matrix_t & GetIVariance() const { return fIvar;}
+   Matrix_t & GetIVariance() { return fIvar;}
+
    /*  get vector of averages computed in the training phase */
    const std::vector<Scalar_t> & GetMuVector() const { return fMu_Training;}
    std::vector<Scalar_t> & GetMuVector() { return fMu_Training;}
@@ -144,6 +164,14 @@ public:
    std::vector<Scalar_t> & GetVarVector()  { return fVar_Training;}
 
    // Scalar_t GetWeightDecay() const { return fWeightDecay; }
+
+   /*  Get the momentum of the gradient descent */
+   const Scalar_t GetMomentum() const { return fMomentum;}
+   Scalar_t GetMomentum() { return fMomentum;}
+
+   /*  Get epsilon */
+   const Scalar_t GetEpsilon() const { return fEpsilon;}
+   Scalar_t GetEpsilon() { return fEpsilon;}
    
 };
 
@@ -217,6 +245,20 @@ auto TBatchNormLayer<Architecture_t>::Initialize() -> void
 template <typename Architecture_t>
 auto TBatchNormLayer<Architecture_t>::Forward(Tensor_t &x, bool inTraining) -> void
 {
+   if (inTraining) Architecture_t::BatchNormLayerForwardTraining(x.At(0).GetMatrix(),
+                                      this->GetWeightsAt(0), this->GetWeightsAt(1),
+                                      this->GetOutputAt(0), this->GetBatchMean(), 
+                                      this->GetNormedBatch(), this->GetVariance(),
+                                      this->GetIVariance(), this->GetMuVector(),
+                                      this->GetVarVector(), this->GetNTrainedBatches(),
+                                      this->GetMomentum(), this->GetEpsilon());
+   else            Architecture_t::BatchNormLayerForwardInference(x.At(0).GetMatrix(),
+                                      this->GetWeightsAt(0), this->GetWeightsAt(1),
+                                      this->GetOutputAt(0), this->GetMuVector(), 
+                                      this->GetVarVector(), this->GetNTrainedBatches(), 
+                                      this->GetEpsilon());
+
+   #if 0
    Matrix_t input = x.At(0).GetMatrix(); 
 
    Matrix_t &gamma = this->GetWeightsAt(0);
@@ -285,6 +327,7 @@ auto TBatchNormLayer<Architecture_t>::Forward(Tensor_t &x, bool inTraining) -> v
    //    std::cout << " training batch " << fTrainedBatches << " mu var0" << fMu_Training[0] << std::endl;
    // else
    //    std::cout << " testing batch  " << fTrainedBatches << " mu var0" << fMu_Training[0] << std::endl;
+   # endif
 }
 
 //______________________________________________________________________________
@@ -293,7 +336,17 @@ auto TBatchNormLayer<Architecture_t>::Backward(Tensor_t &gradients_backward,
                                                const Tensor_t & /*  activations_backward */) -> void 
 //                                               Tensor_t &, Tensor_t &) -> void
 {
-
+   Architecture_t::BatchNormLayerForwardBackward(this->GetActivationGradients().At(0).GetMatrix(),
+                                                 this->GetWeightsAt(0),
+                                                 this->GetWeightGradientsAt(0),
+                                                 this->GetWeightGradientsAt(1),
+                                                 gradients_backward.At(0).GetMatrix(),
+                                                 this->GetNormedBatch(),
+                                                 this->GetBatchMean(),
+                                                 this->GetIVariance(),
+                                                 this->GetVariance(),
+                                                 this->GetEpsilon());
+   # if 0
    double epsilon = fEpsilon;
 
 
@@ -334,6 +387,7 @@ auto TBatchNormLayer<Architecture_t>::Backward(Tensor_t &gradients_backward,
                     (n * dout(i, k) - npSumDy - fXmu(i, k) / (fVar(0, k) + epsilon) * npSumDyHMu);
       }
    }
+   # endif
 }
 
 //______________________________________________________________________________

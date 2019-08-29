@@ -31,6 +31,7 @@
 
 #include "TMVA/DNN/GeneralLayer.h"
 #include "TMVA/DNN/Functions.h"
+#include "TMVA/DNN/CNN/ContextHandles.h"
 
 #include <iostream>
 #include <iomanip>
@@ -184,7 +185,10 @@ template <typename Architecture_t>
 auto TDenseLayer<Architecture_t>::Forward( Tensor_t &input, bool applyDropout) -> void
 {
    if (applyDropout && (this->GetDropoutProbability() != 1.0)) {
-      Architecture_t::Dropout(input, this->GetDropoutProbability());
+      // 
+      Architecture_t::DropoutForward(input, static_cast<TDescriptors *> (nullptr), 
+                                     static_cast<TWorkspace *> (nullptr), 
+                                     this->GetDropoutProbability());
    }
    Architecture_t::MultiplyTranspose(this->GetOutput() , input, this->GetWeightsAt(0));
    Architecture_t::AddRowWise(this->GetOutput(), this->GetBiasesAt(0));
@@ -202,6 +206,12 @@ auto TDenseLayer<Architecture_t>::Backward(Tensor_t &gradients_backward, const T
 ////                                           /*inp2*/) -> void
 {
 
+   if (this->GetDropoutProbability() != 1.0) {
+      Architecture_t::DropoutBackward(this->GetActivationGradients(), 
+      static_cast<TDescriptors *> (nullptr), 
+      static_cast<TWorkspace *> (nullptr));
+   }
+   typename Architecture_t::ActivationDescriptor_t activDesc; // use for the moment a dummy descriptor
    Architecture_t::ActivationFunctionBackward(fDerivatives, this->GetOutput(), 
                                               this->GetActivationGradients(), this->GetInputActivation(),
                                               this->GetActivationFunction(), fActivationDesc);
