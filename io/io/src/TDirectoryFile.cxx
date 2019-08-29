@@ -92,7 +92,7 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
       return;
    }
 
-   TDirectoryFile::Build(initMotherDir ? initMotherDir->GetFile() : nullptr, initMotherDir);
+   BuildImp(initMotherDir ? initMotherDir->GetFile() : nullptr, initMotherDir);
 
    TDirectory* motherdir = GetMotherDir();
    TFile* f = TDirectoryFile::GetFile();
@@ -291,7 +291,7 @@ void TDirectoryFile::Browse(TBrowser *b)
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialise directory to defaults.
 
-void TDirectoryFile::Build(TFile* motherFile, TDirectory* motherDir)
+void TDirectoryFile::BuildImp(TFile* motherFile, TDirectory* motherDir)
 {
    // If directory is created via default ctor (when dir is read from file)
    // don't add it here to the directory since its name is not yet known.
@@ -1641,7 +1641,7 @@ void TDirectoryFile::Streamer(TBuffer &b)
 {
    Version_t v,version;
    if (b.IsReading()) {
-      Build((TFile*)b.GetParent(), nullptr);
+      BuildImp((TFile*)b.GetParent(), nullptr);
       if (fFile && fFile->IsWritable()) fWritable = kTRUE;
 
       if (fFile && !fFile->IsBinary()) {

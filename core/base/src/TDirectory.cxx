@@ -81,7 +81,7 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t * /*classna
       return;
    }
 
-   TDirectory::Build(initMotherDir ? initMotherDir->GetFile() : nullptr, initMotherDir);
+   BuildImp(initMotherDir ? initMotherDir->GetFile() : nullptr, initMotherDir);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -234,7 +234,7 @@ void TDirectory::Browse(TBrowser *b)
 /// don't add it here to the directory since its name is not yet known.
 /// It will be added to the directory in TKey::ReadObj().
 
-void TDirectory::Build(TFile* /*motherFile*/, TDirectory* motherDir)
+void TDirectory::BuildImp(TFile* /*motherFile*/, TDirectory* motherDir)
 {
    fList       = new THashList(100,50);
    fList->UseRWLock();
@@ -279,7 +279,7 @@ void TDirectory::CleanTargets()
    }
 
    if (gDirectory == this) {
-      TDirectory *cursav = GetMotherDir();  // NOLINT: silence clang-tidy warnings
+      TDirectory *cursav = GetMotherDir();
       if (cursav && cursav != this) {
          cursav->cd();
       } else {

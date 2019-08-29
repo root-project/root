@@ -47,6 +47,7 @@ protected:
 
    void        CleanTargets();
    void        InitDirectory(TClass *cl = nullptr);
+   void        BuildImp(TFile* motherFile, TDirectory* motherDir);
 
 private:
    TDirectoryFile(const TDirectoryFile &directory) = delete;  //Directories cannot be copied
@@ -67,7 +68,7 @@ public:
           void        Add(TObject *obj, Bool_t replace = kFALSE) override { Append(obj,replace); }
           Int_t       AppendKey(TKey *key) override;
           void        Browse(TBrowser *b) override;
-          void        Build(TFile* motherFile = nullptr, TDirectory* motherDir = nullptr) override;
+          void        Build(TFile* motherFile = nullptr, TDirectory* motherDir = nullptr) override { BuildImp(motherFile, motherDir); }
           TObject    *CloneObject(const TObject *obj, Bool_t autoadd = kTRUE) override;
           void        Close(Option_t *option="") override;
           void        Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }
