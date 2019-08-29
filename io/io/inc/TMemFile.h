@@ -32,7 +32,7 @@ protected:
       TMemBlock(const TMemBlock&) = delete;            // Not implemented
       TMemBlock &operator=(const TMemBlock&) = delete; // Not implemented.
    public:
-      TMemBlock();
+      TMemBlock() = default;
       TMemBlock(Long64_t size, TMemBlock *previous = nullptr);
       TMemBlock(UChar_t* externalBuffer, Long64_t size);
       ~TMemBlock();
@@ -46,11 +46,11 @@ protected:
    };
    TMemBlock    fBlockList;               ///< Collection of memory blocks of size fgDefaultBlockSize
    ExternalDataPtr_t fExternalData;       ///< shared file data / content
-   Bool_t       fIsOwnedByROOT;           ///< if this is a C-style memory region
-   Long64_t     fSize;                    ///< Total file size (sum of the size of the chunks)
-   Long64_t     fSysOffset;               ///< Seek offset in file
-   TMemBlock   *fBlockSeek;               ///< Pointer to the block we seeked to.
-   Long64_t     fBlockOffset;             ///< Seek offset within the block
+   Bool_t       fIsOwnedByROOT{kFALSE};   ///< if this is a C-style memory region
+   Long64_t     fSize{0};                 ///< Total file size (sum of the size of the chunks)
+   Long64_t     fSysOffset{0};            ///< Seek offset in file
+   TMemBlock   *fBlockSeek{nullptr};      ///< Pointer to the block we seeked to.
+   Long64_t     fBlockOffset{0};          ///< Seek offset within the block
 
    constexpr static Long64_t fgDefaultBlockSize = 2 * 1024 * 1024;
    Long64_t fDefaultBlockSize = fgDefaultBlockSize;
