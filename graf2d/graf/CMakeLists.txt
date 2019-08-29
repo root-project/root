@@ -101,3 +101,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf
   BUILTINS
     FREETYPE
 )
+
+# Gpad and Hist depend on Graf, linking would create circular dependencies
+target_include_directories(Graf PRIVATE ../gpad/inc ../../hist/hist/inc)
