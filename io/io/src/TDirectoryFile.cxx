@@ -778,7 +778,7 @@ TKey *TDirectoryFile::FindKeyAny(const char *keyname) const
    while ((key = (TKey *) next())) {
       if (!strcmp(name, key->GetName()))
          if ((cycle == 9999) || (cycle >= key->GetCycle()))  {
-            ((TDirectory*)this)->cd(); // may be we should not make cd ???
+            const_cast<TDirectoryFile*>(this)->cd(); // may be we should not make cd ???
             return key;
          }
    }
@@ -788,8 +788,8 @@ TKey *TDirectoryFile::FindKeyAny(const char *keyname) const
       //if (!strcmp(key->GetClassName(),"TDirectory")) {
       if (strstr(key->GetClassName(),"TDirectory")) {
          TDirectory* subdir =
-           ((TDirectory*)this)->GetDirectory(key->GetName(), kTRUE, "FindKeyAny");
-         TKey *k = (subdir!=0) ? subdir->FindKeyAny(keyname) : nullptr;
+             const_cast<TDirectoryFile*>(this)->GetDirectory(key->GetName(), kTRUE, "FindKeyAny");
+         TKey *k = subdir ? subdir->FindKeyAny(keyname) : nullptr;
          if (k) return k;
       }
    }
@@ -1193,7 +1193,7 @@ TDirectory *TDirectoryFile::mkdir(const char *name, const char *title)
       char *workname = new char[size+1];
       strncpy(workname, name, size);
       workname[size] = 0;
-      TDirectoryFile *tmpdir;
+      TDirectoryFile *tmpdir = nullptr;
       GetObject(workname,tmpdir);
       if (!tmpdir) {
          tmpdir = (TDirectoryFile*)mkdir(workname,title);
