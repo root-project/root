@@ -92,7 +92,7 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
       return;
    }
 
-   BuildImp(initMotherDir ? initMotherDir->GetFile() : nullptr, initMotherDir);
+   BuildDirectoryFile(initMotherDir ? initMotherDir->GetFile() : nullptr, initMotherDir);
 
    TDirectory* motherdir = GetMotherDir();
    TFile* f = TDirectoryFile::GetFile();
@@ -117,7 +117,7 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
    fBufferSize  = 0;
    fWritable    = kTRUE;
 
-   InitDirectory(cl);
+   InitDirectoryFile(cl);
 
    fModified = kFALSE;
 
@@ -133,7 +133,7 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
 /// Initialize the key associated with this directory (and the related
 /// data members.
 
-void TDirectoryFile::InitDirectory(TClass *cl)
+void TDirectoryFile::InitDirectoryFile(TClass *cl)
 {
    TFile* f = GetFile(); // NOLINT: silence clang-tidy warnings
    if (f->IsBinary()) {
@@ -170,7 +170,7 @@ TDirectoryFile::~TDirectoryFile()
       SafeDelete(fKeys);
    }
 
-   CleanTargets();
+   TDirectoryFile::CleanTargets();
 
    // Delete our content before we become somewhat invalid
    // since some those objects (TTree for example) needs information
@@ -291,7 +291,7 @@ void TDirectoryFile::Browse(TBrowser *b)
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialise directory to defaults.
 
-void TDirectoryFile::BuildImp(TFile* motherFile, TDirectory* motherDir)
+void TDirectoryFile::BuildDirectoryFile(TFile* motherFile, TDirectory* motherDir)
 {
    // If directory is created via default ctor (when dir is read from file)
    // don't add it here to the directory since its name is not yet known.
@@ -564,7 +564,7 @@ void TDirectoryFile::Close(Option_t *option)
       fKeys->Delete("slow");
    }
 
-   CleanTargets();
+   TDirectoryFile::CleanTargets();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1437,7 +1437,7 @@ void TDirectoryFile::ResetAfterMerge(TFileMergeInfo *info)
       fKeys->Delete("slow");
    }
 
-   InitDirectory(cl);
+   InitDirectoryFile(cl);
 
    // Do the same with the sub-directories.
    TIter   next(GetList());
@@ -1641,7 +1641,7 @@ void TDirectoryFile::Streamer(TBuffer &b)
 {
    Version_t v,version;
    if (b.IsReading()) {
-      BuildImp((TFile*)b.GetParent(), nullptr);
+      BuildDirectoryFile((TFile*)b.GetParent(), nullptr);
       if (fFile && fFile->IsWritable()) fWritable = kTRUE;
 
       if (fFile && !fFile->IsBinary()) {

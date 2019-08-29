@@ -104,7 +104,7 @@ protected:
            void   FillFullPath(TString& buf) const;
            void   RegisterContext(TContext *ctxt);
            void   UnregisterContext(TContext *ctxt);
-           void   BuildImp(TFile* motherFile, TDirectory* motherDir);
+           void   BuildDirectory(TFile* motherFile, TDirectory* motherDir);
 
    friend class TContext;
 
@@ -123,7 +123,7 @@ public:
    virtual void        Add(TObject *obj, Bool_t replace = kFALSE) { Append(obj,replace); }
    virtual Int_t       AppendKey(TKey *) {return 0;}
            void        Browse(TBrowser *b) override;
-   virtual void        Build(TFile* motherFile = nullptr, TDirectory* motherDir = nullptr) { BuildImp(motherFile, motherDir); }
+   virtual void        Build(TFile* motherFile = nullptr, TDirectory* motherDir = nullptr) { BuildDirectory(motherFile, motherDir); }
            void        Clear(Option_t *option="") override;
    virtual TObject    *CloneObject(const TObject *obj, Bool_t autoadd = kTRUE);
    virtual void        Close(Option_t *option="");
