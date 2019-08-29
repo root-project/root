@@ -60,20 +60,24 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(
    std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
    : ROOT::Experimental::Detail::RNTuple(std::move(model))
    , fSource(std::move(source))
+   , fMetrics("RNTupleReader")
 {
    fSource->Attach();
    ConnectModel();
    fNEntries = fSource->GetNEntries();
+   fMetrics.ObserveMetrics(fSource->GetMetrics());
 }
 
 ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
    : ROOT::Experimental::Detail::RNTuple(nullptr)
    , fSource(std::move(source))
+   , fMetrics("RNTupleReader")
 {
    fSource->Attach();
    fModel = fSource->GetDescriptor().GenerateModel();
    ConnectModel();
    fNEntries = fSource->GetNEntries();
+   fMetrics.ObserveMetrics(fSource->GetMetrics());
 }
 
 ROOT::Experimental::RNTupleReader::~RNTupleReader()
@@ -138,6 +142,9 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       break;
    case ENTupleInfo::kStorageDetails:
       fSource->GetDescriptor().PrintInfo(output);
+      break;
+   case ENTupleInfo::kMetrics:
+      fMetrics.Print(output);
       break;
    default:
       // Unhandled case, internal error
