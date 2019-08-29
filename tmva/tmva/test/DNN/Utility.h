@@ -75,12 +75,10 @@ void constructConvNet(TDeepNet<AArchitecture> &net)
    size_t strideColsPool = 1;
 
    
-#if 0
    net.AddMaxPoolLayer(filterHeightPool, filterWidthPool, strideRowsPool, strideColsPool);
 
    std::cout << "added MaxPool layer " <<  net.GetLayerAt(net.GetDepth() - 1)->GetDepth() << " x " <<  net.GetLayerAt(net.GetDepth() - 1)->GetHeight()
              << " x " << net.GetLayerAt(net.GetDepth() - 1)->GetWidth() << std::endl;
-#endif
 
 
    size_t depthReshape = 1;
@@ -165,12 +163,12 @@ void constructLinearConvNet(TDeepNet<AArchitecture> &net)
    size_t strideRowsPool = 1;
    size_t strideColsPool = 1;
 
-#if 0
+
    net.AddMaxPoolLayer(filterHeightPool, filterWidthPool, strideRowsPool, strideColsPool);
 
    std::cout << "added MaxPool layer " <<  net.GetLayerAt(net.GetDepth() - 1)->GetDepth() << " x " <<  net.GetLayerAt(net.GetDepth() - 1)->GetHeight()
              << " x " << net.GetLayerAt(net.GetDepth() - 1)->GetWidth() << std::endl;
-#endif
+
 
    size_t depthReshape = 1;
    size_t heightReshape = 1;
