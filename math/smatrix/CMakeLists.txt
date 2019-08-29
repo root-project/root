@@ -39,6 +39,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Smatrix
   DEPENDENCIES
     Core
     MathCore
+    RIO
 )
 
 ROOT_GENERATE_DICTIONARY(G__Smatrix32
@@ -56,4 +57,5 @@ ROOT_GENERATE_DICTIONARY(G__Smatrix32
   DEPENDENCIES
     Core
     MathCore
+    RIO
 )
