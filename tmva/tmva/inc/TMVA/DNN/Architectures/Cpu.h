@@ -21,6 +21,7 @@
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/CNN/ContextHandles.h"
 //#include "TMVA/DNN/CNN/Descriptors.h"
+//#include "TMVA/DNN/BatchNormLayer.h"
 #include "TMVA/DNN/CNN/ConvLayer.h"
 #include "TMVA/DNN/CNN/MaxPoolLayer.h"
 
@@ -81,6 +82,9 @@ public:
    
    using EmptyDescriptor_t       = DummyEmptyDescriptor;        // Used if a descriptor is not needed in a class
    
+   /*using BNormLayer_t            = DNN::TBatchNormLayer<TCpu<AReal>>;
+   using BNormDescriptors_t      = CNN::TCNNDescriptors<BNormLayer_t>;
+   using BNormWorkspace_t        = CNN::TCNNWorkspace<BNormLayer_t>;*/
    using ConvLayer_t             = CNN::TConvLayer<TCpu<AReal>>;
    using ConvDescriptors_t       = CNN::TCNNDescriptors<ConvLayer_t>;
    using ConvWorkspace_t         = CNN::TCNNWorkspace<ConvLayer_t>;
@@ -99,6 +103,10 @@ public:
    //____________________________________________________________________________
    
    /** Initialize CNN data/operator descriptors. Not used at the moment.*/
+   # if 0
+   static void InitializeBNormDescriptors(TDescriptors * & /*descriptors*/, 
+                                          BNormLayer_t */*L = nullptr*/) {}
+   # endif
    static void InitializeConvDescriptors(TDescriptors * & /*descriptors*/, double /*coef = 0.0*/, 
                                          ConvLayer_t */*L = nullptr*/) {}
    static void InitializePoolDescriptors(TDescriptors * & /*descriptors*/,
@@ -114,7 +122,7 @@ public:
                                        TDescriptors * & /*descriptors*/,
                                        const DNN::CNN::TConvParams & /*params*/,
                                        ConvLayer_t */*L = nullptr*/) {}
-   static void InitializePoolWorkspace(TWorkspace * & /*workspace*/,
+   static void InitializeDropoutWorkspace(TWorkspace * & /*workspace*/,
                                        TDescriptors * & /*descriptors*/,
                                        const DNN::CNN::TConvParams & /*params*/,
                                        PoolingLayer_t */*L = nullptr*/) {}
@@ -390,12 +398,84 @@ public:
 
    /** Apply dropout with activation probability \p p to the given
     *  tensor \p A and scale the result by reciprocal of \p p. */
-   static void Dropout(Tensor_t & A, Scalar_t p);
+   static void DropoutForward(Tensor_t & A, 
+                              TDescriptors * descriptors,
+                              TWorkspace   * workspace, 
+                              Scalar_t p);
 
-   static void Dropout(Matrix_t & A, Scalar_t p) { 
+   static void DropoutForward(Matrix_t & A, Scalar_t p) { 
       Tensor_t tA(A);
-      Dropout( tA, p );
+      DropoutForward( tA, static_cast<TDescriptors *> (nullptr), static_cast<TWorkspace *> (nullptr), p );
    }
+
+   // Only needed for cuDNN
+   static void DropoutBackward(Tensor_t & A,                               
+                               TDescriptors * descriptors,
+                               TWorkspace   * workspace) {}
+   ///@}
+
+   //____________________________________________________________________________
+   //
+   // Batch Normalization
+   //____________________________________________________________________________
+
+   /** @name Batch Normalization Layer Propagation
+    */
+   ///@{
+
+   /** The input from each batch are normalized during training to have zero mean and unit variance 
+     * and they are then scaled by two parameter, different for each input variable: 
+     *  - a scale factor \gamma gamma
+     *  - an offset \beta beta */
+   static void BatchNormLayerForwardTraining(Matrix_t input,                        // input
+                                             Matrix_t & gamma,                      // gamma
+                                             Matrix_t & beta,                       // beta
+                                             Matrix_t outputActivation,             // out
+                                             Matrix_t & Xmu,                        // Xmu
+                                             Matrix_t & output,                     // Xhat
+                                             Matrix_t & Variance,                   // Var
+                                             Matrix_t & IVariance,                  // Ivar
+                                             # if 0
+                                             const BNormDescriptors_t & /*descriptors*/,
+                                             BNormWorkspace_t & /*workspace*/,
+                                             # endif
+                                             std::vector<Scalar_t> & RunningMeans,  // Mu_Training
+                                             std::vector<Scalar_t> & RunningVars,   // Var_Training
+                                             Scalar_t nTrainedBatches,              // TrainedBatches
+                                             Scalar_t momentum,                     // GD momentum
+                                             Scalar_t epsilon);                     // epsilon
+
+   /** During inference the inputs are not normalized using the batch mean but the previously computed 
+     * at  running mean and variance */
+   static void BatchNormLayerForwardInference(Matrix_t input,
+                                              Matrix_t & gamma,
+                                              Matrix_t & beta,
+                                              Matrix_t outputActivation,
+                                              # if 0
+                                              const BNormDescriptors_t & /*descriptors*/,
+                                              BNormWorkspace_t & /*workspace*/,
+                                              # endif
+                                              std::vector<Scalar_t> & RunningMeans,
+                                              std::vector<Scalar_t> & RunningVars,
+                                              Scalar_t nTrainedBatches,
+                                              Scalar_t epsilon);
+
+   /**
+    * */
+   static void BatchNormLayerForwardBackward(const Matrix_t & outputGrad,
+                                             const Matrix_t & gamma,
+                                             Matrix_t &dgamma,
+                                             Matrix_t &dbeta,
+                                             Matrix_t dx,
+                                             Matrix_t & output,
+                                             Matrix_t & Xmu,
+                                             Matrix_t & IVariance,
+                                             Matrix_t & Variance,
+                                             # if 0
+                                             const BNormDescriptors_t & /*descriptors*/,
+                                             BNormWorkspace_t & /*workspace*/,
+                                             # endif
+                                             Scalar_t epsilon);
 
    ///@}
 

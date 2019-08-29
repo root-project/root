@@ -22,8 +22,10 @@ namespace DNN  {
 
 //____________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::Dropout(TCudaTensor<AFloat> &A,
-                            AFloat dropoutProbability)
+void TCuda<AFloat>::DropoutForward(TCudaTensor<AFloat> & A, 
+                                   TDescriptors * /*descriptors*/,
+                                   TWorkspace   * /*workspace*/, 
+                                   AFloat dropoutProbability)
 {
    dim3 blockDims = TDevice::BlockDims2D();
    dim3 gridDims  = TDevice::GridDims2D(A);

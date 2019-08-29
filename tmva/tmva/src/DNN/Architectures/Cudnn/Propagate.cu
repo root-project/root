@@ -109,7 +109,30 @@ size_t TCudnn<AFloat>::calculateDimension(size_t imgDim, size_t fltDim, size_t p
 ///////////////////////////////////////////////////////////////////////////////
 // Initialization of the cuDNN objects for the different layers
 // ...
-//////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+# if 0
+template<typename AFloat>
+void TCudnn<AFloat>::InitializeBNormDescriptors(TDescriptors * & descriptors, ConvLayer_t *L) 
+{
+   auto bnormDescriptors = new CNN::TCNNDescriptors<typename TCudnn<AFloat>::BNormLayer_t> ();
+
+   //FIXME: Move this to constructor
+   cudnnDataType_t   cudnnDataType;
+   if      (std::is_same<AFloat, double>::value) { cudnnDataType = CUDNN_DATA_DOUBLE;}
+   else if (std::is_same<AFloat, float>::value)  { cudnnDataType = CUDNN_DATA_FLOAT;}
+
+   Tensor_t inputTensor  ({L->GetBatchSize(), L->GetInputDepth(), L->GetInputHeight(), L->GetInputWidth()}, MemoryLayout::RowMajor, 0, 0);
+   
+   // derived BNormdescr
+   CUDNNCHECK(cudnnCreateTensorDescriptor(&bnormDescriptors->HeplerDescriptor));
+
+   CUDNNCHECK(cudnnDeriveBNTensorDescriptor(bnormDescriptors->HeplerDescriptor
+                                            inputTensor.GetTensorDescriptor(),
+                                            CUDNN_BATCHNORM_PER_ACTIVATION));
+
+   descriptors = bnormDescriptors;
+}
+# endif
 
 template <typename AFloat>
 void TCudnn<AFloat>::InitializeActivationDescriptor(TCudnn<AFloat>::ActivationDescriptor_t &descriptor,
@@ -179,7 +202,6 @@ void TCudnn<AFloat>::InitializeConvDescriptors(TDescriptors * & descriptors, dou
                                          L->GetFilterWidth()));
 
    descriptors = convDescriptors;
-
 }
 
 //____________________________________________________________________________
@@ -225,7 +247,13 @@ template <typename AFloat>
 void TCudnn<AFloat>::ReleaseDescriptor(ConvolutionDescriptor_t & convolutionDescr) {
    CUDNNCHECK(cudnnDestroyConvolutionDescriptor(convolutionDescr));
 }
-   
+
+//____________________________________________________________________________
+template <typename AFloat>
+void TCudnn<AFloat>::ReleaseDescriptor(DropoutDescriptor_t & dropoutDescr) {
+   CUDNNCHECK(cudnnDestroyDropoutDescriptor(dropoutDescr));
+}
+
 //____________________________________________________________________________
 template <typename AFloat>
 void TCudnn<AFloat>::ReleaseDescriptor(FilterDescriptor_t & filterDescr) {
@@ -368,20 +396,43 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
    workspace = convWorkspace;
 }
 
+
 //____________________________________________________________________________
 template <typename AFloat>
-void TCudnn<AFloat>::InitializePoolWorkspace(TWorkspace * & workspace,
+void TCudnn<AFloat>::InitializeDropoutWorkspace(TWorkspace * & workspace,
                                              TDescriptors * & descriptors, 
                                              const DNN::CNN::TConvParams & /*params*/,
                                              PoolingLayer_t *L) {
    auto poolWorkspace = new PoolingWorkspace_t ();
    auto poolDescriptors = static_cast<PoolingDescriptors_t *>(descriptors);
 
-   Tensor_t & outputTensor = L->GetOutput(); 
-   outputTensor = Tensor_t(outputTensor.GetDeviceBuffer(),{ L->GetBatchSize(), L->GetDepth(), L->GetHeight(), L->GetWidth() },GetTensorLayout(),0,0 );
+   Tensor_t inputTensor ({L->GetBatchSize(), L->GetInputDepth(), L->GetInputHeight(), L->GetInputWidth()}, MemoryLayout::RowMajor, 0, 0);
+   cudnnHandle_t cudnnHandle = inputTensor.GetCudnnHandle();
 
-   Tensor_t &  activationGradients = L->GetActivationGradients();
-   activationGradients =  Tensor_t(activationGradients.GetDeviceBuffer(),outputTensor.GetShape() ,GetTensorLayout(),0,0 );
+   // Space needed to execute forward and backward dropout pass
+   CUDNNCHECK(cudnnDropoutGetReserveSpaceSize(inputTensor.GetTensorDescriptor(),
+                                              &poolWorkspace->HelperWorkspaceSize));
+
+   if (poolWorkspace->HelperWorkspaceSize) cudaMalloc(&poolWorkspace->HelperWorkspace, 
+                                                      poolWorkspace->HelperWorkspaceSize*sizeof(AFloat));
+   
+   // Space that containrandom pass                                           
+   CUDNNCHECK(cudnnDropoutGetStatesSize(cudnnHandle,
+                                        &poolWorkspace->ForwardWorkspaceSize));
+
+   if (poolWorkspace->ForwardWorkspaceSize) cudaMalloc(&poolWorkspace->ForwardWorkspace, 
+                                                       poolWorkspace->ForwardWorkspaceSize*sizeof(AFloat));
+
+                                                          // Fill the dropout workspace with random numbers and copy to device
+   TRandom &  rand = TCudnn<AFloat>::GetRandomGenerator();
+   unsigned long long seed = 5496729; //rand.Uniform(0, ULLONG_MAX);
+   // Reset the descriptor at every forward pass, so that random states get newly initialized?
+   CUDNNCHECK(cudnnSetDropoutDescriptor(poolDescriptors->HelperDescriptor,
+                                        cudnnHandle,
+                                        L->GetDropoutProbability(),
+                                        poolWorkspace->ForwardWorkspace,
+                                        poolWorkspace->ForwardWorkspaceSize,
+                                        seed));
 
    workspace = poolWorkspace;
 }
@@ -408,6 +459,48 @@ void TCudnn<AFloat>::FreePoolWorkspace(TWorkspace * workspace, PoolingLayer_t *L
    if(poolWorkspace->HelperWorkspace)   cudaFree(poolWorkspace->HelperWorkspace);
 }
 
+//____________________________________________________________________________
+template <typename AFloat>
+void TCudnn<AFloat>::BatchNormLayerForwardTraining(Matrix_t input,
+                                          Matrix_t & gamma,
+                                          Matrix_t & beta,
+                                          Matrix_t outputActivation,
+                                          Matrix_t & Xmu,
+                                          Matrix_t & output,
+                                          Matrix_t & Variance,
+                                          Matrix_t & IVariance,
+                                          # if 0
+                                          const BNormDescriptors_t & descriptors,
+                                          BNormWorkspace_t & workspace,
+                                          # endif
+                                          std::vector<Scalar_t> & RunningMeans,
+                                          std::vector<Scalar_t> & RunningVars,
+                                          Scalar_t nTrainedBatches,
+                                          Scalar_t momentum,
+                                          Scalar_t epsilon)
+{
+   AFloat a = 1.0;
+   AFloat b = 0.0;
+   /*CUDNNCHECK(cudnnBatchNormalizationForwardTraining(input.GetCudnnHandle(),
+      cudnnBatchNormMode_t             mode,
+                                                     &alpha,
+                                                     &beta,
+                                                     input.GetTensorDescriptor(),
+                                                     input.GetDataPointer(),
+      const cudnnTensorDescriptor_t    yDesc,
+      void                            *y,
+      const cudnnTensorDescriptor_t    bnScaleBiasMeanVarDesc,
+      const void                      *bnScale,
+      const void                      *bnBias,
+      double                           exponentialAverageFactor,
+      void                            *resultRunningMean,
+      void                            *resultRunningVariance,
+                                                      epsilon,
+      void                            *resultSaveMean,
+      void                            *resultSaveInvVariance));*/
+}
+
+//____________________________________________________________________________
 
 ///////////////////////////////////////////////////////////////////////////////////
 /// \brief A helper for image operations that rearranges image regions into
