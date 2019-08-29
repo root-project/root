@@ -9,3 +9,15 @@
 ############################################################################
 
 ROOT_OBJECT_LIBRARY(RootPcmObjs src/rootclingIO.cxx)
+
+target_include_directories(RootPcmObjs
+  PRIVATE
+    ../../core/base/inc
+    ../../core/clib/inc
+    ../../core/cont/inc
+    ../../core/foundation/inc
+    ../../core/meta/inc
+    ../../core/thread/inc
+    ../../core/zip/inc
+    ../io/inc
+)
