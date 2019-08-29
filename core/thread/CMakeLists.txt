@@ -61,7 +61,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Thread
     src/TThread.cxx
     src/TThreadFactory.cxx
     src/TThreadImp.cxx
-  OBJECT_LIBRARY
   STAGE1
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM 
