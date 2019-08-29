@@ -79,20 +79,20 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
    fName = name;
    fTitle = title;
 
-   if (initMotherDir==0) initMotherDir = gDirectory;
+   if (!initMotherDir) initMotherDir = gDirectory;
 
    if (strchr(name,'/')) {
       ::Error("TDirectoryFile","directory name (%s) cannot contain a slash", name);
-      gDirectory = 0;
+      gDirectory = nullptr;
       return;
    }
    if (strlen(GetName()) == 0) {
       ::Error("TDirectoryFile","directory name cannot be \"\"");
-      gDirectory = 0;
+      gDirectory = nullptr;
       return;
    }
 
-   Build(initMotherDir ? initMotherDir->GetFile() : 0, initMotherDir);
+   Build(initMotherDir ? initMotherDir->GetFile() : nullptr, initMotherDir);
 
    TDirectory* motherdir = GetMotherDir();
    TFile* f = GetFile();
@@ -103,7 +103,7 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
       Error("TDirectoryFile","An object with name %s exists already", name);
       return;
    }
-   TClass *cl = 0;
+   TClass *cl = nullptr;
    if (classname[0]) {
       cl = TClass::GetClass(classname);
       if (!cl) {
@@ -137,7 +137,7 @@ void TDirectoryFile::Init(TClass *cl)
 {
    TFile* f = GetFile();
    if (f->IsBinary()) {
-      if (cl==0) {
+      if (!cl) {
          cl = IsA();
       }
       TDirectory* motherdir = GetMotherDir();
@@ -197,7 +197,7 @@ TDirectoryFile::~TDirectoryFile()
 
 void TDirectoryFile::Append(TObject *obj, Bool_t replace /* = kFALSE */)
 {
-   if (obj == 0 || fList == 0) return;
+   if (!obj || !fList) return;
 
    TDirectory::Append(obj,replace);
 
@@ -251,9 +251,9 @@ void TDirectoryFile::Browse(TBrowser *b)
    TString name;
 
    if (b) {
-      TObject *obj = 0;
+      TObject *obj = nullptr;
       TIter nextin(fList);
-      TKey *key = 0, *keyo = 0;
+      TKey *key = nullptr, *keyo = nullptr;
       TIter next(fKeys);
 
       cd();
@@ -342,7 +342,7 @@ void TDirectoryFile::CleanTargets()
    // After CleanTargets either gFile was changed appropriately
    // by a cd() or needs to be set to zero.
    if (gFile == this) {
-      gFile = 0;
+      gFile = nullptr;
    }
    TDirectory::CleanTargets();
 }
@@ -363,7 +363,7 @@ TObject *TDirectoryFile::CloneObject(const TObject *obj, Bool_t autoadd /* = kTR
 {
    // if no default ctor return immediately (error issued by New())
    char *pobj = (char*)obj->IsA()->New();
-   if (!pobj) return 0;
+   if (!pobj) return nullptr;
 
    Int_t baseOffset = obj->IsA()->GetBaseClassOffset(TObject::Class());
    if (baseOffset==-1) {
@@ -381,7 +381,7 @@ TObject *TDirectoryFile::CloneObject(const TObject *obj, Bool_t autoadd /* = kTR
       // NOTE: This can not be 'gDirectory=0' as at least roofit expect gDirectory to not be null
       // during the streaming ....
       TFile *filsav = gFile;
-      gFile = 0;
+      gFile = nullptr;
       const Int_t bufsize = 10000;
       TBufferFile buffer(TBuffer::kWrite,bufsize);
       buffer.MapObject(obj);  //register obj in map to handle self reference
@@ -426,7 +426,7 @@ TObject *TDirectoryFile::FindObjectAnyFile(const char *name) const
       TObject *obj = f->GetList()->FindObject(name);
       if (obj) return obj;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -479,7 +479,7 @@ TDirectory *TDirectoryFile::GetDirectory(const char *apath,
          delete [] path; return result;
       } else {
          if (printError) Error(funcname, "No such file %s", path);
-         delete [] path; return 0;
+         delete [] path; return nullptr;
       }
    }
 
@@ -501,7 +501,7 @@ TDirectory *TDirectoryFile::GetDirectory(const char *apath,
       GetObject(path,obj);
       if (!obj) {
          if (printError) Error(funcname,"Unknown directory %s", path);
-         delete [] path; return 0;
+         delete [] path; return nullptr;
       }
 
       delete [] path; return obj;
@@ -520,7 +520,7 @@ TDirectory *TDirectoryFile::GetDirectory(const char *apath,
    GetObject(subdir,obj);
    if (!obj) {
       if (printError) Error(funcname,"Unknown directory %s", subdir.Data());
-      delete [] path; return 0;
+      delete [] path; return nullptr;
    }
 
    result = ((TDirectory*)obj)->GetDirectory(slash+1,printError,funcname);
@@ -789,12 +789,12 @@ TKey *TDirectoryFile::FindKeyAny(const char *keyname) const
       if (strstr(key->GetClassName(),"TDirectory")) {
          TDirectory* subdir =
            ((TDirectory*)this)->GetDirectory(key->GetName(), kTRUE, "FindKeyAny");
-         TKey *k = (subdir!=0) ? subdir->FindKeyAny(keyname) : 0;
+         TKey *k = (subdir!=0) ? subdir->FindKeyAny(keyname) : nullptr;
          if (k) return k;
       }
    }
    if (dirsav) dirsav->cd();
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -833,12 +833,12 @@ TObject *TDirectoryFile::FindObjectAny(const char *aname) const
       if (strstr(key->GetClassName(),"TDirectory")) {
          TDirectory* subdir =
            ((TDirectory*)this)->GetDirectory(key->GetName(), kTRUE, "FindKeyAny");
-         TKey *k = subdir==0 ? 0 : subdir->FindKeyAny(aname);
+         TKey *k = subdir ? subdir->FindKeyAny(aname) : nullptr;
          if (k) { if (dirsav) dirsav->cd(); return k->ReadObj();}
       }
    }
    if (dirsav) dirsav->cd();
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -918,14 +918,14 @@ TObject *TDirectoryFile::Get(const char *namecycle)
          // The object has the same name has the directory and
          // that's what we picked-up!  We just need to ignore
          // it ...
-         idcur = 0;
+         idcur = nullptr;
       } else if (cycle == 9999) {
          return idcur;
       } else {
          if (idcur->InheritsFrom(TCollection::Class()))
             idcur->Delete();  // delete also list elements
          delete idcur;
-         idcur = 0;
+         idcur = nullptr;
       }
    }
 
@@ -963,7 +963,7 @@ TObject *TDirectoryFile::Get(const char *namecycle)
 
 void *TDirectoryFile::GetObjectUnchecked(const char *namecycle)
 {
-   return GetObjectChecked(namecycle,(TClass*)0);
+   return GetObjectChecked(namecycle,(TClass*)nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1019,7 +1019,7 @@ void *TDirectoryFile::GetObjectChecked(const char *namecycle, const TClass* expe
          if (dirToSearch) {
             return dirToSearch->GetObjectChecked(subnamecycle, expectedClass);
          } else {
-            return 0;
+            return nullptr;
          }
       }
    }
@@ -1028,29 +1028,29 @@ void *TDirectoryFile::GetObjectChecked(const char *namecycle, const TClass* expe
 //*-*---------------------Case of Object in memory---------------------
 //                        ========================
    if (expectedClass==0 || expectedClass->IsTObject()) {
-      TObject *objcur = fList ? fList->FindObject(namobj) : 0;
+      TObject *objcur = fList ? fList->FindObject(namobj) : nullptr;
       if (objcur) {
          if (objcur==this && strlen(namobj)!=0) {
             // The object has the same name has the directory and
             // that's what we picked-up!  We just need to ignore
             // it ...
-            objcur = 0;
+            objcur = nullptr;
          } else if (cycle == 9999) {
             // Check type
-            if (expectedClass && objcur->IsA()->GetBaseClassOffset(expectedClass) == -1) return 0;
+            if (expectedClass && objcur->IsA()->GetBaseClassOffset(expectedClass) == -1) return nullptr;
             else return objcur;
          } else {
             if (objcur->InheritsFrom(TCollection::Class()))
                objcur->Delete();  // delete also list elements
             delete objcur;
-            objcur = 0;
+            objcur = nullptr;
          }
       }
    }
 
 //*-*---------------------Case of Key---------------------
 //                        ===========
-   void *idcur = 0;
+   void *idcur = nullptr;
    TKey *key;
    TIter nextkey(GetListOfKeys());
    while ((key = (TKey *) nextkey())) {
@@ -1099,7 +1099,7 @@ TKey *TDirectoryFile::GetKey(const char *name, Short_t cycle) const
       }
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1170,7 +1170,6 @@ TFile *TDirectoryFile::OpenFile(const char *name, Option_t *option,const char *f
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a sub-directory "a" or a hierarchy of sub-directories "a/b/c/...".
 ///
@@ -1182,13 +1181,13 @@ TFile *TDirectoryFile::OpenFile(const char *name, Option_t *option,const char *f
 
 TDirectory *TDirectoryFile::mkdir(const char *name, const char *title)
 {
-   if (!name || !title || !name[0]) return 0;
+   if (!name || !title || !name[0]) return nullptr;
    if (!title[0]) title = name;
    if (GetKey(name)) {
       Error("mkdir","An object with name %s exists already",name);
-      return 0;
+      return nullptr;
    }
-   TDirectoryFile *newdir = 0;
+   TDirectoryFile *newdir = nullptr;
    if (const char *slash = strchr(name,'/')) {
       Long_t size = Long_t(slash-name);
       char *workname = new char[size+1];
@@ -1198,7 +1197,7 @@ TDirectory *TDirectoryFile::mkdir(const char *name, const char *title)
       GetObject(workname,tmpdir);
       if (!tmpdir) {
          tmpdir = (TDirectoryFile*)mkdir(workname,title);
-         if (!tmpdir) return 0;
+         if (!tmpdir) return nullptr;
       }
       if (!newdir) newdir = tmpdir;
       tmpdir->mkdir(slash+1);
@@ -1238,8 +1237,8 @@ void TDirectoryFile::Purge(Short_t)
          }
       }
    }
-   TFile* f = GetFile();
-   if (fModified && (f!=0)) {
+   TFile *f = GetFile();
+   if (fModified && f) {
       WriteKeys();                   // Write new keys structure
       WriteDirHeader();              // Write new directory header
       f->WriteFree();                // Write new free segments list
@@ -1310,7 +1309,7 @@ void TDirectoryFile::ReadAll(Option_t* opt)
 
 Int_t TDirectoryFile::ReadKeys(Bool_t forceRead)
 {
-   if (fFile==0 || fKeys==0) return 0;
+   if (!fFile || !fKeys) return 0;
 
    if (!fFile->IsBinary())
       return fFile->DirReadKeys(this);
@@ -1397,7 +1396,7 @@ Int_t TDirectoryFile::ReadKeys(Bool_t forceRead)
 Int_t TDirectoryFile::ReadTObject(TObject *obj, const char *keyname)
 {
    if (!fFile) { Error("Read","No file open"); return 0; }
-   TKey *key = 0;
+   TKey *key = nullptr;
    TIter nextkey(GetListOfKeys());
    while ((key = (TKey *) nextkey())) {
       if (strcmp(keyname,key->GetName()) == 0) {
@@ -1458,16 +1457,16 @@ void TDirectoryFile::ResetAfterMerge(TFileMergeInfo *info)
 ////////////////////////////////////////////////////////////////////////////////
 /// Removes subdirectory from the directory
 ///
-/// When diredctory is deleted, all keys in all subdirectories will be
+/// When directory is deleted, all keys in all subdirectories will be
 /// read first and deleted from file (if exists)
 /// Equivalent call is Delete("name;*");
 
 void TDirectoryFile::rmdir(const char *name)
 {
-   if ((name==0) || (*name==0)) return;
+   if (!name || (*name==0)) return;
 
    TString mask(name);
-   mask+=";*";
+   mask += ";*";
    Delete(mask);
 }
 
@@ -1553,7 +1552,7 @@ void TDirectoryFile::SaveSelf(Bool_t force)
    if (IsWritable() && (fModified || force) && fFile) {
       Bool_t dowrite = kTRUE;
       if (fFile->GetListOfFree())
-        dowrite = fFile->GetListOfFree()->First() != 0;
+        dowrite = fFile->GetListOfFree()->First() != nullptr;
       if (dowrite) {
          TDirectory *dirsav = gDirectory;
          if (dirsav != this) cd();
@@ -1864,7 +1863,7 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
 
    // Remove trailing blanks in object name
    Int_t nch = strlen(oname);
-   char *newName = 0;
+   char *newName = nullptr;
    if (nch && oname[nch-1] == ' ') {
       newName = new char[nch+1];
       strlcpy(newName,oname,nch+1);
@@ -1943,10 +1942,10 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
 Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option, Int_t bufsize)
 {
    TClass *cl = TClass::GetClass(classname);
-   if (cl == 0) {
+   if (!cl) {
       TObject *info_obj = *(TObject**)obj;
       TVirtualStreamerInfo *info = dynamic_cast<TVirtualStreamerInfo*>(info_obj);
-      if (info == 0) {
+      if (!info) {
          Error("WriteObjectAny","Unknown class: %s",classname);
          return 0;
       } else {
@@ -1971,7 +1970,7 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const ch
 {
    TDirectory::TContext ctxt(this);
 
-   if (fFile==0) return 0;
+   if (!fFile) return 0;
 
    if (!cl) {
       Error("WriteObject","Unknown type for %s, it can not be written.",name);
@@ -2004,7 +2003,7 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const ch
       return 0;
    }
 
-   TKey *key, *oldkey=0;
+   TKey *key, *oldkey = nullptr;
    Int_t bsize = GetBufferSize();
    if (bufsize > 0) bsize = bufsize;
 
@@ -2013,7 +2012,7 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const ch
 
    // Remove trailing blanks in object name
    Int_t nch = strlen(oname);
-   char *newName = 0;
+   char *newName = nullptr;
    if (nch && oname[nch-1] == ' ') {
       newName = new char[nch+1];
       strlcpy(newName,oname,nch+1);
@@ -2062,7 +2061,7 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const ch
 void TDirectoryFile::WriteDirHeader()
 {
    TFile* f = GetFile();
-   if (f==0) return;
+   if (!f) return;
 
    if (!f->IsBinary()) {
       fDatimeM.Set();
@@ -2071,8 +2070,8 @@ void TDirectoryFile::WriteDirHeader()
    }
 
    Int_t nbytes  = TDirectoryFile::Sizeof();  //Warning ! TFile has a Sizeof()
-   char * header = new char[nbytes];
-   char * buffer = header;
+   char *header = new char[nbytes];
+   char *buffer = header;
    fDatimeM.Set();
    TDirectoryFile::FillBuffer(buffer);
    Long64_t pointer = fSeekDir + fNbytesName; // do not overwrite the name/title part
@@ -2091,7 +2090,7 @@ void TDirectoryFile::WriteDirHeader()
 void TDirectoryFile::WriteKeys()
 {
    TFile* f = GetFile();
-   if (f==0) return;
+   if (!f) return;
 
    if (!f->IsBinary()) {
       f->DirWriteKeys(this);
