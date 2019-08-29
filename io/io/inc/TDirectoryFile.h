@@ -32,21 +32,21 @@ class TFile;
 class TDirectoryFile : public TDirectory {
 
 protected:
-   Bool_t      fModified;        ///< True if directory has been modified
-   Bool_t      fWritable;        ///< True if directory is writable
-   TDatime     fDatimeC;         ///< Date and time when directory is created
-   TDatime     fDatimeM;         ///< Date and time of last modification
-   Int_t       fNbytesKeys;      ///< Number of bytes for the keys
-   Int_t       fNbytesName;      ///< Number of bytes in TNamed at creation time
-   Int_t       fBufferSize;      ///< Default buffer size to create new TKeys
-   Long64_t    fSeekDir;         ///< Location of directory on file
-   Long64_t    fSeekParent;      ///< Location of parent directory on file
-   Long64_t    fSeekKeys;        ///< Location of Keys record on file
-   TFile      *fFile;            ///< Pointer to current file in memory
-   TList      *fKeys;            ///< Pointer to keys list in memory
+   Bool_t      fModified{kFALSE};        ///< True if directory has been modified
+   Bool_t      fWritable{kFALSE};        ///< True if directory is writable
+   TDatime     fDatimeC;                 ///< Date and time when directory is created
+   TDatime     fDatimeM;                 ///< Date and time of last modification
+   Int_t       fNbytesKeys{0};           ///< Number of bytes for the keys
+   Int_t       fNbytesName{0};           ///< Number of bytes in TNamed at creation time
+   Int_t       fBufferSize{0};           ///< Default buffer size to create new TKeys
+   Long64_t    fSeekDir{0};              ///< Location of directory on file
+   Long64_t    fSeekParent{0};           ///< Location of parent directory on file
+   Long64_t    fSeekKeys{0};             ///< Location of Keys record on file
+   TFile      *fFile{nullptr};           ///< Pointer to current file in memory
+   TList      *fKeys{nullptr};           ///< Pointer to keys list in memory
 
-   virtual void         CleanTargets();
-   void Init(TClass *cl = nullptr);
+   void        CleanTargets() override;
+   void        Init(TClass *cl = nullptr);
 
 private:
    TDirectoryFile(const TDirectoryFile &directory) = delete;  //Directories cannot be copied
@@ -59,7 +59,7 @@ public:
       kCustomBrowse   = BIT(9)
    };
 
-   TDirectoryFile();
+   TDirectoryFile()= default;
    TDirectoryFile(const char *name, const char *title, Option_t *option="", TDirectory* motherDir = nullptr);
    virtual ~TDirectoryFile();
 
@@ -73,7 +73,7 @@ public:
           void        Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }
           Bool_t      cd(const char *path = nullptr) override;
           void        Delete(const char *namecycle="") override;
-   virtual void       FillBuffer(char *&buffer);
+          void        FillBuffer(char *&buffer) override;
           TKey       *FindKey(const char *keyname) const override;
           TKey       *FindKeyAny(const char *keyname) const override;
           TObject    *FindObjectAny(const char *name) const override;

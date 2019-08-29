@@ -55,20 +55,10 @@ ClassImp(TDirectoryFile);
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default Constructor
-
-TDirectoryFile::TDirectoryFile() : TDirectory()
-   , fModified(kFALSE), fWritable(kFALSE), fNbytesKeys(0), fNbytesName(0)
-   , fBufferSize(0), fSeekDir(0), fSeekParent(0), fSeekKeys(0)
-   , fFile(0), fKeys(0)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Create a new TDirectoryFile
 ///
 ///  A new directory with a name and a title is created in the current directory.
-///  The directory header information is immediatly saved on the file
+///  The directory header information is immediately saved on the file
 ///  A new key is added in the parent directory.
 ///  When this constructor is called from a class directly derived
 ///  from TDirectoryFile, the third argument, classname, MUST be specified.
@@ -77,10 +67,6 @@ TDirectoryFile::TDirectoryFile() : TDirectory()
 ///  Note that the directory name cannot contain slashes.
 
 TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *classname, TDirectory* initMotherDir)
-           : TDirectory()
-   , fModified(kFALSE), fWritable(kFALSE), fNbytesKeys(0), fNbytesName(0)
-   , fBufferSize(0), fSeekDir(0), fSeekParent(0), fSeekKeys(0)
-   , fFile(0), fKeys(0)
 {
    // We must not publish this objects to the list of RecursiveRemove (indirectly done
    // by 'Appending' this object to it's mother) before the object is completely
