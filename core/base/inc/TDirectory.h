@@ -33,7 +33,7 @@ class TFile;
 
 class TDirectory : public TNamed {
 public:
-   /** @class Context
+   /** @class TContext
      *
      *  Small helper to keep current directory context.
      *  Automatically reverts to "old" directory
@@ -56,39 +56,46 @@ public:
       {
          // Store the current directory so we can restore it
          // later and cd to the new directory.
-         if ( fDirectory ) (*fDirectory).RegisterContext(this);
-         if ( newCurrent ) newCurrent->cd();
-         else CdNull();
+         if (fDirectory)
+            (*fDirectory).RegisterContext(this);
+         if (newCurrent)
+            newCurrent->cd();
+         else
+            CdNull();
       }
       TContext() : fDirectory(TDirectory::CurrentDirectory())
       {
          // Store the current directory so we can restore it
          // later and cd to the new directory.
-         if ( fDirectory ) (*fDirectory).RegisterContext(this);
+         if (fDirectory)
+            (*fDirectory).RegisterContext(this);
       }
       TContext(TDirectory *newCurrent) : fDirectory(TDirectory::CurrentDirectory())
       {
          // Store the current directory so we can restore it
          // later and cd to the new directory.
-         if ( fDirectory ) (*fDirectory).RegisterContext(this);
-         if ( newCurrent ) newCurrent->cd();
-         else CdNull();
+         if (fDirectory)
+            (*fDirectory).RegisterContext(this);
+         if (newCurrent)
+            newCurrent->cd();
+         else
+            CdNull();
       }
       ~TContext();
    };
 
 protected:
 
-   TObject      *fMother{nullptr};   // pointer to mother of the directory
-   TList        *fList{nullptr};     // List of objects in memory
-   TUUID         fUUID;              // Unique identifier
-   mutable TString fPathBuffer;      //! Buffer for GetPath() function
-   TContext     *fContext{nullptr};  //! Pointer to a list of TContext object pointing to this TDirectory
+   TObject         *fMother{nullptr};   // pointer to mother of the directory
+   TList           *fList{nullptr};     // List of objects in memory
+   TUUID            fUUID;              // Unique identifier
+   mutable TString  fPathBuffer;        //! Buffer for GetPath() function
+   TContext        *fContext{nullptr};  //! Pointer to a list of TContext object pointing to this TDirectory
 
-   std::atomic<size_t> fContextPeg;   //!Counter delaying the TDirectory destructor from finishing.
-   mutable std::atomic_flag fSpinLock; //! MSVC doesn't support = ATOMIC_FLAG_INIT;
+   std::atomic<size_t> fContextPeg;     //!Counter delaying the TDirectory destructor from finishing.
+   mutable std::atomic_flag fSpinLock;  //! MSVC doesn't support = ATOMIC_FLAG_INIT;
 
-   static Bool_t fgAddDirectory;   //!flag to add histograms, graphs,etc to the directory
+   static Bool_t fgAddDirectory;        //!flag to add histograms, graphs,etc to the directory
 
           Bool_t  cd1(const char *path);
    static Bool_t  Cd1(const char *path);
@@ -122,12 +129,12 @@ public:
            void        Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }
    virtual Bool_t      cd(const char *path = nullptr);
    virtual void        DeleteAll(Option_t *option="");
-   virtual void        Delete(const char *namecycle="");
+           void        Delete(const char *namecycle="") override;
            void        Draw(Option_t *option="") override;
    virtual TKey       *FindKey(const char * /*keyname*/) const {return nullptr;}
    virtual TKey       *FindKeyAny(const char * /*keyname*/) const {return nullptr;}
-   virtual TObject    *FindObject(const char *name) const;
-   virtual TObject    *FindObject(const TObject *obj) const;
+           TObject    *FindObject(const char *name) const override;
+           TObject    *FindObject(const TObject *obj) const override;
    virtual TObject    *FindObjectAny(const char *name) const;
    virtual TObject    *FindObjectAnyFile(const char * /*name*/) const {return nullptr;}
    virtual TObject    *Get(const char *namecycle);
@@ -159,10 +166,10 @@ public:
    virtual const char *GetPathStatic() const;
    virtual const char *GetPath() const;
    TUUID               GetUUID() const {return fUUID;}
-   virtual Bool_t      IsFolder() const { return kTRUE; }
+           Bool_t      IsFolder() const override { return kTRUE; }
    virtual Bool_t      IsModified() const { return kFALSE; }
    virtual Bool_t      IsWritable() const { return kFALSE; }
-   virtual void        ls(Option_t *option="") const;
+           void        ls(Option_t *option="") const override;
    virtual TDirectory *mkdir(const char *name, const char *title="");
    virtual TFile      *OpenFile(const char * /*name*/, Option_t * /*option*/ = "",
                             const char * /*ftitle*/ = "", Int_t /*compress*/ = 1,
@@ -187,10 +194,10 @@ public:
    virtual void        SetTRefAction(TObject * /*ref*/, TObject * /*parent*/) {}
    virtual void        SetSeekDir(Long64_t) {}
    virtual void        SetWritable(Bool_t) {}
-   virtual Int_t       Sizeof() const {return 0;}
-   virtual Int_t       Write(const char * /*name*/=0, Int_t /*opt*/=0, Int_t /*bufsize*/=0){return 0;}
-   virtual Int_t       Write(const char * /*name*/=0, Int_t /*opt*/=0, Int_t /*bufsize*/=0) const {return 0;}
-   virtual Int_t       WriteTObject(const TObject *obj, const char *name =0, Option_t * /*option*/="", Int_t /*bufsize*/ =0);
+           Int_t       Sizeof() const override {return 0;}
+   virtual Int_t       Write(const char * /*name*/=nullptr, Int_t /*opt*/=0, Int_t /*bufsize*/=0) override {return 0;}
+   virtual Int_t       Write(const char * /*name*/=nullptr, Int_t /*opt*/=0, Int_t /*bufsize*/=0) const override {return 0;}
+   virtual Int_t       WriteTObject(const TObject *obj, const char *name =nullptr, Option_t * /*option*/="", Int_t /*bufsize*/ =0);
 private:
            Int_t       WriteObject(void *obj, const char* name, Option_t *option="", Int_t bufsize=0); // Intentionally not implemented.
 public:
