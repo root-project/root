@@ -177,8 +177,12 @@ ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntup
    , fUnzipBuffer(std::make_unique<std::array<unsigned char, kMaxPageSize>>())
    , fMetrics("RPageSourceRaw")
 {
-   fMetrics.MakeCounter("timeWallUnzip", "ns", "", fCtrTimeWallUnzip);
-   fMetrics.MakeCounter("timeCpuUnzip", "ns", "", fCtrTimeCpuUnzip);
+   fMetrics.MakeCounter("szRead", "B", "volume read from file", fCtrSzRead);
+   fMetrics.MakeCounter("nPages", "", "number of populated pages", fCtrNPages);
+   fMetrics.MakeCounter("timeWallRead", "ns", "wall clock time spent reading", fCtrTimeWallRead);
+   fMetrics.MakeCounter("timeCpuRead", "ns", "CPU time spent reading", fCtrTimeCpuRead);
+   fMetrics.MakeCounter("timeWallUnzip", "ns", "wall clock time spent decompressing", fCtrTimeWallUnzip);
+   fMetrics.MakeCounter("timeCpuUnzip", "ns", "CPU time spent decompressing", fCtrTimeCpuUnzip);
 }
 
 ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntupleName, std::string_view path,
@@ -198,8 +202,10 @@ ROOT::Experimental::Detail::RPageSourceRaw::~RPageSourceRaw()
 
 void ROOT::Experimental::Detail::RPageSourceRaw::Read(void *buffer, std::size_t nbytes, std::uint64_t offset)
 {
+   RNTuplePlainTimer timer(*fCtrTimeWallRead, *fCtrTimeCpuRead);
    auto nread = fFile->ReadAt(buffer, nbytes, offset);
    R__ASSERT(nread == nbytes);
+   fCtrSzRead->Add(nread);
 }
 
 
@@ -235,6 +241,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceRaw
 ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::PopulatePageFromCluster(
    ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor, ClusterSize_t::ValueType clusterIndex)
 {
+   fCtrNPages->Inc();
    auto columnId = columnHandle.fId;
    auto clusterId = clusterDescriptor.GetId();
    const auto &pageRange = clusterDescriptor.GetPageRange(columnId);
