@@ -26,8 +26,8 @@ even if the object is not of a class in the Cint/Reflex dictionary.
 class TVirtualObject {
 private:
 
-   TVirtualObject(const TVirtualObject&);             // not implemented
-   TVirtualObject &operator=(const TVirtualObject&);  // not implemented
+   TVirtualObject(const TVirtualObject&) = delete;             // not implemented
+   TVirtualObject &operator=(const TVirtualObject&) = delete;  // not implemented
 
 public:
    TClassRef  fClass;

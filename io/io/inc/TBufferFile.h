@@ -55,8 +55,8 @@ protected:
    TBufferFile() = default;
 
    // TBuffer objects cannot be copied or assigned
-   TBufferFile(const TBufferFile &);       ///<  not implemented
-   void operator=(const TBufferFile &);    ///<  not implemented
+   TBufferFile(const TBufferFile &) = delete;       ///<  not implemented
+   void operator=(const TBufferFile &) = delete;    ///<  not implemented
 
    Int_t  CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss, const char* classname);
    void  CheckCount(UInt_t offset) override;
