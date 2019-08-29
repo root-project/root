@@ -327,7 +327,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    // We are opening synchronously
    fAsyncOpenStatus = kAOSNotAsync;
 
-   TDirectoryFile::Build(this, nullptr);
+   TDirectoryFile::BuildImp(this, nullptr);
 
    fVersion      = gROOT->GetVersionInt();  //ROOT version in integer format
    fUnits        = 4;
