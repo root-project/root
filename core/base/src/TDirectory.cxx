@@ -189,16 +189,16 @@ Bool_t TDirectory::AddDirectoryStatus()
 
 void TDirectory::Append(TObject *obj, Bool_t replace /* = kFALSE */)
 {
-   if (obj == 0 || fList == 0) return;
+   if (!obj || !fList) return;
 
    if (replace && obj->GetName() && obj->GetName()[0]) {
       TObject *old;
-      while (0!=(old = GetList()->FindObject(obj->GetName()))) {
+      while (nullptr != (old = GetList()->FindObject(obj->GetName()))) {
          Warning("Append","Replacing existing %s: %s (Potential memory leak).",
                  obj->IsA()->GetName(),obj->GetName());
          ROOT::DirAutoAdd_t func = old->IsA()->GetDirectoryAutoAdd();
          if (func) {
-            func(old,0);
+            func(old,nullptr);
          } else {
             Remove(old);
          }
@@ -215,7 +215,7 @@ void TDirectory::Append(TObject *obj, Bool_t replace /* = kFALSE */)
 void TDirectory::Browse(TBrowser *b)
 {
    if (b) {
-      TObject *obj = 0;
+      TObject *obj = nullptr;
       TIter nextin(fList);
 
       cd();
@@ -284,7 +284,7 @@ void TDirectory::CleanTargets()
          cursav->cd();
       } else {
          if (this == gROOT) {
-            gDirectory = 0;
+            gDirectory = nullptr;
          } else {
             gROOT->cd();
          }
@@ -300,8 +300,8 @@ void TDirectory::CleanTargets()
 static TBuffer* R__CreateBuffer()
 {
    typedef void (*tcling_callfunc_Wrapper_t)(void*, int, void**, void*);
-   static tcling_callfunc_Wrapper_t creator = 0;
-   if (creator == 0) {
+   static tcling_callfunc_Wrapper_t creator = nullptr;
+   if (!creator) {
       R__LOCKGUARD(gROOTMutex);
       TClass *c = TClass::GetClass("TBufferFile");
       TMethod *m = c->GetMethodWithPrototype("TBufferFile","TBuffer::EMode,Int_t",kFALSE,ROOT::kExactMatch);
@@ -331,7 +331,7 @@ TObject *TDirectory::CloneObject(const TObject *obj, Bool_t autoadd /* = kTRUE *
    char *pobj = (char*)obj->IsA()->New();
    if (!pobj) {
      Fatal("CloneObject","Failed to create new object");
-     return 0;
+     return nullptr;
    }
 
    Int_t baseOffset = obj->IsA()->GetBaseClassOffset(TObject::Class());
@@ -350,7 +350,7 @@ TObject *TDirectory::CloneObject(const TObject *obj, Bool_t autoadd /* = kTRUE *
    TBuffer *buffer = R__CreateBuffer();
    if (!buffer) {
       Fatal("CloneObject","Not able to create a TBuffer!");
-      return 0;
+      return nullptr;
    }
    buffer->MapObject(obj);  //register obj in map to handle self reference
    const_cast<TObject*>(obj)->Streamer(*buffer);
@@ -379,7 +379,7 @@ TObject *TDirectory::CloneObject(const TObject *obj, Bool_t autoadd /* = kTRUE *
 
 TDirectory *&TDirectory::CurrentDirectory()
 {
-   static TDirectory *currentDirectory = 0;
+   static TDirectory *currentDirectory = nullptr;
    if (!gThreadTsd)
       return currentDirectory;
    else
@@ -425,7 +425,7 @@ TDirectory *TDirectory::GetDirectory(const char *apath,
          delete [] path; return result;
       } else {
          if (printError) Error(funcname, "No such file %s", path);
-         delete [] path; return 0;
+         delete [] path; return nullptr;
       }
    }
 
@@ -446,13 +446,13 @@ TDirectory *TDirectory::GetDirectory(const char *apath,
       obj = Get(path);
       if (!obj) {
          if (printError) Error(funcname,"Unknown directory %s", path);
-         delete [] path; return 0;
+         delete [] path; return nullptr;
       }
 
       //Check return object is a directory
       if (!obj->InheritsFrom(TDirectory::Class())) {
          if (printError) Error(funcname,"Object %s is not a directory", path);
-         delete [] path; return 0;
+         delete [] path; return nullptr;
       }
       delete [] path; return (TDirectory*)obj;
    }
@@ -470,13 +470,13 @@ TDirectory *TDirectory::GetDirectory(const char *apath,
    obj = Get(subdir);
    if (!obj) {
       if (printError) Error(funcname,"Unknown directory %s", subdir.Data());
-      delete [] path; return 0;
+      delete [] path; return nullptr;
    }
 
    //Check return object is a directory
    if (!obj->InheritsFrom(TDirectory::Class())) {
       if (printError) Error(funcname,"Object %s is not a directory", subdir.Data());
-      delete [] path; return 0;
+      delete [] path; return nullptr;
    }
    result = ((TDirectory*)obj)->GetDirectory(slash+1,printError,funcname);
    delete [] path; return result;
@@ -735,7 +735,7 @@ TObject *TDirectory::FindObject(const char *name) const
 TObject *TDirectory::FindObjectAny(const char *aname) const
 {
    //object may be already in the list of objects in memory
-   TObject *obj =  fList->FindObject(aname);
+   TObject *obj = fList->FindObject(aname);
    if (obj) return obj;
 
    //try with subdirectories
@@ -749,7 +749,7 @@ TObject *TDirectory::FindObjectAny(const char *aname) const
          }
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -889,7 +889,7 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const char* classname)
 /// ~~~
 ///  Note: We recommend using the method TDirectory::GetObject:
 /// ~~~ {.cpp}
-///      MyClass *obj = 0;
+///      MyClass *obj = nullptr;
 ///      directory->GetObject("some object inheriting from MyClass",obj);
 ///      if (obj) { ... we found what we are looking for ... }
 /// ~~~
@@ -911,7 +911,7 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const TClass* expected
          if (dirToSearch) {
             return dirToSearch->GetObjectChecked(namobj, expectedClass);
          } else {
-            return 0;
+            return nullptr;
          }
       }
    }
@@ -925,21 +925,21 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const TClass* expected
             // The object has the same name has the directory and
             // that's what we picked-up!  We just need to ignore
             // it ...
-            objcur = 0;
+            objcur = nullptr;
          } else if (cycle == 9999) {
             // Check type
-            if (expectedClass && objcur->IsA()->GetBaseClassOffset(expectedClass) == -1) return 0;
+            if (expectedClass && objcur->IsA()->GetBaseClassOffset(expectedClass) == -1) return nullptr;
             else return objcur;
          } else {
             if (objcur->InheritsFrom(TCollection::Class()))
                objcur->Delete();  // delete also list elements
             delete objcur;
-            objcur = 0;
+            objcur = nullptr;
          }
       }
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -948,7 +948,7 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const TClass* expected
 
 const char *TDirectory::GetPathStatic() const
 {
-   static char *path = 0;
+   static char *path = nullptr;
    const int kMAXDEPTH = 128;
    const TDirectory *d[kMAXDEPTH];
    const TDirectory *cur = this;
@@ -986,14 +986,12 @@ const char *TDirectory::GetPathStatic() const
 
 const char *TDirectory::GetPath() const
 {
-   //
-   TString* buf = &(const_cast<TDirectory*>(this)->fPathBuffer);
+   FillFullPath(fPathBuffer);
 
-   FillFullPath(*buf);
-   if (GetMotherDir()==0) // case of file
-      buf->Append("/");
+   if (!GetMotherDir()) // case of file
+      fPathBuffer.Append("/");
 
-   return buf->Data();
+   return fPathBuffer.Data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1002,13 +1000,13 @@ const char *TDirectory::GetPath() const
 void TDirectory::FillFullPath(TString& buf) const
 {
    TDirectory* mom = GetMotherDir();
-   if (mom!=0) {
+   if (mom) {
       mom->FillFullPath(buf);
       buf += "/";
       buf += GetName();
    } else {
       buf = GetName();
-      buf +=":";
+      buf += ":";
    }
 }
 
@@ -1033,9 +1031,9 @@ void TDirectory::FillFullPath(TString& buf) const
 
 TDirectory *TDirectory::mkdir(const char *name, const char *title)
 {
-   if (!name || !title || !name[0]) return 0;
+   if (!name || !title || !name[0]) return nullptr;
    if (!title[0]) title = name;
-   TDirectory *newdir = 0;
+   TDirectory *newdir = nullptr;
    if (const char *slash = strchr(name,'/')) {
       Long_t size = Long_t(slash-name);
       char *workname = new char[size+1];
@@ -1045,10 +1043,10 @@ TDirectory *TDirectory::mkdir(const char *name, const char *title)
       GetObject(workname,tmpdir);
       if (!tmpdir) {
          tmpdir = mkdir(workname,title);
-         if (!tmpdir) return 0;
+         if (!tmpdir) return nullptr;
       }
       delete[] workname;
-      if (!tmpdir) return 0;
+      if (!tmpdir) return nullptr;
       if (!newdir) newdir = tmpdir;
       tmpdir->mkdir(slash+1);
       return newdir;
@@ -1316,13 +1314,13 @@ void TDirectory::UnregisterContext(TContext *ctxt) {
 
    if (ctxt==fContext) {
       fContext = ctxt->fNext;
-      if (fContext) fContext->fPrevious = 0;
-      ctxt->fPrevious = ctxt->fNext = 0;
+      if (fContext) fContext->fPrevious = nullptr;
+      ctxt->fPrevious = ctxt->fNext = nullptr;
    } else {
       TContext *next = ctxt->fNext;
       ctxt->fPrevious->fNext = next;
       if (next) next->fPrevious = ctxt->fPrevious;
-      ctxt->fPrevious = ctxt->fNext = 0;
+      ctxt->fPrevious = ctxt->fNext = nullptr;
    }
 }
 
