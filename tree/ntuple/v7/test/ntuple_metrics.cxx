@@ -22,7 +22,7 @@ TEST(Metrics, Counters)
    metrics.MakeCounter("atomic", "s", "example 2", ctrTwo);
    ASSERT_NE(nullptr, ctrOne);
    ASSERT_NE(nullptr, ctrTwo);
-   EXPECT_TRUE(ctrOne->IsEnabled());
+   EXPECT_FALSE(ctrOne->IsEnabled());
    EXPECT_FALSE(ctrTwo->IsEnabled());
 
    EXPECT_EQ(0, ctrOne->GetValue());

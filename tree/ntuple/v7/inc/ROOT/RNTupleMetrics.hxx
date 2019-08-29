@@ -76,8 +76,6 @@ public:
    RNTuplePlainCounter(const std::string &name, const std::string &unit, const std::string &desc)
       : RNTuplePerfCounter(name, unit, desc)
    {
-      // There is no performance gain in checking the active status
-      Enable();
    }
 
    void Inc() { ++fCounter; }
