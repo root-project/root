@@ -19,4 +19,6 @@ ROOT_LINKER_LIBRARY(mathtext
   NOINSTALL
 )
 
+# Needed due to Byteswap.h
+target_include_directories(mathtext PRIVATE ../../core/base/inc)
 set_property(TARGET mathtext PROPERTY POSITION_INDEPENDENT_CODE ON)
