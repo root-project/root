@@ -1,7 +1,7 @@
 #ifndef __SETUP_BDT_H_
 #define __SETUP_BDT_H_
 
-#include "bdt_helpers.hxx"
+#include "TreeHelpers.hxx"
 
 
 std::string events_file     = "./data/events.csv";

@@ -15,7 +15,7 @@ CPPFLAGS = -I./include \
 
 ROOT_FLAGS = `root-config --cflags --glibs`
 
-LIBFLAGS = -L -Llib  -lpthread -lbenchmark
+LIBFLAGS = -L -lpthread -lbenchmark # -Llib
 
 DEPS = #include/jitted_bdt.h include/forest.h
 

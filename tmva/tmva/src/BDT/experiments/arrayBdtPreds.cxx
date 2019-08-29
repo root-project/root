@@ -1,4 +1,4 @@
-#include "forest.hxx"
+#include "RForestInference.hxx"
 #include "setup.h"
 
 int main()
@@ -11,7 +11,6 @@ int main()
 
    ForestBranchless<float> Forest;
    Forest.LoadFromJson("lala", json_model_file);
-   Forest.branchedForest2BranchlessForest(json_model_file);
 
    /*
    { // Test 1
