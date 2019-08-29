@@ -176,7 +176,7 @@ TDirectoryFile::~TDirectoryFile()
    // since some those objects (TTree for example) needs information
    // from this object.  Note that on some platform after the end
    // of the body (i.e. thus during ~TDirectory which is also
-   // contains this code) the exeuction of 'this->GetFile()' fails
+   // contains this code) the execution of 'this->GetFile()' fails
    // to return the 'proper' value (because it uses the wrong
    // virtual function).
    if (fList) {
