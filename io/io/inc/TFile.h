@@ -65,47 +65,47 @@ public:
    enum ECacheAction { kDisconnect = 0, kDoNotDisconnect = 1 };
 
 protected:
-   Double_t         fSumBuffer;      ///<Sum of buffer sizes of objects written so far
-   Double_t         fSum2Buffer;     ///<Sum of squares of buffer sizes of objects written so far
-   Long64_t         fBytesWrite;     ///<Number of bytes written to this file
-   Long64_t         fBytesRead;      ///<Number of bytes read from this file
-   Long64_t         fBytesReadExtra; ///<Number of extra bytes (overhead) read by the readahead buffer
-   Long64_t         fBEGIN;          ///<First used byte in file
-   Long64_t         fEND;            ///<Last used byte in file
-   Long64_t         fSeekFree;       ///<Location on disk of free segments structure
-   Long64_t         fSeekInfo;       ///<Location on disk of StreamerInfo record
-   Int_t            fD;              ///<File descriptor
-   Int_t            fVersion;        ///<File format version
-   Int_t            fCompress;       ///<Compression level and algorithm
-   Int_t            fNbytesFree;     ///<Number of bytes for free segments structure
-   Int_t            fNbytesInfo;     ///<Number of bytes for StreamerInfo record
-   Int_t            fWritten;        ///<Number of objects written so far
-   Int_t            fNProcessIDs;    ///<Number of TProcessID written to this file
-   Int_t            fReadCalls;      ///<Number of read calls ( not counting the cache calls )
-   TString          fRealName;       ///<Effective real file name (not original url)
-   TString          fOption;         ///<File options
-   Char_t           fUnits;          ///<Number of bytes for file pointers
-   TList           *fFree;           ///<Free segments linked list table
-   TArrayC         *fClassIndex;     ///<!Index of TStreamerInfo classes written to this file
-   TObjArray       *fProcessIDs;     ///<!Array of pointers to TProcessIDs
-   Long64_t         fOffset;         ///<!Seek offset cache
-   TArchiveFile    *fArchive;        ///<!Archive file from which we read this file
-   TFileCacheRead  *fCacheRead;      ///<!Pointer to the read cache (if any)
-   TMap            *fCacheReadMap;   ///<!Pointer to the read cache (if any)
-   TFileCacheWrite *fCacheWrite;     ///<!Pointer to the write cache (if any)
-   Long64_t         fArchiveOffset;  ///<!Offset at which file starts in archive
-   Bool_t           fIsArchive : 1;  ///<!True if this is a pure archive file
-   Bool_t           fNoAnchorInName : 1; ///<!True if we don't want to force the anchor to be appended to the file name
-   Bool_t           fIsRootFile : 1; ///<!True is this is a ROOT file, raw file otherwise
-   Bool_t           fInitDone : 1;   ///<!True if the file has been initialized
-   Bool_t           fMustFlush : 1;  ///<!True if the file buffers must be flushed
-   Bool_t           fIsPcmFile : 1;  ///<!True if the file is a ROOT pcm file.
-   TFileOpenHandle *fAsyncHandle;    ///<!For proper automatic cleanup
-   EAsyncOpenStatus fAsyncOpenStatus; ///<!Status of an asynchronous open request
-   TUrl             fUrl;            ///<!URL of file
+   Double_t         fSumBuffer{0};            ///<Sum of buffer sizes of objects written so far
+   Double_t         fSum2Buffer{0};           ///<Sum of squares of buffer sizes of objects written so far
+   Long64_t         fBytesWrite{0};           ///<Number of bytes written to this file
+   Long64_t         fBytesRead{0};            ///<Number of bytes read from this file
+   Long64_t         fBytesReadExtra{0};       ///<Number of extra bytes (overhead) read by the readahead buffer
+   Long64_t         fBEGIN{0};                ///<First used byte in file
+   Long64_t         fEND{0};                  ///<Last used byte in file
+   Long64_t         fSeekFree{0};             ///<Location on disk of free segments structure
+   Long64_t         fSeekInfo{0};             ///<Location on disk of StreamerInfo record
+   Int_t            fD{-1};                   ///<File descriptor
+   Int_t            fVersion{0};              ///<File format version
+   Int_t            fCompress{0};             ///<Compression level and algorithm
+   Int_t            fNbytesFree{0};           ///<Number of bytes for free segments structure
+   Int_t            fNbytesInfo{0};           ///<Number of bytes for StreamerInfo record
+   Int_t            fWritten{0};              ///<Number of objects written so far
+   Int_t            fNProcessIDs{0};          ///<Number of TProcessID written to this file
+   Int_t            fReadCalls{0};            ///<Number of read calls ( not counting the cache calls )
+   TString          fRealName;                ///<Effective real file name (not original url)
+   TString          fOption;                  ///<File options
+   Char_t           fUnits{0};                ///<Number of bytes for file pointers
+   TList           *fFree{nullptr};           ///<Free segments linked list table
+   TArrayC         *fClassIndex{nullptr};     ///<!Index of TStreamerInfo classes written to this file
+   TObjArray       *fProcessIDs{nullptr};     ///<!Array of pointers to TProcessIDs
+   Long64_t         fOffset{0};               ///<!Seek offset cache
+   TArchiveFile    *fArchive{nullptr};        ///<!Archive file from which we read this file
+   TFileCacheRead  *fCacheRead{nullptr};      ///<!Pointer to the read cache (if any)
+   TMap            *fCacheReadMap{nullptr};   ///<!Pointer to the read cache (if any)
+   TFileCacheWrite *fCacheWrite{nullptr};     ///<!Pointer to the write cache (if any)
+   Long64_t         fArchiveOffset{0};        ///<!Offset at which file starts in archive
+   Bool_t           fIsArchive{kFALSE};       ///<!True if this is a pure archive file
+   Bool_t           fNoAnchorInName{kFALSE};  ///<!True if we don't want to force the anchor to be appended to the file name
+   Bool_t           fIsRootFile{kTRUE};       ///<!True is this is a ROOT file, raw file otherwise
+   Bool_t           fInitDone{kFALSE};        ///<!True if the file has been initialized
+   Bool_t           fMustFlush{kTRUE};        ///<!True if the file buffers must be flushed
+   Bool_t           fIsPcmFile{kFALSE};       ///<!True if the file is a ROOT pcm file.
+   TFileOpenHandle *fAsyncHandle{nullptr};    ///<!For proper automatic cleanup
+   EAsyncOpenStatus fAsyncOpenStatus{kAOSNotAsync}; ///<!Status of an asynchronous open request
+   TUrl             fUrl;                     ///<!URL of file
 
-   TList           *fInfoCache;      ///<!Cached list of the streamer infos in this file
-   TList           *fOpenPhases;     ///<!Time info about open phases
+   TList           *fInfoCache{nullptr};      ///<!Cached list of the streamer infos in this file
+   TList           *fOpenPhases{nullptr};     ///<!Time info about open phases
 
 #ifdef R__USE_IMT
    static ROOT::TRWSpinLock                   fgRwLock;     ///<!Read-write lock to protect global PID list
@@ -295,7 +295,7 @@ public:
                             Int_t netopt = 0);
    static TFile       *Open(TFileOpenHandle *handle);
 
-   static EFileType    GetType(const char *name, Option_t *option = "", TString *prefix = 0);
+   static EFileType    GetType(const char *name, Option_t *option = "", TString *prefix = nullptr);
 
    static EAsyncOpenStatus GetAsyncOpenStatus(const char *name);
    static EAsyncOpenStatus GetAsyncOpenStatus(TFileOpenHandle *handle);

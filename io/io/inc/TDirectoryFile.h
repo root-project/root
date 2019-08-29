@@ -67,7 +67,7 @@ public:
           void        Add(TObject *obj, Bool_t replace = kFALSE) override { Append(obj,replace); }
           Int_t       AppendKey(TKey *key) override;
           void        Browse(TBrowser *b) override;
-          void        Build(TFile* motherFile = 0, TDirectory* motherDir = nullptr) override;
+          void        Build(TFile* motherFile = nullptr, TDirectory* motherDir = nullptr) override;
           TObject    *CloneObject(const TObject *obj, Bool_t autoadd = kTRUE) override;
           void        Close(Option_t *option="") override;
           void        Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }
