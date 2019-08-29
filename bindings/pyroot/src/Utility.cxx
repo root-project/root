@@ -459,7 +459,8 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
 /// for a class as in MakeRootTemplateClass in RootModule.cxx) or for method lookup
 /// (as in TemplatedMemberHook, below).
 
-PyObject* PyROOT::Utility::BuildTemplateName( PyObject* pyname, PyObject* args, int argoff, bool inferredTypes )
+PyObject* PyROOT::Utility::BuildTemplateName( PyObject* pyname, PyObject* tpArgs, int argoff,
+   PyObject* args, ArgPreference pref, int* pcnt, bool inferredTypes )
 {
    if ( pyname )
       pyname = PyROOT_PyUnicode_FromString( PyROOT_PyUnicode_AsString( pyname ) );
@@ -467,10 +468,10 @@ PyObject* PyROOT::Utility::BuildTemplateName( PyObject* pyname, PyObject* args, 
       pyname = PyROOT_PyUnicode_FromString( "" );
    PyROOT_PyUnicode_AppendAndDel( &pyname, PyROOT_PyUnicode_FromString( "<" ) );
 
-   Py_ssize_t nArgs = PyTuple_GET_SIZE( args );
+   Py_ssize_t nArgs = PyTuple_GET_SIZE( tpArgs );
    for ( int i = argoff; i < nArgs; ++i ) {
    // add type as string to name
-      PyObject* tn = PyTuple_GET_ITEM( args, i );
+      PyObject* tn = PyTuple_GET_ITEM( tpArgs, i );
       if ( PyROOT_PyUnicode_Check( tn ) ) {
          PyROOT_PyUnicode_Append( &pyname, tn );
       } else if (PyObject_HasAttr( tn, PyStrings::gName ) ) {
@@ -481,6 +482,21 @@ PyObject* PyROOT::Utility::BuildTemplateName( PyObject* pyname, PyObject* args, 
          } else {
             tpName = PyObject_GetAttr( tn, PyStrings::gName );
          }
+
+         // Check if parameter is reference, pointer or value
+         if (args) {
+            auto arg = PyTuple_GET_ITEM(args, i);
+            ObjectProxy* pyobj = (ObjectProxy*)arg;
+            if (ObjectProxy_Check(pyobj)) {
+               if (pcnt) *pcnt += 1;
+               if ((pyobj->fFlags & ObjectProxy::kIsReference) || pref == kPointer) {
+                  PyROOT_PyUnicode_AppendAndDel(&tpName, PyROOT_PyUnicode_FromString("*"));
+               } else if (pref != kValue) {
+                  PyROOT_PyUnicode_AppendAndDel(&tpName, PyROOT_PyUnicode_FromString("&"));
+               }
+            }
+         }
+
          // special case for strings
          auto tpNameStr = PyROOT_PyUnicode_AsString(tpName);
          if ( strcmp( tpNameStr, "str" ) == 0 ) {

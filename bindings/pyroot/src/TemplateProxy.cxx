@@ -290,33 +290,37 @@ namespace {
 
     // case 4a: instantiating obj->method< T0, T1, ... >( type(a0), type(a1), ... )( a0, a1, ... )
       if ( ! isType && ! ( nStrings == nArgs ) ) {    // no types among args and not all strings
-         PyObject* pyname_v2 = Utility::BuildTemplateName( NULL, tpArgs, 0, true );
-         if ( pyname_v2 ) {
-            std::string mname = PyROOT_PyUnicode_AsString( pyname_v2 );
-            Py_DECREF( pyname_v2 );
-            std::string proto = mname.substr( 1, mname.size() - 2 );
-         // the following causes instantiation as necessary
-            auto scope = Cppyy::GetScope(clNameStr);
-            auto cppmeth = Cppyy::GetMethodTemplate(scope, tmplname, proto);
-            if ( cppmeth ) {    // overload stops here
-               Py_XDECREF( pyname_v1 );
-               if (Cppyy::IsNamespace(scope) || Cppyy::IsStaticMethod(cppmeth)) {
-                  pytmpl->fTemplated->AddMethod( new TFunctionHolder( scope, cppmeth ) );
-                  pymeth = (PyObject*)MethodProxy_New(
-                     Cppyy::GetMethodName(cppmeth).c_str(), new TFunctionHolder( scope, cppmeth ) );
-               } else {
-                  pytmpl->fTemplated->AddMethod( new TMethodHolder( scope, cppmeth ) );
-                  pymeth = (PyObject*)MethodProxy_New(
-                     Cppyy::GetMethodName(cppmeth).c_str(), new TMethodHolder( scope, cppmeth ) );
+         for (auto pref : {Utility::kReference, Utility::kPointer, Utility::kValue}) {
+            int pcnt = 0;
+            PyObject* pyname_v2 = Utility::BuildTemplateName( NULL, tpArgs, 0, args, pref, &pcnt, true );
+            if ( pyname_v2 ) {
+               std::string mname = PyROOT_PyUnicode_AsString( pyname_v2 );
+               Py_DECREF( pyname_v2 );
+               std::string proto = mname.substr( 1, mname.size() - 2 );
+            // the following causes instantiation as necessary
+               auto scope = Cppyy::GetScope(clNameStr);
+               auto cppmeth = Cppyy::GetMethodTemplate(scope, tmplname, proto);
+               if ( cppmeth ) {    // overload stops here
+                  Py_XDECREF( pyname_v1 );
+                  if (Cppyy::IsNamespace(scope) || Cppyy::IsStaticMethod(cppmeth)) {
+                     pytmpl->fTemplated->AddMethod( new TFunctionHolder( scope, cppmeth ) );
+                     pymeth = (PyObject*)MethodProxy_New(
+                        Cppyy::GetMethodName(cppmeth).c_str(), new TFunctionHolder( scope, cppmeth ) );
+                  } else {
+                     pytmpl->fTemplated->AddMethod( new TMethodHolder( scope, cppmeth ) );
+                     pymeth = (PyObject*)MethodProxy_New(
+                        Cppyy::GetMethodName(cppmeth).c_str(), new TMethodHolder( scope, cppmeth ) );
+                  }
+                  PyObject_SetAttrString( pytmpl->fPyClass, (char*)Cppyy::GetMethodName(cppmeth).c_str(), (PyObject*)pymeth );
+                  Py_DECREF( pymeth );
+                  pymeth = PyObject_GetAttrString(
+                     pytmpl->fSelf ? pytmpl->fSelf : pytmpl->fPyClass, (char*)Cppyy::GetMethodName(cppmeth).c_str() );
+                  PyObject* result = MethodProxy_Type.tp_call( pymeth, args, kwds );
+                  Py_DECREF( pymeth );
+                  return result;
                }
-               PyObject_SetAttrString( pytmpl->fPyClass, (char*)Cppyy::GetMethodName(cppmeth).c_str(), (PyObject*)pymeth );
-               Py_DECREF( pymeth );
-               pymeth = PyObject_GetAttrString(
-                  pytmpl->fSelf ? pytmpl->fSelf : pytmpl->fPyClass, (char*)Cppyy::GetMethodName(cppmeth).c_str() );
-               PyObject* result = MethodProxy_Type.tp_call( pymeth, args, kwds );
-               Py_DECREF( pymeth );
-               return result;
             }
+            if (!pcnt) break; // preference never used; no point trying others
          }
       }
 
