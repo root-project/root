@@ -6333,7 +6333,7 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string &mangled_nam
 // linker stores this symbol as __ZN8TRandom34RndmEv (adding an extra _).
    std::string maybe_prefixed_mangled_name = mangled_name;
 #ifdef R__MACOSX
-   assert(llvm::StringRef(mangled_name).startswith("__"));
+   assert(!llvm::StringRef(mangled_name).startswith("__") && "Already added!");
    maybe_prefixed_mangled_name = "_" + maybe_prefixed_mangled_name;
 #endif
 
