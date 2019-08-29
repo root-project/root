@@ -143,12 +143,12 @@ std::atomic<Long64_t> TFile::fgFileCounter{0};
 std::atomic<Int_t>    TFile::fgReadCalls{0};
 Int_t    TFile::fgReadaheadSize = 256000;
 Bool_t   TFile::fgReadInfo = kTRUE;
-TList   *TFile::fgAsyncOpenRequests = 0;
+TList   *TFile::fgAsyncOpenRequests = nullptr;
 TString  TFile::fgCacheFileDir;
 Bool_t   TFile::fgCacheFileForce = kFALSE;
 Bool_t   TFile::fgCacheFileDisconnected = kTRUE;
 UInt_t   TFile::fgOpenTimeout = TFile::kEternalTimeout;
-Bool_t   TFile::fgOnlyStaged = 0;
+Bool_t   TFile::fgOnlyStaged = kFALSE;
 #ifdef R__USE_IMT
 ROOT::TRWSpinLock TFile::fgRwLock;
 ROOT::Internal::RConcurrentHashColl TFile::fgTsSIHashes;
@@ -172,46 +172,10 @@ AddPseudoGlobals() {
 ////////////////////////////////////////////////////////////////////////////////
 /// File default Constructor.
 
-TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal), fInfoCache(0)
+TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
 {
-   fD               = -1;
-   fFree            = 0;
-   fWritten         = 0;
-   fSumBuffer       = 0;
-   fSum2Buffer      = 0;
-   fClassIndex      = 0;
-   fProcessIDs      = 0;
-   fNProcessIDs     = 0;
-   fOffset          = 0;
-   fArchive         = 0;
-   fCacheRead       = 0;
    fCacheReadMap    = new TMap();
-   fCacheWrite      = 0;
-   fArchiveOffset   = 0;
-   fReadCalls       = 0;
-   fInfoCache       = 0;
-   fOpenPhases      = 0;
-   fNoAnchorInName  = kFALSE;
-   fIsRootFile      = kTRUE;
-   fIsArchive       = kFALSE;
-   fInitDone        = kFALSE;
-   fMustFlush       = kTRUE;
-   fIsPcmFile       = kFALSE;
-   fAsyncHandle     = 0;
-   fAsyncOpenStatus = kAOSNotAsync;
    SetBit(kBinaryFile, kTRUE);
-
-   fBEGIN          = 0;
-   fEND            = 0;
-   fBytesRead      = 0;
-   fBytesReadExtra = 0;
-   fBytesWrite     = 0;
-   fNbytesFree     = 0;
-   fNbytesInfo     = 0;
-   fSeekFree       = 0;
-   fSeekInfo       = 0;
-   fUnits          = 0;
-   fVersion        = 0;
 
    if (gDebug)
       Info("TFile", "default ctor");
@@ -330,14 +294,13 @@ TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorit
 /// in such file cannot be read correctly.
 
 TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t compress)
-           : TDirectoryFile(), fCompress(compress), fUrl(fname1,kTRUE), fInfoCache(0), fOpenPhases(0)
+           : TDirectoryFile(), fCompress(compress), fUrl(fname1,kTRUE)
 {
    if (!gROOT)
       ::Fatal("TFile::TFile", "ROOT system not initialized");
 
    // store name without the options as name and title
    TString sfname1 = fname1;
-   fNoAnchorInName = kFALSE;
    if (sfname1.Index("?") != kNPOS) {
       TString s = sfname1(0, sfname1.Index("?"));
       SetName(s);
@@ -351,61 +314,35 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fname1 = fUrl.GetFile();
 
    // if option contains filetype=raw then go into raw file mode
-   fIsRootFile = kTRUE;
    if (strstr(fUrl.GetOptions(), "filetype=raw"))
       fIsRootFile = kFALSE;
 
    // if option contains filetype=pcm then go into ROOT PCM file mode
-   fIsPcmFile = kFALSE;
    if (strstr(fUrl.GetOptions(), "filetype=pcm"))
       fIsPcmFile = kTRUE;
 
    if (fUrl.HasOption("reproducible"))
       SetBit(kReproducible);
 
-   // Init initialization control flag
-   fInitDone   = kFALSE;
-   fMustFlush  = kTRUE;
-
    // We are opening synchronously
-   fAsyncHandle = 0;
    fAsyncOpenStatus = kAOSNotAsync;
 
-   TDirectoryFile::Build(this, 0);
+   TDirectoryFile::Build(this, nullptr);
 
-   fD            = -1;
-   fFree         = 0;
    fVersion      = gROOT->GetVersionInt();  //ROOT version in integer format
    fUnits        = 4;
    fOption       = option;
-   fWritten      = 0;
-   fSumBuffer    = 0;
-   fSum2Buffer   = 0;
-   fBytesRead    = 0;
-   fBytesReadExtra = 0;
-   fBytesWrite   = 0;
-   fClassIndex   = 0;
    fSeekInfo     = 0;
-   fNbytesInfo   = 0;
-   fProcessIDs   = 0;
-   fNProcessIDs  = 0;
-   fOffset       = 0;
-   fCacheRead    = 0;
    fCacheReadMap = new TMap();
-   fCacheWrite   = 0;
-   fReadCalls    = 0;
    SetBit(kBinaryFile, kTRUE);
 
    fOption.ToUpper();
 
-   fArchiveOffset = 0;
-   fIsArchive     = kFALSE;
-   fArchive       = 0;
    if (fIsRootFile && !fIsPcmFile && fOption != "NEW" && fOption != "CREATE"
        && fOption != "RECREATE") {
       // If !gPluginMgr then we are at startup and cannot handle plugins
       // as TArchiveFile yet.
-      fArchive = gPluginMgr ? TArchiveFile::Open(fUrl.GetUrl(), this) : 0;
+      fArchive = gPluginMgr ? TArchiveFile::Open(fUrl.GetUrl(), this) : nullptr;
       if (fArchive) {
          fname1 = fArchive->GetArchiveName();
          // if no archive member is specified then this TFile is just used
