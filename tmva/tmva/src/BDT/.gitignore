@@ -4,7 +4,6 @@
 *.json
 callgrind.out.*
 *.png
-data/
 .ipynb_checkpoints/
 __pycache__
 tmp/
