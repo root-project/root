@@ -17,6 +17,10 @@
 
 #include <ostream>
 
+ROOT::Experimental::Detail::RNTuplePerfCounter::~RNTuplePerfCounter()
+{
+}
+
 bool ROOT::Experimental::Detail::RNTupleMetrics::Contains(const std::string &name) const
 {
    for (const auto &c : fCounters) {
