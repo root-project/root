@@ -88,13 +88,6 @@ timeVStrees = dict(
 
 if __name__ == "__main__":
     # timeVSdepth
-    execute_bench(
-        "./tmp/timeVSdepth/",
-        [2, 4, 6, 8, 10, 12],
-        3,
-        "max_depth",
-        timeVSdepth,  # repetitions
-    )
 
     execute_bench(
         "./tmp/timeVSfeats/",
@@ -103,13 +96,7 @@ if __name__ == "__main__":
         "num_features",
         timeVSfeats,  # repetitions
     )
-    execute_bench(
-        "./tmp/timeVStrees/",
-        [100, 300, 600, 900],
-        3,
-        "num_trees",
-        timeVStrees,  # repetitions
-    )
+
     execute_bench(
         "./tmp/timeVSfewEvents/",
         [2, 4, 6, 8, 10, 12, 14, 16, 18],
@@ -130,6 +117,21 @@ if __name__ == "__main__":
         2,  # repetitions
         "num_samples",
         timeVSevents,
+    )
+    execute_bench(
+        "./tmp/timeVStrees/",
+        [100, 300, 600, 900, 1200],
+        3,
+        "num_trees",
+        timeVStrees,  # repetitions
+    )
+
+    execute_bench(
+        "./tmp/timeVSdepth/",
+        [2, 4, 6, 8, 10, 12, 15, 18],
+        3,
+        "max_depth",
+        timeVSdepth,  # repetitions
     )
     # """
 
