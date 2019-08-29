@@ -6,141 +6,111 @@ from xgboost import plot_tree
 import matplotlib.pyplot as plt
 import xgboost as xgb
 import timeit
-
+import os
 import subprocess
 
 import json  # for testing jsonness
 
+from utils import *
+
 DATA_FOLDER = "./data/"
 
 
-def get_benchs_data(bench_name="benchs/a.txt"):
-    with open(bench_name, "r") as file:
-        data = file.read().replace("\n", "")
-    benchs = json.loads(data)
-    fname = benchs["context"]["date"].replace(" ", "")
-    mins = []
-    means = []
-    stddev = []
-    for i, bench in enumerate(benchs["benchmarks"]):
-        if bench["aggregate_name"] == "min":
-            mins.append(bench["cpu_time"])
-        if bench["aggregate_name"] == "stddev":
-            stddev.append(bench["cpu_time"])
-        if bench["aggregate_name"] == "mean":
-            means.append(bench["cpu_time"])
-    return fname, mins, means, stddev
+def execute_bench(TMP_FOLDER, test_list, repetitions, kwargs):
+    # TMP_FOLDER = "./tmp/timeVSdepth/"
+    if not os.path.exists(TMP_FOLDER):
+        os.makedirs(TMP_FOLDER)
+    onlyfiles = sorted(
+        [
+            f
+            for f in os.listdir(TMP_FOLDER)
+            if os.path.isfile(os.path.join(TMP_FOLDER, f))
+        ]
+    )
+    for the_file in onlyfiles:
+        if the_file[-4:] == ".npy":
+            os.remove(TMP_FOLDER + the_file)
 
-
-def create_model_gaussian(
-    num_samples=100,
-    num_features=5,
-    num_trees=3,
-    max_depth=8,
-    data_folder="./data/",
-    save_models=True,
-):
-    mu, sigma = 0, 1  # mean and standard deviation
-
-    training_samples = max(1000, num_samples)
-    X = np.random.normal(mu, sigma, (training_samples, num_features))
-
-    p = 0.5
-    Y = np.random.choice(a=[0, 1], size=(training_samples), p=[p, 1 - p])
-
-    # fit model no training data
-    model = xgb.XGBClassifier(n_estimators=num_trees, max_depth=max_depth)
-    model.fit(X, Y)
-
-    X = X[:num_samples]
-    Y = Y[:num_samples]
-
-    y_pred = model.predict(X)
-    y_scores = model.apply(X)
-
-    # print(y_pred)
-    predictions = [round(value) for value in y_pred]
-
-    # evaluate predictions
-    accuracy = accuracy_score(Y, predictions)
-    print("For curiosity: Accuracy: %.2f%%" % (accuracy * 100.0))
-
-    # saving files
-    np.savetxt(data_folder + "events.csv", X, delimiter=",", fmt="%f")
-    np.savetxt(data_folder + "python_predictions.csv", y_pred, delimiter=",", fmt="%d")
-    np.savetxt(data_folder + "python_groundtruths.csv", Y, delimiter=",", fmt="%d")
-    if save_models is True:
-        model.get_booster().dump_model(data_folder + "model.json", dump_format="json")
-        model.save_model(data_folder + "model.rabbit")
-    print("Saved files")
-
-
-def bench_1():
-    test_list = [1, 10, 30, 40, 50, 60, 70, 100, 120, 130, 150, 160, 180, 200]
-    offset = 0
-    for i, num_samples in enumerate(test_list):
-        create_model_gaussian(num_samples=num_samples, num_features=5, num_trees=100)
-        subprocess.call("./bench.sh".split(), shell=True)
-        fname, mins, means, stddevs = get_benchs_data("benchs/a.txt")
-        # np.save("tmp/"+"{0:03}".format(i)+"_"+fname, mins)
-        np.save("tmp/" + "{0:03}".format(i + offset) + "_", mins)
-
-
-def bench_2():
-    test_list = np.arange(50, 1500, 50)
-    np.save("list.npy", test_list)
-    offset = 0
-    i = 1
-    for i, num_trees in enumerate(test_list):
-        mins_list = []
-        for j in range(4):
-            create_model_gaussian(
-                num_samples=100_000,
-                num_features=5,
-                num_trees=num_trees,
-                data_folder="./data/",
-            )
-            subprocess.call("./bench.sh".split(), shell=True)
-            fname, mins, means, stddevs = get_benchs_data("benchs/a.txt")
-            # np.save("tmp/"+"{0:03}".format(i)+"_"+fname, mins)
-            mins_list.append(mins)
-        np.save(
-            "tmp/" + "{0:03}".format(i + offset) + "_",
-            np.min(np.stack(mins_list), axis=0),
-        )
-
-
-if __name__ == "__main__":
-    # bench_1()
-    # bench_2()
-    test_list = [5]
     # test_list = np.arange(5, 8, 3)
-    np.save("tmp/0_abscisse.npy", np.array(test_list))
-    offset = 0
-    i = 1
+    np.save(TMP_FOLDER + "0_abscisse.npy", np.array(test_list))
     for i, value_test in enumerate(test_list):
         print(f"***** bench value {value_test} *****")
         mins_list = []
-        create_model_gaussian(
-            num_samples=10000,
-            num_features=value_test,
-            num_trees=3000,
-            max_depth=3,
-            data_folder=DATA_FOLDER,
-            save_models=True,
-        )
-        subprocess.call("./bench.sh".split(), shell=True)
-        fname, mins, means, stddevs = get_benchs_data("./data/a.txt")
-        # np.save("tmp/"+"{0:03}".format(i)+"_"+fname, mins)
-        mins_list.append(mins)
+        for j in range(repetitions):
+            create_model_gaussian(max_depth=value_test, **kwargs)
+            subprocess.call("./bench.sh".split(), shell=True)
+            fname, mins, means, stddevs = get_benchs_data("./data/a.txt")
+            mins_list.append(mins)
         np.save(
-            "tmp/" + "{0:03}".format(i + offset) + "_",
+            TMP_FOLDER + "min_" + "{0:03}".format(i) + "_",
             np.min(np.stack(mins_list), axis=0),
         )
         np.save(
-            "tmp/std_" + "{0:03}".format(i + offset) + "_",
+            TMP_FOLDER + "std_" + "{0:03}".format(i) + "_",
             np.std(np.stack(mins_list), axis=0),
         )
+
+
+timeVSdepth = dict(
+    num_samples=100_000,
+    num_features=10,
+    num_trees=250,
+    data_folder=DATA_FOLDER,
+    save_models=True,
+)
+timeVSfeats = dict(
+    num_samples=100_000,
+    max_depth=3,
+    num_trees=100,
+    data_folder=DATA_FOLDER,
+    save_models=True,
+)
+timeVSevents = dict(
+    num_features=10,
+    max_depth=3,
+    num_trees=250,
+    data_folder=DATA_FOLDER,
+    save_models=True,
+)
+timeVStrees = dict(
+    num_samples=100_000,
+    num_features=10,
+    max_depth=3,
+    data_folder=DATA_FOLDER,
+    save_models=True,
+)
+
+if __name__ == "__main__":
+    # timeVSdepth
+    execute_bench(
+        "./tmp/timeVSdepth/", [2, 3, 4, 5, 6, 7], 3, timeVSdepth  # repetitions
+    )
+
+    execute_bench(
+        "./tmp/timeVSfeats/", [5, 15, 25, 35, 45, 55], 4, timeVSfeats  # repetitions
+    )
+    execute_bench(
+        "./tmp/timeVStrees/", [100, 300, 500, 700, 900], 2, timeVStrees  # repetitions
+    )
+    execute_bench(
+        "./tmp/timeVSfewEvents/",
+        [2, 4, 6, 8, 10, 12, 14, 16],
+        10,  # repetitions
+        timeVSevents,
+    )
+    execute_bench(
+        "./tmp/timeVSmiddleEvents/",
+        [20, 40, 60, 80, 100, 120, 140, 160, 180, 200],
+        5,  # repetitions
+        timeVSevents,
+    )
+    execute_bench(
+        "./tmp/timeVSevents/",
+        [1000, 10000, 100_000, 300_000, 500_000],
+        2,  # repetitions
+        timeVSevents,
+    )
+    # """
 
 
 # end
