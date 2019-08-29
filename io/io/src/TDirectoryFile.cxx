@@ -175,17 +175,6 @@ void TDirectoryFile::Init(TClass *cl)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor.
-
-TDirectoryFile::TDirectoryFile(const TDirectoryFile & directory) : TDirectory(directory)
-   , fModified(kFALSE), fWritable(kFALSE), fNbytesKeys(0), fNbytesName(0)
-   , fBufferSize(0), fSeekDir(0), fSeekParent(0), fSeekKeys(0)
-   , fFile(0), fKeys(0)
-{
-   ((TDirectoryFile&)directory).Copy(*this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
 TDirectoryFile::~TDirectoryFile()
