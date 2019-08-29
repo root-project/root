@@ -46,7 +46,7 @@ protected:
    TList      *fKeys{nullptr};           ///< Pointer to keys list in memory
 
    void        CleanTargets();
-   void        Init(TClass *cl = nullptr);
+   void        InitDirectory(TClass *cl = nullptr);
 
 private:
    TDirectoryFile(const TDirectoryFile &directory) = delete;  //Directories cannot be copied
