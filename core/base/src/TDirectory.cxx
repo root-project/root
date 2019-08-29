@@ -104,7 +104,7 @@ TDirectory::~TDirectory()
 
    TDirectory::CleanTargets();
 
-   TDirectory* mom = TDirectory::GetMotherDir();
+   TDirectory* mom = GetMotherDir();
 
    if (mom) {
       mom->Remove(this);
@@ -279,7 +279,7 @@ void TDirectory::CleanTargets()
    }
 
    if (gDirectory == this) {
-      TDirectory *cursav = GetMotherDir();     // NOLINT: silence clang-tidy warnings
+      TDirectory *cursav = GetMotherDir();
       if (cursav && cursav != this) {
          cursav->cd();
       } else {
