@@ -92,12 +92,12 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
       return;
    }
 
-   Build(initMotherDir ? initMotherDir->GetFile() : nullptr, initMotherDir);
+   TDirectoryFile::Build(initMotherDir ? initMotherDir->GetFile() : nullptr, initMotherDir);
 
    TDirectory* motherdir = GetMotherDir();
-   TFile* f = GetFile();
+   TFile* f = TDirectoryFile::GetFile();
 
-   if ((motherdir==0) || (f==0)) return;
+   if (!motherdir || !f) return;
    if (!f->IsWritable()) return; //*-* in case of a directory in memory
    if (motherdir->GetKey(name)) {
       Error("TDirectoryFile","An object with name %s exists already", name);
@@ -111,7 +111,7 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
          return;
       }
    } else {
-      cl = IsA();
+      cl = TDirectoryFile::IsA();
    }
 
    fBufferSize  = 0;
@@ -135,10 +135,10 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
 
 void TDirectoryFile::Init(TClass *cl)
 {
-   TFile* f = GetFile();
+   TFile* f = GetFile(); // NOLINT: silence clang-tidy warnings
    if (f->IsBinary()) {
       if (!cl) {
-         cl = IsA();
+         cl = IsA(); // NOLINT: silence clang-tidy warnings
       }
       TDirectory* motherdir = GetMotherDir();
       fSeekParent  = f->GetSeekDir();
@@ -170,7 +170,7 @@ TDirectoryFile::~TDirectoryFile()
       SafeDelete(fKeys);
    }
 
-   CleanTargets();
+   TDirectoryFile::CleanTargets();
 
    // Delete our content before we become somewhat invalid
    // since some those objects (TTree for example) needs information
@@ -1645,7 +1645,7 @@ void TDirectoryFile::Streamer(TBuffer &b)
 {
    Version_t v,version;
    if (b.IsReading()) {
-      Build((TFile*)b.GetParent(), 0);
+      Build((TFile*)b.GetParent(), nullptr);
       if (fFile && fFile->IsWritable()) fWritable = kTRUE;
 
       if (fFile && !fFile->IsBinary()) {
