@@ -100,7 +100,7 @@ protected:
           Bool_t  cd1(const char *path);
    static Bool_t  Cd1(const char *path);
 
-   virtual void   CleanTargets();
+           void   CleanTargets();
            void   FillFullPath(TString& buf) const;
            void   RegisterContext(TContext *ctxt);
            void   UnregisterContext(TContext *ctxt);
