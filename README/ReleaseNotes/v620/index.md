@@ -101,6 +101,10 @@ or in `TBrowser` by opening `Browser Help → About ROOT`.
 
 ## 2D Graphics Libraries
 
+ * Provide support of NDC corrdinates for TArrow.
+ * Fix interactive movement of TLine/TArrow objects when NDC coordinates are used
+ * Provide TGraph::MovePoints() method
+
 
 ## 3D Graphics Libraries
 
