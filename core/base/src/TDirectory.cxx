@@ -126,6 +126,17 @@ TDirectory::~TDirectory()
    }
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the current directory to null.
+/// This is called from the TContext destructor.  Since the destructor is
+/// inline, we do not want to have it directly use a global variable.
+
+void TDirectory::TContext::CdNull()
+{
+   gDirectory = nullptr;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 ///
@@ -1324,16 +1335,6 @@ void TDirectory::UnregisterContext(TContext *ctxt) {
       if (next) next->fPrevious = ctxt->fPrevious;
       ctxt->fPrevious = ctxt->fNext = 0;
    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set the current directory to null.
-/// This is called from the TContext destructor.  Since the destructor is
-/// inline, we do not want to have it directly use a global variable.
-
-void TDirectory::TContext::CdNull()
-{
-   gDirectory = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

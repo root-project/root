@@ -40,19 +40,19 @@ public:
      */
    class TContext  {
    private:
-      std::atomic<TDirectory*> fDirectory; //! Pointer to the previous current directory.
-      std::atomic<bool> fActiveDestructor;  //! Set to true during the destructor execution
-      std::atomic<bool> fDirectoryWait;     //! Set to true if a TDirectory might still access this object.
+      std::atomic<TDirectory*> fDirectory{nullptr}; //! Pointer to the previous current directory.
+      std::atomic<bool> fActiveDestructor{false};   //! Set to true during the destructor execution
+      std::atomic<bool> fDirectoryWait{false};      //! Set to true if a TDirectory might still access this object.
+      TContext   *fPrevious{nullptr};               //! Pointer to the next TContext in the implied list of context pointing to fPrevious.
+      TContext   *fNext{nullptr};                   //! Pointer to the next TContext in the implied list of context pointing to fPrevious.
 
-      TContext   *fPrevious;    //! Pointer to the next TContext in the implied list of context pointing to fPrevious.
-      TContext   *fNext;        //! Pointer to the next TContext in the implied list of context pointing to fPrevious.
-      TContext(TContext&);
-      TContext& operator=(TContext&);
+      TContext(TContext&) = delete;
+      TContext& operator=(TContext&) = delete;
+
       void CdNull();
       friend class TDirectory;
    public:
-      TContext(TDirectory *previous, TDirectory *newCurrent)
-         : fDirectory(previous), fActiveDestructor(false), fDirectoryWait(false), fPrevious(0), fNext(0)
+      TContext(TDirectory *previous, TDirectory *newCurrent) : fDirectory(previous)
       {
          // Store the current directory so we can restore it
          // later and cd to the new directory.
@@ -60,17 +60,13 @@ public:
          if ( newCurrent ) newCurrent->cd();
          else CdNull();
       }
-      TContext()
-         : fDirectory(TDirectory::CurrentDirectory()), fActiveDestructor(false), fDirectoryWait(false), fPrevious(0),
-           fNext(0)
+      TContext() : fDirectory(TDirectory::CurrentDirectory())
       {
          // Store the current directory so we can restore it
          // later and cd to the new directory.
          if ( fDirectory ) (*fDirectory).RegisterContext(this);
       }
-      TContext(TDirectory *newCurrent)
-         : fDirectory(TDirectory::CurrentDirectory()), fActiveDestructor(false), fDirectoryWait(false), fPrevious(0),
-           fNext(0)
+      TContext(TDirectory *newCurrent) : fDirectory(TDirectory::CurrentDirectory())
       {
          // Store the current directory so we can restore it
          // later and cd to the new directory.
