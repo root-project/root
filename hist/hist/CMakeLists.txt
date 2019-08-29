@@ -174,9 +174,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   DEPENDENCIES
+    Core
     MathCore
     Matrix
     RIO
+    Thread
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
