@@ -73,12 +73,12 @@ protected:
    void SetEnablePrefetchingImpl(Bool_t setPrefetching = kFALSE); // Can not be virtual as it is called from the constructor.
 
 private:
-   TFileCacheRead(const TFileCacheRead &);            //cannot be copied
-   TFileCacheRead& operator=(const TFileCacheRead &);
+   TFileCacheRead(const TFileCacheRead &) = delete;            //cannot be copied
+   TFileCacheRead& operator=(const TFileCacheRead &) = delete;
 
 public:
    TFileCacheRead();
-   TFileCacheRead(TFile *file, Int_t buffersize, TObject *tree = 0);
+   TFileCacheRead(TFile *file, Int_t buffersize, TObject *tree = nullptr);
    virtual ~TFileCacheRead();
    virtual Int_t       AddBranch(TBranch * /*b*/, Bool_t /*subbranches*/ = kFALSE) { return 0; }
    virtual Int_t       AddBranch(const char * /*branch*/, Bool_t /*subbranches*/ = kFALSE) { return 0; }
