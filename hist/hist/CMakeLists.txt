@@ -181,6 +181,15 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
     Thread
 )
 
+# Gpad, Graf, and Graf3d all depend on Hist, so we need to use
+# private includes to avoid circular dependencies between them
+target_include_directories(Hist
+  PRIVATE
+    ../../graf2d/gpad/inc
+    ../../graf2d/graf/inc
+    ../../graf3d/g3d/inc
+)
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)
 
 if(root7)
