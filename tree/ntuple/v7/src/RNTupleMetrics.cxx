@@ -32,6 +32,10 @@ bool ROOT::Experimental::Detail::RNTupleMetrics::Contains(const std::string &nam
 
 void ROOT::Experimental::Detail::RNTupleMetrics::Print(std::ostream &output, const std::string &prefix) const
 {
+   if (!fIsEnabled) {
+      output << fName << " metrics disabled!" << std::endl;
+      return;
+   }
 
    for (const auto &c : fCounters) {
       output << prefix << fName << "." << c->GetName() << "|" << c->GetUnit() << "|" << c->GetDescription()
