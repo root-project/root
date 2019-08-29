@@ -198,4 +198,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
 target_compile_definitions(MathCore INTERFACE ${VecCore_DEFINITIONS})
 target_link_libraries(MathCore PRIVATE ${CMAKE_THREAD_LIBS_INIT})
 
+if(mathmore)
+  # Math/DistFunc.h includes Math/PdfFuncMathMore.h from MathMore
+  target_include_directories(MathCore PRIVATE ../mathmore/inc)
+endif()
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)
