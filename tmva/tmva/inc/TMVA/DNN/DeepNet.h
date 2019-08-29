@@ -784,7 +784,7 @@ auto TDeepNet<Architecture_t, Layer_t>::Forward( Tensor_t &input, bool applyDrop
 
    for (size_t i = 1; i < fLayers.size(); i++) {
       fLayers[i]->Forward(fLayers[i - 1]->GetOutput(), applyDropout);
-      // std::cout << "forward for layer " << i << std::endl;
+      //std::cout << "forward for layer " << i << std::endl;
       // fLayers[i]->GetOutput()[0].Print(); 
    }
 }

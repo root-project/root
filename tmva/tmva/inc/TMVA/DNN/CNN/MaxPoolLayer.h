@@ -192,10 +192,10 @@ auto TMaxPoolLayer<Architecture_t>::Forward(Tensor_t &input, bool applyDropout) 
 //______________________________________________________________________________
 template <typename Architecture_t>
 auto TMaxPoolLayer<Architecture_t>::Backward(Tensor_t &gradients_backward,
-                                             const Tensor_t & /*activations_backward*/) -> void
+                                             const Tensor_t & activations_backward) -> void
 //                                             Tensor_t & /*inp1*/, Tensor_t &
 {
-   Architecture_t::MaxPoolLayerBackward(gradients_backward, this->GetActivationGradients(), fIndexTensor, this->GetInputActivation(), this->GetOutput(),
+   Architecture_t::MaxPoolLayerBackward(gradients_backward, this->GetActivationGradients(), fIndexTensor, activations_backward, this->GetOutput(),
                                         (TCNNDescriptors<TMaxPoolLayer<Architecture_t>> &) (*TConvLayer<Architecture_t>::fDescriptors),
                                         (TCNNWorkspace<TMaxPoolLayer<Architecture_t>> &) (*TConvLayer<Architecture_t>::fWorkspace),
                                         this->GetInputHeight(), this->GetInputWidth(),      

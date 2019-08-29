@@ -235,8 +235,6 @@ TConvLayer<Architecture_t>::TConvLayer(size_t batchSize, size_t inputDepth, size
      fDropoutProbability(dropoutProbability), fPaddingHeight(paddingHeight), fPaddingWidth(paddingWidth),
      fInputActivation(), fF(f), fReg(reg), fWeightDecay(weightDecay)
 {  
-   InitializeDescriptors(); 
-   InitializeWorkspace();
    /** Each element in the vector is a `T_Matrix` representing an event, therefore `vec.size() == batchSize`.
     *  Cells in these matrices are distributed in the following manner:
     *  Each row represents a single feature map, therefore we have `nRows == depth`.
@@ -255,6 +253,8 @@ TConvLayer<Architecture_t>::TConvLayer(size_t batchSize, size_t inputDepth, size
    // Architecture_t::PrepareInternals(this->GetOutput(), this->GetInputActivation(), this->GetWeights(),
    //                                  this->GetBiases(), this->GetWeightGradients(), this->GetBiasGradients(), 
    //                                  this->GetActivationGradients(), params);
+   InitializeDescriptors(); 
+   InitializeWorkspace();
 }
 
 //______________________________________________________________________________

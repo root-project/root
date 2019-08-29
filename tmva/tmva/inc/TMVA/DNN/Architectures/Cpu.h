@@ -104,6 +104,8 @@ public:
    static void InitializePoolDescriptors(TDescriptors * & /*descriptors*/,
                                          PoolingLayer_t */*L = nullptr*/) {}
 
+   static void InitializeActivationDescriptor(ActivationDescriptor_t &/*descriptors*/, EActivationFunction /*activFunc */ , double /*coef*/ = 0.0) {}
+
    /** Release CNN data/operator descriptors. Not used at the moment.*/
    static void ReleaseConvDescriptors(TDescriptors * & /*descriptors*/, ConvLayer_t */*L = nullptr*/) {}
    static void ReleasePoolDescriptors(TDescriptors * & /*descriptors*/, PoolingLayer_t */*L = nullptr*/) {}
@@ -119,6 +121,8 @@ public:
 
    static void FreeConvWorkspace(TWorkspace * & /*workspace*/, ConvLayer_t */*L = nullptr*/) {}   ///< Only used for certain cudnn on-device memory
    static void FreePoolWorkspace(TWorkspace * & /*workspace*/, PoolingLayer_t */*L = nullptr*/) {}
+
+   static void ReleaseDescriptor(ActivationDescriptor_t &  /* activationDescr */) {}
    // // Utility function to convert from a Matrix to a Tensor
    // static Tensor_t  MatrixToTensor(Matrix_t & A) { 
    //    return Tensor_t(A.GetRawDataPointer(), Shape_t({A.GetNrows(), A.GetNcols() }), RTensor::MemoryLayout::ColumnMajor);
