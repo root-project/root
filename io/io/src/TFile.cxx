@@ -332,7 +332,6 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fVersion      = gROOT->GetVersionInt();  //ROOT version in integer format
    fUnits        = 4;
    fOption       = option;
-   fSeekInfo     = 0;
    fCacheReadMap = new TMap();
    SetBit(kBinaryFile, kTRUE);
 
@@ -549,7 +548,7 @@ void TFile::Init(Bool_t create)
       if (fOption != "READ") {
          Error("Init", "archive %s can only be opened in read mode", GetName());
          delete fArchive;
-         fArchive = 0;
+         fArchive = nullptr;
          fIsArchive = kFALSE;
          goto zombie;
       }
@@ -569,7 +568,7 @@ void TFile::Init(Bool_t create)
          Error("Init", "member %s not found in archive %s",
                fArchive->GetMemberName(), fArchive->GetArchiveName());
          delete fArchive;
-         fArchive = 0;
+         fArchive = nullptr;
          fIsArchive = kFALSE;
          goto zombie;
       }
@@ -667,7 +666,7 @@ void TFile::Init(Bool_t create)
       }
       //*-*-------------Read directory info
       // buffer_keyloc is the start of the key record.
-      char *buffer_keyloc = 0;
+      char *buffer_keyloc = nullptr;
 
       Int_t nbytes = fNbytesName + TDirectoryFile::Sizeof();
       if ( (nbytes + fBEGIN) > fEND) {
@@ -880,8 +879,8 @@ void TFile::Close(Option_t *option)
    if (fCacheRead) fCacheRead->Close();
    {
       TIter iter(fCacheReadMap);
-      TObject *key = 0;
-      while ((key = iter()) != 0) {
+      TObject *key = nullptr;
+      while ((key = iter()) != nullptr) {
          TFileCacheRead *cache = dynamic_cast<TFileCacheRead *>(fCacheReadMap->GetValue(key));
          cache->Close();
       }
@@ -910,7 +909,7 @@ void TFile::Close(Option_t *option)
       gMonitoringWriter->SendFileCloseEvent(this);
 
    delete fClassIndex;
-   fClassIndex = 0;
+   fClassIndex = nullptr;
 
    // Delete free segments from free list (but don't delete list header)
    if (fFree) {
@@ -972,7 +971,7 @@ TKey* TFile::CreateKey(TDirectory* mother, const void* obj, const TClass* cl, co
 
 TFile *&TFile::CurrentFile()
 {
-   static TFile *currentFile = 0;
+   static TFile *currentFile = nullptr;
    if (!gThreadTsd)
       return currentFile;
    else
@@ -1269,7 +1268,7 @@ TFile::InfoListRet TFile::GetStreamerInfoListImpl(bool lookupSICache)
 
    if (fIsPcmFile) return {nullptr, 1, hash}; // No schema evolution for ROOT PCM files.
 
-   TList *list = 0;
+   TList *list = nullptr;
    if (fSeekInfo) {
       TDirectory::TContext ctxt(this); // gFile and gDirectory used in ReadObj
       auto key = std::make_unique<TKey>(this);
@@ -1301,7 +1300,7 @@ TFile::InfoListRet TFile::GetStreamerInfoListImpl(bool lookupSICache)
       list = (TList*)Get("StreamerInfo"); //for versions 2.26 (never released)
    }
 
-   if (list == 0) {
+   if (!list) {
       Info("GetStreamerInfoList", "cannot find the StreamerInfo record in file %s",
            GetName());
       return {nullptr, 1, hash};
@@ -1564,7 +1563,7 @@ Bool_t TFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 
       Int_t st;
       Double_t start = 0;
-      if (gPerfStats != 0) start = TTimeStamp();
+      if (gPerfStats) start = TTimeStamp();
 
       if ((st = ReadBufferViaCache(buf, len))) {
          if (st == 2)
@@ -1594,7 +1593,7 @@ Bool_t TFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 
       if (gMonitoringWriter)
          gMonitoringWriter->SendFileReadProgress(this);
-      if (gPerfStats != 0) {
+      if (gPerfStats) {
          gPerfStats->FileReadEvent(this, len, start);
       }
       return kFALSE;
@@ -1620,7 +1619,7 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
       ssize_t siz;
       Double_t start = 0;
 
-      if (gPerfStats != 0) start = TTimeStamp();
+      if (gPerfStats) start = TTimeStamp();
 
       while ((siz = SysRead(fD, buf, len)) < 0 && GetErrno() == EINTR)
          ResetErrno();
@@ -1641,7 +1640,7 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
 
       if (gMonitoringWriter)
          gMonitoringWriter->SendFileReadProgress(this);
-      if (gPerfStats != 0) {
+      if (gPerfStats) {
          gPerfStats->FileReadEvent(this, len, start);
       }
       return kFALSE;
@@ -1672,10 +1671,10 @@ Bool_t TFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
    Int_t k = 0;
    Bool_t result = kTRUE;
    TFileCacheRead *old = fCacheRead;
-   fCacheRead = 0;
+   fCacheRead = nullptr;
    Long64_t curbegin = pos[0];
    Long64_t cur;
-   char *buf2 = 0;
+   char *buf2 = nullptr;
    Int_t i = 0, n = 0;
    while (i < nbuf) {
       cur = pos[i]+len[i];
@@ -1693,7 +1692,7 @@ Bool_t TFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
          } else {
             //otherwise we read all blocks that fit in the read-ahead buffer
             Seek(curbegin);
-            if (buf2 == 0) buf2 = new char[fgReadaheadSize];
+            if (!buf2) buf2 = new char[fgReadaheadSize];
             //we read ahead
             Long64_t nahead = pos[i-1]+len[i-1]-curbegin;
             result = ReadBuffer(buf2, nahead);
@@ -1789,7 +1788,7 @@ void TFile::ReadFree()
 
 TProcessID  *TFile::ReadProcessID(UShort_t pidf)
 {
-   TProcessID *pid = 0;
+   TProcessID *pid = nullptr;
    TObjArray *pids = GetListOfProcessIDs();
    if (pidf < pids->GetSize()) pid = (TProcessID *)pids->UncheckedAt(pidf);
    if (pid) {
@@ -1944,7 +1943,7 @@ Int_t TFile::Recover()
          frombuf(buffer, &sdir);  seekpdir = (Long64_t)sdir;
       }
       frombuf(buffer, &nwhc);
-      char *classname = 0;
+      char *classname = nullptr;
       if (nwhc <= 0 || nwhc > 100) break;
       classname = new char[nwhc+1];
       int i, nwhci = nwhc;
@@ -2621,13 +2620,13 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
 
       if (opt.Contains("update")) {
          // check that directory exist, if not create it
-         if (dir == 0) {
+         if (!dir) {
             gSystem->mkdir(dirname);
          }
 
       } else if (opt.Contains("recreate")) {
          // check that directory exist, if not create it
-         if (dir == 0) {
+         if (!dir) {
             if (gSystem->mkdir(dirname) < 0) {
                Error("MakeProject","cannot create directory '%s'",dirname);
                return;
@@ -2636,7 +2635,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
          // clear directory
          while (dir) {
             const char *afile = gSystem->GetDirEntry(dir);
-            if (afile == 0) break;
+            if (!afile) break;
             if (strcmp(afile,".") == 0) continue;
             if (strcmp(afile,"..") == 0) continue;
             dirpath.Form("%s/%s",dirname,afile);
@@ -2666,7 +2665,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    // loop on all TStreamerInfo
    TList *filelist = (TList*)GetStreamerInfoCache();
    if (filelist) filelist = (TList*)filelist->Clone();
-   if (filelist == 0) {
+   if (!filelist) {
       Error("MakeProject","file %s has no StreamerInfo", GetName());
       return;
    }
@@ -2691,7 +2690,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    // Start the source file
    TString spath; spath.Form("%s/%sProjectSource.cxx",clean_dirname.Data(),subdirname.Data());
    FILE *sfp = fopen(spath.Data(),"w");
-   if (sfp ==0) {
+   if (!sfp) {
       Error("MakeProject","Unable to create the source file %s.",spath.Data());
       return;
    }
@@ -2842,7 +2841,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    }
 
    // Makefiles files
-   FILE *fpMAKE = 0;
+   FILE *fpMAKE = nullptr;
    if (!makepar) {
       // Create the MAKEP file by looping on all *.h files
       // delete MAKEP if it already exists
@@ -2866,7 +2865,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    }
 
    // Add rootcint/genreflex statement generating ProjectDict.cxx
-   FILE *ifp = 0;
+   FILE *ifp = nullptr;
    path.Form("%s/%sProjectInstances.h",clean_dirname.Data(),subdirname.Data());
 #ifdef R__WINGCC
    ifp = fopen(path,"wb");
@@ -2987,7 +2986,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
                   } else {
                      what.ReplaceAll("std::","");
                      TClass *paircl = TClass::GetClass(what.Data());
-                     if (paircl == 0 || !paircl->HasInterpreterInfo()) {
+                     if (!paircl || !paircl->HasInterpreterInfo()) {
                         fprintf(fp,"#pragma link C++ class %s+;\n",what.Data());
                      }
                   }
@@ -3465,7 +3464,7 @@ void TFile::ReadStreamerInfo()
       TObjLink *lnk = list->FirstLink();
       while (lnk) {
          info = (TStreamerInfo*)lnk->GetObject();
-         if (info == 0 || info->IsA() != TStreamerInfo::Class()) {
+         if (!info || info->IsA() != TStreamerInfo::Class()) {
             lnk = lnk->Next();
             continue;
          }
@@ -3491,7 +3490,7 @@ void TFile::ReadStreamerInfo()
       TObjLink *lnk = list->FirstLink();
       while (lnk) {
          info = (TStreamerInfo*)lnk->GetObject();
-         if (info == 0) {
+         if (!info) {
             lnk = lnk->Next();
             continue;
          }
@@ -3711,7 +3710,7 @@ void TFile::WriteStreamerInfo()
 TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
                    Int_t compress, Int_t netopt)
 {
-   TFile *f = 0;
+   TFile *f = nullptr;
 
    if (fgCacheFileDir == "") {
       ::Warning("TFile::OpenFromCache",
@@ -3816,13 +3815,13 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
                      need2copy = kTRUE;
                      ::Error("TFile::OpenFromCache",
                              "cannot open the cache file to check cache consistency");
-                     return 0;
+                     return nullptr;
                   }
 
                   if (!remotfile) {
                      ::Error("TFile::OpenFromCache",
                              "cannot open the remote file to check cache consistency");
-                     return 0;
+                     return nullptr;
                   }
 
                   cachefile->Seek(0);
@@ -3857,7 +3856,7 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
                          cachefilepathbasedir.Data());
                fgCacheFileForce = forcedcache;
                if (fgOpenTimeout != 0)
-                  return 0;
+                  return nullptr;
             } else {
                fgCacheFileForce = forcedcache;
                ::Info("TFile::OpenFromCache", "using local cache copy of %s [%s]",
@@ -3921,7 +3920,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
                    Int_t compress, Int_t netopt)
 {
    TPluginHandler *h;
-   TFile *f = 0;
+   TFile *f = nullptr;
    EFileType type = kFile;
 
    // Check input
@@ -4023,7 +4022,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
       // Check first if a pending async open request matches this one
       if (fgAsyncOpenRequests && (fgAsyncOpenRequests->GetSize() > 0)) {
          TIter nxr(fgAsyncOpenRequests);
-         TFileOpenHandle *fh = 0;
+         TFileOpenHandle *fh = nullptr;
          while ((fh = (TFileOpenHandle *)nxr()))
             if (fh->Matches(name))
                return TFile::Open(fh);
@@ -4056,7 +4055,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
             // Network files
             if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
                if (h->LoadPlugin() == -1)
-                  return 0;
+                  return nullptr;
                f = (TFile*) h->ExecPlugin(5, name.Data(), option, ftitle, compress, netopt);
             }
 
@@ -4065,7 +4064,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
             // Web files
             if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
                if (h->LoadPlugin() == -1)
-                  return 0;
+                  return nullptr;
                f = (TFile*) h->ExecPlugin(2, name.Data(), option);
             }
 
@@ -4084,7 +4083,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
             // no recognized specification: try the plugin manager
             if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name.Data()))) {
                if (h->LoadPlugin() == -1)
-                  return 0;
+                  return nullptr;
                TClass *cl = TClass::GetClass(h->GetClass());
                if (cl && cl->InheritsFrom("TNetFile"))
                   f = (TFile*) h->ExecPlugin(5, name.Data(), option, ftitle, compress, netopt);
@@ -4104,7 +4103,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
          if( newUrl.Length() && gEnv->GetValue("TFile.CrossProtocolRedirects", 1) )
             f = TFile::Open( newUrl, option, ftitle, compress );
          else
-            f = 0;
+            f = nullptr;
       }
    }
 
@@ -4159,9 +4158,8 @@ TFileOpenHandle *TFile::AsyncOpen(const char *url, Option_t *option,
                                   const char *ftitle, Int_t compress,
                                   Int_t netopt)
 {
-   TFileOpenHandle *fh = 0;
-   TPluginHandler *h;
-   TFile *f = 0;
+   TFileOpenHandle *fh = nullptr;
+   TFile *f = nullptr;
    Bool_t notfound = kTRUE;
 
    // Check input
@@ -4198,6 +4196,8 @@ TFileOpenHandle *TFile::AsyncOpen(const char *url, Option_t *option,
 
       // Resolve the file type; this also adjusts names
       EFileType type = GetType(name, option);
+
+      TPluginHandler *h = nullptr;
 
       // Here we send the asynchronous request if the functionality is implemented
       if (type == kNet) {
@@ -4258,7 +4258,7 @@ TFileOpenHandle *TFile::AsyncOpen(const char *url, Option_t *option,
 
 TFile *TFile::Open(TFileOpenHandle *fh)
 {
-   TFile *f = 0;
+   TFile *f = nullptr;
 
    // Note that the request may have failed
    if (fh && fgAsyncOpenRequests) {
@@ -4500,7 +4500,7 @@ Bool_t TFile::ShrinkCacheFileDir(Long64_t shrinksize, Long_t cleanupinterval)
 
    // (re-)create the cache tag file
    cachetagfile += "?filetype=raw";
-   TFile *tagfile = 0;
+   TFile *tagfile = nullptr;
 
    if (!(tagfile = TFile::Open(cachetagfile, "RECREATE"))) {
       ::Error("TFile::ShrinkCacheFileDir", "cannot create the cache tag file %s", cachetagfile.Data());
@@ -4714,7 +4714,7 @@ TFile::EAsyncOpenStatus TFile::GetAsyncOpenStatus(const char* name)
    // Check the list of pending async open requests
    if (fgAsyncOpenRequests && (fgAsyncOpenRequests->GetSize() > 0)) {
       TIter nxr(fgAsyncOpenRequests);
-      TFileOpenHandle *fh = 0;
+      TFileOpenHandle *fh = nullptr;
       while ((fh = (TFileOpenHandle *)nxr()))
          if (fh->Matches(name))
             return TFile::GetAsyncOpenStatus(fh);
@@ -4725,7 +4725,7 @@ TFile::EAsyncOpenStatus TFile::GetAsyncOpenStatus(const char* name)
    TSeqCollection *of = gROOT->GetListOfFiles();
    if (of && (of->GetSize() > 0)) {
       TIter nxf(of);
-      TFile *f = 0;
+      TFile *f = nullptr;
       while ((f = (TFile *)nxf()))
          if (f->Matches(name))
             return f->GetAsyncOpenStatus();
@@ -4760,7 +4760,7 @@ const TUrl *TFile::GetEndpointUrl(const char* name)
    // Check the list of pending async open requests
    if (fgAsyncOpenRequests && (fgAsyncOpenRequests->GetSize() > 0)) {
       TIter nxr(fgAsyncOpenRequests);
-      TFileOpenHandle *fh = 0;
+      TFileOpenHandle *fh = nullptr;
       while ((fh = (TFileOpenHandle *)nxr()))
          if (fh->Matches(name))
             if (fh->fFile)
@@ -4772,14 +4772,14 @@ const TUrl *TFile::GetEndpointUrl(const char* name)
    TSeqCollection *of = gROOT->GetListOfFiles();
    if (of && (of->GetSize() > 0)) {
       TIter nxf(of);
-      TFile *f = 0;
+      TFile *f = nullptr;
       while ((f = (TFile *)nxf()))
          if (f->Matches(name))
             return f->GetEndpointUrl();
    }
 
    // Information not yet available
-   return (const TUrl *)0;
+   return (const TUrl *)nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4838,10 +4838,10 @@ Bool_t TFile::Cp(const char *dst, Bool_t progressbar, UInt_t buffersize)
 
    dURL.SetOptions(opt);
 
-   char *copybuffer = 0;
+   char *copybuffer = nullptr;
 
    TFile *sfile = this;
-   TFile *dfile = 0;
+   TFile *dfile = nullptr;
 
    // "RECREATE" does not work always well with XROOTD
    // namely when some pieces of the path are missing;
@@ -4874,15 +4874,12 @@ Bool_t TFile::Cp(const char *dst, Bool_t progressbar, UInt_t buffersize)
       goto copyout;
    }
 
-   Bool_t   readop;
-   Bool_t   writeop;
-   Long64_t read;
-   Long64_t written;
-   Long64_t totalread;
-   Long64_t filesize;
-   Long64_t b00;
-   filesize  = sfile->GetSize();
+   Bool_t   readop, writeop;
+   Long64_t read, written, totalread, filesize, b00;
+
    totalread = 0;
+   filesize = sfile->GetSize();
+
    watch.Start();
 
    b00 = sfile->GetBytesRead();
@@ -4966,7 +4963,7 @@ Bool_t TFile::Cp(const char *src, const char *dst, Bool_t progressbar,
    opt += TString::Format("&cachesz=%d&readaheadsz=%d&rmpolicy=1", 4*buffersize, 2*buffersize);
    sURL.SetOptions(opt);
 
-   TFile *sfile = 0;
+   TFile *sfile = nullptr;
 
    Bool_t success = kFALSE;
 
@@ -4977,8 +4974,10 @@ Bool_t TFile::Cp(const char *src, const char *dst, Bool_t progressbar,
       success = sfile->Cp(dst, progressbar, buffersize);
    }
 
-   if (sfile) sfile->Close();
-   if (sfile) delete sfile;
+   if (sfile) {
+      sfile->Close();
+      delete sfile;
+   }
 
    return success;
 }
@@ -5007,13 +5006,13 @@ Bool_t TFile::ReadBufferAsync(Long64_t offset, Int_t len)
       advice = POSIX_FADV_NORMAL;
    }
    Double_t start = 0;
-   if (gPerfStats != 0) start = TTimeStamp();
+   if (gPerfStats) start = TTimeStamp();
 #if defined(R__SEEK64)
    Int_t result = posix_fadvise64(fD, offset, len, advice);
 #else
    Int_t result = posix_fadvise(fD, offset, len, advice);
 #endif
-   if (gPerfStats != 0) {
+   if (gPerfStats) {
       gPerfStats->FileReadEvent(this, len, start);
    }
    return (result != 0);
@@ -5035,7 +5034,7 @@ Bool_t TFile::ReadBufferAsync(Long64_t, Int_t)
 
 Int_t TFile::GetBytesToPrefetch() const
 {
-   TFileCacheRead *cr = 0;
+   TFileCacheRead *cr = nullptr;
    if ((cr = GetCacheRead())) {
       Int_t bytes = cr->GetBufferSize() / 4 * 3;
       return ((bytes < 0) ? 0 : bytes);
