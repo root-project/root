@@ -71,10 +71,17 @@ or in `TBrowser` by opening `Browser Help → About ROOT`.
 
 ## Core Libraries
 
+* Speed-up startup, in particular in case of no or poor network accesibility, by avoiding
+a network access that was used as input to generate a globally unique ID for the current
+process.
+ * This network access is replaced by a passive scan of the network interface. This
+reduces somewhat the uniqueness of the unique ID as the IP address is no longer
+guaranteed by the DNS server to be unique.   Note that this was already the case when
+the network access (used to look up the hostname and its IP address) failed.
+
 
 ## I/O Libraries
 
-* TMemFile: Apply customization of minimal block size also to the first block.
 * TFile: A new bit `TFile::kReproducible` was introduced. It can be enabled by
   specifying the `"reproducible"` url option when creating the file:
    ```{.cpp}
@@ -85,13 +92,26 @@ or in `TBrowser` by opening `Browser Help → About ROOT`.
    values for creation and modification date of TKey/TDirectory objects and null
    value for TUUID objects inside TFile. As drawback, TRef objects stored in such
    file cannot be read correctly.
-
+* TMemFile: Apply customization of minimal block size also to the first block.
+* Add renaming rule for instances of the math classes from `genvector` and `smatrix` to
+instance for one floating point type (`float`, `double`, `Double32_t`, `Float16_t`) to
+instances for any other floating point type.
+* Corrected the application of  `I/O customization rules` when the target classes contained
+typedefs (in particular `Double32_t`)
+* Prevent splitting of objects when a `Streamer Function` was explicitly attached to their
+`TClass`.
+* In hadd fix verbose level arg parsing
+* Allow user to change the type of the content of a TClonesArray.
+* Avoid deleted memory access in `MakeProject` and in handling of
+`I/O customization rules`.
 
 ## TTree Libraries
 
+* Prevent a situation in `TTreeFormula` when stale cached information was re-used.
 
 ## Histogram Libraries
 
+* Allow reading v5 TF1 that were stored memberwise in a TClonesArray.
 
 ## Math Libraries
 
