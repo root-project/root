@@ -95,12 +95,15 @@ now ignored by ROOT).
 ## Preprocessor deprecation macros
 ### Deprecated Classes
   * `R__SUGGEST_ALTERNATIVE("Suggestion text")` macro allows to suggest alternatives to classes. It must be used after the class definition and before the final semicolon:
-```{.cpp}
+
+```
 class DoNotUseClass {
 } R__SUGGEST_ALTERNATIVE("Use ... instead.");
 ```
+
 It is activated by the preprocessor defines `R__SUGGEST_NEW_INTERFACE`. The former is useful when deprecation warnings should be activated/deactivated at global level, for example for an entire project. This could be done by defining `R__SUGGEST_NEW_INTERFACE` in the build system.
 If the warning needs to be confined within single translation units, irrespective of the definition of `R__SUGGEST_NEW_INTERFACE`, the `R__ALWAYS_SUGGEST_ALTERNATIVE` macro can be used:
+
 ```{.cpp}
 #ifndef DONOTUSECLASS_H
 #define DONOTUSECLASS_H
@@ -110,8 +113,10 @@ class DoNotUseClass {
 
 #endif
 ```
+
 ### Deprecated Functions
 The same macro as for classes can be used for functions:
+
 ```{.cpp}
 TIterator* createIterator() const
 R__SUGGEST_ALTERNATIVE("begin(), end() and range-based for loops.") {
@@ -158,6 +163,7 @@ The methods could be replaced by equivalent methods with other signature:
 ## I/O Libraries
 
 * Added simpler way to retrieve object from `TDirectory` and `TFile`:
+
 ~~~ {.cpp}
 auto obj = directory->Get<MyClass>("some object");
 ~~~
@@ -231,6 +237,7 @@ Maximal compression of JSON can be achieved now with compact parameter 128 = 100
   - All functionalities of the other datatypes have been reimplemented.
   - The documentation of `TTree` and `TBuffer` has been updated accordingly.
   - The following example shows how to use the new features:
+
 ~~~ {.cpp}
 Float16_t  floatVal;
 Float16_t  floatArray[7];
@@ -305,6 +312,7 @@ hist2workspace performance optimisations. For a large, ATLAS-style Higgs-->bb wo
 
 ### Faster, STL-like Collections in RooFit
 RooFit's collections `RooArgSet` and `RooArgList` have been made more STL-like. The underlying implementation used to be the `RooLinkedList`, but now both collections work with `std::vector`. The collections have an STL-like interface concerning iterators such that iterations over the two collections that looked like
+
 ```
 TIterator* depIter = intDepList.createIterator() ;
 RooAbsArg* arg;
@@ -314,6 +322,7 @@ while((arg=(RooAbsArg*)depIter->Next())) {
 delete depIter;
 ```
 now look like:
+
 ```
 for (auto arg : intDepList) {
   ...
@@ -332,6 +341,7 @@ The old RooFit collections could be modified while iterating. The STL-like itera
 
 #### Moving away from the slower iterators
 The legacy iterators have been flagged with a special deprecation macro that can be used help the user use the recommended ROOT interface. Defining one of the [deprecation macros](#preprocessor-deprecation-macros) (either in a single translation unit or in the build system), and creating a legacy iterator will trigger a compiler warning such as:
+
 ```
 <path>/RooChebychev.cxx:66:34: warning: 'createIterator' is deprecated: There is a superior alternative: begin(), end() and range-based for loops. [-Wdeprecated-declarations]
   TIterator* coefIter = coefList.createIterator() ;
@@ -375,6 +385,7 @@ In addition we have :
     individually for each histogram.
   - Improve the line clipping when a histogram is drawn with option "L". The following
     example shows the improvement.
+
 ~~~ {.cpp}
   auto h = new TH1F("h","h",5,0.5,5.5);
   h->SetBinContent(1,100000);
@@ -387,6 +398,7 @@ In addition we have :
   h->Draw("L*");
   gPad->SetLogy();
 ~~~
+
   - `ChangeLabel` is now available for alphanumeric axis.
   - Implement transparency for lines, texts and markers in the TeX output.
 
@@ -526,12 +538,12 @@ If the fix or new feature is a pythonization related to a C++ class, the change 
   * Includes fixed template support, fixed overload resolution, Windows fixes and other
 - Merged Cppyy's patch to support using namespace declarations (PR-3579)
 - Add `DeclareCppCallable` decorator, which allows to call Python callables from C++, e.g., in an RDataFrame workflow:
-~~~ {.python}
+
+~~~ {.cpp}
 @ROOT.DeclareCppCallable(["float"], "float")
 
 def f(x):
    return 2.0 * x
-
 ROOT.CppCallable.f(21.0)
 # Returns 42.0
 
@@ -715,3 +727,28 @@ Released on August 23, 2019
 ## HEAD of the v6-18-00-patches branch
 
 These changes will be part of the future 6.18/04.
+## Core Libraries
+
+* Speed-up startup, in particular in case of no or poor network accesibility, by avoiding
+a network access that was used as input to generate a globally unique ID for the current
+process.
+ * This network access is replaced by a passive scan of the network interface. This
+reduces somewhat the uniqueness of the unique ID as the IP address is no longer
+guaranteed by the DNS server to be unique.   Note that this was already the case when
+the network access (used to look up the hostname and its IP address) failed.
+
+## I/O Libraries
+
+* Allowed user to actually customize the 1st block's size in TMemFile.  Previously the user
+request was only applies to the 2nd and subsequent blocks.
+* Add renaming rule for instances of the math classes from `genvector` and `smatrix` to
+instance for one floating point type (`float`, `double`, `Double32_t`, `Float16_t`) to
+instances for any other floating point type.
+* Corrected the application of  `I/O customization rules` when the target classes contained
+typedefs (in particular `Double32_t`)
+* Prevent splitting of objects when a `Streamer Function` was explicitly attached to their
+`TClass`.
+* Set offset of the used-for-write element in case of `I/O` rule on 'current' `StreamerInfo.`
+* Fix `TTreeReader`'s use of `Set[Local]Entry`
+* Avoid deleted memory access in `MakeProject` and in handling of
+`I/O customization rules`.
