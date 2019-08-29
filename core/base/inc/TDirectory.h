@@ -158,8 +158,8 @@ public:
    virtual TKey       *GetKey(const char * /*name */, Short_t /* cycle */=9999) const {return nullptr;}
    virtual TList      *GetList() const { return fList; }
    virtual TList      *GetListOfKeys() const { return nullptr; }
-   virtual TObject    *GetMother() const { return fMother; }
-   virtual TDirectory *GetMotherDir() const { return !fMother ? nullptr : dynamic_cast<TDirectory*>(fMother); }
+           TObject    *GetMother() const { return fMother; }
+           TDirectory *GetMotherDir() const { return !fMother ? nullptr : dynamic_cast<TDirectory*>(fMother); }
    virtual Int_t       GetNbytesKeys() const { return 0; }
    virtual Int_t       GetNkeys() const { return 0; }
    virtual Long64_t    GetSeekDir() const { return 0; }
