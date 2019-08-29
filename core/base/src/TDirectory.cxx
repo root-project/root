@@ -279,7 +279,7 @@ void TDirectory::CleanTargets()
    }
 
    if (gDirectory == this) {
-      TDirectory *cursav = GetMotherDir();
+      TDirectory *cursav = GetMotherDir();     // NOLINT: silence clang-tidy warnings
       if (cursav && cursav != this) {
          cursav->cd();
       } else {
