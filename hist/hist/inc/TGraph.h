@@ -157,6 +157,7 @@ public:
    virtual void          LeastSquareFit(Int_t m, Double_t *a, Double_t xmin=0, Double_t xmax=0);
    virtual void          LeastSquareLinearFit(Int_t n, Double_t &a0, Double_t &a1, Int_t &ifail, Double_t xmin=0, Double_t xmax=0);
    virtual Int_t         Merge(TCollection* list);
+   virtual void          MovePoints(Double_t dx, Double_t dy, Bool_t logx = kFALSE, Bool_t logy = kFALSE);
    virtual void          Paint(Option_t *chopt="");
    void                  PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt);
    void                  PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt);

@@ -19,7 +19,6 @@
 #include "TF1.h"
 #include "TStyle.h"
 #include "TMath.h"
-#include "TFrame.h"
 #include "TVector.h"
 #include "TVectorD.h"
 #include "Foption.h"
@@ -609,7 +608,7 @@ Double_t TGraph::Chisquare(TF1 *func, Option_t * option) const
 
 Bool_t TGraph::CompareArg(const TGraph* gr, Int_t left, Int_t right)
 {
-   Double_t xl, yl, xr, yr;
+   Double_t xl = 0, yl = 0, xr = 0, yr = 0;
    gr->GetPoint(left, xl, yl);
    gr->GetPoint(right, xr, yr);
    return (TMath::ATan2(yl, xl) > TMath::ATan2(yr, xr));
@@ -1052,7 +1051,7 @@ TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_
 {
    char *linear;
    linear = (char*) strstr(fname, "++");
-   if (linear) { 
+   if (linear) {
       TF1 f1(fname, fname, xmin, xmax);
       return Fit(&f1, option, "", xmin, xmax);
    }
@@ -1579,8 +1578,7 @@ TH1F *TGraph::GetHistogram() const
 
 Int_t TGraph::GetPoint(Int_t i, Double_t &x, Double_t &y) const
 {
-   if (i < 0 || i >= fNpoints) return -1;
-   if (!fX || !fY) return -1;
+   if (i < 0 || i >= fNpoints || !fX || !fY) return -1;
    x = fX[i];
    y = fY[i];
    return i;
@@ -2471,18 +2469,45 @@ Int_t TGraph::Merge(TCollection* li)
    }
    return GetN();
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 ///  protected function to perform the merge operation of a graph
 
 Bool_t TGraph::DoMerge(const TGraph* g)
 {
-   Double_t x, y;
+   Double_t x = 0, y = 0;
    for (Int_t i = 0 ; i < g->GetN(); i++) {
       g->GetPoint(i, x, y);
       SetPoint(GetN(), x, y);
    }
    return kTRUE;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Move all graph points on specified values dx,dy
+/// If log argument specified, calculation done in logarithmic scale like:
+///  new_value = exp( log(old_value) + delta );
+
+void TGraph::MovePoints(Double_t dx, Double_t dy, Bool_t logx, Bool_t logy)
+{
+   Double_t x = 0, y = 0;
+   for (Int_t i = 0 ; i < GetN(); i++) {
+      GetPoint(i, x, y);
+      if (!logx) {
+         x += dx;
+      } else if (x > 0) {
+         x = TMath::Exp(TMath::Log(x) + dx);
+      }
+      if (!logy) {
+         y += dy;
+      } else if (y > 0) {
+         y = TMath::Exp(TMath::Log(y) + dy);
+      }
+      SetPoint(i, x, y);
+   }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Find zero of a continuous function.
 /// This function finds a real zero of the continuous real
