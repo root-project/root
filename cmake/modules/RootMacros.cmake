@@ -271,7 +271,12 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
   if(TARGET ${ARG_MODULE})
     get_target_property(target_incdirs ${ARG_MODULE} INCLUDE_DIRECTORIES)
-    list(APPEND incdirs ${target_incdirs})
+    foreach(dir ${target_incdirs})
+      string(REGEX REPLACE "^[$]<BUILD_INTERFACE:(.+)>" "\\1" dir ${dir})
+      if(NOT ${dir} MATCHES "^[$]")
+        list(APPEND incdirs ${dir})
+      endif()
+    endforeach()
   endif()
 
   #---Get the list of header files-------------------------
