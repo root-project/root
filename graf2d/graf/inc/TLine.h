@@ -36,7 +36,7 @@ public:
       kHorizontal = BIT(16)  ///< Line is horizontal
    };
 
-   TLine() = default;
+   TLine() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
    TLine(Double_t x1, Double_t y1, Double_t x2, Double_t  y2);
    TLine(const TLine &line);
    virtual ~TLine() = default;
