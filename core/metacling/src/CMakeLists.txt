@@ -7,22 +7,6 @@
 # TInterpreter implementation for cling. Only in libCling; needs to resolve
 # symbols from libCore.
 
-# Register the llvm include directories after clangs. This instructs the compiler to resolve
-# headers from our builtin clang. That's an issue when we are building with bultin_llvm=Off
-# and we have installed clang headers, too.
-include_directories(SYSTEM
-  ${CLANG_INCLUDE_DIRS}
-  ${LLVM_INCLUDE_DIRS}
-  ${CLAD_INCLUDE_DIRS}
-)
-
-include_directories(
-  ../res
-  ../../clingutils/res
-  ../../foundation/res
-  ${CLING_INCLUDE_DIRS}
-)
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
 
 if(MSVC)
@@ -59,6 +43,27 @@ ROOT_OBJECT_LIBRARY(MetaCling
   TClingTypedefInfo.cxx
   TClingTypeInfo.cxx
   TClingValue.cxx
+)
+
+# Register the llvm include directories after clangs. This instructs the compiler to resolve
+# headers from our builtin clang. That's an issue when we are building with bultin_llvm=Off
+# and we have installed clang headers, too.
+target_include_directories(MetaCling SYSTEM PRIVATE
+  ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS} ${CLAD_INCLUDE_DIRS})
+
+target_include_directories(MetaCling PRIVATE
+  ../res
+  ../../base/inc
+  ../../clib/inc
+  ../../cont/inc
+  ../../meta/inc
+  ../../thread/inc
+  ../../zip/inc
+  ../../clingutils/res
+  ../../foundation/inc
+  ../../foundation/res
+  ../../../io/io/inc
+  ${CLING_INCLUDE_DIRS}
 )
 
 add_dependencies(MetaCling CLING)
