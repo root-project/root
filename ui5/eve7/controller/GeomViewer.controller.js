@@ -1137,6 +1137,14 @@ sap.ui.define(['sap/ui/core/Component',
          this.processPainterChange('changedBackground', oEvent.getParameter('value'));
       },
 
+      axesChanged: function() {
+         this.processPainterChange('changedAxes');
+      },
+
+      autorotateChanged: function() {
+         this.processPainterChange('changedAutoRotate');
+      },
+
       cameraReset: function() {
          this.processPainterChange('focusCamera');
       },
