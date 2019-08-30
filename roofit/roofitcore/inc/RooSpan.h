@@ -117,7 +117,7 @@ public:
   }
 
   constexpr typename std::span<T>::reference operator[](typename std::span<T>::index_type i) const noexcept {
-    return *(static_cast<typename std::span<T>::pointer __restrict__>(_span.data())+i);
+    return _span[i];
   }
 
   constexpr typename std::span<T>::index_type size() const noexcept {

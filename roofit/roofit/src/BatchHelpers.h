@@ -76,7 +76,7 @@ class BracketAdapter {
 
 class BracketAdapterWithMask {
   public:
-    explicit BracketAdapterWithMask(double payload, const RooSpan<const double>& batch) noexcept :
+    explicit BracketAdapterWithMask(double payload, RooSpan<const double> batch) noexcept :
     _isBatch(!batch.empty()),
     _payload(payload),
     _pointer(batch.empty() ? &_payload : batch.data()),
@@ -84,11 +84,11 @@ class BracketAdapterWithMask {
     {
     }
 
-    constexpr double operator[](std::size_t i) const noexcept {
+    inline double operator[](std::size_t i) const noexcept {
       return _pointer[ i & _mask];
     }
     
-    constexpr bool isBatch() const noexcept {
+    inline bool isBatch() const noexcept {
       return _isBatch;
     }
 

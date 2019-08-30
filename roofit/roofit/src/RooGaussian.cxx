@@ -109,8 +109,6 @@ void compute(RooSpan<double> output, Tx x, TMean mean, TSig sigma) {
 /// \return A span with the computed values.
 
 RooSpan<double> RooGaussian::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
-
   auto xData = x.getValBatch(begin, batchSize);
   auto meanData = mean.getValBatch(begin, batchSize);
   auto sigmaData = sigma.getValBatch(begin, batchSize);
@@ -119,6 +117,12 @@ RooSpan<double> RooGaussian::evaluateBatch(std::size_t begin, std::size_t batchS
   const bool batchX = !xData.empty();
   const bool batchMean = !meanData.empty();
   const bool batchSigma = !sigmaData.empty();
+
+  if (!(batchX || batchMean || batchSigma)) {
+    return {};
+  }
+
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
 
   if (batchX && !batchMean && !batchSigma) {
     compute(output, xData, BracketAdapter<double>(mean), BracketAdapter<double>(sigma));
@@ -140,8 +144,6 @@ RooSpan<double> RooGaussian::evaluateBatch(std::size_t begin, std::size_t batchS
   }
   else if (!batchX && batchMean && batchSigma) {
     compute(output, BracketAdapter<double>(x), meanData, sigmaData);
-  } else {
-    throw std::logic_error("Requested a batch computation, but no batch data available.");
   }
 
   return output;
