@@ -41,12 +41,12 @@ public:
 
 
 private:
-	 
+
   friend class RooNumIntConfig ;
 
   std::map<std::string,std::pair<std::unique_ptr<RooAbsIntegrator>,std::string> > _map;
 
-  RooNumIntFactory() = default;
+  RooNumIntFactory() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
   RooNumIntFactory(const RooNumIntFactory& other) = delete;
 
   void init();

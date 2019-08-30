@@ -25,7 +25,7 @@ class RooRealVar;
 
 class RooJohnson final : public RooAbsPdf {
 public:
-  RooJohnson() = default;
+  RooJohnson() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
 
   RooJohnson(const char *name, const char *title,
             RooAbsReal& mass, RooAbsReal& mu, RooAbsReal& sigma,
