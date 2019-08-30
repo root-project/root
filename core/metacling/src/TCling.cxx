@@ -1683,6 +1683,10 @@ void TCling::LoadPCM(std::string pcmFileNameFullPath)
    if (!llvm::sys::fs::exists(pcmFileNameFullPath)) {
       ::Error("TCling::LoadPCM", "ROOT PCM %s file does not exist",
               pcmFileNameFullPath.data());
+      if (!fPendingRdicts.empty())
+         for (const auto &rdict : fPendingRdicts)
+            ::Info("TCling::LoadPCM", "In-memory ROOT PCM candidate %s\n",
+                   rdict.first.c_str());
       return;
    }
 
