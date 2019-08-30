@@ -5,6 +5,7 @@
 ## a pandas.DataFrame.
 ##
 ## \macro_code
+## \macro_output
 ##
 ## \date April 2018
 ## \author Stefan Wunsch
