@@ -156,7 +156,8 @@
          depthMethod: "dflt",
          select_in_view: false,
          update_browser: true,
-         light: { top: false, bottom: false, left: false, right: false, front: false, specular: true }
+         light: { top: false, bottom: false, left: false, right: false, front: false, specular: true },
+         trans_radial: 0, trans_z: 0
       };
 
       this.ctrl.depthMethodItems = [
@@ -412,7 +413,7 @@
       if (typeof opt != "string") opt = "";
 
       var res = { _grid: false, _bound: false, _debug: false,
-                  _full: false, _axis: false, _axis_center: false,
+                  _full: false, _axis: 0,
                   _count: false, wireframe: false,
                    scale: new THREE.Vector3(1,1,1), zoom: 1.0, rotatey: 0, rotatez: 0,
                    more: 1, maxlimit: 100000,
@@ -421,8 +422,8 @@
                    highlight: false, highlight_scene: false, no_screen: false,
                    project: '', is_main: false, tracks: false, showtop: false, can_rotate: true, ortho_camera: false,
                    clipx: false, clipy: false, clipz: false, usessao: false, outline: false,
-                   script_name: "", transparency: 0, autoRotate: false, background: '#FFFFFF',
-                   depthMethod: "dflt", mouse_tmout: 50 };
+                   script_name: "", transparency: 0, rotate: false, background: '#FFFFFF',
+                   depthMethod: "dflt", mouse_tmout: 50, trans_radial: 0, trans_z: 0 };
 
       var _opt = JSROOT.GetUrlOption('_grid');
       if (_opt !== null && _opt == "true") res._grid = true;
@@ -519,7 +520,7 @@
       if (d.check("HSCENE")) res.highlight_scene = true;
 
       if (d.check("WIREFRAME") || d.check("WIRE")) res.wireframe = true;
-      if (d.check("ROTATE")) res.autoRotate = true;
+      if (d.check("ROTATE")) res.rotate = true;
 
       if (d.check("INVX") || d.check("INVERTX")) res.scale.x = -1;
       if (d.check("INVY") || d.check("INVERTY")) res.scale.y = -1;
@@ -533,7 +534,10 @@
       if (d.check('OPACITY',true))
          res.transparency = 1 - d.partAsInt(0,100)/100;
 
-      if (d.check("AXISCENTER") || d.check("AC")) { res._axis = true; res._axis_center = true; }
+      if (d.check("AXISCENTER") || d.check("AC")) res._axis = 2;
+
+      if (d.check('TRR',true)) res.trans_radial = d.partAsInt()/100;
+      if (d.check('TRZ',true)) res.trans_z = d.partAsInt()/100;
 
       if (d.check("AXIS") || d.check("A")) res._axis = true;
 
@@ -633,8 +637,8 @@
       menu.addchk(this.ctrl.show_controls, "Show Controls", function() {
          this.showControlOptions('toggle');
       });
-      menu.addchk(this.TestAxisVisibility, "Show axes", function() {
-         this.toggleAxesDraw();
+      menu.addchk(this.ctrl._axis, "Show axes", function() {
+         this.setAxesDraw('toggle');
       });
       if (this.geo_manager)
          menu.addchk(this.ctrl.showtop, "Show top volume", function() {
@@ -657,8 +661,8 @@
          alert("Position (as url): &opt=" + this.produceCameraUrl());
       });
       if (!this.ctrl.project)
-         menu.addchk(this.ctrl.autoRotate, "Autorotate", function() {
-            this.setAutoRotate(!this.ctrl.autoRotate);
+         menu.addchk(this.ctrl.rotate, "Autorotate", function() {
+            this.setAutoRotate(!this.ctrl.rotate);
          });
       menu.addchk(this.ctrl.select_in_view, "Select in view", function() {
          this.ctrl.select_in_view = !this.ctrl.select_in_view;
@@ -684,6 +688,80 @@
       if (!skip_render) this.Render3D(-1);
    }
 
+   /** Reset transformation @private */
+   TGeoPainter.prototype.resetTransformation = function() {
+      this.changedTransformation("reset");
+   }
+
+   /** Method should be called when transformation parameters were changed @private */
+   TGeoPainter.prototype.changedTransformation = function(arg) {
+      if (!this._toplevel) return;
+
+      var ctrl = this.ctrl,
+          translation = new THREE.Matrix4(),
+          vect2 = new THREE.Vector3();
+
+      if (arg == "reset")
+         ctrl.trans_z = ctrl.trans_radial = 0;
+
+      this._toplevel.traverse(function(mesh) {
+         if (mesh.stack === undefined) return;
+
+         var node = mesh.parent;
+
+         if (arg == "reset") {
+            if (node.matrix0) {
+               node.matrix.copy(node.matrix0);
+               node.matrix.decompose( node.position, node.quaternion, node.scale );
+               node.matrixWorldNeedsUpdate = true;
+            }
+            delete node.matrix0;
+            delete node.vect0;
+            delete node.vect1;
+            delete node.minvert;
+            return;
+         }
+
+         if (node.vect0 === undefined) {
+            node.matrix0 = node.matrix.clone();
+            node.minvert = new THREE.Matrix4().getInverse( node.matrixWorld );
+
+            var box3 = JSROOT.GEO.getBoundingBox(mesh, null, true),
+                signz = mesh._flippedMesh ? -1 : 1;
+
+            // real center of mesh in local coordinates
+            node.vect0 = new THREE.Vector3((box3.max.x  + box3.min.x) / 2, (box3.max.y  + box3.min.y) / 2, signz * (box3.max.z  + box3.min.z) / 2).applyMatrix4(node.matrixWorld);
+            node.vect1 = new THREE.Vector3(0,0,0).applyMatrix4(node.minvert);
+         }
+
+         vect2.set(ctrl.trans_radial * node.vect0.x, ctrl.trans_radial * node.vect0.y, ctrl.trans_z * node.vect0.z).applyMatrix4(node.minvert).sub(node.vect1);
+
+         node.matrix.multiplyMatrices(node.matrix0, translation.makeTranslation(vect2.x, vect2.y, vect2.z));
+         node.matrix.decompose( node.position, node.quaternion, node.scale );
+         node.matrixWorldNeedsUpdate = true;
+      });
+
+      this._toplevel.updateMatrixWorld();
+
+      // axes drawing always triggers rendering
+      if (arg != "norender")
+         this.drawSimpleAxis();
+   }
+
+   /** @brief Should be called when autorotate property changed @private */
+   TGeoPainter.prototype.changedAutoRotate = function() {
+      this.autorotate(2.5);
+   }
+
+   /** Method should be called when changing axes drawing @private */
+   TGeoPainter.prototype.changedAxes = function() {
+      if (typeof this.ctrl._axis == 'string')
+         this.ctrl._axis = parseInt(this.ctrl._axis);
+
+      this.drawSimpleAxis();
+   }
+
+   /** Method should be called to change background color @private */
    TGeoPainter.prototype.changedBackground = function(val) {
       if (val !== undefined) this.ctrl.background = val;
       this._renderer.setClearColor(this.ctrl.background, 1);
@@ -802,18 +880,25 @@
 
       var appearance = this._datgui.addFolder('Appearance');
 
-      appearance.add(this.ctrl, 'highlight')
-                .name('Highlight Selection')
+      appearance.add(this.ctrl, 'highlight').name('Highlight Selection')
                 .listen().onChange(this.changedHighlight.bind(this));
 
       appearance.add(this.ctrl, 'transparency', 0.0, 1.0, 0.001)
                      .listen().onChange(this.changedGlobalTransparency.bind(this));
 
+      appearance.addColor(this.ctrl, 'background').name('Background')
+                .onChange(this.changedBackground.bind(this));
+
       appearance.add(this.ctrl, 'wireframe').name('Wireframe')
                      .listen().onChange(this.changedWireFrame.bind(this));
 
-      appearance.addColor(this.ctrl, 'background')
-                .name('Background').onChange(this.changedBackground.bind(this));
+      this.ctrl._axis_cfg = 0;
+      appearance.add(this.ctrl, '_axis', { "none" : 0, "show": 1, "center": 2}).name('Axes')
+                    .onChange(this.changedAxes.bind(this));
+
+      if (!this.ctrl.project)
+         appearance.add(this.ctrl, 'rotate').name("Autorotate")
+                      .listen().onChange(this.changedAutoRotate.bind(this));
 
       appearance.add(this, 'focusCamera').name('Reset camera position');
 
@@ -828,9 +913,24 @@
 
          advanced.add( this.ctrl, 'depthMethod', depthcfg)
              .name("Rendering order")
-            .onChange(this.changedDepthMethod.bind(this));
+             .onChange(this.changedDepthMethod.bind(this));
 
         advanced.add(this, 'resetAdvanced').name('Reset');
+      }
+
+      // Transformation Options
+      if (!this.ctrl.project) {
+         var transform = this._datgui.addFolder('Transform');
+         transform.add(this.ctrl, 'trans_z', 0., 3., 0.01)
+                     .name('Z axis')
+                     .listen().onChange(this.changedTransformation.bind(this));
+         transform.add(this.ctrl, 'trans_radial', 0., 3., 0.01)
+                  .name('Radial')
+                  .listen().onChange(this.changedTransformation.bind(this));
+
+         transform.add(this, 'resetTransformation').name('Reset');
+
+         if (this.ctrl.trans_z || this.ctrl.trans_radial) transform.open();
       }
 
       // no SSAO folder if outline is enabled
@@ -1446,9 +1546,9 @@
          }
 
          var job = {
-               collect: this._current_face_limit,   // indicator for the command
-               visible: this._clones.GetVisibleFlags(),
-               matrix: matrix ? matrix.elements : null
+            collect: this._current_face_limit,   // indicator for the command
+            flags: this._clones.GetVisibleFlags(),
+            matrix: matrix ? matrix.elements : null
          };
 
          this.submitToWorker(job);
@@ -2365,10 +2465,10 @@
 
          var current = new Date();
 
-         if ( painter.ctrl.autoRotate ) requestAnimationFrame( animate );
+         if ( painter.ctrl.rotate ) requestAnimationFrame( animate );
 
          if (painter._controls) {
-            painter._controls.autoRotate = painter.ctrl.autoRotate;
+            painter._controls.autoRotate = painter.ctrl.rotate;
             painter._controls.autoRotateSpeed = rotSpeed * ( current.getTime() - last.getTime() ) / 16.6666;
             painter._controls.update();
          }
@@ -2976,12 +3076,14 @@
 
          this._clones.name_prefix = name_prefix;
 
-         var uniquevis = this.ctrl.no_screen ? 0 : this._clones.MarkVisibles(true);
+         var hide_top_volume = !!this.geo_manager && !this.ctrl.showtop;
+
+         var uniquevis = this.ctrl.no_screen ? 0 : this._clones.MarkVisibles(true, false, hide_top_volume);
 
          if (uniquevis <= 0)
-            uniquevis = this._clones.MarkVisibles(false, false, null, !!this.geo_manager && !this.ctrl.showtop);
+            uniquevis = this._clones.MarkVisibles(false, false, hide_top_volume);
          else
-            uniquevis = this._clones.MarkVisibles(true, true); // copy bits once and use normal visibility bits
+            uniquevis = this._clones.MarkVisibles(true, true, hide_top_volume); // copy bits once and use normal visibility bits
 
          this._clones.ProduceIdShits();
 
@@ -3147,9 +3249,6 @@
 
          var tm1 = new Date();
 
-         if (typeof this.TestAxisVisibility === 'function')
-            this.TestAxisVisibility(this._camera, this._toplevel);
-
          this.TestCameraPosition(tmout === -1);
 
          // its needed for outlinePass - do rendering, most consuming time
@@ -3296,11 +3395,15 @@
          this._slave_painters[k].startDrawGeometry();
    }
 
-   TGeoPainter.prototype.drawSimpleAxis = function() {
+   /** Draw axes if configured, otherwise just remove completely */
+   TGeoPainter.prototype.drawSimpleAxis = function(norender) {
+      this.getExtrasContainer('delete', 'axis');
+
+      if (!this.ctrl._axis)
+         return norender ? null : this.Render3D();
 
       var box = this.getGeomBoundingBox(this._toplevel);
 
-      this.getExtrasContainer('delete', 'axis');
       var container = this.getExtrasContainer('create', 'axis');
 
       var text_size = 0.02 * Math.max( (box.max.x - box.min.x), (box.max.y - box.min.y), (box.max.z - box.min.z)),
@@ -3312,7 +3415,7 @@
           yup = [this.ctrl._yup, this.ctrl._yup, this.ctrl._yup],
           numaxis = 3;
 
-      if (this.ctrl._axis_center)
+      if (this.ctrl._axis == 2)
          for (var naxis=0;naxis<3;++naxis) {
             var name = names[naxis];
             if ((box.min[name]<=0) && (box.max[name]>=0)) continue;
@@ -3355,7 +3458,7 @@
            case 2: buf[5] = box.max.z; lbl += " " + labels[2]; break;
          }
 
-         if (this.ctrl._axis_center)
+         if (this.ctrl._axis == 2)
             for (var k=0;k<6;++k)
                if ((k % 3) !== naxis) buf[k] = center[k%3];
 
@@ -3367,7 +3470,7 @@
          var textMaterial = new THREE.MeshBasicMaterial({ color: axiscol });
 
          if ((center[naxis]===0) && (center[naxis]>=box.min[name]) && (center[naxis]<=box.max[name]))
-           if (!this.ctrl._axis_center || (naxis===0)) {
+           if ((this.ctrl._axis != 2) || (naxis===0)) {
                var geom = ortho ? new THREE.CircleBufferGeometry(text_size*0.25) :
                                   new THREE.SphereBufferGeometry(text_size*0.25);
                mesh = new THREE.Mesh(geom, textMaterial);
@@ -3461,41 +3564,28 @@
          container.add(mesh);
       }
 
-      this.TestAxisVisibility = function(camera, toplevel) {
-         if (!camera) {
-            this.getExtrasContainer('delete', 'axis');
-            delete this.TestAxisVisibility;
-            this.Render3D();
-            return;
-         }
-      }
+      // after creating axes trigger rendering and recalculation of depth
+      this.changedDepthMethod(norender ? "norender" : undefined);
    }
 
-   /** Toggle axes visibility */
-   TGeoPainter.prototype.toggleAxesDraw = function(force_draw) {
-      if (this.TestAxisVisibility) {
-         if (!force_draw) {
-           this.TestAxisVisibility(null, this._toplevel);
-           this.ctrl._axis = false;
-         }
-      } else {
-         this.ctrl._axis = true;
-         this.drawSimpleAxis();
-         if (force_draw !== true)
-            this.changedDepthMethod();
-      }
+   /** @brief  Toggle axes visibility */
+   TGeoPainter.prototype.toggleAxesDraw = function() {
+      this.setAxesDraw("toggle");
    }
 
-   /** @brief Set axes visibility */
+   /** @brief Set axes visibility 0 - off, 1 - on, 2 - centered */
    TGeoPainter.prototype.setAxesDraw = function(on) {
-      if (on != this.ctrl._axis)
-         this.toggleAxesDraw();
+      if (on === "toggle")
+         this.ctrl._axis = this.ctrl._axis ? 0 : 1;
+      else
+         this.ctrl._axis = (typeof on == 'number') ? on : (on ? 1 : 0);
+      this.drawSimpleAxis();
    }
 
    /** @brief Set auto rotate mode */
    TGeoPainter.prototype.setAutoRotate = function(on) {
       if (this.ctrl.project) return;
-      this.ctrl.autoRotate = on;
+      if (on !== undefined) this.ctrl.rotate = on;
       this.autorotate(2.5);
    }
 
@@ -3661,8 +3751,11 @@
       if (first_time)
          this.completeScene();
 
+      if (full_redraw && (this.ctrl.trans_radial || this.ctrl.trans_z))
+         this.changedTransformation("norender");
+
       if (full_redraw && this.ctrl._axis)
-         this.toggleAxesDraw(true);
+         this.drawSimpleAxis(true);
 
       this._scene.overrideMaterial = null;
 
@@ -3699,7 +3792,7 @@
             this.ctrl.highlight_scene = this.ctrl.highlight;
 
          // if rotation was enabled, do it
-         if (this._webgl && this.ctrl.autoRotate && !this.ctrl.project) this.autorotate(2.5);
+         if (this._webgl && this.ctrl.rotate && !this.ctrl.project) this.autorotate(2.5);
          if (!this._usesvg && this.ctrl.show_controls && !JSROOT.BatchMode) this.showControlOptions(true);
       }
 
@@ -3728,7 +3821,7 @@
 
       for (var n = 0; n < this._draw_nodes.length; ++n) {
          var entry = this._draw_nodes[n];
-         if ((entry.nodeid === nodeid) || (this._clones.IsNodeInStack(nodeid, entry.stack))) {
+         if ((entry.nodeid === nodeid) || this._clones.IsNodeInStack(nodeid, entry.stack)) {
             this._clones.CreateObject3D(entry.stack, this._toplevel, 'delete_mesh');
          } else {
             new_nodes.push(entry);
@@ -3840,7 +3933,6 @@
       delete this._new_draw_nodes;
       delete this._new_append_nodes;
       delete this._last_camera_position;
-      delete this.TestAxisVisibility;
 
       this.first_render_tm = 0; // time needed for first rendering
       this.last_render_tm = 0;
@@ -3962,7 +4054,6 @@
       delete this._build_shapes;
 
       delete this._extraObjects;
-      delete this.TestAxisVisibility; // allow draw of axes again
       delete this._clipCfg;
 
       JSROOT.Painter.DisposeThreejsObject(this._toplevel, true);

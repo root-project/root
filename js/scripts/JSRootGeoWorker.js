@@ -87,8 +87,8 @@ onmessage = function(e) {
       // this is task to collect visible nodes using camera position
 
       // first mark all visible flags
-      clones.MarkVisibles(false, false, e.data.visible);
-      delete e.data.visible;
+      clones.SetVisibleFlags(e.data.flags);
+      delete e.data.falgs;
 
       clones.ProduceIdShits();
 

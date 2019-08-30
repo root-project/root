@@ -2377,34 +2377,26 @@
    }
 
    /** Mark visisble nodes. Set only basic flags, actual visibility depends from hierarchy  */
-   JSROOT.GEO.ClonedNodes.prototype.MarkVisibles = function(on_screen, copy_bits, cloning, hide_top_volume) {
-      if (!this.nodes) return 0;
+   JSROOT.GEO.ClonedNodes.prototype.MarkVisibles = function(on_screen, copy_bits, hide_top_volume) {
       if (this.plain_shape) return 1;
+      if (!this.origin || !this.nodes) return 0;
 
-      var res = 0, simple_copy = cloning && (cloning.length === this.nodes.length);
-
-      if (!simple_copy && !this.origin) return 0;
+      var res = 0;
 
       for (var n=0;n<this.nodes.length;++n) {
-         var clone = this.nodes[n];
+         var clone = this.nodes[n],
+             obj = this.origin[n];
 
          clone.vis = 0; // 1 - only with last level
          delete clone.nochlds;
-
-         if (simple_copy) {
-            clone.vis = cloning[n].vis;
-            clone.nochlds = cloning[n].nochlds;
-            if (clone.vis) res++;
-            continue;
-         }
-
-         var obj = this.origin[n];
 
          if (clone.kind === 0) {
             if (obj.fVolume) {
                if (on_screen) {
                   // on screen bits used always, childs always checked
                   clone.vis = JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisOnScreen) ? 99 : 0;
+
+                  if ((n==0) && clone.vis && hide_top_volume) clone.vis = 0;
 
                   if (copy_bits) {
                      JSROOT.GEO.SetBit(obj.fVolume, JSROOT.GEO.BITS.kVisNone, false);
@@ -2472,6 +2464,25 @@
          res[n] = { vis: this.nodes[n].vis, nochlds: this.nodes[n].nochlds };
       return res;
    }
+
+   /** Assign only visibility flags, extracted with GetVisibleFlags @private */
+   JSROOT.GEO.ClonedNodes.prototype.SetVisibleFlags = function(flags) {
+      if (!this.nodes || !flags || !flags.length != this.nodes.length)
+         return 0;
+
+      var res = 0;
+      for (var n=0;n<this.nodes.length;++n) {
+         var clone = this.nodes[n];
+
+         clone.vis = flags[n].vis;
+         clone.nochlds = flags[n].nochlds;
+         if (clone.vis) res++;
+      }
+
+      return res;
+   }
+
+
 
    /** Scan visible nodes in hierarchy, starting from nodeid
      * Each entry in hierarchy get its unique id, which is not changed with visibility flags
@@ -2811,10 +2822,11 @@
       return prop;
    }
 
+   /** Creates hierarchy of Object3D for given stack entry
+     * such hierarchy repeats hierarchy of TGeoNodes and set matrix for the objects drawing
+     * also set renderOrder, required to handle transparency
+     * @private */
    JSROOT.GEO.ClonedNodes.prototype.CreateObject3D = function(stack, toplevel, options) {
-      // create hierarchy of Object3D for given stack entry
-      // such hierarchy repeats hierarchy of TGeoNodes and set matrix for the objects drawing
-      // also set renderOrder, required to handle transparency
 
       var node = this.nodes[0], three_prnt = toplevel, draw_depth = 0,
           force = (typeof options == 'object') || (options==='force');
@@ -3224,9 +3236,9 @@
       }
    }
 
+   /** When transformation matrix includes one or several inversion of axis,
+     * one should inverse geometry object, otherwise THREE.js cannot correctly draw it, @private */
    JSROOT.GEO.createFlippedMesh = function(parent, shape, material) {
-      // when transformation matrix includes one or several inversion of axis,
-      // one should inverse geometry object, otherwise THREE.js cannot correctly draw it
 
       var flip =  new THREE.Vector3(1,1,-1);
 
@@ -3235,9 +3247,8 @@
          if (shape.geom.type == 'BufferGeometry') {
 
             var pos = shape.geom.getAttribute('position').array,
-                norm = shape.geom.getAttribute('normal').array;
-
-            var index = shape.geom.getIndex();
+                norm = shape.geom.getAttribute('normal').array,
+                index = shape.geom.getIndex();
 
             if (index) {
                // we need to unfold all points to
@@ -3577,9 +3588,9 @@
 
       var uniquevis = opt.no_screen ? 0 : clones.MarkVisibles(true);
       if (uniquevis <= 0)
-         uniquevis = clones.MarkVisibles(false, false, null, hide_top);
+         uniquevis = clones.MarkVisibles(false, false, hide_top);
       else
-         uniquevis = clones.MarkVisibles(true, true); // copy bits once and use normal visibility bits
+         uniquevis = clones.MarkVisibles(true, true, hide_top); // copy bits once and use normal visibility bits
 
       clones.ProduceIdShits();
 
@@ -3645,16 +3656,15 @@
       return toplevel;
    }
 
-   JSROOT.GEO.getBoundingBox = function(node, box3) {
+   /**  extract code of Box3.expandByObject
+     * Major difference - do not traverse hierarchy */
 
-      // extract code of Box3.expandByObject
-      // Major difference - do not traverse hierarchy
-
+   JSROOT.GEO.getBoundingBox = function(node, box3, local_coordinates) {
       if (!node || !node.geometry) return box3;
 
       if (!box3) { box3 = new THREE.Box3(); box3.makeEmpty(); }
 
-      node.updateMatrixWorld();
+      if (!local_coordinates) node.updateMatrixWorld();
 
       var v1 = new THREE.Vector3(),
           geometry = node.geometry;
@@ -3663,7 +3673,7 @@
          var vertices = geometry.vertices;
          for (var i = 0, l = vertices.length; i < l; i ++ ) {
             v1.copy( vertices[ i ] );
-            v1.applyMatrix4( node.matrixWorld );
+            if (!local_coordinates) v1.applyMatrix4( node.matrixWorld );
             box3.expandByPoint( v1 );
          }
       } else if ( geometry.isBufferGeometry ) {
@@ -3671,7 +3681,8 @@
          if ( attribute !== undefined ) {
             for (var i = 0, l = attribute.count; i < l; i ++ ) {
                // v1.fromAttribute( attribute, i ).applyMatrix4( node.matrixWorld );
-               v1.fromBufferAttribute( attribute, i ).applyMatrix4( node.matrixWorld );
+               v1.fromBufferAttribute( attribute, i );
+               if (!local_coordinates) v1.applyMatrix4( node.matrixWorld );
                box3.expandByPoint( v1 );
             }
          }
