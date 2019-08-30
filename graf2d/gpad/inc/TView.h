@@ -26,7 +26,7 @@ class TView : public TObject, public TAttLine {
 
 public:
 
-   TView() = default;
+   TView() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
    virtual ~TView() = default;
 
    virtual void          DefinePerspectiveView() = 0;
