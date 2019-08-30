@@ -39,7 +39,7 @@ private:
 
   RooRealProxy _x;
   RooListProxy _coefList ;
-  mutable TNamed* _refRangeName ;
+  const TNamed* _refRangeName ;
 
   Double_t evaluate() const;
   RooSpan<double> evaluateBatch(std::size_t begin, std::size_t batchSize) const;
