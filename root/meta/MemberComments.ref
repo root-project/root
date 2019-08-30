@@ -168,7 +168,7 @@ OBJ: TList	TList	Doubly linked list : 0
  OBJ: TMethod	Dump	*MENU* : 0
       void TObject::Dump() const
  OBJ: TMethod	Error	 : 0
-      void TObject::Error(const char* method, const char* msgfmt) const
+      void TObject::Error(const char* method, const char* msgfmt,...) const
  OBJ: TMethod	Execute	 : 0
       void TObject::Execute(const char* method, const char* params, Int_t* error = 0)
  OBJ: TMethod	Execute	 : 0
@@ -178,7 +178,7 @@ OBJ: TList	TList	Doubly linked list : 0
  OBJ: TMethod	ExecuteEvent	 : 0
       void TObject::ExecuteEvent(Int_t event, Int_t px, Int_t py)
  OBJ: TMethod	Fatal	 : 0
-      void TObject::Fatal(const char* method, const char* msgfmt) const
+      void TObject::Fatal(const char* method, const char* msgfmt,...) const
  OBJ: TMethod	FindObject	 : 0
       TObject* TObject::FindObject(const char* name) const
  OBJ: TMethod	FindObject	 : 0
@@ -270,7 +270,7 @@ OBJ: TList	TList	Doubly linked list : 0
  OBJ: TMethod	ImplFileName	 : 0
       const char* TAttFill::ImplFileName()
  OBJ: TMethod	Info	 : 0
-      void TObject::Info(const char* method, const char* msgfmt) const
+      void TObject::Info(const char* method, const char* msgfmt,...) const
  OBJ: TMethod	InheritsFrom	 : 0
       Bool_t TObject::InheritsFrom(const char* classname) const
  OBJ: TMethod	InheritsFrom	 : 0
@@ -478,7 +478,7 @@ OBJ: TList	TList	Doubly linked list : 0
  OBJ: TMethod	StreamerNVirtual	 : 0
       void TAttFill::StreamerNVirtual(TBuffer& ClassDef_StreamerNVirtual_b)
  OBJ: TMethod	SysError	 : 0
-      void TObject::SysError(const char* method, const char* msgfmt) const
+      void TObject::SysError(const char* method, const char* msgfmt,...) const
  OBJ: TMethod	TArrow	 : 0
       TArrow TArrow::TArrow()
  OBJ: TMethod	TArrow	 : 0
@@ -518,7 +518,7 @@ OBJ: TList	TList	Doubly linked list : 0
  OBJ: TMethod	UseCurrentStyle	 : 0
       void TObject::UseCurrentStyle()
  OBJ: TMethod	Warning	 : 0
-      void TObject::Warning(const char* method, const char* msgfmt) const
+      void TObject::Warning(const char* method, const char* msgfmt,...) const
  OBJ: TMethod	Write	 : 0
       Int_t TObject::Write(const char* name = 0, Int_t option = 0, Int_t bufsize = 0)
  OBJ: TMethod	Write	 : 0
