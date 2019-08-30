@@ -86,8 +86,7 @@ template <typename T>
 EFromHumanReadableSize FromHumanReadableSize(std::string_view str, T &value)
 {
    try {
-      size_t size = str.size();
-      size_t cur;
+      size_t cur, size = str.size();
       // Parse leading numeric factor
       const double coeff = stod(std::string(str.data(), str.size()), &cur);
 
@@ -95,12 +94,11 @@ EFromHumanReadableSize FromHumanReadableSize(std::string_view str, T &value)
       while (cur<size && isspace(str[cur])) ++cur;
 
       // Read off first character which should be an SI prefix
-      int exp  = 0;
-      int unit = 1000;
+      int exp = 0, unit = 1000;
 
       auto result = [coeff,&exp,&unit,&value]() {
          double v = exp ? coeff * std::pow(unit, exp / 3) : coeff;
-         if (v < std::numeric_limits<T>::max()) {
+         if (v < (double) std::numeric_limits<T>::max()) {
             value = (T)v;
             return EFromHumanReadableSize::kSuccess;
          } else {
