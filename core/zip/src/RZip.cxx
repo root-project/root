@@ -322,83 +322,72 @@ int R__unzip_header(int *srcsize, uch *src, int *tgtsize)
 // age of the original code...
 void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
 {
-  long isize;
-  uch  *ibufptr,*obufptr;
-  long  ibufcnt, obufcnt;
+   long isize;
+   uch *ibufptr, *obufptr;
+   long ibufcnt, obufcnt;
 
-  *irep = 0L;
+   *irep = 0L;
 
-  /*   C H E C K   H E A D E R   */
+   /*   C H E C K   H E A D E R   */
 
-  if (*srcsize < HDRSIZE) {
-    fprintf(stderr,"R__unzip: too small source\n");
-    return;
-  }
+   if (*srcsize < HDRSIZE) {
+      fprintf(stderr, "R__unzip: too small source\n");
+      return;
+   }
 
-  /*   C H E C K   H E A D E R   */
-  if (!is_valid_header(src)) {
-     fprintf(stderr, "Error R__unzip: error in header\n");
-     return;
-  }
+   /*   C H E C K   H E A D E R   */
+   if (!is_valid_header(src)) {
+      fprintf(stderr, "Error R__unzip: error in header\n");
+      return;
+   }
 
-  ibufptr = src + HDRSIZE;
-  ibufcnt = (long)src[3] | ((long)src[4] << 8) | ((long)src[5] << 16);
-  isize   = (long)src[6] | ((long)src[7] << 8) | ((long)src[8] << 16);
-  obufptr = tgt;
-  obufcnt = *tgtsize;
+   ibufptr = src + HDRSIZE;
+   ibufcnt = (long)src[3] | ((long)src[4] << 8) | ((long)src[5] << 16);
+   isize = (long)src[6] | ((long)src[7] << 8) | ((long)src[8] << 16);
+   obufptr = tgt;
+   obufcnt = *tgtsize;
 
-  if (obufcnt < isize) {
-    fprintf(stderr,"R__unzip: too small target\n");
-    return;
-  }
+   if (obufcnt < isize) {
+      fprintf(stderr, "R__unzip: too small target\n");
+      return;
+   }
 
-  if (ibufcnt + HDRSIZE != *srcsize) {
-    fprintf(stderr,"R__unzip: discrepancy in source length\n");
-    return;
-  }
+   if (ibufcnt + HDRSIZE != *srcsize) {
+      fprintf(stderr, "R__unzip: discrepancy in source length\n");
+      return;
+   }
 
-  /*   D E C O M P R E S S   D A T A  */
+   /* ZLIB and other standard compression algorithms */
+   if (is_valid_header_zlib(src)) {
+      R__unzipZLIB(srcsize, src, tgtsize, tgt, irep);
+      return;
+   } else if (is_valid_header_lzma(src)) {
+      R__unzipLZMA(srcsize, src, tgtsize, tgt, irep);
+      return;
+   } else if (is_valid_header_lz4(src)) {
+      R__unzipLZ4(srcsize, src, tgtsize, tgt, irep);
+      return;
+   } else if (is_valid_header_zstd(src)) {
+      R__unzipZSTD(srcsize, src, tgtsize, tgt, irep);
+      return;
+   }
 
-  /*std::cout << "tgtsize: " << *tgtsize << std::endl;
-  std::cout << "srcsize: " << *srcsize << std::endl;*/
+   /* Old zlib format */
+   if (R__Inflate(&ibufptr, &ibufcnt, &obufptr, &obufcnt)) {
+      fprintf(stderr, "R__unzip: error during decompression\n");
+      return;
+   }
 
-  /* ZLIB and other standard compression algorithms */
-  if (is_valid_header_zlib(src)) {
-     R__unzipZLIB(srcsize, src, tgtsize, tgt, irep);
-     //std::cout << "retval: " << *irep << std::endl << std::endl;
-     return;
-  } else if (is_valid_header_lzma(src)) {
-     R__unzipLZMA(srcsize, src, tgtsize, tgt, irep);
-     //std::cout << "retval: " << *irep << std::endl << std::endl;
-     return;
-  } else if (is_valid_header_lz4(src)) {
-     R__unzipLZ4(srcsize, src, tgtsize, tgt, irep);
-     //std::cout << "retval: " << *irep << std::endl << std::endl;
-     return;
-  }
-  else if (is_valid_header_zstd(src)) {
-     R__unzipZSTD(srcsize, src, tgtsize, tgt, irep);
-     //std::cout << "retval: " << *irep << std::endl << std::endl;
-     return;
-  }
+   /* if (obufptr - tgt != isize) {
+     There are some rare cases when a few more bytes are required */
+   if (obufptr - tgt > *tgtsize) {
+      fprintf(stderr, "R__unzip: discrepancy (%ld) with initial size: %ld, tgtsize=%d\n", (long)(obufptr - tgt), isize,
+              *tgtsize);
+      *irep = obufptr - tgt;
+      return;
+   }
 
-
-  /* Old zlib format */
-  if (R__Inflate(&ibufptr, &ibufcnt, &obufptr, &obufcnt)) {
-    fprintf(stderr,"R__unzip: error during decompression\n");
-    return;
-  }
-
-  /* if (obufptr - tgt != isize) {
-    There are some rare cases when a few more bytes are required */
-  if (obufptr - tgt > *tgtsize) {
-    fprintf(stderr,"R__unzip: discrepancy (%ld) with initial size: %ld, tgtsize=%d\n",
-            (long)(obufptr - tgt),isize,*tgtsize);
-    *irep = obufptr - tgt;
-    return;
-  }
-
-  *irep = isize;
+   *irep = isize;
 }
 
 void R__unzipZLIB(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep)
