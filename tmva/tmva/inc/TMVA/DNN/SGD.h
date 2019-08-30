@@ -91,25 +91,16 @@ TSGD<Architecture_t, Layer_t, DeepNet_t>::TSGD(Scalar_t learningRate, DeepNet_t 
    fPastBiasGradients.resize(layersNSlices);
 
    for (size_t i = 0; i < layersNSlices; i++) {
-      size_t weightsNSlices = (layers[i]->GetWeights()).size();
-
+      
+      Architecture_t::CreateWeightTensors( fPastWeightGradients[i], layers[i]->GetWeights()); 
+      size_t weightsNSlices = fPastWeightGradients[i].size();
       for (size_t j = 0; j < weightsNSlices; j++) {
-         Matrix_t &currentWeights = layers[i]->GetWeightsAt(j);
-         size_t weightsNRows = currentWeights.GetNrows();
-         size_t weightsNCols = currentWeights.GetNcols();
-
-         fPastWeightGradients[i].emplace_back(weightsNRows, weightsNCols);
          initialize<Architecture_t>(fPastWeightGradients[i][j], EInitialization::kZero);
       }
 
-      size_t biasesNSlices = (layers[i]->GetBiases()).size();
-
+      Architecture_t::CreateWeightTensors( fPastBiasGradients[i], layers[i]->GetBiases()); 
+      size_t biasesNSlices = fPastBiasGradients[i].size();
       for (size_t j = 0; j < biasesNSlices; j++) {
-         Matrix_t &currentBiases = layers[i]->GetBiasesAt(j);
-         size_t biasesNRows = currentBiases.GetNrows();
-         size_t biasesNCols = currentBiases.GetNcols();
-
-         fPastBiasGradients[i].emplace_back(biasesNRows, biasesNCols);
          initialize<Architecture_t>(fPastBiasGradients[i][j], EInitialization::kZero);
       }
    }

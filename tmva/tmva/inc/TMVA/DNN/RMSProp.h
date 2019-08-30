@@ -110,26 +110,20 @@ TRMSProp<Architecture_t, Layer_t, DeepNet_t>::TRMSProp(DeepNet_t &deepNet, Scala
    for (size_t i = 0; i < layersNSlices; i++) {
       const size_t weightsNSlices = (layers[i]->GetWeights()).size();
 
-      for (size_t j = 0; j < weightsNSlices; j++) {
-         Matrix_t &currentWeights = layers[i]->GetWeightsAt(j);
-         const size_t weightsNRows = currentWeights.GetNrows();
-         const size_t weightsNCols = currentWeights.GetNcols();
+      Architecture_t::CreateWeightTensors(fPastSquaredWeightGradients[i], layers[i]->GetWeights());
+      Architecture_t::CreateWeightTensors(fWeightUpdates[i], layers[i]->GetWeights());
 
-         fPastSquaredWeightGradients[i].emplace_back(weightsNRows, weightsNCols);
-         fWeightUpdates[i].emplace_back(weightsNRows, weightsNCols);
+      for (size_t j = 0; j < weightsNSlices; j++) {
          initialize<Architecture_t>(fPastSquaredWeightGradients[i][j], EInitialization::kZero);
          initialize<Architecture_t>(fWeightUpdates[i][j], EInitialization::kZero);
       }
 
       const size_t biasesNSlices = (layers[i]->GetBiases()).size();
 
-      for (size_t j = 0; j < biasesNSlices; j++) {
-         Matrix_t &currentBiases = layers[i]->GetBiasesAt(j);
-         const size_t biasesNRows = currentBiases.GetNrows();
-         const size_t biasesNCols = currentBiases.GetNcols();
+      Architecture_t::CreateWeightTensors( fPastSquaredBiasGradients[i], layers[i]->GetBiases()); 
+      Architecture_t::CreateWeightTensors( fBiasUpdates[i], layers[i]->GetBiases()); 
 
-         fPastSquaredBiasGradients[i].emplace_back(biasesNRows, biasesNCols);
-         fBiasUpdates[i].emplace_back(biasesNRows, biasesNCols);
+      for (size_t j = 0; j < biasesNSlices; j++) {
          initialize<Architecture_t>(fPastSquaredBiasGradients[i][j], EInitialization::kZero);
          initialize<Architecture_t>(fBiasUpdates[i][j], EInitialization::kZero);
       }

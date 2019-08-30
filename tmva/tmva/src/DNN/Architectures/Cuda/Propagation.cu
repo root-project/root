@@ -593,9 +593,11 @@ void TCuda<AFloat>::Flatten(TCudaTensor<AFloat> &A,
                             const TCudaTensor<AFloat> &B)
 {
    // flatten B: ( B x C x HW ) in ( 1, B , CHW)
-   size_t size = B.GetFirstSize();   // B size
+   size_t nDepth    = B.GetFirstSize();   // B size
    size_t nRows = B.GetCSize();      // C size
    size_t nCols = B.GetWSize();      // HW size
+   if (B.GetNDim()==4) nCols *= B.GetHSize(); 
+   assert(B.GetNDim() <= 4);
 
    dim3 blockDims = TDevice::BlockDims2D();
    dim3 gridDims  = TDevice::GridDims2D(A.GetHSize(), A.GetWSize());
@@ -631,7 +633,7 @@ void TCuda<AFloat>::Flatten(TCudaTensor<AFloat> &A,
 
    // to be fixed !!!
    // Launch the kernel using our device pointers.
-   ::TMVA::DNN::Cuda::Flatten<<<gridDims, blockDims>>>(A.GetDataPointer(), B.GetDataPointer(), size, nRows, nCols);
+   ::TMVA::DNN::Cuda::Flatten<<<gridDims, blockDims>>>(A.GetDataPointer(), B.GetDataPointer(), nDepth, nRows, nCols);
 
    //PrintTensor(A, "kernel reshape");
 
@@ -660,9 +662,12 @@ template<typename AFloat>
 void TCuda<AFloat>::Deflatten(TCudaTensor<AFloat> &A,
                               const TCudaTensor<AFloat> &B)
 {
-    size_t size = A.GetFirstSize();   // B size
-    size_t nRows = A.GetCSize();      // C size
-    size_t nCols = A.GetWSize();      // HW size
+   size_t nDepth = A.GetFirstSize();   // B size
+   size_t nRows = A.GetCSize();      // C size
+   size_t nCols = A.GetWSize();      // HW size
+   if (A.GetNDim()==4) nCols *= A.GetHSize(); 
+   assert(A.GetNDim() <= 4);
+
 
     dim3 blockDims = TDevice::BlockDims2D();
     dim3 gridDims  = TDevice::GridDims2D(B.GetHSize(), B.GetWSize());
@@ -688,7 +693,7 @@ void TCuda<AFloat>::Deflatten(TCudaTensor<AFloat> &A,
    //  cudaMemcpy(dA, hA, sizeof(AFloat *) * size, cudaMemcpyHostToDevice);
 
     // Launch the kernel using our device pointers.
-   ::TMVA::DNN::Cuda::Deflatten<<<gridDims, blockDims>>>(A.GetDataPointer(), B.GetDataPointer(), size, nRows, nCols);
+   ::TMVA::DNN::Cuda::Deflatten<<<gridDims, blockDims>>>(A.GetDataPointer(), B.GetDataPointer(), nDepth, nRows, nCols);
 
    // assert (  B.GetFirstSize() == 1);
    // assert (  B.GetHSize() == size);

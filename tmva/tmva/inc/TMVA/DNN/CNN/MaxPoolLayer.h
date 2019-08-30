@@ -260,16 +260,18 @@ void TMaxPoolLayer<Architecture_t>::ReleaseDescriptors() {
 //______________________________________________________________________________
 template <typename Architecture_t>
 void TMaxPoolLayer<Architecture_t>::InitializeWorkspace() {
+#if 0  // this is for dropout and needs to be fixed
    TConvParams params(this->GetBatchSize(), this->GetInputDepth(), this->GetInputHeight(), this->GetInputWidth(),
                       this->GetDepth(), this->GetFilterHeight(), this->GetFilterWidth(),
                       this->GetStrideRows(), this->GetStrideCols(), this->GetPaddingHeight(), this->GetPaddingWidth());
 
-   Architecture_t::InitializeDropoutWorkspace(TConvLayer<Architecture_t>::fWorkspace, TConvLayer<Architecture_t>::fDescriptors, params, this);
+   Architecture_t::InitializePoolDropoutWorkspace(TConvLayer<Architecture_t>::fWorkspace, TConvLayer<Architecture_t>::fDescriptors, params, this);
+#endif
 }
 
 template <typename Architecture_t>
 void TMaxPoolLayer<Architecture_t>::FreeWorkspace() {
-   Architecture_t::FreePoolWorkspace(TConvLayer<Architecture_t>::fWorkspace, this);
+   //Architecture_t::FreePoolDropoutWorkspace(TConvLayer<Architecture_t>::fWorkspace, this);
 }
 
 } // namespace CNN

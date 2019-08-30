@@ -97,6 +97,17 @@ public:
    static Tensor_t CreateTensor(size_t n, size_t c, size_t h, size_t w) { 
       return Tensor_t( {c,h*w,n}, GetTensorLayout()); 
    }
+   static Tensor_t CreateTensor(DeviceBuffer_t buffer, size_t n, size_t c, size_t h, size_t w) { 
+      return Tensor_t( buffer, {c,h*w,n}, GetTensorLayout()); 
+   }
+   // create a weight tensor/matrix vector   from another tensor/weight  vector using the given tensor shapes 
+   // this function is used by the optimizers to stgore intermidiate weights representations
+   static void  CreateWeightTensors( std::vector<Matrix_t> & newWeights, const std::vector<Matrix_t> & weights) {
+      if (!newWeights.empty()) newWeights.clear(); 
+      size_t n =  weights.size(); 
+      for (size_t i = 0; i < n; ++i)
+         newWeights.emplace_back( weights[i].GetNrows(), weights[i].GetNcols());
+   }
    //____________________________________________________________________________
    //
    // Architecture Initialization
@@ -122,13 +133,13 @@ public:
                                        TDescriptors * & /*descriptors*/,
                                        const DNN::CNN::TConvParams & /*params*/,
                                        ConvLayer_t */*L = nullptr*/) {}
-   static void InitializeDropoutWorkspace(TWorkspace * & /*workspace*/,
+   static void InitializePoolDropoutWorkspace(TWorkspace * & /*workspace*/,
                                        TDescriptors * & /*descriptors*/,
                                        const DNN::CNN::TConvParams & /*params*/,
                                        PoolingLayer_t */*L = nullptr*/) {}
 
    static void FreeConvWorkspace(TWorkspace * & /*workspace*/, ConvLayer_t */*L = nullptr*/) {}   ///< Only used for certain cudnn on-device memory
-   static void FreePoolWorkspace(TWorkspace * & /*workspace*/, PoolingLayer_t */*L = nullptr*/) {}
+   static void FreePoolDropoutWorkspace(TWorkspace * & /*workspace*/, PoolingLayer_t */*L = nullptr*/) {}
 
    static void ReleaseDescriptor(ActivationDescriptor_t &  /* activationDescr */) {}
    // // Utility function to convert from a Matrix to a Tensor
@@ -746,7 +757,7 @@ public:
    static void AdamUpdateSecondMom(Matrix_t & A, const Matrix_t & B, Scalar_t beta);
 
    // printing of tensor
-   static void PrintTensor( const Tensor_t & A, const std::string name = "Cpu-tensor");
+   static void PrintTensor( const Tensor_t & A, const std::string name = "Cpu-tensor", bool truncate = false);
 
 };
 
@@ -785,7 +796,7 @@ void TCpu<Real_t>::CopyDiffArch(std::vector<TCpuMatrix<Real_t>> &A, const std::v
 }
 
 template <typename Real_t>
-void TCpu<Real_t>::PrintTensor(const typename TCpu<Real_t>::Tensor_t & A, const std::string name ) 
+void TCpu<Real_t>::PrintTensor(const typename TCpu<Real_t>::Tensor_t & A, const std::string name, bool truncate ) 
 {
    std::cout << name << " size = " << A.GetSize() << " shape = { "; 
    auto shape = A.GetShape(); 
@@ -800,9 +811,12 @@ void TCpu<Real_t>::PrintTensor(const typename TCpu<Real_t>::Tensor_t & A, const 
    if (A.GetShape().size() == 2 ) { 
       for (size_t i = 0; i < A.GetShape()[0]; ++i) {
          std::cout << "{ ";
-         for (size_t j = 0; j < A.GetShape()[1]; ++j) {
+         size_t n =  A.GetShape()[1];
+         if (truncate) n = std::min(n,size_t(10));
+         for (size_t j = 0; j < n; ++j) {
             std::cout << A(i,j) << " ";
          }
+          if (truncate && n < A.GetShape()[1]) std::cout << " ...... ";
          std::cout << " } " << std::endl;
       }
    } else if  (A.GetShape().size() == 3 ) {
@@ -810,9 +824,12 @@ void TCpu<Real_t>::PrintTensor(const typename TCpu<Real_t>::Tensor_t & A, const 
          std::cout << "{ ";
          for (size_t j = 0; j < A.GetHSize(); ++j) {
             std::cout << "{ ";
-            for (size_t k = 0; k < A.GetWSize(); ++k) {
+            size_t n =  A.GetWSize();
+            if (truncate)  n = std::min(n,size_t(10));  
+            for (size_t k = 0; k < n; ++k) {
                std::cout << A(i,j,k) << " ";
             }
+            if (truncate && n < A.GetWSize()) std::cout << " ...... ";
             std::cout << " } " << std::endl;
          }
          std::cout << " } " << std::endl;

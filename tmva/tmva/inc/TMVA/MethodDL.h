@@ -81,21 +81,22 @@ class MethodDL : public MethodBase {
 private:
    // Key-Value vector type, contining the values for the training options
    using KeyValueVector_t = std::vector<std::map<TString, TString>>;
-// #ifdef R__HAS_TMVAGPU
-//    using ArchitectureImpl_t = TMVA::DNN::TCuda<Double_t>;
-// #else
+#ifdef R__HAS_TMVAGPU
+   using ArchitectureImpl_t = TMVA::DNN::TCudnn<Float_t>;
+   //using ArchitectureImpl_t = TMVA::DNN::TCuda<Float_t>;
+#else
 // do not use arch GPU for evaluation. It is too slow for batch size=1   
 #ifdef R__HAS_TMVACPU
    using ArchitectureImpl_t = TMVA::DNN::TCpu<Float_t>;
 #else
    using ArchitectureImpl_t = TMVA::DNN::TReference<Float_t>;
 #endif  
-//#endif
+#endif
    using DeepNetImpl_t = TMVA::DNN::TDeepNet<ArchitectureImpl_t>;
    using MatrixImpl_t =  typename ArchitectureImpl_t::Matrix_t;
    using TensorImpl_t =  typename ArchitectureImpl_t::Tensor_t;
    using ScalarImpl_t =  typename ArchitectureImpl_t::Scalar_t;
- 
+   using HostBufferImpl_t = typename ArchitectureImpl_t::HostBuffer_t;
 
    /*! The option handling methods */
    void DeclareOptions();
@@ -190,7 +191,8 @@ private:
    KeyValueVector_t fSettings;                       ///< Map for the training strategy
    std::vector<TTrainingSettings> fTrainingSettings; ///< The vector defining each training strategy
 
-   TensorImpl_t fXInput;  // input tensor used to evaluate fNet
+   TensorImpl_t fXInput;                 // input tensor used to evaluate fNet
+   HostBufferImpl_t fXInputBuffer;        // input hist buffer corresponding to X (needed for GPU implementation)    
    std::unique_ptr<MatrixImpl_t> fYHat;   // output prediction matrix of fNet
    std::unique_ptr<DeepNetImpl_t> fNet;
   
