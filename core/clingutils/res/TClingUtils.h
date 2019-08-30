@@ -93,7 +93,7 @@ namespace TMetaUtils {
 /// Resolve a symlink to its canonical path. If the symlink was relative it
 /// turns it into an absolute path with respect to the original symlink location.
 ///
-///\returns the resolved absolute path.
+///\returns the resolved normalized absolute path.
 std::string ResolveSymlink(const std::string &path);
 
 // Forward Declarations --------------------------------------------------------
