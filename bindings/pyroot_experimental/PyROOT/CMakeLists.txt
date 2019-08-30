@@ -86,16 +86,16 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTPython
     cppyy
 )
 
+set(ROOTDirName python/ROOT)
 set(JupyROOTDirName python/JupyROOT)
-add_library(JupyROOT SHARED ${JupyROOTDirName}/src/IOHandler.cxx)
-target_include_directories(JupyROOT PRIVATE ${JupyROOTDirName}/src)
-target_link_libraries(JupyROOT Core ${CMAKE_DL_LIBS})
-set_property(GLOBAL APPEND PROPERTY CMAKENOEXPORT JupyROOT)
+set(JsMVADirName python/JsMVA)
+
+ROOT_LINKER_LIBRARY(JupyROOT ${JupyROOTDirName}/src/IOHandler.cxx DEPENDENCIES Core CMAKENOEXPORT)
 
 #---Install python modules----------------------------------------------------------------------
 
-file(COPY python/ROOT DESTINATION ${localruntimedir})
-install(DIRECTORY python/ROOT DESTINATION ${runtimedir})
+file(COPY ${ROOTDirName} DESTINATION ${localruntimedir})
+install(DIRECTORY ${ROOTDirName} DESTINATION ${runtimedir})
 
 set(d $ENV{DESTDIR}/${CMAKE_INSTALL_PREFIX}/${runtimedir})
 foreach(py_source ${py_sources})
@@ -106,8 +106,8 @@ endforeach()
 file(COPY ${JupyROOTDirName} DESTINATION ${localruntimedir})
 install(DIRECTORY ${JupyROOTDirName} DESTINATION ${runtimedir})
 
-file(COPY python/JsMVA DESTINATION ${localruntimedir})
-install(DIRECTORY python/JsMVA DESTINATION ${runtimedir})
+file(COPY ${JsMVADirName} DESTINATION ${localruntimedir})
+install(DIRECTORY ${JsMVADirName} DESTINATION ${runtimedir})
 
 # Disables warnings caused by Py_RETURN_TRUE/Py_RETURN_FALSE
 if(NOT MSVC)
