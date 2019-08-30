@@ -124,7 +124,7 @@ TClingRdictModuleFileExtension::Reader::Reader(clang::ModuleFileExtension *Ext, 
       case FIRST_EXTENSION_RECORD_ID + 1: {
          // FIXME: Remove the string copy in fPendingRdicts.
          std::string ResolvedFileName
-            = ROOT::TMetaUtils::ResolveSymlink(Mod.FileName);
+            = ROOT::TMetaUtils::GetRealPath(Mod.FileName);
          llvm::StringRef ModDir = llvm::sys::path::parent_path(ResolvedFileName);
          llvm::SmallString<255> FullRdictName = ModDir;
          llvm::sys::path::append(FullRdictName, CurrentRdictName);
