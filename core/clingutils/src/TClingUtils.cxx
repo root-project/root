@@ -68,7 +68,7 @@
 namespace ROOT {
 namespace TMetaUtils {
 
-std::string ResolveSymlink(const std::string &path)
+std::string GetRealPath(const std::string &path)
 {
    llvm::SmallString<256> result_path;
    llvm::sys::fs::real_path(path, result_path, /*expandTilde*/true);
