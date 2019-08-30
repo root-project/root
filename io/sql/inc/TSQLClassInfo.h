@@ -21,7 +21,7 @@ class TObjArray;
 class TSQLClassColumnInfo final : public TObject {
 
 public:
-   TSQLClassColumnInfo() = default;
+   TSQLClassColumnInfo() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
    TSQLClassColumnInfo(const char *name, const char *sqlname, const char *sqltype);
 
    const char *GetName() const final { return fName.Data(); }
@@ -40,7 +40,7 @@ protected:
 
 class TSQLClassInfo final : public TObject {
 public:
-   TSQLClassInfo() = default;
+   TSQLClassInfo() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
    TSQLClassInfo(Long64_t classid, const char *classname, Int_t version);
    virtual ~TSQLClassInfo();
 

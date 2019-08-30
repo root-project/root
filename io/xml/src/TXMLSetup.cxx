@@ -130,6 +130,17 @@ TXMLSetup::TXMLSetup(const TXMLSetup &src)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// assign operator
+
+TXMLSetup &TXMLSetup::operator=(const TXMLSetup &rhs)
+{
+   fXmlLayout = rhs.fXmlLayout;
+   fStoreStreamerInfos = rhs.fStoreStreamerInfos;
+   fUseDtd = rhs.fUseDtd;
+   fUseNamespaces = rhs.fUseNamespaces;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// return setup values as string
 
 TString TXMLSetup::GetSetupAsString()
