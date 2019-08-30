@@ -52,7 +52,7 @@ protected:
    InfoList_t      fInfoStack;     ///< Stack of pointers to the TStreamerInfos
 
    // Default ctor
-   TBufferFile() = default;
+   TBufferFile() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
 
    // TBuffer objects cannot be copied or assigned
    TBufferFile(const TBufferFile &) = delete;       ///<  not implemented

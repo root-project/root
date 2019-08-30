@@ -88,6 +88,8 @@ public:
    TXMLSetup(const TXMLSetup &src);
    virtual ~TXMLSetup() = default;
 
+   TXMLSetup &operator=(const TXMLSetup &rhs);
+
    TString GetSetupAsString();
 
    void PrintSetup();
