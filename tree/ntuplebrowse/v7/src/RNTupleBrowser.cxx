@@ -37,14 +37,14 @@ void ROOT::Experimental::RNTupleBrowser::SetDirectory(TDirectory* directory)
 {
    fDirectory = directory;
    // Checks if a RNTupleReader with that directory was already created. If so it just takes the already existing RNTupleReader.
-   for (int i = 0; i < (int)fPastDirectories.size(); ++i) {
+   for (unsigned int i = 0; i < fPastDirectories.size(); ++i) {
       if (fPastDirectories.at(i) == fDirectory) {
          fReaderPtrVecIndex = i;
          return;
       }
    }
    
-   std::unique_ptr<ROOT::Experimental::Detail::RPageSource> sourcePtr = std::make_unique<ROOT::Experimental::Detail::RPageSourceRoot>(fDirectory);
+   std::unique_ptr<Detail::RPageSource> sourcePtr = std::make_unique<Detail::RPageSourceRoot>(fDirectory);
    
    // Stores smart pointers of RNTupleReader in a vector, so that RNTupleReader-objects don't get destroyed at the end of this function. Because the fDirectory serves like a key to the RNTupleReader (like in a map data structure), it is also stored in a vector.
    fReaderPtrVec.emplace_back(std::make_unique<ROOT::Experimental::RNTupleReader>(std::move(sourcePtr)));
@@ -60,7 +60,7 @@ ROOT::Experimental::RNTupleBrowser::~RNTupleBrowser()
 void ROOT::Experimental::RNTupleBrowser::Browse(TBrowser *b)
 {
    ROOT::Experimental::RBrowseVisitor browseVisitor(b, this);
-   GetReaderPtr()->GetModel()->GetRootField()->TraverseVisitor(browseVisitor);
+   GetReaderPtr()->GetModel()->GetRootField()->TraverseVisitor(browseVisitor, 0);
 }
    
 //---------------------------- NTupleBrowseFolder ---------------------------
@@ -71,7 +71,7 @@ void ROOT::Experimental::RNTupleBrowseFolder::Browse(TBrowser *b)
 {
    RBrowseVisitor browseVisitor(b, fRNTupleBrowserPtr);
    if (fFieldPtr) {
-      fFieldPtr->TraverseVisitor(browseVisitor);
+      fFieldPtr->TraverseVisitor(browseVisitor, 0);
    }
 }
 
@@ -97,8 +97,8 @@ void ROOT::Experimental::RNTupleBrowseLeaf::AddBrowse(TBrowser *b)
 
 void ROOT::Experimental::RNTupleBrowseLeaf::Browse(TBrowser* /*b*/)
 {
-   RDisplayHistoVisitor histoVisitor(fRNTupleBrowserPtr, fReaderPtr);
+   RDisplayHistVisitor histVisitor(fRNTupleBrowserPtr, fReaderPtr);
    if (fFieldPtr) {
-      fFieldPtr->AcceptVisitor(histoVisitor);
+      fFieldPtr->AcceptVisitor(histVisitor, 1/* 1 is a dummy value*/);
    }
 }

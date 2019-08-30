@@ -124,13 +124,13 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       // FitString defined in RFieldVisitor.cxx
          output << frameSymbol << " N-Tuple : " << RNTupleFormatter::FitString(name, width-13) << frameSymbol << std::endl; // prints line with name of ntuple
          output << frameSymbol << " Entries : " << RNTupleFormatter::FitString(std::to_string(GetNEntries()), width - 13) << frameSymbol << std::endl;  // prints line with number of entries
-      GetModel()->GetRootField()->TraverseVisitor(prepVisitor);
+      GetModel()->GetRootField()->TraverseVisitor(prepVisitor, 0);
 
       printVisitor.SetFrameSymbol(frameSymbol);
       printVisitor.SetWidth(width);
       printVisitor.SetDeepestLevel(prepVisitor.GetDeepestLevel());
       printVisitor.SetNumFields(prepVisitor.GetNumFields());
-      GetModel()->GetRootField()->TraverseVisitor(printVisitor);
+      GetModel()->GetRootField()->TraverseVisitor(printVisitor, 0);
 
       for (int i = 0; i < width; ++i)
          output << frameSymbol;

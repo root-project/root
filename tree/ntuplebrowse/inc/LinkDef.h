@@ -17,7 +17,6 @@
 #pragma link C++ nestedtypedefs;
 #pragma link C++ nestedclasses;
 
-// Generate dictionaries for following classes
 #pragma link C++ class ROOT::Experimental::RNTupleBrowser;
 #pragma link C++ class ROOT::Experimental::RNTupleBrowseFolder;
 #pragma link C++ class ROOT::Experimental::RNTupleBrowseLeaf;

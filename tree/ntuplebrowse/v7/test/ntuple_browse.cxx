@@ -74,7 +74,7 @@ TEST(RNTupleBrowse, Floattest)
    browseObject.Browse(nullptr);
    
    ASSERT_EQ(browseObject.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(1));
-   ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(0).get())->GetName(), "FloatField");
+   EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(0).get())->GetName(), "FloatField");
 }
 
 
@@ -98,8 +98,8 @@ TEST(RNTupleBrowse, Stringtest)
    browseObject.Browse(nullptr);
    
    ASSERT_EQ(browseObject.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(2));
-   ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(0).get())->GetName(), "StringField");
-   ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(1).get())->GetName(), "StringField2");
+   EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(0).get())->GetName(), "StringField");
+   EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(1).get())->GetName(), "StringField2");
 }
 
 
@@ -127,13 +127,13 @@ TEST(RNTupleBrowse, MixedFieldstest)
    browseObject.Browse(nullptr);
    
    ASSERT_EQ(browseObject.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(7));
-   ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(0).get())->GetName(), "DoubleField");
-   ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(1).get())->GetName(), "StringField");
-   ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(2).get())->GetName(), "IntField");
-   ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(3).get())->GetName(), "StringField2");
-   ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(4).get())->GetName(), "floatField");
-   ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(5).get())->GetName(), "uInt32Field");
-   ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(6).get())->GetName(), "uInt64Field");
+   EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(0).get())->GetName(), "DoubleField");
+   EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(1).get())->GetName(), "StringField");
+   EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(2).get())->GetName(), "IntField");
+   EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(3).get())->GetName(), "StringField2");
+   EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(4).get())->GetName(), "floatField");
+   EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(5).get())->GetName(), "uInt32Field");
+   EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(6).get())->GetName(), "uInt64Field");
 }
 
 
@@ -161,13 +161,13 @@ TEST(RNTupleBrowse, Browsetest)
    browseObject.Browse(nullptr);
    
    ASSERT_EQ(browseObject.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(7));
-   ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(0).get())->GetName(), "DoubleField");
-   ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(1).get())->GetName(), "StringField");
-   ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(2).get())->GetName(), "IntField");
-   ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(3).get())->GetName(), "StringField2");
-   ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(4).get())->GetName(), "floatField");
-   ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(5).get())->GetName(), "uInt32Field");
-   ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(6).get())->GetName(), "uInt64Field");
+   EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(0).get())->GetName(), "DoubleField");
+   EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(1).get())->GetName(), "StringField");
+   EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(2).get())->GetName(), "IntField");
+   EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(3).get())->GetName(), "StringField2");
+   EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(4).get())->GetName(), "floatField");
+   EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(5).get())->GetName(), "uInt32Field");
+   EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(6).get())->GetName(), "uInt64Field");
    // situation up to here is exaclty the same as in the unit test above.
    
    // no ASSERT_EQ here, it only checks if calling the Browse-method (drawing Histo) leads to an error.
@@ -202,13 +202,13 @@ TEST(RNTupleBrowse, MultipleBrowsetest)
    
    ASSERT_EQ(browseObject.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(14));
    for(int i = 0; i < 8; i+=7) {
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(0).get())->GetName(), "DoubleField");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(1).get())->GetName(), "StringField");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(2).get())->GetName(), "IntField");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(3).get())->GetName(), "StringField2");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(4).get())->GetName(), "floatField");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(5).get())->GetName(), "uInt32Field");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(6).get())->GetName(), "uInt64Field");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(0).get())->GetName(), "DoubleField");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(1).get())->GetName(), "StringField");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(2).get())->GetName(), "IntField");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(3).get())->GetName(), "StringField2");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(4).get())->GetName(), "floatField");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(5).get())->GetName(), "uInt32Field");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(6).get())->GetName(), "uInt64Field");
    }
    
    // Checks if calling the Browse-method (draw Histo) leads to an error.
@@ -241,11 +241,11 @@ TEST(RNTupleBrowse, VecBrowsetest)
    
    ASSERT_EQ(browseObject.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(10)); // instead of 12, because only fields directly attached to the RootField should be "browsed"
    for(int i = 0; i < 6; i+=5) {
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i).get())->GetName(), "DoubleField");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+1).get())->GetName(), "StringField");
-      ASSERT_STREQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+2).get())->GetName(), "VecIntField");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+3).get())->GetName(), "StringField2");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+4).get())->GetName(), "floatField");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i).get())->GetName(), "DoubleField");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+1).get())->GetName(), "StringField");
+      EXPECT_STREQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+2).get())->GetName(), "VecIntField");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+3).get())->GetName(), "StringField2");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+4).get())->GetName(), "floatField");
    }
    
    for (int j = 0; j < 3; ++j) {
@@ -260,7 +260,7 @@ TEST(RNTupleBrowse, VecBrowsetest)
    
    ASSERT_EQ(browseObject.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(16)); // create 2*3=6 instances of int-BrowseFields stored.
    for (int i = 10; i < 16; ++i) {
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i).get())->GetName(), "std::int32_t");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i).get())->GetName(), "std::int32_t");
    }
 }
 
@@ -289,12 +289,12 @@ TEST(RNTupleBrowse, DoubleVecBrowsetest)
    
    ASSERT_EQ(browseObject.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(12)); // instead of 16, because only fields directly attached to the RootField should be "browsed"
    for (int i = 0; i < 7; i+=6) {
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i).get())->GetName(), "DoubleField");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+1).get())->GetName(), "StringField");
-      ASSERT_STREQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+2).get())->GetName(), "VecIntField");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+3).get())->GetName(), "StringField2");
-      ASSERT_STREQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+4).get())->GetName(), "VecDoubleField");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+5).get())->GetName(), "floatField");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i).get())->GetName(), "DoubleField");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+1).get())->GetName(), "StringField");
+      EXPECT_STREQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+2).get())->GetName(), "VecIntField");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+3).get())->GetName(), "StringField2");
+      EXPECT_STREQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+4).get())->GetName(), "VecDoubleField");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+5).get())->GetName(), "floatField");
    }
    
    for (int j = 0; j < 3; ++j) {
@@ -309,15 +309,15 @@ TEST(RNTupleBrowse, DoubleVecBrowsetest)
    
    ASSERT_EQ(browseObject.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(24)); // create 2*2*3=12 instances of int-BrowseFields stored.
    for(int i = 12; i < 24; i+=2) {
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i).get())->GetName(), "std::int32_t");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+1).get())->GetName(), "double");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i).get())->GetName(), "std::int32_t");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+1).get())->GetName(), "double");
    }
-   ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(0).get())->GetName(), "DoubleField");
-   ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(1).get())->GetName(), "StringField");
-   ASSERT_STREQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(2).get())->GetName(), "VecIntField");
-   ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(3).get())->GetName(), "StringField2");
-   ASSERT_STREQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(4).get())->GetName(), "VecDoubleField");
-   ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(5).get())->GetName(), "floatField");
+   EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(0).get())->GetName(), "DoubleField");
+   EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(1).get())->GetName(), "StringField");
+   EXPECT_STREQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(2).get())->GetName(), "VecIntField");
+   EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(3).get())->GetName(), "StringField2");
+   EXPECT_STREQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(4).get())->GetName(), "VecDoubleField");
+   EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(5).get())->GetName(), "floatField");
 }
 
 
@@ -362,21 +362,21 @@ TEST(RNTupleBrowse, MultipleRootFiletest)
    
    ASSERT_EQ(browseObject.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(12)); // instead of 16, because only fields directly attached to the RootField should be "browsed"
    for (int i = 0; i < 7; i+=6) {
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i).get())->GetName(), "DoubleField");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+1).get())->GetName(), "StringField");
-      ASSERT_STREQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+2).get())->GetName(), "VecDoubleField");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+3).get())->GetName(), "StringField2");
-      ASSERT_STREQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+4).get())->GetName(), "VecIntField");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+5).get())->GetName(), "floatField");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i).get())->GetName(), "DoubleField");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+1).get())->GetName(), "StringField");
+      EXPECT_STREQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+2).get())->GetName(), "VecDoubleField");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+3).get())->GetName(), "StringField2");
+      EXPECT_STREQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+4).get())->GetName(), "VecIntField");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+5).get())->GetName(), "floatField");
    }
    
    ASSERT_EQ(browseObject2.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(10)); // instead of 12, because only fields directly attached to the RootField should be "browsed"
    for (int i = 0; i < 7; i+=5) {
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i).get())->GetName(), "Double2Field");
-      ASSERT_STREQ(static_cast<RFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+1).get())->GetName(), "VecInt2Field");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+2).get())->GetName(), "String2Field2");
-      ASSERT_STREQ(static_cast<RFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+3).get())->GetName(), "VecDouble2Field");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+4).get())->GetName(), "float2Field");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i).get())->GetName(), "Double2Field");
+      EXPECT_STREQ(static_cast<RFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+1).get())->GetName(), "VecInt2Field");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+2).get())->GetName(), "String2Field2");
+      EXPECT_STREQ(static_cast<RFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+3).get())->GetName(), "VecDouble2Field");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+4).get())->GetName(), "float2Field");
    }
 }
 
@@ -422,21 +422,21 @@ TEST(RNTupleBrowse, MultipleRootFileMultipleBrowsetest)
    
    ASSERT_EQ(browseObject.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(12)); // instead of 16, because only fields directly attached to the RootField should be "browsed"
    for (int i = 0; i < 7; i+=6) {
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i).get())->GetName(), "DoubleField");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+1).get())->GetName(), "StringField");
-      ASSERT_STREQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+2).get())->GetName(), "VecIntField");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+3).get())->GetName(), "StringField2");
-      ASSERT_STREQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+4).get())->GetName(), "VecDoubleField");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+5).get())->GetName(), "floatField");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i).get())->GetName(), "DoubleField");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+1).get())->GetName(), "StringField");
+      EXPECT_STREQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+2).get())->GetName(), "VecIntField");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+3).get())->GetName(), "StringField2");
+      EXPECT_STREQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+4).get())->GetName(), "VecDoubleField");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+5).get())->GetName(), "floatField");
    }
    
    ASSERT_EQ(browseObject2.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(10)); // instead of 12, because only fields directly attached to the RootField should be "browsed"
    for (int i = 0; i < 7; i+=5) {
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i).get())->GetName(), "Double2Field");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+1).get())->GetName(), "String2Field");
-      ASSERT_STREQ(static_cast<RFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+2).get())->GetName(), "VecInt2Field");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+3).get())->GetName(), "String2Field2");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+4).get())->GetName(), "float2Field");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i).get())->GetName(), "Double2Field");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+1).get())->GetName(), "String2Field");
+      EXPECT_STREQ(static_cast<RFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+2).get())->GetName(), "VecInt2Field");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+3).get())->GetName(), "String2Field2");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+4).get())->GetName(), "float2Field");
    }
    
    // browses a couple of times the different root files.
@@ -472,29 +472,29 @@ TEST(RNTupleBrowse, MultipleRootFileMultipleBrowsetest)
    
    ASSERT_EQ(browseObject.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(20));
    for (int i = 0; i < 7; i+=6) {
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i).get())->GetName(), "DoubleField");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+1).get())->GetName(), "StringField");
-      ASSERT_STREQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+2).get())->GetName(), "VecIntField");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+3).get())->GetName(), "StringField2");
-      ASSERT_STREQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+4).get())->GetName(), "VecDoubleField");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+5).get())->GetName(), "floatField");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i).get())->GetName(), "DoubleField");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+1).get())->GetName(), "StringField");
+      EXPECT_STREQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+2).get())->GetName(), "VecIntField");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+3).get())->GetName(), "StringField2");
+      EXPECT_STREQ(static_cast<RFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+4).get())->GetName(), "VecDoubleField");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+5).get())->GetName(), "floatField");
    }
    
    ASSERT_EQ(browseObject2.fNTupleBrowsePtrVec.size(), static_cast<std::size_t>(14));
    for (int i = 0; i < 7; i+=5) {
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i).get())->GetName(), "Double2Field");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+1).get())->GetName(), "String2Field");
-      ASSERT_STREQ(static_cast<RFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+2).get())->GetName(), "VecInt2Field");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+3).get())->GetName(), "String2Field2");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+4).get())->GetName(), "float2Field");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i).get())->GetName(), "Double2Field");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+1).get())->GetName(), "String2Field");
+      EXPECT_STREQ(static_cast<RFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+2).get())->GetName(), "VecInt2Field");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+3).get())->GetName(), "String2Field2");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i+4).get())->GetName(), "float2Field");
    }
    
    for (int i = 12; i < 20; i+=2) {
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i).get())->GetName(), "std::int32_t");
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+1).get())->GetName(), "double");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i).get())->GetName(), "std::int32_t");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject.fNTupleBrowsePtrVec.at(i+1).get())->GetName(), "double");
    }
    for (int i = 10; i < 14; ++i) {
-      ASSERT_STREQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i).get())->GetName(), "std::int32_t");
+      EXPECT_STREQ(static_cast<RNonFolder*>(browseObject2.fNTupleBrowsePtrVec.at(i).get())->GetName(), "std::int32_t");
    }
 }
 

@@ -266,8 +266,8 @@ public:
    RIterator end();
 
    /// Used for the visitor design pattern, see for example RNTupleReader::Print()
-   virtual void TraverseVisitor(RNTupleVisitor &visitor, int level = 0) const;
-   virtual void AcceptVisitor(RNTupleVisitor &visitor, int level =1) const;
+   virtual void TraverseVisitor(RNTupleVisitor &visitor, int level) const;
+   virtual void AcceptVisitor(RNTupleVisitor &visitor, int level) const;
 
    RLevelInfo GetLevelInfo() const {
       return RLevelInfo(this);
@@ -308,7 +308,7 @@ public:
 
    /// Generates managed values for the top-level sub fields
    REntry* GenerateEntry();
-   void AcceptVisitor(Detail::RNTupleVisitor &visitor, int level = 0) const final;
+   void AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const final;
 };
 
 /// The field for a class with dictionary
@@ -602,7 +602,7 @@ public:
          Detail::RColumnElement<float, EColumnType::kReal32>(static_cast<float*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(float); }
-   void AcceptVisitor(Detail::RNTupleVisitor &v, int level = 1) const final;
+   void AcceptVisitor(Detail::RNTupleVisitor &v, int level) const final;
 };
 
 
@@ -640,7 +640,7 @@ public:
          Detail::RColumnElement<double, EColumnType::kReal64>(static_cast<double*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(double); }
-   void AcceptVisitor(Detail::RNTupleVisitor &v, int level = 1) const final;
+   void AcceptVisitor(Detail::RNTupleVisitor &v, int level) const final;
 };
 
 template <>
@@ -713,7 +713,7 @@ public:
          Detail::RColumnElement<std::int32_t, EColumnType::kInt32>(static_cast<std::int32_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::int32_t); }
-   void AcceptVisitor(Detail::RNTupleVisitor &v, int level = 1) const final;
+   void AcceptVisitor(Detail::RNTupleVisitor &v, int level) const final;
 };
 
 template <>
@@ -750,7 +750,7 @@ public:
          Detail::RColumnElement<std::uint32_t, EColumnType::kInt32>(static_cast<std::uint32_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::uint32_t); }
-   void AcceptVisitor(Detail::RNTupleVisitor &v, int level = 1) const final;
+   void AcceptVisitor(Detail::RNTupleVisitor &v, int level) const final;
 };
 
 template <>
@@ -787,7 +787,7 @@ public:
          Detail::RColumnElement<std::uint64_t, EColumnType::kInt64>(static_cast<std::uint64_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::uint64_t); }
-   void AcceptVisitor(Detail::RNTupleVisitor &v, int level = 1) const final;
+   void AcceptVisitor(Detail::RNTupleVisitor &v, int level) const final;
 };
 
 
