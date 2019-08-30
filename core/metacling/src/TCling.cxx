@@ -1447,7 +1447,7 @@ static std::string FindLibraryName(void (*func)())
    {
       return {};
    }
-   return ROOT::TMetaUtils::ResolveSymlink(moduleName);
+   return ROOT::TMetaUtils::GetRealPath(moduleName);
 #else
    Dl_info info;
    if (dladdr((void*)func, &info) == 0) {
@@ -1455,7 +1455,7 @@ static std::string FindLibraryName(void (*func)())
       return {};
    } else {
       if (strchr(info.dli_fname, '/'))
-         return ROOT::TMetaUtils::ResolveSymlink(info.dli_fname);
+         return ROOT::TMetaUtils::GetRealPath(info.dli_fname);
       // Else absolute path. For all we know that's a binary.
       // Some people have dictionaries in binaries, this is how we find their path:
       // (see also https://stackoverflow.com/a/1024937/6182509)
@@ -1463,23 +1463,23 @@ static std::string FindLibraryName(void (*func)())
       char buf[PATH_MAX] = { 0 };
       uint32_t bufsize = sizeof(buf);
       if (_NSGetExecutablePath(buf, &bufsize) >= 0)
-         return ROOT::TMetaUtils::ResolveSymlink(buf);
-      return ROOT::TMetaUtils::ResolveSymlink(info.dli_fname);
+         return ROOT::TMetaUtils::GetRealPath(buf);
+      return ROOT::TMetaUtils::GetRealPath(info.dli_fname);
 # elif defined(R__UNIX)
       char buf[PATH_MAX] = { 0 };
       // Cross our fingers that /proc/self/exe exists.
       if (readlink("/proc/self/exe", buf, sizeof(buf)) > 0)
-         return ROOT::TMetaUtils::ResolveSymlink(buf);
+         return ROOT::TMetaUtils::GetRealPath(buf);
       std::string pipeCmd = std::string("which \"") + info.dli_fname + "\"";
       FILE* pipe = popen(pipeCmd.c_str(), "r");
       if (!pipe)
-         return ROOT::TMetaUtils::ResolveSymlink(info.dli_fname);
+         return ROOT::TMetaUtils::GetRealPath(info.dli_fname);
       std::string result;
       while (fgets(buf, sizeof(buf), pipe)) {
          result += buf;
       }
       pclose(pipe);
-      return ROOT::TMetaUtils::ResolveSymlink(result);
+      return ROOT::TMetaUtils::GetRealPath(result);
 # else
 #  error "Unsupported platform."
 # endif
@@ -1664,7 +1664,7 @@ void TCling::LoadPCM(std::string pcmFileNameFullPath)
    }
 
    if (llvm::sys::fs::is_symlink_file(pcmFileNameFullPath))
-      pcmFileNameFullPath = ROOT::TMetaUtils::ResolveSymlink(pcmFileNameFullPath);
+      pcmFileNameFullPath = ROOT::TMetaUtils::GetRealPath(pcmFileNameFullPath);
 
    auto pendingRdict = fPendingRdicts.find(pcmFileNameFullPath);
    if (pendingRdict != fPendingRdicts.end()) {
