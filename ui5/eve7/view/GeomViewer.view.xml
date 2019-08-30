@@ -149,17 +149,31 @@
                 <items>
                   <IconTabFilter text="Appearance">
                     <VBox>
-                    <!-- CheckBox text="Highlight selection" selected="{/hightlight}" select="hightlightChanged"/-->
-                    <Text text="Transparency:"/>
-                    <Slider min="0" max="1" step="0.01" value="{/transparency}" width="100%"
-                               showAdvancedTooltip="true" showHandleTooltip="false" inputsAsTooltips="true"
-                               change="transparencyChange" liveChange="transparencyChange"/>
-                    <CheckBox text="Wireframe" selected="{/wireframe}" select="wireframeChanged"/>
-                    <Label text="Background"/>
-                    <ColorPalette colorSelect="backgroundChanged"/>
-                    <Button text="Reset camera" press="cameraReset" tooltip="Set default camera position"/>
+                       <!-- CheckBox text="Highlight selection" selected="{/hightlight}" select="hightlightChanged"/-->
+                       <Text text="Transparency:"/>
+                       <Slider min="0" max="1" step="0.01" value="{/transparency}" width="100%"
+                                  showAdvancedTooltip="true" showHandleTooltip="false" inputsAsTooltips="true"
+                                  change="transparencyChange" liveChange="transparencyChange"/>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
+                          <CheckBox text="Wireframe" selected="{/wireframe}" select="wireframeChanged"/>
+                          <CheckBox text="Autorotate" selected="{/rotate}" select="autorotateChanged"/>
+                       </HBox>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
+                          <Label text="Axes"  wrapping="true"/>
+                          <ComboBox selectedKey="{/_axis}" change="axesChanged" width="160px">
+                             <core:Item key="0" text="none"/>
+                             <core:Item key="1" text="side"/>
+                             <core:Item key="2" text="centered"/>
+                          </ComboBox>
+                       </HBox>
+                       <Button text="Reset camera" press="cameraReset" tooltip="Set default camera position"/>
                     </VBox>
                   </IconTabFilter>
+
+                  <IconTabFilter text="Background">
+                    <ColorPalette colorSelect="backgroundChanged"/>
+                  </IconTabFilter>
+
                </items>
             </IconTabBar>
             <IconTabBar class="sapUiResponsiveContentPadding" expanded="false">
