@@ -525,13 +525,18 @@ if(ROOT_pyroot_FOUND)
     set(dataframe_veto_py dataframe/*.py)
     file(GLOB dataframe_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*.py tmva/tmva*.py)
     list(REMOVE_ITEM pytutorials ${dataframe_veto_py})
-    list(REMOVE_ITEM pytutorials pyroot/pyroot002_TTreeAsMatrix.py)
+    list(REMOVE_ITEM pytutorials pyroot/pyroot002_TTreeAsMatrix.py pyroot/pyroot004_DeclareCppCallable.py)
   endif()
 
   find_python_module(xgboost QUIET)
   if (NOT PY_XGBOOST_FOUND OR NOT dataframe)
     file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*.py tmva/tmva10*.py)
     list(REMOVE_ITEM pytutorials ${tmva_veto_py})
+  endif()
+
+  find_python_module(numba QUIET)
+  if (NOT PY_NUMBA_FOUND OR NOT pyroot_experimental)
+    list(REMOVE_ITEM pytutorials pyroot/pyroot004_DeclareCppCallable.py)
   endif()
 
   #---Python tutorials dependencies--------------------------------------
