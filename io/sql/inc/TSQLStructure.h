@@ -110,7 +110,7 @@ protected:
    TObjArray fChilds;               //!
 
 public:
-   TSQLStructure() = default;
+   TSQLStructure() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
    virtual ~TSQLStructure();
 
    TSQLStructure *GetParent() const { return fParent; }

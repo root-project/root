@@ -24,7 +24,7 @@ private:
    TKeyXML &operator=(const TKeyXML &) = delete; // TKeyXML objects are not copiable.
 
 protected:
-   TKeyXML() = default;
+   TKeyXML() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
 
 public:
    TKeyXML(TDirectory *mother, Long64_t keyid, const TObject *obj, const char *name = nullptr,

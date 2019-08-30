@@ -41,7 +41,7 @@ protected:
 
    static Int_t fgMapSize; ///< Default map size for all TBuffer objects
 
-   TBufferIO() = default;
+   TBufferIO() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
 
    TBufferIO(TBuffer::EMode mode);
    TBufferIO(TBuffer::EMode mode, Int_t bufsiz);
