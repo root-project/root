@@ -41,7 +41,7 @@ protected:
 
 public:
 
-   TWebPadPainter() = default;
+   TWebPadPainter() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
 
    void SetPainting(TWebPainting *p) { fPainting = p; }
 
