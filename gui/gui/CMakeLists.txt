@@ -203,6 +203,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gui
     -writeEmptyRootPCM
   DEPENDENCIES
     Core
+    Rint
     Net
     Gpad
     Graf
