@@ -12,7 +12,6 @@
 #include "TCollection.h"
 #include "TDataMember.h"
 #include "TDataType.h"
-#include "TEnum.h"
 #include "TEnumConstant.h"
 #include "TError.h"
 #include "TFunction.h"
@@ -175,9 +174,8 @@ std::string Cppyy::ResolveName( const std::string& cppitem_name )
    return TClassEdit::ResolveTypedef( tclean.c_str(), true );
 }
 
-std::string Cppyy::ResolveEnum(const std::string& enum_type)
+std::string Cppyy::ResolveEnum(const TEnum* en)
 {
-   auto en = TEnum::GetEnum(enum_type.c_str());
    if (en) {
       auto ut = en->GetUnderlyingType();
       if (ut != EDataType::kNumDataTypes)
@@ -185,6 +183,11 @@ std::string Cppyy::ResolveEnum(const std::string& enum_type)
    }
    // Can't get type of enum, use int as default
    return "int";
+}
+
+std::string Cppyy::ResolveEnum(const std::string& enum_type)
+{
+   return ResolveEnum(TEnum::GetEnum(enum_type.c_str()));
 }
 
 Cppyy::TCppScope_t Cppyy::GetScope( const std::string& sname )
