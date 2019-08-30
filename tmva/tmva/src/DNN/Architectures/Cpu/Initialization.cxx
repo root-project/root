@@ -69,10 +69,12 @@ void TCpu<AFloat>::InitializeUniform(TCpuMatrix<AFloat> & A)
 
    AFloat range = sqrt(2.0 / ((AFloat) n));
 
-   for (size_t i = 0; i < m; i++) {
-      for (size_t j = 0; j < n; j++) {
-         A(i,j) = rand.Uniform(-range, range);
-      }
+   // for debugging
+   //range = 1; 
+   //rand.SetSeed(111);
+
+   for (size_t i = 0; i < A.GetSize(); ++i) {
+      A.GetRawDataPointer()[i] = rand.Uniform(-range, range);
    }
 }
 
@@ -91,6 +93,7 @@ void TCpu<AFloat>::InitializeGlorotNormal(TCpuMatrix<AFloat> & A)
    TRandom &  rand = GetRandomGenerator();
 
    AFloat sigma = sqrt(2.0 /( ((AFloat) n) + ((AFloat) m)) );
+   // AFloat sigma = sqrt(2.0 /( ((AFloat) m)) );
 
    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n; j++) {
@@ -134,7 +137,8 @@ void TCpu<AFloat>::InitializeIdentity(TCpuMatrix<AFloat> & A)
 
    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n ; j++) {
-         A(i,j) = 0.0;
+         //A(i,j) = 0.0;
+         A(i,j) = 1.0;
       }
 
       if (i < n) {

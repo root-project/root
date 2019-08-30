@@ -211,7 +211,7 @@ auto TDenseLayer<Architecture_t>::Backward(Tensor_t &gradients_backward, const T
       static_cast<TDescriptors *> (nullptr), 
       static_cast<TWorkspace *> (nullptr));
    }
-   typename Architecture_t::ActivationDescriptor_t activDesc; // use for the moment a dummy descriptor
+
    Architecture_t::ActivationFunctionBackward(fDerivatives, this->GetOutput(), 
                                               this->GetActivationGradients(), this->GetInputActivation(),
                                               this->GetActivationFunction(), fActivationDesc);

@@ -289,8 +289,10 @@ auto inline TBasicRNNLayer<Architecture_t>::CellForward(const Matrix_t &input, M
    Architecture_t::AddRowWise(fState, fBiases);
    Tensor_t dFt(dF); 
    Tensor_t tState(fState);
+#if 0 // exclude for cudnn 
    DNN::evaluateDerivative<Architecture_t>(dFt, fAF, fState);
    DNN::evaluate<Architecture_t>(tState, fAF);
+#endif
 }
 
 //____________________________________________________________________________

@@ -177,6 +177,10 @@ void MethodDL::DeclareOptions()
    DeclareOptionRef(fWeightInitializationString = "XAVIER", "WeightInitialization", "Weight initialization strategy");
    AddPreDefVal(TString("XAVIER"));
    AddPreDefVal(TString("XAVIERUNIFORM"));
+   AddPreDefVal(TString("GAUSS"));
+   AddPreDefVal(TString("UNIFORM"));
+   AddPreDefVal(TString("IDENTITY"));
+   AddPreDefVal(TString("ZERO"));
 
    DeclareOptionRef(fRandomSeed = 0, "RandomSeed", "Random seed used for weight initialization and batch shuffling");
 
@@ -350,6 +354,8 @@ void MethodDL::ProcessOptions()
       fWeightInitialization = DNN::EInitialization::kUniform;
    } else if (fWeightInitializationString == "ZERO") {
       fWeightInitialization = DNN::EInitialization::kZero;
+   } else if (fWeightInitializationString == "IDENTITY") {
+      fWeightInitialization = DNN::EInitialization::kIdentity;
    } else {
       fWeightInitialization = DNN::EInitialization::kGlorotUniform;
    }
@@ -1289,11 +1295,17 @@ void MethodDL::TrainDeepNet()
 
       // when fNet is built create also input matrix that will be used to evaluate it
       if (fBuildNet) {
-         int n1 = batchHeight;
-         int n2 = batchWidth; 
+         //int n1 = batchHeight;
+         //int n2 = batchWidth; 
          // treat case where batchHeight is the batchSize in case of first Dense layers (then we need to set to fNet batch size)
-         if (batchDepth == 1 && GetInputHeight() == 1 && GetInputDepth() == 1) n1 = fNet->GetBatchSize();
-         fXInput = TensorImpl_t(1,n1,n2);
+         //if (batchDepth == 1 && GetInputHeight() == 1 && GetInputDepth() == 1) n1 = fNet->GetBatchSize();
+         //fXInput = TensorImpl_t(1,n1,n2);
+         fXInput = ArchitectureImpl_t::CreateTensor(fNet->GetBatchSize(), GetInputDepth(), GetInputHeight(), GetInputWidth() );
+         if (batchDepth == 1 && GetInputHeight() == 1 && GetInputDepth() == 1)
+            fXInput = TensorImpl_t( fNet->GetBatchSize(), GetInputWidth() ); 
+         fXInputBuffer = HostBufferImpl_t( fXInput.GetSize() );
+   
+
          // create pointer to output matrix used for the predictions
          fYHat = std::unique_ptr<MatrixImpl_t>(new MatrixImpl_t(fNet->GetBatchSize(),  fNet->GetOutputWidth() ) );
 
@@ -1306,14 +1318,16 @@ void MethodDL::TrainDeepNet()
 
       // Loading the training and validation datasets
       TMVAInput_t trainingTuple = std::tie(eventCollectionTraining, DataInfo());
-      TensorDataLoader_t trainingData(trainingTuple, nTrainingSamples, deepNet.GetBatchDepth(),
-                                      deepNet.GetBatchHeight(), deepNet.GetBatchWidth(),
-                                      deepNet.GetOutputWidth(), this->GetInputShape(), nThreads);
+      TensorDataLoader_t trainingData(trainingTuple, nTrainingSamples, batchSize, 
+                                      {inputDepth, inputHeight, inputWidth},
+                                     {deepNet.GetBatchDepth(), deepNet.GetBatchHeight(), deepNet.GetBatchWidth()} ,
+                                      deepNet.GetOutputWidth(), nThreads);
 
       TMVAInput_t validationTuple = std::tie(eventCollectionValidation, DataInfo());
-      TensorDataLoader_t validationData(validationTuple, nValidationSamples, deepNet.GetBatchDepth(),
-                                        deepNet.GetBatchHeight(), deepNet.GetBatchWidth(),
-                                        deepNet.GetOutputWidth(), this->GetInputShape(),  nThreads);
+      TensorDataLoader_t validationData(validationTuple, nValidationSamples, batchSize, 
+                                       {inputDepth, inputHeight, inputWidth}, 
+                                       { deepNet.GetBatchDepth(),deepNet.GetBatchHeight(), deepNet.GetBatchWidth()} ,
+                                        deepNet.GetOutputWidth(), nThreads);
 
 
 
@@ -1432,11 +1446,44 @@ void MethodDL::TrainDeepNet()
 
             auto my_batch = trainingData.GetTensorBatch();
 
-
-            // execute one optimization step
+#ifdef DEBUG
+            std::cout << "\n\n----- batch # " << i << "\n\n";
+            Architecture_t::PrintTensor(my_batch.GetInput(),"input tensor",true);
+            typename Architecture_t::Tensor_t tOut(my_batch.GetOutput());
+            typename Architecture_t::Tensor_t tW(my_batch.GetWeights());
+            Architecture_t::PrintTensor(tOut,"label tensor",true)   ;
+            Architecture_t::PrintTensor(tW,"weight tensor",true)  ;
+#endif           
+           
             deepNet.Forward(my_batch.GetInput(), true);
+
+#ifdef DEBUG
+            size_t nlayers = deepNet.GetLayers().size();
+            for (size_t l = 0; l < nlayers; ++l) {
+               if (deepNet.GetLayerAt(l)->GetWeights().size() > 0)
+                  Architecture_t::PrintTensor(deepNet.GetLayerAt(l)->GetWeightsAt(0),
+                                              TString::Format("initial weights layer %d", l).Data());
+
+               Architecture_t::PrintTensor(deepNet.GetLayerAt(l)->GetOutput(),
+                                           TString::Format("output tensor layer %d", l).Data());
+            }
+#endif
+            
+            //Architecture_t::PrintTensor(deepNet.GetLayerAt(nlayers-1)->GetOutput(),"output tensor last layer" );
+
             deepNet.Backward(my_batch.GetInput(), my_batch.GetOutput(), my_batch.GetWeights());
+
             optimizer->Step();
+            
+#ifdef DEBUG            
+            std::cout << "minmimizer step - momentum " << settings.momentum << " learning rate " << optimizer->GetLearningRate() << std::endl; 
+            for (size_t l = 0; l < nlayers; ++l) { 
+               if (deepNet.GetLayerAt(l)->GetWeights().size() > 0) {
+                  Architecture_t::PrintTensor(deepNet.GetLayerAt(l)->GetWeightsAt(0),TString::Format("weights after step layer %d",l).Data());
+                  Architecture_t::PrintTensor(deepNet.GetLayerAt(l)->GetWeightGradientsAt(0),"weight gradients");
+               }
+            }
+#endif
          }
          //}
 
@@ -1570,7 +1617,7 @@ void MethodDL::Train()
    if (this->GetArchitectureString() == "GPU") {
 #ifdef R__HAS_TMVAGPU
       Log() << kINFO << "Start of deep neural network training on GPU." << Endl << Endl;
-      TrainDeepNet<DNN::TCuda<ScalarImpl_t> >(); 
+      TrainDeepNet<DNN::TCudnn<ScalarImpl_t> >(); 
 #else
       Log() << kFATAL << "CUDA backend not enabled. Please make sure "
          "you have CUDA installed and it was successfully "
@@ -1632,7 +1679,7 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
    }
 
    // input  size must be equal to  1 which is the batch size of fNet 
-   R__ASSERT(fXInput.GetFirstSize() == 1 && fNet->GetBatchSize() == 1);
+   R__ASSERT(fNet->GetBatchSize() == 1);
 
    // int batchWidth = fNet->GetBatchWidth();
    // int batchDepth = fNet->GetBatchDepth();
@@ -1641,25 +1688,45 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
 
 
    // get current event
-   const std::vector<Float_t> &inputValues = GetEvent()->GetValues();
+   const std::vector<Float_t> &inputValues = GetEvent()->GetValues(); 
 
-   int n1 = fXInput.GetHSize();
-   int n2 = fXInput.GetWSize();
+   size_t nVariables = GetEvent()->GetNVariables();
 
-   int nVariables = GetEvent()->GetNVariables();
-
-
-   if (n1*n2 != nVariables) {
-      Log() << kFATAL << "Input Event variable dimensions are not compatible with the built network architecture"
-            << " n-event variables " << nVariables << " expected input matrix " << n1 << " x " << n2 
+   // for Columnlayout tensor memory layout is   HWC while for rowwise is CHW
+   if (fXInput.GetLayout() == TMVA::Experimental::MemoryLayout::ColumnMajor) { 
+      assert(fXInput.GetShape().size() < 4); 
+      size_t nc = fXInput.GetCSize(); 
+      size_t nhw = fXInput.GetWSize(); 
+      if ( nVariables != nc * nhw)  { 
+          Log() << kFATAL << "Input Event variable dimensions are not compatible with the built network architecture"
+            << " n-event variables " << nVariables << " expected input tensor " << nc << " x " << nhw 
             << Endl;
-   }
-   // get the event data in input matrix 
-   for (int j = 0; j < n1; ++j) {
-      for (int k = 0; k < n2; k++) {
-         fXInput(j, k, 0) = inputValues[j*n2+k];  // for column layout !!!
+      }
+      for (size_t j = 0; j < nc; j++) {
+         for (size_t k = 0; k < nhw; k++) {
+            // note that in TMVA events images are stored as C H W while in the buffer we stored as H W C
+            fXInputBuffer[ k * nc + j] = inputValues[j*nhw + k];  // for column layout !!!
+         }
+      }
+   } else {
+      // row-wise layout
+      assert(fXInput.GetShape().size() >= 4); 
+      size_t nc = fXInput.GetCSize(); 
+      size_t nh = fXInput.GetHSize(); 
+      size_t nw = fXInput.GetWSize(); 
+      size_t n = nc * nh * nw; 
+      if ( nVariables != n) { 
+         Log() << kFATAL << "Input Event variable dimensions are not compatible with the built network architecture"
+            << " n-event variables " << nVariables << " expected input tensor " << nc << " x " << nh << " x " << nw 
+            << Endl;
+      }
+      for (size_t j = 0; j < n; j++) {
+         // in this case TMVA event has same order as input tensor
+         fXInputBuffer[ j ] = inputValues[j];  // for column layout !!!
       }
    }
+   // copy buffer in input 
+   fXInput.GetDeviceBuffer().CopyFrom( fXInputBuffer);
 
    // perform the prediction
    fNet->Prediction(*fYHat, fXInput, fOutputFunction);
@@ -1763,7 +1830,7 @@ std::vector<Double_t> MethodDL::PredictDeepNet(Long64_t firstEvt, Long64_t lastE
    //this->SetBatchDepth(n0);
    Long64_t nEvents = lastEvt - firstEvt; 
    TMVAInput_t testTuple = std::tie(GetEventCollection(Data()->GetCurrentType()), DataInfo());
-   TensorDataLoader_t testData(testTuple, nEvents, n0, n1, n2, deepNet.GetOutputWidth(), this->GetInputShape(), 1);
+   TensorDataLoader_t testData(testTuple, nEvents, batchSize, {inputDepth, inputHeight, inputWidth}, {n0, n1, n2}, deepNet.GetOutputWidth(), 1);
 
 
    // Tensor_t xInput;
@@ -1915,14 +1982,15 @@ std::vector<Double_t> MethodDL::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt
    nEvents = lastEvt-firstEvt;
 
    // use same batch size as for training (from first strategy)
-   size_t batchSize = (fTrainingSettings.empty()) ? 1000 :  fTrainingSettings.front().batchSize; 
+   size_t defaultEvalBatchSize = (fXInput.GetSize() > 1000) ? 100 : 1000; 
+   size_t batchSize = (fTrainingSettings.empty()) ? defaultEvalBatchSize :  fTrainingSettings.front().batchSize; 
    if  ( size_t(nEvents) < batchSize ) batchSize = nEvents;
 
    // using for training same scalar type defined for the prediction
    if (this->GetArchitectureString() == "GPU") {
 #ifdef R__HAS_TMVAGPU
       Log() << kINFO << "Evaluate deep neural network on GPU using batches with size = " <<  batchSize << Endl << Endl;
-      return PredictDeepNet<DNN::TCuda<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
+      return PredictDeepNet<DNN::TCudnn<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
 #endif
    } else if (this->GetArchitectureString() == "CPU") {
 #ifdef R__HAS_TMVACPU
@@ -1934,6 +2002,8 @@ std::vector<Double_t> MethodDL::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt
          << Endl << Endl;
 #if HAVE_REFERENCE
    return PredictDeepNet<DNN::TReference<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
+#else
+   return std::vector<Double_t>(nEvents,TMath::QuietNaN());
 #endif
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -2161,13 +2231,17 @@ void MethodDL::ReadWeightsFromXML(void * rootXML)
 
    fBuildNet = false; 
    // create now the input and output matrices
-   int n1 = batchHeight;
-   int n2 = batchWidth; 
+   //int n1 = batchHeight;
+   //int n2 = batchWidth; 
    // treat case where batchHeight is the batchSize in case of first Dense layers (then we need to set to fNet batch size)
-   if (batchDepth == 1 && GetInputHeight() == 1 && GetInputDepth() == 1) n1 = fNet->GetBatchSize();
    //if (fXInput.size() > 0) fXInput.clear(); 
    //fXInput.emplace_back(MatrixImpl_t(n1,n2));
-   fXInput = TensorImpl_t(1, n1, n2);
+   fXInput = ArchitectureImpl_t::CreateTensor(fNet->GetBatchSize(), GetInputDepth(), GetInputHeight(), GetInputWidth() );
+   if (batchDepth == 1 && GetInputHeight() == 1 && GetInputDepth() == 1)
+      // make here a ColumnMajor tensor
+      fXInput = TensorImpl_t( fNet->GetBatchSize(), GetInputWidth(),TMVA::Experimental::MemoryLayout::ColumnMajor ); 
+   fXInputBuffer =  HostBufferImpl_t( fXInput.GetSize());
+   
    // create pointer to output matrix used for the predictions
    fYHat = std::unique_ptr<MatrixImpl_t>(new MatrixImpl_t(fNet->GetBatchSize(),  fNet->GetOutputWidth() ) );
 

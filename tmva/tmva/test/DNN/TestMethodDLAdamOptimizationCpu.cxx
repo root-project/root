@@ -36,5 +36,10 @@ int main()
 
    testMethodDL_DNN(archCPU, "ADAM");
 
+   // CPU Architecture:
+   archCPU = "GPU";
+
+   testMethodDL_DNN(archCPU, "ADAM");
+
    return 0;
 }

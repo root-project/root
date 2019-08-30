@@ -32,6 +32,8 @@
 #include <utility>
 #include <vector>
 
+#include "TMVA/DNN/Architectures/Cuda.h"
+
 class TRandom;
 
 namespace TMVA
@@ -93,6 +95,22 @@ public:
    static Tensor_t CreateTensor(size_t n, size_t c, size_t h, size_t w) { 
       return Tensor_t( {n,c,h,w}, GetTensorLayout(), 0, 0); 
    }
+  
+   static Tensor_t CreateTensor(DeviceBuffer_t buffer, size_t n, size_t c, size_t h, size_t w) { 
+      return Tensor_t( buffer, {n,c,h,w}, GetTensorLayout(), 0, 0); 
+   }
+    // create a weight tensor/matrix    from another tensor/weight  
+   // static Matrix_t CreateWeightTensor( const Matrix_t & A) { 
+   //    return Matrix_t( A.GetShape(), A.GetLayout(), 0, 0); 
+   // }
+   // create a weight tensor/matrix vector   from another tensor/weight  vector using the given tensor shapes 
+   // this function is used by the optimizers to stgore intermidiate weights representations
+   static void  CreateWeightTensors( std::vector<Matrix_t> & newWeights, const std::vector<Matrix_t> & weights) {
+      if (!newWeights.empty()) newWeights.clear(); 
+      size_t n =  weights.size(); 
+      for (size_t i = 0; i < n; ++i)
+         newWeights.emplace_back( weights[i].GetShape(), weights[i].GetLayout(), 0, 0);
+   }
    //____________________________________________________________________________
    //
    // Architecture Initialization
@@ -123,13 +141,13 @@ public:
                                        TDescriptors * & descriptors,
                                        const DNN::CNN::TConvParams & params,
                                        ConvLayer_t *L = nullptr);
-   static void InitializeDropoutWorkspace(TWorkspace * & workspace,
+   static void InitializePoolDropoutWorkspace(TWorkspace * & workspace,
                                        TDescriptors * & descriptors,
                                        const DNN::CNN::TConvParams & params,
                                        PoolingLayer_t *L = nullptr);
 
    static void FreeConvWorkspace(TWorkspace * workspace, ConvLayer_t *L = nullptr);
-   static void FreePoolWorkspace(TWorkspace * workspace, PoolingLayer_t *L = nullptr);
+   static void FreePoolDropoutWorkspace(TWorkspace * workspace, PoolingLayer_t *L = nullptr);
    //____________________________________________________________________________
    //
    // Propagation
@@ -177,9 +195,18 @@ public:
    static void Copy(Tensor_t & A, const Tensor_t & B);
 
    // copy from another tensor
-   /*template<typename ATensor_t>
+   template<typename ATensor_t>
    static void CopyDiffArch(Tensor_t & A,
-                            const ATensor_t & B);*/
+                            const ATensor_t & B);
+
+   //template<>
+   static void CopyDiffArch(Tensor_t A, const Tensor_t & B ) { Copy(A,B); }
+
+      // copy from vector of matrices of different types
+   template<typename AMatrix_t>
+   static void CopyDiffArch(std::vector<Tensor_t>  & A,
+                            const std::vector<AMatrix_t> & B);
+
 
    //____________________________________________________________________________
    //
@@ -283,58 +310,8 @@ public:
                        const Matrix_t & );
    ///@}
 
-   //____________________________________________________________________________
-   //
-   // Regularization
-   //____________________________________________________________________________
-
-   /** @name Regularization
-    * For each regularization type two functions are required, one named
-    * <tt><Type>Regularization</tt> that evaluates the corresponding
-    * regularization functional for a given weight matrix and the
-    * <tt>Add<Type>RegularizationGradients</tt>, that adds the regularization
-    * component in the gradients to the provided matrix.
-    */
-   ///@{
-
-   static Scalar_t L1Regularization(const Matrix_t & W) { return 0;}
-   static void AddL1RegularizationGradients(Matrix_t & A,
-                                            const Matrix_t & W,
-                                            Scalar_t weightDecay) {}
-
-   static Scalar_t L2Regularization(const Matrix_t & W) { return 0; }
-   static void AddL2RegularizationGradients(Matrix_t & A,
-                                            const Matrix_t & W,
-                                            Scalar_t weightDecay) {}
-      ///@}
-
-   //____________________________________________________________________________
-   //
-   // Initialization
-   //____________________________________________________________________________
-
-   /** @name Initialization
-    * For each initialization method, one function in the low-level interface
-    * is provided. The naming scheme is <p>Initialize<Type></p> for a given
-    * initialization method Type.
-    */
-   ///@{
-
-   static void InitializeGauss(Matrix_t & A);
-   static void InitializeUniform(Matrix_t & A);
-   static void InitializeIdentity(Matrix_t & A);
-   static void InitializeZero(Matrix_t & A);
-   static void InitializeGlorotNormal(Matrix_t & A); 
-   static void InitializeGlorotUniform(Matrix_t & A);
-
-      // return static instance of random generator used for initialization
-      // if generator does not exist it is created the first time with a random seed (e.g. seed = 0)
-   static TRandom & GetRandomGenerator();
-      // set random seed for the static geenrator
-      // if the static geneerator does not exists it is created
-   static void SetRandomSeed(size_t seed); 
-      ///@}
-
+   
+   
       //____________________________________________________________________________
       //
       // Dropout
@@ -420,173 +397,227 @@ public:
                                              # endif
                                              Scalar_t epsilon) {}
 
-   ///@}
+   //____________________________________________________________________________
+   //
+   // Regularization
+   //____________________________________________________________________________
 
-      //____________________________________________________________________________
-      //
-      //  Convolutional Layer Propagation
-      //____________________________________________________________________________
-
-   /** @name Forward Propagation in Convolutional Layer
+   /** @name Regularization
+    * For each regularization type two functions are required, one named
+    * <tt><Type>Regularization</tt> that evaluates the corresponding
+    * regularization functional for a given weight matrix and the
+    * <tt>Add<Type>RegularizationGradients</tt>, that adds the regularization
+    * component in the gradients to the provided matrix.
     */
-      ///@{
-
-   /** Calculate how many neurons "fit" in the output layer, given the input as well as the layer's hyperparameters. */
-   //static size_t calculateDimension(size_t imgDim, size_t fltDim, size_t padding, size_t stride) {}
-
-   /** Transform the matrix B in local view format, suitable for
-    *  convolution, and store it in matrix A */
-   /*static void Im2col(Matrix_t &A,
-                      const Matrix_t &B,
-                      size_t imgHeight,
-                      size_t imgWidth,
-                      size_t fltHeight,
-                      size_t fltWidth,
-                      size_t strideRows,
-                      size_t strideCols,
-                      size_t zeroPaddingHeight,
-                      size_t zeroPaddingWidth) {}
-
-   static void Im2colIndices(std::vector<int> &V, const Matrix_t &B, size_t nLocalViews,
-                             size_t imgHeight, size_t imgWidth, size_t fltHeight,
-                             size_t fltWidth, size_t strideRows, size_t strideCols, size_t zeroPaddingHeight,
-                             size_t zeroPaddingWidth) {}
-   static void Im2colFast(Matrix_t &A, const Matrix_t &B, const std::vector<int> & V) {}*/
-
-   /** Rotates the matrix \p B, which is representing a weights,
-    *  and stores them in the matrix \p A. */
-   /*static void RotateWeights(Matrix_t &A, const Matrix_t &B, size_t filterDepth, size_t filterHeight,
-                             size_t filterWidth, size_t numFilters) {}*/
-
-   /** Add the biases in the Convolutional Layer.  */
-   static void AddConvBiases(Matrix_t &output, const Matrix_t &biases);
-      ///@}
-
-   /** Dummy placeholder - preparation is currently only required for the CUDA architecture. */
-   static void PrepareInternals(Tensor_t &) {}
-
-   /** Forward propagation in the Convolutional layer */
-   static void ConvLayerForward(Tensor_t & output,
-                                Tensor_t & inputActivationFunc, // this is output conv w/o activ func.
-                                const Tensor_t &input,
-                                const Matrix_t &weights, const Matrix_t & biases,
-                                const DNN::CNN::TConvParams & params,
-                                EActivationFunction activFunc,
-                                Tensor_t & /* inputPrime */,
-                                const ConvDescriptors_t & descriptors,
-                                ConvWorkspace_t & workspace);
-                                //const AFloat alpha = 1,
-                                //const AFloat beta  = 1);
-
-   /** @name Backward Propagation in Convolutional Layer
-    */
-      ///@{
-
-
-   /** Perform the complete backward propagation step in a Convolutional Layer.
-    *  If the provided \p activationGradientsBackward matrix is not empty, compute the
-    *  gradients of the objective function with respect to the activations
-    *  of the previous layer (backward direction).
-    *  Also compute the weight and the bias gradients. Modifies the values
-    *  in \p df and thus produces only a valid result, if it is applied the
-    *  first time after the corresponding forward propagation has been per-
-    *  formed. */
-   static void ConvLayerBackward(Tensor_t &activationGradientsBackward,
-                                 Matrix_t &weightGradients, Matrix_t &biasGradients,
-                                 Tensor_t &inputActivation,
-                                 Tensor_t &activationGradients,
-                                 const Matrix_t &weights,
-                                 const Tensor_t &activationBackward,
-                                 const Tensor_t &outputTensor,
-                                 EActivationFunction activFunc,
-                                 const ConvDescriptors_t & descriptors,
-                                 ConvWorkspace_t & workspace,
-                                 size_t /*batchSize*/,   size_t /*inputHeight*/, 
-                                 size_t /*inputWidth*/,  size_t /*depth*/, 
-                                 size_t /*height*/,      size_t /*width*/, 
-                                 size_t /*filterDepth*/, size_t /*filterHeight*/, 
-                                 size_t /*filterWidth*/, size_t /*nLocalViews*/ );
-
    
-   
-   ///@}
+   static Scalar_t L1Regularization(const Matrix_t &W)
+   {
+      TCudaMatrix<AFloat> mW(W.GetDeviceBuffer(), W.GetSize(), 1);
+      return TCuda<AFloat>::L1Regularization(mW);
+   }
+   static void AddL1RegularizationGradients(Matrix_t &A, const Matrix_t &W, Scalar_t weightDecay)
+   {
+      TCudaMatrix<AFloat> mA(A.GetDeviceBuffer(), A.GetSize(), 1);
+      TCudaMatrix<AFloat> mW(W.GetDeviceBuffer(), W.GetSize(), 1);
+      return TCuda<AFloat>::AddL1RegularizationGradients(mA, mW, weightDecay);
+   }
 
-      //____________________________________________________________________________
-      //
-      //  Max Pooling Layer Propagation
-      //____________________________________________________________________________
-   /** @name Forward Propagation in Max Pooling Layer
-    */
-      ///@{
+   static Scalar_t L2Regularization(const Matrix_t &W)
+   {
+      TCudaMatrix<AFloat> mW(W.GetDeviceBuffer(), W.GetSize(), 1);
+      return TCuda<AFloat>::L2Regularization(mW);
+   }
+   static void AddL2RegularizationGradients(Matrix_t &A, const Matrix_t &W, Scalar_t weightDecay)
+   {
+      TCudaMatrix<AFloat> mA(A.GetDeviceBuffer(), A.GetSize(), 1);
+      TCudaMatrix<AFloat> mW(W.GetDeviceBuffer(), W.GetSize(), 1);
+      return TCuda<AFloat>::AddL1RegularizationGradients(mA, mW, weightDecay);
+    }
+    ///@}
 
-   /** Downsample the matrix \p C to the matrix \p A, using max
-    * operation, such that the winning indices are stored in matrix
-    * \p B. No winning indices needed for cuDNN. */
-   static void Downsample(Tensor_t & A, Tensor_t & /*B*/, const Tensor_t & C,
-                          const PoolingDescriptors_t & descriptors,
-                          PoolingWorkspace_t & workspace,
-                          size_t imgHeight, size_t imgWidth, size_t fltHeight, 
-                          size_t fltWidth, size_t strideRows, size_t strideCols);
+    //____________________________________________________________________________
+    //
+    // Initialization
+    //____________________________________________________________________________
 
-      ///@}
+    /** @name Initialization
+     * For each initialization method, one function in the low-level interface
+     * is provided. The naming scheme is <p>Initialize<Type></p> for a given
+     * initialization method Type.
+     */
+    ///@{
 
-   /** @name Backward Propagation in Max Pooling Layer
-    */
-      ///@{
-   /** Perform the complete backward propagation step in a Pooling Layer. Based on the
-    *  input to and output from the MaxPoolLayer, the gradients for the winning pixels 
-    *  are computed. */
-   static void MaxPoolLayerBackward(Tensor_t & activationGradientsBackward,
-                                    const Tensor_t & activationGradients,
-                                    const Tensor_t & /*indexMatrix*/,
-                                    const Tensor_t & inputActivation,
-                                    const Tensor_t & outputTensor,
-                                    const PoolingDescriptors_t & descriptors,
-                                    PoolingWorkspace_t & workspace,
-                                    size_t imgHeight,
-                                    size_t imgWidth,
-                                    size_t fltHeight,
-                                    size_t fltWidth,
-                                    size_t strideRows,
-                                    size_t strideCols,
-                                    size_t nLocalViews);
+    static void InitializeGauss(Matrix_t &A);
+    static void InitializeUniform(Matrix_t &A);
+    static void InitializeIdentity(Matrix_t &A);
+    static void InitializeZero(Matrix_t &A);
+    static void InitializeGlorotNormal(Matrix_t &A);
+    static void InitializeGlorotUniform(Matrix_t &A);
 
-      ///@}
+    // return static instance of random generator used for initialization
+    // if generator does not exist it is created the first time with a random seed (e.g. seed = 0)
+    static TRandom &GetRandomGenerator();
+    // set random seed for the static geenrator
+    // if the static geneerator does not exists it is created
+    static void SetRandomSeed(size_t seed);
+    ///@}
 
-      //____________________________________________________________________________
-      //
-      //  Reshape Layer Propagation
-      //____________________________________________________________________________
-   /** @name Forward and Backward Propagation in Reshape Layer
-    */
-      ///@{
+    //____________________________________________________________________________
+    //
+    // Dropout
+    //____________________________________________________________________________
 
-   /** Transform the matrix \p B to a matrix with different dimensions \p A */
-   //static void Reshape(Matrix_t &A, const Matrix_t &B);
+    /** @name Dropout
+     */
+    ///@{
 
-   /** Flattens the tensor \p B, such that each matrix, is stretched in
-    *  one row, resulting with a matrix \p A. */
-   static void Flatten(Tensor_t &A, const Tensor_t &B); 
+    /** Apply dropout with activation probability \p p to the given
+     *  tensor \p A and scale the result by reciprocal of \p p. */
+    static void Dropout(Tensor_t &A, Scalar_t p) {}
 
-   /** Transforms each row of \p B to a matrix and stores it in the
-    *  tensor \p B. */
-   static void Deflatten(Tensor_t &A, const Tensor_t &B); // size_t index, size_t nRows,size_t nCols);
+    ///@}
 
-   /** Rearrage data accoring to time fill B x T x D out with T x B x D matrix in*/
-   //static void Rearrange(Tensor_t &out, const Tensor_t &in);
+    //____________________________________________________________________________
+    //
+    //  Convolutional Layer Propagation
+    //____________________________________________________________________________
 
+    /** @name Forward Propagation in Convolutional Layer
+     */
+    ///@{
 
-   /** Backward pass for Recurrent Networks */
-   /*static Matrix_t & RecurrentLayerBackward(Matrix_t & state_gradients_backward, // BxH
-                                            Matrix_t & input_weight_gradients,
-                                            Matrix_t & state_weight_gradients,
-                                            Matrix_t & bias_gradients,
-                                            Matrix_t & df, //DxH
-                                            const Matrix_t & state, // BxH
-                                            const Matrix_t & weights_input, // HxD
-                                            const Matrix_t & weights_state, // HxH
-                                            const Matrix_t & input,  // BxD
-                                            Matrix_t & input_gradient);*/
+    /** Calculate how many neurons "fit" in the output layer, given the input as well as the layer's hyperparameters. */
+    // static size_t calculateDimension(size_t imgDim, size_t fltDim, size_t padding, size_t stride) {}
+
+    /** Transform the matrix B in local view format, suitable for
+     *  convolution, and store it in matrix A */
+    /*static void Im2col(Matrix_t &A,
+                       const Matrix_t &B,
+                       size_t imgHeight,
+                       size_t imgWidth,
+                       size_t fltHeight,
+                       size_t fltWidth,
+                       size_t strideRows,
+                       size_t strideCols,
+                       size_t zeroPaddingHeight,
+                       size_t zeroPaddingWidth) {}
+
+    static void Im2colIndices(std::vector<int> &V, const Matrix_t &B, size_t nLocalViews,
+                              size_t imgHeight, size_t imgWidth, size_t fltHeight,
+                              size_t fltWidth, size_t strideRows, size_t strideCols, size_t zeroPaddingHeight,
+                              size_t zeroPaddingWidth) {}
+    static void Im2colFast(Matrix_t &A, const Matrix_t &B, const std::vector<int> & V) {}*/
+
+    /** Rotates the matrix \p B, which is representing a weights,
+     *  and stores them in the matrix \p A. */
+    /*static void RotateWeights(Matrix_t &A, const Matrix_t &B, size_t filterDepth, size_t filterHeight,
+                              size_t filterWidth, size_t numFilters) {}*/
+
+    /** Add the biases in the Convolutional Layer.  */
+    static void AddConvBiases(Matrix_t &output, const Matrix_t &biases);
+    ///@}
+
+    /** Dummy placeholder - preparation is currently only required for the CUDA architecture. */
+    static void PrepareInternals(Tensor_t &) {}
+
+    /** Forward propagation in the Convolutional layer */
+    static void ConvLayerForward(Tensor_t &output,
+                                 Tensor_t &inputActivationFunc, // this is output conv w/o activ func.
+                                 const Tensor_t &input, const Matrix_t &weights, const Matrix_t &biases,
+                                 const DNN::CNN::TConvParams &params, EActivationFunction activFunc,
+                                 Tensor_t & /* inputPrime */, const ConvDescriptors_t &descriptors,
+                                 ConvWorkspace_t &workspace);
+    // const AFloat alpha = 1,
+    // const AFloat beta  = 1);
+
+    /** @name Backward Propagation in Convolutional Layer
+     */
+    ///@{
+
+    /** Perform the complete backward propagation step in a Convolutional Layer.
+     *  If the provided \p activationGradientsBackward matrix is not empty, compute the
+     *  gradients of the objective function with respect to the activations
+     *  of the previous layer (backward direction).
+     *  Also compute the weight and the bias gradients. Modifies the values
+     *  in \p df and thus produces only a valid result, if it is applied the
+     *  first time after the corresponding forward propagation has been per-
+     *  formed. */
+    static void ConvLayerBackward(Tensor_t &activationGradientsBackward, Matrix_t &weightGradients,
+                                  Matrix_t &biasGradients, Tensor_t &inputActivation, Tensor_t &activationGradients,
+                                  const Matrix_t &weights, const Tensor_t &activationBackward,
+                                  const Tensor_t &outputTensor, EActivationFunction activFunc,
+                                  const ConvDescriptors_t &descriptors, ConvWorkspace_t &workspace,
+                                  size_t /*batchSize*/, size_t /*inputHeight*/, size_t /*inputWidth*/, size_t /*depth*/,
+                                  size_t /*height*/, size_t /*width*/, size_t /*filterDepth*/, size_t /*filterHeight*/,
+                                  size_t /*filterWidth*/, size_t /*nLocalViews*/);
+
+    ///@}
+
+    //____________________________________________________________________________
+    //
+    //  Max Pooling Layer Propagation
+    //____________________________________________________________________________
+    /** @name Forward Propagation in Max Pooling Layer
+     */
+    ///@{
+
+    /** Downsample the matrix \p C to the matrix \p A, using max
+     * operation, such that the winning indices are stored in matrix
+     * \p B. No winning indices needed for cuDNN. */
+    static void Downsample(Tensor_t &A, Tensor_t & /*B*/, const Tensor_t &C, const PoolingDescriptors_t &descriptors,
+                           PoolingWorkspace_t &workspace, size_t imgHeight, size_t imgWidth, size_t fltHeight,
+                           size_t fltWidth, size_t strideRows, size_t strideCols);
+
+    ///@}
+
+    /** @name Backward Propagation in Max Pooling Layer
+     */
+    ///@{
+    /** Perform the complete backward propagation step in a Pooling Layer. Based on the
+     *  input to and output from the MaxPoolLayer, the gradients for the winning pixels
+     *  are computed. */
+    static void MaxPoolLayerBackward(Tensor_t &activationGradientsBackward, const Tensor_t &activationGradients,
+                                     const Tensor_t & /*indexMatrix*/, const Tensor_t &inputActivation,
+                                     const Tensor_t &outputTensor, const PoolingDescriptors_t &descriptors,
+                                     PoolingWorkspace_t &workspace, size_t imgHeight, size_t imgWidth, size_t fltHeight,
+                                     size_t fltWidth, size_t strideRows, size_t strideCols, size_t nLocalViews);
+
+    ///@}
+
+    //____________________________________________________________________________
+    //
+    //  Reshape Layer Propagation
+    //____________________________________________________________________________
+    /** @name Forward and Backward Propagation in Reshape Layer
+     */
+    ///@{
+
+    /** Transform the matrix \p B to a matrix with different dimensions \p A */
+    // static void Reshape(Matrix_t &A, const Matrix_t &B);
+
+    /** Flattens the tensor \p B, such that each matrix, is stretched in
+     *  one row, resulting with a matrix \p A. */
+    static void Flatten(Tensor_t &A, const Tensor_t &B);
+
+    /** Transforms each row of \p B to a matrix and stores it in the
+     *  tensor \p B. */
+    static void Deflatten(Tensor_t &A, const Tensor_t &B); // size_t index, size_t nRows,size_t nCols);
+
+    /** Rearrage data accoring to time fill B x T x D out with T x B x D matrix in*/
+    static void Rearrange(Tensor_t &out, const Tensor_t &in) {}
+
+    /** Backward pass for Recurrent Networks */
+    static Matrix_t &RecurrentLayerBackward(Matrix_t &state_gradients_backward, // BxH
+                                            Matrix_t &input_weight_gradients, Matrix_t &state_weight_gradients,
+                                            Matrix_t &bias_gradients,
+                                            Matrix_t &df,                  // DxH
+                                            const Matrix_t &state,         // BxH
+                                            const Matrix_t &weights_input, // HxD
+                                            const Matrix_t &weights_state, // HxH
+                                            const Matrix_t &input,         // BxD
+                                            Matrix_t &input_gradient)
+    {
+       return state_gradients_backward;}
 
 
       ///@}
@@ -619,10 +650,15 @@ public:
    /** In-place Hadamard (element-wise) product of matrices \p A and \p B
     *  with the result being written into \p A.
     */
-   /*static void Hadamard(Tensor_t &A,
-                        const Tensor_t &B);
-   static void Hadamard(Matrix_t &A,
-                        const Matrix_t &B);*/
+   static void Hadamard(Tensor_t &A,
+                        const Tensor_t &B) { 
+         TCudaMatrix<AFloat> tmpA(A.GetDeviceBuffer(), 1, A.GetSize());
+         TCudaMatrix<AFloat> tmpB(B.GetDeviceBuffer(), 1, B.GetSize());     
+         assert(A.GetSize() == B.GetSize());             
+         TCuda<AFloat>::Hadamard(tmpA,tmpB);                    
+   }
+  // static void Hadamard(Matrix_t &A,
+  //                      const Matrix_t &B);*/
       // {
       //    Tensor_t tA(A);
       //    Hadamard( tA, Tensor_t(B));
@@ -644,35 +680,64 @@ public:
    /** Add the constant \p beta to all the elements of matrix \p A and write the
     * result into \p A.
     */
-   static void ConstAdd(Matrix_t &A, Scalar_t beta);
+   static void ConstAdd(Matrix_t &A, Scalar_t beta) { 
+      TCudaMatrix<AFloat> tmp(A.GetDeviceBuffer(), 1, A.GetSize());
+      TCuda<AFloat>::ConstAdd(tmp,beta);
+   }
 
    /** Multiply the constant \p beta to all the elements of matrix \p A and write the
     * result into \p A.
     */
-   static void ConstMult(Matrix_t &A, Scalar_t beta);
+   static void ConstMult(Matrix_t &A, Scalar_t beta) { 
+      TCudaMatrix<AFloat> tmp(A.GetDeviceBuffer(), 1, A.GetSize());
+      TCuda<AFloat>::ConstMult(tmp,beta);
+   }
 
    /** Reciprocal each element of the matrix \p A and write the result into
     * \p A
     */
-   //static void ReciprocalElementWise(Matrix_t &A);
+   static void ReciprocalElementWise(Matrix_t &A) {
+      TCudaMatrix<AFloat> tmp(A.GetDeviceBuffer(), 1, A.GetSize());
+      TCuda<AFloat>::ReciprocalElementWise(tmp);
+   }
 
    /** Square each element of the matrix \p A and write the result into
     * \p A
     */
-   //static void SquareElementWise(Matrix_t &A);
+   static void SquareElementWise(Matrix_t &A) { 
+      TCudaMatrix<AFloat> tmp(A.GetDeviceBuffer(), 1, A.GetSize());
+      TCuda<AFloat>::SquareElementWise(tmp);
+   }
 
    /** Square root each element of the matrix \p A and write the result into
     * \p A
     */
-   static void SqrtElementWise(Matrix_t &A, Scalar_t alpha = 1, Scalar_t beta = 0, Scalar_t gamma = 0);
+   //static void SqrtElementWise(Matrix_t &A, Scalar_t alpha = 1, Scalar_t beta = 0, Scalar_t gamma = 0) {
+   static void SqrtElementWise(Matrix_t &A) {
+      TCudaMatrix<AFloat> tmp(A.GetDeviceBuffer(), 1, A.GetSize());
+      TCuda<AFloat>::SqrtElementWise(tmp);
+   }
 
       // optimizer functions
-   /*static void AdamUpdate(Matrix_t & A, const Matrix_t & M, const Matrix_t & V, Scalar_t alpha, Scalar_t eps);
-   static void AdamUpdateFirstMom(Matrix_t & A, const Matrix_t & B, Scalar_t beta);
-   static void AdamUpdateSecondMom(Matrix_t & A, const Matrix_t & B, Scalar_t beta);*/
+   static void AdamUpdate(Matrix_t & A, const Matrix_t & M, const Matrix_t & V, Scalar_t alpha, Scalar_t eps) {
+      TCudaMatrix<AFloat> tmpA(A.GetDeviceBuffer(), 1, A.GetSize());
+      TCudaMatrix<AFloat> tmpM(M.GetDeviceBuffer(), 1, M.GetSize());
+      TCudaMatrix<AFloat> tmpV(V.GetDeviceBuffer(), 1, V.GetSize());
+      TCuda<AFloat>::AdamUpdate(tmpA, tmpM, tmpV,alpha, eps);
+   }
+   static void AdamUpdateFirstMom(Matrix_t & A, const Matrix_t & B, Scalar_t beta) {
+      TCudaMatrix<AFloat> tmpA(A.GetDeviceBuffer(), 1, A.GetSize());
+      TCudaMatrix<AFloat> tmpB(B.GetDeviceBuffer(), 1, B.GetSize());
+      TCuda<AFloat>::AdamUpdateFirstMom(tmpA, tmpB,  beta);
+   }
+   static void AdamUpdateSecondMom(Matrix_t & A, const Matrix_t & B, Scalar_t beta) {
+      TCudaMatrix<AFloat> tmpA(A.GetDeviceBuffer(), 1, A.GetSize());
+      TCudaMatrix<AFloat> tmpB(B.GetDeviceBuffer(), 1, B.GetSize());
+      TCuda<AFloat>::AdamUpdateSecondMom(tmpA, tmpB,  beta); 
+   }
 
       // printing of tensor
-   static void PrintTensor( const Tensor_t & A, const std::string name = "tensor");
+   static void PrintTensor( const Tensor_t & A, const std::string name = "tensor", bool = false);
 
 
 
@@ -923,30 +988,32 @@ void TCudnn<AFloat>::FreeConvWorkspace(TWorkspace * workspace, ConvLayer_t *L) {
 #endif
 
 //____________________________________________________________________________
-/*template <typename AFloat>
+template <typename AFloat>
 template <typename AMatrix_t>
-void TCuda<AFloat>::CopyDiffArch(TCudaMatrix<AFloat> &B,
+void TCudnn<AFloat>::CopyDiffArch(TCudaTensor<AFloat> &B,
                         const AMatrix_t &A)
 {
    // copy from another architecture using the reference one
    // this is not very efficient since creates temporary objects
-   TMatrixT<AFloat> tmp = A;
-   Copy(B, TCudaMatrix<AFloat>(tmp) ); 
+   TMatrixT<AFloat> tmp = A;// .GetMatrix();
+   TCudaMatrix<AFloat> tmp2(tmp);
+   TCudaTensor<AFloat> tA( tmp2 );
+   Copy(B, tA ); 
 }
 
 //____________________________________________________________________________
 template <typename AFloat>
 template <typename AMatrix_t>
-void TCuda<AFloat>::CopyDiffArch(std::vector<TCudaMatrix<AFloat>> &B,
+void TCudnn<AFloat>::CopyDiffArch(std::vector<Tensor_t> &B,
                             const std::vector<AMatrix_t> &A)
 {
    for (size_t i = 0; i < B.size(); ++i) {
       CopyDiffArch(B[i], A[i]);
    }
-}*/
+}
 
 template <typename Real_t>
-void TCudnn<Real_t>::PrintTensor(const typename TCudnn<Real_t>::Tensor_t & A, const std::string name ) 
+void TCudnn<Real_t>::PrintTensor(const typename TCudnn<Real_t>::Tensor_t & A, const std::string name, bool truncate ) 
 {
    std::cout << name << "  size = " << A.GetSize() << " shape = { "; 
    auto shape = A.GetShape(); 
@@ -962,9 +1029,13 @@ void TCudnn<Real_t>::PrintTensor(const typename TCudnn<Real_t>::Tensor_t & A, co
    if (A.GetShape().size() == 2 ) { 
       for (size_t i = 0; i < A.GetShape()[0]; ++i) {
          std::cout << "{ ";
-         for (size_t j = 0; j < A.GetShape()[1]; ++j) {
+         size_t n =  A.GetShape()[1];
+         if (truncate) n = std::min(n,size_t(10));
+         for (size_t j = 0; j < n; ++j) {
             std::cout << A(i,j) << " ";
+            
          }
+         if (truncate && n < A.GetShape()[1]) std::cout << " ...... ";
          std::cout << " } " << std::endl;
       }
    } else if  (A.GetShape().size() == 3 ) {
@@ -972,9 +1043,12 @@ void TCudnn<Real_t>::PrintTensor(const typename TCudnn<Real_t>::Tensor_t & A, co
          std::cout << "{ ";
          for (size_t j = 0; j < A.GetHSize(); ++j) {
             std::cout << "{ ";
-            for (size_t k = 0; k < A.GetWSize(); ++k) {
+            size_t n =  A.GetWSize();
+            if (truncate)  n = std::min(n,size_t(10));
+            for (size_t k = 0; k < n; ++k) {
                std::cout << A(i,j,k) << " ";
             }
+            if (truncate && n < A.GetWSize()) std::cout << " ...... ";
             std::cout << " } " << std::endl;
          }
          std::cout << " } " << std::endl;
@@ -985,9 +1059,12 @@ void TCudnn<Real_t>::PrintTensor(const typename TCudnn<Real_t>::Tensor_t & A, co
          for (size_t j = 0; j < A.GetShape()[1]; ++j) {
             std::cout << "{ ";
             for (size_t k = 0; k < A.GetShape()[2]; ++k) {
-               for (size_t l = 0; l < A.GetShape()[3]; ++l) {
+               size_t n =  A.GetShape()[3];
+               if (truncate)  n = std::min(n,size_t(10));  
+               for (size_t l = 0; l < n; ++l) {
                   std::cout << A(i,j,k,l) << " ";
                }  
+               if (truncate && n < A.GetShape()[3]) std::cout << " ...... ";
                std::cout << " } " << std::endl;
             }
             std::cout << " } " << std::endl;

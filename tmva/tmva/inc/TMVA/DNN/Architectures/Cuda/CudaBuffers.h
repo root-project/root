@@ -140,6 +140,8 @@ public:
    cudaStream_t GetComputeStream() const {return fComputeStream;}
    void SetComputeStream(cudaStream_t stream) {fComputeStream = stream;}
 
+   size_t GetUseCount() const { return fDevicePointer.use_count(); }
+
 };
 
 //
