@@ -27,6 +27,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RInterface
     src/TRObject.cxx
   DEPENDENCIES
     Core
+    Rint
     Matrix
     RIO
     Thread
