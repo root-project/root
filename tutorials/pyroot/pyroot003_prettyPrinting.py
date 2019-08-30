@@ -7,6 +7,7 @@
 ## powered by the C++ interpreter cling.
 ##
 ## \macro_code
+## \macro_output
 ##
 ## \date June 2018
 ## \author Stefan Wunsch, Enric Tejedor

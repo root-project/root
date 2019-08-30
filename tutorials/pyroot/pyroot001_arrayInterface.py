@@ -7,6 +7,7 @@
 ## is added dynamically to the Python objects by PyROOT.
 ##
 ## \macro_code
+## \macro_output
 ##
 ## \date April 2018
 ## \author Stefan Wunsch
