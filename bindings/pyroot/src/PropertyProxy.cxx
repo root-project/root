@@ -214,10 +214,9 @@ void PyROOT::PropertyProxy::Set( Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t id
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void PyROOT::PropertyProxy::Set( Cppyy::TCppScope_t scope, const std::string& name, void* address )
+void PyROOT::PropertyProxy::Set( Cppyy::TCppScope_t scope, const std::string& name, void* address, TEnum* en )
 {
-   Cppyy::TCppIndex_t idata = Cppyy::GetDatamemberIndex(scope, name);
-   std::string cppType = Cppyy::ResolveEnum(Cppyy::GetDatamemberType(scope, idata));
+   std::string cppType = Cppyy::ResolveEnum(en);
 
    fEnclosingScope = scope;
    fName           = name;
