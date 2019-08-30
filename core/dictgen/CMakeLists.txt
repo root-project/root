@@ -32,10 +32,14 @@ ROOT_OBJECT_LIBRARY(Dictgen
 add_dependencies(Dictgen CLING)
 
 target_include_directories(Dictgen PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}/src
-  ${CMAKE_CURRENT_SOURCE_DIR}/res
-  ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res
-  ${CMAKE_CURRENT_SOURCE_DIR}/../clingutils/res
+  src
+  res
+  ../base/inc
+  ../clib/inc
+  ../meta/inc
+  ../foundation/inc
+  ../foundation/res
+  ../clingutils/res
   ${CLING_INCLUDE_DIRS}
 )
 
