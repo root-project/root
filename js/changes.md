@@ -11,6 +11,7 @@
 8. New and simpler TArrow drawing without use of svg markers
 9. Use TGeoManager::fVisLevel in geometry painter
 10. Support "texte" and "texte0" draw options for TH2/TProfile2D classes
+11. Provide radial and z-axis interactive transformation for TGeo drawings
 
 
 ## Changes in 5.7.1
