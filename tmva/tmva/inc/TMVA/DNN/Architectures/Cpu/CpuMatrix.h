@@ -347,6 +347,10 @@ public:
    AFloat *GetRawDataPointer() { return fBuffer; }
    const AFloat *GetRawDataPointer() const { return fBuffer; }
 
+   // for same API as CudaTensor (device buffer is the CpuBuffer)
+   const TCpuBuffer<AFloat> & GetDeviceBuffer()     const {return fBuffer;}
+   TCpuBuffer<AFloat>       & GetDeviceBuffer()           {return fBuffer;}
+
    AFloat *GetData() { return fTensor.GetData(); }
    const AFloat *GetData() const { return fTensor.GetData(); }
 

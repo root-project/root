@@ -21,6 +21,8 @@
 
 #include "TMVA/DNN/Architectures/Cuda.h"
 
+#include "TRandom.h"
+
 // #include "TMVA/DNN/Architectures/Cuda/Device.h"
 // #include "Kernels.cuh"*/
 // #include <math.h>
@@ -310,19 +312,29 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
    
 
    // FIXME: Use descriptors instead (Tensor device memory is otherwise allocated during initialization)
-   Tensor_t inputTensor  ({L->GetBatchSize(), L->GetInputDepth(), L->GetInputHeight(), L->GetInputWidth()}, MemoryLayout::RowMajor, 0, 0);
+   //Tensor_t inputTensor  ({L->GetBatchSize(), L->GetInputDepth(), L->GetInputHeight(), L->GetInputWidth()}, MemoryLayout::RowMajor, 0, 0);
+   cudnnTensorDescriptor_t  inputTensorDescriptor; 
+   CUDNNCHECK(cudnnCreateTensorDescriptor(&inputTensorDescriptor) );
+   CUDNNCHECK(cudnnSetTensor4dDescriptor(inputTensorDescriptor,
+                                             CUDNN_TENSOR_NCHW,// Layout of the tensor in memory
+                                             Tensor_t::GetDataType(),
+                                             (int)L->GetBatchSize(),
+                                             (int)L->GetInputDepth(),
+                                             (int)L->GetInputHeight(),
+                                             (int)L->GetInputWidth() ) );
+
 
    // size_t outputHeight = ConvLayer_t::calculateDimension(L->GetInputHeight(), L->GetFilterHeight(), L->GetPaddingHeight(), L->GetStrideRows());
    // size_t outputWidth  = ConvLayer_t::calculateDimension(L->GetInputWidth(), L->GetFilterWidth(), L->GetPaddingWidth(),  L->GetStrideCols());
    //Tensor_t outputTensor ({L->GetBatchSize(), L->GetDepth(), outputHeight, outputWidth}, MemoryLayout::RowMajor, 0, 0);
    
    // Get access to cudnn library handle, which is static for the CudaTensor class
-   cudnnHandle_t cudnnHandle = inputTensor.GetCudnnHandle();
+   cudnnHandle_t cudnnHandle = outputTensor.GetCudnnHandle();
    
    // cuDNN decides which algorithm to use
    // More detailed alternative: cudnnFindConvolutionForwardAlgorithm
    CUDNNCHECK(cudnnGetConvolutionForwardAlgorithm(cudnnHandle,
-                                                  inputTensor.GetTensorDescriptor(),
+                                                  inputTensorDescriptor,
                                                   convDescriptors->WeightsDescriptor,
                                                   convDescriptors->LayerDescriptor,
                                                   outputTensor.GetTensorDescriptor(),
@@ -333,7 +345,7 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
    // Allocate memory for the convolution
    //size_t workSpaceSizeInBytes = 0;
    CUDNNCHECK(cudnnGetConvolutionForwardWorkspaceSize(cudnnHandle,
-                                                      inputTensor.GetTensorDescriptor(),
+                                                      inputTensorDescriptor,
                                                       convDescriptors->WeightsDescriptor,
                                                       convDescriptors->LayerDescriptor,
                                                       outputTensor.GetTensorDescriptor(),
@@ -341,13 +353,21 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
                                                       &convWorkspace->ForwardWorkspaceSize));
                                                   
    if (convWorkspace->ForwardWorkspaceSize) cudaMalloc(&convWorkspace->ForwardWorkspace, convWorkspace->ForwardWorkspaceSize*sizeof(AFloat));
-
+   if (convWorkspace->ForwardWorkspaceSize > 0 && convWorkspace->ForwardWorkspace == nullptr  ) { 
+      std::cerr << "Error allocating FWD CONV workspace of size " << convWorkspace->ForwardWorkspaceSize << " - probably running out of memory on the GPU"
+      << std::endl;
+      std::cout << " layer input shape is  { " << L->GetBatchSize() << " , " <<  L->GetInputDepth() << " , " 
+                                                <<L->GetInputHeight() << " , " << L->GetInputWidth() << " } " << std::endl;
+      //inputTensor.PrintShape("inputTensor");
+      R__ASSERT(false);
+   }
    //
    // Backward Algorithm
    //
    
    //Tensor_t activationGradients ({L->GetBatchSize(), L->GetDepth(), outputHeight, outputWidth}, MemoryLayout::RowMajor, 0, 0);
-   Tensor_t activationGradientsBackward ({L->GetBatchSize(), L->GetInputDepth(), L->GetInputHeight(), L->GetInputWidth()}, MemoryLayout::RowMajor, 0, 0);
+   //Tensor_t activationGradientsBackward ({L->GetBatchSize(), L->GetInputDepth(), L->GetInputHeight(), L->GetInputWidth()}, MemoryLayout::RowMajor, 0, 0);
+   cudnnTensorDescriptor_t activationGradientsBackwardDescriptor = inputTensorDescriptor; 
 
    cudnnHandle = activationGradients.GetCudnnHandle();
    // dx : Activation gradient to be computed                               -> activationGradients [in place op] 
@@ -356,7 +376,7 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
                                                        convDescriptors->WeightsDescriptor,
                                                        activationGradients.GetTensorDescriptor(),
                                                        convDescriptors->LayerDescriptor,
-                                                       activationGradientsBackward.GetTensorDescriptor(),
+                                                       activationGradientsBackwardDescriptor,
                                                        CUDNN_CONVOLUTION_BWD_DATA_PREFER_FASTEST,
                                                        0,
                                                        &convWorkspace->AlgorithmBackward));
@@ -365,17 +385,26 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
                                                            convDescriptors->WeightsDescriptor,
                                                            activationGradients.GetTensorDescriptor(),
                                                            convDescriptors->LayerDescriptor,
-                                                           activationGradientsBackward.GetTensorDescriptor(),
+                                                           activationGradientsBackwardDescriptor,
                                                            convWorkspace->AlgorithmBackward,
                                                            &convWorkspace->BackwardWorkspaceSize));
                                                            
    if (convWorkspace->BackwardWorkspaceSize) cudaMalloc(&convWorkspace->BackwardWorkspace, convWorkspace->BackwardWorkspaceSize*sizeof(AFloat));
-  
+   if (convWorkspace->BackwardWorkspaceSize > 0 && convWorkspace->BackwardWorkspace == nullptr  ) { 
+      std::cerr << "Error allocating BACKW DATA CONV workspace of size " << convWorkspace->BackwardWorkspaceSize << " - probably running out of memory on the GPU"
+      << std::endl;
+      std::cout << " layer input shape is  { " << L->GetBatchSize() << " , " <<  L->GetInputDepth() << " , " 
+                                                <<L->GetInputHeight() << " , " << L->GetInputWidth() << " } " << std::endl;
+      //inputTensor.PrintShape("inputTensor");
+      R__ASSERT(false);
+   }
    // Filter gradient
-   Tensor_t activationBackward ({L->GetBatchSize(), L->GetInputDepth(), L->GetInputHeight(), L->GetInputWidth()}, MemoryLayout::RowMajor, 0, 0);
+   //Tensor_t activationBackward ({L->GetBatchSize(), L->GetInputDepth(), L->GetInputHeight(), L->GetInputWidth()}, MemoryLayout::RowMajor, 0, 0);
+   // here should be able to use inputTensorDescriptor
+   cudnnTensorDescriptor_t activationBackwardDescriptor = inputTensorDescriptor; 
 
    CUDNNCHECK(cudnnGetConvolutionBackwardFilterAlgorithm(cudnnHandle,
-                                                         activationBackward.GetTensorDescriptor(),
+                                                         activationBackwardDescriptor,
                                                          activationGradients.GetTensorDescriptor(),
                                                          convDescriptors->LayerDescriptor,
                                                          convDescriptors->WeightsDescriptor,
@@ -384,48 +413,89 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
                                                          &convWorkspace->HelperAlgorithm));
                                                           
    CUDNNCHECK(cudnnGetConvolutionBackwardFilterWorkspaceSize(cudnnHandle,
-                                                             activationBackward.GetTensorDescriptor(),
+                                                             activationBackwardDescriptor,
                                                              activationGradients.GetTensorDescriptor(),
                                                              convDescriptors->LayerDescriptor,
                                                              convDescriptors->WeightsDescriptor,
                                                              convWorkspace->HelperAlgorithm,
                                                              &convWorkspace->HelperWorkspaceSize));
                                                               
-    if (convWorkspace->HelperWorkspaceSize) cudaMalloc(&convWorkspace->HelperWorkspace, convWorkspace->HelperWorkspaceSize*sizeof(AFloat));
-   
+   if (convWorkspace->HelperWorkspaceSize) cudaMalloc(&convWorkspace->HelperWorkspace, convWorkspace->HelperWorkspaceSize*sizeof(AFloat));
+   if (convWorkspace->HelperWorkspaceSize > 0 && convWorkspace->HelperWorkspace == nullptr  ) { 
+      std::cerr << "Error allocating BACKW FILTER CONV workspace of size " << convWorkspace->BackwardWorkspaceSize << " - probably running out of memory on the GPU"
+      << std::endl;
+      std::cout << " layer input shape is  { " << L->GetBatchSize() << " , " <<  L->GetInputDepth() << " , " 
+                                                <<L->GetInputHeight() << " , " << L->GetInputWidth() << " } " << std::endl;
+      filters.PrintShape("filterTensor");
+      R__ASSERT(false);
+   }
+
    workspace = convWorkspace;
+
+   CUDNNCHECK(cudnnDestroyTensorDescriptor(inputTensorDescriptor));
 }
 
 
 //____________________________________________________________________________
 template <typename AFloat>
-void TCudnn<AFloat>::InitializeDropoutWorkspace(TWorkspace * & workspace,
+void TCudnn<AFloat>::InitializePoolDropoutWorkspace(TWorkspace * & workspace,
                                              TDescriptors * & descriptors, 
                                              const DNN::CNN::TConvParams & /*params*/,
                                              PoolingLayer_t *L) {
+
    auto poolWorkspace = new PoolingWorkspace_t ();
    auto poolDescriptors = static_cast<PoolingDescriptors_t *>(descriptors);
 
-   Tensor_t inputTensor ({L->GetBatchSize(), L->GetInputDepth(), L->GetInputHeight(), L->GetInputWidth()}, MemoryLayout::RowMajor, 0, 0);
-   cudnnHandle_t cudnnHandle = inputTensor.GetCudnnHandle();
+   //Tensor_t inputTensor ({L->GetBatchSize(), L->GetInputDepth(), L->GetInputHeight(), L->GetInputWidth()}, MemoryLayout::RowMajor, 0, 0);
+   cudnnHandle_t cudnnHandle = L->GetOutput().GetCudnnHandle();
+
+   // create tensor descriptors 
+   cudnnTensorDescriptor_t  inputTensorDescriptor; 
+   CUDNNCHECK(cudnnCreateTensorDescriptor(&inputTensorDescriptor) );
+   CUDNNCHECK(cudnnSetTensor4dDescriptor(inputTensorDescriptor,
+                                             CUDNN_TENSOR_NCHW,// Layout of the tensor in memory
+                                             Tensor_t::GetDataType(),
+                                             (int)L->GetBatchSize(),
+                                             (int)L->GetInputDepth(),
+                                             (int)L->GetInputHeight(),
+                                             (int)L->GetInputWidth() ) );
+
 
    // Space needed to execute forward and backward dropout pass
-   CUDNNCHECK(cudnnDropoutGetReserveSpaceSize(inputTensor.GetTensorDescriptor(),
+   CUDNNCHECK(cudnnDropoutGetReserveSpaceSize(inputTensorDescriptor,
                                               &poolWorkspace->HelperWorkspaceSize));
 
-   if (poolWorkspace->HelperWorkspaceSize) cudaMalloc(&poolWorkspace->HelperWorkspace, 
-                                                      poolWorkspace->HelperWorkspaceSize*sizeof(AFloat));
-   
-   // Space that containrandom pass                                           
+   if (poolWorkspace->HelperWorkspaceSize) {
+      cudaMalloc(&poolWorkspace->HelperWorkspace, poolWorkspace->HelperWorkspaceSize * sizeof(AFloat));
+      if (poolWorkspace->HelperWorkspace == nullptr) {
+         std::cerr << "Error allocating POOL reserved droput workspace of size " <<  poolWorkspace->HelperWorkspaceSize 
+                  << " probably running out of memory on the GPU"
+                   << std::endl;
+         std::cout << " layer input shape is  { " << L->GetBatchSize() << " , " << L->GetInputDepth() << " , "
+                   << L->GetInputHeight() << " , " << L->GetInputWidth() << " } " << std::endl;
+         R__ASSERT(false);
+      }
+   }
+
+   // Space that contain random pass                                           
    CUDNNCHECK(cudnnDropoutGetStatesSize(cudnnHandle,
                                         &poolWorkspace->ForwardWorkspaceSize));
 
-   if (poolWorkspace->ForwardWorkspaceSize) cudaMalloc(&poolWorkspace->ForwardWorkspace, 
-                                                       poolWorkspace->ForwardWorkspaceSize*sizeof(AFloat));
+   if (poolWorkspace->ForwardWorkspaceSize) {
+      cudaMalloc(&poolWorkspace->ForwardWorkspace, poolWorkspace->ForwardWorkspaceSize * sizeof(AFloat));
+      if (poolWorkspace->ForwardWorkspace == nullptr) {
+         std::cerr << "Error allocating POOL droput state of size " <<  poolWorkspace->ForwardWorkspaceSize <<
+         " probably running out of memory on the GPU"  << std::endl;
+         std::cout << " layer input shape is  { " << L->GetBatchSize() << " , " << L->GetInputDepth() << " , "
+                   << L->GetInputHeight() << " , " << L->GetInputWidth() << " } " << std::endl;
+         R__ASSERT(false);
+      }
+   }
 
-                                                          // Fill the dropout workspace with random numbers and copy to device
+   // Fill the dropout workspace with random numbers and copy to device
    TRandom &  rand = TCudnn<AFloat>::GetRandomGenerator();
-   unsigned long long seed = 5496729; //rand.Uniform(0, ULLONG_MAX);
+   // create a 64 bit seed using 2 32 bits integers
+   unsigned long long seed = (unsigned long long) rand.Integer(UINT_MAX) << 32 + rand.Integer(UINT_MAX);
    // Reset the descriptor at every forward pass, so that random states get newly initialized?
    CUDNNCHECK(cudnnSetDropoutDescriptor(poolDescriptors->HelperDescriptor,
                                         cudnnHandle,
@@ -435,6 +505,8 @@ void TCudnn<AFloat>::InitializeDropoutWorkspace(TWorkspace * & workspace,
                                         seed));
 
    workspace = poolWorkspace;
+
+   CUDNNCHECK(cudnnDestroyTensorDescriptor(inputTensorDescriptor));
 }
 
 //____________________________________________________________________________
@@ -450,7 +522,7 @@ void TCudnn<AFloat>::FreeConvWorkspace(TWorkspace * workspace, ConvLayer_t *L) {
 
 //____________________________________________________________________________
 template <typename AFloat>
-void TCudnn<AFloat>::FreePoolWorkspace(TWorkspace * workspace, PoolingLayer_t *L) {
+void TCudnn<AFloat>::FreePoolDropoutWorkspace(TWorkspace * workspace, PoolingLayer_t *L) {
    if (!workspace) return;
    auto poolWorkspace = static_cast<PoolingWorkspace_t *>(workspace);
 
@@ -479,8 +551,8 @@ void TCudnn<AFloat>::BatchNormLayerForwardTraining(Matrix_t input,
                                           Scalar_t momentum,
                                           Scalar_t epsilon)
 {
-   AFloat a = 1.0;
-   AFloat b = 0.0;
+   //AFloat a = 1.0;
+   //AFloat b = 0.0;
    /*CUDNNCHECK(cudnnBatchNormalizationForwardTraining(input.GetCudnnHandle(),
       cudnnBatchNormMode_t             mode,
                                                      &alpha,
@@ -580,8 +652,8 @@ void TCudnn<AFloat>::ConvLayerForward(Tensor_t & outputTensor,
    //((Tensor_t & )input).Reshape( {params.batchSize, params.inputDepth, params.inputHeight, params.inputWidth});
    assert( input.GetLayout() == GetTensorLayout()); 
 
-   size_t outputHeight =  DNN::CNN::TConvLayer<TCudnn<AFloat>>::calculateDimension(params.inputHeight, params.filterHeight, params.paddingHeight, params.strideRows);
-   size_t outputWidth =  DNN::CNN::TConvLayer<TCudnn<AFloat>>::calculateDimension(params.inputWidth, params.filterWidth, params.paddingWidth, params.strideCols);
+   //size_t outputHeight =  DNN::CNN::TConvLayer<TCudnn<AFloat>>::calculateDimension(params.inputHeight, params.filterHeight, params.paddingHeight, params.strideRows);
+   //size_t outputWidth =  DNN::CNN::TConvLayer<TCudnn<AFloat>>::calculateDimension(params.inputWidth, params.filterWidth, params.paddingWidth, params.strideCols);
 
    // PrintTensor(input,"input");
    // PrintTensor(outputTensor,"output");
@@ -596,81 +668,24 @@ void TCudnn<AFloat>::ConvLayerForward(Tensor_t & outputTensor,
    cudnnHandle_t cudnnHandle = input.GetCudnnHandle();
 
    // check descriptors 
+#ifndef NDEBUG
    int n,c,h,w = 0; 
    int s1,s2,s3,s4 = 0; 
    cudnnDataType_t  dataType; 
    cudnnGetTensor4dDescriptor( input.GetTensorDescriptor(), &dataType,&n,&c,&h,&w,&s1,&s2,&s3,&s4 );
-   std::vector<size_t>  shape_input = {n,c,h,w}; 
+   std::vector<size_t>  shape_input = {size_t(n), size_t(c) , size_t(h), size_t(w) }; 
    assert (shape_input == input.GetShape());
 
    cudnnGetTensor4dDescriptor( outputTensor.GetTensorDescriptor(), &dataType,&n,&c,&h,&w,&s1,&s2,&s3,&s4 );
-   std::vector<size_t>  shape_output = {n,c,h,w}; 
+   std::vector<size_t>  shape_output = {size_t(n), size_t(c) , size_t(h), size_t(w) }; 
    assert (shape_output == outputTensor.GetShape());
-
-#if 0
-<<<<<<< HEAD
-   
-   //FIXME: Move this to constructor
-   cudnnDataType_t   cudnnDataType;
-   if      (std::is_same<AFloat, double>::value) { cudnnDataType = CUDNN_DATA_DOUBLE;}
-   else if (std::is_same<AFloat, float>::value)  { cudnnDataType = CUDNN_DATA_FLOAT;}
-
-   PrintTensor(input ,"input tensor");
-  
-   // Set the  filter parameters
-   CUDNNCHECK(cudnnSetFilter4dDescriptor(descriptors.WeightsDescriptor,
-                                         cudnnDataType,
-                                         CUDNN_TENSOR_NCHW,
-                                         params.numberFilters,
-                                         params.inputDepth,
-                                         params.filterHeight,
-                                         params.filterWidth));
-                                         
-   // Set the convolution parameters
-   CUDNNCHECK(cudnnSetConvolution2dDescriptor(descriptors.LayerDescriptor,//descriptors.LayerDescriptor,
-                                              params.paddingHeight,
-                                              params.paddingWidth,
-                                              params.strideRows,
-                                              params.strideCols,
-                                              1,                 //Dilation height
-                                              1,                 //Dilation width
-                                              CUDNN_CROSS_CORRELATION,
-                                              cudnnDataType));
-   
-   // cuDNN decides on which algorithm to use
-
-
-   // FIXME: Move everything except convolution to constructor
-
-   // cuDNN decides which algorithm to use
-   cudnnConvolutionFwdAlgo_t algorithm;
-   // More detailed alternative: cudnnFindConvolutionForwardAlgorithm
-   CUDNNCHECK(cudnnGetConvolutionForwardAlgorithm(cudnnHandle,
-                                                  input.GetTensorDescriptor(),
-                                                  descriptors.WeightsDescriptor,
-                                                  descriptors.LayerDescriptor,
-                                                  outputTensor.GetTensorDescriptor(),
-                                                  CUDNN_CONVOLUTION_FWD_PREFER_FASTEST,
-                                                  0,     // Memory limit in bytes for mode CUDNN_CONVOLUTION_FWD_SPECIFY_WORKSPACE_LIMIT
-                                                  &algorithm));
-                                                  
-   // Allocate memory for the convolution
-   size_t workSpaceSizeInBytes = 0;
-   CUDNNCHECK(cudnnGetConvolutionForwardWorkspaceSize(cudnnHandle,
-                                                      input.GetTensorDescriptor(),
-                                                      descriptors.WeightsDescriptor,
-                                                      descriptors.LayerDescriptor,
-                                                      outputTensor.GetTensorDescriptor(),
-                                                      algorithm,
-                                                      &workSpaceSizeInBytes));
-
-   if (workSpaceSizeInBytes) cudaMalloc(&cudnnWorkspace, workSpaceSizeInBytes*sizeof(AFloat));
-
 #endif
-/// >>>>>>> Workspace initialization is now done in the constructor.
+
+   assert( workspace.ForwardWorkspace != 0);
 
    // Perform convolution
-   CUDNNCHECK(cudnnConvolutionForward(cudnnHandle,
+   //CUDNNCHECK(cudnnConvolutionForward(cudnnHandle,
+   cudnnStatus_t status =  cudnnConvolutionForward(cudnnHandle,
                                       &alpha,
                                       input.GetTensorDescriptor(),
                                       input.GetDataPointer(),
@@ -682,17 +697,47 @@ void TCudnn<AFloat>::ConvLayerForward(Tensor_t & outputTensor,
                                       workspace.ForwardWorkspaceSize,
                                       &beta,
                                       outputTensor.GetTensorDescriptor(),
-                                      outputTensor.GetDataPointer()));
+                                      outputTensor.GetDataPointer());
 
    // Apply biases
+   assert(status == CUDNN_STATUS_SUCCESS);
+   CUDNNCHECK(status);
+   
+   //PrintTensor(biases,"biases");
+   //PrintTensor(outputTensor,"tensor before biases");
    AddConvBiases(outputTensor, biases);
-
+   
+   //PrintTensor(outputTensor,"tensor after biases");
+   
    // Store the conv output before application of activation to use in the backward pass
    TCudnn<AFloat>::Copy(inputActivation, outputTensor);
 
    // Apply activation
    TCudnn<AFloat>::ActivationFunctionForward(outputTensor, activFunc, descriptors.HelperDescriptor, 0.0, 1.0, 0.0);
+
    
+   //perform convolution + biases + activation in one single call 
+    // could use an extra vector z but here we just pass a dummy tensor 
+   // AFloat alpha2 = 0; 
+   // CUDNNCHECK(cudnnConvolutionBiasActivationForward(cudnnHandle,
+   //             &alpha,
+   //             input.GetTensorDescriptor(),
+   //             input.GetDataPointer(),
+   //             descriptors.WeightsDescriptor,
+   //             weights.GetDataPointer(),
+   //             descriptors.LayerDescriptor,
+   //             workspace.AlgorithmForward,
+   //             workspace.ForwardWorkspace,
+   //             workspace.ForwardWorkspaceSize,
+   //             &alpha2,
+   //             outputTensor.GetTensorDescriptor(),  // z : not used 
+   //             outputTensor.GetDataPointer(),
+   //             biases.GetDescriptor(),
+   //             biases.GetDataPointer(),
+   //             descriptors.HelperDescriptor,
+   //    outputTensor.GetTensorDescriptor(),
+   //    outputTensor.GetDataPointer()));
+
    //TCudnn<AFloat>::PrintTensor(outputTensor, "after activation");
    
    //cudaFree(cudnnWorkspace);
@@ -781,6 +826,8 @@ void TCudnn<AFloat>::ConvLayerBackward(Tensor_t &activationGradientsBackward,
     //--------------------------------------------------------------------------
     // Bias gradient
     //--------------------------------------------------------------------------
+
+    
     
     CUDNNCHECK(cudnnConvolutionBackwardBias(cudnnHandle,
                                             &alpha,
@@ -789,6 +836,8 @@ void TCudnn<AFloat>::ConvLayerBackward(Tensor_t &activationGradientsBackward,
                                             &beta,
                                             biasGradients.GetTensorDescriptor(),
                                             biasGradients.GetDataPointer()));
+
+   //PrintTensor(biasGradients,"computed gradient biases");
 }
 
 //____________________________________________________________________________

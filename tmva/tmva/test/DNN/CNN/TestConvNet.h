@@ -127,7 +127,7 @@ auto testDownsample(const typename Architecture::Matrix_t &A, const typename Arc
 
    TMaxPoolLayer<Architecture> *layer = nullptr;
    Architecture::InitializePoolDescriptors(poolDescriptors, layer);
-   Architecture::InitializeDropoutWorkspace(poolWorkspace, poolDescriptors, params, layer);
+   Architecture::InitializePoolDropoutWorkspace(poolWorkspace, poolDescriptors, params, layer);
 
    Architecture::Downsample(tDown, tInd, tA, 
                             (typename Architecture::PoolingDescriptors_t &) *poolDescriptors,
@@ -186,7 +186,7 @@ auto testPoolingBackward(const typename Architecture::Matrix_t &input, const typ
 
     TMaxPoolLayer<Architecture> *layer = nullptr;
     Architecture::InitializePoolDescriptors(poolDescriptors, layer);
-    Architecture::InitializeDropoutWorkspace(poolWorkspace, poolDescriptors, params, layer);
+    Architecture::InitializePoolDropoutWorkspace(poolWorkspace, poolDescriptors, params, layer);
 
     Architecture::MaxPoolLayerBackward(ABack, tInput, tIndexMatrix, inputActivation, outputActivation,
                                        (typename Architecture::PoolingDescriptors_t &) *poolDescriptors,
@@ -457,7 +457,9 @@ auto evaluate_net_weight(TDeepNet<Architecture> &net, typename Architecture::Ten
 
     // shift the weight value and compute the Loss
     auto & netW = net.GetLayerAt(l)->GetWeightsAt(k);
+   
     netW(i,j) += dx;
+    
     Scalar_t res = net.Loss(X, Y, W);
     // rest weight to original value
     netW(i,j) -= dx;
@@ -476,10 +478,20 @@ auto evaluate_net_bias(TDeepNet<Architecture> &net, typename Architecture::Tenso
     using Scalar_t = typename Architecture::Scalar_t;
     //using Matrix_t = typename Architecture::Matrix_t;
 
-    auto & netB = net.GetLayerAt(l)->GetBiases();
-    netB[k](i,0) += dx;
+    auto & netB = net.GetLayerAt(l)->GetBiasesAt(k);
+    
+    netB(i,0) += dx;
+ 
+   std::cout << "------ net biases layer " << l << " k  " << k <<  " element " << i << " dx = " <<  dx << std::endl;
+    Architecture::PrintTensor( netB, "netB bias tensor");
+    //typename Architecture::Tensor_t temp(netB);
+   
+    
     Scalar_t res = net.Loss(X, Y, W);
-    netB[k](i,0) -= dx;
+   
+    netB(i,0) -= dx;
+
+    
     return res;
 }
 
@@ -534,9 +546,13 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
          TString tname = TString::Format("weight-tensor-layer-%d",l);
          Tensor_t tW( vW[0] ); 
          Architecture::PrintTensor( tW ,std::string(tname));
-         //vW[0].Print();
-         //tW.Print(); 
-         
+      }
+      auto & vB = theLayer.GetBiases();
+      if (vB.size() > 0) {
+         TString tname = TString::Format("bias-tensor-layer-%d",l);
+         Architecture::InitializeIdentity(vB[0]);
+         Tensor_t tB( vB[0] );
+         Architecture::PrintTensor( tB ,std::string(tname));
       }
    }
    
@@ -567,7 +583,7 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
    Architecture::PrintTensor(X,"input");
    convNet.Backward(X, Y, W);
 
-   Architecture::PrintTensor(Tensor_t(lLayer.GetWeights()[0]),"weights-after-bw");  
+   //Architecture::PrintTensor(Tensor_t(lLayer.GetWeights()[0]),"weights-after-bw");  
   
 
    // now compare derivatives using finite differences and compare the result
@@ -586,6 +602,7 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
       Architecture::PrintTensor(layer.GetActivationGradients(),"activation gradient");
 
       auto &gw = layer.GetWeightGradients();
+      auto &gb = layer.GetBiasGradients();
       if (gw.size() > 0) { 
          std::cout << "Weight gradient from back-propagation - vector size is " << gw.size()  << std::endl;
          Architecture::PrintTensor(Tensor_t(layer.GetWeights()[0]),"weights");  
@@ -612,8 +629,10 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
                 << "  " << layer.GetInputWidth() << std::endl;
 
       // print output and activation gradients
+
       auto &outL = layer.GetOutput();
       auto & actGrad = layer.GetActivationGradients();
+#ifdef DEBUG
       if (Architecture::GetTensorLayout() == TMVA::Experimental::MemoryLayout::ColumnMajor) {
          std::cout << "layer output size " << outL.GetFirstSize() << std::endl;
          if (outL.GetFirstSize() > 0) {
@@ -637,11 +656,13 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
          Architecture::PrintTensor(outL, "layer output");
          Architecture::PrintTensor(actGrad,"activation gradients");
       }
-
+#endif
       
       std::cout << "Evaluate the Derivatives with Finite difference and compare with BP for Layer " << l << std::endl;
-      int nerrors = 0;
-      int ngood = 0;
+      int nerrorsW = 0;
+      int nerrorsB = 0;
+      int ngoodW = 0;
+      int ngoodB = 0; 
 #ifdef DEBUG
       int ngoodPrint = 10000;
 #else
@@ -652,11 +673,20 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
       // for (size_t i = 0; i < layer.GetWidth(); i++) {
       size_t k = 0;
       Matrix_t & gwm = gw[k]; 
+      Matrix_t & gbm = gb[k]; 
+      // size_t n1 = (gwm.GetNDim() == 2 ) ? gwm.GetNrows() : gwm.GetCSize();
+      // size_t n1b =  (gwb.GetNDim() == 2 ) ? gwb.GetNrows() : gwb.GetCSize();
+      // assert(n1 == n1b); 
+      // size_t n2 = (gwm.GetNDim() == 2 ) ? gwm.GetNcols() : gwm.GetHSize()*gwm.GetWSize();
+      size_t n1 =  gwm.GetNrows();
+      size_t n2 = gwm.GetNcols();
+      size_t n1b =  gbm.GetNrows();
+      assert(n1b <= n1);
       //Matrix_t & wm = layer.GetWeightsAt(k);
       // make matrices in case they are not
-      for (size_t i = 0; i < gwm.GetNrows(); i++) {
+      for (size_t i = 0; i < n1; i++) {
          // for (size_t j = 0; j < layer.GetInputWidth(); j++) {
-         for (size_t j = 0; j < gwm.GetNcols(); j++) {
+         for (size_t j = 0; j < n2; j++) {
             auto f = [&convNet, &X, &Y, &W, l, i, j, k](Scalar_t x) {
                return evaluate_net_weight(convNet, X, Y, W, l, i, j, k, x);
             };
@@ -671,21 +701,54 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
             }
             maximum_error = std::max(error, maximum_error);
             if (error > 1.E-3) {
-               std::cout << k << " - " << i << " , " << j << " : " << dy << " from BP " << dy_ref << "   " << error
+               std::cout << k << " weight - " << i << " , " << j << " : " << dy << " from BP " << dy_ref << "   " << error
                          << " ERROR " << std::endl;
-               nerrors++;
+               nerrorsW++;
             } else {
-               if (ngood < ngoodPrint)
-                  std::cout << k << " - " << i << " , " << j << " : " << dy << " from BP " << dy_ref << "   " << error
+               if (ngoodW < ngoodPrint)
+                  std::cout << k << " weight - " << i << " , " << j << " : " << dy << " from BP " << dy_ref << "   " << error
                             << std::endl;
-               ngood++;
+               ngoodW++;
             }
-            if (nerrors > 10) {
+            if (nerrorsW > 10) {
                std::cout << "Reached error limit skip..." << std::endl;
                break;
             }
          }
-         if (nerrors > 10)
+
+         // evaluate the bias gradients
+         if (i < n1b) {
+            auto fb = [&convNet, &X, &Y, &W, l, i, k](Scalar_t x) {
+               return evaluate_net_bias(convNet, X, Y, W, l, i, k, x);
+            };
+            Scalar_t dy = finiteDifference(fb, dx) / (2.0 * dx);
+            Scalar_t dy_ref = gbm(i, 0);
+            // Compute the relative error if dy != 0.
+            Scalar_t error;
+            if (std::fabs(dy_ref) > 1e-15) {
+               error = std::fabs((dy - dy_ref) / dy_ref);
+            } else {
+               error = std::fabs(dy - dy_ref);
+            }
+            maximum_error = std::max(error, maximum_error);
+            if (error > 1.E-3) {
+               std::cout << k << " bias - " << i << " : " << dy << " from BP " << dy_ref << "   " << error
+                         << " ERROR " << std::endl;
+               nerrorsB++;
+            } else {
+               if (ngoodB < ngoodPrint)
+                  std::cout << k << " bias - " << i << " : " << dy << " from BP " << dy_ref << "   " << error
+                            << std::endl;
+               ngoodB++;
+            }
+            if (nerrorsB > 10) {
+               std::cout << "Reached error limit skip..." << std::endl;
+               break;
+            }
+         }
+
+
+         if (nerrorsB || nerrorsW > 10)
             break;
       }
    }

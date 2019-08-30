@@ -148,6 +148,7 @@ public:
     * not the default stream. */
    inline void Synchronize(const TCudaMatrix &) const;
 
+   static size_t GetNDim() {return 2;}
    size_t GetNrows() const {return fNRows;}
    size_t GetNcols() const {return fNCols;}
    size_t GetNoElements() const {return fNRows * fNCols;}

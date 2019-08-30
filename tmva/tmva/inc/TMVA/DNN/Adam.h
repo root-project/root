@@ -110,29 +110,25 @@ TAdam<Architecture_t, Layer_t, DeepNet_t>::TAdam(DeepNet_t &deepNet, Scalar_t le
    fSecondMomentWeights.resize(layersNSlices);
    fSecondMomentBiases.resize(layersNSlices);
 
+
    for (size_t i = 0; i < layersNSlices; i++) {
+      
+      Architecture_t::CreateWeightTensors( fFirstMomentWeights[i], layers[i]->GetWeights()); 
+      Architecture_t::CreateWeightTensors( fSecondMomentWeights[i], layers[i]->GetWeights()); 
+   
       const size_t weightsNSlices = (layers[i]->GetWeights()).size();
 
       for (size_t j = 0; j < weightsNSlices; j++) {
-         Matrix_t &currentWeights = layers[i]->GetWeightsAt(j);
-         const size_t weightsNRows = currentWeights.GetNrows();
-         const size_t weightsNCols = currentWeights.GetNcols();
-
-         fFirstMomentWeights[i].emplace_back(weightsNRows, weightsNCols);
-         fSecondMomentWeights[i].emplace_back(weightsNRows, weightsNCols);
          initialize<Architecture_t>(fFirstMomentWeights[i][j], EInitialization::kZero);
          initialize<Architecture_t>(fSecondMomentWeights[i][j], EInitialization::kZero);
       }
 
       const size_t biasesNSlices = (layers[i]->GetBiases()).size();
 
-      for (size_t j = 0; j < biasesNSlices; j++) {
-         Matrix_t &currentBiases = layers[i]->GetBiasesAt(j);
-         const size_t biasesNRows = currentBiases.GetNrows();
-         const size_t biasesNCols = currentBiases.GetNcols();
+      Architecture_t::CreateWeightTensors( fFirstMomentBiases[i], layers[i]->GetBiases()); 
+      Architecture_t::CreateWeightTensors( fSecondMomentBiases[i], layers[i]->GetBiases()); 
 
-         fFirstMomentBiases[i].emplace_back(biasesNRows, biasesNCols);
-         fSecondMomentBiases[i].emplace_back(biasesNRows, biasesNCols);
+      for (size_t j = 0; j < biasesNSlices; j++) {
          initialize<Architecture_t>(fFirstMomentBiases[i][j], EInitialization::kZero);
          initialize<Architecture_t>(fSecondMomentBiases[i][j], EInitialization::kZero);
       }

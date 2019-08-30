@@ -244,6 +244,18 @@ void TCudnn<AFloat>::ScaleAdd(TCudaTensor<AFloat> & B,
                              const AFloat alpha,
                              const AFloat beta)
 {
+
+   assert(B.GetShape().size() == A.GetShape().size()); 
+   for (size_t i = 0; i < B.GetShape().size(); ++i) { 
+      if (B.GetShape()[i] != A.GetShape()[i] ) { 
+         if ( A.GetShape()[i]!=1) { 
+            PrintTensor(A); 
+            PrintTensor(B);
+            assert(false);
+         } 
+      }
+   }
+
    CUDNNCHECK(cudnnAddTensor(A.GetCudnnHandle(),
                              &alpha,
                              A.GetTensorDescriptor(),
@@ -253,6 +265,7 @@ void TCudnn<AFloat>::ScaleAdd(TCudaTensor<AFloat> & B,
                              B.GetDataPointer()));
 }
 
+#if 0 // we need to test these functions
 //____________________________________________________________________________
 template<typename AFloat>
 void TCudnn<AFloat>::ConstAdd(TCudaTensor<AFloat> &A, const AFloat beta)
@@ -273,7 +286,7 @@ void TCudnn<AFloat>::ConstMult(TCudaTensor<AFloat> &A, const AFloat beta)
                                A.GetDataPointer(),
                                &beta));
 }
-
+#endif
 //____________________________________________________________________________
 /*template<typename AFloat>
 void TCudnn<AFloat>::ReciprocalElementWise(TCudaTensor<AFloat> &A)
@@ -288,6 +301,7 @@ void TCudnn<AFloat>::SquareElementWise(TCudaTensor<AFloat> &A)
 
 }*/
 
+#if 0  // to check
 //____________________________________________________________________________
 template<typename AFloat>
 void TCudnn<AFloat>::SqrtElementWise(TCudaTensor<AFloat> &A, const AFloat alpha, const AFloat beta, const AFloat gamma)
@@ -320,6 +334,9 @@ void TCudnn<AFloat>::SqrtElementWise(TCudaTensor<AFloat> &A, const AFloat alpha,
                             
    CUDNNCHECK(cudnnDestroyOpTensorDescriptor(opTensorDescr));
 }
+
+#endif
+
 
 /// Adam updates 
 //____________________________________________________________________________

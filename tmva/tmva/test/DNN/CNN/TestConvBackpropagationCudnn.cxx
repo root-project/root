@@ -96,6 +96,7 @@ int main()
       return -1;
    }
    std::cout << ">>>>>>   Test1 :    OK !!!!";
+   //return 0; 
 
    std::cout << "\n\n\n\nTest2: more complex network architecture no dropout" << std::endl;
    if (!test2()) {
