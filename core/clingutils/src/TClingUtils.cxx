@@ -68,40 +68,11 @@
 namespace ROOT {
 namespace TMetaUtils {
 
-/// Resolve a symlink to its canonical path. If the symlink was relative it
-/// turns it into an absolute path with respect to the original symlink location.
-///
-///\returns the resolved absolute path.
 std::string ResolveSymlink(const std::string &path)
 {
-   // No symlinks on Windows.
-   if (!llvm::sys::fs::is_symlink_file(path))
-      return path;
-
-#ifndef R__WIN32
-
-   char Buffer[kMAXPATHLEN];
-   ssize_t CharCount = ::readlink(path.c_str(), Buffer, sizeof(Buffer));
-   // readlink does not append a NUL character to Buffer.
-   if (CharCount > 0) {
-      llvm::StringRef resolved_path(Buffer, CharCount);
-      if (llvm::sys::path::is_absolute(resolved_path))
-         return resolved_path.str();
-
-      // If the symlink did not resolve to an absolute path we should convert
-      // it, because if we are embedded in a framework we will resolve the link
-      // with respect to the current dir (which is most often the one of the
-      // file descriptor. However, in a relative path in a symlink we want to
-      // resolve it with respect to the symlink parent directory.
-      llvm::StringRef current_dir = llvm::sys::path::parent_path(path);
-      llvm::SmallString<256> relative_path(resolved_path);
-      llvm::sys::fs::make_absolute(/*wrt*/current_dir, relative_path);
-      return relative_path.str().str();
-   }
-
-   Error("ResolveSymlink", "Could not resolve symlink '%s'\n.", path.c_str());
-   return {};
-#endif // not R__WIN32
+   llvm::SmallString<256> result_path;
+   llvm::sys::fs::real_path(path, result_path, /*expandTilde*/true);
+   return result_path.str().str();
 }
 
 

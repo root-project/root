@@ -169,3 +169,6 @@ else()
         COMMENT "Copying LLVM resource and header files")
 endif()
 add_custom_target(LLVMRES DEPENDS ${stamp_file} CLING)
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)
+
