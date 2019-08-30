@@ -55,6 +55,17 @@ ClassImp(TDirectoryFile);
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Default TDirectoryFile constructor
+
+TDirectoryFile::TDirectoryFile()
+{
+   /// Intentionally placed here
+   /// when TDirectoryFile() = default; used,  mac1014/cxx17 fails on some tests
+   /// Problem with TObject::IsOnHeap() failing
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Create a new TDirectoryFile
 ///
 ///  A new directory with a name and a title is created in the current directory.

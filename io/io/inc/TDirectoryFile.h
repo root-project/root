@@ -60,7 +60,7 @@ public:
       kCustomBrowse   = BIT(9)
    };
 
-   TDirectoryFile()= default;
+   TDirectoryFile();
    TDirectoryFile(const char *name, const char *title, Option_t *option="", TDirectory* motherDir = nullptr);
    virtual ~TDirectoryFile();
 
