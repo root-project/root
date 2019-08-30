@@ -74,7 +74,7 @@ private:
    std::shared_ptr<THttpWSEngine> TakeWSEngine();
 
 public:
-   explicit THttpCallArg() = default;
+   explicit THttpCallArg() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
    virtual ~THttpCallArg();
 
    // these methods used to set http request arguments
