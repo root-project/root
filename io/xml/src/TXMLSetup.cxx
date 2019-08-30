@@ -138,6 +138,7 @@ TXMLSetup &TXMLSetup::operator=(const TXMLSetup &rhs)
    fStoreStreamerInfos = rhs.fStoreStreamerInfos;
    fUseDtd = rhs.fUseDtd;
    fUseNamespaces = rhs.fUseNamespaces;
+   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
