@@ -1149,6 +1149,14 @@ sap.ui.define(['sap/ui/core/Component',
          this.processPainterChange('changedDepthMethod');
       },
 
+      sliderTransChange: function() {
+         this.processPainterChange('changedTransformation');
+      },
+
+      pressTransReset: function() {
+         this.processPainterChange('changedTransformation', 'reset');
+      },
+
       pressReset: function() {
          this.processPainterChange('resetAdvanced');
          this.byId("geomControl").getModel().refresh();
