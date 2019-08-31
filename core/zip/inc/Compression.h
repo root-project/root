@@ -111,6 +111,8 @@ enum ECompressionAlgorithm {
    /// Deprecated name, do *not* use:
    kLZ4 = RCompressionSetting::EAlgorithm::kLZ4,
    /// Deprecated name, do *not* use:
+   kZSTD = RCompressionSetting::EAlgorithm::kZSTD,
+   /// Deprecated name, do *not* use:
    kUndefinedCompressionAlgorithm = RCompressionSetting::EAlgorithm::kUndefined
 };
 

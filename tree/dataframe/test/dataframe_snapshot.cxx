@@ -453,7 +453,7 @@ void ReadWriteCarray(const char *outFileNameBase)
    t.Branch("size", &size, "size/I");
    t.Branch("v", v, "v[size]/I");
    t.Branch("vb", vb, "vb[size]/O");
-   
+
    // Size 1
    size = 1;
    v[0] = 12;
