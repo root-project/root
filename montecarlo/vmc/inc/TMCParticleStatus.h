@@ -48,7 +48,7 @@ struct TMCParticleStatus {
    /// Print all info at once
    void Print() const
    {
-      Info("Print", "Status of track");
+      ::Info("Print", "Status of track");
       std::cout << "\t"
                 << "ID: " << fId << "\n"
                 << "\t"
