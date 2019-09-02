@@ -346,10 +346,6 @@ file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" "${__modulemap_e
 # From now on we handled all exposed module and want to make all new modulemaps private to ROOT.
 set(ROOT_CXXMODULES_WRITE_TO_CURRENT_DIR ON)
 
-#---Global PCH-----------------------------------------------------------------------------------
-get_property(__clingetcpch GLOBAL PROPERTY CLINGETCPCH)
-get_property(__pch_dependencies GLOBAL PROPERTY ROOT_PCH_DEPENDENCIES)
-
 set (CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS}")
 if(cxxmodules)
   # rootcling uses our internal version of clang. Passing the modules flags here
@@ -368,24 +364,6 @@ if(MSVC)
   string(REPLACE "-MDd" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
 endif()
 
-add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
-                          etc/dictpch/allHeaders.h
-                          etc/dictpch/allCppflags.txt
-                   COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${CMAKE_SOURCE_DIR} . ${pyroot_experimental} ${__clingetcpch}
-                   DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${__pch_dependencies})
-
-get_property(incdirs DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
-foreach(d ${incdirs})
-  if(NOT "${d}" MATCHES "AFTER|BEFORE|INTERFACE|PRIVATE|PUBLIC|SYSTEM")
-    set(__allIncludes ${__allIncludes} -I${d})
-  endif()
-endforeach()
-if(WIN32)
-  set(__allIncludes ${__allIncludes} -I${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/glib)
-  set(__allIncludes ${__allIncludes} -I${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src)
-  set(__allIncludes ${__allIncludes} -I${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/gdk)
-endif()
-
 if(runtime_cxxmodules)
   # Dummy target that does nothing, we don't need a PCH for modules.
   # Onepcm target has all dependencies needed for allDict.cxx.pch, which allow
@@ -397,13 +375,42 @@ if(runtime_cxxmodules)
   unset(ROOT_LIBRARY_TARGETS CACHE)
   set(FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES On)
 else()
+  get_property(incdirs DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
+
+  if(WIN32)
+    list(APPEND incdirs
+      ${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src
+      ${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/gdk
+      ${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/glib
+    )
+  endif()
+
+  foreach(d ${incdirs})
+    if(NOT "${d}" MATCHES "AFTER|BEFORE|INTERFACE|PRIVATE|PUBLIC|SYSTEM")
+      set(__allIncludes ${__allIncludes} -I${d})
+    endif()
+  endforeach()
+
+  get_property(__cling_pch GLOBAL PROPERTY CLINGETCPCH)
+  get_property(__pch_dependencies GLOBAL PROPERTY ROOT_PCH_DEPENDENCIES)
+
   add_custom_command(OUTPUT etc/allDict.cxx.pch
-                    COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch ${__allIncludes} -I${CMAKE_BINARY_DIR}/include
-                    DEPENDS ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
-                            etc/dictpch/allLinkDefs.h
-                            etc/dictpch/allHeaders.h
-                            etc/dictpch/allCppflags.txt
-                            rootcling)
+    BYPRODUCTS
+      etc/dictpch/allCppflags.txt
+      etc/dictpch/allHeaders.h
+      etc/dictpch/allLinkDefs.h
+    COMMAND
+      ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py
+      ${CMAKE_SOURCE_DIR} . ${pyroot_experimental} ${__cling_pch}
+    COMMAND
+      ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE}
+      ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch
+      ${__allIncludes} -I${CMAKE_BINARY_DIR}/include
+    DEPENDS
+      rootcling ${__pch_dependencies}
+      ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py
+      ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
+  )
   add_custom_target(onepcm ALL DEPENDS etc/allDict.cxx.pch)
   install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
   install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
