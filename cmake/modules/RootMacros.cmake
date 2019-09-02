@@ -532,7 +532,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
 
   if(PROJECT_NAME STREQUAL "ROOT")
-    set_property(GLOBAL APPEND PROPERTY ROOT_PCH_DEPENDENCIES ${dictionary})
+    set_property(GLOBAL APPEND PROPERTY ROOT_PCH_DEPENDENCIES ${CMAKE_CURRENT_BINARY_DIR}/${dictionary}.cxx)
   endif()
 
   if(ARG_MULTIDICT)
