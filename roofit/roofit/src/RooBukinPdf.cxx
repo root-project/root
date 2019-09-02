@@ -176,7 +176,7 @@ void compute(  size_t batchSize,
     
     output[i] = rho*y*y/Yp/Yp -r3 + factor*4*r3*y*hp*r5*r4/yi/yi;
     if (X[i]>=x1 && X[i]<x2) {
-      output[i] = vdt::fast_log(1 + 4*XI[i]*r4*(X[i]-XP[i])*hp) / vdt::fast_log(1 +2*XI[i]*( XI[i]-r4 ));
+      output[i] = _rf_fast_log(1 + 4*XI[i]*r4*(X[i]-XP[i])*hp) / _rf_fast_log(1 +2*XI[i]*( XI[i]-r4 ));
       output[i] *= -output[i]*r3;
     }
     if (X[i]>=x1 && X[i]<x2 && XI[i]<r6 && XI[i]>-r6) {
@@ -184,7 +184,7 @@ void compute(  size_t batchSize,
     }
   }
   for (size_t i=0; i<batchSize; i++) {
-    output[i] = vdt::fast_exp(output[i]);
+    output[i] = _rf_fast_exp(output[i]);
   }
 }
 };

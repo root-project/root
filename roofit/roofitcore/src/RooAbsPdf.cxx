@@ -792,7 +792,7 @@ RooSpan<const double> RooAbsPdf::getLogValBatch(std::size_t begin, std::size_t m
   for (std::size_t i = 0; i < pdfValues.size(); ++i) { //CHECK_VECTORISE
     const double prob = pdfValues[i];
 
-    double theLog = vdt::fast_log(prob);
+    double theLog = _rf_fast_log(prob);
 
     if (prob < 0) {
       theLog = std::numeric_limits<double>::quiet_NaN();

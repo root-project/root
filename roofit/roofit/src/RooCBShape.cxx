@@ -107,14 +107,14 @@ void compute(	size_t batchSize,
       output[i] = -0.5*t*t;
     } else {
       output[i] = N[i] / (N[i] -A[i]*A[i] -A[i]*t);
-      output[i] = vdt::fast_log(output[i]);
+      output[i] = _rf_fast_log(output[i]);
       output[i] *= N[i];
       output[i] -= 0.5*A[i]*A[i];
     }
   }
   
   for (size_t i=0; i<batchSize; i++) {
-    output[i] = vdt::fast_exp(output[i]);
+    output[i] = _rf_fast_exp(output[i]);
   }
 }
 };

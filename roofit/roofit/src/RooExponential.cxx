@@ -95,7 +95,7 @@ void compute(RooSpan<double> output, Tx x, Tc c) {
   const int n = output.size();
 
   for (int i = 0; i < n; ++i) { //CHECK_VECTORISE
-    output[i] = vdt::fast_exp(x[i]*c[i]);
+    output[i] = _rf_fast_exp(x[i]*c[i]);
   }
 }
 
