@@ -50,6 +50,9 @@ __all__ = [
 ### "from ROOT import *" done in import-*-ed module ==========================
 from Amir import *
 
+exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
+
+
 class Regression01TwiceImportStar( MyTestCase ):
    def test1FromROOTImportStarInModule( self ):
       """Test handling of twice 'from ROOT import*'"""
@@ -353,15 +356,11 @@ class Regression10CoralAttributeListIterators( MyTestCase ):
 
 ### importing cout should not result in printed errors =======================
 class Regression11GlobalsLookup( MyTestCase ):
-   @classmethod
-   def setUpClass(cls):
-      cls.exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
-
    def test1GetCout( self ):
       """Test that ROOT.cout does not cause error messages"""
 
       import ROOT
-      if self.exp_pyroot:
+      if exp_pyroot:
          # Look for cout in std
          c = ROOT.std.cout
       else:
@@ -382,8 +381,15 @@ class Regression12WriteTGraph( MyTestCase ):
       gr = TGraph()
       ff = TFile( "test.root", "RECREATE" )
       ff.WriteObject( gr, "grname", "" )
-      gr2 = TGraph()
-      ff.GetObject( "grname", gr2 )
+      if exp_pyroot:
+         # In new PyROOT, use a nicer way to get objects in files:
+         # (1) getattr syntax
+         ff.grname
+         # (2) Get pythonisation
+         ff.Get("grname")
+      else:  
+         gr2 = TGraph()
+         ff.GetObject( "grname", gr2 )
       os.remove( "test.root" )
 
 
@@ -404,7 +410,6 @@ class Regression14TPyException( MyTestCase ):
    def test1PythonAccessToTPyException( self ):
       """Load TPyException into python and make sure its usable"""
 
-      exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
       if exp_pyroot:
          # In exp PyROOT, TPyException belongs to the CPyCppyy namespace.
          # Also, it is not included in the PCH, so we need to include the
