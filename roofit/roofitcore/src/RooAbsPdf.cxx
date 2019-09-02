@@ -134,20 +134,10 @@ If evaluateBatch is not implemented, the classic and slower `evaluate()` will be
 called for each data event.
 */
 
+#include "RooAbsPdf.h"
+
 #include "RooFit.h"
 #include "RooMsgService.h" 
-
-#include "TClass.h"
-#include "Riostream.h"
-#include "TMath.h"
-#include "TObjString.h"
-#include "TPaveText.h"
-#include "TList.h"
-#include "TH1.h"
-#include "TH2.h"
-#include "TMatrixD.h"
-#include "TMatrixDSym.h"
-#include "RooAbsPdf.h"
 #include "RooDataSet.h"
 #include "RooArgSet.h"
 #include "RooArgProxy.h"
@@ -180,15 +170,23 @@ called for each data event.
 #include "RooMinimizer.h"
 #include "RooRealIntegral.h"
 #include "RooWorkspace.h"
-#include "Math/CholeskyDecomp.h"
-#include "RooHelpers.h"
-#include <string>
-#include "RooHelpers.h"
 
-#define USE_VDT
-#ifdef USE_VDT
-  #include "vdt/log.h"
-#endif
+#include "RooHelpers.h"
+#include "RooVDTHeaders.h"
+
+#include "TClass.h"
+#include "Riostream.h"
+#include "TMath.h"
+#include "TObjString.h"
+#include "TPaveText.h"
+#include "TList.h"
+#include "TH1.h"
+#include "TH2.h"
+#include "TMatrixD.h"
+#include "TMatrixDSym.h"
+#include "Math/CholeskyDecomp.h"
+
+#include <string>
 
 using namespace std;
 
@@ -794,11 +792,7 @@ RooSpan<const double> RooAbsPdf::getLogValBatch(std::size_t begin, std::size_t m
   for (std::size_t i = 0; i < pdfValues.size(); ++i) { //CHECK_VECTORISE
     const double prob = pdfValues[i];
 
-#ifdef USE_VDT
     double theLog = vdt::fast_log(prob);
-#else
-    double theLog = log(prob);
-#endif
 
     if (prob < 0) {
       theLog = prob;

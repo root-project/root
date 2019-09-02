@@ -22,16 +22,16 @@ Bifurcated Gaussian p.d.f with different widths on left and right
 side of maximum value
 **/
 
-
-#include "Riostream.h"
-#include "TMath.h"
-#include <math.h>
-
 #include "RooBifurGauss.h"
+
 #include "RooAbsReal.h"
 #include "RooMath.h"
-#include "vdt/exp.h"
 #include "BatchHelpers.h"
+#include "RooVDTHeaders.h"
+
+#include "TMath.h"
+
+#include <cmath>
 
 using namespace std;
 

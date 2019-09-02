@@ -23,13 +23,7 @@ Poisson pdf
 #include "Math/ProbFuncMathCore.h"
 
 #include "BatchHelpers.h"
-
-//#undef USE_VDT
-
-#ifdef USE_VDT
-#include "vdt/exp.h"
-#include "vdt/log.h"
-#endif
+#include "RooVDTHeaders.h"
 
 #include <limits>
 #include <cmath>
@@ -96,26 +90,15 @@ void compute(RooSpan<double> output, Tx x, TMean mean,
 
   for (int i = 0; i < n; ++i) { //CHECK_VECTORISE
     const double x_i = noRounding ? x[i] : floor(x[i]);
-#ifdef USE_VDT
     const double logMean = vdt::fast_log(mean[i]);
     const double logPoisson = x_i * logMean - mean[i] - output[i];
     output[i] = vdt::fast_exp(logPoisson);
-#else
-    const double logMean = log(mean[i]);
-    const double logPoisson = x_i * logMean - mean[i] - output[i];
-    output[i] = exp(logPoisson);
-#endif
-
 
     // Cosmetics
     if (x_i < 0.)
       output[i] = 0.;
     else if (x_i == 0.) {
-#ifdef USE_VDT
       output[i] = 1./vdt::fast_exp(mean[i]);
-#else
-      output[i] = 1./exp(mean[i]);
-#endif
     }
     if (protectNegative && mean[i] < 0.)
       output[i] = 1.E-3;

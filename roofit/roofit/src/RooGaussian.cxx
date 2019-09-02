@@ -20,24 +20,16 @@
 Plain Gaussian p.d.f
 **/
 
-#include "RooFit.h"
-
-#include "Riostream.h"
-#include "Riostream.h"
-#include <math.h>
-
 #include "RooGaussian.h"
 
+#include "RooFit.h"
 #include "BatchHelpers.h"
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooRandom.h"
 #include "RooMath.h"
 
-#define USE_VDT
-#ifdef USE_VDT
-#include "vdt/exp.h"
-#endif
+#include "RooVDTHeaders.h"
 
 using namespace BatchHelpers;
 using namespace std;
@@ -88,11 +80,7 @@ void compute(RooSpan<double> output, Tx x, TMean mean, TSig sigma) {
     const double arg = x[i] - mean[i];
     const double halfBySigmaSq = -0.5 / (sigma[i] * sigma[i]);
 
-#ifdef USE_VDT
     output[i] = vdt::fast_exp(arg*arg * halfBySigmaSq);
-#else
-    output[i] = exp(arg*arg * halfBySigmaSq);
-#endif
   }
 }
 
