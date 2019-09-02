@@ -76,13 +76,23 @@ class BracketAdapter {
 
 class BracketAdapterWithMask {
   public:
-    explicit BracketAdapterWithMask(double payload, RooSpan<const double> batch) noexcept :
+    BracketAdapterWithMask(double payload, const RooSpan<const double>& batch) noexcept :
     _isBatch(!batch.empty()),
     _payload(payload),
     _pointer(batch.empty() ? &_payload : batch.data()),
     _mask(batch.empty() ? 0 : ~static_cast<size_t>(0))
     {
     }
+    
+    BracketAdapterWithMask(const BracketAdapterWithMask& other) noexcept:
+    _isBatch(other._isBatch),
+    _payload(other._payload),
+    _pointer(other._isBatch ? other._pointer : &_payload),
+    _mask(other._mask)
+    {
+    }
+    
+    BracketAdapterWithMask& operator= (const BracketAdapterWithMask& other) = delete;
 
     inline double operator[](std::size_t i) const noexcept {
       return _pointer[ i & _mask];
