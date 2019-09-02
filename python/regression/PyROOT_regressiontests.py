@@ -353,11 +353,19 @@ class Regression10CoralAttributeListIterators( MyTestCase ):
 
 ### importing cout should not result in printed errors =======================
 class Regression11GlobalsLookup( MyTestCase ):
+   @classmethod
+   def setUpClass(cls):
+      cls.exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
+
    def test1GetCout( self ):
       """Test that ROOT.cout does not cause error messages"""
 
       import ROOT
-      c = ROOT.cout
+      if self.exp_pyroot:
+         # Look for cout in std
+         c = ROOT.std.cout
+      else:
+         c = ROOT.cout
 
    def test2GlobalFromROOTNamespace( self ):
       """Entities in 'ROOT::' need no explicit 'ROOT.'"""
