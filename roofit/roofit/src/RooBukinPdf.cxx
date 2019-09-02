@@ -27,16 +27,12 @@ A.Bukin, Budker INP, Novosibirsk
 http://www.slac.stanford.edu/BFROOT/www/Organization/CollabMtgs/2003/detJuly2003/Tues3a/bukin.ps
 **/
 
-#include "RooFit.h"
-
-#include <cmath>
-
 #include "RooBukinPdf.h"
 #include "RooRealVar.h"
-
 #include "BatchHelpers.h"
-#include "vdt/exp.h"
-#include "vdt/log.h"
+#include "RooVDTHeaders.h"
+
+#include <cmath>
 
 using namespace std;
 

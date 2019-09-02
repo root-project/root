@@ -20,22 +20,17 @@
 PDF implementing the Crystal Ball line shape.
 **/
 
-#include "RooFit.h"
-
-#include "Riostream.h"
-#include "Riostream.h"
-#include <math.h>
-
 #include "RooCBShape.h"
+
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooMath.h"
+#include "BatchHelpers.h"
+#include "RooVDTHeaders.h"
+
 #include "TMath.h"
 
-#include "TError.h"
-#include "BatchHelpers.h"
-#include "vdt/exp.h"
-#include "vdt/log.h"
+#include <math.h>
 
 using namespace std;
 

@@ -231,6 +231,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooHelpers.h
     RooSpan.h
     BatchData.h
+    RooVDTHeaders.h
   SOURCES
     src/BidirMMapPipe.cxx
     src/BidirMMapPipe.h

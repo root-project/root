@@ -45,24 +45,18 @@ RooPoison(N,mu) and treating the function as a PDF in mu.
 
 #include "RooGamma.h"
 
-#include "RooFit.h"
-#include "Riostream.h"
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooRandom.h"
 #include "RooMath.h"
 #include "RooHelpers.h"
+#include "BatchHelpers.h"
+#include "RooVDTHeaders.h"
 
 #include "TMath.h"
-
 #include <Math/SpecFuncMathCore.h>
 #include <Math/PdfFuncMathCore.h>
 #include <Math/ProbFuncMathCore.h>
-
-#include "TError.h"
-#include "vdt/exp.h"
-#include "vdt/log.h"
-#include "BatchHelpers.h"
 
 #include <iostream>
 #include <cmath>
