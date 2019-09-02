@@ -25,19 +25,13 @@ where \f$ \mathcal{N} \f$ is a normalisation constant that depends on the
 range and values of the arguments.
 **/
 
-#include "RooFit.h"
-
-#include "Riostream.h"
-#include "Riostream.h"
-#include <math.h>
-
 #include "RooExponential.h"
+
 #include "RooRealVar.h"
 #include "BatchHelpers.h"
+#include "RooVDTHeaders.h"
 
-#ifdef USE_VDT
-#include "vdt/exp.h"
-#endif
+#include <cmath>
 
 using namespace std;
 
@@ -101,11 +95,7 @@ void compute(RooSpan<double> output, Tx x, Tc c) {
   const int n = output.size();
 
   for (int i = 0; i < n; ++i) { //CHECK_VECTORISE
-#ifdef USE_VDT
     output[i] = vdt::fast_exp(x[i]*c[i]);
-#else
-    output[i] = exp(x[i]*c[i]);
-#endif
   }
 }
 
