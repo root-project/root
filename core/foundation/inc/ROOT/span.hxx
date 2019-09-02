@@ -183,14 +183,14 @@ public:
   // Note:
   // This constructor can't be constexpr because & operator can't be constexpr.
   template<index_type N>
-  /*implicit*/ span(std::array<T, N> const& a) noexcept
+  /*implicit*/ span(std::array<T, N> & a) noexcept
      : length_(N), data_(N > 0 ? a.data() : nullptr)
   {}
 
   // Note:
   // This constructor can't be constexpr because & operator can't be constexpr.
   template<index_type N>
-  /*implicit*/ span(T const (& a)[N]) noexcept
+  /*implicit*/ span(T(& a)[N]) noexcept
      : length_(N), data_(N > 0 ? std::addressof(a[0]) : nullptr)
   {
     static_assert(N > 0, "Zero-length array is not permitted in ISO C++.");
