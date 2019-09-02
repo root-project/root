@@ -26,6 +26,7 @@ RooArgusBG is a RooAbsPdf implementation describing the ARGUS background shape.
 */
 
 #include "RooArgusBG.h"
+#include "RooFit.h"
 #include "RooRealVar.h"
 #include "RooRealConstant.h"
 #include "RooMath.h"
@@ -101,11 +102,11 @@ void compute(  size_t batchSize,
   for (size_t i=0; i<batchSize; i++) {
     const double t = M[i]/M0[i];
     const double u = 1 - t*t;
-    output[i] = C[i]*u + P[i]*vdt::fast_log(u);
+    output[i] = C[i]*u + P[i]*_rf_fast_log(u);
   }
   for (size_t i=0; i<batchSize; i++) {
     if (M[i] >= M0[i]) output[i] = 0.0;
-    else output[i] = M[i]*vdt::fast_exp(output[i]);
+    else output[i] = M[i]*_rf_fast_exp(output[i]);
   }
 }
 };

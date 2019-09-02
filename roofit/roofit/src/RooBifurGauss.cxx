@@ -96,7 +96,7 @@ void compute(  size_t batchSize,
   
   for (size_t i=0; i<batchSize; i++) {
     if (X[i]-M[i]>1e-30 || X[i]-M[i]<-1e-30) {
-      output[i] = vdt::fast_exp(-0.5*output[i]*output[i]);
+      output[i] = _rf_fast_exp(-0.5*output[i]*output[i]);
     }
     else {
       output[i] = 1.0;

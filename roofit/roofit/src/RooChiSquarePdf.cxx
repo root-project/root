@@ -92,11 +92,11 @@ void compute(	size_t batchSize,
   const double lnx0 = std::log(X[0]);
   for (size_t i=0; i<batchSize; i++) {
     double lnx;
-    if ( X.isBatch() ) lnx = vdt::fast_log(X[i]);
+    if ( X.isBatch() ) lnx = _rf_fast_log(X[i]);
     else lnx = lnx0;
     
     double arg = (N[i]-2)*lnx -X[i] -N[i]*ln2;
-    output[i] *= vdt::fast_exp(0.5*arg);
+    output[i] *= _rf_fast_exp(0.5*arg);
   }
 }
 };

@@ -464,12 +464,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     Foam
 )
 
-if(builtin_vdt)
-#  target_link_libraries(RooFitCore PUBLIC $<INSTALL_INTERFACE:vdt>)
-  target_include_directories(RooFitCore PUBLIC $<INSTALL_INTERFACE:include>)
-elseif(vdt)
-#  target_link_libraries(RooFitCore PUBLIC ${VDT_LIBRARIES})
-  target_include_directories(RooFitCore PUBLIC ${VDT_INCLUDE_DIRS})
+if(vdt AND NOT builtin_vdt)
+  target_include_directories(RooFitCore PRIVATE ${VDT_INCLUDE_DIR})
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

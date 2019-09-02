@@ -90,15 +90,15 @@ void compute(RooSpan<double> output, Tx x, TMean mean,
 
   for (int i = 0; i < n; ++i) { //CHECK_VECTORISE
     const double x_i = noRounding ? x[i] : floor(x[i]);
-    const double logMean = vdt::fast_log(mean[i]);
+    const double logMean = _rf_fast_log(mean[i]);
     const double logPoisson = x_i * logMean - mean[i] - output[i];
-    output[i] = vdt::fast_exp(logPoisson);
+    output[i] = _rf_fast_exp(logPoisson);
 
     // Cosmetics
     if (x_i < 0.)
       output[i] = 0.;
     else if (x_i == 0.) {
-      output[i] = 1./vdt::fast_exp(mean[i]);
+      output[i] = 1./_rf_fast_exp(mean[i]);
     }
     if (protectNegative && mean[i] < 0.)
       output[i] = 1.E-3;
