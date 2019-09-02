@@ -137,9 +137,9 @@ void compute(	size_t batchSize,
       const double invBeta = 1/B[i];
       double arg = (X[i]-M[i])*invBeta;
       output[i] -= arg;
-      arg = vdt::fast_log(arg);
+      arg = _rf_fast_log(arg);
       output[i] += arg*(G[i]-1);
-      output[i] = vdt::fast_exp(output[i]);
+      output[i] = _rf_fast_exp(output[i]);
       output[i] *= invBeta;
     }
   }

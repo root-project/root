@@ -17,12 +17,34 @@
 #ifndef ROOFIT_ROOFITCORE_ROOVDTHEADERS_H_
 #define ROOFIT_ROOFITCORE_ROOVDTHEADERS_H_
 
+/**
+ * VDT headers for RooFit. Since RooFit cannot directly depend on VDT (it might not be available),
+ * this layer can be used to switch between different implementations.
+ */
+
 #if defined(R__HAS_VDT)
 #include "vdt/exp.h"
 #include "vdt/log.h"
+
+inline double _rf_fast_exp(double x) {
+  return vdt::fast_exp(x);
+}
+
+inline double _rf_fast_log(double x) {
+  return vdt::fast_log(x);
+}
+
 #else
-#define vdt::fast_exp std::exp
-#define vdt::fast_log std::log
+#include <cmath>
+
+inline double _rf_fast_exp(double x) {
+  return std::exp(x);
+}
+
+inline double _rf_fast_log(double x) {
+  return std::exp(x);
+}
+
 #endif
 
 

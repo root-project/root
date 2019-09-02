@@ -133,14 +133,14 @@ void compute(RooSpan<double> output, TMass mass, TMu mu, TLambda lambda, TGamma 
   for (int i = 0; i < n; ++i) { //CHECK_VECTORISE
     const double arg = (mass[i] - mu[i]) / lambda[i];
 #ifdef R__HAS_VDT
-    const double asinh_arg = vdt::fast_log(arg + std::sqrt(arg*arg+1));
+    const double asinh_arg = _rf_fast_log(arg + std::sqrt(arg*arg+1));
 #else
     const double asinh_arg = asinh(arg);
 #endif
     const double expo = gamma[i] + delta[i] * asinh_arg;
     const double result = delta[i] / sqrt_twoPi
                                    / (lambda[i] * std::sqrt(1. + arg*arg))
-                                   * vdt::fast_exp(-0.5 * expo * expo);
+                                   * _rf_fast_exp(-0.5 * expo * expo);
 
     const double passThrough = mass[i] >= massThreshold;
     output[i] = result * passThrough;

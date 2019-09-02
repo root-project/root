@@ -80,7 +80,7 @@ void compute(RooSpan<double> output, Tx x, TMean mean, TSig sigma) {
     const double arg = x[i] - mean[i];
     const double halfBySigmaSq = -0.5 / (sigma[i] * sigma[i]);
 
-    output[i] = vdt::fast_exp(arg*arg * halfBySigmaSq);
+    output[i] = _rf_fast_exp(arg*arg * halfBySigmaSq);
   }
 }
 
