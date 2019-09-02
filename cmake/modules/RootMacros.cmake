@@ -757,6 +757,10 @@ function(ROOT_LINKER_LIBRARY library)
   endif()
 
   if(PROJECT_NAME STREQUAL "ROOT")
+    if(NOT TARGET ROOT::${library})
+      add_library(ROOT::${library} ALIAS ${library})
+    endif()
+
     if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/inc)
       target_include_directories(${library}
         PRIVATE
