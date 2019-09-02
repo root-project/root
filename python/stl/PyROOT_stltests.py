@@ -297,6 +297,7 @@ class TestClasSTLSTRINGHANDLING:
         import cppyy
         cls.test_dct = "StlTypes_C"
         cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
+        cls.exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
 
     def test01_string_argument_passing(self):
         """Test mapping of python strings and std::string"""
@@ -351,7 +352,10 @@ class TestClasSTLSTRINGHANDLING:
         t0 = "aap\0noot"
         assert t0 == "aap\0noot"
 
-        c, s = StringyClass(), std.string(t0, len(t0))
+        if self.exp_pyroot:
+           c, s = StringyClass(), std.string(t0, 0, len(t0))
+        else:
+           c, s = StringyClass(), std.string(t0, len(t0))
 
         c.SetString1( s )
         assert t0 == c.GetString1()
