@@ -29,16 +29,17 @@ The sum can be truncated at the low end. See the main constructor
 RooPolynomial::RooPolynomial(const char*, const char*, RooAbsReal&, const RooArgList&, Int_t)
 **/
 
-#include <cmath>
-#include <cassert>
-
 #include "RooPolynomial.h"
 #include "RooAbsReal.h"
 #include "RooArgList.h"
 #include "RooMsgService.h"
+#include "BatchHelpers.h"
 
 #include "TError.h"
 
+#include <cmath>
+#include <cassert>
+#include <vector>
 using namespace std;
 
 ClassImp(RooPolynomial);
@@ -154,17 +155,22 @@ namespace PolynomialEvaluate{
 void compute(  size_t batchSize, const int lowestOrder,
                double * __restrict__ output,
                const double * __restrict__ const X,
-               const RooListProxy& coefList )
+               const std::vector<BatchHelpers::BracketAdapterWithMask>& coefList )
 {
-  const int nCoef = coefList.getSize();
-  const RooArgSet* normSet = coefList.nset();
-
-  double fill;
-  if (nCoef==0 && lowestOrder==0) fill = 0;
-  else if (nCoef==0 && lowestOrder>0) fill = 1.0;
-  else fill = static_cast<RooAbsReal&>(coefList[nCoef-1]).getVal(normSet);
-  for (size_t i=0; i<batchSize; i++) {
-    output[i] = fill;
+  const int nCoef = coefList.size();
+  if (nCoef==0 && lowestOrder==0) {
+    for (size_t i=0; i<batchSize; i++) {
+      output[i] = 0.0;
+    }
+  }
+  else if (nCoef==0 && lowestOrder>0) {
+    for (size_t i=0; i<batchSize; i++) {
+      output[i] = 1.0;
+    }
+  } else {
+    for (size_t i=0; i<batchSize; i++) {
+      output[i] = coefList[nCoef-1][i];
+    }
   }
   if (nCoef == 0) return;
   
@@ -174,17 +180,16 @@ void compute(  size_t batchSize, const int lowestOrder,
    * coefList[k+1] and coefList[k]
    */
   for (int k=nCoef-3; k>=0; k-=2) {
-    double coef1 = static_cast<RooAbsReal&>(coefList[k+1]).getVal(normSet);
-    double coef2 = static_cast<RooAbsReal&>(coefList[ k ]).getVal(normSet);
     for (size_t i=0; i<batchSize; i++) {
+      double coef1 = coefList[k+1][i];
+      double coef2 = coefList[ k ][i];
       output[i] = X[i]*(output[i]*X[i] + coef1) + coef2;
     }
   }
   // If nCoef is odd, then the coefList[0] didn't get processed
   if (nCoef%2 == 0) {
-    double coef = static_cast<RooAbsReal&>(coefList[0]).getVal(normSet);
     for (size_t i=0; i<batchSize; i++) {
-      output[i] = output[i]*X[i] + coef;
+      output[i] = output[i]*X[i] + coefList[0][i];
     }
   }
   //Increase the order of the polynomial, first by myltiplying with X[i]^2
@@ -194,7 +199,7 @@ void compute(  size_t batchSize, const int lowestOrder,
       output[i] *= X[i]*X[i];
     }
   }
-  bool isOdd = lowestOrder%2;
+  const bool isOdd = lowestOrder%2;
   for (size_t i=0; i<batchSize; i++) {
     if (isOdd) output[i] *= X[i];
     output[i] += 1.0;
@@ -207,14 +212,22 @@ void compute(  size_t batchSize, const int lowestOrder,
 RooSpan<double> RooPolynomial::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
   RooSpan<const double> xData = _x.getValBatch(begin, batchSize);
   batchSize = xData.size();
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
-  
   if (xData.empty()) {
-    throw std::logic_error("Requested a batch computation, but no batch data available.");
+    return {};
   }
-  else {
-    PolynomialEvaluate::compute(batchSize, _lowestOrder, output.data(), xData.data(), _coefList);
+  
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+  const int nCoef = _coefList.getSize();
+  const RooArgSet* normSet = _coefList.nset();
+  std::vector<BatchHelpers::BracketAdapterWithMask> coefList;
+  for (int i=0; i<nCoef; i++) {
+    auto val = static_cast<RooAbsReal&>(_coefList[i]).getVal(normSet);
+    auto valBatch = static_cast<RooAbsReal&>(_coefList[i]).getValBatch(begin, batchSize, normSet);
+    coefList.push_back( BatchHelpers::BracketAdapterWithMask(val, valBatch) );
   }
+  
+  PolynomialEvaluate::compute(batchSize, _lowestOrder, output.data(), xData.data(), coefList);
+  
   return output;
 }
 
