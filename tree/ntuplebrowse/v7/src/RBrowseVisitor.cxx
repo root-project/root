@@ -23,17 +23,17 @@ void ROOT::Experimental::RBrowseVisitor::VisitField(const ROOT::Experimental::De
    if (level != 1) {
       return;
    }
-   
-   // if the field has no children/subfields a RNTupleBrowseLeaf is created, which displays a histrogram upon double-click. If the field has children/subfields a RNTupleBrowseFolder is created, which displays it's subfields when double-clicked.
+
+   // if the field has no children/subfields a RNTupleBrowseLeaf is created, which displays a histrogram upon
+   // double-click. If the field has children/subfields a RNTupleBrowseFolder is created, which displays it's subfields
+   // when double-clicked.
    if (field.GetLevelInfo().GetNumChildren() == 0) {
-      ROOT::Experimental::RNTupleBrowseLeaf* f = new ROOT::Experimental::RNTupleBrowseLeaf(fNTupleBrowserPtr, &field);
+      RNTupleBrowseLeaf *f = new RNTupleBrowseLeaf(fNTupleBrowserPtr, &field);
       f->AddBrowse(fBrowser);
       fNTupleBrowserPtr->fNTupleBrowsePtrVec.emplace_back(f);
    } else {
-      ROOT::Experimental::RNTupleBrowseFolder* f = new ROOT::Experimental::RNTupleBrowseFolder(fNTupleBrowserPtr, &field);
+      RNTupleBrowseFolder *f = new RNTupleBrowseFolder(fNTupleBrowserPtr, &field);
       f->AddBrowse(fBrowser);
       fNTupleBrowserPtr->fNTupleBrowsePtrVec.emplace_back(f);
    }
 }
-
-
