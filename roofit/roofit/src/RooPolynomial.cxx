@@ -149,7 +149,7 @@ Double_t RooPolynomial::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-namespace PolynomialEvaluate{
+namespace {
 //Author: Emmanouil Michalainas, CERN 15 AUGUST 2019  
 
 void compute(  size_t batchSize, const int lowestOrder,
@@ -226,7 +226,7 @@ RooSpan<double> RooPolynomial::evaluateBatch(std::size_t begin, std::size_t batc
     coefList.push_back( BatchHelpers::BracketAdapterWithMask(val, valBatch) );
   }
   
-  PolynomialEvaluate::compute(batchSize, _lowestOrder, output.data(), xData.data(), coefList);
+  compute(batchSize, _lowestOrder, output.data(), xData.data(), coefList);
   
   return output;
 }
