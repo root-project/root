@@ -28,12 +28,13 @@ http://www.slac.stanford.edu/BFROOT/www/Organization/CollabMtgs/2003/detJuly2003
 **/
 
 #include "RooBukinPdf.h"
+#include "RooFit.h"
 #include "RooRealVar.h"
 #include "BatchHelpers.h"
 #include "RooVDTHeaders.h"
+#include "RooHelpers.h"
 
 #include <cmath>
-
 using namespace std;
 
 ClassImp(RooBukinPdf);
@@ -62,6 +63,10 @@ RooBukinPdf::RooBukinPdf(const char *name, const char *title,
   rho1("rho1","rho1",this,_rho1),
   rho2("rho2","rho2",this,_rho2)
 {
+    RooHelpers::checkRangeOfParameters(this, {&_sigp}, 0.0);
+    RooHelpers::checkRangeOfParameters(this, {&_rho1},-1.0, 0.0);
+    RooHelpers::checkRangeOfParameters(this, {&_rho2}, 0.0, 1.0);
+    RooHelpers::checkRangeOfParameters(this, {&_xi}, -1.0, 1.0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

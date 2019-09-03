@@ -26,7 +26,6 @@ RooArgusBG is a RooAbsPdf implementation describing the ARGUS background shape.
 */
 
 #include "RooArgusBG.h"
-#include "RooFit.h"
 #include "RooRealVar.h"
 #include "RooRealConstant.h"
 #include "RooMath.h"
@@ -34,10 +33,8 @@ RooArgusBG is a RooAbsPdf implementation describing the ARGUS background shape.
 #include "RooVDTHeaders.h"
 
 #include "TMath.h"
-#include "TError.h"
 
 #include <cmath>
-
 using namespace std;
 
 ClassImp(RooArgusBG);

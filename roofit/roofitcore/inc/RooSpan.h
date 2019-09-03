@@ -127,6 +127,11 @@ public:
   constexpr bool empty() const noexcept {
     return _span.empty();
   }
+  
+  constexpr bool isBatch() const noexcept {
+    return true;
+  }
+
 
   ///Test if the span overlaps with `other`.
   template <class Span_t>
