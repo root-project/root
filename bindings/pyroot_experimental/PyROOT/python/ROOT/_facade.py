@@ -18,10 +18,12 @@ class PyROOTConfiguration(object):
 class ROOTFacade(types.ModuleType):
     """Facade class for ROOT module"""
 
-    def __init__(self, module):
+    def __init__(self, module, is_ipython):
         types.ModuleType.__init__(self, module.__name__)
 
         self.module = module
+        # Importing all will be customised later
+        self.module.__all__ = []
 
         self.__doc__  = module.__doc__
         self.__name__ = module.__name__
@@ -31,15 +33,17 @@ class ROOTFacade(types.ModuleType):
         self.gROOT = gROOT
 
         # Expose some functionality from CPyCppyy extension module
-        cppyy_exports = [ 'Double', 'Long', 'nullptr', 'bind_object',
-                          'SetMemoryPolicy', 'kMemoryHeuristics', 'kMemoryStrict',
-                          'SetOwnership' ]
-        for name in cppyy_exports:
+        self._cppyy_exports = [ 'Double', 'Long', 'nullptr', 'bind_object',
+                                'SetMemoryPolicy', 'kMemoryHeuristics', 'kMemoryStrict',
+                                'SetOwnership' ]
+        for name in self._cppyy_exports:
             setattr(self, name, getattr(cppyy_backend, name))
         self.AddressOf = cppyy_backend.addressof
 
         # Initialize configuration
         self.PyConfig = PyROOTConfiguration()
+
+        self._is_ipython = is_ipython
 
         # Redirect lookups to temporary helper methods
         # This lets the user do some actions before all the machinery is in place:
@@ -71,6 +75,31 @@ class ROOTFacade(types.ModuleType):
             return _orig_ihook(name, *args, **kwds)
         __builtin__.__import__ = _importhook
 
+    def _handle_import_all(self):
+        # Called if "from ROOT import *" is executed in the app.
+        # Customises lookup in Python's main module to also
+        # check in C++'s global namespace
+
+        if sys.hexversion >= 0x3000000:
+            raise ImportError('"from ROOT import *" is not supported in Python 3')
+        if self._is_ipython:
+            import warnings
+            warnings.warn('"from ROOT import *" is not supported in IPython')
+            # Continue anyway, just in case it works
+
+        # Get caller module (jump over the facade)
+        caller = sys.modules[sys._getframe(2).f_globals['__name__']]
+
+        # Inject some predefined attributes of the facade
+        for name in self._cppyy_exports + [ 'gROOT', 'AddressOf' ]:
+            caller.__dict__[name] = getattr(self, name)
+
+        # Install the hook
+        cppyy_backend._set_cpp_lazy_lookup(caller.__dict__)
+
+        # Return empty list to prevent further copying
+        return self.module.__all__
+
     def _fallback_getattr(self, name):
         # Try:
         # - in the global namespace
@@ -79,6 +108,10 @@ class ROOTFacade(types.ModuleType):
         #   memory mapped files, functions, geometries ecc.)
         # The first two attempts allow to lookup
         # e.g. ROOT.ROOT.Math as ROOT.Math
+
+        if name == '__all__':
+            self._handle_import_all()
+
         try:
             return getattr(gbl_namespace, name)
         except AttributeError as err:
