@@ -20,8 +20,14 @@
 #include <memory>
 #include <vector>
 
+#include <ROOT/RDrawable.hxx>
+
+#include "TClass.h"
+
+
 namespace ROOT {
 namespace Experimental {
+
 class RCanvas;
 class RFrame;
 
@@ -65,6 +71,35 @@ public:
    RUniqueDisplayItem(T *addr) : RDisplayItem(), fObject(addr) {}
 
    T *GetObject() const { return fObject.get(); }
+};
+
+// created from plain drawable without need of extra parameters
+
+class RDrawableDisplayItem : public RDisplayItem {
+protected:
+
+
+   RDrawableAttributesContainer *fAttr{nullptr};     ///< attributes
+   RDrawableAttributesContainer *fDflts{nullptr};    ///< defaults
+   std::string fTypeName;
+
+
+   void SetDrawables(RDrawable &dr)
+   {
+      SetObjectID(dr.GetId());
+      if (!dr.fNewAttributes.empty()) fAttr = &dr.fNewAttributes;
+      if (!dr.fDefaults.empty()) fDflts = &dr.fDefaults;
+   }
+
+public:
+
+   template <class T>
+   RDrawableDisplayItem(T &dr)
+   {
+      fTypeName = TClass::GetClass<T>()->GetName();
+      SetDrawables(dr);
+   }
+
 };
 
 } // namespace Experimental
