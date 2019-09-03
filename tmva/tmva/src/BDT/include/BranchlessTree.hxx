@@ -1,67 +1,72 @@
 #ifndef __BRANCHLESS_TREE_HXX_
 #define __BRANCHLESS_TREE_HXX_
 
-#include "json.hpp"
-#include <fstream>
-#include <iostream>
 #include <string>
-#include <sstream>
-#include <streambuf>
-#include <map>
 #include <vector>
-#include <array>
-#include <utility>
+#include "json.hpp"
 
 using json = nlohmann::json;
 
+/// Branchless Tree classes and helpers
 namespace BranchlessTree {
 
+/**
+ * \class Tree
+ * Branchless representation of a Tree, using topological ordering
+ *
+ * \tparam T type for the prediction. Usually floating point type (float, double, long double)
+ */
 template <typename T>
 class Tree {
-private:
 public:
-   size_t           array_length;
-   int              tree_depth;
+   size_t           array_length; ///< array_lengths
+   int              tree_depth;   ///< depth of the tree
+   std::vector<T>   thresholds;   ///< cut thresholds or scores if corresponding node is a leaf
+   std::vector<int> features;     ///< cut variables / features
    void             set_array_length(const size_t &array_length) { this->array_length = array_length; }
    void             set_tree_depth(const int &tree_depth) { this->tree_depth = tree_depth; }
-   inline T         inference(const std::vector<T> &);
-   inline T         inference(const T *event);
-   inline T         inference_conditional(const std::vector<T> &);
-   std::vector<T>   thresholds; // scores if it is a leaf
-   std::vector<int> features;
+   /// Perform inference on sigle node
+   inline T inference(const T *event);
 };
 
-template <typename T>
-inline T Tree<T>::inference_conditional(const std::vector<T> &event)
-{
-   size_t index = 0;
-   while (index < this->array_length) {
-      if (this->features[index] == -1) {
-         return this->thresholds[index];
-      }
-      index = 2 * index + 1 + (int)(event[this->features[index]] > this->thresholds[index]);
-   } // end while
-}
+////////////////////////////////////////////////////////////////////////////////
+///// functions definitions /////
+////////////////////////////////////////////////////////////////////////////////
 
-template <typename T>
-inline T Tree<T>::inference(const std::vector<T> &event)
-{
-   size_t index = 0;
-   for (int iLevel = 0; iLevel < this->tree_depth; ++iLevel) {
-      index = 2 * index + 1 + (int)(event[this->features[index]] > this->thresholds[index]);
-   }
-   return this->thresholds[index];
-}
+////////////////////////////////////////////////////////////////////////////////
+/// \param[in] event pointer to data containing the event
+/// \param[out] Tree score, result of the inference
 template <typename T>
 inline T Tree<T>::inference(const T *event)
 {
-   size_t index = 0;
+   int index = 0; // should we switch to size_t ?
    for (int iLevel = 0; iLevel < this->tree_depth; ++iLevel) {
       index = 2 * index + 1 + (event[this->features[index]] > this->thresholds[index]);
    }
    return this->thresholds[index];
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Define a comparison between two trees
+///
+/// \tparam T type for the inference
+/// \param[in] a first compared tree
+/// \param[in] b second compared tree
+/// \param[out] True if a<b, false if a>=b
+///
+/// The two trees are compared based on first cut-variable then cut-threshold of the first node of the tree
+template <typename T>
+bool cmp(const Tree<T> &a, const Tree<T> &b)
+{
+   if (a.features[0] == b.features[0]) {
+      return a.thresholds[0] < b.thresholds[0];
+   } else {
+      return a.features[0] < b.features[0];
+   }
+}
+
+////////// reading functions //////////
+/* // obsolete reading functions
 // ----- Reading functions -----
 template <typename T>
 std::pair<int, T> get_node_members(json &jTree)
@@ -153,17 +158,7 @@ void read_nodes_from_tree(json &jTree, Tree<T> &tree)
    // for (auto value : tree.features) std::cout << value << std::endl;
    // std::cout << "------- \n";
 }
-
-// ordering function for vectors of trees
-template <typename T>
-bool cmp(const Tree<T> &a, const Tree<T> &b)
-{
-   if (a.features[0] == b.features[0]) {
-      return a.thresholds[0] < b.thresholds[0];
-   } else {
-      return a.features[0] < b.features[0];
-   }
-}
+// */ // end of obsolete reading functions
 
 } // namespace BranchlessTree
 #endif
