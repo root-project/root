@@ -20,16 +20,10 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   # Select flags.
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG")
   set(CMAKE_CXX_FLAGS_RELEASE        "-O2 -DNDEBUG")
-  set(CMAKE_CXX_FLAGS_OPTIMIZED      "-Ofast -DNDEBUG")
   set(CMAKE_CXX_FLAGS_DEBUG          "-g")
-  set(CMAKE_CXX_FLAGS_DEBUGFULL      "-g3")
-  set(CMAKE_CXX_FLAGS_PROFILE        "-g3 -ftest-coverage -fprofile-arcs")
   set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g -DNDEBUG")
   set(CMAKE_C_FLAGS_RELEASE          "-O2 -DNDEBUG")
-  set(CMAKE_C_FLAGS_OPTIMIZED        "-Ofast -DNDEBUG")
   set(CMAKE_C_FLAGS_DEBUG            "-g")
-  set(CMAKE_C_FLAGS_DEBUGFULL        "-g3 -fno-inline")
-  set(CMAKE_C_FLAGS_PROFILE          "-g3 -fno-inline -ftest-coverage -fprofile-arcs")
 
   #---Set Linker flags----------------------------------------------------------------------
   set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS}")
@@ -61,11 +55,9 @@ elseif(MSVC)
   #---Select compiler flags----------------------------------------------------------------
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -Z7")
   set(CMAKE_CXX_FLAGS_RELEASE        "-O2")
-  set(CMAKE_CXX_FLAGS_OPTIMIZED      "-O2")
   set(CMAKE_CXX_FLAGS_DEBUG          "-Od -Z7")
   set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -Z7")
   set(CMAKE_C_FLAGS_RELEASE          "-O2")
-  set(CMAKE_C_FLAGS_OPTIMIZED        "-O2")
   set(CMAKE_C_FLAGS_DEBUG            "-Od -Z7")
 
   #---Set Linker flags----------------------------------------------------------------------
