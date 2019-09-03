@@ -52,7 +52,7 @@ def execute_bench(TMP_FOLDER, test_list, repetitions, key, kwargs):
         )
 
 
-STD_NUM_SAMPLES = 100_000
+STD_NUM_SAMPLES = 50000
 STD_NUM_FEATURES = 5
 STD_DEPTH = 3
 STD_NUM_TREES = 200
@@ -87,7 +87,22 @@ timeVStrees = dict(
 )
 
 if __name__ == "__main__":
-    # timeVSdepth
+    """
+    execute_bench(
+        "./tmp/timeVSevents/",
+        [50000, 100_000, 300_000, 500_000, 750_000, 1_000_000],
+        2,  # repetitions
+        "num_samples",
+        timeVSevents,
+    )
+
+    execute_bench(
+        "./tmp/timeVStrees/",
+        [100, 300, 600, 900, 1200],
+        2,
+        "num_trees",
+        timeVStrees,  # repetitions
+    )
 
     execute_bench(
         "./tmp/timeVSfeats/",
@@ -111,13 +126,7 @@ if __name__ == "__main__":
         "num_samples",
         timeVSevents,
     )
-    execute_bench(
-        "./tmp/timeVSevents/",
-        [1000, 10000, 50000, 100_000, 200_000, 500_000],
-        2,  # repetitions
-        "num_samples",
-        timeVSevents,
-    )
+
     execute_bench(
         "./tmp/timeVStrees/",
         [100, 300, 600, 900, 1200],
@@ -125,15 +134,14 @@ if __name__ == "__main__":
         "num_trees",
         timeVStrees,  # repetitions
     )
-
+    # """
     execute_bench(
         "./tmp/timeVSdepth/",
-        [2, 4, 6, 8, 10, 12, 15, 18],
-        3,
+        [2, 4, 6, 8, 10, 12, 15, 18, 21, 13],
+        1,
         "max_depth",
         timeVSdepth,  # repetitions
     )
-    # """
 
 
 # end

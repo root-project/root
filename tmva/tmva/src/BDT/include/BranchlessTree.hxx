@@ -47,7 +47,7 @@ template <typename T>
 inline T Tree<T>::inference(const std::vector<T> &event)
 {
    size_t index = 0;
-   for (unsigned int iLevel = 0; iLevel < this->tree_depth; ++iLevel) {
+   for (int iLevel = 0; iLevel < this->tree_depth; ++iLevel) {
       index = 2 * index + 1 + (int)(event[this->features[index]] > this->thresholds[index]);
    }
    return this->thresholds[index];
@@ -56,8 +56,8 @@ template <typename T>
 inline T Tree<T>::inference(const T *event)
 {
    size_t index = 0;
-   for (unsigned int iLevel = 0; iLevel < this->tree_depth; ++iLevel) {
-      index = 2 * index + 1 + (int)(event[this->features[index]] > this->thresholds[index]);
+   for (int iLevel = 0; iLevel < this->tree_depth; ++iLevel) {
+      index = 2 * index + 1 + (event[this->features[index]] > this->thresholds[index]);
    }
    return this->thresholds[index];
 }

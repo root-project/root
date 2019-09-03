@@ -17,6 +17,7 @@ files/
 *.svm
 ./*.txt
 *.txt
+*.eps
 
 # Prerequisites
 *.d

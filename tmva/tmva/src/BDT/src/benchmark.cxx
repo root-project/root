@@ -25,10 +25,10 @@ std::string json_model_file = "./data/model.json";
 int         loop_size       = 256;
 
 template <typename T, typename ForestType>
-ForestType get_forest()
+ForestType get_forest(bool order = true)
 {
    ForestType Forest;
-   Forest.LoadFromJson("my_key", json_model_file);
+   Forest.LoadFromJson("my_key", json_model_file, order);
    return Forest;
 }
 
@@ -71,12 +71,12 @@ static void BM_Branchless(benchmark::State &state)
    }
    write_csv(preds_file, _data.scores);
 }
-// /*
+/*
 BENCHMARK(BM_Branchless)
-   ->Unit(benchmark::kMillisecond)
-   ->ComputeStatistics("min", [](const std::vector<double> &v) -> double {
-      return *(std::min_element(std::begin(v), std::end(v)));
-   });
+  ->Unit(benchmark::kMillisecond)
+  ->ComputeStatistics("min", [](const std::vector<double> &v) -> double {
+     return *(std::min_element(std::begin(v), std::end(v)));
+  });
 // */
 
 static void BM_BranchedJIT(benchmark::State &state)
@@ -107,12 +107,12 @@ static void BM_BranchlessJIT(benchmark::State &state)
    }
    write_csv(preds_file, _data.scores);
 }
-// /*
+/*
 BENCHMARK(BM_BranchlessJIT)
-   ->Unit(benchmark::kMillisecond)
-   ->ComputeStatistics("min", [](const std::vector<double> &v) -> double {
-      return *(std::min_element(std::begin(v), std::end(v)));
-   });
+  ->Unit(benchmark::kMillisecond)
+  ->ComputeStatistics("min", [](const std::vector<double> &v) -> double {
+     return *(std::min_element(std::begin(v), std::end(v)));
+  });
 // */
 
 /// Benchmark eval unique_bdts
@@ -145,12 +145,12 @@ static void BM_Branchless_batch(benchmark::State &state)
    }
    write_csv(preds_file, _data.scores);
 }
-// /*
+/*
 BENCHMARK(BM_Branchless_batch)
-   ->Unit(benchmark::kMillisecond)
-   ->ComputeStatistics("min", [](const std::vector<double> &v) -> double {
-      return *(std::min_element(std::begin(v), std::end(v)));
-   });
+  ->Unit(benchmark::kMillisecond)
+  ->ComputeStatistics("min", [](const std::vector<double> &v) -> double {
+     return *(std::min_element(std::begin(v), std::end(v)));
+  });
 // */
 
 static void BM_BranchedJIT_batch(benchmark::State &state)
@@ -181,12 +181,12 @@ static void BM_BranchlessJIT_batch(benchmark::State &state)
    }
    write_csv(preds_file, _data.scores);
 }
-// /*
+/*
 BENCHMARK(BM_BranchlessJIT_batch)
-   ->Unit(benchmark::kMillisecond)
-   ->ComputeStatistics("min", [](const std::vector<double> &v) -> double {
-      return *(std::min_element(std::begin(v), std::end(v)));
-   });
+  ->Unit(benchmark::kMillisecond)
+  ->ComputeStatistics("min", [](const std::vector<double> &v) -> double {
+     return *(std::min_element(std::begin(v), std::end(v)));
+  });
 // */
 ///////////////////////////  STATIC  ////////////////////////
 //

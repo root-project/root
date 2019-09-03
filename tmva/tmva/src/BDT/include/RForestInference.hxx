@@ -3,86 +3,113 @@
 
 #include "ForestHelpers.hxx"
 
-// using json = nlohmann::json;
-
 std::string generated_files_path = "generated_files/"; // For DEBUG
 
-//\todo:  Put this into namespace
+///  \todo:  Put this into namespace
 
+/**
+ * \class ForestBase
+ *
+ * \tparam T type for the prediction. Usually floating point type (float, double, long double)
+ * \tparam forestType type of the underlying Forest
+ */
 template <typename T, typename forestType>
 class ForestBase {
 protected:
+   /// Loads a forest from a json file
    std::vector<BranchedTree::Tree<T>> _LoadFromJson(const std::string &key, const std::string &filename,
                                                     const bool &bool_sort_trees = true);
-   /// Event by event prediction
 
-   /// these two possibilities can take place:
-   std::function<T(T)> objective_func = logistic_function<T>; // Default objective function
-   // std::function<bool(T)> objective_func = binary_logistic<T>; // Default objective function
-   std::string s_obj_func = "logistic";
+   std::string         s_obj_func;     ///< Default string_describing the objective function
+   std::function<T(T)> objective_func; ///< Default objective function
 
 public:
-   forestType trees;
-   void       set_objective_function(std::string func_name); // or int KIND
-   void       inference(const T *events_vector, int rows, int cols, T *preds);
-   void       inference(const T *events_vector, int rows, int cols, T *preds,
-                        int loop_size); // Batched version
-   // void inference(const std::vector<std::vector<T>> &events_vector, int rows, int cols, T *preds);
-   void _predict(T *predictions, const int num_predictions, unsigned int *);
+   forestType trees; ///< Store the forest, either as vector or jitted function
+
+   ForestBase() : s_obj_func("logistic"), objective_func(logistic_function<T>) {}
+
+   /// Set objective function from a string name
+   void set_objective_function(const std::string &func_name); // or int KIND
+   /// Inference event by events
+   void inference(const T *events_vector, const int rows, const int cols, T *preds);
+   /// Inference in a loop blocked fashion
+   void inference(const T *events_vector, const int rows, const int cols, T *preds, const int loop_size);
+
+   /// Goes from probability to classification
+   void _predict(T *predictions, const int num_predictions, int *);
 };
 
-/// Branched version of the Forest (unique_ptr representation)
+/**
+ * \class ForestBranched
+ * Branched version of the Forest (unique_ptr representation)
+ *
+ * \tparam T type for the prediction. Usually floating point type (float, double, long double)
+ */
 template <typename T>
 class ForestBranched : public ForestBase<T, std::vector<BranchedTree::Tree<T>>> {
-private:
 public:
+   /// Load Forest from a json file
    void LoadFromJson(const std::string &key, const std::string &filename, const bool &bool_sort_trees = true)
    {
       this->trees = this->_LoadFromJson(key, filename, bool_sort_trees);
    }
 };
 
-/// Branched version of the Forest (topologically ordered representation)
+/**
+ * \class ForestBranchless
+ * Branchless version of the Forest (topologically ordered representation)
+ *
+ * \tparam T type for the prediction. Usually floating point type (float, double, long double)
+ */
 template <typename T>
 class ForestBranchless : public ForestBase<T, std::vector<BranchlessTree::Tree<T>>> {
-
-private:
 public:
+   /// Load Forest from a json file
    void LoadFromJson(const std::string &key, const std::string &json_filename, bool bool_sort_trees = true);
-   // void LoadFromJson2(const std::string &key, const std::string &filename, bool bool_sort_trees = true);
 };
 
+/**
+ * \class ForestBase
+ * Branched version of the Forest (topologically ordered representation)
+ *
+ * \tparam T type for the prediction. Usually floating point type (float, double, long double)
+ */
 template <typename T>
-// class ForestBaseJIT : public ForestBase<T, std::function<bool(const std::vector<float> &)>> {
 class ForestBaseJIT : public ForestBase<T, std::function<bool(const T *)>> {
-private:
 public:
-   void inference(const T *events_vector, int rows, int cols, T *preds);
-   void inference(const T *events_vector, int rows, int cols, T *preds, int loop_size);
-   // void inference(const std::vector<std::vector<T>> &events_vector, int rows, int cols, T *preds);
-   // void LoadFromJson(const std::string &key, const std::string &filename, bool bool_sort_trees = true);
+   /// Inference event by events
+   void inference(const T *events_vector, const int rows, const int cols, T *preds);
+   /// Inference in a loop blocked fashion
+   void inference(const T *events_vector, const int rows, const int cols, T *preds, const int loop_size);
 };
 
 template <typename T>
 class ForestBranchedJIT : public ForestBaseJIT<T> {
 public:
+   /// Load Forest from a json file
    void LoadFromJson(const std::string &key, const std::string &filename, bool bool_sort_trees = true);
 };
 
 template <typename T>
 class ForestBranchlessJIT : public ForestBaseJIT<T> {
 public:
+   /// Load Forest from a json file
    void LoadFromJson(const std::string &key, const std::string &filename, bool bool_sort_trees = true);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-///// functions implementations /////
+///// functions definitions /////
+////////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////// Inference functions ///////////////////////
 
-/// Inference for non-jitted functions
+////////////////////////////////////////////////////////////////////////////////
+/// \param[in] events_vector pointer to data containing the events
+/// \param[in] rows number of events in events_vecctor
+/// \param[in] cols number of features per events i.e. columns in events_vector
+/// \param[in] preds pointer to the pre-allocated data that's gonna be filled by this function
 template <typename T, typename treeType>
-void ForestBase<T, treeType>::inference(const T *events_vector, int rows, int cols, T *preds)
+void ForestBase<T, treeType>::inference(const T *events_vector, const int rows, const int cols, T *preds)
 {
    T preds_tmp;
    for (size_t i = 0; i < rows; i++) {
@@ -94,8 +121,15 @@ void ForestBase<T, treeType>::inference(const T *events_vector, int rows, int co
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// \param[in] events_vector pointer to data containing the events
+/// \param[in] rows number of events in events_vecctor
+/// \param[in] cols number of features per events i.e. columns in events_vector
+/// \param[in] preds pointer to the pre-allocated data that's gonna be filled by this function
+/// \param[in] loop_size
 template <typename T, typename treeType>
-void ForestBase<T, treeType>::inference(const T *events_vector, int rows, int cols, T *preds, int loop_size)
+void ForestBase<T, treeType>::inference(const T *events_vector, const int rows, const int cols, T *preds,
+                                        const int loop_size)
 {
    int rest = rows % loop_size;
 
@@ -127,8 +161,13 @@ void ForestBase<T, treeType>::inference(const T *events_vector, int rows, int co
    delete[] preds_tmp_arr;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// \param[in] events_vector pointer to data containing the events
+/// \param[in] rows number of events in events_vecctor
+/// \param[in] cols number of features per events i.e. columns in events_vector
+/// \param[in] preds pointer to the pre-allocated data that's gonna be filled by this function
 template <typename T>
-void ForestBaseJIT<T>::inference(const T *events_vector, int rows, int cols,
+void ForestBaseJIT<T>::inference(const T *events_vector, const int rows, const int cols,
                                  T *preds) // T *preds)
 {
    for (int i = 0; i < rows; i++) {
@@ -137,8 +176,14 @@ void ForestBaseJIT<T>::inference(const T *events_vector, int rows, int cols,
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// \param[in] events_vector pointer to data containing the events
+/// \param[in] rows number of events in events_vecctor
+/// \param[in] cols number of features per events i.e. columns in events_vector
+/// \param[in] preds pointer to the pre-allocated data that's gonna be filled by this function
+/// \param[in] loop_size
 template <typename T>
-void ForestBaseJIT<T>::inference(const T *events_vector, int rows, int cols, T *preds, int loop_size)
+void ForestBaseJIT<T>::inference(const T *events_vector, const int rows, const int cols, T *preds, const int loop_size)
 {
    int rest  = rows % loop_size;
    int index = 0;
@@ -154,7 +199,12 @@ void ForestBaseJIT<T>::inference(const T *events_vector, int rows, int cols, T *
 }
 
 ///////////////////////////// Loading functions ////////////////////////////////
-/// Load to unique_ptr implementation
+
+////////////////////////////////////////////////////////////////////////////////
+/// \param[in] key string with the key for the correct model inside the file
+/// \param[in] json_file string with the filename that contains the models
+/// \param[in] bool_sort_trees should the forest be ordered? `default=true`
+/// \param[out] Branched representation of the forest, with is used also to derive other forests
 template <typename T, typename treeType>
 std::vector<BranchedTree::Tree<T>> ForestBase<T, treeType>::_LoadFromJson(const std::string &key,
                                                                           const std::string &json_file,
@@ -177,6 +227,11 @@ std::vector<BranchedTree::Tree<T>> ForestBase<T, treeType>::_LoadFromJson(const 
    return std::move(trees);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// \param[in] key string with the key for the correct model inside the file
+/// \param[in] json_file string with the filename that contains the models
+/// \param[in] bool_sort_trees should the forest be ordered? `default=true`
+/// \param[out] Forest representation
 template <typename T>
 void ForestBranchless<T>::LoadFromJson(const std::string &key, const std::string &json_filename, bool bool_sort_trees)
 {
@@ -185,6 +240,11 @@ void ForestBranchless<T>::LoadFromJson(const std::string &key, const std::string
    this->trees = Branched2BranchlessTrees(trees_unique);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// \param[in] key string with the key for the correct model inside the file
+/// \param[in] json_file string with the filename that contains the models
+/// \param[in] bool_sort_trees should the forest be ordered? `default=true`
+/// \param[out] Forest representation (jitted function)
 template <typename T>
 void ForestBranchedJIT<T>::LoadFromJson(const std::string &key, const std::string &json_filename, bool bool_sort_trees)
 {
@@ -197,6 +257,11 @@ void ForestBranchedJIT<T>::LoadFromJson(const std::string &key, const std::strin
    this->trees = JitTrees<T, BranchedTree::Tree<T>>(trees, this->s_obj_func);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// \param[in] key string with the key for the correct model inside the file
+/// \param[in] json_file string with the filename that contains the models
+/// \param[in] bool_sort_trees should the forest be ordered? `default=true`
+/// \param[out] Forest representation (jitted function)
 template <typename T>
 void ForestBranchlessJIT<T>::LoadFromJson(const std::string &key, const std::string &json_filename,
                                           bool bool_sort_trees)
@@ -211,57 +276,4 @@ void ForestBranchlessJIT<T>::LoadFromJson(const std::string &key, const std::str
    this->trees = JitTrees<T, BranchlessTree::Tree<T>>(trees, this->s_obj_func);
 }
 
-/// Deprecated functions
-/*
-/// REading model directly from json
-template <typename T>
-void ForestBranchless<T>::LoadFromJson2(const std::string &key, const std::string &filename, bool bool_sort_trees)
-{
-   std::string my_config       = read_file_string(filename);
-   auto        json_model      = json::parse(my_config);
-   int         number_of_trees = json_model.size();
-
-   std::vector<BranchlessTree::Tree<T>> trees;
-   trees.resize(number_of_trees);
-
-   for (int i = 0; i < number_of_trees; i++) {
-      BranchlessTree::read_nodes_from_tree<T>(json_model[i], trees[i]);
-   }
-
-   if (bool_sort_trees == true) {
-      std::sort(trees.begin(), trees.end(), BranchlessTree::cmp<T>);
-   }
-
-   this->trees = trees;
-}
-*/
-
-/*
-/// inference on a vector of vectors for non jitted
-template <typename T, typename treeType>
-void ForestBase<T, treeType>::inference(const std::vector<std::vector<T>> &events_vector, int rows,
-                                        int cols, T *preds)
-{
-   T preds_tmp;
-   for (size_t i = 0; i < rows; i++) {
-      preds_tmp = 0;
-      for (auto &tree : this->trees) {
-         preds_tmp += tree.inference(events_vector[i].data()); //[i * cols]
-      }
-      preds[i] = this->objective_func(preds_tmp);
-   }
-}
-*/
-
-/*
-/// inference on a vector of vectors for jitted
-template <typename T>
-void ForestBaseJIT<T>::inference(const std::vector<std::vector<T>> &events_vector, int rows, int cols,
-                                 T *preds)
-{
-   for (size_t i = 0; i < rows; i++) {
-      preds[i] = this->trees(events_vector[i].data());
-   }
-}
-*/
 #endif

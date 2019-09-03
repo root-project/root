@@ -11,26 +11,6 @@ int         loop_size       = 256;
 
 int tree_number = 1;
 
-template <typename T>
-struct DataStruct {
-   const std::vector<std::vector<T>>    events_vec_vec;
-   const std::vector<T>                 events_vector;
-   const T *                            events_pointer = nullptr;
-   const std::vector<std::vector<bool>> groundtruth;
-   std::vector<T>                       scores;
-   std::vector<bool>                    preds;
-   const int                            rows, cols;
-
-   DataStruct(const std::string &events_file, const std::string &preds_file)
-      : events_vec_vec(read_csv<T>(events_file)), events_vector(convert_VecMatrix2Vec<T>(events_vec_vec)),
-        events_pointer(events_vector.data()), groundtruth(read_csv<bool>(preds_file)), rows(events_vec_vec.size()),
-        cols(events_vec_vec[0].size())
-   {
-      preds.reserve(rows);
-      scores.reserve(rows);
-   }
-};
-
 template <typename T, typename ForestType>
 void test_predictions(int loop_size = 1)
 {
