@@ -35,18 +35,22 @@ TEST(TClingUtilsTests, GetRealPath)
    file.close();
    file.open("./realfile2", std::ios::out);
    file.close();
+
+   bool failure = false;
    // Create symlinks
-   symlink("./realfile1", "symlink_realfile1");
-   symlink((cwd + "realfile2").c_str(), "symlink_realfile2");
+   failure |= symlink("./realfile1", "symlink_realfile1");
+   failure |= symlink((cwd + "realfile2").c_str(), "symlink_realfile2");
 
    // Recursive symlinks
-   symlink("./symlink_realfile1", "symlink1_symlink_realfile1");
-   symlink((cwd + "symlink_realfile2").c_str(), "symlink1_symlink_realfile2");
+   failure |= symlink("./symlink_realfile1", "symlink1_symlink_realfile1");
+   failure |= symlink((cwd + "symlink_realfile2").c_str(), "symlink1_symlink_realfile2");
 
-   symlink("./symlink_realfile2", "symlink2_symlink_realfile2");
-   symlink((cwd + "symlink_realfile1").c_str(), "symlink2_symlink_realfile1");
+   failure |= symlink("./symlink_realfile2", "symlink2_symlink_realfile2");
+   failure |= symlink((cwd + "symlink_realfile1").c_str(), "symlink2_symlink_realfile1");
 
-   symlink((cwd + ".//.///symlink_realfile1").c_str(), "symlink3_symlink_realfile1");
+   failure |= symlink((cwd + ".//.///symlink_realfile1").c_str(), "symlink3_symlink_realfile1");
+
+   ASSERT_FALSE(failure);
 
    using namespace ROOT::TMetaUtils;
    std::string realfile1 = GetRealPath("./realfile1");
