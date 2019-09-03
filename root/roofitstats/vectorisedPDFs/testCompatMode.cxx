@@ -38,7 +38,6 @@ class TestRooPolynomial : public PDFTest
       auto a3 = new RooFormulaVar("a3", "Third coefficient", "a1+a2", RooArgList(*a1, *a2));
 
       _pdf = std::make_unique<RooPolynomial>("pol", "Polynomial", *x, RooArgList(*a1, *a2, *a3));
-      _pdf->Print("t");
 
 
       for (auto var : {x, a1}) {
@@ -187,25 +186,22 @@ class TestNonVecGauss : public PDFTest
 {
   protected:
     TestNonVecGauss() :
-      PDFTest("GaussNoBatches", 200000)
-  {
-      // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
-        auto x = new RooRealVar("x", "x", -10, 10);
-        auto mean = new RooRealVar("mean", "mean of gaussian", 1, -10, 10);
-        auto sigma = new RooRealVar("sigma", "width of gaussian", 1, 0.1, 10);
+      PDFTest("GaussNoBatches", 200000) {
+      auto x = new RooRealVar("x", "x", -10, 10);
+      auto mean = new RooRealVar("mean", "mean of gaussian", 1, -10, 10);
+      auto sigma = new RooRealVar("sigma", "width of gaussian", 1, 0.1, 10);
 
-        // Build gaussian p.d.f in terms of x,mean and sigma
-        _pdf = std::make_unique<RooNonVecGaussian>("gauss", "gaussian PDF", *x, *mean, *sigma);
-
+      // Build gaussian p.d.f in terms of x,mean and sigma
+      _pdf = std::make_unique<RooNonVecGaussian>("gauss", "gaussian PDF", *x, *mean, *sigma);
 
       _variables.addOwned(*x);
-
-//      _variablesToPlot.add(x);
 
       for (auto par : {mean, sigma}) {
         _parameters.addOwned(*par);
       }
-  }
+
+      _toleranceCompareLogs = 2.5E-14;
+    }
 };
 
 COMPARE_FIXED_VALUES_UNNORM(TestNonVecGauss, CompareFixedUnnorm)
@@ -238,6 +234,8 @@ class TestNonVecGaussWeighted : public PDFTestWeightedData
       for (auto par : {mean, sigma}) {
         _parameters.addOwned(*par);
       }
+
+      _toleranceCompareLogs = 2.5E-14;
   }
 };
 
