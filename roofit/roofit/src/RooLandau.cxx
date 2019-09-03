@@ -61,7 +61,7 @@ Double_t RooLandau::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-namespace LandauBatchEvaluate {
+namespace {
   
 //Author: Emmanouil Michalainas, CERN 26 JULY 2019
 /* Actual computation of Landau(x,mean,sigma) in a vectorization-friendly way
@@ -175,17 +175,19 @@ void compute(	size_t batchSize,
 
 RooSpan<double> RooLandau::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
   using namespace BatchHelpers;
-  using namespace LandauBatchEvaluate;
   auto xData = x.getValBatch(begin, batchSize);
   auto meanData = mean.getValBatch(begin, batchSize);
   auto sigmaData = sigma.getValBatch(begin, batchSize);
-
-  batchSize = findSize({ xData, meanData, sigmaData });
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
-
   const bool batchX = !xData.empty();
   const bool batchMean = !meanData.empty();
   const bool batchSigma = !sigmaData.empty();
+
+  if (!batchX && !batchMean && !batchSigma) {
+    return {};
+  }
+  batchSize = findSize({ xData, meanData, sigmaData });
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+
   if (batchX && !batchMean && !batchSigma ) {
     compute(batchSize, output.data(), xData, BracketAdapter<double>(mean), BracketAdapter<double>(sigma));
   }
@@ -207,10 +209,6 @@ RooSpan<double> RooLandau::evaluateBatch(std::size_t begin, std::size_t batchSiz
   else if (batchX && batchMean && batchSigma ) {
     compute(batchSize, output.data(), xData, meanData, sigmaData);
   }
-  else{
-    throw std::logic_error("Requested a batch computation, but no batch data available.");
-  }
-
   return output;
 }
 

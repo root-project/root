@@ -81,7 +81,7 @@ Double_t RooBifurGauss::evaluate() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-namespace BifurGaussBatchEvaluate {
+namespace {
 //Author: Emmanouil Michalainas, CERN 20 AUGUST 2019  
 
 template<class Tx, class Tm, class Tsl, class Tsr>
@@ -107,26 +107,26 @@ void compute(  size_t batchSize,
 
 RooSpan<double> RooBifurGauss::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
   using namespace BatchHelpers;
-  using namespace BifurGaussBatchEvaluate;
-    
-  EvaluateInfo info = getInfo( {&x,&mean,&sigmaL,&sigmaR}, begin, batchSize );
-  auto output = _batchData.makeWritableBatchUnInit(begin, info.size);
-  auto xData = x.getValBatch(begin, info.size);
+
+  EvaluateInfo info = getInfo( {&x, &mean, &sigmaL, &sigmaR}, begin, batchSize );
   if (info.nBatches == 0) {
-    throw std::logic_error("Requested a batch computation, but no batch data available.");
+    return {};
   }
-  else if (info.nBatches==1 && !xData.empty()) {
-    compute(info.size, output.data(), xData.data(), 
-    BracketAdapter<double> (mean), 
-    BracketAdapter<double> (sigmaL), 
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+  auto xData = x.getValBatch(begin, info.size);
+
+  if (info.nBatches==1 && !xData.empty()) {
+    compute(info.size, output.data(), xData.data(),
+    BracketAdapter<double> (mean),
+    BracketAdapter<double> (sigmaL),
     BracketAdapter<double> (sigmaR));
   }
   else {
-    compute(info.size, output.data(), 
-    BracketAdapterWithMask (x,x.getValBatch(begin,batchSize)), 
-    BracketAdapterWithMask (mean,mean.getValBatch(begin,batchSize)), 
-    BracketAdapterWithMask (sigmaL,sigmaL.getValBatch(begin,batchSize)), 
-    BracketAdapterWithMask (sigmaR,sigmaR.getValBatch(begin,batchSize)));
+    compute(info.size, output.data(),
+    BracketAdapterWithMask (x,x.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (mean,mean.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (sigmaL,sigmaL.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (sigmaR,sigmaR.getValBatch(begin,info.size)));
   }
   return output;
 }

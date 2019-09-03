@@ -143,7 +143,7 @@ Double_t RooBukinPdf::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-namespace BukinBatchEvaluate {
+namespace {
 //Author: Emmanouil Michalainas, CERN 26 JULY 2019  
 
 template<class Tx, class TXp, class TSigp, class Txi, class Trho1, class Trho2>
@@ -192,30 +192,30 @@ void compute(  size_t batchSize,
 
 RooSpan<double> RooBukinPdf::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
   using namespace BatchHelpers;
-  using namespace BukinBatchEvaluate;
-    
-  EvaluateInfo info = getInfo( {&x,&Xp,&sigp,&xi,&rho1,&rho2}, begin, batchSize );
-  auto output = _batchData.makeWritableBatchUnInit(begin, info.size);
-  auto xData = x.getValBatch(begin, info.size);
+
+  EvaluateInfo info = getInfo( {&x, &Xp, &sigp, &xi, &rho1, &rho2}, begin, batchSize );
   if (info.nBatches == 0) {
-    throw std::logic_error("Requested a batch computation, but no batch data available.");
+    return {};
   }
-  else if (info.nBatches==1 && !xData.empty()) {
-    compute(info.size, output.data(), xData.data(), 
-    BracketAdapter<double> (Xp), 
-    BracketAdapter<double> (sigp), 
-    BracketAdapter<double> (xi), 
-    BracketAdapter<double> (rho1), 
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+  auto xData = x.getValBatch(begin, info.size);
+
+  if (info.nBatches==1 && !xData.empty()) {
+    compute(info.size, output.data(), xData.data(),
+    BracketAdapter<double> (Xp),
+    BracketAdapter<double> (sigp),
+    BracketAdapter<double> (xi),
+    BracketAdapter<double> (rho1),
     BracketAdapter<double> (rho2));
   }
   else {
-    compute(info.size, output.data(), 
-    BracketAdapterWithMask (x,x.getValBatch(begin,batchSize)), 
-    BracketAdapterWithMask (Xp,Xp.getValBatch(begin,batchSize)), 
-    BracketAdapterWithMask (sigp,sigp.getValBatch(begin,batchSize)), 
-    BracketAdapterWithMask (xi,xi.getValBatch(begin,batchSize)), 
-    BracketAdapterWithMask (rho1,rho1.getValBatch(begin,batchSize)), 
-    BracketAdapterWithMask (rho2,rho2.getValBatch(begin,batchSize)));
+    compute(info.size, output.data(),
+    BracketAdapterWithMask (x,x.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (Xp,Xp.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (sigp,sigp.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (xi,xi.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (rho1,rho1.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (rho2,rho2.getValBatch(begin,info.size)));
   }
   return output;
 }

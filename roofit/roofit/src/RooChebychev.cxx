@@ -183,7 +183,7 @@ Double_t RooChebychev::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-namespace ChebychevEvaluate {
+namespace {
 //Author: Emmanouil Michalainas, CERN 12 AUGUST 2019  
 
 void compute(  size_t batchSize, double xmax, double xmin,
@@ -223,17 +223,15 @@ void compute(  size_t batchSize, double xmax, double xmin,
 
 RooSpan<double> RooChebychev::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
   auto xData = _x.getValBatch(begin, batchSize);
+  if (xData.empty()) {
+    return {};
+  }
+  
   batchSize = xData.size();
   auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
-
-  if (xData.empty()) {
-        throw std::logic_error("Requested a batch computation, but no batch data available.");
-  }
-  else {
-    const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName() : nullptr);
-    const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName() : nullptr);
-    ChebychevEvaluate::compute(batchSize, xmax, xmin, output.data(), xData.data(), _coefList);
-  }
+  const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName() : nullptr);
+  const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName() : nullptr);
+  compute(batchSize, xmax, xmin, output.data(), xData.data(), _coefList);
   return output;
 }
 ////////////////////////////////////////////////////////////////////////////////

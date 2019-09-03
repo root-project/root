@@ -129,7 +129,7 @@ Double_t RooBernstein::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-namespace BernsteinEvaluate {
+namespace {
 //Author: Emmanouil Michalainas, CERN 16 AUGUST 2019  
 
 void compute(  size_t batchSize, double xmax, double xmin,
@@ -192,17 +192,15 @@ void compute(  size_t batchSize, double xmax, double xmin,
 
 RooSpan<double> RooBernstein::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
   auto xData = _x.getValBatch(begin, batchSize);
+  if (xData.empty()) {
+        return {};
+  }
+  
   batchSize = xData.size();
   auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
-
-  if (xData.empty()) {
-        throw std::logic_error("Requested a batch computation, but no batch data available.");
-  }
-  else {
-    const double xmax = _x.max();
-    const double xmin = _x.min();
-    BernsteinEvaluate::compute(batchSize, xmax, xmin, output.data(), xData.data(), _coefList);
-  }
+  const double xmax = _x.max();
+  const double xmin = _x.min();
+  compute(batchSize, xmax, xmin, output.data(), xData.data(), _coefList);
   return output;
 }
 

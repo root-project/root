@@ -95,7 +95,7 @@ Double_t RooGamma::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-namespace GammaBatchEvaluate {
+namespace {
 //Author: Emmanouil Michalainas, CERN 22 August 2019
 
 template<class Tx, class Tgamma, class Tbeta, class Tmu>
@@ -148,16 +148,15 @@ void compute(	size_t batchSize,
 
 RooSpan<double> RooGamma::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
   using namespace BatchHelpers;
-  using namespace GammaBatchEvaluate;
 
   EvaluateInfo info = getInfo( {&x, &gamma, &beta, &mu}, begin, batchSize );
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
-
-  auto xData = x.getValBatch(begin, info.size);
   if (info.nBatches == 0) {
-    throw std::logic_error("Requested a batch computation, but no batch data available.");
+    return {};
   }
-  else if (info.nBatches==1 && !xData.empty()) {
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+  auto xData = x.getValBatch(begin, info.size);
+
+  if (info.nBatches==1 && !xData.empty()) {
     compute(info.size, output.data(), xData.data(),
     BracketAdapter<double> (gamma),
     BracketAdapter<double> (beta),
