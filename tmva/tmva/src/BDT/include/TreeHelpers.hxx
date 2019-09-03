@@ -1,3 +1,20 @@
+/**********************************************************************************
+ * Project: ROOT - a Root-integrated toolkit for multivariate data analysis       *
+ * Package: TMVA                                                                  *
+ * Web    : http://tmva.sourceforge.net                                           *
+ *                                                                                *
+ * Description:                                                                   *
+ *                                                                                *
+ * Author: Luca Zampieri (luca.zampieri@alumni.epfl.ch)  01/09/2019               *
+ *                                                                                *
+ * Copyright (c) 2019:                                                            *
+ *      CERN, Switzerland                                                         *
+ *                                                                                *
+ * Redistribution and use in source and binary forms, with or without             *
+ * modification, are permitted according to the terms listed in LICENSE           *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
+ **********************************************************************************/
+
 #ifndef __TREE_HELPERS_H_
 #define __TREE_HELPERS_H_
 
@@ -18,24 +35,19 @@
 #include <ctime>
 #include <chrono>
 
-//
-/// sums internal values of vector
-template <class T>
-inline T vec_sum(std::vector<T> vec)
-{
-   return std::accumulate(vec.begin(), vec.end(), 0.0);
-}
-
-///////////////////////////////////////////////////////
-/// Objective functions
+////////////////////////////////////////////////////////////////////////////////
 /// logistic function
-template <class T>
+/// \param[in] value score to be transformed in probability
+/// \param[out] logistic function of the input
+template <typename T>
 inline T logistic_function(T value)
 {
    return 1. / (1. + (1. / std::exp(value)));
 }
-/// binary logistic
-template <class T>
+
+////////////////////////////////////////////////////////////////////////////////
+/// binary logistic function
+template <typename T>
 inline bool binary_logistic(T value)
 {
    return (logistic_function(value) > 0.5);
@@ -51,10 +63,12 @@ std::function<bool(float)> get_classification_function(std::string &s_class_func
    }
    return classification_function;
 }
-/// END objective functions
-/////////////////////////////////////////////////////77//
 
-// --------------- READING FILES ----------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Reads file into string
+///
+/// \param[in] filename
+/// \param[out] string containing the content of the file
 std::string read_file_string(const std::string &filename)
 {
    std::ifstream     t(filename);
@@ -63,14 +77,17 @@ std::string read_file_string(const std::string &filename)
    return buffer.str();
 }
 
-/// get linux time
-float get_time()
+////////////////////////////////////////////////////////////////////////////////
+/// param[out] linux time in milliseconds
+double get_time()
 {
    auto unix_timestamp        = std::chrono::seconds(std::time(NULL));
    int  unix_timestamp_x_1000 = std::chrono::milliseconds(unix_timestamp).count();
-   return static_cast<float>(unix_timestamp_x_1000);
+   return static_cast<double>(unix_timestamp_x_1000);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// \param[out] time processed and ready to be used as a namespace
 std::string get_time_string()
 {
    std::string s_time = std::to_string(get_time());
@@ -78,11 +95,13 @@ std::string get_time_string()
    return s_time;
 }
 
-//////////////////////////////////////////////////////
-/// CSV helpers
-
-/// read a line of a "csv file" format
-template <class T>
+////////////////////////////////////////////////////////////////////////////////
+/// read a line of a csv file format
+///
+/// \tparam T type, usually floating point type (float, double, long double)
+/// \param[in] s_line string contain a csv line
+/// \param[out] line written as a vector
+template <typename T>
 std::vector<T> _read_csv_line(std::string &s_line)
 {
    std::vector<T>    vector_line;
@@ -99,15 +118,18 @@ std::vector<T> _read_csv_line(std::string &s_line)
    return vector_line;
 }
 
-/// reads csv file contaning floats into vector<vector<float>>
-template <class T>
+////////////////////////////////////////////////////////////////////////////////
+/// reads csv file into vector<vector<T>>
+///
+/// \tparam T type, usually floating point type (float, double, long double)
+/// \param[in] filename of the csv file
+/// \param[out] content written in a vector of vectors
+template <typename T>
 std::vector<std::vector<T>> read_csv(const std::string &filename)
 {
-   // std::ifstream fin;
    std::ifstream               file(filename);
    std::vector<std::vector<T>> out;
-
-   std::string cell, line;
+   std::string                 cell, line;
    while (file.good()) {
       getline(file, line);
       if (!line.empty()) out.push_back(_read_csv_line<T>(line));
@@ -115,8 +137,13 @@ std::vector<std::vector<T>> read_csv(const std::string &filename)
    return out;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 /// write vector of vectors to csv file
-template <class T>
+///
+/// \tparam T type, usually floating point type (float, double, long double)
+/// \param[in] filename where to write
+/// \param[in] data to write to file
+template <typename T>
 void write_csv(const std::string &filename, std::vector<std::vector<T>> values_vec)
 {
    std::ofstream fout;
@@ -141,8 +168,13 @@ void write_csv(const std::string &filename, std::vector<std::vector<T>> values_v
    fout.close();
 }
 
+////////////////////////////////////////////////////////////////////////////////
 /// write vector to csv file
-template <class T>
+///
+/// \tparam T type, usually floating point type (float, double, long double)
+/// \param[in] filename where to write
+/// \param[in] data to write to file
+template <typename T>
 void write_csv(const std::string &filename, std::vector<T> values_vec)
 {
    std::ofstream fout;
@@ -156,6 +188,12 @@ void write_csv(const std::string &filename, std::vector<T> values_vec)
    fout.close();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// convert vector of vectors into a single vector
+///
+/// \tparam T type, usually floating point type (float, double, long double)
+/// \param[in] vec_vec data to convert
+/// \param[in] converted vector
 template <typename T>
 std::vector<T> convert_VecMatrix2Vec(std::vector<std::vector<T>> vec_vec)
 {
@@ -171,13 +209,18 @@ std::vector<T> convert_VecMatrix2Vec(std::vector<std::vector<T>> vec_vec)
    return out;
 }
 
-// Data structure for tests and benchmarking
+////////////////////////////////////////////////////////////////////////////////
+/// Data structure for tests and benchmarking
+///
+/// \tparam T type, usually floating point type (float, double, long double)
+///
+/// Contains all data to make different kind of predictions
 template <typename T>
 struct DataStruct {
-   const std::vector<std::vector<T>>    events_vec_vec;
-   const std::vector<T>                 events_vector;
-   const T *                            events_pointer = nullptr;
-   const std::vector<std::vector<bool>> groundtruth;
+   const std::vector<std::vector<T>>    events_vec_vec;           ///< events
+   const std::vector<T>                 events_vector;            ///< events
+   const T *                            events_pointer = nullptr; ///< events
+   const std::vector<std::vector<bool>> groundtruth;              ///< "real" predictions
    std::vector<T>                       scores;
    std::vector<bool>                    preds;
    const int                            rows, cols;
