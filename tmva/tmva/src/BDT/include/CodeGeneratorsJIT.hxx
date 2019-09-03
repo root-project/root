@@ -23,7 +23,7 @@
 /// \param[in] s_namespace string containing the namespace name
 /// \param[out] jitted function
 template <typename T>
-std::function<bool(const T *event)> jit_forest(const std::string &tojit, const std::string s_namespace = "")
+std::function<T(const T *event)> jit_forest(const std::string &tojit, const std::string s_namespace = "")
 {
    gInterpreter->Declare(tojit.c_str());
    bool use_namespaces = (!s_namespace.empty());
@@ -33,9 +33,9 @@ std::function<bool(const T *event)> jit_forest(const std::string &tojit, const s
       func_ref_name = "#pragma cling optimize(3)\n & jitted_" + s_namespace + "::generated_forest";
    else
       func_ref_name = "#pragma cling optimize(3)\n & generated_forest";
-   auto ptr                = gInterpreter->Calc(func_ref_name.c_str());
-   bool (*func)(const T *) = reinterpret_cast<bool (*)(const T *)>(ptr);
-   std::function<bool(const T *)> fWrapped{func};
+   auto ptr             = gInterpreter->Calc(func_ref_name.c_str());
+   T (*func)(const T *) = reinterpret_cast<T (*)(const T *)>(ptr);
+   std::function<T(const T *)> fWrapped{func};
    return fWrapped;
 }
 
@@ -99,9 +99,9 @@ void generate_objective_function(std::ostream &fout, const std::string &s_obj_fu
 {
    const std::string s_logistic = "logistic";
    const std::string s_identity = "identity";
-   if (s_obj_func.compare(s_logistic)) {
+   if (s_obj_func.compare(s_logistic) == 0) {
       fout << "1. / (1. + (1. / std::exp(result)));" << std::endl;
-   } else if (s_obj_func.compare(s_identity)) {
+   } else if (s_obj_func.compare(s_identity) == 0) {
       fout << "result;" << std::endl;
    } else {
       throw std::invalid_argument("Unknown objective function for JITTING");
@@ -251,7 +251,8 @@ void generate_features_array(std::ostream &fout, const std::vector<BranchlessTre
 /// \tparam T type for the prediction. Usually floating point type (float, double, long double)
 /// \param[in] fout stream where the code is written
 /// \param[in] tree to be written down
-/// \param[in] tree_index index of the tree in the containing vector of trees
+/// \param[in] tree_index_thresholds index of the current tree in the whole array
+/// \param[in] tree_index_features index of the current tree in the whole array
 template <typename T>
 void generate_branchless_tree(std::ostream &fout, const BranchlessTree::Tree<T> &tree, const int tree_index_thresholds,
                               const int tree_index_features)
@@ -263,6 +264,29 @@ void generate_branchless_tree(std::ostream &fout, const BranchlessTree::Tree<T> 
    }
    fout << "result += thresholds[" << tree_index_thresholds << "+index];" << std::endl;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Generates long array of thresholds
+///
+/// \tparam T type for the prediction. Usually floating point type (float, double, long double)
+/// \param[in] fout stream where the code is written
+/// \param[in] tree to be written down
+/// \param[in] tree_index_thresholds index of the current tree in the whole array
+/// \param[in] tree_index_features index of the current tree in the whole arraytemplate <typename T>
+///*
+template <typename T>
+void generate_branchless_tree2(std::ostream &fout, const BranchlessTree::Tree<T> &tree, const int tree_index_thresholds,
+                               const int tree_index_features)
+{
+   fout << "index=0;" << std::endl;
+   for (size_t j = 0; j < tree.tree_depth; ++j) {
+      fout << "index = index + 1 + (event[features[" << tree_index_features << "+index]] > thresholds["
+           << tree_index_thresholds << "+index])*" << (BranchlessTree::myPow(2, tree.tree_depth - j - 1) - 1) << ";"
+           << std::endl; // write
+   }
+   fout << "result += thresholds[" << tree_index_thresholds << "+index];" << std::endl;
+}
+//*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate the code for Forest evaluation

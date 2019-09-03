@@ -234,8 +234,11 @@ struct DataStruct {
         events_pointer(events_vector.data()), groundtruth(read_csv<bool>(preds_file)), rows(events_vec_vec.size()),
         cols(events_vec_vec[0].size())
    {
-      preds.reserve(rows);
-      scores.reserve(rows);
+      if (rows < 1) {
+         std::cerr << "No events in event vector!!! (usually bad) \n";
+      }
+      preds.resize(rows);
+      scores.resize(rows);
    }
 };
 

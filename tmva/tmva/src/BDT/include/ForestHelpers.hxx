@@ -15,7 +15,7 @@
 /// \param[in] value score to be transformed in probability
 /// \param[out] classified input
 template <typename T>
-inline int classify_binary(T value)
+inline bool classify_binary(T value)
 {
    return (value > 0.5);
 }
@@ -30,7 +30,7 @@ template <typename T>
 void _predict(T *scores, const int num_predictions, std::vector<bool> &predictions)
 {
    for (int i = 0; i < num_predictions; i++) {
-      predictions[i] = classify_binary(scores[i]);
+      predictions[i] = classify_binary<T>(scores[i]);
    }
 }
 

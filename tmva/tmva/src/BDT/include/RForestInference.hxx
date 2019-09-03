@@ -29,14 +29,14 @@ public:
    ForestBase() : s_obj_func("logistic"), objective_func(logistic_function<T>) {}
 
    /// Set objective function from a string name
-   void set_objective_function(const std::string &func_name); // or int KIND
+   // void set_objective_function(const std::string &func_name); // or int KIND
    /// Inference event by events
    void inference(const T *events_vector, const int rows, const int cols, T *preds);
    /// Inference in a loop blocked fashion
    void inference(const T *events_vector, const int rows, const int cols, T *preds, const int loop_size);
 
    /// Goes from probability to classification
-   void _predict(T *predictions, const int num_predictions, int *);
+   // void _predict(T *predictions, const int num_predictions, int *);
 };
 
 /**
@@ -75,7 +75,7 @@ public:
  * \tparam T type for the prediction. Usually floating point type (float, double, long double)
  */
 template <typename T>
-class ForestBaseJIT : public ForestBase<T, std::function<bool(const T *)>> {
+class ForestBaseJIT : public ForestBase<T, std::function<T(const T *)>> {
 public:
    /// Inference event by events
    void inference(const T *events_vector, const int rows, const int cols, T *preds);
@@ -108,6 +108,7 @@ public:
 /// \param[in] rows number of events in events_vecctor
 /// \param[in] cols number of features per events i.e. columns in events_vector
 /// \param[in] preds pointer to the pre-allocated data that's gonna be filled by this function
+///*
 template <typename T, typename treeType>
 void ForestBase<T, treeType>::inference(const T *events_vector, const int rows, const int cols, T *preds)
 {
@@ -120,6 +121,7 @@ void ForestBase<T, treeType>::inference(const T *events_vector, const int rows, 
       preds[i] = this->objective_func(preds_tmp);
    }
 }
+//*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \param[in] events_vector pointer to data containing the events
@@ -127,6 +129,7 @@ void ForestBase<T, treeType>::inference(const T *events_vector, const int rows, 
 /// \param[in] cols number of features per events i.e. columns in events_vector
 /// \param[in] preds pointer to the pre-allocated data that's gonna be filled by this function
 /// \param[in] loop_size
+/*
 template <typename T, typename treeType>
 void ForestBase<T, treeType>::inference(const T *events_vector, const int rows, const int cols, T *preds,
                                         const int loop_size)
@@ -141,8 +144,8 @@ void ForestBase<T, treeType>::inference(const T *events_vector, const int rows, 
 
    for (; index < rows - rest; index += loop_size) {
       for (int i = 0; i < num_trees; i++) {
-         for (int j = index; j < index + loop_size; j++) {
-            preds_tmp_arr[j - index] += trees[i].inference(events_vector + i * cols);
+         for (int j = 0; j < loop_size; j++) {
+            preds_tmp_arr[j] += trees[i].inference(events_vector + (index + j) * cols);
          }
       }
       for (int j = 0; j < loop_size; j++) {
@@ -160,6 +163,28 @@ void ForestBase<T, treeType>::inference(const T *events_vector, const int rows, 
    }
    delete[] preds_tmp_arr;
 }
+// */ //
+
+// /*
+template <typename T, typename treeType>
+void ForestBase<T, treeType>::inference(const T *events_vector, const int rows, const int cols, T *preds,
+                                        const int loop_size)
+{
+   for (int j = 0; j < rows; j++) {
+      preds[j] = 0;
+   }
+
+   for (int i = 0; i < this->trees.size(); i++) {
+      for (int j = 0; j < rows; j++) {
+         preds[j] += trees[i].inference(events_vector + j * cols);
+      }
+   }
+
+   for (int j = 0; j < rows; j++) {
+      preds[j] = this->objective_func(preds[j]);
+   }
+}
+//*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \param[in] events_vector pointer to data containing the events
@@ -173,6 +198,7 @@ void ForestBaseJIT<T>::inference(const T *events_vector, const int rows, const i
    for (int i = 0; i < rows; i++) {
       // preds[i]
       preds[i] = this->trees(events_vector + i * cols);
+      // std::cout << preds[i] << "  \n";
    }
 }
 

@@ -1,5 +1,6 @@
 #!/bin/bash
 rm mybenchmark.exe
+make -f makefile_bench.make clean
 make -f makefile_bench.make
 ./mybenchmark.exe --benchmark_repetitions=5 \
                   --benchmark_format=console \

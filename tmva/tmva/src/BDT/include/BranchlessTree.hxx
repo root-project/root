@@ -32,7 +32,12 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 ///// functions definitions /////
 ////////////////////////////////////////////////////////////////////////////////
-
+int myPow(int x, int p)
+{
+   int i = 1;
+   for (int j = 1; j <= p; j++) i *= x;
+   return i;
+}
 ////////////////////////////////////////////////////////////////////////////////
 /// \param[in] event pointer to data containing the event
 /// \param[out] Tree score, result of the inference
@@ -42,6 +47,10 @@ inline T Tree<T>::inference(const T *event)
    int index = 0; // should we switch to size_t ?
    for (int iLevel = 0; iLevel < this->tree_depth; ++iLevel) {
       index = 2 * index + 1 + (event[this->features[index]] > this->thresholds[index]);
+      //    index =
+      //       index + 1 +
+      //       (myPow(2, this->tree_depth - iLevel - 1) - 1) * (int)(event[this->features[index]] >
+      //       this->thresholds[index]);
    }
    return this->thresholds[index];
 }

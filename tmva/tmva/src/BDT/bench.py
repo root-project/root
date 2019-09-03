@@ -136,11 +136,7 @@ if __name__ == "__main__":
     )
     # """
     execute_bench(
-        "./tmp/timeVSdepth/",
-        [2, 4, 6, 8, 10, 12, 15, 18, 21, 13],
-        1,
-        "max_depth",
-        timeVSdepth,  # repetitions
+        "./tmp/timeVSdepth/", [2, 4, 6], 1, "max_depth", timeVSdepth  # repetitions
     )
 
 

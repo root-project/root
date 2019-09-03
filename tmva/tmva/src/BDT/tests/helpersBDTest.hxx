@@ -18,3 +18,24 @@ TEST(helpersBDT, test_write_vector_vector)
       }
    }
 }
+
+TEST(helpersBDT, test_write_vector)
+{
+   std::string filename     = "./data/python_predictions.csv";
+   std::string tmp_filename = "./data/tmp_write.csv";
+
+   std::vector<std::vector<bool>> data = read_csv<bool>(filename);
+
+   std::vector<bool> data2(data.size());
+   for (int i = 0; i < data.size(); i++) {
+      data2[i] = data[i][0];
+   }
+   write_csv<bool>(tmp_filename, data2);
+   std::vector<std::vector<bool>> data3 = read_csv<bool>(tmp_filename);
+
+   ASSERT_EQ(data.size(), data3.size());
+
+   for (size_t i = 0; i < data.size(); i++) {
+      ASSERT_EQ(data[i][0], data3[i][0]);
+   }
+}
