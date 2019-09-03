@@ -63,11 +63,11 @@ for _, module_name, _ in  pkgutil.walk_packages(pyz.__path__):
 # Configure ROOT facade module
 import sys
 from ._facade import ROOTFacade
-sys.modules[__name__] = ROOTFacade(sys.modules[__name__])
+_is_ipython = hasattr(__builtins__, '__IPYTHON__') or 'IPython' in sys.modules
+sys.modules[__name__] = ROOTFacade(sys.modules[__name__], _is_ipython)
 
 # Configuration for usage from Jupyter notebooks
-is_ipython = hasattr(__builtins__, '__IPYTHON__') or 'IPython' in sys.modules
-if is_ipython:
+if _is_ipython:
     from IPython import get_ipython
     ip = get_ipython()
     if hasattr(ip,"kernel"):
