@@ -31,6 +31,7 @@ class PyROOTApplication(object):
         # Integrate IPython >= 5 with ROOT's event loop
         # Check for new GUI events until there is some user input to process
 
+        from IPython import get_ipython
         from IPython.terminal import pt_inputhooks
 
         def inputhook(context):
