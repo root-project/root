@@ -93,7 +93,7 @@ Double_t RooCBShape::evaluate() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-namespace CBShapeBatchEvaluate {
+namespace {
 //Author: Emmanouil Michalainas, CERN 21 August 2019
 
 template<class Tm, class Tm0, class Tsigma, class Talpha, class Tn>
@@ -121,16 +121,15 @@ void compute(	size_t batchSize,
 
 RooSpan<double> RooCBShape::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
   using namespace BatchHelpers;
-  using namespace CBShapeBatchEvaluate;
 
   EvaluateInfo info = getInfo( {&m, &m0, &sigma, &alpha, &n}, begin, batchSize );
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
-
-  auto mData = m.getValBatch(begin, info.size);
   if (info.nBatches == 0) {
-    throw std::logic_error("Requested a batch computation, but no batch data available.");
+    return {};
   }
-  else if (info.nBatches==1 && !mData.empty()) {
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+  auto mData = m.getValBatch(begin, info.size);
+
+  if (info.nBatches==1 && !mData.empty()) {
     compute(info.size, output.data(), mData.data(),
     BracketAdapter<double> (m0),
     BracketAdapter<double> (sigma),
@@ -139,11 +138,11 @@ RooSpan<double> RooCBShape::evaluateBatch(std::size_t begin, std::size_t batchSi
   }
   else {
     compute(info.size, output.data(),
-    BracketAdapterWithMask (m,m.getValBatch(begin,batchSize)),
-    BracketAdapterWithMask (m0,m0.getValBatch(begin,batchSize)),
-    BracketAdapterWithMask (sigma,sigma.getValBatch(begin,batchSize)),
-    BracketAdapterWithMask (alpha,alpha.getValBatch(begin,batchSize)),
-    BracketAdapterWithMask (n,n.getValBatch(begin,batchSize)));
+    BracketAdapterWithMask (m,m.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (m0,m0.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (sigma,sigma.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (alpha,alpha.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (n,n.getValBatch(begin,info.size)));
   }
   return output;
 }

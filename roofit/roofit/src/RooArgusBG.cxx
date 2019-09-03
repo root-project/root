@@ -26,7 +26,6 @@ RooArgusBG is a RooAbsPdf implementation describing the ARGUS background shape.
 */
 
 #include "RooArgusBG.h"
-#include "RooFit.h"
 #include "RooRealVar.h"
 #include "RooRealConstant.h"
 #include "RooMath.h"
@@ -91,7 +90,7 @@ Double_t RooArgusBG::evaluate() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-namespace ArgusBatchEvaluate {
+namespace {
 //Author: Emmanouil Michalainas, CERN 19 AUGUST 2019  
 
 template<class Tm, class Tm0, class Tc, class Tp>
@@ -113,26 +112,26 @@ void compute(  size_t batchSize,
 
 RooSpan<double> RooArgusBG::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
   using namespace BatchHelpers;
-  using namespace ArgusBatchEvaluate;
-    
-  EvaluateInfo info = getInfo( {&m,&m0,&c,&p}, begin, batchSize );
-  auto output = _batchData.makeWritableBatchUnInit(begin, info.size);
-  auto mData = m.getValBatch(begin, info.size);
+
+  EvaluateInfo info = getInfo( {&m, &m0, &c, &p}, begin, batchSize );
   if (info.nBatches == 0) {
-    throw std::logic_error("Requested a batch computation, but no batch data available.");
+    return {};
   }
-  else if (info.nBatches==1 && !mData.empty()) {
-    compute(info.size, output.data(), mData.data(), 
-    BracketAdapter<double> (m0), 
-    BracketAdapter<double> (c), 
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+  auto mData = m.getValBatch(begin, info.size);
+
+  if (info.nBatches==1 && !mData.empty()) {
+    compute(info.size, output.data(), mData.data(),
+    BracketAdapter<double> (m0),
+    BracketAdapter<double> (c),
     BracketAdapter<double> (p));
   }
   else {
-    compute(info.size, output.data(), 
-    BracketAdapterWithMask (m,m.getValBatch(begin,batchSize)), 
-    BracketAdapterWithMask (m0,m0.getValBatch(begin,batchSize)), 
-    BracketAdapterWithMask (c,c.getValBatch(begin,batchSize)), 
-    BracketAdapterWithMask (p,p.getValBatch(begin,batchSize)));
+    compute(info.size, output.data(),
+    BracketAdapterWithMask (m,m.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (m0,m0.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (c,c.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (p,p.getValBatch(begin,info.size)));
   }
   return output;
 }
