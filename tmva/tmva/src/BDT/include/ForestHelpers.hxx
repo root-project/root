@@ -70,9 +70,9 @@ template <typename T>
 void fill_tree(const int &index, const int &max_index, std::vector<T> &thresholds, std::vector<int> &features,
                const T &threshold_value, const int &feature_value)
 {
+   if (index < max_index / 2) features.at(index) = feature_value;
    if (index < max_index) {
       thresholds.at(index) = threshold_value;
-      features.at(index)   = feature_value;
       fill_tree<T>(index * 2 + 1, max_index, thresholds, features, threshold_value, feature_value); // fill true child
       fill_tree<T>(index * 2 + 2, max_index, thresholds, features, threshold_value, feature_value); // fill false child
    }
@@ -116,10 +116,9 @@ void convert_branchedTree_2_branchlessTree(const BranchedTree::Tree<T> &tree_uni
 {
    int    depth        = get_max_depth(tree_unique.nodes);
    size_t array_length = std::pow(2, depth + 1) - 1; // (2^0+2^1+2^2+...)
-   tree.set_array_length(array_length);
    tree.set_tree_depth(depth);
    std::vector<T>   thresholds(array_length);
-   std::vector<int> features(array_length);
+   std::vector<int> features(array_length / 2);
    recurse_through_tree<T>(*tree_unique.nodes, thresholds, features);
    tree.thresholds.swap(thresholds);
    tree.features.swap(features);

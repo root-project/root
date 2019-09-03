@@ -253,14 +253,15 @@ void generate_features_array(std::ostream &fout, const std::vector<BranchlessTre
 /// \param[in] tree to be written down
 /// \param[in] tree_index index of the tree in the containing vector of trees
 template <typename T>
-void generate_branchless_tree(std::ostream &fout, const BranchlessTree::Tree<T> &tree, const int tree_index)
+void generate_branchless_tree(std::ostream &fout, const BranchlessTree::Tree<T> &tree, const int tree_index_thresholds,
+                              const int tree_index_features)
 {
    fout << "index=0;" << std::endl;
    for (size_t j = 0; j < tree.tree_depth; ++j) {
-      fout << "index = 2*index + 1 + (event[features[" << std::to_string(tree_index) << "+index]] > thresholds["
-           << std::to_string(tree_index) << "+index]);" << std::endl; // write
+      fout << "index = 2*index + 1 + (event[features[" << tree_index_features << "+index]] > thresholds["
+           << tree_index_thresholds << "+index]);" << std::endl; // write
    }
-   fout << "result += thresholds[" << std::to_string(tree_index) << "+index];" << std::endl;
+   fout << "result += thresholds[" << tree_index_thresholds << "+index];" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -275,24 +276,28 @@ template <typename T>
 void generate_code_forest(std::ostream &fout, const std::vector<BranchlessTree::Tree<T>> &trees, std::string s_id = "",
                           const std::string &s_obj_func = "logistic")
 {
-   int total_array_length = 0;
+   int total_array_length_thresholds = 0;
+   int total_array_length_features   = 0;
    for (auto &tree : trees) {
-      total_array_length += tree.array_length;
+      total_array_length_thresholds += tree.thresholds.size();
+      total_array_length_features += tree.features.size();
    }
    generate_file_header(fout, s_id);
    // Generates the arrays with all cuts, and features on which to cut
-   generate_threshold_array<T>(fout, trees, total_array_length);
-   generate_features_array<T>(fout, trees, total_array_length);
+   generate_threshold_array<T>(fout, trees, total_array_length_thresholds);
+   generate_features_array<T>(fout, trees, total_array_length_features);
 
    fout << type_as_string<T>() << " generated_forest (const " << type_as_string<T>() << " *event){" << std::endl
         << "" << type_as_string<T>() << " result = 0;" << std::endl;
 
    fout << "int index=0;" << std::endl;
 
-   int current_tree_index = 0;
+   int tree_index_thresholds = 0;
+   int tree_index_features   = 0;
    for (int i = 0; i < trees.size(); i++) {
-      generate_branchless_tree<T>(fout, trees[i], current_tree_index);
-      current_tree_index += trees[i].array_length;
+      generate_branchless_tree<T>(fout, trees[i], tree_index_thresholds, tree_index_features);
+      tree_index_thresholds += trees[i].thresholds.size();
+      tree_index_features += trees[i].features.size();
    }
    generate_file_footer(fout, s_id, s_obj_func);
 }

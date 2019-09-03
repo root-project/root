@@ -20,11 +20,10 @@ namespace BranchlessTree {
 template <typename T>
 class Tree {
 public:
-   size_t           array_length; ///< array_lengths
-   int              tree_depth;   ///< depth of the tree
-   std::vector<T>   thresholds;   ///< cut thresholds or scores if corresponding node is a leaf
-   std::vector<int> features;     ///< cut variables / features
-   void             set_array_length(const size_t &array_length) { this->array_length = array_length; }
+   // size_t           array_length; ///< array_lengths
+   int              tree_depth; ///< depth of the tree
+   std::vector<T>   thresholds; ///< cut thresholds or scores if corresponding node is a leaf
+   std::vector<int> features;   ///< cut variables / features
    void             set_tree_depth(const int &tree_depth) { this->tree_depth = tree_depth; }
    /// Perform inference on sigle node
    inline T inference(const T *event);
@@ -64,6 +63,16 @@ bool cmp(const Tree<T> &a, const Tree<T> &b)
    } else {
       return a.features[0] < b.features[0];
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the maximal array_length, given a depth
+///
+/// \param[in] depth of the tree
+/// \param[out] length of the topological sorted tree
+inline size_t get_array_length(const size_t depth)
+{
+   return std::pow(2, depth + 1) - 1; // (2^0+2^1+2^2+...)
 }
 
 ////////// reading functions //////////
