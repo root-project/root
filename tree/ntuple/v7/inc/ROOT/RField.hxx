@@ -52,6 +52,7 @@ class RCollectionNTuple;
 class REntry;
 class RFieldCollection;
 class RNTupleModel;
+class RValueVisitor;
 
 namespace Detail {
 
@@ -94,12 +95,16 @@ private:
       int fOrder = 1;
       /// The field itself is also included in this number.
       int fNumSiblingFields = 1;
+      /// Children refers to elements of fSubField
+      int fNumChildren = 0;
+      
    public:
       RLevelInfo() = default;
       RLevelInfo(const RFieldBase *field) : RLevelInfo() {
          fLevel = GetLevel(field);
          fOrder = GetOrder(field);
          fNumSiblingFields = GetNumSiblings(field);
+         fNumChildren = GetNumChildren(field);
       }
       int GetNumSiblings(const RFieldBase *field = nullptr) const {
          if (field && field->GetParent())
@@ -107,7 +112,7 @@ private:
          return fNumSiblingFields;
       }
       int GetLevel(const RFieldBase *field = nullptr) const {
-         if(!field)
+         if (!field)
             return fLevel;
          int level{0};
          const RFieldBase *parentPtr{field->GetParent()};
@@ -118,9 +123,15 @@ private:
          return level;
       }
       int GetOrder(const RFieldBase *field = nullptr) const {
-         if(field)
+         if (field)
             return field->fOrder;
          return fOrder;
+      }
+      int GetNumChildren(const RFieldBase *field = nullptr) const {
+         if (field) {
+            return static_cast<int>(field->fSubFields.size());
+         }
+         return fNumChildren;
       }
    };
    /// First subfield of parentfield has fOrder 1, the next fOrder 2, etc. Value set by RFieldBase::Attach()
@@ -260,6 +271,7 @@ public:
    /// Used for the visitor design pattern, see for example RNTupleReader::Print()
    virtual void TraverseVisitor(RNTupleVisitor &visitor, int level = 0) const;
    virtual void AcceptVisitor(RNTupleVisitor &visitor, int level) const;
+   virtual void TraverseValueVisitor(RValueVisitor &visitor, int level) const;
 
    RLevelInfo GetLevelInfo() const {
       return RLevelInfo(this);
@@ -558,6 +570,7 @@ public:
          Detail::RColumnElement<bool, EColumnType::kBit>(static_cast<bool*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(bool); }
+   void AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const final;
 };
 
 template <>
@@ -594,6 +607,7 @@ public:
          Detail::RColumnElement<float, EColumnType::kReal32>(static_cast<float*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(float); }
+   void AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const final;
 };
 
 
@@ -631,6 +645,7 @@ public:
          Detail::RColumnElement<double, EColumnType::kReal64>(static_cast<double*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(double); }
+   void AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const final;
 };
 
 template <>
@@ -667,6 +682,7 @@ public:
          Detail::RColumnElement<std::uint8_t, EColumnType::kByte>(static_cast<std::uint8_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::uint8_t); }
+   void AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const final;
 };
 
 template <>
@@ -703,6 +719,7 @@ public:
          Detail::RColumnElement<std::int32_t, EColumnType::kInt32>(static_cast<std::int32_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::int32_t); }
+   void AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const final;
 };
 
 template <>
@@ -739,6 +756,7 @@ public:
          Detail::RColumnElement<std::uint32_t, EColumnType::kInt32>(static_cast<std::uint32_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::uint32_t); }
+   void AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const final;
 };
 
 template <>
@@ -775,6 +793,7 @@ public:
          Detail::RColumnElement<std::uint64_t, EColumnType::kInt64>(static_cast<std::uint64_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::uint64_t); }
+   void AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const final;
 };
 
 
@@ -819,6 +838,7 @@ public:
    size_t GetValueSize() const final { return sizeof(std::string); }
    size_t GetAlignment() const final { return std::alignment_of<std::string>(); }
    void CommitCluster() final;
+   void AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const final;
 };
 
 
