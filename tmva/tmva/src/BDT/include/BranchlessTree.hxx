@@ -1,9 +1,10 @@
 #ifndef __BRANCHLESS_TREE_HXX_
 #define __BRANCHLESS_TREE_HXX_
 
+#include "json.hpp"
+
 #include <string>
 #include <vector>
-#include "json.hpp"
 
 using json = nlohmann::json;
 

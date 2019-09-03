@@ -108,7 +108,7 @@ void write_generated_code_to_file(const std::vector<trees_kind> &trees, const st
    // filename = generated_files_path + "generated_forest.h";
    fb.open(filename, std::ios::out);
    std::ostream os(&fb);
-   generate_code_forest<T>(os, trees, trees.size(), s_obj_func);
+   generate_code_forest<T>(os, trees, s_obj_func);
    fb.close();
 }
 
@@ -126,7 +126,7 @@ std::function<T(const T *)> JitTrees(const std::vector<trees_kind> &trees, const
    // JIT
    std::string       s_namespace_name = generate_namespace_name();
    std::stringstream ss;
-   generate_code_forest<T>(ss, trees, trees.size(), s_namespace_name, s_obj_func);
+   generate_code_forest<T>(ss, trees, s_namespace_name, s_obj_func);
    std::string s_trees = ss.str();
    return jit_forest<T>(s_trees, s_namespace_name);
 }

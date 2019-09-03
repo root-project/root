@@ -1,10 +1,11 @@
 #ifndef __BRANCHEDTREE_HXX_
 #define __BRANCHEDTREE_HXX_
 
+#include "json.hpp"
+
 #include <string>
 #include <vector>
 #include <memory>
-#include "json.hpp"
 
 using json = nlohmann::json;
 
@@ -76,7 +77,7 @@ inline T Node<T>::inference(const T *event)
 ////////////////////////////////////////////////////////////////////////////////
 /// Reads members of a node of a tree that is in a json format
 ///
-/// \tparam T type for the inference
+/// \tparam T type for the prediction. Usually floating point type (float, double, long double)
 /// \param[in] jTree json containing the tree
 /// \param[in] tmp_node the node which members are gonna be filled by this function
 template <typename T>

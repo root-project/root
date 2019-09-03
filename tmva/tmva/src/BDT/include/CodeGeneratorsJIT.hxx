@@ -1,26 +1,27 @@
 #ifndef __JIT_CODE_GENERATORS_HXX_
 #define __JIT_CODE_GENERATORS_HXX_
 
-#include <string>
-#include <map>
-#include <iostream>
-#include "json.hpp"
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <vector>
-
 #include "BranchlessTree.hxx"
 #include "BranchedTree.hxx"
 #include "TreeHelpers.hxx"
 
 #include "TInterpreter.h" // for gInterpreter
 
-//////////////////////////////////////////////////////
-/// JITTING FUNCTIONS
-//////////////////////////////////////////////////////
+#include <fstream>
+#include <string>
+#include <vector>
 
-/// JIT forest from sringed code
+////////////////////////////////////////////////////////////////////////////////
+///// JITTING FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+/// JIT forest from a string containing generated code with -O3 optimization
+///
+/// \tparam T type for the prediction. Usually floating point type (float, double, long double)
+/// \param[in] tojit contains the code to be jitted
+/// \param[in] s_namespace string containing the namespace name
+/// \param[out] jitted function
 template <typename T>
 std::function<bool(const T *event)> jit_forest(const std::string &tojit, const std::string s_namespace = "")
 {
@@ -38,18 +39,20 @@ std::function<bool(const T *event)> jit_forest(const std::string &tojit, const s
    return fWrapped;
 }
 
-//////////////////////////////////////////////////////
-/// CODE GENERATION FUNCTIONS
-//////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+///// CODE GENERATION FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////
 /// Helper to write the type as string
+///
+/// \tparam T type for the prediction. Usually floating point type (float, double, long double)
 template <typename T> // primary template
 std::string type_as_string()
 {
    static_assert(std::is_floating_point<T>::value,
                  "This function has not been specialized for the provided type. Type has to be a floating_point type");
 }
-
 template <>
 std::string type_as_string<float>()
 {
@@ -60,18 +63,22 @@ std::string type_as_string<double>()
 {
    return "double";
 }
-
 template <>
 std::string type_as_string<long double>()
 {
    return "long double";
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Generates headers for generated code
+///
+/// \param[in] fout stream where the code is written
+/// \param[in] s_id namespace postfix
 void generate_file_header(std::ostream &fout, const std::string &s_id)
 {
    bool use_namespaces = (!s_id.empty());
 
-   fout << "// File automatically generated! " << std::endl;
+   fout << "// Code automatically generated! " << std::endl;
    fout << "/// Functions that defines the"
         << " inference on a forest" << std::endl;
    fout << std::endl << std::endl;
@@ -83,6 +90,11 @@ void generate_file_header(std::ostream &fout, const std::string &s_id)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Generates objective functions for generated code
+///
+/// \param[in] fout stream where the code is written
+/// \param[in] s_obj_func name of objective functions
 void generate_objective_function(std::ostream &fout, const std::string &s_obj_func)
 {
    const std::string s_logistic = "logistic";
@@ -96,18 +108,19 @@ void generate_objective_function(std::ostream &fout, const std::string &s_obj_fu
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Generates footer for generated code
+///
+/// \param[in] fout stream where the code is written
+/// \param[in] s_id namespace postfix
+/// \param[in] s_obj_func name of objective functions
 void generate_file_footer(std::ostream &fout, const std::string &s_id, const std::string &s_obj_func)
 {
    bool use_namespaces = (!s_id.empty());
-   // fout << "result = 1. / (1. + (1. / std::exp(result)));" << std::endl;
-   // fout << "return (result > 0.5);" << std::endl;
-
    fout << "return ";
    generate_objective_function(fout, s_obj_func);
    fout << std::endl;
-
    fout << "} // end of function" << std::endl;
-
    // close namespace
    if (use_namespaces) {
       fout << "} // end of <prefix>" << s_id << " namespace" << std::endl;
@@ -118,11 +131,14 @@ void generate_file_footer(std::ostream &fout, const std::string &s_id, const std
 ///// BRANCHED VERSION /////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-/// generates if then else statements for bdts
+////////////////////////////////////////////////////////////////////////////////
+/// Generates if then else statements for bdts given a node
+///
+/// \tparam T type for the prediction. Usually floating point type (float, double, long double)
+/// \param[in] fout stream where the code is written
+/// \param[in] node to be written down
 template <typename T>
-void generate_if_statement_for_bdt(std::ostream &fout,
-                                   // std::shared_ptr<Node> node
-                                   const BranchedTree::Node<T> *node)
+void generate_if_statement_for_bdt(std::ostream &fout, const BranchedTree::Node<T> *node)
 {
 
    std::string condition =
@@ -149,15 +165,22 @@ void generate_if_statement_for_bdt(std::ostream &fout,
    fout << "}" << std::endl;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 /// Generate the code for Forest evaluation
+///
+/// \tparam T type for the prediction. Usually floating point type (float, double, long double)
+/// \param[in] fout stream where the code is written
+/// \param[in] tree to be written down
+/// \param[in] s_id namespace postfix
+/// \param[in] s_obj_func name of objective functions
 template <typename T>
-void generate_code_forest(std::ostream &fout, const std::vector<BranchedTree::Tree<T>> &trees, int number_of_trees,
-                          std::string s_id = "", const std::string &s_obj_func = "logistic")
+void generate_code_forest(std::ostream &fout, const std::vector<BranchedTree::Tree<T>> &trees, std::string s_id = "",
+                          const std::string &s_obj_func = "logistic")
 {
    generate_file_header(fout, s_id);
    fout << type_as_string<T>() << " generated_forest (const " << type_as_string<T>() << " * event){" << std::endl
         << "" << type_as_string<T>() << " result = 0;" << std::endl;
-   for (int i = 0; i < number_of_trees; i++) {
+   for (int i = 0; i < trees.size(); i++) {
       generate_if_statement_for_bdt<T>(fout, trees[i].nodes.get());
    }
    generate_file_footer(fout, s_id, s_obj_func);
@@ -165,17 +188,23 @@ void generate_code_forest(std::ostream &fout, const std::vector<BranchedTree::Tr
 
 ////////////////////////////////////////////////////////////////////////////////
 ///// Branchless version /////
+////////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////
 /// Generates long array of thresholds
+///
+/// \tparam T type for the prediction. Usually floating point type (float, double, long double)
+/// \param[in] fout stream where the code is written
+/// \param[in] tree to be written down
+/// \param[in] total_array_length
 template <typename T>
 void generate_threshold_array(std::ostream &fout, const std::vector<BranchlessTree::Tree<T>> &trees,
-                              int total_array_length)
+                              const int total_array_length)
 {
    fout << "const " << type_as_string<T>() << " thresholds[" // I could have done it just const
         << std::to_string(total_array_length) << "] {";
    for (int j = 0; j < trees.size(); j++) {
       for (int i = 0; i < trees[j].thresholds.size(); i++) {
-         // fout << std::to_string(trees[j].thresholds[i]);
          fout << trees[j].thresholds[i];
          if (i < trees[j].thresholds.size() - 1) {
             fout << ", ";
@@ -189,13 +218,19 @@ void generate_threshold_array(std::ostream &fout, const std::vector<BranchlessTr
 }
 
 /// \todo these two next functions perform code duplication: solve this!
-/// Generates long array of thresholds
-/// also possible with constexpr std::array<float,
+////////////////////////////////////////////////////////////////////////////////
+/// Generates long array of features
+///
+/// \tparam T type for the prediction. Usually floating point type (float, double, long double)
+/// \param[in] fout stream where the code is written
+/// \param[in] tree to be written down
+/// \param[in] total_array_length
 template <typename T>
 void generate_features_array(std::ostream &fout, const std::vector<BranchlessTree::Tree<T>> &trees,
-                             int total_array_length)
+                             const int total_array_length)
 {
-   fout << "const unsigned int features[" << std::to_string(total_array_length) << "] {";
+   // also possible with constexpr std::array<float,
+   fout << "const int features[" << total_array_length << "] {";
    for (int j = 0; j < trees.size(); j++) {
       for (int i = 0; i < trees[j].features.size(); i++) {
          fout << std::to_string(trees[j].features[i]);
@@ -210,8 +245,15 @@ void generate_features_array(std::ostream &fout, const std::vector<BranchlessTre
    fout << "};" << std::endl;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Generates long array of thresholds
+///
+/// \tparam T type for the prediction. Usually floating point type (float, double, long double)
+/// \param[in] fout stream where the code is written
+/// \param[in] tree to be written down
+/// \param[in] tree_index index of the tree in the containing vector of trees
 template <typename T>
-void generate_branchless_tree(std::ostream &fout, const BranchlessTree::Tree<T> &tree, int tree_index)
+void generate_branchless_tree(std::ostream &fout, const BranchlessTree::Tree<T> &tree, const int tree_index)
 {
    fout << "index=0;" << std::endl;
    for (size_t j = 0; j < tree.tree_depth; ++j) {
@@ -221,10 +263,17 @@ void generate_branchless_tree(std::ostream &fout, const BranchlessTree::Tree<T> 
    fout << "result += thresholds[" << std::to_string(tree_index) << "+index];" << std::endl;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 /// Generate the code for Forest evaluation
+///
+/// \tparam T type for the prediction. Usually floating point type (float, double, long double)
+/// \param[in] fout stream where the code is written
+/// \param[in] tree to be written down
+/// \param[in] s_id namespace postfix
+/// \param[in] s_obj_func name of objective functions
 template <typename T>
-void generate_code_forest(std::ostream &fout, const std::vector<BranchlessTree::Tree<T>> &trees, int number_of_trees,
-                          std::string s_id = "", const std::string &s_obj_func = "logistic")
+void generate_code_forest(std::ostream &fout, const std::vector<BranchlessTree::Tree<T>> &trees, std::string s_id = "",
+                          const std::string &s_obj_func = "logistic")
 {
    int total_array_length = 0;
    for (auto &tree : trees) {
@@ -238,10 +287,10 @@ void generate_code_forest(std::ostream &fout, const std::vector<BranchlessTree::
    fout << type_as_string<T>() << " generated_forest (const " << type_as_string<T>() << " *event){" << std::endl
         << "" << type_as_string<T>() << " result = 0;" << std::endl;
 
-   fout << "unsigned int index=0;" << std::endl;
+   fout << "int index=0;" << std::endl;
 
    int current_tree_index = 0;
-   for (int i = 0; i < number_of_trees; i++) {
+   for (int i = 0; i < trees.size(); i++) {
       generate_branchless_tree<T>(fout, trees[i], current_tree_index);
       current_tree_index += trees[i].array_length;
    }
