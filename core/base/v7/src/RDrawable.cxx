@@ -16,6 +16,8 @@
 #include "ROOT/RDrawable.hxx"
 
 #include <cassert>
+#include <string>
+
 
 // pin vtable
 ROOT::Experimental::RDrawable::~RDrawable() {}
@@ -30,7 +32,7 @@ ROOT::Experimental::RDrawableAttributesContainer ROOT::Experimental::RDrawableAt
 
 
 
-const char *ROOT::Experimental::RDrawableAttributesNew::Eval(const std::string &name)
+const char *ROOT::Experimental::RDrawableAttributesNew::Eval(const std::string &name) const
 {
    if (fDrawable.fNewAttributes) {
       auto entry = fDrawable.fNewAttributes->find(name);
@@ -44,3 +46,54 @@ const char *ROOT::Experimental::RDrawableAttributesNew::Eval(const std::string &
 
    return nullptr;
 }
+
+void ROOT::Experimental::RDrawableAttributesNew::SetValue(const std::string &name, const char *val)
+{
+   if (val) {
+
+      if (!fDrawable.fNewAttributes)
+         fDrawable.fNewAttributes = std::make_unique<RDrawableAttributesContainer>();
+
+      fDrawable.fNewAttributes->at(name) = val;
+
+   } else if (fDrawable.fNewAttributes) {
+      auto elem = fDrawable.fNewAttributes->find(name);
+      if (elem != fDrawable.fNewAttributes->end()) {
+         fDrawable.fNewAttributes->erase(elem);
+         if (fDrawable.fNewAttributes->size() == 0)
+            fDrawable.fNewAttributes.reset();
+      }
+   }
+}
+
+void ROOT::Experimental::RDrawableAttributesNew::SetValue(const std::string &name, const std::string &value)
+{
+   if (!fDrawable.fNewAttributes)
+      fDrawable.fNewAttributes = std::make_unique<RDrawableAttributesContainer>();
+
+   fDrawable.fNewAttributes->at(name) = value;
+}
+
+
+int ROOT::Experimental::RDrawableAttributesNew::GetInt(const std::string &name) const
+{
+   auto res = Eval(name);
+   return res ? std::stoi(res) : 0;
+}
+
+void ROOT::Experimental::RDrawableAttributesNew::SetInt(const std::string &name, const int value)
+{
+   SetValue(name, std::to_string(value));
+}
+
+float ROOT::Experimental::RDrawableAttributesNew::GetFloat(const std::string &name) const
+{
+   auto res = Eval(name);
+   return res ? std::stof(res) : 0.;
+}
+
+void ROOT::Experimental::RDrawableAttributesNew::SetFloat(const std::string &name, const float value)
+{
+   SetValue(name, std::to_string(value));
+}
+
