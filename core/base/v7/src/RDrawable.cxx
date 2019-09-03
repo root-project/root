@@ -24,3 +24,23 @@ void ROOT::Experimental::RDrawable::Execute(const std::string &)
 {
    assert(false && "Did not expect a menu item to be invoked!");
 }
+
+
+ROOT::Experimental::RDrawableAttributesContainer ROOT::Experimental::RDrawableAttributesNew::fNoDefaults = {};
+
+
+
+const char *ROOT::Experimental::RDrawableAttributesNew::Eval(const std::string &name)
+{
+   if (fDrawable.fNewAttributes) {
+      auto entry = fDrawable.fNewAttributes->find(name);
+      if (entry != fDrawable.fNewAttributes->end())
+         return entry->second.c_str();
+   }
+
+   auto entry = fDefaults.find(name);
+   if (entry != fDefaults.end())
+     return entry->second.c_str();
+
+   return nullptr;
+}
