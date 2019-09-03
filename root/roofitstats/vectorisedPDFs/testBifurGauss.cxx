@@ -24,24 +24,23 @@ class TestBifurGauss : public PDFTest
     TestBifurGauss() :
       PDFTest("BifurGauss", 300000)
   { 
-      auto x = new RooRealVar("x", "x", 300.0, 1.0, 1000.0);
-      auto mean = new RooRealVar("mean", "mean", 350.0, 100.0, 900.0);
-      auto sigmaL = new RooRealVar("sigmaL", "sigmaL", 10.0, 5.0, 15.0);
-      auto sigmaR = new RooRealVar("sigmaR", "sigmaR", 10.0, 5.0, 15.0);
-      _pdf = std::make_unique<RooBifurGauss>("bifurGauss1", "bifurGauss1", *x, *mean, *sigmaL, *sigmaR);
-      for (auto var : {x}) {
-        _variables.addOwned(*var);
-      }
+    auto x = new RooRealVar("x", "x", 300.0, 100.0, 800.0);
+    auto mean = new RooRealVar("mean", "mean", 350.0, 250.0, 500.0);
+    mean->setConstant();
+    auto sigmaL = new RooRealVar("sigmaL", "sigmaL", 60.0, 50.0, 150.0);
+    auto sigmaR = new RooRealVar("sigmaR", "sigmaR", 100.0, 50.0, 150.0);
+    _pdf = std::make_unique<RooBifurGauss>("bifurGauss1", "bifurGauss1", *x, *mean, *sigmaL, *sigmaR);
+    for (auto var : {x}) {
+      _variables.addOwned(*var);
+    }
 
-      //for (auto var : {x}) {
-        //_variablesToPlot.add(*var);
-      //}
+//    for (auto var : {x}) {
+//      _variablesToPlot.add(*var);
+//    }
 
-      for (auto par : {mean, sigmaL, sigmaR}) {
-        _parameters.addOwned(*par);
-      }
-      
-      _toleranceCompareBatches = 1e-13;
+    for (auto par : {mean, sigmaL, sigmaR}) {
+      _parameters.addOwned(*par);
+    }
   }
 };
 

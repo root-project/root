@@ -53,27 +53,30 @@ class TestPolynomial5 : public PDFTest
     TestPolynomial5() :
       PDFTest("Polynomial5", 300000)
   {
-        auto x = new RooRealVar("x", "x", -100, 40);
-        auto a0 = new RooRealVar("a0", "a0", 1000.0);
-        auto a1 = new RooRealVar("a1", "a1", 1.0, 0.0, 3.0);
-        auto a2 = new RooRealVar("a2", "a2", 10.0, 9.0, 12.0);
-        auto a3 = new RooRealVar("a3", "a3", 0.09, 0.05, 0.1);
-        auto a4 = new RooRealVar("a4", "a4", 0.00009, 0.00005, 0.0005);
-        auto a5 = new RooRealVar("a5", "a5", 0.0000009, 0.0000005, 0.000005);
-        a0->setConstant(true);
-        a1->setConstant(true);
-        a3->setConstant(true);
+      auto x = new RooRealVar("x", "x", -150, 40);
+      auto a0 = new RooRealVar("a0", "a0", 1000.0);
+      auto a1 = new RooRealVar("a1", "a1", 1.0, 0.0, 3.0);
+      auto a2 = new RooRealVar("a2", "a2", 10.0, 9.0, 12.0);
+      auto a3 = new RooRealVar("a3", "a3", 0.09, 0.05, 0.1);
+      auto a4 = new RooRealVar("a4", "a4", 0.001, 0.0005, 0.002);
+      auto a5 = new RooRealVar("a5", "a5", 0.0000009, 0.0000005, 0.000005);
+      a0->setConstant(true);
+      a1->setConstant(true);
+      a3->setConstant(true);
+      a4->setConstant(true);
 
-        _pdf = std::make_unique<RooPolynomial>("polynomial5", "polynomial PDF 5 coefficients", *x, RooArgSet(*a0,*a1, *a2, *a3, *a4, *a5),0);
-
+      _pdf = std::make_unique<RooPolynomial>("polynomial5", "polynomial PDF 5 coefficients", *x, RooArgSet(*a0,*a1, *a2, *a3, *a4, *a5),0);
 
       _variables.addOwned(*x);
 
-      //_variablesToPlot.add(*x);
+//      _variablesToPlot.add(*x);
+//      _printLevel = 2;
 
       for (auto par : { a2, a4, a5}) {
         _parameters.addOwned(*par);
       }
+
+      _toleranceParameter = 2.E-5;
   }
 };
 

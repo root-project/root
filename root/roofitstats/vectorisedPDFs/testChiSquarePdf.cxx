@@ -45,9 +45,9 @@ class TestChiSquarePdfinX: public PDFTest
 COMPARE_FIXED_VALUES_UNNORM(TestChiSquarePdfinX, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestChiSquarePdfinX, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestChiSquarePdfinX, CompareFixedNormLog)
-FIT_TEST_SCALAR(TestChiSquarePdfinX, DISABLED_RunScalar)
-FIT_TEST_BATCH(TestChiSquarePdfinX, DISABLED_RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestChiSquarePdfinX, DISABLED_CompareBatchScalar)
+FIT_TEST_SCALAR(TestChiSquarePdfinX, RunScalar)
+FIT_TEST_BATCH(TestChiSquarePdfinX, RunBatch)
+FIT_TEST_BATCH_VS_SCALAR(TestChiSquarePdfinX, CompareBatchScalar)
 
 class TestChiSquarePdfinNdof: public PDFTest
 {
@@ -56,7 +56,7 @@ class TestChiSquarePdfinNdof: public PDFTest
       PDFTest("ChiSquarePdf", 300000)
     {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
-      auto x = new RooRealVar("x", "x", 0.1, 100);
+      auto x = new RooRealVar("x", "x", 0.01, 20);
       auto ndof = new RooRealVar("ndof", "ndof of chiSquarePdf", 2, 1, 5);
       
       // Build chiSquarePdf p.d.f 
@@ -66,7 +66,7 @@ class TestChiSquarePdfinNdof: public PDFTest
         _variables.addOwned(*var);
       }
       
-      _variablesToPlot.add(*x);
+//      _variablesToPlot.add(*ndof);
       
       for (auto par : {x}) {
         _parameters.addOwned(*par);
@@ -79,9 +79,9 @@ class TestChiSquarePdfinNdof: public PDFTest
 COMPARE_FIXED_VALUES_UNNORM(TestChiSquarePdfinNdof, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestChiSquarePdfinNdof, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestChiSquarePdfinNdof, CompareFixedNormLog)
-FIT_TEST_SCALAR(TestChiSquarePdfinNdof, DISABLED_RunScalar)
-FIT_TEST_BATCH(TestChiSquarePdfinNdof, DISABLED_RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestChiSquarePdfinNdof, DISABLED_CompareBatchScalar)
+FIT_TEST_SCALAR(TestChiSquarePdfinNdof, RunScalar)
+FIT_TEST_BATCH(TestChiSquarePdfinNdof, RunBatch)
+FIT_TEST_BATCH_VS_SCALAR(TestChiSquarePdfinNdof, CompareBatchScalar)
 
 class TestChiSquarePdfinXandNdof: public PDFTest
 {
@@ -90,7 +90,7 @@ class TestChiSquarePdfinXandNdof: public PDFTest
       PDFTest("ChiSquarePdf", 300000)
     {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
-      auto x = new RooRealVar("x", "x", 0.1, 100);
+      auto x = new RooRealVar("x", "x", 0.1, 50);
       auto ndof = new RooRealVar("ndof", "ndof of chiSquarePdf", 2, 1, 5);
       
       // Build chiSquarePdf p.d.f 
@@ -108,6 +108,4 @@ class TestChiSquarePdfinXandNdof: public PDFTest
 COMPARE_FIXED_VALUES_UNNORM(TestChiSquarePdfinXandNdof, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestChiSquarePdfinXandNdof, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestChiSquarePdfinXandNdof, CompareFixedNormLog)
-FIT_TEST_SCALAR(TestChiSquarePdfinXandNdof, DISABLED_RunScalar)
-FIT_TEST_BATCH(TestChiSquarePdfinXandNdof, DISABLED_RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestChiSquarePdfinXandNdof, DISABLED_CompareBatchScalar)
+// No fit tests, since it doesn't have parameters.

@@ -26,20 +26,24 @@ class TestArgus : public PDFTest
       auto m = new RooRealVar("m", "m", 300.0, 1.0, 800.0);
       auto m0 = new RooRealVar("m0", "m0", 1100.0, 800.0, 1400.0);
       auto c = new RooRealVar("c", "c", 10.0, 5.0, 15.0);
+      c->setConstant();
       auto p = new RooRealVar("p", "p", 1.0, 0.9, 1.3);
+      p->setConstant();
       _pdf = std::make_unique<RooArgusBG>("argus1", "argus1", *m, *m0, *c, *p);
       for (auto var : {m}) {
         _variables.addOwned(*var);
       }
 
-      //for (auto var : {m}) {
-        //_variablesToPlot.add(*var);
-      //}
+//      for (auto var : {m}) {
+//        _variablesToPlot.add(*var);
+//      }
+//      _printLevel = 2;
 
       for (auto par : {m0, c, p}) {
         _parameters.addOwned(*par);
       }
       
+      _toleranceParameter = 2.E-6;
   }
 };
 

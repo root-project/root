@@ -24,11 +24,12 @@ class TestGamma : public PDFTest
     TestGamma() :
       PDFTest("Gamma", 300000)
   {
-    // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
     auto x = new RooRealVar("x", "x", 5, 4, 10);
-    auto gamma = new RooRealVar("m0", "m0", 1.5, 0.1, 7);
-    auto beta = new RooRealVar("sigma", "sigma", 1.5, 0.1, 10);
-    auto mu = new RooRealVar("alpha", "alpha", 2, 1, 4);
+    auto gamma = new RooRealVar("gamma", "N+1", 6, 4, 8);
+    gamma->setConstant();
+    auto beta = new RooRealVar("beta", "beta", 1.5, 0.1, 10);
+    auto mu = new RooRealVar("mu", "mu", 0.2, -1., 1.);
+    mu->setConstant();
     
     // Build gaussian p.d.f in terms of x,mean and sigma
     _pdf = std::make_unique<RooGamma>("Gamma", "Gamma PDF", *x, *gamma, *beta, *mu);
@@ -41,9 +42,9 @@ class TestGamma : public PDFTest
       _parameters.addOwned(*par);
     }
     
-    _variablesToPlot.add(*x);
-    _toleranceCompareLogs = 1.105735107124577e-11;
-
+//    _variablesToPlot.add(*x);
+    _toleranceCompareBatches = 1.2E-14;
+    _toleranceCompareLogs = 6.E-12;
   }
 };
 
