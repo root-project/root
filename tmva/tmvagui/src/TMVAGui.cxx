@@ -237,6 +237,13 @@ void TMVA::TMVAGui( const char* fName  , TString dataset)
                  "Plots the PDFs of the classifier output distributions for signal and background - if requested (macro probas.cxx)",
                  buttonType, defaultRequiredClassifier );
 
+   title = Form( "(%i) Training History", ++ic );
+   ActionButton( cbar,  
+                 title,
+                 Form( "TMVA::training_history(\"%s\",\"%s\",%d)",dataset.Data(), fName ),
+                 "Plot training history of classifiers with multiple passed (eg Neural Networks) ",
+                 buttonType, defaultRequiredClassifier );
+
    title = Form( "(%i) Likelihood Reference Distributiuons", ++ic);
    ActionButton( cbar,  
                  title,

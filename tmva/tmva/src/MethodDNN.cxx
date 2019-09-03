@@ -1024,6 +1024,9 @@ void TMVA::MethodDNN::TrainGpu()
             }
             testError /= (Double_t) (nTestSamples / settings.batchSize);
 
+            //Log the loss value
+            fTrainHistory.AddValue("testError",stepCount,testError);
+
             end   = std::chrono::system_clock::now();
 
             // Compute training error.
@@ -1034,6 +1037,8 @@ void TMVA::MethodDNN::TrainGpu()
                trainingError += net.Loss(inputMatrix, outputMatrix);
             }
             trainingError /= (Double_t) (nTrainingSamples / settings.batchSize);
+            //Log the loss value
+            fTrainHistory.AddValue("trainingError",stepCount,trainingError);
 
             // Compute numerical throughput.
             std::chrono::duration<double> elapsed_seconds = end - start;
@@ -1208,6 +1213,9 @@ void TMVA::MethodDNN::TrainCpu()
             }
             testError /= (Double_t) (nTestSamples / settings.batchSize);
 
+            //Log the loss value
+            fTrainHistory.AddValue("testError",stepCount,testError);
+
             end   = std::chrono::system_clock::now();
 
             // Compute training error.
@@ -1219,6 +1227,9 @@ void TMVA::MethodDNN::TrainCpu()
                trainingError += net.Loss(inputMatrix, outputMatrix, weightMatrix);
             }
             trainingError /= (Double_t) (nTrainingSamples / settings.batchSize);
+
+            //Log the loss value
+            fTrainHistory.AddValue("trainingError",stepCount,trainingError);
 
             if (fInteractive){
                fInteractive->AddPoint(stepCount, trainingError, testError);
