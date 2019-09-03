@@ -108,6 +108,10 @@ class ROOTFacade(types.ModuleType):
         self.__class__.__setattr__ = lambda self, name, val: setattr(gbl_namespace, name, val)
 
     def _getattr(self, name):
+        # Special case, to allow "from ROOT import gROOT" w/o starting the graphics
+        if name == '__path__':
+            raise AttributeError(name)
+
         self._finalSetup()
 
         return getattr(self, name)
