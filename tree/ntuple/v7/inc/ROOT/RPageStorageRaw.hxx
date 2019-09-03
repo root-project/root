@@ -29,6 +29,7 @@ namespace ROOT {
 namespace Experimental {
 namespace Detail {
 
+class RClusterPool;
 class RPageAllocatorHeap;
 class RPagePool;
 class RRawFile;
@@ -101,6 +102,7 @@ public:
 private:
    std::unique_ptr<RPageAllocatorFile> fPageAllocator;
    std::shared_ptr<RPagePool> fPagePool;
+   std::unique_ptr<RClusterPool> fClusterPool;
    std::unique_ptr<std::array<unsigned char, kMaxPageSize>> fUnzipBuffer;
    std::unique_ptr<RRawFile> fFile;
 
@@ -131,6 +133,8 @@ public:
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
    RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;
    void ReleasePage(RPage &page) final;
+
+   std::unique_ptr<RCluster> LoadCluster(DescriptorId_t clusterId) final;
 
    RNTupleMetrics &GetMetrics() final { return fMetrics; }
 };

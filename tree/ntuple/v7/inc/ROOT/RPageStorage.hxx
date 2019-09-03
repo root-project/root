@@ -16,16 +16,20 @@
 #ifndef ROOT7_RPageStorage
 #define ROOT7_RPageStorage
 
+#include <ROOT/RCluster.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageAllocator.hxx>
+#include <ROOT/RSpan.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <atomic>
 #include <cstddef>
+#include <functional>
 #include <memory>
+#include <string>
 
 namespace ROOT {
 namespace Experimental {
@@ -157,6 +161,9 @@ mapped into memory. The page source also gives access to the ntuple's meta-data.
 */
 // clang-format on
 class RPageSource : public RPageStorage {
+public:
+   //using ClusterHandle_t = void *;
+
 protected:
    const RNTupleReadOptions fOptions;
    RNTupleDescriptor fDescriptor;
@@ -186,6 +193,8 @@ public:
    virtual RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) = 0;
    /// Another version of PopulatePage that allows to specify cluster-relative indexes
    virtual RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) = 0;
+
+   virtual std::unique_ptr<RCluster> LoadCluster(DescriptorId_t clusterId) = 0;
 };
 
 } // namespace Detail

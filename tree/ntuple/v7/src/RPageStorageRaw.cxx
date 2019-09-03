@@ -14,6 +14,7 @@
  *************************************************************************/
 
 #include <ROOT/RPageStorageRaw.hxx>
+#include <ROOT/RClusterPool.hxx>
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
@@ -174,6 +175,7 @@ ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntup
    : RPageSource(ntupleName, options)
    , fPageAllocator(std::make_unique<RPageAllocatorFile>())
    , fPagePool(std::make_shared<RPagePool>())
+   , fClusterPool(std::make_unique<RClusterPool>(*this))
    , fUnzipBuffer(std::make_unique<std::array<unsigned char, kMaxPageSize>>())
    , fMetrics("RPageSourceRaw")
 {
@@ -253,14 +255,17 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::Po
    const auto &pageRange = clusterDescriptor.GetPageRange(columnId);
 
    // TODO(jblomer): binary search
+   // TODO(jblomer): move to descriptor class
    RClusterDescriptor::RPageRange::RPageInfo pageInfo;
    decltype(clusterIndex) firstInPage = 0;
+   NTupleSize_t pageNo = 0;
    for (const auto &pi : pageRange.fPageInfos) {
       if (firstInPage + pi.fNElements > clusterIndex) {
          pageInfo = pi;
          break;
       }
       firstInPage += pi.fNElements;
+      ++pageNo;
    }
    R__ASSERT(firstInPage <= clusterIndex);
    R__ASSERT((firstInPage + pageInfo.fNElements) > clusterIndex);
@@ -271,7 +276,13 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::Po
    auto pageSize = pageInfo.fLocator.fBytesOnStorage;
    void *pageBuffer = malloc(std::max(pageSize, static_cast<std::uint32_t>(elementSize * pageInfo.fNElements)));
    R__ASSERT(pageBuffer);
-   Read(pageBuffer, pageSize, pageInfo.fLocator.fPosition);
+
+   auto cluster = fClusterPool->GetCluster(clusterId);
+   RSheetKey sheetKey(columnId, pageNo);
+   const auto &sheet = cluster->GetSheet(sheetKey);
+   R__ASSERT(pageSize == sheet.GetSize());
+   memcpy(pageBuffer, sheet.GetAddress(), sheet.GetSize());
+   //Read(pageBuffer, pageSize, pageInfo.fLocator.fPosition);
 
    auto bytesOnStorage = (element->GetBitsOnStorage() * pageInfo.fNElements + 7) / 8;
    if (pageSize != bytesOnStorage) {
@@ -347,6 +358,35 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::Po
 void ROOT::Experimental::Detail::RPageSourceRaw::ReleasePage(RPage &page)
 {
    fPagePool->ReturnPage(page);
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RCluster>
+ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId)
+{
+   std::cout << "LOADING CLUSTER NUMBER " << clusterId << std::endl;
+   const auto &clusterDesc = GetDescriptor().GetClusterDescriptor(clusterId);
+   auto clusterLocator = clusterDesc.GetLocator();
+   auto buffer = reinterpret_cast<unsigned char *>(malloc(clusterLocator.fBytesOnStorage));
+   R__ASSERT(buffer);
+   std::cout << "CLUSTER AT " << (void *)(buffer) << std::endl;
+   Read(buffer, clusterLocator.fBytesOnStorage, clusterLocator.fPosition);
+   auto cluster = std::make_unique<RCluster>(buffer, clusterId);
+   // TODO(jblomer): make id range
+   for (unsigned int i = 0; i < fDescriptor.GetNColumns(); ++i) {
+      const auto &pageRange = clusterDesc.GetPageRange(i);
+      NTupleSize_t pageNo = 0;
+      for (const auto &pageInfo : pageRange.fPageInfos) {
+         const auto &pageLocator = pageInfo.fLocator;
+         RSheetKey key(i, pageNo);
+         RSheet sheet(buffer + pageLocator.fPosition - clusterLocator.fPosition, pageLocator.fBytesOnStorage);
+         std::cout << "REGISTER SHEET " << i << "/" << pageNo << " @ "
+                   << sheet.GetAddress() << " : " << sheet.GetSize() << std::endl;
+         cluster->InsertSheet(key, sheet);
+         ++pageNo;
+      }
+   }
+
+   return cluster;
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSourceRaw::Clone() const

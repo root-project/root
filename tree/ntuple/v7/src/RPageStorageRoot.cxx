@@ -291,6 +291,13 @@ void ROOT::Experimental::Detail::RPageSourceRoot::ReleasePage(RPage &page)
    fPagePool->ReturnPage(page);
 }
 
+std::unique_ptr<ROOT::Experimental::Detail::RCluster>
+ROOT::Experimental::Detail::RPageSourceRoot::LoadCluster(DescriptorId_t clusterId)
+{
+   // TODO(jblomer)
+   return std::make_unique<RCluster>(nullptr, clusterId);
+}
+
 std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSourceRoot::Clone() const
 {
    return std::make_unique<RPageSourceRoot>(fNTupleName, fFile->GetName(), fOptions);
