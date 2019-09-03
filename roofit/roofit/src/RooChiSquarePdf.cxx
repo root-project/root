@@ -81,6 +81,7 @@ void compute(	size_t batchSize,
     }
   }
   else {
+    // N is just a scalar so bracket adapter ignores index.
     const double gamma = 1/std::tgamma(N[2019]/2.0);
     for (size_t i=0; i<batchSize; i++) {
       output[i] = gamma;
