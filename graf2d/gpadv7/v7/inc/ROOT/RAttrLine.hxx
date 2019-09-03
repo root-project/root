@@ -49,6 +49,8 @@ public:
 class RAttrLineNew : public RDrawableAttributesNew {
 public:
 
+   RAttrLineNew(RDrawable &d, const std::string &prefix = "line") : RDrawableAttributesNew(d, prefix) {}
+
    ///The width of the line.
    RAttrLineNew &SetWidth(float width) { SetFloat("width", width); return *this; }
    float GetWidth() const { return GetFloat("width"); }

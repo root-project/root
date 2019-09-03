@@ -45,18 +45,23 @@ using RDrawableAttributesContainer = std::unordered_map<std::string, std::string
 class RDrawableAttributesNew {
    RDrawable &fDrawable; ///<! reference
 
+   std::string fPrefix; ///<! name prefix for all attributes values
+
    const RDrawableAttributesContainer &fDefaults; ///<! default values for attributes
 
-   static RDrawableAttributesContainer fNoDefaults;  ///<! empty container with no defaults
+   std::string GetFullName(const std::string &name) const { return fPrefix.empty() ? name : fPrefix + "." + name; }
 
 public:
 
-   RDrawableAttributesNew(RDrawable &d) : fDrawable(d), fDefaults(fNoDefaults)  {}
-   RDrawableAttributesNew(RDrawable &d, RDrawableAttributesContainer &dflts) : fDrawable(d), fDefaults(dflts)  {}
+   RDrawableAttributesNew(RDrawable &d, const std::string &prefix);
+   RDrawableAttributesNew(RDrawable &d, const std::string &prefix, RDrawableAttributesContainer &dflts) : fDrawable(d), fPrefix(prefix), fDefaults(dflts)  {}
    virtual ~RDrawableAttributesNew() {}
 
    /** use const char* - nullptr means no value found */
    const char *Eval(const std::string &name) const;
+
+   /** returns true when value exists */
+   bool HasValue(const std::string &name) const { return Eval(name) != nullptr; }
 
    void SetValue(const std::string &name, const char *val);
 
@@ -64,8 +69,7 @@ public:
 
    void ClearValue(const std::string &name) { SetValue(name, (const char *)nullptr); }
 
-   /** returns true when value exists */
-   bool HasValue(const std::string &name) const { return Eval(name) != nullptr; }
+   void Clear();
 
    int GetInt(const std::string &name) const;
    void SetInt(const std::string &name, const int value);
@@ -85,7 +89,20 @@ private:
 
    std::unique_ptr<RDrawableAttributesContainer> fNewAttributes; ///< container for any kind of attribute associated with drawable, attributes can be styled
 
+   const RDrawableAttributesContainer &fDefaults; ///<! default values for drawable attributes
+
+protected:
+
+   void ClearAttributes();
+
+
+
 public:
+
+   RDrawable();
+
+   RDrawable(const RDrawableAttributesContainer &dflts) : fDefaults(dflts) {}
+
    virtual ~RDrawable();
 
    virtual void Paint(Internal::RPadPainter &onPad) = 0;

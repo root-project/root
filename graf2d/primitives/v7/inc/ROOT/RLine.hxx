@@ -59,6 +59,10 @@ public:
 
    RLine(const RPadPos& p1, const RPadPos& p2) : fP1(p1), fP2(p2) {}
 
+
+   RAttrLineNew lineatt() { return RAttrLineNew(*this); }
+
+
    void SetP1(const RPadPos& p1) { fP1 = p1; }
    void SetP2(const RPadPos& p2) { fP2 = p2; }
 
