@@ -18,6 +18,8 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
+
 
 namespace ROOT {
 namespace Experimental {
@@ -25,6 +27,8 @@ namespace Experimental {
 class RDrawingOptsBase;
 class RMenuItems;
 class RPadBase;
+class RDrawable;
+
 
 namespace Internal {
 class RPadPainter;
@@ -34,10 +38,41 @@ class RPadPainter;
   Base class for drawable entities: objects that can be painted on a `RPad`.
  */
 
+
+using RDrawableAttributesContainer = std::unordered_map<std::string, std::string>;
+
+
+/** Access to drawable attributes, never should be stored */
+class RDrawableAttributesNew {
+   RDrawable &fDrawable; ///<! reference
+
+   const RDrawableAttributesContainer &fDefaults; ///<! default values for attributes
+
+   static RDrawableAttributesContainer fNoDefaults;  ///<! empty container with no defaults
+
+public:
+
+   RDrawableAttributesNew(RDrawable &d) : fDrawable(d), fDefaults(fNoDefaults)  {}
+   RDrawableAttributesNew(RDrawable &d, RDrawableAttributesContainer &dflts) : fDrawable(d), fDefaults(dflts)  {}
+   virtual ~RDrawableAttributesNew() {}
+
+   /** use const char* - nullptr means no value found */
+   const char *Eval(const std::string &name);
+
+   /** returns true when value exists */
+   bool HasValue(const std::string &name) { return Eval(name) != nullptr; }
+};
+
+
+
 class RDrawable {
 friend class RPadBase;
+friend class RDrawableAttributesNew;
 private:
+
    std::string  fId; ///< object identifier, unique inside RCanvas
+
+   std::unique_ptr<RDrawableAttributesContainer> fNewAttributes; ///< container for any kind of attribute associated with drawable, attributes can be styled
 
 public:
    virtual ~RDrawable();
