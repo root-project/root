@@ -75,11 +75,10 @@ Double_t RooPoisson::evaluate() const
 namespace {
 
 template<class Tx, class TMean>
-void compute(RooSpan<double> output, Tx x, TMean mean,
+void compute(const size_t n, double* __restrict output, Tx x, TMean mean,
     const bool protectNegative, const bool noRounding) {
-  const int n = output.size();
 
-  for (int i = 0; i < n; ++i) { //CHECK_VECTORISE
+  for (size_t i = 0; i < n; ++i) { //CHECK_VECTORISE
     const double x_i = noRounding ? x[i] : floor(x[i]);
     // The std::lgamma yields different values than in the scalar implementation.
     // Need to check which one is more accurate.
@@ -88,7 +87,7 @@ void compute(RooSpan<double> output, Tx x, TMean mean,
   }
 
 
-  for (int i = 0; i < n; ++i) { //CHECK_VECTORISE
+  for (size_t i = 0; i < n; ++i) { //CHECK_VECTORISE
     const double x_i = noRounding ? x[i] : floor(x[i]);
     const double logMean = _rf_fast_log(mean[i]);
     const double logPoisson = x_i * logMean - mean[i] - output[i];
@@ -111,27 +110,27 @@ void compute(RooSpan<double> output, Tx x, TMean mean,
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute Poisson values in batches.
 RooSpan<double> RooPoisson::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+  using namespace BatchHelpers;
   auto xData = x.getValBatch(begin, batchSize);
   auto meanData = mean.getValBatch(begin, batchSize);
-
   const bool batchX = !xData.empty();
   const bool batchMean = !meanData.empty();
 
-  if (batchX && batchMean) {
-    compute(output, xData, meanData, _protectNegative, _noRounding);
-  } else if (batchX && !batchMean) {
-    compute(output, xData, BatchHelpers::BracketAdapter<double>(mean), _protectNegative, _noRounding);
+  if (!batchX && !batchMean) {
+    return {};
   }
-  else if (!batchX && batchMean) {
-    compute(output, BatchHelpers::BracketAdapter<double>(x), meanData, _protectNegative, _noRounding);
-  } else if (!batchX && !batchMean) {
-    compute(output, BatchHelpers::BracketAdapter<double>(x), BatchHelpers::BracketAdapter<double>(mean), _protectNegative, _noRounding);
-  } else {
-    //Should not happen
-    assert(false);
-  }
+  batchSize = findSize({ xData, meanData });
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
 
+  if (batchX && !batchMean ) {
+    compute(batchSize, output.data(), xData, BracketAdapter<double>(mean), _protectNegative, _noRounding);
+  }
+  else if (!batchX && batchMean ) {
+    compute(batchSize, output.data(), BracketAdapter<double>(x), meanData, _protectNegative, _noRounding);
+  }
+  else if (batchX && batchMean ) {
+    compute(batchSize, output.data(), xData, meanData, _protectNegative, _noRounding);
+  }
   return output;
 }
 
