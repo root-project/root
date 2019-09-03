@@ -60,6 +60,10 @@ RooLegendre::RooLegendre(const char* name, const char* title, RooAbsReal& ctheta
 {
   //TODO: we assume m>=0
   //      should map m<0 back to m>=0...
+  if (_l1<_m1 || _l2<_m2) {
+    throw std::invalid_argument("RooLegendre: m coefficients need to be smaller than corresponding l");
+  }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -69,6 +73,9 @@ RooLegendre::RooLegendre(const char* name, const char* title, RooAbsReal& ctheta
  , _ctheta("ctheta", "ctheta", this, ctheta)
  , _l1(l1),_m1(m1),_l2(l2),_m2(m2)
 {
+  if (_l1<_m1 || _l2<_m2) {
+    throw std::invalid_argument("RooLegendre: m coefficients need to be smaller than corresponding l");
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
