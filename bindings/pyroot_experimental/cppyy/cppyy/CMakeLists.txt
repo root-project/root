@@ -12,6 +12,7 @@ set(py_sources
   cppyy/_pythonization.py
   cppyy/_typemap.py
   cppyy/_version.py
+  cppyy/interactive.py
 )
 
 set(d $ENV{DESTDIR}/${CMAKE_INSTALL_PREFIX}/${runtimedir})
