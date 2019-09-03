@@ -86,6 +86,13 @@ else()
   set(ROOT_CLING_TARGET "all")
 endif()
 
+if(GENERATOR_IS_MULTI_CONFIG AND NOT LLVM_BUILD_TYPE MATCHES "Debug")
+  # Need to force non-debug flags, else a Debug ROOT build will create
+  # a debug llvm/clang build!
+  set(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_RELEASE})
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO ${CMAKE_CXX_FLAGS_RELEASE})
+endif()
+
 if(MSVC)
   # replace dashes in the -EH* and -GR* flags with slashes (/EH* /GR*)
   string(REPLACE " -EH" " /EH" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
