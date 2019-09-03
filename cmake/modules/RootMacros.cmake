@@ -527,27 +527,12 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
     target_include_directories(${dictionary} PRIVATE
       ${includedirs} $<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>)
-
-    # We must depend on $<TARGET_OBJECTS:${dictionary}> here to create a
-    # file-level dependency between the dictionary and the PCH. If we depend on
-    # the source file, there is a race condition between the library and the PCH
-    # on the custom command that generates the dictionary, and if we use the
-    # ${dictionary} target, there is no file-level dependency and the PCH does
-    # not regenerate when the dictionary changes.
-    if(PROJECT_NAME STREQUAL "ROOT")
-      set_property(GLOBAL APPEND PROPERTY ROOT_PCH_DEPENDENCIES $<TARGET_OBJECTS:${dictionary}>)
-    endif()
   else()
     add_custom_target(${dictionary} DEPENDS ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file})
+  endif()
 
-    # Error out if this dictionary should be part of the PCH but won't cause
-    # it to regenerate it when it changes, due to the missing file-level dependency.
-    # We cannot add a dependency on the dictionary source since that creates a race
-    # condition on the custom command that generates the dictionary. Any target that
-    # triggers this error should be moved to use the object library as intermediate.
-    if(PROJECT_NAME STREQUAL "ROOT" AND NOT "${ARG_MODULE}" STREQUAL "")
-      message(FATAL_ERROR "Target ${dictionary} will not cause PCH to regenerate!")
-    endif()
+  if(PROJECT_NAME STREQUAL "ROOT")
+    set_property(GLOBAL APPEND PROPERTY ROOT_PCH_DEPENDENCIES ${dictionary})
   endif()
 
   if(ARG_MULTIDICT)
