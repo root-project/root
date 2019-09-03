@@ -59,10 +59,6 @@ public:
 
    RLine(const RPadPos& p1, const RPadPos& p2) : fP1(p1), fP2(p2) {}
 
-
-   RAttrLineNew lineatt() { return RAttrLineNew(*this); }
-
-
    void SetP1(const RPadPos& p1) { fP1 = p1; }
    void SetP2(const RPadPos& p2) { fP2 = p2; }
 
@@ -78,6 +74,14 @@ public:
       topPad.AddDisplayItem(
          std::make_unique<ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RLine>>(this));
    }
+};
+
+
+class RLineNew : public RDrawable {
+
+public:
+   RAttrLineNew lineatt() { return RAttrLineNew(*this); }
+
 };
 
 inline std::shared_ptr<ROOT::Experimental::RLine>

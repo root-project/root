@@ -47,14 +47,18 @@ class RDrawableAttributesNew {
 
    std::string fPrefix; ///<! name prefix for all attributes values
 
-   const RDrawableAttributesContainer &fDefaults; ///<! default values for attributes
+   RDrawableAttributesContainer &fDefaults; ///<! default values for attributes
 
    std::string GetFullName(const std::string &name) const { return fPrefix.empty() ? name : fPrefix + "." + name; }
+
+protected:
+
+   /** Should be used in the constructor */
+   void SetDefaults(RDrawableAttributesContainer &dflts) { fDefaults = dflts; }
 
 public:
 
    RDrawableAttributesNew(RDrawable &d, const std::string &prefix);
-   RDrawableAttributesNew(RDrawable &d, const std::string &prefix, RDrawableAttributesContainer &dflts) : fDrawable(d), fPrefix(prefix), fDefaults(dflts)  {}
    virtual ~RDrawableAttributesNew() {}
 
    /** use const char* - nullptr means no value found */
@@ -78,30 +82,30 @@ public:
    void SetFloat(const std::string &name, const float value);
 };
 
-
+class RDrawableDisplayItem;
 
 class RDrawable {
 friend class RPadBase;
 friend class RDrawableAttributesNew;
+friend class RDrawableDisplayItem;
+
 private:
 
    std::string  fId; ///< object identifier, unique inside RCanvas
 
-   std::unique_ptr<RDrawableAttributesContainer> fNewAttributes; ///< container for any kind of attribute associated with drawable, attributes can be styled
+   RDrawableAttributesContainer fNewAttributes; ///< container for any kind of attribute associated with drawable, attributes can be styled
 
-   const RDrawableAttributesContainer &fDefaults; ///<! default values for drawable attributes
+   RDrawableAttributesContainer &fDefaults; ///<! default values for drawable attributes
 
 protected:
 
    void ClearAttributes();
 
-
+   void SetDefaults(RDrawableAttributesContainer &dflts) { fDefaults = dflts; }
 
 public:
 
    RDrawable();
-
-   RDrawable(const RDrawableAttributesContainer &dflts) : fDefaults(dflts) {}
 
    virtual ~RDrawable();
 

@@ -40,7 +40,7 @@ void ROOT::Experimental::RDrawable::Execute(const std::string &)
 
 void ROOT::Experimental::RDrawable::ClearAttributes()
 {
-   fNewAttributes.reset();
+   fNewAttributes.clear();
 }
 
 
@@ -52,19 +52,17 @@ ROOT::Experimental::RDrawableAttributesNew::RDrawableAttributesNew(RDrawable &d,
 
 const char *ROOT::Experimental::RDrawableAttributesNew::Eval(const std::string &name) const
 {
-   if (fDrawable.fNewAttributes) {
-      auto entry = fDrawable.fNewAttributes->find(GetFullName(name));
-      if (entry != fDrawable.fNewAttributes->end())
-         return entry->second.c_str();
-   }
+   auto entry = fDrawable.fNewAttributes.find(GetFullName(name));
+   if (entry != fDrawable.fNewAttributes.end())
+      return entry->second.c_str();
 
-   auto entry = fDefaults.find(name);
-   if (entry != fDefaults.end())
-     return entry->second.c_str();
+   auto centry = fDefaults.find(name);
+   if (centry != fDefaults.end())
+     return centry->second.c_str();
 
-   const auto centry = fDrawable.fDefaults.find(GetFullName(name));
-   if (centry != fDrawable.fDefaults.end())
-      return centry->second.c_str();
+   auto centry2 = fDrawable.fDefaults.find(GetFullName(name));
+   if (centry2 != fDrawable.fDefaults.end())
+      return centry2->second.c_str();
 
    return nullptr;
 }
@@ -73,27 +71,18 @@ void ROOT::Experimental::RDrawableAttributesNew::SetValue(const std::string &nam
 {
    if (val) {
 
-      if (!fDrawable.fNewAttributes)
-         fDrawable.fNewAttributes = std::make_unique<RDrawableAttributesContainer>();
+      fDrawable.fNewAttributes[GetFullName(name)] = val;
 
-      fDrawable.fNewAttributes->at(GetFullName(name)) = val;
-
-   } else if (fDrawable.fNewAttributes) {
-      auto elem = fDrawable.fNewAttributes->find(GetFullName(name));
-      if (elem != fDrawable.fNewAttributes->end()) {
-         fDrawable.fNewAttributes->erase(elem);
-         if (fDrawable.fNewAttributes->size() == 0)
-            fDrawable.fNewAttributes.reset();
-      }
+   } else {
+      auto elem = fDrawable.fNewAttributes.find(GetFullName(name));
+      if (elem != fDrawable.fNewAttributes.end())
+         fDrawable.fNewAttributes.erase(elem);
    }
 }
 
 void ROOT::Experimental::RDrawableAttributesNew::SetValue(const std::string &name, const std::string &value)
 {
-   if (!fDrawable.fNewAttributes)
-      fDrawable.fNewAttributes = std::make_unique<RDrawableAttributesContainer>();
-
-   fDrawable.fNewAttributes->at(GetFullName(name)) = value;
+   fDrawable.fNewAttributes[GetFullName(name)] = value;
 }
 
 /** Clear all respective values from drawable. Only defaults can be used */
