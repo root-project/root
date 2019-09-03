@@ -19,6 +19,9 @@
 #include <ROOT/RDrawingAttr.hxx>
 #include <ROOT/RColor.hxx>
 
+#include <ROOT/RDrawable.hxx>
+
+
 namespace ROOT {
 namespace Experimental {
 
@@ -40,6 +43,19 @@ public:
    ///The style of the line.
    RAttrLine &SetStyle(int style) { Set("style", style); return *this; }
    int GetStyle() const { return Get<int>("style"); }
+};
+
+
+class RAttrLineNew : public RDrawableAttributesNew {
+public:
+
+   ///The width of the line.
+   RAttrLineNew &SetWidth(float width) { SetFloat("width", width); return *this; }
+   float GetWidth() const { return GetFloat("width"); }
+
+   ///The style of the line.
+   RAttrLineNew &SetStyle(int style) { SetInt("style", style); return *this; }
+   int GetStyle() const { return GetInt("style"); }
 };
 
 } // namespace Experimental

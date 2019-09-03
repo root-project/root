@@ -41,7 +41,6 @@ class RPadPainter;
 
 using RDrawableAttributesContainer = std::unordered_map<std::string, std::string>;
 
-
 /** Access to drawable attributes, never should be stored */
 class RDrawableAttributesNew {
    RDrawable &fDrawable; ///<! reference
@@ -57,10 +56,22 @@ public:
    virtual ~RDrawableAttributesNew() {}
 
    /** use const char* - nullptr means no value found */
-   const char *Eval(const std::string &name);
+   const char *Eval(const std::string &name) const;
+
+   void SetValue(const std::string &name, const char *val);
+
+   void SetValue(const std::string &name, const std::string &value);
+
+   void ClearValue(const std::string &name) { SetValue(name, (const char *)nullptr); }
 
    /** returns true when value exists */
-   bool HasValue(const std::string &name) { return Eval(name) != nullptr; }
+   bool HasValue(const std::string &name) const { return Eval(name) != nullptr; }
+
+   int GetInt(const std::string &name) const;
+   void SetInt(const std::string &name, const int value);
+
+   float GetFloat(const std::string &name) const;
+   void SetFloat(const std::string &name, const float value);
 };
 
 
