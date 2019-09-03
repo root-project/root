@@ -22,15 +22,12 @@ Landau distribution p.d.f
 **/
 
 #include "RooLandau.h"
-#include "TMath.h"
+#include "RooHelpers.h"
 #include "RooFit.h"
-
 #include "RooRandom.h"
 #include "BatchHelpers.h"
 
-#include "TError.h"
-
-using namespace std;
+#include "TMath.h"
 
 ClassImp(RooLandau);
 
@@ -42,6 +39,7 @@ RooLandau::RooLandau(const char *name, const char *title, RooAbsReal& _x, RooAbs
   mean("mean","Mean",this,_mean),
   sigma("sigma","Width",this,_sigma)
 {
+  RooHelpers::checkRangeOfParameters(this, {&_sigma}, 0.0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -228,7 +226,7 @@ Int_t RooLandau::getGenerator(const RooArgSet& directVars, RooArgSet &generateVa
 
 void RooLandau::generateEvent(Int_t code)
 {
-  R__ASSERT(code==1) ;
+  assert(1 == code); (void)code;
   Double_t xgen ;
   while(1) {
     xgen = RooRandom::randomGenerator()->Landau(mean,sigma);

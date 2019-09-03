@@ -708,7 +708,7 @@ Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const
   if(prob < 0) {
     logEvalError("getLogVal() top-level p.d.f evaluates to a negative number") ;
 
-    return 0;
+    return std::numeric_limits<double>::quiet_NaN();
   }
 
   if(prob == 0) {
@@ -795,7 +795,7 @@ RooSpan<const double> RooAbsPdf::getLogValBatch(std::size_t begin, std::size_t m
     double theLog = vdt::fast_log(prob);
 
     if (prob < 0) {
-      theLog = prob;
+      theLog = std::numeric_limits<double>::quiet_NaN();
     } else if (prob == 0 || TMath::IsNaN(prob)) {
       theLog = -std::numeric_limits<double>::infinity();
     }

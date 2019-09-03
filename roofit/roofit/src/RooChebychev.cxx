@@ -23,20 +23,14 @@ implicitly assumed to be 1, and the list of coefficients supplied by callers
 starts with the coefficient that goes with \f$ T_1(x)=x \f$ (i.e. the linear term).
 **/
 
-#include <cmath>
-#include <iostream>
-
-#include "RooFit.h"
-
-#include "Riostream.h"
-
 #include "RooChebychev.h"
+#include "RooFit.h"
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooArgList.h"
 #include "RooNameReg.h"
 
-#include "TError.h"
+#include <cmath>
 
 ClassImp(RooChebychev);
 
@@ -127,19 +121,15 @@ RooChebychev::RooChebychev(const char* name, const char* title,
   _coefList("coefficients","List of coefficients",this),
   _refRangeName(0)
 {
-  TIterator* coefIter = coefList.createIterator() ;
-  RooAbsArg* coef ;
-  while((coef = (RooAbsArg*)coefIter->Next())) {
+  for (const auto coef : coefList) {
     if (!dynamic_cast<RooAbsReal*>(coef)) {
-   std::cerr << "RooChebychev::ctor(" << GetName() <<
+      coutE(InputArguments) << "RooChebychev::ctor(" << GetName() <<
        ") ERROR: coefficient " << coef->GetName() <<
        " is not of type RooAbsReal" << std::endl ;
-      R__ASSERT(0) ;
+      throw std::invalid_argument("Wrong input arguments for RooChebychev");
     }
     _coefList.add(*coef) ;
   }
-
-  delete coefIter ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -258,7 +248,7 @@ Int_t RooChebychev::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVar
 
 Double_t RooChebychev::analyticalIntegral(Int_t code, const char* rangeName) const
 {
-  R__ASSERT(1 == code);
+  assert(1 == code); (void)code;
 
   const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName():0);
   const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName():0);
