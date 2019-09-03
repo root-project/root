@@ -8,8 +8,6 @@
 #  RootMacros.cmake
 #---------------------------------------------------------------------------------------------------
 
-set(THISDIR ${CMAKE_CURRENT_LIST_DIR})
-
 if(WIN32)
   set(libprefix lib)
   set(ld_library_path PATH)
@@ -1270,6 +1268,10 @@ function(REFLEX_BUILD_DICTIONARY dictionary headerfiles selectionfile )
   install(CODE "EXECUTE_PROCESS(COMMAND ${merge_rootmap_cmd} --do-merge --input-file ${srcRootMap} --merged-file ${mergedRootMap})")
 endfunction()
 
+# Need to set this outside of the function so that ${CMAKE_CURRENT_LIST_DIR}
+# is for RootMacros.cmake and not for the file currently calling the function.
+set(ROOT_TEST_DRIVER ${CMAKE_CURRENT_LIST_DIR}/RootTestDriver.cmake)
+
 #----------------------------------------------------------------------------
 # function ROOT_ADD_TEST( <name> COMMAND cmd [arg1... ]
 #                        [PRECMD cmd [arg1...]] [POSTCMD cmd [arg1...]]
@@ -1405,11 +1407,6 @@ function(ROOT_ADD_TEST test)
     set(_command ${_command} -DCOPY=${_copy_files})
   endif()
 
-  #- Locate the test driver
-  find_file(ROOT_TEST_DRIVER RootTestDriver.cmake PATHS ${THISDIR} ${CMAKE_MODULE_PATH} NO_DEFAULT_PATH)
-  if(NOT ROOT_TEST_DRIVER)
-    message(FATAL_ERROR "ROOT_ADD_TEST: RootTestDriver.cmake not found!")
-  endif()
   set(_command ${_command} -P ${ROOT_TEST_DRIVER})
 
   if(ARG_WILLFAIL)
