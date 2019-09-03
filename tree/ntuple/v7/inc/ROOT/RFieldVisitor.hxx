@@ -16,6 +16,8 @@
 #ifndef ROOT7_RFieldVisitor
 #define ROOT7_RFieldVisitor
 
+#include <ROOT/RField.hxx>
+
 #include <algorithm>
 #include <iostream>
 #include <sstream>
@@ -24,9 +26,9 @@
 
 namespace ROOT {
 namespace Experimental {
-class RFieldRoot;
+class RNTupleReader;
 namespace Detail {
-class RFieldBase;
+class RFieldValue;
 
 
 // clang-format off
@@ -42,6 +44,15 @@ class RNTupleVisitor {
 public:
    virtual void VisitField(const Detail::RFieldBase &field, int level) = 0;
    virtual void VisitRootField(const RFieldRoot &field, int level) = 0;
+   virtual void VisitBoolField(const RField<bool> &field, int level) {VisitField(field, level);}
+   virtual void VisitDoubleField(const RField<double> &field, int level) {VisitField(field, level);}
+   virtual void VisitFloatField(const RField<float> &field, int level) {VisitField(field, level);}
+   virtual void VisitIntField(const RField<int> &field, int level) {VisitField(field, level);}
+   virtual void VisitStringField(const RField<std::string> &field, int level) {VisitField(field, level);}
+   virtual void VisitUIntField(const RField<std::uint32_t> &field, int level) {VisitField(field, level);}
+   virtual void VisitUInt64Field(const RField<std::uint64_t> &field, int level) {VisitField(field, level);}
+   virtual void VisitUInt8Field(const RField<std::uint8_t> &field, int level) {VisitField(field, level);}
+   
 };
 } // namespace Detail
 // clang-format off
@@ -126,7 +137,36 @@ public:
       fAvailableSpaceValueString = fWidth - 6 - fAvailableSpaceKeyString;
    }
 };
-
+// clang-format off
+/**
+\class ROOT::Experimental::RValueVisitor
+\ingroup NTuple
+\brief Traverses through an ntuple to display its entries.
+    
+Each visit outputs the entry of a single field as in a .json file.
+*/
+// clang-format on
+// NOTE (lesimon): currently no support for char, std::array, standard arrays,
+//    RField<Clustersize_t>, not sure about std::int64_t.
+class RValueVisitor: public Detail::RNTupleVisitor {
+private:
+   RNTupleReader* fReader;
+   std::ostream &fOutput;
+   int fIndex;
+public:
+   RValueVisitor(std::ostream &output, RNTupleReader* reader, int index): fReader{reader}, fOutput{output}, fIndex{index} {}
+   void VisitField(const Detail::RFieldBase &field, int level) final;
+   void VisitRootField(const RFieldRoot &/*fField*/, int /*level*/) final { }
+   void VisitBoolField(const RField<bool> &field, int level) final;
+   void VisitDoubleField(const RField<double> &field, int level) final;
+   void VisitFloatField(const RField<float> &field, int level) final;
+   void VisitIntField(const RField<int> &field, int level) final;
+   void VisitStringField(const RField<std::string> &field, int level) final;
+   void VisitUIntField(const RField<std::uint32_t> &field, int level) final;
+   void VisitUInt64Field(const RField<std::uint64_t> &field, int level) final;
+   void VisitUInt8Field(const RField<std::uint8_t> &field, int level) final;
+   std::ostream& GetOutput() {return fOutput;}
+};
    
 // clang-format off
 /**
@@ -134,11 +174,12 @@ public:
 \ingroup NTuple
 \brief Contains helper functions for RNTupleReader::PrintInfo() and RPrintVisitor::VisitField()
     
- The functions in this class format strings which are displayed when RNTupleReader::PrinfInfo() is called.
+ The functions in this class format strings which are displayed when RNTupleReader::PrintInfo() or RNTupleReader::Show() is called.
 */
 // clang-format on
 class RNTupleFormatter {
 public:
+   static std::string FieldHierarchy(const Detail::RFieldBase &field);
    static std::string FitString(const std::string &str, int availableSpace);
    static std::string HierarchialFieldOrder(const Detail::RFieldBase &field);
 };

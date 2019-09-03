@@ -223,7 +223,33 @@ void ROOT::Experimental::Detail::RFieldBase::TraverseVisitor(RNTupleVisitor &vis
 
 void ROOT::Experimental::Detail::RFieldBase::AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const
 {
-    visitor.VisitField(*this, level);
+   visitor.VisitField(*this, level);
+}
+
+void ROOT::Experimental::Detail::RFieldBase::TraverseValueVisitor(RValueVisitor &visitor, int level) const
+{
+   // subfields of a std::vector shouldn't be displayed
+   if ((GetLevelInfo().GetLevel() != 0) && (GetParent()->GetStructure() == ENTupleStructure::kCollection)) return;
+   
+   if (this->GetLevelInfo().GetOrder() == 1)
+   {
+      for (int i = 1; i < level; ++i) visitor.GetOutput() << "  ";
+      visitor.GetOutput() << '{' << std::endl;
+   }
+   this->AcceptVisitor(visitor, level);
+   /*if(this->GetParent()->GetLevelInfo().GetLevel() != 0) {
+      visitor.SetValue((void*)((std::uint8_t*)visitor.GetValue() + this->GetValueSize()));
+   }*/ // to remove later.
+   ++level;
+   for (const auto &fieldPtr: fSubFields) {
+      fieldPtr->TraverseValueVisitor(visitor, level);
+   }
+   
+   if (this->GetLevelInfo().GetOrder() == this->GetLevelInfo().GetNumSiblings())
+   {
+      for(int i = 1; i < level-1; ++i) visitor.GetOutput() << "  ";
+      visitor.GetOutput() << '}' << std::endl;
+   }
 }
 
 ROOT::Experimental::Detail::RFieldBase::RIterator ROOT::Experimental::Detail::RFieldBase::begin()
@@ -314,6 +340,10 @@ void ROOT::Experimental::RField<std::uint8_t>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
+void ROOT::Experimental::RField<std::uint8_t>::AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const
+{
+   visitor.VisitUInt8Field(*this, level);
+}
 
 //------------------------------------------------------------------------------
 
@@ -326,6 +356,10 @@ void ROOT::Experimental::RField<bool>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
+void ROOT::Experimental::RField<bool>::AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const
+{
+   visitor.VisitBoolField(*this, level);
+}
 
 //------------------------------------------------------------------------------
 
@@ -338,6 +372,11 @@ void ROOT::Experimental::RField<float>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
+void ROOT::Experimental::RField<float>::AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const
+{
+   visitor.VisitFloatField(*this, level);
+}
+
 //------------------------------------------------------------------------------
 
 void ROOT::Experimental::RField<double>::DoGenerateColumns()
@@ -348,6 +387,10 @@ void ROOT::Experimental::RField<double>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
+void ROOT::Experimental::RField<double>::AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const
+{
+   visitor.VisitDoubleField(*this, level);
+}
 
 //------------------------------------------------------------------------------
 
@@ -357,6 +400,11 @@ void ROOT::Experimental::RField<std::int32_t>::DoGenerateColumns()
    fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(Detail::RColumn::Create<
       std::int32_t, EColumnType::kInt32>(model, 0)));
    fPrincipalColumn = fColumns[0].get();
+}
+
+void ROOT::Experimental::RField<std::int32_t>::AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const
+{
+   visitor.VisitIntField(*this, level);
 }
 
 //------------------------------------------------------------------------------
@@ -369,6 +417,11 @@ void ROOT::Experimental::RField<std::uint32_t>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
+void ROOT::Experimental::RField<std::uint32_t>::AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const
+{
+   visitor.VisitUIntField(*this, level);
+}
+
 //------------------------------------------------------------------------------
 
 void ROOT::Experimental::RField<std::uint64_t>::DoGenerateColumns()
@@ -377,6 +430,11 @@ void ROOT::Experimental::RField<std::uint64_t>::DoGenerateColumns()
    fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
       Detail::RColumn::Create<std::uint64_t, EColumnType::kInt64>(model, 0)));
    fPrincipalColumn = fColumns[0].get();
+}
+
+void ROOT::Experimental::RField<std::uint64_t>::AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const
+{
+   visitor.VisitUInt64Field(*this, level);
 }
 
 //------------------------------------------------------------------------------
@@ -421,6 +479,10 @@ void ROOT::Experimental::RField<std::string>::CommitCluster()
    fIndex = 0;
 }
 
+void ROOT::Experimental::RField<std::string>::AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const
+{
+   visitor.VisitStringField(*this, level);
+}
 
 //------------------------------------------------------------------------------
 
