@@ -2,15 +2,9 @@
 #define __BRANCHEDTREE_HXX_
 
 #include <string>
-#include <map>
-#include <iostream>
-
-#include "json.hpp"
-#include <fstream>
-#include <sstream>
-#include <streambuf>
 #include <vector>
 #include <memory>
+#include "json.hpp"
 
 using json = nlohmann::json;
 
