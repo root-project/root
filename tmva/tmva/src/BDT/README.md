@@ -21,6 +21,7 @@ Run `bash run.sh`!
 - Non-unique namespace when jitting
 - Be carefull when using Jitting. The code generation makes use of std::to_string which could crete problems... see https://en.cppreference.com/w/cpp/string/basic_string/to_string for more about this.
 - When using array_bdt, the depth should be limited, of the allocation of memory might give `std::bad_alloc`. (max depth ~= 28???)
+- We used int instead of size_t, so the max size are reduced!
 
 
 ## From xgboost doc we have:

@@ -37,6 +37,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// logistic function
+///
+/// \tparam T type, usually floating point type (float, double, long double)
 /// \param[in] value score to be transformed in probability
 /// \param[out] logistic function of the input
 template <typename T>
@@ -47,6 +49,8 @@ inline T logistic_function(T value)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// binary logistic function
+///
+/// \tparam T type, usually floating point type (float, double, long double)
 template <typename T>
 inline bool binary_logistic(T value)
 {
