@@ -433,6 +433,33 @@ void MethodPyKeras::Train() {
    PyRunString("history = model.fit(trainX, trainY, sample_weight=trainWeights, batch_size=batchSize, epochs=numEpochs, verbose=verbose, validation_data=(valX, valY, valWeights), callbacks=callbacks)",
                "Failed to train model");
 
+
+   std::vector<float> fHistory; // Hold training history  (val_acc or loss etc)
+   fHistory.resize(fNumEpochs); // holds training loss or accuracy output
+   npy_intp dimsHistory[1] = { (npy_intp)fNumEpochs};
+   PyArrayObject* pHistory = (PyArrayObject*)PyArray_SimpleNewFromData(1, dimsHistory, NPY_FLOAT, (void*)&fHistory[0]);
+   PyDict_SetItemString(fLocalNS, "HistoryOutput", (PyObject*)pHistory);
+
+   // Store training history data
+   Int_t iHis=0;
+   PyRunString("number_of_keys=len(history.history.keys())");
+   PyObject* PyNkeys=PyDict_GetItemString(fLocalNS, "number_of_keys");
+   int nkeys=PyLong_AsLong(PyNkeys);
+   PyObject* stra=NULL;
+   for (iHis=0; iHis<nkeys; iHis++) {
+      std::cout<<"Getting his:"<<iHis<<std::endl;
+      PyRunString(TString::Format("copy_string=history.history.keys()[%d]",iHis));
+      PyObject* stra=PyDict_GetItemString(fLocalNS, "copy_string");
+      if(!stra) break;
+      const char* name = PyString_AsString(stra);
+      PyRunString("print(history.history.keys())","Failed to do printing of history");
+      PyRunString(TString::Format("for i,p in enumerate(history.history['%s']):\n   HistoryOutput[i]=p\n",name),
+                  TString::Format("Failed to get %s from training history",name));
+      for (int i=0; i<fHistory.size(); i++)
+         fTrainHistory.AddValue(name,i+1,fHistory[i]);
+
+   }
+   
    /*
     * Store trained model to file (only if option 'SaveBestOnly' is NOT activated,
     * because we do not want to override the best model checkpoint)

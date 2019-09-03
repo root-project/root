@@ -1184,6 +1184,13 @@ void TMVA::Factory::TrainAllMethods()
      }
       }
 
+      for (UInt_t i=0; i<methods->size(); i++) {
+         MethodBase* m = dynamic_cast<MethodBase*>((*methods)[i]);
+         if(m==0) continue;
+         m->BaseDir()->cd();
+         m->fTrainHistory.SaveHistory(m->GetMethodName());
+      }
+
       // delete all methods and recreate them from weight file - this ensures that the application
       // of the methods (in TMVAClassificationApplication) is consistent with the results obtained
       // in the testing
@@ -1386,6 +1393,8 @@ void TMVA::Factory::EvaluateAllMethods( void )
       std::vector<std::vector<Float_t> > multiclass_trainEff;
       std::vector<std::vector<Float_t> > multiclass_testPur;
       std::vector<std::vector<Float_t> > multiclass_trainPur;
+      
+      std::vector<std::vector<Float_t> > train_history;
 
       // Multiclass confusion matrices.
       std::vector<TMatrixD> multiclass_trainConfusionEffB01;
