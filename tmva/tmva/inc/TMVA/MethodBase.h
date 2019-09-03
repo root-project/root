@@ -55,6 +55,7 @@
 #include "TMVA/Event.h"
 #include "TMVA/TransformationHandler.h"
 #include <TMVA/Results.h>
+#include "TMVA/TrainingHistory.h"
 
 #include <TFile.h>
 
@@ -88,6 +89,7 @@ namespace TMVA {
    namespace Experimental {
    class Classification;
    }
+   class TrainingHistory;
 
    class IPythonInteractive {
    public:
@@ -222,6 +224,12 @@ namespace TMVA {
 
       // multiclass classification response
       virtual const std::vector<Float_t>& GetMulticlassValues() {
+         std::vector<Float_t>* ptr = new std::vector<Float_t>(0);
+         return (*ptr);
+      }
+
+      // Training history
+      virtual const std::vector<Float_t>& GetTrainingHistory(const char* name) {
          std::vector<Float_t>* ptr = new std::vector<Float_t>(0);
          return (*ptr);
       }
@@ -414,6 +422,7 @@ namespace TMVA {
       const Event*     GetTestingEvent ( Long64_t ievt ) const;
       const std::vector<TMVA::Event*>& GetEventCollection( Types::ETreeType type );
 
+      TrainingHistory  fTrainHistory;
       // ---------- public auxiliary methods ---------------------------------------
 
       // this method is used to decide whether an event is signal- or background-like

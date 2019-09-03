@@ -181,6 +181,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     TMVA/TNeuronInputSqSum.h
     TMVA/TNeuronInputSum.h
     TMVA/Tools.h
+    TMVA/TrainingHistory.h
     TMVA/TransformationHandler.h
     TMVA/TSpline1.h
     TMVA/TSpline2.h
@@ -341,6 +342,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     src/TNeuronInputSqSum.cxx
     src/TNeuronInputSum.cxx
     src/Tools.cxx
+    src/TrainingHistory.cxx
     src/TransformationHandler.cxx
     src/TSpline1.cxx
     src/TSpline2.cxx

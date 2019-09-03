@@ -44,6 +44,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVAGui
     TMVA/rulevisCorr.h
     TMVA/rulevisHists.h
     TMVA/tmvaglob.h
+    TMVA/training_history.h
     TMVA/variables.h
     TMVA/variablesMultiClass.h
   SOURCES
@@ -76,6 +77,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVAGui
     src/rulevisCorr.cxx
     src/rulevisHists.cxx
     src/tmvaglob.cxx
+    src/training_history.cxx
     src/variables.cxx
     src/variablesMultiClass.cxx
     src/BDT.cxx

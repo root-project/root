@@ -1399,6 +1399,9 @@ void MethodDL::TrainDeepNet()
             Double_t regTerm = (includeRegularization) ? deepNet.RegularizationTerm() : 0.0; 
             valError /= (Double_t)(nValidationSamples / settings.batchSize);
             valError += regTerm; 
+
+            //Log the loss value
+            fTrainHistory.AddValue("valError",optimizer->GetGlobalStep(),valError);
             
             t2 = std::chrono::system_clock::now();
 
@@ -1440,6 +1443,9 @@ void MethodDL::TrainDeepNet()
             // normalize loss to number of batches and add regularization term 
             trainingError /= (Double_t)(nTrainingSamples / settings.batchSize);
             trainingError += regTerm; 
+
+            //Log the loss value
+            fTrainHistory.AddValue("trainingError",optimizer->GetGlobalStep(),trainingError);
 
             // stop measuring
             tend = std::chrono::system_clock::now();
