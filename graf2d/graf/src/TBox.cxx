@@ -138,16 +138,16 @@ Int_t TBox::DistancetoPrimitive(Int_t px, Int_t py)
    Int_t py1 = gPad->YtoAbsPixel(fY1);
    Int_t px2 = gPad->XtoAbsPixel(fX2);
    Int_t py2 = gPad->YtoAbsPixel(fY2);
-   
-   if(gPad->GetLogx()){
+
+   if (gPad->GetLogx()) {
      px1 = gPad->XtoAbsPixel(TMath::Log10(GetX1()));
      px2 = gPad->XtoAbsPixel(TMath::Log10(GetX2()));
    }
-   if(gPad->GetLogy()){
+   if (gPad->GetLogy()) {
      py1 = gPad->YtoAbsPixel(TMath::Log10(GetY1()));
      py2 = gPad->YtoAbsPixel(TMath::Log10(GetY2()));
    }
-   
+
    if (px1 < px2) {pxl = px1; pxt = px2;}
    else           {pxl = px2; pxt = px1;}
    if (py1 < py2) {pyl = py1; pyt = py2;}
@@ -278,15 +278,15 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       px2 = gPad->XtoAbsPixel(GetX2());
       py2 = gPad->YtoAbsPixel(GetY2());
 
-      if(gPad->GetLogx()){
+      if (gPad->GetLogx()) {
         px1 = gPad->XtoAbsPixel(TMath::Log10(GetX1()));
         px2 = gPad->XtoAbsPixel(TMath::Log10(GetX2()));
       }
-      if(gPad->GetLogy()){
+      if (gPad->GetLogy()) {
         py1 = gPad->YtoAbsPixel(TMath::Log10(GetY1()));
         py2 = gPad->YtoAbsPixel(TMath::Log10(GetY2()));
       }
-       
+
       if (px1 < px2) {
          pxl = px1;
          pxt = px2;
@@ -505,16 +505,16 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             fX2 = gPad->AbsPixeltoX(px2);
             fY2 = gPad->AbsPixeltoY(py2);
          }
-	 
-	 if(gPad->GetLogx()){
-           fX1 = TMath::Power(10,fX1);
-           fX2 = TMath::Power(10,fX2);
-	 }	  
-	 if(gPad->GetLogy()){
-           fY1 = TMath::Power(10,fY1);
-           fY2 = TMath::Power(10,fY2);
-	 }
-	 
+
+         if (gPad->GetLogx()) {
+            fX1 = TMath::Power(10,fX1);
+            fX2 = TMath::Power(10,fX2);
+         }
+         if (gPad->GetLogy()) {
+            fY1 = TMath::Power(10,fY1);
+            fY2 = TMath::Power(10,fY2);
+         }
+
          if (pINSIDE) gPad->ShowGuidelines(this, event, 'i', true);
          if (pTop) gPad->ShowGuidelines(this, event, 't', true);
          if (pBot) gPad->ShowGuidelines(this, event, 'b', true);
@@ -577,15 +577,15 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             fX2 = gPad->AbsPixeltoX(px2);
             fY2 = gPad->AbsPixeltoY(py2);
          }
-	 
-	 if(gPad->GetLogx()){
-           fX1 = TMath::Power(10,fX1);
-           fX2 = TMath::Power(10,fX2);
-	 }	  
-	 if(gPad->GetLogy()){
-           fY1 = TMath::Power(10,fY1);
-           fY2 = TMath::Power(10,fY2);
-	 }
+
+         if (gPad->GetLogx()) {
+            fX1 = TMath::Power(10,fX1);
+            fX2 = TMath::Power(10,fX2);
+         }
+         if (gPad->GetLogy()) {
+            fY1 = TMath::Power(10,fY1);
+            fY2 = TMath::Power(10,fY2);
+         }
 
          if (pINSIDE) {
             // if it was not a pad that was moved then it must have been
