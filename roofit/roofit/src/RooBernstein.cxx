@@ -32,19 +32,15 @@ See also
 http://www.idav.ucdavis.edu/education/CAGDNotes/Bernstein-Polynomials.pdf
 **/
 
-#include "RooFit.h"
-
-#include "Riostream.h"
-#include "Riostream.h"
-#include <math.h>
-#include "TMath.h"
 #include "RooBernstein.h"
+#include "RooFit.h"
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooArgList.h"
 
-#include "TError.h"
+#include "TMath.h"
 
+#include <cmath>
 using namespace std;
 
 ClassImp(RooBernstein);
