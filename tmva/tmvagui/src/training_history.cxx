@@ -74,8 +74,6 @@ void TMVA::plot_training_history(TString dataset, TFile* /*file*/, TDirectory* B
                if (h->GetBinLowEdge(0) < x1 ) x1 = h->GetBinLowEdge(0);
                if (h->GetBinLowEdge(h->GetNbinsX()+1 ) > x2 ) x2 = h->GetBinLowEdge(h->GetNbinsX()+1 );
                
-               std::cout<<"X:"<<x1<<"\t"<<x2<<std::endl;
-               std::cout<<"Y:"<<y1<<"\t"<<y2<<std::endl;
             }
          }
       }

@@ -58,17 +58,15 @@ void TMVA::TrainingHistory::AddValue(TString Property,Int_t stage, Double_t valu
 void TMVA::TrainingHistory::SaveHistory(TString Name)
 {
    //if (fHistoryData.empty()) return;
-   //for(std::map<TString,Int_t>::iterator element = fHistoryMap.begin(); element != fHistoryMap.end(); ++element) {
-   //for (auto element :fHistoryMap) {
    for ( const auto &element : fHistoryMap ) {
       TString property = element.first;
       Int_t iHistory = element.second;
       Int_t nBins=fHistoryData.at(iHistory)->size();
       Double_t xMin=fHistoryData.at(iHistory)->front().first;
       Double_t xMax=fHistoryData.at(iHistory)->back().first;
-      TH1D* h=new TH1D("TrainingHistory_"+Name+"_"+property,"TrainingHistory_"+Name+"_"+property,nBins,xMin,xMax);
+      Double_t BinSize=(xMax-xMin)/(Double_t)(nBins-1);
+      TH1D* h=new TH1D("TrainingHistory_"+Name+"_"+property,"TrainingHistory_"+Name+"_"+property,nBins,xMin-0.5*BinSize,xMax+0.5*BinSize);
       for (int i=0; i<nBins; i++) {
-         std::cout<<fHistoryData.at(iHistory)->at(i).first<<"\t"<<fHistoryData.at(iHistory)->at(i).second<<std::endl;
          h->AddBinContent(i+1,fHistoryData.at(iHistory)->at(i).second);
       }
       h->Print();
