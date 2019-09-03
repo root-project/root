@@ -49,7 +49,12 @@ public:
 class RAttrLineNew : public RDrawableAttributesNew {
 public:
 
-   RAttrLineNew(RDrawable &d, const std::string &prefix = "line") : RDrawableAttributesNew(d, prefix) {}
+   RAttrLineNew(RDrawable &d, const std::string &prefix = "line") :
+      RDrawableAttributesNew(d, prefix)
+   {
+      static RDrawableAttributesContainer dflts = { {"width","1"}, {"style","1"} };
+      SetDefaults(dflts);
+   }
 
    ///The width of the line.
    RAttrLineNew &SetWidth(float width) { SetFloat("width", width); return *this; }
