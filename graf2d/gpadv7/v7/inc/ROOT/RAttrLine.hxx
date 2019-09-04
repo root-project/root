@@ -45,14 +45,27 @@ public:
 };
 
 
-class RAttrLineNew : public RDrawableAttributesNew {
+class RAttrLineNew : public RAttributesVisitor {
+
+   auto &getDefaults()
+   {
+      static RAttributesContainer::Map_t dflts = { {"width","1"}, {"style","1"} };
+      return dflts;
+   }
+
 public:
 
-   RAttrLineNew(RDrawable &d, const std::string &prefix = "line") :
-      RDrawableAttributesNew(d, prefix)
+
+   RAttrLineNew(RAttributesContainer &cont, const std::string &prefix = "line") :
+      RAttributesVisitor(cont, prefix)
    {
-      static RDrawableAttributesContainer dflts = { {"width","1"}, {"style","1"} };
-      SetDefaults(dflts);
+      SetDefaults(getDefaults());
+   }
+
+   RAttrLineNew(const RAttributesContainer &cont, const std::string &prefix = "line") :
+      RAttributesVisitor(cont, prefix)
+   {
+      SetDefaults(getDefaults());
    }
 
    ///The width of the line.

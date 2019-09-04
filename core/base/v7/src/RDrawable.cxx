@@ -33,23 +33,70 @@ void ROOT::Experimental::RDrawable::Execute(const std::string &)
 }
 
 
-void ROOT::Experimental::RDrawable::ClearAttributes()
+//////////////////////////////////////////////////////////////////////////////////////
+
+const char *ROOT::Experimental::RAttributesContainer::Eval(const std::string &name) const
 {
-   fNewAttributes.clear();
+   auto cont = GetContainer();
+   if (cont) {
+      auto entry = cont->find(name);
+      if (entry != cont->end())
+         return entry->second.c_str();
+   }
+
+   return nullptr;
 }
 
 
-ROOT::Experimental::RDrawableAttributesNew::RDrawableAttributesNew(RDrawable &d, const std::string &prefix) :
-    fDrawable(d), fPrefix(prefix)
+void ROOT::Experimental::RAttributesContainer::SetValue(const std::string &name, const char *val)
 {
+   if (val) {
+
+      auto cont = MakeContainer();
+
+      (*cont)[name] = val;
+
+   } else if (GetContainer()) {
+
+      auto elem = fCont->find(name);
+      if (elem != fCont->end())
+         fCont->erase(elem);
+   }
+}
+
+void ROOT::Experimental::RAttributesContainer::SetValue(const std::string &name, const std::string &value)
+{
+   auto cont = MakeContainer();
+
+   (*cont)[name] = value;
+}
+
+void ROOT::Experimental::RAttributesContainer::Clear()
+{
+   // special case when container was read by I/O but not yet assigned to
+   if (fContIO && !fCont)
+      delete fContIO;
+
+   fContIO = nullptr;
+   fCont.reset();
 }
 
 
-const char *ROOT::Experimental::RDrawableAttributesNew::Eval(const std::string &name) const
+///////////////////////////////////////////////////////////////////////////////
+
+const char *ROOT::Experimental::RAttributesVisitor::Eval(const std::string &name) const
 {
-   auto entry = fDrawable.fNewAttributes.find(GetFullName(name));
-   if (entry != fDrawable.fNewAttributes.end())
-      return entry->second.c_str();
+   if (fFirstTime) {
+      fFirstTime = false;
+      if (!fCont)
+         fCont = fWeak.lock();
+   }
+
+   if (fCont) {
+      auto entry = fCont->find(GetFullName(name));
+      if (entry != fCont->end())
+         return entry->second.c_str();
+   }
 
    if (fDefaults) {
       const auto centry = fDefaults->find(name);
@@ -57,35 +104,53 @@ const char *ROOT::Experimental::RDrawableAttributesNew::Eval(const std::string &
          return centry->second.c_str();
    }
 
-   if (fDrawable.fDefaults) {
+/*   if (fDrawable.fDefaults) {
       const auto centry = fDrawable.fDefaults->find(GetFullName(name));
       if (centry != fDrawable.fDefaults->end())
          return centry->second.c_str();
    }
-
+*/
    return nullptr;
 }
 
-void ROOT::Experimental::RDrawableAttributesNew::SetValue(const std::string &name, const char *val)
+void ROOT::Experimental::RAttributesVisitor::SetValue(const std::string &name, const char *val)
 {
+   if (fFirstTime) {
+      fFirstTime = false;
+      if (!fCont)
+         fCont = fWeak.lock();
+   }
+
+   if (!fCont)
+      return;
+
    if (val) {
 
-      fDrawable.fNewAttributes[GetFullName(name)] = val;
+      (*fCont)[GetFullName(name)] = val;
 
    } else {
-      auto elem = fDrawable.fNewAttributes.find(GetFullName(name));
-      if (elem != fDrawable.fNewAttributes.end())
-         fDrawable.fNewAttributes.erase(elem);
+
+      auto elem = fCont->find(GetFullName(name));
+      if (elem != fCont->end())
+         fCont->erase(elem);
+
    }
 }
 
-void ROOT::Experimental::RDrawableAttributesNew::SetValue(const std::string &name, const std::string &value)
+void ROOT::Experimental::RAttributesVisitor::SetValue(const std::string &name, const std::string &value)
 {
-   fDrawable.fNewAttributes[GetFullName(name)] = value;
+   if (fFirstTime) {
+      fFirstTime = false;
+      if (!fCont)
+         fCont = fWeak.lock();
+   }
+
+   if (fCont)
+      (*fCont)[GetFullName(name)] = value;
 }
 
 /** Clear all respective values from drawable. Only defaults can be used */
-void ROOT::Experimental::RDrawableAttributesNew::Clear()
+void ROOT::Experimental::RAttributesVisitor::Clear()
 {
    if (fDefaults)
       for (const auto &entry : *fDefaults)
@@ -93,25 +158,24 @@ void ROOT::Experimental::RDrawableAttributesNew::Clear()
 }
 
 
-int ROOT::Experimental::RDrawableAttributesNew::GetInt(const std::string &name) const
+int ROOT::Experimental::RAttributesVisitor::GetInt(const std::string &name) const
 {
    auto res = Eval(name);
    return res ? std::stoi(res) : 0;
 }
 
-void ROOT::Experimental::RDrawableAttributesNew::SetInt(const std::string &name, const int value)
+void ROOT::Experimental::RAttributesVisitor::SetInt(const std::string &name, const int value)
 {
    SetValue(name, std::to_string(value));
 }
 
-float ROOT::Experimental::RDrawableAttributesNew::GetFloat(const std::string &name) const
+float ROOT::Experimental::RAttributesVisitor::GetFloat(const std::string &name) const
 {
    auto res = Eval(name);
    return res ? std::stof(res) : 0.;
 }
 
-void ROOT::Experimental::RDrawableAttributesNew::SetFloat(const std::string &name, const float value)
+void ROOT::Experimental::RAttributesVisitor::SetFloat(const std::string &name, const float value)
 {
    SetValue(name, std::to_string(value));
 }
-

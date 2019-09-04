@@ -91,6 +91,8 @@ class RLineNew : public RDrawable {
 
    RDrawingOptsBase fOpts; ///<! only temporary here, should be removed later
 
+   RAttributesContainer fAttr; ///< attributes
+
 public:
 
    RLineNew() = default;
@@ -103,7 +105,9 @@ public:
    const RPadPos& GetP1() const { return fP1; }
    const RPadPos& GetP2() const { return fP2; }
 
-   RAttrLineNew AttrLine() { return RAttrLineNew(*this); }
+   RAttrLineNew AttrLine() { return RAttrLineNew(fAttr); }
+
+   const RAttrLineNew AttrLine() const { return RAttrLineNew(fAttr); }
 
    /** TDOD: remove it later */
    RDrawingOptsBase &GetOptionsBase() override { return fOpts; }

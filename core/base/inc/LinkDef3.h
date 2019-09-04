@@ -272,7 +272,7 @@
 
 #ifdef ROOT7_RDrawable
 #pragma link C++ class ROOT::Experimental::RDrawable+;
-#pragma link C++ class ROOT::Experimental::RDrawableAttributesNew+;
+#pragma link C++ class ROOT::Experimental::RAttributesContainer+;
 #endif
 
 #endif
