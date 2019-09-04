@@ -73,7 +73,7 @@ namespace BreitWignerBatchEvaluate {
 
 template<class Tx, class Tmean, class Twidth>
 void compute(	size_t batchSize,
-              double * __restrict__ output,
+              double * __restrict output,
               Tx X, Tmean M, Twidth W)
 {
   for (size_t i=0; i<batchSize; i++) {

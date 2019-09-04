@@ -1247,7 +1247,7 @@ void RooVectorDataStore::recalculateCache( const RooArgSet *projectedArgs, Int_t
   if (!_cache) return ;
 
   std::vector<RooVectorDataStore::RealVector *> tv;
-  tv.reserve(_cache->_realStoreList.size() * 0.7); // Typically, 30..60% need to be recalculated
+  tv.reserve(static_cast<std::size_t>(_cache->_realStoreList.size() * 0.7)); // Typically, 30..60% need to be recalculated
 
   // Check which items need recalculation
   for (const auto realVec : _cache->_realStoreList) {

@@ -131,8 +131,8 @@ namespace {
 //Author: Emmanouil Michalainas, CERN 26 August 2019
 
 void compute(	size_t batchSize, const int l1, const int m1, const int l2, const int m2,
-              double * __restrict__ output,
-              double const * __restrict__ TH)
+              double * __restrict output,
+              double const * __restrict TH)
 {
 #ifdef R__HAS_MATHMORE
   double legendre1=1.0, legendreMinus1=1.0;
