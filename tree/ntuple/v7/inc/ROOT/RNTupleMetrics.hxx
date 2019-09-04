@@ -45,6 +45,9 @@ Derived classes decide on the counter type and implement printing of the value.
 // clang-format on
 class RNTuplePerfCounter {
 private:
+   /// Symbol to split name, unit, description, and value when printing
+   static constexpr char kFieldSeperator = '|';
+
    std::string fName;
    std::string fUnit;
    std::string fDescription;
@@ -60,7 +63,8 @@ public:
    std::string GetDescription() const { return fDescription; }
    std::string GetUnit() const { return fUnit; }
 
-   virtual std::string ToString() const = 0;
+   virtual std::string ValueToString() const = 0;
+   std::string ToString() const;
 };
 
 
@@ -86,7 +90,7 @@ public:
    R__ALWAYS_INLINE void Add(int64_t delta) { fCounter += delta; }
    R__ALWAYS_INLINE int64_t GetValue() const { return fCounter; }
    R__ALWAYS_INLINE void SetValue(int64_t val) { fCounter = val; }
-   std::string ToString() const override { return std::to_string(fCounter); }
+   std::string ValueToString() const override { return std::to_string(fCounter); }
 };
 
 
@@ -143,7 +147,7 @@ public:
          fCounter.store(val);
    }
 
-   std::string ToString() const override { return std::to_string(GetValue()); }
+   std::string ValueToString() const override { return std::to_string(GetValue()); }
 };
 
 
@@ -165,7 +169,7 @@ public:
       R__ASSERT(unit == "ns");
    }
 
-   std::string ToString() const final {
+   std::string ValueToString() const final {
       auto ticks = BaseCounterT::GetValue();
       return std::to_string(std::uint64_t(
          (double(ticks) / double(CLOCKS_PER_SEC)) * (1000. * 1000. * 1000.)));
@@ -231,6 +235,9 @@ The class owns the counters; on registration of a new
 // clang-format on
 class RNTupleMetrics {
 private:
+   /// Symbol to split metrics name from counter / sub metrics name
+   static constexpr char kNamespaceSeperator = '.';
+
    std::vector<std::unique_ptr<RNTuplePerfCounter>> fCounters;
    std::vector<RNTupleMetrics *> fObservedMetrics;
    std::string fName;
