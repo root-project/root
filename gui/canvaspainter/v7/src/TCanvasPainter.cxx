@@ -555,7 +555,14 @@ void ROOT::Experimental::TCanvasPainter::NewDisplay(const std::string &where)
 {
    CreateWindow();
 
-   fWindow->Show(where);
+   auto sz = fCanvas.GetSize();
+
+   RWebDisplayArgs args(where);
+
+   args.SetWidth((int) sz[0].fVal + 1);
+   args.SetHeight((int) sz[1].fVal + 40); // extra size of browser window header + ui5 menu
+
+   fWindow->Show(args);
 }
 
 //////////////////////////////////////////////////////////////////////////
