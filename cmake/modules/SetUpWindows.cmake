@@ -24,10 +24,6 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g -DNDEBUG")
   set(CMAKE_C_FLAGS_RELEASE          "-O2 -DNDEBUG")
   set(CMAKE_C_FLAGS_DEBUG            "-g")
-
-  #---Set Linker flags----------------------------------------------------------------------
-  set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS}")
-  set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}")
 elseif(MSVC)
   set(ROOT_ARCHITECTURE win32)
 
