@@ -189,7 +189,6 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd1476")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -restrict")
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS}")
 
   # Check icc compiler version and set compile flags according to the
   execute_process(COMMAND ${CMAKE_CXX_COMPILER} -v
