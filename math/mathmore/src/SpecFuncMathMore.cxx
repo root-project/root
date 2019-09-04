@@ -55,6 +55,7 @@ double assoc_legendre(unsigned l, unsigned m, double x) {
 
 }
 
+// Shortcut for RooFit to call the gsl legendre functions without the branches in the above implementation.
 namespace internal{
   double legendre(unsigned l, unsigned m, double x) {
     return gsl_sf_legendre_Plm(l, m, x);

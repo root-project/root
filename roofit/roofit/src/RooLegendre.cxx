@@ -15,18 +15,23 @@
 /** \class RooLegendre
     \ingroup Roofit
 
+    Compute the associated Legendre polynomials using ROOT::Math::assoc_legendre().
+
+    Since the Legendre polynomials have a value range of [-1, 1], these cannot be implemented as a PDF.
+    They can be used in sums, though, for example using a RooRealSumFunc of RooLegendre plus an offset.
 **/
 
-#include "RooFit.h"
-#include "Riostream.h"
-#include <math.h>
-#include <string>
-#include <algorithm>
-
 #include "RooLegendre.h"
+
+#include "RooFit.h"
+
 #include "RooAbsReal.h"
 #include "Math/SpecFunc.h"
 #include "TMath.h"
+
+#include <cmath>
+#include <string>
+#include <algorithm>
 
 using namespace std;
 
@@ -40,6 +45,21 @@ namespace {
         r /= pow(2.,m+2*p);
         return p%2==0 ? r : -r ;
     }
+
+    void throwIfNoMathMore() {
+#ifndef R__HAS_MATHMORE
+      throw std::runtime_error("RooLegendre needs functions from MathMore. It is not available in this root build.");
+#endif
+    }
+
+    void checkCoeffs(int m1, int l1, int m2, int l2) {
+      if (m1 < 0 || m2 < 0) {
+        throw std::invalid_argument("RooLegendre: m coefficients need to be >= 0.");
+      }
+      if (l1 < m1 || l2 < m2) {
+        throw std::invalid_argument("RooLegendre: m coefficients need to be smaller than corresponding l.");
+      }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -47,6 +67,7 @@ namespace {
 RooLegendre::RooLegendre() :
   _l1(1),_m1(1),_l2(0),_m2(0)
 {
+  throwIfNoMathMore();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -58,12 +79,9 @@ RooLegendre::RooLegendre(const char* name, const char* title, RooAbsReal& ctheta
  , _ctheta("ctheta", "ctheta", this, ctheta)
  , _l1(l),_m1(m),_l2(0),_m2(0)
 {
-  //TODO: we assume m>=0
-  //      should map m<0 back to m>=0...
-  if (_l1<_m1 || _l2<_m2) {
-    throw std::invalid_argument("RooLegendre: m coefficients need to be smaller than corresponding l");
-  }
+  checkCoeffs(_m1, _l1, _m2, _l2);
 
+  throwIfNoMathMore();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -73,9 +91,9 @@ RooLegendre::RooLegendre(const char* name, const char* title, RooAbsReal& ctheta
  , _ctheta("ctheta", "ctheta", this, ctheta)
  , _l1(l1),_m1(m1),_l2(l2),_m2(m2)
 {
-  if (_l1<_m1 || _l2<_m2) {
-    throw std::invalid_argument("RooLegendre: m coefficients need to be smaller than corresponding l");
-  }
+  checkCoeffs(_m1, _l1, _m2, _l2);
+
+  throwIfNoMathMore();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,7 +107,6 @@ RooLegendre::RooLegendre(const RooLegendre& other, const char* name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TODO: check that 0<=m_i<=l_i; on the other hand, assoc_legendre already does that ;-)
 /// Note: P_0^0 = 1, so P_l^m = P_l^m P_0^0
 
 Double_t RooLegendre::evaluate() const
@@ -102,26 +119,22 @@ Double_t RooLegendre::evaluate() const
   if ((_m1+_m2)%2==1) r = -r;
   return r;
 #else
-  throw std::logic_error("RooLegendre: ERROR: This class require installation of the MathMore library") ;
-  return 0 ;
+  throwIfNoMathMore();
+  return 0.;
 #endif
 }
 
-//~ double assoc_legendre(unsigned l, unsigned m, double x) {
-   //~ // add  (-1)^m
-   //~ return (m%2 == 0) ? gsl_sf_legendre_Plm(l, m, x) : -gsl_sf_legendre_Plm(l, m, x);
-
-//~ }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-namespace LegendreBatchEvaluate {
+namespace {
 //Author: Emmanouil Michalainas, CERN 26 August 2019
 
 void compute(	size_t batchSize, const int l1, const int m1, const int l2, const int m2,
               double * __restrict__ output,
               double const * __restrict__ TH)
 {
+#ifdef R__HAS_MATHMORE
   double legendre1=1.0, legendreMinus1=1.0;
   if (l1+m1 > 0) {
     legendre1      = ROOT::Math::internal::legendre(l1,m1,1.0);
@@ -148,21 +161,26 @@ void compute(	size_t batchSize, const int l1, const int m1, const int l2, const 
       }
     }
   }
+
+#else
+  (void) batchSize, (void) l1, (void)m1, (void)l2, (void)m2, (void)output, (void)TH;
+  throwIfNoMathMore();
+#endif
 }
 };
 
 RooSpan<double> RooLegendre::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
-  using namespace LegendreBatchEvaluate;
   auto cthetaData = _ctheta.getValBatch(begin, batchSize);
+
+  if (cthetaData.empty()) {
+    return {};
+  }
+
   batchSize = cthetaData.size();
   auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
 
-  if (!cthetaData.empty()) {
-    compute(batchSize, _l1, _m1, _l2, _m2, output.data(), cthetaData.data());
-  }
-  else{
-    throw std::logic_error("Requested a batch computation, but no batch data available.");
-  }
+  compute(batchSize, _l1, _m1, _l2, _m2, output.data(), cthetaData.data());
+
   return output;
 }
 
