@@ -19,8 +19,6 @@
 #include <ROOT/RDrawingAttr.hxx>
 #include <ROOT/RColor.hxx>
 
-#include <ROOT/RDrawable.hxx>
-
 namespace ROOT {
 namespace Experimental {
 
@@ -49,7 +47,7 @@ class RAttrLineNew : public RAttributesVisitor {
 
    auto &getDefaults()
    {
-      static RAttributesContainer::Map_t dflts = { {"width","1"}, {"style","1"} };
+      static RAttributesContainer::AttrMap_t dflts = { {"width","1"}, {"style","1"} };
       return dflts;
    }
 
