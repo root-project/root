@@ -48,6 +48,7 @@ namespace clang {
    class EnumDecl;
    class FunctionDecl;
    class NamespaceDecl;
+   class TagDecl;
    class Type;
    class QualType;
 }
@@ -313,6 +314,7 @@ public: // Public Interface
 
    static void  UpdateClassInfo(char* name, Long_t tagnum);
    static void  UpdateClassInfoWork(const char* name);
+          void  RefreshClassInfo(TClass *cl, const clang::TagDecl *td, bool alias);
           void  UpdateClassInfoWithDecl(const void* vTD);
    static void  UpdateAllCanvases();
 

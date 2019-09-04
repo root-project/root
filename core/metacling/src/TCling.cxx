@@ -6468,9 +6468,52 @@ Bool_t TCling::IsAutoLoadNamespaceCandidate(const clang::NamespaceDecl* nsDecl)
    return fNSFromRootmaps.count(nsDecl) != 0;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Internal function. Actually do the update of the ClassInfo when seeing
+//  new TagDecl or NamespaceDecl.
+void TCling::RefreshClassInfo(TClass *cl, const clang::TagDecl *tdDef, bool alias) {
+
+   TClingClassInfo *cci = ((TClingClassInfo *)cl->fClassInfo);
+   if (cci) {
+      // If we only had a forward declaration then update the
+      // TClingClassInfo with the definition if we have it now.
+      const TagDecl *tdOld = llvm::dyn_cast_or_null<TagDecl>(cci->GetDecl());
+      if (!tdOld || (tdDef && tdDef != tdOld)) {
+         cl->ResetCaches();
+         TClass::RemoveClassDeclId(cci->GetDeclId());
+         if (tdDef) {
+            // It's a tag decl, not a namespace decl.
+            cci->Init(*cci->GetType());
+            TClass::AddClassToDeclIdMap(cci->GetDeclId(), cl);
+         }
+      }
+   } else if (!cl->TestBit(TClass::kLoading) && !cl->fHasRootPcmInfo) {
+      cl->ResetCaches();
+      // yes, this is almost a waste of time, but we do need to lookup
+      // the 'type' corresponding to the TClass anyway in order to
+      // preserve the opaque typedefs (Double32_t)
+      if (!alias)
+         cl->fClassInfo = (ClassInfo_t *)new TClingClassInfo(fInterpreter, tdDef);
+      else
+          cl->fClassInfo = (ClassInfo_t *)new TClingClassInfo(fInterpreter, cl->GetName());
+      if (((TClingClassInfo *)cl->fClassInfo)->IsValid()) {
+         // We now need to update the state and bits.
+         if (cl->fState != TClass::kHasTClassInit) {
+            // if (!cl->fClassInfo->IsValid()) cl->fState = TClass::kForwardDeclared; else
+            cl->fState = TClass::kInterpreted;
+            cl->ResetBit(TClass::kIsEmulation);
+         }
+         TClass::AddClassToDeclIdMap(((TClingClassInfo *)(cl->fClassInfo))->GetDeclId(), cl);
+      } else {
+         delete ((TClingClassInfo *)cl->fClassInfo);
+         cl->fClassInfo = nullptr;
+      }
+   }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Internal function. Inform a TClass about its new TagDecl or NamespaceDecl.
-
 void TCling::UpdateClassInfoWithDecl(const void* vTD)
 {
    const NamedDecl* ND = static_cast<const NamedDecl*>(vTD);
@@ -6506,6 +6549,8 @@ void TCling::UpdateClassInfoWithDecl(const void* vTD)
       name = ND->getQualifiedNameAsString();
    }
 
+
+
    // Supposedly we are being called while something is being
    // loaded ... let's now tell the autoloader to do the work
    // yet another time.
@@ -6514,35 +6559,12 @@ void TCling::UpdateClassInfoWithDecl(const void* vTD)
    // for example vector<double> and vector<Double32_t>
    TClass* cl = (TClass*)gROOT->GetListOfClasses()->FindObject(name.c_str());
    if (cl && GetModTClasses().find(cl) == GetModTClasses().end()) {
-      TClingClassInfo* cci = ((TClingClassInfo*)cl->fClassInfo);
-      if (cci) {
-         // If we only had a forward declaration then update the
-         // TClingClassInfo with the definition if we have it now.
-         const TagDecl* tdOld = llvm::dyn_cast_or_null<TagDecl>(cci->GetDecl());
-         if (!tdOld || (tdDef && tdDef != tdOld)) {
-            cl->ResetCaches();
-            TClass::RemoveClassDeclId(cci->GetDeclId());
-            if (td) {
-               // It's a tag decl, not a namespace decl.
-               cci->Init(*cci->GetType());
-               TClass::AddClassToDeclIdMap(cci->GetDeclId(), cl);
-            }
-         }
-      } else if (!cl->TestBit(TClass::kLoading) && !cl->fHasRootPcmInfo) {
-         cl->ResetCaches();
-         // yes, this is almost a waste of time, but we do need to lookup
-         // the 'type' corresponding to the TClass anyway in order to
-         // preserve the opaque typedefs (Double32_t)
-         cl->fClassInfo = (ClassInfo_t *)new TClingClassInfo(fInterpreter, cl->GetName());
-         // We now need to update the state and bits.
-         if (cl->fState != TClass::kHasTClassInit) {
-            // if (!cl->fClassInfo->IsValid()) cl->fState = TClass::kForwardDeclared; else
-            cl->fState = TClass::kInterpreted;
-            cl->ResetBit(TClass::kIsEmulation);
-         }
-         TClass::AddClassToDeclIdMap(((TClingClassInfo*)(cl->fClassInfo))->GetDeclId(), cl);
-      }
+      RefreshClassInfo(cl, tdDef, false);
    }
+   // And here we should find the other 'aliases' (eg. vector<Double32_t>)
+   // and update them too:
+   // foreach(aliascl in gROOT->GetListOfClasses()->FindAliasesOf(name.c_str()))
+   //    RefreshClassInfo(cl, tdDef, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
