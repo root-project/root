@@ -3,6 +3,7 @@
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleUtil.hxx>
 #include <TFile.h>
 
 #include "gtest/gtest.h"
@@ -11,6 +12,7 @@
 #include <sstream>
 #include <vector>
 
+using ClusterSize_t = ROOT::Experimental::ClusterSize_t;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
@@ -362,18 +364,92 @@ TEST(RNTupleShow, ObjectFields)
    auto ntuple2 = RNTupleReader::Open(std::move(model2), ntupleName, rootFileName);
    
    std::ostringstream os;
-   //ntuple2->Show(0, ROOT::Experimental::ENTupleFormat::kJSON, os);
+   ntuple2->Show(0, ROOT::Experimental::ENTupleFormat::kJSON, os);
    std::string fString{ std::string("")
       + "{\n"
+      + "  \"CustomStruct\": \n"
+      + "  {\n"
+      + "    \"a\": 4,\n"
+      + "    \"v1\": { 0.100000f, 0.200000f, 0.300000f },\n"
+      + "    \"v2\": { { 1.10000f, 1.20000f, 1.30000f }, { 2.10000f, 2.20000f, 2.30000f } },\n"
+      + "    \"s\": \"ExampleString\"\n"
+      + "  }\n"
       + "}\n" };
-   //EXPECT_EQ(fString, os.str());
+   EXPECT_EQ(fString, os.str());
    
    std::ostringstream os1;
-   //ntuple2->Show(1, ROOT::Experimental::ENTupleFormat::kJSON, os1);
+   ntuple2->Show(1, ROOT::Experimental::ENTupleFormat::kJSON, os1);
    std::string fString1{ std::string("")
       + "{\n"
+      + "  \"CustomStruct\": \n"
+      + "  {\n"
+      + "    \"a\": 5,\n"
+      + "    \"v1\": { 3.10000f, 3.20000f, 3.30000f },\n"
+      + "    \"v2\": { { 4.10000f, 4.20000f, 4.30000f }, { 5.10000f, 5.20000f, 5.30000f } },\n"
+      + "    \"s\": \"AnotherString\"\n"
+      + "  }\n"
       + "}\n" };
-   //EXPECT_EQ(fString1, os1.str());
+   EXPECT_EQ(fString1, os1.str());
 }
 
+TEST(RNTupleShow, stdArrayAndClusterSize)
+{
+   std::string rootFileName{"arrayAndCluster.root"};
+   std::string ntupleName{"ArrayAndClusterNTuple"};
+   FileRaii fileGuard(rootFileName);
+   {
+      auto model = RNTupleModel::Create();
+      auto Intarrayfield = model->MakeField<std::array<int, 2>>("IntArray");
+      auto Floatarrayfield = model->MakeField<std::array<float, 3>>("FloatArray");
+      auto Vecarrayfield = model->MakeField<std::array<std::vector<double>, 4>>("ArrayOfVec");
+      auto StringArray = model->MakeField<std::array<std::string, 2>>("stringArray");
+      auto ClusterSize = model->MakeField<ClusterSize_t>("ClusterSizeField");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
+      
+      *Intarrayfield = {1, 3};
+      *Floatarrayfield = {3.5f, 4.6f, 5.7f};
+      *Vecarrayfield = {std::vector<double>{1, 2}, std::vector<double>{4, 5}, std::vector<double>{7, 8, 9}, std::vector<double>{11} };
+      *StringArray = {"First", "Second"};
+      *ClusterSize = ClusterSize_t(44);
+      ntuple->Fill();
+      
+      *Intarrayfield = {2, 5};
+      *Floatarrayfield = {2.3f, 5.7f, 11.13f};
+      *Vecarrayfield = {std::vector<double>{17, 19}, std::vector<double>{23, 29}, std::vector<double>{31, 37, 41}, std::vector<double>{43} };
+      *StringArray = {"Third", "Fourth"};
+      *ClusterSize = ClusterSize_t(32);
+      ntuple->Fill();
+   }
+   auto model2 = RNTupleModel::Create();
+   auto Intarrayfield = model2->MakeField<std::array<int, 2>>("IntArray");
+   auto Floatarrayfield = model2->MakeField<std::array<float, 3>>("FloatArray");
+   auto Vecarrayfield = model2->MakeField<std::array<std::vector<double>, 4>>("ArrayOfVec");
+   auto StringArray = model2->MakeField<std::array<std::string, 2>>("stringArray");
+   auto ClusterSize = model2->MakeField<ClusterSize_t>("ClusterSizeField");
+   auto ntuple2 = RNTupleReader::Open(std::move(model2), ntupleName, rootFileName);
+   
+   std::ostringstream os;
+   ntuple2->Show(0, ROOT::Experimental::ENTupleFormat::kJSON, os);
+   std::string fString{ std::string("")
+      + "{\n"
+      + "  \"IntArray\": [1, 3],\n"
+      + "  \"FloatArray\": [3.50000f, 4.60000f, 5.70000f],\n"
+      + "  \"ArrayOfVec\": [{ 1.0000000, 2.0000000 }, { 4.0000000, 5.0000000 }, { 7.0000000, 8.0000000, 9.0000000 }, { 11.000000 }],\n"
+      + "  \"stringArray\": [\"First\", \"Second\"],\n"
+      + "  \"ClusterSizeField\": 44\n"
+      + "}\n"};
+   EXPECT_EQ(fString, os.str());
+   
+   std::ostringstream os1;
+   ntuple2->Show(1, ROOT::Experimental::ENTupleFormat::kJSON, os1);
+   std::string fString1{ std::string("")
+      + "{\n"
+      + "  \"IntArray\": [2, 5],\n"
+      + "  \"FloatArray\": [2.30000f, 5.70000f, 11.1300f],\n"
+      + "  \"ArrayOfVec\": [{ 17.000000, 19.000000 }, { 23.000000, 29.000000 }, { 31.000000, 37.000000, 41.000000 }, { 43.000000 }],\n"
+      + "  \"stringArray\": [\"Third\", \"Fourth\"],\n"
+      + "  \"ClusterSizeField\": 32\n"
+      + "}\n"};
+   EXPECT_EQ(fString1, os1.str());
+}
 

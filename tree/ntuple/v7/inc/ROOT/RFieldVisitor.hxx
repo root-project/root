@@ -17,6 +17,7 @@
 #define ROOT7_RFieldVisitor
 
 #include <ROOT/RField.hxx>
+#include <ROOT/RNTupleUtil.hxx>
 
 #include <algorithm>
 #include <iostream>
@@ -44,7 +45,9 @@ class RNTupleVisitor {
 public:
    virtual void VisitField(const Detail::RFieldBase &field, int level) = 0;
    virtual void VisitRootField(const RFieldRoot &field, int level) = 0;
+   virtual void VisitArrayField(const RFieldArray &field, int level, std::size_t /*arraylength*/, const Detail::RFieldBase* /*subfieldPtr*/) {VisitField(field, level);}
    virtual void VisitBoolField(const RField<bool> &field, int level) {VisitField(field, level);}
+   virtual void VisitClustersizeField(const RField<ClusterSize_t> &field, int level) {VisitField(field, level);}
    virtual void VisitDoubleField(const RField<double> &field, int level) {VisitField(field, level);}
    virtual void VisitFloatField(const RField<float> &field, int level) {VisitField(field, level);}
    virtual void VisitIntField(const RField<int> &field, int level) {VisitField(field, level);}
@@ -157,7 +160,9 @@ public:
    RValueVisitor(std::ostream &output, RNTupleReader* reader, int index): fReader{reader}, fOutput{output}, fIndex{index} {}
    void VisitField(const Detail::RFieldBase &field, int level) final;
    void VisitRootField(const RFieldRoot &/*fField*/, int /*level*/) final { }
+   void VisitArrayField(const RFieldArray &field, int level, std::size_t arraylength, const Detail::RFieldBase* /*subfieldPtr*/) final;
    void VisitBoolField(const RField<bool> &field, int level) final;
+   void VisitClustersizeField(const RField<ClusterSize_t> &field, int level) final;
    void VisitDoubleField(const RField<double> &field, int level) final;
    void VisitFloatField(const RField<float> &field, int level) final;
    void VisitIntField(const RField<int> &field, int level) final;

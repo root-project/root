@@ -228,8 +228,8 @@ void ROOT::Experimental::Detail::RFieldBase::AcceptVisitor(Detail::RNTupleVisito
 
 void ROOT::Experimental::Detail::RFieldBase::TraverseValueVisitor(RValueVisitor &visitor, int level) const
 {
-   // subfields of a std::vector shouldn't be displayed
-   if ((GetLevelInfo().GetLevel() != 0) && (GetParent()->GetStructure() == ENTupleStructure::kCollection)) return;
+   // subfields of a std::vector and std::array shouldn't be displayed
+   if ((GetLevelInfo().GetLevel() != 0) && (GetParent()->GetStructure() == ENTupleStructure::kCollection || GetParent()->GetType().compare(0, 11, "std::array<") == 0 )) return;
    
    if (this->GetLevelInfo().GetOrder() == 1)
    {
@@ -328,6 +328,11 @@ void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::DoGenerateCo
    fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
       Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(model, 0)));
    fPrincipalColumn = fColumns[0].get();
+}
+
+void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const
+{
+   visitor.VisitClustersizeField(*this, level);
 }
 
 //------------------------------------------------------------------------------
@@ -783,6 +788,10 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RFieldArray::Capture
    return Detail::RFieldValue(true /* captureFlag */, this, where);
 }
 
+void ROOT::Experimental::RFieldArray::AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const
+{
+   visitor.VisitArrayField(*this, level, fArrayLength, fSubFields.at(0).get());
+}
 
 //------------------------------------------------------------------------------
 

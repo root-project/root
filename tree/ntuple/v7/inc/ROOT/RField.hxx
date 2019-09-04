@@ -392,6 +392,7 @@ public:
    Detail::RFieldValue CaptureValue(void *where) final;
    size_t GetValueSize() const final { return fItemSize * fArrayLength; }
    size_t GetAlignment() const final { return fSubFields[0]->GetAlignment(); }
+   void AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const final;
 };
 
 #if __cplusplus >= 201703L
@@ -531,6 +532,7 @@ public:
    void GetCollectionInfo(const RClusterIndex &clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size) {
       fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
    }
+   void AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const final;
 };
 
 
