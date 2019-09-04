@@ -76,8 +76,6 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
   endif()
 
   if (CMAKE_COMPILER_IS_GNUCXX)
-     message(STATUS "Found GNU compiler collection")
-
      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -W -Wshadow -Wall -Woverloaded-virtual -fsigned-char -fno-common")
      SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe -W -Wall -fsigned-char -fno-common")
      SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -std=legacy")
@@ -96,8 +94,6 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
      set(CMAKE_C_FLAGS_RELEASE          "-O2 -DNDEBUG"    CACHE STRING "Flags for a release build")
      set(CMAKE_C_FLAGS_DEBUG            "-g"              CACHE STRING "Flags for a debug build")
   elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
-     message(STATUS "Found LLVM compiler collection")
-
      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -W -Wall -Woverloaded-virtual -fsigned-char -fno-common -Qunused-arguments")
      SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe -W -Wall -fsigned-char -fno-common -Qunused-arguments")
      if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8)

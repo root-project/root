@@ -49,7 +49,6 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   exec_program(${CMAKE_CXX_COMPILER} ARGS "--version 2>&1 | grep version" OUTPUT_VARIABLE _clang_version_info)
   string(REGEX REPLACE "^.*[ ]version[ ]([0-9]+)\\.[0-9]+.*" "\\1" CLANG_MAJOR "${_clang_version_info}")
   string(REGEX REPLACE "^.*[ ]version[ ][0-9]+\\.([0-9]+).*" "\\1" CLANG_MINOR "${_clang_version_info}")
-  message(STATUS "Found Clang. Major version ${CLANG_MAJOR}, minor version ${CLANG_MINOR}")
 
   if(CMAKE_GENERATOR STREQUAL "Ninja")
     # LLVM/Clang are automatically checking if we are in interactive terminal mode.
@@ -233,6 +232,7 @@ int main() {}
 #---Print the final compiler flags--------------------------------------------------------------------
 string(TOUPPER "${CMAKE_BUILD_TYPE}" BUILD_TYPE)
 message(STATUS "ROOT Platform: ${ROOT_PLATFORM}")
+message(STATUS "ROOT Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "ROOT Architecture: ${ROOT_ARCHITECTURE}")
 message(STATUS "Build Type: '${CMAKE_BUILD_TYPE}' (flags = '${CMAKE_CXX_FLAGS_${BUILD_TYPE}}')")
 message(STATUS "Compiler Flags: ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${BUILD_TYPE}}")
