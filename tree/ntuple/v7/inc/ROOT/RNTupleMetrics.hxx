@@ -16,6 +16,8 @@
 #ifndef ROOT7_RNTupleMetrics
 #define ROOT7_RNTupleMetrics
 
+#include <ROOT/RConfig.hxx>
+
 #include <TError.h>
 
 #include <atomic>
@@ -79,11 +81,11 @@ public:
    {
    }
 
-   void Inc() { ++fCounter; }
-   void Dec() { --fCounter; }
-   void Add(int64_t delta) { fCounter += delta; }
-   int64_t GetValue() const { return fCounter; }
-   void SetValue(int64_t val) { fCounter = val; }
+   R__ALWAYS_INLINE void Inc() { ++fCounter; }
+   R__ALWAYS_INLINE void Dec() { --fCounter; }
+   R__ALWAYS_INLINE void Add(int64_t delta) { fCounter += delta; }
+   R__ALWAYS_INLINE int64_t GetValue() const { return fCounter; }
+   R__ALWAYS_INLINE void SetValue(int64_t val) { fCounter = val; }
    std::string ToString() const override { return std::to_string(fCounter); }
 };
 
@@ -103,32 +105,44 @@ public:
    RNTupleAtomicCounter(const std::string &name, const std::string &unit, const std::string &desc)
       : RNTuplePerfCounter(name, unit, desc) { }
 
+   R__ALWAYS_INLINE
    void Inc() {
-      if (IsEnabled())
+      if (R__unlikely(IsEnabled()))
          ++fCounter;
    }
+
+   R__ALWAYS_INLINE
    void Dec() {
-      if (IsEnabled())
+      if (R__unlikely(IsEnabled()))
          --fCounter;
    }
+
+   R__ALWAYS_INLINE
    void Add(int64_t delta) {
-      if (IsEnabled())
+      if (R__unlikely(IsEnabled()))
          fCounter += delta;
    }
+
+   R__ALWAYS_INLINE
    int64_t XAdd(int64_t delta) {
-      if (IsEnabled())
+      if (R__unlikely(IsEnabled()))
          return fCounter.fetch_add(delta);
       return 0;
    }
+
+   R__ALWAYS_INLINE
    int64_t GetValue() const {
-      if (IsEnabled())
+      if (R__unlikely(IsEnabled()))
          return fCounter.load();
       return 0;
    }
+
+   R__ALWAYS_INLINE
    void SetValue(int64_t val) {
-      if (IsEnabled())
+      if (R__unlikely(IsEnabled()))
          fCounter.store(val);
    }
+
    std::string ToString() const override { return std::to_string(GetValue()); }
 };
 
