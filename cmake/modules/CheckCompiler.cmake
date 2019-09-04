@@ -8,6 +8,10 @@
 #  CheckCompiler.cmake
 #---------------------------------------------------------------------------------------------------
 
+if(NOT CMAKE_CXX_COMPILER_ID MATCHES "(Apple|)Clang|GNU|Intel|MSVC")
+  message(WARNING "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}.")
+endif()
+
 if(NOT GENERATOR_IS_MULTI_CONFIG AND NOT CMAKE_BUILD_TYPE)
   if(NOT CMAKE_C_FLAGS AND NOT CMAKE_CXX_FLAGS AND NOT CMAKE_Fortran_FLAGS)
     set(CMAKE_BUILD_TYPE Release CACHE STRING
