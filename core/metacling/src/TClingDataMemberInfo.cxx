@@ -411,6 +411,8 @@ long TClingDataMemberInfo::Property() const
          break;
    }
    if (const clang::VarDecl *vard = llvm::dyn_cast<clang::VarDecl>(GetDecl())) {
+      if (vard->isConstexpr())
+         property |= kIsConstexpr;
       if (vard->getStorageClass() == clang::SC_Static) {
          property |= kIsStatic;
       } else if (declaccess->getDeclContext()->isNamespace()) {
