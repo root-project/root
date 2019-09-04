@@ -362,17 +362,24 @@ void ROOT::Experimental::Detail::RPageSourceRaw::ReleasePage(RPage &page)
    fPagePool->ReturnPage(page);
 }
 
+
+ROOT::Experimental::Detail::RRawCluster::~RRawCluster()
+{
+   //std::cout << "FREEING CLUSTER NUMBER " << fClusterId << std::endl;
+   free(fHandle);
+}
+
 std::unique_ptr<ROOT::Experimental::Detail::RCluster>
 ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId)
 {
-   std::cout << "LOADING CLUSTER NUMBER " << clusterId << std::endl;
+   //std::cout << "LOADING CLUSTER NUMBER " << clusterId << std::endl;
    const auto &clusterDesc = GetDescriptor().GetClusterDescriptor(clusterId);
    auto clusterLocator = clusterDesc.GetLocator();
    auto buffer = reinterpret_cast<unsigned char *>(malloc(clusterLocator.fBytesOnStorage));
    R__ASSERT(buffer);
-   std::cout << "CLUSTER AT " << (void *)(buffer) << std::endl;
+   //std::cout << "CLUSTER AT " << (void *)(buffer) << std::endl;
    Read(buffer, clusterLocator.fBytesOnStorage, clusterLocator.fPosition);
-   auto cluster = std::make_unique<RCluster>(buffer, clusterId);
+   auto cluster = std::make_unique<RRawCluster>(buffer, clusterId);
    // TODO(jblomer): make id range
    for (unsigned int i = 0; i < fDescriptor.GetNColumns(); ++i) {
       const auto &pageRange = clusterDesc.GetPageRange(i);
@@ -381,8 +388,8 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
          const auto &pageLocator = pageInfo.fLocator;
          RSheetKey key(i, pageNo);
          RSheet sheet(buffer + pageLocator.fPosition - clusterLocator.fPosition, pageLocator.fBytesOnStorage);
-         std::cout << "REGISTER SHEET " << i << "/" << pageNo << " @ "
-                   << sheet.GetAddress() << " : " << sheet.GetSize() << std::endl;
+         //std::cout << "REGISTER SHEET " << i << "/" << pageNo << " @ "
+         //          << sheet.GetAddress() << " : " << sheet.GetSize() << std::endl;
          cluster->InsertSheet(key, sheet);
          ++pageNo;
       }

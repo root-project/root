@@ -87,6 +87,13 @@ public:
 };
 
 
+class RRawCluster : public RCluster {
+public:
+   RRawCluster(ClusterHandle_t handle, DescriptorId_t clusterId) : RCluster(handle, clusterId) {}
+   ~RRawCluster();
+};
+
+
 // clang-format off
 /**
 \class ROOT::Experimental::Detail::RPageSourceRaw
