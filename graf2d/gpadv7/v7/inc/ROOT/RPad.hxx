@@ -114,8 +114,21 @@ public:
       return Draw(std::make_unique<T>(what), args...);
    }
 
+   template<class T, class... ARGS>
+   auto DrawNew(ARGS... args)
+   {
+      auto res = std::make_shared<T>(args...);
+
+      fPrimitives.emplace_back(res);
+
+      AssignUniqueID(fPrimitives.back());
+
+      return res;
+   }
+
    /// Remove an object from the list of primitives.
-   bool Remove(RDrawingOptsBase& opts) {
+   bool Remove(RDrawingOptsBase& opts)
+   {
       auto iter = std::find_if(fPrimitives.begin(), fPrimitives.end(),
          [&opts](const std::shared_ptr<RDrawable>& drawable) { return &drawable->GetOptionsBase() == &opts; });
       if (iter == fPrimitives.end())

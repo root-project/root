@@ -76,20 +76,52 @@ public:
    }
 };
 
-
-class RLineNew : public RDrawable {
-
-public:
-   RAttrLineNew lineatt() { return RAttrLineNew(*this); }
-
-};
-
 inline std::shared_ptr<ROOT::Experimental::RLine>
 GetDrawable(const std::shared_ptr<ROOT::Experimental::RLine> &line)
 {
    /// A RLine is a RDrawable itself.
    return line;
 }
+
+
+class RLineNew : public RDrawable {
+
+   RPadPos fP1;           ///< 1st point
+   RPadPos fP2;           ///< 2nd point
+
+   RDrawingOptsBase fOpts; ///<! only temporary here, should be removed later
+
+public:
+
+   RLineNew() = default;
+
+   RLineNew(const RPadPos& p1, const RPadPos& p2) : fP1(p1), fP2(p2) {}
+
+   void SetP1(const RPadPos& p1) { fP1 = p1; }
+   void SetP2(const RPadPos& p2) { fP2 = p2; }
+
+   const RPadPos& GetP1() const { return fP1; }
+   const RPadPos& GetP2() const { return fP2; }
+
+   RAttrLineNew AttrLine() { return RAttrLineNew(*this); }
+
+   /** TDOD: remove it later */
+   RDrawingOptsBase &GetOptionsBase() override { return fOpts; }
+
+   void Paint(Internal::RPadPainter &topPad) final
+   {
+      topPad.AddDisplayItem(std::make_unique<RDrawableDisplayItem>(*this));
+   }
+
+};
+
+inline std::shared_ptr<ROOT::Experimental::RLineNew>
+GetDrawable(const std::shared_ptr<ROOT::Experimental::RLineNew> &line)
+{
+   /// A RLine is a RDrawable itself.
+   return line;
+}
+
 
 } // namespace Experimental
 } // namespace ROOT

@@ -78,26 +78,17 @@ public:
 class RDrawableDisplayItem : public RDisplayItem {
 protected:
 
-
-   RDrawableAttributesContainer *fAttr{nullptr};     ///< attributes
-   RDrawableAttributesContainer *fDflts{nullptr};    ///< defaults
-   std::string fTypeName;
-
-
-   void SetDrawables(RDrawable &dr)
-   {
-      SetObjectID(dr.GetId());
-      if (!dr.fNewAttributes.empty()) fAttr = &dr.fNewAttributes;
-      if (!dr.fDefaults.empty()) fDflts = &dr.fDefaults;
-   }
+   const RDrawable *fDrawable{nullptr};                   ///< drawable
+   const RDrawableAttributesContainer *fDflts{nullptr};   ///< drawable defaults, not stored with drawable itself
 
 public:
 
-   template <class T>
-   RDrawableDisplayItem(T &dr)
+   template <class DRAWABLE>
+   RDrawableDisplayItem(const DRAWABLE &dr)
    {
-      fTypeName = TClass::GetClass<T>()->GetName();
-      SetDrawables(dr);
+      SetObjectID(dr.GetId());
+      fDrawable = &dr;
+      if (!dr.fDefaults.empty()) fDflts = &dr.fDefaults;
    }
 
 };
