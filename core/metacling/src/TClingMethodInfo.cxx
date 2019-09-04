@@ -431,6 +431,8 @@ long TClingMethodInfo::Property() const
    long property = 0L;
    property |= kIsCompiled;
    const clang::FunctionDecl *fd = GetMethodDecl();
+   if (fd->isConstexpr())
+      property |= kIsConstexpr;
    switch (fd->getAccess()) {
       case clang::AS_public:
          property |= kIsPublic;
