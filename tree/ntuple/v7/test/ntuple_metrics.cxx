@@ -18,8 +18,8 @@ TEST(Metrics, Counters)
 
    RNTuplePlainCounter *ctrOne = nullptr;
    RNTupleAtomicCounter *ctrTwo = nullptr;
-   metrics.MakeCounter("plain", "s", "example 1", ctrOne);
-   metrics.MakeCounter("atomic", "s", "example 2", ctrTwo);
+   ctrOne = metrics.MakeCounter<RNTuplePlainCounter *>("plain", "s", "example 1");
+   ctrTwo = metrics.MakeCounter<RNTupleAtomicCounter *>("atomic", "s", "example 2");
    ASSERT_NE(nullptr, ctrOne);
    ASSERT_NE(nullptr, ctrTwo);
    EXPECT_FALSE(ctrOne->IsEnabled());

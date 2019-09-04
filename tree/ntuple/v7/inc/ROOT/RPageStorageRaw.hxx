@@ -105,14 +105,14 @@ private:
    std::unique_ptr<RRawFile> fFile;
 
    RNTupleMetrics fMetrics;
-   Detail::RNTuplePlainCounter *fCtrNRead = nullptr;
-   Detail::RNTuplePlainCounter *fCtrSzRead = nullptr;
-   Detail::RNTuplePlainCounter *fCtrSzUnzip = nullptr;
-   Detail::RNTuplePlainCounter *fCtrNPages = nullptr;
-   Detail::RNTuplePlainCounter *fCtrTimeWallRead = nullptr;
-   Detail::RNTuplePlainCounter *fCtrTimeWallUnzip = nullptr;
-   Detail::RNTupleTickCounter<Detail::RNTuplePlainCounter> *fCtrTimeCpuRead = nullptr;
-   Detail::RNTupleTickCounter<Detail::RNTuplePlainCounter> *fCtrTimeCpuUnzip = nullptr;
+   RNTuplePlainCounter *fCtrNRead = nullptr;
+   RNTuplePlainCounter *fCtrSzRead = nullptr;
+   RNTuplePlainCounter *fCtrSzUnzip = nullptr;
+   RNTuplePlainCounter *fCtrNPages = nullptr;
+   RNTuplePlainCounter *fCtrTimeWallRead = nullptr;
+   RNTuplePlainCounter *fCtrTimeWallUnzip = nullptr;
+   RNTupleTickCounter<RNTuplePlainCounter> *fCtrTimeCpuRead = nullptr;
+   RNTupleTickCounter<RNTuplePlainCounter> *fCtrTimeCpuUnzip = nullptr;
 
    RPageSourceRaw(std::string_view ntupleName, const RNTupleReadOptions &options);
    void Read(void *buffer, std::size_t nbytes, std::uint64_t offset);
