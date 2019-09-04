@@ -47,14 +47,14 @@ class RDrawableAttributesNew {
 
    std::string fPrefix; ///<! name prefix for all attributes values
 
-   RDrawableAttributesContainer &fDefaults; ///<! default values for attributes
+   const RDrawableAttributesContainer *fDefaults{nullptr}; ///<! default values for these attributes
 
    std::string GetFullName(const std::string &name) const { return fPrefix.empty() ? name : fPrefix + "." + name; }
 
 protected:
 
    /** Should be used in the constructor */
-   void SetDefaults(RDrawableAttributesContainer &dflts) { fDefaults = dflts; }
+   void SetDefaults(const RDrawableAttributesContainer &dflts) { fDefaults = &dflts; }
 
 public:
 
@@ -93,15 +93,15 @@ private:
 
    std::string  fId; ///< object identifier, unique inside RCanvas
 
-   RDrawableAttributesContainer fNewAttributes; ///< container for any kind of attribute associated with drawable, attributes can be styled
+   RDrawableAttributesContainer fNewAttributes; ///< container for any kind of attribute associated with drawable, attributes can be styled, store as JSON_object
 
-   RDrawableAttributesContainer &fDefaults; ///<! default values for drawable attributes
+   const RDrawableAttributesContainer *fDefaults{nullptr}; ///<! default values for drawable attributes
 
 protected:
 
    void ClearAttributes();
 
-   void SetDefaults(RDrawableAttributesContainer &dflts) { fDefaults = dflts; }
+   void SetDefaults(const RDrawableAttributesContainer &dflts) { fDefaults = &dflts; }
 
 public:
 

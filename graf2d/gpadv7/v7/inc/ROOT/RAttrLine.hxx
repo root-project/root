@@ -21,7 +21,6 @@
 
 #include <ROOT/RDrawable.hxx>
 
-
 namespace ROOT {
 namespace Experimental {
 
