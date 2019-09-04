@@ -559,8 +559,11 @@ void ROOT::Experimental::TCanvasPainter::NewDisplay(const std::string &where)
 
    RWebDisplayArgs args(where);
 
-   args.SetWidth((int) sz[0].fVal + 1);
-   args.SetHeight((int) sz[1].fVal + 40); // extra size of browser window header + ui5 menu
+   if ((sz[0].fVal > 10) && (sz[1].fVal > 10)) {
+      // extra size of browser window header + ui5 menu
+      args.SetWidth((int) sz[0].fVal + 1);
+      args.SetHeight((int) sz[1].fVal + 40);
+   }
 
    fWindow->Show(args);
 }
