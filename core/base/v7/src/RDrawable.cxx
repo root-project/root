@@ -19,12 +19,7 @@
 #include <string>
 
 
-
-ROOT::Experimental::RDrawableAttributesContainer gNoDefaults = {};
-
-
-
-ROOT::Experimental::RDrawable::RDrawable() : fDefaults(gNoDefaults)
+ROOT::Experimental::RDrawable::RDrawable()
 {
 }
 
@@ -45,7 +40,7 @@ void ROOT::Experimental::RDrawable::ClearAttributes()
 
 
 ROOT::Experimental::RDrawableAttributesNew::RDrawableAttributesNew(RDrawable &d, const std::string &prefix) :
-    fDrawable(d), fPrefix(prefix), fDefaults(gNoDefaults)
+    fDrawable(d), fPrefix(prefix)
 {
 }
 
@@ -56,13 +51,17 @@ const char *ROOT::Experimental::RDrawableAttributesNew::Eval(const std::string &
    if (entry != fDrawable.fNewAttributes.end())
       return entry->second.c_str();
 
-   auto centry = fDefaults.find(name);
-   if (centry != fDefaults.end())
-     return centry->second.c_str();
+   if (fDefaults) {
+      const auto centry = fDefaults->find(name);
+      if (centry != fDefaults->end())
+         return centry->second.c_str();
+   }
 
-   auto centry2 = fDrawable.fDefaults.find(GetFullName(name));
-   if (centry2 != fDrawable.fDefaults.end())
-      return centry2->second.c_str();
+   if (fDrawable.fDefaults) {
+      const auto centry = fDrawable.fDefaults->find(GetFullName(name));
+      if (centry != fDrawable.fDefaults->end())
+         return centry->second.c_str();
+   }
 
    return nullptr;
 }
@@ -88,8 +87,9 @@ void ROOT::Experimental::RDrawableAttributesNew::SetValue(const std::string &nam
 /** Clear all respective values from drawable. Only defaults can be used */
 void ROOT::Experimental::RDrawableAttributesNew::Clear()
 {
-   for (const auto &entry : fDefaults)
-      ClearValue(entry.first);
+   if (fDefaults)
+      for (const auto &entry : *fDefaults)
+         ClearValue(entry.first);
 }
 
 

@@ -78,8 +78,8 @@ public:
 class RDrawableDisplayItem : public RDisplayItem {
 protected:
 
-   const RDrawable *fDrawable{nullptr};                   ///< drawable
-   const RDrawableAttributesContainer *fDflts{nullptr};   ///< drawable defaults, not stored with drawable itself
+   const RDrawable *fDrawable{nullptr};                      ///< drawable
+   const RDrawableAttributesContainer *fDefaults{nullptr};   ///< drawable defaults, not stored with drawable itself, store as JSON_object
 
 public:
 
@@ -88,7 +88,7 @@ public:
    {
       SetObjectID(dr.GetId());
       fDrawable = &dr;
-      if (!dr.fDefaults.empty()) fDflts = &dr.fDefaults;
+      fDefaults = dr.fDefaults;
    }
 
 };
