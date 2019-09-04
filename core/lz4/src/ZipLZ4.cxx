@@ -116,8 +116,8 @@ void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *
    if (R__unlikely(checksumFromFile != checksumResult)) {
       fprintf(
          stderr,
-         "R__unzipLZ4: Buffer corruption error!  Calculated checksum %llu; checksum calculated in the file was %llu.\n",
-         checksumResult, checksumFromFile);
+         "R__unzipLZ4: Buffer corruption error!  Calculated checksum %lu; checksum calculated in the file was %lu.\n",
+         (unsigned long) checksumResult, (unsigned long) checksumFromFile);
       return;
    }
    int returnStatus = LZ4_decompress_safe((char *)(&src[kHeaderSize]), (char *)(tgt), inputBufferSize, *tgtsize);
