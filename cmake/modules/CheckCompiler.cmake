@@ -50,7 +50,7 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   string(REGEX REPLACE "^.*[ ]version[ ]([0-9]+)\\.[0-9]+.*" "\\1" CLANG_MAJOR "${_clang_version_info}")
   string(REGEX REPLACE "^.*[ ]version[ ][0-9]+\\.([0-9]+).*" "\\1" CLANG_MINOR "${_clang_version_info}")
   message(STATUS "Found Clang. Major version ${CLANG_MAJOR}, minor version ${CLANG_MINOR}")
-  set(COMPILER_VERSION clang${CLANG_MAJOR}${CLANG_MINOR})
+
   if(CMAKE_GENERATOR STREQUAL "Ninja")
     # LLVM/Clang are automatically checking if we are in interactive terminal mode.
     # We use color output only for Ninja, because Ninja by default is buffering the output,
@@ -87,7 +87,6 @@ if (CMAKE_COMPILER_IS_GNUCXX)
     set(GCC_MAJOR "")
   endif()
   message(STATUS "Found GCC. Major version ${GCC_MAJOR}, minor version ${GCC_MINOR}")
-  set(COMPILER_VERSION gcc${GCC_MAJOR}${GCC_MINOR}${GCC_PATCH})
   if("${GCC_MAJOR}.${GCC_MINOR}" VERSION_GREATER_EQUAL 4.9
       AND CMAKE_GENERATOR STREQUAL "Ninja")
     # GCC checks automatically if we are in interactive terminal mode.
