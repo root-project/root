@@ -120,7 +120,7 @@ namespace Math {
 
   double assoc_legendre(unsigned l, unsigned m, double x);
 
-
+  // Shortcut for RooFit to call the gsl legendre functions without the branches in the above implementation.
   namespace internal{
     double legendre(unsigned l, unsigned m, double x);
   }
