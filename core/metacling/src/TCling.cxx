@@ -6503,7 +6503,7 @@ void TCling::UpdateClassInfoWithDecl(const void* vTD)
       clang::QualType type( td->getTypeForDecl(), 0 );
       ROOT::TMetaUtils::GetNormalizedName(name, type, *fInterpreter, *fNormalizedCtxt);
    } else {
-      name = ND->getNameAsString();
+      name = ND->getQualifiedNameAsString();
    }
 
    // Supposedly we are being called while something is being
