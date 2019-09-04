@@ -19,5 +19,11 @@ include_directories(
   ${CLING_INCLUDE_DIRS}
   )
 
-ROOT_ADD_UNITTEST_DIR(Core RIO ${CLING_LIBRARIES} $<TARGET_OBJECTS:ClingUtils>)
+if(APPLE)
+  # ignore
+  # ld: warning: direct access in function 'unsigned long std::__1::__str_find_first_of<char, unsigned long, std::__1::char_traits<char>, 18446744073709551615ul>(char const*, unsigned long, char const*, unsigned long, unsigned long)' from file '../CMakeFiles/ClingUtils.dir/src/TClingUtils.cxx.o' to global weak symbol 'std::__1::char_traits<char>::eq(char, char)' from file 'CMakeFiles/coreclingutilstestUnit.dir/TClingUtilsTests.cxx.o' means the weak symbol cannot be overridden at runtime. This was likely caused by different translation units being compiled with different visibility settings.
+  # ld: warning: direct access in function 'unsigned long std::__1::__str_find_first_of<char, unsigned long, std::__1::char_traits<char>, 18446744073709551615ul>(char const*, unsigned long, char const*, unsigned long, unsigned long)' from file '../../../interpreter/llvm/src/lib/libLLVMProfileData.a(InstrProf.cpp.o)' to global weak symbol 'std::__1::char_traits<char>::eq(char, char)' from file 'CMakeFiles/coreclingutilstestUnit.dir/TClingUtilsTests.cxx.o' means the weak symbol cannot be overridden at runtime. This was likely caused by different translation units being compiled with different visibility settings.
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -w")
+endif()
 
+ROOT_ADD_UNITTEST_DIR(Core RIO ${CLING_LIBRARIES} $<TARGET_OBJECTS:ClingUtils>)
