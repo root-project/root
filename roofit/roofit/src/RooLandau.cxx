@@ -93,7 +93,7 @@ constexpr double a2[2] = {-1.845568670,-4.284640743};
   
 template<class Tx, class Tmean, class Tsigma>
 void compute(	size_t batchSize,
-              double * __restrict__ output,
+              double * __restrict output,
               Tx X, Tmean M, Tsigma S)
 {
   const double NaN = std::nan("");

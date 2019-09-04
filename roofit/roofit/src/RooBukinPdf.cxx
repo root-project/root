@@ -148,7 +148,7 @@ namespace BukinBatchEvaluate {
 
 template<class Tx, class TXp, class TSigp, class Txi, class Trho1, class Trho2>
 void compute(  size_t batchSize,
-               double * __restrict__ output,
+               double * __restrict output,
                Tx X, TXp XP, TSigp SP, Txi XI, Trho1 R1, Trho2 R2)
 {
   const double r3 = log(2.0);

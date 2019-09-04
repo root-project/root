@@ -70,7 +70,7 @@ namespace ChiSquarePdfBatchEvaluate {
 
 template<class T_x, class T_ndof>
 void compute(	size_t batchSize,
-              double * __restrict__ output,
+              double * __restrict output,
               T_x X, T_ndof N)
 {
   if ( N.isBatch() ) {

@@ -30,7 +30,7 @@ PDF implementing the Crystal Ball line shape.
 
 #include "TMath.h"
 
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 
@@ -98,7 +98,7 @@ namespace CBShapeBatchEvaluate {
 
 template<class Tm, class Tm0, class Tsigma, class Talpha, class Tn>
 void compute(	size_t batchSize,
-	double * __restrict__ output,
+	double * __restrict output,
 	Tm M, Tm0 M0, Tsigma S, Talpha A, Tn N)
 {
   for (size_t i=0; i<batchSize; i++) {
