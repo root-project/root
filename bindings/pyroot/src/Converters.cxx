@@ -23,6 +23,7 @@
 #include <string.h>
 #include <utility>
 #include <sstream>
+#include <tuple>
 
 // FIXME: Should refer to PyROOT::TParameter in the code.
 #ifdef R__CXXMODULES
@@ -846,6 +847,19 @@ Bool_t PyROOT::TLongLongArrayConverter::SetArg(
 
 
 //- converters for special cases ----------------------------------------------
+
+static std::tuple<const char*,Py_ssize_t> getStringAndSize(PyObject* pyobject) {
+#if PY_VERSION_HEX >= 0x03030000
+   // Support non-ASCII strings (get the right length in bytes)
+   Py_ssize_t size = 0;
+   auto charArr = PyROOT_PyUnicode_AsStringAndSize(pyobject, &size);
+#else
+   auto size = PyROOT_PyUnicode_GET_SIZE(pyobject);
+   auto charArr = PyROOT_PyUnicode_AsString(pyobject);
+#endif
+   return std::tuple<const char*,Py_ssize_t>(charArr, size);
+}
+
 #define PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( name, type, F1, F2 )  \
 PyROOT::T##name##Converter::T##name##Converter( Bool_t keepControl ) :        \
       TCppObjectConverter( Cppyy::GetScope( #type ), keepControl ) {}         \
@@ -854,8 +868,8 @@ Bool_t PyROOT::T##name##Converter::SetArg(                                    \
       PyObject* pyobject, TParameter& para, TCallContext* ctxt )              \
 {                                                                             \
    if ( PyROOT_PyUnicode_Check( pyobject ) ) {                                \
-      fBuffer = type( PyROOT_PyUnicode_AsString( pyobject ),                  \
-                      PyROOT_PyUnicode_GET_SIZE( pyobject ) );                \
+      auto strAndSize = getStringAndSize(pyobject);                           \
+      fBuffer = type(std::get<0>(strAndSize), std::get<1>(strAndSize));       \
       para.fValue.fVoidp = &fBuffer;                                          \
       para.fTypeCode = 'V';                                                   \
       return kTRUE;                                                           \
