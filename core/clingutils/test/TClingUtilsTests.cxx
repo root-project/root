@@ -51,16 +51,16 @@ TEST(TClingUtilsTests, GetRealPath)
    using namespace ROOT::TMetaUtils;
    std::string realfile1 = GetRealPath("./realfile1");
    std::string realfile2 = GetRealPath("./realfile2");
-   ASSERT_TRUE(realfile1 == GetRealPath("./symlink_realfile1"));
-   ASSERT_TRUE(realfile1 == GetRealPath("./symlink_realfile1"));
-   ASSERT_TRUE(realfile1 == GetRealPath("./symlink1_symlink_realfile1"));
-   ASSERT_TRUE(realfile1 == GetRealPath("./symlink2_symlink_realfile1"));
-   ASSERT_TRUE(realfile1 == GetRealPath("./symlink3_symlink_realfile1"));
+   ASSERT_EQ(realfile1, GetRealPath("./symlink_realfile1"));
+   ASSERT_EQ(realfile1, GetRealPath("./symlink_realfile1"));
+   ASSERT_EQ(realfile1, GetRealPath("./symlink1_symlink_realfile1"));
+   ASSERT_EQ(realfile1, GetRealPath("./symlink2_symlink_realfile1"));
+   ASSERT_EQ(realfile1, GetRealPath("./symlink3_symlink_realfile1"));
 
-   ASSERT_TRUE(realfile2 == GetRealPath("./realfile2"));
-   ASSERT_TRUE(realfile2 == GetRealPath("./symlink_realfile2"));
-   ASSERT_TRUE(realfile2 == GetRealPath("./symlink1_symlink_realfile2"));
-   ASSERT_TRUE(realfile2 == GetRealPath("./symlink2_symlink_realfile2"));
+   ASSERT_EQ(realfile2, GetRealPath("./realfile2"));
+   ASSERT_EQ(realfile2, GetRealPath("./symlink_realfile2"));
+   ASSERT_EQ(realfile2, GetRealPath("./symlink1_symlink_realfile2"));
+   ASSERT_EQ(realfile2, GetRealPath("./symlink2_symlink_realfile2"));
 
    std::remove("./symlink3_symlink_realfile1");
    std::remove("./symlink2_symlink_realfile2");
