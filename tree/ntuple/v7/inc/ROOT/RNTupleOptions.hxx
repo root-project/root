@@ -31,9 +31,9 @@ All page sink classes need to support the common options.
 */
 // clang-format on
 class RNTupleWriteOptions {
-  int fCompression;
+  int fCompression = RCompressionSetting::EDefaults::kUseAnalysis;
 public:
-  RNTupleWriteOptions() : fCompression(RCompressionSetting::EDefaults::kUseAnalysis) {}
+  RNTupleWriteOptions() = default;
   int GetCompression() const { return fCompression; }
   void SetCompression(int val) { fCompression = val; }
   void SetCompression(RCompressionSetting::EAlgorithm algorithm, int compressionLevel) {
@@ -52,6 +52,20 @@ All page source classes need to support the common options.
 */
 // clang-format on
 class RNTupleReadOptions {
+public:
+   enum EClusterCache {
+      kDefault,
+      kSync,
+      kAsync,
+   };
+
+private:
+   EClusterCache fClusterCache = EClusterCache::kDefault;
+
+public:
+   RNTupleReadOptions() = default;
+   EClusterCache GetClusterCache() const { return fClusterCache; }
+   void SetClusterCache(EClusterCache val) { fClusterCache = val; }
 };
 
 } // namespace Experimental

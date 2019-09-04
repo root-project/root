@@ -22,37 +22,78 @@
 #include <mutex>
 #include <utility>
 
+ROOT::Experimental::Detail::RClusterPool::RClusterPool(RPageSource &pageSource)
+   : fPageSource(pageSource)
+	, fThreadIo(&RClusterPool::ExecLoadClusters, this)
+{
+}
+
+ROOT::Experimental::Detail::RClusterPool::~RClusterPool()
+{
+	{
+		std::unique_lock<std::mutex> lock(fLockWorkQueue);
+		fCvHasSpace.wait(lock, [&]{ return fWorkQueue.size() < kWorkQueueLimit; });
+		fWorkQueue.emplace(RWorkItem());
+		if (fWorkQueue.size() == 1)
+			fCvHasWork.notify_one();
+	}
+	fThreadIo.join();
+}
+
+void ROOT::Experimental::Detail::RClusterPool::ExecLoadClusters()
+{
+	while (true) {
+		RWorkItem workItem;
+		{
+			std::unique_lock<std::mutex> lock(fLockWorkQueue);
+			fCvHasWork.wait(lock, [&]{ return !fWorkQueue.empty(); });
+			workItem = std::move(fWorkQueue.front());
+			fWorkQueue.pop();
+			if (fWorkQueue.empty())
+				fCvHasSpace.notify_one();
+		}
+
+		if (workItem.fClusterId == kInvalidDescriptorId)
+			break;
+
+		workItem.fPromise.set_value(fPageSource.LoadCluster(workItem.fClusterId));
+	}
+}
+
 std::shared_ptr<ROOT::Experimental::Detail::RCluster>
 ROOT::Experimental::Detail::RClusterPool::GetCluster(ROOT::Experimental::DescriptorId_t clusterId)
 {
 	std::lock_guard<std::mutex> lockGuard(fLock);
 
+	auto nextId = kInvalidDescriptorId;
+
 	if (!fCurrent) {
 		fCurrent = fPageSource.LoadCluster(clusterId);
-		auto nextId = fPageSource.GetDescriptor().FindNextClusterId(clusterId);
-		std::cout << "CLUSTER ASYNC, next id is " << nextId << std::endl;
-		if (nextId != kInvalidDescriptorId) {
-			// What happens if thread still runs on delete of the cluster pool
-			fNext = std::async(std::launch::async, &RPageSource::LoadCluster, &fPageSource, nextId);
-		}
-		return fCurrent;
+		nextId = fPageSource.GetDescriptor().FindNextClusterId(clusterId);
 	}
 
    auto cluster = fCurrent;
-	if (cluster->GetId() == clusterId)
-		return cluster;
-
-	cluster = std::move(fNext.get());
 	if (cluster->GetId() != clusterId) {
-		cluster = std::move(fPageSource.LoadCluster(clusterId));
+	   cluster = std::move(fNext.get());
+	   if (cluster->GetId() != clusterId) {
+         cluster = std::move(fPageSource.LoadCluster(clusterId));
+	   }
+	   fCurrent = cluster;
+		nextId = fPageSource.GetDescriptor().FindNextClusterId(clusterId);
 	}
-	fCurrent = cluster;
 
-	auto nextId = fPageSource.GetDescriptor().FindNextClusterId(clusterId);
-	std::cout << "CLUSTER ASYNC, next id is " << nextId << std::endl;
 	if (nextId != kInvalidDescriptorId) {
-		// What happens if thread still runs on delete of the cluster pool
-		fNext = std::async(std::launch::async, &RPageSource::LoadCluster, &fPageSource, nextId);
+		std::promise<std::unique_ptr<RCluster>> promise;
+		fNext = promise.get_future();
+		RWorkItem workItem;
+		workItem.fPromise = std::move(promise);
+		workItem.fClusterId = nextId;
+
+		std::unique_lock<std::mutex> lock(fLockWorkQueue);
+		fCvHasSpace.wait(lock, [&]{ return fWorkQueue.size() < kWorkQueueLimit; });
+		fWorkQueue.emplace(std::move(workItem));
+		if (fWorkQueue.size() == 1)
+			fCvHasWork.notify_one();
 	}
 
 	return cluster;

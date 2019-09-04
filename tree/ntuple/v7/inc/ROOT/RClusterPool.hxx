@@ -19,9 +19,12 @@
 #include <ROOT/RCluster.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
+#include <condition_variable>
 #include <memory>
 #include <mutex>
 #include <future>
+#include <queue>
+#include <thread>
 
 namespace ROOT {
 namespace Experimental {
@@ -31,15 +34,32 @@ class RPageSource;
 
 class RClusterPool {
 private:
+   static constexpr unsigned int kWorkQueueLimit = 4;
+
+   struct RWorkItem {
+      RWorkItem() = default;
+      std::promise<std::unique_ptr<RCluster>> fPromise;
+      DescriptorId_t fClusterId = kInvalidDescriptorId;
+   };
+
    RPageSource &fPageSource;
    std::shared_ptr<RCluster> fCurrent;
    std::future<std::unique_ptr<RCluster>> fNext;
    std::mutex fLock;
 
+   std::thread fThreadIo;
+   std::mutex fLockWorkQueue;
+   std::condition_variable fCvHasWork;
+   std::condition_variable fCvHasSpace;
+   std::queue<RWorkItem> fWorkQueue;
+
+   void ExecLoadClusters();
+
 public:
-   explicit RClusterPool(RPageSource &pageSource) : fPageSource(pageSource) {}
+   explicit RClusterPool(RPageSource &pageSource);
    explicit RClusterPool(const RClusterPool &other) = delete;
    RClusterPool &operator =(const RClusterPool &other) = delete;
+   ~RClusterPool();
 
    std::shared_ptr<RCluster> GetCluster(DescriptorId_t clusterId);
 };

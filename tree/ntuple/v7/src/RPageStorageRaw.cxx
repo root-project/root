@@ -204,11 +204,13 @@ ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntup
 
 ROOT::Experimental::Detail::RPageSourceRaw::~RPageSourceRaw()
 {
+   std::this_thread::sleep_for(std::chrono::milliseconds(50));
 }
 
 
 void ROOT::Experimental::Detail::RPageSourceRaw::Read(void *buffer, std::size_t nbytes, std::uint64_t offset)
 {
+   std::this_thread::sleep_for(std::chrono::milliseconds(10));
    RNTuplePlainTimer timer(*fCtrTimeWallRead, *fCtrTimeCpuRead);
    auto nread = fFile->ReadAt(buffer, nbytes, offset);
    R__ASSERT(nread == nbytes);
