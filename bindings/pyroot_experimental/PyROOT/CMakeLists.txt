@@ -40,9 +40,9 @@ set(py_sources
   ROOT/pythonization/_th1.py
   ROOT/pythonization/_titer.py
   ROOT/pythonization/_tobject.py
-  ROOT/pythonisation/_tobjstring.py
+  ROOT/pythonization/_tobjstring.py
   ROOT/pythonization/_tseqcollection.py
-  ROOT/pythonisation/_tstring.py
+  ROOT/pythonization/_tstring.py
   ROOT/pythonization/_ttree.py
   ROOT/pythonization/_tvector3.py
   ROOT/pythonization/_tvectort.py
