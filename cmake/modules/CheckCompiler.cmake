@@ -232,8 +232,8 @@ int main() {}
 " GLIBCXX_USE_CXX11_ABI)
 
 #---Print the final compiler flags--------------------------------------------------------------------
+string(TOUPPER "${CMAKE_BUILD_TYPE}" BUILD_TYPE)
 message(STATUS "ROOT Platform: ${ROOT_PLATFORM}")
 message(STATUS "ROOT Architecture: ${ROOT_ARCHITECTURE}")
-string(TOUPPER "${CMAKE_BUILD_TYPE}" uppercase_CMAKE_BUILD_TYPE)
-message(STATUS "Build Type: ${CMAKE_BUILD_TYPE} (flags = '${CMAKE_CXX_FLAGS_${uppercase_CMAKE_BUILD_TYPE}}')")
-message(STATUS "Compiler Flags: ${CMAKE_CXX_FLAGS_${uppercase_CMAKE_BUILD_TYPE}} ${CMAKE_CXX_FLAGS}")
+message(STATUS "Build Type: '${CMAKE_BUILD_TYPE}' (flags = '${CMAKE_CXX_FLAGS_${BUILD_TYPE}}')")
+message(STATUS "Compiler Flags: ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${BUILD_TYPE}}")
