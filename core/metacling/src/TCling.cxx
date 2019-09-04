@@ -6490,8 +6490,13 @@ void TCling::UpdateClassInfoWithDecl(const void* vTD)
       }
 
       auto declName=ND->getNameAsString();
+      // Check if we have registered the unqualified name into the list
+      // of TClass that are in kNoInfo, kEmulated or kFwdDeclaredState.
+      // Since this is used as heureutistic to avoid spurrious calls to GetNormalizedName
+      // the unqualified name is sufficient (and the fully qualified name might be
+      // 'wrong' if there is difference in spelling in the template paramters (for example)
       if (!TClass::HasNoInfoOrEmuOrFwdDeclaredDecl(declName.c_str())){
-//          printf ("Impossible to find a TClassEntry in kNoInfo or kEmulated the decl of which would be called %s. Skip w/o building the normalized name.\n",declName );
+         // fprintf (stderr,"WARNING: Impossible to find a TClassEntry in kNoInfo or kEmulated the decl of which would be called %s. Skip w/o building the normalized name.\n",declName.c_str() );
          return;
       }
 
