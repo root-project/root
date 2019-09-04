@@ -133,8 +133,8 @@ namespace BernsteinEvaluate {
 //Author: Emmanouil Michalainas, CERN 16 AUGUST 2019  
 
 void compute(  size_t batchSize, double xmax, double xmin,
-               double * __restrict__ output,
-               const double * __restrict__ const xData,
+               double * __restrict output,
+               const double * __restrict const xData,
                const RooListProxy& coefList)
 {
   constexpr size_t block = 128;

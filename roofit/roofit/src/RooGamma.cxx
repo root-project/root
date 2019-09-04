@@ -100,7 +100,7 @@ namespace GammaBatchEvaluate {
 
 template<class Tx, class Tgamma, class Tbeta, class Tmu>
 void compute(	size_t batchSize,
-              double * __restrict__ output,
+              double * __restrict output,
               Tx X, Tgamma G, Tbeta B, Tmu M)
 {
   constexpr double NaN = std::numeric_limits<double>::quiet_NaN();

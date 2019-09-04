@@ -86,7 +86,7 @@ namespace BifurGaussBatchEvaluate {
 
 template<class Tx, class Tm, class Tsl, class Tsr>
 void compute(  size_t batchSize,
-               double * __restrict__ output,
+               double * __restrict output,
                Tx X, Tm M, Tsl SL, Tsr SR)
 {
   for (size_t i=0; i<batchSize; i++) {

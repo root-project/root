@@ -556,7 +556,7 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
     ((RooAbsPdf*) this)->setProxyNormSet(nset) ;
   }
   
-  RooArgSet* depList = getObservables(nset) ;
+  std::unique_ptr<RooArgSet> depList(getObservables(nset));
 
   if (_verboseEval>0) {
     if (!selfNormalized()) {
@@ -616,7 +616,6 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
   
 //   cout << "making new object " << _norm->GetName() << endl ;
 
-  delete depList ;
   return kTRUE ;
 }
 

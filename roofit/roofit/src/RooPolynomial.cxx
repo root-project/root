@@ -153,8 +153,8 @@ namespace {
 //Author: Emmanouil Michalainas, CERN 15 AUGUST 2019  
 
 void compute(  size_t batchSize, const int lowestOrder,
-               double * __restrict__ output,
-               const double * __restrict__ const X,
+               double * __restrict output,
+               const double * __restrict const X,
                const std::vector<BatchHelpers::BracketAdapterWithMask>& coefList )
 {
   const int nCoef = coefList.size();
@@ -223,7 +223,7 @@ RooSpan<double> RooPolynomial::evaluateBatch(std::size_t begin, std::size_t batc
   for (int i=0; i<nCoef; i++) {
     auto val = static_cast<RooAbsReal&>(_coefList[i]).getVal(normSet);
     auto valBatch = static_cast<RooAbsReal&>(_coefList[i]).getValBatch(begin, batchSize, normSet);
-    coefList.push_back( BatchHelpers::BracketAdapterWithMask(val, valBatch) );
+    coefList.emplace_back(val, valBatch);
   }
   
   compute(batchSize, _lowestOrder, output.data(), xData.data(), coefList);

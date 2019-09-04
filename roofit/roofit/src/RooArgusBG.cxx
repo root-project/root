@@ -96,7 +96,7 @@ namespace ArgusBatchEvaluate {
 
 template<class Tm, class Tm0, class Tc, class Tp>
 void compute(  size_t batchSize,
-               double * __restrict__ output,
+               double * __restrict output,
                Tm M, Tm0 M0, Tc C, Tp P)
 {
   for (size_t i=0; i<batchSize; i++) {

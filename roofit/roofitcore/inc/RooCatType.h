@@ -45,7 +45,7 @@ public:
     // Return state name
     return _label[0] ? _label : 0 ;
   }
-  virtual void SetName(const Text_t* name) ;
+  void SetName(const Text_t* name) ;
 
   inline RooCatType& operator=(const RooCatType& other) { 
     // Assignment operator from other RooCatType

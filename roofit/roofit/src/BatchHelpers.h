@@ -29,7 +29,7 @@ namespace BatchHelpers {
 constexpr size_t block = 1024;
 
 struct ArrayWrapper {
-    const double * __restrict__ ptr;
+    const double * __restrict ptr;
     bool _batch;
     
     constexpr double operator[](std::size_t i) const {
@@ -105,7 +105,7 @@ class BracketAdapterWithMask {
   private:
     const bool _isBatch;
     const double _payload;
-    const double* __restrict__ const _pointer;
+    const double* __restrict const _pointer;
     const size_t _mask;
 };
 
