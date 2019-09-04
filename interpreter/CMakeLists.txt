@@ -131,25 +131,44 @@ if(gcctoolchain)
 endif()
 
 if(builtin_llvm)
-  #---Build type
+  # Since debug builds of LLVM are quite large, we want to be able
+  # to control the build types of ROOT and LLVM independently. The
+  # logic below is to make that possible. LLVM is built in Release
+  # mode unless a different build type is chosen via LLVM_BUILD_TYPE.
+
   if(NOT DEFINED LLVM_BUILD_TYPE)
-    set(LLVM_BUILD_TYPE Release CACHE STRING "Build type for LLVM (used to set CMAKE_BUILD_TYPE)")
+    set(LLVM_BUILD_TYPE Release CACHE STRING "Build type used for LLVM")
   endif()
-  if( CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT LLVM_BUILD_TYPE STREQUAL "Debug")
-    message(STATUS "Selected a 'Debug' build (CMAKE_BUILD_TYPE), LLVM will still be built in 'Release'."
-      " Set LLVM_BUILD_TYPE to Debug to change it.")
-  endif()
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(LLVM_ENABLE_ASSERTIONS "YES")
-  else()
-    if(LLVM_BUILD_TYPE STREQUAL "Debug")
-      set(LLVM_ENABLE_ASSERTIONS "YES")
+
+  message(STATUS "Building LLVM in '${LLVM_BUILD_TYPE}' mode.")
+
+  if(NOT DEFINED LLVM_ENABLE_ASSERTIONS)
+    if(CMAKE_BUILD_TYPE MATCHES "(Debug|RelWithDebInfo)"
+     OR LLVM_BUILD_TYPE MATCHES "(Debug|RelWithDebInfo)")
+      set(LLVM_ENABLE_ASSERTIONS TRUE)
     else()
-      set(LLVM_ENABLE_ASSERTIONS "NO")
+      set(LLVM_ENABLE_ASSERTIONS FALSE)
     endif()
   endif()
-  set(CMAKE_BUILD_TYPE ${LLVM_BUILD_TYPE})
-  set(BUILD_SHARED_LIBS "NO")
+
+  # Multi-configuration generators ignore CMAKE_BUILD_TYPE, so
+  # in that case we set the flags for all configurations to the
+  # flags of the build type assigned to LLVM_BUILD_TYPE.
+
+  if(GENERATOR_IS_MULTI_CONFIG)
+    string(TOUPPER ${LLVM_BUILD_TYPE} LLVM_BUILD_TYPE)
+    set(LLVM_C_FLAGS ${CMAKE_C_FLAGS_${LLVM_BUILD_TYPE}})
+    set(LLVM_CXX_FLAGS ${CMAKE_CXX_FLAGS_${LLVM_BUILD_TYPE}})
+    foreach(CONFIG ${CMAKE_CONFIGURATION_TYPES})
+      string(TOUPPER ${CONFIG} CONFIG)
+      set(CMAKE_C_FLAGS_${CONFIG} ${LLVM_C_FLAGS})
+      set(CMAKE_CXX_FLAGS_${CONFIG} ${LLVM_CXX_FLAGS})
+    endforeach()
+  elseif(NOT LLVM_BUILD_TYPE STREQUAL CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE ${LLVM_BUILD_TYPE})
+  endif()
+
+  set(BUILD_SHARED_LIBS FALSE)
 
   set(CLANG_ENABLE_STATIC_ANALYZER OFF CACHE BOOL "")
   set(CLANG_ENABLE_ARCMT OFF CACHE BOOL "")
