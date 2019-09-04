@@ -292,6 +292,117 @@ public:
    void SetStyleClasses(const std::vector<std::string> &styles) { fStyleClasses = styles; }
 };
 
+
+class RAttributesVisitor;
+
+class RAttributesContainer {
+
+friend class RAttributesVisitor;
+public:
+   using AttrMap_t = std::unordered_map<std::string, std::string>;
+
+private:
+
+   AttrMap_t                  *fContIO{nullptr};    ///  used in IO while shared_ptr not yet supported, JSON_object
+   std::shared_ptr<AttrMap_t>  fCont;               ///<! container itself
+
+   auto *MakeContainer()
+   {
+      if (fContIO && !fCont)
+         fCont.reset(fContIO);
+
+      if (!fCont)
+         fCont = std::make_shared<AttrMap_t>();
+
+      return fContIO = fCont.get();
+   }
+
+   const auto *GetContainer() const
+   {
+      if (!fContIO)
+         const_cast<RAttributesContainer*>(this)->fContIO = fCont.get();
+      else if (!fCont)
+         const_cast<RAttributesContainer*>(this)->fCont.reset(fContIO);
+
+      return fContIO;
+   }
+
+   std::weak_ptr<AttrMap_t> Make()
+   {
+      MakeContainer();
+      return fCont;
+   }
+
+   std::weak_ptr<AttrMap_t> Get() const
+   {
+      GetContainer();
+      return fCont;
+   }
+
+public:
+   RAttributesContainer() = default;
+   ~RAttributesContainer() { Clear(); }
+
+   /** use const char* - nullptr means no value found */
+   const char *Eval(const std::string &name) const;
+
+   /** returns true when value exists */
+   bool HasValue(const std::string &name) const { return Eval(name) != nullptr; }
+
+   void SetValue(const std::string &name, const char *val);
+
+   void SetValue(const std::string &name, const std::string &value);
+
+   void ClearValue(const std::string &name) { SetValue(name, (const char *)nullptr); }
+
+   void Clear();
+};
+
+
+/** Access to drawable attributes, never should be stored */
+class RAttributesVisitor {
+
+   mutable std::weak_ptr<RAttributesContainer::AttrMap_t> fWeak;   ///<! weak pointer on container
+   mutable std::shared_ptr<RAttributesContainer::AttrMap_t> fCont; ///<! by first access to container try to get shared ptr
+   mutable bool fFirstTime{true};                              ///<! only first time try to lock weak ptr
+   std::string fPrefix;                                        ///<! name prefix for all attributes values
+   const RAttributesContainer::AttrMap_t *fDefaults{nullptr};      ///<! default values for these visitor
+
+   std::string GetFullName(const std::string &name) const { return fPrefix.empty() ? name : fPrefix + "." + name; }
+
+protected:
+
+   /** Should be used in the constructor */
+   void SetDefaults(const RAttributesContainer::AttrMap_t &dflts) { fDefaults = &dflts; }
+
+public:
+
+   RAttributesVisitor(RAttributesContainer &cont, const std::string &prefix) : fWeak(cont.Make()), fPrefix(prefix) {}
+
+   RAttributesVisitor(const RAttributesContainer &cont, const std::string &prefix) : fWeak(cont.Get()), fPrefix(prefix) {}
+
+   /** use const char* - nullptr means no value found */
+   const char *Eval(const std::string &name) const;
+
+   /** returns true when value exists */
+   bool HasValue(const std::string &name) const { return Eval(name) != nullptr; }
+
+   void SetValue(const std::string &name, const char *val);
+
+   void SetValue(const std::string &name, const std::string &value);
+
+   void ClearValue(const std::string &name) { SetValue(name, (const char *)nullptr); }
+
+   void Clear();
+
+   int GetInt(const std::string &name) const;
+   void SetInt(const std::string &name, const int value);
+
+   float GetFloat(const std::string &name) const;
+   void SetFloat(const std::string &name, const float value);
+};
+
+
 } // namespace Experimental
 } // namespace ROOT
 
