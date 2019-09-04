@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-`
 # File: roottest/python/basic/PyROOT_datatypetests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 05/11/05
@@ -979,6 +980,21 @@ class TestClassDATATYPES:
         val = 1.0
         arr[N-1] = val
         assert arr[N-1] == np_arr[N-1] == val
+
+    def test23_nonASCII_strings(self):
+        """Test strings with non-ASCII chars"""
+        if not self.exp_pyroot:
+            import ROOT
+
+            ROOT.gInterpreter.Declare("""
+            std::tuple<std::string,std::size_t> myfun(std::string s) {
+                return std::tuple<std::string,std::size_t>(s, s.size());
+            }
+            """)
+
+            res = ROOT.myfun('ℕ')
+            assert res._0 == 'ℕ'
+            assert res._1 == len(u'ℕ'.encode(encoding='UTF-8'))
 
 
 ## actual test run
