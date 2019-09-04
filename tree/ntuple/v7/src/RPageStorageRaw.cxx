@@ -177,14 +177,17 @@ ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntup
    , fUnzipBuffer(std::make_unique<std::array<unsigned char, kMaxPageSize>>())
    , fMetrics("RPageSourceRaw")
 {
-   fMetrics.MakeCounter("nRead", "", "number of read() calls", fCtrNRead);
-   fMetrics.MakeCounter("szRead", "B", "volume read from file", fCtrSzRead);
-   fMetrics.MakeCounter("szUnzip", "B", "volume after unzipping", fCtrSzUnzip);
-   fMetrics.MakeCounter("nPages", "", "number of populated pages", fCtrNPages);
-   fMetrics.MakeCounter("timeWallRead", "ns", "wall clock time spent reading", fCtrTimeWallRead);
-   fMetrics.MakeCounter("timeCpuRead", "ns", "CPU time spent reading", fCtrTimeCpuRead);
-   fMetrics.MakeCounter("timeWallUnzip", "ns", "wall clock time spent decompressing", fCtrTimeWallUnzip);
-   fMetrics.MakeCounter("timeCpuUnzip", "ns", "CPU time spent decompressing", fCtrTimeCpuUnzip);
+   fCtrNRead = fMetrics.MakeCounter<decltype(fCtrNRead)>("nRead", "", "number of read() calls");
+   fCtrSzRead = fMetrics.MakeCounter<decltype(fCtrSzRead)>("szRead", "B", "volume read from file");
+   fCtrSzUnzip = fMetrics.MakeCounter<decltype(fCtrSzUnzip)>("szUnzip", "B", "volume after unzipping");
+   fCtrNPages = fMetrics.MakeCounter<decltype(fCtrNPages)>("nPages", "", "number of populated pages");
+   fCtrTimeWallRead = fMetrics.MakeCounter<decltype(fCtrTimeWallRead)>(
+      "timeWallRead", "ns", "wall clock time spent reading");
+   fCtrTimeCpuRead = fMetrics.MakeCounter<decltype(fCtrTimeCpuRead)>("timeCpuRead", "ns", "CPU time spent reading");
+   fCtrTimeWallUnzip = fMetrics.MakeCounter<decltype(fCtrTimeWallUnzip)>(
+      "timeWallUnzip", "ns", "wall clock time spent decompressing");
+   fCtrTimeCpuUnzip = fMetrics.MakeCounter<decltype(fCtrTimeCpuUnzip)>(
+      "timeCpuUnzip", "ns", "CPU time spent decompressing");
 }
 
 ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntupleName, std::string_view path,

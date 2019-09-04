@@ -251,14 +251,14 @@ public:
    RNTupleMetrics & operator=(const RNTupleMetrics &other) = delete;
    ~RNTupleMetrics() = default;
 
-   template <typename CounterT>
-   void MakeCounter(const std::string &name, const std::string &unit, const std::string &desc,
-                    CounterT *&ptrCounter)
+   template <typename CounterPtrT>
+   CounterPtrT MakeCounter(const std::string &name, const std::string &unit, const std::string &desc)
    {
       R__ASSERT(!Contains(name));
-      auto counter = std::make_unique<CounterT>(name, unit, desc);
-      ptrCounter = counter.get();
+      auto counter = std::make_unique<std::remove_pointer_t<CounterPtrT>>(name, unit, desc);
+      auto ptrCounter = counter.get();
       fCounters.emplace_back(std::move(counter));
+      return ptrCounter;
    }
 
    void ObserveMetrics(RNTupleMetrics &observee);
