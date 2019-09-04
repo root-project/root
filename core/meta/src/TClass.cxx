@@ -1404,10 +1404,12 @@ void TClass::Init(const char *name, Version_t cversion,
          }
       }
 
-      fClassInfo = gInterpreter->ClassInfo_Factory(givenInfo);
-      fCanLoadClassInfo = false; // avoids calls to LoadClassInfo() if info is already loaded
-      if (fState <= kEmulated)
-         fState = kInterpreted;
+      if (!invalid) {
+         fClassInfo = gInterpreter->ClassInfo_Factory(givenInfo);
+         fCanLoadClassInfo = false; // avoids calls to LoadClassInfo() if info is already loaded
+         if (fState <= kEmulated)
+            fState = kInterpreted;
+      }
    }
 
    // We need to check if the class it is not fwd declared for the cases where we
