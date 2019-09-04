@@ -45,6 +45,7 @@
 #pragma link C++ class ROOT::Experimental::RPadLength::CoordSysBase<ROOT::Experimental::RPadLength::Normal>+;
 #pragma link C++ class ROOT::Experimental::RPadLength::CoordSysBase<ROOT::Experimental::RPadLength::User>+;
 #pragma link C++ class ROOT::Experimental::RDisplayItem+;
+#pragma link C++ class ROOT::Experimental::RDrawableDisplayItem+;
 #pragma link C++ class ROOT::Experimental::RPalette+;
 #pragma link C++ class ROOT::Experimental::RColor+;
 #pragma link C++ class ROOT::Experimental::RDrawingAttrBase+;
