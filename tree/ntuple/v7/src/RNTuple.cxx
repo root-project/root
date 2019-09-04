@@ -152,6 +152,7 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
    }
 }
 
+// Uses the visitor design pattern to traverse through each field. The visitor prints a line with an entry for each field it visited.
 void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, const ENTupleFormat what, std::ostream &output)
 {
    if (GetModel()->GetRootField()->GetLevelInfo().GetNumChildren() == 0) {

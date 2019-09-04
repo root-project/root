@@ -21,8 +21,6 @@
 #include <ROOT/RNTupleView.hxx>
 
 #include <TInterpreter.h>
-#include <TROOT.h>
-#include <TString.h>
 
 #include <algorithm>
 #include <iomanip>
@@ -107,15 +105,16 @@ void ROOT::Experimental::RValueVisitor::VisitField(const Detail::RFieldBase &fie
    for (int i = 0; i < level; ++i) fOutput << "  ";
    fOutput << "\"" << field.GetName() << "\": ";
    
-   // A custom object (has ENTupleStructure::kRecord) should let its subfields display its entries.
-   // So the field of the custom object should only display its name.
-   if (field.GetStructure() == ENTupleStructure::kRecord)
+   // A custom object (has ENTupleStructure::kRecord) should let its subfields display
+   // its entries instead of displaying all by itself.
+   // So the field of the custom object should only display its name and make an early quit here.
+   if (field.GetStructure() == ENTupleStructure::kRecord) {
+      fOutput << std::endl;
       return;
+   }
    
-   // gROOT->ProcessLine doesn't like templates, so the below doesn't work...
-   //gROOT->ProcessLine(TString::Format("auto view = fReader->GetView<std::vector<float>>(RNTupleFormatter::FieldHierarchy(field));"));
-   //gROOT->ProcessLine(TString::Format("fOutput << gInterpreter->ToString(field.GetType().c_str(), view.GetRawPtr(fIndex))"));
-   
+   // const_cast may lead to undefined behaviour, so this procedure of obtaining
+   // the entries is only used when there are no good alternatives.
    Detail::RFieldBase* fieldPtr = const_cast<Detail::RFieldBase*>(&field);
    Detail::RFieldValue value{fieldPtr->GenerateValue()};
    fieldPtr->Read(fIndex, &value);
@@ -126,21 +125,54 @@ void ROOT::Experimental::RValueVisitor::VisitField(const Detail::RFieldBase &fie
    fOutput << std::endl;
 }
 
+void ROOT::Experimental::RValueVisitor::VisitArrayField(const RFieldArray &field, int level, std::size_t arraylength, const Detail::RFieldBase* subfieldPtr)
+{
+   for (int i = 0; i < level; ++i) fOutput << "  ";
+   fOutput << "\"" << field.GetName() << "\": [";
+   
+   Detail::RFieldBase* fieldPtr = const_cast<RFieldArray*>(&field);
+   Detail::RFieldValue value{fieldPtr->GenerateValue()};
+   fieldPtr->Read(fIndex, &value);
+   
+   fOutput << gInterpreter->ToString(subfieldPtr->GetType().c_str(), value.GetRawPtr());
+   for (std::size_t i = 1; i < arraylength; ++i) {
+      void* PtrToValue{(void*)((std::uint8_t*)value.GetRawPtr()+i*subfieldPtr->GetValueSize())};
+      fOutput << ", " << gInterpreter->ToString(subfieldPtr->GetType().c_str(), PtrToValue);
+   }
+   
+   fOutput << "]";
+   if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
+      fOutput << ',';
+   fOutput << std::endl;
+}
+
 void ROOT::Experimental::RValueVisitor::VisitBoolField(const RField<bool> &field, int level)
 {
    for (int i = 0; i < level; ++i) fOutput << "  ";
    fOutput << "\"" << field.GetName() << "\": ";
    
-   if (field.GetStructure() != ENTupleStructure::kRecord) {
-      auto view = fReader->GetView<bool>(RNTupleFormatter::FieldHierarchy(field));
-      if (view(fIndex) == 0) {
-         fOutput << "false";
-      } else {
-         fOutput << "true";
-      }
-      if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
-         fOutput << ',';
+   auto view = fReader->GetView<bool>(RNTupleFormatter::FieldHierarchy(field));
+   if (view(fIndex) == 0) {
+      fOutput << "false";
+   } else {
+      fOutput << "true";
    }
+   
+   if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
+      fOutput << ',';
+   fOutput << std::endl;
+}
+
+void ROOT::Experimental::RValueVisitor::VisitClustersizeField(const RField<ROOT::Experimental::ClusterSize_t> &field, int level)
+{
+   for (int i = 0; i < level; ++i) fOutput << "  ";
+   fOutput << "\"" << field.GetName() << "\": ";
+   
+   auto view = fReader->GetView<ClusterSize_t>(RNTupleFormatter::FieldHierarchy(field));
+   fOutput << view(fIndex);
+   
+   if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
+         fOutput << ',';
    fOutput << std::endl;
 }
 
@@ -149,12 +181,11 @@ void ROOT::Experimental::RValueVisitor::VisitDoubleField(const RField<double> &f
    for (int i = 0; i < level; ++i) fOutput << "  ";
    fOutput << "\"" << field.GetName() << "\": ";
    
-   if (field.GetStructure() != ENTupleStructure::kRecord) {
-      auto view = fReader->GetView<double>(RNTupleFormatter::FieldHierarchy(field));
-      fOutput << view(fIndex);
-      if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
-         fOutput << ',';
-   }
+   auto view = fReader->GetView<double>(RNTupleFormatter::FieldHierarchy(field));
+   fOutput << view(fIndex);
+   
+   if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
+      fOutput << ',';
    fOutput << std::endl;
 }
 
@@ -163,12 +194,11 @@ void ROOT::Experimental::RValueVisitor::VisitFloatField(const RField<float> &fie
    for (int i = 0; i < level; ++i) fOutput << "  ";
    fOutput << "\"" << field.GetName() << "\": ";
    
-   if (field.GetStructure() != ENTupleStructure::kRecord) {
-      auto view = fReader->GetView<float>(RNTupleFormatter::FieldHierarchy(field));
-      fOutput << view(fIndex);
-      if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
-         fOutput << ',';
-   }
+   auto view = fReader->GetView<float>(RNTupleFormatter::FieldHierarchy(field));
+   fOutput << view(fIndex);
+   
+   if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
+      fOutput << ',';
    fOutput << std::endl;
 }
 
@@ -177,12 +207,11 @@ void ROOT::Experimental::RValueVisitor::VisitIntField(const RField<int> &field, 
    for (int i = 0; i < level; ++i) fOutput << "  ";
    fOutput << "\"" << field.GetName() << "\": ";
    
-   if (field.GetStructure() != ENTupleStructure::kRecord) {
-      auto view = fReader->GetView<int>(RNTupleFormatter::FieldHierarchy(field));
-      fOutput << view(fIndex);
-      if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
-         fOutput << ',';
-   }
+   auto view = fReader->GetView<int>(RNTupleFormatter::FieldHierarchy(field));
+   fOutput << view(fIndex);
+   
+   if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
+      fOutput << ',';
    fOutput << std::endl;
 }
 
@@ -191,12 +220,11 @@ void ROOT::Experimental::RValueVisitor::VisitStringField(const RField<std::strin
    for (int i = 0; i < level; ++i) fOutput << "  ";
    fOutput << "\"" << field.GetName() << "\": ";
    
-   if (field.GetStructure() != ENTupleStructure::kRecord) {
-      auto view = fReader->GetView<std::string>(RNTupleFormatter::FieldHierarchy(field));
-      fOutput << "\"" << view(fIndex) << "\"";
-      if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
-         fOutput << ',';
-   }
+   auto view = fReader->GetView<std::string>(RNTupleFormatter::FieldHierarchy(field));
+   fOutput << "\"" << view(fIndex) << "\"";
+   
+   if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
+      fOutput << ',';
    fOutput << std::endl;
 }
 
@@ -205,12 +233,11 @@ void ROOT::Experimental::RValueVisitor::VisitUIntField(const RField<std::uint32_
    for (int i = 0; i < level; ++i) fOutput << "  ";
    fOutput << "\"" << field.GetName() << "\": ";
    
-   if (field.GetStructure() != ENTupleStructure::kRecord) {
-      auto view = fReader->GetView<std::uint32_t>(RNTupleFormatter::FieldHierarchy(field));
-      fOutput << view(fIndex);
-      if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
-         fOutput << ',';
-   }
+   auto view = fReader->GetView<std::uint32_t>(RNTupleFormatter::FieldHierarchy(field));
+   fOutput << view(fIndex);
+   
+   if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
+      fOutput << ',';
    fOutput << std::endl;
 }
 
@@ -219,12 +246,11 @@ void ROOT::Experimental::RValueVisitor::VisitUInt64Field(const RField<std::uint6
    for (int i = 0; i < level; ++i) fOutput << "  ";
    fOutput << "\"" << field.GetName() << "\": ";
    
-   if (field.GetStructure() != ENTupleStructure::kRecord) {
-      auto view = fReader->GetView<std::uint64_t>(RNTupleFormatter::FieldHierarchy(field));
-      fOutput << view(fIndex);
-      if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
-         fOutput << ',';
-   }
+   auto view = fReader->GetView<std::uint64_t>(RNTupleFormatter::FieldHierarchy(field));
+   fOutput << view(fIndex);
+   
+   if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
+      fOutput << ',';
    fOutput << std::endl;
 }
 
@@ -233,12 +259,11 @@ void ROOT::Experimental::RValueVisitor::VisitUInt8Field(const RField<std::uint8_
    for (int i = 0; i < level; ++i) fOutput << "  ";
    fOutput << "\"" << field.GetName() << "\": ";
    
-   if (field.GetStructure() != ENTupleStructure::kRecord) {
-      auto view = fReader->GetView<std::uint8_t>(RNTupleFormatter::FieldHierarchy(field));
-      fOutput << "'" << view(fIndex) << "'";
-      if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
-         fOutput << ',';
-   }
+   auto view = fReader->GetView<std::uint8_t>(RNTupleFormatter::FieldHierarchy(field));
+   fOutput << "'" << view(fIndex) << "'";
+   
+   if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
+      fOutput << ',';
    fOutput << std::endl;
 }
 
