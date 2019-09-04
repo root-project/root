@@ -28,7 +28,7 @@ class RDrawingOptsBase;
 class RMenuItems;
 class RPadBase;
 class RDrawable;
-
+class RAttributesVisitor;
 
 namespace Internal {
 class RPadPainter;
@@ -38,28 +38,95 @@ class RPadPainter;
   Base class for drawable entities: objects that can be painted on a `RPad`.
  */
 
+class RAttributesContainer {
 
-using RDrawableAttributesContainer = std::unordered_map<std::string, std::string>;
+friend class RAttributesVisitor;
+public:
+   using Map_t = std::unordered_map<std::string, std::string>;
+
+private:
+
+   std::shared_ptr<Map_t>  fCont;               ///<! container itself
+   Map_t                  *fContIO{nullptr};    ///<  used in IO while shared_ptr not yet supported, JSON_object
+
+   Map_t *MakeContainer()
+   {
+      if (!fContIO)
+         fContIO = fCont.get();
+      else if (!fCont)
+         fCont.reset(fContIO);
+
+      if (!fCont) {
+         fCont = std::make_shared<Map_t>();
+         fContIO = fCont.get();
+      }
+
+      return fContIO;
+   }
+
+   const Map_t *GetContainer() const
+   {
+      if (!fContIO)
+         const_cast<RAttributesContainer*>(this)->fContIO = fCont.get();
+      else if (!fCont)
+         const_cast<RAttributesContainer*>(this)->fCont.reset(fContIO);
+
+      return fContIO;
+   }
+
+   std::weak_ptr<Map_t> Make()
+   {
+      MakeContainer();
+      return fCont;
+   }
+
+   std::weak_ptr<Map_t> Get() const
+   {
+      GetContainer();
+      return fCont;
+   }
+
+public:
+   RAttributesContainer() = default;
+   ~RAttributesContainer() { Clear(); }
+
+   /** use const char* - nullptr means no value found */
+   const char *Eval(const std::string &name) const;
+
+   /** returns true when value exists */
+   bool HasValue(const std::string &name) const { return Eval(name) != nullptr; }
+
+   void SetValue(const std::string &name, const char *val);
+
+   void SetValue(const std::string &name, const std::string &value);
+
+   void ClearValue(const std::string &name) { SetValue(name, (const char *)nullptr); }
+
+   void Clear();
+};
+
 
 /** Access to drawable attributes, never should be stored */
-class RDrawableAttributesNew {
-   RDrawable &fDrawable; ///<! reference
+class RAttributesVisitor {
 
-   std::string fPrefix; ///<! name prefix for all attributes values
-
-   const RDrawableAttributesContainer *fDefaults{nullptr}; ///<! default values for these attributes
+   mutable std::weak_ptr<RAttributesContainer::Map_t> fWeak;   ///<! weak pointer on container
+   mutable std::shared_ptr<RAttributesContainer::Map_t> fCont; ///<! by first access to container try to get shared ptr
+   mutable bool fFirstTime{true};                              ///<! only first time try to lock weak ptr
+   std::string fPrefix;                                        ///<! name prefix for all attributes values
+   const RAttributesContainer::Map_t *fDefaults{nullptr};      ///<! default values for these visitor
 
    std::string GetFullName(const std::string &name) const { return fPrefix.empty() ? name : fPrefix + "." + name; }
 
 protected:
 
    /** Should be used in the constructor */
-   void SetDefaults(const RDrawableAttributesContainer &dflts) { fDefaults = &dflts; }
+   void SetDefaults(const RAttributesContainer::Map_t &dflts) { fDefaults = &dflts; }
 
 public:
 
-   RDrawableAttributesNew(RDrawable &d, const std::string &prefix);
-   virtual ~RDrawableAttributesNew() {}
+   RAttributesVisitor(RAttributesContainer &cont, const std::string &prefix) : fWeak(cont.Make()), fPrefix(prefix) {}
+
+   RAttributesVisitor(const RAttributesContainer &cont, const std::string &prefix) : fWeak(cont.Get()), fPrefix(prefix) {}
 
    /** use const char* - nullptr means no value found */
    const char *Eval(const std::string &name) const;
@@ -92,16 +159,6 @@ friend class RDrawableDisplayItem;
 private:
 
    std::string  fId; ///< object identifier, unique inside RCanvas
-
-   RDrawableAttributesContainer fNewAttributes; ///< container for any kind of attribute associated with drawable, attributes can be styled, store as JSON_object
-
-   const RDrawableAttributesContainer *fDefaults{nullptr}; ///<! default values for drawable attributes
-
-protected:
-
-   void ClearAttributes();
-
-   void SetDefaults(const RDrawableAttributesContainer &dflts) { fDefaults = &dflts; }
 
 public:
 

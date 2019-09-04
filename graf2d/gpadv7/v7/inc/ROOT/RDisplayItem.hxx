@@ -79,7 +79,6 @@ class RDrawableDisplayItem : public RDisplayItem {
 protected:
 
    const RDrawable *fDrawable{nullptr};                      ///< drawable
-   const RDrawableAttributesContainer *fDefaults{nullptr};   ///< drawable defaults, not stored with drawable itself, store as JSON_object
 
 public:
 
@@ -88,7 +87,6 @@ public:
    {
       SetObjectID(dr.GetId());
       fDrawable = &dr;
-      fDefaults = dr.fDefaults;
    }
 
 };
