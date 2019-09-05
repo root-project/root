@@ -3,16 +3,16 @@
 /// This macro shows the usage of TMPIFile to simulate event
 /// reconstruction and merging them in parallel.
 /// 
-/// To run this macro, execute:
-/// "mpirun -np 4 root -b -q testTMPIFile.C"
+/// To run this macro do the following:
+///   - Build the JetEvent library: "root -b -q buildJetEvent.C"
+///   - Run MPI test: "mpirun -np 4 root -b -q testTMPIFile.C"
 ///
 /// \macro_code
 ///
 /// \author Taylor Childers, Yunsong Wang
 
-#ifdef JETS_SECOND_RUN
+R__LOAD_LIBRARY(../tree/JetEvent_cxx)
 
-#include "JetEvent.h"
 #include "TMPIFile.h"
 
 #include <chrono>
@@ -175,7 +175,10 @@ void test_tmpi() {
 
 }
 
-void testTMPIFile(Bool_t secondrun = true) {
+void testTMPIFile() {
+   TString tutdir = gROOT->GetTutorialDir();
+   gSystem->Load(tutdir + "/tree/JetEvent_cxx");
+
    auto start = std::chrono::high_resolution_clock::now();
 
    test_tmpi();
@@ -188,16 +191,5 @@ void testTMPIFile(Bool_t secondrun = true) {
    msg += std::to_string(time);
    Info("testTMPIFile", "%s", msg.c_str());
    Info("testTMPIFile", "exiting");
+
 }
-
-#else
-
-void testTMPIFile() {
-   TString tutdir = gROOT->GetTutorialDir();
-   gROOT->ProcessLine(".L " + tutdir + "/io/JetEvent.cxx+");
-   gROOT->ProcessLine("#define JETS_SECOND_RUN yes");
-   gROOT->ProcessLine("#include \"" __FILE__ "\"");
-   gROOT->ProcessLine("testTMPIFile(true)");
-}
-
-#endif
