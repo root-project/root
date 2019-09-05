@@ -103,7 +103,7 @@ public:
 // clang-format on
 class RNTupleAtomicCounter : public RNTuplePerfCounter {
 private:
-   std::atomic<std::int64_t> fCounter = 0;
+   std::atomic<std::int64_t> fCounter{0};
 
 public:
    RNTupleAtomicCounter(const std::string &name, const std::string &unit, const std::string &desc)
