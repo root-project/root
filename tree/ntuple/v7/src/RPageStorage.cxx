@@ -152,7 +152,7 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
       fOpenColumnRanges.emplace_back(columnRange);
       RClusterDescriptor::RPageRange pageRange;
       pageRange.fColumnId = i;
-      fOpenPageRanges.emplace_back(pageRange);
+      fOpenPageRanges.emplace_back(std::move(pageRange));
    }
 
    DoCreate(model);
@@ -186,8 +186,10 @@ void ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experimental::NT
       range.fNElements = 0;
    }
    for (auto &range : fOpenPageRanges) {
-      fDescriptorBuilder.AddClusterPageRange(fLastClusterId, range);
-      range.fPageInfos.clear();
+      RClusterDescriptor::RPageRange fullRange;
+      std::swap(fullRange, range);
+      range.fColumnId = fullRange.fColumnId;
+      fDescriptorBuilder.AddClusterPageRange(fLastClusterId, std::move(fullRange));
    }
    ++fLastClusterId;
    fPrevClusterNEntries = nEntries;
