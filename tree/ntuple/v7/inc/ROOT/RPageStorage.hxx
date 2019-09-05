@@ -105,7 +105,7 @@ up to the given entry number are committed.
 // clang-format on
 class RPageSink : public RPageStorage {
 protected:
-   const RNTupleWriteOptions fOptions;
+   RNTupleWriteOptions fOptions;
 
    /// Building the ntuple descriptor while writing is done in the same way for all the storage sink implementations.
    /// Field, column, cluster ids and page indexes per cluster are issued sequentially starting with 0
@@ -165,7 +165,7 @@ public:
    //using ClusterHandle_t = void *;
 
 protected:
-   const RNTupleReadOptions fOptions;
+   RNTupleReadOptions fOptions;
    RNTupleDescriptor fDescriptor;
 
    virtual RNTupleDescriptor DoAttach() = 0;

@@ -179,6 +179,9 @@ ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntup
    , fUnzipBuffer(std::make_unique<std::array<unsigned char, kMaxPageSize>>())
    , fMetrics("RPageSourceRaw")
 {
+   if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kDefault)
+      fOptions.SetClusterCache(RNTupleReadOptions::EClusterCache::kOff);
+
    fCtrNRead = fMetrics.MakeCounter<decltype(fCtrNRead)>("nRead", "", "number of read() calls");
    fCtrSzRead = fMetrics.MakeCounter<decltype(fCtrSzRead)>("szRead", "B", "volume read from file");
    fCtrSzUnzip = fMetrics.MakeCounter<decltype(fCtrSzUnzip)>("szUnzip", "B", "volume after unzipping");
@@ -204,13 +207,11 @@ ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntup
 
 ROOT::Experimental::Detail::RPageSourceRaw::~RPageSourceRaw()
 {
-   std::this_thread::sleep_for(std::chrono::milliseconds(50));
 }
 
 
 void ROOT::Experimental::Detail::RPageSourceRaw::Read(void *buffer, std::size_t nbytes, std::uint64_t offset)
 {
-   std::this_thread::sleep_for(std::chrono::milliseconds(10));
    RNTuplePlainTimer timer(*fCtrTimeWallRead, *fCtrTimeCpuRead);
    auto nread = fFile->ReadAt(buffer, nbytes, offset);
    R__ASSERT(nread == nbytes);
@@ -279,12 +280,19 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::Po
    void *pageBuffer = malloc(std::max(pageSize, static_cast<std::uint32_t>(elementSize * pageInfo.fNElements)));
    R__ASSERT(pageBuffer);
 
-   auto cluster = fClusterPool->GetCluster(clusterId);
-   RSheetKey sheetKey(columnId, pageNo);
-   const auto &sheet = cluster->GetSheet(sheetKey);
-   R__ASSERT(pageSize == sheet.GetSize());
-   memcpy(pageBuffer, sheet.GetAddress(), sheet.GetSize());
-   //Read(pageBuffer, pageSize, pageInfo.fLocator.fPosition);
+   if (fOptions.GetClusterCache() != RNTupleReadOptions::EClusterCache::kOff) {
+      auto cluster = fClusterPool->GetCluster(clusterId);
+      RSheetKey sheetKey(columnId, pageNo);
+      const auto sheetPtr = cluster->GetSheet(sheetKey);
+      if (sheetPtr == nullptr) {
+         Read(pageBuffer, pageSize, pageInfo.fLocator.fPosition);
+      } else {
+         R__ASSERT(pageSize == sheetPtr->GetSize());
+         memcpy(pageBuffer, sheetPtr->GetAddress(), sheetPtr->GetSize());
+      }
+   } else {
+      Read(pageBuffer, pageSize, pageInfo.fLocator.fPosition);
+   }
 
    auto bytesOnStorage = (element->GetBitsOnStorage() * pageInfo.fNElements + 7) / 8;
    if (pageSize != bytesOnStorage) {

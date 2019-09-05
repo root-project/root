@@ -18,3 +18,12 @@
 ROOT::Experimental::Detail::RCluster::~RCluster()
 {
 }
+
+const ROOT::Experimental::Detail::RSheet *
+ROOT::Experimental::Detail::RCluster::GetSheet(const RSheetKey &key) const
+{
+   const auto itr = fSheets.find(key);
+   if (itr != fSheets.end())
+      return &(itr->second);
+   return nullptr;
+}

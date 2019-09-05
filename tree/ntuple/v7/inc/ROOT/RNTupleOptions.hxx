@@ -55,6 +55,7 @@ class RNTupleReadOptions {
 public:
    enum EClusterCache {
       kDefault,
+      kOff,
       kSync,
       kAsync,
    };

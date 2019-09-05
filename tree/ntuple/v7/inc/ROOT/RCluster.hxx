@@ -89,7 +89,7 @@ public:
 
    ClusterHandle_t GetHandle() const { return fHandle; }
    DescriptorId_t GetId() const { return fClusterId; }
-   const RSheet &GetSheet(const RSheetKey &key) const { return fSheets.at(key); }
+   const RSheet *GetSheet(const RSheetKey &key) const;
 };
 
 } // namespace Detail
