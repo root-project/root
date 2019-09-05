@@ -89,16 +89,18 @@ ROOT::Experimental::RNTupleReader::~RNTupleReader()
 std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleReader::Open(
    std::unique_ptr<RNTupleModel> model,
    std::string_view ntupleName,
-   std::string_view storage)
+   std::string_view storage,
+   const RNTupleReadOptions &options)
 {
-   return std::make_unique<RNTupleReader>(std::move(model), Detail::RPageSource::Create(ntupleName, storage));
+   return std::make_unique<RNTupleReader>(std::move(model), Detail::RPageSource::Create(ntupleName, storage, options));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleReader::Open(
    std::string_view ntupleName,
-   std::string_view storage)
+   std::string_view storage,
+   const RNTupleReadOptions &options)
 {
-   return std::make_unique<RNTupleReader>(Detail::RPageSource::Create(ntupleName, storage));
+   return std::make_unique<RNTupleReader>(Detail::RPageSource::Create(ntupleName, storage, options));
 }
 
 void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::ostream &output)
