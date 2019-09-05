@@ -373,7 +373,6 @@ void ROOT::Experimental::Detail::RPageSourceRaw::ReleasePage(RPage &page)
 
 ROOT::Experimental::Detail::RRawCluster::~RRawCluster()
 {
-   //std::cout << "FREEING CLUSTER NUMBER " << fClusterId << std::endl;
    free(fHandle);
 }
 
@@ -385,8 +384,8 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
    auto clusterLocator = clusterDesc.GetLocator();
    auto buffer = reinterpret_cast<unsigned char *>(malloc(clusterLocator.fBytesOnStorage));
    R__ASSERT(buffer);
-   //std::cout << "CLUSTER AT " << (void *)(buffer) << std::endl;
    Read(buffer, clusterLocator.fBytesOnStorage, clusterLocator.fPosition);
+
    auto cluster = std::make_unique<RRawCluster>(buffer, clusterId);
    // TODO(jblomer): make id range
    for (unsigned int i = 0; i < fDescriptor.GetNColumns(); ++i) {
