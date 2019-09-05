@@ -766,7 +766,7 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::SetFromHeader(void* headerBuf
       }
 
       pos = fieldBase + frameSize;
-      fDescriptor.fFieldDescriptors[f.fFieldId] = std::move(f);
+      fDescriptor.fFieldDescriptors.emplace(f.fFieldId, std::move(f));
    }
 
    std::uint32_t nColumns;
