@@ -185,7 +185,9 @@ ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntup
    fCtrNRead = fMetrics.MakeCounter<decltype(fCtrNRead)>("nRead", "", "number of read() calls");
    fCtrSzRead = fMetrics.MakeCounter<decltype(fCtrSzRead)>("szRead", "B", "volume read from file");
    fCtrSzUnzip = fMetrics.MakeCounter<decltype(fCtrSzUnzip)>("szUnzip", "B", "volume after unzipping");
-   fCtrNPages = fMetrics.MakeCounter<decltype(fCtrNPages)>("nPages", "", "number of populated pages");
+   fCtrNPage = fMetrics.MakeCounter<decltype(fCtrNPage)>("nPage", "", "number of populated pages");
+   fCtrNCacheMiss = fMetrics.MakeCounter<decltype(fCtrNCacheMiss)>(
+      "nCacheMiss", "", "number of pages not found in the cluster cache");
    fCtrTimeWallRead = fMetrics.MakeCounter<decltype(fCtrTimeWallRead)>(
       "timeWallRead", "ns", "wall clock time spent reading");
    fCtrTimeCpuRead = fMetrics.MakeCounter<decltype(fCtrTimeCpuRead)>("timeCpuRead", "ns", "CPU time spent reading");
@@ -252,7 +254,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceRaw
 ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::PopulatePageFromCluster(
    ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor, ClusterSize_t::ValueType clusterIndex)
 {
-   fCtrNPages->Inc();
+   fCtrNPage->Inc();
    auto columnId = columnHandle.fId;
    auto clusterId = clusterDescriptor.GetId();
    const auto &pageRange = clusterDescriptor.GetPageRange(columnId);
@@ -285,6 +287,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::Po
       RSheetKey sheetKey(columnId, pageNo);
       const auto sheetPtr = cluster->GetSheet(sheetKey);
       if (sheetPtr == nullptr) {
+         fCtrNCacheMiss->Inc();
          Read(pageBuffer, pageSize, pageInfo.fLocator.fPosition);
       } else {
          R__ASSERT(pageSize == sheetPtr->GetSize());
@@ -379,12 +382,45 @@ ROOT::Experimental::Detail::RRawCluster::~RRawCluster()
 std::unique_ptr<ROOT::Experimental::Detail::RCluster>
 ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId)
 {
-   //std::cout << "LOADING CLUSTER NUMBER " << clusterId << std::endl;
+   std::cout << "LOADING CLUSTER NUMBER " << clusterId << std::endl;
    const auto &clusterDesc = GetDescriptor().GetClusterDescriptor(clusterId);
    auto clusterLocator = clusterDesc.GetLocator();
-   auto buffer = reinterpret_cast<unsigned char *>(malloc(clusterLocator.fBytesOnStorage));
+   auto clusterSize = clusterLocator.fBytesOnStorage;
+   R__ASSERT(clusterSize > 0);
+
+   auto activeSize = 0;
+   for (auto columnId : fActiveColumns) {
+      const auto &pageRange = clusterDesc.GetPageRange(columnId);
+      for (const auto &pageInfo : pageRange.fPageInfos) {
+         const auto &pageLocator = pageInfo.fLocator;
+         activeSize += pageLocator.fBytesOnStorage;
+      }
+   }
+
+   if ((double(activeSize) / double(clusterSize)) < 0.5) {
+      std::cout << "  ... PARTIAL FILLING OF CLUSTER CACHE" << std::endl;
+      auto buffer = reinterpret_cast<unsigned char *>(malloc(activeSize));
+      auto cluster = std::make_unique<RRawCluster>(buffer, clusterId);
+      size_t bufPos = 0;
+      for (auto columnId : fActiveColumns) {
+         const auto &pageRange = clusterDesc.GetPageRange(columnId);
+         NTupleSize_t pageNo = 0;
+         for (const auto &pageInfo : pageRange.fPageInfos) {
+            const auto &pageLocator = pageInfo.fLocator;
+            Read(buffer + bufPos, pageLocator.fBytesOnStorage, pageLocator.fPosition);
+            RSheetKey key(columnId, pageNo);
+            RSheet sheet(buffer + bufPos, pageLocator.fBytesOnStorage);
+            cluster->InsertSheet(key, sheet);
+            bufPos += pageLocator.fBytesOnStorage;
+            ++pageNo;
+         }
+      }
+      return cluster;
+   }
+
+   auto buffer = reinterpret_cast<unsigned char *>(malloc(clusterSize));
    R__ASSERT(buffer);
-   Read(buffer, clusterLocator.fBytesOnStorage, clusterLocator.fPosition);
+   Read(buffer, clusterSize, clusterLocator.fPosition);
 
    auto cluster = std::make_unique<RRawCluster>(buffer, clusterId);
    // TODO(jblomer): make id range

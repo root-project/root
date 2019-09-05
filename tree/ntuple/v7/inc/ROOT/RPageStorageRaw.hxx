@@ -117,7 +117,8 @@ private:
    RNTuplePlainCounter *fCtrNRead = nullptr;
    RNTuplePlainCounter *fCtrSzRead = nullptr;
    RNTuplePlainCounter *fCtrSzUnzip = nullptr;
-   RNTuplePlainCounter *fCtrNPages = nullptr;
+   RNTuplePlainCounter *fCtrNPage = nullptr;
+   RNTuplePlainCounter *fCtrNCacheMiss = nullptr;
    RNTuplePlainCounter *fCtrTimeWallRead = nullptr;
    RNTuplePlainCounter *fCtrTimeWallUnzip = nullptr;
    RNTupleTickCounter<RNTuplePlainCounter> *fCtrTimeCpuRead = nullptr;
