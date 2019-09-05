@@ -30,6 +30,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <unordered_set>
 
 namespace ROOT {
 namespace Experimental {
@@ -161,12 +162,11 @@ mapped into memory. The page source also gives access to the ntuple's meta-data.
 */
 // clang-format on
 class RPageSource : public RPageStorage {
-public:
-   //using ClusterHandle_t = void *;
-
 protected:
    RNTupleReadOptions fOptions;
    RNTupleDescriptor fDescriptor;
+   /// The columns which we expect to be read, i.e. for which AddColumn() has been called
+   std::unordered_set<DescriptorId_t> fActiveColumns;
 
    virtual RNTupleDescriptor DoAttach() = 0;
 
