@@ -224,7 +224,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceRaw
    delete[] header;
    delete[] footer;
 
-   return descBuilder.GetDescriptor();
+   return descBuilder.MoveDescriptor();
 }
 
 
@@ -233,7 +233,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::Po
 {
    auto columnId = columnHandle.fId;
    auto clusterId = clusterDescriptor.GetId();
-   auto pageRange = clusterDescriptor.GetPageRange(columnId);
+   const auto &pageRange = clusterDescriptor.GetPageRange(columnId);
 
    // TODO(jblomer): binary search
    RClusterDescriptor::RPageRange::RPageInfo pageInfo;
@@ -302,7 +302,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::Po
 
    auto clusterId = fDescriptor.FindClusterId(columnId, globalIndex);
    R__ASSERT(clusterId != kInvalidDescriptorId);
-   auto clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
+   const auto &clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
    auto selfOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
    R__ASSERT(selfOffset <= globalIndex);
    return PopulatePageFromCluster(columnHandle, clusterDescriptor, globalIndex - selfOffset);
@@ -320,7 +320,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::Po
       return cachedPage;
 
    R__ASSERT(clusterId != kInvalidDescriptorId);
-   auto clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
+   const auto &clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
    return PopulatePageFromCluster(columnHandle, clusterDescriptor, index);
 }
 

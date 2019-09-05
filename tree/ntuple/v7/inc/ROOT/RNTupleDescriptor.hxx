@@ -70,6 +70,12 @@ public:
    static constexpr std::uint16_t kFrameVersionCurrent = 0;
    static constexpr std::uint16_t kFrameVersionMin = 0;
 
+   RFieldDescriptor() = default;
+   RFieldDescriptor(const RFieldDescriptor &other) = delete;
+   RFieldDescriptor &operator =(const RFieldDescriptor &other) = delete;
+   RFieldDescriptor(RFieldDescriptor &&other) = default;
+   RFieldDescriptor &operator =(RFieldDescriptor &&other) = default;
+
    bool operator==(const RFieldDescriptor &other) const;
 
    DescriptorId_t GetId() const { return fFieldId; }
@@ -110,6 +116,12 @@ public:
    /// In order to handle changes to the serialization routine in future ntuple versions
    static constexpr std::uint16_t kFrameVersionCurrent = 0;
    static constexpr std::uint16_t kFrameVersionMin = 0;
+
+   RColumnDescriptor() = default;
+   RColumnDescriptor(const RColumnDescriptor &other) = delete;
+   RColumnDescriptor &operator =(const RColumnDescriptor &other) = delete;
+   RColumnDescriptor(RColumnDescriptor &&other) = default;
+   RColumnDescriptor &operator =(RColumnDescriptor &&other) = default;
 
    bool operator==(const RColumnDescriptor &other) const;
 
@@ -187,6 +199,12 @@ public:
          }
       };
 
+      RPageRange() = default;
+      RPageRange(const RPageRange &other) = delete;
+      RPageRange &operator =(const RPageRange &other) = delete;
+      RPageRange(RPageRange &&other) = default;
+      RPageRange &operator =(RPageRange &&other) = default;
+
       DescriptorId_t fColumnId = kInvalidDescriptorId;
       std::vector<RPageInfo> fPageInfos;
 
@@ -213,6 +231,12 @@ public:
    static constexpr std::uint16_t kFrameVersionCurrent = 0;
    static constexpr std::uint16_t kFrameVersionMin = 0;
 
+   RClusterDescriptor() = default;
+   RClusterDescriptor(const RClusterDescriptor &other) = delete;
+   RClusterDescriptor &operator =(const RClusterDescriptor &other) = delete;
+   RClusterDescriptor(RClusterDescriptor &&other) = default;
+   RClusterDescriptor &operator =(RClusterDescriptor &&other) = default;
+
    bool operator==(const RClusterDescriptor &other) const;
 
    DescriptorId_t GetId() const { return fClusterId; }
@@ -220,8 +244,8 @@ public:
    NTupleSize_t GetFirstEntryIndex() const { return fFirstEntryIndex; }
    ClusterSize_t GetNEntries() const { return fNEntries; }
    RLocator GetLocator() const { return fLocator; }
-   RColumnRange GetColumnRange(DescriptorId_t columnId) const { return fColumnRanges.at(columnId); }
-   RPageRange GetPageRange(DescriptorId_t columnId) const { return fPageRanges.at(columnId); }
+   const RColumnRange &GetColumnRange(DescriptorId_t columnId) const { return fColumnRanges.at(columnId); }
+   const RPageRange &GetPageRange(DescriptorId_t columnId) const { return fPageRanges.at(columnId); }
 };
 
 
@@ -283,6 +307,12 @@ public:
    static constexpr unsigned int kNBytesPreamble = 8;
    /// The last few bytes after the footer store the length of footer and header
    static constexpr unsigned int kNBytesPostscript = 16;
+
+   RNTupleDescriptor() = default;
+   RNTupleDescriptor(const RNTupleDescriptor &other) = delete;
+   RNTupleDescriptor &operator=(const RNTupleDescriptor &other) = delete;
+   RNTupleDescriptor(RNTupleDescriptor &&other) = default;
+   RNTupleDescriptor &operator=(RNTupleDescriptor &&other) = default;
 
    bool operator ==(const RNTupleDescriptor &other) const;
 
@@ -348,6 +378,7 @@ private:
 public:
    bool IsValid() const { return true; /* TODO(jblomer) */}
    const RNTupleDescriptor& GetDescriptor() const { return fDescriptor; }
+   RNTupleDescriptor MoveDescriptor();
 
    void SetNTuple(const std::string_view name, const std::string_view description, const std::string_view author,
                   const RNTupleVersion &version, const RNTupleUuid &uuid);
@@ -366,7 +397,7 @@ public:
                    NTupleSize_t firstEntryIndex, ClusterSize_t nEntries);
    void SetClusterLocator(DescriptorId_t clusterId, RClusterDescriptor::RLocator locator);
    void AddClusterColumnRange(DescriptorId_t clusterId, const RClusterDescriptor::RColumnRange &columnRange);
-   void AddClusterPageRange(DescriptorId_t clusterId, const RClusterDescriptor::RPageRange &pageRange);
+   void AddClusterPageRange(DescriptorId_t clusterId, RClusterDescriptor::RPageRange &&pageRange);
 
    void AddClustersFromFooter(void* footerBuffer);
 };
