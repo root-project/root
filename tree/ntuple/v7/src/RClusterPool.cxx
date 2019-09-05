@@ -24,77 +24,77 @@
 
 ROOT::Experimental::Detail::RClusterPool::RClusterPool(RPageSource &pageSource)
    : fPageSource(pageSource)
-	, fThreadIo(&RClusterPool::ExecLoadClusters, this)
+   , fThreadIo(&RClusterPool::ExecLoadClusters, this)
 {
 }
 
 ROOT::Experimental::Detail::RClusterPool::~RClusterPool()
 {
-	{
-		std::unique_lock<std::mutex> lock(fLockWorkQueue);
-		fCvHasSpace.wait(lock, [&]{ return fWorkQueue.size() < kWorkQueueLimit; });
-		fWorkQueue.emplace(RWorkItem());
-		if (fWorkQueue.size() == 1)
-			fCvHasWork.notify_one();
-	}
-	fThreadIo.join();
+   {
+      std::unique_lock<std::mutex> lock(fLockWorkQueue);
+      fCvHasSpace.wait(lock, [&]{ return fWorkQueue.size() < kWorkQueueLimit; });
+      fWorkQueue.emplace(RWorkItem());
+      if (fWorkQueue.size() == 1)
+         fCvHasWork.notify_one();
+   }
+   fThreadIo.join();
 }
 
 void ROOT::Experimental::Detail::RClusterPool::ExecLoadClusters()
 {
-	while (true) {
-		RWorkItem workItem;
-		{
-			std::unique_lock<std::mutex> lock(fLockWorkQueue);
-			fCvHasWork.wait(lock, [&]{ return !fWorkQueue.empty(); });
-			workItem = std::move(fWorkQueue.front());
-			fWorkQueue.pop();
-			if (fWorkQueue.empty())
-				fCvHasSpace.notify_one();
-		}
+   while (true) {
+      RWorkItem workItem;
+      {
+         std::unique_lock<std::mutex> lock(fLockWorkQueue);
+         fCvHasWork.wait(lock, [&]{ return !fWorkQueue.empty(); });
+         workItem = std::move(fWorkQueue.front());
+         fWorkQueue.pop();
+         if (fWorkQueue.empty())
+            fCvHasSpace.notify_one();
+      }
 
-		if (workItem.fClusterId == kInvalidDescriptorId)
-			break;
+      if (workItem.fClusterId == kInvalidDescriptorId)
+         break;
 
-		workItem.fPromise.set_value(fPageSource.LoadCluster(workItem.fClusterId));
-	}
+      workItem.fPromise.set_value(fPageSource.LoadCluster(workItem.fClusterId));
+   }
 }
 
 std::shared_ptr<ROOT::Experimental::Detail::RCluster>
 ROOT::Experimental::Detail::RClusterPool::GetCluster(ROOT::Experimental::DescriptorId_t clusterId)
 {
-	std::lock_guard<std::mutex> lockGuard(fLock);
+   std::lock_guard<std::mutex> lockGuard(fLock);
 
-	auto nextId = kInvalidDescriptorId;
+   auto nextId = kInvalidDescriptorId;
 
-	if (!fCurrent) {
-		fCurrent = fPageSource.LoadCluster(clusterId);
-		nextId = fPageSource.GetDescriptor().FindNextClusterId(clusterId);
-	}
+   if (!fCurrent) {
+      fCurrent = fPageSource.LoadCluster(clusterId);
+      nextId = fPageSource.GetDescriptor().FindNextClusterId(clusterId);
+   }
 
    auto cluster = fCurrent;
-	if (cluster->GetId() != clusterId) {
-	   cluster = std::move(fNext.get());
-	   if (cluster->GetId() != clusterId) {
+   if (cluster->GetId() != clusterId) {
+      cluster = std::move(fNext.get());
+      if (cluster->GetId() != clusterId) {
          cluster = std::move(fPageSource.LoadCluster(clusterId));
-	   }
-	   fCurrent = cluster;
-		nextId = fPageSource.GetDescriptor().FindNextClusterId(clusterId);
-	}
+      }
+      fCurrent = cluster;
+      nextId = fPageSource.GetDescriptor().FindNextClusterId(clusterId);
+   }
 
-	if (nextId != kInvalidDescriptorId) {
-		std::promise<std::unique_ptr<RCluster>> promise;
-		fNext = promise.get_future();
-		RWorkItem workItem;
-		workItem.fPromise = std::move(promise);
-		workItem.fClusterId = nextId;
+   if (nextId != kInvalidDescriptorId) {
+      std::promise<std::unique_ptr<RCluster>> promise;
+      fNext = promise.get_future();
+      RWorkItem workItem;
+      workItem.fPromise = std::move(promise);
+      workItem.fClusterId = nextId;
 
-		std::unique_lock<std::mutex> lock(fLockWorkQueue);
-		fCvHasSpace.wait(lock, [&]{ return fWorkQueue.size() < kWorkQueueLimit; });
-		fWorkQueue.emplace(std::move(workItem));
-		if (fWorkQueue.size() == 1)
-			fCvHasWork.notify_one();
-	}
+      std::unique_lock<std::mutex> lock(fLockWorkQueue);
+      fCvHasSpace.wait(lock, [&]{ return fWorkQueue.size() < kWorkQueueLimit; });
+      fWorkQueue.emplace(std::move(workItem));
+      if (fWorkQueue.size() == 1)
+         fCvHasWork.notify_one();
+   }
 
-	return cluster;
+   return cluster;
 }
