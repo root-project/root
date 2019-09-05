@@ -18,6 +18,7 @@
 
 #include <ROOT/RColumnElement.hxx>
 #include <ROOT/RColumnModel.hxx>
+#include <ROOT/RConfig.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageStorage.hxx>
@@ -195,13 +196,34 @@ public:
    /// For offset columns only, look at the two adjacent values that define a collection's coordinates
    void GetCollectionInfo(const NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *collectionSize)
    {
-      auto idxStart = (globalIndex == 0) ? 0 : *Map<ClusterSize_t, EColumnType::kIndex>(globalIndex - 1);
-      auto idxEnd = *Map<ClusterSize_t, EColumnType::kIndex>(globalIndex);
-      auto selfOffset = fCurrentPage.GetClusterInfo().GetIndexOffset();
-      if (globalIndex == selfOffset) {
-         // Passed cluster boundary
-         idxStart = 0;
+      NTupleSize_t prevIndex;
+      if (R__likely(globalIndex > 0)) {
+         prevIndex = globalIndex - 1;
+      } else {
+         prevIndex = 0;  // This is technically wrong, nevertheless idxStart will end up being 0
       }
+
+      // Try to not jump back to previous pages/clusters
+      NTupleSize_t idxStart;
+      NTupleSize_t idxEnd;
+      if (R__likely(fCurrentPage.Contains(prevIndex))) {
+         idxStart = *Map<ClusterSize_t, EColumnType::kIndex>(prevIndex);
+         idxEnd = *Map<ClusterSize_t, EColumnType::kIndex>(globalIndex);
+         // Passed cluster boundary?
+         auto selfOffset = fCurrentPage.GetClusterInfo().GetIndexOffset();
+         if (R__unlikely(globalIndex == selfOffset))
+            idxStart = 0;
+      } else {
+         idxEnd = *Map<ClusterSize_t, EColumnType::kIndex>(globalIndex);
+         // Passed cluster boundary?
+         auto selfOffset = fCurrentPage.GetClusterInfo().GetIndexOffset();
+         if (R__unlikely(globalIndex == selfOffset)) {
+            idxStart = 0;
+         } else {
+            idxStart = *Map<ClusterSize_t, EColumnType::kIndex>(prevIndex);
+         }
+      }
+
       *collectionSize = idxEnd - idxStart;
       *collectionStart = RClusterIndex(fCurrentPage.GetClusterInfo().GetId(), idxStart);
    }
