@@ -25,6 +25,7 @@
 #include <cstdint>
 #include <cstring>
 #include <iostream>
+#include <utility>
 
 namespace {
 
@@ -586,11 +587,11 @@ std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeFooter(void* buffe
          auto columnId = column.first;
          pos += SerializeUInt64(columnId, *where);
 
-         auto columnRange = cluster.second.GetColumnRange(columnId);
+         const auto &columnRange = cluster.second.GetColumnRange(columnId);
          R__ASSERT(columnRange.fColumnId == columnId);
          pos += SerializeColumnRange(columnRange, *where);
 
-         auto pageRange = cluster.second.GetPageRange(columnId);
+         const auto &pageRange = cluster.second.GetPageRange(columnId);
          R__ASSERT(pageRange.fColumnId == columnId);
          auto nPages = pageRange.fPageInfos.size();
          pos += SerializeUInt32(nPages, *where);
@@ -697,9 +698,9 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDes
 {
    auto model = std::make_unique<RNTupleModel>();
    auto rootId = FindFieldId("", kInvalidDescriptorId);
-   auto rootDesc = GetFieldDescriptor(rootId);
+   const auto &rootDesc = GetFieldDescriptor(rootId);
    for (const auto id : rootDesc.GetLinkIds()) {
-      auto topDesc = GetFieldDescriptor(id);
+      const auto &topDesc = GetFieldDescriptor(id);
       auto field = Detail::RFieldBase::Create(topDesc.GetFieldName(), topDesc.GetTypeName());
       model->AddField(std::unique_ptr<Detail::RFieldBase>(field));
    }
@@ -709,6 +710,13 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDes
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
+ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::RNTupleDescriptorBuilder::MoveDescriptor()
+{
+   RNTupleDescriptor result;
+   std::swap(result, fDescriptor);
+   return result;
+}
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::SetFromHeader(void* headerBuffer)
 {
@@ -758,7 +766,7 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::SetFromHeader(void* headerBuf
       }
 
       pos = fieldBase + frameSize;
-      fDescriptor.fFieldDescriptors[f.fFieldId] = f;
+      fDescriptor.fFieldDescriptors[f.fFieldId] = std::move(f);
    }
 
    std::uint32_t nColumns;
@@ -775,7 +783,7 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::SetFromHeader(void* headerBuf
       pos += DeserializeUInt32(pos, &c.fIndex);
 
       pos = columnBase + frameSize;
-      fDescriptor.fColumnDescriptors[c.fColumnId] = c;
+      fDescriptor.fColumnDescriptors.emplace(c.fColumnId, std::move(c));
    }
 }
 
@@ -833,7 +841,7 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddClustersFromFooter(void* f
             pos += DeserializePageInfo(pos, &pageInfo);
             pageRange.fPageInfos.emplace_back(pageInfo);
          }
-         AddClusterPageRange(clusterId, pageRange);
+         AddClusterPageRange(clusterId, std::move(pageRange));
       }
    }
 }
@@ -862,7 +870,7 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(
    f.fTypeName = std::string(typeName);
    f.fNRepetitions = nRepetitions;
    f.fStructure = structure;
-   fDescriptor.fFieldDescriptors[fieldId] = f;
+   fDescriptor.fFieldDescriptors.emplace(fieldId, std::move(f));
 }
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId)
@@ -882,7 +890,7 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(
    c.fVersion = version;
    c.fModel = model;
    c.fIndex = index;
-   fDescriptor.fColumnDescriptors[columnId] = c;
+   fDescriptor.fColumnDescriptors.emplace(columnId, std::move(c));
 }
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(
@@ -893,7 +901,7 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(
    c.fVersion = version;
    c.fFirstEntryIndex = firstEntryIndex;
    c.fNEntries = nEntries;
-   fDescriptor.fClusterDescriptors[clusterId] = c;
+   fDescriptor.fClusterDescriptors.emplace(clusterId, std::move(c));
 }
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::SetClusterLocator(DescriptorId_t clusterId,
@@ -909,7 +917,7 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterColumnRange(
 }
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterPageRange(
-   DescriptorId_t clusterId, const RClusterDescriptor::RPageRange &pageRange)
+   DescriptorId_t clusterId, RClusterDescriptor::RPageRange &&pageRange)
 {
-   fDescriptor.fClusterDescriptors[clusterId].fPageRanges[pageRange.fColumnId] = pageRange;
+   fDescriptor.fClusterDescriptors[clusterId].fPageRanges.emplace(pageRange.fColumnId, std::move(pageRange));
 }

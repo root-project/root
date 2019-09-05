@@ -62,7 +62,7 @@ struct ColumnInfo {
 static std::string GetFieldName(ROOT::Experimental::DescriptorId_t fieldId,
    const ROOT::Experimental::RNTupleDescriptor &ntupleDesc)
 {
-   auto fieldDesc = ntupleDesc.GetFieldDescriptor(fieldId);
+   const auto &fieldDesc = ntupleDesc.GetFieldDescriptor(fieldId);
    if (fieldDesc.GetParentId() == ROOT::Experimental::kInvalidDescriptorId)
       return fieldDesc.GetFieldName();
    return GetFieldName(fieldDesc.GetParentId(), ntupleDesc) + "." + fieldDesc.GetFieldName();
