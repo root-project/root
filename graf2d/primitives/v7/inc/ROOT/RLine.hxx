@@ -91,7 +91,7 @@ class RLineNew : public RDrawable {
 
    RDrawingOptsBase fOpts; ///<! only temporary here, should be removed later
 
-   RAttributesContainer fAttr; ///< attributes
+   RDrawableAttributes fAttr; ///< attributes
 
 public:
 
