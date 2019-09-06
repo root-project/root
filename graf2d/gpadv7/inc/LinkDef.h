@@ -59,7 +59,10 @@
 #pragma link C++ class ROOT::Experimental::RAttrMarker+;
 #pragma link C++ class ROOT::Experimental::RAttrText+;
 
-#pragma link C++ class ROOT::Experimental::RAttributesContainer+;
+#pragma link C++ class ROOT::Experimental::RDrawableAttributes+;
+#pragma link C++ class ROOT::Experimental::RDrawableAttributes::Record_t+;
+#pragma link C++ class ROOT::Experimental::RStyleNew+;
+#pragma link C++ class ROOT::Experimental::RStyleNew::Block_t+;
 #pragma link C++ class ROOT::Experimental::RAttributesVisitor+;
 
 #endif

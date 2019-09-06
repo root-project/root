@@ -293,18 +293,33 @@ public:
 };
 
 
-class RAttributesVisitor;
 
-class RAttributesContainer {
 
-friend class RAttributesVisitor;
+/// Only attributes, which should be inserted into RDrawable, probably should be just part of base class
+
+class RDrawableAttributes {
+
 public:
-   using AttrMap_t = std::unordered_map<std::string, std::string>;
+
+   using Map_t = std::unordered_map<std::string, std::string>;
+
+   struct Record_t {
+      std::string type;               ///<! drawable type, not stored in the root file, must be initialized
+      std::string user_class;         ///<  user defined drawable class, can later go inside map
+      Map_t map;    ///<   JSON_object
+      Map_t *defaults{nullptr}; ///<!  default values for server
+   //   Map_t *client_defaults{nullptr}; ///<!  default values for client
+   };
 
 private:
+   Record_t                  *fContIO{nullptr};    ///  used in IO while shared_ptr not yet supported, JSON_object
+   std::shared_ptr<Record_t>  fCont;               ///<! container itself
 
-   AttrMap_t                  *fContIO{nullptr};    ///  used in IO while shared_ptr not yet supported, JSON_object
-   std::shared_ptr<AttrMap_t>  fCont;               ///<! container itself
+public:
+
+   RDrawableAttributes() = default;
+
+   ~RDrawableAttributes() { Clear(); }
 
    auto *MakeContainer()
    {
@@ -312,7 +327,7 @@ private:
          fCont.reset(fContIO);
 
       if (!fCont)
-         fCont = std::make_shared<AttrMap_t>();
+         fCont = std::make_shared<Record_t>();
 
       return fContIO = fCont.get();
    }
@@ -320,78 +335,88 @@ private:
    const auto *GetContainer() const
    {
       if (!fContIO)
-         const_cast<RAttributesContainer*>(this)->fContIO = fCont.get();
+         const_cast<RDrawableAttributes*>(this)->fContIO = fCont.get();
       else if (!fCont)
-         const_cast<RAttributesContainer*>(this)->fCont.reset(fContIO);
+         const_cast<RDrawableAttributes*>(this)->fCont.reset(fContIO);
 
       return fContIO;
    }
 
-   std::weak_ptr<AttrMap_t> Make()
+   std::weak_ptr<Record_t> Make()
    {
       MakeContainer();
       return fCont;
    }
 
-   std::weak_ptr<AttrMap_t> Get() const
+   std::weak_ptr<Record_t> Get() const
    {
       GetContainer();
       return fCont;
    }
 
+   void Clear()
+   {
+      // special case when container was read by I/O but not yet assigned to
+      if (fContIO && !fCont)
+         delete fContIO;
+
+      fContIO = nullptr;
+      fCont.reset();
+   }
+
+};
+
+//////////////////////////////////////////////////////////////////////////
+
+class RStyleNew {
 public:
-   RAttributesContainer() = default;
-   ~RAttributesContainer() { Clear(); }
 
-   /** use const char* - nullptr means no value found */
-   const char *Eval(const std::string &name) const;
+   using Selector_t = std::string;
 
-   /** returns true when value exists */
-   bool HasValue(const std::string &name) const { return Eval(name) != nullptr; }
+   struct Block_t {
+      Selector_t selector;
+      RDrawableAttributes::Map_t map; ///<   JSON_object
+   };
 
-   void SetValue(const std::string &name, const char *val);
+   const char *Eval(const std::string &type, const std::string &user_class, const std::string &field);
 
-   void SetValue(const std::string &name, const std::string &value);
-
-   void ClearValue(const std::string &name) { SetValue(name, (const char *)nullptr); }
-
-   void Clear();
+private:
+   std::vector<Block_t> fBlocks;
 };
 
 
 /** Access to drawable attributes, never should be stored */
 class RAttributesVisitor {
 
-   mutable std::weak_ptr<RAttributesContainer::AttrMap_t> fWeak;   ///<! weak pointer on container
-   mutable std::shared_ptr<RAttributesContainer::AttrMap_t> fCont; ///<! by first access to container try to get shared ptr
-   mutable bool fFirstTime{true};                              ///<! only first time try to lock weak ptr
-   std::string fPrefix;                                        ///<! name prefix for all attributes values
-   const RAttributesContainer::AttrMap_t *fDefaults{nullptr};      ///<! default values for these visitor
+   mutable std::weak_ptr<RDrawableAttributes::Record_t> fWeak;     ///<! weak pointer on container
+   mutable std::shared_ptr<RDrawableAttributes::Record_t> fCont;   ///<! by first access to container try to get shared ptr
+   mutable bool fFirstTime{true};                                  ///<! only first time try to lock weak ptr
+   std::string fPrefix;                                            ///<! name prefix for all attributes values
+   const RDrawableAttributes::Map_t *fDefaults{nullptr};              ///<! defaults values for this visitor
+   std::shared_ptr<RStyleNew> fStyle;                              ///<! style used for evaluations
 
    std::string GetFullName(const std::string &name) const { return fPrefix.empty() ? name : fPrefix + "." + name; }
 
 protected:
 
-   /** Should be used in the constructor */
-   void SetDefaults(const RAttributesContainer::AttrMap_t &dflts) { fDefaults = &dflts; }
+   /** Normally should be configured in constructor */
+   void SetDefaults(const RDrawableAttributes::Map_t &dflts) { fDefaults = &dflts; }
 
 public:
 
-   RAttributesVisitor(RAttributesContainer &cont, const std::string &prefix) : fWeak(cont.Make()), fPrefix(prefix) {}
+   RAttributesVisitor(RDrawableAttributes &cont, const std::string &prefix) : fWeak(cont.Make()), fPrefix(prefix) {}
 
-   RAttributesVisitor(const RAttributesContainer &cont, const std::string &prefix) : fWeak(cont.Get()), fPrefix(prefix) {}
+   RAttributesVisitor(const RDrawableAttributes &cont, const std::string &prefix) : fWeak(cont.Get()), fPrefix(prefix) {}
 
    /** use const char* - nullptr means no value found */
-   const char *Eval(const std::string &name) const;
+   const char *Eval(const std::string &name, bool use_dflts = true) const;
 
    /** returns true when value exists */
-   bool HasValue(const std::string &name) const { return Eval(name) != nullptr; }
-
-   void SetValue(const std::string &name, const char *val);
+   bool HasValue(const std::string &name, bool use_dflts = true) const { return Eval(name, use_dflts) != nullptr; }
 
    void SetValue(const std::string &name, const std::string &value);
 
-   void ClearValue(const std::string &name) { SetValue(name, (const char *)nullptr); }
+   void ClearValue(const std::string &name);
 
    void Clear();
 

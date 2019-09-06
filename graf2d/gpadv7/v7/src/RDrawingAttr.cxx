@@ -199,61 +199,31 @@ void ROOT::Experimental::RDrawingAttrHolder::CopyAttributesInPath(const Path_t &
    }
 }
 
+///////////////////////////////////////////////////////////////////////////////
 
 
+using namespace std::string_literals;
 
-//////////////////////////////////////////////////////////////////////////////////////
-
-const char *ROOT::Experimental::RAttributesContainer::Eval(const std::string &name) const
+const char *ROOT::Experimental::RStyleNew::Eval(const std::string &type, const std::string &user_class, const std::string &field)
 {
-   auto cont = GetContainer();
-   if (cont) {
-      auto entry = cont->find(name);
-      if (entry != cont->end())
-         return entry->second.c_str();
+   for (auto &block : fBlocks) {
+
+      bool match = (block.selector == type) || (!user_class.empty() && (block.selector == "."s + user_class));
+
+      if (match) {
+         const auto centry = block.map.find(field);
+         if (centry != block.map.end())
+            return centry->second.c_str();
+      }
    }
 
    return nullptr;
 }
 
 
-void ROOT::Experimental::RAttributesContainer::SetValue(const std::string &name, const char *val)
-{
-   if (val) {
-
-      auto cont = MakeContainer();
-
-      (*cont)[name] = val;
-
-   } else if (GetContainer()) {
-
-      auto elem = fCont->find(name);
-      if (elem != fCont->end())
-         fCont->erase(elem);
-   }
-}
-
-void ROOT::Experimental::RAttributesContainer::SetValue(const std::string &name, const std::string &value)
-{
-   auto cont = MakeContainer();
-
-   (*cont)[name] = value;
-}
-
-void ROOT::Experimental::RAttributesContainer::Clear()
-{
-   // special case when container was read by I/O but not yet assigned to
-   if (fContIO && !fCont)
-      delete fContIO;
-
-   fContIO = nullptr;
-   fCont.reset();
-}
-
-
 ///////////////////////////////////////////////////////////////////////////////
 
-const char *ROOT::Experimental::RAttributesVisitor::Eval(const std::string &name) const
+const char *ROOT::Experimental::RAttributesVisitor::Eval(const std::string &name, bool use_dflts) const
 {
    if (fFirstTime) {
       fFirstTime = false;
@@ -262,27 +232,34 @@ const char *ROOT::Experimental::RAttributesVisitor::Eval(const std::string &name
    }
 
    if (fCont) {
-      auto entry = fCont->find(GetFullName(name));
-      if (entry != fCont->end())
+      auto fullname = GetFullName(name);
+
+      auto entry = fCont->map.find(fullname);
+      if (entry != fCont->map.end())
          return entry->second.c_str();
+
+      if (fStyle) {
+         const char *res = fStyle->Eval(fCont->type, fCont->user_class, fullname);
+         if (res) return res;
+      }
    }
 
-   if (fDefaults) {
+   if (fDefaults && use_dflts) {
       const auto centry = fDefaults->find(name);
       if (centry != fDefaults->end())
          return centry->second.c_str();
    }
 
-/*   if (fDrawable.fDefaults) {
-      const auto centry = fDrawable.fDefaults->find(GetFullName(name));
-      if (centry != fDrawable.fDefaults->end())
+   if (use_dflts && fCont && fCont->defaults) {
+      const auto centry = fCont->defaults->find(GetFullName(name));
+      if (centry != fCont->defaults->end())
          return centry->second.c_str();
    }
-*/
+
    return nullptr;
 }
 
-void ROOT::Experimental::RAttributesVisitor::SetValue(const std::string &name, const char *val)
+void ROOT::Experimental::RAttributesVisitor::ClearValue(const std::string &name)
 {
    if (fFirstTime) {
       fFirstTime = false;
@@ -290,19 +267,10 @@ void ROOT::Experimental::RAttributesVisitor::SetValue(const std::string &name, c
          fCont = fWeak.lock();
    }
 
-   if (!fCont)
-      return;
-
-   if (val) {
-
-      (*fCont)[GetFullName(name)] = val;
-
-   } else {
-
-      auto elem = fCont->find(GetFullName(name));
-      if (elem != fCont->end())
-         fCont->erase(elem);
-
+   if (fCont) {
+      auto elem = fCont->map.find(GetFullName(name));
+      if (elem != fCont->map.end())
+         fCont->map.erase(elem);
    }
 }
 
@@ -315,7 +283,7 @@ void ROOT::Experimental::RAttributesVisitor::SetValue(const std::string &name, c
    }
 
    if (fCont)
-      (*fCont)[GetFullName(name)] = value;
+      fCont->map[GetFullName(name)] = value;
 }
 
 /** Clear all respective values from drawable. Only defaults can be used */

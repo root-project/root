@@ -47,20 +47,19 @@ class RAttrLineNew : public RAttributesVisitor {
 
    auto &getDefaults()
    {
-      static RAttributesContainer::AttrMap_t dflts = { {"width","1"}, {"style","1"} };
+      static RDrawableAttributes::Map_t dflts = { {"width","1"}, {"style","1"} };
       return dflts;
    }
 
 public:
 
-
-   RAttrLineNew(RAttributesContainer &cont, const std::string &prefix = "line") :
+   RAttrLineNew(RDrawableAttributes &cont, const std::string &prefix = "line") :
       RAttributesVisitor(cont, prefix)
    {
       SetDefaults(getDefaults());
    }
 
-   RAttrLineNew(const RAttributesContainer &cont, const std::string &prefix = "line") :
+   RAttrLineNew(const RDrawableAttributes &cont, const std::string &prefix = "line") :
       RAttributesVisitor(cont, prefix)
    {
       SetDefaults(getDefaults());
