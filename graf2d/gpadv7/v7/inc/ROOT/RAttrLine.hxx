@@ -47,7 +47,12 @@ class RAttrLineNew : public RAttributesVisitor {
 
    auto &getDefaults()
    {
-      static RDrawableAttributes::Map_t dflts = { {"width","1"}, {"style","1"}, {"color","white"} };
+      static RDrawableAttributes::Map_t dflts;
+      if (dflts.empty()) {
+         dflts["width"] = std::make_unique<RDrawableAttributes::DoubleValue_t>(1);
+         dflts["style"] = std::make_unique<RDrawableAttributes::IntValue_t>(1);
+         dflts["color"] = std::make_unique<RDrawableAttributes::StringValue_t>("white");
+      }
       return dflts;
    }
 
@@ -66,16 +71,16 @@ public:
    }
 
    ///The width of the line.
-   RAttrLineNew &SetWidth(float width) { SetFloat("width", width); return *this; }
-   float GetWidth() const { return GetFloat("width"); }
+   RAttrLineNew &SetWidth(double width) { SetValue("width", width); return *this; }
+   double GetWidth() const { return GetDouble("width"); }
 
    ///The style of the line.
-   RAttrLineNew &SetStyle(int style) { SetInt("style", style); return *this; }
+   RAttrLineNew &SetStyle(int style) { SetValue("style", style); return *this; }
    int GetStyle() const { return GetInt("style"); }
 
    ///The color of the line.
    RAttrLineNew &SetColor(const std::string &color) { SetValue("color", color); return *this; }
-   std::string GetColor() const { return GetValue("color"); }
+   std::string GetColor() const { return GetString("color"); }
 
 };
 
