@@ -18,26 +18,26 @@
 class TClientInfo {
 
 private:
-  TFile *fFile;
-  TString fLocalName;
-  UInt_t fContactsCount;
-  TTimeStamp fLastContact;
-  Double_t fTimeSincePrevContact;
+   TFile *fFile;
+   TString fLocalName;
+   UInt_t fContactsCount;
+   TTimeStamp fLastContact;
+   Double_t fTimeSincePrevContact;
 
 public:
-  TClientInfo();                                      // default constructor
-  TClientInfo(const char *filename, UInt_t clientID); // another constructor
-  virtual ~TClientInfo();
+   TClientInfo();                                      // default constructor
+   TClientInfo(const char *filename, UInt_t clientID); // another constructor
+   virtual ~TClientInfo();
 
-  TFile *GetFile() const {return fFile;}
-  TString GetLocalName() const {return fLocalName;}
-  Double_t GetTimeSincePrevContact() const {return fTimeSincePrevContact;}
+   TFile *GetFile() const { return fFile; }
+   TString GetLocalName() const { return fLocalName; }
+   Double_t GetTimeSincePrevContact() const { return fTimeSincePrevContact; }
 
-  void SetFile(TFile *file);
+   void SetFile(TFile *file);
 
-  void R__MigrateKey(TDirectory *destination, TDirectory *source);
-  void R__DeleteObject(TDirectory *dir, Bool_t withReset);
+   void R__MigrateKey(TDirectory *destination, TDirectory *source);
+   void R__DeleteObject(TDirectory *dir, Bool_t withReset);
 
-  ClassDef(TClientInfo, 0);
+   ClassDef(TClientInfo, 0);
 };
 #endif
