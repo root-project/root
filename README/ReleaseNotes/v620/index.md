@@ -66,6 +66,9 @@ or in `TBrowser` by opening `Browser Help → About ROOT`.
    removed. Please remove them from the rootcling invocations.
  * genreflex flag `--deep` has no effect and will be removed. Please remove it
    from the genreflex invocation.
+ * rootcling warns if it sees and unrecognized flag (usually coming from the
+   CXXFLAGS of the build system). Please remove them from the invocation because
+   the warning will become a hard error in the next releases.
 
 ### Deprecated packages
 
