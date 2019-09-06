@@ -3732,6 +3732,10 @@ gOptVerboseLevel(llvm::cl::desc("Choose verbosity level:"),
                 llvm::cl::init(v),
                 llvm::cl::cat(gRootclingOptions));
 
+static llvm::cl::opt<string>
+gOptStd("std", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
+        llvm::cl::init("-"), llvm::cl::Hidden,
+        llvm::cl::cat(gRootclingOptions));
 static llvm::cl::opt<bool>
 gOptCint("cint", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
         llvm::cl::Hidden,
@@ -3929,6 +3933,8 @@ int RootClingMain(int argc,
       genreflex::verbose = true;
 
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,21,00)
+   if (gOptStd != "-")
+      fprintf(stderr, "Please remove the deprecated flag -std.\n");
    if (gOptCint)
       fprintf(stderr, "Please remove the deprecated flag -cint.\n");
    if (gOptReflex)
