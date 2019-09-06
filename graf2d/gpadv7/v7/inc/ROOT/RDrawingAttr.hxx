@@ -21,6 +21,7 @@
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
+#include <list>
 
 namespace ROOT {
 namespace Experimental {
@@ -297,18 +298,61 @@ public:
 
 /// Only attributes, which should be inserted into RDrawable, probably should be just part of base class
 
+
 class RDrawableAttributes {
 
 public:
 
-   using Map_t = std::unordered_map<std::string, std::string>;
+   enum EValuesKind { kBool, kInt, kDouble, kString };
+
+   class Value_t {
+   public:
+      Value_t() = default;
+      virtual ~Value_t() = default;
+      virtual EValuesKind Kind() const = 0;
+      virtual bool Compatible(EValuesKind kind) const { return kind == Kind(); }
+      virtual int GetInt() const { return 0; }
+      virtual double GetDouble() const { return 0; }
+      virtual std::string GetString() const { return ""; }
+   };
+
+   class IntValue_t : public Value_t {
+      int v; ///< integer value
+   public:
+      IntValue_t(int _v = 0) : v(_v) {}
+      EValuesKind Kind() const final { return kInt; }
+      int GetInt() const final { return v; }
+   };
+
+   class DoubleValue_t : public Value_t {
+      double v; ///< double value
+   public:
+      DoubleValue_t(double _v = 0) : v(_v) {}
+      EValuesKind Kind() const final { return kDouble; }
+      double GetDouble() const final { return v; }
+   };
+
+   class StringValue_t : public Value_t {
+      std::string v; ///< string value
+   public:
+      StringValue_t(const std::string _v = "") : v(_v) {}
+      EValuesKind Kind() const final { return kString; }
+      std::string GetString() const final { return v; }
+   };
+
+
+   using Map_t = std::unordered_map<std::string, std::unique_ptr<Value_t>>;
 
    struct Record_t {
-      std::string type;               ///<! drawable type, not stored in the root file, must be initialized
-      std::string user_class;         ///<  user defined drawable class, can later go inside map
-      Map_t map;    ///<   JSON_object
-      Map_t *defaults{nullptr}; ///<!  default values for server
-   //   Map_t *client_defaults{nullptr}; ///<!  default values for client
+      std::string type;             ///<! drawable type, not stored in the root file, must be initialized
+      std::string user_class;       ///<  user defined drawable class, can later go inside map
+      Map_t map;                    ///<  JSON_object
+      Map_t *defaults{nullptr};     ///<! default values for server
+
+      Record_t() = default;
+
+      Record_t(const Record_t &src) = delete;
+      Record_t& operator=(const Record_t &src) = delete;
    };
 
 private:
@@ -377,15 +421,22 @@ public:
       std::string selector;
       RDrawableAttributes::Map_t map; ///<   JSON_object
       Block_t() = default;
-      Block_t(const std::string &_selector, const RDrawableAttributes::Map_t &_map) : selector(_selector), map(_map) {}
+      Block_t(const std::string &_selector) : selector(_selector) {}
+
+      Block_t(const Block_t &) {} // dummy, should not be used, but appears in dictionary
+      Block_t& operator=(const Block_t &) = delete;
    };
 
-   const char *Eval(const std::string &type, const std::string &user_class, const std::string &field);
+   const RDrawableAttributes::Value_t *Eval(const std::string &type, const std::string &user_class, const std::string &field) const;
 
-   void AddBlock(const std::string &selector, const RDrawableAttributes::Map_t &map) { fBlocks.emplace_back(selector, map); }
+   RDrawableAttributes::Map_t &AddBlock(const std::string &selector)
+   {
+      fBlocks.emplace_back(selector);
+      return fBlocks.back().map;
+   }
 
 private:
-   std::vector<Block_t> fBlocks;
+   std::list<Block_t> fBlocks;  // use std::list to avoid calling of Block_t copy constructor
 };
 
 
@@ -401,10 +452,15 @@ class RAttributesVisitor {
 
    std::string GetFullName(const std::string &name) const { return fPrefix + name; }
 
+   bool LockContainer() const;
+
 protected:
 
    /** Normally should be configured in constructor */
    void SetDefaults(const RDrawableAttributes::Map_t &dflts) { fDefaults = &dflts; }
+
+   /** use const char* - nullptr means no value found */
+   const RDrawableAttributes::Value_t *Eval(const std::string &name, bool use_dflts = true) const;
 
 public:
 
@@ -414,25 +470,20 @@ public:
 
    void UseStyle(std::shared_ptr<RStyleNew> style) { fStyle = style; }
 
-   /** use const char* - nullptr means no value found */
-   const char *Eval(const std::string &name, bool use_dflts = true) const;
-
    /** returns true when value exists */
    bool HasValue(const std::string &name, bool use_dflts = true) const { return Eval(name, use_dflts) != nullptr; }
 
+   void SetValue(const std::string &name, double value);
+   void SetValue(const std::string &name, const int value);
    void SetValue(const std::string &name, const std::string &value);
 
    void ClearValue(const std::string &name);
 
    void Clear();
 
-   std::string GetValue(const std::string &name) const;
-
+   std::string GetString(const std::string &name) const;
    int GetInt(const std::string &name) const;
-   void SetInt(const std::string &name, const int value);
-
-   float GetFloat(const std::string &name) const;
-   void SetFloat(const std::string &name, const float value);
+   double GetDouble(const std::string &name) const;
 };
 
 
