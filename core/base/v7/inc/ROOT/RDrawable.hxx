@@ -18,7 +18,6 @@
 
 #include <memory>
 #include <string>
-#include <unordered_map>
 
 
 namespace ROOT {
@@ -38,11 +37,8 @@ class RPadPainter;
  */
 
 
-class RDrawableDisplayItem;
-
 class RDrawable {
 friend class RPadBase;
-friend class RDrawableDisplayItem;
 
 private:
 

@@ -22,8 +22,6 @@
 
 #include <ROOT/RDrawable.hxx>
 
-#include "TClass.h"
-
 
 namespace ROOT {
 namespace Experimental {
