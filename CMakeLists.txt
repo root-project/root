@@ -393,6 +393,7 @@ else()
 
   get_property(__cling_pch GLOBAL PROPERTY CLINGETCPCH)
   get_property(__pch_dependencies GLOBAL PROPERTY ROOT_PCH_DEPENDENCIES)
+  get_property(__pch_dictionaries GLOBAL PROPERTY ROOT_PCH_DICTIONARIES)
 
   add_custom_command(OUTPUT etc/allDict.cxx.pch
     BYPRODUCTS
@@ -407,7 +408,7 @@ else()
       ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch
       ${__allIncludes} -I${CMAKE_BINARY_DIR}/include
     DEPENDS
-      rootcling ${__pch_dependencies}
+      rootcling ${__pch_dependencies} ${__pch_dictionaries}
       ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py
       ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
   )
