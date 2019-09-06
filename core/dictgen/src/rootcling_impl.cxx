@@ -3856,6 +3856,10 @@ gOptPPDefines("D", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
              llvm::cl::desc("Specify defined macros."),
              llvm::cl::cat(gRootclingOptions));
 static llvm::cl::list<std::string>
+gOptPPUndefines("U", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
+             llvm::cl::desc("Specify undefined macros."),
+             llvm::cl::cat(gRootclingOptions));
+static llvm::cl::list<std::string>
 gOptWDiags("W", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
           llvm::cl::desc("Specify compiler diagnostics options."),
           llvm::cl::cat(gRootclingOptions));
@@ -4025,6 +4029,9 @@ int RootClingMain(int argc,
 
    for (const std::string &PPDefine : gOptPPDefines)
       clingArgs.push_back(std::string("-D") + PPDefine);
+
+   for (const std::string &PPUndefine : gOptPPUndefines)
+      clingArgs.push_back(std::string("-U") + PPUndefine);
 
    for (const std::string &IncludePath : gOptIncludePaths)
       clingArgs.push_back(std::string("-I") + IncludePath);
