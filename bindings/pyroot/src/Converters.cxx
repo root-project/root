@@ -875,6 +875,15 @@ Bool_t PyROOT::T##name##Converter::SetArg(                                    \
       return kTRUE;                                                           \
    }                                                                          \
                                                                               \
+   if (PyBytes_Check(pyobject)) {                                             \
+      auto s = PyBytes_AsString(pyobject);                                    \
+      auto size = PyBytes_GET_SIZE(pyobject);                                 \
+      fBuffer = type(s, size);                                                \
+      para.fValue.fVoidp = &fBuffer;                                          \
+      para.fTypeCode = 'V';                                                   \
+      return kTRUE;                                                           \
+   }                                                                          \
+                                                                              \
    if ( ! ( PyInt_Check( pyobject ) || PyLong_Check( pyobject ) ) ) {         \
       Bool_t result = TCppObjectConverter::SetArg( pyobject, para, ctxt );    \
       para.fTypeCode = 'V';                                                   \
