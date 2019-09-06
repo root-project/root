@@ -6468,11 +6468,11 @@ Bool_t TCling::IsAutoLoadNamespaceCandidate(const clang::NamespaceDecl* nsDecl)
    return fNSFromRootmaps.count(nsDecl) != 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Internal function. Actually do the update of the ClassInfo when seeing
 //  new TagDecl or NamespaceDecl.
-void TCling::RefreshClassInfo(TClass *cl, const clang::TagDecl *tdDef, bool alias) {
+void TCling::RefreshClassInfo(TClass *cl, const clang::TagDecl *tdDef, bool alias)
+{
 
    TClingClassInfo *cci = ((TClingClassInfo *)cl->fClassInfo);
    if (cci) {
@@ -6496,7 +6496,7 @@ void TCling::RefreshClassInfo(TClass *cl, const clang::TagDecl *tdDef, bool alia
       if (!alias)
          cl->fClassInfo = (ClassInfo_t *)new TClingClassInfo(fInterpreter, tdDef);
       else
-          cl->fClassInfo = (ClassInfo_t *)new TClingClassInfo(fInterpreter, cl->GetName());
+         cl->fClassInfo = (ClassInfo_t *)new TClingClassInfo(fInterpreter, cl->GetName());
       if (((TClingClassInfo *)cl->fClassInfo)->IsValid()) {
          // We now need to update the state and bits.
          if (cl->fState != TClass::kHasTClassInit) {
@@ -6543,13 +6543,11 @@ void TCling::UpdateClassInfoWithDecl(const void* vTD)
          return;
       }
 
-      clang::QualType type( td->getTypeForDecl(), 0 );
+      clang::QualType type(td->getTypeForDecl(), 0);
       ROOT::TMetaUtils::GetNormalizedName(name, type, *fInterpreter, *fNormalizedCtxt);
    } else {
       name = ND->getQualifiedNameAsString();
    }
-
-
 
    // Supposedly we are being called while something is being
    // loaded ... let's now tell the autoloader to do the work
