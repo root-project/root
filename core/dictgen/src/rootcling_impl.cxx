@@ -3867,6 +3867,10 @@ static llvm::cl::list<std::string>
 gOptDictionaryHeaderFiles(llvm::cl::Positional, llvm::cl::OneOrMore,
                          llvm::cl::desc("<list of dictionary header files> <LinkDef file>"),
                          llvm::cl::cat(gRootclingOptions));
+static llvm::cl::list<std::string>
+gOptSink(llvm::cl::ZeroOrMore, llvm::cl::Sink,
+         llvm::cl::desc("Consumes all unrecognized options."),
+         llvm::cl::cat(gRootclingOptions));
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3952,6 +3956,9 @@ int RootClingMain(int argc,
          gOptDictionaryHeaderFiles.erase(I);
       }
    }
+
+   for (const std::string& Opt : gOptSink)
+      fprintf(stderr, "Please remove the deprecated flag %s\n", Opt.c_str());
 #else
 # error "Remove this deprecated code"
 #endif
