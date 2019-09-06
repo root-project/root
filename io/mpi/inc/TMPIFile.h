@@ -52,42 +52,42 @@ private:
    Int_t fSplitLevel;     // number of collectors to use
    Int_t fMPIColor;       // used by MPI ranks to track which collector to use
 
-   Int_t fMPIGlobalRank;  // global rank number
-   Int_t fMPIGlobalSize;  // total ranks
-   Int_t fMPILocalRank;   // rank number in sub communicator
-   Int_t fMPILocalSize;   // number of ranks in sub communicator
+   Int_t fMPIGlobalRank; // global rank number
+   Int_t fMPIGlobalSize; // total ranks
+   Int_t fMPILocalRank;  // rank number in sub communicator
+   Int_t fMPILocalSize;  // number of ranks in sub communicator
 
-   MPI_Comm fSubComm;         // sub communicator handle
-   MPI_Request fMPIRequest;   // request place holder
+   MPI_Comm fSubComm;       // sub communicator handle
+   MPI_Request fMPIRequest; // request place holder
 
-   TString fMPIFilename;      // output filename, only used by collector
+   TString fMPIFilename; // output filename, only used by collector
 
-   char *fSendBuf = 0;        // message buffer, only used by worker
+   char *fSendBuf = 0; // message buffer, only used by worker
 
    struct ParallelFileMerger : public TObject {
    private:
       using ClientColl_t = std::vector<TClientInfo>;
 
-      TString       fFilename;
-      TBits         fClientsContact;
-      UInt_t        fNClientsContact;
-      ClientColl_t  fClients;
-      TTimeStamp    fLastMerge;
-      TFileMerger   fMerger;
+      TString fFilename;
+      TBits fClientsContact;
+      UInt_t fNClientsContact;
+      ClientColl_t fClients;
+      TTimeStamp fLastMerge;
+      TFileMerger fMerger;
       TClientInfo fClientInfo;
+
    public:
       ParallelFileMerger(const char *filename, Int_t compression_settings, Bool_t writeCache = kFALSE);
       virtual ~ParallelFileMerger();
 
       ULong_t Hash() const { return fFilename.Hash(); };
-      const char *GetName() const{ return fFilename; };
+      const char *GetName() const { return fFilename; };
 
       Bool_t InitialMerge(TFile *input);
       Bool_t Merge();
       Bool_t NeedMerge(Float_t clientThreshold);
       Bool_t NeedFinalMerge() { return fClientsContact.CountBits() > 0; };
       void RegisterClient(UInt_t clientID, TFile *file);
-
    };
 
    void SetOutputName();
@@ -98,10 +98,10 @@ private:
    Bool_t IsReceived();
 
 public:
-   TMPIFile(const char *name, char *buffer, Long64_t size = 0, Option_t *option = "", 
-            Int_t split = 1, const char *ftitle = "", Int_t compress = 4);
-   TMPIFile(const char *name, Option_t *option = "", Int_t split = 1, 
-            const char *ftitle = "", Int_t compress = 4); // no complete implementation
+   TMPIFile(const char *name, char *buffer, Long64_t size = 0, Option_t *option = "", Int_t split = 1,
+            const char *ftitle = "", Int_t compress = 4);
+   TMPIFile(const char *name, Option_t *option = "", Int_t split = 1, const char *ftitle = "",
+            Int_t compress = 4); // no complete implementation
    virtual ~TMPIFile();
 
    // some functions on MPI information
@@ -128,7 +128,7 @@ public:
    void Sync();
 
    // Finalize work and save output in disk.
-   void Close(Option_t *option="") final;
+   void Close(Option_t *option = "") final;
 
    ClassDef(TMPIFile, 0)
 };

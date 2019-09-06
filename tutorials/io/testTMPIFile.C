@@ -2,7 +2,7 @@
 /// \ingroup tutorial_io
 /// This macro shows the usage of TMPIFile to simulate event
 /// reconstruction and merging them in parallel.
-/// 
+///
 /// To run this macro do the following:
 ///   - Build the JetEvent library: "root -b -q buildJetEvent.C"
 ///   - Run MPI test: "mpirun -np 4 root -b -q testTMPIFile.C"
@@ -11,7 +11,7 @@
 ///
 /// \author Taylor Childers, Yunsong Wang
 
-R__LOAD_LIBRARY(../tree/JetEvent_cxx)
+R__LOAD_LIBRARY(../ tree / JetEvent_cxx)
 
 #include "TMPIFile.h"
 
@@ -22,12 +22,12 @@ R__LOAD_LIBRARY(../tree/JetEvent_cxx)
 
 The idea of TMPIFile is to run N MPI ranks where some ranks are
 producing data (called workers), while other ranks are collecting data and
-writing it to disk (called collectors). The number of collectors can be  
+writing it to disk (called collectors). The number of collectors can be
 configured and this should be optimized for each workflow and data size.
 
 This example uses a typical event processing loop, where every N events the
 TMPIFile::Sync() function is called. This call triggers the local TTree data
-to be sent via MPI to the collector rank where it is merged with all the 
+to be sent via MPI to the collector rank where it is merged with all the
 other worker rank data and written to a TFile.
 
 An MPI Sub-Communictor is created for each collector which equally distributes
@@ -35,22 +35,23 @@ the remaining ranks to distribute the workers among collectors.
 
 --------------------------------------------------------------------------- */
 
-void test_tmpi() {
-  
-   Int_t N_collectors    = 2;     // specify how many collectors to run
-   Int_t sync_rate       = 2;    // workers sync every sync_rate events
-   Int_t events_per_rank = 6;    // total events each rank will produce then exit
-   Int_t sleep_mean      = 5;     // simulate compute time for event processing
-   Int_t sleep_sigma     = 2;     // variation in compute time
+void test_tmpi()
+{
+
+   Int_t N_collectors = 2;    // specify how many collectors to run
+   Int_t sync_rate = 2;       // workers sync every sync_rate events
+   Int_t events_per_rank = 6; // total events each rank will produce then exit
+   Int_t sleep_mean = 5;      // simulate compute time for event processing
+   Int_t sleep_sigma = 2;     // variation in compute time
 
    // using JetEvent generator to create a data structure
    // these parameters control this generator
-   Int_t jetm            = 25;
-   Int_t trackm          = 60;
-   Int_t hitam           = 200;
-   Int_t hitbm           = 100;
+   Int_t jetm = 25;
+   Int_t trackm = 60;
+   Int_t hitam = 200;
+   Int_t hitbm = 100;
 
-   std::string treename  = "test_tmpi";
+   std::string treename = "test_tmpi";
    std::string branchname = "event";
 
    // set output filename
@@ -68,17 +69,14 @@ void test_tmpi() {
 
    // only print log messages in MPI Rank 0
    if (newfile->GetMPIGlobalRank() == 0) {
-      std::cout << " running with parallel ranks:   "
-                << newfile->GetMPIGlobalSize() << "\n";
-      std::cout << " running with collecting ranks: " << N_collectors << "\n";
-      std::cout << " running with working ranks:    "
-                << (newfile->GetMPIGlobalSize() - N_collectors) << "\n";
-      std::cout << " running with sync rate:        " << sync_rate << "\n";
-      std::cout << " running with events per rank:  " << events_per_rank << "\n";
-      std::cout << " running with sleep mean:       " << sleep_mean << "\n";
-      std::cout << " running with sleep sigma:      " << sleep_sigma << "\n";
-      std::cout << " running with seed:             " << gRandom->GetSeed()
-                << "\n";
+      Info("test_tmpi", " running with parallel ranks:   %d", newfile->GetMPIGlobalSize());
+      Info("test_tmpi", " running with collecting ranks: %d", N_collectors);
+      Info("test_tmpi", " running with working ranks:    %d", (newfile->GetMPIGlobalSize() - N_collectors));
+      Info("test_tmpi", " running with sync rate:        %d", sync_rate);
+      Info("test_tmpi", " running with events per rank:  %d", events_per_rank);
+      Info("test_tmpi", " running with sleep mean:       %d", sleep_mean);
+      Info("test_tmpi", " running with sleep sigma:      %d", sleep_sigma);
+      Info("test_tmpi", " running with seed:             %d", gRandom->GetSeed());
    }
 
    // print filename for each collector Rank
@@ -91,9 +89,8 @@ void test_tmpi() {
    if (newfile->IsCollector()) {
       // Run by collector ranks
       // This will run until all workers have exited
-      newfile->RunCollector(); 
-   }
-   else {  
+      newfile->RunCollector();
+   } else {
       // Run by worker ranks
       // these ranks generate data to be written to TMPIFile
 
@@ -122,7 +119,8 @@ void test_tmpi() {
          auto evt_built = std::chrono::high_resolution_clock::now();
          double build_time = std::chrono::duration_cast<std::chrono::duration<double>>(evt_built - start).count();
 
-         Info("Rank", "[%d] [%d]\tevt = %d;\tbuild_time = %f", newfile->GetMPIColor(), newfile->GetMPILocalRank(), i, build_time);
+         Info("Rank", "[%d] [%d]\tevt = %d;\tbuild_time = %f", newfile->GetMPIColor(), newfile->GetMPILocalRank(), i,
+              build_time);
 
          // if our build time was significant, subtract that from the sleep time
          auto adjusted_sleep = (int)(sleep_mean - build_time);
@@ -142,7 +140,8 @@ void test_tmpi() {
 
             auto end = std::chrono::high_resolution_clock::now();
             double sync_time = std::chrono::duration_cast<std::chrono::duration<double>>(end - sync_start).count();
-            Info("Rank", "[%d] [%d]\tevent collection time: %f", newfile->GetMPIColor(), newfile->GetMPILocalRank(), sync_time);
+            Info("Rank", "[%d] [%d]\tevent collection time: %f", newfile->GetMPIColor(), newfile->GetMPILocalRank(),
+                 sync_time);
             sync_start = std::chrono::high_resolution_clock::now();
          }
       }
@@ -153,7 +152,6 @@ void test_tmpi() {
       }
    }
 
-   
    // call Close on the file for clean exit.
    Info("Rank", "[%d] [%d]\tclosing file", newfile->GetMPIColor(), newfile->GetMPILocalRank());
    newfile->Close();
@@ -163,19 +161,20 @@ void test_tmpi() {
       TString filename = newfile->GetMPIFilename();
       Info("Rank", "[%d] [%d]\topening file: %s", newfile->GetMPIColor(), newfile->GetMPILocalRank(), filename.Data());
       TFile file(filename.Data());
-      if(file.IsOpen()){
+      if (file.IsOpen()) {
          file.ls();
-         TTree* tree = (TTree*)file.Get(treename.c_str());
-         if(tree)
+         TTree *tree = (TTree *)file.Get(treename.c_str());
+         if (tree)
             tree->Print();
-         
-         Info("Rank", "[%d] [%d]\tfile should have %d events and has %lld", newfile->GetMPIColor(), newfile->GetMPILocalRank(), (newfile->GetMPILocalSize()-1)* events_per_rank, tree->GetEntries());
+
+         Info("Rank", "[%d] [%d]\tfile should have %d events and has %lld", newfile->GetMPIColor(),
+              newfile->GetMPILocalRank(), (newfile->GetMPILocalSize() - 1) * events_per_rank, tree->GetEntries());
       }
    }
-
 }
 
-void testTMPIFile() {
+void testTMPIFile()
+{
    TString tutdir = gROOT->GetTutorialDir();
    gSystem->Load(tutdir + "/tree/JetEvent_cxx");
 
@@ -184,12 +183,9 @@ void testTMPIFile() {
    test_tmpi();
 
    auto end = std::chrono::high_resolution_clock::now();
-   double time =
-      std::chrono::duration_cast<std::chrono::duration<double>>(end - start)
-          .count();
+   double time = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
    std::string msg = "Total elapsed time: ";
    msg += std::to_string(time);
    Info("testTMPIFile", "%s", msg.c_str());
    Info("testTMPIFile", "exiting");
-
 }
