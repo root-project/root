@@ -1,29 +1,30 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
 
+#.rst:
+# FindZSTD
+# -----------
 #
-# FindZSTD.cmake
+# Find the ZSTD library header and define variables.
 #
+# Imported Targets
+# ^^^^^^^^^^^^^^^^
 #
-# The MIT License
+# This module defines :prop_tgt:`IMPORTED` target ``ZSTD::ZSTD``,
+# if ZSTD has been found
 #
-# Copyright (c) 2016 MIT and Intel Corporation
+# Result Variables
+# ^^^^^^^^^^^^^^^^
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
+# This module defines the following variables:
 #
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
+# ::
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+#   ZSTD_FOUND          - True if ZSTD is found.
+#   ZSTD_INCLUDE_DIRS   - Where to find zstd.h
 #
 # Finds the Zstandard library. This module defines:
 #   - ZSTD_INCLUDE_DIR, directory containing headers
@@ -31,49 +32,22 @@
 #   - ZSTD_FOUND, whether Zstandard has been found
 
 # Find header files
-if(ZSTD_SEARCH_HEADER_PATHS)
-  find_path(
-      ZSTD_INCLUDE_DIR zstd.h
-      PATHS ${ZSTD_SEARCH_HEADER_PATHS}
-      NO_DEFAULT_PATH
-  )
-else()
-  find_path(ZSTD_INCLUDE_DIR zstd.h)
-endif()
+find_path(ZSTD_INCLUDE_DIR zstd.h)
 
 # Find library
-if(ZSTD_SEARCH_LIB_PATH)
-  find_library(
-      ZSTD_LIBRARIES NAMES zstd
-      PATHS ${ZSTD_SEARCH_LIB_PATH}$
-      NO_DEFAULT_PATH
-  )
-else()
-  find_library(ZSTD_LIBRARIES NAMES zstd)
-endif()
+find_library(ZSTD_LIBRARIES NAMES zstd)
 
-if(ZSTD_INCLUDE_DIR AND ZSTD_LIBRARIES)
-  message(STATUS "Found Zstandard: ${ZSTD_LIBRARIES}")
-  set(ZSTD_FOUND TRUE)
-else()
-  set(ZSTD_FOUND FALSE)
-endif()
-
-if(ZSTD_FIND_REQUIRED AND NOT ZSTD_FOUND)
-  message(FATAL_ERROR "Could not find the Zstandard library.")
-endif()
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(ZSTD
+  REQUIRED_VARS ZSTD_LIBRARIES ZSTD_INCLUDE_DIR)
 
 if(ZSTD_FOUND)
   set(ZSTD_INCLUDE_DIRS "${ZSTD_INCLUDE_DIR}")
 
-  if(NOT ZSTD_LIBRARIES)
-    set(ZSTD_LIBRARIES ${ZSTD_LIBRARY})
-  endif()
-
   if(NOT TARGET ZSTD::ZSTD)
     add_library(ZSTD::ZSTD UNKNOWN IMPORTED)
     set_target_properties(ZSTD::ZSTD PROPERTIES
-      IMPORTED_LOCATION "${ZSTD_LIBRARY}"
+      IMPORTED_LOCATION "${ZSTD_LIBRARIES}"
       INTERFACE_INCLUDE_DIRECTORIES "${ZSTD_INCLUDE_DIRS}")
   endif()
 endif()
