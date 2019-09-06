@@ -2,19 +2,22 @@
 #include "RForestInference.hxx"
 #include "TreeHelpers.hxx"
 
-namespace BinaryTests {
-std::string events_file     = "./data/events.csv";
-std::string preds_file      = "./data/python_predictions.csv";
-std::string json_model_file = "./data/model.json";
-std::string tmp_file        = "./data/tmp.csv";
+namespace RegressionTests {
+//#include <xgboost/c_api.h> // for xgboost
+//#include "generated_files/evaluate_forest2.h"
+std::string events_file     = "./data/regression_events.csv";
+std::string preds_file      = "./data/regression_python_predictions.csv";
+std::string scores_file     = "./data/regression_python_scores.csv";
+std::string json_model_file = "./data/regression_model.json";
+std::string tmp_file        = "./data/regression_tmp.csv";
 int         loop_size       = 256;
 
 int tree_number = 1;
 
 template <typename T, typename ForestType>
-void test_predictions(int loop_size = 1, std::string my_tmp_file = "")
+void test_regression(int loop_size = 1, std::string my_tmp_file = "")
 {
-   DataStruct<T> _data(events_file, preds_file);
+   DataStructRegression<T> _data(events_file, preds_file, scores_file);
 
    ForestType Forest;
    Forest.LoadFromJson("my_key", json_model_file);
@@ -23,25 +26,27 @@ void test_predictions(int loop_size = 1, std::string my_tmp_file = "")
    } else {
       Forest.inference(_data.events_pointer, _data.rows, _data.cols, _data.scores.data());
    }
-   _predict<T>(_data.scores.data(), _data.preds.size(), _data.preds);
+   //_predict<T>(_data.scores.data(), _data.preds.size(), _data.preds);
 
    if ((!my_tmp_file.empty())) {
-      write_csv<bool>(my_tmp_file, _data.preds);
+      write_csv<T>(my_tmp_file, _data.scores);
    }
 
-   for (size_t i = 0; i < _data.preds.size(); i++) {
-      ASSERT_EQ(_data.preds[i], _data.groundtruth[i][0]);
+   for (size_t i = 0; i < _data.scores.size(); i++) {
+      ASSERT_EQ(_data.scores[i], _data.python_scores[i][0]);
    }
 }
-} // namespace BinaryTests
-using namespace BinaryTests;
-TEST(forestBDT, BranchedPredictionsSingleEvent)
+} // namespace RegressionTests
+using namespace RegressionTests;
+
+TEST(RegressionBDT, BranchedPredictionsSingleEvent)
 {
-   test_predictions<float, ForestBranched<float>>(1, "./data/tmp2.csv");
-   test_predictions<double, ForestBranched<double>>();
-   test_predictions<long double, ForestBranched<long double>>();
-   //
+   test_regression<float, ForestBranched<float>>(1, RegressionTests::tmp_file);
+   // test_predictions<double, ForestBranched<double>>();
+   // test_predictions<long double, ForestBranched<long double>>();
 }
+
+/*
 TEST(forestBDT, BranchedPredictionsBatch)
 {
    test_predictions<float, ForestBranched<float>>(loop_size, "./data/tmp4.csv");
@@ -94,3 +99,4 @@ TEST(forestBDT, JitForestBranchlessBatch)
    test_predictions<double, ForestBranchlessJIT<double>>(loop_size);
    test_predictions<long double, ForestBranchlessJIT<long double>>(loop_size);
 }
+// */

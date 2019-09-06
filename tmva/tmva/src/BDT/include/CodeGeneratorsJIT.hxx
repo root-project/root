@@ -95,13 +95,13 @@ void generate_file_header(std::ostream &fout, const std::string &s_id)
 ///
 /// \param[in] fout stream where the code is written
 /// \param[in] s_obj_func name of objective functions
+///
+/// Right now (09/2019) the objective functions are logistic or identity
 void generate_objective_function(std::ostream &fout, const std::string &s_obj_func)
 {
-   const std::string s_logistic = "logistic";
-   const std::string s_identity = "identity";
-   if (s_obj_func.compare(s_logistic) == 0) {
+   if (std::string("logistic").compare(s_obj_func) == 0) {
       fout << "1. / (1. + (1. / std::exp(result)));" << std::endl;
-   } else if (s_obj_func.compare(s_identity) == 0) {
+   } else if (std::string("identity").compare(s_obj_func) == 0) {
       fout << "result;" << std::endl;
    } else {
       throw std::invalid_argument("Unknown objective function for JITTING");
@@ -265,18 +265,10 @@ void generate_branchless_tree(std::ostream &fout, const BranchlessTree::Tree<T> 
    fout << "result += thresholds[" << tree_index_thresholds << "+index];" << std::endl;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Generates long array of thresholds
-///
-/// \tparam T type for the prediction. Usually floating point type (float, double, long double)
-/// \param[in] fout stream where the code is written
-/// \param[in] tree to be written down
-/// \param[in] tree_index_thresholds index of the current tree in the whole array
-/// \param[in] tree_index_features index of the current tree in the whole arraytemplate <typename T>
-///*
+/* // Run through the tree transversaly
 template <typename T>
-void generate_branchless_tree2(std::ostream &fout, const BranchlessTree::Tree<T> &tree, const int tree_index_thresholds,
-                               const int tree_index_features)
+void generate_branchless_tree_AXEL(std::ostream &fout, const BranchlessTree::Tree<T> &tree, const int
+tree_index_thresholds, const int tree_index_features)
 {
    fout << "index=0;" << std::endl;
    for (size_t j = 0; j < tree.tree_depth; ++j) {

@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 #include "helpersBDTest.hxx"
 #include "forestBDTest.hxx"
+#include "RegressionBDTest.hxx"
 //#include "arrayBDTest.hxx"
 
 int main(int argc, char **argv)

@@ -181,12 +181,12 @@ static void BM_BranchlessJIT_batch(benchmark::State &state)
    }
    write_csv(preds_file, _data.scores);
 }
-/*
+// /*
 BENCHMARK(BM_BranchlessJIT_batch)
-  ->Unit(benchmark::kMillisecond)
-  ->ComputeStatistics("min", [](const std::vector<double> &v) -> double {
-     return *(std::min_element(std::begin(v), std::end(v)));
-  });
+   ->Unit(benchmark::kMillisecond)
+   ->ComputeStatistics("min", [](const std::vector<double> &v) -> double {
+      return *(std::min_element(std::begin(v), std::end(v)));
+   });
 // */
 ///////////////////////////  STATIC  ////////////////////////
 //

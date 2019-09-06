@@ -90,8 +90,8 @@ template <typename T>
 void recurse_through_tree(const BranchedTree::Node<T> &node, std::vector<T> &thresholds, std::vector<int> &features,
                           int index = 0)
 {
-   thresholds.at(index) = node.split_threshold;
-   features.at(index)   = node.split_variable;
+   BranchlessTree::Tree<T> thresholds.at(index) = node.split_threshold;
+   features.at(index)                           = node.split_variable;
 
    int index_true  = index * 2 + 1;
    int index_false = index * 2 + 2;

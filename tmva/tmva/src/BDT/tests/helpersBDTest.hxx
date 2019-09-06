@@ -39,3 +39,32 @@ TEST(helpersBDT, test_write_vector)
       ASSERT_EQ(data[i][0], data3[i][0]);
    }
 }
+
+template <typename T>
+void test_write_vector_single()
+{
+   std::string filename     = "./data/events.csv";
+   std::string tmp_filename = "./data/tmp.csv";
+
+   std::vector<std::vector<float>> data = read_csv<float>(filename);
+
+   std::vector<float> data2(data.size());
+   for (int i = 0; i < data.size(); i++) {
+      data2[i] = data[i][0];
+   }
+
+   write_csv<float>(tmp_filename, data2);
+   std::vector<std::vector<float>> data3 = read_csv<float>(tmp_filename);
+
+   ASSERT_EQ(data.size(), data3.size());
+   for (size_t i = 0; i < data.size(); i++) {
+      ASSERT_FLOAT_EQ(data[i][0], data3[i][0]);
+   }
+}
+TEST(helpersBDT, test_write_vector_s)
+{
+
+   test_write_vector_single<float>();
+   test_write_vector_single<double>();
+   test_write_vector_single<long double>();
+}

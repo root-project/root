@@ -57,13 +57,30 @@ inline bool binary_logistic(T value)
    return (logistic_function(value) > 0.5);
 }
 
-std::function<bool(float)> get_classification_function(std::string &s_class_func)
+////////////////////////////////////////////////////////////////////////////////
+/// Identity function
+///
+/// \tparam T type, usually floating point type (float, double, long double)
+/// \param[in] value score to be processed
+/// \param[out] input
+template <typename T>
+inline T identity_function(T value)
 {
-   std::function<bool(float)> classification_function;
-   if (!s_class_func.compare("logistic")) {
-      std::cerr << "Not implemented yet" << std::endl;
+   return value;
+}
+
+template <typename T>
+std::function<T(T)> get_classification_function(const std::string &s_class_func)
+{
+   std::function<T(T)> classification_function;
+
+   if (std::string("logistic").compare(s_class_func) == 0) {
+      classification_function = binary_logistic<T>;
+   } else if (std::string("identity").compare(s_class_func) == 0) {
+      classification_function = identity_function<T>;
    } else {
-      classification_function = binary_logistic<float>;
+      std::cerr << "Function " << s_class_func << "is not implemented yet" << std::endl;
+      classification_function = binary_logistic<T>;
    }
    return classification_function;
 }
@@ -184,9 +201,11 @@ void write_csv(const std::string &filename, std::vector<T> values_vec)
    std::ofstream fout;
    // opens an existing csv file or creates a new file.
    fout.open(filename, std::ios::out); // | std::ios::app if you want to append"reportcard.csv"
+   fout.precision(10);                 // set precision for floats
    // Read the input
    for (auto line : values_vec) {
       fout << line;
+      // std::cout << line << std::endl;
       fout << "\n";
    }
    fout.close();
@@ -238,6 +257,41 @@ struct DataStruct {
          std::cerr << "No events in event vector!!! (usually bad) \n";
       }
       preds.resize(rows);
+      scores.resize(rows);
+   }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+/// Data structure for tests and benchmarking Regression Forests
+///
+/// \tparam T type, usually floating point type (float, double, long double)
+///
+/// Contains all data to make different kind of predictions
+template <typename T>
+struct DataStructRegression {
+   const std::vector<std::vector<T>> events_vec_vec;           ///< events
+   const std::vector<T>              events_vector;            ///< events
+   const T *                         events_pointer = nullptr; ///< events
+   const std::vector<std::vector<T>> python_preds;             ///< "real" predictions
+   const std::vector<std::vector<T>> python_scores;            ///< "real" predictions
+   std::vector<T>                    scores;
+   const int                         rows, cols;
+
+   DataStructRegression(const std::string &events_file, const std::string &preds_file, const std::string &scores_file)
+      : events_vec_vec(read_csv<T>(events_file)), events_vector(convert_VecMatrix2Vec<T>(events_vec_vec)),
+        events_pointer(events_vector.data()), python_preds(read_csv<T>(preds_file)),
+        python_scores(read_csv<T>(scores_file)), rows(events_vec_vec.size()), cols(events_vec_vec[0].size())
+   {
+      if (rows < 1) {
+         std::cerr << "No events in event vector!!! (usually bad) \n";
+      }
+      if (python_scores.size() < 1) {
+         std::cerr << "No events in python_scores!!! (usually bad) \n";
+      }
+      if (python_preds.size() < 1) {
+         std::cerr << "No events in python_preds!!! (usually bad) \n";
+      }
+      // preds.resize(rows);
       scores.resize(rows);
    }
 };
