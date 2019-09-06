@@ -6523,16 +6523,14 @@ void TCling::UpdateClassInfoWithDecl(const NamedDecl* ND)
       tdDef = td->getDefinition();
       // Let's pass the decl to the TClass only if it has a definition.
       if (!tdDef) return;
-      td = tdDef;
-      ND = td;
 
-      if (!td->isCompleteDefinition() || llvm::isa<clang::FunctionDecl>(td->getDeclContext())) {
+      if (!tdDef->isCompleteDefinition() || llvm::isa<clang::FunctionDecl>(tdDef->getDeclContext())) {
          // Ignore incomplete definition.
          // Ignore declaration within a function.
          return;
       }
 
-      auto declName=ND->getNameAsString();
+      auto declName = tdDef->getNameAsString();
       // Check if we have registered the unqualified name into the list
       // of TClass that are in kNoInfo, kEmulated or kFwdDeclaredState.
       // Since this is used as heureutistic to avoid spurrious calls to GetNormalizedName
@@ -6543,7 +6541,7 @@ void TCling::UpdateClassInfoWithDecl(const NamedDecl* ND)
          return;
       }
 
-      clang::QualType type(td->getTypeForDecl(), 0);
+      clang::QualType type(tdDef->getTypeForDecl(), 0);
       ROOT::TMetaUtils::GetNormalizedName(name, type, *fInterpreter, *fNormalizedCtxt);
    } else {
       name = ND->getQualifiedNameAsString();
