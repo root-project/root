@@ -6523,7 +6523,8 @@ void TCling::UpdateClassInfoWithDecl(const NamedDecl* ND)
       td = tdDef;
       ND = td;
 
-      if (llvm::isa<clang::FunctionDecl>(td->getDeclContext())) {
+      if (!td->isCompleteDefinition() || llvm::isa<clang::FunctionDecl>(td->getDeclContext())) {
+         // Ignore incomplete definition.
          // Ignore declaration within a function.
          return;
       }
