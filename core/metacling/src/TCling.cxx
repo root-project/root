@@ -6471,18 +6471,18 @@ Bool_t TCling::IsAutoLoadNamespaceCandidate(const clang::NamespaceDecl* nsDecl)
 ////////////////////////////////////////////////////////////////////////////////
 /// Internal function. Actually do the update of the ClassInfo when seeing
 //  new TagDecl or NamespaceDecl.
-void TCling::RefreshClassInfo(TClass *cl, const clang::TagDecl *tdDef, bool alias)
+void TCling::RefreshClassInfo(TClass *cl, const clang::NamedDecl *def, bool alias)
 {
 
    TClingClassInfo *cci = ((TClingClassInfo *)cl->fClassInfo);
    if (cci) {
       // If we only had a forward declaration then update the
       // TClingClassInfo with the definition if we have it now.
-      const TagDecl *tdOld = llvm::dyn_cast_or_null<TagDecl>(cci->GetDecl());
-      if (!tdOld || (tdDef && tdDef != tdOld)) {
+      const NamedDecl *oldDef = llvm::dyn_cast_or_null<NamedDecl>(cci->GetDecl());
+      if (!oldDef || (def && def != oldDef)) {
          cl->ResetCaches();
          TClass::RemoveClassDeclId(cci->GetDeclId());
-         if (tdDef) {
+         if (def) {
             // It's a tag decl, not a namespace decl.
             cci->Init(*cci->GetType());
             TClass::AddClassToDeclIdMap(cci->GetDeclId(), cl);
@@ -6493,8 +6493,8 @@ void TCling::RefreshClassInfo(TClass *cl, const clang::TagDecl *tdDef, bool alia
       // yes, this is almost a waste of time, but we do need to lookup
       // the 'type' corresponding to the TClass anyway in order to
       // preserve the opaque typedefs (Double32_t)
-      if (!alias)
-         cl->fClassInfo = (ClassInfo_t *)new TClingClassInfo(fInterpreter, tdDef);
+      if (!alias && def != nullptr)
+         cl->fClassInfo = (ClassInfo_t *)new TClingClassInfo(fInterpreter, def);
       else
          cl->fClassInfo = (ClassInfo_t *)new TClingClassInfo(fInterpreter, cl->GetName());
       if (((TClingClassInfo *)cl->fClassInfo)->IsValid()) {
@@ -6516,11 +6516,14 @@ void TCling::RefreshClassInfo(TClass *cl, const clang::TagDecl *tdDef, bool alia
 /// Internal function. Inform a TClass about its new TagDecl or NamespaceDecl.
 void TCling::UpdateClassInfoWithDecl(const NamedDecl* ND)
 {
-   const TagDecl* td = dyn_cast<TagDecl>(ND);
+   const TagDecl *td = dyn_cast<TagDecl>(ND);
+   const NamespaceDecl *ns = dyn_cast<NamespaceDecl>(ND);
+   const NamedDecl *canon = nullptr;
+
    std::string name;
    TagDecl* tdDef = 0;
    if (td) {
-      tdDef = td->getDefinition();
+      canon = tdDef = td->getDefinition();
       // Let's pass the decl to the TClass only if it has a definition.
       if (!tdDef) return;
 
@@ -6543,6 +6546,9 @@ void TCling::UpdateClassInfoWithDecl(const NamedDecl* ND)
 
       clang::QualType type(tdDef->getTypeForDecl(), 0);
       ROOT::TMetaUtils::GetNormalizedName(name, type, *fInterpreter, *fNormalizedCtxt);
+   } else if (ns) {
+      canon = ns->getCanonicalDecl();
+      name = ND->getQualifiedNameAsString();
    } else {
       name = ND->getQualifiedNameAsString();
    }
@@ -6555,7 +6561,7 @@ void TCling::UpdateClassInfoWithDecl(const NamedDecl* ND)
    // for example vector<double> and vector<Double32_t>
    TClass* cl = (TClass*)gROOT->GetListOfClasses()->FindObject(name.c_str());
    if (cl && GetModTClasses().find(cl) == GetModTClasses().end()) {
-      RefreshClassInfo(cl, tdDef, false);
+      RefreshClassInfo(cl, canon, false);
    }
    // And here we should find the other 'aliases' (eg. vector<Double32_t>)
    // and update them too:
