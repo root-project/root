@@ -6056,7 +6056,7 @@ void TClass::SetUnloaded()
             GetName(),(int)fState);
    }
 
-   InsertTClassInRegistryRAII insertRAII(fState,fName,fNoInfoOrEmuOrFwdDeclNameRegistry);
+   InsertTClassInRegistryRAII insertRAII(fState, fName, fNoInfoOrEmuOrFwdDeclNameRegistry);
 
    // Make sure SetClassInfo, re-calculated the state.
    fState = kForwardDeclared;
