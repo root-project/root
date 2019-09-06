@@ -643,6 +643,22 @@ if(testing)
   endif()
 endif()
 
+cmake_host_system_information(RESULT PROCESSOR QUERY PROCESSOR_DESCRIPTION)
+
+message(STATUS "ROOT Configuration \n
+System          ${CMAKE_SYSTEM}
+Processor       ${PROCESSOR} (${CMAKE_SYSTEM_PROCESSOR})
+Build type      ${CMAKE_BUILD_TYPE}
+Install path    ${CMAKE_INSTALL_PREFIX}
+Compiler        ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}
+Compiler flags:
+C               ${CMAKE_C_FLAGS}
+C++             ${CMAKE_CXX_FLAGS}
+Linker flags:
+Executable      ${CMAKE_EXE_LINKER_FLAGS}
+Module          ${CMAKE_MODULE_LINKER_FLAGS}
+Shared          ${CMAKE_SHARED_LINKER_FLAGS}\n")
+
 ROOT_SHOW_ENABLED_OPTIONS()
 
 #---Packaging-------------------------------------------------------------------------------------
