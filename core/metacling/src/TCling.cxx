@@ -6514,9 +6514,8 @@ void TCling::RefreshClassInfo(TClass *cl, const clang::TagDecl *tdDef, bool alia
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Internal function. Inform a TClass about its new TagDecl or NamespaceDecl.
-void TCling::UpdateClassInfoWithDecl(const void* vTD)
+void TCling::UpdateClassInfoWithDecl(const NamedDecl* ND)
 {
-   const NamedDecl* ND = static_cast<const NamedDecl*>(vTD);
    const TagDecl* td = dyn_cast<TagDecl>(ND);
    std::string name;
    TagDecl* tdDef = 0;
