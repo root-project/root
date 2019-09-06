@@ -403,7 +403,7 @@ void ROOT::Experimental::Detail::RPageSourceRaw::ReleasePage(RPage &page)
 std::unique_ptr<ROOT::Experimental::Detail::RCluster>
 ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId)
 {
-   std::cout << "LOADING CLUSTER NUMBER " << clusterId << std::endl;
+   //std::cout << "LOADING CLUSTER NUMBER " << clusterId << std::endl;
    const auto &clusterDesc = GetDescriptor().GetClusterDescriptor(clusterId);
    auto clusterLocator = clusterDesc.GetLocator();
    auto clusterSize = clusterLocator.fBytesOnStorage;
@@ -423,7 +423,7 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
    }
 
    if ((double(activeSize) / double(clusterSize)) < 0.5) {
-      std::cout << "  ... PARTIAL FILLING OF CLUSTER CACHE" << std::endl;
+      //std::cout << "  ... PARTIAL FILLING OF CLUSTER CACHE" << std::endl;
       auto buffer = reinterpret_cast<unsigned char *>(malloc(activeSize));
       R__ASSERT(buffer);
       auto cluster = std::make_unique<RHeapCluster>(buffer, clusterId);
