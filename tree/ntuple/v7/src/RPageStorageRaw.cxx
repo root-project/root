@@ -186,6 +186,7 @@ ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntup
    fCtrSzRead = fMetrics.MakeCounter<decltype(fCtrSzRead)>("szRead", "B", "volume read from file");
    fCtrSzUnzip = fMetrics.MakeCounter<decltype(fCtrSzUnzip)>("szUnzip", "B", "volume after unzipping");
    fCtrNPage = fMetrics.MakeCounter<decltype(fCtrNPage)>("nPage", "", "number of populated pages");
+   fCtrNPageMmap = fMetrics.MakeCounter<decltype(fCtrNPageMmap)>("nPageMmap", "", "number mmap'd pages");
    fCtrNCacheMiss = fMetrics.MakeCounter<decltype(fCtrNCacheMiss)>(
       "nCacheMiss", "", "number of pages not found in the cluster cache");
    fCtrTimeWallRead = fMetrics.MakeCounter<decltype(fCtrTimeWallRead)>(
@@ -209,6 +210,8 @@ ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntup
 
 ROOT::Experimental::Detail::RPageSourceRaw::~RPageSourceRaw()
 {
+   // delete cluster pool before the file
+   fClusterPool = nullptr;
 }
 
 
@@ -277,23 +280,28 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::Po
 
    auto element = columnHandle.fColumn->GetElement();
    auto elementSize = element->GetSize();
-
    auto pageSize = pageInfo.fLocator.fBytesOnStorage;
-   void *pageBuffer = malloc(std::max(pageSize, static_cast<std::uint32_t>(elementSize * pageInfo.fNElements)));
-   R__ASSERT(pageBuffer);
+   void *pageBuffer = nullptr;
 
+   bool isAdoptedPage = false;
+   std::shared_ptr<RCluster> cluster;
    if (fOptions.GetClusterCache() != RNTupleReadOptions::EClusterCache::kOff) {
-      auto cluster = fClusterPool->GetCluster(clusterId);
+      cluster = fClusterPool->GetCluster(clusterId);
       RSheetKey sheetKey(columnId, pageNo);
       const auto sheetPtr = cluster->GetSheet(sheetKey);
       if (sheetPtr == nullptr) {
          fCtrNCacheMiss->Inc();
+         pageBuffer = malloc(std::max(pageSize, static_cast<std::uint32_t>(elementSize * pageInfo.fNElements)));
+         R__ASSERT(pageBuffer);
          Read(pageBuffer, pageSize, pageInfo.fLocator.fPosition);
       } else {
          R__ASSERT(pageSize == sheetPtr->GetSize());
-         memcpy(pageBuffer, sheetPtr->GetAddress(), sheetPtr->GetSize());
+         pageBuffer = const_cast<void *>(sheetPtr->GetAddress());
+         isAdoptedPage = true;
       }
    } else {
+      pageBuffer = malloc(std::max(pageSize, static_cast<std::uint32_t>(elementSize * pageInfo.fNElements)));
+      R__ASSERT(pageBuffer);
       Read(pageBuffer, pageSize, pageInfo.fLocator.fPosition);
    }
 
@@ -310,6 +318,11 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::Po
       int unzipBytes = 0;
       R__unzip(&szSource, source, &szUnzipBuffer, fUnzipBuffer->data(), &unzipBytes);
       R__ASSERT(unzipBytes > static_cast<int>(pageSize));
+      if (isAdoptedPage) {
+         pageBuffer = malloc(unzipBytes);
+         R__ASSERT(pageBuffer);
+         isAdoptedPage = false;
+      }
       memcpy(pageBuffer, fUnzipBuffer->data(), unzipBytes);
       pageSize = unzipBytes;
       fCtrSzUnzip->Add(unzipBytes);
@@ -320,18 +333,31 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::Po
       auto unpackedBuffer = reinterpret_cast<unsigned char *>(malloc(pageSize));
       R__ASSERT(unpackedBuffer != nullptr);
       element->Unpack(unpackedBuffer, pageBuffer, pageInfo.fNElements);
-      free(pageBuffer);
+      if (!isAdoptedPage)
+         free(pageBuffer);
       pageBuffer = unpackedBuffer;
    }
 
    auto indexOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
    auto newPage = fPageAllocator->NewPage(columnId, pageBuffer, elementSize, pageInfo.fNElements);
    newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
-   fPagePool->RegisterPage(newPage,
-      RPageDeleter([](const RPage &page, void */*userData*/)
-      {
-         RPageAllocatorFile::DeletePage(page);
-      }, nullptr));
+   if (isAdoptedPage) {
+      fMmapdPages.emplace(newPage.GetBuffer(), cluster);
+      fPagePool->RegisterPage(newPage,
+         RPageDeleter([](const RPage &page, void *userData)
+            {
+               auto mmapdPages =
+                  reinterpret_cast<std::unordered_multimap<void *, std::shared_ptr<RCluster>>*>(userData);
+               mmapdPages->erase(mmapdPages->find(page.GetBuffer()));
+            }, &fMmapdPages));
+      fCtrNPageMmap->Inc();
+   } else {
+      fPagePool->RegisterPage(newPage,
+         RPageDeleter([](const RPage &page, void */*userData*/)
+         {
+            RPageAllocatorFile::DeletePage(page);
+         }, nullptr));
+   }
    return newPage;
 }
 
@@ -374,11 +400,6 @@ void ROOT::Experimental::Detail::RPageSourceRaw::ReleasePage(RPage &page)
 }
 
 
-ROOT::Experimental::Detail::RRawCluster::~RRawCluster()
-{
-   free(fHandle);
-}
-
 std::unique_ptr<ROOT::Experimental::Detail::RCluster>
 ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId)
 {
@@ -389,23 +410,29 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
    R__ASSERT(clusterSize > 0);
 
    auto activeSize = 0;
-   for (auto columnId : fActiveColumns) {
-      const auto &pageRange = clusterDesc.GetPageRange(columnId);
-      for (const auto &pageInfo : pageRange.fPageInfos) {
-         const auto &pageLocator = pageInfo.fLocator;
-         activeSize += pageLocator.fBytesOnStorage;
+   if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kMMap) {
+      activeSize = clusterSize;
+   } else {
+      for (auto columnId : fActiveColumns) {
+         const auto &pageRange = clusterDesc.GetPageRange(columnId);
+         for (const auto &pageInfo : pageRange.fPageInfos) {
+            const auto &pageLocator = pageInfo.fLocator;
+            activeSize += pageLocator.fBytesOnStorage;
+         }
       }
    }
 
    if ((double(activeSize) / double(clusterSize)) < 0.5) {
       std::cout << "  ... PARTIAL FILLING OF CLUSTER CACHE" << std::endl;
       auto buffer = reinterpret_cast<unsigned char *>(malloc(activeSize));
-      auto cluster = std::make_unique<RRawCluster>(buffer, clusterId);
+      R__ASSERT(buffer);
+      auto cluster = std::make_unique<RHeapCluster>(buffer, clusterId);
       size_t bufPos = 0;
       for (auto columnId : fActiveColumns) {
          const auto &pageRange = clusterDesc.GetPageRange(columnId);
          NTupleSize_t pageNo = 0;
          for (const auto &pageInfo : pageRange.fPageInfos) {
+            // TODO(jblomer): read linear
             const auto &pageLocator = pageInfo.fLocator;
             Read(buffer + bufPos, pageLocator.fBytesOnStorage, pageLocator.fPosition);
             RSheetKey key(columnId, pageNo);
@@ -418,11 +445,22 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
       return cluster;
    }
 
-   auto buffer = reinterpret_cast<unsigned char *>(malloc(clusterSize));
-   R__ASSERT(buffer);
-   Read(buffer, clusterSize, clusterLocator.fPosition);
+   std::unique_ptr<RCluster> cluster;
+   size_t bufferOffset = 0;
+   unsigned char *buffer = nullptr;
+   if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kMMap) {
+      std::uint64_t mmapdOffset;
+      buffer = reinterpret_cast<unsigned char *>(fFile->Map(clusterSize, clusterLocator.fPosition, mmapdOffset));
+      R__ASSERT(buffer);
+      bufferOffset = clusterLocator.fPosition - mmapdOffset;
+      cluster = std::make_unique<RMMapCluster>(buffer, clusterId, clusterSize + bufferOffset, *fFile);
+   } else {
+      buffer = reinterpret_cast<unsigned char *>(malloc(clusterSize));
+      R__ASSERT(buffer);
+      Read(buffer, clusterSize, clusterLocator.fPosition);
+      cluster = std::make_unique<RHeapCluster>(buffer, clusterId);
+   }
 
-   auto cluster = std::make_unique<RRawCluster>(buffer, clusterId);
    // TODO(jblomer): make id range
    for (unsigned int i = 0; i < fDescriptor.GetNColumns(); ++i) {
       const auto &pageRange = clusterDesc.GetPageRange(i);
@@ -430,7 +468,8 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
       for (const auto &pageInfo : pageRange.fPageInfos) {
          const auto &pageLocator = pageInfo.fLocator;
          RSheetKey key(i, pageNo);
-         RSheet sheet(buffer + pageLocator.fPosition - clusterLocator.fPosition, pageLocator.fBytesOnStorage);
+         RSheet sheet(buffer + bufferOffset + pageLocator.fPosition - clusterLocator.fPosition,
+                      pageLocator.fBytesOnStorage);
          //std::cout << "REGISTER SHEET " << i << "/" << pageNo << " @ "
          //          << sheet.GetAddress() << " : " << sheet.GetSize() << std::endl;
          cluster->InsertSheet(key, sheet);

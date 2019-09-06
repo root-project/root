@@ -70,6 +70,8 @@ namespace ROOT {
 namespace Experimental {
 namespace Detail {
 
+class RRawFile;
+
 class RCluster {
 public:
    using ClusterHandle_t = void *;
@@ -90,6 +92,22 @@ public:
    ClusterHandle_t GetHandle() const { return fHandle; }
    DescriptorId_t GetId() const { return fClusterId; }
    const RSheet *GetSheet(const RSheetKey &key) const;
+};
+
+class RHeapCluster : public RCluster {
+public:
+   RHeapCluster(ClusterHandle_t handle, DescriptorId_t clusterId) : RCluster(handle, clusterId) {}
+   ~RHeapCluster();
+};
+
+class RMMapCluster : public RCluster {
+private:
+   RRawFile &fFile;
+   std::size_t fLength;
+public:
+   RMMapCluster(ClusterHandle_t handle, DescriptorId_t clusterId, std::size_t length, RRawFile &file)
+      : RCluster(handle, clusterId), fFile(file), fLength(length) {}
+   ~RMMapCluster();
 };
 
 } // namespace Detail

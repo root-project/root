@@ -56,8 +56,8 @@ public:
    enum EClusterCache {
       kDefault,
       kOff,
-      kSync,
-      kAsync,
+      kOn,
+      kMMap,
    };
 
 private:

@@ -14,6 +14,9 @@
  *************************************************************************/
 
 #include <ROOT/RCluster.hxx>
+#include <ROOT/RRawFile.hxx>
+
+#include <cstdlib>
 
 ROOT::Experimental::Detail::RCluster::~RCluster()
 {
@@ -26,4 +29,15 @@ ROOT::Experimental::Detail::RCluster::GetSheet(const RSheetKey &key) const
    if (itr != fSheets.end())
       return &(itr->second);
    return nullptr;
+}
+
+
+ROOT::Experimental::Detail::RHeapCluster::~RHeapCluster()
+{
+   free(fHandle);
+}
+
+ROOT::Experimental::Detail::RMMapCluster::~RMMapCluster()
+{
+   fFile.Unmap(fHandle, fLength);
 }

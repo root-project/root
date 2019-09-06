@@ -87,13 +87,6 @@ public:
 };
 
 
-class RRawCluster : public RCluster {
-public:
-   RRawCluster(ClusterHandle_t handle, DescriptorId_t clusterId) : RCluster(handle, clusterId) {}
-   ~RRawCluster();
-};
-
-
 // clang-format off
 /**
 \class ROOT::Experimental::Detail::RPageSourceRaw
@@ -113,11 +106,14 @@ private:
    std::unique_ptr<std::array<unsigned char, kMaxPageSize>> fUnzipBuffer;
    std::unique_ptr<RRawFile> fFile;
 
+   std::unordered_multimap<void *, std::shared_ptr<RCluster>> fMmapdPages;
+
    RNTupleMetrics fMetrics;
    RNTuplePlainCounter *fCtrNRead = nullptr;
    RNTuplePlainCounter *fCtrSzRead = nullptr;
    RNTuplePlainCounter *fCtrSzUnzip = nullptr;
    RNTuplePlainCounter *fCtrNPage = nullptr;
+   RNTuplePlainCounter *fCtrNPageMmap = nullptr;
    RNTuplePlainCounter *fCtrNCacheMiss = nullptr;
    RNTuplePlainCounter *fCtrTimeWallRead = nullptr;
    RNTuplePlainCounter *fCtrTimeWallUnzip = nullptr;
