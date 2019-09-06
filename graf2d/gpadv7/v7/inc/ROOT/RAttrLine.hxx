@@ -47,19 +47,19 @@ class RAttrLineNew : public RAttributesVisitor {
 
    auto &getDefaults()
    {
-      static RDrawableAttributes::Map_t dflts = { {"width","1"}, {"style","1"} };
+      static RDrawableAttributes::Map_t dflts = { {"width","1"}, {"style","1"}, {"color","white"} };
       return dflts;
    }
 
 public:
 
-   RAttrLineNew(RDrawableAttributes &cont, const std::string &prefix = "line") :
+   RAttrLineNew(RDrawableAttributes &cont, const std::string &prefix = "line_") :
       RAttributesVisitor(cont, prefix)
    {
       SetDefaults(getDefaults());
    }
 
-   RAttrLineNew(const RDrawableAttributes &cont, const std::string &prefix = "line") :
+   RAttrLineNew(const RDrawableAttributes &cont, const std::string &prefix = "line_") :
       RAttributesVisitor(cont, prefix)
    {
       SetDefaults(getDefaults());
@@ -72,6 +72,11 @@ public:
    ///The style of the line.
    RAttrLineNew &SetStyle(int style) { SetInt("style", style); return *this; }
    int GetStyle() const { return GetInt("style"); }
+
+   ///The color of the line.
+   RAttrLineNew &SetColor(const std::string &color) { SetValue("color", color); return *this; }
+   std::string GetColor() const { return GetValue("color"); }
+
 };
 
 } // namespace Experimental

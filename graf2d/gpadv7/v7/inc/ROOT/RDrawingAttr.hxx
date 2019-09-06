@@ -315,12 +315,6 @@ private:
    Record_t                  *fContIO{nullptr};    ///  used in IO while shared_ptr not yet supported, JSON_object
    std::shared_ptr<Record_t>  fCont;               ///<! container itself
 
-public:
-
-   RDrawableAttributes() = default;
-
-   ~RDrawableAttributes() { Clear(); }
-
    auto *MakeContainer()
    {
       if (fContIO && !fCont)
@@ -341,6 +335,14 @@ public:
 
       return fContIO;
    }
+
+public:
+
+   RDrawableAttributes() = default;
+
+   RDrawableAttributes(const std::string &_type) { MakeContainer()->type = _type; }
+
+   ~RDrawableAttributes() { Clear(); }
 
    std::weak_ptr<Record_t> Make()
    {
@@ -371,14 +373,16 @@ public:
 class RStyleNew {
 public:
 
-   using Selector_t = std::string;
-
    struct Block_t {
-      Selector_t selector;
+      std::string selector;
       RDrawableAttributes::Map_t map; ///<   JSON_object
+      Block_t() = default;
+      Block_t(const std::string &_selector, const RDrawableAttributes::Map_t &_map) : selector(_selector), map(_map) {}
    };
 
    const char *Eval(const std::string &type, const std::string &user_class, const std::string &field);
+
+   void AddBlock(const std::string &selector, const RDrawableAttributes::Map_t &map) { fBlocks.emplace_back(selector, map); }
 
 private:
    std::vector<Block_t> fBlocks;
@@ -395,7 +399,7 @@ class RAttributesVisitor {
    const RDrawableAttributes::Map_t *fDefaults{nullptr};              ///<! defaults values for this visitor
    std::shared_ptr<RStyleNew> fStyle;                              ///<! style used for evaluations
 
-   std::string GetFullName(const std::string &name) const { return fPrefix.empty() ? name : fPrefix + "." + name; }
+   std::string GetFullName(const std::string &name) const { return fPrefix + name; }
 
 protected:
 
@@ -408,6 +412,8 @@ public:
 
    RAttributesVisitor(const RDrawableAttributes &cont, const std::string &prefix) : fWeak(cont.Get()), fPrefix(prefix) {}
 
+   void UseStyle(std::shared_ptr<RStyleNew> style) { fStyle = style; }
+
    /** use const char* - nullptr means no value found */
    const char *Eval(const std::string &name, bool use_dflts = true) const;
 
@@ -419,6 +425,8 @@ public:
    void ClearValue(const std::string &name);
 
    void Clear();
+
+   std::string GetValue(const std::string &name) const;
 
    int GetInt(const std::string &name) const;
    void SetInt(const std::string &name, const int value);

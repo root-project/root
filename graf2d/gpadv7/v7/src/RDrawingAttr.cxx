@@ -295,6 +295,14 @@ void ROOT::Experimental::RAttributesVisitor::Clear()
 }
 
 
+std::string ROOT::Experimental::RAttributesVisitor::GetValue(const std::string &name) const
+{
+   auto res = Eval(name);
+   if (!res) return ""s;
+   return res;
+}
+
+
 int ROOT::Experimental::RAttributesVisitor::GetInt(const std::string &name) const
 {
    auto res = Eval(name);

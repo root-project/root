@@ -91,7 +91,7 @@ class RLineNew : public RDrawable {
 
    RDrawingOptsBase fOpts; ///<! only temporary here, should be removed later
 
-   RDrawableAttributes fAttr; ///< attributes
+   RDrawableAttributes fAttr{"line"}; ///< attributes
 
 public:
 
