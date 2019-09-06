@@ -4,17 +4,17 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-############################################################################
-# CMakeLists.txt file for building ROOT bindings/pyroot_experimental package
-############################################################################
+###################################################################################
+# CMakeLists.txt file for building ROOT bindings/pyroot_experimental/PyROOT package
+###################################################################################
 
 if(dataframe)
     list(APPEND PYROOT_EXTRA_PYSOURCE
         ROOT/pythonization/_rdataframe.py
         ROOT/pythonization/_rtensor.py)
     list(APPEND PYROOT_EXTRA_SOURCE
-        ROOT/src/RDataFramePyz.cxx
-        ROOT/src/RTensorPyz.cxx)
+        src/RDataFramePyz.cxx
+        src/RTensorPyz.cxx)
 endif()
 
 set(py_sources
@@ -25,7 +25,6 @@ set(py_sources
   ROOT/pythonization/_cppinstance.py
   ROOT/pythonization/_drawables.py
   ROOT/pythonization/_generic.py
-  ROOT/pythonization/_rbdt.py
   ROOT/pythonization/_rooabscollection.py
   ROOT/pythonization/_roodatahist.py
   ROOT/pythonization/_rvec.py
@@ -42,7 +41,6 @@ set(py_sources
   ROOT/pythonization/_titer.py
   ROOT/pythonization/_tobject.py
   ROOT/pythonization/_tobjstring.py
-  ROOT/pythonization/_tree_inference.py
   ROOT/pythonization/_tseqcollection.py
   ROOT/pythonization/_tstring.py
   ROOT/pythonization/_ttree.py
@@ -57,28 +55,28 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTPython
     TPyReturn.h
     TPython.h
   SOURCES
-    ROOT/src/CppCallablePyz.cxx
-    ROOT/src/PyROOTModule.cxx
-    ROOT/src/PyROOTStrings.cxx
-    ROOT/src/PyROOTWrapper.cxx
-    ROOT/src/RPyROOTApplication.cxx
-    ROOT/src/GenericPyz.cxx
-    ROOT/src/RVecPyz.cxx
-    ROOT/src/TClassPyz.cxx
-    ROOT/src/TClonesArrayPyz.cxx
-    ROOT/src/TDirectoryFilePyz.cxx
-    ROOT/src/TDirectoryPyz.cxx
-    ROOT/src/TFilePyz.cxx
-    ROOT/src/TMemoryRegulator.cxx
-    ROOT/src/TPyArg.cxx
-    ROOT/src/TPyClassGenerator.cxx
-    ROOT/src/TPyReturn.cxx
-    ROOT/src/TPython.cxx
-    ROOT/src/TObjectPyz.cxx
-    ROOT/src/TTreePyz.cxx
-    ROOT/src/PyzCppHelpers.cxx
-    ROOT/src/PyzPythonHelpers.cxx
-    ROOT/src/CPPInstancePyz.cxx
+    src/CppCallablePyz.cxx
+    src/PyROOTModule.cxx
+    src/PyROOTStrings.cxx
+    src/PyROOTWrapper.cxx
+    src/RPyROOTApplication.cxx
+    src/GenericPyz.cxx
+    src/RVecPyz.cxx
+    src/TClassPyz.cxx
+    src/TClonesArrayPyz.cxx
+    src/TDirectoryFilePyz.cxx
+    src/TDirectoryPyz.cxx
+    src/TFilePyz.cxx
+    src/TMemoryRegulator.cxx
+    src/TPyArg.cxx
+    src/TPyClassGenerator.cxx
+    src/TPyReturn.cxx
+    src/TPython.cxx
+    src/TObjectPyz.cxx
+    src/TTreePyz.cxx
+    src/PyzCppHelpers.cxx
+    src/PyzPythonHelpers.cxx
+    src/CPPInstancePyz.cxx
     ${PYROOT_EXTRA_SOURCE}
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
@@ -88,13 +86,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTPython
     cppyy
 )
 
-set(ROOTDirName ROOT/python/ROOT)
-set(JupyROOTDirName JupyROOT/python/JupyROOT)
-set(JsMVADirName JsMVA/python/JsMVA)
-
-ROOT_LINKER_LIBRARY(JupyROOT JupyROOT/src/IOHandler.cxx DEPENDENCIES Core CMAKENOEXPORT)
-
-#---Install python modules----------------------------------------------------------------------
+set(ROOTDirName python/ROOT)
 
 file(COPY ${ROOTDirName} DESTINATION ${py_localruntimedir})
 install(DIRECTORY ${ROOTDirName} DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -103,12 +95,6 @@ foreach(py_source ${py_sources})
   install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -m py_compile ${d}/${py_source})")
   install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -O -m py_compile ${d}/${py_source})")
 endforeach()
-
-file(COPY ${JupyROOTDirName} DESTINATION ${py_localruntimedir})
-install(DIRECTORY ${JupyROOTDirName} DESTINATION ${CMAKE_INSTALL_LIBDIR})
-
-file(COPY ${JsMVADirName} DESTINATION ${py_localruntimedir})
-install(DIRECTORY ${JsMVADirName} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 # Disables warnings caused by Py_RETURN_TRUE/Py_RETURN_FALSE
 if(NOT MSVC)
@@ -123,4 +109,4 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang" AND CMAKE_CXX_STANDARD GREAT
     target_compile_options(ROOTPython PRIVATE -Wno-deprecated-register)
 endif()
 
-ROOT_ADD_TEST_SUBDIRECTORY(ROOT/test)
+ROOT_ADD_TEST_SUBDIRECTORY(test)
