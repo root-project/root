@@ -2,11 +2,9 @@ int write_what(const char*what);
 
 int compile(const char *version, const char *what = "myclass.h")
 {
-   static const TString incs( gSystem->GetIncludePath() );
-   TString work( incs );
- 
-   work.Append( Form(" -DCASE_%s -DVERSION=%s ",version,version) ); 
-   gSystem->SetIncludePath( work );
+   TString work;
+   work.Form(" -DCASE_%s -DVERSION=%s ",version,version);
+   gSystem->AddIncludePath( work );
    TString lib; 
    if (strcmp(what,"myclass.h")==0) {
       lib.Form("lib%s",version);

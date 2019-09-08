@@ -1,14 +1,13 @@
 int compile(int type, const char *what)
 {
-   static const TString incs( gSystem->GetIncludePath() );
-   TString work( incs );
+   TString work;
    TString mytype( what );
    mytype.ReplaceAll("longlong","long long");
    if (mytype[0] == 'u') {
       mytype = Form("unsigned %s",mytype.Data()+1);
    }
-   work.Append( Form(" -DCASE_%s \"-DMYTYPE=%s\" -DWHAT=\\\"%s\\\" ",what,mytype.Data(),what) ); 
-   gSystem->SetIncludePath( work );
+   work.Form(" -DCASE_%s \"-DMYTYPE=%s\" -DWHAT=\\\"%s\\\" ",what,mytype.Data(),what);
+   gSystem->AddIncludePath( work );
    TString lib( Form("lib%s",what) );
 
    if (type==0) {
