@@ -100,12 +100,12 @@ def makepch():
       alllinkdefsFilename.replace("\\","/")
 
    rootclingExe = os.path.join(rootdir,"bin","rootcling")
-   command = "%s %s -generate-pch -f allDict.cxx -noDictSelection -c %s %s %s %s" %(rootclingExe,
-                                                                                    rootbuildFlag,
-                                                                                    allCppFlags,
-                                                                                    allheadersFilename,
-                                                                                    extraHeaders,
-                                                                                    alllinkdefsFilename)
+   command = "%s %s -generate-pch -f allDict.cxx -noDictSelection %s %s %s %s" %(rootclingExe,
+                                                                                 rootbuildFlag,
+                                                                                 allCppFlags,
+                                                                                 allheadersFilename,
+                                                                                 extraHeaders,
+                                                                                 alllinkdefsFilename)
 
    if "VERBOSE" in os.environ:
       print(command)
