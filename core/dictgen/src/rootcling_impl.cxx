@@ -3938,27 +3938,27 @@ int RootClingMain(int argc,
 
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,21,00)
    if (gOptCint)
-      fprintf(stderr, "Please remove the deprecated flag -cint.\n");
+      fprintf(stderr, "warning: Please remove the deprecated flag -cint.\n");
    if (gOptReflex)
-      fprintf(stderr, "Please remove the deprecated flag -reflex.\n");
+      fprintf(stderr, "warning: Please remove the deprecated flag -reflex.\n");
    if (gOptGccXml)
-      fprintf(stderr, "Please remove the deprecated flag -gccxml.\n");
+      fprintf(stderr, "warning: Please remove the deprecated flag -gccxml.\n");
    if (gOptC)
-      fprintf(stderr, "Please remove the deprecated flag -c.\n");
+      fprintf(stderr, "warning: Please remove the deprecated flag -c.\n");
    if (gOptP)
-      fprintf(stderr, "Please remove the deprecated flag -p.\n");
+      fprintf(stderr, "warning: Please remove the deprecated flag -p.\n");
 
    for (auto I = gOptDictionaryHeaderFiles.begin(), E = gOptDictionaryHeaderFiles.end(); I != E; ++I) {
       if ((*I)[0] == '+') {
          // Mostly for +P, +V, +STUB which are legacy CINT flags.
-         fprintf(stderr, "Please remove the deprecated flag %s\n", I->c_str());
+         fprintf(stderr, "warning: Please remove the deprecated flag %s\n", I->c_str());
          // Remove it from the list because it will mess up our header input.
          gOptDictionaryHeaderFiles.erase(I);
       }
    }
 
    for (const std::string& Opt : gOptSink)
-      fprintf(stderr, "Please remove the deprecated flag %s\n", Opt.c_str());
+      fprintf(stderr, "warning: Please remove the deprecated flag %s\n", Opt.c_str());
 #else
 # error "Remove this deprecated code"
 #endif
