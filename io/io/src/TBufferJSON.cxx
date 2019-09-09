@@ -1328,13 +1328,13 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
    Int_t special_kind = JsonSpecialClass(cl), map_convert{0};
 
    // provide possibility to store object as base class, can be useful when base class is STL container
-   if (!special_kind && cl && cl->HasDefaultConstructor() && cl->GetStreamerInfo() && (cl->GetStreamerInfo()->GetElements()->GetLast()==0) && cl->GetStreamerInfo()->GetElement(0)->IsBase()) {
+   if (!special_kind && cl && cl->HasDefaultConstructor()) {
       TMethod *m = const_cast<TClass *>(cl)->GetMethod(cl->GetName(), "");
-      TClass *basecl = cl->GetStreamerInfo()->GetElement(0)->GetClassPointer();
-      if (basecl && m && strstr(m->GetTitle(),"JSON_asbase")) {
-         cl = basecl;
-         special_kind = JsonSpecialClass(cl);
-      }
+      if (m && strstr(m->GetTitle(),"JSON_asbase"))
+         if (cl->GetStreamerInfo() && (cl->GetStreamerInfo()->GetElements()->GetLast()==0) && cl->GetStreamerInfo()->GetElement(0)->IsBase()) {
+            cl = cl->GetStreamerInfo()->GetElement(0)->GetClassPointer();;
+            special_kind = JsonSpecialClass(cl);
+         }
    }
 
    TString fObjectOutput, *fPrevOutput{nullptr};
@@ -1792,15 +1792,16 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
 
    TClass *realClass = nullptr;
 
-   if (!special_kind && objClass && objClass->HasDefaultConstructor() && objClass->GetStreamerInfo() && (objClass->GetStreamerInfo()->GetElements()->GetLast()==0) && objClass->GetStreamerInfo()->GetElement(0)->IsBase()) {
+   if (!special_kind && objClass && objClass->HasDefaultConstructor()) {
       TMethod *m = const_cast<TClass *>(objClass)->GetMethod(objClass->GetName(), "");
-      TClass *basecl = objClass->GetStreamerInfo()->GetElement(0)->GetClassPointer();
-      if (basecl && m && strstr(m->GetTitle(),"JSON_asbase")) {
-         realClass = const_cast<TClass*>(objClass);
-         if (!obj) obj = realClass->New();
-         objClass = basecl;
-         special_kind = JsonSpecialClass(objClass);
-      }
+      if (m && strstr(m->GetTitle(),"JSON_asbase"))
+         if (objClass->GetStreamerInfo() && (objClass->GetStreamerInfo()->GetElements()->GetLast()==0) && objClass->GetStreamerInfo()->GetElement(0)->IsBase()) {
+            realClass = const_cast<TClass*>(objClass);
+            if (!obj) obj = realClass->New();
+            objClass = objClass->GetStreamerInfo()->GetElement(0)->GetClassPointer();
+            special_kind = JsonSpecialClass(objClass);
+         }
+
    }
 
    // Extract pointer
