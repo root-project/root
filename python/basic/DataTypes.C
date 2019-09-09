@@ -359,3 +359,9 @@ CppyyTestPod* get_global_pod() {
 CppyyTestPod* get_null_pod() {
     return (CppyyTestPod*)0;
 }
+
+// Python str and bytes to STL string and C string conversion
+std::tuple<std::string,std::size_t> f_stlstring(std::string s)
+{
+    return std::tuple<std::string,std::size_t>(s, s.size());
+}

@@ -981,20 +981,25 @@ class TestClassDATATYPES:
         arr[N-1] = val
         assert arr[N-1] == np_arr[N-1] == val
 
-    def test23_nonASCII_strings(self):
-        """Test strings with non-ASCII chars"""
+    def test23_pyunicode_to_stlstring(self):
+        """Test conversion from Python Unicode str with non-ASCII
+        characters to STL string"""
         if not self.exp_pyroot:
             import ROOT
 
-            ROOT.gInterpreter.Declare("""
-            std::tuple<std::string,std::size_t> myfun(std::string s) {
-                return std::tuple<std::string,std::size_t>(s, s.size());
-            }
-            """)
-
-            res = ROOT.myfun('ℕ')
+            res = ROOT.f_stlstring('ℕ')
             assert res._0 == 'ℕ'
             assert res._1 == len(u'ℕ'.encode(encoding='UTF-8'))
+
+    def test24_pybytes_to_stlstring(self):
+        """Test conversion from Python bytes to STL string"""
+        if not self.exp_pyroot:
+            import ROOT
+
+            bytes_val = u'ℕ'.encode(encoding='UTF-8')
+            res = ROOT.f_stlstring(bytes_val)
+            assert res._0 == 'ℕ'
+            assert res._1 == len(bytes_val)
 
 
 ## actual test run
