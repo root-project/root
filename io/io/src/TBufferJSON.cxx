@@ -1326,6 +1326,14 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
 
    Int_t special_kind = JsonSpecialClass(cl), map_convert{0};
 
+   if (!special_kind && cl && cl->GetStreamerInfo() && (cl->GetStreamerInfo()->GetElements()->GetLast()==0) && cl->GetStreamerInfo()->GetElement(0)->IsBase()) {
+      TClass *basecl = cl->GetStreamerInfo()->GetElement(0)->GetClassPointer();
+      if (TClassEdit::IsStdClass(basecl->GetName())) {
+         special_kind = basecl->GetCollectionType();
+         cl = basecl;
+      }
+   }
+
    TString fObjectOutput, *fPrevOutput{nullptr};
 
    TJSONStackObj *stack = Stack();
