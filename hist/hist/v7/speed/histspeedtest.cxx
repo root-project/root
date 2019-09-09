@@ -101,8 +101,8 @@ struct BinEdges {
 
    using AConf_t = Experimental::RAxisConfig;
 
-   AConf_t GetConfigX() const { return AConf_t(std::span<double>(fXBins).to_vector()); }
-   AConf_t GetConfigY() const { return AConf_t(std::span<double>(fYBins).to_vector()); }
+   AConf_t GetConfigX() const { return AConf_t(std::span<const double>(fXBins).to_vector()); }
+   AConf_t GetConfigY() const { return AConf_t(std::span<const double>(fYBins).to_vector()); }
 };
 
 template <typename T>

@@ -39,7 +39,7 @@ void simple()
    hist.Fill({0.01, 1.02});
 
    // Fit the histogram.
-   RFunction<2> func([](const std::array<double, 2> &x, const std::span<double> par) {
+   RFunction<2> func([](const std::array<double, 2> &x, const std::span<const double> par) {
       return par[0] * x[0] * x[0] + (par[1] - x[1]) * x[1];
    });
 

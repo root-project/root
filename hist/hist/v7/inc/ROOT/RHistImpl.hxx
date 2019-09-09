@@ -168,10 +168,10 @@ public:
    /// Interface function to fill a vector or array of coordinates with
    /// corresponding weights.
    /// \note the size of `xN` and `weightN` must be the same!
-   virtual void FillN(const std::span<CoordArray_t> xN, const std::span<Weight_t> weightN) = 0;
+   virtual void FillN(const std::span<const CoordArray_t> xN, const std::span<const Weight_t> weightN) = 0;
 
    /// Interface function to fill a vector or array of coordinates.
-   virtual void FillN(const std::span<CoordArray_t> xN) = 0;
+   virtual void FillN(const std::span<const CoordArray_t> xN) = 0;
 
    /// Retrieve the pointer to the overridden Fill(x, w) function.
    virtual FillFunc_t GetFillFunc() const = 0;
@@ -474,7 +474,7 @@ public:
    /// For each element `i`, the weight `weightN[i]` will be added to the bin
    /// at the coordinate `xN[i]`
    /// \note `xN` and `weightN` must have the same size!
-   void FillN(const std::span<CoordArray_t> xN, const std::span<Weight_t> weightN) final
+   void FillN(const std::span<const CoordArray_t> xN, const std::span<const Weight_t> weightN) final
    {
 #ifndef NDEBUG
       if (xN.size() != weightN.size()) {
@@ -491,7 +491,7 @@ public:
    /// Fill an array of `weightN` to the bins specified by coordinates `xN`.
    /// For each element `i`, the weight `weightN[i]` will be added to the bin
    /// at the coordinate `xN[i]`
-   void FillN(const std::span<CoordArray_t> xN) final
+   void FillN(const std::span<const CoordArray_t> xN) final
    {
       for (auto &&x: xN) {
          Fill(x);
