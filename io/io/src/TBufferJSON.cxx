@@ -1328,18 +1328,18 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
    Int_t special_kind = JsonSpecialClass(cl), map_convert{0};
 
    // provide possibility to store object as base class, can be useful when base class is STL container
-   if (!special_kind && cl && cl->HasDefaultConstructor() && (const_cast<TClass *>(cl)->GetNdata() == 0)) {
-      TMethod *m = const_cast<TClass *>(cl)->GetMethod(cl->GetName(), "");
-      if (!m) {
-         const char *str = strstr(cl->GetName(), "::"), *next = nullptr;
-         while (str && (next = strstr(str+2, "::"))) str = next;
-         if (str) m = const_cast<TClass *>(cl)->GetMethod(str+2, "");
-      }
-      if (m && strstr(m->GetTitle(),"JSON_asbase")) {
-         auto bases = const_cast<TClass *>(cl)->GetListOfBases();
-         TClass *basecl = bases && (bases->GetSize() == 1) ? const_cast<TClass *>(cl)->GetBaseClass(bases->First()->GetName()) : nullptr;
-         if (basecl) {
-            cl = basecl;
+   if (!special_kind && cl && cl->HasDefaultConstructor() && (const_cast<TClass *>(cl)->GetNdata() == 0) &&
+       !cl->GetStreamer() && !cl->GetStreamerFunc() && !cl->TestBit(TClass::kHasCustomStreamerMember)) {
+      auto *si = cl->GetStreamerInfo();
+      if (si && si->GetElements() && (si->GetElements()->GetLast() == 0) && si->GetElement(0)->IsBase()) {
+         TMethod *m = const_cast<TClass *>(cl)->GetMethod(cl->GetName(), "");
+         if (!m) {
+            const char *str = strstr(cl->GetName(), "::"), *next = nullptr;
+            while (str && (next = strstr(str+2, "::"))) str = next;
+            if (str) m = const_cast<TClass *>(cl)->GetMethod(str+2, "");
+         }
+         if (m && strstr(m->GetTitle(),"JSON_asbase")) {
+            cl = si->GetElement(0)->GetClassPointer();
             special_kind = JsonSpecialClass(cl);
          }
       }
@@ -1800,20 +1800,20 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
 
    TClass *realClass = nullptr;
 
-   if (!special_kind && objClass && objClass->HasDefaultConstructor() && (const_cast<TClass *>(objClass)->GetNdata() == 0)) {
-      TMethod *m = const_cast<TClass *>(objClass)->GetMethod(objClass->GetName(), "");
-      if (!m) {
-         const char *str = strstr(objClass->GetName(), "::"), *next = nullptr;
-         while (str && (next = strstr(str+2, "::"))) str = next;
-         if (str) m = const_cast<TClass *>(objClass)->GetMethod(str+2, "");
-      }
-      if (m && strstr(m->GetTitle(),"JSON_asbase")) {
-         auto bases = const_cast<TClass *>(objClass)->GetListOfBases();
-         TClass *basecl = bases && (bases->GetSize() == 1) ? const_cast<TClass *>(objClass)->GetBaseClass(bases->First()->GetName()) : nullptr;
-         if (basecl) {
+   if (!special_kind && objClass && objClass->HasDefaultConstructor() && (const_cast<TClass *>(objClass)->GetNdata() == 0) &&
+       !objClass->GetStreamer() && !objClass->GetStreamerFunc() && !objClass->TestBit(TClass::kHasCustomStreamerMember)) {
+      auto *si = objClass->GetStreamerInfo();
+      if (si && si->GetElements() && (si->GetElements()->GetLast() == 0) && si->GetElement(0)->IsBase()) {
+         TMethod *m = const_cast<TClass *>(objClass)->GetMethod(objClass->GetName(), "");
+         if (!m) {
+            const char *str = strstr(objClass->GetName(), "::"), *next = nullptr;
+            while (str && (next = strstr(str+2, "::"))) str = next;
+            if (str) m = const_cast<TClass *>(objClass)->GetMethod(str+2, "");
+         }
+         if (m && strstr(m->GetTitle(),"JSON_asbase")) {
             realClass = const_cast<TClass*>(objClass);
             if (!obj) obj = realClass->New();
-            objClass = basecl;
+            objClass = si->GetElement(0)->GetClassPointer();
             special_kind = JsonSpecialClass(objClass);
          }
       }
