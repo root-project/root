@@ -1330,6 +1330,11 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
    // provide possibility to store object as base class, can be useful when base class is STL container
    if (!special_kind && cl && cl->HasDefaultConstructor() && (const_cast<TClass *>(cl)->GetNdata() == 0)) {
       TMethod *m = const_cast<TClass *>(cl)->GetMethod(cl->GetName(), "");
+      if (!m) {
+         const char *str = strstr(cl->GetName(), "::"), *next = nullptr;
+         while (str && (next = strstr(str+2, "::"))) str = next;
+         if (str) m = const_cast<TClass *>(cl)->GetMethod(str+2, "");
+      }
       if (m && strstr(m->GetTitle(),"JSON_asbase")) {
          auto bases = const_cast<TClass *>(cl)->GetListOfBases();
          TClass *basecl = bases && (bases->GetSize() == 1) ? const_cast<TClass *>(cl)->GetBaseClass(bases->First()->GetName()) : nullptr;
@@ -1797,6 +1802,11 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
 
    if (!special_kind && objClass && objClass->HasDefaultConstructor() && (const_cast<TClass *>(objClass)->GetNdata() == 0)) {
       TMethod *m = const_cast<TClass *>(objClass)->GetMethod(objClass->GetName(), "");
+      if (!m) {
+         const char *str = strstr(objClass->GetName(), "::"), *next = nullptr;
+         while (str && (next = strstr(str+2, "::"))) str = next;
+         if (str) m = const_cast<TClass *>(objClass)->GetMethod(str+2, "");
+      }
       if (m && strstr(m->GetTitle(),"JSON_asbase")) {
          auto bases = const_cast<TClass *>(objClass)->GetListOfBases();
          TClass *basecl = bases && (bases->GetSize() == 1) ? const_cast<TClass *>(objClass)->GetBaseClass(bases->First()->GetName()) : nullptr;
@@ -1807,7 +1817,6 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
             special_kind = JsonSpecialClass(objClass);
          }
       }
-
    }
 
    // Extract pointer
