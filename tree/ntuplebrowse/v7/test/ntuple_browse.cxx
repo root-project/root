@@ -57,9 +57,9 @@ std::string GetFileName(const TDirectory *directory) {
    return std::string(fullPath, 0, fullPath.find(".root") + 5);
 }
 
-TEST(RNTupleBrowse, Floattest)
+TEST(RNTupleBrowse, Float)
 {
-   FileRaii fileGuard("test.root");
+   FileRaii fileGuard("test_ntuple_browse_float.root");
    TDirectory *directory = fileGuard.GetFile()->mkdir("Staff");
    {
       auto model = RNTupleModel::Create();
@@ -79,10 +79,10 @@ TEST(RNTupleBrowse, Floattest)
 
 
 
-TEST(RNTupleBrowse, Stringtest)
+TEST(RNTupleBrowse, String)
 {
    
-   FileRaii fileGuard("test2.root");
+   FileRaii fileGuard("test_ntuple_browse_string.root");
    TDirectory *directory = fileGuard.GetFile()->mkdir("Staff2");
    {
       auto model = RNTupleModel::Create();
@@ -104,9 +104,9 @@ TEST(RNTupleBrowse, Stringtest)
 
 
 
-TEST(RNTupleBrowse, MixedFieldstest)
+TEST(RNTupleBrowse, MixedFields)
 {
-   FileRaii fileGuard("test3.root");
+   FileRaii fileGuard("test_ntuple_browse_mixedfield.root");
    TDirectory *directory = fileGuard.GetFile()->mkdir("Staff3");
    {
       auto model = RNTupleModel::Create();
@@ -138,9 +138,9 @@ TEST(RNTupleBrowse, MixedFieldstest)
 
 
 
-TEST(RNTupleBrowse, Browsetest)
+TEST(RNTupleBrowse, TryBrowse)
 {
-   FileRaii fileGuard("test4.root");
+   FileRaii fileGuard("test_ntuple_browse_try_browse.root");
    TDirectory *directory = fileGuard.GetFile()->mkdir("Staff4");
    {
       auto model = RNTupleModel::Create();
@@ -177,9 +177,9 @@ TEST(RNTupleBrowse, Browsetest)
 
 
 
-TEST(RNTupleBrowse, MultipleBrowsetest)
+TEST(RNTupleBrowse, TryMultipleBrowse)
 {
-   FileRaii fileGuard("test5.root");
+   FileRaii fileGuard("test_ntuple_browse_try_multiple_browse.root");
    TDirectory *directory = fileGuard.GetFile()->mkdir("Staff5");
    {
       auto model = RNTupleModel::Create();
@@ -219,9 +219,9 @@ TEST(RNTupleBrowse, MultipleBrowsetest)
 }
 
 
-TEST(RNTupleBrowse, VecBrowsetest)
+TEST(RNTupleBrowse, VecBrowse)
 {
-   FileRaii fileGuard("test6.root");
+   FileRaii fileGuard("test_ntuple_browse_vec_browse.root");
    TDirectory *directory = fileGuard.GetFile()->mkdir("Staff6");
 
    {
@@ -266,9 +266,9 @@ TEST(RNTupleBrowse, VecBrowsetest)
 
 
 
-TEST(RNTupleBrowse, DoubleVecBrowsetest)
+TEST(RNTupleBrowse, TwiceVecBrowse)
 {
-   FileRaii fileGuard("test7.root");
+   FileRaii fileGuard("test_ntuple_browse_twice_vec_browse.root");
    TDirectory *directory = fileGuard.GetFile()->mkdir("Staff7");
 
    {
@@ -322,9 +322,9 @@ TEST(RNTupleBrowse, DoubleVecBrowsetest)
 
 
 
-TEST(RNTupleBrowse, MultipleRootFiletest)
+TEST(RNTupleBrowse, MultipleRootFile)
 {
-   FileRaii fileGuard("test8.root");
+   FileRaii fileGuard("test_ntuple_browse_mutlipe_root_file.root");
    TDirectory *directory = fileGuard.GetFile()->mkdir("Staff8");
    {
       auto model = RNTupleModel::Create();
@@ -382,9 +382,9 @@ TEST(RNTupleBrowse, MultipleRootFiletest)
 
 
 
-TEST(RNTupleBrowse, MultipleRootFileMultipleBrowsetest)
+TEST(RNTupleBrowse, MultipleRootFileMultipleBrowse)
 {
-   FileRaii fileGuard("test10.root");
+   FileRaii fileGuard("test_ntuple_browse_multiple_root_file_multiple_browse.root");
    TDirectory *directory = fileGuard.GetFile()->mkdir("Staff10");
    {
       auto model = RNTupleModel::Create();
