@@ -567,6 +567,10 @@ Bool_t PyROOT::TCStringConverter::SetArg(
    if (PyROOT_PyUnicode_Check(pyobject)) {
       auto strAndSize = getStringAndSize(pyobject);
       fBuffer = std::string(std::get<0>(strAndSize), std::get<1>(strAndSize));
+   } else if (PyBytes_Check(pyobject)) {
+      auto s = PyBytes_AsString(pyobject);                                    \
+      auto size = PyBytes_GET_SIZE(pyobject);
+      fBuffer = std::string(s, size);
    } else {
       return kFALSE;
    }
