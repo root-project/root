@@ -40,13 +40,13 @@ public:
    DERIVED &toDerived() { return *static_cast<DERIVED *>(this); }
    const DERIVED &toDerived() const { return *static_cast<const DERIVED *>(this); }
 
-   std::span<CoordArray_t> GetCoords() const
+   std::span<const CoordArray_t> GetCoords() const
    {
-      return std::span<CoordArray_t>(fXBuf.begin(), fXBuf.begin() + fCursor);
+      return std::span<const CoordArray_t>(fXBuf.begin(), fXBuf.begin() + fCursor);
    }
-   std::span<Weight_t> GetWeights() const
+   std::span<const Weight_t> GetWeights() const
    {
-      return std::span<Weight_t>(fWBuf.begin(), fWBuf.begin() + fCursor);
+      return std::span<const Weight_t>(fWBuf.begin(), fWBuf.begin() + fCursor);
    }
 
    void Fill(const CoordArray_t &x, Weight_t weight = 1.)
@@ -90,12 +90,12 @@ private:
 public:
    RHistBufferedFill(Hist_t &hist): fHist{hist} {}
 
-   void FillN(const std::span<CoordArray_t> xN, const std::span<Weight_t> weightN)
+   void FillN(const std::span<const CoordArray_t> xN, const std::span<const Weight_t> weightN)
    {
       fHist.FillN(xN, weightN);
    }
 
-   void FillN(const std::span<CoordArray_t> xN) { fHist.FillN(xN); }
+   void FillN(const std::span<const CoordArray_t> xN) { fHist.FillN(xN); }
 
    void Flush() { fHist.FillN(this->GetCoords(), this->GetWeights()); }
 

@@ -32,12 +32,12 @@ class RFitResult {
 template <int DIMENSION>
 class RFunction {
 public:
-   RFunction(std::function<double(const std::array<double, DIMENSION> &, const std::span<double> par)> func) {}
+   RFunction(std::function<double(const std::array<double, DIMENSION> &, const std::span<const double> par)> func) {}
 };
 
 template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
 RFitResult FitTo(const RHist<DIMENSIONS, PRECISION, STAT...> &hist, const RFunction<DIMENSIONS> &func,
-                 std::span<double> paramInit)
+                 std::span<const double> paramInit)
 {
    return RFitResult();
 }
