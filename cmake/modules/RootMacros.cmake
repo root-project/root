@@ -1229,7 +1229,9 @@ function(ROOT_EXECUTABLE executable)
   if (ARG_ADDITIONAL_COMPILE_FLAGS)
     set_target_properties(${executable} PROPERTIES COMPILE_FLAGS ${ARG_ADDITIONAL_COMPILE_FLAGS})
   endif()
-  add_dependencies(${executable} move_headers)
+  if(CMAKE_PROJECT_NAME STREQUAL ROOT)
+    add_dependencies(${executable} move_headers)
+  endif()
   if(ARG_BUILTINS)
     foreach(arg1 ${ARG_BUILTINS})
       if(${arg1}_TARGET)
@@ -1546,7 +1548,7 @@ function(ROOT_ADD_GTEST test_suite)
     gtest${mangled_name}
     COMMAND ${test_suite}
     WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
-    COPY_TO_BUILDDIR ${ARG_COPY_TO_BUiILDDIR}
+    COPY_TO_BUILDDIR ${ARG_COPY_TO_BUILDDIR}
     ${willfail}
   )
 endfunction()
