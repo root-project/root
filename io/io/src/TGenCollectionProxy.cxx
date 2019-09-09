@@ -326,21 +326,30 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
    fDelete = 0;
    fSize = std::string::npos;
    fKind = kNoType_t;
-   std::string intype = TClassEdit::ShortType(inside.c_str(),TClassEdit::kDropTrailStar );
-   if ( inside.substr(0,6) == "string" || inside.substr(0,11) == "std::string" ) {
+
+   // Let's treat the unique_ptr case
+   bool nameChanged = false;
+   std::string intype = TClassEdit::GetNameForIO(inside.c_str(), TClassEdit::EModType::kNone, &nameChanged);
+
+   bool isPointer = nameChanged; // unique_ptr is considered a pointer
+   // The incoming name is normalized (it comes from splitting the name of a TClass),
+   // so all we need to do is drop the last trailing star (if any) and record that information.
+   if (!nameChanged && inside[inside.length()-1] == '*') {
+      isPointer = true;
+      intype.pop_back();
+   }
+
+   if ( intype.substr(0,6) == "string" || intype.substr(0,11) == "std::string" ) {
       fCase = kBIT_ISSTRING;
       fType = TClass::GetClass("string");
       fCtor = fType->GetNew();
       fDtor = fType->GetDestructor();
       fDelete = fType->GetDelete();
-      switch(inside[inside.length()-1]) {
-      case '*':
+      if (isPointer) {
          fCase |= kIsPointer;
          fSize = sizeof(void*);
-         break;
-      default:
+      } else {
          fSize = sizeof(std::string);
-         break;
       }
    }
    else {
@@ -353,7 +362,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
       fType = TClass::GetClass(intype.c_str(),kTRUE,silent);
 
       if (fType) {
-         if (intype != inside) {
+         if (isPointer) {
             fCase |= kIsPointer;
             fSize = sizeof(void*);
             if (fType == TString::Class()) {
@@ -381,7 +390,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
             // R__ASSERT((fKind>0 && fKind<0x17) || (fKind==-1&&(prop&kIsPointer)) );
 
             fCase |= kIsFundamental;
-            if (intype != inside) {
+            if (isPointer) {
                fCase |= kIsPointer;
                fSize = sizeof(void*);
             } else {
@@ -392,7 +401,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
             fCase = kIsEnum;
             fSize = sizeof(Int_t);
             fKind = kInt_t;
-            if (intype != inside) {
+            if (isPointer) {
                fCase |= kIsPointer;
                fSize = sizeof(void*);
             }
@@ -411,7 +420,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
             TypeInfo_t *ti = gCling->TypeInfo_Factory();
             gCling->TypeInfo_Init(ti,inside.c_str());
             if ( !gCling->TypeInfo_IsValid(ti) ) {
-               if (intype != inside) {
+               if (isPointer) {
                   fCase |= kIsPointer;
                   fSize = sizeof(void*);
                }
