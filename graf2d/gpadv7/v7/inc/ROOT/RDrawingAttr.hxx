@@ -443,7 +443,7 @@ private:
 /** Access to drawable attributes, never should be stored */
 class RAttributesVisitor {
 
-   mutable std::weak_ptr<RDrawableAttributes::Record_t> fWeak;     ///<! weak pointer on container
+   std::weak_ptr<RDrawableAttributes::Record_t> fWeak;             ///<! weak pointer on container
    mutable std::shared_ptr<RDrawableAttributes::Record_t> fCont;   ///<! by first access to container try to get shared ptr
    mutable bool fFirstTime{true};                                  ///<! only first time try to lock weak ptr
    std::string fPrefix;                                            ///<! name prefix for all attributes values
