@@ -1,5 +1,6 @@
 #include "RtypesCore.h"
 #include <vector>
+#include <tuple>
 
 const int N = 5;
 
@@ -382,3 +383,7 @@ bool is_global_pod(CppyyTestPod* t);
 void set_global_pod(CppyyTestPod* t);
 CppyyTestPod* get_global_pod();
 CppyyTestPod* get_null_pod();
+
+// Python str and bytes to STL string and C string conversion
+std::tuple<std::string,std::size_t> f_stlstring(std::string s);
+
