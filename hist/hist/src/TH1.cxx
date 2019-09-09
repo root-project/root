@@ -6228,6 +6228,14 @@ void TH1::Scale(Double_t c1, Option_t *option)
       if (fBuffer) BufferEmpty(1);
       for(Int_t i = 0; i < fNcells; ++i) UpdateBinContent(i, c1 * RetrieveBinContent(i));
       if (fSumw2.fN) for(Int_t i = 0; i < fNcells; ++i) fSumw2.fArray[i] *= (c1 * c1); // update errors
+      // update global histograms statistics
+      Double_t s[kNstat] = {0};
+      GetStats(s);
+      for (Int_t i=0 ; i < kNstat; i++) {
+         if (i == 1)   s[i] = c1*c1*s[i];
+         else          s[i] = c1*s[i];
+      }
+      PutStats(s);
       SetMinimum(); SetMaximum(); // minimum and maximum value will be recalculated the next time
    }
 
