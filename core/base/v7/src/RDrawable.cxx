@@ -19,11 +19,6 @@
 #include <string>
 
 
-ROOT::Experimental::RDrawable::RDrawable()
-{
-}
-
-
 // pin vtable
 ROOT::Experimental::RDrawable::~RDrawable() {}
 

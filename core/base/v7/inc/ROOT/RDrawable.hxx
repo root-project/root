@@ -26,7 +26,6 @@ namespace Experimental {
 class RDrawingOptsBase;
 class RMenuItems;
 class RPadBase;
-class RDrawable;
 
 namespace Internal {
 class RPadPainter;
@@ -45,8 +44,6 @@ private:
    std::string  fId; ///< object identifier, unique inside RCanvas
 
 public:
-
-   RDrawable();
 
    virtual ~RDrawable();
 
