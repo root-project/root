@@ -314,6 +314,7 @@ public:
       virtual int GetInt() const { return 0; }
       virtual double GetDouble() const { return 0; }
       virtual std::string GetString() const { return ""; }
+      virtual Value_t *Copy() const = 0;
    };
 
    class IntValue_t : public Value_t {
@@ -322,6 +323,7 @@ public:
       IntValue_t(int _v = 0) : v(_v) {}
       EValuesKind Kind() const final { return kInt; }
       int GetInt() const final { return v; }
+      Value_t *Copy() const final { return new IntValue_t(v); }
    };
 
    class DoubleValue_t : public Value_t {
@@ -330,6 +332,7 @@ public:
       DoubleValue_t(double _v = 0) : v(_v) {}
       EValuesKind Kind() const final { return kDouble; }
       double GetDouble() const final { return v; }
+      Value_t *Copy() const final { return new DoubleValue_t(v); }
    };
 
    class StringValue_t : public Value_t {
@@ -338,10 +341,32 @@ public:
       StringValue_t(const std::string _v = "") : v(_v) {}
       EValuesKind Kind() const final { return kString; }
       std::string GetString() const final { return v; }
+      Value_t *Copy() const final { return new StringValue_t(v); }
    };
 
 
-   using Map_t = std::unordered_map<std::string, std::unique_ptr<Value_t>>;
+   class Map_t : public std::unordered_map<std::string, std::unique_ptr<Value_t>> {
+   public:
+      Map_t() = default; ///< JSON_asbase - store as map object
+
+      Map_t &AddInt(const std::string &name, int value) { emplace(name, std::make_unique<IntValue_t>(value)); return *this; }
+      Map_t &AddDouble(const std::string &name, double value) { emplace(name, std::make_unique<DoubleValue_t>(value)); return *this; }
+      Map_t &AddString(const std::string &name, const std::string &value) { emplace(name, std::make_unique<StringValue_t>(value)); return *this; }
+
+      Map_t(const Map_t &src) : std::unordered_map<std::string, std::unique_ptr<Value_t>>()
+      {
+         for (const auto &pair : src)
+            emplace(pair.first, std::unique_ptr<Value_t>(pair.second->Copy()));
+      }
+
+      Map_t &operator=(const Map_t &src)
+      {
+         clear();
+         for (const auto &pair : src)
+            emplace(pair.first, std::unique_ptr<Value_t>(pair.second->Copy()));
+         return *this;
+      }
+   };
 
    struct Record_t {
       std::string type;             ///<! drawable type, not stored in the root file, must be initialized

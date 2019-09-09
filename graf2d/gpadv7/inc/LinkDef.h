@@ -64,6 +64,7 @@
 #pragma link C++ class ROOT::Experimental::RDrawableAttributes::IntValue_t+;
 #pragma link C++ class ROOT::Experimental::RDrawableAttributes::DoubleValue_t+;
 #pragma link C++ class ROOT::Experimental::RDrawableAttributes::StringValue_t+;
+#pragma link C++ class ROOT::Experimental::RDrawableAttributes::Map_t+;
 #pragma link C++ class ROOT::Experimental::RDrawableAttributes::Record_t+;
 #pragma link C++ class ROOT::Experimental::RStyleNew+;
 #pragma link C++ class ROOT::Experimental::RStyleNew::Block_t+;

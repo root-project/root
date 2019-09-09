@@ -47,12 +47,7 @@ class RAttrLineNew : public RAttributesVisitor {
 
    auto &getDefaults()
    {
-      static RDrawableAttributes::Map_t dflts;
-      if (dflts.empty()) {
-         dflts["width"] = std::make_unique<RDrawableAttributes::DoubleValue_t>(1);
-         dflts["style"] = std::make_unique<RDrawableAttributes::IntValue_t>(1);
-         dflts["color"] = std::make_unique<RDrawableAttributes::StringValue_t>("white");
-      }
+      static RDrawableAttributes::Map_t dflts = RDrawableAttributes::Map_t().AddDouble("width",1.).AddInt("style",1).AddString("color", "white");
       return dflts;
    }
 
