@@ -2707,8 +2707,10 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    }
 
    else if ( name.find("ROOT::RDataFrame") == 0 || name.find("ROOT::RDF::RInterface<") == 0 ) {
-      PyObject_SetAttrString(pyclass, "AsNumpy",
-                             PyObject_GetAttrString( gRootModule, "_RDataFrameAsNumpy" ));
+      if (PyObject_HasAttrString( gRootModule, "_RDataFrameAsNumpy" )) {
+         PyObject_SetAttrString(pyclass, "AsNumpy",
+                                PyObject_GetAttrString( gRootModule, "_RDataFrameAsNumpy" ));
+      }
    }
 
    else if ( name == "TStyle" ) {
