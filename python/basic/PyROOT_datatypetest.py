@@ -1001,6 +1001,16 @@ class TestClassDATATYPES:
             assert res._0 == 'ℕ'
             assert res._1 == len(bytes_val)
 
+    def test25_pyunicode_to_cstring(self):
+        """Test conversion from Python unicode str with non-ASCII
+        characters to C string (const and non-const)"""
+        if not self.exp_pyroot:
+            import ROOT
+
+            for res in ROOT.f_cstring('ℕ'), ROOT.f_constcstring('ℕ'):
+                assert res._0 == 'ℕ'
+                assert res._1 == len(u'ℕ'.encode(encoding='UTF-8'))
+
 
 ## actual test run
 if __name__ == '__main__':

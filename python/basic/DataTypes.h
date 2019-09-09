@@ -386,4 +386,6 @@ CppyyTestPod* get_null_pod();
 
 // Python str and bytes to STL string and C string conversion
 std::tuple<std::string,std::size_t> f_stlstring(std::string s);
+std::tuple<char*,std::size_t> f_cstring(char* s);
+std::tuple<const char*,std::size_t> f_constcstring(const char* s);
 
