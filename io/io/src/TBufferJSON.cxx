@@ -1328,7 +1328,7 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
 
    if (!special_kind && cl && cl->GetStreamerInfo() && (cl->GetStreamerInfo()->GetElements()->GetLast()==0) && cl->GetStreamerInfo()->GetElement(0)->IsBase()) {
       TClass *basecl = cl->GetStreamerInfo()->GetElement(0)->GetClassPointer();
-      if (TClassEdit::IsStdClass(basecl->GetName())) {
+      if (TClassEdit::IsStdClass(basecl->GetName()) && (basecl->GetCollectionType() > 0)) {
          special_kind = basecl->GetCollectionType();
          cl = basecl;
       }
@@ -1787,6 +1787,18 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
 
    Int_t special_kind = JsonSpecialClass(objClass);
 
+   TClass *realClass = nullptr;
+
+   if (!special_kind && objClass && objClass->GetStreamerInfo() && (objClass->GetStreamerInfo()->GetElements()->GetLast()==0) && objClass->GetStreamerInfo()->GetElement(0)->IsBase()) {
+      TClass *basecl = objClass->GetStreamerInfo()->GetElement(0)->GetClassPointer();
+      if (TClassEdit::IsStdClass(basecl->GetName()) && (basecl->GetCollectionType() > 0)) {
+         realClass = const_cast<TClass*>(objClass);
+         if (!obj) obj = realClass->New();
+         special_kind = basecl->GetCollectionType();
+         objClass = basecl;
+      }
+   }
+
    // Extract pointer
    if (json->is_object() && (json->size() == 1) && (json->find("$ref") != json->end())) {
       unsigned refid = json->at("$ref").get<unsigned>();
@@ -1960,7 +1972,7 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
       Info("JsonReadObject", "Reading object of class %s done", jsonClass->GetName());
 
    if (readClass)
-      *readClass = jsonClass;
+      *readClass = realClass ? realClass : jsonClass;
 
    return obj;
 }
