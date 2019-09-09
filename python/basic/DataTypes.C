@@ -365,3 +365,14 @@ std::tuple<std::string,std::size_t> f_stlstring(std::string s)
 {
     return std::tuple<std::string,std::size_t>(s, s.size());
 }
+
+std::tuple<char*,std::size_t> f_cstring(char* s)
+{
+    return std::tuple<char*,std::size_t>(s, std::string(s).size());
+}
+
+std::tuple<const char*,std::size_t> f_constcstring(const char* s)
+{
+    return std::tuple<const char*,std::size_t>(s, std::string(s).size());
+}
+
