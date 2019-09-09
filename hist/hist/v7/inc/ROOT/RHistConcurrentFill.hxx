@@ -47,13 +47,13 @@ public:
    using Internal::RHistBufferedFillBase<RHistConcurrentFiller<HIST, SIZE>, HIST, SIZE>::Fill;
 
    /// Thread-specific HIST::FillN().
-   void FillN(const std::span<CoordArray_t> xN, const std::span<Weight_t> weightN)
+   void FillN(const std::span<const CoordArray_t> xN, const std::span<const Weight_t> weightN)
    {
       fManager.FillN(xN, weightN);
    }
 
    /// Thread-specific HIST::FillN().
-   void FillN(const std::span<CoordArray_t> xN) { fManager.FillN(xN); }
+   void FillN(const std::span<const CoordArray_t> xN) { fManager.FillN(xN); }
 
    /// The buffer is full, flush it out.
    void Flush() { fManager.FillN(this->GetCoords(), this->GetWeights()); }
@@ -94,14 +94,14 @@ public:
    RHistConcurrentFiller<HIST, SIZE> MakeFiller() { return RHistConcurrentFiller<HIST, SIZE>{*this}; }
 
    /// Thread-specific HIST::FillN().
-   void FillN(const std::span<CoordArray_t> xN, const std::span<Weight_t> weightN)
+   void FillN(const std::span<const CoordArray_t> xN, const std::span<const Weight_t> weightN)
    {
       std::lock_guard<std::mutex> lockGuard(fFillMutex);
       fHist.FillN(xN, weightN);
    }
 
    /// Thread-specific HIST::FillN().
-   void FillN(const std::span<CoordArray_t> xN)
+   void FillN(const std::span<const CoordArray_t> xN)
    {
       std::lock_guard<std::mutex> lockGuard(fFillMutex);
       fHist.FillN(xN);

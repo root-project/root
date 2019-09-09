@@ -141,13 +141,13 @@ public:
    /// For each coordinate in `xN`, add `weightN[i]` to the bin at coordinate
    /// `xN[i]`. The sizes of `xN` and `weightN` must be the same. This is more
    /// efficient than many separate calls to `Fill()`.
-   void FillN(const std::span<CoordArray_t> xN, const std::span<Weight_t> weightN) noexcept
+   void FillN(const std::span<const CoordArray_t> xN, const std::span<const Weight_t> weightN) noexcept
    {
       fImpl->FillN(xN, weightN);
    }
 
    /// Convenience overload: `FillN()` with weight 1.
-   void FillN(const std::span<CoordArray_t> xN) noexcept { fImpl->FillN(xN); }
+   void FillN(const std::span<const CoordArray_t> xN) noexcept { fImpl->FillN(xN); }
 
    /// Get the number of entries this histogram was filled with.
    int64_t GetEntries() const noexcept { return fImpl->GetStat().GetEntries(); }
