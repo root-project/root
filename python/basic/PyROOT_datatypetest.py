@@ -1011,6 +1011,18 @@ class TestClassDATATYPES:
                 assert res._0 == 'ℕ'
                 assert res._1 == len(u'ℕ'.encode(encoding='UTF-8'))
 
+    def test26_pybytes_to_cstring(self):
+        """Test conversion from Python bytes to C string
+        (const and non-const) """
+        if not self.exp_pyroot:
+            import ROOT
+
+            bytes_val = u'ℕ'.encode(encoding='UTF-8')
+
+            for res in ROOT.f_cstring(bytes_val), ROOT.f_constcstring(bytes_val):
+                assert res._0 == 'ℕ'
+                assert res._1 == len(bytes_val)
+
 
 ## actual test run
 if __name__ == '__main__':
