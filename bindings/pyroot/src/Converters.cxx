@@ -549,14 +549,27 @@ Bool_t PyROOT::TULongLongConverter::ToMemory( PyObject* value, void* address )
 ////////////////////////////////////////////////////////////////////////////////
 /// construct a new string and copy it in new memory
 
+static std::tuple<const char*,Py_ssize_t> getStringAndSize(PyObject* pyobject) {
+#if PY_VERSION_HEX >= 0x03030000
+   // Support non-ASCII strings (get the right length in bytes)
+   Py_ssize_t size = 0;
+   auto charArr = PyROOT_PyUnicode_AsStringAndSize(pyobject, &size);
+#else
+   auto size = PyROOT_PyUnicode_GET_SIZE(pyobject);
+   auto charArr = PyROOT_PyUnicode_AsString(pyobject);
+#endif
+   return std::tuple<const char*,Py_ssize_t>(charArr, size);
+}
+
 Bool_t PyROOT::TCStringConverter::SetArg(
       PyObject* pyobject, TParameter& para, TCallContext* /* ctxt */ )
 {
-   const char* s = PyROOT_PyUnicode_AsStringChecked( pyobject );
-   if ( PyErr_Occurred() )
+   if (PyROOT_PyUnicode_Check(pyobject)) {
+      auto strAndSize = getStringAndSize(pyobject);
+      fBuffer = std::string(std::get<0>(strAndSize), std::get<1>(strAndSize));
+   } else {
       return kFALSE;
-
-   fBuffer = std::string( s, PyROOT_PyUnicode_GET_SIZE( pyobject ) );
+   }
 
 // verify (too long string will cause truncation, no crash)
    if ( fMaxSize < (UInt_t)fBuffer.size() )
@@ -847,18 +860,6 @@ Bool_t PyROOT::TLongLongArrayConverter::SetArg(
 
 
 //- converters for special cases ----------------------------------------------
-
-static std::tuple<const char*,Py_ssize_t> getStringAndSize(PyObject* pyobject) {
-#if PY_VERSION_HEX >= 0x03030000
-   // Support non-ASCII strings (get the right length in bytes)
-   Py_ssize_t size = 0;
-   auto charArr = PyROOT_PyUnicode_AsStringAndSize(pyobject, &size);
-#else
-   auto size = PyROOT_PyUnicode_GET_SIZE(pyobject);
-   auto charArr = PyROOT_PyUnicode_AsString(pyobject);
-#endif
-   return std::tuple<const char*,Py_ssize_t>(charArr, size);
-}
 
 #define PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( name, type, F1, F2 )  \
 PyROOT::T##name##Converter::T##name##Converter( Bool_t keepControl ) :        \
