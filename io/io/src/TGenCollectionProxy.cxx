@@ -334,9 +334,17 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
    bool isPointer = nameChanged; // unique_ptr is considered a pointer
    // The incoming name is normalized (it comes from splitting the name of a TClass),
    // so all we need to do is drop the last trailing star (if any) and record that information.
-   if (!nameChanged && inside[inside.length()-1] == '*') {
+   if (!nameChanged && intype[intype.length()-1] == '*') {
       isPointer = true;
       intype.pop_back();
+      if (intype[intype.length()-1] == '*') {
+         // The value is a pointer to a pointer
+         if (!silent)
+            Warning("TGenCollectionProxy::Value::Value", "I/O not supported for collection of pointer to pointer: %s", inside_type.c_str());
+         fSize = sizeof(void*);
+         fKind = kVoid_t;
+         return;
+      }
    }
 
    if ( intype.substr(0,6) == "string" || intype.substr(0,11) == "std::string" ) {
