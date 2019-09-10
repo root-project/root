@@ -93,7 +93,7 @@ class RLineNew : public RDrawable {
 
    RDrawableAttributes fAttr{"line"}; ///< attributes
 
-   RAttrLineNew  fLineAttr{fAttr};   ///< line attributes
+   RAttrLineNew  fLineAttr{fAttr};   ///<! line attributes
 
 public:
 

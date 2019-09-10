@@ -45,10 +45,13 @@ public:
 
 class RAttrLineNew : public RAttributesVisitor {
 
+   RColorNew fColor{this}; ///<! line color, will access container from line attributes
+
 public:
 
-   RAttrLineNew() : RAttributesVisitor() {
-      static RDrawableAttributes::Map_t dflts = RDrawableAttributes::Map_t().AddDouble("width",1.).AddInt("style",1).AddString("color", "white");
+   RAttrLineNew() : RAttributesVisitor()
+   {
+      static auto dflts = RDrawableAttributes::Map_t().AddDouble("width",1.).AddInt("style",1);
       SetDefaults(&dflts);
    }
 
@@ -66,8 +69,9 @@ public:
    int GetStyle() const { return GetInt("style"); }
 
    ///The color of the line.
-   RAttrLineNew &SetColor(const std::string &color) { SetValue("color", color); return *this; }
-   std::string GetColor() const { return GetString("color"); }
+   RAttrLineNew &SetColor(const RColorNew &color) { fColor = color; return *this; }
+   const RColorNew &Color() const { return fColor; }
+   RColorNew &Color() { return fColor; }
 
 };
 

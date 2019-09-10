@@ -441,6 +441,7 @@ class RAttributesVisitor {
    std::string fPrefix;                                            ///<! name prefix for all attributes values
    const RDrawableAttributes::Map_t *fDefaults{nullptr};           ///<! defaults values for this visitor
    std::shared_ptr<RStyleNew> fStyle;                              ///<! style used for evaluations
+   RAttributesVisitor *fParent{nullptr};                           ///<! parent attributes, prefix applied to it
 
    std::string GetFullName(const std::string &name) const { return fPrefix + name; }
 
@@ -457,15 +458,24 @@ protected:
    void AssignAttributes(RDrawableAttributes &cont, const std::string &prefix)
    {
       fAttr = &cont;
-      fPrefix = prefix;
       fOwnAttr.reset();
+      fPrefix = prefix;
+      fParent = nullptr;
    }
+
+   void AssignParent(RAttributesVisitor *parent, const std::string &prefix)
+   {
+      fAttr = nullptr;  // first access to attributes will chained to parent
+      fOwnAttr.reset();
+      fPrefix = prefix;
+      fParent = parent;
+   }
+
+   bool GetAttr() const;
 
 public:
 
    RAttributesVisitor() = default;
-
-   RAttributesVisitor(RDrawableAttributes &cont, const std::string &prefix) { AssignAttributes(cont, prefix); }
 
    RAttributesVisitor(const RAttributesVisitor &src) { fDefaults = src.fDefaults; DeepCopy(src); }
 

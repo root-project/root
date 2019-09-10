@@ -68,5 +68,8 @@
 #pragma link C++ class ROOT::Experimental::RStyleNew+;
 #pragma link C++ class ROOT::Experimental::RStyleNew::Block_t+;
 #pragma link C++ class ROOT::Experimental::RAttributesVisitor+;
+#pragma link C++ class ROOT::Experimental::RColorNew+;
+#pragma link C++ class ROOT::Experimental::RAttrLineNew+;
+
 
 #endif
