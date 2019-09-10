@@ -471,7 +471,7 @@ protected:
       fParent = parent;
    }
 
-   bool GetAttr() const;
+   bool GetAttr(bool force = false) const;
 
 public:
 
