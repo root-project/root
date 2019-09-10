@@ -4,14 +4,14 @@
 /// reconstruction and merging them in parallel.
 ///
 /// To run this macro do the following:
-///   - Build the JetEvent library: "root -b -q buildJetEvent.C"
-///   - Run MPI test: "mpirun -np 4 root -b -q testTMPIFile.C"
+///   - Build the JetEvent library: "root -b -l -q buildJetEvent.C"
+///   - Run MPI test: "mpirun -np 4 root -b -l -q testTMPIFile.C"
 ///
 /// \macro_code
 ///
 /// \author Taylor Childers, Yunsong Wang
 
-R__LOAD_LIBRARY(../ tree / JetEvent_cxx)
+R__LOAD_LIBRARY(../tree/JetEvent_cxx)
 
 #include "TMPIFile.h"
 

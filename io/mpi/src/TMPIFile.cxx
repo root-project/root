@@ -543,9 +543,7 @@ void TMPIFile::SplitMPIComm()
    Int_t flag;
    MPI_Initialized(&flag);
    if (!flag) {
-      Int_t argc = 0;
-      char **argv = 0;
-      MPI_Init(&argc, &argv);
+      MPI_Init(NULL, NULL);
    }
    // get global size and current global rank
    MPI_Comm_size(MPI_COMM_WORLD, &fMPIGlobalSize);
@@ -553,11 +551,11 @@ void TMPIFile::SplitMPIComm()
 
    if (MIN_FILE_NUM * fSplitLevel > fMPIGlobalSize) {
       Error("TMPIFile",
-            " Number of Output File is larger than number of Processors Allocated."
-            "Number of processors should be two times larger than outpts. For %d outputs at least %d "
+            "Number of Output File is larger than number of Processors Allocated."
+            " Number of processors should be two times larger than outpts. For %d outputs at least %d "
             "should be allocated instead of %d",
             fSplitLevel, MIN_FILE_NUM * fSplitLevel, fMPIGlobalSize);
-      exit(1);
+      throw std::exception();
    }
 
    // using one collector
