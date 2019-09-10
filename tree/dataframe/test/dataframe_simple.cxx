@@ -884,8 +884,9 @@ TEST(RDFSimpleTests, SumOfStrings)
 
 TEST(RDFSimpleTests, GenVector)
 {
+   // The leading underscore of "_hh" tests against ROOT-10305.
    ROOT::RDataFrame t(1);
-   auto aa = t.Define("hh", "ROOT::Math::PtEtaPhiMVector(1,1,1,1)").Define("h", "hh.Rapidity()");
+   auto aa = t.Define("_hh", "ROOT::Math::PtEtaPhiMVector(1,1,1,1)").Define("h", "_hh.Rapidity()");
    auto m = aa.Mean("h");
    EXPECT_TRUE(0 != *m);
 }
