@@ -41,19 +41,27 @@ void lineWidthNew()
       // new way of drawing - return drawable itself, which has all kind attributes
       auto line = canvas->DrawNew<RLineNew>(pl1, pl2);
 
-      // access only line attributes - create so called "visitor" for RDrawable attributes
+      // change line width
+      line->AttrLine().SetWidth(i);
+
+      printf("Current line width %f\n", line->AttrLine().GetWidth());
+
+      // copy attributes
       auto attr = line->AttrLine();
 
+      printf("Attribute line width %f\n", attr.GetWidth());
+
       // change attributes
-      attr.SetWidth(i);
+      attr.SetWidth(i+1);
 
-      // evaluate attributes using value stored in drawable itself
-      printf("Before applying RStyle: width %f style %d color %s\n", attr.GetWidth(), attr.GetStyle(), attr.GetColor().c_str());
+      line->AttrLine().Copy(attr);
 
-      // assign style object to the attributes - now "Visitor" can use style as well
-      attr.UseStyle(style);
+      printf("Now line width %f\n", line->AttrLine().GetWidth());
 
-      printf("Afetr applying RStyle: width %f style %d color %s\n", attr.GetWidth(), attr.GetStyle(), attr.GetColor().c_str());
+      // assign style object to the attribute - now "Visitor" can use style as well
+      line->AttrLine().UseStyle(style);
+
+      printf("Afetr applying RStyle: width %f style %d color %s\n", line->AttrLine().GetWidth(), line->AttrLine().GetStyle(), line->AttrLine().GetColor().c_str());
    }
 
    // drawing of RLineNew not implemented, but attributes can be seen in JSON like:
