@@ -247,11 +247,11 @@ void ROOT::Experimental::RAttributesVisitor::DeepCopy(const RAttributesVisitor &
 ///////////////////////////////////////////////////////////////////////////////
 /// Copy attributes from other object
 
-void ROOT::Experimental::RAttributesVisitor::Copy(const RAttributesVisitor &src)
+void ROOT::Experimental::RAttributesVisitor::Copy(const RAttributesVisitor &src, bool use_dflts)
 {
    if (src.fDefaults && fAttr)
       for (const auto &entry : *src.fDefaults) {
-         const auto *value = src.Eval(entry.first);
+         const auto *value = src.Eval(entry.first, use_dflts);
 
          // check if element with given name exists at all
          if (fDefaults && (fDefaults != src.fDefaults) && value) {
