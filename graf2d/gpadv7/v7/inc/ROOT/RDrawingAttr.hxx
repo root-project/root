@@ -344,34 +344,52 @@ public:
       Value_t *Copy() const final { return new StringValue_t(v); }
    };
 
-
-   class Map_t : public std::unordered_map<std::string, std::unique_ptr<Value_t>> {
+   class Map_t {
+      // FIXME: due to ROOT-10306 only data member of such kind can be correctly stored by ROOT I/O
+      // Once problem fixed, one could make this container a base class
+      std::unordered_map<std::string, std::unique_ptr<Value_t>> m; ///< JSON_object
    public:
       Map_t() = default; ///< JSON_asbase - store as map object
 
-      Map_t &AddInt(const std::string &name, int value) { emplace(name, std::make_unique<IntValue_t>(value)); return *this; }
-      Map_t &AddDouble(const std::string &name, double value) { emplace(name, std::make_unique<DoubleValue_t>(value)); return *this; }
-      Map_t &AddString(const std::string &name, const std::string &value) { emplace(name, std::make_unique<StringValue_t>(value)); return *this; }
+      Map_t &AddInt(const std::string &name, int value) { m.emplace(name, std::make_unique<IntValue_t>(value)); return *this; }
+      Map_t &AddDouble(const std::string &name, double value) { m.emplace(name, std::make_unique<DoubleValue_t>(value)); return *this; }
+      Map_t &AddString(const std::string &name, const std::string &value) { m.emplace(name, std::make_unique<StringValue_t>(value)); return *this; }
 
-      Map_t(const Map_t &src) : std::unordered_map<std::string, std::unique_ptr<Value_t>>()
+      Map_t(const Map_t &src)
       {
-         for (const auto &pair : src)
-            emplace(pair.first, std::unique_ptr<Value_t>(pair.second->Copy()));
+         for (const auto &pair : src.m)
+            m.emplace(pair.first, std::unique_ptr<Value_t>(pair.second->Copy()));
       }
 
       Map_t &operator=(const Map_t &src)
       {
-         clear();
-         for (const auto &pair : src)
-            emplace(pair.first, std::unique_ptr<Value_t>(pair.second->Copy()));
+         m.clear();
+         for (const auto &pair : src.m)
+            m.emplace(pair.first, std::unique_ptr<Value_t>(pair.second->Copy()));
          return *this;
       }
+
+      const Value_t *Eval(const std::string &name) const
+      {
+         auto entry = m.find(name);
+         return (entry != m.end()) ? entry->second.get() : nullptr;
+      }
+
+      void Clear(const std::string &name)
+      {
+         auto entry = m.find(name);
+         if (entry != m.end())
+            m.erase(entry);
+      }
+
+      auto begin() const { return m.begin(); }
+      auto end() const { return m.end(); }
    };
 
    struct Record_t {
       std::string type;             ///<! drawable type, not stored in the root file, must be initialized
       std::string user_class;       ///<  user defined drawable class, can later go inside map
-      Map_t map;                    ///<  JSON_object
+      Map_t map;                    ///<
       Map_t *defaults{nullptr};     ///<! default values for server
 
       Record_t() = default;
@@ -444,7 +462,7 @@ public:
 
    struct Block_t {
       std::string selector;
-      RDrawableAttributes::Map_t map; ///<   JSON_object
+      RDrawableAttributes::Map_t map; ///<    container
       Block_t() = default;
       Block_t(const std::string &_selector) : selector(_selector) {}
 
@@ -472,7 +490,7 @@ class RAttributesVisitor {
    mutable std::shared_ptr<RDrawableAttributes::Record_t> fCont;   ///<! by first access to container try to get shared ptr
    mutable bool fFirstTime{true};                                  ///<! only first time try to lock weak ptr
    std::string fPrefix;                                            ///<! name prefix for all attributes values
-   const RDrawableAttributes::Map_t *fDefaults{nullptr};              ///<! defaults values for this visitor
+   const RDrawableAttributes::Map_t *fDefaults{nullptr};           ///<! defaults values for this visitor
    std::shared_ptr<RStyleNew> fStyle;                              ///<! style used for evaluations
 
    std::string GetFullName(const std::string &name) const { return fPrefix + name; }
