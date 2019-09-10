@@ -104,6 +104,88 @@ RPadExtent FromAttributeString(const std::string &val, const std::string &name, 
 
 std::string ToAttributeString(const RPadExtent &extent);
 
+
+
+/** \class ROOT::Experimental::RPadExtent
+  An extent / size (horizontal and vertical) in a `RPad`.
+  */
+struct RPadExtentNew : public RAttributesVisitor {
+
+   RPadLengthNew fHoriz{this,"horiz_"};   ///<!  horizontal part
+
+   RPadLengthNew fVert{this, "vert_"};    ///<!   vertical part
+
+public:
+
+   RPadExtentNew() : RAttributesVisitor()
+   {
+      // no defaults on this level
+   }
+
+   RPadExtentNew(RDrawableAttributes &cont, const std::string &prefix = "pos_") : RPadExtentNew()  { AssignAttributes(cont, prefix); }
+
+   RPadExtentNew(RAttributesVisitor *parent, const std::string &prefix = "pos_") : RPadExtentNew() { AssignParent(parent, prefix); }
+
+
+   RPadExtentNew(const RPadLengthNew& horiz, const RPadLengthNew& vert)
+   {
+      fHoriz = horiz;
+      fVert = vert;
+   }
+
+   RPadLengthNew &Horiz() { return fHoriz; }
+   const RPadLengthNew &Horiz() const { return fHoriz; }
+
+   RPadLengthNew &Vert() { return fVert; }
+   const RPadLengthNew &Vert() const { return fVert; }
+
+   /// Add two `RPadExtent`s.
+   friend RPadExtentNew operator+(RPadExtentNew lhs, const RPadExtentNew &rhs)
+   {
+      return {lhs.fHoriz + rhs.fHoriz, lhs.fVert + rhs.fVert};
+   }
+
+   /// Subtract two `RPadExtent`s.
+   friend RPadExtentNew operator-(RPadExtentNew lhs, const RPadExtentNew &rhs)
+   {
+      return {lhs.fHoriz - rhs.fHoriz, lhs.fVert - rhs.fVert};
+   }
+
+   /// Add a `RPadExtent`.
+   RPadExtentNew &operator+=(const RPadExtentNew &rhs)
+   {
+      fHoriz += rhs.fHoriz;
+      fVert += rhs.fVert;
+      return *this;
+   };
+
+   /// Subtract a `RPadExtent`.
+   RPadExtentNew &operator-=(const RPadExtentNew &rhs)
+   {
+      fHoriz -= rhs.fHoriz;
+      fVert -= rhs.fVert;
+      return *this;
+   };
+
+   /** \class ScaleFactor
+      A scale factor (separate factors for horizontal and vertical) for scaling a `RPadLength`.
+      */
+   struct ScaleFactor {
+      double fHoriz; ///< Horizontal scale factor
+      double fVert;  ///< Vertical scale factor
+   };
+
+   /// Scale a `RPadHorizVert` horizonally and vertically.
+   /// \param scale - the scale factor,
+   RPadExtentNew &operator*=(const ScaleFactor &scale)
+   {
+      fHoriz *= scale.fHoriz;
+      fVert *= scale.fVert;
+      return *this;
+   };
+};
+
+
 } // namespace Experimental
 } // namespace ROOT
 

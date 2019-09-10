@@ -477,6 +477,10 @@ public:
 
    RAttributesVisitor() = default;
 
+   RAttributesVisitor(RDrawableAttributes &cont, const std::string &prefix = "") { AssignAttributes(cont, prefix); }
+
+   RAttributesVisitor(RAttributesVisitor *parent, const std::string &prefix = "") { AssignParent(parent, prefix); }
+
    RAttributesVisitor(const RAttributesVisitor &src) { fDefaults = src.fDefaults; CreateOwnAttr(); Copy(src); }
 
    RAttributesVisitor &operator=(const RAttributesVisitor &src) { Clear(); Copy(src); return *this; }
