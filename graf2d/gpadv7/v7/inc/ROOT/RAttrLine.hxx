@@ -45,10 +45,10 @@ public:
 
 class RAttrLineNew : public RAttributesVisitor {
 
-   auto &getDefaults()
+   const auto *getDefaults()
    {
       static RDrawableAttributes::Map_t dflts = RDrawableAttributes::Map_t().AddDouble("width",1.).AddInt("style",1).AddString("color", "white");
-      return dflts;
+      return &dflts;
    }
 
 public:
