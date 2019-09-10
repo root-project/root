@@ -291,13 +291,11 @@ public:
 
    RColorNew(int r, int g, int b) : RColorNew()
    {
-      CreateOwnAttr();
       SetRGB(r,g,b);
    }
 
    RColorNew(int r, int g, int b, double alfa) : RColorNew()
    {
-      CreateOwnAttr();
       SetRGB(r,g,b);
       SetAlfa(alfa);
    }

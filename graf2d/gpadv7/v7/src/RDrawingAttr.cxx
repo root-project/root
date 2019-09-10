@@ -256,14 +256,17 @@ void ROOT::Experimental::RAttributesVisitor::Copy(const RAttributesVisitor &src,
 }
 
 
-bool ROOT::Experimental::RAttributesVisitor::GetAttr() const
+bool ROOT::Experimental::RAttributesVisitor::GetAttr(bool force) const
 {
-   if (fAttr) return true;
+   if (fAttr)
+      return true;
 
    auto prnt = fParent;
    auto prefix = fPrefix;
    while (prnt) {
-      if (prnt->GetAttr()) {
+      if (force && !prnt->fParent && !prnt->fAttr)
+         const_cast<RAttributesVisitor*>(prnt)->CreateOwnAttr();
+      if (prnt->fAttr) {
          const_cast<RAttributesVisitor*>(this)->fAttr = prnt->fAttr;
          const_cast<RAttributesVisitor*>(this)->fPrefix = prnt->fPrefix + prefix;
          return true;
@@ -272,7 +275,10 @@ bool ROOT::Experimental::RAttributesVisitor::GetAttr() const
       prnt = prnt->fParent;
    }
 
-   return false;
+   if (!fParent && force)
+      const_cast<RAttributesVisitor*>(this)->CreateOwnAttr();
+
+   return fAttr != nullptr;
 }
 
 
@@ -320,19 +326,19 @@ void ROOT::Experimental::RAttributesVisitor::ClearValue(const std::string &name)
 
 void ROOT::Experimental::RAttributesVisitor::SetValue(const std::string &name, int value)
 {
-   if (GetAttr())
+   if (GetAttr(true))
       fAttr->map.AddInt(GetFullName(name), value);
 }
 
 void ROOT::Experimental::RAttributesVisitor::SetValue(const std::string &name, double value)
 {
-   if (GetAttr())
+   if (GetAttr(true))
       fAttr->map.AddDouble(GetFullName(name), value);
 }
 
 void ROOT::Experimental::RAttributesVisitor::SetValue(const std::string &name, const std::string &value)
 {
-   if (GetAttr())
+   if (GetAttr(true))
       fAttr->map.AddString(GetFullName(name), value);
 }
 
