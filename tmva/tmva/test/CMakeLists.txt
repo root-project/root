@@ -31,5 +31,16 @@ if(dataframe)
     ROOT_ADD_GTEST(rreader rreader.cxx LIBRARIES ROOTVecOps TMVA ROOTDataFrame)
 endif()
 
+# Tree inference system
+ROOT_ADD_GTEST(branchlessForest branchlessForest.cxx LIBRARIES TMVA)
+ROOT_ADD_GTEST(rbdt rbdt.cxx LIBRARIES ROOTVecOps TMVA)
+
+if(dataframe AND pyroot_experimental)
+  find_python_module(xgboost QUIET)
+  if (PY_XGBOOST_FOUND)
+    ROOT_ADD_PYUNITTEST(rbdt_xgboost rbdt_xgboost.py)
+  endif()
+endif()
+
 project(tmva-tests)
 find_package(ROOT REQUIRED)
