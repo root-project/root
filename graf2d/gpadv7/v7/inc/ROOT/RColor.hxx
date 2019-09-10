@@ -18,6 +18,9 @@
 
 #include <array>
 #include <vector>
+#include <string>
+
+#include <ROOT/RDrawingAttr.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -266,6 +269,43 @@ public:
 
 RColor FromAttributeString(const std::string &str, const std::string &name, RColor*);
 std::string ToAttributeString(const RColor& val);
+
+
+class RColorNew : public RAttributesVisitor {
+public:
+   RColorNew() : RAttributesVisitor()
+   {
+      static auto dflts = RDrawableAttributes::Map_t().AddString("rgb","0,0,0").AddDouble("a",1.);
+      SetDefaults(&dflts);
+   }
+
+   RColorNew(RDrawableAttributes &cont, const std::string &prefix = "color_") : RColorNew()
+   {
+      AssignAttributes(cont, prefix);
+   }
+
+   RColorNew(RAttributesVisitor *parent, const std::string &prefix = "color_") : RColorNew()
+   {
+      AssignParent(parent, prefix);
+   }
+
+   std::string GetRGB() const { return GetString("rgb"); }
+   RColorNew &SetRG(const std::string &_rgb) { SetValue("rgb", _rgb); return *this; }
+
+   double GetAlfa() const { return GetDouble("a"); }
+   bool HasAlfa() const { return HasValue("a"); }
+   RColorNew &SetAlfa(double _alfa) { SetValue("a", _alfa); return *this; }
+
+   std::string AsSVG() const
+   {
+      auto rgb = GetRGB();
+      if (HasAlfa())
+         return std::string("rgba(") + rgb + "," + std::to_string(GetAlfa()) + ")";
+       return std::string("rgb(") + rgb + ")";
+   }
+};
+
+
 
 } // namespace Experimental
 } // namespace ROOT
