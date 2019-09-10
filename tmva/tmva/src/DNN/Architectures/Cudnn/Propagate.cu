@@ -212,6 +212,7 @@ void TCudnn<AFloat>::InitializePoolDescriptors(TDescriptors * & descriptors,
                                                PoolingLayer_t *L) {
    auto poolDescriptors = new CNN::TCNNDescriptors<typename TCudnn<AFloat>::PoolingLayer_t> ();
    CUDNNCHECK(cudnnCreatePoolingDescriptor(&poolDescriptors->LayerDescriptor));
+
    CUDNNCHECK(cudnnCreateDropoutDescriptor(&poolDescriptors->HelperDescriptor));
 
    CUDNNCHECK(cudnnSetPooling2dDescriptor(poolDescriptors->LayerDescriptor,
@@ -227,6 +228,16 @@ void TCudnn<AFloat>::InitializePoolDescriptors(TDescriptors * & descriptors,
                                           
 
    descriptors = poolDescriptors;
+
+   // reshape output tensor and activation gradient tensor of pool layer
+   Tensor_t &outputTensor = L->GetOutput();
+   outputTensor = Tensor_t(outputTensor.GetDeviceBuffer(),
+                           {L->GetBatchSize(), L->GetDepth(), L->GetHeight(), L->GetWidth()},
+                           GetTensorLayout(), 0, 0);
+
+   Tensor_t &activationGradients = L->GetActivationGradients();
+   activationGradients = Tensor_t(activationGradients.GetDeviceBuffer(), 
+                                  outputTensor.GetShape(), GetTensorLayout(), 0, 0);
 }
 
 //____________________________________________________________________________
@@ -333,17 +344,30 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
    
    // cuDNN decides which algorithm to use
    // More detailed alternative: cudnnFindConvolutionForwardAlgorithm
+   // cudnnConvolutionFwdPreference_t preferenceFwd = CUDNN_CONVOLUTION_FWD_PREFER_FASTEST;
+   cudnnConvolutionFwdPreference_t preferenceFwd = CUDNN_CONVOLUTION_FWD_NO_WORKSPACE;
+
    CUDNNCHECK(cudnnGetConvolutionForwardAlgorithm(cudnnHandle,
                                                   inputTensorDescriptor,
                                                   convDescriptors->WeightsDescriptor,
                                                   convDescriptors->LayerDescriptor,
                                                   outputTensor.GetTensorDescriptor(),
-                                                  CUDNN_CONVOLUTION_FWD_PREFER_FASTEST,
+                                                  preferenceFwd,
                                                   0,     // Memory limit in bytes for mode CUDNN_CONVOLUTION_FWD_SPECIFY_WORKSPACE_LIMIT
                                                   &convWorkspace->AlgorithmForward));
-                                                  
+
    // Allocate memory for the convolution
    //size_t workSpaceSizeInBytes = 0;
+
+   std::cout << "CONV FWD Algo used for convolution of input shape { " << L->GetBatchSize() << " , " <<  L->GetInputDepth() << " , " 
+                                                <<L->GetInputHeight() << " , " << L->GetInputWidth() << " } is " 
+             << convWorkspace->AlgorithmForward << std::endl;
+
+   // convWorkspace->AlgorithmForward = CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD;
+   // convWorkspace->AlgorithmForward = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM;
+   // convWorkspace->AlgorithmForward = CUDNN_CONVOLUTION_FWD_ALGO_FFT;
+   // std::cout << " but force using " << convWorkspace->AlgorithmForward << std::endl;
+
    CUDNNCHECK(cudnnGetConvolutionForwardWorkspaceSize(cudnnHandle,
                                                       inputTensorDescriptor,
                                                       convDescriptors->WeightsDescriptor,
@@ -351,7 +375,7 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
                                                       outputTensor.GetTensorDescriptor(),
                                                       convWorkspace->AlgorithmForward,
                                                       &convWorkspace->ForwardWorkspaceSize));
-                                                  
+
    if (convWorkspace->ForwardWorkspaceSize) cudaMalloc(&convWorkspace->ForwardWorkspace, convWorkspace->ForwardWorkspaceSize*sizeof(AFloat));
    if (convWorkspace->ForwardWorkspaceSize > 0 && convWorkspace->ForwardWorkspace == nullptr  ) { 
       std::cerr << "Error allocating FWD CONV workspace of size " << convWorkspace->ForwardWorkspaceSize << " - probably running out of memory on the GPU"
@@ -372,14 +396,20 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
    cudnnHandle = activationGradients.GetCudnnHandle();
    // dx : Activation gradient to be computed                               -> activationGradients [in place op] 
    // dy : Gradient of activation from the following layer (backpropagation)-> activationGradients
-   CUDNNCHECK(cudnnGetConvolutionBackwardDataAlgorithm(cudnnHandle,
-                                                       convDescriptors->WeightsDescriptor,
-                                                       activationGradients.GetTensorDescriptor(),
-                                                       convDescriptors->LayerDescriptor,
-                                                       activationGradientsBackwardDescriptor,
-                                                       CUDNN_CONVOLUTION_BWD_DATA_PREFER_FASTEST,
-                                                       0,
-                                                       &convWorkspace->AlgorithmBackward));
+
+   //cudnnConvolutionBwdDataPreference_t preference = CUDNN_CONVOLUTION_BWD_DATA_PREFER_FASTEST;
+   cudnnConvolutionBwdDataPreference_t preferenceBwdData = CUDNN_CONVOLUTION_BWD_DATA_NO_WORKSPACE;
+
+   CUDNNCHECK(cudnnGetConvolutionBackwardDataAlgorithm(cudnnHandle, 
+                                                      convDescriptors->WeightsDescriptor, 
+                                                      activationGradients.GetTensorDescriptor(),
+                                                      convDescriptors->LayerDescriptor, 
+                                                      activationGradientsBackwardDescriptor,
+                                                      preferenceBwdData, 0, 
+                                                      &convWorkspace->AlgorithmBackward));
+
+   std::cout << "CONV BWD Data Algo used  is "  << convWorkspace->AlgorithmBackward << std::endl;
+
     
    CUDNNCHECK(cudnnGetConvolutionBackwardDataWorkspaceSize(cudnnHandle,
                                                            convDescriptors->WeightsDescriptor,
@@ -401,14 +431,17 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
    // Filter gradient
    //Tensor_t activationBackward ({L->GetBatchSize(), L->GetInputDepth(), L->GetInputHeight(), L->GetInputWidth()}, MemoryLayout::RowMajor, 0, 0);
    // here should be able to use inputTensorDescriptor
-   cudnnTensorDescriptor_t activationBackwardDescriptor = inputTensorDescriptor; 
+   cudnnTensorDescriptor_t activationBackwardDescriptor = inputTensorDescriptor;
+
+   // cudnnConvolutionBwdFilterPreference_t preference = CUDNN_CONVOLUTION_BWD_FILTER_PREFER_FASTEST;
+   cudnnConvolutionBwdFilterPreference_t preferenceBwdFilter = CUDNN_CONVOLUTION_BWD_FILTER_NO_WORKSPACE;
 
    CUDNNCHECK(cudnnGetConvolutionBackwardFilterAlgorithm(cudnnHandle,
                                                          activationBackwardDescriptor,
                                                          activationGradients.GetTensorDescriptor(),
                                                          convDescriptors->LayerDescriptor,
                                                          convDescriptors->WeightsDescriptor,
-                                                         CUDNN_CONVOLUTION_BWD_FILTER_PREFER_FASTEST,
+                                                         preferenceBwdFilter,
                                                          0,
                                                          &convWorkspace->HelperAlgorithm));
                                                           
@@ -419,6 +452,8 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
                                                              convDescriptors->WeightsDescriptor,
                                                              convWorkspace->HelperAlgorithm,
                                                              &convWorkspace->HelperWorkspaceSize));
+
+   std::cout << "CONV BWD Filter Algo used  is "  << convWorkspace->HelperAlgorithm<< std::endl;
                                                               
    if (convWorkspace->HelperWorkspaceSize) cudaMalloc(&convWorkspace->HelperWorkspace, convWorkspace->HelperWorkspaceSize*sizeof(AFloat));
    if (convWorkspace->HelperWorkspaceSize > 0 && convWorkspace->HelperWorkspace == nullptr  ) { 
