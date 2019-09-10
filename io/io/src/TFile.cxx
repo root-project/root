@@ -812,7 +812,9 @@ void TFile::Init(Bool_t create)
          } else if (fVersion != gROOT->GetVersionInt() && fVersion > 30000) {
             // Don't complain about missing streamer info for empty files.
             if (fKeys->GetSize()) {
-               Warning("Init","no StreamerInfo found in %s therefore preventing schema evolution when reading this file.",GetName());
+               Warning("Init","no StreamerInfo found in %s therefore preventing schema evolution when reading this file."
+                              " The file was produced with version %d.%02d/%02d of ROOT.",
+                              GetName(),  fVersion / 10000, (fVersion / 100) % (100), fVersion  % 100);
             }
          }
       }
