@@ -618,9 +618,8 @@ void TGraphPainter::ComputeLogs(Int_t npoints, Int_t opt)
    }
    if (!opt && gPad->GetLogy()) {
       for (i=0;i<npoints;i++) {
-         //if (gyworkl[i] > 0)
-         gyworkl[i] = TMath::Log10(gyworkl[i]);
-         //else                gyworkl[i] = gPad->GetY1();
+         if (gyworkl[i] > 0) gyworkl[i] = TMath::Log10(gyworkl[i]);
+         else                gyworkl[i] = gPad->GetY1();
       }
    }
 }
