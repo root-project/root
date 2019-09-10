@@ -225,23 +225,13 @@ const ROOT::Experimental::RDrawableAttributes::Value_t *ROOT::Experimental::RSty
 }
 
 
-
-///////////////////////////////////////////////////////////////////////////////
-/// Copy all attributes
-
-void ROOT::Experimental::RAttributesVisitor::DeepCopy(const RAttributesVisitor &src)
+void ROOT::Experimental::RAttributesVisitor::CreateOwnAttr()
 {
    // create independent container
    fOwnAttr = std::make_unique<RDrawableAttributes>();
 
    // set pointer on the container
    fAttr = fOwnAttr.get();
-
-   // fPrefix = src.fPrefix; // prefix is not copied while it is relative path in container
-   // if (!fDefaults) fDefaults = src.fDefaults;
-   // fStyle = src.fStyle;  // not clear if style reference should be copied
-
-   Copy(src);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
