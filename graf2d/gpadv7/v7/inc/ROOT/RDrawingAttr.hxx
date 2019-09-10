@@ -351,6 +351,7 @@ public:
    public:
       Map_t() = default; ///< JSON_asbase - store as map object
 
+      Map_t &Add(const std::string &name, Value_t *value) { if (value) m.emplace(name, value); return *this; }
       Map_t &AddInt(const std::string &name, int value) { m.emplace(name, std::make_unique<IntValue_t>(value)); return *this; }
       Map_t &AddDouble(const std::string &name, double value) { m.emplace(name, std::make_unique<DoubleValue_t>(value)); return *this; }
       Map_t &AddString(const std::string &name, const std::string &value) { m.emplace(name, std::make_unique<StringValue_t>(value)); return *this; }
@@ -500,16 +501,22 @@ class RAttributesVisitor {
 protected:
 
    /** Normally should be configured in constructor */
-   void SetDefaults(const RDrawableAttributes::Map_t &dflts) { fDefaults = &dflts; }
+   void SetDefaults(const RDrawableAttributes::Map_t *dflts) { fDefaults = dflts; }
 
    /** use const char* - nullptr means no value found */
    const RDrawableAttributes::Value_t *Eval(const std::string &name, bool use_dflts = true) const;
+
+   void DeepCopy(const RAttributesVisitor &src);
 
 public:
 
    RAttributesVisitor(RDrawableAttributes &cont, const std::string &prefix) : fWeak(cont.Make()), fPrefix(prefix) {}
 
    RAttributesVisitor(const RDrawableAttributes &cont, const std::string &prefix) : fWeak(cont.Get()), fPrefix(prefix) {}
+
+   RAttributesVisitor(const RAttributesVisitor &src) { fDefaults = src.fDefaults; DeepCopy(src); }
+
+   RAttributesVisitor &operator=(const RAttributesVisitor &src) { Clear(); DeepCopy(src); return *this; }
 
    void UseStyle(std::shared_ptr<RStyleNew> style) { fStyle = style; }
 

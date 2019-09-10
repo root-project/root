@@ -220,7 +220,35 @@ const ROOT::Experimental::RDrawableAttributes::Value_t *ROOT::Experimental::RSty
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+/// Copy all attributes
 
+void ROOT::Experimental::RAttributesVisitor::DeepCopy(const RAttributesVisitor &src)
+{
+   // create independent container when required
+   if (!fCont)
+      fCont = std::make_shared<RDrawableAttributes::Record_t>();
+
+   // fPrefix = src.fPrefix; // prefix is not copied while it is relative path in container
+   // if (!fDefaults) fDefaults = src.fDefaults;
+   // fStyle = src.fStyle;  // not clear if style reference should be copied
+
+   if (src.fDefaults)
+      for (const auto &entry : *src.fDefaults) {
+         const auto *value = src.Eval(entry.first);
+
+         // check if element with given name exists at all
+         if (fDefaults && (fDefaults != src.fDefaults) && value) {
+            const auto *dvalue = fDefaults->Eval(entry.first);
+            if (!dvalue || !dvalue->Compatible(value->Kind()))
+               value = nullptr;
+         }
+
+         if (value)
+            fCont->map.Add(GetFullName(entry.first), value->Copy());
+      }
+}
+
+///////////////////////////////////////////////////////////////////////////////
 
 bool ROOT::Experimental::RAttributesVisitor::LockContainer() const
 {
