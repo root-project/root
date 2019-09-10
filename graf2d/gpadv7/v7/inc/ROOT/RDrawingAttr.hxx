@@ -453,7 +453,7 @@ protected:
    /** use const char* - nullptr means no value found */
    const RDrawableAttributes::Value_t *Eval(const std::string &name, bool use_dflts = true) const;
 
-   void DeepCopy(const RAttributesVisitor &src);
+   void CreateOwnAttr();
 
    void AssignAttributes(RDrawableAttributes &cont, const std::string &prefix)
    {
@@ -477,7 +477,7 @@ public:
 
    RAttributesVisitor() = default;
 
-   RAttributesVisitor(const RAttributesVisitor &src) { fDefaults = src.fDefaults; DeepCopy(src); }
+   RAttributesVisitor(const RAttributesVisitor &src) { fDefaults = src.fDefaults; CreateOwnAttr(); Copy(src); }
 
    RAttributesVisitor &operator=(const RAttributesVisitor &src) { Clear(); Copy(src); return *this; }
 

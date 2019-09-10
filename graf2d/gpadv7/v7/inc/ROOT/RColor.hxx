@@ -289,8 +289,22 @@ public:
       AssignParent(parent, prefix);
    }
 
+   RColorNew(int r, int g, int b) : RColorNew()
+   {
+      CreateOwnAttr();
+      SetRGB(r,g,b);
+   }
+
+   RColorNew(int r, int g, int b, double alfa) : RColorNew()
+   {
+      CreateOwnAttr();
+      SetRGB(r,g,b);
+      SetAlfa(alfa);
+   }
+
    std::string GetRGB() const { return GetString("rgb"); }
-   RColorNew &SetRG(const std::string &_rgb) { SetValue("rgb", _rgb); return *this; }
+   RColorNew &SetRGB(const std::string &_rgb) { SetValue("rgb", _rgb); return *this; }
+   RColorNew &SetRGB(int r, int g, int b) { return SetRGB(std::to_string(r) + "," + std::to_string(g) + "," + std::to_string(b)); }
 
    double GetAlfa() const { return GetDouble("a"); }
    bool HasAlfa() const { return HasValue("a"); }

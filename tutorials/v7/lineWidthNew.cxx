@@ -24,7 +24,7 @@ void lineWidthNew()
 
    auto style = std::make_shared<RStyleNew>();
 
-   style->AddBlock("line").AddInt("line_style", 2).AddString("line_color", "yellow");
+   style->AddBlock("line").AddInt("line_style", 2).AddString("line_color_rgb", "4,5,6");
 
    for (int i=10; i>0; i--){
       num = num + 0.05;
@@ -61,7 +61,12 @@ void lineWidthNew()
       // assign style object to the attribute - now "Visitor" can use style as well
       line->AttrLine().UseStyle(style);
 
-      printf("Afetr applying RStyle: width %f style %d color %s\n", line->AttrLine().GetWidth(), line->AttrLine().GetStyle(), line->AttrLine().GetColor().c_str());
+      printf("Afetr applying RStyle: width %f style %d color %s\n", line->AttrLine().GetWidth(), line->AttrLine().GetStyle(), line->AttrLine().Color().AsSVG().c_str());
+
+      line->AttrLine().Color() = RColorNew(i+5, i+15, i+25);
+
+      printf("Afetr setting color color %s\n", line->AttrLine().Color().AsSVG().c_str());
+
    }
 
    // drawing of RLineNew not implemented, but attributes can be seen in JSON like:
