@@ -86,12 +86,12 @@ GetDrawable(const std::shared_ptr<ROOT::Experimental::RLine> &line)
 
 class RLineNew : public RDrawable {
 
-   RPadPos fP1;           ///< 1st point
-   RPadPos fP2;           ///< 2nd point
-
    RDrawingOptsBase fOpts; ///<! only temporary here, should be removed later
 
    RDrawableAttributes fAttr{"line"}; ///< attributes
+
+   RPadPosNew fP1{fAttr, "p1_"};     ///<! line begin
+   RPadPosNew fP2{fAttr, "p2_"};     ///<! line end
 
    RAttrLineNew  fLineAttr{fAttr};   ///<! line attributes
 
@@ -99,13 +99,17 @@ public:
 
    RLineNew() = default;
 
-   RLineNew(const RPadPos& p1, const RPadPos& p2) : fP1(p1), fP2(p2) {}
+   RLineNew(const RPadPosNew& p1, const RPadPosNew& p2) : RLineNew()
+   {
+      fP1 = p1;
+      fP2 = p2;
+   }
 
-   void SetP1(const RPadPos& p1) { fP1 = p1; }
-   void SetP2(const RPadPos& p2) { fP2 = p2; }
+   void SetP1(const RPadPosNew& p1) { fP1 = p1; }
+   void SetP2(const RPadPosNew& p2) { fP2 = p2; }
 
-   const RPadPos& GetP1() const { return fP1; }
-   const RPadPos& GetP2() const { return fP2; }
+   const RPadPosNew& GetP1() const { return fP1; }
+   const RPadPosNew& GetP2() const { return fP2; }
 
    RAttrLineNew &AttrLine() { return fLineAttr; }
    const RAttrLineNew &AttrLine() const { return fLineAttr; }

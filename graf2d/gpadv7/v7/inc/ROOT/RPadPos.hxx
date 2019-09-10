@@ -94,6 +94,9 @@ RPadPos FromAttributeString(const std::string &val, const std::string &name, RPa
 /// Convert a RPadPos to a std::string, suitable for PosFromString().
 std::string ToAttributeString(const RPadPos &pos);
 
+
+using RPadPosNew = RPadExtentNew;
+
 } // namespace Experimental
 } // namespace ROOT
 
