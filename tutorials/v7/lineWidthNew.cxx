@@ -24,9 +24,7 @@ void lineWidthNew()
 
    auto style = std::make_shared<RStyleNew>();
 
-   auto &block = style->AddBlock("line");
-   block["line_style"] = std::make_unique<RDrawableAttributes::IntValue_t>(2);
-   block["line_color"] = std::make_unique<RDrawableAttributes::StringValue_t>("yellow");
+   style->AddBlock("line").AddInt("line_style", 2).AddString("line_color", "yellow");
 
    for (int i=10; i>0; i--){
       num = num + 0.05;

@@ -211,9 +211,8 @@ const ROOT::Experimental::RDrawableAttributes::Value_t *ROOT::Experimental::RSty
       bool match = (block.selector == type) || (!user_class.empty() && (block.selector == "."s + user_class));
 
       if (match) {
-         const auto centry = block.map.find(field);
-         if (centry != block.map.end())
-            return centry->second.get();
+         auto res = block.map.Eval(field);
+         if (res) return res;
       }
    }
 
@@ -236,70 +235,64 @@ bool ROOT::Experimental::RAttributesVisitor::LockContainer() const
 
 const ROOT::Experimental::RDrawableAttributes::Value_t *ROOT::Experimental::RAttributesVisitor::Eval(const std::string &name, bool use_dflts) const
 {
+   const RDrawableAttributes::Value_t *res = nullptr;
+
    if (LockContainer()) {
       auto fullname = GetFullName(name);
 
-      auto entry = fCont->map.find(fullname);
-      if (entry != fCont->map.end())
-         return entry->second.get();
+      res = fCont->map.Eval(fullname);
+      if (res) return res;
 
       if (fStyle) {
-         auto res = fStyle->Eval(fCont->type, fCont->user_class, fullname);
+         res = fStyle->Eval(fCont->type, fCont->user_class, fullname);
          if (res) return res;
       }
    }
 
    if (fDefaults && use_dflts) {
-      const auto centry = fDefaults->find(name);
-      if (centry != fDefaults->end())
-         return centry->second.get();
+      res = fDefaults->Eval(name);
+      if (res) return res;
    }
 
    if (use_dflts && fCont && fCont->defaults) {
-      const auto centry = fCont->defaults->find(GetFullName(name));
-      if (centry != fCont->defaults->end())
-         return centry->second.get();
+      res = fCont->defaults->Eval(GetFullName(name));
    }
 
-   return nullptr;
+   return res;
 }
 
 void ROOT::Experimental::RAttributesVisitor::ClearValue(const std::string &name)
 {
-   if (LockContainer()) {
-      auto elem = fCont->map.find(GetFullName(name));
-      if (elem != fCont->map.end())
-         fCont->map.erase(elem);
-   }
+   if (LockContainer())
+      fCont->map.Clear(GetFullName(name));
 }
 
 void ROOT::Experimental::RAttributesVisitor::SetValue(const std::string &name, int value)
 {
    if (LockContainer())
-      fCont->map[GetFullName(name)] = std::make_unique<RDrawableAttributes::IntValue_t>(value);
+      fCont->map.AddInt(GetFullName(name), value);
 }
 
 
 void ROOT::Experimental::RAttributesVisitor::SetValue(const std::string &name, double value)
 {
    if (LockContainer())
-      fCont->map[GetFullName(name)] = std::make_unique<RDrawableAttributes::DoubleValue_t>(value);
+      fCont->map.AddDouble(GetFullName(name), value);
 }
 
 void ROOT::Experimental::RAttributesVisitor::SetValue(const std::string &name, const std::string &value)
 {
    if (LockContainer())
-      fCont->map[GetFullName(name)] = std::make_unique<RDrawableAttributes::StringValue_t>(value);
+      fCont->map.AddString(GetFullName(name), value);
 }
 
 /** Clear all respective values from drawable. Only defaults can be used */
 void ROOT::Experimental::RAttributesVisitor::Clear()
 {
-   if (fDefaults)
+   if (fDefaults && LockContainer())
       for (const auto &entry : *fDefaults)
-         ClearValue(entry.first);
+         fCont->map.Clear(GetFullName(entry.first));
 }
-
 
 std::string ROOT::Experimental::RAttributesVisitor::GetString(const std::string &name) const
 {
@@ -307,7 +300,6 @@ std::string ROOT::Experimental::RAttributesVisitor::GetString(const std::string 
    if (!res || !res->Compatible(RDrawableAttributes::kString)) return ""s;
    return res->GetString();
 }
-
 
 int ROOT::Experimental::RAttributesVisitor::GetInt(const std::string &name) const
 {
@@ -319,6 +311,6 @@ int ROOT::Experimental::RAttributesVisitor::GetInt(const std::string &name) cons
 double ROOT::Experimental::RAttributesVisitor::GetDouble(const std::string &name) const
 {
    auto res = Eval(name);
-   if (!res || !res->Compatible(RDrawableAttributes::kDouble)) return 0;
+   if (!res || !res->Compatible(RDrawableAttributes::kDouble)) return 0.;
    return res->GetDouble();
 }
