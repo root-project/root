@@ -70,6 +70,14 @@
 #pragma link C++ class ROOT::Experimental::RAttributesVisitor+;
 #pragma link C++ class ROOT::Experimental::RColorNew+;
 #pragma link C++ class ROOT::Experimental::RAttrLineNew+;
+#pragma link C++ class ROOT::Experimental::RPadLengthNew+;
+#pragma link C++ class ROOT::Experimental::RPadLengthNew::Pixel+;
+#pragma link C++ class ROOT::Experimental::RPadLengthNew::Normal+;
+#pragma link C++ class ROOT::Experimental::RPadLengthNew::User+;
+#pragma link C++ class ROOT::Experimental::RPadLengthNew::CoordSysBase<ROOT::Experimental::RPadLengthNew::Pixel>+;
+#pragma link C++ class ROOT::Experimental::RPadLengthNew::CoordSysBase<ROOT::Experimental::RPadLengthNew::Normal>+;
+#pragma link C++ class ROOT::Experimental::RPadLengthNew::CoordSysBase<ROOT::Experimental::RPadLengthNew::User>+;
+#pragma link C++ struct ROOT::Experimental::RPadExtentNew+;
 
 
 #endif
