@@ -66,30 +66,38 @@ HijackMessageStream::~HijackMessageStream() {
 }
 
 
-/// \param[in] Class that's calling. Needed to include name and type name of the class in error message.
+/// \param[in] callingClass Class that's calling. Needed to include name and type name of the class in error message.
 /// \param[in] pars List of all parameters to be checked.
-/// \param[in] min Minimum of allowed range. `min` itself counts is disallowed.
-/// \param[in] max Maximum of allowed range. `max` itself counts is disallowed.
+/// \param[in] min Minimum of allowed range. `min` itself counts as disallowed.
+/// \param[in] max Maximum of allowed range. `max` itself counts as disallowed.
+/// \param[in] limitsInAllowedRange If true, the limits passed as parameters are part of the allowed range.
+/// \param[in] extraMessage Message that should be appended to the warning.
 void checkRangeOfParameters(const RooAbsReal* callingClass, std::initializer_list<const RooAbsReal*> pars,
-    double min, double max) {
+    double min, double max, bool limitsInAllowedRange, std::string extraMessage) {
+  const char openBr = limitsInAllowedRange ? '[' : '(';
+  const char closeBr = limitsInAllowedRange ? ']' : ')';
+
   for (auto parameter : pars) {
     auto par = dynamic_cast<const RooAbsRealLValue*>(parameter);
-    if (par && (par->getMin() <= min || par->getMax() >= max) ) {
+    if (par && (
+        (par->getMin() < min || par->getMax() > max)
+        || (!limitsInAllowedRange && (par->getMin() == min || par->getMax() == max)) )) {
       std::stringstream rangeMsg;
-      rangeMsg << "(";
+      rangeMsg << openBr;
       if (min > -std::numeric_limits<double>::max())
         rangeMsg << min << ", ";
       else
         rangeMsg << "-inf, ";
 
       if (max < std::numeric_limits<double>::max())
-        rangeMsg << max << ")";
+        rangeMsg << max << closeBr;
       else
-        rangeMsg << "inf)";
+        rangeMsg << "inf" << closeBr;
 
       oocoutW(callingClass, InputArguments) << "The parameter '" << par->GetName() << "' with range [" << par->getMin("") << ", "
           << par->getMax() << "] of the " << callingClass->IsA()->GetName() << " '" << callingClass->GetName()
-          << "' exceeds the safe range of " << rangeMsg.str() << ". Advise to limit its range." << std::endl;
+          << "' exceeds the safe range of " << rangeMsg.str() << ". Advise to limit its range."
+          << (!extraMessage.empty() ? "\n" : "") << extraMessage << std::endl;
     }
   }
 }
