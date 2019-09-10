@@ -471,12 +471,12 @@ public:
 
    RAttributesVisitor &operator=(const RAttributesVisitor &src) { Clear(); Copy(src); return *this; }
 
-   void Copy(const RAttributesVisitor &src);
+   void Copy(const RAttributesVisitor &src, bool use_dflts = false);
 
    void UseStyle(std::shared_ptr<RStyleNew> style) { fStyle = style; }
 
    /** returns true when value exists */
-   bool HasValue(const std::string &name, bool use_dflts = true) const { return Eval(name, use_dflts) != nullptr; }
+   bool HasValue(const std::string &name, bool use_dflts = false) const { return Eval(name, use_dflts) != nullptr; }
 
    void SetValue(const std::string &name, double value);
    void SetValue(const std::string &name, const int value);
