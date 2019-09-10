@@ -249,7 +249,7 @@ void ROOT::Experimental::RAttributesVisitor::DeepCopy(const RAttributesVisitor &
 
 void ROOT::Experimental::RAttributesVisitor::Copy(const RAttributesVisitor &src, bool use_dflts)
 {
-   if (src.fDefaults && fAttr)
+   if (src.fDefaults && GetAttr())
       for (const auto &entry : *src.fDefaults) {
          const auto *value = src.Eval(entry.first, use_dflts);
 
@@ -266,6 +266,27 @@ void ROOT::Experimental::RAttributesVisitor::Copy(const RAttributesVisitor &src,
 }
 
 
+bool ROOT::Experimental::RAttributesVisitor::GetAttr() const
+{
+   if (fAttr) return true;
+
+   auto prnt = fParent;
+   auto prefix = fPrefix;
+   while (prnt) {
+      if (prnt->GetAttr()) {
+         const_cast<RAttributesVisitor*>(this)->fAttr = prnt->fAttr;
+         const_cast<RAttributesVisitor*>(this)->fPrefix = prnt->fPrefix + prefix;
+         return true;
+      }
+      prefix = prnt->fPrefix + prefix;
+      prnt = prnt->fParent;
+   }
+
+   return false;
+}
+
+
+
 ///////////////////////////////////////////////////////////////////////////////
 /// Evaluate attribute value
 
@@ -273,15 +294,19 @@ const ROOT::Experimental::RDrawableAttributes::Value_t *ROOT::Experimental::RAtt
 {
    const RDrawableAttributes::Value_t *res = nullptr;
 
-   if (fAttr) {
+   if (GetAttr()) {
       auto fullname = GetFullName(name);
 
       res = fAttr->map.Eval(fullname);
       if (res) return res;
 
-      if (fStyle) {
-         res = fStyle->Eval(fAttr->type, fAttr->user_class, fullname);
+      const auto *prnt = this;
+
+      while (prnt) {
+         if (prnt->fStyle)
+            res = prnt->fStyle->Eval(fAttr->type, fAttr->user_class, fullname);
          if (res) return res;
+         prnt = prnt->fParent;
       }
    }
 
@@ -299,32 +324,32 @@ const ROOT::Experimental::RDrawableAttributes::Value_t *ROOT::Experimental::RAtt
 
 void ROOT::Experimental::RAttributesVisitor::ClearValue(const std::string &name)
 {
-   if (fAttr)
+   if (GetAttr())
       fAttr->map.Clear(GetFullName(name));
 }
 
 void ROOT::Experimental::RAttributesVisitor::SetValue(const std::string &name, int value)
 {
-   if (fAttr)
+   if (GetAttr())
       fAttr->map.AddInt(GetFullName(name), value);
 }
 
 void ROOT::Experimental::RAttributesVisitor::SetValue(const std::string &name, double value)
 {
-   if (fAttr)
+   if (GetAttr())
       fAttr->map.AddDouble(GetFullName(name), value);
 }
 
 void ROOT::Experimental::RAttributesVisitor::SetValue(const std::string &name, const std::string &value)
 {
-   if (fAttr)
+   if (GetAttr())
       fAttr->map.AddString(GetFullName(name), value);
 }
 
 /** Clear all respective values from drawable. Only defaults can be used */
 void ROOT::Experimental::RAttributesVisitor::Clear()
 {
-   if (fDefaults && fAttr)
+   if (fDefaults && GetAttr())
       for (const auto &entry : *fDefaults)
          fAttr->map.Clear(GetFullName(entry.first));
 }

@@ -35,7 +35,6 @@
 #pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::RMarker>+;
 #pragma link C++ class ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RMarker>+;
 
-#pragma link C++ class ROOT::Experimental::RAttrLineNew+;
 #pragma link C++ class ROOT::Experimental::RLineNew+;
 
 #endif
