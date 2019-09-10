@@ -298,8 +298,11 @@ public:
 
 /// Only attributes, which should be inserted into RDrawable, probably should be just part of base class
 
+class RAttributesVisitor;
 
 class RDrawableAttributes {
+
+   friend class RAttributesVisitor;
 
 public:
 
@@ -351,10 +354,10 @@ public:
    public:
       Map_t() = default; ///< JSON_asbase - store as map object
 
-      Map_t &Add(const std::string &name, Value_t *value) { if (value) m.emplace(name, value); return *this; }
-      Map_t &AddInt(const std::string &name, int value) { m.emplace(name, std::make_unique<IntValue_t>(value)); return *this; }
-      Map_t &AddDouble(const std::string &name, double value) { m.emplace(name, std::make_unique<DoubleValue_t>(value)); return *this; }
-      Map_t &AddString(const std::string &name, const std::string &value) { m.emplace(name, std::make_unique<StringValue_t>(value)); return *this; }
+      Map_t &Add(const std::string &name, Value_t *value) { if (value) m[name] = std::unique_ptr<Value_t>(value); return *this; }
+      Map_t &AddInt(const std::string &name, int value) { m[name] = std::make_unique<IntValue_t>(value); return *this; }
+      Map_t &AddDouble(const std::string &name, double value) { m[name] = std::make_unique<DoubleValue_t>(value); return *this; }
+      Map_t &AddString(const std::string &name, const std::string &value) { m[name] = std::make_unique<StringValue_t>(value); return *this; }
 
       Map_t(const Map_t &src)
       {
@@ -387,73 +390,19 @@ public:
       auto end() const { return m.end(); }
    };
 
-   struct Record_t {
-      std::string type;             ///<! drawable type, not stored in the root file, must be initialized
-      std::string user_class;       ///<  user defined drawable class, can later go inside map
-      Map_t map;                    ///<
-      Map_t *defaults{nullptr};     ///<! default values for server
-
-      Record_t() = default;
-
-      Record_t(const Record_t &src) = delete;
-      Record_t& operator=(const Record_t &src) = delete;
-   };
-
 private:
-   Record_t                  *fContIO{nullptr};    ///  used in IO while shared_ptr not yet supported, JSON_object
-   std::shared_ptr<Record_t>  fCont;               ///<! container itself
-
-   auto *MakeContainer()
-   {
-      if (fContIO && !fCont)
-         fCont.reset(fContIO);
-
-      if (!fCont)
-         fCont = std::make_shared<Record_t>();
-
-      return fContIO = fCont.get();
-   }
-
-   const auto *GetContainer() const
-   {
-      if (!fContIO)
-         const_cast<RDrawableAttributes*>(this)->fContIO = fCont.get();
-      else if (!fCont)
-         const_cast<RDrawableAttributes*>(this)->fCont.reset(fContIO);
-
-      return fContIO;
-   }
+   std::string type;             ///<! drawable type, not stored in the root file, must be initialized
+   std::string user_class;       ///<  user defined drawable class, can later go inside map
+   Map_t map;                    ///<
+   Map_t *defaults{nullptr};     ///<! default values for server
 
 public:
 
    RDrawableAttributes() = default;
 
-   RDrawableAttributes(const std::string &_type) { MakeContainer()->type = _type; }
+   RDrawableAttributes(const std::string &_type) { type = _type; }
 
-   ~RDrawableAttributes() { Clear(); }
-
-   std::weak_ptr<Record_t> Make()
-   {
-      MakeContainer();
-      return fCont;
-   }
-
-   std::weak_ptr<Record_t> Get() const
-   {
-      GetContainer();
-      return fCont;
-   }
-
-   void Clear()
-   {
-      // special case when container was read by I/O but not yet assigned to
-      if (fContIO && !fCont)
-         delete fContIO;
-
-      fContIO = nullptr;
-      fCont.reset();
-   }
-
+   ~RDrawableAttributes() {}
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -487,16 +436,13 @@ private:
 /** Access to drawable attributes, never should be stored */
 class RAttributesVisitor {
 
-   std::weak_ptr<RDrawableAttributes::Record_t> fWeak;             ///<! weak pointer on container
-   mutable std::shared_ptr<RDrawableAttributes::Record_t> fCont;   ///<! by first access to container try to get shared ptr
-   mutable bool fFirstTime{true};                                  ///<! only first time try to lock weak ptr
+   RDrawableAttributes *fAttr{nullptr};                            ///<! source for attributes
+   std::unique_ptr<RDrawableAttributes> fOwnAttr;                  ///<! own instance when deep copy is created
    std::string fPrefix;                                            ///<! name prefix for all attributes values
    const RDrawableAttributes::Map_t *fDefaults{nullptr};           ///<! defaults values for this visitor
    std::shared_ptr<RStyleNew> fStyle;                              ///<! style used for evaluations
 
    std::string GetFullName(const std::string &name) const { return fPrefix + name; }
-
-   bool LockContainer() const;
 
 protected:
 
@@ -508,15 +454,24 @@ protected:
 
    void DeepCopy(const RAttributesVisitor &src);
 
+   void AssignAttributes(RDrawableAttributes &cont, const std::string &prefix)
+   {
+      fAttr = &cont;
+      fPrefix = prefix;
+      fOwnAttr.reset();
+   }
+
 public:
 
-   RAttributesVisitor(RDrawableAttributes &cont, const std::string &prefix) : fWeak(cont.Make()), fPrefix(prefix) {}
+   RAttributesVisitor() = default;
 
-   RAttributesVisitor(const RDrawableAttributes &cont, const std::string &prefix) : fWeak(cont.Get()), fPrefix(prefix) {}
+   RAttributesVisitor(RDrawableAttributes &cont, const std::string &prefix) { AssignAttributes(cont, prefix); }
 
    RAttributesVisitor(const RAttributesVisitor &src) { fDefaults = src.fDefaults; DeepCopy(src); }
 
-   RAttributesVisitor &operator=(const RAttributesVisitor &src) { Clear(); DeepCopy(src); return *this; }
+   RAttributesVisitor &operator=(const RAttributesVisitor &src) { Clear(); Copy(src); return *this; }
+
+   void Copy(const RAttributesVisitor &src);
 
    void UseStyle(std::shared_ptr<RStyleNew> style) { fStyle = style; }
 

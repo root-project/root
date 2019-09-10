@@ -45,24 +45,16 @@ public:
 
 class RAttrLineNew : public RAttributesVisitor {
 
-   const auto *getDefaults()
-   {
-      static RDrawableAttributes::Map_t dflts = RDrawableAttributes::Map_t().AddDouble("width",1.).AddInt("style",1).AddString("color", "white");
-      return &dflts;
-   }
-
 public:
 
-   RAttrLineNew(RDrawableAttributes &cont, const std::string &prefix = "line_") :
-      RAttributesVisitor(cont, prefix)
-   {
-      SetDefaults(getDefaults());
+   RAttrLineNew() : RAttributesVisitor() {
+      static RDrawableAttributes::Map_t dflts = RDrawableAttributes::Map_t().AddDouble("width",1.).AddInt("style",1).AddString("color", "white");
+      SetDefaults(&dflts);
    }
 
-   RAttrLineNew(const RDrawableAttributes &cont, const std::string &prefix = "line_") :
-      RAttributesVisitor(cont, prefix)
+   RAttrLineNew(RDrawableAttributes &cont, const std::string &prefix = "line_") : RAttrLineNew()
    {
-      SetDefaults(getDefaults());
+      AssignAttributes(cont, prefix);
    }
 
    ///The width of the line.
