@@ -390,6 +390,9 @@ template <typename Architecture_t, typename Layer_t>
 TDeepNet<Architecture_t, Layer_t>::~TDeepNet()
 {
    // Relese the layers memory
+   for (auto  layer : fLayers)
+      delete layer;
+   fLayers.clear(); 
 }
 
 //______________________________________________________________________________

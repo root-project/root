@@ -129,10 +129,11 @@ private:
 
    Tensor_t fForwardTensor;            ///< Cache tensor used for speeding-up the forward pass.
 
-   void InitializeDescriptors();
-   void ReleaseDescriptors();
-   void InitializeWorkspace();
-   void FreeWorkspace();  
+   virtual void InitializeDescriptors();
+   virtual void ReleaseDescriptors();
+   virtual void InitializeWorkspace();
+   virtual void FreeWorkspace();  
+
 public:
    /*! Constructor. */
    TConvLayer(size_t BatchSize, size_t InputDepth, size_t InputHeight, size_t InputWidth, size_t Depth, EInitialization Init,
@@ -147,7 +148,9 @@ public:
    TConvLayer(const TConvLayer &);
 
    /*! Destructor. */
-   ~TConvLayer();
+   virtual ~TConvLayer();
+
+   //virtual void Initialize();
 
    /*! Computes activation of the layer for the given input. The input
    * must be in 3D tensor form with the different matrices corresponding to
@@ -246,9 +249,9 @@ TConvLayer<Architecture_t>::TConvLayer(size_t batchSize, size_t inputDepth, size
    //    fInputActivation.emplace_back(depth, fNLocalViews);
    //    fForwardMatrices.emplace_back(fNLocalViews, fNLocalViewPixels);
    // }
-   TConvParams params(this->GetBatchSize(), this->GetInputDepth(), this->GetInputHeight(), this->GetInputWidth(),
-                      this->GetDepth(), this->GetFilterHeight(), this->GetFilterWidth(),
-                      this->GetStrideRows(), this->GetStrideCols(), this->GetPaddingHeight(), this->GetPaddingWidth());
+   // TConvParams params(this->GetBatchSize(), this->GetInputDepth(), this->GetInputHeight(), this->GetInputWidth(),
+   //                    this->GetDepth(), this->GetFilterHeight(), this->GetFilterWidth(),
+   //                    this->GetStrideRows(), this->GetStrideCols(), this->GetPaddingHeight(), this->GetPaddingWidth());
 
    // Architecture_t::PrepareInternals(this->GetOutput(), this->GetInputActivation(), this->GetWeights(),
    //                                  this->GetBiases(), this->GetWeightGradients(), this->GetBiasGradients(), 
@@ -316,6 +319,7 @@ TConvLayer<Architecture_t>::TConvLayer(const TConvLayer &convLayer)
 template <typename Architecture_t>
 TConvLayer<Architecture_t>::~TConvLayer()
 {
+   //std::cout << "!!!!Delete conv layer " << this->GetOutput().GetShape()[1] << "  " << this->GetOutput().GetShape()[2] << "  " << this->GetOutput().GetShape()[3] << std::endl;
    if (fDescriptors) {
       ReleaseDescriptors();
       delete fDescriptors;
@@ -327,6 +331,13 @@ TConvLayer<Architecture_t>::~TConvLayer()
    }
 }
 
+//______________________________________________________________________________
+// template <typename Architecture_t>
+// void TConvLayer<Architecture_t>::Initialize() { 
+//    InitializeDescriptors();
+//    InitializeWorkspace();  
+// }
+ 
 //______________________________________________________________________________
 template <typename Architecture_t>
 auto TConvLayer<Architecture_t>::Forward(Tensor_t &input, bool /*applyDropout*/) -> void
