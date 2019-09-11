@@ -115,6 +115,13 @@ struct RPadExtentNew : public RAttributesVisitor {
 
    RPadLengthNew fVert{this, "vert_"};    ///<!   vertical part
 
+protected:
+   const RDrawableAttributes::Map_t &GetDefaults() const override
+   {
+      static auto dflts = RDrawableAttributes::Map_t().AddDefaults(fHoriz).AddDefaults(fVert);
+      return dflts;
+   }
+
 public:
 
    RPadExtentNew() : RAttributesVisitor()

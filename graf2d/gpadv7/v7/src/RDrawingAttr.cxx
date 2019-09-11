@@ -202,9 +202,17 @@ void ROOT::Experimental::RDrawingAttrHolder::CopyAttributesInPath(const Path_t &
 ///////////////////////////////////////////////////////////////////////////////
 
 
-
 using namespace std::string_literals;
 
+ROOT::Experimental::RDrawableAttributes::Map_t &ROOT::Experimental::RDrawableAttributes::Map_t::AddDefaults(const RAttributesVisitor &vis)
+{
+   auto prefix = vis.GetPrefixToParent();
+
+   for (const auto &entry : vis.GetDefaults())
+      m[prefix+entry.first] = std::unique_ptr<Value_t>(entry.second->Copy());
+
+   return *this;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Evaluate style
@@ -222,6 +230,27 @@ const ROOT::Experimental::RDrawableAttributes::Value_t *ROOT::Experimental::RSty
    }
 
    return nullptr;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Returns prefix relative to parent
+/// Normally prefix is relative to
+
+std::string ROOT::Experimental::RAttributesVisitor::GetPrefixToParent() const
+{
+   if (!fAttr || !fParent) return fPrefix;
+
+   if (!fParent->GetAttr()) return fPrefix;
+
+   if (fParent->fAttr != fAttr) {
+      R__ERROR_HERE("Graf2d") << "Mismatch in parent/child attributes containers";
+      return fPrefix;
+   }
+
+   if (fParent->fPrefix.empty())
+      return fPrefix;
+
+   return fPrefix.substr(fParent->fPrefix.length());
 }
 
 

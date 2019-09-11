@@ -358,6 +358,7 @@ public:
       Map_t &AddInt(const std::string &name, int value) { m[name] = std::make_unique<IntValue_t>(value); return *this; }
       Map_t &AddDouble(const std::string &name, double value) { m[name] = std::make_unique<DoubleValue_t>(value); return *this; }
       Map_t &AddString(const std::string &name, const std::string &value) { m[name] = std::make_unique<StringValue_t>(value); return *this; }
+      Map_t &AddDefaults(const RAttributesVisitor &vis);
 
       Map_t(const Map_t &src)
       {
@@ -436,6 +437,8 @@ private:
 /** Access to drawable attributes, never should be stored */
 class RAttributesVisitor {
 
+   friend class RDrawableAttributes;
+
    RDrawableAttributes *fAttr{nullptr};                            ///<! source for attributes
    std::unique_ptr<RDrawableAttributes> fOwnAttr;                  ///<! own instance when deep copy is created
    std::string fPrefix;                                            ///<! name prefix for all attributes values
@@ -444,6 +447,8 @@ class RAttributesVisitor {
    RAttributesVisitor *fParent{nullptr};                           ///<! parent attributes, prefix applied to it
 
    std::string GetFullName(const std::string &name) const { return fPrefix + name; }
+
+   std::string GetPrefixToParent() const;
 
 protected:
 
