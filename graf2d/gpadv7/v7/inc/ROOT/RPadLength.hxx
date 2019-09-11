@@ -363,35 +363,26 @@ public:
    RPadLengthNew &SetPixel(double v) { if (fPixel) *fPixel = v; else fPixel = SetValueGetPtr("pixel", v); return *this; }
    RPadLengthNew &SetUser(double v) { if (fUser) *fUser = v; else fUser = SetValueGetPtr("user",v); return *this; }
 
-   double GetNormal() const { return fNormal ? *fNormal : 0; }
-   double GetPixel() const { return fPixel ? *fPixel : 0; }
-   double GetUser() const { return fUser ? *fUser : 0; }
+   double GetNormal() const { return fNormal ? *fNormal : 0.; }
+   double GetPixel() const { return fPixel ? *fPixel : 0.; }
+   double GetUser() const { return fUser ? *fUser : 0.; }
 
    void ClearNormal() { ClearValue("normal"); fNormal = nullptr; }
    void ClearPixel() { ClearValue("pixel");  fPixel = nullptr; }
    void ClearUser() { ClearValue("user"); fUser = nullptr; }
 
-   void Clear() { RAttributesVisitor::Clear(); fNormal = fPixel = fUser = nullptr; }
+   void Clear() { ClearNormal(); ClearPixel(); ClearUser(); }
 
    /// Add two `RPadLength`s.
    friend RPadLengthNew operator+(RPadLengthNew lhs, const RPadLengthNew &rhs)
    {
       RPadLengthNew res;
-      auto nl = lhs.Eval("normal");
-      auto nr = rhs.Eval("normal");
-      if (nl || nr)
-         res.SetNormal((nl ? nl->GetDouble() : 0.) + (nr ? nr->GetDouble() : 0.));
-
-      nl = lhs.Eval("pixel");
-      nr = rhs.Eval("pixel");
-      if (nl || nr)
-         res.SetPixel((nl ? nl->GetDouble() : 0.) + (nr ? nr->GetDouble() : 0.));
-
-      nl = lhs.Eval("user");
-      nr = rhs.Eval("user");
-      if (nl || nr)
-         res.SetUser((nl ? nl->GetDouble() : 0.) + (nr ? nr->GetDouble() : 0.));
-
+      if (lhs.HasNormal() || rhs.HasNormal())
+         res.SetNormal(lhs.GetNormal() + rhs.GetNormal());
+      if (lhs.HasPixel() || rhs.HasPixel())
+         res.SetPixel(lhs.GetPixel() + rhs.GetPixel());
+      if (lhs.HasUser() || rhs.HasUser())
+         res.SetUser(lhs.GetUser() + rhs.GetUser());
       return res;
    }
 
@@ -399,20 +390,12 @@ public:
    friend RPadLengthNew operator-(RPadLengthNew lhs, const RPadLengthNew &rhs)
    {
       RPadLengthNew res;
-      auto nl = lhs.Eval("normal");
-      auto nr = rhs.Eval("normal");
-      if (nl || nr)
-         res.SetNormal((nl ? nl->GetDouble() : 0) - (nr ? nr->GetDouble() : 0));
-
-      nl = lhs.Eval("pixel");
-      nr = rhs.Eval("pixel");
-      if (nl || nr)
-         res.SetPixel((nl ? nl->GetDouble() : 0) - (nr ? nr->GetDouble() : 0));
-
-      nl = lhs.Eval("user");
-      nr = rhs.Eval("user");
-      if (nl || nr)
-         res.SetUser((nl ? nl->GetDouble() : 0) - (nr ? nr->GetDouble() : 0));
+      if (lhs.HasNormal() || rhs.HasNormal())
+         res.SetNormal(lhs.GetNormal() - rhs.GetNormal());
+      if (lhs.HasPixel() || rhs.HasPixel())
+         res.SetPixel(lhs.GetPixel() - rhs.GetPixel());
+      if (lhs.HasUser() || rhs.HasUser())
+         res.SetUser(lhs.GetUser() - rhs.GetUser());
       return res;
    }
 
@@ -420,68 +403,41 @@ public:
    RPadLengthNew operator-()
    {
       RPadLengthNew res;
-      auto nl = Eval("normal");
-      if (nl) res.SetNormal(-nl->GetDouble());
-
-      nl = Eval("pixel");
-      if (nl) res.SetPixel(-nl->GetDouble());
-
-      nl = Eval("user");
-      if (nl) res.SetUser(-nl->GetDouble());
+      if (HasNormal()) res.SetNormal(-GetNormal());
+      if (HasPixel()) res.SetPixel(-GetPixel());
+      if (HasUser()) res.SetUser(-GetUser());
       return res;
    }
 
    /// Add a `RPadLength`.
    RPadLengthNew &operator+=(const RPadLengthNew &rhs)
    {
-      auto nl = Eval("normal");
-      auto nr = rhs.Eval("normal");
-      if (nl || nr)
-         SetNormal((nl ? nl->GetDouble() : 0.) + (nr ? nr->GetDouble() : 0.));
-
-      nl = Eval("pixel");
-      nr = rhs.Eval("pixel");
-      if (nl || nr)
-         SetPixel((nl ? nl->GetDouble() : 0.) + (nr ? nr->GetDouble() : 0.));
-
-      nl = Eval("user");
-      nr = rhs.Eval("user");
-      if (nl || nr)
-         SetUser((nl ? nl->GetDouble() : 0.) + (nr ? nr->GetDouble() : 0.));
-
+      if (HasNormal() || rhs.HasNormal())
+         SetNormal(GetNormal() + rhs.GetNormal());
+      if (HasPixel() || rhs.HasPixel())
+         SetPixel(GetPixel() + rhs.GetPixel());
+      if (HasUser() || rhs.HasUser())
+         SetUser(GetUser() + rhs.GetUser());
       return *this;
    };
 
    /// Subtract a `RPadLength`.
    RPadLengthNew &operator-=(const RPadLengthNew &rhs)
    {
-      auto nl = Eval("normal");
-      auto nr = rhs.Eval("normal");
-      if (nl || nr)
-         SetNormal((nl ? nl->GetDouble() : 0) - (nr ? nr->GetDouble() : 0));
-
-      nl = Eval("pixel");
-      nr = rhs.Eval("pixel");
-      if (nl || nr)
-         SetPixel((nl ? nl->GetDouble() : 0) - (nr ? nr->GetDouble() : 0));
-
-      nl = Eval("user");
-      nr = rhs.Eval("user");
-      if (nl || nr)
-         SetUser((nl ? nl->GetDouble() : 0) - (nr ? nr->GetDouble() : 0));
+      if (HasNormal() || rhs.HasNormal())
+         SetNormal(GetNormal() - rhs.GetNormal());
+      if (HasPixel() || rhs.HasPixel())
+         SetPixel(GetPixel() - rhs.GetPixel());
+      if (HasUser() || rhs.HasUser())
+         SetUser(GetUser() - rhs.GetUser());
       return *this;
    };
 
    RPadLengthNew &operator*=(double scale)
    {
-      auto nl = Eval("normal");
-      if (nl) SetNormal(scale*nl->GetDouble());
-
-      nl = Eval("pixel");
-      if (nl) SetPixel(scale*nl->GetDouble());
-
-      nl = Eval("user");
-      if (nl) SetUser(scale*nl->GetDouble());
+      if (HasNormal()) SetNormal(scale*GetNormal());
+      if (HasPixel()) SetPixel(scale*GetPixel());
+      if (HasUser()) SetUser(scale*GetUser());
       return *this;
    }
 
