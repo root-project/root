@@ -328,6 +328,8 @@ public:
 
    RPadLengthNew(const RPadLengthNew &src) : RAttributesVisitor()
    {
+      CreateOwnAttr();
+      SemanticCopy(src);
       GetFast();
    }
 
@@ -337,7 +339,6 @@ public:
       Copy(src);
       return *this;
    }
-
 
    void Copy(const RPadLengthNew &src)
    {

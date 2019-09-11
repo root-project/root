@@ -493,6 +493,8 @@ protected:
 
    double *GetDoublePtr(const std::string &name) const;
 
+   void SemanticCopy(const RAttributesVisitor &src);
+
 public:
 
    RAttributesVisitor() = default;
@@ -501,7 +503,7 @@ public:
 
    RAttributesVisitor(RAttributesVisitor *parent, const std::string &prefix = "") { AssignParent(parent, prefix); }
 
-   RAttributesVisitor(const RAttributesVisitor &src) { CreateOwnAttr(); Copy(src); }
+   RAttributesVisitor(const RAttributesVisitor &src) { CreateOwnAttr(); SemanticCopy(src); }
 
    RAttributesVisitor &operator=(const RAttributesVisitor &src) { Clear(); Copy(src); return *this; }
 
