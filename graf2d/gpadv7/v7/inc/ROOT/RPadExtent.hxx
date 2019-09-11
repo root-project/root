@@ -126,11 +126,10 @@ public:
 
    RPadExtentNew(RAttributesVisitor *parent, const std::string &prefix = "pos_") : RPadExtentNew() { AssignParent(parent, prefix); }
 
-
-   RPadExtentNew(const RPadLengthNew& horiz, const RPadLengthNew& vert)
+   RPadExtentNew(const RPadLengthNew& horiz, const RPadLengthNew& vert) : RPadExtentNew()
    {
-      fHoriz = horiz;
-      fVert = vert;
+      Horiz() = horiz;
+      Vert() = vert;
    }
 
    RPadLengthNew &Horiz() { return fHoriz; }
