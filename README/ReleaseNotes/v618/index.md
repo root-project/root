@@ -1,5 +1,5 @@
 % ROOT Version 6.18 Release Notes
-% 2019-08-23
+% 2019-09-11
 <a name="TopOfPage"></a>
 
 ## Introduction
@@ -724,12 +724,13 @@ Released on August 23, 2019
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-8777'>ROOT-8777</a>] -         Making it possible to turn off the `stdout` message in `RooMCStudy`
 
 
-## HEAD of the v6-18-00-patches branch
+## Release 6.18/04
 
-These changes will be part of the future 6.18/04.
+Released on September 11, 2019
+
 ## Core Libraries
 
-* Speed-up startup, in particular in case of no or poor network accesibility, by avoiding
+* Speed-up startup, in particular in case of no or poor network accessibility, by avoiding
 a network access that was used as input to generate a globally unique ID for the current
 process.
  * This network access is replaced by a passive scan of the network interface. This
@@ -752,3 +753,23 @@ typedefs (in particular `Double32_t`)
 * Fix `TTreeReader`'s use of `Set[Local]Entry`
 * Avoid deleted memory access in `MakeProject` and in handling of
 `I/O customization rules`.
+
+### Binaries
+
+* Pythia8 is available where the distribution offers it (notably Ubuntus and Fedoras).
+
+### Bugs and Issues fixed in this release
+
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10224'>ROOT-10224</a>] -         Crash in opening `TFile`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10292'>ROOT-10292</a>] -         PYROOT: "TypeError: can not resolve method template call"
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10294'>ROOT-10294</a>] -         PyRoot: Segmentation Violation
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10297'>ROOT-10297</a>] -         Crash in `RooDataHist::sum`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10305'>ROOT-10305</a>] -         Leading underscore in branch name causes a crash
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10306'>ROOT-10306</a>] -         Failure with `std::unique_ptr` in STL container
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10299'>ROOT-10299</a>] -         Info symbols found twice in Pythia and ROOT
+
+## HEAD of the v6-18-00-patches branch
+
+These changes will be part of a future 6.18/06.
+
+* None so far.
