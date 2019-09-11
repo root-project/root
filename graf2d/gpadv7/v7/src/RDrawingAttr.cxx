@@ -312,7 +312,13 @@ bool ROOT::Experimental::RAttributesVisitor::GetAttr(bool force) const
    return fAttr != nullptr;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+/// Return value from attributes container - no style or defaults are used
 
+const ROOT::Experimental::RDrawableAttributes::Value_t *ROOT::Experimental::RAttributesVisitor::GetValue(const std::string &name) const
+{
+   return GetAttr() ? fAttr->map.Eval(GetFullName(name)) : nullptr;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Evaluate attribute value
@@ -365,6 +371,11 @@ void ROOT::Experimental::RAttributesVisitor::SetValue(const std::string &name, d
 {
    if (GetAttr(true))
       fAttr->map.AddDouble(GetFullName(name), value);
+}
+
+double *ROOT::Experimental::RAttributesVisitor::GetDoublePtr(const std::string &name) const
+{
+   return GetAttr() ? fAttr->map.GetDoublePtr(GetFullName(name)) : nullptr;
 }
 
 void ROOT::Experimental::RAttributesVisitor::SetValue(const std::string &name, const std::string &value)

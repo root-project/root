@@ -318,6 +318,7 @@ public:
       virtual double GetDouble() const { return 0; }
       virtual std::string GetString() const { return ""; }
       virtual Value_t *Copy() const = 0;
+      virtual const void *GetValuePtr() const { return nullptr; }
    };
 
    class IntValue_t : public Value_t {
@@ -336,6 +337,7 @@ public:
       EValuesKind Kind() const final { return kDouble; }
       double GetDouble() const final { return v; }
       Value_t *Copy() const final { return new DoubleValue_t(v); }
+      const void *GetValuePtr() const final { return &v; }
    };
 
    class StringValue_t : public Value_t {
@@ -359,6 +361,12 @@ public:
       Map_t &AddDouble(const std::string &name, double value) { m[name] = std::make_unique<DoubleValue_t>(value); return *this; }
       Map_t &AddString(const std::string &name, const std::string &value) { m[name] = std::make_unique<StringValue_t>(value); return *this; }
       Map_t &AddDefaults(const RAttributesVisitor &vis);
+
+      double *GetDoublePtr(const std::string &name) const
+      {
+         auto pair = m.find(name);
+         return ((pair != m.end()) && (pair->second->Kind() == kDouble)) ? (double *) pair->second->GetValuePtr() : nullptr;
+      }
 
       Map_t(const Map_t &src)
       {
@@ -442,7 +450,6 @@ class RAttributesVisitor {
    RDrawableAttributes *fAttr{nullptr};                            ///<! source for attributes
    std::unique_ptr<RDrawableAttributes> fOwnAttr;                  ///<! own instance when deep copy is created
    std::string fPrefix;                                            ///<! name prefix for all attributes values
-   const RDrawableAttributes::Map_t *fDefaults{nullptr};           ///<! defaults values for this visitor
    std::shared_ptr<RStyleNew> fStyle;                              ///<! style used for evaluations
    RAttributesVisitor *fParent{nullptr};                           ///<! parent attributes, prefix applied to it
 
@@ -458,7 +465,10 @@ protected:
       return empty;
    }
 
-   /** use const char* - nullptr means no value found */
+   /** Get attribute value from container */
+   const RDrawableAttributes::Value_t *GetValue(const std::string &name) const;
+
+   /** Evaluate value of attribute, nullptr means no value found */
    const RDrawableAttributes::Value_t *Eval(const std::string &name, bool use_dflts = true) const;
 
    void CreateOwnAttr();
@@ -481,6 +491,8 @@ protected:
 
    bool GetAttr(bool force = false) const;
 
+   double *GetDoublePtr(const std::string &name) const;
+
 public:
 
    RAttributesVisitor() = default;
@@ -489,7 +501,7 @@ public:
 
    RAttributesVisitor(RAttributesVisitor *parent, const std::string &prefix = "") { AssignParent(parent, prefix); }
 
-   RAttributesVisitor(const RAttributesVisitor &src) { fDefaults = src.fDefaults; CreateOwnAttr(); Copy(src); }
+   RAttributesVisitor(const RAttributesVisitor &src) { CreateOwnAttr(); Copy(src); }
 
    RAttributesVisitor &operator=(const RAttributesVisitor &src) { Clear(); Copy(src); return *this; }
 

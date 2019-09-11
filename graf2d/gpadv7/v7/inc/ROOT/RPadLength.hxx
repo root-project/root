@@ -229,6 +229,23 @@ protected:
       return dflts;
    }
 
+   mutable double *fNormal{nullptr}; ///<! normal component from attributes container
+   mutable double *fPixel{nullptr};  ///<! pixel component from attributes container
+   mutable double *fUser{nullptr};   ///<! user component from attributes container
+
+   double *SetValueGetPtr(const std::string &name, double v)
+   {
+      SetValue(name, v);
+      return GetDoublePtr(name);
+   }
+
+   void GetFast() const
+   {
+      fNormal = GetDoublePtr("normal");
+      fPixel = GetDoublePtr("pixel");
+      fUser = GetDoublePtr("user");
+   }
+
 public:
    template <class DERIVED>
    struct CoordSysBase {
@@ -299,6 +316,35 @@ public:
 
    using RAttributesVisitor::RAttributesVisitor;
 
+   RPadLengthNew(RDrawableAttributes &cont, const std::string &prefix = "") : RAttributesVisitor(cont, prefix)
+   {
+      GetFast();
+   }
+
+   RPadLengthNew(RAttributesVisitor *parent, const std::string &prefix = "") : RAttributesVisitor(parent, prefix)
+   {
+      GetFast();
+   }
+
+   RPadLengthNew(const RPadLengthNew &src) : RAttributesVisitor()
+   {
+      GetFast();
+   }
+
+   RPadLengthNew &operator=(const RPadLengthNew &src)
+   {
+      Clear();
+      Copy(src);
+      return *this;
+   }
+
+
+   void Copy(const RPadLengthNew &src)
+   {
+      RAttributesVisitor::Copy(src, false);
+      GetFast();
+   }
+
    /// Constructor from a `Normal` coordinate.
    RPadLengthNew(Normal normal): RPadLengthNew() { SetNormal(normal.fVal); }
 
@@ -308,17 +354,23 @@ public:
    /// Constructor from a `User` coordinate.
    RPadLengthNew(User user) : RPadLengthNew() { SetUser(user.fVal); }
 
-   bool HasNormal() const { return HasValue("normal"); }
-   bool HasPixel() const { return HasValue("pixel"); }
-   bool HasUser() const { return HasValue("user"); }
+   bool HasNormal() const { return fNormal != nullptr; }
+   bool HasPixel() const { return fPixel != nullptr; }
+   bool HasUser() const { return fUser != nullptr; }
 
-   RPadLengthNew &SetNormal(double v) { SetValue("normal",v); return *this; }
-   RPadLengthNew &SetPixel(double v) { SetValue("pixel",v); return *this; }
-   RPadLengthNew &SetUser(double v) { SetValue("user",v); return *this; }
+   RPadLengthNew &SetNormal(double v) { if (fNormal) *fNormal = v; else fNormal = SetValueGetPtr("normal", v); return *this; }
+   RPadLengthNew &SetPixel(double v) { if (fPixel) *fPixel = v; else fPixel = SetValueGetPtr("pixel", v); return *this; }
+   RPadLengthNew &SetUser(double v) { if (fUser) *fUser = v; else fUser = SetValueGetPtr("user",v); return *this; }
 
-   double GetNormal() const { return GetDouble("normal"); }
-   double GetPixel() const { return GetDouble("pixel");  }
-   double GetUser() const { return GetDouble("user"); }
+   double GetNormal() const { return fNormal ? *fNormal : 0; }
+   double GetPixel() const { return fPixel ? *fPixel : 0; }
+   double GetUser() const { return fUser ? *fUser : 0; }
+
+   void ClearNormal() { ClearValue("normal"); fNormal = nullptr; }
+   void ClearPixel() { ClearValue("pixel");  fPixel = nullptr; }
+   void ClearUser() { ClearValue("user"); fUser = nullptr; }
+
+   void Clear() { RAttributesVisitor::Clear(); fNormal = fPixel = fUser = nullptr; }
 
    /// Add two `RPadLength`s.
    friend RPadLengthNew operator+(RPadLengthNew lhs, const RPadLengthNew &rhs)
