@@ -728,7 +728,7 @@ Released on August 23, 2019
 
 Released on September 11, 2019
 
-## Core Libraries
+### Core Libraries
 
 * Speed-up startup, in particular in case of no or poor network accessibility, by avoiding
 a network access that was used as input to generate a globally unique ID for the current
@@ -738,7 +738,7 @@ reduces somewhat the uniqueness of the unique ID as the IP address is no longer
 guaranteed by the DNS server to be unique.   Note that this was already the case when
 the network access (used to look up the hostname and its IP address) failed.
 
-## I/O Libraries
+### I/O Libraries
 
 * Allowed user to actually customize the 1st block's size in TMemFile.  Previously the user
 request was only applies to the 2nd and subsequent blocks.
