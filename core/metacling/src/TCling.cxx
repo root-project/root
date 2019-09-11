@@ -6357,9 +6357,6 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string &mangled_nam
 /// Autoload a library based on a missing symbol.
 
 void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
-   if (!IsClassAutoloadingEnabled())
-      return nullptr;
-
    if (fCxxModulesEnabled)
       return LazyFunctionCreatorAutoloadForModule(mangled_name, fInterpreter);
 
