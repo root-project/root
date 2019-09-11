@@ -15,44 +15,45 @@
  *****************************************************************************/
 
 #include "VectorisedPDFTests.h"
-
-#include "RooGaussian.h"
-#include "RooAddPdf.h"
-#include "RooExponential.h"
+#include "RooDstD0BG.h"
 
 
-class TestExponential : public PDFTest
+class TestDstD0BG : public PDFTest
 {
   protected:
-    TestExponential() :
-      PDFTest("Exp(x, c1)", 300000)
-  {
-      //Beyond ~19, the VDT polynomials break down when c1 is very negative
-      auto x = new RooRealVar("x", "x", 0.001, 18.);
-      auto c1 = new RooRealVar("c1", "c1", -0.2, -50., -0.001);
-      _pdf = std::make_unique<RooExponential>("expo1", "expo1", *x, *c1);
-
-      for (auto var : {x}) {
+    TestDstD0BG() :
+      PDFTest("DstD0BG", 300000)
+  { 
+      auto m = new RooRealVar("m", "m", 750, 500, 1000);
+      auto m0 = new RooRealVar("m0", "m0", 350, 100, 450);
+      auto C = new RooRealVar("C", "C", 500, 300, 800);
+      auto A = new RooRealVar("A", "A", 1, 0.5, 4);
+      auto B = new RooRealVar("B", "B", 1, 0.5, 2);
+      
+      _pdf = std::make_unique<RooDstD0BG>("DstD0BG", "DstD0BG", *m, *m0, *C, *A, *B);
+      m0->setConstant(true);
+      //C->setConstant(true);
+      
+      for (auto var : {m}) {
         _variables.addOwned(*var);
       }
 
-//      for (auto var : {x}) {
-//        _variablesToPlot.add(*var);
-//      }
-
-      for (auto par : {c1}) {
-        _parameters.addOwned(*par);
+      for (auto var : {m}) {
+        _variablesToPlot.add(*var);
       }
 
-      _toleranceCompareLogs = 3E-13;
-      // For i686, this needs to be a bit less strict:
-      _toleranceCompareBatches = 2.E-14;
+      for (auto par : {C, A, B}) {
+        _parameters.addOwned(*par);
+      }
+    _printLevel = 1;
+    //_toleranceParameter = 3e-5;
+
   }
 };
 
-COMPARE_FIXED_VALUES_UNNORM(TestExponential, CompareFixedValuesUnnorm)
-COMPARE_FIXED_VALUES_NORM(TestExponential, CompareFixedValuesNorm)
-COMPARE_FIXED_VALUES_NORM_LOG(TestExponential, CompareFixedValuesNormLog)
-FIT_TEST_SCALAR(TestExponential, RunScalar)
-FIT_TEST_BATCH(TestExponential, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestExponential, CompareBatchScalar)
+COMPARE_FIXED_VALUES_UNNORM(TestDstD0BG, CompareFixedValuesUnnorm)
+COMPARE_FIXED_VALUES_NORM(TestDstD0BG, CompareFixedValuesNorm)
+COMPARE_FIXED_VALUES_NORM_LOG(TestDstD0BG, CompareFixedNormLog)
+FIT_TEST_SCALAR(TestDstD0BG, RunScalar)
+FIT_TEST_BATCH(TestDstD0BG, RunBatch)
+FIT_TEST_BATCH_VS_SCALAR(TestDstD0BG, CompareBatchScalar)
