@@ -93,7 +93,7 @@ class RLineNew : public RDrawable {
    RPadPosNew fP1{fAttr, "p1_"};     ///<! line begin
    RPadPosNew fP2{fAttr, "p2_"};     ///<! line end
 
-   RAttrLineNew  fLineAttr{fAttr};   ///<! line attributes
+   RAttrLineNew  fLineAttr{fAttr, "line_"};   ///<! line attributes
 
 public:
 

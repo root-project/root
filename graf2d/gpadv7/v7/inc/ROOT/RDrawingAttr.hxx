@@ -447,8 +447,11 @@ class RAttributesVisitor {
 
 protected:
 
-   /** Normally should be configured in constructor */
-   void SetDefaults(const RDrawableAttributes::Map_t *dflts) { fDefaults = dflts; }
+   virtual const RDrawableAttributes::Map_t &GetDefaults() const
+   {
+      static RDrawableAttributes::Map_t empty;
+      return empty;
+   }
 
    /** use const char* - nullptr means no value found */
    const RDrawableAttributes::Value_t *Eval(const std::string &name, bool use_dflts = true) const;
@@ -484,6 +487,8 @@ public:
    RAttributesVisitor(const RAttributesVisitor &src) { fDefaults = src.fDefaults; CreateOwnAttr(); Copy(src); }
 
    RAttributesVisitor &operator=(const RAttributesVisitor &src) { Clear(); Copy(src); return *this; }
+
+   virtual ~RAttributesVisitor() = default;
 
    void Copy(const RAttributesVisitor &src, bool use_dflts = false);
 
