@@ -50,7 +50,7 @@ class RAttrLineNew : public RAttributesVisitor {
 protected:
    const RDrawableAttributes::Map_t &GetDefaults() const override
    {
-      static auto dflts = RDrawableAttributes::Map_t().AddDouble("width",1.).AddInt("style",1);
+      static auto dflts = RDrawableAttributes::Map_t().AddDouble("width",1.).AddInt("style",1).AddDefaults(fColor);
       return dflts;
    }
 
