@@ -421,7 +421,7 @@ install(
    DIRECTORY ${CMAKE_BINARY_DIR}/lib/
    DESTINATION ${CMAKE_INSTALL_LIBDIR}
    FILES_MATCHING PATTERN "*.pcm"
-   PATTERN ".*rdict.*" EXCLUDE
+   PATTERN "*_rdict.pcm" EXCLUDE
 )
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
