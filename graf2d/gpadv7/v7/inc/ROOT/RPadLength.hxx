@@ -297,20 +297,7 @@ public:
    };
    /// \}
 
-   /// Default constructor, initializing all coordinate parts to `0.`.
-   RPadLengthNew() : RAttributesVisitor() {
-   }
-
-   RPadLengthNew(RDrawableAttributes &cont, const std::string &prefix = "padlength_") : RPadLengthNew()
-   {
-      AssignAttributes(cont, prefix);
-   }
-
-
-   RPadLengthNew(RAttributesVisitor *parent, const std::string &prefix = "padlength_") : RPadLengthNew()
-   {
-      AssignParent(parent, prefix);
-   }
+   using RAttributesVisitor::RAttributesVisitor;
 
    /// Constructor from a `Normal` coordinate.
    RPadLengthNew(Normal normal): RPadLengthNew() { SetNormal(normal.fVal); }

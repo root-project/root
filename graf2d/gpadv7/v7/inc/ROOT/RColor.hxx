@@ -281,19 +281,8 @@ protected:
    }
 
 public:
-   RColorNew() : RAttributesVisitor()
-   {
-   }
 
-   RColorNew(RDrawableAttributes &cont, const std::string &prefix = "color_") : RColorNew()
-   {
-      AssignAttributes(cont, prefix);
-   }
-
-   RColorNew(RAttributesVisitor *parent, const std::string &prefix = "color_") : RColorNew()
-   {
-      AssignParent(parent, prefix);
-   }
+   using RAttributesVisitor::RAttributesVisitor;
 
    RColorNew(int r, int g, int b) : RColorNew()
    {
