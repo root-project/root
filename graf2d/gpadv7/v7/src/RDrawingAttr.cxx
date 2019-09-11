@@ -287,6 +287,31 @@ void ROOT::Experimental::RAttributesVisitor::Copy(const RAttributesVisitor &src,
    }
 }
 
+///////////////////////////////////////////////////////////////////////////////
+/// Semantic copy attributes from other object
+/// Search in the container all attributes which match source prefix and copy them
+
+void ROOT::Experimental::RAttributesVisitor::SemanticCopy(const RAttributesVisitor &src)
+{
+   if (!src.GetAttr() || !GetAttr(true)) return;
+
+   for (const auto &pair : src.fAttr->map) {
+      auto attrname = pair.first;
+
+      if (!src.fPrefix.empty()) {
+         if (!attrname.compare(9, src.fPrefix.length(), src.fPrefix)) continue;
+         attrname.erase(0, src.fPrefix.length());
+      }
+
+      if (!attrname.empty())
+         fAttr->map.Add(GetFullName(attrname), pair.second->Copy());
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Access attributes container
+/// If pointer not yet assigned, try to find it in parents of just allocate if force flag is specified
+
 bool ROOT::Experimental::RAttributesVisitor::GetAttr(bool force) const
 {
    if (fAttr)
