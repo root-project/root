@@ -26,6 +26,7 @@ void lineWidthNew()
 
    style->AddBlock("line").AddInt("line_style", 2).AddString("line_color_rgb", "4,5,6");
 
+
    for (int i=10; i>0; i--){
       num = num + 0.05;
 
@@ -34,12 +35,15 @@ void lineWidthNew()
       auto optts = canvas->Draw(RText(pt, std::to_string(i)));
       optts->SetSize(13).SetAlign(32).SetFont(52);
 
-      RPadPos pl1(.32_normal, RPadLength::Normal(num));
-      RPadPos pl2(.8_normal , RPadLength::Normal(num));
+      RPadPosNew pl1(RPadLengthNew::Normal(0.32), RPadLengthNew::Normal(num));
+      RPadPosNew pl2(RPadLengthNew::Normal(0.8), RPadLengthNew::Normal(num));
 
+      printf("pl1  horiz %f vert %f\n", pl1.Horiz().GetNormal(),  pl1.Vert().GetNormal());
 
       // new way of drawing - return drawable itself, which has all kind attributes
       auto line = canvas->DrawNew<RLineNew>(pl1, pl2);
+
+      printf("line.P1  horiz %f vert %f\n", line->GetP1().Horiz().GetNormal(),  line->GetP1().Vert().GetNormal());
 
       // change line width
       line->AttrLine().SetWidth(i);
@@ -66,6 +70,10 @@ void lineWidthNew()
       line->AttrLine().Color() = RColorNew(i+5, i+15, i+25);
 
       printf("Afetr setting color color %s\n", line->AttrLine().Color().AsSVG().c_str());
+
+      auto col = line->AttrLine().Color();
+
+      printf("Extracting color %s has alfa %s\n", col.AsSVG().c_str(), col.HasAlfa() ? "true" : "false");
 
    }
 
