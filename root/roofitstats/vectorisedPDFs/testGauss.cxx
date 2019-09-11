@@ -23,7 +23,7 @@ class TestGauss : public PDFTest
 {
   protected:
     TestGauss() :
-      PDFTest("Gauss", 200000)
+      PDFTest("Gauss", 300000)
   {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
         auto x = new RooRealVar("x", "x", -10, 10);
@@ -90,7 +90,7 @@ class TestGaussInMeanAndX : public PDFTest
 {
   protected:
     TestGaussInMeanAndX() :
-      PDFTest("Gauss(x, mean)")
+      PDFTest("Gauss(x, mean)", 300000)
   {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
       auto x = new RooRealVar("x", "x", -10, 10);
@@ -124,7 +124,7 @@ class TestGaussWithFormulaParameters : public PDFTest
 {
   protected:
     TestGaussWithFormulaParameters() :
-      PDFTest("Gauss(x, mean)", 50000)
+      PDFTest("Gauss(x, mean)", 300000)
   {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
       auto x = new RooRealVar("x", "x", 0, 30);
