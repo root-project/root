@@ -45,6 +45,8 @@ class TestExponential : public PDFTest
       }
 
       _toleranceCompareLogs = 3E-13;
+      // For i686, this needs to be a bit less strict:
+      _toleranceCompareBatches = 2.E-14;
   }
 };
 

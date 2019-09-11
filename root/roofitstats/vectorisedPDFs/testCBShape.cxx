@@ -39,6 +39,10 @@ class TestCBShape : public PDFTest
       for (auto par : {m0, sigma, alpha, n}) {
         _parameters.addOwned(*par);
       }
+
+      // For i686:
+      _toleranceCompareBatches = 1.5E-14;
+      _toleranceCorrelation = 1.5E-3;
   }
 };
 

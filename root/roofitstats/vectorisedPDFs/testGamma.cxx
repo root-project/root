@@ -27,7 +27,7 @@ class TestGamma : public PDFTest
     auto x = new RooRealVar("x", "x", 5, 4, 10);
     auto gamma = new RooRealVar("gamma", "N+1", 6, 4, 8);
     gamma->setConstant();
-    auto beta = new RooRealVar("beta", "beta", 1.5, 0.1, 10);
+    auto beta = new RooRealVar("beta", "beta", 1.5, 0.5, 10);
     auto mu = new RooRealVar("mu", "mu", 0.2, -1., 1.);
     mu->setConstant();
     
