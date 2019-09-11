@@ -23,25 +23,22 @@ The parameterization here is physics driven and differs from the ROOT::Math::log
   - x0 = 0
 **/
 
-#include "RooFit.h"
-
-#include "Riostream.h"
-#include "Riostream.h"
-#include <math.h>
-
 #include "RooLognormal.h"
+#include "RooFit.h"
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooRandom.h"
 #include "RooMath.h"
-#include "TMath.h"
+#include "RooVDTHeaders.h"
+#include "RooHelpers.h"
+#include "BatchHelpers.h"
 
+#include "TMath.h"
 #include <Math/SpecFuncMathCore.h>
 #include <Math/PdfFuncMathCore.h>
 #include <Math/ProbFuncMathCore.h>
 
-#include "TError.h"
-
+#include <cmath>
 using namespace std;
 
 ClassImp(RooLognormal);
@@ -56,6 +53,14 @@ RooLognormal::RooLognormal(const char *name, const char *title,
   m0("m0","m0",this,_m0),
   k("k","k",this,_k)
 {
+    RooHelpers::checkRangeOfParameters(this, {&_x, &_m0, &_k}, 0.);
+    
+    auto par = dynamic_cast<const RooAbsRealLValue*>(&_k);
+    if (par && par->getMin()<=1 && par->getMax()>=1 ) {
+      oocoutE(this, InputArguments) << "The parameter '" << par->GetName() << "' with range [" << par->getMin("") << ", "
+          << par->getMax() << "] of the " << this->IsA()->GetName() << " '" << this->GetName()
+          << "' can reach the unsafe value 1.0 " << ". Advise to limit its range." << std::endl;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,14 +79,74 @@ RooLognormal::RooLognormal(const RooLognormal& other, const char* name) :
 
 Double_t RooLognormal::evaluate() const
 {
-  Double_t xv = x;
   Double_t ln_k = TMath::Abs(TMath::Log(k));
   Double_t ln_m0 = TMath::Log(m0);
-  Double_t x0 = 0;
 
-  Double_t ret = ROOT::Math::lognormal_pdf(xv,ln_m0,ln_k,x0);
+  Double_t ret = ROOT::Math::lognormal_pdf(x,ln_m0,ln_k);
   return ret ;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+namespace {
+//Author: Emmanouil Michalainas, CERN 10 September 2019
+
+template<class Tx, class Tm0, class Tk>
+void compute(	size_t batchSize,
+              double * __restrict output,
+              Tx X, Tm0 M0, Tk K)
+{
+  const double rootOf2pi = std::sqrt(2 * M_PI);
+  for (size_t i=0; i<batchSize; i++) {
+    double lnxOverM0 = _rf_fast_log(X[i]/M0[i]);
+    double lnk = _rf_fast_log(K[i]);
+    if (lnk<0) lnk = -lnk;
+    double arg = lnxOverM0/lnk;
+    arg *= -0.5*arg;
+    output[i] = _rf_fast_exp(arg) / (X[i]*lnk*rootOf2pi);
+  }
+}
+};
+
+RooSpan<double> RooLognormal::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
+  using namespace BatchHelpers;
+  auto xData = x.getValBatch(begin, batchSize);
+  auto m0Data = m0.getValBatch(begin, batchSize);
+  auto kData = k.getValBatch(begin, batchSize);
+  const bool batchX = !xData.empty();
+  const bool batchM0 = !m0Data.empty();
+  const bool batchK = !kData.empty();
+
+  if (!batchX && !batchM0 && !batchK) {
+    return {};
+  }
+  batchSize = findSize({ xData, m0Data, kData });
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+
+  if (batchX && !batchM0 && !batchK ) {
+    compute(batchSize, output.data(), xData, BracketAdapter<double>(m0), BracketAdapter<double>(k));
+  }
+  else if (!batchX && batchM0 && !batchK ) {
+    compute(batchSize, output.data(), BracketAdapter<double>(x), m0Data, BracketAdapter<double>(k));
+  }
+  else if (batchX && batchM0 && !batchK ) {
+    compute(batchSize, output.data(), xData, m0Data, BracketAdapter<double>(k));
+  }
+  else if (!batchX && !batchM0 && batchK ) {
+    compute(batchSize, output.data(), BracketAdapter<double>(x), BracketAdapter<double>(m0), kData);
+  }
+  else if (batchX && !batchM0 && batchK ) {
+    compute(batchSize, output.data(), xData, BracketAdapter<double>(m0), kData);
+  }
+  else if (!batchX && batchM0 && batchK ) {
+    compute(batchSize, output.data(), BracketAdapter<double>(x), m0Data, kData);
+  }
+  else if (batchX && batchM0 && batchK ) {
+    compute(batchSize, output.data(), xData, m0Data, kData);
+  }
+  return output;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

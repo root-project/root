@@ -85,7 +85,8 @@ fitting the PDF to data and accumulating the fit statistics.
 <tr><td> ConditionalObservables(const RooArgSet& set)  <td> The set of observables that the PDF should _not_ be normalized over
 <tr><td> Binned(Bool_t flag)               <td> Bin the dataset before fitting it. Speeds up fitting of large data samples
 <tr><td> FitOptions(const char*)           <td> Classic fit options, provided for backward compatibility
-<tr><td> FitOptions(....)                  <td> Options to be used for fitting. All named arguments inside FitOptions() are passed to RooAbsPdf::fitTo()
+<tr><td> FitOptions(....)                  <td> Options to be used for fitting. All named arguments inside FitOptions() are passed to RooAbsPdf::fitTo().
+                                                `Save()` is especially interesting to be able to retrieve fit results of each run using fitResult().
 <tr><td> Verbose(Bool_t flag)              <td> Activate informational messages in event generation phase
 <tr><td> Extended(Bool_t flag)             <td> Determine number of events for each sample anew from a Poisson distribution
 <tr><td> Constrain(const RooArgSet& pars)  <td> Apply internal constraints on given parameters in fit and sample constrained parameter values from constraint p.d.f for each toy.
@@ -996,8 +997,10 @@ const RooArgSet* RooMCStudy::fitParams(Int_t sampleNum) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the RooFitResult object of the fit to given sample 
-
+/// Return the RooFitResult of the fit with the given run number.
+///
+/// \note Fit results are not saved by default. This requires passing `FitOptions(Save(), ...)`
+/// to the constructor.
 const RooFitResult* RooMCStudy::fitResult(Int_t sampleNum) const
 {
   // Check if sampleNum is in range

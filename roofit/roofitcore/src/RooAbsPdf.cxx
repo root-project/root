@@ -2349,16 +2349,13 @@ Bool_t RooAbsPdf::isDirectGenSafe(const RooAbsArg& arg) const
   if (!findServer(arg.GetName())) return kFALSE ;
 
   // There must be no other dependency routes
-  TIterator* sIter = serverIterator() ;
-  const RooAbsArg *server = 0;
-  while((server=(const RooAbsArg*)sIter->Next())) {
+  for (const auto server : _serverList) {
     if(server == &arg) continue;
     if(server->dependsOn(arg)) {
-      delete sIter ;
       return kFALSE ;
     }
   }
-  delete sIter ;
+
   return kTRUE ;
 }
 
