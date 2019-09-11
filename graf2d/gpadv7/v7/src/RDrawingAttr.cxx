@@ -258,7 +258,6 @@ void ROOT::Experimental::RAttributesVisitor::Copy(const RAttributesVisitor &src,
    }
 }
 
-
 bool ROOT::Experimental::RAttributesVisitor::GetAttr(bool force) const
 {
    if (fAttr)
