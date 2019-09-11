@@ -32,7 +32,7 @@ class TestBreitWigner : public PDFTest
 
       _variables.addOwned(*x);
 
-      _variablesToPlot.add(*x);
+//      _variablesToPlot.add(*x);
 
       for (auto par : {mean, width}) {
         _parameters.addOwned(*par);

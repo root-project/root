@@ -82,6 +82,8 @@ class TestPoissonOddMeanNoRounding : public PDFTest
       }
 
       _toleranceParameter = 1.2E-5;
+      // For i686, this needs to be a bit less strict:
+      _toleranceCompareBatches = 5.E-14;
   }
 };
 

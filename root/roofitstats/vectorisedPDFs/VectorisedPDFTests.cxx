@@ -280,6 +280,9 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
 
   // Compare runs
   unsigned int nOff = 0;
+  unsigned int nFarOff = 0;
+  constexpr double thresholdFarOff = 1.E-9;
+
   maximalError = 0.0;
   ROOT::Math::KahanSum<> sumDiffs;
   ROOT::Math::KahanSum<> sumVars;
@@ -295,7 +298,8 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
 
     // Check accuracy of computations, but give it some leniency for very small likelihoods
     if ( (fabs(relDiff) > toleranceCompare && fabs(outputsScalar[i]) > 1.E-50 ) ||
-         (fabs(relDiff) > 1.E-10 && fabs(outputsScalar[i]) > 1.E-300) ) {
+         (fabs(relDiff) > 1.E-10 && fabs(outputsScalar[i]) > 1.E-300) ||
+         (fabs(relDiff) > 1.E-9)) {
       if (nOff < 5) {
         *observables = *_dataUniform->get(i);
         std::cout << "Compare event " << i << "\t" << std::setprecision(15);
@@ -306,6 +310,10 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
                                                              << "\n\trel diff = " << relDiff << std::endl;
       }
       ++nOff;
+
+      if (fabs(relDiff) > thresholdFarOff)
+        ++nFarOff;
+
 #ifdef ROOFIT_CHECK_CACHED_VALUES
       try {
         *observables = *_dataUniform->get(i);
@@ -319,7 +327,8 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
     }
   }
 
-  EXPECT_EQ(nOff, 0u);
+  EXPECT_LT(nOff, 5u);
+  EXPECT_EQ(nFarOff, 0u);
   EXPECT_GT(sumDiffs/outputsBatch.size(), -toleranceCompare) << "Batch outputs biased towards negative.";
   EXPECT_LT(sumDiffs/outputsBatch.size(), toleranceCompare)  << "Batch outputs biased towards positive.";
   EXPECT_LT(sqrt(sumVars/outputsBatch.size()), toleranceCompare) << "High standard deviation for batch results vs scalar.";

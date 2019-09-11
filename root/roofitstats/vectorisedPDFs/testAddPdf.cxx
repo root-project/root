@@ -58,6 +58,8 @@ class TestGaussPlusPoisson : public PDFTest
 
       // Gauss is slightly less accurate
       _toleranceCompareBatches = 2.E-14;
+      _toleranceParameter = 3.E-6;
+      _toleranceCorrelation = 5.E-4;
     }
 };
 
@@ -65,47 +67,9 @@ COMPARE_FIXED_VALUES_UNNORM(TestGaussPlusPoisson, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestGaussPlusPoisson, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestGaussPlusPoisson, CompareFixedValuesNormLog)
 
-
-class TestGaussPlusPoissonFit : public PDFTest
-{
-  protected:
-    TestGaussPlusPoissonFit() :
-      PDFTest("Gauss + Poisson", 200000)
-    {
-      // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
-      auto x = new RooRealVar("x", "x", -1.5, 40.5);
-      x->setBins(42);//Prettier plots for Poisson
-
-      auto mean = new RooRealVar("mean", "mean of gaussian", 20., -10, 30);
-      auto sigma = new RooRealVar("sigma", "width of gaussian", 4., 0.1, 10);
-
-      // Build gaussian p.d.f in terms of x,mean and sigma
-      auto gauss = new RooGaussian("gauss", "gaussian PDF", *x, *mean, *sigma);
-
-      auto meanPois = new RooRealVar("meanPois", "Mean of Poisson", 7, 0, 30);
-      auto pois = new RooPoisson("Pois", "Poisson PDF", *x, *meanPois, true);
-
-      auto fractionGaus = new RooRealVar("fractionGaus", "Fraction of Gauss component", 0.5, 0., 1.);
-      _pdf = std::make_unique<RooAddPdf>("SumGausPois", "Sum of Gaus and Poisson",
-          RooArgSet(*gauss, *pois), *fractionGaus);
-
-      _variables.addOwned(*x);
-
-//      _variablesToPlot.add(x);
-
-      for (auto par : {mean, sigma, meanPois, fractionGaus}) {
-        _parameters.addOwned(*par);
-      }
-
-      for (auto obj : std::initializer_list<RooAbsPdf*>{gauss, pois}) {
-        _otherObjects.addOwned(*obj);
-      }
-    }
-};
-
-FIT_TEST_SCALAR(TestGaussPlusPoissonFit, DISABLED_Scalar)
-FIT_TEST_BATCH(TestGaussPlusPoissonFit, DISABLED_Batch)
-FIT_TEST_BATCH_VS_SCALAR(TestGaussPlusPoissonFit, CompareBatchScalar)
+FIT_TEST_SCALAR(TestGaussPlusPoisson, Scalar)
+FIT_TEST_BATCH(TestGaussPlusPoisson, Batch)
+FIT_TEST_BATCH_VS_SCALAR(TestGaussPlusPoisson, CompareBatchScalar)
 
 
 class TestGaussPlusGaussPlusExp : public PDFTest
