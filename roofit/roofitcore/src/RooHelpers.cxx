@@ -76,18 +76,18 @@ void checkRangeOfParameters(const RooAbsReal* callingClass, std::initializer_lis
     auto par = dynamic_cast<const RooAbsRealLValue*>(parameter);
     if (par && (par->getMin() <= min || par->getMax() >= max) ) {
       std::stringstream rangeMsg;
-      rangeMsg << "]";
+      rangeMsg << "(";
       if (min > -std::numeric_limits<double>::max())
         rangeMsg << min << ", ";
       else
         rangeMsg << "-inf, ";
 
       if (max < std::numeric_limits<double>::max())
-        rangeMsg << max << "[";
+        rangeMsg << max << ")";
       else
-        rangeMsg << "inf[";
+        rangeMsg << "inf)";
 
-      oocoutE(callingClass, InputArguments) << "The parameter '" << par->GetName() << "' with range [" << par->getMin("") << ", "
+      oocoutW(callingClass, InputArguments) << "The parameter '" << par->GetName() << "' with range [" << par->getMin("") << ", "
           << par->getMax() << "] of the " << callingClass->IsA()->GetName() << " '" << callingClass->GetName()
           << "' exceeds the safe range of " << rangeMsg.str() << ". Advise to limit its range." << std::endl;
     }

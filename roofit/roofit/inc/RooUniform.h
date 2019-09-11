@@ -40,6 +40,9 @@ protected:
   RooListProxy x ;
 
   Double_t evaluate() const ;
+  inline RooSpan<double> evaluateBatch(std::size_t, std::size_t ) const {
+    return {};
+  }
 
 private:
 
