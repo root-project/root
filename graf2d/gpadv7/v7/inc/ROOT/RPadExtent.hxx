@@ -83,7 +83,7 @@ struct RPadExtent: Internal::RPadHorizVert {
       double fVert;  ///< Vertical scale factor
    };
 
-   /// Scale a `RPadHorizVert` horizonally and vertically.
+   /// Scale a `RPadHorizVert` horizontally and vertically.
    /// \param scale - the scale factor,
    RPadExtent &operator*=(const ScaleFactor &scale)
    {
@@ -124,14 +124,7 @@ protected:
 
 public:
 
-   RPadExtentNew() : RAttributesVisitor()
-   {
-      // no defaults on this level
-   }
-
-   RPadExtentNew(RDrawableAttributes &cont, const std::string &prefix = "pos_") : RPadExtentNew()  { AssignAttributes(cont, prefix); }
-
-   RPadExtentNew(RAttributesVisitor *parent, const std::string &prefix = "pos_") : RPadExtentNew() { AssignParent(parent, prefix); }
+   using RAttributesVisitor::RAttributesVisitor;
 
    RPadExtentNew(const RPadLengthNew& horiz, const RPadLengthNew& vert) : RPadExtentNew()
    {
@@ -181,7 +174,7 @@ public:
       double fVert;  ///< Vertical scale factor
    };
 
-   /// Scale a `RPadHorizVert` horizonally and vertically.
+   /// Scale a `RPadHorizVert` horizontally and vertically.
    /// \param scale - the scale factor,
    RPadExtentNew &operator*=(const ScaleFactor &scale)
    {
