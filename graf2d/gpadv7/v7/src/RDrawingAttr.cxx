@@ -239,20 +239,23 @@ void ROOT::Experimental::RAttributesVisitor::CreateOwnAttr()
 
 void ROOT::Experimental::RAttributesVisitor::Copy(const RAttributesVisitor &src, bool use_dflts)
 {
-   if (src.fDefaults && GetAttr(true))
-      for (const auto &entry : *src.fDefaults) {
-         const auto *value = src.Eval(entry.first, use_dflts);
+   if (!GetAttr(true)) return;
 
-         // check if element with given name exists at all
-         if (fDefaults && (fDefaults != src.fDefaults) && value) {
-            const auto *dvalue = fDefaults->Eval(entry.first);
-            if (!dvalue || !dvalue->Compatible(value->Kind()))
-               value = nullptr;
-         }
+   bool same_dflts = &GetDefaults() == &src.GetDefaults();
 
-         if (value)
-            fAttr->map.Add(GetFullName(entry.first), value->Copy());
+   for (const auto &entry : src.GetDefaults()) {
+      const auto *value = src.Eval(entry.first, use_dflts);
+
+      // check if element with given name exists at all
+      if (!same_dflts && value) {
+         const auto *dvalue = GetDefaults().Eval(entry.first);
+         if (!dvalue || !dvalue->Compatible(value->Kind()))
+            value = nullptr;
       }
+
+      if (value)
+         fAttr->map.Add(GetFullName(entry.first), value->Copy());
+   }
 }
 
 
@@ -306,8 +309,8 @@ const ROOT::Experimental::RDrawableAttributes::Value_t *ROOT::Experimental::RAtt
       }
    }
 
-   if (fDefaults && use_dflts) {
-      res = fDefaults->Eval(name);
+   if (use_dflts) {
+      res = GetDefaults().Eval(name);
       if (res) return res;
    }
 
@@ -345,8 +348,8 @@ void ROOT::Experimental::RAttributesVisitor::SetValue(const std::string &name, c
 /** Clear all respective values from drawable. Only defaults can be used */
 void ROOT::Experimental::RAttributesVisitor::Clear()
 {
-   if (fDefaults && GetAttr())
-      for (const auto &entry : *fDefaults)
+   if (GetAttr())
+      for (const auto &entry : GetDefaults())
          fAttr->map.Clear(GetFullName(entry.first));
 }
 
