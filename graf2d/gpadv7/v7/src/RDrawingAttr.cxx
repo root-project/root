@@ -239,7 +239,7 @@ void ROOT::Experimental::RAttributesVisitor::CreateOwnAttr()
 
 void ROOT::Experimental::RAttributesVisitor::Copy(const RAttributesVisitor &src, bool use_dflts)
 {
-   if (src.fDefaults && GetAttr())
+   if (src.fDefaults && GetAttr(true))
       for (const auto &entry : *src.fDefaults) {
          const auto *value = src.Eval(entry.first, use_dflts);
 
