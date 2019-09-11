@@ -13,6 +13,7 @@ import sys
 import os
 import glob
 import shutil
+import posixpath
 
 #-------------------------------------------------------------------------------
 def removeFiles(filesList):
@@ -373,7 +374,7 @@ def getLocalLinkDefs(rootSrcDir, outdir , dirName):
 
    for linkDefName in linkDefNames:
       fullLinkDefName = os.path.join(outdir,linkDefName)
-      linkDefPartContent += '#include "%s"\n' %fullLinkDefName
+      linkDefPartContent += '#include "%s"\n' %posixpath.join(*fullLinkDefName.split(os.sep))
    os.chdir(curDir)
    return linkDefPartContent
 
@@ -394,7 +395,7 @@ def getCppFlags(rootSrcDir,allIncPaths):
    for name in resolveSoftLinks((rootSrcDir,os.getcwd())):
       filteredIncPaths = filter (lambda incPath: not name in incPath,filteredIncPaths)
    for incPath in filteredIncPaths:
-      allHeadersPartContent += "-I%s\n" %incPath
+      allHeadersPartContent += "-I%s\n" %posixpath.join(*incPath.split(os.sep))
    return allHeadersPartContent
 
 #-------------------------------------------------------------------------------
