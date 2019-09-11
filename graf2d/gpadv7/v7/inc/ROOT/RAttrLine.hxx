@@ -56,14 +56,7 @@ protected:
 
 public:
 
-   RAttrLineNew() : RAttributesVisitor()
-   {
-   }
-
-   RAttrLineNew(RDrawableAttributes &cont, const std::string &prefix = "line_") : RAttrLineNew()
-   {
-      AssignAttributes(cont, prefix);
-   }
+   using RAttributesVisitor::RAttributesVisitor;
 
    ///The width of the line.
    RAttrLineNew &SetWidth(double width) { SetValue("width", width); return *this; }
