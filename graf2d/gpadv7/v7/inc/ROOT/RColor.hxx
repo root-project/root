@@ -272,11 +272,17 @@ std::string ToAttributeString(const RColor& val);
 
 
 class RColorNew : public RAttributesVisitor {
+
+protected:
+   const RDrawableAttributes::Map_t &GetDefaults() const override
+   {
+      static auto dflts = RDrawableAttributes::Map_t().AddString("rgb","0,0,0").AddDouble("a",1.);
+      return dflts;
+   }
+
 public:
    RColorNew() : RAttributesVisitor()
    {
-      static auto dflts = RDrawableAttributes::Map_t().AddString("rgb","0,0,0").AddDouble("a",1.);
-      SetDefaults(&dflts);
    }
 
    RColorNew(RDrawableAttributes &cont, const std::string &prefix = "color_") : RColorNew()

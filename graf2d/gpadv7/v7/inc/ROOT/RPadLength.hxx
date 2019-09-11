@@ -221,6 +221,14 @@ std::string ToAttributeString(const RPadLength &len);
 
 
 class RPadLengthNew : public RAttributesVisitor {
+
+protected:
+   const RDrawableAttributes::Map_t &GetDefaults() const override
+   {
+      static auto dflts = RDrawableAttributes::Map_t().AddDouble("normal",0.).AddDouble("pixel",0.).AddDouble("user",0.);
+      return dflts;
+   }
+
 public:
    template <class DERIVED>
    struct CoordSysBase {
@@ -291,8 +299,6 @@ public:
 
    /// Default constructor, initializing all coordinate parts to `0.`.
    RPadLengthNew() : RAttributesVisitor() {
-      static auto dflts = RDrawableAttributes::Map_t().AddDouble("normal",0.).AddDouble("pixel",0.).AddDouble("user",0.);
-      SetDefaults(&dflts);
    }
 
    RPadLengthNew(RDrawableAttributes &cont, const std::string &prefix = "padlength_") : RPadLengthNew()
