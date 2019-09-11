@@ -35,6 +35,8 @@ std::pair<bool, bool> PyROOT::TMemoryRegulator::RegisterHook(Cppyy::TCppObject_t
    if (Cppyy::IsSubtype(klass, tobjectTypeID)) {
       ObjectMap_t::iterator ppo = fObjectMap.find(cppobj);
       if (ppo == fObjectMap.end()) {
+         // Set cleanup bit so RecursiveRemove is tried on registered object
+         ((TObject*)cppobj)->SetBit(TObject::kMustCleanup);
          fObjectMap.insert({cppobj, klass});
       }
    }
