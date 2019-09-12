@@ -1093,7 +1093,7 @@ void TApplication::Help(const char *line)
       strippedCommand.Remove(0, 5);
    }
    // We strip the command line after removing ".help" or ".?".
-   TString strippedClass = strippedCommand.Strip(TString::kBoth);
+   strippedCommand = strippedCommand.Strip(TString::kBoth);
    // We call the function what handles the extended ".help scopeName" command.
    OpenReferenceGuideFor(strippedClass);
    }
