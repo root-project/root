@@ -1020,7 +1020,6 @@ void TApplication::OpenReferenceGuideFor(const TString &strippedClass)
          methodType = kURLforStructor;
          // We check if "memberName" is a method.
       } else {
-         std::cout << memberName.Data() << " is a method from " << baseClName.Data() << "." << std::endl;
          methodType = kURLforMethod;
       }
       // We call "GetUrlForMethod" for the correct class and scope.
