@@ -1026,7 +1026,7 @@ void TApplication::OpenReferenceGuideFor(TString strippedClass)
          methodType = kURLforMethod;
       }
       // We call "GetUrlForMethod" for the correct class and scope.
-      OpenInBrowser(GetUrlForMethod (baseClName, memberName, func, methodType, scopeType));
+      OpenInBrowser(GetUrlForMethod(baseClName, memberName, func, methodType, scopeType));
       return;
    }
    // We check if "memberName" is an enumeration.
