@@ -59,6 +59,9 @@
 #pragma link C++ class ROOT::Experimental::RAttrMarker+;
 #pragma link C++ class ROOT::Experimental::RAttrText+;
 
+
+#pragma link C++ class ROOT::Experimental::RDrawable+;
+
 #pragma link C++ class ROOT::Experimental::RDrawableAttributes+;
 #pragma link C++ class ROOT::Experimental::RDrawableAttributes::Value_t+;
 #pragma link C++ class ROOT::Experimental::RDrawableAttributes::BoolValue_t+;

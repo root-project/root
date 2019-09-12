@@ -223,13 +223,8 @@ endif()
 
 if(root7)
   list(APPEND BASE_HEADERS
-      ROOT/RDrawable.hxx
       ROOT/RDirectoryEntry.hxx
-      ROOT/RIndexIter.hxx
-  )
-  list(APPEND BASE_SOURCES
-      v7/src/RDrawable.cxx
-  )
+      ROOT/RIndexIter.hxx)
 endif()
 
 
