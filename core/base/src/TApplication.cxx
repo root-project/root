@@ -1048,7 +1048,6 @@ void TApplication::OpenReferenceGuideFor(const TString &strippedClass)
    // We will open a browser with the URL for the class only if the user types "y".
    std::string open;
    std::cin >> open;
-   if (open == "y") {
       OpenInBrowser(UrlGenerator(scopeName, scopeType));
    }
 }
