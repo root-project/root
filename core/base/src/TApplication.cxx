@@ -698,6 +698,7 @@ static TString UrlGenerator(TString scopeName, EUrl scopeType)
    }
    delete objarr;
    delete objarr;
+   delete objarr;
    url.Append(version);
    url.Append("/");
    // We will replace all "::" with "_1_1" and all "_" with "__" in the
