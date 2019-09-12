@@ -293,9 +293,6 @@ public:
    void SetStyleClasses(const std::vector<std::string> &styles) { fStyleClasses = styles; }
 };
 
-
-
-
 /// Only attributes, which should be inserted into RDrawable, probably should be just part of base class
 
 class RAttributesVisitor;
@@ -309,6 +306,7 @@ public:
    enum EValuesKind { kBool, kInt, kDouble, kString };
 
    class Value_t {
+      friend class RDrawableAttributes;
    public:
       Value_t() = default;
       virtual ~Value_t() = default;
@@ -319,6 +317,11 @@ public:
       virtual std::string GetString() const { return ""; }
       virtual Value_t *Copy() const = 0;
       virtual const void *GetValuePtr() const { return nullptr; }
+
+      template<typename T> T get() const;
+
+      template <typename T>
+      static T get_value(const Value_t *rec);
    };
 
    class IntValue_t : public Value_t {
@@ -402,8 +405,7 @@ public:
 private:
    std::string type;             ///<! drawable type, not stored in the root file, must be initialized
    std::string user_class;       ///<  user defined drawable class, can later go inside map
-   Map_t map;                    ///<
-   Map_t *defaults{nullptr};     ///<! default values for server
+   Map_t map;                    ///<  central values storage
 
 public:
 
@@ -413,6 +415,16 @@ public:
 
    ~RDrawableAttributes() {}
 };
+
+template<> int RDrawableAttributes::Value_t::get<int>() const;
+template<> double RDrawableAttributes::Value_t::get<double>() const;
+template<> std::string RDrawableAttributes::Value_t::get<std::string>() const;
+
+template<> int RDrawableAttributes::Value_t::get_value<int>(const Value_t *rec);
+template<> double RDrawableAttributes::Value_t::get_value<double>(const Value_t *rec);
+template<> std::string RDrawableAttributes::Value_t::get_value<std::string>(const Value_t *rec);
+template<> const RDrawableAttributes::Value_t *RDrawableAttributes::Value_t::get_value<const RDrawableAttributes::Value_t *>(const Value_t *rec);
+
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -471,6 +483,45 @@ protected:
    /** Evaluate value of attribute, nullptr means no value found */
    const RDrawableAttributes::Value_t *Eval(const std::string &name, bool use_dflts = true) const;
 
+   ///////////////////////////////////////////////////////////////////////////////
+   /// Evaluate attribute value
+
+/*   template <typename T, typename std::enable_if_t<std::is_same<T,bool>::value>::type = 0>
+   T get_value(RDrawableAttributes::Value_t *rec) {
+       return rec ? true : false;
+   }
+
+   template <typename T, typename std::enable_if_t<!std::is_same<T,bool>::value>::type = 0>
+   T get_value(RDrawableAttributes::Value_t *rec) {
+       return rec ? rec->get<T>() : T();
+   }
+*/
+
+
+   template <typename T>
+   auto Eval(const std::string &name) const
+   {
+      if (GetAttr()) {
+         auto fullname = GetFullName(name);
+
+         auto rec = fAttr->map.Eval(fullname);
+         if (rec) return RDrawableAttributes::Value_t::get_value<T>(rec);
+
+         const auto *prnt = this;
+
+         while (prnt) {
+            if (prnt->fStyle)
+               rec = prnt->fStyle->Eval(fAttr->type, fAttr->user_class, fullname);
+            if (rec) return RDrawableAttributes::Value_t::get_value<T>(rec);
+            prnt = prnt->fParent;
+         }
+      }
+
+      auto rec = GetDefaults().Eval(name);
+      return RDrawableAttributes::Value_t::get_value<T>(rec);
+   }
+
+
    void CreateOwnAttr();
 
    void AssignAttributes(RDrawableAttributes &cont, const std::string &prefix)
@@ -513,9 +564,6 @@ public:
 
    void UseStyle(std::shared_ptr<RStyleNew> style) { fStyle = style; }
 
-   /** returns true when value exists */
-   bool HasValue(const std::string &name, bool use_dflts = false) const { return Eval(name, use_dflts) != nullptr; }
-
    void SetValue(const std::string &name, double value);
    void SetValue(const std::string &name, const int value);
    void SetValue(const std::string &name, const std::string &value);
@@ -524,9 +572,14 @@ public:
 
    void Clear();
 
-   std::string GetString(const std::string &name) const;
-   int GetInt(const std::string &name) const;
-   double GetDouble(const std::string &name) const;
+   bool HasValue(const std::string &name) const { return Eval<const RDrawableAttributes::Value_t *>(name) != nullptr; }
+
+   template<typename T, std::enable_if_t<!std::is_pointer<T>{}>* = nullptr>
+   T Get(const std::string &name) const { return Eval<T>(name); }
+
+   std::string GetString(const std::string &name) const { return Eval<std::string>(name); }
+   int GetInt(const std::string &name) const { return Eval<int>(name); }
+   double GetDouble(const std::string &name) const { return Eval<double>(name); }
 };
 
 
