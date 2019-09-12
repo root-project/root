@@ -682,7 +682,7 @@ enum EUrl {kURLforClass, kURLforNameSpace, kURLforStruct};
 static TString UrlGenerator(TString scopeName, EUrl scopeType)
 {
    // We start the URL with a static part, the same for all scopes and members.
-   TString url ("https://root.cern/doc/");
+   TString url = "https://root.cern/doc/";
    // Then we check what is version ot ROOT the user has.
    TPRegexp re4(".*/v(\\d)-(\\d\\d)-00-patches");
    const char *branchName = gROOT->GetGitBranch();
