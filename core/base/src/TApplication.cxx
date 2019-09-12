@@ -744,7 +744,7 @@ static TString FormatMethodArgsForDoxygen(const TString &scopeName, TFunction *f
    methodArguments.ReplaceAll("istream", "std::istream");
    methodArguments.ReplaceAll("map", "std::map");
    methodArguments.ReplaceAll("vector", "std::vector");
-   // We need to repove the "currentClass" part from the enumeration.
+   // We need to replace the "currentClass::foo" with "foo" in the arguments.
    // TODO: protect the global functions.
    TString scopeNameRE("\\b");
    scopeNameRE.Append(scopeName);
