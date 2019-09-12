@@ -682,7 +682,7 @@ enum EUrl {kURLforClass, kURLforNameSpace, kURLforStruct};
 static TString UrlGenerator(TString scopeName, EUrl scopeType)
 {
    // We start the URL with a static part, the same for all scopes and members.
-   TString url ("https://root.cern/doc/");
+   TString url = "https://root.cern/doc/";
    // Then we check what is version ot ROOT the user has.
    TPRegexp re4(".*/v(\\d)-(\\d\\d)-00-patches");
    const char *branchName = gROOT->GetGitBranch();
@@ -696,6 +696,9 @@ static TString UrlGenerator(TString scopeName, EUrl scopeType)
       // If it's not a supported version, we will go to "master" branch.
       version = "master";
    }
+   delete objarr;
+   delete objarr;
+   delete objarr;
    url.Append(version);
    url.Append("/");
    // We will replace all "::" with "_1_1" and all "_" with "__" in the
@@ -744,7 +747,7 @@ static TString FormatMethodArgsForDoxygen(const TString &scopeName, TFunction *f
    methodArguments.ReplaceAll("istream", "std::istream");
    methodArguments.ReplaceAll("map", "std::map");
    methodArguments.ReplaceAll("vector", "std::vector");
-   // We need to repove the "currentClass" part from the enumeration.
+   // We need to replace the "currentClass::foo" with "foo" in the arguments.
    // TODO: protect the global functions.
    TString scopeNameRE("\\b");
    scopeNameRE.Append(scopeName);
@@ -770,14 +773,14 @@ static TString FormatReturnTypeForDoxygen(const TString &scopeName, TFunction *f
 {
    // We put the return type of "func" in a TString "returnType".
    TString returnType = func->GetReturnTypeName();
-   // If the return type consist of enumeration, it will appear with its class (Class::Enumeration).
+   // If the return type is a type nested in the current class, it will appear scoped (Class::Enumeration).
    // Below we make sure to remove the current class, because the syntax of Doxygen requires it.
    TString scopeNameRE ("\\b");
    scopeNameRE.Append(scopeName);
    scopeNameRE.Append("::\\b");
    TPRegexp returnFix(scopeNameRE);
    returnFix.Substitute(returnType, "");
-   // We check is if the method is deffined as inline.
+   // We check is if the method is defined as inline.
    if (func->ExtraProperty() & kIsInlined) {
       // We check if the function is defined as virtual.
       if (func->Property() & kIsVirtual) {
@@ -786,7 +789,7 @@ static TString FormatReturnTypeForDoxygen(const TString &scopeName, TFunction *f
       }
       returnType.ReplaceAll(" *", "*");
    } else {
-      // If the function is not inline we only change the spacing in "returnTyp$
+      // If the function is not inline we only change the spacing in "returnType"
       returnType.ReplaceAll("*", " *");
    }
    // In any case (with no respect to virtual/inline check) we need to change
@@ -815,7 +818,7 @@ namespace {
 /// \param[in] dataMember pointer to the data member/enumerator
 /// \param[in] scopeType enumerator to the scope type
 
-static TString GetUrlForDataMember(TString scopeName, const TString &dataMemberName, TDataMember *dataMember, EUrl scopeType)
+static TString GetUrlForDataMember(const TString &scopeName, const TString &dataMemberName, TDataMember *dataMember, EUrl scopeType)
 {
    // We first check if the data member is not enumerator.
    if(!dataMember->IsEnum()){
@@ -848,14 +851,14 @@ static TString GetUrlForDataMember(TString scopeName, const TString &dataMemberN
       md5EnumClass.Append("::@1@1");
    } else {
       // If the enumeration is not anonymous we put "scopeName::Enumeration" in a TString,
-      // which will be crypted with MD5 later.
+      // which will be hashed with MD5 later.
       md5EnumClass.Append(scopeEnumeration);
       // We extract the part after "::" (this is the enumerator name).
       TString enumOnlyName = TClassEdit::GetUnqualifiedName(scopeEnumeration);
       // The syntax is "Class::EnumeratorEnumerator
       md5EnumClass.Append(enumOnlyName);
    }
-   // The next part of the URL is crypted "@ scopeName::EnumeratorEnumerator".
+   // The next part of the URL is hashed "@ scopeName::EnumeratorEnumerator".
    TString md5Enumerator("@ ");
    md5Enumerator.Append(scopeName);
    md5Enumerator.Append("::");
@@ -863,10 +866,10 @@ static TString GetUrlForDataMember(TString scopeName, const TString &dataMemberN
    md5Enumerator.Append(dataMemberName);
    // We make the URL for the "scopeName".
    TString url = UrlGenerator(scopeName, scopeType);
-   // Then we have to append the crypted text for the enumerator.
+   // Then we have to append the hashed text for the enumerator.
    url.Append("#a");
    url.Append(md5EnumClass.MD5());
-   // We append "a" and then the next crypted text.
+   // We append "a" and then the next hashed text.
    url.Append("a");
    url.Append(md5Enumerator.MD5());
    return url;
@@ -883,7 +886,7 @@ namespace {
 /// \param[in] scopeType enumerator for class/namespace/struct
 
 static TString GetUrlForEnumeration(TString scopeName, const TString &enumeration, EUrl scopeType){
-   // The URL consists of URL for the "scopeName", "#a" and crypted with MD5 text.
+   // The URL consists of URL for the "scopeName", "#a" and hashed as MD5 text.
    // The text is "Class::EnumerationEnumeration.
    TString md5Enumeration(scopeName);
    md5Enumeration.Append("::");
@@ -891,7 +894,7 @@ static TString GetUrlForEnumeration(TString scopeName, const TString &enumeratio
    md5Enumeration.Append(enumeration);
    // We make the URL for the scope "scopeName".
    TString url(UrlGenerator(scopeName, scopeType));
-   // Then we have to append "#a" and the crypted text.
+   // Then we have to append "#a" and the hashed text.
    url.Append("#a");
    url.Append(md5Enumeration.MD5());
    return url;
@@ -914,7 +917,7 @@ enum EMethodKind {kURLforMethod, kURLforStructor};
 /// \param[in] methodType enumerator for method or constructor
 /// \param[in] scopeType enumerator for class/namespace/struct
 
-static TString GetUrlForMethod(TString scopeName, const TString &methodName, TFunction *func, EMethodKind methodType, EUrl scopeType)
+static TString GetUrlForMethod(const TString &scopeName, const TString &methodName, TFunction *func, EMethodKind methodType, EUrl scopeType)
 {
    TString md5Text;
    if (methodType == kURLforMethod) {
@@ -923,7 +926,7 @@ static TString GetUrlForMethod(TString scopeName, const TString &methodName, TFu
       md5Text.Append((FormatReturnTypeForDoxygen(scopeName, func)));
       if (scopeType == kURLforNameSpace) {
          // We need to append "constexpr" if we work with constexpr functions in namespaces.
-         if ((func->Property() & kIsConstexpr)>0) {
+         if (func->Property() & kIsConstexpr) {
             md5Text.Prepend("constexpr ");
          }
       }
@@ -954,7 +957,7 @@ static TString GetUrlForMethod(TString scopeName, const TString &methodName, TFu
 ///
 /// \param[in] strippedClasss the scope or scope::member
 
-void TApplication::OpenReferenceGuideFor(TString strippedClass)
+void TApplication::OpenReferenceGuideFor(const TString &strippedClass)
 {
    // We check if the user is searching for a scope and if the scope exists.
    if (TClass *clas = TClass::GetClass(strippedClass)) {
@@ -973,24 +976,23 @@ void TApplication::OpenReferenceGuideFor(TString strippedClass)
       return;
    }
    // Else we substract the name of the method and remove it from the command.
-   TString memberName = TClassEdit::GetUnqualifiedName(strippedClass.Data());
-   // If "strippedClass" is the same before and after the operation, we give an error.
+   TString memberName = TClassEdit::GetUnqualifiedName(strippedClass);
+   // Error out if "strippedClass" is unscoped (and it's not a class, see `TClass::GetClass(strippedClass)` above).
    // TODO: Global functions.
    if (strippedClass == memberName) {
-      Error("OpenReferenceGuideFor", "Incorrect format or the command is not supported yet!");
+      Error("OpenReferenceGuideFor", "Unknown entity \"%s\" - global variables / functions not supported yet!", strippedClass.Data());
       return;
    }
-   // Else we substract the name of the scope.
+   // Else we remove the member name to be left with the scope.
    TString scopeName = strippedClass.Remove(strippedClass.Length() - memberName.Length() - 2);
    // We check if the scope exists in ROOT.
    TClass *cl = TClass::GetClass(scopeName);
    if (!cl) {
-      // If the user wants to open a browser with the URL for "scopeName" only, but types the scope incorrectly.
-      Warning("TApplication::Help", "\"%s\" does not exist in ROOT!", scopeName.Data());
+      // That's a member of something ROOT doesn't know.
+      Warning("OpenReferenceGuideFor", "\"%s\" does not exist in ROOT!", scopeName.Data());
       return;
    }
    // We have enumerators for the three available cases - class, namespace and struct.
-   // We define "scopeType"check and check what is the used mode.
    EUrl scopeType;
    if (cl->Property() & kIsNamespace) {
       scopeType = kURLforNameSpace;
@@ -1000,11 +1002,11 @@ void TApplication::OpenReferenceGuideFor(TString strippedClass)
       scopeType = kURLforClass;
    }
    // If the user wants to search for a method, we take its name (memberName) and
-   // modify it - we delete everything after the first "(" so the user won't have to
-   // do it by hand when he uses Tab.
+   // modify it - we delete everything starting at the first "(" so the user won't have to
+   // do it by hand when they use Tab.
    int bracket = memberName.First("(");
    if (bracket > 0) {
-      memberName.Remove(bracket,(memberName.Length()-bracket));
+      memberName.Remove(bracket);
    }
    // We check if "memberName" is a member fuction of "cl" or any of its base classes.
    if (TFunction *func = cl->GetMethodAllAny(memberName)) {
@@ -1014,19 +1016,16 @@ void TApplication::OpenReferenceGuideFor(TString strippedClass)
       EMethodKind methodType;
       // We check if "memberName" is a constructor.
       if (baseClName == memberName) {
-         std::cout << memberName.Data() << " is the constructor of " << baseClName.Data() << "."<< std::endl;
          methodType = kURLforStructor;
          // We check if "memberName" is a destructor.
       } else if (memberName[0] == '~') {
-         std::cout << memberName.Data() << " is the destructor of " << baseClName.Data() << "."<< std::endl;
          methodType = kURLforStructor;
          // We check if "memberName" is a method.
       } else {
-         std::cout << memberName.Data() << " is a method from " << baseClName.Data() << "." << std::endl;
          methodType = kURLforMethod;
       }
       // We call "GetUrlForMethod" for the correct class and scope.
-      OpenInBrowser(GetUrlForMethod (baseClName, memberName, func, methodType, scopeType));
+      OpenInBrowser(GetUrlForMethod(baseClName, memberName, func, methodType, scopeType));
       return;
    }
    // We check if "memberName" is an enumeration.
@@ -1035,11 +1034,11 @@ void TApplication::OpenReferenceGuideFor(TString strippedClass)
       // with respect to the "scopeType".
       OpenInBrowser(GetUrlForEnumeration(scopeName, memberName, scopeType));
       return;
-    }
+   }
 
    // We check if "memberName" is enumerator defined in one the base classes of "scopeName".
    if (TDataMember *enumerator = (TDataMember*)cl->GetListOfAllPublicDataMembers()->FindObject(memberName)) {
-      // We find what is its name and open the URL in a browser.
+      // We find the actual scope (might be in a base) and open the URL in a browser.
       TString baseClName = ((TMethod *)enumerator->GetClass())->GetName();
       OpenInBrowser(GetUrlForDataMember(baseClName, memberName, enumerator, scopeType));
       return;
@@ -1047,12 +1046,10 @@ void TApplication::OpenReferenceGuideFor(TString strippedClass)
 
    // Warning message will appear if the user types the function name incorrectly
    // or the function is not a member function of "cl" or any of its base classes.
-   Warning("Help", "\"%s\" has incorrect format or is not a member of %s or its base classes!", memberName.Data(), scopeName.Data());
+   Warning("OpenReferenceGuideFor", "\"%s\" has incorrect format or is not a member of %s or its base classes!", memberName.Data(), scopeName.Data());
    // We will open a browser with the URL for the class only if the user types "y".
-   std::cout << "Would you like to open the online reference guide for " << scopeName.Data()<< "? <y/n>" << std::endl;
    std::string open;
    std::cin >> open;
-   if (open == "y") {
       OpenInBrowser(UrlGenerator(scopeName, scopeType));
    }
 }
@@ -1092,9 +1089,9 @@ void TApplication::Help(const char *line)
       strippedCommand.Remove(0, 5);
    }
    // We strip the command line after removing ".help" or ".?".
-   TString strippedClass = strippedCommand.Strip(TString::kBoth);
+   strippedCommand = strippedCommand.Strip(TString::kBoth);
    // We call the function what handles the extended ".help scopeName" command.
-   OpenReferenceGuideFor(strippedClass);
+   OpenReferenceGuideFor(strippedCommand);
    }
 }
 
