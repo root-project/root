@@ -786,7 +786,7 @@ static TString FormatReturnTypeForDoxygen(const TString &scopeName, TFunction *f
       }
       returnType.ReplaceAll(" *", "*");
    } else {
-      // If the function is not inline we only change the spacing in "returnTyp$
+      // If the function is not inline we only change the spacing in "returnType"
       returnType.ReplaceAll("*", " *");
    }
    // In any case (with no respect to virtual/inline check) we need to change
