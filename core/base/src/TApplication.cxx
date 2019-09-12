@@ -892,7 +892,7 @@ static TString GetUrlForEnumeration(TString scopeName, const TString &enumeratio
    md5Enumeration.Append(enumeration);
    // We make the URL for the scope "scopeName".
    TString url(UrlGenerator(scopeName, scopeType));
-   // Then we have to append "#a" and the crypted text.
+   // Then we have to append "#a" and the hashed text.
    url.Append("#a");
    url.Append(md5Enumeration.MD5());
    return url;
