@@ -27,6 +27,7 @@ if(dataframe)
         TMVA/RStandardScaler.hxx
         TMVA/RReader.hxx
         TMVA/RInferenceUtils.hxx
+        TMVA/RBDT.hxx
     )
     set(TMVA_EXTRA_DEPENDENCIES
         ROOTDataFrame
