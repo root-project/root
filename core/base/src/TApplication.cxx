@@ -986,7 +986,7 @@ void TApplication::OpenReferenceGuideFor(const TString &strippedClass)
    // We check if the scope exists in ROOT.
    TClass *cl = TClass::GetClass(scopeName);
    if (!cl) {
-      // If the user wants to open a browser with the URL for "scopeName" only, but types the scope incorrectly.
+      // That's a member of something ROOT doesn't know.
       Warning("OpenReferenceGuideFor", "\"%s\" does not exist in ROOT!", scopeName.Data());
       return;
    }
