@@ -987,7 +987,7 @@ void TApplication::OpenReferenceGuideFor(TString strippedClass)
    TClass *cl = TClass::GetClass(scopeName);
    if (!cl) {
       // If the user wants to open a browser with the URL for "scopeName" only, but types the scope incorrectly.
-      Warning("TApplication::Help", "\"%s\" does not exist in ROOT!", scopeName.Data());
+      Warning("OpenReferenceGuideFor", "\"%s\" does not exist in ROOT!", scopeName.Data());
       return;
    }
    // We have enumerators for the three available cases - class, namespace and struct.
