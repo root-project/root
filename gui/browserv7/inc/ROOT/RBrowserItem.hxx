@@ -17,6 +17,9 @@
 #ifndef ROOT7_RBrowserItem
 #define ROOT7_RBrowserItem
 
+#include <string>
+#include <vector>
+
 namespace ROOT {
 namespace Experimental {
 
