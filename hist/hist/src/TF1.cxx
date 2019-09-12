@@ -713,8 +713,8 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, Op
 TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList) :
    TF1(EFType::kInterpreted, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar))
 {
-   if (fName == "*") {
-      Info("TF1", "TF1 has name * - it is not well defined");
+   if (fName.Data()[0] == '*') {  // case TF1 name starts with a *
+      Info("TF1", "TF1 has a name starting with a \'*\' - it is for saved TF1 objects in a .C file");
       return; //case happens via SavePrimitive
    } else if (fName.IsNull()) {
       Error("TF1", "requires a proper function name!");
