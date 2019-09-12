@@ -31,9 +31,9 @@ void lineWidthNew()
       num = num + 0.05;
 
       // current way to draw primitives - it always returns drawing options
-      RPadPos pt(.3_normal, RPadLength::Normal(num));
-      auto optts = canvas->Draw(RText(pt, std::to_string(i)));
-      optts->SetSize(13).SetAlign(32).SetFont(52);
+      RPadPosNew pt(RPadLengthNew::Normal(0.32), RPadLengthNew::Normal(num));
+      auto text = canvas->DrawNew<RTextNew>(pt, std::to_string(i));
+      text->AttrText().SetSize(13).SetAlign(32).SetFont(52);
 
       RPadPosNew pl1(RPadLengthNew::Normal(0.32), RPadLengthNew::Normal(num));
       RPadPosNew pl2(RPadLengthNew::Normal(0.8), RPadLengthNew::Normal(num));
