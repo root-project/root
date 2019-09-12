@@ -4041,7 +4041,7 @@ int RootClingMain(int argc,
       clingArgs.push_back(std::string("-U") + PPUndefine);
 
    for (const std::string &IncludePath : gOptIncludePaths)
-      clingArgs.push_back(std::string("-I") + IncludePath);
+      clingArgs.push_back(std::string("-I") + llvm::sys::path::convert_to_slash(IncludePath));
 
    for (const std::string &WDiag : gOptWDiags) {
       const std::string FullWDiag = std::string("-W") + WDiag;
