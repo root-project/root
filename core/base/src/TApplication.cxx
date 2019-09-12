@@ -696,8 +696,6 @@ static TString UrlGenerator(TString scopeName, EUrl scopeType)
       version = "master";
    }
    delete objarr;
-   delete objarr;
-   delete objarr;
    url.Append(version);
    url.Append("/");
    // We will replace all "::" with "_1_1" and all "_" with "__" in the
@@ -1045,7 +1043,7 @@ void TApplication::OpenReferenceGuideFor(const TString &strippedClass)
 
    // Warning message will appear if the user types the function name incorrectly
    // or the function is not a member function of "cl" or any of its base classes.
-   Warning("Help", cannot find "\"%s\" as member of %s or its base classes! Check %s\n",
+   Warning("Help", "cannot find \"%s\" as member of %s or its base classes! Check %s\n",
       memberName.Data(), scopeName.Data(), UrlGenerator(scopeName, scopeType).Data());
 }
 
