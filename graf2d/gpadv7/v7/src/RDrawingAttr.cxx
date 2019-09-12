@@ -234,7 +234,7 @@ const ROOT::Experimental::RDrawableAttributes::Value_t *ROOT::Experimental::RSty
       bool match = (block.selector == type) || (!user_class.empty() && (block.selector == "."s + user_class));
 
       if (match) {
-         auto res = block.map.Eval(field);
+         auto res = block.map.Find(field);
          if (res) return res;
       }
    }
@@ -273,27 +273,51 @@ void ROOT::Experimental::RAttributesVisitor::CreateOwnAttr()
    fAttr = fOwnAttr.get();
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////
 /// Copy attributes from other object
 
-void ROOT::Experimental::RAttributesVisitor::Copy(const RAttributesVisitor &src, bool use_dflts)
+bool ROOT::Experimental::RAttributesVisitor::CopyValue(const std::string &name, const RDrawableAttributes::Value_t *value, bool check_type)
 {
-   if (!GetAttr(true)) return;
+   if (!value) return false;
 
-   bool same_dflts = &GetDefaults() == &src.GetDefaults();
+   if (check_type) {
+      const auto *dvalue = GetDefaults().Find(name);
+      if (!dvalue || !dvalue->Compatible(value->Kind()))
+         return false;
+   }
+
+   if (!GetAttr(true))
+      return false;
+
+   fAttr->map.Add(GetFullName(name), value->Copy());
+
+   return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/// Copy attributes from other object
+
+void ROOT::Experimental::RAttributesVisitor::Copy(const RAttributesVisitor &src, bool use_style)
+{
+   if (!src.GetAttr()) return;
 
    for (const auto &entry : src.GetDefaults()) {
-      const auto *value = src.Eval(entry.first, use_dflts);
 
-      // check if element with given name exists at all
-      if (!same_dflts && value) {
-         const auto *dvalue = GetDefaults().Eval(entry.first);
-         if (!dvalue || !dvalue->Compatible(value->Kind()))
-            value = nullptr;
+      auto fullname = src.GetFullName(entry.first);
+
+      auto rec = src.fAttr->map.Find(fullname);
+      if (rec && CopyValue(entry.first,rec)) continue;
+
+      const auto *prnt = &src;
+      while (prnt && use_style) {
+         if (auto observe = prnt->fStyle.lock()) {
+            rec = observe->Eval(src.fAttr->type, src.fAttr->user_class, fullname);
+            if (rec && CopyValue(entry.first, rec)) break;
+         }
+         prnt = prnt->fParent;
       }
-
-      if (value)
-         fAttr->map.Add(GetFullName(entry.first), value->Copy());
    }
 }
 
@@ -303,7 +327,7 @@ void ROOT::Experimental::RAttributesVisitor::Copy(const RAttributesVisitor &src,
 
 void ROOT::Experimental::RAttributesVisitor::SemanticCopy(const RAttributesVisitor &src)
 {
-   if (!src.GetAttr() || !GetAttr(true)) return;
+   if (!src.GetAttr()) return;
 
    for (const auto &pair : src.fAttr->map) {
       auto attrname = pair.first;
@@ -313,8 +337,9 @@ void ROOT::Experimental::RAttributesVisitor::SemanticCopy(const RAttributesVisit
          attrname.erase(0, src.fPrefix.length());
       }
 
+
       if (!attrname.empty())
-         fAttr->map.Add(GetFullName(attrname), pair.second->Copy());
+         CopyValue(attrname, pair.second.get(), false);
    }
 }
 
@@ -349,42 +374,6 @@ bool ROOT::Experimental::RAttributesVisitor::GetAttr(bool force) const
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Return value from attributes container - no style or defaults are used
-
-const ROOT::Experimental::RDrawableAttributes::Value_t *ROOT::Experimental::RAttributesVisitor::GetValue(const std::string &name) const
-{
-   return GetAttr() ? fAttr->map.Eval(GetFullName(name)) : nullptr;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// Evaluate attribute value
-
-const ROOT::Experimental::RDrawableAttributes::Value_t *ROOT::Experimental::RAttributesVisitor::Eval(const std::string &name, bool use_dflts) const
-{
-   const RDrawableAttributes::Value_t *res = nullptr;
-
-   if (GetAttr()) {
-      auto fullname = GetFullName(name);
-
-      res = fAttr->map.Eval(fullname);
-      if (res) return res;
-
-      const auto *prnt = this;
-
-      while (prnt) {
-         if (prnt->fStyle)
-            res = prnt->fStyle->Eval(fAttr->type, fAttr->user_class, fullname);
-         if (res) return res;
-         prnt = prnt->fParent;
-      }
-   }
-
-   if (use_dflts) {
-      res = GetDefaults().Eval(name);
-      if (res) return res;
-   }
-
-   return res;
-}
 
 void ROOT::Experimental::RAttributesVisitor::ClearValue(const std::string &name)
 {

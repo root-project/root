@@ -385,7 +385,7 @@ public:
          return *this;
       }
 
-      const Value_t *Eval(const std::string &name) const
+      const Value_t *Find(const std::string &name) const
       {
          auto entry = m.find(name);
          return (entry != m.end()) ? entry->second.get() : nullptr;
@@ -462,7 +462,7 @@ class RAttributesVisitor {
    RDrawableAttributes *fAttr{nullptr};                            ///<! source for attributes
    std::unique_ptr<RDrawableAttributes> fOwnAttr;                  ///<! own instance when deep copy is created
    std::string fPrefix;                                            ///<! name prefix for all attributes values
-   std::shared_ptr<RStyleNew> fStyle;                              ///<! style used for evaluations
+   std::weak_ptr<RStyleNew> fStyle;                                ///<! style used for evaluations
    RAttributesVisitor *fParent{nullptr};                           ///<! parent attributes, prefix applied to it
 
    std::string GetFullName(const std::string &name) const { return fPrefix + name; }
@@ -480,47 +480,37 @@ protected:
    /** Get attribute value from container */
    const RDrawableAttributes::Value_t *GetValue(const std::string &name) const;
 
-   /** Evaluate value of attribute, nullptr means no value found */
-   const RDrawableAttributes::Value_t *Eval(const std::string &name, bool use_dflts = true) const;
+   bool CopyValue(const std::string &name, const RDrawableAttributes::Value_t * value, bool check_type = true);
 
    ///////////////////////////////////////////////////////////////////////////////
    /// Evaluate attribute value
 
-/*   template <typename T, typename std::enable_if_t<std::is_same<T,bool>::value>::type = 0>
-   T get_value(RDrawableAttributes::Value_t *rec) {
-       return rec ? true : false;
-   }
-
-   template <typename T, typename std::enable_if_t<!std::is_same<T,bool>::value>::type = 0>
-   T get_value(RDrawableAttributes::Value_t *rec) {
-       return rec ? rec->get<T>() : T();
-   }
-*/
-
-
    template <typename T>
-   auto Eval(const std::string &name) const
+   auto Eval(const std::string &name, bool use_dflts = true) const
    {
-      if (GetAttr()) {
-         auto fullname = GetFullName(name);
+      auto fullname = GetFullName(name);
 
-         auto rec = fAttr->map.Eval(fullname);
+      const RDrawableAttributes::Value_t *rec = nullptr;
+
+      if (GetAttr()) {
+         rec = fAttr->map.Find(fullname);
          if (rec) return RDrawableAttributes::Value_t::get_value<T>(rec);
 
          const auto *prnt = this;
-
          while (prnt) {
-            if (prnt->fStyle)
-               rec = prnt->fStyle->Eval(fAttr->type, fAttr->user_class, fullname);
-            if (rec) return RDrawableAttributes::Value_t::get_value<T>(rec);
+            if (auto observe = prnt->fStyle.lock()) {
+               rec = observe->Eval(fAttr->type, fAttr->user_class, fullname);
+               if (rec) return RDrawableAttributes::Value_t::get_value<T>(rec);
+            }
             prnt = prnt->fParent;
          }
       }
 
-      auto rec = GetDefaults().Eval(name);
+      if (use_dflts)
+         rec = GetDefaults().Find(name);
+
       return RDrawableAttributes::Value_t::get_value<T>(rec);
    }
-
 
    void CreateOwnAttr();
 
@@ -560,7 +550,7 @@ public:
 
    virtual ~RAttributesVisitor() = default;
 
-   void Copy(const RAttributesVisitor &src, bool use_dflts = false);
+   void Copy(const RAttributesVisitor &src, bool use_style = true);
 
    void UseStyle(std::shared_ptr<RStyleNew> style) { fStyle = style; }
 
@@ -572,11 +562,12 @@ public:
 
    void Clear();
 
-   bool HasValue(const std::string &name) const { return Eval<const RDrawableAttributes::Value_t *>(name) != nullptr; }
+   bool HasValue(const std::string &name, bool check_defaults = true) const { return Eval<const RDrawableAttributes::Value_t *>(name, check_defaults) != nullptr; }
 
    template<typename T, std::enable_if_t<!std::is_pointer<T>{}>* = nullptr>
    T Get(const std::string &name) const { return Eval<T>(name); }
 
+   // sahould be removed as soon as possible
    std::string GetString(const std::string &name) const { return Eval<std::string>(name); }
    int GetInt(const std::string &name) const { return Eval<int>(name); }
    double GetDouble(const std::string &name) const { return Eval<double>(name); }
