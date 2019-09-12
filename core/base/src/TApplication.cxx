@@ -777,7 +777,7 @@ static TString FormatReturnTypeForDoxygen(const TString &scopeName, TFunction *f
    scopeNameRE.Append("::\\b");
    TPRegexp returnFix(scopeNameRE);
    returnFix.Substitute(returnType, "");
-   // We check is if the method is deffined as inline.
+   // We check is if the method is defined as inline.
    if (func->ExtraProperty() & kIsInlined) {
       // We check if the function is defined as virtual.
       if (func->Property() & kIsVirtual) {
