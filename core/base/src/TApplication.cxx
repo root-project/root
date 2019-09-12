@@ -991,7 +991,6 @@ void TApplication::OpenReferenceGuideFor(TString strippedClass)
       return;
    }
    // We have enumerators for the three available cases - class, namespace and struct.
-   // We define "scopeType"check and check what is the used mode.
    EUrl scopeType;
    if (cl->Property() & kIsNamespace) {
       scopeType = kURLforNameSpace;
