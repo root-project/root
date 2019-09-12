@@ -201,6 +201,16 @@ void ROOT::Experimental::RDrawingAttrHolder::CopyAttributesInPath(const Path_t &
 
 ///////////////////////////////////////////////////////////////////////////////
 
+template<> int ROOT::Experimental::RDrawableAttributes::Value_t::get<int>() const { return GetInt(); }
+template<> double ROOT::Experimental::RDrawableAttributes::Value_t::get<double>() const { return GetDouble(); }
+template<> std::string ROOT::Experimental::RDrawableAttributes::Value_t::get<std::string>() const { return GetString(); }
+
+template<> int ROOT::Experimental::RDrawableAttributes::Value_t::get_value<int>(const Value_t *rec) { return rec ? rec->GetInt() : 0; }
+template<> double ROOT::Experimental::RDrawableAttributes::Value_t::get_value<double>(const Value_t *rec) { return rec ? rec->GetDouble() : 0.; }
+template<> std::string ROOT::Experimental::RDrawableAttributes::Value_t::get_value<std::string>(const Value_t *rec) { return rec ? rec->GetString() : ""; }
+template<> const ROOT::Experimental::RDrawableAttributes::Value_t *ROOT::Experimental::RDrawableAttributes::Value_t::get_value<const ROOT::Experimental::RDrawableAttributes::Value_t *>(const Value_t *rec) { return rec; }
+
+
 
 using namespace std::string_literals;
 
@@ -373,10 +383,6 @@ const ROOT::Experimental::RDrawableAttributes::Value_t *ROOT::Experimental::RAtt
       if (res) return res;
    }
 
-   if (use_dflts && fAttr && fAttr->defaults) {
-      res = fAttr->defaults->Eval(GetFullName(name));
-   }
-
    return res;
 }
 
@@ -415,25 +421,4 @@ void ROOT::Experimental::RAttributesVisitor::Clear()
    if (GetAttr())
       for (const auto &entry : GetDefaults())
          fAttr->map.Clear(GetFullName(entry.first));
-}
-
-std::string ROOT::Experimental::RAttributesVisitor::GetString(const std::string &name) const
-{
-   auto res = Eval(name);
-   if (!res || !res->Compatible(RDrawableAttributes::kString)) return ""s;
-   return res->GetString();
-}
-
-int ROOT::Experimental::RAttributesVisitor::GetInt(const std::string &name) const
-{
-   auto res = Eval(name);
-   if (!res || !res->Compatible(RDrawableAttributes::kInt)) return 0;
-   return res->GetInt();
-}
-
-double ROOT::Experimental::RAttributesVisitor::GetDouble(const std::string &name) const
-{
-   auto res = Eval(name);
-   if (!res || !res->Compatible(RDrawableAttributes::kDouble)) return 0.;
-   return res->GetDouble();
 }
