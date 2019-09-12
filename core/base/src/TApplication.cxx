@@ -1000,7 +1000,7 @@ void TApplication::OpenReferenceGuideFor(TString strippedClass)
       scopeType = kURLforClass;
    }
    // If the user wants to search for a method, we take its name (memberName) and
-   // modify it - we delete everything after the first "(" so the user won't have to
+   // modify it - we delete everything starting at the first "(" so the user won't have to
    // do it by hand when he uses Tab.
    int bracket = memberName.First("(");
    if (bracket > 0) {
