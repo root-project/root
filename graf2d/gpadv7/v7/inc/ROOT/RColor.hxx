@@ -295,11 +295,11 @@ public:
       SetAlfa(alfa);
    }
 
-   std::string GetRGB() const { return GetString("rgb"); }
+   std::string GetRGB() const { return GetValue<std::string>("rgb"); }
    RColorNew &SetRGB(const std::string &_rgb) { SetValue("rgb", _rgb); return *this; }
    RColorNew &SetRGB(int r, int g, int b) { return SetRGB(std::to_string(r) + "," + std::to_string(g) + "," + std::to_string(b)); }
 
-   double GetAlfa() const { return GetDouble("a"); }
+   double GetAlfa() const { return GetValue<double>("a"); }
    bool HasAlfa() const { return HasValue("a"); }
    RColorNew &SetAlfa(double _alfa) { SetValue("a", _alfa); return *this; }
 

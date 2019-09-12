@@ -312,6 +312,7 @@ public:
       virtual ~Value_t() = default;
       virtual EValuesKind Kind() const = 0;
       virtual bool Compatible(EValuesKind kind) const { return kind == Kind(); }
+      virtual bool GetBool() const { return false; }
       virtual int GetInt() const { return 0; }
       virtual double GetDouble() const { return 0; }
       virtual std::string GetString() const { return ""; }
@@ -320,12 +321,22 @@ public:
 
       template<typename T> T get() const;
 
-      template <typename T>
+      template <typename T, typename second = void>
       static T get_value(const Value_t *rec);
    };
 
+   class BoolValue_t : public Value_t {
+      bool v{false}; ///< integer value
+   public:
+      explicit BoolValue_t(bool _v = false) : v(_v) {}
+      EValuesKind Kind() const final { return kBool; }
+      bool GetBool() const final { return v; }
+      Value_t *Copy() const final { return new BoolValue_t(v); }
+   };
+
+
    class IntValue_t : public Value_t {
-      int v; ///< integer value
+      int v{0}; ///< integer value
    public:
       IntValue_t(int _v = 0) : v(_v) {}
       EValuesKind Kind() const final { return kInt; }
@@ -334,7 +345,7 @@ public:
    };
 
    class DoubleValue_t : public Value_t {
-      double v; ///< double value
+      double v{0}; ///< double value
    public:
       DoubleValue_t(double _v = 0) : v(_v) {}
       EValuesKind Kind() const final { return kDouble; }
@@ -360,6 +371,7 @@ public:
       Map_t() = default; ///< JSON_asbase - store as map object
 
       Map_t &Add(const std::string &name, Value_t *value) { if (value) m[name] = std::unique_ptr<Value_t>(value); return *this; }
+      Map_t &AddBool(const std::string &name, bool value) { m[name] = std::make_unique<BoolValue_t>(value); return *this; }
       Map_t &AddInt(const std::string &name, int value) { m[name] = std::make_unique<IntValue_t>(value); return *this; }
       Map_t &AddDouble(const std::string &name, double value) { m[name] = std::make_unique<DoubleValue_t>(value); return *this; }
       Map_t &AddString(const std::string &name, const std::string &value) { m[name] = std::make_unique<StringValue_t>(value); return *this; }
@@ -416,14 +428,20 @@ public:
    ~RDrawableAttributes() {}
 };
 
+template<> bool RDrawableAttributes::Value_t::get<bool>() const;
 template<> int RDrawableAttributes::Value_t::get<int>() const;
 template<> double RDrawableAttributes::Value_t::get<double>() const;
 template<> std::string RDrawableAttributes::Value_t::get<std::string>() const;
 
-template<> int RDrawableAttributes::Value_t::get_value<int>(const Value_t *rec);
-template<> double RDrawableAttributes::Value_t::get_value<double>(const Value_t *rec);
-template<> std::string RDrawableAttributes::Value_t::get_value<std::string>(const Value_t *rec);
-template<> const RDrawableAttributes::Value_t *RDrawableAttributes::Value_t::get_value<const RDrawableAttributes::Value_t *>(const Value_t *rec);
+template<> bool RDrawableAttributes::Value_t::get_value<bool,void>(const Value_t *rec);
+template<> int RDrawableAttributes::Value_t::get_value<int,void>(const Value_t *rec);
+template<> double RDrawableAttributes::Value_t::get_value<double,void>(const Value_t *rec);
+template<> std::string RDrawableAttributes::Value_t::get_value<std::string,void>(const Value_t *rec);
+template<> const RDrawableAttributes::Value_t *RDrawableAttributes::Value_t::get_value<const RDrawableAttributes::Value_t *,void>(const Value_t *rec);
+template<> const RDrawableAttributes::Value_t *RDrawableAttributes::Value_t::get_value<const RDrawableAttributes::Value_t *,bool>(const Value_t *rec);
+template<> const RDrawableAttributes::Value_t *RDrawableAttributes::Value_t::get_value<const RDrawableAttributes::Value_t *,int>(const Value_t *rec);
+template<> const RDrawableAttributes::Value_t *RDrawableAttributes::Value_t::get_value<const RDrawableAttributes::Value_t *,double>(const Value_t *rec);
+template<> const RDrawableAttributes::Value_t *RDrawableAttributes::Value_t::get_value<const RDrawableAttributes::Value_t *,std::string>(const Value_t *rec);
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -477,15 +495,12 @@ protected:
       return empty;
    }
 
-   /** Get attribute value from container */
-   const RDrawableAttributes::Value_t *GetValue(const std::string &name) const;
-
    bool CopyValue(const std::string &name, const RDrawableAttributes::Value_t * value, bool check_type = true);
 
    ///////////////////////////////////////////////////////////////////////////////
    /// Evaluate attribute value
 
-   template <typename T>
+   template <typename T,typename S = void>
    auto Eval(const std::string &name, bool use_dflts = true) const
    {
       auto fullname = GetFullName(name);
@@ -494,13 +509,13 @@ protected:
 
       if (GetAttr()) {
          rec = fAttr->map.Find(fullname);
-         if (rec) return RDrawableAttributes::Value_t::get_value<T>(rec);
+         if (rec) return RDrawableAttributes::Value_t::get_value<T,S>(rec);
 
          const auto *prnt = this;
          while (prnt) {
             if (auto observe = prnt->fStyle.lock()) {
                rec = observe->Eval(fAttr->type, fAttr->user_class, fullname);
-               if (rec) return RDrawableAttributes::Value_t::get_value<T>(rec);
+               if (rec) return RDrawableAttributes::Value_t::get_value<T,S>(rec);
             }
             prnt = prnt->fParent;
          }
@@ -509,7 +524,7 @@ protected:
       if (use_dflts)
          rec = GetDefaults().Find(name);
 
-      return RDrawableAttributes::Value_t::get_value<T>(rec);
+      return RDrawableAttributes::Value_t::get_value<T,S>(rec);
    }
 
    void CreateOwnAttr();
@@ -562,15 +577,11 @@ public:
 
    void Clear();
 
-   bool HasValue(const std::string &name, bool check_defaults = true) const { return Eval<const RDrawableAttributes::Value_t *>(name, check_defaults) != nullptr; }
+   template<typename T = void, std::enable_if_t<!std::is_pointer<T>{}>* = nullptr>
+   bool HasValue(const std::string &name, bool check_defaults = false) const { return Eval<const RDrawableAttributes::Value_t *,T>(name, check_defaults) != nullptr; }
 
    template<typename T, std::enable_if_t<!std::is_pointer<T>{}>* = nullptr>
-   T Get(const std::string &name) const { return Eval<T>(name); }
-
-   // sahould be removed as soon as possible
-   std::string GetString(const std::string &name) const { return Eval<std::string>(name); }
-   int GetInt(const std::string &name) const { return Eval<int>(name); }
-   double GetDouble(const std::string &name) const { return Eval<double>(name); }
+   T GetValue(const std::string &name) const { return Eval<T>(name); }
 };
 
 

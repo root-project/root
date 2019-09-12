@@ -60,11 +60,11 @@ public:
 
    ///The width of the line.
    RAttrLineNew &SetWidth(double width) { SetValue("width", width); return *this; }
-   double GetWidth() const { return GetDouble("width"); }
+   double GetWidth() const { return GetValue<double>("width"); }
 
    ///The style of the line.
    RAttrLineNew &SetStyle(int style) { SetValue("style", style); return *this; }
-   int GetStyle() const { return GetInt("style"); }
+   int GetStyle() const { return GetValue<int>("style"); }
 
    ///The color of the line.
    RAttrLineNew &SetColor(const RColorNew &color) { fColor = color; return *this; }
