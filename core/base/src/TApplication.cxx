@@ -1046,7 +1046,6 @@ void TApplication::OpenReferenceGuideFor(const TString &strippedClass)
    // or the function is not a member function of "cl" or any of its base classes.
    Warning("OpenReferenceGuideFor", "\"%s\" has incorrect format or is not a member of %s or its base classes!", memberName.Data(), scopeName.Data());
    // We will open a browser with the URL for the class only if the user types "y".
-   std::cout << "Would you like to open the online reference guide for " << scopeName.Data()<< "? <y/n>" << std::endl;
    std::string open;
    std::cin >> open;
    if (open == "y") {
