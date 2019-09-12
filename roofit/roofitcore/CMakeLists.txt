@@ -232,6 +232,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooSpan.h
     BatchData.h
     RooVDTHeaders.h
+    RooWrapperPdf.h
   SOURCES
     src/BidirMMapPipe.cxx
     src/BidirMMapPipe.h
@@ -450,7 +451,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooXYChi2Var.cxx
     src/RooHelpers.cxx
     src/BatchData.cxx
-  DICTIONARY_OPTIONS
+    src/RooWrapperPdf.cxx
+    DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   DEPENDENCIES
     Core
