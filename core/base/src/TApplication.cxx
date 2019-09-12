@@ -849,7 +849,7 @@ static TString GetUrlForDataMember(const TString &scopeName, const TString &data
       md5EnumClass.Append("::@1@1");
    } else {
       // If the enumeration is not anonymous we put "scopeName::Enumeration" in a TString,
-      // which will be crypted with MD5 later.
+      // which will be hashed with MD5 later.
       md5EnumClass.Append(scopeEnumeration);
       // We extract the part after "::" (this is the enumerator name).
       TString enumOnlyName = TClassEdit::GetUnqualifiedName(scopeEnumeration);
