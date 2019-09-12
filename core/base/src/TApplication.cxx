@@ -1014,7 +1014,6 @@ void TApplication::OpenReferenceGuideFor(const TString &strippedClass)
       EMethodKind methodType;
       // We check if "memberName" is a constructor.
       if (baseClName == memberName) {
-         std::cout << memberName.Data() << " is the constructor of " << baseClName.Data() << "."<< std::endl;
          methodType = kURLforStructor;
          // We check if "memberName" is a destructor.
       } else if (memberName[0] == '~') {
