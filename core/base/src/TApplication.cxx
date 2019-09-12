@@ -1004,7 +1004,7 @@ void TApplication::OpenReferenceGuideFor(const TString &strippedClass)
    // do it by hand when they use Tab.
    int bracket = memberName.First("(");
    if (bracket > 0) {
-      memberName.Remove(bracket,(memberName.Length()-bracket));
+      memberName.Remove(bracket);
    }
    // We check if "memberName" is a member fuction of "cl" or any of its base classes.
    if (TFunction *func = cl->GetMethodAllAny(memberName)) {
