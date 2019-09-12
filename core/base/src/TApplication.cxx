@@ -1035,7 +1035,7 @@ void TApplication::OpenReferenceGuideFor(TString strippedClass)
       // with respect to the "scopeType".
       OpenInBrowser(GetUrlForEnumeration(scopeName, memberName, scopeType));
       return;
-    }
+   }
 
    // We check if "memberName" is enumerator defined in one the base classes of "scopeName".
    if (TDataMember *enumerator = (TDataMember*)cl->GetListOfAllPublicDataMembers()->FindObject(memberName)) {
