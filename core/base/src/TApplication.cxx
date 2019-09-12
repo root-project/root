@@ -978,7 +978,7 @@ void TApplication::OpenReferenceGuideFor(const TString &strippedClass)
    // Error out if "strippedClass" is unscoped (and it's not a class, see `TClass::GetClass(strippedClass)` above).
    // TODO: Global functions.
    if (strippedClass == memberName) {
-      Error("OpenReferenceGuideFor", "Incorrect format or the command is not supported yet!");
+      Error("OpenReferenceGuideFor", "Unknown entity \"%s\" - global variables / functions not supported yet!", strippedClass.Data());
       return;
    }
    // Else we remove the member name to be left with the scope.
