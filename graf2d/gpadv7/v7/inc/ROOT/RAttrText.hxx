@@ -72,19 +72,19 @@ public:
 
    ///The text size
    RAttrTextNew &SetSize(double width) { SetValue("size", width); return *this; }
-   double GetSize() const { return GetDouble("size"); }
+   double GetSize() const { return GetValue<double>("size"); }
 
    ///The text angle
    RAttrTextNew &SetAngle(double angle) { SetValue("angle", angle); return *this; }
-   double GetAngle() const { return GetDouble("angle"); }
+   double GetAngle() const { return GetValue<double>("angle"); }
 
    ///The text align
    RAttrTextNew &SetAlign(int align) { SetValue("align", align); return *this; }
-   int GetAlign() const { return GetInt("align"); }
+   int GetAlign() const { return GetValue<int>("align"); }
 
    ///The text font
    RAttrTextNew &SetFont(int font) { SetValue("font", font); return *this; }
-   int GetFont() const { return GetInt("font"); }
+   int GetFont() const { return GetValue<int>("font"); }
 
    ///The color of the line.
    RAttrTextNew &SetColor(const RColorNew &color) { fColor = color; return *this; }
