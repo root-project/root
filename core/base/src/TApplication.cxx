@@ -856,7 +856,7 @@ static TString GetUrlForDataMember(const TString &scopeName, const TString &data
       // The syntax is "Class::EnumeratorEnumerator
       md5EnumClass.Append(enumOnlyName);
    }
-   // The next part of the URL is crypted "@ scopeName::EnumeratorEnumerator".
+   // The next part of the URL is hashed "@ scopeName::EnumeratorEnumerator".
    TString md5Enumerator("@ ");
    md5Enumerator.Append(scopeName);
    md5Enumerator.Append("::");
