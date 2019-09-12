@@ -696,6 +696,7 @@ static TString UrlGenerator(TString scopeName, EUrl scopeType)
       // If it's not a supported version, we will go to "master" branch.
       version = "master";
    }
+   delete objarr;
    url.Append(version);
    url.Append("/");
    // We will replace all "::" with "_1_1" and all "_" with "__" in the
