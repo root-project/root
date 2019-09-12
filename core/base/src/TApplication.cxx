@@ -915,7 +915,7 @@ enum EMethodKind {kURLforMethod, kURLforStructor};
 /// \param[in] methodType enumerator for method or constructor
 /// \param[in] scopeType enumerator for class/namespace/struct
 
-static TString GetUrlForMethod(TString scopeName, const TString &methodName, TFunction *func, EMethodKind methodType, EUrl scopeType)
+static TString GetUrlForMethod(const TString &scopeName, const TString &methodName, TFunction *func, EMethodKind methodType, EUrl scopeType)
 {
    TString md5Text;
    if (methodType == kURLforMethod) {
