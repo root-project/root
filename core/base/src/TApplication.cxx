@@ -1001,7 +1001,7 @@ void TApplication::OpenReferenceGuideFor(TString strippedClass)
    }
    // If the user wants to search for a method, we take its name (memberName) and
    // modify it - we delete everything starting at the first "(" so the user won't have to
-   // do it by hand when he uses Tab.
+   // do it by hand when they use Tab.
    int bracket = memberName.First("(");
    if (bracket > 0) {
       memberName.Remove(bracket,(memberName.Length()-bracket));
