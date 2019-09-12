@@ -339,11 +339,11 @@ Double_t RooAbsReal::traceEval(const RooArgSet* /*nset*/) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Variant of getAnalyticalIntegral that is also passed the normalization set
-/// that should be applied to the integrand of which the integral is request.
+/// that should be applied to the integrand of which the integral is requested.
 /// For certain operator p.d.f it is useful to overload this function rather
 /// than analyticalIntegralWN() as the additional normalization information
 /// may be useful in determining a more efficient decomposition of the
-/// requested integral
+/// requested integral.
 
 Int_t RooAbsReal::getAnalyticalIntegralWN(RooArgSet& allDeps, RooArgSet& analDeps,
 					  const RooArgSet* /*normSet*/, const char* rangeName) const
@@ -4885,7 +4885,7 @@ Double_t RooAbsReal::getVal(const RooArgSet* normalisationSet) const {
 
   const double ret = (_fast && !_inhibitDirty) ? _value : fullEval;
 
-  if (std::isfinite(ret) && ( ret != 0. ? (ret - fullEval)/ret : ret - fullEval) > 1.E-14) {
+  if (std::isfinite(ret) && ( ret != 0. ? (ret - fullEval)/ret : ret - fullEval) > 1.E-9) {
     gSystem->StackTrace();
     FormatPdfTree formatter;
     formatter << "--> (Scalar computation wrong here:)\n"
