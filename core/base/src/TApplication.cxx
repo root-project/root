@@ -923,7 +923,7 @@ static TString GetUrlForMethod(TString scopeName, const TString &methodName, TFu
       md5Text.Append((FormatReturnTypeForDoxygen(scopeName, func)));
       if (scopeType == kURLforNameSpace) {
          // We need to append "constexpr" if we work with constexpr functions in namespaces.
-         if ((func->Property() & kIsConstexpr)>0) {
+         if (func->Property() & kIsConstexpr) {
             md5Text.Prepend("constexpr ");
          }
       }
