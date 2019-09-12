@@ -884,7 +884,7 @@ namespace {
 /// \param[in] scopeType enumerator for class/namespace/struct
 
 static TString GetUrlForEnumeration(TString scopeName, const TString &enumeration, EUrl scopeType){
-   // The URL consists of URL for the "scopeName", "#a" and crypted with MD5 text.
+   // The URL consists of URL for the "scopeName", "#a" and hashed as MD5 text.
    // The text is "Class::EnumerationEnumeration.
    TString md5Enumeration(scopeName);
    md5Enumeration.Append("::");
