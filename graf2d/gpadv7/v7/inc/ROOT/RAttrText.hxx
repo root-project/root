@@ -54,6 +54,47 @@ public:
    int GetFont() const { return Get<int>("font"); }
 };
 
+
+class RAttrTextNew : public RAttributesVisitor {
+
+   RColorNew fColor{this, "color_"}; ///<! line color, will access container from line attributes
+
+protected:
+   const RDrawableAttributes::Map_t &GetDefaults() const override
+   {
+      static auto dflts = RDrawableAttributes::Map_t().AddDouble("size",12.).AddDouble("angle",0.).AddInt("align", 22).AddInt("font",41).AddDefaults(fColor);
+      return dflts;
+   }
+
+public:
+
+   using RAttributesVisitor::RAttributesVisitor;
+
+   ///The text size
+   RAttrTextNew &SetSize(double width) { SetValue("size", width); return *this; }
+   double GetSize() const { return GetDouble("size"); }
+
+   ///The text angle
+   RAttrTextNew &SetAngle(double angle) { SetValue("angle", angle); return *this; }
+   double GetAngle() const { return GetDouble("angle"); }
+
+   ///The text align
+   RAttrTextNew &SetAlign(int align) { SetValue("align", align); return *this; }
+   int GetAlign() const { return GetInt("align"); }
+
+   ///The text font
+   RAttrTextNew &SetFont(int font) { SetValue("font", font); return *this; }
+   int GetFont() const { return GetInt("font"); }
+
+   ///The color of the line.
+   RAttrTextNew &SetColor(const RColorNew &color) { fColor = color; return *this; }
+   const RColorNew &Color() const { return fColor; }
+   RColorNew &Color() { return fColor; }
+
+};
+
+
+
 } // namespace Experimental
 } // namespace ROOT
 

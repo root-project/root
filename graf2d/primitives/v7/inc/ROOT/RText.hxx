@@ -90,6 +90,59 @@ GetDrawable(const std::shared_ptr<ROOT::Experimental::RText> &text)
    return text;
 }
 
+
+class RTextNew : public RDrawable {
+
+   RDrawingOptsBase fOpts; ///<! only temporary here, should be removed later
+
+   std::string fText;  ///< text to display
+
+   RDrawableAttributes fAttr{"text"}; ///< attributes
+
+   RPadPosNew fPos{fAttr, "p_"};        ///<! position
+
+   RAttrTextNew  fTextAttr{fAttr, "text_"};  ///<! text attributes
+
+public:
+
+   RTextNew() = default;
+
+   RTextNew(const std::string &str)
+   {
+      fText = str;
+   }
+
+   RTextNew(const RPadPosNew& p, const std::string &str)
+   {
+      fText = str;
+      fPos = p;
+   }
+
+   void SetPos(const RPadPosNew& p) { fPos = p; }
+
+   const RPadPosNew& GetPos() const { return fPos; }
+
+   RAttrTextNew &AttrText() { return fTextAttr; }
+   const RAttrTextNew &AttrText() const { return fTextAttr; }
+
+   /** TDOD: remove it later */
+   RDrawingOptsBase &GetOptionsBase() override { return fOpts; }
+
+   void Paint(Internal::RPadPainter &topPad) final
+   {
+      topPad.AddDisplayItem(std::make_unique<RDrawableDisplayItem>(*this));
+   }
+
+};
+
+inline std::shared_ptr<ROOT::Experimental::RTextNew>
+GetDrawable(const std::shared_ptr<ROOT::Experimental::RTextNew> &txt)
+{
+   /// A RLine is a RDrawable itself.
+   return txt;
+}
+
+
 } // namespace Experimental
 } // namespace ROOT
 

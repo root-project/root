@@ -70,6 +70,7 @@
 #pragma link C++ class ROOT::Experimental::RAttributesVisitor+;
 #pragma link C++ class ROOT::Experimental::RColorNew+;
 #pragma link C++ class ROOT::Experimental::RAttrLineNew+;
+#pragma link C++ class ROOT::Experimental::RAttrTextNew+;
 #pragma link C++ class ROOT::Experimental::RPadLengthNew+;
 #pragma link C++ class ROOT::Experimental::RPadLengthNew::Pixel+;
 #pragma link C++ class ROOT::Experimental::RPadLengthNew::Normal+;
