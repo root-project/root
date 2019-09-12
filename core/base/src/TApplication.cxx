@@ -770,7 +770,7 @@ static TString FormatReturnTypeForDoxygen(const TString &scopeName, TFunction *f
 {
    // We put the return type of "func" in a TString "returnType".
    TString returnType = func->GetReturnTypeName();
-   // If the return type consist of enumeration, it will appear with its class (Class::Enumeration).
+   // If the return type is a type nested in the current class, it will appear scoped (Class::Enumeration).
    // Below we make sure to remove the current class, because the syntax of Doxygen requires it.
    TString scopeNameRE ("\\b");
    scopeNameRE.Append(scopeName);
