@@ -867,7 +867,7 @@ static TString GetUrlForDataMember(const TString &scopeName, const TString &data
    // Then we have to append the hashed text for the enumerator.
    url.Append("#a");
    url.Append(md5EnumClass.MD5());
-   // We append "a" and then the next crypted text.
+   // We append "a" and then the next hashed text.
    url.Append("a");
    url.Append(md5Enumerator.MD5());
    return url;
