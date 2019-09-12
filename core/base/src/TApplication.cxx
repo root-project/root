@@ -974,7 +974,7 @@ void TApplication::OpenReferenceGuideFor(TString strippedClass)
       return;
    }
    // Else we substract the name of the method and remove it from the command.
-   TString memberName = TClassEdit::GetUnqualifiedName(strippedClass.Data());
+   TString memberName = TClassEdit::GetUnqualifiedName(strippedClass);
    // Error out if "strippedClass" is unscoped (and it's not a class, see `TClass::GetClass(strippedClass)` above).
    // TODO: Global functions.
    if (strippedClass == memberName) {
