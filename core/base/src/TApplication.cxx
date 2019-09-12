@@ -662,8 +662,7 @@ void TApplication::OpenInBrowser(const TString &url)
       gSystem->Exec(cLinux);
    } else {
       // Else the user will have a warning and the URL in the terminal.
-      Warning("OpenInBrowser", "The DISPLAY is not set!");
-      std::cout << url.Data() << std::endl;
+      Warning("OpenInBrowser", "The $DISPLAY is not set! Please open (e.g. Ctrl-click) %s\n", url.Data());
    }
 #endif
 }
@@ -984,7 +983,7 @@ void TApplication::OpenReferenceGuideFor(const TString &strippedClass)
       return;
    }
    // Else we remove the member name to be left with the scope.
-   TString scopeName = strippedClass.Remove(strippedClass.Length() - memberName.Length() - 2);
+   TString scopeName = strippedClass(0, strippedClass.Length() - memberName.Length() - 2);
    // We check if the scope exists in ROOT.
    TClass *cl = TClass::GetClass(scopeName);
    if (!cl) {
@@ -1046,12 +1045,8 @@ void TApplication::OpenReferenceGuideFor(const TString &strippedClass)
 
    // Warning message will appear if the user types the function name incorrectly
    // or the function is not a member function of "cl" or any of its base classes.
-   Warning("OpenReferenceGuideFor", "\"%s\" has incorrect format or is not a member of %s or its base classes!", memberName.Data(), scopeName.Data());
-   // We will open a browser with the URL for the class only if the user types "y".
-   std::string open;
-   std::cin >> open;
-      OpenInBrowser(UrlGenerator(scopeName, scopeType));
-   }
+   Warning("Help", cannot find "\"%s\" as member of %s or its base classes! Check %s\n",
+      memberName.Data(), scopeName.Data(), UrlGenerator(scopeName, scopeType).Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
