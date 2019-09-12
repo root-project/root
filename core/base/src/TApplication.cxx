@@ -816,7 +816,7 @@ namespace {
 /// \param[in] dataMember pointer to the data member/enumerator
 /// \param[in] scopeType enumerator to the scope type
 
-static TString GetUrlForDataMember(TString scopeName, const TString &dataMemberName, TDataMember *dataMember, EUrl scopeType)
+static TString GetUrlForDataMember(const TString &scopeName, const TString &dataMemberName, TDataMember *dataMember, EUrl scopeType)
 {
    // We first check if the data member is not enumerator.
    if(!dataMember->IsEnum()){
