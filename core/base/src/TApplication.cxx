@@ -980,7 +980,7 @@ void TApplication::OpenReferenceGuideFor(TString strippedClass)
       Error("OpenReferenceGuideFor", "Incorrect format or the command is not supported yet!");
       return;
    }
-   // Else we substract the name of the scope.
+   // Else we remove the member name to be left with the scope.
    TString scopeName = strippedClass.Remove(strippedClass.Length() - memberName.Length() - 2);
    // We check if the scope exists in ROOT.
    TClass *cl = TClass::GetClass(scopeName);
