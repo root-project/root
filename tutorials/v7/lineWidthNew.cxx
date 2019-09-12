@@ -30,7 +30,6 @@ void lineWidthNew()
    for (int i=10; i>0; i--){
       num = num + 0.05;
 
-      // current way to draw primitives - it always returns drawing options
       RPadPosNew pt(RPadLengthNew::Normal(0.32), RPadLengthNew::Normal(num));
       auto text = canvas->DrawNew<RTextNew>(pt, std::to_string(i));
       text->AttrText().SetSize(13).SetAlign(32).SetFont(52);
@@ -50,14 +49,15 @@ void lineWidthNew()
 
       printf("Current line width %f\n", line->AttrLine().GetWidth());
 
-      // copy attributes
+      // copy attributes - fully independent from line
       auto attr = line->AttrLine();
 
       printf("Attribute line width %f\n", attr.GetWidth());
 
-      // change attributes
+      // change attribute value
       attr.SetWidth(i+1);
 
+      // copy values back to line attributes
       line->AttrLine().Copy(attr);
 
       printf("Now line width %f\n", line->AttrLine().GetWidth());
