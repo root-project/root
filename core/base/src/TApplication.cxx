@@ -955,7 +955,7 @@ static TString GetUrlForMethod(TString scopeName, const TString &methodName, TFu
 ///
 /// \param[in] strippedClasss the scope or scope::member
 
-void TApplication::OpenReferenceGuideFor(TString strippedClass)
+void TApplication::OpenReferenceGuideFor(const TString &strippedClass)
 {
    // We check if the user is searching for a scope and if the scope exists.
    if (TClass *clas = TClass::GetClass(strippedClass)) {
