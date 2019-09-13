@@ -97,7 +97,7 @@ public:
       static int ConvBwdDataAlgorithm;
       static int ConvBwdFilterAlgorithm;
       // default is 0 (left to cudnn : a value -1 will indicate to not use any space)
-      static size_t ConvMaxWorkspaceSize;
+      static Long_t ConvMaxWorkspaceSize;
    }; // namespace DNN
 
    static TMVA::Experimental::MemoryLayout GetTensorLayout() { return TMVA::Experimental::MemoryLayout::RowMajor; }
@@ -1110,7 +1110,7 @@ int TCudnn<AFloat>::CNNOptions::ConvBwdDataAlgorithm = -1;
 template <typename AFloat>
 int TCudnn<AFloat>::CNNOptions::ConvBwdFilterAlgorithm = -1;
 template <typename AFloat>
-size_t TCudnn<AFloat>::CNNOptions::ConvMaxWorkspaceSize = 0;
+Long_t TCudnn<AFloat>::CNNOptions::ConvMaxWorkspaceSize = -1;  // -1 let use Cudnn defaults 
 
 } // namespace DNN
 } // namespace TMVA

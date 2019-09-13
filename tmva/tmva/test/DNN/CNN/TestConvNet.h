@@ -482,8 +482,8 @@ auto evaluate_net_bias(TDeepNet<Architecture> &net, typename Architecture::Tenso
     
     netB(i,0) += dx;
  
-   std::cout << "------ net biases layer " << l << " k  " << k <<  " element " << i << " dx = " <<  dx << std::endl;
-    Architecture::PrintTensor( netB, "netB bias tensor");
+    //std::cout << "------ net biases layer " << l << " k  " << k <<  " element " << i << " dx = " <<  dx << std::endl;
+    //Architecture::PrintTensor( netB, "netB bias tensor");
     //typename Architecture::Tensor_t temp(netB);
    
     
@@ -519,7 +519,7 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
 
    std::cout << "test backward on this network " << std::endl;
    convNet.Print();
-   
+
 //    auto & w0 = convNet.GetLayerAt(0)->GetWeights();
 // #ifdef DEBUG  
 //    std::cout << "Netwrok weights for Layer 0  " << std::endl; 
@@ -527,7 +527,7 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
 //    for (size_t i = 0; i < w0.size();   ++i)
 //       TMVA_DNN_PrintTCpuMatrix(w0[i],"weight-layer0");
 // #endif  
-   
+
    //typename Architecture::Tensor_t X(batchSize, imgDepth, imgHeight * imgWidth, Architecture::GetTensorLayout() );
    auto X =  Architecture::CreateTensor( batchSize, imgDepth, imgHeight , imgWidth);
    randomBatch(X);
@@ -543,26 +543,26 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
       auto & theLayer = *(convNet.GetLayers()[l]);
       auto & vW = theLayer.GetWeights();
       if (vW.size() > 0) {
-         TString tname = TString::Format("weight-tensor-layer-%d",l);
+         TString tname = TString::Format("weight-tensor-layer-%d",(int)l);
          Tensor_t tW( vW[0] ); 
          Architecture::PrintTensor( tW ,std::string(tname));
       }
       auto & vB = theLayer.GetBiases();
       if (vB.size() > 0) {
-         TString tname = TString::Format("bias-tensor-layer-%d",l);
+         TString tname = TString::Format("bias-tensor-layer-%d",(int)l);
          Architecture::InitializeIdentity(vB[0]);
          Tensor_t tB( vB[0] );
          Architecture::PrintTensor( tB ,std::string(tname));
       }
    }
-   
+
    auto & lLayer = *(convNet.GetLayers().back());
-   
-   Architecture::PrintTensor(Tensor_t(lLayer.GetWeights()[0]),"weights-before-fw");  
+
+   Architecture::PrintTensor(Tensor_t(lLayer.GetWeights()[0]),"weights-before-fw");
    std::cout << "Do Forward Pass " << std::endl;
    convNet.Forward(X);
 
-   Architecture::PrintTensor(Tensor_t(lLayer.GetWeights()[0]),"weights-after-fw");  
+   Architecture::PrintTensor(Tensor_t(lLayer.GetWeights()[0]),"weights-after-fw");
 
 
    // print layer derivatives
@@ -597,9 +597,9 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
       std::cout << std::endl;
       layer.Print(); 
       std::cout << "************************************* \n\n";
-     
-      Architecture::PrintTensor(layer.GetOutput(),"output tensor");
-      Architecture::PrintTensor(layer.GetActivationGradients(),"activation gradient");
+
+      //Architecture::PrintTensor(layer.GetOutput(),"output tensor");
+      //Architecture::PrintTensor(layer.GetActivationGradients(),"activation gradient");
 
       auto &gw = layer.GetWeightGradients();
       auto &gb = layer.GetBiasGradients();
@@ -630,9 +630,9 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
 
       // print output and activation gradients
 
+#ifdef DEBUG
       auto &outL = layer.GetOutput();
       auto & actGrad = layer.GetActivationGradients();
-#ifdef DEBUG
       if (Architecture::GetTensorLayout() == TMVA::Experimental::MemoryLayout::ColumnMajor) {
          std::cout << "layer output size " << outL.GetFirstSize() << std::endl;
          if (outL.GetFirstSize() > 0) {
@@ -672,11 +672,11 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
       // for (size_t k = 0; k <  gw.GetFirstSize() ; ++k) {
       // for (size_t i = 0; i < layer.GetWidth(); i++) {
       size_t k = 0;
-      Matrix_t & gwm = gw[k]; 
-      Matrix_t & gbm = gb[k]; 
+      Matrix_t & gwm = gw[k];
+      Matrix_t & gbm = gb[k];
       // size_t n1 = (gwm.GetNDim() == 2 ) ? gwm.GetNrows() : gwm.GetCSize();
       // size_t n1b =  (gwb.GetNDim() == 2 ) ? gwb.GetNrows() : gwb.GetCSize();
-      // assert(n1 == n1b); 
+      // assert(n1 == n1b);
       // size_t n2 = (gwm.GetNDim() == 2 ) ? gwm.GetNcols() : gwm.GetHSize()*gwm.GetWSize();
       size_t n1 =  gwm.GetNrows();
       size_t n2 = gwm.GetNcols();

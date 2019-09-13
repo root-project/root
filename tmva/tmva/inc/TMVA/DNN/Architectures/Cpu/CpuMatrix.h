@@ -288,6 +288,14 @@ public:
    // default constructor
    TCpuTensor() : fBuffer(0), fTensor(fBuffer, {0}) {}
 
+   /** constructors from n m */
+   TCpuTensor(size_t n, size_t m, MemoryLayout memlayout = MemoryLayout::ColumnMajor)
+      : fBuffer(n * m), fTensor(fBuffer, {n, m}, memlayout)
+   {
+      if (memlayout == MemoryLayout::RowMajor)
+         fTensor = TMVA::Experimental::RTensor<AFloat>(fBuffer, {n, m}, memlayout);
+   }
+
    /** constructors from batch size, depth, height*width */
    TCpuTensor(size_t bsize, size_t depth, size_t hw, MemoryLayout memlayout = MemoryLayout::ColumnMajor)
       : fBuffer(bsize * depth * hw), fTensor(fBuffer, {depth, hw, bsize}, memlayout)
@@ -368,6 +376,11 @@ public:
                                                                    : fTensor.GetShape().back();
    }
 
+   size_t GetCSize() const
+   {
+      if (fTensor.GetShape().size() == 2)  return 1;
+      return (GetLayout() == MemoryLayout::ColumnMajor) ? fTensor.GetShape().front() : fTensor.GetShape()[1]; // assume NHWC
+   }
    //
    size_t GetHSize() const
    {
