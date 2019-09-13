@@ -1,7 +1,7 @@
-/// \file ROOT/RAttrBox.hxx
+/// \file ROOT/RAttrLine.hxx
 /// \ingroup Gpad ROOT7
-/// \author Axel Naumann <axel@cern.ch>
-/// \date 2018-10-17
+/// \author Sergey Linev
+/// \date 2019-09-13
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
 
@@ -13,41 +13,43 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RAttrBox
-#define ROOT7_RAttrBox
+#ifndef ROOT7_RAttrFill
+#define ROOT7_RAttrFill
 
 #include <ROOT/RDrawingAttr.hxx>
-#include <ROOT/RAttrLine.hxx>
-#include <ROOT/RAttrFill.hxx>
-#include <ROOT/RPadExtent.hxx>
-#include <ROOT/RPadPos.hxx>
+#include <ROOT/RColor.hxx>
 
 namespace ROOT {
 namespace Experimental {
 
-/** class ROOT::Experimental::RAttrBox
- Drawing attributes for a box: rectangular lines with size and position.
+/** class ROOT::Experimental::RAttrLine
+ Drawing line attributes for different objects.
  */
-class RAttrBox : public RAttributesVisitor {
 
-   RAttrLine fBorder{this, "border_"};       ///<!
-   RAttrFill fFill{this, "fill_"};           ///<!
+class RAttrFill : public RAttributesVisitor {
+
+   RColor fColor{this, "color_"}; ///<! line color, will access container from line attributes
 
 protected:
    const RDrawableAttributes::Map_t &GetDefaults() const override
    {
-      static auto dflts = RDrawableAttributes::Map_t().AddDefaults(fBorder).AddDefaults(fFill);
+      static auto dflts = RDrawableAttributes::Map_t().AddInt("style",1).AddDefaults(fColor);
       return dflts;
    }
 
 public:
+
    using RAttributesVisitor::RAttributesVisitor;
 
-   const RAttrLine &Border() const { return fBorder; }
-   RAttrLine &Border() { return fBorder; }
+   ///The fill style
+   RAttrFill &SetStyle(int style) { SetValue("style", style); return *this; }
+   int GetStyle() const { return GetValue<int>("style"); }
 
-   const RAttrFill &Fill() const { return fFill; }
-   RAttrFill &Fill() { return fFill; }
+   ///The fill color
+   RAttrFill &SetColor(const RColor &color) { fColor = color; return *this; }
+   const RColor &Color() const { return fColor; }
+   RColor &Color() { return fColor; }
+
 };
 
 } // namespace Experimental

@@ -15,7 +15,8 @@
 #include "ROOT/RPadPos.hxx"
 #include <string>
 
-void lineWidth() {
+void lineWidth()
+{
    using namespace ROOT::Experimental;
 
    auto canvas = RCanvas::Create("Canvas Title");
@@ -25,13 +26,13 @@ void lineWidth() {
       num = num + 0.05;
 
       RPadPos pt(.3_normal, RPadLength::Normal(num));
-      auto optts = canvas->Draw(RText(pt, std::to_string(i)));
-      optts->SetSize(13).SetAlign(32).SetFont(52);
+      auto text = canvas->Draw<RText>(pt, std::to_string(i));
+      text->AttrText().SetSize(13).SetAlign(32).SetFont(52);
 
       RPadPos pl1(.32_normal, RPadLength::Normal(num));
       RPadPos pl2(.8_normal , RPadLength::Normal(num));
-      auto optls = canvas->Draw(RLine(pl1, pl2));
-      optls->SetWidth(i);
+      auto line = canvas->Draw<RLine>(pl1, pl2);
+      line->AttrLine().SetWidth(i);
    }
 
    canvas->Show();
