@@ -40,5 +40,13 @@ template class TCudnn<Double_t>;
    static_assert(false,"GPU/CUDA architecture is not enabled"); 
 #endif
 
-} // namespace tmva
-} // namespace dnn
+   // CuDNN options
+
+
+// int TCudnn<Double_t>::CNNOptions::ConvFwdAlgorithm = -1;
+// int TCudnn<Double_t>::CNNOptions::ConvBwdDataAlgorithm = -1;
+// int TCudnn<Double_t>::CNNOptions::ConvBwdFilterAlgorithm = -1;
+// size_t TCudnn<Double_t>::CNNOptions::ConvMaxWorkspaceSize = 0;
+
+} // end namespace DNN
+} // end namespace TMVA

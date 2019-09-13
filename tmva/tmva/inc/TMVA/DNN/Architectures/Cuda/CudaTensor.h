@@ -162,9 +162,8 @@ public:
    TCudaTensor(TCudaDeviceBuffer<AFloat> buffer, size_t n, size_t m) : 
          TCudaTensor( buffer, {n,m}, MemoryLayout::ColumnMajor ,0,0) {}
 
-
-   TCudaTensor(const TCudaTensor  &, size_t dim = 0);
-   TCudaTensor(      TCudaTensor &&) = default;
+   TCudaTensor(const TCudaTensor &) = default; 
+   TCudaTensor(TCudaTensor &&) = default;
    TCudaTensor & operator=(const TCudaTensor  &) = default;
    TCudaTensor & operator=(      TCudaTensor &&) = default;
    ~TCudaTensor();

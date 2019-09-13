@@ -1336,6 +1336,7 @@ void MethodDL::TrainDeepNet()
       Bool_t includeRegularization = (R != DNN::ERegularization::kNone); 
 
       Double_t minValError = 0.0;
+      Log() << "Compute initial loss  on the validation data " << Endl;
       for (auto batch : validationData) {
          auto inputTensor = batch.GetInput();
          auto outputMatrix = batch.GetOutput();
@@ -1428,7 +1429,8 @@ void MethodDL::TrainDeepNet()
          bias_tensor[0].Print();
       }
 
-
+      Log() << "   Start epoch iteration ..." << Endl;
+      bool debugFirstEpoch = false; 
       while (!converged) {
          optimizer->IncrementGlobalStep();
          trainingData.Shuffle(rng);
@@ -1443,11 +1445,15 @@ void MethodDL::TrainDeepNet()
             //for (size_t j = 0; j < nThreads; j++) {
             //   batches.push_back(trainingData.GetTensorBatch());
             //}
+            if (debugFirstEpoch) std::cout << "\n\n----- batch # " << i << "\n\n";
 
             auto my_batch = trainingData.GetTensorBatch();
 
+            if (debugFirstEpoch)
+               std::cout << "got batch data - doing forward \n";
+
 #ifdef DEBUG
-            std::cout << "\n\n----- batch # " << i << "\n\n";
+            
             Architecture_t::PrintTensor(my_batch.GetInput(),"input tensor",true);
             typename Architecture_t::Tensor_t tOut(my_batch.GetOutput());
             typename Architecture_t::Tensor_t tW(my_batch.GetWeights());
@@ -1456,6 +1462,9 @@ void MethodDL::TrainDeepNet()
 #endif           
            
             deepNet.Forward(my_batch.GetInput(), true);
+
+            if (debugFirstEpoch)
+               std::cout << "- doing backward \n";
 
 #ifdef DEBUG
             size_t nlayers = deepNet.GetLayers().size();
@@ -1473,6 +1482,9 @@ void MethodDL::TrainDeepNet()
 
             deepNet.Backward(my_batch.GetInput(), my_batch.GetOutput(), my_batch.GetWeights());
 
+            if (debugFirstEpoch)
+               std::cout << "- doing optimizer update  \n";
+
             optimizer->Step();
             
 #ifdef DEBUG            
@@ -1484,9 +1496,12 @@ void MethodDL::TrainDeepNet()
                }
             }
 #endif
+            
          }
+         
+         if (debugFirstEpoch) std::cout << "\n End batch loop - compute validation loss   \n";
          //}
-
+         debugFirstEpoch = false;
          if ((optimizer->GetGlobalStep() % settings.testInterval) == 0) {
 
             std::chrono::time_point<std::chrono::system_clock> t1,t2;
@@ -1494,6 +1509,8 @@ void MethodDL::TrainDeepNet()
             t1 = std::chrono::system_clock::now();
 
             // Compute validation error.
+           
+
             Double_t valError = 0.0;
             for (auto batch : validationData) {
                auto inputTensor = batch.GetInput();

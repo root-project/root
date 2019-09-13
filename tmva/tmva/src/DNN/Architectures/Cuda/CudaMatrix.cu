@@ -16,8 +16,11 @@
 #include "TMVA/DNN/Architectures/Cuda/CudaMatrix.h"
 #include "TMVA/DNN/Architectures/Cuda/Device.h"
 
+#include <iostream>
+
 namespace TMVA {
 namespace DNN  {
+
 
 //____________________________________________________________________________
 __global__ void CurandInitializationKernel(unsigned long long seed,
@@ -45,6 +48,8 @@ template<typename AFloat>
 size_t          TCudaMatrix<AFloat>::fNCurandStates = 0;
 template<typename AFloat>
 size_t          TCudaMatrix<AFloat>::fNOnes         = 0;
+template <typename AFloat>
+Bool_t TCudaMatrix<AFloat>::gInitializeCurand = kFALSE;
 
 // Constructors.
 //____________________________________________________________________________
@@ -102,10 +107,14 @@ inline void TCudaMatrix<AFloat>::InitializeCuda()
        CUDACHECK(cudaMalloc(& fDeviceReturn, sizeof(AFloat)));
        CUDACHECK(cudaMalloc(& fCurandStates, TDevice::NThreads(*this)));
    }
-   if (TDevice::NThreads(*this) > (int) fNCurandStates) {
+   if (gInitializeCurand && TDevice::NThreads(*this) > (int) fNCurandStates) {
        fNCurandStates = TDevice::NThreads(*this);
+       if (fNCurandStates > 10000000)
+          std::cout << "***** Warning - initialize a BIG curandstate for matrix " << fNRows << "," << fNCols << " nstate "
+                    << fNCurandStates << std::endl;
+       //R__ASSERT( fNRows*fNCols <= 8*8*128*128);
        if (fCurandStates) {
-           cudaFree(fCurandStates);
+          cudaFree(fCurandStates);
        }
        cudaMalloc(&fCurandStates, TDevice::NThreads(*this) * sizeof(curandState_t));
        InitializeCurandStates();

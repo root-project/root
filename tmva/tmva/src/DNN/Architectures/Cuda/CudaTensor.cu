@@ -148,16 +148,18 @@ TCudaTensor<AFloat>::TCudaTensor(TCudaDeviceBuffer<AFloat> buffer,
 
 //____________________________________________________________________________
 //FIXME: Go to shared_ptr implementation of instance tracking
-template <typename AFloat>
-TCudaTensor<AFloat>::TCudaTensor(const TCudaTensor<AFloat>& oldTensor, size_t /*dim*/) :
-   TCudaTensor(oldTensor.fShape, oldTensor.fMemoryLayout, oldTensor.fDevice, oldTensor.fStreamIndx)
-{
-   // No deep copy
-   fStrides       = oldTensor.fStrides;
-   fElementBuffer = oldTensor.fElementBuffer;   
-        
-   InitializeCuda();
-}
+// template <typename AFloat>
+// TCudaTensor<AFloat>::TCudaTensor(const TCudaTensor<AFloat>& oldTensor) :
+//    TCudaTensor(oldTensor.fShape, oldTensor.fMemoryLayout, oldTensor.fDevice, oldTensor.fStreamIndx)
+// {
+//    // No deep copy
+//    fStrides       = oldTensor.fStrides;
+//    fElementBuffer = oldTensor.fElementBuffer;
+
+//    std::cout << "calling copy constructor of TCuda tensor" << std::endl;
+
+//    InitializeCuda();
+// }
 
 //____________________________________________________________________________
 template <typename AFloat>
@@ -180,10 +182,15 @@ TCudaTensor<AFloat>::TCudaTensor(const TCudaMatrix<AFloat>& matrix, size_t dim) 
 template <typename AFloat>
 TCudaTensor<AFloat>::~TCudaTensor() 
 {
-   if (fTensorDescriptor && fTensorDescriptor.use_count() == 1 ) { 
+   if (fTensorDescriptor && fTensorDescriptor.use_count() == 1 ) {
+      // //std::cout << "Destroy tensor descriptor for shape ";
+      // for (int ii = 0; ii < fNDim; ++ii)
+      //    std::cout << fShape[ii] << ",";
+      // std::cout << std::endl;
       CUDNNCHECK(cudnnDestroyTensorDescriptor(fTensorDescriptor->fCudnnDesc));
    }
    fInstances[fStreamIndx]--;
+   //std::cout << "Tensor descriptor destroyed - instances are " << fInstances[fStreamIndx] << std::endl;
 
    // When all tensors in a streamIndx are destroyed, release cudnn resources 
    //if (--fInstances[fStreamIndx] <= 0) CUDNNCHECK(cudnnDestroy(fCudnnHandle[fStreamIndx]));
@@ -216,19 +223,26 @@ inline void TCudaTensor<AFloat>::InitializeCuda()
 {
    // If fNDim >= 4, a cudnn tensor is required and we initialize cudnn
    if (fNDim >= 2 && fSize > 0) {
+
+      //std::cout << "initialize Cuda for tensor of shape ";
+      // for (int ii = 0; ii < fNDim; ++ii)
+      //    std::cout << fShape[ii] << ",";
+      // std::cout << " stream index " << fStreamIndx << " instances " << fInstances[fStreamIndx] << std::endl;
+
       // Also check whether a new streamIndx has been opened
       if (fInstances.size() - 1 < fStreamIndx) {
          // If need to resize once, need probably to resize more often
-         fInstances.resize(2*fStreamIndx + 1, 0);
-         fCudnnHandle.resize(2*fStreamIndx + 1, nullptr);
-      }
+         fInstances.resize(2 * fStreamIndx + 1, 0);
+         fCudnnHandle.resize(2 * fStreamIndx + 1, nullptr);
+         }
       if (fInstances[fStreamIndx] == 0) {
-        CUDNNCHECK(cudnnCreate(&fCudnnHandle[fStreamIndx]));
-        //CUDNNCHECK(cudnnSetStream(fCudnnHandle[fStreamIndx], fElementBuffer.GetComputeStream()));
-        
-        //cublasCreate(&fCublasHandle);
-        //CUDACHECK(cudaMalloc(& fDeviceReturn, sizeof(AFloat)));
-        //CUDACHECK(cudaMalloc(& fCurandStates, TDevice::NThreads(*this)));
+         std::cout << "TCudaTensor::create cudnn handle ! " << std::endl;
+         CUDNNCHECK(cudnnCreate(&fCudnnHandle[fStreamIndx]));
+         // CUDNNCHECK(cudnnSetStream(fCudnnHandle[fStreamIndx], fElementBuffer.GetComputeStream()));
+
+         // cublasCreate(&fCublasHandle);
+         // CUDACHECK(cudaMalloc(& fDeviceReturn, sizeof(AFloat)));
+         // CUDACHECK(cudaMalloc(& fCurandStates, TDevice::NThreads(*this)));
       }
       // if (TDevice::NThreads(*this) > (int) fNCurandStates) {
       //     fNCurandStates = TDevice::NThreads(*this);
@@ -241,6 +255,7 @@ inline void TCudaTensor<AFloat>::InitializeCuda()
 
       if (!fTensorDescriptor) { 
          fTensorDescriptor = std::make_shared<TensorDescriptor>();
+         //std::cout << "create tensor  descriptor ! " << std::endl;
          CUDNNCHECK(cudnnCreateTensorDescriptor(&(fTensorDescriptor->fCudnnDesc)));
       }
         
@@ -250,7 +265,9 @@ inline void TCudaTensor<AFloat>::InitializeCuda()
       if      (std::is_same<AFloat, double>::value) {fDataType = CUDNN_DATA_DOUBLE;}
       else if (std::is_same<AFloat, float>::value)  {fDataType = CUDNN_DATA_FLOAT;}
 
+     //std::cout << "Set tensor  descriptor ! " << std::endl;
       SetTensorDescriptor();
+      //std::cout << "End cudnn initialization ! " << std::endl;
    }
 
 }
