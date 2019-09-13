@@ -83,7 +83,7 @@ void REveDataProxyBuilderBase::Build()
 {
    if (m_collection)
    {
-      printf("Base %p %s %s\n", m_collection, m_collection->GetCName(), m_type.c_str());
+      // printf("Base %p %s %s\n", m_collection, m_collection->GetCName(), m_type.c_str());
       try
       {
          auto itemSize = m_collection->GetNItems(); //cashed
@@ -91,7 +91,7 @@ void REveDataProxyBuilderBase::Build()
          Clean();
          for (auto &pp: m_products)
          {
-            printf("build() %s \n", m_collection->GetCName());
+            // printf("build() %s \n", m_collection->GetCName());
             REveElement* elms = pp->m_elements;
             auto oldSize = elms->NumChildren();
 
