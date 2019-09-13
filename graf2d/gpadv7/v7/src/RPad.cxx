@@ -191,6 +191,15 @@ void ROOT::Experimental::RPadBase::SetAllAxisBound(const std::vector<BoundKindAn
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+/// Collect all shared items to resolve shared_ptr after IO
+
+void ROOT::Experimental::RPadBase::CollectShared(Internal::RIOSharedVector_t &vect)
+{
+   for (auto &dr : fPrimitives)
+      dr->CollectShared(vect);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 /// Set the range of an axis as bound kind and bound (up or down).
 
 void ROOT::Experimental::RPadBase::SetAllAxisAutoBounds()

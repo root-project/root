@@ -62,6 +62,8 @@ protected:
 
    RDrawableAttributes fAttr{"pad"};       ///< attributes
 
+   void CollectShared(Internal::RIOSharedVector_t &) override;
+
 public:
    virtual ~RPadBase();
 
