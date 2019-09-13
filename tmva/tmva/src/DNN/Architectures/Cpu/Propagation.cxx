@@ -136,7 +136,7 @@ void TCpu<AFloat>::AddRowWise(TCpuMatrix<AFloat> &output, const TCpuMatrix<AFloa
 template <typename AFloat>
 void TCpu<AFloat>::Backward(TCpuTensor<AFloat> &activationGradientsBackward, TCpuMatrix<AFloat> &weightGradients,
                             TCpuMatrix<AFloat> &biasGradients, const TCpuTensor<AFloat> &df,
-                            const TCpuTensor<AFloat> &activationGradients, const TCpuMatrix<AFloat> &weights,
+                            const TCpuTensor<AFloat> &/*activationGradients*/, const TCpuMatrix<AFloat> &weights,
                             const TCpuTensor<AFloat> &activationsBackward)
 {
    // Compute element-wise product.
@@ -146,14 +146,17 @@ void TCpu<AFloat>::Backward(TCpuTensor<AFloat> &activationGradientsBackward, TCp
 
    // Activation gradients (exclude if it is first layer)
    if (activationGradientsBackward.GetSize() > 0 ) { 
-   
+
       Matrix_t  activationGradientsBackward_m = activationGradientsBackward.GetMatrix(); 
-     
+
       Multiply(activationGradientsBackward_m, df_m, weights);
    }
 
    // Weight gradients.
    if (weightGradients.GetNoElements() > 0) TransposeMultiply(weightGradients, df_m, activationsBackward.GetMatrix());
+
+   // PrintTensor(activationsBackward,"activ backward");
+   //PrintTensor(Tensor_t(weightGradients),"weight gradients");
 
    // Bias gradients.
    if (biasGradients.GetNoElements() > 0) SumColumns(biasGradients, df_m);
@@ -484,7 +487,7 @@ void TCpu<AFloat>::CalculateConvActivationGradients(TCpuTensor<AFloat> &activati
 
    // size_t tempZeroPaddingHeight = 1;
    // size_t tempZeroPaddingWidth = 1;
-   
+
    // Calculate the number of local views and the number of pixles in each view
    size_t tempNLocalViews = inputHeight * inputWidth;
    size_t tempNLocalViewPixels = depth * filterHeight * filterWidth;
@@ -504,13 +507,12 @@ void TCpu<AFloat>::CalculateConvActivationGradients(TCpuTensor<AFloat> &activati
     R__ASSERT(batchSize == activationGradientsBackward.GetFirstSize() );
     auto f = [&] (UInt_t i)
    {
-   
        // Im2col(dfTr, df[i], height, width, filterHeight, filterWidth, tempStrideRows, tempStrideCols,
        //       tempZeroPaddingHeight, tempZeroPaddingWidth);
 
       TCpuMatrix<AFloat> dfTr(tempNLocalViews, tempNLocalViewPixels);
-      
-      Im2colFast(dfTr, df.At(i).GetMatrix(), vIndices); 
+
+      Im2colFast(dfTr, df.At(i).GetMatrix(), vIndices);
 
        //TMVA_DNN_PrintTCpuMatrix(df[i],"df[i]");
        //TMVA_DNN_PrintTCpuMatrix(dfTr,"dfTr");

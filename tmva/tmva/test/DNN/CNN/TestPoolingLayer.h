@@ -36,10 +36,10 @@
 #include <vector>
 
 #include "TestConvNet.h"
-#include "TMVA/DNN/Architectures/TCudnn.h"
 
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::CNN;
+using namespace TMVA::Experimental;
 
 
 inline bool isInteger(double x)
@@ -152,11 +152,11 @@ bool testDownsample1_cudnn()
                                {255, 255, 192, 204, 
                                153, 246, 246, 175}};
 
-    double answerIdxTest1[][8] = {{1, 2, 2, 3, 
-                                  10, 17, 17, 13},
+    // double answerIdxTest1[][8] = {{1, 2, 2, 3, 
+    //                               10, 17, 17, 13},
 
-                                  {1, 1, 7, 4, 
-                                  11, 17, 17, 13}};
+    //                               {1, 1, 7, 4, 
+    //                               11, 17, 17, 13}};
 
     size_t imgDepthTest1 = 2;
     size_t imgHeightTest1 = 4;
@@ -191,27 +191,27 @@ bool testDownsample1_cudnn()
     // Not needed for cuDNN
     Matrix_t idx;
 
-    TMaxPoolLayer<TCudnn<Double_t>> poolLayer (1, imgDepthTest1, imgHeightTest1, imgWidthTest1,
+    TMaxPoolLayer<Architecture> poolLayer (1, imgDepthTest1, imgHeightTest1, imgWidthTest1,
                                                fltHeightTest1, fltWidthTest1, strideRowsTest1,
                                                strideColsTest1, 0.5);
 
     auto* poolDescriptors = poolLayer.GetDescriptors();
     auto* poolWorkspace   = poolLayer.GetWorkspace();
 
-    TCudnn<Double_t>::PrintTensor(input, "input before dropout");
+    Architecture::PrintTensor(input, "input before dropout");
     Architecture::DropoutForward(input, poolDescriptors, poolWorkspace,
                                  poolLayer.GetDropoutProbability());
 
-    TCudnn<Double_t>::PrintTensor(input, "input after 1 dropout");
+    Architecture::PrintTensor(input, "input after 1 dropout");
 
     Architecture::DropoutForward(input, poolDescriptors, poolWorkspace,
                                  poolLayer.GetDropoutProbability());
 
-    TCudnn<Double_t>::PrintTensor(input, "input after 2 dropout");
+    Architecture::PrintTensor(input, "input after 2 dropout");
 
     Architecture::DropoutBackward(input, poolDescriptors, poolWorkspace);
 
-    TCudnn<Double_t>::PrintTensor(input, "input after dropout backward");
+    Architecture::PrintTensor(input, "input after dropout backward");
 
     Architecture::Downsample(computedOutput, idx, input, 
                             (typename Architecture::PoolingDescriptors_t &) *poolDescriptors,
@@ -219,7 +219,7 @@ bool testDownsample1_cudnn()
                             imgHeightTest1, imgWidthTest1, fltHeightTest1, fltWidthTest1, 
                             strideRowsTest1, strideColsTest1);
 
-    TCudnn<Double_t>::PrintTensor(computedOutput, "after downsampling");
+    Architecture::PrintTensor(computedOutput, "after downsampling");
 
     /*bool status = computedOutput.isEqual(expectedOutput);
     return status;*/
@@ -292,7 +292,8 @@ bool testDownsample2_cudnn()
 
     double answerTest2[][10] = {{230, 218, 230, 218, 224, 200, 153, 233, 236, 233}};
 
-    double answerIdxTest2[][10] = {{7, 10, 7, 10, 13, 22, 26, 28, 32, 28}};
+    // not used by cudnn
+    //double answerIdxTest2[][10] = {{7, 10, 7, 10, 13, 22, 26, 28, 32, 28}};
 
     size_t imgDepthTest2 = 1;
     size_t imgHeightTest2 = 6;
@@ -327,12 +328,12 @@ bool testDownsample2_cudnn()
     // Not needed for cuDNN
     Matrix_t idx;
 
-    TMaxPoolLayer<TCudnn<Double_t>> poolLayer (1, imgDepthTest2, imgHeightTest2, imgWidthTest2,
+    TMaxPoolLayer<Architecture> poolLayer (1, imgDepthTest2, imgHeightTest2, imgWidthTest2,
                                                fltHeightTest2, fltWidthTest2, strideRowsTest2,
                                                strideColsTest2, 0.0);
 
-    auto& poolDescriptors = static_cast<TMVA::DNN::TCudnn<Double_t>::PoolingDescriptors_t &> (*poolLayer.GetDescriptors());
-    auto& poolWorkspace   = static_cast<TMVA::DNN::TCudnn<Double_t>::PoolingWorkspace_t &> (*poolLayer.GetWorkspace());
+    auto& poolDescriptors = static_cast<typename Architecture::PoolingDescriptors_t &> (*poolLayer.GetDescriptors());
+    auto& poolWorkspace   = static_cast<typename Architecture::PoolingWorkspace_t &> (*poolLayer.GetWorkspace());
 
     Architecture::Downsample(computedOutput, idx, input, 
                             (typename Architecture::PoolingDescriptors_t &) poolDescriptors,
@@ -340,7 +341,7 @@ bool testDownsample2_cudnn()
                             imgHeightTest2, imgWidthTest2, fltHeightTest2, fltWidthTest2, 
                             strideRowsTest2, strideColsTest2);
 
-    //TCudnn<Double_t>::PrintTensor(computedOutput, "FInal output");
+    //Architecture::PrintTensor(computedOutput, "FInal output");
     bool status = computedOutput.isEqual(expectedOutput);
     return status;
 }
@@ -462,12 +463,12 @@ bool testBackward1_cudnn() {
     // Not needed for cuDNN
     Matrix_t idxForward;
 
-    TMaxPoolLayer<TCudnn<Double_t>> poolLayer (1, depth, inHeight, inWidth,
+    TMaxPoolLayer<Architecture> poolLayer (1, depth, inHeight, inWidth,
                                                frameHeight, frameWidth, strideRows,
                                                strideCols, 0.0);
 
-    auto& poolDescriptors = static_cast<TMVA::DNN::TCudnn<Double_t>::PoolingDescriptors_t &> (*poolLayer.GetDescriptors());
-    auto& poolWorkspace   = static_cast<TMVA::DNN::TCudnn<Double_t>::PoolingWorkspace_t &> (*poolLayer.GetWorkspace());
+    auto& poolDescriptors = static_cast<typename Architecture::PoolingDescriptors_t &> (*poolLayer.GetDescriptors());
+    auto& poolWorkspace   = static_cast<typename Architecture::PoolingWorkspace_t &> (*poolLayer.GetWorkspace());
 
     Architecture::Downsample(outputActivation, idxForward, inputActivation, 
                             (typename Architecture::PoolingDescriptors_t &) poolDescriptors,
@@ -528,8 +529,8 @@ bool testBackward1_cudnn() {
                                         inHeight, inWidth, frameHeight, frameWidth,
                                         strideRows, strideCols, 0);
 
-    TCudnn<Double_t>::PrintTensor(expectedOutput, "Expected output");
-    TCudnn<Double_t>::PrintTensor(computedOutput, "Final output");
+    Architecture::PrintTensor(expectedOutput, "Expected output");
+    Architecture::PrintTensor(computedOutput, "Final output");
     
     bool status = expectedOutput.isEqual(computedOutput);
     return status;

@@ -32,10 +32,10 @@
 #include <cmath>
 
 #include "TestConvNet.h"
-#include "TMVA/DNN/Architectures/TCudnn.h"
 
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::CNN;
+using namespace TMVA::Experimental;
 
 inline bool isInteger(double x)
 {
@@ -237,65 +237,70 @@ bool testForward1_cudnn()
    size_t zeroPaddingHeight = 0;
    size_t zeroPaddingWidth = 0;
 
+   using Matrix_t = typename Architecture::Matrix_t;
+   using Tensor_t = typename Architecture::Tensor_t;
+   using HostBuffer_t = typename Architecture::HostBuffer_t;
+
    std::vector<size_t> inputShape {1, imgDepth, imgHeight, imgWidth};
-   TCudaHostBuffer<Double_t> input_hostbuffer(imgDepth * imgHeight * imgWidth);
+   HostBuffer_t    input_hostbuffer(imgDepth * imgHeight * imgWidth);
    for (size_t i = 0; i < imgDepth; i++) {
       for (size_t j = 0; j < imgHeight * imgWidth; j++) {
          input_hostbuffer[i*imgHeight * imgWidth + j] = img[i][j];
       }
    }
-   TCudaTensor<Double_t> input(input_hostbuffer, inputShape, MemoryLayout::RowMajor, 0, 0);
+   Tensor_t input(input_hostbuffer, inputShape, MemoryLayout::RowMajor, 0, 0);
 
    std::vector<size_t> weightShape {numberFilters, imgDepth, fltHeight, fltWidth};
-   TCudaHostBuffer<Double_t> weight_hostbuffer(numberFilters * fltHeight * fltWidth * imgDepth);
+   HostBuffer_t weight_hostbuffer(numberFilters * fltHeight * fltWidth * imgDepth);
    for (size_t i = 0; i < numberFilters; i++) {
        for (size_t j = 0; j < fltHeight * fltWidth * imgDepth; j++){
            weight_hostbuffer[i*fltHeight * fltWidth * imgDepth + j] = weights[i][j];
        }
    }
-   TCudaTensor<Double_t> weightsTensor(weight_hostbuffer, weightShape, MemoryLayout::RowMajor, 0, 0);
-   
+
+   Matrix_t weightsTensor(weight_hostbuffer, weightShape, MemoryLayout::RowMajor, 0, 0);
+
    size_t height = calculateDimension(imgHeight, fltHeight, zeroPaddingHeight, strideRows);
    size_t width = calculateDimension(imgWidth, fltWidth, zeroPaddingWidth, strideCols);
-   
+
    std::vector<size_t> biasesShape {1, numberFilters, height, width};
-   TCudaHostBuffer<Double_t> biases_hostbuffer(numberFilters * height * width);
-   
+   HostBuffer_t biases_hostbuffer(numberFilters * height * width);
+
    for (size_t i = 0; i < numberFilters; i++) {
       for (size_t j = 0; j < height * width; j++) {
          biases_hostbuffer[i * height * width + j] = biases[i][j];
       }
    }
-   TCudaTensor<Double_t> biasesTensor(biases_hostbuffer, biasesShape, MemoryLayout::RowMajor, 0, 0);
-   
-   TCudaTensor<Double_t> computedDerivatives(1, 3, height, width, TCudaTensor<Double_t>::MemoryLayout::RowMajor,0,0);
-   TCudaTensor<Double_t> computedOutput (1, 3, height, width, TCudaTensor<Double_t>::MemoryLayout::RowMajor,0,0);
+   Tensor_t biasesTensor(biases_hostbuffer, biasesShape, MemoryLayout::RowMajor, 0, 0);
+
+   Tensor_t computedDerivatives(1, 3, height, width, MemoryLayout::RowMajor,0,0);
+   Tensor_t computedOutput (1, 3, height, width, MemoryLayout::RowMajor,0,0);
 
    TConvParams params(1, imgDepth, imgHeight, imgWidth, numberFilters, fltHeight, fltWidth, strideRows,
                       strideCols, zeroPaddingHeight, zeroPaddingWidth);
 
-   TCudaTensor<Double_t> forwardMatrix;
-   
+   Tensor_t forwardMatrix;
+
    EActivationFunction AFunct = EActivationFunction::kIdentity;
    //EActivationFunction AFunct = EActivationFunction::kRelu;
-   TConvLayer<TCudnn<Double_t>> convLayer (1, imgDepth, imgHeight, imgWidth, numberFilters,
+   TConvLayer<Architecture> convLayer (1, imgDepth, imgHeight, imgWidth, numberFilters,
                                            EInitialization::kIdentity, fltHeight, fltWidth,
                                            strideRows, strideCols, zeroPaddingHeight, zeroPaddingWidth,
                                            0.0, AFunct, ERegularization::kNone, 0.0);
 
-    auto& convDescriptors = static_cast<TMVA::DNN::TCudnn<Double_t>::ConvDescriptors_t &> (*convLayer.GetDescriptors());
-    auto& convWorkspace   = static_cast<TMVA::DNN::TCudnn<Double_t>::ConvWorkspace_t &> (*convLayer.GetWorkspace());
+   auto& convDescriptors = static_cast<typename Architecture::ConvDescriptors_t &> (*convLayer.GetDescriptors());
+   auto& convWorkspace   = static_cast<typename Architecture::ConvWorkspace_t &> (*convLayer.GetWorkspace());
 
-    TCudnn<Double_t>::ConvLayerForward(computedOutput, computedDerivatives, input, weightsTensor, biasesTensor, params,
+   Architecture::ConvLayerForward(computedOutput, computedDerivatives, input, weightsTensor, biasesTensor, params,
                                        AFunct, forwardMatrix, convDescriptors, convWorkspace);
-                                      
-   TCudaHostBuffer<Double_t> expectedOutput_buffer(numberFilters * height * width);                                  
+
+   HostBuffer_t expectedOutput_buffer(numberFilters * height * width);
    for (size_t i = 0; i < numberFilters; i++) {
       for (size_t j = 0; j < height * width; j++) {
          expectedOutput_buffer[i * height * width + j] = expected[i][j];
       }
    }
-   TCudnn<Double_t>::PrintTensor(computedOutput ,"Convolution output: ");
+   Architecture::PrintTensor(computedOutput ,"Convolution output: ");
 
    return computedOutput.isEqual(expectedOutput_buffer, expectedOutput_buffer.GetSize());
 }
@@ -480,6 +485,7 @@ bool testBackward1_cudnn()
 {
     using Matrix_t = typename Architecture::Matrix_t;
     using Tensor_t = typename Architecture::Tensor_t;
+    using HostBuffer_t = typename Architecture::HostBuffer_t;
 
     size_t imgDepth = 2;
     size_t imgHeight = 5;
@@ -503,7 +509,7 @@ bool testBackward1_cudnn()
     };
 
     std::vector<size_t> gradShape {1, numberFilters, height, width};
-    TCudaHostBuffer<Double_t> grad_hostbuffer(numberFilters * height * width);
+    HostBuffer_t grad_hostbuffer(numberFilters * height * width);
     for (size_t i = 0; i < numberFilters; i++) {
        for (size_t j = 0; j < height * width; j++) {
           grad_hostbuffer[i * height * width + j] = grad[i][j];
@@ -517,7 +523,7 @@ bool testBackward1_cudnn()
     };
 
     std::vector<size_t> derivShape {1, numberFilters, height, width};
-    TCudaHostBuffer<Double_t> deriv_hostbuffer(numberFilters * height * width);
+    HostBuffer_t deriv_hostbuffer(numberFilters * height * width);
     for (size_t i = 0; i < numberFilters; i++) {
        for (size_t j = 0; j < height * width; j++) {
           deriv_hostbuffer[i * height * width + j] = derivatives[i][j];
@@ -535,7 +541,7 @@ bool testBackward1_cudnn()
 
     
     std::vector<size_t> weightsShape {numberFilters, imgDepth, fltHeight, fltWidth};
-    TCudaHostBuffer<Double_t> weights_hostbuffer(numberFilters * imgDepth * fltHeight * fltWidth);
+    HostBuffer_t weights_hostbuffer(numberFilters * imgDepth * fltHeight * fltWidth);
     for (size_t i = 0; i < numberFilters; i++) {
         for (size_t j = 0; j < imgDepth * fltHeight * fltWidth; j++) {
             weights_hostbuffer[i * imgDepth * fltHeight * fltWidth + j] = W[i][j];
@@ -557,7 +563,7 @@ bool testBackward1_cudnn()
     };
 
     std::vector<size_t> inputActvShape {1, imgDepth, imgHeight, imgWidth};
-    TCudaHostBuffer<Double_t> inputActv_hostbuffer(imgDepth * imgHeight * imgWidth);
+    HostBuffer_t inputActv_hostbuffer(imgDepth * imgHeight * imgWidth);
     for (size_t i = 0; i < imgDepth; i++) {
         for (size_t j = 0; j < imgHeight * imgWidth; j++) {
             inputActv_hostbuffer[i * imgHeight * imgWidth + j] = activationsPreviousLayer[i][j];
@@ -576,7 +582,7 @@ bool testBackward1_cudnn()
     };
 
     std::vector<size_t> expcActvShape {1, imgDepth, imgHeight, imgWidth};
-    TCudaHostBuffer<Double_t> expcActv_hostbuffer(imgDepth * imgHeight * imgWidth);
+    HostBuffer_t expcActv_hostbuffer(imgDepth * imgHeight * imgWidth);
     for (size_t i = 0; i < imgDepth; i++) {
         for (size_t j = 0; j < imgHeight * imgWidth; j++) {
             expcActv_hostbuffer[i * imgHeight * imgWidth + j] = expectedActivationGradsBackward[i][j];
@@ -595,7 +601,7 @@ bool testBackward1_cudnn()
     };
 
     std::vector<size_t> expcWeightsShape {numberFilters, imgDepth, fltHeight, fltWidth};
-    TCudaHostBuffer<Double_t> expc_weights_hostbuffer(numberFilters * imgDepth * fltHeight * fltWidth);
+    HostBuffer_t expc_weights_hostbuffer(numberFilters * imgDepth * fltHeight * fltWidth);
     for (size_t i = 0; i < numberFilters; i++) {
         for (size_t j = 0; j < imgDepth * fltHeight * fltWidth; j++) {
             expc_weights_hostbuffer[i * imgDepth * fltHeight * fltWidth + j] = expectedWeightGrads[i][j];
@@ -630,23 +636,23 @@ bool testBackward1_cudnn()
     // Make a forward pass in preparation
     EActivationFunction AFunct = EActivationFunction::kIdentity;
     //EActivationFunction AFunct = EActivationFunction::kRelu;
-    TConvLayer<TCudnn<Double_t>> convLayer (1, imgDepth, imgHeight, imgWidth, numberFilters,
+    TConvLayer<Architecture> convLayer (1, imgDepth, imgHeight, imgWidth, numberFilters,
                                             EInitialization::kIdentity, fltHeight, fltWidth,
                                             strideRows, strideCols, zeroPaddingHeight, zeroPaddingWidth,
                                             0.0, AFunct, ERegularization::kNone, 0.0);
 
-    auto& convDescriptors = static_cast<TMVA::DNN::TCudnn<Double_t>::ConvDescriptors_t &> (*convLayer.GetDescriptors());
-    auto& convWorkspace = static_cast<TMVA::DNN::TCudnn<Double_t>::ConvWorkspace_t &> (*convLayer.GetWorkspace());
+    auto& convDescriptors = static_cast<typename Architecture::ConvDescriptors_t &> (*convLayer.GetDescriptors());
+    auto& convWorkspace = static_cast<typename Architecture::ConvWorkspace_t &> (*convLayer.GetWorkspace());
 
     TConvParams params(1, imgDepth, imgHeight, imgWidth, numberFilters, fltHeight, fltWidth, strideRows,
                       strideCols, zeroPaddingHeight, zeroPaddingWidth);
     Tensor_t dummy; 
-    TCudnn<Double_t>::ConvLayerForward(computedOutput, computedInputActivFunc, input, weights, biasesTensor, params,
+    Architecture::ConvLayerForward(computedOutput, computedInputActivFunc, input, weights, biasesTensor, params,
                                        AFunct, dummy, convDescriptors, convWorkspace);
 
 
     // Backward pass
-    TCudaHostBuffer<Double_t> comp_actvGrad_hostbuffer(numberFilters * imgDepth * fltHeight * fltWidth);
+    HostBuffer_t comp_actvGrad_hostbuffer(numberFilters * imgDepth * fltHeight * fltWidth);
     Tensor_t computedActivationGradientsBackward(comp_actvGrad_hostbuffer, expcActvShape, MemoryLayout::RowMajor);
 
     Architecture::ConvLayerBackward(computedActivationGradientsBackward, computedWeightGradients,
