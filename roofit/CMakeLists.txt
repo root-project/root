@@ -1,4 +1,5 @@
 add_subdirectory(roofitZMQ)
+add_subdirectory(multiprocess)
 add_subdirectory(roofitcore)
 add_subdirectory(roofit)
 add_subdirectory(roostats)
