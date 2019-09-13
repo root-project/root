@@ -14,33 +14,3 @@
  *************************************************************************/
 
 #include "ROOT/RPadPos.hxx"
-
-#include <ROOT/RPadExtent.hxx>
-#include <ROOT/RLogger.hxx>
-
-////////////////////////////////////////////////////////////////////////////////
-/// Initialize a RPadPos from a style string.
-/// Syntax: X, Y
-/// where X and Y are a series of numbers separated by "+", where each number is
-/// followed by one of `px`, `user`, `normal` to specify an extent in pixel,
-/// user or normal coordinates. Spaces between any part is allowed.
-/// Example: `100 px + 0.1 user, 0.5 normal` is a `RPadPos{100_px + 0.1_user, 0.5_normal}`.
-
-ROOT::Experimental::RPadPos ROOT::Experimental::FromAttributeString(const std::string &val, const std::string &name, RPadPos*)
-{
-   RPadPos ret;
-   ret.SetFromAttrString(val, name);
-   return ret;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Convert a RPadPos to a style string, matching what PosFromString can parse.
-
-std::string ROOT::Experimental::ToAttributeString(const RPadPos &pos)
-{
-   std::string ret = ToAttributeString(pos.fHoriz);
-   ret += ", ";
-   ret += ToAttributeString(pos.fVert);
-   return ret;
-}
-

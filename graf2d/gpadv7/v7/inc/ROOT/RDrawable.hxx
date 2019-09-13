@@ -18,23 +18,45 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 
 namespace ROOT {
 namespace Experimental {
 
-class RDrawingOptsBase;
 class RMenuItems;
 class RPadBase;
 
 namespace Internal {
 class RPadPainter;
+
+class RIOSharedBase {
+public:
+   virtual const void *GetIOPtr() const = 0;
+   virtual bool HasShared() const = 0;
+   virtual void *MakeShared() = 0;
+   virtual void SetShared(void *shared) = 0;
+   virtual ~RIOSharedBase() {}
+};
+
+using RIOSharedVector_t = std::vector<RIOSharedBase *>;
+
+template<class T>
+class RIOShared final : public RIOSharedBase {
+   std::shared_ptr<T>  fShared;  ///<!   holder of object
+   T* fIO{nullptr};              ///<    plain pointer for IO
+public:
+   const void *GetIOPtr() const final { return fIO; }
+   virtual bool HasShared() const final { return fShared.get() != nullptr; }
+   virtual void *MakeShared() final { fShared.reset(fIO); return &fShared; }
+   virtual void SetShared(void *shared) final { fShared = *((std::shared_ptr<T> *) shared); }
+};
+
 }
 
 /** \class RDrawable
   Base class for drawable entities: objects that can be painted on a `RPad`.
  */
-
 
 class RDrawable {
 friend class RPadBase;
@@ -43,30 +65,28 @@ private:
 
    std::string  fId; ///< object identifier, unique inside RCanvas
 
+protected:
+
+   virtual void CollectShared(Internal::RIOSharedVector_t &) {}
+
 public:
 
    virtual ~RDrawable();
 
-   virtual void Paint(Internal::RPadPainter &onPad) = 0;
+   virtual void Paint(Internal::RPadPainter &onPad);
 
    /** Method can be used to provide menu items for the drawn object */
    virtual void PopulateMenu(RMenuItems &){};
 
    virtual void Execute(const std::string &);
 
-   /// Get the reference to the drawing options as RDrawingOptsBase. Used e.g. to identify the RDrawable in
-   /// the list of primitives.
-   virtual RDrawingOptsBase& GetOptionsBase() = 0;
-
    std::string GetId() const { return fId; }
-
 };
 
-template <class DERIVED>
-class RDrawableBase: public RDrawable {
-public:
-   RDrawingOptsBase& GetOptionsBase() override { return static_cast<DERIVED*>(this)->GetOptions(); }
-};
+
+/// Classes to solve problem with shared_ptr inside RCanvas
+/// Only objects inside canvas can be
+
 
 namespace Internal {
 

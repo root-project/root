@@ -1,4 +1,4 @@
-/// \file ROOT/RColor.hxx
+/// \file ROOT/RColorOld.hxx
 /// \ingroup Gpad ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2017-09-26
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RColor
-#define ROOT7_RColor
+#ifndef ROOT7_RColorOld
+#define ROOT7_RColorOld
 
 #include <array>
 #include <vector>
@@ -25,12 +25,12 @@
 namespace ROOT {
 namespace Experimental {
 
-/** \class ROOT::Experimental::RColor
+/** \class ROOT::Experimental::RColorOld
   A color: Red|Green|Blue|Alpha, or a position in a RPalette
   */
-class RColor {
+class RColorOld {
 public:
-   /** \class ROOT::Experimental::RColor::TAlpha
+   /** \class ROOT::Experimental::RColorOld::TAlpha
     The alpha value of a color: 0 is completely transparent, 1 is completely opaque.
     */
    struct Alpha {
@@ -45,7 +45,7 @@ public:
    enum class EKind {
       kRGBA, ///< The color is defined as specific RGBA values.
       kPalettePos, ///< The color is defined as a value in the `RFrame`'s `RPalette`.
-      kAuto ///< The color will be set upon drawing the canvas choosing a `RPalette` color, see `RColor(Auto_t)`
+      kAuto ///< The color will be set upon drawing the canvas choosing a `RPalette` color, see `RColorOld(Auto_t)`
    };
 
 private:
@@ -74,20 +74,20 @@ public:
    using RGBA = std::array<float, 4>;
 
    // Default constructor: good old solid black.
-   constexpr RColor() = default;
+   constexpr RColorOld() = default;
 
-   /// Initialize a RColor with red, green, blue and alpha component.
-   constexpr RColor(float r, float g, float b, float alpha): fRedOrPalettePos(r), fGreen(g), fBlue(b), fAlpha(alpha) {}
+   /// Initialize a RColorOld with red, green, blue and alpha component.
+   constexpr RColorOld(float r, float g, float b, float alpha): fRedOrPalettePos(r), fGreen(g), fBlue(b), fAlpha(alpha) {}
 
-   /// Initialize a RColor with red, green, blue and alpha component.
-   constexpr RColor(float r, float g, float b, Alpha alpha = kOpaque): RColor(r, g, b, alpha.fVal) {}
+   /// Initialize a RColorOld with red, green, blue and alpha component.
+   constexpr RColorOld(float r, float g, float b, Alpha alpha = kOpaque): RColorOld(r, g, b, alpha.fVal) {}
 
-   /// Initialize a RColor with red, green, blue and alpha component as an array.
-   constexpr RColor(const RGBA &rgba): RColor(rgba[0], rgba[1], rgba[2], rgba[3]) {}
+   /// Initialize a RColorOld with red, green, blue and alpha component as an array.
+   constexpr RColorOld(const RGBA &rgba): RColorOld(rgba[0], rgba[1], rgba[2], rgba[3]) {}
 
-   /// Initialize a `RColor` with a `RPalette` ordinal. The actual color is determined from the pad's
+   /// Initialize a `RColorOld` with a `RPalette` ordinal. The actual color is determined from the pad's
    /// (or rather its `RFrame`'s) `RPalette`
-   constexpr RColor(float paletteOrdinal): fRedOrPalettePos(paletteOrdinal), fKind(EKind::kPalettePos) {}
+   constexpr RColorOld(float paletteOrdinal): fRedOrPalettePos(paletteOrdinal), fKind(EKind::kPalettePos) {}
 
    /**\class AutoTag
     Used to signal that this color shall be automatically chosen by the drawing routines, by picking a color
@@ -95,22 +95,22 @@ public:
    */
    class AutoTag {};
 
-   /// Constructs an automatically assigned color. Call as `RColor col(RColor::kAuto)`.
-   constexpr RColor(AutoTag): fKind(EKind::kAuto) {}
+   /// Constructs an automatically assigned color. Call as `RColorOld col(RColorOld::kAuto)`.
+   constexpr RColorOld(AutoTag): fKind(EKind::kAuto) {}
 
-   /// Determine whether this RColor is storing RGBA (in contrast to an ordinal of a RPalette).
+   /// Determine whether this RColorOld is storing RGBA (in contrast to an ordinal of a RPalette).
    bool IsRGBA() const { return fKind == EKind::kRGBA; }
 
-   /// Determine whether this `RColor` is storing an ordinal of a RPalette (in contrast to RGBA).
+   /// Determine whether this `RColorOld` is storing an ordinal of a RPalette (in contrast to RGBA).
    bool IsPaletteOrdinal() const { return fKind == EKind::kPalettePos; }
 
-   /// Determine whether this `RColor` will be assigned a actual color upon drawing.
+   /// Determine whether this `RColorOld` will be assigned a actual color upon drawing.
    bool IsAuto() const { return fKind == EKind::kAuto; }
 
    /// If this is an ordinal in a palette, resolve the
    float GetPaletteOrdinal() const;
 
-   friend bool operator==(const RColor &lhs, const RColor &rhs)
+   friend bool operator==(const RColorOld &lhs, const RColorOld &rhs)
    {
       if (lhs.fKind != rhs.fKind)
          return false;
@@ -184,7 +184,7 @@ public:
          fAlpha = (float)a;
    }
 
-   /// Return the Hue, Light, Saturation (HLS) definition of this RColor
+   /// Return the Hue, Light, Saturation (HLS) definition of this RColorOld
    void GetHLS(float &hue, float &light, float &satur) {
       hue = light = satur = 0.;
       if (AssertNotPalettePos()) {
@@ -264,14 +264,11 @@ public:
    ///\}
 };
 
-// TODO: see also imagemagick's C++ interface for RColor operations!
+// TODO: see also imagemagick's C++ interface for RColorOld operations!
 // https://www.imagemagick.org/api/magick++-classes.php
 
-RColor FromAttributeString(const std::string &str, const std::string &name, RColor*);
-std::string ToAttributeString(const RColor& val);
 
-
-class RColorNew : public RAttributesVisitor {
+class RColor : public RAttributesVisitor {
 
 protected:
    const RDrawableAttributes::Map_t &GetDefaults() const override
@@ -282,26 +279,35 @@ protected:
 
 public:
 
+   using RGB_t = std::array<int, 3>;
+
+
    using RAttributesVisitor::RAttributesVisitor;
 
-   RColorNew(int r, int g, int b) : RColorNew()
+   RColor(int r, int g, int b) : RColor()
    {
       SetRGB(r,g,b);
    }
 
-   RColorNew(int r, int g, int b, double alfa) : RColorNew()
+   RColor(int r, int g, int b, double alfa) : RColor()
    {
       SetRGB(r,g,b);
       SetAlfa(alfa);
    }
 
+   RColor(const RGB_t &rgb) : RColor()
+   {
+      SetRGB(rgb[0],rgb[1],rgb[2]);
+   }
+
+
    std::string GetRGB() const { return GetValue<std::string>("rgb"); }
-   RColorNew &SetRGB(const std::string &_rgb) { SetValue("rgb", _rgb); return *this; }
-   RColorNew &SetRGB(int r, int g, int b) { return SetRGB(std::to_string(r) + "," + std::to_string(g) + "," + std::to_string(b)); }
+   RColor &SetRGB(const std::string &_rgb) { SetValue("rgb", _rgb); return *this; }
+   RColor &SetRGB(int r, int g, int b) { return SetRGB(std::to_string(r) + "," + std::to_string(g) + "," + std::to_string(b)); }
 
    double GetAlfa() const { return GetValue<double>("a"); }
    bool HasAlfa() const { return HasValue("a"); }
-   RColorNew &SetAlfa(double _alfa) { SetValue("a", _alfa); return *this; }
+   RColor &SetAlfa(double _alfa) { SetValue("a", _alfa); return *this; }
 
    std::string AsSVG() const
    {
@@ -310,8 +316,14 @@ public:
          return std::string("rgba(") + rgb + "," + std::to_string(GetAlfa()) + ")";
        return std::string("rgb(") + rgb + ")";
    }
-};
 
+   static constexpr RGB_t kRed{{255, 0, 0}};
+   static constexpr RGB_t kGreen{{0, 255, 0}};
+   static constexpr RGB_t kBlue{{0, 0, 255}};
+   static constexpr RGB_t kWhite{{255, 255, 255}};
+   static constexpr RGB_t kBlack{{0, 0, 0}};
+
+};
 
 
 } // namespace Experimental

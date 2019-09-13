@@ -60,12 +60,6 @@ RHistPainterBase<DIMENSION> *RHistPainterBase<DIMENSION>::GetPainter()
    return GetPainterPtr();
 }
 
-template <class DERIVED>
-void RHistDrawableBase<DERIVED>::PopulateMenu(RMenuItems &)
-{
-   // here should be filling of context menu for the given object
-}
-
 // GCC 5 needs to have that outlined - is that a compiler bug?
 template <int DIMENSIONS>
 RHistDrawable<DIMENSIONS>::RHistDrawable() = default;
@@ -74,7 +68,7 @@ RHistDrawable<DIMENSIONS>::RHistDrawable() = default;
 template <int DIMENSIONS>
 void RHistDrawable<DIMENSIONS>::Paint(Internal::RPadPainter &pad)
 {
-   Internal::RHistPainterBase<DIMENSIONS>::GetPainter()->Paint(*this, fOpts, pad);
+   Internal::RHistPainterBase<DIMENSIONS>::GetPainter()->Paint(*this, pad);
 }
 
 namespace ROOT {
@@ -85,13 +79,6 @@ template class RHistPainterBase<1>;
 template class RHistPainterBase<2>;
 template class RHistPainterBase<3>;
 } // namespace Internal
-
-template <class DERIVED>
-RHistDrawableBase<DERIVED>::~RHistDrawableBase() = default;
-
-template class RHistDrawableBase<RHistDrawable<1>>;
-template class RHistDrawableBase<RHistDrawable<2>>;
-template class RHistDrawableBase<RHistDrawable<3>>;
 
 template class RHistDrawable<1>;
 template class RHistDrawable<2>;

@@ -114,14 +114,6 @@ public:
    /// palette.
    RColor GetColor(double ordinal);
 
-   /// Given a RColor (that might either be a RGBA or a RPalette ordinal), get the RGBA-based color.
-   RColor ResolveRGBAColor(const RColor &col)
-   {
-      if (col.IsRGBA())
-         return col;
-      return GetColor(col.GetPaletteOrdinal());
-   }
-
    ///\{
    ///\name Global Palettes
 

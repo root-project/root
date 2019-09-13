@@ -30,6 +30,8 @@ namespace Internal {
  Reads the attribute config values from `.rootstylerc`. If the style entry is not found there, tries `~/.rootstylerc`
  and finally `$ROOTSYS/etc/system.rootstylerc`.
   */
+
+/*
 class RStyleReader {
 public:
    /// Key is the style name.
@@ -54,6 +56,8 @@ public:
    /// Prints an error if the syntax is wrong (but not if the file does not exist).
    bool AddFromStyleFile(const std::string &filename);
 };
+
+*/
 } // namespace Internal
 } // namespace Experimental
 } // namespace ROOT

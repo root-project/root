@@ -18,7 +18,6 @@
 
 #include <ROOT/RDrawable.hxx>
 #include <ROOT/RAttrText.hxx>
-#include <ROOT/RDrawingOptsBase.hxx>
 #include <ROOT/RPadPos.hxx>
 #include <ROOT/RPadPainter.hxx>
 
@@ -33,114 +32,35 @@ namespace Experimental {
  A text.
  */
 
-class RText : public RDrawableBase<RText> {
-public:
+class RText : public RDrawable {
 
-/** class ROOT::Experimental::RText::DrawingOpts
- Drawing options for RText.
- */
-
-class DrawingOpts: public RDrawingOptsBase, public RAttrText {
-public:
-   DrawingOpts(): RAttrText(FromOption, "text", *this) {}
-};
-
-private:
-
-   /// The text itself
-   std::string fText;
-
-   /// Text's position
-   RPadPos fP;
-
-   /// Text's attributes
-   DrawingOpts fOpts;
+   std::string fText;                      ///< text to display
+   RDrawableAttributes fAttr{"text"};      ///< attributes
+   RPadPos fPos{fAttr, "p_"};              ///<! position
+   RAttrText  fTextAttr{fAttr, "text_"};   ///<! text attributes
 
 public:
 
    RText() = default;
 
-   RText(const std::string &str) : fText(str) {}
-   RText(const RPadPos& p, const std::string &str) : fText(str), fP(p) {}
-
-   void SetText(const std::string &txt) { fText = txt; }
-
-   std::string GetText() const { return fText; }
-
-   void SetPosition(const RPadPos& p) {fP = p;}
-
-   const RPadPos& GetPosition() const { return fP; }
-
-
-   /// Get the drawing options.
-   DrawingOpts &GetOptions() { return fOpts; }
-   const DrawingOpts &GetOptions() const { return fOpts; }
-
-   void Paint(Internal::RPadPainter &pad) final
+   RText(const std::string &txt)
    {
-      pad.AddDisplayItem(
-         std::make_unique<ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RText>>(this));
-   }
-};
-
-inline std::shared_ptr<ROOT::Experimental::RText>
-GetDrawable(const std::shared_ptr<ROOT::Experimental::RText> &text)
-{
-   /// A RText is a RDrawable itself.
-   return text;
-}
-
-
-class RTextNew : public RDrawable {
-
-   RDrawingOptsBase fOpts; ///<! only temporary here, should be removed later
-
-   std::string fText;  ///< text to display
-
-   RDrawableAttributes fAttr{"text"}; ///< attributes
-
-   RPadPosNew fPos{fAttr, "p_"};        ///<! position
-
-   RAttrTextNew  fTextAttr{fAttr, "text_"};  ///<! text attributes
-
-public:
-
-   RTextNew() = default;
-
-   RTextNew(const std::string &str)
-   {
-      fText = str;
+      fText = txt;
    }
 
-   RTextNew(const RPadPosNew& p, const std::string &str)
+   RText(const RPadPos& p, const std::string &txt)
    {
-      fText = str;
+      fText = txt;
       fPos = p;
    }
 
-   void SetPos(const RPadPosNew& p) { fPos = p; }
+   void SetPos(const RPadPos& p) { fPos = p; }
+   const RPadPos& GetPos() const { return fPos; }
 
-   const RPadPosNew& GetPos() const { return fPos; }
-
-   RAttrTextNew &AttrText() { return fTextAttr; }
-   const RAttrTextNew &AttrText() const { return fTextAttr; }
-
-   /** TDOD: remove it later */
-   RDrawingOptsBase &GetOptionsBase() override { return fOpts; }
-
-   void Paint(Internal::RPadPainter &topPad) final
-   {
-      topPad.AddDisplayItem(std::make_unique<RDrawableDisplayItem>(*this));
-   }
+   RAttrText &AttrText() { return fTextAttr; }
+   const RAttrText &AttrText() const { return fTextAttr; }
 
 };
-
-inline std::shared_ptr<ROOT::Experimental::RTextNew>
-GetDrawable(const std::shared_ptr<ROOT::Experimental::RTextNew> &txt)
-{
-   /// A RLine is a RDrawable itself.
-   return txt;
-}
 
 
 } // namespace Experimental

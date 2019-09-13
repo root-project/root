@@ -22,19 +22,13 @@
 #pragma link C++ class std::vector<ROOT::Experimental::Detail::RMenuArgument>+;
 #pragma link C++ class ROOT::Experimental::Detail::RArgsMenuItem+;
 #pragma link C++ class ROOT::Experimental::RMenuItems+;
-#pragma link C++ class ROOT::Experimental::RObjectDrawingOpts+;
 #pragma link C++ class ROOT::Experimental::RObjectDrawable+;
-#pragma link C++ class ROOT::Experimental::RObjectDisplayItem+;
 #pragma link C++ class ROOT::Experimental::RPadUserAxisBase+;
 #pragma link C++ class ROOT::Experimental::RPadCartesianUserAxis+;
-#pragma link C++ struct ROOT::Experimental::Internal::RPadHorizVert+;
-#pragma link C++ struct ROOT::Experimental::RPadExtent+;
-#pragma link C++ struct ROOT::Experimental::RPadPos+;
-#pragma link C++ class std::vector<std::unique_ptr<ROOT::Experimental::RDrawable>>+;
+#pragma link C++ class ROOT::Experimental::RPadExtent+;
+#pragma link C++ class ROOT::Experimental::RPadPos+;
 #pragma link C++ class ROOT::Experimental::RPadBase+;
-#pragma link C++ class ROOT::Experimental::RPad::DrawingOpts+;
 #pragma link C++ class ROOT::Experimental::RPad+;
-#pragma link C++ class ROOT::Experimental::RPadDrawable+;
 #pragma link C++ class ROOT::Experimental::RCanvas+;
 #pragma link C++ class ROOT::Experimental::RFrame+;
 #pragma link C++ class ROOT::Experimental::RPadLength+;
@@ -47,21 +41,9 @@
 #pragma link C++ class ROOT::Experimental::RDisplayItem+;
 #pragma link C++ class ROOT::Experimental::RDrawableDisplayItem+;
 #pragma link C++ class ROOT::Experimental::RPalette+;
-#pragma link C++ class ROOT::Experimental::RColor+;
-#pragma link C++ class ROOT::Experimental::RDrawingAttrBase+;
-#pragma link C++ class ROOT::Experimental::RDrawingAttrBase::Path+;
-#pragma link C++ class ROOT::Experimental::RDrawingAttrHolder+;
-#pragma link C++ class ROOT::Experimental::RDrawingOptsBase+;
 #pragma link C++ class ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RCanvas>+;
-#pragma link C++ class ROOT::Experimental::RStyle+;
-#pragma link C++ class ROOT::Experimental::RAttrBox+;
-#pragma link C++ class ROOT::Experimental::RAttrLine+;
-#pragma link C++ class ROOT::Experimental::RAttrMarker+;
-#pragma link C++ class ROOT::Experimental::RAttrText+;
-
 
 #pragma link C++ class ROOT::Experimental::RDrawable+;
-
 #pragma link C++ class ROOT::Experimental::RDrawableAttributes+;
 #pragma link C++ class ROOT::Experimental::RDrawableAttributes::Value_t+;
 #pragma link C++ class ROOT::Experimental::RDrawableAttributes::BoolValue_t+;
@@ -69,20 +51,17 @@
 #pragma link C++ class ROOT::Experimental::RDrawableAttributes::DoubleValue_t+;
 #pragma link C++ class ROOT::Experimental::RDrawableAttributes::StringValue_t+;
 #pragma link C++ class ROOT::Experimental::RDrawableAttributes::Map_t+;
-#pragma link C++ class ROOT::Experimental::RStyleNew+;
-#pragma link C++ class ROOT::Experimental::RStyleNew::Block_t+;
 #pragma link C++ class ROOT::Experimental::RAttributesVisitor+;
-#pragma link C++ class ROOT::Experimental::RColorNew+;
-#pragma link C++ class ROOT::Experimental::RAttrLineNew+;
-#pragma link C++ class ROOT::Experimental::RAttrTextNew+;
-#pragma link C++ class ROOT::Experimental::RPadLengthNew+;
-#pragma link C++ class ROOT::Experimental::RPadLengthNew::Pixel+;
-#pragma link C++ class ROOT::Experimental::RPadLengthNew::Normal+;
-#pragma link C++ class ROOT::Experimental::RPadLengthNew::User+;
-#pragma link C++ class ROOT::Experimental::RPadLengthNew::CoordSysBase<ROOT::Experimental::RPadLengthNew::Pixel>+;
-#pragma link C++ class ROOT::Experimental::RPadLengthNew::CoordSysBase<ROOT::Experimental::RPadLengthNew::Normal>+;
-#pragma link C++ class ROOT::Experimental::RPadLengthNew::CoordSysBase<ROOT::Experimental::RPadLengthNew::User>+;
-#pragma link C++ struct ROOT::Experimental::RPadExtentNew+;
+
+
+#pragma link C++ class ROOT::Experimental::RStyle+;
+#pragma link C++ class ROOT::Experimental::RStyle::Block_t+;
+
+#pragma link C++ class ROOT::Experimental::RColor+;
+#pragma link C++ class ROOT::Experimental::RAttrLine+;
+#pragma link C++ class ROOT::Experimental::RAttrBox+;
+#pragma link C++ class ROOT::Experimental::RAttrMarker+;
+#pragma link C++ class ROOT::Experimental::RAttrText+;
 
 
 #endif
