@@ -231,3 +231,31 @@ void ROOT::Experimental::RCanvas::Run(double tm)
       std::this_thread::sleep_for(std::chrono::milliseconds(int(tm*1000)));
    }
 }
+
+//////////////////////////////////////////////////////////////////////////
+/// To resolve problem with storing of shared pointers
+/// Call this method when reading canvas from the file
+/// Can be called many times - after reinitialization of shared pointers no changes will be performed
+
+void ROOT::Experimental::RCanvas::ResolveSharedPtrs()
+{
+   Internal::RIOSharedVector_t vect;
+
+   CollectShared(vect);
+
+   for (unsigned n = 0; n < vect.size(); ++n) {
+      if (vect[n]->HasShared() || !vect[n]->GetIOPtr()) continue;
+
+      auto shrd_ptr = vect[n]->MakeShared();
+
+      for (auto n2 = n+1; n2 < vect.size(); ++n2) {
+         if (vect[n2]->GetIOPtr() == vect[n]->GetIOPtr()) {
+            if (vect[n2]->HasShared())
+               R__ERROR_HERE("Gpadv7") << "FATAL Shared pointer for same IO ptr already exists";
+            else
+               vect[n2]->SetShared(shrd_ptr);
+         }
+      }
+
+   }
+}

@@ -130,6 +130,8 @@ public:
       return *this;
    }
 
+   void ResolveSharedPtrs();
+
    /// Convert a `Pixel` position to Canvas-normalized positions.
 //   std::array<RPadLength::Normal, 2> PixelsToNormal(const std::array<RPadLength::Pixel, 2> &pos) const final
 //   {
