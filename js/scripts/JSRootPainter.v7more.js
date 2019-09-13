@@ -25,17 +25,17 @@
 
    function drawText() {
       var text         = this.GetObject(),
-          opts         = text.fOpts,
-          pp           = this.canv_painter(),
+          attr         = text.fAttr,
+          pp           = this.pad_painter(),
           w            = this.pad_width(),
           h            = this.pad_height(),
           use_frame    = false,
-          text_size    = pp.GetNewOpt(opts, "text.size", 12),
-          text_angle   = -pp.GetNewOpt(opts, "text.angle", 0),
-          text_align   = pp.GetNewOpt(opts, "text.align", 22),
-          text_color   = pp.GetNewColor(opts, "text.color", "black"),
-          text_font    = pp.GetNewOpt(opts, "text.font", 41),
-          p            = this.GetCoordinate(text.fP);
+          text_size    = pp.GetNewOpt(attr, "text_size", 12),
+          text_angle   = -pp.GetNewOpt(attr, "text_angle", 0),
+          text_align   = pp.GetNewOpt(attr, "text_align", 22),
+          text_color   = pp.GetNewColor(attr, "text_color", "black"),
+          text_font    = pp.GetNewOpt(attr, "text_font", 41),
+          p            = pp.GetCoordinate(attr, "p");
 
       this.CreateG(use_frame);
 
@@ -56,15 +56,13 @@
    function drawLine() {
 
        var line         = this.GetObject(),
-           opts         = line.fOpts,
-           pp           = this.canv_painter(),
-
-           line_width   = pp.GetNewOpt(opts, "line.width", 1),
-           line_style   = pp.GetNewOpt(opts, "line.style", 1),
-           line_color   = pp.GetNewColor(opts, "line.color", "black"),
-           line_opacity = pp.GetNewOpt(opts, "line.opacity", 1),
-           p1           = this.GetCoordinate(line.fP1),
-           p2           = this.GetCoordinate(line.fP2);
+           attr         = line.fAttr,
+           pp           = this.pad_painter(),
+           line_width   = pp.GetNewOpt(attr, "line.width", 1),
+           line_style   = pp.GetNewOpt(attr, "line_style", 1),
+           line_color   = pp.GetNewColor(attr, "line_color", "black"),
+           p1           = pp.GetCoordinate(attr, "p1"),
+           p2           = pp.GetCoordinate(attr, "p2");
 
     this.CreateG();
 
@@ -76,7 +74,7 @@
         .attr("y2", p2.y)
         .style("stroke", line_color)
         .attr("stroke-width", line_width)
-        .attr("stroke-opacity", line_opacity)
+//        .attr("stroke-opacity", line_opacity)
         .style("stroke-dasharray", JSROOT.Painter.root_line_styles[line_style]);
    }
 
@@ -84,19 +82,17 @@
    function drawBox() {
 
        var box          = this.GetObject(),
-           opts         = box.fOpts,
-           pp           = this.canv_painter(),
-           line_width   = pp.GetNewOpt(opts, "box.border.width", 1),
-           line_opacity = pp.GetNewOpt(opts, "box.border.opacity", 1),
-           line_style   = pp.GetNewOpt(opts, "box.border.style", 1),
-           line_color   = pp.GetNewColor(opts, "box.border.color", "black"),
-           fill_opacity = pp.GetNewOpt(opts, "box.fill.opacity", 1),
-           fill_color   = pp.GetNewColor(opts, "box.fill.color", "white"),
-           fill_style   = pp.GetNewOpt(opts, "box.fill.style", 1),
-           round_width  = pp.GetNewOpt(opts, "box.round.width", 0),
-           round_height = pp.GetNewOpt(opts, "box.round.height", 0),
-           p1           = this.GetCoordinate(box.fP1),
-           p2           = this.GetCoordinate(box.fP2);
+           attr         = box.fAttr,
+           pp           = this.pad_painter(),
+           line_width   = pp.GetNewOpt(attr, "box_border_width", 1),
+           line_style   = pp.GetNewOpt(attr, "box_border_style", 1),
+           line_color   = pp.GetNewColor(attr, "box_border_color", "black"),
+           fill_color   = pp.GetNewColor(attr, "box_fill_color", "white"),
+           fill_style   = pp.GetNewOpt(attr, "box_fill_style", 1),
+           round_width  = pp.GetNewOpt(attr, "box_round_width", 0), // not yet exists
+           round_height = pp.GetNewOpt(attr, "box_round_height", 0), // not yet exists
+           p1           = pp.GetCoordinate(attr, "p1"),
+           p2           = pp.GetCoordinate(attr, "p2");
 
     this.CreateG();
 
@@ -112,22 +108,19 @@
         .attr("ry", round_height)
         .style("stroke", line_color)
         .attr("stroke-width", line_width)
-        .attr("stroke-opacity", line_opacity)
         .attr("fill", fill_color)
-        .attr("fill-opacity", fill_opacity)
         .style("stroke-dasharray", JSROOT.Painter.root_line_styles[line_style]);
    }
 
 
    function drawMarker() {
        var marker         = this.GetObject(),
-           opts           = marker.fOpts,
-           pp             = this.canv_painter(),
-           marker_size    = pp.GetNewOpt(opts, "marker.size", 1),
-           marker_opacity = pp.GetNewOpt(opts, "marker.opacity", 1),
-           marker_style   = pp.GetNewOpt(opts, "marker.style", 1),
-           marker_color   = pp.GetNewColor(opts, "marker.color", "black"),
-           p              = this.GetCoordinate(marker.fP);
+           attr           = marker.fAttr,
+           pp             = this.pad_painter(),
+           marker_size    = pp.GetNewOpt(attr, "marker.size", 1),
+           marker_style   = pp.GetNewOpt(attr, "marker.style", 1),
+           marker_color   = pp.GetNewColor(attr, "marker.color", "black"),
+           p              = pp.GetCoordinate(attr, "p");
 
            var att = new JSROOT.TAttMarkerHandler({ style: marker_style, color: marker_color, size: marker_size });
 
