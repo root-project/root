@@ -18,10 +18,9 @@
 #include <ROOT/RDisplayItem.hxx>
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RMenuItem.hxx>
-#include <ROOT/RPadPainter.hxx>
 
-#include "TClass.h"
 #include "TROOT.h"
+
 
 #include <exception>
 #include <sstream>
@@ -29,10 +28,8 @@
 
 void ROOT::Experimental::RObjectDrawable::PopulateMenu(RMenuItems &items)
 {
-   TObject *obj = fObj.get();
-
    // fill context menu items for the ROOT class
-   items.PopulateObjectMenu(obj, obj->IsA());
+   items.PopulateObjectMenu(fObj.get(), fObj.get()->IsA());
 }
 
 void ROOT::Experimental::RObjectDrawable::Execute(const std::string &exec)

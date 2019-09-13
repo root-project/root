@@ -18,6 +18,8 @@
 
 #include <ROOT/RDrawable.hxx>
 
+#include "TObject.h"
+
 #include <memory>
 #include <string>
 
@@ -30,11 +32,15 @@ class RPadBase;
 
 /// \class ROOT::Experimental::Internal::RObjectDrawable
 /// Provides v7 drawing facilities for TObject types (TGraph etc).
-class RObjectDrawable : public RDrawable {
+class RObjectDrawable final : public RDrawable {
 
-   const std::shared_ptr<TObject> fObj; ///< The object to be painted
+   Internal::RIOShared<TObject> fObj; ///< The object to be painted
 
    std::string fOpts;  ///< drawing options
+
+protected:
+
+   void CollectShared(Internal::RIOSharedVector_t &vect) final { vect.emplace_back(&fObj); }
 
 public:
    RObjectDrawable() = default;
