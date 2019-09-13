@@ -50,6 +50,26 @@ public:
    virtual bool HasShared() const final { return fShared.get() != nullptr; }
    virtual void *MakeShared() final { fShared.reset(fIO); return &fShared; }
    virtual void SetShared(void *shared) final { fShared = *((std::shared_ptr<T> *) shared); }
+
+   RIOShared() = default;
+
+   RIOShared(const std::shared_ptr<T> &ptr) : RIOSharedBase()
+   {
+      fShared = ptr;
+      fIO = ptr.get();
+   }
+
+   RIOShared &operator=(const std::shared_ptr<T> &ptr)
+   {
+      fShared = ptr;
+      fIO = ptr.get();
+      return *this;
+   }
+
+   std::shared_ptr<T> &operator()() { return fShared; }
+
+   void Reset() { fShared.reset(); fIO = nullptr; }
+
 };
 
 }
