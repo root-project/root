@@ -18,6 +18,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 class TClass;
 
@@ -111,7 +112,7 @@ public:
    /** virtual destructor need for vtable, used when vector of RMenuItem* is stored */
    virtual ~RArgsMenuItem() {}
 
-   void AddArg(const RMenuArgument &arg) { fArgs.push_back(arg); }
+   void AddArg(const RMenuArgument &arg) { fArgs.emplace_back(arg); }
 };
 
 } // namespace Detail
@@ -120,14 +121,14 @@ public:
 
 class RMenuItems {
 protected:
-   std::vector<Detail::RMenuItem *> fItems; ///< list of items in the menu
+   std::vector<std::unique_ptr<Detail::RMenuItem>> fItems; ///< list of items in the menu
 public:
    /** Default constructor */
    RMenuItems() = default;
 
-   ~RMenuItems() { Cleanup(); }
+   ~RMenuItems() = default;
 
-   void Add(Detail::RMenuItem *item) { fItems.push_back(item); }
+   void Add(Detail::RMenuItem *item) { fItems.emplace_back(item); }
 
    void AddMenuItem(const std::string &name, const std::string &title, const std::string &exec)
    {
@@ -143,7 +144,7 @@ public:
       Add(item);
    }
 
-   unsigned Size() const { return fItems.size(); }
+   auto Size() const { return fItems.size(); }
 
    void Cleanup();
 

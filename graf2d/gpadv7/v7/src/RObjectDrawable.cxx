@@ -27,11 +27,6 @@
 #include <sstream>
 #include <iostream>
 
-void ROOT::Experimental::RObjectDrawable::Paint(Internal::RPadPainter &pad)
-{
-   pad.AddDisplayItem(std::make_unique<RObjectDisplayItem>(fObj.get(), fOpts.GetOptionString()));
-}
-
 void ROOT::Experimental::RObjectDrawable::PopulateMenu(RMenuItems &items)
 {
    TObject *obj = fObj.get();

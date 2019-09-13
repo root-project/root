@@ -18,9 +18,7 @@
 
 #include <ROOT/RDrawable.hxx>
 #include <ROOT/RAttrMarker.hxx>
-#include <ROOT/RDrawingOptsBase.hxx>
 #include <ROOT/RPadPos.hxx>
-#include <ROOT/RPadPainter.hxx>
 
 #include <initializer_list>
 #include <memory>
@@ -32,54 +30,25 @@ namespace Experimental {
  A simple marker.
  */
 
-class RMarker : public RDrawableBase<RMarker> {
-public:
+class RMarker : public RDrawable {
 
-/** class ROOT::Experimental::RMarker::DrawingOpts
- Drawing options for RMarker.
- */
-
-class DrawingOpts: public RDrawingOptsBase, public RAttrMarker {
-public:
-   DrawingOpts(): RAttrMarker(FromOption, "marker", *this) {}
-};
-
-
-private:
-
-   /// Marker's position
-   RPadPos fP;
-
-   /// Marker's attributes
-   DrawingOpts fOpts;
+   RDrawableAttributes fAttr{"marker"};         ///< attributes
+   RPadPos fP{fAttr, "pos_"};                  ///<! position
+   RAttrMarker fMarkerAttr{fAttr, "marker_"};  ///<! marker attributes
 
 public:
 
    RMarker() = default;
 
-   RMarker(const RPadPos& p) : fP(p) {}
+   RMarker(const RPadPos& p) : RMarker() { fP = p; }
 
    void SetP(const RPadPos& p) { fP = p; }
-
    const RPadPos& GetP() const { return fP; }
 
-   /// Get the drawing options.
-   DrawingOpts &GetOptions() { return fOpts; }
-   const DrawingOpts &GetOptions() const { return fOpts; }
+   RAttrMarker &AttrMarker() { return fMarkerAttr; }
+   const RAttrMarker &AttrMarker() const { return fMarkerAttr; }
 
-   void Paint(Internal::RPadPainter &topPad) final
-   {
-      topPad.AddDisplayItem(
-         std::make_unique<ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RMarker>>(this));
-   }
 };
-
-inline std::shared_ptr<ROOT::Experimental::RMarker>
-GetDrawable(const std::shared_ptr<ROOT::Experimental::RMarker> &marker)
-{
-   /// A RMarker is a RDrawable itself.
-   return marker;
-}
 
 } // namespace Experimental
 } // namespace ROOT

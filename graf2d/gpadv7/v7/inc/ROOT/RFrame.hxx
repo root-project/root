@@ -16,8 +16,9 @@
 #ifndef ROOT7_RFrame
 #define ROOT7_RFrame
 
+#include "ROOT/RDrawable.hxx"
+
 #include "ROOT/RAttrBox.hxx"
-#include "ROOT/RDrawingOptsBase.hxx"
 #include "ROOT/RPadUserAxis.hxx"
 #include "ROOT/RPalette.hxx"
 
@@ -30,12 +31,8 @@ namespace Experimental {
   Holds a user coordinate system with a palette.
   */
 
-class RFrame {
+class RFrame : public RDrawable  {
 public:
-   class DrawingOpts: public RDrawingOptsBase {
-   public:
-      RAttrBox Frame() { return {"frame", *this}; }
-   };
 
 private:
    /// Mapping of user coordinates to normal coordinates, one entry per dimension.
@@ -44,25 +41,15 @@ private:
    /// Palette used to visualize user coordinates.
    RPalette fPalette;
 
-   /// Drawing options.
-   DrawingOpts fOpts;
-
 public:
    // Default constructor
-   RFrame()
+   RFrame() : RDrawable()
    {
       GrowToDimensions(2);
    }
 
    /// Constructor taking user coordinate system, position and extent.
-   explicit RFrame(std::vector<std::unique_ptr<RPadUserAxisBase>> &&coords, const DrawingOpts &opts);
-
-   // Constructor taking position and extent.
-   explicit RFrame(const DrawingOpts &opts)
-      : RFrame({}, opts)
-   {}
-
-   DrawingOpts &GetDrawingOpts() { return fOpts; }
+   explicit RFrame(std::vector<std::unique_ptr<RPadUserAxisBase>> &&coords);
 
    /// Create `nDimensions` default axes for the user coordinate system.
    void GrowToDimensions(size_t nDimensions);

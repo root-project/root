@@ -30,6 +30,9 @@
 
 using namespace ROOT::Experimental;
 
+
+/*
+
 namespace {
 static Internal::RStyleReader::AllStyles_t ReadGlobalDefaultStyles()
 {
@@ -84,7 +87,7 @@ RStyle &RStyle::GetCurrent()
    return sCurrentStyle;
 }
 
-std::string RStyle::GetAttribute(const std::string &attrName, const std::string &/*className*/) const {
+std::string RStyle::GetAttribute(const std::string &attrName, const std::string &) const {
    std::string trailingPart(attrName);
    while (!trailingPart.empty()) {
       auto iter = fAttrs.find(trailingPart);
@@ -99,3 +102,5 @@ std::string RStyle::GetAttribute(const std::string &attrName, const std::string 
    }
    return {};
 }
+
+*/

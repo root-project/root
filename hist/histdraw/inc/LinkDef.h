@@ -18,23 +18,12 @@
 // but currently histpainter does not creates dictionary at all
 #pragma extra_include "ROOT/RDisplayItem.hxx";
 
-#pragma link C++ class ROOT::Experimental::RHistDrawingOpts<1>+;
-#pragma link C++ class ROOT::Experimental::RHistDrawingOpts<2>+;
-#pragma link C++ class ROOT::Experimental::RHistDrawingOpts<3>+;
 #pragma link C++ class ROOT::Experimental::RHistDrawable<1>+;
 #pragma link C++ class ROOT::Experimental::RHistDrawable<2>+;
 #pragma link C++ class ROOT::Experimental::RHistDrawable<3>+;
-#pragma link C++ class ROOT::Experimental::RDrawableBase<ROOT::Experimental::RHistDrawable<1>>+;
-#pragma link C++ class ROOT::Experimental::RDrawableBase<ROOT::Experimental::RHistDrawable<2>>+;
-#pragma link C++ class ROOT::Experimental::RDrawableBase<ROOT::Experimental::RHistDrawable<3>>+;
-#pragma link C++ class ROOT::Experimental::RHistDrawableBase<ROOT::Experimental::RHistDrawable<1>>+;
-#pragma link C++ class ROOT::Experimental::RHistDrawableBase<ROOT::Experimental::RHistDrawable<2>>+;
-#pragma link C++ class ROOT::Experimental::RHistDrawableBase<ROOT::Experimental::RHistDrawable<3>>+;
-#pragma link C++ class ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RHistDrawable<1>>+;
-#pragma link C++ class ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RHistDrawable<2>>+;
-#pragma link C++ class ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RHistDrawable<3>>+;
-#pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::Detail::RHistImplPrecisionAgnosticBase<1> >+;
-#pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::Detail::RHistImplPrecisionAgnosticBase<2>>+;
-#pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::Detail::RHistImplPrecisionAgnosticBase<3>>+;
+
+#pragma link C++ class ROOT::Experimental::Internal::RIOShared<ROOT::Experimental::Detail::RHistImplPrecisionAgnosticBase<1>>+;
+#pragma link C++ class ROOT::Experimental::Internal::RIOShared<ROOT::Experimental::Detail::RHistImplPrecisionAgnosticBase<2>>+;
+#pragma link C++ class ROOT::Experimental::Internal::RIOShared<ROOT::Experimental::Detail::RHistImplPrecisionAgnosticBase<3>>+;
 
 #endif

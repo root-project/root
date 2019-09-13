@@ -28,36 +28,10 @@ namespace Experimental {
  A text.
  */
 
-class RAttrText: public RDrawingAttrBase {
-public:
 
-   using RDrawingAttrBase::RDrawingAttrBase;
+class RAttrText : public RAttributesVisitor {
 
-   /// The color of the text.
-   RAttrText &SetColor(const RColor &col) { Set("color", col); return *this; }
-   RColor GetColor() const { return Get<RColor>("color"); }
-
-   /// The size of the text.
-   RAttrText &SetSize(float size) { Set("size", size); return *this; }
-   float GetSize() const { return Get<float>("size"); }
-
-   /// The angle of the text.
-   RAttrText &SetAngle(float angle) { Set("angle", angle); return *this; }
-   float GetAngle() const { return Get<float>("angle"); }
-
-   /// The alignment of the text.
-   RAttrText &SetAlign(int style) { Set("align", style); return *this; }
-   int GetAlign() const { return Get<int>("align"); }
-
-   /// The font of the text.
-   RAttrText &SetFont(int font) { Set("font", font); return *this; }
-   int GetFont() const { return Get<int>("font"); }
-};
-
-
-class RAttrTextNew : public RAttributesVisitor {
-
-   RColorNew fColor{this, "color_"}; ///<! line color, will access container from line attributes
+   RColor fColor{this, "color_"}; ///<! line color, will access container from line attributes
 
 protected:
    const RDrawableAttributes::Map_t &GetDefaults() const override
@@ -71,25 +45,25 @@ public:
    using RAttributesVisitor::RAttributesVisitor;
 
    ///The text size
-   RAttrTextNew &SetSize(double width) { SetValue("size", width); return *this; }
+   RAttrText &SetSize(double width) { SetValue("size", width); return *this; }
    double GetSize() const { return GetValue<double>("size"); }
 
    ///The text angle
-   RAttrTextNew &SetAngle(double angle) { SetValue("angle", angle); return *this; }
+   RAttrText &SetAngle(double angle) { SetValue("angle", angle); return *this; }
    double GetAngle() const { return GetValue<double>("angle"); }
 
    ///The text align
-   RAttrTextNew &SetAlign(int align) { SetValue("align", align); return *this; }
+   RAttrText &SetAlign(int align) { SetValue("align", align); return *this; }
    int GetAlign() const { return GetValue<int>("align"); }
 
    ///The text font
-   RAttrTextNew &SetFont(int font) { SetValue("font", font); return *this; }
+   RAttrText &SetFont(int font) { SetValue("font", font); return *this; }
    int GetFont() const { return GetValue<int>("font"); }
 
    ///The color of the line.
-   RAttrTextNew &SetColor(const RColorNew &color) { fColor = color; return *this; }
-   const RColorNew &Color() const { return fColor; }
-   RColorNew &Color() { return fColor; }
+   RAttrText &SetColor(const RColor &color) { fColor = color; return *this; }
+   const RColor &Color() const { return fColor; }
+   RColor &Color() { return fColor; }
 
 };
 

@@ -28,19 +28,37 @@ namespace Experimental {
 /** class ROOT::Experimental::RAttrBox
  Drawing attributes for a box: rectangular lines with size and position.
  */
-class RAttrBox: public RDrawingAttrBase {
-public:
-   using RDrawingAttrBase::RDrawingAttrBase;
+class RAttrBox : public RAttributesVisitor {
+   RAttrLine fBorder{this, "border_"};     ///<!
+   RAttrLine fTop{this, "top_"};           ///<!
+   RAttrLine fRight{this, "right_"};       ///<!
+   RAttrLine fBottom{this, "bottom_"};     ///<!
+   RAttrLine fLeft{this, "left_"};         ///<!
 
-   RAttrLine Border() const { return  {"border", *this}; }
+protected:
+   const RDrawableAttributes::Map_t &GetDefaults() const override
+   {
+      static auto dflts = RDrawableAttributes::Map_t().AddDefaults(fBorder).AddDefaults(fTop).AddDefaults(fRight).AddDefaults(fBottom).AddDefaults(fLeft);
+      return dflts;
+   }
+
+public:
+   using RAttributesVisitor::RAttributesVisitor;
+
+   const RAttrLine &Border() const { return fBorder; }
+   RAttrLine &Border() { return fBorder; }
    /// Overrides Border() for the top line..
-   RAttrLine Top() const { return  {"top", *this}; }
+   const RAttrLine &Top() const { return fTop; }
+   RAttrLine &Top() { return fTop; }
    /// Overrides Border() for the right line.
-   RAttrLine Right() const { return  {"right", *this}; }
+   const RAttrLine &Right() const { return fRight; }
+   RAttrLine &Right() { return fRight; }
    /// Overrides Border() for the bottom line.
-   RAttrLine Bottom() const { return  {"bottom", *this}; }
+   const RAttrLine &Bottom() const { return fBottom; }
+   RAttrLine &Bottom() { return fBottom; }
    /// Overrides Border() for the left line.
-   RAttrLine Left() const { return  {"left", *this}; }
+   const RAttrLine &Left() const { return fLeft; }
+   RAttrLine &Left() { return fLeft; }
 
    // TODO: Add Fill()!
 };

@@ -18,7 +18,6 @@
 
 #include <ROOT/RDrawable.hxx>
 #include <ROOT/RAttrLine.hxx>
-#include <ROOT/RDrawingOptsBase.hxx>
 #include <ROOT/RPadPos.hxx>
 #include <ROOT/RPadPainter.hxx>
 
@@ -27,37 +26,22 @@
 namespace ROOT {
 namespace Experimental {
 
-/** \class ROOT::Experimental::RLine
- A simple line.
- */
+class RLine : public RDrawable {
 
-class RLine : public RDrawableBase<RLine> {
-public:
-
-/** \class ROOT::Experimental::RLine::DrawingOpts
- Drawing options for RLine.
- */
-class DrawingOpts: public RDrawingOptsBase, public RAttrLine {
-public:
-   DrawingOpts(): RAttrLine(FromOption, "line", *this) {}
-};
-
-
-private:
-
-   /// Line's coordinates
-
-   RPadPos fP1;           ///< 1st point
-   RPadPos fP2;           ///< 2nd point
-
-   /// Line's attributes
-   DrawingOpts fOpts;
+   RDrawableAttributes fAttr{"line"};       ///< attributes
+   RPadPos fP1{fAttr, "p1_"};               ///<! line begin
+   RPadPos fP2{fAttr, "p2_"};               ///<! line end
+   RAttrLine  fLineAttr{fAttr, "line_"};    ///<! line attributes
 
 public:
 
    RLine() = default;
 
-   RLine(const RPadPos& p1, const RPadPos& p2) : fP1(p1), fP2(p2) {}
+   RLine(const RPadPos& p1, const RPadPos& p2) : RLine()
+   {
+      fP1 = p1;
+      fP2 = p2;
+   }
 
    void SetP1(const RPadPos& p1) { fP1 = p1; }
    void SetP2(const RPadPos& p2) { fP2 = p2; }
@@ -65,72 +49,9 @@ public:
    const RPadPos& GetP1() const { return fP1; }
    const RPadPos& GetP2() const { return fP2; }
 
-   /// Get the drawing options.
-   DrawingOpts &GetOptions() { return fOpts; }
-   const DrawingOpts &GetOptions() const { return fOpts; }
-
-   void Paint(Internal::RPadPainter &topPad) final
-   {
-      topPad.AddDisplayItem(
-         std::make_unique<ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RLine>>(this));
-   }
+   RAttrLine &AttrLine() { return fLineAttr; }
+   const RAttrLine &AttrLine() const { return fLineAttr; }
 };
-
-inline std::shared_ptr<ROOT::Experimental::RLine>
-GetDrawable(const std::shared_ptr<ROOT::Experimental::RLine> &line)
-{
-   /// A RLine is a RDrawable itself.
-   return line;
-}
-
-
-class RLineNew : public RDrawable {
-
-   RDrawingOptsBase fOpts; ///<! only temporary here, should be removed later
-
-   RDrawableAttributes fAttr{"line"}; ///< attributes
-
-   RPadPosNew fP1{fAttr, "p1_"};     ///<! line begin
-   RPadPosNew fP2{fAttr, "p2_"};     ///<! line end
-
-   RAttrLineNew  fLineAttr{fAttr, "line_"};   ///<! line attributes
-
-public:
-
-   RLineNew() = default;
-
-   RLineNew(const RPadPosNew& p1, const RPadPosNew& p2) : RLineNew()
-   {
-      fP1 = p1;
-      fP2 = p2;
-   }
-
-   void SetP1(const RPadPosNew& p1) { fP1 = p1; }
-   void SetP2(const RPadPosNew& p2) { fP2 = p2; }
-
-   const RPadPosNew& GetP1() const { return fP1; }
-   const RPadPosNew& GetP2() const { return fP2; }
-
-   RAttrLineNew &AttrLine() { return fLineAttr; }
-   const RAttrLineNew &AttrLine() const { return fLineAttr; }
-
-   /** TDOD: remove it later */
-   RDrawingOptsBase &GetOptionsBase() override { return fOpts; }
-
-   void Paint(Internal::RPadPainter &topPad) final
-   {
-      topPad.AddDisplayItem(std::make_unique<RDrawableDisplayItem>(*this));
-   }
-
-};
-
-inline std::shared_ptr<ROOT::Experimental::RLineNew>
-GetDrawable(const std::shared_ptr<ROOT::Experimental::RLineNew> &line)
-{
-   /// A RLine is a RDrawable itself.
-   return line;
-}
-
 
 } // namespace Experimental
 } // namespace ROOT

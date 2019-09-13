@@ -43,28 +43,28 @@ void ROOT::Experimental::RPadBase::AssignUniqueID(std::shared_ptr<RDrawable> &pt
 
 std::shared_ptr<ROOT::Experimental::RDrawable> ROOT::Experimental::RPadBase::FindDrawable(const std::string &id) const
 {
-   for (auto &&drawable : GetPrimitives()) {
+   for (auto &drawable : GetPrimitives()) {
 
       if (drawable->GetId() == id)
          return drawable;
 
-      RPadDrawable *pad_draw = dynamic_cast<RPadDrawable *> (drawable.get());
-      if (!pad_draw || !pad_draw->Get()) continue;
+      RPadBase *pad_draw = dynamic_cast<RPadBase *> (drawable.get());
 
-      auto subelem = pad_draw->Get()->FindDrawable(id);
+      if (pad_draw) {
+         auto subelem = pad_draw->FindDrawable(id);
 
-      if (!subelem) continue;
-
-      return subelem;
+         if (subelem)
+            return subelem;
+      }
    }
 
    return nullptr;
 }
 
-std::vector<std::vector<ROOT::Experimental::RPad *>>
-ROOT::Experimental::RPadBase::Divide(int nHoriz, int nVert, const RPadExtent &padding /*= {}*/)
+std::vector<std::vector<std::shared_ptr<ROOT::Experimental::RPad>>>
+ROOT::Experimental::RPadBase::Divide(int nHoriz, int nVert, const RPadExtent &padding)
 {
-   std::vector<std::vector<RPad *>> ret;
+   std::vector<std::vector<std::shared_ptr<RPad>>> ret;
    if (!nHoriz)
       R__ERROR_HERE("Gpad") << "Cannot divide into 0 horizontal sub-pads!";
    if (!nVert)
@@ -79,15 +79,15 @@ ROOT::Experimental::RPadBase::Divide(int nHoriz, int nVert, const RPadExtent &pa
    offset *= {1. / nHoriz, 1. / nVert};
    const RPadExtent size = offset - padding;
 
-   ret.resize(nHoriz);
    for (int iHoriz = 0; iHoriz < nHoriz; ++iHoriz) {
-      ret[iHoriz].resize(nVert);
+      ret.emplace_back();
       for (int iVert = 0; iVert < nVert; ++iVert) {
          RPadPos subPos = offset;
          subPos *= {1. * iHoriz, 1. * iVert};
-         auto uniqPad = std::make_unique<RPad>(*this, subPos, size);
-         ret[iHoriz][iVert] = uniqPad.get();
-         Draw(std::move(uniqPad), subPos, size);
+
+         auto subpad = Draw<RPad>(this, subPos, size);
+
+         ret.back().emplace_back(subpad);
          // printf("Create subpad pos %5.2f %5.2f\n", subPos.fHoriz.fNormal.fVal, subPos.fVert.fNormal.fVal);
       }
    }
@@ -207,25 +207,17 @@ ROOT::Experimental::RPad::~RPad() = default;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Experimental::RPadDrawable::RPadDrawable(const std::shared_ptr<RPad> &pPad, const RPad::DrawingOpts &opts /*= {}*/)
-   : fPad(std::move(pPad))
-{
-   if (fPad)
-      fPad->GetDrawingOpts() = opts;
-}
 
 /// Paint the pad.
-void ROOT::Experimental::RPadDrawable::Paint(Internal::RPadPainter &toppad)
+void ROOT::Experimental::RPad::Paint(Internal::RPadPainter &toppad)
 {
    Internal::RPadPainter painter;
 
-   painter.PaintDrawables(*fPad.get());
+   painter.PaintDrawables(*this);
 
-   painter.fPadDisplayItem->SetDrawOpts(&GetOptions());
-
-   painter.fPadDisplayItem->SetPos(&fPad->GetPos());
-
-   painter.fPadDisplayItem->SetSize(&fPad->GetSize());
+   painter.fPadDisplayItem->SetAttributes(&fAttr);
 
    toppad.AddDisplayItem(std::move(painter.fPadDisplayItem));
 }
+
+

@@ -25,8 +25,8 @@ namespace ROOT {
 namespace Experimental {
 
 class RPadDisplayItem;
-class RPadDrawable;
 class RPadBase;
+class RPad;
 
 namespace Internal {
 
@@ -36,7 +36,7 @@ namespace Internal {
 
 class RPadPainter {
 
-friend class ROOT::Experimental::RPadDrawable;
+   friend class ROOT::Experimental::RPad;
 
 protected:
 
