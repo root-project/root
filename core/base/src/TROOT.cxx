@@ -2597,7 +2597,7 @@ void TROOT::RegisterModule(const char* modulename,
    atexit(CallCloseFiles);
 
    // Now register with TCling.
-   if (gCling) {
+   if (TROOT::Initialized()) {
       gCling->RegisterModule(modulename, headers, includePaths, payloadCode, fwdDeclCode, triggerFunc,
                              fwdDeclsArgToSkip, classesHeaders, false, hasCxxModule);
    } else {

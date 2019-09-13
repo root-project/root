@@ -1194,11 +1194,13 @@ static void RegisterPreIncludedHeaders(cling::Interpreter &clingInterp)
 ///               e.g. `-DFOO=bar`. The last element of the array must be `nullptr`.
 
 TCling::TCling(const char *name, const char *title, const char* const argv[])
-: TInterpreter(name, title), fGlobalsListSerial(-1), fInterpreter(0),
-   fMetaProcessor(0), fNormalizedCtxt(0), fPrevLoadedDynLibInfo(0),
-   fClingCallbacks(0), fAutoLoadCallBack(0),
-   fTransactionCount(0), fHeaderParsingOnDemand(true), fIsAutoParsingSuspended(kFALSE)
+: TInterpreter(name, title), fMore(0), fGlobalsListSerial(-1), fMapfile(nullptr),
+  fRootmapFiles(nullptr), fLockProcessLine(true), fInterpreter(0),
+  fMetaProcessor(0), fNormalizedCtxt(0), fPrevLoadedDynLibInfo(0),
+  fClingCallbacks(0), fAutoLoadCallBack(0),
+  fTransactionCount(0), fHeaderParsingOnDemand(true), fIsAutoParsingSuspended(kFALSE)
 {
+   fPrompt[0] = 0;
    const bool fromRootCling = IsFromRootCling();
 
    fCxxModulesEnabled = false;
@@ -1351,14 +1353,6 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
    fLookupHelper = new ROOT::TMetaUtils::TClingLookupHelper(*fInterpreter, *fNormalizedCtxt, TClingLookupHelper__ExistingTypeCheck, TClingLookupHelper__AutoParse);
    TClassEdit::Init(fLookupHelper);
-
-   // Initialize the cling interpreter interface.
-   fMore      = 0;
-   fPrompt[0] = 0;
-   fMapfile   = 0;
-//    fMapNamespaces   = 0;
-   fRootmapFiles = 0;
-   fLockProcessLine = kTRUE;
 
    // Disallow auto-parsing in rootcling
    fIsAutoParsingSuspended = fromRootCling;
