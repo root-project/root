@@ -1358,9 +1358,6 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    fIsAutoParsingSuspended = fromRootCling;
 
    ResetAll();
-#ifndef R__WIN32
-   //optind = 1;  // make sure getopt() works in the main program
-#endif // R__WIN32
 
    // Enable dynamic lookup
    if (!fromRootCling) {
