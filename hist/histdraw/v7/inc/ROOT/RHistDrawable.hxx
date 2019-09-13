@@ -17,6 +17,7 @@
 #define ROOT7_RHistDrawable
 
 #include "ROOT/RDrawable.hxx"
+#include <ROOT/RAttrLine.hxx>
 #include "ROOT/RHist.hxx"
 #include "ROOT/RHistImpl.hxx"
 #include "ROOT/RMenuItem.hxx"
@@ -42,8 +43,24 @@ public:
 private:
    Internal::RIOShared<HistImpl_t> fHistImpl;
 
+   RDrawableAttributes fAttr{"hist"};       ///< attributes
+   RAttrLine  fLineAttr{fAttr, "line_"};    ///<! line attributes
+
+protected:
+
+   void CollectShared(Internal::RIOSharedVector_t &vect) final { vect.emplace_back(&fHistImpl); }
+
 public:
    RHistDrawable();
+
+   template <class HIST>
+   RHistDrawable(const std::shared_ptr<HIST> &hist)
+      : fHistImpl(std::shared_ptr<HistImpl_t>(hist, hist->GetImpl()))
+   {}
+
+   RAttrLine &AttrLine() { return fLineAttr; }
+   const RAttrLine &AttrLine() const { return fLineAttr; }
+
 
    void PopulateMenu(RMenuItems &) final
    {
@@ -54,12 +71,6 @@ public:
    {
       // should execute menu item
    }
-
-
-   template <class HIST>
-   RHistDrawable(const std::shared_ptr<HIST> &hist)
-      : fHistImpl(std::shared_ptr<HistImpl_t>(hist, hist->GetImpl()))
-   {}
 
 //   template <class HIST>
 //   RHistDrawable(std::unique_ptr<HIST> &&hist)
