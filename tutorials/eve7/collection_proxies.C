@@ -256,12 +256,12 @@ public:
 
       // table specs
       auto tableInfo = new REX::REveTableViewInfo();
-      tableInfo->table("XYTracks").
+      tableInfo->table("TParticle").
          column("pt", 1, "Pt").
          column("eta", 3, "Eta").
          column("phi", 3, "Phi");
 
-      tableInfo->table("XYJets").
+      tableInfo->table("XYJet").
          column("eta", 1, "Eta").
          column("phi", 1, "Phi").
          column("etasize", 2, "GetEtaSize").
