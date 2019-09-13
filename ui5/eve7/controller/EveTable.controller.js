@@ -70,24 +70,7 @@ sap.ui.define([
 
       buildTableBody: function(doBind)
       {
-
-         // amt
-         //return;
          var oTable = this.getView().byId("table");
-
-         // column definition
-         var columnData = [];
-
-         columnData.push({columnName:"Name"});
-         columnData.push({columnName:"Filtered"});
-
-         console.log("buildTableBody",this.eveTable );
-         var eveColumns = this.eveTable.childs;
-         for (var i = 0; i < eveColumns.length; i++)
-         {
-            var cname = eveColumns[i].fName;
-            columnData.push({columnName : cname});
-         }
 
          // row definition
          var rowData = this.eveTable.body;
@@ -97,28 +80,59 @@ sap.ui.define([
             rowData[i].Filtered =  this.collection.childs[i].fFiltered === true ? "--" : "*";
          }
 
-         // table model
-         var oModel = new JSONModel();
-         oModel.setData({
-            rows: rowData,
-            columns: columnData
-         });
-         oTable.setModel(oModel);
-         console.log("column table data ",columnData );
-
          if (doBind) {
+            // column definition
+            var columnData = [];
+
+            columnData.push({columnName:"Name"});
+            columnData.push({columnName:"Filtered"});
+
+            console.log("buildTableBody",this.eveTable );
+            var eveColumns = this.eveTable.childs;
+            for (var i = 0; i < eveColumns.length; i++)
+            {
+               var cname = eveColumns[i].fName;
+               columnData.push({columnName : cname});
+            }
+
+
+            // table model
+            var oModel = new JSONModel();
+            oModel.setData({
+               rows: rowData,
+               columns: columnData
+            });
+            oTable.setModel(oModel);
+
+            /*
             // bind rows and columns
             oTable.bindColumns("/columns", function(sId, oContext) {
-               var columnName = oContext.getObject().columnName;
-               var oColumn = new Column({
-                  label: columnName,
-                  template: columnName,
-                  sortProperty: columnName,
-                  showFilterMenuEntry: true
+            var columnName = oContext.getObject().columnName;
+            var oColumn = new Column({
+            label: columnName,
+            template: columnName,
+            sortProperty: columnName,
+            showFilterMenuEntry: true
+            });
+            return oColumn;
+            });
+            */
+
+            oTable.bindAggregation("columns", "/columns", function(sId, oContext) {
+               return new sap.ui.table.Column(sId, {
+	          label: "{columnName}",
+	          template: new sap.ui.commons.TextField().bindValue(oContext.getProperty("columnName")),
+                  showFilterMenuEntry: true,
+                  width: "100px"
                });
-               return oColumn;
             });
             oTable.bindRows("/rows");
+         }
+         else
+         {
+            var model = oTable.getModel();
+            var data = model.getData();
+            model.setData({"rows":rowData, "columns":data.columns});
          }
       },
 
