@@ -35,7 +35,7 @@ void draw_v6()
    double y[npoints] = { .1, .2, .3, .4, .3, .2, .1, .2, .3, .4 };
    auto gr = std::make_shared<TGraph>(npoints, x, y);
    auto canvas = RCanvas::Create("v7 RCanvas showing a v6 TGraph");
-   canvas->Draw(gr, "AL");
+   canvas->Draw<RObjectDrawable>(gr, "AL");
 
    // canvas->Show("opera");   // one could specify program name which should show canvas (like chromium or firefox)
    // canvas->Show("/usr/bin/chromium --app=$url &"); // one could use $url parameter, which replaced with canvas URL

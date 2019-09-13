@@ -2780,11 +2780,11 @@
           w = width, h = height, x = 0, y = 0,
           svg_pad = null, svg_rect = null, btns = null;
 
-      if (this.pad && this.pad.fDrawOpts && this.pad.fSize) {
-         x = Math.round(width * this.pad.fPos.fHoriz.fNormal.fVal);
-         y = Math.round(height * this.pad.fPos.fVert.fNormal.fVal);
-         w = Math.round(width * this.pad.fSize.fHoriz.fNormal.fVal);
-         h = Math.round(height * this.pad.fSize.fVert.fNormal.fVal);
+      if (this.pad && this.pad.fAttr) {
+         x = Math.round(width * this.GetNewOpt(this.pad.fAttr, "pos_horiz_normal", 0));
+         y = Math.round(height * this.GetNewOpt(this.pad.fAttr, "pos_vert_normal", 0));
+         w = Math.round(width * this.GetNewOpt(this.pad.fAttr, "size_horiz_normal", 1));
+         h = Math.round(width * this.GetNewOpt(this.pad.fAttr, "size_vert_normal", 1));
       }
 
       if (pad_enlarged === this.pad) { w = width; h = height; x = y = 0; }
@@ -3182,7 +3182,8 @@
             if (snap._typename == "ROOT::Experimental::RPadDisplayItem")  // subpad
                return objpainter.RedrawPadSnap(snap, draw_callback);
 
-            if (objpainter.UpdateObject(snap.fObject, snap.fOption || "")) objpainter.Redraw();
+            if (objpainter.UpdateObject(snap.fDrawable || snap.fObject, snap.fOption || ""))
+               objpainter.Redraw();
 
             continue; // call next
          }
@@ -3223,12 +3224,8 @@
                   handle.func("workaround"); // call function with "workaround" as argument
                });
 
-         if (snap._typename === "ROOT::Experimental::RDrawableDisplayItem") {
-            objpainter = JSROOT.draw(this.divid, snap.fDrawable, snap.fOption || "", handle);
-         } else {
-            // here the case of normal drawing, can be improved
-            objpainter = JSROOT.draw(this.divid, snap.fObject, snap.fOption || "", handle);
-         }
+         // TODO - fDrawable is v7, fObject from v6, maybe use same data member?
+         objpainter = JSROOT.draw(this.divid, snap.fDrawable || snap.fObject, snap.fOption || "", handle);
 
          if (!handle.completed) return; // if callback will be invoked, break while loop
       }
@@ -3267,7 +3264,7 @@
       if (!snap || !snap.fPrimitives) return;
 
       // for the moment only window size attributes are provided
-      var padattr = { fCw: snap.fWinSize[0].fVal, fCh: snap.fWinSize[1].fVal, fTitle: snap.fTitle };
+      var padattr = { fCw: snap.fWinSize[0], fCh: snap.fWinSize[1], fTitle: snap.fTitle };
 
       // if canvas size not specified in batch mode, temporary use 900x700 size
       if (this.batch_mode && this.iscan && (!padattr.fCw || !padattr.fCh)) { padattr.fCw = 900; padattr.fCh = 700; }

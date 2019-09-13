@@ -192,7 +192,7 @@ public:
    RPad() = default;
 
    /// Create a child pad.
-   RPad(RPadBase *parent, const RPadPos &pos, const RPadExtent &size): fParent(parent), fPos(pos), fSize(size) {}
+   RPad(RPadBase *parent, const RPadPos &pos, const RPadExtent &size): fParent(parent) { fPos = pos; fSize = size; }
 
    /// Destructor to have a vtable.
    virtual ~RPad();
