@@ -34,9 +34,7 @@ public:
 
 protected:
    const RFrame *fFrame{nullptr};             ///< temporary pointer on frame object
-   const RPad::DrawingOpts *fDrawOpts{nullptr}; ///< temporary pointer on pad drawing options
-   const RPadPos *fPos{nullptr};              ///< temporary pointer on pad position attribute
-   const RPadExtent *fSize{nullptr};          ///< temporary pointer on pad size attributes
+   const RDrawableAttributes *fAttr{nullptr}; ///< temporary pointer on attributes
    std::string fTitle;                        ///< title of the pad (used for canvas)
    std::array<RPadLength::Pixel, 2> fWinSize; ///< window size (used for canvas)
    PadPrimitives_t fPrimitives;               ///< display items for all primitives in the pad
@@ -44,22 +42,18 @@ public:
    RPadDisplayItem() = default;
    virtual ~RPadDisplayItem() {}
    void SetFrame(const RFrame *f) { fFrame = f; }
-   void SetDrawOpts(const RPad::DrawingOpts *opts) { fDrawOpts = opts; }
-   void SetPos(const RPadPos *pos) { fPos = pos; }
-   void SetSize(const RPadExtent *sz) { fSize = sz; }
+   void SetAttributes(const RDrawableAttributes *f) { fAttr = f; }
    void SetTitle(const std::string &title) { fTitle = title; }
    void SetWindowSize(const std::array<RPadLength::Pixel, 2> &win) { fWinSize = win; }
    PadPrimitives_t &GetPrimitives() { return fPrimitives; }
    void Add(std::unique_ptr<RDisplayItem> &&item) { fPrimitives.push_back(std::move(item)); }
    void Clear()
    {
-      fPrimitives.clear();
       fFrame = nullptr;
-      fDrawOpts = nullptr;
-      fPos = nullptr;
-      fSize = nullptr;
-      fWinSize[0] = fWinSize[1] = 0;
+      fAttr = nullptr;
       fTitle.clear();
+      fWinSize[0] = fWinSize[1] = 0;
+      fPrimitives.clear();
    }
 };
 

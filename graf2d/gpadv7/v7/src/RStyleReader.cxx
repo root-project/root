@@ -28,6 +28,8 @@
 using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Internal;
 
+/*
+
 void RStyleReader::ReadDefaults()
 {
    RStyleReader reader(fAttrs);
@@ -112,3 +114,4 @@ bool RStyleReader::AddFromStyleFile(const std::string &filename)
    }
    return true;
 }
+*/

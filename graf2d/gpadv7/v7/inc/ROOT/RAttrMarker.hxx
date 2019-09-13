@@ -26,21 +26,31 @@ namespace Experimental {
  A simple marker.
  */
 
-class RAttrMarker : public RDrawingAttrBase {
-public:
-   using RDrawingAttrBase::RDrawingAttrBase;
+class RAttrMarker : public RAttributesVisitor {
 
-   /// The color of the marker.
-   RAttrMarker &SetColor(const RColor &col) { Set("color", col); return *this; }
-   RColor GetColor() const { return Get<RColor>("color"); }
+   RColor fColor{this, "color_"}; ///<! marker color, will access container from line attributes
+
+protected:
+   const RDrawableAttributes::Map_t &GetDefaults() const override
+   {
+      static auto dflts = RDrawableAttributes::Map_t().AddDouble("size",1.).AddInt("style",1).AddDefaults(fColor);
+      return dflts;
+   }
+
+public:
+   using RAttributesVisitor::RAttributesVisitor;
+
+   RAttrMarker &SetColor(const RColor &color) { fColor = color; return *this; }
+   const RColor &Color() const { return fColor; }
+   RColor &Color() { return fColor; }
 
    /// The size of the marker.
-   RAttrMarker &SetSize(float size) { Set("size", size); return *this; }
-   float GetSize() const { return Get<float>("size"); }
+   RAttrMarker &SetSize(float size) { SetValue("size", size); return *this; }
+   float GetSize() const { return GetValue<double>("size"); }
 
    /// The style of the marker.
-   RAttrMarker &SetStyle(int style) { Set("style", style); return *this; }
-   int GetStyle() const { return Get<int>("style"); }
+   RAttrMarker &SetStyle(int style) { SetValue("style", style); return *this; }
+   int GetStyle() const { return GetValue<int>("style"); }
 };
 
 } // namespace Experimental

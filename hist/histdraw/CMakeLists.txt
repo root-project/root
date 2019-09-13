@@ -15,7 +15,6 @@ endif()
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTHistDraw
   HEADERS
     ROOT/RHistDrawable.hxx
-    ROOT/RHistDrawingOpts.hxx
   SOURCES
     v7/src/RHistDrawable.cxx
   DICTIONARY_OPTIONS
@@ -25,7 +24,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTHistDraw
     MathCore
     Hist
     ROOTGpadv7
-    ROOTGraphicsPrimitives
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(v7/test)

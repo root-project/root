@@ -28,36 +28,27 @@ using namespace ROOT::Experimental::Internal;
 namespace {
 class RHistPainter1D : public RHistPainterBase<1> {
 public:
-   void Paint(RDrawable &drw, const RHistDrawingOpts<1> & /*opts*/, RPadPainter &pad) final
+   void Paint(RHistDrawable<1> &drw, RPadPainter &pad) final
    {
-      assert(dynamic_cast<RHistDrawable<1> *>(&drw) && "Wrong drawable type");
-      RHistDrawable<1> &hd = static_cast<RHistDrawable<1> &>(drw);
-
-      pad.AddDisplayItem(
-         std::make_unique<ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RHistDrawable<1>>>(&hd));
+      pad.AddDisplayItem(std::make_unique<RDrawableDisplayItem>(drw));
    }
    virtual ~RHistPainter1D() final {}
 };
 
 class RHistPainter2D : public RHistPainterBase<2> {
 public:
-   void Paint(RDrawable &drw, const RHistDrawingOpts<2> & /*opts*/, RPadPainter &pad) final
+   void Paint(RHistDrawable<2> &drw, RPadPainter &pad) final
    {
-      assert(dynamic_cast<RHistDrawable<2> *>(&drw) && "Wrong drawable type");
-      RHistDrawable<2> &hd = static_cast<RHistDrawable<2> &>(drw);
-
-      pad.AddDisplayItem(
-         std::make_unique<ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RHistDrawable<2>>>(&hd));
+      pad.AddDisplayItem(std::make_unique<RDrawableDisplayItem>(drw));
    }
    virtual ~RHistPainter2D() final {}
 };
 
 class RHistPainter3D : public RHistPainterBase<3> {
 public:
-   void Paint(RDrawable &hist, const RHistDrawingOpts<3> & /*opts*/, RPadPainter & /*canv*/) final
+   void Paint(RHistDrawable<3> &drw, RPadPainter &pad) final
    {
-      // TODO: paint!
-      std::cout << "Painting 3D histogram (to be done) @" << &hist << '\n';
+      pad.AddDisplayItem(std::make_unique<RDrawableDisplayItem>(drw));
    }
    virtual ~RHistPainter3D() final {}
 };

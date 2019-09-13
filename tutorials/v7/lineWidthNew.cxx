@@ -22,7 +22,7 @@ void lineWidthNew()
    auto canvas = RCanvas::Create("Canvas Title");
    double num = 0.3;
 
-   auto style = std::make_shared<RStyleNew>();
+   auto style = std::make_shared<RStyle>();
 
    style->AddBlock("line").AddInt("line_style", 2).AddString("line_color_rgb", "4,5,6");
 
@@ -30,12 +30,12 @@ void lineWidthNew()
    for (int i=10; i>0; i--){
       num = num + 0.05;
 
-      RPadPosNew pt(RPadLengthNew::Normal(0.32), RPadLengthNew::Normal(num));
+      RPadPosNew pt(RPadLength::Normal(0.32), RPadLength::Normal(num));
       auto text = canvas->DrawNew<RTextNew>(pt, std::to_string(i));
       text->AttrText().SetSize(13).SetAlign(32).SetFont(52);
 
-      RPadPosNew pl1(RPadLengthNew::Normal(0.32), RPadLengthNew::Normal(num));
-      RPadPosNew pl2(RPadLengthNew::Normal(0.8), RPadLengthNew::Normal(num));
+      RPadPosNew pl1(RPadLength::Normal(0.32), RPadLength::Normal(num));
+      RPadPosNew pl2(RPadLength::Normal(0.8), RPadLength::Normal(num));
 
       printf("pl1  horiz %f vert %f\n", pl1.Horiz().GetNormal(),  pl1.Vert().GetNormal());
 
@@ -67,7 +67,7 @@ void lineWidthNew()
 
       printf("Afetr applying RStyle: width %f style %d color %s\n", line->AttrLine().GetWidth(), line->AttrLine().GetStyle(), line->AttrLine().Color().AsSVG().c_str());
 
-      line->AttrLine().Color() = RColorNew(i+5, i+15, i+25);
+      line->AttrLine().Color() = RColor(i+5, i+15, i+25);
 
       printf("Afetr setting color color %s\n", line->AttrLine().Color().AsSVG().c_str());
 

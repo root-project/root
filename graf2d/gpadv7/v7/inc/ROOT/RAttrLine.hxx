@@ -23,29 +23,12 @@ namespace ROOT {
 namespace Experimental {
 
 /** class ROOT::Experimental::RAttrLine
- Drawing attributes for RLine.
+ Drawing line attributes for different objects.
  */
-class RAttrLine: public RDrawingAttrBase {
-public:
-   using RDrawingAttrBase::RDrawingAttrBase;
 
-   /// The color of the line.
-   RAttrLine &SetColor(const RColor& col) { Set("color", col); return *this; }
-   RColor GetColor() const { return Get<RColor>("color"); }
+class RAttrLine : public RAttributesVisitor {
 
-   ///The width of the line.
-   RAttrLine &SetWidth(float width) { Set("width", width); return *this; }
-   float GetWidth() const { return Get<float>("width"); }
-
-   ///The style of the line.
-   RAttrLine &SetStyle(int style) { Set("style", style); return *this; }
-   int GetStyle() const { return Get<int>("style"); }
-};
-
-
-class RAttrLineNew : public RAttributesVisitor {
-
-   RColorNew fColor{this, "color_"}; ///<! line color, will access container from line attributes
+   RColor fColor{this, "color_"}; ///<! line color, will access container from line attributes
 
 protected:
    const RDrawableAttributes::Map_t &GetDefaults() const override
@@ -59,17 +42,17 @@ public:
    using RAttributesVisitor::RAttributesVisitor;
 
    ///The width of the line.
-   RAttrLineNew &SetWidth(double width) { SetValue("width", width); return *this; }
+   RAttrLine &SetWidth(double width) { SetValue("width", width); return *this; }
    double GetWidth() const { return GetValue<double>("width"); }
 
    ///The style of the line.
-   RAttrLineNew &SetStyle(int style) { SetValue("style", style); return *this; }
+   RAttrLine &SetStyle(int style) { SetValue("style", style); return *this; }
    int GetStyle() const { return GetValue<int>("style"); }
 
    ///The color of the line.
-   RAttrLineNew &SetColor(const RColorNew &color) { fColor = color; return *this; }
-   const RColorNew &Color() const { return fColor; }
-   RColorNew &Color() { return fColor; }
+   RAttrLine &SetColor(const RColor &color) { fColor = color; return *this; }
+   const RColor &Color() const { return fColor; }
+   RColor &Color() { return fColor; }
 
 };
 

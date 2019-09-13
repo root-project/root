@@ -26,8 +26,6 @@
 
 void ROOT::Experimental::RMenuItems::Cleanup()
 {
-   for (unsigned n = 0; n < fItems.size(); ++n) delete fItems[n];
-
    fItems.clear();
 }
 
@@ -39,9 +37,9 @@ void ROOT::Experimental::RMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
    cl->GetMenuItems(lst);
 
    TIter iter(lst);
-   TMethod *m = 0;
+   TMethod *m = nullptr;
 
-   while ((m = (TMethod *)iter()) != 0) {
+   while ((m = (TMethod *)iter()) != nullptr) {
 
       if (m->IsMenuItem() == kMenuToggle) {
          TString getter;
@@ -86,9 +84,9 @@ void ROOT::Experimental::RMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
             item->SetExec(Form("%s()", m->GetName()));
 
             TIter args_iter(args);
-            TMethodArg *arg = 0;
+            TMethodArg *arg = nullptr;
 
-            while ((arg = dynamic_cast<TMethodArg *>(args_iter())) != 0) {
+            while ((arg = dynamic_cast<TMethodArg *>(args_iter())) != nullptr) {
                Detail::RMenuArgument menu_arg(arg->GetName(), arg->GetTitle(), arg->GetFullTypeName());
                if (arg->GetDefault()) menu_arg.SetDefault(arg->GetDefault());
                item->AddArg(menu_arg);

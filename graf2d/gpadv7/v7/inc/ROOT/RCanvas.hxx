@@ -74,7 +74,8 @@ public:
    const std::array<RPadLength::Pixel, 2> &GetSize() const { return fSize; }
 
    /// Set canvas pixel size as array with two elements - width and height
-   RCanvas &SetSize(const std::array<RPadLength::Pixel, 2> &sz) {
+   RCanvas &SetSize(const std::array<RPadLength::Pixel, 2> &sz)
+   {
       fSize = sz;
       return *this;
    }
@@ -98,7 +99,8 @@ public:
 
    /// Insert panel into the canvas, canvas should be shown at this moment
    template <class PANEL>
-   bool AddPanel(std::shared_ptr<PANEL> &panel) {
+   bool AddPanel(std::shared_ptr<PANEL> &panel)
+   {
       if (!fPainter) return false;
       return fPainter->AddPanel(panel->GetWindow());
    }
@@ -122,16 +124,17 @@ public:
    const std::string &GetTitle() const { return fTitle; }
 
    /// Set the canvas's title.
-   RCanvas &SetTitle(const std::string &title) {
+   RCanvas &SetTitle(const std::string &title)
+   {
       fTitle = title;
       return *this;
    }
 
    /// Convert a `Pixel` position to Canvas-normalized positions.
-   std::array<RPadLength::Normal, 2> PixelsToNormal(const std::array<RPadLength::Pixel, 2> &pos) const final
-   {
-      return {{pos[0] / fSize[0], pos[1] / fSize[1]}};
-   }
+//   std::array<RPadLength::Normal, 2> PixelsToNormal(const std::array<RPadLength::Pixel, 2> &pos) const final
+//   {
+//      return {{pos[0] / fSize[0], pos[1] / fSize[1]}};
+//   }
 
    static const std::vector<std::shared_ptr<RCanvas>> GetCanvases();
 };

@@ -16,11 +16,9 @@
 #ifndef ROOT7_RBox
 #define ROOT7_RBox
 
-#include <ROOT/RAttrBox.hxx>
 #include <ROOT/RDrawable.hxx>
-#include <ROOT/RDrawingOptsBase.hxx>
+#include <ROOT/RAttrBox.hxx>
 #include <ROOT/RPadPos.hxx>
-#include <ROOT/RPadPainter.hxx>
 
 #include <initializer_list>
 #include <memory>
@@ -32,38 +30,19 @@ namespace Experimental {
  A simple box.
  */
 
-class RBox : public RDrawableBase<RBox> {
-public:
-
-/** class ROOT::Experimental::RBox::DrawingOpts
- Drawing options for RBox.
- */
-
-class DrawingOpts: public RDrawingOptsBase, public RAttrBox {
-public:
-      DrawingOpts():
-         RAttrBox(FromOption, "box", *this)
-      {}
-
-      using RAttrBox::RAttrBox;
-};
-
-
-private:
+class RBox : public RDrawable {
 
    /// Box's coordinates
-
-   RPadPos fP1;           ///< 1st point, bottom left
-   RPadPos fP2;           ///< 2nd point, top right
-
-   /// Box's attributes
-   DrawingOpts fOpts;
+   RDrawableAttributes fAttr{"line"};   ///< attributes
+   RPadPos fP1{fAttr, "p1_"};           ///<! line begin
+   RPadPos fP2{fAttr, "p2_"};           ///<! line end
+   RAttrBox fBoxAttr{fAttr, "box_"};    ///<! line attributes
 
 public:
 
    RBox() = default;
 
-   RBox(const RPadPos& p1, const RPadPos& p2) : fP1(p1), fP2(p2) {}
+   RBox(const RPadPos& p1, const RPadPos& p2) : RBox() { fP1 = p1; fP2 = p2; }
 
    void SetP1(const RPadPos& p1) { fP1 = p1; }
    void SetP2(const RPadPos& p2) { fP2 = p2; }
@@ -71,23 +50,9 @@ public:
    const RPadPos& GetP1() const { return fP1; }
    const RPadPos& GetP2() const { return fP2; }
 
-   /// Get the drawing options.
-   DrawingOpts &GetOptions() { return fOpts; }
-   const DrawingOpts &GetOptions() const { return fOpts; }
-
-   void Paint(Internal::RPadPainter &topPad) final
-   {
-      topPad.AddDisplayItem(
-         std::make_unique<ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RBox>>(this));
-   }
+   RAttrBox &AttrBox() { return fBoxAttr; }
+   const RAttrBox &AttrBox() const { return fBoxAttr; }
 };
-
-inline std::shared_ptr<ROOT::Experimental::RBox>
-GetDrawable(const std::shared_ptr<ROOT::Experimental::RBox> &box)
-{
-   /// A RBox is a RDrawable itself.
-   return box;
-}
 
 } // namespace Experimental
 } // namespace ROOT

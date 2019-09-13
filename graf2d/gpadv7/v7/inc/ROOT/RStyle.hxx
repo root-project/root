@@ -16,7 +16,7 @@
 #ifndef ROOT7_RStyle
 #define ROOT7_RStyle
 
-#include <ROOT/RColor.hxx>
+#include <ROOT/RDrawingAttr.hxx>
 
 #include <ROOT/RStringView.hxx>
 
@@ -30,6 +30,8 @@ namespace Experimental {
 /** \class ROOT::Experimental::RStyle
   A set of defaults for graphics attributes, e.g. for histogram fill color, line width, frame offsets etc.
   */
+
+/*
 
 class RStyle {
 public:
@@ -73,6 +75,8 @@ public:
    /// Set the current RStyle by copying `style` into the static current style object.
    static void SetCurrent(const RStyle &style) { GetCurrent() = style; }
 };
+
+*/
 
 } // namespace Experimental
 } // namespace ROOT
