@@ -108,12 +108,15 @@ private:
    static size_t          fNOnes;        ///< Current length of the one vector.
    static curandState_t * fCurandStates;
    static size_t          fNCurandStates;
+   
 
    size_t                    fNRows;
    size_t                    fNCols;
    TCudaDeviceBuffer<AFloat> fElementBuffer;
 
 public:
+
+   static Bool_t gInitializeCurand;
 
    static AFloat * GetOnes() {return fOnes;}
 

@@ -42,7 +42,8 @@ namespace DNN
 {
 
 struct TCudnnEmptyDescriptor {};
- 
+
+
 /** The TCudnn architecture class.
  *
  * Low-level interface class for CUDA computing architectures using the cuDNN
@@ -88,7 +89,17 @@ public:
    using PoolingDescriptors_t    = CNN::TCNNDescriptors<PoolingLayer_t>;
    using PoolingWorkspace_t      = CNN::TCNNWorkspace<PoolingLayer_t>;
 
-   
+   // convolution options
+   // default is -1 (left to cudnn)
+   struct CNNOptions  {
+
+      static int ConvFwdAlgorithm;
+      static int ConvBwdDataAlgorithm;
+      static int ConvBwdFilterAlgorithm;
+      // default is 0 (left to cudnn : a value -1 will indicate to not use any space)
+      static size_t ConvMaxWorkspaceSize;
+   }; // namespace DNN
+
    static TMVA::Experimental::MemoryLayout GetTensorLayout() { return TMVA::Experimental::MemoryLayout::RowMajor; }
 
 
@@ -1080,6 +1091,26 @@ void TCudnn<Real_t>::PrintTensor(const typename TCudnn<Real_t>::Tensor_t & A, co
    }  
 }
 
+// initialize the CNN options
+// possible options for forward (from 0 to 7)
+//
+//  0 : CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM;
+//  1 : CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;
+//  6  : CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD;
+//  7 : CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD_NONFUSED;  (lots of memory)
+
+// for backward data (from 0 to 5)
+//  1 : CUDNN_CONVOLUTION_BWD_DATA_ALGO_1;
+//  5  CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD_NONFUSED;
+
+template <typename AFloat>
+int TCudnn<AFloat>::CNNOptions::ConvFwdAlgorithm = -1;
+template <typename AFloat>
+int TCudnn<AFloat>::CNNOptions::ConvBwdDataAlgorithm = -1;
+template <typename AFloat>
+int TCudnn<AFloat>::CNNOptions::ConvBwdFilterAlgorithm = -1;
+template <typename AFloat>
+size_t TCudnn<AFloat>::CNNOptions::ConvMaxWorkspaceSize = 0;
 
 } // namespace DNN
 } // namespace TMVA
