@@ -121,7 +121,7 @@ sap.ui.define([
             oTable.bindAggregation("columns", "/columns", function(sId, oContext) {
                return new sap.ui.table.Column(sId, {
 	          label: "{columnName}",
-	          template: new sap.ui.commons.TextField().bindValue(oContext.getProperty("columnName")),
+	          template: new sap.m.Text().bindText(oContext.getProperty("columnName")),
                   showFilterMenuEntry: true,
                   width: "100px"
                });
