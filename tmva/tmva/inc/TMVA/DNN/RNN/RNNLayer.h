@@ -78,6 +78,8 @@ private:
    Matrix_t &fWeightInputGradients; ///< Gradients w.r.t. the input weights
    Matrix_t &fWeightStateGradients; ///< Gradients w.r.t. the recurring weights
    Matrix_t &fBiasGradients;        ///< Gradients w.r.t. the bias values
+   
+   typename Architecture_t::ActivationDescriptor_t fActivationDesc;
 
 public:
 
@@ -219,6 +221,8 @@ template <typename Architecture_t>
 auto TBasicRNNLayer<Architecture_t>::InitState(DNN::EInitialization /*m*/) -> void
 {
    DNN::initialize<Architecture_t>(this->GetState(),  DNN::EInitialization::kZero);
+
+   Architecture_t::InitializeActivationDescriptor(fActivationDesc,this->GetActivationFunction());
 }
 
 //______________________________________________________________________________
@@ -287,12 +291,15 @@ auto inline TBasicRNNLayer<Architecture_t>::CellForward(const Matrix_t &input, M
    Architecture_t::MultiplyTranspose(fState, input, fWeightsInput);
    Architecture_t::ScaleAdd(fState, tmpState);
    Architecture_t::AddRowWise(fState, fBiases);
-   Tensor_t dFt(dF); 
+   Tensor_t inputActivFunc(dF); 
    Tensor_t tState(fState);
-#if 0 // exclude for cudnn 
-   DNN::evaluateDerivative<Architecture_t>(dFt, fAF, fState);
-   DNN::evaluate<Architecture_t>(tState, fAF);
-#endif
+
+   // DNN::evaluateDerivative<Architecture_t>(dFt, fAF, fState);
+   // DNN::evaluate<Architecture_t>(tState, fAF);
+
+   Architecture_t::Copy(inputActivFunc, tState);
+   Architecture_t::ActivationFunctionForward(tState, fAF, fActivationDesc);
+
 }
 
 //____________________________________________________________________________
@@ -348,8 +355,15 @@ auto inline TBasicRNNLayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
       Architecture_t::ScaleAdd(state_gradients_backward, actgrad_m);
 
       Matrix_t actbw_m = arr_activations_backward.At(t - 1).GetMatrix(); 
-      Matrix_t gradbw_m = arr_gradients_backward.At(t - 1).GetMatrix(); 
-      Matrix_t df_m = fDerivatives.At(t - 1).GetMatrix(); 
+      Matrix_t gradbw_m = arr_gradients_backward.At(t - 1).GetMatrix();
+
+      // compute derivatives of activations
+      Tensor_t  df = fDerivatives.At(t-1); 
+      Architecture_t::ActivationFunctionBackward(df, arr_output, 
+                                                 arr_actgradients, df, //do in place (should work) 
+                                              this->GetActivationFunction(), fActivationDesc);
+      
+      Matrix_t df_m = df.GetMatrix(); 
 
       if (t > 1) {
          Matrix_t precStateActivations = arr_output.At(t - 2).GetMatrix();

@@ -414,15 +414,15 @@ public:
                               TWorkspace   * workspace, 
                               Scalar_t p);
 
-   static void DropoutForward(Matrix_t & A, Scalar_t p) { 
+   static void DropoutForward(Matrix_t & A, Scalar_t p) {
       Tensor_t tA(A);
       DropoutForward( tA, static_cast<TDescriptors *> (nullptr), static_cast<TWorkspace *> (nullptr), p );
    }
 
    // Only needed for cuDNN
-   static void DropoutBackward(Tensor_t & A,                               
-                               TDescriptors * descriptors,
-                               TWorkspace   * workspace) {}
+   static void DropoutBackward(Tensor_t & /*A */,
+                               TDescriptors * /*descriptors */,
+                               TWorkspace   * /*workspace*/) {}
    ///@}
 
    //____________________________________________________________________________

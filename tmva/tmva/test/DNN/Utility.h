@@ -93,7 +93,7 @@ void constructConvNet(TDeepNet<AArchitecture> &net)
    size_t widthFC1 = 20;
 
    //EActivationFunction fFC1 = EActivationFunction::kIdentity;
-   EActivationFunction fFC1 = EActivationFunction::kTanh;
+   EActivationFunction fFC1 = EActivationFunction::kSigmoid;
 
    //EActivationFunction fFC1 = ActivationFunctions[r.Uniform(ActivationFunctions.size())];
    net.AddDenseLayer(widthFC1, fFC1);

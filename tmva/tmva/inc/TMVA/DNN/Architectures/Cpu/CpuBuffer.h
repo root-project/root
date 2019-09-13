@@ -58,6 +58,7 @@ public:
 
    /** Construct buffer to hold \p size numbers of type \p AFloat.*/
     TCpuBuffer(size_t size);
+    TCpuBuffer() = default;
     TCpuBuffer(const TCpuBuffer  &) = default;
     TCpuBuffer(      TCpuBuffer &&) = default;
     TCpuBuffer & operator=(const TCpuBuffer  &) = default;
