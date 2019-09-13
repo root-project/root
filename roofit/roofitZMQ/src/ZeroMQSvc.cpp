@@ -71,23 +71,23 @@ zmq::message_t ZeroMQSvc::encode(const std::string& item) const {
   return encode(item.c_str());
 }
 
-zmq::message_t ZeroMQSvc::encode(const TObject& item) const {
-  auto deleteBuffer = []( void* data, void* /* hint */ ) -> void {
-    delete [] (char*)data;
-  };
-
-  TBufferFile buffer(TBuffer::kWrite);
-  buffer.WriteObject(&item);
-
-  // Create message and detach buffer
-  // This is the only ZMQ thing that can throw, and only when memory ran out
-  // (errno ENOMEM), and that is something only the caller can fix, so we don't
-  // catch it here:
-  zmq::message_t message(buffer.Buffer(), buffer.Length(), deleteBuffer);
-  buffer.DetachBuffer();
-
-  return message;
-}
+//zmq::message_t ZeroMQSvc::encode(const TObject& item) const {
+//  auto deleteBuffer = []( void* data, void* /* hint */ ) -> void {
+//    delete [] (char*)data;
+//  };
+//
+//  TBufferFile buffer(TBuffer::kWrite);
+//  buffer.WriteObject(&item);
+//
+//  // Create message and detach buffer
+//  // This is the only ZMQ thing that can throw, and only when memory ran out
+//  // (errno ENOMEM), and that is something only the caller can fix, so we don't
+//  // catch it here:
+//  zmq::message_t message(buffer.Buffer(), buffer.Length(), deleteBuffer);
+//  buffer.DetachBuffer();
+//
+//  return message;
+//}
 
 
 bool ZeroMQSvc::send(zmq::socket_t& socket, const char* item, int flags) const {

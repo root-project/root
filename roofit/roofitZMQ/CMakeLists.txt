@@ -20,8 +20,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitZMQ
         -I${ZeroMQ_INCLUDE_DIR}
         -writeEmptyRootPCM
     DEPENDENCIES
-        Core # TVersionCheck, RegisterModule
-        RIO  # TBufferFile, TBufferIO
+        Core # TVersionCheck, RegisterModule, these are always called from G__RooFitZMQ.cxx.o
+#        RIO  # TBufferFile, TBufferIO
     LIBRARIES
         ${ZeroMQ_LIBRARY}
     )
