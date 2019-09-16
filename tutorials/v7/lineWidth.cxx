@@ -25,14 +25,9 @@ void lineWidth()
    for (int i=10; i>0; i--){
       num = num + 0.05;
 
-      RPadPos pt(.3_normal, RPadLength::Normal(num));
-      auto text = canvas->Draw<RText>(pt, std::to_string(i));
-      text->AttrText().SetSize(13).SetAlign(32).SetFont(52);
+      canvas->Draw<RText>(RPadPos(.3_normal, 1_normal*num), std::to_string(i))->AttrText().SetSize(13).SetAlign(32).SetFont(52);
 
-      RPadPos pl1(.32_normal, RPadLength::Normal(num));
-      RPadPos pl2(.8_normal , RPadLength::Normal(num));
-      auto line = canvas->Draw<RLine>(pl1, pl2);
-      line->AttrLine().SetWidth(i);
+      canvas->Draw<RLine>(RPadPos(.32_normal, 1_normal*num), RPadPos(.8_normal , 1_normal*num))->AttrLine().SetWidth(i);
    }
 
    canvas->Show();
