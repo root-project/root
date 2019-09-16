@@ -47,6 +47,7 @@ public:
       virtual int GetInt() const { return 0; }
       virtual double GetDouble() const { return 0; }
       virtual std::string GetString() const { return ""; }
+      virtual bool IsEqual(const Value_t *) const { return false; }
       virtual Value_t *Copy() const = 0;
       virtual const void *GetValuePtr() const { return nullptr; }
 
@@ -63,6 +64,7 @@ public:
       EValuesKind Kind() const final { return kBool; }
       bool GetBool() const final { return v; }
       Value_t *Copy() const final { return new BoolValue_t(v); }
+      bool IsEqual(const Value_t *tgt) const final { return (tgt->Kind() == kBool) && (tgt->GetBool() == v); }
    };
 
 
@@ -73,6 +75,7 @@ public:
       EValuesKind Kind() const final { return kInt; }
       int GetInt() const final { return v; }
       Value_t *Copy() const final { return new IntValue_t(v); }
+      bool IsEqual(const Value_t *tgt) const final { return (tgt->Kind() == kInt) && (tgt->GetInt() == v); }
    };
 
    class DoubleValue_t : public Value_t {
@@ -82,6 +85,7 @@ public:
       EValuesKind Kind() const final { return kDouble; }
       double GetDouble() const final { return v; }
       Value_t *Copy() const final { return new DoubleValue_t(v); }
+      bool IsEqual(const Value_t *tgt) const final { return (tgt->Kind() == kDouble) && (tgt->GetDouble() == v); }
       const void *GetValuePtr() const final { return &v; }
    };
 
@@ -91,6 +95,7 @@ public:
       StringValue_t(const std::string _v = "") : v(_v) {}
       EValuesKind Kind() const final { return kString; }
       std::string GetString() const final { return v; }
+      bool IsEqual(const Value_t *tgt) const final { return (tgt->Kind() == kString) && (tgt->GetString() == v); }
       Value_t *Copy() const final { return new StringValue_t(v); }
    };
 
@@ -226,7 +231,9 @@ protected:
       return empty;
    }
 
-   bool CopyValue(const std::string &name, const RDrawableAttributes::Value_t * value, bool check_type = true);
+   bool CopyValue(const std::string &name, const RDrawableAttributes::Value_t *value, bool check_type = true);
+
+   bool IsValueEqual(const std::string &name, const RDrawableAttributes::Value_t *value, bool use_style = false) const;
 
    ///////////////////////////////////////////////////////////////////////////////
    /// Evaluate attribute value
@@ -282,7 +289,7 @@ protected:
 
    void SemanticCopy(const RAttributesVisitor &src);
 
-   void CopyTo(RAttributesVisitor &tgt, bool use_style = true) const;
+   bool IsSame(const RAttributesVisitor &src, bool use_style = true) const;
 
 public:
 
@@ -294,11 +301,11 @@ public:
 
    RAttributesVisitor(const RAttributesVisitor &src) { CreateOwnAttr(); src.CopyTo(*this); }
 
-   RAttributesVisitor &operator=(const RAttributesVisitor &src) { Clear(); src.CopyTo(*this); return *this; }
-
    virtual ~RAttributesVisitor() = default;
 
-   void Copy(const RAttributesVisitor &src, bool use_style = true) { src.CopyTo(*this, use_style); }
+   RAttributesVisitor &operator=(const RAttributesVisitor &src) { Clear(); src.CopyTo(*this); return *this; }
+
+   void CopyTo(RAttributesVisitor &tgt, bool use_style = true) const;
 
    void UseStyle(const std::shared_ptr<RStyle> &style) { fStyle = style; }
 
@@ -315,8 +322,10 @@ public:
 
    template<typename T, std::enable_if_t<!std::is_pointer<T>{}>* = nullptr>
    T GetValue(const std::string &name) const { return Eval<T>(name); }
-};
 
+   friend bool operator==(const RAttributesVisitor& lhs, const RAttributesVisitor& rhs){ return lhs.IsSame(rhs) && rhs.IsSame(lhs); }
+   friend bool operator!=(const RAttributesVisitor& lhs, const RAttributesVisitor& rhs){ return !lhs.IsSame(rhs) || !rhs.IsSame(lhs); }
+};
 
 } // namespace Experimental
 } // namespace ROOT
