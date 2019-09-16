@@ -40,7 +40,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
          # an opaque pointer to the provided object.
          # Not exposed in new PyROOT for now (is it really necessary?)
          import libcppyy
-         cls.AsCObject = libcppyy.AsCObject
+         cls.AsCObject = libcppyy.as_cobject
       else:
          cls.AsCObject = ROOT.AsCObject
 
