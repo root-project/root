@@ -16,6 +16,35 @@
 
 namespace CPyCppyy {
 
+//- helper for ctypes conversions --------------------------------------------
+static PyObject* TC2CppName(PyObject* pytc, const char* cpd, bool allow_voidp)
+{
+    const char* name = nullptr;
+    if (CPyCppyy_PyText_Check(pytc)) {
+        char tc = ((char*)CPyCppyy_PyText_AsString(pytc))[0];
+        switch (tc) {
+            case '?': name = "bool";           break;
+            case 'c': name = "char";           break;
+            case 'b': name = "char";           break;
+            case 'B': name = "unsigned char";  break;
+            case 'h': name = "short";          break;
+            case 'H': name = "unsigned short"; break;
+            case 'i': name = "int";            break;
+            case 'I': name = "unsigned int";   break;
+            case 'l': name = "long";           break;
+            case 'L': name = "unsigned long";  break;
+            case 'f': name = "float";          break;
+            case 'd': name = "double";         break;
+            case 'g': name = "long double";    break;
+            default:  name = (allow_voidp ? "void*" : nullptr); break;
+        }
+    }
+
+    if (name)
+        return CPyCppyy_PyText_FromString((std::string{name}+cpd).c_str());
+    return nullptr;
+}
+
 //----------------------------------------------------------------------------
 TemplateInfo::TemplateInfo() : fCppName(nullptr), fPyName(nullptr), fPyClass(nullptr),
     fNonTemplated(nullptr), fTemplated(nullptr), fLowPriority(nullptr)
@@ -104,28 +133,11 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
         // special case for arrays
             PyObject* pytc = PyObject_GetAttr(itemi, PyStrings::gTypeCode);
             if (pytc) {
-                if (CPyCppyy_PyText_Check(pytc)) {
-                // array, build up a pointer type
-                    char tc = ((char*)CPyCppyy_PyText_AsString(pytc))[0];
-                    const char* ptrname = 0;
-                    switch (tc) {
-                        case 'b': ptrname = "char*";           break;
-                        case 'h': ptrname = "short*";          break;
-                        case 'H': ptrname = "unsigned short*"; break;
-                        case 'i': ptrname = "int*";            break;
-                        case 'I': ptrname = "unsigned int*";   break;
-                        case 'l': ptrname = "long*";           break;
-                        case 'L': ptrname = "unsigned long*";  break;
-                        case 'f': ptrname = "float*";          break;
-                        case 'd': ptrname = "double*";         break;
-                        default:  ptrname = "void*";  // TODO: verify if this is right
-                    }
-                    if (ptrname) {
-                        PyObject* pyptrname = CPyCppyy_PyText_FromString(ptrname);
-                        PyTuple_SET_ITEM(tpArgs, i, pyptrname);
-                        bArgSet = true;
-                    // string added, but not counted towards nStrings
-                    }
+                PyObject* pyptrname = TC2CppName(pytc, "*", true);
+                if (pyptrname) {
+                    PyTuple_SET_ITEM(tpArgs, i, pyptrname);
+                    bArgSet = true;
+                // string added, but not counted towards nStrings
                 }
                 Py_DECREF(pytc); pytc = nullptr;
             } else
@@ -134,30 +146,24 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
         // if not arg set, try special case for ctypes
             if (!bArgSet) pytc = PyObject_GetAttr(itemi, PyStrings::gCTypesType);
 
-            if (pytc) {
-                if (CPyCppyy_PyText_Check(pytc)) {
-                    char tc = ((char*)CPyCppyy_PyText_AsString(pytc))[0];
-                    const char* actname = 0;
-                    switch (tc) {
-                        case 'c': actname = "char&";           break;
-                        case 'h': actname = "short&";          break;
-                        case 'H': actname = "unsigned short&"; break;
-                        case 'i': actname = "int&";            break;
-                        case 'I': actname = "unsigned int&";   break;
-                        case 'l': actname = "long&";           break;
-                        case 'L': actname = "unsigned long&";  break;
-                        case 'f': actname = "float&";          break;
-                        case 'd': actname = "double&";         break;
-                        // no default, just let fail
-                    }
-                    if (actname) {
-                        PyObject* pyactname = CPyCppyy_PyText_FromString(actname);
-                        PyTuple_SET_ITEM(tpArgs, i, pyactname);
-                        bArgSet = true;
-                    // string added, but not counted towards nStrings
-                    }
+            if (!bArgSet && pytc) {
+                PyObject* pyactname = TC2CppName(pytc, "&", false);
+                if (!pyactname) {
+                // _type_ of a pointer to c_type is that type, which will have a type
+                    PyObject* newpytc = PyObject_GetAttr(pytc, PyStrings::gCTypesType);
+                    Py_DECREF(pytc);
+                    pytc = newpytc;
+                    if (pytc) {
+                        pyactname = TC2CppName(pytc, "*", false);
+                    } else
+                        PyErr_Clear();
                 }
-                Py_DECREF(pytc);
+                Py_DECREF(pytc); pytc = nullptr;
+                if (pyactname) {
+                    PyTuple_SET_ITEM(tpArgs, i, pyactname);
+                    bArgSet = true;
+                // string added, but not counted towards nStrings
+                }
             } else
                 PyErr_Clear();
 
@@ -424,7 +430,6 @@ static inline PyObject* CallMethodImp(TemplateProxy* pytmpl, PyObject*& pymeth,
     if (result) {
         Py_XDECREF(((CPPOverload*)pymeth)->fSelf); ((CPPOverload*)pymeth)->fSelf = nullptr;    // unbind
         UpdateDispatchMap(pytmpl, true, sighash, (CPPOverload*)pymeth);
-        Py_DECREF(kwds);
     }
 
     Py_DECREF(pymeth); pymeth = nullptr;

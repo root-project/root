@@ -10,8 +10,12 @@ try:
 except ImportError:
     has_wheel = False
 
+force_bdist = False
+if '--force-bdist' in sys.argv:
+    force_bdist = True
+    sys.argv.remove('--force-bdist')
 
-requirements = ['cppyy-cling>=6.18.0.0', 'cppyy-backend>=1.10.0']
+requirements = ['cppyy-cling==6.18.2.*', 'cppyy-backend==1.10.*']
 setup_requirements = ['wheel']
 if 'build' in sys.argv or 'install' in sys.argv:
     setup_requirements += requirements
@@ -27,7 +31,7 @@ with codecs.open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
 def is_manylinux():
     try:
         for line in open('/etc/redhat-release').readlines():
-            if 'CentOS release 5.11' in line:
+            if 'CentOS release 6.10 (Final)' in line:
                 return True
     except (OSError, IOError):
         pass
@@ -98,7 +102,7 @@ class MyDistribution(Distribution):
         # packages are installed one-by-one, on old install is used or the build
         # will simply fail hard. The following is not completely quiet, but at
         # least a lot less conspicuous.
-        if not is_manylinux():
+        if not is_manylinux() and not force_bdist:
             disabled = set((
                 'bdist_wheel', 'bdist_egg', 'bdist_wininst', 'bdist_rpm'))
             for cmd in self.commands:
@@ -114,7 +118,7 @@ class MyDistribution(Distribution):
 
 setup(
     name='CPyCppyy',
-    version='1.9.1',
+    version='1.9.3',
     description='Cling-based Python-C++ bindings for CPython',
     long_description=long_description,
 

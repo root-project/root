@@ -6,7 +6,7 @@ currpath = py.path.local(__file__).dirpath()
 
 def setup_make(targetname):
     if sys.platform == 'win32':
-        popen = subprocess.Popen(["python", "make_dict_win32.py", targetname], cwd=str(currpath),
+        popen = subprocess.Popen([sys.executable, "make_dict_win32.py", targetname], cwd=str(currpath),
                                  stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     else:
         popen = subprocess.Popen(["make", targetname+"Dict.so"], cwd=str(currpath),

@@ -19,47 +19,97 @@ The backend repo contains both the cppyy-cling (under "cling") and
 cppyy-backend (under "clingwrapper") packages.
 
 
-Building
---------
+Building from source
+--------------------
+
+.. _building_from_source:
 
 Except for cppyy-cling, the structure in the repositories follows a normal
-PyPA package and they are thus are ready to build with `setuptools`_: simply
-checkout the package and either run ``python setup.py``, or use ``pip``.
+PyPA package and they are thus ready to build with `setuptools`_: simply
+clone the package and either run ``python setup.py``, or use ``pip``.
+
 It is highly recommended to follow the dependency chain when manually
-upgrading packages individually (i.e. cppyy-cling, cppyy-backend, CPyCppyy
-if on CPython, and then finally cppyy).
+upgrading packages individually (i.e. ``cppyy-cling``, ``cppyy-backend``,
+``CPyCppyy`` if on CPython, and then finally ``cppyy``), because upstream
+packages expose headers that are used by the ones downstream.
+Of course, if only building for a patch/point release, there is no need to
+re-install the full chain (or follow the order).
+Always run the local updates from the package directories (i.e. where the
+``setup.py`` file is located), as some tools rely on the package structure.
 
-As an example, to upgrade CPyCppyy to the latest version in the repository,
-do::
+The ``STDCXX`` envar can be used to control the C++ standard version; use
+``MAKE`` to change the ``make`` command; and ``MAKE_NPROCS`` to control the
+maximum number of parallel jobs.
+Compilation of the backend, which contains a customized version of
+Clang/LLVM, can take a long time, so by default the setup script will use all
+cores (x2 if hyperthreading is enabled).
 
- $ git clone https://bitbucket.org/wlav/CPyCppyy.git
- $ pip install ./CPyCppyy --upgrade
+On MS Windows, some temporary path names may be too long, causing the build to
+fail.
+To resolve this issue, set the ``TMP`` and ``TEMP`` envars to something short,
+before building.
+For example::
 
-Installation of the cppyy package works the same way (just replace "CPyCppyy"
-with "cppyy").
-Please see the `pip documentation`_ for more options, such as developer mode.
+ > set TMP=C:\TMP
+ > set TEMP=C:\TMP
 
-For the clingwrapper part of the backend (package "cppyy-backend"), which
-lives in a subdirectory in the cppyy-backend repository, do::
-
- $ git clone https://bitbucket.org/wlav/cppyy-backend.git
- $ pip install ./cppyy-backend/clingwrapper --upgrade
-
-Finally, the cppyy-cling package (subdirectory "cling") requires sources being
-pulled in from upstream, and thus takes a few extra steps::
+Start with the ``cppyy-cling`` package (cppyy-backend repo, subdirectory
+"cling"), which requires source to be pulled in from upstream, and thus takes
+a few extra steps::
 
  $ git clone https://bitbucket.org/wlav/cppyy-backend.git
  $ cd cppyy-backend/cling
  $ python setup.py egg_info
  $ python create_src_directory.py
- $ pip install . --upgrade
+ $ python -m pip install . --upgrade
 
-The egg_info command is needed for ``create_src_directory.py`` to find the
-right version.
-It in turn downloads the proper release from upstream, trims and patches it,
+The ``egg_info`` setup command is needed for ``create_src_directory.py`` to
+find the right version.
+That script in turn downloads the proper release from `upstream`_, trims and
+patches it,
 and installs the result in the "src" directory.
-When done, the structure of cppyy-cling looks again like a PyPA package and
-can be used as expected.
+When done, the structure of ``cppyy-cling`` looks again like a PyPA package
+and can be used/installed as expected, here using ``pip``.
+
+The ``cppyy-cling`` package, because it contains Cling/Clang/LLVM, is rather
+large to build, so by default the setup script will use all cores (x2 if
+hyperthreading is enabled).
+You can change this behavior with the ``MAKE_NPROCS`` envar.
+The wheel of ``cppyy-cling`` is reused by pip for all versions of CPython and
+PyPy, thus the long compilation is needed only once for all different
+versions of Python on the same machine.
+
+Unless you build on the manylinux1 docker images, wheels for ``cppyy``,
+``CPyCppyy``, and ``cppyy-backend`` are disabled, because ``setuptools`` (as
+used by ``pip``) does not properly resolve dependencies for wheels.
+You will see a harmless "error" message to that effect fly by in the (verbose)
+output.
+You can force manual build of those wheels, as long as you make sure that you
+have the proper dependencies *installed*, using ``--force-bdist``, when
+building from the repository.
+
+Next up is ``cppyy-backend`` (cppyy-backend, subdirectory "clingwrapper"; omit
+the first step if you already cloned the repo for ``cppyy-cling``)::
+
+ $ git clone https://bitbucket.org/wlav/cppyy-backend.git
+ $ cd cppyy-backend/clingwrapper
+ $ python -m pip install . --upgrade
+
+Upgrading ``CPyCppyy`` (if on CPython; it's not needed for PyPy) and ``cppyy``
+is very similar::
+
+ $ git clone https://bitbucket.org/wlav/CPyCppyy.git
+ $ cd CPyCppyy
+ $ python -m pip install . --upgrade
+
+Finally, the top-level package ``cppyy``::
+
+ $ git clone https://bitbucket.org/wlav/cppyy.git
+ $ cd cppyy
+ $ python -m pip install . --upgrade
+
+Please see the `pip documentation`_ for more options, such as developer mode.
 
 .. _`setuptools`: https://setuptools.readthedocs.io/
+.. _`upstream`: https://root.cern.ch/download/
 .. _`pip documentation`: https://pip.pypa.io/

@@ -50,7 +50,7 @@ PyObject* CPyCppyy::CPPConstructor::Call(
 // verify existence of self (i.e. tp_new called)
     if (!self) {
         PyErr_Print();
-        PyErr_SetString(PyExc_ReferenceError, "no python object allcoated");
+        PyErr_SetString(PyExc_ReferenceError, "no python object allocated");
         return nullptr;
     }
 

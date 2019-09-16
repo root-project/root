@@ -9,7 +9,7 @@
 //- helpers ------------------------------------------------------------------
 static inline
 bool is_varchar(char c) {
-    return isalnum((int)c) || c == '_';
+    return isalnum((int)c) || c == '_' || c == ')' || c == '(' /* for (anonymous) */;
 }
 
 static inline
@@ -106,6 +106,7 @@ std::string CPyCppyy::TypeManip::clean_type(
         else
             name = remove_const(name);
     }
+
     return name;
 }
 

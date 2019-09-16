@@ -247,7 +247,7 @@ char* cppstring_to_cstring(const std::string& cppstr)
     return cstr;
 }
 
-static inline 
+static inline
 bool match_name(const std::string& tname, const std::string fname)
 {
 // either match exactly, or match the name as template
@@ -380,7 +380,24 @@ Cppyy::TCppScope_t Cppyy::GetScope(const std::string& sname)
 // TODO: scope_name should always be final already?
 // Resolve name fully before lookup to make sure all aliases point to the same scope
     std::string scope_name = ResolveName(sname);
-    result = find_memoized(scope_name);
+    bool bHasAlias = sname != scope_name;
+    if (bHasAlias) {
+        result = find_memoized(scope_name);
+        if (result) return result;
+    }
+
+// both failed, but may be STL name that's missing 'std::' now, but didn't before
+    bool b_scope_name_missclassified = is_missclassified_stl(scope_name);
+    if (b_scope_name_missclassified) {
+        result = find_memoized("std::"+scope_name);
+        if (result) g_name2classrefidx["std::"+scope_name] = (ClassRefs_t::size_type)result;
+    }
+    bool b_sname_missclassified = bHasAlias ? is_missclassified_stl(sname) : false;
+    if (b_sname_missclassified) {
+        if (!result) result = find_memoized("std::"+sname);
+        if (result) g_name2classrefidx["std::"+sname] = (ClassRefs_t::size_type)result;
+    }
+
     if (result) return result;
 
 // use TClass directly, to enable auto-loading; class may be stubbed (eg. for
@@ -393,14 +410,13 @@ Cppyy::TCppScope_t Cppyy::GetScope(const std::string& sname)
 // memoize found/created TClass
     ClassRefs_t::size_type sz = g_classrefs.size();
     g_name2classrefidx[scope_name] = sz;
-    if (sname != scope_name)
-        g_name2classrefidx[sname] = sz;
+    if (bHasAlias) g_name2classrefidx[sname] = sz;
     g_classrefs.push_back(TClassRef(scope_name.c_str()));
 
 // TODO: make ROOT/meta NOT remove std :/
-    if (is_missclassified_stl(scope_name))
+    if (b_scope_name_missclassified)
         g_name2classrefidx["std::"+scope_name] = sz;
-    if (is_missclassified_stl(sname))
+    if (b_sname_missclassified)
         g_name2classrefidx["std::"+sname] = sz;
 
     return (TCppScope_t)sz;
@@ -474,7 +490,8 @@ Cppyy::TCppType_t Cppyy::GetActualClass(TCppType_t klass, TCppObject_t obj)
 size_t Cppyy::SizeOf(TCppType_t klass)
 {
     TClassRef& cr = type_from_handle(klass);
-    if (cr.GetClass()) return (size_t)gInterpreter->ClassInfo_Size(cr->GetClassInfo());
+    if (cr.GetClass() && cr->GetClassInfo())
+        return (size_t)gInterpreter->ClassInfo_Size(cr->GetClassInfo());
     return (size_t)0;
 }
 
@@ -696,7 +713,7 @@ char* Cppyy::CallS(
         cppresult->std::string::~basic_string();
     } else
         *length = 0;
-    free((void*)cppresult); 
+    free((void*)cppresult);
     return cstr;
 }
 
@@ -1191,7 +1208,7 @@ std::vector<Cppyy::TCppIndex_t> Cppyy::GetMethodIndicesFromName(
         gInterpreter->UpdateListOfMethods(cr.GetClass());
         int imeth = 0;
         TFunction* func = nullptr;
-        TIter next(cr->GetListOfMethods()); 
+        TIter next(cr->GetListOfMethods());
         while ((func = (TFunction*)next())) {
             if (match_name(name, func->GetName())) {
                 if (func->Property() & kIsPublic)
@@ -1201,7 +1218,7 @@ std::vector<Cppyy::TCppIndex_t> Cppyy::GetMethodIndicesFromName(
         }
     } else if (scope == GLOBAL_HANDLE) {
         TCollection* funcs = gROOT->GetListOfGlobalFunctions(true);
-        
+
     // tickle deserialization
         if (!funcs->FindObject(name.c_str()))
             return indices;
@@ -1672,6 +1689,12 @@ std::string Cppyy::GetDatamemberType(TCppScope_t scope, TCppIndex_t idata)
     if (cr.GetClass())  {
         TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At((int)idata);
         std::string fullType = m->GetFullTypeName();
+        if (fullType.rfind("struct ", 0) != std::string::npos ||
+                (fullType.rfind("union", 0) != std::string::npos && \
+                 fullType.size() > 5 && (fullType[5] == ' ' || fullType[5] == '('))) {
+            fullType = m->GetTrueTypeName();
+        }
+
         if ((int)m->GetArrayDim() > 1 || (!m->IsBasic() && m->IsaPointer()))
             fullType.append("*");
         else if ((int)m->GetArrayDim() == 1) {
@@ -2389,5 +2412,5 @@ int cppyy_vectorbool_getitem(cppyy_object_t ptr, int idx) {
 void cppyy_vectorbool_setitem(cppyy_object_t ptr, int idx, int value) {
     (*(std::vector<bool>*)ptr)[idx] = (bool)value;
 }
-   
+
 } // end C-linkage wrappers

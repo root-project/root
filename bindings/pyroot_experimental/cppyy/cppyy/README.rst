@@ -16,3 +16,13 @@ numbers.
 Full documentation: `cppyy.readthedocs.io <http://cppyy.readthedocs.io/>`_.
 
 Notebook-based tutorial: `Cppyy Tutorial <https://bitbucket.org/wlav/cppyy/src/master/doc/tutorial/CppyyTutorial.ipynb?viewer=nbviewer&fileviewer=notebook-viewer%3Anbviewer>`_.
+
+For Anaconda/miniconda, install cppyy from `conda-forge <https://anaconda.org/conda-forge/cppyy>`_.
+
+----
+
+Change log:
+  https://cppyy.readthedocs.io/en/latest/changelog.html
+
+Bug reports/feedback:
+  https://bitbucket.org/wlav/cppyy/issues?status=new&status=open

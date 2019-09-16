@@ -209,13 +209,14 @@ std::vector<float> some_foo_calling_python() {
         assert hasattr(cppyy.gbl, 'FIND')
 
     def test10_cobject_addressing(self):
-        """AsCObject (not public) had a deref too many"""
+        """AsCObject (now as_cobject) had a deref too many"""
 
         import cppyy
+        import cppyy.ll
 
         cppyy.cppdef('struct CObjA { CObjA() : m_int(42) {} int m_int; };')
         a = cppyy.gbl.CObjA()
-        co = cppyy._backend.AsCObject(a)
+        co = cppyy.ll.as_cobject(a)
 
         assert a == cppyy.bind_object(co, 'CObjA')
         assert a.m_int == 42
@@ -270,3 +271,31 @@ std::vector<float> some_foo_calling_python() {
 
         assert cppyy.gbl.csoc3.call('0')  == 'string'
         assert cppyy.gbl.csoc3.call('00') == 'string'
+
+    def test13_struct_direct_definition(self):
+        """Struct defined directly in a scope miseed scope in renormalized name"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+        namespace struct_direct_definition {
+        struct Bar {
+            struct Baz {
+                std::vector<double> data;
+            } baz[2];
+
+            Bar() {
+                baz[0].data.push_back(3.14);
+                baz[1].data.push_back(2.73);
+            }
+        }; }""")
+
+        from cppyy.gbl import struct_direct_definition as sds
+
+        f = sds.Bar()
+
+        assert len(f.baz) == 2
+        assert len(f.baz[0].data) == 1
+        assert f.baz[0].data[0]   == 3.14
+        assert len(f.baz[1].data) == 1
+        assert f.baz[1].data[0]   == 2.73

@@ -146,7 +146,7 @@ Example:
     >>> pc = PyConcrete()
     >>> call_abstract_method(pc)
     Hello, Python World!
-    >>> 
+    >>>
 
 Note that it is not necessary to provide a constructor (``__init__``), but
 if you do, you *must* call the base class constructor through the ``super``

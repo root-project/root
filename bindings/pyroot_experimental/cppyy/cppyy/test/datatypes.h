@@ -1,3 +1,6 @@
+#ifndef CPPYY_TEST_DATATYPES_H
+#define CPPYY_TEST_DATATYPES_H
+
 #ifndef CPPYY_DUMMY_BACKEND
 #include "RtypesCore.h"
 #else
@@ -262,6 +265,68 @@ public:
     void set_complex_cr(const complex_t&);
     void set_icomplex_cr(const icomplex_t&);
     void set_enum_cr(const EWhat&);
+
+// setters ref
+    void set_bool_r(bool&);
+    void set_char_r(char&);
+    void set_wchar_r(wchar_t&);
+    void set_schar_r(signed char&);
+    void set_uchar_r(unsigned char&);
+    void set_short_r(short&);
+    void set_ushort_r(unsigned short&);
+    void set_int_r(int&);
+    void set_uint_r(unsigned int&);
+    void set_long_r(long&);
+    void set_ulong_r(unsigned long&);
+    void set_llong_r(long long&);
+    void set_ullong_r(unsigned long long&);
+    void set_float_r(float&);
+    void set_double_r(double&);
+    void set_ldouble_r(long double&);
+
+// setters ptr
+    void set_bool_p(bool*);
+    void set_char_p(char*);
+    void set_wchar_p(wchar_t*);
+    void set_schar_p(signed char*);
+    void set_uchar_p(unsigned char*);
+    void set_short_p(short*);
+    void set_ushort_p(unsigned short*);
+    void set_int_p(int*);
+    void set_uint_p(unsigned int*);
+    void set_long_p(long*);
+    void set_ulong_p(unsigned long*);
+    void set_llong_p(long long*);
+    void set_ullong_p(unsigned long long*);
+    void set_float_p(float*);
+    void set_double_p(double*);
+    void set_ldouble_p(long double*);
+
+// setters ptrptr
+    void set_bool_ppa(bool**);
+    void set_char_ppa(char**);
+    void set_wchar_ppa(wchar_t**);
+    void set_schar_ppa(signed char**);
+    void set_uchar_ppa(unsigned char**);
+    void set_short_ppa(short**);
+    void set_ushort_ppa(unsigned short**);
+    void set_int_ppa(int**);
+    void set_uint_ppa(unsigned int**);
+    void set_long_ppa(long**);
+    void set_ulong_ppa(unsigned long**);
+    void set_llong_ppa(long long**);
+    void set_ullong_ppa(unsigned long long**);
+    void set_float_ppa(float**);
+    void set_double_ppa(double**);
+    void set_ldouble_ppa(long double**);
+
+    intptr_t set_char_ppm(char**);
+    intptr_t set_cchar_ppm(const char**);
+    intptr_t set_wchar_ppm(wchar_t**);
+    intptr_t set_cwchar_ppm(const wchar_t**);
+    intptr_t set_void_ppm(void**);
+
+    intptr_t freeit(void*);
 
 // setters r-value
     void set_bool_rv(bool&&);
@@ -528,3 +593,5 @@ public:
     void set_callable(const std::function<double(double, double)>&);
     double operator()(double, double);
 };
+
+#endif // !CPPYY_TEST_DATATYPES_H

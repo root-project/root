@@ -32,7 +32,7 @@ PyObject* CPyCppyy::CPPFunction::Call(
         return nullptr;
 
 // if function was attached to a class, self will be non-zero and should be
-// the first function argument, so reorder 
+// the first function argument, so reorder
     if (self) args = this->PreProcessArgs(self, args, kwds);
 
 // translate the arguments as normal

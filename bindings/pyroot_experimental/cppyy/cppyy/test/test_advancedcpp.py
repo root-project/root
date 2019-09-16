@@ -522,7 +522,9 @@ class TestADVANCEDCPP:
 
         import cppyy
         base_class = cppyy.gbl.base_class
+        base_class.clone.__creates__ = True
         derived_class = cppyy.gbl.derived_class
+        derived_class.clone.__creates__ = True
 
         b = base_class()
         d = derived_class()
@@ -563,11 +565,13 @@ class TestADVANCEDCPP:
 
         import cppyy
 
+        cppyy.gbl.create_c1.__creates__ = True
         c1 = cppyy.gbl.create_c1()
         assert type(c1) == cppyy.gbl.c_class_1
         assert c1.m_c == 3
         c1.__destruct__()
 
+        cppyy.gbl.create_c2.__creates__ = True
         c2 = cppyy.gbl.create_c2()
         assert type(c2) == cppyy.gbl.c_class_2
         assert c2.m_c == 3

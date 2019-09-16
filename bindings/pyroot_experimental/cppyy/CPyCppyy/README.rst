@@ -19,6 +19,13 @@ are differences due to the former being reference counted and the latter
 being garbage collected, as well as temporary differences due to different
 release cycles of the respective projects.
 
-Full documentation: `cppyy.readthedocs.io <http://cppyy.readthedocs.io/>`_.
+----
 
-Please report bugs in the `cppyy issue tracker <https://bitbucket.org/wlav/cppyy/issues>`_.
+Find the cppyy documentation here:
+  http://cppyy.readthedocs.io
+
+Change log:
+  https://cppyy.readthedocs.io/en/latest/changelog.html
+
+Bug reports/feedback:
+  https://bitbucket.org/wlav/cppyy/issues?status=new&status=open

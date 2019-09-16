@@ -5,6 +5,10 @@ from distutils import log
 from setuptools.dist import Distribution
 from setuptools.command.install import install as _install
 
+force_bdist = False
+if '--force-bdist' in sys.argv:
+    force_bdist = True
+    sys.argv.remove('--force-bdist')
 
 add_pkg = ['cppyy']
 try:
@@ -22,10 +26,10 @@ try:
             requirements = ['cppyy-cling<=6.15', 'cppyy-backend<1.1']
     elif version[0] == 7:
         if version[1] <= 1:
-            requirements = ['cppyy-cling<=6.18.0.0', 'cppyy-backend<=1.10']
+            requirements = ['cppyy-cling<=6.18.2.0', 'cppyy-backend<=1.10']
 except ImportError:
     # CPython
-    requirements = ['cppyy-cling>=6.18.0.0', 'cppyy-backend>=1.10.0', 'CPyCppyy>=1.9.0']
+    requirements = ['cppyy-cling==6.18.2.2', 'cppyy-backend==1.10.3', 'CPyCppyy==1.9.3']
 
 setup_requirements = ['wheel']
 if 'build' in sys.argv or 'install' in sys.argv:
@@ -55,7 +59,7 @@ def find_version(*file_paths):
 def is_manylinux():
     try:
        for line in open('/etc/redhat-release').readlines():
-           if 'CentOS release 5.11' in line:
+           if 'CentOS release 6.10 (Final)' in line:
                return True
     except (OSError, IOError):
         pass
@@ -105,7 +109,7 @@ class MyDistribution(Distribution):
         # packages are installed one-by-one, on old install is used or the build
         # will simply fail hard. The following is not completely quiet, but at
         # least a lot less conspicuous.
-        if not is_manylinux():
+        if not is_manylinux() and not force_bdist:
             disabled = set((
                 'bdist_wheel', 'bdist_egg', 'bdist_wininst', 'bdist_rpm'))
             for cmd in self.commands:

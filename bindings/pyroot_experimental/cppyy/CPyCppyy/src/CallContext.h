@@ -25,11 +25,11 @@ struct Parameter {
         Long_t         fLong;
         intptr_t       fIntPtr;
         ULong_t        fULong;
-        Long64_t       fLongLong;
-        ULong64_t      fULongLong;
+        Long64_t       fLLong;
+        ULong64_t      fULLong;
         float          fFloat;
         double         fDouble;
-        LongDouble_t   fLongDouble;
+        LongDouble_t   fLDouble;
         void*          fVoidp;
     } fValue;
     void* fRef;
@@ -38,7 +38,7 @@ struct Parameter {
 
 // extra call information
 struct CallContext {
-    CallContext() : fFlags(0), fArgsVec(nullptr), fNArgs(0), fTemps(nullptr) {}
+    CallContext() : fFlags(0), fCurScope(0), fArgsVec(nullptr), fNArgs(0), fTemps(nullptr) {}
     CallContext(const CallContext&) = delete;
     CallContext& operator=(const CallContext&) = delete;
     ~CallContext() { if (fTemps) Cleanup(); delete fArgsVec; }
@@ -87,7 +87,9 @@ struct CallContext {
     size_t GetSize() { return fNArgs; }
 
 public:
+// info/status
     uint64_t fFlags;
+    Cppyy::TCppScope_t fCurScope;
 
 private:
 // payload

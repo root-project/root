@@ -27,8 +27,8 @@ typedef std::vector<std::pair<ptrdiff_t, PyObject*>> CI_DatamemberCache_t;
 class CPPInstance {
 public:
     enum EFlags {
-        kNone        = 0x0,
-        kDefault     = 0x0001,
+        kDefault     = 0x0000,
+        kNoSmartConv = 0x0001,
         kIsOwner     = 0x0002,
         kIsExtended  = 0x0004,
         kIsReference = 0x0008,
@@ -36,7 +36,8 @@ public:
         kIsValue     = 0x0020,
         kIsPtrPtr    = 0x0040,
         kIsSmartPtr  = 0x0080,
-        kHasLifeline = 0x0100 };
+        kHasLifeline = 0x0100,
+        kIsRegulated = 0x0200 };
 
 public:                 // public, as the python C-API works with C structs
     PyObject_HEAD

@@ -398,8 +398,6 @@ class TestSTLSTRING:
     def test03_string_with_null_character(self):
         """Test that strings with NULL do not get truncated"""
 
-        return # don't bother; is fixed in cling-support
-
         import cppyy
         std = cppyy.gbl.std
         stringy_class = cppyy.gbl.stringy_class["std::string"]
@@ -407,11 +405,15 @@ class TestSTLSTRING:
         t0 = "aap\0noot"
         assert t0 == "aap\0noot"
 
-        c, s = stringy_class(""), std.string(t0, len(t0))
+        c, s = stringy_class(""), std.string(t0)
 
         c.set_string1(s)
         assert t0 == c.get_string1()
         assert s == c.get_string1()
+
+        assert std.string('ab\0c')       == 'ab\0c'
+        assert repr(std.string('ab\0c')) == repr('ab\0c')
+        assert str(std.string('ab\0c'))  == 'ab\0c'
 
     def test04_array_of_strings(self):
         """Access to global arrays of strings"""

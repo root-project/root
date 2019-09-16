@@ -34,7 +34,7 @@ public:
 };
 
 
-static const int dummy_location = 0xdead;
+static const uintptr_t dummy_location = 0xdead;
 
 class E {
 public:

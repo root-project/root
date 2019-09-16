@@ -85,7 +85,6 @@ static void meta_dealloc(CPPScope* scope)
             delete scope->fImp.fUsing; scope->fImp.fUsing = nullptr;
         }
     } else {
-        for (auto& pp : *scope->fImp.fCppObjects) Py_DECREF(pp.second);
         delete scope->fImp.fCppObjects; scope->fImp.fCppObjects = nullptr;
     }
     free(scope->fModuleName);
@@ -459,13 +458,15 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname)
             if (pyuscope) {
                 attr = PyObject_GetAttr(pyuscope, pyname);
                 if (attr) break;
+                PyErr_Clear();
             }
         }
     }
 
-    if (attr)
+    if (attr) {
         std::for_each(errors.begin(), errors.end(), Utility::PyError_t::Clear);
-    else {
+        PyErr_Clear();
+    } else {
     // not found: prepare a full error report
         PyObject* topmsg = nullptr;
         PyObject* sklass = PyObject_Str(pyclass);

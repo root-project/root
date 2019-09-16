@@ -567,6 +567,7 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
     const auto mempolicy = (mflags & (CallContext::kUseHeuristics | CallContext::kUseStrict));
     ctxt.fFlags |= mempolicy ? mempolicy : (uint64_t)CallContext::sMemoryPolicy;
     ctxt.fFlags |= (mflags & CallContext::kReleaseGIL);
+    if (IsConstructor(pymeth->fMethodInfo->fFlags)) ctxt.fFlags |= CallContext::kIsConstructor;
 
 // magic variable to prevent recursion passed by keyword?
     if (kwds && PyDict_CheckExact(kwds) && PyDict_Size(kwds) != 0) {
@@ -604,7 +605,7 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
         PyObject* result = memoized_pc->Call(pymeth->fSelf, args, kwds, &ctxt);
         result = HandleReturn(pymeth, oldSelf, result);
 
-        if (result != 0)
+        if (result)
             return result;
 
     // fall through: python is dynamic, and so, the hashing isn't infallible
@@ -618,10 +619,14 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
     }
 
     std::vector<Utility::PyError_t> errors;
+    std::vector<bool> implicit_possible(methods.size());
     for (int stage = 0; stage < 2; ++stage) {
+        bool bHaveImplicit = false;
         for (CPPOverload::Methods_t::size_type i = 0; i < nMethods; ++i) {
-            PyObject* result = methods[i]->Call(pymeth->fSelf, args, kwds, &ctxt);
+            if (stage && !implicit_possible[i])
+                continue;    // did not set implicit conversion, so don't try again
 
+            PyObject* result = methods[i]->Call(pymeth->fSelf, args, kwds, &ctxt);
             if (result != 0) {
             // success: update the dispatch map for subsequent calls
                 if (!memoized_pc)
@@ -658,11 +663,18 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
                 Py_DECREF(sig);
             }
             Utility::FetchError(errors);
+
+            if (HaveImplicit(&ctxt)) {
+                bHaveImplicit = true;
+                implicit_possible[i] = true;
+                ctxt.fFlags &= ~CallContext::kHaveImplicit;
+            } else
+                implicit_possible[i] = false;
             ResetCallState(pymeth->fSelf, oldSelf, false);
         }
 
     // only move forward if implicit conversions are available
-        if (!HaveImplicit(&ctxt))
+        if (!bHaveImplicit)
             break;
 
         ctxt.fFlags |= CallContext::kAllowImplicit;

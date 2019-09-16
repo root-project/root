@@ -36,8 +36,10 @@ __author__ = 'Wim Lavrijsen <WLavrijsen@lbl.gov>'
 __all__ = [
     'cppdef',                 # declare C++ source to Cling
     'include',                # load and jit a header file
+    'c_include',              # load and jit a C header file
     'load_library',           # load a shared library
-    'sizeof',                 #  size of a C++ type
+    'nullptr',                # unique pointer representing NULL
+    'sizeof',                 # size of a C++ type
     'typeid',                 # typeid of a C++ type
     'add_include_path',       # add a path to search for headers
     'add_autoload_map',       # explicitly include an autoload map
@@ -136,11 +138,12 @@ def cppdef(src):
 
 def load_library(name):
     """Explicitly load a shared library."""
+    gSystem = gbl.gSystem
     if name[:3] != 'lib':
-        if not gbl.gSystem.FindDynamicLibrary(gbl.TString(name), True) and\
-               gbl.gSystem.FindDynamicLibrary(gbl.TString('lib'+name), True):
+        if not gSystem.FindDynamicLibrary(gbl.TString(name), True) and\
+               gSystem.FindDynamicLibrary(gbl.TString('lib'+name), True):
             name = 'lib'+name
-    sc = gbl.gSystem.Load(name)
+    sc = gSystem.Load(name)
     if sc == -1:
         raise RuntimeError("Unable to load library "+name)
 
@@ -175,9 +178,9 @@ if not ispypy:
     if 'CPPYY_API_PATH' in os.environ:
         apipath_extra = os.environ['CPPYY_API_PATH']
     else:
-        apipath_extra = os.path.join(os.path.dirname(apipath), 'site', os.path.basename(apipath))
+        apipath_extra = os.path.join(os.path.dirname(apipath), 'site', 'python'+sys.version[:3])
         if not os.path.exists(os.path.join(apipath_extra, 'CPyCppyy')):
-            import libcppyy
+            import glob, libcppyy
             apipath_extra = os.path.dirname(libcppyy.__file__)
           # a "normal" structure finds the include directory 3 levels up,
           # ie. from lib/pythonx.y/site-packages
@@ -187,10 +190,11 @@ if not ispypy:
 
             apipath_extra = os.path.join(apipath_extra, 'include')
           # add back pythonx.y or site/pythonx.y if available
-            if os.path.exists(os.path.join(apipath_extra, 'python'+sys.version[:3], 'CPyCppyy')):
-                apipath_extra = os.path.join(apipath_extra, 'python'+sys.version[:3])
-            elif os.path.exists(os.path.join(apipath_extra, 'site', 'python'+sys.version[:3], 'CPyCppyy')):
-                apipath_extra = os.path.join(apipath_extra, 'site', 'python'+sys.version[:3])
+            for p in glob.glob(os.path.join(apipath_extra, 'python'+sys.version[:3]+'*'))+\
+                     glob.glob(os.path.join(apipath_extra, '*', 'python'+sys.version[:3]+'*')):
+                if os.path.exists(os.path.join(p, 'CPyCppyy')):
+                    apipath_extra = p
+                    break
 
     cpycppyy_path = os.path.join(apipath_extra, 'CPyCppyy')
     if apipath_extra.lower() != 'none':

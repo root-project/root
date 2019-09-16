@@ -39,15 +39,17 @@ other computer software, distribute, and sublicense such Enhancements
 or derivative works thereof, in binary and source code form.
 
 
-
 Additional copyright holders
 ----------------------------
 
-Except when otherwise stated (look for LICENSE files or information in
-source files), this package contains files copyrighted by one or more of
-the following people and organizations:
+In addition to LBNL/UC Berkeley, this package contains files copyrighted by 
+one or more of the following people and organizations, and licensed under
+the same conditions (except for some compatible licenses as retained in the
+source code):
 
   Aditi Dutta
   Shaheed Haque
   Toby StClere-Smithe
   Stefan Wunsch
+
+Conda-forge recipes were provided by Julian Rueth.

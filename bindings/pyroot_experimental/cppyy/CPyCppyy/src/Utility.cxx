@@ -381,19 +381,39 @@ static bool AddTypeName(std::string& tmpl_name, PyObject* tn, PyObject* arg,
         if (arg) {
 #if PY_VERSION_HEX < 0x03000000
             long l = PyInt_AS_LONG(arg);
-            if (l < INT_MIN || INT_MAX < l)
+            tmpl_name.append((l < INT_MIN || INT_MAX < l) ? "long" : "int");
 #else
-            Long64_t ll = PyLong_AsLongLong(arg);
-            if (ll < INT_MIN || INT_MAX < ll)
+             Long64_t ll = PyLong_AsLongLong(arg);
+             if (ll == (Long64_t)-1 && PyErr_Occurred()) {
+                 PyErr_Clear();
+                 ULong64_t ull = PyLong_AsUnsignedLongLong(arg);
+                 if (ull == (ULong64_t)-1 && PyErr_Occurred()) {
+                     PyErr_Clear();
+                     tmpl_name.append("int");    // still out of range, will fail later
+                 } else
+                     tmpl_name.append("ULong64_t");   // since already failed long long
+             } else
+                 tmpl_name.append((ll < INT_MIN || INT_MAX < ll) ? \
+                     ((ll < LONG_MIN || LONG_MAX < ll) ? "Long64_t" : "long") : "int");
 #endif
-                tmpl_name.append("Long64_t");
-            else
-                tmpl_name.append("int");
         } else
             tmpl_name.append("int");
 #if PY_VERSION_HEX < 0x03000000
     } else if (tn == (PyObject*)&PyLong_Type) {
-        tmpl_name.append("long");
+        if (arg) {
+             Long64_t ll = PyLong_AsLongLong(arg);
+             if (ll == (Long64_t)-1 && PyErr_Occurred()) {
+                 PyErr_Clear();
+                 ULong64_t ull = PyLong_AsUnsignedLongLong(arg);
+                 if (ull == (ULong64_t)-1 && PyErr_Occurred()) {
+                     PyErr_Clear();
+                     tmpl_name.append("long");   // still out of range, will fail later
+                 } else
+                     tmpl_name.append("ULong64_t");   // since already failed long long
+             } else
+                 tmpl_name.append((ll < LONG_MIN || LONG_MAX < ll) ? "Long64_t" : "long");
+        } else
+            tmpl_name.append("long");
 #endif
     } else if (tn == (PyObject*)&PyFloat_Type) {
     // special case for floats (Python-speak for double) if from argument (only)
@@ -406,12 +426,12 @@ static bool AddTypeName(std::string& tmpl_name, PyObject* tn, PyObject* arg,
         tmpl_name.append("std::string");
     } else if (tn == (PyObject*)&PyList_Type || tn == (PyObject*)&PyTuple_Type) {
         if (arg && PySequence_Size(arg)) {
-            std::string subtype{"const std::vector<"};
+            std::string subtype{"std::initializer_list<"};
             PyObject* item = PySequence_GetItem(arg, 0);
             ArgPreference subpref = pref == kValue ? kValue : kPointer;
             if (AddTypeName(subtype, (PyObject*)Py_TYPE(item), item, subpref)) {
                 tmpl_name.append(subtype);
-                tmpl_name.append(">&");
+                tmpl_name.append(">");
             }
             Py_DECREF(item);
         }

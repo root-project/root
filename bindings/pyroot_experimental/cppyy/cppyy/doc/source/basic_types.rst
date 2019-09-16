@@ -66,7 +66,7 @@ For example, string comparison work directly, and ``std::complex`` has
     <class cppyy.gbl.std.string at 0x7fa75edbf8a0>
     >>> s == "aap"
     True
-    >>> 
+    >>>
 
 To pass an argument through a C++ ``char`` (signed or unsigned) use a Python
 string of size 1.

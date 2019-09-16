@@ -509,6 +509,9 @@ class TestTEMPLATES:
            int test2(const std::vector<Derived*>& v) { return (int)v.size(); }
 
            template <typename T>
+           int test2a(std::vector<Derived*> v) { return v.size(); }
+
+           template <typename T>
            int test3(const std::vector<Base*>& v) { return (int)v.size(); }
         }""")
 
@@ -522,8 +525,26 @@ class TestTEMPLATES:
         assert l2v.test2[int]([d1])     == 1
         assert l2v.test2[int]([d1, d1]) == 2
 
+        assert l2v.test2a[int]([d1])     == 1
+        assert l2v.test2a[int]([d1, d1]) == 2
+
         assert l2v.test3[int]([d1])     == 1
         assert l2v.test3[int]([d1, d1]) == 2
+
+    def test21_type_deduction_of_proper_integer_size(self):
+        """Template type from integer arg should be big enough"""
+
+        import cppyy
+
+        cppyy.cppdef("template <typename T> T PassSomeInt(T t) { return t; }")
+
+        from cppyy.gbl import PassSomeInt
+
+        for val in [1, 100000000000, -2**32, 2**32-1, 2**64-1 -2**63]:
+            assert val == PassSomeInt(val)
+
+        for val in [2**64, -2**63-1]:
+            raises(OverflowError, PassSomeInt, val)
 
 
 class TestTEMPLATED_TYPEDEFS:

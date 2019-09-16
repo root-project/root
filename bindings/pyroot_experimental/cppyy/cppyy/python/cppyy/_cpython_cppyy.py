@@ -101,10 +101,12 @@ gbl.std.move  = _backend.move
 import os
 def add_default_paths():
     try:
-        for line in open('/etc/ld.so.conf'):
-            f = line.strip()
-            if (os.path.exists(f)):
-                gbl.gSystem.AddDynamicPath(f)
+        gSystem = gbl.gSystem
+        with open('/etc/ld.so.conf') as ldconf:
+            for line in ldconf:
+                f = line.strip()
+                if (os.path.exists(f)):
+                    gSystem.AddDynamicPath(f)
     except IOError:
         pass
 add_default_paths()

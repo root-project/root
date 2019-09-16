@@ -44,7 +44,7 @@ public:                                                                      \
     virtual PyObject* FromMemory(void*);                                     \
 }
 
-#define CPPYY_DECLARE_REF_CONVERTER(name)                                    \
+#define CPPYY_DECLARE_REFCONVERTER(name)                                     \
 class name##RefConverter : public Converter {                                \
 public:                                                                      \
     virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);      \
@@ -65,11 +65,12 @@ private:                                                                     \
     Py_ssize_t* fShape;                                                      \
 };                                                                           \
                                                                              \
-class name##ArrayRefConverter : public name##ArrayConverter {                \
+class name##ArrayPtrConverter : public name##ArrayConverter {                \
 public:                                                                      \
     using name##ArrayConverter::name##ArrayConverter;                        \
     virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);      \
-}
+};
+
 
 // converters for built-ins
 CPPYY_DECLARE_BASIC_CONVERTER(Long);
@@ -89,15 +90,28 @@ CPPYY_DECLARE_BASIC_CONVERTER(UShort);
 CPPYY_DECLARE_BASIC_CONVERTER(Int);
 CPPYY_DECLARE_BASIC_CONVERTER(ULong);
 CPPYY_DECLARE_BASIC_CONVERTER2(UInt, ULong);
-CPPYY_DECLARE_BASIC_CONVERTER(LongLong);
-CPPYY_DECLARE_BASIC_CONVERTER(ULongLong);
+CPPYY_DECLARE_BASIC_CONVERTER(LLong);
+CPPYY_DECLARE_BASIC_CONVERTER(ULLong);
 CPPYY_DECLARE_BASIC_CONVERTER(Double);
 CPPYY_DECLARE_BASIC_CONVERTER(Float);
-CPPYY_DECLARE_BASIC_CONVERTER(LongDouble);
+CPPYY_DECLARE_BASIC_CONVERTER(LDouble);
 
-CPPYY_DECLARE_REF_CONVERTER(Int);
-CPPYY_DECLARE_REF_CONVERTER(Long);
-CPPYY_DECLARE_REF_CONVERTER(Double);
+CPPYY_DECLARE_REFCONVERTER(Bool);
+CPPYY_DECLARE_REFCONVERTER(Char);
+CPPYY_DECLARE_REFCONVERTER(WChar);
+CPPYY_DECLARE_REFCONVERTER(SChar);
+CPPYY_DECLARE_REFCONVERTER(UChar);
+CPPYY_DECLARE_REFCONVERTER(Short);
+CPPYY_DECLARE_REFCONVERTER(UShort);
+CPPYY_DECLARE_REFCONVERTER(UInt);
+CPPYY_DECLARE_REFCONVERTER(Int);
+CPPYY_DECLARE_REFCONVERTER(Long);
+CPPYY_DECLARE_REFCONVERTER(ULong);
+CPPYY_DECLARE_REFCONVERTER(LLong);
+CPPYY_DECLARE_REFCONVERTER(ULLong);
+CPPYY_DECLARE_REFCONVERTER(Float);
+CPPYY_DECLARE_REFCONVERTER(Double);
+CPPYY_DECLARE_REFCONVERTER(LDouble);
 
 class VoidConverter : public Converter {
 public:
@@ -158,12 +172,9 @@ CPPYY_DECLARE_ARRAY_CONVERTER(LLong);
 CPPYY_DECLARE_ARRAY_CONVERTER(ULLong);
 CPPYY_DECLARE_ARRAY_CONVERTER(Float);
 CPPYY_DECLARE_ARRAY_CONVERTER(Double);
+CPPYY_DECLARE_ARRAY_CONVERTER(LDouble);
 CPPYY_DECLARE_ARRAY_CONVERTER(ComplexD);
 
-class LongLongArrayConverter : public VoidArrayConverter {
-public:
-    virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);
-};
 
 // converters for special cases
 class NullptrConverter : public Converter {

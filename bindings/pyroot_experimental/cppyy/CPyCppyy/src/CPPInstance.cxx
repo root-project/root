@@ -202,8 +202,8 @@ void CPyCppyy::op_dealloc_nofree(CPPInstance* pyobj) {
     Cppyy::TCppType_t klass = pyobj->ObjectIsA(false /* check_smart */);
     void*& cppobj = pyobj->GetObjectRaw();
 
-    if (!(pyobj->fFlags & CPPInstance::kIsReference))
-        MemoryRegulator::UnregisterPyObject(cppobj, klass);
+    if (pyobj->fFlags & CPPInstance::kIsRegulated)
+        MemoryRegulator::UnregisterPyObject(pyobj, (PyObject*)Py_TYPE((PyObject*)pyobj));
 
     if (pyobj->fFlags & CPPInstance::kIsValue) {
         Cppyy::CallDestructor(klass, cppobj);
@@ -274,7 +274,7 @@ static PyObject* op_get_smartptr(CPPInstance* self)
         Py_RETURN_NONE;
     }
 
-    return CPyCppyy::BindCppObjectNoCast(self->GetSmartObject(), SMART_TYPE(self), CPPInstance::kNone);
+    return CPyCppyy::BindCppObjectNoCast(self->GetSmartObject(), SMART_TYPE(self), CPPInstance::kNoSmartConv);
 }
 
 
@@ -297,7 +297,7 @@ static CPPInstance* op_new(PyTypeObject* subtype, PyObject*, PyObject*)
 // Create a new object proxy (holder only).
     CPPInstance* pyobj = (CPPInstance*)subtype->tp_alloc(subtype, 0);
     pyobj->fObject = nullptr;
-    pyobj->fFlags = CPPInstance::kNone;
+    pyobj->fFlags = CPPInstance::kNoSmartConv;
 
     return pyobj;
 }
@@ -309,6 +309,17 @@ static void op_dealloc(CPPInstance* pyobj)
     op_dealloc_nofree(pyobj);
     if (pyobj->fFlags & CPPInstance::kIsExtended) delete (ExtendedData*)pyobj->fObject;
     Py_TYPE(pyobj)->tp_free((PyObject*)pyobj);
+}
+
+//----------------------------------------------------------------------------
+static int op_clear(CPPInstance* pyobj)
+{
+// Garbage collector clear of held python member objects; this is a good time
+// to safely remove this object from the memory regulator.
+    if (pyobj->fFlags & CPPInstance::kIsRegulated)
+        MemoryRegulator::UnregisterPyObject(pyobj, (PyObject*)Py_TYPE((PyObject*)pyobj));;
+
+    return 0;
 }
 
 //----------------------------------------------------------------------------
@@ -574,7 +585,7 @@ PyTypeObject CPPInstance_Type = {
         Py_TPFLAGS_CHECKTYPES,     // tp_flags
     (char*)"cppyy object proxy (internal)",  // tp_doc
     0,                             // tp_traverse
-    0,                             // tp_clear
+    (inquiry)op_clear,             // tp_clear
     (richcmpfunc)op_richcompare,   // tp_richcompare
     0,                             // tp_weaklistoffset
     0,                             // tp_iter
