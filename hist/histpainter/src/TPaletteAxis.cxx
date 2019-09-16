@@ -84,6 +84,30 @@ user to adjust minimum, maximum of the histogram and/or the contour levels
 to get a reasonable look of the plot.
 Only overlap of the labels is avoided if too many contour levels are used.
 
+This option is especially useful with user defined contours.
+An example is shown here:
+Begin_Macro(source)
+{
+	gStyle->SetOptStat(0);
+   TCanvas *c1 = new TCanvas("c1","exa_CJUST",300,10,400,400);
+   TH2F *hpxpy = new TH2F("hpxpy","py vs px",40,-4,4,40,-4,4);
+   // Fill histograms randomly
+   TRandom3 randomNum;
+   Float_t px, py;
+   for (Int_t i = 0; i < 25000; i++) {
+      randomNum.Rannor(px,py);
+      hpxpy->Fill(px,py);
+	}
+	hpxpy->SetMaximum(200);
+	Double_t zcontours[5] = {0, 20, 40, 80, 120};
+	hpxpy->SetContour(5, zcontours);
+	hpxpy->GetZaxis()->SetTickSize(0.01);
+	hpxpy->GetZaxis()->SetLabelOffset(0.01);
+	gPad->SetRightMargin(0.13);
+	hpxpy->SetTitle("User contours, CJUST");
+	hpxpy->Draw("COL Z CJUST");
+}
+End_Macro
 */
 
 
@@ -453,7 +477,7 @@ void TPaletteAxis::Paint(Option_t *)
       if (label) {
          Double_t lof = fAxis.GetLabelOffset()*(gPad->GetUxmax()-gPad->GetUxmin());
          // the following assumes option "S"
-         Double_t tlength = fAxis.GetTickSize() * (ymax-ymin);
+         Double_t tlength = fAxis.GetTickSize() * (gPad->GetUxmax()-gPad->GetUxmin());
          Double_t lsize = fAxis.GetLabelSize();
          Double_t lsize_user = lsize*(gPad->GetUymax()-gPad->GetUymin());
          Double_t zlab = fH->GetContourLevel(i);
