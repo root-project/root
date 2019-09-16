@@ -2780,11 +2780,11 @@
           w = width, h = height, x = 0, y = 0,
           svg_pad = null, svg_rect = null, btns = null;
 
-      if (this.pad && this.pad.fAttr) {
-         x = Math.round(width * this.GetNewOpt(this.pad.fAttr, "pos_horiz_normal", 0));
-         y = Math.round(height * this.GetNewOpt(this.pad.fAttr, "pos_vert_normal", 0));
-         w = Math.round(width * this.GetNewOpt(this.pad.fAttr, "size_horiz_normal", 1));
-         h = Math.round(width * this.GetNewOpt(this.pad.fAttr, "size_vert_normal", 1));
+      if (this.pad && this.pad.fPos && this.pad.fSize) {
+         x = Math.round(width * this.pad.fPos.fHoriz.fArr[0]);
+         y = Math.round(height * this.pad.fPos.fVert.fArr[0]);
+         w = Math.round(width * this.pad.fSize.fHoriz.fArr[0]);
+         h = Math.round(height * this.pad.fSize.fVert.fArr[0]);
       }
 
       if (pad_enlarged === this.pad) { w = width; h = height; x = y = 0; }
@@ -3209,6 +3209,7 @@
 
             // we select current pad, where all drawing is performed
             var prev_name = padpainter.CurrentPadName(padpainter.this_pad_name);
+
             padpainter.DrawNextSnap(snap.fPrimitives, -1, function() {
                padpainter.CurrentPadName(prev_name);
                draw_callback(padpainter);
@@ -3818,8 +3819,8 @@
          return (len.fArr && (len.fArr.length>indx)) ? len.fArr[indx] : dflt;
       }
 
-      var w = this.pad_width(),
-          h = this.pad_height(),
+      var w = this.pad_width(this.this_pad_name),
+          h = this.pad_height(this.this_pad_name),
           h_norm = GetV(pos.fHoriz, 0, 0),
           h_pixel = GetV(pos.fHoriz, 1, 0),
           h_user = GetV(pos.fHoriz, 2),
