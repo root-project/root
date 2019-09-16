@@ -19,7 +19,6 @@
 #include <ROOT/RDrawable.hxx>
 #include <ROOT/RAttrLine.hxx>
 #include <ROOT/RPadPos.hxx>
-#include <ROOT/RPadPainter.hxx>
 
 #include <memory>
 
@@ -28,10 +27,10 @@ namespace Experimental {
 
 class RLine : public RDrawable {
 
-   RDrawableAttributes fAttr{"line"};       ///< attributes
-   RPadPos fP1{fAttr, "p1_"};               ///<! line begin
-   RPadPos fP2{fAttr, "p2_"};               ///<! line end
-   RAttrLine  fLineAttr{fAttr, "line_"};    ///<! line attributes
+   RPadPos fP1;                            ///< line begin
+   RPadPos fP2;                            ///< line end
+   RDrawableAttributes fAttr{"line"};      ///< attributes
+   RAttrLine  fLineAttr{fAttr, "line_"};   ///<! line attributes
 
 public:
 
@@ -43,8 +42,8 @@ public:
       fP2 = p2;
    }
 
-   void SetP1(const RPadPos& p1) { fP1 = p1; }
-   void SetP2(const RPadPos& p2) { fP2 = p2; }
+   RLine &SetP1(const RPadPos& p1) { fP1 = p1; return *this; }
+   RLine &SetP2(const RPadPos& p2) { fP2 = p2; return *this; }
 
    const RPadPos& GetP1() const { return fP1; }
    const RPadPos& GetP2() const { return fP2; }

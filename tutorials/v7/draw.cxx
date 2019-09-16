@@ -46,12 +46,12 @@ void draw()
 
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("Canvas Title");
-   auto pOpts = canvas->Draw(pHist);
-   pOpts->BoxLine().SetColor(RColor::kRed);
+   auto draw1 = canvas->Draw<RHistDrawable<2>>(pHist);
+   draw1->AttrLine().SetColor(RColor::kRed);
 
-   RH2D other = *pHist;
-   auto pOptsOther = canvas->Draw(other, *pOpts);
-   pOptsOther->BoxLine().SetColor(RColor::kBlue).SetWidth(12);
+   auto other = std::make_shared<RH2D>(*pHist);
+   auto draw2 = canvas->Draw<RHistDrawable<2>>(other);
+   draw2->AttrLine().SetColor(RColor::kBlue).SetWidth(12);
 
    canvas->Show();
 }
