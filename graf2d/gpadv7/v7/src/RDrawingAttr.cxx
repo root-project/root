@@ -112,7 +112,7 @@ bool ROOT::Experimental::RAttributesVisitor::CopyValue(const std::string &name, 
          return false;
    }
 
-   if (!GetAttr(true))
+   if (!EnsureAttr())
       return false;
 
    fAttr->map.Add(GetFullName(name), value->Copy());
@@ -230,7 +230,7 @@ void ROOT::Experimental::RAttributesVisitor::SemanticCopy(const RAttributesVisit
 /// Access attributes container
 /// If pointer not yet assigned, try to find it in parents of just allocate if force flag is specified
 
-bool ROOT::Experimental::RAttributesVisitor::GetAttr(bool force) const
+bool ROOT::Experimental::RAttributesVisitor::GetAttr() const
 {
    if (fAttr)
       return true;
@@ -238,8 +238,6 @@ bool ROOT::Experimental::RAttributesVisitor::GetAttr(bool force) const
    auto prnt = fParent;
    auto prefix = fPrefix;
    while (prnt) {
-      if (force && !prnt->fParent && !prnt->fAttr)
-         const_cast<RAttributesVisitor*>(prnt)->CreateOwnAttr();
       if (prnt->fAttr) {
          const_cast<RAttributesVisitor*>(this)->fAttr = prnt->fAttr;
          const_cast<RAttributesVisitor*>(this)->fPrefix = prnt->fPrefix + prefix;
@@ -249,11 +247,37 @@ bool ROOT::Experimental::RAttributesVisitor::GetAttr(bool force) const
       prnt = prnt->fParent;
    }
 
-   if (!fParent && force)
-      const_cast<RAttributesVisitor*>(this)->CreateOwnAttr();
-
    return fAttr != nullptr;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+/// Ensure that attributes container exists
+/// If not exists before, created for very most parent
+
+bool ROOT::Experimental::RAttributesVisitor::EnsureAttr()
+{
+   if (fAttr)
+      return true;
+
+   auto prnt = fParent;
+   auto prefix = fPrefix;
+   while (prnt) {
+      if (!prnt->fParent && !prnt->fAttr)
+         prnt->CreateOwnAttr();
+      if (prnt->fAttr) {
+         fAttr = prnt->fAttr;
+         fPrefix = prnt->fPrefix + prefix;
+         return true;
+      }
+      prefix = prnt->fPrefix + prefix;
+      prnt = prnt->fParent;
+   }
+
+   CreateOwnAttr();
+
+   return true;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Return value from attributes container - no style or defaults are used
@@ -266,13 +290,13 @@ void ROOT::Experimental::RAttributesVisitor::ClearValue(const std::string &name)
 
 void ROOT::Experimental::RAttributesVisitor::SetValue(const std::string &name, int value)
 {
-   if (GetAttr(true))
+   if (EnsureAttr())
       fAttr->map.AddInt(GetFullName(name), value);
 }
 
 void ROOT::Experimental::RAttributesVisitor::SetValue(const std::string &name, double value)
 {
-   if (GetAttr(true))
+   if (EnsureAttr())
       fAttr->map.AddDouble(GetFullName(name), value);
 }
 
@@ -283,7 +307,7 @@ double *ROOT::Experimental::RAttributesVisitor::GetDoublePtr(const std::string &
 
 void ROOT::Experimental::RAttributesVisitor::SetValue(const std::string &name, const std::string &value)
 {
-   if (GetAttr(true))
+   if (EnsureAttr())
       fAttr->map.AddString(GetFullName(name), value);
 }
 
