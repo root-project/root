@@ -30,12 +30,12 @@
           w            = this.pad_width(),
           h            = this.pad_height(),
           use_frame    = false,
+          p            = pp.GetCoordinate(text.fPos),
           text_size    = pp.GetNewOpt(attr, "text_size", 12),
           text_angle   = -pp.GetNewOpt(attr, "text_angle", 0),
           text_align   = pp.GetNewOpt(attr, "text_align", 22),
           text_color   = pp.GetNewColor(attr, "text_color", "black"),
-          text_font    = pp.GetNewOpt(attr, "text_font", 41),
-          p            = pp.GetCoordinate(attr, "p");
+          text_font    = pp.GetNewOpt(attr, "text_font", 41);
 
       this.CreateG(use_frame);
 
@@ -58,11 +58,11 @@
        var line         = this.GetObject(),
            attr         = line.fAttr,
            pp           = this.pad_painter(),
-           line_width   = pp.GetNewOpt(attr, "line.width", 1),
+           p1           = pp.GetCoordinate(line.fP1),
+           p2           = pp.GetCoordinate(line.fP2),
+           line_width   = pp.GetNewOpt(attr, "line_width", 1),
            line_style   = pp.GetNewOpt(attr, "line_style", 1),
-           line_color   = pp.GetNewColor(attr, "line_color", "black"),
-           p1           = pp.GetCoordinate(attr, "p1"),
-           p2           = pp.GetCoordinate(attr, "p2");
+           line_color   = pp.GetNewColor(attr, "line_color", "black");
 
     this.CreateG();
 
@@ -84,15 +84,15 @@
        var box          = this.GetObject(),
            attr         = box.fAttr,
            pp           = this.pad_painter(),
+           p1           = pp.GetCoordinate(box.fP1),
+           p2           = pp.GetCoordinate(box.fP2),
            line_width   = pp.GetNewOpt(attr, "box_border_width", 1),
            line_style   = pp.GetNewOpt(attr, "box_border_style", 1),
            line_color   = pp.GetNewColor(attr, "box_border_color", "black"),
            fill_color   = pp.GetNewColor(attr, "box_fill_color", "white"),
            fill_style   = pp.GetNewOpt(attr, "box_fill_style", 1),
            round_width  = pp.GetNewOpt(attr, "box_round_width", 0), // not yet exists
-           round_height = pp.GetNewOpt(attr, "box_round_height", 0), // not yet exists
-           p1           = pp.GetCoordinate(attr, "p1"),
-           p2           = pp.GetCoordinate(attr, "p2");
+           round_height = pp.GetNewOpt(attr, "box_round_height", 0); // not yet exists
 
     this.CreateG();
 
@@ -117,10 +117,10 @@
        var marker         = this.GetObject(),
            attr           = marker.fAttr,
            pp             = this.pad_painter(),
+           p              = pp.GetCoordinate(marker.fP),
            marker_size    = pp.GetNewOpt(attr, "marker.size", 1),
            marker_style   = pp.GetNewOpt(attr, "marker.style", 1),
-           marker_color   = pp.GetNewColor(attr, "marker.color", "black"),
-           p              = pp.GetCoordinate(attr, "p");
+           marker_color   = pp.GetNewColor(attr, "marker.color", "black");
 
            var att = new JSROOT.TAttMarkerHandler({ style: marker_style, color: marker_color, size: marker_size });
 
