@@ -120,6 +120,30 @@ bool ROOT::Experimental::RAttributesVisitor::CopyValue(const std::string &name, 
    return true;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+/// Copy attributes into target object
+
+bool ROOT::Experimental::RAttributesVisitor::IsValueEqual(const std::string &name, const RDrawableAttributes::Value_t *value, bool use_style) const
+{
+   if (!GetAttr() || !value)
+      return false;
+
+   auto fullname = GetFullName(name);
+
+   auto value2 = fAttr->map.Find(fullname);
+   if (value2) return value2->IsEqual(value);
+
+   const auto *prnt = this;
+   while (prnt && use_style) {
+      if (auto observe = const_cast<RAttributesVisitor*> (prnt)->fStyle.lock()) {
+         value2 = observe->Eval(fAttr->type, fAttr->user_class, fullname);
+         if (value2) return value2->IsEqual(value);
+      }
+      prnt = prnt->fParent;
+   }
+
+   return false;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Copy attributes into target object
@@ -143,6 +167,40 @@ void ROOT::Experimental::RAttributesVisitor::CopyTo(RAttributesVisitor &tgt, boo
             prnt = prnt->fParent;
          }
       }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Check if all values which are evaluated in this object are exactly the same as in tgt object
+
+bool ROOT::Experimental::RAttributesVisitor::IsSame(const RAttributesVisitor &tgt, bool use_style) const
+{
+   if (GetAttr())
+      for (const auto &entry : GetDefaults()) {
+
+         auto fullname = GetFullName(entry.first);
+
+         auto rec = fAttr->map.Find(fullname);
+         if (rec) {
+            if (!tgt.IsValueEqual(entry.first, rec, use_style)) return false;
+            continue;
+         }
+
+         const auto *prnt = this;
+         bool resolved = false;
+         while (prnt && use_style) {
+            if (auto observe = const_cast<RAttributesVisitor *>(prnt)->fStyle.lock()) {
+               rec = observe->Eval(fAttr->type, fAttr->user_class, fullname);
+               if (rec) {
+                  if (!tgt.IsValueEqual(entry.first, rec, use_style)) return false;
+                  resolved = true;
+                  break;
+               }
+            }
+            prnt = prnt->fParent;
+         }
+         if (!resolved) return false;
+      }
+   return true;
 }
 
 
