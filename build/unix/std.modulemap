@@ -386,6 +386,10 @@ module "std" [system] {
     export *
     header "bits/exception_defines.h"
   }
+  module "bits/basic_ios.h" {
+    export *
+    header "bits/basic_ios.h"
+  }
   module "bits/ios_base.h" {
     export *
     header "bits/ios_base.h"
