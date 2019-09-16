@@ -109,6 +109,12 @@ public:
    /// Constructor from a `User` coordinate.
    RPadLength(User user) : RPadLength() { SetUser(user.fVal); }
 
+   /// Constructor for normal and pixel coordinate.
+   RPadLength(Normal normal, Pixel px): RPadLength() { SetPixel(px.fVal); SetNormal(normal.fVal);  }
+
+   /// Constructor for normal, pixel and user coordinate.
+   RPadLength(Normal normal, Pixel px, User user): RPadLength() { SetUser(user.fVal); SetPixel(px.fVal); SetNormal(normal.fVal);  }
+
    bool HasNormal() const { return fArr.size() > 0; }
    bool HasPixel() const { return fArr.size() > 1; }
    bool HasUser() const { return fArr.size() > 2; }

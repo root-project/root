@@ -22,3 +22,5 @@ constexpr RColor::RGB_t RColor::kGreen;
 constexpr RColor::RGB_t RColor::kBlue;
 constexpr RColor::RGB_t RColor::kWhite;
 constexpr RColor::RGB_t RColor::kBlack;
+constexpr double RColor::kTransparent;
+constexpr double RColor::kOpaque;

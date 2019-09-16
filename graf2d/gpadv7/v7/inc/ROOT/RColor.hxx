@@ -52,7 +52,7 @@ public:
    RColor(int r, int g, int b, double alfa) : RColor()
    {
       SetRGB(r,g,b);
-      SetAlfa(alfa);
+      SetAlpha(alfa);
    }
 
    RColor(const RGB_t &rgb) : RColor()
@@ -65,15 +65,15 @@ public:
    RColor &SetRGB(const std::string &_rgb) { SetValue("rgb", _rgb); return *this; }
    RColor &SetRGB(int r, int g, int b) { return SetRGB(std::to_string(r) + "," + std::to_string(g) + "," + std::to_string(b)); }
 
-   double GetAlfa() const { return GetValue<double>("a"); }
-   bool HasAlfa() const { return HasValue("a"); }
-   RColor &SetAlfa(double _alfa) { SetValue("a", _alfa); return *this; }
+   double GetAlpha() const { return GetValue<double>("a"); }
+   bool HasAlpha() const { return HasValue("a"); }
+   RColor &SetAlpha(double _alfa) { SetValue("a", _alfa); return *this; }
 
    std::string AsSVG() const
    {
       auto rgb = GetRGB();
-      if (HasAlfa())
-         return std::string("rgba(") + rgb + "," + std::to_string(GetAlfa()) + ")";
+      if (HasAlpha())
+         return std::string("rgba(") + rgb + "," + std::to_string(GetAlpha()) + ")";
        return std::string("rgb(") + rgb + ")";
    }
 
@@ -82,6 +82,12 @@ public:
    static constexpr RGB_t kBlue{{0, 0, 255}};
    static constexpr RGB_t kWhite{{255, 255, 255}};
    static constexpr RGB_t kBlack{{0, 0, 0}};
+   static constexpr double kTransparent{0.};
+   static constexpr double kOpaque{1.};
+
+
+   friend bool operator==(const RColor& lhs, const RColor& rhs){ return (lhs.GetRGB() == rhs.GetRGB()) && (lhs.HasAlpha() == rhs.HasAlpha()) && (lhs.GetAlpha() == rhs.GetAlpha()); }
+
 
 };
 

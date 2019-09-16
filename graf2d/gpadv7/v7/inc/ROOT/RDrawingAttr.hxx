@@ -283,7 +283,9 @@ protected:
       fParent = parent;
    }
 
-   bool GetAttr(bool force = false) const;
+   bool GetAttr() const;
+
+   bool EnsureAttr();
 
    double *GetDoublePtr(const std::string &name) const;
 
