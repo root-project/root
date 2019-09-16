@@ -33,9 +33,9 @@ namespace Experimental {
 class RBox : public RDrawable {
 
    /// Box's coordinates
+   RPadPos fP1;                         ///< line begin
+   RPadPos fP2;                         ///< line end
    RDrawableAttributes fAttr{"line"};   ///< attributes
-   RPadPos fP1{fAttr, "p1_"};           ///<! line begin
-   RPadPos fP2{fAttr, "p2_"};           ///<! line end
    RAttrBox fBoxAttr{fAttr, "box_"};    ///<! line attributes
 
 public:
@@ -44,8 +44,8 @@ public:
 
    RBox(const RPadPos& p1, const RPadPos& p2) : RBox() { fP1 = p1; fP2 = p2; }
 
-   void SetP1(const RPadPos& p1) { fP1 = p1; }
-   void SetP2(const RPadPos& p2) { fP2 = p2; }
+   RBox &SetP1(const RPadPos& p1) { fP1 = p1; return *this; }
+   RBox &SetP2(const RPadPos& p2) { fP2 = p2; return *this; }
 
    const RPadPos& GetP1() const { return fP1; }
    const RPadPos& GetP2() const { return fP2; }

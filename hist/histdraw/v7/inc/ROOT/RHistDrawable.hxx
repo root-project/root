@@ -16,11 +16,12 @@
 #ifndef ROOT7_RHistDrawable
 #define ROOT7_RHistDrawable
 
-#include "ROOT/RDrawable.hxx"
+#include <ROOT/RDrawable.hxx>
 #include <ROOT/RAttrLine.hxx>
-#include "ROOT/RHist.hxx"
-#include "ROOT/RHistImpl.hxx"
-#include "ROOT/RMenuItem.hxx"
+#include <ROOT/RHist.hxx>
+#include <ROOT/RHistImpl.hxx>
+#include <ROOT/RMenuItem.hxx>
+#include <ROOT/RPad.hxx>
 
 #include <memory>
 

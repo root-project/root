@@ -19,9 +19,7 @@
 #include <ROOT/RDrawable.hxx>
 #include <ROOT/RAttrText.hxx>
 #include <ROOT/RPadPos.hxx>
-#include <ROOT/RPadPainter.hxx>
 
-#include <initializer_list>
 #include <memory>
 #include <string>
 
@@ -35,8 +33,8 @@ namespace Experimental {
 class RText : public RDrawable {
 
    std::string fText;                      ///< text to display
+   RPadPos fPos;                           ///< position
    RDrawableAttributes fAttr{"text"};      ///< attributes
-   RPadPos fPos{fAttr, "p_"};              ///<! position
    RAttrText  fTextAttr{fAttr, "text_"};   ///<! text attributes
 
 public:
@@ -54,12 +52,14 @@ public:
       fPos = p;
    }
 
-   void SetPos(const RPadPos& p) { fPos = p; }
-   const RPadPos& GetPos() const { return fPos; }
+   RText &SetPos(const RPadPos& p) { fPos = p; return *this; }
+   const RPadPos &GetPos() const { return fPos; }
+
+   RText &SetText(const std::string &t) { fText = t; return *this; }
+   const std::string &GetText() const { return fText; }
 
    RAttrText &AttrText() { return fTextAttr; }
    const RAttrText &AttrText() const { return fTextAttr; }
-
 };
 
 
