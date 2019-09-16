@@ -1,3 +1,6 @@
+License and copyright
+=====================
+
 Copyright (c) 2017-2019, The Regents of the University of California,
 through Lawrence Berkeley National Laboratory (subject to receipt of
 any required approvals from the U.S. Dept. of Energy). All rights
@@ -47,16 +50,20 @@ one or more of the following people and organizations, and licensed under
 the same conditions (except for some compatible licenses as retained in the
 source code):
 
-  CERN
-  Robert Bradshaw
-  Ellis Breen
-  Antonio Cuni
-  Aditi Dutta
-  Shaheed Haque
-  Jonsomi
-  Alvaro Moran
-  Matti Picus
-  Camille Scott
+  * CERN
+  * Robert Bradshaw
+  * Ellis Breen
+  * Antonio Cuni
+  * Aditi Dutta
+  * Shaheed Haque
+  * Jonsomi
+  * Alvaro Moran
+  * Matti Picus
+  * Camille Scott
+  * Toby StClere-Smithe
+  * Stefan Wunsch
+
+Conda-forge recipes were provided by Julian Rueth.
 
 
 External code

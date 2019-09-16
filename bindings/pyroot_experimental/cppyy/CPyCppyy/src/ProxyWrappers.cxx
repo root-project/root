@@ -712,7 +712,7 @@ PyObject* CPyCppyy::CreateScopeProxy(const std::string& name, PyObject* parent)
 
 //----------------------------------------------------------------------------
 PyObject* CPyCppyy::BindCppObjectNoCast(Cppyy::TCppObject_t address,
-        Cppyy::TCppType_t klass, int flags)
+        Cppyy::TCppType_t klass, const unsigned flags)
 {
 // only known or knowable objects will be bound (null object is ok)
     if (!klass) {
@@ -728,19 +728,20 @@ PyObject* CPyCppyy::BindCppObjectNoCast(Cppyy::TCppObject_t address,
     bool isRef   = flags & CPPInstance::kIsReference;
     bool isValue = flags & CPPInstance::kIsValue;
 
-// TODO: add convenience function to MemoryRegulator to use pyclass directly
 // TODO: make sure that a consistent address is used (may have to be done in BindCppObject)
-    if (address && !isValue /* always fresh */) {
+    if (address && !isValue /* always fresh */ && flags != CPPInstance::kNoSmartConv) {
         PyObject* oldPyObject = MemoryRegulator::RetrievePyObject(
-            isRef ? *(void**)address : address, klass);
+            isRef ? *(void**)address : address, pyclass);
+
     // ptr-ptr requires old object to be a reference to enable re-use
         if (oldPyObject && (!(flags & CPPInstance::kIsPtrPtr) ||
-                ((CPPInstance*)oldPyObject)->fFlags & CPPInstance::kIsReference))
+                ((CPPInstance*)oldPyObject)->fFlags & CPPInstance::kIsReference)) {
             return oldPyObject;
+        }
     }
 
 // if smart, instantiate a Python-side object of the underlying type, carrying the smartptr
-    PyObject* smart_type = (flags != CPPInstance::kNone && (((CPPClass*)pyclass)->fFlags & CPPScope::kIsSmart)) ? pyclass : nullptr;
+    PyObject* smart_type = (flags != CPPInstance::kNoSmartConv && (((CPPClass*)pyclass)->fFlags & CPPScope::kIsSmart)) ? pyclass : nullptr;
     if (smart_type) {
         pyclass = CreateScopeProxy(((CPPSmartClass*)smart_type)->fUnderlyingType);
         if (!pyclass) {
@@ -759,15 +760,16 @@ PyObject* CPyCppyy::BindCppObjectNoCast(Cppyy::TCppObject_t address,
 
 // bind, register and return if successful
     if (pyobj != 0) { // fill proxy value?
-        unsigned flags =
+        unsigned objflags =
             (isRef ? CPPInstance::kIsReference : 0) | (isValue ? CPPInstance::kIsValue : 0);
-        pyobj->Set(address, (CPPInstance::EFlags)flags);
-
-        if (address && !isRef)
-            MemoryRegulator::RegisterPyObject(pyobj, address);
+        pyobj->Set(address, (CPPInstance::EFlags)objflags);
 
         if (smart_type)
             pyobj->SetSmart(smart_type);
+
+    // do not register null pointers, references (?), or direct usage of smart pointers
+        if (address && !isRef && flags != CPPInstance::kNoSmartConv)
+            MemoryRegulator::RegisterPyObject(pyobj, pyobj->GetObject());
     }
 
 // successful completion
@@ -776,7 +778,7 @@ PyObject* CPyCppyy::BindCppObjectNoCast(Cppyy::TCppObject_t address,
 
 //----------------------------------------------------------------------------
 PyObject* CPyCppyy::BindCppObject(Cppyy::TCppObject_t address,
-        Cppyy::TCppType_t klass, int flags)
+        Cppyy::TCppType_t klass, const unsigned flags)
 {
 // if the object is a null pointer, return a typed one (as needed for overloading)
     if (!address)

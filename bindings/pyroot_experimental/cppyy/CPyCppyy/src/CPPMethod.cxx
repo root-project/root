@@ -201,26 +201,28 @@ std::string CPyCppyy::CPPMethod::GetSignatureString(bool fa)
 void CPyCppyy::CPPMethod::SetPyError_(PyObject* msg)
 {
 // helper to report errors in a consistent format (derefs msg)
-    PyObject *etype, *evalue, *etrace;
-    PyErr_Fetch(&etype, &evalue, &etrace);
+    std::string details{};
 
-    std::string details = "";
-    if (evalue) {
-        PyObject* descr = PyObject_Str(evalue);
-        if (descr) {
-            details = CPyCppyy_PyText_AsString(descr);
-            Py_DECREF(descr);
+    PyObject* etype = nullptr;
+    if (PyErr_Occurred()) {
+        PyObject *evalue = nullptr, *etrace = nullptr;
+        PyErr_Fetch(&etype, &evalue, &etrace);
+
+        if (evalue) {
+            PyObject* descr = PyObject_Str(evalue);
+            if (descr) {
+                details = CPyCppyy_PyText_AsString(descr);
+                Py_DECREF(descr);
+            }
         }
-    }
 
-    Py_XDECREF(evalue); Py_XDECREF(etrace);
+        Py_XDECREF(evalue); Py_XDECREF(etrace);
+    }
 
     PyObject* doc = GetDocString();
     PyObject* errtype = etype;
-    if (!errtype) {
-        Py_INCREF(PyExc_TypeError);
+    if (!errtype)
         errtype = PyExc_TypeError;
-    }
     PyObject* pyname = PyObject_GetAttr(errtype, PyStrings::gName);
     const char* cname = pyname ? CPyCppyy_PyText_AsString(pyname) : "Exception";
 
@@ -307,7 +309,7 @@ int CPyCppyy::CPPMethod::GetPriority()
 // is allowed implicitly, float to int is not.
 //
 // Special cases that are disliked include void*, initializer_list, and
-// unknown/incomplete types. Finally, moves aer preferred over references.
+// unknown/incomplete types. Finally, moves are preferred over references.
 // TODO: extend this to favour classes that are not bases.
 // TODO: profile this method (it's expensive, but should be called too often)
 
@@ -361,7 +363,7 @@ int CPyCppyy::CPPMethod::GetPriority()
 
         // a couple of special cases as explained above
             if (aname.find("initializer_list") != std::string::npos) {
-                priority += -1000;     // difficult/expensive conversion
+                priority +=  -500;     // difficult/expensive conversion
             } else if (aname.rfind("&&", aname.size()-2) != std::string::npos) {
                 priority +=   100;     // prefer moves over other ref/ptr
             } else if (!aname.empty() && !Cppyy::IsComplete(aname)) {
@@ -374,9 +376,13 @@ int CPyCppyy::CPPMethod::GetPriority()
         }
     }
 
+// prefer methods w/o optional arguments b/c ones with optional arguments are easier to
+// select by providing the optional arguments explicitly
+    priority += ((int)Cppyy::GetMethodReqArgs(fMethod) - (int)nArgs);
+
 // add a small penalty to prefer non-const methods over const ones for get/setitem
     if (Cppyy::IsConstMethod(fMethod) && Cppyy::GetMethodName(fMethod) == "operator[]")
-        priority += -1;
+        priority += -10;
 
     return priority;
 }
@@ -550,6 +556,9 @@ bool CPyCppyy::CPPMethod::ConvertAndSetArgs(PyObject* args, CallContext* ctxt)
 
     if (argc == 0)
         return true;
+
+// pass current scope for which the call is made
+    ctxt->fCurScope = fScope;
 
 // convert the arguments to the method call array
     bool isOK = true;

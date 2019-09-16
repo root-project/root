@@ -9,9 +9,29 @@ level packages, which have their own releases.
 See :doc:`packages <packages>`, for details on the package structure.
 PyPy support lags CPython support.
 
-master: 1.5.1
--------------
 
+2019-09-15: 1.5.3
+-----------------
+
+* Performance improvements
+* Support for anonymous/unnamed/nested unions
+* Extended documentation
+
+
+2019-09-06: 1.5.2
+-----------------
+
+* Added a "low level" interface (cppyy.ll) for hard-casting and ll types
+* Extened support for passing ctypes arguments through ptr, ref, ptr-ptr
+* Fixed crash when creating an array of instances of a scoped inner struct
+* Extended documentation
+
+
+2019-08-26: 1.5.1
+-----------------
+
+* Upgrade cppyy-cling to 6.18.2
+* Various patches to upstream's pre-compiled header generation and use
 * Instantiate templates with larger integer types if argument values require
 * Improve cppyy.interactive and partially enable it on PyPy, IPython, etc.
 * Let __overload__ be more flexible in signature matching
@@ -22,7 +42,7 @@ master: 1.5.1
 2019-08-18: 1.5.0
 -----------------
 
-* Upgrade cppyy-cling to 6.18
+* Upgrade cppyy-cling to 6.18.0
 * Allow python-derived classes to be used in templates
 * Stricter template resolution and better caching/performance
 * Detailed memory management for make_shared and shared_ptr

@@ -33,7 +33,7 @@ def is_manylinux():
         _is_manylinux = False
         try:
             for line in open('/etc/redhat-release').readlines():
-                if 'CentOS release 5.11' in line:
+                if 'CentOS release 6.10 (Final)' in line:
                     _is_manylinux = True
                     break
         except (OSError, IOError):
@@ -88,7 +88,7 @@ class my_cmake_build(_build):
         srcdir   = get_srcdir()
         if not os.path.exists(srcdir):
             log.info('No src directory ... creating with "python create_src_directory.py"')
-            if subprocess.call(['python', 'create_src_directory.py']) != 0:
+            if subprocess.call([sys.executable, 'create_src_directory.py']) != 0:
                 log.error('ERROR: the source directory "%s" does not exist' % srcdir)
                 log.error('Please run "python create_src_directory.py" first.')
                 sys.exit(1)
@@ -345,7 +345,7 @@ setup(
     author='ROOT Developers',
     author_email='rootdev@cern.ch',
 
-    version='6.18.0.0',
+    version='6.18.2.2',
 
     license='LLVM: UoI-NCSA; ROOT: LGPL 2.1',
 
@@ -378,7 +378,7 @@ setup(
     setup_requires=['wheel'],
 
     include_package_data=True,
-    package_data={'': ['cmake/*.cmake', 'pkg_templates/*.in']},
+    package_data={'': ['cmake/*.cmake', 'pkg_templates/*.in', 'pkg_templates/*.py']},
 
     package_dir={'': 'python'},
     packages=find_packages('python', include=['cppyy_backend']),

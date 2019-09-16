@@ -126,6 +126,7 @@ development environments.
    installation
    examples
    changelog
+   license
 
 .. toctree::
    :caption: Features
@@ -136,6 +137,7 @@ development environments.
    functions
    type_conversions
    python
+   lowlevel
    misc
 
 .. toctree::
