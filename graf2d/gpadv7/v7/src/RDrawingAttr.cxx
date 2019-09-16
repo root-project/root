@@ -122,29 +122,29 @@ bool ROOT::Experimental::RAttributesVisitor::CopyValue(const std::string &name, 
 
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Copy attributes from other object
+/// Copy attributes into target object
 
-void ROOT::Experimental::RAttributesVisitor::Copy(const RAttributesVisitor &src, bool use_style)
+void ROOT::Experimental::RAttributesVisitor::CopyTo(RAttributesVisitor &tgt, bool use_style) const
 {
-   if (!src.GetAttr()) return;
+   if (GetAttr())
+      for (const auto &entry : GetDefaults()) {
 
-   for (const auto &entry : src.GetDefaults()) {
+         auto fullname = GetFullName(entry.first);
 
-      auto fullname = src.GetFullName(entry.first);
+         auto rec = fAttr->map.Find(fullname);
+         if (rec && tgt.CopyValue(entry.first,rec)) continue;
 
-      auto rec = src.fAttr->map.Find(fullname);
-      if (rec && CopyValue(entry.first,rec)) continue;
-
-      const auto *prnt = &src;
-      while (prnt && use_style) {
-         if (auto observe = prnt->fStyle.lock()) {
-            rec = observe->Eval(src.fAttr->type, src.fAttr->user_class, fullname);
-            if (rec && CopyValue(entry.first, rec)) break;
+         const auto *prnt = this;
+         while (prnt && use_style) {
+            if (auto observe = prnt->fStyle.lock()) {
+               rec = observe->Eval(fAttr->type, fAttr->user_class, fullname);
+               if (rec && tgt.CopyValue(entry.first, rec)) break;
+            }
+            prnt = prnt->fParent;
          }
-         prnt = prnt->fParent;
       }
-   }
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Semantic copy attributes from other object
