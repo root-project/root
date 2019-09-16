@@ -59,6 +59,7 @@
       var obj = this.GetObject(), histo = this.GetHImpl(obj);
 
       if (histo && !histo.getBinContent) {
+         console.log('histo type', histo._typename);
          if (histo.fAxes._1) {
             histo.getBin = function(x, y) { return (x + this.fAxes._0.fNBins * y); }
             histo.getBinContent = function(x, y) { return this.fStatistics.fBinContent[this.getBin(x, y)]; }

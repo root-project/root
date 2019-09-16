@@ -64,18 +64,18 @@
            line_style   = pp.GetNewOpt(attr, "line_style", 1),
            line_color   = pp.GetNewColor(attr, "line_color", "black");
 
-    this.CreateG();
+       this.CreateG();
 
-    this.draw_g
-        .append("svg:line")
-        .attr("x1", p1.x)
-        .attr("y1", p1.y)
-        .attr("x2", p2.x)
-        .attr("y2", p2.y)
-        .style("stroke", line_color)
-        .attr("stroke-width", line_width)
+       this.draw_g
+           .append("svg:line")
+           .attr("x1", p1.x)
+           .attr("y1", p1.y)
+           .attr("x2", p2.x)
+           .attr("y2", p2.y)
+           .style("stroke", line_color)
+           .attr("stroke-width", line_width)
 //        .attr("stroke-opacity", line_opacity)
-        .style("stroke-dasharray", JSROOT.Painter.root_line_styles[line_style]);
+           .style("stroke-dasharray", JSROOT.Painter.root_line_styles[line_style]);
    }
 
 
@@ -114,13 +114,13 @@
 
 
    function drawMarker() {
-       var marker         = this.GetObject(),
-           attr           = marker.fAttr,
-           pp             = this.pad_painter(),
-           p              = pp.GetCoordinate(marker.fP),
-           marker_size    = pp.GetNewOpt(attr, "marker.size", 1),
-           marker_style   = pp.GetNewOpt(attr, "marker.style", 1),
-           marker_color   = pp.GetNewColor(attr, "marker.color", "black");
+       var marker       = this.GetObject(),
+           attr         = marker.fAttr,
+           pp           = this.pad_painter(),
+           p            = pp.GetCoordinate(marker.fP),
+           marker_size  = pp.GetNewOpt(attr, "marker_size", 1),
+           marker_style = pp.GetNewOpt(attr, "marker_style", 1),
+           marker_color = pp.GetNewColor(attr, "marker_color", "black");
 
            var att = new JSROOT.TAttMarkerHandler({ style: marker_style, color: marker_color, size: marker_size });
 
