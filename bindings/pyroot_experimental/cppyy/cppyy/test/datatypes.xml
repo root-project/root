@@ -41,7 +41,7 @@
 
   <function name="sum_of_int_sf" />
   <function name="sum_of_double_sf" />
-  <function name="call_double_double_sf" /> 
+  <function name="call_double_double_sf" />
 
   <function name="call_int_int_sf" />
   <function name="call_void_sf" />

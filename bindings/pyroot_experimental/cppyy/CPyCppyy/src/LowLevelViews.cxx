@@ -738,6 +738,8 @@ template<> struct typecode_traits<float> {
     static constexpr const char* format = "f"; static constexpr const char* name = "float"; };
 template<> struct typecode_traits<double> {
     static constexpr const char* format = "d"; static constexpr const char* name = "double"; };
+template<> struct typecode_traits<long double> {
+    static constexpr const char* format = "D"; static constexpr const char* name = "long double"; };
 template<> struct typecode_traits<std::complex<float>> {
     static constexpr const char* format = "Zf"; static constexpr const char* name = "std::complex<float>"; };
 template<> struct typecode_traits<std::complex<double>> {
@@ -830,6 +832,7 @@ CPPYY_IMPL_VIEW_CREATOR(long long);
 CPPYY_IMPL_VIEW_CREATOR(unsigned long long);
 CPPYY_IMPL_VIEW_CREATOR(float);
 CPPYY_IMPL_VIEW_CREATOR(double);
+CPPYY_IMPL_VIEW_CREATOR(long double);
 CPPYY_IMPL_VIEW_CREATOR(std::complex<float>);
 CPPYY_IMPL_VIEW_CREATOR(std::complex<double>);
 CPPYY_IMPL_VIEW_CREATOR(std::complex<int>);

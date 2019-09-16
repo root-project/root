@@ -317,8 +317,6 @@ class TestFRAGILE:
     def test14_double_enum_trouble(self):
         """Test a redefinition of enum in a derived class"""
 
-        return # don't bother; is fixed in cling-support
-
         import cppyy
 
         M = cppyy.gbl.fragile.M
@@ -326,7 +324,6 @@ class TestFRAGILE:
 
         assert M.kOnce == N.kOnce
         assert M.kTwice == N.kTwice
-        assert M.__dict__['kTwice'] is not N.__dict__['kTwice']
 
     def test15_const_in_name(self):
         """Make sure 'const' is not erased when part of a name"""

@@ -4,7 +4,7 @@
 
 import sys
 
-def _create_mapper(cls):
+def _create_mapper(cls, extra_dct=None):
     def mapper(name, scope):
         if scope:
             cppname = scope+'::'+name
@@ -12,7 +12,9 @@ def _create_mapper(cls):
         else:
             cppname = name
             modname = 'cppyy.gbl'
-        return type(name, (cls,), {'__cpp_name__' : cppname, '__module__' : modname})
+        dct = {'__cpp_name__' : cppname, '__module__' : modname}
+        if extra_dct: dct.update(extra_dct)
+        return type(name, (cls,), dct)
     return mapper
 
 # from six.py ---
@@ -95,3 +97,11 @@ def initialize(backend):
     float_tm = _create_mapper(float)
     for tp in ['float', 'double', 'long double']:
         tm[tp] = float_tm
+
+    # void*
+    import ctypes
+    def voidp_init(self, arg=0):
+        import cppyy, ctypes
+        if arg == cppyy.nullptr: arg = 0
+        ctypes.c_void_p.__init__(self, arg)
+    tm['void*'] = _create_mapper(ctypes.c_void_p, {'__init__' : voidp_init})

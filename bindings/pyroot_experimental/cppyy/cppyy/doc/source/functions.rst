@@ -210,13 +210,13 @@ Most return types are readily amenable to automatic memory management: builtin
 returns, by-value returns, (const-)reference returns to internal data, smart
 pointers, etc.
 The important exception is pointer returns.
-  
+ 
 A function that returns a pointer to an object over which Python should claim
 ownership, should have its ``__creates__`` flag set through its
 :doc:`pythonization <pythonizations>`.
 Well-written APIs will have clear clues in their naming convention about the
 ownership rules.
-For example, functions called ``New...``, ``Clone...``, etc.  can be expected 
+For example, functions called ``New...``, ``Clone...``, etc.  can be expected
 to return freshly allocated objects.
 A simple name-matching in the pythonization then makes it simple to mark all
 these functions as creators.
