@@ -282,6 +282,8 @@ protected:
 
    void SemanticCopy(const RAttributesVisitor &src);
 
+   void CopyTo(RAttributesVisitor &tgt, bool use_style = true) const;
+
 public:
 
    RAttributesVisitor() = default;
@@ -290,13 +292,13 @@ public:
 
    RAttributesVisitor(RAttributesVisitor *parent, const std::string &prefix = "") { AssignParent(parent, prefix); }
 
-   RAttributesVisitor(const RAttributesVisitor &src) { CreateOwnAttr(); SemanticCopy(src); }
+   RAttributesVisitor(const RAttributesVisitor &src) { CreateOwnAttr(); src.CopyTo(*this); }
 
-   RAttributesVisitor &operator=(const RAttributesVisitor &src) { Clear(); Copy(src); return *this; }
+   RAttributesVisitor &operator=(const RAttributesVisitor &src) { Clear(); src.CopyTo(*this); return *this; }
 
    virtual ~RAttributesVisitor() = default;
 
-   void Copy(const RAttributesVisitor &src, bool use_style = true);
+   void Copy(const RAttributesVisitor &src, bool use_style = true) { src.CopyTo(*this, use_style); }
 
    void UseStyle(const std::shared_ptr<RStyle> &style) { fStyle = style; }
 
