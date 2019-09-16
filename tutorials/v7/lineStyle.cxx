@@ -9,13 +9,12 @@
 /// \author Iliana Betsou
 
 #include "ROOT/RCanvas.hxx"
-#include "ROOT/RColor.hxx"
 #include "ROOT/RText.hxx"
 #include "ROOT/RLine.hxx"
-#include "ROOT/RPadPos.hxx"
 #include <string>
 
-void lineStyle() {
+void lineStyle()
+{
    using namespace ROOT::Experimental;
 
    auto canvas = RCanvas::Create("Canvas Title");
@@ -24,14 +23,9 @@ void lineStyle() {
    for (int i=10; i>0; i--){
       num = num + 0.05;
 
-      RPadPos pt(.3_normal, RPadLength::Normal(num));
-      auto optts = canvas->Draw(RText(pt, std::to_string(i)));
-      optts->SetSize(13).SetAlign(32).SetFont(52);
+      canvas->Draw<RText>(std::to_string(i))->SetPos({.3_normal, 1_normal*num}).AttrText().SetSize(13).SetAlign(32).SetFont(52);
 
-      RPadPos pl1(.32_normal, RPadLength::Normal(num));
-      RPadPos pl2(.8_normal , RPadLength::Normal(num));
-      auto optls = canvas->Draw(RLine(pl1, pl2));
-      optls->SetStyle(i);
+      canvas->Draw<RLine>()->SetP1({.32_normal,1_normal*num}).SetP2({.8_normal, 1_normal*num}).AttrLine().SetStyle(i);
    }
 
    canvas->Show();

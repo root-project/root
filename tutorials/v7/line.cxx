@@ -29,18 +29,17 @@ void line()
 
    for (double i = 0; i < 360; i+=1) {
       double angle = i * TMath::Pi() / 180;
-      RPadPos p(0.3_normal*TMath::Cos(angle) + 0.5_normal,
-                0.3_normal*TMath::Sin(angle) + 0.5_normal);
       RColor col( 50  + (int) i/360*200, 0, 0);
-      canvas->Draw<RLine>(RPadPos(0.5_normal, 0.5_normal) , p)->AttrLine().SetColor(col);
+      canvas->Draw<RLine>()->SetP1({0.5_normal, 0.5_normal})
+                            .SetP2({0.5_normal + 0.3_normal*TMath::Cos(angle), 0.5_normal + 0.3_normal*TMath::Sin(angle)}).AttrLine().SetColor(col);
     }
 
-   canvas->Draw<RLine>(RPadPos(0.0_normal, 0.0_normal), RPadPos(1.0_normal,1.0_normal));
-   canvas->Draw<RLine>(RPadPos(0.1_normal, 0.1_normal), RPadPos(0.9_normal,0.1_normal));
-   canvas->Draw<RLine>(RPadPos(0.9_normal, 0.1_normal), RPadPos(0.9_normal,0.9_normal));
-   canvas->Draw(std::make_shared<RLine>({0.9_normal, 0.9_normal}, {0.1_normal,0.9_normal}));
-   canvas->Draw(std::make_shared<RLine>({0.1_normal, 0.1_normal}, {0.1_normal,0.9_normal}));
-   canvas->Draw(std::make_shared<RLine>({0.0_normal, 1.0_normal}, {1.0_normal,0.0_normal}));
+   canvas->Draw<RLine>()->SetP1({0.0_normal, 0.0_normal}).SetP2({1.0_normal,1.0_normal});
+   canvas->Draw<RLine>()->SetP1({0.1_normal, 0.1_normal}).SetP2({0.9_normal,0.1_normal});
+   canvas->Draw<RLine>()->SetP1({0.9_normal, 0.1_normal}).SetP2({0.9_normal,0.9_normal});
+   canvas->Draw<RLine>()->SetP1({0.9_normal, 0.9_normal}).SetP2({0.1_normal,0.9_normal});
+   canvas->Draw<RLine>()->SetP1({0.1_normal, 0.1_normal}).SetP2({0.1_normal,0.9_normal});
+   canvas->Draw<RLine>()->SetP1({0.0_normal, 1.0_normal}).SetP2({1.0_normal,0.0_normal});
 
    canvas->Show();
    // canvas->SaveAs("line.png");
