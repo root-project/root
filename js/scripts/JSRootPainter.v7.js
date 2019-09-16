@@ -3809,19 +3809,23 @@
       return rgb ? "rgb(" + rgb + ")" : dflt;
    }
 
-   TPadPainter.prototype.GetCoordinate = function(attr, prefix) {
+   TPadPainter.prototype.GetCoordinate = function(pos) {
       var res = { x: 0, y: 0 };
 
-      if (!attr || !prefix) return res;
+      if (!pos) return res;
+
+      function GetV(len, indx, dflt) {
+         return (len.fArr && (len.fArr.length>indx)) ? len.fArr[indx] : dflt;
+      }
 
       var w = this.pad_width(),
           h = this.pad_height(),
-          h_norm = this.GetNewOpt(attr, prefix + "_horiz_normal", 0),
-          h_user = this.GetNewOpt(attr, prefix + "_horiz_user"),
-          h_pixel = this.GetNewOpt(attr, prefix + "_horiz_pixel", 0),
-          v_norm = this.GetNewOpt(attr, prefix + "_vert_normal", 0),
-          v_user = this.GetNewOpt(attr, prefix + "_vert_user"),
-          v_pixel = this.GetNewOpt(attr, prefix + "_vert_pixel", 0);
+          h_norm = GetV(pos.fHoriz, 0, 0),
+          h_pixel = GetV(pos.fHoriz, 1, 0),
+          h_user = GetV(pos.fHoriz, 2),
+          v_norm = GetV(pos.fVert, 0, 0),
+          v_pixel = GetV(pos.fVert, 1, 0),
+          v_user = GetV(pos.fVert, 2);
 
       if (!this.pad_frame || (h_user === undefined)) {
          res.x = h_norm * w + h_pixel;
