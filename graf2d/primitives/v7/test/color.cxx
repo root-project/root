@@ -7,17 +7,13 @@ TEST(ColorTest, Predef) {
    using namespace ROOT::Experimental;
    {
       RColor col{RColor::kRed};
-      EXPECT_FLOAT_EQ(col.GetRed(), 1.);
-      EXPECT_FLOAT_EQ(col.GetGreen(), 0.);
-      EXPECT_FLOAT_EQ(col.GetBlue(), 0.);
-      EXPECT_FLOAT_EQ(col.GetAlpha(), 1.);
+      EXPECT_EQ(col.GetRGB(), "255,0,0");
+      EXPECT_EQ(col.HasAlpha(), false);
    }
    {
       RColor col{RColor::kBlue};
       col.SetAlpha(RColor::kTransparent);
-      EXPECT_FLOAT_EQ(col.GetRed(), 0.);
-      EXPECT_FLOAT_EQ(col.GetGreen(), 0.);
-      EXPECT_FLOAT_EQ(col.GetBlue(), 1.);
+      EXPECT_EQ(col.GetRGB(), "0,0,255");
       EXPECT_FLOAT_EQ(col.GetAlpha(), 0.);
    }
 }

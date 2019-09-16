@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
- #include "gtest/gtest.h"
+#include "gtest/gtest.h"
 
 #include "ROOT/RPadLength.hxx"
 
@@ -18,43 +18,43 @@ TEST(PadCoord, AddSubtract) {
    using namespace ROOT::Experimental;
 
    RPadLength cn{0.3_normal};
-   EXPECT_DOUBLE_EQ(0.3, cn.fNormal.fVal);
-   EXPECT_DOUBLE_EQ(0., cn.fPixel.fVal);
-   EXPECT_DOUBLE_EQ(0., cn.fUser.fVal);
+   EXPECT_DOUBLE_EQ(0.3, cn.GetNormal());
+   EXPECT_DOUBLE_EQ(0., cn.GetPixel());
+   EXPECT_DOUBLE_EQ(0., cn.GetUser());
 
    RPadLength cn1{0.4_normal};
    cn += cn1;
-   EXPECT_DOUBLE_EQ(0.7, cn.fNormal.fVal);
-   EXPECT_DOUBLE_EQ(0., cn.fPixel.fVal);
-   EXPECT_DOUBLE_EQ(0., cn.fUser.fVal);
+   EXPECT_DOUBLE_EQ(0.7, cn.GetNormal());
+   EXPECT_DOUBLE_EQ(0., cn.GetPixel());
+   EXPECT_DOUBLE_EQ(0., cn.GetUser());
 
    RPadLength cp{120_px};
-   EXPECT_DOUBLE_EQ(120., cp.fPixel.fVal);
-   EXPECT_DOUBLE_EQ(0., cp.fNormal.fVal);
-   EXPECT_DOUBLE_EQ(0., cp.fUser.fVal);
+   EXPECT_DOUBLE_EQ(120., cp.GetPixel());
+   EXPECT_DOUBLE_EQ(0., cp.GetNormal());
+   EXPECT_DOUBLE_EQ(0., cp.GetUser());
 
    RPadLength sum = cn + cp;
-   EXPECT_DOUBLE_EQ(0.7, sum.fNormal.fVal);
-   EXPECT_DOUBLE_EQ(120., sum.fPixel.fVal);
-   EXPECT_DOUBLE_EQ(0., sum.fUser.fVal);
+   EXPECT_DOUBLE_EQ(0.7, sum.GetNormal());
+   EXPECT_DOUBLE_EQ(120., sum.GetPixel());
+   EXPECT_DOUBLE_EQ(0., sum.GetUser());
 
    sum -= RPadLength(0.2_user);
-   EXPECT_DOUBLE_EQ(0.7, sum.fNormal.fVal);
-   EXPECT_DOUBLE_EQ(120., sum.fPixel.fVal);
-   EXPECT_DOUBLE_EQ(-0.2, sum.fUser.fVal);
+   EXPECT_DOUBLE_EQ(0.7, sum.GetNormal());
+   EXPECT_DOUBLE_EQ(120., sum.GetPixel());
+   EXPECT_DOUBLE_EQ(-0.2, sum.GetUser());
 
    sum *= 0.1;
-   EXPECT_DOUBLE_EQ(0.07, sum.fNormal.fVal);
-   EXPECT_DOUBLE_EQ(12., sum.fPixel.fVal);
-   EXPECT_DOUBLE_EQ(-0.02, sum.fUser.fVal);
+   EXPECT_DOUBLE_EQ(0.07, sum.GetNormal());
+   EXPECT_DOUBLE_EQ(12., sum.GetPixel());
+   EXPECT_DOUBLE_EQ(-0.02, sum.GetUser());
 
    RPadLength subtr(0.07_normal, 12_px, -0.02_user);
-   EXPECT_DOUBLE_EQ(0.07, subtr.fNormal.fVal);
-   EXPECT_DOUBLE_EQ(12., subtr.fPixel.fVal);
-   EXPECT_DOUBLE_EQ(-0.02, subtr.fUser.fVal);
+   EXPECT_DOUBLE_EQ(0.07, subtr.GetNormal());
+   EXPECT_DOUBLE_EQ(12., subtr.GetPixel());
+   EXPECT_DOUBLE_EQ(-0.02, subtr.GetUser());
 
    sum -= subtr;
-   EXPECT_NEAR(0., sum.fNormal.fVal, 1e-10);
-   EXPECT_NEAR(0., sum.fPixel.fVal, 1e-10);
-   EXPECT_NEAR(0., sum.fUser.fVal, 1e-10);
+   EXPECT_NEAR(0., sum.GetNormal(), 1e-10);
+   EXPECT_NEAR(0., sum.GetPixel(), 1e-10);
+   EXPECT_NEAR(0., sum.GetUser(), 1e-10);
 }

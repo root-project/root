@@ -28,10 +28,10 @@ TEST(IOTest, OneD)
 TEST(IOTest, OneDOpts)
 {
    RAxisConfig xaxis{10, 0., 1.};
-   auto h = std::make_unique<RH1D>(xaxis);
+   auto h = std::make_shared<RH1D>(xaxis);
    RCanvas canv;
-   auto optsPtr = canv.Draw(std::move(h));
-   optsPtr->Line().SetColor(RColor::kRed);
+   auto drawable = canv.Draw<RHistDrawable<1>>(h);
+   drawable->AttrLine().SetColor(RColor::kRed);
 
    auto file = RFile::Recreate("IOTestOneDOpts.root");
    file->Write("canv", canv);
