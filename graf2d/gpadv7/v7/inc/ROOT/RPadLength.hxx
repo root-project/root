@@ -17,38 +17,18 @@
 #define ROOT7_RPadLength
 
 #include <string>
+#include <vector>
 
 #include <ROOT/RDrawingAttr.hxx>
 
 namespace ROOT {
 namespace Experimental {
 
-
-class RPadLength : public RAttributesVisitor {
+class RPadLength  {
 
 protected:
-   const RDrawableAttributes::Map_t &GetDefaults() const override
-   {
-      static auto dflts = RDrawableAttributes::Map_t().AddDouble("normal",0.).AddDouble("pixel",0.).AddDouble("user",0.);
-      return dflts;
-   }
 
-   mutable double *fNormal{nullptr}; ///<! normal component from attributes container
-   mutable double *fPixel{nullptr};  ///<! pixel component from attributes container
-   mutable double *fUser{nullptr};   ///<! user component from attributes container
-
-   double *SetValueGetPtr(const std::string &name, double v)
-   {
-      SetValue(name, v);
-      return GetDoublePtr(name);
-   }
-
-   void GetFast() const
-   {
-      fNormal = GetDoublePtr("normal");
-      fPixel = GetDoublePtr("pixel");
-      fUser = GetDoublePtr("user");
-   }
+   std::vector<double> fArr; ///< components [0] - normalized, [1] - pixel, [2] - user
 
 public:
    template <class DERIVED>
@@ -118,37 +98,7 @@ public:
    };
    /// \}
 
-   using RAttributesVisitor::RAttributesVisitor;
-
-   RPadLength(RDrawableAttributes &cont, const std::string &prefix = "") : RAttributesVisitor(cont, prefix)
-   {
-      GetFast();
-   }
-
-   RPadLength(RAttributesVisitor *parent, const std::string &prefix = "") : RAttributesVisitor(parent, prefix)
-   {
-      GetFast();
-   }
-
-   RPadLength(const RPadLength &src) : RAttributesVisitor()
-   {
-      CreateOwnAttr();
-      SemanticCopy(src);
-      GetFast();
-   }
-
-   RPadLength &operator=(const RPadLength &src)
-   {
-      Clear();
-      Copy(src);
-      return *this;
-   }
-
-   void Copy(const RPadLength &src)
-   {
-      RAttributesVisitor::Copy(src, false);
-      GetFast();
-   }
+   RPadLength() {}
 
    /// Constructor from a `Normal` coordinate.
    RPadLength(Normal normal): RPadLength() { SetNormal(normal.fVal); }
@@ -159,34 +109,50 @@ public:
    /// Constructor from a `User` coordinate.
    RPadLength(User user) : RPadLength() { SetUser(user.fVal); }
 
-   bool HasNormal() const { return fNormal != nullptr; }
-   bool HasPixel() const { return fPixel != nullptr; }
-   bool HasUser() const { return fUser != nullptr; }
+   bool HasNormal() const { return fArr.size() > 0; }
+   bool HasPixel() const { return fArr.size() > 1; }
+   bool HasUser() const { return fArr.size() > 2; }
 
-   RPadLength &SetNormal(double v) { if (fNormal) *fNormal = v; else fNormal = SetValueGetPtr("normal", v); return *this; }
-   RPadLength &SetPixel(double v) { if (fPixel) *fPixel = v; else fPixel = SetValueGetPtr("pixel", v); return *this; }
-   RPadLength &SetUser(double v) { if (fUser) *fUser = v; else fUser = SetValueGetPtr("user",v); return *this; }
+   RPadLength &SetNormal(double v)
+   {
+      if (fArr.size() < 1)
+         fArr.resize(1);
+      fArr[0] = v;
+      return *this;
+   }
+   RPadLength &SetPixel(double v)
+   {
+      if (fArr.size() < 2)
+         fArr.resize(2, 0.);
+      fArr[1] = v;
+      return *this;
+   }
+   RPadLength &SetUser(double v)
+   {
+      if (fArr.size() < 3)
+         fArr.resize(3, 0.);
+      fArr[2] = v;
+      return *this;
+   }
 
-   double GetNormal() const { return fNormal ? *fNormal : 0.; }
-   double GetPixel() const { return fPixel ? *fPixel : 0.; }
-   double GetUser() const { return fUser ? *fUser : 0.; }
+   double GetNormal() const { return fArr.size() > 0 ? fArr[0] : 0.; }
+   double GetPixel() const { return fArr.size() > 1 ? fArr[1] : 0.; }
+   double GetUser() const { return fArr.size() > 2 ? fArr[2] : 0.; }
 
-   void ClearNormal() { ClearValue("normal"); fNormal = nullptr; }
-   void ClearPixel() { ClearValue("pixel");  fPixel = nullptr; }
-   void ClearUser() { ClearValue("user"); fUser = nullptr; }
+   void ClearUser() { if (fArr.size()>2) fArr.resize(2); }
 
-   void Clear() { ClearNormal(); ClearPixel(); ClearUser(); }
+   void Clear() { fArr.clear(); }
 
    /// Add two `RPadLength`s.
    friend RPadLength operator+(RPadLength lhs, const RPadLength &rhs)
    {
       RPadLength res;
-      if (lhs.HasNormal() || rhs.HasNormal())
-         res.SetNormal(lhs.GetNormal() + rhs.GetNormal());
-      if (lhs.HasPixel() || rhs.HasPixel())
-         res.SetPixel(lhs.GetPixel() + rhs.GetPixel());
       if (lhs.HasUser() || rhs.HasUser())
          res.SetUser(lhs.GetUser() + rhs.GetUser());
+      if (lhs.HasPixel() || rhs.HasPixel())
+         res.SetPixel(lhs.GetPixel() + rhs.GetPixel());
+      if (lhs.HasNormal() || rhs.HasNormal())
+         res.SetNormal(lhs.GetNormal() + rhs.GetNormal());
       return res;
    }
 
@@ -194,12 +160,12 @@ public:
    friend RPadLength operator-(RPadLength lhs, const RPadLength &rhs)
    {
       RPadLength res;
-      if (lhs.HasNormal() || rhs.HasNormal())
-         res.SetNormal(lhs.GetNormal() - rhs.GetNormal());
-      if (lhs.HasPixel() || rhs.HasPixel())
-         res.SetPixel(lhs.GetPixel() - rhs.GetPixel());
       if (lhs.HasUser() || rhs.HasUser())
          res.SetUser(lhs.GetUser() - rhs.GetUser());
+      if (lhs.HasPixel() || rhs.HasPixel())
+         res.SetPixel(lhs.GetPixel() - rhs.GetPixel());
+      if (lhs.HasNormal() || rhs.HasNormal())
+         res.SetNormal(lhs.GetNormal() - rhs.GetNormal());
       return res;
    }
 
@@ -207,41 +173,41 @@ public:
    RPadLength operator-()
    {
       RPadLength res;
-      if (HasNormal()) res.SetNormal(-GetNormal());
-      if (HasPixel()) res.SetPixel(-GetPixel());
       if (HasUser()) res.SetUser(-GetUser());
+      if (HasPixel()) res.SetPixel(-GetPixel());
+      if (HasNormal()) res.SetNormal(-GetNormal());
       return res;
    }
 
    /// Add a `RPadLength`.
    RPadLength &operator+=(const RPadLength &rhs)
    {
-      if (HasNormal() || rhs.HasNormal())
-         SetNormal(GetNormal() + rhs.GetNormal());
-      if (HasPixel() || rhs.HasPixel())
-         SetPixel(GetPixel() + rhs.GetPixel());
       if (HasUser() || rhs.HasUser())
          SetUser(GetUser() + rhs.GetUser());
+      if (HasPixel() || rhs.HasPixel())
+         SetPixel(GetPixel() + rhs.GetPixel());
+      if (HasNormal() || rhs.HasNormal())
+         SetNormal(GetNormal() + rhs.GetNormal());
       return *this;
    };
 
    /// Subtract a `RPadLength`.
    RPadLength &operator-=(const RPadLength &rhs)
    {
-      if (HasNormal() || rhs.HasNormal())
-         SetNormal(GetNormal() - rhs.GetNormal());
-      if (HasPixel() || rhs.HasPixel())
-         SetPixel(GetPixel() - rhs.GetPixel());
       if (HasUser() || rhs.HasUser())
          SetUser(GetUser() - rhs.GetUser());
+      if (HasPixel() || rhs.HasPixel())
+         SetPixel(GetPixel() - rhs.GetPixel());
+      if (HasNormal() || rhs.HasNormal())
+         SetNormal(GetNormal() - rhs.GetNormal());
       return *this;
    };
 
    RPadLength &operator*=(double scale)
    {
-      if (HasNormal()) SetNormal(scale*GetNormal());
-      if (HasPixel()) SetPixel(scale*GetPixel());
       if (HasUser()) SetUser(scale*GetUser());
+      if (HasPixel()) SetPixel(scale*GetPixel());
+      if (HasNormal()) SetNormal(scale*GetNormal());
       return *this;
    }
 

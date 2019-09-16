@@ -71,6 +71,7 @@ void RHistDrawable<DIMENSIONS>::Paint(Internal::RPadPainter &pad)
    Internal::RHistPainterBase<DIMENSIONS>::GetPainter()->Paint(*this, pad);
 }
 
+
 namespace ROOT {
 namespace Experimental {
 

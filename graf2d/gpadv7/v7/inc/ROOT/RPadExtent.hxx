@@ -27,27 +27,20 @@ namespace Experimental {
 /** \class ROOT::Experimental::RPadExtent
   An extent / size (horizontal and vertical) in a `RPad`.
   */
-class RPadExtent : public RAttributesVisitor {
+class RPadExtent  {
 
-   RPadLength fHoriz{this,"horiz_"};   ///<!  horizontal part
+   RPadLength fHoriz;   ///<  horizontal part
 
-   RPadLength fVert{this, "vert_"};    ///<!   vertical part
-
-protected:
-   const RDrawableAttributes::Map_t &GetDefaults() const override
-   {
-      static auto dflts = RDrawableAttributes::Map_t().AddDefaults(fHoriz).AddDefaults(fVert);
-      return dflts;
-   }
+   RPadLength fVert;    ///<   vertical part
 
 public:
 
-   using RAttributesVisitor::RAttributesVisitor;
+   RPadExtent() = default;
 
    RPadExtent(const RPadLength& horiz, const RPadLength& vert) : RPadExtent()
    {
-      Horiz() = horiz;
-      Vert() = vert;
+      fHoriz = horiz;
+      fVert = vert;
    }
 
    RPadLength &Horiz() { return fHoriz; }

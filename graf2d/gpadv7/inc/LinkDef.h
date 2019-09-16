@@ -43,6 +43,7 @@
 #pragma link C++ class ROOT::Experimental::RPalette+;
 #pragma link C++ class ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RCanvas>+;
 
+#pragma link C++ class ROOT::Experimental::Internal::RIOSharedBase+;
 #pragma link C++ class ROOT::Experimental::RDrawable+;
 #pragma link C++ class ROOT::Experimental::RDrawableAttributes+;
 #pragma link C++ class ROOT::Experimental::RDrawableAttributes::Value_t+;

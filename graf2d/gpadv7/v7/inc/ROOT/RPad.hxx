@@ -86,6 +86,15 @@ public:
       return res;
    }
 
+   auto Draw(std::shared_ptr<RDrawable> &&drawable)
+   {
+      fPrimitives.emplace_back(std::move(drawable));
+
+      AssignUniqueID(fPrimitives.back());
+
+      return fPrimitives.back();
+   }
+
    auto NumPrimitives() const
    {
       return fPrimitives.size();
@@ -182,8 +191,8 @@ class RPad: public RPadBase {
    /// Pad containing this pad as a sub-pad.
    RPadBase *fParent{nullptr};             /// The parent pad, if this pad has one.
 
-   RPadPos fPos{fAttr, "pos_"};            ///<! pad position
-   RPadExtent fSize{fAttr, "size_"};       ///<! pad size
+   RPadPos fPos;                           ///<! pad position
+   RPadExtent fSize;                       ///<! pad size
 
    RAttrLine fLineAttr{fAttr, "border_"};   ///<! border attributes
 

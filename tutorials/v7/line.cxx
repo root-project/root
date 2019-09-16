@@ -14,9 +14,9 @@
 /// is welcome!
 /// \authors Olivier couet, Iliana Betsou
 
-#include "ROOT/RCanvas.hxx"
-#include "ROOT/RColor.hxx"
-#include "ROOT/RLine.hxx"
+#include <ROOT/RCanvas.hxx>
+#include <ROOT/RColor.hxx>
+#include <ROOT/RLine.hxx>
 #include <ROOT/RPadPos.hxx>
 #include "TMath.h"
 
@@ -30,19 +30,18 @@ void line()
    for (double i = 0; i < 360; i+=1) {
       double angle = i * TMath::Pi() / 180;
       RPadPos p(0.3_normal*TMath::Cos(angle) + 0.5_normal,
-                 0.3_normal*TMath::Sin(angle) + 0.5_normal);
-      auto opts = canvas->Draw(RLine({0.5_normal, 0.5_normal} , p));
-      RColor col(0.0025*i, 0, 0);
-      opts->SetColor(col);
+                0.3_normal*TMath::Sin(angle) + 0.5_normal);
+      RColor col( 50  + (int) i/360*200, 0, 0);
+      canvas->Draw<RLine>(RPadPos(0.5_normal, 0.5_normal) , p)->AttrLine().SetColor(col);
     }
 
-   canvas->Draw(RLine({0.0_normal, 0.0_normal}, {1.0_normal,1.0_normal}));
-   canvas->Draw(RLine({0.1_normal, 0.1_normal}, {0.9_normal,0.1_normal}));
-   canvas->Draw(RLine({0.9_normal, 0.1_normal}, {0.9_normal,0.9_normal}));
-   canvas->Draw(RLine({0.9_normal, 0.9_normal}, {0.1_normal,0.9_normal}));
-   canvas->Draw(RLine({0.1_normal, 0.1_normal}, {0.1_normal,0.9_normal}));
-   canvas->Draw(RLine({0.0_normal, 1.0_normal}, {1.0_normal,0.0_normal}));
+   canvas->Draw<RLine>(RPadPos(0.0_normal, 0.0_normal), RPadPos(1.0_normal,1.0_normal));
+   canvas->Draw<RLine>(RPadPos(0.1_normal, 0.1_normal), RPadPos(0.9_normal,0.1_normal));
+   canvas->Draw<RLine>(RPadPos(0.9_normal, 0.1_normal), RPadPos(0.9_normal,0.9_normal));
+   canvas->Draw(std::make_shared<RLine>({0.9_normal, 0.9_normal}, {0.1_normal,0.9_normal}));
+   canvas->Draw(std::make_shared<RLine>({0.1_normal, 0.1_normal}, {0.1_normal,0.9_normal}));
+   canvas->Draw(std::make_shared<RLine>({0.0_normal, 1.0_normal}, {1.0_normal,0.0_normal}));
 
-  // canvas->Show();
-   canvas->SaveAs("line.png");
+   canvas->Show();
+   // canvas->SaveAs("line.png");
 }
