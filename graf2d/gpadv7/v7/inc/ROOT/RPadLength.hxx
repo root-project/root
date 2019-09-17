@@ -16,10 +16,8 @@
 #ifndef ROOT7_RPadLength
 #define ROOT7_RPadLength
 
-#include <string>
 #include <vector>
-
-#include <ROOT/RDrawingAttr.hxx>
+#include <string>
 
 namespace ROOT {
 namespace Experimental {
@@ -266,8 +264,6 @@ inline RPadLength::User operator"" _user(unsigned long long int val)
 {
    return RPadLength::User{(double)val};
 }
-
-
 
 } // namespace Experimental
 } // namespace ROOT
