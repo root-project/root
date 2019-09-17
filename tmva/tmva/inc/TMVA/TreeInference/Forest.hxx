@@ -45,6 +45,15 @@ T *GetObjectSafe(TFile *f, const std::string &n, const std::string &m)
       throw std::runtime_error("Failed to read " + m + " from file " + n + ".");
    return v;
 }
+
+template <typename T>
+bool CompareTree(const BranchlessTree<T> &a, const BranchlessTree<T> &b)
+{
+   if (a.fInputs[0] == b.fInputs[0])
+      return a.fThresholds[0] < b.fThresholds[0];
+   else
+      return a.fInputs[0] < b.fInputs[0];
+}
 } // namespace Internal
 
 /// Forest base class
@@ -114,9 +123,6 @@ BranchlessForest<T>::Load(const std::string &key, const std::string &filename, c
    const auto lenInputs = std::pow(2, maxDepth->at(0)) - 1;
    const auto lenThresholds = std::pow(2, maxDepth->at(0) + 1) - 1;
 
-   // Sort trees by threshold value of first node
-   // TODO
-
    // Find number of trees corresponding to given output node
    if (output > numOutputs->at(0))
       throw std::runtime_error("Given output node of the forest is larger or equal to number of output nodes.");
@@ -153,6 +159,10 @@ BranchlessForest<T>::Load(const std::string &key, const std::string &filename, c
 
       c++;
    }
+
+   // Sort trees by first cut variable and threshold value
+   if (sortTrees)
+      std::sort(this->fTrees.begin(), this->fTrees.end(), Internal::CompareTree<T>);
 
    // Clean-up
    delete maxDepth;
