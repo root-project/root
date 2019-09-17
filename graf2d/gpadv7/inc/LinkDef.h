@@ -14,6 +14,25 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+#pragma link C++ class ROOT::Experimental::RAttrValues+;
+#pragma link C++ class ROOT::Experimental::RAttrValues::Value_t+;
+#pragma link C++ class ROOT::Experimental::RAttrValues::BoolValue_t+;
+#pragma link C++ class ROOT::Experimental::RAttrValues::IntValue_t+;
+#pragma link C++ class ROOT::Experimental::RAttrValues::DoubleValue_t+;
+#pragma link C++ class ROOT::Experimental::RAttrValues::StringValue_t+;
+#pragma link C++ class ROOT::Experimental::RAttrValues::Map_t+;
+#pragma link C++ class ROOT::Experimental::RAttrBase+;
+
+#pragma link C++ class ROOT::Experimental::RStyle+;
+#pragma link C++ class ROOT::Experimental::RStyle::Block_t+;
+
+#pragma link C++ class ROOT::Experimental::RDrawable+;
+
+#pragma link C++ class ROOT::Experimental::Internal::RIOSharedBase+;
+#pragma link C++ class ROOT::Experimental::Internal::RIOShared<TObject>+;
+#pragma link C++ class ROOT::Experimental::Internal::RIOShared<ROOT::Experimental::RDrawable>+;
+
+
 #pragma link C++ class ROOT::Experimental::RPadDisplayItem+;
 #pragma link C++ class ROOT::Experimental::Detail::RMenuItem+;
 #pragma link C++ class std::vector<ROOT::Experimental::Detail::RMenuItem*>+;
@@ -42,23 +61,6 @@
 #pragma link C++ class ROOT::Experimental::RDrawableDisplayItem+;
 #pragma link C++ class ROOT::Experimental::RPalette+;
 #pragma link C++ class ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RCanvas>+;
-
-#pragma link C++ class ROOT::Experimental::RDrawable+;
-#pragma link C++ class ROOT::Experimental::RAttrValues+;
-#pragma link C++ class ROOT::Experimental::RAttrValues::Value_t+;
-#pragma link C++ class ROOT::Experimental::RAttrValues::BoolValue_t+;
-#pragma link C++ class ROOT::Experimental::RAttrValues::IntValue_t+;
-#pragma link C++ class ROOT::Experimental::RAttrValues::DoubleValue_t+;
-#pragma link C++ class ROOT::Experimental::RAttrValues::StringValue_t+;
-#pragma link C++ class ROOT::Experimental::RAttrValues::Map_t+;
-#pragma link C++ class ROOT::Experimental::RAttrBase+;
-
-#pragma link C++ class ROOT::Experimental::Internal::RIOSharedBase+;
-#pragma link C++ class ROOT::Experimental::Internal::RIOShared<TObject>+;
-#pragma link C++ class ROOT::Experimental::Internal::RIOShared<RDrawable>+;
-
-#pragma link C++ class ROOT::Experimental::RStyle+;
-#pragma link C++ class ROOT::Experimental::RStyle::Block_t+;
 
 #pragma link C++ class ROOT::Experimental::RColor+;
 #pragma link C++ class ROOT::Experimental::RAttrFill+;

@@ -38,10 +38,13 @@ class RCanvas;
   */
 
 class RPadBase : public RDrawable {
+
 private:
-   /// Content of the pad.
 
    using Primitive_t = Internal::RIOShared<RDrawable>;
+
+   /// Content of the pad.
+
 
    std::vector<Primitive_t> fPrimitives;
 
@@ -65,6 +68,8 @@ protected:
    void CollectShared(Internal::RIOSharedVector_t &) override;
 
 public:
+
+
 
    using Primitives_t = std::vector<std::shared_ptr<RDrawable>>;
 
