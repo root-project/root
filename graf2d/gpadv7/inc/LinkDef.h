@@ -60,7 +60,6 @@
 #pragma link C++ class ROOT::Experimental::RDisplayItem+;
 #pragma link C++ class ROOT::Experimental::RDrawableDisplayItem+;
 #pragma link C++ class ROOT::Experimental::RPalette+;
-#pragma link C++ class ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RCanvas>+;
 
 #pragma read sourceClass="ROOT::Experimental::RCanvas" targetClass="ROOT::Experimental::RCanvas" source="" target="" code="{ newObj->ResolveSharedPtrs() ; }"
 
