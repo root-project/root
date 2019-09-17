@@ -20,26 +20,26 @@
 #include <algorithm>
 #include <iterator>
 
-template<> bool ROOT::Experimental::RDrawableAttributes::Value_t::get<bool>() const { return GetBool(); }
-template<> int ROOT::Experimental::RDrawableAttributes::Value_t::get<int>() const { return GetInt(); }
-template<> double ROOT::Experimental::RDrawableAttributes::Value_t::get<double>() const { return GetDouble(); }
-template<> std::string ROOT::Experimental::RDrawableAttributes::Value_t::get<std::string>() const { return GetString(); }
+template<> bool ROOT::Experimental::RDrawingAttr::Value_t::get<bool>() const { return GetBool(); }
+template<> int ROOT::Experimental::RDrawingAttr::Value_t::get<int>() const { return GetInt(); }
+template<> double ROOT::Experimental::RDrawingAttr::Value_t::get<double>() const { return GetDouble(); }
+template<> std::string ROOT::Experimental::RDrawingAttr::Value_t::get<std::string>() const { return GetString(); }
 
-template<> bool ROOT::Experimental::RDrawableAttributes::Value_t::get_value<bool,void>(const Value_t *rec) { return rec ? rec->GetBool() : false; }
-template<> int ROOT::Experimental::RDrawableAttributes::Value_t::get_value<int,void>(const Value_t *rec) { return rec ? rec->GetInt() : 0; }
-template<> double ROOT::Experimental::RDrawableAttributes::Value_t::get_value<double,void>(const Value_t *rec) { return rec ? rec->GetDouble() : 0.; }
-template<> std::string ROOT::Experimental::RDrawableAttributes::Value_t::get_value<std::string,void>(const Value_t *rec) { return rec ? rec->GetString() : ""; }
+template<> bool ROOT::Experimental::RDrawingAttr::Value_t::get_value<bool,void>(const Value_t *rec) { return rec ? rec->GetBool() : false; }
+template<> int ROOT::Experimental::RDrawingAttr::Value_t::get_value<int,void>(const Value_t *rec) { return rec ? rec->GetInt() : 0; }
+template<> double ROOT::Experimental::RDrawingAttr::Value_t::get_value<double,void>(const Value_t *rec) { return rec ? rec->GetDouble() : 0.; }
+template<> std::string ROOT::Experimental::RDrawingAttr::Value_t::get_value<std::string,void>(const Value_t *rec) { return rec ? rec->GetString() : ""; }
 
-template<> const ROOT::Experimental::RDrawableAttributes::Value_t *ROOT::Experimental::RDrawableAttributes::Value_t::get_value<const ROOT::Experimental::RDrawableAttributes::Value_t *,void>(const Value_t *rec) { return rec; }
-template<> const ROOT::Experimental::RDrawableAttributes::Value_t *ROOT::Experimental::RDrawableAttributes::Value_t::get_value<const ROOT::Experimental::RDrawableAttributes::Value_t *,bool>(const Value_t *rec) { return rec && rec->Kind() == RDrawableAttributes::kBool ? rec : nullptr; }
-template<> const ROOT::Experimental::RDrawableAttributes::Value_t *ROOT::Experimental::RDrawableAttributes::Value_t::get_value<const ROOT::Experimental::RDrawableAttributes::Value_t *,int>(const Value_t *rec) { return rec && rec->Kind() == RDrawableAttributes::kInt ? rec : nullptr; }
-template<> const ROOT::Experimental::RDrawableAttributes::Value_t *ROOT::Experimental::RDrawableAttributes::Value_t::get_value<const ROOT::Experimental::RDrawableAttributes::Value_t *,double>(const Value_t *rec) { return rec && rec->Kind() == RDrawableAttributes::kDouble ? rec : nullptr; }
-template<> const ROOT::Experimental::RDrawableAttributes::Value_t *ROOT::Experimental::RDrawableAttributes::Value_t::get_value<const ROOT::Experimental::RDrawableAttributes::Value_t *,std::string>(const Value_t *rec) { return rec && rec->Kind() == RDrawableAttributes::kString ? rec : nullptr;  }
+template<> const ROOT::Experimental::RDrawingAttr::Value_t *ROOT::Experimental::RDrawingAttr::Value_t::get_value<const ROOT::Experimental::RDrawingAttr::Value_t *,void>(const Value_t *rec) { return rec; }
+template<> const ROOT::Experimental::RDrawingAttr::Value_t *ROOT::Experimental::RDrawingAttr::Value_t::get_value<const ROOT::Experimental::RDrawingAttr::Value_t *,bool>(const Value_t *rec) { return rec && rec->Kind() == RDrawingAttr::kBool ? rec : nullptr; }
+template<> const ROOT::Experimental::RDrawingAttr::Value_t *ROOT::Experimental::RDrawingAttr::Value_t::get_value<const ROOT::Experimental::RDrawingAttr::Value_t *,int>(const Value_t *rec) { return rec && rec->Kind() == RDrawingAttr::kInt ? rec : nullptr; }
+template<> const ROOT::Experimental::RDrawingAttr::Value_t *ROOT::Experimental::RDrawingAttr::Value_t::get_value<const ROOT::Experimental::RDrawingAttr::Value_t *,double>(const Value_t *rec) { return rec && rec->Kind() == RDrawingAttr::kDouble ? rec : nullptr; }
+template<> const ROOT::Experimental::RDrawingAttr::Value_t *ROOT::Experimental::RDrawingAttr::Value_t::get_value<const ROOT::Experimental::RDrawingAttr::Value_t *,std::string>(const Value_t *rec) { return rec && rec->Kind() == RDrawingAttr::kString ? rec : nullptr;  }
 
 
 using namespace std::string_literals;
 
-ROOT::Experimental::RDrawableAttributes::Map_t &ROOT::Experimental::RDrawableAttributes::Map_t::AddDefaults(const RAttributesVisitor &vis)
+ROOT::Experimental::RDrawingAttr::Map_t &ROOT::Experimental::RDrawingAttr::Map_t::AddDefaults(const RAttrBase &vis)
 {
    auto prefix = vis.GetPrefixToParent();
 
@@ -52,7 +52,7 @@ ROOT::Experimental::RDrawableAttributes::Map_t &ROOT::Experimental::RDrawableAtt
 ///////////////////////////////////////////////////////////////////////////////
 /// Evaluate style
 
-const ROOT::Experimental::RDrawableAttributes::Value_t *ROOT::Experimental::RStyle::Eval(const std::string &type, const std::string &user_class, const std::string &field) const
+const ROOT::Experimental::RDrawingAttr::Value_t *ROOT::Experimental::RStyle::Eval(const std::string &type, const std::string &user_class, const std::string &field) const
 {
    for (const auto &block : fBlocks) {
 
@@ -71,7 +71,7 @@ const ROOT::Experimental::RDrawableAttributes::Value_t *ROOT::Experimental::RSty
 /// Returns prefix relative to parent
 /// Normally prefix is relative to
 
-std::string ROOT::Experimental::RAttributesVisitor::GetPrefixToParent() const
+std::string ROOT::Experimental::RAttrBase::GetPrefixToParent() const
 {
    if (!fAttr || !fParent) return fPrefix;
 
@@ -91,10 +91,10 @@ std::string ROOT::Experimental::RAttributesVisitor::GetPrefixToParent() const
 ///////////////////////////////////////////////////////////////////////////////
 /// Create own attributes
 
-void ROOT::Experimental::RAttributesVisitor::CreateOwnAttr()
+void ROOT::Experimental::RAttrBase::CreateOwnAttr()
 {
    // create independent container
-   fOwnAttr = std::make_unique<RDrawableAttributes>();
+   fOwnAttr = std::make_unique<RDrawingAttr>();
 
    // set pointer on the container
    fAttr = fOwnAttr.get();
@@ -104,7 +104,7 @@ void ROOT::Experimental::RAttributesVisitor::CreateOwnAttr()
 ///////////////////////////////////////////////////////////////////////////////
 /// Copy attributes from other object
 
-bool ROOT::Experimental::RAttributesVisitor::CopyValue(const std::string &name, const RDrawableAttributes::Value_t *value, bool check_type)
+bool ROOT::Experimental::RAttrBase::CopyValue(const std::string &name, const RDrawingAttr::Value_t *value, bool check_type)
 {
    if (!value)
       return false;
@@ -126,7 +126,7 @@ bool ROOT::Experimental::RAttributesVisitor::CopyValue(const std::string &name, 
 ///////////////////////////////////////////////////////////////////////////////
 /// Copy attributes into target object
 
-bool ROOT::Experimental::RAttributesVisitor::IsValueEqual(const std::string &name, const RDrawableAttributes::Value_t *value, bool use_style) const
+bool ROOT::Experimental::RAttrBase::IsValueEqual(const std::string &name, const RDrawingAttr::Value_t *value, bool use_style) const
 {
    if (!GetAttr() || !value)
       return false;
@@ -138,7 +138,7 @@ bool ROOT::Experimental::RAttributesVisitor::IsValueEqual(const std::string &nam
 
    const auto *prnt = this;
    while (prnt && use_style) {
-      if (auto observe = const_cast<RAttributesVisitor*> (prnt)->fStyle.lock()) {
+      if (auto observe = const_cast<RAttrBase*> (prnt)->fStyle.lock()) {
          value2 = observe->Eval(fAttr->type, fAttr->user_class, fullname);
          if (value2) return value2->IsEqual(value);
       }
@@ -151,7 +151,7 @@ bool ROOT::Experimental::RAttributesVisitor::IsValueEqual(const std::string &nam
 ///////////////////////////////////////////////////////////////////////////////
 /// Copy attributes into target object
 
-void ROOT::Experimental::RAttributesVisitor::CopyTo(RAttributesVisitor &tgt, bool use_style) const
+void ROOT::Experimental::RAttrBase::CopyTo(RAttrBase &tgt, bool use_style) const
 {
    if (GetAttr())
       for (const auto &entry : GetDefaults()) {
@@ -175,7 +175,7 @@ void ROOT::Experimental::RAttributesVisitor::CopyTo(RAttributesVisitor &tgt, boo
 ///////////////////////////////////////////////////////////////////////////////
 /// Check if all values which are evaluated in this object are exactly the same as in tgt object
 
-bool ROOT::Experimental::RAttributesVisitor::IsSame(const RAttributesVisitor &tgt, bool use_style) const
+bool ROOT::Experimental::RAttrBase::IsSame(const RAttrBase &tgt, bool use_style) const
 {
    if (GetAttr())
       for (const auto &entry : GetDefaults()) {
@@ -190,7 +190,7 @@ bool ROOT::Experimental::RAttributesVisitor::IsSame(const RAttributesVisitor &tg
 
          const auto *prnt = this;
          while (prnt && use_style) {
-            if (auto observe = const_cast<RAttributesVisitor *>(prnt)->fStyle.lock()) {
+            if (auto observe = const_cast<RAttrBase *>(prnt)->fStyle.lock()) {
                rec = observe->Eval(fAttr->type, fAttr->user_class, fullname);
                if (rec) {
                   if (!tgt.IsValueEqual(entry.first, rec, use_style)) return false;
@@ -208,7 +208,7 @@ bool ROOT::Experimental::RAttributesVisitor::IsSame(const RAttributesVisitor &tg
 /// Semantic copy attributes from other object
 /// Search in the container all attributes which match source prefix and copy them
 
-void ROOT::Experimental::RAttributesVisitor::SemanticCopy(const RAttributesVisitor &src)
+void ROOT::Experimental::RAttrBase::SemanticCopy(const RAttrBase &src)
 {
    if (!src.GetAttr()) return;
 
@@ -230,17 +230,17 @@ void ROOT::Experimental::RAttributesVisitor::SemanticCopy(const RAttributesVisit
 /// Access attributes container
 /// If pointer not yet assigned, try to find it in parents of just allocate if force flag is specified
 
-bool ROOT::Experimental::RAttributesVisitor::GetAttr() const
+bool ROOT::Experimental::RAttrBase::GetAttr() const
 {
    if (fAttr)
       return true;
 
-   const RAttributesVisitor *prnt = fParent;
+   const RAttrBase *prnt = fParent;
    auto prefix = fPrefix;
    while (prnt) {
       if (prnt->fAttr) {
-         const_cast<RAttributesVisitor*>(this)->fAttr = prnt->fAttr;
-         const_cast<RAttributesVisitor*>(this)->fPrefix = prnt->fPrefix + prefix;
+         const_cast<RAttrBase*>(this)->fAttr = prnt->fAttr;
+         const_cast<RAttrBase*>(this)->fPrefix = prnt->fPrefix + prefix;
          return true;
       }
       prefix = prnt->fPrefix + prefix;
@@ -254,16 +254,16 @@ bool ROOT::Experimental::RAttributesVisitor::GetAttr() const
 /// Ensure that attributes container exists
 /// If not exists before, created for very most parent
 
-bool ROOT::Experimental::RAttributesVisitor::EnsureAttr()
+bool ROOT::Experimental::RAttrBase::EnsureAttr()
 {
    if (fAttr)
       return true;
 
-   const RAttributesVisitor *prnt = fParent;
+   const RAttrBase *prnt = fParent;
    auto prefix = fPrefix;
    while (prnt) {
       if (!prnt->fParent && !prnt->fAttr)
-         const_cast<RAttributesVisitor *>(prnt)->CreateOwnAttr();
+         const_cast<RAttrBase *>(prnt)->CreateOwnAttr();
       if (prnt->fAttr) {
          fAttr = prnt->fAttr;
          fPrefix = prnt->fPrefix + prefix;
@@ -282,37 +282,37 @@ bool ROOT::Experimental::RAttributesVisitor::EnsureAttr()
 ///////////////////////////////////////////////////////////////////////////////
 /// Return value from attributes container - no style or defaults are used
 
-void ROOT::Experimental::RAttributesVisitor::ClearValue(const std::string &name)
+void ROOT::Experimental::RAttrBase::ClearValue(const std::string &name)
 {
    if (GetAttr())
       fAttr->map.Clear(GetFullName(name));
 }
 
-void ROOT::Experimental::RAttributesVisitor::SetValue(const std::string &name, int value)
+void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, int value)
 {
    if (EnsureAttr())
       fAttr->map.AddInt(GetFullName(name), value);
 }
 
-void ROOT::Experimental::RAttributesVisitor::SetValue(const std::string &name, double value)
+void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, double value)
 {
    if (EnsureAttr())
       fAttr->map.AddDouble(GetFullName(name), value);
 }
 
-double *ROOT::Experimental::RAttributesVisitor::GetDoublePtr(const std::string &name) const
+double *ROOT::Experimental::RAttrBase::GetDoublePtr(const std::string &name) const
 {
    return GetAttr() ? fAttr->map.GetDoublePtr(GetFullName(name)) : nullptr;
 }
 
-void ROOT::Experimental::RAttributesVisitor::SetValue(const std::string &name, const std::string &value)
+void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, const std::string &value)
 {
    if (EnsureAttr())
       fAttr->map.AddString(GetFullName(name), value);
 }
 
 /** Clear all respective values from drawable. Only defaults can be used */
-void ROOT::Experimental::RAttributesVisitor::Clear()
+void ROOT::Experimental::RAttrBase::Clear()
 {
    if (GetAttr())
       for (const auto &entry : GetDefaults())

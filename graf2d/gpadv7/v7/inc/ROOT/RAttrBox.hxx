@@ -28,21 +28,21 @@ namespace Experimental {
 /** class ROOT::Experimental::RAttrBox
  Drawing attributes for a box: rectangular lines with size and position.
  */
-class RAttrBox : public RAttributesVisitor {
+class RAttrBox : public RAttrBase {
 
    RAttrLine fBorder{this, "border_"};       ///<!
    RAttrFill fFill{this, "fill_"};           ///<!
 
 protected:
-   const RDrawableAttributes::Map_t &GetDefaults() const override
+   const RDrawingAttr::Map_t &GetDefaults() const override
    {
-      static auto dflts = RDrawableAttributes::Map_t().AddDefaults(fBorder).AddDefaults(fFill);
+      static auto dflts = RDrawingAttr::Map_t().AddDefaults(fBorder).AddDefaults(fFill);
       return dflts;
    }
 
 public:
 
-   using RAttributesVisitor::RAttributesVisitor;
+   using RAttrBase::RAttrBase;
 
    RAttrBox(const RAttrBox &src) : RAttrBox() { src.CopyTo(*this); }
    RAttrBox &operator=(const RAttrBox &src) { Clear(); src.CopyTo(*this); return *this; }
