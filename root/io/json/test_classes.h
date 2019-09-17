@@ -933,6 +933,7 @@ public:
    std::map<int, TNamed> map2;
    std::vector<TNamed> vect1;
    std::vector<std::vector<std::vector<std::vector<int>>>> vvvv;
+   std::map<std::string, int> map_obj;  /// JSON_object
 
    TJsonEx13() = default;
    virtual ~TJsonEx13() {}
@@ -951,6 +952,8 @@ public:
          map2[n] = named;
          vect1.push_back(named);
          v.emplace_back(n);
+
+         map_obj[std::string("name") + std::to_string(n)] = n*11;
       }
 
       for (int n=0;n<cnt;++n)
