@@ -30,7 +30,9 @@ void ROOT::Experimental::Internal::RPadPainter::PaintDrawables(const RPadBase &p
 
    fPadDisplayItem->SetFrame(pad.GetFrame());
 
-   for (auto &&drawable : pad.GetPrimitives()) {
+   auto primitives = pad.GetPrimitives();
+
+   for (auto &drawable : primitives) {
 
       fCurrentDrawableId = drawable->GetId();
 
