@@ -104,7 +104,8 @@ void ROOT::Experimental::RAttributesVisitor::CreateOwnAttr()
 
 bool ROOT::Experimental::RAttributesVisitor::CopyValue(const std::string &name, const RDrawableAttributes::Value_t *value, bool check_type)
 {
-   if (!value) return false;
+   if (!value)
+      return false;
 
    if (check_type) {
       const auto *dvalue = GetDefaults().Find(name);
@@ -178,27 +179,24 @@ bool ROOT::Experimental::RAttributesVisitor::IsSame(const RAttributesVisitor &tg
       for (const auto &entry : GetDefaults()) {
 
          auto fullname = GetFullName(entry.first);
-
          auto rec = fAttr->map.Find(fullname);
+
          if (rec) {
             if (!tgt.IsValueEqual(entry.first, rec, use_style)) return false;
             continue;
          }
 
          const auto *prnt = this;
-         bool resolved = false;
          while (prnt && use_style) {
             if (auto observe = const_cast<RAttributesVisitor *>(prnt)->fStyle.lock()) {
                rec = observe->Eval(fAttr->type, fAttr->user_class, fullname);
                if (rec) {
                   if (!tgt.IsValueEqual(entry.first, rec, use_style)) return false;
-                  resolved = true;
                   break;
                }
             }
             prnt = prnt->fParent;
          }
-         if (!resolved) return false;
       }
    return true;
 }
@@ -235,7 +233,7 @@ bool ROOT::Experimental::RAttributesVisitor::GetAttr() const
    if (fAttr)
       return true;
 
-   auto prnt = fParent;
+   const RAttributesVisitor *prnt = fParent;
    auto prefix = fPrefix;
    while (prnt) {
       if (prnt->fAttr) {
@@ -259,11 +257,11 @@ bool ROOT::Experimental::RAttributesVisitor::EnsureAttr()
    if (fAttr)
       return true;
 
-   auto prnt = fParent;
+   const RAttributesVisitor *prnt = fParent;
    auto prefix = fPrefix;
    while (prnt) {
       if (!prnt->fParent && !prnt->fAttr)
-         prnt->CreateOwnAttr();
+         const_cast<RAttributesVisitor *>(prnt)->CreateOwnAttr();
       if (prnt->fAttr) {
          fAttr = prnt->fAttr;
          fPrefix = prnt->fPrefix + prefix;

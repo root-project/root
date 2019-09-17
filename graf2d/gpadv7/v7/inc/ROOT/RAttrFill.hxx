@@ -41,6 +41,9 @@ public:
 
    using RAttributesVisitor::RAttributesVisitor;
 
+   RAttrFill(const RAttrFill &src) : RAttrFill() { src.CopyTo(*this); }
+   RAttrFill &operator=(const RAttrFill &src) { Clear(); src.CopyTo(*this); return *this; }
+
    ///The fill style
    RAttrFill &SetStyle(int style) { SetValue("style", style); return *this; }
    int GetStyle() const { return GetValue<int>("style"); }

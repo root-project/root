@@ -44,6 +44,9 @@ public:
 
    using RAttributesVisitor::RAttributesVisitor;
 
+   RAttrText(const RAttrText &src) : RAttrText() { src.CopyTo(*this); }
+   RAttrText &operator=(const RAttrText &src) { Clear(); src.CopyTo(*this); return *this; }
+
    ///The text size
    RAttrText &SetSize(double width) { SetValue("size", width); return *this; }
    double GetSize() const { return GetValue<double>("size"); }

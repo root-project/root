@@ -40,6 +40,9 @@ protected:
 public:
    using RAttributesVisitor::RAttributesVisitor;
 
+   RAttrMarker(const RAttrMarker &src) : RAttrMarker() { src.CopyTo(*this); }
+   RAttrMarker &operator=(const RAttrMarker &src) { Clear(); src.CopyTo(*this); return *this; }
+
    RAttrMarker &SetColor(const RColor &color) { fColor = color; return *this; }
    const RColor &Color() const { return fColor; }
    RColor &Color() { return fColor; }
