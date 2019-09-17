@@ -82,6 +82,7 @@ module "std" [system] {
     header "csignal"
   }
   module "cstdalign" {
+    requires !cplusplus17, !header_existence
     export *
     header "cstdalign"
   }
