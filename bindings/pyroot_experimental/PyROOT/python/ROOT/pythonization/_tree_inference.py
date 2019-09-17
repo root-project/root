@@ -12,23 +12,30 @@ from ROOT import pythonization
 import cppyy
 
 
-def SaveXGBoost(self, xgb_model, key_name, output_path, tmp_path = "/tmp", threshold_dtype="float"):
-    # Extract parameters from the model object
-    max_depth = xgb_model.max_depth
-    num_inputs = xgb_model._features_count
+def SaveXGBoost(self, xgb_model, key_name, output_path,
+        num_inputs = None, tmp_path = "/tmp", threshold_dtype="float"):
+    # Extract objective
     objective_map = {
             "multi:softprob": "softmax", # Naming the objective softmax is more common today
             "binary:logistic": "logistic",
+            "reg:linear": "identity",
             }
     model_objective = xgb_model.objective
-    num_outputs = xgb_model.n_classes_
-    if "binary:" in model_objective:
-        if num_outputs == 2:
-            num_outputs = 1
     if not model_objective in objective_map:
         raise Exception('XGBoost model has unsupported objective "{}". Supported objectives are {}.'.format(
             model_objective, objective_map.keys()))
     objective = cppyy.gbl.std.string(objective_map[model_objective])
+
+    # Extract max depth of the trees
+    max_depth = xgb_model.max_depth
+
+    # Determine number of outputs
+    if "reg:" in model_objective:
+        num_outputs = 1
+    elif "binary:" in model_objective:
+        num_outputs = 1
+    else:
+        num_outputs = xgb_model.n_classes_
 
     # Dump XGB model to the tmp folder as json file
     import os
@@ -36,10 +43,17 @@ def SaveXGBoost(self, xgb_model, key_name, output_path, tmp_path = "/tmp", thres
     tmp_path = os.path.join(tmp_path, str(uuid.uuid4()) + ".json")
     xgb_model.get_booster().dump_model(tmp_path, dump_format="json")
 
-    # Extract parameters from json and write to arrays
     import json
     forest = json.load(open(tmp_path, "r"))
+
+    # Determine whether the model has a bias paramter and write bias trees
+    if hasattr(xgb_model, "base_score") and "reg:" in model_objective:
+        bias = xgb_model.base_score
+        if not bias == 0.0:
+            forest += [{"leaf": bias}] * num_outputs
     #print(str(forest).replace("u'", "'").replace("'", '"'))
+
+    # Extract parameters from json and write to arrays
     num_trees = len(forest)
     len_inputs = 2**max_depth - 1
     inputs = cppyy.gbl.std.vector["int"](len_inputs * num_trees, -1)
@@ -77,6 +91,14 @@ def SaveXGBoost(self, xgb_model, key_name, output_path, tmp_path = "/tmp", thres
     if num_outputs != 1:
         for i in range(num_trees):
             outputs[i] = int(i % num_outputs)
+
+    # Determine number of input variables
+    if not num_inputs is None:
+        pass
+    elif hasattr(xgb_model, "_features_count"):
+        num_inputs = xgb_model._features_count
+    else:
+        raise Exception("Failed to get number of input variables from XGBoost model. Please provide the additional keyword argument 'num_inputs' to this function.")
 
     # Store arrays in a ROOT file in a folder with the given key name
     # TODO: Write single values as simple integers and not vectors.
