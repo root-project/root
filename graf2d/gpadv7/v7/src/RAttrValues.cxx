@@ -14,7 +14,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RDrawingAttr.hxx"
+#include "ROOT/RAttrValues.hxx"
 #include "ROOT/RAttrBase.hxx"
 
 #include "ROOT/RLogger.hxx"
