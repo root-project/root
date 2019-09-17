@@ -47,14 +47,14 @@
 #pragma link C++ class ROOT::Experimental::Internal::RIOShared<TObject>+;
 
 #pragma link C++ class ROOT::Experimental::RDrawable+;
-#pragma link C++ class ROOT::Experimental::RDrawableAttributes+;
-#pragma link C++ class ROOT::Experimental::RDrawableAttributes::Value_t+;
-#pragma link C++ class ROOT::Experimental::RDrawableAttributes::BoolValue_t+;
-#pragma link C++ class ROOT::Experimental::RDrawableAttributes::IntValue_t+;
-#pragma link C++ class ROOT::Experimental::RDrawableAttributes::DoubleValue_t+;
-#pragma link C++ class ROOT::Experimental::RDrawableAttributes::StringValue_t+;
-#pragma link C++ class ROOT::Experimental::RDrawableAttributes::Map_t+;
-#pragma link C++ class ROOT::Experimental::RAttributesVisitor+;
+#pragma link C++ class ROOT::Experimental::RDrawingAttr+;
+#pragma link C++ class ROOT::Experimental::RDrawingAttr::Value_t+;
+#pragma link C++ class ROOT::Experimental::RDrawingAttr::BoolValue_t+;
+#pragma link C++ class ROOT::Experimental::RDrawingAttr::IntValue_t+;
+#pragma link C++ class ROOT::Experimental::RDrawingAttr::DoubleValue_t+;
+#pragma link C++ class ROOT::Experimental::RDrawingAttr::StringValue_t+;
+#pragma link C++ class ROOT::Experimental::RDrawingAttr::Map_t+;
+#pragma link C++ class ROOT::Experimental::RAttrBase+;
 
 
 #pragma link C++ class ROOT::Experimental::RStyle+;

@@ -29,20 +29,20 @@ namespace Experimental {
  */
 
 
-class RAttrText : public RAttributesVisitor {
+class RAttrText : public RAttrBase {
 
    RColor fColor{this, "color_"}; ///<! line color, will access container from line attributes
 
 protected:
-   const RDrawableAttributes::Map_t &GetDefaults() const override
+   const RDrawingAttr::Map_t &GetDefaults() const override
    {
-      static auto dflts = RDrawableAttributes::Map_t().AddDouble("size",12.).AddDouble("angle",0.).AddInt("align", 22).AddInt("font",41).AddDefaults(fColor);
+      static auto dflts = RDrawingAttr::Map_t().AddDouble("size",12.).AddDouble("angle",0.).AddInt("align", 22).AddInt("font",41).AddDefaults(fColor);
       return dflts;
    }
 
 public:
 
-   using RAttributesVisitor::RAttributesVisitor;
+   using RAttrBase::RAttrBase;
 
    RAttrText(const RAttrText &src) : RAttrText() { src.CopyTo(*this); }
    RAttrText &operator=(const RAttrText &src) { Clear(); src.CopyTo(*this); return *this; }

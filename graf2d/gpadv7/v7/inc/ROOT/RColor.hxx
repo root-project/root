@@ -28,12 +28,12 @@ namespace Experimental {
 // TODO: see also imagemagick's C++ interface for RColorOld operations!
 // https://www.imagemagick.org/api/magick++-classes.php
 
-class RColor : public RAttributesVisitor {
+class RColor : public RAttrBase {
 
 protected:
-   const RDrawableAttributes::Map_t &GetDefaults() const override
+   const RDrawingAttr::Map_t &GetDefaults() const override
    {
-      static auto dflts = RDrawableAttributes::Map_t().AddString("rgb","0,0,0").AddDouble("a",1.);
+      static auto dflts = RDrawingAttr::Map_t().AddString("rgb","0,0,0").AddDouble("a",1.);
       return dflts;
    }
 
@@ -41,7 +41,7 @@ public:
 
    using RGB_t = std::array<int, 3>;
 
-   using RAttributesVisitor::RAttributesVisitor;
+   using RAttrBase::RAttrBase;
 
    RColor(int r, int g, int b) : RColor() { SetRGB(r, g, b); }
 

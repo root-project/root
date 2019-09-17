@@ -6,20 +6,20 @@
 
 using namespace ROOT::Experimental;
 
-class CustomAttrs : public RAttributesVisitor {
+class CustomAttrs : public RAttrBase {
    RAttrBox fAttrBox{this, "box_"};
    RAttrText fAttrText{this, "text_"};
 
 protected:
-   const RDrawableAttributes::Map_t &GetDefaults() const override
+   const RDrawingAttr::Map_t &GetDefaults() const override
    {
-      static auto dflts = RDrawableAttributes::Map_t().AddDefaults(fAttrBox).AddDefaults(fAttrText);
+      static auto dflts = RDrawingAttr::Map_t().AddDefaults(fAttrBox).AddDefaults(fAttrText);
       return dflts;
    }
 
 public:
 
-   using RAttributesVisitor::RAttributesVisitor;
+   using RAttrBase::RAttrBase;
 
    CustomAttrs(const CustomAttrs &src) : CustomAttrs() { src.CopyTo(*this); }
    CustomAttrs &operator=(const CustomAttrs &src) { Clear(); src.CopyTo(*this); return *this; }

@@ -33,7 +33,7 @@ namespace Experimental {
 class RMarker : public RDrawable {
 
    RPadPos fP;                                 ///< position
-   RDrawableAttributes fAttr{"marker"};        ///< attributes
+   RDrawingAttr fAttr{"marker"};        ///< attributes
    RAttrMarker fMarkerAttr{fAttr, "marker_"};  ///<! marker attributes
 
 public:

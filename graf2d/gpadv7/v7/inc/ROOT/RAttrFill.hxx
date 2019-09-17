@@ -26,20 +26,20 @@ namespace Experimental {
  Drawing line attributes for different objects.
  */
 
-class RAttrFill : public RAttributesVisitor {
+class RAttrFill : public RAttrBase {
 
    RColor fColor{this, "color_"}; ///<! line color, will access container from line attributes
 
 protected:
-   const RDrawableAttributes::Map_t &GetDefaults() const override
+   const RDrawingAttr::Map_t &GetDefaults() const override
    {
-      static auto dflts = RDrawableAttributes::Map_t().AddInt("style",1).AddDefaults(fColor);
+      static auto dflts = RDrawingAttr::Map_t().AddInt("style",1).AddDefaults(fColor);
       return dflts;
    }
 
 public:
 
-   using RAttributesVisitor::RAttributesVisitor;
+   using RAttrBase::RAttrBase;
 
    RAttrFill(const RAttrFill &src) : RAttrFill() { src.CopyTo(*this); }
    RAttrFill &operator=(const RAttrFill &src) { Clear(); src.CopyTo(*this); return *this; }
