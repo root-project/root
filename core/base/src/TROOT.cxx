@@ -1268,6 +1268,8 @@ void TROOT::EndOfProcessCleanups()
    fColors->Delete();
    fStyles->Delete();
 
+   TQObject::BlockAllSignals(kTRUE);
+
    if (gInterpreter) {
       gInterpreter->ShutDown();
    }
