@@ -65,7 +65,6 @@ TEST(IOTest, OneDOpts)
 
       if(canv2) {
          EXPECT_EQ(canv2->NumPrimitives(), 2u);
-         canv2->ResolveSharedPtrs();
          EXPECT_NE(canv2->GetPrimitive(0).get(), canv2->GetPrimitive(1).get());
          auto dr1 = std::dynamic_pointer_cast<RHistDrawable<1>>(canv2->GetPrimitive(0));
          auto dr2 = std::dynamic_pointer_cast<RHistDrawable<1>>(canv2->GetPrimitive(1));
