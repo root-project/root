@@ -481,13 +481,13 @@ TFitResultPtr TMultiGraph::Fit(const char *fname, Option_t *option, Option_t *, 
 {
    char *linear;
    linear= (char*)strstr(fname, "++");
-   if (linear) { 
+   if (linear) {
       TF1 f1(fname, fname, xmin, xmax);
       return Fit(&f1,option,"",xmin,xmax);
    }
    TF1 * f1 = (TF1*)gROOT->GetFunction(fname);
    if (!f1) { Printf("Unknown function: %s",fname); return -1; }
-   
+
    return Fit(f1,option,"",xmin,xmax);
 }
 
@@ -964,7 +964,7 @@ Int_t TMultiGraph::IsInside(Double_t x, Double_t y) const
 ///       may trigger the creation of `fHistogram`. If `fHistogram` still does not
 ///       exit but `hframe` does (if user called `TPad::DrawFrame`) the pointer to
 ///       `hframe` histogram is returned
-///    3. if after the two previous points if `fHistogram` still doesn't exist then
+///    3. after the two previous steps, if `fHistogram` still doesn't exist, then
 ///       it is created.
 
 TH1F *TMultiGraph::GetHistogram()
@@ -1111,6 +1111,13 @@ void TMultiGraph::Paint(Option_t *choptin)
    if (l) {
       chopt.ReplaceAll("PADS","");
       PaintPads(chopt.Data());
+      return;
+   }
+
+   char *lrx = (char*)strstr(chopt.Data(),"RX"); // Reverse graphs along X axis
+   char *lry = (char*)strstr(chopt.Data(),"RY"); // Reverse graphs along Y axis
+   if (lrx || lry) {
+      PaintReverse(chopt.Data());
       return;
    }
 
@@ -1458,6 +1465,40 @@ void TMultiGraph::PaintPolyLine3D(Option_t *option)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Paint all the graphs of this multigraph reverting values along X and/or Y axis.
+/// New graphs are created.
+
+void TMultiGraph::PaintReverse(Option_t *option)
+{
+   auto *h = GetHistogram();
+   TH1F *hg = nullptr;
+   TGraph *fg = nullptr;
+   if (!h) return;
+   TString mgopt = option;
+   mgopt.ToLower();
+
+   TIter next(fGraphs);
+   TGraph *g;
+   Bool_t first = kTRUE;
+   TString gopt;
+   while ((g = (TGraph*) next())) {
+      gopt = GetGraphDrawOption(g);
+      gopt.Append(mgopt);
+      if (first) {
+         fg = g;
+         hg = fg->GetHistogram();
+         fg->SetHistogram(h);
+         fg->Paint(gopt.Data());
+         first = kFALSE;
+      } else {
+         g->Paint(gopt.ReplaceAll("a","").Data());
+      }
+   }
+   if (fg) fg->SetHistogram(hg);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Print the list of graphs.
 
 void TMultiGraph::Print(Option_t *option) const
@@ -1548,6 +1589,7 @@ void TMultiGraph::SetMinimum(Double_t minimum)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get iterator over internal graphs list.
+
 TIter TMultiGraph::begin() const
 {
   return TIter(fGraphs);
