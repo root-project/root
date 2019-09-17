@@ -1114,8 +1114,8 @@ void TMultiGraph::Paint(Option_t *choptin)
       return;
    }
 
-   char *lrx = (char*)strstr(chopt.Data(),"RX"); // Reverse graphs along X axis
-   char *lry = (char*)strstr(chopt.Data(),"RY"); // Reverse graphs along Y axis
+   char *lrx = (char *)strstr(chopt.Data(), "RX"); // Reverse graphs along X axis
+   char *lry = (char *)strstr(chopt.Data(), "RY"); // Reverse graphs along Y axis
    if (lrx || lry) {
       PaintReverse(chopt.Data());
       return;
@@ -1473,7 +1473,8 @@ void TMultiGraph::PaintReverse(Option_t *option)
    auto *h = GetHistogram();
    TH1F *hg = nullptr;
    TGraph *fg = nullptr;
-   if (!h) return;
+   if (!h)
+      return;
    TString mgopt = option;
    mgopt.ToLower();
 
@@ -1481,7 +1482,7 @@ void TMultiGraph::PaintReverse(Option_t *option)
    TGraph *g;
    Bool_t first = kTRUE;
    TString gopt;
-   while ((g = (TGraph*) next())) {
+   while ((g = (TGraph *)next())) {
       gopt = GetGraphDrawOption(g);
       gopt.Append(mgopt);
       if (first) {
@@ -1491,10 +1492,11 @@ void TMultiGraph::PaintReverse(Option_t *option)
          fg->Paint(gopt.Data());
          first = kFALSE;
       } else {
-         g->Paint(gopt.ReplaceAll("a","").Data());
+         g->Paint(gopt.ReplaceAll("a", "").Data());
       }
    }
-   if (fg) fg->SetHistogram(hg);
+   if (fg)
+      fg->SetHistogram(hg);
 }
 
 
