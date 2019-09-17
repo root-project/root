@@ -45,38 +45,12 @@ public:
    std::string GetObjectID() const { return fObjectID; }
 };
 
-// direct pointer to some object without ownership
-
-template <class T>
-class ROrdinaryDisplayItem : public RDisplayItem {
-protected:
-   const T *fObject{nullptr}; ///<  direct pointer without ownership
-
-public:
-   ROrdinaryDisplayItem(const T *addr) : RDisplayItem(), fObject(addr) {}
-
-   const T *GetObject() const { return fObject; }
-};
-
-// unique pointer of specified class with ownership
-
-template <class T>
-class RUniqueDisplayItem : public RDisplayItem {
-protected:
-   std::unique_ptr<T> fObject;
-
-public:
-   RUniqueDisplayItem(T *addr) : RDisplayItem(), fObject(addr) {}
-
-   T *GetObject() const { return fObject.get(); }
-};
-
 // created from plain drawable without need of extra parameters
 
 class RDrawableDisplayItem : public RDisplayItem {
 protected:
 
-   const RDrawable *fDrawable{nullptr};                      ///< drawable
+   const RDrawable *fDrawable{nullptr};        ///< drawable
 
 public:
 
