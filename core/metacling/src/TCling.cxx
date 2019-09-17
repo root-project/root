@@ -3675,8 +3675,20 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
 {
    // We are shutting down, there is no point in reloading, it only triggers
    // redundant deserializations.
-   if (fCxxModulesEnabled && reload && fIsShuttingDown)
+   if (fIsShuttingDown) {
+      // Remove the decl_id from the DeclIdToTClass map
+      if (cl->fClassInfo) {
+         R__LOCKGUARD(gInterpreterMutex);
+         TClingClassInfo* TClinginfo = (TClingClassInfo*) cl->fClassInfo;
+         // Test again as another thread may have set fClassInfo to nullptr.
+         if (TClinginfo) {
+            TClass::RemoveClassDeclId(TClinginfo->GetDeclId());
+         }
+         delete TClinginfo;
+         cl->fClassInfo = nullptr;
+      }
       return;
+   }
 
    R__LOCKGUARD(gInterpreterMutex);
    if (cl->fClassInfo && !reload) {

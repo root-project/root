@@ -1250,7 +1250,7 @@ void TROOT::EndOfProcessCleanups()
    CloseFiles();
 
    if (gInterpreter) {
-      gInterpreter->ShutDown();
+      gInterpreter->ResetGlobals();
    }
 
    // Now delete the objects 'held' by the TFiles so that it
@@ -1267,6 +1267,10 @@ void TROOT::EndOfProcessCleanups()
    fCanvases->Delete("slow");
    fColors->Delete();
    fStyles->Delete();
+
+   if (gInterpreter) {
+      gInterpreter->ShutDown();
+   }
 }
 
 
