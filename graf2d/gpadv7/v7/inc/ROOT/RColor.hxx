@@ -41,24 +41,20 @@ public:
 
    using RGB_t = std::array<int, 3>;
 
-
    using RAttributesVisitor::RAttributesVisitor;
 
-   RColor(int r, int g, int b) : RColor()
-   {
-      SetRGB(r,g,b);
-   }
+   RColor(int r, int g, int b) : RColor() { SetRGB(r, g, b); }
 
    RColor(int r, int g, int b, double alfa) : RColor()
    {
-      SetRGB(r,g,b);
+      SetRGB(r, g, b);
       SetAlpha(alfa);
    }
 
-   RColor(const RGB_t &rgb) : RColor()
-   {
-      SetRGB(rgb[0],rgb[1],rgb[2]);
-   }
+   RColor(const RGB_t &rgb) : RColor() { SetRGB(rgb[0], rgb[1], rgb[2]); }
+
+   RColor(const RColor &src) : RColor() { src.CopyTo(*this); }
+   RColor &operator=(const RColor &src) { Clear(); src.CopyTo(*this); return *this; }
 
 
    std::string GetRGB() const { return GetValue<std::string>("rgb"); }
