@@ -358,8 +358,14 @@ module "std" [system] {
     header "vector"
   }
   module "codecvt" {
+    requires !header_existence
     export *
     header "codecvt"
+  }
+  module "cuchar" {
+    requires !header_existence
+    export *
+    header "cuchar"
   }
   //module "experimental/algorithm" {
   //  export *
