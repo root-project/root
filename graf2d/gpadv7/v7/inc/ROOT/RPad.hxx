@@ -105,8 +105,7 @@ public:
 
    unsigned NumPrimitives() const { return fPrimitives.size(); }
 
-   template<class T = RDrawable>
-   std::shared_ptr<T> GetPrimitive(unsigned num) const
+   std::shared_ptr<RDrawable> GetPrimitive(unsigned num) const
    {
       if (num >= fPrimitives.size()) return nullptr;
       return fPrimitives[num].get_shared();
