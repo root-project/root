@@ -2482,8 +2482,6 @@
       return res;
    }
 
-
-
    /** Scan visible nodes in hierarchy, starting from nodeid
      * Each entry in hierarchy get its unique id, which is not changed with visibility flags
      * @private */
@@ -2949,9 +2947,10 @@
       if (this.plain_shape)
          return { lst: [ { nodeid: 0, seqid: 0, stack: [], factor: 1, shapeid: 0, server_shape: this.plain_shape } ], complete: true };
 
-      var total = 0, arg = {
+      var arg = {
          facecnt: 0,
          viscnt: new Array(this.nodes.length), // counter for each node
+         vislvl: this.GetVisLevel(),
          reset: function() {
             this.total = 0;
             this.facecnt = 0;
@@ -2966,12 +2965,10 @@
          }
       };
 
-      arg.vislvl = this.GetVisLevel();
-
       arg.reset();
-      total = this.ScanVisible(arg);
 
-      var maxnumnodes = this.GetMaxVisNodes();
+      var total = this.ScanVisible(arg),
+          maxnumnodes = this.GetMaxVisNodes();
 
       if (maxnumnodes > 0) {
          while ((total > maxnumnodes) && (arg.vislvl > 1)) {

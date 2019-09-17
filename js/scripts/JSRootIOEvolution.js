@@ -971,7 +971,7 @@
             if (!sum_total) sum_total = 1;
 
             var progress_offest = sum1/sum_total, progress_this = (sum2-sum1)/sum_total;
-            xhr.addEventListener("progress", function updateProgress(oEvent) {
+            xhr.addEventListener("progress", function(oEvent) {
                if (oEvent.lengthComputable)
                   progress_callback(progress_offest + progress_this*oEvent.loaded/oEvent.total);
             });
