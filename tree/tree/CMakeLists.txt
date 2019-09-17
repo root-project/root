@@ -62,8 +62,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Tree
     TVirtualIndex.h
     TVirtualTreePlayer.h
     ROOT/TIOFeatures.hxx
-    ROOT/TBulkBranchRead.hxx
-    ROOT/TBulkBranchRead.icc
   SOURCES
     src/TBasket.cxx
     src/TBasketSQL.cxx

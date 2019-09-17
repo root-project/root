@@ -47,7 +47,6 @@
 #include "TVirtualPerfStats.h"
 
 #include "TBranchIMTHelper.h"
-#include "ROOT/TBulkBranchRead.hxx"
 
 #include "ROOT/TIOFeatures.hxx"
 

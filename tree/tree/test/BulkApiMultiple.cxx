@@ -9,7 +9,6 @@
 #include "TTreeReaderValue.h"
 #include "ROOT/TTreeReaderFast.hxx"
 #include "ROOT/TTreeReaderValueFast.hxx"
-#include "ROOT/TBulkBranchRead.hxx"
 
 #include "gtest/gtest.h"
 

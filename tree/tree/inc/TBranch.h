@@ -60,6 +60,33 @@ const Int_t kBranchObject = BIT(12); // branch is a TObject*
 const Int_t kBranchAny    = BIT(17); // branch is an object*
 const Int_t kMapObject    = kBranchObject | kBranchAny;
 
+namespace ROOT {
+namespace Experimental {
+namespace Internal {
+
+///\class TBulkBranchRead
+/// Helper class for reading many branch entries at once to optimize throughput.
+class TBulkBranchRead {
+
+   friend class ::TBranch;
+
+public:
+   Int_t GetBulkEntries(Long64_t evt, TBuffer &user_buf);
+   Int_t GetEntriesSerialized(Long64_t evt, TBuffer &user_buf);
+   Int_t GetEntriesSerialized(Long64_t evt, TBuffer &user_buf, TBuffer *count_buf);
+   Bool_t SupportsBulkRead() const;
+
+private:
+   TBulkBranchRead(TBranch &parent)
+      : fParent(parent)
+   {}
+
+   TBranch &fParent;
+};
+}
+}
+}
+
 class TBranch : public TNamed , public TAttFill {
    using TIOFeatures = ROOT::TIOFeatures;
 
@@ -279,6 +306,17 @@ inline Int_t TBranch::GetCompressionSettings() const
    return (fCompress < 0) ? -1 : fCompress;
 }
 
-#include "ROOT/TBulkBranchRead.icc"
+namespace ROOT {
+namespace Experimental {
+namespace Internal {
+
+inline Int_t  TBulkBranchRead::GetBulkEntries(Long64_t evt, TBuffer& user_buf) { return fParent.GetBulkEntries(evt, user_buf); }
+inline Int_t  TBulkBranchRead::GetEntriesSerialized(Long64_t evt, TBuffer& user_buf) { return fParent.GetEntriesSerialized(evt, user_buf); }
+inline Int_t  TBulkBranchRead::GetEntriesSerialized(Long64_t evt, TBuffer& user_buf, TBuffer* count_buf) { return fParent.GetEntriesSerialized(evt, user_buf, count_buf); }
+inline Bool_t TBulkBranchRead::SupportsBulkRead() const { return fParent.SupportsBulkRead(); }
+
+}  // Internal
+}  // Experimental
+}  // ROOT
 
 #endif
