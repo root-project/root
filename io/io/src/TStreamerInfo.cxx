@@ -39,6 +39,7 @@ element type.
 #include "TStreamerElement.h"
 #include "TClass.h"
 #include "TClassEdit.h"
+#include "TClassTable.h"
 #include "TDataMember.h"
 #include "TMethodCall.h"
 #include "TDataType.h"
@@ -1770,12 +1771,14 @@ void TStreamerInfo::BuildOld()
          if (element->IsA() == TStreamerBase::Class()) {
             TStreamerBase* base = (TStreamerBase*) element;
 #if defined(PROPER_IMPLEMEMANTION_OF_BASE_CLASS_RENAMING)
-            TClass* baseclass =  fClass->GetBaseClass( base->GetName() );
+            TClassRef baseclass =  fClass->GetBaseClass( base->GetName() );
 #else
             // Currently the base class renaming does not work, so we use the old
             // version of the code which essentially disable the next if(!baseclass ..
             // statement.
-            TClass* baseclass =  base->GetClassPointer();
+            // During the TStreamerElement's Init an emulated TClass might be replaced
+            // by one from the dictionary, we use a TClassRef to be informed of the change.
+            TClassRef baseclass =  base->GetClassPointer();
 #endif
 
             //------------------------------------------------------------------
@@ -5489,9 +5492,9 @@ void TStreamerInfo::Update(const TClass *oldcl, TClass *newcl)
 void TStreamerInfo::TCompInfo::Update(const TClass *oldcl, TClass *newcl)
 {
    if (fType != -1) {
-      if (fClass == oldcl)
+      if (fClass == oldcl || strcmp(fClassName, newcl->GetName()) == 0)
          fClass = newcl;
-      else if (fClass == 0)
+      else if (fClass == 0 && TClassTable::GetDict(fClassName))
          fClass = TClass::GetClass(fClassName);
    }
 }
