@@ -39,16 +39,18 @@ TEST(IOTest, OneDOpts)
    auto drawable2 = canv.Draw<RHistDrawable<1>>(h);
    drawable2->AttrLine().SetColor(RColor::kBlue);
 
-   std::shared_ptr<RDrawable> shared_1;
-   std::shared_ptr<RHistDrawable<1>> shared_2;
-
-   shared_1 = shared_2;
-//    shared_2 = shared_1;
-
    EXPECT_EQ(canv.NumPrimitives(), 2u);
    EXPECT_NE(canv.GetPrimitive(0).get(), canv.GetPrimitive(1).get());
-   //EXPECT_NE(canv.GetPrimitive<RHistDrawable<1>>(0).get(), nullptr);
-   //EXPECT_NE(canv.GetPrimitive<RHistDrawable<1>>(1).get(), nullptr);
+
+   auto pr1 = std::dynamic_pointer_cast<RHistDrawable<1>>(canv.GetPrimitive(0));
+   auto pr2 = std::dynamic_pointer_cast<RHistDrawable<1>>(canv.GetPrimitive(1));
+   EXPECT_NE(pr1.get(), nullptr);
+   EXPECT_NE(pr2.get(), nullptr);
+   if (pr1 && pr2) {
+      EXPECT_NE(pr1->GetHist().get(), nullptr);
+      EXPECT_NE(pr2->GetHist().get(), nullptr);
+      EXPECT_EQ(pr1->GetHist().get(), pr2->GetHist().get());
+   }
 
    {
       auto file = RFile::Recreate("IOTestOneDOpts.root");
@@ -65,8 +67,15 @@ TEST(IOTest, OneDOpts)
          EXPECT_EQ(canv2->NumPrimitives(), 2u);
          canv2->ResolveSharedPtrs();
          EXPECT_NE(canv2->GetPrimitive(0).get(), canv2->GetPrimitive(1).get());
-         //  EXPECT_NE(canv2->GetPrimitive<RHistDrawable<1>>(0).get(), nullptr);
-         //  EXPECT_NE(canv2->GetPrimitive<RHistDrawable<1>>(1).get(), nullptr);
+         auto dr1 = std::dynamic_pointer_cast<RHistDrawable<1>>(canv2->GetPrimitive(0));
+         auto dr2 = std::dynamic_pointer_cast<RHistDrawable<1>>(canv2->GetPrimitive(1));
+         EXPECT_NE(dr1.get(), nullptr);
+         EXPECT_NE(dr2.get(), nullptr);
+         if (dr1 && dr2) {
+            EXPECT_NE(dr1->GetHist().get(), nullptr);
+            EXPECT_NE(dr2->GetHist().get(), nullptr);
+            EXPECT_EQ(dr1->GetHist().get(), dr2->GetHist().get());
+         }
       }
 
       delete canv2;
