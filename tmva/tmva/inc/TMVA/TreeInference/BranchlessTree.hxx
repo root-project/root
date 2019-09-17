@@ -31,22 +31,22 @@ namespace Internal {
 /// Fill the empty nodes of a sparse tree recursively
 template <typename T>
 void RecursiveFill(int thisIndex, int lastIndex, int treeDepth, int maxTreeDepth, std::vector<T> &thresholds,
-                   std::vector<int> &features)
+                   std::vector<int> &inputs)
 {
    // If we are upstream of a leaf in a sparse branch, copy the last threshold value
    // and mark this node as a leaf again
-   if (features[lastIndex] == -1) {
+   if (inputs[lastIndex] == -1) {
       thresholds.at(thisIndex) = thresholds.at(lastIndex);
       // Don't access the feature vector in the last layer of the tree since we
-      // don't store these values in the features vector
+      // don't store these values in the inputs vector
       if (treeDepth < maxTreeDepth)
-         features.at(thisIndex) = -1;
+         inputs.at(thisIndex) = -1;
    }
 
    // Fill the children of this node if we are not in the final layer of the tree
    if (treeDepth < maxTreeDepth) {
-      Internal::RecursiveFill<T>(2 * thisIndex + 1, thisIndex, treeDepth + 1, maxTreeDepth, thresholds, features);
-      Internal::RecursiveFill<T>(2 * thisIndex + 2, thisIndex, treeDepth + 1, maxTreeDepth, thresholds, features);
+      Internal::RecursiveFill<T>(2 * thisIndex + 1, thisIndex, treeDepth + 1, maxTreeDepth, thresholds, inputs);
+      Internal::RecursiveFill<T>(2 * thisIndex + 2, thisIndex, treeDepth + 1, maxTreeDepth, thresholds, inputs);
    }
 }
 
@@ -60,7 +60,7 @@ template <typename T>
 struct BranchlessTree {
    int fTreeDepth;             ///< Depth of the tree
    std::vector<T> fThresholds; ///< Cut thresholds or scores if corresponding node is a leaf
-   std::vector<int> fFeatures; ///< Cut variables / features
+   std::vector<int> fInputs;   ///< Cut variables / inputs
 
    inline T Inference(const T *input);
    inline void FillSparse();
@@ -74,7 +74,7 @@ inline T BranchlessTree<T>::Inference(const T *input)
 {
    int index = 0;
    for (int level = 0; level < fTreeDepth; ++level) {
-      index = 2 * index + 1 + (input[fFeatures[index]] > fThresholds[index]);
+      index = 2 * index + 1 + (input[fInputs[index]] > fThresholds[index]);
    }
    return fThresholds[index];
 }
@@ -89,11 +89,11 @@ template <typename T>
 inline void BranchlessTree<T>::FillSparse()
 {
    // Fill threshold / leaf values recursively
-   Internal::RecursiveFill<T>(1, 0, 1, fTreeDepth, fThresholds, fFeatures);
-   Internal::RecursiveFill<T>(2, 0, 1, fTreeDepth, fThresholds, fFeatures);
+   Internal::RecursiveFill<T>(1, 0, 1, fTreeDepth, fThresholds, fInputs);
+   Internal::RecursiveFill<T>(2, 0, 1, fTreeDepth, fThresholds, fInputs);
 
    // Replace feature indices of -1 with 0
-   std::replace(fFeatures.begin(), fFeatures.end(), -1.0, 0.0);
+   std::replace(fInputs.begin(), fInputs.end(), -1.0, 0.0);
 }
 
 } // namespace Experimental

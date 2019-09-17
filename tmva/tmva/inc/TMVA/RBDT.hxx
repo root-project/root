@@ -21,7 +21,10 @@
 
 #include "TMVA/RTensor.hxx"
 #include "TMVA/TreeInference/Forest.hxx"
+#include "TFile.h"
 
+#include <vector>
+#include <string>
 #include <sstream> // std::stringstream
 
 namespace TMVA {
@@ -35,15 +38,33 @@ public:
    using Backend_t = Backend;
 
 private:
-   int fNumClasses;
-   Backend_t fBackend;
+   int fNumOutputs;
+   bool fNormalizeOutputs;
+   std::vector<Backend_t> fBackends;
 
 public:
-   /// Construct backend from model in ROOT file
+   /// Construct backends from model in ROOT file
    RBDT(const std::string &key, const std::string &filename)
    {
-      fBackend = Backend_t();
-      fBackend.Load(key, filename);
+      // Get number of output nodes of the forest
+      auto file = TFile::Open(filename.c_str(), "READ");
+      auto numOutputs = Internal::GetObjectSafe<std::vector<int>>(file, filename, key + "/num_outputs");
+      fNumOutputs = numOutputs->at(0);
+      delete numOutputs;
+
+      // Get objective and decide whether to normalize output nodes for example in the multiclass case
+      auto objective = Internal::GetObjectSafe<std::string>(file, filename, key + "/objective");
+      if (objective->compare("softmax") == 0)
+         fNormalizeOutputs = true;
+      else
+         fNormalizeOutputs = false;
+      delete objective;
+      file->Close();
+
+      // Initialize backends
+      fBackends = std::vector<Backend_t>(fNumOutputs);
+      for (int i = 0; i < fNumOutputs; i++)
+         fBackends[i].Load(key, filename, i);
    }
 
    /// Compute model prediction on a single event
@@ -53,33 +74,40 @@ public:
    template <typename Vector>
    Vector Compute(const Vector &x)
    {
-      // TODO: fNumClasses -> fNumOutputs?
-      // TODO: Implement multi-class
       Vector y;
-      y.resize(1);
-      fBackend.Inference(&x[0], 1, &y[0]);
+      y.resize(fNumOutputs);
+      for (int i = 0; i < fNumOutputs; i++)
+         fBackends[i].Inference(&x[0], 1, &y[i]);
+      if (fNormalizeOutputs) {
+         Value_t s = 0.0;
+         for (int i = 0; i < fNumOutputs; i++)
+            s += y[i];
+         for (int i = 0; i < fNumOutputs; i++)
+            y[i] /= s;
+      }
       return y;
    }
 
    /// Compute model prediction on a single event
-   std::vector<Value_t> Compute(const std::vector<Value_t> &x)
-   {
-      // TODO: fNumClasses -> fNumOutputs?
-      // TODO: Implement multi-class
-      std::vector<Value_t> y;
-      y.resize(1);
-      fBackend.Inference(&x[0], 1, &y[0]);
-      return y;
-   }
+   std::vector<Value_t> Compute(const std::vector<Value_t> &x) { return this->Compute<std::vector<Value_t>>(x); }
 
    /// Compute model prediction on input RTensor
    RTensor<Value_t> Compute(const RTensor<Value_t> &x)
    {
-      // TODO: Add inference for a batch of events
-      // TODO: Check that input tensor is row major
       const auto rows = x.GetShape()[0];
-      RTensor<Value_t> y({rows, 1});
-      fBackend.Inference(x.GetData(), rows, y.GetData());
+      RTensor<Value_t> y({rows, static_cast<std::size_t>(fNumOutputs)}, MemoryLayout::ColumnMajor);
+      for (int i = 0; i < fNumOutputs; i++)
+         fBackends[i].Inference(x.GetData(), rows, &y(0, i));
+      if (fNormalizeOutputs) {
+         Value_t s;
+         for (int i = 0; i < static_cast<int>(rows); i++) {
+            s = 0.0;
+            for (int j = 0; j < fNumOutputs; j++)
+               s += y(i, j);
+            for (int j = 0; j < fNumOutputs; j++)
+               y(i, j) /= s;
+         }
+      }
       return y;
    }
 };
