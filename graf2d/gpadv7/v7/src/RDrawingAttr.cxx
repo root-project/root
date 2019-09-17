@@ -88,6 +88,8 @@ std::string ROOT::Experimental::RAttributesVisitor::GetPrefixToParent() const
    return fPrefix.substr(fParent->fPrefix.length());
 }
 
+///////////////////////////////////////////////////////////////////////////////
+/// Create own attributes
 
 void ROOT::Experimental::RAttributesVisitor::CreateOwnAttr()
 {

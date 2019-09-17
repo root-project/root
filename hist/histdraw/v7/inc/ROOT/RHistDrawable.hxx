@@ -42,10 +42,10 @@ public:
    using HistImpl_t = Detail::RHistImplPrecisionAgnosticBase<DIMENSIONS>;
 
 private:
-   Internal::RIOShared<HistImpl_t> fHistImpl;
+   Internal::RIOShared<HistImpl_t> fHistImpl;  ///< I/O capable reference on histogram
 
-   RDrawableAttributes fAttr{"hist"};       ///< attributes
-   RAttrLine  fLineAttr{fAttr, "line_"};    ///<! line attributes
+   RDrawableAttributes fAttr{"hist"};          ///< attributes
+   RAttrLine  fLineAttr{fAttr, "line_"};       ///<! line attributes
 
 protected:
 
