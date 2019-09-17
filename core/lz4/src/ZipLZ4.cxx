@@ -21,6 +21,8 @@
 #include <lz4hc.h>
 #include <xxhash.h>
 
+#include <iostream>
+
 // Header consists of:
 // - 2 byte identifier "L4"
 // - 1 byte LZ4 version string.
@@ -89,6 +91,7 @@ void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *
 {
    // NOTE: We don't check that srcsize / tgtsize is reasonable or within the ROOT-imposed limits.
    // This is assumed to be handled by the upper layers.
+   printf("Uncompress, CompressedSize=%d, UncompressedSize=%d\n", (int)*srcsize, (int)*tgtsize);
 
    int LZ4_version = LZ4_versionNumber() / (100 * 100);
    *irep = 0;
@@ -129,6 +132,7 @@ void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *
    }
 
    *irep = returnStatus;
+   printf("irep=%d\n", *irep);
 }
 
 void R__zipLZ4BS(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
@@ -139,7 +143,10 @@ void R__zipLZ4BS(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, 
    }
 
    size_t elem_count = *srcsize / sizeof(float);
+   printf("Compress, UnCompressedSize=%d, CompressedSize=%d\n", (int)*srcsize, (int)*tgtsize);
    char *temp_buffer = (char *)malloc(*srcsize);
+   printf("Calling bshuf_bitshuffle, nmElements=%ld, elemSize=%d, blockSize=%d\n",
+                  elem_count, (int)sizeof(float), 0);
    int64_t result = bshuf_bitshuffle(src, temp_buffer, elem_count, sizeof(float), 0);
    if (result != *srcsize) {
       fprintf(stderr, "Bitshuffle failed: %ld\n", result);
@@ -169,20 +176,13 @@ void R__unzipLZ4BS(int * srcsize, unsigned char * src, int * tgtsize, unsigned c
 {
      // NOTE: We don't check that srcsize / tgtsize is reasonable or within the ROOT-imposed limits.
      // This is assumed to be handled by the upper layers.
+      printf("Uncompress, CompressedSize=%d, UncompressedSize=%d\n", (int)*srcsize, (int)*tgtsize);
 
-     int LZ4_version = LZ4_versionNumber() / (100 * 100);
      *irep = 0;
 
      if (R__unlikely(src[0] != 'L' || src[1] != '4' || src[2] != 'B')) {
         fprintf(stderr, "R__unzipLZ4BS: algorithm run against buffer with incorrect header (got %d%d%d; expected %d%d%d).\n",
                 src[0], src[1], src[2], 'L', '4', 'B');
-        return;
-     }
-
-     if (R__unlikely(src[2] != LZ4_version)) {
-        fprintf(stderr,
-                "R__unzipLZ4: This version of LZ4 is incompatible with the on-disk version (got %d; expected %d).\n",
-                src[2], LZ4_version);
         return;
      }
 
@@ -202,14 +202,13 @@ void R__unzipLZ4BS(int * srcsize, unsigned char * src, int * tgtsize, unsigned c
            "R__unzipLZ4: Buffer corruption error!  Calculated checksum %llu; checksum calculated in the file was %llu.\n",
            checksumResult, checksumFromFile);
         return;
-     }
-       size_t elem_count = *srcsize / sizeof(float);
-       char *temp_buffer = (char *)malloc(*tgtsize);
-       int returnStatus = bshuf_decompress_lz4((const char *)(&src[kHeaderSize]), (char *)(tgt), elem_count, sizeof(float), 0);
-       return;
-
-       //int returnStatus = LZ4_decompress_safe((char *)(&src[kHeaderSize]), (char *)(tgt), inputBufferSize, *tgtsize);
-
+     } 
+     size_t elem_count = *srcsize / sizeof(float);
+     printf("Calling bshuf_decompress_lz4, nmElements=%ld, elemSize=%d, blockSize=%d\n",
+               elem_count, (int)sizeof(float), 0);
+     int returnStatus = bshuf_decompress_lz4(&src[kHeaderSize], tgt, elem_count, sizeof(float), 0);
+     printf("Printing ReturnStatus for unzip_LZ4BS %d\n", returnStatus);
+   
      if (R__unlikely(returnStatus < 0)) {
         fprintf(stderr, "R__unzipLZ4: error in decompression around byte %d out of maximum %d.\n", -returnStatus,
                 *tgtsize);
@@ -217,4 +216,6 @@ void R__unzipLZ4BS(int * srcsize, unsigned char * src, int * tgtsize, unsigned c
      }
 
      *irep = returnStatus;
+     printf("irep=%d\n", *irep);
+
 }

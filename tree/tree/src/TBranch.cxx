@@ -2634,16 +2634,20 @@ void TBranch::SetCompressionSettings(Int_t settings)
        const char *leaf_type = leaf->GetTypeName();
        bool result = !strcmp(leaf_type, "UChar_t") ||
                      !strcmp(leaf_type, "Char_t") ||
+                     !strcmp(leaf_type, "Short_t") ||
+                     !strcmp(leaf_type, "UShort_t") ||
                      !strcmp(leaf_type, "Bool_t") ||
                      !strcmp(leaf_type, "Float_t") ||
+                     !strcmp(leaf_type, "Float16_t") ||
                      !strcmp(leaf_type, "Double_t") ||
+                     !strcmp(leaf_type, "Double32_t") ||
                      !strcmp(leaf_type, "Int_t") ||
                      !strcmp(leaf_type, "UInt_t") ||
                      !strcmp(leaf_type, "Long64_t") ||
                      !strcmp(leaf_type, "ULong64_t");
       if (result) {
           //printf("Converting compression algorithm to use BitShuffle.\n");
-          fCompress += (GetCompressionAlgorithm() == 2) ? 300 : 200; // Switch to LZMABS
+          fCompress += (GetCompressionAlgorithm() == 4) ? 504 : 101;
           settings = fCompress;
       }
    }

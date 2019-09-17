@@ -120,7 +120,7 @@ enum ECompressionAlgorithm {
    /// Deprecated name, do *not* use:
    kZSTD = RCompressionSetting::EAlgorithm::kZSTD,
    /// Deprecated name, do *not* use:
-   kUndefinedCompressionAlgorithm = RCompressionSetting::EAlgorithm::kUndefined
+   kUndefinedCompressionAlgorithm = RCompressionSetting::EAlgorithm::kUndefined,
    /// Use LZ4 + BitShuffle compression
    kLZ4BS = RCompressionSetting::EAlgorithm::kLZ4BS,
 };

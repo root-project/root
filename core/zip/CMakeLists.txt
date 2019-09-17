@@ -6,7 +6,6 @@
 
 find_package(ZLIB REQUIRED)
 
-
 ROOT_OBJECT_LIBRARY(Zip
   src/Bits.c
   src/ZDeflate.c
