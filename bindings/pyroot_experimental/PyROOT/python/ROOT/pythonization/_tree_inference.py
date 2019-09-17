@@ -15,12 +15,16 @@ import cppyy
 def SaveXGBoost(self, xgb_model, key_name, output_path, tmp_path = "/tmp", threshold_dtype="float"):
     # Extract parameters from the model object
     max_depth = xgb_model.max_depth
-    num_features = xgb_model._features_count
-    num_classes = xgb_model.n_classes_
+    num_inputs = xgb_model._features_count
     objective_map = {
+            "multi:softprob": "softmax", # Naming the objective softmax is more common today
             "binary:logistic": "logistic",
             }
     model_objective = xgb_model.objective
+    num_outputs = xgb_model.n_classes_
+    if "binary:" in model_objective:
+        if num_outputs == 2:
+            num_outputs = 1
     if not model_objective in objective_map:
         raise Exception('XGBoost model has unsupported objective "{}". Supported objectives are {}.'.format(
             model_objective, objective_map.keys()))
@@ -37,20 +41,20 @@ def SaveXGBoost(self, xgb_model, key_name, output_path, tmp_path = "/tmp", thres
     forest = json.load(open(tmp_path, "r"))
     #print(str(forest).replace("u'", "'").replace("'", '"'))
     num_trees = len(forest)
-    len_features = 2**max_depth - 1
-    features = cppyy.gbl.std.vector["int"](len_features * num_trees, -1)
+    len_inputs = 2**max_depth - 1
+    inputs = cppyy.gbl.std.vector["int"](len_inputs * num_trees, -1)
     len_thresholds = 2**(max_depth + 1) - 1
     thresholds = cppyy.gbl.std.vector[threshold_dtype](len_thresholds * num_trees)
 
-    def fill_arrays(node, index, features_base, thresholds_base):
+    def fill_arrays(node, index, inputs_base, thresholds_base):
         # Set leaf score as threshold value if this node is a leaf
         if "leaf" in node:
             thresholds[thresholds_base + index] = node["leaf"]
             return
 
-        # Set feature index
-        feature = int(node["split"].replace("f", ""))
-        features[features_base + index] = feature
+        # Set input index
+        input_ = int(node["split"].replace("f", ""))
+        inputs[inputs_base + index] = input_
 
         # Set threshold value
         thresholds[thresholds_base + index] = node["split_condition"]
@@ -62,28 +66,35 @@ def SaveXGBoost(self, xgb_model, key_name, output_path, tmp_path = "/tmp", thres
             yes, no = 0, 1
 
         # Fill values from the child nodes
-        fill_arrays(node["children"][no], 2 * index + 1, features_base, thresholds_base)
-        fill_arrays(node["children"][yes], 2 * index + 2, features_base, thresholds_base)
+        fill_arrays(node["children"][no], 2 * index + 1, inputs_base, thresholds_base)
+        fill_arrays(node["children"][yes], 2 * index + 2, inputs_base, thresholds_base)
 
     for i_tree, tree in enumerate(forest):
-        fill_arrays(tree, 0, len_features * i_tree, len_thresholds * i_tree)
+        fill_arrays(tree, 0, len_inputs * i_tree, len_thresholds * i_tree)
+
+    # Determine to which output node a tree belongs
+    outputs = cppyy.gbl.std.vector["int"](num_trees)
+    if num_outputs != 1:
+        for i in range(num_trees):
+            outputs[i] = int(i % num_outputs)
 
     # Store arrays in a ROOT file in a folder with the given key name
     # TODO: Write single values as simple integers and not vectors.
     f = cppyy.gbl.TFile(output_path, "RECREATE")
     f.mkdir(key_name)
     d = f.Get(key_name)
-    d.WriteObjectAny(features, "std::vector<int>", "features")
+    d.WriteObjectAny(inputs, "std::vector<int>", "inputs")
+    d.WriteObjectAny(outputs, "std::vector<int>", "outputs")
     d.WriteObjectAny(thresholds, "std::vector<" + threshold_dtype + ">", "thresholds")
     d.WriteObjectAny(objective, "std::string", "objective")
     max_depth_ = cppyy.gbl.std.vector["int"](1, max_depth)
     d.WriteObjectAny(max_depth_, "std::vector<int>", "max_depth")
     num_trees_ = cppyy.gbl.std.vector["int"](1, num_trees)
     d.WriteObjectAny(num_trees_, "std::vector<int>", "num_trees")
-    num_features_ = cppyy.gbl.std.vector["int"](1, num_features)
-    d.WriteObjectAny(num_features_, "std::vector<int>", "num_features")
-    num_classes_ = cppyy.gbl.std.vector["int"](1, num_classes)
-    d.WriteObjectAny(num_classes_, "std::vector<int>", "num_classes")
+    num_inputs_ = cppyy.gbl.std.vector["int"](1, num_inputs)
+    d.WriteObjectAny(num_inputs_, "std::vector<int>", "num_inputs")
+    num_outputs_ = cppyy.gbl.std.vector["int"](1, num_outputs)
+    d.WriteObjectAny(num_outputs_, "std::vector<int>", "num_outputs")
     f.Write()
     f.Close()
 

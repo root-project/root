@@ -43,6 +43,17 @@ inline T Identity(T value)
    return value;
 }
 
+/// Natural exponential function f(x) = exp(x)
+///
+/// This objective is used for the softmax objective in the multiclass
+/// case with the formula exp(x)/sum(exp(x)) and the vector x.
+template <typename T>
+inline T Exponential(T value)
+{
+   return std::exp(value);
+}
+
+/// Get function pointer to implementation from name given as string
 template <typename T>
 std::function<T(T)> GetFunction(const std::string &name)
 {
@@ -50,6 +61,8 @@ std::function<T(T)> GetFunction(const std::string &name)
       return std::function<T(T)>(Identity<T>);
    else if (name.compare("logistic") == 0)
       return std::function<T(T)>(Logistic<T>);
+   else if (name.compare("softmax") == 0)
+      return std::function<T(T)>(Exponential<T>);
    else
       throw std::runtime_error("Objective function with name \"" + name + "\" is not implemented.");
 }
