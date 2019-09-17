@@ -27,7 +27,7 @@
 
 ROOT::Experimental::RPadBase::~RPadBase() = default;
 
-void ROOT::Experimental::RPadBase::AssignUniqueID(std::shared_ptr<RDrawable> &ptr)
+void ROOT::Experimental::RPadBase::AssignUniqueID(RDrawable *ptr)
 {
    if (!ptr)
       return;
@@ -41,17 +41,17 @@ void ROOT::Experimental::RPadBase::AssignUniqueID(std::shared_ptr<RDrawable> &pt
    ptr->fId = canv->GenerateUniqueId();
 }
 
-std::shared_ptr<ROOT::Experimental::RDrawable> ROOT::Experimental::RPadBase::FindDrawable(const std::string &id) const
+std::shared_ptr<ROOT::Experimental::RDrawable> ROOT::Experimental::RPadBase::FindPrimitive(const std::string &id) const
 {
-   for (auto &drawable : GetPrimitives()) {
+   for (auto &drawable : fPrimitives) {
 
       if (drawable->GetId() == id)
-         return drawable;
+         return drawable.get_shared();
 
-      RPadBase *pad_draw = dynamic_cast<RPadBase *> (drawable.get());
+      const RPadBase *pad_draw = dynamic_cast<const RPadBase *> (drawable.get());
 
       if (pad_draw) {
-         auto subelem = pad_draw->FindDrawable(id);
+         auto subelem = pad_draw->FindPrimitive(id);
 
          if (subelem)
             return subelem;
@@ -195,8 +195,10 @@ void ROOT::Experimental::RPadBase::SetAllAxisBound(const std::vector<BoundKindAn
 
 void ROOT::Experimental::RPadBase::CollectShared(Internal::RIOSharedVector_t &vect)
 {
-   for (auto &dr : fPrimitives)
+   for (auto &dr : fPrimitives) {
+      vect.emplace_back(&dr);
       dr->CollectShared(vect);
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -230,5 +232,3 @@ void ROOT::Experimental::RPad::Paint(Internal::RPadPainter &toppad)
 
    toppad.AddDisplayItem(std::move(painter.fPadDisplayItem));
 }
-
-

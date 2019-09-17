@@ -125,7 +125,7 @@ private:
 
    std::string CreateSnapshot(const ROOT::Experimental::RCanvas &can);
 
-   std::shared_ptr<RDrawable> FindDrawable(const ROOT::Experimental::RCanvas &can, const std::string &id);
+   std::shared_ptr<RDrawable> FindPrimitive(const RCanvas &can, const std::string &id);
 
    void CreateWindow();
 
@@ -276,7 +276,7 @@ void ROOT::Experimental::TCanvasPainter::CheckDataToSend()
          buf.Append(":");
          buf.Append(cmd->fName);
       } else if (!conn.fGetMenu.empty()) {
-         auto drawable = FindDrawable(fCanvas, conn.fGetMenu);
+         auto drawable = FindPrimitive(fCanvas, conn.fGetMenu);
 
          R__DEBUG_HERE("CanvasPainter") << "Request menu for object " << conn.fGetMenu;
 
@@ -503,7 +503,7 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
       if ((pos != std::string::npos) && (pos > 0)) {
          std::string id(cdata, 0, pos);
          cdata.erase(0, pos + 1);
-         auto drawable = FindDrawable(fCanvas, id);
+         auto drawable = FindPrimitive(fCanvas, id);
          if (drawable && (cdata.length() > 0)) {
             R__DEBUG_HERE("CanvasPainter") << "execute " << cdata << " for drawable " << id;
             drawable->Execute(cdata);
@@ -647,7 +647,7 @@ std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Exper
 /// Used to communicate with the clients, which does not have any pointer
 
 std::shared_ptr<ROOT::Experimental::RDrawable>
-ROOT::Experimental::TCanvasPainter::FindDrawable(const ROOT::Experimental::RCanvas &can, const std::string &id)
+ROOT::Experimental::TCanvasPainter::FindPrimitive(const ROOT::Experimental::RCanvas &can, const std::string &id)
 {
    std::string search = id;
    size_t pos = search.find("#");
@@ -655,7 +655,7 @@ ROOT::Experimental::TCanvasPainter::FindDrawable(const ROOT::Experimental::RCanv
    if (pos != std::string::npos)
       search.resize(pos);
 
-   return can.FindDrawable(search);
+   return can.FindPrimitive(search);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

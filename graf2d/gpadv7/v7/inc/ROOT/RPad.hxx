@@ -38,12 +38,12 @@ class RCanvas;
   */
 
 class RPadBase : public RDrawable {
-public:
-   using Primitives_t = std::vector<std::shared_ptr<RDrawable>>;
-
 private:
    /// Content of the pad.
-   Primitives_t fPrimitives;
+
+   using Primitive_t = Internal::RIOShared<RDrawable>;
+
+   std::vector<Primitive_t> fPrimitives;
 
    /// RFrame with user coordinate system, if used by this pad.
    std::unique_ptr<RFrame> fFrame;
@@ -54,7 +54,7 @@ private:
    /// Disable assignment.
    RPadBase &operator=(const RPadBase &) = delete;
 
-   void AssignUniqueID(std::shared_ptr<RDrawable> &ptr);
+   void AssignUniqueID(RDrawable *ptr);
 
 protected:
    /// Allow derived classes to default construct a RPadBase.
@@ -65,6 +65,9 @@ protected:
    void CollectShared(Internal::RIOSharedVector_t &) override;
 
 public:
+
+   using Primitives_t = std::vector<std::shared_ptr<RDrawable>>;
+
    virtual ~RPadBase();
 
    /// Divide this pad into a grid of subpads with padding in between.
@@ -81,7 +84,7 @@ public:
 
       fPrimitives.emplace_back(res);
 
-      AssignUniqueID(fPrimitives.back());
+      AssignUniqueID(fPrimitives.back().get());
 
       return res;
    }
@@ -90,21 +93,36 @@ public:
    {
       fPrimitives.emplace_back(std::move(drawable));
 
-      AssignUniqueID(fPrimitives.back());
+      AssignUniqueID(fPrimitives.back().get());
 
-      return fPrimitives.back();
+      return fPrimitives.back().get_shared();
    }
 
-   auto NumPrimitives() const
+   unsigned NumPrimitives() const { return fPrimitives.size(); }
+
+   template<class T = RDrawable>
+   std::shared_ptr<T> GetPrimitive(unsigned num) const
    {
-      return fPrimitives.size();
+      if (num >= fPrimitives.size()) return nullptr;
+      return fPrimitives[num].get_shared();
+   }
+
+   std::shared_ptr<RDrawable> FindPrimitive(const std::string &id) const;
+
+   /// Get the elements contained in the canvas.
+   auto GetPrimitives() const
+   {
+      Primitives_t res;
+      for (auto &entry : fPrimitives)
+         res.emplace_back(entry.get_shared());
+      return res;
    }
 
    /// Remove an object from the list of primitives.
    bool Remove(const std::string &id)
    {
       auto iter = std::find_if(fPrimitives.begin(), fPrimitives.end(),
-         [&id](const std::shared_ptr<RDrawable>& drawable) { return drawable->GetId() == id; });
+         [&id](const Internal::RIOShared<RDrawable>& dr) { return dr->GetId() == id; });
       if (iter == fPrimitives.end())
          return false;
       iter->reset();
@@ -115,7 +133,7 @@ public:
    bool Remove(const std::shared_ptr<RDrawable> &drawable)
    {
       auto iter = std::find_if(fPrimitives.begin(), fPrimitives.end(),
-         [&drawable](const std::shared_ptr<RDrawable>& dr) { return drawable == dr; });
+         [&drawable](const Internal::RIOShared<RDrawable>& dr) { return drawable.get() == dr.get(); });
       if (iter == fPrimitives.end())
          return false;
       iter->reset();
@@ -131,8 +149,6 @@ public:
       return true;
 
    }
-
-   std::shared_ptr<RDrawable> FindDrawable(const std::string &id) const;
 
    /// Wipe the pad by clearing the list of primitives.
    void Wipe()
@@ -161,9 +177,6 @@ public:
    };
    void SetAllAxisBound(const std::vector<BoundKindAndValue> &vecBoundAndKind);
    void SetAllAxisAutoBounds();
-
-   /// Get the elements contained in the canvas.
-   const Primitives_t &GetPrimitives() const { return fPrimitives; }
 
    /// Convert a `Pixel` position to Canvas-normalized positions.
 //   virtual std::array<RPadLength::Normal, 2> PixelsToNormal(const std::array<RPadLength::Pixel, 2> &pos) const = 0;
