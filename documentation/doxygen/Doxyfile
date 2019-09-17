@@ -833,6 +833,7 @@ INPUT                  = . \
                          ../../gui/guihtml/ \
                          ../../gui/recorder/ \
                          ../../gui/sessionviewer/ \
+                         ../../gui/webdisplay \
                          ../../hist/ \
                          ../../html/ \
                          ../../io/dcache/ \
@@ -971,6 +972,7 @@ EXCLUDE_PATTERNS       = */G__* \
                          */win32gdk/gdk/* \
                          */bindings/pyroot/*.py \
                          makeimage.C \
+                         makerootfile.C \
                          libs.C \
                          filter.cxx \
                          *gl2ps* \
@@ -978,7 +980,7 @@ EXCLUDE_PATTERNS       = */G__* \
                          converttonotebook.py \
                          makeimage.py \
                          parallelNotebooks.py \
-                         LinkDef.h \
+                         LinkDef*.h \
                          */io/io/res/* \
                          */src/lexertk.hpp
 
@@ -2211,7 +2213,7 @@ INCLUDE_FILE_PATTERNS  =
 # recursively expanded use the := operator instead of the = operator.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-PREDEFINED             = ClassDef(x,y)=// \
+PREDEFINED             = "ClassDef(x,y)=//" \
                          ClassImp(x)=// \
                          ClassImpQ(x)=// \
                          templateClassImp(x)=// \
