@@ -16,7 +16,7 @@
 #ifndef ROOT7_RAttrBase
 #define ROOT7_RAttrBase
 
-#include <ROOT/RDrawingAttr.hxx>
+#include <ROOT/RAttrValues.hxx>
 #include <ROOT/RStyle.hxx>
 
 namespace ROOT {
