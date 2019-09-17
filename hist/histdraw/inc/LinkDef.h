@@ -16,14 +16,15 @@
 
 // need to correctly generate dictionary for display items, used in v7 histpainter,
 // but currently histpainter does not creates dictionary at all
-#pragma extra_include "ROOT/RDisplayItem.hxx";
+// #pragma extra_include "ROOT/RDisplayItem.hxx";
+
+#pragma link C++ class ROOT::Experimental::Internal::RIOShared<ROOT::Experimental::Detail::RHistImplPrecisionAgnosticBase<1>>+;
+#pragma link C++ class ROOT::Experimental::Internal::RIOShared<ROOT::Experimental::Detail::RHistImplPrecisionAgnosticBase<2>>+;
+#pragma link C++ class ROOT::Experimental::Internal::RIOShared<ROOT::Experimental::Detail::RHistImplPrecisionAgnosticBase<3>>+;
 
 #pragma link C++ class ROOT::Experimental::RHistDrawable<1>+;
 #pragma link C++ class ROOT::Experimental::RHistDrawable<2>+;
 #pragma link C++ class ROOT::Experimental::RHistDrawable<3>+;
 
-#pragma link C++ class ROOT::Experimental::Internal::RIOShared<ROOT::Experimental::Detail::RHistImplPrecisionAgnosticBase<1>>+;
-#pragma link C++ class ROOT::Experimental::Internal::RIOShared<ROOT::Experimental::Detail::RHistImplPrecisionAgnosticBase<2>>+;
-#pragma link C++ class ROOT::Experimental::Internal::RIOShared<ROOT::Experimental::Detail::RHistImplPrecisionAgnosticBase<3>>+;
 
 #endif
