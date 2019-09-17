@@ -34,7 +34,7 @@ class RText : public RDrawable {
 
    std::string fText;                      ///< text to display
    RPadPos fPos;                           ///< position
-   RDrawableAttributes fAttr{"text"};      ///< attributes
+   RDrawingAttr fAttr{"text"};      ///< attributes
    RAttrText  fTextAttr{fAttr, "text_"};   ///<! text attributes
 
 public:
