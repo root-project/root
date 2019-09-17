@@ -62,6 +62,7 @@ public:
    RAttrLine &AttrLine() { return fLineAttr; }
    const RAttrLine &AttrLine() const { return fLineAttr; }
 
+   std::shared_ptr<HistImpl_t> GetHist() const { return fHistImpl.get_shared(); }
 
    void PopulateMenu(RMenuItems &) final
    {
