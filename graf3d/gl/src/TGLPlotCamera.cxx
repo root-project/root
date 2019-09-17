@@ -9,8 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 #include "TGLPlotCamera.h"
-#include "TGLIncludes.h"
+#include "TVirtualGL.h"
 #include "TGLUtil.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TGLPlotCamera
 \ingroup opengl

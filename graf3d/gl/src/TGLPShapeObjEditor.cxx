@@ -26,9 +26,14 @@
 #include "TGLUtil.h"
 #include "TGLPhysicalShape.h"
 #include "TGLWidget.h"
-#include "TGLIncludes.h"
 
 #include "Buttons.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TGLPShapeObjEditor
 \ingroup opengl

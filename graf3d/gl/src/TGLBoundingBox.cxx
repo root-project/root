@@ -11,8 +11,13 @@
 
 #include "Riostream.h"
 #include "TGLBoundingBox.h"
-#include "TGLIncludes.h"
 #include "TMathBase.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 using namespace std;
 

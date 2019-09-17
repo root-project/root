@@ -8,13 +8,17 @@
 #include "TGLCamera.h"
 #include "TGLSelectRecord.h"
 #include "TGLContext.h"
-#include "TGLIncludes.h"
 
 #include "TBuffer3D.h"
 #include "TClass.h"
 #include "TContextMenu.h"
 #include "TEnv.h"
 
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TGLLogicalShape
 \ingroup opengl

@@ -6,11 +6,16 @@
 
 #include <map>
 
-#include "TGLIncludes.h"
 #include "TGLWSIncludes.h"
 #include "TGLContext.h"
 #include "RConfigure.h"
 #include "GuiTypes.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 #ifdef WIN32
 

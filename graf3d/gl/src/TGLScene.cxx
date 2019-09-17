@@ -19,11 +19,16 @@
 #include "TGLPhysicalShape.h"
 #include "TGLCamera.h"
 #include "TGLContext.h"
-#include "TGLIncludes.h"
 
 #include <TColor.h>
 #include <TROOT.h>
 #include <TClass.h>
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 #include <algorithm>
 

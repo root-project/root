@@ -9,10 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TGLIncludes.h"
-
 #include "TGLPlotPainter.h"
 #include "TGLIsoMesh.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 namespace Rgl {
 

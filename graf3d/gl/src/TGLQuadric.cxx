@@ -9,8 +9,13 @@
  *************************************************************************/
 
 #include "TGLQuadric.h"
-#include "TGLIncludes.h"
 #include "TError.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TGLQuadric
 \ingroup opengl

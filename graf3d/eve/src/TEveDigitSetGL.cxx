@@ -14,7 +14,12 @@
 
 #include "TGLRnrCtx.h"
 #include "TGLSelectRecord.h"
-#include "TGLIncludes.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TEveDigitSetGL
 \ingroup TEve

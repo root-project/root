@@ -18,10 +18,15 @@
 #include "TGLRnrCtx.h"
 #include "TGLSelectRecord.h"
 #include "TGLPhysicalShape.h"
-#include "TGLIncludes.h"
 #include "TGLUtil.h"
 #include "TEveRGBAPalette.h"
 #include "TEveUtil.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TEveCalo3DGL
 \ingroup TEve

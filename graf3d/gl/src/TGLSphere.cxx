@@ -13,7 +13,6 @@
 #include "TGLSphere.h"
 #include "TGLRnrCtx.h"
 #include "TGLQuadric.h"
-#include "TGLIncludes.h"
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
@@ -21,6 +20,12 @@
 // For debug tracing
 #include "TClass.h"
 #include "TError.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TGLSphere
 \ingroup opengl

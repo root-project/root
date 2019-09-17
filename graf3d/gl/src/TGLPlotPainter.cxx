@@ -31,12 +31,17 @@
 
 #include "TGLPlotPainter.h"
 #include "TGLPlotCamera.h"
-#include "TGLIncludes.h"
 #include "TGLAdapter.h"
 #include "TGLOutput.h"
 #include "TGLUtil.h"
 #include "TGL5D.h"
 #include "gl2ps.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TGLPlotPainter
 \ingroup opengl

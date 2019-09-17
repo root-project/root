@@ -24,10 +24,16 @@
 
 #include "TColorGradient.h"
 #include "TGLPadPainter.h"
-#include "TGLIncludes.h"
 #include "TGLUtil.h"
 #include "TError.h"
 #include "TMath.h"
+
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 namespace {
 

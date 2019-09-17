@@ -12,10 +12,15 @@
 #include "TEveBoxSetGL.h"
 #include "TEveBoxSet.h"
 
-#include "TGLIncludes.h"
 #include "TGLRnrCtx.h"
 #include "TGLSelectRecord.h"
 #include "TGLQuadric.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TEveBoxSetGL
 \ingroup TEve

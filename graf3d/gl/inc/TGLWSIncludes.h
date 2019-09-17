@@ -15,7 +15,12 @@
 #ifndef ROOT_TGLWSIncludes
 
 #include "RConfigure.h"
-#include "TGLIncludes.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 #if defined(WIN32)
 #  include <GL/wglew.h>

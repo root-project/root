@@ -10,7 +10,6 @@
  *************************************************************************/
 
 #include "TGLViewer.h"
-#include "TGLIncludes.h"
 #include "TGLStopwatch.h"
 #include "TGLRnrCtx.h"
 #include "TGLSelectBuffer.h"
@@ -59,6 +58,12 @@
 #include "TImage.h"
 
 #include <stdexcept>
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 #ifndef GL_BGRA
 #define GL_BGRA GL_BGRA_EXT

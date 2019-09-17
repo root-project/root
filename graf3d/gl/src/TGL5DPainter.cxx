@@ -21,8 +21,13 @@
 #include "TGLPlotCamera.h"
 #include "TGL5DPainter.h"
 #include "TGLPadUtils.h"
-#include "TGLIncludes.h"
 #include "TGL5D.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TGL5DPainter
 \ingroup opengl

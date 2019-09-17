@@ -14,12 +14,17 @@
 #include "TEveProjectionManager.h"
 #include "THLimitsFinder.h"
 
-#include "TGLIncludes.h"
 #include "TGLRnrCtx.h"
 #include "TGLFontManager.h"
 #include "TGLCamera.h"
 
 #include "TMath.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TEveProjectionAxesGL
 \ingroup TEve

@@ -12,9 +12,14 @@
 #include "TEveStraightLineSetGL.h"
 #include "TEveStraightLineSet.h"
 
-#include "TGLIncludes.h"
 #include "TGLRnrCtx.h"
 #include "TGLSelectRecord.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TEveStraightLineSetGL
 \ingroup TEve

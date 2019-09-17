@@ -10,13 +10,18 @@
  *************************************************************************/
 
 #include "TGLClip.h"
-#include "TGLIncludes.h"
 #include "TGLRnrCtx.h"
 #include "TGLManipSet.h"
 
 #include "TGLFaceSet.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 namespace
 {

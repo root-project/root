@@ -13,7 +13,6 @@
 
 #include "TGLRnrCtx.h"
 #include "TGLCamera.h"
-#include "TGLIncludes.h"
 #include "TGLRnrCtx.h"
 #include "TGLFontManager.h"
 
@@ -24,6 +23,12 @@
 
 #include "TMath.h"
 #include "TPRegexp.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TGLAxisPainterBox
 \ingroup opengl

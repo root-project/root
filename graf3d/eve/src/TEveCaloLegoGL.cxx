@@ -14,7 +14,6 @@
 #include "THLimitsFinder.h"
 
 #include "TGLViewer.h"
-#include "TGLIncludes.h"
 #include "TGLPhysicalShape.h"
 #include "TGLRnrCtx.h"
 #include "TGLSelectRecord.h"
@@ -29,6 +28,12 @@
 #include "TEveCalo.h"
 #include "TEveManager.h"
 #include "TEveRGBAPalette.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 #include <algorithm>
 

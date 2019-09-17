@@ -13,9 +13,14 @@
 #include "TEveArrow.h"
 
 #include "TGLRnrCtx.h"
-#include "TGLIncludes.h"
 #include "TGLUtil.h"
 #include "TGLQuadric.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TEveArrowGL
 \ingroup TEve

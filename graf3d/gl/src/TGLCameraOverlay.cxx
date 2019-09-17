@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TGLIncludes.h"
 #include "TGLCameraOverlay.h"
 #include "TGLViewer.h"
 #include "TGLCamera.h"
@@ -21,6 +20,12 @@
 #include "TMath.h"
 #include "TAxis.h"
 #include "THLimitsFinder.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TGLCameraOverlay
 \ingroup opengl

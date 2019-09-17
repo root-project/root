@@ -14,11 +14,16 @@
 #include "TMath.h"
 
 #include <TGLRnrCtx.h>
-#include <TGLIncludes.h>
 #include <TGLSelectRecord.h>
 #include <TGLUtil.h>
 #include <TGLCamera.h>
 #include <TGLViewerBase.h>
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TGLOverlayButton
 \ingroup opengl

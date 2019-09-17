@@ -10,10 +10,12 @@
  *************************************************************************/
 
 #include "TGLStopwatch.h"
-#include "TGLIncludes.h"
+
+#include <GL/glew.h>
 
 #ifdef R__WIN32
 #include <Windows.h>  // For GetSystemTimeAsFileTime()
+#include "Windows4Root.h"
 #else
 #include <sys/time.h> // For gettimeofday()
 #endif

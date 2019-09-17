@@ -18,7 +18,12 @@
 #include "TColor.h"
 #include "TSystem.h"
 #include "TEnv.h"
-#include "TGLIncludes.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 // Direct inclusion of FTGL headers is deprecated in ftgl-2.1.3 while
 // ftgl-2.1.2 shipped with ROOT requires manual inclusion.

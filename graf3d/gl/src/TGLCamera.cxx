@@ -10,10 +10,15 @@
  *************************************************************************/
 
 #include "TGLCamera.h"
-#include "TGLIncludes.h"
 #include "TGLBoundingBox.h"
 #include "TError.h"
 #include "TMath.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TGLCamera
 \ingroup opengl

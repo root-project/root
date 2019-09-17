@@ -38,7 +38,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <TGLIncludes.h>
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 #define GL2PSDLL_API
 

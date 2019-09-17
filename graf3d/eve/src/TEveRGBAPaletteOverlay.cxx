@@ -12,10 +12,15 @@
 #include "TEveRGBAPaletteOverlay.h"
 #include "TEveRGBAPalette.h"
 
-#include "TGLIncludes.h"
 #include "TGLAxis.h"
 #include "TGLRnrCtx.h"
 #include "TGLUtil.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TEveRGBAPaletteOverlay
 \ingroup TEve

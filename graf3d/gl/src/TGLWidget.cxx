@@ -19,11 +19,16 @@
 #include "TVirtualMutex.h"
 
 #include "TGLWidget.h"
-#include "TGLIncludes.h"
 #include "TGLWSIncludes.h"
 #include "TGLUtil.h"
 #include "TGLEventHandler.h"
 #include "RConfigure.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TGLWidget
 \ingroup opengl

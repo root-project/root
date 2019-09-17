@@ -14,8 +14,13 @@
 #include "TEveTrackPropagator.h"
 #include "TEveProjectionManager.h"
 
-#include "TGLIncludes.h"
 #include "TGLRnrCtx.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TEveTrackProjectedGL
 \ingroup TEve

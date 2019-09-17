@@ -13,7 +13,6 @@
 
 #include "TGLPolyMarker.h"
 #include "TGLRnrCtx.h"
-#include "TGLIncludes.h"
 #include "TGLUtil.h"
 
 #include "TBuffer3D.h"
@@ -25,6 +24,12 @@
 // For debug tracing
 #include "TClass.h"
 #include "TError.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TGLPolyMarker
 \ingroup opengl

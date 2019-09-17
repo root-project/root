@@ -13,7 +13,12 @@
 #include "TMath.h"
 
 #include "TGLTH3Composition.h"
-#include "TGLIncludes.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TGLTH3Composition
 \ingroup opengl

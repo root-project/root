@@ -10,8 +10,6 @@
  *************************************************************************/
 #include "Riostream.h"
 #include "TROOT.h"
-
-#include "TGLIncludes.h"
 #include "TGLUtil.h"
 #include "TGLAxis.h"
 #include "TGLText.h"
@@ -19,6 +17,12 @@
 #include "TString.h"
 #include "TMath.h"
 #include "THLimitsFinder.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TGLAxis
 \ingroup opengl

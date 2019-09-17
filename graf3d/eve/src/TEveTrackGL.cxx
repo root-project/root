@@ -13,9 +13,14 @@
 #include "TEveTrack.h"
 #include "TEveTrackPropagator.h"
 
-#include "TGLIncludes.h"
 #include "TGLRnrCtx.h"
 #include "TGLSelectRecord.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TEveTrackGL
 \ingroup TEve

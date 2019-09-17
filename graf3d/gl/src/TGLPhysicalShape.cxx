@@ -14,12 +14,17 @@
 #include "TGLPShapeRef.h"
 #include "TGLCamera.h"
 #include "TGLRnrCtx.h"
-#include "TGLIncludes.h"
 
 #include "TGLScene.h"
 
 #include "TColor.h"
 #include "TROOT.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 #include <cmath>
 

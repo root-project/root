@@ -24,7 +24,12 @@
 #include "TGLMarchingCubes.h"
 #include "TGLPlotCamera.h"
 #include "TGLTF3Painter.h"
-#include "TGLIncludes.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TGLTF3Painter
 \ingroup opengl

@@ -23,13 +23,18 @@
 
 #include "TGLContextPrivate.h"
 #include "RConfigure.h"
-#include "TGLIncludes.h"
 #include "TGLContext.h"
 #include "TGLWidget.h"
 #include "TGLFormat.h"
 #include "TGLUtil.h"
 
 #include "TGLFontManager.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TGLContext
 \ingroup opengl

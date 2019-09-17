@@ -31,9 +31,14 @@
 #include "TGLBoundingBox.h"
 #include "TGLCamera.h"
 #include "TGLPlotPainter.h"
-#include "TGLIncludes.h"
 #include "TGLQuadric.h"
 #include "TGLUtil.h"
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 /** \class TGLVertex3
 \ingroup opengl

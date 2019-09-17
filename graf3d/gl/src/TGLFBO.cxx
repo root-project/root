@@ -10,10 +10,15 @@
  *************************************************************************/
 
 #include "TGLFBO.h"
-#include "TGLIncludes.h"
 #include <TMath.h>
 #include <TString.h>
 #include <TError.h>
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 #include <stdexcept>
 

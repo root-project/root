@@ -15,9 +15,14 @@
 #include "TGLRnrCtx.h"
 #include "TGLCamera.h"
 #include "TGLClip.h"
-#include "TGLIncludes.h"
 
 #include <TMath.h>
+
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 #include <string>
 #include <algorithm>
