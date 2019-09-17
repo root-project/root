@@ -16,7 +16,7 @@
 #ifndef ROOT7_RAttrText
 #define ROOT7_RAttrText
 
-#include <ROOT/RDrawingAttr.hxx>
+#include <ROOT/RAttrBase.hxx>
 #include <ROOT/RColor.hxx>
 
 #include <string>

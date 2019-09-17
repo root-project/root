@@ -16,7 +16,7 @@
 #ifndef ROOT7_RAttrMarker
 #define ROOT7_RAttrMarker
 
-#include <ROOT/RDrawingAttr.hxx>
+#include <ROOT/RAttrBase.hxx>
 #include <ROOT/RColor.hxx>
 
 namespace ROOT {

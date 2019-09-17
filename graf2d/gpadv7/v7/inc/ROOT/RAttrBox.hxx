@@ -16,11 +16,9 @@
 #ifndef ROOT7_RAttrBox
 #define ROOT7_RAttrBox
 
-#include <ROOT/RDrawingAttr.hxx>
+#include <ROOT/RAttrBase.hxx>
 #include <ROOT/RAttrLine.hxx>
 #include <ROOT/RAttrFill.hxx>
-#include <ROOT/RPadExtent.hxx>
-#include <ROOT/RPadPos.hxx>
 
 namespace ROOT {
 namespace Experimental {

@@ -31,52 +31,30 @@ namespace Experimental {
   A set of defaults for graphics attributes, e.g. for histogram fill color, line width, frame offsets etc.
   */
 
-/*
-
 class RStyle {
 public:
-   /// A map of attribute name to string attribute values/
-   using Attrs_t = std::unordered_map<std::string, std::string>;
+
+   struct Block_t {
+      std::string selector;
+      RDrawingAttr::Map_t map; ///<    container
+      Block_t() = default;
+      Block_t(const std::string &_selector) : selector(_selector) {}
+
+      Block_t(const Block_t &) {} // dummy, should not be used, but appears in dictionary
+      Block_t& operator=(const Block_t &) = delete;
+   };
+
+   const RDrawingAttr::Value_t *Eval(const std::string &type, const std::string &user_class, const std::string &field) const;
+
+   RDrawingAttr::Map_t &AddBlock(const std::string &selector)
+   {
+      fBlocks.emplace_back(selector);
+      return fBlocks.back().map;
+   }
 
 private:
-   /// Mapping of user coordinates to normal coordinates.
-   std::string fName; // Name of the attribute set.
-   Attrs_t fAttrs; // Pairs of name / attribute values.
-
-public:
-   /// Default constructor, creating an unnamed, empty style.
-   RStyle() = default;
-
-   /// Creates a named but empty style.
-   explicit RStyle(std::string_view name): fName(name) {}
-
-   /// Constructor taking the style name and a set of attributes (e.g. read from the config files).
-   RStyle(std::string_view name, Attrs_t &&attrs): fName(name), fAttrs(std::move(attrs)) {}
-
-   /// Get this stryle's name. (No setter as that would upset the unordered_map.)
-   const std::string &GetName() const { return fName; }
-
-   /// Get the style value as a string, given an attribute name.
-   /// Strips leading "foo." from the name until the first entry in the style is found.
-   /// E.g. if the default style has not entry for "Hist.1D.Fill.Color", the value might
-   /// be initialized to the default style's entry for the more general "1D.Fill.Color".
-   /// The className is the name of a CSS-style class, possibly overriding the generic attribute.
-   std::string GetAttribute(const std::string &attrName, const std::string &className = {}) const;
-
-   /// Move-register `style` in the global style collection, possibly replacing a global style with the same name.
-   static RStyle &Register(RStyle &&style);
-
-   /// Get the `RStyle` named `name` from the global style collection, or `nullptr` if that doesn't exist.
-   static RStyle *Get(std::string_view name);
-
-   /// Get the current RStyle.
-   static RStyle &GetCurrent();
-
-   /// Set the current RStyle by copying `style` into the static current style object.
-   static void SetCurrent(const RStyle &style) { GetCurrent() = style; }
+   std::list<Block_t> fBlocks;  // use std::list to avoid calling of Block_t copy constructor
 };
-
-*/
 
 } // namespace Experimental
 } // namespace ROOT

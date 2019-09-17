@@ -13,14 +13,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RColorOld
-#define ROOT7_RColorOld
+#ifndef ROOT7_RColor
+#define ROOT7_RColor
+
+#include <ROOT/RAttrBase.hxx>
 
 #include <array>
-#include <vector>
-#include <string>
 
-#include <ROOT/RDrawingAttr.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -84,9 +83,7 @@ public:
 
    friend bool operator==(const RColor& lhs, const RColor& rhs){ return (lhs.GetRGB() == rhs.GetRGB()) && (lhs.HasAlpha() == rhs.HasAlpha()) && (lhs.GetAlpha() == rhs.GetAlpha()); }
 
-
 };
-
 
 } // namespace Experimental
 } // namespace ROOT
