@@ -25,7 +25,7 @@ using namespace std::string_literals;
 ///////////////////////////////////////////////////////////////////////////////
 /// Evaluate style
 
-const ROOT::Experimental::RDrawingAttr::Value_t *ROOT::Experimental::RStyle::Eval(const std::string &type, const std::string &user_class, const std::string &field) const
+const ROOT::Experimental::RAttrValues::Value_t *ROOT::Experimental::RStyle::Eval(const std::string &type, const std::string &user_class, const std::string &field) const
 {
    for (const auto &block : fBlocks) {
 

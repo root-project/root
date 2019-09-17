@@ -34,9 +34,9 @@ class RAttrText : public RAttrBase {
    RColor fColor{this, "color_"}; ///<! line color, will access container from line attributes
 
 protected:
-   const RDrawingAttr::Map_t &GetDefaults() const override
+   const RAttrValues::Map_t &GetDefaults() const override
    {
-      static auto dflts = RDrawingAttr::Map_t().AddDouble("size",12.).AddDouble("angle",0.).AddInt("align", 22).AddInt("font",41).AddDefaults(fColor);
+      static auto dflts = RAttrValues::Map_t().AddDouble("size",12.).AddDouble("angle",0.).AddInt("align", 22).AddInt("font",41).AddDefaults(fColor);
       return dflts;
    }
 

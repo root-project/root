@@ -32,9 +32,9 @@ class RAttrBox : public RAttrBase {
    RAttrFill fFill{this, "fill_"};           ///<!
 
 protected:
-   const RDrawingAttr::Map_t &GetDefaults() const override
+   const RAttrValues::Map_t &GetDefaults() const override
    {
-      static auto dflts = RDrawingAttr::Map_t().AddDefaults(fBorder).AddDefaults(fFill);
+      static auto dflts = RAttrValues::Map_t().AddDefaults(fBorder).AddDefaults(fFill);
       return dflts;
    }
 

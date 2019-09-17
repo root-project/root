@@ -1,4 +1,4 @@
-/// \file ROOT/RDrawingAttr.hxx
+/// \file ROOT/RAttrValues.hxx
 /// \ingroup Gpad ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \author Sergey Linev <s.linev@gsi.de>
@@ -14,8 +14,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RDrawingAttr
-#define ROOT7_RDrawingAttr
+#ifndef ROOT7_RAttrValues
+#define ROOT7_RAttrValues
 
 #include <memory>
 #include <string>
@@ -29,7 +29,7 @@ namespace Experimental {
 
 class RAttrBase;
 
-class RDrawingAttr {
+class RAttrValues {
 
    friend class RAttrBase;
 
@@ -157,27 +157,27 @@ private:
 
 public:
 
-   RDrawingAttr() = default;
+   RAttrValues() = default;
 
-   RDrawingAttr(const std::string &_type) { type = _type; }
+   RAttrValues(const std::string &_type) { type = _type; }
 
-   ~RDrawingAttr() {}
+   ~RAttrValues() {}
 };
 
-template<> bool RDrawingAttr::Value_t::get<bool>() const;
-template<> int RDrawingAttr::Value_t::get<int>() const;
-template<> double RDrawingAttr::Value_t::get<double>() const;
-template<> std::string RDrawingAttr::Value_t::get<std::string>() const;
+template<> bool RAttrValues::Value_t::get<bool>() const;
+template<> int RAttrValues::Value_t::get<int>() const;
+template<> double RAttrValues::Value_t::get<double>() const;
+template<> std::string RAttrValues::Value_t::get<std::string>() const;
 
-template<> bool RDrawingAttr::Value_t::get_value<bool,void>(const Value_t *rec);
-template<> int RDrawingAttr::Value_t::get_value<int,void>(const Value_t *rec);
-template<> double RDrawingAttr::Value_t::get_value<double,void>(const Value_t *rec);
-template<> std::string RDrawingAttr::Value_t::get_value<std::string,void>(const Value_t *rec);
-template<> const RDrawingAttr::Value_t *RDrawingAttr::Value_t::get_value<const RDrawingAttr::Value_t *,void>(const Value_t *rec);
-template<> const RDrawingAttr::Value_t *RDrawingAttr::Value_t::get_value<const RDrawingAttr::Value_t *,bool>(const Value_t *rec);
-template<> const RDrawingAttr::Value_t *RDrawingAttr::Value_t::get_value<const RDrawingAttr::Value_t *,int>(const Value_t *rec);
-template<> const RDrawingAttr::Value_t *RDrawingAttr::Value_t::get_value<const RDrawingAttr::Value_t *,double>(const Value_t *rec);
-template<> const RDrawingAttr::Value_t *RDrawingAttr::Value_t::get_value<const RDrawingAttr::Value_t *,std::string>(const Value_t *rec);
+template<> bool RAttrValues::Value_t::get_value<bool,void>(const Value_t *rec);
+template<> int RAttrValues::Value_t::get_value<int,void>(const Value_t *rec);
+template<> double RAttrValues::Value_t::get_value<double,void>(const Value_t *rec);
+template<> std::string RAttrValues::Value_t::get_value<std::string,void>(const Value_t *rec);
+template<> const RAttrValues::Value_t *RAttrValues::Value_t::get_value<const RAttrValues::Value_t *,void>(const Value_t *rec);
+template<> const RAttrValues::Value_t *RAttrValues::Value_t::get_value<const RAttrValues::Value_t *,bool>(const Value_t *rec);
+template<> const RAttrValues::Value_t *RAttrValues::Value_t::get_value<const RAttrValues::Value_t *,int>(const Value_t *rec);
+template<> const RAttrValues::Value_t *RAttrValues::Value_t::get_value<const RAttrValues::Value_t *,double>(const Value_t *rec);
+template<> const RAttrValues::Value_t *RAttrValues::Value_t::get_value<const RAttrValues::Value_t *,std::string>(const Value_t *rec);
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -186,4 +186,4 @@ template<> const RDrawingAttr::Value_t *RDrawingAttr::Value_t::get_value<const R
 } // namespace Experimental
 } // namespace ROOT
 
-#endif // ROOT7_RDrawingAttr
+#endif // ROOT7_RAttrValues

@@ -45,7 +45,7 @@ std::string ROOT::Experimental::RAttrBase::GetPrefixToParent() const
 void ROOT::Experimental::RAttrBase::CreateOwnAttr()
 {
    // create independent container
-   fOwnAttr = std::make_unique<RDrawingAttr>();
+   fOwnAttr = std::make_unique<RAttrValues>();
 
    // set pointer on the container
    fAttr = fOwnAttr.get();
@@ -55,7 +55,7 @@ void ROOT::Experimental::RAttrBase::CreateOwnAttr()
 ///////////////////////////////////////////////////////////////////////////////
 /// Copy attributes from other object
 
-bool ROOT::Experimental::RAttrBase::CopyValue(const std::string &name, const RDrawingAttr::Value_t *value, bool check_type)
+bool ROOT::Experimental::RAttrBase::CopyValue(const std::string &name, const RAttrValues::Value_t *value, bool check_type)
 {
    if (!value)
       return false;
@@ -77,7 +77,7 @@ bool ROOT::Experimental::RAttrBase::CopyValue(const std::string &name, const RDr
 ///////////////////////////////////////////////////////////////////////////////
 /// Copy attributes into target object
 
-bool ROOT::Experimental::RAttrBase::IsValueEqual(const std::string &name, const RDrawingAttr::Value_t *value, bool use_style) const
+bool ROOT::Experimental::RAttrBase::IsValueEqual(const std::string &name, const RAttrValues::Value_t *value, bool use_style) const
 {
    if (!GetAttr() || !value)
       return false;
