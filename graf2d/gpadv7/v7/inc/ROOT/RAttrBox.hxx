@@ -41,7 +41,11 @@ protected:
    }
 
 public:
+
    using RAttributesVisitor::RAttributesVisitor;
+
+   RAttrBox(const RAttrBox &src) : RAttrBox() { src.CopyTo(*this); }
+   RAttrBox &operator=(const RAttrBox &src) { Clear(); src.CopyTo(*this); return *this; }
 
    const RAttrLine &Border() const { return fBorder; }
    RAttrLine &Border() { return fBorder; }

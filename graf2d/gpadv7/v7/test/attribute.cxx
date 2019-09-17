@@ -21,6 +21,9 @@ public:
 
    using RAttributesVisitor::RAttributesVisitor;
 
+   CustomAttrs(const CustomAttrs &src) : CustomAttrs() { src.CopyTo(*this); }
+   CustomAttrs &operator=(const CustomAttrs &src) { Clear(); src.CopyTo(*this); return *this; }
+
    RAttrBox &AttrBox() { return fAttrBox; }
    const RAttrBox &AttrBox() const { return fAttrBox; }
 

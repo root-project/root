@@ -217,7 +217,7 @@ class RAttributesVisitor {
    std::unique_ptr<RDrawableAttributes> fOwnAttr;                  ///<! own instance when deep copy is created
    std::string fPrefix;                                            ///<! name prefix for all attributes values
    std::weak_ptr<RStyle> fStyle;                                   ///<! style used for evaluations
-   RAttributesVisitor *fParent{nullptr};                           ///<! parent attributes, prefix applied to it
+   const RAttributesVisitor *fParent{nullptr};                     ///<! parent attributes, prefix applied to it
 
    std::string GetFullName(const std::string &name) const { return fPrefix + name; }
 
@@ -275,7 +275,7 @@ protected:
       fParent = nullptr;
    }
 
-   void AssignParent(RAttributesVisitor *parent, const std::string &prefix)
+   void AssignParent(const RAttributesVisitor *parent, const std::string &prefix)
    {
       fAttr = nullptr;  // first access to attributes will chained to parent
       fOwnAttr.reset();
@@ -299,9 +299,9 @@ public:
 
    RAttributesVisitor(RDrawableAttributes &cont, const std::string &prefix = "") { AssignAttributes(cont, prefix); }
 
-   RAttributesVisitor(RAttributesVisitor *parent, const std::string &prefix = "") { AssignParent(parent, prefix); }
+   RAttributesVisitor(const RAttributesVisitor *parent, const std::string &prefix = "") { AssignParent(parent, prefix); }
 
-   RAttributesVisitor(const RAttributesVisitor &src) { CreateOwnAttr(); src.CopyTo(*this); }
+   RAttributesVisitor(const RAttributesVisitor &src) { src.CopyTo(*this); }
 
    virtual ~RAttributesVisitor() = default;
 
@@ -314,6 +314,8 @@ public:
    void SetValue(const std::string &name, double value);
    void SetValue(const std::string &name, const int value);
    void SetValue(const std::string &name, const std::string &value);
+
+   std::string GetPrefix() const { return fPrefix; }
 
    void ClearValue(const std::string &name);
 
