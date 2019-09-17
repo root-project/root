@@ -195,9 +195,10 @@ void ROOT::Experimental::RPadBase::SetAllAxisBound(const std::vector<BoundKindAn
 
 void ROOT::Experimental::RPadBase::CollectShared(Internal::RIOSharedVector_t &vect)
 {
-   for (auto &dr : fPrimitives) {
-      vect.emplace_back(&dr);
-      dr->CollectShared(vect);
+   for (auto &handle : fPrimitives) {
+      vect.emplace_back(&handle);
+      auto drawable = handle.get();
+      if (drawable) drawable->CollectShared(vect);
    }
 }
 

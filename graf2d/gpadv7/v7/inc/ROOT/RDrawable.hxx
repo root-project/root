@@ -66,18 +66,17 @@ public:
       return *this;
    }
 
-   const T *operator->() const { return fShared.get(); }
-   T *operator->() { return fShared.get(); }
+   operator bool() const { return !!fShared || !!fIO; }
 
-   operator bool() const { return !!fShared; }
+   const T *get() const { return fShared ? fShared.get() : fIO; }
+   T *get() { return fShared ? fShared.get() : fIO; }
+
+   const T *operator->() const { return get(); }
+   T *operator->() { return get(); }
 
    std::shared_ptr<T> get_shared() const { return fShared; }
 
-   const T *get() const { return fShared.get(); }
-   T *get() { return fShared.get(); }
-
    void reset() { fShared.reset(); fIO = nullptr; }
-
 };
 
 }
