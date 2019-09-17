@@ -1,6 +1,7 @@
 /// \file RStyle.cxx
 /// \ingroup Gpad ROOT7
 /// \author Axel Naumann <axel@cern.ch>
+/// \author Sergey Linev <s.linev@gsi.de>
 /// \date 2017-10-11
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
@@ -15,92 +16,26 @@
 
 #include "ROOT/RStyle.hxx"
 
-#include "ROOT/RLogger.hxx"
-#include "ROOT/RPadExtent.hxx"
-#include "ROOT/RPadPos.hxx"
-
-#include "RStyleReader.hxx" // in src/
-
-#include <ROOT/RStringView.hxx>
-
-#include <cassert>
-#include <limits>
-#include <string>
-#include <sstream>
-
-using namespace ROOT::Experimental;
+// #include "RStyleReader.hxx" // in src/
 
 
-/*
+using namespace std::string_literals;
 
-namespace {
-static Internal::RStyleReader::AllStyles_t ReadGlobalDefaultStyles()
+
+///////////////////////////////////////////////////////////////////////////////
+/// Evaluate style
+
+const ROOT::Experimental::RDrawingAttr::Value_t *ROOT::Experimental::RStyle::Eval(const std::string &type, const std::string &user_class, const std::string &field) const
 {
-   Internal::RStyleReader::AllStyles_t target;
-   Internal::RStyleReader reader(target);
-   reader.ReadDefaults();
-   return target;
-}
+   for (const auto &block : fBlocks) {
 
-static Internal::RStyleReader::AllStyles_t &GetGlobalStyles()
-{
-   static Internal::RStyleReader::AllStyles_t sStyles = ReadGlobalDefaultStyles();
-   return sStyles;
-}
-} // unnamed namespace
+      bool match = (block.selector == type) || (!user_class.empty() && (block.selector == "."s + user_class));
 
-RStyle &RStyle::Register(RStyle&& style)
-{
-   RStyle& ret = GetGlobalStyles()[style.GetName()];
-   ret = style;
-   return ret;
-}
-
-RStyle *RStyle::Get(std::string_view name)
-{
-   auto iStyle = GetGlobalStyles().find(std::string(name));
-   if (iStyle != GetGlobalStyles().end())
-      return &iStyle->second;
-   return nullptr;
-}
-
-
-namespace {
-static RStyle GetInitialCurrent()
-{
-   static constexpr const char* kDefaultStyleName = "plain";
-   auto iDefStyle = GetGlobalStyles().find(std::string(kDefaultStyleName));
-   if (iDefStyle == GetGlobalStyles().end()) {
-      R__INFO_HERE("Gpad") << "Cannot find initial default style named \"" << kDefaultStyleName
-      << "\", using an empty one.";
-      RStyle defStyle(kDefaultStyleName);
-      return RStyle::Register(std::move(defStyle));
-   } else {
-      return iDefStyle->second;
-   }
-}
-}
-
-RStyle &RStyle::GetCurrent()
-{
-   static RStyle sCurrentStyle = GetInitialCurrent();
-   return sCurrentStyle;
-}
-
-std::string RStyle::GetAttribute(const std::string &attrName, const std::string &) const {
-   std::string trailingPart(attrName);
-   while (!trailingPart.empty()) {
-      auto iter = fAttrs.find(trailingPart);
-      if (iter != fAttrs.end())
-         return iter->second;
-      auto posDot = trailingPart.find('.');
-      if (posDot != std::string::npos) {
-         trailingPart.erase(0, posDot + 1);
-      } else {
-         return {};
+      if (match) {
+         auto res = block.map.Find(field);
+         if (res) return res;
       }
    }
-   return {};
-}
 
-*/
+   return nullptr;
+}

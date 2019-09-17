@@ -16,7 +16,7 @@
 #ifndef ROOT7_RAttrFill
 #define ROOT7_RAttrFill
 
-#include <ROOT/RDrawingAttr.hxx>
+#include <ROOT/RAttrBase.hxx>
 #include <ROOT/RColor.hxx>
 
 namespace ROOT {
