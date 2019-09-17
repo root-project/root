@@ -1265,7 +1265,7 @@ void TMultiGraph::Paint(Option_t *choptin)
       fHistogram->Paint("0");
    }
 
-   TGraph *gfit = 0;
+   TGraph *gfit = nullptr;
    if (fGraphs) {
       TObjOptLink *lnk = (TObjOptLink*)fGraphs->FirstLink();
       TObject *obj = 0;
@@ -1295,7 +1295,7 @@ void TMultiGraph::Paint(Option_t *choptin)
    }
 
    TObject *f;
-   TF1 *fit = 0;
+   TF1 *fit = nullptr;
    if (fFunctions) {
       TIter   next(fFunctions);
       while ((f = (TObject*) next())) {
@@ -1308,7 +1308,7 @@ void TMultiGraph::Paint(Option_t *choptin)
       }
    }
 
-   if (fit) gfit->PaintStats(fit);
+   if (gfit && fit) gfit->PaintStats(fit);
 }
 
 
