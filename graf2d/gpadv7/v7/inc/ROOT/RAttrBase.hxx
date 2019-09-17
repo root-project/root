@@ -26,10 +26,10 @@ namespace Experimental {
 /** Base class for all attributes, used with RDrawable */
 class RAttrBase {
 
-   friend class RDrawingAttr;
+   friend class RAttrValues;
 
-   RDrawingAttr *fAttr{nullptr};                            ///<! source for attributes
-   std::unique_ptr<RDrawingAttr> fOwnAttr;                  ///<! own instance when deep copy is created
+   RAttrValues *fAttr{nullptr};                            ///<! source for attributes
+   std::unique_ptr<RAttrValues> fOwnAttr;                  ///<! own instance when deep copy is created
    std::string fPrefix;                                            ///<! name prefix for all attributes values
    std::weak_ptr<RStyle> fStyle;                                   ///<! style used for evaluations
    const RAttrBase *fParent{nullptr};                              ///<! parent attributes, prefix applied to it
@@ -40,15 +40,15 @@ class RAttrBase {
 
 protected:
 
-   virtual const RDrawingAttr::Map_t &GetDefaults() const
+   virtual const RAttrValues::Map_t &GetDefaults() const
    {
-      static RDrawingAttr::Map_t empty;
+      static RAttrValues::Map_t empty;
       return empty;
    }
 
-   bool CopyValue(const std::string &name, const RDrawingAttr::Value_t *value, bool check_type = true);
+   bool CopyValue(const std::string &name, const RAttrValues::Value_t *value, bool check_type = true);
 
-   bool IsValueEqual(const std::string &name, const RDrawingAttr::Value_t *value, bool use_style = false) const;
+   bool IsValueEqual(const std::string &name, const RAttrValues::Value_t *value, bool use_style = false) const;
 
    ///////////////////////////////////////////////////////////////////////////////
    /// Evaluate attribute value
@@ -58,17 +58,17 @@ protected:
    {
       auto fullname = GetFullName(name);
 
-      const RDrawingAttr::Value_t *rec = nullptr;
+      const RAttrValues::Value_t *rec = nullptr;
 
       if (GetAttr()) {
          rec = fAttr->map.Find(fullname);
-         if (rec) return RDrawingAttr::Value_t::get_value<T,S>(rec);
+         if (rec) return RAttrValues::Value_t::get_value<T,S>(rec);
 
          const auto *prnt = this;
          while (prnt) {
             if (auto observe = prnt->fStyle.lock()) {
                rec = observe->Eval(fAttr->type, fAttr->user_class, fullname);
-               if (rec) return RDrawingAttr::Value_t::get_value<T,S>(rec);
+               if (rec) return RAttrValues::Value_t::get_value<T,S>(rec);
             }
             prnt = prnt->fParent;
          }
@@ -77,12 +77,12 @@ protected:
       if (use_dflts)
          rec = GetDefaults().Find(name);
 
-      return RDrawingAttr::Value_t::get_value<T,S>(rec);
+      return RAttrValues::Value_t::get_value<T,S>(rec);
    }
 
    void CreateOwnAttr();
 
-   void AssignAttributes(RDrawingAttr &cont, const std::string &prefix)
+   void AssignAttributes(RAttrValues &cont, const std::string &prefix)
    {
       fAttr = &cont;
       fOwnAttr.reset();
@@ -112,7 +112,7 @@ public:
 
    RAttrBase() = default;
 
-   RAttrBase(RDrawingAttr &cont, const std::string &prefix = "") { AssignAttributes(cont, prefix); }
+   RAttrBase(RAttrValues &cont, const std::string &prefix = "") { AssignAttributes(cont, prefix); }
 
    RAttrBase(const RAttrBase *parent, const std::string &prefix = "") { AssignParent(parent, prefix); }
 
@@ -137,7 +137,7 @@ public:
    void Clear();
 
    template<typename T = void, std::enable_if_t<!std::is_pointer<T>{}>* = nullptr>
-   bool HasValue(const std::string &name, bool check_defaults = false) const { return Eval<const RDrawingAttr::Value_t *,T>(name, check_defaults) != nullptr; }
+   bool HasValue(const std::string &name, bool check_defaults = false) const { return Eval<const RAttrValues::Value_t *,T>(name, check_defaults) != nullptr; }
 
    template<typename T, std::enable_if_t<!std::is_pointer<T>{}>* = nullptr>
    T GetValue(const std::string &name) const { return Eval<T>(name); }

@@ -44,7 +44,7 @@ public:
 private:
    Internal::RIOShared<HistImpl_t> fHistImpl;  ///< I/O capable reference on histogram
 
-   RDrawingAttr fAttr{"hist"};          ///< attributes
+   RAttrValues fAttr{"hist"};          ///< attributes
    RAttrLine  fLineAttr{fAttr, "line_"};       ///<! line attributes
 
 protected:

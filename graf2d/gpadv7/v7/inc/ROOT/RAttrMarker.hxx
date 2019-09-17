@@ -31,9 +31,9 @@ class RAttrMarker : public RAttrBase {
    RColor fColor{this, "color_"}; ///<! marker color, will access container from line attributes
 
 protected:
-   const RDrawingAttr::Map_t &GetDefaults() const override
+   const RAttrValues::Map_t &GetDefaults() const override
    {
-      static auto dflts = RDrawingAttr::Map_t().AddDouble("size",1.).AddInt("style",1).AddDefaults(fColor);
+      static auto dflts = RAttrValues::Map_t().AddDouble("size",1.).AddInt("style",1).AddDefaults(fColor);
       return dflts;
    }
 

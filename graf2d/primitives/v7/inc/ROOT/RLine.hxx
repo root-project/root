@@ -29,7 +29,7 @@ class RLine : public RDrawable {
 
    RPadPos fP1;                            ///< line begin
    RPadPos fP2;                            ///< line end
-   RDrawingAttr fAttr{"line"};      ///< attributes
+   RAttrValues fAttr{"line"};      ///< attributes
    RAttrLine  fLineAttr{fAttr, "line_"};   ///<! line attributes
 
 public:

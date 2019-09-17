@@ -30,9 +30,9 @@ namespace Experimental {
 class RColor : public RAttrBase {
 
 protected:
-   const RDrawingAttr::Map_t &GetDefaults() const override
+   const RAttrValues::Map_t &GetDefaults() const override
    {
-      static auto dflts = RDrawingAttr::Map_t().AddString("rgb","0,0,0").AddDouble("a",1.);
+      static auto dflts = RAttrValues::Map_t().AddString("rgb","0,0,0").AddDouble("a",1.);
       return dflts;
    }
 

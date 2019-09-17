@@ -60,7 +60,7 @@ protected:
    /// Allow derived classes to default construct a RPadBase.
    RPadBase() = default;
 
-   RDrawingAttr fAttr{"pad"};       ///< attributes
+   RAttrValues fAttr{"pad"};       ///< attributes
 
    void CollectShared(Internal::RIOSharedVector_t &) override;
 
