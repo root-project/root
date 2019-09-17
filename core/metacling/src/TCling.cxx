@@ -3801,7 +3801,7 @@ TCling::CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamesp
    static const char *anonEnum = "anonymous enum ";
    static const int cmplen = strlen(anonEnum);
 
-   if (0 == strncmp(name,anonEnum,cmplen)) {
+   if (fIsShuttingDown || 0 == strncmp(name, anonEnum, cmplen)) {
       return kUnknown;
    }
 
