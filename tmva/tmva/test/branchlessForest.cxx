@@ -126,8 +126,8 @@ TEST(BranchlessForest, InferenceTwoTrees)
    const auto numInputs = 2;
    const auto numTrees = 2;
    const auto outputNode = 1;
-   WriteModel("myModel", "TestBranchlessForest2.root", "identity", {0, 1}, {outputNode, outputNode}, {0.0, 1.0, -1.0, 0.0, 2.0, -2.0}, {maxDepth},
-              {numTrees}, {numInputs}, {1});
+   WriteModel("myModel", "TestBranchlessForest2.root", "identity", {0, 1}, {outputNode, outputNode},
+              {0.0, 1.0, -1.0, 0.0, 2.0, -2.0}, {maxDepth}, {numTrees}, {numInputs}, {1});
 
    BranchlessForest<float> forest;
    forest.Load("myModel", "TestBranchlessForest2.root", outputNode);
@@ -138,4 +138,31 @@ TEST(BranchlessForest, InferenceTwoTrees)
    forest.Inference(inputs, rows, predictions);
    EXPECT_FLOAT_EQ(predictions[0], 1.0 + -2.0);
    EXPECT_FLOAT_EQ(predictions[1], -1.0 + 2.0);
+}
+
+TEST(BranchlessForest, SortTrees)
+{
+   const auto maxDepth = 1;
+   const auto numInputs = 2;
+   const auto numTrees = 3;
+   WriteModel("myModel", "TestBranchlessForest3.root", "identity", {1, 0, 0}, {0, 0, 0},
+              {0.0, 0.0, 0.0, 2.0, 2.0, 2.0, 1.0, 1.0, 1.0}, {maxDepth}, {numTrees}, {numInputs}, {1});
+
+   BranchlessForest<float> forest;
+   forest.Load("myModel", "TestBranchlessForest3.root", 0, false);
+   EXPECT_EQ(forest.fTrees[0].fInputs[0], 1);
+   EXPECT_EQ(forest.fTrees[1].fInputs[0], 0);
+   EXPECT_EQ(forest.fTrees[2].fInputs[0], 0);
+   EXPECT_EQ(forest.fTrees[0].fThresholds[0], 0.0);
+   EXPECT_EQ(forest.fTrees[1].fThresholds[0], 2.0);
+   EXPECT_EQ(forest.fTrees[2].fThresholds[0], 1.0);
+
+   BranchlessForest<float> forest2;
+   forest2.Load("myModel", "TestBranchlessForest3.root", 0, true);
+   EXPECT_EQ(forest2.fTrees[0].fInputs[0], 0);
+   EXPECT_EQ(forest2.fTrees[1].fInputs[0], 0);
+   EXPECT_EQ(forest2.fTrees[2].fInputs[0], 1);
+   EXPECT_EQ(forest2.fTrees[0].fThresholds[0], 1.0);
+   EXPECT_EQ(forest2.fTrees[1].fThresholds[0], 2.0);
+   EXPECT_EQ(forest2.fTrees[2].fThresholds[0], 0.0);
 }
