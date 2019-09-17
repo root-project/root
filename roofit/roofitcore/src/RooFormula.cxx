@@ -138,6 +138,7 @@ RooFormula::RooFormula(const RooFormula& other, const char* name) :
   _tFormula.reset(newTF);
 }
 
+#ifndef _MSC_VER
 #if !defined(__GNUC__) || defined(__clang__) || (__GNUC__ > 4) || ( __GNUC__ == 4 && __GNUC_MINOR__ > 8)
 #define ROOFORMULA_HAVE_STD_REGEX
 ////////////////////////////////////////////////////////////////////////////////
@@ -264,6 +265,7 @@ std::string RooFormula::reconstructFormula(std::string internalRepr) const {
   return internalRepr;
 }
 #endif //GCC < 4.9 Check
+#endif //_MSC_VER
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Find all input arguments which are categories, and save this information in
