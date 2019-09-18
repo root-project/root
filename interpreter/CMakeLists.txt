@@ -147,7 +147,21 @@ else()
     set(LLVM_ENABLE_ASSERTIONS "NO")
   endif()
 endif()
-set(CMAKE_BUILD_TYPE ${LLVM_BUILD_TYPE})
+# Multi-configuration generators ignore CMAKE_BUILD_TYPE, so
+# in that case we set the flags for all configurations to the
+# flags of the build type assigned to LLVM_BUILD_TYPE.
+if(MSVC OR XCODE)
+  string(TOUPPER ${LLVM_BUILD_TYPE} LLVM_BUILD_TYPE)
+  set(LLVM_C_FLAGS ${CMAKE_C_FLAGS_${LLVM_BUILD_TYPE}})
+  set(LLVM_CXX_FLAGS ${CMAKE_CXX_FLAGS_${LLVM_BUILD_TYPE}})
+  foreach(CONFIG ${CMAKE_CONFIGURATION_TYPES})
+    string(TOUPPER ${CONFIG} CONFIG)
+    set(CMAKE_C_FLAGS_${CONFIG} ${LLVM_C_FLAGS})
+    set(CMAKE_CXX_FLAGS_${CONFIG} ${LLVM_CXX_FLAGS})
+  endforeach()
+elseif(NOT LLVM_BUILD_TYPE STREQUAL CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE ${LLVM_BUILD_TYPE})
+endif()
 set(BUILD_SHARED_LIBS "NO")
 
 set(CLANG_ENABLE_STATIC_ANALYZER OFF CACHE BOOL "")
