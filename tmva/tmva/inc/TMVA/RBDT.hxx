@@ -112,6 +112,8 @@ public:
    }
 };
 
+extern template class TMVA::Experimental::RBDT<TMVA::Experimental::BranchlessForest<float>>;
+
 } // namespace Experimental
 } // namespace TMVA
 

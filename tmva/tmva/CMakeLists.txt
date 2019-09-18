@@ -29,6 +29,9 @@ if(dataframe)
         TMVA/RInferenceUtils.hxx
         TMVA/RBDT.hxx
     )
+    set(TMVA_EXTRA_SOURCES
+        RBDT.cxx
+    )
     set(TMVA_EXTRA_DEPENDENCIES
         ROOTDataFrame
         ROOTVecOps
@@ -366,6 +369,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     src/DNN/Architectures/Reference.cxx
     src/DNN/Architectures/Reference/DataLoader.cxx
     src/DNN/Architectures/Reference/TensorDataLoader.cxx
+    ${TMVA_EXTRA_SOURCES}
     #src/DNN/Architectures/Reference/ActivationFunctions.cxx
     #src/DNN/Architectures/Reference/Arithmetic.cxx
     #src/DNN/Architectures/Reference/DenoisePropagation.cxx
