@@ -2314,7 +2314,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     TString opt(o.drawOptions);
     if(opt.Contains("P")){
       RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
-      RooHist *graph= new RooHist(*projection,*plotVar,1.,1.,frame->getNormVars(),o.errorFR);
+      RooHist *graph= new RooHist(*projection,*plotVar,1.,o.scaleFactor,frame->getNormVars(),o.errorFR);
       RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
 
       // Override name of curve by user name, if specified
