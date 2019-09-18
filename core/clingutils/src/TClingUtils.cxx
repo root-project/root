@@ -477,10 +477,13 @@ TClingLookupHelper::TClingLookupHelper(cling::Interpreter &interpreter,
                                        TNormalizedCtxt &normCtxt,
                                        ExistingTypeCheck_t existingTypeCheck,
                                        AutoParse_t autoParse,
+                                       bool *shuttingDownPtr,
                                        const int* pgDebug /*= 0*/):
    fInterpreter(&interpreter),fNormalizedCtxt(&normCtxt),
    fExistingTypeCheck(existingTypeCheck),
-   fAutoParse(autoParse), fPDebug(pgDebug)
+   fAutoParse(autoParse),
+   fInterpreterIsShuttingDownPtr(shuttingDownPtr),
+   fPDebug(pgDebug)
 {
 }
 
@@ -629,9 +632,18 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
    return false;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// TClassEdit will call this routine as soon as any of its static variable (used
+// for caching) is destroyed.
+void TClingLookupHelper::ShuttingDownSignal()
+{
+   if (fInterpreterIsShuttingDownPtr)
+      *fInterpreterIsShuttingDownPtr = true;
+}
 
    } // end namespace ROOT
 } // end namespace TMetaUtils
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Insert the type with name into the collection of typedefs to keep.
@@ -3994,7 +4006,7 @@ ROOT::TMetaUtils::GetNameTypeForIO(const clang::QualType& thisType,
    if (!hasChanged) return std::make_pair(thisTypeName,thisType);
 
    if (hasChanged && ROOT::TMetaUtils::GetErrorIgnoreLevel() <= ROOT::TMetaUtils::kNote) {
-      ROOT::TMetaUtils::Info("ROOT::TMetaUtils::GetTypeForIO", 
+      ROOT::TMetaUtils::Info("ROOT::TMetaUtils::GetTypeForIO",
         "Name changed from %s to %s\n", thisTypeName.c_str(), thisTypeNameForIO.c_str());
    }
 

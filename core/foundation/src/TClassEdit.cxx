@@ -30,6 +30,17 @@
 
 namespace {
    static TClassEdit::TInterpreterLookupHelper *gInterpreterHelper = 0;
+
+   template <typename T>
+   struct ShuttingDownSignaler : public T {
+      using T::T;
+
+      ~ShuttingDownSignaler()
+      {
+         if (gInterpreterHelper)
+            gInterpreterHelper->ShuttingDownSignal();
+      }
+   };
 }
 
 namespace std {} using namespace std;
@@ -55,7 +66,7 @@ static size_t StdLen(const std::string_view name)
                std::string scoperesult;
                // We assume that we are called in already serialized code.
                // Note: should we also cache the negative answers?
-               static std::set<std::string> gInlined;
+               static ShuttingDownSignaler<std::set<std::string>> gInlined;
 
                if (gInlined.find(scope) != gInlined.end()) {
                   len = i;
@@ -125,6 +136,18 @@ TClassEdit::EComplexType TClassEdit::GetComplexType(const char* clName)
       }
    }
    return EComplexType::kNone;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+TClassEdit::TInterpreterLookupHelper::~TInterpreterLookupHelper()
+{
+   // Already too late to call this->ShuttingDownSignal
+   // the virtual table has already lost (on some platform) the
+   // address of the derived function that we would need to call.
+   // But at least forget about this instance!
+
+   if (this == gInterpreterHelper)
+      gInterpreterHelper = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1832,7 +1855,7 @@ string TClassEdit::InsertStd(const char *tname)
       "vector",
       "wstring"
    };
-   static set<string> sSetSTLtypes;
+   static ShuttingDownSignaler<set<string>> sSetSTLtypes;
 
    if (tname==0 || tname[0]==0) return "";
 
