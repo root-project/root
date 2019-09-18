@@ -55,7 +55,6 @@ if(opengl) # special case when cocoa is enabled but not opengl (i.e. gminimal=ON
 else()
   target_include_directories(GCocoa PRIVATE
     ${CMAKE_SOURCE_DIR}/graf3d/gl/inc
-    ${CMAKE_SOURCE_DIR}/graf3d/glew/inc
   )
 endif(opengl)
 
