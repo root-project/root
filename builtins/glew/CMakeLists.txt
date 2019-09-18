@@ -8,6 +8,8 @@ project(GLEW C)
 
 find_package(OpenGL REQUIRED)
 
+include_directories (${CMAKE_CURRENT_SOURCE_DIR}/inc)
+
 set(GLEW_HEADERS
   inc/GL/glew.h
   inc/GL/glxew.h
