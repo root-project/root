@@ -1387,6 +1387,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
 
 TCling::~TCling()
 {
+   fIsShuttingDown = true;
    delete fMapfile;
 //    delete fMapNamespaces;
    delete fRootmapFiles;
