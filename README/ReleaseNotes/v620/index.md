@@ -129,6 +129,7 @@ typedefs (in particular `Double32_t`)
  * Provide support of NDC corrdinates for TArrow.
  * Fix interactive movement of TLine/TArrow objects when NDC coordinates are used
  * Provide TGraph::MovePoints() method
+ * New options `RX`and `RY` for TMultiGraph in order to draw reverse axis along X and Y.
 
 
 ## 3D Graphics Libraries
