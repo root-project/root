@@ -1351,7 +1351,10 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
-   fLookupHelper = new ROOT::TMetaUtils::TClingLookupHelper(*fInterpreter, *fNormalizedCtxt, TClingLookupHelper__ExistingTypeCheck, TClingLookupHelper__AutoParse);
+   fLookupHelper = new ROOT::TMetaUtils::TClingLookupHelper(*fInterpreter, *fNormalizedCtxt,
+                                                            TClingLookupHelper__ExistingTypeCheck,
+                                                            TClingLookupHelper__AutoParse,
+                                                            &fIsShuttingDown);
    TClassEdit::Init(fLookupHelper);
 
    // Disallow auto-parsing in rootcling
