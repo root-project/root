@@ -225,6 +225,7 @@ void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
                "Failed to load Keras model from file: "+filenameLoadModel);
    Log() << kINFO << "Load model from file: " << filenameLoadModel << Endl;
 
+
    /*
     * Init variables and weights
     */
@@ -370,6 +371,8 @@ void MethodPyKeras::Train() {
    /*
     * Train Keras model
     */
+   Log() << kINFO << "Training Model Summary" << Endl;
+   PyRunString("model.summary()");
 
    // Setup parameters
 
