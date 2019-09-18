@@ -65,8 +65,15 @@ const Double_t RooKeysPdf::_nSigma = std::sqrt(-2. *
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// cache stuff about x
-
+/// Make a new RooKeysPdf.
+///
+/// \param[in] name Name of this object.
+/// \param[in] title Title (for e.g. plotting)
+/// \param[in] x The variable of this PDF.
+/// \param[in] data Data to construct the density from.
+/// \param[in] mirror Enumerator to choose the strategy for mirroring the distribution at the edges
+/// of `x`'s value range.
+/// \param[in] rho Scale kernel widths. Defaults to 1.
 RooKeysPdf::RooKeysPdf(const char *name, const char *title,
                        RooAbsReal& x, RooDataSet& data,
                        Mirror mirror, Double_t rho) :
