@@ -1367,6 +1367,9 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       fInterpreter->enableDynamicLookup();
    }
 
+   // Enable ClinG's DefinitionShadower for ROOT.
+   fInterpreter->allowRedefinition();
+
    // Attach cling callbacks last; they might need TROOT::fInterpreter
    // and should thus not be triggered during the equivalent of
    // TROOT::fInterpreter = new TCling;
