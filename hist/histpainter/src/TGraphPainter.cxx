@@ -3448,6 +3448,8 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
 
    Bool_t lrx = opt.Contains("rx");
    Bool_t lry = opt.Contains("ry");
+   Bool_t axis = opt.Contains("a");
+   opt.ReplaceAll("a", "");
 
    Double_t LOX = theHist->GetXaxis()->GetLabelOffset();
    Double_t TLX = theHist->GetXaxis()->GetTickLength();
@@ -3456,7 +3458,7 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
    Int_t XACOL  = theHist->GetXaxis()->GetAxisColor();
    Int_t YACOL  = theHist->GetYaxis()->GetAxisColor();
 
-   if (opt.Contains("a")) {
+   if (axis) {
       if (lrx) {
          theHist->GetXaxis()->SetTickLength(0.);
          theHist->GetXaxis()->SetLabelOffset(999.);
@@ -3468,50 +3470,58 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
          theHist->GetYaxis()->SetAxisColor(gPad->GetFrameFillColor());
       }
       theHist->Paint("0");
-      opt.ReplaceAll("a", "");
    }
 
    Int_t     N  = theGraph->GetN();
    Double_t *X  = theGraph->GetX();
    Double_t *Y  = theGraph->GetY();
-   Double_t XA1 = theGraph->GetXaxis()->GetXmin();
-   Double_t XA2 = theGraph->GetXaxis()->GetXmax();
-   Double_t YA1 = theGraph->GetYaxis()->GetXmin();
-   Double_t YA2 = theGraph->GetYaxis()->GetXmax();
+   Double_t XA1, XA2, YA1, YA2;
+   if (axis) {
+      XA1 = theGraph->GetXaxis()->GetXmin();
+      XA2 = theGraph->GetXaxis()->GetXmax();
+      YA1 = theGraph->GetYaxis()->GetXmin();
+      YA2 = theGraph->GetYaxis()->GetXmax();
+   } else {
+      XA1 = gPad->GetUxmin();
+      XA2 = gPad->GetUxmax();
+      YA1 = gPad->GetUymin();
+      YA2 = gPad->GetUymax();
+   }
    Double_t dX  = XA1+XA2;
    Double_t dY  = YA1+YA2;
+
    std::vector<Double_t> newX(N);
    std::vector<Double_t> newY(N);
 
    if (lrx) {
       opt.ReplaceAll("rx", "");
+      if (axis) {
+         Double_t GL = 0.;
+         theHist->GetXaxis()->SetTickLength(0.);
+         theHist->GetXaxis()->SetLabelOffset(999.);
 
-      Double_t GL = 0.;
-      theHist->GetXaxis()->SetTickLength(0.);
-      theHist->GetXaxis()->SetLabelOffset(999.);
-
-      // Redraw the new X axis
-      gPad->Update();
-      TString optax = "-SDH";
-      if (gPad->GetGridx()) {
-         GL = (YA2-YA1)/(gPad->GetY2() - gPad->GetY1());
-         optax.Append("W");
+         // Redraw the new X axis
+         gPad->Update();
+         TString optax = "-SDH";
+         if (gPad->GetGridx()) {
+            GL = (YA2 - YA1) / (gPad->GetY2() - gPad->GetY1());
+            optax.Append("W");
+         }
+         auto *theNewAxis = new TGaxis(gPad->GetUxmax(),
+                                       gPad->GetUymin(),
+                                       gPad->GetUxmin(),
+                                       gPad->GetUymin(),
+                                       theGraph->GetXaxis()->GetXmin(),
+                                       theGraph->GetXaxis()->GetXmax(),
+                                       theHist->GetNdivisions("X"),
+                                       optax.Data(), -GL);
+         theNewAxis->SetLabelFont(theGraph->GetXaxis()->GetLabelFont());
+         theNewAxis->SetLabelSize(theGraph->GetXaxis()->GetLabelSize());
+         theNewAxis->SetLabelColor(theGraph->GetXaxis()->GetLabelColor());
+         theNewAxis->SetTickLength(TLX);
+         theNewAxis->SetLabelOffset(LOX - theGraph->GetXaxis()->GetLabelSize());
+         theNewAxis->Paint();
       }
-      TGaxis *theNewAxis = new TGaxis(gPad->GetUxmax(),
-                                      gPad->GetUymin(),
-                                      gPad->GetUxmin(),
-                                      gPad->GetUymin(),
-                                      theGraph->GetXaxis()->GetXmin(),
-                                      theGraph->GetXaxis()->GetXmax(),
-                                      theHist->GetNdivisions("X"),
-                                      optax.Data(), -GL);
-      theNewAxis->SetLabelFont(theGraph->GetXaxis()->GetLabelFont());
-      theNewAxis->SetLabelSize(theGraph->GetXaxis()->GetLabelSize());
-      theNewAxis->SetLabelColor(theGraph->GetXaxis()->GetLabelColor());
-      theNewAxis->SetTickLength(TLX);
-      theNewAxis->SetLabelOffset(LOX-theGraph->GetXaxis()->GetLabelSize());
-      theNewAxis->Paint();
-
       // Reverse X coordinates
       for (Int_t i=0; i<N; i++) newX[i] = dX-X[i];
    } else {
@@ -3520,31 +3530,31 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
 
    if (lry) {
       opt.ReplaceAll("ry", "");
-      Double_t GL = 0.;
+      if (axis) {
+         Double_t GL = 0.;
+         // Redraw the new Y axis
+         gPad->Update();
+         TString optax = "-SDH";
 
-      // Redraw the new Y axis
-      gPad->Update();
-      TString optax = "-SDH";
-
-      if (gPad->GetGridy()) {
-         GL = (XA2-XA1)/(gPad->GetX2() - gPad->GetX1());
-         optax.Append("W");
+         if (gPad->GetGridy()) {
+            GL = (XA2 - XA1) / (gPad->GetX2() - gPad->GetX1());
+            optax.Append("W");
+         }
+         auto *theNewAxis = new TGaxis(gPad->GetUxmin(),
+                                       gPad->GetUymax(),
+                                       gPad->GetUxmin(),
+                                       gPad->GetUymin(),
+                                       theGraph->GetYaxis()->GetXmin(),
+                                       theGraph->GetYaxis()->GetXmax(),
+                                       theHist->GetNdivisions("Y"),
+                                       optax.Data(), GL);
+         theNewAxis->SetLabelFont(theGraph->GetYaxis()->GetLabelFont());
+         theNewAxis->SetLabelSize(theGraph->GetYaxis()->GetLabelSize());
+         theNewAxis->SetLabelColor(theGraph->GetYaxis()->GetLabelColor());
+         theNewAxis->SetTickLength(-TLY);
+         theNewAxis->SetLabelOffset(LOY-TLY);
+         theNewAxis->Paint();
       }
-      TGaxis *theNewAxis = new TGaxis(gPad->GetUxmin(),
-                                   gPad->GetUymax(),
-                                   gPad->GetUxmin(),
-                                   gPad->GetUymin(),
-                                   theGraph->GetYaxis()->GetXmin(),
-                                   theGraph->GetYaxis()->GetXmax(),
-                                   theHist->GetNdivisions("Y"),
-                                   optax.Data(), GL);
-      theNewAxis->SetLabelFont(theGraph->GetYaxis()->GetLabelFont());
-      theNewAxis->SetLabelSize(theGraph->GetYaxis()->GetLabelSize());
-      theNewAxis->SetLabelColor(theGraph->GetYaxis()->GetLabelColor());
-      theNewAxis->SetTickLength(-TLY);
-      theNewAxis->SetLabelOffset(LOY-TLY);
-      theNewAxis->Paint();
-
       // Reverse Y coordinates
       for (Int_t i=0; i<N; i++) newY[i] = dY-Y[i];
    } else {
