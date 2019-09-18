@@ -235,6 +235,27 @@ TMVA::VariableInfo& TMVA::DataSetInfo::AddVariable( const VariableInfo& varInfo)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// add an  array of variables identified by an expression corresponding to an array entry in the tree
+
+void TMVA::DataSetInfo::AddVariablesArray(const TString &expression, Int_t size, const TString &title, const TString &unit,
+                                                   Double_t min, Double_t max, char varType, Bool_t normalized,
+                                                   void *external)
+{
+   TString regexpr = expression; // remove possible blanks
+   regexpr.ReplaceAll(" ", "");
+   fVariables.reserve(fVariables.size() + size);
+   for (int i = 0; i < size; ++i) {
+      TString newTitle = title + TString::Format("__[%d]", i);
+      fVariables.push_back(
+         VariableInfo(regexpr, newTitle, unit, fVariables.size() + 1, varType, external, min, max, normalized));
+      fVariables.back().SetBit(kIsArrayVariable);
+   }
+   fVarArrays[regexpr] = size; 
+   fNeedsRebuilding = kTRUE;
+   //return fVariables.back();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// add a variable (can be a complex expression) to the set of
 /// variables used in the MV analysis
 
