@@ -291,23 +291,59 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
 {
    TTree *tr = tinfo.GetTree()->GetTree();
 
-   tr->SetBranchStatus("*",1);
+   //tr->SetBranchStatus("*",1); // nor needed when using TTReeFormula
    tr->ResetBranchAddresses();
 
-   Bool_t hasDollar = kFALSE;
+   Bool_t hasDollar = kTRUE;  // Set to false if wants to enable only some branch in the tree
 
    // 1) the input variable formulas
-   Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName()) << "transform input variables" << Endl;
+   Log() << kINFO << Form("Dataset[%s] : ",dsi.GetName()) << "transform input variables - tree " << tr->GetName() << Endl;
    std::vector<TTreeFormula*>::const_iterator formIt, formItEnd;
    for (formIt = fInputFormulas.begin(), formItEnd=fInputFormulas.end(); formIt!=formItEnd; ++formIt) if (*formIt) delete *formIt;
    fInputFormulas.clear();
    TTreeFormula* ttf = 0;
+   fInputTableFormulas.clear();  // this contains shallow pointer copies 
 
-   for (UInt_t i=0; i<dsi.GetNVariables(); i++) {
-      ttf = new TTreeFormula( Form( "Formula%s", dsi.GetVariableInfo(i).GetInternalName().Data() ),
-                              dsi.GetVariableInfo(i).GetExpression().Data(), tr );
-      CheckTTreeFormula( ttf, dsi.GetVariableInfo(i).GetExpression(), hasDollar );
-      fInputFormulas.push_back( ttf );
+   bool firstArrayVar = kTRUE;
+   int firstArrayVarIndex = -1;
+   int arraySize = -1;  
+   for (UInt_t i = 0; i < dsi.GetNVariables(); i++) {
+      if (i % 1000 == 0)
+         Log() << kINFO << "transform input formula for variable " << dsi.GetVariableInfo(i).GetInternalName() << Endl;
+
+    
+      // create TTreeformula
+      if (! dsi.IsVariableFromArray(i) )  {
+            ttf = new TTreeFormula(Form("Formula%s", dsi.GetVariableInfo(i).GetInternalName().Data()),
+                                   dsi.GetVariableInfo(i).GetExpression().Data(), tr);
+            CheckTTreeFormula(ttf, dsi.GetVariableInfo(i).GetExpression(), hasDollar);
+            fInputFormulas.push_back(ttf);
+            fInputTableFormulas.push_back(std::make_pair(ttf, (Int_t) 0));
+      } else {
+         // it is a variable from an array
+         if (firstArrayVar) {
+
+            Log() << kINFO << "found variable from array " << dsi.GetVariableInfo(i).GetInternalName()
+                  << Endl;
+
+            // create a new TFormula
+            ttf = new TTreeFormula(Form("Formula%s", dsi.GetVariableInfo(i).GetInternalName().Data()),
+                                   dsi.GetVariableInfo(i).GetExpression().Data(), tr);
+            CheckTTreeFormula(ttf, dsi.GetVariableInfo(i).GetExpression(), hasDollar);
+            fInputFormulas.push_back(ttf);
+
+            arraySize = dsi.GetVarArraySize(dsi.GetVariableInfo(i).GetExpression());
+            firstArrayVar = kFALSE;
+            firstArrayVarIndex = i;
+         }
+         fInputTableFormulas.push_back(std::make_pair(ttf, (Int_t) i-firstArrayVarIndex));
+         if (i-firstArrayVarIndex == arraySize-1 ) { 
+            // I am the last element of the array
+            firstArrayVar = kTRUE;
+            firstArrayVarIndex = -1; 
+         }
+      }
+
    }
 
    //
@@ -385,12 +421,15 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
       }
       fWeightFormula.push_back( ttf );
    }
-   Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName()) << "enable branches" << Endl;
+   return; 
+   // all this code below is not needed when using TTReeFormula 
+
+   Log() << kDEBUG << Form("Dataset[%s] : ", dsi.GetName()) << "enable branches" << Endl;
    // now enable only branches that are needed in any input formula, target, cut, weight
 
    if (!hasDollar) {
       tr->SetBranchStatus("*",0);
-      Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName()) << "enable branches: input variables" << Endl;
+      Log() << kINFO << Form("Dataset[%s] : ",dsi.GetName()) << "enable branches: input variables" << Endl;
       // input vars
       for (formIt = fInputFormulas.begin(); formIt!=fInputFormulas.end(); ++formIt) {
          ttf = *formIt;
@@ -399,7 +438,7 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
          }
       }
       // targets
-      Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName()) << "enable branches: targets" << Endl;
+      Log() << kINFO << Form("Dataset[%s] : ",dsi.GetName()) << "enable branches: targets" << Endl;
       for (formIt = fTargetFormulas.begin(); formIt!=fTargetFormulas.end(); ++formIt) {
          ttf = *formIt;
          for (Int_t bi = 0; bi<ttf->GetNcodes(); bi++)
@@ -429,7 +468,7 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
             tr->SetBranchStatus( ttf->GetLeaf(bi)->GetBranch()->GetName(), 1 );
       }
    }
-   Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName()) << "tree initialized" << Endl;
+   Log() << kINFO << Form("Dataset[%s] : ",dsi.GetName()) << "tree initialized" << Endl;
    return;
 }
 
@@ -742,12 +781,13 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
          std::vector<Float_t> vis(nvis);
          TreeInfo currentInfo = *treeIt;
 
-         Log() << kDEBUG << "Building event vectors " << currentInfo.GetTreeType() << Endl;
+         Log() << kINFO << "Building event vectors for type " << currentInfo.GetTreeType() << " " << currentInfo.GetClassName() <<  Endl;
 
          EventVector& event_v = eventsmap[currentInfo.GetTreeType()].at(cl);
 
          Bool_t isChain = (TString("TChain") == currentInfo.GetTree()->ClassName());
          currentInfo.GetTree()->LoadTree(0);
+         // create the TTReeFormula to evalute later on on each single event
          ChangeToNewTree( currentInfo, dsi );
 
          // count number of events in tree before cut
@@ -768,16 +808,32 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
             currentInfo.GetTree()->GetEntry(evtIdx);
             Int_t sizeOfArrays = 1;
             Int_t prevArrExpr = 0;
+            Bool_t haveAllArrayData = kFALSE; 
 
             // ======= evaluate all formulas =================
 
             // first we check if some of the formulas are arrays
-            for (UInt_t ivar=0; ivar<nvars; ivar++) {
-               Int_t ndata = fInputFormulas[ivar]->GetNdata();
+            // This is the case when all inputs (variables, targets and spectetors are array and a TMVA event is not
+            // an event of the tree but an event + array index). In this case we set the flag haveAllArrayData = true
+            // Otherwise we support for arrays of variables where each
+            // element of the array corresponds to a different variable like in the case of image
+            // In that case the VAriableInfo has a bit, IsVariableFromArray that is set and we have a single formula for the array
+            // fInputFormulaTable contains a map of the formula and the variable index to evaluate the formula 
+            for (UInt_t ivar = 0; ivar < nvars; ivar++) {
+               // distinguish case where variable is not from an array
+               if (dsi.IsVariableFromArray(ivar)) continue;
+               auto inputFormula = fInputTableFormulas[ivar].first;
+
+               Int_t ndata = inputFormula->GetNdata();
+
+               // std::cout << " ---> looping on formula for var " << ivar << " ndata = " << ndata << "  - "
+               //           << fInputFormulas[ivar]->GetTitle() << std::endl;
+
                classEventCounts.varAvLength[ivar] += ndata;
                if (ndata == 1) continue;
-               // haveArrayVariable = kTRUE;
+               Bool_t haveAllArrayData = kTRUE;
                varIsArray[ivar] = kTRUE;
+               //std::cout << "Found array !!!" << std::endl;
                if (sizeOfArrays == 1) {
                   sizeOfArrays = ndata;
                   prevArrExpr = ivar;
@@ -788,10 +844,10 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
                   Log() << Form("Dataset[%s] : ",dsi.GetName())<< "   location of error: event " << evtIdx
                         << " in tree " << currentInfo.GetTree()->GetName()
                         << " of file " << currentInfo.GetTree()->GetCurrentFile()->GetName() << Endl;
-                  Log() << Form("Dataset[%s] : ",dsi.GetName())<< "   expression " << fInputFormulas[ivar]->GetTitle() << " has "
+                  Log() << Form("Dataset[%s] : ",dsi.GetName())<< "   expression " << inputFormula->GetTitle() << " has "
                         << Form("Dataset[%s] : ",dsi.GetName()) << ndata << " entries, while" << Endl;
-                  Log() << Form("Dataset[%s] : ",dsi.GetName())<< "   expression " << fInputFormulas[prevArrExpr]->GetTitle() << " has "
-                        << Form("Dataset[%s] : ",dsi.GetName())<< fInputFormulas[prevArrExpr]->GetNdata() << " entries" << Endl;
+                  Log() << Form("Dataset[%s] : ",dsi.GetName())<< "   expression " << fInputTableFormulas[prevArrExpr].first->GetTitle() << " has "
+                        << Form("Dataset[%s] : ",dsi.GetName())<< fInputTableFormulas[prevArrExpr].first->GetNdata() << " entries" << Endl;
                   Log() << kFATAL << Form("Dataset[%s] : ",dsi.GetName())<< "Need to abort" << Endl;
                }
             }
@@ -828,12 +884,14 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
 
                // the input variable
                for (UInt_t ivar=0; ivar<nvars; ivar++) {
-                  formula = fInputFormulas[ivar];
-                  formula->SetQuickLoad(true);
-                  Int_t ndata = formula->GetNdata();
-                  vars[ivar] = (ndata == 1 ?
-                                formula->EvalInstance(0) :
-                                formula->EvalInstance(idata));
+                  auto formulaMap = fInputTableFormulas[ivar];
+                  formula = formulaMap.first;
+                  int inputVarIndex = formulaMap.second;
+                  formula->SetQuickLoad(true); // is this needed ???
+                  //Int_t ndata = formula->GetNdata();
+                  vars[ivar] =  ( !haveAllArrayData ? 
+                                 formula->EvalInstance(inputVarIndex) : 
+                                 formula->EvalInstance(idata));
                   checkNanInf(nanMessages, vars[ivar], "Input", formula->GetTitle());
                }
 
