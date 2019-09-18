@@ -3924,7 +3924,7 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 /// is used where the residual for each bin is computed using as error the observed value (the bin error)
 ///
 /// \f[
-///      Chi2 = \sum{ \left(y(i) - \frac{f(x(i) | p )}{e(i)} \right)^2 }
+///      Chi2 = \sum{ \left(\frac{y(i) - f(x(i) | p )}{e(i)} \right)^2 }
 /// \f]
 ///
 /// where y(i) is the bin content for each bin i, x(i) is the bin center and e(i) is the bin error (sqrt(y(i) for
