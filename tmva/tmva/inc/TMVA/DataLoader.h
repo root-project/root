@@ -117,11 +117,18 @@ namespace TMVA {
       void AddTree( TTree* tree, const TString& className, Double_t weight, const TCut& cut, const TString& treeType );
 
       // set input variable
-      void SetInputVariables  ( std::vector<TString>* theVariables ); // depreciated
+      void SetInputVariables  ( std::vector<TString>* theVariables ); // deprecated
+
       void AddVariable        ( const TString& expression, const TString& title, const TString& unit,
                                 char type='F', Double_t min = 0, Double_t max = 0 );
       void AddVariable        ( const TString& expression, char type='F',
                                 Double_t min = 0, Double_t max = 0 );
+
+      // NEW: add an array of variables (e.g. for image data) with the provided size
+      void AddVariablesArray(const TString &expression, int size, char type = 'F',
+                             Double_t min = 0, Double_t max = 0);
+
+
       void AddTarget          ( const TString& expression, const TString& title = "", const TString& unit = "",
                                 Double_t min = 0, Double_t max = 0 );
       void AddRegressionTarget( const TString& expression, const TString& title = "", const TString& unit = "",
