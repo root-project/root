@@ -2099,9 +2099,15 @@ void TMVA::MethodBase::WriteEvaluationHistosToFile(Types::ETreeType treetype)
             << "/kMaxAnalysisType" << Endl;
    results->GetStorage()->Write();
    if (treetype==Types::kTesting) {
-      GetTransformationHandler().PlotVariables (GetEventCollection( Types::kTesting ), BaseDir() );
+      // skipping plotting of variables if too many (default is 200)
+      if ((int) DataInfo().GetNVariables()< gConfig().GetVariablePlotting().fMaxNumOfAllowedVariables)
+         GetTransformationHandler().PlotVariables (GetEventCollection( Types::kTesting ), BaseDir() );
+      else
+         Log() << kINFO << TString::Format("Dataset[%s] : ",DataInfo().GetName())
+               << " variable plots are not produces ! The number of variables is " << DataInfo().GetNVariables()
+               << " , it is larger than " << gConfig().GetVariablePlotting().fMaxNumOfAllowedVariables << Endl; 
    }
-}
+} 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// write special monitoring histograms to file

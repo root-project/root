@@ -297,7 +297,7 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
    Bool_t hasDollar = kTRUE;  // Set to false if wants to enable only some branch in the tree
 
    // 1) the input variable formulas
-   Log() << kINFO << Form("Dataset[%s] : ",dsi.GetName()) << "transform input variables - tree " << tr->GetName() << Endl;
+   Log() << kINFO << Form("Dataset[%s] : ",dsi.GetName()) << " create input formulas for tree " << tr->GetName() << Endl;
    std::vector<TTreeFormula*>::const_iterator formIt, formItEnd;
    for (formIt = fInputFormulas.begin(), formItEnd=fInputFormulas.end(); formIt!=formItEnd; ++formIt) if (*formIt) delete *formIt;
    fInputFormulas.clear();
@@ -308,9 +308,6 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
    int firstArrayVarIndex = -1;
    int arraySize = -1;  
    for (UInt_t i = 0; i < dsi.GetNVariables(); i++) {
-      if (i % 1000 == 0)
-         Log() << kINFO << "transform input formula for variable " << dsi.GetVariableInfo(i).GetInternalName() << Endl;
-
     
       // create TTreeformula
       if (! dsi.IsVariableFromArray(i) )  {
@@ -323,9 +320,6 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
          // it is a variable from an array
          if (firstArrayVar) {
 
-            Log() << kINFO << "found variable from array " << dsi.GetVariableInfo(i).GetInternalName()
-                  << Endl;
-
             // create a new TFormula
             ttf = new TTreeFormula(Form("Formula%s", dsi.GetVariableInfo(i).GetInternalName().Data()),
                                    dsi.GetVariableInfo(i).GetExpression().Data(), tr);
@@ -335,12 +329,16 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
             arraySize = dsi.GetVarArraySize(dsi.GetVariableInfo(i).GetExpression());
             firstArrayVar = kFALSE;
             firstArrayVarIndex = i;
+
+            Log() << kINFO << "Using variable " << dsi.GetVariableInfo(i).GetInternalName() <<
+               " from array expression " << dsi.GetVariableInfo(i).GetExpression() << " of size " << arraySize << Endl;
          }
          fInputTableFormulas.push_back(std::make_pair(ttf, (Int_t) i-firstArrayVarIndex));
-         if (i-firstArrayVarIndex == arraySize-1 ) { 
+         if (int(i)-firstArrayVarIndex == arraySize-1 ) { 
             // I am the last element of the array
             firstArrayVar = kTRUE;
-            firstArrayVarIndex = -1; 
+            firstArrayVarIndex = -1;
+            Log() << kDEBUG << "Using Last variable from array : " << dsi.GetVariableInfo(i).GetInternalName() << Endl;
          }
       }
 
@@ -746,8 +744,8 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
          eventCounts[i].varAvLength[ivar] = 0;
    }
 
-   // Bool_t haveArrayVariable = kFALSE;
-   Bool_t *varIsArray = new Bool_t[nvars];
+   Bool_t haveArrayVariable = kFALSE;
+   //Bool_t *varIsArray = new Bool_t[nvars];
 
    // If there are NaNs in the tree:
    // => warn if used variables/cuts/weights contain nan (no problem if event is cut out)
@@ -826,13 +824,10 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
 
                Int_t ndata = inputFormula->GetNdata();
 
-               // std::cout << " ---> looping on formula for var " << ivar << " ndata = " << ndata << "  - "
-               //           << fInputFormulas[ivar]->GetTitle() << std::endl;
-
                classEventCounts.varAvLength[ivar] += ndata;
                if (ndata == 1) continue;
-               Bool_t haveAllArrayData = kTRUE;
-               varIsArray[ivar] = kTRUE;
+               haveAllArrayData = kTRUE;
+               //varIsArray[ivar] = kTRUE;
                //std::cout << "Found array !!!" << std::endl;
                if (sizeOfArrays == 1) {
                   sizeOfArrays = ndata;
@@ -888,7 +883,7 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
                   formula = formulaMap.first;
                   int inputVarIndex = formulaMap.second;
                   formula->SetQuickLoad(true); // is this needed ???
-                  //Int_t ndata = formula->GetNdata();
+
                   vars[ivar] =  ( !haveAllArrayData ? 
                                  formula->EvalInstance(inputVarIndex) : 
                                  formula->EvalInstance(idata));
@@ -1031,7 +1026,7 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
    else Log() << kDEBUG //<< Form("Dataset[%s] : ",dsi.GetName())
          << "    No preselection cuts applied on event classes" << Endl;
 
-   delete[] varIsArray;
+   //delete[] varIsArray;
 
 }
 

@@ -107,6 +107,7 @@ namespace TMVA {
          Float_t fTimesRMS;
          Int_t   fNbins1D;
          Int_t   fNbins2D;
+         Int_t   fMaxNumOfAllowedVariables;
          Int_t   fMaxNumOfAllowedVariablesForScatterPlots;
          Int_t   fNbinsMVAoutput;
          Int_t   fNbinsXOfROCCurve;
