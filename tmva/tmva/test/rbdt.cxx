@@ -110,3 +110,19 @@ TEST(RBDT, MulticlassBatch)
    EXPECT_FLOAT_EQ(y(1, 1), 1.0);
    EXPECT_FLOAT_EQ(y(1, 2), -2.0);
 }
+
+TEST(RBDT, ColumnMajorInput)
+{
+   const auto maxDepth = 1;
+   const auto numInputs = 2;
+   const auto numTrees = 1;
+   WriteModel("myModel", "TestRBDT5.root", "identity", {0}, {0}, {0.0, 1.0, -1.0}, {maxDepth}, {numTrees}, {numInputs},
+              {1});
+
+   RBDT bdt("myModel", "TestRBDT5.root");
+   float data[4] = {-999.0, -999.0, 999.0, 999.0};
+   RTensor<float> x(data, {2, 2}, MemoryLayout::ColumnMajor);
+   auto y = bdt.Compute(x);
+   EXPECT_FLOAT_EQ(y(0, 0), 1.0);
+   EXPECT_FLOAT_EQ(y(1, 0), 1.0);
+}
