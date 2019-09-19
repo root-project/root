@@ -279,6 +279,7 @@ using `TH1::GetOption`:
 | "COLZ"    | Same as "COL". In addition the color palette is also drawn.|
 | "COL2"    | Alternative rendering algorithm to "COL". Can significantly improve rendering performance for large, non-sparse 2-D histograms.|
 | "COLZ2"   | Same as "COL2". In addition the color palette is also drawn.|
+| "Z CJUST" | In combination with colored options "COL","CONT0" etc: Justify labels in the color palette at color boudaries. For more details see `TPaletteAxis`|
 | "CANDLE"  | Draw a candle plot along X axis.|
 | "CANDLEX" | Same as "CANDLE".|
 | "CANDLEY" | Draw a candle plot along Y axis.|
@@ -2493,6 +2494,13 @@ the item `colors` in the `VIEW` menu of the canvas tool bar.
 The red, green, and blue components of a color can be changed thanks to
 `TColor::SetRGB()`.
 
+\since **ROOT version 6.19/01**
+
+As default labels and ticks are drawn by `TGAxis` at equidistant (lin or log) 
+points as controlled by SetNdivisions.
+If option "CJUST" is given labels and ticks are justified at the 
+color boundaries defined by the contour levels. 
+For more details see `TPaletteAxis`
 
 ### <a name="HP24"></a> Drawing a sub-range of a 2D histogram; the [cutg] option
 
@@ -4266,7 +4274,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
    if (strstr(chopt,"A"))   Hoption.Axis = -1;
    if (strstr(chopt,"B"))   Hoption.Bar  = 1;
-   if (strstr(chopt,"C")) { Hoption.Curve =1; Hoption.Hist = -1;}
+   if (strstr(chopt,"C") && !strstr(chopt,"CJUST")) { Hoption.Curve =1; Hoption.Hist = -1;}
    if (strstr(chopt,"F"))   Hoption.Fill =1;
    if (strstr(chopt,"][")) {Hoption.Off  =1; Hoption.Hist =1;}
    if (strstr(chopt,"F2"))  Hoption.Fill =2;
