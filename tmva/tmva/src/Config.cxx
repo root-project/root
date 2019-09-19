@@ -66,6 +66,7 @@ TMVA::Config::Config() :
    fVariablePlotting.fTimesRMS = 8.0;
    fVariablePlotting.fNbins1D  = 40;
    fVariablePlotting.fNbins2D  = 300;
+   fVariablePlotting.fMaxNumOfAllowedVariables = 200;
    fVariablePlotting.fMaxNumOfAllowedVariablesForScatterPlots = 20;
 
    fVariablePlotting.fNbinsMVAoutput   = 40;
