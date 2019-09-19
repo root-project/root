@@ -80,6 +80,7 @@ TMVA::DataSetInfo::DataSetInfo(const TString& name)
      fTargetsForMulticlass(0),
      fLogger( new MsgLogger("DataSetInfo", kINFO) )
 {
+   std::cout << "create data set info " << name << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -245,14 +246,17 @@ void TMVA::DataSetInfo::AddVariablesArray(const TString &expression, Int_t size,
    regexpr.ReplaceAll(" ", "");
    fVariables.reserve(fVariables.size() + size);
    for (int i = 0; i < size; ++i) {
-      TString newTitle = title + TString::Format("__[%d]", i);
+      TString newTitle = title + TString::Format("[%d]", i);
+
       fVariables.push_back(
          VariableInfo(regexpr, newTitle, unit, fVariables.size() + 1, varType, external, min, max, normalized));
+      // set corresponding bit indicating is a variable from an array
       fVariables.back().SetBit(kIsArrayVariable);
+      TString newVarName = fVariables.back().GetInternalName() + TString::Format("[%d]", i);
+      fVariables.back().SetInternalName(newVarName);
    }
-   fVarArrays[regexpr] = size; 
+   fVarArrays[regexpr] = size;
    fNeedsRebuilding = kTRUE;
-   //return fVariables.back();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -397,7 +401,7 @@ std::vector<TString> TMVA::DataSetInfo::GetListOfVariables() const
 {
    std::vector<TString> vNames;
    std::vector<TMVA::VariableInfo>::const_iterator viIt = GetVariableInfos().begin();
-   for(;viIt != GetVariableInfos().end(); ++viIt) vNames.push_back( (*viIt).GetExpression() );
+   for(;viIt != GetVariableInfos().end(); ++viIt) vNames.push_back( (*viIt).GetInternalName() );
 
    return vNames;
 }

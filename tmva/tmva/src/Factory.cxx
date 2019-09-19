@@ -123,7 +123,7 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
    fVerboseLevel         ( kINFO ),
    fCorrelations         ( kFALSE ),
    fROC                  ( kTRUE ),
-   fSilentFile           ( kFALSE ),
+   fSilentFile           ( theTargetFile == nullptr ),
    fJobName              ( jobName ),
    fAnalysisType         ( Types::kClassification ),
    fModelPersistence     (kTRUE)
@@ -421,7 +421,7 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
      if (fModelPersistence)
         methBoost->SetWeightFileDir(fFileDir);
      methBoost->SetModelPersistence(fModelPersistence);
-     methBoost->SetBoostedMethodName(theMethodName);       // DSMTEST divided into two lines
+     methBoost->SetBoostedMethodName(theMethodName);                            // DSMTEST divided into two lines
      methBoost->fDataSetManager = loader->GetDataSetInfo().GetDataSetManager(); // DSMTEST
      methBoost->SetFile(fgTargetFile);
      methBoost->SetSilentFile(IsSilentFile());
@@ -1182,42 +1182,45 @@ void TMVA::Factory::TrainAllMethods()
      // iterate through all booked methods
      for (UInt_t i=0; i<methods->size(); i++) {
 
-       MethodBase* m = dynamic_cast<MethodBase*>((*methods)[i]);
-       if(m==0) continue;
+        MethodBase *m = dynamic_cast<MethodBase *>((*methods)[i]);
+        if (m == 0)
+           continue;
 
-       TMVA::Types::EMVA methodType = m->GetMethodType();
-       TString           weightfile = m->GetWeightFileName();
+        TMVA::Types::EMVA methodType = m->GetMethodType();
+        TString weightfile = m->GetWeightFileName();
 
-       // decide if .txt or .xml file should be read:
-       if (READXML) weightfile.ReplaceAll(".txt",".xml");
+        // decide if .txt or .xml file should be read:
+        if (READXML)
+           weightfile.ReplaceAll(".txt", ".xml");
 
-       DataSetInfo& dataSetInfo = m->DataInfo();
-       TString      testvarName = m->GetTestvarName();
-       delete m; //itrMethod[i];
+        DataSetInfo &dataSetInfo = m->DataInfo();
+        TString testvarName = m->GetTestvarName();
+        delete m; // itrMethod[i];
 
-       // recreate
-       m = dynamic_cast<MethodBase *>(ClassifierFactory::Instance().Create(
-          Types::Instance().GetMethodName(methodType).Data(), dataSetInfo, weightfile));
-       if( m->GetMethodType() == Types::kCategory ){
-      MethodCategory *methCat = (dynamic_cast<MethodCategory*>(m));
-      if( !methCat ) Log() << kFATAL << "Method with type kCategory cannot be casted to MethodCategory. /Factory" << Endl;
-      else methCat->fDataSetManager = m->DataInfo().GetDataSetManager();
-       }
-       //ToDo, Do we need to fill the DataSetManager of MethodBoost here too?
+        // recreate
+        m = dynamic_cast<MethodBase *>(ClassifierFactory::Instance().Create(
+           Types::Instance().GetMethodName(methodType).Data(), dataSetInfo, weightfile));
+        if (m->GetMethodType() == Types::kCategory) {
+           MethodCategory *methCat = (dynamic_cast<MethodCategory *>(m));
+           if (!methCat)
+              Log() << kFATAL << "Method with type kCategory cannot be casted to MethodCategory. /Factory" << Endl;
+           else
+              methCat->fDataSetManager = m->DataInfo().GetDataSetManager();
+        }
+        // ToDo, Do we need to fill the DataSetManager of MethodBoost here too?
 
+        TString fFileDir = m->DataInfo().GetName();
+        fFileDir += "/" + gConfig().GetIONames().fWeightFileDir;
+        m->SetWeightFileDir(fFileDir);
+        m->SetModelPersistence(fModelPersistence);
+        m->SetSilentFile(IsSilentFile());
+        m->SetAnalysisType(fAnalysisType);
+        m->SetupMethod();
+        m->ReadStateFromFile();
+        m->SetTestvarName(testvarName);
 
-            TString fFileDir= m->DataInfo().GetName();
-            fFileDir+="/"+gConfig().GetIONames().fWeightFileDir;
-            m->SetWeightFileDir(fFileDir);
-            m->SetModelPersistence(fModelPersistence);
-            m->SetSilentFile(IsSilentFile());
-       m->SetAnalysisType(fAnalysisType);
-       m->SetupMethod();
-       m->ReadStateFromFile();
-       m->SetTestvarName(testvarName);
-
-       // replace trained method by newly created one (from weight file) in methods vector
-       (*methods)[i] = m;
+        // replace trained method by newly created one (from weight file) in methods vector
+        (*methods)[i] = m;
      }
        }
    }
@@ -1245,15 +1248,18 @@ void TMVA::Factory::TestAllMethods()
       MVector::iterator itrMethod;
 
       // iterate over methods and test
-      for( itrMethod = methods->begin(); itrMethod != methods->end(); ++itrMethod ) {
-     Event::SetIsTraining(kFALSE);
-     MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
-     if(mva==0) continue;
-     Types::EAnalysisType analysisType = mva->GetAnalysisType();
-     Log() << kHEADER << "Test method: " << mva->GetMethodName() << " for "
-      << (analysisType == Types::kRegression ? "Regression" :
-          (analysisType == Types::kMulticlass ? "Multiclass classification" : "Classification")) << " performance" << Endl << Endl;
-     mva->AddOutput( Types::kTesting, analysisType );
+      for (itrMethod = methods->begin(); itrMethod != methods->end(); ++itrMethod) {
+         Event::SetIsTraining(kFALSE);
+         MethodBase *mva = dynamic_cast<MethodBase *>(*itrMethod);
+         if (mva == 0)
+            continue;
+         Types::EAnalysisType analysisType = mva->GetAnalysisType();
+         Log() << kHEADER << "Test method: " << mva->GetMethodName() << " for "
+               << (analysisType == Types::kRegression
+                      ? "Regression"
+                      : (analysisType == Types::kMulticlass ? "Multiclass classification" : "Classification"))
+               << " performance" << Endl << Endl;
+         mva->AddOutput(Types::kTesting, analysisType);
       }
    }
 }
@@ -1444,11 +1450,10 @@ void TMVA::Factory::EvaluateAllMethods( void )
 
        mname[0].push_back( theMethod->GetMethodName() );
        nmeth_used[0]++;
-       if(!IsSilentFile())
-       {
-      Log() << kDEBUG << "\tWrite evaluation histograms to file" << Endl;
-      theMethod->WriteEvaluationHistosToFile(Types::kTesting);
-      theMethod->WriteEvaluationHistosToFile(Types::kTraining);
+       if (!IsSilentFile()) {
+          Log() << kDEBUG << "\tWrite evaluation histograms to file" << Endl;
+          theMethod->WriteEvaluationHistosToFile(Types::kTesting);
+          theMethod->WriteEvaluationHistosToFile(Types::kTraining);
        }
      } else if (theMethod->DoMulticlass()) {
         // ====================================================================
