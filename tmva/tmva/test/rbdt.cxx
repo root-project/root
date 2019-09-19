@@ -18,7 +18,7 @@ TEST(RBDT, ClassificationSingleEvent)
    WriteModel("myModel", "TestRBDT0.root", "identity", {0}, {0}, {0.0, 1.0, -1.0}, {maxDepth}, {numTrees}, {numInputs},
               {1});
 
-   RBDT bdt("myModel", "TestRBDT0.root");
+   RBDT<> bdt("myModel", "TestRBDT0.root");
    auto y = bdt.Compute({-999.0});
    EXPECT_EQ(y.size(), 1u);
    EXPECT_FLOAT_EQ(y[0], 1.0);
@@ -33,7 +33,7 @@ TEST(RBDT, ClassificationSingleEventRVec)
    WriteModel("myModel", "TestRBDT1.root", "identity", {0}, {0}, {0.0, 1.0, -1.0}, {maxDepth}, {numTrees}, {numInputs},
               {1});
 
-   RBDT bdt("myModel", "TestRBDT1.root");
+   RBDT<> bdt("myModel", "TestRBDT1.root");
    ROOT::RVec<float> x = {-999.0};
    auto y = bdt.Compute(x);
    EXPECT_EQ(y.size(), 1u);
@@ -48,7 +48,7 @@ TEST(RBDT, ClassificationBatch)
    WriteModel("myModel", "TestRBDT2.root", "identity", {0}, {0}, {0.0, 1.0, -1.0}, {maxDepth}, {numTrees}, {numInputs},
               {1});
 
-   RBDT bdt("myModel", "TestRBDT2.root");
+   RBDT<> bdt("myModel", "TestRBDT2.root");
    RTensor<float> x({2, 1});
    x(0, 0) = -999.0;
    x(0, 1) = 999.0;
@@ -69,7 +69,7 @@ TEST(RBDT, MulticlassSingleEvent)
    WriteModel("myModel", "TestRBDT3.root", "softmax", {0, 0, 0}, {0, 1, 2},
               {0.0, 1.0, -1.0, 0.0, -1.0, 1.0, 0.0, 2.0, -2.0}, {maxDepth}, {numTrees}, {numInputs}, {numOutputs});
 
-   RBDT bdt("myModel", "TestRBDT3.root");
+   RBDT<> bdt("myModel", "TestRBDT3.root");
 
    auto y = bdt.Compute({-999.0});
    EXPECT_EQ(y.size(), 3u);
@@ -95,7 +95,7 @@ TEST(RBDT, MulticlassBatch)
    WriteModel("myModel", "TestRBDT4.root", "identity", {0, 0, 0}, {0, 1, 2},
               {0.0, 1.0, -1.0, 0.0, -1.0, 1.0, 0.0, 2.0, -2.0}, {maxDepth}, {numTrees}, {numInputs}, {numOutputs});
 
-   RBDT bdt("myModel", "TestRBDT4.root");
+   RBDT<> bdt("myModel", "TestRBDT4.root");
    RTensor<float> x({2, 1});
    x(0, 0) = -999.0;
    x(0, 1) = 999.0;
@@ -119,7 +119,7 @@ TEST(RBDT, ColumnMajorInput)
    WriteModel("myModel", "TestRBDT5.root", "identity", {0}, {0}, {0.0, 1.0, -1.0}, {maxDepth}, {numTrees}, {numInputs},
               {1});
 
-   RBDT bdt("myModel", "TestRBDT5.root");
+   RBDT<> bdt("myModel", "TestRBDT5.root");
    float data[4] = {-999.0, -999.0, 999.0, 999.0};
    RTensor<float> x(data, {2, 2}, MemoryLayout::ColumnMajor);
    auto y = bdt.Compute(x);
