@@ -62,19 +62,20 @@ struct BranchlessTree {
    std::vector<T> fThresholds; ///< Cut thresholds or scores if corresponding node is a leaf
    std::vector<int> fInputs;   ///< Cut variables / inputs
 
-   inline T Inference(const T *input);
+   inline T Inference(const T *input, const int stride);
    inline void FillSparse();
 };
 
 /// Perform inference on a single input vector
 /// \param[in] input Pointer to data containing the input values
+/// \param[in] stride Stride to go from one input variable to the next one
 /// \param[out] Tree score, result of the inference
 template <typename T>
-inline T BranchlessTree<T>::Inference(const T *input)
+inline T BranchlessTree<T>::Inference(const T *input, const int stride)
 {
    int index = 0;
    for (int level = 0; level < fTreeDepth; ++level) {
-      index = 2 * index + 1 + (input[fInputs[index]] > fThresholds[index]);
+      index = 2 * index + 1 + (input[fInputs[index] * stride] > fThresholds[index]);
    }
    return fThresholds[index];
 }

@@ -77,7 +77,7 @@ public:
       Vector y;
       y.resize(fNumOutputs);
       for (int i = 0; i < fNumOutputs; i++)
-         fBackends[i].Inference(&x[0], 1, &y[i]);
+         fBackends[i].Inference(&x[0], 1, true, &y[i]);
       if (fNormalizeOutputs) {
          Value_t s = 0.0;
          for (int i = 0; i < fNumOutputs; i++)
@@ -96,8 +96,9 @@ public:
    {
       const auto rows = x.GetShape()[0];
       RTensor<Value_t> y({rows, static_cast<std::size_t>(fNumOutputs)}, MemoryLayout::ColumnMajor);
+      const bool layout = x.GetMemoryLayout() == MemoryLayout::ColumnMajor ? false : true;
       for (int i = 0; i < fNumOutputs; i++)
-         fBackends[i].Inference(x.GetData(), rows, &y(0, i));
+         fBackends[i].Inference(x.GetData(), rows, layout, &y(0, i));
       if (fNormalizeOutputs) {
          Value_t s;
          for (int i = 0; i < static_cast<int>(rows); i++) {

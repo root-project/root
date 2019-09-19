@@ -67,21 +67,24 @@ struct ForestBase {
    ForestType fTrees;                  ///< Store the forest, either as vector or jitted function
    int fNumInputs;                     ///< Number of input variables
 
-   void Inference(const T *inputs, const int rows, T *predictions);
+   void Inference(const T *inputs, const int rows, bool layout, T *predictions);
 };
 
 /// Perform inference of the forest on a batch of inputs
 ///
 /// \param[in] inputs Pointer to data containing the inputs
 /// \param[in] rows Number of events in inputs vector
+/// \param[in] layout Row major (true) or column major (false) memory layout
 /// \param[in] predictions Pointer to the buffer to be filled with the predictions
 template <typename T, typename ForestType>
-inline void ForestBase<T, ForestType>::Inference(const T *inputs, const int rows, T *predictions)
+inline void ForestBase<T, ForestType>::Inference(const T *inputs, const int rows, bool layout, T *predictions)
 {
+   const auto strideTree = layout ? 1 : rows;
+   const auto strideBatch = layout ? fNumInputs : 1;
    for (int i = 0; i < rows; i++) {
       predictions[i] = 0.0;
       for (auto &tree : fTrees) {
-         predictions[i] += tree.Inference(inputs + i * fNumInputs);
+         predictions[i] += tree.Inference(inputs + i * strideBatch, strideTree);
       }
       predictions[i] = fObjectiveFunc(predictions[i]);
    }
