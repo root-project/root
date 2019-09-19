@@ -20,10 +20,10 @@
 #ifndef TMVA_TREEINFERENCE_OBJECTIVES
 #define TMVA_TREEINFERENCE_OBJECTIVES
 
-#include <cmath>
 #include <string>
-#include <algorithm>
 #include <stdexcept>
+#include <cmath> // std::exp
+#include <functional> // std::function
 
 namespace TMVA {
 namespace Experimental {
