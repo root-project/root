@@ -110,8 +110,8 @@ TCutG::TCutG(const TCutG &cutg)
 {
    fVarX    = cutg.fVarX;
    fVarY    = cutg.fVarY;
-   fObjectX = cutg.fObjectX;
-   fObjectY = cutg.fObjectY;
+   fObjectX = cutg.fObjectX ? cutg.fObjectX->Clone() : nullptr;
+   fObjectY = cutg.fObjectY ? cutg.fObjectY->Clone() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
