@@ -17,7 +17,7 @@ TEST(BranchlessTree, InferenceFullTreeDepth0)
    tree.fTreeDepth = 0;
    tree.fThresholds = {-1.0};
    tree.fInputs = {};
-   EXPECT_FLOAT_EQ(tree.Inference(nullptr), -1.0);
+   EXPECT_FLOAT_EQ(tree.Inference(nullptr, 1), -1.0);
 }
 
 TEST(BranchlessTree, InferenceFullTreeDepth1)
@@ -27,7 +27,7 @@ TEST(BranchlessTree, InferenceFullTreeDepth1)
    tree.fThresholds = {0.0, 1.0, -1.0};
    tree.fInputs = {0};
    float input[1] = {999.0};
-   EXPECT_FLOAT_EQ(tree.Inference(input), -1.0);
+   EXPECT_FLOAT_EQ(tree.Inference(input, 1), -1.0);
 }
 
 TEST(BranchlessTree, InferenceSparseTreeDepth1)
@@ -41,9 +41,9 @@ TEST(BranchlessTree, InferenceSparseTreeDepth1)
    EXPECT_FLOAT_EQ(tree.fThresholds[1], 1.0);
    EXPECT_FLOAT_EQ(tree.fThresholds[2], 1.0);
    float input0[1] = {-999.0};
-   EXPECT_FLOAT_EQ(tree.Inference(input0), 1.0);
+   EXPECT_FLOAT_EQ(tree.Inference(input0, 1), 1.0);
    float input1[1] = {999.0};
-   EXPECT_FLOAT_EQ(tree.Inference(input1), 1.0);
+   EXPECT_FLOAT_EQ(tree.Inference(input1, 1), 1.0);
 }
 
 TEST(BranchlessTree, InferenceFullTreeDepth2)
@@ -53,13 +53,13 @@ TEST(BranchlessTree, InferenceFullTreeDepth2)
    tree.fThresholds = {0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
    tree.fInputs = {0, 1, 2};
    float input0[3] = {-1.0, 0.0, -999.0};
-   EXPECT_FLOAT_EQ(tree.Inference(input0), 3.0);
+   EXPECT_FLOAT_EQ(tree.Inference(input0, 1), 3.0);
    float input1[3] = {-1.0, 2.0, -999.0};
-   EXPECT_FLOAT_EQ(tree.Inference(input1), 4.0);
+   EXPECT_FLOAT_EQ(tree.Inference(input1, 1), 4.0);
    float input2[3] = {1.0, -999.0, 1.0};
-   EXPECT_FLOAT_EQ(tree.Inference(input2), 5.0);
+   EXPECT_FLOAT_EQ(tree.Inference(input2, 1), 5.0);
    float input3[3] = {1.0, -999.0, 3.0};
-   EXPECT_FLOAT_EQ(tree.Inference(input3), 6.0);
+   EXPECT_FLOAT_EQ(tree.Inference(input3, 1), 6.0);
 }
 
 TEST(BranchlessTree, InferenceSparseTreeDepth2)
@@ -73,13 +73,13 @@ TEST(BranchlessTree, InferenceSparseTreeDepth2)
    EXPECT_FLOAT_EQ(tree.fThresholds[3], 1.0);
    EXPECT_FLOAT_EQ(tree.fThresholds[4], 1.0);
    float input0[3] = {-1.0, 0.0, -999.0};
-   EXPECT_FLOAT_EQ(tree.Inference(input0), 1.0);
+   EXPECT_FLOAT_EQ(tree.Inference(input0, 1), 1.0);
    float input1[3] = {-1.0, 2.0, -999.0};
-   EXPECT_FLOAT_EQ(tree.Inference(input1), 1.0);
+   EXPECT_FLOAT_EQ(tree.Inference(input1, 1), 1.0);
    float input2[3] = {1.0, -999.0, 1.0};
-   EXPECT_FLOAT_EQ(tree.Inference(input2), 5.0);
+   EXPECT_FLOAT_EQ(tree.Inference(input2, 1), 5.0);
    float input3[3] = {1.0, -999.0, 3.0};
-   EXPECT_FLOAT_EQ(tree.Inference(input3), 6.0);
+   EXPECT_FLOAT_EQ(tree.Inference(input3, 1), 6.0);
 }
 
 TEST(BranchlessForest, InferenceSingleTree)
@@ -96,7 +96,7 @@ TEST(BranchlessForest, InferenceSingleTree)
    const auto rows = 2;
    float inputs[numInputs * rows] = {-999.0, 999.0};
    float predictions[rows];
-   forest.Inference(inputs, rows, predictions);
+   forest.Inference(inputs, rows, true, predictions);
    EXPECT_FLOAT_EQ(predictions[0], 1.0);
    EXPECT_FLOAT_EQ(predictions[1], -1.0);
 }
@@ -115,7 +115,7 @@ TEST(BranchlessForest, InferenceSingleTreeObjectiveLogistic)
    const auto rows = 2;
    float inputs[numInputs * rows] = {-999.0, 999.0};
    float predictions[rows];
-   forest.Inference(inputs, rows, predictions);
+   forest.Inference(inputs, rows, true, predictions);
    EXPECT_FLOAT_EQ(predictions[0], Objectives::Logistic<float>(1.0));
    EXPECT_FLOAT_EQ(predictions[1], Objectives::Logistic<float>(-1.0));
 }
@@ -135,7 +135,7 @@ TEST(BranchlessForest, InferenceTwoTrees)
    const auto rows = 2;
    float inputs[numInputs * rows] = {-999.0, 999.0, 999.0, -999.0};
    float predictions[rows];
-   forest.Inference(inputs, rows, predictions);
+   forest.Inference(inputs, rows, true, predictions);
    EXPECT_FLOAT_EQ(predictions[0], 1.0 + -2.0);
    EXPECT_FLOAT_EQ(predictions[1], -1.0 + 2.0);
 }
