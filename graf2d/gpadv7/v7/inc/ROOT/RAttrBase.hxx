@@ -146,7 +146,15 @@ public:
    friend bool operator!=(const RAttrBase& lhs, const RAttrBase& rhs){ return !lhs.IsSame(rhs) || !rhs.IsSame(lhs); }
 };
 
+
 } // namespace Experimental
 } // namespace ROOT
+
+#define R_ATTR_CLASS(ClassName,dflt_prefix) \
+   ClassName() = default; \
+   ClassName(RAttrValues &cont, const std::string &prefix = dflt_prefix) { AssignAttributes(cont, prefix); } \
+   ClassName(const RAttrBase *parent, const std::string &prefix = dflt_prefix) { AssignParent(parent, prefix); } \
+   ClassName(const ClassName &src) : ClassName() { src.CopyTo(*this); } \
+   ClassName &operator=(const ClassName &src) { Clear(); src.CopyTo(*this); return *this; }
 
 #endif
