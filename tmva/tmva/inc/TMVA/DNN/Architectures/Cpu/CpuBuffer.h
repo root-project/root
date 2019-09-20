@@ -66,6 +66,22 @@ public:
 
     operator AFloat * () const {return (* fBuffer) + fOffset;}
 
+    class FakeIteratorBegin{
+    private:
+      AFloat& fBeginRet;
+    public:
+      FakeIteratorBegin(AFloat& x): fBeginRet(x){}
+      AFloat& operator*()
+      {
+         return fBeginRet;
+      }
+    };
+    FakeIteratorBegin begin(){
+      return FakeIteratorBegin((*fBuffer.get())[fOffset]);
+   }
+
+
+
     /** Return sub-buffer of size \p start starting at element \p offset. */
     TCpuBuffer GetSubBuffer(size_t offset, size_t start) const;
 
@@ -80,7 +96,7 @@ public:
     void CopyTo(TCpuBuffer &);
 
     /**
-     * copy pointer from an external 
+     * copy pointer from an external
      */
 
     size_t GetSize() const {return fSize;}
@@ -92,4 +108,3 @@ public:
 } // namespace TMVA
 
 #endif
-
