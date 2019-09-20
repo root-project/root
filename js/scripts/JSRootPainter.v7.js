@@ -3794,9 +3794,9 @@
    }
 
    TPadPainter.prototype.GetNewOpt = function(attr, name, dflt) {
-      if (!attr || !attr.map || !attr.map.m) return dflt;
+      if (!attr || !attr.m) return dflt;
 
-      var value = attr.map.m[name];
+      var value = attr.m[name];
       return value ? value.v : dflt;
    }
 
