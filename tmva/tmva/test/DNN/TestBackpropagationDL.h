@@ -242,7 +242,7 @@ auto testBackpropagationL2Regularization(typename Architecture::Scalar_t dx)
              EInitialization::kGauss);  // use kIdentity for debugging
    // FCLayer_t* l1 = net.AddDenseLayer(outputSize, EActivationFunction::kIdentity);
    // test fails if using VDT and tanh
-   net.AddDenseLayer(outputSize, EActivationFunction::kTanh);  // careful kTanh gives some numerical issues in finite difference when using VDT
+   net.AddDenseLayer(outputSize, EActivationFunction::kSigmoid);  // careful kTanh gives some numerical issues in finite difference when using VDT
 
    // Random training data.
    Tensor_t X(timeSteps, tbatchSize, inputSize); // T x B x D
