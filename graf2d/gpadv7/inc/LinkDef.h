@@ -14,13 +14,12 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class ROOT::Experimental::RAttrValues+;
-#pragma link C++ class ROOT::Experimental::RAttrValues::Value_t+;
-#pragma link C++ class ROOT::Experimental::RAttrValues::BoolValue_t+;
-#pragma link C++ class ROOT::Experimental::RAttrValues::IntValue_t+;
-#pragma link C++ class ROOT::Experimental::RAttrValues::DoubleValue_t+;
-#pragma link C++ class ROOT::Experimental::RAttrValues::StringValue_t+;
-#pragma link C++ class ROOT::Experimental::RAttrValues::Map_t+;
+#pragma link C++ class ROOT::Experimental::RAttrMap+;
+#pragma link C++ class ROOT::Experimental::RAttrMap::Value_t+;
+#pragma link C++ class ROOT::Experimental::RAttrMap::BoolValue_t+;
+#pragma link C++ class ROOT::Experimental::RAttrMap::IntValue_t+;
+#pragma link C++ class ROOT::Experimental::RAttrMap::DoubleValue_t+;
+#pragma link C++ class ROOT::Experimental::RAttrMap::StringValue_t+;
 #pragma link C++ class ROOT::Experimental::RAttrBase+;
 
 #pragma link C++ class ROOT::Experimental::RStyle+;

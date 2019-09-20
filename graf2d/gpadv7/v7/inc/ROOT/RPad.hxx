@@ -20,7 +20,6 @@
 #include <vector>
 
 #include "ROOT/RDrawable.hxx"
-#include "ROOT/RAttrValues.hxx"
 #include "ROOT/RFrame.hxx"
 #include "ROOT/RPadExtent.hxx"
 #include "ROOT/RPadPos.hxx"

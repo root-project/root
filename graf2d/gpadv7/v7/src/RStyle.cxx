@@ -27,7 +27,7 @@ using namespace std::string_literals;
 ///////////////////////////////////////////////////////////////////////////////
 /// Evaluate style
 
-const ROOT::Experimental::RAttrValues::Value_t *ROOT::Experimental::RStyle::Eval(const std::string &field, const RDrawable *drawable) const
+const ROOT::Experimental::RAttrMap::Value_t *ROOT::Experimental::RStyle::Eval(const std::string &field, const RDrawable *drawable) const
 {
    for (const auto &block : fBlocks) {
 
