@@ -34,7 +34,7 @@ class RCanvas;
 
 
 template <class DRAWABLE, class... ARGS>
-inline auto GetDrawable(const std::shared_ptr<DRAWABLE> &drawable, ARGS... args)
+inline auto GetDrawable(const std::shared_ptr<DRAWABLE> &drawable, ARGS...)
 {
    return drawable;
 }
