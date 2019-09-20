@@ -102,7 +102,10 @@ bool ROOT::Experimental::RAttrBase::IsValueEqual(const std::string &name, const 
 
 void ROOT::Experimental::RAttrBase::CopyTo(RAttrBase &tgt, bool use_style) const
 {
-   if (GetAttr())
+   if (GetAttr()) {
+
+      std::shared_ptr<RStyle> style;
+
       for (const auto &entry : GetDefaults()) {
 
          auto fullname = GetFullName(entry.first);
@@ -110,12 +113,16 @@ void ROOT::Experimental::RAttrBase::CopyTo(RAttrBase &tgt, bool use_style) const
          auto rec = fAttr->Find(fullname);
          if (rec && tgt.CopyValue(entry.first,rec)) continue;
 
-         while (fDrawable && use_style)
-            if (auto observe = fDrawable->fStyle.lock()) {
-               rec = observe->Eval(fullname, fDrawable);
-               if (rec && tgt.CopyValue(entry.first, rec)) break;
+         if (fDrawable && use_style) {
+            if (!style)
+               style = fDrawable->fStyle.lock();
+            if (style) {
+               rec = style->Eval(fullname, fDrawable);
+               if (rec) tgt.CopyValue(entry.first, rec);
             }
+         }
       }
+   }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -123,7 +130,10 @@ void ROOT::Experimental::RAttrBase::CopyTo(RAttrBase &tgt, bool use_style) const
 
 bool ROOT::Experimental::RAttrBase::IsSame(const RAttrBase &tgt, bool use_style) const
 {
-   if (GetAttr())
+   if (GetAttr()) {
+
+      std::shared_ptr<RStyle> style;
+
       for (const auto &entry : GetDefaults()) {
 
          auto fullname = GetFullName(entry.first);
@@ -134,15 +144,16 @@ bool ROOT::Experimental::RAttrBase::IsSame(const RAttrBase &tgt, bool use_style)
             continue;
          }
 
-         if (fDrawable && use_style)
-            if (auto observe = fDrawable->fStyle.lock()) {
-               rec = observe->Eval(fullname, fDrawable);
-               if (rec) {
-                  if (!tgt.IsValueEqual(entry.first, rec, use_style)) return false;
-                  break;
-               }
+         if (fDrawable && use_style) {
+            if (!style)
+               style = fDrawable->fStyle.lock();
+            if (style) {
+               rec = style->Eval(fullname, fDrawable);
+               if (rec && !tgt.IsValueEqual(entry.first, rec, use_style)) return false;
             }
+         }
       }
+   }
    return true;
 }
 
