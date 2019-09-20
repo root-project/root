@@ -30,6 +30,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RInterface
     Matrix
     RIO
     Thread
+  NO_MODULE
 )
 
 ROOT_ADD_CXX_FLAG(_R_FLAGS -Wno-cast-function-type)
