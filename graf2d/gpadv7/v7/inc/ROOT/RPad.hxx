@@ -53,7 +53,6 @@ private:
 
    /// Content of the pad.
 
-
    std::vector<Primitive_t> fPrimitives;
 
    /// RFrame with user coordinate system, if used by this pad.
@@ -69,14 +68,11 @@ private:
 
 protected:
    /// Allow derived classes to default construct a RPadBase.
-   RPadBase() = default;
-
-   RAttrValues fAttr{"pad"};       ///< attributes
+   RPadBase() : RDrawable("pad") {}
 
    void CollectShared(Internal::RIOSharedVector_t &) override;
 
 public:
-
 
 
    using Primitives_t = std::vector<std::shared_ptr<RDrawable>>;
@@ -235,7 +231,7 @@ class RPad: public RPadBase {
    RPadPos fPos;                           ///<! pad position
    RPadExtent fSize;                       ///<! pad size
 
-   RAttrLine fLineAttr{fAttr, "border_"};   ///<! border attributes
+   RAttrLine fLineAttr{this, "border_"};   ///<! border attributes
 
 public:
    /// Create a topmost, non-paintable pad.

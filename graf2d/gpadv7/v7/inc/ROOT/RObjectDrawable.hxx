@@ -43,9 +43,9 @@ protected:
    void CollectShared(Internal::RIOSharedVector_t &vect) final { vect.emplace_back(&fObj); }
 
 public:
-   RObjectDrawable() = default;
+   RObjectDrawable() : RDrawable("tobject") {}
 
-   RObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt) : fObj(obj), fOpts(opt) {}
+   RObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt) : RDrawable("tobject"), fObj(obj), fOpts(opt) {}
 
    /// Fill menu items for the object
    void PopulateMenu(RMenuItems &) final;

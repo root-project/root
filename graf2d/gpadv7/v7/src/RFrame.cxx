@@ -20,9 +20,11 @@
 
 #include <cassert>
 
-ROOT::Experimental::RFrame::RFrame(std::vector<std::unique_ptr<RPadUserAxisBase>> &&coords) : RDrawable(),
-   fUserCoord(std::move(coords)), fPalette(RPalette::GetPalette("default"))
-{}
+ROOT::Experimental::RFrame::RFrame(std::vector<std::unique_ptr<RPadUserAxisBase>> &&coords) : RFrame()
+{
+   fUserCoord=  std::move(coords);
+   fPalette = RPalette::GetPalette("default");
+}
 
 void ROOT::Experimental::RFrame::GrowToDimensions(size_t nDimensions)
 {

@@ -20,12 +20,15 @@
 #include <string>
 #include <vector>
 
+#include <ROOT/RAttrValues.hxx>
 
 namespace ROOT {
 namespace Experimental {
 
 class RMenuItems;
 class RPadBase;
+class RAttrBase;
+
 
 namespace Internal {
 class RPadPainter;
@@ -87,16 +90,22 @@ public:
 
 class RDrawable {
 friend class RPadBase;
+friend class RAttrBase;
 
 private:
 
    std::string  fId; ///< object identifier, unique inside RCanvas
 
+   RAttrValues fAttr; ///< attributes values
+
 protected:
 
    virtual void CollectShared(Internal::RIOSharedVector_t &) {}
+   RAttrValues *GetAttr() { return &fAttr; }
 
 public:
+
+   explicit RDrawable(const std::string &type) : fAttr(type) {}
 
    virtual ~RDrawable();
 

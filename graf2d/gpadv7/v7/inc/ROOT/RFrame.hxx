@@ -43,7 +43,7 @@ private:
 
 public:
    // Default constructor
-   RFrame() : RDrawable()
+   RFrame() : RDrawable("frame")
    {
       GrowToDimensions(2);
    }

@@ -33,14 +33,12 @@ namespace Experimental {
 class RBox : public RDrawable {
 
    /// Box's coordinates
-   RPadPos fP1;                         ///< line begin
-   RPadPos fP2;                         ///< line end
-   RAttrValues fAttr{"line"};           ///< attributes
-   RAttrBox fBoxAttr{fAttr, "box_"};    ///<! line attributes
+   RPadPos fP1, fP2;                    ///< line begin,end
+   RAttrBox fBoxAttr{this, "box_"};     ///<! line attributes
 
 public:
 
-   RBox() = default;
+   RBox() : RDrawable("box") {}
 
    RBox(const RPadPos& p1, const RPadPos& p2) : RBox() { fP1 = p1; fP2 = p2; }
 
