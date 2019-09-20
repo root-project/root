@@ -33,6 +33,14 @@ namespace Experimental {
 class RPad;
 class RCanvas;
 
+
+template <class... ARGS>
+inline std::shared_ptr<RDrawable> GetDrawable(const std::shared_ptr<RDrawable> &drawable, ARGS... args)
+{
+   return drawable;
+}
+
+
 /** \class ROOT::Experimental::RPadBase
   Base class for graphic containers for `RDrawable`-s.
   */
@@ -85,13 +93,13 @@ public:
    template<class T, class... ARGS>
    auto Draw(ARGS... args)
    {
-      auto res = std::make_shared<T>(args...);
+      auto drawable = std::make_shared<T>(args...);
 
-      fPrimitives.emplace_back(res);
+      fPrimitives.emplace_back(drawable);
 
       AssignUniqueID(fPrimitives.back().get());
 
-      return res;
+      return drawable;
    }
 
    auto Draw(std::shared_ptr<RDrawable> &&drawable)
@@ -101,6 +109,22 @@ public:
       AssignUniqueID(fPrimitives.back().get());
 
       return fPrimitives.back().get_shared();
+   }
+
+   /// Add something to be painted.
+   /// The pad observes what's lifetime through a weak pointer.
+   /// Drawing options will be constructed through `args`, which can be empty for default-constructed options.
+   template <class T, class... ARGS>
+   auto Draw(const std::shared_ptr<T> &what, ARGS... args)
+   {
+      // Requires GetDrawable(what) to be known!
+      auto drawable = GetDrawable(what, args...);
+
+      fPrimitives.emplace_back(drawable);
+
+      AssignUniqueID(fPrimitives.back().get());
+
+      return drawable;
    }
 
    unsigned NumPrimitives() const { return fPrimitives.size(); }
