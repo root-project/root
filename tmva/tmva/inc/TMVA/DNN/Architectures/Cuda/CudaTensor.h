@@ -346,7 +346,7 @@ public:
       fShape   = newShape;
       fStrides = ComputeStridesFromShape(fShape, fMemoryLayout == MemoryLayout::RowMajor);
       fNDim = fShape.size(); 
-      // reset the descritor for Cudnn
+#ifdef DEBUG
       std::cout << "reshaping tensor to a new shape " << std::endl;
       std::cout << "old shape : "; 
       for (size_t i = 0; i < fNDim; i++) std::cout << fShape[i] << "  ";
@@ -354,6 +354,8 @@ public:
       std::cout << "new shape : "; 
       for (size_t i = 0; i < fNDim; i++) std::cout << fShape[i] << "  ";
       std::cout << std::endl;
+#endif
+      // reset the descritor for Cudnn
       SetTensorDescriptor(); 
    }
 

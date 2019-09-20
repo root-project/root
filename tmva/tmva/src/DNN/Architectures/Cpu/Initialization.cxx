@@ -87,6 +87,8 @@ template<typename AFloat>
 void TCpu<AFloat>::InitializeGlorotNormal(TCpuMatrix<AFloat> & A)
 {
    size_t m,n;
+   // for conv layer weights output m is only output depth. It shouild ne multiplied also by filter sizes 
+   // e.g. 9 for a 3x3 filter. But this information is lost if we use Tensors of dims 2 
    m = A.GetNrows();
    n = A.GetNcols();
 
@@ -97,9 +99,12 @@ void TCpu<AFloat>::InitializeGlorotNormal(TCpuMatrix<AFloat> & A)
 
    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n; j++) {
-         AFloat value = rand.Gaus(0.0, sigma);
-         if ( std::abs(value) > 2*sigma) continue; 
-         A(i,j) = rand.Gaus(0.0, sigma);
+         AFloat value = 0; 
+         do { 
+            value = rand.Gaus(0.0, sigma);
+         } while ( std::abs(value) > 2*sigma);
+         R__ASSERT( std::abs(value) < 2*sigma); 
+         A(i,j) = value;
       }
    }
 }
