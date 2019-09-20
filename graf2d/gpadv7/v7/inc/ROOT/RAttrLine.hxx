@@ -30,17 +30,9 @@ class RAttrLine : public RAttrBase {
 
    RColor fColor{this, "color_"}; ///<! line color, will access container from line attributes
 
-protected:
-   const RAttrValues::Map_t &GetDefaults() const override
-   {
-      static auto dflts = RAttrValues::Map_t().AddDouble("width",1.).AddInt("style",1).AddDefaults(fColor);
-      return dflts;
-   }
+   R_ATTR_CLASS(RAttrLine, "line_", AddDouble("width",1.).AddInt("style",1).AddDefaults(fColor));
 
-public:
-
-   R_ATTR_CLASS(RAttrLine,"line_")
-
+   // keep it here, it is minimal set of methods which should be reimplemented
    // using RAttrBase::RAttrBase;
    // RAttrLine(const RAttrLine &src) : RAttrLine() { src.CopyTo(*this); }
    // RAttrLine &operator=(const RAttrLine &src) { Clear(); src.CopyTo(*this); return *this; }

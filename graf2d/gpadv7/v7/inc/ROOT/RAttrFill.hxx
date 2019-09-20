@@ -30,19 +30,7 @@ class RAttrFill : public RAttrBase {
 
    RColor fColor{this, "color_"}; ///<! line color, will access container from line attributes
 
-protected:
-   const RAttrValues::Map_t &GetDefaults() const override
-   {
-      static auto dflts = RAttrValues::Map_t().AddInt("style",1).AddDefaults(fColor);
-      return dflts;
-   }
-
-public:
-
-   using RAttrBase::RAttrBase;
-
-   RAttrFill(const RAttrFill &src) : RAttrFill() { src.CopyTo(*this); }
-   RAttrFill &operator=(const RAttrFill &src) { Clear(); src.CopyTo(*this); return *this; }
+   R_ATTR_CLASS(RAttrFill, "fill_", AddInt("style",1).AddDefaults(fColor));
 
    ///The fill style
    RAttrFill &SetStyle(int style) { SetValue("style", style); return *this; }

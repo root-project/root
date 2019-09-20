@@ -150,7 +150,14 @@ public:
 } // namespace Experimental
 } // namespace ROOT
 
-#define R_ATTR_CLASS(ClassName,dflt_prefix) \
+#define R_ATTR_CLASS(ClassName,dflt_prefix,dflt_values) \
+protected: \
+const RAttrValues::Map_t &GetDefaults() const override \
+{ \
+   static auto dflts = RAttrValues::Map_t().dflt_values; \
+   return dflts; \
+} \
+public: \
    ClassName() = default; \
    ClassName(RAttrValues &cont, const std::string &prefix = dflt_prefix) { AssignAttributes(cont, prefix); } \
    ClassName(const RAttrBase *parent, const std::string &prefix = dflt_prefix) { AssignParent(parent, prefix); } \

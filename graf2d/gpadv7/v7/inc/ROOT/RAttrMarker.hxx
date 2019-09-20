@@ -22,26 +22,15 @@
 namespace ROOT {
 namespace Experimental {
 
-/** \class ROOT::Experimental::RMarker
- A simple marker.
+/** \class ROOT::Experimental::RAttrMarker
+ A marker attributes.
  */
 
 class RAttrMarker : public RAttrBase {
 
    RColor fColor{this, "color_"}; ///<! marker color, will access container from line attributes
 
-protected:
-   const RAttrValues::Map_t &GetDefaults() const override
-   {
-      static auto dflts = RAttrValues::Map_t().AddDouble("size",1.).AddInt("style",1).AddDefaults(fColor);
-      return dflts;
-   }
-
-public:
-   using RAttrBase::RAttrBase;
-
-   RAttrMarker(const RAttrMarker &src) : RAttrMarker() { src.CopyTo(*this); }
-   RAttrMarker &operator=(const RAttrMarker &src) { Clear(); src.CopyTo(*this); return *this; }
+   R_ATTR_CLASS(RAttrMarker, "marker_", AddDouble("size",1.).AddInt("style",1).AddDefaults(fColor));
 
    RAttrMarker &SetColor(const RColor &color) { fColor = color; return *this; }
    const RColor &Color() const { return fColor; }

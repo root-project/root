@@ -29,18 +29,9 @@ namespace Experimental {
 
 class RColor : public RAttrBase {
 
-protected:
-   const RAttrValues::Map_t &GetDefaults() const override
-   {
-      static auto dflts = RAttrValues::Map_t().AddString("rgb","0,0,0").AddDouble("a",1.);
-      return dflts;
-   }
-
-public:
+   R_ATTR_CLASS(RColor, "color_", AddString("rgb","0,0,0").AddDouble("a",1.));
 
    using RGB_t = std::array<int, 3>;
-
-   using RAttrBase::RAttrBase;
 
    RColor(int r, int g, int b) : RColor() { SetRGB(r, g, b); }
 
@@ -51,10 +42,6 @@ public:
    }
 
    RColor(const RGB_t &rgb) : RColor() { SetRGB(rgb[0], rgb[1], rgb[2]); }
-
-   RColor(const RColor &src) : RColor() { src.CopyTo(*this); }
-   RColor &operator=(const RColor &src) { Clear(); src.CopyTo(*this); return *this; }
-
 
    std::string GetRGB() const { return GetValue<std::string>("rgb"); }
    RColor &SetRGB(const std::string &_rgb) { SetValue("rgb", _rgb); return *this; }
@@ -79,7 +66,6 @@ public:
    static constexpr RGB_t kBlack{{0, 0, 0}};
    static constexpr double kTransparent{0.};
    static constexpr double kOpaque{1.};
-
 
    friend bool operator==(const RColor& lhs, const RColor& rhs){ return (lhs.GetRGB() == rhs.GetRGB()) && (lhs.HasAlpha() == rhs.HasAlpha()) && (lhs.GetAlpha() == rhs.GetAlpha()); }
 

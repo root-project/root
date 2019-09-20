@@ -31,19 +31,7 @@ class RAttrBox : public RAttrBase {
    RAttrLine fBorder{this, "border_"};       ///<!
    RAttrFill fFill{this, "fill_"};           ///<!
 
-protected:
-   const RAttrValues::Map_t &GetDefaults() const override
-   {
-      static auto dflts = RAttrValues::Map_t().AddDefaults(fBorder).AddDefaults(fFill);
-      return dflts;
-   }
-
-public:
-
-   using RAttrBase::RAttrBase;
-
-   RAttrBox(const RAttrBox &src) : RAttrBox() { src.CopyTo(*this); }
-   RAttrBox &operator=(const RAttrBox &src) { Clear(); src.CopyTo(*this); return *this; }
+   R_ATTR_CLASS(RAttrBox, "box_", AddDefaults(fBorder).AddDefaults(fFill));
 
    const RAttrLine &Border() const { return fBorder; }
    RAttrLine &Border() { return fBorder; }
