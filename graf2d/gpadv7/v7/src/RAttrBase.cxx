@@ -15,7 +15,8 @@
 
 #include <ROOT/RAttrBase.hxx>
 
-#include "ROOT/RLogger.hxx"
+#include <ROOT/RDrawable.hxx>
+#include <ROOT/RLogger.hxx>
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Returns prefix relative to parent
@@ -232,6 +233,26 @@ bool ROOT::Experimental::RAttrBase::EnsureAttr()
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Return value from attributes container - no style or defaults are used
+
+void ROOT::Experimental::RAttrBase::AssignDrawable(RDrawable *drawable, const std::string &prefix)
+{
+   fDrawable = drawable;
+   fAttr = fDrawable->GetAttr();
+   fOwnAttr.reset();
+   fPrefix = prefix;
+   fParent = nullptr;
+}
+
+void ROOT::Experimental::RAttrBase::AssignParent(const RAttrBase *parent, const std::string &prefix)
+{
+   fDrawable = nullptr;
+   fAttr = nullptr;  // first access to attributes will chained to parent
+   fOwnAttr.reset();
+   fPrefix = prefix;
+   fParent = parent;
+}
+
+
 
 void ROOT::Experimental::RAttrBase::ClearValue(const std::string &name)
 {

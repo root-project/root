@@ -34,12 +34,11 @@ class RText : public RDrawable {
 
    std::string fText;                      ///< text to display
    RPadPos fPos;                           ///< position
-   RAttrValues fAttr{"text"};              ///< attributes
-   RAttrText  fTextAttr{fAttr, "text_"};   ///<! text attributes
+   RAttrText  fTextAttr{this, "text_"};    ///<! text attributes
 
 public:
 
-   RText() = default;
+   RText() : RDrawable("text") {}
 
    RText(const std::string &txt) : RText() { fText = txt; }
 
