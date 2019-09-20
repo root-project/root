@@ -18,6 +18,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Rtools
     Core
     MathCore
     RInterface
+  NO_MODULE
 )
 
 file(COPY "${CMAKE_SOURCE_DIR}/etc/plugins/ROOT@@Math@@Minimizer/P090_RMinimizer.C"
