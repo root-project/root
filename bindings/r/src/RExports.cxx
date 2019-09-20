@@ -11,7 +11,11 @@
 #include<TRDataFrame.h>
 #include<Rcpp/Vector.h>
 
-Rcpp::internal::NamedPlaceHolder ROOT::R::Label;
+namespace ROOT {
+   namespace R {
+     const Rcpp::internal::NamedPlaceHolder &Label(Rcpp::_);
+   }
+}
 
 namespace Rcpp {
 //TVectorT

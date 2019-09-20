@@ -154,7 +154,7 @@ namespace ROOT {
          Rcpp::function(name_, fun, docstring);
       }
 
-      extern Rcpp::internal::NamedPlaceHolder Label;
+      extern const Rcpp::internal::NamedPlaceHolder &Label;
    }
 }
 
