@@ -1261,6 +1261,36 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       }
    }
 
+   if (fCxxModulesEnabled) {
+#ifdef R__WIN32
+      const char EnvPathDelimiter = ';';
+#else
+      const char EnvPathDelimiter = ':';
+#endif // R__WIN32
+      auto GetEnvVarPath = [EnvPathDelimiter](const std::string &EnvVar,
+                                              std::vector<std::string> &Paths) {
+         llvm::Optional<std::string> EnvOpt = llvm::sys::Process::GetEnv(EnvVar);
+         if (EnvOpt.hasValue()) {
+            StringRef Env(*EnvOpt);
+            while (!Env.empty()) {
+               StringRef Arg;
+               std::tie(Arg, Env) = Env.split(EnvPathDelimiter);
+               if (std::find(Paths.begin(), Paths.end(), Arg.str()) == Paths.end())
+                  Paths.push_back(Arg.str());
+            }
+         }
+      };
+
+      std::vector<std::string> Paths;
+      GetEnvVarPath("CLING_PREBUILT_MODULE_PATH", Paths);
+      GetEnvVarPath("LD_LIBRARY_PATH", Paths);
+      std::string EnvVarPath;
+      for (const std::string& P : Paths)
+         EnvVarPath += P + EnvPathDelimiter;
+      // FIXME: We should make cling -fprebuilt-module-path work.
+      gSystem->Setenv("CLING_PREBUILT_MODULE_PATH", EnvVarPath.c_str());
+   }
+
    // FIXME: This only will enable frontend timing reports.
    EnvOpt = llvm::sys::Process::GetEnv("ROOT_CLING_TIMING");
    if (EnvOpt.hasValue())
@@ -1338,7 +1368,6 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    // Until we can disable autoloading during Sema::CorrectTypo() we have
    // to disable spell checking.
    fInterpreter->getCI()->getLangOpts().SpellChecking = false;
-
 
    // We need stream that doesn't close its file descriptor, thus we are not
    // using llvm::outs. Keeping file descriptor open we will be able to use
