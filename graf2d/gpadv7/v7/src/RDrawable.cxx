@@ -34,3 +34,8 @@ void ROOT::Experimental::RDrawable::Paint(Internal::RPadPainter &onPad)
 {
    onPad.AddDisplayItem(std::make_unique<RDrawableDisplayItem>(*this));
 }
+
+bool ROOT::Experimental::RDrawable::MatchSelector(const std::string &selector) const
+{
+   return (selector == fType) || (!fUserClass.empty() && (selector == std::string(".") + fUserClass));
+}

@@ -90,10 +90,11 @@ bool ROOT::Experimental::RAttrBase::IsValueEqual(const std::string &name, const 
 
    const auto *prnt = this;
    while (prnt && use_style) {
-      if (auto observe = const_cast<RAttrBase*> (prnt)->fStyle.lock()) {
-         value2 = observe->Eval(fAttr->type, fAttr->user_class, fullname);
-         if (value2) return value2->IsEqual(value);
-      }
+      if (prnt->fDrawable)
+         if (auto observe = const_cast<RAttrBase*> (prnt)->fDrawable->fStyle.lock()) {
+            value2 = observe->Eval(fullname, prnt->fDrawable);
+            if (value2) return value2->IsEqual(value);
+         }
       prnt = prnt->fParent;
    }
 
@@ -115,10 +116,11 @@ void ROOT::Experimental::RAttrBase::CopyTo(RAttrBase &tgt, bool use_style) const
 
          const auto *prnt = this;
          while (prnt && use_style) {
-            if (auto observe = prnt->fStyle.lock()) {
-               rec = observe->Eval(fAttr->type, fAttr->user_class, fullname);
-               if (rec && tgt.CopyValue(entry.first, rec)) break;
-            }
+            if (prnt->fDrawable)
+               if (auto observe = prnt->fDrawable->fStyle.lock()) {
+                  rec = observe->Eval(fullname, prnt->fDrawable);
+                  if (rec && tgt.CopyValue(entry.first, rec)) break;
+               }
             prnt = prnt->fParent;
          }
       }
@@ -142,13 +144,14 @@ bool ROOT::Experimental::RAttrBase::IsSame(const RAttrBase &tgt, bool use_style)
 
          const auto *prnt = this;
          while (prnt && use_style) {
-            if (auto observe = const_cast<RAttrBase *>(prnt)->fStyle.lock()) {
-               rec = observe->Eval(fAttr->type, fAttr->user_class, fullname);
-               if (rec) {
-                  if (!tgt.IsValueEqual(entry.first, rec, use_style)) return false;
-                  break;
+            if (prnt->fDrawable)
+               if (auto observe = const_cast<RAttrBase *>(prnt)->fDrawable->fStyle.lock()) {
+                  rec = observe->Eval(fullname, prnt->fDrawable);
+                  if (rec) {
+                     if (!tgt.IsValueEqual(entry.first, rec, use_style)) return false;
+                     break;
+                  }
                }
-            }
             prnt = prnt->fParent;
          }
       }
@@ -251,8 +254,6 @@ void ROOT::Experimental::RAttrBase::AssignParent(const RAttrBase *parent, const 
    fPrefix = prefix;
    fParent = parent;
 }
-
-
 
 void ROOT::Experimental::RAttrBase::ClearValue(const std::string &name)
 {

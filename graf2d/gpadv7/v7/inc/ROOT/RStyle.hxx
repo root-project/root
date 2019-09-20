@@ -27,6 +27,8 @@
 namespace ROOT {
 namespace Experimental {
 
+class RDrawable;
+
 /** \class ROOT::Experimental::RStyle
   A set of defaults for graphics attributes, e.g. for histogram fill color, line width, frame offsets etc.
   */
@@ -44,7 +46,7 @@ public:
       Block_t& operator=(const Block_t &) = delete;
    };
 
-   const RAttrValues::Value_t *Eval(const std::string &type, const std::string &user_class, const std::string &field) const;
+   const RAttrValues::Value_t *Eval(const std::string &field, const RDrawable *drawable) const;
 
    RAttrValues::Map_t &AddBlock(const std::string &selector)
    {

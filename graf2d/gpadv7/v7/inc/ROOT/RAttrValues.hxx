@@ -151,15 +151,11 @@ public:
    };
 
 private:
-   std::string type;             ///<! drawable type, not stored in the root file, must be initialized
-   std::string user_class;       ///<  user defined drawable class, can later go inside map
    Map_t map;                    ///<  central values storage
 
 public:
 
    RAttrValues() = default;
-
-   RAttrValues(const std::string &_type) { type = _type; }
 
    ~RAttrValues() {}
 };
