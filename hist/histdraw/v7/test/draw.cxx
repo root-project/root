@@ -11,7 +11,7 @@ TEST(DrawTest, OneD)
    RAxisConfig xaxis{10, 0., 1.};
    auto h = std::make_shared<RH1D>(xaxis);
    RCanvas canv;
-   canv.Draw<RHistDrawable<1>>(h);
+   canv.Draw(h);
    EXPECT_EQ(canv.NumPrimitives(), 1u);
 }
 
@@ -22,8 +22,8 @@ TEST(DrawTest, TwoD)
    auto h1 = std::make_shared<RH2I>(xaxis, yaxis);
    auto h2 = std::make_shared<RH2C>(xaxis, yaxis);
    RCanvas canv;
-   canv.Draw<RHistDrawable<2>>(h1);
-   canv.Draw<RHistDrawable<2>>(h2);
+   canv.Draw(h1);
+   canv.Draw(h2);
    // No RHist copt c'tor:
    // canv.Draw(RH2F(xaxis, yaxis));
    // canv.Draw(std::make_unique<RH2C>(xaxis, yaxis));
@@ -37,7 +37,7 @@ TEST(DrawTest, ThreeD)
    RAxisConfig zaxis{{0., 1., 10., 100.}};
    auto h = std::make_shared<RH3F>(xaxis, yaxis, zaxis);
    RCanvas canv;
-   canv.Draw<RHistDrawable<3>>(h);
+   canv.Draw(h);
    EXPECT_EQ(canv.NumPrimitives(), 1u);
 }
 
@@ -47,7 +47,7 @@ TEST(DrawOptTest, OneD)
    RAxisConfig xaxis{10, 0., 1.};
    auto h = std::make_shared<RH1D>(xaxis);
    RCanvas canv;
-   auto drawable = canv.Draw<RHistDrawable<1>>(h);
+   auto drawable = canv.Draw(h);
    drawable->AttrLine().SetColor(RColor::kRed);
    RColor shouldBeRed = drawable->AttrLine().Color();
    EXPECT_EQ(shouldBeRed, RColor::kRed);
