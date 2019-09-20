@@ -38,7 +38,7 @@ public:
 
    struct Block_t {
       std::string selector;
-      RAttrValues::Map_t map; ///<    container
+      RAttrMap map; ///<    container
       Block_t() = default;
       Block_t(const std::string &_selector) : selector(_selector) {}
 
@@ -46,9 +46,9 @@ public:
       Block_t& operator=(const Block_t &) = delete;
    };
 
-   const RAttrValues::Value_t *Eval(const std::string &field, const RDrawable *drawable) const;
+   const RAttrMap::Value_t *Eval(const std::string &field, const RDrawable *drawable) const;
 
-   RAttrValues::Map_t &AddBlock(const std::string &selector)
+   RAttrMap &AddBlock(const std::string &selector)
    {
       fBlocks.emplace_back(selector);
       return fBlocks.back().map;
