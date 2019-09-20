@@ -35,7 +35,7 @@ class RBox : public RDrawable {
    /// Box's coordinates
    RPadPos fP1;                         ///< line begin
    RPadPos fP2;                         ///< line end
-   RAttrValues fAttr{"line"};   ///< attributes
+   RAttrValues fAttr{"line"};           ///< attributes
    RAttrBox fBoxAttr{fAttr, "box_"};    ///<! line attributes
 
 public:
