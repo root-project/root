@@ -34,9 +34,9 @@ TEST(IOTest, OneDOpts)
    RAxisConfig xaxis{10, 0., 1.};
    auto h = std::make_shared<RH1D>(xaxis);
    RCanvas canv;
-   auto drawable1 = canv.Draw<RHistDrawable<1>>(h);
+   auto drawable1 = canv.Draw(h);
    drawable1->AttrLine().SetColor(RColor::kRed);
-   auto drawable2 = canv.Draw<RHistDrawable<1>>(h);
+   auto drawable2 = canv.Draw(h);
    drawable2->AttrLine().SetColor(RColor::kBlue);
 
    EXPECT_EQ(canv.NumPrimitives(), 2u);
