@@ -53,8 +53,8 @@ void draw_canvas(const std::string &title, RColor col)
 
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create(title + " canvas");
-   canvas->Draw<RHistDrawable<1>>(pHist)->AttrLine().SetColor(col);
-   canvas->Draw<RHistDrawable<1>>(pHist2)->AttrLine().SetColor(RColor::kBlue);
+   canvas->Draw(pHist)->AttrLine().SetColor(col);
+   canvas->Draw(pHist2)->AttrLine().SetColor(RColor::kBlue);
 
    int maxloop = 50;
 
