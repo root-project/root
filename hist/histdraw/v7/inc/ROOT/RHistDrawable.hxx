@@ -91,74 +91,74 @@ extern template class RHistDrawable<3>;
 
 
 template <class... ARGS>
-inline auto GetDrawable(const std::shared_ptr<RH1D> &histimpl, ARGS... args)
+inline auto GetDrawable(const std::shared_ptr<RH1D> &histimpl, ARGS...)
 {
    return std::make_shared<RHistDrawable<1>>(histimpl);
 }
 
 template <class... ARGS>
-inline auto GetDrawable(const std::shared_ptr<RH1I> &histimpl, ARGS... args)
+inline auto GetDrawable(const std::shared_ptr<RH1I> &histimpl, ARGS...)
 {
    return std::make_shared<RHistDrawable<1>>(histimpl);
 }
 
 template <class... ARGS>
-inline auto GetDrawable(const std::shared_ptr<RH1C> &histimpl, ARGS... args)
+inline auto GetDrawable(const std::shared_ptr<RH1C> &histimpl, ARGS...)
 {
    return std::make_shared<RHistDrawable<1>>(histimpl);
 }
 
 template <class... ARGS>
-inline auto GetDrawable(const std::shared_ptr<RH1F> &histimpl, ARGS... args)
+inline auto GetDrawable(const std::shared_ptr<RH1F> &histimpl, ARGS...)
 {
    return std::make_shared<RHistDrawable<1>>(histimpl);
 }
 
 template <class... ARGS>
-inline auto GetDrawable(const std::shared_ptr<RH2D> &histimpl, ARGS... args)
+inline auto GetDrawable(const std::shared_ptr<RH2D> &histimpl, ARGS...)
 {
    return std::make_shared<RHistDrawable<2>>(histimpl);
 }
 
 template <class... ARGS>
-inline auto GetDrawable(const std::shared_ptr<RH2I> &histimpl, ARGS... args)
+inline auto GetDrawable(const std::shared_ptr<RH2I> &histimpl, ARGS...)
 {
    return std::make_shared<RHistDrawable<2>>(histimpl);
 }
 
 template <class... ARGS>
-inline auto GetDrawable(const std::shared_ptr<RH2C> &histimpl, ARGS... args)
+inline auto GetDrawable(const std::shared_ptr<RH2C> &histimpl, ARGS...)
 {
    return std::make_shared<RHistDrawable<2>>(histimpl);
 }
 
 template <class... ARGS>
-inline auto GetDrawable(const std::shared_ptr<RH2F> &histimpl, ARGS... args)
+inline auto GetDrawable(const std::shared_ptr<RH2F> &histimpl, ARGS...)
 {
    return std::make_shared<RHistDrawable<2>>(histimpl);
 }
 
 
 template <class... ARGS>
-inline auto GetDrawable(const std::shared_ptr<RH3D> &histimpl, ARGS... args)
+inline auto GetDrawable(const std::shared_ptr<RH3D> &histimpl, ARGS...)
 {
    return std::make_shared<RHistDrawable<3>>(histimpl);
 }
 
 template <class... ARGS>
-inline auto GetDrawable(const std::shared_ptr<RH3I> &histimpl, ARGS... args)
+inline auto GetDrawable(const std::shared_ptr<RH3I> &histimpl, ARGS...)
 {
    return std::make_shared<RHistDrawable<3>>(histimpl);
 }
 
 template <class... ARGS>
-inline auto GetDrawable(const std::shared_ptr<RH3C> &histimpl, ARGS... args)
+inline auto GetDrawable(const std::shared_ptr<RH3C> &histimpl, ARGS...)
 {
    return std::make_shared<RHistDrawable<3>>(histimpl);
 }
 
 template <class... ARGS>
-inline auto GetDrawable(const std::shared_ptr<RH3F> &histimpl, ARGS... args)
+inline auto GetDrawable(const std::shared_ptr<RH3F> &histimpl, ARGS...)
 {
    return std::make_shared<RHistDrawable<3>>(histimpl);
 }
