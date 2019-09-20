@@ -77,6 +77,11 @@ if (Have_cudnn)
   ROOT_ADD_TEST(TMVA-DNN-Cudnn COMMAND testCudnn)
 endif()
 
+   # DNN - Optimization GPU
+  ROOT_EXECUTABLE(testOptimizationCuda TestOptimizationCuda.cxx
+    LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-Optimization-Cuda COMMAND testOptimizationCuda)
+
   # DNN - TensorDataLoader Cudnn
   #CUDA_ADD_EXECUTABLE(testTensorDataLoaderCudnn TestTensorDataLoaderCudnn.cxx)
   #TARGET_LINK_LIBRARIES(testTensorDataLoaderCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})

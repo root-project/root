@@ -93,25 +93,39 @@ void TCudnn<AFloat>::InitializeUniform(TCudaTensor<AFloat> & A)
 template<typename AFloat>
 void TCudnn<AFloat>::InitializeGlorotNormal(TCudaTensor<AFloat> & A)
 {
-   // n,m are the input/output units of the tensor
-   size_t n = A.GetShape()[0];
-   size_t m = A.GetShape()[1];
+   // n,m are the output/input units of the tensor
+   // default is caseof tensor of 2D (dense layer)
+   size_t n = A.GetShape()[0];  // output size
+   size_t m = A.GetShape()[1];  // input size
+   // for convolutions
+   if (A.GetShape().size() > 2) { 
+      // n is number of inputs
+      for (size_t j = 2; j < A.GetShape().size(); ++j) {
+         m *= A.GetShape()[j];
+         n *= A.GetShape()[j];
+      }
+   }
 
    TRandom &  rand = GetRandomGenerator();
-   Double_t sigma = sqrt(2.0 /((Double_t) n + (Double_t) m) );  
+   Double_t sigma = sqrt(2.0 /((Double_t) n + (Double_t) m) );
+
+   //std::cout << "Initialize Glorot normal for tensor " << n <<","<<m << " ";
+   //A.PrintShape();
 
    size_t nsize = A.GetSize(); 
    TCudaHostBuffer<AFloat> xhost(nsize);
    for (size_t i = 0; i < nsize; i++) {
-      AFloat value =  rand.Gaus(0.0, sigma); 
-      if ( std::abs(value) > 2*sigma) continue; 
-      xhost[i] = rand.Gaus(0, sigma);
+      AFloat value = 0; 
+         do { 
+            value = rand.Gaus(0.0, sigma);
+         } while ( std::abs(value) > 2*sigma);
+         R__ASSERT( std::abs(value) < 2*sigma); 
+         xhost[i] = value;
    }
    A.GetDeviceBuffer().CopyFrom(xhost);
-   //std::cout << "sigma glort " << sigma << "  nm  " << n << "  " << m << std::endl;
-   //PrintTensor(A,"weightensor after Glrot normal");
-   if (A.GetNDim() == 2) assert( xhost[0] == A(0,0));
-   if (A.GetNDim() == 4) assert( xhost[0] == A(0,0,0,0));
+ 
+   // if (A.GetNDim() == 2) assert( xhost[0] == A(0,0));
+   // if (A.GetNDim() == 4) assert( xhost[0] == A(0,0,0,0));
 }
 
 //______________________________________________________________________________
@@ -123,19 +137,32 @@ template<typename AFloat>
 void TCudnn<AFloat>::InitializeGlorotUniform(TCudaTensor<AFloat> & A)
 {
    // n,m  are the input/output  units of the tensor
-   size_t n = 0;
-   size_t m = 0; 
-   if (A.GetNDim() > 2) { 
-      n = A.GetFirstSize();
-      m = A.GetCSize();
-   }
-   else {
-      n = A.GetNrows();
-      m = A.GetNcols(); 
+   // size_t n = 0;
+   // size_t m = 0; 
+   // if (A.GetNDim() > 2) { 
+   //    n = A.GetFirstSize();
+   //    m = A.GetCSize();
+   // }
+   // else {
+   //    n = A.GetNrows();
+   //    m = A.GetNcols(); 
+   // }
+   size_t n = A.GetShape()[0]; // output size
+   size_t m = A.GetShape()[1]; // input size
+   // for convolutions
+   if (A.GetShape().size() > 2) {
+      // n is number of inputs
+      for (size_t j = 2; j < A.GetShape().size(); ++j) {
+         m *= A.GetShape()[j];
+         n *= A.GetShape()[j];
+      }
    }
 
    TRandom &  rand = GetRandomGenerator();
    Double_t range = sqrt(6.0 /( (Double_t) n +  (Double_t) m) );
+
+   //std::cout << "Initialize Glorot uniform for tensor " << n << "," << m << " ";
+   //A.PrintShape();
 
    size_t nsize = A.GetSize(); 
    TCudaHostBuffer<AFloat> xhost(nsize);
@@ -143,7 +170,7 @@ void TCudnn<AFloat>::InitializeGlorotUniform(TCudaTensor<AFloat> & A)
       xhost[i] = rand.Uniform(-range, range);
    }
    A.GetDeviceBuffer().CopyFrom(xhost); 
-   //PrintTensor(A,"weightensor after Glrot uniform");
+ 
 }
 
 //______________________________________________________________________________

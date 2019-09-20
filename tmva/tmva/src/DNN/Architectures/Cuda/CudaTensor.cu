@@ -88,7 +88,7 @@ template<typename AFloat>
 TCudaTensor<AFloat>::TCudaTensor()
     : fShape(), fStrides(), fNDim(0), fSize(0), fElementBuffer(), fStreamIndx(0), fTensorDescriptor(nullptr)
 {
-   InitializeCuda();
+   //InitializeCuda();
 }
 
 
@@ -105,8 +105,9 @@ TCudaTensor<AFloat>::TCudaTensor(const std::vector<size_t> & shape,
    fSize = (layout==MemoryLayout::RowMajor) ? fStrides.front()*fShape.front() : 
                                               fStrides.back()*fShape.back(); 
 
+   // create a new buffer in this case 
    fElementBuffer = TCudaDeviceBuffer<AFloat>(fSize, 0);
-   
+   // need to initialize Cuda when creating a new Cuda Buffer (e.g. create Tensor descriptor)
    InitializeCuda();
 }
 
@@ -128,6 +129,9 @@ TCudaTensor<AFloat>::TCudaTensor(const AFloat * host_data, const std::vector<siz
 
    cudaMemcpy(fElementBuffer, host_data, fSize * sizeof(AFloat),
               cudaMemcpyHostToDevice);
+
+   // no need to initialize cuda. Done in the other constructor that is called before
+   //InitializeCuda();
 }
 
 //____________________________________________________________________________
@@ -142,8 +146,10 @@ TCudaTensor<AFloat>::TCudaTensor(TCudaDeviceBuffer<AFloat> buffer,
    fStrides = ComputeStridesFromShape(fShape, layout==MemoryLayout::RowMajor);
    
    fSize = (layout==MemoryLayout::RowMajor) ? fStrides.front()*fShape.front() : 
-                                              fStrides.back()*fShape.back();  
-   InitializeCuda();  
+                                              fStrides.back()*fShape.back();
+
+   // need to Initialize Cuda in case device buffer was created separatly
+   InitializeCuda();
 }
 
 //____________________________________________________________________________
@@ -173,9 +179,9 @@ TCudaTensor<AFloat>::TCudaTensor(const TCudaMatrix<AFloat>& matrix, size_t dim) 
       fShape.insert(fShape.end(), dim-2, 1);
       fStrides.insert(fStrides.end(),dim-2,fSize); 
       fNDim = dim; 
+      // need to reset tensor descriptor since we are changing the shape
+      SetTensorDescriptor(); 
    }
-
-   InitializeCuda();
 }
 
 //____________________________________________________________________________
@@ -188,13 +194,17 @@ TCudaTensor<AFloat>::~TCudaTensor()
       //    std::cout << fShape[ii] << ",";
       // std::cout << std::endl;
       CUDNNCHECK(cudnnDestroyTensorDescriptor(fTensorDescriptor->fCudnnDesc));
+
+      fInstances[fStreamIndx]--;
    }
-   fInstances[fStreamIndx]--;
+
    //std::cout << "Tensor descriptor destroyed - instances are " << fInstances[fStreamIndx] << std::endl;
 
    // When all tensors in a streamIndx are destroyed, release cudnn resources 
-   //if (--fInstances[fStreamIndx] <= 0) CUDNNCHECK(cudnnDestroy(fCudnnHandle[fStreamIndx]));
-//#endif
+   if (fInstances[fStreamIndx] <= 0) {
+      std::cout << "All Cuda tensors are -released - destroy cudnn handle " << fInstances[fStreamIndx] << std::endl;
+      CUDNNCHECK(cudnnDestroy(fCudnnHandle[fStreamIndx]));
+   }
 }
 
 template<typename AFloat>
@@ -221,13 +231,15 @@ TCudaTensor<AFloat>::operator TMatrixT<AFloat>() const
 template <typename AFloat>
 inline void TCudaTensor<AFloat>::InitializeCuda()
 {
-   // If fNDim >= 4, a cudnn tensor is required and we initialize cudnn
-   if (fNDim >= 2 && fSize > 0) {
+   // descriptor is needed for Cuddn tensor that are rowmajor
+   if (!fTensorDescriptor && fSize > 0 && fNDim >= 2) {
 
-      //std::cout << "initialize Cuda for tensor of shape ";
-      // for (int ii = 0; ii < fNDim; ++ii)
-      //    std::cout << fShape[ii] << ",";
-      // std::cout << " stream index " << fStreamIndx << " instances " << fInstances[fStreamIndx] << std::endl;
+
+      // if ((fInstances[fStreamIndx] < 4 && fInstances[fStreamIndx] > -4) || fInstances[fStreamIndx]%1000 == 0) {
+      //    std::cout << " stream index " << fStreamIndx << " instances " << fInstances[fStreamIndx] << std::endl;
+      //    PrintShape();
+      // }
+
 
       // Also check whether a new streamIndx has been opened
       if (fInstances.size() - 1 < fStreamIndx) {
@@ -253,22 +265,23 @@ inline void TCudaTensor<AFloat>::InitializeCuda()
       //     InitializeCurandStates();
       // }
 
-      if (!fTensorDescriptor) { 
-         fTensorDescriptor = std::make_shared<TensorDescriptor>();
-         //std::cout << "create tensor  descriptor ! " << std::endl;
-         CUDNNCHECK(cudnnCreateTensorDescriptor(&(fTensorDescriptor->fCudnnDesc)));
-      }
-        
-      fInstances[fStreamIndx]++;
-      
       // Prevent template specialization of entire class
-      if      (std::is_same<AFloat, double>::value) {fDataType = CUDNN_DATA_DOUBLE;}
-      else if (std::is_same<AFloat, float>::value)  {fDataType = CUDNN_DATA_FLOAT;}
+      if (std::is_same<AFloat, double>::value) {
+         fDataType = CUDNN_DATA_DOUBLE;
+      } else if (std::is_same<AFloat, float>::value) {
+         fDataType = CUDNN_DATA_FLOAT;
+      }
 
-     //std::cout << "Set tensor  descriptor ! " << std::endl;
-      SetTensorDescriptor();
-      //std::cout << "End cudnn initialization ! " << std::endl;
+      // create tensor descriptor
+      fTensorDescriptor = std::make_shared<TensorDescriptor>();
+      // std::cout << "create tensor  descriptor ! " << std::endl;
+      CUDNNCHECK(cudnnCreateTensorDescriptor(&(fTensorDescriptor->fCudnnDesc)));
+
+      // we increment instances when we create the descriptor
+      fInstances[fStreamIndx]++;
    }
+
+   SetTensorDescriptor();
 
 }
 template<typename AFloat>
