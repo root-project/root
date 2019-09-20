@@ -229,7 +229,7 @@ void ROOT::Experimental::RPad::Paint(Internal::RPadPainter &toppad)
 
    painter.fPadDisplayItem->SetPadPosSize(&fPos, &fSize);
 
-   painter.fPadDisplayItem->SetAttributes(&fAttr);
+   painter.fPadDisplayItem->SetAttributes(GetAttr());
 
    toppad.AddDisplayItem(std::move(painter.fPadDisplayItem));
 }
