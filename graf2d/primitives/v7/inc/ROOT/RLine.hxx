@@ -29,18 +29,14 @@ class RLine : public RDrawable {
 
    RPadPos fP1;                            ///< line begin
    RPadPos fP2;                            ///< line end
-   RAttrValues fAttr{"line"};      ///< attributes
+   RAttrValues fAttr{"line"};              ///< attributes
    RAttrLine  fLineAttr{fAttr, "line_"};   ///<! line attributes
 
 public:
 
    RLine() = default;
 
-   RLine(const RPadPos& p1, const RPadPos& p2) : RLine()
-   {
-      fP1 = p1;
-      fP2 = p2;
-   }
+   RLine(const RPadPos& p1, const RPadPos& p2) : RLine() { fP1 = p1; fP2 = p2; }
 
    RLine &SetP1(const RPadPos& p1) { fP1 = p1; return *this; }
    RLine &SetP2(const RPadPos& p2) { fP2 = p2; return *this; }

@@ -19,7 +19,8 @@
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RPad.hxx"
 
-void draw_subpads() {
+void draw_subpads()
+{
   using namespace ROOT::Experimental;
 
   // Create the histogram.
