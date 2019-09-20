@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-#include <ROOT/RAttrValues.hxx>
+#include <ROOT/RAttrMap.hxx>
 #include <ROOT/RStyle.hxx>
 
 
