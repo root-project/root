@@ -34,8 +34,8 @@ class RPad;
 class RCanvas;
 
 
-template <class... ARGS>
-inline std::shared_ptr<RDrawable> GetDrawable(const std::shared_ptr<RDrawable> &drawable, ARGS... args)
+template <class DRAWABLE, class... ARGS>
+inline auto GetDrawable(const std::shared_ptr<DRAWABLE> &drawable, ARGS... args)
 {
    return drawable;
 }

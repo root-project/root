@@ -16,14 +16,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Rtypes.h"
-
-R__LOAD_LIBRARY(libROOTHistDraw);
-
-#include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RColor.hxx"
-#include "ROOT/RDirectory.hxx"
+#include "ROOT/RHistDrawable.hxx"
 
 void draw()
 {
@@ -40,9 +35,6 @@ void draw()
    pHist->Fill({0.98, 1.02});
    pHist->Fill({1.90, 1.02});
    pHist->Fill({0.75, -0.02});
-
-   // Register the histogram with ROOT: now it lives even after draw() ends.
-   RDirectory::Heap().Add("hist", pHist);
 
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("Canvas Title");
