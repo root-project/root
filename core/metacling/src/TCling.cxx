@@ -1112,8 +1112,8 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
                                            "ROOT_Foundation_Stage1_NoRTTI", "Core", "RIO"};
 
    // FIXME: Reducing those will let us be less dependent on rootmap files
-   static constexpr std::array<const char *, 3> ExcludeModules = {
-      {"Rtools", "RSQLite", "RInterface"}};
+   static constexpr std::array<const char *, 4> ExcludeModules = {
+      {"Rtools", "RSQLite", "RInterface", "RMVA"}};
 
    LoadModules(CoreModules, clingInterp);
 
