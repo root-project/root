@@ -88,15 +88,11 @@ bool ROOT::Experimental::RAttrBase::IsValueEqual(const std::string &name, const 
    auto value2 = fAttr->map.Find(fullname);
    if (value2) return value2->IsEqual(value);
 
-   const auto *prnt = this;
-   while (prnt && use_style) {
-      if (prnt->fDrawable)
-         if (auto observe = const_cast<RAttrBase*> (prnt)->fDrawable->fStyle.lock()) {
-            value2 = observe->Eval(fullname, prnt->fDrawable);
-            if (value2) return value2->IsEqual(value);
-         }
-      prnt = prnt->fParent;
-   }
+   if (fDrawable && use_style)
+      if (auto observe = fDrawable->fStyle.lock()) {
+         value2 = observe->Eval(fullname, fDrawable);
+         if (value2) return value2->IsEqual(value);
+      }
 
    return false;
 }
@@ -114,15 +110,11 @@ void ROOT::Experimental::RAttrBase::CopyTo(RAttrBase &tgt, bool use_style) const
          auto rec = fAttr->map.Find(fullname);
          if (rec && tgt.CopyValue(entry.first,rec)) continue;
 
-         const auto *prnt = this;
-         while (prnt && use_style) {
-            if (prnt->fDrawable)
-               if (auto observe = prnt->fDrawable->fStyle.lock()) {
-                  rec = observe->Eval(fullname, prnt->fDrawable);
-                  if (rec && tgt.CopyValue(entry.first, rec)) break;
-               }
-            prnt = prnt->fParent;
-         }
+         while (fDrawable && use_style)
+            if (auto observe = fDrawable->fStyle.lock()) {
+               rec = observe->Eval(fullname, fDrawable);
+               if (rec && tgt.CopyValue(entry.first, rec)) break;
+            }
       }
 }
 
@@ -142,18 +134,14 @@ bool ROOT::Experimental::RAttrBase::IsSame(const RAttrBase &tgt, bool use_style)
             continue;
          }
 
-         const auto *prnt = this;
-         while (prnt && use_style) {
-            if (prnt->fDrawable)
-               if (auto observe = const_cast<RAttrBase *>(prnt)->fDrawable->fStyle.lock()) {
-                  rec = observe->Eval(fullname, prnt->fDrawable);
-                  if (rec) {
-                     if (!tgt.IsValueEqual(entry.first, rec, use_style)) return false;
-                     break;
-                  }
+         if (fDrawable && use_style)
+            if (auto observe = fDrawable->fStyle.lock()) {
+               rec = observe->Eval(fullname, fDrawable);
+               if (rec) {
+                  if (!tgt.IsValueEqual(entry.first, rec, use_style)) return false;
+                  break;
                }
-            prnt = prnt->fParent;
-         }
+            }
       }
    return true;
 }
@@ -196,6 +184,7 @@ bool ROOT::Experimental::RAttrBase::GetAttr() const
       if (prnt->fAttr) {
          const_cast<RAttrBase*>(this)->fAttr = prnt->fAttr;
          const_cast<RAttrBase*>(this)->fPrefix = prnt->fPrefix + prefix;
+         const_cast<RAttrBase*>(this)->fDrawable = prnt->fDrawable;
          return true;
       }
       prefix = prnt->fPrefix + prefix;
@@ -222,6 +211,7 @@ bool ROOT::Experimental::RAttrBase::EnsureAttr()
       if (prnt->fAttr) {
          fAttr = prnt->fAttr;
          fPrefix = prnt->fPrefix + prefix;
+         fDrawable = prnt->fDrawable;
          return true;
       }
       prefix = prnt->fPrefix + prefix;
