@@ -21,6 +21,8 @@
 #include <vector>
 
 #include <ROOT/RAttrValues.hxx>
+#include <ROOT/RStyle.hxx>
+
 
 namespace ROOT {
 namespace Experimental {
@@ -89,8 +91,10 @@ public:
  */
 
 class RDrawable {
+
 friend class RPadBase;
 friend class RAttrBase;
+friend class RStyle;
 
 private:
 
@@ -98,14 +102,23 @@ private:
 
    RAttrValues fAttr; ///< attributes values
 
+   std::weak_ptr<RStyle> fStyle; ///<! style applied for RDrawable
+
+   std::string fType;          ///<! drawable type, not stored in the root file, must be initialized in constructor
+
+   std::string fUserClass;     ///<  user defined drawable class, can later go inside map
+
+
 protected:
 
    virtual void CollectShared(Internal::RIOSharedVector_t &) {}
    RAttrValues *GetAttr() { return &fAttr; }
 
+   bool MatchSelector(const std::string &selector) const;
+
 public:
 
-   explicit RDrawable(const std::string &type) : fAttr(type) {}
+   explicit RDrawable(const std::string &type) : fType(type) {}
 
    virtual ~RDrawable();
 
@@ -117,6 +130,15 @@ public:
    virtual void Execute(const std::string &);
 
    std::string GetId() const { return fId; }
+
+   void UseStyle(const std::shared_ptr<RStyle> &style) { fStyle = style; }
+   void ClearStyle() { fStyle.reset(); }
+
+   void SetUserClass(const std::string &cl) { fUserClass = cl; }
+   std::string GetUserClass() const { return fUserClass; }
+
+   std::string GetType() const { return fType; }
+
 };
 
 

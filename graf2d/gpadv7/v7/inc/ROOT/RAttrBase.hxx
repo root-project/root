@@ -18,6 +18,7 @@
 
 #include <ROOT/RAttrValues.hxx>
 #include <ROOT/RStyle.hxx>
+#include <ROOT/RDrawable.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -35,7 +36,6 @@ class RAttrBase {
    RAttrValues *fAttr{nullptr};                            ///<! attributes sources
    std::unique_ptr<RAttrValues> fOwnAttr;                  ///<! own instance when deep copy is created
    std::string fPrefix;                                    ///<! name prefix for all attributes values
-   std::weak_ptr<RStyle> fStyle;                           ///<! style used for evaluations
    const RAttrBase *fParent{nullptr};                      ///<! parent attributes, prefix applied to it
 
    std::string GetFullName(const std::string &name) const { return fPrefix + name; }
@@ -70,10 +70,11 @@ protected:
 
          const auto *prnt = this;
          while (prnt) {
-            if (auto observe = prnt->fStyle.lock()) {
-               rec = observe->Eval(fAttr->type, fAttr->user_class, fullname);
-               if (rec) return RAttrValues::Value_t::get_value<T,S>(rec);
-            }
+            if (prnt->fDrawable)
+               if (auto observe = prnt->fDrawable->fStyle.lock()) {
+                  rec = observe->Eval(fullname, fDrawable);
+                  if (rec) return RAttrValues::Value_t::get_value<T,S>(rec);
+               }
             prnt = prnt->fParent;
          }
       }
@@ -115,8 +116,6 @@ public:
    RAttrBase &operator=(const RAttrBase &src) { Clear(); src.CopyTo(*this); return *this; }
 
    void CopyTo(RAttrBase &tgt, bool use_style = true) const;
-
-   void UseStyle(const std::shared_ptr<RStyle> &style) { fStyle = style; }
 
    void SetValue(const std::string &name, double value);
    void SetValue(const std::string &name, const int value);
