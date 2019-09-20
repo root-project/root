@@ -1,4 +1,4 @@
-/// \file ROOT/RAttrValues.hxx
+/// \file ROOT/RAttrMap.hxx
 /// \ingroup Gpad ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \author Sergey Linev <s.linev@gsi.de>
@@ -7,15 +7,15 @@
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RAttrValues
-#define ROOT7_RAttrValues
+#ifndef ROOT7_RAttrMap
+#define ROOT7_RAttrMap
 
 #include <memory>
 #include <string>
@@ -29,7 +29,7 @@ namespace Experimental {
 
 class RAttrBase;
 
-class RAttrValues {
+class RAttrMap {
 
    friend class RAttrBase;
 
@@ -99,81 +99,75 @@ public:
       Value_t *Copy() const final { return new StringValue_t(v); }
    };
 
-   class Map_t {
-      // FIXME: due to ROOT-10306 only data member of such kind can be correctly stored by ROOT I/O
-      // Once problem fixed, one could make this container a base class
-      std::unordered_map<std::string, std::unique_ptr<Value_t>> m; ///< JSON_object
-   public:
-      Map_t() = default; ///< JSON_asbase - store as map object
-
-      Map_t &Add(const std::string &name, Value_t *value) { if (value) m[name] = std::unique_ptr<Value_t>(value); return *this; }
-      Map_t &AddBool(const std::string &name, bool value) { m[name] = std::make_unique<BoolValue_t>(value); return *this; }
-      Map_t &AddInt(const std::string &name, int value) { m[name] = std::make_unique<IntValue_t>(value); return *this; }
-      Map_t &AddDouble(const std::string &name, double value) { m[name] = std::make_unique<DoubleValue_t>(value); return *this; }
-      Map_t &AddString(const std::string &name, const std::string &value) { m[name] = std::make_unique<StringValue_t>(value); return *this; }
-      Map_t &AddDefaults(const RAttrBase &vis);
-
-      double *GetDoublePtr(const std::string &name) const
-      {
-         auto pair = m.find(name);
-         return ((pair != m.end()) && (pair->second->Kind() == kDouble)) ? (double *) pair->second->GetValuePtr() : nullptr;
-      }
-
-      Map_t(const Map_t &src)
-      {
-         for (const auto &pair : src.m)
-            m.emplace(pair.first, std::unique_ptr<Value_t>(pair.second->Copy()));
-      }
-
-      Map_t &operator=(const Map_t &src)
-      {
-         m.clear();
-         for (const auto &pair : src.m)
-            m.emplace(pair.first, std::unique_ptr<Value_t>(pair.second->Copy()));
-         return *this;
-      }
-
-      const Value_t *Find(const std::string &name) const
-      {
-         auto entry = m.find(name);
-         return (entry != m.end()) ? entry->second.get() : nullptr;
-      }
-
-      void Clear(const std::string &name)
-      {
-         auto entry = m.find(name);
-         if (entry != m.end())
-            m.erase(entry);
-      }
-
-      auto begin() const { return m.begin(); }
-      auto end() const { return m.end(); }
-   };
-
 private:
-   Map_t map;                    ///<  central values storage
+
+   // FIXME: due to ROOT-10306 only data member of such kind can be correctly stored by ROOT I/O
+   // Once problem fixed, one could make this container a base class
+   std::unordered_map<std::string, std::unique_ptr<Value_t>> m; ///< JSON_object
+
 
 public:
 
-   RAttrValues() = default;
+   RAttrMap() = default; ///< JSON_asbase - store as map object
 
-   ~RAttrValues() {}
+   RAttrMap &Add(const std::string &name, Value_t *value) { if (value) m[name] = std::unique_ptr<Value_t>(value); return *this; }
+   RAttrMap &AddBool(const std::string &name, bool value) { m[name] = std::make_unique<BoolValue_t>(value); return *this; }
+   RAttrMap &AddInt(const std::string &name, int value) { m[name] = std::make_unique<IntValue_t>(value); return *this; }
+   RAttrMap &AddDouble(const std::string &name, double value) { m[name] = std::make_unique<DoubleValue_t>(value); return *this; }
+   RAttrMap &AddString(const std::string &name, const std::string &value) { m[name] = std::make_unique<StringValue_t>(value); return *this; }
+   RAttrMap &AddDefaults(const RAttrBase &vis);
+
+   double *GetDoublePtr(const std::string &name) const
+   {
+      auto pair = m.find(name);
+      return ((pair != m.end()) && (pair->second->Kind() == kDouble)) ? (double *) pair->second->GetValuePtr() : nullptr;
+   }
+
+   RAttrMap(const RAttrMap &src)
+   {
+      for (const auto &pair : src.m)
+         m.emplace(pair.first, std::unique_ptr<Value_t>(pair.second->Copy()));
+   }
+
+   RAttrMap &operator=(const RAttrMap &src)
+   {
+      m.clear();
+      for (const auto &pair : src.m)
+         m.emplace(pair.first, std::unique_ptr<Value_t>(pair.second->Copy()));
+      return *this;
+   }
+
+   const Value_t *Find(const std::string &name) const
+   {
+      auto entry = m.find(name);
+      return (entry != m.end()) ? entry->second.get() : nullptr;
+   }
+
+   void Clear(const std::string &name)
+   {
+      auto entry = m.find(name);
+      if (entry != m.end())
+         m.erase(entry);
+   }
+
+   auto begin() const { return m.begin(); }
+   auto end() const { return m.end(); }
 };
 
-template<> bool RAttrValues::Value_t::get<bool>() const;
-template<> int RAttrValues::Value_t::get<int>() const;
-template<> double RAttrValues::Value_t::get<double>() const;
-template<> std::string RAttrValues::Value_t::get<std::string>() const;
+template<> bool RAttrMap::Value_t::get<bool>() const;
+template<> int RAttrMap::Value_t::get<int>() const;
+template<> double RAttrMap::Value_t::get<double>() const;
+template<> std::string RAttrMap::Value_t::get<std::string>() const;
 
-template<> bool RAttrValues::Value_t::get_value<bool,void>(const Value_t *rec);
-template<> int RAttrValues::Value_t::get_value<int,void>(const Value_t *rec);
-template<> double RAttrValues::Value_t::get_value<double,void>(const Value_t *rec);
-template<> std::string RAttrValues::Value_t::get_value<std::string,void>(const Value_t *rec);
-template<> const RAttrValues::Value_t *RAttrValues::Value_t::get_value<const RAttrValues::Value_t *,void>(const Value_t *rec);
-template<> const RAttrValues::Value_t *RAttrValues::Value_t::get_value<const RAttrValues::Value_t *,bool>(const Value_t *rec);
-template<> const RAttrValues::Value_t *RAttrValues::Value_t::get_value<const RAttrValues::Value_t *,int>(const Value_t *rec);
-template<> const RAttrValues::Value_t *RAttrValues::Value_t::get_value<const RAttrValues::Value_t *,double>(const Value_t *rec);
-template<> const RAttrValues::Value_t *RAttrValues::Value_t::get_value<const RAttrValues::Value_t *,std::string>(const Value_t *rec);
+template<> bool RAttrMap::Value_t::get_value<bool,void>(const Value_t *rec);
+template<> int RAttrMap::Value_t::get_value<int,void>(const Value_t *rec);
+template<> double RAttrMap::Value_t::get_value<double,void>(const Value_t *rec);
+template<> std::string RAttrMap::Value_t::get_value<std::string,void>(const Value_t *rec);
+template<> const RAttrMap::Value_t *RAttrMap::Value_t::get_value<const RAttrMap::Value_t *,void>(const Value_t *rec);
+template<> const RAttrMap::Value_t *RAttrMap::Value_t::get_value<const RAttrMap::Value_t *,bool>(const Value_t *rec);
+template<> const RAttrMap::Value_t *RAttrMap::Value_t::get_value<const RAttrMap::Value_t *,int>(const Value_t *rec);
+template<> const RAttrMap::Value_t *RAttrMap::Value_t::get_value<const RAttrMap::Value_t *,double>(const Value_t *rec);
+template<> const RAttrMap::Value_t *RAttrMap::Value_t::get_value<const RAttrMap::Value_t *,std::string>(const Value_t *rec);
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -182,4 +176,4 @@ template<> const RAttrValues::Value_t *RAttrValues::Value_t::get_value<const RAt
 } // namespace Experimental
 } // namespace ROOT
 
-#endif // ROOT7_RAttrValues
+#endif // ROOT7_RAttrMap

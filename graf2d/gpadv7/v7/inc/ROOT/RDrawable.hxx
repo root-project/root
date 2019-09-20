@@ -98,9 +98,9 @@ friend class RStyle;
 
 private:
 
-   std::string  fId; ///< object identifier, unique inside RCanvas
+   std::string  fId;             ///< object identifier, unique inside RCanvas
 
-   RAttrValues fAttr; ///< attributes values
+   RAttrMap fAttr;               ///< attributes values
 
    std::weak_ptr<RStyle> fStyle; ///<! style applied for RDrawable
 
@@ -108,11 +108,10 @@ private:
 
    std::string fUserClass;     ///<  user defined drawable class, can later go inside map
 
-
 protected:
 
    virtual void CollectShared(Internal::RIOSharedVector_t &) {}
-   RAttrValues *GetAttr() { return &fAttr; }
+   RAttrMap *GetAttr() { return &fAttr; }
 
    bool MatchSelector(const std::string &selector) const;
 

@@ -46,7 +46,7 @@ std::string ROOT::Experimental::RAttrBase::GetPrefixToParent() const
 void ROOT::Experimental::RAttrBase::CreateOwnAttr()
 {
    // create independent container
-   fOwnAttr = std::make_unique<RAttrValues>();
+   fOwnAttr = std::make_unique<RAttrMap>();
 
    // set pointer on the container
    fAttr = fOwnAttr.get();
@@ -56,7 +56,7 @@ void ROOT::Experimental::RAttrBase::CreateOwnAttr()
 ///////////////////////////////////////////////////////////////////////////////
 /// Copy attributes from other object
 
-bool ROOT::Experimental::RAttrBase::CopyValue(const std::string &name, const RAttrValues::Value_t *value, bool check_type)
+bool ROOT::Experimental::RAttrBase::CopyValue(const std::string &name, const RAttrMap::Value_t *value, bool check_type)
 {
    if (!value)
       return false;
@@ -70,7 +70,7 @@ bool ROOT::Experimental::RAttrBase::CopyValue(const std::string &name, const RAt
    if (!EnsureAttr())
       return false;
 
-   fAttr->map.Add(GetFullName(name), value->Copy());
+   fAttr->Add(GetFullName(name), value->Copy());
 
    return true;
 }
@@ -78,14 +78,14 @@ bool ROOT::Experimental::RAttrBase::CopyValue(const std::string &name, const RAt
 ///////////////////////////////////////////////////////////////////////////////
 /// Copy attributes into target object
 
-bool ROOT::Experimental::RAttrBase::IsValueEqual(const std::string &name, const RAttrValues::Value_t *value, bool use_style) const
+bool ROOT::Experimental::RAttrBase::IsValueEqual(const std::string &name, const RAttrMap::Value_t *value, bool use_style) const
 {
    if (!GetAttr() || !value)
       return false;
 
    auto fullname = GetFullName(name);
 
-   auto value2 = fAttr->map.Find(fullname);
+   auto value2 = fAttr->Find(fullname);
    if (value2) return value2->IsEqual(value);
 
    if (fDrawable && use_style)
@@ -107,7 +107,7 @@ void ROOT::Experimental::RAttrBase::CopyTo(RAttrBase &tgt, bool use_style) const
 
          auto fullname = GetFullName(entry.first);
 
-         auto rec = fAttr->map.Find(fullname);
+         auto rec = fAttr->Find(fullname);
          if (rec && tgt.CopyValue(entry.first,rec)) continue;
 
          while (fDrawable && use_style)
@@ -127,7 +127,7 @@ bool ROOT::Experimental::RAttrBase::IsSame(const RAttrBase &tgt, bool use_style)
       for (const auto &entry : GetDefaults()) {
 
          auto fullname = GetFullName(entry.first);
-         auto rec = fAttr->map.Find(fullname);
+         auto rec = fAttr->Find(fullname);
 
          if (rec) {
             if (!tgt.IsValueEqual(entry.first, rec, use_style)) return false;
@@ -155,7 +155,7 @@ void ROOT::Experimental::RAttrBase::SemanticCopy(const RAttrBase &src)
 {
    if (!src.GetAttr()) return;
 
-   for (const auto &pair : src.fAttr->map) {
+   for (const auto &pair : *src.fAttr) {
       auto attrname = pair.first;
 
       if (!src.fPrefix.empty()) {
@@ -248,30 +248,30 @@ void ROOT::Experimental::RAttrBase::AssignParent(const RAttrBase *parent, const 
 void ROOT::Experimental::RAttrBase::ClearValue(const std::string &name)
 {
    if (GetAttr())
-      fAttr->map.Clear(GetFullName(name));
+      fAttr->Clear(GetFullName(name));
 }
 
 void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, int value)
 {
    if (EnsureAttr())
-      fAttr->map.AddInt(GetFullName(name), value);
+      fAttr->AddInt(GetFullName(name), value);
 }
 
 void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, double value)
 {
    if (EnsureAttr())
-      fAttr->map.AddDouble(GetFullName(name), value);
+      fAttr->AddDouble(GetFullName(name), value);
 }
 
 double *ROOT::Experimental::RAttrBase::GetDoublePtr(const std::string &name) const
 {
-   return GetAttr() ? fAttr->map.GetDoublePtr(GetFullName(name)) : nullptr;
+   return GetAttr() ? fAttr->GetDoublePtr(GetFullName(name)) : nullptr;
 }
 
 void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, const std::string &value)
 {
    if (EnsureAttr())
-      fAttr->map.AddString(GetFullName(name), value);
+      fAttr->AddString(GetFullName(name), value);
 }
 
 /** Clear all respective values from drawable. Only defaults can be used */
@@ -279,5 +279,5 @@ void ROOT::Experimental::RAttrBase::Clear()
 {
    if (GetAttr())
       for (const auto &entry : GetDefaults())
-         fAttr->map.Clear(GetFullName(entry.first));
+         fAttr->Clear(GetFullName(entry.first));
 }

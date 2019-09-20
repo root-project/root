@@ -10,19 +10,7 @@ class CustomAttrs : public RAttrBase {
    RAttrBox fAttrBox{this, "box_"};
    RAttrText fAttrText{this, "text_"};
 
-protected:
-   const RAttrValues::Map_t &GetDefaults() const override
-   {
-      static auto dflts = RAttrValues::Map_t().AddDefaults(fAttrBox).AddDefaults(fAttrText);
-      return dflts;
-   }
-
-public:
-
-   using RAttrBase::RAttrBase;
-
-   CustomAttrs(const CustomAttrs &src) : CustomAttrs() { src.CopyTo(*this); }
-   CustomAttrs &operator=(const CustomAttrs &src) { Clear(); src.CopyTo(*this); return *this; }
+   R_ATTR_CLASS(CustomAttrs, "custom_", AddDefaults(fAttrBox).AddDefaults(fAttrText));
 
    RAttrBox &AttrBox() { return fAttrBox; }
    const RAttrBox &AttrBox() const { return fAttrBox; }
