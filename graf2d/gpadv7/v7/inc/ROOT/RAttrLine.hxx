@@ -39,10 +39,11 @@ protected:
 
 public:
 
-   using RAttrBase::RAttrBase;
+   R_ATTR_CLASS(RAttrLine,"line_")
 
-   RAttrLine(const RAttrLine &src) : RAttrLine() { src.CopyTo(*this); }
-   RAttrLine &operator=(const RAttrLine &src) { Clear(); src.CopyTo(*this); return *this; }
+   // using RAttrBase::RAttrBase;
+   // RAttrLine(const RAttrLine &src) : RAttrLine() { src.CopyTo(*this); }
+   // RAttrLine &operator=(const RAttrLine &src) { Clear(); src.CopyTo(*this); return *this; }
 
    ///The width of the line.
    RAttrLine &SetWidth(double width) { SetValue("width", width); return *this; }
