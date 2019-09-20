@@ -17,7 +17,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
     ROOT/RObjectDrawable.hxx
     ROOT/RColor.hxx
     ROOT/RDisplayItem.hxx
-    ROOT/RAttrValues.hxx
+    ROOT/RAttrMap.hxx
     ROOT/RAttrBase.hxx
     ROOT/RAttrBox.hxx
     ROOT/RAttrLine.hxx
@@ -43,7 +43,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
     v7/src/RColor.cxx
     v7/src/RDisplayItem.cxx
     v7/src/RDrawable.cxx
-    v7/src/RAttrValues.cxx
+    v7/src/RAttrMap.cxx
     v7/src/RAttrBase.cxx
     v7/src/RPalette.cxx
     v7/src/RStyle.cxx

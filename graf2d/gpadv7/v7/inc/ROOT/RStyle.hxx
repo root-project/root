@@ -16,7 +16,7 @@
 #ifndef ROOT7_RStyle
 #define ROOT7_RStyle
 
-#include <ROOT/RAttrValues.hxx>
+#include <ROOT/RAttrMap.hxx>
 
 #include <ROOT/RStringView.hxx>
 
