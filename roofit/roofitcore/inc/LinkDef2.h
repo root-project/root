@@ -18,7 +18,6 @@
 #pragma link C++ class RooFIter+ ;
 #pragma link C++ class RooFormula+ ;
 #pragma link C++ class RooFormulaVar+ ;
-#pragma link C++ class RooGaussKronrodIntegrator1D+ ;
 #pragma link C++ class RooGenContext+ ;
 #pragma link C++ class RooGenericPdf+ ;
 #pragma link C++ class RooGenProdProj+ ;

@@ -64,7 +64,6 @@ using namespace std ;
 ClassImp(RooAdaptiveGaussKronrodIntegrator1D);
 ;
 
-
 // --- From GSL_MATH.h -------------------------------------------
 struct gsl_function_struct
 {
@@ -134,27 +133,43 @@ gsl_integration_qagiu (gsl_function * f,
 
 //-------------------------------------------------------------------
 
+// register integrator class 
+// create a derived class in order to call the protected method of the 
+// RoodaptiveGaussKronrodIntegrator1D
+namespace RooFit_internal {
+struct Roo_internal_AGKInteg1D : public RooAdaptiveGaussKronrodIntegrator1D {
 
+   static void registerIntegrator()
+   {
+      auto &intFactory = RooNumIntFactory::instance();
+      RooAdaptiveGaussKronrodIntegrator1D::registerIntegrator(intFactory);
+   }
+};
+// class used to register integrator at loafing time
+struct Roo_reg_AGKInteg1D {
+   Roo_reg_AGKInteg1D() { Roo_internal_AGKInteg1D::registerIntegrator(); }
+};
+
+static Roo_reg_AGKInteg1D instance;
+} // namespace RooFit_internal
 ////////////////////////////////////////////////////////////////////////////////
 /// Register this class with RooNumIntConfig as a possible choice of numeric
 /// integrator for one-dimensional integrals over finite and infinite domains
-
 void RooAdaptiveGaussKronrodIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 {
-  RooRealVar maxSeg("maxSeg","maximum number of segments",100) ;
-  RooCategory method("method","Integration method for each segment") ;
-  method.defineType("WynnEpsilon",0) ;
-  method.defineType("15Points",1) ;
-  method.defineType("21Points",2) ;
-  method.defineType("31Points",3) ;
-  method.defineType("41Points",4) ;
-  method.defineType("51Points",5) ;
-  method.defineType("61Points",6) ;
-  method.setIndex(2) ;  
-  fact.storeProtoIntegrator(new RooAdaptiveGaussKronrodIntegrator1D(),RooArgSet(maxSeg,method)) ;
+     RooRealVar maxSeg("maxSeg", "maximum number of segments", 100);
+     RooCategory method("method", "Integration method for each segment");
+     method.defineType("WynnEpsilon", 0);
+     method.defineType("15Points", 1);
+     method.defineType("21Points", 2);
+     method.defineType("31Points", 3);
+     method.defineType("41Points", 4);
+     method.defineType("51Points", 5);
+     method.defineType("61Points", 6);
+     method.setIndex(2);
+     fact.storeProtoIntegrator(new RooAdaptiveGaussKronrodIntegrator1D(), RooArgSet(maxSeg, method));
+     std::cout << "RooAdaptiveGaussKronrofIntegrator1D has beed registered " << std::endl;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// coverity[UNINIT_CTOR]

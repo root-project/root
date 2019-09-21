@@ -79,6 +79,25 @@ int gsl_integration_qng (const gsl_function * f,
                          size_t * neval);
 //-------------------------------------------------------------------
 
+// register integrator class 
+// create a derived class in order to call the protected method of the 
+// RoodaptiveGaussKronrodIntegrator1D
+namespace RooFit_internal {
+struct Roo_internal_GKInteg1D : public RooGaussKronrodIntegrator1D {
+
+   static void registerIntegrator()
+   {
+      auto &intFactory = RooNumIntFactory::instance();
+      RooGaussKronrodIntegrator1D::registerIntegrator(intFactory);
+   }
+};
+// class used to register integrator at loafing time
+struct Roo_reg_GKInteg1D {
+   Roo_reg_GKInteg1D() { Roo_internal_GKInteg1D::registerIntegrator(); }
+};
+
+static Roo_reg_GKInteg1D instance;
+} 
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -87,6 +106,7 @@ int gsl_integration_qng (const gsl_function * f,
 void RooGaussKronrodIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 {
   fact.storeProtoIntegrator(new RooGaussKronrodIntegrator1D(),RooArgSet()) ;
+  std::cout << "RooGaussKronrodIntegrator1D has been registered" << std::endl;
 }
 
 
