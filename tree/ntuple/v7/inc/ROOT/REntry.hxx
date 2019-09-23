@@ -48,6 +48,8 @@ class REntry {
    std::vector<std::size_t> fManagedValues;
 
 public:
+   using Iterator_t = decltype(fValues)::iterator;
+
    REntry() = default;
    REntry(const REntry& other) = delete;
    REntry& operator=(const REntry& other) = delete;
@@ -87,8 +89,8 @@ public:
       return nullptr;
    }
 
-   decltype(fValues)::iterator begin() { return fValues.begin(); }
-   decltype(fValues)::iterator end() { return fValues.end(); }
+   Iterator_t begin() { return fValues.begin(); }
+   Iterator_t end() { return fValues.end(); }
 };
 
 } // namespace Experimental

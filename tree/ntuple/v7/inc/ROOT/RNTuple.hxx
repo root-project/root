@@ -112,7 +112,7 @@ public:
       explicit RIterator(NTupleSize_t index) : fIndex(index) {}
       ~RIterator() = default;
 
-      iterator  operator++(int) /* postfix */        { auto r = *this; ++fIndex; return r; }
+      iterator  operator++(int) /* postfix */        { auto r = *this; fIndex++; return r; }
       iterator& operator++()    /* prefix */         { ++fIndex; return *this; }
       reference operator* ()                         { return fIndex; }
       pointer   operator->()                         { return &fIndex; }
