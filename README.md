@@ -12,21 +12,22 @@ Run tests locally
 
 There are two ways to generate and execute the tests:
 
-    1. As part of building ROOT using CMake.
+1. As part of building ROOT using CMake.
 
-       Before building, enable the 'testing' and 'roottest' option:
+Before building, enable the 'testing' and 'roottest' option:
 
        cmake -Dtesting=ON -Droottest=ON $PATH_TO_ROOT_SOURCES
 
-    2. As a stand-alone project, testing a ROOT build / installation.
+2. As a stand-alone project, testing a ROOT build / installation.
 
-       Set the ROOT environment to the existing installation
+Set the ROOT environment to the existing installation
        
        . ${ROOTSYS}/thisroot.[c]sh
 
-       Create a build directory, change into it and execute
+Create a build directory, change into it and execute
 
        cmake $PATH_TO_ROOTTEST
+       make -j8
 
 Tests can then be executed using the ctest command in the build directory:
 
