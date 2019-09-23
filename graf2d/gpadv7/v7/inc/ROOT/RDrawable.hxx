@@ -97,26 +97,23 @@ friend class RAttrBase;
 friend class RStyle;
 
 private:
-   std::string  fId;             ///< object identifier, unique inside RCanvas - TODO change
-
+   std::string fId;              ///< object identifier, unique inside RCanvas - TODO change
    RAttrMap fAttr;               ///< attributes values
-
    std::weak_ptr<RStyle> fStyle; ///<! style applied for RDrawable
-
-   std::string fType;          ///<! drawable type, not stored in the root file, must be initialized in constructor
-
-   std::string fUserClass;     ///<  user defined drawable class, can later go inside map
+   std::string fCssType;         ///<! drawable type, not stored in the root file, must be initialized in constructor
+   std::string fCssClass;        ///<  user defined drawable class, can later go inside map
 
 protected:
 
    virtual void CollectShared(Internal::RIOSharedVector_t &) {}
-   RAttrMap *GetAttr() { return &fAttr; }
+
+   RAttrMap &GetAttr() { return fAttr; }
 
    bool MatchSelector(const std::string &selector) const;
 
 public:
 
-   explicit RDrawable(const std::string &type) : fType(type) {}
+   explicit RDrawable(const std::string &type) : fCssType(type) {}
 
    virtual ~RDrawable();
 
@@ -134,10 +131,10 @@ public:
    void UseStyle(const std::shared_ptr<RStyle> &style) { fStyle = style; }
    void ClearStyle() { fStyle.reset(); }
 
-   void SetUserClass(const std::string &cl) { fUserClass = cl; }
-   std::string GetUserClass() const { return fUserClass; }
+   void SetCssClass(const std::string &cl) { fCssClass = cl; }
+   const std::string &GetCssClass() const { return fCssClass; }
 
-   std::string GetType() const { return fType; }
+   const std::string &GetCssType() const { return fCssType; }
 
 };
 
