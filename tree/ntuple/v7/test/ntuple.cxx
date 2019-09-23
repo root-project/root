@@ -548,11 +548,11 @@ TEST(RNTuple, Composable)
 }
 
 TEST(RNTuple, TypeName) {
-   EXPECT_STREQ("float", ROOT::Experimental::RField<float>::MyTypeName().c_str());
+   EXPECT_STREQ("float", ROOT::Experimental::RField<float>::TypeName().c_str());
    EXPECT_STREQ("std::vector<std::string>",
-                ROOT::Experimental::RField<std::vector<std::string>>::MyTypeName().c_str());
+                ROOT::Experimental::RField<std::vector<std::string>>::TypeName().c_str());
    EXPECT_STREQ("CustomStruct",
-                ROOT::Experimental::RField<CustomStruct>::MyTypeName().c_str());
+                ROOT::Experimental::RField<CustomStruct>::TypeName().c_str());
 }
 
 namespace {

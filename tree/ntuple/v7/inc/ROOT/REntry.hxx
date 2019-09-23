@@ -80,7 +80,7 @@ public:
    T* Get(std::string_view fieldName) {
       for (auto& v : fValues) {
          if (v.GetField()->GetName() == fieldName) {
-            R__ASSERT(v.GetField()->GetType() == RField<T>::MyTypeName());
+            R__ASSERT(v.GetField()->GetType() == RField<T>::TypeName());
             return static_cast<T*>(v.GetRawPtr());
          }
       }

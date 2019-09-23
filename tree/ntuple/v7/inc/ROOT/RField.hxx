@@ -427,8 +427,8 @@ public:
 template <typename T, typename=void>
 class RField : public RFieldClass {
 public:
-   static std::string MyTypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
-   RField(std::string_view name) : RFieldClass(name, MyTypeName()) {
+   static std::string TypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
+   RField(std::string_view name) : RFieldClass(name, TypeName()) {
       static_assert(std::is_class<T>::value, "no I/O support for this basic C++ type");
    }
    RField(RField&& other) = default;
@@ -450,7 +450,7 @@ private:
    /// Save the link to the collection ntuple in order to reset the offset counter when committing the cluster
    std::shared_ptr<RCollectionNTuple> fCollectionNTuple;
 public:
-   static std::string MyTypeName() { return ":RFieldCollection:"; }
+   static std::string TypeName() { return ":RFieldCollection:"; }
    RFieldCollection(std::string_view name,
                     std::shared_ptr<RCollectionNTuple> collectionNTuple,
                     std::unique_ptr<RNTupleModel> collectionModel);
@@ -482,9 +482,9 @@ public:
 template <>
 class RField<ClusterSize_t> : public Detail::RFieldBase {
 public:
-   static std::string MyTypeName() { return "ROOT::Experimental::ClusterSize_t"; }
+   static std::string TypeName() { return "ROOT::Experimental::ClusterSize_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, MyTypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
@@ -527,9 +527,9 @@ public:
 template <>
 class RField<bool> : public Detail::RFieldBase {
 public:
-   static std::string MyTypeName() { return "bool"; }
+   static std::string TypeName() { return "bool"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, MyTypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
@@ -563,9 +563,9 @@ public:
 template <>
 class RField<float> : public Detail::RFieldBase {
 public:
-   static std::string MyTypeName() { return "float"; }
+   static std::string TypeName() { return "float"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, MyTypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
@@ -600,9 +600,9 @@ public:
 template <>
 class RField<double> : public Detail::RFieldBase {
 public:
-   static std::string MyTypeName() { return "double"; }
+   static std::string TypeName() { return "double"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, MyTypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
@@ -636,9 +636,9 @@ public:
 template <>
 class RField<std::uint8_t> : public Detail::RFieldBase {
 public:
-   static std::string MyTypeName() { return "std::uint8_t"; }
+   static std::string TypeName() { return "std::uint8_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, MyTypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
@@ -672,9 +672,9 @@ public:
 template <>
 class RField<std::int32_t> : public Detail::RFieldBase {
 public:
-   static std::string MyTypeName() { return "std::int32_t"; }
+   static std::string TypeName() { return "std::int32_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, MyTypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
@@ -708,9 +708,9 @@ public:
 template <>
 class RField<std::uint32_t> : public Detail::RFieldBase {
 public:
-   static std::string MyTypeName() { return "std::uint32_t"; }
+   static std::string TypeName() { return "std::uint32_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, MyTypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
@@ -744,9 +744,9 @@ public:
 template <>
 class RField<std::uint64_t> : public Detail::RFieldBase {
 public:
-   static std::string MyTypeName() { return "std::uint64_t"; }
+   static std::string TypeName() { return "std::uint64_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, MyTypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
@@ -789,9 +789,9 @@ private:
                      ROOT::Experimental::Detail::RFieldValue *value) final;
 
 public:
-   static std::string MyTypeName() { return "std::string"; }
+   static std::string TypeName() { return "std::string"; }
    explicit RField(std::string_view name)
-      : Detail::RFieldBase(name, MyTypeName(), ENTupleStructure::kLeaf, false /* isSimple */)
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, false /* isSimple */)
       , fIndex(0), fElemIndex(&fIndex) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
@@ -826,11 +826,11 @@ template <typename ItemT, std::size_t N>
 class RField<std::array<ItemT, N>> : public RFieldArray {
    using ContainerT = typename std::array<ItemT, N>;
 public:
-   static std::string MyTypeName() {
-      return "std::array<" + RField<ItemT>::MyTypeName() + "," + std::to_string(N) + ">";
+   static std::string TypeName() {
+      return "std::array<" + RField<ItemT>::TypeName() + "," + std::to_string(N) + ">";
    }
    explicit RField(std::string_view name)
-      : RFieldArray(name, std::make_unique<RField<ItemT>>(RField<ItemT>::MyTypeName()), N)
+      : RFieldArray(name, std::make_unique<RField<ItemT>>(RField<ItemT>::TypeName()), N)
    {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
@@ -856,7 +856,7 @@ private:
    template <typename HeadT, typename... TailTs>
    static std::string BuildItemTypes()
    {
-      std::string result = RField<HeadT>::MyTypeName();
+      std::string result = RField<HeadT>::TypeName();
       if constexpr(sizeof...(TailTs) > 0)
          result += "," + BuildItemTypes<TailTs...>();
       return result;
@@ -875,7 +875,7 @@ private:
    }
 
 public:
-   static std::string MyTypeName() { return "std::variant<" + BuildItemTypes<ItemTs...>() + ">"; }
+   static std::string TypeName() { return "std::variant<" + BuildItemTypes<ItemTs...>() + ">"; }
    explicit RField(std::string_view name) : RFieldVariant(name, BuildItemFields<ItemTs...>()) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
@@ -897,9 +897,9 @@ template <typename ItemT>
 class RField<std::vector<ItemT>> : public RFieldVector {
    using ContainerT = typename std::vector<ItemT>;
 public:
-   static std::string MyTypeName() { return "std::vector<" + RField<ItemT>::MyTypeName() + ">"; }
+   static std::string TypeName() { return "std::vector<" + RField<ItemT>::TypeName() + ">"; }
    explicit RField(std::string_view name)
-      : RFieldVector(name, std::make_unique<RField<ItemT>>(RField<ItemT>::MyTypeName()))
+      : RFieldVector(name, std::make_unique<RField<ItemT>>(RField<ItemT>::TypeName()))
    {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
@@ -932,7 +932,7 @@ protected:
    void DoGenerateColumns() final;
 
 public:
-   static std::string MyTypeName() { return "std::vector<bool>"; }
+   static std::string TypeName() { return "std::vector<bool>"; }
    explicit RField(std::string_view name);
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
@@ -1003,7 +1003,7 @@ public:
       Attach(std::move(itemField));
    }
    explicit RField(std::string_view name)
-      : RField(name, std::make_unique<RField<ItemT>>(RField<ItemT>::MyTypeName()))
+      : RField(name, std::make_unique<RField<ItemT>>(RField<ItemT>::TypeName()))
    {
    }
    RField(RField&& other) = default;
@@ -1033,7 +1033,7 @@ public:
    }
    void CommitCluster() final { fNWritten = 0; }
 
-   static std::string MyTypeName() { return "ROOT::VecOps::RVec<" + RField<ItemT>::MyTypeName() + ">"; }
+   static std::string TypeName() { return "ROOT::VecOps::RVec<" + RField<ItemT>::TypeName() + ">"; }
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
@@ -1114,7 +1114,7 @@ public:
    }
    void CommitCluster() final { fNWritten = 0; }
 
-   static std::string MyTypeName() { return "ROOT::VecOps::RVec<bool>"; }
+   static std::string TypeName() { return "ROOT::VecOps::RVec<bool>"; }
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
