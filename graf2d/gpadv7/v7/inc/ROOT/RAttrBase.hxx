@@ -191,6 +191,8 @@ public: \
    ClassName(RDrawable *drawable, const std::string &prefix = dflt_prefix) { AssignDrawable(drawable, prefix); } \
    ClassName(const RAttrBase *parent, const std::string &prefix = dflt_prefix) { AssignParent(parent, prefix); } \
    ClassName(const ClassName &src) : ClassName() { src.CopyTo(*this); } \
+   ClassName(ClassName &&src) = default; \
+   ClassName &operator=(ClassName &&src) = default; \
    ClassName &operator=(const ClassName &src) \
    { \
       Clear(); \
