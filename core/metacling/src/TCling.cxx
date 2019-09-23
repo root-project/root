@@ -2132,28 +2132,24 @@ void TCling::RegisterModule(const char* modulename,
    // Now that all the header have been registered/compiled, let's
    // make sure to 'reset' the TClass that have a class init in this module
    // but already had their type information available (using information/header
-   // loaded from other modules or from class rules).
-   if (!ModuleWasSuccessfullyLoaded && !hasHeaderParsingOnDemand) {
-      // This code is likely to be superseded by the similar code in LoadPCM,
-      // and have been disabled, (inadvertently or awkwardly) by
-      // commit 7903f09f3beea69e82ffba29f59fb2d656a4fd54 (Refactor the routines used for header parsing on demand)
-      // whereas it seems that a more semantically correct conditional would have
-      // been 'if this module does not have a rootpcm'.
-      // Note: this need to be review when the clang pcm are being installed.
-      //       #if defined(R__MUST_REVISIT)
-      while (!fClassesToUpdate.empty()) {
-         TClass *oldcl = fClassesToUpdate.back().first;
-         if (oldcl->GetState() != TClass::kHasTClassInit) {
-            // if (gDebug > 2) Info("RegisterModule", "Forcing TClass init for %s", oldcl->GetName());
-            DictFuncPtr_t dict = fClassesToUpdate.back().second;
-            fClassesToUpdate.pop_back();
-            // Calling func could manipulate the list so, let maintain the list
-            // then call the dictionary function.
-            TClass *ncl = dict();
-            if (ncl) ncl->PostLoadCheck();
-         } else {
-            fClassesToUpdate.pop_back();
-         }
+   // loaded from other modules or from class rules or from opening a TFile
+   // or from loading header in a way that did not provoke the loading of
+   // the library we just laoded).
+   while (!fClassesToUpdate.empty()) {
+      TClass *oldcl = fClassesToUpdate.back().first;
+      // If somehow the TClass has already been loaded (maybe it was registered several time),
+      // we skip it.  Otherwise, the existing TClass is in mode kInterpreted, kEmulated or
+      // maybe even kForwardDeclared and needs to replaced.
+      if (oldcl->GetState() != TClass::kHasTClassInit) {
+         // if (gDebug > 2) Info("RegisterModule", "Forcing TClass init for %s", oldcl->GetName());
+         DictFuncPtr_t dict = fClassesToUpdate.back().second;
+         fClassesToUpdate.pop_back();
+         // Calling func could manipulate the list so, let maintain the list
+         // then call the dictionary function.
+         TClass *ncl = dict();
+         if (ncl) ncl->PostLoadCheck();
+      } else {
+         fClassesToUpdate.pop_back();
       }
    }
 
@@ -6061,20 +6057,21 @@ Int_t TCling::AutoParse(const char *cls)
 
    Int_t nHheadersParsed = AutoParseImplRecurse(cls,/*topLevel=*/ true);
 
-   if (nHheadersParsed != 0) {
-      while (!fClassesToUpdate.empty()) {
-         TClass *oldcl = fClassesToUpdate.back().first;
-         if (oldcl->GetState() != TClass::kHasTClassInit) {
-            // if (gDebug > 2) Info("RegisterModule", "Forcing TClass init for %s", oldcl->GetName());
-            DictFuncPtr_t dict = fClassesToUpdate.back().second;
-            fClassesToUpdate.pop_back();
-            // Calling func could manipulate the list so, let maintain the list
-            // then call the dictionary function.
-            TClass *ncl = dict();
-            if (ncl) ncl->PostLoadCheck();
-         } else {
-            fClassesToUpdate.pop_back();
-         }
+   while (!fClassesToUpdate.empty()) {
+      TClass *oldcl = fClassesToUpdate.back().first;
+      // If somehow the TClass has already been loaded (maybe it was registered several time),
+      // we skip it.  Otherwise, the existing TClass is in mode kInterpreted, kEmulated or
+      // maybe even kForwardDeclared and needs to replaced.
+      if (oldcl->GetState() != TClass::kHasTClassInit) {
+         // if (gDebug > 2) Info("RegisterModule", "Forcing TClass init for %s", oldcl->GetName());
+         DictFuncPtr_t dict = fClassesToUpdate.back().second;
+         fClassesToUpdate.pop_back();
+         // Calling func could manipulate the list so, let maintain the list
+         // then call the dictionary function.
+         TClass *ncl = dict();
+         if (ncl) ncl->PostLoadCheck();
+      } else {
+         fClassesToUpdate.pop_back();
       }
    }
 
