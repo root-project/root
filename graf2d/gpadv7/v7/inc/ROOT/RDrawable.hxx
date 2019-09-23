@@ -97,8 +97,7 @@ friend class RAttrBase;
 friend class RStyle;
 
 private:
-
-   std::string  fId;             ///< object identifier, unique inside RCanvas
+   std::string  fId;             ///< object identifier, unique inside RCanvas - TODO change
 
    RAttrMap fAttr;               ///< attributes values
 
@@ -121,6 +120,8 @@ public:
 
    virtual ~RDrawable();
 
+   // copy constructor and assign operator !!!
+
    virtual void Paint(Internal::RPadPainter &onPad);
 
    /** Method can be used to provide menu items for the drawn object */
@@ -139,6 +140,17 @@ public:
    std::string GetType() const { return fType; }
 
 };
+
+
+
+/// Central method to insert drawable in list of pad primitives
+/// By default drawable placed as is.
+template <class DRAWABLE>
+inline auto GetDrawable(const std::shared_ptr<DRAWABLE> &drawable)
+{
+   return drawable;
+}
+
 
 
 } // namespace Experimental
