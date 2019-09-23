@@ -15,7 +15,6 @@
 
 #include <ROOT/RAttrBase.hxx>
 
-#include <ROOT/RDrawable.hxx>
 #include <ROOT/RLogger.hxx>
 
 ///////////////////////////////////////////////////////////////////////////////

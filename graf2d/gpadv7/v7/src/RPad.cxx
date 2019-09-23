@@ -102,9 +102,8 @@ ROOT::Experimental::RFrame *ROOT::Experimental::RPadBase::GetOrCreateFrame()
 
 void ROOT::Experimental::RPadBase::CreateFrameIfNeeded()
 {
-   if (!fFrame) {
+   if (!fFrame)
       fFrame = std::make_unique<ROOT::Experimental::RFrame>();
-   }
 }
 
 
@@ -229,7 +228,7 @@ void ROOT::Experimental::RPad::Paint(Internal::RPadPainter &toppad)
 
    painter.fPadDisplayItem->SetPadPosSize(&fPos, &fSize);
 
-   painter.fPadDisplayItem->SetAttributes(GetAttr());
+   painter.fPadDisplayItem->SetAttributes(&GetAttr());
 
    toppad.AddDisplayItem(std::move(painter.fPadDisplayItem));
 }

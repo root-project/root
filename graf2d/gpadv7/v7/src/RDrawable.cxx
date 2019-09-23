@@ -37,5 +37,5 @@ void ROOT::Experimental::RDrawable::Paint(Internal::RPadPainter &onPad)
 
 bool ROOT::Experimental::RDrawable::MatchSelector(const std::string &selector) const
 {
-   return (selector == fType) || (!fUserClass.empty() && (selector == std::string(".") + fUserClass));
+   return (selector == fCssType) || (!fCssClass.empty() && (selector == std::string(".") + fCssClass));
 }
