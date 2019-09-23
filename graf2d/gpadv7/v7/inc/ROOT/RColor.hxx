@@ -29,7 +29,7 @@ namespace Experimental {
 
 class RColor : public RAttrBase {
 
-   R__ATTR_CLASS(RColor, "color_", AddString("rgb","0,0,0").AddDouble("a",1.));
+   R__ATTR_CLASS(RColor, "color_", AddString("rgb", "0,0,0").AddDouble("a", 1.));
 
    using RGB_t = std::array<int, 3>;
 
