@@ -18,7 +18,7 @@ class CustomAttrs : public RAttrBase {
    RAttrText &AttrText() { return fAttrText; }
    const RAttrText &AttrText() const { return fAttrText; }
 
-   double GetDirect(const std::string &name) const { GetValue<double>(name); }
+   double GetDirect(const std::string &name) const { return GetValue<double>(name); }
 };
 
 
