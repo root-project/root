@@ -17,6 +17,8 @@ class CustomAttrs : public RAttrBase {
 
    RAttrText &AttrText() { return fAttrText; }
    const RAttrText &AttrText() const { return fAttrText; }
+
+   double GetDirect(const std::string &name) const { GetValue<double>(name); }
 };
 
 
@@ -27,12 +29,12 @@ TEST(OptsTest, AttribStrings) {
    attrs.AttrText().SetSize(1.7);
 
    {
-      double val = attrs.GetValue<double>("box_border_width");
+      auto val = attrs.GetDirect("box_border_width");
       EXPECT_FLOAT_EQ(val, 42.f);
    }
 
    {
-      float val = attrs.GetValue<double>("text_size");
+      auto val = attrs.GetDirect("text_size");
       EXPECT_FLOAT_EQ(val, 1.7f);
    }
 }

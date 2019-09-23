@@ -32,14 +32,6 @@ namespace Experimental {
 class RPad;
 class RCanvas;
 
-
-template <class DRAWABLE, class... ARGS>
-inline auto GetDrawable(const std::shared_ptr<DRAWABLE> &drawable, ARGS...)
-{
-   return drawable;
-}
-
-
 /** \class ROOT::Experimental::RPadBase
   Base class for graphic containers for `RDrawable`-s.
   */
@@ -264,7 +256,7 @@ public:
    void SetSize(const RPadExtent &sz) { fSize = sz; }
 
    /// Set position
-   void SetPos(const RPadPos &p) const { (RPadExtent&) fPos = (const RPadExtent&) p; }
+   void SetPos(const RPadPos &p) { fPos = p; }
 
    RAttrLine &AttrLine() { return fLineAttr; }
    const RAttrLine &AttrLine() const { return fLineAttr; }
