@@ -18,7 +18,7 @@ There are two ways to generate and execute the tests:
 Before building, enable the 'testing' and 'roottest' option:
 
        cmake -Dtesting=ON -Droottest=ON $PATH_TO_ROOT_SOURCES
-       make -j8
+       cmake --build . -j8
 
 #### Option 2: roottest as a stand-alone project
 
@@ -29,7 +29,7 @@ Set the ROOT environment to an existing build / installation:
 Create a build directory, change into it and execute
 
        cmake $PATH_TO_ROOTTEST
-       make -j8
+       cmake --build . -j8
 
 ### Running the test suite
 
