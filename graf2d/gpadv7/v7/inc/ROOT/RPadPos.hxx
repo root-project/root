@@ -25,7 +25,7 @@ namespace ROOT {
 namespace Experimental {
 
 /** \class ROOT::Experimental::RPadPos
-  An position (horizontal and vertical) in a `RPad`.
+  A position (horizontal and vertical) in a `RPad`.
   */
 class RPadPos {
 

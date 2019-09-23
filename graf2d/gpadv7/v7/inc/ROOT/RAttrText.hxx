@@ -33,7 +33,7 @@ class RAttrText : public RAttrBase {
 
    RColor fColor{this, "color_"}; ///<! line color, will access container from line attributes
 
-   R_ATTR_CLASS(RAttrText, "text_", AddDouble("size",12.).AddDouble("angle",0.).AddInt("align", 22).AddInt("font",41).AddDefaults(fColor));
+   R__ATTR_CLASS(RAttrText, "text_", AddDouble("size",12.).AddDouble("angle",0.).AddInt("align", 22).AddInt("font",41).AddDefaults(fColor));
 
    ///The text size
    RAttrText &SetSize(double width) { SetValue("size", width); return *this; }

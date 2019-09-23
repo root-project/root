@@ -10,7 +10,7 @@ class CustomAttrs : public RAttrBase {
    RAttrBox fAttrBox{this, "box_"};
    RAttrText fAttrText{this, "text_"};
 
-   R_ATTR_CLASS(CustomAttrs, "custom_", AddDefaults(fAttrBox).AddDefaults(fAttrText));
+   R__ATTR_CLASS(CustomAttrs, "custom_", AddDefaults(fAttrBox).AddDefaults(fAttrText));
 
    RAttrBox &AttrBox() { return fAttrBox; }
    const RAttrBox &AttrBox() const { return fAttrBox; }
