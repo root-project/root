@@ -19,41 +19,6 @@
 #include <ROOT/RLogger.hxx>
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Returns prefix relative to parent
-/// Normally prefix is relative to
-
-std::string ROOT::Experimental::RAttrBase::GetPrefixToParent() const
-{
-   if (!fAttr || !fParent) return fPrefix;
-
-   if (!fParent->GetAttr()) return fPrefix;
-
-   if (fParent->fAttr != fAttr) {
-      R__ERROR_HERE("Graf2d") << "Mismatch in parent/child attributes containers";
-      return fPrefix;
-   }
-
-   if (fParent->fPrefix.empty())
-      return fPrefix;
-
-   return fPrefix.substr(fParent->fPrefix.length());
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-/// Create own attributes
-
-void ROOT::Experimental::RAttrBase::CreateOwnAttr()
-{
-   // create independent container
-   fOwnAttr = std::make_unique<RAttrMap>();
-
-   // set pointer on the container
-   fAttr = fOwnAttr.get();
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
 /// Copy attributes from other object
 
 bool ROOT::Experimental::RAttrBase::CopyValue(const std::string &name, const RAttrMap::Value_t *value, bool check_type)
@@ -67,12 +32,12 @@ bool ROOT::Experimental::RAttrBase::CopyValue(const std::string &name, const RAt
          return false;
    }
 
-   if (!EnsureAttr())
-      return false;
+   if (auto access = EnsureAttr(name)) {
+      access.attr->Add(access.fullname, value->Copy());
+      return true;
+   }
 
-   fAttr->Add(GetFullName(name), value->Copy());
-
-   return true;
+   return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -80,19 +45,11 @@ bool ROOT::Experimental::RAttrBase::CopyValue(const std::string &name, const RAt
 
 bool ROOT::Experimental::RAttrBase::IsValueEqual(const std::string &name, const RAttrMap::Value_t *value, bool use_style) const
 {
-   if (!GetAttr() || !value)
+   if (!value)
       return false;
 
-   auto fullname = GetFullName(name);
-
-   auto value2 = fAttr->Find(fullname);
-   if (value2) return value2->IsEqual(value);
-
-   if (fDrawable && use_style)
-      if (auto observe = fDrawable->fStyle.lock()) {
-         value2 = observe->Eval(fullname, fDrawable);
-         if (value2) return value2->IsEqual(value);
-      }
+   if (auto v = AccessValue(name, use_style))
+      return v.value->IsEqual(value);
 
    return false;
 }
@@ -102,26 +59,9 @@ bool ROOT::Experimental::RAttrBase::IsValueEqual(const std::string &name, const 
 
 void ROOT::Experimental::RAttrBase::CopyTo(RAttrBase &tgt, bool use_style) const
 {
-   if (GetAttr()) {
-
-      std::shared_ptr<RStyle> style;
-
-      for (const auto &entry : GetDefaults()) {
-
-         auto fullname = GetFullName(entry.first);
-
-         auto rec = fAttr->Find(fullname);
-         if (rec && tgt.CopyValue(entry.first,rec)) continue;
-
-         if (fDrawable && use_style) {
-            if (!style)
-               style = fDrawable->fStyle.lock();
-            if (style) {
-               rec = style->Eval(fullname, fDrawable);
-               if (rec) tgt.CopyValue(entry.first, rec);
-            }
-         }
-      }
+   for (const auto &entry : GetDefaults()) {
+      if (auto v = AccessValue(entry.first, use_style))
+         tgt.CopyValue(entry.first, v.value);
    }
 }
 
@@ -130,110 +70,12 @@ void ROOT::Experimental::RAttrBase::CopyTo(RAttrBase &tgt, bool use_style) const
 
 bool ROOT::Experimental::RAttrBase::IsSame(const RAttrBase &tgt, bool use_style) const
 {
-   if (GetAttr()) {
-
-      std::shared_ptr<RStyle> style;
-
-      for (const auto &entry : GetDefaults()) {
-
-         auto fullname = GetFullName(entry.first);
-         auto rec = fAttr->Find(fullname);
-
-         if (rec) {
-            if (!tgt.IsValueEqual(entry.first, rec, use_style)) return false;
-            continue;
-         }
-
-         if (fDrawable && use_style) {
-            if (!style)
-               style = fDrawable->fStyle.lock();
-            if (style) {
-               rec = style->Eval(fullname, fDrawable);
-               if (rec && !tgt.IsValueEqual(entry.first, rec, use_style)) return false;
-            }
-         }
-      }
+   for (const auto &entry : GetDefaults()) {
+      if (auto v = AccessValue(entry.first, use_style))
+         if (!tgt.IsValueEqual(entry.first, v.value, use_style)) return false;
    }
    return true;
 }
-
-
-///////////////////////////////////////////////////////////////////////////////
-/// Semantic copy attributes from other object
-/// Search in the container all attributes which match source prefix and copy them
-
-void ROOT::Experimental::RAttrBase::SemanticCopy(const RAttrBase &src)
-{
-   if (!src.GetAttr()) return;
-
-   for (const auto &pair : *src.fAttr) {
-      auto attrname = pair.first;
-
-      if (!src.fPrefix.empty()) {
-         if (!attrname.compare(9, src.fPrefix.length(), src.fPrefix)) continue;
-         attrname.erase(0, src.fPrefix.length());
-      }
-
-
-      if (!attrname.empty())
-         CopyValue(attrname, pair.second.get(), false);
-   }
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// Access attributes container
-/// If pointer not yet assigned, try to find it in parents of just allocate if force flag is specified
-
-bool ROOT::Experimental::RAttrBase::GetAttr() const
-{
-   if (fAttr)
-      return true;
-
-   const RAttrBase *prnt = fParent;
-   auto prefix = fPrefix;
-   while (prnt) {
-      if (prnt->fAttr) {
-         const_cast<RAttrBase*>(this)->fAttr = prnt->fAttr;
-         const_cast<RAttrBase*>(this)->fPrefix = prnt->fPrefix + prefix;
-         const_cast<RAttrBase*>(this)->fDrawable = prnt->fDrawable;
-         return true;
-      }
-      prefix = prnt->fPrefix + prefix;
-      prnt = prnt->fParent;
-   }
-
-   return fAttr != nullptr;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// Ensure that attributes container exists
-/// If not exists before, created for very most parent
-
-bool ROOT::Experimental::RAttrBase::EnsureAttr()
-{
-   if (fAttr)
-      return true;
-
-   const RAttrBase *prnt = fParent;
-   auto prefix = fPrefix;
-   while (prnt) {
-      if (!prnt->fParent && !prnt->fAttr)
-         const_cast<RAttrBase *>(prnt)->CreateOwnAttr();
-      if (prnt->fAttr) {
-         fAttr = prnt->fAttr;
-         fPrefix = prnt->fPrefix + prefix;
-         fDrawable = prnt->fDrawable;
-         return true;
-      }
-      prefix = prnt->fPrefix + prefix;
-      prnt = prnt->fParent;
-   }
-
-   CreateOwnAttr();
-
-   return true;
-}
-
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Return value from attributes container - no style or defaults are used
@@ -241,7 +83,6 @@ bool ROOT::Experimental::RAttrBase::EnsureAttr()
 void ROOT::Experimental::RAttrBase::AssignDrawable(RDrawable *drawable, const std::string &prefix)
 {
    fDrawable = drawable;
-   fAttr = fDrawable->GetAttr();
    fOwnAttr.reset();
    fPrefix = prefix;
    fParent = nullptr;
@@ -250,7 +91,6 @@ void ROOT::Experimental::RAttrBase::AssignDrawable(RDrawable *drawable, const st
 void ROOT::Experimental::RAttrBase::AssignParent(const RAttrBase *parent, const std::string &prefix)
 {
    fDrawable = nullptr;
-   fAttr = nullptr;  // first access to attributes will chained to parent
    fOwnAttr.reset();
    fPrefix = prefix;
    fParent = parent;
@@ -258,37 +98,38 @@ void ROOT::Experimental::RAttrBase::AssignParent(const RAttrBase *parent, const 
 
 void ROOT::Experimental::RAttrBase::ClearValue(const std::string &name)
 {
-   if (GetAttr())
-      fAttr->Clear(GetFullName(name));
+   if (auto access = AccessAttr(name))
+       const_cast<RAttrMap*>(access.attr)->Clear(access.fullname);
 }
 
 void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, int value)
 {
-   if (EnsureAttr())
-      fAttr->AddInt(GetFullName(name), value);
+   if (auto access = EnsureAttr(name))
+      access.attr->AddInt(access.fullname, value);
 }
 
 void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, double value)
 {
-   if (EnsureAttr())
-      fAttr->AddDouble(GetFullName(name), value);
+   if (auto access = EnsureAttr(name))
+      access.attr->AddDouble(access.fullname, value);
 }
 
 double *ROOT::Experimental::RAttrBase::GetDoublePtr(const std::string &name) const
 {
-   return GetAttr() ? fAttr->GetDoublePtr(GetFullName(name)) : nullptr;
+   if (auto access = AccessAttr(name))
+      return access.attr->GetDoublePtr(access.fullname);
+   return nullptr;
 }
 
 void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, const std::string &value)
 {
-   if (EnsureAttr())
-      fAttr->AddString(GetFullName(name), value);
+   if (auto access = EnsureAttr(name))
+      access.attr->AddString(access.fullname, value);
 }
 
 /** Clear all respective values from drawable. Only defaults can be used */
 void ROOT::Experimental::RAttrBase::Clear()
 {
-   if (GetAttr())
-      for (const auto &entry : GetDefaults())
-         fAttr->Clear(GetFullName(entry.first));
+   for (const auto &entry : GetDefaults())
+      ClearValue(entry.first);
 }

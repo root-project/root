@@ -25,22 +25,15 @@ namespace Experimental {
 
 class RDrawable;
 
-// SL TODO: move all methods to protected area
-
 /** Base class for all attributes, used with RDrawable */
 class RAttrBase {
 
    friend class RAttrMap;
 
    RDrawable *fDrawable{nullptr};                          ///<! drawable used to store attributes
-   RAttrMap *fAttr{nullptr};                               ///<! attributes sources
    std::unique_ptr<RAttrMap> fOwnAttr;                     ///<! own instance when deep copy is created
    std::string fPrefix;                                    ///<! name prefix for all attributes values
    const RAttrBase *fParent{nullptr};                      ///<! parent attributes, prefix applied to it
-
-   std::string GetFullName(const std::string &name) const { return fPrefix + name; }
-
-   std::string GetPrefixToParent() const;
 
 protected:
 
@@ -55,25 +48,81 @@ protected:
    bool IsValueEqual(const std::string &name, const RAttrMap::Value_t *value, bool use_style = false) const;
 
    ///////////////////////////////////////////////////////////////////////////////
+
+   void AssignDrawable(RDrawable *drawable, const std::string &prefix);
+
+   void AssignParent(const RAttrBase *parent, const std::string &prefix);
+
+   struct Rec_t {
+      RAttrMap *attr{nullptr};
+      std::string fullname;
+      RDrawable *drawable{nullptr};
+      operator bool() const { return !!attr; }
+   };
+
+   /// Find attributes container and full-qualified name for value
+   const Rec_t AccessAttr(const std::string &name) const
+   {
+      const RAttrBase *prnt = this;
+      std::string fullname = name;
+      while (prnt) {
+         fullname.insert(0, prnt->fPrefix);  // fullname = prnt->fPrefix + fullname
+         if (prnt->fDrawable)
+            return { &(prnt->fDrawable->fAttr), fullname, prnt->fDrawable };
+         if (prnt->fOwnAttr)
+            return { prnt->fOwnAttr.get(), fullname, nullptr };
+         prnt = prnt->fParent;
+      }
+      return {nullptr, fullname, nullptr};
+   }
+
+   struct Val_t {
+      const RAttrMap::Value_t *value{nullptr};
+      std::shared_ptr<RStyle> style;
+      operator bool() const { return !!value; }
+   };
+
+   const Val_t AccessValue(const std::string &name, bool use_style = true) const
+   {
+      if (auto access = AccessAttr(name)) {
+         auto rec = access.attr->Find(access.fullname);
+         if (rec) return { rec, nullptr };
+         if (access.drawable && use_style)
+            if (auto observe = access.drawable->fStyle.lock()) {
+               if ((rec = observe->Eval(access.fullname, access.drawable)))
+                  return { rec, observe };
+            }
+      }
+
+      return { nullptr, nullptr };
+   }
+
+   Rec_t EnsureAttr(const std::string &name)
+   {
+      const RAttrBase *prnt = this;
+      std::string fullname = name;
+      while (prnt) {
+         fullname.insert(0, prnt->fPrefix);  // fullname = prnt->fPrefix + fullname
+         if (prnt->fDrawable)
+            return { &(prnt->fDrawable->fAttr), fullname, prnt->fDrawable };
+         if (!prnt->fParent && !prnt->fOwnAttr)
+            const_cast<RAttrBase *>(prnt)->fOwnAttr = std::make_unique<RAttrMap>();
+         if (prnt->fOwnAttr)
+            return { prnt->fOwnAttr.get(), fullname, nullptr };
+         prnt = prnt->fParent;
+      }
+      return {nullptr, fullname, nullptr};
+   }
+
    /// Evaluate attribute value
 
    template <typename T,typename S = void>
    auto Eval(const std::string &name, bool use_dflts = true) const
    {
+      if (auto v = AccessValue(name, true))
+         return RAttrMap::Value_t::get_value<T,S>(v.value);
+
       const RAttrMap::Value_t *rec = nullptr;
-
-      if (GetAttr()) {
-         auto fullname = GetFullName(name);
-
-         rec = fAttr->Find(fullname);
-         if (rec) return RAttrMap::Value_t::get_value<T,S>(rec);
-
-         if (fDrawable)
-           if (auto observe = fDrawable->fStyle.lock()) {
-              rec = observe->Eval(fullname, fDrawable);
-              if (rec) return RAttrMap::Value_t::get_value<T,S>(rec);
-           }
-      }
 
       if (use_dflts)
          rec = GetDefaults().Find(name);
@@ -81,25 +130,12 @@ protected:
       return RAttrMap::Value_t::get_value<T,S>(rec);
    }
 
-   void CreateOwnAttr();
-
-   void AssignDrawable(RDrawable *drawable, const std::string &prefix);
-
-   void AssignParent(const RAttrBase *parent, const std::string &prefix);
-
-   bool GetAttr() const;
-
-   bool EnsureAttr();
 
    double *GetDoublePtr(const std::string &name) const;
 
-   void SemanticCopy(const RAttrBase &src);
+   void CopyTo(RAttrBase &tgt, bool use_style = true) const;
 
    bool IsSame(const RAttrBase &src, bool use_style = true) const;
-
-public:
-
-   RAttrBase() = default;
 
    RAttrBase(RDrawable *drawable, const std::string &prefix = "") { AssignDrawable(drawable, prefix); }
 
@@ -107,11 +143,7 @@ public:
 
    RAttrBase(const RAttrBase &src) { src.CopyTo(*this); }
 
-   virtual ~RAttrBase() = default;
-
    RAttrBase &operator=(const RAttrBase &src) { Clear(); src.CopyTo(*this); return *this; }
-
-   void CopyTo(RAttrBase &tgt, bool use_style = true) const;
 
    void SetValue(const std::string &name, double value);
    void SetValue(const std::string &name, const int value);
@@ -128,6 +160,11 @@ public:
 
    template<typename T, std::enable_if_t<!std::is_pointer<T>{}>* = nullptr>
    T GetValue(const std::string &name) const { return Eval<T>(name); }
+
+public:
+   RAttrBase() = default;
+
+   virtual ~RAttrBase() = default;
 
    friend bool operator==(const RAttrBase& lhs, const RAttrBase& rhs){ return lhs.IsSame(rhs) && rhs.IsSame(lhs); }
    friend bool operator!=(const RAttrBase& lhs, const RAttrBase& rhs){ return !lhs.IsSame(rhs) || !rhs.IsSame(lhs); }
