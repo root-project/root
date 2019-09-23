@@ -40,7 +40,7 @@ using namespace std::string_literals;
 
 ROOT::Experimental::RAttrMap &ROOT::Experimental::RAttrMap::AddDefaults(const RAttrBase &vis)
 {
-   auto prefix = vis.GetPrefixToParent();
+   auto prefix = vis.GetPrefix();
 
    for (const auto &entry : vis.GetDefaults())
       m[prefix+entry.first] = std::unique_ptr<Value_t>(entry.second->Copy());
