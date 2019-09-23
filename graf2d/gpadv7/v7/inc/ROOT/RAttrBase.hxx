@@ -23,17 +23,15 @@
 namespace ROOT {
 namespace Experimental {
 
-class RDrawable;
-
 /** Base class for all attributes, used with RDrawable */
 class RAttrBase {
 
    friend class RAttrMap;
 
-   RDrawable *fDrawable{nullptr};                          ///<! drawable used to store attributes
-   std::unique_ptr<RAttrMap> fOwnAttr;                     ///<! own instance when deep copy is created
-   std::string fPrefix;                                    ///<! name prefix for all attributes values
-   const RAttrBase *fParent{nullptr};                      ///<! parent attributes, prefix applied to it
+   RDrawable *fDrawable{nullptr};      ///<! drawable used to store attributes
+   std::unique_ptr<RAttrMap> fOwnAttr; ///<! own instance when deep copy is created
+   std::string fPrefix;                ///<! name prefix for all attributes values
+   const RAttrBase *fParent{nullptr};  ///<! parent attributes, prefix applied to it
 
 protected:
 
