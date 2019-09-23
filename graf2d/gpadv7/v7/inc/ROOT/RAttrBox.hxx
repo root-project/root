@@ -31,7 +31,7 @@ class RAttrBox : public RAttrBase {
    RAttrLine fBorder{this, "border_"};       ///<!
    RAttrFill fFill{this, "fill_"};           ///<!
 
-   R_ATTR_CLASS(RAttrBox, "box_", AddDefaults(fBorder).AddDefaults(fFill));
+   R__ATTR_CLASS(RAttrBox, "box_", AddDefaults(fBorder).AddDefaults(fFill));
 
    const RAttrLine &Border() const { return fBorder; }
    RAttrLine &Border() { return fBorder; }

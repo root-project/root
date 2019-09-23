@@ -35,13 +35,9 @@ class RAttrBase {
 
 protected:
 
-   virtual const RAttrMap &GetDefaults() const
-   {
-      static RAttrMap empty;
-      return empty;
-   }
+   virtual const RAttrMap &GetDefaults() const;
 
-   bool CopyValue(const std::string &name, const RAttrMap::Value_t *value, bool check_type = true);
+   bool CopyValue(const std::string &name, const RAttrMap::Value_t &value, bool check_type = true);
 
    bool IsValueEqual(const std::string &name, const RAttrMap::Value_t *value, bool use_style = false) const;
 
@@ -172,7 +168,7 @@ public:
 } // namespace Experimental
 } // namespace ROOT
 
-#define R_ATTR_CLASS(ClassName,dflt_prefix,dflt_values) \
+#define R__ATTR_CLASS(ClassName,dflt_prefix,dflt_values) \
 protected: \
 const RAttrMap &GetDefaults() const override \
 { \
