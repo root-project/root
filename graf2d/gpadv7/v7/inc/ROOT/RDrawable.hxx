@@ -97,7 +97,7 @@ friend class RAttrBase;
 friend class RStyle;
 
 private:
-   std::string fId;              ///< object identifier, unique inside RCanvas - TODO change
+   std::string fId;              ///< object identifier, unique inside RCanvas - TODO make it only for user, internal IDs should be independent
    RAttrMap fAttr;               ///< attributes values
    std::weak_ptr<RStyle> fStyle; ///<! style applied for RDrawable
    std::string fCssType;         ///<! drawable type, not stored in the root file, must be initialized in constructor
@@ -142,7 +142,7 @@ public:
 
 /// Central method to insert drawable in list of pad primitives
 /// By default drawable placed as is.
-template <class DRAWABLE>
+template <class DRAWABLE, std::enable_if_t<std::is_base_of<RDrawable, DRAWABLE>{}>* = nullptr>
 inline auto GetDrawable(const std::shared_ptr<DRAWABLE> &drawable)
 {
    return drawable;
