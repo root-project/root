@@ -294,7 +294,7 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
       if (mu<=0 && N>0) {
 
         // Catch error condition: data present where zero events are predicted
-        logEvalError(Form("Observed %f events in bin %lu with zero event yield",N,i)) ;
+        logEvalError(Form("Observed %f events in bin %lu with zero event yield",N,(unsigned long)i)) ;
 
       } else if (fabs(mu)<1e-10 && fabs(N)<1e-10) {
 
