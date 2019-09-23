@@ -130,7 +130,9 @@ protected:
    std::vector<std::unique_ptr<RFieldBase>> fSubFields;
    /// Sub fields point to their mother field
    RFieldBase* fParent;
-   /// All fields have a main column. For collection fields, the main column is the index field. Points into fColumns.
+   /// Points into fColumns.  All fields that have columns have a distinct main column. For simple fields
+   /// (float, int, ...), the principal column corresponds to the field type. For collection fields expect std::array,
+   /// the main column is the offset field.  Class fields have no column of their own.
    RColumn* fPrincipalColumn;
    /// The columns are connected either to a sink or to a source (not to both); they are owned by the field.
    std::vector<std::unique_ptr<RColumn>> fColumns;
