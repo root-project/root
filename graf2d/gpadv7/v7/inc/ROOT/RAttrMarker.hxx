@@ -30,7 +30,7 @@ class RAttrMarker : public RAttrBase {
 
    RColor fColor{this, "color_"}; ///<! marker color, will access container from line attributes
 
-   R__ATTR_CLASS(RAttrMarker, "marker_", AddDouble("size",1.).AddInt("style",1).AddDefaults(fColor));
+   R__ATTR_CLASS(RAttrMarker, "marker_", AddDouble("size", 1.).AddInt("style", 1).AddDefaults(fColor));
 
    RAttrMarker &SetColor(const RColor &color) { fColor = color; return *this; }
    const RColor &Color() const { return fColor; }

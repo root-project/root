@@ -30,7 +30,7 @@ class RAttrLine : public RAttrBase {
 
    RColor fColor{this, "color_"}; ///<! line color, will access container from line attributes
 
-   R__ATTR_CLASS(RAttrLine, "line_", AddDouble("width",1.).AddInt("style",1).AddDefaults(fColor));
+   R__ATTR_CLASS(RAttrLine, "line_", AddDouble("width", 1.).AddInt("style", 1).AddDefaults(fColor));
 
    // keep it here, it is minimal set of methods which should be reimplemented
    // using RAttrBase::RAttrBase;
