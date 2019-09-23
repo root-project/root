@@ -49,8 +49,8 @@ private:
     * the offset column with index 0 and the character value column with index 1.
     */
    std::uint32_t fIndex;
-   RPageSink* fPageSink;
-   RPageSource* fPageSource;
+   RPageSink *fPageSink;
+   RPageSource *fPageSource;
    RPageStorage::ColumnHandle_t fHandleSink;
    RPageStorage::ColumnHandle_t fHandleSource;
    /// Open page into which new elements are being written
@@ -64,11 +64,11 @@ private:
    /// Used to pack and unpack pages on writing/reading
    std::unique_ptr<RColumnElementBase> fElement;
 
-   RColumn(const RColumnModel& model, std::uint32_t index);
+   RColumn(const RColumnModel &model, std::uint32_t index);
 
 public:
    template <typename CppT, EColumnType ColumnT>
-   static RColumn *Create(const RColumnModel& model, std::uint32_t index) {
+   static RColumn *Create(const RColumnModel &model, std::uint32_t index) {
       R__ASSERT(model.GetType() == ColumnT);
       auto column = new RColumn(model, index);
       column->fElement = std::unique_ptr<RColumnElementBase>(new RColumnElement<CppT, ColumnT>(nullptr));
@@ -76,13 +76,13 @@ public:
    }
 
    RColumn(const RColumn&) = delete;
-   RColumn& operator =(const RColumn&) = delete;
+   RColumn &operator =(const RColumn&) = delete;
    ~RColumn();
 
    void Connect(DescriptorId_t fieldId, RPageStorage *pageStorage);
 
    void Append(const RColumnElementBase &element) {
-      void* dst = fHeadPage.TryGrow(1);
+      void *dst = fHeadPage.TryGrow(1);
       if (dst == nullptr) {
          Flush();
          dst = fHeadPage.TryGrow(1);
@@ -93,7 +93,7 @@ public:
    }
 
    void AppendV(const RColumnElementBase &elemArray, std::size_t count) {
-      void* dst = fHeadPage.TryGrow(count);
+      void *dst = fHeadPage.TryGrow(count);
       if (dst == nullptr) {
          for (unsigned i = 0; i < count; ++i) {
             Append(RColumnElementBase(elemArray, i));
@@ -108,7 +108,7 @@ public:
       if (!fCurrentPage.Contains(globalIndex)) {
          MapPage(globalIndex);
       }
-      void* src = static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
+      void *src = static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
                   (globalIndex - fCurrentPage.GetGlobalRangeFirst()) * element->GetSize();
       element->ReadFrom(src, 1);
    }
@@ -117,7 +117,7 @@ public:
       if (!fCurrentPage.Contains(clusterIndex)) {
          MapPage(clusterIndex);
       }
-      void* src = static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
+      void *src = static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
                   (clusterIndex.GetIndex() - fCurrentPage.GetClusterRangeFirst()) * element->GetSize();
       element->ReadFrom(src, 1);
    }
@@ -128,7 +128,7 @@ public:
       }
       NTupleSize_t idxInPage = globalIndex - fCurrentPage.GetGlobalRangeFirst();
 
-      void* src = static_cast<unsigned char *>(fCurrentPage.GetBuffer()) + idxInPage * elemArray->GetSize();
+      void *src = static_cast<unsigned char *>(fCurrentPage.GetBuffer()) + idxInPage * elemArray->GetSize();
       if (globalIndex + count <= fCurrentPage.GetGlobalRangeLast() + 1) {
          elemArray->ReadFrom(src, count);
       } else {
@@ -228,10 +228,10 @@ public:
    void MapPage(const RClusterIndex &clusterIndex);
    NTupleSize_t GetNElements() const { return fNElements; }
    RColumnElementBase *GetElement() const { return fElement.get(); }
-   const RColumnModel& GetModel() const { return fModel; }
+   const RColumnModel &GetModel() const { return fModel; }
    std::uint32_t GetIndex() const { return fIndex; }
    ColumnId_t GetColumnIdSource() const { return fColumnIdSource; }
-   RPageSource* GetPageSource() const { return fPageSource; }
+   RPageSource *GetPageSource() const { return fPageSource; }
    RPageStorage::ColumnHandle_t GetHandleSource() const { return fHandleSource; }
    RPageStorage::ColumnHandle_t GetHandleSink() const { return fHandleSink; }
    RNTupleVersion GetVersion() const { return RNTupleVersion(); }
