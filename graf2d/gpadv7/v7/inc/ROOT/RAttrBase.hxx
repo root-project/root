@@ -25,6 +25,8 @@ namespace Experimental {
 
 class RDrawable;
 
+// SL TODO: move all methods to protected area
+
 /** Base class for all attributes, used with RDrawable */
 class RAttrBase {
 
@@ -58,23 +60,19 @@ protected:
    template <typename T,typename S = void>
    auto Eval(const std::string &name, bool use_dflts = true) const
    {
-      auto fullname = GetFullName(name);
-
       const RAttrMap::Value_t *rec = nullptr;
 
       if (GetAttr()) {
+         auto fullname = GetFullName(name);
+
          rec = fAttr->Find(fullname);
          if (rec) return RAttrMap::Value_t::get_value<T,S>(rec);
 
-         const auto *prnt = this;
-         while (prnt) {
-            if (prnt->fDrawable)
-               if (auto observe = prnt->fDrawable->fStyle.lock()) {
-                  rec = observe->Eval(fullname, fDrawable);
-                  if (rec) return RAttrMap::Value_t::get_value<T,S>(rec);
-               }
-            prnt = prnt->fParent;
-         }
+         if (fDrawable)
+           if (auto observe = fDrawable->fStyle.lock()) {
+              rec = observe->Eval(fullname, fDrawable);
+              if (rec) return RAttrMap::Value_t::get_value<T,S>(rec);
+           }
       }
 
       if (use_dflts)
