@@ -1,5 +1,4 @@
-roottest
-========
+# roottest
 
 Tests in the roottest repository can be added and executed using CMake and
 CTest. A CDash report for nightly and continuous builds can be found at:
@@ -7,27 +6,32 @@ CTest. A CDash report for nightly and continuous builds can be found at:
     http://cdash.cern.ch/index.php?project=ROOT
 
 
-Run tests locally
------------------
+## Run tests locally
+
+
+### Configuration and Build
 
 There are two ways to generate and execute the tests:
 
-1. As part of building ROOT using CMake.
+#### Option 1: roottest as part of a ROOT build
 
 Before building, enable the 'testing' and 'roottest' option:
 
        cmake -Dtesting=ON -Droottest=ON $PATH_TO_ROOT_SOURCES
+       make -j8
 
-2. As a stand-alone project, testing a ROOT build / installation.
+#### Option 2: roottest as a stand-alone project
 
-Set the ROOT environment to the existing installation
-       
+Set the ROOT environment to an existing build / installation:
+
        . ${ROOTSYS}/thisroot.[c]sh
 
 Create a build directory, change into it and execute
 
        cmake $PATH_TO_ROOTTEST
        make -j8
+
+### Running the test suite
 
 Tests can then be executed using the ctest command in the build directory:
 
@@ -43,8 +47,7 @@ You can combine most of the ctest options, e.g. ctest -V -j4 -R root-meta is a
 valid call.
 
 
-Adding tests
-------------
+## Adding tests
 
 Tests can be defined in a CMakeLists.txt file via custom CMake functions and
 macros. Either put the new test into an existing directory and edit its
@@ -137,13 +140,13 @@ Options:
 
 Examples:
 
-    1. Simply add a ROOT macro test.
+1. Simply add a ROOT macro test.
 
         ROOTTEST_ADD_TEST(assertSparseToTHn
                           MACRO assertSparseToTHn.C)
 
 
-    2. Add a compiled ROOT macro test (note the +) and compare its stdout and
+2. Add a compiled ROOT macro test (note the +) and compare its stdout and
        stderr output to the given reference files. Associate the test to the
        labels roottest, regression and cling.
 
@@ -177,8 +180,9 @@ used to manage dependencies on dictionaries:
                          LABELS roottest regression cling)
 
 
-Adding definitions and ClingWorkarounds
----------------------------------------
+## Advanced / developers' features
+
+### Adding definitions and ClingWorkarounds
 
 Definitions to root macro tests can be added by calling add_definitions(-DDEF).
 ClingWorkarounds are supposed to be specified in
@@ -187,14 +191,12 @@ workaround definition and a introduce a variable that can be checked to see,
 if a workaround is active.
 
 
-Set test owner
------------------
+### Set test owner
 
 The owner of a test can be set by calling ROOTTEST_SET_TESTOWNER("Test Owner").
 
 
-Ignoring tests
---------------
+### Ignoring tests
 
 An existing test may be marked to be ignored. This is done by adding its name
 to the CTEST_CUSTOM_TESTS_IGNORE variable in roottest/CTestCustom.cmake.
