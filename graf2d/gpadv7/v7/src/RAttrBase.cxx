@@ -17,22 +17,29 @@
 
 #include <ROOT/RLogger.hxx>
 
+
+///////////////////////////////////////////////////////////////////////////////
+/// Return default values for attributes, empty for base class
+
+const ROOT::Experimental::RAttrMap &ROOT::Experimental::RAttrBase::GetDefaults() const
+{
+   static RAttrMap empty;
+   return empty;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 /// Copy attributes from other object
 
-bool ROOT::Experimental::RAttrBase::CopyValue(const std::string &name, const RAttrMap::Value_t *value, bool check_type)
+bool ROOT::Experimental::RAttrBase::CopyValue(const std::string &name, const RAttrMap::Value_t &value, bool check_type)
 {
-   if (!value)
-      return false;
-
    if (check_type) {
       const auto *dvalue = GetDefaults().Find(name);
-      if (!dvalue || !dvalue->Compatible(value->Kind()))
+      if (!dvalue || !dvalue->Compatible(value.Kind()))
          return false;
    }
 
    if (auto access = EnsureAttr(name)) {
-      access.attr->Add(access.fullname, value->Copy());
+      access.attr->Add(access.fullname, value.Copy());
       return true;
    }
 
@@ -60,7 +67,7 @@ void ROOT::Experimental::RAttrBase::CopyTo(RAttrBase &tgt, bool use_style) const
 {
    for (const auto &entry : GetDefaults()) {
       if (auto v = AccessValue(entry.first, use_style))
-         tgt.CopyValue(entry.first, v.value);
+         tgt.CopyValue(entry.first, *v.value);
    }
 }
 

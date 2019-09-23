@@ -107,7 +107,7 @@ protected:
 
    virtual void CollectShared(Internal::RIOSharedVector_t &) {}
 
-   RAttrMap &GetAttr() { return fAttr; }
+   RAttrMap &GetAttrMap() { return fAttr; }
 
    bool MatchSelector(const std::string &selector) const;
 
