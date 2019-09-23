@@ -25,7 +25,6 @@
 #include <TH1D.h>
 #include <TLatex.h>
 #include <TStyle.h>
-#include <TSystem.h>
 
 #include <cassert>
 #include <cmath>
@@ -166,8 +165,7 @@ void Convert() {
 
 
 void ntpl004_dimuon() {
-   if (gSystem->AccessPathName(kNTupleFileName))
-      Convert();
+   Convert();
 
    // Enable mutli-threading only after the conversion because we use RDF's Range() in it,
    // which currently does not support multi-threading

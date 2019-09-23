@@ -27,7 +27,6 @@
 #include <TFile.h>
 #include <TH1F.h>
 #include <TLeaf.h>
-#include <TSystem.h>
 #include <TTree.h>
 
 #include <cassert>
@@ -92,8 +91,7 @@ void Convert() {
 
 void ntpl003_lhcbOpenData()
 {
-   if (gSystem->AccessPathName(kNTupleFileName))
-      Convert();
+   Convert();
 
    // Create histogram of the flight distance
 
