@@ -18,11 +18,6 @@
 
 #include <ROOT/RDrawable.hxx>
 
-#include "TObject.h"
-
-#include <memory>
-#include <string>
-
 class TObject;
 
 namespace ROOT {
