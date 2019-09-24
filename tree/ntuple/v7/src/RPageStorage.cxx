@@ -18,6 +18,7 @@
 #include <ROOT/RField.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RPagePool.hxx>
+#include <ROOT/RPageStorageChain.hxx>
 #include <ROOT/RPageStorageRaw.hxx>
 #include <ROOT/RPageStorageRoot.hxx>
 #include <ROOT/RStringView.hxx>
@@ -66,6 +67,27 @@ std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Det
    if (StrEndsWith(std::string(location), ".root"))
       return std::make_unique<RPageSourceRoot>(ntupleName, location, options);
    return std::make_unique<RPageSourceRaw>(ntupleName, location, options);
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSource::Create(std::string_view ntupleName, std::vector<std::string> locationVec, const RNTupleReadOptions &options)
+{
+   return std::make_unique<RPageSourceChain>(ntupleName, locationVec, options);
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSource::CreateFrom2Reader(std::string_view ntupleName, RPageSource* s1, RPageSource* s2, const RNTupleReadOptions &options)
+{
+   std::vector<RPageSource*> sourceVec;
+   sourceVec.emplace_back(s1);
+   sourceVec.emplace_back(s2);
+   return std::make_unique<RPageSourceChain>(ntupleName, sourceVec, options);
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSource::CreateFrom2Reader(std::string_view ntupleName, std::unique_ptr<RPageSource>&& s1, std::unique_ptr<RPageSource>&& s2, const RNTupleReadOptions &options)
+{
+   std::vector<std::unique_ptr<RPageSource>> sourceVec;
+   sourceVec.emplace_back(std::move(s1));
+   sourceVec.emplace_back(std::move(s2));
+   return std::make_unique<RPageSourceChain>(ntupleName, std::move(sourceVec), options);
 }
 
 ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t

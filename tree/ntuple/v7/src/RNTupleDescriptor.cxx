@@ -846,6 +846,35 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddClustersFromFooter(void* f
    }
 }
 
+void ROOT::Experimental::RNTupleDescriptorBuilder::AddClustersFromAdditionalFile(const RNTupleDescriptor& desc)
+{
+   auto lastId = fDescriptor.GetNClusters();
+   std::size_t nEntryOldState = fDescriptor.GetNEntries();
+   for (std::size_t i = 0; i < desc.GetNClusters(); ++i) {
+      const RClusterDescriptor &clust = desc.fClusterDescriptors.at(i);
+      // Add Cluster
+      AddCluster(i+lastId, clust.GetVersion(), clust.GetFirstEntryIndex()+nEntryOldState, clust.GetNEntries());
+      // Add Locator
+      SetClusterLocator(i+lastId, clust.GetLocator());
+      for (std::size_t columnId = 0; columnId < fDescriptor.GetNColumns(); ++columnId) {
+         // Add ColumnRange
+         const RClusterDescriptor::RColumnRange colrange{columnId,
+            fDescriptor.GetClusterDescriptor(i+lastId-1).GetColumnRange(columnId).fFirstElementIndex +
+            fDescriptor.GetClusterDescriptor(i+lastId-1).GetColumnRange(columnId).fNElements,
+            clust.GetColumnRange(columnId).fNElements};
+         AddClusterColumnRange(i+lastId, colrange);
+         
+         // Add PageRanges
+         RClusterDescriptor::RPageRange pr;
+         pr.fColumnId = columnId;
+         for (auto& p: clust.fPageRanges.at(columnId).fPageInfos) {
+            pr.fPageInfos.push_back(p);
+         }
+         AddClusterPageRange(i+lastId, std::move(pr));
+      }
+   }
+}
+
 void ROOT::Experimental::RNTupleDescriptorBuilder::SetNTuple(
    const std::string_view name, const std::string_view description, const std::string_view author,
    const RNTupleVersion &version, const RNTupleUuid &uuid)

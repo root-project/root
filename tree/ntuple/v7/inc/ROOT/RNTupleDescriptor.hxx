@@ -400,6 +400,7 @@ public:
    void AddClusterPageRange(DescriptorId_t clusterId, RClusterDescriptor::RPageRange &&pageRange);
 
    void AddClustersFromFooter(void* footerBuffer);
+   void AddClustersFromAdditionalFile(const RNTupleDescriptor& desc);
 };
 
 } // namespace Experimental

@@ -201,32 +201,35 @@ void ROOT::Experimental::Detail::RPageSourceRaw::Read(void *buffer, std::size_t 
 
 ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceRaw::DoAttach()
 {
+   RNTupleDescriptorBuilder descBuilder;
+   GetHeaderAndFooter(descBuilder);
+   return descBuilder.MoveDescriptor();
+}
+
+void ROOT::Experimental::Detail::RPageSourceRaw::GetHeaderAndFooter(RNTupleDescriptorBuilder &descBuilder)
+{
    unsigned char postscript[RNTupleDescriptor::kNBytesPostscript];
    auto fileSize = fFile->GetSize();
    R__ASSERT(fileSize != RRawFile::kUnknownFileSize);
    R__ASSERT(fileSize >= RNTupleDescriptor::kNBytesPostscript);
    auto offset = fileSize - RNTupleDescriptor::kNBytesPostscript;
    Read(postscript, RNTupleDescriptor::kNBytesPostscript, offset);
-
+   
    std::uint32_t szHeader;
    std::uint32_t szFooter;
    RNTupleDescriptor::LocateMetadata(postscript, szHeader, szFooter);
    R__ASSERT(fileSize >= szHeader + szFooter);
-
+   
    unsigned char *header = new unsigned char[szHeader];
    unsigned char *footer = new unsigned char[szFooter];
    Read(header, szHeader, 0);
    Read(footer, szFooter, fileSize - szFooter);
-
-   RNTupleDescriptorBuilder descBuilder;
+   
    descBuilder.SetFromHeader(header);
    descBuilder.AddClustersFromFooter(footer);
    delete[] header;
    delete[] footer;
-
-   return descBuilder.MoveDescriptor();
 }
-
 
 ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::PopulatePageFromCluster(
    ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor, ClusterSize_t::ValueType clusterIndex)

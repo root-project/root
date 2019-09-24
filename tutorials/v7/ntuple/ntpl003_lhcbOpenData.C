@@ -31,6 +31,7 @@
 #include <TTree.h>
 
 #include <cassert>
+#include <chrono>
 #include <memory>
 #include <vector>
 
@@ -108,11 +109,44 @@ void ntpl003_lhcbOpenData()
    TH1F h("h", "B Flight Distance", 200, 0, 140);
    h.SetFillColor(48);
 
+   auto t1 = std::chrono::high_resolution_clock::now();
    for (auto i : ntuple->GetViewRange()) {
       // Note that we do not load an entry in this loop, i.e. we avoid the memory copy of loading the data into
       // the memory location given by the entry
       h.Fill(viewFlightDistance(i));
    }
-
+   auto t2 = std::chrono::high_resolution_clock::now();
    h.DrawCopy();
+   
+   
+   
+   // Create a vector containing the same filename 20 times.
+   std::vector<std::string> vec(20);
+   for (auto &v : vec) {
+      v = kNTupleFileName;
+   }
+   
+   // Creates a ntuple where the same data is concatenated 20 times.
+   auto ntuple2 = RNTupleReader::Open("DecayTree", vec);
+
+   auto viewFlightDistance2 = ntuple2->GetView<double>("B_FlightDistance");
+   auto c2 = new TCanvas("c2", "B Flight Distance Chain", 200, 10, 700, 500);
+   TH1F h2("h", "B Flight Distance Chain", 200, 0, 140);
+   h2.SetFillColor(48);
+
+
+   auto t3 = std::chrono::high_resolution_clock::now();
+   // The ViewRange is 20 times longer than for the previous RNTupleReader
+   for (auto i : ntuple2->GetViewRange()) {
+      h2.Fill(viewFlightDistance2(i));
+   }
+   auto t4 = std::chrono::high_resolution_clock::now();
+   
+   // Draws the same graph with 20 times more entries
+   h2.DrawCopy();
+   
+   auto durationSingleFile = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+   auto durationChainOfFiles = std::chrono::duration_cast<std::chrono::microseconds>(t4 - t3).count();
+   
+   std::cout << "It takes " << durationChainOfFiles / durationSingleFile << " times longer when the same file is concatenated 20 times in a chain.\n";
 }

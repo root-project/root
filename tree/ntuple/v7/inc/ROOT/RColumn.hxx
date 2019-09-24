@@ -150,7 +150,7 @@ public:
       if (clusterIndex.GetIndex() + count <= fCurrentPage.GetClusterRangeLast() + 1) {
          elemArray->ReadFrom(src, count);
       } else {
-         ClusterSize_t::ValueType nBatch = fCurrentPage.GetClusterRangeLast() - idxInPage;
+         ClusterSize_t::ValueType nBatch = fCurrentPage.GetNElements() - idxInPage;
          elemArray->ReadFrom(src, nBatch);
          RColumnElementBase elemTail(*elemArray, nBatch);
          ReadV(RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndex() + nBatch), count - nBatch, &elemTail);

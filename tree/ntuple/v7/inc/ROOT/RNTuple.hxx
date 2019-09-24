@@ -126,6 +126,13 @@ public:
                                              std::string_view storage);
    static std::unique_ptr<RNTupleReader> Open(std::string_view ntupleName, std::string_view storage);
 
+   static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName, std::vector<std::string> storage);
+   static std::unique_ptr<RNTupleReader> Open(std::string_view ntupleName, std::vector<std::string> storage);
+
+   /// Chains 2 RNTupleReader with the same field and columns into a single one.
+   static std::unique_ptr<RNTupleReader> ChainReader(std::string_view ntupleName, std::unique_ptr<RNTupleReader>& reader1, std::unique_ptr<RNTupleReader>& reader2);
+   static std::unique_ptr<RNTupleReader> ChainReader(std::string_view ntupleName, std::unique_ptr<RNTupleReader>&& reader1, std::unique_ptr<RNTupleReader>&& reader2);
+
    /// The user imposes an ntuple model, which must be compatible with the model found in the data on storage
    RNTupleReader(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSource> source);
    /// The model is generated from the ntuple metadata on storage
@@ -134,6 +141,7 @@ public:
    ~RNTupleReader();
 
    NTupleSize_t GetNEntries() const { return fNEntries; }
+   const RNTupleDescriptor &GetDescriptor() const { return fSource->GetDescriptor(); }
 
    /// Prints a detailed summary of the ntuple, including a list of fields.
    void PrintInfo(const ENTupleInfo what = ENTupleInfo::kSummary, std::ostream &output = std::cout);
