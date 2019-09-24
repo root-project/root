@@ -23,6 +23,7 @@
 #include <unordered_map>
 #include <vector>
 #include <list>
+#include <ROOT/RMakeUnique.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -47,7 +48,7 @@ public:
       virtual double GetDouble() const { return 0; }
       virtual std::string GetString() const { return ""; }
       virtual bool IsEqual(const Value_t &) const { return false; }
-      virtual Value_t *Copy() const = 0;
+      virtual std::unique_ptr<Value_t> Copy() const = 0;
 
       template<typename T> T Get() const;
 
@@ -61,10 +62,9 @@ public:
       explicit BoolValue_t(bool _v = false) : v(_v) {}
       EValuesKind Kind() const final { return kBool; }
       bool GetBool() const final { return v; }
-      Value_t *Copy() const final { return new BoolValue_t(v); }
+      std::unique_ptr<Value_t> Copy() const final { return std::make_unique<BoolValue_t>(v); }
       bool IsEqual(const Value_t &tgt) const final { return (tgt.Kind() == kBool) && (tgt.GetBool() == v); }
    };
-
 
    class IntValue_t : public Value_t {
       int v{0}; ///< integer value
@@ -72,7 +72,7 @@ public:
       IntValue_t(int _v = 0) : v(_v) {}
       EValuesKind Kind() const final { return kInt; }
       int GetInt() const final { return v; }
-      Value_t *Copy() const final { return new IntValue_t(v); }
+      std::unique_ptr<Value_t> Copy() const final { return std::make_unique<IntValue_t>(v); }
       bool IsEqual(const Value_t &tgt) const final { return (tgt.Kind() == kInt) && (tgt.GetInt() == v); }
    };
 
@@ -82,7 +82,7 @@ public:
       DoubleValue_t(double _v = 0) : v(_v) {}
       EValuesKind Kind() const final { return kDouble; }
       double GetDouble() const final { return v; }
-      Value_t *Copy() const final { return new DoubleValue_t(v); }
+      std::unique_ptr<Value_t> Copy() const final { return std::make_unique<DoubleValue_t>(v); }
       bool IsEqual(const Value_t &tgt) const final { return (tgt.Kind() == kDouble) && (tgt.GetDouble() == v); }
    };
 
@@ -93,7 +93,7 @@ public:
       EValuesKind Kind() const final { return kString; }
       std::string GetString() const final { return v; }
       bool IsEqual(const Value_t &tgt) const final { return (tgt.Kind() == kString) && (tgt.GetString() == v); }
-      Value_t *Copy() const final { return new StringValue_t(v); }
+      std::unique_ptr<Value_t> Copy() const final { return std::make_unique<StringValue_t>(v); }
    };
 
 private:
@@ -107,7 +107,7 @@ public:
 
    RAttrMap() = default; ///< JSON_asbase - store as map object
 
-   RAttrMap &Add(const std::string &name, Value_t *value) { if (value) m[name] = std::unique_ptr<Value_t>(value); return *this; }
+   RAttrMap &Add(const std::string &name, std::unique_ptr<Value_t> &&value) { m[name] = std::move(value); return *this; }
    RAttrMap &AddBool(const std::string &name, bool value) { m[name] = std::make_unique<BoolValue_t>(value); return *this; }
    RAttrMap &AddInt(const std::string &name, int value) { m[name] = std::make_unique<IntValue_t>(value); return *this; }
    RAttrMap &AddDouble(const std::string &name, double value) { m[name] = std::make_unique<DoubleValue_t>(value); return *this; }
@@ -117,14 +117,14 @@ public:
    RAttrMap(const RAttrMap &src)
    {
       for (const auto &pair : src.m)
-         m.emplace(pair.first, std::unique_ptr<Value_t>(pair.second->Copy()));
+         m[pair.first] = pair.second->Copy();
    }
 
    RAttrMap &operator=(const RAttrMap &src)
    {
       m.clear();
       for (const auto &pair : src.m)
-         m.emplace(pair.first, std::unique_ptr<Value_t>(pair.second->Copy()));
+         m[pair.first] = pair.second->Copy();
       return *this;
    }
 

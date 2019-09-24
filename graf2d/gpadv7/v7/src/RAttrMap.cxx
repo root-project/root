@@ -43,7 +43,7 @@ ROOT::Experimental::RAttrMap &ROOT::Experimental::RAttrMap::AddDefaults(const RA
    auto prefix = vis.GetPrefix();
 
    for (const auto &entry : vis.GetDefaults())
-      m[prefix+entry.first] = std::unique_ptr<Value_t>(entry.second->Copy());
+      m[prefix+entry.first] = entry.second->Copy();
 
    return *this;
 }
