@@ -997,6 +997,7 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
       unsigned int const_offset = (0==strncmp("const ",full.c_str(),6)) ? 6 : 0;
       bool isString = false;
       bool isStdString = false;
+      size_t std_offset = const_offset;
       static const char* basic_string_std = "std::basic_string<char";
       static const unsigned int basic_string_std_len = strlen(basic_string_std);
 
@@ -1004,14 +1005,22 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
           && full.size() > basic_string_std_len) {
          isString = true;
          isStdString = true;
+         std_offset += 5;
       } else if (full.compare(const_offset,basic_string_std_len-5,basic_string_std+5) == 0
                  && full.size() > (basic_string_std_len-5)) {
          // no std.
          isString = true;
+      } else if (full.find("basic_string") != std::string::npos) {
+         size_t len = StdLen(full.c_str() + const_offset);
+         if (len && len != 5 && full.compare(const_offset + len, basic_string_std_len-5, basic_string_std+5) == 0) {
+            isString = true;
+            isStdString = true;
+            std_offset += len;
+         }
       }
       if (isString) {
-         size_t offset = isStdString ? basic_string_std_len : basic_string_std_len - 5;
-         offset += const_offset;
+         size_t offset = basic_string_std_len - 5;
+         offset += std_offset; // std_offset includs both the size of std prefix and const prefix.
          if ( full[offset] == '>' ) {
             // done.
          } else if (full[offset] == ',') {
