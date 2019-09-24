@@ -557,7 +557,7 @@ void TGraphAsymmErrors::BayesDivide(const TH1* pass, const TH1* total, Option_t 
 /// - shortest: use shortest interval (done by default if mode is set)
 /// - central: use central interval (done by default if mode is NOT set)
 /// - pois: interpret histograms as poisson ratio instead of efficiency
-/// - e0    : plot (in Bayesian case) efficiency and interval for bins where total=0
+/// - e0    : plot efficiency and interval for bins where total=0
 ///           (default is to skip them)
 ///
 /// Note:
@@ -664,112 +664,108 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       option.ReplaceAll("cl=","");
    }
 
-   //normal approximation
-   if(option.Contains("n")) {
-      option.ReplaceAll("n","");
+   // look for statistic options
+   // check first Bayesian case
+   // bayesian with prior
+   Bool_t usePosteriorMode = false;
+   Bool_t useShortestInterval = false;
+   if (option.Contains("b(")) {
+      Double_t a = 0;
+      Double_t b = 0;
+      sscanf(strstr(option.Data(), "b("), "b(%lf,%lf)", &a, &b);
+      if (a > 0)
+         alpha = a;
+      else
+         Warning("Divide", "given shape parameter for alpha %.2lf is invalid", a);
+      if (b > 0)
+         beta = b;
+      else
+         Warning("Divide", "given shape parameter for beta %.2lf is invalid", b);
+      option.ReplaceAll("b(", "");
+      bIsBayesian = true;
+
+      // look for specific bayesian options
+
+      // use posterior mode
+
+      if (option.Contains("mode")) {
+         usePosteriorMode = true;
+         option.ReplaceAll("mode", "");
+      }
+      if (option.Contains("sh") || (usePosteriorMode && !option.Contains("cen"))) {
+         useShortestInterval = true;
+      }
+   }
+   // normal approximation
+   else if (option.Contains("n")) {
+      option.ReplaceAll("n", "");
       pBound = &TEfficiency::Normal;
    }
-
-   //clopper pearson interval
-   if(option.Contains("cp")) {
-      option.ReplaceAll("cp","");
+   // clopper pearson interval
+   else if (option.Contains("cp")) {
+      option.ReplaceAll("cp", "");
       pBound = &TEfficiency::ClopperPearson;
    }
-
-   //wilson interval
-   if(option.Contains("w")) {
-      option.ReplaceAll("w","");
+   // wilson interval
+   else if (option.Contains("w")) {
+      option.ReplaceAll("w", "");
       pBound = &TEfficiency::Wilson;
    }
-
-   //agresti coull interval
-   if(option.Contains("ac")) {
-      option.ReplaceAll("ac","");
+   // agresti coull interval
+   else if (option.Contains("ac")) {
+      option.ReplaceAll("ac", "");
       pBound = &TEfficiency::AgrestiCoull;
    }
    // Feldman-Cousins interval
-   if(option.Contains("fc")) {
-      option.ReplaceAll("fc","");
+   else if (option.Contains("fc")) {
+      option.ReplaceAll("fc", "");
       pBound = &TEfficiency::FeldmanCousins;
    }
    // mid-P Lancaster interval
-   if(option.Contains("midp")) {
-      option.ReplaceAll("midp","");
+   else if (option.Contains("midp")) {
+      option.ReplaceAll("midp", "");
       pBound = &TEfficiency::MidPInterval;
-   }
-
-   //bayesian with prior
-   if(option.Contains("b(")) {
-      Double_t a = 0;
-      Double_t b = 0;
-      sscanf(strstr(option.Data(),"b("),"b(%lf,%lf)",&a,&b);
-      if(a > 0)
-         alpha = a;
-      else
-         Warning("Divide","given shape parameter for alpha %.2lf is invalid",a);
-      if(b > 0)
-         beta = b;
-      else
-         Warning("Divide","given shape parameter for beta %.2lf is invalid",b);
-      option.ReplaceAll("b(","");
-      bIsBayesian = true;
-   }
-
-   // use posterior mode
-   Bool_t usePosteriorMode = false;
-   if(bIsBayesian && option.Contains("mode") ) {
-      usePosteriorMode = true;
-      option.ReplaceAll("mode","");
-   }
-
-   Bool_t plot0Bins = false;
-   if(option.Contains("e0") ) {
-      plot0Bins = true;
-      option.ReplaceAll("e0","");
-   }
-
-   Bool_t useShortestInterval = false;
-   if (bIsBayesian && ( option.Contains("sh") || (usePosteriorMode && !option.Contains("cen") ) ) ) {
-      useShortestInterval = true;
    }
 
    // interpret as Poisson ratio
    Bool_t bPoissonRatio = false;
-   if(option.Contains("pois") ) {
+   if (option.Contains("pois")) {
       bPoissonRatio = true;
-      option.ReplaceAll("pois","");
+      option.ReplaceAll("pois", "");
+   }
+   Bool_t plot0Bins = false;
+   if (option.Contains("e0")) {
+      plot0Bins = true;
+      option.ReplaceAll("e0", "");
    }
 
    // weights works only in case of Normal approximation or Bayesian for binomial interval
    // in case of Poisson ratio we can use weights by rescaling the obtained results using the effective entries
-   if ( ( bEffective && !bPoissonRatio) && !bIsBayesian && pBound != &TEfficiency::Normal ) {
-      Warning("Divide","Histograms have weights: only Normal or Bayesian error calculation is supported");
-      Info("Divide","Using now the Normal approximation for weighted histograms");
+   if ((bEffective && !bPoissonRatio) && !bIsBayesian && pBound != &TEfficiency::Normal) {
+      Warning("Divide", "Histograms have weights: only Normal or Bayesian error calculation is supported");
+      Info("Divide", "Using now the Normal approximation for weighted histograms");
    }
 
-   if(bPoissonRatio)
-   {
-     if(pass->GetDimension() != total->GetDimension()) {
-       Error("Divide","passed histograms are not of the same dimension");
-       return;
-     }
+   if (bPoissonRatio) {
+      if (pass->GetDimension() != total->GetDimension()) {
+         Error("Divide", "passed histograms are not of the same dimension");
+         return;
+      }
 
-     if(!TEfficiency::CheckBinning(*pass,*total)) {
-       Error("Divide","passed histograms are not consistent");
-       return;
-     }
-   }
-   else
-   {
-     //check consistency of histograms, allowing weights
-     if(!TEfficiency::CheckConsistency(*pass,*total,"w")) {
-       Error("Divide","passed histograms are not consistent");
-       return;
-     }
+      if (!TEfficiency::CheckBinning(*pass, *total)) {
+         Error("Divide", "passed histograms are not consistent");
+         return;
+      }
+   } else {
+      // check consistency of histograms, allowing weights
+      if (!TEfficiency::CheckConsistency(*pass, *total, "w")) {
+         Error("Divide", "passed histograms are not consistent");
+         return;
+      }
    }
 
-   //Set the graph to have a number of points equal to the number of histogram
-   //bins
+   // Set the graph to have a number of points equal to the number of histogram
+   // bins
    Int_t nbins = pass->GetNbinsX();
    Set(nbins);
 
@@ -793,68 +789,67 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       upper = 0;
 
       // special case in case of weights we have to consider the sum of weights and the sum of weight squares
-       if(bEffective) {
-          tw =  total->GetBinContent(b);
-          tw2 = (total->GetSumw2()->fN > 0) ? total->GetSumw2()->At(b) : tw;
-          pw =  pass->GetBinContent(b);
-          pw2 = (pass->GetSumw2()->fN > 0) ? pass->GetSumw2()->At(b) : pw;
+      if (bEffective) {
+         tw = total->GetBinContent(b);
+         tw2 = (total->GetSumw2()->fN > 0) ? total->GetSumw2()->At(b) : tw;
+         pw = pass->GetBinContent(b);
+         pw2 = (pass->GetSumw2()->fN > 0) ? pass->GetSumw2()->At(b) : pw;
 
-          if(bPoissonRatio)
-          {
-             // tw += pw;
-             // tw2 += pw2;
-             // compute ratio on the effective entries ( p and t)
-             // special case is when (pw=0, pw2=0) in this case we cannot get the bin weight.
-             // we use then the overall weight of the full histogram
-             if (pw == 0 && pw2 == 0)
-                p = 0;
-             else
-                p = (pw*pw)/pw2;
+         if (bPoissonRatio) {
+            // tw += pw;
+            // tw2 += pw2;
+            // compute ratio on the effective entries ( p and t)
+            // special case is when (pw=0, pw2=0) in this case we cannot get the bin weight.
+            // we use then the overall weight of the full histogram
+            if (pw == 0 && pw2 == 0)
+               p = 0;
+            else
+               p = (pw * pw) / pw2;
 
-             if (tw == 0 && tw2 == 0)
-                t = 0;
-             else
-                t = (tw*tw)/tw2;
+            if (tw == 0 && tw2 == 0)
+               t = 0;
+            else
+               t = (tw * tw) / tw2;
 
-             if (pw > 0 && tw > 0)
-                // this is the ratio of the two bin weights ( pw/p  / t/tw )
-                wratio = (pw*t)/(p * tw);
-             else if (pw == 0 && tw > 0)
-                // case p histogram has zero  compute the weights from all the histogram
-                // weight of histogram - sumw2/sumw
-                wratio = (psumw2 * t) /(psumw * tw );
-             else if (tw == 0 && pw > 0)
-                // case t histogram has zero  compute the weights from all the histogram
-                // weight of histogram - sumw2/sumw
-                wratio = (pw * tsumw) /(p * tsumw2 );
-             else if (p > 0)
-                wratio = pw/p; //not sure if needed
-             else {
-                // case both pw and tw are zero - we skip these bins
-                if (!plot0Bins) continue; // skip bins with total <= 0
-             }
+            if (pw > 0 && tw > 0)
+               // this is the ratio of the two bin weights ( pw/p  / t/tw )
+               wratio = (pw * t) / (p * tw);
+            else if (pw == 0 && tw > 0)
+               // case p histogram has zero  compute the weights from all the histogram
+               // weight of histogram - sumw2/sumw
+               wratio = (psumw2 * t) / (psumw * tw);
+            else if (tw == 0 && pw > 0)
+               // case t histogram has zero  compute the weights from all the histogram
+               // weight of histogram - sumw2/sumw
+               wratio = (pw * tsumw) / (p * tsumw2);
+            else if (p > 0)
+               wratio = pw / p; // not sure if needed
+            else {
+               // case both pw and tw are zero - we skip these bins
+               if (!plot0Bins) continue; // skip bins with total <= 0
+            }
 
-             t += p;
-             //std::cout << p << "   " << t << "  " << wratio << std::endl;
-          }
-          else
-             if (tw <= 0 && !plot0Bins) continue; // skip bins with total <= 0
+            t += p;
+            // std::cout << p << "   " << t << "  " << wratio << std::endl;
+         } else if (tw <= 0 && !plot0Bins)
+            continue; // skip bins with total <= 0
 
-          // in the case of weights have the formula only for
-          // the normal and  bayesian statistics (see below)
+         // in the case of weights have the formula only for
+         // the normal and  bayesian statistics (see below)
 
-       }
+      }
 
-       //use bin contents
-       else {
-          t = int( total->GetBinContent(b) + 0.5);
-          p = int(pass->GetBinContent(b) + 0.5);
+      // use bin contents
+      else {
+         t = int(total->GetBinContent(b) + 0.5);
+         p = int(pass->GetBinContent(b) + 0.5);
 
-          if(bPoissonRatio) t += p;
+         if (bPoissonRatio)
+            t += p;
 
-          if (!t && !plot0Bins) continue; // skip bins with total = 0
-       }
-
+         if (!t && !plot0Bins)
+            continue; // skip bins with total = 0
+      }
 
       //using bayesian statistics
       if(bIsBayesian) {
