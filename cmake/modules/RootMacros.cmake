@@ -393,39 +393,28 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endforeach()
 
   #---Build the names for library, pcm and rootmap file ----
-  set(library_target_name)
   if(dictionary MATCHES "^G__")
-    string(REGEX REPLACE "^G__(.*)" "\\1"  library_target_name ${dictionary})
-    if (ARG_MULTIDICT)
-      string(REGEX REPLACE "(.*)32$" "\\1"  library_target_name ${library_target_name})
-    endif (ARG_MULTIDICT)
+    string(SUBSTRING ${dictionary} 3 -1 deduced_arg_module)
   else()
-    get_filename_component(library_target_name ${dictionary} NAME_WE)
+    get_filename_component(deduced_arg_module ${dictionary} NAME_WE)
   endif()
-  if (ARG_MODULE)
-    if (NOT ${ARG_MODULE} STREQUAL ${library_target_name})
-      message(AUTHOR_WARNING "The MODULE argument ${ARG_MODULE} and the deduced library name "
-        "${library_target_name} mismatch. Deduction stem: ${dictionary}.")
-      set(library_target_name ${ARG_MODULE})
-    endif()
-  endif(ARG_MODULE)
 
   #---Set the library output directory-----------------------
   ROOT_GET_LIBRARY_OUTPUT_DIR(library_output_dir)
   set (runtime_cxxmodule_dependencies )
   if(ARG_MODULE)
     set(cpp_module)
-    set(library_name ${libprefix}${library_target_name}${libsuffix})
+    set(library_name ${libprefix}${ARG_MODULE}${libsuffix})
     set(newargs -s ${library_output_dir}/${library_name})
-    set(master_pcm_name ${library_output_dir}/${libprefix}${library_target_name}_rdict.pcm)
+    set(master_pcm_name ${library_output_dir}/${libprefix}${ARG_MODULE}_rdict.pcm)
     if(ARG_MULTIDICT)
       set(newargs ${newargs} -multiDict)
-      set(pcm_name ${library_output_dir}/${libprefix}${library_target_name}_${dictionary}_rdict.pcm)
-      set(rootmap_name ${library_output_dir}/${libprefix}${library_target_name}.rootmap)
+      set(pcm_name ${library_output_dir}/${libprefix}${ARG_MODULE}_${dictionary}_rdict.pcm)
+      set(rootmap_name ${library_output_dir}/${libprefix}${deduced_arg_module}.rootmap)
     else()
-      set(cpp_module ${library_target_name})
+      set(cpp_module ${ARG_MODULE})
       set(pcm_name ${master_pcm_name})
-      set(rootmap_name ${library_output_dir}/${libprefix}${library_target_name}.rootmap)
+      set(rootmap_name ${library_output_dir}/${libprefix}${ARG_MODULE}.rootmap)
     endif(ARG_MULTIDICT)
 
     if(runtime_cxxmodules)
@@ -444,10 +433,10 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       endif(cpp_module)
     endif()
   else()
-    set(library_name ${libprefix}${library_target_name}${libsuffix})
+    set(library_name ${libprefix}${deduced_arg_module}${libsuffix})
     set(newargs -s ${library_output_dir}/${library_name})
-    set(pcm_name ${library_output_dir}/${libprefix}${library_target_name}_rdict.pcm)
-    set(rootmap_name ${library_output_dir}/${libprefix}${library_target_name}.rootmap)
+    set(pcm_name ${library_output_dir}/${libprefix}${deduced_arg_module}_rdict.pcm)
+    set(rootmap_name ${library_output_dir}/${libprefix}${deduced_arg_module}.rootmap)
   endif()
 
   if(CMAKE_ROOTTEST_NOROOTMAP OR cpp_module_file)
@@ -496,19 +485,21 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     list(APPEND _implicitdeps CXX ${_dep})
   endforeach()
 
-  set(MODULE_LIB_DEPENDENCY ${ARG_DEPENDENCIES})
+  if(ARG_MODULE)
+    set(MODULE_LIB_DEPENDENCY ${ARG_DEPENDENCIES})
 
-  # get target properties added after call to ROOT_GENERATE_DICTIONARY()
-  if(TARGET ${library_target_name})
-    set(library_incs $<TARGET_PROPERTY:${library_target_name},INCLUDE_DIRECTORIES>)
-    set(library_defs $<TARGET_PROPERTY:${library_target_name},COMPILE_DEFINITIONS>)
+    # get target properties added after call to ROOT_GENERATE_DICTIONARY()
+    if(TARGET ${ARG_MODULE})
+      set(module_incs $<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>)
+      set(module_defs $<TARGET_PROPERTY:${ARG_MODULE},COMPILE_DEFINITIONS>)
+    endif()
   endif()
 
   #---call rootcint------------------------------------------
   add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file}
                      COMMAND ${command} -v2 -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
-                                        ${definitions} "$<$<BOOL:${library_defs}>:-D$<JOIN:${library_defs},;-D>>"
-                                        ${includedirs} "$<$<BOOL:${library_incs}>:-I$<JOIN:${library_incs},;-I>>"
+                                        ${definitions} "$<$<BOOL:${module_defs}>:-D$<JOIN:${module_defs},;-D>>"
+                                        ${includedirs} "$<$<BOOL:${module_incs}>:-I$<JOIN:${module_incs},;-I>>"
                                         ${ARG_OPTIONS} ${headerfiles} ${_linkdef}
                      IMPLICIT_DEPENDS ${_implicitdeps}
                      DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCINTDEP}
