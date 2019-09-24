@@ -33,7 +33,6 @@ class RPadPos {
 
    RPadLength fVert;    ///<   vertical part
 
-
 public:
 
    RPadPos() = default;
