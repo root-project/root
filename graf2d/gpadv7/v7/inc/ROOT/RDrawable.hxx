@@ -41,7 +41,7 @@ public:
    virtual bool HasShared() const = 0;
    virtual void *MakeShared() = 0;
    virtual void SetShared(void *shared) = 0;
-   virtual ~RIOSharedBase() {}
+   virtual ~RIOSharedBase() = default;
 };
 
 using RIOSharedVector_t = std::vector<RIOSharedBase *>;
