@@ -57,10 +57,19 @@ protected:
    Int_t    Fill(Double_t); //MayNotUse
    Int_t    Fill(const char*, Double_t) { return Fill(0);}  //MayNotUse
 
+   virtual Double_t Interpolate(Double_t x) const; // may not use
+
 private:
 
    TH2(const TH2&);
    TH2& operator=(const TH2&); // Not implemented
+
+   // make private methods which have a TH1 signature and should not
+   // be called for a TH2
+   using TH1::GetBinErrorLow;
+   using TH1::GetBinErrorUp;
+   using TH1::Integral;
+   using TH1::IntegralAndError;
 
 public:
    virtual ~TH2();
@@ -82,8 +91,6 @@ public:
    virtual Double_t GetBinContent(Int_t bin) const { return TH1::GetBinContent(bin); }
    virtual Double_t GetBinContent(Int_t binx, Int_t biny) const { return TH1::GetBinContent( GetBin(binx, biny) ); }
    virtual Double_t GetBinContent(Int_t binx, Int_t biny, Int_t) const { return TH1::GetBinContent( GetBin(binx, biny) ); }
-   using TH1::GetBinErrorLow;
-   using TH1::GetBinErrorUp;
    virtual Double_t GetBinErrorLow(Int_t binx, Int_t biny) { return TH1::GetBinErrorLow( GetBin(binx, biny) ); }
    virtual Double_t GetBinErrorUp(Int_t binx, Int_t biny) { return TH1::GetBinErrorUp( GetBin(binx, biny) ); }
    virtual Double_t GetCorrelationFactor(Int_t axis1=1,Int_t axis2=2) const;
@@ -92,14 +99,11 @@ public:
    virtual void     GetStats(Double_t *stats) const;
    virtual Double_t Integral(Option_t *option="") const;
    //virtual Double_t Integral(Int_t, Int_t, Option_t * ="") const {return 0;}
-   using TH1::Integral;
    virtual Double_t Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Option_t *option="") const;
    virtual Double_t Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Option_t * ="") const {return 0;}
-   using TH1::IntegralAndError;
    virtual Double_t IntegralAndError(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Double_t & err, Option_t *option="") const;
-   virtual Double_t Interpolate(Double_t x);
-   virtual Double_t Interpolate(Double_t x, Double_t y);
-   virtual Double_t Interpolate(Double_t x, Double_t y, Double_t z);
+   virtual Double_t Interpolate(Double_t x, Double_t y) const;
+   virtual Double_t Interpolate(Double_t x, Double_t y, Double_t z) const;
    virtual Double_t KolmogorovTest(const TH1 *h2, Option_t *option="") const;
    virtual TH2     *RebinX(Int_t ngroup=2, const char *newname=""); // *MENU*
    virtual TH2     *RebinY(Int_t ngroup=2, const char *newname=""); // *MENU*
@@ -325,4 +329,3 @@ protected:
 };
 
 #endif
-

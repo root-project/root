@@ -322,9 +322,9 @@ public:
    virtual Double_t Integral(Option_t *option="") const;
    virtual Double_t Integral(Int_t binx1, Int_t binx2, Option_t *option="") const;
    virtual Double_t IntegralAndError(Int_t binx1, Int_t binx2, Double_t & err, Option_t *option="") const;
-   virtual Double_t Interpolate(Double_t x);
-   virtual Double_t Interpolate(Double_t x, Double_t y);
-   virtual Double_t Interpolate(Double_t x, Double_t y, Double_t z);
+   virtual Double_t Interpolate(Double_t x) const;
+   virtual Double_t Interpolate(Double_t x, Double_t y) const;
+   virtual Double_t Interpolate(Double_t x, Double_t y, Double_t z) const;
            Bool_t   IsBinOverflow(Int_t bin, Int_t axis = 0) const;
            Bool_t   IsBinUnderflow(Int_t bin, Int_t axis = 0) const;
    virtual Bool_t   IsHighlight() const { return TestBit(kIsHighlight); }

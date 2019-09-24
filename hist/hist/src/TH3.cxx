@@ -1193,11 +1193,10 @@ Double_t TH3::IntegralAndError(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny
    return DoIntegral(binx1,binx2,biny1,biny2,binz1,binz2,error,option,kTRUE);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ///Not yet implemented
 
-Double_t TH3::Interpolate(Double_t)
+Double_t TH3::Interpolate(Double_t) const
 {
    Error("Interpolate","This function must be called with 3 arguments for a TH3");
    return 0;
@@ -1207,7 +1206,7 @@ Double_t TH3::Interpolate(Double_t)
 ////////////////////////////////////////////////////////////////////////////////
 ///Not yet implemented
 
-Double_t TH3::Interpolate(Double_t, Double_t)
+Double_t TH3::Interpolate(Double_t, Double_t) const
 {
    Error("Interpolate","This function must be called with 3 arguments for a TH3");
    return 0;
@@ -1224,17 +1223,17 @@ Double_t TH3::Interpolate(Double_t, Double_t)
 ///   fYAxis.GetBinCenter(1) < y  < fYaxis.GetBinCenter(nbinY)     AND
 ///   fZAxis.GetBinCenter(1) < z  < fZaxis.GetBinCenter(nbinZ)
 
-Double_t TH3::Interpolate(Double_t x, Double_t y, Double_t z)
+Double_t TH3::Interpolate(Double_t x, Double_t y, Double_t z) const
 {
-   Int_t ubx = fXaxis.FindBin(x);
+   Int_t ubx = fXaxis.FindFixBin(x);
    if ( x < fXaxis.GetBinCenter(ubx) ) ubx -= 1;
    Int_t obx = ubx + 1;
 
-   Int_t uby = fYaxis.FindBin(y);
+   Int_t uby = fYaxis.FindFixBin(y);
    if ( y < fYaxis.GetBinCenter(uby) ) uby -= 1;
    Int_t oby = uby + 1;
 
-   Int_t ubz = fZaxis.FindBin(z);
+   Int_t ubz = fZaxis.FindFixBin(z);
    if ( z < fZaxis.GetBinCenter(ubz) ) ubz -= 1;
    Int_t obz = ubz + 1;
 

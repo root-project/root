@@ -607,7 +607,7 @@ void TH2::FillRandom(const char *fname, Int_t ntimes)
 
    TAxis & xAxis = fXaxis;
    TAxis & yAxis = fYaxis;
-   
+
    // in case axes of histogram are not defined use the function axis
    if (fXaxis.GetXmax() <= fXaxis.GetXmin()  || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
       Double_t xmin,xmax,ymin,ymax;
@@ -1159,7 +1159,6 @@ Double_t TH2::Integral(Int_t firstxbin, Int_t lastxbin, Int_t firstybin, Int_t l
    return DoIntegral(firstxbin,lastxbin,firstybin,lastybin,-1,0,err,option);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return integral of bin contents in range [firstxbin,lastxbin],[firstybin,lastybin]
 /// for a 2-D histogram. Calculates also the integral error using error propagation
@@ -1173,16 +1172,14 @@ Double_t TH2::IntegralAndError(Int_t firstxbin, Int_t lastxbin, Int_t firstybin,
    return DoIntegral(firstxbin,lastxbin,firstybin,lastybin,-1,0,error,option,kTRUE);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ///illegal for a TH2
 
-Double_t TH2::Interpolate(Double_t)
+Double_t TH2::Interpolate(Double_t) const
 {
    Error("Interpolate","This function must be called with 2 arguments for a TH2");
    return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Given a point P(x,y), Interpolate approximates the value via bilinear
@@ -1191,13 +1188,13 @@ Double_t TH2::Interpolate(Double_t)
 /// Andy Mastbaum 10/8/2008
 /// vaguely based on R.Raja 6-Sep-2008
 
- Double_t TH2::Interpolate(Double_t x, Double_t y)
+ Double_t TH2::Interpolate(Double_t x, Double_t y) const
 {
    Double_t f=0;
    Double_t x1=0,x2=0,y1=0,y2=0;
    Double_t dx,dy;
-   Int_t bin_x = fXaxis.FindBin(x);
-   Int_t bin_y = fYaxis.FindBin(y);
+   Int_t bin_x = fXaxis.FindFixBin(x);
+   Int_t bin_y = fYaxis.FindFixBin(y);
    if(bin_x<1 || bin_x>GetNbinsX() || bin_y<1 || bin_y>GetNbinsY()) {
       Error("Interpolate","Cannot interpolate outside histogram domain.");
       return 0;
@@ -1240,13 +1237,13 @@ Double_t TH2::Interpolate(Double_t)
       y2 = fYaxis.GetBinCenter(bin_y);
       break;
    }
-   Int_t bin_x1 = fXaxis.FindBin(x1);
+   Int_t bin_x1 = fXaxis.FindFixBin(x1);
    if(bin_x1<1) bin_x1=1;
-   Int_t bin_x2 = fXaxis.FindBin(x2);
+   Int_t bin_x2 = fXaxis.FindFixBin(x2);
    if(bin_x2>GetNbinsX()) bin_x2=GetNbinsX();
-   Int_t bin_y1 = fYaxis.FindBin(y1);
+   Int_t bin_y1 = fYaxis.FindFixBin(y1);
    if(bin_y1<1) bin_y1=1;
-   Int_t bin_y2 = fYaxis.FindBin(y2);
+   Int_t bin_y2 = fYaxis.FindFixBin(y2);
    if(bin_y2>GetNbinsY()) bin_y2=GetNbinsY();
    Int_t bin_q22 = GetBin(bin_x2,bin_y2);
    Int_t bin_q12 = GetBin(bin_x1,bin_y2);
@@ -1265,7 +1262,7 @@ Double_t TH2::Interpolate(Double_t)
 ////////////////////////////////////////////////////////////////////////////////
 ///illegal for a TH2
 
-Double_t TH2::Interpolate(Double_t, Double_t, Double_t)
+Double_t TH2::Interpolate(Double_t, Double_t, Double_t) const
 {
    Error("Interpolate","This function must be called with 2 arguments for a TH2");
    return 0;
@@ -1492,10 +1489,10 @@ TH2 * TH2::Rebin( Int_t ngroup, const char*newname, const Double_t *xbins)
 {
    if (xbins != nullptr) {
       Error("Rebin","Rebinning a 2-d histogram into variable bins is not supported (it is possible only for 1-d histograms). Return a nullptr");
-      return nullptr; 
+      return nullptr;
    }
    Info("Rebin","Rebinning only the x-axis. Use Rebin2D for rebinning both axes");
-   return RebinX(ngroup, newname); 
+   return RebinX(ngroup, newname);
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// Rebin this histogram grouping nxgroup/nygroup bins along the xaxis/yaxis together.
