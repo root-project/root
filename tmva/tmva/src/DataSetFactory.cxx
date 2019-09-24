@@ -142,7 +142,7 @@ TMVA::DataSet* TMVA::DataSetFactory::CreateDataSet( TMVA::DataSetInfo& dsi,
       //Log() << kHEADER <<  Endl;
       Log() << kHEADER << Form("[%s] : ",dsi.GetName()) << " " << Endl << Endl;
    }
-   
+
    return ds;
 }
 
@@ -186,7 +186,7 @@ TMVA::DataSet* TMVA::DataSetFactory::BuildDynamicDataSet( TMVA::DataSetInfo& dsi
    ds->SetEventCollection(newEventVector, Types::kTraining);
    ds->SetCurrentType( Types::kTraining );
    ds->SetCurrentEvent( 0 );
-   
+
    delete newEventVector;
    return ds;
 }
@@ -302,20 +302,20 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
    for (formIt = fInputFormulas.begin(), formItEnd=fInputFormulas.end(); formIt!=formItEnd; ++formIt) if (*formIt) delete *formIt;
    fInputFormulas.clear();
    TTreeFormula* ttf = 0;
-   fInputTableFormulas.clear();  // this contains shallow pointer copies 
+   fInputTableFormulas.clear();  // this contains shallow pointer copies
 
    bool firstArrayVar = kTRUE;
    int firstArrayVarIndex = -1;
-   int arraySize = -1;  
+   int arraySize = -1;
    for (UInt_t i = 0; i < dsi.GetNVariables(); i++) {
-    
+
       // create TTreeformula
       if (! dsi.IsVariableFromArray(i) )  {
             ttf = new TTreeFormula(Form("Formula%s", dsi.GetVariableInfo(i).GetInternalName().Data()),
                                    dsi.GetVariableInfo(i).GetExpression().Data(), tr);
             CheckTTreeFormula(ttf, dsi.GetVariableInfo(i).GetExpression(), hasDollar);
-            fInputFormulas.push_back(ttf);
-            fInputTableFormulas.push_back(std::make_pair(ttf, (Int_t) 0));
+            fInputFormulas.emplace_back(ttf);
+            fInputTableFormulas.emplace_back(std::make_pair(ttf, (Int_t) 0));
       } else {
          // it is a variable from an array
          if (firstArrayVar) {
@@ -334,7 +334,7 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
                " from array expression " << dsi.GetVariableInfo(i).GetExpression() << " of size " << arraySize << Endl;
          }
          fInputTableFormulas.push_back(std::make_pair(ttf, (Int_t) i-firstArrayVarIndex));
-         if (int(i)-firstArrayVarIndex == arraySize-1 ) { 
+         if (int(i)-firstArrayVarIndex == arraySize-1 ) {
             // I am the last element of the array
             firstArrayVar = kTRUE;
             firstArrayVarIndex = -1;
@@ -419,8 +419,8 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
       }
       fWeightFormula.push_back( ttf );
    }
-   return; 
-   // all this code below is not needed when using TTReeFormula 
+   return;
+   // all this code below is not needed when using TTReeFormula
 
    Log() << kDEBUG << Form("Dataset[%s] : ", dsi.GetName()) << "enable branches" << Endl;
    // now enable only branches that are needed in any input formula, target, cut, weight
@@ -696,7 +696,7 @@ TMVA::DataSetFactory::InitOptions( TMVA::DataSetInfo& dsi,
    splitSpecs.DeclareOptionRef(fCorrelations, "Correlations", "Boolean to show correlation output (Default: true)");
    fComputeCorrelations = kTRUE;
    splitSpecs.DeclareOptionRef(fComputeCorrelations, "CalcCorrelations", "Compute correlations and also some variable statistics, e.g. min/max (Default: true )");
-   
+
    splitSpecs.ParseOptions();
    splitSpecs.CheckForUnusedOptions();
 
@@ -744,7 +744,7 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
          eventCounts[i].varAvLength[ivar] = 0;
    }
 
-   Bool_t haveArrayVariable = kFALSE;
+   //Bool_t haveArrayVariable = kFALSE;
    //Bool_t *varIsArray = new Bool_t[nvars];
 
    // If there are NaNs in the tree:
@@ -806,7 +806,7 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
             currentInfo.GetTree()->GetEntry(evtIdx);
             Int_t sizeOfArrays = 1;
             Int_t prevArrExpr = 0;
-            Bool_t haveAllArrayData = kFALSE; 
+            Bool_t haveAllArrayData = kFALSE;
 
             // ======= evaluate all formulas =================
 
@@ -816,7 +816,7 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
             // Otherwise we support for arrays of variables where each
             // element of the array corresponds to a different variable like in the case of image
             // In that case the VAriableInfo has a bit, IsVariableFromArray that is set and we have a single formula for the array
-            // fInputFormulaTable contains a map of the formula and the variable index to evaluate the formula 
+            // fInputFormulaTable contains a map of the formula and the variable index to evaluate the formula
             for (UInt_t ivar = 0; ivar < nvars; ivar++) {
                // distinguish case where variable is not from an array
                if (dsi.IsVariableFromArray(ivar)) continue;
@@ -884,8 +884,8 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
                   int inputVarIndex = formulaMap.second;
                   formula->SetQuickLoad(true); // is this needed ???
 
-                  vars[ivar] =  ( !haveAllArrayData ? 
-                                 formula->EvalInstance(inputVarIndex) : 
+                  vars[ivar] =  ( !haveAllArrayData ?
+                                 formula->EvalInstance(inputVarIndex) :
                                  formula->EvalInstance(idata));
                   checkNanInf(nanMessages, vars[ivar], "Input", formula->GetTitle());
                }
@@ -1677,4 +1677,3 @@ TMVA::DataSetFactory::RenormEvents( TMVA::DataSetInfo& dsi,
 
 
 }
-
