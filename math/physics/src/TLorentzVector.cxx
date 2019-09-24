@@ -16,6 +16,7 @@ are superior from the runtime performance offered, i.e.:
   - ROOT::Math::PtEtaPhiMVector based on pt (rho),eta,phi and M (t) coordinates in double precision
   - ROOT::Math::PtEtaPhiEVector based on pt (rho),eta,phi and E (t) coordinates in double precision
   - ROOT::Math::PxPyPzMVector based on px,py,pz and M (mass) coordinates in double precision
+  - ROOT::Math::PxPyPzEVector based on px,py,pz and E (energy) coordinates in double precision
   - ROOT::Math::XYZTVector based on x,y,z,t coordinates (cartesian) in double precision
   - ROOT::Math::XYZTVectorF based on x,y,z,t coordinates (cartesian) in float precision
 
