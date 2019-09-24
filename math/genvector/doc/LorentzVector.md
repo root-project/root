@@ -9,6 +9,7 @@ To avoid exposing templated parameter to the users, typedefs are defined for all
 *   ROOT::Math::PtEtaPhiEVector vector based on pt (rho),eta,phi and E (t) coordinates in double precision
 *   ROOT::Math::PtEtaPhiMVector vector based on pt (rho),eta,phi and M (t) coordinates in double precision
 *   ROOT::Math::PxPyPzMVector vector based on px,py,pz and M (mass) coordinates in double precision
+*   ROOT::Math::PxPyPzEVector vector based on px,py,pz and E (energy) coordinates in double precision
 
 The metric used for all the LorentzVector's is (-,-,-,+)
 
