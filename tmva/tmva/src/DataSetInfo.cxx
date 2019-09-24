@@ -248,8 +248,7 @@ void TMVA::DataSetInfo::AddVariablesArray(const TString &expression, Int_t size,
    for (int i = 0; i < size; ++i) {
       TString newTitle = title + TString::Format("[%d]", i);
 
-      fVariables.push_back(
-         VariableInfo(regexpr, newTitle, unit, fVariables.size() + 1, varType, external, min, max, normalized));
+      fVariables.emplace_back(regexpr, newTitle, unit, fVariables.size() + 1, varType, external, min, max, normalized);
       // set corresponding bit indicating is a variable from an array
       fVariables.back().SetBit(kIsArrayVariable);
       TString newVarName = fVariables.back().GetInternalName() + TString::Format("[%d]", i);
@@ -574,4 +573,3 @@ Double_t TMVA::DataSetInfo::GetTestingSumBackgrWeights (){
    if (fTestingSumBackgrWeights<0) Log() << kFATAL << Form("Dataset[%s] : ",fName.Data()) << " asking for the sum of testing backgr event weights which is not initialized yet" << Endl;
    return fTestingSumBackgrWeights ;
 }
-
