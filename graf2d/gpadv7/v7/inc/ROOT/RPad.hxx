@@ -194,7 +194,7 @@ public:
    void SetAllAxisAutoBounds();
 
    /// Convert a `Pixel` position to Canvas-normalized positions.
-//   virtual std::array<RPadLength::Normal, 2> PixelsToNormal(const std::array<RPadLength::Pixel, 2> &pos) const = 0;
+   virtual std::array<RPadLength::Normal, 2> PixelsToNormal(const std::array<RPadLength::Pixel, 2> &pos) const = 0;
 
    /// Access to the top-most canvas, if any (const version).
    virtual const RCanvas *GetCanvas() const = 0;
@@ -203,10 +203,10 @@ public:
    virtual RCanvas *GetCanvas() = 0;
 
    /// Convert user coordinates to normal coordinates.
-//   std::array<RPadLength::Normal, 2> UserToNormal(const std::array<RPadLength::User, 2> &pos) const
-//   {
-//      return fFrame->UserToNormal(pos);
-//   }
+   std::array<RPadLength::Normal, 2> UserToNormal(const std::array<RPadLength::User, 2> &pos) const
+   {
+      return fFrame->UserToNormal(pos);
+   }
 };
 
 
@@ -263,32 +263,29 @@ public:
 
    void Paint(Internal::RPadPainter &) final;
 
-/*
-
    /// Convert a `Pixel` position to Canvas-normalized positions.
    std::array<RPadLength::Normal, 2> PixelsToNormal(const std::array<RPadLength::Pixel, 2> &pos) const override
    {
       std::array<RPadLength::Normal, 2> posInParentNormal = fParent->PixelsToNormal(pos);
       std::array<RPadLength::Normal, 2> myPixelInNormal =
-         fParent->PixelsToNormal({{fSize.fHoriz.fPixel, fSize.fVert.fPixel}});
+         fParent->PixelsToNormal({{fSize.Horiz().GetPixel(), fSize.Vert().GetPixel()}});
       std::array<RPadLength::Normal, 2> myUserInNormal =
-         fParent->UserToNormal({{fSize.fHoriz.fUser, fSize.fVert.fUser}});
+         fParent->UserToNormal({{fSize.Horiz().GetUser(), fSize.Vert().GetUser()}});
       // If the parent says pos is at 0.6 in normal coords, and our size converted to normal is 0.2, then pos in our
       // coord system is 3.0!
-      return {{posInParentNormal[0] / (fSize.fHoriz.fNormal + myPixelInNormal[0] + myUserInNormal[0]),
-               posInParentNormal[1] / (fSize.fVert.fNormal + myPixelInNormal[1] + myUserInNormal[1])}};
+      return {{posInParentNormal[0] / (fSize.Horiz().GetNormal() + myPixelInNormal[0] + myUserInNormal[0]),
+               posInParentNormal[1] / (fSize.Vert().GetNormal() + myPixelInNormal[1] + myUserInNormal[1])}};
    }
 
    /// Convert a RPadPos to [x, y] of normalized coordinates.
-   std::array<RPadLength::Normal, 2> ToNormal(const Internal::RPadHorizVert &pos) const
+   std::array<RPadLength::Normal, 2> ToNormal(const RPadPos &pos) const
    {
-      std::array<RPadLength::Normal, 2> pixelsInNormal = PixelsToNormal({{pos.fHoriz.fPixel, pos.fVert.fPixel}});
-      std::array<RPadLength::Normal, 2> userInNormal = UserToNormal({{pos.fHoriz.fUser, pos.fVert.fUser}});
-      return {{pos.fHoriz.fNormal + pixelsInNormal[0] + userInNormal[0],
-               pos.fVert.fNormal + pixelsInNormal[1] + userInNormal[1]}};
+      std::array<RPadLength::Normal, 2> pixelsInNormal = PixelsToNormal({{pos.Horiz().GetPixel(), pos.Vert().GetPixel()}});
+      std::array<RPadLength::Normal, 2> userInNormal = UserToNormal({{pos.Horiz().GetUser(), pos.Vert().GetUser()}});
+      return {{pos.Horiz().GetNormal() + pixelsInNormal[0] + userInNormal[0],
+               pos.Vert().GetNormal() + pixelsInNormal[1] + userInNormal[1]}};
    }
 
-*/
 
 };
 
