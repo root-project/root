@@ -4935,11 +4935,11 @@ Double_t TH1::GetBinWithContent(Double_t c, Int_t &binx, Int_t firstx, Int_t las
 ///
 /// Andy Mastbaum 10/21/08
 
-Double_t TH1::Interpolate(Double_t x)
+Double_t TH1::Interpolate(Double_t x) const
 {
    if (fBuffer) ((TH1*)this)->BufferEmpty();
 
-   Int_t xbin = FindBin(x);
+   Int_t xbin = fXaxis.FindFixBin(x);
    Double_t x0,x1,y0,y1;
 
    if(x<=GetBinCenter(1)) {
@@ -4963,18 +4963,18 @@ Double_t TH1::Interpolate(Double_t x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Interpolate. Not yet implemented.
+/// 2d Interpolation. Not yet implemented.
 
-Double_t TH1::Interpolate(Double_t, Double_t)
+Double_t TH1::Interpolate(Double_t, Double_t) const
 {
    Error("Interpolate","This function must be called with 1 argument for a TH1");
    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Interpolate. Not yet implemented.
+/// 3d Interpolation. Not yet implemented.
 
-Double_t TH1::Interpolate(Double_t, Double_t, Double_t)
+Double_t TH1::Interpolate(Double_t, Double_t, Double_t) const
 {
    Error("Interpolate","This function must be called with 1 argument for a TH1");
    return 0;

@@ -62,10 +62,18 @@ protected:
    Int_t    Fill(const char*,Double_t,Double_t) {return Fill(0);} //MayNotUse
    Int_t    Fill(const char*,const char*,Double_t) {return Fill(0);} //MayNotUse
 
+   virtual Double_t Interpolate(Double_t x, Double_t y) const; // May not use
+   virtual Double_t Interpolate(Double_t x) const; // MayNotUse
+
 private:
 
    TH3(const TH3&);
    TH3& operator=(const TH3&); // Not implemented
+
+   using TH1::GetBinErrorLow;
+   using TH1::GetBinErrorUp;
+   using TH1::Integral;
+   using TH1::IntegralAndError;
 
 public:
    virtual ~TH3();
@@ -89,8 +97,6 @@ public:
    virtual Double_t GetBinContent(Int_t bin) const { return TH1::GetBinContent(bin); }
    virtual Double_t GetBinContent(Int_t bin, Int_t) const { return TH1::GetBinContent(bin); }
    virtual Double_t GetBinContent(Int_t binx, Int_t biny, Int_t binz) const { return TH1::GetBinContent( GetBin(binx, biny, binz) ); }
-   using TH1::GetBinErrorLow;
-   using TH1::GetBinErrorUp;
    virtual Double_t GetBinErrorLow(Int_t binx, Int_t biny, Int_t binz) { return TH1::GetBinErrorLow( GetBin(binx, biny, binz) ); }
    virtual Double_t GetBinErrorUp(Int_t binx, Int_t biny, Int_t binz)  { return TH1::GetBinErrorUp( GetBin(binx, biny, binz) ); }
    virtual Double_t GetBinWithContent3(Double_t c, Int_t &binx, Int_t &biny, Int_t &binz, Int_t firstx=0, Int_t lastx=0,Int_t firsty=0, Int_t lasty=0, Int_t firstz=0, Int_t lastz=0, Double_t maxdiff=0) const;
@@ -99,13 +105,9 @@ public:
    virtual void     GetRandom3(Double_t &x, Double_t &y, Double_t &z);
    virtual void     GetStats(Double_t *stats) const;
    virtual Double_t Integral(Option_t *option="") const;
-   using TH1::Integral;
    virtual Double_t Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t binz1, Int_t binz2, Option_t *option="") const;
-   using TH1::IntegralAndError;
    virtual Double_t IntegralAndError(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t binz1, Int_t binz2, Double_t & err, Option_t *option="") const;
-   virtual Double_t Interpolate(Double_t x);
-   virtual Double_t Interpolate(Double_t x, Double_t y);
-   virtual Double_t Interpolate(Double_t x, Double_t y, Double_t z);
+   virtual Double_t Interpolate(Double_t x, Double_t y, Double_t z) const;
    virtual Double_t KolmogorovTest(const TH1 *h2, Option_t *option="") const;
    virtual TH1D    *ProjectionX(const char *name="_px", Int_t iymin=0, Int_t iymax=-1, Int_t izmin=0,
                                 Int_t izmax=-1, Option_t *option="") const; // *MENU*
