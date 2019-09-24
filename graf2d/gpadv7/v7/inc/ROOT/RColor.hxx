@@ -1,4 +1,4 @@
-/// \file ROOT/RColorOld.hxx
+/// \file ROOT/RColor.hxx
 /// \ingroup Gpad ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2017-09-26
@@ -24,7 +24,7 @@
 namespace ROOT {
 namespace Experimental {
 
-// TODO: see also imagemagick's C++ interface for RColorOld operations!
+// TODO: see also imagemagick's C++ interface for RColor operations!
 // https://www.imagemagick.org/api/magick++-classes.php
 
 class RColor : public RAttrBase {
