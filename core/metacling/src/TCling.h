@@ -601,6 +601,7 @@ private: // Private Utility Functions and Classes
    Bool_t HandleNewTransaction(const cling::Transaction &T);
    void UnloadClassMembers(TClass* cl, const clang::DeclContext* DC);
    bool IsClassAutoloadingEnabled() const;
+   void ProcessClassesToUpdate();
 };
 
 #endif

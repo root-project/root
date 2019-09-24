@@ -1799,6 +1799,29 @@ static void PrintDlError(const char *dyLibName, const char *modulename)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Update all the TClass registered in fClassesToUpdate
+
+void TCling::ProcessClassesToUpdate()
+{
+   while (!fClassesToUpdate.empty()) {
+      TClass *oldcl = fClassesToUpdate.back().first;
+      // If somehow the TClass has already been loaded (maybe it was registered several time),
+      // we skip it.  Otherwise, the existing TClass is in mode kInterpreted, kEmulated or
+      // maybe even kForwardDeclared and needs to replaced.
+      if (oldcl->GetState() != TClass::kHasTClassInit) {
+         // if (gDebug > 2) Info("RegisterModule", "Forcing TClass init for %s", oldcl->GetName());
+         DictFuncPtr_t dict = fClassesToUpdate.back().second;
+         fClassesToUpdate.pop_back();
+         // Calling func could manipulate the list so, let maintain the list
+         // then call the dictionary function.
+         TClass *ncl = dict();
+         if (ncl) ncl->PostLoadCheck();
+      } else {
+         fClassesToUpdate.pop_back();
+      }
+   }
+}
+////////////////////////////////////////////////////////////////////////////////
 /// Inject the module named "modulename" into cling; load all headers.
 /// headers is a 0-terminated array of header files to #include after
 /// loading the module. The module is searched for in all $LD_LIBRARY_PATH
@@ -2134,24 +2157,8 @@ void TCling::RegisterModule(const char* modulename,
    // but already had their type information available (using information/header
    // loaded from other modules or from class rules or from opening a TFile
    // or from loading header in a way that did not provoke the loading of
-   // the library we just laoded).
-   while (!fClassesToUpdate.empty()) {
-      TClass *oldcl = fClassesToUpdate.back().first;
-      // If somehow the TClass has already been loaded (maybe it was registered several time),
-      // we skip it.  Otherwise, the existing TClass is in mode kInterpreted, kEmulated or
-      // maybe even kForwardDeclared and needs to replaced.
-      if (oldcl->GetState() != TClass::kHasTClassInit) {
-         // if (gDebug > 2) Info("RegisterModule", "Forcing TClass init for %s", oldcl->GetName());
-         DictFuncPtr_t dict = fClassesToUpdate.back().second;
-         fClassesToUpdate.pop_back();
-         // Calling func could manipulate the list so, let maintain the list
-         // then call the dictionary function.
-         TClass *ncl = dict();
-         if (ncl) ncl->PostLoadCheck();
-      } else {
-         fClassesToUpdate.pop_back();
-      }
-   }
+   // the library we just loaded).
+   ProcessClassesToUpdate();
 
    if (!ModuleWasSuccessfullyLoaded && !hasHeaderParsingOnDemand) {
       // __ROOTCLING__ might be pulled in through PCH
@@ -6057,23 +6064,7 @@ Int_t TCling::AutoParse(const char *cls)
 
    Int_t nHheadersParsed = AutoParseImplRecurse(cls,/*topLevel=*/ true);
 
-   while (!fClassesToUpdate.empty()) {
-      TClass *oldcl = fClassesToUpdate.back().first;
-      // If somehow the TClass has already been loaded (maybe it was registered several time),
-      // we skip it.  Otherwise, the existing TClass is in mode kInterpreted, kEmulated or
-      // maybe even kForwardDeclared and needs to replaced.
-      if (oldcl->GetState() != TClass::kHasTClassInit) {
-         // if (gDebug > 2) Info("RegisterModule", "Forcing TClass init for %s", oldcl->GetName());
-         DictFuncPtr_t dict = fClassesToUpdate.back().second;
-         fClassesToUpdate.pop_back();
-         // Calling func could manipulate the list so, let maintain the list
-         // then call the dictionary function.
-         TClass *ncl = dict();
-         if (ncl) ncl->PostLoadCheck();
-      } else {
-         fClassesToUpdate.pop_back();
-      }
-   }
+   ProcessClassesToUpdate();
 
    return nHheadersParsed > 0 ? 1 : 0;
 }
