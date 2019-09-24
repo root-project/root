@@ -787,3 +787,25 @@ TEST(RNTuple, Descriptor)
    delete[] footerBuffer;
    delete[] headerBuffer;
 }
+
+// Tests ReadV in RColumn.hxx
+TEST(RNTuple, ReadString)
+{
+   const std::string_view ntupleName = "rs";
+   FileRaii fileGuard("test_ntuple_readstring.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto st = model->MakeField<std::string>("st");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, fileGuard.GetPath());
+
+      for (int i = 0; i < 25000; ++i) {
+      *st = "foooooo";
+      ntuple->Fill();
+      }
+   }
+
+   auto ntuple = RNTupleReader::Open(ntupleName, fileGuard.GetPath());
+   auto viewSt = ntuple->GetView<std::string>("st");
+   // assumes NElements per Page is 10000
+   EXPECT_EQ(viewSt(1428), "foooooo");
+}
