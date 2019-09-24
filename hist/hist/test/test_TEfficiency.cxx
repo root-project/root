@@ -30,27 +30,27 @@ bool testTEfficiency_vs_TGA(int nexp = 1000, TEfficiency::EStatOption statOpt = 
       h2->SetBinContent(1, n);
 
       // test the various option : case no mode (average) and shortes (no central)
-      // cannot be done with TGraphAsymmErrors. ROOT-10324 is missing mode central 
-      // that is now fixed 
+      // cannot be done with TGraphAsymmErrors. ROOT-10324 is missing mode central
+      // that is now fixed
       TGraphAsymmErrors *g = new TGraphAsymmErrors();
-      if (statOpt == TEfficiency::kBUniform &&  mode  && !central)
-         g->BayesDivide(h1, h2); // this is mode not central for uniform prior 
+      if (statOpt == TEfficiency::kBUniform && mode && !central)
+         g->BayesDivide(h1, h2); // this is mode not central for uniform prior
       else if (statOpt == TEfficiency::kBUniform && !mode && central)
-         g->Divide(h1, h2, "cl=0.683 b(1,1)");  // default is no mode and central  
+         g->Divide(h1, h2, "cl=0.683 b(1,1)"); // default is no mode and central
       else if (statOpt == TEfficiency::kBUniform && mode && central)
          g->Divide(h1, h2, "cl=0.683 b(1,1) mode central");
       else if (statOpt == TEfficiency::kBUniform && !mode && !central)
          g->Divide(h1, h2, "cl=0.683 b(1,1) shortest");
-      
+
       else if (statOpt == TEfficiency::kBJeffrey && mode && !central)
          g->Divide(h1, h2, "cl=0.683 b(0.5,0.5) mode");
       else if (statOpt == TEfficiency::kBJeffrey && !mode && central)
-         g->Divide(h1, h2, "cl=0.683 b(0.5,0.5) central");  // adding central is actually useless here but so we test this
+         g->Divide(h1, h2, "cl=0.683 b(0.5,0.5) central"); // adding central is actually useless here but so we test this
       else if (statOpt == TEfficiency::kBJeffrey && mode && central)
          g->Divide(h1, h2, "cl=0.683 b(0.5,0.5) mode central");
       else if (statOpt == TEfficiency::kBJeffrey && !mode && !central)
          g->Divide(h1, h2, "cl=0.683 b(0.5,0.5) shortest");
-      
+
       else if (statOpt == TEfficiency::kFCP)
          g->Divide(h1, h2, "cl=0.683 cp");
       else if (statOpt == TEfficiency::kFAC)
@@ -75,9 +75,8 @@ bool testTEfficiency_vs_TGA(int nexp = 1000, TEfficiency::EStatOption statOpt = 
       e->SetPosteriorMode(mode);
       if (central)
          e->SetCentralInterval();
-      else 
+      else
          e->SetShortestInterval();
-         
 
       e->SetConfidenceLevel(0.683);
 
@@ -356,9 +355,9 @@ void testConsistencyWithTGraph()
 {
    // check consistency between TEfficiency and TGraphAsymmErrors
    std::cout << "uniform prior with mode: ";
-   testTEfficiency_vs_TGA(1000, TEfficiency::kBUniform, true,false);
+   testTEfficiency_vs_TGA(1000, TEfficiency::kBUniform, true, false);
    std::cout << "uniform prior with mean and central: ";
-   testTEfficiency_vs_TGA(1000, TEfficiency::kBUniform, false,true);
+   testTEfficiency_vs_TGA(1000, TEfficiency::kBUniform, false, true);
    std::cout << "uniform prior with mode and central interval: ";
    testTEfficiency_vs_TGA(1000, TEfficiency::kBUniform, true, true); // case of ROOT-10324
    std::cout << "uniform prior with mean and shortest ";
@@ -366,11 +365,11 @@ void testConsistencyWithTGraph()
    std::cout << "Jeffrey prior with mode: ";
    testTEfficiency_vs_TGA(1000, TEfficiency::kBJeffrey, true, false);
    std::cout << "Jeffrey prior with mean and central: ";
-   testTEfficiency_vs_TGA(1000, TEfficiency::kBJeffrey, false,true);
+   testTEfficiency_vs_TGA(1000, TEfficiency::kBJeffrey, false, true);
    std::cout << "Jeffrey prior with mode and central: ";
-   testTEfficiency_vs_TGA(1000, TEfficiency::kBJeffrey, true,true );
+   testTEfficiency_vs_TGA(1000, TEfficiency::kBJeffrey, true, true);
    std::cout << "Jeffrey prior with mean and shortest: ";
-   testTEfficiency_vs_TGA(1000, TEfficiency::kBJeffrey, false,false);
+   testTEfficiency_vs_TGA(1000, TEfficiency::kBJeffrey, false, false);
    std::cout << "Clopper-Pearson: ";
    testTEfficiency_vs_TGA(1000, TEfficiency::kFCP);
    std::cout << "Agresti-Coull: ";
