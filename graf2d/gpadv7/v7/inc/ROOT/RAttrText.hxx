@@ -43,7 +43,7 @@ class RAttrText : public RAttrBase {
    RAttrText &SetAngle(double angle) { SetValue("angle", angle); return *this; }
    double GetAngle() const { return GetValue<double>("angle"); }
 
-   ///The text align
+   ///The text alignment
    RAttrText &SetAlign(int align) { SetValue("align", align); return *this; }
    int GetAlign() const { return GetValue<int>("align"); }
 
@@ -51,7 +51,7 @@ class RAttrText : public RAttrBase {
    RAttrText &SetFont(int font) { SetValue("font", font); return *this; }
    int GetFont() const { return GetValue<int>("font"); }
 
-   ///The color of the line.
+   ///The color of the text.
    RAttrText &SetColor(const RColor &color) { fColor = color; return *this; }
    const RColor &Color() const { return fColor; }
    RColor &Color() { return fColor; }
