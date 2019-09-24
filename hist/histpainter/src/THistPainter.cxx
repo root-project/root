@@ -1818,7 +1818,7 @@ Therefore to use this functionality in a macro, `gPad->Update()`
 should be performed after the histogram drawing. Once the list is
 built, the contours are accessible in the following way:
 
-    TObjArray *contours = gROOT->GetListOfSpecials()->FindObject("contours")
+    TObjArray *contours = (TObjArray*)gROOT->GetListOfSpecials()->FindObject("contours");
     Int_t ncontours     = contours->GetSize();
     TList *list         = (TList*)contours->At(i);
 
