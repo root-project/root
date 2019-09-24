@@ -49,11 +49,8 @@ bool ROOT::Experimental::RAttrBase::CopyValue(const std::string &name, const RAt
 ///////////////////////////////////////////////////////////////////////////////
 /// Copy attributes into target object
 
-bool ROOT::Experimental::RAttrBase::IsValueEqual(const std::string &name, const RAttrMap::Value_t *value, bool use_style) const
+bool ROOT::Experimental::RAttrBase::IsValueEqual(const std::string &name, const RAttrMap::Value_t &value, bool use_style) const
 {
-   if (!value)
-      return false;
-
    if (auto v = AccessValue(name, use_style))
       return v.value->IsEqual(value);
 
@@ -78,7 +75,7 @@ bool ROOT::Experimental::RAttrBase::IsSame(const RAttrBase &tgt, bool use_style)
 {
    for (const auto &entry : GetDefaults()) {
       if (auto v = AccessValue(entry.first, use_style))
-         if (!tgt.IsValueEqual(entry.first, v.value, use_style)) return false;
+         if (!tgt.IsValueEqual(entry.first, *v.value, use_style)) return false;
    }
    return true;
 }
@@ -118,13 +115,6 @@ void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, double val
 {
    if (auto access = EnsureAttr(name))
       access.attr->AddDouble(access.fullname, value);
-}
-
-double *ROOT::Experimental::RAttrBase::GetDoublePtr(const std::string &name) const
-{
-   if (auto access = AccessAttr(name))
-      return access.attr->GetDoublePtr(access.fullname);
-   return nullptr;
 }
 
 void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, const std::string &value)
