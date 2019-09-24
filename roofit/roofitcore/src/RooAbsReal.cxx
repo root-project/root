@@ -4947,8 +4947,8 @@ void RooAbsReal::checkBatchComputation(std::size_t evtNo, const RooArgSet* normS
 
         auto serverAsReal = dynamic_cast<RooAbsReal*>(server);
         if (serverAsReal) {
-          const BatchHelpers::BatchData& batchData = serverAsReal->batchData();
-          RooSpan<const double> theBatch = batchData.getBatch(evtNo-1, 3);
+          const BatchHelpers::BatchData& serverBatchData = serverAsReal->batchData();
+          RooSpan<const double> theBatch = serverBatchData.getBatch(evtNo-1, 3);
           if (!theBatch.empty()) {
             formatter << "\n   _batch[" << evtNo-1 << "]=" << theBatch[0]
                                                                        << "\n   _batch[" << evtNo << "]=" << theBatch[1]
