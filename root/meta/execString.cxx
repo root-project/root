@@ -51,6 +51,24 @@ int execString()
      ++badresult;
    }
 
+   gInterpreter->Declare("namespace std { inline namespace __cxx11 {} } ");
+
+   longname = "std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > >";
+   output = TClassEdit::ShortType(longname,TClassEdit::kDropAllDefault);
+   badresult += !checkResult("ShortType",output,"std::vector<std::string>");
+
+   cl = TClass::GetClass(longname);
+   if (cl) {
+     output = cl->GetName();
+     badresult += !checkResult("GetClass",output,"vector<string>");
+     if (!cl->IsLoaded()) {
+       Error("execString","When calling GetClass with %s, the TClass is in state %d",longname, cl->GetState());
+       ++badresult;
+     }
+   } else {
+     Error("execString","When calling GetClass with %s, no object was returned",longname);
+     ++badresult;
+   }
 
    return badresult;
 }
