@@ -39,7 +39,7 @@ protected:
 
    bool CopyValue(const std::string &name, const RAttrMap::Value_t &value, bool check_type = true);
 
-   bool IsValueEqual(const std::string &name, const RAttrMap::Value_t *value, bool use_style = false) const;
+   bool IsValueEqual(const std::string &name, const RAttrMap::Value_t &value, bool use_style = false) const;
 
    ///////////////////////////////////////////////////////////////////////////////
 
@@ -114,18 +114,15 @@ protected:
    auto Eval(const std::string &name, bool use_dflts = true) const
    {
       if (auto v = AccessValue(name, true))
-         return RAttrMap::Value_t::get_value<RET_TYPE,MATCH_TYPE>(v.value);
+         return RAttrMap::Value_t::GetValue<RET_TYPE,MATCH_TYPE>(v.value);
 
       const RAttrMap::Value_t *rec = nullptr;
 
       if (use_dflts)
          rec = GetDefaults().Find(name);
 
-      return RAttrMap::Value_t::get_value<RET_TYPE,MATCH_TYPE>(rec);
+      return RAttrMap::Value_t::GetValue<RET_TYPE,MATCH_TYPE>(rec);
    }
-
-
-   double *GetDoublePtr(const std::string &name) const;
 
    void CopyTo(RAttrBase &tgt, bool use_style = true) const;
 

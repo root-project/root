@@ -39,7 +39,6 @@ public:
 
    class Value_t {
    public:
-      Value_t() = default;
       virtual ~Value_t() = default;
       virtual EValuesKind Kind() const = 0;
       virtual bool Compatible(EValuesKind kind) const { return kind == Kind(); }
@@ -47,14 +46,13 @@ public:
       virtual int GetInt() const { return 0; }
       virtual double GetDouble() const { return 0; }
       virtual std::string GetString() const { return ""; }
-      virtual bool IsEqual(const Value_t *) const { return false; }
+      virtual bool IsEqual(const Value_t &) const { return false; }
       virtual Value_t *Copy() const = 0;
-      virtual const void *GetValuePtr() const { return nullptr; }
 
-      template<typename T> T get() const;
+      template<typename T> T Get() const;
 
-      template <typename T, typename second = void>
-      static T get_value(const Value_t *rec);
+      template <typename RET_TYPE, typename MATCH_TYPE = void>
+      static RET_TYPE GetValue(const Value_t *rec);
    };
 
    class BoolValue_t : public Value_t {
@@ -64,7 +62,7 @@ public:
       EValuesKind Kind() const final { return kBool; }
       bool GetBool() const final { return v; }
       Value_t *Copy() const final { return new BoolValue_t(v); }
-      bool IsEqual(const Value_t *tgt) const final { return (tgt->Kind() == kBool) && (tgt->GetBool() == v); }
+      bool IsEqual(const Value_t &tgt) const final { return (tgt.Kind() == kBool) && (tgt.GetBool() == v); }
    };
 
 
@@ -75,7 +73,7 @@ public:
       EValuesKind Kind() const final { return kInt; }
       int GetInt() const final { return v; }
       Value_t *Copy() const final { return new IntValue_t(v); }
-      bool IsEqual(const Value_t *tgt) const final { return (tgt->Kind() == kInt) && (tgt->GetInt() == v); }
+      bool IsEqual(const Value_t &tgt) const final { return (tgt.Kind() == kInt) && (tgt.GetInt() == v); }
    };
 
    class DoubleValue_t : public Value_t {
@@ -85,8 +83,7 @@ public:
       EValuesKind Kind() const final { return kDouble; }
       double GetDouble() const final { return v; }
       Value_t *Copy() const final { return new DoubleValue_t(v); }
-      bool IsEqual(const Value_t *tgt) const final { return (tgt->Kind() == kDouble) && (tgt->GetDouble() == v); }
-      const void *GetValuePtr() const final { return &v; }
+      bool IsEqual(const Value_t &tgt) const final { return (tgt.Kind() == kDouble) && (tgt.GetDouble() == v); }
    };
 
    class StringValue_t : public Value_t {
@@ -95,7 +92,7 @@ public:
       StringValue_t(const std::string _v = "") : v(_v) {}
       EValuesKind Kind() const final { return kString; }
       std::string GetString() const final { return v; }
-      bool IsEqual(const Value_t *tgt) const final { return (tgt->Kind() == kString) && (tgt->GetString() == v); }
+      bool IsEqual(const Value_t &tgt) const final { return (tgt.Kind() == kString) && (tgt.GetString() == v); }
       Value_t *Copy() const final { return new StringValue_t(v); }
    };
 
@@ -116,12 +113,6 @@ public:
    RAttrMap &AddDouble(const std::string &name, double value) { m[name] = std::make_unique<DoubleValue_t>(value); return *this; }
    RAttrMap &AddString(const std::string &name, const std::string &value) { m[name] = std::make_unique<StringValue_t>(value); return *this; }
    RAttrMap &AddDefaults(const RAttrBase &vis);
-
-   double *GetDoublePtr(const std::string &name) const
-   {
-      auto pair = m.find(name);
-      return ((pair != m.end()) && (pair->second->Kind() == kDouble)) ? (double *) pair->second->GetValuePtr() : nullptr;
-   }
 
    RAttrMap(const RAttrMap &src)
    {
@@ -154,20 +145,20 @@ public:
    auto end() const { return m.end(); }
 };
 
-template<> bool RAttrMap::Value_t::get<bool>() const;
-template<> int RAttrMap::Value_t::get<int>() const;
-template<> double RAttrMap::Value_t::get<double>() const;
-template<> std::string RAttrMap::Value_t::get<std::string>() const;
+template<> bool RAttrMap::Value_t::Get<bool>() const;
+template<> int RAttrMap::Value_t::Get<int>() const;
+template<> double RAttrMap::Value_t::Get<double>() const;
+template<> std::string RAttrMap::Value_t::Get<std::string>() const;
 
-template<> bool RAttrMap::Value_t::get_value<bool,void>(const Value_t *rec);
-template<> int RAttrMap::Value_t::get_value<int,void>(const Value_t *rec);
-template<> double RAttrMap::Value_t::get_value<double,void>(const Value_t *rec);
-template<> std::string RAttrMap::Value_t::get_value<std::string,void>(const Value_t *rec);
-template<> const RAttrMap::Value_t *RAttrMap::Value_t::get_value<const RAttrMap::Value_t *,void>(const Value_t *rec);
-template<> const RAttrMap::Value_t *RAttrMap::Value_t::get_value<const RAttrMap::Value_t *,bool>(const Value_t *rec);
-template<> const RAttrMap::Value_t *RAttrMap::Value_t::get_value<const RAttrMap::Value_t *,int>(const Value_t *rec);
-template<> const RAttrMap::Value_t *RAttrMap::Value_t::get_value<const RAttrMap::Value_t *,double>(const Value_t *rec);
-template<> const RAttrMap::Value_t *RAttrMap::Value_t::get_value<const RAttrMap::Value_t *,std::string>(const Value_t *rec);
+template<> bool RAttrMap::Value_t::GetValue<bool,void>(const Value_t *rec);
+template<> int RAttrMap::Value_t::GetValue<int,void>(const Value_t *rec);
+template<> double RAttrMap::Value_t::GetValue<double,void>(const Value_t *rec);
+template<> std::string RAttrMap::Value_t::GetValue<std::string,void>(const Value_t *rec);
+template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,void>(const Value_t *rec);
+template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,bool>(const Value_t *rec);
+template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,int>(const Value_t *rec);
+template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,double>(const Value_t *rec);
+template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,std::string>(const Value_t *rec);
 
 
 //////////////////////////////////////////////////////////////////////////
