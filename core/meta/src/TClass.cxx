@@ -1378,6 +1378,17 @@ void TClass::Init(const char *name, Version_t cversion,
       // Move the Schema Rules too.
       fSchemaRules = oldcl->fSchemaRules;
       oldcl->fSchemaRules = 0;
+
+      // Move the TFunctions.
+      fFuncTemplate = oldcl->fFuncTemplate;
+      if (fFuncTemplate)
+         fFuncTemplate->fClass = this;
+      oldcl->fFuncTemplate = nullptr;
+      fMethod.store( oldcl->fMethod );
+      if (fMethod)
+         (*fMethod).fClass = this;
+      oldcl->fMethod = nullptr;
+
    }
 
    SetBit(kLoading);

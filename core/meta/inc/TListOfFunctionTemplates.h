@@ -34,6 +34,8 @@ class TFunctionTemplate;
 class TListOfFunctionTemplates : public THashList
 {
 private:
+   friend class TClass;
+
    typedef TDictionary::DeclId_t DeclId_t;
    TClass    *fClass; // Context of this list.  Not owned.
 
