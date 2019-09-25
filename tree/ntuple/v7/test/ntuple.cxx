@@ -793,6 +793,8 @@ TEST(RNTuple, ReadString)
 {
    const std::string_view ntupleName = "rs";
    constexpr int numEntries = 2500;
+   const std::string contentString = "foooooo";
+
    FileRaii fileGuard("test_ntuple_readstring.root");
    {
       auto model = RNTupleModel::Create();
@@ -800,7 +802,7 @@ TEST(RNTuple, ReadString)
       auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, fileGuard.GetPath());
 
       for (int i = 0; i < numEntries; ++i) {
-         *st = "foooooo";
+         *st = contentString;
          ntuple->Fill();
       }
    }
@@ -811,5 +813,5 @@ TEST(RNTuple, ReadString)
       FAIL(); // This means all entries are inside the same page and numEntries should be increased.
    }
    int nElementsPerPage = ntuple->GetDescriptor().GetClusterDescriptor(0).GetPageRange(1).fPageInfos.at(1).fNElements;
-   EXPECT_EQ(viewSt(nElementsPerPage/7), "foooooo");
+   EXPECT_EQ(contentString, viewSt(nElementsPerPage/7));
 }
