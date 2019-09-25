@@ -217,6 +217,21 @@ void REveDataItem::SetFiltered(bool f)
   }
 }
 
+void REveDataItem::FillImpliedSelectedSet(Set_t &impSelSet)
+{
+   for (auto &n : fNieces)
+   {
+      impSelSet.insert(n);
+      n->FillImpliedSelectedSet(impSelSet);
+
+      if (gDebug > 1)
+      {
+         printf("REveDataItem::FillImpliedSelectedSet added niece '%s' [%s]\n",
+                n->GetCName(), n->IsA()->GetName());
+      }
+   }
+}
+
 //==============================================================================
 // REveDataTable
 //==============================================================================

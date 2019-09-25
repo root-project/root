@@ -101,12 +101,13 @@ REveManager::REveManager() : // (Bool_t map_window, Option_t* opt) :
    AssignElementId(fWorld);
 
    fSelectionList = new REveElement("Selection List");
+   fSelectionList->SetChildClass(TClass::GetClass<REveSelection>());
    fSelectionList->IncDenyDestroy();
    fWorld->AddElement(fSelectionList);
-   fSelection = new REveSelection("Global Selection");
+   fSelection = new REveSelection("Global Selection", "", kRed, kViolet);
    fSelection->IncDenyDestroy();
    fSelectionList->AddElement(fSelection);
-   fHighlight = new REveSelection("Global Highlight");
+   fHighlight = new REveSelection("Global Highlight", "", kGreen, kCyan);
    fHighlight->SetHighlightMode();
    fHighlight->IncDenyDestroy();
    fSelectionList->AddElement(fHighlight);
@@ -215,16 +216,6 @@ TMacro* REveManager::GetMacro(const char* name) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Show element in default editor.
-
-void REveManager::EditElement(REveElement* /*element*/)
-{
-   static const REveException eh("REveManager::EditElement ");
-
-   // GetEditor()->DisplayElement(element);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Register a request for 3D redraw.
 
 void REveManager::RegisterRedraw3D()
@@ -268,31 +259,16 @@ void REveManager::FullRedraw3D(Bool_t /*resetCameras*/, Bool_t /*dropLogicals*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Element was changed, perform framework side action.
-/// Called from REveElement::ElementChanged().
+/// Clear all selection objects. Can make things easier for EVE when going to
+/// the next event. Still, destruction os selected object should still work
+/// correctly as long as it is executed within a change cycle.
 
-void REveManager::ElementChanged(REveElement* element, Bool_t update_scenes, Bool_t redraw)
+void REveManager::ClearAllSelections()
 {
-   static const REveException eh("REveElement::ElementChanged ");
-
-   // XXXXis this still needed at all ????
-   if (update_scenes) {
-      REveElement::List_t scenes;
-      element->CollectScenes(scenes);
-      ScenesChanged(scenes);
+   for (auto el : fSelectionList->fChildren)
+   {
+      dynamic_cast<REveSelection*>(el)->ClearSelection();
    }
-
-   if (redraw)
-      Redraw3D();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Mark all scenes from the given list as changed.
-
-void REveManager::ScenesChanged(REveElement::List_t &scenes)
-{
-   for (auto &s: scenes)
-      ((REveScene*)s)->Changed();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -382,6 +358,7 @@ void REveManager::PreDeleteElement(REveElement* el)
       if (el->fImpliedSelected != 0)
          Error("REveManager::PreDeleteElement", "ImpliedSelected not zero (%d) after cleanup of selections.", el->fImpliedSelected);
    }
+   // Primary selection deregistration is handled through Niece removal from Aunts.
 
    if (el->fElementId != 0)
    {
@@ -398,30 +375,6 @@ void REveManager::PreDeleteElement(REveElement* el)
       else Error("PreDeleteElement", "element id %u was not registered in ElementIdMap.", el->fElementId);
    }
    else Error("PreDeleteElement", "element with 0 ElementId passed in.");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Select an element.
-/// Now it only calls EditElement() - should also update selection state.
-
-void REveManager::ElementSelect(REveElement* element)
-{
-   if (element)
-      EditElement(element);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Paste has been called.
-
-Bool_t REveManager::ElementPaste(REveElement* element)
-{
-   // The object to paste is taken from the editor (this is not
-   // exactly right) and handed to 'element' for pasting.
-
-   REveElement* src = 0; // GetEditor()->GetEveElement();
-   if (src)
-      return element->HandleElementPaste(src);
-   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
