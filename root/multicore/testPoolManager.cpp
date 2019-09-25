@@ -7,11 +7,11 @@ unsigned testTPoolManager(){
 
     {
     auto sched = ROOT::Internal::GetPoolManager(tbb::task_scheduler_init::default_num_threads());
-    if(ROOT::Internal::TPoolManager::GetPoolSize()!= tbb::task_scheduler_init::default_num_threads())
+    if( (int)ROOT::Internal::TPoolManager::GetPoolSize() != (int)tbb::task_scheduler_init::default_num_threads())
        return 1;
 
     auto sched1 = ROOT::Internal::GetPoolManager(5);
-    if(ROOT::Internal::TPoolManager::GetPoolSize()!= tbb::task_scheduler_init::default_num_threads())
+    if( (int)ROOT::Internal::TPoolManager::GetPoolSize() != (int)tbb::task_scheduler_init::default_num_threads())
        return 2;
     }
 
