@@ -841,13 +841,13 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
 
       // use bin contents
       else {
-         t = int(total->GetBinContent(b) + 0.5);
-         p = int(pass->GetBinContent(b) + 0.5);
+         t = std::round(total->GetBinContent(b));
+         p = std::round(pass->GetBinContent(b));
 
          if (bPoissonRatio)
             t += p;
 
-         if (!t && !plot0Bins)
+         if (t == 0.0 && !plot0Bins)
             continue; // skip bins with total = 0
       }
 
@@ -910,7 +910,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
          }
          else {
             // when not using weights (all cases) or in case of  Poisson ratio with weights
-            if(t)
+            if(t != 0.0)
                eff = ((Double_t)p)/t;
 
             low = pBound(t,p,conf,false);
