@@ -4092,7 +4092,14 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
 
    // If the location is a macro get the expansion location.
    sourceLocation = sourceManager.getExpansionRange(sourceLocation).second;
-   if (sourceManager.isLoadedSourceLocation(sourceLocation)) {
+   // FIXME: We should optimize this routine instead making it do the wrong thing
+   // returning an empty comment if the decl came from the AST.
+   // In order to do that we need to: check if the decl has an attribute and
+   // return the attribute content (including walking the redecl chain) and if
+   // this is not the case we should try finding it in the header file.
+   // This will allow us to move the implementation of TCling*Info::Title() in
+   // TClingDeclInfo.
+   if (!decl.hasOwningModule() && sourceManager.isLoadedSourceLocation(sourceLocation)) {
       // Do not touch disk for nodes coming from the PCH.
       return "";
    }
