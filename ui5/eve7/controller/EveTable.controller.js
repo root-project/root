@@ -31,13 +31,13 @@ sap.ui.define([
          this.mgr = data.mgr;
          this.elementid = data.elementid;
          this.kind = data.kind;
-
+         
+         this.bindTableColumns = true;
          var element = this.mgr.GetElement(this.elementid);
          // loop over scene and add dependency
          for (var k=0;k<element.childs.length;++k) {
             var scene = element.childs[k];
             this.mgr.RegisterSceneReceiver(scene.fSceneId, this);
-            console.log("on init ....table controller");
             this.onSceneCreate();
          }
       },
@@ -54,13 +54,13 @@ sap.ui.define([
             this.viewInfo = scene.childs[0];
          }
 
-         console.log("table viewinfo", this.viewInfo  );
+         // console.log("table viewinfo", this.viewInfo  );
          this.collection = this.mgr.GetElement(this.viewInfo.fDisplayedCollection);
          // loop over products
          for (var i = 1; i < scene.childs.length; ++i) {
             var product = scene.childs[i];
             if (product.childs && product.childs.length && product.childs[0].fCollectionId == this.viewInfo.fDisplayedCollection) {
-               console.log("table found  ",product.childs[0] );
+               // console.log("table found  ",product.childs[0] );
                this.eveTable =  product.childs[0];
                break;
             }
@@ -68,33 +68,43 @@ sap.ui.define([
 
       },
 
-      buildTableBody: function(doBind)
+      buildTableBody: function()
       {
          var oTable = this.getView().byId("table");
 
          // row definition
          var rowData = this.eveTable.body;
+
+         // parse to float -- AMT in future data should be streamed as floats
+         for (var r=0; r < rowData.length; r++) {
+            var xr = rowData[r];
+            for (var xri = 0; xri < xr.length; xri++) {
+               var nv = parseFloat(xr[i]);
+               if (nv != NaN) {
+                  rowData[r][ri] = nv;
+               }
+            }
+         }
+
          for (var i = 0; i < this.collection.childs.length; i++)
          {
             rowData[i].Name =  this.collection.childs[i].fName;
             rowData[i].Filtered =  this.collection.childs[i].fFiltered === true ? "--" : "*";
          }
 
-         if (doBind) {
+         if (this.bindTableColumns) {
             // column definition
             var columnData = [];
 
             columnData.push({columnName:"Name"});
             columnData.push({columnName:"Filtered"});
 
-            console.log("buildTableBody",this.eveTable );
             var eveColumns = this.eveTable.childs;
             for (var i = 0; i < eveColumns.length; i++)
             {
                var cname = eveColumns[i].fName;
                columnData.push({columnName : cname});
             }
-
 
             // table model
             var oModel = new JSONModel();
@@ -104,29 +114,17 @@ sap.ui.define([
             });
             oTable.setModel(oModel);
 
-            /*
-            // bind rows and columns
-            oTable.bindColumns("/columns", function(sId, oContext) {
-            var columnName = oContext.getObject().columnName;
-            var oColumn = new Column({
-            label: columnName,
-            template: columnName,
-            sortProperty: columnName,
-            showFilterMenuEntry: true
-            });
-            return oColumn;
-            });
-            */
-
             oTable.bindAggregation("columns", "/columns", function(sId, oContext) {
                return new sap.ui.table.Column(sId, {
 	          label: "{columnName}",
+	          sortProperty: "{columnName}",
 	          template: new sap.m.Text().bindText(oContext.getProperty("columnName")),
                   showFilterMenuEntry: true,
                   width: "100px"
                });
             });
             oTable.bindRows("/rows");
+            this.bindTableColumns = false;
          }
          else
          {
@@ -299,9 +297,10 @@ sap.ui.define([
 
          // console.log("table element id ", pthis.eveTable.fElementId);
 
-         var obj = {"mir" : mir, "fElementId" :pthis.viewInfo.fElementId, "class" : pthis.eveTable._typename};
+         var obj = {"mir" : mir, "fElementId" :pthis.viewInfo.fElementId, "class" : pthis.viewInfo._typename};
          // console.log("MIR obj ", obj);
-         pthis.mgr.handle.Send(JSON.stringify(obj));
+         //pthis.mgr.handle.Send(JSON.stringify(obj));
+         pthis.mgr.SendMIR(obj);
       },
 
       collectionChanged: function(oEvent) {
@@ -311,23 +310,24 @@ sap.ui.define([
          var entry = model.getProperty(path);
          var coll = entry.elementId;
          var mng =  this.viewInfo;
-         var mir = {"elementid" : mng.fElementId, "elementclass":mng._typename};
-         mir.func = "SetDisplayedCollection(" + coll + ")";
 
-         this.mgr.executeCommand(mir);
+         var mir = "SetDisplayedCollection(" + coll + ")";
+         var obj = {"mir" : mir, "fElementId" : mng.fElementId, "class":mng._typename };    
+         this.mgr.SendMIR(obj);
       },
 
-      sceneElementChange : function(msg)
+      sceneElementChange : function(el)
       {
-        // AMT for the moment always recreate table in endChanges
-        // var el = this.mgr.GetElement(msg.fElementId);
-        // this[msg.tag](el);
+         // console.log("table sceneElementChange", el);
+         if (el._typename == "ROOT::Experimental::REveTableViewInfo") {
+            this.bindTableColumns = true;
+         }
       },
 
       endChanges : function(oEvent) {
-         console.log("table controller endChanges ",this.eveTable );
+         // console.log("table controller endChanges ",this.eveTable );
          this.locateEveTable();
-         this.buildTableBody(false);
+         this.buildTableBody();
       },
 
       elementRemoved: function(elId) {

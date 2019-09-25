@@ -21,6 +21,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     ROOT/REveGeomViewer.hxx
     ROOT/REveGluTess.hxx
     ROOT/REveJetCone.hxx
+    ROOT/REveEllipsoid.hxx
     ROOT/REveLine.hxx
     ROOT/REveManager.hxx
     ROOT/REvePathMark.hxx
@@ -75,6 +76,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     src/REveGeomViewer.cxx
     src/REveGluTess.cxx
     src/REveJetCone.cxx
+    src/REveEllipsoid.cxx
     src/REveLine.cxx
     src/REveManager.cxx
     src/REvePathMark.cxx

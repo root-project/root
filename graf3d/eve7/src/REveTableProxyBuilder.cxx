@@ -44,7 +44,7 @@ void REveTableProxyBuilder::Build(const REveDataCollection* collection, REveElem
          auto c = new REveDataColumn(spec.fName.c_str());
          fTable->AddElement(c);
          using namespace std::string_literals;
-         std::string exp  = "i."s + spec.fExpression + "()"s;
+         std::string exp  =  spec.fExpression;
          c->SetExpressionAndType(exp.c_str(), spec.fType);
          c->SetPrecision(spec.fPrecision);
       }

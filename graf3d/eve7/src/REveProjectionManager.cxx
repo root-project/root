@@ -140,17 +140,6 @@ void REveProjectionManager::SetCenter(Float_t x, Float_t y, Float_t z)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// React to element being pasted or dnd-ed.
-/// Return true if redraw is needed (virtual method).
-
-Bool_t REveProjectionManager::HandleElementPaste(REveElement* el)
-{
-   List_t::size_type n_children  = fChildren.size();
-   ImportElements(el);
-   return n_children != fChildren.size();
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Returns true if element el should be imported.
 ///
 /// Behaviour depends on the value of the fImportEmpty member:
@@ -174,7 +163,7 @@ Bool_t REveProjectionManager::ShouldImport(REveElement *el)
 /// Update dependent elements' bounding box and mark scenes
 /// containing element root or its children as requiring a repaint.
 
-void REveProjectionManager::UpdateDependentElsAndScenes(REveElement *root)
+void REveProjectionManager::UpdateDependentElsAndScenes(REveElement */*root*/)
 {
    for (auto &d: fDependentEls) {
       TAttBBox* bbox = dynamic_cast<TAttBBox *>(d);
@@ -182,6 +171,11 @@ void REveProjectionManager::UpdateDependentElsAndScenes(REveElement *root)
          bbox->ComputeBBox();
    }
 
+   static int warn_count = 0;
+   if (++warn_count <= 5)
+      Warning("REveProjectionManager::UpdateDependentElsAndScenes",
+              "Figure out if scene stamping is still needed.");
+   /*
    List_t scenes;
    root->CollectScenes(scenes);
    if (root == this)
@@ -189,6 +183,7 @@ void REveProjectionManager::UpdateDependentElsAndScenes(REveElement *root)
          n->CollectScenes(scenes);
 
    REX::gEve->ScenesChanged(scenes);
+   */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -354,7 +349,7 @@ void REveProjectionManager::ProjectChildrenRecurse(REveElement* el)
          BBoxCheckPoint(b[0], b[2], b[4]);
          BBoxCheckPoint(b[1], b[3], b[5]);
       }
-      el->ElementChanged(kFALSE);
+      el->StampObjProps();
    }
 
    for (auto &c : el->RefChildren())  ProjectChildrenRecurse(c);

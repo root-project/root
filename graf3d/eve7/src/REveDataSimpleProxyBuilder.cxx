@@ -42,7 +42,9 @@ REveDataSimpleProxyBuilder::Build(const REveDataCollection *collection,
    auto pIdx = product->RefChildren().begin();
    for (int index = 0; index < size; ++index)
    {
+      auto di = Collection()->GetDataItem(index);
       REveElement *itemHolder = nullptr;
+
       if (index <  product->NumChildren())
       {
          itemHolder = *pIdx;
@@ -53,11 +55,14 @@ REveDataSimpleProxyBuilder::Build(const REveDataCollection *collection,
       {
          itemHolder = CreateCompound(true, true);
          itemHolder->SetMainColor(collection->GetMainColor());
-         SetupAddElement(itemHolder, product, true);
          itemHolder->SetName(Form("compound %d", index));
 
+         product->AddElement(itemHolder);
       }
-      auto di = Collection()->GetDataItem(index);
+
+      di->AddNiece(itemHolder);
+      itemHolder->SetSelectionMaster(di);
+
       if (di->GetRnrSelf() && !di->GetFiltered())
       {
          Build(collection->GetDataPtr(index), index, itemHolder, vc);
@@ -73,7 +78,9 @@ REveDataSimpleProxyBuilder::BuildViewType(const REveDataCollection* collection,
    auto pIdx = product->RefChildren().begin();
    for (int index = 0; index < size; ++index)
    {
+      auto di = Collection()->GetDataItem(index);
       REveElement* itemHolder = nullptr;
+
       if (index <  product->NumChildren())
       {
          itemHolder = *pIdx;
@@ -84,11 +91,14 @@ REveDataSimpleProxyBuilder::BuildViewType(const REveDataCollection* collection,
       {
          itemHolder = CreateCompound(true, true);
          itemHolder->SetMainColor(collection->GetMainColor());
-         SetupAddElement(itemHolder, product, true);
          itemHolder->SetName(Form("compound %d", index));
 
+         product->AddElement(itemHolder);
       }
-      auto di = Collection()->GetDataItem(index);
+
+      di->AddNiece(itemHolder);
+      itemHolder->SetSelectionMaster(di);
+
       if (di->GetRnrSelf() && !di->GetFiltered())
       {
          BuildViewType(collection->GetDataPtr(index), index, itemHolder, viewType, vc);

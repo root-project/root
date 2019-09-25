@@ -91,7 +91,8 @@ public:
 
 //==============================================================================
 
-class REveDataItem : public REveElement
+class REveDataItem : public REveElement,
+                     public REveAuntAsList
 {
 protected:
    Bool_t fFiltered{false};
@@ -105,6 +106,8 @@ public:
 
    virtual void SetItemColorRGB(UChar_t r, UChar_t g, UChar_t b);
    virtual void SetItemRnrSelf(bool);
+
+   virtual void FillImpliedSelectedSet(Set_t& impSelSet) override;
 
    Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
 };

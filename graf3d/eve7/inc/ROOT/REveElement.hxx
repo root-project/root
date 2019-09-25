@@ -46,7 +46,9 @@ namespace nlohmann {
            template<typename T, typename SFINAE> class JSONSerializer>
      class basic_json;
 
-   using json = basic_json<std::map, std::vector, std::string, bool, std::int64_t, std::uint64_t, double, std::allocator, adl_serializer>;
+   using json = basic_json<std::map, std::vector, std::string,
+                           bool, std::int64_t, std::uint64_t, double,
+                           std::allocator, adl_serializer>;
 }
 
 namespace ROOT {
@@ -82,8 +84,9 @@ private:
    ElementId_t      fElementId{0};        // Unique ID of an element.
 
 protected:
-   REveElement     *fMother{nullptr};
-   REveScene       *fScene{nullptr};
+   REveElement     *fMother {nullptr};
+   REveScene       *fScene  {nullptr};
+   REveElement     *fSelectionMaster {nullptr};
 
    ElementId_t get_mother_id() const;
    ElementId_t get_scene_id()  const;
@@ -96,9 +99,9 @@ protected:
    std::string      fTitle;                //  Element title / tooltip
    AuntList_t       fAunts;                //  List of aunts.
    List_t           fChildren;             //  List of children.
-   TClass          *fChildClass{nullptr};  //  Class of acceptable children, others are rejected.
-   REveCompound    *fCompound{nullptr};    //  Compound this object belongs to.
-   REveElement     *fVizModel{nullptr};    //! Element used as model from VizDB.
+   TClass          *fChildClass {nullptr}; //  Class of acceptable children, others are rejected.
+   REveCompound    *fCompound   {nullptr}; //  Compound this object belongs to.
+   REveElement     *fVizModel   {nullptr}; //! Element used as model from VizDB.
    TString          fVizTag;               //  Tag used to query VizDB for model element.
 
    Int_t            fDenyDestroy{0};          //! Deny-destroy count.
@@ -164,7 +167,6 @@ public:
    void           SaveVizParams (std::ostream &out, const TString &tag, const TString &var);
    virtual void   WriteVizParams(std::ostream &out, const TString &var);
 
-   REveElement*   GetMaster();
    REveCompound*  GetCompound()                { return fCompound; }
    void           SetCompound(REveCompound* c) { fCompound = c;    }
 
@@ -177,7 +179,6 @@ public:
    virtual void AddAunt(REveAunt *au);
    virtual void RemoveAunt(REveAunt *au);
    virtual void CheckReferenceCount(const std::string &from = "<unknown>");
-   virtual void CollectScenes(List_t &scenes);
 
    AuntList_t       &RefAunts()       { return fAunts; }
    const AuntList_t &RefAunts() const { return fAunts; }
@@ -233,9 +234,6 @@ public:
    virtual void Destroy();                      // *MENU*
    virtual void DestroyOrWarn();
    virtual void DestroyElements();              // *MENU*
-
-   virtual Bool_t HandleElementPaste(REveElement *el);
-   virtual void   ElementChanged(Bool_t update_scenes = kTRUE, Bool_t redraw = kFALSE);
 
    virtual Bool_t CanEditElement() const { return kTRUE;    }
    virtual Bool_t SingleRnrState() const { return kFALSE;   }
@@ -321,7 +319,8 @@ public:
    void   SetPickable(Bool_t p) { fPickable = p; }
    void   SetPickableRecursively(Bool_t p);
 
-   virtual REveElement* ForwardSelection();
+   REveElement* GetSelectionMaster();
+   void         SetSelectionMaster(REveElement *el) { fSelectionMaster = el; }
 
    virtual void FillImpliedSelectedSet(Set_t& impSelSet);
 
@@ -352,8 +351,8 @@ public:
       kCBColorSelection =  BIT(0), // Main color or select/hilite state changed.
       kCBTransBBox      =  BIT(1), // Transformation matrix or bounding-box changed.
       kCBObjProps       =  BIT(2), // Object changed, requires dropping its display-lists.
-      kCBVisibility     =  BIT(3)  // Rendering of self/children changed.
-      // kCBElementAdded   = BIT(), // Element was added to a new parent.
+      kCBVisibility     =  BIT(3),  // Rendering of self/children changed.
+      kCBElementAdded   =  BIT(4) // Element was added to a new parent.
       // kCBElementRemoved = BIT()  // Element was removed from a parent.
 
       // Deletions are handled in a special way in REveManager::PreDeleteElement().
@@ -367,8 +366,9 @@ public:
    void StampColorSelection() { AddStamp(kCBColorSelection); }
    void StampTransBBox()      { AddStamp(kCBTransBBox); }
    void StampObjProps()       { AddStamp(kCBObjProps); }
+   void StampObjPropsPreChk() { if ( ! (fChangeBits & kCBObjProps)) AddStamp(kCBObjProps); }
    void StampVisibility()     { AddStamp(kCBVisibility); }
-   // void StampElementAdded()   { AddStamp(kCBElementAdded); }
+   void StampElementAdded()   { AddStamp(kCBElementAdded); }
    // void StampElementRemoved() { AddStamp(kCBElementRemoved); }
    virtual void AddStamp(UChar_t bits);
    virtual void ClearStamps() { fChangeBits = 0; }
@@ -400,6 +400,7 @@ public:
 
    virtual void AddNiece(REveElement *el)
    {
+      // XXXX Check AcceptNiece() -- throw if not !!!!
       el->AddAunt(this);
       AddNieceInternal(el);
    }
