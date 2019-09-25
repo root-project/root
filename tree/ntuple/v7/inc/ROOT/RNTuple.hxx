@@ -134,6 +134,7 @@ public:
    ~RNTupleReader();
 
    NTupleSize_t GetNEntries() const { return fNEntries; }
+   const RNTupleDescriptor &GetDescriptor() const { return fSource->GetDescriptor(); }
 
    /// Prints a detailed summary of the ntuple, including a list of fields.
    void PrintInfo(const ENTupleInfo what = ENTupleInfo::kSummary, std::ostream &output = std::cout);
