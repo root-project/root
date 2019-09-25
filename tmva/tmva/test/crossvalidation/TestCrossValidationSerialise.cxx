@@ -207,7 +207,7 @@ void TestContex::verifyApplicationPhase()
 
    for (UInt_t iEvent = 0; iEvent < fEvaluationResults.size(); ++iEvent) {
 
-      if (not TMath::AreEqualAbs(fEvaluationResults[iEvent], fApplicationResults[iEvent], 1e-5)) {
+      if (!TMath::AreEqualAbs(fEvaluationResults[iEvent], fApplicationResults[iEvent], 1e-5)) {
          std::cout << "eval:appl[" << iEvent << "] -- " << fEvaluationResults[iEvent] << ":"
                    << fApplicationResults[iEvent] << std::endl;
          throw std::runtime_error("Output not equal!");

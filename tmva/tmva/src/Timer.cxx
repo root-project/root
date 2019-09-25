@@ -60,7 +60,13 @@ Remark: in batch mode, the progress bar is quite ugly; you may
 #include "TStopwatch.h"
 
 #include <iomanip>
+#ifdef _MSC_VER
+#include <io.h>
+#define isatty _isatty
+#define STDERR_FILENO 2
+#else
 #include <unistd.h>
+#endif
 
 const TString TMVA::Timer::fgClassName = "Timer";
 const Int_t   TMVA::Timer::fgNbins     = 16;

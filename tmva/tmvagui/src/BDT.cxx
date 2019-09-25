@@ -30,6 +30,7 @@
 std::vector<TControlBar*> TMVA::BDT_Global__cbar;
 
 TMVA::StatDialogBDT* TMVA::StatDialogBDT::fThis = 0;
+bool TMVA::DecisionTreeNode::fgIsTraining = false;
 
 void TMVA::StatDialogBDT::SetItree() 
 {

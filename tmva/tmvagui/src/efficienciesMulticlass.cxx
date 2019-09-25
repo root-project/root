@@ -186,7 +186,7 @@ roccurvelist_t TMVA::getRocCurves(TDirectory *binDir, TString methodPrefix, TStr
 
             TGraph *h = (TGraph *)hkey2->ReadObj();
             TString hname = h->GetName();
-            if (hname.Contains(graphNameRef) && hname.BeginsWith(methodPrefix) && not hname.Contains("Train")) {
+            if (hname.Contains(graphNameRef) && hname.BeginsWith(methodPrefix) && !hname.Contains("Train")) {
 
                // Extract classname from plot name
                UInt_t index = hname.Last('_');
