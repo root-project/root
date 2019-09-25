@@ -21,7 +21,12 @@ static const std::vector<std::string> variablesClassification = {"var1", "var2",
 void TrainClassificationModel()
 {
    // Check for existing training
-   if (gSystem->mkdir("RReaderClassification") == -1) return;
+   if (gSystem->mkdir("RReaderClassification") == -1)
+#ifndef _MSC_VER
+      return;
+#else
+      std::cout << "The directory \"RReaderClassification\" exists already...\n";
+#endif
 
    // Create factory
    auto output = TFile::Open("TMVA.root", "RECREATE");
@@ -58,7 +63,12 @@ static const std::vector<std::string> variablesRegression = {"var1", "var2"};
 void TrainRegressionModel()
 {
    // Check for existing training
-   if (gSystem->mkdir("RReaderRegression") == -1) return;
+   if (gSystem->mkdir("RReaderRegression") == -1)
+#ifndef _MSC_VER
+      return;
+#else
+      std::cout << "The directory \"RReaderRegression\" exists already...\n";
+#endif
 
    // Create factory
    auto output = TFile::Open("TMVA.root", "RECREATE");
@@ -92,7 +102,12 @@ static const std::vector<std::string> variablesMulticlass = variablesClassificat
 void TrainMulticlassModel()
 {
    // Check for existing training
-   if (gSystem->mkdir("RReaderMulticlass") == -1) return;
+   if (gSystem->mkdir("RReaderMulticlass") == -1)
+#ifndef _MSC_VER
+      return;
+#else
+      std::cout << "The directory \"RReaderMulticlass\" exists already...\n";
+#endif
 
    // Create factory
    auto output = TFile::Open("TMVA.root", "RECREATE");

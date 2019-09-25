@@ -1474,7 +1474,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
         multiclass_testConfusionEffB10.push_back(theMethod->GetMulticlassConfusionMatrix(0.10, Types::kTesting));
         multiclass_testConfusionEffB30.push_back(theMethod->GetMulticlassConfusionMatrix(0.30, Types::kTesting));
 
-        if (not IsSilentFile()) {
+        if (!IsSilentFile()) {
            Log() << kDEBUG << "\tWrite evaluation histograms to file" << Endl;
            theMethod->WriteEvaluationHistosToFile(Types::kTesting);
            theMethod->WriteEvaluationHistosToFile(Types::kTraining);
@@ -2498,7 +2498,7 @@ TH1F* TMVA::Factory::GetImportance(const int nbits,std::vector<Double_t> importa
   gStyle->SetTitleXOffset(1.2);
 
 
-  Double_t x_ie[nbits], y_ie[nbits];
+  std::vector<Double_t> x_ie(nbits), y_ie(nbits);
   for (Int_t i = 1; i < nbits + 1; i++) {
     x_ie[i - 1] = (i - 1) * 1.;
     roc = 100.0 * importances[i - 1] / normalization;
@@ -2507,7 +2507,7 @@ TH1F* TMVA::Factory::GetImportance(const int nbits,std::vector<Double_t> importa
     vih1->GetXaxis()->SetBinLabel(i, varNames[i - 1].Data());
     vih1->SetBinContent(i, roc);
   }
-  TGraph *g_ie = new TGraph(nbits + 2, x_ie, y_ie);
+  TGraph *g_ie = new TGraph(nbits + 2, &x_ie[0], &y_ie[0]);
   g_ie->SetTitle("");
 
   vih1->LabelsOption("v >", "X");
