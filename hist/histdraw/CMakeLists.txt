@@ -21,6 +21,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTHistDraw
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   DEPENDENCIES
+    Core
+    MathCore
     Hist
     ROOTGpadv7
     ROOTGraphicsPrimitives
