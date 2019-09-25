@@ -60,14 +60,15 @@ REveDataProxyBuilderBase::Product::~Product()
    m_elements->Annihilate();
 }
 
+//------------------------------------------------------------------------------
 
-//______________________________________________________________________________
 void REveDataProxyBuilderBase::SetCollection(REveDataCollection* c)
 {
    m_collection = c;
 }
 
-//______________________________________________________________________________
+//------------------------------------------------------------------------------
+
 /*
 void
 REveDataProxyBuilderBase::SetInteractionList(REveDataInteractionList* l, const std::string& purpose )
@@ -78,7 +79,8 @@ REveDataProxyBuilderBase::SetInteractionList(REveDataInteractionList* l, const s
 }
 */
 
-//______________________________________________________________________________
+//------------------------------------------------------------------------------
+
 void REveDataProxyBuilderBase::Build()
 {
    if (m_collection)
@@ -175,7 +177,8 @@ void REveDataProxyBuilderBase::Build()
    }
 }
 
-//______________________________________________________________________________
+//------------------------------------------------------------------------------
+
 void
 REveDataProxyBuilderBase::Build(const REveDataCollection*, REveElement*, const REveViewContext*)
 {
@@ -189,8 +192,7 @@ REveDataProxyBuilderBase::BuildViewType(const REveDataCollection*, REveElement*,
    assert("virtual BuildViewType(const FWEventItem*, TEveElementList*, FWViewType::EType, const FWViewContext*) not implemented by inherited class");
 }
 
-//______________________________________________________________________________
-
+//------------------------------------------------------------------------------
 
 REveElement*
 REveDataProxyBuilderBase::CreateProduct( std::string viewType, const REveViewContext* viewContext)
@@ -221,8 +223,10 @@ REveDataProxyBuilderBase::CreateProduct( std::string viewType, const REveViewCon
    return product->m_elements;
 }
 
-//______________________________________________________________________________
-namespace {
+//------------------------------------------------------------------------------
+
+namespace
+{
    void applyColorAttrToChildren(REveElement* p) {
       for (auto &it: p->RefChildren())
       {
@@ -260,15 +264,26 @@ REveDataProxyBuilderBase::ModelChanges(const REveDataCollection::Ids_t& iIds, Pr
       if (item->GetMainColor() != comp->GetMainColor()) comp->SetMainColor(item->GetMainColor());
       applyColorAttrToChildren(comp);
 
-      if (VisibilityModelChanges(itemIdx, comp, p->m_viewContext)) {
+      if (VisibilityModelChanges(itemIdx, comp, p->m_viewContext))
+      {
          elms->ProjectChild(comp);
          printf("---REveDataProxyBuilderBase project child\n");
+      }
+      else
+      {
+         LocalModelChanges(itemIdx, comp, p->m_viewContext);
       }
    }
 }
 
-//______________________________________________________________________________
+void
+REveDataProxyBuilderBase::LocalModelChanges(int, REveElement*, const REveViewContext*)
+{
+   // Nothing to be done in base class.
+   // Visibility, main color and main transparency are handled automatically throught compound.
+}
 
+//------------------------------------------------------------------------------
 
 void
 REveDataProxyBuilderBase::ModelChanges(const REveDataCollection::Ids_t& iIds)
@@ -312,7 +327,7 @@ REveDataProxyBuilderBase::SetupElement(REveElement* el, bool color) const
 {
    el->CSCTakeMotherAsMaster();
    el->SetPickable(true);
-   el->SetMainColor(m_collection->GetMainColor());
+
    if (color)
    {
       el->CSCApplyMainColorToMatchingChildren();
@@ -327,8 +342,7 @@ REveDataProxyBuilderBase::SetupElement(REveElement* el, bool color) const
 REveCompound*
 REveDataProxyBuilderBase::CreateCompound(bool set_color, bool propagate_color_to_all_children) const
 {
-   REveCompound* c = new REveCompound();
-   c->CSCTakeMotherAsMaster();
+   REveCompound *c = new REveCompound();
    c->CSCImplySelectAllChildren();
    c->SetPickable(true);
    if (set_color)
@@ -349,7 +363,7 @@ REveDataProxyBuilderBase::CreateCompound(bool set_color, bool propagate_color_to
    return c;
 }
 
-//______________________________________________________________________________
+//------------------------------------------------------------------------------
 
 void REveDataProxyBuilderBase::Clean()
 {

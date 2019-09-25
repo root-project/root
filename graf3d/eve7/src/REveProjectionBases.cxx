@@ -121,7 +121,7 @@ void REveProjectable::PropagateRenderState(Bool_t rnr_self, Bool_t rnr_children)
 {
    for (auto &&proj : fProjectedList) {
       if (proj->GetProjectedAsElement()->SetRnrSelfChildren(rnr_self, rnr_children))
-         proj->GetProjectedAsElement()->ElementChanged();
+         proj->GetProjectedAsElement()->StampVisibility();
    }
 }
 
@@ -131,8 +131,11 @@ void REveProjectable::PropagateRenderState(Bool_t rnr_self, Bool_t rnr_children)
 void REveProjectable::PropagateMainColor(Color_t color, Color_t old_color)
 {
    for (auto &&proj : fProjectedList) {
-      if (proj->GetProjectedAsElement()->GetMainColor() == old_color)
-         proj->GetProjectedAsElement()->SetMainColor(color);
+      auto p_as_el = proj->GetProjectedAsElement();
+      if (p_as_el->GetMainColor() == old_color) {
+         p_as_el->SetMainColor(color);
+         p_as_el->StampColorSelection();
+      }
    }
 }
 
@@ -143,8 +146,11 @@ void REveProjectable::PropagateMainColor(Color_t color, Color_t old_color)
 void REveProjectable::PropagateMainTransparency(Char_t t, Char_t old_t)
 {
    for (auto &&proj : fProjectedList) {
-      if (proj->GetProjectedAsElement()->GetMainTransparency() == old_t)
-         proj->GetProjectedAsElement()->SetMainTransparency(t);
+      auto p_as_el = proj->GetProjectedAsElement();
+      if (p_as_el->GetMainTransparency() == old_t) {
+         p_as_el->SetMainTransparency(t);
+         p_as_el->StampColorSelection();
+      }
    }
 }
 

@@ -72,7 +72,10 @@ private:
    REveSelection &operator=(const REveSelection &); // Not implemented
 
 protected:
-   Int_t            fPickToSelect{0};  ///<!
+   Color_t          fVisibleEdgeColor; ///<!
+   Color_t          fHiddenEdgeColor;  ///<!
+
+   std::vector<int> fPickToSelect;     ///<!
    Bool_t           fActive{kFALSE};   ///<!
    Bool_t           fIsMaster{kFALSE}; ///<!
 
@@ -90,17 +93,24 @@ protected:
    void RecheckImpliedSet(SelMap_i &entry);
 
 public:
-   REveSelection(const std::string &n = "REveSelection", const std::string &t = "", Color_t col = kViolet);
+   REveSelection(const std::string &n = "REveSelection", const std::string &t = "",
+                 Color_t col_visible = kViolet, Color_t col_hidden = kPink);
    virtual ~REveSelection();
+
+   void   SetVisibleEdgeColorRGB(UChar_t r, UChar_t g, UChar_t b);
+   void   SetHiddenEdgeColorRGB(UChar_t r, UChar_t g, UChar_t b);
 
    void   SetHighlightMode();
 
-   Int_t  GetPickToSelect()   const { return fPickToSelect; }
-   void   SetPickToSelect(Int_t ps) { fPickToSelect = ps; }
+   const std::vector<int>& RefPickToSelect()  const { return fPickToSelect; }
+   void   ClearPickToSelect()     { fPickToSelect.clear(); }
+   void   AddPickToSelect(int ps) { fPickToSelect.push_back(ps); }
 
    Bool_t GetIsMaster()   const { return fIsMaster; }
    void   SetIsMaster(Bool_t m) { fIsMaster = m; }
 
+   bool   IsEmpty()  const { return   fMap.empty(); }
+   bool   NotEmpty() const { return ! fMap.empty(); }
 
    // Abstract methods of REveAunt
    bool HasNiece(REveElement *el) const override;
@@ -135,6 +145,7 @@ public:
    virtual void UserUnPickedElement(REveElement *el);
 
    void NewElementPicked(ElementId_t id, bool multi, bool secondary, const std::set<int>& secondary_idcs={});
+   void ClearSelection();
 
    int  RemoveImpliedSelectedReferencesTo(REveElement *el);
 

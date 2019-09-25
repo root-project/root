@@ -46,10 +46,7 @@ public:
 
    Bool_t SingleRnrState() const override { return kTRUE; }
 
-   void AddStamp(UChar_t bits) override;
-
    Bool_t AcceptElement(REveElement *el) override;
-   Bool_t HandleElementPaste(REveElement *el) override;
 };
 
 } // namespace Experimental

@@ -79,8 +79,9 @@ protected:
    virtual void BuildViewType(const REveDataCollection* iItem, REveElement* product, std::string viewType, const REveViewContext*);
 
    virtual void ModelChanges(const REveDataCollection::Ids_t&, Product*);
+   virtual void LocalModelChanges(int idx, REveElement* el, const REveViewContext* ctx);
 
-  // utility
+   // Utility
    REveCompound* CreateCompound(bool set_color=true, bool propagate_color_to_all_children=false) const;
    virtual void Clean();
    virtual void CleanLocal();
@@ -92,7 +93,7 @@ private:
    const REveDataCollection *m_collection{nullptr};
 
    float                 m_layer;
-   //   REveDataInteractionList*  m_interactionList;
+   // REveDataInteractionList*  m_interactionList;
    bool                  m_haveWindow;
    bool                  m_modelsChanged;
 };

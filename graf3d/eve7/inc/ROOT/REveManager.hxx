@@ -153,8 +153,6 @@ public:
    TFolder *GetMacroFolder() const { return fMacroFolder; }
    TMacro *GetMacro(const char *name) const;
 
-   void EditElement(REveElement *element);
-
    void DisableRedraw() { ++fRedrawDisabled; }
    void EnableRedraw()  { --fRedrawDisabled; if (fRedrawDisabled <= 0) Redraw3D(); }
 
@@ -168,11 +166,10 @@ public:
    void DoRedraw3D();
    void FullRedraw3D(Bool_t resetCameras = kFALSE, Bool_t dropLogicals = kFALSE);
 
+   void ClearAllSelections();
+
    Bool_t GetKeepEmptyCont() const   { return fKeepEmptyCont; }
    void   SetKeepEmptyCont(Bool_t k) { fKeepEmptyCont = k; }
-
-   void ElementChanged(REveElement* element, Bool_t update_scenes=kTRUE, Bool_t redraw=kFALSE);
-   void ScenesChanged(REveElement::List_t& scenes);
 
    void AddElement(REveElement *element, REveElement* parent = nullptr);
    void AddGlobalElement(REveElement *element, REveElement* parent = nullptr);
@@ -182,9 +179,6 @@ public:
    REveElement* FindElementById (ElementId_t id) const;
    void         AssignElementId (REveElement* element);
    void         PreDeleteElement(REveElement* element);
-
-   void   ElementSelect(REveElement* element);
-   Bool_t ElementPaste(REveElement* element);
 
    // VizDB - Visualization-parameter data-base.
    Bool_t       InsertVizDBEntry(const TString& tag, REveElement* model,

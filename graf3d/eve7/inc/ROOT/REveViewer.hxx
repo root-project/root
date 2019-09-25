@@ -41,10 +41,6 @@ public:
 
    void RemoveElementLocal(REveElement *el) override;
    void RemoveElementsLocal() override;
-
-   Bool_t HandleElementPaste(REveElement* el) override;
-
-   // virtual const TGPicture* GetListTreeIcon(Bool_t open=kFALSE);
 };
 
 

@@ -6,8 +6,9 @@ sap.ui.define(['sap/ui/core/Component',
                'sap/m/library',
                'sap/m/Button',
                'sap/m/MenuItem',
+               'sap/m/MessageStrip',
                'rootui5/eve7/lib/EveManager'
-], function(Component, UIComponent, Controller, Splitter, SplitterLayoutData, MobileLibrary, mButton, mMenuItem, EveManager) {
+              ], function(Component, UIComponent, Controller, Splitter, SplitterLayoutData, MobileLibrary, mButton, mMenuItem, mMessageStrip, EveManager) {
 
    "use strict";
 
@@ -22,39 +23,40 @@ sap.ui.define(['sap/ui/core/Component',
          this.mgr.UseConnection(conn_handle);
          // this.mgr.UseConnection(this.getView().getViewData().conn_handle);
 
+         this.mgr.RegisterController(this);
          // method to found summary controller by ID and set manager to it
          var elem = this.byId("Summary");
          var ctrl = elem.getController();
          ctrl.SetMgr(this.mgr);
-
-         this.mgr.RegisterUpdate(this, "onManagerUpdate");
       },
 
-      getHandle: function () {
-         return this.handle;
+      onDisconnect : function() {
+         var t = this.byId("centerTitle");
+         t.setHtmlText("<strong style=\"color: red;\">Client Disconnected !</strong>");
       },
+
 
       UpdateCommandsButtons: function(cmds) {
-          if (!cmds || this.commands) return;
+         if (!cmds || this.commands) return;
 
-          var toolbar = this.byId("otb1");
+         var toolbar = this.byId("otb1");
 
-          this.commands = cmds;
-          for (var k=cmds.length-1;k>=0;--k) {
-             var btn = new mButton({
-                // text: "ButtonNew",
-                icon: cmds[k].icon,
-                tooltip: cmds[k].name,
-                press: this.mgr.executeCommand.bind(this.mgr, cmds[k])
-              });
-             toolbar.insertContent(btn, 0);
-          }
+         this.commands = cmds;
+         var pthis = this;
+         for (var k=cmds.length-1;k>=0;--k) {
+            var btn = new mButton({
+               icon: cmds[k].icon,
+               tooltip: cmds[k].name,
+               press: pthis.executeCommand.bind(pthis, cmds[k])
+            });
+            toolbar.insertContentLeft(btn, 0);
+         }
       },
-      
+
       viewItemPressed: function (elem, oEvent) {
          var item = oEvent.getSource();
          console.log('item pressed', item.getText(), elem);
-         
+
          var name = item.getText();
          if (name.indexOf(" ")>0) name = name.substr(0, name.indexOf(" "));
 
@@ -64,7 +66,7 @@ sap.ui.define(['sap/ui/core/Component',
          var oRouter = UIComponent.getRouterFor(this);
          oRouter.navTo("View", { viewName: name });
       },
-      
+
       updateViewers: function(loading_done) {
          var viewers = this.mgr.FindViewers();
 
@@ -75,14 +77,14 @@ sap.ui.define(['sap/ui/core/Component',
             if (!el.$view_created && el.fRnrSelf) staged.push(el);
          }
          if (staged.length == 0) return;
-         
+
          console.log("FOUND viewers", viewers.length, "not yet exists", staged.length);
-         
+
          if (staged.length > 1) {
             var vMenu = this.getView().byId("menuViewId");
             var item = new mMenuItem({text:"Browse to"});
             vMenu.addItem(item);
-            for (var n=0;n<staged.length;++n) 
+            for (var n=0;n<staged.length;++n)
                item.addItem(new mMenuItem({text: staged[n].fName, press: this.viewItemPressed.bind(this, staged[n]) }));
          }
 
@@ -101,12 +103,12 @@ sap.ui.define(['sap/ui/core/Component',
                oLd = new SplitterLayoutData({ resizable: true, size: "50%" });
 
             var vtype = "rootui5.eve7.view.GL";
-            if (elem.fName === "Table") 
+            if (elem.fName === "Table")
                vtype = "rootui5.eve7.view.EveTable"; // AMT temporary solution
             else
-               elem.view_kind = (n==0) ? "3D" : "2D"; // FIXME: should be property of GL view 
-            
-            
+               elem.view_kind = (n==0) ? "3D" : "2D"; // FIXME: should be property of GL view
+
+
             var oOwnerComponent = Component.getOwnerComponentFor(this.getView());
             var view = oOwnerComponent.runAsOwner(function() {
                return new sap.ui.xmlview({
@@ -131,7 +133,7 @@ sap.ui.define(['sap/ui/core/Component',
          }
       },
 
-      onManagerUpdate: function() {
+      OnEveManagerInit: function() {
          console.log("manager updated");
          this.UpdateCommandsButtons(this.mgr.commands);
          this.updateViewers();
@@ -185,8 +187,29 @@ sap.ui.define(['sap/ui/core/Component',
       showHelp : function(oEvent) {
          alert("User support: root-webgui@cern.ch");
       },
+
       showUserURL : function(oEvent) {
          MobileLibrary.URLHelper.redirect("https://github.com/alja/jsroot/blob/dev/eve7.md", true);
+      },
+
+      executeCommand : function(cmd) {
+         if (!cmd || !this.mgr.handle)
+            return;
+
+         // idealy toolbar shoulf be unactive, but thus is the role af web application
+         if (this.mgr.busyProcessingChanges) {
+            return;
+         }
+
+         var obj = { "mir": cmd.func, "fElementId": cmd.elementid, "class": cmd.elementclass };
+         // only for real connections send commands to server
+         // only with NextEvent command meaningful handling is possible
+         if ((this.mgr.handle.kind != "file") || (cmd.name == "NextEvent"))
+            this.mgr.SendMIR(obj);
+         if ((cmd.name == "QuitRoot") && window) {
+             window.close();
+         }
       }
+
    });
 });

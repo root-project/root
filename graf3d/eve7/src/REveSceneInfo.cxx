@@ -48,37 +48,12 @@ Int_t REveSceneInfo::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Override from REveElement.
-/// Process visibility changes and forward them to fGLScene.
-
-void REveSceneInfo::AddStamp(UChar_t bits)
-{
-   REveElement::AddStamp(bits);
-   // if (bits & kCBVisibility)
-   // {
-   //    fGLSceneInfo->SetActive(fRnrSelf);
-   // }
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Virtual from REveElement.
 /// REveSceneInfo does not accept children.
 
 Bool_t REveSceneInfo::AcceptElement(REveElement* /*el*/)
 {
    static const REveException eH("REveSceneInfo::AcceptElement ");
-
-   // gEve->SetStatusLine(eH + "this class does not accept children.");
-   return kFALSE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Virtual from REveElement.
-/// REveSceneInfo does not accept children.
-
-Bool_t REveSceneInfo::HandleElementPaste(REveElement* /*el*/)
-{
-   static const REveException eH("REveSceneInfo::HandleElementPaste ");
 
    // gEve->SetStatusLine(eH + "this class does not accept children.");
    return kFALSE;

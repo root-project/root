@@ -28,10 +28,11 @@ public:
 
 protected:
    void Build(const REveDataCollection* iCollection, REveElement* product, const REveViewContext*) override;
-   void BuildViewType(const REveDataCollection* iCollection, REveElement* product, std::string viewType, const REveViewContext*) override;
 
-   //called once for each collection in collection, the void* points to the
-   // object properly offset in memory
+  void BuildViewType(const REveDataCollection* iCollection, REveElement* product, std::string viewType, const REveViewContext*) override;
+
+   // Called once for every item in collection, the void* points to the
+   // item properly offset in memory.
    virtual void Build(const void* data, int index, REveElement* iCollectionHolder, const REveViewContext*) = 0;
    virtual void BuildViewType(const void* data, int index, REveElement* iCollectionHolder, std::string viewType, const REveViewContext*) = 0;
 

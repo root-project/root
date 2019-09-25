@@ -8,9 +8,11 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
+#include "TClass.h"
 #include <ROOT/REveTableInfo.hxx>
 #include <ROOT/REveManager.hxx>
+#include "TROOT.h"
+#include "TInterpreter.h"
 
 #include "json.hpp"
 
@@ -36,21 +38,37 @@ void REveTableViewInfo::AddNewColumnToCurrentCollection(const std::string& expr,
 {
    if (!fDisplayedCollection) return;
 
-      REveElement* col = gEve->FindElementById(fDisplayedCollection);
-      if (!col) {
-         printf("REveTableViewInfo::AddNewColumnToCurrentCollection error: collection not found\n");
-         return;
-      }
+   REveDataCollection* col = dynamic_cast<REveDataCollection*>(gEve->FindElementById(fDisplayedCollection));
+   if (!col) {
+      printf("REveTableViewInfo::AddNewColumnToCurrentCollection error: collection not found\n");
+      return;
+   }
 
-      fConfigChanged = true;
-      table(col->GetName()).column(title, prec, expr);
+   const char *rtyp   = "void";
+   auto icls = col->GetItemClass();
+   std::function<void(void *)> fooptr;
+   std::stringstream s;
+   s << "*((std::function<" << rtyp << "(" << icls->GetName() << "*)>*)" << std::hex << std::showbase << (size_t)(&fooptr)
+     << ") = [](" << icls->GetName() << "* p){" << icls->GetName() << " &i=*p; return (" << expr
+     << "); }";
 
-       for (auto &it : fDelegates)
-          it();
+   int err;
+   gROOT->ProcessLine(s.str().c_str(), &err);
+   if (err != TInterpreter::kNoError)
+   {
+      std::cout << "REveTableViewInfo::AddNewColumnToCurrentCollection failed." <<  std::endl;
+      return;
+   }
 
-      fConfigChanged = false;
+   fConfigChanged = true;
+   table(col->GetItemClass()->GetName()).column(title, prec, expr);
 
-    StampObjProps();
+   for (auto &it : fDelegates)
+      it();
+
+   fConfigChanged = false;
+
+   StampObjProps();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
