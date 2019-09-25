@@ -82,6 +82,10 @@ sap.ui.define([
 
         isIndexSelectable: function() {
             Log.warning("root.model.hListBinding#isIndexSelectable(" + JSON.stringify(arguments) + ")");
+        },
+        
+        attachSelectionChanged: function() {
+           // dummy for compatibility with newest 1.70.0 version
         }
 
     });
