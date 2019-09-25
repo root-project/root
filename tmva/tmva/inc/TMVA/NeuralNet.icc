@@ -5,7 +5,9 @@
 #error "Do not use NeuralNet.icc directly. #include \"NeuralNet.h\" instead."
 #endif // TMVA_NEURAL_NET
 #pragma once
+#ifndef _MSC_VER
 #pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
 
 #include "Math/Util.h"
 
