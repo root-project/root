@@ -11,12 +11,22 @@
 
 //#define NDEBUG
 
-#include "TGCocoa.h"
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+// Please don't to move <GL/glew.h> from here: 
+// <GL/glew.h> should be included before any of Cocoa headers.
+// Moving it will trigger the redefinition error:
+// #error gltypes.h included before glew.h
+// ../inc/GL/glew.h:6586:22: error: typedef redefinition with 
+//                     different types ('unsigned int' vs 'void *')
+// typedef unsigned int GLhandleARB;
+// .../System/Library/Frameworks/OpenGL.framework/Headers/gltypes.h:28:18: 
+//                      note: previous definition is here
+// typedef void    *GLhandleARB;
+#include <GL/glew.h>
 
-// We want to pickup ROOT's glew and not the system OpenGL coming from:
-// ROOTOpenGLView.h ->QuartzWindow.h->Cocoa.h
-// Allowing TU's which include the system GL and then glew (from TGLIncludes)
-// leads to gltypes.h redefinition errors.
+#include "TGCocoa.h"
 
 #include "ROOTOpenGLView.h"
 #include "CocoaConstants.h"
@@ -41,12 +51,6 @@
 #include "TROOT.h"
 #include "TEnv.h"
 #include "TVirtualMutex.h"
-
-#ifdef WIN32
-#include "Windows4Root.h"
-#endif
-
-#include <GL/glew.h>
 
 #include <ApplicationServices/ApplicationServices.h>
 #include <OpenGL/OpenGL.h>
