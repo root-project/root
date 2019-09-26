@@ -74,6 +74,7 @@ TMVA::Config::Config() :
    fVariablePlotting.fUsePaperStyle = 0;
 
    // IO names
+   fIONames.fWeightFileDirPrefix = "";
    fIONames.fWeightFileDir           = "weights";
    fIONames.fWeightFileExtension     = "weights";
    fIONames.fOptionsReferenceFileDir = "optionInfo";
@@ -119,4 +120,3 @@ TMVA::Config& TMVA::Config::Instance()
    return fgConfigPtr ? *fgConfigPtr :*(fgConfigPtr = new Config());
 #endif
 }
-
