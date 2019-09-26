@@ -222,6 +222,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
     ${installoptions}
 )
 
+if(MSVC)
+  target_compile_definitions (RGL PRIVATE "GLEW_STATIC")
+endif()
+
 if(MACOSX_GLU_DEPRECATED)
   target_compile_options(RGL PRIVATE -Wno-deprecated-declarations)
 endif()
