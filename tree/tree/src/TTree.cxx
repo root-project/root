@@ -1654,17 +1654,20 @@ TBranch* TTree::BranchImpRef(const char* branchname, TClass* ptrClass, EDataType
 ////////////////////////////////////////////////////////////////////////////////
 // Wrapper to turn Branch call with an std::array into the relevant leaf list
 // call
-TBranch *TTree::BranchImpArr(const char* branchname, EDataType datatype, std::size_t N, void* addobj, Int_t bufsize, Int_t splitlevel)
+TBranch *TTree::BranchImpArr(const char *branchname, EDataType datatype, std::size_t N, void *addobj, Int_t bufsize,
+                             Int_t /* splitlevel */)
 {
    if (datatype == kOther_t || datatype == kNoType_t) {
-      Error("Branch", "The inner type of the std::array passed specified for %s is not of a class or type known to ROOT", branchname);
+      Error("Branch",
+            "The inner type of the std::array passed specified for %s is not of a class or type known to ROOT",
+            branchname);
    } else {
-      TString varname; varname.Form("%s[%d]/%c", branchname, (int)N, DataTypeToChar(datatype));
+      TString varname;
+      varname.Form("%s[%d]/%c", branchname, (int)N, DataTypeToChar(datatype));
       return Branch(branchname, addobj, varname.Data(), bufsize);
    }
-   return 0;
+   return nullptr;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Deprecated function. Use next function instead.
