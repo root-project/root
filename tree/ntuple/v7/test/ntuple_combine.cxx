@@ -7,7 +7,6 @@
 
 #include "gtest/gtest.h"
 
-#include <cassert>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -405,6 +404,7 @@ TEST(RNTupleChain, ChainOfChainWithStdMove)
    EXPECT_DOUBLE_EQ(doubleView(21001), 6.0);
    EXPECT_DOUBLE_EQ(doubleView(21002), 7.0);
    EXPECT_DOUBLE_EQ(doubleView(31000), 10005.0);
+   EXPECT_DOUBLE_EQ(doubleView(63001), 6.0);
    EXPECT_DOUBLE_EQ(doubleView(31001), 10006.0);
    EXPECT_DOUBLE_EQ(doubleView(42000), 5.0);
    EXPECT_DOUBLE_EQ(doubleView(42001), 6.0);
@@ -412,7 +412,6 @@ TEST(RNTupleChain, ChainOfChainWithStdMove)
    EXPECT_DOUBLE_EQ(doubleView(52000), 10005.0);
    EXPECT_DOUBLE_EQ(doubleView(52001), 10006.0);
    EXPECT_DOUBLE_EQ(doubleView(63000), 5.0);
-   EXPECT_DOUBLE_EQ(doubleView(63001), 6.0);
    EXPECT_DOUBLE_EQ(doubleView(63002), 7.0);
    EXPECT_EQ(stringView(0), "foo0");
    EXPECT_EQ(stringView(1), "foo1");
@@ -422,6 +421,8 @@ TEST(RNTupleChain, ChainOfChainWithStdMove)
    EXPECT_EQ(stringView(21000), "foo0");
    EXPECT_EQ(stringView(21001), "foo1");
    EXPECT_EQ(stringView(21002), "foo2");
+   EXPECT_EQ(stringView(63000), "foo0");
+   EXPECT_EQ(stringView(63001), "foo1");
    EXPECT_EQ(stringView(31000), "foo10000");
    EXPECT_EQ(stringView(31001), "foo10001");
    EXPECT_EQ(stringView(42000), "foo0");
@@ -429,8 +430,6 @@ TEST(RNTupleChain, ChainOfChainWithStdMove)
    EXPECT_EQ(stringView(42002), "foo2");
    EXPECT_EQ(stringView(52000), "foo10000");
    EXPECT_EQ(stringView(52001), "foo10001");
-   EXPECT_EQ(stringView(63000), "foo0");
-   EXPECT_EQ(stringView(63001), "foo1");
    EXPECT_EQ(stringView(63002), "foo2");
 }
 

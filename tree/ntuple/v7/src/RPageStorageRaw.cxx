@@ -215,7 +215,7 @@ void ROOT::Experimental::Detail::RPageSourceRaw::GetHeaderAndFooter(RNTupleDescr
    R__ASSERT(fileSize >= RNTupleDescriptor::kNBytesPostscript);
    auto offset = fileSize - RNTupleDescriptor::kNBytesPostscript;
    Read(postscript, RNTupleDescriptor::kNBytesPostscript, offset);
-   
+
    std::uint32_t szHeader;
    std::uint32_t szFooter;
    RNTupleDescriptor::LocateMetadata(postscript, szHeader, szFooter);
