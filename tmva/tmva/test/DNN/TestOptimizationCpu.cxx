@@ -34,64 +34,72 @@ using TMVA::DNN::EOptimizer;
 
 int main()
 {
-   std::cout << "Testing optimization: (single precision)" << std::endl;
+   using Architecture = TCpu<Float_t>;
+   std::cout << "Testing optimization: (single precision) for Cpu" << std::endl;
 
    Real_t momentumSinglePrecision = 0.0;
    std::cout << "Stochastic Gradient Descent: ";
-   Double_t error = testOptimization<TCpu<Real_t>>(momentumSinglePrecision, EOptimizer::kSGD, false);
+   Double_t error = testOptimization<Architecture>(momentumSinglePrecision, EOptimizer::kSGD, false);
    std::cout << "After Training: Mean Absolute error = " << error << std::endl;
    if (error > 1e-1) {
+      std::cout << "---->   Error: SGD test failed ! " << std::endl;
       return 1;
    }
 
    momentumSinglePrecision = 0.9;
    std::cout << "Stochastic Gradient Descent with momentum: ";
-   error = testOptimization<TCpu<Real_t>>(momentumSinglePrecision, EOptimizer::kSGD, false);
+   error = testOptimization<Architecture>(momentumSinglePrecision, EOptimizer::kSGD, false);
    std::cout << "After Training: Mean Absolute error = " << error << std::endl;
    if (error > 1e-1) {
+      std::cout << "---->   Error: SGD momentum test failed ! " << std::endl;
       return 1;
    }
 
    momentumSinglePrecision = 0.0;
    std::cout << "Adam Optimizer: ";
    // Adam doesn't use momentum. Passing this as a parameter just to match the function prototype.
-   error = testOptimization<TCpu<Real_t>>(momentumSinglePrecision, EOptimizer::kAdam, false);
+   error = testOptimization<Architecture>(momentumSinglePrecision, EOptimizer::kAdam, false);
    std::cout << "After Training: Mean Absolute error = " << error << std::endl;
    if (error > 1e-1) {
+      std::cout << "---->   Error: ADAM test failed ! " << std::endl;
       return 1;
    }
 
    momentumSinglePrecision = 0.0;
    std::cout << "Adagrad Optimizer: ";
    // Adagrad doesn't use momentum. Passing this as a parameter just to match the function prototype.
-   error = testOptimization<TCpu<Real_t>>(momentumSinglePrecision, EOptimizer::kAdagrad, false);
+   error = testOptimization<Architecture>(momentumSinglePrecision, EOptimizer::kAdagrad, false);
    std::cout << "After Training: Mean Absolute error = " << error << std::endl;
    if (error > 1e-1) {
+      std::cout << "---->   Error: Adagrad test failed ! " << std::endl;
       return 1;
    }
 
    momentumSinglePrecision = 0.0;
    std::cout << "RMSProp Optimizer without momentum: ";
-   error = testOptimization<TCpu<Real_t>>(momentumSinglePrecision, EOptimizer::kRMSProp, false);
+   error = testOptimization<Architecture>(momentumSinglePrecision, EOptimizer::kRMSProp, false);
    std::cout << "After Training: Mean Absolute error = " << error << std::endl;
    if (error > 1e-1) {
+      std::cout << "---->   Error: RMSPROP test failed ! " << std::endl;
       return 1;
    }
 
    momentumSinglePrecision = 0.9;
    std::cout << "RMSProp Optimizer with momentum: ";
-   error = testOptimization<TCpu<Real_t>>(momentumSinglePrecision, EOptimizer::kRMSProp, false);
+   error = testOptimization<Architecture>(momentumSinglePrecision, EOptimizer::kRMSProp, false);
    std::cout << "After Training: Mean Absolute error = " << error << std::endl;
    if (error > 1e-1) {
+      std::cout << "---->   Error: RMSPROP momentum test failed ! " << std::endl;
       return 1;
    }
 
    momentumSinglePrecision = 0.0;
    std::cout << "Adadelta Optimizer: ";
    // Adadelta doesn't use momentum. Passing this as a parameter just to match the function prototype.
-   error = testOptimization<TCpu<Real_t>>(momentumSinglePrecision, EOptimizer::kAdadelta, false);
+   error = testOptimization<Architecture>(momentumSinglePrecision, EOptimizer::kAdadelta, false);
    std::cout << "After Training: Mean Absolute error = " << error << std::endl;
    if (error > 1e-1) {
+      std::cout << "---->   Error: Adadelta test failed ! " << std::endl;
       return 1;
    }
 

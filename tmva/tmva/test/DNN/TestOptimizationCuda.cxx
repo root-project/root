@@ -25,7 +25,7 @@
  **********************************************************************************/
 
 #include "TestOptimization.h"
-#include "TMVA/DNN/Architectures/Cpu.h"
+#include "TMVA/DNN/Architectures/TCudnn.h"
 
 #include <iostream>
 
@@ -34,14 +34,15 @@ using TMVA::DNN::EOptimizer;
 
 int main()
 {
-   using Architecture = TCudnn<Real_t>; 
-   std::cout << "Testing optimization: (single precision)" << std::endl;
+   using Architecture = TCudnn<Float_t>; 
+   std::cout << "Testing optimization: (single precision) for Cuda with cudnn" << std::endl;
 
    Real_t momentumSinglePrecision = 0.0;
    std::cout << "Stochastic Gradient Descent: ";
    Double_t error = testOptimization<Architecture>(momentumSinglePrecision, EOptimizer::kSGD, false);
    std::cout << "After Training: Mean Absolute error = " << error << std::endl;
    if (error > 1e-1) {
+      std::cout << "---->   Error: SGD test failed ! " << std::endl;
       return 1;
    }
 
@@ -50,6 +51,7 @@ int main()
    error = testOptimization<Architecture>(momentumSinglePrecision, EOptimizer::kSGD, false);
    std::cout << "After Training: Mean Absolute error = " << error << std::endl;
    if (error > 1e-1) {
+      std::cout << "---->   Error: SGD momentum test failed ! " << std::endl;
       return 1;
    }
 
@@ -59,6 +61,7 @@ int main()
    error = testOptimization<Architecture>(momentumSinglePrecision, EOptimizer::kAdam, false);
    std::cout << "After Training: Mean Absolute error = " << error << std::endl;
    if (error > 1e-1) {
+      std::cout << "---->   Error: ADAM test failed ! " << std::endl;
       return 1;
    }
 
@@ -68,6 +71,7 @@ int main()
    error = testOptimization<Architecture>(momentumSinglePrecision, EOptimizer::kAdagrad, false);
    std::cout << "After Training: Mean Absolute error = " << error << std::endl;
    if (error > 1e-1) {
+      std::cout << "---->   Error: Adagrad test failed ! " << std::endl;
       return 1;
    }
 
@@ -76,6 +80,7 @@ int main()
    error = testOptimization<Architecture>(momentumSinglePrecision, EOptimizer::kRMSProp, false);
    std::cout << "After Training: Mean Absolute error = " << error << std::endl;
    if (error > 1e-1) {
+      std::cout << "---->   Error: RMSPROP test failed ! " << std::endl;
       return 1;
    }
 
@@ -84,6 +89,7 @@ int main()
    error = testOptimization<Architecture>(momentumSinglePrecision, EOptimizer::kRMSProp, false);
    std::cout << "After Training: Mean Absolute error = " << error << std::endl;
    if (error > 1e-1) {
+      std::cout << "---->   Error: RMSPROP momentum test failed ! " << std::endl;
       return 1;
    }
 
@@ -93,6 +99,7 @@ int main()
    error = testOptimization<Architecture>(momentumSinglePrecision, EOptimizer::kAdadelta, false);
    std::cout << "After Training: Mean Absolute error = " << error << std::endl;
    if (error > 1e-1) {
+      std::cout << "---->   Error: Adadelta test failed ! " << std::endl;
       return 1;
    }
 

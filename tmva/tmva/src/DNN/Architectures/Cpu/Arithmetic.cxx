@@ -30,10 +30,10 @@ namespace DNN
 {
 
 //____________________________________________________________________________
-template<typename Real_t>
-void TCpu<Real_t>::Multiply(TCpuMatrix<Real_t> &C,
-                            const TCpuMatrix<Real_t> &A,
-                            const TCpuMatrix<Real_t> &B)
+template<typename AReal>
+void TCpu<AReal>::Multiply(TCpuMatrix<AReal> &C,
+                            const TCpuMatrix<AReal> &A,
+                            const TCpuMatrix<AReal> &B)
 {
     int m = (int) A.GetNrows();
     int k = (int) A.GetNcols();
@@ -46,23 +46,23 @@ void TCpu<Real_t>::Multiply(TCpuMatrix<Real_t> &C,
     char transa = 'N';
     char transb = 'N';
 
-    Real_t alpha = 1.0;
-    Real_t beta  = 0.0;
+    AReal alpha = 1.0;
+    AReal beta  = 0.0;
 
-    const Real_t * APointer = A.GetRawDataPointer();
-    const Real_t * BPointer = B.GetRawDataPointer();
-          Real_t * CPointer = C.GetRawDataPointer();
+    const AReal * APointer = A.GetRawDataPointer();
+    const AReal * BPointer = B.GetRawDataPointer();
+          AReal * CPointer = C.GetRawDataPointer();
 
     ::TMVA::DNN::Blas::Gemm(&transa, &transb, &m, &n, &k, &alpha,
                             APointer, &m, BPointer, &k, &beta, CPointer, &m);
 }
 
 //____________________________________________________________________________
-template<typename Real_t>
-void TCpu<Real_t>::TransposeMultiply(TCpuMatrix<Real_t> &C,
-                                     const TCpuMatrix<Real_t> &A,
-                                     const TCpuMatrix<Real_t> &B,
-                                     Real_t alpha, Real_t beta)
+template<typename AReal>
+void TCpu<AReal>::TransposeMultiply(TCpuMatrix<AReal> &C,
+                                     const TCpuMatrix<AReal> &A,
+                                     const TCpuMatrix<AReal> &B,
+                                     AReal alpha, AReal beta)
 {
     int m = (int) A.GetNcols();
     int k = (int) A.GetNrows();
@@ -75,28 +75,28 @@ void TCpu<Real_t>::TransposeMultiply(TCpuMatrix<Real_t> &C,
     char transa = 'T';
     char transb = 'N';
 
-    //Real_t alpha = 1.0;
-    //Real_t beta  = 0.0;
+    //AReal alpha = 1.0;
+    //AReal beta  = 0.0;
 
-    const Real_t *APointer = A.GetRawDataPointer();
-    const Real_t *BPointer = B.GetRawDataPointer();
-          Real_t *CPointer = C.GetRawDataPointer();
+    const AReal *APointer = A.GetRawDataPointer();
+    const AReal *BPointer = B.GetRawDataPointer();
+          AReal *CPointer = C.GetRawDataPointer();
 
     ::TMVA::DNN::Blas::Gemm(&transa, &transb, &m, &n, &k, &alpha,
                             APointer, &k, BPointer, &k, &beta, CPointer, &m);
 }
 
 //____________________________________________________________________________
-template<typename Real_t>
-void TCpu<Real_t>::Hadamard(TCpuMatrix<Real_t> &B,
-                            const TCpuMatrix<Real_t> &A)
+template<typename AReal>
+void TCpu<AReal>::Hadamard(TCpuMatrix<AReal> &B,
+                            const TCpuMatrix<AReal> &A)
 {
-   const Real_t *dataA      = A.GetRawDataPointer();
-   Real_t *dataB      = B.GetRawDataPointer();
+   const AReal *dataA      = A.GetRawDataPointer();
+   AReal *dataB      = B.GetRawDataPointer();
 
    size_t nElements =  A.GetNoElements();
    R__ASSERT(B.GetNoElements() == nElements); 
-   size_t nSteps = TCpuMatrix<Real_t>::GetNWorkItems(nElements);
+   size_t nSteps = TCpuMatrix<AReal>::GetNWorkItems(nElements);
 
    auto f = [&](UInt_t workerID)
    {
@@ -122,16 +122,16 @@ void TCpu<Real_t>::Hadamard(TCpuMatrix<Real_t> &B,
 }
 
 //____________________________________________________________________________
-template<typename Real_t>
-void TCpu<Real_t>::Hadamard(TCpuTensor<Real_t> &B,
-                            const TCpuTensor<Real_t> &A)
+template<typename AReal>
+void TCpu<AReal>::Hadamard(TCpuTensor<AReal> &B,
+                            const TCpuTensor<AReal> &A)
 {
-   const Real_t *dataA      = A.GetRawDataPointer();
-   Real_t *dataB      = B.GetRawDataPointer();
+   const AReal *dataA      = A.GetRawDataPointer();
+   AReal *dataB      = B.GetRawDataPointer();
 
    size_t nElements =  A.GetNoElements();
    R__ASSERT(B.GetNoElements() == nElements); 
-   size_t nSteps = TCpuMatrix<Real_t>::GetNWorkItems(nElements);
+   size_t nSteps = TCpuMatrix<AReal>::GetNWorkItems(nElements);
 
    auto f = [&](UInt_t workerID)
    {
@@ -158,21 +158,21 @@ void TCpu<Real_t>::Hadamard(TCpuTensor<Real_t> &B,
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// \brief Checks two matrices for element-wise equality.
-/// \tparam Real_t An architecture-specific floating point number type.
+/// \tparam AReal An architecture-specific floating point number type.
 /// \param A The first matrix.
 /// \param B The second matrix.
 /// \param epsilon Equality tolerance, needed to address floating point arithmetic.
 /// \return Whether the two matrices can be considered equal element-wise
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename Real_t>
-bool TCpu<Real_t>::AlmostEquals(const TCpuMatrix<Real_t> &A, const TCpuMatrix<Real_t> &B, double epsilon)
+template<typename AReal>
+bool TCpu<AReal>::AlmostEquals(const TCpuMatrix<AReal> &A, const TCpuMatrix<AReal> &B, double epsilon)
 {
     if (A.GetNrows() != B.GetNrows() || A.GetNcols() != B.GetNcols()) {
         Fatal("AlmostEquals", "The passed matrices have unequal shapes.");
     }
 
-    const Real_t *dataA = A.GetRawDataPointer();
-    const Real_t *dataB = B.GetRawDataPointer();
+    const AReal *dataA = A.GetRawDataPointer();
+    const AReal *dataB = B.GetRawDataPointer();
     size_t nElements =  A.GetNoElements();
 
     for(size_t i = 0; i < nElements; i++) {
@@ -182,150 +182,150 @@ bool TCpu<Real_t>::AlmostEquals(const TCpuMatrix<Real_t> &A, const TCpuMatrix<Re
 }
 
 //____________________________________________________________________________
-template<typename Real_t>
-void TCpu<Real_t>::SumColumns(TCpuMatrix<Real_t> &B,
-                              const TCpuMatrix<Real_t> &A,
-                              Real_t alpha, Real_t beta)
+template<typename AReal>
+void TCpu<AReal>::SumColumns(TCpuMatrix<AReal> &B,
+                              const TCpuMatrix<AReal> &A,
+                              AReal alpha, AReal beta)
 {
    int m = (int) A.GetNrows();
    int n = (int) A.GetNcols();
    int inc = 1;
 
-   // Real_t alpha = 1.0;
-   //Real_t beta  = 0.0;
+   // AReal alpha = 1.0;
+   //AReal beta  = 0.0;
    char   trans   = 'T';
 
-   const Real_t * APointer = A.GetRawDataPointer();
-         Real_t * BPointer = B.GetRawDataPointer();
+   const AReal * APointer = A.GetRawDataPointer();
+         AReal * BPointer = B.GetRawDataPointer();
 
    ::TMVA::DNN::Blas::Gemv(&trans, &m, &n, &alpha, APointer, &m,
-                           TCpuMatrix<Real_t>::GetOnePointer(), &inc,
+                           TCpuMatrix<AReal>::GetOnePointer(), &inc,
                            &beta, BPointer, &inc);
 }
 
 //____________________________________________________________________________
-template<typename Real_t>
-void TCpu<Real_t>::ScaleAdd(TCpuMatrix<Real_t> &B,
-                            const TCpuMatrix<Real_t> &A,
-                            Real_t alpha)
+template<typename AReal>
+void TCpu<AReal>::ScaleAdd(TCpuMatrix<AReal> &B,
+                            const TCpuMatrix<AReal> &A,
+                            AReal alpha)
 {
    int n = (int) (A.GetNcols() * A.GetNrows());
    int inc = 1;
 
-   const Real_t *x = A.GetRawDataPointer();
-   Real_t *y = B.GetRawDataPointer();
+   const AReal *x = A.GetRawDataPointer();
+   AReal *y = B.GetRawDataPointer();
 
    ::TMVA::DNN::Blas::Axpy(&n, &alpha, x, &inc, y, &inc);
 }
 
 //____________________________________________________________________________
-template<typename Real_t>
-void TCpu<Real_t>::Copy(TCpuMatrix<Real_t> &B,
-                        const TCpuMatrix<Real_t> &A)
+template<typename AReal>
+void TCpu<AReal>::Copy(TCpuMatrix<AReal> &B,
+                        const TCpuMatrix<AReal> &A)
 {
-   auto f = [](Real_t x) {return x;};
+   auto f = [](AReal x) {return x;};
    B.MapFrom(f, A);
 }
 
 
 //____________________________________________________________________________
-template<typename Real_t>
-void TCpu<Real_t>::ScaleAdd(TCpuTensor<Real_t> &B,
-                            const TCpuTensor<Real_t> &A,
-                            Real_t alpha)
+template<typename AReal>
+void TCpu<AReal>::ScaleAdd(TCpuTensor<AReal> &B,
+                            const TCpuTensor<AReal> &A,
+                            AReal alpha)
 {
    // should re-implemented at tensor level
    for (size_t i = 0; i < B.GetFirstSize(); ++i) {
-      TCpuMatrix<Real_t> B_m = B.At(i).GetMatrix(); 
+      TCpuMatrix<AReal> B_m = B.At(i).GetMatrix(); 
       ScaleAdd(B_m, A.At(i).GetMatrix(), alpha);
    }
 }
 
 //____________________________________________________________________________
-template<typename Real_t>
-void TCpu<Real_t>::Copy(TCpuTensor<Real_t> &B,
-                            const TCpuTensor<Real_t> &A)
+template<typename AReal>
+void TCpu<AReal>::Copy(TCpuTensor<AReal> &B,
+                            const TCpuTensor<AReal> &A)
 {
 
-   auto f = [](Real_t x) {return x;};
+   auto f = [](AReal x) {return x;};
    B.MapFrom(f, A);
 }
 
 //____________________________________________________________________________
-template <typename Real_t>
-void TCpu<Real_t>::ConstAdd(TCpuMatrix<Real_t> &A, Real_t beta)
+template <typename AReal>
+void TCpu<AReal>::ConstAdd(TCpuMatrix<AReal> &A, AReal beta)
 {
-   auto f = [beta](Real_t x) { return x + beta; };
+   auto f = [beta](AReal x) { return x + beta; };
    A.Map(f);
 }
 
 //____________________________________________________________________________
-template <typename Real_t>
-void TCpu<Real_t>::ConstMult(TCpuMatrix<Real_t> &A, Real_t beta)
+template <typename AReal>
+void TCpu<AReal>::ConstMult(TCpuMatrix<AReal> &A, AReal beta)
 {
-   auto f = [beta](Real_t x) { return x * beta; };
+   auto f = [beta](AReal x) { return x * beta; };
    A.Map(f);
 }
 
 //____________________________________________________________________________
-template <typename Real_t>
-void TCpu<Real_t>::ReciprocalElementWise(TCpuMatrix<Real_t> &A)
+template <typename AReal>
+void TCpu<AReal>::ReciprocalElementWise(TCpuMatrix<AReal> &A)
 {
-   auto f = [](Real_t x) { return 1.0 / x; };
+   auto f = [](AReal x) { return 1.0 / x; };
    A.Map(f);
 }
 
 //____________________________________________________________________________
-template <typename Real_t>
-void TCpu<Real_t>::SquareElementWise(TCpuMatrix<Real_t> &A)
+template <typename AReal>
+void TCpu<AReal>::SquareElementWise(TCpuMatrix<AReal> &A)
 {
-   auto f = [](Real_t x) { return x * x; };
+   auto f = [](AReal x) { return x * x; };
    A.Map(f);
 }
 
 //____________________________________________________________________________
-template <typename Real_t>
-void TCpu<Real_t>::SqrtElementWise(TCpuMatrix<Real_t> &A)
+template <typename AReal>
+void TCpu<AReal>::SqrtElementWise(TCpuMatrix<AReal> &A)
 {
-   auto f = [](Real_t x) { return sqrt(x); };
+   auto f = [](AReal x) { return sqrt(x); };
    A.Map(f);
 }
 
 /// Adam updates 
 //____________________________________________________________________________
-template<typename Real_t>
-void TCpu<Real_t>::AdamUpdate(TCpuMatrix<Real_t> &A, const TCpuMatrix<Real_t> & M, const TCpuMatrix<Real_t> & V, Real_t alpha, Real_t eps)
+template<typename AReal>
+void TCpu<AReal>::AdamUpdate(TCpuMatrix<AReal> &A, const TCpuMatrix<AReal> & M, const TCpuMatrix<AReal> & V, AReal alpha, AReal eps)
 {
    // ADAM update the weights.
    // Weight = Weight - alpha * M / (sqrt(V) + epsilon)
-   Real_t * a = A.GetRawDataPointer();
-   const Real_t * m = M.GetRawDataPointer(); 
-   const Real_t * v = V.GetRawDataPointer();
+   AReal * a = A.GetRawDataPointer();
+   const AReal * m = M.GetRawDataPointer(); 
+   const AReal * v = V.GetRawDataPointer();
    for (size_t index = 0; index < A.GetNoElements() ; ++index) {
       a[index] = a[index] - alpha * m[index]/( sqrt(v[index]) + eps);
    }
 }
 
 //____________________________________________________________________________
-template<typename Real_t>
-void TCpu<Real_t>::AdamUpdateFirstMom(TCpuMatrix<Real_t> &A, const TCpuMatrix<Real_t> & B, Real_t beta)
+template<typename AReal>
+void TCpu<AReal>::AdamUpdateFirstMom(TCpuMatrix<AReal> &A, const TCpuMatrix<AReal> & B, AReal beta)
 {
    // First momentum weight gradient update for ADAM
    // Mt = beta1 * Mt-1 + (1-beta1) * WeightGradients
-   Real_t * a = A.GetRawDataPointer();
-   const Real_t * b = B.GetRawDataPointer();
+   AReal * a = A.GetRawDataPointer();
+   const AReal * b = B.GetRawDataPointer();
    for (size_t index = 0; index < A.GetNoElements() ; ++index) {
       a[index] = beta * a[index] + (1.-beta) * b[index];
    }
 }
 //____________________________________________________________________________
-template<typename Real_t>
-void TCpu<Real_t>::AdamUpdateSecondMom(TCpuMatrix<Real_t> &A, const TCpuMatrix<Real_t> & B, Real_t beta)
+template<typename AReal>
+void TCpu<AReal>::AdamUpdateSecondMom(TCpuMatrix<AReal> &A, const TCpuMatrix<AReal> & B, AReal beta)
 {
    // Second momentum weight gradient update for ADAM 
    // Vt = beta2 * Vt-1 + (1-beta2) * WeightGradients^2
-   Real_t * a = A.GetRawDataPointer();
-   const Real_t * b = B.GetRawDataPointer();
+   AReal * a = A.GetRawDataPointer();
+   const AReal * b = B.GetRawDataPointer();
    for (size_t index = 0; index < A.GetNoElements() ; ++index) {
       a[index] = beta * a[index] + (1.-beta) * b[index] * b[index];
    }

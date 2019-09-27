@@ -68,32 +68,32 @@ namespace Blas
 // Type-Generic Wrappers
 //____________________________________________________________________________
 /** Add the vector \p x scaled by \p alpha to \p y scaled by \beta */
-template <typename Real_t>
-inline void Axpy(const int * n, const Real_t * alpha,
-                 const Real_t * x, const int * incx,
-                 Real_t * y, const int * incy);
+template <typename AReal>
+inline void Axpy(const int * n, const AReal * alpha,
+                 const AReal * x, const int * incx,
+                 AReal * y, const int * incy);
 
 /** Multiply the vector \p x with the matrix \p A and store the result in \p y. */
-template <typename Real_t>
+template <typename AReal>
 inline void Gemv(const char *trans, const int * m, const int * n,
-                 const Real_t * alpha, const Real_t * A, const int * lda,
-                 const Real_t * x, const int * incx,
-                 const Real_t * beta, Real_t * y, const int * incy);
+                 const AReal * alpha, const AReal * A, const int * lda,
+                 const AReal * x, const int * incx,
+                 const AReal * beta, AReal * y, const int * incy);
 
 /** Multiply the matrix \p A with the matrix \p B and store the result in \p C. */
-template <typename Real_t>
+template <typename AReal>
 inline void Gemm(const char *transa, const char *transb,
                  const int * m, const int * n, const int* k,
-                 const Real_t * alpha, const Real_t * A, const int * lda,
-                 const Real_t * B, const int * ldb, const Real_t * beta,
-                 Real_t * C, const int * ldc);
+                 const AReal * alpha, const AReal * A, const int * lda,
+                 const AReal * B, const int * ldb, const AReal * beta,
+                 AReal * C, const int * ldc);
 
 /** Add the outer product of \p x and \p y to the matrix \p A. */
-template <typename Real_t>
-inline void Ger(const int * m, const int * n, const Real_t * alpha,
-                const Real_t * x, const int * incx,
-                const Real_t * y, const int * incy,
-                Real_t * A, const int * lda);
+template <typename AReal>
+inline void Ger(const int * m, const int * n, const AReal * alpha,
+                const AReal * x, const int * incx,
+                const AReal * y, const int * incy,
+                AReal * A, const int * lda);
 
 // Specializations
 //____________________________________________________________________________

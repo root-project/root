@@ -27,6 +27,9 @@ int main()
 
     std::cout << "Testing Activation Functions:" << std::endl;
 
+    //create dummy tensor to initialize Cuda/Cudnn
+    TCudaTensor<Scalar_t> dummy(1, 1);
+
     double error;
 
     // Identity.
