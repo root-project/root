@@ -3220,17 +3220,22 @@ UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
 
    TIter next(GetElements());
    TStreamerElement *el;
-   while ( (el=(TStreamerElement*)next()) && !fClass->GetCollectionProxy()) { // loop over bases if not a proxied collection
-      if (el->IsBase()) {
-         name = el->GetName();
-         il = name.Length();
-         for (int i=0; i<il; i++) id = id*3+name[i];
-         if (code > TClass::kNoBaseCheckSum && el->IsA() == TStreamerBase::Class()) {
-            TStreamerBase *base = (TStreamerBase*)el;
-            id = id*3 + base->GetBaseCheckSum();
+   // Here we skip he base classes in case this is a pair or STL collection,
+   // otherwise, on some STL implementations, it can happen that pair has
+   // base classes which are an internal implementation detail.
+   if (!fClass->GetCollectionProxy() && strncmp(fClass->GetName(), "pair<", 5)) {
+      while ( (el=(TStreamerElement*)next())) { // loop over bases
+         if (el->IsBase()) {
+            name = el->GetName();
+            il = name.Length();
+            for (int i=0; i<il; i++) id = id*3+name[i];
+            if (code > TClass::kNoBaseCheckSum && el->IsA() == TStreamerBase::Class()) {
+               TStreamerBase *base = (TStreamerBase*)el;
+               id = id*3 + base->GetBaseCheckSum();
+            }
          }
-      }
-   } /* End of Base Loop */
+      } /* End of Base Loop */
+   }
 
    next.Reset();
    while ( (el=(TStreamerElement*)next()) ) {
