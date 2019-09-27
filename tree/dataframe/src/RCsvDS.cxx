@@ -95,6 +95,7 @@ std::string RCsvDS::AsString()
 TRegexp RCsvDS::intRegex("^[-+]?[0-9]+$");
 TRegexp RCsvDS::doubleRegex1("^[-+]?[0-9]+\\.[0-9]*$");
 TRegexp RCsvDS::doubleRegex2("^[-+]?[0-9]*\\.[0-9]+$");
+TRegexp RCsvDS::doubleRegex3("^[-+]?[0-9]*\\.[0-9]+[eE][-+]?[0-9]+$");
 TRegexp RCsvDS::trueRegex("^true$");
 TRegexp RCsvDS::falseRegex("^false$");
 
@@ -199,7 +200,9 @@ void RCsvDS::InferType(const std::string &col, unsigned int idxCol)
 
    if (intRegex.Index(col, &dummy) != -1) {
       type = 'l'; // Long64_t
-   } else if (doubleRegex1.Index(col, &dummy) != -1 || doubleRegex2.Index(col, &dummy) != -1) {
+   } else if (doubleRegex1.Index(col, &dummy) != -1 ||
+              doubleRegex2.Index(col, &dummy) != -1 ||
+              doubleRegex3.Index(col, &dummy) != -1) {
       type = 'd'; // double
    } else if (trueRegex.Index(col, &dummy) != -1 || falseRegex.Index(col, &dummy) != -1) {
       type = 'b'; // bool
