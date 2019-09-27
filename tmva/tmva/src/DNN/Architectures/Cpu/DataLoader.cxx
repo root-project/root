@@ -26,9 +26,9 @@ namespace DNN
 
 // TCpuBatchIterator
 //______________________________________________________________________________
-template<typename Data_t, typename Real_t>
-TCpuBatchIterator<Data_t, Real_t>::TCpuBatchIterator(
-    TCpuDataLoader<Data_t, Real_t> & dataLoader,
+template<typename AData, typename AReal>
+TCpuBatchIterator<AData, AReal>::TCpuBatchIterator(
+    TCpuDataLoader<AData, AReal> & dataLoader,
     size_t batchIndex)
     : fDataLoader(dataLoader), fBatchIndex(batchIndex)
 {
@@ -36,38 +36,38 @@ TCpuBatchIterator<Data_t, Real_t>::TCpuBatchIterator(
 }
 
 //______________________________________________________________________________
-template<typename Data_t, typename Real_t>
-TCpuBatch<Real_t> TCpuBatchIterator<Data_t, Real_t>::operator*()
+template<typename AData, typename AReal>
+TCpuBatch<AReal> TCpuBatchIterator<AData, AReal>::operator*()
 {
    return fDataLoader.GetBatch(fBatchIndex);
 }
 
 //______________________________________________________________________________
-template<typename Data_t, typename Real_t>
-TCpuBatchIterator<Data_t, Real_t> & TCpuBatchIterator<Data_t, Real_t>::operator++()
+template<typename AData, typename AReal>
+TCpuBatchIterator<AData, AReal> & TCpuBatchIterator<AData, AReal>::operator++()
 {
     fBatchIndex++;
     return *this;
 }
 
 //______________________________________________________________________________
-template<typename Data_t, typename Real_t>
-bool TCpuBatchIterator<Data_t, Real_t>::operator!=(const TCpuBatchIterator & other)
+template<typename AData, typename AReal>
+bool TCpuBatchIterator<AData, AReal>::operator!=(const TCpuBatchIterator & other)
 {
     return fBatchIndex != other.GetBatchIndex();
 }
 
 //______________________________________________________________________________
-template<typename Data_t, typename Real_t>
-bool TCpuBatchIterator<Data_t, Real_t>::operator==(const TCpuBatchIterator & other)
+template<typename AData, typename AReal>
+bool TCpuBatchIterator<AData, AReal>::operator==(const TCpuBatchIterator & other)
 {
     return fBatchIndex == other.GetBatchIndex();
 }
 
 // TCpuDataLoader
 //______________________________________________________________________________
-template<typename Data_t, typename Real_t>
-TCpuDataLoader<Data_t, Real_t>::TCpuDataLoader(const Data_t &input,
+template<typename AData, typename AReal>
+TCpuDataLoader<AData, AReal>::TCpuDataLoader(const AData &input,
                                                size_t nsamples,
                                                size_t batchSize,
                                                size_t ninputFeatures,
@@ -92,8 +92,8 @@ TCpuDataLoader<Data_t, Real_t>::TCpuDataLoader(const Data_t &input,
 }
 
 //______________________________________________________________________________
-template<typename Data_t, typename Real_t>
-inline void TCpuDataLoader<Data_t, Real_t>::CopyData(size_t batchIndex)
+template<typename AData, typename AReal>
+inline void TCpuDataLoader<AData, AReal>::CopyData(size_t batchIndex)
 {
    auto copy = [this](UInt_t workerID)
    {
@@ -113,20 +113,20 @@ inline void TCpuDataLoader<Data_t, Real_t>::CopyData(size_t batchIndex)
 }
 
 //______________________________________________________________________________
-template<typename Data_t, typename Real_t>
-TCpuBatch<Real_t> TCpuDataLoader<Data_t, Real_t>::GetBatch(size_t batchIndex)
+template<typename AData, typename AReal>
+TCpuBatch<AReal> TCpuDataLoader<AData, AReal>::GetBatch(size_t batchIndex)
 {
    size_t fBufferIndex = batchIndex % fBufferSize;
    if (fBufferIndex == 0) {
       CopyData(batchIndex);
    }
-   return TCpuBatch<Real_t>(fInputMatrices[fBufferIndex],
+   return TCpuBatch<AReal>(fInputMatrices[fBufferIndex],
                             fOutputMatrices[fBufferIndex]);
 }
 
 //______________________________________________________________________________
-template<typename Data_t, typename Real_t>
-auto TCpuDataLoader<Data_t, Real_t>::begin()
+template<typename AData, typename AReal>
+auto TCpuDataLoader<AData, AReal>::begin()
     -> BatchIterator_t
 {
    std::shuffle(fSampleIndices.begin(), fSampleIndices.end(), std::default_random_engine{});
@@ -134,8 +134,8 @@ auto TCpuDataLoader<Data_t, Real_t>::begin()
 }
 
 //______________________________________________________________________________
-template<typename Data_t, typename Real_t>
-auto TCpuDataLoader<Data_t, Real_t>::end()
+template<typename AData, typename AReal>
+auto TCpuDataLoader<AData, AReal>::end()
     -> BatchIterator_t
 {
    return BatchIterator_t(*this, fNBatches);

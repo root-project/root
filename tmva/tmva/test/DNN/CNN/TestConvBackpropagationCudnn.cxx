@@ -65,8 +65,8 @@ bool test2()
 
     size_t batchSizeTest = 4;
     size_t imgDepthTest = 1;
-    size_t imgHeightTest = 8;
-    size_t imgWidthTest = 8;
+    size_t imgHeightTest = 3;
+    size_t imgWidthTest = 3;
     size_t batchDepth = batchSizeTest;
     size_t batchHeight = imgDepthTest;
     size_t batchWidth = imgHeightTest * imgWidthTest;
@@ -87,7 +87,6 @@ int main()
     std::cout << "Test1: backward pass with linear activation network - compare with finite difference" << std::endl;
 
    // fix random initialization
-   gRandom->SetSeed(12345);
    TCudnn<double>::SetRandomSeed(12346);
 
 
@@ -95,14 +94,13 @@ int main()
       std::cerr << "ERROR - test1 failed " << std::endl;
       return -1;
    }
-   std::cout << ">>>>>>   Test1 :    OK !!!!";
-   //return 0; 
+   std::cout << ">>>>>>   Test1 :    OK !!!!" << std::endl;
+   //return 0;
 
    std::cout << "\n\n\n\nTest2: more complex network architecture no dropout" << std::endl;
    if (!test2()) {
       std::cerr << "ERROR - test2 failed " << std::endl;
       return -1;
    }
-    std::cout << ">>>>>>   Test2 :    OK !!!!";
+   std::cout << ">>>>>>   Test2 :    OK !!!!" << std::endl;
 }
-

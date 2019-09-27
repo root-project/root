@@ -51,7 +51,7 @@ struct TCudnnEmptyDescriptor {};
  * matrix and buffer types for this architecture, as well as the remaining 
  * functions in the low-level interface in the form of static members.
  */
-template<typename AFloat>
+template<typename AFloat = Float_t>
 class TCudnn
 {
 private:
@@ -1023,8 +1023,8 @@ void TCudnn<AFloat>::CopyDiffArch(std::vector<Tensor_t> &B,
    }
 }
 
-template <typename Real_t>
-void TCudnn<Real_t>::PrintTensor(const typename TCudnn<Real_t>::Tensor_t & A, const std::string name, bool truncate ) 
+template <typename AFloat>
+void TCudnn<AFloat>::PrintTensor(const typename TCudnn<AFloat>::Tensor_t & A, const std::string name, bool truncate ) 
 {
    std::cout << name << "  size = " << A.GetSize() << " shape = { "; 
    auto shape = A.GetShape(); 

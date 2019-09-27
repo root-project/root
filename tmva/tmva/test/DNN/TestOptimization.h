@@ -74,6 +74,9 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
    size_t nFeatures = 32;
    size_t batchSize = 32;
 
+   std::chrono::time_point<std::chrono::system_clock> tInitial, tFinal;
+   tInitial = std::chrono::system_clock::now();
+
    // Initialize train and test input
    // XTrain = (1 x nSamples x nFeatures)
    // XTest  = (1 x nSamples x nFeatures)
@@ -226,6 +229,7 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
    std::cout << " Before Training: Mean Absolute Error = " << meanAbsoluteError(Ytemp, K) << ",";
 
    Double_t minTestError = 0;
+   
    while (!converged) {
       optimizer->IncrementGlobalStep();
       trainingData.Shuffle(rng);
@@ -326,7 +330,6 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
       }
    }
 
-   std::cout << " No of Epochs = " << optimizer->GetGlobalStep() << ", ";
 
    deepNet.Forward(tI, false);
 
@@ -351,6 +354,11 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
          std::cout << std::endl;
       }
    }
+
+   tFinal = std::chrono::system_clock::now();
+   std::chrono::duration<double> totalTime = tFinal - tInitial;
+
+   std::cout << " No of Epochs = " << optimizer->GetGlobalStep() << ", total Time(sec) " << totalTime.count() << ", ";
 
    return meanAbsoluteError(Y, K);
 }

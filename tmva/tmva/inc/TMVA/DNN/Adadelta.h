@@ -58,6 +58,10 @@ protected:
                                                                  /// updates associated with the deep net.
    std::vector<std::vector<Matrix_t>> fPastSquaredBiasUpdates;   ///< The accumulation of the square of the past bias
                                                                  /// updates associated with the deep net.
+   std::vector<std::vector<Matrix_t>>  fWorkWeightTensor1; ///< working tensor used to keep a temporary copy of weights or weight gradients
+   std::vector<std::vector<Matrix_t>>  fWorkBiasTensor1; ///< working tensor used to keep a temporary copy of bias or bias gradients
+   std::vector<std::vector<Matrix_t>>  fWorkWeightTensor2; ///< working tensor used to keep a temporary copy of weights or weight gradients
+   std::vector<std::vector<Matrix_t>>  fWorkBiasTensor2; ///< working tensor used to keep a temporary copy of bias or bias gradients
 
    /*! Update the weights, given the current weight gradients. */
    void UpdateWeights(size_t layerIndex, std::vector<Matrix_t> &weights, const std::vector<Matrix_t> &weightGradients);
@@ -104,6 +108,10 @@ TAdadelta<Architecture_t, Layer_t, DeepNet_t>::TAdadelta(DeepNet_t &deepNet, Sca
    fPastSquaredBiasGradients.resize(layersNSlices);
    fPastSquaredWeightUpdates.resize(layersNSlices);
    fPastSquaredBiasUpdates.resize(layersNSlices);
+   fWorkWeightTensor1.resize(layersNSlices);
+   fWorkBiasTensor1.resize(layersNSlices);
+   fWorkWeightTensor2.resize(layersNSlices);
+   fWorkBiasTensor2.resize(layersNSlices);
 
    for (size_t i = 0; i < layersNSlices; i++) {
       const size_t weightsNSlices = (layers[i]->GetWeights()).size();
@@ -125,6 +133,11 @@ TAdadelta<Architecture_t, Layer_t, DeepNet_t>::TAdadelta(DeepNet_t &deepNet, Sca
          initialize<Architecture_t>(fPastSquaredBiasGradients[i][j], EInitialization::kZero);
          initialize<Architecture_t>(fPastSquaredBiasUpdates[i][j], EInitialization::kZero);
       }
+
+      Architecture_t::CreateWeightTensors(fWorkWeightTensor1[i], layers[i]->GetWeights());
+      Architecture_t::CreateWeightTensors(fWorkBiasTensor1[i], layers[i]->GetBiases());
+      Architecture_t::CreateWeightTensors(fWorkWeightTensor2[i], layers[i]->GetWeights());
+      Architecture_t::CreateWeightTensors(fWorkBiasTensor2[i], layers[i]->GetBiases());
    }
 }
 
@@ -136,36 +149,35 @@ auto TAdadelta<Architecture_t, Layer_t, DeepNet_t>::UpdateWeights(size_t layerIn
    std::vector<Matrix_t> &currentLayerPastSquaredWeightGradients = this->GetPastSquaredWeightGradientsAt(layerIndex);
    std::vector<Matrix_t> &currentLayerPastSquaredWeightUpdates = this->GetPastSquaredWeightUpdatesAt(layerIndex);
 
-   for (size_t k = 0; k < currentLayerPastSquaredWeightGradients.size(); k++) {
+   const size_t weightsNSlices = weights.size();
+   assert(currentLayerPastSquaredWeightGradients.size() == weightNSlices);
 
+   for (size_t i = 0; i < weightsNSlices; i++) {
       // accumulation matrix used for temporary storing of the current accumulation
-      Matrix_t accumulation(currentLayerPastSquaredWeightGradients[k].GetNrows(),
-                            currentLayerPastSquaredWeightGradients[k].GetNcols());
+      auto &accumulation = fWorkWeightTensor1[layerIndex][i];
+      auto &currentSquaredWeightGradients = fWorkWeightTensor2[layerIndex][i];
 
       // Vt = rho * Vt-1 + (1-rho) * currentSquaredWeightGradients
       initialize<Architecture_t>(accumulation, EInitialization::kZero);
-      Matrix_t currentSquaredWeightGradients(weightGradients[k].GetNrows(), weightGradients[k].GetNcols());
-      Architecture_t::Copy(currentSquaredWeightGradients, weightGradients[k]);
+      
+      Architecture_t::Copy(currentSquaredWeightGradients, weightGradients[i]);
       Architecture_t::SquareElementWise(currentSquaredWeightGradients);
-      Architecture_t::ScaleAdd(accumulation, currentLayerPastSquaredWeightGradients[k], this->GetRho());
+      Architecture_t::ScaleAdd(accumulation, currentLayerPastSquaredWeightGradients[i], this->GetRho());
       Architecture_t::ScaleAdd(accumulation, currentSquaredWeightGradients, 1 - (this->GetRho()));
-      Architecture_t::Copy(currentLayerPastSquaredWeightGradients[k], accumulation);
-   }
+      Architecture_t::Copy(currentLayerPastSquaredWeightGradients[i], accumulation);
+   
 
-   // updating the weights.
-   for (size_t i = 0; i < weights.size(); i++) {
-
+      // updating the weights.
       // currentWeightUpdates = sqrt(Wt + epsilon) * currentGradients / sqrt(Vt + epsilon)
 
       // dummy1 = sqrt(Wt + epsilon)
-      Matrix_t dummy1(currentLayerPastSquaredWeightUpdates[i].GetNrows(),
-                      currentLayerPastSquaredWeightUpdates[i].GetNcols());
+      auto &dummy1 = fWorkWeightTensor1[layerIndex][i];  // reuse working tensor
       Architecture_t::Copy(dummy1, currentLayerPastSquaredWeightUpdates[i]);
       Architecture_t::ConstAdd(dummy1, this->GetEpsilon());
       Architecture_t::SqrtElementWise(dummy1);
 
-      Matrix_t currentWeightUpdates(currentLayerPastSquaredWeightGradients[i].GetNrows(),
-                                    currentLayerPastSquaredWeightGradients[i].GetNcols());
+      auto &currentWeightUpdates = fWorkWeightTensor2[layerIndex][i]; // reuse the work tensor for the weight updates now
+
       Architecture_t::Copy(currentWeightUpdates, currentLayerPastSquaredWeightGradients[i]);
       Architecture_t::ConstAdd(currentWeightUpdates, this->GetEpsilon());
       Architecture_t::SqrtElementWise(currentWeightUpdates);
@@ -176,13 +188,10 @@ auto TAdadelta<Architecture_t, Layer_t, DeepNet_t>::UpdateWeights(size_t layerIn
       // theta = theta - learningRate * currentWeightUpdates
       Architecture_t::ScaleAdd(weights[i], currentWeightUpdates, -this->GetLearningRate());
 
-      // accumulation matrix used for temporary storing of the current accumulation
-      Matrix_t accumulation(currentLayerPastSquaredWeightUpdates[i].GetNrows(),
-                            currentLayerPastSquaredWeightUpdates[i].GetNcols());
-
       // Wt = rho * Wt-1 + (1-rho) * currentSquaredWeightUpdates
+      // re-use accumulation matrix used for temporary storing of the current accumulation
       initialize<Architecture_t>(accumulation, EInitialization::kZero);
-      Matrix_t currentSquaredWeightUpdates(currentWeightUpdates.GetNrows(), currentWeightUpdates.GetNcols());
+      auto &currentSquaredWeightUpdates = fWorkWeightTensor2[layerIndex][i]; // reuse work tensor
       Architecture_t::Copy(currentSquaredWeightUpdates, currentWeightUpdates);
       Architecture_t::SquareElementWise(currentSquaredWeightUpdates);
       Architecture_t::ScaleAdd(accumulation, currentLayerPastSquaredWeightUpdates[i], this->GetRho());
@@ -199,36 +208,33 @@ auto TAdadelta<Architecture_t, Layer_t, DeepNet_t>::UpdateBiases(size_t layerInd
    std::vector<Matrix_t> &currentLayerPastSquaredBiasGradients = this->GetPastSquaredBiasGradientsAt(layerIndex);
    std::vector<Matrix_t> &currentLayerPastSquaredBiasUpdates = this->GetPastSquaredBiasUpdatesAt(layerIndex);
 
-   for (size_t k = 0; k < currentLayerPastSquaredBiasGradients.size(); k++) {
+   const size_t biasesNSlices = biases.size();
+   assert(currentLayerPastSquaredBiasGradients.size() == biasedNSlices);
+   for (size_t i = 0; i < biasesNSlices; i++) {
 
       // accumulation matrix used for temporary storing of the current accumulation
-      Matrix_t accumulation(currentLayerPastSquaredBiasGradients[k].GetNrows(),
-                            currentLayerPastSquaredBiasGradients[k].GetNcols());
+      auto &accumulation = fWorkBiasTensor1[layerIndex][i];
 
       // Vt = rho * Vt-1 + (1-rho) * currentSquaredBiasGradients
       initialize<Architecture_t>(accumulation, EInitialization::kZero);
-      Matrix_t currentSquaredBiasGradients(biasGradients[k].GetNrows(), biasGradients[k].GetNcols());
-      Architecture_t::Copy(currentSquaredBiasGradients, biasGradients[k]);
-      Architecture_t::SquareElementWise(currentSquaredBiasGradients);
-      Architecture_t::ScaleAdd(accumulation, currentLayerPastSquaredBiasGradients[k], this->GetRho());
-      Architecture_t::ScaleAdd(accumulation, currentSquaredBiasGradients, 1 - (this->GetRho()));
-      Architecture_t::Copy(currentLayerPastSquaredBiasGradients[k], accumulation);
-   }
 
-   // updating the biases.
-   for (size_t i = 0; i < biases.size(); i++) {
+      auto &currentSquaredBiasGradients = fWorkBiasTensor2[layerIndex][i];
+      Architecture_t::Copy(currentSquaredBiasGradients, biasGradients[i]);
+      Architecture_t::SquareElementWise(currentSquaredBiasGradients);
+      Architecture_t::ScaleAdd(accumulation, currentLayerPastSquaredBiasGradients[i], this->GetRho());
+      Architecture_t::ScaleAdd(accumulation, currentSquaredBiasGradients, 1 - (this->GetRho()));
+      Architecture_t::Copy(currentLayerPastSquaredBiasGradients[i], accumulation);
+
+      // updating the biases.
 
       // currentBiasUpdates = sqrt(Wt + epsilon) * currentGradients / sqrt(Vt + epsilon)
-
       // dummy1 = sqrt(Wt + epsilon)
-      Matrix_t dummy1(currentLayerPastSquaredBiasUpdates[i].GetNrows(),
-                      currentLayerPastSquaredBiasUpdates[i].GetNcols());
+      auto &dummy1 = fWorkBiasTensor1[layerIndex][i]; // reuse working tensor
       Architecture_t::Copy(dummy1, currentLayerPastSquaredBiasUpdates[i]);
       Architecture_t::ConstAdd(dummy1, this->GetEpsilon());
       Architecture_t::SqrtElementWise(dummy1);
 
-      Matrix_t currentBiasUpdates(currentLayerPastSquaredBiasGradients[i].GetNrows(),
-                                  currentLayerPastSquaredBiasGradients[i].GetNcols());
+      auto &currentBiasUpdates = fWorkBiasTensor2[layerIndex][i];
       Architecture_t::Copy(currentBiasUpdates, currentLayerPastSquaredBiasGradients[i]);
       Architecture_t::ConstAdd(currentBiasUpdates, this->GetEpsilon());
       Architecture_t::SqrtElementWise(currentBiasUpdates);
@@ -239,13 +245,11 @@ auto TAdadelta<Architecture_t, Layer_t, DeepNet_t>::UpdateBiases(size_t layerInd
       // theta = theta - learningRate * currentBiasUpdates
       Architecture_t::ScaleAdd(biases[i], currentBiasUpdates, -this->GetLearningRate());
 
-      // accumulation matrix used for temporary storing of the current accumulation
-      Matrix_t accumulation(currentLayerPastSquaredBiasUpdates[i].GetNrows(),
-                            currentLayerPastSquaredBiasUpdates[i].GetNcols());
 
       // Wt = rho * Wt-1 + (1-rho) * currentSquaredBiasUpdates
+      // re-use accumulation matrix used for temporary storing of the current accumulation
       initialize<Architecture_t>(accumulation, EInitialization::kZero);
-      Matrix_t currentSquaredBiasUpdates(currentBiasUpdates.GetNrows(), currentBiasUpdates.GetNcols());
+      auto &currentSquaredBiasUpdates = fWorkBiasTensor2[layerIndex][i]; // reuse work tensor
       Architecture_t::Copy(currentSquaredBiasUpdates, currentBiasUpdates);
       Architecture_t::SquareElementWise(currentSquaredBiasUpdates);
       Architecture_t::ScaleAdd(accumulation, currentLayerPastSquaredBiasUpdates[i], this->GetRho());

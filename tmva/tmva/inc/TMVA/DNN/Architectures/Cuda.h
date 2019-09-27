@@ -59,7 +59,7 @@ namespace DNN
  * for this architecture as well as the remaining functions in the low-level
  * interface in the form of static members.
  */
-template<typename AReal = Real_t>
+template<typename AReal = Float_t>
 class TCuda
 {
 private:
@@ -796,8 +796,8 @@ void TCuda<AFloat>::CopyDiffArch(std::vector<TCudaMatrix<AFloat>> &B,
    }
 }
 
-template <typename Real_t>
-void TCuda<Real_t>::PrintTensor(const typename TCuda<Real_t>::Tensor_t & A, const std::string name, bool  ) 
+template <typename AFloat>
+void TCuda<AFloat>::PrintTensor(const typename TCuda<AFloat>::Tensor_t & A, const std::string name, bool  ) 
 {
    std::cout << name << "  size = " << A.GetSize() << " shape = { "; 
    auto shape = A.GetShape(); 

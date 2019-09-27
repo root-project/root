@@ -55,7 +55,7 @@ namespace DNN
  * for this architecture as well as the remaining functions in the low-level
  * interface in the form of static members.
  */
-template<typename AReal = Real_t>
+template<typename AReal = Float_t>
 class TCpu
 {
 private:
@@ -762,21 +762,21 @@ public:
 };
 
 //____________________________________________________________________________
-template <typename Real_t>
+template <typename AReal>
 template <typename AMatrix_t>
-void TCpu<Real_t>::CopyDiffArch(TCpuMatrix<Real_t> &B,
+void TCpu<AReal>::CopyDiffArch(TCpuMatrix<AReal> &B,
                         const AMatrix_t &A)
 {
    // copy from another architecture using the reference one
    // this is not very efficient since creates temporary objects
-   TMatrixT<Real_t> tmp = A;
-   Copy(B, TCpuMatrix<Real_t>(tmp) ); 
+   TMatrixT<AReal> tmp = A;
+   Copy(B, TCpuMatrix<AReal>(tmp) ); 
 }
 
 //____________________________________________________________________________
-template <typename Real_t>
+template <typename AReal>
 template <typename ATensor_t>
-void TCpu<Real_t>::CopyDiffArch(TCpuTensor<Real_t> &B,
+void TCpu<AReal>::CopyDiffArch(TCpuTensor<AReal> &B,
                             const ATensor_t &A)
 {
    // assume tensor are dim 3 and can be converted in a matrix
@@ -786,17 +786,17 @@ void TCpu<Real_t>::CopyDiffArch(TCpuTensor<Real_t> &B,
 }
 
 // implementation using vector of matrices for the weights
-template <typename Real_t>
+template <typename AReal>
 template <typename AMatrix_t>
-void TCpu<Real_t>::CopyDiffArch(std::vector<TCpuMatrix<Real_t>> &A, const std::vector<AMatrix_t> &B)
+void TCpu<AReal>::CopyDiffArch(std::vector<TCpuMatrix<AReal>> &A, const std::vector<AMatrix_t> &B)
 {
    for (size_t i = 0; i < A.size(); ++i) {
       CopyDiffArch(A[i], B[i]);
    }
 }
 
-template <typename Real_t>
-void TCpu<Real_t>::PrintTensor(const typename TCpu<Real_t>::Tensor_t & A, const std::string name, bool truncate ) 
+template <typename AReal>
+void TCpu<AReal>::PrintTensor(const typename TCpu<AReal>::Tensor_t & A, const std::string name, bool truncate ) 
 {
    std::cout << name << " size = " << A.GetSize() << " shape = { "; 
    auto shape = A.GetShape(); 
