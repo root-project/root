@@ -30,387 +30,346 @@ Cranmer KS, Kernel Estimation in High-Energy Physics.
             Computer Physics Communications 136:198-207,2001 - e-Print Archive: hep ex/0011057
 **/
 
-#include "RooFit.h"
-
-#include <limits>
-#include <algorithm>
-#include <cmath>
-#include "Riostream.h"
-#include "TMath.h"
-
 #include "RooKeysPdf.h"
+#include "RooFit.h"
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
-#include "RooRandom.h"
 #include "RooDataSet.h"
-#include "RooTrace.h"
+#include "RooVDTHeaders.h"
 
-#include "TError.h"
-
-using namespace std;
+#include <algorithm>
+#include <cmath>
 
 ClassImp(RooKeysPdf);
 
-const Double_t RooKeysPdf::_nSigma = std::sqrt(-2. *
-    std::log(std::numeric_limits<Double_t>::epsilon()));
-
 ////////////////////////////////////////////////////////////////////////////////
-/// coverity[UNINIT_CTOR]
 
-  RooKeysPdf::RooKeysPdf() : _nEvents(0), _dataPts(0), _dataWgts(0), _weights(0), _sumWgt(0),
-              _mirrorLeft(kFALSE), _mirrorRight(kFALSE),
-              _asymLeft(kFALSE), _asymRight(kFALSE)
+  RooKeysPdf::RooKeysPdf() : 
+    nEvents           (0),
+    nBins             (1000), 
+    mirrorLeft        (false), 
+    mirrorRight       (false),
+    asymLeft          (false), 
+    asymRight         (false)
 {
-  TRACE_CREATE
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Make a new RooKeysPdf.
-///
-/// \param[in] name Name of this object.
-/// \param[in] title Title (for e.g. plotting)
-/// \param[in] x The variable of this PDF.
-/// \param[in] data Data to construct the density from.
-/// \param[in] mirror Enumerator to choose the strategy for mirroring the distribution at the edges
-/// of `x`'s value range.
-/// \param[in] rho Scale kernel widths. Defaults to 1.
-RooKeysPdf::RooKeysPdf(const char *name, const char *title,
+
+RooKeysPdf::RooKeysPdf(const char* name, const char* title,
                        RooAbsReal& x, RooDataSet& data,
-                       Mirror mirror, Double_t rho) :
-  RooAbsPdf(name,title),
-  _x("x","observable",this,x),
-  _nEvents(0),
-  _dataPts(0),
-  _dataWgts(0),
-  _weights(0),
-  _mirrorLeft(mirror==MirrorLeft || mirror==MirrorBoth || mirror==MirrorLeftAsymRight),
-  _mirrorRight(mirror==MirrorRight || mirror==MirrorBoth || mirror==MirrorAsymLeftRight),
-  _asymLeft(mirror==MirrorAsymLeft || mirror==MirrorAsymLeftRight || mirror==MirrorAsymBoth),
-  _asymRight(mirror==MirrorAsymRight || mirror==MirrorLeftAsymRight || mirror==MirrorAsymBoth),
-  _rho(rho)
+                       Mirror mirror, double rho, int nBins) :
+  RooAbsPdf     (name,title),
+  x             ("x","observable",this,x),
+  nEvents       (0),
+  nBins         (nBins),
+  mirrorLeft    (mirror==MirrorLeft || mirror==MirrorBoth || mirror==MirrorLeftAsymRight),
+  mirrorRight   (mirror==MirrorRight || mirror==MirrorBoth || mirror==MirrorAsymLeftRight),
+  asymLeft      (mirror==MirrorAsymLeft || mirror==MirrorAsymLeftRight || mirror==MirrorAsymBoth),
+  asymRight     (mirror==MirrorAsymRight || mirror==MirrorLeftAsymRight || mirror==MirrorAsymBoth),
+  rho           (rho),
+  varName       (x.GetName()),
+  lookupTable   (std::vector<double>(nBins+1,0))
 {
-  snprintf(_varName, 128,"%s", x.GetName());
-  RooAbsRealLValue& real= (RooRealVar&)(_x.arg());
-  _lo = real.getMin();
-  _hi = real.getMax();
-  _binWidth = (_hi-_lo)/(_nPoints-1);
+  RooAbsRealLValue& real= (RooRealVar&)(this->x.arg());
+  lo = real.getMin();
+  hi = real.getMax();
+  binWidth = (hi-lo) / nBins;
 
   // form the lookup table
   LoadDataSet(data);
-  TRACE_CREATE
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// cache stuff about x
 
-RooKeysPdf::RooKeysPdf(const char *name, const char *title,
+RooKeysPdf::RooKeysPdf(const char* name, const char* title,
                        RooAbsReal& xpdf, RooRealVar& xdata, RooDataSet& data,
-                       Mirror mirror, Double_t rho) :
-  RooAbsPdf(name,title),
-  _x("x","Observable",this,xpdf),
-  _nEvents(0),
-  _dataPts(0),
-  _dataWgts(0),
-  _weights(0),
-  _mirrorLeft(mirror==MirrorLeft || mirror==MirrorBoth || mirror==MirrorLeftAsymRight),
-  _mirrorRight(mirror==MirrorRight || mirror==MirrorBoth || mirror==MirrorAsymLeftRight),
-  _asymLeft(mirror==MirrorAsymLeft || mirror==MirrorAsymLeftRight || mirror==MirrorAsymBoth),
-  _asymRight(mirror==MirrorAsymRight || mirror==MirrorLeftAsymRight || mirror==MirrorAsymBoth),
-  _rho(rho)
+                       Mirror mirror, double rho, int nBins) :
+  RooAbsPdf     (name,title),
+  x             ("x","Observable",this,xpdf),
+  nEvents       (0),
+  nBins         (nBins),
+  mirrorLeft    (mirror==MirrorLeft || mirror==MirrorBoth || mirror==MirrorLeftAsymRight),
+  mirrorRight   (mirror==MirrorRight || mirror==MirrorBoth || mirror==MirrorAsymLeftRight),
+  asymLeft      (mirror==MirrorAsymLeft || mirror==MirrorAsymLeftRight || mirror==MirrorAsymBoth),
+  asymRight     (mirror==MirrorAsymRight || mirror==MirrorLeftAsymRight || mirror==MirrorAsymBoth),
+  rho           (rho),
+  varName       (xdata.GetName()),
+  lookupTable   (std::vector<double>(nBins+1,0))
 {
-  snprintf(_varName, 128,"%s", xdata.GetName());
   RooAbsRealLValue& real= (RooRealVar&)(xdata);
-  _lo = real.getMin();
-  _hi = real.getMax();
-  _binWidth = (_hi-_lo)/(_nPoints-1);
+  lo = real.getMin();
+  hi = real.getMax();
+  binWidth = (hi-lo) / nBins;
+  /* Trick: we actually divide the hi-lo range into nBins. However,
+   * when the time comes to do linear extrapolation, if we need the 
+   * estimated value for a point that belongs to bin nBins-1, we also
+   * need the value at point hi. This corresponds to the limit of the
+   * bins nBin-1 and nBin (indexing begins from 0). So we need one extra bin.
+   * Check the evaluate function for a better understanding.
+   */
 
   // form the lookup table
   LoadDataSet(data);
-  TRACE_CREATE
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 RooKeysPdf::RooKeysPdf(const RooKeysPdf& other, const char* name):
-  RooAbsPdf(other,name), _x("x",this,other._x), _nEvents(other._nEvents),
-  _dataPts(0), _dataWgts(0), _weights(0), _sumWgt(0),
-  _mirrorLeft( other._mirrorLeft ), _mirrorRight( other._mirrorRight ),
-  _asymLeft(other._asymLeft), _asymRight(other._asymRight),
-  _rho( other._rho ) {
-  // cache stuff about x
-  snprintf(_varName, 128, "%s", other._varName );
-  _lo = other._lo;
-  _hi = other._hi;
-  _binWidth = other._binWidth;
+  RooAbsPdf     (other,name), 
+  x             ("x",this,other.x), 
+  nEvents       (other.nEvents),
+  nBins         (other.nBins),
+  lookupTable   (other.lookupTable), //copy the lookup table
+  mirrorLeft    (other.mirrorLeft), 
+  mirrorRight   (other.mirrorRight),
+  asymLeft      (other.asymLeft), 
+  asymRight     (other.asymRight),
+  rho           (other.rho),
+  varName       (other.varName),
+  lo            (other.lo),
+  binWidth      (other.binWidth)
+{
+}
 
-  // copy over data and weights... not necessary, commented out for speed
-//    _dataPts = new Double_t[_nEvents];
-//    _weights = new Double_t[_nEvents];
-//    for (Int_t i= 0; i<_nEvents; i++) {
-//      _dataPts[i]= other._dataPts[i];
-//      _weights[i]= other._weights[i];
-//    }
-
-  // copy over the lookup table
-  for (Int_t i= 0; i<_nPoints+1; i++)
-    _lookupTable[i]= other._lookupTable[i];
-
-  TRACE_CREATE
+////////////////////////////////////////////////////////////////////////////////
+RooKeysPdf::~RooKeysPdf()
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooKeysPdf::~RooKeysPdf() {
-  delete[] _dataPts;
-  delete[] _dataWgts;
-  delete[] _weights;
-
-  TRACE_DESTROY
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// small helper structure
-
-namespace {
-  struct Data {
-    Double_t x;
-    Double_t w;
-  };
-  // helper to order two Data structures
-  struct cmp {
-    inline bool operator()(const struct Data& a, const struct Data& b) const
-    { return a.x < b.x; }
-  };
-}
 void RooKeysPdf::LoadDataSet( RooDataSet& data) {
-  delete[] _dataPts;
-  delete[] _dataWgts;
-  delete[] _weights;
+  nEvents = data.numEntries(); // before mirroring
+  const size_t duplicateFactor = 1 +mirrorLeft +mirrorRight;
+  nTotalEvents = duplicateFactor*nEvents; // after mirroring
+  dataArr.resize(nTotalEvents);
+  adaptedWidthArr.resize(nTotalEvents);
+  
+  auto xFromDataSet = static_cast<RooRealVar*>(data.get()->find(x.arg()));
+  if (!xFromDataSet)
+    throw std::runtime_error("Couldn't find x, Blabla");
+  data.attachBuffers(RooArgSet(*xFromDataSet));
 
-  std::vector<Data> tmp;
-  tmp.reserve((1 + _mirrorLeft + _mirrorRight) * data.numEntries());
-  Double_t x0 = 0., x1 = 0., x2 = 0.;
-  _sumWgt = 0.;
-  // read the data set into tmp and accumulate some statistics
-  RooRealVar& real = (RooRealVar&)(data.get()->operator[](_varName));
-  for (Int_t i = 0; i < data.numEntries(); ++i) {
-    data.get(i);
-    const Double_t x = real.getVal();
-    const Double_t w = data.weight();
+  RooSpan<const double> pointData = xFromDataSet->getValBatch(0, nEvents);
+  RooSpan<const double> weightData = data.getWeightBatch(0, nEvents);
+  if (pointData.empty())
+    throw std::runtime_error("No data to construct density from.");
+    
+  // x0, x1, x2 are the 0th, 1st and 2nd momentums
+  double x0=0.0, x1=0.0, x2=0.0, sumWgt=0.0;
+    
+  for (size_t i=0, iii=0; i<nEvents; i++, iii+=duplicateFactor) {
+    // i for reading from the spans, iii for writing to the arrays  
+    const double x = pointData[i]; 
+    const double w = 1; //weightData[i]; -------------------------!!! To be fixed
+    
+    dataArr[iii].x = x;
+    dataArr[iii].w = w;
     x0 += w;
-    x1 += w * x;
-    x2 += w * x * x;
-    _sumWgt += Double_t(1 + _mirrorLeft + _mirrorRight) * w;
+    x1 += w*x;
+    x2 += w*x*x;
 
-    Data p;
-    p.x = x, p.w = w;
-    tmp.push_back(p);
-    if (_mirrorLeft) {
-      p.x = 2. * _lo - x;
-      tmp.push_back(p);
-    }
-    if (_mirrorRight) {
-      p.x = 2. * _hi - x;
-      tmp.push_back(p);
+    if (mirrorLeft && mirrorRight) {
+      dataArr[iii+1].x = 2*lo-x;
+      dataArr[iii+2].x = 2*hi-x;
+      dataArr[iii+1].w = dataArr[iii+2].w = w;
+    } else if (mirrorLeft) {
+      dataArr[iii+1].x = 2*lo-x;
+      dataArr[iii+1].w = w;
+    } else if (mirrorRight) {
+      dataArr[iii+1].x = 2*hi-x;
+      dataArr[iii+1].w = w;
     }
   }
+    
   // sort the entire data set so that values of x are increasing
-  std::sort(tmp.begin(), tmp.end(), cmp());
+  std::sort(dataArr.begin(), dataArr.end(), Data::compare);
+    
+  sumWgt = duplicateFactor*x0;
+  double mean = x1/x0;
+  double sigma = std::sqrt(x2/x0 -mean*mean);
+  double h = std::pow(nTotalEvents,-0.2)*sigma*rho*1.05922384104881225329; //(4/3)^(1/5)
+  double hmin = h*0.14142135623730950488; // sqrt(2)/10
+  double norm = h/std::sqrt(sigma)/ 3.46410161513775458705; //3.5449077018110320546; // 2sqrt(pi)
+  
+  
+  printf("New =================================================\n");
+  
+  //~ for (auto i: {mean,sigma,h,hmin,norm}) printf("%lf ",i);
+  //~ printf("\n");
 
-  // copy the sorted data set to its final destination
-  _nEvents = tmp.size();
-  _dataPts  = new Double_t[_nEvents];
-  _dataWgts = new Double_t[_nEvents];
-  for (unsigned i = 0; i < tmp.size(); ++i) {
-    _dataPts[i] = tmp[i].x;
-    _dataWgts[i] = tmp[i].w;
+  unsigned int __start=0, __end=0; //helper variables only used in gaussian()
+  for(size_t i=0; i<nTotalEvents; ++i) {
+    adaptedWidthArr[i] = norm/std::sqrt( gaussian(dataArr[i].x,h,__start,__end) );
+    if (adaptedWidthArr[i]<hmin) adaptedWidthArr[i]=hmin;
+    //~ printf("%lf ",adaptedWidthArr[i]);
   }
-  {
-    // free tmp
-    std::vector<Data> tmp2;
-    tmp2.swap(tmp);
-  }
+  //~ printf("\n");
 
-  Double_t meanv=x1/x0;
-  Double_t sigmav=std::sqrt(x2/x0-meanv*meanv);
-  Double_t h=std::pow(Double_t(4)/Double_t(3),0.2)*std::pow(_nEvents,-0.2)*_rho;
-  Double_t hmin=h*sigmav*std::sqrt(2.)/10;
-  Double_t norm=h*std::sqrt(sigmav)/(2.0*std::sqrt(3.0));
-
-  _weights=new Double_t[_nEvents];
-  for(Int_t j=0;j<_nEvents;++j) {
-    _weights[j]=norm/std::sqrt(g(_dataPts[j],h*sigmav));
-    if (_weights[j]<hmin) _weights[j]=hmin;
-  }
-
-  // The idea below is that beyond nSigma sigma, the value of the exponential
+  // The idea below is that beyond sigmaLowLimit sigma, the value of the exponential
   // in the Gaussian is well below the machine precision of a double, so it
   // does not contribute any more. That way, we can limit how many bins of the
-  // binned approximation in _lookupTable we have to touch when filling it.
-  for (Int_t i=0;i<_nPoints+1;++i) _lookupTable[i] = 0.;
-  for(Int_t j=0;j<_nEvents;++j) {
-      const Double_t xlo = std::min(_hi,
-         std::max(_lo, _dataPts[j] - _nSigma * _weights[j]));
-      const Double_t xhi = std::max(_lo,
-         std::min(_hi, _dataPts[j] + _nSigma * _weights[j]));
-      if (xlo >= xhi) continue;
-      const Double_t chi2incr = _binWidth / _weights[j] / std::sqrt(2.);
-      const Double_t weightratio = _dataWgts[j] / _weights[j];
-      const Int_t binlo = static_cast<Int_t>(std::floor((xlo - _lo) / _binWidth));
-      const Int_t binhi = static_cast<Int_t>(_nPoints - std::floor((_hi - xhi) / _binWidth));
-      const Double_t x = (Double_t(_nPoints - binlo) * _lo +
-         Double_t(binlo) * _hi) / Double_t(_nPoints);
-      Double_t chi = (x - _dataPts[j]) / _weights[j] / std::sqrt(2.);
-      for (Int_t k = binlo; k <= binhi; ++k, chi += chi2incr) {
-     _lookupTable[k] += weightratio * std::exp(- chi * chi);
-      }
+  // binned approximation in lookupTable we have to touch when filling it.
+  for (int i=0; i<nBins+1; ++i) {
+    lookupTable[i] = 0.0;
   }
-  if (_asymLeft) {
-      for(Int_t j=0;j<_nEvents;++j) {
-     const Double_t xlo = std::min(_hi,
-        std::max(_lo, 2. * _lo - _dataPts[j] + _nSigma * _weights[j]));
-     const Double_t xhi = std::max(_lo,
-        std::min(_hi, 2. * _lo - _dataPts[j] - _nSigma * _weights[j]));
-     if (xlo >= xhi) continue;
-     const Double_t chi2incr = _binWidth / _weights[j] / std::sqrt(2.);
-     const Double_t weightratio = _dataWgts[j] / _weights[j];
-     const Int_t binlo = static_cast<Int_t>(std::floor((xlo - _lo) / _binWidth));
-     const Int_t binhi = static_cast<Int_t>(_nPoints - std::floor((_hi - xhi) / _binWidth));
-     const Double_t x = (Double_t(_nPoints - binlo) * _lo +
-        Double_t(binlo) * _hi) / Double_t(_nPoints);
-     Double_t chi = (x - (2. * _lo - _dataPts[j])) / _weights[j] / std::sqrt(2.);
-     for (Int_t k = binlo; k <= binhi; ++k, chi += chi2incr) {
-         _lookupTable[k] -= weightratio * std::exp(- chi * chi);
-     }
-      }
+  //~ printf("SigmaLowLimit=%lf\n",sigmaLowLimit);
+  for(size_t i=0; i<nTotalEvents; ++i) {
+    fillLookupTable(dataArr[i].x, dataArr[i].w, adaptedWidthArr[i], +1);
+    if (asymLeft)  fillLookupTable(2*lo -dataArr[i].x, dataArr[i].w, adaptedWidthArr[i], -1);
+    if (asymRight) fillLookupTable(2*hi -dataArr[i].x, dataArr[i].w, adaptedWidthArr[i], -1);
   }
-  if (_asymRight) {
-      for(Int_t j=0;j<_nEvents;++j) {
-     const Double_t xlo = std::min(_hi,
-        std::max(_lo, 2. * _hi - _dataPts[j] + _nSigma * _weights[j]));
-     const Double_t xhi = std::max(_lo,
-        std::min(_hi, 2. * _hi - _dataPts[j] - _nSigma * _weights[j]));
-     if (xlo >= xhi) continue;
-     const Double_t chi2incr = _binWidth / _weights[j] / std::sqrt(2.);
-     const Double_t weightratio = _dataWgts[j] / _weights[j];
-     const Int_t binlo = static_cast<Int_t>(std::floor((xlo - _lo) / _binWidth));
-     const Int_t binhi = static_cast<Int_t>(_nPoints - std::floor((_hi - xhi) / _binWidth));
-     const Double_t x = (Double_t(_nPoints - binlo) * _lo +
-        Double_t(binlo) * _hi) / Double_t(_nPoints);
-     Double_t chi = (x - (2. * _hi - _dataPts[j])) / _weights[j] / std::sqrt(2.);
-     for (Int_t k = binlo; k <= binhi; ++k, chi += chi2incr) {
-         _lookupTable[k] -= weightratio * std::exp(- chi * chi);
-     }
-      }
+  for (int i=0; i<nBins+1; ++i) {
+    lookupTable[i] /= 2.50662827463100050242 * sumWgt; //sqrt(2pi)
+    //~ printf(i%10 ? "%lf " : "%lf\n",lookupTable[i]);
   }
-  static const Double_t sqrt2pi(std::sqrt(2*TMath::Pi()));
-  for (Int_t i=0;i<_nPoints+1;++i)
-    _lookupTable[i] /= sqrt2pi * _sumWgt;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooKeysPdf::evaluate() const {
-  Int_t i = (Int_t)floor((Double_t(_x)-_lo)/_binWidth);
+double RooKeysPdf::evaluate() const {
+  const double realX = x;
+  int i = static_cast<int>( (realX-lo)/binWidth );
   if (i<0) {
 //     cerr << "got point below lower bound:"
-//     << Double_t(_x) << " < " << _lo
+//     << double(x) << " < " << lo
 //     << " -- performing linear extrapolation..." << endl;
     i=0;
   }
-  if (i>_nPoints-1) {
+  if (i>nBins-1) {
 //     cerr << "got point above upper bound:"
-//     << Double_t(_x) << " > " << _hi
+//     << double(x) << " > " << hi
 //     << " -- performing linear extrapolation..." << endl;
-    i=_nPoints-1;
+    i=nBins-1;
   }
-  Double_t dx = (Double_t(_x)-(_lo+i*_binWidth))/_binWidth;
-
+  double dx = (realX-lo)/binWidth -i;
+  
   // for now do simple linear interpolation.
   // one day replace by splines...
-  Double_t ret = (_lookupTable[i]+dx*(_lookupTable[i+1]-_lookupTable[i]));
-  if (ret<0) ret=0 ;
-  return ret ;
+  double ret = lookupTable[i] +dx*(lookupTable[i+1]-lookupTable[i]) ;
+  if (ret<0) ret=0;
+  printf("%lf\n",ret);
+  return ret;
 }
 
-Int_t RooKeysPdf::getAnalyticalIntegral(
+int RooKeysPdf::getAnalyticalIntegral(
    RooArgSet& allVars, RooArgSet& analVars, const char* /* rangeName */) const
 {
-  if (matchArgs(allVars, analVars, _x)) return 1;
+  if (matchArgs(allVars, analVars, x)) return 1;
   return 0;
 }
 
-Double_t RooKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooKeysPdf::analyticalIntegral(int code, const char* rangeName) const
 {
-  R__ASSERT(1 == code);
-  // this code is based on _lookupTable and uses linear interpolation, just as
+  assert(1 == code);
+  // this code is based on lookupTable and uses linear interpolation, just as
   // evaluate(); integration is done using the trapez rule
-  const Double_t xmin = std::max(_lo, _x.min(rangeName));
-  const Double_t xmax = std::min(_hi, _x.max(rangeName));
-  const Int_t imin = (Int_t)floor((xmin - _lo) / _binWidth);
-  const Int_t imax = std::min((Int_t)floor((xmax - _lo) / _binWidth),
-      _nPoints - 1);
-  Double_t sum = 0.;
+  const double xmin = std::max(lo, x.min(rangeName));
+  const double xmax = std::min(hi, x.max(rangeName));
+  const int imin = static_cast<int>( (xmin-lo)/binWidth );
+  const int imax = std::min( static_cast<int>( (xmax-lo)/binWidth ), nBins-1);
+  double sum = 0.0;
   // sum up complete bins in middle
   if (imin + 1 < imax)
-    sum += _lookupTable[imin + 1] + _lookupTable[imax];
-  for (Int_t i = imin + 2; i < imax; ++i)
-    sum += 2. * _lookupTable[i];
-  sum *= _binWidth * 0.5;
+    sum += lookupTable[imin + 1] + lookupTable[imax];
+  for (int i = imin + 2; i < imax; ++i)
+    sum += 2. * lookupTable[i];
+  sum *= binWidth * 0.5;
   // treat incomplete bins
-  const Double_t dxmin = (xmin - (_lo + imin * _binWidth)) / _binWidth;
-  const Double_t dxmax = (xmax - (_lo + imax * _binWidth)) / _binWidth;
+  const double dxmin = (xmin - (lo + imin * binWidth)) / binWidth;
+  const double dxmax = (xmax - (lo + imax * binWidth)) / binWidth;
   if (imin < imax) {
     // first bin
-    sum += _binWidth * (1. - dxmin) * 0.5 * (_lookupTable[imin + 1] +
-   _lookupTable[imin] + dxmin *
-   (_lookupTable[imin + 1] - _lookupTable[imin]));
+    sum += binWidth * (1. - dxmin) * 0.5 * (lookupTable[imin + 1] +
+   lookupTable[imin] + dxmin *
+   (lookupTable[imin + 1] - lookupTable[imin]));
     // last bin
-    sum += _binWidth * dxmax * 0.5 * (_lookupTable[imax] +
-   _lookupTable[imax] + dxmax *
-   (_lookupTable[imax + 1] - _lookupTable[imax]));
+    sum += binWidth * dxmax * 0.5 * (lookupTable[imax] +
+   lookupTable[imax] + dxmax *
+   (lookupTable[imax + 1] - lookupTable[imax]));
   } else if (imin == imax) {
     // first bin == last bin
-    sum += _binWidth * (dxmax - dxmin) * 0.5 * (
-   _lookupTable[imin] + dxmin *
-   (_lookupTable[imin + 1] - _lookupTable[imin]) +
-   _lookupTable[imax] + dxmax *
-   (_lookupTable[imax + 1] - _lookupTable[imax]));
+    sum += binWidth * (dxmax - dxmin) * 0.5 * (
+   lookupTable[imin] + dxmin *
+   (lookupTable[imin + 1] - lookupTable[imin]) +
+   lookupTable[imax] + dxmax *
+   (lookupTable[imax + 1] - lookupTable[imax]));
   }
   return sum;
 }
 
-Int_t RooKeysPdf::getMaxVal(const RooArgSet& vars) const
+int RooKeysPdf::getMaxVal(const RooArgSet& vars) const
 {
-  if (vars.contains(*_x.absArg())) return 1;
+  if (vars.contains(*x.absArg())) return 1;
   return 0;
 }
 
-Double_t RooKeysPdf::maxVal(Int_t code) const
+double RooKeysPdf::maxVal(int code) const
 {
-  R__ASSERT(1 == code);
-  Double_t max = -std::numeric_limits<Double_t>::max();
-  for (Int_t i = 0; i <= _nPoints; ++i)
-    if (max < _lookupTable[i]) max = _lookupTable[i];
+  assert(1 == code);
+  double max = -std::numeric_limits<double>::max();
+  for (int i = 0; i < nBins; ++i)
+    if (max < lookupTable[i]) max = lookupTable[i];
   return max;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooKeysPdf::g(Double_t x,Double_t sigmav) const {
-  Double_t y=0;
-  // since data is sorted, we can be a little faster because we know which data
-  // points contribute
-  Double_t* it = std::lower_bound(_dataPts, _dataPts + _nEvents,
-      x - _nSigma * sigmav);
-  if (it >= (_dataPts + _nEvents)) return 0.;
-  Double_t* iend = std::upper_bound(it, _dataPts + _nEvents,
-      x + _nSigma * sigmav);
-  for ( ; it < iend; ++it) {
-    const Double_t r = (x - *it) / sigmav;
-    y += std::exp(-0.5 * r * r);
+double RooKeysPdf::gaussian(double x, double sigma, unsigned int& start, unsigned int& end) const {
+  /* The value computed for each point and added to ret is only significant
+   * for the points within the range [x-sigmaLowLimit*sigma, x+sigmaLowLimit*sigma].
+   * For the rest points, the value is zero, due to machine precision limits.
+   * start will be the index from first point to lie within this range.
+   * end will be the index after the last point to lie within this range.
+   * The data is sorted, so two variables that constantly increase will do the job.
+   */
+  while ( start < nTotalEvents 
+       && dataArr[start].x < x -sigmaLowLimit*sigma) {
+    start++;
   }
+  while ( end < nTotalEvents
+       && dataArr[end].x <= x +sigmaLowLimit*sigma) {
+    end++;
+  }
+  
+  double ret=0;
+  const double halfOverSigma2 = -0.5/(sigma*sigma);
+  for (unsigned int i=start; i<end; i++) {
+    const double r = x-dataArr[i].x;
+    ret += _rf_fast_exp(halfOverSigma2*r*r);
+  }
+  return ret / (sigma*nTotalEvents*2.50662827463100050242); //sqrt(2pi)
+}
 
-  static const Double_t sqrt2pi(std::sqrt(2*TMath::Pi()));
-  return y/(sigmav*sqrt2pi*_nEvents);
+////////////////////////////////////////////////////////////////////////////////
+
+void RooKeysPdf::fillLookupTable(double x, double weight, double adaptedWidth, double sign) {
+    //~ printf("%lf %lf %lf\n",x,weight,adaptedWidth);
+    int binlo = static_cast<int>( (x -sign*sigmaLowLimit*adaptedWidth -lo) / binWidth );
+    if (binlo >= nBins) {
+      //~ printf("dropped\n");
+      return;
+    }
+    if (binlo < 0) binlo = 0;
+    
+    int binhi = static_cast<int>( (x +sign*sigmaLowLimit*adaptedWidth -lo) / binWidth );
+    if (binhi < 0) {
+      //~ printf("dropped\n");
+      return;
+    }
+    if (binhi > nBins) binhi = nBins;
+    //we well want to write to the extra bin
+    
+    const double startOfBinlo = lo +binlo*binWidth;
+    double dist = (startOfBinlo-x) / adaptedWidth / 1.4142135623730950488;
+    const double distInc = binWidth / adaptedWidth / 1.4142135623730950488; //sqrt(2)
+    const double weightratio = weight / adaptedWidth;
+    
+    //~ printf("%d %d\n",binlo,binhi);
+    for (int i=binlo; i<=binhi; i++) {
+      lookupTable[i] += sign*weightratio*_rf_fast_exp( -dist*dist );
+      dist += distInc;
+    }
 }

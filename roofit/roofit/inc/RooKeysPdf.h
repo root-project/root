@@ -14,69 +14,79 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_KEYS
-#define ROO_KEYS
+#ifndef ROOKEYS
+#define ROOKEYS
 
 #include "RooAbsPdf.h"
 #include "RooRealProxy.h"
+#include <vector>
+#include <string>
 
 class RooRealVar;
 
 class RooKeysPdf : public RooAbsPdf {
 public:
   enum Mirror { NoMirror, MirrorLeft, MirrorRight, MirrorBoth,
-      MirrorAsymLeft, MirrorAsymLeftRight,
-      MirrorAsymRight, MirrorLeftAsymRight,
-      MirrorAsymBoth };
-  RooKeysPdf() ;
-  RooKeysPdf(const char *name, const char *title,
-             RooAbsReal& x, RooDataSet& data, Mirror mirror= NoMirror,
-        Double_t rho=1);
-  RooKeysPdf(const char *name, const char *title,
-             RooAbsReal& x, RooRealVar& xdata, RooDataSet& data, Mirror mirror= NoMirror,
-        Double_t rho=1);
+                MirrorAsymLeft, MirrorAsymLeftRight,
+                MirrorAsymRight, MirrorLeftAsymRight,
+                MirrorAsymBoth,
+                Default };
+  struct Data {
+    double x;
+    double w;
+    static inline bool compare(const Data& A, const Data& B)  {
+      return A.x < B.x;
+    }
+  };
+  
+  RooKeysPdf();
   RooKeysPdf(const RooKeysPdf& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const {return new RooKeysPdf(*this,newname); }
+  RooKeysPdf(const char* name, const char* title, RooAbsReal& x, RooDataSet& data, 
+             Mirror mirror=Default, double rho=1, int nBins=1000);
+  RooKeysPdf(const char* name, const char* title, RooAbsReal& x, RooRealVar& xdata, RooDataSet& data,           Mirror mirror=Default, double rho=1, int nBins=1000);
   virtual ~RooKeysPdf();
-
-  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
-     const char* rangeName = 0) const;
-  virtual Double_t analyticalIntegral(Int_t code, const char* rangeName = 0) const;
-  virtual Int_t getMaxVal(const RooArgSet& vars) const;
-  virtual Double_t maxVal(Int_t code) const;
+  
+  virtual TObject* clone(const char* newname) const {
+    return new RooKeysPdf(*this,newname); 
+  }
+  
+  virtual int getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
+                                    const char* rangeName = 0) const;
+  virtual double analyticalIntegral(int code, const char* rangeName = 0) const;
+  
+  virtual int getMaxVal(const RooArgSet& vars) const;
+  virtual double maxVal(int code) const;
 
   void LoadDataSet( RooDataSet& data);
 
 protected:
 
-  RooRealProxy _x ;
-  Double_t evaluate() const;
+  RooRealProxy x ;
+  double evaluate() const;
 
 private:
-  // how far you have to go out in a Gaussian until it is smaller than the
-  // machine precision
-  static const Double_t _nSigma; //!
+  //storage
+  size_t nEvents;
+  size_t nTotalEvents;
+  const int nBins;
+  std::vector<Data> dataArr;
+  std::vector<double> adaptedWidthArr;
+  std::vector<double> lookupTable;
+  
+  //details
+  double rho;
+  std::string varName;
+  double lo, hi, binWidth;
+  bool mirrorLeft, mirrorRight;
+  bool asymLeft, asymRight;
+  
+  //utilities
+  double gaussian(double x, double sigma, unsigned int& start, unsigned int& end) const;
+  void fillLookupTable(double x, double weight, double adaptedWidth, double sign);
+  // how far you have to go out in a Gaussian until it is smaller than the machine precision
+  const double sigmaLowLimit = std::sqrt(-2.0*std::log(std::numeric_limits<double>::epsilon()));
 
-  Int_t _nEvents;
-  Double_t *_dataPts;  //[_nEvents]
-  Double_t *_dataWgts; //[_nEvents]
-  Double_t *_weights;  //[_nEvents]
-  Double_t _sumWgt ;
-
-  enum { _nPoints = 1000 };
-  Double_t _lookupTable[_nPoints+1];
-
-  Double_t g(Double_t x,Double_t sigma) const;
-
-  Bool_t _mirrorLeft, _mirrorRight;
-  Bool_t _asymLeft, _asymRight;
-
-  // cached info on variable
-  Char_t _varName[128];
-  Double_t _lo, _hi, _binWidth;
-  Double_t _rho;
-
-  ClassDef(RooKeysPdf,2) // One-dimensional non-parametric kernel estimation p.d.f.
+  ClassDef(RooKeysPdf,3) // One-dimensional non-parametric kernel estimation p.d.f.
 };
 
 #endif
