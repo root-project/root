@@ -6317,8 +6317,12 @@ UInt_t TClass::GetCheckSum(ECheckSum code, Bool_t &isvalid) const
    il = name.Length();
    for (int i=0; i<il; i++) id = id*3+name[i];
 
+   // Here we skip he base classes in case this is a pair or STL collection,
+   // otherwise, on some STL implementations, it can happen that pair has
+   // base classes which are an internal implementation detail.
    TList *tlb = ((TClass*)this)->GetListOfBases();
-   if (tlb && !GetCollectionProxy()) {   // Loop over bases if not a proxied collection
+   if (tlb && !GetCollectionProxy() && strncmp(GetName(), "pair<", 5)) {
+      // Loop over bases if not a proxied collection or a pair
 
       TIter nextBase(tlb);
 
