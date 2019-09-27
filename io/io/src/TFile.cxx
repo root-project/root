@@ -1083,7 +1083,12 @@ Int_t TFile::GetBestBuffer() const
    if (!fWritten) return TBuffer::kInitialSize;
    Double_t mean = fSumBuffer/fWritten;
    Double_t rms2 = TMath::Abs(fSum2Buffer/fSumBuffer -mean*mean);
-   return (Int_t)(mean + sqrt(rms2));
+   Double_t result = mean + sqrt(rms2);
+   if (result >= (double)std::numeric_limits<Int_t>::max()) {
+      return std::numeric_limits<Int_t>::max() -1;
+   } else {
+      return (Int_t)result;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
