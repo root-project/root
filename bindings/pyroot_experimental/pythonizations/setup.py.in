@@ -1,0 +1,9 @@
+from distutils.core import setup
+
+setup(name = 'ROOT',
+      version = '${ROOT_VERSION}',
+      packages=['ROOT', 'ROOT.pythonization'],
+      package_dir={'' : '${CMAKE_CURRENT_SOURCE_DIR}/python'},
+      url = 'https://root.cern.ch',
+      author_email = 'massimiliano.galli@cern.ch',
+      )
