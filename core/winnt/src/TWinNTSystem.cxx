@@ -4282,6 +4282,11 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options,
             // Change .dll into .lib and remove the
             // path info if it not accessible.
             s = libs(index, end);
+            s.ToLower();
+            if ((s.Index("c:/windows/") != kNPOS)) {
+               start += end+1;
+               continue;
+            }
             if (s.Index(user_dll) != kNPOS) {
                s.ReplaceAll(".dll",".lib");
                if ( GetPathInfo( s, sbuf ) != 0 ) {
@@ -4295,7 +4300,9 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options,
                }
             }
             if (!ntlibs.IsNull()) ntlibs.Append(" ");
-            ntlibs.Append(s);
+            if ((s.Index("python") == kNPOS) && (s.Index("cppyy") == kNPOS) &&
+                (s.Index("vcruntime") == kNPOS) && (s.Index(".pyd") == kNPOS))
+              ntlibs.Append(s);
          }
          start += end+1;
       }
