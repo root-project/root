@@ -182,7 +182,7 @@ endif()
 
 if(builtin_lzma)
   set(lzma_version 5.2.4)
-  set(LIBLZMA_TARGET LZMA)
+  set(LZMA_TARGET LZMA)
   message(STATUS "Building LZMA version ${lzma_version} included in ROOT itself")
   if(WIN32)
     set(LIBLZMA_LIBRARIES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.lib)
