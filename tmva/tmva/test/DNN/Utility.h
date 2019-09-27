@@ -39,8 +39,8 @@ void constructConvNet(TDeepNet<AArchitecture> &net)
 
    //EActivationFunction fConv1 = EActivationFunction::kIdentity;
 
-   TRandom &  r = (AArchitecture::GetRandomGenerator());
-   r.SetSeed(123);
+   //TRandom &  r = (AArchitecture::GetRandomGenerator());
+   //r.SetSeed(0);
 
    EActivationFunction fConv1 =  EActivationFunction::kRelu;
    //EActivationFunction fConv1 = ActivationFunctions[r.Uniform(ActivationFunctions.size())];
@@ -60,7 +60,7 @@ void constructConvNet(TDeepNet<AArchitecture> &net)
    size_t zeroPaddingHeight2 = 1;
    size_t zeroPaddingWidth2 = 1;
 
-   EActivationFunction fConv2 = EActivationFunction::kRelu;
+   EActivationFunction fConv2 = EActivationFunction::kSigmoid;
    //EActivationFunction fConv2 = ActivationFunctions[r.Uniform(ActivationFunctions.size())];
 
    net.AddConvLayer(depth2, filterHeightConv2, filterWidthConv2, strideRowsConv2, strideColsConv2, zeroPaddingHeight2,
@@ -75,7 +75,7 @@ void constructConvNet(TDeepNet<AArchitecture> &net)
    size_t strideRowsPool = 1;
    size_t strideColsPool = 1;
 
-   
+
    net.AddMaxPoolLayer(filterHeightPool, filterWidthPool, strideRowsPool, strideColsPool);
 
    std::cout << "added MaxPool layer " <<  net.GetLayerAt(net.GetDepth() - 1)->GetDepth() << " x " <<  net.GetLayerAt(net.GetDepth() - 1)->GetHeight()
@@ -110,7 +110,7 @@ void constructConvNet(TDeepNet<AArchitecture> &net)
 template <typename AArchitecture>
 void constructLinearConvNet(TDeepNet<AArchitecture> &net)
 {
-   
+
    size_t depth1 = 2;
    size_t filterHeightConv1 = 3;
    size_t filterWidthConv1 = 3;
@@ -349,7 +349,7 @@ void uniformMatrix(AMatrix &X)
    m = X.GetNrows();
    n = X.GetNcols();
 
-   TRandom & rand = *gRandom; 
+   TRandom & rand = *gRandom;
 
    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n; j++) {
@@ -363,23 +363,27 @@ void uniformMatrix(AMatrix &X)
 template <typename ATensor>
 void randomBatch(ATensor &X)
 {
-   for (size_t i = 0; i < X.GetFirstSize(); ++i) { 
-      auto rX = X.At(i);
-      if (X.GetShape().size() == 3 || rX.GetFirstSize() == 1) { 
-         auto mX = rX.GetMatrix();
-         randomMatrix(mX); 
-      }
-      else { 
-         for (size_t j = 0; j < rX.GetFirstSize(); ++j ) {
-            auto mX = rX.At(j).GetMatrix(); 
-            randomMatrix(mX); 
-         }
-      } 
-   }
+   // for (size_t i = 0; i < X.GetFirstSize(); ++i) {
+   //    auto rX = X.At(i);
+   //    if (X.GetShape().size() == 3 || rX.GetFirstSize() == 1) {
+   //       auto mX = rX.GetMatrix();
+   //       randomMatrix(mX);
+   //    }
+   //    else {
+   //       for (size_t j = 0; j < rX.GetFirstSize(); ++j ) {
+   //          auto mX = rX.At(j).GetMatrix();
+   //          randomMatrix(mX);
+   //       }
+   //    }
+   // }
+   using Scalar_t = typename ATensor::Scalar_t;
+   TMatrixT<Scalar_t>  m(1,X.GetSize() ); 
+   randomMatrix(m);
+   X = ATensor(m.GetMatrixArray(), X.GetShape(), X.GetLayout() );
 }
 
-// one should use Architecture::Copy function 
-#if 0 
+// one should use Architecture::Copy function
+#if 0
 /*! Generate a random batch as input for a neural net. */
 //______________________________________________________________________________
 template <typename AMatrix>
@@ -399,7 +403,7 @@ void copyMatrix(AMatrix &X, const AMatrix &Y)
 template <typename ATensor>
 void copyTensor(ATensor &X, const ATensor &Y)
 {
-   size_t n = Y.GetSize(); 
+   size_t n = Y.GetSize();
    assert (n == X.GetSize());
    std::copy(Y.GetData(), Y.GetData()+n, X.GetData());
 }
@@ -427,7 +431,7 @@ void applyTensor(ATensor &X, F f)
    size_t m = X.GetFirstSize();
 
    for (size_t i = 0; i < m; i++) {
-      auto mX = X.At(i).GetMatrix(); 
+      auto mX = X.At(i).GetMatrix();
       applyMatrix(mX,f);
    }
 }
@@ -534,7 +538,7 @@ template <typename Tensor1, typename Tensor2>
 auto maximumRelativeErrorTensor(const Tensor1 &X, const Tensor2 &Y) -> Double_t
 {
 
-   size_t fsize = X.GetFirstSize(); 
+   size_t fsize = X.GetFirstSize();
    assert(fsize == Y.GetFirstSize());
 
    Double_t curError, maxError = 0.0;
@@ -543,7 +547,7 @@ auto maximumRelativeErrorTensor(const Tensor1 &X, const Tensor2 &Y) -> Double_t
       curError = maximumRelativeError( X.At(i).GetMatrix(), Y.At(i).GetMatrix() );
       maxError = std::max(curError, maxError);
    }
- 
+
 
    return maxError;
 }

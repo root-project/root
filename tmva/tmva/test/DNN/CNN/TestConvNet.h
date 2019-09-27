@@ -113,11 +113,11 @@ auto testDownsample(const typename Architecture::Matrix_t &A, const typename Arc
 
    typename Architecture::Matrix_t AInd(m2, n2);
 
-   typename Architecture::Tensor_t tDown(ADown,3); // convert to tensors of dims 3 
-   typename Architecture::Tensor_t tInd(AInd,3); 
-   typename Architecture::Tensor_t tA(A,3); 
+   typename Architecture::Tensor_t tDown(ADown,3); // convert to tensors of dims 3
+   typename Architecture::Tensor_t tInd(AInd,3);
+   typename Architecture::Tensor_t tA(A,3);
 
-   std::cout << "Testing downsample with size = " << fltHeight << " , " << fltWidth 
+   std::cout << "Testing downsample with size = " << fltHeight << " , " << fltWidth
    << " stride " << strideRows << " . " << strideCols << std::endl;
 
    TDescriptors * poolDescriptors = nullptr;
@@ -129,7 +129,7 @@ auto testDownsample(const typename Architecture::Matrix_t &A, const typename Arc
    Architecture::InitializePoolDescriptors(poolDescriptors, layer);
    Architecture::InitializePoolDropoutWorkspace(poolWorkspace, poolDescriptors, params, layer);
 
-   Architecture::Downsample(tDown, tInd, tA, 
+   Architecture::Downsample(tDown, tInd, tA,
                             (typename Architecture::PoolingDescriptors_t &) *poolDescriptors,
                             (typename Architecture::PoolingWorkspace_t &) *poolWorkspace,
                             imgHeight, imgWidth, fltHeight, fltWidth, strideRows, strideCols);
@@ -139,7 +139,7 @@ auto testDownsample(const typename Architecture::Matrix_t &A, const typename Arc
          if (ADown(i, j) != B(i, j)) {
             std::cout << "Error - downsample failed for " << i << "," << j << std::endl;
             Architecture::PrintTensor(tDown,"downsample tensor");
-            typename Architecture::Tensor_t tB(B,3); 
+            typename Architecture::Tensor_t tB(B,3);
             Architecture::PrintTensor(tB,"expected tensor");
             Architecture::PrintTensor(tA,"input tensor");
             return false;
@@ -152,7 +152,7 @@ auto testDownsample(const typename Architecture::Matrix_t &A, const typename Arc
          if (AInd(i, j) != ind(i, j)) {
             std::cout << "Error - downsample index failed for " << i << "," << j << std::endl;
             Architecture::PrintTensor(tInd,"index tensor");
-            typename Architecture::Tensor_t texInd(ind,3); 
+            typename Architecture::Tensor_t texInd(ind,3);
             Architecture::PrintTensor(texInd,"expected tensor");
             return false;
          }
@@ -176,7 +176,7 @@ auto testPoolingBackward(const typename Architecture::Matrix_t &input, const typ
     typename Architecture::Tensor_t tInput( input, 3);
     typename Architecture::Tensor_t tIndexMatrix( indexMatrix, 3);
     // only needed in cuDNN backward pass
-    typename Architecture::Tensor_t inputActivation;  
+    typename Architecture::Tensor_t inputActivation;
     typename Architecture::Tensor_t outputActivation;
 
     TDescriptors * poolDescriptors = nullptr;
@@ -286,10 +286,10 @@ auto testConvLayerForward(const typename Architecture::Tensor_t &input,
     size_t nLocalViewPixels = inputDepth * fltHeight * fltWidth;
 
     typename Architecture::Tensor_t forwardMatrices (1 , nLocalViews, nLocalViewPixels);
-    
+
     TDescriptors * convDescriptors = nullptr;
     TWorkspace   * convWorkspace   = nullptr;
-    
+
     TConvLayer<Architecture> *layer = nullptr;
     Architecture::InitializeConvDescriptors(convDescriptors, 0.0, layer);
     Architecture::InitializeConvWorkspace(convWorkspace, convDescriptors, params, layer);
@@ -301,8 +301,8 @@ auto testConvLayerForward(const typename Architecture::Tensor_t &input,
 
     for (size_t slice = 0; slice < nRows; slice++) {
         for (size_t localView = 0; localView < nCols; localView++) {
-            if (expectedOutput(0, slice, localView) != computedOutput(0, slice, localView)) { 
-               std::cout << "Error - computed output different than expected for " << slice 
+            if (expectedOutput(0, slice, localView) != computedOutput(0, slice, localView)) {
+               std::cout << "Error - computed output different than expected for " << slice
                << " , " << localView << std::endl;
                Architecture::PrintTensor(computedOutput,"computed output tensor");
                Architecture::PrintTensor(expectedOutput,"expected output tensor");
@@ -320,9 +320,9 @@ template <typename Architecture_t>
 auto testDeflatten(const typename Architecture_t::Tensor_t &A, const typename Architecture_t::Tensor_t &B ) -> bool
 {
    typename Architecture_t::Tensor_t AComputed( B.GetShape() );
-   size_t size = B.GetFirstSize(); 
-   size_t nRows = B.GetHSize(); 
-   size_t nCols = B.GetWSize();  
+   size_t size = B.GetFirstSize();
+   size_t nRows = B.GetHSize();
+   size_t nCols = B.GetWSize();
 
    Architecture_t::Deflatten(AComputed, A );
 
@@ -352,9 +352,9 @@ auto testConvForwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, si
    convNet.Initialize();
 
    typename Architecture::Tensor_t X (batchSize, imgDepth, imgHeight * imgWidth);
-   
+
    randomBatch(X);
-   
+
 
    convNet.Forward(X);
 }
@@ -375,9 +375,9 @@ auto testConvLossFunction(size_t batchSize, size_t imgDepth, size_t imgHeight, s
    convNet.Initialize();
 
    typename Architecture::Tensor_t X(batchSize, imgDepth, imgHeight * imgWidth);
-   
+
    randomBatch(X);
-   
+
 
    Matrix_t Y(batchSize, convNet.GetOutputWidth());
    Matrix_t W(batchSize, 1);
@@ -404,7 +404,7 @@ auto testConvPrediction(size_t batchSize, size_t imgDepth, size_t imgHeight, siz
 
    typename Architecture::Tensor_t X(batchSize, imgDepth, imgHeight * imgWidth);
    randomBatch(X);
-   
+
    Matrix_t Predictions(batchSize, convNet.GetOutputWidth());
    convNet.Prediction(Predictions, X, f);
 
@@ -457,9 +457,9 @@ auto evaluate_net_weight(TDeepNet<Architecture> &net, typename Architecture::Ten
 
     // shift the weight value and compute the Loss
     auto & netW = net.GetLayerAt(l)->GetWeightsAt(k);
-   
+
     netW(i,j) += dx;
-    
+
     Scalar_t res = net.Loss(X, Y, W);
     // rest weight to original value
     netW(i,j) -= dx;
@@ -479,19 +479,19 @@ auto evaluate_net_bias(TDeepNet<Architecture> &net, typename Architecture::Tenso
     //using Matrix_t = typename Architecture::Matrix_t;
 
     auto & netB = net.GetLayerAt(l)->GetBiasesAt(k);
-    
+
     netB(i,0) += dx;
- 
+
     //std::cout << "------ net biases layer " << l << " k  " << k <<  " element " << i << " dx = " <<  dx << std::endl;
     //Architecture::PrintTensor( netB, "netB bias tensor");
     //typename Architecture::Tensor_t temp(netB);
-   
-    
+
+
     Scalar_t res = net.Loss(X, Y, W);
-   
+
     netB(i,0) -= dx;
 
-    
+
     return res;
 }
 
@@ -509,7 +509,7 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
    Net_t convNet(batchSize, imgDepth, imgHeight, imgWidth, batchDepth, batchHeight, batchWidth,
                  ELossFunction::kMeanSquaredError, EInitialization:: kGlorotUniform);
    // tyoe of network
-   if (testType == kLinearNet) 
+   if (testType == kLinearNet)
       constructLinearConvNet(convNet);
    else
       constructConvNet(convNet);
@@ -521,19 +521,21 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
    convNet.Print();
 
 //    auto & w0 = convNet.GetLayerAt(0)->GetWeights();
-// #ifdef DEBUG  
-//    std::cout << "Netwrok weights for Layer 0  " << std::endl; 
+// #ifdef DEBUG
+//    std::cout << "Netwrok weights for Layer 0  " << std::endl;
 //    std::cout << "weight depth = " << w0.size() << std::endl;
 //    for (size_t i = 0; i < w0.size();   ++i)
 //       TMVA_DNN_PrintTCpuMatrix(w0[i],"weight-layer0");
-// #endif  
+// #endif
 
    //typename Architecture::Tensor_t X(batchSize, imgDepth, imgHeight * imgWidth, Architecture::GetTensorLayout() );
    auto X =  Architecture::CreateTensor( batchSize, imgDepth, imgHeight , imgWidth);
    randomBatch(X);
 
+   Architecture::PrintTensor( X, "X input tensor");
+
    Matrix_t Y(batchSize, convNet.GetOutputWidth());
-   Matrix_t W(batchSize, 1);   // this are the data weights 
+   Matrix_t W(batchSize, 1);   // this are the data weights
    randomMatrix(Y);
    //randomMatrix(W);
    // for the moment use weights equal to 1
@@ -544,7 +546,7 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
       auto & vW = theLayer.GetWeights();
       if (vW.size() > 0) {
          TString tname = TString::Format("weight-tensor-layer-%d",(int)l);
-         Tensor_t tW( vW[0] ); 
+         Tensor_t tW( vW[0] );
          Architecture::PrintTensor( tW ,std::string(tname));
       }
       auto & vB = theLayer.GetBiases();
@@ -569,7 +571,7 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
 #ifdef DEBUG
    using ConvLayer_t = TConvLayer<Architecture>;
    auto convLayer = dynamic_cast<ConvLayer_t*>(convNet.GetLayerAt(0) );
-   if (convLayer) { 
+   if (convLayer) {
       auto & df = convLayer->GetDerivatives();
       std::cout << "Derivatives - size " << df.GetFirstSize() << std::endl;
       for (size_t ii=0; ii< df.GetFirstSize(); ++ii)
@@ -577,14 +579,14 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
    }
 #endif
 
-   //if (testType == kRndmActNet)  return true; 
+   //if (testType == kRndmActNet)  return true;
 
    std::cout << "Do Backward Pass " << std::endl;
    Architecture::PrintTensor(X,"input");
    convNet.Backward(X, Y, W);
 
-   //Architecture::PrintTensor(Tensor_t(lLayer.GetWeights()[0]),"weights-after-bw");  
-  
+   //Architecture::PrintTensor(Tensor_t(lLayer.GetWeights()[0]),"weights-after-bw");
+
 
    // now compare derivatives using finite differences and compare the result
    Scalar_t maximum_error = 0.0;
@@ -595,7 +597,7 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
       std::cout << std::flush;
       auto & layer = *(convNet.GetLayerAt(l));
       std::cout << std::endl;
-      layer.Print(); 
+      layer.Print();
       std::cout << "************************************* \n\n";
 
       //Architecture::PrintTensor(layer.GetOutput(),"output tensor");
@@ -603,27 +605,26 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
 
       auto &gw = layer.GetWeightGradients();
       auto &gb = layer.GetBiasGradients();
-      if (gw.size() > 0) { 
+
+      if (gw.size() > 0) {
+#ifdef DEBUG
          std::cout << "Weight gradient from back-propagation - vector size is " << gw.size()  << std::endl;
-         Architecture::PrintTensor(Tensor_t(layer.GetWeights()[0]),"weights");  
-         Architecture::PrintTensor(Tensor_t(layer.GetWeightGradients()[0]),"weight gradients"); 
-     
-
-
+         Architecture::PrintTensor(Tensor_t(layer.GetWeights()[0]),"weights");
+         Architecture::PrintTensor(Tensor_t(layer.GetWeightGradients()[0]),"weight gradients");
+         Architecture::PrintTensor(Tensor_t(layer.GetBiasGradients()[0]),"bias gradients");
          std::cout << std::endl;
-
+#endif
          // if (gw[0].GetNoElements() < 100 ) {
             //    gw[0].Print();
          //    // }
          // else
-         //    std::cout << "BP Weight Gradient ( " << gw[0].GetNrows() << " x " << gw[0].GetNcols() << " ) , ...... skip printing (too many elements ) " << std::endl;  
+         //    std::cout << "BP Weight Gradient ( " << gw[0].GetNrows() << " x " << gw[0].GetNcols() << " ) , ...... skip printing (too many elements ) " << std::endl;
          // }
       }
       else {
          std::cout << "Layer " << l << " has no weights " << std::endl;
          continue;
       }
-
       std::cout << "Layer " << l << " :  output  D x H x W " << layer.GetDepth() << "  " << layer.GetHeight() << "  "
                 << layer.GetWidth() << "\t input D x H x W " << layer.GetInputDepth() << "  " << layer.GetInputHeight()
                 << "  " << layer.GetInputWidth() << std::endl;
@@ -657,16 +658,16 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
          Architecture::PrintTensor(actGrad,"activation gradients");
       }
 #endif
-      
+
       std::cout << "Evaluate the Derivatives with Finite difference and compare with BP for Layer " << l << std::endl;
       int nerrorsW = 0;
       int nerrorsB = 0;
       int ngoodW = 0;
-      int ngoodB = 0; 
+      int ngoodB = 0;
 #ifdef DEBUG
       int ngoodPrint = 10000;
 #else
-      int ngoodPrint = 3;
+      int ngoodPrint = 10;
 #endif
       //  conv layer weights is a matrix
       // for (size_t k = 0; k <  gw.GetFirstSize() ; ++k) {
@@ -681,7 +682,7 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
       size_t n1 =  gwm.GetNrows();
       size_t n2 = gwm.GetNcols();
       size_t n1b =  gbm.GetNrows();
-      assert(n1b <= n1);
+      //assert(n1b <= n1);
       //Matrix_t & wm = layer.GetWeightsAt(k);
       // make matrices in case they are not
       for (size_t i = 0; i < n1; i++) {
@@ -715,52 +716,60 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
                break;
             }
          }
+      }
 
+      for (size_t i = 0; i < n1b; i++)
+      {
          // evaluate the bias gradients
-         if (i < n1b) {
-            auto fb = [&convNet, &X, &Y, &W, l, i, k](Scalar_t x) {
-               return evaluate_net_bias(convNet, X, Y, W, l, i, k, x);
-            };
-            Scalar_t dy = finiteDifference(fb, dx) / (2.0 * dx);
-            Scalar_t dy_ref = gbm(i, 0);
-            // Compute the relative error if dy != 0.
-            Scalar_t error;
-            if (std::fabs(dy_ref) > 1e-15) {
-               error = std::fabs((dy - dy_ref) / dy_ref);
-            } else {
-               error = std::fabs(dy - dy_ref);
-            }
-            maximum_error = std::max(error, maximum_error);
-            if (error > 1.E-3) {
+         //std::cout << " i " << i << "  " << n1b << "  " << n1 << std::endl;
+
+         auto fb = [&convNet, &X, &Y, &W, l, i, k](Scalar_t x) {
+            return evaluate_net_bias(convNet, X, Y, W, l, i, k, x);
+         };
+         Scalar_t dy = finiteDifference(fb, dx) / (2.0 * dx);
+         Scalar_t dy_ref = gbm(i, 0);
+         // Compute the relative error if dy != 0.
+         Scalar_t error;
+         if (std::fabs(dy_ref) > 1e-15)
+         {
+            error = std::fabs((dy - dy_ref) / dy_ref);
+         }
+         else
+         {
+            error = std::fabs(dy - dy_ref);
+         }
+         maximum_error = std::max(error, maximum_error);
+         if (error > 1.E-3)
+         {
+            std::cout << k << " bias - " << i << " : " << dy << " from BP " << dy_ref << "   " << error
+                      << " ERROR " << std::endl;
+            nerrorsB++;
+         }
+         else
+         {
+            if (ngoodB < ngoodPrint)
                std::cout << k << " bias - " << i << " : " << dy << " from BP " << dy_ref << "   " << error
-                         << " ERROR " << std::endl;
-               nerrorsB++;
-            } else {
-               if (ngoodB < ngoodPrint)
-                  std::cout << k << " bias - " << i << " : " << dy << " from BP " << dy_ref << "   " << error
-                            << std::endl;
-               ngoodB++;
-            }
-            if (nerrorsB > 10) {
-               std::cout << "Reached error limit skip..." << std::endl;
-               break;
-            }
+                         << std::endl;
+            ngoodB++;
+         }
+         if (nerrorsB > 10)
+         {
+            std::cout << "Reached error limit skip..." << std::endl;
+            break;
          }
 
 
-         if (nerrorsB || nerrorsW > 10)
-            break;
       }
    }
-    // }
    std::cout << "\rTesting weight gradients:      ";
    std::cout << "maximum relative error: " << print_error(maximum_error) << std::endl;
    if (maximum_error > 1.E-3) {
       std::cout << "ERROR - BackPropagation test failed in computing  weight Derivatives " << std::endl;
       return false;
    }
-   //return maximum_error;
-   return true; 
+//return maximum_error;
+   return true;
 }
+
 
 #endif

@@ -69,6 +69,13 @@ if (CUDA_FOUND AND tmva-gpu)
   CUDA_ADD_EXECUTABLE(testDataLoaderCuda TestDataLoaderCuda.cxx)
   TARGET_LINK_LIBRARIES(testDataLoaderCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
   ROOT_ADD_TEST(TMVA-DNN-DataLoaderCuda COMMAND testDataLoaderCuda)
+
+
+   # DNN - Optimization GPU
+  CUDA_ADD_EXECUTABLE(testOptimizationCuda TestOptimizationCuda.cxx)
+  TARGET_LINK_LIBRARIES(testOptimizationCuda ${Libraries} ${DNN_CUDA_LIBRARIES} /usr/local/cuda/lib64/libcudnn.so)
+  ROOT_ADD_TEST(TMVA-DNN-Optimization-Cuda COMMAND testOptimizationCuda)
+
   
   # DNN - Cudnn
 if (Have_cudnn) 
@@ -77,10 +84,6 @@ if (Have_cudnn)
   ROOT_ADD_TEST(TMVA-DNN-Cudnn COMMAND testCudnn)
 endif()
 
-   # DNN - Optimization GPU
-  ROOT_EXECUTABLE(testOptimizationCuda TestOptimizationCuda.cxx
-    LIBRARIES ${Libraries})
-  ROOT_ADD_TEST(TMVA-DNN-Optimization-Cuda COMMAND testOptimizationCuda)
 
   # DNN - TensorDataLoader Cudnn
   #CUDA_ADD_EXECUTABLE(testTensorDataLoaderCudnn TestTensorDataLoaderCudnn.cxx)

@@ -80,7 +80,8 @@ class TCudaTensor
 public:
 
    using Shape_t = std::vector<size_t>;
-   using MemoryLayout = TMVA::Experimental::MemoryLayout; 
+   using MemoryLayout = TMVA::Experimental:: MemoryLayout;
+   using Scalar_t = AFloat; 
   
 
 private:
@@ -345,7 +346,11 @@ public:
    void Reshape(const Shape_t & newShape) {
       fShape   = newShape;
       fStrides = ComputeStridesFromShape(fShape, fMemoryLayout == MemoryLayout::RowMajor);
-      fNDim = fShape.size(); 
+      fNDim = fShape.size();
+      // in principle reshape should not change tensor size
+      size_t newSize = (fMemoryLayout == MemoryLayout::RowMajor) ? fStrides.front() * fShape.front() : fStrides.back() * fShape.back();
+      R__ASSERT(newSize <= fSize);
+      fSize = newSize;
 #ifdef DEBUG
       std::cout << "reshaping tensor to a new shape " << std::endl;
       std::cout << "old shape : "; 

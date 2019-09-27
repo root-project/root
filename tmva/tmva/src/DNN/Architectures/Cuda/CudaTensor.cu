@@ -143,10 +143,12 @@ TCudaTensor<AFloat>::TCudaTensor(TCudaDeviceBuffer<AFloat> buffer,
    : fNDim(shape.size()), fElementBuffer(buffer), fShape(shape), fStrides( shape.size()), fDevice(device), 
      fStreamIndx(streamIndx), fTensorDescriptor(nullptr), fMemoryLayout(layout)
 {
+   // constructor from an existing buffer . Buffer size must contain given size
    fStrides = ComputeStridesFromShape(fShape, layout==MemoryLayout::RowMajor);
    
    fSize = (layout==MemoryLayout::RowMajor) ? fStrides.front()*fShape.front() : 
                                               fStrides.back()*fShape.back();
+   R__ASSERT(fSize <= buffer.GetSize());
 
    // need to Initialize Cuda in case device buffer was created separatly
    InitializeCuda();
@@ -211,14 +213,16 @@ template<typename AFloat>
 TCudaTensor<AFloat>::operator TMatrixT<AFloat>() const
 {
    // this should work only for size 2 or 4 tensors
-   if (fNDim < 4) {
+   if (fNDim == 2 || (fNDim == 3 && GetFirstSize() == 1)) {
+//         return TCudaMatrix<AFloat>(fElementBuffer, GetHSize(), GetWSize());
       TCudaMatrix<AFloat> temp = GetMatrix();
       return temp;
    }
    // we can convert directy to TMatrix 
-   assert(fNDim == 4); 
+   assert(fNDim <= 4); 
    size_t nRows = fShape[0]*fShape[1];
-   size_t nCols = fShape[2]*fShape[3]; 
+   size_t nCols = fShape[2];
+   if (fNDim == 4) nCols*= fShape[3];
    TMatrixT<AFloat> hostMatrix( nRows, nCols ); 
 
    

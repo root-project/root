@@ -11,7 +11,7 @@
 
 /////////////////////////////////////////////////////////////////
 // Explicit instantiation of the TCuda architecture class with //
-// for Double_t and Real_t floating point types.               //
+// for Double_t and Float_t floating point types.               //
 /////////////////////////////////////////////////////////////////
 
 #include "TMVA/DNN/Architectures/Cuda.h"
@@ -28,7 +28,7 @@
 namespace TMVA {
 namespace DNN  {
 
-template class TCuda<Real_t>;
+template class TCuda<Float_t>;
 template class TCuda<Double_t>;
 
 

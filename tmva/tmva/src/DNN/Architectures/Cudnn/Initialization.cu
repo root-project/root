@@ -58,7 +58,7 @@ void TCudnn<AFloat>::InitializeGauss(TCudaTensor<AFloat> & A)
       xhost[i] = rand.Gaus(0,sigma); 
    }
    A.GetDeviceBuffer().CopyFrom(xhost);
-   PrintTensor(A,"A after init Gaus");
+   //PrintTensor(A,"A after init Gaus");
 }
 
 //______________________________________________________________________________
@@ -80,7 +80,6 @@ void TCudnn<AFloat>::InitializeUniform(TCudaTensor<AFloat> & A)
    for (size_t i = 0; i < nelements; i++) {
       xhost[i] = rand.Uniform(-range, range);
    }
-   std::cout << std::endl;
    A.GetDeviceBuffer().CopyFrom(xhost);
   
 }

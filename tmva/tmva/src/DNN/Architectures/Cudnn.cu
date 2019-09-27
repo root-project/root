@@ -32,7 +32,7 @@
 namespace TMVA {
 namespace DNN  {
 
-template class TCudnn<Real_t>;
+template class TCudnn<Float_t>;
 template class TCudnn<Double_t>;
 
 #ifndef R__HAS_TMVAGPU

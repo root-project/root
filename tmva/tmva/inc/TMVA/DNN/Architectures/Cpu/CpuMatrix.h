@@ -284,6 +284,7 @@ public:
    using Shape_t = typename TMVA::Experimental::RTensor<AFloat>::Shape_t;
    using MemoryLayout = TMVA::Experimental::MemoryLayout;
    using Matrix_t = TCpuMatrix<AFloat>; 
+   using Scalar_t = AFloat; 
 
    // default constructor
    TCpuTensor() : fBuffer(0), fTensor(fBuffer, {0}) {}
@@ -330,6 +331,17 @@ public:
               MemoryLayout memlayout = MemoryLayout::ColumnMajor)
       : fBuffer(buffer), fTensor(fBuffer, shape, memlayout)
    {
+      // given buffer size must be biug enough to contain the provided shape
+      R__ASSERT(fTensor.GetSize() <= fBuffer.GetSize());
+   }
+
+    /** constructors from a AFloat pointer  and a shape */
+   TCpuTensor(AFloat *data, const Shape_t &shape,
+              MemoryLayout memlayout = MemoryLayout::ColumnMajor)
+      : fBuffer(TMVA::Experimental::Internal::GetSizeFromShape(shape)), fTensor(fBuffer, shape, memlayout)
+   {
+      // copy data in buffer
+      for (size_t i = 0; i <  fBuffer.GetSize(); ++i) fBuffer[i] = data[i];
    }
 
    /** constructors from a TCpuMatrix. Memory layout is forced to be same as matrix (i.e. columnlayout) */
@@ -350,19 +362,33 @@ public:
       }
    }
 
+   void Reshape(const Shape_t &newShape) { fTensor.Reshape(newShape); }
+
+   /** Convert to a TMatrixT<AFloat_t> object. Performs a deep copy of the matrix
+    *  elements. */
+   operator TMatrixT<AFloat>() const {
+      // this should work only for size 2 or 4 tensors
+      if (fTensor.GetShape().size() == 2 || (fTensor.GetShape().size() == 3 && GetFirstSize() == 1)) {
+         TCpuMatrix<AFloat> temp = GetMatrix();
+         return temp;
+      }
+      // convert as a flat vector
+      return TMatrixT<AFloat>(1, GetSize(), GetData());
+   }
+
    /** Return raw pointer to the elements stored contiguously in column-major
     *  order. */
    AFloat *GetRawDataPointer() { return fBuffer; }
    const AFloat *GetRawDataPointer() const { return fBuffer; }
 
    // for same API as CudaTensor (device buffer is the CpuBuffer)
-   const TCpuBuffer<AFloat> & GetDeviceBuffer()     const {return fBuffer;}
-   TCpuBuffer<AFloat>       & GetDeviceBuffer()           {return fBuffer;}
+   const TCpuBuffer<AFloat> &GetDeviceBuffer() const { return fBuffer; }
+   TCpuBuffer<AFloat> &GetDeviceBuffer() { return fBuffer; }
 
    AFloat *GetData() { return fTensor.GetData(); }
    const AFloat *GetData() const { return fTensor.GetData(); }
 
-   const Shape_t & GetShape() const { return fTensor.GetShape(); }
+   const Shape_t &GetShape() const { return fTensor.GetShape(); }
 
    size_t GetNoElements() const { return fTensor.GetSize(); }
    size_t GetSize() const { return fTensor.GetSize(); }
@@ -378,8 +404,10 @@ public:
 
    size_t GetCSize() const
    {
-      if (fTensor.GetShape().size() == 2)  return 1;
-      return (GetLayout() == MemoryLayout::ColumnMajor) ? fTensor.GetShape().front() : fTensor.GetShape()[1]; // assume NHWC
+      if (fTensor.GetShape().size() == 2)
+         return 1;
+      return (GetLayout() == MemoryLayout::ColumnMajor) ? fTensor.GetShape().front()
+                                                        : fTensor.GetShape()[1]; // assume NHWC
    }
    //
    size_t GetHSize() const
@@ -423,8 +451,7 @@ public:
    // so single event slides
    TCpuTensor<AFloat> At(size_t i)
    {
-   
-      const Shape_t & shape = GetShape();
+      const Shape_t &shape = GetShape();
       Shape_t sliced_shape = (fTensor.GetMemoryLayout() == MemoryLayout::RowMajor)
                                 ? Shape_t(shape.begin() + 1, shape.end())
                                 : Shape_t(shape.begin(), shape.end() - 1);
@@ -466,13 +493,13 @@ public:
    }
 
    // access single element - assume tensor dim is 2
-   const AFloat & operator()(size_t i, size_t j) const
+   const AFloat &operator()(size_t i, size_t j) const
    {
       assert(fTensor.GetShape().size() == 2);
       return (fTensor.GetMemoryLayout() == MemoryLayout::RowMajor) ? GetData()[i * fTensor.GetShape()[1] + j]
                                                                    : GetData()[j * fTensor.GetShape()[0] + i];
    }
-   const AFloat & operator()(size_t i, size_t j, size_t k) const
+   const AFloat &operator()(size_t i, size_t j, size_t k) const
    {
       // note that i is condidered always the first dimension !!!
       assert(fTensor.GetShape().size() == 3);
@@ -495,8 +522,8 @@ public:
    size_t GetBufferUseCount() const { return fBuffer.GetUseCount(); }
 
    void Print() const {
-      
-      for (size_t i = 0; i < fTensor.GetSize(); i++) std::cout << GetData()[i] << "  ";
+      for (size_t i = 0; i < fTensor.GetSize(); i++)
+         std::cout << GetData()[i] << "  ";
       std::cout << std::endl;
    }
 };
