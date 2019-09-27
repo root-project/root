@@ -267,7 +267,7 @@ RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long
 
    // Read the headers if present
    if (fReadHeaders) {
-      if (std::getline(fStream, line)) {
+      if (std::getline(fStream, line) && !line.empty()) {
          FillHeaders(line);
       } else {
          std::string msg = "Error reading headers of CSV file ";
@@ -277,7 +277,11 @@ RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long
    }
 
    fDataPos = fStream.tellg();
-   if (std::getline(fStream, line)) {
+   bool eof = false;
+   do {
+      eof = !std::getline(fStream, line);
+   } while (line.empty());
+   if (!eof) {
       auto columns = ParseColumns(line);
 
       // Generate headers if not present
@@ -288,8 +292,12 @@ RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long
       // Infer types of columns with first record
       InferColTypes(columns);
 
-      // rewind one line
+      // rewind
       fStream.seekg(fDataPos);
+   } else {
+      std::string msg = "Could not infer column types of CSV file ";
+      msg += fileName;
+      throw std::runtime_error(msg);
    }
 }
 
@@ -351,9 +359,11 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RCsvDS::GetEntryRanges()
    FreeRecords();
 
    std::string line;
-   while ((-1LL == fLinesChunkSize || 0 != linesToRead--) && std::getline(fStream, line)) {
+   while ((-1LL == fLinesChunkSize || 0 != linesToRead) && std::getline(fStream, line)) {
+      if (line.empty()) continue; // skip empty lines
       fRecords.emplace_back();
       FillRecord(line, fRecords.back());
+      --linesToRead;
    }
 
    if (gDebug > 0) {
