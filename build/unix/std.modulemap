@@ -306,6 +306,11 @@ module "std" [system] {
     export *
     header "string"
   }
+  module "string_view" {
+    requires !header_existence
+    export *
+    header "string_view"
+  }
 //  module "string.h" {
 //    export *
 //    header "string.h"
