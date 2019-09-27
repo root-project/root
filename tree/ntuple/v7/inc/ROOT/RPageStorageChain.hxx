@@ -31,7 +31,7 @@ namespace Detail {
 \ingroup NTuple
 \brief A pagesource generated from multiple files with the same fields and columns. It acts like a PageSource for a file where multiple files were merged into one.
  
- An instance of RPageSourceChain is created in RPageStorage::Create() when a std::vector of filenames is passed as an argument instead of a filename-string. It first creates a RPageSource (including its descriptor) for each filename passed and initalizes its members. Later it merges the information from all the descriptors to create a single descriptor containing all information. It's main job is to assign PopulatePage() and ReleasePage() to the correct RPageSource.
+ An instance of RPageSourceChain is created in RPageStorage::Create() when a std::vector of filenames is passed as an argument instead of a filename-string. It first creates a RPageSource (including its descriptor) for each filename passed and initalizes its members. Later it merges the information from all the descriptors to create a single descriptor containing all information. After that its main job is to assign PopulatePage() and ReleasePage() to the correct RPageSource.
 */
 // clang-format on
 class RPageSourceChain : public RPageSource {
@@ -42,13 +42,13 @@ private:
    /// fNEntryPerSource[i] holds the number of entries of the i-th file, fNEntryPerSource[0] = 0
    std::vector<std::size_t> fNEntryPerSource;
    /// Holds the cumulative number of clusters per file. It's size is number of files + 1.
-   /// fNClusterPerSource[i] holds the number of clusters of the i-th file, fNClusterPerSource[0] = 0
+   /// fNClusterPerSource[i] holds the number of clusters of the i-th file, fNClusterPerSource[0] is always = 0
    std::vector<std::size_t> fNClusterPerSource;
    /// The number of elements can vary between different columns of the same RPageSource, e.g. for a int and std::string
    /// column. fNElementsPerColumnPerSource.at(i).at(j) holds the entry of the i-th source and (j-1)-th column (start
-   /// counting i and j from 1 instead of 0) fNElementsPerColumnPerSource.at(0).at(j) = 0.
+   /// counting i and j from 1 instead of 0). For all j, fNElementsPerColumnPerSource.at(0).at(j) = 0.
    std::vector<std::vector<std::size_t>> fNElementsPerColumnPerSource;
-   /// Maps the buffer of a RPage (void*) to its RPageSource (std::size_t = index of fSources)
+   /// Maps the buffer of a RPage (void*) to its RPageSource (std::size_t = (index of fSources))
    std::unordered_map<void *, std::size_t> fPageMapper;
    /// Is set to true when the meta-data of the fields and columns don't match.
    /// Getting pages from a unsafe RPageStorageChain can lead to undefined behaviour.
