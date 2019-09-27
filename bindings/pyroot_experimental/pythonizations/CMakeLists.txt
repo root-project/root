@@ -103,4 +103,13 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang" AND CMAKE_CXX_STANDARD GREAT
     target_compile_options(ROOTPythonizations PRIVATE -Wno-deprecated-register)
 endif()
 
+# configure setup.py to retrieve information for the python egg
+set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in")
+set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
+configure_file(${SETUP_PY_IN} ${SETUP_PY})
+
+# create egg with PyROOT info
+add_custom_target(ROOT_egg ALL COMMAND ${PYTHON_EXECUTABLE} setup.py install_egg_info -d ${py_localruntimedir}/ROOT WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_custom_command(TARGET ROOT_egg POST_BUILD COMMAND bash -c "rm -rf python/*.egg-info" WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)
