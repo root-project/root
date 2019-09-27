@@ -3,11 +3,7 @@
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleModel.hxx>
 
-#include <TBranch.h>
 #include <TFile.h>
-#include <TLeaf.h>
-#include <TSystem.h>
-#include <TTree.h>
 
 #include "gtest/gtest.h"
 

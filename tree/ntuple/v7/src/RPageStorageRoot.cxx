@@ -186,6 +186,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceRoo
    return descBuilder.MoveDescriptor();
 }
 
+
 void ROOT::Experimental::Detail::RPageSourceRoot::GetHeaderAndFooter(RNTupleDescriptorBuilder &descBuilder)
 {
    auto keyRawNTupleHeader = fDirectory->GetKey(kKeyNTupleHeader);
@@ -193,7 +194,7 @@ void ROOT::Experimental::Detail::RPageSourceRoot::GetHeaderAndFooter(RNTupleDesc
    descBuilder.SetFromHeader(ntupleRawHeader->fContent);
    free(ntupleRawHeader->fContent);
    delete ntupleRawHeader;
-   
+
    auto keyRawNTupleFooter = fDirectory->GetKey(kKeyNTupleFooter);
    auto ntupleRawFooter = keyRawNTupleFooter->ReadObject<ROOT::Experimental::Internal::RNTupleBlob>();
    descBuilder.AddClustersFromFooter(ntupleRawFooter->fContent);

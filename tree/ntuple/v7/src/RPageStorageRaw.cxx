@@ -206,6 +206,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceRaw
    return descBuilder.MoveDescriptor();
 }
 
+
 void ROOT::Experimental::Detail::RPageSourceRaw::GetHeaderAndFooter(RNTupleDescriptorBuilder &descBuilder)
 {
    unsigned char postscript[RNTupleDescriptor::kNBytesPostscript];
@@ -219,17 +220,18 @@ void ROOT::Experimental::Detail::RPageSourceRaw::GetHeaderAndFooter(RNTupleDescr
    std::uint32_t szFooter;
    RNTupleDescriptor::LocateMetadata(postscript, szHeader, szFooter);
    R__ASSERT(fileSize >= szHeader + szFooter);
-   
+
    unsigned char *header = new unsigned char[szHeader];
    unsigned char *footer = new unsigned char[szFooter];
    Read(header, szHeader, 0);
    Read(footer, szFooter, fileSize - szFooter);
-   
+
    descBuilder.SetFromHeader(header);
    descBuilder.AddClustersFromFooter(footer);
    delete[] header;
    delete[] footer;
 }
+
 
 ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::PopulatePageFromCluster(
    ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor, ClusterSize_t::ValueType clusterIndex)
