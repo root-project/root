@@ -75,5 +75,10 @@ ROOTTEST_ADD_TEST(execDuplicate
                   OUTREF execDuplicate.ref
                   DEPENDS libDuplicate.cxx)
 
+ROOTTEST_ADD_TEST(execReadSimplePair
+                  COPY_TO_BUILDDIR simplepair.root
+                  MACRO execReadSimplePair.C
+                  OUTREF execReadSimplePair.ref)
+
 
 ROOTTEST_ADD_TESTDIRS()
