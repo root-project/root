@@ -47,6 +47,7 @@ class TObject;
 extern "C" {
    void TCling__UpdateListsOnCommitted(const cling::Transaction&, Interpreter*);
    void TCling__UpdateListsOnUnloaded(const cling::Transaction&);
+   void TCling__InvalidateGlobal(const clang::Decl*);
    void TCling__TransactionRollback(const cling::Transaction&);
    void TCling__GetNormalizedContext(const ROOT::TMetaUtils::TNormalizedCtxt*&);
    TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx);
@@ -814,6 +815,10 @@ void TClingCallbacks::TransactionRollback(const Transaction &T) {
       return;
 
    TCling__TransactionRollback(T);
+}
+
+void TClingCallbacks::DefinitionShadowed(const clang::NamedDecl *D) {
+   TCling__InvalidateGlobal(D);
 }
 
 void TClingCallbacks::DeclDeserialized(const clang::Decl* D) {
