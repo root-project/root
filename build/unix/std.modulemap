@@ -402,6 +402,10 @@ module "std" [system] {
     export *
     header "bits/basic_ios.h"
   }
+  module "bits/cpp_type_traits.h" {
+    export *
+    header "bits/cpp_type_traits.h"
+  }
   module "bits/ios_base.h" {
     export *
     header "bits/ios_base.h"
