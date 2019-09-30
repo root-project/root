@@ -243,7 +243,7 @@ endfunction(ROOT_GET_INSTALL_DIR)
 #   no error is emitted. The dictionary does not depend on these headers.
 #---------------------------------------------------------------------------------------------------
 function(ROOT_GENERATE_DICTIONARY dictionary)
-  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL"
+  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL;NO_CXXMODULE"
     "MODULE;LINKDEF" "NODEPHEADERS;OPTIONS;DEPENDENCIES;EXTRA_DEPENDENCIES;BUILTINS" ${ARGN})
 
   # Check if OPTIONS start with a dash.
@@ -393,28 +393,39 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endforeach()
 
   #---Build the names for library, pcm and rootmap file ----
+  set(library_target_name)
   if(dictionary MATCHES "^G__")
-    string(SUBSTRING ${dictionary} 3 -1 deduced_arg_module)
+    string(REGEX REPLACE "^G__(.*)" "\\1"  library_target_name ${dictionary})
+    if (ARG_MULTIDICT)
+      string(REGEX REPLACE "(.*)32$" "\\1"  library_target_name ${library_target_name})
+    endif (ARG_MULTIDICT)
   else()
-    get_filename_component(deduced_arg_module ${dictionary} NAME_WE)
+    get_filename_component(library_target_name ${dictionary} NAME_WE)
   endif()
+  if (ARG_MODULE)
+    if (NOT ${ARG_MODULE} STREQUAL ${library_target_name})
+#      message(AUTHOR_WARNING "The MODULE argument ${ARG_MODULE} and the deduced library name "
+#        "${library_target_name} mismatch. Deduction stem: ${dictionary}.")
+      set(library_target_name ${ARG_MODULE})
+    endif()
+  endif(ARG_MODULE)
 
   #---Set the library output directory-----------------------
   ROOT_GET_LIBRARY_OUTPUT_DIR(library_output_dir)
   set (runtime_cxxmodule_dependencies )
   if(ARG_MODULE)
     set(cpp_module)
-    set(library_name ${libprefix}${ARG_MODULE}${libsuffix})
+    set(library_name ${libprefix}${library_target_name}${libsuffix})
     set(newargs -s ${library_output_dir}/${library_name})
-    set(master_pcm_name ${library_output_dir}/${libprefix}${ARG_MODULE}_rdict.pcm)
+    set(master_pcm_name ${library_output_dir}/${libprefix}${library_target_name}_rdict.pcm)
     if(ARG_MULTIDICT)
       set(newargs ${newargs} -multiDict)
-      set(pcm_name ${library_output_dir}/${libprefix}${ARG_MODULE}_${dictionary}_rdict.pcm)
-      set(rootmap_name ${library_output_dir}/${libprefix}${deduced_arg_module}.rootmap)
+      set(pcm_name ${library_output_dir}/${libprefix}${library_target_name}_${dictionary}_rdict.pcm)
+      set(rootmap_name ${library_output_dir}/${libprefix}${library_target_name}.rootmap)
     else()
-      set(cpp_module ${ARG_MODULE})
+      set(cpp_module ${library_target_name})
       set(pcm_name ${master_pcm_name})
-      set(rootmap_name ${library_output_dir}/${libprefix}${ARG_MODULE}.rootmap)
+      set(rootmap_name ${library_output_dir}/${libprefix}${library_target_name}.rootmap)
     endif(ARG_MULTIDICT)
 
     if(runtime_cxxmodules)
@@ -433,10 +444,15 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       endif(cpp_module)
     endif()
   else()
-    set(library_name ${libprefix}${deduced_arg_module}${libsuffix})
+    set(library_name ${libprefix}${library_target_name}${libsuffix})
     set(newargs -s ${library_output_dir}/${library_name})
-    set(pcm_name ${library_output_dir}/${libprefix}${deduced_arg_module}_rdict.pcm)
-    set(rootmap_name ${library_output_dir}/${libprefix}${deduced_arg_module}.rootmap)
+    set(pcm_name ${library_output_dir}/${libprefix}${library_target_name}_rdict.pcm)
+    set(rootmap_name ${library_output_dir}/${libprefix}${library_target_name}.rootmap)
+  endif()
+
+  if (ARG_NO_CXXMODULE)
+    unset(cpp_module)
+    unset(cpp_module_file)
   endif()
 
   if(CMAKE_ROOTTEST_NOROOTMAP OR cpp_module_file)
@@ -1095,11 +1111,11 @@ endfunction()
 #                                 LINKDEF LinkDef.h LinkDef2.h : linkdef files, default value is "LinkDef.h"
 #                                 DICTIONARY_OPTIONS option    : options passed to rootcling
 #                                 INSTALL_OPTIONS option       : options passed to install headers
-#                                 NO_MODULE                    : don't generate a C++ module for this package
+#                                 NO_CXXMODULE                 : don't generate a C++ module for this package
 #                                )
 #---------------------------------------------------------------------------------------------------
 function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
-  set(options NO_INSTALL_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY NO_MODULE)
+  set(options NO_INSTALL_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY NO_CXXMODULE)
   set(oneValueArgs)
   set(multiValueArgs DEPENDENCIES HEADERS NODEPHEADERS SOURCES BUILTINS LIBRARIES DICTIONARY_OPTIONS LINKDEF INSTALL_OPTIONS)
   CMAKE_PARSE_ARGUMENTS(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -1132,10 +1148,8 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
     set(STAGE1_FLAG "STAGE1")
   endif()
 
-  # Don't pass the MODULE arg to ROOT_GENERATE_DICTIONARY when
-  # NO_MODULE is set.
-  if(NOT ARG_NO_MODULE)
-    set(MODULE_GEN_ARG MODULE ${libname})
+  if (ARG_NO_CXXMODULE)
+    set(NO_CXXMODULE_FLAG "NO_CXXMODULE")
   endif()
 
   if(ARG_NO_SOURCES)
@@ -1179,18 +1193,15 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   endif()
 
   ROOT_GENERATE_DICTIONARY(G__${libname} ${ARG_HEADERS}
-                          ${MODULE_GEN_ARG}
+                          ${NO_CXXMODULE_FLAG}
                           ${STAGE1_FLAG}
+                          MODULE ${libname}
                           LINKDEF ${ARG_LINKDEF}
                           NODEPHEADERS ${ARG_NODEPHEADERS}
                           OPTIONS ${ARG_DICTIONARY_OPTIONS}
                           DEPENDENCIES ${ARG_DEPENDENCIES}
                           BUILTINS ${ARG_BUILTINS}
                           )
-
-  if(ARG_NO_MODULE)
-    target_sources(${libname} PRIVATE G__${libname}.cxx)
-  endif()
 
   # Dictionary might include things from the current src dir, e.g. tests. Alas
   # there is no way to set the include directory for a source file (except for
