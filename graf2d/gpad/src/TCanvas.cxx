@@ -155,7 +155,7 @@ TCanvas::TCanvas(Bool_t build) : TPad(), fDoubleBuffer(0)
       const char *defcanvas = gROOT->GetDefCanvasName();
       char *cdef;
 
-      TList *lc = (TList*)gROOT->GetListOfCanvases();
+      auto lc = (TList*)gROOT->GetListOfCanvases();
       if (lc->FindObject(defcanvas)) {
          Int_t n = lc->GetSize()+1;
          while (lc->FindObject(Form("%s_n%d",defcanvas,n))) n++;
@@ -1432,7 +1432,7 @@ TCanvas *TCanvas::MakeDefCanvas()
    const char *defcanvas = gROOT->GetDefCanvasName();
    char *cdef;
 
-   TList *lc = (TList*)gROOT->GetListOfCanvases();
+   auto lc = (TList*)gROOT->GetListOfCanvases();
    if (lc->FindObject(defcanvas)) {
       Int_t n = lc->GetSize() + 1;
       cdef = new char[strlen(defcanvas)+15];
@@ -1977,10 +1977,10 @@ void TCanvas::SetFolder(Bool_t isfolder)
 
 void TCanvas::SetName(const char *name)
 {
-   if (!name[0]) {
+   if (!name || !name[0]) {
       const char *defcanvas = gROOT->GetDefCanvasName();
       char *cdef;
-      TList *lc = (TList*)gROOT->GetListOfCanvases();
+      auto lc = (TList*)gROOT->GetListOfCanvases();
       if (lc->FindObject(defcanvas)) {
          cdef = Form("%s_n%d",defcanvas,lc->GetSize()+1);
       } else {
