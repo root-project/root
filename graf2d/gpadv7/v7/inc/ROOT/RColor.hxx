@@ -29,55 +29,35 @@ namespace Experimental {
 
 class RColor : public RAttrBase {
 
-   R__ATTR_CLASS(RColor, "color_", AddString("hex", "").AddString("rgb", "").AddString("name", "").AddString("a", ""));
+   R__ATTR_CLASS(RColor, "color_", AddString("rgb", "").AddString("a", "").AddString("name", ""));
 
    using RGB_t = std::array<int, 3>;
 
 protected:
 
-   std::string toHex(int v) const
-   {
-      static const char *digits = "0123456789ABCDEF";
-      if (v < 0)
-         v = 0;
-      else if (v > 255)
-         v = 255;
+   static std::string toHex(int v);
 
-      std::string res(2,'0');
-      res[0] = digits[v >> 4];
-      res[1] = digits[v & 0xf];
-      return res;
+   RColor &SetRGBFloat(float r, float g, float b)
+   {
+      return SetRGB(int(r*255),int(g*255),int(b*255));
    }
+
+   bool GetRGBFloat(float &r, float &g, float &b) const;
 
 public:
 
-   RColor(int r, int g, int b) : RColor() { SetHex(r, g, b); }
+   RColor(int r, int g, int b) : RColor() { SetRGB(r, g, b); }
 
    RColor(int r, int g, int b, double alfa) : RColor()
    {
-      SetHex(r, g, b);
+      SetRGB(r, g, b);
       SetAlpha(alfa);
    }
 
-   RColor(const RGB_t &rgb) : RColor() { SetHex(rgb[0], rgb[1], rgb[2]); }
-
-   std::string GetRGB() const { return GetValue<std::string>("rgb"); }
-
-   RColor &SetRGB(int r, int g, int b)
-   {
-      return SetRGB(std::to_string(r) + "," + std::to_string(g) + "," + std::to_string(b));
-   }
-
-   RColor &SetRGB(const std::string &_rgb)
-   {
-      ClearValue("hex");
-      ClearValue("name");
-      SetValue("rgb", _rgb);
-      return *this;
-   }
+   RColor(const RGB_t &rgb) : RColor() { SetRGB(rgb[0], rgb[1], rgb[2]); }
 
    /** Set r/g/b/ components of color as hex code, default for the color */
-   RColor &SetHex(int r, int g, int b)
+   RColor &SetRGB(int r, int g, int b)
    {
       return SetHex(toHex(r) + toHex(g) + toHex(b));
    }
@@ -85,24 +65,32 @@ public:
    /** Set color as hex string like 00FF00 */
    RColor &SetHex(const std::string &_hex)
    {
-      ClearValue("rgb");
-      ClearValue("name");
-      SetValue("hex", _hex);
+      SetValue("rgb", _hex);
       return *this;
    }
 
-   std::string GetHex() const { return GetValue<std::string>("hex"); }
+   std::string GetHex() const { return GetValue<std::string>("rgb"); }
+
+   bool GetRGB(int &r, int &g, int &b) const;
+
+   void ClearRGB()
+   {
+      ClearValue("rgb");
+   }
 
    RColor &SetName(const std::string &_name)
    {
-      ClearValue("hex");
-      ClearValue("rgb");
+      ClearRGB();
       SetValue("name", _name);
       return *this;
    }
 
    std::string GetName() const { return GetValue<std::string>("name"); }
 
+   void ClearName()
+   {
+      ClearValue("name");
+   }
 
    double GetAlpha() const
    {
@@ -127,24 +115,20 @@ public:
       return *this;
    }
 
+   /// Return the Hue, Light, Saturation (HLS) definition of this RColor
+   bool GetHLS(float &hue, float &light, float &satur) const;
+
+   /// Set the Red Green and Blue (RGB) values from the Hue, Light, Saturation (HLS).
+   RColor &SetHLS(float hue, float light, float satur);
+
    std::string AsSVG() const
    {
-      bool has_alpha = HasAlpha();
-
       auto hex = GetHex();
       if (!hex.empty()) {
          std::string res = "#";
          res.append(hex);
-         if (has_alpha) res.append(GetAlphaHex());
+         res.append(GetAlphaHex());
          return res;
-      }
-
-      auto rgb = GetRGB();
-      if (!rgb.empty()) {
-         if (!has_alpha) return std::string("rgb(") + rgb + ")";
-         char alphabuf[10];
-         snprintf(alphabuf, sizeof(alphabuf), "%5.3f", GetAlpha());
-         return std::string("rgba(") + rgb + "," + alphabuf + ")";
       }
 
       // check that alpha is not specified
@@ -161,7 +145,7 @@ public:
 
    friend bool operator==(const RColor &lhs, const RColor &rhs)
    {
-      return (lhs.GetHex() == rhs.GetHex()) && (lhs.GetName() == rhs.GetName()) && (lhs.GetRGB() == rhs.GetRGB()) &&
+      return (lhs.GetHex() == rhs.GetHex()) && (lhs.GetName() == rhs.GetName()) &&
              (lhs.GetAlphaHex() == rhs.GetAlphaHex());
    }
 };

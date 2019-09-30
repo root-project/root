@@ -19,21 +19,20 @@ using namespace ROOT::Experimental;
 TEST(RColorTest, Empty) {
    RColor col;
    EXPECT_EQ(col.GetHex(), "");
-   EXPECT_EQ(col.GetAlphaHex(), "");
-   EXPECT_EQ(col.GetRGB(), "");
+   EXPECT_DOUBLE_EQ(col.GetAlpha(), 1.);
    EXPECT_EQ(col.GetName(), "");
 }
 
 // Test usage of empty color
 TEST(RColorTest, AsHex) {
    RColor col;
-   col.SetHex(0,0,0);
+   col.SetRGB(0,0,0);
    EXPECT_EQ(col.GetHex(), "000000");
-   col.SetHex(1,7,15);
+   col.SetRGB(1,7,15);
    EXPECT_EQ(col.GetHex(), "01070F");
-   col.SetHex(127,127,127);
+   col.SetRGB(127,127,127);
    EXPECT_EQ(col.GetHex(), "7F7F7F");
-   col.SetHex(255,255,255);
+   col.SetRGB(255,255,255);
    EXPECT_EQ(col.GetHex(), "FFFFFF");
 }
 
@@ -56,4 +55,20 @@ TEST(RColorTest, Alpha) {
 
    col.SetAlpha(0.8);
    EXPECT_NEAR(0.8,col.GetAlpha(), delta);
+}
+
+
+TEST(RColorTest, Predef) {
+   {
+      RColor col{RColor::kRed};
+      EXPECT_EQ(col.GetHex(), "FF0000");
+      EXPECT_EQ(col.HasAlpha(), false);
+   }
+
+   {
+      RColor col{RColor::kBlue};
+      col.SetAlpha(RColor::kTransparent);
+      EXPECT_EQ(col.GetHex(), "0000FF");
+      EXPECT_FLOAT_EQ(col.GetAlpha(), 0.);
+   }
 }
