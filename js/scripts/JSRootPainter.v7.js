@@ -2051,32 +2051,31 @@
       menu.add("Save as frame.png", function() { this.pad_painter().SaveAs("png", 'frame', 'frame.png'); });
       menu.add("Save as frame.svg", function() { this.pad_painter().SaveAs("svg", 'frame', 'frame.svg'); });
 
-
       return true;
    }
 
+   /** @summary Show axis status message
+   *
+   * @desc method called normally when mouse enter main object element
+   * @private
+   */
    TFramePainter.prototype.ShowAxisStatus = function(axis_name) {
       // method called normally when mouse enter main object element
 
       var status_func = this.GetShowStatusFunc();
 
-      if (!status_func) return;
+      if (typeof status_func != "function") return;
 
-      var taxis = null;
-
-      var hint_name = axis_name, hint_title = "TAxis";
+      var taxis = null, hint_name = axis_name, hint_title = "TAxis",
+          m = d3.mouse(this.svg_frame().node()), id = (axis_name=="x") ? 0 : 1;
 
       if (taxis) { hint_name = taxis.fName; hint_title = taxis.fTitle || "histogram TAxis object"; }
 
-      var m = d3.mouse(this.svg_frame().node());
-
-      var id = (axis_name=="x") ? 0 : 1;
       if (this.swap_xy) id = 1-id;
 
       var axis_value = (axis_name=="x") ? this.RevertX(m[id]) : this.RevertY(m[id]);
 
-      status_func(hint_name, hint_title, axis_name + " : " + this.AxisAsText(axis_name, axis_value),
-                  m[0].toFixed(0)+","+ m[1].toFixed(0));
+      status_func(hint_name, hint_title, axis_name + " : " + this.AxisAsText(axis_name, axis_value), m[0]+","+m[1]);
    }
 
    TFramePainter.prototype.AddInteractive = function() {
@@ -2347,7 +2346,7 @@
 
       if (this._xaxis_timedisplay) {
          this.x_kind = 'time';
-         this.timeoffsetx = JSROOT.Painter.getTimeOffset(this.histo.fXaxis);
+         this.timeoffsetx = JSROOT.Painter.getTimeOffset(/*this.histo.fXaxis*/);
          this.ConvertX = function(x) { return new Date(this.timeoffsetx + x*1000); };
          this.RevertX = function(grx) { return (this.x.invert(grx) - this.timeoffsetx) / 1000; };
       } else {
@@ -2395,7 +2394,7 @@
 
       if (this._yaxis_timedisplay) {
          this.y_kind = 'time';
-         this.timeoffsety = JSROOT.Painter.getTimeOffset(this.histo.fYaxis);
+         this.timeoffsety = JSROOT.Painter.getTimeOffset(/*this.histo.fYaxis*/);
          this.ConvertY = function(y) { return new Date(this.timeoffsety + y*1000); };
          this.RevertY = function(gry) { return (this.y.invert(gry) - this.timeoffsety) / 1000; };
       } else {
@@ -3801,13 +3800,12 @@
    }
 
    TPadPainter.prototype.GetNewColor = function(attr, name, dflt) {
-      var rgb = this.GetNewOpt(attr, name + "_rgb", ""),
-          alfa = this.GetNewOpt(attr, name + "_a", "");
+      var rgb = this.GetNewOpt(attr, name + "_rgb", "");
 
-      if (rgb && alfa)
-         return "rgba(" + rgb + "," + alfa + ")";
+      if (rgb)
+         return "#" + rgb + this.GetNewOpt(attr, name + "_a", "");
 
-      return rgb ? "rgb(" + rgb + ")" : dflt;
+      return this.GetNewOpt(attr, name + "_name", "") || dflt;
    }
 
    TPadPainter.prototype.GetCoordinate = function(pos) {
