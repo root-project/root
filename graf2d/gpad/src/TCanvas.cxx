@@ -880,7 +880,7 @@ void TCanvas::Draw(Option_t *)
 TObject *TCanvas::DrawClone(Option_t *option) const
 {
    TCanvas *newCanvas = (TCanvas*)Clone();
-   newCanvas->SetName("");
+   newCanvas->SetName();
 
    newCanvas->Draw(option);
    newCanvas->Update();
