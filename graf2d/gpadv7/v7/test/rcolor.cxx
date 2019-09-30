@@ -36,6 +36,15 @@ TEST(RColorTest, AsHex) {
    EXPECT_EQ(col.GetHex(), "FFFFFF");
 }
 
+// Test usage of empty color
+TEST(RColorTest, Components) {
+   RColor col;
+   col.SetHex("012345");
+   EXPECT_EQ(col.GetRed(), 0x01);
+   EXPECT_EQ(col.GetBlue(), 0x23);
+   EXPECT_EQ(col.GetGreen(), 0x45);
+}
+
 TEST(RColorTest, Alpha) {
 
    static constexpr double delta = 0.01; // approx precision of alpha storage

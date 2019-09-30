@@ -73,6 +73,28 @@ public:
 
    bool GetRGB(int &r, int &g, int &b) const;
 
+   /** Returns red color component 0..255 */
+   int GetRed() const
+   {
+      int r,g,b;
+      return GetRGB(r,g,b) ? r : 0;
+   }
+
+   /** Returns green color component 0..255 */
+   int GetGreen() const
+   {
+      int r,g,b;
+      return GetRGB(r,g,b) ? g : 0;
+   }
+
+   /** Returns blue color component 0..255 */
+   int GetBlue() const
+   {
+      int r,g,b;
+      return GetRGB(r,g,b) ? b : 0;
+   }
+
+
    void ClearRGB()
    {
       ClearValue("rgb");
