@@ -29,7 +29,7 @@ namespace Experimental {
 
 class RColor : public RAttrBase {
 
-   R__ATTR_CLASS(RColor, "color_", AddString("hex", "").AddString("rgb", "").AddString("name", "").AddDouble("a", 1.));
+   R__ATTR_CLASS(RColor, "color_", AddString("hex", "").AddString("rgb", "").AddString("name", "").AddString("a", ""));
 
    using RGB_t = std::array<int, 3>;
 
@@ -79,7 +79,7 @@ public:
    /** Set r/g/b/ components of color as hex code, default for the color */
    RColor &SetHex(int r, int g, int b)
    {
-      return SetRGB(toHex(r) + toHex(g) + toHex(b));
+      return SetHex(toHex(r) + toHex(g) + toHex(b));
    }
 
    /** Set color as hex string like 00FF00 */
@@ -104,9 +104,24 @@ public:
    std::string GetName() const { return GetValue<std::string>("name"); }
 
 
-   double GetAlpha() const { return GetValue<double>("a"); }
+   double GetAlpha() const
+   {
+      auto hex = GetAlphaHex();
+      if (hex.empty())
+         return 1.;
+      return std::strtol(hex.c_str(), nullptr, 16) / 255.;
+   }
+
+   std::string GetAlphaHex() const { return GetValue<std::string>("a"); }
+
    bool HasAlpha() const { return HasValue("a"); }
+
    RColor &SetAlpha(double _alfa)
+   {
+      return SetAlphaHex(toHex((int) (_alfa*255)));
+   }
+
+   RColor &SetAlphaHex(const std::string &_alfa)
    {
       SetValue("a", _alfa);
       return *this;
@@ -115,22 +130,21 @@ public:
    std::string AsSVG() const
    {
       bool has_alpha = HasAlpha();
-      double alpha = has_alpha ? GetAlpha() : 1.;
 
       auto hex = GetHex();
       if (!hex.empty()) {
          std::string res = "#";
          res.append(hex);
-         if (has_alpha) res.append(toHex((int) (alpha*255)));
+         if (has_alpha) res.append(GetAlphaHex());
          return res;
       }
 
       auto rgb = GetRGB();
       if (!rgb.empty()) {
-         if (has_alpha)
-            return std::string("rgba(") + rgb + "," + std::to_string(alpha) + ")";
-         else
-            return std::string("rgb(") + rgb + ")";
+         if (!has_alpha) return std::string("rgb(") + rgb + ")";
+         char alphabuf[10];
+         snprintf(alphabuf, sizeof(alphabuf), "%5.3f", GetAlpha());
+         return std::string("rgba(") + rgb + "," + alphabuf + ")";
       }
 
       // check that alpha is not specified
@@ -145,10 +159,11 @@ public:
    static constexpr double kTransparent{0.};
    static constexpr double kOpaque{1.};
 
-   friend bool operator==(const RColor& lhs, const RColor& rhs){ return (lhs.GetRGB() == rhs.GetRGB()) && (lhs.HasAlpha() == rhs.HasAlpha()) && (lhs.GetAlpha() == rhs.GetAlpha()); }
-
-
-
+   friend bool operator==(const RColor &lhs, const RColor &rhs)
+   {
+      return (lhs.GetHex() == rhs.GetHex()) && (lhs.GetName() == rhs.GetName()) && (lhs.GetRGB() == rhs.GetRGB()) &&
+             (lhs.GetAlphaHex() == rhs.GetAlphaHex());
+   }
 };
 
 } // namespace Experimental
