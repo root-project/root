@@ -47,8 +47,8 @@ struct TCudnnEmptyDescriptor {};
 /** The TCudnn architecture class.
  *
  * Low-level interface class for CUDA computing architectures using the cuDNN
- * library as backend. Contains as public types the declaration of the scalar, 
- * matrix and buffer types for this architecture, as well as the remaining 
+ * library as backend. Contains as public types the declaration of the scalar,
+ * matrix and buffer types for this architecture, as well as the remaining
  * functions in the low-level interface in the form of static members.
  */
 template<typename AFloat = Float_t>
@@ -63,7 +63,7 @@ public:
    using Tensor_t       = TCudaTensor<AFloat>;
    using DeviceBuffer_t = TCudaDeviceBuffer<AFloat>;
    using HostBuffer_t   = TCudaHostBuffer<AFloat>;
-    
+
    // The descriptors for the (tensor) data are held by the data classes (CudaTensor)
    using ActivationDescriptor_t  = cudnnActivationDescriptor_t;
    using ConvolutionDescriptor_t = cudnnConvolutionDescriptor_t;
@@ -76,9 +76,10 @@ public:
    using AlgorithmBackward_t     = cudnnConvolutionBwdDataAlgo_t;
    using AlgorithmHelper_t       = cudnnConvolutionBwdFilterAlgo_t;
    using AlgorithmDataType_t     = cudnnDataType_t;
-    
+   using ReduceTensorDescriptor_t = cudnnReduceTensorDescriptor_t;
+
    using EmptyDescriptor_t       = TCudnnEmptyDescriptor;        // Used if a descriptor is not needed in a class
-   
+
    /*using BNormLayer_t            = DNN::TBatchNormLayer<TCudnn<AFloat>>;
    using BNormDescriptors_t      = CNN::TCNNDescriptors<BNormLayer_t>;
    using BNormWorkspace_t        = CNN::TCNNWorkspace<BNormLayer_t>;*/
@@ -103,22 +104,22 @@ public:
    static TMVA::Experimental::MemoryLayout GetTensorLayout() { return TMVA::Experimental::MemoryLayout::RowMajor; }
 
 
-   static Tensor_t CreateTensor(size_t n, size_t c, size_t h, size_t w) { 
-      return Tensor_t( {n,c,h,w}, GetTensorLayout(), 0, 0); 
+   static Tensor_t CreateTensor(size_t n, size_t c, size_t h, size_t w) {
+      return Tensor_t( {n,c,h,w}, GetTensorLayout(), 0, 0);
    }
-  
-   static Tensor_t CreateTensor(DeviceBuffer_t buffer, size_t n, size_t c, size_t h, size_t w) { 
-      return Tensor_t( buffer, {n,c,h,w}, GetTensorLayout(), 0, 0); 
+
+   static Tensor_t CreateTensor(DeviceBuffer_t buffer, size_t n, size_t c, size_t h, size_t w) {
+      return Tensor_t( buffer, {n,c,h,w}, GetTensorLayout(), 0, 0);
    }
-    // create a weight tensor/matrix    from another tensor/weight  
-   // static Matrix_t CreateWeightTensor( const Matrix_t & A) { 
-   //    return Matrix_t( A.GetShape(), A.GetLayout(), 0, 0); 
+    // create a weight tensor/matrix    from another tensor/weight
+   // static Matrix_t CreateWeightTensor( const Matrix_t & A) {
+   //    return Matrix_t( A.GetShape(), A.GetLayout(), 0, 0);
    // }
-   // create a weight tensor/matrix vector   from another tensor/weight  vector using the given tensor shapes 
+   // create a weight tensor/matrix vector   from another tensor/weight  vector using the given tensor shapes
    // this function is used by the optimizers to stgore intermidiate weights representations
    static void  CreateWeightTensors( std::vector<Matrix_t> & newWeights, const std::vector<Matrix_t> & weights) {
-      if (!newWeights.empty()) newWeights.clear(); 
-      size_t n =  weights.size(); 
+      if (!newWeights.empty()) newWeights.clear();
+      size_t n =  weights.size();
       for (size_t i = 0; i < n; ++i)
          newWeights.emplace_back( weights[i].GetShape(), weights[i].GetLayout(), 0, 0);
    }
@@ -127,16 +128,16 @@ public:
    // Architecture Initialization
    //____________________________________________________________________________
    # if 0
-   static void InitializeBNormDescriptors(TDescriptors * & descriptors, 
+   static void InitializeBNormDescriptors(TDescriptors * & descriptors,
                                           BNormLayer_t *L = nullptr);
    # endif
-   static void InitializeConvDescriptors(TDescriptors * & descriptors, double coef = 0.0, 
+   static void InitializeConvDescriptors(TDescriptors * & descriptors, double coef = 0.0,
                                          ConvLayer_t *L = nullptr);
 
-   static void InitializePoolDescriptors(TDescriptors * & descriptors, 
+   static void InitializePoolDescriptors(TDescriptors * & descriptors,
                                         PoolingLayer_t *L = nullptr);
 
-   static void InitializeActivationDescriptor(ActivationDescriptor_t & descriptors, EActivationFunction activFunc, double coef = 0.0); 
+   static void InitializeActivationDescriptor(ActivationDescriptor_t & descriptors, EActivationFunction activFunc, double coef = 0.0);
 
    static void ReleaseConvDescriptors(TDescriptors    * descriptors, ConvLayer_t    *L = nullptr);
    static void ReleasePoolDescriptors(TDescriptors * descriptors, PoolingLayer_t *L = nullptr);
@@ -146,8 +147,8 @@ public:
    static void ReleaseDescriptor(DropoutDescriptor_t     & dropoutDescr);
    static void ReleaseDescriptor(FilterDescriptor_t      & filterDescr);
    static void ReleaseDescriptor(PoolingDescriptor_t     & poolingDescr);
-   
-   
+
+
    static void InitializeConvWorkspace(TWorkspace * & workspace,
                                        TDescriptors * & descriptors,
                                        const DNN::CNN::TConvParams & params,
@@ -195,7 +196,7 @@ public:
                         Tensor_t & df,
                         const Tensor_t & activationGradients,
                         const Matrix_t & weights,
-                        const Tensor_t & activationBackward); 
+                        const Tensor_t & activationBackward);
 
    /** Above functions extended to vectors */
    static void ScaleAdd(Tensor_t & A, const Tensor_t & B,
@@ -232,23 +233,23 @@ public:
     */
    ///@{
    static void Identity(Tensor_t & X) {}
-   static void IdentityDerivative(Tensor_t & dX, Tensor_t& X, 
-                                  Tensor_t & Y,  Tensor_t & dY, 
-                                  ActivationDescriptor_t activationDescr, 
-                                  const AFloat alpha = 1, 
+   static void IdentityDerivative(Tensor_t & dX, Tensor_t& X,
+                                  Tensor_t & Y,  Tensor_t & dY,
+                                  ActivationDescriptor_t activationDescr,
+                                  const AFloat alpha = 1,
                                   const AFloat beta = 1) {}
 
    static void ActivationFunctionForward(Tensor_t & X, EActivationFunction activFunct,
                           const ActivationDescriptor_t activationDescr,
-                          const double coef = 0.0, const AFloat alpha = 1, 
+                          const double coef = 0.0, const AFloat alpha = 1,
                           const AFloat beta = 0);
-                          
+
    /** Computes the gradient of the activation function */
    static void ActivationFunctionBackward(Tensor_t & dX, const Tensor_t & Y,
-                                          const Tensor_t & dY,  const Tensor_t & X, 
+                                          const Tensor_t & dY,  const Tensor_t & X,
                                           EActivationFunction activFunct,
                                           const ActivationDescriptor_t activationDescr,
-                                          const AFloat alpha = 1, 
+                                          const AFloat alpha = 1,
                                           const AFloat beta = 0);
 
    //
@@ -321,8 +322,8 @@ public:
                        const Matrix_t & );
    ///@}
 
-   
-   
+
+
       //____________________________________________________________________________
       //
       // Dropout
@@ -334,9 +335,9 @@ public:
 
    /** Apply dropout with activation probability \p p to the given
     *  tensor \p A and scale the result by reciprocal of \p p. */
-   static void DropoutForward(Tensor_t & A, 
+   static void DropoutForward(Tensor_t & A,
                               TDescriptors * descriptors,
-                              TWorkspace         * workspace, 
+                              TWorkspace         * workspace,
                               Scalar_t p);
 
    static void DropoutBackward(Tensor_t & A,
@@ -354,8 +355,8 @@ public:
     */
    ///@{
 
-   /** The input from each batch are normalized during training to have zero mean and unit variance 
-     * and they are then scaled by two parameter, different for each input variable: 
+   /** The input from each batch are normalized during training to have zero mean and unit variance
+     * and they are then scaled by two parameter, different for each input variable:
      *  - a scale factor \gamma gamma
      *  - an offset \beta beta */
    static void BatchNormLayerForwardTraining(Matrix_t input,                        // input
@@ -376,7 +377,7 @@ public:
                                              Scalar_t momentum,                     // GD momentum
                                              Scalar_t epsilon);                     // epsilon
 
-   /** During inference the inputs are not normalized using the batch mean but the previously computed 
+   /** During inference the inputs are not normalized using the batch mean but the previously computed
      * at  running mean and variance */
    static void BatchNormLayerForwardInference(Matrix_t input,
                                               Matrix_t & gamma,
@@ -420,7 +421,7 @@ public:
     * <tt>Add<Type>RegularizationGradients</tt>, that adds the regularization
     * component in the gradients to the provided matrix.
     */
-   
+
    static Scalar_t L1Regularization(const Matrix_t &W)
    {
       TCudaMatrix<AFloat> mW(W.GetDeviceBuffer(), W.GetSize(), 1);
@@ -632,7 +633,7 @@ public:
 
 
       ///@}
-      
+
       //____________________________________________________________________________
       //
       // Additional Arithmetic Functions
@@ -662,11 +663,11 @@ public:
     *  with the result being written into \p A.
     */
    static void Hadamard(Tensor_t &A,
-                        const Tensor_t &B) { 
+                        const Tensor_t &B) {
          TCudaMatrix<AFloat> tmpA(A.GetDeviceBuffer(), 1, A.GetSize());
-         TCudaMatrix<AFloat> tmpB(B.GetDeviceBuffer(), 1, B.GetSize());     
-         assert(A.GetSize() == B.GetSize());             
-         TCuda<AFloat>::Hadamard(tmpA,tmpB);                    
+         TCudaMatrix<AFloat> tmpB(B.GetDeviceBuffer(), 1, B.GetSize());
+         assert(A.GetSize() == B.GetSize());
+         TCuda<AFloat>::Hadamard(tmpA,tmpB);
    }
   // static void Hadamard(Matrix_t &A,
   //                      const Matrix_t &B);*/
@@ -691,7 +692,7 @@ public:
    /** Add the constant \p beta to all the elements of matrix \p A and write the
     * result into \p A.
     */
-   static void ConstAdd(Matrix_t &A, Scalar_t beta) { 
+   static void ConstAdd(Matrix_t &A, Scalar_t beta) {
       TCudaMatrix<AFloat> tmp(A.GetDeviceBuffer(), 1, A.GetSize());
       TCuda<AFloat>::ConstAdd(tmp,beta);
    }
@@ -699,7 +700,7 @@ public:
    /** Multiply the constant \p beta to all the elements of matrix \p A and write the
     * result into \p A.
     */
-   static void ConstMult(Matrix_t &A, Scalar_t beta) { 
+   static void ConstMult(Matrix_t &A, Scalar_t beta) {
       TCudaMatrix<AFloat> tmp(A.GetDeviceBuffer(), 1, A.GetSize());
       TCuda<AFloat>::ConstMult(tmp,beta);
    }
@@ -715,7 +716,7 @@ public:
    /** Square each element of the matrix \p A and write the result into
     * \p A
     */
-   static void SquareElementWise(Matrix_t &A) { 
+   static void SquareElementWise(Matrix_t &A) {
       TCudaMatrix<AFloat> tmp(A.GetDeviceBuffer(), 1, A.GetSize());
       TCuda<AFloat>::SquareElementWise(tmp);
    }
@@ -744,7 +745,7 @@ public:
    static void AdamUpdateSecondMom(Matrix_t & A, const Matrix_t & B, Scalar_t beta) {
       TCudaMatrix<AFloat> tmpA(A.GetDeviceBuffer(), 1, A.GetSize());
       TCudaMatrix<AFloat> tmpB(B.GetDeviceBuffer(), 1, B.GetSize());
-      TCuda<AFloat>::AdamUpdateSecondMom(tmpA, tmpB,  beta); 
+      TCuda<AFloat>::AdamUpdateSecondMom(tmpA, tmpB,  beta);
    }
 
       // printing of tensor
@@ -755,7 +756,7 @@ public:
    ///////////////////////////////////////////////////////////////////////////////
    /// extra functions defined only for CPU architecture !!!
    //////////////////////////////////////////////////////////////////////////////
-   
+
    /** Sum rows of (m x n) matrix \p A and write the results into the first
    * m elements in \p B.
    */
@@ -783,9 +784,9 @@ void TCudnn<AFloat>::InitializeConvDescriptors(TDescriptors * & descriptors, dou
       case EActivationFunction::kSigmoid:  activationMode = CUDNN_ACTIVATION_SIGMOID; break;
       case EActivationFunction::kTanh:     activationMode = CUDNN_ACTIVATION_TANH;    break;
       // The activations otherwise used are not supported by cuDNN
-      default:  activationMode = CUDNN_ACTIVATION_RELU;    
+      default:  activationMode = CUDNN_ACTIVATION_RELU;
    };
-   
+
    CUDNNCHECK(cudnnCreateConvolutionDescriptor(&convDescriptors->LayerDescriptor));
    CUDNNCHECK(cudnnCreateActivationDescriptor(&convDescriptors->HelperDescriptor));
    CUDNNCHECK(cudnnCreateFilterDescriptor(&convDescriptors->WeightsDescriptor));
@@ -802,7 +803,7 @@ void TCudnn<AFloat>::InitializeConvDescriptors(TDescriptors * & descriptors, dou
                                               cudnnDataType));
 
    // Dont set activation function descriptor for identity function
-   if (L->GetActivationFunction() != EActivationFunction::kIdentity) 
+   if (L->GetActivationFunction() != EActivationFunction::kIdentity)
       CUDNNCHECK(cudnnSetActivationDescriptor(convDescriptors->HelperDescriptor,
                                                                activationMode,
                                                                CUDNN_PROPAGATE_NAN,
@@ -819,29 +820,29 @@ void TCudnn<AFloat>::InitializeConvDescriptors(TDescriptors * & descriptors, dou
 
    descriptors = convDescriptors;
 
-   // fix the weight tensor shapes 
-   // by default the weights are columnmajor, set them to be row major . At this points 
-   // they are not yet initialized 
-   Tensor_t & filters = L->GetWeightsAt(0); 
+   // fix the weight tensor shapes
+   // by default the weights are columnmajor, set them to be row major . At this points
+   // they are not yet initialized
+   Tensor_t & filters = L->GetWeightsAt(0);
    filters = Tensor_t (filters.GetDeviceBuffer(), {L->GetDepth(),L->GetInputDepth(), L->GetFilterHeight(),L->GetFilterWidth()}, MemoryLayout::RowMajor, 0, 0 );
-   //PrintTensor(L->GetWeightsAt(0)); 
+   //PrintTensor(L->GetWeightsAt(0));
    Tensor_t & biases = L->GetBiasesAt(0);
    biases = Tensor_t (biases.GetDeviceBuffer(), {1, L->GetDepth(),1,1}, GetTensorLayout(), 0, 0 );
 
-   Tensor_t & output = L->GetOutput(); 
+   Tensor_t & output = L->GetOutput();
    output = Tensor_t(output.GetDeviceBuffer(),{ L->GetBatchSize(), L->GetDepth(), L->GetHeight(), L->GetWidth() },GetTensorLayout(),0,0 );
-   Tensor_t & inputActivation = L->GetInputActivation(); 
+   Tensor_t & inputActivation = L->GetInputActivation();
    inputActivation = Tensor_t(inputActivation.GetDeviceBuffer(),output.GetShape() ,GetTensorLayout(),0,0 );
 
    Tensor_t &  activationGradients = L->GetActivationGradients();
    activationGradients =  Tensor_t(activationGradients.GetDeviceBuffer(),output.GetShape() ,GetTensorLayout(),0,0 );
-   
-   Tensor_t & weightGradients = L->GetWeightGradientsAt(0); 
-   weightGradients = Tensor_t( weightGradients.GetDeviceBuffer(), filters.GetShape(), GetTensorLayout(), 0, 0 ); 
-   
-   Tensor_t & biasGradients = L->GetBiasGradientsAt(0); 
-   biasGradients = Tensor_t( biasGradients.GetDeviceBuffer(), biases.GetShape(), GetTensorLayout(), 0, 0 ); 
-   
+
+   Tensor_t & weightGradients = L->GetWeightGradientsAt(0);
+   weightGradients = Tensor_t( weightGradients.GetDeviceBuffer(), filters.GetShape(), GetTensorLayout(), 0, 0 );
+
+   Tensor_t & biasGradients = L->GetBiasGradientsAt(0);
+   biasGradients = Tensor_t( biasGradients.GetDeviceBuffer(), biases.GetShape(), GetTensorLayout(), 0, 0 );
+
 
 }
 
@@ -879,7 +880,7 @@ template <typename AFloat>
 void TCudnn<AFloat>::ReleaseDescriptor(ConvolutionDescriptor_t & convolutionDescr) {
    CUDNNCHECK(cudnnDestroyConvolutionDescriptor(convolutionDescr));
 }
-   
+
 //____________________________________________________________________________
 template <typename AFloat>
 void TCudnn<AFloat>::ReleaseDescriptor(FilterDescriptor_t & filterDescr) {
@@ -895,7 +896,7 @@ void TCudnn<AFloat>::ReleaseDescriptor(PoolingDescriptor_t & poolingDescr) {
 //____________________________________________________________________________
 template <typename AFloat>
 void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
-                                             TDescriptors * & descriptors, 
+                                             TDescriptors * & descriptors,
                                              const DNN::CNN::TConvParams & params,
                                              ConvLayer_t *L) {
    auto convWorkspace = new ConvWorkspace_t ();
@@ -906,10 +907,10 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
    size_t outputHeight = ConvLayer_t::calculateDimension(params.inputHeight, params.filterHeight, params.paddingHeight, params.strideRows);
    size_t outputWidth  = ConvLayer_t::calculateDimension(params.inputWidth, params.filterWidth, params.paddingWidth, params.strideCols);
    Tensor_t outputTensor ({params.batchSize, params.numberFilters, outputHeight, outputWidth}, MemoryLayout::RowMajor, 0, 0);
-   
+
    // Get access to cudnn library handle, which is static for the CudaTensor class
    cudnnHandle_t cudnnHandle = inputTensor.GetCudnnHandle();
-   
+
    // cuDNN decides which algorithm to use
    // More detailed alternative: cudnnFindConvolutionForwardAlgorithm
    CUDNNCHECK(cudnnGetConvolutionForwardAlgorithm(cudnnHandle,
@@ -920,7 +921,7 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
                                                   CUDNN_CONVOLUTION_FWD_PREFER_FASTEST,
                                                   0,     // Memory limit in bytes for mode CUDNN_CONVOLUTION_FWD_SPECIFY_WORKSPACE_LIMIT
                                                   &convWorkspace->AlgorithmForward));
-                                                  
+
    // Allocate memory for the convolution
    //size_t workSpaceSizeInBytes = 0;
    CUDNNCHECK(cudnnGetConvolutionForwardWorkspaceSize(cudnnHandle,
@@ -930,17 +931,17 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
                                                       outputTensor.GetTensorDescriptor(),
                                                       convWorkspace->AlgorithmForward,
                                                       &convWorkspace->ForwardWorkspaceSize));
-                                                  
+
    if (convWorkspace->ForwardWorkspaceSize) cudaMalloc(&convWorkspace->ForwardWorkspace, convWorkspace->ForwardWorkspaceSize*sizeof(AFloat));
 
    //
    // Backward Algorithm
    //
-   
+
    Tensor_t activationGradients ({params.batchSize, params.numberFilters, outputHeight, outputWidth}, MemoryLayout::RowMajor, 0, 0);
    Tensor_t activationGradientsBackward ({params.batchSize, params.inputDepth, params.inputHeight, params.inputWidth}, MemoryLayout::RowMajor, 0, 0);
    cudnnHandle = activationGradients.GetCudnnHandle();
-   // dx : Activation gradient to be computed                               -> activationGradients [in place op] 
+   // dx : Activation gradient to be computed                               -> activationGradients [in place op]
    // dy : Gradient of activation from the following layer (backpropagation)-> activationGradients
    CUDNNCHECK(cudnnGetConvolutionBackwardDataAlgorithm(cudnnHandle,
                                                        convDescriptors->WeightsDescriptor,
@@ -950,7 +951,7 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
                                                        CUDNN_CONVOLUTION_BWD_DATA_PREFER_FASTEST,
                                                        0,
                                                        &convWorkspace->AlgorithmBackward));
-    
+
    CUDNNCHECK(cudnnGetConvolutionBackwardDataWorkspaceSize(cudnnHandle,
                                                            convDescriptors->WeightsDescriptor,
                                                            activationGradients.GetTensorDescriptor(),
@@ -958,9 +959,9 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
                                                            activationGradientsBackward.GetTensorDescriptor(),
                                                            convWorkspace->AlgorithmBackward,
                                                            &convWorkspace->BackwardWorkspaceSize));
-                                                           
+
    if (convWorkspace->BackwardWorkspaceSize) cudaMalloc(&convWorkspace->BackwardWorkspace, convWorkspace->BackwardWorkspaceSize*sizeof(AFloat));
-  
+
    // Filter gradient
    Tensor_t activationBackward ({params.batchSize, params.inputDepth, params.inputHeight, params.inputWidth}, MemoryLayout::RowMajor, 0, 0);
 
@@ -972,7 +973,7 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
                                                          CUDNN_CONVOLUTION_BWD_FILTER_PREFER_FASTEST,
                                                          0,
                                                          &convWorkspace->HelperAlgorithm));
-                                                          
+
    CUDNNCHECK(cudnnGetConvolutionBackwardFilterWorkspaceSize(cudnnHandle,
                                                              activationBackward.GetTensorDescriptor(),
                                                              activationGradients.GetTensorDescriptor(),
@@ -980,9 +981,9 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
                                                              convDescriptors->WeightsDescriptor,
                                                              convWorkspace->HelperAlgorithm,
                                                              &convWorkspace->HelperWorkspaceSize));
-                                                              
+
     if (convWorkspace->HelperWorkspaceSize) cudaMalloc(&convWorkspace->HelperWorkspace, convWorkspace->HelperWorkspaceSize*sizeof(AFloat));
-   
+
    workspace = convWorkspace;
 }
 
@@ -1009,7 +1010,7 @@ void TCudnn<AFloat>::CopyDiffArch(TCudaTensor<AFloat> &B,
    TMatrixT<AFloat> tmp = A;// .GetMatrix();
    TCudaMatrix<AFloat> tmp2(tmp);
    TCudaTensor<AFloat> tA( tmp2 );
-   Copy(B, tA ); 
+   Copy(B, tA );
 }
 
 //____________________________________________________________________________
@@ -1024,27 +1025,27 @@ void TCudnn<AFloat>::CopyDiffArch(std::vector<Tensor_t> &B,
 }
 
 template <typename AFloat>
-void TCudnn<AFloat>::PrintTensor(const typename TCudnn<AFloat>::Tensor_t & A, const std::string name, bool truncate ) 
+void TCudnn<AFloat>::PrintTensor(const typename TCudnn<AFloat>::Tensor_t & A, const std::string name, bool truncate )
 {
-   std::cout << name << "  size = " << A.GetSize() << " shape = { "; 
-   auto shape = A.GetShape(); 
+   std::cout << name << "  size = " << A.GetSize() << " shape = { ";
+   auto shape = A.GetShape();
    for (size_t k = 0; k < shape.size()-1; ++k)
       std::cout << shape[k] << " , ";
    std::cout << shape.back() << " } ";
    std::cout << " strides = { ";
-   auto strides = A.GetStrides(); 
+   auto strides = A.GetStrides();
    for (size_t k = 0; k < strides.size()-1; ++k)
       std::cout << strides[k] << " , ";
    std::cout << strides.back() << " }\n ";
 
-   if (A.GetShape().size() == 2 ) { 
+   if (A.GetShape().size() == 2 ) {
       for (size_t i = 0; i < A.GetShape()[0]; ++i) {
          std::cout << "{ ";
          size_t n =  A.GetShape()[1];
          if (truncate) n = std::min(n,size_t(10));
          for (size_t j = 0; j < n; ++j) {
             std::cout << A(i,j) << " ";
-            
+
          }
          if (truncate && n < A.GetShape()[1]) std::cout << " ...... ";
          std::cout << " } " << std::endl;
@@ -1071,10 +1072,10 @@ void TCudnn<AFloat>::PrintTensor(const typename TCudnn<AFloat>::Tensor_t & A, co
             std::cout << "{ ";
             for (size_t k = 0; k < A.GetShape()[2]; ++k) {
                size_t n =  A.GetShape()[3];
-               if (truncate)  n = std::min(n,size_t(10));  
+               if (truncate)  n = std::min(n,size_t(10));
                for (size_t l = 0; l < n; ++l) {
                   std::cout << A(i,j,k,l) << " ";
-               }  
+               }
                if (truncate && n < A.GetShape()[3]) std::cout << " ...... ";
                std::cout << " } " << std::endl;
             }
@@ -1083,12 +1084,12 @@ void TCudnn<AFloat>::PrintTensor(const typename TCudnn<AFloat>::Tensor_t & A, co
          std::cout << " } " << std::endl;
       }
    }
-   else {  
+   else {
       for (size_t l = 0; l < A.GetSize(); ++l) {
          std::cout << A.GetData()[l] << " ";
       }
       std::cout << "\n";
-   }  
+   }
 }
 
 // initialize the CNN options
@@ -1110,7 +1111,7 @@ int TCudnn<AFloat>::CNNOptions::ConvBwdDataAlgorithm = -1;
 template <typename AFloat>
 int TCudnn<AFloat>::CNNOptions::ConvBwdFilterAlgorithm = -1;
 template <typename AFloat>
-Long_t TCudnn<AFloat>::CNNOptions::ConvMaxWorkspaceSize = -1;  // -1 let use Cudnn defaults 
+Long_t TCudnn<AFloat>::CNNOptions::ConvMaxWorkspaceSize = -1;  // -1 let use Cudnn defaults
 
 } // namespace DNN
 } // namespace TMVA
