@@ -867,28 +867,12 @@ public:
    /// Return the VMC's ID
    Int_t GetId() const { return fId; }
 
-   /// Check whether external geometry construction should be used
-   Bool_t UseExternalGeometryConstruction() const { return fUseExternalGeometryConstruction; }
-
-   /// Check whether external particle generation should be used
-   Bool_t UseExternalParticleGeneration() const { return fUseExternalParticleGeneration; }
-
 private:
    /// Set the VMC id
    void SetId(UInt_t id);
 
    /// Set container holding additional information for transported TParticles
    void SetManagerStack(TMCManagerStack *stack);
-
-   /// Disables internal dispatch to TVirtualMCApplication::ConstructGeometry()
-   /// and hence rely on geometry construction being trigeered from outside.
-   void SetExternalGeometryConstruction(Bool_t value = kTRUE);
-
-   /// Disables internal dispatch to TVirtualMCApplication::GeneratePrimaries()
-   /// and tells the engine to not make any implicit assumptions on whether it's
-   /// a primary or a secondary. The track could have even been transported by
-   /// another engine to the current point.
-   void SetExternalParticleGeneration(Bool_t value = kTRUE);
 
    /// An interruptible event can be paused and resumed at any time. It must not
    /// call TVirtualMCApplication::BeginEvent() and ::FinishEvent()
@@ -916,23 +900,17 @@ private:
 #endif
 
 private:
-   Int_t fId;                               //!< Unique identification of this VMC
-                                            // (don't use TObject::SetUniqueId since this
-                                            // is used to uniquely identify TObjects in
-                                            // in general)
-                                            // An ID is given by the running TVirtualMCApp
-                                            // and not by the user.
-   TVirtualMCStack *fStack;                 //!< Particles stack
-   TMCManagerStack *fManagerStack;          //!< Stack handled by the TMCManager
-   TVirtualMCDecayer *fDecayer;             //!< External decayer
-   TRandom *fRandom;                        //!< Random number generator
-   TVirtualMagField *fMagField;             //!< Magnetic field
-   Bool_t fUseExternalGeometryConstruction; //!< Don't attempt to
-                                            // call
-                                            // TVirtualMCApplication
-                                            // hooks related to geometry
-   // construction
-   Bool_t fUseExternalParticleGeneration;
+   Int_t fId;                      //!< Unique identification of this VMC
+                                   // (don't use TObject::SetUniqueId since this
+                                   // is used to uniquely identify TObjects in
+                                   // in general)
+                                   // An ID is given by the running TVirtualMCApp
+                                   // and not by the user.
+   TVirtualMCStack *fStack;        //!< Particles stack
+   TMCManagerStack *fManagerStack; //!< Stack handled by the TMCManager
+   TVirtualMCDecayer *fDecayer;    //!< External decayer
+   TRandom *fRandom;               //!< Random number generator
+   TVirtualMagField *fMagField;    //!< Magnetic field
 
    ClassDef(TVirtualMC, 1) // Interface to Monte Carlo
 };
