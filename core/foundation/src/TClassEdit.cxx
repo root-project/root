@@ -1531,7 +1531,7 @@ static void ResolveTypedefImpl(const char *tname,
                      result += "::";
                   }
                } else if (modified) {
-                  result += std::string(tname+prevScope,cursor+1-prevScope);
+                  result += std::string(tname+prevScope,cursor+2-prevScope);
                }
             } else if (!gInterpreterHelper->IsDeclaredScope(scope,isInlined)) {
                // the nesting namespace is not declared
@@ -1549,7 +1549,7 @@ static void ResolveTypedefImpl(const char *tname,
                   result += string(tname,start_of_type,prevScope - start_of_type);
                }
             } else if (modified) {
-               result += std::string(tname+prevScope,cursor+1-prevScope);
+               result += std::string(tname+prevScope,cursor+2-prevScope);
             }
             // Consume the 1st semi colon, the 2nd will be consume by the for loop.
             ++cursor;
