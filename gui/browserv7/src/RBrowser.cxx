@@ -326,14 +326,25 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
       return res;
 
    if (request->sort == "DBLCLK") {
-      res = "FREAD:";
-      if (request->path.size() > 5 && request->path.compare(request->path.size() - 5, 5, ".root") == 0) {
+       if(request->path.find(".root") != std::string::npos) {
+            //TDirectory *rfile = (TDirectory *)gROOT->ProcessLine(TString::Format("TFile::Open(\"%s\", \"READ\")", filename.c_str()));
 
-      } else {
-         std::ifstream t(request->path);
-         std::string str((std::istreambuf_iterator<char>(t)),
-                          std::istreambuf_iterator<char>());
-         res.append(str.c_str());
+            //TFile *file = TFile::Open(request->path.substr(0, request->path.size()-6).c_str(), "READ");
+            //TString json = TBufferJSON::ConvertToJSON(file, 32);
+            //printf(json.Data());
+
+            //TObject *obj = (TObject *) item->GetUserData();
+            //TString json = TBufferJSON::ConvertToJSON(file, 32);
+            //printf(json.Data());
+            //res.append()
+
+            std::string str = "{\"path\":\"" + request->path + "\"}";
+            res = "FROOT:" + str;
+       } else {
+            res = "FREAD:";
+            std::ifstream t(request->path);
+            std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+            res.append(str.c_str());
       }
       return res;
    }

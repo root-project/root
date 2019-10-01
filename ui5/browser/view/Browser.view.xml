@@ -2,10 +2,12 @@
           controllerName="rootui5.browser.controller.Browser"
           xmlns="sap.m"
           xmlns:mvc="sap.ui.core.mvc"
+          xmlns:core="sap.ui.core"
           xmlns:t="sap.ui.table"
           xmlns:l="sap.ui.layout"
           xmlns:u="sap.ui.unified"
-          xmlns:e="sap.ui.codeeditor">
+          xmlns:e="sap.ui.codeeditor"
+          xmlns:c="sap.suite.ui.commons">
    <Page title="" showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false">
       <!-- headerContent>
       </headerContent-->
@@ -42,7 +44,7 @@
               showAddNewButton="true"
               addNewButtonPress="addNewButtonPressHandler"
               itemClose="tabCloseHandler">
-              <items >
+              <items>
                 <TabContainerItem name="Code Editor" icon="sap-icon://write-new-document" additionalText="untitled" >
                   <content>
                     <l:Splitter orientation="Vertical">
@@ -61,9 +63,9 @@
                   </content>
                 </TabContainerItem>
                 <TabContainerItem name="ROOT Canvas" icon="sap-icon://column-chart-dual-axis" additionalText="" >
-                  <content>
-                        
-                  </content>
+                    <content>
+                        <core:HTML id="aRootCanvas1" content="&lt;div style=&quot;height:100%&quot;&gt;{/rootCanvas}&lt;/div&gt;" />
+                    </content>
                 </TabContainerItem>
               </items>
             </TabContainer>
