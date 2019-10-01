@@ -71,7 +71,7 @@ An example of a Canvas layout is sketched in the picture below.
 \image html gpad_canvas.png
 
 This canvas contains two pads named P1 and P2. Both Canvas, P1 and P2 can be
-moved, grown, shrinked using the normal rules of the Display manager.
+moved, grown, shrunk using the normal rules of the Display manager.
 
 Once objects have been drawn in a canvas, they can be edited/moved by pointing
 directly to them. The cursor shape is changed to suggest the type of action that
@@ -94,7 +94,7 @@ the interactive mode, the following four lines of code should be used:
    {
       Double_t w = 600;
       Double_t h = 600;
-      TCanvas * c1 = new TCanvas("c", "c", w, h);
+      auto c = new TCanvas("c", "c", w, h);
       c->SetWindowSize(w + (w - c->GetWw()), h + (h - c->GetWh()));
    }
 ~~~
@@ -107,9 +107,11 @@ If the canvas size this exceed the window size, scroll bars will be added to the
 This allows to display very large canvases (even bigger than the screen size). The
 Following example shows how to proceed.
 ~~~ {.cpp}
-TCanvas *c1 = new TCanvas("c1","c1");
-c1->SetCanvasSize(1500, 1500);
-c1->SetWindowSize(500, 500);
+   {
+      auto c = new TCanvas("c","c");
+      c->SetCanvasSize(1500, 1500);
+      c->SetWindowSize(500, 500);
+   }
 ~~~
 */
 
@@ -153,7 +155,7 @@ TCanvas::TCanvas(Bool_t build) : TPad(), fDoubleBuffer(0)
       const char *defcanvas = gROOT->GetDefCanvasName();
       char *cdef;
 
-      TList *lc = (TList*)gROOT->GetListOfCanvases();
+      auto lc = (TList*)gROOT->GetListOfCanvases();
       if (lc->FindObject(defcanvas)) {
          Int_t n = lc->GetSize()+1;
          while (lc->FindObject(Form("%s_n%d",defcanvas,n))) n++;
@@ -290,7 +292,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       Warning("Constructor","Deleting canvas with same name: %s",name);
       delete old;
    }
-   if (!name[0] || gROOT->IsBatch()) {   //We are in Batch mode
+   if (gROOT->IsBatch()) {   //We are in Batch mode
       fWindowTopX = fWindowTopY = 0;
       if (form == 1) {
          fWindowWidth  = gStyle->GetCanvasDefW();
@@ -389,7 +391,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
       Warning("Constructor","Deleting canvas with same name: %s",name);
       delete old;
    }
-   if (!name[0] || gROOT->IsBatch()) {   //We are in Batch mode
+   if (gROOT->IsBatch()) {   //We are in Batch mode
       fWindowTopX   = fWindowTopY = 0;
       fWindowWidth  = ww;
       fWindowHeight = wh;
@@ -475,7 +477,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
       Warning("Constructor","Deleting canvas with same name: %s",name);
       delete old;
    }
-   if (!name[0] || gROOT->IsBatch()) {   //We are in Batch mode
+   if (gROOT->IsBatch()) {   //We are in Batch mode
       fWindowTopX   = fWindowTopY = 0;
       fWindowWidth  = ww;
       fWindowHeight = wh;
@@ -877,17 +879,8 @@ void TCanvas::Draw(Option_t *)
 
 TObject *TCanvas::DrawClone(Option_t *option) const
 {
-   const char *defcanvas = gROOT->GetDefCanvasName();
-   char *cdef;
-
-   TList *lc = (TList*)gROOT->GetListOfCanvases();
-   if (lc->FindObject(defcanvas))
-      cdef = Form("%s_n%d",defcanvas,lc->GetSize()+1);
-   else
-      cdef = Form("%s",defcanvas);
-
    TCanvas *newCanvas = (TCanvas*)Clone();
-   newCanvas->SetName(cdef);
+   newCanvas->SetName();
 
    newCanvas->Draw(option);
    newCanvas->Update();
@@ -1439,7 +1432,7 @@ TCanvas *TCanvas::MakeDefCanvas()
    const char *defcanvas = gROOT->GetDefCanvasName();
    char *cdef;
 
-   TList *lc = (TList*)gROOT->GetListOfCanvases();
+   auto lc = (TList*)gROOT->GetListOfCanvases();
    if (lc->FindObject(defcanvas)) {
       Int_t n = lc->GetSize() + 1;
       cdef = new char[strlen(defcanvas)+15];
@@ -1977,6 +1970,27 @@ void TCanvas::SetFixedAspectRatio(Bool_t fixed)
 void TCanvas::SetFolder(Bool_t isfolder)
 {
    fgIsFolder = isfolder;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set canvas name. In case `name` is an empty string, a default name is set.
+
+void TCanvas::SetName(const char *name)
+{
+   if (!name || !name[0]) {
+      const char *defcanvas = gROOT->GetDefCanvasName();
+      char *cdef;
+      auto lc = (TList*)gROOT->GetListOfCanvases();
+      if (lc->FindObject(defcanvas)) {
+         cdef = Form("%s_n%d",defcanvas,lc->GetSize()+1);
+      } else {
+         cdef = Form("%s",defcanvas);
+      }
+      fName = cdef;
+   } else {
+      fName = name;
+   }
+   if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

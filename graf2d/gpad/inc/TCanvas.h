@@ -201,6 +201,7 @@ public:
    void              SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void      SetCursor(ECursor cursor);
    virtual void      SetDoubleBuffer(Int_t mode=1);
+   virtual void      SetName(const char *name="");
    virtual void      SetFixedAspectRatio(Bool_t fixed = kTRUE);  // *TOGGLE*
    void              SetGrayscale(Bool_t set = kTRUE); // *TOGGLE* *GETTER=IsGrayscale
    void              SetWindowPosition(Int_t x, Int_t y) { if (fCanvasImp) fCanvasImp->SetWindowPosition(x, y); }
