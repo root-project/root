@@ -136,7 +136,7 @@ int execResolveTypedef()
    // Known failure: the Long64_t is not yet propagated to the template's typedef :(
    // testing("NS::Inner<Long64_t,Object>",TClassEdit::ResolveTypedef("Wrapper<Long64_t>::Point_t"));
 
-   testing(                           "!=<const Roo*,const Roo*,vector<RooFunction> >",
+   testing(                           "!=<const Roo*,const Roo*,std::vector<RooFunction> >",
            TClassEdit::ResolveTypedef("!=<const Roo*, const Roo*, std::vector<RooFunction> >"));
 
    // TClassEdit::ResolveTypedef's job is *not* (yet?) to clean up the spaces.

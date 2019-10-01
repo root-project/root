@@ -1,7 +1,7 @@
 
 Processing execCheckNaming.C...
 Check TClassEdit::ResolveTypedef
-@const Something_t&@ --> @const Something&@
+@const Something_t&@ --> @const std::Something&@
 @const std::Something&@ --> @const std::Something&@
 @const string&@ --> @const string&@
 @A<B>[2]@ --> @A<B>[2]@
