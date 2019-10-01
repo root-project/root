@@ -2068,6 +2068,7 @@
       this.nbinsy = 0;
       this.accept_drops = true; // indicate that one can drop other objects like doing Draw("same")
       this.mode3d = false;
+      this.hist_painter_id = JSROOT.id_counter++; // assign unique identifier for hist painter
    }
 
    THistPainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
@@ -2206,6 +2207,10 @@
       this.createAttLine({ attr: histo, color0: this.options.histoLineColor });
    }
 
+   /** @brief Update histogram object
+    * @param obj - new histogram instance
+    * @param opt - new drawing option (optional)
+    * @returns {Boolean} - true if histogram was successfully updated */
    THistPainter.prototype.UpdateObject = function(obj, opt) {
 
       var histo = this.GetHisto(),
@@ -2232,7 +2237,7 @@
 
          // if (histo.TestBit(JSROOT.TH1StatusBits.kNoStats)) this.ToggleStat();
 
-         // special tratement for webcanvas - also name can be changed
+         // special treatment for webcanvas - also name can be changed
          if (this.snapid !== undefined)
             histo.fName = obj.fName;
 
@@ -2311,17 +2316,52 @@
             histo.fBins = obj.fBins;
          }
 
-         if (obj.fFunctions && this.options.Func) {
-            for (var n=0;n<obj.fFunctions.arr.length;++n) {
-               var func = obj.fFunctions.arr[n];
-               if (!func || !func._typename) continue;
-               var funcpainter = func.fName ? this.FindPainterFor(null, func.fName, func._typename) : null;
-               if (funcpainter) {
-                  funcpainter.UpdateObject(func);
-               } else if ((func._typename != 'TPaletteAxis') && (func._typename != 'TPaveStats')) {
-                  console.log('Get ' + func._typename + ' in histogram functions list, need to use?');
-                  // histo.fFunctions.Add(func,"");
+         if (this.options.Func) {
+
+            var painters = [], newfuncs = [], pp = this.pad_painter(), pid = this.hist_painter_id;
+
+            // find painters associated with histogram
+            if (pp)
+               pp.ForEachPainterInPad(function(objp) {
+                  if (objp.child_painter_id === pid)
+                     painters.push(objp);
+               }, "objects");
+
+            if (obj.fFunctions)
+               for (var n=0;n<obj.fFunctions.arr.length;++n) {
+                  var func = obj.fFunctions.arr[n];
+                  if (!func || !func._typename) continue;
+                  var funcpainter = null, func_indx = -1;
+
+                  // try to find matching object in associated list of painters
+                  for (var i=0;i<painters.length;++i)
+                     if (painters[i].MatchObjectType(func._typename) && (painters[i].GetObject().fName === func.fName)) {
+                        funcpainter = painters[i];
+                        func_indx = i;
+                        break;
+                     }
+                  // or just in generic list of painted objects
+                  if (!funcpainter && func.fName)
+                     funcpainter = this.FindPainterFor(null, func.fName, func._typename);
+
+                  if (funcpainter) {
+                     funcpainter.UpdateObject(func);
+                     if (func_indx >= 0) painters.splice(func_indx, 1);
+                  } else {
+                     newfuncs.push(func);
+                  }
                }
+
+            // remove all function which are not found in new list of primitives
+            if (pp && (painters.length > 0))
+               pp.CleanPrimitives(function(p) { return painters.indexOf(p) >= 0; });
+
+            // plot new objects on the same pad - will works only for simple drawings already loaded
+            if (pp && (newfuncs.length > 0)) {
+               var prev_name = pp.has_canvas ? pp.CurrentPadName(pp.this_pad_name) : undefined;
+               for (var k=0;k<newfuncs.length;++k)
+                  JSROOT.draw(this.divid, newfuncs[k],"", function (painter) { painter.child_painter_id = pid; } )
+               pp.CurrentPadName(prev_name);
             }
          }
 
@@ -2579,6 +2619,8 @@
       return indx;
    }
 
+   /** Find function in histogram list of functions
+    * @private */
    THistPainter.prototype.FindFunction = function(type_name, obj_name) {
       var histo = this.GetObject(),
           funcs = histo && histo.fFunctions ? histo.fFunctions.arr : null;
@@ -2608,12 +2650,17 @@
       return !this.GetObject() || (!this.draw_content && !this.create_stats) || (this.options.Axis>0);
    }
 
+   /** @summary Create stat box for histogram if required
+    * @private
+    */
    THistPainter.prototype.CreateStat = function(force) {
 
-      if (this.options.PadStats) return null;
+      var histo = this.GetHisto();
+
+      if (this.options.PadStats || !histo) return null;
 
       if (!force && !this.options.ForceStat) {
-         if (this.options.NoStat || this.histo.TestBit(JSROOT.TH1StatusBits.kNoStats) || !JSROOT.gStyle.AutoStat) return null;
+         if (this.options.NoStat || histo.TestBit(JSROOT.TH1StatusBits.kNoStats) || !JSROOT.gStyle.AutoStat) return null;
 
          if (!this.draw_content || !this.is_main_painter()) return null;
       }
@@ -2625,7 +2672,7 @@
          if (stats) stats.fOptStat = optstat;
          delete this.options.optstat;
       } else {
-         optstat = this.histo.$custom_stat || st.fOptStat;
+         optstat = histo.$custom_stat || st.fOptStat;
       }
 
       if (optfit !== undefined) {
@@ -2656,17 +2703,15 @@
       stats.fFillStyle = st.fStatStyle;
 
       stats.fTextAngle = 0;
-      stats.fTextSize = st.fStatFontSize; // 9 ??
+      stats.fTextSize = st.fStatFontSize;
       stats.fTextAlign = 12;
       stats.fTextColor = st.fStatTextColor;
       stats.fTextFont = st.fStatFont;
 
-//      st.fStatBorderSize : 1,
-
-      if (this.histo._typename.match(/^TProfile/) || this.histo._typename.match(/^TH2/))
+      if (histo._typename.match(/^TProfile/) || histo._typename.match(/^TH2/))
          stats.fY1NDC = 0.67;
 
-      stats.AddText(this.histo.fName);
+      stats.AddText(histo.fName);
 
       this.AddFunction(stats);
 
@@ -2686,14 +2731,18 @@
          histo.fFunctions.Add(obj);
    }
 
-   THistPainter.prototype.DrawNextFunction = function(indx, callback) {
-      // method draws next function from the functions list
+   /** @summary Method draws next function from the functions list @private */
+   THistPainter.prototype.DrawNextFunction = function(indx, callback, painter) {
 
-      if (!this.options.Func || !this.histo.fFunctions ||
-          (indx >= this.histo.fFunctions.arr.length)) return JSROOT.CallBack(callback);
+      if (painter && (typeof painter == "object"))
+         painter.child_painter_id = this.hist_painter_id;
 
-      var func = this.histo.fFunctions.arr[indx],
-          opt = this.histo.fFunctions.opt[indx],
+      var histo = this.GetHisto();
+      if (!this.options.Func || !histo.fFunctions ||
+          (indx >= histo.fFunctions.arr.length)) return JSROOT.CallBack(callback);
+
+      var func = histo.fFunctions.arr[indx],
+          opt = histo.fFunctions.opt[indx],
           do_draw = false,
           func_painter = this.FindPainterFor(func);
 
@@ -2701,11 +2750,12 @@
       // object will be redraw automatically
       if (func_painter === null) {
          if (func._typename === 'TPaveText' || func._typename === 'TPaveStats') {
-            do_draw = !this.histo.TestBit(JSROOT.TH1StatusBits.kNoStats) && !this.options.NoStat;
+            do_draw = !histo.TestBit(JSROOT.TH1StatusBits.kNoStats) && !this.options.NoStat;
          } else if (func._typename === 'TF1') {
             do_draw = !func.TestBit(JSROOT.BIT(9));
-         } else
+         } else {
             do_draw = (func._typename !== 'TPaletteAxis');
+         }
       }
 
       if (do_draw)
@@ -2714,11 +2764,12 @@
       this.DrawNextFunction(indx+1, callback);
    }
 
+   /** @summary Unzoom user range if any @private */
    THistPainter.prototype.UnzoomUserRange = function(dox, doy, doz) {
 
-      if (!this.histo) return false;
+      var res = false, painter = this, histo = this.GetHisto();
 
-      var res = false, painter = this;
+      if (!histo) return false;
 
       function UnzoomTAxis(obj) {
          if (!obj) return false;
@@ -2738,9 +2789,9 @@
          return true;
       }
 
-      if (dox && UnzoomTAxis(this.histo.fXaxis)) res = true;
-      if (doy && (UnzoomTAxis(this.histo.fYaxis) || UzoomMinMax(1, this.histo))) res = true;
-      if (doz && (UnzoomTAxis(this.histo.fZaxis) || UzoomMinMax(2, this.histo))) res = true;
+      if (dox && UnzoomTAxis(histo.fXaxis)) res = true;
+      if (doy && (UnzoomTAxis(histo.fYaxis) || UzoomMinMax(1, histo))) res = true;
+      if (doz && (UnzoomTAxis(histo.fZaxis) || UzoomMinMax(2, histo))) res = true;
 
       return res;
    }
@@ -2764,32 +2815,13 @@
       return false;
    }
 
-   THistPainter.prototype.ShowAxisStatus = function(axis_name) {
-      // method called normally when mouse enter main object element
-
-      var status_func = this.GetShowStatusFunc();
-
-      if (!status_func) return;
-
-      var taxis = this.histo ? this.histo['f'+axis_name.toUpperCase()+"axis"] : null;
-
-      var hint_name = axis_name, hint_title = "TAxis";
-
-      if (taxis) { hint_name = taxis.fName; hint_title = taxis.fTitle || "histogram TAxis object"; }
-
-      var m = d3.mouse(this.svg_frame().node());
-
-      var id = (axis_name=="x") ? 0 : 1;
-      if (this.swap_xy) id = 1-id;
-
-      var axis_value = (axis_name=="x") ? this.RevertX(m[id]) : this.RevertY(m[id]);
-
-      status_func(hint_name, hint_title, axis_name + " : " + this.AxisAsText(axis_name, axis_value),
-                  m[0].toFixed(0)+","+ m[1].toFixed(0));
-   }
-
+   /** @summary Add different interactive handlers
+    *
+    * @desc only first (main) painter in list allowed to add interactive functionality
+    * Most of interactivity now handled by frame
+    * @private
+    */
    THistPainter.prototype.AddInteractive = function() {
-      // only first painter in list allowed to add interactive functionality to the frame
 
       if (this.is_main_painter()) {
          var fp = this.frame_painter();
@@ -2863,9 +2895,10 @@
       });  // end menu creation
    }
 
-
+   /** @summary Invoke dialog to enter and modify user range @private */
    THistPainter.prototype.ChangeUserRange = function(arg) {
-      var taxis = this.histo['f'+arg+"axis"];
+      var histo = this.GetHisto(),
+          taxis = histo ? histo['f'+arg+"axis"] : null;
       if (!taxis) return;
 
       var curr = "[1," + taxis.fNbins+"]";
@@ -3011,28 +3044,30 @@
       if (!not_shown) pp.ShowButtons();
    }
 
+   /** @summary Returns tooltip information for 3D drawings @private */
    THistPainter.prototype.Get3DToolTip = function(indx) {
-      var tip = { bin: indx, name: this.GetObject().fName, title: this.GetObject().fTitle };
+      var histo = this.GetHisto(),
+          tip = { bin: indx, name: histo.fName, title: histo.fTitle };
       switch (this.Dimension()) {
          case 1:
             tip.ix = indx; tip.iy = 1;
-            tip.value = this.histo.getBinContent(tip.ix);
-            tip.error = this.histo.getBinError(indx);
+            tip.value = histo.getBinContent(tip.ix);
+            tip.error = histo.getBinError(indx);
             tip.lines = this.GetBinTips(indx-1);
             break;
          case 2:
             tip.ix = indx % (this.nbinsx + 2);
             tip.iy = (indx - tip.ix) / (this.nbinsx + 2);
-            tip.value = this.histo.getBinContent(tip.ix, tip.iy);
-            tip.error = this.histo.getBinError(indx);
+            tip.value = histo.getBinContent(tip.ix, tip.iy);
+            tip.error = histo.getBinError(indx);
             tip.lines = this.GetBinTips(tip.ix-1, tip.iy-1);
             break;
          case 3:
             tip.ix = indx % (this.nbinsx+2);
             tip.iy = ((indx - tip.ix) / (this.nbinsx+2)) % (this.nbinsy+2);
             tip.iz = (indx - tip.ix - tip.iy * (this.nbinsx+2)) / (this.nbinsx+2) / (this.nbinsy+2);
-            tip.value = this.GetObject().getBinContent(tip.ix, tip.iy, tip.iz);
-            tip.error = this.histo.getBinError(indx);
+            tip.value = histo.getBinContent(tip.ix, tip.iy, tip.iz);
+            tip.error = histo.getBinError(indx);
             tip.lines = this.GetBinTips(tip.ix-1, tip.iy-1, tip.iz-1);
             break;
       }
@@ -3494,14 +3529,15 @@
     * @desc Detect min/max values for x and y axis
     * @param when_axis_changed - true when only zooming was changed, some checks may be skipped */
    TH1Painter.prototype.ScanContent = function(when_axis_changed) {
-      // if when_axis_changed === true specified, content will be scanned after axis zoom changed
 
       if (when_axis_changed && !this.nbinsx) when_axis_changed = false;
 
       if (this.IsTH1K()) this.ConvertTH1K();
 
+      var histo = this.GetHisto();
+
       if (!when_axis_changed) {
-         this.nbinsx = this.histo.fXaxis.fNbins;
+         this.nbinsx = histo.fXaxis.fNbins;
          this.nbinsy = 0;
          this.CreateAxisFuncs(false);
       }
@@ -3523,8 +3559,8 @@
           profile = this.IsTProfile(), value, err;
 
       for (var i = 0; i < this.nbinsx; ++i) {
-         value = this.histo.getBinContent(i + 1);
-         hsum += profile ? this.histo.fBinEntries[i + 1] : value;
+         value = histo.getBinContent(i + 1);
+         hsum += profile ? histo.fBinEntries[i + 1] : value;
 
          if ((i<left) || (i>=right)) continue;
 
@@ -3535,7 +3571,7 @@
             first = false;
          }
 
-         err = this.options.Error ? this.histo.getBinError(i + 1) : 0;
+         err = this.options.Error ? histo.getBinError(i + 1) : 0;
 
          hmin = Math.min(hmin, value - err);
          hmax = Math.max(hmax, value + err);
@@ -3543,12 +3579,12 @@
 
       // account overflow/underflow bins
       if (profile)
-         hsum += this.histo.fBinEntries[0] + this.histo.fBinEntries[this.nbinsx + 1];
+         hsum += histo.fBinEntries[0] + histo.fBinEntries[this.nbinsx + 1];
       else
-         hsum += this.histo.getBinContent(0) + this.histo.getBinContent(this.nbinsx + 1);
+         hsum += histo.getBinContent(0) + histo.getBinContent(this.nbinsx + 1);
 
       this.stat_entries = hsum;
-      if (this.histo.fEntries>1) this.stat_entries = this.histo.fEntries;
+      if (histo.fEntries > 1) this.stat_entries = histo.fEntries;
 
       this.hmin = hmin;
       this.hmax = hmax;
@@ -3615,6 +3651,7 @@
       if (this.draw_content) this.wheel_zoomy = false;
    }
 
+   /** @summary Count histogram statistic @private */
    TH1Painter.prototype.CountStat = function(cond) {
       var profile = this.IsTProfile(),
           histo = this.GetHisto(), xaxis = histo.fXaxis,
@@ -3669,12 +3706,14 @@
       return res;
    }
 
+   /** @summary Fill stat box @private */
    TH1Painter.prototype.FillStatistic = function(stat, dostat, dofit) {
 
       // no need to refill statistic if histogram is dummy
       if (this.IgnoreStatsFill()) return false;
 
-      var data = this.CountStat(),
+      var histo = this.GetHisto(),
+          data = this.CountStat(),
           print_name = dostat % 10,
           print_entries = Math.floor(dostat / 10) % 10,
           print_mean = Math.floor(dostat / 100) % 10,
@@ -3709,7 +3748,7 @@
       } else {
 
          if (print_entries > 0)
-            stat.AddText("Entries = " + stat.Format(data.entries,"entries"));
+            stat.AddText("Entries = " + stat.Format(data.entries, "entries"));
 
          if (print_mean > 0)
             stat.AddText("Mean = " + stat.Format(data.meanx));
@@ -3718,13 +3757,13 @@
             stat.AddText("Std Dev = " + stat.Format(data.rmsx));
 
          if (print_under > 0)
-            stat.AddText("Underflow = " + stat.Format((this.histo.fArray.length > 0) ? this.histo.fArray[0] : 0,"entries"));
+            stat.AddText("Underflow = " + stat.Format((histo.fArray.length > 0) ? histo.fArray[0] : 0, "entries"));
 
          if (print_over > 0)
-            stat.AddText("Overflow = " + stat.Format((this.histo.fArray.length > 0) ? this.histo.fArray[this.histo.fArray.length - 1] : 0,"entries"));
+            stat.AddText("Overflow = " + stat.Format((histo.fArray.length > 0) ? histo.fArray[histo.fArray.length - 1] : 0, "entries"));
 
          if (print_integral > 0)
-            stat.AddText("Integral = " + stat.Format(data.integral,"entries"));
+            stat.AddText("Integral = " + stat.Format(data.integral, "entries"));
 
          if (print_skew > 0)
             stat.AddText("Skew = <not avail>");
@@ -3738,6 +3777,7 @@
       return true;
    }
 
+   /** @summary Draw histogram as bars @private */
    TH1Painter.prototype.DrawBars = function(width, height) {
 
       this.CreateG(true);
@@ -4218,6 +4258,7 @@
       return tips;
    }
 
+   /** @summary Process tooltip event @private */
    TH1Painter.prototype.ProcessTooltip = function(pnt) {
       if ((pnt === null) || !this.draw_content || !this.draw_g || this.options.Mode3D) {
          if (this.draw_g !== null)
@@ -4374,7 +4415,7 @@
          // if bars option used check that bar is not match
          if ((pnt_x < grx1 - gapx) || (pnt_x > grx2 + gapx)) findbin = null; else
          // exclude empty bin if empty bins suppressed
-         if (!this.options.Zero && (this.histo.getBinContent(findbin+1)===0)) findbin = null;
+         if (!this.options.Zero && (histo.getBinContent(findbin+1)===0)) findbin = null;
       }
 
       var ttrect = this.draw_g.select(".tooltip_bin");
@@ -4444,8 +4485,8 @@
       }
 
       if (res.changed)
-         res.user_info = { obj: this.histo,  name: this.histo.fName,
-                           bin: findbin, cont: this.histo.getBinContent(findbin+1),
+         res.user_info = { obj: histo,  name: histo.fName,
+                           bin: findbin, cont: histo.getBinContent(findbin+1),
                            grx: midx, gry: midy };
 
       return res;
@@ -4647,7 +4688,7 @@
          jj1 = Math.round((this.tt_handle.j1 + this.tt_handle.j2)/2); jj2 = jj1+1;
       }
 
-      var canp = this.canv_painter();
+      var canp = this.canv_painter(), histo = this.GetHisto();
 
       if (canp && !canp._readonly && (this.snapid !== undefined)) {
          // this is when projection should be created on the server side
@@ -4663,12 +4704,12 @@
       if (!this.proj_hist) {
          if (this.is_projection == "X") {
             this.proj_hist = JSROOT.CreateHistogram("TH1D", this.nbinsx);
-            JSROOT.extend(this.proj_hist.fXaxis, this.histo.fXaxis);
+            JSROOT.extend(this.proj_hist.fXaxis, histo.fXaxis);
             this.proj_hist.fName = "xproj";
             this.proj_hist.fTitle = "X projection";
          } else {
             this.proj_hist = JSROOT.CreateHistogram("TH1D", this.nbinsy);
-            JSROOT.extend(this.proj_hist.fXaxis, this.histo.fYaxis);
+            JSROOT.extend(this.proj_hist.fXaxis, histo.fYaxis);
             this.proj_hist.fName = "yproj";
             this.proj_hist.fTitle = "Y projection";
          }
@@ -4677,13 +4718,13 @@
       if (this.is_projection == "X") {
          for (var i=0;i<this.nbinsx;++i) {
             var sum=0;
-            for (var j=jj1;j<jj2;++j) sum+=this.histo.getBinContent(i+1,j+1);
+            for (var j=jj1;j<jj2;++j) sum += histo.getBinContent(i+1,j+1);
             this.proj_hist.setBinContent(i+1, sum);
          }
       } else {
          for (var j=0;j<this.nbinsy;++j) {
             var sum = 0;
-            for (var i=ii1;i<ii2;++i) sum += this.histo.getBinContent(i+1,j+1);
+            for (var i=ii1;i<ii2;++i) sum += histo.getBinContent(i+1,j+1);
             this.proj_hist.setBinContent(j+1, sum);
          }
       }
