@@ -97,10 +97,6 @@ void TMCManager::Register(TVirtualMC *mc)
    fStacks.emplace_back(new TMCManagerStack());
    mc->SetStack(fStacks.back().get());
    mc->SetManagerStack(fStacks.back().get());
-   // Don't attempt to call TVirtualMCApplication hooks related to geometry
-   // construction
-   mc->SetExternalGeometryConstruction();
-   mc->SetExternalParticleGeneration();
    // Must update engine pointers here since during construction of the concrete TVirtualMC
    // implementation the static TVirtualMC::GetMC() or defined gMC might be used.
    UpdateEnginePointers(mc);
@@ -313,6 +309,9 @@ void TMCManager::TransferTrack(TVirtualMC *mc)
    fParticlesStatus[trackId]->fTrackLength = fCurrentEngine->TrackLength();
    fParticlesStatus[trackId]->fWeight = fCurrentEngine->TrackWeight();
 
+   // Store TGeoNavidator's fIsOutside state
+   fParticlesStatus[trackId]->fIsOutside = gGeoManager->IsOutside();
+
    TGeoBranchArray *geoState = fBranchArrayContainer.GetNewGeoState(fParticlesStatus[trackId]->fGeoStateIndex);
    geoState->InitFromNavigator(gGeoManager->GetCurrentNavigator());
 
@@ -323,6 +322,38 @@ void TMCManager::TransferTrack(TVirtualMC *mc)
       fStacks[mc->GetId()]->PushSecondaryTrackId(trackId);
    }
    fCurrentEngine->InterruptTrack();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Try to restore geometry for a given track
+///
+
+Bool_t TMCManager::RestoreGeometryState(Int_t trackId, Bool_t checkTrackIdRange)
+{
+  if (checkTrackIdRange && (trackId < 0 || trackId >= static_cast<Int_t>(fParticles.size()) || !fParticles[trackId])) {
+     return kFALSE;
+  }
+  UInt_t& geoStateId = fParticlesStatus[trackId]->fGeoStateIndex;
+  if(geoStateId == 0) {
+    return kFALSE;
+  }
+  const TGeoBranchArray* branchArray = fBranchArrayContainer.GetGeoState(geoStateId);
+  branchArray->UpdateNavigator(gGeoManager->GetCurrentNavigator());
+  fBranchArrayContainer.FreeGeoState(geoStateId);
+  gGeoManager->SetOutside(fParticlesStatus[trackId]->fIsOutside);
+  geoStateId = 0;
+  return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Try to restore geometry for the track currently set
+///
+
+Bool_t TMCManager::RestoreGeometryState()
+{
+  return RestoreGeometryState(fStacks[fCurrentEngine->GetId()]->GetCurrentTrackNumber(), kFALSE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

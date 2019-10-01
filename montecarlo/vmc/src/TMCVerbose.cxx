@@ -249,6 +249,7 @@ void TMCVerbose::Stepping()
 
       // Step number
       //
+      // std::cout << "#" << std::setw(4) << gMC->StepNumber() << "  ";
       std::cout << "#" << std::setw(4) << fStepNumber++ << "  ";
 
       // Position
@@ -310,7 +311,7 @@ void TMCVerbose::PostTrack()
 
 void TMCVerbose::FinishPrimary()
 {
-   if (fLevel==2)
+   if (fLevel==1)
       std::cout << "--- Finish primary " << std::endl;
 }
 
