@@ -25,6 +25,8 @@ constexpr RColor::RGB_t RColor::kBlack;
 constexpr double RColor::kTransparent;
 constexpr double RColor::kOpaque;
 
+///////////////////////////////////////////////////////////////////////////
+/// Converts integer from 0 to 255 into hex format with two digits like 00
 
 std::string RColor::toHex(int v)
 {
@@ -40,6 +42,10 @@ std::string RColor::toHex(int v)
    return res;
 }
 
+///////////////////////////////////////////////////////////////////////////
+/// Decodes hex color value into RGB - each color component as integer from 0 to 255
+/// If color was not specified as hex, method returns false
+
 bool RColor::GetRGB(int &r, int &g, int &b) const
 {
    auto hex = GetHex();
@@ -52,6 +58,22 @@ bool RColor::GetRGB(int &r, int &g, int &b) const
    return true;
 }
 
+///////////////////////////////////////////////////////////////////////////
+/// Decodes color component and returns integer from 0 to 255
+/// Values of indx 0: Red, 1: Green, 2: Blue
+/// If color was not specified as hex, method returns 0
+
+int RColor::GetColorComponent(int indx) const
+{
+   auto hex = GetHex();
+
+   return hex.length() == 6 ? std::stoi(hex.substr(indx * 2, 2), nullptr, 16) : 0;
+}
+
+///////////////////////////////////////////////////////////////////////////
+/// Decodes hex color value into RGB - each color component as float from 0. to 1.
+/// If color was not specified as hex, method returns false
+
 bool RColor::GetRGBFloat(float &r, float &g, float &b) const
 {
    int ri, gi, bi;
@@ -63,7 +85,10 @@ bool RColor::GetRGBFloat(float &r, float &g, float &b) const
    return true;
 }
 
-/// Return the Hue, Light, Saturation (HLS) definition of this RColor
+///////////////////////////////////////////////////////////////////////////
+/// Returns the Hue, Light, Saturation (HLS) definition of this RColor
+/// If color was not specified as hex, method returns false
+
 bool RColor::GetHLS(float &hue, float &light, float &satur) const
 {
    float red, green, blue;
@@ -106,7 +131,9 @@ bool RColor::GetHLS(float &hue, float &light, float &satur) const
    return true;
 }
 
-/// Set the Red Green and Blue (RGB) values from the Hue, Light, Saturation (HLS).
+///////////////////////////////////////////////////////////////////////////
+/// Set the color value from the Hue, Light, Saturation (HLS).
+
 RColor &RColor::SetHLS(float hue, float light, float satur)
 {
    float rh, rl, rs, rm1, rm2;

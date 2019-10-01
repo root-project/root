@@ -33,10 +33,11 @@ class RColor : public RAttrBase {
 
    using RGB_t = std::array<int, 3>;
 
-protected:
+private:
 
    static std::string toHex(int v);
 
+   /** Set RGB values as floats, each from 0..1. Real color values will be stored in hex format */
    RColor &SetRGBFloat(float r, float g, float b)
    {
       return SetRGB(int(r*255),int(g*255),int(b*255));
@@ -44,16 +45,21 @@ protected:
 
    bool GetRGBFloat(float &r, float &g, float &b) const;
 
+   int GetColorComponent(int indx) const;
+
 public:
 
+   /** Construct color with provided r,g,b values */
    RColor(int r, int g, int b) : RColor() { SetRGB(r, g, b); }
 
-   RColor(int r, int g, int b, double alfa) : RColor()
+   /** Construct color with provided r,g,b and alpha values */
+   RColor(int r, int g, int b, float alpha) : RColor()
    {
       SetRGB(r, g, b);
-      SetAlpha(alfa);
+      SetAlpha(alpha);
    }
 
+   /** Construct color with provided RGB_t value */
    RColor(const RGB_t &rgb) : RColor() { SetRGB(rgb[0], rgb[1], rgb[2]); }
 
    /** Set r/g/b/ components of color as hex code, default for the color */
@@ -69,37 +75,27 @@ public:
       return *this;
    }
 
+   /** Return color as hex string like 00FF00 */
    std::string GetHex() const { return GetValue<std::string>("rgb"); }
 
    bool GetRGB(int &r, int &g, int &b) const;
 
    /** Returns red color component 0..255 */
-   int GetRed() const
-   {
-      int r,g,b;
-      return GetRGB(r,g,b) ? r : 0;
-   }
+   int GetRed() const { return GetColorComponent(0); }
 
    /** Returns green color component 0..255 */
-   int GetGreen() const
-   {
-      int r,g,b;
-      return GetRGB(r,g,b) ? g : 0;
-   }
+   int GetGreen() const { return GetColorComponent(1); }
 
    /** Returns blue color component 0..255 */
-   int GetBlue() const
-   {
-      int r,g,b;
-      return GetRGB(r,g,b) ? b : 0;
-   }
+   int GetBlue() const { return GetColorComponent(2); }
 
-
+   /** Clear RGB color value (if any) */
    void ClearRGB()
    {
       ClearValue("rgb");
    }
 
+   /** Set color as plain SVG name like "white" or "lightblue". Clears RGB component before */
    RColor &SetName(const std::string &_name)
    {
       ClearRGB();
@@ -107,14 +103,17 @@ public:
       return *this;
    }
 
+   /** Returns color as plain SVG name like "white" or "lightblue" */
    std::string GetName() const { return GetValue<std::string>("name"); }
 
+   /** Clear color plain SVG name (if any) */
    void ClearName()
    {
       ClearValue("name");
    }
 
-   double GetAlpha() const
+   /** Returns color alpha (opacity) as float from 0. to 1. */
+   float GetAlpha() const
    {
       auto hex = GetAlphaHex();
       if (hex.empty())
@@ -122,27 +121,33 @@ public:
       return std::strtol(hex.c_str(), nullptr, 16) / 255.;
    }
 
+   /** Returns color alpha (opacity) as hex string like FF. Default is empty */
    std::string GetAlphaHex() const { return GetValue<std::string>("a"); }
 
+   /** Returns true if color alpha (opacity) was specified */
    bool HasAlpha() const { return HasValue("a"); }
 
-   RColor &SetAlpha(double _alfa)
+   /** Set color alpha (opacity) value - from 0 to 1 */
+   RColor &SetAlpha(float _alpha)
    {
-      return SetAlphaHex(toHex((int) (_alfa*255)));
+      return SetAlphaHex(toHex((int) (_alpha*255)));
    }
 
+   /** Set color alpha (opacity) value as hex string */
    RColor &SetAlphaHex(const std::string &_alfa)
    {
       SetValue("a", _alfa);
       return *this;
    }
 
-   /// Return the Hue, Light, Saturation (HLS) definition of this RColor
+   /** Return the Hue, Light, Saturation (HLS) definition of this RColor */
    bool GetHLS(float &hue, float &light, float &satur) const;
 
-   /// Set the Red Green and Blue (RGB) values from the Hue, Light, Saturation (HLS).
+   /** Set the Red Green and Blue (RGB) values from the Hue, Light, Saturation (HLS). */
    RColor &SetHLS(float hue, float light, float satur);
 
+   /** Returns color value as it will be used in SVG drawing
+    * It either include hex format #66FF66 or just plain SVG name */
    std::string AsSVG() const
    {
       auto hex = GetHex();
