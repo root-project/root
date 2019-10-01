@@ -1,5 +1,5 @@
 
-Processing execResolveTypedef.cxx+...
+Processing execResolveTypedef.cxx...
 Test 1 The result is correct: const int
 Test 2 The result is correct: const int
 Test 3 The result is correct: const Long64_t
@@ -53,7 +53,7 @@ Test 50 The result is correct: Long64_t
 Test 51 The result is correct: Long64_t
 Test 52 The result is correct: testing_iterator<pair<const unsigned int,TGLPhysicalShape*> >::_Base_ptr*
 Test 53 The result is correct: testing_iterator<pair<const unsigned int,TGLPhysicalShape*> >::_Base_ptr*
-Test 54 The result is correct: !=<const Roo*,const Roo*,vector<RooFunction> >
+Test 54 The result is correct: !=<const Roo*,const Roo*,std::vector<RooFunction> >
 Test 55 The result is correct: vec<const int>
 Test 56 The result is correct: vec<const int>
 Test 57 The result is correct: vec<const int>
