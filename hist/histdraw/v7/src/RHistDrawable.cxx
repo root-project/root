@@ -62,7 +62,15 @@ RHistPainterBase<DIMENSION> *RHistPainterBase<DIMENSION>::GetPainter()
 
 // GCC 5 needs to have that outlined - is that a compiler bug?
 template <int DIMENSIONS>
-RHistDrawable<DIMENSIONS>::RHistDrawable() : RDrawable("hist") {}
+RHistDrawable<DIMENSIONS>::RHistDrawable() : RDrawable("hist")
+{
+}
+
+// Seems to be, windows require this
+template <int DIMENSIONS>
+RHistDrawable<DIMENSIONS>::~RHistDrawable()
+{
+}
 
 /// Paint the histogram
 template <int DIMENSIONS>

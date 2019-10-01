@@ -58,7 +58,7 @@ public:
       fHistImpl = std::shared_ptr<HistImpl_t>(hist, hist->GetImpl());
    }
 
-   virtual ~RHistDrawable() {}
+   virtual ~RHistDrawable();
 
    RAttrLine &AttrLine() { return fLineAttr; }
    const RAttrLine &AttrLine() const { return fLineAttr; }
