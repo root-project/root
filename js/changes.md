@@ -12,6 +12,9 @@
 9. Use TGeoManager::fVisLevel in geometry painter
 10. Support "texte" and "texte0" draw options for TH2/TProfile2D classes
 11. Provide radial and z-axis interactive transformation for TGeo drawings
+12. Provide wrong_http_response workaround (#189)
+13. Improve "comp" and "compx" option to show TGeoCompositeShape components
+14. Update objects update from list of histogram functions (#190) 
 
 
 ## Changes in 5.7.1

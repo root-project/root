@@ -1345,18 +1345,21 @@
       return "%Y";
    }
 
+   /** @summary Returns time format @private */
    Painter.getTimeFormat = function(axis) {
       var idF = axis.fTimeFormat.indexOf('%F');
-      if (idF >= 0) return axis.fTimeFormat.substr(0, idF);
-      return axis.fTimeFormat;
+      return (idF >= 0) ? axis.fTimeFormat.substr(0, idF) : axis.fTimeFormat;
    }
 
+   /** @summary Return time offset value for given TAxis object @private */
    Painter.getTimeOffset = function(axis) {
+      var dflt_time_offset = 788918400000;
+      if (!axis) return dflt_time_offset;
       var idF = axis.fTimeFormat.indexOf('%F');
       if (idF < 0) return JSROOT.gStyle.fTimeOffset*1000;
       var sof = axis.fTimeFormat.substr(idF + 2);
       // default string in axis offset
-      if (sof.indexOf('1995-01-01 00:00:00s0')==0) return 788918400000;
+      if (sof.indexOf('1995-01-01 00:00:00s0')==0) return dflt_time_offset;
       // special case, used from DABC painters
       if ((sof == "0") || (sof == "")) return 0;
 
@@ -1424,7 +1427,7 @@
       return (str.indexOf("#")>=0) || (str.indexOf("\\")>=0) || (str.indexOf("{")>=0);
    }
 
-   /** Function translates ROOT TLatex into MathJax format */
+   /** @summary Function translates ROOT TLatex into MathJax format */
    Painter.translateMath = function(str, kind, color, painter) {
 
       if (kind != 2) {
@@ -1835,7 +1838,7 @@
       return this.user_args;
    }
 
-   /** Set callbacks reciever.
+   /** @summary Set callbacks receiver.
     *
     * Following function can be defined in receiver object:
     *    - OnWebsocketMsg
@@ -6504,7 +6507,7 @@
          for (var i = 0; i < can_painter.painters.length; ++i) {
             var painter = can_painter.painters[i];
             if (painter.MatchObjectType(obj._typename))
-               if (painter.UpdateObject(obj)) {
+               if (painter.UpdateObject(obj, opt)) {
                   can_painter.RedrawPad();
                   JSROOT.CallBack(callback, painter);
                   return painter;
@@ -6708,6 +6711,7 @@
    }
 
    /** @summary Tries to close current browser tab
+     *
      * @desc Many browsers do not allow simple window.close() call,
      * therefore try several workarounds */
 
