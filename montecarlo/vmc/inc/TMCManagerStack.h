@@ -111,15 +111,6 @@ public:
    /// Get current particle's geometry status
    const TGeoBranchArray *GetCurrentGeoState() const;
 
-   //
-   // Action methods
-   //
-
-   /// To free the cached geo state which was associated to a track
-   void NotifyOnRestoredGeometry(Int_t trackId);
-   /// To free the cached geo state which was associated to the current track
-   void NotifyOnRestoredGeometry();
-
 private:
    friend class TMCManager;
    /// Check whether track trackId exists
