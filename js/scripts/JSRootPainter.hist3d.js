@@ -53,6 +53,7 @@
          this.camera.lookAt(this.lookat);
    }
 
+   /** @summary Create all necessary components for 3D drawings @private */
    JSROOT.TFramePainter.prototype.Create3DScene = function(arg) {
 
       if ((arg!==undefined) && (arg<0)) {
@@ -1075,6 +1076,7 @@
       }
    }
 
+   /** Draw histograms in 3D mode @private */
    JSROOT.THistPainter.prototype.Draw3DBins = function() {
 
       if (!this.draw_content) return;
@@ -1141,7 +1143,7 @@
       }
 
       // if bin ID fit into 16 bit, use smaller arrays for intersect indexes
-      var use16indx = (this.histo.getBin(i2, j2) < 0xFFFF),
+      var use16indx = (histo.getBin(i2, j2) < 0xFFFF),
           levels = [ axis_zmin, axis_zmax ], palette = null, totalvertices = 0;
 
       // DRAW ALL CUBES
@@ -1223,7 +1225,7 @@
                   k += 24;
                }
 
-               var size = indicies.length, bin_index = this.histo.getBin(i+1, j+1);
+               var size = indicies.length, bin_index = histo.getBin(i+1, j+1);
                if (nobottom) size -= 6;
 
                // array over all vertices of the single bin
@@ -1492,8 +1494,8 @@
 
    // ==========================================================================================
 
+   /** @summary Draw 1-D histogram in 3D @private */
    JSROOT.TH1Painter.prototype.Draw3D = function(call_back, resize) {
-      // function called with this as painter
 
       this.mode3d = true;
 
@@ -1518,13 +1520,12 @@
             main.DrawXYZ(main.toplevel, { use_y_for_z: true, zmult: 1.1, zoom: JSROOT.gStyle.Zooming, ndim: 1 });
          }
 
-         this.Draw3DBins();
-
-         main.Render3D();
-
-         this.UpdateStatWebCanvas();
-
-         main.AddKeysHandler();
+         if (main.mode3d) {
+            this.Draw3DBins();
+            main.Render3D();
+            this.UpdateStatWebCanvas();
+            main.AddKeysHandler();
+         }
       }
 
       if (is_main) {
@@ -1553,13 +1554,10 @@
 
       } else {
 
-         var pad = this.root_pad();
-         // if (pad && pad.fGridz === undefined) pad.fGridz = false;
+         var pad = this.root_pad(), zmult = 1.1;
 
          this.zmin = pad.fLogz ? this.gminposbin * 0.3 : this.gminbin;
          this.zmax = this.gmaxbin;
-
-         var zmult = 1.1;
 
          if (this.options.minimum !== -1111) this.zmin = this.options.minimum;
          if (this.options.maximum !== -1111) { this.zmax = this.options.maximum; zmult = 1; }
@@ -1575,13 +1573,12 @@
             main.DrawXYZ(main.toplevel, { zmult: zmult, zoom: JSROOT.gStyle.Zooming, ndim: 2 });
          }
 
-         this.Draw3DBins();
-
-         main.Render3D();
-
-         this.UpdateStatWebCanvas();
-
-         main.AddKeysHandler();
+         if (main.mode3d) {
+            this.Draw3DBins();
+            main.Render3D();
+            this.UpdateStatWebCanvas();
+            main.AddKeysHandler();
+         }
       }
 
       if (is_main) {
@@ -2031,6 +2028,7 @@
    JSROOT.TH2Painter.prototype.DrawError = function() {
       var pthis = this,
           main = this.frame_painter(),
+          histo = this.GetHisto(),
           handle = this.PrepareColorDraw({ rounding: false, use3d: true, extra: 1 }),
           zmin = main.grz.domain()[0],
           zmax = main.grz.domain()[1],
@@ -2050,15 +2048,15 @@
              x1 = handle.grx[i];
              x2 = handle.grx[i+1];
              for (j=handle.j1;j<handle.j2;++j) {
-                binz = this.histo.getBinContent(i+1, j+1);
+                binz = histo.getBinContent(i+1, j+1);
                 if ((binz < zmin) || (binz > zmax)) continue;
                 if ((binz===zmin) && check_skip_min()) continue;
 
                 // just count number of segments
                 if (loop===0) { nsegments+=3; continue; }
 
-                bin = this.histo.getBin(i+1,j+1);
-                binerr = this.histo.getBinError(bin);
+                bin = histo.getBin(i+1,j+1);
+                binerr = histo.getBinError(bin);
                 binindx[lindx/18] = bin;
 
                 y1 = handle.gry[j];
