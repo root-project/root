@@ -1416,7 +1416,7 @@ static void ResolveTypedefProcessType(const char *tname,
                     : string(tname, start_of_type, end_of_type == 0 ? cursor - start_of_type : end_of_type - start_of_type));  // we need to try to avoid this copy
    string typeresult;
    if (gInterpreterHelper->ExistingTypeCheck(type, typeresult)
-       || gInterpreterHelper->GetPartiallyDesugaredNameWithScopeHandling(type, typeresult)) {
+       || gInterpreterHelper->GetPartiallyDesugaredNameWithScopeHandling(type, typeresult, false)) {
       // it is a known type
       if (!typeresult.empty()) {
          // and it is a typedef, we need to replace it in the output.
@@ -1486,11 +1486,6 @@ static void ResolveTypedefImpl(const char *tname,
 
    }
 
-   // When either of those two is true, we should probably go to modified
-   // mode. (Otherwise we rely on somebody else to strip the std::)
-   if (len > 5 && strncmp(tname+cursor,"std::",5) == 0) {
-      cursor += 5;
-   }
    if (len > 2 && strncmp(tname+cursor,"::",2) == 0) {
       cursor += 2;
       len -= 2;
