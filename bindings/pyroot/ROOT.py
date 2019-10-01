@@ -808,8 +808,10 @@ class ModuleFacade( types.ModuleType ):
     # This can be removed once autoloading on selected variables is available
     # If we have a pcm for the library, we don't have to explicitly load this as
     # modules have an autoloading support.
-      if not _root.gInterpreter.HasPCMForLibrary("libMathCore"):
-         _root.gSystem.Load( "libMathCore" )
+    # FIXME: Modules should support loading of gRandom, we are temporary
+    # reenabling the workaround to silence tutorial-pyroot-DynamicSlice-py
+      #if not _root.gInterpreter.HasPCMForLibrary("libMathCore"):
+      _root.gSystem.Load( "libMathCore" )
 
 sys.modules[ __name__ ] = ModuleFacade( sys.modules[ __name__ ] )
 del ModuleFacade
