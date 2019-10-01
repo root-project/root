@@ -180,7 +180,7 @@ public:
    virtual void GetPartiallyDesugaredName(std::string &nameLong);
    virtual bool IsAlreadyPartiallyDesugaredName(const std::string &nondef, const std::string &nameLong);
    virtual bool IsDeclaredScope(const std::string &base, bool &isInlined);
-   virtual bool GetPartiallyDesugaredNameWithScopeHandling(const std::string &tname, std::string &result);
+   virtual bool GetPartiallyDesugaredNameWithScopeHandling(const std::string &tname, std::string &result, bool dropstd = true);
    virtual void ShuttingDownSignal();
 };
 
