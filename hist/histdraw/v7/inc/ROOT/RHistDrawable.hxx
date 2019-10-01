@@ -83,71 +83,18 @@ public:
 
 };
 
-extern template class RHistDrawable<1>;
-extern template class RHistDrawable<2>;
-extern template class RHistDrawable<3>;
-
-
-
-inline auto GetDrawable(const std::shared_ptr<RH1D> &histimpl)
-{
-   return std::make_shared<RHistDrawable<1>>(histimpl);
-}
-
-inline auto GetDrawable(const std::shared_ptr<RH1I> &histimpl)
-{
-   return std::make_shared<RHistDrawable<1>>(histimpl);
-}
-
-inline auto GetDrawable(const std::shared_ptr<RH1C> &histimpl)
-{
-   return std::make_shared<RHistDrawable<1>>(histimpl);
-}
-
-inline auto GetDrawable(const std::shared_ptr<RH1F> &histimpl)
-{
-   return std::make_shared<RHistDrawable<1>>(histimpl);
-}
-
-inline auto GetDrawable(const std::shared_ptr<RH2D> &histimpl)
-{
-   return std::make_shared<RHistDrawable<2>>(histimpl);
-}
-
-inline auto GetDrawable(const std::shared_ptr<RH2I> &histimpl)
-{
-   return std::make_shared<RHistDrawable<2>>(histimpl);
-}
-
-inline auto GetDrawable(const std::shared_ptr<RH2C> &histimpl)
-{
-   return std::make_shared<RHistDrawable<2>>(histimpl);
-}
-
-inline auto GetDrawable(const std::shared_ptr<RH2F> &histimpl)
-{
-   return std::make_shared<RHistDrawable<2>>(histimpl);
-}
-
-inline auto GetDrawable(const std::shared_ptr<RH3D> &histimpl)
-{
-   return std::make_shared<RHistDrawable<3>>(histimpl);
-}
-
-inline auto GetDrawable(const std::shared_ptr<RH3I> &histimpl)
-{
-   return std::make_shared<RHistDrawable<3>>(histimpl);
-}
-
-inline auto GetDrawable(const std::shared_ptr<RH3C> &histimpl)
-{
-   return std::make_shared<RHistDrawable<3>>(histimpl);
-}
-
-inline auto GetDrawable(const std::shared_ptr<RH3F> &histimpl)
-{
-   return std::make_shared<RHistDrawable<3>>(histimpl);
-}
+std::shared_ptr<RHistDrawable<1>> GetDrawable(const std::shared_ptr<RH1D> &histimpl);
+std::shared_ptr<RHistDrawable<1>> GetDrawable(const std::shared_ptr<RH1I> &histimpl);
+std::shared_ptr<RHistDrawable<1>> GetDrawable(const std::shared_ptr<RH1C> &histimpl);
+std::shared_ptr<RHistDrawable<1>> GetDrawable(const std::shared_ptr<RH1F> &histimpl);
+std::shared_ptr<RHistDrawable<2>> GetDrawable(const std::shared_ptr<RH2D> &histimpl);
+std::shared_ptr<RHistDrawable<2>> GetDrawable(const std::shared_ptr<RH2I> &histimpl);
+std::shared_ptr<RHistDrawable<2>> GetDrawable(const std::shared_ptr<RH2C> &histimpl);
+std::shared_ptr<RHistDrawable<2>> GetDrawable(const std::shared_ptr<RH2F> &histimpl);
+std::shared_ptr<RHistDrawable<3>> GetDrawable(const std::shared_ptr<RH3D> &histimpl);
+std::shared_ptr<RHistDrawable<3>> GetDrawable(const std::shared_ptr<RH3I> &histimpl);
+std::shared_ptr<RHistDrawable<3>> GetDrawable(const std::shared_ptr<RH3C> &histimpl);
+std::shared_ptr<RHistDrawable<3>> GetDrawable(const std::shared_ptr<RH3F> &histimpl);
 
 
 namespace Internal {
