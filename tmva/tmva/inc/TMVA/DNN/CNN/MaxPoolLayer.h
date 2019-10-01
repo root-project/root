@@ -75,6 +75,8 @@ public:
    // FIXME: Add other cudnn types (algorithm preference etc.)
    using AlgorithmDataType_t = typename Architecture_t::AlgorithmDataType_t;
 
+   using ReduceTensorDescriptor_t = typename Architecture_t::ReduceTensorDescriptor_t; // used for reduction of tensor(bias grad)
+
 protected:
    size_t fFilterDepth;  ///< The depth of the filter.
    size_t fFilterHeight; ///< The height of the filter.
@@ -149,7 +151,7 @@ public:
    size_t GetNLocalViews() const { return fNLocalViews; }
 
    Scalar_t GetDropoutProbability() const { return fDropoutProbability; }
- 
+
    const Tensor_t & GetIndexTensor() const { return fIndexTensor; }
    Tensor_t & GetIndexTensor() { return fIndexTensor; }
 
@@ -228,11 +230,11 @@ TMaxPoolLayer<Architecture_t>::~TMaxPoolLayer()
 
 //______________________________________________________________________________
 // template <typename Architecture_t>
-// void TMaxPoolLayer<Architecture_t>::Initialize() { 
+// void TMaxPoolLayer<Architecture_t>::Initialize() {
 //    InitializeDescriptors();
-//    InitializeWorkspace();  
+//    InitializeWorkspace();
 // }
- 
+
 //______________________________________________________________________________
 template <typename Architecture_t>
 auto TMaxPoolLayer<Architecture_t>::Forward(Tensor_t &input, bool applyDropout) -> void
@@ -300,7 +302,7 @@ void TMaxPoolLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
 template <typename Architecture_t>
 void TMaxPoolLayer<Architecture_t>::ReadWeightsFromXML(void * /*parent */)
 {
-   // all info is read before - nothing to do 
+   // all info is read before - nothing to do
 }
 
 //______________________________________________________________________________

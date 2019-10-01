@@ -488,6 +488,38 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
       R__ASSERT(false);
    }
 
+   /// allocate workspace and descriptor for reduction operation
+   // used to compiute bias gradients
+   // try reducing the tensor
+
+   CUDNNCHECK(cudnnCreateReduceTensorDescriptor(&convWorkspace->fReduceTensorDesc));
+
+   auto reduceTensorDesc = convWorkspace->fReduceTensorDesc;
+   CUDNNCHECK(cudnnSetReduceTensorDescriptor(reduceTensorDesc, CUDNN_REDUCE_TENSOR_ADD, Tensor_t::GetDataType(),
+                                             CUDNN_PROPAGATE_NAN, CUDNN_REDUCE_TENSOR_NO_INDICES, CUDNN_32BIT_INDICES));
+   // cudnnReduceTensorOp_t           reduceTensorOp,
+   // cudnnDataType_t                 reduceTensorCompType,
+   // cudnnNanPropagation_t           reduceTensorNanOpt,
+   // cudnnReduceTensorIndices_t      reduceTensorIndices,
+   // cudnnIndicesType_t              reduceTensorIndicesType))
+
+   //size_t wsizeInBytes;
+   //void *reductionWorkspace = nullptr;
+   CUDNNCHECK(cudnnGetReductionWorkspaceSize(cudnnHandle, reduceTensorDesc, activationGradients.GetTensorDescriptor(),
+                                             biasGradients.GetTensorDescriptor(),
+                                             &convWorkspace->fReductionWorkspaceSize));
+   if (convWorkspace->fReductionWorkspaceSize > 0)
+      cudaMalloc(&convWorkspace->fReductionWorkspace, convWorkspace->fReductionWorkspaceSize);
+
+
+   // size_t isizeInBytes;
+   // void *iSpace = nullptr;
+   // CUDNNCHECK(cudnnGetReductionIndicesSize(cudnnHandle, reduceTensorDesc, activationGradients.GetTensorDescriptor(),
+   //                                         biasGradients.GetTensorDescriptor(), &isizeInBytes));
+
+   // if (isizeInBytes > 0)
+   //    cudaMalloc(&convWorkspace->fIndiceWorkspace, isizeInBytes);
+
    workspace = convWorkspace;
 
    CUDNNCHECK(cudnnDestroyTensorDescriptor(inputTensorDescriptor));
@@ -576,6 +608,12 @@ void TCudnn<AFloat>::FreeConvWorkspace(TWorkspace * workspace, ConvLayer_t *L) {
    if(convWorkspace->ForwardWorkspace)  cudaFree(convWorkspace->ForwardWorkspace);
    if(convWorkspace->BackwardWorkspace) cudaFree(convWorkspace->BackwardWorkspace);
    if(convWorkspace->HelperWorkspace)   cudaFree(convWorkspace->HelperWorkspace);
+
+   CUDNNCHECK(cudnnDestroyReduceTensorDescriptor(convWorkspace->fReduceTensorDesc));
+
+   if (convWorkspace->fReductionWorkspace)
+      cudaFree(convWorkspace->fReductionWorkspace);
+
 }
 
 //____________________________________________________________________________
@@ -885,14 +923,38 @@ void TCudnn<AFloat>::ConvLayerBackward(Tensor_t &activationGradientsBackward,
    //--------------------------------------------------------------------------
    // Bias gradient
    //--------------------------------------------------------------------------
-//#if 0
+#if 0
    CUDNNCHECK(cudnnConvolutionBackwardBias(cudnnHandle, &alpha, activationGradients.GetTensorDescriptor(),
                                            activationGradients.GetDataPointer(), &beta,
                                            biasGradients.GetTensorDescriptor(), biasGradients.GetDataPointer()));
 
    //PrintTensor(biasGradients,"computed gradient biases");
-//#endif
-#if  0
+#endif
+#if 0
+// try trandforming the activation gradient tensor and reduce it
+   auto shape = activationGradients.GetShape();
+   Tensor_t actGradTransf({shape[1], shape[0], shape[2], shape[3]}, activationGradients.GetLayout());
+   CUDNNCHECK(cudnnTransformTensor(cudnnHandle, &alpha, activationGradients.GetTensorDescriptor(),
+                                   activationGradients.GetDataPointer(), &beta, actGradTransf.GetTensorDescriptor(),
+                                   actGradTransf.GetDataPointer()));
+   // now make the operation
+   TCudaMatrix<AFloat> actGradMatrix(actGradTransf.GetDeviceBuffer(), shape[0] * shape[2] * shape[3], shape[1]);
+   TCudaMatrix<AFloat> temp(biasGradients.GetDeviceBuffer(), biasGradients.GetShape()[1], 1);
+   TCuda<AFloat>::SumColumns(temp, actGradMatrix);
+#endif
+
+   // to compute the bias gradients is more efficient to reduce the activation gradient tensor in B,H,W dimensions and
+   // adding their elements.
+   // we create the descriptor for reduction and necessary workspaces in the initialization workspace function for the
+   // convolution layer. Note that the indices workspace is not needed in case of addition operation
+
+   CUDNNCHECK(cudnnReduceTensor(cudnnHandle, workspace.fReduceTensorDesc, nullptr, 0, workspace.fReductionWorkspace,
+                                workspace.fReductionWorkspaceSize, &alpha, activationGradients.GetTensorDescriptor(),
+                                activationGradients.GetDataPointer(), &beta, biasGradients.GetTensorDescriptor(),
+                                biasGradients.GetDataPointer()));
+
+
+#if 0   // this is very slow for large batches
    biasGradients.Zero();
    TCudaMatrix<AFloat> temp(biasGradients.GetShape()[1], 1);
    TCudaMatrix<AFloat> biasGradMatrix(biasGradients.GetDeviceBuffer(), biasGradients.GetShape()[1], 1);

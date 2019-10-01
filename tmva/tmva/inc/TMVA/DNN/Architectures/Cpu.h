@@ -45,7 +45,7 @@ namespace DNN
  struct DummyConvolutionBwdDataAlgo {};
  struct DummyConvolutionBwdFilterAlgo {};
  struct DummyDataType {};
- 
+
  struct DummyEmptyDescriptor {};
 
 /** The TCpu architecture class.
@@ -79,9 +79,10 @@ public:
    using AlgorithmBackward_t     = DummyConvolutionBwdDataAlgo;
    using AlgorithmHelper_t       = DummyConvolutionBwdFilterAlgo;
    using AlgorithmDataType_t     = DummyDataType;
-   
+   using ReduceTensorDescriptor_t = DummyDataType;
+
    using EmptyDescriptor_t       = DummyEmptyDescriptor;        // Used if a descriptor is not needed in a class
-   
+
    /*using BNormLayer_t            = DNN::TBatchNormLayer<TCpu<AReal>>;
    using BNormDescriptors_t      = CNN::TCNNDescriptors<BNormLayer_t>;
    using BNormWorkspace_t        = CNN::TCNNWorkspace<BNormLayer_t>;*/
@@ -94,17 +95,17 @@ public:
 
    static TMVA::Experimental::MemoryLayout GetTensorLayout() { return TMVA::Experimental::MemoryLayout::ColumnMajor; }
 
-   static Tensor_t CreateTensor(size_t n, size_t c, size_t h, size_t w) { 
-      return Tensor_t( {c,h*w,n}, GetTensorLayout()); 
+   static Tensor_t CreateTensor(size_t n, size_t c, size_t h, size_t w) {
+      return Tensor_t( {c,h*w,n}, GetTensorLayout());
    }
-   static Tensor_t CreateTensor(DeviceBuffer_t buffer, size_t n, size_t c, size_t h, size_t w) { 
-      return Tensor_t( buffer, {c,h*w,n}, GetTensorLayout()); 
+   static Tensor_t CreateTensor(DeviceBuffer_t buffer, size_t n, size_t c, size_t h, size_t w) {
+      return Tensor_t( buffer, {c,h*w,n}, GetTensorLayout());
    }
-   // create a weight tensor/matrix vector   from another tensor/weight  vector using the given tensor shapes 
+   // create a weight tensor/matrix vector   from another tensor/weight  vector using the given tensor shapes
    // this function is used by the optimizers to stgore intermidiate weights representations
    static void  CreateWeightTensors( std::vector<Matrix_t> & newWeights, const std::vector<Matrix_t> & weights) {
-      if (!newWeights.empty()) newWeights.clear(); 
-      size_t n =  weights.size(); 
+      if (!newWeights.empty()) newWeights.clear();
+      size_t n =  weights.size();
       for (size_t i = 0; i < n; ++i)
          newWeights.emplace_back( weights[i].GetNrows(), weights[i].GetNcols());
    }
@@ -112,13 +113,13 @@ public:
    //
    // Architecture Initialization
    //____________________________________________________________________________
-   
+
    /** Initialize CNN data/operator descriptors. Not used at the moment.*/
    # if 0
-   static void InitializeBNormDescriptors(TDescriptors * & /*descriptors*/, 
+   static void InitializeBNormDescriptors(TDescriptors * & /*descriptors*/,
                                           BNormLayer_t */*L = nullptr*/) {}
    # endif
-   static void InitializeConvDescriptors(TDescriptors * & /*descriptors*/, double /*coef = 0.0*/, 
+   static void InitializeConvDescriptors(TDescriptors * & /*descriptors*/, double /*coef = 0.0*/,
                                          ConvLayer_t */*L = nullptr*/) {}
    static void InitializePoolDescriptors(TDescriptors * & /*descriptors*/,
                                          PoolingLayer_t */*L = nullptr*/) {}
@@ -143,7 +144,7 @@ public:
 
    static void ReleaseDescriptor(ActivationDescriptor_t &  /* activationDescr */) {}
    // // Utility function to convert from a Matrix to a Tensor
-   // static Tensor_t  MatrixToTensor(Matrix_t & A) { 
+   // static Tensor_t  MatrixToTensor(Matrix_t & A) {
    //    return Tensor_t(A.GetRawDataPointer(), Shape_t({A.GetNrows(), A.GetNcols() }), RTensor::MemoryLayout::ColumnMajor);
    // }
 
@@ -162,7 +163,7 @@ public:
    static void MultiplyTranspose(Matrix_t &output, const Matrix_t &input, const Matrix_t &weights);
 
    static void MultiplyTranspose(Tensor_t &output, const Tensor_t &input, const Matrix_t &weights) {
-      Matrix_t output_matrix = output.GetMatrix(); 
+      Matrix_t output_matrix = output.GetMatrix();
       MultiplyTranspose( output_matrix, input.GetMatrix(), weights);
       //ensor_t::MatrixToTensor(output_matrix, output); // this maybe is not needed
    }
@@ -170,9 +171,9 @@ public:
    /** Add the vectors biases row-wise to the matrix output */
    static void AddRowWise(Matrix_t &output,const Matrix_t &biases);
 
-   static void AddRowWise(Tensor_t &output, const Matrix_t &biases) { 
-      Matrix_t output_matrix = output.GetMatrix(); 
-      AddRowWise(output_matrix, biases); 
+   static void AddRowWise(Tensor_t &output, const Matrix_t &biases) {
+      Matrix_t output_matrix = output.GetMatrix();
+      AddRowWise(output_matrix, biases);
       //Tensor_t::MatrixToTensor(output_matrix, output); // this maybe is not needed
    }
 
@@ -209,7 +210,7 @@ public:
 
    // copy from another type of matrix
    template<typename AMatrix_t>
-   static void CopyDiffArch(Matrix_t & B, const AMatrix_t & A); 
+   static void CopyDiffArch(Matrix_t & B, const AMatrix_t & A);
 
 
    /** Above functions extended to vectors */
@@ -253,15 +254,15 @@ public:
 
    static void ActivationFunctionForward(Tensor_t & X, EActivationFunction activFunct,
                           const ActivationDescriptor_t activationDescr,
-                          const double coef = 0.0, const Scalar_t alpha = 1, 
+                          const double coef = 0.0, const Scalar_t alpha = 1,
                           const Scalar_t beta = 0);
 
    /** Computes the gradient of the activation function */
-   static void ActivationFunctionBackward(Tensor_t & dX, const Tensor_t & Y, 
-                                          const Tensor_t & dY,  const Tensor_t & X, 
+   static void ActivationFunctionBackward(Tensor_t & dX, const Tensor_t & Y,
+                                          const Tensor_t & dY,  const Tensor_t & X,
                                           EActivationFunction activFunct,
                                           const ActivationDescriptor_t activationDescr,
-                                          const Scalar_t alpha = 1, 
+                                          const Scalar_t alpha = 1,
                                           const Scalar_t beta = 0);
 
    static void IdentityDerivative(Tensor_t & B,
@@ -392,10 +393,10 @@ public:
 
    // return static instance of random generator used for initialization
    // if generator does not exist it is created the first time with a random seed (e.g. seed = 0)
-   static TRandom & GetRandomGenerator(); 
+   static TRandom & GetRandomGenerator();
    // set random seed for the static geenrator
    // if the static geneerator does not exists it is created
-   static void SetRandomSeed(size_t seed); 
+   static void SetRandomSeed(size_t seed);
    ///@}
 
    //____________________________________________________________________________
@@ -409,9 +410,9 @@ public:
 
    /** Apply dropout with activation probability \p p to the given
     *  tensor \p A and scale the result by reciprocal of \p p. */
-   static void DropoutForward(Tensor_t & A, 
+   static void DropoutForward(Tensor_t & A,
                               TDescriptors * descriptors,
-                              TWorkspace   * workspace, 
+                              TWorkspace   * workspace,
                               Scalar_t p);
 
    static void DropoutForward(Matrix_t & A, Scalar_t p) {
@@ -434,8 +435,8 @@ public:
     */
    ///@{
 
-   /** The input from each batch are normalized during training to have zero mean and unit variance 
-     * and they are then scaled by two parameter, different for each input variable: 
+   /** The input from each batch are normalized during training to have zero mean and unit variance
+     * and they are then scaled by two parameter, different for each input variable:
      *  - a scale factor \gamma gamma
      *  - an offset \beta beta */
    static void BatchNormLayerForwardTraining(Matrix_t input,                        // input
@@ -456,7 +457,7 @@ public:
                                              Scalar_t momentum,                     // GD momentum
                                              Scalar_t epsilon);                     // epsilon
 
-   /** During inference the inputs are not normalized using the batch mean but the previously computed 
+   /** During inference the inputs are not normalized using the batch mean but the previously computed
      * at  running mean and variance */
    static void BatchNormLayerForwardInference(Matrix_t input,
                                               Matrix_t & gamma,
@@ -518,7 +519,7 @@ public:
    static void Im2colIndices(std::vector<int> &V, const Matrix_t &B, size_t nLocalViews, size_t imgHeight, size_t imgWidth, size_t fltHeight,
                       size_t fltWidth, size_t strideRows, size_t strideCols, size_t zeroPaddingHeight,
                       size_t zeroPaddingWidth);
-   static void Im2colFast(Matrix_t &A, const Matrix_t &B, const std::vector<int> & V); 
+   static void Im2colFast(Matrix_t &A, const Matrix_t &B, const std::vector<int> & V);
 
    /** Rotates the matrix \p B, which is representing a weights,
     *  and stores them in the matrix \p A. */
@@ -539,7 +540,7 @@ public:
                                 const Matrix_t &weights, const Matrix_t & biases,
                                 const DNN::CNN::TConvParams & params, EActivationFunction activFunc,
                                 Tensor_t & /* inputPrime */,
-                                const ConvDescriptors_t & /*descriptors*/,   // Empty struct for cuda architecture   
+                                const ConvDescriptors_t & /*descriptors*/,   // Empty struct for cuda architecture
                                 ConvWorkspace_t & /*workspace*/);       // Empty struct for cuda architecture
                                 //void * cudnnWorkspace = nullptr);          // Remains nullptr for cuda architecture
 
@@ -565,10 +566,10 @@ public:
                                  EActivationFunction activFunc,
                                  const ConvDescriptors_t & /*descriptors*/,
                                  ConvWorkspace_t & /*workspace*/,
-                                 size_t batchSize,   size_t inputHeight, 
-                                 size_t inputWidth,  size_t depth, 
+                                 size_t batchSize,   size_t inputHeight,
+                                 size_t inputWidth,  size_t depth,
                                  size_t height,      size_t width,
-                                 size_t filterDepth, size_t filterHeight, 
+                                 size_t filterDepth, size_t filterHeight,
                                  size_t filterWidth, size_t nLocalViews );
 
    /** Utility function for calculating the activation gradients of the layer
@@ -609,8 +610,8 @@ public:
    static void Downsample(Tensor_t &A, Tensor_t &B, const Tensor_t &C,
                           const PoolingDescriptors_t & /*descriptors*/,
                           PoolingWorkspace_t & /*workspace*/,
-                          size_t imgHeight, size_t imgWidth, 
-                          size_t fltHeight, size_t fltWidth, 
+                          size_t imgHeight, size_t imgWidth,
+                          size_t fltHeight, size_t fltWidth,
                           size_t strideRows, size_t strideCols);
 
    ///@}
@@ -658,7 +659,7 @@ public:
    static void Deflatten(Tensor_t &A, const Tensor_t &B); // size_t index, size_t nRows,size_t nCols);
 
    /** Rearrage data accoring to time fill B x T x D out with T x B x D matrix in*/
-   static void Rearrange(Tensor_t &out, const Tensor_t &in); 
+   static void Rearrange(Tensor_t &out, const Tensor_t &in);
 
 
  /** Backward pass for Recurrent Networks */
@@ -668,7 +669,7 @@ public:
                                             Matrix_t & bias_gradients,
                                             Matrix_t & df, //DxH
                                             const Matrix_t & state, // BxH
-                                            const Matrix_t & weights_input, // HxD 
+                                            const Matrix_t & weights_input, // HxD
                                             const Matrix_t & weights_state, // HxH
                                             const Matrix_t & input,  // BxD
                                             Matrix_t & input_gradient);
@@ -770,7 +771,7 @@ void TCpu<AReal>::CopyDiffArch(TCpuMatrix<AReal> &B,
    // copy from another architecture using the reference one
    // this is not very efficient since creates temporary objects
    TMatrixT<AReal> tmp = A;
-   Copy(B, TCpuMatrix<AReal>(tmp) ); 
+   Copy(B, TCpuMatrix<AReal>(tmp) );
 }
 
 //____________________________________________________________________________
@@ -796,19 +797,19 @@ void TCpu<AReal>::CopyDiffArch(std::vector<TCpuMatrix<AReal>> &A, const std::vec
 }
 
 template <typename AReal>
-void TCpu<AReal>::PrintTensor(const typename TCpu<AReal>::Tensor_t & A, const std::string name, bool truncate ) 
+void TCpu<AReal>::PrintTensor(const typename TCpu<AReal>::Tensor_t & A, const std::string name, bool truncate )
 {
-   std::cout << name << " size = " << A.GetSize() << " shape = { "; 
-   auto shape = A.GetShape(); 
+   std::cout << name << " size = " << A.GetSize() << " shape = { ";
+   auto shape = A.GetShape();
    for (size_t k = 0; k < shape.size()-1; ++k)
       std::cout << shape[k] << " , ";
    std::cout << shape.back() << " } ";
    //std::cout << " is view/owner " << A.IsView() << " / " << A.IsOwner() << " layout " << A.GetLayout() << std::endl;
    //std::cout << " layout " << A.GetLayout() << std::endl;
-   // print elements 
+   // print elements
    // need to find way to nice printing all elements
    std::cout << " tensor count " << A.GetBufferUseCount() << std::endl;
-   if (A.GetShape().size() == 2 ) { 
+   if (A.GetShape().size() == 2 ) {
       for (size_t i = 0; i < A.GetShape()[0]; ++i) {
          std::cout << "{ ";
          size_t n =  A.GetShape()[1];
@@ -825,7 +826,7 @@ void TCpu<AReal>::PrintTensor(const typename TCpu<AReal>::Tensor_t & A, const st
          for (size_t j = 0; j < A.GetHSize(); ++j) {
             std::cout << "{ ";
             size_t n =  A.GetWSize();
-            if (truncate)  n = std::min(n,size_t(10));  
+            if (truncate)  n = std::min(n,size_t(10));
             for (size_t k = 0; k < n; ++k) {
                std::cout << A(i,j,k) << " ";
             }
@@ -835,12 +836,12 @@ void TCpu<AReal>::PrintTensor(const typename TCpu<AReal>::Tensor_t & A, const st
          std::cout << " } " << std::endl;
       }
    }
-   else {  
+   else {
       for (size_t l = 0; l < A.GetSize(); ++l) {
          std::cout << A.GetData()[l] << " ";
       }
       std::cout << "\n";
-   }  
+   }
 }
 
 
