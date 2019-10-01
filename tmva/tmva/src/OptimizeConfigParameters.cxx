@@ -100,8 +100,8 @@ TMVA::OptimizeConfigParameters::~OptimizeConfigParameters()
    Int_t n=Int_t(fFOMvsIter.size());
    Float_t *x = new Float_t[n];
    Float_t *y = new Float_t[n];
-   Float_t  ymin=+999999999;
-   Float_t  ymax=-999999999;
+   Float_t  ymin=(Float_t)+999999999;
+   Float_t  ymax=(Float_t)-999999999;
 
    for (Int_t i=0;i<n;i++){
       x[i] = Float_t(i);
