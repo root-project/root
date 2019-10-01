@@ -554,7 +554,8 @@ bool TClingLookupHelper::IsDeclaredScope(const std::string &base, bool &isInline
 /// [const] typename[*&][const]
 
 bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::string &tname,
-                                                                    std::string &result)
+                                                                    std::string &result,
+                                                                    bool dropstd /* = true */)
 {
    if (tname.empty()) return false;
 
@@ -599,13 +600,13 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
          if (strncmp(result.c_str(), "const ", 6) == 0) {
             offset = 6;
          }
-         if (strncmp(result.c_str()+offset, "std::", 5) == 0) {
+         if (dropstd && strncmp(result.c_str()+offset, "std::", 5) == 0) {
             result.erase(offset,5);
          }
          for(unsigned int i = 1; i<result.length(); ++i) {
             if (result[i]=='s') {
                if (result[i-1]=='<' || result[i-1]==',' || result[i-1]==' ') {
-                  if (result.compare(i,5,"std::",5) == 0) {
+                  if (dropstd && result.compare(i,5,"std::",5) == 0) {
                      result.erase(i,5);
                   }
                }
