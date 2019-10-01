@@ -352,7 +352,7 @@ void TObjArray::Compress()
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove all objects from the array AND delete all heap based objects.
 
-void TObjArray::Delete(Option_t * /* opt */)
+void TObjArray::Delete(Option_t * opt)
 {
    // In some case, for example TParallelCoord, a list (the pad's list of
    // primitives) will contain both the container and the containees
@@ -366,18 +366,30 @@ void TObjArray::Delete(Option_t * /* opt */)
    // from using Draw to Paint) but the structure might still exist elsewhere
    // so we keep this comment here.
 
-   R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
+   std::unordered_set<TObject*> todelete;
+   Bool_t dedup = opt ? (!strcmp(opt, "dedup") ? kTRUE : kFALSE) : kFALSE;
+   //auto orig = GetEntries();
+   {
+      R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
-   // Since we set fCont[i] only after the deletion is completed, we do not
-   // lose the connection and thus do not need to take any special action.
-   for (Int_t i = 0; i < fSize; i++) {
-      if (fCont[i] && fCont[i]->IsOnHeap()) {
-         TCollection::GarbageCollect(fCont[i]);
-         fCont[i] = 0;
+      // Since we set fCont[i] only after the deletion is completed, we do not
+      // lose the connection and thus do not need to take any special action.
+      for (Int_t i = 0; i < fSize; i++) {
+         if (fCont[i] && fCont[i]->IsOnHeap()) {
+            if (dedup)
+               todelete.insert(fCont[i]);
+            else
+               TCollection::GarbageCollect(fCont[i]);
+            fCont[i] = 0;
+         }
       }
-   }
 
-   Init(fSize, fLowerBound);
+      Init(fSize, fLowerBound);
+   }
+   //fprintf(stderr, "dedup size %d %ld\n", orig, todelete.size());
+   if (dedup)
+      for(auto obj : todelete)
+         TCollection::GarbageCollect(obj);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

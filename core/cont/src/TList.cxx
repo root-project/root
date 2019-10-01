@@ -466,90 +466,104 @@ void TList::Clear(Option_t *option)
 
 void TList::Delete(Option_t *option)
 {
-   R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
-   R__COLLECTION_WRITE_GUARD();
+   std::unordered_set<TObject*> todelete;
+   Bool_t dedup = option ? (!strcmp(option, "dedup") ? kTRUE : kFALSE) : kFALSE;
 
-   Bool_t slow = option ? (!strcmp(option, "slow") ? kTRUE : kFALSE) : kFALSE;
+   {
+      R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
+      R__COLLECTION_WRITE_GUARD();
 
-   TList removeDirectory; // need to deregister these from their directory
+      Bool_t slow = option ? (!strcmp(option, "slow") ? kTRUE : kFALSE) : kFALSE;
 
-   if (slow) {
+      TList removeDirectory; // need to deregister these from their directory
 
-      // In some case, for example TParallelCoord, a list (the pad's list of
-      // primitives) will contain both the container and the containees
-      // (the TParallelCoorVar) but if the Clear is being called from
-      // the destructor of the container of this list, one of the first
-      // thing done will be the remove the container (the pad) for the
-      // list (of Primitives of the canvas) that was connecting it
-      // (indirectly) to the list of cleanups.
+      if (slow) {
 
-      // To preserve this connection (without introducing one when there was none),
-      // we re-use fCache to inform RecursiveRemove of the node currently
-      // being cleared/deleted.
-      while (fFirst) {
-         auto tlk = fFirst;
-         fFirst = fFirst->fNext;
-         fSize--;
+         // In some case, for example TParallelCoord, a list (the pad's list of
+         // primitives) will contain both the container and the containees
+         // (the TParallelCoorVar) but if the Clear is being called from
+         // the destructor of the container of this list, one of the first
+         // thing done will be the remove the container (the pad) for the
+         // list (of Primitives of the canvas) that was connecting it
+         // (indirectly) to the list of cleanups.
 
-         // Make node available to RecursiveRemove
-         tlk->fNext.reset();
-         tlk->fPrev.reset();
-         fCache = tlk;
+         // To preserve this connection (without introducing one when there was none),
+         // we re-use fCache to inform RecursiveRemove of the node currently
+         // being cleared/deleted.
+         while (fFirst) {
+            auto tlk = fFirst;
+            fFirst = fFirst->fNext;
+            fSize--;
 
-         // delete only heap objects
-         auto obj = tlk->GetObject();
-         if (obj && !obj->TestBit(kNotDeleted))
-            Error("Delete", "A list is accessing an object (%p) already deleted (list name = %s)",
-                  obj, GetName());
-         else if (obj && obj->IsOnHeap())
-            TCollection::GarbageCollect(obj);
-         else if (obj && obj->IsA()->GetDirectoryAutoAdd())
-            removeDirectory.Add(obj);
+            // Make node available to RecursiveRemove
+            tlk->fNext.reset();
+            tlk->fPrev.reset();
+            fCache = tlk;
 
-         // delete tlk;
+            // delete only heap objects
+            auto obj = tlk->GetObject();
+            if (obj && !obj->TestBit(kNotDeleted))
+               Error("Delete", "A list is accessing an object (%p) already deleted (list name = %s)",
+                     obj, GetName());
+            else if (obj && obj->IsOnHeap()) {
+               if (dedup)
+                  todelete.insert(obj);
+               else
+                  TCollection::GarbageCollect(obj);
+            } else if (obj && obj->IsA()->GetDirectoryAutoAdd())
+               removeDirectory.Add(obj);
+
+            // delete tlk;
+         }
+
+         fFirst.reset();
+         fLast.reset();
+         fCache.reset();
+         fSize  = 0;
+
+      } else {
+
+         auto first = fFirst;    //pointer to first entry in linked list
+         fFirst.reset();
+         fLast.reset();
+         fCache.reset();
+         fSize  = 0;
+         while (first) {
+            auto tlk = first;
+            first = first->fNext;
+            // delete only heap objects
+            auto obj = tlk->GetObject();
+            tlk->SetObject(nullptr);
+            if (obj && !obj->TestBit(kNotDeleted))
+               Error("Delete", "A list is accessing an object (%p) already deleted (list name = %s)",
+                     obj, GetName());
+            else if (obj && obj->IsOnHeap()) {
+               if (dedup)
+                  todelete.insert(obj);
+               else
+                  TCollection::GarbageCollect(obj);
+            } else if (obj && obj->IsA()->GetDirectoryAutoAdd())
+               removeDirectory.Add(obj);
+
+            // The formerly first token, when tlk goes out of scope has no more references
+            // because of the fFirst.reset()
+         }
       }
 
-      fFirst.reset();
-      fLast.reset();
-      fCache.reset();
-      fSize  = 0;
-
-   } else {
-
-      auto first = fFirst;    //pointer to first entry in linked list
-      fFirst.reset();
-      fLast.reset();
-      fCache.reset();
-      fSize  = 0;
-      while (first) {
-         auto tlk = first;
-         first = first->fNext;
-         // delete only heap objects
-         auto obj = tlk->GetObject();
-         tlk->SetObject(nullptr);
-         if (obj && !obj->TestBit(kNotDeleted))
-            Error("Delete", "A list is accessing an object (%p) already deleted (list name = %s)",
-                  obj, GetName());
-         else if (obj && obj->IsOnHeap())
-            TCollection::GarbageCollect(obj);
-         else if (obj && obj->IsA()->GetDirectoryAutoAdd())
-            removeDirectory.Add(obj);
-
-         // The formerly first token, when tlk goes out of scope has no more references
-         // because of the fFirst.reset()
+      // These objects cannot expect to have a valid TDirectory anymore;
+      // e.g. because *this is the TDirectory's list of objects. Even if
+      // not, they are supposed to be deleted, so we can as well unregister
+      // them from their directory, even if they are stack-based:
+      TIter iRemDir(&removeDirectory);
+      TObject* dirRem = 0;
+      while ((dirRem = iRemDir())) {
+         (*dirRem->IsA()->GetDirectoryAutoAdd())(dirRem, 0);
       }
+      Changed();
    }
-
-   // These objects cannot expect to have a valid TDirectory anymore;
-   // e.g. because *this is the TDirectory's list of objects. Even if
-   // not, they are supposed to be deleted, so we can as well unregister
-   // them from their directory, even if they are stack-based:
-   TIter iRemDir(&removeDirectory);
-   TObject* dirRem = 0;
-   while ((dirRem = iRemDir())) {
-      (*dirRem->IsA()->GetDirectoryAutoAdd())(dirRem, 0);
-   }
-   Changed();
+   if (dedup)
+      for(auto obj : todelete)
+         TCollection::GarbageCollect(obj);
 }
 
 #if 0

@@ -206,53 +206,64 @@ void THashList::Clear(Option_t *option)
 
 void THashList::Delete(Option_t *option)
 {
-   R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
+   std::unordered_set<TObject*> todelete;
+   Bool_t dedup = option ? (!strcmp(option, "dedup") ? kTRUE : kFALSE) : kFALSE;
 
-   Bool_t slow = option ? (!strcmp(option, "slow") ? kTRUE : kFALSE) : kFALSE;
+   {
+      R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
-   if (!slow) {
-      fTable->Clear("nodelete");     // clear table so no more lookups
-      TList::Delete(option);         // this deletes the objects
-   } else {
-      TList removeDirectory; // need to deregister these from their directory
+      Bool_t slow = option ? (!strcmp(option, "slow") ? kTRUE : kFALSE) : kFALSE;
 
-      while (fFirst) {
-         auto tlk = fFirst;
-         fFirst = fFirst->NextSP();
-         fSize--;
-         // remove object from table
-         fTable->Remove(tlk->GetObject());
+      if (!slow) {
+         fTable->Clear("nodelete");     // clear table so no more lookups
+         TList::Delete(option);         // this deletes the objects
+      } else {
+         TList removeDirectory; // need to deregister these from their directory
 
-         // delete only heap objects
-         auto obj = tlk->GetObject();
-         // In case somebody else access it.
-         tlk->SetObject(nullptr);
-         if (obj && !obj->TestBit(kNotDeleted))
-            Error("Delete", "A list is accessing an object (%p) already deleted (list name = %s)",
-                  obj, GetName());
-         else if (obj && obj->IsOnHeap())
-            TCollection::GarbageCollect(obj);
-         else if (obj && obj->IsA()->GetDirectoryAutoAdd())
-            removeDirectory.Add(obj);
+         while (fFirst) {
+            auto tlk = fFirst;
+            fFirst = fFirst->NextSP();
+            fSize--;
+            // remove object from table
+            fTable->Remove(tlk->GetObject());
 
-         // tlk reference count goes down 1.
+            // delete only heap objects
+            auto obj = tlk->GetObject();
+            // In case somebody else access it.
+            tlk->SetObject(nullptr);
+            if (obj && !obj->TestBit(kNotDeleted))
+               Error("Delete", "A list is accessing an object (%p) already deleted (list name = %s)",
+                     obj, GetName());
+            else if (obj && obj->IsOnHeap()) {
+               if (dedup)
+                  todelete.insert(obj);
+               else
+                  TCollection::GarbageCollect(obj);
+            } else if (obj && obj->IsA()->GetDirectoryAutoAdd())
+               removeDirectory.Add(obj);
+
+            // tlk reference count goes down 1.
+         }
+         fFirst.reset();
+         fLast.reset();
+         fCache.reset();
+         fSize  = 0;
+
+         // These objects cannot expect to have a valid TDirectory anymore;
+         // e.g. because *this is the TDirectory's list of objects. Even if
+         // not, they are supposed to be deleted, so we can as well unregister
+         // them from their directory, even if they are stack-based:
+         TIter iRemDir(&removeDirectory);
+         TObject* dirRem = 0;
+         while ((dirRem = iRemDir())) {
+               (*dirRem->IsA()->GetDirectoryAutoAdd())(dirRem, 0);
+         }
+         Changed();
       }
-      fFirst.reset();
-      fLast.reset();
-      fCache.reset();
-      fSize  = 0;
-
-      // These objects cannot expect to have a valid TDirectory anymore;
-      // e.g. because *this is the TDirectory's list of objects. Even if
-      // not, they are supposed to be deleted, so we can as well unregister
-      // them from their directory, even if they are stack-based:
-      TIter iRemDir(&removeDirectory);
-      TObject* dirRem = 0;
-      while ((dirRem = iRemDir())) {
-            (*dirRem->IsA()->GetDirectoryAutoAdd())(dirRem, 0);
-      }
-      Changed();
    }
+   if (dedup)
+      for(auto obj : todelete)
+         TCollection::GarbageCollect(obj);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
