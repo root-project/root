@@ -48,7 +48,7 @@ struct TMCParticleStatus {
    /// Print all info at once
    void Print() const
    {
-      ::Info("Print", "Status of track");
+      Info("Print", "Status of track");
       std::cout << "\t"
                 << "ID: " << fId << "\n"
                 << "\t"
@@ -90,6 +90,8 @@ struct TMCParticleStatus {
    Int_t fId = -1;
    /// Unique ID assigned by the user
    Int_t fParentId = -1;
+   /// Flags to (re)set for TGeoNavigator's fIsOutside state
+   Bool_t fIsOutside;
 
 private:
    /// Copying kept private
