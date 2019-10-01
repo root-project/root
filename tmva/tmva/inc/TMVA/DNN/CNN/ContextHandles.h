@@ -23,7 +23,7 @@
 namespace TMVA
 {
 namespace DNN
-{ 
+{
    struct TDescriptors {};
    struct TWorkspace {};
 namespace CNN
@@ -31,7 +31,7 @@ namespace CNN
 
 //______________________________________________________________________________
 //
-// Keeps the descriptors for the CNN 
+// Keeps the descriptors for the CNN
 //______________________________________________________________________________
 
 template<typename Layer_t>
@@ -51,6 +51,8 @@ struct TCNNWorkspace : public TMVA::DNN::TWorkspace {
    using AlgorithmBackward_t = typename Layer_t::AlgorithmBackward_t; // Backward layer operation
    using AlgorithmHelper_t   = typename Layer_t::AlgorithmHelper_t;   // Used for weight grad backward pass
 
+   using ReduceTensorDescriptor_t = typename Layer_t::ReduceTensorDescriptor_t;
+
    // FIXME: Add other cudnn types (algorithm preference etc.)
    using AlgorithmDataType_t = typename Layer_t::AlgorithmDataType_t;
 
@@ -64,9 +66,17 @@ struct TCNNWorkspace : public TMVA::DNN::TWorkspace {
    size_t * BackwardWorkspace;
    size_t * HelperWorkspace;
 
+   void *fReductionWorkspace = nullptr;
+   //void *fIndicesWorkspace = nullptr;
+
    size_t ForwardWorkspaceSize;
    size_t BackwardWorkspaceSize;
    size_t HelperWorkspaceSize;
+   size_t fReductionWorkspaceSize = 0;
+   //size_t fIndicesWorkspaceSize = 0;
+
+   ReduceTensorDescriptor_t fReduceTensorDesc;
+
 };
 
 } // namespace CNN
