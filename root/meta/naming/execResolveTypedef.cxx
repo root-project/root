@@ -153,6 +153,8 @@ int execResolveTypedef()
    testing("vec<const int>",TClassEdit::ResolveTypedef("vec< const Int_t>"));
    testing("vec<const int>",TClassEdit::ResolveTypedef("vec< Int_t  const>"));
    testing("vec<const int>",TClassEdit::ResolveTypedef("vec<int const>"));
+   testing("unknown::wrapper<int>",TClassEdit::ResolveTypedef("unknown::wrapper<Int_t>"));
+   testing("std::pair<char,unknown::wrapper<int> >",TClassEdit::ResolveTypedef("std::pair<Char_t,unknown::wrapper<Int_t>>"));
 
    printf("Starting GetNormalizedName tests\n");
 
