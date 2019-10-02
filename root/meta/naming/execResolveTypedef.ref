@@ -59,23 +59,25 @@ Test 56 The result is correct: vec<const int>
 Test 57 The result is correct: vec<const int>
 Test 58 The result is correct: vec<const int>
 Test 59 The result is correct: vec<const int>
+Test 60 The result is correct: unknown::wrapper<int>
+Test 61 The result is correct: std::pair<char,unknown::wrapper<int> >
 Starting GetNormalizedName tests
-Test 60 The result is correct: NS::Inner<long,Object>
-Test 61 The result is correct: NS::Inner<long,Object>
-Test 62 The result is correct: NS::Inner<Long64_t,Object>
-Test 63 The result is correct: NS::Inner<Long64_t,Object>
+Test 62 The result is correct: NS::Inner<long,Object>
+Test 63 The result is correct: NS::Inner<long,Object>
 Test 64 The result is correct: NS::Inner<Long64_t,Object>
 Test 65 The result is correct: NS::Inner<Long64_t,Object>
-Test 66 The result is correct: pair<vector<long>,long>
-Test 67 The result is correct: NS::Inner<int,Object>
-Test 68 The result is correct: Wrapper<NS::Inner<int,Object> >
-Test 69 The result is correct: vector2<NS::Inner<int,Object> >
-Test 70 The result is correct: vector<NS::Inner<int,Object> >
-Test 71 The result is correct: RootPCtempObj<const TObject*const>
-Test 72 The result is correct: vector<const cl::inner<const long>*const>
-Test 73 The result is correct: const cl::inner<const long>*const
+Test 66 The result is correct: NS::Inner<Long64_t,Object>
+Test 67 The result is correct: NS::Inner<Long64_t,Object>
+Test 68 The result is correct: pair<vector<long>,long>
+Test 69 The result is correct: NS::Inner<int,Object>
+Test 70 The result is correct: Wrapper<NS::Inner<int,Object> >
+Test 71 The result is correct: vector2<NS::Inner<int,Object> >
+Test 72 The result is correct: vector<NS::Inner<int,Object> >
+Test 73 The result is correct: RootPCtempObj<const TObject*const>
 Test 74 The result is correct: vector<const cl::inner<const long>*const>
 Test 75 The result is correct: const cl::inner<const long>*const
 Test 76 The result is correct: vector<const cl::inner<const long>*const>
 Test 77 The result is correct: const cl::inner<const long>*const
+Test 78 The result is correct: vector<const cl::inner<const long>*const>
+Test 79 The result is correct: const cl::inner<const long>*const
 (int) 0
