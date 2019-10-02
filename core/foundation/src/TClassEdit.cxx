@@ -1534,11 +1534,8 @@ static void ResolveTypedefImpl(const char *tname,
                   result += std::string(tname+prevScope,cursor+2-prevScope);
                }
             } else if (!gInterpreterHelper->IsDeclaredScope(scope,isInlined)) {
-               // the nesting namespace is not declared
-               if (modified) result += (tname+prevScope);
-               // Unfortunately, this is too harsh .. what about:
-               //    unknown::wrapper<Int_t>
-               return;
+               // the nesting namespace is not declared, just ignore it and move on
+               if (modified) result += std::string(tname+prevScope,cursor+2-prevScope);
             } else if (isInlined) {
                // humm ... just skip it.
                if (!modified) {
