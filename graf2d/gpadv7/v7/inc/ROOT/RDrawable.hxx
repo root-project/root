@@ -34,7 +34,6 @@ class RDisplayItem;
 
 
 namespace Internal {
-class RPadPainter;
 
 class RIOSharedBase {
 public:
@@ -96,14 +95,13 @@ class RDrawable {
 friend class RPadBase; // to access Display method
 friend class RAttrBase;
 friend class RStyle;
-friend class Internal::RPadPainter;
 
 private:
-   std::string fId;              ///< object identifier, unique inside RCanvas - TODO make it only for user, internal IDs should be independent
    RAttrMap fAttr;               ///< attributes values
    std::weak_ptr<RStyle> fStyle; ///<! style applied for RDrawable
    std::string fCssType;         ///<! drawable type, not stored in the root file, must be initialized in constructor
-   std::string fCssClass;        ///<  user defined drawable class, can later go inside map
+   std::string fCssClass;        ///< user defined drawable class, can later go inside map
+   std::string fId;              ///< optional object identifier, may be used in CSS as well
 
 protected:
 
@@ -124,14 +122,10 @@ public:
 
    // copy constructor and assign operator !!!
 
-   virtual void Paint(Internal::RPadPainter &onPad);
-
    /** Method can be used to provide menu items for the drawn object */
    virtual void PopulateMenu(RMenuItems &){};
 
    virtual void Execute(const std::string &);
-
-   std::string GetId() const { return fId; }
 
    void UseStyle(const std::shared_ptr<RStyle> &style) { fStyle = style; }
    void ClearStyle() { fStyle.reset(); }
@@ -141,8 +135,10 @@ public:
 
    const std::string &GetCssType() const { return fCssType; }
 
-};
+   const std::string &GetId() const { return fId; }
+   void SetId(const std::string &id) { fId = id; }
 
+};
 
 /// Central method to insert drawable in list of pad primitives
 /// By default drawable placed as is.
@@ -151,8 +147,6 @@ inline auto GetDrawable(const std::shared_ptr<DRAWABLE> &drawable)
 {
    return drawable;
 }
-
-
 
 } // namespace Experimental
 } // namespace ROOT

@@ -17,7 +17,6 @@
 
 #include "ROOT/RLogger.hxx"
 #include <ROOT/RPadDisplayItem.hxx>
-#include <ROOT/RPadPainter.hxx>
 #include <ROOT/RCanvas.hxx>
 
 #include <cassert>
@@ -26,22 +25,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 ROOT::Experimental::RPad::~RPad() = default;
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
-/// Paint the pad.
-void ROOT::Experimental::RPad::Paint(Internal::RPadPainter &toppad)
-{
-   auto paditem = std::make_unique<RPadDisplayItem>();
-
-   paditem->SetPadPosSize(&fPos, &fSize);
-
-   Internal::RPadPainter painter;
-
-   painter.PaintDrawables(*this, paditem.get());
-
-   toppad.AddDisplayItem(std::move(paditem));
-}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /// Create pad display item

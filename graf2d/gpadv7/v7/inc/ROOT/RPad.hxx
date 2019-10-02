@@ -79,8 +79,6 @@ public:
    RAttrLine &AttrLine() { return fLineAttr; }
    const RAttrLine &AttrLine() const { return fLineAttr; }
 
-   void Paint(Internal::RPadPainter &) final;
-
    /// Convert a `Pixel` position to Canvas-normalized positions.
    std::array<RPadLength::Normal, 2> PixelsToNormal(const std::array<RPadLength::Pixel, 2> &pos) const override
    {
