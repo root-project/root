@@ -57,6 +57,14 @@ public:
    RPadDisplayItem() = default;
    virtual ~RPadDisplayItem() {}
    void SetPadPosSize(const RPadPos *pos, const RPadExtent *size) { fPos = pos; fSize = size; }
+
+   void BuildFullId(const std::string &prefix) override
+   {
+      RDisplayItem::BuildFullId(prefix);
+      std::string subprefix = prefix + std::to_string(GetIndex()) + "_";
+      for (auto &item : fPrimitives)
+         item->BuildFullId(subprefix);
+   }
 };
 
 /// Display item for the canvas
@@ -72,6 +80,12 @@ public:
    virtual ~RCanvasDisplayItem() = default;
    void SetTitle(const std::string &title) { fTitle = title; }
    void SetWindowSize(const std::array<RPadLength::Pixel, 2> &win) { fWinSize[0] = (int) win[0].fVal; fWinSize[1] = (int) win[1].fVal; }
+
+   void BuildFullId(const std::string &prefix) override
+   {
+      for (auto &item : fPrimitives)
+         item->BuildFullId(prefix);
+   }
 };
 
 

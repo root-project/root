@@ -37,6 +37,8 @@ class RDisplayItem {
 protected:
    std::string fObjectID; ///< unique object identifier
 
+   unsigned fIndex{0};   ///<! set index inside current pad, used to produce fully-qualified id, not send to client
+
 public:
    RDisplayItem() = default;
    virtual ~RDisplayItem() {}
@@ -46,8 +48,10 @@ public:
 
    void SetObjectIDAsPtr(const void *ptr);
 
-   void PrependID(const std::string &prefix) { fObjectID = prefix + fObjectID; }
+   void SetIndex(unsigned indx) { fIndex = indx; }
+   unsigned GetIndex() const { return fIndex; }
 
+   virtual void BuildFullId(const std::string &prefix);
 };
 
 // created from plain drawable without need of extra parameters
