@@ -64,10 +64,10 @@ struct TTrainingSettings {
    size_t batchSize;
    size_t testInterval;
    size_t convergenceSteps;
-   size_t maxEpochs; 
+   size_t maxEpochs;
    DNN::ERegularization regularization;
    DNN::EOptimizer optimizer;
-   TString optimizerName; 
+   TString optimizerName;
    Double_t learningRate;
    Double_t momentum;
    Double_t weightDecay;
@@ -81,17 +81,17 @@ class MethodDL : public MethodBase {
 private:
    // Key-Value vector type, contining the values for the training options
    using KeyValueVector_t = std::vector<std::map<TString, TString>>;
-#ifdef R__HAS_TMVAGPU
-   using ArchitectureImpl_t = TMVA::DNN::TCudnn<Float_t>;
-   //using ArchitectureImpl_t = TMVA::DNN::TCuda<Float_t>;
-#else
-// do not use arch GPU for evaluation. It is too slow for batch size=1   
+// #ifdef R__HAS_TMVAGPU
+//    using ArchitectureImpl_t = TMVA::DNN::TCudnn<Float_t>;
+//    //using ArchitectureImpl_t = TMVA::DNN::TCuda<Float_t>;
+// #else
+// do not use arch GPU for evaluation. It is too slow for batch size=1
 #ifdef R__HAS_TMVACPU
    using ArchitectureImpl_t = TMVA::DNN::TCpu<Float_t>;
 #else
    using ArchitectureImpl_t = TMVA::DNN::TReference<Float_t>;
-#endif  
 #endif
+//#endif
    using DeepNetImpl_t = TMVA::DNN::TDeepNet<ArchitectureImpl_t>;
    using MatrixImpl_t =  typename ArchitectureImpl_t::Matrix_t;
    using TensorImpl_t =  typename ArchitectureImpl_t::Tensor_t;
@@ -155,9 +155,9 @@ private:
    /// perform prediction of the deep neural network
    /// using batches (called by GetMvaValues)
    template <typename Architecture_t>
-   std::vector<Double_t> PredictDeepNet(Long64_t firstEvt, Long64_t lastEvt, size_t batchSize, Bool_t logProgress); 
+   std::vector<Double_t> PredictDeepNet(Long64_t firstEvt, Long64_t lastEvt, size_t batchSize, Bool_t logProgress);
 
-   /// parce the validation string and return the number of event data used for validation 
+   /// parce the validation string and return the number of event data used for validation
    UInt_t GetNumValidationSamples();
 
    // cudnn implementation needs this format
@@ -166,11 +166,11 @@ private:
    std::vector<size_t> fInputShape;
 
    // The size of the batch, i.e. the number of images that are contained in the batch, is either set to be the depth
-   // or the height of the batch 
+   // or the height of the batch
    size_t fBatchDepth;  ///< The depth of the batch used to train the deep net.
    size_t fBatchHeight; ///< The height of the batch used to train the deep net.
    size_t fBatchWidth;  ///< The width of the batch used to train the deep net.
-   
+
    size_t fRandomSeed;  ///<The random seed used to initialize the weights and shuffling batches (default is zero)
 
    DNN::EInitialization fWeightInitialization; ///< The initialization method
@@ -192,10 +192,10 @@ private:
    std::vector<TTrainingSettings> fTrainingSettings; ///< The vector defining each training strategy
 
    TensorImpl_t fXInput;                 // input tensor used to evaluate fNet
-   HostBufferImpl_t fXInputBuffer;        // input hist buffer corresponding to X (needed for GPU implementation)    
+   HostBufferImpl_t fXInputBuffer;        // input hist buffer corresponding to X (needed for GPU implementation)
    std::unique_ptr<MatrixImpl_t> fYHat;   // output prediction matrix of fNet
    std::unique_ptr<DeepNetImpl_t> fNet;
-  
+
 
    ClassDef(MethodDL, 0);
 
