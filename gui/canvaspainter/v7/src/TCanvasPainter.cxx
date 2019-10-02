@@ -284,13 +284,12 @@ void ROOT::Experimental::TCanvasPainter::CheckDataToSend()
 
             ROOT::Experimental::RMenuItems items;
 
+            items.SetId(conn.fGetMenu);
+
             drawable->PopulateMenu(items);
 
-            // FIXME: got problem with std::list<RMenuItem>, can be generic TBufferJSON
             buf = "MENU:";
-            buf.Append(conn.fGetMenu);
-            buf.Append(":");
-            buf.Append(items.ProduceJSON());
+            buf.Append(TBufferJSON::ToJSON(&items, fJsonComp).Data());
          }
 
          conn.fGetMenu = "";
@@ -636,8 +635,7 @@ std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Exper
    TString res = TBufferJSON::ToJSON(canvitem.get(), fJsonComp);
 
    if (!fNextDumpName.empty()) {
-      TBufferJSON::ExportToFile(fNextDumpName.c_str(), canvitem.get(),
-                                gROOT->GetClass("ROOT::Experimental::RCanvasDisplayItem"));
+      TBufferJSON::ExportToFile(fNextDumpName.c_str(), canvitem.get(), TClass::GetClass<ROOT::Experimental::RCanvasDisplayItem>());
       fNextDumpName.clear();
    }
 
@@ -657,7 +655,7 @@ ROOT::Experimental::TCanvasPainter::FindPrimitive(const ROOT::Experimental::RCan
    if (pos != std::string::npos)
       search.resize(pos);
 
-   return can.FindPrimitive(search);
+   return can.FindPrimitiveByDisplayId(search);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

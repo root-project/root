@@ -121,12 +121,15 @@ public:
 
 class RMenuItems {
 protected:
+   std::string fId;                                        ///< object identifier
    std::vector<std::unique_ptr<Detail::RMenuItem>> fItems; ///< list of items in the menu
 public:
    /** Default constructor */
    RMenuItems() = default;
 
    ~RMenuItems() = default;
+
+   void SetId(const std::string &id) { fId = id; }
 
    void Add(Detail::RMenuItem *item) { fItems.emplace_back(item); }
 
@@ -149,8 +152,6 @@ public:
    void Cleanup();
 
    void PopulateObjectMenu(void *obj, TClass *cl);
-
-   std::string ProduceJSON();
 };
 
 } // namespace Experimental
