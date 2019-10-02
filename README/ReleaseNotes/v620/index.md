@@ -131,6 +131,8 @@ typedefs (in particular `Double32_t`)
  * Fix interactive movement of TLine/TArrow objects when NDC coordinates are used
  * Provide TGraph::MovePoints() method
  * New options `RX`and `RY` for TMultiGraph in order to draw reverse axis along X and Y.
+ * Combined with the option "Z" the option "CJUST" allows to draw the color palette
+   with axis labels justified on the color boundaries.
 
 
 ## 3D Graphics Libraries
