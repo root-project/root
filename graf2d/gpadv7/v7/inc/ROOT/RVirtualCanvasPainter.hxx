@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <functional>
+#include <string>
 
 namespace ROOT {
 namespace Experimental {
