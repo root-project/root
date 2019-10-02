@@ -73,6 +73,9 @@ public:
 
    virtual ~RPadBase();
 
+   void UseStyle(const std::shared_ptr<RStyle> &style) override;
+   void ClearStyle() override;
+
    /// Divide this pad into a grid of subpads with padding in between.
    /// \param nHoriz Number of horizontal pads.
    /// \param nVert Number of vertical pads.
