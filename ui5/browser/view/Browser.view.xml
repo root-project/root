@@ -6,8 +6,7 @@
           xmlns:t="sap.ui.table"
           xmlns:l="sap.ui.layout"
           xmlns:u="sap.ui.unified"
-          xmlns:e="sap.ui.codeeditor"
-          xmlns:c="sap.suite.ui.commons">
+          xmlns:e="sap.ui.codeeditor">
    <Page title="" showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false">
       <!-- headerContent>
       </headerContent-->
