@@ -30,10 +30,10 @@ namespace Experimental {
 class RPad: public RPadBase {
 
    /// Pad containing this pad as a sub-pad.
-   RPadBase *fParent{nullptr};             /// The parent pad, if this pad has one.
+   RPadBase *fParent{nullptr};             ///< The parent pad, if this pad has one.
 
-   RPadPos fPos;                           ///<! pad position
-   RPadExtent fSize;                       ///<! pad size
+   RPadPos fPos;                           ///< pad position
+   RPadExtent fSize;                       ///< pad size
 
    RAttrLine fLineAttr{this, "border_"};   ///<! border attributes
 

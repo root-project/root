@@ -32,13 +32,13 @@ ROOT::Experimental::RPad::~RPad() = default;
 /// Paint the pad.
 void ROOT::Experimental::RPad::Paint(Internal::RPadPainter &toppad)
 {
+   auto paditem = std::make_unique<RPadDisplayItem>();
+
+   paditem->SetPadPosSize(&fPos, &fSize);
+
    Internal::RPadPainter painter;
 
-   painter.PaintDrawables(*this);
+   painter.PaintDrawables(*this, paditem.get());
 
-   painter.fPadDisplayItem->SetPadPosSize(&fPos, &fSize);
-
-   painter.fPadDisplayItem->SetAttributes(&GetAttrMap());
-
-   toppad.AddDisplayItem(std::move(painter.fPadDisplayItem));
+   toppad.AddDisplayItem(std::move(paditem));
 }

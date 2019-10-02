@@ -24,7 +24,7 @@
 namespace ROOT {
 namespace Experimental {
 
-class RPadDisplayItem;
+class RPadBaseDisplayItem;
 class RPadBase;
 class RPad;
 
@@ -40,18 +40,14 @@ class RPadPainter {
 
 protected:
 
-    std::unique_ptr<RPadDisplayItem> fPadDisplayItem; ///<! display items for all drawables in the pad
+    RPadBaseDisplayItem *fPadDisplayItem{nullptr}; ///<! display items for all drawables in the pad, temporary pointer, FIXME
     std::string   fCurrentDrawableId; ///<! current drawable id
 
-    void PaintDrawables(const RPadBase &pad);
+    void PaintDrawables(const RPadBase &pad, RPadBaseDisplayItem *paditem);
 
 public:
 
-   /// Default constructor
-   RPadPainter() = default;
-
-   /// Default destructor.
-   virtual ~RPadPainter();
+   virtual ~RPadPainter() = default;
 
    /// add display item to the canvas
    virtual void AddDisplayItem(std::unique_ptr<RDisplayItem> &&item);
