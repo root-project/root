@@ -16,8 +16,6 @@
 #ifndef ROOT7_RVirtualCanvasPainter
 #define ROOT7_RVirtualCanvasPainter
 
-#include "ROOT/RPadPainter.hxx"
-
 #include <memory>
 #include <functional>
 
@@ -35,7 +33,7 @@ namespace Internal {
   Abstract interface for painting a canvas.
   */
 
-class RVirtualCanvasPainter : public RPadPainter {
+class RVirtualCanvasPainter {
 protected:
    class Generator {
    public:

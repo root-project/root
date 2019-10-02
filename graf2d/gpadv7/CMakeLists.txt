@@ -32,7 +32,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
     ROOT/RPadBase.hxx
     ROOT/RPad.hxx
     ROOT/RPadLength.hxx
-    ROOT/RPadPainter.hxx
     ROOT/RPadPos.hxx
     ROOT/RPadUserAxis.hxx
     ROOT/RVirtualCanvasPainter.hxx
@@ -53,7 +52,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
     v7/src/RPad.cxx
     v7/src/RPadExtent.cxx
     v7/src/RPadLength.cxx
-    v7/src/RPadPainter.cxx
     v7/src/RPadPos.cxx
     v7/src/RPadUserAxis.cxx
     v7/src/RVirtualCanvasPainter.cxx

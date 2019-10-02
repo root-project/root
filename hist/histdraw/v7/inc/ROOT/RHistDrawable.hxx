@@ -78,9 +78,6 @@ public:
 //      : fHistImpl(std::unique_ptr<HistImpl_t>(std::move(*hist).TakeImpl())), fOpts(opts)
 //   {}
 
-   /// Paint the histogram
-   void Paint(Internal::RPadPainter &pad) final;
-
 };
 
 std::shared_ptr<RHistDrawable<1>> GetDrawable(const std::shared_ptr<RH1D> &histimpl);
@@ -95,32 +92,6 @@ std::shared_ptr<RHistDrawable<3>> GetDrawable(const std::shared_ptr<RH3D> &histi
 std::shared_ptr<RHistDrawable<3>> GetDrawable(const std::shared_ptr<RH3I> &histimpl);
 std::shared_ptr<RHistDrawable<3>> GetDrawable(const std::shared_ptr<RH3C> &histimpl);
 std::shared_ptr<RHistDrawable<3>> GetDrawable(const std::shared_ptr<RH3F> &histimpl);
-
-
-namespace Internal {
-
-void LoadHistPainterLibrary();
-
-template <int DIMENSION>
-class RHistPainterBase {
-   static RHistPainterBase<DIMENSION> *&GetPainterPtr();
-
-protected:
-   RHistPainterBase();
-   virtual ~RHistPainterBase();
-
-public:
-   static RHistPainterBase<DIMENSION> *GetPainter();
-
-   /// Paint a RHist. All we need is access to its GetBinContent()
-   virtual void Paint(RHistDrawable<DIMENSION> &obj, RPadPainter &pad) = 0;
-};
-
-extern template class RHistPainterBase<1>;
-extern template class RHistPainterBase<2>;
-extern template class RHistPainterBase<3>;
-
-} // namespace Internal
 
 
 } // namespace Experimental

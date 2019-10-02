@@ -8,11 +8,6 @@
 # CMakeLists.txt file for building ROOT hist/histpainter package
 ############################################################################
 
-if(root7)
-    set(HISTPAINTER_V7_SOURCES v7/src/RHistPainter.cxx)
-    set(HISTPAINTER_V7_LIBRARIES ROOTHistDraw)
-endif()
-
 ROOT_STANDARD_LIBRARY_PACKAGE(HistPainter
   HEADERS
     Hoption.h
@@ -29,7 +24,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistPainter
     src/THistPainter.cxx
     src/TPainter3dAlgorithms.cxx
     src/TPaletteAxis.cxx
-    ${HISTPAINTER_V7_SOURCES}
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   DEPENDENCIES
@@ -38,5 +32,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistPainter
     Hist
     MathCore
     Matrix
-    ${HISTPAINTER_V7_LIBRARIES}
 )
