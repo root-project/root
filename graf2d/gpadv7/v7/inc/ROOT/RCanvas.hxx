@@ -32,6 +32,7 @@ namespace Experimental {
 
 class RCanvas: public RPadBase {
 friend class RPadBase;  /// use for ID generation
+friend class TCanvasPainter; /// used for primitives drawing
 private:
    /// Title of the canvas.
    std::string fTitle;

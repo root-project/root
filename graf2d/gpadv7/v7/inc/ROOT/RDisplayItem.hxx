@@ -43,6 +43,11 @@ public:
 
    void SetObjectID(const std::string &id) { fObjectID = id; }
    std::string GetObjectID() const { return fObjectID; }
+
+   void SetObjectIDAsPtr(const void *ptr);
+
+   void PrependID(const std::string &prefix) { fObjectID = prefix + fObjectID; }
+
 };
 
 // created from plain drawable without need of extra parameters

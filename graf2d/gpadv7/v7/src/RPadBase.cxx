@@ -20,9 +20,12 @@
 #include "ROOT/RPadPos.hxx"
 #include <ROOT/RPad.hxx>
 #include <ROOT/RCanvas.hxx>
+#include <ROOT/RPadDisplayItem.hxx>
 
 #include <cassert>
 #include <limits>
+
+using namespace std::string_literals;
 
 ROOT::Experimental::RPadBase::~RPadBase() = default;
 
@@ -59,6 +62,23 @@ std::shared_ptr<ROOT::Experimental::RDrawable> ROOT::Experimental::RPadBase::Fin
 
    return nullptr;
 }
+
+
+void ROOT::Experimental::RPadBase::DisplayPrimitives(RPadBaseDisplayItem &paditem) const
+{
+   paditem.SetAttributes(&GetAttrMap());
+   paditem.SetFrame(GetFrame());
+
+   unsigned cnt = 0;
+
+   for (auto &drawable : fPrimitives) {
+      auto item = drawable->Display();
+      item->SetObjectIDAsPtr(drawable.get());
+      item->PrependID(std::to_string(cnt) + "_"s);
+      paditem.Add(std::move(item));
+   }
+}
+
 
 std::vector<std::vector<std::shared_ptr<ROOT::Experimental::RPad>>>
 ROOT::Experimental::RPadBase::Divide(int nHoriz, int nVert, const RPadExtent &padding)

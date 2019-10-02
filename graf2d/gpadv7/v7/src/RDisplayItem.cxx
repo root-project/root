@@ -14,3 +14,15 @@
  *************************************************************************/
 
 #include "ROOT/RDisplayItem.hxx"
+
+#include "TString.h"
+
+////////////////////////////////////////////////////////////////////////////
+/// Assign id using arbitrary pointer value
+/// Typically drawable pointer should be used here
+
+void ROOT::Experimental::RDisplayItem::SetObjectIDAsPtr(const void *ptr)
+{
+   UInt_t hash = TString::Hash(&ptr, sizeof(ptr));
+   SetObjectID(std::to_string(hash));
+}

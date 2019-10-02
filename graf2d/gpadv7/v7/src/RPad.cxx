@@ -42,3 +42,18 @@ void ROOT::Experimental::RPad::Paint(Internal::RPadPainter &toppad)
 
    toppad.AddDisplayItem(std::move(paditem));
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/// Create pad display item
+
+std::unique_ptr<ROOT::Experimental::RDisplayItem> ROOT::Experimental::RPad::Display() const
+{
+   auto paditem = std::make_unique<RPadDisplayItem>();
+
+   DisplayPrimitives(*paditem.get());
+
+   paditem->SetPadPosSize(&fPos, &fSize);
+
+   return paditem;
+}
+
