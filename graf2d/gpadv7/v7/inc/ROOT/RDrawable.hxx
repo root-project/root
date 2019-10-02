@@ -95,6 +95,7 @@ class RDrawable {
 friend class RPadBase;
 friend class RAttrBase;
 friend class RStyle;
+friend class Internal::RPadPainter;
 
 private:
    std::string fId;              ///< object identifier, unique inside RCanvas - TODO make it only for user, internal IDs should be independent
@@ -108,6 +109,7 @@ protected:
    virtual void CollectShared(Internal::RIOSharedVector_t &) {}
 
    RAttrMap &GetAttrMap() { return fAttr; }
+   const RAttrMap &GetAttrMap() const { return fAttr; }
 
    bool MatchSelector(const std::string &selector) const;
 
