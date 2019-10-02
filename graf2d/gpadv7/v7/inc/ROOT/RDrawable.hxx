@@ -144,7 +144,6 @@ public:
 };
 
 
-
 /// Central method to insert drawable in list of pad primitives
 /// By default drawable placed as is.
 template <class DRAWABLE, std::enable_if_t<std::is_base_of<RDrawable, DRAWABLE>{}>* = nullptr>

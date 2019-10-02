@@ -28,6 +28,7 @@
 #pragma link C++ class ROOT::Experimental::RDrawable+;
 #pragma link C++ class ROOT::Experimental::RDisplayItem+;
 #pragma link C++ class ROOT::Experimental::RDrawableDisplayItem+;
+#pragma link C++ class ROOT::Experimental::RObjectDisplayItem+;
 
 #pragma link C++ class ROOT::Experimental::Internal::RIOSharedBase+;
 #pragma link C++ class ROOT::Experimental::Internal::RIOShared<TObject>+;

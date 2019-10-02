@@ -37,6 +37,8 @@ protected:
 
    void CollectShared(Internal::RIOSharedVector_t &vect) final { vect.emplace_back(&fObj); }
 
+   std::unique_ptr<RDisplayItem> Display() const override;
+
 public:
    RObjectDrawable() : RDrawable("tobject") {}
 

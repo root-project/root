@@ -22,6 +22,7 @@
 
 #include <ROOT/RDrawable.hxx>
 
+class TObject;
 
 namespace ROOT {
 namespace Experimental {
@@ -68,6 +69,25 @@ public:
    {
       SetObjectID(dr.GetId());
       fDrawable = &dr;
+   }
+
+};
+
+
+// created from plain drawable without need of extra parameters
+
+class RObjectDisplayItem : public RDisplayItem {
+protected:
+
+   const TObject *fObject{nullptr};        ///< ROOT6 object
+   std::string fOption;                    ///< drawing options
+
+public:
+
+   RObjectDisplayItem(const TObject *obj, const std::string &opt)
+   {
+      fObject = obj;
+      fOption = opt;
    }
 
 };
