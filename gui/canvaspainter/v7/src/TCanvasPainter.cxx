@@ -625,11 +625,11 @@ std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Exper
 {
    auto canvitem = std::make_unique<RCanvasDisplayItem>();
 
+   can.DisplayPrimitives(*canvitem.get());
+
    canvitem->SetObjectID("canvas"); // for canvas itself use special id
    canvitem->SetTitle(can.GetTitle());
    canvitem->SetWindowSize(can.GetSize());
-
-   PaintDrawables(can, canvitem.get());
 
    TString res = TBufferJSON::ToJSON(canvitem.get(), fJsonComp);
 

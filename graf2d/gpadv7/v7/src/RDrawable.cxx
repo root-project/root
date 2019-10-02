@@ -39,3 +39,8 @@ bool ROOT::Experimental::RDrawable::MatchSelector(const std::string &selector) c
 {
    return (selector == fCssType) || (!fCssClass.empty() && (selector == std::string(".") + fCssClass));
 }
+
+std::unique_ptr<ROOT::Experimental::RDisplayItem> ROOT::Experimental::RDrawable::Display() const
+{
+   return std::make_unique<RDrawableDisplayItem>(*this);
+}

@@ -30,6 +30,7 @@ namespace Experimental {
 class RMenuItems;
 class RPadBase;
 class RAttrBase;
+class RDisplayItem;
 
 
 namespace Internal {
@@ -92,7 +93,7 @@ public:
 
 class RDrawable {
 
-friend class RPadBase;
+friend class RPadBase; // to access Display method
 friend class RAttrBase;
 friend class RStyle;
 friend class Internal::RPadPainter;
@@ -112,6 +113,8 @@ protected:
    const RAttrMap &GetAttrMap() const { return fAttr; }
 
    bool MatchSelector(const std::string &selector) const;
+
+   virtual std::unique_ptr<RDisplayItem> Display() const;
 
 public:
 

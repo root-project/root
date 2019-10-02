@@ -32,6 +32,7 @@ namespace Experimental {
 
 class RPad;
 class RCanvas;
+class RPadBaseDisplayItem;
 
 /** \class ROOT::Experimental::RPadBase
   Base class for graphic containers for `RDrawable`-s.
@@ -63,6 +64,8 @@ protected:
    RPadBase() : RDrawable("pad") {}
 
    void CollectShared(Internal::RIOSharedVector_t &) override;
+
+   void DisplayPrimitives(RPadBaseDisplayItem &paditem) const;
 
 public:
 

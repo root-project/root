@@ -37,6 +37,11 @@ class RPad: public RPadBase {
 
    RAttrLine fLineAttr{this, "border_"};   ///<! border attributes
 
+protected:
+
+   std::unique_ptr<RDisplayItem> Display() const final;
+
+
 public:
    /// Create a topmost, non-paintable pad.
    RPad() = default;
