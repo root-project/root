@@ -15,7 +15,6 @@
 
 #include "ROOT/RDrawable.hxx"
 #include "ROOT/RDisplayItem.hxx"
-#include "ROOT/RPadPainter.hxx"
 
 
 #include <cassert>
@@ -28,11 +27,6 @@ ROOT::Experimental::RDrawable::~RDrawable() {}
 void ROOT::Experimental::RDrawable::Execute(const std::string &)
 {
    assert(false && "Did not expect a menu item to be invoked!");
-}
-
-void ROOT::Experimental::RDrawable::Paint(Internal::RPadPainter &onPad)
-{
-   onPad.AddDisplayItem(std::make_unique<RDrawableDisplayItem>(*this));
 }
 
 bool ROOT::Experimental::RDrawable::MatchSelector(const std::string &selector) const
