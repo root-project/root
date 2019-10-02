@@ -51,20 +51,6 @@ const std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> ROOT::Experiment
    return GetHeldCanvases();
 }
 
-// void ROOT::Experimental::RCanvas::Paint() {
-//  for (auto&& drw: fPrimitives) {
-//    drw->Paint(*this);
-//  }
-// }
-
-///////////////////////////////////////////////////////////////////////////////////////
-/// Generates unique ID inside the canvas
-
-std::string ROOT::Experimental::RCanvas::GenerateUniqueId()
-{
-   return std::to_string(fIdCounter++);
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////
 /// Returns true is canvas was modified since last painting
 
@@ -77,12 +63,6 @@ void ROOT::Experimental::RCanvas::Update(bool async, CanvasCallback_t callback)
 {
    if (fPainter)
       fPainter->CanvasUpdated(fModified, async, callback);
-
-   // SnapshotList_t lst;
-   // for (auto&& drw: fPrimitives) {
-   //   TSnapshot *snap = drw->CreateSnapshot(*this);
-   //   lst.push_back(std::unique_ptr<TSnapshot>(snap));
-   // }
 }
 
 std::shared_ptr<ROOT::Experimental::RCanvas> ROOT::Experimental::RCanvas::Create(const std::string &title)
