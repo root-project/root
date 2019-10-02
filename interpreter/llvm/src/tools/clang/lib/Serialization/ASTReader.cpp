@@ -2163,6 +2163,10 @@ InputFile ASTReader::getInputFile(ModuleFile &F, unsigned ID, bool Complain) {
   }
   // FIXME: If the file is overridden and we've already opened it,
   // issue an error (or split it into a separate FileEntry).
+  // FIXME: Complain before hitting the assert. We should investigate why we
+  // hit this unforeseen case.
+  if ((Overridden || Transient) && IsOutOfDate)
+    Error(diag::err_fe_pch_file_overridden, Filename);
 
   InputFile IF = InputFile(File, Overridden || Transient, IsOutOfDate);
 
