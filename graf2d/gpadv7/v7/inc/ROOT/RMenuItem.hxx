@@ -124,32 +124,25 @@ protected:
    std::string fId;                                        ///< object identifier
    std::vector<std::unique_ptr<Detail::RMenuItem>> fItems; ///< list of items in the menu
 public:
-   /** Default constructor */
-   RMenuItems() = default;
-
-   ~RMenuItems() = default;
-
    void SetId(const std::string &id) { fId = id; }
 
-   void Add(Detail::RMenuItem *item) { fItems.emplace_back(item); }
+   auto Size() const { return fItems.size(); }
+
+   void Add(std::unique_ptr<Detail::RMenuItem> &&item) { fItems.emplace_back(std::move(item)); }
 
    void AddMenuItem(const std::string &name, const std::string &title, const std::string &exec)
    {
-      Detail::RMenuItem *item = new Detail::RMenuItem(name, title);
+      auto item = std::make_unique<Detail::RMenuItem>(name, title);
       item->SetExec(exec);
-      Add(item);
+      Add(std::move(item));
    }
 
    void AddChkMenuItem(const std::string &name, const std::string &title, bool checked, const std::string &toggle)
    {
-      Detail::RCheckedMenuItem *item = new Detail::RCheckedMenuItem(name, title, checked);
+      auto item = std::make_unique<Detail::RCheckedMenuItem>(name, title, checked);
       item->SetExec(toggle);
-      Add(item);
+      Add(std::move(item));
    }
-
-   auto Size() const { return fItems.size(); }
-
-   void Cleanup();
 
    void PopulateObjectMenu(void *obj, TClass *cl);
 };
