@@ -104,6 +104,9 @@ void tree1r()
   // in the browser, click on "ROOT Files", then on "tree1.root".
   //     you can click on the histogram icons in the right panel to draw them.
   // in the TreeViewer, follow the instructions in the Help button.
+
+  // Allow to use the TTree after the end of the function.
+  t1->ResetBranchAddresses();
 }
 
 void tree1() {
