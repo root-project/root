@@ -24,7 +24,10 @@
 #include "TSystem.h"
 #include "TROOT.h"
 #include "TBufferJSON.h"
+#include "TFile.h"
+#include "TH1F.h"
 
+#include <string>
 #include <sstream>
 #include <iostream>
 #include <algorithm>
@@ -327,19 +330,46 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
 
    if (request->sort == "DBLCLK") {
        if(request->path.find(".root") != std::string::npos) {
-            //TDirectory *rfile = (TDirectory *)gROOT->ProcessLine(TString::Format("TFile::Open(\"%s\", \"READ\")", filename.c_str()));
 
-            //TFile *file = TFile::Open(request->path.substr(0, request->path.size()-6).c_str(), "READ");
-            //TString json = TBufferJSON::ConvertToJSON(file, 32);
-            //printf(json.Data());
+           // Split of the path by /
+           std::vector<std::string> split;
+           std::string buffer;
+           std::istringstream path(request->path);
+           while (std::getline(path, buffer, '/')) {
+               split.push_back(buffer);
+           }
 
-            //TObject *obj = (TObject *) item->GetUserData();
-            //TString json = TBufferJSON::ConvertToJSON(file, 32);
-            //printf(json.Data());
-            //res.append()
+            std::string rootFilePath = "", rootFileName = "";
 
-            std::string str = "{\"path\":\"" + request->path + "\"}";
-            res = "FROOT:" + str;
+           //Iterate over the split
+            for(std::vector<int>::size_type i=0; i!=split.size(); i++) {
+
+                // If the spli contain .root
+                if(split[i].find(".root") != std::string::npos) {
+                    rootFilePath += split[i]; // Add the file to the path
+                        if(split[i+1].find("ntuple") != std::string::npos) {
+                            // TODO
+                            break;
+                        } else {
+                            rootFileName += split[i+1]; // the add the name of the file then stop
+                            break;
+                        }
+                } else {
+                    rootFilePath += split[i] + "/"; // Add the file to the path
+                }
+            }
+
+            TDirectory *file = (TDirectory *)gROOT->ProcessLine(TString::Format("TFile::Open(\"%s\", \"READ\")", rootFilePath.c_str()));
+
+            TObject *object;
+            file->GetObject(rootFileName.c_str(), object);
+            TString jsonobject = TBufferJSON::ConvertToJSON(object, 32);
+
+            res = "FROOT:";
+            std::string json = "{\"path\":\"" + request->path + "\", \"data\":";
+            res.append(json);
+            res.append(jsonobject.Data());
+            res.append("}");
        } else {
             res = "FREAD:";
             std::ifstream t(request->path);

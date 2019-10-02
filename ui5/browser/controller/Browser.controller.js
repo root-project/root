@@ -304,11 +304,12 @@ sap.ui.define(['sap/ui/core/Component',
          case "FREAD:":  // file read
              this.getView().byId("aCodeEditor").getModel().setProperty("/code", msg);
              break;
-         case "FROOT:": // Root file
+             case "FROOT:": // Root file
 
              let selecedTabID = this.getSelectedtabFromtabContainer("myTabContainer"); // The ID of the selected tab in the TabContainer
 
              let jsonAnswer = JSON.parse(msg); // message received from the server to JSON
+
              let rootFileArray = jsonAnswer.path.split("/"); // spliting the path on /
              let rootFileRelativePath = ""; // Declaration of the var to open the good file
 
@@ -332,12 +333,12 @@ sap.ui.define(['sap/ui/core/Component',
              document.getElementById("TopBrowserId--aRootCanvas" + selecedTabID).innerHTML = ""; // Clearing the canvas
              oTabElement.setAdditionalText(rootFileDisplayName); // Setting the tab file name
 
-             //let test = {"_typename" : "TKey", "_blob" : [1915, 4, 7631, 1651934934, 46, 1, 383802, 100, "TH2F", "hpxpy", "py vs px"]};
-             //JSROOT.draw("TopBrowserId--aRootCanvas" + selecedTabID, test, "colz"); // Drawing the plot into the canvas
-
+             // JSROOT.draw("TopBrowserId--aRootCanvas" + selecedTabID, jsonAnswer.data, "colz");
              // TODO: Change it to C++ read
+
              JSROOT.OpenFile("https://root.cern/js/files/hsimple.root", (file) => { //Opening a root file
                  file.ReadObject(rootFileArray[i + 1], function (obj) { //reading a root file
+                     console.log(obj, jsonAnswer.data);
                      JSROOT.draw("TopBrowserId--aRootCanvas" + selecedTabID, obj, "colz"); // Drawing the plot into the canvas
                  });
              });
