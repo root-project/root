@@ -55,16 +55,6 @@ void ROOT::Experimental::RPadBase::UseStyle(const std::shared_ptr<RStyle> &style
 }
 
 ///////////////////////////////////////////////////////////////////////////
-/// Clear style for pad and all primitives inside
-
-void ROOT::Experimental::RPadBase::ClearStyle()
-{
-   RDrawable::ClearStyle();
-   for (auto &drawable : fPrimitives)
-      drawable->ClearStyle();
-}
-
-///////////////////////////////////////////////////////////////////////////
 /// Find primitive with specified id
 
 std::shared_ptr<ROOT::Experimental::RDrawable> ROOT::Experimental::RPadBase::FindPrimitive(const std::string &id) const

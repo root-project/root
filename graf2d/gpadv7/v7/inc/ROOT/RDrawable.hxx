@@ -128,7 +128,7 @@ public:
    virtual void Execute(const std::string &);
 
    virtual void UseStyle(const std::shared_ptr<RStyle> &style) { fStyle = style; }
-   virtual void ClearStyle() { fStyle.reset(); }
+   void ClearStyle() { UseStyle(nullptr); }
 
    void SetCssClass(const std::string &cl) { fCssClass = cl; }
    const std::string &GetCssClass() const { return fCssClass; }
