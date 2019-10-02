@@ -53,6 +53,8 @@ public:
    unsigned GetIndex() const { return fIndex; }
 
    virtual void BuildFullId(const std::string &prefix);
+
+   static std::string ObjectIDFromPtr(const void *ptr);
 };
 
 // created from plain drawable without need of extra parameters

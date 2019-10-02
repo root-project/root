@@ -127,6 +127,8 @@ public:
 
    std::shared_ptr<RDrawable> FindPrimitive(const std::string &id) const;
 
+   std::shared_ptr<RDrawable> FindPrimitiveByDisplayId(const std::string &display_id) const;
+
    /// Get the elements contained in the canvas.
    auto GetPrimitives() const
    {
@@ -148,6 +150,7 @@ public:
       return true;
    }
 
+   /// Remove drawable from list of primitives
    bool Remove(const std::shared_ptr<RDrawable> &drawable)
    {
       auto iter = std::find_if(fPrimitives.begin(), fPrimitives.end(),
@@ -159,13 +162,13 @@ public:
       return true;
    }
 
+   /// Remove drawable at specified position
    bool RemoveAt(unsigned indx)
    {
       if (indx >= fPrimitives.size()) return false;
       fPrimitives[indx].reset();
       fPrimitives.erase(fPrimitives.begin() + indx);
       return true;
-
    }
 
    /// Wipe the pad by clearing the list of primitives.

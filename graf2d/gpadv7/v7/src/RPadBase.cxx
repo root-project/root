@@ -43,6 +43,9 @@ void ROOT::Experimental::RPadBase::AssignUniqueID(RDrawable *ptr)
    ptr->fId = canv->GenerateUniqueId();
 }
 
+///////////////////////////////////////////////////////////////////////////
+/// Find primitive with specified id
+
 std::shared_ptr<ROOT::Experimental::RDrawable> ROOT::Experimental::RPadBase::FindPrimitive(const std::string &id) const
 {
    for (auto &drawable : fPrimitives) {
@@ -63,6 +66,33 @@ std::shared_ptr<ROOT::Experimental::RDrawable> ROOT::Experimental::RPadBase::Fin
    return nullptr;
 }
 
+///////////////////////////////////////////////////////////////////////////
+/// Find primitive with unique id, produce for RDisplayItem
+/// Such id used for client-server identification of objects
+
+std::shared_ptr<ROOT::Experimental::RDrawable> ROOT::Experimental::RPadBase::FindPrimitiveByDisplayId(const std::string &id) const
+{
+   auto p = id.find("_");
+   if (p == std::string::npos)
+      return nullptr;
+
+   auto prim = GetPrimitive(std::stoul(id.substr(0,p)));
+   if (!prim)
+      return nullptr;
+
+   auto subid = id.substr(p+1);
+
+   if (RDisplayItem::ObjectIDFromPtr(prim.get()) == subid)
+      return prim;
+
+   auto subpad = std::dynamic_pointer_cast<RPadBase>(prim);
+
+   return subpad ? subpad->FindPrimitiveByDisplayId(subid) : nullptr;
+}
+
+///////////////////////////////////////////////////////////////////////////
+/// Create display items for all primitives in the pad
+/// Each display item gets its special id, which used later for client-server communication
 
 void ROOT::Experimental::RPadBase::DisplayPrimitives(RPadBaseDisplayItem &paditem) const
 {
@@ -82,6 +112,9 @@ void ROOT::Experimental::RPadBase::DisplayPrimitives(RPadBaseDisplayItem &padite
    }
 }
 
+///////////////////////////////////////////////////////////////////////////
+/// Divide pad on nHoriz X nVert subpads
+/// Return array of array of pads
 
 std::vector<std::vector<std::shared_ptr<ROOT::Experimental::RPad>>>
 ROOT::Experimental::RPadBase::Divide(int nHoriz, int nVert, const RPadExtent &padding)

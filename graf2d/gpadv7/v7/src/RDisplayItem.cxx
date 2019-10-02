@@ -23,11 +23,17 @@
 
 void ROOT::Experimental::RDisplayItem::SetObjectIDAsPtr(const void *ptr)
 {
-   UInt_t hash = TString::Hash(&ptr, sizeof(ptr));
-   SetObjectID(std::to_string(hash));
+   SetObjectID(ObjectIDFromPtr(ptr));
 }
 
 void ROOT::Experimental::RDisplayItem::BuildFullId(const std::string &prefix)
 {
    SetObjectID(prefix + std::to_string(GetIndex()) + "_" + GetObjectID());
+}
+
+
+std::string ROOT::Experimental::RDisplayItem::ObjectIDFromPtr(const void *ptr)
+{
+   auto hash = TString::Hash(&ptr, sizeof(ptr));
+   return std::to_string(hash);
 }
