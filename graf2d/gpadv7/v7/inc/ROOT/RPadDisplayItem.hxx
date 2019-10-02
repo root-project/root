@@ -33,13 +33,13 @@ public:
    using PadPrimitives_t = std::vector<std::unique_ptr<RDisplayItem>>;
 
 protected:
-   const RFrame *fFrame{nullptr};             ///< temporary pointer on frame object
-   const RAttrMap *fAttr{nullptr}; ///< temporary pointer on attributes
-   const RPadPos *fPos{nullptr};              ///< pad position
-   const RPadExtent *fSize{nullptr};          ///< pad size
-   std::string fTitle;                        ///< title of the pad (used for canvas)
-   std::array<int, 2> fWinSize;               ///< window size (used for canvas)
-   PadPrimitives_t fPrimitives;               ///< display items for all primitives in the pad
+   const RFrame *fFrame{nullptr};       ///< temporary pointer on frame object
+   const RAttrMap *fAttr{nullptr};      ///< temporary pointer on attributes
+   const RPadPos *fPos{nullptr};        ///< pad position
+   const RPadExtent *fSize{nullptr};    ///< pad size
+   std::string fTitle;                  ///< title of the pad (used for canvas)
+   std::array<int, 2> fWinSize;         ///< window size (used for canvas)
+   PadPrimitives_t fPrimitives;         ///< display items for all primitives in the pad
 public:
    RPadDisplayItem() = default;
    virtual ~RPadDisplayItem() {}
