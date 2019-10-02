@@ -822,22 +822,28 @@ endfunction()
 #---------------------------------------------------------------------------------------------------
 function(ROOT_ADD_INCLUDE_DIRECTORIES library)
   if(PROJECT_NAME STREQUAL "ROOT")
-    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-      target_include_directories(${library}
-        PRIVATE
-          ${CMAKE_CURRENT_SOURCE_DIR}/inc
-        INTERFACE
-          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
-      )
-    endif()
+    # Currently the *non-runtime_cxxmodules* are wired to the $ROOTSYS/include.
+    # When we have blah/inc and $ROOTSYS/include and we resolve a header file
+    # from the former, we hit redefinition errors if a module was already
+    # activated from a header in the latter.
+    if (NOT cxxmodules)
+      if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+        target_include_directories(${library}
+          PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/inc
+          INTERFACE
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+        )
+      endif()
 
-    if(root7 AND IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
-      target_include_directories(${library}
-        PRIVATE
-          ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc
-        INTERFACE
-          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>
-      )
+      if(root7 AND IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
+        target_include_directories(${library}
+          PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc
+          INTERFACE
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>
+        )
+      endif()
     endif()
 
     if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/res)
