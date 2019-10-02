@@ -304,8 +304,7 @@ sap.ui.define(['sap/ui/core/Component',
          case "FREAD:":  // file read
              this.getView().byId("aCodeEditor").getModel().setProperty("/code", msg);
              break;
-             case "FROOT:": // Root file
-
+         case "FROOT:": // Root file
              let selecedTabID = this.getSelectedtabFromtabContainer("myTabContainer"); // The ID of the selected tab in the TabContainer
 
              let jsonAnswer = JSON.parse(msg); // message received from the server to JSON
@@ -318,30 +317,21 @@ sap.ui.define(['sap/ui/core/Component',
                  rootFileRelativePath += "/" + rootFileArray[i];
                  i++;
              }
-             rootFileRelativePath += "/" + rootFileArray[i]; // Adding the last bit (the wanted plot) to the relative path
+             rootFileRelativePath += "/" + rootFileArray[i]; // Adding the last bit (the wanted graphic) to the relative path
 
              let oCanvas = this.getView().byId("aRootCanvas" + selecedTabID); // Get the drawing place object
 
-             if (oCanvas === undefined || oCanvas === null) {
+             if (oCanvas === undefined || oCanvas === null) { // If the selected tabs it not a Root canvas then display and error message
                  MessageToast.show("Please, select a Root Canvas tab", {duration: 1500});
                  return;
              }
 
              let oTabElement = oCanvas.getParent(); // Get the tab from the drawing place
-             let rootFileDisplayName = rootFileArray[i] + "/" + rootFileArray[i + 1]; // Creating a simple nameOfTheFile.root/plot;1 to display on the tab
+             let rootFileDisplayName = rootFileArray[i] + "/" + rootFileArray[i + 1]; // Creating a simple nameOfTheFile.root/graphic;1 to display on the tab
 
              document.getElementById("TopBrowserId--aRootCanvas" + selecedTabID).innerHTML = ""; // Clearing the canvas
              oTabElement.setAdditionalText(rootFileDisplayName); // Setting the tab file name
-
-             // JSROOT.draw("TopBrowserId--aRootCanvas" + selecedTabID, jsonAnswer.data, "colz");
-             // TODO: Change it to C++ read
-
-             JSROOT.OpenFile("https://root.cern/js/files/hsimple.root", (file) => { //Opening a root file
-                 file.ReadObject(rootFileArray[i + 1], function (obj) { //reading a root file
-                     console.log(obj, jsonAnswer.data);
-                     JSROOT.draw("TopBrowserId--aRootCanvas" + selecedTabID, obj, "colz"); // Drawing the plot into the canvas
-                 });
-             });
+             JSROOT.draw("TopBrowserId--aRootCanvas" + selecedTabID, JSROOT.parse(JSON.stringify(jsonAnswer.data)), "colz"); // Drawing the graphic into the selected tab canvas
 
              break;
          case "BREPL:":   // browser reply

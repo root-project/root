@@ -331,6 +331,8 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
    if (request->sort == "DBLCLK") {
        if(request->path.find(".root") != std::string::npos) {
 
+           std::string rootFilePath = "", rootFileName = "";
+
            // Split of the path by /
            std::vector<std::string> split;
            std::string buffer;
@@ -339,12 +341,12 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
                split.push_back(buffer);
            }
 
-            std::string rootFilePath = "", rootFileName = "";
-
            //Iterate over the split
+           // The goal is to have two parts
+           // The first one is the relative path of the root file to open it (rootFilePath)
+           // And the second if the name of the namecysle (rootFileName)
             for(std::vector<int>::size_type i=0; i!=split.size(); i++) {
-
-                // If the spli contain .root
+                // If the current split contain .root
                 if(split[i].find(".root") != std::string::npos) {
                     rootFilePath += split[i]; // Add the file to the path
                         if(split[i+1].find("ntuple") != std::string::npos) {
@@ -359,12 +361,13 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
                 }
             }
 
-            TDirectory *file = (TDirectory *)gROOT->ProcessLine(TString::Format("TFile::Open(\"%s\", \"READ\")", rootFilePath.c_str()));
+            TDirectory *file = (TDirectory *)gROOT->ProcessLine(TString::Format("TFile::Open(\"%s\", \"READ\")", rootFilePath.c_str())); // Opnening the wanted file
 
             TObject *object;
-            file->GetObject(rootFileName.c_str(), object);
-            TString jsonobject = TBufferJSON::ConvertToJSON(object, 32);
+            file->GetObject(rootFileName.c_str(), object); // Getting the data of the graphic into the TObject
+            TString jsonobject = TBufferJSON::ToJSON(object);
 
+            // Actual message that need to be like { path: pathOfTheFile, data: { Things returned by the GetObject } }
             res = "FROOT:";
             std::string json = "{\"path\":\"" + request->path + "\", \"data\":";
             res.append(json);
