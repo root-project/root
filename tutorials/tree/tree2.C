@@ -194,6 +194,9 @@ void tree2r()
    gPad->SetFillColor(37);
    t2->SetMarkerColor(kRed);
    t2->Draw("vect[0]:vect[1]:vect[2]");
+
+   // Allow to use the TTree after the end of the function.
+   t2->ResetBranchAddresses();
 }
 
 void tree2() {
