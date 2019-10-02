@@ -331,7 +331,8 @@ sap.ui.define(['sap/ui/core/Component',
 
              document.getElementById("TopBrowserId--aRootCanvas" + selecedTabID).innerHTML = ""; // Clearing the canvas
              oTabElement.setAdditionalText(rootFileDisplayName); // Setting the tab file name
-             JSROOT.draw("TopBrowserId--aRootCanvas" + selecedTabID, JSROOT.parse(JSON.stringify(jsonAnswer.data)), "colz"); // Drawing the graphic into the selected tab canvas
+             let finalJsonRoot = JSROOT.JSONR_unref(jsonAnswer.data); // Creating the graphic from the json
+             JSROOT.draw("TopBrowserId--aRootCanvas" + selecedTabID, finalJsonRoot, "colz"); // Drawing the graphic into the selected tab canvas
 
              break;
          case "BREPL:":   // browser reply
