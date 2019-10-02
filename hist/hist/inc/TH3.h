@@ -70,8 +70,6 @@ private:
    TH3(const TH3&);
    TH3& operator=(const TH3&); // Not implemented
 
-   using TH1::GetBinErrorLow;
-   using TH1::GetBinErrorUp;
    using TH1::Integral;
    using TH1::IntegralAndError;
 
@@ -97,6 +95,8 @@ public:
    virtual Double_t GetBinContent(Int_t bin) const { return TH1::GetBinContent(bin); }
    virtual Double_t GetBinContent(Int_t bin, Int_t) const { return TH1::GetBinContent(bin); }
    virtual Double_t GetBinContent(Int_t binx, Int_t biny, Int_t binz) const { return TH1::GetBinContent( GetBin(binx, biny, binz) ); }
+   using TH1::GetBinErrorLow;
+   using TH1::GetBinErrorUp;
    virtual Double_t GetBinErrorLow(Int_t binx, Int_t biny, Int_t binz) { return TH1::GetBinErrorLow( GetBin(binx, biny, binz) ); }
    virtual Double_t GetBinErrorUp(Int_t binx, Int_t biny, Int_t binz)  { return TH1::GetBinErrorUp( GetBin(binx, biny, binz) ); }
    virtual Double_t GetBinWithContent3(Double_t c, Int_t &binx, Int_t &biny, Int_t &binz, Int_t firstx=0, Int_t lastx=0,Int_t firsty=0, Int_t lasty=0, Int_t firstz=0, Int_t lastz=0, Double_t maxdiff=0) const;

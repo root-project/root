@@ -65,9 +65,6 @@ private:
    TH2& operator=(const TH2&); // Not implemented
 
    // make private methods which have a TH1 signature and should not
-   // be called for a TH2
-   using TH1::GetBinErrorLow;
-   using TH1::GetBinErrorUp;
    using TH1::Integral;
    using TH1::IntegralAndError;
 
@@ -91,6 +88,8 @@ public:
    virtual Double_t GetBinContent(Int_t bin) const { return TH1::GetBinContent(bin); }
    virtual Double_t GetBinContent(Int_t binx, Int_t biny) const { return TH1::GetBinContent( GetBin(binx, biny) ); }
    virtual Double_t GetBinContent(Int_t binx, Int_t biny, Int_t) const { return TH1::GetBinContent( GetBin(binx, biny) ); }
+   using TH1::GetBinErrorLow;
+   using TH1::GetBinErrorUp;
    virtual Double_t GetBinErrorLow(Int_t binx, Int_t biny) { return TH1::GetBinErrorLow( GetBin(binx, biny) ); }
    virtual Double_t GetBinErrorUp(Int_t binx, Int_t biny) { return TH1::GetBinErrorUp( GetBin(binx, biny) ); }
    virtual Double_t GetCorrelationFactor(Int_t axis1=1,Int_t axis2=2) const;
