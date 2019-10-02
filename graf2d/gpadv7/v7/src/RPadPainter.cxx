@@ -8,14 +8,7 @@
 #include <ROOT/RPadPainter.hxx>
 
 #include <ROOT/RPadDisplayItem.hxx>
-#include <ROOT/RPad.hxx>
-
-
-/// destructor
-ROOT::Experimental::Internal::RPadPainter::~RPadPainter()
-{
-   // defined here, while TPadDisplayItem only included here
-}
+#include <ROOT/RPadBase.hxx>
 
 
 void ROOT::Experimental::Internal::RPadPainter::AddDisplayItem(std::unique_ptr<RDisplayItem> &&item)
@@ -24,11 +17,12 @@ void ROOT::Experimental::Internal::RPadPainter::AddDisplayItem(std::unique_ptr<R
    fPadDisplayItem->Add(std::move(item));
 }
 
-void ROOT::Experimental::Internal::RPadPainter::PaintDrawables(const RPadBase &pad)
+void ROOT::Experimental::Internal::RPadPainter::PaintDrawables(const RPadBase &pad, RPadBaseDisplayItem *paditem)
 {
-   fPadDisplayItem = std::make_unique<RPadDisplayItem>();
+   fPadDisplayItem = paditem;
 
-   fPadDisplayItem->SetFrame(pad.GetFrame());
+   paditem->SetAttributes(&pad.GetAttrMap());
+   paditem->SetFrame(pad.GetFrame());
 
    auto primitives = pad.GetPrimitives();
 
@@ -39,4 +33,5 @@ void ROOT::Experimental::Internal::RPadPainter::PaintDrawables(const RPadBase &p
       drawable->Paint(*this);
    }
 
+   fPadDisplayItem = nullptr;
 }
