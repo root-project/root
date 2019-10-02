@@ -43,8 +43,6 @@ private:
    /// Modify counter, incremented every time canvas is changed
    uint64_t fModified{0}; ///<!
 
-   uint64_t fIdCounter{2};   ///< counter for objects, id==1 is canvas itself
-
    /// The painter of this canvas, bootstrapping the graphics connection.
    /// Unmapped canvases (those that never had `Draw()` invoked) might not have
    /// a painter.
@@ -55,8 +53,6 @@ private:
 
    /// Disable assignment for now.
    RCanvas &operator=(const RCanvas &) = delete;
-
-   std::string GenerateUniqueId();
 
 public:
    static std::shared_ptr<RCanvas> Create(const std::string &title);
