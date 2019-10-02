@@ -772,4 +772,6 @@ typedefs (in particular `Double32_t`)
 
 These changes will be part of a future 6.18/06.
 
-* None so far.
+### TTree Libraries
+
+* Prevent a noticeable memory leak when reading uncompressed TTree.
