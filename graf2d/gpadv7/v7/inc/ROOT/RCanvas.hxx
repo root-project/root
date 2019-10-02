@@ -16,7 +16,7 @@
 #ifndef ROOT7_RCanvas
 #define ROOT7_RCanvas
 
-#include "ROOT/RPad.hxx"
+#include "ROOT/RPadBase.hxx"
 #include "ROOT/RVirtualCanvasPainter.hxx"
 
 #include <memory>
