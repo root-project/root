@@ -26,3 +26,8 @@ void ROOT::Experimental::RDisplayItem::SetObjectIDAsPtr(const void *ptr)
    UInt_t hash = TString::Hash(&ptr, sizeof(ptr));
    SetObjectID(std::to_string(hash));
 }
+
+void ROOT::Experimental::RDisplayItem::BuildFullId(const std::string &prefix)
+{
+   SetObjectID(prefix + std::to_string(GetIndex()) + "_" + GetObjectID());
+}
