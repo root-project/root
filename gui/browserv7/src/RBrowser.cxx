@@ -326,7 +326,7 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
       return res;
 
    if (request->sort == "DBLCLK") {
-       if(request->path.find(".root") != std::string::npos) {
+       if (request->path.find(".root") != std::string::npos) {
 
            std::string rootFilePath = "", rootFileName = "";
 
@@ -342,11 +342,11 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
            // The goal is to have two parts
            // The first one is the relative path of the root file to open it (rootFilePath)
            // And the second if the name of the namecysle (rootFileName)
-            for(std::vector<int>::size_type i=0; i!=split.size(); i++) {
+            for (std::vector<int>::size_type i=0; i!=split.size(); i++) {
                 // If the current split contain .root
-                if(split[i].find(".root") != std::string::npos) {
+                if (split[i].find(".root") != std::string::npos) {
                     rootFilePath += split[i]; // Add the file to the path
-                        if(split[i+1].find("ntuple") != std::string::npos) {
+                        if (split[i+1].find("ntuple") != std::string::npos) {
                             // TODO
                             break;
                         } else {

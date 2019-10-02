@@ -305,36 +305,36 @@ sap.ui.define(['sap/ui/core/Component',
              this.getView().byId("aCodeEditor").getModel().setProperty("/code", msg);
              break;
          case "FROOT:": // Root file
-             let selecedTabID = this.getSelectedtabFromtabContainer("myTabContainer"); // The ID of the selected tab in the TabContainer
+           let selecedTabID = this.getSelectedtabFromtabContainer("myTabContainer"); // The ID of the selected tab in the TabContainer
 
-             let jsonAnswer = JSON.parse(msg); // message received from the server to JSON
+           let jsonAnswer = JSON.parse(msg); // message received from the server to JSON
 
-             let rootFileArray = jsonAnswer.path.split("/"); // spliting the path on /
-             let rootFileRelativePath = ""; // Declaration of the var to open the good file
+           let rootFileArray = jsonAnswer.path.split("/"); // spliting the path on /
+           let rootFileRelativePath = ""; // Declaration of the var to open the good file
 
-             let i = 0; // Iterator
-             while (rootFileArray[i].slice(-5) !== ".root") { // Iterating over the splited path until it find the .root file
-                 rootFileRelativePath += "/" + rootFileArray[i];
-                 i++;
-             }
-             rootFileRelativePath += "/" + rootFileArray[i]; // Adding the last bit (the wanted graphic) to the relative path
+           let i = 0; // Iterator
+           while (rootFileArray[i].slice(-5) !== ".root") { // Iterating over the splited path until it find the .root file
+             rootFileRelativePath += "/" + rootFileArray[i];
+             i++;
+           }
+           rootFileRelativePath += "/" + rootFileArray[i]; // Adding the last bit (the wanted graphic) to the relative path
 
-             let oCanvas = this.getView().byId("aRootCanvas" + selecedTabID); // Get the drawing place object
+           let oCanvas = this.getView().byId("aRootCanvas" + selecedTabID); // Get the drawing place object
 
-             if (oCanvas === undefined || oCanvas === null) { // If the selected tabs it not a Root canvas then display and error message
-                 MessageToast.show("Please, select a Root Canvas tab", {duration: 1500});
-                 return;
-             }
+           if (oCanvas === undefined || oCanvas === null) { // If the selected tabs it not a Root canvas then display and error message
+             MessageToast.show("Please, select a Root Canvas tab", {duration: 1500});
+             return;
+           }
 
-             let oTabElement = oCanvas.getParent(); // Get the tab from the drawing place
-             let rootFileDisplayName = rootFileArray[i] + "/" + rootFileArray[i + 1]; // Creating a simple nameOfTheFile.root/graphic;1 to display on the tab
+           let oTabElement = oCanvas.getParent(); // Get the tab from the drawing place
+           let rootFileDisplayName = rootFileArray[i] + "/" + rootFileArray[i + 1]; // Creating a simple nameOfTheFile.root/graphic;1 to display on the tab
 
-             document.getElementById("TopBrowserId--aRootCanvas" + selecedTabID).innerHTML = ""; // Clearing the canvas
-             oTabElement.setAdditionalText(rootFileDisplayName); // Setting the tab file name
-             let finalJsonRoot = JSROOT.JSONR_unref(jsonAnswer.data); // Creating the graphic from the json
-             JSROOT.draw("TopBrowserId--aRootCanvas" + selecedTabID, finalJsonRoot, "colz"); // Drawing the graphic into the selected tab canvas
+           document.getElementById("TopBrowserId--aRootCanvas" + selecedTabID).innerHTML = ""; // Clearing the canvas
+           oTabElement.setAdditionalText(rootFileDisplayName); // Setting the tab file name
+           let finalJsonRoot = JSROOT.JSONR_unref(jsonAnswer.data); // Creating the graphic from the json
+           JSROOT.draw("TopBrowserId--aRootCanvas" + selecedTabID, finalJsonRoot, "colz"); // Drawing the graphic into the selected tab canvas
 
-             break;
+           break;
          case "BREPL:":   // browser reply
             if (this.model) {
                var bresp = JSON.parse(msg);
