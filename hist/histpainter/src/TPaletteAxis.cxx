@@ -75,10 +75,10 @@ can be used to set the axis attributes.
 
 It is possible to select a range on the axis to set the min/max in z
 
-As default labels and ticks are drawn by `TGAxis` at equidistant (lin or log) 
+As default labels and ticks are drawn by `TGAxis` at equidistant (lin or log)
 points as controlled by SetNdivisions.
-If option "CJUST" is given labels and ticks are justified at the 
-color boundaries defined by the contour levels. 
+If option "CJUST" is given labels and ticks are justified at the
+color boundaries defined by the contour levels.
 In this case no optimization can be done. It is responsiblity of the
 user to adjust minimum, maximum of the histogram and/or the contour levels
 to get a reasonable look of the plot.
@@ -88,7 +88,7 @@ This option is especially useful with user defined contours.
 An example is shown here:
 Begin_Macro(source)
 {
-	gStyle->SetOptStat(0);
+   gStyle->SetOptStat(0);
    TCanvas *c1 = new TCanvas("c1","exa_CJUST",300,10,400,400);
    TH2F *hpxpy = new TH2F("hpxpy","py vs px",40,-4,4,40,-4,4);
    // Fill histograms randomly
@@ -97,15 +97,15 @@ Begin_Macro(source)
    for (Int_t i = 0; i < 25000; i++) {
       randomNum.Rannor(px,py);
       hpxpy->Fill(px,py);
-	}
-	hpxpy->SetMaximum(200);
-	Double_t zcontours[5] = {0, 20, 40, 80, 120};
-	hpxpy->SetContour(5, zcontours);
-	hpxpy->GetZaxis()->SetTickSize(0.01);
-	hpxpy->GetZaxis()->SetLabelOffset(0.01);
-	gPad->SetRightMargin(0.13);
-	hpxpy->SetTitle("User contours, CJUST");
-	hpxpy->Draw("COL Z CJUST");
+   }
+   hpxpy->SetMaximum(200);
+   Double_t zcontours[5] = {0, 20, 40, 80, 120};
+   hpxpy->SetContour(5, zcontours);
+   hpxpy->GetZaxis()->SetTickSize(0.01);
+   hpxpy->GetZaxis()->SetLabelOffset(0.01);
+   gPad->SetRightMargin(0.13);
+   hpxpy->SetTitle("User contours, CJUST");
+   hpxpy->Draw("COL Z CJUST");
 }
 End_Macro
 */
@@ -489,14 +489,14 @@ void TPaletteAxis::Paint(Option_t *)
             label->PaintLatex(xmax + lof, y1, 0, lsize, Form("%g", zlab));
             prevlab = y1;
          }
-         line->PaintLine(xmax-tlength, y1, xmax, y1); 
+         line->PaintLine(xmax-tlength, y1, xmax, y1);
          if (i == ndivz-1) {
             // label + tick at top of axis
             if ((y2 - prevlab > 1.5*lsize_user))
-               label->PaintLatex(xmax + lof, y2, 0, lsize, Form("%g",fH->GetMaximum())); 
-            line->PaintLine(xmax-tlength, y2, xmax, y2); 
+               label->PaintLatex(xmax + lof, y2, 0, lsize, Form("%g",fH->GetMaximum()));
+            line->PaintLine(xmax-tlength, y2, xmax, y2);
          }
-      }  
+      }
    }
    Int_t ndiv  = fH->GetZaxis()->GetNdivisions() % 100; //take primary divisions only
    char chopt[6] = "S   ";
@@ -515,7 +515,7 @@ void TPaletteAxis::Paint(Option_t *)
    // case option "CJUST", cleanup
       delete label;
       delete line;
-   } else { 
+   } else {
       // default
       fAxis.PaintAxis(xmax, ymin, xmax, ymax, wmin, wmax, ndiv, chopt);
    }
