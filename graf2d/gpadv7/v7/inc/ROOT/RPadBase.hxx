@@ -57,8 +57,6 @@ private:
    /// Disable assignment.
    RPadBase &operator=(const RPadBase &) = delete;
 
-   void AssignUniqueID(RDrawable *ptr);
-
 protected:
    /// Allow derived classes to default construct a RPadBase.
    RPadBase() : RDrawable("pad") {}
@@ -82,6 +80,7 @@ public:
    /// \returns vector of vector (ret[x][y]) of created pads.
    std::vector<std::vector<std::shared_ptr<RPad>>> Divide(int nHoriz, int nVert, const RPadExtent &padding = {});
 
+   /// Create drawable of specified class T
    template<class T, class... ARGS>
    auto Draw(ARGS... args)
    {
@@ -89,16 +88,13 @@ public:
 
       fPrimitives.emplace_back(drawable);
 
-      AssignUniqueID(fPrimitives.back().get());
-
       return drawable;
    }
 
+   /// Add existing drawable instance to canvas
    auto Draw(std::shared_ptr<RDrawable> &&drawable)
    {
       fPrimitives.emplace_back(std::move(drawable));
-
-      AssignUniqueID(fPrimitives.back().get());
 
       return fPrimitives.back().get_shared();
    }
@@ -114,13 +110,13 @@ public:
 
       fPrimitives.emplace_back(drawable);
 
-      AssignUniqueID(fPrimitives.back().get());
-
       return drawable;
    }
 
+   /// returns number of primitives in the pad
    unsigned NumPrimitives() const { return fPrimitives.size(); }
 
+   /// returns primitive of given number
    std::shared_ptr<RDrawable> GetPrimitive(unsigned num) const
    {
       if (num >= fPrimitives.size()) return nullptr;
@@ -131,7 +127,7 @@ public:
 
    std::shared_ptr<RDrawable> FindPrimitiveByDisplayId(const std::string &display_id) const;
 
-   /// Get the elements contained in the canvas.
+   /// Get all primitives contained in the pad.
    auto GetPrimitives() const
    {
       Primitives_t res;

@@ -29,20 +29,6 @@ using namespace std::string_literals;
 
 ROOT::Experimental::RPadBase::~RPadBase() = default;
 
-void ROOT::Experimental::RPadBase::AssignUniqueID(RDrawable *ptr)
-{
-   if (!ptr)
-      return;
-
-   RCanvas *canv = GetCanvas();
-   if (!canv) {
-      R__ERROR_HERE("Gpad") << "Cannot access canvas when unique object id should be assigned";
-      return;
-   }
-
-   ptr->fId = canv->GenerateUniqueId();
-}
-
 ///////////////////////////////////////////////////////////////////////////
 /// Use provided style for pad and all primitives inside
 
