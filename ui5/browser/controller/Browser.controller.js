@@ -436,6 +436,8 @@ sap.ui.define(['sap/ui/core/Component',
          });
          oTabContainerItem.addContent(html);
 
+         oTabContainer.setSelectedItem(oTabContainerItem);
+
          this.getView().byId("aRootCanvas" + ID).setModel(new JSONModel({
             rootCanvas: ""
          }));
