@@ -113,6 +113,7 @@ typedefs (in particular `Double32_t`)
 ## TTree Libraries
 
 * Prevent a situation in `TTreeFormula` when stale cached information was re-used.
+* Prevent a noticeable memory leak when reading uncompressed TTree.
 
 ## Histogram Libraries
 
