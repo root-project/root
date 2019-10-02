@@ -627,9 +627,11 @@ std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Exper
 
    can.DisplayPrimitives(*canvitem.get());
 
-   canvitem->SetObjectID("canvas"); // for canvas itself use special id
    canvitem->SetTitle(can.GetTitle());
    canvitem->SetWindowSize(can.GetSize());
+
+   canvitem->BuildFullId(""); // create object id which unique identify it via pointer and position in subpads
+   canvitem->SetObjectID("canvas"); // for canvas itself use special id
 
    TString res = TBufferJSON::ToJSON(canvitem.get(), fJsonComp);
 

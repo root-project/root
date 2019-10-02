@@ -69,13 +69,16 @@ void ROOT::Experimental::RPadBase::DisplayPrimitives(RPadBaseDisplayItem &padite
    paditem.SetAttributes(&GetAttrMap());
    paditem.SetFrame(GetFrame());
 
-   unsigned cnt = 0;
+   unsigned indx = 0;
 
    for (auto &drawable : fPrimitives) {
       auto item = drawable->Display();
-      item->SetObjectIDAsPtr(drawable.get());
-      item->PrependID(std::to_string(cnt) + "_"s);
-      paditem.Add(std::move(item));
+      if (item) {
+         item->SetObjectIDAsPtr(drawable.get());
+         item->SetIndex(indx);
+         paditem.Add(std::move(item));
+      }
+      ++indx;
    }
 }
 
