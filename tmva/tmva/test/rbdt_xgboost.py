@@ -76,6 +76,12 @@ class RBDT(unittest.TestCase):
         """
         _test_XGBBinary("TMVA::Experimental::BranchlessForest<float>", "branchlessForest")
 
+    def test_XGBBinary_branchlessjitted(self):
+        """
+        Test BranchlessJittedForest backend for model trained with binary XGBClassifier
+        """
+        _test_XGBBinary("TMVA::Experimental::BranchlessJittedForest<float>", "branchlessJittedForest")
+
     def test_XGBMulticlass_default(self):
         """
         Test default backend for model trained with multiclass XGBClassifier
@@ -88,6 +94,12 @@ class RBDT(unittest.TestCase):
         """
         _test_XGBMulticlass("TMVA::Experimental::BranchlessForest<float>", "branchlessForest")
 
+    def test_XGBMulticlass_branchlessjitted(self):
+        """
+        Test BranchlessJittedForest backend for model trained with multiclass XGBClassifier
+        """
+        _test_XGBMulticlass("TMVA::Experimental::BranchlessJittedForest<float>", "branchlessJittedForest")
+
     def test_XGBRegression_default(self):
         """
         Test default backend for model trained with XGBRegressor
@@ -99,6 +111,12 @@ class RBDT(unittest.TestCase):
         Test BranchlessForest backend for model trained with XGBRegressor
         """
         _test_XGBRegression("TMVA::Experimental::BranchlessForest<float>", "branchlessForest")
+
+    def test_XGBRegression_branchlessjitted(self):
+        """
+        Test BranchlessJittedForest backend for model trained with XGBRegressor
+        """
+        _test_XGBRegression("TMVA::Experimental::BranchlessJittedForest<float>", "branchlessJittedForest")
 
 
 if __name__ == '__main__':
