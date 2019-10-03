@@ -1,10 +1,3 @@
-/// \file RObjectDrawable.cxx
-/// \ingroup CanvasPainter ROOT7
-/// \author Axel Naumann <axel@cern.ch>
-/// \date 2017-05-31
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
-
 /*************************************************************************
  * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *

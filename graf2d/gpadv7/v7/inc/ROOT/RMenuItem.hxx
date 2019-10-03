@@ -1,10 +1,3 @@
-/// \file ROOT/RMenuItem.hxx
-/// \ingroup Base ROOT7
-/// \author Sergey Linev
-/// \date 2017-06-29
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
-
 /*************************************************************************
  * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -27,8 +20,12 @@ namespace Experimental {
 namespace Detail {
 
 /** \class RMenuItem
-  Class contains info for producing menu item on the JS side.
-  */
+\ingroup BaseROOT7
+\brief Class contains info for producing menu item on the JS side.
+\author Sergey Linev
+\date 2017-06-29
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RMenuItem {
 protected:

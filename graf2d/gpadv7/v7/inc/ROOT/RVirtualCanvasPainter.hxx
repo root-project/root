@@ -1,10 +1,3 @@
-/// \file ROOT/RVirtualCanvasPainter.hxx
-/// \ingroup Gpad ROOT7
-/// \author Axel Naumann <axel@cern.ch>
-/// \date 2017-05-31
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
-
 /*************************************************************************
  * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -31,8 +24,12 @@ class RWebWindow;
 namespace Internal {
 
 /** \class ROOT::Experimental::Internal::RVirtualCanvasPainter
-  Abstract interface for painting a canvas.
-  */
+\ingroup GpadROOT7
+\brief Abstract interface for painting a canvas.
+\author Axel Naumann <axel@cern.ch>
+\date 2017-05-31
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RVirtualCanvasPainter {
 protected:

@@ -1,10 +1,3 @@
-/// \file ROOT/RPalette.hxx
-/// \ingroup Gpad ROOT7
-/// \author Axel Naumann <axel@cern.ch>
-/// \date 2017-09-26
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
-
 /*************************************************************************
  * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -25,8 +18,9 @@
 namespace ROOT {
 namespace Experimental {
 
-/** \class ROOT::Experimental::RPalette
-  A set of colors. `RColor`s can be conveniently generated from this.
+/** \class RPalette
+\ingroup GpadROOT7
+\brief A set of colors. `RColor`s can be conveniently generated from this.
 
   A palette associates a color with an ordinal number: for a normalized palette,
   this number ranges from 0..1. For user-valued palettes, the palette yields a color for
@@ -34,12 +28,16 @@ namespace Experimental {
 
   A palette can be a smooth gradients by interpolation of support points, or a set of
   discrete colors.
-  */
+
+\author Axel Naumann <axel@cern.ch>
+\date 2017-09-26
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+
+*/
+
 class RPalette {
 public:
-   /** \class ROOT::Experimental::RPalette::OrdinalAndColor
-    An ordinal value and its associated color.
-    */
+   /// An ordinal value and its associated color.
    struct OrdinalAndColor {
       double fOrdinal; ///< The value associated with the color.
       RColor fColor;   ///< The color associated with the value.

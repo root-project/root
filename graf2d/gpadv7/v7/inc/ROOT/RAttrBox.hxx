@@ -1,10 +1,3 @@
-/// \file ROOT/RAttrBox.hxx
-/// \ingroup Gpad ROOT7
-/// \author Axel Naumann <axel@cern.ch>
-/// \date 2018-10-17
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
-
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -23,9 +16,14 @@
 namespace ROOT {
 namespace Experimental {
 
-/** class ROOT::Experimental::RAttrBox
- Drawing attributes for a box: rectangular lines with size and position.
- */
+/** \class RAttrBox
+\ingroup GpadROOT7
+\author Axel Naumann <axel@cern.ch>
+\date 2018-10-17
+\brief Drawing attributes for a box: rectangular lines with size and position.
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
+
 class RAttrBox : public RAttrBase {
 
    RAttrLine fBorder{this, "border_"};       ///<!
