@@ -55,7 +55,7 @@ FIND_LIBRARY(
 )
 FIND_LIBRARY(
     ORACLE_LIBRARY_LNNZ
-    NAMES libnnz10 nnz10 libnnz11 nnz11 libnnz12 nnz12 nnz18 ociw32
+    NAMES libnnz10 nnz10 libnnz11 nnz11 libnnz12 nnz12 nnz18 nnz19 ociw32
     PATHS ${ORACLE_LIB_LOCATION}
 )
 
