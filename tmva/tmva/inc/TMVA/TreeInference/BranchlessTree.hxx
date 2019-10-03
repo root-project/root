@@ -22,6 +22,8 @@
 
 #include <vector>
 #include <algorithm>
+#include <string>
+#include <sstream>
 
 namespace TMVA {
 namespace Experimental {
@@ -52,7 +54,7 @@ void RecursiveFill(int thisIndex, int lastIndex, int treeDepth, int maxTreeDepth
 
 } // namespace Internal
 
-/// \class Tree
+/// \class BranchlessTree
 /// \brief Branchless representation of a decision tree using topological ordering
 ///
 /// \tparam T Value type for the computation (usually floating point type)
@@ -64,6 +66,7 @@ struct BranchlessTree {
 
    inline T Inference(const T *input, const int stride);
    inline void FillSparse();
+   inline std::string GetInferenceCode(const std::string& funcName, const std::string& typeName);
 };
 
 /// Perform inference on a single input vector
@@ -95,6 +98,51 @@ inline void BranchlessTree<T>::FillSparse()
 
    // Replace feature indices of -1 with 0
    std::replace(fInputs.begin(), fInputs.end(), -1.0, 0.0);
+}
+
+/// Get code for compiling the inference function of the branchless tree with
+/// the current thresholds and cut variables
+///
+/// \param[in] funcName Name of the function
+/// \param[in] typeName Name of the type used for the computation
+/// \param[out] Code of the inference function as string
+template <typename T>
+inline std::string BranchlessTree<T>::GetInferenceCode(const std::string& funcName, const std::string& typeName)
+{
+   std::stringstream ss;
+
+   // Build signature
+   ss << "inline " << typeName << " " << funcName << "(const " << typeName << "* input, const int stride)";
+
+   // Function body
+   ss << "\n{\n";
+
+   // Hard-code thresholds and cut variables
+   ss << "   const int inputs[" << fInputs.size() << "] = {";
+   int last = static_cast<int>(fInputs.size() - 1);
+   for (int i = 0; i < last + 1; i++) {
+      ss << fInputs[i];
+      if (i != last) ss << ", ";
+   }
+   ss << "};\n";
+
+   ss << "   const " << typeName << " thresholds[" << fThresholds.size() << "] = {";
+   last = static_cast<int>(fThresholds.size() - 1);
+   for (int i = 0; i < last + 1; i++) {
+      ss << fThresholds[i];
+      if (i != last) ss << ", ";
+   }
+   ss << "};\n";
+
+   // Add inference code
+   ss << "   int index = 0;\n";
+   for (int level = 0; level < fTreeDepth; ++level) {
+      ss << "   index = 2 * index + 1 + (input[inputs[index] * stride] > thresholds[index]);\n";
+   }
+   ss << "   return thresholds[index];\n";
+   ss << "}";
+
+   return ss.str();
 }
 
 } // namespace Experimental
