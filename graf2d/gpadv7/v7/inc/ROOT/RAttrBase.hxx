@@ -1,10 +1,3 @@
-/// \file ROOT/RAttrBase.hxx
-/// \ingroup Gpad ROOT7
-/// \author Sergey Linev <s.linev@gsi.de>
-/// \date 2019-09-17
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
-
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -23,7 +16,14 @@
 namespace ROOT {
 namespace Experimental {
 
-/** Base class for all attributes, used with RDrawable */
+/** \class RAttrBase
+\ingroup GpadROOT7
+\author Sergey Linev <s.linev@gsi.de>
+\date 2019-09-17
+\brief Base class for all attributes, used with RDrawable
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
+
 class RAttrBase {
 
    friend class RAttrMap;

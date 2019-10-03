@@ -1,10 +1,3 @@
-/// \file ROOT/RStyleReader.hxx
-/// \ingroup Gpad ROOT7
-/// \author Axel Naumann <axel@cern.ch>
-/// \date 2017-09-29
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
-
 /*************************************************************************
  * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -26,10 +19,14 @@
 namespace ROOT {
 namespace Experimental {
 namespace Internal {
-/** \class ROOT::Experimental::RStyleReader
- Reads the attribute config values from `.rootstylerc`. If the style entry is not found there, tries `~/.rootstylerc`
- and finally `$ROOTSYS/etc/system.rootstylerc`.
-  */
+/** \class RStyleReader
+\ingroup GpadROOT7
+\brief Reads the attribute config values from `.rootstylerc`.
+If the style entry is not found there, tries `~/.rootstylerc` and finally `$ROOTSYS/etc/system.rootstylerc`.
+\author Axel Naumann <axel@cern.ch>
+\date 2017-09-29
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 /*
 class RStyleReader {

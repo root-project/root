@@ -1,10 +1,3 @@
-/// \file ROOT/RLine.hxx
-/// \ingroup Graf ROOT7
-/// \author Olivier Couet <Olivier.Couet@cern.ch>
-/// \date 2017-10-16
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
-
 /*************************************************************************
  * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -24,6 +17,14 @@
 
 namespace ROOT {
 namespace Experimental {
+
+/** \class RLine
+\ingroup GrafROOT7
+\brief A simple line.
+\author Olivier Couet <Olivier.Couet@cern.ch>
+\date 2017-10-16
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RLine : public RDrawable {
 

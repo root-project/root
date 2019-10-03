@@ -1,10 +1,3 @@
-/// \file ROOT/RPadExtent.hxx
-/// \ingroup Gpad ROOT7
-/// \author Axel Naumann <axel@cern.ch>
-/// \date 2017-07-07
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
-
 /*************************************************************************
  * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -24,9 +17,13 @@
 namespace ROOT {
 namespace Experimental {
 
-/** \class ROOT::Experimental::RPadExtent
-  An extent / size (horizontal and vertical) in a `RPad`.
-  */
+/** \class RPadExtent
+\ingroup GpadROOT7
+\brief An extent / size (horizontal and vertical) in a `RPad`.
+\author Axel Naumann <axel@cern.ch>
+\date 2017-07-07
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 class RPadExtent  {
 
    RPadLength fHoriz;   ///<  horizontal part
@@ -78,9 +75,10 @@ public:
       return *this;
    };
 
-   /** \class ScaleFactor
-      A scale factor (separate factors for horizontal and vertical) for scaling a `RPadLength`.
-      */
+   /** \struct ScaleFactor
+       \ingroup GpadROOT7
+       \brief A scale factor (separate factors for horizontal and vertical) for scaling a `RPadLength`.
+   */
    struct ScaleFactor {
       double fHoriz; ///< Horizontal scale factor
       double fVert;  ///< Vertical scale factor

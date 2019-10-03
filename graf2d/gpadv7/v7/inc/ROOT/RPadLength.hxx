@@ -1,9 +1,9 @@
-/// \file ROOT/RPadLength.hxx
-/// \ingroup Gpad ROOT7
+/// \defgroup ROOT7PadCoordSystems ROOT7 RPad coordinate systems
+/// \ingroup ROOT7Graphics
+/// \brief The ROOT7 RPad coordinate systems.
+///
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2017-07-06
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
@@ -21,6 +21,11 @@
 
 namespace ROOT {
 namespace Experimental {
+
+   /** \class RPadLength
+       \ingroup ROOT7PadCoordSystems
+       \brief A length in RPad.
+    */
 
 class RPadLength  {
 
@@ -67,29 +72,36 @@ public:
       // no ==, !=
    };
 
-   /// \defgroup PadCoordSystems RPad coordinate systems
-   /// These define typesafe coordinates used by RPad to identify which coordinate system a coordinate is referring to.
+   /// \defgroup TypesafeCoordinates Typesafe Coordinates
+   /// \ingroup ROOT7PadCoordSystems
+   /// These define typesafe coordinates used by RPad to identify which coordinate system a coordinate is referring to
    /// The origin (0,0) is in the `RPad`'s bottom left corner for all of them.
    /// \{
 
-   /** \class Normal
-     A normalized coordinate: 0 in the left, bottom corner, 1 in the top, right corner of the `RPad`. Resizing the pad
-     will resize the objects with it.
+   /** \struct Normal
+       \brief A normalized coordinate.
+
+     0 in the left, bottom corner, 1 in the top, right corner of the `RPad`.
+     Resizing the pad will resize the objects with it.
     */
    struct Normal: CoordSysBase<Normal> {
       using CoordSysBase<Normal>::CoordSysBase;
    };
 
-   /** \class Pixel
-     A pixel coordinate: 0 in the left, bottom corner, 1 in the top, right corner of the `RPad`. Resizing the pad will
-     keep the pixel-position of the objects positioned in `Pixel` coordinates.
+   /** \struct Pixel
+       \brief A pixel coordinate.
+
+     0 in the left, bottom corner, 1 in the top, right corner of the `RPad`.
+     Resizing the pad will keep the pixel-position of the objects positioned in `Pixel` coordinates.
     */
    struct Pixel: CoordSysBase<Pixel> {
       using CoordSysBase<Pixel>::CoordSysBase;
    };
 
-   /** \class User
-     A user coordinate, as defined by the EUserCoordSystem parameter of the `RPad`.
+   /** \struct User
+       \brief A user coordinate.
+
+       as defined by the EUserCoordSystem parameter of the `RPad`.
     */
    struct User: CoordSysBase<User> {
       using CoordSysBase<User>::CoordSysBase;
