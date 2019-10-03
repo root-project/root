@@ -1,11 +1,3 @@
-/// \file ROOT/RPadBase.hxx
-/// \ingroup Gpad ROOT7
-/// \author Axel Naumann <axel@cern.ch>
-/// \author Sergey Linev <s.linev@gsi.de>
-/// \date 2019-10-02
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
-
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -35,8 +27,12 @@ class RCanvas;
 class RPadBaseDisplayItem;
 
 /** \class ROOT::Experimental::RPadBase
-  Base class for graphic containers for `RDrawable`-s.
-  */
+\ingroup GpadROOT7
+\brief Base class for graphic containers for `RDrawable`-s.
+\authors Axel Naumann <axel@cern.ch> Sergey Linev <s.linev@gsi.de>
+\date 2019-10-02
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RPadBase : public RDrawable {
 

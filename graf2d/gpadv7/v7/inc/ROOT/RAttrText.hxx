@@ -1,10 +1,3 @@
-/// \file ROOT/RAttrText.hxx
-/// \ingroup Gpad ROOT7
-/// \author Axel Naumann <axel@cern.ch>
-/// \date 2018-10-12
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
-
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -24,9 +17,13 @@
 namespace ROOT {
 namespace Experimental {
 
-/** \class ROOT::Experimental::RText
- A text.
- */
+/** \class RAttrText
+\ingroup GpadROOT7
+\brief A text.attributes.
+\author Axel Naumann <axel@cern.ch>
+\date 2018-10-12
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 
 class RAttrText : public RAttrBase {

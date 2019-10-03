@@ -1,10 +1,3 @@
-/// \file ROOT/RStyle.hxx
-/// \ingroup Gpad ROOT7
-/// \author Axel Naumann <axel@cern.ch>
-/// \date 2017-10-10
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
-
 /*************************************************************************
  * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -29,9 +22,13 @@ namespace Experimental {
 
 class RDrawable;
 
-/** \class ROOT::Experimental::RStyle
-  A set of defaults for graphics attributes, e.g. for histogram fill color, line width, frame offsets etc.
-  */
+/** \class RStyle
+\ingroup GpadROOT7
+\brief A set of defaults for graphics attributes, e.g. for histogram fill color, line width, frame offsets etc.
+\author Axel Naumann <axel@cern.ch>
+\date 2017-10-10
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RStyle {
 public:

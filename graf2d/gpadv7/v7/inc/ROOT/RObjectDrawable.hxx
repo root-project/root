@@ -1,10 +1,3 @@
-/// \file ROOT/RObjectDrawable.hxx
-/// \ingroup Base ROOT7
-/// \author Sergey Linev
-/// \date 2017-05-31
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
-
 /*************************************************************************
  * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -25,8 +18,14 @@ namespace Experimental {
 
 class RPadBase;
 
-/// \class ROOT::Experimental::Internal::RObjectDrawable
-/// Provides v7 drawing facilities for TObject types (TGraph etc).
+/** \class RObjectDrawable
+\ingroup BaseROOT7
+\brief Provides v7 drawing facilities for TObject types (TGraph etc).
+\author Sergey Linev
+\date 2017-05-31
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
+
 class RObjectDrawable final : public RDrawable {
 
    Internal::RIOShared<TObject> fObj; ///< The object to be painted

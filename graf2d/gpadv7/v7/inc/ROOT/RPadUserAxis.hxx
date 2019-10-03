@@ -1,10 +1,3 @@
-/// \file ROOT/RPadUserAxis.hxx
-/// \ingroup Gpad ROOT7
-/// \author Axel Naumann <axel@cern.ch>
-/// \date 2017-07-15
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
-
 /*************************************************************************
  * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -24,9 +17,13 @@
 namespace ROOT {
 namespace Experimental {
 
-/** \class ROOT::Experimental::Internal::RPadUserAxisBase
-  Base class for user coordinates (e.g. for histograms) used by `RPad` and `RCanvas`.
-  */
+/** \class RPadUserAxisBase
+\ingroup GpadROOT7
+\brief Base class for user coordinates (e.g. for histograms) used by `RPad` and `RCanvas`.
+\author Axel Naumann <axel@cern.ch>
+\date 2017-07-15
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RPadUserAxisBase {
 public:

@@ -1,10 +1,3 @@
-/// \file ROOT/RDrawable.hxx
-/// \ingroup Base ROOT7
-/// \author Axel Naumann <axel@cern.ch>
-/// \date 2015-08-07
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
-
 /*************************************************************************
  * Copyright (C) 1995-2015, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -34,6 +27,13 @@ class RDisplayItem;
 
 
 namespace Internal {
+
+/** \class RIOSharedBase
+\ingroup BaseROOT7
+\\author Axel Naumann <axel@cern.ch>
+\date 2015-08-07
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RIOSharedBase {
 public:
@@ -87,8 +87,12 @@ public:
 }
 
 /** \class RDrawable
-  Base class for drawable entities: objects that can be painted on a `RPad`.
- */
+\ingroup BaseROOT7
+\brief Base class for drawable entities: objects that can be painted on a `RPad`.
+\author Axel Naumann <axel@cern.ch>
+\date 2015-08-07
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RDrawable {
 
