@@ -216,6 +216,28 @@ sap.ui.define(['sap/ui/core/Component',
             oReader.readAsText(file);
       },
 
+     _getContextMenu : function () {
+       if (!this._oContextMenu) {
+         this._oContextMenu = sap.ui.xmlfragment("rootui5.browser.view.contextmenu", this);
+         let oModel = new sap.ui.model.json.JSONModel("rootui5sys/browser/json/drawingOptions.json");
+         this._oContextMenu.setModel(oModel);
+         this.getView().addDependent(this._oContextMenu);
+       }
+       return this._oContextMenu;
+     },
+
+     contextMenu: function() {
+        this._getContextMenu().open();
+     },
+
+     onDrawingOptionsPopupOK: (oEvent) => {
+       oEvent.getSource().close();
+     },
+
+     onDrawingOptionsPopupCancel: (oEvent) => {
+       oEvent.getSource().close();
+     },
+
       /** @brief Handle the "Save As..." button press event */
       onSaveAs: function() {
          var oEditor = this.getView().byId("aCodeEditor");

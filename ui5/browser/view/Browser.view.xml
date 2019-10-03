@@ -25,6 +25,7 @@
                <ToolbarSpacer/>
                <SearchField liveChange="onSearch"/>
             </Toolbar>
+            <Button text="Show Personalization Dialog" press="contextMenu"/>
             <t:TreeTable
               id="treeTable"
               columnHeaderVisible="true"
