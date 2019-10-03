@@ -31,7 +31,7 @@ namespace TMVA {
 namespace Experimental {
 
 /// Fast boosted decision tree inference
-template <typename Backend = BranchlessForest<float>>
+template <typename Backend = BranchlessJittedForest<float>>
 class RBDT {
 public:
    using Value_t = typename Backend::Value_t;
@@ -114,6 +114,7 @@ public:
 };
 
 extern template class TMVA::Experimental::RBDT<TMVA::Experimental::BranchlessForest<float>>;
+extern template class TMVA::Experimental::RBDT<TMVA::Experimental::BranchlessJittedForest<float>>;
 
 } // namespace Experimental
 } // namespace TMVA
