@@ -255,35 +255,44 @@ sap.ui.define(['sap/ui/core/Component',
          var rows = this.byId("treeTable").getRows();
          for (var k=0;k<rows.length;++k) {
             rows[k].$().dblclick(this.onRowDblClick.bind(this, rows[k]));
+            rows[k].$().contextmenu(this.onRowRightClick.bind(this, rows[k]));
          }
       },
 
       /** @brief Send RBrowserRequest to the browser */
       sendBrowserRequest: function(_oper, args) {
-         var req = { path: "", first: 0, number: 0, sort: _oper };
+         let req = { path: "", first: 0, number: 0, sort: _oper, filePath: "", rootFile: "" };
          JSROOT.extend(req, args);
          this.websocket.Send("BRREQ:" + JSON.stringify(req));
       },
 
       /** @brief Double-click event handler */
       onRowDblClick: function(row) {
-         if (row._bHasChildren) // ignore directories for now
-            return;
-         var fullpath = "";
-         var ctxt = row.getBindingContext(),
-             prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
-         if (prop && prop.fullpath) {
-            fullpath = prop.fullpath.substr(1, prop.fullpath.length-2);
-            var dirname = fullpath.substr(0, fullpath.lastIndexOf('/'));
-            if (dirname.endsWith(".root"))
-               return this.sendBrowserRequest("DBLCLK", { path: fullpath });
-         }
-         var oEditor = this.getView().byId("aCodeEditor");
-         var oModel = oEditor.getModel();
-         var filename = fullpath.substr(fullpath.lastIndexOf('/') + 1);
-         if (this.setFileNameType(filename))
-            return this.sendBrowserRequest("DBLCLK", { path: fullpath });
-       },
+        let json = this.getPathAndNameFromRow(row);
+        return this.sendBrowserRequest("DBLCLK", json);
+      },
+
+     onRowRightClick: function(row) {
+       let json = this.getPathAndNameFromRow(row);
+       return this.sendBrowserRequest("RCLICK", json);
+     },
+
+      getPathAndNameFromRow: function(row) {
+        let answer = {};
+        let fullpath = "";
+        let ctxt = row.getBindingContext(), prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
+        if (prop && prop.fullpath) {
+          fullpath = prop.fullpath.substr(1, prop.fullpath.length-2);
+          answer.path = fullpath;
+          let dirname = fullpath.substr(0, fullpath.lastIndexOf('/'));
+          answer.filePath = dirname;
+          if (dirname.endsWith(".root")) {
+            let rootFile = fullpath.substr(fullpath.lastIndexOf('/')+1, fullpath.length);
+            answer.rootFile = rootFile;
+          }
+        }
+        return answer;
+      },
 
       OnWebsocketOpened: function(handle) {
          this.isConnected = true;
@@ -354,6 +363,7 @@ sap.ui.define(['sap/ui/core/Component',
            document.getElementById("TopBrowserId--aRootCanvas" + selecedTabID).innerHTML = ""; // Clearing the canvas
            oTabElement.setAdditionalText(rootFileDisplayName); // Setting the tab file name
            let finalJsonRoot = JSROOT.JSONR_unref(jsonAnswer.data); // Creating the graphic from the json
+
            JSROOT.draw("TopBrowserId--aRootCanvas" + selecedTabID, finalJsonRoot, "colz"); // Drawing the graphic into the selected tab canvas
 
            break;

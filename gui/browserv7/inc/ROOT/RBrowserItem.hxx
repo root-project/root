@@ -30,6 +30,8 @@ public:
    int first{0};     ///< first child to request
    int number{0};    ///< number of childs to request, 0 - all childs
    std::string sort; ///< kind of sorting
+   std::string filePath{""}; ///< path of the file request
+   std::string rootFile{""}; ///< root file namecycle
 };
 
 /** Representation of single item in the browser */

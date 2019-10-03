@@ -190,6 +190,8 @@ sap.ui.define([
            this.loadDataCounter++;
 
            var request = {
+              filePath: "",
+              rootFile: "",
               path: path,
               first: first || 0,
               number: number || this.threshold || 100,
