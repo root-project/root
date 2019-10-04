@@ -84,7 +84,7 @@ void ROOT::Experimental::RAttrBase::AssignDrawable(RDrawable *drawable, const st
    fParent = nullptr;
 }
 
-void ROOT::Experimental::RAttrBase::AssignParent(const RAttrBase *parent, const std::string &prefix)
+void ROOT::Experimental::RAttrBase::AssignParent(RAttrBase *parent, const std::string &prefix)
 {
    fDrawable = nullptr;
    fOwnAttr.reset();
