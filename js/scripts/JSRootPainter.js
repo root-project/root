@@ -2657,6 +2657,7 @@
       this.pad_name = "";
       this.main = null;
       this.draw_object = null;
+      delete this.snapid;
 
       // remove attributes objects (if any)
       delete this.fillatt;
@@ -2666,6 +2667,10 @@
       delete this.root_colors;
       delete this.options;
       delete this.options_store;
+
+      // remove extra fields from v7 painters
+      delete this.rstyle;
+      delete this.csstype;
 
       TBasePainter.prototype.Cleanup.call(this, keep_origin);
    }
@@ -6421,6 +6426,7 @@
       function performDraw() {
          if (handle.direct) {
             painter = new TObjectPainter(obj, opt);
+            painter.csstype = handle.csstype;
             painter.SetDivId(divid, 2);
             painter.Redraw = handle.func;
             painter.Redraw();

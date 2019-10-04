@@ -95,7 +95,7 @@
 
    "use strict";
 
-   JSROOT.version = "dev 1/10/2019";
+   JSROOT.version = "dev 4/10/2019";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -105,7 +105,7 @@
    JSROOT.wrong_http_response_handling = false; // wehn configured, try to handle wrong content-length response from server
    JSROOT.sources = ['core'];   // indicates which major sources were loaded
 
-   JSROOT.id_counter = 1;
+   JSROOT.id_counter = 1;       // avoid id value 0, starts from 1
    if (JSROOT.BatchMode === undefined)
       JSROOT.BatchMode = false; // when true, disables all kind of interactive features
 
