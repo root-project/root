@@ -1,5 +1,8 @@
 /// \file
 /// \ingroup tutorial_v7
+//
+/// This ROOT 7 example demonstrates how to create a ROOT 7 canvas (RCanvas),
+/// divide on subpads and draw histograms there
 ///
 /// \macro_code
 ///
@@ -8,7 +11,7 @@
 /// \author Sergey Linev
 
 /*************************************************************************
- * Copyright (C) 1995-2015, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -18,32 +21,24 @@
 #include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RPad.hxx"
+#include "TRandom.h"
 
 void draw_subpads()
 {
   using namespace ROOT::Experimental;
 
   // Create the histogram.
-  RAxisConfig xaxis(10, 0., 10.);
+  RAxisConfig xaxis(25, 0., 10.);
   auto pHist1 = std::make_shared<RH1D>(xaxis);
   auto pHist2 = std::make_shared<RH1D>(xaxis);
   auto pHist3 = std::make_shared<RH1D>(xaxis);
 
-  // Fill a few points.
-  pHist1->Fill(1);
-  pHist1->Fill(2);
-  pHist1->Fill(2);
-  pHist1->Fill(3);
 
-  pHist2->Fill(5);
-  pHist2->Fill(6);
-  pHist2->Fill(6);
-  pHist2->Fill(7);
-
-  pHist3->Fill(4);
-  pHist3->Fill(5);
-  pHist3->Fill(5);
-  pHist3->Fill(6);
+  for (int n=0;n<1000;n++) {
+     pHist1->Fill(gRandom->Gaus(3., 0.8));
+     pHist2->Fill(gRandom->Gaus(5., 1.));
+     pHist3->Fill(gRandom->Gaus(7., 1.2));
+  }
 
   // Create a canvas to be displayed.
   auto canvas = RCanvas::Create("Canvas Title");

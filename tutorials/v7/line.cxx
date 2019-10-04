@@ -12,7 +12,7 @@
 /// \date 2018-03-18
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
-/// \authors Olivier couet, Iliana Betsou
+/// \authors Olivier Couet, Iliana Betsou
 
 #include <ROOT/RCanvas.hxx>
 #include <ROOT/RColor.hxx>

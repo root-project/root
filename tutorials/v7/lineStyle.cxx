@@ -11,7 +11,6 @@
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RText.hxx"
 #include "ROOT/RLine.hxx"
-#include <string>
 
 void lineStyle()
 {
