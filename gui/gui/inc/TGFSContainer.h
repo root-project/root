@@ -24,7 +24,6 @@
 #include "TGListView.h"
 #include "TGDNDManager.h"
 #include "TBufferFile.h"
-#include <stdlib.h>
 
 //----- file sort mode
 enum EFSSortMode {
