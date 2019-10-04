@@ -13,6 +13,7 @@
 
 #include "ROOT/RDF/RNodeBase.hxx"
 #include "ROOT/RDF/NodesUtils.hxx"
+#include "ROOT/RDF/TaskContext.hxx"
 
 #include <functional>
 #include <map>
@@ -106,7 +107,8 @@ class RLoopManager : public RNodeBase {
    std::shared_ptr<TTree> fTree{nullptr};
    const ColumnNames_t fDefaultColumns;
    const ULong64_t fNEmptyEntries{0};
-   const unsigned int fNSlots{1};
+   Internal::RDF::TaskContextStorage fStorage;
+
    bool fMustRunNamedFilters{true};
    const ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
    std::string fToJitDeclare; ///< Code that should be just-in-time declared right before the event loop
@@ -161,7 +163,8 @@ public:
    void Book(RRangeBase *rangePtr);
    void Deregister(RRangeBase *rangePtr);
    bool CheckFilters(unsigned int, Long64_t) final;
-   unsigned int GetNSlots() const { return fNSlots; }
+   unsigned int GetNSlots() const { return fStorage.size(); }
+   Internal::RDF::TaskContextStorage &GetStorage() { return fStorage; }
    void Report(ROOT::RDF::RCutFlowReport &rep) const final;
    /// End of recursive chain of calls, does nothing
    void PartialReport(ROOT::RDF::RCutFlowReport &) const final {}

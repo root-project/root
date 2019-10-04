@@ -188,23 +188,22 @@ ColumnNames_t ROOT::Internal::RDF::GetBranchNames(TTree &t, bool allowDuplicates
 
 RLoopManager::RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
    : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultColumns(defaultBranches),
-     fNSlots(RDFInternal::GetNSlots()),
-     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles)
+     fStorage(RDFInternal::GetNSlots()), fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles)
 {
 }
 
 RLoopManager::RLoopManager(ULong64_t nEmptyEntries)
-   : fNEmptyEntries(nEmptyEntries), fNSlots(RDFInternal::GetNSlots()),
+   : fNEmptyEntries(nEmptyEntries), fStorage(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kNoFilesMT : ELoopType::kNoFiles)
 {
 }
 
 RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches)
-   : fDefaultColumns(defaultBranches), fNSlots(RDFInternal::GetNSlots()),
+   : fDefaultColumns(defaultBranches), fStorage(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kDataSourceMT : ELoopType::kDataSource),
      fDataSource(std::move(ds))
 {
-   fDataSource->SetNSlots(fNSlots);
+   fDataSource->SetNSlots(RDFInternal::GetNSlots());
 }
 
 // ROOT-9559: we cannot handle indexed friends
@@ -230,11 +229,11 @@ void RLoopManager::CheckIndexedFriends()
 void RLoopManager::RunEmptySourceMT()
 {
 #ifdef R__USE_IMT
-   RSlotStack slotStack(fNSlots);
+   RSlotStack slotStack(GetNSlots());
    // Working with an empty tree.
    // Evenly partition the entries according to fNSlots. Produce around 2 tasks per slot.
-   const auto nEntriesPerSlot = fNEmptyEntries / (fNSlots * 2);
-   auto remainder = fNEmptyEntries % (fNSlots * 2);
+   const auto nEntriesPerSlot = fNEmptyEntries / (GetNSlots() * 2);
+   auto remainder = fNEmptyEntries % (GetNSlots() * 2);
    std::vector<std::pair<ULong64_t, ULong64_t>> entryRanges;
    ULong64_t start = 0;
    while (start < fNEmptyEntries) {
@@ -279,7 +278,7 @@ void RLoopManager::RunTreeProcessorMT()
 {
 #ifdef R__USE_IMT
    CheckIndexedFriends();
-   RSlotStack slotStack(fNSlots);
+   RSlotStack slotStack(fStorage.size());
    const auto &entryList = fTree->GetEntryList() ? *fTree->GetEntryList() : TEntryList();
    auto tp = std::make_unique<ROOT::TTreeProcessorMT>(*fTree, entryList);
 
@@ -347,7 +346,7 @@ void RLoopManager::RunDataSourceMT()
 {
 #ifdef R__USE_IMT
    R__ASSERT(fDataSource != nullptr);
-   RSlotStack slotStack(fNSlots);
+   RSlotStack slotStack(fStorage.size());
    ROOT::TThreadExecutor pool;
 
    // Each task works on a subrange of entries
@@ -580,9 +579,9 @@ void RLoopManager::Report(ROOT::RDF::RCutFlowReport &rep) const
 void RLoopManager::RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f)
 {
    if (everyNEvents == 0ull)
-      fCallbacksOnce.emplace_back(std::move(f), fNSlots);
+      fCallbacksOnce.emplace_back(std::move(f), fStorage.size());
    else
-      fCallbacks.emplace_back(everyNEvents, std::move(f), fNSlots);
+      fCallbacks.emplace_back(everyNEvents, std::move(f), fStorage.size());
 }
 
 std::vector<std::string> RLoopManager::GetFiltersNames()

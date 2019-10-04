@@ -130,18 +130,18 @@ struct HistoUtils<T, false> {
 // Generic filling (covers Histo2D, Histo3D, Profile1D and Profile2D actions, with and without weights)
 template <typename... BranchTypes, typename ActionTag, typename ActionResultType, typename PrevNodeType>
 std::unique_ptr<RActionBase>
-BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h, const unsigned int nSlots,
+BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h, TaskContextStorage &storage,
             std::shared_ptr<PrevNodeType> prevNode, ActionTag, RDFInternal::RBookedCustomColumns &&customColumns)
 {
    using Helper_t = FillParHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-   return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), std::move(customColumns));
+   return std::make_unique<Action_t>(Helper_t(h, storage), bl, std::move(prevNode), std::move(customColumns));
 }
 
 // Histo1D filling (must handle the special case of distinguishing FillParHelper and FillHelper
 template <typename... BranchTypes, typename PrevNodeType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h,
-                                         const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
+                                         TaskContextStorage &storage, std::shared_ptr<PrevNodeType> prevNode,
                                          ActionTags::Histo1D, RDFInternal::RBookedCustomColumns &&customColumns)
 {
    auto hasAxisLimits = HistoUtils<::TH1D>::HasAxisLimits(*h);
@@ -149,83 +149,83 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
    if (hasAxisLimits) {
       using Helper_t = FillParHelper<::TH1D>;
       using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-      return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), std::move(customColumns));
+      return std::make_unique<Action_t>(Helper_t(h, storage), bl, std::move(prevNode), std::move(customColumns));
    } else {
       using Helper_t = FillHelper;
       using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-      return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), std::move(customColumns));
+      return std::make_unique<Action_t>(Helper_t(h, storage), bl, std::move(prevNode), std::move(customColumns));
    }
 }
 
 template <typename... BranchTypes, typename PrevNodeType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<TGraph> &g,
-                                         const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
+                                         TaskContextStorage &storage, std::shared_ptr<PrevNodeType> prevNode,
                                          ActionTags::Graph, RDFInternal::RBookedCustomColumns &&customColumns)
 {
    using Helper_t = FillTGraphHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-   return std::make_unique<Action_t>(Helper_t(g, nSlots), bl, std::move(prevNode), std::move(customColumns));
+   return std::make_unique<Action_t>(Helper_t(g, storage), bl, std::move(prevNode), std::move(customColumns));
 }
 
 // Min action
 template <typename BranchType, typename PrevNodeType, typename ActionResultType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &minV,
-                                         const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
+                                         TaskContextStorage &storage, std::shared_ptr<PrevNodeType> prevNode,
                                          ActionTags::Min, RDFInternal::RBookedCustomColumns &&customColumns)
 {
    using Helper_t = MinHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   return std::make_unique<Action_t>(Helper_t(minV, nSlots), bl, std::move(prevNode), std::move(customColumns));
+   return std::make_unique<Action_t>(Helper_t(minV, storage), bl, std::move(prevNode), std::move(customColumns));
 }
 
 // Max action
 template <typename BranchType, typename PrevNodeType, typename ActionResultType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &maxV,
-                                         const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
+                                         TaskContextStorage &storage, std::shared_ptr<PrevNodeType> prevNode,
                                          ActionTags::Max, RDFInternal::RBookedCustomColumns &&customColumns)
 {
    using Helper_t = MaxHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   return std::make_unique<Action_t>(Helper_t(maxV, nSlots), bl, std::move(prevNode), std::move(customColumns));
+   return std::make_unique<Action_t>(Helper_t(maxV, storage), bl, std::move(prevNode), std::move(customColumns));
 }
 
 // Sum action
 template <typename BranchType, typename PrevNodeType, typename ActionResultType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &sumV,
-                                         const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
+                                         TaskContextStorage &storage, std::shared_ptr<PrevNodeType> prevNode,
                                          ActionTags::Sum, RDFInternal::RBookedCustomColumns &&customColumns)
 {
    using Helper_t = SumHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   return std::make_unique<Action_t>(Helper_t(sumV, nSlots), bl, std::move(prevNode), std::move(customColumns));
+   return std::make_unique<Action_t>(Helper_t(sumV, storage), bl, std::move(prevNode), std::move(customColumns));
 }
 
 // Mean action
 template <typename BranchType, typename PrevNodeType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV,
-                                         const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
+                                         TaskContextStorage &storage, std::shared_ptr<PrevNodeType> prevNode,
                                          ActionTags::Mean, RDFInternal::RBookedCustomColumns &&customColumns)
 {
    using Helper_t = MeanHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   return std::make_unique<Action_t>(Helper_t(meanV, nSlots), bl, std::move(prevNode), std::move(customColumns));
+   return std::make_unique<Action_t>(Helper_t(meanV, storage), bl, std::move(prevNode), std::move(customColumns));
 }
 
 // Standard Deviation action
 template <typename BranchType, typename PrevNodeType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &stdDeviationV,
-                                         const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
+                                         TaskContextStorage &storage, std::shared_ptr<PrevNodeType> prevNode,
                                          ActionTags::StdDev, RDFInternal::RBookedCustomColumns &&customColumns)
 {
    using Helper_t = StdDevHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   return std::make_unique<Action_t>(Helper_t(stdDeviationV, nSlots), bl, prevNode, std::move(customColumns));
+   return std::make_unique<Action_t>(Helper_t(stdDeviationV, storage), bl, prevNode, std::move(customColumns));
 }
 
 // Display action
 template <typename... BranchTypes, typename PrevNodeType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<RDisplay> &d,
-                                         const unsigned int, std::shared_ptr<PrevNodeType> prevNode,
+                                         TaskContextStorage &, std::shared_ptr<PrevNodeType> prevNode,
                                          ActionTags::Display, RDFInternal::RBookedCustomColumns &&customColumns)
 {
    using Helper_t = DisplayHelper<PrevNodeType>;
@@ -258,7 +258,7 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
                    const RDFInternal::RBookedCustomColumns &customCols, const ColumnNames_t &branches);
 
 std::string JitBuildAction(const ColumnNames_t &bl, void *prevNode, const std::type_info &art, const std::type_info &at,
-                           void *r, TTree *tree, const unsigned int nSlots,
+                           void *r, TTree *tree, TaskContextStorage &storage,
                            const RDFInternal::RBookedCustomColumns &customColumns, RDataSource *ds,
                            std::shared_ptr<RJittedAction> *jittedActionOnHeap, unsigned int namespaceID);
 
@@ -379,7 +379,7 @@ void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RL
 
 /// Convenience function invoked by jitted code to build action nodes at runtime
 template <typename ActionTag, typename... BranchTypes, typename PrevNodeType, typename ActionResultType>
-void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const ColumnNames_t &bl, const unsigned int nSlots,
+void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const ColumnNames_t &bl, TaskContextStorage &storage,
                      const std::shared_ptr<ActionResultType> *rOnHeap,
                      std::shared_ptr<RJittedAction> *jittedActionOnHeap,
                      RDFInternal::RBookedCustomColumns *customColumns)
@@ -395,7 +395,7 @@ void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const Column
                         : *customColumns;
 
    auto actionPtr =
-      BuildAction<BranchTypes...>(bl, *rOnHeap, nSlots, std::move(prevNodePtr), ActionTag{}, std::move(newColumns));
+      BuildAction<BranchTypes...>(bl, *rOnHeap, storage, std::move(prevNodePtr), ActionTag{}, std::move(newColumns));
    (*jittedActionOnHeap)->SetAction(std::move(actionPtr));
 
    // customColumns points to the columns structure in the heap, created before the jitted call so that the jitter can

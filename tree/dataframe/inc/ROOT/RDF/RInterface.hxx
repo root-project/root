@@ -376,7 +376,7 @@ public:
                                      fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
 
       auto jittedCustomColumn =
-         std::make_shared<RDFDetail::RJittedCustomColumn>(fLoopManager, name, fLoopManager->GetNSlots());
+         std::make_shared<RDFDetail::RJittedCustomColumn>(fLoopManager, name, fLoopManager->GetStorage().size());
 
       RDFInternal::BookDefineJit(name, expression, *fLoopManager, fDataSource, jittedCustomColumn, fCustomColumns,
                                  fLoopManager->GetBranchNames());
@@ -872,12 +872,12 @@ public:
    ///
    RResultPtr<ULong64_t> Count()
    {
-      const auto nSlots = fLoopManager->GetNSlots();
+      auto &storage = fLoopManager->GetStorage();
       auto cSPtr = std::make_shared<ULong64_t>(0);
       using Helper_t = RDFInternal::CountHelper;
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
       auto action =
-         std::make_unique<Action_t>(Helper_t(cSPtr, nSlots), ColumnNames_t({}), fProxiedPtr, std::move(fCustomColumns));
+         std::make_unique<Action_t>(Helper_t(cSPtr, storage), ColumnNames_t({}), fProxiedPtr, std::move(fCustomColumns));
       fLoopManager->Book(action.get());
       return MakeResultPtr(cSPtr, *fLoopManager, std::move(action));
    }
@@ -914,10 +914,10 @@ public:
       using Helper_t = RDFInternal::TakeHelper<T, T, COLL>;
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
       auto valuesPtr = std::make_shared<COLL>();
-      const auto nSlots = fLoopManager->GetNSlots();
+      auto &storage = fLoopManager->GetStorage();
 
       auto action =
-         std::make_unique<Action_t>(Helper_t(valuesPtr, nSlots), validColumnNames, fProxiedPtr, std::move(newColumns));
+         std::make_unique<Action_t>(Helper_t(valuesPtr, storage), validColumnNames, fProxiedPtr, std::move(newColumns));
       fLoopManager->Book(action.get());
       return MakeResultPtr(valuesPtr, *fLoopManager, std::move(action));
    }
@@ -2053,7 +2053,7 @@ public:
       using Helper_t = RDFInternal::AggregateHelper<AccFun, MergeFun, R, T, U>;
       using Action_t = typename RDFInternal::RAction<Helper_t, Proxied>;
       auto action = std::make_unique<Action_t>(
-         Helper_t(std::move(aggregator), std::move(merger), accObjPtr, fLoopManager->GetNSlots()), validColumnNames,
+         Helper_t(std::move(aggregator), std::move(merger), accObjPtr, fLoopManager->GetStorage()), validColumnNames,
          fProxiedPtr, std::move(newColumns));
       fLoopManager->Book(action.get());
       return MakeResultPtr(accObjPtr, *fLoopManager, std::move(action));
@@ -2232,7 +2232,7 @@ private:
          RDFDetail::RCustomColumn<decltype(entryColGen), RDFDetail::CustomColExtraArgs::SlotAndEntry>;
 
       auto entryColumn = std::make_shared<NewColEntry_t>(fLoopManager, entryColName, std::move(entryColGen),
-                                                         ColumnNames_t{}, fLoopManager->GetNSlots(), newCols);
+                                                         ColumnNames_t{}, fLoopManager->GetStorage().size(), newCols);
       newCols.AddName(entryColName);
       newCols.AddColumn(entryColumn, entryColName);
 
@@ -2249,7 +2249,7 @@ private:
       using NewColSlot_t = RDFDetail::RCustomColumn<decltype(slotColGen), RDFDetail::CustomColExtraArgs::Slot>;
 
       auto slotColumn = std::make_shared<NewColSlot_t>(fLoopManager, slotColName, std::move(slotColGen),
-                                                       ColumnNames_t{}, fLoopManager->GetNSlots(), newCols);
+                                                       ColumnNames_t{}, fLoopManager->GetStorage().size(), newCols);
 
       newCols.AddName(slotColName);
       newCols.AddColumn(slotColumn, slotColName);
@@ -2300,9 +2300,9 @@ private:
       auto newColumns = CheckAndFillDSColumns(validColumnNames, std::make_index_sequence<nColumns>(),
                                               RDFInternal::TypeList<BranchTypes...>());
 
-      const auto nSlots = fLoopManager->GetNSlots();
+      auto &storage = fLoopManager->GetStorage();
 
-      auto action = RDFInternal::BuildAction<BranchTypes...>(validColumnNames, r, nSlots, fProxiedPtr, ActionTag{},
+      auto action = RDFInternal::BuildAction<BranchTypes...>(validColumnNames, r, storage, fProxiedPtr, ActionTag{},
                                                              std::move(newColumns));
       fLoopManager->Book(action.get());
       return MakeResultPtr(r, *fLoopManager, std::move(action));
@@ -2319,7 +2319,7 @@ private:
       auto realNColumns = (nColumns > -1 ? nColumns : sizeof...(BranchTypes));
 
       const auto validColumnNames = GetValidatedColumnNames(realNColumns, columns);
-      const unsigned int nSlots = fLoopManager->GetNSlots();
+      auto &storage = fLoopManager->GetStorage();
 
       auto tree = fLoopManager->GetTree();
       auto rOnHeap = RDFInternal::MakeSharedOnHeap(r);
@@ -2333,7 +2333,7 @@ private:
 
       auto toJit = RDFInternal::JitBuildAction(
          validColumnNames, upcastNodeOnHeap, typeid(std::shared_ptr<ActionResultType>), typeid(ActionTag), rOnHeap,
-         tree, nSlots, fCustomColumns, fDataSource, jittedActionOnHeap, fLoopManager->GetID());
+         tree, storage, fCustomColumns, fDataSource, jittedActionOnHeap, fLoopManager->GetID());
       fLoopManager->Book(jittedActionOnHeap->get());
       fLoopManager->ToJitExec(toJit);
       return MakeResultPtr(r, *fLoopManager, *jittedActionOnHeap);
@@ -2362,7 +2362,7 @@ private:
       using NewCol_t = RDFDetail::RCustomColumn<F, CustomColumnType>;
       RDFInternal::RBookedCustomColumns newCols(newColumns);
       auto newColumn = std::make_shared<NewCol_t>(fLoopManager, name, std::forward<F>(expression), validColumnNames,
-                                                  fLoopManager->GetNSlots(), newCols);
+                                                  fLoopManager->GetStorage().size(), newCols);
 
       // Declare return type to the interpreter, for future use by jitted actions
       auto retTypeName = RDFInternal::TypeID2TypeName(typeid(RetType));
@@ -2445,7 +2445,7 @@ private:
          using Helper_t = RDFInternal::SnapshotHelperMT<ColumnTypes...>;
          using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
          actionPtr.reset(new Action_t(
-            Helper_t(fLoopManager->GetNSlots(), filename, dirname, treename, validCols, columnList, options), validCols,
+            Helper_t(fLoopManager->GetStorage(), filename, dirname, treename, validCols, columnList, options), validCols,
             fProxiedPtr, std::move(newColumns)));
       }
 

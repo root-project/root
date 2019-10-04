@@ -26,6 +26,7 @@
 #include "ROOT/RVec.hxx"
 #include "ROOT/TBufferMerger.hxx" // for SnapshotHelper
 #include "ROOT/RDF/RCutFlowReport.hxx"
+#include "ROOT/RDF/TaskContext.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RMakeUnique.hxx"
 #include "ROOT/RSnapshotOptions.hxx"
@@ -116,7 +117,7 @@ class CountHelper : public RActionImpl<CountHelper> {
 
 public:
    using ColumnTypes_t = TypeList<>;
-   CountHelper(const std::shared_ptr<ULong64_t> &resultCount, const unsigned int nSlots);
+   CountHelper(const std::shared_ptr<ULong64_t> &resultCount, TaskContextStorage& storage);
    CountHelper(CountHelper &&) = default;
    CountHelper(const CountHelper &) = delete;
    void InitTask(TTreeReader *, unsigned int) {}
@@ -163,20 +164,21 @@ class FillHelper : public RActionImpl<FillHelper> {
    using BufEl_t = double;
    using Buf_t = std::vector<BufEl_t>;
 
-   std::vector<Buf_t> fBuffers;
-   std::vector<Buf_t> fWBuffers;
+   FSVector<Buf_t> fBuffers;
+   FSVector<Buf_t> fWBuffers;
    const std::shared_ptr<Hist_t> fResultHist;
-   unsigned int fNSlots;
    unsigned int fBufSize;
    /// Histograms containing "snapshots" of partial results. Non-null only if a registered callback requires it.
-   Results<std::unique_ptr<Hist_t>> fPartialHists;
-   Buf_t fMin;
-   Buf_t fMax;
+   FSVector<std::unique_ptr<Hist_t>> fPartialHists;
+   FSVector<BufEl_t> fMin;
+   FSVector<BufEl_t> fMax;
 
    void UpdateMinMax(unsigned int slot, double v);
+   static FillHelper::Buf_t GetAdequatelyReservedBuf(const TaskContextStorage &storage);
+
 
 public:
-   FillHelper(const std::shared_ptr<Hist_t> &h, const unsigned int nSlots);
+   FillHelper(const std::shared_ptr<Hist_t> &h, TaskContextStorage& storage);
    FillHelper(FillHelper &&) = default;
    FillHelper(const FillHelper &) = delete;
    void InitTask(TTreeReader *, unsigned int) {}
@@ -256,17 +258,17 @@ FillHelper::Exec(unsigned int, const std::vector<unsigned int> &, const std::vec
 
 template <typename HIST = Hist_t>
 class FillParHelper : public RActionImpl<FillParHelper<HIST>> {
-   std::vector<HIST *> fObjects;
+   FSVector<HIST *> fObjects;
 
 public:
    FillParHelper(FillParHelper &&) = default;
    FillParHelper(const FillParHelper &) = delete;
 
-   FillParHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots) : fObjects(nSlots, nullptr)
+   FillParHelper(const std::shared_ptr<HIST> &h, TaskContextStorage& storage) : fObjects(storage, nullptr)
    {
       fObjects[0] = h.get();
       // Initialise all other slots
-      for (unsigned int i = 1; i < nSlots; ++i) {
+      for (unsigned int i = 1; i < fObjects.size(); ++i) {
          fObjects[i] = new HIST(*fObjects[0]);
          if (auto objAsHist = dynamic_cast<TH1*>(fObjects[i])) {
             objAsHist->SetDirectory(nullptr);
@@ -439,7 +441,7 @@ public:
    using Result_t = ::TGraph;
 
 private:
-   std::vector<::TGraph *> fGraphs;
+   FSVector<::TGraph *> fGraphs;
 
 public:
    FillTGraphHelper(FillTGraphHelper &&) = default;
@@ -447,11 +449,11 @@ public:
 
    // The last parameter is always false, as at the moment there is no way to propagate the parameter from the user to
    // this method
-   FillTGraphHelper(const std::shared_ptr<::TGraph> &g, const unsigned int nSlots) : fGraphs(nSlots, nullptr)
+   FillTGraphHelper(const std::shared_ptr<::TGraph> &g, TaskContextStorage &storage) : fGraphs(storage, nullptr)
    {
       fGraphs[0] = g.get();
       // Initialise all other slots
-      for (unsigned int i = 1; i < nSlots; ++i) {
+      for (unsigned int i = 1; i < storage.size(); ++i) {
          fGraphs[i] = new TGraph(*fGraphs[0]);
       }
    }
@@ -521,15 +523,16 @@ void FillColl(bool v, COLL& c) {
 // No optimisations, no transformations: just copies.
 template <typename RealT_t, typename T, typename COLL>
 class TakeHelper : public RActionImpl<TakeHelper<RealT_t, T, COLL>> {
-   Results<std::shared_ptr<COLL>> fColls;
+   FSVector<std::shared_ptr<COLL>> fColls;
 
 public:
    using ColumnTypes_t = TypeList<T>;
-   TakeHelper(const std::shared_ptr<COLL> &resultColl, const unsigned int nSlots)
+   TakeHelper(const std::shared_ptr<COLL> &resultColl, TaskContextStorage &storage)
+   : fColls(storage)
    {
-      fColls.emplace_back(resultColl);
-      for (unsigned int i = 1; i < nSlots; ++i)
-         fColls.emplace_back(std::make_shared<COLL>());
+      fColls[0] = resultColl;
+      for (unsigned int i = 1; i < storage.size(); ++i)
+         fColls[i] = std::make_shared<COLL>();
    }
    TakeHelper(TakeHelper &&);
    TakeHelper(const TakeHelper &) = delete;
@@ -567,10 +570,10 @@ class TakeHelper<RealT_t, T, std::vector<T>> : public RActionImpl<TakeHelper<Rea
 
 public:
    using ColumnTypes_t = TypeList<T>;
-   TakeHelper(const std::shared_ptr<std::vector<T>> &resultColl, const unsigned int nSlots)
+   TakeHelper(const std::shared_ptr<std::vector<T>> &resultColl, TaskContextStorage &storage)
    {
       fColls.emplace_back(resultColl);
-      for (unsigned int i = 1; i < nSlots; ++i) {
+      for (unsigned int i = 1; i < storage.size(); ++i) {
          auto v = std::make_shared<std::vector<T>>();
          v->reserve(1024);
          fColls.emplace_back(v);
@@ -612,10 +615,10 @@ class TakeHelper<RealT_t, RVec<RealT_t>, COLL> : public RActionImpl<TakeHelper<R
 
 public:
    using ColumnTypes_t = TypeList<RVec<RealT_t>>;
-   TakeHelper(const std::shared_ptr<COLL> &resultColl, const unsigned int nSlots)
+   TakeHelper(const std::shared_ptr<COLL> &resultColl, TaskContextStorage &storage)
    {
       fColls.emplace_back(resultColl);
-      for (unsigned int i = 1; i < nSlots; ++i)
+      for (unsigned int i = 1; i < storage.size(); ++i)
          fColls.emplace_back(std::make_shared<COLL>());
    }
    TakeHelper(TakeHelper &&);
@@ -651,10 +654,11 @@ class TakeHelper<RealT_t, RVec<RealT_t>, std::vector<RealT_t>>
 
 public:
    using ColumnTypes_t = TypeList<RVec<RealT_t>>;
-   TakeHelper(const std::shared_ptr<std::vector<std::vector<RealT_t>>> &resultColl, const unsigned int nSlots)
+   TakeHelper(const std::shared_ptr<std::vector<std::vector<RealT_t>>> &resultColl, TaskContextStorage &storage):
+      fColls(storage)
    {
       fColls.emplace_back(resultColl);
-      for (unsigned int i = 1; i < nSlots; ++i) {
+      for (unsigned int i = 1; i < storage.size(); ++i) {
          auto v = std::make_shared<std::vector<RealT_t>>();
          v->reserve(1024);
          fColls.emplace_back(v);
@@ -715,12 +719,12 @@ extern template class TakeHelper<double, double, std::vector<double>>;
 template <typename ResultType>
 class MinHelper : public RActionImpl<MinHelper<ResultType>> {
    const std::shared_ptr<ResultType> fResultMin;
-   Results<ResultType> fMins;
+   FSVector<ResultType> fMins;
 
 public:
    MinHelper(MinHelper &&) = default;
-   MinHelper(const std::shared_ptr<ResultType> &minVPtr, const unsigned int nSlots)
-      : fResultMin(minVPtr), fMins(nSlots, std::numeric_limits<ResultType>::max())
+   MinHelper(const std::shared_ptr<ResultType> &minVPtr, TaskContextStorage &storage)
+      : fResultMin(minVPtr), fMins(storage, std::numeric_limits<ResultType>::max())
    {
    }
 
@@ -759,13 +763,13 @@ public:
 template <typename ResultType>
 class MaxHelper : public RActionImpl<MaxHelper<ResultType>> {
    const std::shared_ptr<ResultType> fResultMax;
-   Results<ResultType> fMaxs;
+   FSVector<ResultType> fMaxs;
 
 public:
    MaxHelper(MaxHelper &&) = default;
    MaxHelper(const MaxHelper &) = delete;
-   MaxHelper(const std::shared_ptr<ResultType> &maxVPtr, const unsigned int nSlots)
-      : fResultMax(maxVPtr), fMaxs(nSlots, std::numeric_limits<ResultType>::lowest())
+   MaxHelper(const std::shared_ptr<ResultType> &maxVPtr, TaskContextStorage &storage)
+      : fResultMax(maxVPtr), fMaxs(storage, std::numeric_limits<ResultType>::lowest())
    {
    }
 
@@ -804,7 +808,7 @@ public:
 template <typename ResultType>
 class SumHelper : public RActionImpl<SumHelper<ResultType>> {
    const std::shared_ptr<ResultType> fResultSum;
-   Results<ResultType> fSums;
+   FSVector<ResultType> fSums;
 
    /// Evaluate neutral element for this type and the sum operation.
    /// This is assumed to be any_value - any_value if operator- is defined
@@ -824,8 +828,8 @@ class SumHelper : public RActionImpl<SumHelper<ResultType>> {
 public:
    SumHelper(SumHelper &&) = default;
    SumHelper(const SumHelper &) = delete;
-   SumHelper(const std::shared_ptr<ResultType> &sumVPtr, const unsigned int nSlots)
-      : fResultSum(sumVPtr), fSums(nSlots, NeutralElement(*sumVPtr, -1))
+   SumHelper(const std::shared_ptr<ResultType> &sumVPtr, TaskContextStorage &storage)
+      : fResultSum(sumVPtr), fSums(storage, NeutralElement(*sumVPtr, -1))
    {
    }
 
@@ -854,12 +858,12 @@ public:
 
 class MeanHelper : public RActionImpl<MeanHelper> {
    const std::shared_ptr<double> fResultMean;
-   std::vector<ULong64_t> fCounts;
-   std::vector<double> fSums;
-   std::vector<double> fPartialMeans;
+   FSVector<ULong64_t> fCounts;
+   FSVector<double> fSums;
+   FSVector<double> fPartialMeans;
 
 public:
-   MeanHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots);
+   MeanHelper(const std::shared_ptr<double> &meanVPtr, TaskContextStorage &storage);
    MeanHelper(MeanHelper &&) = default;
    MeanHelper(const MeanHelper &) = delete;
    void InitTask(TTreeReader *, unsigned int) {}
@@ -894,14 +898,14 @@ class StdDevHelper : public RActionImpl<StdDevHelper> {
    const unsigned int fNSlots;
    const std::shared_ptr<double> fResultStdDev;
    // Number of element for each slot
-   std::vector<ULong64_t> fCounts;
+   FSVector<ULong64_t> fCounts;
    // Mean of each slot
-   std::vector<double> fMeans;
+   FSVector<double> fMeans;
    // Squared distance from the mean
-   std::vector<double> fDistancesfromMean;
+   FSVector<double> fDistancesfromMean;
 
 public:
-   StdDevHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots);
+   StdDevHelper(const std::shared_ptr<double> &meanVPtr, TaskContextStorage &storage);
    StdDevHelper(StdDevHelper &&) = default;
    StdDevHelper(const StdDevHelper &) = delete;
    void InitTask(TTreeReader *, unsigned int) {}
@@ -1253,32 +1257,32 @@ template <typename... BranchTypes>
 class SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<BranchTypes...>> {
    const unsigned int fNSlots;
    std::unique_ptr<ROOT::Experimental::TBufferMerger> fMerger; // must use a ptr because TBufferMerger is not movable
-   std::vector<std::shared_ptr<ROOT::Experimental::TBufferMergerFile>> fOutputFiles;
-   std::vector<std::unique_ptr<TTree>> fOutputTrees;
-   std::vector<int> fIsFirstEvent;        // vector<bool> does not allow concurrent writing of different elements
+   FSVector<std::shared_ptr<ROOT::Experimental::TBufferMergerFile>> fOutputFiles;
+   FSVector<std::unique_ptr<TTree>> fOutputTrees;
+   FSVector<int> fIsFirstEvent;        // vector<bool> does not allow concurrent writing of different elements
    const std::string fFileName;           // name of the output file name
    const std::string fDirName;            // name of TFile subdirectory in which output must be written (possibly empty)
    const std::string fTreeName;           // name of output tree
    const RSnapshotOptions fOptions;       // struct holding options to pass down to TFile and TTree in this action
    const ColumnNames_t fInputBranchNames; // This contains the resolved aliases
    const ColumnNames_t fOutputBranchNames;
-   std::vector<TTree *> fInputTrees; // Current input trees. Set at initialization time (`InitTask`)
-   std::vector<BoolArrayMap> fBoolArrays; // Per-thread storage for C arrays of bools to be written out
+   FSVector<TTree *> fInputTrees; // Current input trees. Set at initialization time (`InitTask`)
+   FSVector<BoolArrayMap> fBoolArrays; // Per-thread storage for C arrays of bools to be written out
    // Addresses of branches in output per slot, non-null only for the ones holding C arrays
-   std::vector<std::vector<TBranch *>> fBranches;
+   FSVector<std::vector<TBranch *>> fBranches;
    // Addresses associated to output branches per slot, non-null only for the ones holding C arrays
-   std::vector<std::vector<void *>> fBranchAddresses; 
+   FSVector<std::vector<void *>> fBranchAddresses; 
 
 public:
    using ColumnTypes_t = TypeList<BranchTypes...>;
-   SnapshotHelperMT(const unsigned int nSlots, std::string_view filename, std::string_view dirname,
+   SnapshotHelperMT(TaskContextStorage &storage, std::string_view filename, std::string_view dirname,
                     std::string_view treename, const ColumnNames_t &vbnames, const ColumnNames_t &bnames,
                     const RSnapshotOptions &options)
-      : fNSlots(nSlots), fOutputFiles(fNSlots), fOutputTrees(fNSlots), fIsFirstEvent(fNSlots, 1), fFileName(filename),
+      : fNSlots(storage.size()), fOutputFiles(storage), fOutputTrees(storage), fIsFirstEvent(storage, 1), fFileName(filename),
         fDirName(dirname), fTreeName(treename), fOptions(options), fInputBranchNames(vbnames),
-        fOutputBranchNames(ReplaceDotWithUnderscore(bnames)), fInputTrees(fNSlots), fBoolArrays(fNSlots),
-        fBranches(fNSlots, std::vector<TBranch *>(vbnames.size(), nullptr)), 
-        fBranchAddresses(fNSlots, std::vector<void *>(vbnames.size(), nullptr))
+        fOutputBranchNames(ReplaceDotWithUnderscore(bnames)), fInputTrees(storage), fBoolArrays(storage),
+        fBranches(storage, std::vector<TBranch *>(vbnames.size(), nullptr)), 
+        fBranchAddresses(storage, std::vector<void *>(vbnames.size(), nullptr))
    {
    }
    SnapshotHelperMT(const SnapshotHelperMT &) = delete;
@@ -1416,12 +1420,12 @@ class AggregateHelper : public RActionImpl<AggregateHelper<Acc, Merge, R, T, U, 
    Acc fAggregate;
    Merge fMerge;
    const std::shared_ptr<U> fResult;
-   Results<U> fAggregators;
+   FSVector<U> fAggregators;
 
 public:
    using ColumnTypes_t = TypeList<T>;
-   AggregateHelper(Acc &&f, Merge &&m, const std::shared_ptr<U> &result, const unsigned int nSlots)
-      : fAggregate(std::move(f)), fMerge(std::move(m)), fResult(result), fAggregators(nSlots, *result)
+   AggregateHelper(Acc &&f, Merge &&m, const std::shared_ptr<U> &result, TaskContextStorage &storage)
+      : fAggregate(std::move(f)), fMerge(std::move(m)), fResult(result), fAggregators(storage, *result)
    {
    }
    AggregateHelper(AggregateHelper &&) = default;
@@ -1447,8 +1451,9 @@ public:
              bool MergeAll = std::is_same<void, MergeRet>::value>
    typename std::enable_if<MergeAll, void>::type Finalize()
    {
-      fMerge(fAggregators);
-      *fResult = fAggregators[0];
+      std::vector<U> aggregators(fAggregators.begin(), fAggregators.end());
+      fMerge(aggregators);
+      *fResult = aggregators[0];
    }
 
    template <typename MergeRet = typename CallableTraits<Merge>::ret_type,

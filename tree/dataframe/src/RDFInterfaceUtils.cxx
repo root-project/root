@@ -710,7 +710,7 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
 // Jit and call something equivalent to "this->BuildAndBook<BranchTypes...>(params...)"
 // (see comments in the body for actual jitted code)
 std::string JitBuildAction(const ColumnNames_t &bl, void *prevNode, const std::type_info &art, const std::type_info &at,
-                           void *rOnHeap, TTree *tree, const unsigned int nSlots,
+                           void *rOnHeap, TTree *tree, TaskContextStorage &storage,
                            const RDFInternal::RBookedCustomColumns &customCols, RDataSource *ds,
                            std::shared_ptr<RJittedAction> *jittedActionOnHeap, unsigned int namespaceID)
 {
@@ -767,7 +767,7 @@ std::string JitBuildAction(const ColumnNames_t &bl, void *prevNode, const std::t
          createAction_str << ", ";
       createAction_str << '"' << bl[i] << '"';
    }
-   createAction_str << "}, " << std::dec << std::noshowbase << nSlots << ", reinterpret_cast<" << actionResultTypeName
+   createAction_str << "}, *reinterpret_cast<ROOT::Internal::RDF::TaskContextStorage*>(" << &storage << "), reinterpret_cast<" << actionResultTypeName
                     << "*>(" << PrettyPrintAddr(rOnHeap) << ")"
                     << ", reinterpret_cast<std::shared_ptr<ROOT::Internal::RDF::RJittedAction>*>("
                     << PrettyPrintAddr(jittedActionOnHeap) << "),"

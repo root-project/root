@@ -14,8 +14,8 @@ namespace ROOT {
 namespace Internal {
 namespace RDF {
 
-CountHelper::CountHelper(const std::shared_ptr<ULong64_t> &resultCount, const unsigned int nSlots)
-   : fResultCount(resultCount), fCounts(nSlots, 0)
+CountHelper::CountHelper(const std::shared_ptr<ULong64_t> &resultCount, TaskContextStorage &storage)
+   : fResultCount(resultCount), fCounts(storage.size(), 0)
 {
 }
 
@@ -45,18 +45,20 @@ void FillHelper::UpdateMinMax(unsigned int slot, double v)
    thisMax = std::max(thisMax, v);
 }
 
-FillHelper::FillHelper(const std::shared_ptr<Hist_t> &h, const unsigned int nSlots)
-   : fResultHist(h), fNSlots(nSlots), fBufSize(fgTotalBufSize / nSlots), fPartialHists(fNSlots),
-     fMin(nSlots, std::numeric_limits<BufEl_t>::max()), fMax(nSlots, std::numeric_limits<BufEl_t>::lowest())
+FillHelper::Buf_t
+FillHelper::GetAdequatelyReservedBuf(const TaskContextStorage &storage) {
+   Buf_t ret;
+   unsigned int bufSize = fgTotalBufSize / storage.size();
+   ret.reserve(bufSize);
+   return ret;
+}
+
+FillHelper::FillHelper(const std::shared_ptr<Hist_t> &h, TaskContextStorage &storage)
+   : fBuffers(storage, GetAdequatelyReservedBuf(storage)), fWBuffers(storage, GetAdequatelyReservedBuf(storage)),
+     fResultHist(h), fBufSize(fgTotalBufSize / storage.size()), fPartialHists(storage),
+     fMin(storage, std::numeric_limits<BufEl_t>::max()), fMax(storage, std::numeric_limits<BufEl_t>::lowest())
 {
-   fBuffers.reserve(fNSlots);
-   fWBuffers.reserve(fNSlots);
-   for (unsigned int i = 0; i < fNSlots; ++i) {
-      Buf_t v;
-      v.reserve(fBufSize);
-      fBuffers.emplace_back(v);
-      fWBuffers.emplace_back(v);
-   }
+
 }
 
 void FillHelper::Exec(unsigned int slot, double v)
@@ -85,7 +87,7 @@ Hist_t &FillHelper::PartialUpdate(unsigned int slot)
 
 void FillHelper::Finalize()
 {
-   for (unsigned int i = 0; i < fNSlots; ++i) {
+   for (unsigned int i = 0; i < fWBuffers.size(); ++i) {
       if (!fWBuffers[i].empty() && fBuffers[i].size() != fWBuffers[i].size()) {
          throw std::runtime_error("Cannot fill weighted histogram with values in containers of different sizes.");
       }
@@ -99,7 +101,7 @@ void FillHelper::Finalize()
       fResultHist->SetBins(fResultHist->GetNbinsX(), globalMin, globalMax);
    }
 
-   for (unsigned int i = 0; i < fNSlots; ++i) {
+   for (unsigned int i = 0; i < fBuffers.size(); ++i) {
       auto weights = fWBuffers[i].empty() ? nullptr : fWBuffers[i].data();
       fResultHist->FillN(fBuffers[i].size(), fBuffers[i].data(), weights);
    }
@@ -129,8 +131,8 @@ template void FillHelper::Exec(unsigned int, const std::vector<unsigned int> &, 
 // template void MaxHelper::Exec(unsigned int, const std::vector<int> &);
 // template void MaxHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
-MeanHelper::MeanHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots)
-   : fResultMean(meanVPtr), fCounts(nSlots, 0), fSums(nSlots, 0), fPartialMeans(nSlots)
+MeanHelper::MeanHelper(const std::shared_ptr<double> &meanVPtr, TaskContextStorage &storage)
+   : fResultMean(meanVPtr), fCounts(storage, 0), fSums(storage, 0), fPartialMeans(storage)
 {
 }
 
@@ -163,8 +165,8 @@ template void MeanHelper::Exec(unsigned int, const std::vector<char> &);
 template void MeanHelper::Exec(unsigned int, const std::vector<int> &);
 template void MeanHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
-StdDevHelper::StdDevHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots)
-   : fNSlots(nSlots), fResultStdDev(meanVPtr), fCounts(nSlots, 0), fMeans(nSlots, 0), fDistancesfromMean(nSlots, 0)
+StdDevHelper::StdDevHelper(const std::shared_ptr<double> &meanVPtr, TaskContextStorage &storage)
+   : fNSlots(storage.size()), fResultStdDev(meanVPtr), fCounts(storage, 0), fMeans(storage, 0), fDistancesfromMean(storage, 0)
 {
 }
 
