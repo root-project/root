@@ -12,8 +12,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RHistUtils_h
-#define ROOT7_RHistUtils_h
+#ifndef ROOT7_RHistUtils
+#define ROOT7_RHistUtils
 
 #include <array>
 #include <type_traits>
