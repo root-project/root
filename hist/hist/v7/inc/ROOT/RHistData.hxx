@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RHistData_h
-#define ROOT7_RHistData_h
+#ifndef ROOT7_RHistData
+#define ROOT7_RHistData
 
 #include <cmath>
 #include <vector>
@@ -484,4 +484,5 @@ public:
 
 } // namespace Experimental
 } // namespace ROOT
+
 #endif
