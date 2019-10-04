@@ -1,5 +1,5 @@
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -11,11 +11,7 @@
 
 #include <ROOT/RAttrMap.hxx>
 
-#include <ROOT/RStringView.hxx>
-
 #include <string>
-#include <tuple>
-#include <unordered_map>
 
 namespace ROOT {
 namespace Experimental {
@@ -24,13 +20,15 @@ class RDrawable;
 
 /** \class RStyle
 \ingroup GpadROOT7
-\brief A set of defaults for graphics attributes, e.g. for histogram fill color, line width, frame offsets etc.
+\brief A set of defaults for graphics attributes, e.g. for histogram fill color, line width, frame offsets etc. Uses CSS syntax.
 \author Axel Naumann <axel@cern.ch>
+\author Sergey Linev <s.linev@gsi.de>
 \date 2017-10-10
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
 class RStyle {
+
 public:
 
    struct Block_t {
@@ -43,7 +41,7 @@ public:
       Block_t& operator=(const Block_t &) = delete;
    };
 
-   const RAttrMap::Value_t *Eval(const std::string &field, const RDrawable *drawable) const;
+   const RAttrMap::Value_t *Eval(const std::string &field, const RDrawable &drawable) const;
 
    RAttrMap &AddBlock(const std::string &selector)
    {
@@ -52,7 +50,9 @@ public:
    }
 
 private:
+
    std::list<Block_t> fBlocks;  // use std::list to avoid calling of Block_t copy constructor
+
 };
 
 } // namespace Experimental

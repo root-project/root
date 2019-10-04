@@ -10,18 +10,13 @@
 #define ROOT7_RDisplayItem
 
 #include <string>
-#include <memory>
-#include <vector>
-
-#include <ROOT/RDrawable.hxx>
 
 class TObject;
 
 namespace ROOT {
 namespace Experimental {
 
-class RCanvas;
-class RFrame;
+class RDrawable;
 
 /** \class RDisplayItem
 \ingroup BaseROOT7
@@ -66,12 +61,10 @@ public:
    template <class DRAWABLE>
    RDrawableDisplayItem(const DRAWABLE &dr)
    {
-      SetObjectID(dr.GetId());
       fDrawable = &dr;
    }
 
 };
-
 
 // created from plain drawable without need of extra parameters
 
