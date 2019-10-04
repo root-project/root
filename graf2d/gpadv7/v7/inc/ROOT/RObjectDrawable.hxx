@@ -19,7 +19,7 @@ namespace Experimental {
 class RPadBase;
 
 /** \class RObjectDrawable
-\ingroup BaseROOT7
+\ingroup GpadROOT7
 \brief Provides v7 drawing facilities for TObject types (TGraph etc).
 \author Sergey Linev
 \date 2017-05-31

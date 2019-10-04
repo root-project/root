@@ -1,5 +1,5 @@
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -17,20 +17,21 @@ namespace ROOT {
 namespace Experimental {
 
 class RDrawable;
+class RStyle;
 
 /** \class RDisplayItem
-\ingroup BaseROOT7
+\ingroup GpadROOT7
 \brief Base class for painting data for JS.
-\author Sergey Linev
+\author Sergey Linev <s.linev@gsi.de>
 \date 2017-05-31
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
 class RDisplayItem {
 protected:
-   std::string fObjectID; ///< unique object identifier
-
-   unsigned fIndex{0};   ///<! set index inside current pad, used to produce fully-qualified id, not send to client
+   std::string fObjectID;   ///< unique object identifier
+   RStyle *fStyle{nullptr}; ///< style object
+   unsigned fIndex{0};      ///<! index inside current pad, used to produce fully-qualified id, not send to client
 
 public:
    RDisplayItem() = default;
@@ -41,6 +42,8 @@ public:
 
    void SetObjectIDAsPtr(const void *ptr);
 
+   void SetStyle(RStyle *style) { fStyle = style; }
+
    void SetIndex(unsigned indx) { fIndex = indx; }
    unsigned GetIndex() const { return fIndex; }
 
@@ -49,7 +52,14 @@ public:
    static std::string ObjectIDFromPtr(const void *ptr);
 };
 
-// created from plain drawable without need of extra parameters
+
+/** \class RDrawableDisplayItem
+\ingroup GpadROOT7
+\brief Generic display item for RDrawable, just reference drawable itself
+\author Sergey Linev <s.linev@gsi.de>
+\date 2017-05-31
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RDrawableDisplayItem : public RDisplayItem {
 protected:
@@ -66,7 +76,13 @@ public:
 
 };
 
-// created from plain drawable without need of extra parameters
+/** \class RObjectDisplayItem
+\ingroup GpadROOT7
+\brief Display item for TObject with drawing options
+\author Sergey Linev <s.linev@gsi.de>
+\date 2017-05-31
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RObjectDisplayItem : public RDisplayItem {
 protected:
