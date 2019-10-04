@@ -417,7 +417,7 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
                                                       &convWorkspace->AlgorithmBackward));
 
    std::cout << "CONV BWD Data Algo used  is "  << convWorkspace->AlgorithmBackward << std::endl;
-   CUDNNCHECK(cudnnSetConvolutionMathType(convDescriptors->LayerDescriptor, CUDNN_TENSOR_OP_MATH));
+   //CUDNNCHECK(cudnnSetConvolutionMathType(convDescriptors->LayerDescriptor, CUDNN_TENSOR_OP_MATH));
 
 
    if (CNNOptions::ConvBwdDataAlgorithm > 0) {
@@ -462,14 +462,13 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
                                                          &convWorkspace->HelperAlgorithm));
 
    std::cout << "CONV BWD Filter Algo used  is " << convWorkspace->HelperAlgorithm << std::endl;
-   convWorkspace->HelperAlgorithm = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1;
 
    if (CNNOptions::ConvBwdFilterAlgorithm > 0) {
       convWorkspace->HelperAlgorithm = (cudnnConvolutionBwdFilterAlgo_t)CNNOptions::ConvBwdFilterAlgorithm;
       std::cout << " but force using " << convWorkspace->HelperAlgorithm << std::endl;
    }
 
-   CUDNNCHECK(cudnnSetConvolutionMathType(convDescriptors->LayerDescriptor, CUDNN_TENSOR_OP_MATH));
+   //CUDNNCHECK(cudnnSetConvolutionMathType(convDescriptors->LayerDescriptor, CUDNN_TENSOR_OP_MATH));
 
    CUDNNCHECK(cudnnGetConvolutionBackwardFilterWorkspaceSize(
          cudnnHandle, activationBackwardDescriptor, activationGradients.GetTensorDescriptor(),
@@ -777,11 +776,11 @@ void TCudnn<AFloat>::ConvLayerForward(Tensor_t & outputTensor,
    assert (shape_output == outputTensor.GetShape());
 #endif
 
-   assert( workspace.ForwardWorkspace != 0);
+   //assert( workspace.ForwardWorkspace != 0);
 
-   cudnnMathType_t math_type = CUDNN_TENSOR_OP_MATH; // : CUDNN_DEFAULT_MATH);
+   //cudnnMathType_t math_type = CUDNN_TENSOR_OP_MATH; // : CUDNN_DEFAULT_MATH);
    // if using tensor math (cudnn version > 7)
-   CUDNNCHECK(cudnnSetConvolutionMathType(descriptors.LayerDescriptor, math_type));
+   //CUDNNCHECK(cudnnSetConvolutionMathType(descriptors.LayerDescriptor, math_type));
 
    // Perform convolution
    //CUDNNCHECK(cudnnConvolutionForward(cudnnHandle,
@@ -796,8 +795,8 @@ void TCudnn<AFloat>::ConvLayerForward(Tensor_t & outputTensor,
                                       workspace.ForwardWorkspace,
                                       workspace.ForwardWorkspaceSize,
                                       &beta,
-                                      outputTensor.GetTensorDescriptor(),
-                                      outputTensor.GetDataPointer());
+                                      inputActivation.GetTensorDescriptor(),
+                                      inputActivation.GetDataPointer());
 
    // Apply biases
    assert(status == CUDNN_STATUS_SUCCESS);
@@ -805,15 +804,15 @@ void TCudnn<AFloat>::ConvLayerForward(Tensor_t & outputTensor,
 
    //PrintTensor(biases,"biases");
    //PrintTensor(outputTensor,"tensor before biases");
-   AddConvBiases(outputTensor, biases);
+   AddConvBiases(inputActivation, biases);
 
    //PrintTensor(outputTensor,"tensor after biases");
 
    // Store the conv output before application of activation to use in the backward pass
-   TCudnn<AFloat>::Copy(inputActivation, outputTensor);
+   //TCudnn<AFloat>::Copy(outputTensor,inputActivation);
 
    // Apply activation
-   TCudnn<AFloat>::ActivationFunctionForward(outputTensor, activFunc, descriptors.HelperDescriptor, 0.0, 1.0, 0.0);
+   TCudnn<AFloat>::ActivationFunctionForward(outputTensor, inputActivation, activFunc, descriptors.HelperDescriptor, 0.0, 1.0, 0.0);
 
 
    //perform convolution + biases + activation in one single call
@@ -888,9 +887,9 @@ void TCudnn<AFloat>::ConvLayerBackward(Tensor_t &activationGradientsBackward,
 
    cudnnHandle_t cudnnHandle = outputTensor.GetCudnnHandle();
 
-   cudnnMathType_t math_type = CUDNN_TENSOR_OP_MATH; // : CUDNN_DEFAULT_MATH);
+   //cudnnMathType_t math_type = CUDNN_TENSOR_OP_MATH; // : CUDNN_DEFAULT_MATH);
    // if using tensor math (cudnn version > 7)
-   CUDNNCHECK(cudnnSetConvolutionMathType(descriptors.LayerDescriptor, math_type));
+   //CUDNNCHECK(cudnnSetConvolutionMathType(descriptors.LayerDescriptor, math_type));
 
    // do not compute activation gradients for first layer (i.e. when input activationGradientBackward is a dummy empty tensor)
    if (activationGradientsBackward.GetSize() > 0)
@@ -912,7 +911,7 @@ void TCudnn<AFloat>::ConvLayerBackward(Tensor_t &activationGradientsBackward,
     // Filter gradient
     //--------------------------------------------------------------------------
 
-   CUDNNCHECK(cudnnSetConvolutionMathType(descriptors.LayerDescriptor, CUDNN_TENSOR_OP_MATH));
+   //CUDNNCHECK(cudnnSetConvolutionMathType(descriptors.LayerDescriptor, CUDNN_TENSOR_OP_MATH));
 
    CUDNNCHECK(cudnnConvolutionBackwardFilter(
       cudnnHandle, &alpha, activationBackward.GetTensorDescriptor(), activationBackward.GetDataPointer(),

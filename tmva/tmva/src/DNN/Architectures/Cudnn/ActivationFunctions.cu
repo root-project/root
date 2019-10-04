@@ -28,25 +28,7 @@ namespace DNN
 template<typename AFloat>
 void TCudnn<AFloat>::ActivationFunctionForward(Tensor_t & X, EActivationFunction activFunct, const ActivationDescriptor_t activationDescr,  const double coef, const AFloat alpha, const AFloat beta)
 {
-/*
-   cudnnActivationMode_t activationMode;
-   //std::cout << activationDescr << std::endl;
-   //activationDescr = (ActivationDescriptor_t) nullptr;
-   switch(activFunct) {
-      case EActivationFunction::kIdentity: return; // Identity activation only works for cudnnConvolutionBiasActivationForward()
-      case EActivationFunction::kRelu:     activationMode = CUDNN_ACTIVATION_RELU;    break;
-      case EActivationFunction::kSigmoid:  activationMode = CUDNN_ACTIVATION_SIGMOID; break;
-      case EActivationFunction::kTanh:     activationMode = CUDNN_ACTIVATION_TANH;    break;
-      // The activations otherwise used are not supported by cuDNN
-      default:    return;    
-   };
-   
-   CUDNNCHECK(cudnnSetActivationDescriptor(activationDescr,
-                                           activationMode,
-                                           CUDNN_PROPAGATE_NAN,
-                                           coef));
-*/
-  
+   // compute forward activation in place
    // Nothing to do for identity function
    if (activFunct == EActivationFunction::kIdentity) return;
 
@@ -59,23 +41,39 @@ void TCudnn<AFloat>::ActivationFunctionForward(Tensor_t & X, EActivationFunction
                                      X.GetTensorDescriptor(),     // Can be computed in place
                                      X.GetDataPointer()));
 }
+//______________________________________________________________________________
+template <typename AFloat>
+void TCudnn<AFloat>::ActivationFunctionForward(Tensor_t & Y, const Tensor_t &X, EActivationFunction activFunct,
+                                               const ActivationDescriptor_t activationDescr, const double coef,
+                                               const AFloat alpha, const AFloat beta)
+{
+   // compute forward activation  with different input/output tensor (needed in training)
+   // Nothing to do for identity function
+   if (activFunct == EActivationFunction::kIdentity)
+      TCudnn<AFloat>::Copy(Y, X);
+
+   CUDNNCHECK(cudnnActivationForward(X.GetCudnnHandle(), activationDescr, &alpha, X.GetTensorDescriptor(),
+                                     X.GetDataPointer(), &beta,
+                                     Y.GetTensorDescriptor(), // Can be computed in place
+                                     Y.GetDataPointer()));
+}
 
 //______________________________________________________________________________
 template<typename AFloat>
 void TCudnn<AFloat>::ActivationFunctionBackward(Tensor_t & dX, const Tensor_t & Y,
-                                                const Tensor_t & dY, const Tensor_t & X, 
+                                                const Tensor_t & dY, const Tensor_t & X,
                                                 EActivationFunction activFunct ,
-                                                const ActivationDescriptor_t activationDescr, 
+                                                const ActivationDescriptor_t activationDescr,
                                                 const AFloat alpha, const AFloat beta)
 {
    // For identity function output dX is = dY
-   if (activFunct == EActivationFunction::kIdentity) { 
+   if (activFunct == EActivationFunction::kIdentity) {
       Copy(dX,dY);
       return;
    }
    //std::cout << "No identityy\n";
    //Y.Print();
-   // The activation descriptor is set in the forward pass                                        
+   // The activation descriptor is set in the forward pass
    CUDNNCHECK(cudnnActivationBackward(X.GetCudnnHandle(),
                                       activationDescr,
                                       &alpha,
@@ -100,9 +98,9 @@ void TCudnn<AFloat>::Relu(Tensor_t & X, ActivationDescriptor_t activationDescr, 
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCudnn<AFloat>::ReluDerivative(const Tensor_t & Y, const Tensor_t & dY, 
-                                    const Tensor_t & X, Tensor_t & dX, 
-                                    const ActivationDescriptor_t activationDescr, 
+void TCudnn<AFloat>::ReluDerivative(const Tensor_t & Y, const Tensor_t & dY,
+                                    const Tensor_t & X, Tensor_t & dX,
+                                    const ActivationDescriptor_t activationDescr,
                                     const AFloat alpha, const AFloat beta)
 {
    ActivationFunctionBackward(Y, dY, X, dX, activationDescr, alpha, beta);
@@ -117,7 +115,7 @@ void TCudnn<AFloat>::Sigmoid(Tensor_t & X, ActivationDescriptor_t activationDesc
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCudnn<AFloat>::SigmoidDerivative(const Tensor_t & Y, const Tensor_t & dY, 
+void TCudnn<AFloat>::SigmoidDerivative(const Tensor_t & Y, const Tensor_t & dY,
                                        const Tensor_t & X, Tensor_t & dX,
                                        const ActivationDescriptor_t activationDescr,
                                        const AFloat alpha, const AFloat beta)
@@ -134,9 +132,9 @@ void TCudnn<AFloat>::Tanh(Tensor_t & X, ActivationDescriptor_t activationDescr, 
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCudnn<AFloat>::TanhDerivative(const Tensor_t & Y, const Tensor_t & dY, 
-                                    const Tensor_t & X, Tensor_t & dX, 
-                                    const ActivationDescriptor_t activationDescr, 
+void TCudnn<AFloat>::TanhDerivative(const Tensor_t & Y, const Tensor_t & dY,
+                                    const Tensor_t & X, Tensor_t & dX,
+                                    const ActivationDescriptor_t activationDescr,
                                     const AFloat alpha, const AFloat beta)
 {
    ActivationFunctionBackward(Y, dY, X, dX, activationDescr, alpha, beta);
