@@ -31,7 +31,7 @@ class RAttrBase {
    RDrawable *fDrawable{nullptr};      ///<! drawable used to store attributes
    std::unique_ptr<RAttrMap> fOwnAttr; ///<! own instance when deep copy is created
    std::string fPrefix;                ///<! name prefix for all attributes values
-   const RAttrBase *fParent{nullptr};  ///<! parent attributes, prefix applied to it
+   RAttrBase *fParent{nullptr};        ///<! parent attributes, prefix applied to it
 
 protected:
 
@@ -45,7 +45,7 @@ protected:
 
    void AssignDrawable(RDrawable *drawable, const std::string &prefix);
 
-   void AssignParent(const RAttrBase *parent, const std::string &prefix);
+   void AssignParent(RAttrBase *parent, const std::string &prefix);
 
    struct Rec_t {
       RAttrMap *attr{nullptr};
@@ -83,7 +83,7 @@ protected:
             return {rec, nullptr};
          if (access.drawable && use_style)
             if (auto observe = access.drawable->fStyle.lock()) {
-               if (auto rec = observe->Eval(access.fullname, access.drawable))
+               if (auto rec = observe->Eval(access.fullname, *access.drawable))
                   return {rec, observe};
             }
       }
@@ -91,16 +91,18 @@ protected:
       return {nullptr, nullptr};
    }
 
+   /// Ensure attribute with give name exists - creates container for attributes if required
+
    Rec_t EnsureAttr(const std::string &name)
    {
-      const RAttrBase *prnt = this;
+      auto prnt = this;
       std::string fullname = name;
       while (prnt) {
          fullname.insert(0, prnt->fPrefix); // fullname = prnt->fPrefix + fullname
          if (prnt->fDrawable)
             return {&(prnt->fDrawable->fAttr), fullname, prnt->fDrawable};
          if (!prnt->fParent && !prnt->fOwnAttr)
-            const_cast<RAttrBase *>(prnt)->fOwnAttr = std::make_unique<RAttrMap>();
+            prnt->fOwnAttr = std::make_unique<RAttrMap>();
          if (prnt->fOwnAttr)
             return {prnt->fOwnAttr.get(), fullname, nullptr};
          prnt = prnt->fParent;
@@ -130,7 +132,7 @@ protected:
 
    RAttrBase(RDrawable *drawable, const std::string &prefix) { AssignDrawable(drawable, prefix); }
 
-   RAttrBase(const RAttrBase *parent, const std::string &prefix) { AssignParent(parent, prefix); }
+   RAttrBase(RAttrBase *parent, const std::string &prefix) { AssignParent(parent, prefix); }
 
    RAttrBase(const RAttrBase &src) { src.CopyTo(*this); }
 
@@ -186,7 +188,7 @@ const RAttrMap &GetDefaults() const override \
 public: \
    ClassName() = default; \
    ClassName(RDrawable *drawable, const std::string &prefix = dflt_prefix) { AssignDrawable(drawable, prefix); } \
-   ClassName(const RAttrBase *parent, const std::string &prefix = dflt_prefix) { AssignParent(parent, prefix); } \
+   ClassName(RAttrBase *parent, const std::string &prefix = dflt_prefix) { AssignParent(parent, prefix); } \
    ClassName(const ClassName &src) : ClassName() { src.CopyTo(*this); } \
    ClassName(ClassName &&src) = default; \
    ClassName &operator=(ClassName &&src) = default; \
