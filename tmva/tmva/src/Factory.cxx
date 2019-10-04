@@ -399,7 +399,8 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
    conf->DeclareOptionRef( boostNum = 0, "Boost_num",
                            "Number of times the classifier will be boosted" );
    conf->ParseOptions();
-   delete conf; // this is name of weight file directory (weigh)
+   delete conf;
+   // this is name of weight file directory
    TString fileDir;
    if(fModelPersistence)
    {
@@ -422,11 +423,11 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
      Log() << kDEBUG <<"Boost Number is " << boostNum << " > 0: train boosted classifier" << Endl;
      im = ClassifierFactory::Instance().Create("Boost", fJobName, methodTitle, loader->GetDataSetInfo(), theOption);
      MethodBoost *methBoost = dynamic_cast<MethodBoost *>(im); // DSMTEST divided into two lines
-     if (!methBoost)                                           // DSMTEST
+     if (!methBoost) {                                    // DSMTEST
         Log() << kFATAL << "Method with type kBoost cannot be casted to MethodCategory. /Factory" << Endl; // DSMTEST
-
-     if (fModelPersistence)
-        methBoost->SetWeightFileDir(fileDir);
+        return nullptr;
+     }
+     if (fModelPersistence)  methBoost->SetWeightFileDir(fileDir);
      methBoost->SetModelPersistence(fModelPersistence);
      methBoost->SetBoostedMethodName(theMethodName);                            // DSMTEST divided into two lines
      methBoost->fDataSetManager = loader->GetDataSetInfo().GetDataSetManager(); // DSMTEST
@@ -440,9 +441,10 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
    // set fDataSetManager if MethodCategory (to enable Category to create datasetinfo objects) // DSMTEST
    if (method->GetMethodType() == Types::kCategory) { // DSMTEST
       MethodCategory *methCat = (dynamic_cast<MethodCategory*>(im)); // DSMTEST
-      if (!methCat) // DSMTEST
+      if (!methCat) {// DSMTEST
          Log() << kFATAL << "Method with type kCategory cannot be casted to MethodCategory. /Factory" << Endl; // DSMTEST
-
+         return nullptr;
+      }
       if(fModelPersistence) methCat->SetWeightFileDir(fileDir);
       methCat->SetModelPersistence(fModelPersistence);
       methCat->fDataSetManager = loader->GetDataSetInfo().GetDataSetManager(); // DSMTEST
