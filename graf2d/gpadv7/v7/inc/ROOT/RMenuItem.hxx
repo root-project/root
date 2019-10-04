@@ -20,8 +20,8 @@ namespace Experimental {
 namespace Detail {
 
 /** \class RMenuItem
-\ingroup BaseROOT7
-\brief Class contains info for producing menu item on the JS side.
+\ingroup GpadROOT7
+\brief Base class for menu items, shown on JS side.
 \author Sergey Linev
 \date 2017-06-29
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
@@ -42,7 +42,7 @@ public:
    RMenuItem(const std::string &name, const std::string &title) : fName(name), fTitle(title), fExec() {}
 
    /** virtual destructor need for vtable, used when vector of RMenuItem* is stored */
-   virtual ~RMenuItem() {}
+   virtual ~RMenuItem() = default;
 
    /** Set execution string with all required arguments,
     * which will be executed when menu item is selected  */
@@ -55,9 +55,17 @@ public:
    const std::string &GetExec() const { return fExec; }
 };
 
+/** \class RCheckedMenuItem
+\ingroup GpadROOT7
+\brief Menu item with check box
+\author Sergey Linev
+\date 2017-06-29
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
+
 class RCheckedMenuItem : public RMenuItem {
 protected:
-   bool fChecked = false; ///< -1 not exists, 0 - off, 1 - on
+   bool fChecked = false; ///< state of checkbox
 public:
    /** Default constructor */
    RCheckedMenuItem() = default;
@@ -76,6 +84,14 @@ public:
 
    bool IsChecked() const { return fChecked; }
 };
+
+/** \class RMenuArgument
+\ingroup GpadROOT7
+\brief Argument description for menu item which should invoke class method
+\author Sergey Linev
+\date 2017-06-29
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RMenuArgument {
 protected:
@@ -96,6 +112,14 @@ public:
    void SetDefault(const std::string &dflt) { fDefault = dflt; }
 };
 
+/** \class RArgsMenuItem
+\ingroup GpadROOT7
+\brief Menu item which requires extra arguments for invoked class method
+\author Sergey Linev
+\date 2017-06-29
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
+
 class RArgsMenuItem : public RMenuItem {
 protected:
    std::vector<RMenuArgument> fArgs;
@@ -115,6 +139,14 @@ public:
 } // namespace Detail
 
 ///////////////////////////////////////////////////////////////////////
+
+/** \class RMenuItems
+\ingroup GpadROOT7
+\brief List of items for object context menu
+\author Sergey Linev
+\date 2017-06-29
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RMenuItems {
 protected:
