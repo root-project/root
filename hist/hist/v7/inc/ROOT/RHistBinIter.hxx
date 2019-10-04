@@ -39,8 +39,8 @@ public:
    using HistBinStat_t = decltype(((HISTIMPL *)0x123)->GetStat().GetView(1));
 
 private:
-   size_t fIndex = 0; ///< Bin index
-   HistImpl_t *fHist; ///< The bin's histogram.
+   size_t fIndex{0}; ///< Bin index
+   HistImpl_t *fHist{nullptr}; ///< The bin's histogram.
    HistBinStat_t fStatView;
 
 public:

@@ -18,7 +18,6 @@
 
 #include "ROOT/RSpan.hxx"
 #include "ROOT/RAxis.hxx"
-#include "ROOT/RDrawable.hxx"
 #include "ROOT/RHistBinIter.hxx"
 #include "ROOT/RHistImpl.hxx"
 #include "ROOT/RHistData.hxx"
