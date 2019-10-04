@@ -71,10 +71,10 @@ protected:
 
 public:
    RPageSourceChain(std::string_view ntupleName, std::vector<std::string> locationVec,
-                    const RNTupleReadOptions &options);
-   RPageSourceChain(std::string_view ntupleName, std::vector<RPageSource *> sources, const RNTupleReadOptions &options);
+                    const RNTupleReadOptions &options = RNTupleReadOptions());
+   RPageSourceChain(std::string_view ntupleName, std::vector<RPageSource *> sources, const RNTupleReadOptions &options = RNTupleReadOptions());
    RPageSourceChain(std::string_view ntupleName, std::vector<std::unique_ptr<RPageSource>> &&sources,
-                    const RNTupleReadOptions &options);
+                    const RNTupleReadOptions &options = RNTupleReadOptions());
    ~RPageSourceChain() = default;
 
    std::unique_ptr<RPageSource> Clone() const;

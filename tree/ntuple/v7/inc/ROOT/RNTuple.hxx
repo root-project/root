@@ -75,11 +75,16 @@ public:
 
 
 /**
- * Listing of the different options that can be returned by RNTupleReader::GetInfo()
+ * Listing of the different options that can be returned by RNTupleReader::PrintInfo()
  */
 enum class ENTupleInfo {
    kSummary,  // The ntuple name, description, number of entries
    kStorageDetails, // size on storage, page sizes, compression factor, etc.
+};
+
+enum class EFileOpeningOptions {
+   kChain,     // Multiple files with same fields are chained
+   kFriend     // The field structure of multiple files with the same cluster structure are combined
 };
 
 
@@ -124,14 +129,24 @@ public:
    static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<RNTupleModel> model,
                                              std::string_view ntupleName,
                                              std::string_view storage);
-   static std::unique_ptr<RNTupleReader> Open(std::string_view ntupleName, std::string_view storage);
+   static std::unique_ptr<RNTupleReader> Open(std::string_view ntupleName,
+                                              std::string_view storage);
 
-   static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName, std::vector<std::string> storage);
-   static std::unique_ptr<RNTupleReader> Open(std::string_view ntupleName, std::vector<std::string> storage);
+   static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<RNTupleModel> model,
+                                              std::string_view ntupleName,
+                                              std::vector<std::string> storage,
+                                              EFileOpeningOptions op = EFileOpeningOptions::kChain);
+   static std::unique_ptr<RNTupleReader> Open(std::string_view ntupleName,
+                                              std::vector<std::string> storage,
+                                              EFileOpeningOptions op = EFileOpeningOptions::kChain);
 
    /// Chains 2 RNTupleReader with the same field and columns into a single one.
-   static std::unique_ptr<RNTupleReader> ChainReader(std::string_view ntupleName, std::unique_ptr<RNTupleReader>& reader1, std::unique_ptr<RNTupleReader>& reader2);
-   static std::unique_ptr<RNTupleReader> ChainReader(std::string_view ntupleName, std::unique_ptr<RNTupleReader>&& reader1, std::unique_ptr<RNTupleReader>&& reader2);
+   static std::unique_ptr<RNTupleReader> ChainReader(std::string_view ntupleName,
+                                                     std::unique_ptr<RNTupleReader>& reader1,
+                                                     std::unique_ptr<RNTupleReader>& reader2);
+   static std::unique_ptr<RNTupleReader> ChainReader(std::string_view ntupleName,
+                                                     std::unique_ptr<RNTupleReader>&& reader1,
+                                                     std::unique_ptr<RNTupleReader>&& reader2);
 
    /// The user imposes an ntuple model, which must be compatible with the model found in the data on storage
    RNTupleReader(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSource> source);

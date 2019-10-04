@@ -165,10 +165,6 @@ public:
    /// Guess the concrete derived page source from the file name (location)
    static std::unique_ptr<RPageSource> Create(std::string_view ntupleName, std::string_view location,
                                               const RNTupleReadOptions &options = RNTupleReadOptions());
-   static std::unique_ptr<RPageSource> Create(std::string_view ntupleName, std::vector<std::string> locationVec, const RNTupleReadOptions &options = RNTupleReadOptions());
-   static std::unique_ptr<RPageSource> CreateFrom2Reader(std::string_view ntupleName, RPageSource* s1, RPageSource* s2, const RNTupleReadOptions &options = RNTupleReadOptions());
-   static std::unique_ptr<RPageSource> CreateFrom2Reader(std::string_view ntupleName, std::unique_ptr<RPageSource>&& s1, std::unique_ptr<RPageSource>&& s2, const RNTupleReadOptions &options = RNTupleReadOptions());
-   /// Open the same storage multiple time, e.g. for reading in multiple threads
    virtual std::unique_ptr<RPageSource> Clone() const = 0;
 
    EPageStorageType GetType() final { return EPageStorageType::kSource; }
