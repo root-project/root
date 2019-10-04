@@ -14,6 +14,8 @@ A Tree Index with majorname and minorname.
 */
 
 #include "TTreeIndex.h"
+
+#include "TTreeFormula.h"
 #include "TTree.h"
 #include "TMath.h"
 

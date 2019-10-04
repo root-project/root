@@ -22,7 +22,6 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#include "THashTable.h"
 #include "TTree.h"
 #include "TTreeReaderUtils.h"
 #include "TNotifyLink.h"

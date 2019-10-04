@@ -164,8 +164,8 @@ protected:
 
 private:
    // Not implemented yet
-   TTreeFormula(const TTreeFormula&);
-   TTreeFormula& operator=(const TTreeFormula&);
+   TTreeFormula(const TTreeFormula&) = delete;
+   TTreeFormula& operator=(const TTreeFormula&) = delete;
 
    template<typename T> T GetConstant(Int_t k);
 

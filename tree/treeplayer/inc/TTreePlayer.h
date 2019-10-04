@@ -27,18 +27,18 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TTree.h"
-#include "TSelectorDraw.h"
 #include "TVirtualTreePlayer.h"
 
+#include "TSelectorDraw.h"
+#include "TTree.h"
 
 class TVirtualIndex;
 
 class TTreePlayer : public TVirtualTreePlayer {
 
 private:
-   TTreePlayer(const TTreePlayer &);
-   TTreePlayer& operator=(const TTreePlayer &);
+   TTreePlayer(const TTreePlayer &) = delete;
+   TTreePlayer& operator=(const TTreePlayer &) = delete;
 
 protected:
    TTree         *fTree;            //!  Pointer to current Tree
