@@ -22,6 +22,7 @@ if(root7)
   )
 
   set(HIST_V7_SOURCES v7/src/RAxis.cxx)
+  set(HIST_V7_DEPS ROOTGpadv7)
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Hist
@@ -177,6 +178,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
     MathCore
     Matrix
     RIO
+    ${HIST_V7_DEPS}
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
