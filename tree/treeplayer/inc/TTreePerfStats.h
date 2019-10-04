@@ -34,6 +34,7 @@ class TPaveText;
 class TGraphErrors;
 class TGaxis;
 class TText;
+
 class TTreePerfStats : public TVirtualPerfStats {
 
 public:
