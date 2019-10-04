@@ -18,9 +18,8 @@ namespace Experimental {
 
 
 /** class RPadBaseDisplayItem
-\ingroup BaseROOT7
-\brief Display item for the RPadBase
-Includes primitives and frames
+\ingroup GpadROOT7
+\brief Display item for the RPadBase class, includes primitives, attributes and frame
 \author Sergey Linev
 \date 2017-05-31
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
@@ -44,9 +43,13 @@ public:
    void Add(std::unique_ptr<RDisplayItem> &&item) { fPrimitives.push_back(std::move(item)); }
 };
 
-
-/// Display item for the pad
-/// Includes pad graphical properties
+/** class RPadDisplayItem
+\ingroup GpadROOT7
+\brief Display item for the RPad class, add pad position and size
+\author Sergey Linev
+\date 2017-05-31
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RPadDisplayItem : public RPadBaseDisplayItem {
 
@@ -67,14 +70,20 @@ public:
    }
 };
 
-/// Display item for the canvas
-/// Includes canvas properties
+
+/** class RCanvasDisplayItem
+\ingroup GpadROOT7
+\brief Display item for the RCanvas class, add canvas title and size
+\author Sergey Linev
+\date 2017-05-31
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RCanvasDisplayItem : public RPadBaseDisplayItem {
 
 protected:
-   std::string fTitle;                  ///< title of the pad (used for canvas)
-   std::array<int, 2> fWinSize;         ///< window size (used for canvas)
+   std::string fTitle;                  ///< title of the canvas
+   std::array<int, 2> fWinSize;         ///< canvas window size
 public:
    RCanvasDisplayItem() = default;
    virtual ~RCanvasDisplayItem() = default;
