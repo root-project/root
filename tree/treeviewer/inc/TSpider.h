@@ -22,12 +22,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TObject.h"
-
 #include "TAttFill.h"
-
 #include "TAttLine.h"
-
-#include "TAttText.h"
 
 class TTree;
 class TGraphPolargram;

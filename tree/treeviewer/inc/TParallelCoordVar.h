@@ -12,8 +12,8 @@
 #ifndef ROOT_TParallelCoordVar
 #define ROOT_TParallelCoordVar
 
-#include "TAttLine.h"
 #include "TNamed.h"
+#include "TAttLine.h"
 #include "TAttFill.h"
 
 class TParallelCoord;
@@ -54,7 +54,7 @@ private:
 public:
    TParallelCoordVar();
    TParallelCoordVar(Double_t *val, const char* title,Int_t id, TParallelCoord* gram);
-   ~TParallelCoordVar();
+   virtual ~TParallelCoordVar();
 
    void           AddRange(TParallelCoordRange* range);
    void           AddRange() {AddRange(NULL);} // *MENU*
