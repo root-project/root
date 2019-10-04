@@ -23,6 +23,46 @@
 
    JSROOT.v7 = {}; // placeholder for v7-relevant code
 
+   /** Evalue attributes using fAttr storage and configured RStyle */
+   JSROOT.TObjectPainter.prototype.v7EvalAttr = function(name, dflt) {
+      var obj = this.GetObject();
+      if (!obj) return dflt;
+
+      if (obj.fAttr && obj.fAttr.m) {
+         var value = obj.fAttr.m[name];
+         if (value) return value.v; // found value direct in attributes
+      }
+
+      if (this.rstyle && this.rstyle.fBlocks) {
+         var blks = this.rstyle.fBlocks;
+         for (var k=0;k<blks.length;++k) {
+            var block = blks[k];
+
+            var match = (this.csstype && (block.selector == this.csstype)) ||
+                        (obj.fId && (block.selector == ("#" + obj.fId))) ||
+                        (obj.fCssClass && (block.selector == ("." + obj.fCssClass)));
+
+            if (match && block.map && block.map.m) {
+               var value = block.map.m[name];
+               if (value) return value.v;
+            }
+         }
+      }
+
+      return dflt;
+   }
+
+   /** Evalue RColor using attribute storage and configured RStyle */
+   JSROOT.TObjectPainter.prototype.v7EvalColor = function(name, dflt) {
+      var rgb = this.v7EvalAttr(name + "_rgb", "");
+
+      if (rgb)
+         return "#" + rgb + this.v7EvalAttr(name + "_a", "");
+
+      return this.v7EvalAttr(name + "_name", "") || dflt;
+   }
+
+
    function TAxisPainter(axis, embedded) {
       JSROOT.TObjectPainter.call(this, axis);
 
@@ -3144,6 +3184,7 @@
             // keep snap id in painter, will be used for the
             if (this.painters.indexOf(objpainter)<0) this.painters.push(objpainter);
             objpainter.snapid = lst[indx].fObjectID;
+            objpainter.rstyle = lst[indx].fStyle;
          }
 
          objpainter = null;
@@ -3195,6 +3236,7 @@
             padpainter.DecodeOptions("");
             padpainter.SetDivId(this.divid); // pad painter will be registered in the canvas painters list
             padpainter.snapid = snap.fObjectID;
+            padpainter.rstyle = snap.fStyle;
 
             padpainter.CreatePadSvg();
 
@@ -3792,22 +3834,6 @@
       btns.attr("transform","translate("+btns_x+","+btns_y+")");
    }
 
-   TPadPainter.prototype.GetNewOpt = function(attr, name, dflt) {
-      if (!attr || !attr.m) return dflt;
-
-      var value = attr.m[name];
-      return value ? value.v : dflt;
-   }
-
-   TPadPainter.prototype.GetNewColor = function(attr, name, dflt) {
-      var rgb = this.GetNewOpt(attr, name + "_rgb", "");
-
-      if (rgb)
-         return "#" + rgb + this.GetNewOpt(attr, name + "_a", "");
-
-      return this.GetNewOpt(attr, name + "_name", "") || dflt;
-   }
-
    TPadPainter.prototype.GetCoordinate = function(pos) {
       var res = { x: 0, y: 0 };
 
@@ -4285,10 +4311,10 @@
 
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RHistDrawable<1>", icon: "img_histo1d", prereq: "v7hist", func: "JSROOT.v7.drawHist1", opt: "" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RHistDrawable<2>", icon: "img_histo2d", prereq: "v7hist", func: "JSROOT.v7.drawHist2", opt: "" });
-   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RText", icon: "img_text", prereq: "v7more", func: "JSROOT.v7.drawText", opt: "", direct: true });
-   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RLine", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawLine", opt: "", direct: true });
-   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RBox", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawBox", opt: "", direct: true });
-   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RMarker", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawMarker", opt: "", direct: true });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RText", icon: "img_text", prereq: "v7more", func: "JSROOT.v7.drawText", opt: "", direct: true, csstype: "text" });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RLine", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawLine", opt: "", direct: true, csstype: "line" });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RBox", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawBox", opt: "", direct: true, csstype: "box" });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RMarker", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawMarker", opt: "", direct: true, csstype: "marker" });
 
    JSROOT.v7.TAxisPainter = TAxisPainter;
    JSROOT.v7.TFramePainter = TFramePainter;

@@ -25,17 +25,16 @@
 
    function drawText() {
       var text         = this.GetObject(),
-          attr         = text.fAttr,
           pp           = this.pad_painter(),
           w            = this.pad_width(),
           h            = this.pad_height(),
           use_frame    = false,
           p            = pp.GetCoordinate(text.fPos),
-          text_size    = pp.GetNewOpt(attr, "text_size", 12),
-          text_angle   = -pp.GetNewOpt(attr, "text_angle", 0),
-          text_align   = pp.GetNewOpt(attr, "text_align", 22),
-          text_color   = pp.GetNewColor(attr, "text_color", "black"),
-          text_font    = pp.GetNewOpt(attr, "text_font", 41);
+          text_size    = this.v7EvalAttr( "text_size", 12),
+          text_angle   = -1 * this.v7EvalAttr( "text_angle", 0),
+          text_align   = this.v7EvalAttr( "text_align", 22),
+          text_color   = this.v7EvalColor( "text_color", "black"),
+          text_font    = this.v7EvalAttr( "text_font", 41);
 
       this.CreateG(use_frame);
 
@@ -56,13 +55,12 @@
    function drawLine() {
 
        var line         = this.GetObject(),
-           attr         = line.fAttr,
            pp           = this.pad_painter(),
            p1           = pp.GetCoordinate(line.fP1),
            p2           = pp.GetCoordinate(line.fP2),
-           line_width   = pp.GetNewOpt(attr, "line_width", 1),
-           line_style   = pp.GetNewOpt(attr, "line_style", 1),
-           line_color   = pp.GetNewColor(attr, "line_color", "black");
+           line_width   = this.v7EvalAttr("line_width", 1),
+           line_style   = this.v7EvalAttr("line_style", 1),
+           line_color   = this.v7EvalColor("line_color", "black");
 
        this.CreateG();
 
@@ -82,17 +80,16 @@
    function drawBox() {
 
        var box          = this.GetObject(),
-           attr         = box.fAttr,
            pp           = this.pad_painter(),
            p1           = pp.GetCoordinate(box.fP1),
            p2           = pp.GetCoordinate(box.fP2),
-           line_width   = pp.GetNewOpt(attr, "box_border_width", 1),
-           line_style   = pp.GetNewOpt(attr, "box_border_style", 1),
-           line_color   = pp.GetNewColor(attr, "box_border_color", "black"),
-           fill_color   = pp.GetNewColor(attr, "box_fill_color", "white"),
-           fill_style   = pp.GetNewOpt(attr, "box_fill_style", 1),
-           round_width  = pp.GetNewOpt(attr, "box_round_width", 0), // not yet exists
-           round_height = pp.GetNewOpt(attr, "box_round_height", 0); // not yet exists
+           line_width   = this.v7EvalAttr( "box_border_width", 1),
+           line_style   = this.v7EvalAttr( "box_border_style", 1),
+           line_color   = this.v7EvalColor( "box_border_color", "black"),
+           fill_color   = this.v7EvalColor( "box_fill_color", "white"),
+           fill_style   = this.v7EvalAttr( "box_fill_style", 1),
+           round_width  = this.v7EvalAttr( "box_round_width", 0), // not yet exists
+           round_height = this.v7EvalAttr( "box_round_height", 0); // not yet exists
 
     this.CreateG();
 
@@ -115,23 +112,20 @@
 
    function drawMarker() {
        var marker       = this.GetObject(),
-           attr         = marker.fAttr,
            pp           = this.pad_painter(),
            p            = pp.GetCoordinate(marker.fP),
-           marker_size  = pp.GetNewOpt(attr, "marker_size", 1),
-           marker_style = pp.GetNewOpt(attr, "marker_style", 1),
-           marker_color = pp.GetNewColor(attr, "marker_color", "black");
+           marker_size  = this.v7EvalAttr( "marker_size", 1),
+           marker_style = this.v7EvalAttr( "marker_style", 1),
+           marker_color = this.v7EvalColor( "marker_color", "black"),
+           att          = new JSROOT.TAttMarkerHandler({ style: marker_style, color: marker_color, size: marker_size }),
+           path         = att.create(p.x, p.y);
 
-           var att = new JSROOT.TAttMarkerHandler({ style: marker_style, color: marker_color, size: marker_size });
+       this.CreateG();
 
-           this.CreateG();
-
-           var  path = att.create(p.x, p.y);
-
-           if (path)
-              this.draw_g.append("svg:path")
-                  .attr("d", path)
-                  .call(att.func);
+       if (path)
+          this.draw_g.append("svg:path")
+                     .attr("d", path)
+                     .call(att.func);
    }
 
    // ================================================================================
