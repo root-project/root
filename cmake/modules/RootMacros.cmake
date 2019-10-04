@@ -822,6 +822,7 @@ endfunction()
 #---------------------------------------------------------------------------------------------------
 function(ROOT_ADD_INCLUDE_DIRECTORIES library)
   if(PROJECT_NAME STREQUAL "ROOT")
+
     if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/inc)
       target_include_directories(${library}
         PRIVATE
@@ -847,8 +848,19 @@ function(ROOT_ADD_INCLUDE_DIRECTORIES library)
       )
     endif()
 
-    # needed for generated headers like RConfigure.h and ROOT/RConfig.hxx
-    target_include_directories(${library} PRIVATE ${CMAKE_BINARY_DIR}/include)
+    if (cxxmodules)
+      # needed for generated headers like RConfigure.h and ROOT/RConfig.hxx
+      # FIXME: We prepend ROOTSYS/include because if we have built a module
+      # and try to resolve the 'same' header from a different location we will
+      # get a redefinition error.
+      # We should remove these lines when the fallback include is removed. Then
+      # we will need a module.modulemap file per `inc` directory.
+      target_include_directories(${library} BEFORE PRIVATE ${CMAKE_BINARY_DIR}/include)
+    else()
+      # needed for generated headers like RConfigure.h and ROOT/RConfig.hxx
+      target_include_directories(${library} PRIVATE ${CMAKE_BINARY_DIR}/include)
+    endif()
+
   endif()
 
 endfunction(ROOT_ADD_INCLUDE_DIRECTORIES)
