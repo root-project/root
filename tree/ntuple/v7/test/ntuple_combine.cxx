@@ -234,58 +234,58 @@ TEST(RNTupleChain, threeFiles)
    auto mergedStringView = ntuple->GetView<std::string>("st");
 
    // There are errors which only occur when the views are mixed up.
-   EXPECT_FLOAT_EQ(floatView(0), 5.0f);
-   EXPECT_FLOAT_EQ(floatView(14), 9.0f);
-   EXPECT_FLOAT_EQ(floatView(15), 10.0f);
-   EXPECT_FLOAT_EQ(floatView(1), 6.0f);
-   EXPECT_FLOAT_EQ(mergedfloatView(7), 6.0f);
-   EXPECT_FLOAT_EQ(floatView(2), 7.0f);
-   EXPECT_FLOAT_EQ(mergedfloatView(13), 8.0f);
-   EXPECT_FLOAT_EQ(floatView(5), 10.0f);
-   EXPECT_FLOAT_EQ(floatView(6), 11.0f);
-   EXPECT_FLOAT_EQ(floatView(10), 9.0f);
-   EXPECT_FLOAT_EQ(floatView(11), 10.0f);
-   EXPECT_FLOAT_EQ(floatView(7), 6.0f);
-   EXPECT_FLOAT_EQ(floatView(8), 7.0f);
-   EXPECT_FLOAT_EQ(floatView(9), 8.0f);
-   EXPECT_FLOAT_EQ(mergedfloatView(4), 9.0f);
-   EXPECT_FLOAT_EQ(floatView(12009), 12004.0f);
-   EXPECT_FLOAT_EQ(floatView(3), 8.0f);
-   EXPECT_FLOAT_EQ(floatView(4), 9.0f);
-   EXPECT_FLOAT_EQ(floatView(13), 8.0f);
-   EXPECT_FLOAT_EQ(mergedfloatView(0), 5.0f);
-   EXPECT_FLOAT_EQ(floatView(16), 11.0f);
-   EXPECT_FLOAT_EQ(floatView(17), 12.0f);
-   EXPECT_FLOAT_EQ(floatView(50000), 49995.0f);
+   EXPECT_FLOAT_EQ(5.0f, floatView(0));
+   EXPECT_FLOAT_EQ(9.0f, floatView(14));
+   EXPECT_FLOAT_EQ(10.0f, floatView(15));
+   EXPECT_FLOAT_EQ(6.0f, floatView(1));
+   EXPECT_FLOAT_EQ(6.0f, mergedfloatView(7));
+   EXPECT_FLOAT_EQ(7.0f, floatView(2));
+   EXPECT_FLOAT_EQ(8.0f, mergedfloatView(13));
+   EXPECT_FLOAT_EQ(10.0f, floatView(5));
+   EXPECT_FLOAT_EQ(11.0f, floatView(6));
+   EXPECT_FLOAT_EQ(9.0f, floatView(10));
+   EXPECT_FLOAT_EQ(10.0f, floatView(11));
+   EXPECT_FLOAT_EQ(6.0f, floatView(7));
+   EXPECT_FLOAT_EQ(7.0f, floatView(8));
+   EXPECT_FLOAT_EQ(8.0f, floatView(9));
+   EXPECT_FLOAT_EQ(9.0f, mergedfloatView(4));
+   EXPECT_FLOAT_EQ(12004.0f, floatView(12009));
+   EXPECT_FLOAT_EQ(8.0f, floatView(3));
+   EXPECT_FLOAT_EQ(9.0f, floatView(4));
+   EXPECT_FLOAT_EQ(8.0f, floatView(13));
+   EXPECT_FLOAT_EQ(5.0f, mergedfloatView(0));
+   EXPECT_FLOAT_EQ(11.0f, floatView(16));
+   EXPECT_FLOAT_EQ(12.0f, floatView(17));
+   EXPECT_FLOAT_EQ(49995.0f, floatView(50000));
 
-   EXPECT_EQ(stringView(14), "14");
-   EXPECT_EQ(stringView(0), "foofoofoo");
-   EXPECT_EQ(stringView(1), "foofoofoo");
-   EXPECT_EQ(stringView(1034), "1034");
-   EXPECT_EQ(stringView(2), "foofoofoo");
-   EXPECT_EQ(mergedStringView(6), "foofoofoo");
-   EXPECT_EQ(stringView(3), "foofoofoo");
-   EXPECT_EQ(stringView(8), "foo");
-   EXPECT_EQ(stringView(5), "foofoofoo");
-   EXPECT_EQ(mergedStringView(17), "17");
-   EXPECT_EQ(stringView(6), "foofoofoo");
-   EXPECT_EQ(mergedStringView(8), "foo");
-   EXPECT_EQ(stringView(7), "foo");
-   EXPECT_EQ(stringView(13), "13");
-   EXPECT_EQ(mergedStringView(0), "foofoofoo");
-   EXPECT_EQ(stringView(9), "foo");
-   EXPECT_EQ(stringView(10), "foo");
-   EXPECT_EQ(mergedStringView(7), "foo");
-   EXPECT_EQ(stringView(11), "foo");
-   EXPECT_EQ(mergedStringView(4), "foofoofoo");
-   EXPECT_EQ(stringView(12), "12");
-   EXPECT_EQ(mergedStringView(14), "14");
-   EXPECT_EQ(stringView(4), "foofoofoo");
-   EXPECT_EQ(stringView(17003), "17003");
-   EXPECT_EQ(stringView(15), "15");
-   EXPECT_EQ(stringView(34567), "34567");
-   EXPECT_EQ(stringView(1680), "1680");
-   EXPECT_EQ(stringView(60010), "60010");
+   EXPECT_EQ("14", stringView(14));
+   EXPECT_EQ("foofoofoo", stringView(0));
+   EXPECT_EQ("foofoofoo", stringView(1));
+   EXPECT_EQ("1034", stringView(1034));
+   EXPECT_EQ("foofoofoo", stringView(2));
+   EXPECT_EQ("foofoofoo", mergedStringView(6));
+   EXPECT_EQ("foofoofoo", stringView(3));
+   EXPECT_EQ("foo", stringView(8));
+   EXPECT_EQ("foofoofoo", stringView(5));
+   EXPECT_EQ("17", mergedStringView(17));
+   EXPECT_EQ("foofoofoo", stringView(6));
+   EXPECT_EQ("foo", mergedStringView(8));
+   EXPECT_EQ("foo", stringView(7));
+   EXPECT_EQ("13", stringView(13));
+   EXPECT_EQ("foofoofoo", mergedStringView(0));
+   EXPECT_EQ("foo", stringView(9));
+   EXPECT_EQ("foo", stringView(10));
+   EXPECT_EQ("foo", mergedStringView(7));
+   EXPECT_EQ("foo", stringView(11));
+   EXPECT_EQ("foofoofoo", mergedStringView(4));
+   EXPECT_EQ("12", stringView(12));
+   EXPECT_EQ("14", mergedStringView(14));
+   EXPECT_EQ("foofoofoo", stringView(4));
+   EXPECT_EQ("17003", stringView(17003));
+   EXPECT_EQ("15", stringView(15));
+   EXPECT_EQ("34567", stringView(34567));
+   EXPECT_EQ("1680", stringView(1680));
+   EXPECT_EQ("60010", stringView(60010));
    // TODO (lesimon): Check if RNTupleReader::Show() leads to desired output.
 }
 
@@ -320,51 +320,51 @@ TEST(RNTupleChain, ChainOfChain)
    auto doubleView3 = ntupleChainOfChain->GetView<double>("db");
    auto stringView3 = ntupleChainOfChain->GetView<std::string>("st");
 
-   EXPECT_DOUBLE_EQ(doubleView(0), 5.0f);
-   EXPECT_DOUBLE_EQ(doubleView(1), 6.0f);
-   EXPECT_DOUBLE_EQ(doubleView(2), 7.0f);
-   EXPECT_EQ(stringView(0), "foo0");
-   EXPECT_EQ(stringView(1), "foo1");
-   EXPECT_EQ(stringView(2), "foo2");
+   EXPECT_DOUBLE_EQ(5.0f, doubleView(0));
+   EXPECT_DOUBLE_EQ(6.0f, doubleView(1));
+   EXPECT_DOUBLE_EQ(7.0f, doubleView(2));
+   EXPECT_EQ("foo0", stringView(0));
+   EXPECT_EQ("foo1", stringView(1));
+   EXPECT_EQ("foo2", stringView(2));
 
-   EXPECT_DOUBLE_EQ(doubleView2(0), 5.0f);
-   EXPECT_DOUBLE_EQ(doubleView2(1), 6.0f);
-   EXPECT_DOUBLE_EQ(doubleView2(2), 7.0f);
-   EXPECT_DOUBLE_EQ(doubleView2(3), 5.0f);
-   EXPECT_DOUBLE_EQ(doubleView2(4), 6.0f);
-   EXPECT_DOUBLE_EQ(doubleView2(5), 7.0f);
+   EXPECT_DOUBLE_EQ(5.0f, doubleView2(0));
+   EXPECT_DOUBLE_EQ(6.0f, doubleView2(1));
+   EXPECT_DOUBLE_EQ(7.0f, doubleView2(2));
+   EXPECT_DOUBLE_EQ(5.0f, doubleView2(3));
+   EXPECT_DOUBLE_EQ(6.0f, doubleView2(4));
+   EXPECT_DOUBLE_EQ(7.0f, doubleView2(5));
 
-   EXPECT_EQ(stringView2(0), "foo0");
-   EXPECT_EQ(stringView2(1), "foo1");
-   EXPECT_EQ(stringView2(2), "foo2");
-   EXPECT_EQ(stringView2(3), "foo0");
-   EXPECT_EQ(stringView2(4), "foo1");
-   EXPECT_EQ(stringView2(5), "foo2");
+   EXPECT_EQ("foo0", stringView2(0));
+   EXPECT_EQ("foo1", stringView2(1));
+   EXPECT_EQ("foo2", stringView2(2));
+   EXPECT_EQ("foo0", stringView2(3));
+   EXPECT_EQ("foo1", stringView2(4));
+   EXPECT_EQ("foo2", stringView2(5));
 
-   EXPECT_DOUBLE_EQ(doubleView3(0), 5.0);
-   EXPECT_DOUBLE_EQ(doubleView3(1), 6.0);
-   EXPECT_DOUBLE_EQ(doubleView3(2), 7.0);
-   EXPECT_DOUBLE_EQ(doubleView3(3), 5.0);
-   EXPECT_DOUBLE_EQ(doubleView3(4), 6.0);
-   EXPECT_DOUBLE_EQ(doubleView3(5), 7.0);
-   EXPECT_DOUBLE_EQ(doubleView3(6), 5.0);
-   EXPECT_DOUBLE_EQ(doubleView3(7), 6.0);
-   EXPECT_DOUBLE_EQ(doubleView3(8), 7.0);
-   EXPECT_DOUBLE_EQ(doubleView3(9), 5.0);
-   EXPECT_DOUBLE_EQ(doubleView3(10), 6.0);
-   EXPECT_DOUBLE_EQ(doubleView3(11), 7.0);
-   EXPECT_EQ(stringView3(0), "foo0");
-   EXPECT_EQ(stringView3(1), "foo1");
-   EXPECT_EQ(stringView3(2), "foo2");
-   EXPECT_EQ(stringView3(3), "foo0");
-   EXPECT_EQ(stringView3(4), "foo1");
-   EXPECT_EQ(stringView3(5), "foo2");
-   EXPECT_EQ(stringView3(6), "foo0");
-   EXPECT_EQ(stringView3(7), "foo1");
-   EXPECT_EQ(stringView3(8), "foo2");
-   EXPECT_EQ(stringView3(9), "foo0");
-   EXPECT_EQ(stringView3(10), "foo1");
-   EXPECT_EQ(stringView3(11), "foo2");
+   EXPECT_DOUBLE_EQ(5.0, doubleView3(0));
+   EXPECT_DOUBLE_EQ(6.0, doubleView3(1));
+   EXPECT_DOUBLE_EQ(7.0, doubleView3(2));
+   EXPECT_DOUBLE_EQ(5.0, doubleView3(3));
+   EXPECT_DOUBLE_EQ(6.0, doubleView3(4));
+   EXPECT_DOUBLE_EQ(7.0, doubleView3(5));
+   EXPECT_DOUBLE_EQ(5.0, doubleView3(6));
+   EXPECT_DOUBLE_EQ(6.0, doubleView3(7));
+   EXPECT_DOUBLE_EQ(7.0, doubleView3(8));
+   EXPECT_DOUBLE_EQ(5.0, doubleView3(9));
+   EXPECT_DOUBLE_EQ(6.0, doubleView3(10));
+   EXPECT_DOUBLE_EQ(7.0, doubleView3(11));
+   EXPECT_EQ("foo0", stringView3(0));
+   EXPECT_EQ("foo1", stringView3(1));
+   EXPECT_EQ("foo2", stringView3(2));
+   EXPECT_EQ("foo0", stringView3(3));
+   EXPECT_EQ("foo1", stringView3(4));
+   EXPECT_EQ("foo2", stringView3(5));
+   EXPECT_EQ("foo0", stringView3(6));
+   EXPECT_EQ("foo1", stringView3(7));
+   EXPECT_EQ("foo2", stringView3(8));
+   EXPECT_EQ("foo0", stringView3(9));
+   EXPECT_EQ("foo1", stringView3(10));
+   EXPECT_EQ("foo2", stringView3(11));
 }
 
 TEST(RNTupleChain, ChainOfChainWithStdMove)
@@ -395,41 +395,69 @@ TEST(RNTupleChain, ChainOfChainWithStdMove)
    auto doubleView = ntupleChainOfChain->GetView<double>("db");
    auto stringView = ntupleChainOfChain->GetView<std::string>("st");
 
-   EXPECT_DOUBLE_EQ(doubleView(0), 5.0);
-   EXPECT_DOUBLE_EQ(doubleView(1), 6.0);
-   EXPECT_DOUBLE_EQ(doubleView(2), 7.0);
-   EXPECT_DOUBLE_EQ(doubleView(10000), 10005.0);
-   EXPECT_DOUBLE_EQ(doubleView(10001), 10006.0);
-   EXPECT_DOUBLE_EQ(doubleView(21000), 5.0);
-   EXPECT_DOUBLE_EQ(doubleView(21001), 6.0);
-   EXPECT_DOUBLE_EQ(doubleView(21002), 7.0);
-   EXPECT_DOUBLE_EQ(doubleView(31000), 10005.0);
-   EXPECT_DOUBLE_EQ(doubleView(63001), 6.0);
-   EXPECT_DOUBLE_EQ(doubleView(31001), 10006.0);
-   EXPECT_DOUBLE_EQ(doubleView(42000), 5.0);
-   EXPECT_DOUBLE_EQ(doubleView(42001), 6.0);
-   EXPECT_DOUBLE_EQ(doubleView(42002), 7.0);
-   EXPECT_DOUBLE_EQ(doubleView(52000), 10005.0);
-   EXPECT_DOUBLE_EQ(doubleView(52001), 10006.0);
-   EXPECT_DOUBLE_EQ(doubleView(63000), 5.0);
-   EXPECT_DOUBLE_EQ(doubleView(63002), 7.0);
-   EXPECT_EQ(stringView(0), "foo0");
-   EXPECT_EQ(stringView(1), "foo1");
-   EXPECT_EQ(stringView(2), "foo2");
-   EXPECT_EQ(stringView(10000), "foo10000");
-   EXPECT_EQ(stringView(10001), "foo10001");
-   EXPECT_EQ(stringView(21000), "foo0");
-   EXPECT_EQ(stringView(21001), "foo1");
-   EXPECT_EQ(stringView(21002), "foo2");
-   EXPECT_EQ(stringView(63000), "foo0");
-   EXPECT_EQ(stringView(63001), "foo1");
-   EXPECT_EQ(stringView(31000), "foo10000");
-   EXPECT_EQ(stringView(31001), "foo10001");
-   EXPECT_EQ(stringView(42000), "foo0");
-   EXPECT_EQ(stringView(42001), "foo1");
-   EXPECT_EQ(stringView(42002), "foo2");
-   EXPECT_EQ(stringView(52000), "foo10000");
-   EXPECT_EQ(stringView(52001), "foo10001");
-   EXPECT_EQ(stringView(63002), "foo2");
+   EXPECT_DOUBLE_EQ(5.0, doubleView(0));
+   EXPECT_DOUBLE_EQ(6.0, doubleView(1));
+   EXPECT_DOUBLE_EQ(7.0, doubleView(2));
+   EXPECT_DOUBLE_EQ(10005.0, doubleView(10000));
+   EXPECT_DOUBLE_EQ(10006.0, doubleView(10001));
+   EXPECT_DOUBLE_EQ(5.0, doubleView(21000));
+   EXPECT_DOUBLE_EQ(6.0, doubleView(21001));
+   EXPECT_DOUBLE_EQ(7.0, doubleView(21002));
+   EXPECT_DOUBLE_EQ(10005.0, doubleView(31000));
+   EXPECT_DOUBLE_EQ(6.0, doubleView(63001));
+   EXPECT_DOUBLE_EQ(10006.0, doubleView(31001));
+   EXPECT_DOUBLE_EQ(5.0, doubleView(42000));
+   EXPECT_DOUBLE_EQ(6.0, doubleView(42001));
+   EXPECT_DOUBLE_EQ(7.0, doubleView(42002));
+   EXPECT_DOUBLE_EQ(10005.0, doubleView(52000));
+   EXPECT_DOUBLE_EQ(10006.0, doubleView(52001));
+   EXPECT_DOUBLE_EQ(5.0, doubleView(63000));
+   EXPECT_DOUBLE_EQ(7.0, doubleView(63002));
+   EXPECT_EQ("foo0", stringView(0));
+   EXPECT_EQ("foo1", stringView(1));
+   EXPECT_EQ("foo2", stringView(2));
+   EXPECT_EQ("foo10000", stringView(10000));
+   EXPECT_EQ("foo10001", stringView(10001));
+   EXPECT_EQ("foo0", stringView(21000));
+   EXPECT_EQ("foo1", stringView(21001));
+   EXPECT_EQ("foo2", stringView(21002));
+   EXPECT_EQ("foo0", stringView(63000));
+   EXPECT_EQ("foo1", stringView(63001));
+   EXPECT_EQ("foo10000", stringView(31000));
+   EXPECT_EQ("foo10001", stringView(31001));
+   EXPECT_EQ("foo0", stringView(42000));
+   EXPECT_EQ("foo1", stringView(42001));
+   EXPECT_EQ("foo2", stringView(42002));
+   EXPECT_EQ("foo10000", stringView(52000));
+   EXPECT_EQ("foo10001", stringView(52001));
+   EXPECT_EQ("foo2", stringView(63002));
 }
 
+// When a cached page is returned in RPageSourceRoot::PopulatePage(), 2 pages with the same buffer will exist.
+// This test should check if RNTupleChain can deal with such a situation.
+TEST(RNTupleChain, CachedPage)
+{
+   const std::string ntupleName = "CachedPageNTuple";
+   FileRaii fileGuard("test_ntuple_chain_cachedPage.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto boField = model->MakeField<bool>("bo");
+      auto u64Field = model->MakeField<std::uint64_t>("u64");
+      auto stField = model->MakeField<std::string>("st");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, fileGuard.GetPath());
+
+      for (unsigned int i = 0; i < 10; ++i) {
+         *boField = i%2;
+         *u64Field = i;
+         *stField = std::to_string(i) + "-th entry";
+         ntuple->Fill();
+      }
+   }
+
+   auto ntuple = RNTupleReader::Open(ntupleName, { fileGuard.GetPath(), fileGuard.GetPath() });
+   auto ntupleView1 = ntuple->GetView<bool>("bo");
+   auto ntupleView2 = ntuple->GetView<bool>("bo");
+
+   EXPECT_EQ(true, ntupleView1(11));
+   EXPECT_EQ(false, ntupleView2(12));
+}

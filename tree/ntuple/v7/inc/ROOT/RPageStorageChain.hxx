@@ -48,8 +48,16 @@ private:
    /// column. fNElementsPerColumnPerSource.at(i).at(j) holds the entry of the i-th source and (j-1)-th column (start
    /// counting i and j from 1 instead of 0). For all j, fNElementsPerColumnPerSource.at(0).at(j) = 0.
    std::vector<std::vector<std::size_t>> fNElementsPerColumnPerSource;
-   /// Maps the buffer of a RPage (void*) to its RPageSource (std::size_t = (index of fSources))
-   std::unordered_map<void *, std::size_t> fPageMapper;
+   /// Keeps track to which RPageSource a populated page belongs to and how often the same page was populated but not
+   /// released yet.
+   struct PageInfo {
+      /// Tells that the RPage belongs to the RPageSource fSources.at(fSourceId).
+      std::size_t fSourceId;
+      /// Tells how often the same page was populated.
+      std::size_t fNSamePagePopulated;
+   };
+   /// Maps the buffer of a RPage (void*) to its RPageSource.
+   std::unordered_map<void *, PageInfo> fPageMapper;
    /// Is set to true when the meta-data of the fields and columns don't match.
    /// Getting pages from a unsafe RPageStorageChain can lead to undefined behaviour.
    bool fUnsafe = false;
@@ -67,10 +75,6 @@ public:
    RPageSourceChain(std::string_view ntupleName, std::vector<RPageSource *> sources, const RNTupleReadOptions &options);
    RPageSourceChain(std::string_view ntupleName, std::vector<std::unique_ptr<RPageSource>> &&sources,
                     const RNTupleReadOptions &options);
-   RPageSourceChain(const RPageSourceChain &other) = delete;
-   RPageSourceChain &operator=(const RPageSourceChain &other) = delete;
-   RPageSourceChain(RPageSourceChain &&other) = default;
-   RPageSourceChain &operator=(RPageSourceChain &&other) = default;
    ~RPageSourceChain() = default;
 
    std::unique_ptr<RPageSource> Clone() const;

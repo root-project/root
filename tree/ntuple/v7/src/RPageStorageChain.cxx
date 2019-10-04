@@ -164,7 +164,12 @@ ROOT::Experimental::Detail::RPageSourceChain::PopulatePage(ColumnHandle_t column
    R__ASSERT(sourceIndex != fSources.size() && "globalIndex is bigger than total number of entries.");
 
    RPage page{fSources.at(sourceIndex)->PopulatePage(columnHandle, globalIndex - fNEntryPerSource.at(sourceIndex))};
-   fPageMapper.emplace(page.GetBuffer(), sourceIndex);
+
+   if (fPageMapper.find(page.GetBuffer()) == fPageMapper.end()) {
+      fPageMapper.emplace(page.GetBuffer(), PageInfo{sourceIndex, 1});
+   } else {
+      fPageMapper.at(page.GetBuffer()).fNSamePagePopulated += 1;
+   }
 
    auto clusterId = fDescriptor.FindClusterId(columnHandle.fId, globalIndex);
    auto selfOffset = fDescriptor.GetClusterDescriptor(clusterId).GetColumnRange(columnHandle.fId).fFirstElementIndex;
@@ -190,7 +195,12 @@ ROOT::Experimental::Detail::RPageSourceChain::PopulatePage(ColumnHandle_t column
    RClusterIndex newClusterIndex(clusterIndex.GetClusterId() - fNClusterPerSource.at(sourceIndex),
                                  clusterIndex.GetIndex());
    RPage page{fSources.at(sourceIndex)->PopulatePage(columnHandle, newClusterIndex)};
-   fPageMapper.emplace(page.GetBuffer(), sourceIndex);
+
+   if (fPageMapper.find(page.GetBuffer()) == fPageMapper.end()) {
+      fPageMapper.emplace(page.GetBuffer(), PageInfo{sourceIndex, 1});
+   } else {
+      fPageMapper.at(page.GetBuffer()).fNSamePagePopulated += 1;
+   }
 
    auto selfOffset = fDescriptor.GetClusterDescriptor(clusterId).GetColumnRange(columnHandle.fId).fFirstElementIndex;
    auto clusterInfo = RPage::RClusterInfo(clusterId, selfOffset);
@@ -204,16 +214,15 @@ void ROOT::Experimental::Detail::RPageSourceChain::ReleasePage(RPage &page)
 {
    if (page.IsNull())
       return;
-   for (const auto &m : fPageMapper) {
-      if (m.first == page.GetBuffer()) {
-         fSources.at(m.second)->ReleasePage(page);
-         // Sometimes malloc allocates the same memory location as a previous malloc.
-         // To avoid a collision of keys for such cases, the entry is deleted from std::unordered_map when released.
-         fPageMapper.erase(m.first);
-         return;
-      }
-   }
-   R__ASSERT(false && "Page could not be assigned to source and released.");
+   auto mapIterator = fPageMapper.find(page.GetBuffer());
+   if (mapIterator == fPageMapper.end())
+      R__ASSERT(false && "Page could not be assigned to source and released.");
+
+   fSources.at(mapIterator->second.fSourceId)->ReleasePage(page);
+   // Sometimes malloc allocates the same memory location as a previous malloc.
+   // To avoid a collision of keys for such cases, the entry is deleted from std::unordered_map when released.
+   if (mapIterator->second.fNSamePagePopulated-- == 1)
+      fPageMapper.erase(mapIterator);
 }
 
 void ROOT::Experimental::Detail::RPageSourceChain::GetHeaderAndFooter(RNTupleDescriptorBuilder &descBuilder)
