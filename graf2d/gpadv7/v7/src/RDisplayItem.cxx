@@ -8,6 +8,8 @@
 
 #include "ROOT/RDisplayItem.hxx"
 
+#include "ROOT/RDrawable.hxx"
+
 #include "TString.h"
 
 ////////////////////////////////////////////////////////////////////////////
@@ -23,7 +25,6 @@ void ROOT::Experimental::RDisplayItem::BuildFullId(const std::string &prefix)
 {
    SetObjectID(prefix + std::to_string(GetIndex()) + "_" + GetObjectID());
 }
-
 
 std::string ROOT::Experimental::RDisplayItem::ObjectIDFromPtr(const void *ptr)
 {

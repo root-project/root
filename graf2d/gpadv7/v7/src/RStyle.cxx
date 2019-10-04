@@ -19,15 +19,13 @@ using namespace std::string_literals;
 ///////////////////////////////////////////////////////////////////////////////
 /// Evaluate style
 
-const ROOT::Experimental::RAttrMap::Value_t *ROOT::Experimental::RStyle::Eval(const std::string &field, const RDrawable *drawable) const
+const ROOT::Experimental::RAttrMap::Value_t *ROOT::Experimental::RStyle::Eval(const std::string &field, const RDrawable &drawable) const
 {
    for (const auto &block : fBlocks) {
-
-      bool match = !drawable || drawable->MatchSelector(block.selector);
-
-      if (match) {
+      if (drawable.MatchSelector(block.selector)) {
          auto res = block.map.Find(field);
-         if (res) return res;
+         if (res)
+            return res;
       }
    }
 
