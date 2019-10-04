@@ -36,11 +36,12 @@
 #include "TList.h"
 #include "TSystem.h"
 #include "TGDNDManager.h"
-#include "TBufferFile.h"
 #include "Riostream.h"
 #include "TRemoteObject.h"
 #include "TImage.h"
+
 #include <time.h>
+#include <stdlib.h>
 
 ClassImp(TGFileItem);
 ClassImp(TGFileContainer);
