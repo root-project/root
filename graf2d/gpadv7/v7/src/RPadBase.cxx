@@ -30,7 +30,6 @@ void ROOT::Experimental::RPadBase::UseStyle(const std::shared_ptr<RStyle> &style
    RDrawable::UseStyle(style);
    for (auto &drawable : fPrimitives)
       drawable->UseStyle(style);
-
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -89,6 +88,8 @@ void ROOT::Experimental::RPadBase::DisplayPrimitives(RPadBaseDisplayItem &padite
    paditem.SetAttributes(&GetAttrMap());
    paditem.SetFrame(GetFrame());
 
+   paditem.SetPadStyle(fStyle.lock());
+
    unsigned indx = 0;
 
    for (auto &drawable : fPrimitives) {
@@ -96,7 +97,8 @@ void ROOT::Experimental::RPadBase::DisplayPrimitives(RPadBaseDisplayItem &padite
       if (item) {
          item->SetObjectIDAsPtr(drawable.get());
          item->SetIndex(indx);
-         paditem.Add(std::move(item));
+         // add object with the style
+         paditem.Add(std::move(item), drawable->fStyle.lock());
       }
       ++indx;
    }
