@@ -12,8 +12,6 @@
 #ifndef ROOT_TMemStatShow
 #define ROOT_TMemStatShow
 
-
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TMemStatShow                                                         //
