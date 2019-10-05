@@ -169,6 +169,12 @@ else()
         COMMENT "Copying LLVM resource and header files")
 endif()
 add_custom_target(LLVMRES DEPENDS ${stamp_file} CLING)
-
+# CLING is a shorthand for CLING_LIBRARIES and some other clang-specific
+# dependencies which ensure the correct order of building. Then the cling header
+# files (such as RuntimeUniverse.h) are moved to a semi-private place in ROOT
+# #ROOTSYS/etc. This is the place where ROOT will use them from and we should
+# add an explcit dependency to something cling-related which ROOT knows.
+# ClingUtils seems a good candidate because it is very foundational.
+add_dependencies(ClingUtils LLVMRES)
 ROOT_ADD_TEST_SUBDIRECTORY(test)
 
