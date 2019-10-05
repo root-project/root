@@ -38,4 +38,4 @@ ROOT_EXECUTABLE(rootcling_stage1 src/rootcling_stage1.cxx
                               LIBRARIES ${CLING_LIBRARIES} ${LINK_LIBS} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
                               NOINSTALL)
 set_target_properties(rootcling_stage1 PROPERTIES RUNTIME_OUTPUT_DIRECTORY src)
-add_dependencies(rootcling_stage1 CLING LLVMRES)
+add_dependencies(rootcling_stage1 ClingUtils)
