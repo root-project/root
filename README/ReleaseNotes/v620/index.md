@@ -69,6 +69,8 @@ or in `TBrowser` by opening `Browser Help → About ROOT`.
  * rootcling warns if it sees and unrecognized flag (usually coming from the
    CXXFLAGS of the build system). Please remove them from the invocation because
    the warning will become a hard error in the next releases.
+ * The empty headers `Gtypes.h` and `Htypes.h` are deprecated. Please include
+   `Rtypes.h`
 
 ### Deprecated packages
 

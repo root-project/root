@@ -17,7 +17,6 @@ set(BASE_HEADERS
   Buttons.h
   Bytes.h
   Byteswap.h
-  Gtypes.h
   GuiTypes.h
   KeySymbols.h
   MessageTypes.h

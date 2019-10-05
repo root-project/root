@@ -11,6 +11,12 @@
 #ifndef ROOT_Gtypes
 #define ROOT_Gtypes
 
+#warning "This header is deprecated. Please include Rtypes.h"
+
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,00)
+# error "Remove this deprecated file".
+#endif
+
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
