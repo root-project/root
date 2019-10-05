@@ -81,6 +81,15 @@ public:
    void          ClearBinContents();                 // Clears the content of all bins
    TObject      *Clone(const char* newname = "") const;
    void          ChangePartition(Int_t n, Int_t m);  // Sets the number of partition cells to another value
+   using TH2::Multiply;
+   using TH2::Divide;
+   using TH2::Interpolate;
+   virtual Bool_t Divide(TF1 *, Double_t);
+   virtual Bool_t Multiply(TF1 *, Double_t);
+   virtual Double_t ComputeIntegral(Bool_t);
+   virtual TH1 *  FFT(TH1*, Option_t * );
+   virtual TH1 *  GetAsymmetry(TH1* , Double_t,  Double_t);
+   virtual Double_t Interpolate(Double_t, Double_t);
    virtual Int_t Fill(Double_t x,Double_t y);
    virtual Int_t Fill(Double_t x,Double_t y, Double_t w);
    virtual Int_t Fill(const char* name, Double_t w);
