@@ -41,7 +41,7 @@ void TMemberInspector::TParentBuf::Append(const char* add)
    // Add "add" to string
    if (!add || !add[0]) return;
    Ssiz_t addlen = strlen(add);
-   fBuf.reserve(fLen + addlen);
+   fBuf.resize(fLen + addlen + 1);
    const char* i = add;
    while (*i) {
       fBuf[fLen++] = *i;
