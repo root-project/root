@@ -143,7 +143,7 @@ public:
    /*! Function for adding Recurrent Layer in the Deep Neural Network,
     * with given parameters */
    TBasicRNNLayer<Architecture_t> *AddBasicRNNLayer(size_t stateSize, size_t inputSize, size_t timeSteps,
-                                                    bool rememberState = false);
+                                                    bool rememberState = false,EActivationFunction f = EActivationFunction::kTanh);
 
    /*! Function for adding Vanilla RNN when the layer is already created
     */
@@ -502,7 +502,7 @@ void TDeepNet<Architecture_t, Layer_t>::AddMaxPoolLayer(TMaxPoolLayer<Architectu
 template <typename Architecture_t, typename Layer_t>
 TBasicRNNLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBasicRNNLayer(size_t stateSize, size_t inputSize,
                                                                                     size_t timeSteps,
-                                                                                    bool rememberState)
+                                                                                    bool rememberState, EActivationFunction f)
 {
 
    // should check if input and time size are consistent
@@ -526,7 +526,7 @@ TBasicRNNLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBasicRNNLa
 
    TBasicRNNLayer<Architecture_t> *basicRNNLayer =
       new TBasicRNNLayer<Architecture_t>(this->GetBatchSize(), stateSize, inputSize, timeSteps, rememberState,
-                                         DNN::EActivationFunction::kTanh, fIsTraining, this->GetInitialization());
+                                         f, fIsTraining, this->GetInitialization());
    fLayers.push_back(basicRNNLayer);
    return basicRNNLayer;
 }

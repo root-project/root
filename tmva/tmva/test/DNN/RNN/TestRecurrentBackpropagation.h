@@ -17,6 +17,7 @@
 #define TMVA_TEST_DNN_TEST_RNN_TEST_BWDPASS_H
 
 #include <iostream>
+#include <iomanip>
 #include <vector>
 
 #include "../Utility.h"
@@ -60,7 +61,8 @@ auto evaluate_net_weight(TDeepNet<Architecture> &net, typename Architecture::Ten
     net.GetLayerAt(l)->GetWeightsAt(k).operator()(i,j) = xvalue;
     Scalar_t res = net.Loss(X, Y, W, false, false);
     net.GetLayerAt(l)->GetWeightsAt(k).operator()(i,j) = prev_value;
-    //std::cout << "compute loss for weight  " << xvalue << "  " << prev_value << " result " << res << std::endl;
+    
+    //std::cout << "compute loss for weight  " << std::setprecision(12) << xvalue << "  " << prev_value << " result " << res << std::setprecision(6) << std::endl;
     return res;
 }
 
@@ -73,11 +75,11 @@ auto evaluate_net_bias(TDeepNet<Architecture> &net, typename Architecture::Tenso
                        size_t k, size_t i, typename Architecture::Scalar_t xvalue) -> typename Architecture::Scalar_t
 {
     using Scalar_t = typename Architecture::Scalar_t;
- 
+
     Scalar_t prev_value = net.GetLayerAt(l)->GetBiasesAt(k).operator()(i,0);
     net.GetLayerAt(l)->GetBiasesAt(k).operator()(i,0) = xvalue;
     Scalar_t res = net.Loss(X, Y, W, false, false);
-    net.GetLayerAt(l)->GetBiasesAt(k).operator()(i,0) = prev_value; 
+    net.GetLayerAt(l)->GetBiasesAt(k).operator()(i,0) = prev_value;
     return res;
 }
 
@@ -89,12 +91,12 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
                                   std::vector<bool> options = {}, bool debug = false)
 
 {
-   bool failed = false; 
-   if (options.size() == 0) options = std::vector<bool>(4); 
+   bool failed = false;
+   if (options.size() == 0) options = std::vector<bool>(4);
    bool randomInput = !options[0];
    bool addDenseLayer = options[1];
    bool addExtraRNN = options[2];
-   
+
    using Matrix_t   = typename Architecture::Matrix_t;
    using Tensor_t   = typename Architecture::Tensor_t;
    using RNNLayer_t = TBasicRNNLayer<Architecture>; 
@@ -105,21 +107,21 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
    //std::vector<Matrix_t<Double_t>> XRef(batchSize, Matrix_t<Double_t>(timeSteps, inputSize));    // B x T x D
    Tensor_t XArch (batchSize, timeSteps, inputSize); // B x T x D
 
-   // for random input (default) 
-   if (randomInput) { 
+   // for random input (default)
+   if (randomInput) {
    for (size_t i = 0; i < batchSize; ++i) {
          for (size_t l = 0; l < (size_t) timeSteps; ++l) {
             for (size_t m = 0; m < (size_t) inputSize; ++m) {
                //XArch[i](l, m) = i + l + m;
                XArch(i, l, m) = gRandom->Uniform(-1,1);
             }
-         } 
+         }
       }
    }
-   else { 
-      R__ASSERT(inputSize <= 6); 
-      R__ASSERT(timeSteps <= 3); 
-      R__ASSERT(batchSize <= 1); 
+   else {
+      R__ASSERT(inputSize <= 6);
+      R__ASSERT(timeSteps <= 3);
+      R__ASSERT(batchSize <= 1);
       double x_input[] = {-1,   1,  -2,  2, -3,  3 ,
                           -0.5, 0.5,-0.8,0.9, -2, 1.5,
                           -0.2, 0.1,-0.5,0.4, -1, 1.};
@@ -133,12 +135,13 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
          }
       }
       gRandom->SetSeed(1); // for weights initizialization
+      Architecture::SetRandomSeed(111);
    }
    if (debug) printTensor<Architecture>(XArch,"input");
 
    size_t outputSize = timeSteps*stateSize;
-   if (addDenseLayer) outputSize = 1; 
-   
+   if (addDenseLayer) outputSize = 1;
+
    Matrix_t Y(batchSize, outputSize), weights(batchSize, 1);
    //randomMatrix(Y);
    for (size_t i = 0; i < (size_t) Y.GetNrows(); ++i) {
@@ -158,16 +161,17 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
    std::cout << std::endl;
 
    Net_t rnn(batchSize, batchSize, timeSteps, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kGauss);
-   RNNLayer_t* layer = rnn.AddBasicRNNLayer(stateSize, inputSize, timeSteps);
+   RNNLayer_t* layer = rnn.AddBasicRNNLayer(stateSize, inputSize, timeSteps, false, TMVA::DNN::EActivationFunction::kSigmoid);  // don't use tanh in test due to limited vdt precision
    //size_t input2 = stateSize;
-   if (addExtraRNN) rnn.AddBasicRNNLayer(stateSize, stateSize, timeSteps);
+   if (addExtraRNN) rnn.AddBasicRNNLayer(stateSize, stateSize, timeSteps, false,
+                                         TMVA::DNN::EActivationFunction::kRelu); 
    //layer->Print();
    rnn.AddReshapeLayer(1, 1, timeSteps*stateSize, true);
 
    DenseLayer_t * dlayer1 = nullptr;
    DenseLayer_t * dlayer2 = nullptr;
    if (addDenseLayer) {
-      dlayer1 = rnn.AddDenseLayer(10, TMVA::DNN::EActivationFunction::kTanh);
+      dlayer1 = rnn.AddDenseLayer(10, TMVA::DNN::EActivationFunction::kSigmoid);
       dlayer2 = rnn.AddDenseLayer(1, TMVA::DNN::EActivationFunction::kIdentity);
    }
 
@@ -178,34 +182,34 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
    auto & wi = layer->GetWeightsInput();
    if (debug) printTensor<Architecture>(wi,"Input weights");
 #if 0
-   for (int i = 0; i < stateSize; ++i) { 
-      for (int j = 0; j < inputSize; ++j) { 
+   for (int i = 0; i < stateSize; ++i) {
+      for (int j = 0; j < inputSize; ++j) {
          wi(i,j) =  gRandom->Uniform(-1,1);
       }
-         wi(i,i) = 1.; 
+         wi(i,i) = 1.;
    }
 #endif
-   
+
    auto & wh = layer->GetWeightsState();
    if (debug) printTensor<Architecture>(wh,"State weights");
 #if 0
-   for (int i = 0; i < stateSize; ++i) { 
-      for (int j = 0; j < stateSize; ++j) { 
+   for (int i = 0; i < stateSize; ++i) {
+      for (int j = 0; j < stateSize; ++j) {
          wh(i,j) = gRandom->Uniform(-1,1);
       }
-         wh(i,i) = 0.5; 
+         wh(i,i) = 0.5;
    }
 #endif
    auto & b = layer->GetBiasesState();
    if (debug) b.Print();
 #if 0
-   for (int i = 0; i < (size_t) b.GetNrows(); ++i) { 
-      for (int j = 0; j < (size_t) b.GetNcols(); ++j) { 
+   for (int i = 0; i < (size_t) b.GetNrows(); ++i) {
+      for (int j = 0; j < (size_t) b.GetNcols(); ++j) {
          b(i,j) = gRandom->Uniform(-0.5,0.5);
       }
    }
 #endif
-   
+
    rnn.Forward(XArch);
    rnn.Backward(XArch, Y, weights);
 
@@ -220,12 +224,12 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
       }
    }
 
-   
+
    Scalar_t maximum_error = 0.0;
-   std::string maxerrorType; 
+   std::string maxerrorType;
 
    ROOT::Math::RichardsonDerivator deriv;
-   
+
 
    // Weights Input, k = 0
    auto &Wi = layer->GetWeightsAt(0);
@@ -241,7 +245,7 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
 
          // Compute the relative error if dy != 0.
          Scalar_t error;
-         std::string errorType; 
+         std::string errorType;
          if (std::fabs(dy_ref) > 1e-15) {
             error = std::fabs((dy - dy_ref) / dy_ref);
             errorType = "relative";
@@ -254,7 +258,7 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
 
          if (error >= maximum_error) {
             maximum_error = error;
-            maxerrorType = errorType; 
+            maxerrorType = errorType;
          }
       }
    }
@@ -267,9 +271,9 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
    }
 
    /// testing weight state gradient
-   
+
    // Weights State, k = 1
-   maximum_error = 0; 
+   maximum_error = 0;
    auto &Ws = layer->GetWeightsAt(1);
    auto &dWs = layer->GetWeightGradientsAt(1);
    for (size_t i = 0; i < (size_t) Ws.GetNrows(); ++i) {
@@ -283,7 +287,7 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
 
          // Compute the relative error if dy != 0.
          Scalar_t error;
-         std::string errorType;  
+         std::string errorType;
          if (std::fabs(dy_ref) > 1e-15) {
             error = std::fabs((dy - dy_ref) / dy_ref);
             errorType = "relative";
@@ -293,10 +297,10 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
          }
 
          if ( error >= maximum_error) {
-            maximum_error = error; 
-            maxerrorType = errorType; 
+            maximum_error = error;
+            maxerrorType = errorType;
          }
-         if (debug) std::cout << "Weight-state gradient (" << i << "," << j << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
+         if (debug) std::cout << "Weight-state gradient (" << i << "," << j << ") : (num, BP) " << dy << " , " << dy_ref << std::endl;
       }
    }
 
@@ -308,7 +312,7 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
    }
 
    // testing bias gradients
-   maximum_error = 0; 
+   maximum_error = 0;
    auto &B = layer->GetBiasesAt(0);
    auto &dB = layer->GetBiasGradientsAt(0);
    for (size_t i = 0;  i < (size_t) B.GetNrows(); ++i) {
@@ -321,7 +325,7 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
 
       // Compute the relative error if dy != 0.
       Scalar_t error;
-      std::string errorType;  
+      std::string errorType;
       if (std::fabs(dy_ref) > 1e-15) {
          error = std::fabs((dy - dy_ref) / dy_ref);
          errorType = "relative";
@@ -331,10 +335,10 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
       }
 
       if ( error >= maximum_error) {
-            maximum_error = error; 
-            maxerrorType = errorType; 
+            maximum_error = error;
+            maxerrorType = errorType;
       }
-      if (debug) std::cout << "Bias gradient (" << i << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
+      if (debug) std::cout << "Bias gradient (" << i << ") : (Num, BP) " << dy << " , " << dy_ref << std::endl;
    }
 
    std::cout << "\rTesting bias gradients:      ";
@@ -352,7 +356,7 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
 /*! Generate a DeepNet, test backward pass */
 //______________________________________________________________________________
 template <typename Architecture>
-auto testRecurrentBackpropagationBiases(size_t timeSteps, size_t batchSize, size_t stateSize, 
+auto testRecurrentBackpropagationBiases(size_t timeSteps, size_t batchSize, size_t stateSize,
                                         size_t inputSize, typename Architecture::Scalar_t dx)
 -> Double_t
 {
@@ -382,10 +386,10 @@ auto testRecurrentBackpropagationBiases(size_t timeSteps, size_t batchSize, size
    rnn.Initialize();
    rnn.Forward(XArch);
    rnn.Backward(XArch, Y, weights);
-  
+
    Scalar_t maximum_error = 0.0;
-   std::string merrorType;  
-      
+   std::string merrorType;
+
    auto &B = layer->GetBiasesAt(0);
    auto &dB = layer->GetBiasGradientsAt(0);
    for (Int_t i = 0; i < B.GetNrows(); ++i) {
@@ -397,7 +401,7 @@ auto testRecurrentBackpropagationBiases(size_t timeSteps, size_t batchSize, size
 
       // Compute the relative error if dy != 0.
       Scalar_t error;
-      std::string errorType;  
+      std::string errorType;
       if (std::fabs(dy_ref) > 1e-15) {
          error = std::fabs((dy - dy_ref) / dy_ref);
          errorType = "relative";
@@ -407,8 +411,8 @@ auto testRecurrentBackpropagationBiases(size_t timeSteps, size_t batchSize, size
       }
 
       if ( error >= maximum_error) {
-            maximum_error = error; 
-            merrorType = errorType; 
+            maximum_error = error;
+            merrorType = errorType;
       }
       std::cout << "Bias gradient (" << i << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
       //maximum_error = std::max(error, maximum_error);
