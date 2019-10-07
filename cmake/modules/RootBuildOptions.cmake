@@ -304,9 +304,8 @@ elseif(APPLE)
 endif()
 
 # Current limitations for modules:
-#---Modules do not play well with c++17 yet
 #---Modules are disabled on aarch64 platform (due ODR violations)
-if(CMAKE_CXX_STANDARD GREATER 14 OR CMAKE_SYSTEM_PROCESSOR MATCHES aarch64)
+if(CMAKE_SYSTEM_PROCESSOR MATCHES aarch64)
   set(runtime_cxxmodules_defvalue OFF)
 endif()
 
