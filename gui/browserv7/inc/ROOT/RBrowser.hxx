@@ -24,6 +24,7 @@
 #include <stdint.h>
 
 class TString;
+class TCanvas;
 
 namespace ROOT {
 namespace Experimental {
@@ -68,8 +69,12 @@ protected:
    std::string fDescPath;                ///<! last scanned directory
    std::vector<RRootFileItem> fDesc;     ///<! plain list of current directory
    std::vector<RRootFileItem *> fSorted; ///<! current sorted list (no ownership)
+   std::vector<std::string> fCanvases;   ///<! canvases created by browser, should be closed at the end
 
-   std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to show geometry
+   std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to browser
+
+   void AddCanvas();
+   void CloseCanvas(const std::string &name);
 
    void AddFolder(const char *name);
    void AddFile(const char *name);

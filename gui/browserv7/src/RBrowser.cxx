@@ -23,6 +23,8 @@
 #include "TString.h"
 #include "TSystem.h"
 #include "TROOT.h"
+#include "TWebCanvas.h"
+#include "TCanvas.h"
 #include "TBufferJSON.h"
 
 #include <sstream>
@@ -61,6 +63,8 @@ ROOT::Experimental::RBrowser::RBrowser()
 
 ROOT::Experimental::RBrowser::~RBrowser()
 {
+   while (fCanvases.size() > 0)
+      CloseCanvas(fCanvases[fCanvases.size()-1]);
 }
 
 
@@ -437,6 +441,34 @@ void ROOT::Experimental::RBrowser::Hide()
 
    fWebWindow->CloseConnections();
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Create new web canvas, invoked when new canvas created on client side
+
+void ROOT::Experimental::RBrowser::AddCanvas()
+{
+   TString canv_name;
+   int cnt = 1;
+   do {
+      canv_name.Format("webcanv%d", cnt++);
+   } while (gROOT->GetListOfCanvases()->FindObject(canv_name.Data()));
+
+   fCanvases.emplace_back(canv_name);
+
+}
+
+void ROOT::Experimental::RBrowser::CloseCanvas(const std::string &name)
+{
+   auto iter = std::find_if(fCanvases.begin(), fCanvases.end(), [name](std::string &item) { return item == name; });
+
+   if (iter != fCanvases.end())
+      fCanvases.erase(iter);
+
+   auto canv = gROOT->GetListOfCanvases()->FindObject(name.c_str());
+   if (canv) delete canv;
+}
+
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// receive data from client
