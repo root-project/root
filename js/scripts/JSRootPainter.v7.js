@@ -4112,13 +4112,13 @@
       this._websocket.Connect();
    }
 
-   TCanvasPainter.prototype.UseWebsocket = function(handle) {
+   TCanvasPainter.prototype.UseWebsocket = function(handle, href) {
       this.CloseWebsocket();
 
       this._websocket = handle;
       console.log('Use websocket', this._websocket.key);
       this._websocket.SetReceiver(this);
-      this._websocket.Connect();
+      this._websocket.Connect(href);
    }
 
    TCanvasPainter.prototype.WindowBeforeUnloadHanlder = function() {
