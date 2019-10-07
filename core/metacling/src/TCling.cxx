@@ -2706,7 +2706,7 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
 
       if (!ispointer) {
          const clang::CXXRecordDecl* fieldRecDecl = memNonPtrType->getAsCXXRecordDecl();
-         if (fieldRecDecl) {
+         if (fieldRecDecl && !fieldRecDecl->isAnonymousStructOrUnion()) {
             // nested objects get an extra call to InspectMember
             // R__insp.InspectMember("FileStat_t", (void*)&fFileStat, "fFileStat.", false);
             std::string sFieldRecName;
