@@ -176,6 +176,9 @@ private:
    Value_t *fData;
    std::shared_ptr<Container_t> fContainer;
 
+protected:
+   void ReshapeInplace(const Shape_t &shape);
+
 public:
    // Constructors
 
@@ -301,6 +304,33 @@ public:
       return Iterator(*this, fSize);
    }
 };
+
+/// \brief Reshape tensor in place
+/// \param[in] shape Shape vector
+/// Reshape tensor without changing the overall size
+template <typename Value_t, typename Container_t>
+inline void RTensor<Value_t, Container_t>::ReshapeInplace(const Shape_t &shape)
+{
+   const auto size = Internal::GetSizeFromShape(shape);
+   if (size != fSize) {
+      std::stringstream ss;
+      ss << "Cannot reshape tensor with size " << fSize << " into shape { ";
+      for (std::size_t i = 0; i < shape.size(); i++) {
+         if (i != shape.size() - 1) {
+            ss << shape[i] << ", ";
+         } else {
+            ss << shape[i] << " }.";
+         }
+      }
+      throw std::runtime_error(ss.str());
+   }
+
+   // Compute new strides from shape
+   auto strides = Internal::ComputeStridesFromShape(shape, fLayout);
+   fShape = shape;
+   fStrides = strides;
+}
+
 
 /// \brief Access elements
 /// \param[in] idx Index vector
@@ -445,27 +475,9 @@ inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::ExpandDims(i
 template <typename Value_t, typename Container_t>
 inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::Reshape(const Shape_t &shape)
 {
-   const auto size = Internal::GetSizeFromShape(shape);
-   if (size != fSize) {
-      std::stringstream ss;
-      ss << "Cannot reshape tensor with size " << fSize << " into shape { ";
-      for (std::size_t i = 0; i < shape.size(); i++) {
-         if (i != shape.size() - 1) {
-            ss << shape[i] << ", ";
-         } else {
-            ss << shape[i] << " }.";
-         }
-      }
-      throw std::runtime_error(ss.str());
-   }
-
-   // Compute new strides from shape
-   auto strides = Internal::ComputeStridesFromShape(shape, fLayout);
-
-   // Create copy, attach new shape and strides and return
+   // Create copy, replace and return
    RTensor<Value_t, Container_t> x(*this);
-   x.fShape = shape;
-   x.fStrides = strides;
+   x.ReshapeInplace(shape);
    return x;
 }
 
