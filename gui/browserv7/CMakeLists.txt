@@ -16,4 +16,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
     src/RBrowser.cxx
   DEPENDENCIES
     ROOTWebDisplay
+    Gpad
+    WebGui6
+    
 )
