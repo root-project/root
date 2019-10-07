@@ -20,7 +20,7 @@ sap.ui.define([
       onAfterRendering: function() {
          if (this.canvas_painter && this.canvas_painter._window_handle) {
             this.canvas_painter.SetDivId(this.getView().getDomRef(), -1);
-            this.canvas_painter.UseWebsocket(this.canvas_painter._window_handle);
+            this.canvas_painter.UseWebsocket(this.canvas_painter._window_handle, this.canvas_painter._window_handle_href);
             delete this.canvas_painter._window_handle;
          }
       },
