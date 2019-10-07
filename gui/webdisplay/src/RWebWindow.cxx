@@ -818,7 +818,7 @@ void ROOT::Experimental::RWebWindow::Sync()
 /// Address can be required if one needs to access data from one window into another window
 /// Used for instance when inserting panel into canvas
 
-std::string ROOT::Experimental::RWebWindow::RelativeAddr(std::shared_ptr<RWebWindow> &win) const
+std::string ROOT::Experimental::RWebWindow::RelativeAddr(const std::shared_ptr<RWebWindow> &win) const
 {
    if (fMgr != win->fMgr) {
       R__ERROR_HERE("WebDisplay") << "Same web window manager should be used";
