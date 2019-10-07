@@ -76,8 +76,8 @@ public:
          return fBeginRet;
       }
     };
-    FakeIteratorBegin begin(){
-      return FakeIteratorBegin((*fBuffer.get())[fOffset]);
+    FakeIteratorBegin begin(){      
+      return FakeIteratorBegin(*((* fBuffer) + fOffset));
    }
 
 
