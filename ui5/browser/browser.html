@@ -45,9 +45,9 @@
         if (JSROOT.GetUrlOption('libs')!==null) JSROOT.use_full_libs = true;
 
         JSROOT.ConnectWebWindow({
-           prereq: "openui5",
+           prereq: "openui5;v6",  // load v6 because of canvas painter
 //           openui5src: "jsroot",    // use JSROOT provided package, default
-//           openui5src: "https://openui5.hana.ondemand.com/1.64.1/",
+//           openui5src: "https://openui5.hana.ondemand.com/1.70.0/",
            openui5libs: "sap.m, sap.ui.layout, sap.ui.unified, sap.ui.table, sap.ui.codeeditor", // customize openui5 libs later
            prereq_logdiv: "BrowserDiv",
            callback: InitUI

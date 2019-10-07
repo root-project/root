@@ -73,7 +73,7 @@ protected:
 
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to browser
 
-   void AddCanvas();
+   TCanvas *AddCanvas();
    void CloseCanvas(const std::string &name);
 
    void AddFolder(const char *name);
