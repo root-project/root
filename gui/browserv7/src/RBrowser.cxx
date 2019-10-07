@@ -445,7 +445,7 @@ void ROOT::Experimental::RBrowser::Hide()
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Create new web canvas, invoked when new canvas created on client side
 
-void ROOT::Experimental::RBrowser::AddCanvas()
+TCanvas *ROOT::Experimental::RBrowser::AddCanvas()
 {
    TString canv_name;
    int cnt = 1;
@@ -453,8 +453,15 @@ void ROOT::Experimental::RBrowser::AddCanvas()
       canv_name.Format("webcanv%d", cnt++);
    } while (gROOT->GetListOfCanvases()->FindObject(canv_name.Data()));
 
-   fCanvases.emplace_back(canv_name);
+   fCanvases.emplace_back(canv_name.Data());
 
+   TCanvas *canv = new TCanvas(kFALSE);
+   canv->SetName(canv_name.Data());
+   canv->SetTitle(canv_name.Data());
+   canv->ResetBit(TCanvas::kShowEditor);
+   canv->SetCanvas(canv);
+   canv->SetBatch(kTRUE); // mark canvas as batch
+   return canv;
 }
 
 void ROOT::Experimental::RBrowser::CloseCanvas(const std::string &name)
@@ -467,7 +474,6 @@ void ROOT::Experimental::RBrowser::CloseCanvas(const std::string &name)
    auto canv = gROOT->GetListOfCanvases()->FindObject(name.c_str());
    if (canv) delete canv;
 }
-
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -486,5 +492,28 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       //if (!fDesc.IsBuild()) fDesc.Build();
       auto json = ProcessBrowserRequest(arg.substr(6));
       if (json.length() > 0) fWebWindow->Send(connid, json);
+   } else if (arg.compare(0,7, "CANVAS:") == 0) {
+
+      // create canvas
+      TCanvas *canv = AddCanvas();
+
+      // create implementation
+      TWebCanvas *web = new TWebCanvas(canv, "title", 0, 0, 800, 600);
+
+      // assign implementation
+      canv->SetCanvasImp(web);
+
+      web->ShowWebWindow("embed");
+
+      auto url = fWebWindow->RelativeAddr(web->GetWebWindow());
+
+      std::vector<std::string> reply = {arg.substr(7), url, std::string(canv->GetName())};
+
+      std::string res = "CANVS:";
+      res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
+
+      printf("Creating canvas reply %s\n", res.c_str());
+
+      fWebWindow->Send(connid, res);
    }
 }

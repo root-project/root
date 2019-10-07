@@ -2,6 +2,7 @@ sap.ui.define(['sap/ui/core/Component',
                'sap/ui/core/mvc/Controller',
                'sap/ui/core/Control',
                'sap/ui/core/Icon',
+               'sap/ui/core/mvc/XMLView',
                'sap/m/Text',
                'sap/m/CheckBox',
                'sap/m/MessageBox',
@@ -13,13 +14,13 @@ sap.ui.define(['sap/ui/core/Component',
                "sap/ui/table/Column",
                "sap/ui/core/util/File",
                "sap/ui/model/json/JSONModel",
-               "rootui5/browser/model/BrowserModel"
-],function(Component, Controller, CoreControl, CoreIcon, mText, mCheckBox, MessageBox, MessageToast, TabContainerItem,
+               "rootui5/browser/model/BrowserModel",
+],function(Component, Controller, CoreControl, CoreIcon, XMLView, mText, mCheckBox, MessageBox, MessageToast, TabContainerItem,
            Splitter, ResizeHandler, HorizontalLayout, tableColumn, File, JSONModel, BrowserModel) {
 
    "use strict";
 
-   /** Central ROOT Browser contoller
+   /** Central ROOT RBrowser controller
     * All Browser functionality is loaded after main ui5 rendering is performed */
 
    return Controller.extend("rootui5.browser.controller.Browser", {
@@ -38,11 +39,11 @@ sap.ui.define(['sap/ui/core/Component',
          // if true, most operations are performed locally without involving server
          this.standalone = this.websocket.kind == "file";
 
-         if (JSROOT.GetUrlOption('nobrowser') !== null) {
+/*         if (JSROOT.GetUrlOption('nobrowser') !== null) {
             // remove complete area
             this.getView().byId("mainSplitter").removeAllContentAreas();
          } else {
-
+*/
             // create model only for browser - no need for anybody else
             this.model = new BrowserModel();
 
@@ -133,10 +134,13 @@ sap.ui.define(['sap/ui/core/Component',
                code: ""
             }));
             
-            this.getView().byId("aRootCanvas1").setModel(new JSONModel({
+            /* this.getView().byId("aRootCanvas1").setModel(new JSONModel({
                rootCanvas: ""
             }));
-         }
+            */
+     //    }
+            
+          this.addNewButtonPressHandler(); // always create new canvas in the beginning   
       },
 
       /** @brief Extract the file name and extension
@@ -265,6 +269,12 @@ sap.ui.define(['sap/ui/core/Component',
 
       OnWebsocketOpened: function(handle) {
          this.isConnected = true;
+         
+         // this is required when canvas created faster then connection is established
+         if (this.newCanvasId) {
+            this.websocket.Send("CANVAS:" + this.newCanvasId);
+            delete this.newCanvasId;
+         }
 
          if (this.model)
             this.model.sendFirstRequest(this.websocket);
@@ -302,8 +312,11 @@ sap.ui.define(['sap/ui/core/Component',
             this.parseDescription(msg, false);
             break;
          case "FREAD:":  // file read
-             this.getView().byId("aCodeEditor").getModel().setProperty("/code", msg);
-             break;
+            this.getView().byId("aCodeEditor").getModel().setProperty("/code", msg);
+            break;
+         case "CANVS:":  // canvas created by server, need to establish connection
+            this.connectCanvas(msg);
+            break;
          case "FROOT:": // Root file
            let selecedTabID = this.getSelectedtabFromtabContainer("myTabContainer"); // The ID of the selected tab in the TabContainer
 
@@ -356,13 +369,13 @@ sap.ui.define(['sap/ui/core/Component',
          }
       },
 
-      /** Get the ID of the curentrly selected tab of given tab container */
+      /** Get the ID of the currently selected tab of given tab container */
       getSelectedtabFromtabContainer: function(divid) {
          let tabContainer = this.getView().byId('myTabContainer').getSelectedItem()
          return tabContainer.slice(6, tabContainer.length);
       },
 
-      /** Show special message insted of nodes hierarchy */
+      /** Show special message instead of nodes hierarchy */
       showTextInBrowser: function(text) {
          var br = this.byId("treeTable");
          br.collapseAll();
@@ -423,14 +436,25 @@ sap.ui.define(['sap/ui/core/Component',
 
       /** @brief Add Tab event handler */
       addNewButtonPressHandler: function(oEvent) {
+         if (this.newCanvasId) return;
+         
          var oTabContainer = this.byId("myTabContainer");
          var oTabContainerItem = new TabContainerItem({
             name: "ROOT Canvas",
             icon: "sap-icon://column-chart-dual-axis"
          });
-         let ID = oTabContainerItem.sId.slice(6, oTabContainerItem.sId.length);
 
          oTabContainer.addItem(oTabContainerItem);
+
+         if (this.isConnected)
+            this.websocket.Send("CANVAS:" + oTabContainerItem.getId());
+         else
+            this.newCanvasId = oTabContainerItem.getId();
+
+         this.last_created_item = oTabContainerItem; // FIXME, how to find item by ID!!!
+         
+         /* let ID = oTabContainerItem.sId.slice(6, oTabContainerItem.sId.length);
+
          let html = new sap.ui.core.HTML("TopBrowserId--aRootCanvas" + ID, {
             content: "<div style=\"height:100%\">{/rootCanvas}</div>"
          });
@@ -441,6 +465,51 @@ sap.ui.define(['sap/ui/core/Component',
          this.getView().byId("aRootCanvas" + ID).setModel(new JSONModel({
             rootCanvas: ""
          }));
+         */
+      },
+      
+      /** process reply from server when canvas created */
+      connectCanvas: function(msg) {
+         var arr = JSROOT.parse(msg);
+         if (!arr || (arr.length != 3)) return;
+         
+         var tabItem = this.last_created_item;
+         delete this.last_created_item;
+         if (!tabItem || tabItem.getId() != arr[0]) return;
+         
+         tabItem.canvasName = arr[2]; // name can be used to set active canvas or close canvas
+         
+         var conn = new JSROOT.WebWindowHandle(this.websocket.kind);
+         
+         // this is producing 
+         var addr = this.websocket.href, relative_path = arr[1];
+         if (relative_path.indexOf("../")==0) {
+            var ddd = addr.lastIndexOf("/",addr.length-2);
+            addr = addr.substr(0,ddd) + relative_path.substr(2);
+         } else {
+            addr += relative_path;
+         }
+         
+         console.log("connecting with", addr)
+         // establish connection
+         // conn.Connect(addr);
+         
+         var painter = new JSROOT.TCanvasPainter(null);
+         painter.online_canvas = true;
+         painter.use_openui = true; 
+         painter.batch_mode = false;
+         painter._window_handle = conn;
+         painter._window_handle_href = addr; // argument for connect
+         
+         XMLView.create({
+            viewName: "rootui5.canv.view.Canvas",
+            viewData: { canvas_painter: painter },
+            height: "100%"
+         }).then(function(oView) {
+            tabItem.addContent(oView);
+            // JSROOT.CallBack(call_back, true);
+         });
+         
       },
 
       /** @brief Close Tab event handler */

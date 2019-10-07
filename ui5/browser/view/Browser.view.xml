@@ -61,11 +61,11 @@
                   </l:Splitter>
                   </content>
                 </TabContainerItem>
-                <TabContainerItem name="ROOT Canvas" icon="sap-icon://column-chart-dual-axis" additionalText="" >
+                <!-- TabContainerItem name="ROOT Canvas" icon="sap-icon://column-chart-dual-axis" additionalText="" >
                   <content>
                     <core:HTML id="aRootCanvas1" content="&lt;div style=&quot;height:100%&quot;&gt;{/rootCanvas}&lt;/div&gt;" />
                   </content>
-                </TabContainerItem>
+                </TabContainerItem -->
               </items>
             </TabContainer>
           <!--/l:Splitter-->
