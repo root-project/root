@@ -273,10 +273,10 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
    TList *primitives = pad->GetListOfPrimitives();
 
-   fPrimitivesLists.Add(primitives); // add list of primitives
+   if (primitives) fPrimitivesLists.Add(primitives); // add list of primitives
 
    TWebPS masterps;
-   bool usemaster = primitives->GetSize() > fPrimitivesMerge;
+   bool usemaster = primitives ? (primitives->GetSize() > fPrimitivesMerge) : false;
 
    TIter iter(primitives);
    TObject *obj = nullptr;
@@ -609,7 +609,8 @@ void TWebCanvas::ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &args)
    if ((w > 10) && (w < 50000) && (h > 10) && (h < 30000))
       fWindow->SetGeometry(w + 6, h + 22);
 
-   fWindow->Show(args);
+   if (args.GetBrowserName() != "embed")
+      fWindow->Show(args);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

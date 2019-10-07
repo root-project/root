@@ -113,6 +113,8 @@ public:
 
    void ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &user_args = "");
 
+   const std::shared_ptr<ROOT::Experimental::RWebWindow> &GetWebWindow() const { return fWindow; }
+
    virtual Bool_t IsReadOnly() const { return kTRUE; }
 
    Int_t InitWindow() override;
