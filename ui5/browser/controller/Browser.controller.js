@@ -140,7 +140,7 @@ sap.ui.define(['sap/ui/core/Component',
             */
      //    }
             
-          this.addNewButtonPressHandler(); // always create new canvas in the beginning   
+          // this.addNewButtonPressHandler(); // always create new canvas in the beginning   
       },
 
       /** @brief Extract the file name and extension
@@ -270,12 +270,6 @@ sap.ui.define(['sap/ui/core/Component',
       OnWebsocketOpened: function(handle) {
          this.isConnected = true;
          
-         // this is required when canvas created faster then connection is established
-         if (this.newCanvasId) {
-            this.websocket.Send("CANVAS:" + this.newCanvasId);
-            delete this.newCanvasId;
-         }
-
          if (this.model)
             this.model.sendFirstRequest(this.websocket);
 
@@ -305,6 +299,9 @@ sap.ui.define(['sap/ui/core/Component',
          // console.log(mhdr, msg.length, msg.substr(0,70), "...");
 
          switch (mhdr) {
+         case "INMSG:":
+            this.processInitMsg(msg);
+            break;
          case "DESCR:":  // browser hierarchy
             this.parseDescription(msg, true);
             break;
@@ -315,7 +312,8 @@ sap.ui.define(['sap/ui/core/Component',
             this.getView().byId("aCodeEditor").getModel().setProperty("/code", msg);
             break;
          case "CANVS:":  // canvas created by server, need to establish connection
-            this.connectCanvas(msg);
+            var arr = JSON.parse(msg);
+            this.createCanvas(arr[0], arr[1]);
             break;
          case "FROOT:": // Root file
            var selecedTabID = this.getSelectedtabFromtabContainer("myTabContainer"); // The ID of the selected tab in the TabContainer
@@ -436,7 +434,23 @@ sap.ui.define(['sap/ui/core/Component',
 
       /** @brief Add Tab event handler */
       addNewButtonPressHandler: function(oEvent) {
-         if (this.newCanvasId) return;
+         if (this.isConnected)
+            this.websocket.Send("NEWCANVAS");
+      },
+      
+      /** process initial message, now it is list of existing canvases */
+      processInitMsg: function(msg) {
+         var arr = JSROOT.parse(msg);
+         if (!arr) return;
+         
+         for (var k=0; k<arr.length; ++k) {
+            this.createCanvas(arr[k][0], arr[k][1]);
+         }
+      },
+      
+      createCanvas: function(url, name) {
+         console.log("Create canvas ", url, name);
+         if (!url || !name) return;
          
          var oTabContainer = this.byId("myTabContainer");
          var oTabContainerItem = new TabContainerItem({
@@ -444,45 +458,14 @@ sap.ui.define(['sap/ui/core/Component',
             icon: "sap-icon://column-chart-dual-axis"
          });
 
+         oTabContainerItem.setAdditionalText(name); // name can be used to set active canvas or close canvas
+
          oTabContainer.addItem(oTabContainerItem);
-
-         if (this.isConnected)
-            this.websocket.Send("CANVAS:" + oTabContainerItem.getId());
-         else
-            this.newCanvasId = oTabContainerItem.getId();
-
-         this.last_created_item = oTabContainerItem; // FIXME, how to find item by ID!!!
-         
-         /* var  ID = oTabContainerItem.sId.slice(6, oTabContainerItem.sId.length);
-
-         var  html = new sap.ui.core.HTML("TopBrowserId--aRootCanvas" + ID, {
-            content: "<div style=\"height:100%\">{/rootCanvas}</div>"
-         });
-         oTabContainerItem.addContent(html);
-
-         oTabContainer.setSelectedItem(oTabContainerItem);
-
-         this.getView().byId("aRootCanvas" + ID).setModel(new JSONModel({
-            rootCanvas: ""
-         }));
-         */
-      },
-      
-      /** process reply from server when canvas created */
-      connectCanvas: function(msg) {
-         var arr = JSROOT.parse(msg);
-         if (!arr || (arr.length != 3)) return;
-         
-         var tabItem = this.last_created_item;
-         delete this.last_created_item;
-         if (!tabItem || tabItem.getId() != arr[0]) return;
-         
-         tabItem.setAdditionalText(arr[2]); // name can be used to set active canvas or close canvas
          
          var conn = new JSROOT.WebWindowHandle(this.websocket.kind);
          
          // this is producing 
-         var addr = this.websocket.href, relative_path = arr[1];
+         var addr = this.websocket.href, relative_path = url;
          if (relative_path.indexOf("../")==0) {
             var ddd = addr.lastIndexOf("/",addr.length-2);
             addr = addr.substr(0,ddd) + relative_path.substr(2);
@@ -502,10 +485,9 @@ sap.ui.define(['sap/ui/core/Component',
             viewData: { canvas_painter: painter },
             height: "100%"
          }).then(function(oView) {
-            tabItem.addContent(oView);
+            oTabContainerItem.addContent(oView);
             // JSROOT.CallBack(call_back, true);
          });
-         
       },
       
       tabSelectItem: function(oEvent) {
@@ -532,12 +514,14 @@ sap.ui.define(['sap/ui/core/Component',
             MessageToast.show("Sorry, you cannot close the Code Editor", {duration: 1500});
             return;
          }
+         
+         var pthis = this;
 
          MessageBox.confirm('Do you really want to close the "' + oItemToClose.getName() + '" tab?', {
             onClose: function (oAction) {
                if (oAction === MessageBox.Action.OK) {
                   if (oItemToClose.getName() == "ROOT Canvas") 
-                     this.websocket.Send("CLOSE_CANVAS:" + oItemToClose.getAdditionalText());
+                     pthis.websocket.Send("CLOSE_CANVAS:" + oItemToClose.getAdditionalText());
                   
                   oTabContainer.removeItem(oItemToClose);
                   
