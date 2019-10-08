@@ -63,8 +63,7 @@ ROOT::Experimental::RBrowser::RBrowser()
 
 ROOT::Experimental::RBrowser::~RBrowser()
 {
-   while (fCanvases.size() > 0)
-      CloseCanvas(fCanvases[fCanvases.size()-1]);
+   fCanvases.clear();
 }
 
 
@@ -481,25 +480,20 @@ void ROOT::Experimental::RBrowser::Hide()
 TCanvas *ROOT::Experimental::RBrowser::AddCanvas()
 {
    TString canv_name;
-   int cnt = 1;
-   do {
-      canv_name.Form("webcanv%d", cnt++);
-   } while (gROOT->GetListOfCanvases()->FindObject(canv_name.Data()));
+   canv_name.Form("webcanv%d", (int)(fCanvases.size()+1));
 
-   fCanvases.emplace_back(canv_name.Data());
-
-   TCanvas *canv = new TCanvas(kFALSE);
+   auto canv = std::make_unique<TCanvas>(kFALSE);
    canv->SetName(canv_name.Data());
    canv->SetTitle(canv_name.Data());
    canv->ResetBit(TCanvas::kShowEditor);
    canv->ResetBit(TCanvas::kShowToolBar);
-   canv->SetCanvas(canv);
+   canv->SetCanvas(canv.get());
    canv->SetBatch(kTRUE); // mark canvas as batch
    fActiveCanvas = canv->GetName();
 
-   gROOT->GetListOfCanvases()->Add(canv);
+   fCanvases.emplace_back(std::move(canv));
 
-   return canv;
+   return fCanvases.back().get();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -507,11 +501,12 @@ TCanvas *ROOT::Experimental::RBrowser::AddCanvas()
 
 TCanvas *ROOT::Experimental::RBrowser::GetActiveCanvas() const
 {
-   if (fActiveCanvas.empty()) return nullptr;
+   auto iter = std::find_if(fCanvases.begin(), fCanvases.end(), [this](const std::unique_ptr<TCanvas> &canv) { return fActiveCanvas == canv->GetName(); });
 
-   auto canv = dynamic_cast<TCanvas *>(gROOT->GetListOfCanvases()->FindObject(fActiveCanvas.c_str()));
+   if (iter != fCanvases.end())
+      return iter->get();
 
-   return canv && canv->IsWeb() ? canv : nullptr;
+   return nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -519,13 +514,10 @@ TCanvas *ROOT::Experimental::RBrowser::GetActiveCanvas() const
 
 void ROOT::Experimental::RBrowser::CloseCanvas(const std::string &name)
 {
-   auto iter = std::find_if(fCanvases.begin(), fCanvases.end(), [name](std::string &item) { return item == name; });
+   auto iter = std::find_if(fCanvases.begin(), fCanvases.end(), [name](std::unique_ptr<TCanvas> &canv) { return name == canv->GetName(); });
 
    if (iter != fCanvases.end())
       fCanvases.erase(iter);
-
-   auto canv = gROOT->GetListOfCanvases()->FindObject(name.c_str());
-   if (canv) delete canv;
 
    if (fActiveCanvas == name)
       fActiveCanvas.clear();
@@ -559,6 +551,7 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       // assign implementation
       canv->SetCanvasImp(web);
 
+      // initialize web window, but not start new web browser
       web->ShowWebWindow("embed");
 
       auto url = fWebWindow->RelativeAddr(web->GetWebWindow());
