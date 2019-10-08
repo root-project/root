@@ -49,8 +49,10 @@ void TCudnn<AFloat>::ActivationFunctionForward(Tensor_t & Y, const Tensor_t &X, 
 {
    // compute forward activation  with different input/output tensor (needed in training)
    // Nothing to do for identity function
-   if (activFunct == EActivationFunction::kIdentity)
+   if (activFunct == EActivationFunction::kIdentity) {
       TCudnn<AFloat>::Copy(Y, X);
+      return;
+   }
 
    CUDNNCHECK(cudnnActivationForward(X.GetCudnnHandle(), activationDescr, &alpha, X.GetTensorDescriptor(),
                                      X.GetDataPointer(), &beta,

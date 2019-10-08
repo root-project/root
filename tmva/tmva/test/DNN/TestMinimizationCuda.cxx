@@ -22,45 +22,38 @@
 
 using namespace TMVA::DNN;
 
+template<typename AFloat>
+int test(double tol) {
+
+   // create a dummy tensor to init a cuda/cudnn handle
+   TCudaTensor<Float_t> dummy(1, 1);
+
+   Double_t error = testMinimization<TCuda<Float_t>>();
+   std::cout << "Gradient Descent: Maximum relative error = " << error << std::endl;
+   if (error > tol) {
+       return 1;
+   }
+
+   error = testMinimizationMomentum<TCuda<Float_t>>();
+   std::cout << "Momentum:         Maximum relative error = " << error << std::endl;
+    if (error > tol) {
+       return 1;
+   }
+
+   error = testMinimizationWeights<TCuda<Float_t>>();
+   std::cout << "Weighted Data:    Maximum relative error = " << error << std::endl;
+   if (error > tol) {
+      return 1;
+   }
+   return 0;
+}
 int main()
 {
+   bool fail = false;
    std::cout << "Testing minimization: (single precision)" << std::endl;
-
-   Double_t error = testMinimization<TCuda<Real_t>>();
-   std::cout << "Gradient Descent: Maximum relative error = " << error << std::endl;
-   if (error > 1) {
-       return 1;
-   }
-
-   error = testMinimizationMomentum<TCuda<Real_t>>();
-   std::cout << "Momentum:         Maximum relative error = " << error << std::endl;
-    if (error > 1) {
-       return 1;
-   }
-
-   error = testMinimizationWeights<TCuda<Real_t>>();
-   std::cout << "Weighted Data:    Maximum relative error = " << error << std::endl;
-   if (error > 1e-3) {
-      return 1;
-   }
+   fail |= test<Float_t>( 1.E-3);
 
    std::cout << std::endl << "Testing minimization: (double precision)" << std::endl;
-
-   error = testMinimization<TCuda<Double_t>>();
-   std::cout << "Gradient Descent: Maximum relative error = " << error << std::endl;
-   if (error > 1e-3) {
-       return 1;
-   }
-
-   error = testMinimizationMomentum<TCuda<Double_t>>();
-   std::cout << "Momentum:         Maximum relative error = " << error << std::endl;
-   if (error > 1e-3) {
-       return 1;
-   }
-
-   error = testMinimizationWeights<TCuda<Double_t>>();
-   std::cout << "Weighted Data:    Maximum relative error = " << error << std::endl;
-   if (error > 1e-3) {
-      return 1;
-   }
+   fail |= test<Double_t>(1.E-3);
+   return fail;
 }

@@ -28,7 +28,7 @@
 
 using namespace TMVA::DNN;
 
-bool debug = false; 
+bool debug = false;
 // TODO pass as function params
 size_t tbatchSize = 2, timeSteps = 1, inputSize = 4, outputSize = 3;
 

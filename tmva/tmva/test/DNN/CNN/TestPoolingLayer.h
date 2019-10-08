@@ -71,26 +71,26 @@ bool testDownsample1()
     using Matrix_t = typename Architecture::Matrix_t;
 
     double imgTest1[][20] = {
-            {166, 212, 213, 150, 114, 
-             119, 109, 115, 88, 144, 
-             227, 208, 208, 235, 57, 
+            {166, 212, 213, 150, 114,
+             119, 109, 115, 88, 144,
+             227, 208, 208, 235, 57,
              57, 165, 250, 139, 76},
 
-            {57, 255, 184, 162, 204, 
-            220, 11, 192, 183, 174, 
-            2, 153, 183, 175, 10, 
+            {57, 255, 184, 162, 204,
+            220, 11, 192, 183, 174,
+            2, 153, 183, 175, 10,
             55, 123, 246, 138, 80}};
 
-    double answerTest1[][8] = {{212, 213, 213, 150, 
+    double answerTest1[][8] = {{212, 213, 213, 150,
                                 227, 250, 250, 235},
 
-                               {255, 255, 192, 204, 
+                               {255, 255, 192, 204,
                                153, 246, 246, 175}};
 
-    double answerIdxTest1[][8] = {{1, 2, 2, 3, 
+    double answerIdxTest1[][8] = {{1, 2, 2, 3,
                                   10, 17, 17, 13},
 
-                                  {1, 1, 7, 4, 
+                                  {1, 1, 7, 4,
                                   11, 17, 17, 13}};
 
     size_t imgDepthTest1 = 2;
@@ -123,7 +123,7 @@ bool testDownsample1()
         }
     }
 
-    bool status = testDownsample<Architecture>(A, idx, B, imgHeightTest1, imgWidthTest1, fltHeightTest1, 
+    bool status = testDownsample<Architecture>(A, idx, B, imgHeightTest1, imgWidthTest1, fltHeightTest1,
                                                fltWidthTest1, strideRowsTest1, strideColsTest1);
 
     return status;
@@ -136,26 +136,26 @@ bool testDownsample1_cudnn()
     using HostBuffer_t = typename Architecture::HostBuffer_t;
 
     double imgTest1[][20] = {
-            {166, 212, 213, 150, 114, 
-             119, 109, 115, 88, 144, 
-             227, 208, 208, 235, 57, 
+            {166, 212, 213, 150, 114,
+             119, 109, 115, 88, 144,
+             227, 208, 208, 235, 57,
              57, 165, 250, 139, 76},
 
-            {57, 255, 184, 162, 204, 
-            220, 11, 192, 183, 174, 
-            2, 153, 183, 175, 10, 
+            {57, 255, 184, 162, 204,
+            220, 11, 192, 183, 174,
+            2, 153, 183, 175, 10,
             55, 123, 246, 138, 80}};
 
-    double answerTest1[][8] = {{212, 213, 213, 150, 
+    double answerTest1[][8] = {{212, 213, 213, 150,
                                 227, 250, 250, 235},
 
-                               {255, 255, 192, 204, 
+                               {255, 255, 192, 204,
                                153, 246, 246, 175}};
 
-    // double answerIdxTest1[][8] = {{1, 2, 2, 3, 
+    // double answerIdxTest1[][8] = {{1, 2, 2, 3,
     //                               10, 17, 17, 13},
 
-    //                               {1, 1, 7, 4, 
+    //                               {1, 1, 7, 4,
     //                               11, 17, 17, 13}};
 
     size_t imgDepthTest1 = 2;
@@ -213,10 +213,10 @@ bool testDownsample1_cudnn()
 
     Architecture::PrintTensor(input, "input after dropout backward");
 
-    Architecture::Downsample(computedOutput, idx, input, 
+    Architecture::Downsample(computedOutput, idx, input,
                             (typename Architecture::PoolingDescriptors_t &) *poolDescriptors,
                             (typename Architecture::PoolingWorkspace_t &) *poolWorkspace,
-                            imgHeightTest1, imgWidthTest1, fltHeightTest1, fltWidthTest1, 
+                            imgHeightTest1, imgWidthTest1, fltHeightTest1, fltWidthTest1,
                             strideRowsTest1, strideColsTest1);
 
     Architecture::PrintTensor(computedOutput, "after downsampling");
@@ -335,10 +335,10 @@ bool testDownsample2_cudnn()
     auto& poolDescriptors = static_cast<typename Architecture::PoolingDescriptors_t &> (*poolLayer.GetDescriptors());
     auto& poolWorkspace   = static_cast<typename Architecture::PoolingWorkspace_t &> (*poolLayer.GetWorkspace());
 
-    Architecture::Downsample(computedOutput, idx, input, 
+    Architecture::Downsample(computedOutput, idx, input,
                             (typename Architecture::PoolingDescriptors_t &) poolDescriptors,
                             (typename Architecture::PoolingWorkspace_t &) poolWorkspace,
-                            imgHeightTest2, imgWidthTest2, fltHeightTest2, fltWidthTest2, 
+                            imgHeightTest2, imgWidthTest2, fltHeightTest2, fltWidthTest2,
                             strideRowsTest2, strideColsTest2);
 
     //Architecture::PrintTensor(computedOutput, "FInal output");
@@ -430,27 +430,28 @@ bool testBackward1() {
 template<typename Architecture>
 bool testBackward1_cudnn() {
 
-    using Matrix_t = typename Architecture::Matrix_t;
-    using HostBuffer_t = typename Architecture::HostBuffer_t;
+   using Scalar_t = typename Architecture::Scalar_t;
+   using Matrix_t = typename Architecture::Matrix_t;
+   using HostBuffer_t = typename Architecture::HostBuffer_t;
 
-    // Do a forward pass first to get x and y
-    double img[][36] = {{200, 79, 69,  58,  98,  168, 49,  230, 21,  141, 218, 38, 72, 224, 14,  65,  147, 105,
-                               38,  27, 111, 160, 200, 48,  109, 104, 153, 149, 233, 11, 16, 91,  236, 183, 166, 155}};
+   // Do a forward pass first to get x and y
+   double img[][36] = {{200, 79, 69,  58,  98,  168, 49,  230, 21,  141, 218, 38, 72, 224, 14,  65,  147, 105,
+                        38,  27, 111, 160, 200, 48,  109, 104, 153, 149, 233, 11, 16, 91,  236, 183, 166, 155}};
 
-    size_t depth = 1;
-    size_t inHeight = 6;
-    size_t inWidth = 6;
-    size_t frameHeight = 2;
-    size_t frameWidth = 3;
-    size_t strideRows = 1;
-    size_t strideCols = 3;
+   size_t depth = 1;
+   size_t inHeight = 6;
+   size_t inWidth = 6;
+   size_t frameHeight = 2;
+   size_t frameWidth = 3;
+   size_t strideRows = 1;
+   size_t strideCols = 3;
 
-    std::vector<size_t> inputActivationShape {1, depth, inHeight, inWidth};
-    HostBuffer_t inputActivation_hostbuffer(depth * inHeight * inWidth);
-    for (size_t i = 0; i < depth; i++) {
-       for (size_t j = 0; j < inHeight * inWidth; j++) {
-          inputActivation_hostbuffer[i*inHeight * inWidth + j] = img[i][j];
-       }
+   std::vector<size_t> inputActivationShape{1, depth, inHeight, inWidth};
+   HostBuffer_t inputActivation_hostbuffer(depth * inHeight * inWidth);
+   for (size_t i = 0; i < depth; i++) {
+      for (size_t j = 0; j < inHeight * inWidth; j++) {
+         inputActivation_hostbuffer[i * inHeight * inWidth + j] = img[i][j];
+      }
     }
     Matrix_t inputActivation(inputActivation_hostbuffer, inputActivationShape, MemoryLayout::RowMajor, 0, 0);
 
@@ -470,10 +471,10 @@ bool testBackward1_cudnn() {
     auto& poolDescriptors = static_cast<typename Architecture::PoolingDescriptors_t &> (*poolLayer.GetDescriptors());
     auto& poolWorkspace   = static_cast<typename Architecture::PoolingWorkspace_t &> (*poolLayer.GetWorkspace());
 
-    Architecture::Downsample(outputActivation, idxForward, inputActivation, 
+    Architecture::Downsample(outputActivation, idxForward, inputActivation,
                             (typename Architecture::PoolingDescriptors_t &) poolDescriptors,
                             (typename Architecture::PoolingWorkspace_t &) poolWorkspace,
-                            inHeight, inWidth, frameHeight, frameWidth, 
+                            inHeight, inWidth, frameHeight, frameWidth,
                             strideRows, strideCols);
 
 
@@ -531,9 +532,10 @@ bool testBackward1_cudnn() {
 
     Architecture::PrintTensor(expectedOutput, "Expected output");
     Architecture::PrintTensor(computedOutput, "Final output");
-    
-    bool status = expectedOutput.isEqual(computedOutput);
-    return status;
+
+    Scalar_t maxerror = maximumRelativeErrorTensor(expectedOutput, computedOutput);
+    std::cout << " maxerror = " << maxerror << std::endl;
+    return (maxerror < 1.E-6);
 }
 
 /*************************************************************************

@@ -75,7 +75,7 @@ public:
    using Tensor_t = typename Architecture_t::Tensor_t;
    using Matrix_t = typename Architecture_t::Matrix_t;
    using Scalar_t = typename Architecture_t::Scalar_t;
-  
+
 
 private:
    bool inline isInteger(Scalar_t x) const { return x == floor(x); }
@@ -286,8 +286,8 @@ public:
                  bool inTraining = false, bool includeRegularization = true);
 
    /*! Function for computing the regularizaton term to be added to the loss function  */
-   Scalar_t RegularizationTerm() const; 
-   
+   Scalar_t RegularizationTerm() const;
+
    /*! Prediction based on activations stored in the last layer. */
    void Prediction(Matrix_t &predictions, EOutputFunction f) const;
 
@@ -392,7 +392,7 @@ TDeepNet<Architecture_t, Layer_t>::~TDeepNet()
    // Relese the layers memory
    for (auto  layer : fLayers)
       delete layer;
-   fLayers.clear(); 
+   fLayers.clear();
 }
 
 //______________________________________________________________________________
@@ -508,19 +508,21 @@ TBasicRNNLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBasicRNNLa
    // should check if input and time size are consistent
 
    //std::cout << "Create RNN " << fLayers.size() << "  " << this->GetInputHeight() << "  " << this->GetInputWidth() << std::endl;
-   size_t inputHeight, inputWidth;
+   size_t inputHeight, inputWidth, inputDepth;
    if (fLayers.size() == 0) {
       inputHeight = this->GetInputHeight();
       inputWidth = this->GetInputWidth();
+      inputDepth = this->GetInputDepth();
    } else {
       Layer_t *lastLayer = fLayers.back();
       inputHeight = lastLayer->GetHeight();
       inputWidth = lastLayer->GetWidth();
+      inputDepth = lastLayer->GetDepth();
    }
    if (inputSize != inputWidth) {
       Error("AddBasicRNNLayer","Inconsistent input size with input layout  - it should be %zu instead of %zu",inputSize, inputWidth);
    }
-   if (timeSteps != inputHeight) {
+   if (timeSteps != inputHeight || timeSteps != inputDepth) {
       Error("AddBasicRNNLayer","Inconsistent time steps with input layout - it should be %zu instead of %zu",timeSteps, inputHeight);
    }
 
@@ -697,7 +699,7 @@ TReshapeLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddReshapeLaye
       outputNCols = inputNCols;
       depth = 1;
       height = 1;
-      width = outputNCols; 
+      width = outputNCols;
    } else {
       outputNSlices = this->GetBatchSize();
       outputNRows = depth;
@@ -718,7 +720,7 @@ TReshapeLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddReshapeLaye
 TBatchNormLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBatchNormLayer(Scalar_t momentum, Scalar_t epsilon)
 {
    size_t batchSize = this->GetBatchSize();
-   size_t inputWidth = 0; 
+   size_t inputWidth = 0;
    if (fLayers.size() == 0) {
       inputWidth = this->GetInputWidth();
    } else {
@@ -738,7 +740,7 @@ template <typename Architecture_t, typename Layer_t>
 TBatchNormLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBatchNormLayer(Scalar_t momentum, Scalar_t epsilon)
 {
    size_t batchSize = this->GetBatchSize();
-   size_t inputWidth = 0; 
+   size_t inputWidth = 0;
    if (fLayers.size() == 0) {
       inputWidth = this->GetInputWidth();
    } else {
@@ -788,7 +790,7 @@ auto TDeepNet<Architecture_t, Layer_t>::Forward( Tensor_t &input, bool applyDrop
    for (size_t i = 1; i < fLayers.size(); i++) {
       fLayers[i]->Forward(fLayers[i - 1]->GetOutput(), applyDropout);
       //std::cout << "forward for layer " << i << std::endl;
-      // fLayers[i]->GetOutput()[0].Print(); 
+      // fLayers[i]->GetOutput()[0].Print();
    }
 }
 
@@ -936,7 +938,7 @@ auto TDeepNet<Architecture_t, Layer_t>::Backward(const Tensor_t &input, const Ma
    }
 
    // need to have a dummy tensor (size=0) to pass for activation gradient backward which
-   // are not computed for the first layer 
+   // are not computed for the first layer
    Tensor_t dummy;
    fLayers[0]->Backward(dummy, input);
 }
@@ -1156,7 +1158,7 @@ auto TDeepNet<Architecture_t, Layer_t>::Loss(const Matrix_t &groundTruth, const 
 
    includeRegularization &= (this->GetRegularization() != ERegularization::kNone);
    if (includeRegularization) {
-      loss += RegularizationTerm(); 
+      loss += RegularizationTerm();
    }
 
    return loss;
@@ -1176,13 +1178,13 @@ auto TDeepNet<Architecture_t, Layer_t>::Loss(Tensor_t &input, const Matrix_t &gr
 template <typename Architecture_t, typename Layer_t>
 auto TDeepNet<Architecture_t, Layer_t>::RegularizationTerm() const -> Scalar_t
 {
-   Scalar_t reg = 0.0; 
+   Scalar_t reg = 0.0;
    for (size_t i = 0; i < fLayers.size(); i++) {
       for (size_t j = 0; j < (fLayers[i]->GetWeights()).size(); j++) {
          reg += regularization<Architecture_t>(fLayers[i]->GetWeightsAt(j), this->GetRegularization());
       }
    }
-   return this->GetWeightDecay() * reg; 
+   return this->GetWeightDecay() * reg;
 }
 
 

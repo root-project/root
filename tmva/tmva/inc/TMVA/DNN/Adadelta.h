@@ -150,7 +150,7 @@ auto TAdadelta<Architecture_t, Layer_t, DeepNet_t>::UpdateWeights(size_t layerIn
    std::vector<Matrix_t> &currentLayerPastSquaredWeightUpdates = this->GetPastSquaredWeightUpdatesAt(layerIndex);
 
    const size_t weightsNSlices = weights.size();
-   assert(currentLayerPastSquaredWeightGradients.size() == weightNSlices);
+   assert(currentLayerPastSquaredWeightGradients.size() == weightsNSlices);
 
    for (size_t i = 0; i < weightsNSlices; i++) {
       // accumulation matrix used for temporary storing of the current accumulation
@@ -209,7 +209,7 @@ auto TAdadelta<Architecture_t, Layer_t, DeepNet_t>::UpdateBiases(size_t layerInd
    std::vector<Matrix_t> &currentLayerPastSquaredBiasUpdates = this->GetPastSquaredBiasUpdatesAt(layerIndex);
 
    const size_t biasesNSlices = biases.size();
-   assert(currentLayerPastSquaredBiasGradients.size() == biasedNSlices);
+   assert(currentLayerPastSquaredBiasGradients.size() == biasesNSlices);
    for (size_t i = 0; i < biasesNSlices; i++) {
 
       // accumulation matrix used for temporary storing of the current accumulation

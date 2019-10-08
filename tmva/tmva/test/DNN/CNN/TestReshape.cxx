@@ -59,4 +59,5 @@ int main()
       std::cerr << "ERROR - testDeflatten failed " << std::endl;
       return 1;
    }
+   return 0;
 }

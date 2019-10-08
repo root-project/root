@@ -954,11 +954,11 @@ void TCpu<AFloat>::Rearrange(Tensor_t &out, const Tensor_t &in)
   
 
    size_t B = out.GetFirstSize(); 
-   size_t T = out.GetHSize();  //1 for row-major
+   size_t T = out.GetCSize();  //1 for row-major
    size_t D = out.GetWSize();  // 2 for row-major
-   if ((T != in.GetFirstSize()) || (B != in.GetHSize()) || (D != in.GetWSize()) ) {
+   if ((T != in.GetFirstSize()) || (B != in.GetCSize()) || (D != in.GetWSize()) ) {
       std::cout << "Incompatible Dimensions\n"
-                << in.GetFirstSize() << "x" << in.GetHSize() << "x" << in.GetWSize() << " --> " << B << "x" << T << "x"
+                << in.GetFirstSize() << "x" << in.GetCSize() << "x" << in.GetWSize() << " --> " << B << "x" << T << "x"
                 << D << "\n";
       assert(false);
       return;

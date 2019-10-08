@@ -122,7 +122,7 @@ auto testFullRNN(size_t batchSize, size_t stateSize,
          //for (size_t i = 0; i < inputSize; ++i) std::cout << XRef[0](0, i) << " "; std::cout << "\n";
          //for (size_t i = 0; i < inputSize; ++i) std::cout << rnn.GetLayers().back()->GetOutputAt(0)(0, i) << " "; std::cout << "\n";
       //}
-      std::cout << "loss: " << loss << std::endl;
+      std::cout << "iteration : " << iter << "  loss: " << loss << std::endl;
 
       rnn.Backward(XArch, YArch, W);
 

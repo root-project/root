@@ -356,16 +356,16 @@ void TTensorDataLoader<TensorInput, TCpu<Float_t>>::CopyTensorWeights(TCpuBuffer
    }
 }
 
-#if 0 
+#if 0
 //______________________________________________________________________________
 template <>
 TTensorBatch<TCpu<Float_t> > TTensorDataLoader<TensorInput, TCpu<Float_t> >::GetTensorBatch()
 {
-   // After copying the data to the device, wrap the device buffer in the respective 
+   // After copying the data to the device, wrap the device buffer in the respective
    // architectures matrix type
    DeviceBufferTuple DeviceBuffers = CopyTensorBatches();
-   
-   Tensor_t inputTensor( std::get<0>(DeviceBuffers), { fBatchHeight, fBatchWidth, fBatchSize } ); 
+
+   Tensor_t inputTensor( std::get<0>(DeviceBuffers), { fBatchHeight, fBatchWidth, fBatchSize } );
    // size_t jump = fBatchHeight * fBatchWidth;
    // for (size_t i = 0; i < fBatchSize; i++) {
    //    DeviceBuffer_t subInputDeviceBuffer = std::get<0>(DeviceBuffers).GetSubBuffer(i * jump, jump);
@@ -445,17 +445,17 @@ void TTensorDataLoader<TensorInput, TCpu<Double_t>>::CopyTensorWeights(TCpuBuffe
 template <>
 TTensorBatch<TCpu<Double_t> > TTensorDataLoader<TensorInput, TCpu<Double_t> >::GetTensorBatch()
 {
-   // After copying the data to the device, wrap the device buffer in the respective 
+   // After copying the data to the device, wrap the device buffer in the respective
    // architectures matrix type
    DeviceBufferTuple DeviceBuffers = CopyTensorBatches();
-   
-   Tensor_t inputTensor( std::get<0>(DeviceBuffers), { fBatchHeight, fBatchWidth, fBatchSize } ); 
+
+   Tensor_t inputTensor( std::get<0>(DeviceBuffers), { fBatchHeight, fBatchWidth, fBatchSize } );
    // size_t jump = fBatchHeight * fBatchWidth;
    // for (size_t i = 0; i < fBatchSize; i++) {
    //    DeviceBuffer_t subInputDeviceBuffer = std::get<0>(DeviceBuffers).GetSubBuffer(i * jump, jump);
    //    inputTensor.emplace_back(subInputDeviceBuffer, fBatchHeight, fBatchWidth);
    // }
-   
+
    Matrix_t outputMatrix(std::get<1>(DeviceBuffers), fBatchSize, fNOutputFeatures);
    Matrix_t weightMatrix(std::get<2>(DeviceBuffers), fBatchSize, fNOutputFeatures);
 
@@ -484,7 +484,7 @@ void TTensorDataLoader<TMVAInput_t, TCpu<Double_t>>::CopyTensorInput(TCpuBuffer<
          sampleIterator++;
       }
    } else if (fBatchDepth == fBatchSize) {
-      // batchDepth is batch size 
+      // batchDepth is batch size
       for (size_t i = 0; i < fBatchDepth; i++) {
          size_t sampleIndex = *sampleIterator;
          Event * event = std::get<0>(fData)[sampleIndex];
@@ -556,12 +556,12 @@ void TTensorDataLoader<TMVAInput_t, TCpu<Double_t>>::CopyTensorWeights(TCpuBuffe
 template <>
 TTensorBatch<TCpu<Double_t> > TTensorDataLoader<TMVAInput_t, TCpu<Double_t> >::GetTensorBatch()
 {
-   // After copying the data to the device, wrap the device buffer in the respective 
+   // After copying the data to the device, wrap the device buffer in the respective
    // architectures matrix type
    DeviceBufferTuple DeviceBuffers = CopyTensorBatches();
-   
 
-   Tensor_t inputTensor( std::get<0>(DeviceBuffers), { fBatchHeight, fBatchWidth, fBatchSize } ); 
+
+   Tensor_t inputTensor( std::get<0>(DeviceBuffers), { fBatchHeight, fBatchWidth, fBatchSize } );
    // size_t jump = fBatchHeight * fBatchWidth;
    // for (size_t i = 0; i < fBatchSize; i++) {
    //    DeviceBuffer_t subInputDeviceBuffer = std::get<0>(DeviceBuffers).GetSubBuffer(i * jump, jump);
@@ -594,7 +594,7 @@ void TTensorDataLoader<TMVAInput_t, TCpu<Float_t>>::CopyTensorInput(TCpuBuffer<F
          sampleIterator++;
       }
    } else if (fBatchDepth == fBatchSize) {
-      // batchDepth is batch size 
+      // batchDepth is batch size
       for (size_t i = 0; i < fBatchDepth; i++) {
          size_t sampleIndex = *sampleIterator;
          Event * event = std::get<0>(fData)[sampleIndex];
@@ -610,7 +610,7 @@ void TTensorDataLoader<TMVAInput_t, TCpu<Float_t>>::CopyTensorInput(TCpuBuffer<F
    }
    else {
       Error("TTensorDataLoader","Inconsistency between batch depth and batch size");
-      R__ASSERT(0); 
+      R__ASSERT(0);
    }
 }
 
@@ -661,16 +661,16 @@ void TTensorDataLoader<TMVAInput_t, TCpu<Float_t>>::CopyTensorWeights(TCpuBuffer
    }
 }
 
-#if 0 
+#if 0
 //______________________________________________________________________________
 template <>
 TTensorBatch<TCpu<Float_t> > TTensorDataLoader<TMVAInput_t, TCpu<Float_t> >::GetTensorBatch()
 {
-   // After copying the data to the device, wrap the device buffer in the respective 
+   // After copying the data to the device, wrap the device buffer in the respective
    // architectures matrix type
    DeviceBufferTuple DeviceBuffers = CopyTensorBatches();
-   
-   Tensor_t inputTensor( std::get<0>(DeviceBuffers), { fBatchHeight, fBatchWidth, fBatchSize } ); 
+
+   Tensor_t inputTensor( std::get<0>(DeviceBuffers), { fBatchHeight, fBatchWidth, fBatchSize } );
    // std::vector<Matrix_t> inputTensor;
    // size_t jump = fBatchHeight * fBatchWidth;
    // for (size_t i = 0; i < fBatchSize; i++) {

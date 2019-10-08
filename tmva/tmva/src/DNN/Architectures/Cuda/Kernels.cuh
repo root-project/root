@@ -448,7 +448,7 @@ __global__ void AdamUpdateSecondMom(AFloat * A, const AFloat * B,
 //____________________________________________________________________________
 template<typename AFloat>
 __global__ void IdentityDerivative(AFloat * A,
-                                   int m, int n)   
+                                   int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
