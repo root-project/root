@@ -107,6 +107,18 @@ void ROOT::Experimental::RCanvas::Show(const std::string &where)
 }
 
 //////////////////////////////////////////////////////////////////////////
+/// Returns window name for canvas
+
+std::string ROOT::Experimental::RCanvas::GetWindowAddr() const
+{
+   if (fPainter)
+      return fPainter->GetWindowAddr();
+
+   return "";
+}
+
+
+//////////////////////////////////////////////////////////////////////////
 /// Hide all canvas displays
 
 void ROOT::Experimental::RCanvas::Hide()
