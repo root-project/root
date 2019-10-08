@@ -95,7 +95,7 @@ std::string RCsvDS::AsString()
 TRegexp RCsvDS::intRegex("^[-+]?[0-9]+$");
 TRegexp RCsvDS::doubleRegex1("^[-+]?[0-9]+\\.[0-9]*$");
 TRegexp RCsvDS::doubleRegex2("^[-+]?[0-9]*\\.[0-9]+$");
-TRegexp RCsvDS::doubleRegex3("^[-+]?[0-9]*\\.[0-9]+[eE][-+]?[0-9]+$");
+TRegexp RCsvDS::doubleRegex3("^[-+]?[0-9]*\\.[0-9]+[eEdDqQ][-+]?[0-9]+$");
 TRegexp RCsvDS::trueRegex("^true$");
 TRegexp RCsvDS::falseRegex("^false$");
 
