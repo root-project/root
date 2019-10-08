@@ -5,11 +5,11 @@
 Collections are a key feature of the ROOT system. Many, if not most, of
 the applications you write will use collections. If you have used
 polymorphic C++ collections before, some of this material will be review.
-However, much of this tutorial covers aspects of collections specific to
-the ROOT system. In this tutorial the following features will be demonstrated:
+However, much of [this tutorial](https://github.com/root-project/root/blob/master/test/tcollex.cxx)
+covers aspects of collections specific to the ROOT system.
+In this tutorial the following features will be demonstrated:
 
-  - [Chapter about Collections in the Users Guide](https://root.cern.ch/root/htmldoc/guides/users-guide/ROOTUsersGuide.html#collection-classes)
-  - [Using collections](https://github.com/root-project/root/blob/master/test/tcollex.cxx)
+  - Using collections
   - How to create instances of collections
   - The difference between lists, ordered collections, hash-tables, maps, etc.
   - How to add and remove elements of a collection
