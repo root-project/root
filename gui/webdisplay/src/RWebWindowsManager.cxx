@@ -374,10 +374,14 @@ std::string ROOT::Experimental::RWebWindowsManager::GetUrl(const ROOT::Experimen
 ///
 ///   HTTP-server related parameters documented in RWebWindowsManager::CreateServer() method
 
-unsigned ROOT::Experimental::RWebWindowsManager::ShowWindow(ROOT::Experimental::RWebWindow &win, bool batch_mode, const RWebDisplayArgs &user_args)
+unsigned ROOT::Experimental::RWebWindowsManager::ShowWindow(RWebWindow &win, bool batch_mode, const RWebDisplayArgs &user_args)
 {
    // silently ignore regular Show() calls in batch mode
    if (!batch_mode && gROOT->IsWebDisplayBatch())
+      return 0;
+
+   // for embedded window no any browser need to be started
+   if (user_args.GetBrowserKind() == RWebDisplayArgs::kEmbedded)
       return 0;
 
    // we book manager mutex for a longer operation,
