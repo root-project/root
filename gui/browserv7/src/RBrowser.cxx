@@ -25,6 +25,7 @@
 #include "TROOT.h"
 #include "TWebCanvas.h"
 #include "TCanvas.h"
+#include "TFile.h"
 #include "TBufferJSON.h"
 
 #include <sstream>
@@ -68,18 +69,15 @@ ROOT::Experimental::RBrowser::~RBrowser()
    fCanvases.clear();
 }
 
-TDirectory *ROOT::Experimental::RBrowser::OpenFile(const std::string &fname)
+TFile *ROOT::Experimental::RBrowser::OpenFile(const std::string &fname)
 {
-   TDirectory *file = dynamic_cast<TDirectory *>(gROOT->GetListOfFiles()->FindObject(fname.c_str()));
+   auto file = dynamic_cast<TFile *>(gROOT->GetListOfFiles()->FindObject(fname.c_str()));
 
    if (!file)
-      file = (TDirectory *)gROOT->ProcessLine(
-         TString::Format("TFile::Open(\"%s\", \"READ\")", fname.c_str()).Data());
+      file = TFile::Open(fname.c_str());
 
    return file;
 }
-
-
 
 /////////////////////////////////////////////////////////////////////
 /// Collect information for provided root file
@@ -90,7 +88,7 @@ void ROOT::Experimental::RBrowser::Browse(const std::string &path)
    fDesc.clear();
    fSorted.clear();
    std::string keyname, classname, filename = path.substr(1, path.size()-2);
-   TDirectory *rfile = OpenFile(filename);
+   auto rfile = OpenFile(filename);
    if (rfile) {
       // replace actual user data (TObjString) by the TDirectory...
       int nkeys = rfile->GetListOfKeys()->GetEntries();
@@ -381,86 +379,70 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
 
 std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &item_path)
 {
-   std::string res;
-   if (item_path.find(".root") != std::string::npos) {
-
-      auto canv = GetActiveCanvas();
-      if (!canv) {
-         printf("No active web canvas to process dbl click\n");
-         return res;
-      }
-
-      std::string rootFilePath = "", rootFileName = "";
-
-      // Split of the path by /
-      std::vector<std::string> split;
-      std::string buffer;
-      std::istringstream path(item_path);
-      while (std::getline(path, buffer, '/')) {
-         split.push_back(buffer);
-      }
-
-      // Iterate over the split
-      // The goal is to have two parts
-      // The first one is the relative path of the root file to open it (rootFilePath)
-      // And the second if the name of the namecycle (rootFileName)
-      for (std::vector<int>::size_type i = 0; i != split.size(); i++) {
-         // If the current split contain .root
-         if (split[i].find(".root") != std::string::npos) {
-            rootFilePath += split[i]; // Add the file to the path
-            if (split[i + 1].find("ntuple") != std::string::npos) {
-               // TODO
-               break;
-            } else {
-               rootFileName += split[i + 1]; // the add the name of the file then stop
-               break;
-            }
-         } else {
-            rootFilePath += split[i] + "/"; // Add the file to the path
-         }
-      }
-
-      TDirectory *file = OpenFile(rootFilePath);
-      if (!file) {
-         printf("No ROOT file found\n");
-         return res;
-      }
-
-      TObject *object = nullptr;
-      file->GetObject(rootFileName.c_str(), object); // Getting the data of the graphic into the TObject
-
-      if (!object) {
-         printf("No ROOT object read\n");
-         return res;
-      }
-
-      canv->GetListOfPrimitives()->Clear();
-
-
-      canv->GetListOfPrimitives()->Add(object,"");
-
-      canv->ForceUpdate(); // force update async - do not wait for confirmation
-
-      // this is sync method, therefore should not be used that way!
-      // canv->Update();
-
-      /*
-
-      TString jsonobject = TBufferJSON::ToJSON(object);
-      // Actual message that need to be like { path: pathOfTheFile, data: { Things returned by the GetObject } }
-      res = "FROOT:";
-      std::string json = "{\"path\":\"" + item_path + "\", \"data\":";
-      res.append(json);
-      res.append(jsonobject.Data());
-      res.append("}");
-      */
-   } else {
-      res = "FREAD:";
+   if (item_path.find(".root") == std::string::npos) {
+      std::string res = "FREAD:";
       std::ifstream t(item_path);
-      std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
-      res.append(str.c_str());
+      res.append(std::string(std::istreambuf_iterator<char>(t), std::istreambuf_iterator<char>()));
+      return res;
    }
-   return res;
+
+   std::string rootFilePath = "", rootFileName = "";
+
+   // Split of the path by /
+   std::vector<std::string> split;
+   std::string buffer;
+   std::istringstream path(item_path);
+   while (std::getline(path, buffer, '/')) {
+      split.push_back(buffer);
+   }
+
+   // Iterate over the split
+   // The goal is to have two parts
+   // The first one is the relative path of the root file to open it (rootFilePath)
+   // And the second if the name of the namecycle (rootFileName)
+   for (std::vector<int>::size_type i = 0; i != split.size(); i++) {
+      // If the current split contain .root
+      if (split[i].find(".root") != std::string::npos) {
+         rootFilePath += split[i]; // Add the file to the path
+         if (split[i + 1].find("ntuple") != std::string::npos) {
+            // TODO
+            break;
+         } else {
+            rootFileName += split[i + 1]; // the add the name of the file then stop
+            break;
+         }
+      } else {
+         rootFilePath += split[i] + "/"; // Add the file to the path
+      }
+   }
+
+   auto file = OpenFile(rootFilePath);
+   if (!file) {
+      printf("No ROOT file found\n");
+      return "";
+   }
+
+   TObject *object = nullptr;
+   file->GetObject(rootFileName.c_str(), object); // Getting the data of the graphic into the TObject
+
+   if (!object) {
+      printf("No ROOT object read\n");
+      return "";
+   }
+
+   auto canv = GetActiveCanvas();
+   if (!canv) {
+      printf("No active web canvas to process dbl click\n");
+      return "";
+   }
+
+   canv->GetListOfPrimitives()->Clear();
+
+   canv->GetListOfPrimitives()->Add(object,"");
+
+   canv->ForceUpdate(); // force update async - do not wait for confirmation
+
+   return "";
 }
 
 /////////////////////////////////////////////////////////////////////////////////
