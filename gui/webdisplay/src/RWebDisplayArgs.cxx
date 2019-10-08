@@ -96,6 +96,8 @@ ROOT::Experimental::RWebDisplayArgs &ROOT::Experimental::RWebDisplayArgs::SetBro
       SetBrowserKind(kCEF);
    else if ((kind == "qt") || (kind == "qt5"))
       SetBrowserKind(kQt5);
+   else if ((kind == "embed") || (kind == "embedded"))
+      SetBrowserKind(kEmbedded);
    else
       SetCustomExec(kind);
 
@@ -115,6 +117,7 @@ std::string ROOT::Experimental::RWebDisplayArgs::GetBrowserName() const
       case kQt5: return "qt5";
       case kLocal: return "local";
       case kStandard: return "default";
+      case kEmbedded: return "embed";
       case kCustom:
           auto pos = fExec.find(" ");
           return (pos == std::string::npos) ? fExec : fExec.substr(0,pos);
