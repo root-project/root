@@ -325,14 +325,8 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
    if (!request)
       return res;
 
-   if (request->sort == "RCLICK") {
-
-      TDirectory *file = (TDirectory *)gROOT->ProcessLine(TString::Format("TFile::Open(\"%s\", \"READ\")", request->filePath.c_str())); // Opnening the wanted file
-      TObject *object;
-      file->GetObject(request->rootFile.c_str(), object); // Getting the data of the graphic into the TObject
-
-   } else if (request->sort == "DBLCLK") {
-       if (request->path.find(".root") != std::string::npos) {
+   if (request->sort == "DBLCLK") {
+       if (request->rootFile != "") {
 
             TDirectory *file = (TDirectory *)gROOT->ProcessLine(TString::Format("TFile::Open(\"%s\", \"READ\")", request->filePath.c_str())); // Opnening the wanted file
 
@@ -346,11 +340,13 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
             res.append(json);
             res.append(jsonobject.Data());
             res.append("}");
+          printf("SENDED FROOT");
        } else {
             res = "FREAD:";
             std::ifstream t(request->path);
             std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
             res.append(str.c_str());
+          printf("SENDED FREAD");
       }
       return res;
    }
@@ -382,7 +378,7 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
 
    res = "BREPL:";
    res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kSkipTypeInfo + TBufferJSON::kNoSpaces).Data());
-
+   printf("\nSENDED BREPL\n%s\n", res.c_str());
    return res;
 }
 
@@ -426,6 +422,7 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       fWebWindow->TerminateROOT();
 
    } else if (arg.compare(0,6, "BRREQ:") == 0) {
+      printf("\n%s\n", arg.c_str());
       // central place for processing browser requests
       //if (!fDesc.IsBuild()) fDesc.Build();
       auto json = ProcessBrowserRequest(arg.substr(6));

@@ -13,7 +13,8 @@ sap.ui.define(['sap/ui/core/Component',
                "sap/ui/table/Column",
                "sap/ui/core/util/File",
                "sap/ui/model/json/JSONModel",
-               "rootui5/browser/model/BrowserModel"
+               "rootui5/browser/model/BrowserModel",
+               "sap/ui/core/Fragment"
 ],function(Component, Controller, CoreControl, CoreIcon, mText, mCheckBox, MessageBox, MessageToast, TabContainerItem,
            Splitter, ResizeHandler, HorizontalLayout, tableColumn, File, JSONModel, BrowserModel) {
 
@@ -23,6 +24,7 @@ sap.ui.define(['sap/ui/core/Component',
     * All Browser functionality is loaded after main ui5 rendering is performed */
 
    return Controller.extend("rootui5.browser.controller.Browser", {
+
       onInit: function () {
 
          this.websocket = this.getView().getViewData().conn_handle;
@@ -210,32 +212,31 @@ sap.ui.define(['sap/ui/core/Component',
          var oReader = new FileReader();
          oReader.onload = function() {
             oModel.setProperty("/code", oReader.result);
-         }
+         };
          var file = oEvent.getParameter("files")[0];
          if (this.setFileNameType(file.name))
             oReader.readAsText(file);
       },
 
-     _getContextMenu : function () {
-       if (!this._oContextMenu) {
-         this._oContextMenu = sap.ui.xmlfragment("rootui5.browser.view.contextmenu", this);
-         let oModel = new sap.ui.model.json.JSONModel("rootui5sys/browser/json/drawingOptions.json");
-         this._oContextMenu.setModel(oModel);
-         this.getView().addDependent(this._oContextMenu);
+     _getSettingsMenu: async function () {
+       if (!this._oSettingsMenu) {
+         let myThis = this;
+         await sap.ui.core.Fragment.load({name: "rootui5.browser.view.settingsmenu"}).then(function (oSettingsMenu) {
+           let oModel = new sap.ui.model.json.JSONModel("rootui5sys/browser/json/drawingOptions.json");
+           oSettingsMenu.setModel(oModel);
+           myThis.getView().addDependent(oSettingsMenu);
+
+           myThis._oSettingsMenu = oSettingsMenu;
+           return oSettingsMenu;
+         });
        }
-       return this._oContextMenu;
+       return this._oSettingsMenu;
      },
 
-     contextMenu: function() {
-        this._getContextMenu().open();
-     },
-
-     onDrawingOptionsPopupOK: (oEvent) => {
-       oEvent.getSource().close();
-     },
-
-     onDrawingOptionsPopupCancel: (oEvent) => {
-       oEvent.getSource().close();
+     onSettingPress: async function() {
+        console.log("onSettingPress");
+        await this._getSettingsMenu();
+        this._oSettingsMenu.open();
      },
 
       /** @brief Handle the "Save As..." button press event */
@@ -255,7 +256,6 @@ sap.ui.define(['sap/ui/core/Component',
          var rows = this.byId("treeTable").getRows();
          for (var k=0;k<rows.length;++k) {
             rows[k].$().dblclick(this.onRowDblClick.bind(this, rows[k]));
-            rows[k].$().contextmenu(this.onRowRightClick.bind(this, rows[k]));
          }
       },
 
@@ -272,13 +272,8 @@ sap.ui.define(['sap/ui/core/Component',
         return this.sendBrowserRequest("DBLCLK", json);
       },
 
-     onRowRightClick: function(row) {
-       let json = this.getPathAndNameFromRow(row);
-       return this.sendBrowserRequest("RCLICK", json);
-     },
-
       getPathAndNameFromRow: function(row) {
-        let answer = {};
+        let answer = {path: "", rootFile: "", filepath: ""};
         let fullpath = "";
         let ctxt = row.getBindingContext(), prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
         if (prop && prop.fullpath) {
@@ -320,54 +315,24 @@ sap.ui.define(['sap/ui/core/Component',
          if (typeof msg != "string")
             return console.error("Browser do not uses binary messages len = " + mgs.byteLength);
 
-         var mhdr = msg.substr(0,6);
-         msg = msg.substr(6);
 
-         // console.log(mhdr, msg.length, msg.substr(0,70), "...");
+         let mhdr = msg.split(":")[0];
+         msg = msg.substr(mhdr.length+1);
 
          switch (mhdr) {
-         case "DESCR:":  // browser hierarchy
+         case "DESCR":  // browser hierarchy
             this.parseDescription(msg, true);
             break;
-         case "FESCR:":  // searching hierarchy
+         case "FESCR":  // searching hierarchy
             this.parseDescription(msg, false);
             break;
-         case "FREAD:":  // file read
-             this.getView().byId("aCodeEditor").getModel().setProperty("/code", msg);
-             break;
-         case "FROOT:": // Root file
-           let selecedTabID = this.getSelectedtabFromtabContainer("myTabContainer"); // The ID of the selected tab in the TabContainer
-
-           let jsonAnswer = JSON.parse(msg); // message received from the server to JSON
-
-           let rootFileArray = jsonAnswer.path.split("/"); // spliting the path on /
-           let rootFileRelativePath = ""; // Declaration of the var to open the good file
-
-           let i = 0; // Iterator
-           while (rootFileArray[i].slice(-5) !== ".root") { // Iterating over the splited path until it find the .root file
-             rootFileRelativePath += "/" + rootFileArray[i];
-             i++;
-           }
-           rootFileRelativePath += "/" + rootFileArray[i]; // Adding the last bit (the wanted graphic) to the relative path
-
-           let oCanvas = this.getView().byId("aRootCanvas" + selecedTabID); // Get the drawing place object
-
-           if (oCanvas === undefined || oCanvas === null) { // If the selected tabs it not a Root canvas then display and error message
-             MessageToast.show("Please, select a Root Canvas tab", {duration: 1500});
-             return;
-           }
-
-           let oTabElement = oCanvas.getParent(); // Get the tab from the drawing place
-           let rootFileDisplayName = rootFileArray[i] + "/" + rootFileArray[i + 1]; // Creating a simple nameOfTheFile.root/graphic;1 to display on the tab
-
-           document.getElementById("TopBrowserId--aRootCanvas" + selecedTabID).innerHTML = ""; // Clearing the canvas
-           oTabElement.setAdditionalText(rootFileDisplayName); // Setting the tab file name
-           let finalJsonRoot = JSROOT.JSONR_unref(jsonAnswer.data); // Creating the graphic from the json
-
-           JSROOT.draw("TopBrowserId--aRootCanvas" + selecedTabID, finalJsonRoot, "colz"); // Drawing the graphic into the selected tab canvas
-
-           break;
-         case "BREPL:":   // browser reply
+         case "FREAD":  // file read
+            this.getView().byId("aCodeEditor").getModel().setProperty("/code", msg);
+            break;
+         case "FROOT": // Root file
+            this.draw(msg);
+            break;
+         case "BREPL":   // browser reply
             if (this.model) {
                var bresp = JSON.parse(msg);
 
@@ -393,6 +358,33 @@ sap.ui.define(['sap/ui/core/Component',
          let tabContainer = this.getView().byId('myTabContainer').getSelectedItem()
          return tabContainer.slice(6, tabContainer.length);
       },
+
+     draw: function(msg, drawOption="colz") {
+
+       let selecedTabID = this.getSelectedtabFromtabContainer("myTabContainer"); // The ID of the selected tab in the TabContainer
+       let oCanvas = this.getView().byId("aRootCanvas" + selecedTabID); // Get the drawing place object
+       if (oCanvas === undefined || oCanvas === null) { // If the selected tabs it not a Root canvas then display and error message
+         MessageToast.show("Please, select a Root Canvas tab", {duration: 1500});
+         return;
+       }
+       let oTabElement = oCanvas.getParent(); // Get the tab from the drawing place
+
+       let jsonAnswer = JSON.parse(msg); // message received from the server to JSON
+
+       let rootFileArray = jsonAnswer.path.split("/"); // spliting the path on /
+       let i = 0; // Iterator
+       while (rootFileArray[i].slice(-5) !== ".root") { // Iterating over the splited path until it find the .root file
+         i++;
+       }
+       let rootFileDisplayName = rootFileArray[i] + "/" + rootFileArray[i + 1]; // Creating a simple nameOfTheFile.root/graphic;1 to display on the tab
+       oTabElement.setAdditionalText(rootFileDisplayName); // Setting the tab file name
+
+       document.getElementById("TopBrowserId--aRootCanvas" + selecedTabID).innerHTML = ""; // Clearing the canvas
+       oTabElement.setAdditionalText(rootFileDisplayName); // Setting the tab file name
+       let finalJsonRoot = JSROOT.JSONR_unref(jsonAnswer.data); // Creating the graphic from the json
+
+       JSROOT.draw("TopBrowserId--aRootCanvas" + selecedTabID, finalJsonRoot, drawOption); // Drawing the graphic into the selected tab canvas
+     },
 
       /** Show special message insted of nodes hierarchy */
       showTextInBrowser: function(text) {

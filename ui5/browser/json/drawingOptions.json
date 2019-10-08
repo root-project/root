@@ -1,80 +1,24 @@
 {
-	"drawingOptions": [
+	"TH1": [
 		{
-			"graph": "TH2",
-			"option": "box"
+			"name": "box"
 		},
 		{
-			"graph": "TH3",
-			"option": "box"
+			"name": "lego"
 		},
 		{
-			"graph": "TH2",
-			"option": "colz"
+			"name": "colz"
+		}
+	],
+	"TH2": [
+		{
+			"name": "box"
 		},
 		{
-			"graph": "TH1",
-			"option": "lego"
+			"name": "lego"
 		},
 		{
-			"graph": "TH2",
-			"option": "lego"
-		},
-		{
-			"graph": "TH2Poly",
-			"option": "lego"
-		},
-		{
-			"graph": "THStack",
-			"option": "lego"
-		},
-		{
-			"graph": "THGeo",
-			"option": "lego"
-		},
-		{
-			"graph": "TH2",
-			"option": "lego1"
-		},
-		{
-			"graph": "TH2",
-			"option": "lego2"
-		},
-		{
-			"graph": "TH2",
-			"option": "surf"
-		},
-		{
-			"graph": "TH2",
-			"option": "surf1"
-		},
-		{
-			"graph": "TH2",
-			"option": "surf2"
-		},
-		{
-			"graph": "TH2",
-			"option": "surf3"
-		},
-		{
-			"graph": "TH2",
-			"option": "surf4"
-		},
-		{
-			"graph": "TH2",
-			"option": "surf5"
-		},
-		{
-			"graph": "TH1",
-			"option": "text"
-		},
-		{
-			"graph": "TH2",
-			"option": "text"
-		},
-		{
-			"graph": "TProfile",
-			"option": "text"
+			"name": "colz"
 		}
 	]
 }
