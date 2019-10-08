@@ -367,7 +367,7 @@ sap.ui.define(['sap/ui/core/Component',
            JSROOT.draw("TopBrowserId--aRootCanvas" + selecedTabID, finalJsonRoot, "colz"); // Drawing the graphic into the selected tab canvas
 
            break;
-         case "BREPL:":   // browser reply
+         case "BREPL":   // browser reply
             if (this.model) {
                var bresp = JSON.parse(msg);
 

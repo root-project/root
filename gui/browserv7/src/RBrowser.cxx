@@ -330,10 +330,6 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
    if (!request)
       return res;
 
-   if (request->sort == "DBLCLK") {
-
-   }
-
    // rebuild list only when selected directory changed
    if (!IsBuild() || (request->path != fDescPath)) {
       fDescPath = request->path;
@@ -361,7 +357,7 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
 
    res = "BREPL:";
    res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kSkipTypeInfo + TBufferJSON::kNoSpaces).Data());
-
+   printf("\n%s\n", res.c_str());
    return res;
 }
 

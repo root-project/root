@@ -14,7 +14,8 @@
         <TabContainer id="myTabContainer"
                       showAddNewButton="true"
                       addNewButtonPress="addNewButtonPressHandler"
-                      itemSelect="tabSelectItem"itemClose="tabCloseHandler">
+                      itemSelect="tabSelectItem"
+                      itemClose="tabCloseHandler">
           <items>
             <TabContainerItem name="Code Editor" icon="sap-icon://write-new-document" additionalText="untitled" >
               <content>
