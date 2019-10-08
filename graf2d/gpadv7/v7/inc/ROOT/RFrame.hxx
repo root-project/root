@@ -1,10 +1,3 @@
-/// \file ROOT/RFrame.hxx
-/// \ingroup Gpad ROOT7
-/// \author Axel Naumann <axel@cern.ch>
-/// \date 2017-09-26
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
-
 /*************************************************************************
  * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -27,9 +20,13 @@
 namespace ROOT {
 namespace Experimental {
 
-/** \class ROOT::Experimental::RFrame
-  Holds a user coordinate system with a palette.
-  */
+/** \class RFrame
+\ingroup GpadROOT7
+\brief Holds a user coordinate system with a palette.
+\author Axel Naumann <axel@cern.ch>
+\date 2017-09-26
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RFrame : public RDrawable  {
 public:

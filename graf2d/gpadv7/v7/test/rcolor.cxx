@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
- #include "gtest/gtest.h"
+#include "gtest/gtest.h"
 
 #include "ROOT/RColor.hxx"
 

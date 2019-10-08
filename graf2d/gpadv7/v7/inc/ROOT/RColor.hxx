@@ -1,10 +1,3 @@
-/// \file ROOT/RColor.hxx
-/// \ingroup Gpad ROOT7
-/// \author Axel Naumann <axel@cern.ch>
-/// \date 2017-09-26
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
-
 /*************************************************************************
  * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -26,6 +19,14 @@ namespace Experimental {
 
 // TODO: see also imagemagick's C++ interface for RColor operations!
 // https://www.imagemagick.org/api/magick++-classes.php
+
+/** \class RColor
+\ingroup GpadROOT7
+\brief The color class
+\author Axel Naumann <axel@cern.ch>
+\date 2017-09-26
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RColor : public RAttrBase {
 

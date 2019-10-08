@@ -1,10 +1,3 @@
-/// \file RMenuItem.cxx
-/// \ingroup Base ROOT7
-/// \author Sergey Linev
-/// \date 2017-07-18
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
-
 /*************************************************************************
  * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -24,19 +17,14 @@
 #include "TMethodCall.h"
 #include "TBufferJSON.h"
 
-void ROOT::Experimental::RMenuItems::Cleanup()
-{
-   fItems.clear();
-}
-
 void ROOT::Experimental::RMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
 {
-   Cleanup();
+   fItems.clear();
 
-   TList *lst = new TList;
-   cl->GetMenuItems(lst);
+   TList lst;
+   cl->GetMenuItems(&lst);
 
-   TIter iter(lst);
+   TIter iter(&lst);
    TMethod *m = nullptr;
 
    while ((m = (TMethod *)iter()) != nullptr) {
@@ -60,7 +48,7 @@ void ROOT::Experimental::RMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
          if ((getter.Length() > 0) && cl->GetMethodAllAny(getter)) {
             // execute getter method to get current state of toggle item
 
-            TMethodCall *call = new TMethodCall(cl, getter, "");
+            auto call = std::make_unique<TMethodCall>(cl, getter, "");
 
             if (call->ReturnType() == TMethodCall::kLong) {
                Long_t l(0);
@@ -71,8 +59,6 @@ void ROOT::Experimental::RMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
             } else {
                // Error("CheckModifiedFlag", "Cannot get toggle value with getter %s", getter.Data());
             }
-
-            delete call;
          }
       } else {
          TList *args = m->GetListOfMethodArgs();
@@ -80,7 +66,7 @@ void ROOT::Experimental::RMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
          if (!args || (args->GetSize() == 0)) {
             AddMenuItem(m->GetName(), m->GetTitle(), Form("%s()", m->GetName()));
          } else {
-            Detail::RArgsMenuItem *item = new Detail::RArgsMenuItem(m->GetName(), m->GetTitle());
+            auto item = std::make_unique<Detail::RArgsMenuItem>(m->GetName(), m->GetTitle());
             item->SetExec(Form("%s()", m->GetName()));
 
             TIter args_iter(args);
@@ -92,22 +78,8 @@ void ROOT::Experimental::RMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
                item->AddArg(menu_arg);
             }
 
-            Add(item);
+            Add(std::move(item));
          }
       }
    }
-
-   delete lst;
-}
-
-std::string ROOT::Experimental::RMenuItems::ProduceJSON()
-{
-   TClass *cl = gROOT->GetClass("std::vector<ROOT::Experimental::Detail::RMenuItem*>");
-
-   // FIXME: got problem with std::list<RMenuItem>, can be generic TBufferJSON
-   TString res = TBufferJSON::ConvertToJSON(&fItems, cl);
-
-   // printf("Got JSON %s\n", res.Data());
-
-   return res.Data();
 }

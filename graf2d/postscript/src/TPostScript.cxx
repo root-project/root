@@ -12,7 +12,7 @@
 /** \class TPostScript
 \ingroup PS
 
-Interface to PostScript.
+\brief Interface to PostScript.
 
 To generate a Postscript (or encapsulated ps) file corresponding to
 a single image in a canvas, you can:
@@ -26,7 +26,11 @@ a single image in a canvas, you can:
     file instead.
   - In your program (or macro), you can type:
 ~~~ {.cpp}
-    c1->Print("xxx.ps")</B> or <B>c1->Print("xxx.eps").
+    c1->Print("xxx.ps");
+~~~
+or:
+~~~ {.cpp}
+    c1->Print("xxx.eps");
 ~~~
     This will generate a file corresponding to the picture in the canvas
     pointed by `c1`.
@@ -215,7 +219,7 @@ component K (black). The conversion from RGB to CMYK is:
 CMYK add the black component which allows to have a better quality for black
 printing. PostScript support the CMYK model.
 
-To change the color model use gStyle->SetColorModelPS(c).
+To change the color model use `gStyle->SetColorModelPS(c)`.
 
   - c = 0 means TPostScript will use RGB color model (default)
   - c = 1 means TPostScript will use CMYK color model

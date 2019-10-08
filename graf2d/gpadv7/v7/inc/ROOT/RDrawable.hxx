@@ -1,10 +1,3 @@
-/// \file ROOT/RDrawable.hxx
-/// \ingroup Base ROOT7
-/// \author Axel Naumann <axel@cern.ch>
-/// \date 2015-08-07
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
-
 /*************************************************************************
  * Copyright (C) 1995-2015, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -30,10 +23,17 @@ namespace Experimental {
 class RMenuItems;
 class RPadBase;
 class RAttrBase;
+class RDisplayItem;
 
 
 namespace Internal {
-class RPadPainter;
+
+/** \class RIOSharedBase
+\ingroup GpadROOT7
+\author Sergey Linev <s.linev@gsi.de>
+\date 2019-09-24
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RIOSharedBase {
 public:
@@ -87,29 +87,37 @@ public:
 }
 
 /** \class RDrawable
-  Base class for drawable entities: objects that can be painted on a `RPad`.
- */
+\ingroup GpadROOT7
+\brief Base class for drawable entities: objects that can be painted on a `RPad`.
+\author Axel Naumann <axel@cern.ch>
+\author Sergey Linev <s.linev@gsi.de>
+\date 2015-08-07
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RDrawable {
 
-friend class RPadBase;
+friend class RPadBase; // to access Display method
 friend class RAttrBase;
 friend class RStyle;
 
 private:
-   std::string fId;              ///< object identifier, unique inside RCanvas - TODO make it only for user, internal IDs should be independent
    RAttrMap fAttr;               ///< attributes values
    std::weak_ptr<RStyle> fStyle; ///<! style applied for RDrawable
    std::string fCssType;         ///<! drawable type, not stored in the root file, must be initialized in constructor
-   std::string fCssClass;        ///<  user defined drawable class, can later go inside map
+   std::string fCssClass;        ///< user defined drawable class, can later go inside map
+   std::string fId;              ///< optional object identifier, may be used in CSS as well
 
 protected:
 
    virtual void CollectShared(Internal::RIOSharedVector_t &) {}
 
    RAttrMap &GetAttrMap() { return fAttr; }
+   const RAttrMap &GetAttrMap() const { return fAttr; }
 
    bool MatchSelector(const std::string &selector) const;
+
+   virtual std::unique_ptr<RDisplayItem> Display() const;
 
 public:
 
@@ -119,26 +127,23 @@ public:
 
    // copy constructor and assign operator !!!
 
-   virtual void Paint(Internal::RPadPainter &onPad);
-
    /** Method can be used to provide menu items for the drawn object */
    virtual void PopulateMenu(RMenuItems &){};
 
    virtual void Execute(const std::string &);
 
-   std::string GetId() const { return fId; }
-
-   void UseStyle(const std::shared_ptr<RStyle> &style) { fStyle = style; }
-   void ClearStyle() { fStyle.reset(); }
+   virtual void UseStyle(const std::shared_ptr<RStyle> &style) { fStyle = style; }
+   void ClearStyle() { UseStyle(nullptr); }
 
    void SetCssClass(const std::string &cl) { fCssClass = cl; }
    const std::string &GetCssClass() const { return fCssClass; }
 
    const std::string &GetCssType() const { return fCssType; }
 
+   const std::string &GetId() const { return fId; }
+   void SetId(const std::string &id) { fId = id; }
+
 };
-
-
 
 /// Central method to insert drawable in list of pad primitives
 /// By default drawable placed as is.
@@ -147,8 +152,6 @@ inline auto GetDrawable(const std::shared_ptr<DRAWABLE> &drawable)
 {
    return drawable;
 }
-
-
 
 } // namespace Experimental
 } // namespace ROOT

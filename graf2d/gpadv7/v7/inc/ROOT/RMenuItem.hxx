@@ -1,10 +1,3 @@
-/// \file ROOT/RMenuItem.hxx
-/// \ingroup Base ROOT7
-/// \author Sergey Linev
-/// \date 2017-06-29
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
-
 /*************************************************************************
  * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -27,8 +20,12 @@ namespace Experimental {
 namespace Detail {
 
 /** \class RMenuItem
-  Class contains info for producing menu item on the JS side.
-  */
+\ingroup GpadROOT7
+\brief Base class for menu items, shown on JS side.
+\author Sergey Linev
+\date 2017-06-29
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RMenuItem {
 protected:
@@ -45,7 +42,7 @@ public:
    RMenuItem(const std::string &name, const std::string &title) : fName(name), fTitle(title), fExec() {}
 
    /** virtual destructor need for vtable, used when vector of RMenuItem* is stored */
-   virtual ~RMenuItem() {}
+   virtual ~RMenuItem() = default;
 
    /** Set execution string with all required arguments,
     * which will be executed when menu item is selected  */
@@ -58,9 +55,17 @@ public:
    const std::string &GetExec() const { return fExec; }
 };
 
+/** \class RCheckedMenuItem
+\ingroup GpadROOT7
+\brief Menu item with check box
+\author Sergey Linev
+\date 2017-06-29
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
+
 class RCheckedMenuItem : public RMenuItem {
 protected:
-   bool fChecked = false; ///< -1 not exists, 0 - off, 1 - on
+   bool fChecked = false; ///< state of checkbox
 public:
    /** Default constructor */
    RCheckedMenuItem() = default;
@@ -80,6 +85,14 @@ public:
    bool IsChecked() const { return fChecked; }
 };
 
+/** \class RMenuArgument
+\ingroup GpadROOT7
+\brief Argument description for menu item which should invoke class method
+\author Sergey Linev
+\date 2017-06-29
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
+
 class RMenuArgument {
 protected:
    std::string fName;     ///<  name of call argument
@@ -98,6 +111,14 @@ public:
 
    void SetDefault(const std::string &dflt) { fDefault = dflt; }
 };
+
+/** \class RArgsMenuItem
+\ingroup GpadROOT7
+\brief Menu item which requires extra arguments for invoked class method
+\author Sergey Linev
+\date 2017-06-29
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RArgsMenuItem : public RMenuItem {
 protected:
@@ -119,38 +140,40 @@ public:
 
 ///////////////////////////////////////////////////////////////////////
 
+/** \class RMenuItems
+\ingroup GpadROOT7
+\brief List of items for object context menu
+\author Sergey Linev
+\date 2017-06-29
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
+
 class RMenuItems {
 protected:
+   std::string fId;                                        ///< object identifier
    std::vector<std::unique_ptr<Detail::RMenuItem>> fItems; ///< list of items in the menu
 public:
-   /** Default constructor */
-   RMenuItems() = default;
+   void SetId(const std::string &id) { fId = id; }
 
-   ~RMenuItems() = default;
+   auto Size() const { return fItems.size(); }
 
-   void Add(Detail::RMenuItem *item) { fItems.emplace_back(item); }
+   void Add(std::unique_ptr<Detail::RMenuItem> &&item) { fItems.emplace_back(std::move(item)); }
 
    void AddMenuItem(const std::string &name, const std::string &title, const std::string &exec)
    {
-      Detail::RMenuItem *item = new Detail::RMenuItem(name, title);
+      auto item = std::make_unique<Detail::RMenuItem>(name, title);
       item->SetExec(exec);
-      Add(item);
+      Add(std::move(item));
    }
 
    void AddChkMenuItem(const std::string &name, const std::string &title, bool checked, const std::string &toggle)
    {
-      Detail::RCheckedMenuItem *item = new Detail::RCheckedMenuItem(name, title, checked);
+      auto item = std::make_unique<Detail::RCheckedMenuItem>(name, title, checked);
       item->SetExec(toggle);
-      Add(item);
+      Add(std::move(item));
    }
 
-   auto Size() const { return fItems.size(); }
-
-   void Cleanup();
-
    void PopulateObjectMenu(void *obj, TClass *cl);
-
-   std::string ProduceJSON();
 };
 
 } // namespace Experimental

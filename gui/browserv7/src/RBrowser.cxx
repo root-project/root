@@ -23,6 +23,8 @@
 #include "TString.h"
 #include "TSystem.h"
 #include "TROOT.h"
+#include "TWebCanvas.h"
+#include "TCanvas.h"
 #include "TBufferJSON.h"
 
 #include <sstream>
@@ -48,12 +50,14 @@ ROOT::Experimental::RBrowser::RBrowser()
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
 
    // this is call-back, invoked when message received via websocket
-   fWebWindow->SetCallBacks([this](unsigned connid) { fConnId = connid; },
+   fWebWindow->SetCallBacks([this](unsigned connid) { fConnId = connid; SendInitMsg(connid); },
                             [this](unsigned connid, const std::string &arg) { WebWindowCallback(connid, arg); });
    fWebWindow->SetGeometry(1200, 700); // configure predefined window geometry
    fWebWindow->SetConnLimit(1); // the only connection is allowed
    fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
    Show();
+
+   AddCanvas();  // add first canvas by default
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -61,6 +65,7 @@ ROOT::Experimental::RBrowser::RBrowser()
 
 ROOT::Experimental::RBrowser::~RBrowser()
 {
+   fCanvases.clear();
 }
 
 
@@ -305,7 +310,7 @@ std::string ROOT::Experimental::RBrowser::GetFileIcon(TString &name)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-/// constructor
+/// Process browser request
 
 std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::string &msg)
 {
@@ -326,29 +331,7 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
       return res;
 
    if (request->sort == "DBLCLK") {
-       if (request->rootFile != "") {
 
-            TDirectory *file = (TDirectory *)gROOT->ProcessLine(TString::Format("TFile::Open(\"%s\", \"READ\")", request->filePath.c_str())); // Opnening the wanted file
-
-            TObject *object;
-            file->GetObject(request->rootFile.c_str(), object); // Getting the data of the graphic into the TObject
-            TString jsonobject = TBufferJSON::ToJSON(object);
-
-            // Actual message that need to be like { path: pathOfTheFile, data: { Things returned by the GetObject } }
-            res = "FROOT:";
-            std::string json = "{\"path\":\"" + request->path + "\", \"data\":";
-            res.append(json);
-            res.append(jsonobject.Data());
-            res.append("}");
-          printf("SENDED FROOT");
-       } else {
-            res = "FREAD:";
-            std::ifstream t(request->path);
-            std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
-            res.append(str.c_str());
-          printf("SENDED FREAD");
-      }
-      return res;
    }
 
    // rebuild list only when selected directory changed
@@ -378,7 +361,90 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
 
    res = "BREPL:";
    res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kSkipTypeInfo + TBufferJSON::kNoSpaces).Data());
-   printf("\nSENDED BREPL\n%s\n", res.c_str());
+
+   return res;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Process dbl click on browser item
+
+std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &item_path)
+{
+   std::string res;
+   if (item_path.find(".root") != std::string::npos) {
+
+      auto canv = GetActiveCanvas();
+      if (!canv) {
+         printf("No active web canvas to process dbl click\n");
+         return res;
+      }
+
+      std::string rootFilePath = "", rootFileName = "";
+
+      // Split of the path by /
+      std::vector<std::string> split;
+      std::string buffer;
+      std::istringstream path(item_path);
+      while (std::getline(path, buffer, '/')) {
+         split.push_back(buffer);
+      }
+
+      // Iterate over the split
+      // The goal is to have two parts
+      // The first one is the relative path of the root file to open it (rootFilePath)
+      // And the second if the name of the namecycle (rootFileName)
+      for (std::vector<int>::size_type i = 0; i != split.size(); i++) {
+         // If the current split contain .root
+         if (split[i].find(".root") != std::string::npos) {
+            rootFilePath += split[i]; // Add the file to the path
+            if (split[i + 1].find("ntuple") != std::string::npos) {
+               // TODO
+               break;
+            } else {
+               rootFileName += split[i + 1]; // the add the name of the file then stop
+               break;
+            }
+         } else {
+            rootFilePath += split[i] + "/"; // Add the file to the path
+         }
+      }
+
+      TDirectory *file = (TDirectory *)gROOT->ProcessLine(
+         TString::Format("TFile::Open(\"%s\", \"READ\")", rootFilePath.c_str())); // Opening the wanted file
+
+      TObject *object = nullptr;
+      file->GetObject(rootFileName.c_str(), object); // Getting the data of the graphic into the TObject
+
+      if (!object) {
+         printf("No ROOT object read\n");
+         return res;
+      }
+
+      canv->GetListOfPrimitives()->Clear();
+
+      canv->GetListOfPrimitives()->Add(object,"");
+
+      canv->ForceUpdate(); // force update async - do not wait for confirmation
+
+      // this is sync method, therefore should not be used that way!
+      // canv->Update();
+
+      /*
+
+      TString jsonobject = TBufferJSON::ToJSON(object);
+      // Actual message that need to be like { path: pathOfTheFile, data: { Things returned by the GetObject } }
+      res = "FROOT:";
+      std::string json = "{\"path\":\"" + item_path + "\", \"data\":";
+      res.append(json);
+      res.append(jsonobject.Data());
+      res.append("}");
+      */
+   } else {
+      res = "FREAD:";
+      std::ifstream t(item_path);
+      std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+      res.append(str.c_str());
+   }
    return res;
 }
 
@@ -411,6 +477,97 @@ void ROOT::Experimental::RBrowser::Hide()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+/// Create new web canvas, invoked when new canvas created on client side
+
+TCanvas *ROOT::Experimental::RBrowser::AddCanvas()
+{
+   TString canv_name;
+   canv_name.Form("webcanv%d", (int)(fCanvases.size()+1));
+
+   auto canv = std::make_unique<TCanvas>(kFALSE);
+   canv->SetName(canv_name.Data());
+   canv->SetTitle(canv_name.Data());
+   canv->ResetBit(TCanvas::kShowEditor);
+   canv->ResetBit(TCanvas::kShowToolBar);
+   canv->SetCanvas(canv.get());
+   canv->SetBatch(kTRUE); // mark canvas as batch
+   fActiveCanvas = canv->GetName();
+
+   // create implementation
+   TWebCanvas *web = new TWebCanvas(canv.get(), "title", 0, 0, 800, 600);
+
+   // assign implementation
+   canv->SetCanvasImp(web);
+
+   // initialize web window, but not start new web browser
+   web->ShowWebWindow("embed");
+
+   fCanvases.emplace_back(std::move(canv));
+
+   return fCanvases.back().get();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Returns relative URL for canvas - required for client to establish connection
+
+std::string ROOT::Experimental::RBrowser::GetCanvasUrl(TCanvas *canv)
+{
+   TWebCanvas *web = dynamic_cast<TWebCanvas *>(canv->GetCanvasImp());
+   return fWebWindow->RelativeAddr(web->GetWebWindow());
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Returns active web canvas (if any)
+
+TCanvas *ROOT::Experimental::RBrowser::GetActiveCanvas() const
+{
+   auto iter = std::find_if(fCanvases.begin(), fCanvases.end(), [this](const std::unique_ptr<TCanvas> &canv) { return fActiveCanvas == canv->GetName(); });
+
+   if (iter != fCanvases.end())
+      return iter->get();
+
+   return nullptr;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Close and delete specified canvas
+
+void ROOT::Experimental::RBrowser::CloseCanvas(const std::string &name)
+{
+   auto iter = std::find_if(fCanvases.begin(), fCanvases.end(), [name](std::unique_ptr<TCanvas> &canv) { return name == canv->GetName(); });
+
+   if (iter != fCanvases.end())
+      fCanvases.erase(iter);
+
+   if (fActiveCanvas == name)
+      fActiveCanvas.clear();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Process client connect
+
+void ROOT::Experimental::RBrowser::SendInitMsg(unsigned connid)
+{
+   std::vector<std::vector<std::string>> reply;
+
+   for (auto &canv : fCanvases) {
+      auto url = GetCanvasUrl(canv.get());
+      std::string name = canv->GetName();
+      std::vector<std::string> arr = {url, name};
+      reply.emplace_back(arr);
+   }
+
+   std::string msg = "INMSG:";
+   msg.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
+
+   printf("Init msg %s\n", msg.c_str());
+
+   fWebWindow->Send(connid, msg);
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
 /// receive data from client
 
 void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std::string &arg)
@@ -422,10 +579,30 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       fWebWindow->TerminateROOT();
 
    } else if (arg.compare(0,6, "BRREQ:") == 0) {
-      printf("\n%s\n", arg.c_str());
       // central place for processing browser requests
       //if (!fDesc.IsBuild()) fDesc.Build();
       auto json = ProcessBrowserRequest(arg.substr(6));
       if (json.length() > 0) fWebWindow->Send(connid, json);
+   } else if (arg.compare("NEWCANVAS") == 0) {
+
+      // create canvas
+      TCanvas *canv = AddCanvas();
+
+      auto url = GetCanvasUrl(canv);
+
+      std::vector<std::string> reply = {url, std::string(canv->GetName())};
+
+      std::string res = "CANVS:";
+      res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
+
+      fWebWindow->Send(connid, res);
+   } else if (arg.compare(0,7, "DBLCLK:") == 0) {
+      auto str = ProcessDblClick(arg.substr(7));
+      if (str.length() > 0) fWebWindow->Send(connid, str);
+   } else if (arg.compare(0,14, "SELECT_CANVAS:") == 0) {
+      fActiveCanvas = arg.substr(14);
+      printf("Select %s\n", fActiveCanvas.c_str());
+   } else if (arg.compare(0,13, "CLOSE_CANVAS:") == 0) {
+      CloseCanvas(arg.substr(13));
    }
 }

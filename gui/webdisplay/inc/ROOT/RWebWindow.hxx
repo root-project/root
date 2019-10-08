@@ -295,7 +295,7 @@ public:
 
    void RecordData(const std::string &fname = "protocol.json", const std::string &fprefix = "");
 
-   std::string RelativeAddr(std::shared_ptr<RWebWindow> &win) const;
+   std::string RelativeAddr(const std::shared_ptr<RWebWindow> &win) const;
 
    void SetCallBacks(WebWindowConnectCallback_t conn, WebWindowDataCallback_t data, WebWindowConnectCallback_t disconn = nullptr);
 

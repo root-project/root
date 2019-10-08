@@ -284,13 +284,12 @@ void ROOT::Experimental::TCanvasPainter::CheckDataToSend()
 
             ROOT::Experimental::RMenuItems items;
 
+            items.SetId(conn.fGetMenu);
+
             drawable->PopulateMenu(items);
 
-            // FIXME: got problem with std::list<RMenuItem>, can be generic TBufferJSON
             buf = "MENU:";
-            buf.Append(conn.fGetMenu);
-            buf.Append(":");
-            buf.Append(items.ProduceJSON());
+            buf.Append(TBufferJSON::ToJSON(&items, fJsonComp).Data());
          }
 
          conn.fGetMenu = "";
@@ -623,21 +622,22 @@ bool ROOT::Experimental::TCanvasPainter::AddPanel(std::shared_ptr<RWebWindow> wi
 
 std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Experimental::RCanvas &can)
 {
-   PaintDrawables(can);
+   auto canvitem = std::make_unique<RCanvasDisplayItem>();
 
-   fPadDisplayItem->SetObjectID("canvas"); // for canvas itself use special id
-   fPadDisplayItem->SetTitle(can.GetTitle());
-   fPadDisplayItem->SetWindowSize(can.GetSize());
+   can.DisplayPrimitives(*canvitem.get());
 
-   TString res = TBufferJSON::ToJSON(fPadDisplayItem.get(), fJsonComp);
+   canvitem->SetTitle(can.GetTitle());
+   canvitem->SetWindowSize(can.GetSize());
+
+   canvitem->BuildFullId(""); // create object id which unique identify it via pointer and position in subpads
+   canvitem->SetObjectID("canvas"); // for canvas itself use special id
+
+   TString res = TBufferJSON::ToJSON(canvitem.get(), fJsonComp);
 
    if (!fNextDumpName.empty()) {
-      TBufferJSON::ExportToFile(fNextDumpName.c_str(), fPadDisplayItem.get(),
-                                gROOT->GetClass("ROOT::Experimental::RPadDisplayItem"));
+      TBufferJSON::ExportToFile(fNextDumpName.c_str(), canvitem.get(), TClass::GetClass<ROOT::Experimental::RCanvasDisplayItem>());
       fNextDumpName.clear();
    }
-
-   fPadDisplayItem.reset(); // no need to keep memory any longer
 
    return std::string(res.Data());
 }
@@ -655,7 +655,7 @@ ROOT::Experimental::TCanvasPainter::FindPrimitive(const ROOT::Experimental::RCan
    if (pos != std::string::npos)
       search.resize(pos);
 
-   return can.FindPrimitive(search);
+   return can.FindPrimitiveByDisplayId(search);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

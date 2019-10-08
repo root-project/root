@@ -2062,7 +2062,6 @@
 
    function THistPainter(histo) {
       JSROOT.TObjectPainter.call(this, histo);
-      this.histo = histo;
       this.draw_content = true;
       this.nbinsx = 0;
       this.nbinsy = 0;
@@ -2107,12 +2106,11 @@
       this.mode3d = false;
    }
 
+   /** Cleanup histogram painter */
    THistPainter.prototype.Cleanup = function() {
 
       // clear all 3D buffers
       this.Clear3DScene();
-
-      this.histo = null; // cleanup histogram reference
 
       delete this.fPalette;
       delete this.fContour;
@@ -2220,12 +2218,10 @@
 
          if (!this.MatchObjectType(obj)) return false;
 
-         // TODO: simple replace of object does not help - one can have different
+         // simple replace of object does not help - one can have different
          // complex relations between histo and stat box, histo and colz axis,
          // one could have THStack or TMultiGraph object
          // The only that could be done is update of content
-
-         // this.histo = obj;
 
          // check only stats bit, later other settings can be monitored
          if (histo.TestBit(JSROOT.TH1StatusBits.kNoStats) != obj.TestBit(JSROOT.TH1StatusBits.kNoStats)) {

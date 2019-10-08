@@ -769,35 +769,9 @@ function(ROOT_LINKER_LIBRARY library)
     if(NOT TARGET ROOT::${library})
       add_library(ROOT::${library} ALIAS ${library})
     endif()
-
-    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-      target_include_directories(${library}
-        PRIVATE
-          ${CMAKE_CURRENT_SOURCE_DIR}/inc
-        INTERFACE
-          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
-      )
-    endif()
-
-    if(root7 AND IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
-      target_include_directories(${library}
-        PRIVATE
-          ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc
-        INTERFACE
-          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>
-      )
-    endif()
-
-    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/res)
-      target_include_directories(${library}
-        PRIVATE
-          ${CMAKE_CURRENT_SOURCE_DIR}/res
-      )
-    endif()
-
-    # needed for generated headers like RConfigure.h and ROOT/RConfig.hxx
-    target_include_directories(${library} PRIVATE ${CMAKE_BINARY_DIR}/include)
   endif()
+
+  ROOT_ADD_INCLUDE_DIRECTORIES(${library})
 
   if(TARGET G__${library})
     add_dependencies(${library} G__${library})
@@ -844,18 +818,11 @@ function(ROOT_LINKER_LIBRARY library)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_OBJECT_LIBRARY( <name> source1 source2 ... BUILTINS dep1 dep2 ...)
+#---ROOT_ADD_INCLUDE_DIRECTORIES( library )
 #---------------------------------------------------------------------------------------------------
-function(ROOT_OBJECT_LIBRARY library)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "" "BUILTINS"  ${ARGN})
-  ROOT_GET_SOURCES(lib_srcs src ${ARG_UNPARSED_ARGUMENTS})
-  add_library( ${library} OBJECT ${lib_srcs})
-  if(lib_srcs MATCHES "(^|/)(G__[^.]*)[.]cxx.*")
-     add_dependencies(${library} ${CMAKE_MATCH_2})
-  endif()
-  add_dependencies(${library} move_headers)
-
+function(ROOT_ADD_INCLUDE_DIRECTORIES library)
   if(PROJECT_NAME STREQUAL "ROOT")
+
     if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/inc)
       target_include_directories(${library}
         PRIVATE
@@ -881,9 +848,36 @@ function(ROOT_OBJECT_LIBRARY library)
       )
     endif()
 
-    # needed for generated headers like RConfigure.h and ROOT/RConfig.hxx
-    target_include_directories(${library} PRIVATE ${CMAKE_BINARY_DIR}/include)
+    if (cxxmodules)
+      # needed for generated headers like RConfigure.h and ROOT/RConfig.hxx
+      # FIXME: We prepend ROOTSYS/include because if we have built a module
+      # and try to resolve the 'same' header from a different location we will
+      # get a redefinition error.
+      # We should remove these lines when the fallback include is removed. Then
+      # we will need a module.modulemap file per `inc` directory.
+      target_include_directories(${library} BEFORE PRIVATE ${CMAKE_BINARY_DIR}/include)
+    else()
+      # needed for generated headers like RConfigure.h and ROOT/RConfig.hxx
+      target_include_directories(${library} PRIVATE ${CMAKE_BINARY_DIR}/include)
+    endif()
+
   endif()
+
+endfunction(ROOT_ADD_INCLUDE_DIRECTORIES)
+
+#---------------------------------------------------------------------------------------------------
+#---ROOT_OBJECT_LIBRARY( <name> source1 source2 ... BUILTINS dep1 dep2 ...)
+#---------------------------------------------------------------------------------------------------
+function(ROOT_OBJECT_LIBRARY library)
+  CMAKE_PARSE_ARGUMENTS(ARG "" "" "BUILTINS"  ${ARGN})
+  ROOT_GET_SOURCES(lib_srcs src ${ARG_UNPARSED_ARGUMENTS})
+  add_library( ${library} OBJECT ${lib_srcs})
+  if(lib_srcs MATCHES "(^|/)(G__[^.]*)[.]cxx.*")
+     add_dependencies(${library} ${CMAKE_MATCH_2})
+  endif()
+  add_dependencies(${library} move_headers)
+
+  ROOT_ADD_INCLUDE_DIRECTORIES(${library})
 
   #--- Only for building shared libraries
   set_property(TARGET ${library} PROPERTY POSITION_INDEPENDENT_CODE 1)
@@ -947,35 +941,7 @@ function(ROOT_MODULE_LIBRARY library)
   # macros.
   set_target_properties(${library} PROPERTIES DEFINE_SYMBOL "")
 
-  if(PROJECT_NAME STREQUAL "ROOT")
-    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-      target_include_directories(${library}
-        PRIVATE
-          ${CMAKE_CURRENT_SOURCE_DIR}/inc
-        INTERFACE
-          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
-      )
-    endif()
-
-    if(root7 AND IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
-      target_include_directories(${library}
-        PRIVATE
-          ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc
-        INTERFACE
-          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>
-      )
-    endif()
-
-    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/res)
-      target_include_directories(${library}
-        PRIVATE
-          ${CMAKE_CURRENT_SOURCE_DIR}/res
-      )
-    endif()
-
-    # needed for generated headers like RConfigure.h and ROOT/RConfig.hxx
-    target_include_directories(${library} PRIVATE ${CMAKE_BINARY_DIR}/include)
-  endif()
+  ROOT_ADD_INCLUDE_DIRECTORIES(${library})
 
   target_link_libraries(${library} PUBLIC ${ARG_LIBRARIES})
   #----Installation details-------------------------------------------------------

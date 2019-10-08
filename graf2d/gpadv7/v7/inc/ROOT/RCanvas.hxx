@@ -1,10 +1,3 @@
-/// \file ROOT/RCanvas.hxx
-/// \ingroup Gpad ROOT7
-/// \author Axel Naumann <axel@cern.ch>
-/// \date 2015-07-08
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
-
 /*************************************************************************
  * Copyright (C) 1995-2015, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -16,7 +9,7 @@
 #ifndef ROOT7_RCanvas
 #define ROOT7_RCanvas
 
-#include "ROOT/RPad.hxx"
+#include "ROOT/RPadBase.hxx"
 #include "ROOT/RVirtualCanvasPainter.hxx"
 
 #include <memory>
@@ -26,12 +19,17 @@
 namespace ROOT {
 namespace Experimental {
 
-/** \class ROOT::Experimental::RCanvas
-  A window's topmost `RPad`.
-  */
+/** \class RCanvas
+\ingroup GpadROOT7
+\brief A window's topmost `RPad`.
+\author Axel Naumann <axel@cern.ch>
+\date 2015-07-08
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RCanvas: public RPadBase {
 friend class RPadBase;  /// use for ID generation
+friend class TCanvasPainter; /// used for primitives drawing
 private:
    /// Title of the canvas.
    std::string fTitle;
@@ -41,8 +39,6 @@ private:
 
    /// Modify counter, incremented every time canvas is changed
    uint64_t fModified{0}; ///<!
-
-   uint64_t fIdCounter{2};   ///< counter for objects, id==1 is canvas itself
 
    /// The painter of this canvas, bootstrapping the graphics connection.
    /// Unmapped canvases (those that never had `Draw()` invoked) might not have
@@ -54,8 +50,6 @@ private:
 
    /// Disable assignment for now.
    RCanvas &operator=(const RCanvas &) = delete;
-
-   std::string GenerateUniqueId();
 
 public:
    static std::shared_ptr<RCanvas> Create(const std::string &title);

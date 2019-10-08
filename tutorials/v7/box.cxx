@@ -11,13 +11,12 @@
 /// \date 2018-10-10
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
-/// \author Olivier couet
+/// \author Olivier Couet
 
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RColor.hxx"
 #include "ROOT/RBox.hxx"
 #include <ROOT/RPadPos.hxx>
-#include "TMath.h"
 
 void box()
 {
