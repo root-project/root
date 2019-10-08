@@ -258,13 +258,13 @@ sap.ui.define(['sap/ui/core/Component',
             fullpath = prop.fullpath.substr(1, prop.fullpath.length-2);
             var dirname = fullpath.substr(0, fullpath.lastIndexOf('/'));
             if (dirname.endsWith(".root"))
-               return this.sendBrowserRequest("DBLCLK", { path: fullpath });
+               return this.websocket.Send("DBLCLK:" + fullpath);
          }
          var oEditor = this.getView().byId("aCodeEditor");
          var oModel = oEditor.getModel();
          var filename = fullpath.substr(fullpath.lastIndexOf('/') + 1);
          if (this.setFileNameType(filename))
-            return this.sendBrowserRequest("DBLCLK", { path: fullpath });
+            return this.websocket.Send("DBLCLK:" + fullpath);
        },
 
       OnWebsocketOpened: function(handle) {
