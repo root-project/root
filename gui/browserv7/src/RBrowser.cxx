@@ -68,6 +68,18 @@ ROOT::Experimental::RBrowser::~RBrowser()
    fCanvases.clear();
 }
 
+TDirectory *ROOT::Experimental::RBrowser::OpenFile(const std::string &fname)
+{
+   TDirectory *file = dynamic_cast<TDirectory *>(gROOT->GetListOfFiles()->FindObject(fname.c_str()));
+
+   if (!file)
+      file = (TDirectory *)gROOT->ProcessLine(
+         TString::Format("TFile::Open(\"%s\", \"READ\")", fname.c_str()).Data());
+
+   return file;
+}
+
+
 
 /////////////////////////////////////////////////////////////////////
 /// Collect information for provided root file
@@ -78,8 +90,7 @@ void ROOT::Experimental::RBrowser::Browse(const std::string &path)
    fDesc.clear();
    fSorted.clear();
    std::string keyname, classname, filename = path.substr(1, path.size()-2);
-   TDirectory *rfile = (TDirectory *)gROOT->ProcessLine(TString::Format("TFile::Open(\"%s\", \"READ\")",
-                                                       filename.c_str()));
+   TDirectory *rfile = OpenFile(filename);
    if (rfile) {
       // replace actual user data (TObjString) by the TDirectory...
       int nkeys = rfile->GetListOfKeys()->GetEntries();
@@ -409,8 +420,11 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
          }
       }
 
-      TDirectory *file = (TDirectory *)gROOT->ProcessLine(
-         TString::Format("TFile::Open(\"%s\", \"READ\")", rootFilePath.c_str())); // Opening the wanted file
+      TDirectory *file = OpenFile(rootFilePath);
+      if (!file) {
+         printf("No ROOT file found\n");
+         return res;
+      }
 
       TObject *object = nullptr;
       file->GetObject(rootFileName.c_str(), object); // Getting the data of the graphic into the TObject
@@ -421,6 +435,7 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
       }
 
       canv->GetListOfPrimitives()->Clear();
+
 
       canv->GetListOfPrimitives()->Add(object,"");
 
@@ -491,6 +506,7 @@ TCanvas *ROOT::Experimental::RBrowser::AddCanvas()
    canv->ResetBit(TCanvas::kShowToolBar);
    canv->SetCanvas(canv.get());
    canv->SetBatch(kTRUE); // mark canvas as batch
+   canv->SetEditable(kTRUE); // ensure fPrimitives are created
    fActiveCanvas = canv->GetName();
 
    // create implementation
