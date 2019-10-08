@@ -26,6 +26,7 @@
 
 class TString;
 class TCanvas;
+class TDirectory;
 
 namespace ROOT {
 namespace Experimental {
@@ -77,6 +78,7 @@ protected:
 
    TCanvas *AddCanvas();
    TCanvas *GetActiveCanvas() const;
+   TDirectory *OpenFile(const std::string &fname);
    std::string GetCanvasUrl(TCanvas *canv);
    void CloseCanvas(const std::string &name);
 
