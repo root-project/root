@@ -12,11 +12,23 @@
 
 Bernstein basis polynomials are positive-definite in the range [0,1].
 In this implementation, we extend [0,1] to be the range of the parameter.
-There are n+1 Bernstein basis polynomials of degree n.
-Thus, by providing N coefficients that are positive-definite, there
-is a natural way to have well behaved polynomial PDFs.
-For any n, the n+1 basis polynomials 'form a partition of unity', eg.
- they sum to one for all values of x. See
+There are n+1 Bernstein basis polynomials of degree n:
+\f[
+ B_{i,n}(x) = \begin{pmatrix}n \\\ i \end{pmatrix} x^i \cdot (1-x)^{n-i}
+\f]
+Thus, by providing n coefficients that are positive-definite, there
+is a natural way to have well-behaved polynomial PDFs. For any n, the n+1 polynomials
+'form a partition of unity', i.e., they sum to one for all values of x.
+They can be used as a basis to span the space of polynomials with degree n or less:
+\f[
+ PDF(x, c_0, ..., c_n) = \mathcal{N} \cdot \sum_{i=0}^{n} c_i \cdot B_{i,n}(x).
+\f]
+By giving n+1 coefficients in the constructor, this class constructs the n+1
+polynomials of degree n, and sums them to form an element of the space of polynomials
+of degree n. \f$ \mathcal{N} \f$ is a normalisation constant that takes care of the
+cases where the \f$ c_i \f$ are not all equal to one.
+
+See also
 http://www.idav.ucdavis.edu/education/CAGDNotes/Bernstein-Polynomials.pdf
 **/
 
@@ -39,7 +51,7 @@ ClassImp(RooBernstein);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooBernstein::RooBernstein()
+RooBernstein::RooBernstein() : _refRangeName(nullptr)
 {
 }
 
@@ -50,7 +62,8 @@ RooBernstein::RooBernstein(const char* name, const char* title,
                            RooAbsReal& x, const RooArgList& coefList):
   RooAbsPdf(name, title),
   _x("x", "Dependent", this, x),
-  _coefList("coefficients","List of coefficients",this)
+  _coefList("coefficients","List of coefficients",this),
+  _refRangeName(nullptr)
 {
   TIterator* coefIter = coefList.createIterator() ;
   RooAbsArg* coef ;
@@ -70,16 +83,32 @@ RooBernstein::RooBernstein(const char* name, const char* title,
 RooBernstein::RooBernstein(const RooBernstein& other, const char* name) :
   RooAbsPdf(other, name),
   _x("x", this, other._x),
-  _coefList("coefList",this,other._coefList)
+  _coefList("coefList",this,other._coefList),
+  _refRangeName(other._refRangeName)
 {
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+void RooBernstein::selectNormalizationRange(const char* rangeName, Bool_t force)
+{
+  if (rangeName && (force || !_refRangeName)) {
+     _refRangeName = static_cast<const TNamed*> (RooNameReg::instance().constPtr(rangeName));
+  }
+  if (!rangeName) {
+     _refRangeName = 0;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Double_t RooBernstein::evaluate() const
 {
-  Double_t xmin = _x.min();
-  Double_t x = (_x - xmin) / (_x.max() - xmin); // rescale to [0,1]
+  const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName():0);
+  const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName():0);
+
+  Double_t x = (_x - xmin) / (xmax - xmin); // rescale to [0,1]
   Int_t degree = _coefList.getSize() - 1; // n+1 polys of degree n
   RooFIter iter = _coefList.fwdIterator();
 
@@ -124,11 +153,10 @@ Double_t RooBernstein::evaluate() const
 
 Int_t RooBernstein::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
 {
-  if (rangeName && strlen(rangeName)) {
-    return 0 ;
-  }
+  if (rangeName && strlen(rangeName))   return 0;
 
   if (matchArgs(allVars, analVars, _x)) return 1;
+
   return 0;
 }
 
@@ -137,8 +165,11 @@ Int_t RooBernstein::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVar
 Double_t RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   R__ASSERT(code==1) ;
-  Double_t xmin = _x.min(rangeName); Double_t xmax = _x.max(rangeName);
-  Int_t degree= _coefList.getSize()-1; // n+1 polys of degree n
+  const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName():0);
+  const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName():0);
+  const Double_t xlo = (_x.min(rangeName) - xmin) / (xmax - xmin);
+  const Double_t xhi = (_x.max(rangeName) - xmin) / (xmax - xmin);
+  const Int_t degree= _coefList.getSize()-1; // n+1 polys of degree n
   Double_t norm(0) ;
 
   RooFIter iter = _coefList.fwdIterator() ;
@@ -149,12 +180,11 @@ Double_t RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) con
     // where the integral is straight forward.
     temp = 0;
     for (int j=i; j<=degree; ++j){ // power basis≈ß
-      temp += pow(-1.,j-i) * TMath::Binomial(degree, j) * TMath::Binomial(j,i) / (j+1);
+      temp += pow(-1.,j-i) * TMath::Binomial(degree, j) * TMath::Binomial(j,i) * (TMath::Power(xhi,j+1) - TMath::Power(xlo,j+1)) / (j+1);
     }
     temp *= ((RooAbsReal*)iter.next())->getVal(); // include coeff
     norm += temp; // add this basis's contribution to total
   }
-
-  norm *= xmax-xmin;
+  norm = norm*(xmax - xmin);
   return norm;
 }
