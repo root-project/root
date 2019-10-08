@@ -309,7 +309,7 @@ std::string ROOT::Experimental::RBrowser::GetFileIcon(TString &name)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-/// constructor
+/// Process browser request
 
 std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::string &msg)
 {
@@ -330,57 +330,7 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
       return res;
 
    if (request->sort == "DBLCLK") {
-       if (request->path.find(".root") != std::string::npos) {
 
-           std::string rootFilePath = "", rootFileName = "";
-
-           // Split of the path by /
-           std::vector<std::string> split;
-           std::string buffer;
-           std::istringstream path(request->path);
-           while (std::getline(path, buffer, '/')) {
-               split.push_back(buffer);
-           }
-
-           //Iterate over the split
-           // The goal is to have two parts
-           // The first one is the relative path of the root file to open it (rootFilePath)
-           // And the second if the name of the namecysle (rootFileName)
-            for (std::vector<int>::size_type i=0; i!=split.size(); i++) {
-                // If the current split contain .root
-                if (split[i].find(".root") != std::string::npos) {
-                    rootFilePath += split[i]; // Add the file to the path
-                        if (split[i+1].find("ntuple") != std::string::npos) {
-                            // TODO
-                            break;
-                        } else {
-                            rootFileName += split[i+1]; // the add the name of the file then stop
-                            break;
-                        }
-                } else {
-                    rootFilePath += split[i] + "/"; // Add the file to the path
-                }
-            }
-
-            TDirectory *file = (TDirectory *)gROOT->ProcessLine(TString::Format("TFile::Open(\"%s\", \"READ\")", rootFilePath.c_str())); // Opnening the wanted file
-
-            TObject *object;
-            file->GetObject(rootFileName.c_str(), object); // Getting the data of the graphic into the TObject
-            TString jsonobject = TBufferJSON::ToJSON(object);
-
-            // Actual message that need to be like { path: pathOfTheFile, data: { Things returned by the GetObject } }
-            res = "FROOT:";
-            std::string json = "{\"path\":\"" + request->path + "\", \"data\":";
-            res.append(json);
-            res.append(jsonobject.Data());
-            res.append("}");
-       } else {
-            res = "FREAD:";
-            std::ifstream t(request->path);
-            std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
-            res.append(str.c_str());
-      }
-      return res;
    }
 
    // rebuild list only when selected directory changed
@@ -411,6 +361,66 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
    res = "BREPL:";
    res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kSkipTypeInfo + TBufferJSON::kNoSpaces).Data());
 
+   return res;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Process dbl click on browser item
+
+std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &item_path)
+{
+   std::string res;
+   if (item_path.find(".root") != std::string::npos) {
+
+      std::string rootFilePath = "", rootFileName = "";
+
+      // Split of the path by /
+      std::vector<std::string> split;
+      std::string buffer;
+      std::istringstream path(item_path);
+      while (std::getline(path, buffer, '/')) {
+         split.push_back(buffer);
+      }
+
+      // Iterate over the split
+      // The goal is to have two parts
+      // The first one is the relative path of the root file to open it (rootFilePath)
+      // And the second if the name of the namecysle (rootFileName)
+      for (std::vector<int>::size_type i = 0; i != split.size(); i++) {
+         // If the current split contain .root
+         if (split[i].find(".root") != std::string::npos) {
+            rootFilePath += split[i]; // Add the file to the path
+            if (split[i + 1].find("ntuple") != std::string::npos) {
+               // TODO
+               break;
+            } else {
+               rootFileName += split[i + 1]; // the add the name of the file then stop
+               break;
+            }
+         } else {
+            rootFilePath += split[i] + "/"; // Add the file to the path
+         }
+      }
+
+      TDirectory *file = (TDirectory *)gROOT->ProcessLine(
+         TString::Format("TFile::Open(\"%s\", \"READ\")", rootFilePath.c_str())); // Opnening the wanted file
+
+      TObject *object;
+      file->GetObject(rootFileName.c_str(), object); // Getting the data of the graphic into the TObject
+      TString jsonobject = TBufferJSON::ToJSON(object);
+
+      // Actual message that need to be like { path: pathOfTheFile, data: { Things returned by the GetObject } }
+      res = "FROOT:";
+      std::string json = "{\"path\":\"" + item_path + "\", \"data\":";
+      res.append(json);
+      res.append(jsonobject.Data());
+      res.append("}");
+   } else {
+      res = "FREAD:";
+      std::ifstream t(item_path);
+      std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+      res.append(str.c_str());
+   }
    return res;
 }
 
@@ -515,5 +525,8 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       printf("Creating canvas reply %s\n", res.c_str());
 
       fWebWindow->Send(connid, res);
+   } else if (arg.compare(0,7, "DBLCLK:") == 0) {
+      auto str = ProcessDblClick(arg.substr(7));
+      if (str.length() > 0) fWebWindow->Send(connid, str);
    }
 }
