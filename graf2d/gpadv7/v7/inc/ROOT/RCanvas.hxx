@@ -85,6 +85,9 @@ public:
    /// Display the canvas.
    void Show(const std::string &where = "");
 
+   /// Returns window name used to display canvas
+   std::string GetWindowAddr() const;
+
    /// Hide all canvas displays
    void Hide();
 
