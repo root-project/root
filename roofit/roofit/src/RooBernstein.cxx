@@ -104,6 +104,7 @@ Double_t RooBernstein::evaluate() const
   const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName():0);
   const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName():0);
 
+  std::cout << "evaluate at (xmin, xmax)" << "(" << xmin << "," << xmax << ")"<< std::endl;  
   Double_t x = (_x - xmin) / (xmax - xmin); // rescale to [0,1]
   Int_t degree = _coefList.getSize() - 1; // n+1 polys of degree n
   RooFIter iter = _coefList.fwdIterator();
@@ -227,6 +228,7 @@ RooSpan<double> RooBernstein::evaluateBatch(std::size_t begin, std::size_t batch
 Int_t RooBernstein::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
 {
   if (rangeName && strlen(rangeName)) {
+  std::cout << "rangename: " << rangeName << " - numerical integral" << std::endl;
   _refRangeName = 0;
   return 0 ;
   }
@@ -245,6 +247,7 @@ Double_t RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) con
 //  const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName():0);
   Double_t xmin = _x.min();
   Double_t xmax = _x.max();
+  std::cout << "(" << xmin << "," << xmax << ")" << std::endl;
   Int_t degree= _coefList.getSize()-1; // n+1 polys of degree n
   Double_t norm(0) ;
 
