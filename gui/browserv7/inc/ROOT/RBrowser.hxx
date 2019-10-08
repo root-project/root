@@ -70,10 +70,12 @@ protected:
    std::vector<RRootFileItem> fDesc;     ///<! plain list of current directory
    std::vector<RRootFileItem *> fSorted; ///<! current sorted list (no ownership)
    std::vector<std::string> fCanvases;   ///<! canvases created by browser, should be closed at the end
+   std::string fActiveCanvas;            ///<! name of active for RBrowser canvas, not a gPad!
 
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to browser
 
    TCanvas *AddCanvas();
+   TCanvas *GetActiveCanvas() const;
    void CloseCanvas(const std::string &name);
 
    void AddFolder(const char *name);

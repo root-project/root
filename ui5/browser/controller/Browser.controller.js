@@ -318,33 +318,33 @@ sap.ui.define(['sap/ui/core/Component',
             this.connectCanvas(msg);
             break;
          case "FROOT:": // Root file
-           let selecedTabID = this.getSelectedtabFromtabContainer("myTabContainer"); // The ID of the selected tab in the TabContainer
+           var selecedTabID = this.getSelectedtabFromtabContainer("myTabContainer"); // The ID of the selected tab in the TabContainer
 
-           let jsonAnswer = JSON.parse(msg); // message received from the server to JSON
+           var jsonAnswer = JSON.parse(msg); // message received from the server to JSON
 
-           let rootFileArray = jsonAnswer.path.split("/"); // spliting the path on /
-           let rootFileRelativePath = ""; // Declaration of the var to open the good file
+           var rootFileArray = jsonAnswer.path.split("/"); // splitting the path on /
+           var  rootFileRelativePath = ""; // Declaration of the var to open the good file
 
-           let i = 0; // Iterator
+           var  i = 0; // Iterator
            while (rootFileArray[i].slice(-5) !== ".root") { // Iterating over the splited path until it find the .root file
              rootFileRelativePath += "/" + rootFileArray[i];
              i++;
            }
            rootFileRelativePath += "/" + rootFileArray[i]; // Adding the last bit (the wanted graphic) to the relative path
 
-           let oCanvas = this.getView().byId("aRootCanvas" + selecedTabID); // Get the drawing place object
+           var  oCanvas = this.getView().byId("aRootCanvas" + selecedTabID); // Get the drawing place object
 
            if (oCanvas === undefined || oCanvas === null) { // If the selected tabs it not a Root canvas then display and error message
              MessageToast.show("Please, select a Root Canvas tab", {duration: 1500});
              return;
            }
 
-           let oTabElement = oCanvas.getParent(); // Get the tab from the drawing place
-           let rootFileDisplayName = rootFileArray[i] + "/" + rootFileArray[i + 1]; // Creating a simple nameOfTheFile.root/graphic;1 to display on the tab
+           var  oTabElement = oCanvas.getParent(); // Get the tab from the drawing place
+           var  rootFileDisplayName = rootFileArray[i] + "/" + rootFileArray[i + 1]; // Creating a simple nameOfTheFile.root/graphic;1 to display on the tab
 
            document.getElementById("TopBrowserId--aRootCanvas" + selecedTabID).innerHTML = ""; // Clearing the canvas
            oTabElement.setAdditionalText(rootFileDisplayName); // Setting the tab file name
-           let finalJsonRoot = JSROOT.JSONR_unref(jsonAnswer.data); // Creating the graphic from the json
+           var  finalJsonRoot = JSROOT.JSONR_unref(jsonAnswer.data); // Creating the graphic from the json
            JSROOT.draw("TopBrowserId--aRootCanvas" + selecedTabID, finalJsonRoot, "colz"); // Drawing the graphic into the selected tab canvas
 
            break;
@@ -371,7 +371,7 @@ sap.ui.define(['sap/ui/core/Component',
 
       /** Get the ID of the currently selected tab of given tab container */
       getSelectedtabFromtabContainer: function(divid) {
-         let tabContainer = this.getView().byId('myTabContainer').getSelectedItem()
+         var  tabContainer = this.getView().byId('myTabContainer').getSelectedItem();
          return tabContainer.slice(6, tabContainer.length);
       },
 
@@ -453,9 +453,9 @@ sap.ui.define(['sap/ui/core/Component',
 
          this.last_created_item = oTabContainerItem; // FIXME, how to find item by ID!!!
          
-         /* let ID = oTabContainerItem.sId.slice(6, oTabContainerItem.sId.length);
+         /* var  ID = oTabContainerItem.sId.slice(6, oTabContainerItem.sId.length);
 
-         let html = new sap.ui.core.HTML("TopBrowserId--aRootCanvas" + ID, {
+         var  html = new sap.ui.core.HTML("TopBrowserId--aRootCanvas" + ID, {
             content: "<div style=\"height:100%\">{/rootCanvas}</div>"
          });
          oTabContainerItem.addContent(html);
@@ -477,7 +477,7 @@ sap.ui.define(['sap/ui/core/Component',
          delete this.last_created_item;
          if (!tabItem || tabItem.getId() != arr[0]) return;
          
-         tabItem.canvasName = arr[2]; // name can be used to set active canvas or close canvas
+         tabItem.setAdditionalText(arr[2]); // name can be used to set active canvas or close canvas
          
          var conn = new JSROOT.WebWindowHandle(this.websocket.kind);
          
@@ -489,10 +489,6 @@ sap.ui.define(['sap/ui/core/Component',
          } else {
             addr += relative_path;
          }
-         
-         console.log("connecting with", addr)
-         // establish connection
-         // conn.Connect(addr);
          
          var painter = new JSROOT.TCanvasPainter(null);
          painter.online_canvas = true;
@@ -509,6 +505,18 @@ sap.ui.define(['sap/ui/core/Component',
             tabItem.addContent(oView);
             // JSROOT.CallBack(call_back, true);
          });
+         
+      },
+      
+      tabSelectItem: function(oEvent) {
+         var oTabContainer = this.byId("myTabContainer");
+         var oItemSelected = oEvent.getParameter('item');
+         
+         if (oItemSelected.getName() != "ROOT Canvas") return;
+
+         console.log("Canvas selected:", oItemSelected.getAdditionalText());
+         
+         this.websocket.Send("SELECT_CANVAS:" + oItemSelected.getAdditionalText());
          
       },
 
@@ -528,7 +536,11 @@ sap.ui.define(['sap/ui/core/Component',
          MessageBox.confirm('Do you really want to close the "' + oItemToClose.getName() + '" tab?', {
             onClose: function (oAction) {
                if (oAction === MessageBox.Action.OK) {
+                  if (oItemToClose.getName() == "ROOT Canvas") 
+                     this.websocket.Send("CLOSE_CANVAS:" + oItemToClose.getAdditionalText());
+                  
                   oTabContainer.removeItem(oItemToClose);
+                  
                   MessageToast.show('Closed the "' + oItemToClose.getName() + '" tab', {duration: 1500});
                }
             }
