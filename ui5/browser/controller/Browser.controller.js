@@ -247,9 +247,13 @@ sap.ui.define(['sap/ui/core/Component',
      handleSettingsChange: function(oEvent) {
         let oSlectedItems = oEvent.getSource().getSelectedItems();
         let graphType = oEvent.getSource().sId.split("-")[1];
-        let options = [];
+
+        if (this.drawingOptions === undefined || this.drawingOptions === null) {
+          this.drawingOptions = {'TH1': ['colz'], 'TH2': ['colz']};
+        }
+        this.drawingOptions[graphType] = [];
         for (let i=0; i<oSlectedItems.length; i++) {
-          options.push(oSlectedItems[i].getText());
+          this.drawingOptions[graphType].push(oSlectedItems[i].getText());
         }
      },
 

@@ -1,5 +1,5 @@
 <core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:l="sap.ui.layout" xmlns:f="sap.ui.layout.form">
-  <ViewSettingsDialog confirm="handleSettingsConfirm">
+  <ViewSettingsDialog>
     <customTabs>
       <ViewSettingsCustomTab id="drawing-options" icon="sap-icon://signature" text="Drawing options" title="Drawing options" tooltip="Drawing options">
         <content>
@@ -20,8 +20,9 @@
                           <MultiComboBox
                                 id="do-TH1"
                                 showButton="false"
-                                items="{ path: '/TH1' }">
-                          <core:Item text="{name}"/>
+                                items="{ path: '/TH1' }"
+                                selectedKeys="colz">
+                          <core:Item text="{name}" key="{name}"/>
                         </MultiComboBox>
                         </f:fields>
                       </f:FormElement>
@@ -30,8 +31,9 @@
                           <MultiComboBox
                                   id="do-TH2"
                                   showButton="false"
-                                  items="{ path: '/TH2' }">
-                            <core:Item text="{name}"/>
+                                  items="{ path: '/TH2' }"
+                                  selectedKeys="colz">
+                            <core:Item text="{name}" key="{name}"/>
                           </MultiComboBox>
                         </f:fields>
                       </f:FormElement>
