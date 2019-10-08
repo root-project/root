@@ -842,6 +842,16 @@ Bool_t TWebCanvas::PerformUpdate()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+/// Increment canvas version and force sending data to client - do not wit for reply
+
+void TWebCanvas::ForceUpdate()
+{
+   fCanvVersion++;
+
+   CheckDataToSend();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
 /// Wait when specified version of canvas was painted and confirmed by browser
 
 Bool_t TWebCanvas::WaitWhenCanvasPainted(Long64_t ver)
