@@ -313,7 +313,7 @@ sap.ui.define(['sap/ui/core/Component',
             break;
          case "CANVS:":  // canvas created by server, need to establish connection
             var arr = JSON.parse(msg);
-            this.createCanvas(arr[0], arr[1]);
+            this.createCanvas(arr[0], arr[1], arr[2]);
             break;
          case "FROOT:": // Root file
            var selecedTabID = this.getSelectedtabFromtabContainer("myTabContainer"); // The ID of the selected tab in the TabContainer
@@ -444,11 +444,11 @@ sap.ui.define(['sap/ui/core/Component',
          if (!arr) return;
          
          for (var k=0; k<arr.length; ++k) {
-            this.createCanvas(arr[k][0], arr[k][1]);
+            this.createCanvas(arr[k][0], arr[k][1], arr[k][2]);
          }
       },
       
-      createCanvas: function(url, name) {
+      createCanvas: function(kind, url, name) {
          console.log("Create canvas ", url, name);
          if (!url || !name) return;
          
@@ -473,7 +473,14 @@ sap.ui.define(['sap/ui/core/Component',
             addr += relative_path;
          }
          
-         var painter = new JSROOT.TCanvasPainter(null);
+         var painter = null;
+         
+         if (kind == "root7") {
+            painter = new JSROOT.v7.TCanvasPainter(null);
+         } else {
+            painter = new JSROOT.TCanvasPainter(null);
+         }
+         
          painter.online_canvas = true;
          painter.use_openui = true; 
          painter.batch_mode = false;
