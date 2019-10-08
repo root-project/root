@@ -328,9 +328,6 @@ namespace HistFactory {
 
     void SetInputFile( const std::string& InputFile ) { fInputFile = InputFile; }
     std::string GetInputFile() { return fInputFile; }
- 
-    void SetStackLabel( const std::string& StackLabel ) { fStackLabel = StackLabel; }
-    std::string GetStackLabel() { return fStackLabel; }    
 
     void SetHistoName( const std::string& HistoName ) { fHistoName = HistoName; }
     std::string GetHistoName() { return fHistoName; }
@@ -345,8 +342,7 @@ namespace HistFactory {
   protected:
 
     bool fActivate;
-    bool fUseHisto; // Use an external histogram for the errors
-    std::string fStackLabel;
+    bool fUseHisto; // Use an external histogram for the errors 
     std::string fInputFile;
     std::string fHistoName;
     std::string fHistoPath;
