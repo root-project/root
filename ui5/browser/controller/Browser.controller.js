@@ -227,19 +227,30 @@ sap.ui.define(['sap/ui/core/Component',
          await sap.ui.core.Fragment.load({name: "rootui5.browser.view.settingsmenu"}).then(function (oSettingsMenu) {
            let oModel = new sap.ui.model.json.JSONModel("rootui5sys/browser/json/drawingOptions.json");
            oSettingsMenu.setModel(oModel);
+           oSettingsMenu.attachConfirm(myThis.handleSettingsConfirm);
            myThis.getView().addDependent(oSettingsMenu);
 
            myThis._oSettingsMenu = oSettingsMenu;
            return oSettingsMenu;
          });
+         sap.ui.getCore().byId("do-TH1").attachSelectionChange(this.handleSettingsChange);
+         sap.ui.getCore().byId("do-TH2").attachSelectionChange(this.handleSettingsChange);
        }
        return this._oSettingsMenu;
      },
 
      onSettingPress: async function() {
-        console.log("onSettingPress");
         await this._getSettingsMenu();
         this._oSettingsMenu.open();
+     },
+
+     handleSettingsChange: function(oEvent) {
+        let oSlectedItems = oEvent.getSource().getSelectedItems();
+        let graphType = oEvent.getSource().sId.split("-")[1];
+        let options = [];
+        for (let i=0; i<oSlectedItems.length; i++) {
+          options.push(oSlectedItems[i].getText());
+        }
      },
 
       /** @brief Handle the "Save As..." button press event */

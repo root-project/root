@@ -357,7 +357,6 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
 
    res = "BREPL:";
    res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kSkipTypeInfo + TBufferJSON::kNoSpaces).Data());
-   printf("\n%s\n", res.c_str());
    return res;
 }
 
