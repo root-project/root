@@ -609,8 +609,7 @@ void TWebCanvas::ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &args)
    if ((w > 10) && (w < 50000) && (h > 10) && (h < 30000))
       fWindow->SetGeometry(w + 6, h + 22);
 
-   if (args.GetBrowserName() != "embed")
-      fWindow->Show(args);
+   fWindow->Show(args);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
