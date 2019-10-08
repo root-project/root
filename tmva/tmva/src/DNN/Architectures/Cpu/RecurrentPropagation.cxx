@@ -1,4 +1,4 @@
-// @(#)root/tmva/tmva/dnn:$Id$ 
+// @(#)root/tmva/tmva/dnn:$Id$
 // Author: Saurav Shekhar 23/06/17
 
 /*************************************************************************
@@ -23,7 +23,7 @@ namespace TMVA
 {
 namespace DNN
 {
-  
+
 template<typename AFloat>
 auto TCpu<AFloat>::RecurrentLayerBackward(TCpuMatrix<AFloat> & state_gradients_backward, // BxH
                                           TCpuMatrix<AFloat> & input_weight_gradients,
@@ -31,7 +31,7 @@ auto TCpu<AFloat>::RecurrentLayerBackward(TCpuMatrix<AFloat> & state_gradients_b
                                           TCpuMatrix<AFloat> & bias_gradients,
                                           TCpuMatrix<AFloat> & df, //BxH
                                           const TCpuMatrix<AFloat> & state, // BxH
-                                          const TCpuMatrix<AFloat> & weights_input, // HxD 
+                                          const TCpuMatrix<AFloat> & weights_input, // HxD
                                           const TCpuMatrix<AFloat> & weights_state, // HxH
                                           const TCpuMatrix<AFloat> & input,  // BxD
                                           TCpuMatrix<AFloat> & input_gradient)
@@ -44,10 +44,10 @@ auto TCpu<AFloat>::RecurrentLayerBackward(TCpuMatrix<AFloat> & state_gradients_b
    // TMVA_DNN_PrintTCpuMatrix(input_weight_gradients,"input w grad");
    // TMVA_DNN_PrintTCpuMatrix(state,"state");
    // TMVA_DNN_PrintTCpuMatrix(input,"input");
-   
+
    // Compute element-wise product.
-   Hadamard(df, state_gradients_backward);  // B x H 
-   
+   //Hadamard(df, state_gradients_backward);  // B x H
+
    // Input gradients.
    if (input_gradient.GetNoElements() > 0) Multiply(input_gradient, df, weights_input);
 
@@ -55,9 +55,9 @@ auto TCpu<AFloat>::RecurrentLayerBackward(TCpuMatrix<AFloat> & state_gradients_b
    if (state_gradients_backward.GetNoElements() > 0) Multiply(state_gradients_backward, df, weights_state);
 
    // compute the gradients
-   // Perform the operation in place by readding the result on the same gradient matrix 
+   // Perform the operation in place by readding the result on the same gradient matrix
    // e.g. W += D * X
-   
+
    // Weights gradients
    if (input_weight_gradients.GetNoElements() > 0) {
       TransposeMultiply(input_weight_gradients, df, input, 1. , 1.); // H x B . B x D

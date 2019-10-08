@@ -50,5 +50,5 @@ int main()
    }
 
    std::cout << "All tests passed!" << std::endl;
-
+   return 0;
 }

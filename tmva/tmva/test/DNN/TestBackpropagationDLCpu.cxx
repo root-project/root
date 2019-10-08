@@ -35,11 +35,11 @@ int main()
    if (error > 1e-3)
        iret++;
 
-   error = testBackpropagationL1Regularization<TCpu<Scalar_t>>(1e-2); // relu can use large dx
+   error = testBackpropagationL1Regularization<TCpu<Scalar_t>>(1e-5); // relu can use large dx
    if (error > 1e-3)
        iret++;
 
-   error = testBackpropagationL2Regularization<TCpu<Scalar_t>>(1.E-6);
+   error = testBackpropagationL2Regularization<TCpu<Scalar_t>>(1.E-5);
    if (error > 1e-3)
        iret++;
 
