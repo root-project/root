@@ -78,7 +78,7 @@ private:
    Matrix_t &fWeightInputGradients; ///< Gradients w.r.t. the input weights
    Matrix_t &fWeightStateGradients; ///< Gradients w.r.t. the recurring weights
    Matrix_t &fBiasGradients;        ///< Gradients w.r.t. the bias values
-   
+
    typename Architecture_t::ActivationDescriptor_t fActivationDesc;
 
 public:
@@ -111,7 +111,7 @@ public:
     *  call to Forward(...). */
    void Backward(Tensor_t &gradients_backward,
                  const Tensor_t &activations_backward);
-  
+
    /* Updates weights and biases, given the learning rate */
    void Update(const Scalar_t learningRate);
 
@@ -129,7 +129,7 @@ public:
 
    /*! Read the information and the weights about the layer from XML node. */
    virtual void ReadWeightsFromXML(void *parent);
-   
+
 
    /** Getters */
    size_t GetTimeSteps() const { return fTimeSteps; }
@@ -147,7 +147,7 @@ public:
    const Tensor_t & GetDerivatives()   const {return fDerivatives;}
    // Matrix_t &GetDerivativesAt(size_t i) { return fDerivatives[i]; }
    // const Matrix_t &GetDerivativesAt(size_t i) const { return fDerivatives[i]; }
-  
+
    Matrix_t        & GetBiasesState()              {return fBiases;}
    const Matrix_t & GetBiasesState()         const {return fBiases;}
    Matrix_t        & GetBiasStateGradients()            {return fBiasGradients;}
@@ -178,7 +178,7 @@ TBasicRNNLayer<Architecture_t>::TBasicRNNLayer(size_t batchSize, size_t stateSiz
      fWeightsInput(this->GetWeightsAt(0)),
      fWeightsState(this->GetWeightsAt(1)),
      fBiases(this->GetBiasesAt(0)),
-     fDerivatives( timeSteps, batchSize, stateSize),   // create tensor time x bs x S 
+     fDerivatives( timeSteps, batchSize, stateSize),   // create tensor time x bs x S
      fWeightInputGradients(this->GetWeightGradientsAt(0)),
      fWeightStateGradients(this->GetWeightGradientsAt(1)),
      fBiasGradients(this->GetBiasGradientsAt(0))
@@ -201,7 +201,7 @@ TBasicRNNLayer<Architecture_t>::TBasicRNNLayer(const TBasicRNNLayer &layer)
 {
 
    Architecture_t::Copy(fDerivatives, layer.GetDerivatives() );
-   
+
    // Gradient matrices not copied
    Architecture_t::Copy(fState, layer.GetState());
 }
@@ -231,7 +231,7 @@ auto TBasicRNNLayer<Architecture_t>::Print() const
 -> void
 {
    std::cout << " RECURRENT Layer: \t ";
-   std::cout << " (NInput = " << this->GetInputSize();  // input size 
+   std::cout << " (NInput = " << this->GetInputSize();  // input size
    std::cout << ", NState = " << this->GetStateSize();  // hidden state size
    std::cout << ", NTime  = " << this->GetTimeSteps() << " )";  // time size
    std::cout << "\tOutput = ( " << this->GetOutput().GetFirstSize() << " , " << this->GetOutput().GetHSize() << " , " << this->GetOutput().GetWSize() << " )\n";
@@ -261,12 +261,12 @@ auto inline TBasicRNNLayer<Architecture_t>::Forward(Tensor_t &input, bool /*isTr
    // H : state size
    // T : time size
    // B : batch size
-   
+
    Tensor_t arrInput (fTimeSteps, this->GetBatchSize(), this->GetInputWidth() );
    //for (size_t t = 0; t < fTimeSteps; ++t) arrInput.emplace_back(this->GetBatchSize(), this->GetInputWidth()); // T x B x D
    Architecture_t::Rearrange(arrInput, input);
    Tensor_t arrOutput ( fTimeSteps, this->GetBatchSize(), fStateSize);
-   //for (size_t t = 0; t < fTimeSteps;++t) arrOutput.emplace_back(this->GetBatchSize(), fStateSize); // T x B x H 
+   //for (size_t t = 0; t < fTimeSteps;++t) arrOutput.emplace_back(this->GetBatchSize(), fStateSize); // T x B x H
 
    if (!this->fRememberState) InitState(DNN::EInitialization::kZero);
    for (size_t t = 0; t < fTimeSteps; ++t) {
@@ -291,7 +291,7 @@ auto inline TBasicRNNLayer<Architecture_t>::CellForward(const Matrix_t &input, M
    Architecture_t::MultiplyTranspose(fState, input, fWeightsInput);
    Architecture_t::ScaleAdd(fState, tmpState);
    Architecture_t::AddRowWise(fState, fBiases);
-   Tensor_t inputActivFunc(dF); 
+   Tensor_t inputActivFunc(dF);
    Tensor_t tState(fState);
 
    // DNN::evaluateDerivative<Architecture_t>(dFt, fAF, fState);
@@ -347,30 +347,49 @@ auto inline TBasicRNNLayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
    // reinitialize weights and biases gradients to 0
    fWeightInputGradients.Zero();
    fWeightStateGradients.Zero();
-   fBiasGradients.Zero(); 
+   fBiasGradients.Zero();
 
    for (size_t t = fTimeSteps; t > 0; t--) {
       //const Matrix_t & currStateActivations = arr_output[t - 1];
-      Matrix_t actgrad_m = arr_actgradients.At(t - 1).GetMatrix(); 
+      Matrix_t actgrad_m = arr_actgradients.At(t - 1).GetMatrix();
       Architecture_t::ScaleAdd(state_gradients_backward, actgrad_m);
 
-      Matrix_t actbw_m = arr_activations_backward.At(t - 1).GetMatrix(); 
+      Matrix_t actbw_m = arr_activations_backward.At(t - 1).GetMatrix();
       Matrix_t gradbw_m = arr_gradients_backward.At(t - 1).GetMatrix();
 
-      // compute derivatives of activations
-      Tensor_t  df = fDerivatives.At(t-1); 
-      Architecture_t::ActivationFunctionBackward(df, arr_output, 
-                                                 arr_actgradients, df, //do in place (should work) 
-                                              this->GetActivationFunction(), fActivationDesc);
-      
-      Matrix_t df_m = df.GetMatrix(); 
+      // Architecture_t::PrintTensor(arr_actgradients.At(t - 1), "act grad");
+      // Architecture_t::PrintTensor(Tensor_t(state_gradients_backward), "state grad before");
 
+      // compute derivatives of activations
+      Tensor_t  df = fDerivatives.At(t-1);
+      Tensor_t dy =  Tensor_t(state_gradients_backward);
+      //Tensor_t dy =  arr_actgradients.At(t - 1);
+      Tensor_t y = arr_output.At(t-1);
+      Architecture_t::ActivationFunctionBackward(df, y,
+                                                 dy, df, //do in place (should work)
+                                              this->GetActivationFunction(), fActivationDesc);
+
+      Matrix_t df_m = df.GetMatrix();
+
+      // Architecture_t::PrintTensor(df, "dy before");
       if (t > 1) {
          Matrix_t precStateActivations = arr_output.At(t - 2).GetMatrix();
          CellBackward(state_gradients_backward, precStateActivations, actbw_m, gradbw_m, df_m);
+
+         // std::cout << "at time " << t << std::endl;
+         // Architecture_t::PrintTensor(Tensor_t(state_gradients_backward), "state grad after");
+         // Architecture_t::PrintTensor(arr_gradients_backward.At(t-1),"dx");
+         // Architecture_t::PrintTensor(arr_activations_backward.At(t - 1),"x");
+         // Architecture_t::PrintTensor(df, "dy after");
       } else {
          const Matrix_t & precStateActivations = initState;
          CellBackward(state_gradients_backward, precStateActivations, actbw_m, gradbw_m, df_m);
+
+         // std::cout << "at time " << t << std::endl;
+         // Architecture_t::PrintTensor(Tensor_t(state_gradients_backward), "state grad after");
+         // Architecture_t::PrintTensor(arr_gradients_backward.At(t - 1), "dx");
+         // Architecture_t::PrintTensor(arr_activations_backward.At(t - 1), "x");
+         // Architecture_t::PrintTensor(df, "dy");
       }
    }
    if (!dummy) {

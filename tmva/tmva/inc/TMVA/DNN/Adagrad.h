@@ -129,7 +129,7 @@ auto TAdagrad<Architecture_t, Layer_t, DeepNet_t>::UpdateWeights(size_t layerInd
   
 
    const size_t weightsNSlices = weights.size();
-   assert(currentLayerPastSquaredWeightGradients.size() == weightNSlices);
+   assert(currentLayerPastSquaredWeightGradients.size() == weightsNSlices);
 
    for (size_t i = 0; i < weightsNSlices; i++) {
 
@@ -160,7 +160,7 @@ auto TAdagrad<Architecture_t, Layer_t, DeepNet_t>::UpdateBiases(size_t layerInde
    std::vector<Matrix_t> &currentLayerPastSquaredBiasGradients = this->GetPastSquaredBiasGradientsAt(layerIndex);
 
    const size_t biasesNSlices = biases.size();
-   assert(currentLayerPastSquaredBiasGradients.size() == biasedNSlices);
+   assert(currentLayerPastSquaredBiasGradients.size() == biasesNSlices);
    for (size_t i = 0; i < biasesNSlices; i++) {
 
       // Vt = Vt-1 + currentSquaredBiasGradients

@@ -24,6 +24,7 @@ using namespace TMVA::DNN;
 int main()
 {
     using Scalar_t = Double_t;
+    TCudaTensor<Scalar_t> dummy(1, 1);  // for initializing Cuda properly
 
     std::cout << "Testing Backpropagation:" << std::endl;
     double error;

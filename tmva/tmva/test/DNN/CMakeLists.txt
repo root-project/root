@@ -24,7 +24,8 @@ if (CUDA_FOUND AND tmva-gpu)
   #if using CUDA_ADD_EXECUTABLE CUDA_LIBRARIES are added automatically
   SET(DNN_CUDA_LIBRARIES ${CUDA_CUBLAS_LIBRARIES} /usr/local/cuda/lib64/libcudnn.so)
 
-
+  list(APPEND Libraries ${DNN_CUDA_LIBRARIES})
+  
   # DNN - Activation Functions Cuda
   CUDA_ADD_EXECUTABLE(testActivationFunctionsCuda TestActivationFunctionsCuda.cxx)
   TARGET_LINK_LIBRARIES(testActivationFunctionsCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
@@ -56,8 +57,10 @@ if (CUDA_FOUND AND tmva-gpu)
   ROOT_ADD_TEST(TMVA-DNN-BatchNormalization-Cuda COMMAND testBatchNormalizationCuda)
 
   # DNN - Minimization Cuda
-  CUDA_ADD_EXECUTABLE(testMinimizationCuda TestMinimizationCuda.cxx)
+  CUDA_ADD_EXECUTABLE(testMinimizationCuda TestMinimizationCuda.cxx  )
   TARGET_LINK_LIBRARIES(testMinimizationCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
+  #include_directories(${CUDA_INCLUDE_DIRS})
+  #ROOT_EXECUTABLE(testMinimizationCuda TestMinimizationCuda.cxx LIBRARIES ${Libraries})
   ROOT_ADD_TEST(TMVA-DNN-MinimizationCuda COMMAND testMinimizationCuda)
 
   # DNN - Arithmetic Cuda

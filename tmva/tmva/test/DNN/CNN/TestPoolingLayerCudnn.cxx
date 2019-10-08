@@ -64,4 +64,5 @@ int main()
         std::cerr << "ERROR - Back-propagation failed " << std::endl;
         return -1;
     }*/
+    return 0;
 }

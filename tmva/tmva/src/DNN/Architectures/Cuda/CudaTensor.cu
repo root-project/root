@@ -198,15 +198,17 @@ TCudaTensor<AFloat>::~TCudaTensor()
       CUDNNCHECK(cudnnDestroyTensorDescriptor(fTensorDescriptor->fCudnnDesc));
 
       fInstances[fStreamIndx]--;
+
+         // When all tensors in a streamIndx are destroyed, release cudnn resources 
+      if (fInstances[fStreamIndx] <= 0) {
+         std::cout << "All Cuda tensors are -released - destroy cudnn handle " << fInstances[fStreamIndx] << std::endl;
+         CUDNNCHECK(cudnnDestroy(fCudnnHandle[fStreamIndx]));
+      }
+
    }
 
    //std::cout << "Tensor descriptor destroyed - instances are " << fInstances[fStreamIndx] << std::endl;
 
-   // When all tensors in a streamIndx are destroyed, release cudnn resources 
-   if (fInstances[fStreamIndx] <= 0) {
-      std::cout << "All Cuda tensors are -released - destroy cudnn handle " << fInstances[fStreamIndx] << std::endl;
-      CUDNNCHECK(cudnnDestroy(fCudnnHandle[fStreamIndx]));
-   }
 }
 
 template<typename AFloat>

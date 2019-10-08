@@ -102,6 +102,7 @@ int main()
       std::cerr << "ERROR - test2 failed " << std::endl;
       return -1;
    }
-    std::cout << ">>>>>>   Test2 :    OK !!!!";
+   std::cout << ">>>>>>   Test2 :    OK !!!!" << std::endl;;
+    return 0;
 }
 
