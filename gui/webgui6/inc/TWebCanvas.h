@@ -134,8 +134,10 @@ public:
 
    void ActivateInEditor(TPad *pad, TObject *obj);
 
+   void ForceUpdate() override;
+
+
    /*
-      virtual void   ForceUpdate() { }
       virtual void   Iconify() { }
       virtual void   SetStatusText(const char *text = 0, Int_t partidx = 0);
       virtual void   SetWindowPosition(Int_t x, Int_t y);
