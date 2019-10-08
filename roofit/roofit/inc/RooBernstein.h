@@ -39,7 +39,7 @@ private:
 
   RooRealProxy _x;
   RooListProxy _coefList ;
-  const TNamed* _refRangeName ;
+  mutable TNamed* _refRangeName ;
 
   Double_t evaluate() const;
 
