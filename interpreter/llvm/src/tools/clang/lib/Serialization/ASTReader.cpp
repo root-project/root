@@ -2081,8 +2081,10 @@ InputFile ASTReader::getInputFile(ModuleFile &F, unsigned ID, bool Complain) {
 
   // For an overridden file, create a virtual file with the stored
   // size/timestamp.
-  if ((Overridden || Transient) && (DisableValidation || File == nullptr))
+  if ((Overridden || Transient) && (DisableValidation || File == nullptr)) {
     File = FileMgr.getVirtualFile(Filename, StoredSize, StoredTime);
+    Overridden = true;
+  }
 
   if (File == nullptr) {
     if (Complain) {
