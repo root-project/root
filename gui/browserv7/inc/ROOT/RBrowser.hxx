@@ -66,13 +66,13 @@ class RBrowser {
 protected:
 
    std::string fTitle;  ///<! title
-   unsigned fConnId{0}; ///<! connection id
+   unsigned fConnId{0}; ///<! default connection id
 
    std::string fDescPath;                ///<! last scanned directory
    std::vector<RRootFileItem> fDesc;     ///<! plain list of current directory
    std::vector<RRootFileItem *> fSorted; ///<! current sorted list (no ownership)
 
-   bool fUseRCanvas{false};               ///<!
+   bool fUseRCanvas{false};             ///<!  which canvas should be used
    std::vector<std::unique_ptr<TCanvas>> fCanvases;  ///<! canvases created by browser, should be closed at the end
    std::string fActiveCanvas;            ///<! name of active for RBrowser canvas, not a gPad!
    std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> fRCanvases; ///<!  ROOT7 canvases
@@ -104,7 +104,7 @@ protected:
    void WebWindowCallback(unsigned connid, const std::string &arg);
 
 public:
-   RBrowser();
+   RBrowser(bool use_rcanvas = false);
    virtual ~RBrowser();
 
    bool GetUseRCanvas() const { return fUseRCanvas; }

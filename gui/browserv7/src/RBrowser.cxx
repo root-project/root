@@ -49,8 +49,10 @@ web-based ROOT Browser prototype.
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-ROOT::Experimental::RBrowser::RBrowser()
+ROOT::Experimental::RBrowser::RBrowser(bool use_rcanvas)
 {
+   SetUseRCanvas(use_rcanvas);
+
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
 
@@ -60,9 +62,15 @@ ROOT::Experimental::RBrowser::RBrowser()
    fWebWindow->SetGeometry(1200, 700); // configure predefined window geometry
    fWebWindow->SetConnLimit(1); // the only connection is allowed
    fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
+
    Show();
 
-   AddCanvas();  // add first canvas by default
+   // add first canvas by default
+
+   if (GetUseRCanvas())
+      AddRCanvas();
+   else
+      AddCanvas();
 
    // AddRCanvas();
 }
@@ -449,7 +457,11 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
 
    auto rcanv = GetActiveRCanvas();
    if (rcanv) {
-      rcanv->Wipe();
+      if (rcanv->NumPrimitives() > 0) {
+         rcanv->Wipe();
+         rcanv->Modified();
+         rcanv->Update(true);
+      }
 
       // FIXME: how to proced with ownership here
       TObject* clone = object->Clone();
@@ -459,6 +471,7 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
       std::shared_ptr<TObject> ptr;
       ptr.reset(clone);
       rcanv->Draw<RObjectDrawable>(ptr, "");
+      rcanv->Modified();
 
       rcanv->Update(true);
 
