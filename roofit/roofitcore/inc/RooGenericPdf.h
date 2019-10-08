@@ -25,6 +25,7 @@ class RooArgList ;
 class RooGenericPdf : public RooAbsPdf {
 public:
   // Constructors, assignment etc
+  inline RooGenericPdf(){}
   RooGenericPdf(const char *name, const char *title, const char* formula, const RooArgList& dependents);
   RooGenericPdf(const char *name, const char *title, const RooArgList& dependents);
   RooGenericPdf(const RooGenericPdf& other, const char* name=0);
