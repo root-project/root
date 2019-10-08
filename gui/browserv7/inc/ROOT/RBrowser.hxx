@@ -21,6 +21,7 @@
 #include <ROOT/RBrowserItem.hxx>
 
 #include <vector>
+#include <memory>
 #include <stdint.h>
 
 class TString;
@@ -69,7 +70,7 @@ protected:
    std::string fDescPath;                ///<! last scanned directory
    std::vector<RRootFileItem> fDesc;     ///<! plain list of current directory
    std::vector<RRootFileItem *> fSorted; ///<! current sorted list (no ownership)
-   std::vector<std::string> fCanvases;   ///<! canvases created by browser, should be closed at the end
+   std::vector<std::unique_ptr<TCanvas>> fCanvases;  ///<! canvases created by browser, should be closed at the end
    std::string fActiveCanvas;            ///<! name of active for RBrowser canvas, not a gPad!
 
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to browser
