@@ -50,12 +50,14 @@ ROOT::Experimental::RBrowser::RBrowser()
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
 
    // this is call-back, invoked when message received via websocket
-   fWebWindow->SetCallBacks([this](unsigned connid) { fConnId = connid; },
+   fWebWindow->SetCallBacks([this](unsigned connid) { fConnId = connid; SendInitMsg(connid); },
                             [this](unsigned connid, const std::string &arg) { WebWindowCallback(connid, arg); });
    fWebWindow->SetGeometry(1200, 700); // configure predefined window geometry
    fWebWindow->SetConnLimit(1); // the only connection is allowed
    fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
    Show();
+
+   AddCanvas();  // add first canvas by default
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -491,10 +493,29 @@ TCanvas *ROOT::Experimental::RBrowser::AddCanvas()
    canv->SetBatch(kTRUE); // mark canvas as batch
    fActiveCanvas = canv->GetName();
 
+   // create implementation
+   TWebCanvas *web = new TWebCanvas(canv.get(), "title", 0, 0, 800, 600);
+
+   // assign implementation
+   canv->SetCanvasImp(web);
+
+   // initialize web window, but not start new web browser
+   web->ShowWebWindow("embed");
+
    fCanvases.emplace_back(std::move(canv));
 
    return fCanvases.back().get();
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Returns relative URL for canvas - required for client to establish connection
+
+std::string ROOT::Experimental::RBrowser::GetCanvasUrl(TCanvas *canv)
+{
+   TWebCanvas *web = dynamic_cast<TWebCanvas *>(canv->GetCanvasImp());
+   return fWebWindow->RelativeAddr(web->GetWebWindow());
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Returns active web canvas (if any)
@@ -523,6 +544,28 @@ void ROOT::Experimental::RBrowser::CloseCanvas(const std::string &name)
       fActiveCanvas.clear();
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Process client connect
+
+void ROOT::Experimental::RBrowser::SendInitMsg(unsigned connid)
+{
+   std::vector<std::vector<std::string>> reply;
+
+   for (auto &canv : fCanvases) {
+      auto url = GetCanvasUrl(canv.get());
+      std::string name = canv->GetName();
+      std::vector<std::string> arr = {url, name};
+      reply.emplace_back(arr);
+   }
+
+   std::string msg = "INMSG:";
+   msg.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
+
+   printf("Init msg %s\n", msg.c_str());
+
+   fWebWindow->Send(connid, msg);
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// receive data from client
@@ -540,28 +583,17 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       //if (!fDesc.IsBuild()) fDesc.Build();
       auto json = ProcessBrowserRequest(arg.substr(6));
       if (json.length() > 0) fWebWindow->Send(connid, json);
-   } else if (arg.compare(0,7, "CANVAS:") == 0) {
+   } else if (arg.compare("NEWCANVAS") == 0) {
 
       // create canvas
       TCanvas *canv = AddCanvas();
 
-      // create implementation
-      TWebCanvas *web = new TWebCanvas(canv, "title", 0, 0, 800, 600);
+      auto url = GetCanvasUrl(canv);
 
-      // assign implementation
-      canv->SetCanvasImp(web);
-
-      // initialize web window, but not start new web browser
-      web->ShowWebWindow("embed");
-
-      auto url = fWebWindow->RelativeAddr(web->GetWebWindow());
-
-      std::vector<std::string> reply = {arg.substr(7), url, std::string(canv->GetName())};
+      std::vector<std::string> reply = {url, std::string(canv->GetName())};
 
       std::string res = "CANVS:";
       res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
-
-      printf("Creating canvas reply %s\n", res.c_str());
 
       fWebWindow->Send(connid, res);
    } else if (arg.compare(0,7, "DBLCLK:") == 0) {

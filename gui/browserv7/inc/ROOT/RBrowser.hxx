@@ -77,6 +77,7 @@ protected:
 
    TCanvas *AddCanvas();
    TCanvas *GetActiveCanvas() const;
+   std::string GetCanvasUrl(TCanvas *canv);
    void CloseCanvas(const std::string &name);
 
    void AddFolder(const char *name);
@@ -90,6 +91,7 @@ protected:
 
    bool IsBuild() const { return fDesc.size() > 0; }
 
+   void SendInitMsg(unsigned connid);
    void WebWindowCallback(unsigned connid, const std::string &arg);
 
 public:
