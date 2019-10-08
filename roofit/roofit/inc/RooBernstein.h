@@ -33,19 +33,17 @@ public:
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
   Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
-  virtual void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) ;
 
 private:
 
   RooRealProxy _x;
   RooListProxy _coefList ;
-  mutable TNamed* _refRangeName ;
 
   Double_t evaluate() const;
   RooSpan<double> evaluateBatch(std::size_t begin, std::size_t batchSize) const;
 
 
-  ClassDef(RooBernstein,2) // Bernstein polynomial PDF
+  ClassDef(RooBernstein,1) // Bernstein polynomial PDF
 };
 
 #endif
