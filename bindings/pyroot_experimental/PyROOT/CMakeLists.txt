@@ -25,6 +25,7 @@ set(py_sources
   ROOT/pythonization/_cppinstance.py
   ROOT/pythonization/_drawables.py
   ROOT/pythonization/_generic.py
+  ROOT/pythonization/_rbdt.py
   ROOT/pythonization/_rooabscollection.py
   ROOT/pythonization/_roodatahist.py
   ROOT/pythonization/_rvec.py
@@ -41,6 +42,7 @@ set(py_sources
   ROOT/pythonization/_titer.py
   ROOT/pythonization/_tobject.py
   ROOT/pythonization/_tobjstring.py
+  ROOT/pythonization/_tree_inference.py
   ROOT/pythonization/_tseqcollection.py
   ROOT/pythonization/_tstring.py
   ROOT/pythonization/_ttree.py
