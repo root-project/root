@@ -30,14 +30,22 @@ namespace Experimental {
 class RBox : public RDrawable {
 
    /// Box's coordinates
-   RPadPos fP1, fP2;                    ///< line begin,end
-   RAttrBox fBoxAttr{this, "box_"};     ///<! line attributes
+   RPadPos fP1, fP2;                    ///< box corners coordinates
+   RAttrBox fBoxAttr{this, "box_"};     ///<! box attributes
+
+protected:
+
+   // constructor for derived classes
+   RBox(const std::string &subtype) : RDrawable(subtype) {}
 
 public:
-
    RBox() : RDrawable("box") {}
 
-   RBox(const RPadPos& p1, const RPadPos& p2) : RBox() { fP1 = p1; fP2 = p2; }
+   RBox(const RPadPos &p1, const RPadPos &p2) : RBox()
+   {
+      fP1 = p1;
+      fP2 = p2;
+   }
 
    RBox &SetP1(const RPadPos& p1) { fP1 = p1; return *this; }
    RBox &SetP2(const RPadPos& p2) { fP2 = p2; return *this; }
