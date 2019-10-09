@@ -343,10 +343,10 @@ ROOT::Experimental::RWebDisplayHandle::ChromeCreator::ChromeCreator() : BrowserC
 
 #ifdef _MSC_VER
    fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "fork: --headless --disable-gpu $url");
-   fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog $geometry --app=$url");
+   fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog $geometry --no-first-run --app=$url");
 #else
    fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "fork:--headless $url");
-   fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog $geometry --user-data-dir=$profile --app=\'$url\' &");
+   fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog $geometry --no-first-run --user-data-dir=$profile --app=\'$url\' &");
 #endif
 }
 
