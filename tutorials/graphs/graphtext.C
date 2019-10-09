@@ -16,7 +16,7 @@ void graphtext() {
    c->SetGrid();
 
    const Int_t n = 10;
-   auto *gr = new TGraph(n);
+   auto gr = new TGraph(n);
    gr->SetTitle("A Simple Graph Example with Text");
    gr->SetMarkerStyle(20);
    auto ex = new TExec("ex","drawtext();");
