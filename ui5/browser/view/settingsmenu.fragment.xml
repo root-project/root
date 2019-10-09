@@ -17,13 +17,12 @@
                     <f:formElements>
                       <f:FormElement label="TH1">
                         <f:fields>
-                          <MultiComboBox
+                          <ComboBox
                                 id="do-TH1"
-                                showButton="false"
                                 items="{ path: '/TH1' }"
-                                selectedKeys="colz">
+                                selectedKey="colz">
                           <core:Item text="{name}" key="{name}"/>
-                        </MultiComboBox>
+                        </ComboBox>
                         </f:fields>
                       </f:FormElement>
                       <f:FormElement label="TH2">

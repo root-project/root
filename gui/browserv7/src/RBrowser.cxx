@@ -110,6 +110,7 @@ void ROOT::Experimental::RBrowser::Browse(const std::string &path)
          item.ftype   = "";
          item.fuid    = "";
          item.fgid    = "";
+         item.className = classname;
       }
    }
    for (auto &item : fDesc)
@@ -363,7 +364,7 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
 /////////////////////////////////////////////////////////////////////////////////
 /// Process dbl click on browser item
 
-std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &item_path)
+std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &item_path, const std::string drawingOptions)
 {
    std::string res;
    if (item_path.find(".root") != std::string::npos) {
@@ -416,8 +417,8 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
       }
 
       canv->GetListOfPrimitives()->Clear();
-
-      canv->GetListOfPrimitives()->Add(object,"");
+      printf("\n%s\n", drawingOptions.c_str());
+      canv->GetListOfPrimitives()->Add(object, drawingOptions.c_str());
 
       canv->ForceUpdate(); // force update async - do not wait for confirmation
 
@@ -592,8 +593,14 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
 
       fWebWindow->Send(connid, res);
    } else if (arg.compare(0,7, "DBLCLK:") == 0) {
-      auto str = ProcessDblClick(arg.substr(7));
-      if (str.length() > 0) fWebWindow->Send(connid, str);
+
+      auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
+      if (arr) {
+         auto str = ProcessDblClick(arr->at(0), arr->at(1));
+         if (str.length() > 0) {
+            fWebWindow->Send(connid, str);
+         }
+      }
    } else if (arg.compare(0,14, "SELECT_CANVAS:") == 0) {
       fActiveCanvas = arg.substr(14);
       printf("Select %s\n", fActiveCanvas.c_str());

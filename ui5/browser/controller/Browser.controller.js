@@ -57,6 +57,7 @@ sap.ui.define(['sap/ui/core/Component',
                node.ftype = elem.ftype;
                node.fuid = elem.fuid;
                node.fgid = elem.fgid;
+               node.className = elem.className
             }
 
             var t = this.getView().byId("treeTable");
@@ -125,6 +126,16 @@ sap.ui.define(['sap/ui/core/Component',
                   ]
                })
             }));
+            t.addColumn(new tableColumn({
+              label: "ClassName",
+              autoResizable: true,
+              visible: false,
+              template: new HorizontalLayout({
+                content: [
+                  new mText({text:"{className}", wrapping: false })
+                ]
+              })
+            }));
 
             // catch re-rendering of the table to assign handlers
             t.addEventDelegate({
@@ -142,6 +153,9 @@ sap.ui.define(['sap/ui/core/Component',
      //    }
 
           // this.addNewButtonPressHandler(); // always create new canvas in the beginning
+
+            this.drawingOptions = { TH1: ['colz'], TH2: ['colz'] };
+
       },
 
       /** @brief Extract the file name and extension
@@ -233,8 +247,8 @@ sap.ui.define(['sap/ui/core/Component',
            myThis._oSettingsMenu = oSettingsMenu;
            return oSettingsMenu;
          });
-         sap.ui.getCore().byId("do-TH1").attachSelectionChange(this.handleSettingsChange);
-         sap.ui.getCore().byId("do-TH2").attachSelectionChange(this.handleSettingsChange);
+         sap.ui.getCore().byId("do-TH1").attachSelectionChange(this, this.handleSettingsChange);
+         sap.ui.getCore().byId("do-TH2").attachSelectionChange(this, this.handleSettingsChange);
        }
        return this._oSettingsMenu;
      },
@@ -244,16 +258,12 @@ sap.ui.define(['sap/ui/core/Component',
         this._oSettingsMenu.open();
      },
 
-     handleSettingsChange: function(oEvent) {
-        let oSlectedItems = oEvent.getSource().getSelectedItems();
+     handleSettingsChange: function(oEvent, myThis) {
+        let oSlectedItems = oEvent.getSource().getSelectedItem();
         let graphType = oEvent.getSource().sId.split("-")[1];
-
-        if (this.drawingOptions === undefined || this.drawingOptions === null) {
-          this.drawingOptions = {'TH1': ['colz'], 'TH2': ['colz']};
-        }
-        this.drawingOptions[graphType] = [];
+        myThis.drawingOptions[graphType] = [];
         for (let i=0; i<oSlectedItems.length; i++) {
-          this.drawingOptions[graphType].push(oSlectedItems[i].getText());
+          myThis.drawingOptions[graphType].push(oSlectedItems[i].getText());
         }
      },
 
@@ -294,8 +304,32 @@ sap.ui.define(['sap/ui/core/Component',
          if (prop && prop.fullpath) {
             fullpath = prop.fullpath.substr(1, prop.fullpath.length-2);
             var dirname = fullpath.substr(0, fullpath.lastIndexOf('/'));
-            if (dirname.endsWith(".root"))
-               return this.websocket.Send("DBLCLK:" + fullpath);
+            if (dirname.endsWith(".root")) {
+              let split = fullpath.split("/");
+              let model = row.getModel().mainModel;
+              let className = "";
+
+              for (let i = 0; i<split.length; i++) {
+                for (let j=0; j<model.length; j++) {
+                  if (model[j].name === split[i]) {
+                    if(i === split.length-1 ) {
+                      className = model[j].className;
+                      break;
+                    } else {
+                      model = model[j].childs;
+                      break;
+                    }
+                  }
+                }
+              }
+              className = this.getMasterClass(className);
+              let drawingOptions = "";
+              if (this.drawingOptions[className]) {
+                drawingOptions = this.drawingOptions[className].join(" ");
+              }
+
+              return this.websocket.Send('DBLCLK: ["'  + fullpath + '","' + drawingOptions + '"]' );
+            }
          }
          var oEditor = this.getView().byId("aCodeEditor");
          var oModel = oEditor.getModel();
@@ -303,6 +337,15 @@ sap.ui.define(['sap/ui/core/Component',
          if (this.setFileNameType(filename))
             return this.websocket.Send("DBLCLK:" + fullpath);
        },
+
+      getMasterClass: function(className) {
+        if (className.match(/^TH1/)) {
+          return "TH1";
+        } else if (className.match(/^TH2/)) {
+          return "TH2";
+        }
+        return className;
+      },
 
       OnWebsocketOpened: function(handle) {
          this.isConnected = true;
