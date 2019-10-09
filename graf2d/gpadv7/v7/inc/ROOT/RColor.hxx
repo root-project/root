@@ -62,7 +62,10 @@ public:
    }
 
    /** Construct color with provided RGB_t value */
-   RColor(const RGB_t &rgb) : RColor() { SetRGB(rgb[0], rgb[1], rgb[2]); }
+   RColor(const RGB_t &rgb) : RColor() { SetRGB(rgb); }
+
+   /** Set r/g/b/ components of color as hex code, default for the color */
+   RColor &SetRGB(const RGB_t &rgb) { return SetRGB(rgb[0], rgb[1], rgb[2]); }
 
    /** Set r/g/b/ components of color as hex code, default for the color */
    RColor &SetRGB(int r, int g, int b) { return SetHex(toHex(r) + toHex(g) + toHex(b)); }
