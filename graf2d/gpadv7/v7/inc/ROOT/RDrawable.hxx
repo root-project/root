@@ -24,6 +24,7 @@ class RMenuItems;
 class RPadBase;
 class RAttrBase;
 class RDisplayItem;
+class RLegend;
 
 
 namespace Internal {
@@ -100,6 +101,7 @@ class RDrawable {
 friend class RPadBase; // to access Display method
 friend class RAttrBase;
 friend class RStyle;
+friend class RLegend; // to access CollectShared method
 
 private:
    RAttrMap fAttr;               ///< attributes values
