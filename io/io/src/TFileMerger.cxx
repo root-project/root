@@ -751,12 +751,27 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
             //!!if the object is a tree, it is stored in globChain...
             if(cl->InheritsFrom( TDirectory::Class() )) {
                //printf("cas d'une directory\n");
+
+               auto dirobj = (TDirectory*)obj;
+               TString dirpath(dirobj->GetPath());
+               // coverity[unchecked_value] 'target' is from a file so GetPath always returns path starting with filename:
+               dirpath.Remove(0, std::strlen(dirobj->GetFile()->GetPath()));
+
                // Do not delete the directory if it is part of the output
                // and we are in incremental mode (because it will be reuse
                // and has not been written to disk (for performance reason).
                // coverity[var_deref_model] the IsA()->InheritsFrom guarantees that the dynamic_cast will succeed.
                if (!(type&kIncremental) || dynamic_cast<TDirectory*>(obj)->GetFile() != target) {
                   delete obj;
+               }
+               // Let's also delete the directory from the other source (thanks to the 'allNames'
+               // mechanism above we will not process the directories when tranversing the next
+               // files).
+               TFile *nextsource = current_file ? (TFile*)sourcelist->After( current_file ) : (TFile*)sourcelist->First();
+               while (nextsource) {
+                  TDirectory *ndir = nextsource->GetDirectory(dirpath);
+                  delete ndir;
+                  nextsource = (TFile*)sourcelist->After( nextsource );
                }
             } else if (cl->InheritsFrom( TCollection::Class() )) {
                // Don't overwrite, if the object were not merged.
@@ -795,6 +810,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
       // to call SaveSelf explicilty.
       target->SaveSelf(kTRUE);
    }
+
    return status;
 }
 
