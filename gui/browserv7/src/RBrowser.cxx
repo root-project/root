@@ -133,6 +133,7 @@ void ROOT::Experimental::RBrowser::Browse(const std::string &path)
          item.ftype   = "";
          item.fuid    = "";
          item.fgid    = "";
+         item.className = classname;
       }
    }
    for (auto &item : fDesc)
@@ -391,8 +392,7 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
 /////////////////////////////////////////////////////////////////////////////////
 /// Process dbl click on browser item
 
-std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &item_path)
-{
+std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &item_path, const std::string &drawingOptions) {
    if (item_path.find(".root") == std::string::npos) {
       std::string res = "FREAD:";
       std::ifstream t(item_path);
@@ -448,7 +448,7 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
    if (canv) {
       canv->GetListOfPrimitives()->Clear();
 
-      canv->GetListOfPrimitives()->Add(object,"");
+      canv->GetListOfPrimitives()->Add(object, drawingOptions.c_str());
 
       canv->ForceUpdate(); // force update async - do not wait for confirmation
 
@@ -464,13 +464,13 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
       }
 
       // FIXME: how to proced with ownership here
-      TObject* clone = object->Clone();
-      TH1 *h1 = dynamic_cast<TH1*>(clone);
+      TObject *clone = object->Clone();
+      TH1 *h1 = dynamic_cast<TH1 *>(clone);
       if (h1) h1->SetDirectory(nullptr);
 
       std::shared_ptr<TObject> ptr;
       ptr.reset(clone);
-      rcanv->Draw<RObjectDrawable>(ptr, "");
+      rcanv->Draw<RObjectDrawable>(ptr, drawingOptions);
       rcanv->Modified();
 
       rcanv->Update(true);
@@ -693,8 +693,19 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
 
       fWebWindow->Send(connid, res);
    } else if (arg.compare(0,7, "DBLCLK:") == 0) {
-      auto str = ProcessDblClick(arg.substr(7));
-      if (str.length() > 0) fWebWindow->Send(connid, str);
+
+      if (arg.at(8) != '[') {
+         auto str = ProcessDblClick(arg.substr(7), "");
+         fWebWindow->Send(connid, str);
+      } else {
+         auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
+         if (arr) {
+            auto str = ProcessDblClick(arr->at(0), arr->at(1));
+            if (str.length() > 0) {
+               fWebWindow->Send(connid, str);
+            }
+         }
+      }
    } else if (arg.compare(0,14, "SELECT_CANVAS:") == 0) {
       fActiveCanvas = arg.substr(14);
       printf("Select %s\n", fActiveCanvas.c_str());

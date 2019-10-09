@@ -15,8 +15,9 @@ sap.ui.define(['sap/ui/core/Component',
                "sap/ui/core/util/File",
                "sap/ui/model/json/JSONModel",
                "rootui5/browser/model/BrowserModel",
+               "sap/ui/core/Fragment"
 ],function(Component, Controller, CoreControl, CoreIcon, XMLView, mText, mCheckBox, MessageBox, MessageToast, TabContainerItem,
-           Splitter, ResizeHandler, HorizontalLayout, tableColumn, File, JSONModel, BrowserModel) {
+           Splitter, ResizeHandler, HorizontalLayout, tableColumn, File, JSONModel, BrowserModel, Fragment) {
 
    "use strict";
 
@@ -56,7 +57,8 @@ sap.ui.define(['sap/ui/core/Component',
                node.ftype = elem.ftype;
                node.fuid = elem.fuid;
                node.fgid = elem.fgid;
-            }
+               node.className = elem.className
+            };
 
             var t = this.getView().byId("treeTable");
 
@@ -124,6 +126,16 @@ sap.ui.define(['sap/ui/core/Component',
                   ]
                })
             }));
+            t.addColumn(new tableColumn({
+              label: "ClassName",
+              autoResizable: true,
+              visible: false,
+              template: new HorizontalLayout({
+                content: [
+                  new mText({text:"{className}", wrapping: false })
+                ]
+              })
+            }));
 
             // catch re-rendering of the table to assign handlers
             t.addEventDelegate({
@@ -139,8 +151,11 @@ sap.ui.define(['sap/ui/core/Component',
             }));
             */
      //    }
-            
-          // this.addNewButtonPressHandler(); // always create new canvas in the beginning   
+
+          // this.addNewButtonPressHandler(); // always create new canvas in the beginning
+
+            this.drawingOptions = { TH1: 'hist', TH2: 'COL', TProfile: 'E0'};
+
       },
 
       /** @brief Extract the file name and extension
@@ -214,11 +229,110 @@ sap.ui.define(['sap/ui/core/Component',
          var oReader = new FileReader();
          oReader.onload = function() {
             oModel.setProperty("/code", oReader.result);
-         }
+         };
          var file = oEvent.getParameter("files")[0];
          if (this.setFileNameType(file.name))
             oReader.readAsText(file);
       },
+
+     _getSettingsMenu: async function () {
+       if (!this._oSettingsMenu) {
+         let myThis = this;
+         await Fragment.load({name: "rootui5.browser.view.settingsmenu"}).then(function (oSettingsMenu) {
+           let oModel = new JSONModel({
+             "TH1": [
+               { "name": "hist" },
+               { "name": "P" },
+               { "name": "P0" },
+               { "name": "E" },
+               { "name": "E1" },
+               { "name": "E2" },
+               { "name": "E3" },
+               { "name": "E4" },
+               { "name": "E1X0" },
+               { "name": "L" },
+               { "name": "LF2" },
+               { "name": "B" },
+               { "name": "B1" },
+               { "name": "A" },
+               { "name": "TEXT" },
+               { "name": "LEGO" },
+               { "name": "same" }
+             ],
+             "TH2": [
+               { "name": "COL" },
+               { "name": "COLZ" },
+               { "name": "COL0"},
+               { "name": "COL1" },
+               { "name": "COL0Z" },
+               { "name": "COL1Z" },
+               { "name": "COLA" },
+               { "name": "BOX" },
+               { "name": "BOX1" },
+               { "name": "PROJ" },
+               { "name": "PROJX1" },
+               { "name": "PROJX2" },
+               { "name": "PROJX3" },
+               { "name": "PROJY1" },
+               { "name": "PROJY2" },
+               { "name": "PROJY3" },
+               { "name": "SCAT" },
+               { "name": "TEXT" },
+               { "name": "TEXTE" },
+               { "name": "TEXTE0" },
+               { "name": "CONT" },
+               { "name": "CONT1" },
+               { "name": "CONT2" },
+               { "name": "CONT3" },
+               { "name": "CONT4" },
+               { "name": "ARR" },
+               { "name": "SURF" },
+               { "name": "SURF1" },
+               { "name": "SURF2" },
+               { "name": "SURF4" },
+               { "name": "SURF6" },
+               { "name": "E" },
+               { "name": "A" },
+               { "name": "LEGO" },
+               { "name": "LEGO0" },
+               { "name": "LEGO1" },
+               { "name": "LEGO2" },
+               { "name": "LEGO3" },
+               { "name": "LEGO4" },
+               { "name": "same" }
+             ],
+             "TProfile": [
+               { "name": "E0" },
+               { "name": "E1" },
+               { "name": "E2" },
+               { "name": "p" },
+               { "name": "AH" },
+               { "name": "hist" }
+             ]
+           });
+           oSettingsMenu.setModel(oModel);
+           oSettingsMenu.attachConfirm(myThis.handleSettingsConfirm);
+           myThis.getView().addDependent(oSettingsMenu);
+
+           myThis._oSettingsMenu = oSettingsMenu;
+         });
+         sap.ui.getCore().byId("do-TH1").attachChange(this, this.handleSettingsChange);
+         sap.ui.getCore().byId("do-TH2").attachChange(this, this.handleSettingsChange);
+         sap.ui.getCore().byId("do-TProfile").attachChange(this, this.handleSettingsChange);
+       }
+       return this._oSettingsMenu;
+     },
+
+     onSettingPress: async function() {
+        await this._getSettingsMenu();
+        this._oSettingsMenu.open();
+     },
+
+     handleSettingsChange: function(oEvent, myThis) {
+        let graphType = oEvent.getSource().sId.split("-")[1];
+        myThis.drawingOptions[graphType] = oEvent.getSource().mProperties.value;
+        // ß
+     },
 
       /** @brief Handle the "Save As..." button press event */
       onSaveAs: function() {
@@ -257,8 +371,32 @@ sap.ui.define(['sap/ui/core/Component',
          if (prop && prop.fullpath) {
             fullpath = prop.fullpath.substr(1, prop.fullpath.length-2);
             var dirname = fullpath.substr(0, fullpath.lastIndexOf('/'));
-            if (dirname.endsWith(".root"))
-               return this.websocket.Send("DBLCLK:" + fullpath);
+            if (dirname.endsWith(".root")) {
+              let split = fullpath.split("/");
+              let model = row.getModel().mainModel;
+              let className = "";
+
+              for (let i = 0; i<split.length; i++) {
+                for (let j=0; j<model.length; j++) {
+                  if (model[j].name === split[i]) {
+                    if(i === split.length-1 ) {
+                      className = model[j].className;
+                      break;
+                    } else {
+                      model = model[j].childs;
+                      break;
+                    }
+                  }
+                }
+              }
+              className = this.getBaseClass(className);
+              let drawingOptions = "";
+              if (this.drawingOptions[className]) {
+                drawingOptions = this.drawingOptions[className];
+              }
+
+              return this.websocket.Send('DBLCLK: ["'  + fullpath + '","' + drawingOptions + '"]' );
+            }
          }
          var oEditor = this.getView().byId("aCodeEditor");
          var oModel = oEditor.getModel();
@@ -266,6 +404,15 @@ sap.ui.define(['sap/ui/core/Component',
          if (this.setFileNameType(filename))
             return this.websocket.Send("DBLCLK:" + fullpath);
        },
+
+      getBaseClass: function(className) {
+        if (className.match(/^TH1/)) {
+          return "TH1";
+        } else if (className.match(/^TH2/)) {
+          return "TH2";
+        }
+        return className;
+      },
 
       OnWebsocketOpened: function(handle) {
          this.isConnected = true;
@@ -293,29 +440,28 @@ sap.ui.define(['sap/ui/core/Component',
          if (typeof msg != "string")
             return console.error("Browser do not uses binary messages len = " + mgs.byteLength);
 
-         var mhdr = msg.substr(0,6);
-         msg = msg.substr(6);
 
-         // console.log(mhdr, msg.length, msg.substr(0,70), "...");
+         let mhdr = msg.split(":")[0];
+         msg = msg.substr(mhdr.length+1);
 
          switch (mhdr) {
-         case "INMSG:":
-            this.processInitMsg(msg);
-            break;
-         case "DESCR:":  // browser hierarchy
+         case "DESCR":  // browser hierarchy
             this.parseDescription(msg, true);
             break;
-         case "FESCR:":  // searching hierarchy
+         case "INMSG":
+            this.processInitMsg(msg);
+            break;
+         case "FESCR":  // searching hierarchy
             this.parseDescription(msg, false);
             break;
-         case "FREAD:":  // file read
+         case "FREAD":  // file read
             this.getView().byId("aCodeEditor").getModel().setProperty("/code", msg);
             break;
-         case "CANVS:":  // canvas created by server, need to establish connection
+         case "CANVS":  // canvas created by server, need to establish connection
             var arr = JSON.parse(msg);
             this.createCanvas(arr[0], arr[1], arr[2]);
             break;
-         case "FROOT:": // Root file
+         case "FROOT": // Root file
            var selecedTabID = this.getSelectedtabFromtabContainer("myTabContainer"); // The ID of the selected tab in the TabContainer
 
            var jsonAnswer = JSON.parse(msg); // message received from the server to JSON
@@ -346,7 +492,7 @@ sap.ui.define(['sap/ui/core/Component',
            JSROOT.draw("TopBrowserId--aRootCanvas" + selecedTabID, finalJsonRoot, "colz"); // Drawing the graphic into the selected tab canvas
 
            break;
-         case "BREPL:":   // browser reply
+         case "BREPL":   // browser reply
             if (this.model) {
                var bresp = JSON.parse(msg);
 
@@ -474,13 +620,13 @@ sap.ui.define(['sap/ui/core/Component',
          }
          
          var painter = null;
-         
+
          if (kind == "root7") {
             painter = new JSROOT.v7.TCanvasPainter(null);
          } else {
             painter = new JSROOT.TCanvasPainter(null);
          }
-         
+
          painter.online_canvas = true;
          painter.use_openui = true; 
          painter.batch_mode = false;

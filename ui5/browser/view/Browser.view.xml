@@ -7,72 +7,68 @@
           xmlns:l="sap.ui.layout"
           xmlns:u="sap.ui.unified"
           xmlns:e="sap.ui.codeeditor">
-   <Page title="" showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false">
-      <!-- headerContent>
-      </headerContent-->
-      <!-- subHeader>
-      </subHeader-->
-      <content>
-        <l:Splitter id="mainSplitter">
-          <l:Splitter orientation="Vertical">
-            <l:layoutData><l:SplitterLayoutData size="310px" resizable="true"/></l:layoutData>
-            <Toolbar>
-               <layoutData><l:SplitterLayoutData size="35px" resizable="false"/></layoutData>
-               <Button icon="sap-icon://synchronize" type="Transparent"
-                    tooltip="Refresh" press="onRealoadPress"/>
-               <Button icon="sap-icon://log" type="Transparent"
-                    tooltip="Quit ROOT session" press="onQuitRootPress"/>
-               <ToolbarSpacer/>
-               <SearchField liveChange="onSearch"/>
-            </Toolbar>
-            <t:TreeTable
-              id="treeTable"
-              columnHeaderVisible="true"
-              editable="false"
-              enableSelectAll="false"
-              selectionBehavior="RowOnly"
-              selectionMode="Single"
-              visibleRowCountMode="Auto"
-              showColumnVisibilityMenu="true"
-              rows="{/nodes}">
-            </t:TreeTable>
-          </l:Splitter>
-          <!-- here comes the tab container for canvases and editor, custom controller append in initializer -->
-          <!--l:Splitter orientation="Vertical"-->
-            <TabContainer id="myTabContainer"
-              showAddNewButton="true"
-              addNewButtonPress="addNewButtonPressHandler"
-              itemSelect="tabSelectItem"
-              itemClose="tabCloseHandler">
-              <items>
-                <TabContainerItem name="Code Editor" icon="sap-icon://write-new-document" additionalText="untitled" >
-                  <content>
-                    <l:Splitter orientation="Vertical">
-                    <Toolbar>
-                      <layoutData><l:SplitterLayoutData size="35px" resizable="false"/></layoutData>
-                      <u:FileUploader change="onChangeFile"/>
-                      <Button text="Save as..." tooltip="Save current file as..." press="onSaveAs" />
-                    </Toolbar>
-                    <e:CodeEditor
-                      id="aCodeEditor"
-                      height="100%"
-                      colorTheme="default"
-                      type="c_cpp"
-                      value="{/code}" />
-                  </l:Splitter>
-                  </content>
-                </TabContainerItem>
-                <!-- TabContainerItem name="ROOT Canvas" icon="sap-icon://column-chart-dual-axis" additionalText="" >
-                  <content>
-                    <core:HTML id="aRootCanvas1" content="&lt;div style=&quot;height:100%&quot;&gt;{/rootCanvas}&lt;/div&gt;" />
-                  </content>
-                </TabContainerItem -->
-              </items>
-            </TabContainer>
-          <!--/l:Splitter-->
-        </l:Splitter>
-      </content>
-    </Page>
+
+  <SplitApp id="SplitAppBrowser" initialDetail="detail" initialMaster="master" orientationChange="onOrientationChange">
+    <detailPages>
+      <Page title="Root Javascript Browser">
+        <TabContainer id="myTabContainer"
+                      showAddNewButton="true"
+                      addNewButtonPress="addNewButtonPressHandler"
+                      itemSelect="tabSelectItem"
+                      itemClose="tabCloseHandler">
+          <items>
+            <TabContainerItem name="Code Editor" icon="sap-icon://write-new-document" additionalText="untitled" >
+              <content>
+                <l:Splitter orientation="Vertical">
+                  <Toolbar>
+                    <layoutData><l:SplitterLayoutData size="35px" resizable="false"/></layoutData>
+                    <u:FileUploader change="onChangeFile"/>
+                    <Button text="Save as..." tooltip="Save current file as..." press="onSaveAs" />
+                  </Toolbar>
+                  <e:CodeEditor
+                          id="aCodeEditor"
+                          height="100%"
+                          colorTheme="default"
+                          type="c_cpp"
+                          value="{/code}" />
+                </l:Splitter>
+              </content>
+            </TabContainerItem>
+            <!--TabContainerItem name="ROOT Canvas" icon="sap-icon://column-chart-dual-axis" additionalText="" >
+              <content>
+                <core:HTML id="aRootCanvas1" content="&lt;div style=&quot;height:100%&quot;&gt;{/rootCanvas}&lt;/div&gt;" />
+              </content>
+            </TabContainerItem-->
+          </items>
+        </TabContainer>
+      </Page>
+    </detailPages>
+    <masterPages id="myMaster">
+      <Page title="" showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false">
+        <Toolbar>
+          <layoutData><l:SplitterLayoutData size="35px" resizable="false"/></layoutData>
+          <Button icon="sap-icon://synchronize" type="Transparent"
+                  tooltip="Refresh" press="onRealoadPress"/>
+          <Button icon="sap-icon://log" type="Transparent"
+                  tooltip="Quit ROOT session" press="onQuitRootPress"/>
+          <Button icon="sap-icon://settings" type="Transparent" tooltip="Settings" press="onSettingPress"/>
+          <ToolbarSpacer/>
+          <SearchField liveChange="onSearch"/>
+        </Toolbar>
+        <t:TreeTable
+                id="treeTable"
+                columnHeaderVisible="true"
+                editable="false"
+                enableSelectAll="false"
+                selectionBehavior="RowOnly"
+                selectionMode="Single"
+                visibleRowCountMode="Auto"
+                showColumnVisibilityMenu="true"
+                rows="{/nodes}">
+        </t:TreeTable>
+      </Page>
+    </masterPages>
+  </SplitApp>
 </mvc:View>
 
 
