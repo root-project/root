@@ -1530,6 +1530,7 @@
       this.axes_drawn = false;
    }
 
+   /** Returns frame rectangle plus extra info for hint display */
    TFramePainter.prototype.CleanFrameDrawings = function() {
 
       // cleanup all 3D drawings if any
@@ -3186,7 +3187,7 @@
       for (var i=0; i < this.pad.fPrimitives.arr.length; i++) {
          var obj = this.pad.fPrimitives.arr[i];
 
-         if ((exact_obj!==null) && (obj !== exact_obj)) continue;
+         if ((exact_obj !== null) && (obj !== exact_obj)) continue;
 
          if ((classname !== undefined) && (classname !== null))
             if (obj._typename !== classname) continue;
@@ -3200,8 +3201,8 @@
       return null;
    }
 
+   /** Return true if any objects beside sub-pads exists in the pad */
    TPadPainter.prototype.HasObjectsToDraw = function() {
-      // return true if any objects beside sub-pads exists in the pad
 
       if (!this.pad || !this.pad.fPrimitives) return false;
 
@@ -4967,15 +4968,36 @@
       return res;
    }
 
+   /** Check if TGeo objects in the canvas - draw them directly @private */
+   TCanvasPainter.prototype.DirectGeoDraw = function() {
+      var lst = this.pad ? this.pad.fPrimitives : null;
+      if (!lst || (lst.arr.length != 1)) return;
+
+      var obj = lst.arr[0];
+      if (obj && obj._typename && (obj._typename.indexOf("TGeo")==0))
+         return JSROOT.draw(this.divid, obj, lst.opt[0]);
+   }
+
    function drawCanvas(divid, can, opt) {
       var nocanvas = !can;
       if (nocanvas) can = JSROOT.Create("TCanvas");
 
       var painter = new TCanvasPainter(can);
+      painter.SetDivId(divid, -1); // just assign id
+
+      if (!nocanvas && can.fCw && can.fCh && !JSROOT.BatchMode) {
+         var rect0 = painter.select_main().node().getBoundingClientRect();
+         if (!rect0.height && (rect0.width > 0.1*can.fCw)) {
+            painter.select_main().style("width", can.fCw+"px").style("height", can.fCh+"px");
+            painter._fixed_size = true;
+         }
+      }
+
+      var direct = painter.DirectGeoDraw();
+      if (direct) return direct;
+
       painter.DecodeOptions(opt);
       painter.normal_canvas = !nocanvas;
-
-      painter.SetDivId(divid, -1); // just assign id
       painter.CheckSpecialsInPrimitives(can);
       painter.CreateCanvasSvg(0);
       painter.SetDivId(divid);  // now add to painters list

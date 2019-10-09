@@ -26,6 +26,7 @@
 
    function THistPainter(histo) {
       JSROOT.TObjectPainter.call(this, histo);
+      this.csstype = "hist";
       this.draw_content = true;
       this.nbinsx = 0;
       this.nbinsy = 0;

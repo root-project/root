@@ -15,6 +15,7 @@
 12. Provide wrong_http_response workaround (#189)
 13. Improve "comp" and "compx" option to show TGeoCompositeShape components
 14. Update objects from list of histogram functions (#190)
+15. Add support of TGeo in TCanvas
 
 
 ## Changes in 5.7.1
