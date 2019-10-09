@@ -20,20 +20,29 @@
                           <ComboBox
                                 id="do-TH1"
                                 items="{ path: '/TH1' }"
-                                selectedKey="colz">
+                                selectedKey="hist">
                           <core:Item text="{name}" key="{name}"/>
                         </ComboBox>
                         </f:fields>
                       </f:FormElement>
                       <f:FormElement label="TH2">
                         <f:fields>
-                          <MultiComboBox
+                          <ComboBox
                                   id="do-TH2"
-                                  showButton="false"
                                   items="{ path: '/TH2' }"
-                                  selectedKeys="colz">
+                                  selectedKey="COL">
                             <core:Item text="{name}" key="{name}"/>
-                          </MultiComboBox>
+                          </ComboBox>
+                        </f:fields>
+                      </f:FormElement>
+                      <f:FormElement label="TProfile">
+                        <f:fields>
+                          <ComboBox
+                                  id="do-TProfile"
+                                  items="{ path: '/TProfile' }"
+                                  selectedKey="E0">
+                            <core:Item text="{name}" key="{name}"/>
+                          </ComboBox>
                         </f:fields>
                       </f:FormElement>
                     </f:formElements>

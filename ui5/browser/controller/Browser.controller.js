@@ -154,7 +154,7 @@ sap.ui.define(['sap/ui/core/Component',
 
           // this.addNewButtonPressHandler(); // always create new canvas in the beginning
 
-            this.drawingOptions = { TH1: ['colz'], TH2: ['colz'] };
+            this.drawingOptions = { TH1: 'hist', TH2: 'COL', TProfile: 'E0'};
 
       },
 
@@ -259,12 +259,12 @@ sap.ui.define(['sap/ui/core/Component',
      },
 
      handleSettingsChange: function(oEvent, myThis) {
-        let oSlectedItems = oEvent.getSource().getSelectedItem();
+        let oSlectedItem = oEvent.getSource().getSelectedItem();
         let graphType = oEvent.getSource().sId.split("-")[1];
-        myThis.drawingOptions[graphType] = [];
-        for (let i=0; i<oSlectedItems.length; i++) {
-          myThis.drawingOptions[graphType].push(oSlectedItems[i].getText());
-        }
+        console.log(oSlectedItem);
+        console.log(oSlectedItem.getText());
+        myThis.drawingOptions[graphType] = oSlectedItem.getText();
+        // ß
      },
 
       /** @brief Handle the "Save As..." button press event */
@@ -325,7 +325,7 @@ sap.ui.define(['sap/ui/core/Component',
               className = this.getMasterClass(className);
               let drawingOptions = "";
               if (this.drawingOptions[className]) {
-                drawingOptions = this.drawingOptions[className].join(" ");
+                drawingOptions = this.drawingOptions[className];
               }
 
               return this.websocket.Send('DBLCLK: ["'  + fullpath + '","' + drawingOptions + '"]' );

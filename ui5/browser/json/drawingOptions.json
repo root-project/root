@@ -1,24 +1,197 @@
 {
 	"TH1": [
 		{
-			"name": "box"
+			"name": "hist"
 		},
 		{
-			"name": "lego"
+			"name": "P"
 		},
 		{
-			"name": "colz"
+			"name": "P0"
+		},
+		{
+			"name": "E"
+		},
+		{
+			"name": "E1"
+		},
+		{
+			"name": "E2"
+		},
+		{
+			"name": "E3"
+		},
+		{
+			"name": "E4"
+		},
+		{
+			"name": "E1X0"
+		},
+		{
+			"name": "L"
+		},
+		{
+			"name": "LF2"
+		},
+		{
+			"name": "B"
+		},
+		{
+			"name": "B1"
+		},
+		{
+			"name": "A"
+		},
+		{
+			"name": "TEXT"
+		},
+		{
+			"name": "LEGO"
+		},
+		{
+			"name": "same"
 		}
 	],
 	"TH2": [
 		{
-			"name": "box"
+			"name": "COL"
 		},
 		{
-			"name": "lego"
+			"name": "COLZ"
 		},
 		{
-			"name": "colz"
+			"name": "COL0"
+		},
+		{
+			"name": "COL1"
+		},
+		{
+			"name": "COL0Z"
+		},
+		{
+			"name": "COL1Z"
+		},
+		{
+			"name": "COLA"
+		},
+		{
+			"name": "BOX"
+		},
+		{
+			"name": "BOX1"
+		},
+		{
+			"name": "PROJ"
+		},
+		{
+			"name": "PROJX1"
+		},
+		{
+			"name": "PROJX2"
+		},
+		{
+			"name": "PROJX3"
+		},
+		{
+			"name": "PROJY1"
+		},
+		{
+			"name": "PROJY2"
+		},
+		{
+			"name": "PROJY3"
+		},
+		{
+			"name": "SCAT"
+		},
+		{
+			"name": "TEXT"
+		},
+		{
+			"name": "TEXTE"
+		},
+		{
+			"name": "TEXTE0"
+		},
+		{
+			"name": "CONT"
+		},
+		{
+			"name": "CONT1"
+		},
+		{
+			"name": "CONT2"
+		},
+		{
+			"name": "CONT3"
+		},
+		{
+			"name": "CONT4"
+		},
+		{
+			"name": "ARR"
+		},
+		{
+			"name": "SURF"
+		},
+		{
+			"name": "SURF1"
+		},
+		{
+			"name": "SURF2"
+		},
+		{
+			"name": "SURF4"
+		},
+		{
+			"name": "SURF6"
+		},
+		{
+			"name": "E"
+		},
+		{
+			"name": "A"
+		},
+		{
+			"name": "LEGO"
+		},
+		{
+			"name": "LEGO0"
+		},
+		{
+			"name": "LEGO1"
+		},
+		{
+			"name": "LEGO2"
+		},
+		{
+			"name": "LEGO3"
+		},
+		{
+			"name": "LEGO4"
+		},
+		{
+			"name": "same"
+		}
+	],
+	"TProfile": [
+		{
+			"name": "E0"
+		},
+		{
+			"name": "E1"
+		},
+		{
+			"name": "E2"
+		},
+		{
+			"name": "p"
+		},
+		{
+			"name": "AH"
+		},
+		{
+			"name": "hist"
 		}
 	]
 }

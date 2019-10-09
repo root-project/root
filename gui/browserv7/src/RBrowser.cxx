@@ -366,8 +366,11 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
 
 std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &item_path, const std::string drawingOptions)
 {
+   printf("\n%s\n", item_path.c_str());
    std::string res;
    if (item_path.find(".root") != std::string::npos) {
+
+      printf("\nI AM INSIDE\n");
 
       auto canv = GetActiveCanvas();
       if (!canv) {
@@ -441,6 +444,8 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
       std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
       res.append(str.c_str());
    }
+   printf("\n%s\n", item_path.c_str());
+   printf("\n%s\n", res.c_str());
    return res;
 }
 
@@ -594,11 +599,18 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       fWebWindow->Send(connid, res);
    } else if (arg.compare(0,7, "DBLCLK:") == 0) {
 
-      auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
-      if (arr) {
-         auto str = ProcessDblClick(arr->at(0), arr->at(1));
+      if (arg.at(8) != '[') {
+         auto str = ProcessDblClick(arg.substr(7), "");
          if (str.length() > 0) {
             fWebWindow->Send(connid, str);
+         }
+      } else {
+         auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
+         if (arr) {
+            auto str = ProcessDblClick(arr->at(0), arr->at(1));
+            if (str.length() > 0) {
+               fWebWindow->Send(connid, str);
+            }
          }
       }
    } else if (arg.compare(0,14, "SELECT_CANVAS:") == 0) {
