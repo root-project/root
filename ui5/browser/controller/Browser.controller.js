@@ -607,6 +607,11 @@ sap.ui.define(['sap/ui/core/Component',
          oTabContainerItem.setAdditionalText(name); // name can be used to set active canvas or close canvas
 
          oTabContainer.addItem(oTabContainerItem);
+
+         // Change the selected tabs, only if it is new one, not the basic one
+         if(name !== "rcanv1") {
+           oTabContainer.setSelectedItem(oTabContainerItem);
+         }
          
          var conn = new JSROOT.WebWindowHandle(this.websocket.kind);
          
