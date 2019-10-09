@@ -1566,6 +1566,23 @@ void TPad::DrawCrosshair()
 ///   \param[in] title     Pad title.If title is of the form "stringt;stringx;stringy"
 ///                        the pad title is set to stringt, the x axis title to
 ///                        stringx, the y axis title to stringy.
+///
+/// #### Example:
+///
+/// Begin_Macro(source)
+/// {
+///    auto c = new TCanvas("c","c",200,10,500,300);
+///
+///    const Int_t n = 50;
+///    auto g = new TGraph();
+///    for (Int_t i=0;i<n;i++) g->SetPoint(i,i*0.1,100*sin(i*0.1+0.2));
+///
+///    auto frame = c->DrawFrame(0, -110, 2, 110);
+///    frame->GetXaxis()->SetTitle("X axis");
+///
+///    g->Draw("L*");
+/// }
+/// End_Macro
 
 TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title)
 {
