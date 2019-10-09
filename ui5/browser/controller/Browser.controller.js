@@ -467,6 +467,7 @@ sap.ui.define(['sap/ui/core/Component',
            for(let i=0; i<oTabContainerItems.length; i++) {
              if (oTabContainerItems[i].getAdditionalText() === msg) {
                oTabContainer.setSelectedItem(oTabContainerItems[i]);
+               break;
              }
            }
            break;
