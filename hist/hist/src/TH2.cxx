@@ -701,11 +701,12 @@ void TH2::DoFitSlices(bool onX,
    if (lastbin < 0 || lastbin > nbins + 1) lastbin = nbins + 1;
    if (lastbin < firstbin) {firstbin = 0; lastbin = nbins + 1;}
    TString opt = option;
-   TString gcut("");
+   TString proj_opt = "e";
    Int_t i1 = opt.Index("[");
-   if (i1>=0) {
-      Int_t i2 = opt.Index("]");
-      gcut = opt(i1,i2-i1+1);
+   Int_t i2 = opt.Index("]");
+   if (i1>=0 && i2>i1) {
+      proj_opt += opt(i1,i2-i1+1);
+      opt.Remove(i1, i2-i1+1);
    }
    opt.ToLower();
    Int_t ngroup = 1;
@@ -773,9 +774,9 @@ void TH2::DoFitSlices(bool onX,
    for (bin=firstbin;bin+ngroup-1<=lastbin;bin += nstep) {
       TH1D *hp;
       if (onX)
-         hp= ProjectionX("_temp",bin,bin+ngroup-1,"e"+gcut);
+         hp= ProjectionX("_temp",bin,bin+ngroup-1,proj_opt);
       else
-         hp= ProjectionY("_temp",bin,bin+ngroup-1,"e"+gcut);
+         hp= ProjectionY("_temp",bin,bin+ngroup-1,proj_opt);
       if (hp == 0) continue;
       nentries = Long64_t(hp->GetEntries());
       if (nentries == 0 || nentries < cut) {delete hp; continue;}
