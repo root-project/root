@@ -508,6 +508,8 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                     key->GetName(), key->GetTitle());
                continue;
             }
+            if (cl->IsTObject())
+               obj->ResetBit(kMustCleanup);
             if (cl->IsTObject() && cl != obj->IsA()) {
                Error("MergeRecursive", "TKey and object retrieve disagree on type (%s vs %s).  Continuing with %s.",
                     key->GetClassName(), obj->IsA()->GetName(), obj->IsA()->GetName());
@@ -526,9 +528,11 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                   newdir = target->GetDirectory(obj->GetName());
                   if (!newdir) {
                      newdir = target->mkdir( obj->GetName(), obj->GetTitle() );
+                     newdir->ResetBit(kMustCleanup);
                   }
                } else {
                   newdir = target->mkdir( obj->GetName(), obj->GetTitle() );
+                  newdir->ResetBit(kMustCleanup);
                }
 
                // newdir is now the starting point of another round of merging
@@ -560,6 +564,9 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                      // make sure we are at the correct directory level by cd'ing to path
                      TDirectory *ndir = nextsource->GetDirectory(path);
                      if (ndir) {
+                        // For consistency (and persformance), we reset the MustCleanup be also for those
+                        // 'key' retrieved indirectly.
+                        ndir->ResetBit(kMustCleanup);
                         ndir->cd();
                         TKey *key2 = (TKey*)ndir->GetListOfKeys()->FindObject(key->GetName());
                         if (key2) {
@@ -625,6 +632,9 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                      // make sure we are at the correct directory level by cd'ing to path
                      TDirectory *ndir = nextsource->GetDirectory(path);
                      if (ndir) {
+                        // For consistency (and persformance), we reset the MustCleanup be also for those
+                        // 'key' retrieved indirectly.
+                        ndir->ResetBit(kMustCleanup);
                         ndir->cd();
                         TKey *key2 = (TKey*)ndir->GetListOfKeys()->FindObject(key->GetName());
                         if (key2) {
@@ -687,6 +697,9 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                      // make sure we are at the correct directory level by cd'ing to path
                      TDirectory *ndir = nextsource->GetDirectory(path);
                      if (ndir) {
+                        // For consistency (and persformance), we reset the MustCleanup be also for those
+                        // 'key' retrieved indirectly.
+                        ndir->ResetBit(kMustCleanup);
                         ndir->cd();
                         TKey *key2 = (TKey*)ndir->GetListOfKeys()->FindObject(key->GetName());
                         if (key2) {
