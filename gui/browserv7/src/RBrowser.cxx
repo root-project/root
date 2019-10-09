@@ -392,7 +392,7 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
 /////////////////////////////////////////////////////////////////////////////////
 /// Process dbl click on browser item
 
-std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &item_path, const std::string drawingOptions) {
+std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &item_path, const std::string &drawingOptions) {
    if (item_path.find(".root") == std::string::npos) {
       std::string res = "FREAD:";
       std::ifstream t(item_path);
@@ -470,7 +470,7 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
 
       std::shared_ptr<TObject> ptr;
       ptr.reset(clone);
-      rcanv->Draw<RObjectDrawable>(ptr, drawingOptions.c_str());
+      rcanv->Draw<RObjectDrawable>(ptr, drawingOptions);
       rcanv->Modified();
 
       rcanv->Update(true);
@@ -696,9 +696,7 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
 
       if (arg.at(8) != '[') {
          auto str = ProcessDblClick(arg.substr(7), "");
-         if (str.length() > 0) {
-            fWebWindow->Send(connid, str);
-         }
+         fWebWindow->Send(connid, str);
       } else {
          auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
          if (arr) {

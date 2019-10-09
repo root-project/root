@@ -17,7 +17,7 @@ sap.ui.define(['sap/ui/core/Component',
                "rootui5/browser/model/BrowserModel",
                "sap/ui/core/Fragment"
 ],function(Component, Controller, CoreControl, CoreIcon, XMLView, mText, mCheckBox, MessageBox, MessageToast, TabContainerItem,
-           Splitter, ResizeHandler, HorizontalLayout, tableColumn, File, JSONModel, BrowserModel) {
+           Splitter, ResizeHandler, HorizontalLayout, tableColumn, File, JSONModel, BrowserModel, Fragment) {
 
    "use strict";
 
@@ -238,14 +238,83 @@ sap.ui.define(['sap/ui/core/Component',
      _getSettingsMenu: async function () {
        if (!this._oSettingsMenu) {
          let myThis = this;
-         await sap.ui.core.Fragment.load({name: "rootui5.browser.view.settingsmenu"}).then(function (oSettingsMenu) {
-           let oModel = new sap.ui.model.json.JSONModel("rootui5sys/browser/json/drawingOptions.json");
+         await Fragment.load({name: "rootui5.browser.view.settingsmenu"}).then(function (oSettingsMenu) {
+           let oModel = new JSONModel({
+             "TH1": [
+               { "name": "hist" },
+               { "name": "P" },
+               { "name": "P0" },
+               { "name": "E" },
+               { "name": "E1" },
+               { "name": "E2" },
+               { "name": "E3" },
+               { "name": "E4" },
+               { "name": "E1X0" },
+               { "name": "L" },
+               { "name": "LF2" },
+               { "name": "B" },
+               { "name": "B1" },
+               { "name": "A" },
+               { "name": "TEXT" },
+               { "name": "LEGO" },
+               { "name": "same" }
+             ],
+             "TH2": [
+               { "name": "COL" },
+               { "name": "COLZ" },
+               { "name": "COL0"},
+               { "name": "COL1" },
+               { "name": "COL0Z" },
+               { "name": "COL1Z" },
+               { "name": "COLA" },
+               { "name": "BOX" },
+               { "name": "BOX1" },
+               { "name": "PROJ" },
+               { "name": "PROJX1" },
+               { "name": "PROJX2" },
+               { "name": "PROJX3" },
+               { "name": "PROJY1" },
+               { "name": "PROJY2" },
+               { "name": "PROJY3" },
+               { "name": "SCAT" },
+               { "name": "TEXT" },
+               { "name": "TEXTE" },
+               { "name": "TEXTE0" },
+               { "name": "CONT" },
+               { "name": "CONT1" },
+               { "name": "CONT2" },
+               { "name": "CONT3" },
+               { "name": "CONT4" },
+               { "name": "ARR" },
+               { "name": "SURF" },
+               { "name": "SURF1" },
+               { "name": "SURF2" },
+               { "name": "SURF4" },
+               { "name": "SURF6" },
+               { "name": "E" },
+               { "name": "A" },
+               { "name": "LEGO" },
+               { "name": "LEGO0" },
+               { "name": "LEGO1" },
+               { "name": "LEGO2" },
+               { "name": "LEGO3" },
+               { "name": "LEGO4" },
+               { "name": "same" }
+             ],
+             "TProfile": [
+               { "name": "E0" },
+               { "name": "E1" },
+               { "name": "E2" },
+               { "name": "p" },
+               { "name": "AH" },
+               { "name": "hist" }
+             ]
+           });
            oSettingsMenu.setModel(oModel);
            oSettingsMenu.attachConfirm(myThis.handleSettingsConfirm);
            myThis.getView().addDependent(oSettingsMenu);
 
            myThis._oSettingsMenu = oSettingsMenu;
-           return oSettingsMenu;
          });
          sap.ui.getCore().byId("do-TH1").attachChange(this, this.handleSettingsChange);
          sap.ui.getCore().byId("do-TH2").attachChange(this, this.handleSettingsChange);
@@ -320,7 +389,7 @@ sap.ui.define(['sap/ui/core/Component',
                   }
                 }
               }
-              className = this.getMasterClass(className);
+              className = this.getBaseClass(className);
               let drawingOptions = "";
               if (this.drawingOptions[className]) {
                 drawingOptions = this.drawingOptions[className];
@@ -336,7 +405,7 @@ sap.ui.define(['sap/ui/core/Component',
             return this.websocket.Send("DBLCLK:" + fullpath);
        },
 
-      getMasterClass: function(className) {
+      getBaseClass: function(className) {
         if (className.match(/^TH1/)) {
           return "TH1";
         } else if (className.match(/^TH2/)) {
