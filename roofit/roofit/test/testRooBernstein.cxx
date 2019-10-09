@@ -6,13 +6,9 @@
 #include "RooBernstein.h"
 #include "TCanvas.h"
 #include "RooPlot.h"
-#include "TAxis.h"
-#include "TH1.h"
-//#include "gtest/gtest.h"
 
 using namespace RooFit;
 
-//TEST(RooBernstein, )
 void runFit(unsigned int N, double a0, double a1, double a2, double a3){
     RooRealVar x("x", "x", 0., 100.);
  
