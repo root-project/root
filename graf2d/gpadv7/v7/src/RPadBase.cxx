@@ -95,9 +95,9 @@ void ROOT::Experimental::RPadBase::AssignAutoColors()
          if ((pos > 0) && (pos == attr.first.length() - 11)) {
             // FIXME: dummy code to assign autocolors, later should use RPalette
             switch (cnt++ % 3) {
-              case 0: col.SetRGB(RColor::kRed); break;
-              case 1: col.SetRGB(RColor::kGreen); break;
-              case 2: col.SetRGB(RColor::kBlue); break;
+              case 0: col = RColor::kRed; break;
+              case 1: col = RColor::kGreen; break;
+              case 2: col = RColor::kBlue; break;
             }
             drawable->fAttr.AddString(attr.first.substr(0,pos) + "_color_rgb", col.GetHex());
          }
