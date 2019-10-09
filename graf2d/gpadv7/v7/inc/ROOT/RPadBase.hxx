@@ -166,10 +166,7 @@ public:
    }
 
    /// Wipe the pad by clearing the list of primitives.
-   void Wipe()
-   {
-      fPrimitives.clear();
-   }
+   void Wipe() { fPrimitives.clear(); }
 
    void CreateFrameIfNeeded();
 
@@ -207,6 +204,9 @@ public:
    {
       return fFrame->UserToNormal(pos);
    }
+
+   void AssignAutoColors();
+
 };
 
 } // namespace Experimental

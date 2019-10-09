@@ -80,6 +80,32 @@ std::shared_ptr<ROOT::Experimental::RDrawable> ROOT::Experimental::RPadBase::Fin
 }
 
 ///////////////////////////////////////////////////////////////////////////
+/// Method collect existing colors and assign new values if required
+
+void ROOT::Experimental::RPadBase::AssignAutoColors()
+{
+   int cnt = 0;
+   RColor col;
+
+   for (auto &drawable : fPrimitives) {
+      for (auto &attr: drawable->fAttr) {
+         // only boolean attribute can return true
+         if (!attr.second->GetBool()) continue;
+         auto pos = attr.first.find("_color_auto");
+         if ((pos > 0) && (pos == attr.first.length() - 11)) {
+            // FIXME: dummy code to assign autocolors, later should use RPalette
+            switch (cnt++ % 3) {
+              case 0: col.SetRGB(RColor::kRed); break;
+              case 1: col.SetRGB(RColor::kGreen); break;
+              case 2: col.SetRGB(RColor::kBlue); break;
+            }
+            drawable->fAttr.AddString(attr.first.substr(0,pos) + "_color_rgb", col.GetHex());
+         }
+      }
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////
 /// Create display items for all primitives in the pad
 /// Each display item gets its special id, which used later for client-server communication
 
