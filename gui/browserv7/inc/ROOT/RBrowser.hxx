@@ -104,7 +104,7 @@ protected:
    void WebWindowCallback(unsigned connid, const std::string &arg);
 
 public:
-   RBrowser(bool use_rcanvas = false);
+   RBrowser(bool use_rcanvas = true);
    virtual ~RBrowser();
 
    bool GetUseRCanvas() const { return fUseRCanvas; }
