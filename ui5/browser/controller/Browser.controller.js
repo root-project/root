@@ -247,8 +247,9 @@ sap.ui.define(['sap/ui/core/Component',
            myThis._oSettingsMenu = oSettingsMenu;
            return oSettingsMenu;
          });
-         sap.ui.getCore().byId("do-TH1").attachSelectionChange(this, this.handleSettingsChange);
-         sap.ui.getCore().byId("do-TH2").attachSelectionChange(this, this.handleSettingsChange);
+         sap.ui.getCore().byId("do-TH1").attachChange(this, this.handleSettingsChange);
+         sap.ui.getCore().byId("do-TH2").attachChange(this, this.handleSettingsChange);
+         sap.ui.getCore().byId("do-TProfile").attachChange(this, this.handleSettingsChange);
        }
        return this._oSettingsMenu;
      },
@@ -259,11 +260,8 @@ sap.ui.define(['sap/ui/core/Component',
      },
 
      handleSettingsChange: function(oEvent, myThis) {
-        let oSlectedItem = oEvent.getSource().getSelectedItem();
         let graphType = oEvent.getSource().sId.split("-")[1];
-        console.log(oSlectedItem);
-        console.log(oSlectedItem.getText());
-        myThis.drawingOptions[graphType] = oSlectedItem.getText();
+        myThis.drawingOptions[graphType] = oEvent.getSource().mProperties.value;
         // ß
      },
 

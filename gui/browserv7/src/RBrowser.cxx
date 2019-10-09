@@ -366,11 +366,9 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
 
 std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &item_path, const std::string drawingOptions)
 {
-   printf("\n%s\n", item_path.c_str());
    std::string res;
    if (item_path.find(".root") != std::string::npos) {
 
-      printf("\nI AM INSIDE\n");
 
       auto canv = GetActiveCanvas();
       if (!canv) {
@@ -420,7 +418,7 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
       }
 
       canv->GetListOfPrimitives()->Clear();
-      printf("\n%s\n", drawingOptions.c_str());
+
       canv->GetListOfPrimitives()->Add(object, drawingOptions.c_str());
 
       canv->ForceUpdate(); // force update async - do not wait for confirmation
@@ -444,8 +442,7 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
       std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
       res.append(str.c_str());
    }
-   printf("\n%s\n", item_path.c_str());
-   printf("\n%s\n", res.c_str());
+
    return res;
 }
 
