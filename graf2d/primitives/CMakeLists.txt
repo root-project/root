@@ -12,11 +12,13 @@
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGraphicsPrimitives
   HEADERS
     ROOT/RBox.hxx
+    ROOT/RLegend.hxx
     ROOT/RLine.hxx
     ROOT/RMarker.hxx
     ROOT/RText.hxx
   SOURCES
     v7/src/RBox.cxx
+    v7/src/RLegend.cxx
     v7/src/RLine.cxx
     v7/src/RMarker.cxx
     v7/src/RText.cxx
