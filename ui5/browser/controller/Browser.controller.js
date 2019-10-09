@@ -461,6 +461,15 @@ sap.ui.define(['sap/ui/core/Component',
             var arr = JSON.parse(msg);
             this.createCanvas(arr[0], arr[1], arr[2]);
             break;
+         case "SLCTCANV": // Selected the back selected canvas
+           let oTabContainer = this.byId("myTabContainer");
+           let oTabContainerItems = oTabContainer.getItems();
+           for(let i=0; i<oTabContainerItems.length; i++) {
+             if (oTabContainerItems[i].getAdditionalText() === msg) {
+               oTabContainer.setSelectedItem(oTabContainerItems[i]);
+             }
+           }
+           break;
          case "FROOT": // Root file
            var selecedTabID = this.getSelectedtabFromtabContainer("myTabContainer"); // The ID of the selected tab in the TabContainer
 
