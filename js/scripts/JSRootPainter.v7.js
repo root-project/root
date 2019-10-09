@@ -4316,6 +4316,7 @@
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RLine", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawLine", opt: "", direct: true, csstype: "line" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RBox", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawBox", opt: "", direct: true, csstype: "box" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RMarker", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawMarker", opt: "", direct: true, csstype: "marker" });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RLegend", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawLegend", opt: "", direct: true, csstype: "legend" });
 
    JSROOT.v7.TAxisPainter = TAxisPainter;
    JSROOT.v7.TFramePainter = TFramePainter;
