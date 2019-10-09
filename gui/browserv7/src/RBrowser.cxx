@@ -452,7 +452,9 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
 
       canv->ForceUpdate(); // force update async - do not wait for confirmation
 
-      return "";
+      std::string res = "SLCTCANV:";
+      res.append(canv->GetName());
+      return res;
    }
 
    auto rcanv = GetActiveRCanvas();
@@ -475,7 +477,9 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
 
       rcanv->Update(true);
 
-      return "";
+      std::string res = "SLCTCANV:";
+      res.append(rcanv->GetTitle());
+      return res;
    }
 
 
