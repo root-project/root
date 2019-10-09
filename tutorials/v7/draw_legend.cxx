@@ -1,15 +1,14 @@
 /// \file
 /// \ingroup tutorial_v7
 ///
-/// This macro generates a small V7 TH1D, fills it and draw it in a V7 canvas.
-/// The canvas is display in the web browser and the corresponding png picture
-/// is generated.
+/// This macro generates two TH1D objects and build RLegend
+/// In addition use of auto colors are shown
 ///
 /// \macro_code
 ///
-/// \date 2015-03-22
+/// \date 2019-10-09
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
-/// \author Axel Naumann <axel@cern.ch>
+/// \author Sergey Linev <s.linev@gsi.de>
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
@@ -28,7 +27,7 @@ using namespace ROOT::Experimental;
 
 void draw_legend()
 {
-   // Create the histogram.
+   // Create the histograms.
    RAxisConfig xaxis(25, 0., 10.);
    auto pHist = std::make_shared<RH1D>(xaxis);
    auto pHist2 = std::make_shared<RH1D>(xaxis);
@@ -40,11 +39,16 @@ void draw_legend()
 
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("Canvas Title");
-   auto draw1 = canvas->Draw(pHist);
-   draw1->AttrLine().SetColor(RColor::kRed).SetWidth(2);
 
+   // draw histogram
+   auto draw1 = canvas->Draw(pHist);
+   draw1->AttrLine().SetWidth(2).Color().SetAuto();
+
+   // draw histogram
    auto draw2 = canvas->Draw(pHist2);
-   draw2->AttrLine().SetColor(RColor::kBlue).SetWidth(4);
+   draw2->AttrLine().SetWidth(4).Color().SetAuto();
+
+   canvas->AssignAutoColors();
    
    auto legend = canvas->Draw<RLegend>(RPadPos(0.5_normal, 0.6_normal), RPadPos(0.9_normal,0.9_normal), "Legend title");
    legend->AttrBox().Fill().SetStyle(5).SetColor(RColor::kWhite);
