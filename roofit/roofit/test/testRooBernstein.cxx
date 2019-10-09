@@ -7,11 +7,16 @@
 #include "TCanvas.h"
 #include "RooPlot.h"
 
-using namespace RooFit;
+#include "gtest/gtest.h"
 
-void runFit(unsigned int N, double a0, double a1, double a2, double a3){
+TEST(RooBernstein, RangedFit)
+{
+
+  void runFit(unsigned int N, double a0, double a1, double a2, double a3)
+  {
     RooRealVar x("x", "x", 0., 100.);
  
+    // Define coefficients for a bernstein polynomial of order 3
     RooRealVar c0("c0", "c1 coeff", a0, 0., 10.);
     RooRealVar c1("c1", "c1 coeff", a1, 0., 10.);
     RooRealVar c2("c2", "c2 coeff", a2, 0., 10.);
@@ -20,29 +25,31 @@ void runFit(unsigned int N, double a0, double a1, double a2, double a3){
     // Build bernstein p.d.f in terms of coefficients
     RooBernstein bern("bern", "bernstein PDF", x, RooArgList(c0, c1, c2, c3));
 
-    // set ranges for the variable
+    // Set ranges for the variable
     x.setRange("range1", 0., 30.);
     x.setRange("range2", 70., 100.);
     x.setRange("FULL", 0., 100.);
 
-    RooPlot *xframe = x.frame(Title("bernstein p.d.f"));
-    bern.plotOn(xframe, LineColor(kRed));
-    RooRealVar Ne("Ne", "number of events", 1000, -1e30, 1e30);
-
-    //set normalization range
+    // Set normalization range
     bern.selectNormalizationRange("FULL",kTRUE);
+   
+    // Create an extended pdf to fit simultaneously in the two ranges 
+    RooRealVar Ne("Ne", "number of events", 1000, -1e30, 1e30);
+    RooExtendPdf extbern("extbern", "bernstein extended pdf", bern, Ne, "FULL");
 
-    RooPlot *xframe2 = x.frame(Title("fitted bernstein p.d.f. with data"));
 
+    // Create a dataset from the bernstein pdf
     RooDataSet *data = bern.generate(x, N);
     data->plotOn(xframe2);
-    RooExtendPdf extbern("extbern", "bernstein extended pdf", bern, Ne, "FULL");
  
-    // -----------------------------
     // Fit pdf to data
     c0.setConstant(kTRUE);
     auto result = extbern.fitTo(*data,RooFit::Range("range1,range2"));
 
+    // Plot the distributions
+    RooPlot *xframe1 = x.frame(Title("bernstein p.d.f"));
+    RooPlot *xframe2 = x.frame(Title("fitted bernstein p.d.f. with data"));
+    bern.plotOn(xframe1, LineColor(kRed));
     extbern.plotOn(xframe2,LineColor(kBlue));
 
     // Draw all frames on a canvas
@@ -71,9 +78,7 @@ void runFit(unsigned int N, double a0, double a1, double a2, double a3){
     c2.Print();
     c3.Print();   
     Ne.Print();
-};
-
-void testRooBernstein(){
+  };
   runFit(10000, 0.3, 0.03, 0.2, 0.5);
-};
+}
 
