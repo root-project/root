@@ -98,6 +98,12 @@ void ROOT::Experimental::RAttrBase::ClearValue(const std::string &name)
        const_cast<RAttrMap*>(access.attr)->Clear(access.fullname);
 }
 
+void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, bool value)
+{
+   if (auto access = EnsureAttr(name))
+      access.attr->AddBool(access.fullname, value);
+}
+
 void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, int value)
 {
    if (auto access = EnsureAttr(name))

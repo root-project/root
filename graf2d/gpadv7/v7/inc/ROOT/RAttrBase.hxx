@@ -143,6 +143,7 @@ protected:
       return *this;
    }
 
+   void SetValue(const std::string &name, bool value);
    void SetValue(const std::string &name, double value);
    void SetValue(const std::string &name, int value);
    void SetValue(const std::string &name, const std::string &value);
