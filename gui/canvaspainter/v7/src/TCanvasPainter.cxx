@@ -157,6 +157,8 @@ public:
 
    virtual int NumDisplays() const override;
 
+   virtual std::string GetWindowAddr() const override;
+
    virtual void Run(double tm = 0.) override;
 
    virtual bool AddPanel(std::shared_ptr<RWebWindow>) override;
@@ -577,6 +579,15 @@ int ROOT::Experimental::TCanvasPainter::NumDisplays() const
    return fWindow->NumConnections();
 }
 
+//////////////////////////////////////////////////////////////////////////
+/// Returns web window name
+
+std::string ROOT::Experimental::TCanvasPainter::GetWindowAddr() const
+{
+   if (!fWindow) return "";
+
+   return fWindow->GetAddr();
+}
 
 //////////////////////////////////////////////////////////////////////////
 /// Add window as panel inside canvas window
@@ -596,7 +607,7 @@ bool ROOT::Experimental::TCanvasPainter::AddPanel(std::shared_ptr<RWebWindow> wi
       return false;
    }
 
-   std::string addr = fWindow->RelativeAddr(win);
+   std::string addr = fWindow->GetRelativeAddr(win);
 
    if (addr.length() == 0) {
       R__ERROR_HERE("CanvasPainter") << "Cannot attach panel to canvas";

@@ -17,7 +17,7 @@
 #define ROOT7_RBrowser
 
 #include <ROOT/RWebWindow.hxx>
-
+#include <ROOT/RCanvas.hxx>
 #include <ROOT/RBrowserItem.hxx>
 
 #include <vector>
@@ -26,6 +26,7 @@
 
 class TString;
 class TCanvas;
+class TFile;
 
 namespace ROOT {
 namespace Experimental {
@@ -66,20 +67,28 @@ class RBrowser {
 protected:
 
    std::string fTitle;  ///<! title
-   unsigned fConnId{0}; ///<! connection id
+   unsigned fConnId{0}; ///<! default connection id
 
    std::string fDescPath;                ///<! last scanned directory
    std::vector<RRootFileItem> fDesc;     ///<! plain list of current directory
    std::vector<RRootFileItem *> fSorted; ///<! current sorted list (no ownership)
+
+   bool fUseRCanvas{false};             ///<!  which canvas should be used
    std::vector<std::unique_ptr<TCanvas>> fCanvases;  ///<! canvases created by browser, should be closed at the end
    std::string fActiveCanvas;            ///<! name of active for RBrowser canvas, not a gPad!
+   std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> fRCanvases; ///<!  ROOT7 canvases
 
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to browser
 
    TCanvas *AddCanvas();
    TCanvas *GetActiveCanvas() const;
+   TFile *OpenFile(const std::string &fname);
    std::string GetCanvasUrl(TCanvas *canv);
    void CloseCanvas(const std::string &name);
+
+   std::shared_ptr<RCanvas> AddRCanvas();
+   std::shared_ptr<RCanvas> GetActiveRCanvas() const;
+   std::string GetRCanvasUrl(std::shared_ptr<RCanvas> &canv);
 
    void AddFolder(const char *name);
    void AddFile(const char *name);
@@ -96,8 +105,11 @@ protected:
    void WebWindowCallback(unsigned connid, const std::string &arg);
 
 public:
-   RBrowser();
+   RBrowser(bool use_rcanvas = true);
    virtual ~RBrowser();
+
+   bool GetUseRCanvas() const { return fUseRCanvas; }
+   void SetUseRCanvas(bool on = true) { fUseRCanvas = on; }
 
    /// show Browser in specified place
    void Show(const RWebDisplayArgs &args = "", bool always_start_new_browser = false);

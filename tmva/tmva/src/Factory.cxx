@@ -123,13 +123,14 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
    fVerboseLevel         ( kINFO ),
    fCorrelations         ( kFALSE ),
    fROC                  ( kTRUE ),
-   fSilentFile           ( kFALSE ),
+   fSilentFile           ( theTargetFile == nullptr ),
    fJobName              ( jobName ),
    fAnalysisType         ( Types::kClassification ),
    fModelPersistence     (kTRUE)
 {
+   fName = "Factory";
    fgTargetFile = theTargetFile;
-   fLogger->SetSource(GetName());
+   fLogger->SetSource(fName.Data());
 
    // render silent
    if (gTools().CheckForSilentOption( GetOptions() )) Log().InhibitOutput(); // make sure is silent if wanted to
@@ -211,8 +212,9 @@ TMVA::Factory::Factory( TString jobName, TString theOption )
    fAnalysisType         ( Types::kClassification ),
    fModelPersistence     (kTRUE)
 {
-   fgTargetFile = 0;
-   fLogger->SetSource(GetName());
+   fName = "Factory";
+   fgTargetFile = nullptr;
+   fLogger->SetSource(fName.Data());
 
 
    // render silent
@@ -421,7 +423,7 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
      if (fModelPersistence)
         methBoost->SetWeightFileDir(fFileDir);
      methBoost->SetModelPersistence(fModelPersistence);
-     methBoost->SetBoostedMethodName(theMethodName);       // DSMTEST divided into two lines
+     methBoost->SetBoostedMethodName(theMethodName);                            // DSMTEST divided into two lines
      methBoost->fDataSetManager = loader->GetDataSetInfo().GetDataSetManager(); // DSMTEST
      methBoost->SetFile(fgTargetFile);
      methBoost->SetSilentFile(IsSilentFile());
@@ -494,18 +496,18 @@ TMVA::MethodBase* TMVA::Factory::BookMethod(TMVA::DataLoader *loader, Types::EMV
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Adds an already constructed method to be managed by this factory.
-/// 
+///
 /// \note Private.
 /// \note Know what you are doing when using this method. The method that you
-/// are loading could be trained already. 
-/// 
+/// are loading could be trained already.
+///
 
 TMVA::MethodBase* TMVA::Factory::BookMethodWeightfile(DataLoader *loader, TMVA::Types::EMVA methodType, const TString &weightfile)
 {
    TString datasetname = loader->GetName();
    std::string methodTypeName = std::string(Types::Instance().GetMethodName(methodType).Data());
    DataSetInfo &dsi = loader->GetDataSetInfo();
-   
+
    IMethod *im = ClassifierFactory::Instance().Create(methodTypeName, dsi, weightfile );
    MethodBase *method = (dynamic_cast<MethodBase*>(im));
 
@@ -887,14 +889,14 @@ Double_t TMVA::Factory::GetROCIntegral(TString datasetname, TString theMethodNam
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Argument iClass specifies the class to generate the ROC curve in a 
+/// Argument iClass specifies the class to generate the ROC curve in a
 /// multiclass setting. It is ignored for binary classification.
-/// 
+///
 /// Returns a ROC graph for a given method, or nullptr on error.
 ///
-/// Note: Evaluation of the given method must have been run prior to ROC 
+/// Note: Evaluation of the given method must have been run prior to ROC
 /// generation through Factory::EvaluateAllMetods.
-/// 
+///
 /// NOTE: The ROC curve is 1 vs. all where the given class is considered signal
 /// and the others considered background. This is ok in binary classification
 /// but in in multi class classification, the ROC surface is an N dimensional
@@ -906,14 +908,14 @@ TGraph* TMVA::Factory::GetROCCurve(DataLoader *loader, TString theMethodName, Bo
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Argument iClass specifies the class to generate the ROC curve in a 
+/// Argument iClass specifies the class to generate the ROC curve in a
 /// multiclass setting. It is ignored for binary classification.
-/// 
+///
 /// Returns a ROC graph for a given method, or nullptr on error.
 ///
-/// Note: Evaluation of the given method must have been run prior to ROC 
+/// Note: Evaluation of the given method must have been run prior to ROC
 /// generation through Factory::EvaluateAllMetods.
-/// 
+///
 /// NOTE: The ROC curve is 1 vs. all where the given class is considered signal
 /// and the others considered background. This is ok in binary classification
 /// but in in multi class classification, the ROC surface is an N dimensional
@@ -925,7 +927,7 @@ TGraph* TMVA::Factory::GetROCCurve(TString datasetname, TString theMethodName, B
       Log() << kERROR << Form("DataSet = %s not found in methods map.", datasetname.Data()) << Endl;
       return nullptr;
    }
-   
+
    if ( ! this->HasMethod(datasetname, theMethodName) ) {
       Log() << kERROR << Form("Method = %s not found with Dataset = %s ", theMethodName.Data(), datasetname.Data()) << Endl;
       return nullptr;
@@ -960,10 +962,10 @@ TGraph* TMVA::Factory::GetROCCurve(TString datasetname, TString theMethodName, B
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate a collection of graphs, for all methods for a given class. Suitable
 /// for comparing method performance.
-/// 
-/// Argument iClass specifies the class to generate the ROC curve in a 
+///
+/// Argument iClass specifies the class to generate the ROC curve in a
 /// multiclass setting. It is ignored for binary classification.
-/// 
+///
 /// NOTE: The ROC curve is 1 vs. all where the given class is considered signal
 /// and the others considered background. This is ok in binary classification
 /// but in in multi class classification, the ROC surface is an N dimensional
@@ -977,10 +979,10 @@ TMultiGraph* TMVA::Factory::GetROCCurveAsMultiGraph(DataLoader *loader, UInt_t i
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate a collection of graphs, for all methods for a given class. Suitable
 /// for comparing method performance.
-/// 
-/// Argument iClass specifies the class to generate the ROC curve in a 
+///
+/// Argument iClass specifies the class to generate the ROC curve in a
 /// multiclass setting. It is ignored for binary classification.
-/// 
+///
 /// NOTE: The ROC curve is 1 vs. all where the given class is considered signal
 /// and the others considered background. This is ok in binary classification
 /// but in in multi class classification, the ROC surface is an N dimensional
@@ -999,14 +1001,14 @@ TMultiGraph* TMVA::Factory::GetROCCurveAsMultiGraph(TString datasetname, UInt_t 
 
       TString methodName = method->GetMethodName();
       UInt_t nClasses = method->DataInfo().GetNClasses();
-      
+
       if ( this->fAnalysisType == Types::kMulticlass && iClass >= nClasses ) {
          Log() << kERROR << Form("Given class number (iClass = %i) does not exist. There are %i classes in dataset.", iClass, nClasses) << Endl;
          continue;
       }
 
       TString className = method->DataInfo().GetClassInfo(iClass)->GetName();
-      
+
       TGraph *graph = this->GetROCCurve(datasetname, methodName, false, iClass);
       graph->SetTitle(methodName);
 
@@ -1026,12 +1028,12 @@ TMultiGraph* TMVA::Factory::GetROCCurveAsMultiGraph(TString datasetname, UInt_t 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draws ROC curves for all methods booked with the factory for a given class 
+/// Draws ROC curves for all methods booked with the factory for a given class
 /// onto a canvas.
-/// 
-/// Argument iClass specifies the class to generate the ROC curve in a 
+///
+/// Argument iClass specifies the class to generate the ROC curve in a
 /// multiclass setting. It is ignored for binary classification.
-/// 
+///
 /// NOTE: The ROC curve is 1 vs. all where the given class is considered signal
 /// and the others considered background. This is ok in binary classification
 /// but in in multi class classification, the ROC surface is an N dimensional
@@ -1044,10 +1046,10 @@ TCanvas * TMVA::Factory::GetROCCurve(TMVA::DataLoader *loader, UInt_t iClass)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draws ROC curves for all methods booked with the factory for a given class.
-/// 
-/// Argument iClass specifies the class to generate the ROC curve in a 
+///
+/// Argument iClass specifies the class to generate the ROC curve in a
 /// multiclass setting. It is ignored for binary classification.
-/// 
+///
 /// NOTE: The ROC curve is 1 vs. all where the given class is considered signal
 /// and the others considered background. This is ok in binary classification
 /// but in in multi class classification, the ROC surface is an N dimensional
@@ -1182,42 +1184,45 @@ void TMVA::Factory::TrainAllMethods()
      // iterate through all booked methods
      for (UInt_t i=0; i<methods->size(); i++) {
 
-       MethodBase* m = dynamic_cast<MethodBase*>((*methods)[i]);
-       if(m==0) continue;
+        MethodBase *m = dynamic_cast<MethodBase *>((*methods)[i]);
+        if (m == nullptr)
+           continue;
 
-       TMVA::Types::EMVA methodType = m->GetMethodType();
-       TString           weightfile = m->GetWeightFileName();
+        TMVA::Types::EMVA methodType = m->GetMethodType();
+        TString weightfile = m->GetWeightFileName();
 
-       // decide if .txt or .xml file should be read:
-       if (READXML) weightfile.ReplaceAll(".txt",".xml");
+        // decide if .txt or .xml file should be read:
+        if (READXML)
+           weightfile.ReplaceAll(".txt", ".xml");
 
-       DataSetInfo& dataSetInfo = m->DataInfo();
-       TString      testvarName = m->GetTestvarName();
-       delete m; //itrMethod[i];
+        DataSetInfo &dataSetInfo = m->DataInfo();
+        TString testvarName = m->GetTestvarName();
+        delete m; // itrMethod[i];
 
-       // recreate
-       m = dynamic_cast<MethodBase *>(ClassifierFactory::Instance().Create(
-          Types::Instance().GetMethodName(methodType).Data(), dataSetInfo, weightfile));
-       if( m->GetMethodType() == Types::kCategory ){
-      MethodCategory *methCat = (dynamic_cast<MethodCategory*>(m));
-      if( !methCat ) Log() << kFATAL << "Method with type kCategory cannot be casted to MethodCategory. /Factory" << Endl;
-      else methCat->fDataSetManager = m->DataInfo().GetDataSetManager();
-       }
-       //ToDo, Do we need to fill the DataSetManager of MethodBoost here too?
+        // recreate
+        m = dynamic_cast<MethodBase *>(ClassifierFactory::Instance().Create(
+           Types::Instance().GetMethodName(methodType).Data(), dataSetInfo, weightfile));
+        if (m->GetMethodType() == Types::kCategory) {
+           MethodCategory *methCat = (dynamic_cast<MethodCategory *>(m));
+           if (!methCat)
+              Log() << kFATAL << "Method with type kCategory cannot be casted to MethodCategory. /Factory" << Endl;
+           else
+              methCat->fDataSetManager = m->DataInfo().GetDataSetManager();
+        }
+        // ToDo, Do we need to fill the DataSetManager of MethodBoost here too?
 
+        TString fFileDir = m->DataInfo().GetName();
+        fFileDir += "/" + gConfig().GetIONames().fWeightFileDir;
+        m->SetWeightFileDir(fFileDir);
+        m->SetModelPersistence(fModelPersistence);
+        m->SetSilentFile(IsSilentFile());
+        m->SetAnalysisType(fAnalysisType);
+        m->SetupMethod();
+        m->ReadStateFromFile();
+        m->SetTestvarName(testvarName);
 
-            TString fFileDir= m->DataInfo().GetName();
-            fFileDir+="/"+gConfig().GetIONames().fWeightFileDir;
-            m->SetWeightFileDir(fFileDir);
-            m->SetModelPersistence(fModelPersistence);
-            m->SetSilentFile(IsSilentFile());
-       m->SetAnalysisType(fAnalysisType);
-       m->SetupMethod();
-       m->ReadStateFromFile();
-       m->SetTestvarName(testvarName);
-
-       // replace trained method by newly created one (from weight file) in methods vector
-       (*methods)[i] = m;
+        // replace trained method by newly created one (from weight file) in methods vector
+        (*methods)[i] = m;
      }
        }
    }
@@ -1245,15 +1250,18 @@ void TMVA::Factory::TestAllMethods()
       MVector::iterator itrMethod;
 
       // iterate over methods and test
-      for( itrMethod = methods->begin(); itrMethod != methods->end(); ++itrMethod ) {
-     Event::SetIsTraining(kFALSE);
-     MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
-     if(mva==0) continue;
-     Types::EAnalysisType analysisType = mva->GetAnalysisType();
-     Log() << kHEADER << "Test method: " << mva->GetMethodName() << " for "
-      << (analysisType == Types::kRegression ? "Regression" :
-          (analysisType == Types::kMulticlass ? "Multiclass classification" : "Classification")) << " performance" << Endl << Endl;
-     mva->AddOutput( Types::kTesting, analysisType );
+      for (itrMethod = methods->begin(); itrMethod != methods->end(); ++itrMethod) {
+         Event::SetIsTraining(kFALSE);
+         MethodBase *mva = dynamic_cast<MethodBase *>(*itrMethod);
+         if (mva == 0)
+            continue;
+         Types::EAnalysisType analysisType = mva->GetAnalysisType();
+         Log() << kHEADER << "Test method: " << mva->GetMethodName() << " for "
+               << (analysisType == Types::kRegression
+                      ? "Regression"
+                      : (analysisType == Types::kMulticlass ? "Multiclass classification" : "Classification"))
+               << " performance" << Endl << Endl;
+         mva->AddOutput(Types::kTesting, analysisType);
       }
    }
 }
@@ -1444,11 +1452,10 @@ void TMVA::Factory::EvaluateAllMethods( void )
 
        mname[0].push_back( theMethod->GetMethodName() );
        nmeth_used[0]++;
-       if(!IsSilentFile())
-       {
-      Log() << kDEBUG << "\tWrite evaluation histograms to file" << Endl;
-      theMethod->WriteEvaluationHistosToFile(Types::kTesting);
-      theMethod->WriteEvaluationHistosToFile(Types::kTraining);
+       if (!IsSilentFile()) {
+          Log() << kDEBUG << "\tWrite evaluation histograms to file" << Endl;
+          theMethod->WriteEvaluationHistosToFile(Types::kTesting);
+          theMethod->WriteEvaluationHistosToFile(Types::kTraining);
        }
      } else if (theMethod->DoMulticlass()) {
         // ====================================================================
@@ -2527,4 +2534,3 @@ TH1F* TMVA::Factory::GetImportance(const int nbits,std::vector<Double_t> importa
 //   vih1->Draw("B");
   return vih1;
 }
-

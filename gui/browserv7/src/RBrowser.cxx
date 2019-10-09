@@ -17,7 +17,8 @@
 
 #include <ROOT/RBrowserItem.hxx>
 #include <ROOT/RLogger.hxx>
-#include "ROOT/RMakeUnique.hxx"
+#include <ROOT/RMakeUnique.hxx>
+#include <ROOT/RObjectDrawable.hxx>
 
 #include "TKey.h"
 #include "TString.h"
@@ -25,6 +26,8 @@
 #include "TROOT.h"
 #include "TWebCanvas.h"
 #include "TCanvas.h"
+#include "TFile.h"
+#include "TH1.h"
 #include "TBufferJSON.h"
 
 #include <sstream>
@@ -35,6 +38,8 @@
 #include <thread>
 #include <fstream>
 
+using namespace std::string_literals;
+
 /** \class ROOT::Experimental::RBrowser
 \ingroup webdisplay
 
@@ -44,8 +49,10 @@ web-based ROOT Browser prototype.
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-ROOT::Experimental::RBrowser::RBrowser()
+ROOT::Experimental::RBrowser::RBrowser(bool use_rcanvas)
 {
+   SetUseRCanvas(use_rcanvas);
+
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
 
@@ -55,9 +62,17 @@ ROOT::Experimental::RBrowser::RBrowser()
    fWebWindow->SetGeometry(1200, 700); // configure predefined window geometry
    fWebWindow->SetConnLimit(1); // the only connection is allowed
    fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
+
    Show();
 
-   AddCanvas();  // add first canvas by default
+   // add first canvas by default
+
+   if (GetUseRCanvas())
+      AddRCanvas();
+   else
+      AddCanvas();
+
+   // AddRCanvas();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -68,6 +83,15 @@ ROOT::Experimental::RBrowser::~RBrowser()
    fCanvases.clear();
 }
 
+TFile *ROOT::Experimental::RBrowser::OpenFile(const std::string &fname)
+{
+   auto file = dynamic_cast<TFile *>(gROOT->GetListOfFiles()->FindObject(fname.c_str()));
+
+   if (!file)
+      file = TFile::Open(fname.c_str());
+
+   return file;
+}
 
 /////////////////////////////////////////////////////////////////////
 /// Collect information for provided root file
@@ -78,8 +102,7 @@ void ROOT::Experimental::RBrowser::Browse(const std::string &path)
    fDesc.clear();
    fSorted.clear();
    std::string keyname, classname, filename = path.substr(1, path.size()-2);
-   TDirectory *rfile = (TDirectory *)gROOT->ProcessLine(TString::Format("TFile::Open(\"%s\", \"READ\")",
-                                                       filename.c_str()));
+   auto rfile = OpenFile(filename);
    if (rfile) {
       // replace actual user data (TObjString) by the TDirectory...
       int nkeys = rfile->GetListOfKeys()->GetEntries();
@@ -331,6 +354,10 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
    if (!request)
       return res;
 
+   if (request->sort == "DBLCLK") {
+
+   }
+
    // rebuild list only when selected directory changed
    if (!IsBuild() || (request->path != fDescPath)) {
       fDescPath = request->path;
@@ -358,92 +385,104 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
 
    res = "BREPL:";
    res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kSkipTypeInfo + TBufferJSON::kNoSpaces).Data());
+
    return res;
 }
 
 /////////////////////////////////////////////////////////////////////////////////
 /// Process dbl click on browser item
 
-std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &item_path, const std::string drawingOptions)
-{
-   std::string res;
-   if (item_path.find(".root") != std::string::npos) {
+std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &item_path, const std::string drawingOptions) {
+   if (item_path.find(".root") == std::string::npos) {
+      std::string res = "FREAD:";
+      std::ifstream t(item_path);
+      res.append(std::string(std::istreambuf_iterator<char>(t), std::istreambuf_iterator<char>()));
+      return res;
+   }
 
+   std::string rootFilePath = "", rootFileName = "";
 
-      auto canv = GetActiveCanvas();
-      if (!canv) {
-         printf("No active web canvas to process dbl click\n");
-         return res;
-      }
+   // Split of the path by /
+   std::vector<std::string> split;
+   std::string buffer;
+   std::istringstream path(item_path);
+   while (std::getline(path, buffer, '/')) {
+      split.push_back(buffer);
+   }
 
-      std::string rootFilePath = "", rootFileName = "";
-
-      // Split of the path by /
-      std::vector<std::string> split;
-      std::string buffer;
-      std::istringstream path(item_path);
-      while (std::getline(path, buffer, '/')) {
-         split.push_back(buffer);
-      }
-
-      // Iterate over the split
-      // The goal is to have two parts
-      // The first one is the relative path of the root file to open it (rootFilePath)
-      // And the second if the name of the namecycle (rootFileName)
-      for (std::vector<int>::size_type i = 0; i != split.size(); i++) {
-         // If the current split contain .root
-         if (split[i].find(".root") != std::string::npos) {
-            rootFilePath += split[i]; // Add the file to the path
-            if (split[i + 1].find("ntuple") != std::string::npos) {
-               // TODO
-               break;
-            } else {
-               rootFileName += split[i + 1]; // the add the name of the file then stop
-               break;
-            }
+   // Iterate over the split
+   // The goal is to have two parts
+   // The first one is the relative path of the root file to open it (rootFilePath)
+   // And the second if the name of the namecycle (rootFileName)
+   for (std::vector<int>::size_type i = 0; i != split.size(); i++) {
+      // If the current split contain .root
+      if (split[i].find(".root") != std::string::npos) {
+         rootFilePath += split[i]; // Add the file to the path
+         if (split[i + 1].find("ntuple") != std::string::npos) {
+            // TODO
+            break;
          } else {
-            rootFilePath += split[i] + "/"; // Add the file to the path
+            rootFileName += split[i + 1]; // the add the name of the file then stop
+            break;
          }
+      } else {
+         rootFilePath += split[i] + "/"; // Add the file to the path
       }
+   }
 
-      TDirectory *file = (TDirectory *)gROOT->ProcessLine(
-         TString::Format("TFile::Open(\"%s\", \"READ\")", rootFilePath.c_str())); // Opening the wanted file
+   auto file = OpenFile(rootFilePath);
+   if (!file) {
+      printf("No ROOT file found\n");
+      return "";
+   }
 
-      TObject *object = nullptr;
-      file->GetObject(rootFileName.c_str(), object); // Getting the data of the graphic into the TObject
+   TObject *object = nullptr;
+   file->GetObject(rootFileName.c_str(), object); // Getting the data of the graphic into the TObject
 
-      if (!object) {
-         printf("No ROOT object read\n");
-         return res;
-      }
+   if (!object) {
+      printf("No ROOT object read\n");
+      return "";
+   }
 
+   auto canv = GetActiveCanvas();
+   if (canv) {
       canv->GetListOfPrimitives()->Clear();
 
       canv->GetListOfPrimitives()->Add(object, drawingOptions.c_str());
 
       canv->ForceUpdate(); // force update async - do not wait for confirmation
 
-      // this is sync method, therefore should not be used that way!
-      // canv->Update();
-
-      /*
-
-      TString jsonobject = TBufferJSON::ToJSON(object);
-      // Actual message that need to be like { path: pathOfTheFile, data: { Things returned by the GetObject } }
-      res = "FROOT:";
-      std::string json = "{\"path\":\"" + item_path + "\", \"data\":";
-      res.append(json);
-      res.append(jsonobject.Data());
-      res.append("}");
-      */
-   } else {
-      res = "FREAD:";
-      std::ifstream t(item_path);
-      std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
-      res.append(str.c_str());
+      return "";
    }
 
-   return res;
+   auto rcanv = GetActiveRCanvas();
+   if (rcanv) {
+      if (rcanv->NumPrimitives() > 0) {
+         rcanv->Wipe();
+         rcanv->Modified();
+         rcanv->Update(true);
+      }
+
+      // FIXME: how to proced with ownership here
+      TObject *clone = object->Clone();
+      TH1 *h1 = dynamic_cast<TH1 *>(clone);
+      if (h1) h1->SetDirectory(nullptr);
+
+      std::shared_ptr<TObject> ptr;
+      ptr.reset(clone);
+      rcanv->Draw<RObjectDrawable>(ptr, drawingOptions.c_str());
+      rcanv->Modified();
+
+      rcanv->Update(true);
+
+      return "";
+   }
+
+
+   printf("No active canvas to process dbl click\n");
+
+
+   return "";
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -489,6 +528,7 @@ TCanvas *ROOT::Experimental::RBrowser::AddCanvas()
    canv->ResetBit(TCanvas::kShowToolBar);
    canv->SetCanvas(canv.get());
    canv->SetBatch(kTRUE); // mark canvas as batch
+   canv->SetEditable(kTRUE); // ensure fPrimitives are created
    fActiveCanvas = canv->GetName();
 
    // create implementation
@@ -506,14 +546,39 @@ TCanvas *ROOT::Experimental::RBrowser::AddCanvas()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+/// Creates RCanvas for the output
+
+std::shared_ptr<ROOT::Experimental::RCanvas> ROOT::Experimental::RBrowser::AddRCanvas()
+{
+   std::string name = "rcanv"s + std::to_string(fRCanvases.size()+1);
+
+   auto canv = ROOT::Experimental::RCanvas::Create(name);
+
+   canv->Show("embed");
+
+   fActiveCanvas = name;
+
+   fRCanvases.emplace_back(canv);
+
+   return canv;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
 /// Returns relative URL for canvas - required for client to establish connection
 
 std::string ROOT::Experimental::RBrowser::GetCanvasUrl(TCanvas *canv)
 {
    TWebCanvas *web = dynamic_cast<TWebCanvas *>(canv->GetCanvasImp());
-   return fWebWindow->RelativeAddr(web->GetWebWindow());
+   return fWebWindow->GetRelativeAddr(web->GetWebWindow());
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Returns relative URL for canvas - required for client to establish connection
+
+std::string ROOT::Experimental::RBrowser::GetRCanvasUrl(std::shared_ptr<RCanvas> &canv)
+{
+   return "../"s + canv->GetWindowAddr() + "/"s;
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Returns active web canvas (if any)
@@ -527,6 +592,21 @@ TCanvas *ROOT::Experimental::RBrowser::GetActiveCanvas() const
 
    return nullptr;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Returns active RCanvas (if any)
+
+std::shared_ptr<ROOT::Experimental::RCanvas> ROOT::Experimental::RBrowser::GetActiveRCanvas() const
+{
+   auto iter = std::find_if(fRCanvases.begin(), fRCanvases.end(), [this](const std::shared_ptr<RCanvas> &canv) { return fActiveCanvas == canv->GetTitle(); });
+
+   if (iter != fRCanvases.end())
+      return *iter;
+
+   return nullptr;
+
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Close and delete specified canvas
@@ -552,7 +632,14 @@ void ROOT::Experimental::RBrowser::SendInitMsg(unsigned connid)
    for (auto &canv : fCanvases) {
       auto url = GetCanvasUrl(canv.get());
       std::string name = canv->GetName();
-      std::vector<std::string> arr = {url, name};
+      std::vector<std::string> arr = {"root6", url, name};
+      reply.emplace_back(arr);
+   }
+
+   for (auto &canv : fRCanvases) {
+      auto url = GetRCanvasUrl(canv);
+      std::string name = canv->GetTitle();
+      std::vector<std::string> arr = {"root7", url, name};
       reply.emplace_back(arr);
    }
 
@@ -583,12 +670,23 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       if (json.length() > 0) fWebWindow->Send(connid, json);
    } else if (arg.compare("NEWCANVAS") == 0) {
 
-      // create canvas
-      TCanvas *canv = AddCanvas();
+      std::vector<std::string> reply;
 
-      auto url = GetCanvasUrl(canv);
+      if (GetUseRCanvas()) {
+         auto canv = AddRCanvas();
 
-      std::vector<std::string> reply = {url, std::string(canv->GetName())};
+         auto url = GetRCanvasUrl(canv);
+
+         reply = {"root7"s, url, canv->GetTitle()};
+
+      } else {
+         // create canvas
+         auto canv = AddCanvas();
+
+         auto url = GetCanvasUrl(canv);
+
+         reply = {"root6"s, url, std::string(canv->GetName())};
+      }
 
       std::string res = "CANVS:";
       res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());

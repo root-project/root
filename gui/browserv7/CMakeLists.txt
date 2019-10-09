@@ -16,7 +16,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
     src/RBrowser.cxx
   DEPENDENCIES
     ROOTWebDisplay
+    RIO
     Gpad
     WebGui6
-    
+    ROOTGpadv7
 )

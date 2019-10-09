@@ -18,17 +18,14 @@ void makeImages(int n = 10000, int npx = 8, int npy = 8) {
    TTree bkg("bkg","bkg");
    TFile f("imagesData.root","RECREATE");
   
-   for(auto i=0;i<np;i++)
-   {
-        bkg.Branch(Form("var%d",i),&x1[i]);
-        sgn.Branch(Form("var%d",i),&x2[i]);
-   }
+   bkg.Branch("ximage",x1.data(),Form("ximage[%d]/F",np));
+   sgn.Branch("ximage",x2.data(),Form("ximage[%d]/F",np));
    
    sgn.SetDirectory(&f);
    bkg.SetDirectory(&f);
    
    f1->SetParameters(1,5,3,5,3);
-   f2->SetParameters(1,5,3.3,5,2.7 );
+   f2->SetParameters(1,5,3.9,5,2.1 );
    gRandom->SetSeed(0); 
    for (int i = 0; i < n; ++i) {
       h1->Reset();
@@ -39,8 +36,8 @@ void makeImages(int n = 10000, int npx = 8, int npy = 8) {
       f2->SetParameter(1,gRandom->Uniform(3,7));
       f2->SetParameter(3,gRandom->Uniform(3,7));
 
-      h1->FillRandom("f1",np*10);
-      h2->FillRandom("f2",np*10);
+      h1->FillRandom("f1",np*100);
+      h2->FillRandom("f2",np*100);
 
 
       for (int k = 0; k < npx ; ++k) {
@@ -59,6 +56,8 @@ void makeImages(int n = 10000, int npx = 8, int npy = 8) {
 //          h2->Draw("COLZ");
 //       }
    }
+   sgn.Print();
+   bkg.Print();
    sgn.Write();
    bkg.Write();
    f.Close();

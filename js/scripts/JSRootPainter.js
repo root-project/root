@@ -2437,8 +2437,7 @@
          if (rect_origin.width > lmt) {
             height_factor = height_factor || 0.66;
             main_origin.style('height', Math.round(rect_origin.width * height_factor)+'px');
-         } else
-         if (can_resize !== 'height') {
+         } else if (can_resize !== 'height') {
             main_origin.style('width', '200px').style('height', '100px');
          }
       }

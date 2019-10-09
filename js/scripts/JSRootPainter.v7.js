@@ -1240,7 +1240,8 @@
       this.axes_drawn = false;
    }
 
-   TFramePainter.prototype.CleanDrawings = function() {
+   /** Removes all drawn elements of the frame @private */
+   TFramePainter.prototype.CleanFrameDrawings = function() {
       // cleanup all 3D drawings if any
       if (typeof this.Create3DScene === 'function')
          this.Create3DScene(-1);
@@ -1268,7 +1269,7 @@
 
    TFramePainter.prototype.Cleanup = function() {
 
-      this.CleanDrawings();
+      this.CleanFrameDrawings();
 
       if (this.draw_g) {
          this.draw_g.selectAll("*").remove();
@@ -1430,9 +1431,8 @@
          setTimeout(this.ProcessTooltipEvent.bind(this, hintsg.property('last_point')), 10);
    }
 
+   /** Returns frame rectangle plus extra info for hint display */
    TFramePainter.prototype.GetFrameRect = function() {
-      // returns frame rectangle plus extra info for hint display
-
       return {
          x: this.frame_x(),
          y: this.frame_y(),
@@ -1444,9 +1444,9 @@
       }
    }
 
+   /** Function called when frame is clicked and object selection can be performed
+     * such event can be used to select objects */
    TFramePainter.prototype.ProcessFrameClick = function(pnt, dblckick) {
-      // function called when frame is clicked and object selection can be performed
-      // such event can be used to select
 
       var pp = this.pad_painter();
       if (!pp) return;
@@ -2549,6 +2549,7 @@
 
    function TPadPainter(pad, iscan) {
       JSROOT.TObjectPainter.call(this, pad);
+      this.csstype = "pad";
       this.pad = pad;
       this.iscan = iscan; // indicate if working with canvas
       this.this_pad_name = "";
@@ -3381,7 +3382,7 @@
          this.painters = [];
          if (fp) {
             this.painters.push(fp);
-            fp.CleanDrawings();
+            fp.CleanFrameDrawings();
          }
          this.RemoveButtons();
          this.AddOnlineButtons();

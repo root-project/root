@@ -34,6 +34,7 @@ public:
       kQt5,      ///< QWebEngine libraries - Chrome code packed in qt5
       kLocal,    ///< either CEF or Qt5 - both runs on local display without real http server
       kStandard, ///< standard system web browser, not recognized by ROOT, without batch mode
+      kEmbedded,  ///< window will be embedded into other, no extra browser need to be started
       kCustom    ///< custom web browser, execution string should be provided
    };
 
