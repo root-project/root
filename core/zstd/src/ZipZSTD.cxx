@@ -82,7 +82,7 @@ void R__unzipZSTD(int *srcsize, unsigned char *src, int *tgtsize, unsigned char 
     /* The error code 18446744073709551546 arises when the tgt buffer is too small
      * However this error is already handled outside of the compression algorithm
      */
-    if (R__unlikely(ZSTD_isError(retval)) && retval != 18446744073709551546U) {
+    if (R__unlikely(ZSTD_isError(retval)) && retval != errorCodeSmallBuffer) {
         std::cerr << "Error in unzip ZSTD. Type = " << ZSTD_getErrorName(retval) <<
         " . Code = " << retval << std::endl;
         return;
