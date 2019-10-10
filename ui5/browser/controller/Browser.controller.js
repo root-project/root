@@ -173,6 +173,7 @@ sap.ui.define(['sap/ui/core/Component',
          var oModel = oEditor.getModel();
          var oTabElement = oEditor.getParent().getParent();
          var ext = "txt";
+         this.getView().byId("run_macro").setEnabled(false);
          if (filename.lastIndexOf('.') > 0)
             ext = filename.substr(filename.lastIndexOf('.') + 1);
          switch(ext.toLowerCase()) {
@@ -180,6 +181,7 @@ sap.ui.define(['sap/ui/core/Component',
             case "cc":
             case "cpp":
             case "cxx":
+               this.getView().byId("run_macro").setEnabled(false);
             case "h":
             case "hh":
             case "hxx":
@@ -455,7 +457,6 @@ sap.ui.define(['sap/ui/core/Component',
          var oEditor = this.getView().byId("aCodeEditor");
          var oModel = oEditor.getModel();
          oModel.setProperty("/fullpath", fullpath);
-         this.getView().byId("run_macro").setEnabled(true);
          this.getView().byId("save_file").setEnabled(true);
          var filename = fullpath.substr(fullpath.lastIndexOf('/') + 1);
          if (this.setFileNameType(filename))

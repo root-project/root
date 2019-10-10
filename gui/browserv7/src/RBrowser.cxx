@@ -745,9 +745,9 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
          }
       }
    } else if (arg.compare(0,9, "RUNMACRO:") == 0) {
-      auto str = ProcessRunCommand(arg.substr(9));
+      ProcessRunCommand(arg.substr(9));
    } else if (arg.compare(0,9, "SAVEFILE:") == 0) {
-      auto str = ProcessSaveFile(arg.substr(9));
+      ProcessSaveFile(arg.substr(9));
    } else if (arg.compare(0,14, "SELECT_CANVAS:") == 0) {
       fActiveCanvas = arg.substr(14);
       printf("Select %s\n", fActiveCanvas.c_str());
