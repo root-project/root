@@ -378,6 +378,7 @@ std::string ROOT::Experimental::RWebDisplayHandle::ChromeCreator::MakeProfile(st
    if (chrome_profile && *chrome_profile) {
       profile_arg = chrome_profile;
    } else {
+      gRandom->SetSeed(0);
       rmdir = profile_arg = std::string(gSystem->TempDirectory()) + "/root_chrome_profile_"s + std::to_string(gRandom->Integer(0x100000));
    }
 
@@ -434,18 +435,16 @@ std::string ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::MakeProfile(s
       profile_arg = "-profile "s + ff_profilepath;
    } else if ((ff_randomprofile > 0) || (batch_mode && (ff_randomprofile >= 0))) {
 
+      gRandom->SetSeed(0);
       std::string rnd_profile = "root_ff_profile_"s + std::to_string(gRandom->Integer(0x100000));
       std::string profile_dir = std::string(gSystem->TempDirectory()) + "/"s + rnd_profile;
 
       profile_arg = "-profile "s + profile_dir;
 
-      if (!fProg.empty()) {
-         gSystem->Exec(Form("%s %s -no-remote -CreateProfile \"%s %s\"", fProg.c_str(), (batch_mode ? "-headless" : ""),
-                            rnd_profile.c_str(), profile_dir.c_str()));
-
+      if (gSystem->mkdir(profile_dir.c_str()) == 0) {
          rmdir = profile_dir;
       } else {
-         R__ERROR_HERE("WebDisplay") << "Cannot create Firefox profile without assigned executable, check WebGui.Firefox variable";
+         R__ERROR_HERE("WebDisplay") << "Cannot create Firefox profile directory " << profile_dir;
       }
    }
 
