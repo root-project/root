@@ -4861,7 +4861,7 @@ RooSpan<double> RooAbsReal::evaluateBatch(std::size_t begin, std::size_t maxSize
 
 
 
-#ifdef ROOFIT_CHECK_CACHED_VALUES
+
 #include "TSystem.h"
 #include "RooHelpers.h"
 
@@ -4869,7 +4869,7 @@ using RooHelpers::CachingError;
 using RooHelpers::FormatPdfTree;
 
 
-Double_t RooAbsReal::getVal(const RooArgSet* normalisationSet) const {
+Double_t RooAbsReal::_DEBUG_getVal(const RooArgSet* normalisationSet) const {
 
   const bool tmpFast = _fast;
   const double tmp = _value;
@@ -4965,4 +4965,4 @@ void RooAbsReal::checkBatchComputation(std::size_t evtNo, const RooArgSet* normS
     }
   }
 }
-#endif
+
