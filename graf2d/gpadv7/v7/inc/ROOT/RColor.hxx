@@ -189,8 +189,9 @@ public:
 
    friend bool operator==(const RColor &lhs, const RColor &rhs)
    {
+      // auto flag is not taken into account when comparing colors
       return (lhs.GetHex() == rhs.GetHex()) && (lhs.GetName() == rhs.GetName()) &&
-             (lhs.GetAlphaHex() == rhs.GetAlphaHex()) && (lhs.IsAuto() == rhs.IsAuto());
+             (lhs.GetAlphaHex() == rhs.GetAlphaHex()); //  && (lhs.IsAuto() == rhs.IsAuto());
    }
 };
 
