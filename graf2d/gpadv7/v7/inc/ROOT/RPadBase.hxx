@@ -9,15 +9,15 @@
 #ifndef ROOT7_RPadBase
 #define ROOT7_RPadBase
 
-#include <memory>
-#include <vector>
-
 #include "ROOT/RDrawable.hxx"
 #include "ROOT/RFrame.hxx"
 #include "ROOT/RPadExtent.hxx"
 #include "ROOT/RPadPos.hxx"
 #include "ROOT/RPadUserAxis.hxx"
 #include "ROOT/TypeTraits.hxx"
+
+#include <memory>
+#include <vector>
 
 namespace ROOT {
 namespace Experimental {
