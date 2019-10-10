@@ -91,7 +91,7 @@ void ROOT::Experimental::RPadBase::AssignAutoColors()
       for (auto &attr: drawable->fAttr) {
          // only boolean attribute can return true
          if (!attr.second->GetBool()) continue;
-         auto pos = attr.first.find("_color_auto");
+         auto pos = attr.first.rfind("_color_auto");
          if ((pos > 0) && (pos == attr.first.length() - 11)) {
             // FIXME: dummy code to assign autocolors, later should use RPalette
             switch (cnt++ % 3) {
