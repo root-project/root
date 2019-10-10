@@ -303,14 +303,12 @@ elseif(APPLE)
   set(x11_defvalue OFF)
 endif()
 
-#---Modules do not play well with c++17 yet----------------------------------------------------
-if(CMAKE_CXX_STANDARD GREATER 14)
-  set(runtime_cxxmodules_defvalue OFF)
-endif()
-
-#---Modules do not play well with preinstalled ROOT in the system------------------------------
+# Current limitations for modules:
+#---Modules do not play well with c++17 yet
+#---Modules do not play well with preinstalled ROOT in the system (PREINSTALLED_MODULEMAP)
+#---Modules are disabled on aarch64 platform (due ODR violations)
 find_file(PREINSTALLED_MODULEMAP module.modulemap)
-if(PREINSTALLED_MODULEMAP)
+if(CMAKE_CXX_STANDARD GREATER 14 OR CMAKE_SYSTEM_PROCESSOR MATCHES aarch64 OR PREINSTALLED_MODULEMAP)
   set(runtime_cxxmodules_defvalue OFF)
 endif()
 
