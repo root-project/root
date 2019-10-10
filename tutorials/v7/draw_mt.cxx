@@ -25,7 +25,7 @@
 #include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RCanvas.hxx"
 
-R__LOAD_LIBRARY(libROOTWebDisplay);
+R__LOAD_LIBRARY(libROOTHistDraw)
 
 #include "TRandom3.h"
 #include "TEnv.h"

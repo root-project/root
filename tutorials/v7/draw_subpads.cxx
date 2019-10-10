@@ -23,6 +23,9 @@
 #include "ROOT/RPad.hxx"
 #include "TRandom.h"
 
+R__LOAD_LIBRARY(libROOTHistDraw)
+
+
 void draw_subpads()
 {
   using namespace ROOT::Experimental;

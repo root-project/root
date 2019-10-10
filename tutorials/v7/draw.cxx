@@ -20,6 +20,8 @@
 #include "ROOT/RColor.hxx"
 #include "ROOT/RHistDrawable.hxx"
 
+R__LOAD_LIBRARY(libROOTHistDraw)
+
 void draw()
 {
    using namespace ROOT::Experimental;
