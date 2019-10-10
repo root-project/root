@@ -56,10 +56,6 @@ class TH3F;
 #include <iostream>
 #include <sstream>
 
-#ifndef NDEBUG
-#define ROOFIT_CHECK_CACHED_VALUES
-#endif
-
 class RooAbsReal : public RooAbsArg {
 public:
   // Constructors, assignment etc
