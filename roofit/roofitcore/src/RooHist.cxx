@@ -299,7 +299,7 @@ RooHist::RooHist(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xErrorFrac, 
   }
   setYAxisLabel(title.Data());
 
-  RooAbsFunc *funcPtr = 0;
+  RooAbsFunc *funcPtr = nullptr;
   RooAbsFunc *rawPtr  = 0;
   funcPtr= f.bindVars(x,normVars,kTRUE);
 
