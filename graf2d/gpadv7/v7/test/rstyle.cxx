@@ -22,14 +22,17 @@ class CustomDrawable : public RDrawable {
 public:
    CustomDrawable() : RDrawable("custom") {}
 
+   const RAttrLine &GetAttrLine() const { return fAttrLine; }
+   CustomDrawable &SetAttrLine(const RAttrLine &attr) { fAttrLine = attr; return *this; }
    RAttrLine &AttrLine() { return fAttrLine; }
-   const RAttrLine &AttrLine() const { return fAttrLine; }
 
+   const RAttrBox &GetAttrBox() const { return fAttrBox; }
+   CustomDrawable &SetAttrBox(RAttrBox &box) { fAttrBox = box; return *this; }
    RAttrBox &AttrBox() { return fAttrBox; }
-   const RAttrBox &AttrBox() const { return fAttrBox; }
 
+   const RAttrText &GetAttrText() const { return fAttrText; }
+   CustomDrawable &SetAttrText(const RAttrText &attr) { fAttrText = attr; return *this; }
    RAttrText &AttrText() { return fAttrText; }
-   const RAttrText &AttrText() const { return fAttrText; }
 };
 
 
@@ -49,11 +52,11 @@ TEST(RStyleTest, CreateStyle)
 
    drawable.UseStyle(style);
 
-   EXPECT_DOUBLE_EQ(drawable.AttrLine().GetWidth(), 2.);
+   EXPECT_DOUBLE_EQ(drawable.GetAttrLine().GetWidth(), 2.);
 
    EXPECT_EQ(drawable.AttrBox().GetAttrFill().GetStyle(), 5);
 
-   EXPECT_DOUBLE_EQ(drawable.AttrText().GetSize(), 3.);
+   EXPECT_DOUBLE_EQ(drawable.GetAttrText().GetSize(), 3.);
 }
 
 TEST(RStyleTest, LostStyle)
@@ -68,10 +71,10 @@ TEST(RStyleTest, LostStyle)
       // here weak_ptr will be set, therefore after style is deleted drawable will loose it
       drawable.UseStyle(style);
 
-      EXPECT_DOUBLE_EQ(drawable.AttrLine().GetWidth(), 2.);
+      EXPECT_DOUBLE_EQ(drawable.GetAttrLine().GetWidth(), 2.);
    }
 
    // here style no longer exists
-   EXPECT_DOUBLE_EQ(drawable.AttrLine().GetWidth(), 1.);
+   EXPECT_DOUBLE_EQ(drawable.GetAttrLine().GetWidth(), 1.);
 }
 

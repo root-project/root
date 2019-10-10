@@ -29,7 +29,7 @@ namespace Experimental {
 
 class RMarker : public RDrawable {
 
-   RPadPos fP;                                 ///< position
+   RPadPos fP;                                ///< position
    RAttrMarker fMarkerAttr{this, "marker_"};  ///<! marker attributes
 
 public:
@@ -41,8 +41,9 @@ public:
    RMarker &SetP(const RPadPos& p) { fP = p; return *this; }
    const RPadPos& GetP() const { return fP; }
 
+   const RAttrMarker &GetAttrMarker() const { return fMarkerAttr; }
+   RMarker &SetAttrMarker(const RAttrMarker &attr) { fMarkerAttr = attr; return *this; }
    RAttrMarker &AttrMarker() { return fMarkerAttr; }
-   const RAttrMarker &AttrMarker() const { return fMarkerAttr; }
 
 };
 

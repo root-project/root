@@ -31,7 +31,7 @@ class RPad: public RPadBase {
    RPadPos fPos;                           ///< pad position
    RPadExtent fSize;                       ///< pad size
 
-   RAttrLine fLineAttr{this, "border_"};   ///<! border attributes
+   RAttrLine fAttrLine{this, "border_"};   ///<! border attributes
 
 protected:
 
@@ -72,8 +72,9 @@ public:
    /// Set position
    void SetPos(const RPadPos &p) { fPos = p; }
 
-   RAttrLine &AttrLine() { return fLineAttr; }
-   const RAttrLine &AttrLine() const { return fLineAttr; }
+   const RAttrLine &GetAttrLine() const { return fAttrLine; }
+   RPad &SetAttrLine(const RAttrLine &attr) { fAttrLine = attr; return *this; }
+   RAttrLine &AttrLine() { return fAttrLine; }
 
    /// Convert a `Pixel` position to Canvas-normalized positions.
    std::array<RPadLength::Normal, 2> PixelsToNormal(const std::array<RPadLength::Pixel, 2> &pos) const override

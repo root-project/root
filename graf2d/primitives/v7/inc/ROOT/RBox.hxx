@@ -31,7 +31,7 @@ class RBox : public RDrawable {
 
    /// Box's coordinates
    RPadPos fP1, fP2;                    ///< box corners coordinates
-   RAttrBox fBoxAttr{this, "box_"};     ///<! box attributes
+   RAttrBox fAttrBox{this, "box_"};     ///<! box attributes
 
 protected:
 
@@ -53,8 +53,9 @@ public:
    const RPadPos& GetP1() const { return fP1; }
    const RPadPos& GetP2() const { return fP2; }
 
-   RAttrBox &AttrBox() { return fBoxAttr; }
-   const RAttrBox &AttrBox() const { return fBoxAttr; }
+   const RAttrBox &GetAttrBox() const { return fAttrBox; }
+   RBox &SetAttrBox(RAttrBox &box) { fAttrBox = box; return *this; }
+   RAttrBox &AttrBox() { return fAttrBox; }
 };
 
 } // namespace Experimental
