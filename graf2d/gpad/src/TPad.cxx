@@ -51,8 +51,6 @@
 #include "TEnv.h"
 #include "TImage.h"
 #include "TViewer3DPad.h"
-#include "TBuffer3D.h"
-#include "TBuffer3DTypes.h"
 #include "TCreatePrimitives.h"
 #include "TLegend.h"
 #include "TAtt3D.h"
