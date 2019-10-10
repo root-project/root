@@ -34,7 +34,7 @@ using TMVA::DNN::EOptimizer;
 
 int main()
 {
-   using Architecture = TCuda<Float_t>;
+   using Architecture = TCudnn<Float_t>;
    gRandom->SetSeed(111);
    Architecture::SetRandomSeed(112);
 
