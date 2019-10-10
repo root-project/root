@@ -382,7 +382,7 @@ RooHist::RooHist(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xErrorFrac, 
   }
   
   // apply a scale factor if necessary
-  assert(0 != funcPtr);
+  assert(funcPtr);
 
   // calculate the points to add to our curve
   int xbins = x.numBins();
