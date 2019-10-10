@@ -93,7 +93,7 @@ void RooBernstein::selectNormalizationRange(const char* rangeName, Bool_t force)
      _refRangeName = static_cast<const TNamed*> (RooNameReg::instance().constPtr(rangeName));
   }
   if (!rangeName) {
-     _refRangeName = 0;
+     _refRangeName = nullptr;
   }
 }
 
