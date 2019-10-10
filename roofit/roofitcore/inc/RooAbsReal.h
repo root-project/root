@@ -42,6 +42,9 @@ class RooFitResult ;
 class RooAbsMoment ;
 class RooDerivative ;
 class RooVectorDataStore ;
+namespace RooHelpers {
+class BatchInterfaceAccessor;
+}
 
 class TH1;
 class TH1F;
@@ -52,10 +55,6 @@ class TH3F;
 #include <string>
 #include <iostream>
 #include <sstream>
-
-#ifndef NDEBUG
-#define ROOFIT_CHECK_CACHED_VALUES
-#endif
 
 class RooAbsReal : public RooAbsArg {
 public:
@@ -84,18 +83,19 @@ public:
   /// the variables to normalise over.
   /// These are integrated over their current ranges to compute the normalisation constant,
   /// and the unnormalised result is divided by this value.
-#ifdef ROOFIT_CHECK_CACHED_VALUES
-  Double_t getVal(const RooArgSet* normalisationSet = nullptr) const;
-#else
   inline Double_t getVal(const RooArgSet* normalisationSet = nullptr) const {
+#ifdef ROOFIT_CHECK_CACHED_VALUES
+    return _DEBUG_getVal(normalisationSet);
+#else
+
 #ifndef _WIN32
     return (_fast && !_inhibitDirty) ? _value : getValV(normalisationSet) ;
 #else
     return (_fast && !inhibitDirty()) ? _value : getValV(normalisationSet) ;
 #endif
-  }
 
 #endif
+  }
 
   /// Like getVal(const RooArgSet*), but always requires an argument for normalisation.
   inline  Double_t getVal(const RooArgSet& normalisationSet) const { return _fast ? _value : getValV(&normalisationSet) ; }
@@ -397,17 +397,14 @@ protected:
 
   // Function evaluation and error tracing
   Double_t traceEval(const RooArgSet* set) const ;
-//  virtual Bool_t traceEvalHook(Double_t /*value*/) const {
-//    // Hook function to add functionality to evaluation tracing in derived classes
-//    return kFALSE ;
-//  }
+
   /// Evaluate this PDF / function / constant. Needs to be overridden by all derived classes.
   virtual Double_t evaluate() const = 0;
   virtual RooSpan<double> evaluateBatch(std::size_t begin, std::size_t maxSize) const;
 
   //---------- Interface to access batch data ---------------------------
   //
-  friend class BatchInterfaceAccessor;
+  friend class RooHelpers::BatchInterfaceAccessor;
   void clearBatchMemory() {
     _batchData.clear();
     for (auto arg : _serverList) {
@@ -418,13 +415,15 @@ protected:
     }
   }
 
-#ifdef ROOFIT_CHECK_CACHED_VALUES
- public:
+ private:
   void checkBatchComputation(std::size_t evtNo, const RooArgSet* normSet = nullptr, double relAccuracy = 1.E-13) const;
+
   const BatchHelpers::BatchData& batchData() const {
     return _batchData;
   }
-#endif
+
+  /// Debug version of getVal(), which is slow and does error checking.
+  Double_t _DEBUG_getVal(const RooArgSet* normalisationSet) const;
 
   //--------------------------------------------------------------------
 

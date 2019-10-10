@@ -43,6 +43,7 @@ In extended mode, a
 #include "RooRealSumPdf.h"
 #include "RooRealVar.h"
 #include "RooProdPdf.h"
+#include "RooHelpers.h"
 
 #include "Math/Util.h"
 
@@ -239,13 +240,6 @@ void RooNLLVar::applyWeightSquared(Bool_t flag)
       ((RooNLLVar*)_gofArray[i])->applyWeightSquared(flag);
   }
 }
-
-class BatchInterfaceAccessor {
-  public:
-    static void clearBatchMemory(RooAbsReal* theReal) {
-      theReal->clearBatchMemory();
-    }
-};
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -463,7 +457,7 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
     assert(_dataClone->valid());
     pdfClone->getValV(_normSet);
     try {
-      pdfClone->checkBatchComputation(evtNo, _normSet);
+      RooHelpers::BatchInterfaceAccessor::checkBatchComputation(*pdfClone, evtNo, _normSet);
     } catch (std::exception& e) {
       std::cerr << "ERROR when checking batch computation for event " << evtNo << ":\n"
           << e.what() << std::endl;
