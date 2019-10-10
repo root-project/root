@@ -28,6 +28,7 @@
 #include "RooRandom.h"
 #include "RooConstVar.h"
 #include "Math/Util.h"
+#include "RooHelpers.h"
 
 #include <numeric>
 #include <ctime>
@@ -181,6 +182,8 @@ void PDFTest::kickParameters() {
   setValuesConstant(_otherObjects, true);
 }
 
+
+
 void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool compareLogs, bool runTimer, unsigned int nChunks) {
   if (!_dataUniform)
     makeUniformData();
@@ -318,7 +321,8 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
       try {
         *observables = *_dataUniform->get(i);
         _pdf->getVal(normSet);
-        _pdf->checkBatchComputation(i, normSet, toleranceCompare);
+        RooHelpers::BatchInterfaceAccessor::checkBatchComputation(*_pdf, i, normSet, toleranceCompare);
+
       } catch (std::exception& e) {
         std::cerr << "ERROR when checking batch computation for event " << i << ":\n"
             << e.what() << std::endl;
