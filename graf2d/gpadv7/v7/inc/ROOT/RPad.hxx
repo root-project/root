@@ -14,7 +14,6 @@
 namespace ROOT {
 namespace Experimental {
 
-
 /** \class RPad
 \ingroup GpadROOT7
 \brief Graphic container for `RDrawable`-s.
