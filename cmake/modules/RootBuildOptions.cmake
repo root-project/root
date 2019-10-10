@@ -308,6 +308,11 @@ if(CMAKE_CXX_STANDARD GREATER 14)
   set(runtime_cxxmodules_defvalue OFF)
 endif()
 
+#---Modules do not play well with preinstalled ROOT in the system------------------------------
+find_file(PREINSTALLED_MODULEMAP module.modulemap)
+if(PREINSTALLED_MODULEMAP)
+  set(runtime_cxxmodules_defvalue OFF)
+endif()
 
 # Disable RDataFrame on 32-bit UNIX platforms due to ROOT-9236
 if(UNIX AND CMAKE_SIZEOF_VOID_P EQUAL 4)
