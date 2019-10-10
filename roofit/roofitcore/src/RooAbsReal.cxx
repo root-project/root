@@ -1645,9 +1645,9 @@ void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
 ///                                    function value is plotted.
 ///
 /// <tr><td> `Normalization(Double_t scale, ScaleType code)`   <td> Adjust normalization by given scale factor. Interpretation of number depends on code:
-///                     Relative: relative adjustment factor for a normalized function,
-///                     NumEvent: scale to match given number of events.
-///                     Raw: relative adjustment factor for an un-normalized function.
+///                    - Relative: relative adjustment factor for a normalized function,
+///                    - NumEvent: scale to match given number of events.
+///                    - Raw: relative adjustment factor for an un-normalized function.
 ///
 /// <tr><td> `Name(const chat* name)`          <td> Give curve specified name in frame. Useful if curve is to be referenced later
 ///
@@ -1663,7 +1663,8 @@ void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
 /// <tr><td> `Components(const RooArgSet& compSet)` <td> As above, but pass a RooArgSet of the components themselves.
 ///
 /// <tr><th><th> Plotting control
-/// <tr><td> `DrawOption(const char* opt)`     <td> Select ROOT draw option for resulting TGraph object. Currently supported options are "F" (fill), "L" (line), and "P" (points). <i>Caution: Choosing option "P" will cause RooFit to plot (and treat) this pdf as if it were data! This is intended for plotting "corrected data"-type pdfs such as "data-minus-background" or unfolded datasets.</i> 
+/// <tr><td> `DrawOption(const char* opt)`     <td> Select ROOT draw option for resulting TGraph object. Currently supported options are "F" (fill), "L" (line), and "P" (points). 
+///           \note Option "P" will cause RooFit to plot (and treat) this pdf as if it were data! This is intended for plotting "corrected data"-type pdfs such as "data-minus-background" or unfolded datasets.
 ///
 /// <tr><td> `LineStyle(Int_t style)`          <td> Select line style by ROOT line style code, default is solid
 ///
