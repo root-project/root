@@ -9,8 +9,8 @@
 #  LIBDIR           - object code libraries (lib or lib64 or lib/<multiarch-tuple> on Debian)
 #  INCLUDEDIR       - C/C++ header files (include)
 #  SYSCONFDIR       - read-only single-machine data (etc)
-#  PYROOTDIR        - pyroot libraries and modules (LIBDIR/pythonX.Y/site-packages or
-#                     LIBDIR/pythonX.Y/dist-packages on Debian)
+#  PYROOTDIR        - pyroot experimental libraries and modules (LIBDIR/pythonX.Y/site-packages
+#                     or LIBDIR/pythonX.Y/dist-packages on Debian)
 #  DATAROOTDIR      - read-only architecture-independent data (share)
 #  DATADIR          - read-only architecture-independent data (DATAROOTDIR/root)
 #  MANDIR           - man documentation (DATAROOTDIR/man)

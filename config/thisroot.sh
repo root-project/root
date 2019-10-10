@@ -112,50 +112,89 @@ set_environment()
 
    local version=$1
 
+   # Check if the directory created in PyROOT experimental exists
+   if [ -d "@libdir@/python${version}" ]; then
+           exp_pyroot=true
+   fi
+
    if [ -z "${PATH}" ]; then
       PATH=@bindir@; export PATH
    else
       PATH=@bindir@:$PATH; export PATH
    fi
 
-   if [ -z "${LD_LIBRARY_PATH}" ]; then
-      LD_LIBRARY_PATH=@libdir@/python${version}:@libdir@
-      export LD_LIBRARY_PATH       # Linux, ELF HP-UX
+   if [ -z "${exp_pyroot}" ]; then
+      if [ -z "${LD_LIBRARY_PATH}" ]; then
+         LD_LIBRARY_PATH=@libdir@
+         export LD_LIBRARY_PATH       # Linux, ELF HP-UX
+      else
+         LD_LIBRARY_PATH=@libdir@:$LD_LIBRARY_PATH
+         export LD_LIBRARY_PATH
+      fi
+      if [ -z "${DYLD_LIBRARY_PATH}" ]; then
+         DYLD_LIBRARY_PATH=@libdir@
+         export DYLD_LIBRARY_PATH       # Linux, ELF HP-UX
+      else
+         DYLD_LIBRARY_PATH=@libdir@:$DYLD_LIBRARY_PATH
+         export DYLD_LIBRARY_PATH
+      fi
+      if [ -z "${SHLIB_PATH}" ]; then
+         SHLIB_PATH=@libdir@
+         export SHLIB_PATH       # Linux, ELF HP-UX
+      else
+         SHLIB_PATH=@libdir@:$SHLIB_PATH
+         export SHLIB_PATH
+      fi
+      if [ -z "${LIBPATH}" ]; then
+         LIBPATH=@libdir@
+         export LIBPATH       # Linux, ELF HP-UX
+      else
+         LIBPATH=@libdir@:$LIBPATH
+         export LIBPATH
+      fi
+      if [ -z "${PYTHONPATH}" ]; then
+         PYTHONPATH=@libdir@
+         export PYTHONPATH       # Linux, ELF HP-UX
+      else
+         PYTHONPATH=@libdir@:$PYTHONPATH
+         export PYTHONPATH
+      fi
    else
-      LD_LIBRARY_PATH=@libdir@/python${version}:@libdir@:$LD_LIBRARY_PATH
-      export LD_LIBRARY_PATH
-   fi
-
-   if [ -z "${DYLD_LIBRARY_PATH}" ]; then
-      DYLD_LIBRARY_PATH=@libdir@/python${version}:@libdir@
-      export DYLD_LIBRARY_PATH       # Linux, ELF HP-UX
-   else
-      DYLD_LIBRARY_PATH=@libdir@/python${version}:@libdir@:$DYLD_LIBRARY_PATH
-      export DYLD_LIBRARY_PATH
-   fi
-
-   if [ -z "${SHLIB_PATH}" ]; then
-      SHLIB_PATH=@libdir@/python${version}:@libdir@
-      export SHLIB_PATH       # Linux, ELF HP-UX
-   else
-      SHLIB_PATH=@libdir@/python${version}:@libdir@:$SHLIB_PATH
-      export SHLIB_PATH
-   fi
-
-   if [ -z "${LIBPATH}" ]; then
-      LIBPATH=@libdir@/python${version}:@libdir@
-      export LIBPATH       # Linux, ELF HP-UX
-   else
-      LIBPATH=@libdir@/python${version}:@libdir@:$LIBPATH
-      export LIBPATH
-   fi
-
-   if [ -z "${PYTHONPATH}" ]; then
-      PYTHONPATH=@libdir@/python${version}:@libdir@
-      export PYTHONPATH       # Linux, ELF HP-UX
-   else
-      PYTHONPATH=@libdir@/python${version}:@libdir@:$PYTHONPATH
-      export PYTHONPATH
+      if [ -z "${LD_LIBRARY_PATH}" ]; then
+         LD_LIBRARY_PATH=@libdir@:@libdir@/python${version}
+         export LD_LIBRARY_PATH       # Linux, ELF HP-UX
+      else
+         LD_LIBRARY_PATH=@libdir@:@libdir@/python${version}:$LD_LIBRARY_PATH
+         export LD_LIBRARY_PATH
+      fi
+      if [ -z "${DYLD_LIBRARY_PATH}" ]; then
+         DYLD_LIBRARY_PATH=@libdir@:@libdir@/python${version}
+         export DYLD_LIBRARY_PATH       # Linux, ELF HP-UX
+      else
+         DYLD_LIBRARY_PATH=@libdir@:@libdir@/python${version}:$DYLD_LIBRARY_PATH
+         export DYLD_LIBRARY_PATH
+      fi
+      if [ -z "${SHLIB_PATH}" ]; then
+         SHLIB_PATH=@libdir@:@libdir@/python${version}
+         export SHLIB_PATH       # Linux, ELF HP-UX
+      else
+         SHLIB_PATH=@libdir@:@libdir@/python${version}:$SHLIB_PATH
+         export SHLIB_PATH
+      fi
+      if [ -z "${LIBPATH}" ]; then
+         LIBPATH=@libdir@:@libdir@/python${version}
+         export LIBPATH       # Linux, ELF HP-UX
+      else
+         LIBPATH=@libdir@:@libdir@/python${version}:$LIBPATH
+         export LIBPATH
+      fi
+      if [ -z "${PYTHONPATH}" ]; then
+         PYTHONPATH=@libdir@:@libdir@/python${version}
+         export PYTHONPATH       # Linux, ELF HP-UX
+      else
+         PYTHONPATH=@libdir@:@libdir@/python${version}:$PYTHONPATH
+         export PYTHONPATH
+      fi
    fi
 
    if [ -z "${MANPATH}" ]; then
