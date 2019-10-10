@@ -23,6 +23,8 @@
 #include "ROOT/RLegend.hxx"
 #include "TRandom.h"
 
+R__LOAD_LIBRARY(libROOTHistDraw)
+
 using namespace ROOT::Experimental;
 
 void draw_legend()
