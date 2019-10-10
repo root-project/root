@@ -160,6 +160,7 @@ inline auto GetDrawable(const std::shared_ptr<RH3F> &histimpl)
 {
    return std::make_shared<RHistDrawable<3>>(histimpl);
 }
+
 #endif // _MSC_VER
 
 } // namespace Experimental
