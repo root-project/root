@@ -82,7 +82,7 @@ class RLegend : public RBox {
 
    std::vector<Internal::RLegendEntry> fEntries; ///< list of entries which should be displayed
 
-   RAttrText  fTitleAttr{this, "title_"};    ///<! title attributes
+   RAttrText  fAttrTitle{this, "title_"};    ///<! title attributes
 
 protected:
 
@@ -106,11 +106,12 @@ public:
       SetTitle(title);
    }
 
-   void SetTitle(const std::string &title) { fTitle = title; }
+   RLegend &SetTitle(const std::string &title) { fTitle = title; return *this; }
    const std::string &GetTitle() const { return fTitle; }
 
-   RAttrText &AttrTitle() { return fTitleAttr; }
-   const RAttrText &AttrTitle() const { return fTitleAttr; }
+   const RAttrText &GetAttrTitle() const { return fAttrTitle; }
+   RLegend &SetAttrTitle(const RAttrText &attr) { fAttrTitle = attr; return *this; }
+   RAttrText &AttrTitle() { return fAttrTitle; }
 
 
    Internal::RLegendEntry &AddEntry(std::shared_ptr<RDrawable> drawable, const std::string &lbl = "")

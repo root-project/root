@@ -43,7 +43,7 @@ public:
 private:
    Internal::RIOShared<HistImpl_t> fHistImpl;  ///< I/O capable reference on histogram
 
-   RAttrLine  fLineAttr{this, "line_"};        ///<! line attributes
+   RAttrLine  fAttrLine{this, "line_"};        ///<! line attributes
 
 protected:
 
@@ -58,8 +58,9 @@ public:
       fHistImpl = std::shared_ptr<HistImpl_t>(hist, hist->GetImpl());
    }
 
-   RAttrLine &AttrLine() { return fLineAttr; }
-   const RAttrLine &AttrLine() const { return fLineAttr; }
+   const RAttrLine &GetAttrLine() const { return fAttrLine; }
+   RHistDrawable &SetAttrLine(const RAttrLine &attr) { fAttrLine = attr; return *this; }
+   RAttrLine &AttrLine() { return fAttrLine; }
 
    std::shared_ptr<HistImpl_t> GetHist() const { return fHistImpl.get_shared(); }
 

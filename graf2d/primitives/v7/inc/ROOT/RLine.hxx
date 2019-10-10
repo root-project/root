@@ -30,7 +30,7 @@ class RLine : public RDrawable {
 
    RPadPos fP1;                            ///< line begin
    RPadPos fP2;                            ///< line end
-   RAttrLine  fLineAttr{this, "line_"};    ///<! line attributes
+   RAttrLine  fAttrLine{this, "line_"};    ///<! line attributes
 
 public:
 
@@ -44,8 +44,9 @@ public:
    const RPadPos& GetP1() const { return fP1; }
    const RPadPos& GetP2() const { return fP2; }
 
-   RAttrLine &AttrLine() { return fLineAttr; }
-   const RAttrLine &AttrLine() const { return fLineAttr; }
+   const RAttrLine &GetAttrLine() const { return fAttrLine; }
+   RLine &SetAttrLine(const RAttrLine &attr) { fAttrLine = attr; return *this; }
+   RAttrLine &AttrLine() { return fAttrLine; }
 };
 
 } // namespace Experimental
