@@ -12,11 +12,13 @@ class CustomAttrs : public RAttrBase {
 
    R__ATTR_CLASS(CustomAttrs, "custom_", AddDefaults(fAttrBox).AddDefaults(fAttrText));
 
+   const RAttrBox &GetAttrBox() const { return fAttrBox; }
+   CustomAttrs &SetAttrBox(const RAttrBox &box) { fAttrBox = box; return *this; }
    RAttrBox &AttrBox() { return fAttrBox; }
-   const RAttrBox &AttrBox() const { return fAttrBox; }
 
+   const RAttrText &GetAttrText() const { return fAttrText; }
+   CustomAttrs &SetAttrText(const RAttrText &txt) { fAttrText = txt; return *this; }
    RAttrText &AttrText() { return fAttrText; }
-   const RAttrText &AttrText() const { return fAttrText; }
 
    double GetDirect(const std::string &name) const { return GetValue<double>(name); }
 };
@@ -25,7 +27,7 @@ class CustomAttrs : public RAttrBase {
 TEST(OptsTest, AttribStrings) {
    CustomAttrs attrs;
 
-   attrs.AttrBox().Border().SetWidth(42.);
+   attrs.AttrBox().AttrBorder().SetWidth(42.);
    attrs.AttrText().SetSize(1.7);
 
    {
@@ -43,18 +45,18 @@ TEST(OptsTest, AttribVals) {
    CustomAttrs attrs;
 
    attrs.AttrText().SetColor(RColor::kBlue);
-   auto &border = attrs.AttrBox().Border();
+   auto &border = attrs.AttrBox().AttrBorder();
    border.SetWidth(42.);
 
    {
       // Value was set on this attr, not coming from style:
-      EXPECT_FLOAT_EQ(attrs.AttrBox().Border().GetWidth(), 42.f);
+      EXPECT_FLOAT_EQ(attrs.GetAttrBox().GetAttrBorder().GetWidth(), 42.f);
       EXPECT_FLOAT_EQ(border.GetWidth(), 42.f);
    }
 
    {
       // Value was set on this attr, not coming from style:
-      EXPECT_EQ(attrs.AttrText().Color(), RColor::kBlue);
+      EXPECT_EQ(attrs.GetAttrText().GetColor(), RColor::kBlue);
    }
 
 }
@@ -69,8 +71,8 @@ TEST(OptsTest, NullAttribCompare) {
 TEST(OptsTest, AttribEqual) {
    CustomAttrs attrs;
 
-   auto &al1 = attrs.AttrBox().Border();
-   auto &al2 = attrs.AttrBox().Border();
+   auto &al1 = attrs.AttrBox().AttrBorder();
+   auto &al2 = attrs.AttrBox().AttrBorder();
    EXPECT_EQ(al1, al2);
    EXPECT_EQ(al2, al1);
 
@@ -85,9 +87,9 @@ TEST(OptsTest, AttribDiffer) {
    CustomAttrs attrs2;
    CustomAttrs attrs3;
 
-   auto &al1 = attrs1.AttrBox().Border();
-   auto &al2 = attrs2.AttrBox().Border();
-   auto &al3 = attrs3.AttrBox().Border();
+   auto &al1 = attrs1.AttrBox().AttrBorder();
+   auto &al2 = attrs2.AttrBox().AttrBorder();
+   auto &al3 = attrs3.AttrBox().AttrBorder();
 
    al1.SetWidth(7.);
    EXPECT_NE(al1, al2);
@@ -110,13 +112,13 @@ TEST(OptsTest, AttribAssign) {
    CustomAttrs attrs2;
 
    // deep copy - independent from origin
-   auto attrBox1 = attrs1.AttrBox();
-   auto attrBox2 = attrs2.AttrBox();
+   auto attrBox1 = attrs1.GetAttrBox();
+   auto attrBox2 = attrs2.GetAttrBox();
 
    EXPECT_EQ(attrBox2, attrBox1);
    EXPECT_EQ(attrBox1, attrBox2);
 
-   attrBox1.Border().SetWidth(42.);
+   attrBox1.AttrBorder().SetWidth(42.);
    EXPECT_NE(attrBox2, attrBox1);
 
    attrBox2 = attrBox1;
@@ -124,20 +126,20 @@ TEST(OptsTest, AttribAssign) {
    EXPECT_EQ(attrBox1, attrBox2);
 
    // But original attributes now differ
-   EXPECT_NE(attrs1.AttrBox(), attrBox1);
-   EXPECT_NE(attrs2.AttrBox(), attrBox2);
+   EXPECT_NE(attrs1.GetAttrBox(), attrBox1);
+   EXPECT_NE(attrs2.GetAttrBox(), attrBox2);
 
-   EXPECT_FLOAT_EQ(attrBox1.Border().GetWidth(), 42.);
-   EXPECT_FLOAT_EQ(attrBox2.Border().GetWidth(), 42.);
+   EXPECT_FLOAT_EQ(attrBox1.GetAttrBorder().GetWidth(), 42.);
+   EXPECT_FLOAT_EQ(attrBox2.GetAttrBorder().GetWidth(), 42.);
    // default width return 1
-   EXPECT_FLOAT_EQ(attrs1.AttrBox().Border().GetWidth(), 1.);
-   EXPECT_FLOAT_EQ(attrs2.AttrBox().Border().GetWidth(), 1.);
+   EXPECT_FLOAT_EQ(attrs1.GetAttrBox().GetAttrBorder().GetWidth(), 1.);
+   EXPECT_FLOAT_EQ(attrs2.GetAttrBox().GetAttrBorder().GetWidth(), 1.);
 
    // Are the two attributes disconnected?
-   attrBox2.Border().SetWidth(3.);
-   EXPECT_EQ(attrs1.AttrBox().Border(), attrs2.AttrBox().Border());
-   EXPECT_FLOAT_EQ(attrBox1.Border().GetWidth(), 42.);
-   EXPECT_FLOAT_EQ(attrBox2.Border().GetWidth(), 3.);
-   EXPECT_FLOAT_EQ(attrs1.AttrBox().Border().GetWidth(), 1.);
-   EXPECT_FLOAT_EQ(attrs2.AttrBox().Border().GetWidth(), 1.);
+   attrBox2.AttrBorder().SetWidth(3.);
+   EXPECT_EQ(attrs1.GetAttrBox().GetAttrBorder(), attrs2.GetAttrBox().GetAttrBorder());
+   EXPECT_FLOAT_EQ(attrBox1.GetAttrBorder().GetWidth(), 42.);
+   EXPECT_FLOAT_EQ(attrBox2.GetAttrBorder().GetWidth(), 3.);
+   EXPECT_FLOAT_EQ(attrs1.GetAttrBox().GetAttrBorder().GetWidth(), 1.);
+   EXPECT_FLOAT_EQ(attrs2.GetAttrBox().GetAttrBorder().GetWidth(), 1.);
 }

@@ -55,8 +55,8 @@ void draw_legend()
    canvas->AssignAutoColors();
    
    auto legend = canvas->Draw<RLegend>(RPadPos(0.5_normal, 0.6_normal), RPadPos(0.9_normal,0.9_normal), "Legend title");
-   legend->AttrBox().Fill().SetStyle(5).SetColor(RColor::kWhite);
-   legend->AttrBox().Border().SetWidth(2).SetColor(RColor::kRed);
+   legend->AttrBox().AttrFill().SetStyle(5).SetColor(RColor::kWhite);
+   legend->AttrBox().AttrBorder().SetWidth(2).SetColor(RColor::kRed);
    legend->AddEntry(draw1, "histo1").SetLine("line_");
    legend->AddEntry(draw2, "histo2").SetLine("line_");
 

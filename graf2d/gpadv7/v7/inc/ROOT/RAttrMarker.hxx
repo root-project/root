@@ -30,7 +30,7 @@ class RAttrMarker : public RAttrBase {
    R__ATTR_CLASS(RAttrMarker, "marker_", AddDouble("size", 1.).AddInt("style", 1).AddDefaults(fColor));
 
    RAttrMarker &SetColor(const RColor &color) { fColor = color; return *this; }
-   const RColor &Color() const { return fColor; }
+   const RColor &GetColor() const { return fColor; }
    RColor &Color() { return fColor; }
 
    /// The size of the marker.

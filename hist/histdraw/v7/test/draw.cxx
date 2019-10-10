@@ -49,6 +49,6 @@ TEST(DrawOptTest, OneD)
    RCanvas canv;
    auto drawable = canv.Draw(h);
    drawable->AttrLine().SetColor(RColor::kRed);
-   RColor shouldBeRed = drawable->AttrLine().Color();
+   RColor shouldBeRed = drawable->AttrLine().GetColor();
    EXPECT_EQ(shouldBeRed, RColor::kRed);
 }

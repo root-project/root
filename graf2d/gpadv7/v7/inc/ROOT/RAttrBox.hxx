@@ -26,16 +26,18 @@ namespace Experimental {
 
 class RAttrBox : public RAttrBase {
 
-   RAttrLine fBorder{this, "border_"};       ///<!
-   RAttrFill fFill{this, "fill_"};           ///<!
+   RAttrLine fAttrBorder{this, "border_"};   ///<!
+   RAttrFill fAttrFill{this, "fill_"};           ///<!
 
-   R__ATTR_CLASS(RAttrBox, "box_", AddDefaults(fBorder).AddDefaults(fFill));
+   R__ATTR_CLASS(RAttrBox, "box_", AddDefaults(fAttrBorder).AddDefaults(fAttrFill));
 
-   const RAttrLine &Border() const { return fBorder; }
-   RAttrLine &Border() { return fBorder; }
+   const RAttrLine &GetAttrBorder() const { return fAttrBorder; }
+   RAttrBox &SetAttrBorder(const RAttrLine &border) { fAttrBorder = border; return *this; }
+   RAttrLine &AttrBorder() { return fAttrBorder; }
 
-   const RAttrFill &Fill() const { return fFill; }
-   RAttrFill &Fill() { return fFill; }
+   const RAttrFill &GetAttrFill() const { return fAttrFill; }
+   RAttrBox &SetAttrFill(const RAttrFill &fill) { fAttrFill = fill; return *this; }
+   RAttrFill &AttrFill() { return fAttrFill; }
 };
 
 } // namespace Experimental
