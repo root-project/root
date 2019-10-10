@@ -170,12 +170,12 @@ void TestInferenceSingleTreeObjectiveLogistic(const std::string& tag)
    const auto maxDepth = 1;
    const auto numInputs = 1;
    const auto numTrees = 1;
-   WriteModel("myModel", "Test" + tag + "1.root", "logistic",
+   WriteModel("myModel", "Test" + tag + "Logistic1.root", "logistic",
            {0}, {0}, {0.0, 1.0, -1.0}, {maxDepth}, {numTrees},
            {numInputs}, {1});
 
    ForestType forest;
-   forest.Load("myModel", "TestBranchlessForest1.root", 0);
+   forest.Load("myModel", "Test" + tag + "Logistic1.root", 0);
 
    const auto rows = 2;
    float inputs[numInputs * rows] = {-999.0, 999.0};
