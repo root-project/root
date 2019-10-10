@@ -16,7 +16,7 @@
 using namespace ROOT::Experimental;
 
 // Test usage of empty color
-TEST(RColorTest, Empty) {
+TEST(RColor, Empty) {
    RColor col;
    EXPECT_EQ(col.GetHex(), "");
    EXPECT_DOUBLE_EQ(col.GetAlpha(), 1.);
@@ -24,7 +24,7 @@ TEST(RColorTest, Empty) {
 }
 
 // Test usage of empty color
-TEST(RColorTest, AsHex) {
+TEST(RColor, AsHex) {
    RColor col;
    col.SetRGB(0,0,0);
    EXPECT_EQ(col.GetHex(), "000000");
@@ -37,7 +37,7 @@ TEST(RColorTest, AsHex) {
 }
 
 // Test usage of empty color
-TEST(RColorTest, Components) {
+TEST(RColor, Components) {
    RColor col;
    col.SetHex("012345");
    EXPECT_EQ(col.GetRed(), 0x01);
@@ -45,7 +45,7 @@ TEST(RColorTest, Components) {
    EXPECT_EQ(col.GetBlue(), 0x45);
 }
 
-TEST(RColorTest, Alpha) {
+TEST(RColor, Alpha) {
 
    static constexpr double delta = 0.01; // approx precision of alpha storage
 
@@ -67,7 +67,7 @@ TEST(RColorTest, Alpha) {
 }
 
 
-TEST(RColorTest, Predef) {
+TEST(RColor, Predef) {
    {
       RColor col{RColor::kRed};
       EXPECT_EQ(col.GetHex(), "FF0000");

@@ -113,12 +113,13 @@ public:
    RLegend &SetAttrTitle(const RAttrText &attr) { fAttrTitle = attr; return *this; }
    RAttrText &AttrTitle() { return fAttrTitle; }
 
-
    Internal::RLegendEntry &AddEntry(std::shared_ptr<RDrawable> drawable, const std::string &lbl = "")
    {
       fEntries.emplace_back(drawable, lbl);
       return fEntries.back();
    }
+
+   auto NumEntries() const { return fEntries.size(); }
 
 
 };

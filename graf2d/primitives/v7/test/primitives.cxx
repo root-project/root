@@ -4,6 +4,7 @@
 #include "ROOT/RLine.hxx"
 #include "ROOT/RMarker.hxx"
 #include "ROOT/RText.hxx"
+#include "ROOT/RLegend.hxx"
 #include "ROOT/RCanvas.hxx"
 
 using namespace ROOT::Experimental;
@@ -75,5 +76,53 @@ TEST(Primitives, RText)
    EXPECT_DOUBLE_EQ(text->GetAttrText().GetAngle(), 90.);
    EXPECT_EQ(text->GetAttrText().GetAlign(), 13);
    EXPECT_EQ(text->GetAttrText().GetFont(), 42);
+}
+
+
+// Test same color functionality
+TEST(Primitives, SameColor)
+{
+   RCanvas canv;
+   auto line1 = canv.Draw<RLine>(RPadPos(0.1_normal, 0.1_normal), RPadPos(0.9_normal,0.9_normal));
+   auto line2 = canv.Draw<RLine>(RPadPos(0.1_normal, 0.9_normal), RPadPos(0.9_normal,0.1_normal));
+   auto line3 = canv.Draw<RLine>(RPadPos(0.9_normal, 0.1_normal), RPadPos(0.1_normal,0.9_normal));
+
+   line1->AttrLine().Color().SetAuto();
+   line2->AttrLine().Color().SetAuto();
+   line3->AttrLine().Color().SetAuto();
+
+   canv.AssignAutoColors();
+
+   EXPECT_EQ(canv.NumPrimitives(), 3u);
+
+   EXPECT_EQ(line1->GetAttrLine().GetColor(), RColor::kRed);
+   EXPECT_EQ(line2->GetAttrLine().GetColor(), RColor::kGreen);
+   EXPECT_EQ(line3->GetAttrLine().GetColor(), RColor::kBlue);
+}
+
+// Test RLegend API
+TEST(Primitives, RLegend)
+{
+   RCanvas canv;
+   auto line1 = canv.Draw<RLine>(RPadPos(0.1_normal, 0.1_normal), RPadPos(0.9_normal,0.9_normal));
+   auto line2 = canv.Draw<RLine>(RPadPos(0.1_normal, 0.9_normal), RPadPos(0.9_normal,0.1_normal));
+   auto line3 = canv.Draw<RLine>(RPadPos(0.9_normal, 0.1_normal), RPadPos(0.1_normal,0.9_normal));
+
+   line1->AttrLine().SetColor(RColor::kRed);
+   line2->AttrLine().SetColor(RColor::kGreen);
+   line3->AttrLine().SetColor(RColor::kBlue);
+
+   auto legend = canv.Draw<RLegend>(RPadPos(0.5_normal, 0.6_normal), RPadPos(0.9_normal,0.9_normal), "Legend title");
+   legend->AttrBox().AttrFill().SetStyle(5).SetColor(RColor::kWhite);
+   legend->AttrBox().AttrBorder().SetWidth(2).SetColor(RColor::kRed);
+   legend->AddEntry(line1, "RLine 1").SetLine("line_");
+   legend->AddEntry(line2, "RLine 2").SetLine("line_");
+   legend->AddEntry(line3, "RLine 3").SetLine("line_");
+
+   EXPECT_EQ(canv.NumPrimitives(), 4u);
+
+   EXPECT_EQ(legend->NumEntries(), 3u);
+   EXPECT_EQ(legend->GetTitle(), "Legend title");
+   EXPECT_EQ(legend->GetAttrBox().GetAttrFill().GetColor(), RColor::kWhite);
 }
 
