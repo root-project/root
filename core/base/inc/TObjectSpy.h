@@ -30,15 +30,15 @@
 class TObjectSpy : public TObject {
 
 private:
-   TObjectSpy(const TObjectSpy& s); // Not implemented. : TObject(), fObj(s.fObj), fFixMustCleanupBit(s.fFixMustCleanupBit) { }
-   TObjectSpy& operator=(const TObjectSpy& s); // Not implemented. { fObj = s.fObj; fFixMustCleanupBit = s.fFixMustCleanupBit; return *this; }
+   TObjectSpy(const TObjectSpy& s) = delete;
+   TObjectSpy& operator=(const TObjectSpy& s) = delete;
 
 protected:
    TObject  *fObj;                 // object being spied
    Bool_t    fResetMustCleanupBit; // flag saying that kMustCleanup needs to be reset in dtor
 
 public:
-   TObjectSpy(TObject *obj = 0, Bool_t fixMustCleanupBit=kTRUE);
+   TObjectSpy(TObject *obj = nullptr, Bool_t fixMustCleanupBit=kTRUE);
    virtual ~TObjectSpy();
 
    virtual void  RecursiveRemove(TObject *obj);
@@ -52,8 +52,8 @@ public:
 class TObjectRefSpy : public TObject {
 
 private:
-   TObjectRefSpy(const TObjectRefSpy& s); // Not implemented.  : TObject(), fObj(s.fObj), fFixMustCleanupBit(s.fFixMustCleanupBit) { }
-   TObjectRefSpy& operator=(const TObjectRefSpy& s);  // Not implemented. { fObj = s.fObj; fFixMustCleanupBit = s.fFixMustCleanupBit; return *this; }
+   TObjectRefSpy(const TObjectRefSpy& s) = delete;
+   TObjectRefSpy& operator=(const TObjectRefSpy& s) = delete;
 
 protected:
    TObject  *&fObj;                // object being spied

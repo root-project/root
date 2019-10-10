@@ -34,7 +34,6 @@
 #include "TPadPainter.h"
 #include "TVirtualGL.h"
 #include "TVirtualPS.h"
-#include "TObjectSpy.h"
 #include "TAxis.h"
 #include "TView.h"
 
