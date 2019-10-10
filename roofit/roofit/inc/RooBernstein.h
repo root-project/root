@@ -45,7 +45,7 @@ private:
   RooSpan<double> evaluateBatch(std::size_t begin, std::size_t batchSize) const;
 
 
-  ClassDef(RooBernstein,1) // Bernstein polynomial PDF
+  ClassDef(RooBernstein,2) // Bernstein polynomial PDF
 };
 
 #endif
