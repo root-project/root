@@ -27,6 +27,8 @@ template class RHistDrawable<1>;
 template class RHistDrawable<2>;
 template class RHistDrawable<3>;
 
+#ifdef _MSC_VER
+
 std::shared_ptr<RHistDrawable<1>> GetDrawable(const std::shared_ptr<RH1D> &histimpl)
 {
    return std::make_shared<RHistDrawable<1>>(histimpl);
@@ -86,6 +88,8 @@ std::shared_ptr<RHistDrawable<3>> GetDrawable(const std::shared_ptr<RH3F> &histi
 {
    return std::make_shared<RHistDrawable<3>>(histimpl);
 }
+
+#endif // _MSC_VER
 
 } // namespace Experimental
 } // namespace ROOT
