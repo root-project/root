@@ -29,33 +29,28 @@ void box()
    RColor Color1(255, 0, 0, 0.5); // 50% opaque
    RColor Color2(0, 0, 255, 0.3); // 30% opaque
 
-   Box1->AttrBox().Border().SetColor(Color1).SetWidth(5);
-   Box1->AttrBox().Fill().SetColor(RColor::kRed);
-   //OptsBox1->Fill().SetColor(Color2);
+   Box1->AttrBox().AttrBorder().SetColor(Color1).SetWidth(5);
+   Box1->AttrBox().AttrFill().SetColor(RColor::kRed);
 
    auto Box2 = canvas->Draw<RBox>(RPadPos(0.4_normal, 0.2_normal), RPadPos(0.6_normal,0.7_normal));
-   Box2->AttrBox().Border().SetColor(Color2).SetStyle(2).SetWidth(3);
-   Box2->AttrBox().Fill().SetColor(RColor::kGreen);
-   //OptsBox2->Fill().SetStyle(0);
+   Box2->AttrBox().AttrBorder().SetColor(Color2).SetStyle(2).SetWidth(3);
+   Box2->AttrBox().AttrFill().SetColor(RColor::kGreen);
 
    auto Box3 = canvas->Draw<RBox>(RPadPos(0.7_normal, 0.4_normal), RPadPos(0.9_normal,0.6_normal));
-   //OptsBox3->SetFillStyle(0);
-   //OptsBox3->SetRoundWidth(50);
-   //OptsBox3->SetRoundHeight(50);
-   Box3->AttrBox().Border().SetWidth(3);
-   Box3->AttrBox().Fill().SetColor(RColor::kBlue);
+   Box3->AttrBox().AttrBorder().SetWidth(3);
+   Box3->AttrBox().AttrFill().SetColor(RColor::kBlue);
 
    auto Box4 = canvas->Draw<RBox>(RPadPos(0.7_normal, 0.7_normal), RPadPos(0.9_normal,0.9_normal));
    //OptsBox4->SetFillStyle(0);
    //OptsBox4->SetRoundWidth(50);
    //OptsBox4->SetRoundHeight(25);
-   Box4->AttrBox().Border().SetWidth(3);
+   Box4->AttrBox().AttrBorder().SetWidth(3);
 
    auto Box5 = canvas->Draw<RBox>(RPadPos(0.7_normal, 0.1_normal), RPadPos(0.9_normal,0.3_normal));
    //OptsBox5->SetFillStyle(0);
    //OptsBox5->SetRoundWidth(25);
    //OptsBox5->SetRoundHeight(50);
-   Box5->AttrBox().Border().SetWidth(3);
+   Box5->AttrBox().AttrBorder().SetWidth(3);
 
    canvas->Show();
 }

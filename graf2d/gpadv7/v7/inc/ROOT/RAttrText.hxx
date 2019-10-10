@@ -50,7 +50,7 @@ class RAttrText : public RAttrBase {
 
    ///The color of the text.
    RAttrText &SetColor(const RColor &color) { fColor = color; return *this; }
-   const RColor &Color() const { return fColor; }
+   const RColor &GetColor() const { return fColor; }
    RColor &Color() { return fColor; }
 
 };

@@ -51,7 +51,7 @@ TEST(RStyleTest, CreateStyle)
 
    EXPECT_DOUBLE_EQ(drawable.AttrLine().GetWidth(), 2.);
 
-   EXPECT_EQ(drawable.AttrBox().Fill().GetStyle(), 5);
+   EXPECT_EQ(drawable.AttrBox().GetAttrFill().GetStyle(), 5);
 
    EXPECT_DOUBLE_EQ(drawable.AttrText().GetSize(), 3.);
 }
