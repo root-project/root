@@ -31,7 +31,7 @@ class RText : public RDrawable {
 
    std::string fText;                      ///< text to display
    RPadPos fPos;                           ///< position
-   RAttrText  fTextAttr{this, "text_"};    ///<! text attributes
+   RAttrText  fAttrText{this, "text_"};    ///<! text attributes
 
 public:
 
@@ -47,8 +47,9 @@ public:
    RText &SetPos(const RPadPos& p) { fPos = p; return *this; }
    const RPadPos &GetPos() const { return fPos; }
 
-   RAttrText &AttrText() { return fTextAttr; }
-   const RAttrText &AttrText() const { return fTextAttr; }
+   const RAttrText &GetAttrText() const { return fAttrText; }
+   RText &SetAttrText(const RAttrText &attr) { fAttrText = attr; return *this; }
+   RAttrText &AttrText() { return fAttrText; }
 };
 
 
