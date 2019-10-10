@@ -143,9 +143,17 @@ sap.ui.define(['sap/ui/core/Component',
             }, this);
 
             this.getView().byId("aCodeEditor").setModel(new JSONModel({
-               code: ""
+               code: "",
+               ext: "",
+               filename: "",
+               fullpath: "",
+               modified: false
             }));
             
+            this.getView().byId("aCodeEditor").attachChange( function() {
+               this.getModel().setProperty("/modified", true);
+            });
+
             /* this.getView().byId("aRootCanvas1").setModel(new JSONModel({
                rootCanvas: ""
             }));
@@ -344,6 +352,52 @@ sap.ui.define(['sap/ui/core/Component',
          if (filename == undefined) filename = "untitled";
          if (ext == undefined) ext = "txt";
          File.save(sText, filename, ext);
+         oModel().setProperty("/modified", false);
+      },
+
+      /** @brief Handle the "Save" button press event */
+      onSaveFile: function() {
+         var oEditor = this.getView().byId("aCodeEditor");
+         var oModel = oEditor.getModel();
+         var sText = oModel.getProperty("/code");
+         var fullpath = oModel.getProperty("/fullpath");
+         if (fullpath == undefined)
+            return onSaveAs();
+         oModel.setProperty("/modified", false);
+         return this.websocket.Send("SAVEFILE:" + fullpath + ":" + sText);
+      },
+
+      reallyRunMacro: function() {
+         var oEditor = this.getView().byId("aCodeEditor");
+         var oModel = oEditor.getModel();
+         var sText = oModel.getProperty("/code");
+         var fullpath = oModel.getProperty("/fullpath");
+         if (fullpath == undefined)
+            return this.onSaveAs();
+         return this.websocket.Send("RUNMACRO:" + fullpath);
+      },
+
+      /** @brief Handle the "Run" button press event */
+      onRunMacro: function() {
+         var pthis = this;
+         var oEditor = this.getView().byId("aCodeEditor");
+         var oModel = oEditor.getModel();
+         if (oModel.getProperty("/modified") === true) {
+            MessageBox.confirm('The text has been modified! Do you want to save it?', {
+               title: 'Run Macro',
+               icon: sap.m.MessageBox.Icon.QUESTION,
+               actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO, sap.m.MessageBox.Action.CANCEL],
+               onClose: function (oAction) {
+                  if (oAction === MessageBox.Action.YES)
+                     pthis.onSaveFile();
+                  else if (oAction === MessageBox.Action.CANCEL)
+                     return;
+                  return pthis.reallyRunMacro();
+               }
+            });
+         }
+         else
+            return this.reallyRunMacro();
       },
 
       /** @brief Assign the "double click" event handler to each row */
@@ -400,6 +454,9 @@ sap.ui.define(['sap/ui/core/Component',
          }
          var oEditor = this.getView().byId("aCodeEditor");
          var oModel = oEditor.getModel();
+         oModel.setProperty("/fullpath", fullpath);
+         this.getView().byId("run_macro").setEnabled(true);
+         this.getView().byId("save_file").setEnabled(true);
          var filename = fullpath.substr(fullpath.lastIndexOf('/') + 1);
          if (this.setFileNameType(filename))
             return this.websocket.Send("DBLCLK:" + fullpath);
