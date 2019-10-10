@@ -31,6 +31,7 @@
 #include "TDirectory.h"
 #include "TInterpreter.h"
 #include "TUUID.h"
+#include "TGenericClassInfo.h" // ROOT::Internal::GetDemangledTypeName
 
 #include "BranchlessTree.hxx"
 #include "Objectives.hxx"
@@ -194,6 +195,7 @@ struct BranchlessJittedForest : public ForestBase<T, std::function<void (const T
 /// \param[in] filename Filename of the ROOT file
 /// \param[in] output Load trees corresponding to the given output node of the forest
 /// \param[in] sortTrees Flag to indicate sorting the input trees by the cut value of the first node of each tree
+/// \param[out] Return jitted code as string
 template <typename T>
 inline std::string
 BranchlessJittedForest<T>::Load(const std::string &key, const std::string &filename, const int output, const bool sortTrees)
@@ -227,8 +229,10 @@ BranchlessJittedForest<T>::Load(const std::string &key, const std::string &filen
       std::runtime_error("No trees found for given output node of the forest.");
 
    // Get typename of template argument as string
-   // TODO
-   std::string typeName = "float";
+   std::string typeName = ROOT::Internal::GetDemangledTypeName(typeid(T));
+   if (typeName.compare("") == 0) {
+      throw std::runtime_error("Failed to just-in-time compile inference code for branchless forest (typename as string)");
+   }
 
    // Load parameters in trees
    std::vector<T> firstThreshold(c);
@@ -293,7 +297,6 @@ BranchlessJittedForest<T>::Load(const std::string &key, const std::string &filen
    nameSpace = "ns_" + nameSpace;
 
    // JIT the forest
-   // TODO: Error-handling
    std::stringstream jitForest;
    jitForest << "#pragma cling optimize(3)\n"
              << "namespace " << nameSpace << " {\n";
@@ -317,15 +320,20 @@ BranchlessJittedForest<T>::Load(const std::string &key, const std::string &filen
    jitForest << "   }\n"
              << "}\n"
              << "} // end namespace " << nameSpace;
-   const std::string jitForestStr = jitForest.str(); // DEBUG
-   gInterpreter->Declare(jitForestStr.c_str());
+   const std::string jitForestStr = jitForest.str();
+   const auto err = gInterpreter->Declare(jitForestStr.c_str());
+   if (err == 0) {
+      throw std::runtime_error("Failed to just-in-time compile inference code for branchless forest (declare function)");
+   }
 
    // Get function pointer and attach pointer to the forest
-   // TODO: Error-handling
    std::stringstream treesFunc;
    treesFunc << "#pragma cling optimize(3)\n" << nameSpace << "::Inference";
    const std::string treesFuncStr = treesFunc.str();
    auto ptr = gInterpreter->Calc(treesFuncStr.c_str());
+   if (ptr == 0) {
+      throw std::runtime_error("Failed to just-in-time compile inference code for branchless forest (compile function)");
+   }
    this->fTrees = reinterpret_cast<void (*)(const T *, int, bool, float*)>(ptr);
 
    // Clean-up
@@ -340,7 +348,12 @@ BranchlessJittedForest<T>::Load(const std::string &key, const std::string &filen
    return jitForestStr;
 }
 
-// TODO: Put doxygen header
+/// Perform inference of the forest with the jitted branchless implementation on a batch of inputs
+///
+/// \param[in] inputs Pointer to data containing the inputs
+/// \param[in] rows Number of events in inputs vector
+/// \param[in] layout Row major (true) or column major (false) memory layout
+/// \param[in] predictions Pointer to the buffer to be filled with the predictions
 template <typename T>
 void BranchlessJittedForest<T>::Inference(const T *inputs, const int rows, bool layout, T *predictions)
 {
