@@ -25,6 +25,8 @@
 #include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RCanvas.hxx"
 
+// macro must be here while cling is not capable to load
+// library automatically for outlined function see ROOT-10336
 R__LOAD_LIBRARY(libROOTHistDraw)
 
 #include "TRandom3.h"
