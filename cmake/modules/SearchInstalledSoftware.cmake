@@ -1539,6 +1539,17 @@ if(cuda OR tmva-gpu)
     endif()
 
     enable_language(CUDA)
+    
+    ### look for package CuDNN
+    find_package(CuDNN)
+
+    if (CUDNN_FOUND)
+      message(STATUS "CuDNN library found: " ${CUDNN_LIBRARIES})
+    else()
+      message(STATUS "CuDNN library not found")
+    endif()
+
+    
   elseif(fail-on-missing)
     message(FATAL_ERROR "CUDA not found. Ensure that the installation of CUDA is in the CMAKE_PREFIX_PATH")
   endif()
