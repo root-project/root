@@ -441,16 +441,27 @@ if(tmva-cpu)
 endif()
 
 if(tmva-gpu)
-  target_sources(TMVA PRIVATE
+  target_link_libraries(TMVA PRIVATE ${CUDA_CUBLAS_LIBRARIES})
+  	target_include_directories(TMVA PRIVATE ${CUDA_INCLUDE_DIRS})
+  if (CUDNN_FOUND)
+    message(STATUS "using cudnn in tmva")
+	 target_sources(TMVA PRIVATE
     src/DNN/Architectures/Cuda.cu
     src/DNN/Architectures/Cuda/CudaBuffers.cxx
     src/DNN/Architectures/Cuda/CudaMatrix.cu
     src/DNN/Architectures/Cuda/CudaTensor.cu
-    src/DNN/Architectures/Cudnn.cu
-  )
-  target_include_directories(TMVA PRIVATE ${CUDA_INCLUDE_DIRS})
-  target_link_libraries(TMVA PRIVATE ${CUDA_CUBLAS_LIBRARIES})
-  target_link_libraries(TMVA PRIVATE ${CUDA_CUBLAS_LIBRARIES} /usr/local/cuda/lib64/libcudnn.so)
+	 src/DNN/Architectures/Cudnn.cu)
+    target_link_libraries(TMVA PRIVATE ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
+  else()
+   message(STATUS "cudnn not found - use only Cuda+Cublas")
+   target_compile_definitions(TMVA PRIVATE -DDNN_NO_CUDNN)
+	target_link_libraries(TMVA PRIVATE ${CUDA_CUBLAS_LIBRARIES})
+	target_sources(TMVA PRIVATE
+    src/DNN/Architectures/Cuda.cu
+    src/DNN/Architectures/Cuda/CudaBuffers.cxx
+    src/DNN/Architectures/Cuda/CudaMatrix.cu
+    src/DNN/Architectures/Cuda/CudaTensor.cu )
+  endif()
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
