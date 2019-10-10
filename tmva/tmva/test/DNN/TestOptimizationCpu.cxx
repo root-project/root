@@ -35,6 +35,10 @@ using TMVA::DNN::EOptimizer;
 int main()
 {
    using Architecture = TCpu<Float_t>;
+
+   gRandom->SetSeed(111);
+   Architecture::SetRandomSeed(112);
+
    std::cout << "Testing optimization: (single precision) for Cpu" << std::endl;
 
    Real_t momentumSinglePrecision = 0.0;
