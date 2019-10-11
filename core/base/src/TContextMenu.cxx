@@ -205,8 +205,10 @@ void TContextMenu::Action(TClassMenuItem *menuitem)
 ////////////////////////////////////////////////////////////////////////////////
 /// Action to be performed when this toggle menu item is selected.
 
-void TContextMenu::Action(TObject *object, TToggle *toggle)
+void TContextMenu::Action(TObject *object, TToggle *t)
 {
+   TToggleBase *toggle = (TToggleBase *) t;
+
    if (object && toggle) {
       TObjectSpy savePad;
 
@@ -220,8 +222,7 @@ void TContextMenu::Action(TObject *object, TToggle *toggle)
 
       gROOT->SetFromPopUp(kTRUE);
 
-      // toggle->Toggle();
-      fContextMenuImp->Toggle(toggle);
+      toggle->Toggle();
 
       if (fSelectedCanvas && fSelectedCanvas->GetPadSave())
          fSelectedCanvas->GetPadSave()->Modified();

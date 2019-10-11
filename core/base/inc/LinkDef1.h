@@ -195,6 +195,7 @@
 #pragma link C++ class TContextMenu+;
 #pragma link C++ class TContextMenuImp+;
 #pragma link C++ class TControlBarImp+;
+#pragma link C++ class TToggleBase+;
 #pragma link C++ class TInspectorImp+;
 #pragma link C++ class TDatime-;
 #pragma link C++ class TDirectory-;

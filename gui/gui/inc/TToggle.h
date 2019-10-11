@@ -34,13 +34,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TObject.h"
+#include "TContextMenuImp.h"
 #include "TMethodCall.h"
 #include "TMethod.h"
-#include "TNamed.h"
 
 
-class TToggle: public TNamed {
+class TToggle: public TToggleBase {
 
 private:
    Bool_t       fState;        //Object's state - "a local copy"

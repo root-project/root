@@ -33,9 +33,7 @@ class TMethodArg;
 class TVirtualPad;
 class TObjArray;
 class TBrowser;
-class TToggle;
 class TClassMenuItem;
-
 
 class TContextMenu : public TNamed {
 

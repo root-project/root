@@ -23,6 +23,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "Rtypes.h"
+#include "TNamed.h"
 
 class TContextMenu;
 class TObject;
@@ -30,6 +31,13 @@ class TMethod;
 class TFunction;
 class TVirtualPad;
 class TToggle;
+
+class TToggleBase : public TNamed {
+public:
+   TToggleBase() : TNamed() {}
+   virtual void    Toggle() {}
+   ClassDef(TToggleBase,0) // base class for TToggle
+};
 
 class TContextMenuImp {
 
@@ -43,7 +51,7 @@ protected:
      return *this;}
 
 public:
-   TContextMenuImp(TContextMenu *c=0) : fContextMenu(c) { }
+   TContextMenuImp(TContextMenu *c = nullptr) : fContextMenu(c) { }
    virtual ~TContextMenuImp();
 
    virtual TContextMenu *GetContextMenu() const { return fContextMenu; }
@@ -51,8 +59,6 @@ public:
    virtual void Dialog(TObject *, TFunction *) {}
    virtual void Dialog(TObject *, TMethod *) {}
    virtual void DisplayPopup(Int_t /* x */, Int_t /* y */) {}
-
-   virtual void Toggle(TToggle *) {}
 
    ClassDef(TContextMenuImp,0) //Context sensitive popup menu implementation
 };

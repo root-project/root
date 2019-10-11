@@ -38,7 +38,7 @@ ClassImp(TToggle);
 /// TToggle default constructor. You have to initialize it before using
 /// by making a call to SetToggledVariable() or SetToggledObject().
 
-TToggle::TToggle()
+TToggle::TToggle() : TToggleBase()
 {
    fState       =  kFALSE;
    fValue       = -1;
