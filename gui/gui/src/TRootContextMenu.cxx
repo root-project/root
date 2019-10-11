@@ -801,3 +801,11 @@ void TRootContextMenu::RecursiveRemove(TObject *obj)
    }
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Just invoke toggle->Toggle()
+
+void TRootContextMenu::Toggle(TToggle *toggle)
+{
+   toggle->Toggle();
+}

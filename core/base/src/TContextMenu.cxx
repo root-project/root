@@ -219,7 +219,10 @@ void TContextMenu::Action(TObject *object, TToggle *toggle)
       TObjectRefSpy fsc((TObject*&) fSelectedCanvas);
 
       gROOT->SetFromPopUp(kTRUE);
-      toggle->Toggle();
+
+      // toggle->Toggle();
+      fContextMenuImp->Toggle(toggle);
+
       if (fSelectedCanvas && fSelectedCanvas->GetPadSave())
          fSelectedCanvas->GetPadSave()->Modified();
       if (fSelectedPad)

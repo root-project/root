@@ -53,6 +53,8 @@ public:
    virtual Bool_t HandleMotion(Event_t *event);
    virtual void   OnlineHelp();
    virtual void   RecursiveRemove(TObject *obj);
+   virtual void   Toggle(TToggle *);
+
 
    Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 

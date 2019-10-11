@@ -29,7 +29,7 @@
 // This Object may be also used for toggling an integer variable,       //
 // which may be important while building universal objects...           //
 // When user provides a "set-method" of name SetXXX this object tries   //
-// automaticaly to find a matching "get-method" by looking for a method //
+// automatically to find a matching "get-method" by looking for a method//
 // with name GetXXX or IsXXX for given object.                          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////

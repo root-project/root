@@ -28,7 +28,8 @@ class TContextMenu;
 class TObject;
 class TMethod;
 class TFunction;
-
+class TVirtualPad;
+class TToggle;
 
 class TContextMenuImp {
 
@@ -47,15 +48,13 @@ public:
 
    virtual TContextMenu *GetContextMenu() const { return fContextMenu; }
 
-   virtual void Dialog(TObject *object, TFunction *function);
-   virtual void Dialog(TObject *object, TMethod *method);
-   virtual void DisplayPopup(Int_t x, Int_t y);
+   virtual void Dialog(TObject *, TFunction *) {}
+   virtual void Dialog(TObject *, TMethod *) {}
+   virtual void DisplayPopup(Int_t /* x */, Int_t /* y */) {}
+
+   virtual void Toggle(TToggle *) {}
 
    ClassDef(TContextMenuImp,0) //Context sensitive popup menu implementation
 };
-
-inline void TContextMenuImp::Dialog(TObject *, TFunction *) { }
-inline void TContextMenuImp::Dialog(TObject *, TMethod *) { }
-inline void TContextMenuImp::DisplayPopup(Int_t, Int_t) { }
 
 #endif
