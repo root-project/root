@@ -19,7 +19,6 @@ of the autoloading of branches as well as all the generic setup routine.
 #include "TBranchElement.h"
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
-#include "TDataMember.h"
 
 ClassImp(ROOT::Detail::TBranchProxy);
 
