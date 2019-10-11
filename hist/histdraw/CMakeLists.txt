@@ -8,15 +8,11 @@
 # CMakeLists.txt file for building ROOT hist/histdraw package
 ############################################################################
 
-if(NOT root7)
-  return()
-endif()
-
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTHistDraw
   HEADERS
     ROOT/RHistDrawable.hxx
   SOURCES
-    v7/src/RHistDrawable.cxx
+    src/RHistDrawable.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   DEPENDENCIES
@@ -26,4 +22,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTHistDraw
     ROOTGpadv7
 )
 
-ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
+ROOT_ADD_TEST_SUBDIRECTORY(test)
