@@ -25,9 +25,12 @@
 #include "TMVA/DNN/CNN/ConvLayer.h"
 #include "TMVA/DNN/CNN/MaxPoolLayer.h"
 
-#include "Cpu/CpuBuffer.h"
-#include "Cpu/CpuMatrix.h"
+#include "TMVA/DNN/Architectures/Cpu/CpuBuffer.h"
+#include "TMVA/DNN/Architectures/Cpu/CpuMatrix.h"
+#include "TMVA/DNN/Architectures/Cpu/CpuTensor.h"
+
 #include <vector>
+
 
 class TRandom;
 

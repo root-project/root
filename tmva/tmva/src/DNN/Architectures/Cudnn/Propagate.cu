@@ -627,25 +627,25 @@ void TCudnn<AFloat>::FreePoolDropoutWorkspace(TWorkspace * workspace, PoolingLay
 }
 
 //____________________________________________________________________________
-template <typename AFloat>
-void TCudnn<AFloat>::BatchNormLayerForwardTraining(Matrix_t input,
-                                          Matrix_t & gamma,
-                                          Matrix_t & beta,
-                                          Matrix_t outputActivation,
-                                          Matrix_t & Xmu,
-                                          Matrix_t & output,
-                                          Matrix_t & Variance,
-                                          Matrix_t & IVariance,
-                                          # if 0
-                                          const BNormDescriptors_t & descriptors,
-                                          BNormWorkspace_t & workspace,
-                                          # endif
-                                          std::vector<Scalar_t> & RunningMeans,
-                                          std::vector<Scalar_t> & RunningVars,
-                                          Scalar_t nTrainedBatches,
-                                          Scalar_t momentum,
-                                          Scalar_t epsilon)
-{
+// template <typename AFloat>
+// void TCudnn<AFloat>::BatchNormLayerForwardTraining(Matrix_t input,
+//                                           Matrix_t & gamma,
+//                                           Matrix_t & beta,
+//                                           Matrix_t outputActivation,
+//                                           Matrix_t & Xmu,
+//                                           Matrix_t & output,
+//                                           Matrix_t & Variance,
+//                                           Matrix_t & IVariance,
+//                                           # if 0
+//                                           const BNormDescriptors_t & descriptors,
+//                                           BNormWorkspace_t & workspace,
+//                                           # endif
+//                                           std::vector<Scalar_t> & RunningMeans,
+//                                           std::vector<Scalar_t> & RunningVars,
+//                                           Scalar_t nTrainedBatches,
+//                                           Scalar_t momentum,
+//                                           Scalar_t epsilon)
+// {
    //AFloat a = 1.0;
    //AFloat b = 0.0;
    /*CUDNNCHECK(cudnnBatchNormalizationForwardTraining(input.GetCudnnHandle(),
@@ -665,7 +665,7 @@ void TCudnn<AFloat>::BatchNormLayerForwardTraining(Matrix_t input,
                                                       epsilon,
       void                            *resultSaveMean,
       void                            *resultSaveInvVariance));*/
-}
+//}
 
 //____________________________________________________________________________
 
@@ -728,6 +728,7 @@ void TCudnn<AFloat>::RotateWeights(TCudaTensor<AFloat> &A,
    ::TMVA::DNN::Cuda::RotateWeights<<<gridDims, blockDims, 0, s>>>(A.GetDataPointer(), B.GetDataPointer(), filterDepth,
                                                                    filterHeight, filterWidth, numFilters);
 }*/
+
 template <typename AFloat>
 using ConvDescriptors_t       =  CNN::TCNNDescriptors<CNN::TConvLayer<TCudnn<AFloat>>>;
 
