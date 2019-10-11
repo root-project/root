@@ -37,6 +37,7 @@
 #include "TMVA/DNN/Architectures/Cuda.h"
 #include "TestConvNet.h"
 
+
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::CNN;
 
@@ -88,7 +89,7 @@ int main()
 
    // fix random initialization
    gRandom->SetSeed(12345);
-   TCuda<double>::SetRandomSeed(12346);
+   TCuda<double>::SetRandomSeed(gRandom->Integer(TMath::Limits<UInt_t>::Max()));
 
 
    if (!test1()) {

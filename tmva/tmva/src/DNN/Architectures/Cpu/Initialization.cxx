@@ -61,9 +61,8 @@ void TCpu<AFloat>::InitializeGauss(TCpuMatrix<AFloat> & A)
 template<typename AFloat>
 void TCpu<AFloat>::InitializeUniform(TCpuMatrix<AFloat> & A)
 {
-   size_t m,n;
-   m = A.GetNrows();
-   n = A.GetNcols();
+   //size_t m = A.GetNrows();
+   size_t n = A.GetNcols();
 
    TRandom &  rand = GetRandomGenerator();
 

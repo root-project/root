@@ -90,7 +90,7 @@ int main()
    int seed = 12345;
    //seed = 0;
    gRandom->SetSeed(seed);
-   TCpu<double>::SetRandomSeed(gRandom->Integer(std::pow(2,32)));
+   TCpu<double>::SetRandomSeed(gRandom->Integer(TMath::Limits<UInt_t>::Max()));
 
 
    if (!test1()) {

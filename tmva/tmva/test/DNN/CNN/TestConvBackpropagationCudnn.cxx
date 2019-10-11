@@ -88,6 +88,7 @@ int main()
 
    // fix random initialization
    TCudnn<double>::SetRandomSeed(12346);
+   TCudnn<double>::SetRandomSeed(gRandom->Integer(TMath::Limits<UInt_t>::Max()));
 
 
    if (!test1()) {

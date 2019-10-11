@@ -475,7 +475,7 @@ void MethodDL::ParseInputLayout()
       // size_t is unsigned
       subDim = (size_t) abs(inputDimString->GetString().Atoi());
       // Size among unused dimensions should be set to 1 for cudnn
-      if (subDim == 0) subDim = 1;
+      //if (subDim == 0) subDim = 1;
       inputShape.push_back(subDim);
    }
 
@@ -1720,9 +1720,20 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
 
    // for Columnlayout tensor memory layout is   HWC while for rowwise is CHW
    if (fXInput.GetLayout() == TMVA::Experimental::MemoryLayout::ColumnMajor) {
-      assert(fXInput.GetShape().size() < 4);
-      size_t nc = fXInput.GetCSize();
-      size_t nhw = fXInput.GetWSize();
+      R__ASSERT(fXInput.GetShape().size() < 4);
+      size_t nc, nhw = 0;
+      if (fXInput.GetShape().size() == 2) {
+         nc =  fXInput.GetShape()[0];
+         if (nc != 1 ) {
+             ArchitectureImpl_t::PrintTensor(fXInput);
+             Log() << kFATAL << "First tensor dimension should be equal to batch size, i.e. = 1"
+                   << Endl;
+         }
+         nhw = fXInput.GetShape()[1];
+      } else {
+         nc = fXInput.GetCSize();
+         nhw = fXInput.GetWSize();
+      }
       if ( nVariables != nc * nhw)  {
           Log() << kFATAL << "Input Event variable dimensions are not compatible with the built network architecture"
             << " n-event variables " << nVariables << " expected input tensor " << nc << " x " << nhw
@@ -2019,18 +2030,18 @@ std::vector<Double_t> MethodDL::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt
       return PredictDeepNet<DNN::TCudnn<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
 #endif
    } else if (this->GetArchitectureString() == "CPU") {
-#ifdef R__HAS_TMVACPU
+//#ifdef R__HAS_TMVACPU
       Log() << kINFO << "Evaluate deep neural network on CPU using batches with size = " << batchSize << Endl << Endl;
       return PredictDeepNet<DNN::TCpu<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
-#endif
+//#endif
    }
-   Log() << kINFO << "Evaluate deep neural network on the STANDARD architecture  using batches with size = " << batchSize
+   Log() << kINFO << "ERROR:  STANDARD architecture  is not supported anymore for MethodDL ! " 
          << Endl << Endl;
-#if HAVE_REFERENCE
-   return PredictDeepNet<DNN::TReference<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
-#else
+// #if HAVE_REFERENCE
+//    return PredictDeepNet<DNN::TReference<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
+// #else
    return std::vector<Double_t>(nEvents,TMath::QuietNaN());
-#endif
+//#endif
 }
 ////////////////////////////////////////////////////////////////////////////////
 void MethodDL::AddWeightsXMLTo(void * parent) const

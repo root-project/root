@@ -27,6 +27,7 @@
 #ifndef TMVA_TEST_DNN_TEST_CNN_TEST_CONV_NET_H
 #define TMVA_TEST_DNN_TEST_CNN_TEST_CONV_NET_H
 
+#include "TMath.h"
 #include "../Utility.h"
 
 #include "TMVA/DNN/Functions.h"

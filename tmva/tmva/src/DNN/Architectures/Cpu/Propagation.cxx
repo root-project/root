@@ -18,6 +18,10 @@
 #include "TMVA/DNN/Architectures/Cpu.h"
 #include "TMVA/DNN/Architectures/Cpu/Blas.h"
 
+#ifndef R__HAS_TMVACPU
+#include "TMVA/DNN/Architectures/Reference.h"
+#endif
+
 namespace TMVA {
 namespace DNN {
 
@@ -101,6 +105,8 @@ void TCpu<AFloat>::MultiplyTranspose(TCpuMatrix<AFloat> &output, const TCpuMatri
       R__ASSERT((int) Weights.GetNcols() == k); 
    }
 
+#ifdef R__HAS_TMVACPU
+
    char transa = 'N';
    char transb = 'T';
 
@@ -112,11 +118,17 @@ void TCpu<AFloat>::MultiplyTranspose(TCpuMatrix<AFloat> &output, const TCpuMatri
    AFloat *C = output.GetRawDataPointer();
 
    ::TMVA::DNN::Blas::Gemm(&transa, &transb, &m, &n, &k, &alpha, A, &m, B, &n, &beta, C, &m);
+#else
+   TMatrixT<AFloat> tmp(output.GetNrows(), output.GetNcols());
+   tmp.MultT( input,Weights);
+   output = tmp;
+#endif
 }
 
 template <typename AFloat>
 void TCpu<AFloat>::AddRowWise(TCpuMatrix<AFloat> &output, const TCpuMatrix<AFloat> &biases)
 {
+#ifdef R__HAS_TMVACPU
    int m = (int)output.GetNrows();
    int n = (int)output.GetNcols();
 
@@ -131,6 +143,11 @@ void TCpu<AFloat>::AddRowWise(TCpuMatrix<AFloat> &output, const TCpuMatrix<AFloa
    R__ASSERT(n <= (int)(biases.GetNcols()*biases.GetNrows())); 
 
    ::TMVA::DNN::Blas::Ger(&m, &n, &alpha, x, &inc, y, &inc, A, &m);
+#else
+   TMatrixT<AFloat> tmp; 
+   TReference<AFloat>::AddRowWise(tmp, biases);
+   output = tmp;
+#endif
 }
 
 template <typename AFloat>
@@ -332,6 +349,7 @@ void TCpu<AFloat>::RotateWeights(TCpuMatrix<AFloat> &A, const TCpuMatrix<AFloat>
 template <typename AFloat>
 void TCpu<AFloat>::AddConvBiases(TCpuMatrix<AFloat> &output, const TCpuMatrix<AFloat> &biases)
 {
+#ifdef R__HAS_TMVACPU
    int m = (int)output.GetNrows();
    int n = (int)output.GetNcols();
 
@@ -346,6 +364,11 @@ void TCpu<AFloat>::AddConvBiases(TCpuMatrix<AFloat> &output, const TCpuMatrix<AF
    R__ASSERT(n <= (int)TCpuMatrix<AFloat>::GetOnePointerSize() ); 
 
    ::TMVA::DNN::Blas::Ger(&m, &n, &alpha, x, &inc, y, &inc, A, &m);
+#else
+   TMatrixT<AFloat> tmp; 
+   TReference<AFloat>::AddConvBiases(tmp, biases);
+   output = tmp;
+#endif
 }
 
 template<typename AFloat>
@@ -804,7 +827,7 @@ void TCpu<AFloat>::BatchNormLayerForwardInference(Matrix_t input,
                                                   # endif
                                                   std::vector<Scalar_t> & RunningMeans,
                                                   std::vector<Scalar_t> & RunningVars,
-                                                  Scalar_t nTrainedBatches,
+                                                  Scalar_t /* nTrainedBatches */,
                                                   Scalar_t epsilon) 
 {
    int n = input.GetNrows();
@@ -818,7 +841,7 @@ void TCpu<AFloat>::BatchNormLayerForwardInference(Matrix_t input,
       }
    }
 
-   nTrainedBatches = 0;
+   //nTrainedBatches = 0;
 
    // std::cout << " testing batch  " << fTrainedBatches << " mu var0" << fMu_Training[0] << std::endl;
 }
