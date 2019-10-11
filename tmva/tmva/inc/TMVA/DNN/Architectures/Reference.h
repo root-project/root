@@ -32,6 +32,10 @@ namespace TMVA
 {
 namespace DNN
 {
+// struct TDescriptors {
+// };
+// struct TWorkspace {
+// };
 
 /*! The reference architecture class.
 *
@@ -50,6 +54,7 @@ public:
 
    using Scalar_t     = AReal;
    using Matrix_t     = TMatrixT<AReal>;
+   using Tensor_t     = TMatrixT<AReal>;
    //using Tensor_t     = TMVA::Experimental::RTensor<AReal>;
 
    //____________________________________________________________________________
@@ -297,7 +302,13 @@ public:
 
    /** Apply dropout with activation probability \p p to the given
     *  matrix \p A and scale the result by reciprocal of \p p. */
-   static void Dropout(TMatrixT<AReal> & A, AReal dropoutProbability);
+   //static void Dropout(TMatrixT<AReal> & A, AReal dropoutProbability);
+   static void DropoutForward(Tensor_t &A, TDescriptors *descriptors, TWorkspace *workspace, Scalar_t p);
+   static void DropoutForward(Matrix_t &A, Scalar_t p)
+   {
+      Tensor_t & tA = A;  // Tensor and matrix are same types
+      DropoutForward(tA, static_cast<TDescriptors *>(nullptr), static_cast<TWorkspace *>(nullptr), p);
+   }
 
    ///@}
 
