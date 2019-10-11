@@ -641,7 +641,7 @@ TApplication::EExitOnException TApplication::ExitOnException(TApplication::EExit
 void TApplication::OpenInBrowser(const TString &url)
 {
    // We check what operating system the user has.
-#ifdef R_MACOSX
+#ifdef R__MACOSX
    // Command for opening a browser on Mac.
    TString cMac("open ");
    // We generate the full command and execute it.
