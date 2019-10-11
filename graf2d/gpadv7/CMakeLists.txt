@@ -36,25 +36,25 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
     ROOT/RPadUserAxis.hxx
     ROOT/RVirtualCanvasPainter.hxx
   SOURCES
-    v7/src/RCanvas.cxx
-    v7/src/RFrame.cxx
-    v7/src/RMenuItem.cxx
-    v7/src/RObjectDrawable.cxx
-    v7/src/RColor.cxx
-    v7/src/RDisplayItem.cxx
-    v7/src/RDrawable.cxx
-    v7/src/RAttrMap.cxx
-    v7/src/RAttrBase.cxx
-    v7/src/RPalette.cxx
-    v7/src/RStyle.cxx
-    v7/src/RStyleReader.cxx
-    v7/src/RPadBase.cxx
-    v7/src/RPad.cxx
-    v7/src/RPadExtent.cxx
-    v7/src/RPadLength.cxx
-    v7/src/RPadPos.cxx
-    v7/src/RPadUserAxis.cxx
-    v7/src/RVirtualCanvasPainter.cxx
+    src/RCanvas.cxx
+    src/RFrame.cxx
+    src/RMenuItem.cxx
+    src/RObjectDrawable.cxx
+    src/RColor.cxx
+    src/RDisplayItem.cxx
+    src/RDrawable.cxx
+    src/RAttrMap.cxx
+    src/RAttrBase.cxx
+    src/RPalette.cxx
+    src/RStyle.cxx
+    src/RStyleReader.cxx
+    src/RPadBase.cxx
+    src/RPad.cxx
+    src/RPadExtent.cxx
+    src/RPadLength.cxx
+    src/RPadPos.cxx
+    src/RPadUserAxis.cxx
+    src/RVirtualCanvasPainter.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   DEPENDENCIES
@@ -62,4 +62,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
     RIO
 )
 
-ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
+ROOT_ADD_TEST_SUBDIRECTORY(test)
