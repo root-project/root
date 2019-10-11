@@ -181,7 +181,7 @@ sap.ui.define(['sap/ui/core/Component',
             case "cc":
             case "cpp":
             case "cxx":
-               this.getView().byId("run_macro").setEnabled(false);
+               this.getView().byId("run_macro").setEnabled(true);
             case "h":
             case "hh":
             case "hxx":
