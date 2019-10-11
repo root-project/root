@@ -714,7 +714,7 @@ static TString UrlGenerator(TString scopeName, EUrl scopeType)
    url.Append(".html");
    return url;
 }
-}
+} // namespace
 
 namespace {
 ////////////////////////////////////////////////////////////////////////////////
@@ -753,7 +753,7 @@ static TString FormatMethodArgsForDoxygen(const TString &scopeName, TFunction *f
    argFix.Substitute(methodArguments, "");
    return methodArguments;
 }
-}
+} // namespace
 
 namespace {
 ////////////////////////////////////////////////////////////////////////////////
@@ -799,7 +799,7 @@ static TString FormatReturnTypeForDoxygen(const TString &scopeName, TFunction *f
    returnType.ReplaceAll("&", " &");
    return returnType;
 }
-}
+} // namespace
 
 namespace {
 ////////////////////////////////////////////////////////////////////////////////
@@ -871,7 +871,7 @@ static TString GetUrlForDataMember(const TString &scopeName, const TString &data
    url.Append(md5Enumerator.MD5());
    return url;
 }
-}
+} // namespace
 
 namespace {
 ////////////////////////////////////////////////////////////////////////////////
@@ -896,7 +896,7 @@ static TString GetUrlForEnumeration(TString scopeName, const TString &enumeratio
    url.Append(md5Enumeration.MD5());
    return url;
 }
-}
+} // namespace
 
 namespace {
 enum EMethodKind {kURLforMethod, kURLforStructor};
@@ -943,7 +943,7 @@ static TString GetUrlForMethod(const TString &scopeName, const TString &methodNa
    url.Append(md5Text.MD5());
    return url;
 }
-}
+} // namespace
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1044,7 +1044,7 @@ void TApplication::OpenReferenceGuideFor(const TString &strippedClass)
    // Warning message will appear if the user types the function name incorrectly
    // or the function is not a member function of "cl" or any of its base classes.
    Warning("Help", "cannot find \"%s\" as member of %s or its base classes! Check %s\n",
-      memberName.Data(), scopeName.Data(), UrlGenerator(scopeName, scopeType).Data());
+   memberName.Data(), scopeName.Data(), UrlGenerator(scopeName, scopeType).Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1069,22 +1069,22 @@ void TApplication::Help(const char *line)
       Printf("   .help Class::Member : opens the reference gude for function/member");
       return;
    } else {
-   // If the user wants to use the extended ".help scopeName" command to access
-   // the online reference guide, we first check if the command starts correctly.
-   if ((!strippedCommand.BeginsWith(".help ")) && (!strippedCommand.BeginsWith(".? "))) {
-      Error("Help", "Unknown command!");
-      return;
-   }
-   // We remove the command ".help" or ".?" from the TString.
-   if (strippedCommand.BeginsWith(".? ")){
-      strippedCommand.Remove(0, 3);
-   } else {
-      strippedCommand.Remove(0, 5);
-   }
-   // We strip the command line after removing ".help" or ".?".
-   strippedCommand = strippedCommand.Strip(TString::kBoth);
-   // We call the function what handles the extended ".help scopeName" command.
-   OpenReferenceGuideFor(strippedCommand);
+      // If the user wants to use the extended ".help scopeName" command to access
+      // the online reference guide, we first check if the command starts correctly.
+      if ((!strippedCommand.BeginsWith(".help ")) && (!strippedCommand.BeginsWith(".? "))) {
+         Error("Help", "Unknown command!");
+         return;
+      }
+      // We remove the command ".help" or ".?" from the TString.
+      if (strippedCommand.BeginsWith(".? ")){
+         strippedCommand.Remove(0, 3);
+      } else {
+         strippedCommand.Remove(0, 5);
+      }
+      // We strip the command line after removing ".help" or ".?".
+      strippedCommand = strippedCommand.Strip(TString::kBoth);
+      // We call the function what handles the extended ".help scopeName" command.
+      OpenReferenceGuideFor(strippedCommand);
    }
 }
 
@@ -1315,7 +1315,7 @@ namespace {
       Printf("%s", content.Data());
       return 0;
    }
-}
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Process a single command line, either a C++ statement or an interpreter
