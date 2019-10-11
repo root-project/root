@@ -15,7 +15,6 @@
 #include "TBranch.h"
 #include "TBranchObject.h"
 #include "TBranchElement.h"
-#include "TFunction.h"
 #include "TClonesArray.h"
 #include "TLeafB.h"
 #include "TLeafC.h"
