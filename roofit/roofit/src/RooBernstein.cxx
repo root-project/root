@@ -226,7 +226,7 @@ RooSpan<double> RooBernstein::evaluateBatch(std::size_t begin, std::size_t batch
 
 Int_t RooBernstein::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
 {
-  if (rangeName && strlen(rangeName))   return 0;
+  if (rangeName && strlen(rangeName))   return 1;
 
   if (matchArgs(allVars, analVars, _x)) return 1;
 
@@ -240,11 +240,10 @@ Double_t RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) con
   R__ASSERT(code==1) ;
   const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName():0);
   const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName():0);
-  const Double_t xlo = (_x.min(rangeName) - xmin) / (xmax - xmin);
-  const Double_t xhi = (_x.max(rangeName) - xmin) / (xmax - xmin);
+  const Double_t xlo = (_x.min(rangeName?rangeName:0) - xmin) / (xmax - xmin);
+  const Double_t xhi = (_x.max(rangeName?rangeName:0) - xmin) / (xmax - xmin);
   const Int_t degree= _coefList.getSize()-1; // n+1 polys of degree n
   Double_t norm(0) ;
-
   RooFIter iter = _coefList.fwdIterator() ;
   Double_t temp=0;
   for (int i=0; i<=degree; ++i){
@@ -258,6 +257,6 @@ Double_t RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) con
     temp *= ((RooAbsReal*)iter.next())->getVal(); // include coeff
     norm += temp; // add this basis's contribution to total
   }
-  norm *= xmax - xmin;
+  norm *= xmax-xmin;
   return norm;
 }
