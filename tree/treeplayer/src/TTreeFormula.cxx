@@ -41,7 +41,6 @@
 #include "TTreeFormulaManager.h"
 #include "TFormLeafInfo.h"
 #include "TMethod.h"
-#include "TBaseClass.h"
 #include "TFormLeafInfoReference.h"
 
 #include "TEntryList.h"

@@ -44,7 +44,6 @@ split vertically by a shutter:
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
 #include "TVirtualPad.h"
-#include "TBaseClass.h"
 #include "TGTab.h"
 #include "TGComboBox.h"
 #include "TGButton.h"
