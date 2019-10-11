@@ -10,7 +10,7 @@
 
   <SplitApp id="SplitAppBrowser" initialDetail="detail" initialMaster="master" orientationChange="onOrientationChange">
     <detailPages>
-      <Page title="Root Javascript Browser">
+      <Page title="Javascript ROOT Browser">
         <TabContainer id="myTabContainer"
                       showAddNewButton="true"
                       addNewButtonPress="addNewButtonPressHandler"
