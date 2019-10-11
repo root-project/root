@@ -682,8 +682,8 @@ static TString UrlGenerator(TString scopeName, EUrl scopeType)
 {
    // We start the URL with a static part, the same for all scopes and members.
    TString url = "https://root.cern/doc/";
-   // Then we check what is version ot ROOT the user has.
-   TPRegexp re4(".*/v(\\d)-(\\d\\d)-00-patches");
+   // Then we check the ROOT version used.
+   TPRegexp re4(R"(.*/v(\d)-(\d\d)-00-patches)");
    const char *branchName = gROOT->GetGitBranch();
    TObjArray *objarr = re4.MatchS(branchName);
    TString version;
@@ -772,7 +772,7 @@ static TString FormatReturnTypeForDoxygen(const TString &scopeName, TFunction *f
    TString returnType = func->GetReturnTypeName();
    // If the return type is a type nested in the current class, it will appear scoped (Class::Enumeration).
    // Below we make sure to remove the current class, because the syntax of Doxygen requires it.
-   TString scopeNameRE ("\\b");
+   TString scopeNameRE("\\b");
    scopeNameRE.Append(scopeName);
    scopeNameRE.Append("::\\b");
    TPRegexp returnFix(scopeNameRE);
@@ -815,8 +815,8 @@ namespace {
 /// \param[in] dataMember pointer to the data member/enumerator
 /// \param[in] scopeType enumerator to the scope type
 
-static TString GetUrlForDataMember(const TString &scopeName, const TString &dataMemberName,
-                                   TDataMember *dataMember, EUrl scopeType)
+static TString
+GetUrlForDataMember(const TString &scopeName, const TString &dataMemberName, TDataMember *dataMember, EUrl scopeType)
 {
    // We first check if the data member is not enumerator.
    if (!dataMember->IsEnum()) {
@@ -1038,7 +1038,7 @@ void TApplication::OpenReferenceGuideFor(const TString &strippedClass)
    }
 
    // We check if "memberName" is enumerator defined in one the base classes of "scopeName".
-   if (auto enumerator = (TDataMember*)cl->GetListOfAllPublicDataMembers()->FindObject(memberName)) {
+   if (auto enumerator = (TDataMember *)cl->GetListOfAllPublicDataMembers()->FindObject(memberName)) {
       // We find the actual scope (might be in a base) and open the URL in a browser.
       TString baseClName = ((TMethod *)enumerator->GetClass())->GetName();
       OpenInBrowser(GetUrlForDataMember(baseClName, memberName, enumerator, scopeType));
@@ -1319,7 +1319,7 @@ namespace {
       Printf("%s", content.Data());
       return 0;
    }
-} // namespace
+   } // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Process a single command line, either a C++ statement or an interpreter
