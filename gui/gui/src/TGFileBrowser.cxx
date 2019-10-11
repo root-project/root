@@ -24,8 +24,6 @@
 #include "TGMimeTypes.h"
 #include "TClass.h"
 #include "TQClass.h"
-#include "TMethod.h"
-#include "TMethodArg.h"
 #include "TInterpreter.h"
 #include "TRegexp.h"
 #include "TEnv.h"

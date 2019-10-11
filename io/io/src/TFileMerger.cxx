@@ -32,7 +32,6 @@ to be merged, like the standalone hadd program.
 #include "THashList.h"
 #include "TObjString.h"
 #include "TClass.h"
-#include "TMethodCall.h"
 #include "Riostream.h"
 #include "TFileMergeInfo.h"
 #include "TClassRef.h"
