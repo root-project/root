@@ -104,7 +104,6 @@ using namespace std;
 #include "TProofProgressStatus.h"
 #include "TServerSocket.h"
 #include "TMonitor.h"
-#include "TFunction.h"
 #include "TMethodArg.h"
 #include "TMethodCall.h"
 #include "TProofOutputFile.h"
