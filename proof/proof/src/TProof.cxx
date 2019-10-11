@@ -61,7 +61,6 @@ messages to all workers, it collects results, etc.
 #include "TEventList.h"
 #include "TFile.h"
 #include "TFileInfo.h"
-#include "TFunction.h"
 #include "TFTP.h"
 #include "THashList.h"
 #include "TInterpreter.h"

@@ -114,7 +114,6 @@
 #include "TMethod.h"
 #include "TDataType.h"
 #include "TMethodCall.h"
-#include "TFunction.h"
 #include "TVirtualCollectionProxy.h"
 #include "TClassEdit.h"
 #include <string>
