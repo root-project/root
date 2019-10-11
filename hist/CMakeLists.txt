@@ -7,7 +7,8 @@
 add_subdirectory(hist)             # special CMakeLists.txt
 add_subdirectory(histpainter)      # special CMakeLists.txt
 if(root7)
-   add_subdirectory(histdrawv7)         # special CMakeLists.txt
+   add_subdirectory(histv7)         # special CMakeLists.txt
+   add_subdirectory(histdrawv7)     # special CMakeLists.txt
 endif()
 if (spectrum)
    add_subdirectory(spectrum)

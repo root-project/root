@@ -5,21 +5,28 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ############################################################################
-# CMakeLists.txt file for building ROOT hist/histdraw package
+# CMakeLists.txt file for building ROOT hist/hist package
 ############################################################################
 
-ROOT_STANDARD_LIBRARY_PACKAGE(ROOTHistDraw
+ROOT_STANDARD_LIBRARY_PACKAGE(ROOTHist
   HEADERS
-    ROOT/RHistDrawable.hxx
+    ROOT/RAxis.hxx
+    ROOT/RHist.hxx
+    ROOT/RHistBinIter.hxx
+    ROOT/RHistBufferedFill.hxx
+    ROOT/RHistConcurrentFill.hxx
+    ROOT/RHistData.hxx
+    ROOT/RHistImpl.hxx
+    ROOT/RHistUtils.hxx
+    ROOT/RHistView.hxx
   SOURCES
-    src/RHistDrawable.cxx
+    src/RAxis.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   DEPENDENCIES
-    Core
     MathCore
-    ROOTHist
-    ROOTGpadv7
+    Matrix
+    RIO
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
