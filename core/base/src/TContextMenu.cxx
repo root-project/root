@@ -41,7 +41,6 @@ The picture below shows a canvas with a pop-up menu and a dialog box.
 #include "TGuiFactory.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
-#include "TGlobal.h"
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TToggle.h"
