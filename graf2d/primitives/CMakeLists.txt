@@ -17,11 +17,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGraphicsPrimitives
     ROOT/RMarker.hxx
     ROOT/RText.hxx
   SOURCES
-    v7/src/RBox.cxx
-    v7/src/RLegend.cxx
-    v7/src/RLine.cxx
-    v7/src/RMarker.cxx
-    v7/src/RText.cxx
+    src/RBox.cxx
+    src/RLegend.cxx
+    src/RLine.cxx
+    src/RMarker.cxx
+    src/RText.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   DEPENDENCIES
@@ -30,4 +30,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGraphicsPrimitives
     ROOTGpadv7
 )
 
-ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
+ROOT_ADD_TEST_SUBDIRECTORY(test)
