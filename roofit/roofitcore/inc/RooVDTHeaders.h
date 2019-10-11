@@ -22,6 +22,8 @@
  * this layer can be used to switch between different implementations.
  */
 
+#include "ROOT/RConfig.hxx"
+
 #if defined(R__HAS_VDT)
 #include "vdt/exp.h"
 #include "vdt/log.h"
