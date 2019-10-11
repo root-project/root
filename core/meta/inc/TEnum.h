@@ -23,8 +23,8 @@
 #include "TDataType.h"
 #include "TDictionary.h"
 #include "THashList.h"
-#include "TNamed.h"
-#include "TString.h"
+
+#include <string>
 
 class ClassInfo_t;
 class TClass;
@@ -50,27 +50,19 @@ public:
                        kALoadAndInterpLookup = 3
                       };
 
-   TEnum(): fInfo(0), fClass(0) {}
+   TEnum(): fInfo(nullptr), fClass(nullptr) {}
    TEnum(const char *name, DeclId_t declid, TClass *cls);
    virtual ~TEnum();
 
    void                  AddConstant(TEnumConstant *constant);
-   TClass               *GetClass() const {
-      return fClass;
-   }
-   const TSeqCollection *GetConstants() const {
-      return &fConstantList;
-   }
-   const TEnumConstant  *GetConstant(const char *name) const {
-      return (TEnumConstant *) fConstantList.FindObject(name);
-   }
+   TClass               *GetClass() const { return fClass; }
+   const TSeqCollection *GetConstants() const { return &fConstantList; }
+   const TEnumConstant  *GetConstant(const char *name) const { return (TEnumConstant *)fConstantList.FindObject(name); }
    DeclId_t              GetDeclId() const;
    EDataType             GetUnderlyingType() const;
    Bool_t                IsValid();
    Long_t                Property() const;
-   void                  SetClass(TClass *cl) {
-      fClass = cl;
-   }
+   void                  SetClass(TClass *cl) { fClass = cl; }
    void                  Update(DeclId_t id);
    const char*           GetQualifiedName() const { return fQualName.c_str(); }
    static TEnum         *GetEnum(const std::type_info &ti, ESearchAction sa = kALoadAndInterpLookup);
