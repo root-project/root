@@ -98,6 +98,8 @@ protected:
    std::string GetFileIcon(TString &name);
    std::string ProcessBrowserRequest(const std::string &msg);
    std::string ProcessDblClick(const std::string &path, const std::string &drawingOptions);
+   long ProcessRunCommand(const std::string &file_path);
+   bool ProcessSaveFile(const std::string &file_path);
 
    bool IsBuild() const { return fDesc.size() > 0; }
 

@@ -390,6 +390,40 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
 }
 
 /////////////////////////////////////////////////////////////////////////////////
+/// Process file save command in the editor
+
+bool ROOT::Experimental::RBrowser::ProcessSaveFile(const std::string &file_path)
+{
+   // Split the path (filename + text)
+   std::vector<std::string> split;
+   std::string buffer;
+   std::istringstream path(file_path);
+   if (std::getline(path, buffer, ':'))
+      split.push_back(buffer);
+   if (std::getline(path, buffer, '\0'))
+      split.push_back(buffer);
+   std::ofstream ostrm(split[0]);
+   ostrm << split[1];
+   return true;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Process file save command in the editor
+
+long ROOT::Experimental::RBrowser::ProcessRunCommand(const std::string &file_path)
+{
+   // Split the path (filename + text)
+   std::vector<std::string> split;
+   std::string buffer;
+   std::istringstream path(file_path);
+   if (std::getline(path, buffer, ':'))
+      split.push_back(buffer);
+   if (std::getline(path, buffer, '\0'))
+      split.push_back(buffer);
+   return gInterpreter->ExecuteMacro(split[0].c_str());
+}
+
+/////////////////////////////////////////////////////////////////////////////////
 /// Process dbl click on browser item
 
 std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &item_path, const std::string &drawingOptions) {
@@ -657,7 +691,11 @@ void ROOT::Experimental::RBrowser::SendInitMsg(unsigned connid)
 
 void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std::string &arg)
 {
-   printf("Recv %s\n", arg.c_str());
+   size_t len = arg.find("\n");
+   if (len != std::string::npos)
+      printf("Recv %s\n", arg.substr(0, len).c_str());
+   else
+      printf("Recv %s\n", arg.c_str());
 
    if (arg == "QUIT_ROOT") {
 
@@ -706,6 +744,10 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
             }
          }
       }
+   } else if (arg.compare(0,9, "RUNMACRO:") == 0) {
+      ProcessRunCommand(arg.substr(9));
+   } else if (arg.compare(0,9, "SAVEFILE:") == 0) {
+      ProcessSaveFile(arg.substr(9));
    } else if (arg.compare(0,14, "SELECT_CANVAS:") == 0) {
       fActiveCanvas = arg.substr(14);
       printf("Select %s\n", fActiveCanvas.c_str());
