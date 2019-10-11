@@ -98,7 +98,7 @@ public:
 
 
 // This class implements one option in options list. All Data members are public
-// for cenvenience reasons.
+// for convenience reasons.
 
 class TOptionListItem : public TObject {
 
