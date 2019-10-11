@@ -104,6 +104,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gui
     TRootEmbeddedCanvas.h
     TRootGuiFactory.h
     TRootHelpDialog.h
+    TToggle.h
+    TToggleGroup.h
     TVirtualDragManager.h
     WidgetMessageTypes.h
   SOURCES
@@ -198,6 +200,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gui
     src/TRootEmbeddedCanvas.cxx
     src/TRootGuiFactory.cxx
     src/TRootHelpDialog.cxx
+    src/TToggle.cxx
+    src/TToggleGroup.cxx
     src/TVirtualDragManager.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM

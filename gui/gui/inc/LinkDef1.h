@@ -115,5 +115,8 @@
 #pragma link C++ class TGNumberEntryLayout;
 #pragma link C++ class TGPack;
 #pragma link C++ class TGFrameElementPack;
+#pragma link C++ class TToggle;
+#pragma link C++ class TToggleGroup;
+
 
 #endif
