@@ -26,7 +26,7 @@ namespace DNN
 //______________________________________________________________________________
 
 template<typename Real_t>
-void TReference<Real_t>::Dropout(TMatrixT<Real_t> & B, Real_t dropoutProbability)
+void TReference<Real_t>::DropoutForward(TMatrixT<Real_t> & B, TDescriptors*, TWorkspace*, Real_t dropoutProbability)
 {
    size_t m,n;
    m = B.GetNrows();
