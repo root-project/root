@@ -428,9 +428,9 @@ public:
       DropoutForward( tA, static_cast<TDescriptors *> (nullptr), static_cast<TWorkspace *> (nullptr), p );
    }
 
-   static void DropoutBackward(Tensor_t & A,
-                               TDescriptors * descriptors,
-                               TWorkspace   * workspace) {}
+   static void DropoutBackward(Tensor_t & /* A */,
+                               TDescriptors * /*descriptors */,
+                               TWorkspace   * /* workspace */ ) {}
       ///@}
 
    //____________________________________________________________________________

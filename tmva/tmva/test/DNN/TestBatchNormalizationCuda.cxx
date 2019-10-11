@@ -15,7 +15,7 @@
 ////////////////////////////////////////////////////////////////////
 
 #include <iostream>
-#include "TMVA/DNN/Architectures/Cuda.h"
+#include "TMVA/DNN/Architectures/TCudnn.h"
 #include "TestBatchNormalization.h"
 
 using namespace TMVA::DNN;
@@ -30,7 +30,7 @@ int test()
     // Test backpropagation for linear net.
     //
 
-    error = testBackpropagationWeights<TCuda<double>>(0.00001);
+    error = testBackpropagationWeights<TCudnn<double>>(0.00001);
     if (error > 1e-3)
         return 1;
 

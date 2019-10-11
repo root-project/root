@@ -364,6 +364,7 @@ public:
      * and they are then scaled by two parameter, different for each input variable:
      *  - a scale factor \gamma gamma
      *  - an offset \beta beta */
+   /*
    static void BatchNormLayerForwardTraining(Matrix_t input,                        // input
                                              Matrix_t & gamma,                      // gamma
                                              Matrix_t & beta,                       // beta
@@ -382,8 +383,27 @@ public:
                                              Scalar_t momentum,                     // GD momentum
                                              Scalar_t epsilon);                     // epsilon
 
-   /** During inference the inputs are not normalized using the batch mean but the previously computed
+   */
+
+static void BatchNormLayerForwardTraining(Matrix_t, 
+                                          Matrix_t &,
+                                          Matrix_t &,
+                                          Matrix_t,
+                                          Matrix_t &,
+                                          Matrix_t &,
+                                          Matrix_t &,
+                                          Matrix_t &,
+                                          std::vector<Scalar_t> & ,
+                                          std::vector<Scalar_t> &,
+                                          Scalar_t,
+                                          Scalar_t,
+                                          Scalar_t )
+{}
+
+
+/** During inference the inputs are not normalized using the batch mean but the previously computed
      * at  running mean and variance */
+   /*
    static void BatchNormLayerForwardInference(Matrix_t input,
                                               Matrix_t & gamma,
                                               Matrix_t & beta,
@@ -395,11 +415,19 @@ public:
                                               std::vector<Scalar_t> & RunningMeans,
                                               std::vector<Scalar_t> & RunningVars,
                                               Scalar_t nTrainedBatches,
-                                              Scalar_t epsilon) {}
-
+                                              Scalar_t epsilon);
+   */
+static void BatchNormLayerForwardInference(Matrix_t, 
+                                          Matrix_t &,
+                                          Matrix_t &,
+                                          Matrix_t,
+                                          std::vector<Scalar_t> & ,
+                                          std::vector<Scalar_t> &,
+                                          Scalar_t,
+                                          Scalar_t )
+{}
    /**
-    * */
-   static void BatchNormLayerForwardBackward(const Matrix_t & outputGrad,
+    static void BatchNormLayerForwardBackward(const Matrix_t & outputGrad,
                                              const Matrix_t & gamma,
                                              Matrix_t &dgamma,
                                              Matrix_t &dbeta,
@@ -413,7 +441,18 @@ public:
                                              BNormWorkspace_t & workspace,
                                              # endif
                                              Scalar_t epsilon) {}
-
+   */
+static void BatchNormLayerForwardBackward(const Matrix_t, 
+                                          const Matrix_t &,
+                                          Matrix_t &,
+                                          Matrix_t &,
+                                          Matrix_t,
+                                          Matrix_t &,
+                                          Matrix_t &,
+                                          Matrix_t &,
+                                          Matrix_t &,
+                                          Scalar_t )
+{}
    //____________________________________________________________________________
    //
    // Regularization

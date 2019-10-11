@@ -43,9 +43,9 @@
 
 #include "TMVA/DNN/Architectures/Reference.h"
 
-#ifdef R__HAS_TMVACPU
+//#ifdef R__HAS_TMVACPU
 #include "TMVA/DNN/Architectures/Cpu.h"
-#endif
+//#endif
 
 #ifdef R__HAS_TMVAGPU
 #include "TMVA/DNN/Architectures/Cuda.h"
@@ -86,11 +86,10 @@ private:
 //    //using ArchitectureImpl_t = TMVA::DNN::TCuda<Float_t>;
 // #else
 // do not use arch GPU for evaluation. It is too slow for batch size=1
-#ifdef R__HAS_TMVACPU
    using ArchitectureImpl_t = TMVA::DNN::TCpu<Float_t>;
-#else
-   using ArchitectureImpl_t = TMVA::DNN::TReference<Float_t>;
-#endif
+// #else
+//    using ArchitectureImpl_t = TMVA::DNN::TReference<Float_t>;
+// #endif
 //#endif
    using DeepNetImpl_t = TMVA::DNN::TDeepNet<ArchitectureImpl_t>;
    using MatrixImpl_t =  typename ArchitectureImpl_t::Matrix_t;

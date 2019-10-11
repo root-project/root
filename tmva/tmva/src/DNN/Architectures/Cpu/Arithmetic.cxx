@@ -17,10 +17,14 @@
 #include "TMVA/DNN/Architectures/Cpu.h"
 #include "TMVA/DNN/Architectures/Cpu/Blas.h"
 
+#ifndef R__HAS_TMVACPU
+#include "TMVA/DNN/Architectures/Reference.h"
+#endif
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
 
-#include "tbb/tbb.h"
+//#include "tbb/tbb.h"
 
 #pragma GCC diagnostic pop
 
@@ -42,7 +46,9 @@ void TCpu<AReal>::Multiply(TCpuMatrix<AReal> &C,
     R__ASSERT((int) C.GetNrows() == m);
     R__ASSERT((int) C.GetNcols() == n);
     R__ASSERT((int) B.GetNrows() == k); 
-    
+
+#ifdef R__HAS_TMVACPU
+
     char transa = 'N';
     char transb = 'N';
 
@@ -55,6 +61,11 @@ void TCpu<AReal>::Multiply(TCpuMatrix<AReal> &C,
 
     ::TMVA::DNN::Blas::Gemm(&transa, &transb, &m, &n, &k, &alpha,
                             APointer, &m, BPointer, &k, &beta, CPointer, &m);
+#else
+   TMatrixT<AReal> tmp(C.GetNrows(), C.GetNcols()); 
+   tmp.Mult(A,B);
+   C = tmp;
+#endif   
 }
 
 //____________________________________________________________________________
@@ -64,6 +75,7 @@ void TCpu<AReal>::TransposeMultiply(TCpuMatrix<AReal> &C,
                                      const TCpuMatrix<AReal> &B,
                                      AReal alpha, AReal beta)
 {
+#ifdef R__HAS_TMVACPU
     int m = (int) A.GetNcols();
     int k = (int) A.GetNrows();
     int n = (int) B.GetNcols();
@@ -84,6 +96,12 @@ void TCpu<AReal>::TransposeMultiply(TCpuMatrix<AReal> &C,
 
     ::TMVA::DNN::Blas::Gemm(&transa, &transb, &m, &n, &k, &alpha,
                             APointer, &k, BPointer, &k, &beta, CPointer, &m);
+#else
+   TMatrixT<AReal> tmp(C.GetNrows(), C.GetNcols());
+   tmp.TMult(A,B);
+   tmp = alpha*tmp + beta; 
+   C = tmp;
+#endif
 }
 
 //____________________________________________________________________________
@@ -187,6 +205,7 @@ void TCpu<AReal>::SumColumns(TCpuMatrix<AReal> &B,
                               const TCpuMatrix<AReal> &A,
                               AReal alpha, AReal beta)
 {
+#ifdef R__HAS_TMVACPU
    int m = (int) A.GetNrows();
    int n = (int) A.GetNcols();
    int inc = 1;
@@ -201,6 +220,12 @@ void TCpu<AReal>::SumColumns(TCpuMatrix<AReal> &B,
    ::TMVA::DNN::Blas::Gemv(&trans, &m, &n, &alpha, APointer, &m,
                            TCpuMatrix<AReal>::GetOnePointer(), &inc,
                            &beta, BPointer, &inc);
+#else
+   TMatrixT<AReal> tmp(B.GetNrows(), B.GetNcols()); 
+   TReference<AReal>::SumColumns(tmp,A);
+   tmp = alpha*tmp + beta; 
+   B = tmp;
+#endif
 }
 
 //____________________________________________________________________________
@@ -209,6 +234,7 @@ void TCpu<AReal>::ScaleAdd(TCpuMatrix<AReal> &B,
                             const TCpuMatrix<AReal> &A,
                             AReal alpha)
 {
+#ifdef R__HAS_TMVACPU
    int n = (int) (A.GetNcols() * A.GetNrows());
    int inc = 1;
 
@@ -216,6 +242,11 @@ void TCpu<AReal>::ScaleAdd(TCpuMatrix<AReal> &B,
    AReal *y = B.GetRawDataPointer();
 
    ::TMVA::DNN::Blas::Axpy(&n, &alpha, x, &inc, y, &inc);
+#else
+   TMatrixT<AReal> tmp; 
+   TReference<AReal>::ScaleAdd(tmp, A, alpha);
+   B = tmp;
+#endif
 }
 
 //____________________________________________________________________________
