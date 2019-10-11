@@ -31,7 +31,6 @@
 #include "TGCanvas.h"
 #include "TGListTree.h"
 #include "TGuiBldDragManager.h"
-#include "TMethod.h"
 #include "TGMsgBox.h"
 #include "TGIcon.h"
 #include "TGFrame.h"
