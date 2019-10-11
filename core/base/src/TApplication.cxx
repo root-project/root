@@ -676,7 +676,7 @@ enum EUrl {kURLforClass, kURLforNameSpace, kURLforStruct};
 /// class (kURLforClass) or the one for namespace (kURLforNameSpace).
 ///
 /// \param[in] scopeName the name of the class or the namespace
-/// \param[in] scopeTtype the enumerator for class or namespace
+/// \param[in] scopeType the enumerator for class or namespace
 
 static TString UrlGenerator(TString scopeName, EUrl scopeType)
 {
@@ -843,7 +843,7 @@ static TString GetUrlForDataMember(const TString &scopeName, const TString &data
    TString scopeEnumeration = dataMember->GetTrueTypeName();
    TString md5EnumClass;
    if (scopeEnumeration.Contains("(anonymous)")) {
-      // FIXME: need to invetigate the numbering scheme.
+      // FIXME: need to investigate the numbering scheme.
       md5EnumClass.Append(scopeName);
       md5EnumClass.Append("::@1@1");
    } else {
@@ -919,7 +919,7 @@ static TString GetUrlForMethod(const TString &scopeName, const TString &methodNa
    TString md5Text;
    if (methodType == kURLforMethod) {
       // In the case of method, we append the return type too.
-      // "FormatReturnTypeForDoxygen" modifies the return type with respect to Doxygen's reqirement.
+      // "FormatReturnTypeForDoxygen" modifies the return type with respect to Doxygen's requirement.
       md5Text.Append((FormatReturnTypeForDoxygen(scopeName, func)));
       if (scopeType == kURLforNameSpace) {
          // We need to append "constexpr" if we work with constexpr functions in namespaces.
@@ -948,11 +948,11 @@ static TString GetUrlForMethod(const TString &scopeName, const TString &methodNa
 
 ////////////////////////////////////////////////////////////////////////////////
 /// It opens the online reference guide, generated with Doxygen, for the
-/// choosen scope (class/namespace/struct) or member (method/function/
+/// chosen scope (class/namespace/struct) or member (method/function/
 /// data member/enumeration/enumerator. If the user types incorrect value,
 /// it will return an error or warning.
 ///
-/// \param[in] strippedClasss the scope or scope::member
+/// \param[in] strippedClass the scope or scope::member
 
 void TApplication::OpenReferenceGuideFor(const TString &strippedClass)
 {
@@ -972,9 +972,9 @@ void TApplication::OpenReferenceGuideFor(const TString &strippedClass)
       OpenInBrowser(UrlGenerator(strippedClass, scopeType));
       return;
    }
-   // Else we substract the name of the method and remove it from the command.
+   // Else we subtract the name of the method and remove it from the command.
    TString memberName = TClassEdit::GetUnqualifiedName(strippedClass);
-   // Error out if "strippedClass" is unscoped (and it's not a class, see `TClass::GetClass(strippedClass)` above).
+   // Error out if "strippedClass" is un-scoped (and it's not a class, see `TClass::GetClass(strippedClass)` above).
    // TODO: Global functions.
    if (strippedClass == memberName) {
       Error("OpenReferenceGuideFor", "Unknown entity \"%s\" - global variables / functions not supported yet!", strippedClass.Data());
@@ -1005,7 +1005,7 @@ void TApplication::OpenReferenceGuideFor(const TString &strippedClass)
    if (bracket > 0) {
       memberName.Remove(bracket);
    }
-   // We check if "memberName" is a member fuction of "cl" or any of its base classes.
+   // We check if "memberName" is a member function of "cl" or any of its base classes.
    if (TFunction *func = cl->GetMethodAllAny(memberName)) {
       // If so we find the name of the class that it belongs to.
       TString baseClName = ((TMethod *)func)->GetClass()->GetName();
