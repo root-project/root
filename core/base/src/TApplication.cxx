@@ -815,10 +815,11 @@ namespace {
 /// \param[in] dataMember pointer to the data member/enumerator
 /// \param[in] scopeType enumerator to the scope type
 
-static TString GetUrlForDataMember(const TString &scopeName, const TString &dataMemberName, TDataMember *dataMember, EUrl scopeType)
+static TString GetUrlForDataMember(const TString &scopeName, const TString &dataMemberName,
+                                   TDataMember *dataMember, EUrl scopeType)
 {
    // We first check if the data member is not enumerator.
-   if(!dataMember->IsEnum()){
+   if (!dataMember->IsEnum()) {
       // If we work with data members, we have to append a hashed with MD5 text, consisting of:
       // "Type ClassName::DataMemberNameDataMemberName(arguments)".
       // We first get the type of the data member.
@@ -882,7 +883,8 @@ namespace {
 /// \param[in] enumeration the name of the enumeration
 /// \param[in] scopeType enumerator for class/namespace/struct
 
-static TString GetUrlForEnumeration(TString scopeName, const TString &enumeration, EUrl scopeType){
+static TString GetUrlForEnumeration(TString scopeName, const TString &enumeration, EUrl scopeType)
+{
    // The URL consists of URL for the "scopeName", "#a" and hashed as MD5 text.
    // The text is "Class::EnumerationEnumeration.
    TString md5Enumeration(scopeName);
@@ -899,7 +901,7 @@ static TString GetUrlForEnumeration(TString scopeName, const TString &enumeratio
 } // namespace
 
 namespace {
-enum EMethodKind {kURLforMethod, kURLforStructor};
+enum EMethodKind { kURLforMethod, kURLforStructor };
 ////////////////////////////////////////////////////////////////////////////////
 /// The function generates URL for any member function (including Constructor/
 /// Destructor) of "scopeName". Doxygen first generates the URL for the scope.
@@ -914,7 +916,8 @@ enum EMethodKind {kURLforMethod, kURLforStructor};
 /// \param[in] methodType enumerator for method or constructor
 /// \param[in] scopeType enumerator for class/namespace/struct
 
-static TString GetUrlForMethod(const TString &scopeName, const TString &methodName, TFunction *func, EMethodKind methodType, EUrl scopeType)
+static TString GetUrlForMethod(const TString &scopeName, const TString &methodName, TFunction *func,
+                               EMethodKind methodType, EUrl scopeType)
 {
    TString md5Text;
    if (methodType == kURLforMethod) {
@@ -977,7 +980,8 @@ void TApplication::OpenReferenceGuideFor(const TString &strippedClass)
    // Error out if "strippedClass" is un-scoped (and it's not a class, see `TClass::GetClass(strippedClass)` above).
    // TODO: Global functions.
    if (strippedClass == memberName) {
-      Error("OpenReferenceGuideFor", "Unknown entity \"%s\" - global variables / functions not supported yet!", strippedClass.Data());
+      Error("OpenReferenceGuideFor", "Unknown entity \"%s\" - global variables / functions not supported yet!",
+            strippedClass.Data());
       return;
    }
    // Else we remove the member name to be left with the scope.
@@ -1034,7 +1038,7 @@ void TApplication::OpenReferenceGuideFor(const TString &strippedClass)
    }
 
    // We check if "memberName" is enumerator defined in one the base classes of "scopeName".
-   if (TDataMember *enumerator = (TDataMember*)cl->GetListOfAllPublicDataMembers()->FindObject(memberName)) {
+   if (auto enumerator = (TDataMember*)cl->GetListOfAllPublicDataMembers()->FindObject(memberName)) {
       // We find the actual scope (might be in a base) and open the URL in a browser.
       TString baseClName = ((TMethod *)enumerator->GetClass())->GetName();
       OpenInBrowser(GetUrlForDataMember(baseClName, memberName, enumerator, scopeType));
@@ -1043,8 +1047,8 @@ void TApplication::OpenReferenceGuideFor(const TString &strippedClass)
 
    // Warning message will appear if the user types the function name incorrectly
    // or the function is not a member function of "cl" or any of its base classes.
-   Warning("Help", "cannot find \"%s\" as member of %s or its base classes! Check %s\n",
-   memberName.Data(), scopeName.Data(), UrlGenerator(scopeName, scopeType).Data());
+   Warning("Help", "cannot find \"%s\" as member of %s or its base classes! Check %s\n", memberName.Data(),
+           scopeName.Data(), UrlGenerator(scopeName, scopeType).Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1076,7 +1080,7 @@ void TApplication::Help(const char *line)
          return;
       }
       // We remove the command ".help" or ".?" from the TString.
-      if (strippedCommand.BeginsWith(".? ")){
+      if (strippedCommand.BeginsWith(".? ")) {
          strippedCommand.Remove(0, 3);
       } else {
          strippedCommand.Remove(0, 5);
