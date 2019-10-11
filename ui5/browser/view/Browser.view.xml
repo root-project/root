@@ -24,6 +24,8 @@
                     <layoutData><l:SplitterLayoutData size="35px" resizable="false"/></layoutData>
                     <u:FileUploader change="onChangeFile"/>
                     <Button text="Save as..." tooltip="Save current file as..." press="onSaveAs" />
+                    <Button id="save_file" text="Save" tooltip="Save current file" press="onSaveFile" enabled="false" />
+                    <Button id="run_macro" text="Run" icon="sap-icon://play" tooltip="Run Current Macro" press="onRunMacro" enabled="false" />
                   </Toolbar>
                   <e:CodeEditor
                           id="aCodeEditor"
