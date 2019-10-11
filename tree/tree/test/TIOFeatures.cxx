@@ -1,7 +1,5 @@
 
 #include "ROOT/TIOFeatures.hxx"
-#include "TEnum.h"
-#include "TEnumConstant.h"
 
 #include "gtest/gtest.h"
 
