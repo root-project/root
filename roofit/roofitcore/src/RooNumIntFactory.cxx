@@ -29,6 +29,7 @@ the preference of the caller as encoded in the configuration object.
 **/
 
 #include "TClass.h"
+#include "TSystem.h"
 #include "Riostream.h"
 
 #include "RooFit.h"
@@ -78,6 +79,14 @@ void RooNumIntFactory::init() {
   RooNumIntConfig::defaultConfig().method1DOpen().setLabel("RooImproperIntegrator1D") ;
   RooNumIntConfig::defaultConfig().method2D().setLabel("RooAdaptiveIntegratorND") ;
   RooNumIntConfig::defaultConfig().methodND().setLabel("RooAdaptiveIntegratorND") ;
+
+  //if GSL is available load (and register GSL integrator)
+#ifdef R__HAS_MATHMORE
+  int iret = gSystem->Load("libRooFitMore");
+  if (iret < 0) {
+     oocoutE((TObject*)nullptr, Integration) << " RooNumIntFactory::Init : libRooFitMore cannot be loaded. GSL integrators will not beavailable ! " << std::endl;
+  }
+#endif
 }
 
 
