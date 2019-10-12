@@ -168,7 +168,7 @@ void RooAdaptiveGaussKronrodIntegrator1D::registerIntegrator(RooNumIntFactory& f
      method.defineType("61Points", 6);
      method.setIndex(2);
      fact.storeProtoIntegrator(new RooAdaptiveGaussKronrodIntegrator1D(), RooArgSet(maxSeg, method));
-     std::cout << "RooAdaptiveGaussKronrofIntegrator1D has beed registered " << std::endl;
+     oocoutI((TObject*)nullptr,InputArguments)  << "RooAdaptiveGaussKronrodIntegrator1D has been registered " << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
