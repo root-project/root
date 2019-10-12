@@ -1282,6 +1282,10 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       };
 
       std::vector<std::string> Paths;
+      // ROOT usually knows better where its libraries are. This way we can
+      // discover modules without having to should thisroot.sh and should fix
+      // gnuinstall.
+      Paths.push_back(TROOT::GetLibDir().Data());
       GetEnvVarPath("CLING_PREBUILT_MODULE_PATH", Paths);
       GetEnvVarPath("LD_LIBRARY_PATH", Paths);
       std::string EnvVarPath;
