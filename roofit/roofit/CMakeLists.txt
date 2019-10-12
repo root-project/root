@@ -9,10 +9,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-if(mathmore OR ROOT_mathmore_FOUND)
-  set(ROOT_MATHMORE_LIBRARY MathMore)
-endif()
-
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
   HEADERS
     Roo2DKeysPdf.h
@@ -48,7 +44,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooJeffreysPrior.h
     RooKeysPdf.h
     RooLandau.h
-    RooLegendre.h
     RooLognormal.h
     RooMathCoreReg.h
     RooMathMoreReg.h
@@ -112,7 +107,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooJeffreysPrior.cxx
     src/RooKeysPdf.cxx
     src/RooLandau.cxx
-    src/RooLegendre.cxx
     src/RooLognormal.cxx
     src/RooMathCoreReg.cxx
     src/RooMathMoreReg.cxx
@@ -122,14 +116,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooMomentMorphND.cxx
     src/RooMultiBinomial.cxx
     src/RooNDKeysPdf.cxx
-    src/RooNonCentralChiSquare.cxx
     src/RooNonCPEigenDecay.cxx
     src/RooNovosibirsk.cxx
     src/RooParametricStepFunction.cxx
     src/RooParamHistFunc.cxx
     src/RooPoisson.cxx
     src/RooPolynomial.cxx
-    src/RooSpHarmonic.cxx
     src/RooStepFunction.cxx
     src/RooTFnBinding.cxx
     src/RooTFnPdfBinding.cxx
@@ -148,7 +140,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
   LINKDEF
     LinkDef1.h
   DEPENDENCIES
-    ${ROOT_MATHMORE_LIBRARY}
     Core
     RooFitCore
     Tree

@@ -1,5 +1,6 @@
 #include "RooFitMoreLib.h"
 #include "RooMsgService.h"
+#include <iostream>
 
 // Load automatically RooFitMore library that automatically will register the
 // integrator classes
