@@ -9,13 +9,25 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+if(mathmore OR ROOT_mathmore_FOUND)
+  set(ROOT_MATHMORE_LIBRARY MathMore)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMore
   HEADERS
+    RooFitMoreLib.h
     RooAdaptiveGaussKronrodIntegrator1D.h
     RooGaussKronrodIntegrator1D.h
+    RooLegendre.h
+    RooSpHarmonic.h
+    RooNonCentralChiSquare.h
   SOURCES
+    src/RooFitMoreLib.cxx
     src/RooAdaptiveGaussKronrodIntegrator1D.cxx
     src/RooGaussKronrodIntegrator1D.cxx
+    src/RooLegendre.cxx
+    src/RooSpHarmonic.cxx
+    src/RooNonCentralChiSquare.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   LINKDEF

@@ -5,6 +5,9 @@
 
 #pragma link C++ class RooAdaptiveGaussKronrodIntegrator1D+; 
 #pragma link C++ class RooGaussKronrodIntegrator1D+ ;
+#pragma link C++ class RooLegendre+ ;
+#pragma link C++ class RooSpHarmonic+ ;
+#pragma link C++ class RooNonCentralChiSquare+ ;
 
 //
 #endif 
