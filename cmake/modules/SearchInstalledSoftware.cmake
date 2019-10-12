@@ -457,7 +457,7 @@ if(mathmore OR builtin_gsl)
         message(FATAL_ERROR "GSL package not found and 'mathmore' component if required ('fail-on-missing' enabled). "
                             "Alternatively, you can enable the option 'builtin_gsl' to build the GSL libraries internally.")
       else()
-        message(STATUS "GSL not found. Set variable GSL_DIR to point to your GSL installation")
+        message(STATUS "GSL not found. Set variable GSL_ROOT_DIR to point to your GSL installation")
         message(STATUS "               Alternatively, you can also enable the option 'builtin_gsl' to build the GSL libraries internally'")
         message(STATUS "               For the time being switching OFF 'mathmore' option")
         set(mathmore OFF CACHE BOOL "Disable because builtin_gsl disabled and external GSL not found (${mathmore_description})" FORCE)
