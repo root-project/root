@@ -64,6 +64,19 @@ public:
       ROptions() : fLineBreak(ELineBreaks::kAuto), fBlockSize(-1) {}
    };
 
+   /// Used for vector reads from multiple offsets into multiple buffers. This is unlike readv(), which scatters a
+   /// single byte range from disk into multiple buffers.
+   struct RIOVec {
+      /// The destination for reading
+      void *fBuffer = nullptr;
+      /// The file offset
+      std::uint64_t fOffset = 0;
+      /// The number of desired bytes
+      std::size_t fSize = 0;
+      /// The number of actually read bytes, set by ReadV()
+      std::size_t fOutBytes = 0;
+   };
+
 private:
    /// Don't change without adapting ReadAt()
    static constexpr unsigned int kNumBlockBuffers = 2;
@@ -147,6 +160,9 @@ public:
    void Seek(std::uint64_t offset);
    /// Returns the size of the file
    std::uint64_t GetSize();
+
+   /// By default implemented as a loop of ReadAt calls but can be overwritten, e.g. XRootD or DAVIX implementations
+   virtual void ReadV(RIOVec *ioVec, unsigned int nReq);
 
    /// Memory mapping according to POSIX standard; in particular, new mappings of the same range replace older ones.
    /// Mappings need to be aligned at page boundaries, therefore the real offset can be smaller than the desired value.

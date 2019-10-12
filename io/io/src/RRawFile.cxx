@@ -193,6 +193,13 @@ size_t ROOT::Experimental::Detail::RRawFile::ReadAt(void *buffer, size_t nbytes,
    return totalBytes;
 }
 
+void ROOT::Experimental::Detail::RRawFile::ReadV(RIOVec *ioVec, unsigned int nReq)
+{
+   for (unsigned i = 0; i < nReq; ++i) {
+      ioVec[i].fOutBytes = ReadAt(ioVec[i].fBuffer, ioVec[i].fSize, ioVec[i].fOffset);
+   }
+}
+
 bool ROOT::Experimental::Detail::RRawFile::Readln(std::string &line)
 {
    if (fOptions.fLineBreak == ELineBreaks::kAuto) {
