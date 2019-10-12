@@ -145,6 +145,29 @@ TEST(RRawFile, Readln)
 }
 
 
+TEST(RRawFile, ReadV)
+{
+   FileRaii readvGuard("test_rawfile_readv", "Hello, World");
+   std::unique_ptr<RRawFile> f(RRawFile::Create("test_rawfile_readv"));
+
+   char buffer[2];
+   buffer[0] = buffer[1] = 0;
+   RRawFile::RIOVec iovec[2];
+   iovec[0].fBuffer = &buffer[0];
+   iovec[0].fOffset = 0;
+   iovec[0].fSize = 1;
+   iovec[1].fBuffer = &buffer[1];
+   iovec[1].fOffset = 11;
+   iovec[1].fSize = 2;
+   f->ReadV(iovec, 2);
+
+   EXPECT_EQ(1U, iovec[0].fOutBytes);
+   EXPECT_EQ(1U, iovec[1].fOutBytes);
+   EXPECT_EQ('H', buffer[0]);
+   EXPECT_EQ('d', buffer[1]);
+}
+
+
 TEST(RRawFile, SplitUrl)
 {
    EXPECT_STREQ("C:\\Data\\events.root", RRawFile::GetLocation("C:\\Data\\events.root").c_str());
