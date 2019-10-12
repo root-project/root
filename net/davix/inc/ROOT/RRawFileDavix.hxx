@@ -36,6 +36,7 @@ private:
    std::unique_ptr<Internal::RDavixFileDes> fFileDes;
 
 protected:
+<<<<<<< HEAD
    void OpenImpl() final;
    size_t ReadAtImpl(void *buffer, size_t nbytes, std::uint64_t offset) final;
    std::uint64_t GetSizeImpl() final;
