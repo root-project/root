@@ -55,9 +55,6 @@
 /* #pragma link C++ class std::vector< TVector2 >::iterator ; */
 /* #pragma link C++ class RooPolyMorph2D+ ; */
 #pragma link C++ class RooUniform+ ;
-#pragma link C++ class RooSpHarmonic+ ;
-#pragma link C++ class RooLegendre+ ;
-#pragma link C++ class RooNonCentralChiSquare+ ;
 #pragma link C++ class RooJeffreysPrior+ ;
 #pragma link C++ class RooJohnson+;
 #pragma link C++ class RooHypatia2+;

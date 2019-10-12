@@ -106,7 +106,7 @@ static Roo_reg_GKInteg1D instance;
 void RooGaussKronrodIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 {
   fact.storeProtoIntegrator(new RooGaussKronrodIntegrator1D(),RooArgSet()) ;
-  oocoutI((TObject*)nullptr,InputArguments) << "RooGaussKronrodIntegrator1D has been registered" << std::endl;
+  oocoutI((TObject*)nullptr,Integration) << "RooGaussKronrodIntegrator1D has been registered" << std::endl;
 }
 
 
