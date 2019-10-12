@@ -88,3 +88,25 @@ size_t ROOT::Experimental::Detail::RRawFileDavix::DoReadAt(void *buffer, size_t 
    }
    return static_cast<size_t>(retval);
 }
+
+void ROOT::Experimental::Detail::RRawFileDavix::DoReadV(RIOVec *ioVec, unsigned int nReq)
+{
+   Davix::DavixError *davixErr = NULL;
+   Davix::DavIOVecInput in[nReq];
+   Davix::DavIOVecOuput out[nReq];
+
+   for (unsigned int i = 0; i < nReq; ++i) {
+      in[i].diov_buffer = ioVec[i].fBuffer;
+      in[i].diov_offset = ioVec[i].fOffset;
+      in[i].diov_size = ioVec[i].fSize;
+   }
+
+   auto ret = fFileDes->pos.preadVec(fFileDes->fd, in, out, nReq, &davixErr);
+   if (ret < 0) {
+      throw std::runtime_error("Cannot do vector read from '" + fUrl + "', error: " + davixErr->getErrMsg());
+   }
+
+   for (unsigned int i = 0; i < nReq; ++i) {
+      ioVec[i].fOutBytes = out[i].diov_size;
+   }
+}

@@ -133,6 +133,9 @@ protected:
    /// Derived classes with mmap support must be able to unmap the memory area handed out by Map()
    virtual void DoUnmap(void *region, size_t nbytes);
 
+   /// By default implemented as a loop of ReadAt calls but can be overwritten, e.g. XRootD or DAVIX implementations
+   virtual void DoReadV(RIOVec *ioVec, unsigned int nReq);
+
 public:
    RRawFile(std::string_view url, ROptions options);
    RRawFile(const RRawFile &) = delete;
@@ -161,8 +164,8 @@ public:
    /// Returns the size of the file
    std::uint64_t GetSize();
 
-   /// By default implemented as a loop of ReadAt calls but can be overwritten, e.g. XRootD or DAVIX implementations
-   virtual void ReadV(RIOVec *ioVec, unsigned int nReq);
+   /// Opens the file if necessary and calls DoReadV
+   void ReadV(RIOVec *ioVec, unsigned int nReq);
 
    /// Memory mapping according to POSIX standard; in particular, new mappings of the same range replace older ones.
    /// Mappings need to be aligned at page boundaries, therefore the real offset can be smaller than the desired value.

@@ -41,6 +41,7 @@ private:
 protected:
    void DoOpen() final;
    size_t DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset) final;
+   void DoReadV(RIOVec *ioVec, unsigned int nReq) final;
    std::uint64_t DoGetSize() final;
 
 public:
