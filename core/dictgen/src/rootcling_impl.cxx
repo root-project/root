@@ -2042,81 +2042,6 @@ static bool IncludeHeaders(const std::vector<std::string> &headers, cling::Inter
    return result == cling::Interpreter::CompilationResult::kSuccess;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Returns true iff a given module (and its submodules) contains all headers
-/// needed by the given ModuleGenerator.
-/// The names of all header files that are needed by the ModuleGenerator but are
-/// not in the given module will be inserted into the MissingHeader variable.
-/// Returns true iff the PCH was successfully generated.
-static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::Module *module,
-                                  std::vector<std::string> &missingHeaders)
-{
-   // Now we collect all header files from the previously collected modules.
-   std::set<std::string> moduleHeaders;
-   ROOT::TMetaUtils::foreachHeaderInModule(
-      *module, [&moduleHeaders](const clang::Module::Header &h) { moduleHeaders.insert(h.NameAsWritten); });
-
-   // Go through the list of headers that are required by the ModuleGenerator
-   // and check for each header if it's in one of the modules we loaded.
-   // If not, make sure we fail at the end and mark the header as missing.
-   bool foundAllHeaders = true;
-   for (const std::string &header : modGen.GetHeaders()) {
-      if (moduleHeaders.find(header) == moduleHeaders.end()) {
-         missingHeaders.push_back(header);
-         foundAllHeaders = false;
-      }
-   }
-   return foundAllHeaders;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check moduleName validity from modulemap. Check if this module is defined or not.
-static bool CheckModuleValid(TModuleGenerator &modGen, const std::string &resourceDir, cling::Interpreter &interpreter,
-                           StringRef LinkdefPath, const std::string &moduleName)
-{
-#ifdef __APPLE__
-
-   if (moduleName == "Krb5Auth" || moduleName == "GCocoa" || moduleName == "GQuartz")
-      return true;
-#endif
-
-   clang::CompilerInstance *CI = interpreter.getCI();
-   clang::HeaderSearch &headerSearch = CI->getPreprocessor().getHeaderSearchInfo();
-   headerSearch.loadTopLevelSystemModules();
-
-   // Actually lookup the module on the computed module name.
-   clang::Module *module = headerSearch.lookupModule(StringRef(moduleName));
-
-   // Inform the user and abort if we can't find a module with a given name.
-   if (!module) {
-      ROOT::TMetaUtils::Error("CheckModuleValid", "Couldn't find module with name '%s' in modulemap!\n",
-                              moduleName.c_str());
-      return false;
-   }
-
-   // Check if the loaded module covers all headers that were specified
-   // by the user on the command line. This is an integrity check to
-   // ensure that our used module map is
-   std::vector<std::string> missingHeaders;
-   if (!ModuleContainsHeaders(modGen, module, missingHeaders)) {
-      // FIXME: Upgrade this to an error once modules are stable.
-      std::stringstream msgStream;
-      msgStream << "warning: Couldn't find the following specified headers in "
-                << "the module " << module->Name << ":\n";
-      for (auto &H : missingHeaders) {
-         msgStream << "  " << H << "\n";
-      }
-      std::string warningMessage = msgStream.str();
-      ROOT::TMetaUtils::Warning("CheckModuleValid", warningMessage.c_str());
-      // We include the missing headers to fix the module for the user.
-      if (!IncludeHeaders(missingHeaders, interpreter)) {
-         ROOT::TMetaUtils::Error("CheckModuleValid", "Couldn't include missing module headers for module '%s'!\n",
-                                 module->Name.c_str());
-      }
-   }
-
-   return true;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3783,6 +3708,11 @@ static llvm::cl::opt<bool>
 gOptCxxModule("cxxmodule",
              llvm::cl::desc("Generate a C++ module."),
              llvm::cl::cat(gRootclingOptions));
+// FIXME: Figure out how to combine the code of -umbrellaHeader and inlineInputHeader
+static llvm::cl::opt<bool>
+gOptUmbrellaInput("umbrellaHeader",
+                  llvm::cl::desc("A single header including all headers instead of specifying them on the command line."),
+                  llvm::cl::cat(gRootclingOptions));
 static llvm::cl::opt<bool>
 gOptMultiDict("multiDict",
              llvm::cl::desc("If this library has multiple separate LinkDef files."),
@@ -3871,6 +3801,110 @@ static llvm::cl::list<std::string>
 gOptSink(llvm::cl::ZeroOrMore, llvm::cl::Sink,
          llvm::cl::desc("Consumes all unrecognized options."),
          llvm::cl::cat(gRootclingOptions));
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true iff a given module (and its submodules) contains all headers
+/// needed by the given ModuleGenerator.
+/// The names of all header files that are needed by the ModuleGenerator but are
+/// not in the given module will be inserted into the MissingHeader variable.
+/// Returns true iff the PCH was successfully generated.
+static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::Module *module,
+                                  std::vector<std::string> &missingHeaders)
+{
+   // Now we collect all header files from the previously collected modules.
+   std::vector<clang::Module::Header> moduleHeaders;
+   ROOT::TMetaUtils::foreachHeaderInModule(*module,
+      [&moduleHeaders](const clang::Module::Header &h) { moduleHeaders.push_back(h); });
+
+   bool foundAllHeaders = true;
+
+   // Go through the list of headers that are required by the ModuleGenerator
+   // and check for each header if it's in one of the modules we loaded.
+   // If not, make sure we fail at the end and mark the header as missing.
+   for (const std::string &header : modGen.GetHeaders()) {
+      bool headerFound = false;
+      for (const clang::Module::Header &moduleHeader : moduleHeaders) {
+         if (header == moduleHeader.NameAsWritten) {
+            headerFound = true;
+            break;
+         }
+      }
+      if (!headerFound) {
+         missingHeaders.push_back(header);
+         foundAllHeaders = false;
+      }
+   }
+   return foundAllHeaders;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check moduleName validity from modulemap. Check if this module is defined or not.
+static bool CheckModuleValid(TModuleGenerator &modGen, const std::string &resourceDir, cling::Interpreter &interpreter,
+                           StringRef LinkdefPath, const std::string &moduleName)
+{
+#ifdef __APPLE__
+
+   if (moduleName == "Krb5Auth" || moduleName == "GCocoa" || moduleName == "GQuartz")
+      return true;
+#endif
+
+   clang::CompilerInstance *CI = interpreter.getCI();
+   clang::HeaderSearch &headerSearch = CI->getPreprocessor().getHeaderSearchInfo();
+   headerSearch.loadTopLevelSystemModules();
+
+   // Actually lookup the module on the computed module name.
+   clang::Module *module = headerSearch.lookupModule(StringRef(moduleName));
+
+   // Inform the user and abort if we can't find a module with a given name.
+   if (!module) {
+      ROOT::TMetaUtils::Error("CheckModuleValid", "Couldn't find module with name '%s' in modulemap!\n",
+                              moduleName.c_str());
+      return false;
+   }
+
+   // Check if the loaded module covers all headers that were specified
+   // by the user on the command line. This is an integrity check to
+   // ensure that our used module map is
+   std::vector<std::string> missingHeaders;
+   if (!ModuleContainsHeaders(modGen, module, missingHeaders)) {
+      // FIXME: Upgrade this to an error once modules are stable.
+      std::stringstream msgStream;
+      msgStream << "warning: Couldn't find in "
+                << module->PresumedModuleMapFile
+                << " the following specified headers in "
+                << "the module " << module->Name << ":\n";
+      for (auto &H : missingHeaders) {
+         msgStream << "  " << H << "\n";
+      }
+      std::string warningMessage = msgStream.str();
+
+      bool maybeUmbrella = modGen.GetHeaders().size() == 1;
+      // We may have an umbrella and forgot to add the flag. Downgrade the
+      // warning into an information message.
+      // FIXME: We should open the umbrella, extract the set of header files
+      // and check if they exist in the modulemap.
+      // FIXME: We should also check if the header files are specified in the
+      // modulemap file as they appeared in the rootcling invocation, i.e.
+      // if we passed rootcling ... -I/some/path somedir/some/header, the
+      // modulemap should contain module M { header "somedir/some/header" }
+      // This way we will make sure the module is properly activated.
+      if (!gOptUmbrellaInput && maybeUmbrella) {
+         ROOT::TMetaUtils::Info("CheckModuleValid, %s. You can silence this message by adding %s to the invocation.",
+                                warningMessage.c_str(),
+                                gOptUmbrellaInput.ArgStr.data());
+         return true;
+      }
+
+      ROOT::TMetaUtils::Warning("CheckModuleValid", warningMessage.c_str());
+      // We include the missing headers to fix the module for the user.
+      if (!IncludeHeaders(missingHeaders, interpreter)) {
+         ROOT::TMetaUtils::Error("CheckModuleValid", "Couldn't include missing module headers for module '%s'!\n",
+                                 module->Name.c_str());
+      }
+   }
+
+   return true;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4347,6 +4381,15 @@ int RootClingMain(int argc,
          interpreterDeclarations += std::string("#include \"") + header + "\"\n";
       }
    }
+
+   if (gOptUmbrellaInput) {
+      bool hasSelectionFile = !linkdef.empty();
+      unsigned expectedHeaderFilesSize = 1 + hasSelectionFile;
+      if (gOptDictionaryHeaderFiles.size() > expectedHeaderFilesSize)
+         ROOT::TMetaUtils::Error(0, "Option %s used but more than one header file specified.\n",
+                                 gOptUmbrellaInput.ArgStr.data());
+   }
+
 
    if (gDriverConfig->fAddAncestorPCMROOTFile) {
       for (const auto & baseModule : gOptModuleDependencies)
