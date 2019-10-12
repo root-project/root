@@ -98,6 +98,13 @@ void *ROOT::Experimental::Detail::RRawFile::DoMap(size_t /* nbytes */, std::uint
    throw std::runtime_error("Memory mapping unsupported");
 }
 
+void ROOT::Experimental::Detail::RRawFile::DoReadV(RIOVec *ioVec, unsigned int nReq)
+{
+   for (unsigned i = 0; i < nReq; ++i) {
+      ioVec[i].fOutBytes = ReadAt(ioVec[i].fBuffer, ioVec[i].fSize, ioVec[i].fOffset);
+   }
+}
+
 void ROOT::Experimental::Detail::RRawFile::DoUnmap(void * /* region */, size_t /* nbytes */)
 {
    throw std::runtime_error("Memory mapping unsupported");
@@ -195,9 +202,10 @@ size_t ROOT::Experimental::Detail::RRawFile::ReadAt(void *buffer, size_t nbytes,
 
 void ROOT::Experimental::Detail::RRawFile::ReadV(RIOVec *ioVec, unsigned int nReq)
 {
-   for (unsigned i = 0; i < nReq; ++i) {
-      ioVec[i].fOutBytes = ReadAt(ioVec[i].fBuffer, ioVec[i].fSize, ioVec[i].fOffset);
-   }
+   if (!fIsOpen)
+      DoOpen();
+   fIsOpen = true;
+   DoReadV(ioVec, nReq);
 }
 
 bool ROOT::Experimental::Detail::RRawFile::Readln(std::string &line)
