@@ -1287,7 +1287,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       // gnuinstall.
       Paths.push_back(TROOT::GetLibDir().Data());
       GetEnvVarPath("CLING_PREBUILT_MODULE_PATH", Paths);
-      GetEnvVarPath("LD_LIBRARY_PATH", Paths);
+      //GetEnvVarPath("LD_LIBRARY_PATH", Paths);
       std::string EnvVarPath;
       for (const std::string& P : Paths)
          EnvVarPath += P + EnvPathDelimiter;
