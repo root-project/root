@@ -53,14 +53,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooMomentMorphND.h
     RooMultiBinomial.h
     RooNDKeysPdf.h
-    RooNonCentralChiSquare.h
     RooNonCPEigenDecay.h
     RooNovosibirsk.h
     RooParametricStepFunction.h
     RooParamHistFunc.h
     RooPoisson.h
     RooPolynomial.h
-    RooSpHarmonic.h
     RooStepFunction.h
     RooTFnBinding.h
     RooTFnPdfBinding.h
