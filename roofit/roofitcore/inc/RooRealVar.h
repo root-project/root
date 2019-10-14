@@ -44,6 +44,7 @@ public:
   RooRealVar(const char *name, const char *title, Double_t value, 
 	   Double_t minValue, Double_t maxValue, const char *unit= "") ;
   RooRealVar(const RooRealVar& other, const char* name=0);
+  RooRealVar& operator=(const RooRealVar& other);
   virtual TObject* clone(const char* newname) const { return new RooRealVar(*this,newname); }
   virtual ~RooRealVar();
   
