@@ -28,16 +28,37 @@ void runFit(unsigned int N, double a0, double a1, double a2, double a3)
 
   // Set ranges for the variable
   x.setRange("range1", 0., 30.);
-  x.setRange("range2", 70., 100.);
+  x.setRange("range2", 30., 70.);
+  x.setRange("range3", 70., 100.);
   x.setRange("FULL", 0., 100.);
 
   // Set normalization range
   bern.selectNormalizationRange("FULL",kTRUE);
- 
+
+  // Test ranged integration
+  Double_t int_range1 = bern.analyticalIntegral(1, "range1");
+  Double_t int_range2 = bern.analyticalIntegral(1, "range2");
+  Double_t int_range3 = bern.analyticalIntegral(1, "range3");
+  Double_t int_full = bern.analyticalIntegral(1, "FULL");
+
+  Double_t integral = [=, &x](double x) {
+    Double_t val = 0.3*a + 6*1e-3*TMath::Pow(x,2) - 9*1e-5*TMath::Pow(x,3) + 4.25*1e-7*TMath::Pow(x,4);
+    return val;
+  };
+
+  // closure
+  EXPECT_LT(fabs(int_full - int_range1 - int_range2 - int_range3), 1e-10);
+
+  // comparision with polynomial
+  EXPECT_LT(fabs(int_range1 - integral(30.) - integral(0.)),1e-3);
+  EXPECT_LT(fabs(int_range2 - integral(70.) - integral(30.)),1e-3);
+  EXPECT_LT(fabs(int_range3 - integral(100.) - integral(70.)),1e-3);
+  EXPECT_LT(fabs(int_full - integral(100.) - integral(0.)),1e-3);
+
+
   // Create an extended pdf to fit simultaneously in the two ranges 
   RooRealVar Ne("Ne", "number of events", 1000, -1e30, 1e30);
   RooExtendPdf extbern("extbern", "bernstein extended pdf", bern, Ne, "FULL");
-
 
   // Create a dataset from the bernstein pdf
   RooDataSet *data = bern.generate(x, N);
@@ -77,11 +98,16 @@ void runFit(unsigned int N, double a0, double a1, double a2, double a3)
   c2.Print();
   c3.Print();   
   Ne.Print();
+
+  EXPECT_LT(fabs(a1 - c1.getValV()),c1.getError());
+  EXPECT_LT(fabs(a2 - c2.getValV()),c2.getError());
+  EXPECT_LT(fabs(a3 - c3.getValV()),c3.getError());
+
 }
 
 
 TEST(RooBernstein, RangedFit)
 {
-  runFit(10000, 0.3, 0.03, 0.2, 0.5);
+  runFit(10000, 0.3, 0.7, 0.2, 0.5);
 }
 
