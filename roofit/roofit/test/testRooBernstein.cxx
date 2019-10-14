@@ -6,12 +6,18 @@
 #include "RooExtendPdf.h"
 #include "RooBernstein.h"
 #include "TCanvas.h"
+#include "TMath.h"
 #include "RooPlot.h"
 #include "TAxis.h"
 
 #include "gtest/gtest.h"
 
 using namespace RooFit;
+
+Double_t integral(double t) {
+  Double_t val = 0.3*t + 6*1e-3*TMath::Power(t,2) - 9*1e-5*TMath::Power(t,3) + 4.25*1e-7*TMath::Power(t,4);
+  return val;
+};
 
 void runFit(unsigned int N, double a0, double a1, double a2, double a3)
 {
@@ -41,10 +47,6 @@ void runFit(unsigned int N, double a0, double a1, double a2, double a3)
   Double_t int_range3 = bern.analyticalIntegral(1, "range3");
   Double_t int_full = bern.analyticalIntegral(1, "FULL");
 
-  Double_t integral = [=, &x](double x) {
-    Double_t val = 0.3*a + 6*1e-3*TMath::Pow(x,2) - 9*1e-5*TMath::Pow(x,3) + 4.25*1e-7*TMath::Pow(x,4);
-    return val;
-  };
 
   // closure
   EXPECT_LT(fabs(int_full - int_range1 - int_range2 - int_range3), 1e-10);
@@ -102,7 +104,7 @@ void runFit(unsigned int N, double a0, double a1, double a2, double a3)
   EXPECT_LT(fabs(a1 - c1.getValV()),c1.getError());
   EXPECT_LT(fabs(a2 - c2.getValV()),c2.getError());
   EXPECT_LT(fabs(a3 - c3.getValV()),c3.getError());
-  EXPECT_LT(fabs(N - Ne.getValV()),N.getError());
+  EXPECT_LT(fabs(N - Ne.getValV()),Ne.getError());
 }
 
 
