@@ -753,5 +753,11 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       printf("Select %s\n", fActiveCanvas.c_str());
    } else if (arg.compare(0,13, "CLOSE_CANVAS:") == 0) {
       CloseCanvas(arg.substr(13));
+   } else if (arg.compare(0, 8, "WORKDIR:") == 0) {
+      auto path = gSystem->WorkingDirectory();
+      std::string res = "WORKDIR: { \"path\": \"";
+      res.append(path);
+      res.append("\"}");
+      fWebWindow->Send(connid, res);
    }
 }
