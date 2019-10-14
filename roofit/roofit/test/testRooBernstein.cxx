@@ -102,7 +102,7 @@ void runFit(unsigned int N, double a0, double a1, double a2, double a3)
   EXPECT_LT(fabs(a1 - c1.getValV()),c1.getError());
   EXPECT_LT(fabs(a2 - c2.getValV()),c2.getError());
   EXPECT_LT(fabs(a3 - c3.getValV()),c3.getError());
-
+  EXPECT_LT(fabs(N - Ne.getValV()),N.getError());
 }
 
 
