@@ -37,6 +37,8 @@ set(BASE_HEADERS
   TBuffer3D.h
   TBuffer3DTypes.h
   TBuffer.h
+  TColor.h
+  TColorGradient.h
   TDatime.h
   TDirectory.h
   TEnv.h
@@ -46,7 +48,6 @@ set(BASE_HEADERS
   TFileCollection.h
   TFileInfo.h
   TFolder.h
-  TGuiFactory.h
   TInetAddress.h
   TInspectorImp.h
   TMacro.h
@@ -57,7 +58,6 @@ set(BASE_HEADERS
   TNamed.h
   TNotifyLink.h
   TObject.h
-  TObjectSpy.h
   TObjString.h
   TParameter.h
   TPluginManager.h
@@ -112,7 +112,6 @@ set(BASE_HEADERS
 )
 
 set(BASE_SOURCES
-  src/InitGui.cxx
   src/Match.cxx
   src/String.cxx
   src/Stringio.cxx
@@ -131,6 +130,8 @@ set(BASE_SOURCES
   src/TBenchmark.cxx
   src/TBuffer3D.cxx
   src/TBuffer.cxx
+  src/TColor.cxx
+  src/TColorGradient.cxx
   src/TDatime.cxx
   src/TDirectory.cxx
   src/TEnv.cxx
@@ -140,7 +141,6 @@ set(BASE_SOURCES
   src/TFileCollection.cxx
   src/TFileInfo.cxx
   src/TFolder.cxx
-  src/TGuiFactory.cxx
   src/TInetAddress.cxx
   src/TInspectorImp.cxx
   src/TListOfTypes.cxx
@@ -152,7 +152,6 @@ set(BASE_SOURCES
   src/TMessageHandler.cxx
   src/TNamed.cxx
   src/TObject.cxx
-  src/TObjectSpy.cxx
   src/TObjString.cxx
   src/TParameter.cxx
   src/TPluginManager.cxx

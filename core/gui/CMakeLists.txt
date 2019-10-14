@@ -13,25 +13,26 @@ set(GuiCore_dict_headers
   TBrowser.h
   TBrowserImp.h
   TCanvasImp.h
-  TColor.h
-  TColorGradient.h
   TContextMenu.h
   TContextMenuImp.h
   TControlBarImp.h
+  TGuiFactory.h
+  TObjectSpy.h
   TToggleGroup.h
   TToggle.h
   PARENT_SCOPE
 )
 
 ROOT_OBJECT_LIBRARY(GuiCore
+  src/InitGui.cxx
   src/TBrowser.cxx
   src/TBrowserImp.cxx
   src/TCanvasImp.cxx
-  src/TColor.cxx
-  src/TColorGradient.cxx
   src/TContextMenu.cxx
   src/TContextMenuImp.cxx
   src/TControlBarImp.cxx
+  src/TGuiFactory.cxx
+  src/TObjectSpy.cxx
   src/TToggle.cxx
   src/TToggleGroup.cxx
 )
