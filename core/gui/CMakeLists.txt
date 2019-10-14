@@ -13,6 +13,7 @@ set(GuiCore_dict_headers
   TBrowser.h
   TBrowserImp.h
   TCanvasImp.h
+  TClassMenuItem.h
   TContextMenu.h
   TContextMenuImp.h
   TControlBarImp.h
@@ -28,6 +29,7 @@ ROOT_OBJECT_LIBRARY(GuiCore
   src/TBrowser.cxx
   src/TBrowserImp.cxx
   src/TCanvasImp.cxx
+  src/TClassMenuItem.cxx
   src/TContextMenu.cxx
   src/TContextMenuImp.cxx
   src/TControlBarImp.cxx

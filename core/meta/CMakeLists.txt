@@ -12,7 +12,6 @@ set(Meta_dict_headers
   TBaseClass.h
   TClassGenerator.h
   TClass.h
-  TClassMenuItem.h
   TClassRef.h
   TClassStreamer.h
   TDataMember.h
@@ -56,7 +55,6 @@ ROOT_OBJECT_LIBRARY(Meta
   src/TBaseClass.cxx
   src/TClass.cxx
   src/TClassGenerator.cxx
-  src/TClassMenuItem.cxx
   src/TClassRef.cxx
   src/TDataMember.cxx
   src/TDataType.cxx
