@@ -34,7 +34,8 @@ void libs(TString classname)
 
    // Print the library name in a external file
    TString mainlib = libname;
-   mainlib.ReplaceAll(".so ","");
+   mainlib.ReplaceAll(" ","");
+   mainlib.ReplaceAll(".so","");
    FILE *f = fopen("mainlib.dot", "w");
    fprintf(f,"   mainlib [label=%s];\n",mainlib.Data());
    fclose(f);
