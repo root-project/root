@@ -201,14 +201,6 @@ void ROOT::Experimental::Detail::RPageSourceRaw::Read(void *buffer, std::size_t 
 
 ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceRaw::DoAttach()
 {
-   RNTupleDescriptorBuilder descBuilder;
-   GetHeaderAndFooter(descBuilder);
-   return descBuilder.MoveDescriptor();
-}
-
-
-void ROOT::Experimental::Detail::RPageSourceRaw::GetHeaderAndFooter(RNTupleDescriptorBuilder &descBuilder)
-{
    unsigned char postscript[RNTupleDescriptor::kNBytesPostscript];
    auto fileSize = fFile->GetSize();
    R__ASSERT(fileSize != RRawFile::kUnknownFileSize);
@@ -226,10 +218,13 @@ void ROOT::Experimental::Detail::RPageSourceRaw::GetHeaderAndFooter(RNTupleDescr
    Read(header, szHeader, 0);
    Read(footer, szFooter, fileSize - szFooter);
 
+   RNTupleDescriptorBuilder descBuilder;
    descBuilder.SetFromHeader(header);
    descBuilder.AddClustersFromFooter(footer);
    delete[] header;
    delete[] footer;
+
+   return descBuilder.MoveDescriptor();
 }
 
 

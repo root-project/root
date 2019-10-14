@@ -99,7 +99,7 @@ public:
       auto clusterRangeFirst = ClusterSize_t(fRangeFirst - fClusterInfo.GetIndexOffset());
       return (clusterIndex.GetIndex() >= clusterRangeFirst) &&
              (clusterIndex.GetIndex() < clusterRangeFirst + fNElements);
-    }
+   }
 
    void* GetBuffer() const { return fBuffer; }
    /// Return a pointer after the last element that has space for nElements new elements. If there is not enough capacity,

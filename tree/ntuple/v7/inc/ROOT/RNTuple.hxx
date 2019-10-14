@@ -83,8 +83,8 @@ enum class ENTupleInfo {
 };
 
 enum class EFileOpeningOptions {
-   kChain,     // Multiple files with same fields are chained
-   kFriend     // The field structure of multiple files with the same cluster structure are combined
+   kChain,     // Multiple files with identical fields are chained
+   kFriend     // Fields and Columns of multiple files are combined
 };
 
 
@@ -143,10 +143,12 @@ public:
    /// Chains 2 RNTupleReader with the same field and columns into a single one.
    static std::unique_ptr<RNTupleReader> ChainReader(std::string_view ntupleName,
                                                      std::unique_ptr<RNTupleReader>& reader1,
-                                                     std::unique_ptr<RNTupleReader>& reader2);
+                                                     std::unique_ptr<RNTupleReader>& reader2,
+                                                     EFileOpeningOptions op = EFileOpeningOptions::kChain);
    static std::unique_ptr<RNTupleReader> ChainReader(std::string_view ntupleName,
                                                      std::unique_ptr<RNTupleReader>&& reader1,
-                                                     std::unique_ptr<RNTupleReader>&& reader2);
+                                                     std::unique_ptr<RNTupleReader>&& reader2,
+                                                     EFileOpeningOptions op = EFileOpeningOptions::kChain);
 
    /// The user imposes an ntuple model, which must be compatible with the model found in the data on storage
    RNTupleReader(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSource> source);
@@ -156,7 +158,6 @@ public:
    ~RNTupleReader();
 
    NTupleSize_t GetNEntries() const { return fNEntries; }
-   const RNTupleDescriptor &GetDescriptor() const { return fSource->GetDescriptor(); }
 
    /// Prints a detailed summary of the ntuple, including a list of fields.
    void PrintInfo(const ENTupleInfo what = ENTupleInfo::kSummary, std::ostream &output = std::cout);

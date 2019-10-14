@@ -117,7 +117,6 @@ public:
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
    RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;
    void ReleasePage(RPage &page) final;
-   void GetHeaderAndFooter(RNTupleDescriptorBuilder &descBuilder) final;
 };
 
 } // namespace Detail

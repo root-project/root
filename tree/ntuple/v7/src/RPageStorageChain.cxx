@@ -25,6 +25,7 @@
 
 #include <iostream>
 #include <memory>
+#include <unordered_map>
 
 ROOT::Experimental::Detail::RPageSourceChain::RPageSourceChain(std::string_view ntupleName,
                                                                std::vector<std::string> locationVec,
@@ -39,7 +40,7 @@ ROOT::Experimental::Detail::RPageSourceChain::RPageSourceChain(std::string_view 
    }
 
    CompareFileMetaData();
-   InitializeVariables();
+   InitializeMemberVariables();
 }
 
 ROOT::Experimental::Detail::RPageSourceChain::RPageSourceChain(std::string_view ntupleName,
@@ -53,7 +54,7 @@ ROOT::Experimental::Detail::RPageSourceChain::RPageSourceChain(std::string_view 
    }
 
    CompareFileMetaData();
-   InitializeVariables();
+   InitializeMemberVariables();
 }
 
 ROOT::Experimental::Detail::RPageSourceChain::RPageSourceChain(std::string_view ntupleName,
@@ -62,7 +63,7 @@ ROOT::Experimental::Detail::RPageSourceChain::RPageSourceChain(std::string_view 
    : RPageSource{ntupleName, options}, fSources{std::move(sources)}
 {
    CompareFileMetaData();
-   InitializeVariables();
+   InitializeMemberVariables();
 }
 
 void ROOT::Experimental::Detail::RPageSourceChain::CompareFileMetaData()
@@ -71,39 +72,32 @@ void ROOT::Experimental::Detail::RPageSourceChain::CompareFileMetaData()
       // checks only number of fields and columns
       if ((fSources.at(0)->GetDescriptor().GetNFields() != fSources.at(i)->GetDescriptor().GetNFields()) ||
           (fSources.at(0)->GetDescriptor().GetNColumns() != fSources.at(i)->GetDescriptor().GetNColumns())) {
-         R__WARNING_HERE("NTuple") << "The meta-data (number of fields and columns) of the files do not match. Using "
-                                      "this reader may result in undefined behaviour!\n";
+         R__WARNING_HERE("NTuple") << "The meta-data (number of fields and columns) of the files do not match. A nullptr was returned. Please make sure the number of fields and columns in all files are identical!";
          fUnsafe = true;
-         break;
+         return;
       }
       // compares all fieldDescriptors
       for (std::size_t j = 0; j < fSources.at(0)->GetDescriptor().GetNFields(); ++j) {
          if (!(fSources.at(0)->GetDescriptor().GetFieldDescriptor(j) ==
                fSources.at(i)->GetDescriptor().GetFieldDescriptor(j))) {
-            R__WARNING_HERE("NTuple") << "The meta-data of the fields of the files do not match. Using this reader may "
-                                         "result in undefined behaviour!\n";
+            R__WARNING_HERE("NTuple") << "The meta-data of the fields of the files do not match. A nullptr was returned. Please make sure the metadata of the fields (fieldName, field order, etc.) is the same across all files!";
             fUnsafe = true;
-            break;
+            return;
          }
       }
-      if (fUnsafe)
-         break;
       // compares all columnDescriptors
       for (std::size_t j = 0; j < fSources.at(0)->GetDescriptor().GetNColumns(); ++j) {
          if (!(fSources.at(0)->GetDescriptor().GetColumnDescriptor(j) ==
                fSources.at(i)->GetDescriptor().GetColumnDescriptor(j))) {
-            R__WARNING_HERE("NTuple") << "The meta-data of the columns of the files do not match. Using this reader "
-                                         "may result in undefined behaviour!\n";
+            R__WARNING_HERE("NTuple") << "The meta-data of the columns of the files do not match. A nullptr was returned. Please make sure the metadata of columns are the same across all files!";
             fUnsafe = true;
-            break;
+            return;
          }
       }
-      if (fUnsafe)
-         break;
    }
 }
 
-void ROOT::Experimental::Detail::RPageSourceChain::InitializeVariables()
+void ROOT::Experimental::Detail::RPageSourceChain::InitializeMemberVariables()
 {
    // initialize fNEntryPerSource and fNClusterPerSource
    fNEntryPerSource.resize(fSources.size() + 1);
@@ -137,9 +131,11 @@ void ROOT::Experimental::Detail::RPageSourceChain::InitializeVariables()
 ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceChain::DoAttach()
 {
    RNTupleDescriptorBuilder descBuilder;
-   fSources.at(0)->GetHeaderAndFooter(descBuilder);
-   for (std::size_t i = 1; i < fSources.size(); ++i) {
-      descBuilder.AddClustersFromAdditionalFile(fSources.at(i)->GetDescriptor());
+   descBuilder.SetNTuple(fSources.at(0)->GetDescriptor());
+   descBuilder.AddFieldsAndColumnsFromDescriptor(fSources.at(0)->GetDescriptor());
+
+   for (std::size_t i = 0; i < fSources.size(); ++i) {
+      descBuilder.AddClustersFromDescriptor(fSources.at(i)->GetDescriptor());
    }
    return descBuilder.MoveDescriptor();
 }
@@ -166,7 +162,7 @@ ROOT::Experimental::Detail::RPageSourceChain::PopulatePage(ColumnHandle_t column
    RPage page{fSources.at(sourceIndex)->PopulatePage(columnHandle, globalIndex - fNEntryPerSource.at(sourceIndex))};
 
    if (fPageMapper.find(page.GetBuffer()) == fPageMapper.end()) {
-      fPageMapper.emplace(page.GetBuffer(), PageInfo{sourceIndex, 1});
+      fPageMapper.emplace(page.GetBuffer(), PageInfoChain{sourceIndex, 1});
    } else {
       fPageMapper.at(page.GetBuffer()).fNSamePagePopulated += 1;
    }
@@ -197,7 +193,7 @@ ROOT::Experimental::Detail::RPageSourceChain::PopulatePage(ColumnHandle_t column
    RPage page{fSources.at(sourceIndex)->PopulatePage(columnHandle, newClusterIndex)};
 
    if (fPageMapper.find(page.GetBuffer()) == fPageMapper.end()) {
-      fPageMapper.emplace(page.GetBuffer(), PageInfo{sourceIndex, 1});
+      fPageMapper.emplace(page.GetBuffer(), PageInfoChain{sourceIndex, 1});
    } else {
       fPageMapper.at(page.GetBuffer()).fNSamePagePopulated += 1;
    }
@@ -225,10 +221,3 @@ void ROOT::Experimental::Detail::RPageSourceChain::ReleasePage(RPage &page)
       fPageMapper.erase(mapIterator);
 }
 
-void ROOT::Experimental::Detail::RPageSourceChain::GetHeaderAndFooter(RNTupleDescriptorBuilder &descBuilder)
-{
-   fSources.at(0)->GetHeaderAndFooter(descBuilder);
-   for (std::size_t i = 1; i < fSources.size(); ++i) {
-      descBuilder.AddClustersFromAdditionalFile(fSources.at(i)->GetDescriptor());
-   }
-}

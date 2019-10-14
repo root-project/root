@@ -181,7 +181,6 @@ public:
    virtual RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) = 0;
    /// Another version of PopulatePage that allows to specify cluster-relative indexes
    virtual RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) = 0;
-   virtual void GetHeaderAndFooter(RNTupleDescriptorBuilder &descBuilder) = 0;
 };
 
 } // namespace Detail

@@ -17,9 +17,13 @@
 #define ROOT7_RPageStorageChain
 
 #include <ROOT/RNTupleOptions.hxx>
+#include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RPageStorage.hxx>
 
 #include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace ROOT {
 namespace Experimental {
@@ -30,10 +34,14 @@ namespace Detail {
 \class ROOT::Experimental::Detail::RPageSourceChain
 \ingroup NTuple
 \brief A pagesource generated from multiple files with the same fields and columns. It acts like a PageSource for a file where multiple files were merged into one.
+
+An instance of RPageSourceChain is created in RNTupleReader::Open() when a std::vector of filenames is passed as an argument instead of a filename-string and in RNTupleReader::ChainReader(). It first creates a RPageSource (including its descriptor) for each filename passed and initalizes its members. Later it merges the information from all the descriptors to create a single descriptor containing all information. After that its main job is to assign PopulatePage() and ReleasePage() to the correct RPageSources in fSources.
  
- An instance of RPageSourceChain is created in RPageStorage::Create() when a std::vector of filenames is passed as an argument instead of a filename-string. It first creates a RPageSource (including its descriptor) for each filename passed and initalizes its members. Later it merges the information from all the descriptors to create a single descriptor containing all information. After that its main job is to assign PopulatePage() and ReleasePage() to the correct RPageSource.
+ The total number of entries for a reader with this RPageSource is the sum of entries of all the RPageSources in fSources.
 */
 // clang-format on
+
+//Note(lesimon): Currently it can't deal with files, if the ordering of fields and columns aren't the same across all files. Should it learn to deal with cases where the ordering isn't the same?
 class RPageSourceChain : public RPageSource {
 private:
    /// Holds a RPageSource pointer for each file.
@@ -50,24 +58,24 @@ private:
    std::vector<std::vector<std::size_t>> fNElementsPerColumnPerSource;
    /// Keeps track to which RPageSource a populated page belongs to and how often the same page was populated but not
    /// released yet.
-   struct PageInfo {
+   struct PageInfoChain {
       /// Tells that the RPage belongs to the RPageSource fSources.at(fSourceId).
       std::size_t fSourceId;
-      /// Tells how often the same page was populated.
+      /// Tells how often many instances of the same page were populated but not released yet.
       std::size_t fNSamePagePopulated;
    };
    /// Maps the buffer of a RPage (void*) to its RPageSource.
-   std::unordered_map<void *, PageInfo> fPageMapper;
+   std::unordered_map<void *, PageInfoChain> fPageMapper;
    /// Is set to true when the meta-data of the fields and columns don't match.
    /// Getting pages from a unsafe RPageStorageChain can lead to undefined behaviour.
    bool fUnsafe = false;
 
 protected:
-   RNTupleDescriptor DoAttach();
-   /// Checks if the field and column meta-data of all files are the same. If the meta-data doesn't match it allows
-   /// further work but warns the user of undefined behaviour.
+   RNTupleDescriptor DoAttach() final;
+   /// Checks if the field and column meta-data of all files are the same. If the meta-data doesn't match RNTupleReader::Open and RNTupleReader::ChainReader will return a nullptr.
    void CompareFileMetaData();
-   void InitializeVariables();
+   /// initializes fNEntryPerSource, fNClusterPerSource and fNElementsPerColumnPerSource
+   void InitializeMemberVariables();
 
 public:
    RPageSourceChain(std::string_view ntupleName, std::vector<std::string> locationVec,
@@ -77,14 +85,13 @@ public:
                     const RNTupleReadOptions &options = RNTupleReadOptions());
    ~RPageSourceChain() = default;
 
-   std::unique_ptr<RPageSource> Clone() const;
+   std::unique_ptr<RPageSource> Clone() const final;
 
-   RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex);
-   RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex);
-   void ReleasePage(RPage &page);
+   RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
+   RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;
+   void ReleasePage(RPage &page) final;
 
-   void GetHeaderAndFooter(RNTupleDescriptorBuilder &descBuilder);
-   bool IsSafe() const { return fUnsafe; }
+   bool IsUnsafe() const { return fUnsafe; }
 };
 
 } // namespace Detail

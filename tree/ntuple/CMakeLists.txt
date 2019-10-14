@@ -33,6 +33,7 @@ HEADERS
   ROOT/RPagePool.hxx
   ROOT/RPageStorage.hxx
   ROOT/RPageStorageChain.hxx
+  ROOT/RPageStorageFriend.hxx
   ROOT/RPageStorageRaw.hxx
   ROOT/RPageStorageRoot.hxx
 SOURCES
@@ -50,6 +51,7 @@ SOURCES
   v7/src/RPagePool.cxx
   v7/src/RPageStorage.cxx
   v7/src/RPageStorageChain.cxx
+  v7/src/RPageStorageFriend.cxx
   v7/src/RPageStorageRaw.cxx
   v7/src/RPageStorageRoot.cxx
 LINKDEF
