@@ -12,7 +12,7 @@ ROOTTEST_ADD_TEST(runreferenceuse
 
 ROOTTEST_ADD_TEST(testcint
                   MACRO testcint.py
-                  PRECMD root -b -q -l -e .L\ t.h+
+                  PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ t.h+
                   OUTREF pythoncintrun.ref
                   OUTCNVCMD grep -v "just a comment"
                   WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
