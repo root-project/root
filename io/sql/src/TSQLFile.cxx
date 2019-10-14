@@ -164,7 +164,6 @@ Author: S.Linev, GSI Darmstadt,   S.Linev@gsi.de
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TList.h"
-#include "TBrowser.h"
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TList.h"
