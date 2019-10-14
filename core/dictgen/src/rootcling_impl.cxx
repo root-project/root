@@ -224,9 +224,8 @@ bool Namespace__HasMethod(const clang::NamespaceDecl *cl, const char *name,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void AnnotateFieldDecl(clang::FieldDecl &decl,
-                       const std::list<VariableSelectionRule> &fieldSelRules,
-                       bool isGenreflex)
+static void AnnotateFieldDecl(clang::FieldDecl &decl,
+                              const std::list<VariableSelectionRule> &fieldSelRules)
 {
    using namespace ROOT::TMetaUtils;
    // See if in the VariableSelectionRules there are attributes and names with
@@ -390,7 +389,7 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
 
             // This check is here to avoid asserts in debug mode (LLVMDEV env variable set)
             if (FieldDecl *fieldDecl  = dyn_cast<FieldDecl>(*I)) {
-               AnnotateFieldDecl(*fieldDecl, fieldSelRules, isGenreflex);
+               AnnotateFieldDecl(*fieldDecl, fieldSelRules);
             }
          } // End presence of XML selection file
       }
