@@ -1,4 +1,5 @@
-if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
+if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "x86_64.*|x86.*|amd64.*|AMD64.*|i686.*|i386.*")
+  # All platforms except of ARM/AARCH64
   ROOTTEST_ADD_TEST(TabCom
                     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py
                     INPUT TabCom_input.txt
