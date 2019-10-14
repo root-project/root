@@ -3969,11 +3969,12 @@ int RootClingMain(int argc,
    if (gOptVerboseLevel == v4)
       genreflex::verbose = true;
 
+   if (gOptReflex)
+      isGenreflex = true;
+
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,21,00)
    if (gOptCint)
       fprintf(stderr, "warning: Please remove the deprecated flag -cint.\n");
-   if (gOptReflex)
-      fprintf(stderr, "warning: Please remove the deprecated flag -reflex.\n");
    if (gOptGccXml)
       fprintf(stderr, "warning: Please remove the deprecated flag -gccxml.\n");
    if (gOptC)
@@ -5403,7 +5404,6 @@ bool IsGoodLibraryName(const std::string &name)
 /// --pool, --dataonly
 /// --interpreteronly
 /// --gccxml{path,opt,post}
-/// --reflex
 ///
 ///
 /// Exceptions
