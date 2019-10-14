@@ -46,8 +46,6 @@ set(Meta_dict_headers
   TStatusBitsChecker.h
   TStreamerElement.h
   TStreamer.h
-  TToggleGroup.h
-  TToggle.h
   TVirtualIsAProxy.h
   TVirtualRefProxy.h
   TVirtualStreamerInfo.h
@@ -86,8 +84,6 @@ ROOT_OBJECT_LIBRARY(Meta
   src/TSchemaRuleSet.cxx
   src/TStatusBitsChecker.cxx
   src/TStreamerElement.cxx
-  src/TToggle.cxx
-  src/TToggleGroup.cxx
   src/TViewPubDataMembers.cxx
   src/TViewPubFunctions.cxx
   src/TVirtualStreamerInfo.cxx
