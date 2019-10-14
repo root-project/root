@@ -5,11 +5,11 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ############################################################################
-# CMakeLists.txt file for building ROOT roofitcore package
-# @author Pere Mato, CERN
+# CMakeLists.txt file for building ROOT roofitmore package
+# @author Lorenzo Moneta, CERN
 ############################################################################
 
-if(mathmore OR ROOT_mathmore_FOUND)
+if(mathmore)
   set(ROOT_MATHMORE_LIBRARY MathMore)
 endif()
 
@@ -31,7 +31,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMore
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   LINKDEF
-    LinkDef1.h
+    LinkDef.h
   DEPENDENCIES
     ${ROOT_MATHMORE_LIBRARY}
     Core
