@@ -15,9 +15,10 @@ sap.ui.define(['sap/ui/core/Component',
                "sap/ui/core/util/File",
                "sap/ui/model/json/JSONModel",
                "rootui5/browser/model/BrowserModel",
-               "sap/ui/core/Fragment"
+               "sap/ui/core/Fragment",
+               "sap/m/Link"
 ],function(Component, Controller, CoreControl, CoreIcon, XMLView, mText, mCheckBox, MessageBox, MessageToast, TabContainerItem,
-           Splitter, ResizeHandler, HorizontalLayout, tableColumn, File, JSONModel, BrowserModel, Fragment) {
+           Splitter, ResizeHandler, HorizontalLayout, tableColumn, File, JSONModel, BrowserModel, Fragment, Link) {
 
    "use strict";
 
@@ -417,13 +418,33 @@ sap.ui.define(['sap/ui/core/Component',
          this.websocket.Send("BRREQ:" + JSON.stringify(req));
       },
 
+      updateBReadcrumbs: function(jsonString) {
+        let json = JSON.parse(jsonString);
+        let split = json.path.split("/");
+        let oBreadcrumbs = this.getView().byId("breadcrumbs");
+        oBreadcrumbs.removeAllLinks();
+        for (let i=0; i<split.length; i++) {
+          if (i=== split.length-1) {
+            oBreadcrumbs.setCurrentLocationText(split[i]);
+          } else if ( i === 0) {
+            oBreadcrumbs.addLink(new Link({text: "/"}));
+          } else {
+            oBreadcrumbs.addLink(new Link({text: split[i]}));
+          }
+        }
+      },
+
       /** @brief Double-click event handler */
       onRowDblClick: function(row) {
-         if (row._bHasChildren) // ignore directories for now
-            return;
          var fullpath = "";
          var ctxt = row.getBindingContext(),
              prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
+
+        if (row._bHasChildren){
+          let rowText = row.getCells()[0].getContent()[1].getText();
+          return this.websocket.Send('WORKDIR:' + rowText );
+        }
+
          if (prop && prop.fullpath) {
             fullpath = prop.fullpath.substr(1, prop.fullpath.length-2);
             var dirname = fullpath.substr(0, fullpath.lastIndexOf('/'));
@@ -518,6 +539,9 @@ sap.ui.define(['sap/ui/core/Component',
          case "CANVS":  // canvas created by server, need to establish connection
             var arr = JSON.parse(msg);
             this.createCanvas(arr[0], arr[1], arr[2]);
+            break;
+         case "WORKDIR":
+            this.updateBReadcrumbs(msg);
             break;
          case "SLCTCANV": // Selected the back selected canvas
            let oTabContainer = this.byId("myTabContainer");
@@ -680,7 +704,7 @@ sap.ui.define(['sap/ui/core/Component',
          if(name !== "rcanv1") {
            oTabContainer.setSelectedItem(oTabContainerItem);
          }
-         
+
          var conn = new JSROOT.WebWindowHandle(this.websocket.kind);
          
          // this is producing 
