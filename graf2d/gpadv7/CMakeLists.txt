@@ -11,6 +11,7 @@
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
   HEADERS
+    ROOT/RBrowsable.hxx
     ROOT/RCanvas.hxx
     ROOT/RFrame.hxx
     ROOT/RMenuItem.hxx
@@ -36,6 +37,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
     ROOT/RPadUserAxis.hxx
     ROOT/RVirtualCanvasPainter.hxx
   SOURCES
+    src/RBrowsable.cxx
     src/RCanvas.cxx
     src/RFrame.cxx
     src/RMenuItem.cxx
