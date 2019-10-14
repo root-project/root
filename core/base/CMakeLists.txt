@@ -22,7 +22,6 @@ set(BASE_HEADERS
   Riostream.h
   Rtypes.h
   TApplication.h
-  TApplicationImp.h
   TAtt3D.h
   TAttAxis.h
   TAttBBox2D.h
@@ -49,7 +48,6 @@ set(BASE_HEADERS
   TFileInfo.h
   TFolder.h
   TInetAddress.h
-  TInspectorImp.h
   TMacro.h
   TMathBase.h
   TMD5.h
@@ -116,7 +114,6 @@ set(BASE_SOURCES
   src/String.cxx
   src/Stringio.cxx
   src/TApplication.cxx
-  src/TApplicationImp.cxx
   src/TAtt3D.cxx
   src/TAttAxis.cxx
   src/TAttBBox2D.cxx
@@ -142,7 +139,6 @@ set(BASE_SOURCES
   src/TFileInfo.cxx
   src/TFolder.cxx
   src/TInetAddress.cxx
-  src/TInspectorImp.cxx
   src/TListOfTypes.cxx
   src/TListOfTypes.h
   src/TMacro.cxx

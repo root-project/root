@@ -10,6 +10,7 @@
 
 set(GuiCore_dict_headers
   GuiTypes.h
+  TApplicationImp.h
   TBrowser.h
   TBrowserImp.h
   TCanvasImp.h
@@ -18,6 +19,7 @@ set(GuiCore_dict_headers
   TContextMenuImp.h
   TControlBarImp.h
   TGuiFactory.h
+  TInspectorImp.h
   TObjectSpy.h
   TToggleGroup.h
   TToggle.h
@@ -26,6 +28,7 @@ set(GuiCore_dict_headers
 
 ROOT_OBJECT_LIBRARY(GuiCore
   src/InitGui.cxx
+  src/TApplicationImp.cxx
   src/TBrowser.cxx
   src/TBrowserImp.cxx
   src/TCanvasImp.cxx
@@ -34,6 +37,7 @@ ROOT_OBJECT_LIBRARY(GuiCore
   src/TContextMenuImp.cxx
   src/TControlBarImp.cxx
   src/TGuiFactory.cxx
+  src/TInspectorImp.cxx
   src/TObjectSpy.cxx
   src/TToggle.cxx
   src/TToggleGroup.cxx

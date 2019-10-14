@@ -42,7 +42,7 @@ protected:
      return *this;}
 
 public:
-   TContextMenuImp(TContextMenu *c=0) : fContextMenu(c) { }
+   TContextMenuImp(TContextMenu *c=nullptr) : fContextMenu(c) { }
    virtual ~TContextMenuImp();
 
    virtual TContextMenu *GetContextMenu() const { return fContextMenu; }
