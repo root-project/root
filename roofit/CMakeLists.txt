@@ -6,7 +6,9 @@
 
 add_subdirectory(roofitcore)
 add_subdirectory(roofit)
-add_subdirectory(roofitmore)
+if(mathmore)
+  add_subdirectory(roofitmore)
+endif()
 add_subdirectory(roostats)
 if(xml)
   add_subdirectory(histfactory)
