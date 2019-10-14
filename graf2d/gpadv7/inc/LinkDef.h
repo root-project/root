@@ -72,5 +72,7 @@
 #pragma link C++ class ROOT::Experimental::RAttrMarker+;
 #pragma link C++ class ROOT::Experimental::RAttrText+;
 
+#pragma link C++ class ROOT::Experimental::RBrowsableProvider+;
+
 
 #endif
