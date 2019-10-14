@@ -226,10 +226,7 @@ RooSpan<double> RooBernstein::evaluateBatch(std::size_t begin, std::size_t batch
 
 Int_t RooBernstein::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
 {
-  if (rangeName && strlen(rangeName))   return 1;
-
   if (matchArgs(allVars, analVars, _x)) return 1;
-
   return 0;
 }
 
