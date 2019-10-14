@@ -17,7 +17,6 @@ set(BASE_HEADERS
   Buttons.h
   Bytes.h
   Byteswap.h
-  GuiTypes.h
   KeySymbols.h
   MessageTypes.h
   Riostream.h
@@ -35,17 +34,9 @@ set(BASE_HEADERS
   TAttText.h
   TBase64.h
   TBenchmark.h
-  TBrowser.h
-  TBrowserImp.h
   TBuffer3D.h
   TBuffer3DTypes.h
   TBuffer.h
-  TCanvasImp.h
-  TColorGradient.h
-  TColor.h
-  TContextMenu.h
-  TContextMenuImp.h
-  TControlBarImp.h
   TDatime.h
   TDirectory.h
   TEnv.h
@@ -138,16 +129,8 @@ set(BASE_SOURCES
   src/TAttText.cxx
   src/TBase64.cxx
   src/TBenchmark.cxx
-  src/TBrowser.cxx
-  src/TBrowserImp.cxx
   src/TBuffer3D.cxx
   src/TBuffer.cxx
-  src/TCanvasImp.cxx
-  src/TColor.cxx
-  src/TColorGradient.cxx
-  src/TContextMenu.cxx
-  src/TContextMenuImp.cxx
-  src/TControlBarImp.cxx
   src/TDatime.cxx
   src/TDirectory.cxx
   src/TEnv.cxx

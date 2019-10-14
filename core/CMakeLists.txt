@@ -43,6 +43,7 @@ add_subdirectory(clingutils)
 add_subdirectory(cont)
 add_subdirectory(dictgen)
 add_subdirectory(foundation)
+add_subdirectory(gui)
 add_subdirectory(meta)
 add_subdirectory(metacling)
 if(NOT WIN32)
@@ -104,6 +105,7 @@ include_directories(
   winnt/inc
   clingutils/inc
   meta/inc
+  gui/inc
   textinput/inc
 )
 
@@ -115,6 +117,7 @@ set(objectlibs $<TARGET_OBJECTS:Base>
                $<TARGET_OBJECTS:Lz4>
                $<TARGET_OBJECTS:Zip>
                $<TARGET_OBJECTS:Meta>
+               $<TARGET_OBJECTS:GuiCore>
                $<TARGET_OBJECTS:TextInput>
                ${macosx_objects}
                ${unix_objects}
@@ -148,6 +151,7 @@ ROOT_GENERATE_DICTIONARY(G__Core
   ${Unix_dict_headers}
   ${Winnt_dict_headers}
   ${ClingUtils_dict_headers}
+  ${GuiCore_dict_headers}
   ${Meta_dict_headers}
   ${TextInput_dict_headers}
   STAGE1
