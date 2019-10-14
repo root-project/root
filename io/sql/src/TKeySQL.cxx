@@ -22,7 +22,6 @@ from database tables.
 
 #include "TROOT.h"
 #include "TClass.h"
-#include "TBrowser.h"
 #include "Riostream.h"
 
 #include "TSQLResult.h"
