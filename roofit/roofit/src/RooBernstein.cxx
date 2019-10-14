@@ -29,7 +29,7 @@ of degree n. \f$ \mathcal{N} \f$ is a normalisation constant that takes care of 
 cases where the \f$ c_i \f$ are not all equal to one.
 
 See also
-http://www.idav.ucdavis.edu/education/CAGDNotes/Bernstein-Polynomials.pdf
+[1] - http://www.idav.ucdavis.edu/education/CAGDNotes/Bernstein-Polynomials.pdf
 **/
 
 #include "RooBernstein.h"
@@ -250,6 +250,19 @@ Double_t RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) con
     // for each of the i Bernstein basis polynomials
     // represent it in the 'power basis' (the naive polynomial basis)
     // where the integral is straight forward.
+    // [1] - a term in the power basis is given by,
+    //  B_{i,N}(t) = \sum_{j=i}^N (-1)^{j-i} * C(N,j) * C(j,i) * t^j, for 0 < t < 1
+    //  
+    //  where t = (x - xmin)/(xmax - xmin) is the re-scaled bernstein variable
+    //
+    //  the integral of the above term between x1, x2 is given by,
+    //
+    //  \int_x1^x2 B_{i,N}(x) dx = \sum_{j=i}^N (-1)^{j-i} * C(N,j) * C(j,i) *
+    //  	                   [(x2-xmin)^{j+1} - (x1-xmin)^{j+1}]/(j+1)(xmax-xmin)^j 
+    //                           = \sum_{j=1}^N (-1)^{j-i} * C(N,j) * C(j,i) *
+    //                             [ t2^{j+1} - t1^{j+1}]*(xmax-xmin)/(j+1)
+    //
+    //  where t1 and t2 are re-scaled bernstein values, (xlo and xhi in implementation)
     temp = 0;
     for (int j=i; j<=degree; ++j){ // power basis≈ß
       temp += pow(-1.,j-i) * TMath::Binomial(degree, j) * TMath::Binomial(j,i) * (TMath::Power(xhi,j+1) - TMath::Power(xlo,j+1)) / (j+1);
