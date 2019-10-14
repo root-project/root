@@ -39,7 +39,7 @@ protected:
      return *this;}
 
 public:
-   TBrowserImp(TBrowser *b=0) : fBrowser(b), fShowCycles(kFALSE) { }
+   TBrowserImp(TBrowser *b=nullptr) : fBrowser(b), fShowCycles(kFALSE) { }
    TBrowserImp(TBrowser *b, const char *title, UInt_t width, UInt_t height, Option_t *opt = "");
    TBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, Option_t *opt = "");
    virtual ~TBrowserImp() { }
@@ -57,7 +57,7 @@ public:
    virtual void      Refresh(Bool_t = kFALSE) { }
    virtual void      Show() { }
    virtual void      SetDrawOption(Option_t *option="");
-   virtual Option_t *GetDrawOption() const { return 0; }
+   virtual Option_t *GetDrawOption() const { return nullptr; }
 
    virtual Long_t    ExecPlugin(const char *, const char *, const char *, Int_t, Int_t) { return 0; }
    virtual void      SetStatusText(const char *, Int_t) { }

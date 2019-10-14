@@ -42,8 +42,8 @@ class TContextMenu : public TNamed {
 friend class  TContextMenuImp;
 
 private:
-   TContextMenu(const TContextMenu&);            // TContextMenu can not be copied since we do not know the actual type of the TContextMenuImp (and it can not be 'Cloned')
-   TContextMenu& operator=(const TContextMenu&); // TContextMenu can not be copied since we do not know the actual type of the TContextMenuImp (and it can not be 'Cloned')
+   TContextMenu(const TContextMenu&) = delete;            // TContextMenu can not be copied since we do not know the actual type of the TContextMenuImp (and it can not be 'Cloned')
+   TContextMenu& operator=(const TContextMenu&) = delete; // TContextMenu can not be copied since we do not know the actual type of the TContextMenuImp (and it can not be 'Cloned')
 
 protected:
    TContextMenuImp *fContextMenuImp;      //!Context menu system specific implementation
@@ -73,8 +73,8 @@ public:
    virtual const char *CreateArgumentTitle(TMethodArg *argument);
    virtual const char *CreateDialogTitle(TObject *object, TFunction *method);
    virtual const char *CreatePopupTitle(TObject *object );
-   virtual void Execute(const char *method,  const char *params, Int_t *error=0) { TObject::Execute(method, params, error); }
-   virtual void Execute(TMethod *method, TObjArray *params, Int_t *error=0) { TObject::Execute(method, params, error); }
+   virtual void Execute(const char *method,  const char *params, Int_t *error=nullptr) { TObject::Execute(method, params, error); }
+   virtual void Execute(TMethod *method, TObjArray *params, Int_t *error=nullptr) { TObject::Execute(method, params, error); }
    virtual void Execute(TObject *object, TFunction *method, const char *params);
    virtual void Execute(TObject *object, TFunction *method, TObjArray *params);
    void Execute(const char *params) { Execute(fCalledObject, fSelectedMethod, params); }
@@ -87,7 +87,7 @@ public:
    virtual TObject *GetCalledObject() { return fCalledObject; }
    virtual TClassMenuItem *GetSelectedMenuItem() { return fSelectedMenuItem; }
    virtual TVirtualPad *GetSelectedPad() { return fSelectedPad; }
-   virtual void Popup(Int_t x, Int_t y, TObject *obj, TVirtualPad *c=0, TVirtualPad *p=0); // Create menu from canvas
+   virtual void Popup(Int_t x, Int_t y, TObject *obj, TVirtualPad *c=nullptr, TVirtualPad *p=nullptr); // Create menu from canvas
    virtual void Popup(Int_t x, Int_t y, TObject *obj, TBrowser *b);  // Create menu from Browser
    virtual void SetCanvas(TVirtualPad *c) { fSelectedCanvas = c; }
    virtual void SetBrowser(TBrowser *b) { fBrowser = b; }
