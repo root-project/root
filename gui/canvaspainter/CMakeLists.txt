@@ -9,7 +9,7 @@
 ############################################################################
 
 ROOT_LINKER_LIBRARY(ROOTCanvasPainter
-  src/TCanvasPainter.cxx
+  src/RCanvasPainter.cxx
   DEPENDENCIES
     ROOTGpadv7
     RHTTP
