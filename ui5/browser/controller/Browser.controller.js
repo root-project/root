@@ -442,7 +442,7 @@ sap.ui.define(['sap/ui/core/Component',
 
         if (row._bHasChildren){
           let rowText = row.getCells()[0].getContent()[1].getText();
-          return this.websocket.Send('WORKDIR:' + rowText );
+          return this.websocket.Send('SWITCHWORKDIR:' + rowText.substr(1));
         }
 
          if (prop && prop.fullpath) {
@@ -636,6 +636,8 @@ sap.ui.define(['sap/ui/core/Component',
 
       onAfterRendering: function() {
          this.renderingDone = true;
+
+        this.websocket.Send('WORKDIR:'); // Update the breadcrumbs
 
          this.checkRequestMsg();
       },
