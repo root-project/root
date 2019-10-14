@@ -128,8 +128,19 @@ TEST(RNTupleChain, oneFile)
 
    auto ntupleNotChain = RNTupleReader::Open(ntupleNameChain, fileGuardChain1.GetPath());
    auto ntupleChain = RNTupleReader::Open(ntupleNameChain, std::vector<std::string>{ fileGuardChain1.GetPath() });
-   EXPECT_NE(nullptr, ntupleNotChain);
+   auto dbView = ntupleChain->GetView<double>("db");
+   auto stView = ntupleChain->GetView<std::string>("st");
+   auto itView = ntupleChain->GetView<std::vector<std::int32_t>>("it");
+   auto dbView2 = ntupleNotChain->GetView<double>("db");
+   auto stView2 = ntupleNotChain->GetView<std::string>("st");
+   auto itView2 = ntupleNotChain->GetView<std::vector<std::int32_t>>("it");
+   
    EXPECT_NE(nullptr, ntupleChain);
+   for (auto i : ntupleChain->GetViewRange()) {
+      EXPECT_DOUBLE_EQ(dbView2(i), dbView(i));
+      EXPECT_EQ(stView2(i), stView(i));
+      EXPECT_EQ(itView2(i), itView(i));
+   }
 }
 
 

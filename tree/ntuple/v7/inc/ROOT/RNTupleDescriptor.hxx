@@ -364,61 +364,6 @@ public:
    std::unique_ptr<RNTupleModel> GenerateModel() const;
    bool CommonFieldNameExists(const RNTupleDescriptor &desc) const;
    void PrintInfo(std::ostream &output) const;
-   
-   // helper function, to remove later
-   void Print() const {
-      std::time_t now_c1 = std::chrono::system_clock::to_time_t(fTimeStampData);
-      std::time_t now_c2 = std::chrono::system_clock::to_time_t(fTimeStampWritten);
-      std::cout << fName << std::endl << fDescription << std::endl << fAuthor << std::endl << fCustodian << std::endl << std::put_time(std::localtime(&now_c1), "%F %T") << std::endl << std::put_time(std::localtime(&now_c2), "%F %T") << std::endl;
-      std::cout << "1.Fields: FieldName, Id, fTypeName, fParentId, fLinkId.size" << std::endl;
-      for( const auto& n : fFieldDescriptors ) {
-         std::cout << "Key:[" << n.first << "] Value:[" << n.second.GetFieldName() << " " << n.second.GetId() << " " << n.second.GetTypeName() << " " << n.second.GetParentId() << " " << n.second.GetLinkIds().size() << "]\n";
-      }
-      
-      std::cout << "2.Columns: FieldId, Index, Id" << std::endl;
-      for( const auto& n : fColumnDescriptors ) {
-         std::cout << "Key:[" << n.first << "] Value:[" << n.second.GetFieldId() << " " << n.second.GetIndex() << " " << n.second.GetId() << "]\n";
-      }
-      
-      
-      
-      /*
-       To show for each clusterdescriptor:
-       ClusterId done
-       fFirstEntryIndex done
-       fNEntries done
-       fLocator done
-       all fColumnRanges done
-       all fPageRanges done
-       */
-      std::cout << "3.Clusters: NEntries, FirstEntryIndex, ClusterId, Locator(position, bytes on storage)" << std::endl;
-      for( const auto& n : fClusterDescriptors ) {
-         std::cout << "Key:[" << n.first << "] Value:[" << n.second.GetNEntries() << " " << n.second.GetFirstEntryIndex() << " " << n.second.GetId() << " " << n.second.GetLocator().fPosition << " " << n.second.GetLocator().fBytesOnStorage << "]\n";
-      }
-      std::cout << "fColumnRanges: ColumnId, fFirstEntryIndex, NElements" << std::endl;
-      for( const auto& n : fClusterDescriptors ) {
-         std::cout << "Cluster No." << n.first << std::endl;
-         for (std::size_t i = 0; i < GetNColumns(); ++i) {
-            std::cout << "  Column No." << i << ": ";
-            std::cout << n.second.GetColumnRange(i).fColumnId << " " << n.second.GetColumnRange(i).fFirstElementIndex << " " << n.second.GetColumnRange(i).fNElements << std::endl;
-         }
-      }
-      
-      std::cout << "fPageRanges: ColumnId, fPageInfo(fNElements, fLocator(fPosition, fBytesOnStorage))" << std::endl;
-      for (const auto& n : fClusterDescriptors) {
-         std::cout << "Clutser No." << n.first << std::endl;
-         for (std::size_t i = 0; i < GetNColumns(); ++i) {
-            std::cout << "  Column No." << i << ": ";
-            std::cout << n.second.GetPageRange(i).fColumnId << " " << n.second.GetPageRange(i).fPageInfos.at(0).fNElements << " " << n.second.GetPageRange(i).fPageInfos.at(0).fLocator.fPosition << " " << n.second.GetPageRange(i).fPageInfos.at(0).fLocator.fBytesOnStorage << std::endl;
-         }
-      }
-      std::cout << "The number of elements is for ColumnId: 0: " << GetNElements(0) << std::endl;
-      std::cout << "The number of elements is for ColumnId: 1: " << GetNElements(1) << std::endl;
-      std::cout << "The number of elements is for ColumnId: 2: " << GetNElements(2) << std::endl;
-      
-      std::cout << "The number of entries is: " << GetNEntries() << std::endl;
-      //________________ continue here lesimon
-   }
 };
 
 

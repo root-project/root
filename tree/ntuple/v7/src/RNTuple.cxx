@@ -33,6 +33,7 @@
 #include <unordered_map>
 #include <utility>
 
+
 ROOT::Experimental::Detail::RNTuple::RNTuple(std::unique_ptr<ROOT::Experimental::RNTupleModel> model)
    : fModel(std::move(model))
    , fNEntries(0)

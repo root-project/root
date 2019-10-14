@@ -39,7 +39,7 @@ ROOT::Experimental::Detail::RPageSourceChain::RPageSourceChain(std::string_view 
       fSources.back()->Attach();
    }
 
-   CompareFileMetaData();
+   fUnsafe = CompareFileMetaData();
    InitializeMemberVariables();
 }
 
@@ -53,7 +53,7 @@ ROOT::Experimental::Detail::RPageSourceChain::RPageSourceChain(std::string_view 
       fSources.back()->Attach();
    }
 
-   CompareFileMetaData();
+   fUnsafe = CompareFileMetaData();
    InitializeMemberVariables();
 }
 
@@ -62,39 +62,43 @@ ROOT::Experimental::Detail::RPageSourceChain::RPageSourceChain(std::string_view 
                                                                const RNTupleReadOptions &options)
    : RPageSource{ntupleName, options}, fSources{std::move(sources)}
 {
-   CompareFileMetaData();
+   fUnsafe = CompareFileMetaData();
    InitializeMemberVariables();
 }
 
-void ROOT::Experimental::Detail::RPageSourceChain::CompareFileMetaData()
+bool ROOT::Experimental::Detail::RPageSourceChain::CompareFileMetaData()
 {
    for (std::size_t i = 1; i < fSources.size(); ++i) {
       // checks only number of fields and columns
       if ((fSources.at(0)->GetDescriptor().GetNFields() != fSources.at(i)->GetDescriptor().GetNFields()) ||
           (fSources.at(0)->GetDescriptor().GetNColumns() != fSources.at(i)->GetDescriptor().GetNColumns())) {
-         R__WARNING_HERE("NTuple") << "The meta-data (number of fields and columns) of the files do not match. A nullptr was returned. Please make sure the number of fields and columns in all files are identical!";
-         fUnsafe = true;
-         return;
+         R__WARNING_HERE("NTuple")
+            << "The meta-data (number of fields and columns) of the files do not match. A nullptr was returned. Please "
+               "make sure the number of fields and columns in all files are identical!";
+         return true;
       }
       // compares all fieldDescriptors
       for (std::size_t j = 0; j < fSources.at(0)->GetDescriptor().GetNFields(); ++j) {
          if (!(fSources.at(0)->GetDescriptor().GetFieldDescriptor(j) ==
                fSources.at(i)->GetDescriptor().GetFieldDescriptor(j))) {
-            R__WARNING_HERE("NTuple") << "The meta-data of the fields of the files do not match. A nullptr was returned. Please make sure the metadata of the fields (fieldName, field order, etc.) is the same across all files!";
-            fUnsafe = true;
-            return;
+            R__WARNING_HERE("NTuple")
+               << "The meta-data of the fields of the files do not match. A nullptr was returned. Please make sure the "
+                  "metadata of the fields (fieldName, field order, etc.) is the same across all files!";
+            return true;
          }
       }
       // compares all columnDescriptors
       for (std::size_t j = 0; j < fSources.at(0)->GetDescriptor().GetNColumns(); ++j) {
          if (!(fSources.at(0)->GetDescriptor().GetColumnDescriptor(j) ==
                fSources.at(i)->GetDescriptor().GetColumnDescriptor(j))) {
-            R__WARNING_HERE("NTuple") << "The meta-data of the columns of the files do not match. A nullptr was returned. Please make sure the metadata of columns are the same across all files!";
-            fUnsafe = true;
-            return;
+            R__WARNING_HERE("NTuple")
+               << "The meta-data of the columns of the files do not match. A nullptr was returned. Please make sure "
+                  "the metadata of columns are the same across all files!";
+            return true;
          }
       }
    }
+   return false;
 }
 
 void ROOT::Experimental::Detail::RPageSourceChain::InitializeMemberVariables()
@@ -220,4 +224,3 @@ void ROOT::Experimental::Detail::RPageSourceChain::ReleasePage(RPage &page)
    if (mapIterator->second.fNSamePagePopulated-- == 1)
       fPageMapper.erase(mapIterator);
 }
-

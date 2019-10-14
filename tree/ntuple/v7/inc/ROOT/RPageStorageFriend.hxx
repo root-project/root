@@ -41,7 +41,8 @@ namespace Detail {
 */
 // clang-format on
 
-// Note(lesimon): Currently is will fail if the size of the i-th cluster in a file is not the same for all files. Should it be changed to deal with clusters of varying sizes across files?
+// Note(lesimon): Currently is will fail if the size of the i-th cluster in a file is not the same for all files. Should
+// it be changed to deal with clusters of varying sizes across files?
 class RPageSourceFriend : public RPageSource {
 private:
    /// Holds a RPageSource pointer for each file.
@@ -62,18 +63,22 @@ private:
    /// Is set to true when the meta-data of the clusters don't match.
    /// Getting pages from a unsafe RPageStorageFrame can lead to undefined behaviour.
    bool fUnsafe = false;
+
 protected:
    RNTupleDescriptor DoAttach();
-   /// Checks if the field and column meta-data of all files are the same. If the meta-data doesn't match RNTupleReader::Open and RNTupleReader::ChainReader will return a nullptr.
-   void CompareFileMetaData();
+   /// Checks if the field and column meta-data of all files are the same. If the meta-data doesn't match
+   /// RNTupleReader::Open and RNTupleReader::ChainReader will return a nullptr.
+   bool CompareFileMetaData();
    /// initializes fNColumnPerSource
    void InitializeMemberVariables();
+
 public:
    RPageSourceFriend(std::string_view ntupleName, std::vector<std::string> locationVec,
-                      const RNTupleReadOptions &options = RNTupleReadOptions());
-   RPageSourceFriend(std::string_view ntupleName, std::vector<RPageSource *> sources, const RNTupleReadOptions &options = RNTupleReadOptions());
+                     const RNTupleReadOptions &options = RNTupleReadOptions());
+   RPageSourceFriend(std::string_view ntupleName, std::vector<RPageSource *> sources,
+                     const RNTupleReadOptions &options = RNTupleReadOptions());
    RPageSourceFriend(std::string_view ntupleName, std::vector<std::unique_ptr<RPageSource>> &&sources,
-                    const RNTupleReadOptions &options = RNTupleReadOptions());
+                     const RNTupleReadOptions &options = RNTupleReadOptions());
    ~RPageSourceFriend() = default;
    std::unique_ptr<RPageSource> Clone() const final;
 

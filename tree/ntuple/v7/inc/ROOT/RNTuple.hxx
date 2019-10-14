@@ -129,9 +129,7 @@ public:
    static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<RNTupleModel> model,
                                              std::string_view ntupleName,
                                              std::string_view storage);
-   static std::unique_ptr<RNTupleReader> Open(std::string_view ntupleName,
-                                              std::string_view storage);
-
+   static std::unique_ptr<RNTupleReader> Open(std::string_view ntupleName, std::string_view storage);
    static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<RNTupleModel> model,
                                               std::string_view ntupleName,
                                               std::vector<std::string> storage,

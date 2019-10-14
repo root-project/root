@@ -41,7 +41,8 @@ An instance of RPageSourceChain is created in RNTupleReader::Open() when a std::
 */
 // clang-format on
 
-//Note(lesimon): Currently it can't deal with files, if the ordering of fields and columns aren't the same across all files. Should it learn to deal with cases where the ordering isn't the same?
+// Note(lesimon): Currently it can't deal with files, if the ordering of fields and columns aren't the same across all
+// files. Should it learn to deal with cases where the ordering isn't the same?
 class RPageSourceChain : public RPageSource {
 private:
    /// Holds a RPageSource pointer for each file.
@@ -72,15 +73,17 @@ private:
 
 protected:
    RNTupleDescriptor DoAttach() final;
-   /// Checks if the field and column meta-data of all files are the same. If the meta-data doesn't match RNTupleReader::Open and RNTupleReader::ChainReader will return a nullptr.
-   void CompareFileMetaData();
+   /// Checks if the field and column meta-data of all files are the same. If the meta-data doesn't match
+   /// RNTupleReader::Open and RNTupleReader::ChainReader will return a nullptr.
+   bool CompareFileMetaData();
    /// initializes fNEntryPerSource, fNClusterPerSource and fNElementsPerColumnPerSource
    void InitializeMemberVariables();
 
 public:
    RPageSourceChain(std::string_view ntupleName, std::vector<std::string> locationVec,
                     const RNTupleReadOptions &options = RNTupleReadOptions());
-   RPageSourceChain(std::string_view ntupleName, std::vector<RPageSource *> sources, const RNTupleReadOptions &options = RNTupleReadOptions());
+   RPageSourceChain(std::string_view ntupleName, std::vector<RPageSource *> sources,
+                    const RNTupleReadOptions &options = RNTupleReadOptions());
    RPageSourceChain(std::string_view ntupleName, std::vector<std::unique_ptr<RPageSource>> &&sources,
                     const RNTupleReadOptions &options = RNTupleReadOptions());
    ~RPageSourceChain() = default;
