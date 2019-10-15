@@ -41,7 +41,7 @@
 using namespace std::string_literals;
 
 /** \class ROOT::Experimental::RBrowser
-\ingroup webdisplay
+\ingroup rbrowser
 
 web-based ROOT Browser prototype.
 */
