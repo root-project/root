@@ -100,7 +100,7 @@ protected:
    std::string ProcessDblClick(const std::string &path, const std::string &drawingOptions);
    long ProcessRunCommand(const std::string &file_path);
    bool ProcessSaveFile(const std::string &file_path);
-   std::string getCurrentWorkingDirectory();
+   std::string GetCurrentWorkingDirectory();
 
    bool IsBuild() const { return fDesc.size() > 0; }
 
