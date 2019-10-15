@@ -768,7 +768,7 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       std::string res = getCurrentWorkingDirectory();
       fWebWindow->Send(connid, res);
    } else if (arg.compare(0, 14, "SWITCHWORKDIR:") == 0) {
-      gSystem->cd(arg.substr(14).c_str());
+      gSystem->ChangeDirectory(arg.substr(14).c_str());
       std::string res = getCurrentWorkingDirectory();
       fWebWindow->Send(connid, res);
    }
