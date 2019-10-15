@@ -72,10 +72,4 @@
 #pragma link C++ class ROOT::Experimental::RAttrMarker+;
 #pragma link C++ class ROOT::Experimental::RAttrText+;
 
-#pragma link C++ class ROOT::Experimental::RBrowsableProvider+;
-#pragma link C++ class ROOT::Experimental::RBrowsableInfo+;
-#pragma link C++ class ROOT::Experimental::RBrowsableLevelIter+;
-#pragma link C++ class ROOT::Experimental::RBrowsable+;
-
-
 #endif

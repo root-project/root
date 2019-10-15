@@ -12,6 +12,11 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+#pragma link C++ class ROOT::Experimental::RBrowsableProvider+;
+#pragma link C++ class ROOT::Experimental::RBrowsableInfo+;
+#pragma link C++ class ROOT::Experimental::RBrowsableLevelIter+;
+#pragma link C++ class ROOT::Experimental::RBrowsable+;
+
 #pragma link C++ class ROOT::Experimental::RBrowserRequest+;
 #pragma link C++ class ROOT::Experimental::RBrowserItem+;
 #pragma link C++ class ROOT::Experimental::RBrowserReply+;
