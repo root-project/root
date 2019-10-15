@@ -10,9 +10,11 @@
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
   HEADERS
+    ROOT/RBrowsable.hxx
     ROOT/RBrowserItem.hxx
     ROOT/RBrowser.hxx
   SOURCES
+    src/RBrowsable.cxx
     src/RBrowser.cxx
   DEPENDENCIES
     ROOTWebDisplay
