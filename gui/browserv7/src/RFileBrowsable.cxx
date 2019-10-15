@@ -14,73 +14,15 @@
 /// is welcome!
 
 
-#include "ROOT/RBrowsable.hxx"
+#include "ROOT/RFileBrowsable.hxx"
 
 #include "ROOT/RLogger.hxx"
 
 #include "TSystem.h"
 
+using namespace std::string_literals;
+
 using namespace ROOT::Experimental;
-
-
-
-class RFileInfo : public RBrowsableInfo {
-   FileStat_t fStat;       ///<! file stat object
-   std::string fDirName;   ///<! fully-qualified directory name
-   std::string fFileName;  ///<! file name in current dir
-
-   std::string GetFullName() const
-   {
-      std::string path = fDirName;
-      if (!path.empty() && (path.rfind("/") != path.length()-1))
-         path.append("/");
-      path.append(fFileName);
-      return path;
-   }
-
-public:
-   RFileInfo(const std::string &filename) : fFileName(filename)
-   {
-      if (gSystem->GetPathInfo(fFileName.c_str(), fStat)) {
-          if (fStat.fIsLink) {
-             R__ERROR_HERE("Browserv7") << "Broken symlink of " << fFileName;
-          } else {
-             R__ERROR_HERE("Browserv7") << "Can't read file attributes of \"" << fFileName << "\" err:" << gSystem->GetError();
-          }
-      }
-   }
-
-   RFileInfo(const FileStat_t& stat, const std::string &dirname, const std::string &filename) : fStat(stat), fDirName(dirname), fFileName(filename)
-   {
-   }
-
-   virtual ~RFileInfo() = default;
-
-   /** Class information for file not provided */
-   const TClass *GetGlass() const override { return nullptr; }
-
-   /** Name of RBrowsable, must be provided in derived classes */
-   std::string GetName() const override { return fFileName; }
-
-   /** Title of RBrowsable (optional) */
-   std::string GetTitle() const override { return GetFullName(); }
-
-   /** Returns true if item can have childs and one should try to create iterator (optional) */
-   int CanHaveChilds() const override
-   {
-      if (R_ISDIR(fStat.fMode)) return 1;
-
-      if (fFileName.rfind(".root") == fFileName.length()-5)
-         return 1;
-
-      return 0;
-   }
-
-   std::unique_ptr<RBrowsableLevelIter> GetChildsIter() override;
-};
-
-
-
 
 /** \class ROOT::Experimental::RDirectoryLevelIter
 \ingroup rbrowser
@@ -186,16 +128,49 @@ public:
    std::string GetName() const override { return fCurrentName; }
 
    /** Returns full information for current element */
-   std::unique_ptr<RBrowsableInfo> GetInfo() override
+   std::unique_ptr<RBrowsableElement> GetElement() override
    {
-      return std::make_unique<RFileInfo>(fCurrentStat, fPath, fCurrentName);
+      return std::make_unique<RBrowsableFileElement>(fCurrentStat, fPath, fCurrentName);
    }
+
 };
 
 
+RBrowsableFileElement::RBrowsableFileElement(const std::string &filename) : fFileName(filename)
+{
+   if (gSystem->GetPathInfo(fFileName.c_str(), fStat)) {
+      if (fStat.fIsLink) {
+         R__ERROR_HERE("Browserv7") << "Broken symlink of " << fFileName;
+      } else {
+         R__ERROR_HERE("Browserv7") << "Can't read file attributes of \"" << fFileName
+                                    << "\" err:" << gSystem->GetError();
+      }
+   }
+}
+
+std::string RBrowsableFileElement::GetFullName() const
+{
+   std::string path = fDirName;
+   if (!path.empty() && (path.rfind("/") != path.length() - 1))
+      path.append("/");
+   path.append(fFileName);
+   return path;
+}
 
 
-std::unique_ptr<RBrowsableLevelIter> RFileInfo::GetChildsIter()
+/** Returns true if item can have childs and one should try to create iterator (optional) */
+int RBrowsableFileElement::CanHaveChilds() const
+{
+   if (R_ISDIR(fStat.fMode))
+      return 1;
+
+   if (fFileName.rfind(".root") == fFileName.length() - 5)
+      return 1;
+
+   return 0;
+}
+
+std::unique_ptr<RBrowsableLevelIter> RBrowsableFileElement::GetChildsIter()
 {
    if (!R_ISDIR(fStat.fMode))
       return nullptr;
@@ -205,4 +180,128 @@ std::unique_ptr<RBrowsableLevelIter> RFileInfo::GetChildsIter()
    return std::make_unique<RDirectoryLevelIter>(GetFullName());
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+/// Get icon for the type of given file name
 
+std::string RBrowsableFileElement::GetFileIcon() const
+{
+   auto EndsWith = [this](const std::string &suffix) {
+      return (fFileName.length() > suffix.length()) ? (0 == fFileName.compare (fFileName.length() - suffix.length(), suffix.length(), suffix)) : false;
+   };
+
+   if ((EndsWith(".c")) ||
+       (EndsWith(".cpp")) ||
+       (EndsWith(".cxx")) ||
+       (EndsWith(".c++")) ||
+       (EndsWith(".cxx")) ||
+       (EndsWith(".h")) ||
+       (EndsWith(".hpp")) ||
+       (EndsWith(".hxx")) ||
+       (EndsWith(".h++")) ||
+       (EndsWith(".py")) ||
+       (EndsWith(".txt")) ||
+       (EndsWith(".cmake")) ||
+       (EndsWith(".dat")) ||
+       (EndsWith(".log")) ||
+       (EndsWith(".js")))
+      return "sap-icon://document-text"s;
+   if ((EndsWith(".bmp")) ||
+       (EndsWith(".gif")) ||
+       (EndsWith(".jpg")) ||
+       (EndsWith(".png")) ||
+       (EndsWith(".svg")))
+      return "sap-icon://picture"s;
+  if (EndsWith(".root"))
+      return "sap-icon://org-chart"s;
+
+   return "sap-icon://document"s;
+}
+
+
+std::unique_ptr<RBrowserItem> RBrowsableFileElement::CreateBrowserItem()
+{
+   auto item = std::make_unique<RBrowserFileItem>(GetName(), CanHaveChilds());
+
+   // this is construction of current item
+   char tmp[256];
+   Long64_t _fsize, bsize;
+
+   item->type     = fStat.fMode;
+   item->size     = fStat.fSize;
+   item->uid      = fStat.fUid;
+   item->gid      = fStat.fGid;
+   item->modtime  = fStat.fMtime;
+   item->islink   = fStat.fIsLink;
+   item->isdir    = R_ISDIR(fStat.fMode);
+
+   if (item->isdir)
+      item->icon = "sap-icon://folder-blank"s;
+   else
+      item->icon = GetFileIcon();
+
+   // file size
+   _fsize = bsize = item->size;
+   if (_fsize > 1024) {
+      _fsize /= 1024;
+      if (_fsize > 1024) {
+         // 3.7MB is more informative than just 3MB
+         snprintf(tmp, sizeof(tmp), "%lld.%lldM", _fsize/1024, (_fsize%1024)/103);
+      } else {
+         snprintf(tmp, sizeof(tmp), "%lld.%lldK", bsize/1024, (bsize%1024)/103);
+      }
+   } else {
+      snprintf(tmp, sizeof(tmp), "%lld", bsize);
+   }
+   item->fsize = tmp;
+
+   // modification time
+   time_t loctime = (time_t) item->modtime;
+   struct tm *newtime = localtime(&loctime);
+   if (newtime) {
+      snprintf(tmp, sizeof(tmp), "%d-%02d-%02d %02d:%02d", newtime->tm_year + 1900,
+               newtime->tm_mon+1, newtime->tm_mday, newtime->tm_hour,
+               newtime->tm_min);
+      item->mtime = tmp;
+   } else {
+      item->mtime = "1901-01-01 00:00";
+   }
+
+   // file type
+   snprintf(tmp, sizeof(tmp), "%c%c%c%c%c%c%c%c%c%c",
+            (item->islink ?
+             'l' :
+             R_ISREG(item->type) ?
+             '-' :
+             (R_ISDIR(item->type) ?
+              'd' :
+              (R_ISCHR(item->type) ?
+               'c' :
+               (R_ISBLK(item->type) ?
+                'b' :
+                (R_ISFIFO(item->type) ?
+                 'p' :
+                 (R_ISSOCK(item->type) ?
+                  's' : '?' )))))),
+            ((item->type & kS_IRUSR) ? 'r' : '-'),
+            ((item->type & kS_IWUSR) ? 'w' : '-'),
+            ((item->type & kS_ISUID) ? 's' : ((item->type & kS_IXUSR) ? 'x' : '-')),
+            ((item->type & kS_IRGRP) ? 'r' : '-'),
+            ((item->type & kS_IWGRP) ? 'w' : '-'),
+            ((item->type & kS_ISGID) ? 's' : ((item->type & kS_IXGRP) ? 'x' : '-')),
+            ((item->type & kS_IROTH) ? 'r' : '-'),
+            ((item->type & kS_IWOTH) ? 'w' : '-'),
+            ((item->type & kS_ISVTX) ? 't' : ((item->type & kS_IXOTH) ? 'x' : '-')));
+   item->ftype = tmp;
+
+   struct UserGroup_t *user_group = gSystem->GetUserInfo(item->uid);
+   if (user_group) {
+      item->fuid = user_group->fUser;
+      item->fgid = user_group->fGroup;
+      delete user_group;
+   } else {
+      item->fuid = std::to_string(item->uid);
+      item->fgid = std::to_string(item->gid);
+   }
+
+   return item;
+}
