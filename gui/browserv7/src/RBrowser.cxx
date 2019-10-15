@@ -19,6 +19,8 @@
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RObjectDrawable.hxx>
+#include <ROOT/RFileBrowsable.hxx>
+
 
 #include "TKey.h"
 #include "TString.h"
@@ -52,6 +54,11 @@ web-based ROOT Browser prototype.
 ROOT::Experimental::RBrowser::RBrowser(bool use_rcanvas)
 {
    SetUseRCanvas(use_rcanvas);
+
+   std::string curdir = gSystem->WorkingDirectory();
+   printf("Current dir %s\n", curdir.c_str());
+
+   fBrowsable.SetTopItem(std::make_unique<RBrowsableFileElement>(curdir));
 
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");

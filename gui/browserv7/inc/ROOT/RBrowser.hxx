@@ -20,6 +20,7 @@
 #include <ROOT/RCanvas.hxx>
 #include <ROOT/RBrowserItem.hxx>
 #include <ROOT/RBrowsable.hxx>
+#include <ROOT/RFileBrowsable.hxx>
 
 #include <vector>
 #include <memory>
@@ -32,35 +33,6 @@ class TFile;
 namespace ROOT {
 namespace Experimental {
 
-/** Representation of single item in the file browser */
-class RRootFileItem : public RBrowserItem {
-public:
-   // internal data, used for generate directory list
-   int type{0};             ///<! file type
-   int uid{0};              ///<! file uid
-   int gid{0};              ///<! file gid
-   bool islink{false};      ///<! true if symbolic link
-   bool isdir{false};       ///<! true if directory
-   long modtime{0};         ///<! modification time
-   int64_t size{0};         ///<! file size
-
-   // this is part for browser, visible for I/O
-   std::string icon;     ///< icon name
-   std::string fsize;    ///< file size
-   std::string mtime;    ///< modification time
-   std::string ftype;    ///< file attributes
-   std::string fuid;     ///< user id
-   std::string fgid;     ///< group id
-   std::string className; ///< class name
-
-   RRootFileItem() = default;
-
-   RRootFileItem(const std::string &_name, int _nchilds) : RBrowserItem(_name, _nchilds) {}
-
-   // should be here, one needs virtual table for correct streaming of RRootBrowserReply
-   virtual ~RRootFileItem() = default;
-};
-
 /** Web-based ROOT file browser */
 
 class RBrowser {
@@ -71,8 +43,8 @@ protected:
    unsigned fConnId{0}; ///<! default connection id
 
    std::string fDescPath;                ///<! last scanned directory
-   std::vector<RRootFileItem> fDesc;     ///<! plain list of current directory
-   std::vector<RRootFileItem *> fSorted; ///<! current sorted list (no ownership)
+   std::vector<RBrowserFileItem> fDesc;     ///<! plain list of current directory
+   std::vector<RBrowserFileItem *> fSorted; ///<! current sorted list (no ownership)
 
    bool fUseRCanvas{false};             ///<!  which canvas should be used
    std::vector<std::unique_ptr<TCanvas>> fCanvases;  ///<! canvases created by browser, should be closed at the end

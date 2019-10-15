@@ -9,6 +9,9 @@
 #ifndef ROOT7_RBrowsable
 #define ROOT7_RBrowsable
 
+
+#include <ROOT/RBrowserItem.hxx>
+
 #include <memory>
 #include <string>
 #include <map>
@@ -23,7 +26,7 @@ namespace Experimental {
 
 class RBrowsableLevelIter;
 
-/** \class RBrowsableInfo
+/** \class RBrowsableElement
 \ingroup rbrowser
 \brief Basic information about RBrowsable
 \author Sergey Linev <S.Linev@gsi.de>
@@ -31,9 +34,9 @@ class RBrowsableLevelIter;
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RBrowsableInfo {
+class RBrowsableElement {
 public:
-   virtual ~RBrowsableInfo() = default;
+   virtual ~RBrowsableElement() = default;
 
    /** Class information, must be provided in derived classes */
    virtual const TClass *GetGlass() const = 0;
@@ -49,6 +52,11 @@ public:
 
    /** Create iterator for childs elements if any */
    virtual std::unique_ptr<RBrowsableLevelIter> GetChildsIter() { return nullptr; }
+
+   virtual std::unique_ptr<RBrowserItem> CreateBrowserItem()
+   {
+      return std::make_unique<RBrowserItem>(GetName(), CanHaveChilds());
+   }
 };
 
 /** \class RBrowsableLevelIter
@@ -79,7 +87,7 @@ public:
    virtual bool Find(const std::string &name);
 
    /** Returns full information for current element */
-   virtual std::unique_ptr<RBrowsableInfo> GetInfo() { return nullptr; }
+   virtual std::unique_ptr<RBrowsableElement> GetElement() { return nullptr; }
 };
 
 /** \class RBrowsable
@@ -96,17 +104,21 @@ class RBrowsable {
    struct RLevel {
       std::string name;
       std::unique_ptr<RBrowsableLevelIter> iter;
-      std::unique_ptr<RBrowsableInfo> item;
+      std::unique_ptr<RBrowsableElement> item;
       RLevel(const std::string &_name) : name(_name) {}
    };
 
-   std::unique_ptr<RBrowsableInfo> fItem; ///<! top-level item to browse
+   std::unique_ptr<RBrowsableElement> fItem; ///<! top-level item to browse
    std::vector<RLevel> fLevels;           ///<! navigated levels
 
    bool Navigate(const std::vector<std::string> &path);
 
+   bool DecomposePath(const std::string &path, std::vector<std::string> &arr);
+
 public:
-   RBrowsable(std::unique_ptr<RBrowsableInfo> &&item)
+   RBrowsable() = default;
+
+   RBrowsable(std::unique_ptr<RBrowsableElement> &&item)
    {
       fItem = std::move(item);
    }
@@ -114,7 +126,13 @@ public:
    virtual ~RBrowsable() = default;
 
 
+   void SetTopItem(std::unique_ptr<RBrowsableElement> &&item)
+   {
+      fLevels.clear();
+      fItem = std::move(item);
+   }
 
+   bool ProcessRequest(const RBrowserRequest &request, RBrowserReplyNew &reply);
 };
 
 

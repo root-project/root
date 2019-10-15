@@ -102,7 +102,7 @@ bool RBrowsable::Navigate(const std::vector<std::string> &path)
          break;
       }
 
-      level.item = level.iter->GetInfo();
+      level.item = level.iter->GetElement();
       if (!level.item) {
          find = false;
          break;
@@ -115,6 +115,67 @@ bool RBrowsable::Navigate(const std::vector<std::string> &path)
 
    return find;
 }
+
+bool RBrowsable::DecomposePath(const std::string &path, std::vector<std::string> &arr)
+{
+   arr.clear();
+
+   if (path.empty() || (path == "/"))
+      return true;
+
+
+   return false;
+}
+
+
+bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReplyNew &reply)
+{
+   reply.path = request.path;
+   reply.first = 0;
+   reply.nchilds = 0;
+   reply.nodes.clear();
+
+   std::vector<std::string> arr;
+
+   if (!DecomposePath(request.path, arr))
+      return false;
+
+   if (!Navigate(arr))
+      return false;
+
+   auto iter = fLevels.empty() ? fItem->GetChildsIter() : fLevels.back().item->GetChildsIter();
+
+   if (!iter) return false;
+
+   int id = 0;
+
+   while (iter->Next()) {
+
+      if ((id >= request.first) && ((request.number == 0) || (reply.nodes.size() < request.number))) {
+         // access element
+         auto elem = iter->GetElement();
+
+         std::unique_ptr<RBrowserItem> item;
+
+         if (elem)
+            // produce item object, can include extra information
+            item = elem->CreateBrowserItem();
+
+         if (!item)
+            item = std::make_unique<RBrowserItem>(iter->GetName(), -1);
+
+         reply.nodes.emplace_back(std::move(item));
+      }
+
+      id++;
+   }
+
+   reply.first = request.first;
+   reply.nchilds = id; // total number of childs
+
+   return true;
+}
+
 
 
 

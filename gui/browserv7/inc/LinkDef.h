@@ -13,7 +13,7 @@
 #pragma link off all functions;
 
 #pragma link C++ class ROOT::Experimental::RBrowsableProvider+;
-#pragma link C++ class ROOT::Experimental::RBrowsableInfo+;
+#pragma link C++ class ROOT::Experimental::RBrowsableElement+;
 #pragma link C++ class ROOT::Experimental::RBrowsableLevelIter+;
 #pragma link C++ class ROOT::Experimental::RBrowsable+;
 
@@ -22,7 +22,7 @@
 #pragma link C++ class ROOT::Experimental::RBrowserReply+;
 #pragma link C++ class ROOT::Experimental::RBrowserReplyNew+;
 
-#pragma link C++ class ROOT::Experimental::RRootFileItem+;
+#pragma link C++ class ROOT::Experimental::RBrowserFileItem+;
 #pragma link C++ class ROOT::Experimental::RBrowser+;
 
 #endif
