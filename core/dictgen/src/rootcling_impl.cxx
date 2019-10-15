@@ -4171,6 +4171,16 @@ int RootClingMain(int argc,
       // We just pass -fmodules, the CIFactory will do the rest and configure
       // clang correctly once it sees this flag.
       clingArgsInterpreter.push_back("-fmodules");
+      clingArgsInterpreter.push_back("-fno-implicit-module-maps");
+      clingArgsInterpreter.push_back("-fmodule-map-file=" +
+                                     ROOT::FoundationUtils::GetIncludeDir() +
+                                     "/module.modulemap");
+      clingArgsInterpreter.push_back("-fmodule-map-file=" +
+                                     ROOT::FoundationUtils::GetEtcDir() +
+                                     "/cling/module.modulemap");
+      std::string ModuleMapCWD = ROOT::FoundationUtils::GetCurrentDir() + "/module.modulemap";
+      if (llvm::sys::fs::exists(ModuleMapCWD))
+         clingArgsInterpreter.push_back("-fmodule-map-file=" + ModuleMapCWD);
 
       // Specify the module name that we can lookup the module in the modulemap.
       outputFile = llvm::sys::path::stem(gOptSharedLibFileName).str();

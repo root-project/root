@@ -25,6 +25,7 @@
 
 #include "RConfigure.h"
 #include <ROOT/RConfig.hxx>
+#include <ROOT/FoundationUtils.hxx>
 #include "Rtypes.h"
 
 #include "RStl.h"
@@ -4939,17 +4940,9 @@ void ROOT::TMetaUtils::ReplaceAll(std::string& str, const std::string& from, con
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the separator suitable for this platform.
-/// To be replaced at the next llvm upgrade by
-/// const StringRef llvm::sys::path::get_separator()
-
 const std::string& ROOT::TMetaUtils::GetPathSeparator()
 {
-#ifdef WIN32
-   static const std::string gPathSeparator ("\\");
-#else
-   static const std::string gPathSeparator ("/");
-#endif
-   return gPathSeparator;
+   return ROOT::FoundationUtils::GetPathSeparator();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

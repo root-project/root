@@ -19,6 +19,8 @@ clang/LLVM technology.
 
 #include "TCling.h"
 
+#include "ROOT/FoundationUtils.hxx"
+
 #include "TClingBaseClassInfo.h"
 #include "TClingCallFunc.h"
 #include "TClingClassInfo.h"
@@ -1303,8 +1305,16 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    // Add the overlay file. Note that we cannot factor it out for both root
    // and rootcling because rootcling activates modules only if -cxxmodule
    // flag is passed.
-   if (fCxxModulesEnabled && !fromRootCling)
+   if (fCxxModulesEnabled && !fromRootCling) {
       clingArgsStorage.push_back("-includedir_loc=" + std::string(TROOT::GetIncludeDir().Data()));
+      clingArgsStorage.push_back(("-fmodule-map-file=" +
+                                  TROOT::GetIncludeDir() + "/module.modulemap").Data());
+      clingArgsStorage.push_back(("-fmodule-map-file=" +
+                                  TROOT::GetEtcDir() + "/cling/module.modulemap").Data());
+      std::string ModuleMapCWD = std::string(gSystem->WorkingDirectory()) + "/module.modulemap";
+      if (llvm::sys::fs::exists(ModuleMapCWD))
+         clingArgsStorage.push_back("-fmodule-map-file=" + ModuleMapCWD);
+   }
 
    std::vector<const char*> interpArgs;
    for (std::vector<std::string>::const_iterator iArg = clingArgsStorage.begin(),
@@ -1319,6 +1329,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       if (!fromRootCling) {
          // We only set this flag, rest is done by the CIFactory.
          interpArgs.push_back("-fmodules");
+         interpArgs.push_back("-fno-implicit-module-maps");
          // We should never build modules during runtime, so let's enable the
          // module build remarks from clang to make it easier to spot when we do
          // this by accident.

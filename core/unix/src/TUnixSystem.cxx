@@ -19,6 +19,7 @@
 
 #include "RConfigure.h"
 #include <ROOT/RConfig.hxx>
+#include <ROOT/FoundationUtils.hxx>
 #include "TUnixSystem.h"
 #include "TROOT.h"
 #include "TError.h"
@@ -600,7 +601,7 @@ Bool_t TUnixSystem::Init()
 #endif
 
    // This is a fallback in case TROOT::GetRootSys() can't determine ROOTSYS
-   gRootDir = "/usr/local/root";
+   gRootDir = ROOT::FoundationUtils::GetFallbackRootSys().c_str();
 
    return kFALSE;
 }

@@ -23,6 +23,7 @@
 #endif
 
 #include "Windows4Root.h"
+#include "ROOT/FoundationUtils.hxx"
 #include "TWinNTSystem.h"
 #include "TROOT.h"
 #include "TError.h"
@@ -1102,16 +1103,7 @@ Bool_t TWinNTSystem::Init()
    fSigcnt = 0;
 
    // This is a fallback in case TROOT::GetRootSys() can't determine ROOTSYS
-   static char lpFilename[MAX_PATH];
-   if (::GetModuleFileName(
-          NULL,                   // handle to module to find filename for
-          lpFilename,             // pointer to buffer to receive module path
-          sizeof(lpFilename))) {  // size of buffer, in characters
-      const char *dirName = DirName(DirName(lpFilename));
-      gRootDir = StrDup(dirName);
-   } else {
-      gRootDir = 0;
-   }
+   gRootDir = ROOT::FoundationUtils::GetFallbackRootSys().c_str();
 
    // Increase the accuracy of Sleep() without needing to link to winmm.lib
    typedef UINT (WINAPI* LPTIMEBEGINPERIOD)( UINT uPeriod );
