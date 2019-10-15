@@ -12,6 +12,7 @@
 #include <memory>
 #include <string>
 #include <map>
+#include <vector>
 
 
 class TClass;
@@ -20,8 +21,10 @@ namespace ROOT {
 namespace Experimental {
 
 
+class RBrowsableLevelIter;
+
 /** \class RBrowsableInfo
-\ingroup GpadROOT7
+\ingroup rbrowser
 \brief Basic information about RBrowsable
 \author Sergey Linev <S.Linev@gsi.de>
 \date 2019-10-14
@@ -41,12 +44,15 @@ public:
    /** Title of RBrowsable (optional) */
    virtual std::string GetTitle() const { return ""; }
 
-   /** Number of childs in RBrowsable (optional) */
-   virtual int GetNumChilds() const { return 0; }
+   /** Returns estimated number of childs (-1 not implemented, have to try create iterator */
+   virtual int CanHaveChilds() const { return -1; }
+
+   /** Create iterator for childs elements if any */
+   virtual std::unique_ptr<RBrowsableLevelIter> GetChildsIter() { return nullptr; }
 };
 
 /** \class RBrowsableLevelIter
-\ingroup GpadROOT7
+\ingroup rbrowser
 \brief Iterator over single level hierarchy like TList
 \author Sergey Linev <S.Linev@gsi.de>
 \date 2019-10-14
@@ -64,12 +70,20 @@ public:
    /** Reset iterator to the first element, returns false if not supported */
    virtual bool Reset() { return false; }
 
-   /** Returns information for current element */
+   /** Is there current element  */
+   virtual bool HasItem() const { return false; }
+
+   /** Returns current element name  */
+   virtual std::string GetName() const { return ""; }
+
+   virtual bool Find(const std::string &name);
+
+   /** Returns full information for current element */
    virtual std::unique_ptr<RBrowsableInfo> GetInfo() { return nullptr; }
 };
 
 /** \class RBrowsable
-\ingroup GpadROOT7
+\ingroup rbrowser
 \brief Way to browse (hopefully) everything in ROOT
 \author Sergey Linev <S.Linev@gsi.de>
 \date 2019-10-14
@@ -78,16 +92,34 @@ public:
 
 
 class RBrowsable {
+
+   struct RLevel {
+      std::string name;
+      std::unique_ptr<RBrowsableLevelIter> iter;
+      std::unique_ptr<RBrowsableInfo> item;
+      RLevel(const std::string &_name) : name(_name) {}
+   };
+
+   std::unique_ptr<RBrowsableInfo> fItem; ///<! top-level item to browse
+   std::vector<RLevel> fLevels;           ///<! navigated levels
+
+   bool Navigate(const std::vector<std::string> &path);
+
 public:
-   RBrowsable() = default;
+   RBrowsable(std::unique_ptr<RBrowsableInfo> &&item)
+   {
+      fItem = std::move(item);
+   }
+
    virtual ~RBrowsable() = default;
+
 
 
 };
 
 
 /** \class RBrowsableProvider
-\ingroup GpadROOT7
+\ingroup rbrowser
 \brief Provider of different browsing methods for supported classes
 \author Sergey Linev <S.Linev@gsi.de>
 \date 2019-10-14

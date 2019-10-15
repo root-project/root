@@ -59,4 +59,62 @@ std::shared_ptr<RBrowsableProvider> RBrowsableProvider::GetProvider(const TClass
    return nullptr;
 }
 
+/////////////////////////////////////////////////////////////////////
+/// Find item with specified name
+/// Default implementation, should work for all
+
+
+bool RBrowsableLevelIter::Find(const std::string &name)
+{
+   if (!Reset()) return false;
+
+   while (Next()) {
+      if (GetName() == name)
+         return true;
+   }
+
+   return false;
+}
+
+
+/////////////////////////////////////////////////////////////////////
+/// Navigate to specified path
+
+bool RBrowsable::Navigate(const std::vector<std::string> &path)
+{
+   if (!fItem) return false;
+
+   fLevels.clear();
+
+   auto *curr = fItem.get(); // use pointer instead of
+
+   bool find = true;
+
+   for (auto &dir : path) {
+
+      fLevels.emplace_back(dir);
+
+      auto &level = fLevels.back();
+
+      level.iter = curr->GetChildsIter();
+      if (!level.iter || !level.iter->Find(dir)) {
+         find = false;
+         break;
+      }
+
+      level.item = level.iter->GetInfo();
+      if (!level.item) {
+         find = false;
+         break;
+      }
+
+      curr = level.item.get();
+   }
+
+   if (!find) fLevels.clear();
+
+   return find;
+}
+
+
 

@@ -15,6 +15,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
     ROOT/RBrowser.hxx
   SOURCES
     src/RBrowsable.cxx
+    src/RFileBrowsable.cxx
     src/RBrowser.cxx
   DEPENDENCIES
     ROOTWebDisplay
