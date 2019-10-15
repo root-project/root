@@ -646,8 +646,6 @@ sap.ui.define(['sap/ui/core/Component',
       onAfterRendering: function() {
          this.renderingDone = true;
 
-        this.websocket.Send('WORKDIR:'); // Update the breadcrumbs
-
          this.checkRequestMsg();
       },
 
@@ -689,6 +687,7 @@ sap.ui.define(['sap/ui/core/Component',
       
       /** process initial message, now it is list of existing canvases */
       processInitMsg: function(msg) {
+         this.websocket.Send('WORKDIR:'); // Update the breadcrumbs
          var arr = JSROOT.parse(msg);
          if (!arr) return;
          
