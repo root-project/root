@@ -688,9 +688,10 @@ void ROOT::Experimental::RBrowser::SendInitMsg(unsigned connid)
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Return the current directory of ROOT
 
-std::string ROOT::Experimental::RBrowser::GetCurrentWorkingDirectory() {
+std::string ROOT::Experimental::RBrowser::GetCurrentWorkingDirectory()
+{
    auto path = gSystem->WorkingDirectory();
-   std::string res = "WORKDIR: { \"path\": \"";
+   std::string res = "GETWORKDIR: { \"path\": \"";
    res.append(path);
    res.append("\"}");
    return res;
@@ -764,7 +765,7 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       printf("Select %s\n", fActiveCanvas.c_str());
    } else if (arg.compare(0,13, "CLOSE_CANVAS:") == 0) {
       CloseCanvas(arg.substr(13));
-   } else if (arg.compare(0, 8, "WORKDIR:") == 0) {
+   } else if (arg.compare(0, 11, "GETWORKDIR:") == 0) {
       std::string res = GetCurrentWorkingDirectory();
       fWebWindow->Send(connid, res);
    } else if (arg.compare(0, 14, "SWITCHWORKDIR:") == 0) {
