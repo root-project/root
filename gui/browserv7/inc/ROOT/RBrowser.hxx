@@ -19,6 +19,7 @@
 #include <ROOT/RWebWindow.hxx>
 #include <ROOT/RCanvas.hxx>
 #include <ROOT/RBrowserItem.hxx>
+#include <ROOT/RBrowsable.hxx>
 
 #include <vector>
 #include <memory>
@@ -79,6 +80,8 @@ protected:
    std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> fRCanvases; ///<!  ROOT7 canvases
 
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to browser
+
+   RBrowsable  fBrowsable;                   ///<! central browsing element
 
    TCanvas *AddCanvas();
    TCanvas *GetActiveCanvas() const;

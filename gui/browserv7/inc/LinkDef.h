@@ -20,6 +20,7 @@
 #pragma link C++ class ROOT::Experimental::RBrowserRequest+;
 #pragma link C++ class ROOT::Experimental::RBrowserItem+;
 #pragma link C++ class ROOT::Experimental::RBrowserReply+;
+#pragma link C++ class ROOT::Experimental::RBrowserReplyNew+;
 
 #pragma link C++ class ROOT::Experimental::RRootFileItem+;
 #pragma link C++ class ROOT::Experimental::RBrowser+;
