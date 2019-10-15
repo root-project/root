@@ -114,6 +114,7 @@ FARPROC dlsym(void *library, const char *function_name)
 #endif
 
 #include "Riostream.h"
+#include "ROOT/FoundationUtils.hxx"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TClassEdit.h"
@@ -2939,21 +2940,10 @@ static Bool_t IgnorePrefix() {
 /// Get the rootsys directory in the installation. Static utility function.
 
 const TString& TROOT::GetRootSys() {
-#ifdef ROOTPREFIX
-   if (IgnorePrefix()) {
-#endif
-      static TString rootsys;
-      if (rootsys.IsNull())
-         rootsys = gSystem->UnixPathName(gSystem->Getenv("ROOTSYS"));
-      if (rootsys.IsNull())
-         rootsys = gRootDir;
-      return rootsys;
-#ifdef ROOTPREFIX
-   } else {
-      const static TString rootsys = ROOTPREFIX;
-      return rootsys;
-   }
-#endif
+   // Avoid returning a reference to a temporary because of the conversion
+   // between std::string and TString.
+   const static TString rootsys = ROOT::FoundationUtils::GetRootSys();
+   return rootsys;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3002,42 +2992,20 @@ const TString& TROOT::GetLibDir() {
 /// Get the include directory in the installation. Static utility function.
 
 const TString& TROOT::GetIncludeDir() {
-#ifdef ROOTINCDIR
-   if (IgnorePrefix()) {
-#endif
-      static TString rootincdir;
-      if (rootincdir.IsNull()) {
-         rootincdir = "include";
-         gSystem->PrependPathName(GetRootSys(), rootincdir);
-      }
-      return rootincdir;
-#ifdef ROOTINCDIR
-   } else {
-      const static TString rootincdir = ROOTINCDIR;
-      return rootincdir;
-   }
-#endif
+   // Avoid returning a reference to a temporary because of the conversion
+   // between std::string and TString.
+   const static TString includedir = ROOT::FoundationUtils::GetIncludeDir();
+   return includedir;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the sysconfig directory in the installation. Static utility function.
 
 const TString& TROOT::GetEtcDir() {
-#ifdef ROOTETCDIR
-   if (IgnorePrefix()) {
-#endif
-      static TString rootetcdir;
-      if (rootetcdir.IsNull()) {
-         rootetcdir = "etc";
-         gSystem->PrependPathName(GetRootSys(), rootetcdir);
-      }
-      return rootetcdir;
-#ifdef ROOTETCDIR
-   } else {
-      const static TString rootetcdir = ROOTETCDIR;
-      return rootetcdir;
-   }
-#endif
+   // Avoid returning a reference to a temporary because of the conversion
+   // between std::string and TString.
+   const static TString etcdir = ROOT::FoundationUtils::GetEtcDir();
+   return etcdir;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
