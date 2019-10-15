@@ -35,6 +35,8 @@
 #include "TVirtualGL.h"
 #include "TVirtualPS.h"
 #include "TAxis.h"
+#include "TH1.h"
+#include "TGraph.h"
 #include "TView.h"
 
 #include "TVirtualMutex.h"
@@ -968,7 +970,32 @@ void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected
    else
       snprintf(atext, kTMAX, "%d,%d", px, py);
    fCanvasImp->SetStatusText(atext,2);
+   
+   // Show date/time if TimeDisplay is selected
+   if (( selected->InheritsFrom("TH1")
+      && ((TH1*)selected)->GetXaxis()
+      && ((TH1*)selected)->GetXaxis()->GetTimeDisplay() )
+   || ( selected->InheritsFrom("TGraph") 
+      && ((TGraph*)selected)->GetXaxis()
+      && ((TGraph*)selected)->GetXaxis()->GetTimeDisplay() )
+   || ( selected->InheritsFrom("TAxis") &&
+      ((TAxis*)selected)->GetTimeDisplay()) )
+   {
+      TString objinfo = selected->GetObjectInfo(px,py);
+      // check if user has overwritten GetObjectInfo and altered
+      // the default text from TObject::GetObjectInfo "x=.. y=.."
+      if (objinfo.Contains("x=") && objinfo.Contains("y=") ) {
+         TDatime dt((UInt_t)gPad->AbsPixeltoX(px));
+         snprintf(atext, kTMAX, "%s, y=%g", 
+            dt.AsSQLString(),gPad->AbsPixeltoY(py));
+         fCanvasImp->SetStatusText(atext,3);
+         gPad = savepad;
+         return;
+      }
+   }
+   // default
    fCanvasImp->SetStatusText(selected->GetObjectInfo(px,py),3);
+   
    gPad = savepad;
 }
 
