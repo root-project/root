@@ -427,12 +427,31 @@ sap.ui.define(['sap/ui/core/Component',
           if (i=== split.length-1) {
             oBreadcrumbs.setCurrentLocationText(split[i]);
           } else if ( i === 0) {
-            oBreadcrumbs.addLink(new Link({text: "/"}));
+            let link = new Link({text: "/"});
+            link.attachPress(this, this.onBreadcrumbsPress);
+            oBreadcrumbs.addLink(link);
           } else {
-            oBreadcrumbs.addLink(new Link({text: split[i]}));
+            let link = new Link({text: split[i]});
+            link.attachPress(this, this.onBreadcrumbsPress);
+            oBreadcrumbs.addLink(link);
           }
         }
       },
+
+     onBreadcrumbsPress: function(oEvent, myThis) {
+        let sId = oEvent.getSource().sId;
+        let oBreadcrumbs = oEvent.getSource().getParent();
+        let oLinks = oBreadcrumbs.getLinks();
+        let path = "/";
+        for (let i = 1; i<oLinks.length; i++) {
+          if (oLinks[i].sId === sId ) {
+            path += oLinks[i].getText();
+            break;
+          }
+          path += oLinks[i].getText() + "/";
+        }
+        return myThis.websocket.Send('SWITCHWORKDIR:' + path);
+     },
 
       /** @brief Double-click event handler */
       onRowDblClick: function(row) {
