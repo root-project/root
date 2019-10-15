@@ -450,7 +450,7 @@ sap.ui.define(['sap/ui/core/Component',
           }
           path += oLinks[i].getText() + "/";
         }
-        return myThis.websocket.Send('SWITCHWORKDIR:' + path);
+        return myThis.websocket.Send('CHDIR:' + path);
      },
 
       /** @brief Double-click event handler */
@@ -470,7 +470,7 @@ sap.ui.define(['sap/ui/core/Component',
           }
           path += currentText + "/" + rowText;
           console.log(path);
-          return this.websocket.Send('SWITCHWORKDIR:' + path);
+          return this.websocket.Send('CHDIR:' + path);
         }
 
          if (prop && prop.fullpath) {
