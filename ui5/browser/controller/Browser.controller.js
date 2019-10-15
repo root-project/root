@@ -441,8 +441,17 @@ sap.ui.define(['sap/ui/core/Component',
              prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
 
         if (row._bHasChildren){
-          let rowText = row.getCells()[0].getContent()[1].getText();
-          return this.websocket.Send('SWITCHWORKDIR:' + rowText.substr(1));
+          let rowText = row.getCells()[0].getContent()[1].getText().substr(1);
+          let oBreadcrumbs = this.getView().byId("breadcrumbs");
+          let links = oBreadcrumbs.getLinks();
+          let currentText =  oBreadcrumbs.getCurrentLocationText();
+          let path = "/";
+          for (let i = 1; i<links.length; i++) {
+            path += links[i].getText() + "/";
+          }
+          path += currentText + "/" + rowText;
+          console.log(path);
+          return this.websocket.Send('SWITCHWORKDIR:' + path);
         }
 
          if (prop && prop.fullpath) {
