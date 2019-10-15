@@ -203,7 +203,8 @@ void TMessage::SetLength() const
 {
    if (IsWriting()) {
       char *buf = Buffer();
-      tobuf(buf, (UInt_t)(Length() - sizeof(UInt_t)));
+      if (buf)
+         tobuf(buf, (UInt_t)(Length() - sizeof(UInt_t)));
 
       if (fBufComp) {
          buf = fBufComp;
@@ -223,8 +224,10 @@ void TMessage::SetWhat(UInt_t what)
    fWhat = what;
 
    char *buf = Buffer();
-   buf += sizeof(UInt_t);   // skip reserved length space
-   tobuf(buf, what);
+   if (buf) {
+      buf += sizeof(UInt_t);   // skip reserved length space
+      tobuf(buf, what);
+   }
 
    if (fBufComp) {
       buf = fBufComp;
@@ -331,6 +334,11 @@ Int_t TMessage::Compress()
    if (Length() <= (Int_t)(256 + 2*sizeof(UInt_t))) {
       // this message is too small to be compressed
       return 0;
+   }
+
+   if (!Buffer()) {
+      // error condition, should never happen
+      return -1;
    }
 
    Int_t hdrlen   = 2*sizeof(UInt_t);
