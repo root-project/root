@@ -568,7 +568,7 @@ sap.ui.define(['sap/ui/core/Component',
             var arr = JSON.parse(msg);
             this.createCanvas(arr[0], arr[1], arr[2]);
             break;
-         case "WORKDIR":
+         case "GETWORKDIR":
             this.updateBReadcrumbs(msg);
             break;
          case "SLCTCANV": // Selected the back selected canvas
@@ -706,7 +706,7 @@ sap.ui.define(['sap/ui/core/Component',
       
       /** process initial message, now it is list of existing canvases */
       processInitMsg: function(msg) {
-         this.websocket.Send('WORKDIR:'); // Update the breadcrumbs
+         this.websocket.Send('GETWORKDIR:'); // Update the breadcrumbs
          var arr = JSROOT.parse(msg);
          if (!arr) return;
          
