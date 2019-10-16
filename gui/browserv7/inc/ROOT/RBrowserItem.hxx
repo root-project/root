@@ -38,19 +38,20 @@ class RBrowserItem {
 protected:
    std::string name;     ///< item name
    int nchilds{0};       ///< number of childs
-   bool checked{false};  ///< is checked
-   bool expanded{false}; ///< is expanded
+   std::string icon;     ///< icon associated with item
+   bool checked{false};  ///< is checked, not used yet
+   bool expanded{false}; ///< is expanded, not used yet
 public:
    RBrowserItem() = default;
    RBrowserItem(const std::string &_name, int _nchilds = 0) : name(_name), nchilds(_nchilds) {}
+   // must be here, one needs virtual table for correct streaming of sub-classes
+   virtual ~RBrowserItem() = default;
 
    const std::string &GetName() const { return name; }
 
    void SetChecked(bool on = true) { checked = on; }
    void SetExpanded(bool on = true) { expanded = on; }
-
-   // must be here, one needs virtual table for correct streaming of RBrowserReply
-   virtual ~RBrowserItem() = default;
+   void SetIcon(const std::string &_icon) { icon = _icon; }
 };
 
 /** Reply on browser request */

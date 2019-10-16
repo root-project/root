@@ -153,12 +153,15 @@ bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReplyNew
 
    std::vector<std::string> arr;
 
-   printf("REQ: Do decompose path '%s'\n",request.path.c_str());
+   if (gDebug > 0)
+      printf("REQ: Do decompose path '%s'\n",request.path.c_str());
 
    if (!DecomposePath(request.path, arr))
       return false;
 
-   printf("REQ:Try to navigate %d\n", (int) arr.size());
+   if (gDebug > 0)
+      printf("REQ:Try to navigate %d\n", (int) arr.size());
+
    for (auto & subdir : arr) printf("   %s\n", subdir.c_str());
 
    if (!Navigate(arr))
@@ -166,7 +169,8 @@ bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReplyNew
 
    auto iter = fLevels.empty() ? fItem->GetChildsIter() : fLevels.back().item->GetChildsIter();
 
-   printf("REQ:Create iterator %p\n", iter.get());
+   if (gDebug > 0)
+      printf("REQ:Create iterator %p\n", iter.get());
 
    if (!iter) return false;
 
@@ -182,7 +186,8 @@ bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReplyNew
          if (!item)
             item = std::make_unique<RBrowserItem>(iter->GetName(), -1);
 
-         printf("REQ:    item %s\n", item->GetName().c_str());
+         if (gDebug > 0)
+            printf("REQ:    item %s\n", item->GetName().c_str());
 
          reply.nodes.emplace_back(std::move(item));
       }
@@ -190,7 +195,8 @@ bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReplyNew
       id++;
    }
 
-   printf("REQ:  Done processing cnt %d\n", id);
+   if (gDebug > 0)
+      printf("REQ:  Done processing cnt %d\n", id);
 
    reply.first = request.first;
    reply.nchilds = id; // total number of childs
