@@ -100,9 +100,6 @@ public:
    /** Title of RBrowsable (optional) */
    std::string GetTitle() const override { return GetFullName(); }
 
-   /** Returns true if item can have childs and one should try to create iterator (optional) */
-   int CanHaveChilds() const override;
-
    std::unique_ptr<RBrowsableLevelIter> GetChildsIter() override;
 
    bool HasTextContent() const override;
@@ -134,9 +131,6 @@ public:
 
    /** Title of RBrowsable (optional) */
    std::string GetTitle() const override;
-
-   /** Returns true if item can have childs and one should try to create iterator (optional) */
-   int CanHaveChilds() const override;
 
    std::unique_ptr<RBrowsableLevelIter> GetChildsIter() override;
 
