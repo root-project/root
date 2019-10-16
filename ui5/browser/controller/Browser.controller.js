@@ -450,7 +450,10 @@ sap.ui.define(['sap/ui/core/Component',
           }
           path += oLinks[i].getText() + "/";
         }
-        return myThis.websocket.Send('CHDIR:' + path);
+        myThis.websocket.Send('CHDIR:' + path);
+
+        myThis.model.clearFullModel();
+        myThis.model.reloadMainModel(true, path);
      },
 
       /** @brief Double-click event handler */
@@ -469,8 +472,11 @@ sap.ui.define(['sap/ui/core/Component',
             path += links[i].getText() + "/";
           }
           path += currentText + "/" + rowText;
-          console.log(path);
-          return this.websocket.Send('CHDIR:' + path);
+          this.websocket.Send('CHDIR:' + path);
+
+          this.chdir = true;
+          this.websocket.Send("BRREQ:" + JSON.stringify({ path: "/"+rowText+"/", first: 0, number: 0, sort: "" }));
+          return;
         }
 
          if (prop && prop.fullpath) {
@@ -615,16 +621,23 @@ sap.ui.define(['sap/ui/core/Component',
          case "BREPL":   // browser reply
             if (this.model) {
                var bresp = JSON.parse(msg);
+               if(this.chdir) {
+                 this.chdir = false;
+                 this.model.clearFullModel();
+                 this.model.reloadMainModel(true);
+                 this.model.mySetFullModel(bresp.nodes);
 
-               this.model.processResponse(bresp);
+               } else {
+                 this.model.processResponse(bresp);
 
-               if (bresp.path === '/') {
-                  var tt = this.getView().byId("treeTable");
-                  var cols = tt.getColumns();
-                  tt.autoResizeColumn(2);
-                  tt.autoResizeColumn(1);
-                  // for (var k=0;k<cols.length;++k)
-                  //    tt.autoResizeColumn(k);
+                 if (bresp.path === '/') {
+                   var tt = this.getView().byId("treeTable");
+                   var cols = tt.getColumns();
+                   tt.autoResizeColumn(2);
+                   tt.autoResizeColumn(1);
+                   // for (var k=0;k<cols.length;++k)
+                   //    tt.autoResizeColumn(k);
+                 }
                }
             }
             break;
