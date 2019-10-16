@@ -14,6 +14,8 @@
 #include "TSystem.h"
 #include <string>
 
+class TDirectory;
+
 namespace ROOT {
 namespace Experimental {
 
@@ -47,7 +49,9 @@ public:
 };
 
 
-class RBrowsableFileElement : public RBrowsableElement {
+// ========================================================================================
+
+class RBrowsableSysFileElement : public RBrowsableElement {
    FileStat_t fStat;       ///<! file stat object
    std::string fDirName;   ///<! fully-qualified directory name
    std::string fFileName;  ///<! file name in current dir
@@ -57,16 +61,16 @@ class RBrowsableFileElement : public RBrowsableElement {
    std::string GetFileIcon() const;
 
 public:
-   RBrowsableFileElement(const std::string &filename);
+   RBrowsableSysFileElement(const std::string &filename);
 
-   RBrowsableFileElement(const FileStat_t& stat, const std::string &dirname, const std::string &filename) : fStat(stat), fDirName(dirname), fFileName(filename)
+   RBrowsableSysFileElement(const FileStat_t& stat, const std::string &dirname, const std::string &filename) : fStat(stat), fDirName(dirname), fFileName(filename)
    {
    }
 
-   virtual ~RBrowsableFileElement() = default;
+   virtual ~RBrowsableSysFileElement() = default;
 
-   /** Class information for file not provided */
-   const TClass *GetGlass() const override { return nullptr; }
+   /** Class information for system file not provided */
+   const TClass *GetClass() const override { return nullptr; }
 
    /** Name of RBrowsable, must be provided in derived classes */
    std::string GetName() const override { return fFileName; }
@@ -80,6 +84,42 @@ public:
    std::unique_ptr<RBrowsableLevelIter> GetChildsIter() override;
 
    std::unique_ptr<RBrowserItem> CreateBrowserItem() override;
+
+   bool HasTextContent() const override;
+
+   std::string GetTextContent() override;
+
+};
+
+// ====================================================================================================
+
+
+class RBrowsableTDirectoryElement : public RBrowsableElement {
+   std::string fFileName;       ///<!   file name
+   TDirectory *fDir{nullptr};   ///<!   subdirectory (ifany)
+
+   TDirectory *GetDir() const;
+
+public:
+
+   RBrowsableTDirectoryElement(const std::string &fname, TDirectory *dir = nullptr);
+
+   virtual ~RBrowsableTDirectoryElement();
+
+   /** Class information for system file not provided */
+   const TClass *GetClass() const override;
+
+   /** Name of RBrowsable, must be provided in derived classes */
+   std::string GetName() const override;
+
+   /** Title of RBrowsable (optional) */
+   std::string GetTitle() const override;
+
+   /** Returns true if item can have childs and one should try to create iterator (optional) */
+   int CanHaveChilds() const override;
+
+   std::unique_ptr<RBrowsableLevelIter> GetChildsIter() override;
+
 };
 
 
