@@ -625,7 +625,6 @@ sap.ui.define(['sap/ui/core/Component',
                  this.chdir = false;
                  this.model.clearFullModel();
                  this.model.reloadMainModel(true);
-                 this.model.mySetFullModel(bresp.nodes);
 
                } else {
                  this.model.processResponse(bresp);

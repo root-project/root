@@ -34,8 +34,13 @@ sap.ui.define([
         /* Method can be used when complete hierarchy is ready and can be used directly */
         setFullModel: function(topnode) {
            this.fullModel = true;
-           this.h.nchilds = 1;
-           this.h.childs = [ topnode ];
+           if (topnode.length) {
+              this.h.nchilds = topnode.length;
+              this.h.childs = topnode;
+           } else {
+              this.h.nchilds = 1;
+              this.h.childs = [ topnode ];
+           }
            delete this.h._requested; // reply on top element can be full description
 
            if (!this.mainModel) {
@@ -50,25 +55,6 @@ sap.ui.define([
            if (this.oBinding)
               this.oBinding.checkUpdate(true);
         },
-
-       mySetFullModel: function(topnodes) {
-          this.fullModel = true;
-          this.h.nchilds = topnodes.length;
-          this.h.childs = topnodes;
-          delete this.h._requested; // reply on top element can be full description
-
-          if (!this.mainModel) {
-             this.mainModel = this.h.childs;
-             this.mainFullModel = true;
-          }
-
-          // topnode.expanded = true;
-          this.reset_nodes = true;
-          delete this.noData;
-          this.scanShifts();
-          if (this.oBinding)
-             this.oBinding.checkUpdate(true);
-       },
 
         clearFullModel: function() {
            if (!this.fullModel) return;
@@ -201,8 +187,10 @@ sap.ui.define([
            }
 
            console.log('submit request path = ' + path + ' was requested = ' + !!elem._requested);
-
-           if (!this._websocket || elem._requested || this.fullModel) return;
+           console.log("!this._websocket", !this._websocket);
+           console.log("elem._requested", elem._requested);
+           console.log("this.fullModel", this.fullModel);
+           if (!this._websocket || elem._requested || this.fullModel) return console.log("I AM CANCELED");
            elem._requested = true;
 
            this.loadDataCounter++;
@@ -213,6 +201,7 @@ sap.ui.define([
               number: number || this.threshold || 100,
               sort: this.sortOrder || ""
            };
+           console.log("BEFORE SENDING BRREQ", request);
            this._websocket.Send("BRREQ:" + JSON.stringify(request));
         },
 
