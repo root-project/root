@@ -169,9 +169,9 @@ public:
       item->isdir    = R_ISDIR(fCurrentStat.fMode);
 
       if (item->isdir)
-         item->icon = "sap-icon://folder-blank"s;
+         item->SetIcon("sap-icon://folder-blank"s);
       else
-         item->icon = GetFileIcon(GetName());
+         item->SetIcon(GetFileIcon(GetName()));
 
       // file size
       _fsize = bsize = item->size;
@@ -401,12 +401,24 @@ public:
       return (clname.find("TDirectory") == 0) ? 1 : 0;
    }
 
+   std::string GetClassIcon(const std::string &classname)
+   {
+      if (classname == "TTree" || classname == "TNtuple")
+         return "sap-icon://tree"s;
+      if (classname == "TDirectory" || classname == "TDirectoryFile")
+         return "sap-icon://folder-blank"s;
+
+      return "sap-icon://electronic-medical-record"s;
+   }
+
    /** Create element for the browser */
    std::unique_ptr<RBrowserItem> CreateBrowserItem() override
    {
       auto item = std::make_unique<RBrowserTKeyItem>(GetName(), CanHaveChilds());
 
       item->className = fKey->GetClassName();
+
+      item->SetIcon(GetClassIcon(item->className));
 
       return item;
    }
@@ -429,9 +441,6 @@ public:
 
    virtual ~RBrowsableTKeyElement() = default;
 
-   /** Class information, must be provided in derived classes */
-   const TClass *GetClass() const override { return gROOT->GetClass(fKey->GetClassName()); }
-
    /** Name of RBrowsable, must be provided in derived classes */
    std::string GetName() const override
    {
@@ -447,8 +456,9 @@ public:
    /** Create iterator for childs elements if any */
    std::unique_ptr<RBrowsableLevelIter> GetChildsIter() override
    {
-      auto cl = GetClass();
-      if (!cl->InheritsFrom(TDirectory::Class()))
+      std::string clname = fKey->GetClassName();
+
+      if (clname.find("TDirectory") != 0)
          return nullptr;
 
       auto subdir = fDir->GetDirectory(GetName().c_str());
@@ -458,21 +468,16 @@ public:
       return nullptr;
    }
 
-
-   bool HasObjectToDraw() const override
+   /** Temporary solution, later better interface should be provided */
+   TObject *GetObjectToDraw() override
    {
       std::string clname = fKey->GetClassName();
 
       // TODO: this check has to be performed in RBrowsable
       if ((clname.find("TTree") == 0) || (clname.find("TChain") == 0) || (clname.find("TDirectory") == 0))
-         return false;
+         return nullptr;
 
-      return true;
-   }
 
-   /** Temporary solution, later better interface should be provided */
-   TObject *GetObjectToDraw() override
-   {
       return fKey->ReadObj();
    }
 
@@ -513,14 +518,6 @@ TDirectory *RBrowsableTDirectoryElement::GetDir() const
    return fDir;
 }
 
-
-/** Class information for system file not provided */
-const TClass *RBrowsableTDirectoryElement::GetClass() const
-{
-   auto dir = GetDir();
-
-   return dir ? dir->IsA() : nullptr;
-}
 
 /** Name of RBrowsable, must be provided in derived classes */
 std::string RBrowsableTDirectoryElement::GetName() const
