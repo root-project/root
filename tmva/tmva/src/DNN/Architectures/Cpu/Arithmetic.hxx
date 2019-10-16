@@ -15,9 +15,10 @@
 ////////////////////////////////////////////////////////////
 
 #include "TMVA/DNN/Architectures/Cpu.h"
-#include "TMVA/DNN/Architectures/Cpu/Blas.h"
 
-#ifndef R__HAS_TMVACPU
+#ifdef R__HAS_TMVACPU
+#include "TMVA/DNN/Architectures/Cpu/Blas.h"
+#else
 #include "TMVA/DNN/Architectures/Reference.h"
 #endif
 
@@ -45,7 +46,7 @@ void TCpu<AReal>::Multiply(TCpuMatrix<AReal> &C,
 
     R__ASSERT((int) C.GetNrows() == m);
     R__ASSERT((int) C.GetNcols() == n);
-    R__ASSERT((int) B.GetNrows() == k); 
+    R__ASSERT((int) B.GetNrows() == k);
 
 #ifdef R__HAS_TMVACPU
 
@@ -62,10 +63,10 @@ void TCpu<AReal>::Multiply(TCpuMatrix<AReal> &C,
     ::TMVA::DNN::Blas::Gemm(&transa, &transb, &m, &n, &k, &alpha,
                             APointer, &m, BPointer, &k, &beta, CPointer, &m);
 #else
-   TMatrixT<AReal> tmp(C.GetNrows(), C.GetNcols()); 
+   TMatrixT<AReal> tmp(C.GetNrows(), C.GetNcols());
    tmp.Mult(A,B);
    C = tmp;
-#endif   
+#endif
 }
 
 //____________________________________________________________________________
@@ -82,8 +83,8 @@ void TCpu<AReal>::TransposeMultiply(TCpuMatrix<AReal> &C,
 
     R__ASSERT((int) C.GetNrows() == m);
     R__ASSERT((int) C.GetNcols() == n);
-    R__ASSERT((int) B.GetNrows() == k); 
-    
+    R__ASSERT((int) B.GetNrows() == k);
+
     char transa = 'T';
     char transb = 'N';
 
@@ -99,7 +100,7 @@ void TCpu<AReal>::TransposeMultiply(TCpuMatrix<AReal> &C,
 #else
    TMatrixT<AReal> tmp(C.GetNrows(), C.GetNcols());
    tmp.TMult(A,B);
-   tmp = alpha*tmp + beta; 
+   tmp = alpha*tmp + beta;
    C = tmp;
 #endif
 }
@@ -113,20 +114,20 @@ void TCpu<AReal>::Hadamard(TCpuMatrix<AReal> &B,
    AReal *dataB      = B.GetRawDataPointer();
 
    size_t nElements =  A.GetNoElements();
-   R__ASSERT(B.GetNoElements() == nElements); 
+   R__ASSERT(B.GetNoElements() == nElements);
    size_t nSteps = TCpuMatrix<AReal>::GetNWorkItems(nElements);
 
    auto f = [&](UInt_t workerID)
    {
       for (size_t j = 0; j < nSteps; ++j) {
          size_t idx = workerID+j;
-         if (idx >= nElements) break; 
+         if (idx >= nElements) break;
          dataB[idx] *= dataA[idx];
       }
       return 0;
    };
 
-   if (nSteps < nElements) { 
+   if (nSteps < nElements) {
 #ifdef DL_USE_MTE
       B.GetThreadExecutor().Foreach(f, ROOT::TSeqI(0,nElements,nSteps));
 #else
@@ -135,7 +136,7 @@ void TCpu<AReal>::Hadamard(TCpuMatrix<AReal> &B,
 #endif
    }
    else {
-      f(0); 
+      f(0);
    }
 }
 
@@ -148,20 +149,20 @@ void TCpu<AReal>::Hadamard(TCpuTensor<AReal> &B,
    AReal *dataB      = B.GetRawDataPointer();
 
    size_t nElements =  A.GetNoElements();
-   R__ASSERT(B.GetNoElements() == nElements); 
+   R__ASSERT(B.GetNoElements() == nElements);
    size_t nSteps = TCpuMatrix<AReal>::GetNWorkItems(nElements);
 
    auto f = [&](UInt_t workerID)
    {
       for (size_t j = 0; j < nSteps; ++j) {
          size_t idx = workerID+j;
-         if (idx >= nElements) break; 
+         if (idx >= nElements) break;
          dataB[idx] *= dataA[idx];
       }
       return 0;
    };
 
-   if (nSteps < nElements) { 
+   if (nSteps < nElements) {
 #ifdef DL_USE_MTE
       TMVA::Config::Instance().GetThreadExecutor().Foreach(f, ROOT::TSeqI(0,nElements,nSteps));
 #else
@@ -170,7 +171,7 @@ void TCpu<AReal>::Hadamard(TCpuTensor<AReal> &B,
 #endif
    }
    else {
-      f(0); 
+      f(0);
    }
 }
 
@@ -221,9 +222,9 @@ void TCpu<AReal>::SumColumns(TCpuMatrix<AReal> &B,
                            TCpuMatrix<AReal>::GetOnePointer(), &inc,
                            &beta, BPointer, &inc);
 #else
-   TMatrixT<AReal> tmp(B.GetNrows(), B.GetNcols()); 
+   TMatrixT<AReal> tmp(B.GetNrows(), B.GetNcols());
    TReference<AReal>::SumColumns(tmp,A);
-   tmp = alpha*tmp + beta; 
+   tmp = alpha*tmp + beta;
    B = tmp;
 #endif
 }
@@ -243,7 +244,7 @@ void TCpu<AReal>::ScaleAdd(TCpuMatrix<AReal> &B,
 
    ::TMVA::DNN::Blas::Axpy(&n, &alpha, x, &inc, y, &inc);
 #else
-   TMatrixT<AReal> tmp; 
+   TMatrixT<AReal> tmp;
    TReference<AReal>::ScaleAdd(tmp, A, alpha);
    B = tmp;
 #endif
@@ -267,7 +268,7 @@ void TCpu<AReal>::ScaleAdd(TCpuTensor<AReal> &B,
 {
    // should re-implemented at tensor level
    for (size_t i = 0; i < B.GetFirstSize(); ++i) {
-      TCpuMatrix<AReal> B_m = B.At(i).GetMatrix(); 
+      TCpuMatrix<AReal> B_m = B.At(i).GetMatrix();
       ScaleAdd(B_m, A.At(i).GetMatrix(), alpha);
    }
 }
@@ -322,7 +323,7 @@ void TCpu<AReal>::SqrtElementWise(TCpuMatrix<AReal> &A)
    A.Map(f);
 }
 
-/// Adam updates 
+/// Adam updates
 //____________________________________________________________________________
 template<typename AReal>
 void TCpu<AReal>::AdamUpdate(TCpuMatrix<AReal> &A, const TCpuMatrix<AReal> & M, const TCpuMatrix<AReal> & V, AReal alpha, AReal eps)
@@ -330,7 +331,7 @@ void TCpu<AReal>::AdamUpdate(TCpuMatrix<AReal> &A, const TCpuMatrix<AReal> & M, 
    // ADAM update the weights.
    // Weight = Weight - alpha * M / (sqrt(V) + epsilon)
    AReal * a = A.GetRawDataPointer();
-   const AReal * m = M.GetRawDataPointer(); 
+   const AReal * m = M.GetRawDataPointer();
    const AReal * v = V.GetRawDataPointer();
    for (size_t index = 0; index < A.GetNoElements() ; ++index) {
       a[index] = a[index] - alpha * m[index]/( sqrt(v[index]) + eps);
@@ -353,7 +354,7 @@ void TCpu<AReal>::AdamUpdateFirstMom(TCpuMatrix<AReal> &A, const TCpuMatrix<ARea
 template<typename AReal>
 void TCpu<AReal>::AdamUpdateSecondMom(TCpuMatrix<AReal> &A, const TCpuMatrix<AReal> & B, AReal beta)
 {
-   // Second momentum weight gradient update for ADAM 
+   // Second momentum weight gradient update for ADAM
    // Vt = beta2 * Vt-1 + (1-beta2) * WeightGradients^2
    AReal * a = A.GetRawDataPointer();
    const AReal * b = B.GetRawDataPointer();

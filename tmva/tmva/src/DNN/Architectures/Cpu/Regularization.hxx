@@ -15,6 +15,7 @@
 ///////////////////////////////////////////////////////////////////////
 
 #include "TMVA/DNN/Architectures/Reference.h"
+#include "TMVA/DNN/Architectures/Cpu.h"
 
 namespace TMVA
 {
@@ -35,7 +36,7 @@ AFloat TCpu<AFloat>::L1Regularization(const TCpuMatrix<AFloat> &Weights)
    auto f = [&data, &temp, nElements, nSteps](UInt_t workerID)
    {
       size_t iMax = std::min(workerID+nSteps, nElements);
-      size_t iWorker = workerID/nSteps; 
+      size_t iWorker = workerID/nSteps;
       for (size_t i = workerID; i < iMax; ++i) {
          temp[iWorker] += fabs(data[i]);
       }
@@ -49,7 +50,7 @@ AFloat TCpu<AFloat>::L1Regularization(const TCpuMatrix<AFloat> &Weights)
    // {
    //    return sum1 + sum2;
    // };
-   Weights.GetThreadExecutor().Foreach(f, ROOT::TSeqI(0,nElements,nSteps) ); 
+   Weights.GetThreadExecutor().Foreach(f, ROOT::TSeqI(0,nElements,nSteps) );
    return Weights.GetThreadExecutor().Reduce(temp, reduction);
 }
 
@@ -67,7 +68,7 @@ void TCpu<AFloat>::AddL1RegularizationGradients(
    size_t nElements =  B.GetNoElements();
    R__ASSERT(A.GetNoElements() == nElements);
    size_t nSteps = TCpuMatrix<AFloat>::GetNWorkItems(nElements);
-   
+
 
 
    auto f = [&dataA, &dataB, weightDecay, nElements, nSteps](UInt_t workerID)
@@ -88,7 +89,7 @@ void TCpu<AFloat>::AddL1RegularizationGradients(
          f(i);
 #endif
    } else  {
-      f(0); 
+      f(0);
    }
 }
 
@@ -122,7 +123,7 @@ AFloat TCpu<AFloat>::L2Regularization(const TCpuMatrix<AFloat> &Weights)
    //    return sum1 + sum2;
    // };
 
-   Weights.GetThreadExecutor().Foreach(f, ROOT::TSeqI(0,nElements,nSteps) ); 
+   Weights.GetThreadExecutor().Foreach(f, ROOT::TSeqI(0,nElements,nSteps) );
    return Weights.GetThreadExecutor().Reduce(temp, reduction);
 }
 
