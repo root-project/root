@@ -105,8 +105,6 @@ public:
 
    std::unique_ptr<RBrowsableLevelIter> GetChildsIter() override;
 
-   std::unique_ptr<RBrowserItem> CreateBrowserItem() override;
-
    bool HasTextContent() const override;
 
    std::string GetTextContent() override;
