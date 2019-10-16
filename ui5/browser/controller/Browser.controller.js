@@ -452,8 +452,8 @@ sap.ui.define(['sap/ui/core/Component',
         }
         myThis.websocket.Send('CHDIR:' + path);
 
-        myThis.model.clearFullModel();
-        myThis.model.reloadMainModel(true, path);
+       myThis.chdir = true;
+       myThis.websocket.Send("BRREQ:" + JSON.stringify({ path: path, first: 0, number: 0, sort: "" }));
      },
 
       /** @brief Double-click event handler */
