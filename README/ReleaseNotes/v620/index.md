@@ -91,9 +91,9 @@ the network access (used to look up the hostname and its IP address) failed.
 
 * TFile: A new bit `TFile::kReproducible` was introduced. It can be enabled by
   specifying the `"reproducible"` url option when creating the file:
-   ```{.cpp}
+~~~ {.cpp}
       TFile *f = TFile::Open("name.root?reproducible","RECREATE","File title");
-   ```{.cpp}
+~~~
    Unlike regular `TFile`s, the content of such file has reproducible binary
    content when writing exactly same data. This achieved by writing pre-defined
    values for creation and modification date of TKey/TDirectory objects and null
@@ -179,7 +179,16 @@ typedefs (in particular `Double32_t`)
 - Revisited the TSpectrum2 documentation. All the static images have been replaced
   by macros generating images at reference guide build time. These macros have
   been added in the tutorial section of the reference guide.
-
+- The Reference Guide can now be accessed directly from the ROOT prompt thanks to
+  a great extension (implemented by Desislava Kalaydjieva) of the `.help` command.
+  For example to access the Reference Guide for `TTree` it is enough to type:
+~~~ {.cpp}
+   root[0] .help TTree
+~~~
+  To open the reference guide for a function/member:
+~~~ {.cpp}
+   root[0] .help TTree::Draw
+~~~
 
 ## Build, Configuration and Testing Infrastructure
 
