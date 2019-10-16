@@ -1069,8 +1069,8 @@ void TApplication::Help(const char *line)
       Printf("   pwd                 : show current directory, pad and style");
       Printf("   ls                  : list contents of current directory");
       Printf("   which [file]        : shows path of macro file");
-      Printf("   .help Class         : opens the reference gude for that class");
-      Printf("   .help Class::Member : opens the reference gude for function/member");
+      Printf("   .help Class         : opens the reference guide for that class");
+      Printf("   .help Class::Member : opens the reference guide for function/member");
       return;
    } else {
       // If the user wants to use the extended ".help scopeName" command to access
