@@ -21,16 +21,16 @@
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::RNN;
 
-bool debug = false; 
-
 int main() {
+
+   bool debug = false;
    std::cout << "Testing RNN backward pass\n";
 
    ROOT::EnableImplicitMT(1);
 
    using Scalar_t = Double_t;
 
-   bool fail = false; 
+   bool fail = false;
    if (debug) {
       fail |=   testRecurrentBackpropagation<TCpu<Scalar_t>>(2, 1, 1, 2, 1e-5, {true, false, false}, true);
       return fail;

@@ -32,6 +32,9 @@
 
 // for xml
 #include "TMVA/Tools.h"
+#include "TError.h"   // for R__ASSERT
+
+#include "TMVA/DNN/Functions.h"
 
 namespace TMVA {
 namespace DNN {
@@ -110,7 +113,7 @@ public:
    /////                      std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2) = 0;
 
     /*! Reset some training flags after a loop on all batches
-       Some layer (e.g. batchnormalization) might need to implement the function in case some operations 
+       Some layer (e.g. batchnormalization) might need to implement the function in case some operations
        are needed after looping an all batches                                                 */
    virtual void ResetTraining() {}
 
@@ -207,11 +210,11 @@ public:
    void SetIsTraining(bool isTraining) { fIsTraining = isTraining; }
 
    /// helper functions for XML
-   void WriteTensorToXML( void * node, const char * name, const std::vector<Matrix_t> & tensor); 
+   void WriteTensorToXML( void * node, const char * name, const std::vector<Matrix_t> & tensor);
    void WriteMatrixToXML( void * node, const char * name, const Matrix_t & matrix);
 
    void ReadMatrixXML( void * node, const char * name, Matrix_t & matrix);
-   
+
 };
 
 //
@@ -280,7 +283,7 @@ VGeneralLayer<Architecture_t>::VGeneralLayer(VGeneralLayer<Architecture_t> *laye
       fInputWidth(layer->GetInputWidth()), fDepth(layer->GetDepth()), fHeight(layer->GetHeight()),
       fWidth(layer->GetWidth()), fIsTraining(layer->IsTraining()), fWeights(), fBiases(), fWeightGradients(),
       fBiasGradients(),
-      fOutput( layer->GetOutput().GetShape() ),   // construct from shape of other tensor   
+      fOutput( layer->GetOutput().GetShape() ),   // construct from shape of other tensor
       fActivationGradients( layer->GetActivationGradients().GetShape() ),
       fInit(layer->GetInitialization() )
 {
@@ -460,9 +463,9 @@ auto VGeneralLayer<Architecture_t>::CopyBiases(const std::vector<Matrix_t> &othe
 template <typename Architecture_t>
 auto VGeneralLayer<Architecture_t>::WriteTensorToXML(void * node, const char * name, const std::vector<Matrix_t> & tensor) -> void
 {
-   auto xmlengine = gTools().xmlengine(); 
+   auto xmlengine = gTools().xmlengine();
    void* matnode = xmlengine.NewChild(node, 0, name);
-   if (tensor.size() == 0) return; 
+   if (tensor.size() == 0) return;
    xmlengine.NewAttr(matnode,0,"Depth", gTools().StringFromInt(tensor.size()) );
    // assume same number of rows and columns for every matrix in std::vector
    xmlengine.NewAttr(matnode,0,"Rows", gTools().StringFromInt(tensor[0].GetNrows()) );
@@ -473,7 +476,7 @@ auto VGeneralLayer<Architecture_t>::WriteTensorToXML(void * node, const char * n
       for (Int_t row = 0; row < mat.GetNrows(); row++) {
          for (Int_t col = 0; col < mat.GetNcols(); col++) {
             TString tmp = TString::Format( "%5.15e ", (mat)(row,col) );
-            s << tmp.Data(); 
+            s << tmp.Data();
          }
       }
    }
@@ -484,7 +487,7 @@ auto VGeneralLayer<Architecture_t>::WriteTensorToXML(void * node, const char * n
 template <typename Architecture_t>
 auto VGeneralLayer<Architecture_t>::WriteMatrixToXML(void * node, const char * name, const Matrix_t & matrix) -> void
 {
-   auto xmlengine = gTools().xmlengine(); 
+   auto xmlengine = gTools().xmlengine();
    void* matnode = xmlengine.NewChild(node, 0, name);
 
    xmlengine.NewAttr(matnode,0,"Rows", gTools().StringFromInt(matrix.GetNrows()) );
@@ -512,8 +515,8 @@ auto VGeneralLayer<Architecture_t>::ReadMatrixXML(void * node, const char * name
    gTools().ReadAttr(matrixXML, "Rows", rows);
    gTools().ReadAttr(matrixXML, "Columns", cols);
 
-   R__ASSERT((size_t) matrix.GetNrows() == rows); 
-   R__ASSERT((size_t) matrix.GetNcols() == cols); 
+   R__ASSERT((size_t) matrix.GetNrows() == rows);
+   R__ASSERT((size_t) matrix.GetNcols() == cols);
 
    const char * matrixString = gTools().xmlengine().GetNodeContent(matrixXML);
    std::stringstream matrixStringStream(matrixString);
@@ -525,9 +528,9 @@ auto VGeneralLayer<Architecture_t>::ReadMatrixXML(void * node, const char * name
 #ifndef R__HAS_TMVAGPU
          matrixStringStream >> matrix(i,j);
 #else
-         Scalar_t value; 
-         matrixStringStream >> value; 
-         matrix(i,j) = value; 
+         Scalar_t value;
+         matrixStringStream >> value;
+         matrix(i,j) = value;
 #endif
 
       }
