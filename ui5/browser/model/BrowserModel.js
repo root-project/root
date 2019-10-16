@@ -186,11 +186,8 @@ sap.ui.define([
               delete this._expanding_path;
            }
 
-           console.log('submit request path = ' + path + ' was requested = ' + !!elem._requested);
-           console.log("!this._websocket", !this._websocket);
-           console.log("elem._requested", elem._requested);
-           console.log("this.fullModel", this.fullModel);
-           if (!this._websocket || elem._requested || this.fullModel) return console.log("I AM CANCELED");
+
+           if (!this._websocket || elem._requested || this.fullModel) return;
            elem._requested = true;
 
            this.loadDataCounter++;
@@ -201,7 +198,6 @@ sap.ui.define([
               number: number || this.threshold || 100,
               sort: this.sortOrder || ""
            };
-           console.log("BEFORE SENDING BRREQ", request);
            this._websocket.Send("BRREQ:" + JSON.stringify(request));
         },
 
