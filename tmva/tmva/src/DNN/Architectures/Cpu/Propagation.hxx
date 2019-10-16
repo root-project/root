@@ -16,9 +16,11 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "TMVA/DNN/Architectures/Cpu.h"
-#include "TMVA/DNN/Architectures/Cpu/Blas.h"
 
-#ifndef R__HAS_TMVACPU
+
+#ifdef R__HAS_TMVACPU
+#include "TMVA/DNN/Architectures/Cpu/Blas.h"
+#else
 #include "TMVA/DNN/Architectures/Reference.h"
 #endif
 
@@ -33,7 +35,7 @@ namespace DNN {
 //    // apply  multiply transpose. Assume tensor has size == 2  and is column major ordering
 //    //int m = (int)input.GetNrows();
 //    //int k = (int)input.GetNcols();
-    
+
 //    int n = (int)Weights.GetNrows();
 //    int m = (int)input.GetShape()[0];
 //    int k = (int)input.GetShape()[1];
@@ -48,7 +50,7 @@ namespace DNN {
 //    }
 //    if ((int)Weights.GetNcols() != k) {
 //       Error("MultiplyTranspose","Invalid input cols or weight cols  - input cols:  %d != weight cols : %d", k, (int) Weights.GetNcols());
-//       R__ASSERT((int) Weights.GetNcols() == k); 
+//       R__ASSERT((int) Weights.GetNcols() == k);
 //    }
 
 //    char transa = 'N';
@@ -77,8 +79,8 @@ namespace DNN {
 //    const AFloat *x = TCpuMatrix<AFloat>::GetOnePointer();
 //    const AFloat *y = biases.GetRawDataPointer();
 
-//    R__ASSERT(m <= (int)TCpuMatrix<AFloat>::GetOnePointerSize()); 
-//    R__ASSERT(n <= (int)(biases.GetNcols()*biases.GetNrows())); 
+//    R__ASSERT(m <= (int)TCpuMatrix<AFloat>::GetOnePointerSize());
+//    R__ASSERT(n <= (int)(biases.GetNcols()*biases.GetNrows()));
 
 //    ::TMVA::DNN::Blas::Ger(&m, &n, &alpha, x, &inc, y, &inc, A, &m);
 // }
@@ -102,7 +104,7 @@ void TCpu<AFloat>::MultiplyTranspose(TCpuMatrix<AFloat> &output, const TCpuMatri
    }
    if ((int)Weights.GetNcols() != k) {
       Error("MultiplyTranspose","Invalid input cols or weight cols  - input cols:  %d != weight cols : %d", k, (int) Weights.GetNcols());
-      R__ASSERT((int) Weights.GetNcols() == k); 
+      R__ASSERT((int) Weights.GetNcols() == k);
    }
 
 #ifdef R__HAS_TMVACPU
@@ -139,12 +141,12 @@ void TCpu<AFloat>::AddRowWise(TCpuMatrix<AFloat> &output, const TCpuMatrix<AFloa
    const AFloat *x = TCpuMatrix<AFloat>::GetOnePointer();
    const AFloat *y = biases.GetRawDataPointer();
 
-   R__ASSERT(m <= (int)TCpuMatrix<AFloat>::GetOnePointerSize()); 
-   R__ASSERT(n <= (int)(biases.GetNcols()*biases.GetNrows())); 
+   R__ASSERT(m <= (int)TCpuMatrix<AFloat>::GetOnePointerSize());
+   R__ASSERT(n <= (int)(biases.GetNcols()*biases.GetNrows()));
 
    ::TMVA::DNN::Blas::Ger(&m, &n, &alpha, x, &inc, y, &inc, A, &m);
 #else
-   TMatrixT<AFloat> tmp; 
+   TMatrixT<AFloat> tmp;
    TReference<AFloat>::AddRowWise(tmp, biases);
    output = tmp;
 #endif
@@ -159,12 +161,12 @@ void TCpu<AFloat>::Backward(TCpuTensor<AFloat> &activationGradientsBackward, TCp
    // Compute element-wise product.
    //Hadamard(df, activationGradients);
 
-   Matrix_t df_m = df.GetMatrix(); 
+   Matrix_t df_m = df.GetMatrix();
 
    // Activation gradients (exclude if it is first layer)
-   if (activationGradientsBackward.GetSize() > 0 ) { 
+   if (activationGradientsBackward.GetSize() > 0 ) {
 
-      Matrix_t  activationGradientsBackward_m = activationGradientsBackward.GetMatrix(); 
+      Matrix_t  activationGradientsBackward_m = activationGradientsBackward.GetMatrix();
 
       Multiply(activationGradientsBackward_m, df_m, weights);
    }
@@ -198,9 +200,9 @@ void TCpu<AFloat>::Im2col(TCpuMatrix<AFloat> &A, const TCpuMatrix<AFloat> &B, si
    const int halfFltHeightM1 = (fltHeight - 1) / 2;
    const int halfFltWidthM1 = (fltWidth - 1) / 2;
    const int nRowsInput = B.GetNrows();
-   const int nColsInput = B.GetNcols(); 
+   const int nColsInput = B.GetNcols();
    const int nRowsOutput = A.GetNrows();
-   const int nColsOutput = A.GetNcols(); 
+   const int nColsOutput = A.GetNcols();
 
    // convolution centers
    for (int i = halfFltHeight -zeroPaddingHeight; i <= imgHeightBound; i += strideRows) {
@@ -229,7 +231,7 @@ void TCpu<AFloat>::Im2col(TCpuMatrix<AFloat> &A, const TCpuMatrix<AFloat> &B, si
          currLocalView++;
       }
    }
-   //TMVA_DNN_PrintTCpuMatrix(A,"FromIm2Col"); 
+   //TMVA_DNN_PrintTCpuMatrix(A,"FromIm2Col");
 }
 
 //____________________________________________________________________________
@@ -253,7 +255,7 @@ void TCpu<AFloat>::Im2colIndices(std::vector<int> &V, const TCpuMatrix<AFloat> &
    const size_t nSizeOutput = V.size();
    const int npixels =  nRowsInput * fltHeight * fltWidth;
    // const int nRowsOutput = A.GetNrows();
-   // const int nColsOutput = A.GetNcols(); 
+   // const int nColsOutput = A.GetNcols();
 
    // convolution centers
    for (int i = halfFltHeight -zeroPaddingHeight; i <= imgHeightBound; i += strideRows) {
@@ -270,13 +272,13 @@ void TCpu<AFloat>::Im2colIndices(std::vector<int> &V, const TCpuMatrix<AFloat> &
 
                   // Check the boundaries
                   //R__ASSERT(currLocalViewPixel < nColsOutput );
-                  R__ASSERT(currLocalView * npixels + currLocalViewPixel < nSizeOutput ); 
+                  R__ASSERT(currLocalView * npixels + currLocalViewPixel < nSizeOutput );
                   if (k < 0 || k >= (Int_t)imgHeight || l < 0 || l >= (Int_t)imgWidth || kstep + l >=  nColsInput)
                      //V[currLocalView * npixels + currLocalViewPixel]=-1;
                      V[currLocalViewPixel * nLocalViews + currLocalView] = -1;
                   else
                      V[currLocalViewPixel * nLocalViews + currLocalView]= ( kstep + l) * nRowsInput + m;
-                  
+
                   currLocalViewPixel++;
                }
             }
@@ -286,14 +288,14 @@ void TCpu<AFloat>::Im2colIndices(std::vector<int> &V, const TCpuMatrix<AFloat> &
    }
 }
 template <typename AFloat>
-void TCpu<AFloat>::Im2colFast(TCpuMatrix<AFloat> &A, const TCpuMatrix<AFloat> &B, const std::vector<int> &V) 
+void TCpu<AFloat>::Im2colFast(TCpuMatrix<AFloat> &A, const TCpuMatrix<AFloat> &B, const std::vector<int> &V)
 {
-   size_t  n = V.size(); 
+   size_t  n = V.size();
    R__ASSERT( n == A.GetNcols() * A.GetNrows() );
    AFloat *  a = A.GetRawDataPointer();
    const AFloat *  b = B.GetRawDataPointer();
 
-//#define DL_USE_MTE  
+//#define DL_USE_MTE
    // parallel execution
 #ifdef DL_USE_MTE
    const size_t nsteps = TCpuMatrix<AFloat>::GetNWorkItems(n);
@@ -303,7 +305,7 @@ void TCpu<AFloat>::Im2colFast(TCpuMatrix<AFloat> &A, const TCpuMatrix<AFloat> &B
       for (size_t j = 0; j < nsteps; ++j) {
          size_t ii = workerID+j;
          if (ii >= n) break;
-         int idx = V[ii]; 
+         int idx = V[ii];
          if (idx >= 0) a[ii] = b[idx];
          else a[ii] = 0;
       }
@@ -315,7 +317,7 @@ void TCpu<AFloat>::Im2colFast(TCpuMatrix<AFloat> &A, const TCpuMatrix<AFloat> &B
 #else
    //serial execution
    for (size_t ii = 0; ii < n; ++ii) {
-      int idx = V[ii]; 
+      int idx = V[ii];
       if (idx >= 0) a[ii] = b[idx];
       else a[ii] = 0;
    }
@@ -360,12 +362,12 @@ void TCpu<AFloat>::AddConvBiases(TCpuMatrix<AFloat> &output, const TCpuMatrix<AF
    const AFloat *x = biases.GetRawDataPointer();
    const AFloat *y = TCpuMatrix<AFloat>::GetOnePointer();
 
-   R__ASSERT(m <= (int)biases.GetNoElements() ); 
-   R__ASSERT(n <= (int)TCpuMatrix<AFloat>::GetOnePointerSize() ); 
+   R__ASSERT(m <= (int)biases.GetNoElements() );
+   R__ASSERT(n <= (int)TCpuMatrix<AFloat>::GetOnePointerSize() );
 
    ::TMVA::DNN::Blas::Ger(&m, &n, &alpha, x, &inc, y, &inc, A, &m);
 #else
-   TMatrixT<AFloat> tmp; 
+   TMatrixT<AFloat> tmp;
    TReference<AFloat>::AddConvBiases(tmp, biases);
    output = tmp;
 #endif
@@ -448,10 +450,10 @@ void TCpu<AFloat>::ConvLayerBackward(TCpuTensor<AFloat> &activationGradientsBack
                                      EActivationFunction activFunc,
                                      const ConvDescriptors_t & /*descriptors*/,
                                      ConvWorkspace_t & /*workspace*/,
-                                     size_t batchSize,   size_t inputHeight, 
-                                     size_t inputWidth,  size_t depth, 
+                                     size_t batchSize,   size_t inputHeight,
+                                     size_t inputWidth,  size_t depth,
                                      size_t height,      size_t width,
-                                     size_t filterDepth, size_t filterHeight, 
+                                     size_t filterDepth, size_t filterHeight,
                                      size_t filterWidth, size_t nLocalViews)
 {
    // Update derivatives
@@ -459,15 +461,15 @@ void TCpu<AFloat>::ConvLayerBackward(TCpuTensor<AFloat> &activationGradientsBack
    //    m = activationGradients[0].GetNrows();
    //    n = activationGradients[0].GetNcols();
 
- 
-   // Compute activation backward pass  dx = f'(x) * dy  
+
+   // Compute activation backward pass  dx = f'(x) * dy
    //  put resulting dx of activation in activationgradients
    Tensor_t df(activationGradients.GetShape() );   // this is a deep copy, could be put as data member of class
-   ActivationFunctionBackward(df, outputTensor, activationGradients, inputActivationFunc, 
+   ActivationFunctionBackward(df, outputTensor, activationGradients, inputActivationFunc,
                               activFunc, DummyActivationDescriptor() );
 
    // Hadamard(df, activationGradients);
-   
+
 
    // Calculate the activation gradients of the previous layer
    CalculateConvActivationGradients(activationGradientsBackward, df, weights, batchSize, inputHeight, inputWidth, depth,
@@ -492,9 +494,9 @@ void TCpu<AFloat>::CalculateConvActivationGradients(TCpuTensor<AFloat> &activati
 {
    if (activationGradientsBackward.GetSize() == 0) return;
 
-  
+
    activationGradientsBackward.Zero();
-   
+
 
    // Transform the weights
 
@@ -568,42 +570,42 @@ void TCpu<AFloat>::CalculateConvWeightGradients(TCpuMatrix<AFloat> &weightGradie
 
    const size_t tempStrideRows = 1;
    const size_t tempStrideCols = 1;
-      
-      // Calculate the zero paddings from the input height and width (assume stride =1 )      
+
+      // Calculate the zero paddings from the input height and width (assume stride =1 )
    const size_t tempZeroPaddingHeight = (height - inputHeight + filterHeight - 1) / 2;
    const size_t tempZeroPaddingWidth = (width - inputWidth + filterWidth - 1) / 2;
 
 
    // convolution
-   
-   
+
+
 
    std::vector<int> vIndices(nLocalViews * nLocalViewPixels );
    Im2colIndices(vIndices, activationsBackward.At(0).GetMatrix(), nLocalViews, inputHeight, inputWidth, filterHeight , filterWidth,
              tempStrideRows, tempStrideCols, tempZeroPaddingHeight, tempZeroPaddingWidth);
-   
+
    //std::cout << "do back-propagation in conv layer - compute weight gradient" << std::endl;
 
-   // std::vector< TCpuMatrix<AFloat> > vres;//(batchSize); 
+   // std::vector< TCpuMatrix<AFloat> > vres;//(batchSize);
    // for (size_t i = 0; i < batchSize; i++) {
    //    vres.emplace_back(depth, nLocalViewPixels);
    //    //TMVA_DNN_PrintTCpuMatrix(df[i],"df");
    //    //TMVA_DNN_PrintTCpuMatrix(activationsBackward[i],"df");
-      
+
    //}
    //TCpuTensor<AFloat> vres( { batchSize, depth, nLocalViewPIxels} );
    TCpuTensor<AFloat> vres( batchSize, depth, nLocalViewPixels);
 
-   auto fmap = [&](int i) { 
- 
+   auto fmap = [&](int i) {
+
       //TMVA_DNN_PrintTCpuMatrix(df[i],"df-i");
       TCpuMatrix<AFloat> xTr(nLocalViews, nLocalViewPixels);
       TCpuMatrix<AFloat> res(depth, nLocalViewPixels);
 
-      //computing t he gradient is equivalent of doing a convolution of the input using as conv kernel the delta's (the df[] values) 
+      //computing t he gradient is equivalent of doing a convolution of the input using as conv kernel the delta's (the df[] values)
       //N.B. only stride values=1 are now supported
- 
-      //xTr.Zero(); 
+
+      //xTr.Zero();
       // Im2col(xTr, const_cast<TCpuMatrix<AFloat> &>(activationsBackward[i]), inputHeight, inputWidth, filterHeight , filterWidth,
       //        tempStrideRows, tempStrideCols, tempZeroPaddingHeight, tempZeroPaddingWidth);
       Im2colFast(xTr, activationsBackward.At(i).GetMatrix(), vIndices);
@@ -621,14 +623,14 @@ void TCpu<AFloat>::CalculateConvWeightGradients(TCpuMatrix<AFloat> &weightGradie
 
    TCpuMatrix<AFloat>::GetThreadExecutor().Foreach(fmap, ROOT::TSeqI( batchSize ) );
 
-//   auto freduce = [&](const TCpuTensor<AFloat> & vres) { 
-      R__ASSERT(vres.GetFirstSize() == batchSize); 
+//   auto freduce = [&](const TCpuTensor<AFloat> & vres) {
+      R__ASSERT(vres.GetFirstSize() == batchSize);
       for (size_t i = 0; i < batchSize; i++) {
          //TMVA_DNN_PrintTCpuMatrix(vres[i],"res");
-         Matrix_t vres_m = vres.At(i).GetMatrix(); 
+         Matrix_t vres_m = vres.At(i).GetMatrix();
          for (size_t j = 0; j < depth; j++) {
             for (size_t k = 0; k < filterDepth; k++) {
-               size_t kOffset = k * filterSize; 
+               size_t kOffset = k * filterSize;
                for (size_t l = 0; l < filterSize; l++) {
                   //weightGradients(j, k * (filterHeight * filterWidth) + l) += res(k, (tempNLocalViews - 1) - l);
                   weightGradients(j, kOffset + l) += vres_m(j,  kOffset + l);
@@ -638,7 +640,7 @@ void TCpu<AFloat>::CalculateConvWeightGradients(TCpuMatrix<AFloat> &weightGradie
          // TMVA_DNN_PrintTCpuMatrix(weightGradients,"weights_i");
       }
       //  };
-  
+
    //TCpuMatrix<AFloat>::GetThreadExecutor().MapReduce(fmap, ROOT::TSeqI( batchSize ) , freduce);
    //TMVA_DNN_PrintTCpuMatrix(weightGradients,"W-Grad");
 }
@@ -727,9 +729,9 @@ void TCpu<AFloat>::MaxPoolLayerBackward(TCpuTensor<AFloat> &activationGradientsB
    assert( activationGradientsBackward.GetFirstSize() == activationGradients.GetFirstSize());
    for (size_t l = 0; l < activationGradients.GetFirstSize(); ++l) {
 
-      Matrix_t activationGradientsBackward_m = activationGradientsBackward.At(l).GetMatrix(); 
-      Matrix_t activationGradients_m = activationGradients.At(l).GetMatrix(); 
-      Matrix_t indexMatrix_m = indexMatrix.At(l).GetMatrix(); 
+      Matrix_t activationGradientsBackward_m = activationGradientsBackward.At(l).GetMatrix();
+      Matrix_t activationGradients_m = activationGradients.At(l).GetMatrix();
+      Matrix_t indexMatrix_m = indexMatrix.At(l).GetMatrix();
 
       size_t depth = activationGradientsBackward_m.GetNrows();
 
@@ -767,7 +769,7 @@ void TCpu<AFloat>::BatchNormLayerForwardTraining(Matrix_t input,
                                                  std::vector<Scalar_t> & RunningVars,
                                                  Scalar_t nTrainedBatches,
                                                  Scalar_t momentum,
-                                                 Scalar_t epsilon) 
+                                                 Scalar_t epsilon)
 {
    int n = input.GetNrows();
    int d = input.GetNcols();
@@ -802,7 +804,7 @@ void TCpu<AFloat>::BatchNormLayerForwardTraining(Matrix_t input,
          RunningMeans[k] = mean;
          RunningVars[k] = Variance(0, k) * (n) / (Scalar_t(n - 1) + epsilon);
       } else {
-         Scalar_t decay = momentum; 
+         Scalar_t decay = momentum;
          if (momentum < 0) decay = nTrainedBatches/Scalar_t(nTrainedBatches+1);
          RunningMeans[k] = decay * RunningMeans[k] + (1. - decay) * mean;
          RunningVars[k] = decay * RunningVars[k] + (1.-decay) * Variance(0, k) * (n) / (Scalar_t(n - 1) + epsilon);
@@ -828,7 +830,7 @@ void TCpu<AFloat>::BatchNormLayerForwardInference(Matrix_t input,
                                                   std::vector<Scalar_t> & RunningMeans,
                                                   std::vector<Scalar_t> & RunningVars,
                                                   Scalar_t /* nTrainedBatches */,
-                                                  Scalar_t epsilon) 
+                                                  Scalar_t epsilon)
 {
    int n = input.GetNrows();
    int d = input.GetNcols();
@@ -861,7 +863,7 @@ void TCpu<AFloat>::BatchNormLayerForwardBackward(const Matrix_t & outputGrad,
                                                  const BNormDescriptors_t & /*descriptors*/,
                                                  BNormWorkspace_t & /*workspace*/,
                                                  # endif
-                                                 Scalar_t epsilon) 
+                                                 Scalar_t epsilon)
 {
    //const Matrix_t &x = activations_backward[0];
    int d = outputGrad.GetNcols();
@@ -915,12 +917,12 @@ void TCpu<AFloat>::Flatten(TCpuTensor<AFloat> &A, const TCpuTensor<AFloat> &B )
 {
 
    //printf ( "input tensor %f \n",B(0,0,0));
-   
+
    assert( B.GetShape().size() == 3  );
    assert( A.GetShape().size() == 3  );
 
 
-   size_t bsize = B.GetFirstSize(); 
+   size_t bsize = B.GetFirstSize();
    size_t nRows = B.GetHSize();
    size_t nCols = B.GetWSize();
 
@@ -932,14 +934,14 @@ void TCpu<AFloat>::Flatten(TCpuTensor<AFloat> &A, const TCpuTensor<AFloat> &B )
       for (size_t j = 0; j < nRows; j++) {
          for (size_t k = 0; k < nCols; k++) {
             A( 0, i, j * nCols + k) = B(i, j, k);
-         }  
+         }
       }
    }
 
    // size_t bsize = B.GetFirstSize();
-   // size_t n = B.GetSize()/bsize; 
-   // if (B.GetLayout() == TCpuTensor<AFloat>::MemoryLayout::ColumnMajor ) { 
-       
+   // size_t n = B.GetSize()/bsize;
+   // if (B.GetLayout() == TCpuTensor<AFloat>::MemoryLayout::ColumnMajor ) {
+
    // }
    // A = B.Reshape(bsize, n)
 }
@@ -952,7 +954,7 @@ void TCpu<AFloat>::Deflatten(TCpuTensor<AFloat> &A, const TCpuTensor<AFloat> &B 
    assert( B.GetShape().size() == 3  );
    assert( A.GetShape().size() == 3  );
 
-   size_t size = A.GetFirstSize(); 
+   size_t size = A.GetFirstSize();
    size_t nRows = A.GetHSize();
    size_t nCols = A.GetWSize();
 
@@ -974,9 +976,9 @@ void TCpu<AFloat>::Rearrange(Tensor_t &out, const Tensor_t &in)
 {
    // B x T x D out --- T x B x D in*/
    assert ( out.GetShape().size() == 3 && in.GetShape().size() == 3);
-  
 
-   size_t B = out.GetFirstSize(); 
+
+   size_t B = out.GetFirstSize();
    size_t T = out.GetCSize();  //1 for row-major
    size_t D = out.GetWSize();  // 2 for row-major
    if ((T != in.GetFirstSize()) || (B != in.GetCSize()) || (D != in.GetWSize()) ) {

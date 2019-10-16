@@ -17,16 +17,16 @@
 #include <iostream>
 #include "TMVA/DNN/Architectures/Reference.h"
 
-#include "Reference/Propagation.cxx"
-#include "Reference/ActivationFunctions.cxx"
-#include "Reference/Arithmetic.cxx"
-#include "Reference/OutputFunctions.cxx"
-#include "Reference/LossFunctions.cxx"
-#include "Reference/Regularization.cxx"
-#include "Reference/Initialization.cxx"
-#include "Reference/Dropout.cxx"
-#include "Reference/DenoisePropagation.cxx"
-#include "Reference/RecurrentPropagation.cxx"
+#include "Reference/Propagation.hxx"
+#include "Reference/ActivationFunctions.hxx"
+#include "Reference/Arithmetic.hxx"
+#include "Reference/OutputFunctions.hxx"
+#include "Reference/LossFunctions.hxx"
+#include "Reference/Regularization.hxx"
+#include "Reference/Initialization.hxx"
+#include "Reference/Dropout.hxx"
+#include "Reference/DenoisePropagation.hxx"
+#include "Reference/RecurrentPropagation.hxx"
 
 namespace TMVA {
 namespace DNN  {

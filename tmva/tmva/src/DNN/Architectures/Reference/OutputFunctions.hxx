@@ -14,6 +14,8 @@
 // template for Double_t scalar types.                        //
 ////////////////////////////////////////////////////////////////
 
+#include "TMVA/DNN/Architectures/Reference.h"
+
 namespace TMVA {
 namespace DNN  {
 
