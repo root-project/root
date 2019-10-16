@@ -97,10 +97,10 @@ protected:
 private:
    Tensor_t fIndexTensor; ///< Matrix of indices for the backward pass.
 
-   virtual void InitializeDescriptors();
-   virtual void ReleaseDescriptors();
-   virtual void InitializeWorkspace();
-   virtual void FreeWorkspace();
+   void InitializeDescriptors();
+   void ReleaseDescriptors();
+   void InitializeWorkspace();
+   void FreeWorkspace();
 
 public:
    /*! Constructor. */

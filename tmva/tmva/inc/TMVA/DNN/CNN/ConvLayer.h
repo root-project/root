@@ -130,10 +130,10 @@ private:
 
    Tensor_t fForwardTensor;            ///< Cache tensor used for speeding-up the forward pass.
 
-   virtual void InitializeDescriptors();
-   virtual void ReleaseDescriptors();
-   virtual void InitializeWorkspace();
-   virtual void FreeWorkspace();
+   void InitializeDescriptors();
+   void ReleaseDescriptors();
+   void InitializeWorkspace();
+   void FreeWorkspace();
 
 public:
    /*! Constructor. */
