@@ -28,7 +28,7 @@ class RBrowsableLevelIter;
 
 /** \class RBrowsableElement
 \ingroup rbrowser
-\brief Basic information about RBrowsable
+\brief Basic element of RBrowsable hierarchy. Provides access to data, creates iterator if any
 \author Sergey Linev <S.Linev@gsi.de>
 \date 2019-10-14
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
@@ -39,7 +39,7 @@ public:
    virtual ~RBrowsableElement() = default;
 
    /** Class information, must be provided in derived classes */
-   virtual const TClass *GetGlass() const = 0;
+   virtual const TClass *GetClass() const = 0;
 
    /** Name of RBrowsable, must be provided in derived classes */
    virtual std::string GetName() const = 0;
@@ -57,6 +57,10 @@ public:
    {
       return std::make_unique<RBrowserItem>(GetName(), CanHaveChilds());
    }
+
+   virtual bool HasTextContent() const { return false; }
+
+   virtual std::string GetTextContent() { return ""; }
 };
 
 /** \class RBrowsableLevelIter
@@ -133,6 +137,8 @@ public:
    }
 
    bool ProcessRequest(const RBrowserRequest &request, RBrowserReplyNew &reply);
+
+   std::unique_ptr<RBrowsableElement> GetElement(const std::string &path);
 };
 
 

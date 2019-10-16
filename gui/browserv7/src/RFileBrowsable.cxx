@@ -19,21 +19,28 @@
 #include "ROOT/RLogger.hxx"
 
 #include "TSystem.h"
+#include "TKey.h"
+#include "TDirectory.h"
+#include "TROOT.h"
+#include "TFile.h"
+
+#include <sstream>
+#include <fstream>
 
 using namespace std::string_literals;
 
 using namespace ROOT::Experimental;
 
-/** \class ROOT::Experimental::RDirectoryLevelIter
+/** \class ROOT::Experimental::RSysDirLevelIter
 \ingroup rbrowser
 
 Iterator over single file level
 */
 
 
-class RDirectoryLevelIter : public RBrowsableLevelIter {
-   std::string fPath;   ///<! fully qualified path
-   void *fDir{nullptr}; ///<! current directory handle
+class RSysDirLevelIter : public RBrowsableLevelIter {
+   std::string fPath;        ///<! fully qualified path
+   void *fDir{nullptr};      ///<! current directory handle
    std::string fCurrentName; ///<! current file name
    FileStat_t fCurrentStat;  ///<! stat for current file name
 
@@ -117,9 +124,9 @@ class RDirectoryLevelIter : public RBrowsableLevelIter {
    }
 
 public:
-   explicit RDirectoryLevelIter(const std::string &path = "") : fPath(path) { OpenDir(); }
+   explicit RSysDirLevelIter(const std::string &path = "") : fPath(path) { OpenDir(); }
 
-   virtual ~RDirectoryLevelIter() { CloseDir(); }
+   virtual ~RSysDirLevelIter() { CloseDir(); }
 
    bool Reset() override { return OpenDir(); }
 
@@ -134,13 +141,16 @@ public:
    /** Returns full information for current element */
    std::unique_ptr<RBrowsableElement> GetElement() override
    {
-      return std::make_unique<RBrowsableFileElement>(fCurrentStat, fPath, fCurrentName);
+      if (!R_ISDIR(fCurrentStat.fMode) && (fCurrentName.length() > 5) && (fCurrentName.rfind(".root") == fCurrentName.length()-5))
+         return std::make_unique<RBrowsableTDirectoryElement>(fCurrentName);
+
+      return std::make_unique<RBrowsableSysFileElement>(fCurrentStat, fPath, fCurrentName);
    }
 
 };
 
 
-RBrowsableFileElement::RBrowsableFileElement(const std::string &filename) : fFileName(filename)
+RBrowsableSysFileElement::RBrowsableSysFileElement(const std::string &filename) : fFileName(filename)
 {
    if (gSystem->GetPathInfo(fFileName.c_str(), fStat)) {
       if (fStat.fIsLink) {
@@ -152,7 +162,7 @@ RBrowsableFileElement::RBrowsableFileElement(const std::string &filename) : fFil
    }
 }
 
-std::string RBrowsableFileElement::GetFullName() const
+std::string RBrowsableSysFileElement::GetFullName() const
 {
    std::string path = fDirName;
    if (!path.empty() && (path.rfind("/") != path.length() - 1))
@@ -163,31 +173,31 @@ std::string RBrowsableFileElement::GetFullName() const
 
 
 /** Returns true if item can have childs and one should try to create iterator (optional) */
-int RBrowsableFileElement::CanHaveChilds() const
+int RBrowsableSysFileElement::CanHaveChilds() const
 {
    if (R_ISDIR(fStat.fMode))
       return 1;
 
-   if (fFileName.rfind(".root") == fFileName.length() - 5)
+   if ((fFileName.length() > 5) && (fFileName.rfind(".root") == fFileName.length() - 5))
       return 1;
 
    return 0;
 }
 
-std::unique_ptr<RBrowsableLevelIter> RBrowsableFileElement::GetChildsIter()
+std::unique_ptr<RBrowsableLevelIter> RBrowsableSysFileElement::GetChildsIter()
 {
    if (!R_ISDIR(fStat.fMode))
       return nullptr;
 
    // TODO: support .root file and all other file types later
 
-   return std::make_unique<RDirectoryLevelIter>(GetFullName());
+   return std::make_unique<RSysDirLevelIter>(GetFullName());
 }
 
 /////////////////////////////////////////////////////////////////////////////////
 /// Get icon for the type of given file name
 
-std::string RBrowsableFileElement::GetFileIcon() const
+std::string RBrowsableSysFileElement::GetFileIcon() const
 {
    auto EndsWith = [this](const std::string &suffix) {
       return (fFileName.length() > suffix.length()) ? (0 == fFileName.compare (fFileName.length() - suffix.length(), suffix.length(), suffix)) : false;
@@ -222,7 +232,7 @@ std::string RBrowsableFileElement::GetFileIcon() const
 }
 
 
-std::unique_ptr<RBrowserItem> RBrowsableFileElement::CreateBrowserItem()
+std::unique_ptr<RBrowserItem> RBrowsableSysFileElement::CreateBrowserItem()
 {
    auto item = std::make_unique<RBrowserFileItem>(GetName(), CanHaveChilds());
 
@@ -309,3 +319,217 @@ std::unique_ptr<RBrowserItem> RBrowsableFileElement::CreateBrowserItem()
 
    return item;
 }
+
+bool RBrowsableSysFileElement::HasTextContent() const
+{
+   return GetFileIcon() == "sap-icon://document-text"s;
+}
+
+
+std::string RBrowsableSysFileElement::GetTextContent()
+{
+   std::ifstream t(GetFullName());
+   return std::string(std::istreambuf_iterator<char>(t), std::istreambuf_iterator<char>());
+}
+
+
+// ===============================================================================================================
+
+
+class RTDirectoryLevelIter : public RBrowsableLevelIter {
+   TDirectory *fDir{nullptr};         ///<! current directory handle
+   std::unique_ptr<TIterator>  fIter; ///<! created iterator
+   TKey *fKey{nullptr};               ///<! currently selected key
+   std::string fCurrentName;          ///<! current key name
+
+   bool CreateIter()
+   {
+      if (!fDir) return false;
+      fIter.reset(fDir->GetListOfKeys()->MakeIterator());
+      fKey = nullptr;
+      return true;
+   }
+
+   void CloseIter()
+   {
+      fIter.reset(nullptr);
+      fKey = nullptr;
+   }
+
+   bool NextDirEntry()
+   {
+      fCurrentName.clear();
+      if (!fIter) return false;
+
+      fKey = dynamic_cast<TKey *>(fIter->Next());
+
+      if (!fKey) {
+         fIter.reset();
+         return false;
+      }
+
+      fCurrentName = fKey->GetName();
+      fCurrentName.append(";");
+      fCurrentName.append(std::to_string(fKey->GetCycle()));
+
+      return true;
+   }
+
+public:
+   explicit RTDirectoryLevelIter(TDirectory *dir) : fDir(dir) { CreateIter(); }
+
+   virtual ~RTDirectoryLevelIter() = default;
+
+   bool Reset() override { return CreateIter(); }
+
+   bool Next() override { return NextDirEntry(); }
+
+   // use default implementation for now
+   // bool Find(const std::string &name) override { return FindDirEntry(name); }
+
+   bool HasItem() const override { return !fCurrentName.empty(); }
+
+   std::string GetName() const override { return fCurrentName; }
+
+   /** Returns full information for current element */
+   std::unique_ptr<RBrowsableElement> GetElement() override;
+
+};
+
+// ===============================================================================================================
+
+
+
+class RBrowsableTKeyElement : public RBrowsableElement {
+   TDirectory *fDir{nullptr};
+   TKey *fKey{nullptr};
+
+public:
+   RBrowsableTKeyElement(TDirectory *dir, TKey *key) : fDir(dir), fKey(key) {}
+
+   virtual ~RBrowsableTKeyElement() = default;
+
+   /** Class information, must be provided in derived classes */
+   const TClass *GetClass() const override { return gROOT->GetClass(fKey->GetClassName()); }
+
+   /** Name of RBrowsable, must be provided in derived classes */
+   std::string GetName() const override
+   {
+      std::string name = fKey->GetName();
+      name.append(";");
+      name.append(std::to_string(fKey->GetCycle()));
+      return name;
+   }
+
+   /** Title of RBrowsable (optional) */
+   std::string GetTitle() const override { return fKey->GetTitle(); }
+
+   /** Returns estimated number of childs (-1 not implemented, have to try create iterator */
+   int CanHaveChilds() const override
+   {
+      std::string clname = fKey->GetClassName();
+      return (clname.find("TDirectory") == 0) ? 1 : 0;
+   }
+
+   /** Create iterator for childs elements if any */
+   std::unique_ptr<RBrowsableLevelIter> GetChildsIter() override
+   {
+      auto cl = GetClass();
+      if (!cl->InheritsFrom(TDirectory::Class()))
+         return nullptr;
+
+      auto subdir = fDir->GetDirectory(GetName().c_str());
+      if (subdir)
+         return std::make_unique<RTDirectoryLevelIter>(subdir);
+
+      return nullptr;
+   }
+};
+
+// ==============================================================================================
+
+
+std::unique_ptr<RBrowsableElement> RTDirectoryLevelIter::GetElement()
+{
+   return std::make_unique<RBrowsableTKeyElement>(fDir, fKey);
+}
+
+
+// ==============================================================================================
+
+
+
+
+RBrowsableTDirectoryElement::RBrowsableTDirectoryElement(const std::string &fname, TDirectory *dir)
+{
+   printf("Creating RBrowsableTDirectoryElement %s\n", fname.c_str());
+
+   fFileName = fname;
+   fDir = dir;
+}
+
+RBrowsableTDirectoryElement::~RBrowsableTDirectoryElement()
+{
+}
+
+///////////////////////////////////////////////////////////////////
+/// Get TDirectory. Checks if parent file is still there. If not, means it was closed outside ROOT
+
+TDirectory *RBrowsableTDirectoryElement::GetDir() const
+{
+   if (fDir) {
+      if (!gROOT->GetListOfFiles()->FindObject(fDir->GetFile()))
+         const_cast<RBrowsableTDirectoryElement *>(this)->fDir = nullptr;
+   } else if (!fFileName.empty()) {
+      const_cast<RBrowsableTDirectoryElement *>(this)->fDir = TFile::Open(fFileName.c_str());
+   }
+
+   return fDir;
+}
+
+
+/** Class information for system file not provided */
+const TClass *RBrowsableTDirectoryElement::GetClass() const
+{
+   auto dir = GetDir();
+
+   return dir ? dir->IsA() : nullptr;
+}
+
+/** Name of RBrowsable, must be provided in derived classes */
+std::string RBrowsableTDirectoryElement::GetName() const
+{
+   if (fDir)
+      return fDir->GetName();
+
+   if (!fFileName.empty()) {
+      auto pos = fFileName.rfind("/");
+      return ((pos == std::string::npos) || (pos > fFileName.length()-2)) ? fFileName : fFileName.substr(pos+1);
+   }
+
+   return ""s;
+}
+
+/** Title of RBrowsable (optional) */
+std::string RBrowsableTDirectoryElement::GetTitle() const
+{
+   auto dir = GetDir();
+
+   return dir ? dir->GetTitle() : "";
+}
+
+int RBrowsableTDirectoryElement::CanHaveChilds() const
+{
+   return (fFileName.length() > 0) || fDir ? 1 : 0;
+}
+
+std::unique_ptr<RBrowsableLevelIter> RBrowsableTDirectoryElement::GetChildsIter()
+{
+   auto dir = GetDir();
+
+   printf("Creating iterator %p\n", dir);
+
+   return dir ? std::make_unique<RTDirectoryLevelIter>(dir) : nullptr;
+}
+
+

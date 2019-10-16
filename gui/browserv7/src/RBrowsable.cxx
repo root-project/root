@@ -80,9 +80,11 @@ bool RBrowsableLevelIter::Find(const std::string &name)
 /////////////////////////////////////////////////////////////////////
 /// Navigate to specified path
 
-bool RBrowsable::Navigate(const std::vector<std::string> &path)
+bool RBrowsable::Navigate(const std::vector<std::string> &paths)
 {
    if (!fItem) return false;
+
+   // TODO: reuse existing items if any
 
    fLevels.clear();
 
@@ -90,14 +92,14 @@ bool RBrowsable::Navigate(const std::vector<std::string> &path)
 
    bool find = true;
 
-   for (auto &dir : path) {
+   for (auto &subdir : paths) {
 
-      fLevels.emplace_back(dir);
+      fLevels.emplace_back(subdir);
 
       auto &level = fLevels.back();
 
       level.iter = curr->GetChildsIter();
-      if (!level.iter || !level.iter->Find(dir)) {
+      if (!level.iter || !level.iter->Find(subdir)) {
          find = false;
          break;
       }
@@ -116,6 +118,7 @@ bool RBrowsable::Navigate(const std::vector<std::string> &path)
    return find;
 }
 
+
 bool RBrowsable::DecomposePath(const std::string &path, std::vector<std::string> &arr)
 {
    arr.clear();
@@ -125,17 +128,18 @@ bool RBrowsable::DecomposePath(const std::string &path, std::vector<std::string>
    if (path.empty() || (path == slash))
       return true;
 
-
    std::size_t previous = 0;
    if (path[0] == slash[0]) previous++;
    std::size_t current = path.find(slash, previous);
    while (current != std::string::npos) {
-      arr.emplace_back(path.substr(previous, current - previous));
+      if (current > previous)
+         arr.emplace_back(path.substr(previous, current - previous));
       previous = current + 1;
       current = path.find(slash, previous);
    }
 
-   arr.emplace_back(path.substr(previous, current - previous));
+   if (previous < path.length())
+      arr.emplace_back(path.substr(previous));
    return true;
 }
 
@@ -149,19 +153,20 @@ bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReplyNew
 
    std::vector<std::string> arr;
 
-   printf("Request path %s\n", request.path.c_str());
+   printf("REQ: Do decompose path '%s'\n",request.path.c_str());
 
    if (!DecomposePath(request.path, arr))
       return false;
 
-   printf("Navigate\n");
+   printf("REQ:Try to navigate %d\n", (int) arr.size());
+   for (auto & subdir : arr) printf("   %s\n", subdir.c_str());
 
    if (!Navigate(arr))
       return false;
 
    auto iter = fLevels.empty() ? fItem->GetChildsIter() : fLevels.back().item->GetChildsIter();
 
-   printf("Create iterator %p\n", iter.get());
+   printf("REQ:Create iterator %p\n", iter.get());
 
    if (!iter) return false;
 
@@ -182,7 +187,7 @@ bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReplyNew
          if (!item)
             item = std::make_unique<RBrowserItem>(iter->GetName(), -1);
 
-         printf("Create browser item %s\n", item->GetName().c_str());
+         printf("REQ:    item %s\n", item->GetName().c_str());
 
          reply.nodes.emplace_back(std::move(item));
       }
@@ -190,12 +195,35 @@ bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReplyNew
       id++;
    }
 
-   printf("Done processing cnt %d\n", id);
+   printf("REQ:  Done processing cnt %d\n", id);
 
    reply.first = request.first;
    reply.nchilds = id; // total number of childs
 
    return true;
+}
+
+
+std::unique_ptr<RBrowsableElement> RBrowsable::GetElement(const std::string &path)
+{
+   std::vector<std::string> arr;
+
+   if (!DecomposePath(path, arr))
+      return nullptr;
+
+   if (arr.size() == 0) {
+      R__ERROR_HERE("Browserv7") << "Cannot access top-level element via GetElement method";
+      return nullptr;
+   }
+
+   if (!Navigate(arr))
+      return nullptr;
+
+   auto res = std::move(fLevels.back().item);
+
+   fLevels.pop_back();
+
+   return res;
 }
 
 
