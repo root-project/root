@@ -39,9 +39,6 @@ class RBrowsableElement {
 public:
    virtual ~RBrowsableElement() = default;
 
-   /** Class information, must be provided in derived classes */
-   virtual const TClass *GetClass() const = 0;
-
    /** Name of RBrowsable, must be provided in derived classes */
    virtual std::string GetName() const = 0;
 
@@ -54,8 +51,6 @@ public:
    virtual bool HasTextContent() const { return false; }
 
    virtual std::string GetTextContent() { return ""; }
-
-   virtual bool HasObjectToDraw() const { return false; }
 
    /** Temporary solution, later better interface should be provided */
    virtual TObject *GetObjectToDraw() { return nullptr; }

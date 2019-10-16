@@ -32,13 +32,11 @@ public:
    int64_t size{0};         ///<! file size
 
    // this is part for browser, visible for I/O
-   std::string icon;     ///< icon name
    std::string fsize;    ///< file size
    std::string mtime;    ///< modification time
    std::string ftype;    ///< file attributes
    std::string fuid;     ///< user id
    std::string fgid;     ///< group id
-   std::string className; ///< class name
 
    RBrowserFileItem() = default;
 
@@ -56,9 +54,8 @@ public:
 class RBrowserTKeyItem : public RBrowserItem {
 public:
 
-   std::string fsize;    ///< file size
+   std::string icon;     ///< icon name
 
-   // internal data, used for generate directory list
    std::string className; ///< class name
 
    RBrowserTKeyItem() = default;
@@ -80,8 +77,6 @@ class RBrowsableSysFileElement : public RBrowsableElement {
 
    std::string GetFullName() const;
 
-   std::string GetFileIcon() const;
-
 public:
    RBrowsableSysFileElement(const std::string &filename);
 
@@ -90,9 +85,6 @@ public:
    }
 
    virtual ~RBrowsableSysFileElement() = default;
-
-   /** Class information for system file not provided */
-   const TClass *GetClass() const override { return nullptr; }
 
    /** Name of RBrowsable, must be provided in derived classes */
    std::string GetName() const override { return fFileName; }
@@ -110,7 +102,6 @@ public:
 
 // ====================================================================================================
 
-
 class RBrowsableTDirectoryElement : public RBrowsableElement {
    std::string fFileName;       ///<!   file name
    TDirectory *fDir{nullptr};   ///<!   subdirectory (ifany)
@@ -123,9 +114,6 @@ public:
 
    virtual ~RBrowsableTDirectoryElement();
 
-   /** Class information for system file not provided */
-   const TClass *GetClass() const override;
-
    /** Name of RBrowsable, must be provided in derived classes */
    std::string GetName() const override;
 
@@ -133,7 +121,6 @@ public:
    std::string GetTitle() const override;
 
    std::unique_ptr<RBrowsableLevelIter> GetChildsIter() override;
-
 };
 
 

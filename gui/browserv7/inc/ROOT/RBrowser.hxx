@@ -43,8 +43,6 @@ protected:
    unsigned fConnId{0}; ///<! default connection id
 
    std::string fDescPath;                ///<! last scanned directory
-   std::vector<RBrowserFileItem> fDesc;     ///<! plain list of current directory
-   std::vector<RBrowserFileItem *> fSorted; ///<! current sorted list (no ownership)
 
    bool fUseRCanvas{false};             ///<!  which canvas should be used
    std::vector<std::unique_ptr<TCanvas>> fCanvases;  ///<! canvases created by browser, should be closed at the end
@@ -57,7 +55,6 @@ protected:
 
    TCanvas *AddCanvas();
    TCanvas *GetActiveCanvas() const;
-   TFile *OpenFile(const std::string &fname);
    std::string GetCanvasUrl(TCanvas *canv);
    void CloseCanvas(const std::string &name);
 
@@ -65,19 +62,11 @@ protected:
    std::shared_ptr<RCanvas> GetActiveRCanvas() const;
    std::string GetRCanvasUrl(std::shared_ptr<RCanvas> &canv);
 
-   void AddFolder(const char *name);
-   void AddFile(const char *name);
-   void Browse(const std::string &path);
-   void Build(const std::string &path);
-   std::string GetClassIcon(std::string &classname);
-   std::string GetFileIcon(TString &name);
    std::string ProcessBrowserRequest(const std::string &msg);
    std::string ProcessDblClick(const std::string &path, const std::string &drawingOptions);
    long ProcessRunCommand(const std::string &file_path);
    bool ProcessSaveFile(const std::string &file_path);
    std::string GetCurrentWorkingDirectory();
-
-   bool IsBuild() const { return fDesc.size() > 0; }
 
    void SendInitMsg(unsigned connid);
    void WebWindowCallback(unsigned connid, const std::string &arg);
