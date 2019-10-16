@@ -138,6 +138,108 @@ public:
 
    std::string GetName() const override { return fCurrentName; }
 
+   /** Returns true if item can have childs and one should try to create iterator (optional) */
+   int CanHaveChilds() const override
+   {
+      if (R_ISDIR(fCurrentStat.fMode))
+         return 1;
+
+      if ((fCurrentName.length() > 5) && (fCurrentName.rfind(".root") == fCurrentName.length() - 5))
+         return 1;
+
+      return -1;
+   }
+
+   static std::string GetFileIcon(const std::string &fname);
+
+   std::unique_ptr<RBrowserItem> CreateBrowserItem() override
+   {
+      auto item = std::make_unique<RBrowserFileItem>(GetName(), CanHaveChilds());
+
+      // this is construction of current item
+      char tmp[256];
+      Long64_t _fsize, bsize;
+
+      item->type     = fCurrentStat.fMode;
+      item->size     = fCurrentStat.fSize;
+      item->uid      = fCurrentStat.fUid;
+      item->gid      = fCurrentStat.fGid;
+      item->modtime  = fCurrentStat.fMtime;
+      item->islink   = fCurrentStat.fIsLink;
+      item->isdir    = R_ISDIR(fCurrentStat.fMode);
+
+      if (item->isdir)
+         item->icon = "sap-icon://folder-blank"s;
+      else
+         item->icon = GetFileIcon(GetName());
+
+      // file size
+      _fsize = bsize = item->size;
+      if (_fsize > 1024) {
+         _fsize /= 1024;
+         if (_fsize > 1024) {
+            // 3.7MB is more informative than just 3MB
+            snprintf(tmp, sizeof(tmp), "%lld.%lldM", _fsize/1024, (_fsize%1024)/103);
+         } else {
+            snprintf(tmp, sizeof(tmp), "%lld.%lldK", bsize/1024, (bsize%1024)/103);
+         }
+      } else {
+         snprintf(tmp, sizeof(tmp), "%lld", bsize);
+      }
+      item->fsize = tmp;
+
+      // modification time
+      time_t loctime = (time_t) item->modtime;
+      struct tm *newtime = localtime(&loctime);
+      if (newtime) {
+         snprintf(tmp, sizeof(tmp), "%d-%02d-%02d %02d:%02d", newtime->tm_year + 1900,
+                  newtime->tm_mon+1, newtime->tm_mday, newtime->tm_hour,
+                  newtime->tm_min);
+         item->mtime = tmp;
+      } else {
+         item->mtime = "1901-01-01 00:00";
+      }
+
+      // file type
+      snprintf(tmp, sizeof(tmp), "%c%c%c%c%c%c%c%c%c%c",
+               (item->islink ?
+                'l' :
+                R_ISREG(item->type) ?
+                '-' :
+                (R_ISDIR(item->type) ?
+                 'd' :
+                 (R_ISCHR(item->type) ?
+                  'c' :
+                  (R_ISBLK(item->type) ?
+                   'b' :
+                   (R_ISFIFO(item->type) ?
+                    'p' :
+                    (R_ISSOCK(item->type) ?
+                     's' : '?' )))))),
+               ((item->type & kS_IRUSR) ? 'r' : '-'),
+               ((item->type & kS_IWUSR) ? 'w' : '-'),
+               ((item->type & kS_ISUID) ? 's' : ((item->type & kS_IXUSR) ? 'x' : '-')),
+               ((item->type & kS_IRGRP) ? 'r' : '-'),
+               ((item->type & kS_IWGRP) ? 'w' : '-'),
+               ((item->type & kS_ISGID) ? 's' : ((item->type & kS_IXGRP) ? 'x' : '-')),
+               ((item->type & kS_IROTH) ? 'r' : '-'),
+               ((item->type & kS_IWOTH) ? 'w' : '-'),
+               ((item->type & kS_ISVTX) ? 't' : ((item->type & kS_IXOTH) ? 'x' : '-')));
+      item->ftype = tmp;
+
+      struct UserGroup_t *user_group = gSystem->GetUserInfo(item->uid);
+      if (user_group) {
+         item->fuid = user_group->fUser;
+         item->fgid = user_group->fGroup;
+         delete user_group;
+      } else {
+         item->fuid = std::to_string(item->uid);
+         item->fgid = std::to_string(item->gid);
+      }
+
+      return item;
+   }
+
    /** Returns full information for current element */
    std::unique_ptr<RBrowsableElement> GetElement() override
    {
@@ -148,6 +250,47 @@ public:
    }
 
 };
+
+
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Get icon for the type of given file name
+
+std::string RSysDirLevelIter::GetFileIcon(const std::string &fname)
+{
+   auto EndsWith = [this](const std::string &suffix) {
+      return (fname.length() > suffix.length()) ? (0 == fname.compare (fname.length() - suffix.length(), suffix.length(), suffix)) : false;
+   };
+
+   if ((EndsWith(".c")) ||
+       (EndsWith(".cpp")) ||
+       (EndsWith(".cxx")) ||
+       (EndsWith(".c++")) ||
+       (EndsWith(".cxx")) ||
+       (EndsWith(".h")) ||
+       (EndsWith(".hpp")) ||
+       (EndsWith(".hxx")) ||
+       (EndsWith(".h++")) ||
+       (EndsWith(".py")) ||
+       (EndsWith(".txt")) ||
+       (EndsWith(".cmake")) ||
+       (EndsWith(".dat")) ||
+       (EndsWith(".log")) ||
+       (EndsWith(".js")))
+      return "sap-icon://document-text"s;
+   if ((EndsWith(".bmp")) ||
+       (EndsWith(".gif")) ||
+       (EndsWith(".jpg")) ||
+       (EndsWith(".png")) ||
+       (EndsWith(".svg")))
+      return "sap-icon://picture"s;
+  if (EndsWith(".root"))
+      return "sap-icon://org-chart"s;
+
+   return "sap-icon://document"s;
+}
+
+
 
 
 RBrowsableSysFileElement::RBrowsableSysFileElement(const std::string &filename) : fFileName(filename)
@@ -194,137 +337,10 @@ std::unique_ptr<RBrowsableLevelIter> RBrowsableSysFileElement::GetChildsIter()
    return std::make_unique<RSysDirLevelIter>(GetFullName());
 }
 
-/////////////////////////////////////////////////////////////////////////////////
-/// Get icon for the type of given file name
-
-std::string RBrowsableSysFileElement::GetFileIcon() const
-{
-   auto EndsWith = [this](const std::string &suffix) {
-      return (fFileName.length() > suffix.length()) ? (0 == fFileName.compare (fFileName.length() - suffix.length(), suffix.length(), suffix)) : false;
-   };
-
-   if ((EndsWith(".c")) ||
-       (EndsWith(".cpp")) ||
-       (EndsWith(".cxx")) ||
-       (EndsWith(".c++")) ||
-       (EndsWith(".cxx")) ||
-       (EndsWith(".h")) ||
-       (EndsWith(".hpp")) ||
-       (EndsWith(".hxx")) ||
-       (EndsWith(".h++")) ||
-       (EndsWith(".py")) ||
-       (EndsWith(".txt")) ||
-       (EndsWith(".cmake")) ||
-       (EndsWith(".dat")) ||
-       (EndsWith(".log")) ||
-       (EndsWith(".js")))
-      return "sap-icon://document-text"s;
-   if ((EndsWith(".bmp")) ||
-       (EndsWith(".gif")) ||
-       (EndsWith(".jpg")) ||
-       (EndsWith(".png")) ||
-       (EndsWith(".svg")))
-      return "sap-icon://picture"s;
-  if (EndsWith(".root"))
-      return "sap-icon://org-chart"s;
-
-   return "sap-icon://document"s;
-}
-
-
-std::unique_ptr<RBrowserItem> RBrowsableSysFileElement::CreateBrowserItem()
-{
-   auto item = std::make_unique<RBrowserFileItem>(GetName(), CanHaveChilds());
-
-   // this is construction of current item
-   char tmp[256];
-   Long64_t _fsize, bsize;
-
-   item->type     = fStat.fMode;
-   item->size     = fStat.fSize;
-   item->uid      = fStat.fUid;
-   item->gid      = fStat.fGid;
-   item->modtime  = fStat.fMtime;
-   item->islink   = fStat.fIsLink;
-   item->isdir    = R_ISDIR(fStat.fMode);
-
-   if (item->isdir)
-      item->icon = "sap-icon://folder-blank"s;
-   else
-      item->icon = GetFileIcon();
-
-   // file size
-   _fsize = bsize = item->size;
-   if (_fsize > 1024) {
-      _fsize /= 1024;
-      if (_fsize > 1024) {
-         // 3.7MB is more informative than just 3MB
-         snprintf(tmp, sizeof(tmp), "%lld.%lldM", _fsize/1024, (_fsize%1024)/103);
-      } else {
-         snprintf(tmp, sizeof(tmp), "%lld.%lldK", bsize/1024, (bsize%1024)/103);
-      }
-   } else {
-      snprintf(tmp, sizeof(tmp), "%lld", bsize);
-   }
-   item->fsize = tmp;
-
-   // modification time
-   time_t loctime = (time_t) item->modtime;
-   struct tm *newtime = localtime(&loctime);
-   if (newtime) {
-      snprintf(tmp, sizeof(tmp), "%d-%02d-%02d %02d:%02d", newtime->tm_year + 1900,
-               newtime->tm_mon+1, newtime->tm_mday, newtime->tm_hour,
-               newtime->tm_min);
-      item->mtime = tmp;
-   } else {
-      item->mtime = "1901-01-01 00:00";
-   }
-
-   // file type
-   snprintf(tmp, sizeof(tmp), "%c%c%c%c%c%c%c%c%c%c",
-            (item->islink ?
-             'l' :
-             R_ISREG(item->type) ?
-             '-' :
-             (R_ISDIR(item->type) ?
-              'd' :
-              (R_ISCHR(item->type) ?
-               'c' :
-               (R_ISBLK(item->type) ?
-                'b' :
-                (R_ISFIFO(item->type) ?
-                 'p' :
-                 (R_ISSOCK(item->type) ?
-                  's' : '?' )))))),
-            ((item->type & kS_IRUSR) ? 'r' : '-'),
-            ((item->type & kS_IWUSR) ? 'w' : '-'),
-            ((item->type & kS_ISUID) ? 's' : ((item->type & kS_IXUSR) ? 'x' : '-')),
-            ((item->type & kS_IRGRP) ? 'r' : '-'),
-            ((item->type & kS_IWGRP) ? 'w' : '-'),
-            ((item->type & kS_ISGID) ? 's' : ((item->type & kS_IXGRP) ? 'x' : '-')),
-            ((item->type & kS_IROTH) ? 'r' : '-'),
-            ((item->type & kS_IWOTH) ? 'w' : '-'),
-            ((item->type & kS_ISVTX) ? 't' : ((item->type & kS_IXOTH) ? 'x' : '-')));
-   item->ftype = tmp;
-
-   struct UserGroup_t *user_group = gSystem->GetUserInfo(item->uid);
-   if (user_group) {
-      item->fuid = user_group->fUser;
-      item->fgid = user_group->fGroup;
-      delete user_group;
-   } else {
-      item->fuid = std::to_string(item->uid);
-      item->fgid = std::to_string(item->gid);
-   }
-
-   return item;
-}
-
 bool RBrowsableSysFileElement::HasTextContent() const
 {
-   return GetFileIcon() == "sap-icon://document-text"s;
+   return GetFileIcon(GetName()) == "sap-icon://document-text"s;
 }
-
 
 std::string RBrowsableSysFileElement::GetTextContent()
 {
@@ -387,9 +403,25 @@ public:
    // use default implementation for now
    // bool Find(const std::string &name) override { return FindDirEntry(name); }
 
-   bool HasItem() const override { return !fCurrentName.empty(); }
+   bool HasItem() const override { return fKey && !fCurrentName.empty(); }
 
    std::string GetName() const override { return fCurrentName; }
+
+   int CanHaveChilds() const override
+   {
+      std::string clname = fKey->GetClassName();
+      return (clname.find("TDirectory") == 0) ? 1 : 0;
+   }
+
+   /** Create element for the browser */
+   std::unique_ptr<RBrowserItem> CreateBrowserItem() override
+   {
+      auto item = std::make_unique<RBrowserTKeyItem>(GetName(), CanHaveChilds());
+
+      item->className = fKey->GetClassName();
+
+      return item;
+   }
 
    /** Returns full information for current element */
    std::unique_ptr<RBrowsableElement> GetElement() override;
@@ -461,16 +493,6 @@ public:
    TObject *GetObjectToDraw() override
    {
       return fKey->ReadObj();
-   }
-
-
-   std::unique_ptr<RBrowserItem> CreateBrowserItem() override
-   {
-      auto item = std::make_unique<RBrowserTKeyItem>(GetName(), CanHaveChilds());
-
-      item->className = fKey->GetClassName();
-
-      return item;
    }
 
 };

@@ -54,11 +54,6 @@ public:
    /** Create iterator for childs elements if any */
    virtual std::unique_ptr<RBrowsableLevelIter> GetChildsIter() { return nullptr; }
 
-   virtual std::unique_ptr<RBrowserItem> CreateBrowserItem()
-   {
-      return std::make_unique<RBrowserItem>(GetName(), CanHaveChilds());
-   }
-
    virtual bool HasTextContent() const { return false; }
 
    virtual std::string GetTextContent() { return ""; }
@@ -95,6 +90,13 @@ public:
    virtual std::string GetName() const { return ""; }
 
    virtual bool Find(const std::string &name);
+
+   virtual int CanHaveChilds() const { return -1; }
+
+   virtual std::unique_ptr<RBrowserItem> CreateBrowserItem()
+   {
+      return std::make_unique<RBrowserItem>(GetName(), CanHaveChilds());
+   }
 
    /** Returns full information for current element */
    virtual std::unique_ptr<RBrowsableElement> GetElement() { return nullptr; }

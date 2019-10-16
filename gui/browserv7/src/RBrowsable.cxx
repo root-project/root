@@ -175,15 +175,10 @@ bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReplyNew
    while (iter->Next()) {
 
       if ((id >= request.first) && ((request.number == 0) || ((int) reply.nodes.size() < request.number))) {
-         // access element
-         auto elem = iter->GetElement();
+         // access item
+         auto item = iter->CreateBrowserItem();
 
-         std::unique_ptr<RBrowserItem> item;
-
-         if (elem)
-            // produce item object, can include extra information
-            item = elem->CreateBrowserItem();
-
+         // actually error
          if (!item)
             item = std::make_unique<RBrowserItem>(iter->GetName(), -1);
 
