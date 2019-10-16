@@ -51,6 +51,25 @@ sap.ui.define([
               this.oBinding.checkUpdate(true);
         },
 
+       mySetFullModel: function(topnodes) {
+          this.fullModel = true;
+          this.h.nchilds = topnodes.length;
+          this.h.childs = topnodes;
+          delete this.h._requested; // reply on top element can be full description
+
+          if (!this.mainModel) {
+             this.mainModel = this.h.childs;
+             this.mainFullModel = true;
+          }
+
+          // topnode.expanded = true;
+          this.reset_nodes = true;
+          delete this.noData;
+          this.scanShifts();
+          if (this.oBinding)
+             this.oBinding.checkUpdate(true);
+       },
+
         clearFullModel: function() {
            if (!this.fullModel) return;
 
@@ -153,7 +172,7 @@ sap.ui.define([
            this.submitRequest(this.h, "/");
         },
 
-        reloadMainModel: function(force) {
+        reloadMainModel: function(force, path = "/") {
            if (this.mainModel && !force) {
               this.h.nchilds = this.mainModel.length;
               this.h.childs = this.mainModel;
@@ -167,7 +186,7 @@ sap.ui.define([
                  this.oBinding.checkUpdate(true);
            } else if (!this.fullModel) {
               // send request, content will be reassigned
-              this.submitRequest(this.h, "/");
+              this.submitRequest(this.h, path);
            }
 
         },
@@ -175,7 +194,6 @@ sap.ui.define([
         // submit next request to the server
         // directly use web socket, later can be dedicated channel
         submitRequest: function(elem, path, first, number) {
-
            if (first === "expanding") {
               first = 0;
            } else {
@@ -195,7 +213,6 @@ sap.ui.define([
               number: number || this.threshold || 100,
               sort: this.sortOrder || ""
            };
-
            this._websocket.Send("BRREQ:" + JSON.stringify(request));
         },
 
@@ -207,7 +224,6 @@ sap.ui.define([
 
            var elem = this.getNodeByPath(reply.path);
 
-           // console.log('PROCESS RESPONSE', reply.path, reply);
 
            if (!elem) { console.error('DID NOT FOUND ' + reply.path); return; }
 
