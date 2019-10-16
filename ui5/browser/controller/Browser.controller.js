@@ -475,7 +475,7 @@ sap.ui.define(['sap/ui/core/Component',
           this.websocket.Send('CHDIR:' + path);
 
           this.chdir = true;
-          this.websocket.Send("BRREQ:" + JSON.stringify({ path: "/"+rowText+"/", first: 0, number: 0, sort: "" }));
+          this.websocket.Send("BRREQ:" + JSON.stringify({ path: path, first: 0, number: 0, sort: "" }));
           return;
         }
 
