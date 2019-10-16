@@ -48,9 +48,6 @@ public:
    /** Title of RBrowsable (optional) */
    virtual std::string GetTitle() const { return ""; }
 
-   /** Returns estimated number of childs (-1 not implemented, have to try create iterator */
-   virtual int CanHaveChilds() const { return -1; }
-
    /** Create iterator for childs elements if any */
    virtual std::unique_ptr<RBrowsableLevelIter> GetChildsIter() { return nullptr; }
 
@@ -91,7 +88,8 @@ public:
 
    virtual bool Find(const std::string &name);
 
-   virtual int CanHaveChilds() const { return -1; }
+   /** If element may have childs: 0 - no, >0 - yes, -1 - maybe */
+   virtual int CanHaveChilds() const { return 0; }
 
    virtual std::unique_ptr<RBrowserItem> CreateBrowserItem()
    {

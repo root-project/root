@@ -147,7 +147,7 @@ public:
       if ((fCurrentName.length() > 5) && (fCurrentName.rfind(".root") == fCurrentName.length() - 5))
          return 1;
 
-      return -1;
+      return 0;
    }
 
    static std::string GetFileIcon(const std::string &fname);
@@ -258,7 +258,7 @@ public:
 
 std::string RSysDirLevelIter::GetFileIcon(const std::string &fname)
 {
-   auto EndsWith = [this](const std::string &suffix) {
+   auto EndsWith = [fname](const std::string &suffix) {
       return (fname.length() > suffix.length()) ? (0 == fname.compare (fname.length() - suffix.length(), suffix.length(), suffix)) : false;
    };
 
@@ -315,18 +315,6 @@ std::string RBrowsableSysFileElement::GetFullName() const
 }
 
 
-/** Returns true if item can have childs and one should try to create iterator (optional) */
-int RBrowsableSysFileElement::CanHaveChilds() const
-{
-   if (R_ISDIR(fStat.fMode))
-      return 1;
-
-   if ((fFileName.length() > 5) && (fFileName.rfind(".root") == fFileName.length() - 5))
-      return 1;
-
-   return 0;
-}
-
 std::unique_ptr<RBrowsableLevelIter> RBrowsableSysFileElement::GetChildsIter()
 {
    if (!R_ISDIR(fStat.fMode))
@@ -339,7 +327,7 @@ std::unique_ptr<RBrowsableLevelIter> RBrowsableSysFileElement::GetChildsIter()
 
 bool RBrowsableSysFileElement::HasTextContent() const
 {
-   return GetFileIcon(GetName()) == "sap-icon://document-text"s;
+   return RSysDirLevelIter::GetFileIcon(GetName()) == "sap-icon://document-text"s;
 }
 
 std::string RBrowsableSysFileElement::GetTextContent()
@@ -456,13 +444,6 @@ public:
    /** Title of RBrowsable (optional) */
    std::string GetTitle() const override { return fKey->GetTitle(); }
 
-   /** Returns estimated number of childs (-1 not implemented, have to try create iterator */
-   int CanHaveChilds() const override
-   {
-      std::string clname = fKey->GetClassName();
-      return (clname.find("TDirectory") == 0) ? 1 : 0;
-   }
-
    /** Create iterator for childs elements if any */
    std::unique_ptr<RBrowsableLevelIter> GetChildsIter() override
    {
@@ -561,11 +542,6 @@ std::string RBrowsableTDirectoryElement::GetTitle() const
    auto dir = GetDir();
 
    return dir ? dir->GetTitle() : "";
-}
-
-int RBrowsableTDirectoryElement::CanHaveChilds() const
-{
-   return (fFileName.length() > 0) || fDir ? 1 : 0;
 }
 
 std::unique_ptr<RBrowsableLevelIter> RBrowsableTDirectoryElement::GetChildsIter()
