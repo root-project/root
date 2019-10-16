@@ -58,7 +58,7 @@ ROOT::Experimental::RBrowser::RBrowser(bool use_rcanvas)
    std::string curdir = gSystem->WorkingDirectory();
    printf("Current dir %s\n", curdir.c_str());
 
-   fBrowsable.SetTopItem(std::make_unique<RBrowsableFileElement>(curdir));
+   fBrowsable.SetTopItem(std::make_unique<RBrowsableSysFileElement>(curdir));
 
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
@@ -361,10 +361,6 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
    if (!request)
       return res;
 
-   if (request->sort == "DBLCLK") {
-
-   }
-
    RBrowserReplyNew replynew;
 
    fBrowsable.ProcessRequest(*request.get(), replynew);
@@ -414,6 +410,7 @@ bool ROOT::Experimental::RBrowser::ProcessSaveFile(const std::string &file_path)
       split.push_back(buffer);
    if (std::getline(path, buffer, '\0'))
       split.push_back(buffer);
+   // TODO: can be done with RBrowsableElement as well
    std::ofstream ostrm(split[0]);
    ostrm << split[1];
    return true;
@@ -438,13 +435,29 @@ long ROOT::Experimental::RBrowser::ProcessRunCommand(const std::string &file_pat
 /////////////////////////////////////////////////////////////////////////////////
 /// Process dbl click on browser item
 
-std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &item_path, const std::string &drawingOptions) {
-   if (item_path.find(".root") == std::string::npos) {
+std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &item_path, const std::string &drawingOptions)
+{
+/*   if (item_path.find(".root") == std::string::npos) {
       std::string res = "FREAD:";
       std::ifstream t(item_path);
       res.append(std::string(std::istreambuf_iterator<char>(t), std::istreambuf_iterator<char>()));
       return res;
    }
+*/
+
+   printf("DoubleClick %s\n", item_path.c_str());
+
+   auto elem = fBrowsable.GetElement(item_path);
+   if (!elem) return ""s;
+
+   if (elem->HasTextContent())
+      return "FREAD:"s + elem->GetTextContent();
+
+   return ""s;
+
+
+
+
 
    std::string rootFilePath = "", rootFileName = "";
 
