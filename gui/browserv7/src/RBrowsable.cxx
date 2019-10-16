@@ -120,11 +120,23 @@ bool RBrowsable::DecomposePath(const std::string &path, std::vector<std::string>
 {
    arr.clear();
 
-   if (path.empty() || (path == "/"))
+   std::string slash = "/";
+
+   if (path.empty() || (path == slash))
       return true;
 
 
-   return false;
+   std::size_t previous = 0;
+   if (path[0] == slash[0]) previous++;
+   std::size_t current = path.find(slash, previous);
+   while (current != std::string::npos) {
+      arr.emplace_back(path.substr(previous, current - previous));
+      previous = current + 1;
+      current = path.find(slash, previous);
+   }
+
+   arr.emplace_back(path.substr(previous, current - previous));
+   return true;
 }
 
 
@@ -137,13 +149,19 @@ bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReplyNew
 
    std::vector<std::string> arr;
 
+   printf("Request path %s\n", request.path.c_str());
+
    if (!DecomposePath(request.path, arr))
       return false;
+
+   printf("Navigate\n");
 
    if (!Navigate(arr))
       return false;
 
    auto iter = fLevels.empty() ? fItem->GetChildsIter() : fLevels.back().item->GetChildsIter();
+
+   printf("Create iterator %p\n", iter.get());
 
    if (!iter) return false;
 
@@ -151,7 +169,7 @@ bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReplyNew
 
    while (iter->Next()) {
 
-      if ((id >= request.first) && ((request.number == 0) || (reply.nodes.size() < request.number))) {
+      if ((id >= request.first) && ((request.number == 0) || ((int) reply.nodes.size() < request.number))) {
          // access element
          auto elem = iter->GetElement();
 
@@ -164,11 +182,15 @@ bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReplyNew
          if (!item)
             item = std::make_unique<RBrowserItem>(iter->GetName(), -1);
 
+         printf("Create browser item %s\n", item->GetName().c_str());
+
          reply.nodes.emplace_back(std::move(item));
       }
 
       id++;
    }
+
+   printf("Done processing cnt %d\n", id);
 
    reply.first = request.first;
    reply.nchilds = id; // total number of childs
