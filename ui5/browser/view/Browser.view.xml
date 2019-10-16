@@ -57,8 +57,10 @@
           <ToolbarSpacer/>
           <SearchField liveChange="onSearch"/>
         </Toolbar>
-        <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan">
-        </Breadcrumbs>
+        <Toolbar>
+          <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan">
+          </Breadcrumbs>
+        </Toolbar>
         <t:TreeTable
                 id="treeTable"
                 columnHeaderVisible="true"
