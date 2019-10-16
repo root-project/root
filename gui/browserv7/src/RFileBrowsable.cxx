@@ -87,17 +87,21 @@ class RDirectoryLevelIter : public RBrowsableLevelIter {
          return false;
 
       while (fCurrentName.empty()) {
-         std::string name = gSystem->GetDirEntry(fDir);
 
-        if (name.empty()) {
-           CloseDir();
-           return false;
-        }
+         // one have to use const char* to correctly check for nullptr
+         const char *name = gSystem->GetDirEntry(fDir);
 
-        if ((name == ".") || (name == ".."))
-           continue;
+         if (!name) {
+            CloseDir();
+            return false;
+         }
 
-        TestDirEntry(name);
+         std::string sname = name;
+
+         if ((sname == ".") || (sname == ".."))
+            continue;
+
+         TestDirEntry(sname);
       }
 
 
@@ -113,7 +117,7 @@ class RDirectoryLevelIter : public RBrowsableLevelIter {
    }
 
 public:
-   explicit RDirectoryLevelIter(const std::string &path = "") : fPath(path) {}
+   explicit RDirectoryLevelIter(const std::string &path = "") : fPath(path) { OpenDir(); }
 
    virtual ~RDirectoryLevelIter() { CloseDir(); }
 

@@ -44,6 +44,8 @@ public:
    RBrowserItem() = default;
    RBrowserItem(const std::string &_name, int _nchilds = 0) : name(_name), nchilds(_nchilds) {}
 
+   const std::string &GetName() const { return name; }
+
    void SetChecked(bool on = true) { checked = on; }
    void SetExpanded(bool on = true) { expanded = on; }
 
