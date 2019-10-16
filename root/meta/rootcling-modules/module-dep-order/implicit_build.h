@@ -1,3 +1,3 @@
 #pragma once
 
-#include "inc/A.h"
+#include "A.h"
