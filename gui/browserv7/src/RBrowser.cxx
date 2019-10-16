@@ -365,6 +365,11 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
 
    }
 
+   RBrowserReplyNew replynew;
+
+   fBrowsable.ProcessRequest(*request.get(), replynew);
+
+   /*
    // rebuild list only when selected directory changed
    if (!IsBuild() || (request->path != fDescPath)) {
       fDescPath = request->path;
@@ -389,9 +394,9 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
          reply.nodes.emplace_back(node);
       seq++;
    }
-
+*/
    res = "BREPL:";
-   res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kSkipTypeInfo + TBufferJSON::kNoSpaces).Data());
+   res.append(TBufferJSON::ToJSON(&replynew, TBufferJSON::kSkipTypeInfo + TBufferJSON::kNoSpaces).Data());
 
    return res;
 }
