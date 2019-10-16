@@ -453,11 +453,15 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
    if (elem->HasTextContent())
       return "FREAD:"s + elem->GetTextContent();
 
-   return ""s;
+   TObject *tobj = nullptr;
 
+   if (elem->HasObjectToDraw())
+      tobj = elem->GetObjectToDraw();
 
+   if (!tobj)
+      return ""s;
 
-
+   /*
 
    std::string rootFilePath = "", rootFileName = "";
 
@@ -502,12 +506,13 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
       printf("No ROOT object read\n");
       return "";
    }
+*/
 
    auto canv = GetActiveCanvas();
    if (canv) {
       canv->GetListOfPrimitives()->Clear();
 
-      canv->GetListOfPrimitives()->Add(object, drawingOptions.c_str());
+      canv->GetListOfPrimitives()->Add(tobj, drawingOptions.c_str());
 
       canv->ForceUpdate(); // force update async - do not wait for confirmation
 
@@ -522,8 +527,8 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
          rcanv->Update(true);
       }
 
-      // FIXME: how to proced with ownership here
-      TObject *clone = object->Clone();
+      // FIXME: how to proceed with TObject ownership here
+      TObject *clone = tobj->Clone();
       TH1 *h1 = dynamic_cast<TH1 *>(clone);
       if (h1) h1->SetDirectory(nullptr);
 

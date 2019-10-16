@@ -16,6 +16,7 @@
 #pragma link C++ class ROOT::Experimental::RBrowsableElement+;
 #pragma link C++ class ROOT::Experimental::RBrowsableLevelIter+;
 #pragma link C++ class ROOT::Experimental::RBrowsable+;
+#pragma link C++ class ROOT::Experimental::RBrowserTKeyItem+;
 
 #pragma link C++ class ROOT::Experimental::RBrowserRequest+;
 #pragma link C++ class ROOT::Experimental::RBrowserItem+;

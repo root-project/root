@@ -444,6 +444,35 @@ public:
 
       return nullptr;
    }
+
+
+   bool HasObjectToDraw() const override
+   {
+      std::string clname = fKey->GetClassName();
+
+      // TODO: this check has to be performed in RBrowsable
+      if ((clname.find("TTree") == 0) || (clname.find("TChain") == 0) || (clname.find("TDirectory") == 0))
+         return false;
+
+      return true;
+   }
+
+   /** Temporary solution, later better interface should be provided */
+   TObject *GetObjectToDraw() override
+   {
+      return fKey->ReadObj();
+   }
+
+
+   std::unique_ptr<RBrowserItem> CreateBrowserItem() override
+   {
+      auto item = std::make_unique<RBrowserTKeyItem>(GetName(), CanHaveChilds());
+
+      item->className = fKey->GetClassName();
+
+      return item;
+   }
+
 };
 
 // ==============================================================================================
@@ -454,16 +483,10 @@ std::unique_ptr<RBrowsableElement> RTDirectoryLevelIter::GetElement()
    return std::make_unique<RBrowsableTKeyElement>(fDir, fKey);
 }
 
-
 // ==============================================================================================
-
-
-
 
 RBrowsableTDirectoryElement::RBrowsableTDirectoryElement(const std::string &fname, TDirectory *dir)
 {
-   printf("Creating RBrowsableTDirectoryElement %s\n", fname.c_str());
-
    fFileName = fname;
    fDir = dir;
 }
@@ -526,8 +549,6 @@ int RBrowsableTDirectoryElement::CanHaveChilds() const
 std::unique_ptr<RBrowsableLevelIter> RBrowsableTDirectoryElement::GetChildsIter()
 {
    auto dir = GetDir();
-
-   printf("Creating iterator %p\n", dir);
 
    return dir ? std::make_unique<RTDirectoryLevelIter>(dir) : nullptr;
 }

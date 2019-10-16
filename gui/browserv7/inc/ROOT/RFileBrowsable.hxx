@@ -51,6 +51,28 @@ public:
 
 // ========================================================================================
 
+
+/** Representation of single item in the file browser */
+class RBrowserTKeyItem : public RBrowserItem {
+public:
+
+   std::string fsize;    ///< file size
+
+   // internal data, used for generate directory list
+   std::string className; ///< class name
+
+   RBrowserTKeyItem() = default;
+
+   RBrowserTKeyItem(const std::string &_name, int _nchilds) : RBrowserItem(_name, _nchilds) {}
+
+   // should be here, one needs virtual table for correct streaming of RRootBrowserReply
+   virtual ~RBrowserTKeyItem() = default;
+};
+
+
+
+// ========================================================================================
+
 class RBrowsableSysFileElement : public RBrowsableElement {
    FileStat_t fStat;       ///<! file stat object
    std::string fDirName;   ///<! fully-qualified directory name

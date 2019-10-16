@@ -19,6 +19,7 @@
 
 
 class TClass;
+class TObject;
 
 namespace ROOT {
 namespace Experimental {
@@ -61,6 +62,11 @@ public:
    virtual bool HasTextContent() const { return false; }
 
    virtual std::string GetTextContent() { return ""; }
+
+   virtual bool HasObjectToDraw() const { return false; }
+
+   /** Temporary solution, later better interface should be provided */
+   virtual TObject *GetObjectToDraw() { return nullptr; }
 };
 
 /** \class RBrowsableLevelIter
