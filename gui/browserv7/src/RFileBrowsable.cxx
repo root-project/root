@@ -244,14 +244,15 @@ public:
    /** Returns full information for current element */
    std::shared_ptr<RElement> GetElement() override
    {
-      if (!R_ISDIR(fCurrentStat.fMode) && (fCurrentName.length() > 5) && (fCurrentName.rfind(".root") == fCurrentName.length()-5))
-         return std::make_shared<TDirectoryElement>(fCurrentName);
+      if (!R_ISDIR(fCurrentStat.fMode) && (fCurrentName.length() > 5) && (fCurrentName.rfind(".root") == fCurrentName.length()-5)) {
+         auto elem = RProvider::OpenFile("root", fCurrentName);
+         if (elem) return elem;
+      }
 
       return std::make_shared<SysFileElement>(fCurrentStat, fPath, fCurrentName);
    }
 
 };
-
 
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -548,5 +549,30 @@ std::unique_ptr<RLevelIter> TDirectoryElement::GetChildsIter()
 
    return dir ? std::make_unique<TDirectoryLevelIter>(dir) : nullptr;
 }
+
+
+// ==============================================================================================
+
+
+class RTFileProvider : public RProvider {
+protected:
+
+   std::shared_ptr<RElement> DoOpenFile(const std::string &fullname) const override
+   {
+      auto f = TFile::Open(fullname.c_str());
+      if (!f) return nullptr;
+
+      return std::make_shared<TDirectoryElement>(fullname, f);
+   }
+
+};
+
+
+struct RTFileProviderReg {
+   std::shared_ptr<RTFileProvider> provider;
+   RTFileProviderReg() { provider = std::make_shared<RTFileProvider>(); RProvider::RegisterFile("root", provider); }
+   ~RTFileProviderReg() { RProvider::Unregister(provider); }
+} newRTFileProviderReg;
+
 
 
