@@ -12,10 +12,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
   HEADERS
     ROOT/RBrowsable.hxx
     ROOT/RBrowserItem.hxx
+    ROOT/RDrawableProvider.hxx
     ROOT/RBrowser.hxx
   SOURCES
     src/RBrowsable.cxx
     src/RFileBrowsable.cxx
+    src/RDrawableProvider.cxx
     src/RBrowser.cxx
   DEPENDENCIES
     ROOTWebDisplay

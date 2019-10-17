@@ -20,6 +20,7 @@
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RObjectDrawable.hxx>
 #include <ROOT/RFileBrowsable.hxx>
+#include <ROOT/RDrawableProvider.hxx>
 
 
 #include "TKey.h"
@@ -170,24 +171,32 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
    if (elem->HasTextContent())
       return "FREAD:"s + elem->GetTextContent();
 
-   TObject *tobj = elem->GetObjectToDraw();
-
-   if (!tobj)
-      return ""s;
-
    auto canv = GetActiveCanvas();
    if (canv) {
-      canv->GetListOfPrimitives()->Clear();
 
-      canv->GetListOfPrimitives()->Add(tobj, drawingOptions.c_str());
+      auto obj = elem->GetObject(true);
 
-      canv->ForceUpdate(); // force update async - do not wait for confirmation
-
-      return "SLCTCANV:"s + canv->GetName();
+      if (obj)
+         if (ROOT::Experimental::RDrawableProvider::DrawV6(canv, obj, drawingOptions)) {
+            canv->ForceUpdate(); // force update async - do not wait for confirmation
+            return "SLCTCANV:"s + canv->GetName();
+         }
    }
 
    auto rcanv = GetActiveRCanvas();
    if (rcanv) {
+
+      std::shared_ptr<RPadBase> subpad = rcanv;
+
+      auto obj = elem->GetObject();
+      if (obj)
+         if (ROOT::Experimental::RDrawableProvider::DrawV7(subpad, obj, drawingOptions)) {
+            rcanv->Modified();
+            rcanv->Update(true);
+            return "SLCTCANV:"s + rcanv->GetTitle();
+         }
+
+/*
       if (rcanv->NumPrimitives() > 0) {
          rcanv->Wipe();
          rcanv->Modified();
@@ -207,6 +216,7 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
       rcanv->Update(true);
 
       return "SLCTCANV:"s + rcanv->GetTitle();
+      */
    }
 
 
@@ -466,3 +476,74 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
    }
 }
+
+
+
+// ============================================================================================
+
+using namespace ROOT::Experimental;
+
+class RV6DrawProvider : public RDrawableProvider {
+protected:
+
+   bool DoDrawV6(TPad *pad, std::unique_ptr<Browsable::RObject> &obj, const std::string &opt) const override
+   {
+      if (!obj->GetClass()->InheritsFrom(TObject::Class()))
+         return false;
+
+      TObject *tobj = (TObject *)(obj->GetObject());
+      if (!tobj) return false;
+
+      pad->GetListOfPrimitives()->Clear();
+
+      pad->GetListOfPrimitives()->Add(tobj, opt.c_str());
+
+      return true;
+   }
+
+};
+
+struct RV6DrawProviderReg {
+   std::shared_ptr<RV6DrawProvider> provider;
+   RV6DrawProviderReg()
+   {
+      provider = std::make_shared<RV6DrawProvider>();
+      // RDrawableProvider::RegisterV6(TObject::Class(), provider);
+      RDrawableProvider::RegisterV6(nullptr, provider); // try to check all classes
+   }
+   ~RV6DrawProviderReg() { RDrawableProvider::Unregister(provider); }
+} newRV6DrawProviderReg;
+
+
+class RV7DrawProvider : public RDrawableProvider {
+protected:
+
+   bool DoDrawV7(std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RObject> &obj, const std::string &opt) const override
+   {
+      auto tobj = Browsable::get_shared<TObject>(obj);
+      if (!tobj) return false;
+
+      if (subpad->NumPrimitives() > 0) {
+         subpad->Wipe();
+         // subpad->Modified();
+         // subpad->Update(true);
+      }
+
+      subpad->Draw<RObjectDrawable>(tobj, opt);
+
+      return true;
+   }
+
+};
+
+struct RV7DrawProviderReg {
+   std::shared_ptr<RV7DrawProvider> provider;
+   RV7DrawProviderReg()
+   {
+      provider = std::make_shared<RV7DrawProvider>();
+      // RDrawableProvider::RegisterV7(TObject::Class(), provider);
+      RDrawableProvider::RegisterV7(nullptr, provider); // try to check all classes
+   }
+   ~RV7DrawProviderReg() { RDrawableProvider::Unregister(provider); }
+} newRV7DrawProviderReg;
+

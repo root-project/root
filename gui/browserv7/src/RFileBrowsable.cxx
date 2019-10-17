@@ -23,6 +23,7 @@
 #include "TDirectory.h"
 #include "TROOT.h"
 #include "TFile.h"
+#include "TH1.h"
 
 #include <sstream>
 #include <fstream>
@@ -470,17 +471,21 @@ public:
       return nullptr;
    }
 
-   /** Temporary solution, later better interface should be provided */
-   TObject *GetObjectToDraw() override
+   /** Return TObject depending from kind of requested result */
+   std::unique_ptr<RObject> GetObject(bool plain = false) override
    {
       std::string clname = fKey->GetClassName();
 
-      // TODO: this check has to be performed in RBrowsable
-      if ((clname.find("TTree") == 0) || (clname.find("TChain") == 0) || (clname.find("TDirectory") == 0))
-         return nullptr;
+      TObject *obj = fKey->ReadObj();
+      if (!obj) return nullptr;
 
+      if (plain)
+         return std::make_unique<RTObjectHolder>(obj);
 
-      return fKey->ReadObj();
+      if (obj->InheritsFrom(TH1::Class()))
+         static_cast<TH1 *>(obj)->SetDirectory(nullptr);
+
+      return std::make_unique<RUnique<TObject>>(obj);
    }
 
 };
