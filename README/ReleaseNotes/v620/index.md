@@ -134,7 +134,9 @@ typedefs (in particular `Double32_t`)
  * Provide TGraph::MovePoints() method
  * New options `RX`and `RY` for TMultiGraph in order to draw reverse axis along X and Y.
  * Combined with the option "Z" the option "CJUST" allows to draw the color palette
-   with axis labels justified on the color boundaries.
+   with axis labels justified on the color boundaries (implemented by Otto Schaile).
+ * The `TCanvas` Event Status Bar now displays the date and time when the mouse cursor
+   is moved over a time axis (implemented by Otto Schaile).
 
 
 ## 3D Graphics Libraries
