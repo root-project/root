@@ -18,47 +18,103 @@ using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Browsable;
 
 
-RProvider::Map_t &RProvider::GetMap()
+RProvider::Map_t &RProvider::GetBrowseMap()
 {
    static RProvider::Map_t sMap;
    return sMap;
 }
 
-
-void RProvider::Register(std::shared_ptr<RProvider> provider)
+RProvider::FileMap_t &RProvider::GetFileMap()
 {
-    auto &map = GetMap();
-
-    if (map.find(provider->GetSupportedClass()) != map.end())
-       R__ERROR_HERE("Browserv7") << "FATAL Try to setup provider for class " << provider->GetSupportedClass() << " which already exists";
-    else
-       map[provider->GetSupportedClass()] = provider;
+   static RProvider::FileMap_t sMap;
+   return sMap;
 }
 
-std::shared_ptr<RProvider> RProvider::GetProvider(const TClass *cl, bool check_base)
+void RProvider::RegisterFile(const std::string &extension, std::shared_ptr<RProvider> provider)
 {
-   if (!cl) return nullptr;
+    auto &fmap = GetFileMap();
 
-   auto &map = GetMap();
+    if ((extension != "*") && (fmap.find(extension) != fmap.end()))
+       R__ERROR_HERE("Browserv7") << "Provider for file extension  " << extension << " already exists";
 
-   auto iter = map.find(cl);
-   if (iter != map.end())
-      return iter->second;
+    fmap.emplace(extension, provider);
+}
 
-   while (check_base) {
-      auto lst = const_cast<TClass *>(cl)->GetListOfBases();
-      // only first parent in list of parents is used
-      cl = lst && (lst->GetSize() > 0) ? ((TBaseClass *) lst->First())->GetClassPointer() : nullptr;
+void RProvider::RegisterBrowse(const TClass *cl, std::shared_ptr<RProvider> provider)
+{
+    auto &bmap = GetBrowseMap();
 
-      if (!cl) break;
+    if (cl && (bmap.find(cl) != bmap.end()))
+       R__ERROR_HERE("Browserv7") << "Browse provider for class " << cl->GetName() << " already exists";
 
-      iter = map.find(cl);
-      if (iter != map.end())
-         return iter->second;
+    bmap.emplace(cl, provider);
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+// remove provider from all registered lists
+
+void RProvider::Unregister(std::shared_ptr<RProvider> provider)
+{
+   auto &fmap = GetFileMap();
+
+   for (auto fiter = fmap.begin();fiter != fmap.end();) {
+      if (fiter->second == provider)
+         fiter = fmap.erase(fiter);
+      else
+         fiter++;
    }
+
+   auto &bmap = GetBrowseMap();
+   for (auto biter = bmap.begin(); biter != bmap.end();) {
+      if (biter->second == provider)
+         biter = bmap.erase(biter);
+      else
+         biter++;
+   }
+}
+
+
+
+std::shared_ptr<RElement> RProvider::OpenFile(const std::string &extension, const std::string &fullname)
+{
+   auto &fmap = GetFileMap();
+
+   auto iter = fmap.find(extension);
+
+   if (iter != fmap.end()) {
+      auto res = iter->second->DoOpenFile(fullname);
+      if (res) return res;
+   }
+
+   for (auto &pair : fmap)
+      if ((pair.first == "*") || (pair.first == extension)) {
+         auto res = pair.second->DoOpenFile(fullname);
+         if (res) return res;
+      }
 
    return nullptr;
 }
+
+std::shared_ptr<RElement> RProvider::Browse(const TClass *cl, const void *object)
+{
+   auto &bmap = GetBrowseMap();
+
+   auto iter = bmap.find(cl);
+
+   if (iter != bmap.end()) {
+      auto res = iter->second->DoBrowse(cl, object);
+      if (res) return res;
+   }
+
+   for (auto &pair : bmap)
+      if ((pair.first == nullptr) || (pair.first == cl)) {
+         auto res = pair.second->DoBrowse(cl, object);
+         if (res) return res;
+      }
+
+   return nullptr;
+}
+
 
 /////////////////////////////////////////////////////////////////////
 /// Find item with specified name
