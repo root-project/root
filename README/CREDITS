@@ -506,6 +506,10 @@ N: Pierre Juillot
 E: juillot@in2p3.fr
 D: various contributions to the postscript driver
 
+N: Desislava Kalaydjieva
+E: dnkalaydjieva@gmail.com
+D: .help TTree
+
 N: Michal Kapalka
 E: kapalka@icslab.agh.edu.pl
 D: improvements in the ZIP package
