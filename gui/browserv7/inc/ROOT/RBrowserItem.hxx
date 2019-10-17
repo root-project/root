@@ -48,6 +48,7 @@ public:
    virtual ~RBrowserItem() = default;
 
    const std::string &GetName() const { return name; }
+   const std::string &GetIcon() const { return icon; }
 
    void SetChecked(bool on = true) { checked = on; }
    void SetExpanded(bool on = true) { expanded = on; }
