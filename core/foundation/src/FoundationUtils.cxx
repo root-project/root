@@ -121,63 +121,51 @@ const std::string& GetFallbackRootSys() {
 
 const std::string& GetRootSys() {
 #ifdef ROOTPREFIX
-   if (IgnorePrefix()) {
-#endif
-      static std::string rootsys;
-      if (rootsys.empty()) {
-         rootsys = ::getenv("ROOTSYS");
-         // We cannot use gSystem->UnixPathName.
-         ConvertToUnixPath(rootsys);
-      }
-      // FIXME: Should this also call UnixPathName for consistency?
-      if (rootsys.empty())
-         rootsys = GetFallbackRootSys();
-      return rootsys;
-#ifdef ROOTPREFIX
-   } else {
+   if (!IgnorePrefix()) {
       const static std::string rootsys = ROOTPREFIX;
       return rootsys;
    }
 #endif
+   static std::string rootsys;
+   if (rootsys.empty()) {
+      rootsys = ::getenv("ROOTSYS");
+      // We cannot use gSystem->UnixPathName.
+      ConvertToUnixPath(rootsys);
+   }
+   // FIXME: Should this also call UnixPathName for consistency?
+   if (rootsys.empty())
+      rootsys = GetFallbackRootSys();
+   return rootsys;
 }
 
 
 const std::string& GetIncludeDir() {
 #ifdef ROOTINCDIR
-   if (IgnorePrefix()) {
-#endif
-      static std::string rootincdir;
-      if (rootincdir.empty()) {
-         const std::string& sep = GetPathSeparator();
-         rootincdir = GetRootSys() + sep + "include" + sep;
-      }
-      return rootincdir;
-#ifdef ROOTINCDIR
-   } else {
+   if (!IgnorePrefix()) {
       const static std::string rootincdir = ROOTINCDIR;
       return rootincdir;
    }
 #endif
+   static std::string rootincdir;
+   if (rootincdir.empty()) {
+      const std::string& sep = GetPathSeparator();
+      rootincdir = GetRootSys() + sep + "include" + sep;
+   }
+   return rootincdir;
 }
 
 const std::string& GetEtcDir() {
 #ifdef ROOTETCDIR
-   if (IgnorePrefix()) {
-#endif
-      static std::string rootetcdir;
-      if (rootetcdir.empty()) {
-         const std::string& sep = GetPathSeparator();
-         rootetcdir = GetRootSys() + sep + "etc" + sep;
-      }
-      return rootetcdir;
-#ifdef ROOTETCDIR
-   } else {
+   if (!IgnorePrefix()) {
       const static std::string rootetcdir = ROOTETCDIR;
       return rootetcdir;
    }
 #endif
-}
 
+   const static std::string rootetcdir =
+      GetRootSys() + GetPathSeparator() + "etc" + GetPathSeparator();;
+   return rootetcdir;
+}
 
 } // namespace FoundationUtils
 } // namespace ROOT
