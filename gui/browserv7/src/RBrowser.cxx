@@ -15,22 +15,18 @@
 
 #include <ROOT/RBrowser.hxx>
 
-#include <ROOT/RBrowserItem.hxx>
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RObjectDrawable.hxx>
-#include <ROOT/RFileBrowsable.hxx>
 #include <ROOT/RDrawableProvider.hxx>
+#include <ROOT/RBrowsableSysFile.hxx>
+#include <ROOT/RCanvas.hxx>
 
-
-#include "TKey.h"
 #include "TString.h"
 #include "TSystem.h"
 #include "TROOT.h"
 #include "TWebCanvas.h"
 #include "TCanvas.h"
-#include "TFile.h"
-#include "TH1.h"
 #include "TBufferJSON.h"
 
 #include <sstream>
