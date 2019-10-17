@@ -42,6 +42,8 @@
 
 using namespace std::string_literals;
 
+using namespace ROOT::Experimental::Browsable;
+
 /** \class ROOT::Experimental::RBrowser
 \ingroup rbrowser
 
@@ -58,7 +60,7 @@ ROOT::Experimental::RBrowser::RBrowser(bool use_rcanvas)
    fWorkingDirectory = gSystem->WorkingDirectory();
    printf("Current dir %s\n", fWorkingDirectory.c_str());
 
-   fBrowsable.SetTopItem(std::make_unique<RBrowsableSysFileElement>(fWorkingDirectory));
+   fBrowsable.SetTopItem(std::make_unique<SysFileElement>(fWorkingDirectory));
 
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
@@ -133,7 +135,7 @@ bool ROOT::Experimental::RBrowser::ProcessSaveFile(const std::string &file_path)
       split.push_back(buffer);
    if (std::getline(path, buffer, '\0'))
       split.push_back(buffer);
-   // TODO: can be done with RBrowsableElement as well
+   // TODO: can be done with RElement as well
    std::ofstream ostrm(split[0]);
    ostrm << split[1];
    return true;
@@ -459,7 +461,7 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       fWebWindow->Send(connid, res);
    } else if (arg.compare(0, 6, "CHDIR:") == 0) {
       fWorkingDirectory = arg.substr(6);
-      fBrowsable.SetTopItem(std::make_unique<RBrowsableSysFileElement>(fWorkingDirectory));
+      fBrowsable.SetTopItem(std::make_unique<SysFileElement>(fWorkingDirectory));
       gSystem->ChangeDirectory(fWorkingDirectory.c_str());
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
    }

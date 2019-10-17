@@ -30,6 +30,7 @@
 using namespace std::string_literals;
 
 using namespace ROOT::Experimental;
+using namespace ROOT::Experimental::Browsable;
 
 /** \class ROOT::Experimental::RSysDirLevelIter
 \ingroup rbrowser
@@ -38,7 +39,7 @@ Iterator over single file level
 */
 
 
-class RSysDirLevelIter : public RBrowsableLevelIter {
+class RSysDirLevelIter : public RLevelIter {
    std::string fPath;        ///<! fully qualified path
    void *fDir{nullptr};      ///<! current directory handle
    std::string fCurrentName; ///<! current file name
@@ -241,12 +242,12 @@ public:
    }
 
    /** Returns full information for current element */
-   std::shared_ptr<RBrowsableElement> GetElement() override
+   std::shared_ptr<RElement> GetElement() override
    {
       if (!R_ISDIR(fCurrentStat.fMode) && (fCurrentName.length() > 5) && (fCurrentName.rfind(".root") == fCurrentName.length()-5))
-         return std::make_shared<RBrowsableTDirectoryElement>(fCurrentName);
+         return std::make_shared<TDirectoryElement>(fCurrentName);
 
-      return std::make_shared<RBrowsableSysFileElement>(fCurrentStat, fPath, fCurrentName);
+      return std::make_shared<SysFileElement>(fCurrentStat, fPath, fCurrentName);
    }
 
 };
@@ -293,7 +294,7 @@ std::string RSysDirLevelIter::GetFileIcon(const std::string &fname)
 
 
 
-RBrowsableSysFileElement::RBrowsableSysFileElement(const std::string &filename) : fFileName(filename)
+SysFileElement::SysFileElement(const std::string &filename) : fFileName(filename)
 {
    if (gSystem->GetPathInfo(fFileName.c_str(), fStat)) {
       if (fStat.fIsLink) {
@@ -305,7 +306,7 @@ RBrowsableSysFileElement::RBrowsableSysFileElement(const std::string &filename) 
    }
 }
 
-std::string RBrowsableSysFileElement::GetFullName() const
+std::string SysFileElement::GetFullName() const
 {
    std::string path = fDirName;
    if (!path.empty() && (path.rfind("/") != path.length() - 1))
@@ -315,7 +316,7 @@ std::string RBrowsableSysFileElement::GetFullName() const
 }
 
 
-std::unique_ptr<RBrowsableLevelIter> RBrowsableSysFileElement::GetChildsIter()
+std::unique_ptr<RLevelIter> SysFileElement::GetChildsIter()
 {
    if (!R_ISDIR(fStat.fMode))
       return nullptr;
@@ -325,12 +326,12 @@ std::unique_ptr<RBrowsableLevelIter> RBrowsableSysFileElement::GetChildsIter()
    return std::make_unique<RSysDirLevelIter>(GetFullName());
 }
 
-bool RBrowsableSysFileElement::HasTextContent() const
+bool SysFileElement::HasTextContent() const
 {
    return RSysDirLevelIter::GetFileIcon(GetName()) == "sap-icon://document-text"s;
 }
 
-std::string RBrowsableSysFileElement::GetTextContent()
+std::string SysFileElement::GetTextContent()
 {
    std::ifstream t(GetFullName());
    return std::string(std::istreambuf_iterator<char>(t), std::istreambuf_iterator<char>());
@@ -340,7 +341,7 @@ std::string RBrowsableSysFileElement::GetTextContent()
 // ===============================================================================================================
 
 
-class RTDirectoryLevelIter : public RBrowsableLevelIter {
+class TDirectoryLevelIter : public RLevelIter {
    TDirectory *fDir{nullptr};         ///<! current directory handle
    std::unique_ptr<TIterator>  fIter; ///<! created iterator
    TKey *fKey{nullptr};               ///<! currently selected key
@@ -380,9 +381,9 @@ class RTDirectoryLevelIter : public RBrowsableLevelIter {
    }
 
 public:
-   explicit RTDirectoryLevelIter(TDirectory *dir) : fDir(dir) { CreateIter(); }
+   explicit TDirectoryLevelIter(TDirectory *dir) : fDir(dir) { CreateIter(); }
 
-   virtual ~RTDirectoryLevelIter() = default;
+   virtual ~TDirectoryLevelIter() = default;
 
    bool Reset() override { return CreateIter(); }
 
@@ -424,7 +425,7 @@ public:
    }
 
    /** Returns full information for current element */
-   std::shared_ptr<RBrowsableElement> GetElement() override;
+   std::shared_ptr<RElement> GetElement() override;
 
 };
 
@@ -432,14 +433,14 @@ public:
 
 
 
-class RBrowsableTKeyElement : public RBrowsableElement {
+class TKeyElement : public RElement {
    TDirectory *fDir{nullptr};
    TKey *fKey{nullptr};
 
 public:
-   RBrowsableTKeyElement(TDirectory *dir, TKey *key) : fDir(dir), fKey(key) {}
+   TKeyElement(TDirectory *dir, TKey *key) : fDir(dir), fKey(key) {}
 
-   virtual ~RBrowsableTKeyElement() = default;
+   virtual ~TKeyElement() = default;
 
    /** Name of RBrowsable, must be provided in derived classes */
    std::string GetName() const override
@@ -454,7 +455,7 @@ public:
    std::string GetTitle() const override { return fKey->GetTitle(); }
 
    /** Create iterator for childs elements if any */
-   std::unique_ptr<RBrowsableLevelIter> GetChildsIter() override
+   std::unique_ptr<RLevelIter> GetChildsIter() override
    {
       std::string clname = fKey->GetClassName();
 
@@ -463,7 +464,7 @@ public:
 
       auto subdir = fDir->GetDirectory(GetName().c_str());
       if (subdir)
-         return std::make_unique<RTDirectoryLevelIter>(subdir);
+         return std::make_unique<TDirectoryLevelIter>(subdir);
 
       return nullptr;
    }
@@ -486,33 +487,33 @@ public:
 // ==============================================================================================
 
 
-std::shared_ptr<RBrowsableElement> RTDirectoryLevelIter::GetElement()
+std::shared_ptr<RElement> TDirectoryLevelIter::GetElement()
 {
-   return std::make_shared<RBrowsableTKeyElement>(fDir, fKey);
+   return std::make_shared<TKeyElement>(fDir, fKey);
 }
 
 // ==============================================================================================
 
-RBrowsableTDirectoryElement::RBrowsableTDirectoryElement(const std::string &fname, TDirectory *dir)
+TDirectoryElement::TDirectoryElement(const std::string &fname, TDirectory *dir)
 {
    fFileName = fname;
    fDir = dir;
 }
 
-RBrowsableTDirectoryElement::~RBrowsableTDirectoryElement()
+TDirectoryElement::~TDirectoryElement()
 {
 }
 
 ///////////////////////////////////////////////////////////////////
 /// Get TDirectory. Checks if parent file is still there. If not, means it was closed outside ROOT
 
-TDirectory *RBrowsableTDirectoryElement::GetDir() const
+TDirectory *TDirectoryElement::GetDir() const
 {
    if (fDir) {
       if (!gROOT->GetListOfFiles()->FindObject(fDir->GetFile()))
-         const_cast<RBrowsableTDirectoryElement *>(this)->fDir = nullptr;
+         const_cast<TDirectoryElement *>(this)->fDir = nullptr;
    } else if (!fFileName.empty()) {
-      const_cast<RBrowsableTDirectoryElement *>(this)->fDir = TFile::Open(fFileName.c_str());
+      const_cast<TDirectoryElement *>(this)->fDir = TFile::Open(fFileName.c_str());
    }
 
    return fDir;
@@ -520,7 +521,7 @@ TDirectory *RBrowsableTDirectoryElement::GetDir() const
 
 
 /** Name of RBrowsable, must be provided in derived classes */
-std::string RBrowsableTDirectoryElement::GetName() const
+std::string TDirectoryElement::GetName() const
 {
    if (fDir)
       return fDir->GetName();
@@ -534,18 +535,18 @@ std::string RBrowsableTDirectoryElement::GetName() const
 }
 
 /** Title of RBrowsable (optional) */
-std::string RBrowsableTDirectoryElement::GetTitle() const
+std::string TDirectoryElement::GetTitle() const
 {
    auto dir = GetDir();
 
    return dir ? dir->GetTitle() : "";
 }
 
-std::unique_ptr<RBrowsableLevelIter> RBrowsableTDirectoryElement::GetChildsIter()
+std::unique_ptr<RLevelIter> TDirectoryElement::GetChildsIter()
 {
    auto dir = GetDir();
 
-   return dir ? std::make_unique<RTDirectoryLevelIter>(dir) : nullptr;
+   return dir ? std::make_unique<TDirectoryLevelIter>(dir) : nullptr;
 }
 
 
