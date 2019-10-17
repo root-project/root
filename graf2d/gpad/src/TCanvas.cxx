@@ -972,20 +972,34 @@ void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected
    fCanvasImp->SetStatusText(atext,2);
    
    // Show date/time if TimeDisplay is selected
-   if (( selected->InheritsFrom("TH1")
-      && ((TH1*)selected)->GetXaxis()
-      && ((TH1*)selected)->GetXaxis()->GetTimeDisplay() )
-   || ( selected->InheritsFrom("TGraph") 
-      && ((TGraph*)selected)->GetXaxis()
-      && ((TGraph*)selected)->GetXaxis()->GetTimeDisplay() )
-   || ( selected->InheritsFrom("TAxis") &&
-      ((TAxis*)selected)->GetTimeDisplay()) )
-   {
+   TAxis *xaxis = NULL;
+   if ( selected->InheritsFrom("TH1") )
+      xaxis = ((TH1*)selected)->GetXaxis();
+   else if ( selected->InheritsFrom("TGraph") ) 
+      xaxis = ((TGraph*)selected)->GetXaxis();
+   else if ( selected->InheritsFrom("TAxis") ) 
+      xaxis = (TAxis*)selected;
+   if ( xaxis != NULL && xaxis->GetTimeDisplay()) {
       TString objinfo = selected->GetObjectInfo(px,py);
       // check if user has overwritten GetObjectInfo and altered
       // the default text from TObject::GetObjectInfo "x=.. y=.."
       if (objinfo.Contains("x=") && objinfo.Contains("y=") ) {
-         TDatime dt((UInt_t)gPad->AbsPixeltoX(px));
+         UInt_t toff = 0;
+         TString time_format(xaxis->GetTimeFormat());
+         // TimeFormat may contain offset: %F2000-01-01 00:00:00
+         Int_t idF = time_format.Index("%F");
+         if (idF>=0) {
+            Int_t lnF = time_format.Length();
+            // minimal check for correct format
+            if (lnF - idF == 21) {
+               time_format = time_format(idF+2, lnF);
+               TDatime dtoff(time_format);
+               toff = dtoff.Convert();
+            }
+         } else {
+            toff = (UInt_t)gStyle->GetTimeOffset();
+         }
+         TDatime dt((UInt_t)gPad->AbsPixeltoX(px) + toff);
          snprintf(atext, kTMAX, "%s, y=%g", 
             dt.AsSQLString(),gPad->AbsPixeltoY(py));
          fCanvasImp->SetStatusText(atext,3);
