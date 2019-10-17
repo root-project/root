@@ -103,9 +103,9 @@ public:
    {
       auto item = std::make_unique<RBrowserTKeyItem>(GetName(), CanHaveChilds());
 
-      item->className = fKey->GetClassName();
+      item->SetClassName(fKey->GetClassName());
 
-      item->SetIcon(GetClassIcon(item->className));
+      item->SetIcon(GetClassIcon(fKey->GetClassName()));
 
       return item;
    }
@@ -160,18 +160,41 @@ public:
    {
       std::string clname = fKey->GetClassName();
 
-      TObject *obj = fKey->ReadObj();
+      const TClass *obj_class = TClass::GetClass(clname.c_str());
+      if (!obj_class) return nullptr;
+
+      if (plain) {
+
+         if (!obj_class->InheritsFrom(TObject::Class())) {
+            R__ERROR_HERE("Browserv7") << "Only TObjects can be used for plain reading";
+            return nullptr;
+         }
+
+         TObject *tobj = fKey->ReadObj();
+
+         if (!tobj)
+            return nullptr;
+
+         return std::make_unique<RTObjectHolder>(tobj);
+      }
+
+      if (obj_class->InheritsFrom(TObject::Class())) {
+         TObject *tobj = fKey->ReadObj();
+         if (!tobj)
+            return nullptr;
+         if (tobj->InheritsFrom(TH1::Class()))
+            static_cast<TH1 *>(tobj)->SetDirectory(nullptr);
+         if (fDir)
+            fDir->Remove(tobj); // remove object while ownership will be delivered to return value
+         return std::make_unique<RUnique<TObject>>(tobj);
+      }
+
+      void *obj = fKey->ReadObjectAny(obj_class);
       if (!obj) return nullptr;
 
-      if (plain)
-         return std::make_unique<RTObjectHolder>(obj);
+      printf("Read object of class %s done\n", obj_class->GetName());
 
-      if (obj->InheritsFrom(TH1::Class()))
-         static_cast<TH1 *>(obj)->SetDirectory(nullptr);
-
-      if (fDir) fDir->Remove(obj); // remove object while ownreship will be delivered to return value
-
-      return std::make_unique<RUnique<TObject>>(obj);
+      return std::make_unique<RAnyObjectHolder>(obj_class, obj, true);
    }
 
 };

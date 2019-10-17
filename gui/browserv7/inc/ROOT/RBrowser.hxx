@@ -1,6 +1,7 @@
 /// \file ROOT/RBrowser.hxx
-/// \ingroup WebGui ROOT7
+/// \ingroup rbrowser
 /// \author Bertrand Bellenot <bertrand.bellenot@cern.ch>
+/// \author Sergey Linev <S.Linev@gsi.de>
 /// \date 2019-02-28
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
