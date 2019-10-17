@@ -11,8 +11,6 @@
 #include "ROOT/RLogger.hxx"
 
 #include "TClass.h"
-#include "TBaseClass.h"
-#include "TList.h"
 
 using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Browsable;

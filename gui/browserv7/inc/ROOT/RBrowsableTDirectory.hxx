@@ -15,9 +15,23 @@ class TDirectory;
 
 namespace ROOT {
 namespace Experimental {
-namespace Browsable {
 
-} // namespace Browsable
+/** Representation of single item in the file browser for object from TKey */
+class RBrowserTKeyItem : public RBrowserItem {
+public:
+
+   std::string className; ///< class name
+
+   RBrowserTKeyItem() = default;
+
+   RBrowserTKeyItem(const std::string &_name, int _nchilds) : RBrowserItem(_name, _nchilds) {}
+
+   // should be here, one needs virtual table for correct streaming of RRootBrowserReply
+   virtual ~RBrowserTKeyItem() = default;
+};
+
+// ========================================================================================
+
 } // namespace Experimental
 } // namespace ROOT
 

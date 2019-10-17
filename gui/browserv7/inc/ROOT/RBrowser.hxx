@@ -17,10 +17,8 @@
 #define ROOT7_RBrowser
 
 #include <ROOT/RWebWindow.hxx>
-#include <ROOT/RCanvas.hxx>
 #include <ROOT/RBrowserItem.hxx>
 #include <ROOT/RBrowsable.hxx>
-#include <ROOT/RFileBrowsable.hxx>
 
 #include <vector>
 #include <memory>
@@ -32,6 +30,8 @@ class TFile;
 
 namespace ROOT {
 namespace Experimental {
+
+class RCanvas;
 
 /** Web-based ROOT file browser */
 
