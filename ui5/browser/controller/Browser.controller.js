@@ -424,10 +424,14 @@ sap.ui.define(['sap/ui/core/Component',
         let oBreadcrumbs = this.getView().byId("breadcrumbs");
         oBreadcrumbs.removeAllLinks();
         for (let i=0; i<split.length; i++) {
-          if (i=== split.length-1) {
+          if (i === split.length-1) {
             oBreadcrumbs.setCurrentLocationText(split[i]);
-          } else if ( i === 0) {
-            let link = new Link({text: "/"});
+          } else if (i === 0) {
+             let link = new Link();
+             if (split[i].length === 2 && split[i][1] === ':') // Windows drive letter
+               link.setText(split[i]);
+             else
+               link.setText("/");
             link.attachPress(this, this.onBreadcrumbsPress, this);
             oBreadcrumbs.addLink(link);
           } else {
