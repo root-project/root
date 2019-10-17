@@ -92,7 +92,7 @@ public:
    }
 
    /** Returns full information for current element */
-   virtual std::unique_ptr<RBrowsableElement> GetElement() { return nullptr; }
+   virtual std::shared_ptr<RBrowsableElement> GetElement() { return nullptr; }
 };
 
 /** \class RBrowsable
@@ -109,11 +109,11 @@ class RBrowsable {
    struct RLevel {
       std::string name;
       std::unique_ptr<RBrowsableLevelIter> iter;
-      std::unique_ptr<RBrowsableElement> item;
+      std::shared_ptr<RBrowsableElement> item;
       RLevel(const std::string &_name) : name(_name) {}
    };
 
-   std::unique_ptr<RBrowsableElement> fItem; ///<! top-level item to browse
+   std::shared_ptr<RBrowsableElement> fItem; ///<! top-level item to browse
    std::vector<RLevel> fLevels;           ///<! navigated levels
 
    bool Navigate(const std::vector<std::string> &path);
@@ -123,23 +123,23 @@ class RBrowsable {
 public:
    RBrowsable() = default;
 
-   RBrowsable(std::unique_ptr<RBrowsableElement> &&item)
+   RBrowsable(std::shared_ptr<RBrowsableElement> item)
    {
-      fItem = std::move(item);
+      fItem = item;
    }
 
    virtual ~RBrowsable() = default;
 
 
-   void SetTopItem(std::unique_ptr<RBrowsableElement> &&item)
+   void SetTopItem(std::shared_ptr<RBrowsableElement> item)
    {
       fLevels.clear();
-      fItem = std::move(item);
+      fItem = item;
    }
 
    bool ProcessRequest(const RBrowserRequest &request, RBrowserReplyNew &reply);
 
-   std::unique_ptr<RBrowsableElement> GetElement(const std::string &path);
+   std::shared_ptr<RBrowsableElement> GetElement(const std::string &path);
 };
 
 

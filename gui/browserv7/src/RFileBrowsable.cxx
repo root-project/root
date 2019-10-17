@@ -241,12 +241,12 @@ public:
    }
 
    /** Returns full information for current element */
-   std::unique_ptr<RBrowsableElement> GetElement() override
+   std::shared_ptr<RBrowsableElement> GetElement() override
    {
       if (!R_ISDIR(fCurrentStat.fMode) && (fCurrentName.length() > 5) && (fCurrentName.rfind(".root") == fCurrentName.length()-5))
-         return std::make_unique<RBrowsableTDirectoryElement>(fCurrentName);
+         return std::make_shared<RBrowsableTDirectoryElement>(fCurrentName);
 
-      return std::make_unique<RBrowsableSysFileElement>(fCurrentStat, fPath, fCurrentName);
+      return std::make_shared<RBrowsableSysFileElement>(fCurrentStat, fPath, fCurrentName);
    }
 
 };
@@ -424,7 +424,7 @@ public:
    }
 
    /** Returns full information for current element */
-   std::unique_ptr<RBrowsableElement> GetElement() override;
+   std::shared_ptr<RBrowsableElement> GetElement() override;
 
 };
 
@@ -486,9 +486,9 @@ public:
 // ==============================================================================================
 
 
-std::unique_ptr<RBrowsableElement> RTDirectoryLevelIter::GetElement()
+std::shared_ptr<RBrowsableElement> RTDirectoryLevelIter::GetElement()
 {
-   return std::make_unique<RBrowsableTKeyElement>(fDir, fKey);
+   return std::make_shared<RBrowsableTKeyElement>(fDir, fKey);
 }
 
 // ==============================================================================================
