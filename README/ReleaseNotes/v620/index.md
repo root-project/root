@@ -28,6 +28,7 @@ The following people have contributed to this new version:
  Andrei Gheata, CERN/SFT,\
  Enrico Guiraud, CERN/SFT,\
  Stephan Hageboeck, CERN/SFT,\
+ Desislava Kalaydjieva, CERN/SFT,\
  Jan Knedlik, GSI,\
  Sergey Linev, GSI,\
  Pere Mato, CERN/SFT,\
@@ -37,6 +38,7 @@ The following people have contributed to this new version:
  Vincenzo Eduardo Padulano, Bicocca/SFT,\
  Danilo Piparo, CERN/SFT,\
  Fons Rademakers, CERN/SFT,\
+ Otto Schaile, Uni-Muenchen,\
  Henry Schreiner, Princeton,\
  Oksana Shadura, Nebraska,\
  Simon Spies, GSI,\
