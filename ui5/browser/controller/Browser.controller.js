@@ -654,22 +654,15 @@ sap.ui.define(['sap/ui/core/Component',
          case "BREPL":   // browser reply
             if (this.model) {
                var bresp = JSON.parse(msg);
-               if(this.chdir) {
-                 this.chdir = false;
-                 this.model.clearFullModel();
-                 this.model.reloadMainModel(true);
+               this.model.processResponse(bresp);
 
-               } else {
-                 this.model.processResponse(bresp);
-
-                 if (bresp.path === '/') {
-                   var tt = this.getView().byId("treeTable");
-                   var cols = tt.getColumns();
-                   tt.autoResizeColumn(2);
-                   tt.autoResizeColumn(1);
-                   // for (var k=0;k<cols.length;++k)
-                   //    tt.autoResizeColumn(k);
-                 }
+               if (bresp.path === '/') {
+                  var tt = this.getView().byId("treeTable");
+                  var cols = tt.getColumns();
+                  tt.autoResizeColumn(2);
+                  tt.autoResizeColumn(1);
+                  // for (var k=0;k<cols.length;++k)
+                  //    tt.autoResizeColumn(k);
                }
             }
             break;
