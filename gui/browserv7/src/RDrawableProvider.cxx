@@ -66,7 +66,7 @@ void RDrawableProvider::Unregister(std::shared_ptr<RDrawableProvider> provider)
    }
 }
 
-bool RDrawableProvider::DrawV6(TPad *subpad, std::unique_ptr<Browsable::RObject> &obj, const std::string &opt)
+bool RDrawableProvider::DrawV6(TVirtualPad *subpad, std::unique_ptr<Browsable::RObject> &obj, const std::string &opt)
 {
    auto &map6 = GetV6Map();
    auto iter6 = map6.find(obj->GetClass());
