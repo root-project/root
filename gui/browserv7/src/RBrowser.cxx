@@ -488,10 +488,7 @@ protected:
 
    bool DoDrawV6(TPad *pad, std::unique_ptr<Browsable::RObject> &obj, const std::string &opt) const override
    {
-      if (!obj->GetClass()->InheritsFrom(TObject::Class()))
-         return false;
-
-      TObject *tobj = (TObject *)(obj->GetObject());
+      auto tobj = obj->get_object<TObject>();
       if (!tobj) return false;
 
       pad->GetListOfPrimitives()->Clear();
@@ -520,7 +517,7 @@ protected:
 
    bool DoDrawV7(std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RObject> &obj, const std::string &opt) const override
    {
-      auto tobj = Browsable::get_shared<TObject>(obj);
+      auto tobj = obj->get_shared<TObject>();
       if (!tobj) return false;
 
       if (subpad->NumPrimitives() > 0) {
