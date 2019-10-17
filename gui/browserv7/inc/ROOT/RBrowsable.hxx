@@ -26,8 +26,13 @@ namespace Experimental {
 
 namespace Browsable {
 
-class RLevelIter;
-
+/** \class RObject
+\ingroup rbrowser
+\brief Basic class for object holder of any kind. Could be used to transfer shared_ptr or unique_ptr or plain pointer
+\author Sergey Linev <S.Linev@gsi.de>
+\date 2019-10-19
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RObject {
 protected:
@@ -36,7 +41,7 @@ protected:
    virtual const void *GetObject() const { return nullptr; }
    /** Returns pointer on existing shared_ptr<T> */
    virtual void *GetShared() const { return nullptr; }
-   /** Returns pointer with ownership, normally unique_ptr */
+   /** Returns pointer with ownership, normally via unique_ptr<T>::release() */
    virtual void *TakeObject() { return nullptr; }
 
 public:
@@ -72,9 +77,17 @@ public:
    }
 };
 
-/** Holder of TObject without ownership */
+
+/** \class RTObjectHolder
+\ingroup rbrowser
+\brief Holder of TObject instance. Should not be used very often, while ownership is undefined for it
+\author Sergey Linev <S.Linev@gsi.de>
+\date 2019-10-19
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
+
 class RTObjectHolder : public RObject {
-   TObject* fObj{nullptr};
+   TObject* fObj{nullptr};   ///<! plain holder without IO
 protected:
    const void *GetObject() const final { return fObj; }
 public:
@@ -84,12 +97,54 @@ public:
    const TClass *GetClass() const final { return fObj->IsA(); }
 };
 
+/** \class RAnyObjectHolder
+\ingroup rbrowser
+\brief Holder of TObject instance. Should not be used very often, while ownership is undefined for it
+\author Sergey Linev <S.Linev@gsi.de>
+\date 2019-10-19
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
-/** Holder of shared_ptr<T> */
+class RAnyObjectHolder : public RObject {
+   const TClass *fClass{nullptr};  ///<! object class
+   void* fObj{nullptr};            ///<! plain holder without IO
+   bool fOwner{false};             ///<! is object owner
+protected:
+   void *TakeObject() final
+   {
+      void *res = fObj;
+      if (fOwner)
+         fObj = nullptr;
+      else
+         res = nullptr;
+      return res;
+   }
+   const void *GetObject() const final { return fOwner ? nullptr : fObj; }
+
+public:
+   RAnyObjectHolder(const TClass *cl, void *obj, bool owner = false) { fClass = cl; fObj = obj; fOwner = owner; }
+   virtual ~RAnyObjectHolder()
+   {
+      if (fOwner)
+         const_cast<TClass *>(fClass)->Destructor(fObj);
+   }
+
+   const TClass *GetClass() const final { return fClass; }
+};
+
+
+
+/** \class RShared<T>
+\ingroup rbrowser
+\brief Holder of with shared_ptr<T> instance. Should be used to transfer shared_ptr<T> in RBrowsable methods
+\author Sergey Linev <S.Linev@gsi.de>
+\date 2019-10-19
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 template<class T>
 class RShared : public RObject {
-   std::shared_ptr<T> fShared;
+   std::shared_ptr<T> fShared;   ///<! holder without IO
 protected:
    void *GetShared() const final { return &fShared; }
 public:
@@ -101,11 +156,17 @@ public:
    const TClass *GetClass() const final { return TClass::GetClass<T>(); }
 };
 
-/** Holder of unique_ptr<T> */
+/** \class RUnique<T>
+\ingroup rbrowser
+\brief Holder of with unique_ptr<T> instance. Should be used to transfer unique_ptr<T> in RBrowsable methods
+\author Sergey Linev <S.Linev@gsi.de>
+\date 2019-10-19
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 template<class T>
 class RUnique : public RObject {
-   std::unique_ptr<T> fUnique;
+   std::unique_ptr<T> fUnique; ///<! holder without IO
 protected:
    void *TakeObject() final { return fUnique.release(); }
 public:
@@ -115,6 +176,10 @@ public:
 
    const TClass *GetClass() const final { return TClass::GetClass<T>(); }
 };
+
+
+class RLevelIter;
+
 
 /** \class RElement
 \ingroup rbrowser
@@ -147,7 +212,7 @@ public:
 
 /** \class RLevelIter
 \ingroup rbrowser
-\brief Iterator over single level hierarchy like TList
+\brief Iterator over single level hierarchy like any array, keys list, ...
 \author Sergey Linev <S.Linev@gsi.de>
 \date 2019-10-14
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
