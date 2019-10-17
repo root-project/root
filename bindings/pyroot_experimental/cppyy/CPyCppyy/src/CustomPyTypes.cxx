@@ -41,7 +41,11 @@ PyTypeObject RefInt_Type = {       // python int is a C/C++ long
     (char*)"cppyy.Long",           // tp_name
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_CHECKTYPES |
-        Py_TPFLAGS_BASETYPE,       // tp_flags
+        Py_TPFLAGS_BASETYPE
+#if PY_VERSION_HEX >= 0x03040000
+        | Py_TPFLAGS_LONG_SUBCLASS
+#endif
+        ,                          // tp_flags
     (char*)"CPyCppyy long object for pass by reference",    // tp_doc
     0, 0, 0, 0, 0, 0, 0, 0, 0,
     &PyInt_Type,                   // tp_base
