@@ -234,6 +234,7 @@ bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReplyNew
    while (iter->Next()) {
 
       if ((id >= request.first) && ((request.number == 0) || ((int) reply.nodes.size() < request.number))) {
+
          // access item
          auto item = iter->CreateBrowserItem();
 

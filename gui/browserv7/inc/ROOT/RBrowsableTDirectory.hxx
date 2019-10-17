@@ -18,9 +18,9 @@ namespace Experimental {
 
 /** Representation of single item in the file browser for object from TKey */
 class RBrowserTKeyItem : public RBrowserItem {
-public:
-
    std::string className; ///< class name
+
+public:
 
    RBrowserTKeyItem() = default;
 
@@ -28,6 +28,8 @@ public:
 
    // should be here, one needs virtual table for correct streaming of RRootBrowserReply
    virtual ~RBrowserTKeyItem() = default;
+
+   void SetClassName(const std::string &_className) { className = _className; }
 };
 
 // ========================================================================================

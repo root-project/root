@@ -21,6 +21,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
     src/RBrowsableSysFile.cxx
     src/RBrowsableTDirectory.cxx
     src/RDrawableProvider.cxx
+    src/RDrawableRHist.cxx
     src/RBrowser.cxx
   DEPENDENCIES
     ROOTWebDisplay
@@ -28,4 +29,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
     Gpad
     WebGui6
     ROOTGpadv7
+    ROOTHistDraw
 )
