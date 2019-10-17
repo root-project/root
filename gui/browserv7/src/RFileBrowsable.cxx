@@ -485,6 +485,8 @@ public:
       if (obj->InheritsFrom(TH1::Class()))
          static_cast<TH1 *>(obj)->SetDirectory(nullptr);
 
+      if (fDir) fDir->Remove(obj); // remove object while ownreship will be delivered to return value
+
       return std::make_unique<RUnique<TObject>>(obj);
    }
 

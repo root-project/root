@@ -486,7 +486,7 @@ using namespace ROOT::Experimental;
 class RV6DrawProvider : public RDrawableProvider {
 protected:
 
-   bool DoDrawV6(TPad *pad, std::unique_ptr<Browsable::RObject> &obj, const std::string &opt) const override
+   bool DoDrawV6(TVirtualPad *pad, std::unique_ptr<Browsable::RObject> &obj, const std::string &opt) const override
    {
       auto tobj = obj->get_object<TObject>();
       if (!tobj) return false;
