@@ -159,10 +159,10 @@ bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReplyNew
    if (!DecomposePath(request.path, arr))
       return false;
 
-   if (gDebug > 0)
+   if (gDebug > 0) {
       printf("REQ:Try to navigate %d\n", (int) arr.size());
-
-   for (auto & subdir : arr) printf("   %s\n", subdir.c_str());
+      for (auto & subdir : arr) printf("   %s\n", subdir.c_str());
+   }
 
    if (!Navigate(arr))
       return false;

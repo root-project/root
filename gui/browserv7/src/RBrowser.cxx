@@ -55,10 +55,10 @@ ROOT::Experimental::RBrowser::RBrowser(bool use_rcanvas)
 {
    SetUseRCanvas(use_rcanvas);
 
-   std::string curdir = gSystem->WorkingDirectory();
-   printf("Current dir %s\n", curdir.c_str());
+   fWorkingDirectory = gSystem->WorkingDirectory();
+   printf("Current dir %s\n", fWorkingDirectory.c_str());
 
-   fBrowsable.SetTopItem(std::make_unique<RBrowsableSysFileElement>(curdir));
+   fBrowsable.SetTopItem(std::make_unique<RBrowsableSysFileElement>(fWorkingDirectory));
 
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
@@ -385,13 +385,8 @@ void ROOT::Experimental::RBrowser::SendInitMsg(unsigned connid)
 
 std::string ROOT::Experimental::RBrowser::GetCurrentWorkingDirectory()
 {
-   auto path = gSystem->WorkingDirectory();
-   std::string res = "GETWORKDIR: { \"path\": \"";
-   res.append(path);
-   res.append("\"}");
-   return res;
+   return "GETWORKDIR: { \"path\": \""s + fWorkingDirectory + "\"}"s;
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// receive data from client
@@ -463,8 +458,9 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       std::string res = GetCurrentWorkingDirectory();
       fWebWindow->Send(connid, res);
    } else if (arg.compare(0, 6, "CHDIR:") == 0) {
-      gSystem->ChangeDirectory(arg.substr(6).c_str());
-      std::string res = GetCurrentWorkingDirectory();
-      fWebWindow->Send(connid, res);
+      fWorkingDirectory = arg.substr(6);
+      fBrowsable.SetTopItem(std::make_unique<RBrowsableSysFileElement>(fWorkingDirectory));
+      gSystem->ChangeDirectory(fWorkingDirectory.c_str());
+      fWebWindow->Send(connid, GetCurrentWorkingDirectory());
    }
 }

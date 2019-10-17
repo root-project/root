@@ -42,8 +42,6 @@ protected:
    std::string fTitle;  ///<! title
    unsigned fConnId{0}; ///<! default connection id
 
-   std::string fDescPath;                ///<! last scanned directory
-
    bool fUseRCanvas{false};             ///<!  which canvas should be used
    std::vector<std::unique_ptr<TCanvas>> fCanvases;  ///<! canvases created by browser, should be closed at the end
    std::string fActiveCanvas;            ///<! name of active for RBrowser canvas, not a gPad!
@@ -51,6 +49,7 @@ protected:
 
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to browser
 
+   std::string fWorkingDirectory;            ///<! top working directory used by Browsable
    RBrowsable  fBrowsable;                   ///<! central browsing element
 
    TCanvas *AddCanvas();
