@@ -58,7 +58,7 @@ ROOT::Experimental::RBrowser::RBrowser(bool use_rcanvas)
 {
    SetUseRCanvas(use_rcanvas);
 
-   fWorkingDirectory = gSystem->WorkingDirectory();
+   fWorkingDirectory = gSystem->UnixPathName(gSystem->WorkingDirectory());
    printf("Current dir %s\n", fWorkingDirectory.c_str());
 
    fBrowsable.SetTopItem(std::make_unique<SysFileElement>(fWorkingDirectory));
@@ -525,8 +525,8 @@ protected:
 
       if (subpad->NumPrimitives() > 0) {
          subpad->Wipe();
-         // subpad->Modified();
-         // subpad->Update(true);
+         subpad->GetCanvas()->Modified();
+         subpad->GetCanvas()->Update(true);
       }
 
       subpad->Draw<RObjectDrawable>(tobj, opt);
