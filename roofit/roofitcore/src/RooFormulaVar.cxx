@@ -205,15 +205,15 @@ void RooFormulaVar::writeToStream(ostream& os, Bool_t compact) const
 std::list<Double_t>* RooFormulaVar::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
   for (const auto par : _actualVars) {
-    assert(dynamic_cast<const RooAbsReal*>(par));
     auto func = static_cast<const RooAbsReal*>(par);
-    list<Double_t>* binb = func->binBoundaries(obs,xlo,xhi) ;      
-    if (binb) {
-      return binb ;
+    list<Double_t>* binb = nullptr;
+
+    if (func && (binb = func->binBoundaries(obs,xlo,xhi)) ) {
+      return binb;
     }
   }
   
-  return 0 ;  
+  return nullptr;
 }
 
 
@@ -224,16 +224,15 @@ std::list<Double_t>* RooFormulaVar::binBoundaries(RooAbsRealLValue& obs, Double_
 std::list<Double_t>* RooFormulaVar::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
   for (const auto par : _actualVars) {
-    assert(dynamic_cast<const RooAbsReal*>(par));
-    auto func = static_cast<const RooAbsReal*>(par);
+    auto func = dynamic_cast<const RooAbsReal*>(par);
+    list<Double_t>* hint = nullptr;
 
-    list<Double_t>* hint = func->plotSamplingHint(obs,xlo,xhi) ;      
-    if (hint) {
-      return hint ;
+    if (func && (hint = func->plotSamplingHint(obs,xlo,xhi)) ) {
+      return hint;
     }
   }
 
-  return 0 ;
+  return nullptr;
 }
 
 
