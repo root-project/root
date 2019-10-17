@@ -16,19 +16,18 @@
 namespace CPyCppyy {
 
 enum ETypeDetails {
-    kNone           =    0,
-    kIsStaticData   =    1,
-    kIsEnumData     =    2,
-    kIsConstData    =    4,
-    kIsArrayType    =    8,
-    kIsCachable     =   16
+    kNone          = 0x0000,
+    kIsStaticData  = 0x0001,
+    kIsConstData   = 0x0002,
+    kIsArrayType   = 0x0004,
+    kIsCachable    = 0x0008
 };
 
 //= CPyCppyy data member as Python property behavior =========================
 static PyObject* pp_get(CPPDataMember* pyprop, CPPInstance* pyobj, PyObject* /* kls */)
 {
 // cache lookup for low level views
-    if (pyprop->fProperty & kIsCachable) {
+    if (pyprop->fFlags & kIsCachable) {
         CPyCppyy::CI_DatamemberCache_t& cache = pyobj->GetDatamemberCache();
         for (auto it = cache.begin(); it != cache.end(); ++it) {
             if (it->first == pyprop->fOffset) {
@@ -49,7 +48,7 @@ static PyObject* pp_get(CPPDataMember* pyprop, CPPInstance* pyobj, PyObject* /* 
 
 // for fixed size arrays
     void* ptr = address;
-    if (pyprop->fProperty & kIsArrayType)
+    if (pyprop->fFlags & kIsArrayType)
         ptr = &address;
 
 // non-initialized or public data accesses through class (e.g. by help())
@@ -68,7 +67,7 @@ static PyObject* pp_get(CPPDataMember* pyprop, CPPInstance* pyobj, PyObject* /* 
         if (isLLView && CPPInstance_Check(pyobj)) {
             Py_INCREF(result);
             pyobj->GetDatamemberCache().push_back(std::make_pair(pyprop->fOffset, result));
-            pyprop->fProperty |= kIsCachable;
+            pyprop->fFlags |= kIsCachable;
         }
 
     // ensure that the encapsulating class does not go away for the duration
@@ -92,17 +91,17 @@ static PyObject* pp_get(CPPDataMember* pyprop, CPPInstance* pyobj, PyObject* /* 
 //-----------------------------------------------------------------------------
 static int pp_set(CPPDataMember* pyprop, CPPInstance* pyobj, PyObject* value)
 {
-/// Set the value of the C++ datum held.
+// Set the value of the C++ datum held.
     const int errret = -1;
 
 // filter const objects to prevent changing their values
-    if (pyprop->fProperty & kIsConstData) {
+    if (pyprop->fFlags & kIsConstData) {
         PyErr_SetString(PyExc_TypeError, "assignment to const data not allowed");
         return errret;
     }
 
 // remove cached low level view, if any (will be restored upon reaeding)
-    if (pyprop->fProperty & kIsCachable) {
+    if (pyprop->fFlags & kIsCachable) {
         CPyCppyy::CI_DatamemberCache_t& cache = pyobj->GetDatamemberCache();
         for (auto it = cache.begin(); it != cache.end(); ++it) {
             if (it->first == pyprop->fOffset) {
@@ -119,7 +118,7 @@ static int pp_set(CPPDataMember* pyprop, CPPInstance* pyobj, PyObject* value)
 
 // for fixed size arrays
     void* ptr = (void*)address;
-    if (pyprop->fProperty & kIsArrayType)
+    if (pyprop->fFlags & kIsArrayType)
         ptr = &address;
 
 // actual conversion; return on success
@@ -141,7 +140,7 @@ static CPPDataMember* pp_new(PyTypeObject* pytype, PyObject*, PyObject*)
     CPPDataMember* pyprop = (CPPDataMember*)pytype->tp_alloc(pytype, 0);
 
     pyprop->fOffset         = 0;
-    pyprop->fProperty       = 0;
+    pyprop->fFlags          = 0;
     pyprop->fConverter      = nullptr;
     pyprop->fEnclosingScope = 0;
     pyprop->fName           = nullptr;
@@ -228,7 +227,7 @@ void CPyCppyy::CPPDataMember::Set(Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t i
     fEnclosingScope = scope;
     fName           = CPyCppyy_PyText_FromString(Cppyy::GetDatamemberName(scope, idata).c_str());
     fOffset         = Cppyy::GetDatamemberOffset(scope, idata); // TODO: make lazy
-    fProperty       = Cppyy::IsStaticData(scope, idata) ? kIsStaticData : 0;
+    fFlags          = Cppyy::IsStaticData(scope, idata) ? kIsStaticData : 0;
 
     std::vector<dim_t> dims;
     int ndim = 0; dim_t size = 0;
@@ -241,17 +240,16 @@ void CPyCppyy::CPPDataMember::Set(Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t i
     }
     if (ndim) {
         dims[0] = ndim;
-        fProperty |= kIsArrayType;
+        fFlags |= kIsArrayType;
     }
 
     std::string fullType = Cppyy::GetDatamemberType(scope, idata);
     if (Cppyy::IsEnumData(scope, idata)) {
         fullType = Cppyy::ResolveEnum(fullType);  // enum might be any type of int
-        fProperty |= kIsEnumData;
+        fFlags |= kIsConstData;
+    } else if (Cppyy::IsConstData(scope, idata)) {
+        fFlags |= kIsConstData;
     }
-
-    if (Cppyy::IsConstData(scope, idata))
-        fProperty |= kIsConstData;
 
     fConverter = CreateConverter(fullType, dims.empty() ? nullptr : dims.data());
 }
@@ -262,15 +260,16 @@ void CPyCppyy::CPPDataMember::Set(Cppyy::TCppScope_t scope, const std::string& n
     fEnclosingScope = scope;
     fName           = CPyCppyy_PyText_FromString(name.c_str());
     fOffset         = (intptr_t)address;
-    fProperty       = (kIsStaticData | kIsConstData | kIsEnumData /* true, but may chance */);
+    fFlags          = kIsStaticData | kIsConstData;
     fConverter      = CreateConverter("internal_enum_type_t");
 }
+
 
 //-----------------------------------------------------------------------------
 void* CPyCppyy::CPPDataMember::GetAddress(CPPInstance* pyobj)
 {
 // class attributes, global properties
-    if (fProperty & kIsStaticData)
+    if (fFlags & kIsStaticData)
         return (void*)fOffset;
 
 // special case: non-static lookup through class

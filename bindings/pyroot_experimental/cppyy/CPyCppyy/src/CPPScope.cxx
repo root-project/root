@@ -68,6 +68,14 @@ static inline PyObject* add_template(PyObject* pyclass,
     return nullptr;       // so that caller caches the method on full name
 }
 
+//----------------------------------------------------------------------------
+static int enum_setattro(PyObject* pyclass, PyObject* pyname, PyObject* pyval)
+{
+// Helper to make enums read-only.
+    PyErr_SetString(PyExc_TypeError, "enum values are read-only");
+    return -1;
+}
+
 
 //= CPyCppyy type proxy construction/destruction =============================
 static PyObject* meta_alloc(PyTypeObject* meta, Py_ssize_t nitems)
@@ -371,6 +379,24 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname)
             // enum types (incl. named and class enums)
                 Cppyy::TCppEnum_t etype = Cppyy::GetEnum(scope, name);
                 if (etype) {
+                // create new enum type with labeled values in place, with a meta-class
+                // to make sure the enum values are read-only
+                    PyObject* pymetabases = PyTuple_New(1);
+                    PyObject* btype = (PyObject*)Py_TYPE(&PyInt_Type);
+                    Py_INCREF(btype);
+                    PyTuple_SET_ITEM(pymetabases, 0, btype);
+
+                    PyObject* args = Py_BuildValue((char*)"sO{}", (name+"_meta").c_str(), pymetabases);
+                    Py_DECREF(pymetabases);
+                    PyObject* pymeta = PyType_Type.tp_new(Py_TYPE(&PyInt_Type), args, nullptr);
+                    ((PyTypeObject*)pymeta)->tp_setattro = enum_setattro;
+                    Py_DECREF(args);
+
+                // prepare the base class
+                    PyObject* pybases = PyTuple_New(1);
+                    Py_INCREF(&PyInt_Type);
+                    PyTuple_SET_ITEM(pybases, 0, (PyObject*)&PyInt_Type);
+
                 // collect the enum values
                     Cppyy::TCppIndex_t ndata = Cppyy::GetNumEnumData(etype);
                     PyObject* dct = PyDict_New();
@@ -390,15 +416,15 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname)
                     PyDict_SetItem(dct, PyStrings::gCppName, cppname);
                     Py_DECREF(cppname);
 
-                // create new type with labeled values in place
-                    PyObject* pybases = PyTuple_New(1);
-                    Py_INCREF(&PyInt_Type);
-                    PyTuple_SET_ITEM(pybases, 0, (PyObject*)&PyInt_Type);
-                    PyObject* args = Py_BuildValue((char*)"sOO", name.c_str(), pybases, dct);
-                    attr = Py_TYPE(&PyInt_Type)->tp_new(Py_TYPE(&PyInt_Type), args, nullptr);
-                    Py_DECREF(args);
+                // create the actual enum class
+                    args = Py_BuildValue((char*)"sOO", name.c_str(), pybases, dct);
                     Py_DECREF(pybases);
                     Py_DECREF(dct);
+                    attr = ((PyTypeObject*)pymeta)->tp_new((PyTypeObject*)pymeta, args, nullptr);
+
+                // final cleanup
+                    Py_DECREF(args);
+                    Py_DECREF(pymeta);
 
                 } else {
                 // presumably not a class enum; simply pretend int
@@ -584,7 +610,11 @@ PyTypeObject CPPScope_Type = {
     (getattrofunc)meta_getattro,   // tp_getattro
     (setattrofunc)meta_setattro,   // tp_setattro
     0,                             // tp_as_buffer
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,     // tp_flags
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE
+#if PY_VERSION_HEX >= 0x03040000
+        | Py_TPFLAGS_TYPE_SUBCLASS
+#endif
+        ,                          // tp_flags
     (char*)"CPyCppyy metatype (internal)",        // tp_doc
     0,                             // tp_traverse
     0,                             // tp_clear
