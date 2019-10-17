@@ -11,8 +11,7 @@
 
 #include <ROOT/RBrowsable.hxx>
 
-class TPad;
-class TCanvas;
+class TVirtualPad;
 
 namespace ROOT {
 namespace Experimental {
@@ -37,7 +36,7 @@ class RDrawableProvider {
 
 protected:
 
-   virtual bool DoDrawV6(TPad *, std::unique_ptr<Browsable::RObject> &, const std::string &) const { return false; }
+   virtual bool DoDrawV6(TVirtualPad *, std::unique_ptr<Browsable::RObject> &, const std::string &) const { return false; }
 
    virtual bool DoDrawV7(std::shared_ptr<RPadBase> &, std::unique_ptr<Browsable::RObject> &, const std::string &) const { return false; }
 
@@ -48,7 +47,7 @@ public:
    static void RegisterV7(const TClass *cl, std::shared_ptr<RDrawableProvider> provider);
    static void Unregister(std::shared_ptr<RDrawableProvider> provider);
 
-   static bool DrawV6(TPad *subpad, std::unique_ptr<Browsable::RObject> &obj, const std::string &opt = "");
+   static bool DrawV6(TVirtualPad *subpad, std::unique_ptr<Browsable::RObject> &obj, const std::string &opt = "");
    static bool DrawV7(std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RObject> &obj, const std::string &opt = "");
 };
 

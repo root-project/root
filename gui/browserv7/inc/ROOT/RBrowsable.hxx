@@ -208,7 +208,6 @@ protected:
 
    virtual std::shared_ptr<RElement> DoBrowse(const TClass */*cl*/, const void */*object*/) const { return nullptr; }
 
-
 public:
    virtual ~RProvider() = default;
 
@@ -218,7 +217,6 @@ public:
 
    static std::shared_ptr<RElement> OpenFile(const std::string &extension, const std::string &fullname);
    static std::shared_ptr<RElement> Browse(const TClass *cl, const void *object);
-
 };
 
 } // namespace Browsable
