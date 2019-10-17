@@ -187,7 +187,7 @@ bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReplyNew
             item = std::make_unique<RBrowserItem>(iter->GetName(), -1);
 
          if (gDebug > 0)
-            printf("REQ:    item %s\n", item->GetName().c_str());
+            printf("REQ:    item %s icon %s\n", item->GetName().c_str(), item->GetIcon().c_str());
 
          reply.nodes.emplace_back(std::move(item));
       }
@@ -205,17 +205,15 @@ bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReplyNew
 }
 
 
-std::unique_ptr<RBrowsableElement> RBrowsable::GetElement(const std::string &path)
+std::shared_ptr<RBrowsableElement> RBrowsable::GetElement(const std::string &path)
 {
    std::vector<std::string> arr;
 
    if (!DecomposePath(path, arr))
       return nullptr;
 
-   if (arr.size() == 0) {
-      R__ERROR_HERE("Browserv7") << "Cannot access top-level element via GetElement method";
-      return nullptr;
-   }
+   if (arr.size() == 0)
+      return fItem;
 
    if (!Navigate(arr))
       return nullptr;
