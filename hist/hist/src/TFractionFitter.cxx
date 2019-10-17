@@ -77,10 +77,12 @@ is also provided to simplify this.
 ## Setting parameter values
 The function
 
-    TVirtualFitter* vFit = fit->GetFitter();
+    ROOT::Fit::Fitter* fitter = fit->GetFitter();
 
-is provided for direct access to the TVirtualFitter object. This allows to
-set and fix parameter values, and set step sizes directly.
+is provided for direct access to the ROOT::Fit::Fitter object. This allows to
+set and fix parameter values, limits and set step sizes directly via
+
+    fitter->Config().ParSettings(parameter #).Set(const std::string &name, double value, double step, double lower, double upper);
 
 ## Restricting the fit range
 The fit range can be restricted through
