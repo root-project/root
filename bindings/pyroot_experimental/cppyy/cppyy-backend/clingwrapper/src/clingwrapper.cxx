@@ -23,6 +23,7 @@
 #include "TInterpreter.h"
 #include "TList.h"
 #include "TListOfDataMembers.h"
+#include "TListOfEnums.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
 #include "TROOT.h"
@@ -1691,7 +1692,7 @@ std::string Cppyy::GetDatamemberType(TCppScope_t scope, TCppIndex_t idata)
         std::string fullType = m->GetFullTypeName();
         if (fullType.rfind("struct ", 0) != std::string::npos ||
                 (fullType.rfind("union", 0) != std::string::npos && \
-                 fullType.size() > 5 && (fullType[5] == ' ' || fullType[5] == '('))) {
+                 fullType.size() > 5 && fullType[5] == ' ' || fullType[5] == '(')) {
             fullType = m->GetTrueTypeName();
         }
 
@@ -1831,15 +1832,41 @@ bool Cppyy::IsConstData(TCppScope_t scope, TCppIndex_t idata)
 
 bool Cppyy::IsEnumData(TCppScope_t scope, TCppIndex_t idata)
 {
+// TODO: currently, ROOT/meta does not properly distinguish between variables of enum
+// type, and values of enums. The latter are supposed to be const. This code relies on
+// odd features (bugs?) to figure out the difference, but this should really be fixed
+// upstream and/or deserves a new API.
+
     if (scope == GLOBAL_HANDLE) {
         TGlobal* gbl = g_globalvars[idata];
-        return gbl->Property() & kIsEnum;
+
+    // make use of an oddity: enum global variables do not have their kIsStatic bit
+    // set, whereas enum global values do
+        return (gbl->Property() & kIsEnum) && (gbl->Property() & kIsStatic);
     }
+
     TClassRef& cr = type_from_handle(scope);
     if (cr.GetClass()) {
         TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At((int)idata);
-        return m->Property() & kIsEnum;
+        std::string ti = m->GetTypeName();
+
+    // can't check anonymous enums by type name, so just accept them as enums
+        if (ti.rfind("(anonymous)") != std::string::npos)
+            return m->Property() & kIsEnum;
+
+    // since there seems to be no distinction between data of enum type and enum values,
+    // check the list of constants for the type to see if there's a match
+        if (ti.rfind(cr->GetName(), 0) != std::string::npos) {
+            std::string::size_type s = strlen(cr->GetName())+2;
+            if (s < ti.size()) {
+                TEnum* ee = ((TListOfEnums*)cr->GetListOfEnums())->GetObject(ti.substr(s, std::string::npos).c_str());
+                if (ee) return ee->GetConstant(m->GetName());
+            }
+        }
     }
+
+// this default return only means that the data will be writable, not that it will
+// be unreadable or otherwise misrepresented
     return false;
 }
 
