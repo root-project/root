@@ -6,19 +6,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RFileBrowsable
-#define ROOT7_RFileBrowsable
+#ifndef ROOT7_RBrowsableSysFile
+#define ROOT7_RBrowsableSysFile
 
 #include <ROOT/RBrowsable.hxx>
 
 #include "TSystem.h"
 #include <string>
 
-class TDirectory;
-
 namespace ROOT {
 namespace Experimental {
-
 
 /** Representation of single item in the file browser */
 class RBrowserFileItem : public RBrowserItem {
@@ -47,25 +44,6 @@ public:
    virtual ~RBrowserFileItem() = default;
 };
 
-
-// ========================================================================================
-
-
-/** Representation of single item in the file browser */
-class RBrowserTKeyItem : public RBrowserItem {
-public:
-
-   std::string icon;     ///< icon name
-
-   std::string className; ///< class name
-
-   RBrowserTKeyItem() = default;
-
-   RBrowserTKeyItem(const std::string &_name, int _nchilds) : RBrowserItem(_name, _nchilds) {}
-
-   // should be here, one needs virtual table for correct streaming of RRootBrowserReply
-   virtual ~RBrowserTKeyItem() = default;
-};
 
 
 namespace Browsable {
@@ -101,30 +79,6 @@ public:
    std::string GetTextContent() override;
 
 };
-
-// ====================================================================================================
-
-class TDirectoryElement : public RElement {
-   std::string fFileName;       ///<!   file name
-   TDirectory *fDir{nullptr};   ///<!   subdirectory (ifany)
-
-   TDirectory *GetDir() const;
-
-public:
-
-   TDirectoryElement(const std::string &fname, TDirectory *dir = nullptr);
-
-   virtual ~TDirectoryElement();
-
-   /** Name of RBrowsable, must be provided in derived classes */
-   std::string GetName() const override;
-
-   /** Title of RBrowsable (optional) */
-   std::string GetTitle() const override;
-
-   std::unique_ptr<RLevelIter> GetChildsIter() override;
-};
-
 
 } // namespace Browsable
 } // namespace Experimental
