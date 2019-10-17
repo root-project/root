@@ -30,27 +30,58 @@ class RLevelIter;
 
 
 class RObject {
-public:
-   virtual ~RObject() = default;
+protected:
 
-   virtual const TClass *GetClass() const = 0;
    /** Returns pointer when external memory management is used */
    virtual const void *GetObject() const { return nullptr; }
    /** Returns pointer on existing shared_ptr<T> */
    virtual void *GetShared() const { return nullptr; }
    /** Returns pointer with ownership, normally unique_ptr */
    virtual void *TakeObject() { return nullptr; }
+
+public:
+   virtual ~RObject() = default;
+
+   virtual const TClass *GetClass() const = 0;
+
+   template<class T>
+   std::shared_ptr<T> get_shared()
+   {
+      if (!GetClass()->InheritsFrom(TClass::GetClass<T>()))
+         return nullptr;
+      auto pshared = GetShared();
+      if (pshared)
+         return *(static_cast<std::shared_ptr<T> *>(pshared));
+      auto pobj = TakeObject();
+      if (pobj) {
+         std::shared_ptr<T> shared;
+         shared.reset(static_cast<T *>(pobj));
+         return shared;
+      }
+
+      return nullptr;
+   }
+
+   template<class T>
+   T *get_object()
+   {
+      if (!GetClass()->InheritsFrom(TClass::GetClass<T>()))
+         return nullptr;
+
+      return (T *) GetObject();
+   }
 };
 
 /** Holder of TObject without ownership */
 class RTObjectHolder : public RObject {
    TObject* fObj{nullptr};
+protected:
+   const void *GetObject() const final { return fObj; }
 public:
    RTObjectHolder(TObject *obj) { fObj = obj; }
    virtual ~RTObjectHolder() = default;
 
    const TClass *GetClass() const final { return fObj->IsA(); }
-   const void *GetObject() const final { return fObj; }
 };
 
 
@@ -59,6 +90,8 @@ public:
 template<class T>
 class RShared : public RObject {
    std::shared_ptr<T> fShared;
+protected:
+   void *GetShared() const final { return &fShared; }
 public:
    RShared(T *obj) { fShared.reset(obj); }
    RShared(std::shared_ptr<T> obj) { fShared = obj; }
@@ -66,7 +99,6 @@ public:
    virtual ~RShared() = default;
 
    const TClass *GetClass() const final { return TClass::GetClass<T>(); }
-   void *GetShared() const final { return &fShared; }
 };
 
 /** Holder of unique_ptr<T> */
@@ -74,32 +106,15 @@ public:
 template<class T>
 class RUnique : public RObject {
    std::unique_ptr<T> fUnique;
+protected:
+   void *TakeObject() final { return fUnique.release(); }
 public:
    RUnique(T *obj) { fUnique.reset(obj); }
    RUnique(std::unique_ptr<T> &&obj) { fUnique = std::move(obj); }
    virtual ~RUnique() = default;
 
    const TClass *GetClass() const final { return TClass::GetClass<T>(); }
-   void *TakeObject() final { return fUnique.release(); }
 };
-
-
-template<class T>
-std::shared_ptr<T> get_shared(std::unique_ptr<RObject> &ptr)
-{
-   if (!ptr->GetClass()->InheritsFrom(TClass::GetClass<T>())) return nullptr;
-   auto pshared = ptr->GetShared();
-   if (pshared)
-      return *(static_cast<std::shared_ptr<T> *>(pshared));
-   auto pobj = ptr->TakeObject();
-   if (pobj) {
-      std::shared_ptr<T> shared;
-      shared.reset(static_cast<T *>(pobj));
-      return shared;
-   }
-
-   return nullptr;
-}
 
 /** \class RElement
 \ingroup rbrowser
