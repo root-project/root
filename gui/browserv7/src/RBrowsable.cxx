@@ -15,16 +15,17 @@
 #include "TList.h"
 
 using namespace ROOT::Experimental;
+using namespace ROOT::Experimental::Browsable;
 
 
-RBrowsableProvider::Map_t &RBrowsableProvider::GetMap()
+RProvider::Map_t &RProvider::GetMap()
 {
-   static RBrowsableProvider::Map_t sMap;
+   static RProvider::Map_t sMap;
    return sMap;
 }
 
 
-void RBrowsableProvider::Register(std::shared_ptr<RBrowsableProvider> provider)
+void RProvider::Register(std::shared_ptr<RProvider> provider)
 {
     auto &map = GetMap();
 
@@ -34,7 +35,7 @@ void RBrowsableProvider::Register(std::shared_ptr<RBrowsableProvider> provider)
        map[provider->GetSupportedClass()] = provider;
 }
 
-std::shared_ptr<RBrowsableProvider> RBrowsableProvider::GetProvider(const TClass *cl, bool check_base)
+std::shared_ptr<RProvider> RProvider::GetProvider(const TClass *cl, bool check_base)
 {
    if (!cl) return nullptr;
 
@@ -64,7 +65,7 @@ std::shared_ptr<RBrowsableProvider> RBrowsableProvider::GetProvider(const TClass
 /// Default implementation, should work for all
 
 
-bool RBrowsableLevelIter::Find(const std::string &name)
+bool RLevelIter::Find(const std::string &name)
 {
    if (!Reset()) return false;
 
@@ -205,7 +206,7 @@ bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReplyNew
 }
 
 
-std::shared_ptr<RBrowsableElement> RBrowsable::GetElement(const std::string &path)
+std::shared_ptr<RElement> RBrowsable::GetElement(const std::string &path)
 {
    std::vector<std::string> arr;
 

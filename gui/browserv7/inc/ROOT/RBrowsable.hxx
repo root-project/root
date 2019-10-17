@@ -24,10 +24,11 @@ class TObject;
 namespace ROOT {
 namespace Experimental {
 
+namespace Browsable {
 
-class RBrowsableLevelIter;
+class RLevelIter;
 
-/** \class RBrowsableElement
+/** \class RElement
 \ingroup rbrowser
 \brief Basic element of RBrowsable hierarchy. Provides access to data, creates iterator if any
 \author Sergey Linev <S.Linev@gsi.de>
@@ -35,9 +36,9 @@ class RBrowsableLevelIter;
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RBrowsableElement {
+class RElement {
 public:
-   virtual ~RBrowsableElement() = default;
+   virtual ~RElement() = default;
 
    /** Name of RBrowsable, must be provided in derived classes */
    virtual std::string GetName() const = 0;
@@ -46,7 +47,7 @@ public:
    virtual std::string GetTitle() const { return ""; }
 
    /** Create iterator for childs elements if any */
-   virtual std::unique_ptr<RBrowsableLevelIter> GetChildsIter() { return nullptr; }
+   virtual std::unique_ptr<RLevelIter> GetChildsIter() { return nullptr; }
 
    virtual bool HasTextContent() const { return false; }
 
@@ -56,7 +57,7 @@ public:
    virtual TObject *GetObjectToDraw() { return nullptr; }
 };
 
-/** \class RBrowsableLevelIter
+/** \class RLevelIter
 \ingroup rbrowser
 \brief Iterator over single level hierarchy like TList
 \author Sergey Linev <S.Linev@gsi.de>
@@ -65,9 +66,9 @@ public:
 */
 
 
-class RBrowsableLevelIter {
+class RLevelIter {
 public:
-   virtual ~RBrowsableLevelIter() = default;
+   virtual ~RLevelIter() = default;
 
    /** Shift to next element */
    virtual bool Next() { return false; }
@@ -92,8 +93,42 @@ public:
    }
 
    /** Returns full information for current element */
-   virtual std::shared_ptr<RBrowsableElement> GetElement() { return nullptr; }
+   virtual std::shared_ptr<RElement> GetElement() { return nullptr; }
 };
+
+
+/** \class RProvider
+\ingroup rbrowser
+\brief Provider of different browsing methods for supported classes
+\author Sergey Linev <S.Linev@gsi.de>
+\date 2019-10-14
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
+
+
+class RProvider {
+
+   using Map_t = std::map<const TClass*, std::shared_ptr<RProvider>>;
+
+   static Map_t &GetMap();
+
+public:
+   virtual ~RProvider() = default;
+
+   /** Returns supported class */
+   virtual const TClass *GetSupportedClass() const = 0;
+
+   /** Returns true if derived classes supported as well */
+   virtual bool SupportDerivedClasses() const { return false; }
+
+
+   static void Register(std::shared_ptr<RProvider> provider);
+   static std::shared_ptr<RProvider> GetProvider(const TClass *cl, bool check_base = true);
+
+};
+
+} // namespace Browsable
+
 
 /** \class RBrowsable
 \ingroup rbrowser
@@ -108,12 +143,12 @@ class RBrowsable {
 
    struct RLevel {
       std::string name;
-      std::unique_ptr<RBrowsableLevelIter> iter;
-      std::shared_ptr<RBrowsableElement> item;
+      std::unique_ptr<Browsable::RLevelIter> iter;
+      std::shared_ptr<Browsable::RElement> item;
       RLevel(const std::string &_name) : name(_name) {}
    };
 
-   std::shared_ptr<RBrowsableElement> fItem; ///<! top-level item to browse
+   std::shared_ptr<Browsable::RElement> fItem; ///<! top-level item to browse
    std::vector<RLevel> fLevels;           ///<! navigated levels
 
    bool Navigate(const std::vector<std::string> &path);
@@ -123,7 +158,7 @@ class RBrowsable {
 public:
    RBrowsable() = default;
 
-   RBrowsable(std::shared_ptr<RBrowsableElement> item)
+   RBrowsable(std::shared_ptr<Browsable::RElement> item)
    {
       fItem = item;
    }
@@ -131,7 +166,7 @@ public:
    virtual ~RBrowsable() = default;
 
 
-   void SetTopItem(std::shared_ptr<RBrowsableElement> item)
+   void SetTopItem(std::shared_ptr<Browsable::RElement> item)
    {
       fLevels.clear();
       fItem = item;
@@ -139,38 +174,7 @@ public:
 
    bool ProcessRequest(const RBrowserRequest &request, RBrowserReplyNew &reply);
 
-   std::shared_ptr<RBrowsableElement> GetElement(const std::string &path);
-};
-
-
-/** \class RBrowsableProvider
-\ingroup rbrowser
-\brief Provider of different browsing methods for supported classes
-\author Sergey Linev <S.Linev@gsi.de>
-\date 2019-10-14
-\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
-*/
-
-
-class RBrowsableProvider {
-
-   using Map_t = std::map<const TClass*, std::shared_ptr<RBrowsableProvider>>;
-
-   static Map_t &GetMap();
-
-public:
-   virtual ~RBrowsableProvider() = default;
-
-   /** Returns supported class */
-   virtual const TClass *GetSupportedClass() const = 0;
-
-   /** Returns true if derived classes supported as well */
-   virtual bool SupportDerivedClasses() const { return false; }
-
-
-   static void Register(std::shared_ptr<RBrowsableProvider> provider);
-   static std::shared_ptr<RBrowsableProvider> GetProvider(const TClass *cl, bool check_base = true);
-
+   std::shared_ptr<Browsable::RElement> GetElement(const std::string &path);
 };
 
 
