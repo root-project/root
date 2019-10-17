@@ -970,14 +970,14 @@ void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected
    else
       snprintf(atext, kTMAX, "%d,%d", px, py);
    fCanvasImp->SetStatusText(atext,2);
-   
+
    // Show date/time if TimeDisplay is selected
    TAxis *xaxis = NULL;
    if ( selected->InheritsFrom("TH1") )
       xaxis = ((TH1*)selected)->GetXaxis();
-   else if ( selected->InheritsFrom("TGraph") ) 
+   else if ( selected->InheritsFrom("TGraph") )
       xaxis = ((TGraph*)selected)->GetXaxis();
-   else if ( selected->InheritsFrom("TAxis") ) 
+   else if ( selected->InheritsFrom("TAxis") )
       xaxis = (TAxis*)selected;
    if ( xaxis != NULL && xaxis->GetTimeDisplay()) {
       TString objinfo = selected->GetObjectInfo(px,py);
@@ -1000,7 +1000,7 @@ void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected
             toff = (UInt_t)gStyle->GetTimeOffset();
          }
          TDatime dt((UInt_t)gPad->AbsPixeltoX(px) + toff);
-         snprintf(atext, kTMAX, "%s, y=%g", 
+         snprintf(atext, kTMAX, "%s, y=%g",
             dt.AsSQLString(),gPad->AbsPixeltoY(py));
          fCanvasImp->SetStatusText(atext,3);
          gPad = savepad;
@@ -1009,7 +1009,7 @@ void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected
    }
    // default
    fCanvasImp->SetStatusText(selected->GetObjectInfo(px,py),3);
-   
+
    gPad = savepad;
 }
 
