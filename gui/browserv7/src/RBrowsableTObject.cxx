@@ -98,15 +98,28 @@ public:
 
 
 class TObjectElement : public RElement {
+
+   std::unique_ptr<Browsable::RObject> fObject;
    TObject *fObj{nullptr};
    std::string fName;
 
 public:
    TObjectElement(TObject *obj, const std::string &name = "") : fObj(obj), fName(name)
    {
+      fObject = std::make_unique<RTObjectHolder>(fObj);
       if (fName.empty())
          fName = fObj->GetName();
    }
+
+   TObjectElement(std::unique_ptr<Browsable::RObject> &obj, const std::string &name = "")
+   {
+      fObject = std::move(obj); // take responsibility
+      fObj = fObject->Get<TObject>(); // try to cast into TObject
+      fName = name;
+      if (fName.empty() && fObj)
+         fName = fObj->GetName();
+   }
+
 
    virtual ~TObjectElement() = default;
 
@@ -114,11 +127,13 @@ public:
    std::string GetName() const override { return fName; }
 
    /** Title of RBrowsable (optional) */
-   std::string GetTitle() const override { return fObj->GetTitle(); }
+   std::string GetTitle() const override { return fObj ? fObj->GetTitle() : ""; }
 
    /** Create iterator for childs elements if any */
    std::unique_ptr<RLevelIter> GetChildsIter() override
    {
+      if (!fObj) return nullptr;
+
       auto iter = std::make_unique<TObjectLevelIter>();
 
       TMyBrowserImp *imp = new TMyBrowserImp(iter.get());
@@ -140,19 +155,16 @@ public:
    /** Return TObject depending from kind of requested result */
    std::unique_ptr<RObject> GetObject(bool plain = false) override
    {
+      if (!fObject || !fObj)
+         return nullptr;
 
       if (plain)
          return std::make_unique<RTObjectHolder>(fObj);
 
-      TObject *tobj = fObj->Clone();
-      if (!tobj)
-         return nullptr;
-      if (tobj->IsA()->GetBaseClassOffset(TH1::Class()) == 0)
-         static_cast<TH1 *>(tobj)->SetDirectory(nullptr);
-      return std::make_unique<RUnique<TObject>>(tobj);
+      return fObject->Copy();
    }
 
-   std::string ClassName() const { return fObj->ClassName(); }
+   std::string ClassName() const { return fObj ? fObj->ClassName() : ""; }
 
 };
 
@@ -190,16 +202,9 @@ class RTObjectProvider : public RProvider {
 public:
    RTObjectProvider()
    {
-      RegisterBrowse(nullptr, [](const TClass *cl, const void *object) -> std::shared_ptr<RElement> {
-         if (cl && cl->InheritsFrom(TObject::Class())) {
-
-            TObject *to = (TObject *) const_cast<TClass *>(cl)->DynamicCast(TObject::Class(), object, kTRUE);
-
-            if (to) {
-               printf("Doing browsing of obj %s %s\n", to->GetName(), to->ClassName());
-               return std::make_shared<TObjectElement>(to);
-            }
-         }
+      RegisterBrowse(nullptr, [](std::unique_ptr<Browsable::RObject> &object) -> std::shared_ptr<RElement> {
+         if (object->InheritsFrom<TObject>())
+            return std::make_shared<TObjectElement>(object);
 
          return nullptr;
 
