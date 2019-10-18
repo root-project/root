@@ -481,63 +481,43 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
 using namespace ROOT::Experimental;
 
 class RV6DrawProvider : public RDrawableProvider {
-protected:
+public:
 
-   bool DoDrawV6(TVirtualPad *pad, std::unique_ptr<Browsable::RObject> &obj, const std::string &opt) const override
+   RV6DrawProvider()
    {
-      auto tobj = obj->get_object<TObject>();
-      if (!tobj) return false;
+      RegisterV6(nullptr, [](TVirtualPad *pad, std::unique_ptr<Browsable::RObject> &obj, const std::string &opt) -> bool {
+         auto tobj = obj->get_object<TObject>();
+         if (!tobj) return false;
 
-      pad->GetListOfPrimitives()->Clear();
+         pad->GetListOfPrimitives()->Clear();
 
-      pad->GetListOfPrimitives()->Add(tobj, opt.c_str());
+         pad->GetListOfPrimitives()->Add(tobj, opt.c_str());
 
-      return true;
+         return true;
+      });
    }
 
-};
-
-struct RV6DrawProviderReg {
-   std::shared_ptr<RV6DrawProvider> provider;
-   RV6DrawProviderReg()
-   {
-      provider = std::make_shared<RV6DrawProvider>();
-      // RDrawableProvider::RegisterV6(TObject::Class(), provider);
-      RDrawableProvider::RegisterV6(nullptr, provider); // try to check all classes
-   }
-   ~RV6DrawProviderReg() { RDrawableProvider::Unregister(provider); }
-} newRV6DrawProviderReg;
+} newRV6DrawProvider;
 
 
 class RV7DrawProvider : public RDrawableProvider {
-protected:
-
-   bool DoDrawV7(std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RObject> &obj, const std::string &opt) const override
+public:
+   RV7DrawProvider()
    {
-      auto tobj = obj->get_shared<TObject>();
-      if (!tobj) return false;
+      RegisterV7(nullptr, [] (std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RObject> &obj, const std::string &opt) -> bool {
+         auto tobj = obj->get_shared<TObject>();
+         if (!tobj) return false;
 
-      if (subpad->NumPrimitives() > 0) {
-         subpad->Wipe();
-         subpad->GetCanvas()->Modified();
-         subpad->GetCanvas()->Update(true);
-      }
+         if (subpad->NumPrimitives() > 0) {
+            subpad->Wipe();
+            subpad->GetCanvas()->Modified();
+            subpad->GetCanvas()->Update(true);
+         }
 
-      subpad->Draw<RObjectDrawable>(tobj, opt);
-
-      return true;
+         subpad->Draw<RObjectDrawable>(tobj, opt);
+         return true;
+      });
    }
 
-};
-
-struct RV7DrawProviderReg {
-   std::shared_ptr<RV7DrawProvider> provider;
-   RV7DrawProviderReg()
-   {
-      provider = std::make_shared<RV7DrawProvider>();
-      // RDrawableProvider::RegisterV7(TObject::Class(), provider);
-      RDrawableProvider::RegisterV7(nullptr, provider); // try to check all classes
-   }
-   ~RV7DrawProviderReg() { RDrawableProvider::Unregister(provider); }
-} newRV7DrawProviderReg;
+} newRV7DrawProvider;
 
