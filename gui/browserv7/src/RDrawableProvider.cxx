@@ -24,24 +24,24 @@ RDrawableProvider::MapV7_t &RDrawableProvider::GetV7Map()
    return sMap;
 }
 
-void RDrawableProvider::RegisterV6(const TClass *cl, FuncV6_t provider)
+void RDrawableProvider::RegisterV6(const TClass *cl, FuncV6_t func)
 {
     auto &bmap = GetV6Map();
 
     if (cl && (bmap.find(cl) != bmap.end()))
        R__ERROR_HERE("Browserv7") << "Drawable handler for class " << cl->GetName() << " already exists";
 
-    bmap.emplace(cl, provider);
+    bmap.emplace(cl, StructV6{this, func});
 }
 
-void RDrawableProvider::RegisterV7(const TClass *cl, FuncV7_t provider)
+void RDrawableProvider::RegisterV7(const TClass *cl, FuncV7_t func)
 {
     auto &bmap = GetV7Map();
 
     if (cl && (bmap.find(cl) != bmap.end()))
        R__ERROR_HERE("Browserv7") << "Drawable handler for class " << cl->GetName() << " already exists";
 
-    bmap.emplace(cl, provider);
+    bmap.emplace(cl, StructV7{this, func});
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -53,17 +53,17 @@ RDrawableProvider::~RDrawableProvider()
 
    auto &map6 = GetV6Map();
    for (auto iter6 = map6.begin(); iter6 != map6.end();) {
-//      if (iter6->second == provider)
-//         iter6 = map6.erase(iter6);
-//      else
+      if (iter6->second.provider == this)
+         iter6 = map6.erase(iter6);
+      else
          iter6++;
    }
 
    auto &map7 = GetV7Map();
    for (auto iter7 = map7.begin(); iter7 != map7.end();) {
-//      if (iter7->second == provider)
-//         iter7 = map7.erase(iter7);
-//      else
+      if (iter7->second.provider == this)
+         iter7 = map7.erase(iter7);
+      else
          iter7++;
    }
 }
@@ -74,13 +74,13 @@ bool RDrawableProvider::DrawV6(TVirtualPad *subpad, std::unique_ptr<Browsable::R
    auto iter6 = map6.find(obj->GetClass());
 
    if (iter6 != map6.end()) {
-      if (iter6->second(subpad, obj, opt))
+      if (iter6->second.func(subpad, obj, opt))
          return true;
    }
 
    for (auto &pair : map6)
       if ((pair.first == obj->GetClass()) || !pair.first)
-         if (pair.second(subpad, obj, opt))
+         if (pair.second.func(subpad, obj, opt))
             return true;
 
    return false;
@@ -92,13 +92,13 @@ bool RDrawableProvider::DrawV7(std::shared_ptr<RPadBase> &subpad, std::unique_pt
    auto iter7 = map7.find(obj->GetClass());
 
    if (iter7 != map7.end()) {
-      if (iter7->second(subpad, obj, opt))
+      if (iter7->second.func(subpad, obj, opt))
          return true;
    }
 
    for (auto &pair : map7)
       if ((pair.first == obj->GetClass()) || !pair.first)
-         if (pair.second(subpad, obj, opt))
+         if (pair.second.func(subpad, obj, opt))
             return true;
 
    return false;

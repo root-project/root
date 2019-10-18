@@ -35,41 +35,41 @@ RProvider::~RProvider()
    auto &fmap = GetFileMap();
 
    for (auto fiter = fmap.begin();fiter != fmap.end();) {
-      //if (fiter->second == provider)
-      //   fiter = fmap.erase(fiter);
-      //else
+      if (fiter->second.provider == this)
+         fiter = fmap.erase(fiter);
+      else
          fiter++;
    }
 
    auto &bmap = GetBrowseMap();
    for (auto biter = bmap.begin(); biter != bmap.end();) {
-      //if (biter->second == provider)
-      //   biter = bmap.erase(biter);
-      //else
+      if (biter->second.provider == this)
+         biter = bmap.erase(biter);
+      else
          biter++;
    }
 
 }
 
 
-void RProvider::RegisterFile(const std::string &extension, FileFunc_t provider)
+void RProvider::RegisterFile(const std::string &extension, FileFunc_t func)
 {
     auto &fmap = GetFileMap();
 
     if ((extension != "*") && (fmap.find(extension) != fmap.end()))
        R__ERROR_HERE("Browserv7") << "Provider for file extension  " << extension << " already exists";
 
-    fmap.emplace(extension, provider);
+    fmap.emplace(extension, StructFile{this,func});
 }
 
-void RProvider::RegisterBrowse(const TClass *cl, BrowseFunc_t provider)
+void RProvider::RegisterBrowse(const TClass *cl, BrowseFunc_t func)
 {
     auto &bmap = GetBrowseMap();
 
     if (cl && (bmap.find(cl) != bmap.end()))
        R__ERROR_HERE("Browserv7") << "Browse provider for class " << cl->GetName() << " already exists";
 
-    bmap.emplace(cl, provider);
+    bmap.emplace(cl, StructBrowse{this,func});
 }
 
 
@@ -85,13 +85,13 @@ std::shared_ptr<RElement> RProvider::OpenFile(const std::string &extension, cons
    auto iter = fmap.find(extension);
 
    if (iter != fmap.end()) {
-      auto res = iter->second(fullname);
+      auto res = iter->second.func(fullname);
       if (res) return res;
    }
 
    for (auto &pair : fmap)
       if ((pair.first == "*") || (pair.first == extension)) {
-         auto res = pair.second(fullname);
+         auto res = pair.second.func(fullname);
          if (res) return res;
       }
 
@@ -105,19 +105,18 @@ std::shared_ptr<RElement> RProvider::Browse(const TClass *cl, const void *object
    auto iter = bmap.find(cl);
 
    if (iter != bmap.end()) {
-      auto res = iter->second(cl, object);
+      auto res = iter->second.func(cl, object);
       if (res) return res;
    }
 
    for (auto &pair : bmap)
       if ((pair.first == nullptr) || (pair.first == cl)) {
-         auto res = pair.second(cl, object);
+         auto res = pair.second.func(cl, object);
          if (res) return res;
       }
 
    return nullptr;
 }
-
 
 /////////////////////////////////////////////////////////////////////
 /// Find item with specified name
