@@ -43,12 +43,16 @@ protected:
    using FuncV6_t = std::function<bool(TVirtualPad *, std::unique_ptr<Browsable::RObject> &, const std::string &)>;
    using FuncV7_t = std::function<bool(std::shared_ptr<RPadBase> &, std::unique_ptr<Browsable::RObject> &, const std::string &)>;
 
-   void RegisterV6(const TClass *cl, FuncV6_t provider);
-   void RegisterV7(const TClass *cl, FuncV7_t provider);
+   void RegisterV6(const TClass *cl, FuncV6_t func);
+   void RegisterV7(const TClass *cl, FuncV7_t func);
 
 private:
-   using MapV6_t = std::map<const TClass*, FuncV6_t>;
-   using MapV7_t = std::map<const TClass*, FuncV7_t>;
+
+   struct StructV6 { RDrawableProvider *provider;  FuncV6_t func; };
+   struct StructV7 { RDrawableProvider *provider;  FuncV7_t func; };
+
+   using MapV6_t = std::map<const TClass*, StructV6>;
+   using MapV7_t = std::map<const TClass*, StructV7>;
 
    static MapV6_t &GetV6Map();
    static MapV7_t &GetV7Map();
