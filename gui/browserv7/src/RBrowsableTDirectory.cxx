@@ -154,16 +154,12 @@ public:
           return std::make_unique<TDirectoryLevelIter>(subdir);
       }
 
-      const TClass *obj_class = TClass::GetClass(clname.c_str());
-      if (!obj_class || !obj_class->InheritsFrom(TObject::Class())) return nullptr;
-
-      TObject *obj = fDir->FindObjectAny(fKey->GetName());
-      if (!obj) obj = fKey->ReadObj();
+      auto obj = GetObject(true);
 
       if (obj) {
-         printf("Try to browse class %s\n", obj->ClassName());
+         printf("Try to browse class %s\n", obj->GetClass()->GetName());
          // TODO: make clear ownership here, use RObject API here in the future
-         auto elem = Browsable::RProvider::Browse(obj->IsA(), obj);
+         auto elem = Browsable::RProvider::Browse(obj);
          printf("Got element %p\n", elem.get());
          if (elem) return elem->GetChildsIter();
       }
@@ -179,12 +175,8 @@ public:
       const TClass *obj_class = TClass::GetClass(clname.c_str());
       if (!obj_class) return nullptr;
 
-      if (plain) {
-
-         if (!obj_class->InheritsFrom(TObject::Class())) {
-            R__ERROR_HERE("Browserv7") << "Only TObjects can be used for plain reading";
-            return nullptr;
-         }
+      if (plain && obj_class->InheritsFrom(TObject::Class())) {
+         // for TObject means ownership keep for TDirectory
 
          TObject *tobj = fKey->ReadObj();
 

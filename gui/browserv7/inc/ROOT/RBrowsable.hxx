@@ -39,16 +39,39 @@ class RObject {
 protected:
 
    /** Returns pointer when external memory management is used */
-   virtual const void *GetObject() const { return nullptr; }
+   virtual const void *GetObjectPlain() const { return nullptr; }
    /** Returns pointer on existing shared_ptr<T> */
    virtual void *GetShared() const { return nullptr; }
    /** Returns pointer with ownership, normally via unique_ptr<T>::release() */
    virtual void *TakeObject() { return nullptr; }
 
+   virtual RObject *DoCopy() const = 0;
+
 public:
    virtual ~RObject() = default;
 
+   template<class T>
+   bool InheritsFrom() const
+   {
+      if (!GetObject() || !GetClass()) return false;
+      return TClass::GetClass<T>()->InheritsFrom(TObject::Class());
+   }
+
+   template<class T>
+   T *Get() const
+   {
+      if (!InheritsFrom<T>()) return nullptr;
+      return (T *) const_cast<TClass *>(GetClass())->DynamicCast(TClass::GetClass<T>(), GetObject(), kTRUE);
+   }
+
+   /** Clone container. Only if there no object ownership or shared_ptr */
+   auto Copy() const { return std::unique_ptr<RObject>(DoCopy()); }
+
+   /** Returns class of contained object */
    virtual const TClass *GetClass() const = 0;
+
+   /** Returns object pointer without touching ownership */
+   virtual const void *GetObject() const = 0;
 
    template<class T>
    std::shared_ptr<T> get_shared()
@@ -74,7 +97,7 @@ public:
       if (!GetClass()->InheritsFrom(TClass::GetClass<T>()))
          return nullptr;
 
-      return (T *) GetObject();
+      return (T *) GetObjectPlain();
    }
 };
 
@@ -90,17 +113,19 @@ public:
 class RTObjectHolder : public RObject {
    TObject* fObj{nullptr};   ///<! plain holder without IO
 protected:
-   const void *GetObject() const final { return fObj; }
+   const void *GetObjectPlain() const final { return fObj; }
+   RObject* DoCopy() const final { return new RTObjectHolder(fObj); }
 public:
    RTObjectHolder(TObject *obj) { fObj = obj; }
    virtual ~RTObjectHolder() = default;
 
    const TClass *GetClass() const final { return fObj->IsA(); }
+   const void *GetObject() const final { return fObj; }
 };
 
 /** \class RAnyObjectHolder
 \ingroup rbrowser
-\brief Holder of TObject instance. Should not be used very often, while ownership is undefined for it
+\brief Holder of any object instance. Should not be used very often, while ownership is undefined for it
 \author Sergey Linev <S.Linev@gsi.de>
 \date 2019-10-19
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
@@ -120,7 +145,13 @@ protected:
          res = nullptr;
       return res;
    }
-   const void *GetObject() const final { return fOwner ? nullptr : fObj; }
+   const void *GetObjectPlain() const final { return fOwner ? nullptr : fObj; }
+
+   RObject* DoCopy() const final
+   {
+      if (fOwner || !fObj || !fClass) return nullptr;
+      return new RAnyObjectHolder(fClass, fObj, false);
+   }
 
 public:
    RAnyObjectHolder(const TClass *cl, void *obj, bool owner = false) { fClass = cl; fObj = obj; fOwner = owner; }
@@ -131,6 +162,7 @@ public:
    }
 
    const TClass *GetClass() const final { return fClass; }
+   const void *GetObject() const final { return fObj; }
 };
 
 
@@ -148,6 +180,7 @@ class RShared : public RObject {
    std::shared_ptr<T> fShared;   ///<! holder without IO
 protected:
    void *GetShared() const final { return &fShared; }
+   RObject* DoCopy() const final { return new RShared<T>(fShared); }
 public:
    RShared(T *obj) { fShared.reset(obj); }
    RShared(std::shared_ptr<T> obj) { fShared = obj; }
@@ -155,6 +188,7 @@ public:
    virtual ~RShared() = default;
 
    const TClass *GetClass() const final { return TClass::GetClass<T>(); }
+   const void *GetObject() const final { return fShared.get(); }
 };
 
 /** \class RUnique<T>
@@ -170,12 +204,15 @@ class RUnique : public RObject {
    std::unique_ptr<T> fUnique; ///<! holder without IO
 protected:
    void *TakeObject() final { return fUnique.release(); }
+   // clone does not supported for unique_ptr
+   RObject* DoCopy() const final { return nullptr; }
 public:
    RUnique(T *obj) { fUnique.reset(obj); }
    RUnique(std::unique_ptr<T> &&obj) { fUnique = std::move(obj); }
    virtual ~RUnique() = default;
 
    const TClass *GetClass() const final { return TClass::GetClass<T>(); }
+   const void *GetObject() const final { return fUnique.get(); }
 };
 
 
@@ -267,12 +304,12 @@ public:
    virtual ~RProvider();
 
    static std::shared_ptr<RElement> OpenFile(const std::string &extension, const std::string &fullname);
-   static std::shared_ptr<RElement> Browse(const TClass *cl, const void *object);
+   static std::shared_ptr<RElement> Browse(std::unique_ptr<Browsable::RObject> &obj);
 
 protected:
 
    using FileFunc_t = std::function<std::shared_ptr<RElement>(const std::string &)>;
-   using BrowseFunc_t = std::function<std::shared_ptr<RElement>(const TClass *cl, const void *object)>;
+   using BrowseFunc_t = std::function<std::shared_ptr<RElement>(std::unique_ptr<Browsable::RObject> &)>;
 
    void RegisterFile(const std::string &extension, FileFunc_t func);
    void RegisterBrowse(const TClass *cl, BrowseFunc_t func);
@@ -284,7 +321,6 @@ private:
 
    using BrowseMap_t = std::map<const TClass*, StructBrowse>;
    using FileMap_t = std::multimap<std::string, StructFile>;
-
 
    static BrowseMap_t &GetBrowseMap();
    static FileMap_t &GetFileMap();
