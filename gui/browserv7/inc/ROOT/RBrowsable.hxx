@@ -274,13 +274,16 @@ protected:
    using FileFunc_t = std::function<std::shared_ptr<RElement>(const std::string &)>;
    using BrowseFunc_t = std::function<std::shared_ptr<RElement>(const TClass *cl, const void *object)>;
 
-   void RegisterFile(const std::string &extension, FileFunc_t provider);
-   void RegisterBrowse(const TClass *cl, BrowseFunc_t provider);
+   void RegisterFile(const std::string &extension, FileFunc_t func);
+   void RegisterBrowse(const TClass *cl, BrowseFunc_t func);
 
 private:
 
-   using BrowseMap_t = std::map<const TClass*, BrowseFunc_t>;
-   using FileMap_t = std::multimap<std::string, FileFunc_t>;
+   struct StructBrowse { RProvider *provider;  BrowseFunc_t func; };
+   struct StructFile { RProvider *provider;  FileFunc_t func; };
+
+   using BrowseMap_t = std::map<const TClass*, StructBrowse>;
+   using FileMap_t = std::multimap<std::string, StructFile>;
 
 
    static BrowseMap_t &GetBrowseMap();
