@@ -18,6 +18,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <functional>
 
 class TObject;
 
@@ -261,27 +262,30 @@ public:
 
 class RProvider {
 
-   using Map_t = std::map<const TClass*, std::shared_ptr<RProvider>>;
-   using FileMap_t = std::multimap<std::string, std::shared_ptr<RProvider>>;
-
-   static Map_t &GetBrowseMap();
-   static FileMap_t &GetFileMap();
-
-protected:
-
-   virtual std::shared_ptr<RElement> DoOpenFile(const std::string & /*fullname*/) const { return nullptr; }
-
-   virtual std::shared_ptr<RElement> DoBrowse(const TClass */*cl*/, const void */*object*/) const { return nullptr; }
-
 public:
-   virtual ~RProvider() = default;
 
-   static void RegisterFile(const std::string &extension, std::shared_ptr<RProvider> provider);
-   static void RegisterBrowse(const TClass *cl, std::shared_ptr<RProvider> provider);
-   static void Unregister(std::shared_ptr<RProvider> provider);
+   virtual ~RProvider();
 
    static std::shared_ptr<RElement> OpenFile(const std::string &extension, const std::string &fullname);
    static std::shared_ptr<RElement> Browse(const TClass *cl, const void *object);
+
+protected:
+
+   using FileFunc_t = std::function<std::shared_ptr<RElement>(const std::string &)>;
+   using BrowseFunc_t = std::function<std::shared_ptr<RElement>(const TClass *cl, const void *object)>;
+
+   void RegisterFile(const std::string &extension, FileFunc_t provider);
+   void RegisterBrowse(const TClass *cl, BrowseFunc_t provider);
+
+private:
+
+   using BrowseMap_t = std::map<const TClass*, BrowseFunc_t>;
+   using FileMap_t = std::multimap<std::string, FileFunc_t>;
+
+
+   static BrowseMap_t &GetBrowseMap();
+   static FileMap_t &GetFileMap();
+
 };
 
 } // namespace Browsable
