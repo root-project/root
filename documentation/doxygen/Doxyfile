@@ -798,6 +798,7 @@ INPUT                  = . \
                          ../../core/dictgen/ \
                          ../../core/cont/ \
                          ../../core/foundation/ \
+                         ../../core/gui/ \
                          ../../core/macosx/ \
                          ../../core/meta/ \
                          ../../core/metacling/ \
