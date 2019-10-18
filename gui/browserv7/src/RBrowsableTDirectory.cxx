@@ -85,7 +85,7 @@ public:
    int CanHaveChilds() const override
    {
       std::string clname = fKey->GetClassName();
-      return (clname.find("TDirectory") == 0) ? 1 : 0;
+      return (clname.find("TDirectory") == 0) || (clname.find("TTree") == 0) || (clname.find("TNtuple") == 0) ? 1 : 0;
    }
 
    std::string GetClassIcon(const std::string &classname)
@@ -140,17 +140,33 @@ public:
    /** Title of RBrowsable (optional) */
    std::string GetTitle() const override { return fKey->GetTitle(); }
 
-   /** Create iterator for childs elements if any */
+   /** Create iterator for childs elements if any
+    * Means we should try to browse inside.
+    * Either it is directory or some complex object
+    * */
    std::unique_ptr<RLevelIter> GetChildsIter() override
    {
       std::string clname = fKey->GetClassName();
 
-      if (clname.find("TDirectory") != 0)
-         return nullptr;
+      if (clname.find("TDirectory") == 0) {
+          auto subdir = fDir->GetDirectory(GetName().c_str());
+          if (!subdir) return nullptr;
+          return std::make_unique<TDirectoryLevelIter>(subdir);
+      }
 
-      auto subdir = fDir->GetDirectory(GetName().c_str());
-      if (subdir)
-         return std::make_unique<TDirectoryLevelIter>(subdir);
+      const TClass *obj_class = TClass::GetClass(clname.c_str());
+      if (!obj_class || !obj_class->InheritsFrom(TObject::Class())) return nullptr;
+
+      TObject *obj = fDir->FindObjectAny(fKey->GetName());
+      if (!obj) obj = fKey->ReadObj();
+
+      if (obj) {
+         printf("Try to browse class %s\n", obj->ClassName());
+         // TODO: make clear ownership here, use RObject API here in the future
+         auto elem = Browsable::RProvider::Browse(obj->IsA(), obj);
+         printf("Got element %p\n", elem.get());
+         if (elem) return elem->GetChildsIter();
+      }
 
       return nullptr;
    }
@@ -191,8 +207,6 @@ public:
 
       void *obj = fKey->ReadObjectAny(obj_class);
       if (!obj) return nullptr;
-
-      printf("Read object of class %s done\n", obj_class->GetName());
 
       return std::make_unique<RAnyObjectHolder>(obj_class, obj, true);
    }
