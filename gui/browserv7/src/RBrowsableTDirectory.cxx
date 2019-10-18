@@ -286,24 +286,19 @@ public:
 
 // ==============================================================================================
 
-
 class RTFileProvider : public RProvider {
-protected:
 
-   std::shared_ptr<RElement> DoOpenFile(const std::string &fullname) const override
+public:
+   RTFileProvider()
    {
-      auto f = TFile::Open(fullname.c_str());
-      if (!f) return nullptr;
+      RegisterFile("root", [] (const std::string &fullname) -> std::shared_ptr<RElement> {
+         auto f = TFile::Open(fullname.c_str());
+         if (!f) return nullptr;
 
-      return std::make_shared<TDirectoryElement>(fullname, f);
+         return std::make_shared<TDirectoryElement>(fullname, f);
+      });
    }
 
-};
-
-struct RTFileProviderReg {
-   std::shared_ptr<RTFileProvider> provider;
-   RTFileProviderReg() { provider = std::make_shared<RTFileProvider>(); RProvider::RegisterFile("root", provider); }
-   ~RTFileProviderReg() { RProvider::Unregister(provider); }
-} newRTFileProviderReg;
+} newRTFileProvider ;
 
 
