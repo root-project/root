@@ -12,6 +12,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
   HEADERS
     ROOT/RBrowsable.hxx
     ROOT/RBrowsableSysFile.hxx
+    ROOT/RBrowsableTObject.hxx
     ROOT/RBrowsableTDirectory.hxx
     ROOT/RBrowserItem.hxx
     ROOT/RDrawableProvider.hxx
@@ -19,6 +20,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
   SOURCES
     src/RBrowsable.cxx
     src/RBrowsableSysFile.cxx
+    src/RBrowsableTObject.cxx
     src/RBrowsableTDirectory.cxx
     src/RDrawableProvider.cxx
     src/RDrawableRHist.cxx
