@@ -50,6 +50,9 @@ public:
 	  Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax);
   virtual ~RooPlot();
 
+  static RooPlot* frame(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nBins);
+  static RooPlot* frameWithLabels(const RooAbsRealLValue &var);
+
   RooPlot* emptyClone(const char* name) ;
 
   // implement the TH1 interface

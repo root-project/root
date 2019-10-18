@@ -45,6 +45,7 @@
 #include "RooBinning.h"
 #include "RooPlot.h"
 #include "RooCurve.h"
+#include "RooHist.h"
 #include "RooRealVar.h"
 #include "RooArgProxy.h"
 #include "RooFormulaVar.h"
@@ -1643,8 +1644,10 @@ void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
 /// <tr><td> `EvalErrorValue(Double_t value)`  <td> Set curve points at which (pdf) evaluation error occur to specified value. By default the
 ///                                    function value is plotted.
 ///
-/// <tr><td> `Normalization(Double_t scale, ScaleType code)`   <td> Adjust normalization by given scale factor. Interpretation of number depends on code: Relative:
-///                     relative adjustment factor, NumEvent: scale to match given number of events.
+/// <tr><td> `Normalization(Double_t scale, ScaleType code)`   <td> Adjust normalization by given scale factor. Interpretation of number depends on code:
+///                    - Relative: relative adjustment factor for a normalized function,
+///                    - NumEvent: scale to match given number of events.
+///                    - Raw: relative adjustment factor for an un-normalized function.
 ///
 /// <tr><td> `Name(const chat* name)`          <td> Give curve specified name in frame. Useful if curve is to be referenced later
 ///
@@ -1660,13 +1663,20 @@ void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
 /// <tr><td> `Components(const RooArgSet& compSet)` <td> As above, but pass a RooArgSet of the components themselves.
 ///
 /// <tr><th><th> Plotting control
-/// <tr><td> `DrawOption(const char* opt)`     <td> Select ROOT draw option for resulting TGraph object
+/// <tr><td> `DrawOption(const char* opt)`     <td> Select ROOT draw option for resulting TGraph object. Currently supported options are "F" (fill), "L" (line), and "P" (points). 
+///           \note Option "P" will cause RooFit to plot (and treat) this pdf as if it were data! This is intended for plotting "corrected data"-type pdfs such as "data-minus-background" or unfolded datasets.
 ///
 /// <tr><td> `LineStyle(Int_t style)`          <td> Select line style by ROOT line style code, default is solid
 ///
 /// <tr><td> `LineColor(Int_t color)`          <td> Select line color by ROOT color code, default is blue
 ///
 /// <tr><td> `LineWidth(Int_t width)`          <td> Select line with in pixels, default is 3
+///
+/// <tr><td> `MarkerStyle(Int_t style)`   <td> Select the ROOT marker style, default is 21
+///
+/// <tr><td> `MarkerColor(Int_t color)`   <td> Select the ROOT marker color, default is black
+///
+/// <tr><td> `MarkerSize(Double_t size)`   <td> Select the ROOT marker size
 ///
 /// <tr><td> `FillStyle(Int_t style)`          <td> Select fill style, default is not filled. If a filled style is selected, also use VLines()
 ///                                    to add vertical downward lines at end of curve to ensure proper closure
@@ -1750,6 +1760,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   pc.defineString("curveNameSuffix","CurveNameSuffix",0,"") ;
   pc.defineString("sliceCatState","SliceCat",0,"",kTRUE) ;
   pc.defineDouble("scaleFactor","Normalization",0,1.0) ;
+  pc.defineInt("scaleType","Normalization",0,Relative) ; 
   pc.defineObject("sliceSet","SliceVars",0) ;
   pc.defineObject("sliceCatList","SliceCat",0,0,kTRUE) ;
   pc.defineObject("projSet","Project",0) ;
@@ -1773,6 +1784,9 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   pc.defineInt("VLines","VLines",0,2) ; // 2==ExtendedWings
   pc.defineString("rangeName","RangeWithName",0,"") ;
   pc.defineString("normRangeName","NormRange",0,"") ;
+  pc.defineInt("markerColor","MarkerColor",0,-999) ;
+  pc.defineInt("markerStyle","MarkerStyle",0,-999) ;
+  pc.defineDouble("markerSize","MarkerSize",0,-999) ;
   pc.defineInt("lineColor","LineColor",0,-999) ;
   pc.defineInt("lineStyle","LineStyle",0,-999) ;
   pc.defineInt("lineWidth","LineWidth",0,-999) ;
@@ -1799,20 +1813,24 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   }
 
   PlotOpt o ;
+  TString drawOpt(pc.getString("drawOption"));
 
   RooFitResult* errFR = (RooFitResult*) pc.getObject("errorFR") ;
   Double_t errZ = pc.getDouble("errorZ") ;
   RooArgSet* errPars = pc.getSet("errorPars") ;
   Bool_t linMethod = pc.getInt("linearMethod") ;
-  if (errFR) {
+  if (!drawOpt.Contains("P") && errFR) {
     return plotOnWithErrorBand(frame,*errFR,errZ,errPars,argList,linMethod) ;
+  } else {
+    o.errorFR = errFR;
   }
 
   // Extract values from named arguments
   o.numee       = pc.getInt("numee") ;
-  o.drawOptions = pc.getString("drawOption") ;
+  o.drawOptions = drawOpt.Data();
   o.curveNameSuffix = pc.getString("curveNameSuffix") ;
   o.scaleFactor = pc.getDouble("scaleFactor") ;
+  o.stype = (ScaleType) pc.getInt("scaleType")  ;
   o.projData = (const RooAbsData*) pc.getObject("projData") ;
   o.binProjData = pc.getInt("binProjData") ;
   o.projDataSet = (const RooArgSet*) pc.getObject("projDataSet") ;
@@ -1940,6 +1958,9 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   Int_t lineColor = pc.getInt("lineColor") ;
   Int_t lineStyle = pc.getInt("lineStyle") ;
   Int_t lineWidth = pc.getInt("lineWidth") ;
+  Int_t markerColor = pc.getInt("markerColor") ;
+  Int_t markerStyle = pc.getInt("markerStyle") ;
+  Size_t markerSize  = pc.getDouble("markerSize") ;
   Int_t fillColor = pc.getInt("fillColor") ;
   Int_t fillStyle = pc.getInt("fillStyle") ;
   if (lineColor!=-999) ret->getAttLine()->SetLineColor(lineColor) ;
@@ -1947,6 +1968,9 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   if (lineWidth!=-999) ret->getAttLine()->SetLineWidth(lineWidth) ;
   if (fillColor!=-999) ret->getAttFill()->SetFillColor(fillColor) ;
   if (fillStyle!=-999) ret->getAttFill()->SetFillStyle(fillStyle) ;
+  if (markerColor!=-999) ret->getAttMarker()->SetMarkerColor(markerColor) ;
+  if (markerStyle!=-999) ret->getAttMarker()->SetMarkerStyle(markerStyle) ;
+  if (markerSize!=-999) ret->getAttMarker()->SetMarkerSize(markerSize) ;
 
   // Move last inserted object to back to drawing stack if requested
   if (pc.getInt("moveToBack") && frame->numItems()>1) {
@@ -2266,20 +2290,17 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
       GlobalSelectComponentRAII selectCompRAII(true);
       RooAbsReal* intFrac = projection->createIntegral(*plotVar,*plotVar,o.normRangeName) ;
       _globalSelectComp = true; //It's unclear why this is done a second time. Maybe unnecessary.
-      o.scaleFactor /= intFrac->getVal() ;
+      if(o.stype != RooAbsReal::Raw || this->InheritsFrom(RooAbsPdf::Class())){
+        // this scaling should only be !=1  when plotting partial ranges
+        // still, raw means raw
+        o.scaleFactor /= intFrac->getVal() ;
+      }
       delete intFrac ;
 
     }
 
     // create a new curve of our function using the clone to do the evaluations
     // Curve constructor for regular projections
-
-    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
-    RooCurve *curve = new RooCurve(*projection,*plotVar,o.rangeLo,o.rangeHi,frame->GetNbinsX(),
-				   o.scaleFactor,0,o.precision,o.precision,o.shiftToZero,o.wmode,o.numee,o.doeeval,o.eeval,o.progress);
-    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
-
-
 
     // Set default name of curve
     TString curveName(projection->GetName()) ;
@@ -2290,25 +2311,44 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
       // Append any suffixes imported from RooAbsPdf::plotOn
       curveName.Append(o.curveNameSuffix) ;
     }
-    curve->SetName(curveName.Data()) ;
+    
+    TString opt(o.drawOptions);
+    if(opt.Contains("P")){
+      RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
+      RooHist *graph= new RooHist(*projection,*plotVar,1.,o.scaleFactor,frame->getNormVars(),o.errorFR);
+      RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
 
+      // Override name of curve by user name, if specified
+      if (o.curveName) {
+        graph->SetName(o.curveName) ;
+      }
 
-    // Add self to other curve if requested
-    if (o.addToCurveName) {
-      RooCurve* otherCurve = static_cast<RooCurve*>(frame->findObject(o.addToCurveName,RooCurve::Class())) ;
-      RooCurve* sumCurve = new RooCurve(projection->GetName(),projection->GetTitle(),*curve,*otherCurve,o.addToWgtSelf,o.addToWgtOther) ;
-      sumCurve->SetName(Form("%s_PLUS_%s",curve->GetName(),otherCurve->GetName())) ;
-      delete curve ;
-      curve = sumCurve ;
+      // add this new curve to the specified plot frame
+      frame->addPlotable(graph, o.drawOptions, o.curveInvisible);
+    } else {
+      RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
+      RooCurve *curve = new RooCurve(*projection,*plotVar,o.rangeLo,o.rangeHi,frame->GetNbinsX(),
+                                     o.scaleFactor,0,o.precision,o.precision,o.shiftToZero,o.wmode,o.numee,o.doeeval,o.eeval,o.progress);
+      RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
+      curve->SetName(curveName.Data()) ;
+
+      // Add self to other curve if requested
+      if (o.addToCurveName) {
+        RooCurve* otherCurve = static_cast<RooCurve*>(frame->findObject(o.addToCurveName,RooCurve::Class())) ;
+        RooCurve* sumCurve = new RooCurve(projection->GetName(),projection->GetTitle(),*curve,*otherCurve,o.addToWgtSelf,o.addToWgtOther) ;
+        sumCurve->SetName(Form("%s_PLUS_%s",curve->GetName(),otherCurve->GetName())) ;
+        delete curve ;
+        curve = sumCurve ;
+      }
+
+      // Override name of curve by user name, if specified
+      if (o.curveName) {
+        curve->SetName(o.curveName) ;
+      }
+
+      // add this new curve to the specified plot frame
+      frame->addPlotable(curve, o.drawOptions, o.curveInvisible);
     }
-
-    // Override name of curve by user name, if specified
-    if (o.curveName) {
-      curve->SetName(o.curveName) ;
-    }
-
-    // add this new curve to the specified plot frame
-    frame->addPlotable(curve, o.drawOptions, o.curveInvisible);
   }
 
   if (projDataNeededVars) delete projDataNeededVars ;
@@ -2649,7 +2689,7 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 /// \f$ \mathrm{Corr}(a,a') \f$ = the correlation matrix from the fit result
 ///
 
-Double_t RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &nset_in)
+Double_t RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &nset_in) const
 {
 
    // Strip out parameters with zero error
@@ -2799,6 +2839,10 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
   RooLinkedList tmp(plotArgList) ;
   plotOn(frame,tmp) ;
   RooCurve* cenCurve = frame->getCurve() ;
+  if(!cenCurve){
+    coutE(Plotting) << ClassName() << "::" << GetName() << ":plotOnWithErrorBand: no curve for central value available" << endl;
+    return frame;
+  }
   frame->remove(0,kFALSE) ;
 
   RooCurve* band(0) ;
@@ -2956,6 +3000,9 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
   pc.defineInt("lineColor","LineColor",0,-999) ;
   pc.defineInt("lineStyle","LineStyle",0,-999) ;
   pc.defineInt("lineWidth","LineWidth",0,-999) ;
+  pc.defineInt("markerColor","MarkerColor",0,-999) ;
+  pc.defineInt("markerStyle","MarkerStyle",0,-999) ;
+  pc.defineDouble("markerSize","MarkerSize",0,-999) ;
   pc.defineInt("fillColor","FillColor",0,-999) ;
   pc.defineInt("fillStyle","FillStyle",0,-999) ;
   pc.defineString("curveName","Name",0,"") ;
@@ -2972,11 +3019,13 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
   // Insert error band in plot frame
   frame->addPlotable(band,pc.getString("drawOption"),pc.getInt("curveInvisible")) ;
 
-
   // Optionally adjust line/fill attributes
   Int_t lineColor = pc.getInt("lineColor") ;
   Int_t lineStyle = pc.getInt("lineStyle") ;
   Int_t lineWidth = pc.getInt("lineWidth") ;
+  Int_t markerColor = pc.getInt("markerColor") ;
+  Int_t markerStyle = pc.getInt("markerStyle") ;
+  Size_t markerSize  = pc.getDouble("markerSize") ;
   Int_t fillColor = pc.getInt("fillColor") ;
   Int_t fillStyle = pc.getInt("fillStyle") ;
   if (lineColor!=-999) frame->getAttLine()->SetLineColor(lineColor) ;
@@ -2984,6 +3033,9 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
   if (lineWidth!=-999) frame->getAttLine()->SetLineWidth(lineWidth) ;
   if (fillColor!=-999) frame->getAttFill()->SetFillColor(fillColor) ;
   if (fillStyle!=-999) frame->getAttFill()->SetFillStyle(fillStyle) ;
+  if (markerColor!=-999) frame->getAttMarker()->SetMarkerColor(markerColor) ;
+  if (markerStyle!=-999) frame->getAttMarker()->SetMarkerStyle(markerStyle) ;
+  if (markerSize!=-999) frame->getAttMarker()->SetMarkerSize(markerSize) ;
 
   // Adjust name if requested
   if (pc.getString("curveName",0,kTRUE)) {
