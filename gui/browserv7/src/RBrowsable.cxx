@@ -98,21 +98,23 @@ std::shared_ptr<RElement> RProvider::OpenFile(const std::string &extension, cons
    return nullptr;
 }
 
-std::shared_ptr<RElement> RProvider::Browse(const TClass *cl, const void *object)
+std::shared_ptr<RElement> RProvider::Browse(std::unique_ptr<Browsable::RObject> &object)
 {
    auto &bmap = GetBrowseMap();
+
+   auto cl = object->GetClass();
 
    auto iter = bmap.find(cl);
 
    if (iter != bmap.end()) {
-      auto res = iter->second.func(cl, object);
-      if (res) return res;
+      auto res = iter->second.func(object);
+      if (res || !object) return res;
    }
 
    for (auto &pair : bmap)
       if ((pair.first == nullptr) || (pair.first == cl)) {
-         auto res = pair.second.func(cl, object);
-         if (res) return res;
+         auto res = pair.second.func(object);
+         if (res || !object) return res;
       }
 
    return nullptr;
