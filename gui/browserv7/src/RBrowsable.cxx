@@ -16,9 +16,9 @@ using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Browsable;
 
 
-RProvider::Map_t &RProvider::GetBrowseMap()
+RProvider::BrowseMap_t &RProvider::GetBrowseMap()
 {
-   static RProvider::Map_t sMap;
+   static RProvider::BrowseMap_t sMap;
    return sMap;
 }
 
@@ -28,7 +28,31 @@ RProvider::FileMap_t &RProvider::GetFileMap()
    return sMap;
 }
 
-void RProvider::RegisterFile(const std::string &extension, std::shared_ptr<RProvider> provider)
+
+RProvider::~RProvider()
+{
+   // here to remove all correspondent entries
+   auto &fmap = GetFileMap();
+
+   for (auto fiter = fmap.begin();fiter != fmap.end();) {
+      //if (fiter->second == provider)
+      //   fiter = fmap.erase(fiter);
+      //else
+         fiter++;
+   }
+
+   auto &bmap = GetBrowseMap();
+   for (auto biter = bmap.begin(); biter != bmap.end();) {
+      //if (biter->second == provider)
+      //   biter = bmap.erase(biter);
+      //else
+         biter++;
+   }
+
+}
+
+
+void RProvider::RegisterFile(const std::string &extension, FileFunc_t provider)
 {
     auto &fmap = GetFileMap();
 
@@ -38,7 +62,7 @@ void RProvider::RegisterFile(const std::string &extension, std::shared_ptr<RProv
     fmap.emplace(extension, provider);
 }
 
-void RProvider::RegisterBrowse(const TClass *cl, std::shared_ptr<RProvider> provider)
+void RProvider::RegisterBrowse(const TClass *cl, BrowseFunc_t provider)
 {
     auto &bmap = GetBrowseMap();
 
@@ -48,29 +72,10 @@ void RProvider::RegisterBrowse(const TClass *cl, std::shared_ptr<RProvider> prov
     bmap.emplace(cl, provider);
 }
 
+
+
 //////////////////////////////////////////////////////////////////////////////////
 // remove provider from all registered lists
-
-void RProvider::Unregister(std::shared_ptr<RProvider> provider)
-{
-   auto &fmap = GetFileMap();
-
-   for (auto fiter = fmap.begin();fiter != fmap.end();) {
-      if (fiter->second == provider)
-         fiter = fmap.erase(fiter);
-      else
-         fiter++;
-   }
-
-   auto &bmap = GetBrowseMap();
-   for (auto biter = bmap.begin(); biter != bmap.end();) {
-      if (biter->second == provider)
-         biter = bmap.erase(biter);
-      else
-         biter++;
-   }
-}
-
 
 
 std::shared_ptr<RElement> RProvider::OpenFile(const std::string &extension, const std::string &fullname)
@@ -80,13 +85,13 @@ std::shared_ptr<RElement> RProvider::OpenFile(const std::string &extension, cons
    auto iter = fmap.find(extension);
 
    if (iter != fmap.end()) {
-      auto res = iter->second->DoOpenFile(fullname);
+      auto res = iter->second(fullname);
       if (res) return res;
    }
 
    for (auto &pair : fmap)
       if ((pair.first == "*") || (pair.first == extension)) {
-         auto res = pair.second->DoOpenFile(fullname);
+         auto res = pair.second(fullname);
          if (res) return res;
       }
 
@@ -100,13 +105,13 @@ std::shared_ptr<RElement> RProvider::Browse(const TClass *cl, const void *object
    auto iter = bmap.find(cl);
 
    if (iter != bmap.end()) {
-      auto res = iter->second->DoBrowse(cl, object);
+      auto res = iter->second(cl, object);
       if (res) return res;
    }
 
    for (auto &pair : bmap)
       if ((pair.first == nullptr) || (pair.first == cl)) {
-         auto res = pair.second->DoBrowse(cl, object);
+         auto res = pair.second(cl, object);
          if (res) return res;
       }
 

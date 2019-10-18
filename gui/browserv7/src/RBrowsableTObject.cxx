@@ -186,29 +186,24 @@ std::unique_ptr<RBrowserItem> TObjectLevelIter::CreateBrowserItem()
 
 
 class RTObjectProvider : public RProvider {
-protected:
 
-   std::shared_ptr<RElement> DoBrowse(const TClass *cl, const void *object) const
+public:
+   RTObjectProvider()
    {
-      if (cl && cl->InheritsFrom(TObject::Class())) {
+      RegisterBrowse(nullptr, [](const TClass *cl, const void *object) -> std::shared_ptr<RElement> {
+         if (cl && cl->InheritsFrom(TObject::Class())) {
 
-         TObject *to = (TObject *) const_cast<TClass *>(cl)->DynamicCast(TObject::Class(), object, kTRUE);
+            TObject *to = (TObject *) const_cast<TClass *>(cl)->DynamicCast(TObject::Class(), object, kTRUE);
 
-         if (to) {
-            printf("Doing browsing of obj %s %s\n", to->GetName(), to->ClassName());
-            return std::make_shared<TObjectElement>(to);
+            if (to) {
+               printf("Doing browsing of obj %s %s\n", to->GetName(), to->ClassName());
+               return std::make_shared<TObjectElement>(to);
+            }
          }
-      }
 
-      return nullptr;
+         return nullptr;
+
+      });
    }
 
-};
-
-struct RTObjectProviderReg {
-   std::shared_ptr<RTObjectProvider> provider;
-   RTObjectProviderReg() { provider = std::make_shared<RTObjectProvider>(); RProvider::RegisterBrowse(nullptr, provider); }
-   ~RTObjectProviderReg() { RProvider::Unregister(provider); }
-} newRTObjectProviderReg;
-
-
+} newRTObjectProvider;
