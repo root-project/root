@@ -12,19 +12,19 @@
 
 using namespace ROOT::Experimental;
 
-RDrawableProvider::Map_t &RDrawableProvider::GetV6Map()
+RDrawableProvider::MapV6_t &RDrawableProvider::GetV6Map()
 {
-   static RDrawableProvider::Map_t sMap;
+   static RDrawableProvider::MapV6_t sMap;
    return sMap;
 }
 
-RDrawableProvider::Map_t &RDrawableProvider::GetV7Map()
+RDrawableProvider::MapV7_t &RDrawableProvider::GetV7Map()
 {
-   static RDrawableProvider::Map_t sMap;
+   static RDrawableProvider::MapV7_t sMap;
    return sMap;
 }
 
-void RDrawableProvider::RegisterV6(const TClass *cl, std::shared_ptr<RDrawableProvider> provider)
+void RDrawableProvider::RegisterV6(const TClass *cl, FuncV6_t provider)
 {
     auto &bmap = GetV6Map();
 
@@ -34,7 +34,7 @@ void RDrawableProvider::RegisterV6(const TClass *cl, std::shared_ptr<RDrawablePr
     bmap.emplace(cl, provider);
 }
 
-void RDrawableProvider::RegisterV7(const TClass *cl, std::shared_ptr<RDrawableProvider> provider)
+void RDrawableProvider::RegisterV7(const TClass *cl, FuncV7_t provider)
 {
     auto &bmap = GetV7Map();
 
@@ -47,21 +47,23 @@ void RDrawableProvider::RegisterV7(const TClass *cl, std::shared_ptr<RDrawablePr
 //////////////////////////////////////////////////////////////////////////////////
 // remove provider from all registered lists
 
-void RDrawableProvider::Unregister(std::shared_ptr<RDrawableProvider> provider)
+RDrawableProvider::~RDrawableProvider()
 {
+   // TODO: cleanup itself from global list
+
    auto &map6 = GetV6Map();
    for (auto iter6 = map6.begin(); iter6 != map6.end();) {
-      if (iter6->second == provider)
-         iter6 = map6.erase(iter6);
-      else
+//      if (iter6->second == provider)
+//         iter6 = map6.erase(iter6);
+//      else
          iter6++;
    }
 
    auto &map7 = GetV7Map();
    for (auto iter7 = map7.begin(); iter7 != map7.end();) {
-      if (iter7->second == provider)
-         iter7 = map7.erase(iter7);
-      else
+//      if (iter7->second == provider)
+//         iter7 = map7.erase(iter7);
+//      else
          iter7++;
    }
 }
@@ -72,13 +74,13 @@ bool RDrawableProvider::DrawV6(TVirtualPad *subpad, std::unique_ptr<Browsable::R
    auto iter6 = map6.find(obj->GetClass());
 
    if (iter6 != map6.end()) {
-      if (iter6->second->DoDrawV6(subpad, obj, opt))
+      if (iter6->second(subpad, obj, opt))
          return true;
    }
 
    for (auto &pair : map6)
       if ((pair.first == obj->GetClass()) || !pair.first)
-         if (pair.second->DoDrawV6(subpad, obj, opt))
+         if (pair.second(subpad, obj, opt))
             return true;
 
    return false;
@@ -90,13 +92,13 @@ bool RDrawableProvider::DrawV7(std::shared_ptr<RPadBase> &subpad, std::unique_pt
    auto iter7 = map7.find(obj->GetClass());
 
    if (iter7 != map7.end()) {
-      if (iter7->second->DoDrawV7(subpad, obj, opt))
+      if (iter7->second(subpad, obj, opt))
          return true;
    }
 
    for (auto &pair : map7)
       if ((pair.first == obj->GetClass()) || !pair.first)
-         if (pair.second->DoDrawV7(subpad, obj, opt))
+         if (pair.second(subpad, obj, opt))
             return true;
 
    return false;

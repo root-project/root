@@ -11,6 +11,9 @@
 
 #include <ROOT/RBrowsable.hxx>
 
+#include <functional>
+
+
 class TVirtualPad;
 
 namespace ROOT {
@@ -28,27 +31,27 @@ class RPadBase;
 
 
 class RDrawableProvider {
-
-   using Map_t = std::map<const TClass*, std::shared_ptr<RDrawableProvider>>;
-
-   static Map_t &GetV6Map();
-   static Map_t &GetV7Map();
-
-protected:
-
-   virtual bool DoDrawV6(TVirtualPad *, std::unique_ptr<Browsable::RObject> &, const std::string &) const { return false; }
-
-   virtual bool DoDrawV7(std::shared_ptr<RPadBase> &, std::unique_ptr<Browsable::RObject> &, const std::string &) const { return false; }
-
 public:
-   virtual ~RDrawableProvider() = default;
 
-   static void RegisterV6(const TClass *cl, std::shared_ptr<RDrawableProvider> provider);
-   static void RegisterV7(const TClass *cl, std::shared_ptr<RDrawableProvider> provider);
-   static void Unregister(std::shared_ptr<RDrawableProvider> provider);
+   virtual ~RDrawableProvider();
 
    static bool DrawV6(TVirtualPad *subpad, std::unique_ptr<Browsable::RObject> &obj, const std::string &opt = "");
    static bool DrawV7(std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RObject> &obj, const std::string &opt = "");
+
+protected:
+
+   using FuncV6_t = std::function<bool(TVirtualPad *, std::unique_ptr<Browsable::RObject> &, const std::string &)>;
+   using FuncV7_t = std::function<bool(std::shared_ptr<RPadBase> &, std::unique_ptr<Browsable::RObject> &, const std::string &)>;
+
+   void RegisterV6(const TClass *cl, FuncV6_t provider);
+   void RegisterV7(const TClass *cl, FuncV7_t provider);
+
+private:
+   using MapV6_t = std::map<const TClass*, FuncV6_t>;
+   using MapV7_t = std::map<const TClass*, FuncV7_t>;
+
+   static MapV6_t &GetV6Map();
+   static MapV7_t &GetV7Map();
 };
 
 

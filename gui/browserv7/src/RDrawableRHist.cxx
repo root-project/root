@@ -23,33 +23,22 @@
 using namespace ROOT::Experimental;
 
 class RV7HistDrawProvider : public RDrawableProvider {
-protected:
-
-   bool DoDrawV7(std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RObject> &obj, const std::string &) const override
+public:
+   RV7HistDrawProvider()
    {
-      auto hist = obj->get_shared<RH2D>();
-      if (!hist) return false;
+      RegisterV7(TClass::GetClass<RH2D>(), [] (std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RObject> &obj, const std::string &) -> bool {
+         auto hist = obj->get_shared<RH2D>();
+         if (!hist) return false;
 
-      if (subpad->NumPrimitives() > 0) {
-         subpad->Wipe();
-         subpad->GetCanvas()->Modified();
-         subpad->GetCanvas()->Update(true);
-      }
+         if (subpad->NumPrimitives() > 0) {
+            subpad->Wipe();
+            subpad->GetCanvas()->Modified();
+            subpad->GetCanvas()->Update(true);
+         }
 
-      subpad->Draw(hist);
+         subpad->Draw(hist);
 
-      return true;
+         return true;
+      });
    }
-};
-
-struct RV7HistDrawProviderReg {
-   std::shared_ptr<RV7HistDrawProvider> provider;
-   RV7HistDrawProviderReg()
-   {
-      provider = std::make_shared<RV7HistDrawProvider>();
-      // RDrawableProvider::RegisterV7(TObject::Class(), provider);
-      RDrawableProvider::RegisterV7(TClass::GetClass<RH2D>(), provider);
-   }
-   ~RV7HistDrawProviderReg() { RDrawableProvider::Unregister(provider); }
-} newRV7HistDrawProviderReg;
-
+} newRV7HistDrawProvider;
