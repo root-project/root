@@ -91,7 +91,7 @@ RooCmdArg FillColor(Color_t color) ;
 RooCmdArg FillStyle(Style_t style) ;
 RooCmdArg ProjectionRange(const char* rangeName) ;
 RooCmdArg Name(const char* name) ;
-RooCmdArg Invisible() ;
+RooCmdArg Invisible(bool inv=true) ;
 RooCmdArg AddTo(const char* name, double wgtSel=1.0, double wgtOther=1.0) ;
 RooCmdArg EvalErrorValue(Double_t value) ;
 RooCmdArg MoveToBack()  ;
