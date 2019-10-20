@@ -1710,3 +1710,20 @@ if(webgui)
      INSTALL_COMMAND ""
      SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution)
 endif()
+
+#------------------------------------------------------------------------------------
+# Look for libatomic. On ARM systems we need to explicitly link against that library
+# in certain places. But if it's not available, then assume that we are on a system
+# on which it is not needed.
+#
+string(REPLACE ":" ";" LD_LIBRARY_PATH "$ENV{LD_LIBRARY_PATH}")
+find_library(ROOT_ATOMIC_LIB NAMES atomic
+  HINTS ${LD_LIBRARY_PATH}
+  DOC "Path to the atomic library to use during the build")
+mark_as_advanced(ROOT_ATOMIC_LIB)
+if(ROOT_ATOMIC_LIB)
+  set(ROOT_ATOMIC_LIBS ${ROOT_ATOMIC_LIBRARY})
+else()
+  set(ROOT_ATOMIC_LIBS)
+endif()
+unset(LD_LIBRARY_PATH)
