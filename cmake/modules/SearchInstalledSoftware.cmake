@@ -1722,7 +1722,7 @@ find_library(ROOT_ATOMIC_LIB NAMES atomic
   DOC "Path to the atomic library to use during the build")
 mark_as_advanced(ROOT_ATOMIC_LIB)
 if(ROOT_ATOMIC_LIB)
-  set(ROOT_ATOMIC_LIBS ${ROOT_ATOMIC_LIBRARY})
+  set(ROOT_ATOMIC_LIBS ${ROOT_ATOMIC_LIB})
 else()
   set(ROOT_ATOMIC_LIBS)
 endif()
