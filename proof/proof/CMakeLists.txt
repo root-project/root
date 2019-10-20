@@ -86,4 +86,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Proof
     RIO
     Thread
     Tree
+  LIBRARIES
+    ${ROOT_ATOMIC_LIBS}
 )
