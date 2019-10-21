@@ -99,9 +99,9 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_V
 
 
 #---Install a bunch of files to /etc/cling------------------------------------
-set(clinginclude    ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
+set(clinginclude ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
 
-foreach(file module.modulemap.build
+foreach(file libc.modulemap std.modulemap module.modulemap.build
         Interpreter/DynamicExprInfo.h
         Interpreter/DynamicLookupRuntimeUniverse.h
         Interpreter/DynamicLookupLifetimeHandler.h
@@ -113,7 +113,7 @@ foreach(file module.modulemap.build
   set(dest_file ${file})
   if (${file} STREQUAL "module.modulemap.build")
     set(dest_file "module.modulemap")
-  else()
+  elseif(NOT ${file} MATCHES ".*modulemap")
     # We do not want our modulemap to be considered part of the PCH.
     set_property(GLOBAL APPEND PROPERTY CLINGETCPCH etc/cling/${dest_file})
   endif()
