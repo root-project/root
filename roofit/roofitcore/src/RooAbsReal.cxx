@@ -605,8 +605,7 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* n
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Utility function for createIntegral that creates the actual integreal object
-
+/// Internal utility function for createIntegral() that creates the actual integral object.
 RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* nset2,
 				     const RooNumIntConfig* cfg, const char* rangeName) const
 {

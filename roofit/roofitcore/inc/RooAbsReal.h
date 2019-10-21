@@ -175,21 +175,21 @@ public:
 			     const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(), 
 			     const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;
 
+  /// Create integral over observables in iset in range named rangeName.
   RooAbsReal* createIntegral(const RooArgSet& iset, const char* rangeName) const { 
-    // Create integral over observables in iset in range named rangeName
     return createIntegral(iset,0,0,rangeName) ; 
   }
+  /// Create integral over observables in iset in range named rangeName with integrand normalized over observables in nset
   RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, const char* rangeName=0) const { 
-    // Create integral over observables in iset in range named rangeName with integrand normalized over observables in nset
     return createIntegral(iset,&nset,0,rangeName) ; 
   }
-  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, const RooNumIntConfig& cfg, const char* rangeName=0) const { 
-    // Create integral over observables in iset in range named rangeName with integrand normalized over observables in nset while
-    // using specified configuration for any numeric integration
+  /// Create integral over observables in iset in range named rangeName with integrand normalized over observables in nset while
+  /// using specified configuration for any numeric integration.
+  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, const RooNumIntConfig& cfg, const char* rangeName=0) const {
     return createIntegral(iset,&nset,&cfg,rangeName) ; 
   }
+  /// Create integral over observables in iset in range named rangeName using specified configuration for any numeric integration.
   RooAbsReal* createIntegral(const RooArgSet& iset, const RooNumIntConfig& cfg, const char* rangeName=0) const { 
-    // Create integral over observables in iset in range named rangeName using specified configuration for any numeric integration
     return createIntegral(iset,0,&cfg,rangeName) ; 
   }
   virtual RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=0, const RooNumIntConfig* cfg=0, const char* rangeName=0) const ;  
