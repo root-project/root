@@ -1716,9 +1716,9 @@ endif()
 # in certain places. But if it's not available, then assume that we are on a system
 # on which it is not needed.
 #
-string(REPLACE ":" ";" LD_LIBRARY_PATH "$ENV{LD_LIBRARY_PATH}")
+string(REPLACE ":" ";" _libatomicSearchPaths "$ENV{LD_LIBRARY_PATH}")
 find_library(ROOT_ATOMIC_LIB NAMES atomic
-  HINTS ${LD_LIBRARY_PATH}
+  HINTS ${_libatomicSearchPaths}
   DOC "Path to the atomic library to use during the build")
 mark_as_advanced(ROOT_ATOMIC_LIB)
 if(ROOT_ATOMIC_LIB)
@@ -1726,4 +1726,4 @@ if(ROOT_ATOMIC_LIB)
 else()
   set(ROOT_ATOMIC_LIBS)
 endif()
-unset(LD_LIBRARY_PATH)
+unset(_libatomicSearchPaths)
