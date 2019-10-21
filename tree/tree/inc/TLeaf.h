@@ -58,7 +58,7 @@ protected:
    Int_t       fLen;             ///<  Number of fixed length elements in the leaf's data.
    Int_t       fLenType;         ///<  Number of bytes for this data type
    Int_t       fOffset;          ///<  Offset in ClonesArray object (if one)
-   Bool_t      fIsRange;         ///<  (=kTRUE if leaf has a range, kFALSE otherwise)
+   Bool_t      fIsRange;         ///<  (=kTRUE if leaf has a range, kFALSE otherwise).  This is equivalent to being a 'leafcount'.  For a TLeafElement the range information is actually store in the TBranchElement.
    Bool_t      fIsUnsigned;      ///<  (=kTRUE if unsigned, kFALSE otherwise)
    TLeaf      *fLeafCount;       ///<  Pointer to Leaf count if variable length (we do not own the counter)
    TBranch    *fBranch;          ///<! Pointer to supporting branch (we do not own the branch)
