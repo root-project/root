@@ -544,6 +544,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
             SetTitle(branchname);
             leaf->SetName(branchname);
             leaf->SetTitle(branchname);
+            leaf->SetRange(kTRUE);
             Unroll(name, clOfClones, clOfClones, pointer, basketsize, splitlevel+splitSTLP, 31);
             BuildTitle(name);
             SetReadLeavesPtr();
@@ -595,6 +596,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
                SetTitle(branchname);
                leaf->SetName(branchname);
                leaf->SetTitle(branchname);
+               leaf->SetRange(kTRUE);
                // Create sub branches for each data member of an STL container.
                Unroll(name, valueClass, valueClass, pointer, basketsize, splitlevel+splitSTLP, 41);
                BuildTitle(name);
