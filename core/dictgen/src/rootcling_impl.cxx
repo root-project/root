@@ -4159,15 +4159,6 @@ int RootClingMain(int argc,
    }
 
    if (!isPCH && gOptCxxModule) {
-#ifndef R__MACOSX
-      // Add the overlay file. Note that we cannot factor it out for both root
-      // and rootcling because rootcling activates modules only if -cxxmodule
-      // flag is passed.
-
-      // includeDir is where modulemaps exist.
-      clingArgsInterpreter.push_back("-includedir_loc=" + includeDir);
-#endif //R__MACOSX
-
       // We just pass -fmodules, the CIFactory will do the rest and configure
       // clang correctly once it sees this flag.
       clingArgsInterpreter.push_back("-fmodules");
@@ -4175,9 +4166,6 @@ int RootClingMain(int argc,
       clingArgsInterpreter.push_back("-fmodule-map-file=" +
                                      ROOT::FoundationUtils::GetIncludeDir() +
                                      "/module.modulemap");
-      clingArgsInterpreter.push_back("-fmodule-map-file=" +
-                                     ROOT::FoundationUtils::GetEtcDir() +
-                                     "/cling/module.modulemap");
       std::string ModuleMapCWD = ROOT::FoundationUtils::GetCurrentDir() + "/module.modulemap";
       if (llvm::sys::fs::exists(ModuleMapCWD))
          clingArgsInterpreter.push_back("-fmodule-map-file=" + ModuleMapCWD);

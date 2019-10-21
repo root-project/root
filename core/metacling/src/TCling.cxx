@@ -1306,11 +1306,8 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    // and rootcling because rootcling activates modules only if -cxxmodule
    // flag is passed.
    if (fCxxModulesEnabled && !fromRootCling) {
-      clingArgsStorage.push_back("-includedir_loc=" + std::string(TROOT::GetIncludeDir().Data()));
       clingArgsStorage.push_back(("-fmodule-map-file=" +
                                   TROOT::GetIncludeDir() + "/module.modulemap").Data());
-      clingArgsStorage.push_back(("-fmodule-map-file=" +
-                                  TROOT::GetEtcDir() + "/cling/module.modulemap").Data());
       std::string ModuleMapCWD = std::string(gSystem->WorkingDirectory()) + "/module.modulemap";
       if (llvm::sys::fs::exists(ModuleMapCWD))
          clingArgsStorage.push_back("-fmodule-map-file=" + ModuleMapCWD);
