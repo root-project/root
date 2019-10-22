@@ -746,10 +746,24 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       /** @brief Add Tab event handler */
-      addNewButtonPressHandler: function(oEvent) {
-         if (this.isConnected)
-            this.websocket.Send("NEWCANVAS");
+      addNewButtonPressHandler: async function(oEvent) {
+        var oButton = oEvent.getSource().mAggregations._tabStrip.mAggregations.addButton;
+
+        // create action sheet only once
+        if (!this._actionSheet) {
+          let myThis = this;
+          await Fragment.load({name: "rootui5.browser.view.tabsmenu"}).then(function (oFragment) {
+            myThis.getView().addDependent(oFragment);
+            myThis._actionSheet = oFragment;
+          });
+        }
+        this._actionSheet.openBy(oButton);
       },
+
+     newRootXCanvas: function(oEvent) {
+       if (this.isConnected)
+         this.websocket.Send("NEWCANVAS");
+     },
 
       /** process initial message, now it is list of existing canvases */
       processInitMsg: function(msg) {
