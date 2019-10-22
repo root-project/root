@@ -360,7 +360,7 @@ inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::Transpose()
    } else if (fLayout == MemoryLayout::ColumnMajor) {
       fLayout = MemoryLayout::RowMajor;
    } else {
-      std::runtime_error("Memory layout is not known.");
+      throw std::runtime_error("Memory layout is not known.");
    }
 
    // Create copy of container
