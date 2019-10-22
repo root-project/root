@@ -480,6 +480,8 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       fWebWindow->Send(connid, res);
    } else if (arg.compare(0, 6, "CHDIR:") == 0) {
       fWorkingDirectory = arg.substr(6);
+      if ((fWorkingDirectory.length()>1) && (fWorkingDirectory[fWorkingDirectory.length()-1] == '/')) fWorkingDirectory.resize(fWorkingDirectory.length()-1);
+      printf("Current dir %s\n", fWorkingDirectory.c_str());
       fBrowsable.SetTopItem(std::make_unique<SysFileElement>(fWorkingDirectory));
       gSystem->ChangeDirectory(fWorkingDirectory.c_str());
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
