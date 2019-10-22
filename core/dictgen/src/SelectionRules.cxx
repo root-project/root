@@ -1418,15 +1418,10 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
             continue;
          }
 
-         const char* attrName = nullptr;
+         const char* attrName = "class";
          const char* attrVal = nullptr;
-         if (!file_name_value.empty()) {
-            attrName = "file name";
-            attrVal = file_name_value.c_str();
-         } else {
-            attrName = "class";
-            if (!name.empty()) attrVal = name.c_str();
-         }
+         if (!name.empty()) attrVal = name.c_str();
+
          ROOT::TMetaUtils::Warning(0,"Unused %s rule: %s\n", attrName, attrVal);
       }
    }
