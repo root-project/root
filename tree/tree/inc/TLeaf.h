@@ -54,14 +54,21 @@ private:
 
 protected:
 
-   Int_t       fNdata;           ///<! Number of elements in fAddress data buffer.
-   Int_t       fLen;             ///<  Number of fixed length elements in the leaf's data.
-   Int_t       fLenType;         ///<  Number of bytes for this data type
-   Int_t       fOffset;          ///<  Offset in ClonesArray object (if one)
-   Bool_t      fIsRange;         ///<  (=kTRUE if leaf has a range, kFALSE otherwise).  This is equivalent to being a 'leafcount'.  For a TLeafElement the range information is actually store in the TBranchElement.
-   Bool_t      fIsUnsigned;      ///<  (=kTRUE if unsigned, kFALSE otherwise)
-   TLeaf      *fLeafCount;       ///<  Pointer to Leaf count if variable length (we do not own the counter)
-   TBranch    *fBranch;          ///<! Pointer to supporting branch (we do not own the branch)
+   using Counts_t = std::vector<Int_t>;
+   struct LeafCountValues {
+      Counts_t fValues;
+      Long64_t fStartEntry{-1}; ///<! entry number of corresponding to element 0 of the vector.
+   };
+
+   Int_t            fNdata;           ///<! Number of elements in fAddress data buffer.
+   Int_t            fLen;             ///<  Number of fixed length elements in the leaf's data.
+   Int_t            fLenType;         ///<  Number of bytes for this data type
+   Int_t            fOffset;          ///<  Offset in ClonesArray object (if one)
+   Bool_t           fIsRange;         ///<  (=kTRUE if leaf has a range, kFALSE otherwise).  This is equivalent to being a 'leafcount'.  For a TLeafElement the range information is actually store in the TBranchElement.
+   Bool_t           fIsUnsigned;      ///<  (=kTRUE if unsigned, kFALSE otherwise)
+   TLeaf           *fLeafCount;       ///<  Pointer to Leaf count if variable length (we do not own the counter)
+   TBranch         *fBranch;          ///<! Pointer to supporting branch (we do not own the branch)
+   LeafCountValues *fLeafCountValues; ///<! Cache of collection/array sizes
 
    TLeaf(const TLeaf&);
    TLeaf& operator=(const TLeaf&);
@@ -73,6 +80,7 @@ protected:
   Int_t *GenerateOffsetArrayBase(Int_t base, Int_t events) const; // For leaves containing fixed-size objects (no
                                                                   // polymorphism!), this will generate an appropriate
                                                                   // offset array.
+
 
 public:
    enum EStatusBits {
@@ -102,6 +110,9 @@ public:
    ///  return a pointer to the TLeaf that stores such size. Return a nullptr otherwise.
    virtual TLeaf   *GetLeafCount() const { return fLeafCount; }
    virtual TLeaf   *GetLeafCounter(Int_t &countval) const;
+
+   virtual const Counts_t *GetLeafCountValues(Long64_t start, Long64_t len);
+
    virtual Int_t    GetLen() const;
    /// Return the fixed length of this leaf.
    /// If the leaf stores a fixed-length array, this is the size of the array.
