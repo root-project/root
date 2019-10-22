@@ -330,7 +330,7 @@ const char *TGHtml::GetPctWidth(TGHtmlElement *p, char *opt, char *ret)
    if (!strchr(z, '%')) return z;
    // coverity[secure_coding]
    if (!sscanf(z, "%d", &n)) return z;
-   if (n < 0 || n > 100) return z;
+   if (n <= 0 || n > 100) return z;
    if (opt[0] == 'h') {
       val = fCanvas->GetHeight() * 100;
    } else {
