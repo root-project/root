@@ -29,6 +29,10 @@
 #include "TWebCanvas.h"
 #include "TCanvas.h"
 #include "TBufferJSON.h"
+#include "TLeaf.h"
+#include "TBranch.h"
+#include "TTree.h"
+#include "TH1.h"
 
 #include <sstream>
 #include <iostream>
@@ -503,6 +507,41 @@ public:
 
          return true;
       });
+
+      RegisterV6(TLeaf::Class(), [](TVirtualPad *pad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt) -> bool {
+
+         // try take object without ownership
+         auto tleaf = obj->get_object<TLeaf>();
+         if (!tleaf)
+            return false;
+
+         auto ttree = tleaf->GetBranch()->GetTree();
+         if (!ttree)
+            return false;
+
+
+         std::string expr = std::string(tleaf->GetName()) + ">>htemp_tree_draw";
+
+         ttree->Draw(expr.c_str(),"","goff");
+
+         if (!gDirectory)
+            return false;
+
+         auto htemp = dynamic_cast<TH1*>(gDirectory->FindObject("htemp_tree_draw"));
+
+         if (!htemp)
+            return false;
+
+         htemp->SetDirectory(nullptr);
+         htemp->SetName(tleaf->GetName());
+
+         pad->GetListOfPrimitives()->Clear();
+
+         pad->GetListOfPrimitives()->Add(htemp, opt.c_str());
+
+         return true;
+      });
+
    }
 
 } newRV6DrawProvider;
@@ -528,7 +567,54 @@ public:
          subpad->Draw<RObjectDrawable>(tobj, opt);
          return true;
       });
+
+
+      RegisterV7(TLeaf::Class(), [](std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt) -> bool {
+
+         // try take object without ownership
+         auto tleaf = obj->get_object<TLeaf>();
+         if (!tleaf)
+            return false;
+
+         auto ttree = tleaf->GetBranch()->GetTree();
+         if (!ttree)
+            return false;
+
+
+         std::string expr = std::string(tleaf->GetName()) + ">>htemp_tree_draw";
+
+         ttree->Draw(expr.c_str(),"","goff");
+
+         if (!gDirectory)
+            return false;
+
+         auto htemp = dynamic_cast<TH1*>(gDirectory->FindObject("htemp_tree_draw"));
+
+         if (!htemp)
+            return false;
+
+         htemp->SetDirectory(nullptr);
+         htemp->SetName(tleaf->GetName());
+
+         if (subpad->NumPrimitives() > 0) {
+            subpad->Wipe();
+            subpad->GetCanvas()->Modified();
+            subpad->GetCanvas()->Update(true);
+         }
+
+         std::shared_ptr<TH1> shared;
+         shared.reset(htemp);
+
+         subpad->Draw<RObjectDrawable>(shared, opt);
+
+
+         return true;
+      });
+
+
    }
+
+
 
 } newRV7DrawProvider;
 

@@ -307,6 +307,8 @@ public:
 
    virtual ~RProvider();
 
+   static std::string GetClassIcon(const std::string &classname);
+
    static std::shared_ptr<RElement> OpenFile(const std::string &extension, const std::string &fullname);
    static std::shared_ptr<RElement> Browse(std::unique_ptr<Browsable::RHolder> &obj);
 

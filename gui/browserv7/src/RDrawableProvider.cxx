@@ -10,6 +10,9 @@
 
 #include "ROOT/RLogger.hxx"
 
+#include "TBaseClass.h"
+#include "TList.h"
+
 using namespace ROOT::Experimental;
 
 RDrawableProvider::MapV6_t &RDrawableProvider::GetV6Map()
@@ -68,14 +71,26 @@ RDrawableProvider::~RDrawableProvider()
    }
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+/// Invoke drawing of object on TCanvas sub-pad
+/// All existing providers are checked, first checked are class matches (including direct parents)
+
 bool RDrawableProvider::DrawV6(TVirtualPad *subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt)
 {
    auto &map6 = GetV6Map();
-   auto iter6 = map6.find(obj->GetClass());
 
-   if (iter6 != map6.end()) {
-      if (iter6->second.func(subpad, obj, opt))
-         return true;
+   TClass *cl = const_cast<TClass *>(obj->GetClass());
+   while (cl) {
+      auto iter6 = map6.find(cl);
+
+      if (iter6 != map6.end()) {
+         if (iter6->second.func(subpad, obj, opt))
+            return true;
+      }
+
+      auto bases = cl->GetListOfBases();
+
+      cl = bases && (bases->GetSize() > 0) ? dynamic_cast<TBaseClass *>(bases->First())->GetClassPointer() : nullptr;
    }
 
    for (auto &pair : map6)
@@ -86,14 +101,26 @@ bool RDrawableProvider::DrawV6(TVirtualPad *subpad, std::unique_ptr<Browsable::R
    return false;
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+/// Invoke drawing of object on RCanvas sub-pad
+/// All existing providers are checked, first checked are class matches (including direct parents)
+
 bool RDrawableProvider::DrawV7(std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt)
 {
    auto &map7 = GetV7Map();
-   auto iter7 = map7.find(obj->GetClass());
 
-   if (iter7 != map7.end()) {
-      if (iter7->second.func(subpad, obj, opt))
-         return true;
+   TClass *cl = const_cast<TClass *>(obj->GetClass());
+   while (cl) {
+      auto iter7 = map7.find(cl);
+
+      if (iter7 != map7.end()) {
+         if (iter7->second.func(subpad, obj, opt))
+            return true;
+      }
+
+      auto bases = cl->GetListOfBases();
+
+      cl = bases && (bases->GetSize() > 0) ? dynamic_cast<TBaseClass *>(bases->First())->GetClassPointer() : nullptr;
    }
 
    for (auto &pair : map7)
