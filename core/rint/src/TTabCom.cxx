@@ -837,7 +837,7 @@ TString TTabCom::DetermineClass(const char varName[])
    }
    // first char should be '(', which we can ignore.
    c = file1.get();
-   if (!file1 || c <= 0 || c == '*' || c != '(') {
+   if (!file1 || c <= 0 || c != '(') {
       Error("TTabCom::DetermineClass", "variable \"%s\" not defined?",
             varName);
       goto cleanup;
