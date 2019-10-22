@@ -1,8 +1,10 @@
 ROOTTEST_GENERATE_DICTIONARY(stl_makeproject_test stl_makeproject_test.h LINKDEF stl_makeproject_test_linkdef.h)
 
 if(ROOT_runtime_cxxmodules_FOUND)
-  # For C++ modules builds, module.modulemap is generated during configuration time for 
-  # and is not needed during execution of this test, but later in other tests it needs to be back.
+  # FIXME: For C++ modules builds, module.modulemap is generated during configuration time 
+  # and it is not needed during execution of stltest*, but later for other tests it needs to be back in build directory.
+  # FIXME: We need to run some tests in serial mode, because in very-parallel builds,
+  # since they access the same build directory, they could conflict via existent/not module.modulemap file.
   ROOTTEST_ADD_TEST(runatlasaod
                   COPY_TO_BUILDDIR enable_modulemap.sh
                   PRECMD ./enable_modulemap.sh ${CMAKE_CURRENT_BINARY_DIR}
@@ -10,7 +12,9 @@ if(ROOT_runtime_cxxmodules_FOUND)
                   MACRO runatlasaod.C
                   OUTCNV atlasaod_convert.sh
                   OUTREF atlasaod.ref
-                  LABELS longtest)
+                  LABELS longtest
+                  RUN_SERIAL
+                  )
 
     ROOTTEST_ADD_TEST(runcms310
                   COPY_TO_BUILDDIR enable_modulemap.sh
@@ -19,7 +23,8 @@ if(ROOT_runtime_cxxmodules_FOUND)
                   MACRO runcms310.C
                   OUTCNV cms310_convert.sh
                   OUTREF cms310.ref
-                  LABELS longtest)
+                  LABELS longtest
+                  RUN_SERIAL)
 
     ROOTTEST_ADD_TEST(runaliceesd
                   COPY_TO_BUILDDIR enable_modulemap.sh
@@ -27,7 +32,8 @@ if(ROOT_runtime_cxxmodules_FOUND)
                   COPY_TO_BUILDDIR alice_ESDs.root
                   MACRO runaliceesd.C
                   OUTCNV aliceesd_convert.sh
-                  OUTREF aliceesd.ref)
+                  OUTREF aliceesd.ref
+                  RUN_SERIAL)
     
     ROOTTEST_ADD_TEST(examples
                   COPY_TO_BUILDDIR enable_modulemap.sh
@@ -53,8 +59,10 @@ if(ROOT_runtime_cxxmodules_FOUND)
                   DEPENDS stltest)
 
     ROOTTEST_ADD_TEST(foreign
-                  COPY_TO_BUILDDIR foreign.root
-                  MACRO runforeign.C)
+                  COPY_TO_BUILDDIR enable_modulemap.sh foreign.root
+                  PRECMD ./enable_modulemap.sh ${CMAKE_CURRENT_BINARY_DIR}
+                  MACRO runforeign.C
+                  RUN_SERIAL)
 else()
       ROOTTEST_ADD_TEST(runatlasaod
                   COPY_TO_BUILDDIR small_aod.pool.root
