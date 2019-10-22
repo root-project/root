@@ -797,8 +797,7 @@ void TCanvas::Close(Option_t *option)
       gROOT->GetListOfCanvases()->Remove(this);
 
       // Close actual window on screen
-      if (fCanvasImp)
-         SafeDelete(fCanvasImp);
+      SafeDelete(fCanvasImp);
    }
 
    if (cansave == this) {
