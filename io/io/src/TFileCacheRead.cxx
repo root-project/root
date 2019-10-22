@@ -138,7 +138,7 @@ TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize, TObject *tree)
    // start the thread only if the file is not local
    fEnablePrefetching = gEnv->GetValue("TFile.AsyncPrefetching", 0);
 
-   if (fEnablePrefetching && strcmp(file->GetEndpointUrl()->GetProtocol(), "file")){
+   if (fEnablePrefetching && file && strcmp(file->GetEndpointUrl()->GetProtocol(), "file")){
       SetEnablePrefetchingImpl(true);
    }
    else { //disable the async pref for local files
