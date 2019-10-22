@@ -756,9 +756,9 @@ sap.ui.define(['sap/ui/core/Component',
             myThis.getView().addDependent(oFragment);
             myThis._actionSheet = oFragment;
           });
+          sap.ui.getCore().byId("NewTabR6").attachPress(this, this.newRootXCanvas);
+          sap.ui.getCore().byId("NewTabR7").attachPress(this, this.newRootXCanvas);
         }
-        sap.ui.getCore().byId("NewTabR6").attachPress(this, this.newRootXCanvas);
-        sap.ui.getCore().byId("NewTabR7").attachPress(this, this.newRootXCanvas);
         this._actionSheet.openBy(oButton);
       },
 
