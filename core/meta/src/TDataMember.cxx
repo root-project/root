@@ -551,7 +551,7 @@ Int_t TDataMember::GetArrayDim() const
       // fArrayMaxIndex should be zero
       if (dm->fArrayDim) {
          dm->fArrayMaxIndex = new Int_t[fArrayDim];
-         for(Int_t dim = 0; dim < fArrayDim; ++dim) {
+         for(Int_t dim = 0; dim < dm->fArrayDim; ++dim) {
             dm->fArrayMaxIndex[dim] = gCling->DataMemberInfo_MaxIndex(fInfo,dim);
          }
       }
