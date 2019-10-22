@@ -516,7 +516,7 @@ sap.ui.define(['sap/ui/core/Component',
           return;
         }
 
-         if (prop && prop.fullpath) {
+        if (prop && prop.fullpath) {
             fullpath = prop.fullpath.substr(1, prop.fullpath.length-2);
             var dirname = fullpath.substr(0, fullpath.lastIndexOf('/'));
             if (dirname.endsWith(".root")) {
@@ -606,6 +606,9 @@ sap.ui.define(['sap/ui/core/Component',
             break;
          case "FREAD":  // file read
             this.getView().byId("aCodeEditor").getModel().setProperty("/code", msg);
+            break;
+         case "FIMG":  // image file read
+            console.log("Got image " + msg.substr(0,50) + "...");
             break;
          case "CANVS":  // canvas created by server, need to establish connection
             var arr = JSON.parse(msg);
