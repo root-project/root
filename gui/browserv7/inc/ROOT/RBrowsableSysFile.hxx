@@ -74,10 +74,7 @@ public:
 
    std::unique_ptr<RLevelIter> GetChildsIter() override;
 
-   bool HasTextContent() const override;
-
-   std::string GetTextContent() override;
-
+   std::string GetContent(const std::string &kind) override;
 };
 
 } // namespace Browsable

@@ -169,8 +169,16 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
    auto elem = fBrowsable.GetElement(item_path);
    if (!elem) return ""s;
 
-   if (elem->HasTextContent())
-      return "FREAD:"s + elem->GetTextContent();
+   // TODO: kind of content can be provided by client - depending which element is active
+   // if none elements are active, one could configure some rules
+
+   auto img = elem->GetContent("image64");
+   if (!img.empty())
+      return "FIMG:"s + img;
+
+   auto code = elem->GetContent("text");
+   if (!code.empty())
+      return "FREAD:"s + code;
 
    auto canv = GetActiveCanvas();
    if (canv) {

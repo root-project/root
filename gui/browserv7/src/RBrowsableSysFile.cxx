@@ -20,6 +20,7 @@
 
 #include "TSystem.h"
 #include "TROOT.h"
+#include "TBase64.h"
 
 #include <sstream>
 #include <fstream>
@@ -324,14 +325,24 @@ std::unique_ptr<RLevelIter> SysFileElement::GetChildsIter()
    return std::make_unique<RSysDirLevelIter>(GetFullName());
 }
 
-bool SysFileElement::HasTextContent() const
+std::string SysFileElement::GetContent(const std::string &kind)
 {
-   return RSysDirLevelIter::GetFileIcon(GetName()) == "sap-icon://document-text"s;
-}
+   if ((kind == "text"s) && (RSysDirLevelIter::GetFileIcon(GetName()) == "sap-icon://document-text"s)) {
+      std::ifstream t(GetFullName());
+      return std::string(std::istreambuf_iterator<char>(t), std::istreambuf_iterator<char>());
+   }
 
-std::string SysFileElement::GetTextContent()
-{
-   std::ifstream t(GetFullName());
-   return std::string(std::istreambuf_iterator<char>(t), std::istreambuf_iterator<char>());
-}
+   if ((kind == "image64"s) && (RSysDirLevelIter::GetFileIcon(GetName()) == "sap-icon://picture"s)) {
+      std::ifstream t(GetFullName());
+      std::string content = std::string(std::istreambuf_iterator<char>(t), std::istreambuf_iterator<char>());
 
+      auto encode = TBase64::Encode(content.data(), content.length());
+
+      auto pos = GetName().rfind(".");
+
+      return "data:image/"s  + GetName().substr(pos+1) + ";base64,"s + encode.Data();
+   }
+
+   return ""s;
+
+}

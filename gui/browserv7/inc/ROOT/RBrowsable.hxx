@@ -244,9 +244,8 @@ public:
    /** Create iterator for childs elements if any */
    virtual std::unique_ptr<RLevelIter> GetChildsIter() { return nullptr; }
 
-   virtual bool HasTextContent() const { return false; }
-
-   virtual std::string GetTextContent() { return ""; }
+   /** Returns element content, depends from kind. Can be "text" or "image64" */
+   virtual std::string GetContent(const std::string & = "text") { return ""; }
 
    /** Access object */
    virtual std::unique_ptr<RHolder> GetObject() { return nullptr; }
