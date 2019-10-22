@@ -3,10 +3,10 @@
           title="Tabs selection"
           showCancelButton="true"
           placement="Left">
-    <Button text="Code Editor" icon="sap-icon://write-new-document" press="actionSelected" />
-    <Button text="Root 6 canvas" icon="sap-icon://column-chart-dual-axis" press="actionSelected" />
-    <Button text="Root 7 canvas" icon="sap-icon://column-chart-dual-axis" press="actionSelected" />
-    <Button text="Image viewer" icon="sap-icon://background" press="actionSelected" />
-<!--    <Button text="Geom viewer" icon="sap-icon://database" press="actionSelected" />-->
+    <Button text="Code Editor"   id="NewTabCE" icon="sap-icon://write-new-document" />
+    <Button text="Root 6 canvas" id="NewTabR6" icon="sap-icon://column-chart-dual-axis" />
+    <Button text="Root 7 canvas" id="NewTabR7" icon="sap-icon://column-chart-dual-axis" />
+    <Button text="Image viewer"  id="NewTabIV" icon="sap-icon://background" />
+<!--    <Button text="Geom viewer"   id="NewTabGV" icon="sap-icon://database" />-->
   </ActionSheet>
 </core:FragmentDefinition>
