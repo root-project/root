@@ -559,7 +559,7 @@ endmacro(ROOTTEST_SETUP_EXECTEST)
 #
 #-------------------------------------------------------------------------------
 function(ROOTTEST_ADD_TEST testname)
-  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL;"
+  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL;RUN_SERIAL"
                             "OUTREF;ERRREF;OUTREF_CINTSPECIFIC;OUTCNV;PASSRC;MACROARG;WORKING_DIR;INPUT;ENABLE_IF;DISABLE_IF;"
                             "TESTOWNER;COPY_TO_BUILDDIR;MACRO;EXEC;COMMAND;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;TIMEOUT;LABELS;ENVIRONMENT" ${ARGN})
 
@@ -739,6 +739,10 @@ function(ROOTTEST_ADD_TEST testname)
     set(passregex PASSREGEX ${ARG_PASSREGEX})
   endif()
 
+  if(ARG_RUN_SERIAL)
+    set(run_serial RUN_SERIAL ${ARG_RUN_SERIAL})
+  endif()
+
   string(REPLACE ";" ":" _path "${ROOTTEST_ENV_PATH}")
   string(REPLACE ";" ":" _pythonpath "${ROOTTEST_ENV_PYTHONPATH}")
   string(REPLACE ";" ":" _librarypath "${ROOTTEST_ENV_LIBRARYPATH}")
@@ -808,6 +812,7 @@ function(ROOTTEST_ADD_TEST testname)
                         ${passrc}
                         ${precmd}
                         ${postcmd}
+                        ${run_serial}
                         ${failregex}
                         ${passregex}
                         ${copy_to_builddir}
