@@ -28,12 +28,14 @@ then call Final(), which will, optionally, fill a supplied 16-byte
 array with the  digest.
 */
 
+#define __STDC_WANT_LIB_EXT1__ 1
+#include <string.h>
+
 #include "TMD5.h"
 #include "TBuffer.h"
 #include "TError.h"
 #include "TSystem.h"
 #include "Bytes.h"
-#include <string.h>
 #include <errno.h>
 #ifdef R__WIN32
 #include <io.h>
@@ -63,7 +65,7 @@ fBuf(), fBits(), fIn(), fString(), fFinalized(kTRUE)
    if (digest)
       memcpy(fDigest, digest, 16);
    else {
-      memset(fDigest, 0, 16);
+      memset_s(fDigest, 16, 0, 16);
       Error("TMD5::TMD5", "digest is 0");
    }
 }
@@ -193,9 +195,9 @@ void TMD5::Final()
    Encode(fDigest, fBuf, 16);
 
    // Zero out sensitive information
-   memset(fBuf,  0, 4*sizeof(UInt_t));
-   memset(fBits, 0, 2*sizeof(UInt_t));
-   memset(fIn,   0, 64);
+   memset_s(fBuf, 4*sizeof(UInt_t),  0, 4*sizeof(UInt_t));
+   memset_s(fBits, 2*sizeof(UInt_t), 0, 2*sizeof(UInt_t));
+   memset_s(fIn, 64, 0, 64);
 
    fFinalized = kTRUE;
 }
@@ -363,7 +365,7 @@ void TMD5::Transform(UInt_t buf[4], const UChar_t in[64])
    buf[3] += d;
 
    // Zero out sensitive information
-   memset(x, 0, sizeof(x));
+   memset_s(x, sizeof(x), 0, sizeof(x));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -543,7 +545,7 @@ Int_t TMD5::FileChecksum(const char *file, UChar_t digest[16])
       delete md5;
       return 0;
    } else
-      memset(digest, 0, 16);
+      memset_s(digest, 16, 0, 16);
 
    return -1;
 }
