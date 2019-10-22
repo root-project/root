@@ -16,9 +16,11 @@ sap.ui.define(['sap/ui/core/Component',
                "sap/ui/model/json/JSONModel",
                "rootui5/browser/model/BrowserModel",
                "sap/ui/core/Fragment",
-               "sap/m/Link"
+               "sap/m/Link",
+               "sap/ui/codeeditor/CodeEditor",
+               "sap/m/TabContainerItem"
 ],function(Component, Controller, CoreControl, CoreIcon, XMLView, mText, mCheckBox, MessageBox, MessageToast, TabContainerItem,
-           Splitter, ResizeHandler, HorizontalLayout, tableColumn, File, JSONModel, BrowserModel, Fragment, Link) {
+           Splitter, ResizeHandler, HorizontalLayout, tableColumn, File, JSONModel, BrowserModel, Fragment, Link, CodeEditor) {
 
    "use strict";
 
@@ -758,6 +760,7 @@ sap.ui.define(['sap/ui/core/Component',
           });
           sap.ui.getCore().byId("NewTabR6").attachPress(this, this.newRootXCanvas);
           sap.ui.getCore().byId("NewTabR7").attachPress(this, this.newRootXCanvas);
+          sap.ui.getCore().byId("NewTabCE").attachPress(this, this.newCodeEditor);
         }
         this._actionSheet.openBy(oButton);
       },
@@ -766,6 +769,24 @@ sap.ui.define(['sap/ui/core/Component',
        if (myThis.isConnected) {
          myThis.websocket.Send("NEWCANVAS");
        }
+     },
+
+     newCodeEditor: async function(oEvent, myThis) {
+        let oTabContainer = myThis.getView().byId("myTabContainer");
+        console.log(oTabContainer);
+
+        let tabContainerItem = new TabContainerItem({
+          icon: "sap-icon://write-new-document",
+          name:"Code Editor",
+          additionalText: "untitled"
+        });
+        await Fragment.load({name: "rootui5.browser.view.codeeditor"}).then(function (oFragment) {
+          tabContainerItem.removeAllContent();
+          tabContainerItem.addContent(oFragment);
+        });
+        oTabContainer.addItem(tabContainerItem);
+
+        oTabContainer.setSelectedItem(tabContainerItem);
      },
 
       /** process initial message, now it is list of existing canvases */
