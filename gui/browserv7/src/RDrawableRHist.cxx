@@ -26,7 +26,7 @@ class RV7HistDrawProvider : public RDrawableProvider {
 public:
    RV7HistDrawProvider()
    {
-      RegisterV7(TClass::GetClass<RH2D>(), [] (std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RObject> &obj, const std::string &) -> bool {
+      RegisterV7(TClass::GetClass<RH2D>(), [] (std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &) -> bool {
          auto hist = obj->get_shared<RH2D>();
          if (!hist) return false;
 

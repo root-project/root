@@ -22,6 +22,27 @@ using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Browsable;
 
 
+///////////////////////////////////////////////////////////////////////////
+/// Return TObject instance with ownership
+/// If object is not owned by the holder, it will be cloned (with few exceptions)
+
+void *RTObjectHolder::TakeObject()
+{
+   auto res = fObj;
+
+   if (fOwner) {
+      fObj = nullptr;
+      fOwner = false;
+   } else if (fObj && !fObj->IsA()->InheritsFrom("TDirectory") && fObj->IsA()->InheritsFrom("TFile")) {
+      res = fObj->Clone();
+      TH1 *h1 = dynamic_cast<TH1 *>(res);
+      if (h1) h1->SetDirectory(nullptr);
+   }
+
+   return res;
+}
+
+
 // ===============================================================================================================
 
 
@@ -99,7 +120,7 @@ public:
 
 class TObjectElement : public RElement {
 
-   std::unique_ptr<Browsable::RObject> fObject;
+   std::unique_ptr<Browsable::RHolder> fObject;
    TObject *fObj{nullptr};
    std::string fName;
 
@@ -111,12 +132,15 @@ public:
          fName = fObj->GetName();
    }
 
-   TObjectElement(std::unique_ptr<Browsable::RObject> &obj, const std::string &name = "")
+   TObjectElement(std::unique_ptr<Browsable::RHolder> &obj, const std::string &name = "")
    {
       fObject = std::move(obj); // take responsibility
-      fObj = fObject->Get<TObject>(); // try to cast into TObject
+      fObj = const_cast<TObject *>(fObject->Get<TObject>()); // try to cast into TObject
+
       fName = name;
-      if (fName.empty() && fObj)
+      if (!fObj)
+         fObject.reset();
+      else if (fName.empty())
          fName = fObj->GetName();
    }
 
@@ -152,14 +176,11 @@ public:
       return iter;
    }
 
-   /** Return TObject depending from kind of requested result */
-   std::unique_ptr<RObject> GetObject(bool plain = false) override
+   /** Return TObject reference */
+   std::unique_ptr<RHolder> GetObject() override
    {
-      if (!fObject || !fObj)
+      if (!fObject)
          return nullptr;
-
-      if (plain)
-         return std::make_unique<RTObjectHolder>(fObj);
 
       return fObject->Copy();
    }
@@ -202,8 +223,8 @@ class RTObjectProvider : public RProvider {
 public:
    RTObjectProvider()
    {
-      RegisterBrowse(nullptr, [](std::unique_ptr<Browsable::RObject> &object) -> std::shared_ptr<RElement> {
-         if (object->InheritsFrom<TObject>())
+      RegisterBrowse(nullptr, [](std::unique_ptr<Browsable::RHolder> &object) -> std::shared_ptr<RElement> {
+         if (object->CanCastTo<TObject>())
             return std::make_shared<TObjectElement>(object);
 
          return nullptr;

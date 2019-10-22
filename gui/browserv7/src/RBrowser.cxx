@@ -171,7 +171,7 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
    auto canv = GetActiveCanvas();
    if (canv) {
 
-      auto obj = elem->GetObject(true);
+      auto obj = elem->GetObject();
 
       if (obj)
          if (ROOT::Experimental::RDrawableProvider::DrawV6(canv, obj, drawingOptions)) {
@@ -485,9 +485,17 @@ public:
 
    RV6DrawProvider()
    {
-      RegisterV6(nullptr, [](TVirtualPad *pad, std::unique_ptr<Browsable::RObject> &obj, const std::string &opt) -> bool {
+      RegisterV6(nullptr, [](TVirtualPad *pad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt) -> bool {
+
+         // try take object without ownership
          auto tobj = obj->get_object<TObject>();
-         if (!tobj) return false;
+         if (!tobj) {
+            auto utobj = obj->get_unique<TObject>();
+            if (!utobj)
+               return false;
+            tobj = utobj.release();
+            tobj->SetBit(TObject::kMustCleanup); // TCanvas should care about cleanup
+         }
 
          pad->GetListOfPrimitives()->Clear();
 
@@ -504,7 +512,10 @@ class RV7DrawProvider : public RDrawableProvider {
 public:
    RV7DrawProvider()
    {
-      RegisterV7(nullptr, [] (std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RObject> &obj, const std::string &opt) -> bool {
+      RegisterV7(nullptr, [] (std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt) -> bool {
+
+         // here clear ownership is required
+         // If it possible, TObject will be cloned by RTObjectHolder
          auto tobj = obj->get_shared<TObject>();
          if (!tobj) return false;
 

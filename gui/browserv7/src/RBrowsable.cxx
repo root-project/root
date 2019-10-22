@@ -73,7 +73,6 @@ void RProvider::RegisterBrowse(const TClass *cl, BrowseFunc_t func)
 }
 
 
-
 //////////////////////////////////////////////////////////////////////////////////
 // remove provider from all registered lists
 
@@ -98,7 +97,12 @@ std::shared_ptr<RElement> RProvider::OpenFile(const std::string &extension, cons
    return nullptr;
 }
 
-std::shared_ptr<RElement> RProvider::Browse(std::unique_ptr<Browsable::RObject> &object)
+
+/////////////////////////////////////////////////////////////////////////
+/// Create browsable element for the object
+/// Created element may take ownership over the object
+
+std::shared_ptr<RElement> RProvider::Browse(std::unique_ptr<Browsable::RHolder> &object)
 {
    auto &bmap = GetBrowseMap();
 

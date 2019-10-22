@@ -68,7 +68,7 @@ RDrawableProvider::~RDrawableProvider()
    }
 }
 
-bool RDrawableProvider::DrawV6(TVirtualPad *subpad, std::unique_ptr<Browsable::RObject> &obj, const std::string &opt)
+bool RDrawableProvider::DrawV6(TVirtualPad *subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt)
 {
    auto &map6 = GetV6Map();
    auto iter6 = map6.find(obj->GetClass());
@@ -86,7 +86,7 @@ bool RDrawableProvider::DrawV6(TVirtualPad *subpad, std::unique_ptr<Browsable::R
    return false;
 }
 
-bool RDrawableProvider::DrawV7(std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RObject> &obj, const std::string &opt)
+bool RDrawableProvider::DrawV7(std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt)
 {
    auto &map7 = GetV7Map();
    auto iter7 = map7.find(obj->GetClass());
