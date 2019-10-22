@@ -2035,10 +2035,8 @@ Int_t TFile::ReOpen(Option_t *mode)
          FlushWriteCache();
 
          // delete free segments from free list
-         if (fFree) {
-            fFree->Delete();
-            SafeDelete(fFree);
-         }
+         fFree->Delete();
+         SafeDelete(fFree);
 
          SysClose(fD);
          fD = -1;
