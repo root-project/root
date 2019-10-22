@@ -12,8 +12,23 @@
 
 #include "TClass.h"
 
+
 using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Browsable;
+using namespace std::string_literals;
+
+
+std::string RProvider::GetClassIcon(const std::string &classname)
+{
+   if (classname == "TTree" || classname == "TNtuple")
+      return "sap-icon://tree"s;
+   if (classname == "TDirectory" || classname == "TDirectoryFile")
+      return "sap-icon://folder-blank"s;
+   if (classname.find("TLeaf") == 0)
+      return "sap-icon://e-care"s;
+
+   return "sap-icon://electronic-medical-record"s;
+}
 
 
 RProvider::BrowseMap_t &RProvider::GetBrowseMap()
@@ -48,7 +63,6 @@ RProvider::~RProvider()
       else
          biter++;
    }
-
 }
 
 
@@ -290,7 +304,5 @@ std::shared_ptr<RElement> RBrowsable::GetElement(const std::string &path)
 
    return res;
 }
-
-
 
 
