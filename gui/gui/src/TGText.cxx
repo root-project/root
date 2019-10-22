@@ -588,7 +588,7 @@ next:
       lastnl = kTRUE;
    }
 
-   if (!finished && tbuf && strlen(tbuf))
+   if (!finished && strlen(tbuf))
       goto next;
 
    delete [] buf;
