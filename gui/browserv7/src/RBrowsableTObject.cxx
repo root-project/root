@@ -176,7 +176,7 @@ public:
       return iter;
    }
 
-   /** Return TObject reference */
+   /** Return copy of TObject holder - if possible */
    std::unique_ptr<RHolder> GetObject() override
    {
       if (!fObject)
@@ -195,6 +195,8 @@ public:
 
 void TMyBrowserImp::Add(TObject *obj, const char *name, Int_t)
 {
+   // printf("Adding object %p %s %s\n", obj, obj->GetName(), obj->ClassName());
+
    fIter->AddElement(std::make_shared<TObjectElement>(obj, name ? name : ""));
 }
 
@@ -207,9 +209,14 @@ std::unique_ptr<RBrowserItem> TObjectLevelIter::CreateBrowserItem()
 {
    std::shared_ptr<TObjectElement> elem = std::dynamic_pointer_cast<TObjectElement>(fElements[fCounter]);
 
-   auto item = std::make_unique<RBrowserTObjectItem>(elem->GetName(), -1);
+   std::string clname = elem->ClassName();
+   bool can_have_childs = (clname.find("TDirectory") == 0) || (clname.find("TTree") == 0) || (clname.find("TNtuple") == 0);
+
+   auto item = std::make_unique<RBrowserTObjectItem>(elem->GetName(), can_have_childs ? 1 : 0);
 
    item->SetClassName(elem->ClassName());
+
+   item->SetIcon(RProvider::GetClassIcon(elem->ClassName()));
 
    return item;
 }

@@ -89,16 +89,6 @@ public:
       return (clname.find("TDirectory") == 0) || (clname.find("TTree") == 0) || (clname.find("TNtuple") == 0) ? 1 : 0;
    }
 
-   std::string GetClassIcon(const std::string &classname)
-   {
-      if (classname == "TTree" || classname == "TNtuple")
-         return "sap-icon://tree"s;
-      if (classname == "TDirectory" || classname == "TDirectoryFile")
-         return "sap-icon://folder-blank"s;
-
-      return "sap-icon://electronic-medical-record"s;
-   }
-
    /** Create element for the browser */
    std::unique_ptr<RBrowserItem> CreateBrowserItem() override
    {
@@ -106,7 +96,7 @@ public:
 
       item->SetClassName(fKey->GetClassName());
 
-      item->SetIcon(GetClassIcon(fKey->GetClassName()));
+      item->SetIcon(RProvider::GetClassIcon(fKey->GetClassName()));
 
       return item;
    }
