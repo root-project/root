@@ -2411,7 +2411,7 @@ TFormLeafInfoMultiVarDim::TFormLeafInfoMultiVarDim() :
 TFormLeafInfoMultiVarDim::TFormLeafInfoMultiVarDim(const TFormLeafInfoMultiVarDim& orig) : TFormLeafInfo(orig)
 {
    fNsize = orig.fNsize;
-   fSizes.Copy(fSizes);
+   orig.fSizes.Copy(fSizes);
    fCounter2 = orig.fCounter2?orig.fCounter2->DeepCopy():0;
    fSumOfSizes = orig.fSumOfSizes;
    fDim = orig.fDim;
