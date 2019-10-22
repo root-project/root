@@ -3080,7 +3080,7 @@ llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::D
       // Check the token
       if (isdigit(current[0])) {
          for(i=0;i<strlen(current);i++) {
-            if (!isdigit(current[0])) {
+            if (!isdigit(current[i])) {
                // Error we only access integer.
                //NOTE: *** Need to print an error;
                //fprintf(stderr,"*** Datamember %s::%s: size of array (%s) is not an interger\n",
