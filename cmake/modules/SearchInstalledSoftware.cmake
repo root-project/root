@@ -800,6 +800,13 @@ if(fitsio OR builtin_cfitsio)
         BUILD_IN_SOURCE 1
         BUILD_BYPRODUCTS ${CFITSIO_LIBRARIES}
       )
+      # We need to know which CURL_LIBRARIES were used in CFITSIO ExternalProject build
+      # and which ${CURL_LIBRARIES} should be used after for linking in ROOT together with CFITSIO.
+      # (curl is not strictly required in CFITSIO CMakeList.txt).
+      find_package(CURL)
+      if(CURL_FOUND)
+        set(CFITSIO_LIBRARIES ${CFITSIO_LIBRARIES} ${CURL_LIBRARIES})
+      endif()
       set(CFITSIO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
     endif()
     set(fitsio ON CACHE BOOL "Enabled because builtin_cfitsio requested (${fitsio_description})" FORCE)
