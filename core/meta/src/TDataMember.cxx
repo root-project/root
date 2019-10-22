@@ -345,7 +345,7 @@ void TDataMember::Init(bool afterReading)
       //Now let's parse option strings...
 
       Int_t  opt_cnt    = 0;
-      TList *optionlist = new TList();       //storage for options strings
+      std::unique_ptr<TList> optionlist{new TList()};       //storage for options strings
 
       for (i=0;i<token_cnt;i++) {
          if (strstr(tokens[i],"Items")) {
@@ -384,7 +384,7 @@ void TDataMember::Init(bool afterReading)
 
       fOptions = new TList();                //create the list
 
-      TIter next(optionlist);                //we'll iterate through all
+      TIter next(optionlist.get());                //we'll iterate through all
                                              //strings containing options
       TOptionListItem *it  = 0;
       TOptionListItem *it1 = 0;
@@ -431,9 +431,6 @@ void TDataMember::Init(bool afterReading)
       }
 
       // Garbage collection
-
-      // dispose of temporary option list...
-      delete optionlist;
 
       //And dispose tokens string...
       for (i=0;i<token_cnt;i++) if(tokens[i]) delete [] tokens[i];
