@@ -3699,7 +3699,7 @@ void TFormula::Convert(UInt_t /* fromVersion */)
          if (var) newActionCode += var;
          newActionParam = action - var*100 - (kOldexpo+1);
 
-      } if (action > 100 && action < 200) {
+      } else if (action > 100 && action < 200) {
          // Parameter substitution
 
          newActionCode = kParameter;

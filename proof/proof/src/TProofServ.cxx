@@ -723,7 +723,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
          } else if (logmx.EndsWith("M")) {
             xf = 1024*1024;
             logmx.Remove(TString::kTrailing, 'M');
-         } if (logmx.EndsWith("G")) {
+         } else if (logmx.EndsWith("G")) {
             xf = 1024*1024*1024;
             logmx.Remove(TString::kTrailing, 'G');
          }

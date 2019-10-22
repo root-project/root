@@ -583,45 +583,40 @@ void RooAbsCategory::syncCache(const RooArgSet*)
 /// cache is clean(valid) before this function is called, e.g. by
 /// calling syncCache() on the source.
 
-void RooAbsCategory::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/, Bool_t setValDirty)
+void RooAbsCategory::copyCache(const RooAbsArg *source, Bool_t /*valueOnly*/, Bool_t setValDirty)
 {
-  RooAbsCategory* other = static_cast<RooAbsCategory*>(const_cast<RooAbsArg*>(source)) ;
+   RooAbsCategory *other = static_cast<RooAbsCategory *>(const_cast<RooAbsArg *>(source));
 
-  if (!_treeVar) {
-    _value = other->_value ;
-  } else {
-    if (source->getAttribute("INTIDXONLY_TREE_BRANCH")) {
-      // Lookup cat state from other-index because label is missing
-      const RooCatType* type = lookupType(other->_value._value) ;
-      if (type) {
-	_value = *type ;
-      } else {
-	coutE(DataHandling) << "RooAbsCategory::copyCache(" << GetName()
-			    << ") ERROR: index of source arg " << source->GetName()
-			    << " is invalid (" << other->_value._value
-			    << "), value not updated" << endl ;
+   if (!_treeVar) {
+      _value = other->_value;
+   } else {
+      if (source->getAttribute("INTIDXONLY_TREE_BRANCH")) {
+         // Lookup cat state from other-index because label is missing
+         const RooCatType *type = lookupType(other->_value._value);
+         if (type) {
+            _value = *type;
+         } else {
+            coutE(DataHandling) << "RooAbsCategory::copyCache(" << GetName() << ") ERROR: index of source arg "
+                                << source->GetName() << " is invalid (" << other->_value._value
+                                << "), value not updated" << endl;
+         }
+      } else if (source->getAttribute("UCHARIDXONLY_TREE_BRANCH")) {
+         // Lookup cat state from other-index because label is missing
+         Int_t tmp = other->_byteValue;
+         const RooCatType *type = lookupType(tmp);
+         if (type) {
+            _value = *type;
+         } else {
+            coutE(DataHandling) << "RooAbsCategory::copyCache(" << GetName() << ") ERROR: index of source arg "
+                                << source->GetName() << " is invalid (" << tmp << "), value not updated" << endl;
+         }
       }
-    } if (source->getAttribute("UCHARIDXONLY_TREE_BRANCH")) {
-      // Lookup cat state from other-index because label is missing
-      Int_t tmp = other->_byteValue ;
-      const RooCatType* type = lookupType(tmp) ;
-      if (type) {
-	_value = *type ;
-      } else {
-	coutE(DataHandling) << "RooAbsCategory::copyCache(" << GetName()
-			    << ") ERROR: index of source arg " << source->GetName()
-			    << " is invalid (" << tmp
-			    << "), value not updated" << endl ;
-      }
-    }
-  }
+   }
 
-  if (setValDirty) {
-    setValueDirty() ;
-  }
+   if (setValDirty) {
+      setValueDirty();
+   }
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return state definition of ordinal nth defined state,
