@@ -27,7 +27,7 @@ namespace Experimental {
 
 namespace Browsable {
 
-/** \class RObject
+/** \class RHolder
 \ingroup rbrowser
 \brief Basic class for object holder of any kind. Could be used to transfer shared_ptr or unique_ptr or plain pointer
 \author Sergey Linev <S.Linev@gsi.de>
@@ -35,136 +35,98 @@ namespace Browsable {
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RObject {
+class RHolder {
 protected:
 
-   /** Returns pointer when external memory management is used */
-   virtual const void *GetObjectPlain() const { return nullptr; }
    /** Returns pointer on existing shared_ptr<T> */
    virtual void *GetShared() const { return nullptr; }
-   /** Returns pointer with ownership, normally via unique_ptr<T>::release() */
+
+   /** Returns pointer with ownership, normally via unique_ptr<T>::release() or tobj->Clone() */
    virtual void *TakeObject() { return nullptr; }
 
-   virtual RObject *DoCopy() const = 0;
+   /** Returns plain object pointer without care about ownership, should not be used often */
+   virtual void *AccessObject() { return nullptr; }
+
+   /** Create copy of container, works only when pointer can be shared */
+   virtual RHolder *DoCopy() const { return nullptr; }
 
 public:
-   virtual ~RObject() = default;
-
-   template<class T>
-   bool InheritsFrom() const
-   {
-      if (!GetObject() || !GetClass()) return false;
-      return TClass::GetClass<T>()->InheritsFrom(TObject::Class());
-   }
-
-   template<class T>
-   T *Get() const
-   {
-      if (!InheritsFrom<T>()) return nullptr;
-      return (T *) const_cast<TClass *>(GetClass())->DynamicCast(TClass::GetClass<T>(), GetObject(), kTRUE);
-   }
-
-   /** Clone container. Only if there no object ownership or shared_ptr */
-   auto Copy() const { return std::unique_ptr<RObject>(DoCopy()); }
+   virtual ~RHolder() = default;
 
    /** Returns class of contained object */
    virtual const TClass *GetClass() const = 0;
 
-   /** Returns object pointer without touching ownership */
+   /** Returns direct (temporary) object pointer */
    virtual const void *GetObject() const = 0;
 
-   template<class T>
-   std::shared_ptr<T> get_shared()
+   template <class T>
+   bool InheritsFrom() const
    {
-      if (!GetClass()->InheritsFrom(TClass::GetClass<T>()))
-         return nullptr;
-      auto pshared = GetShared();
-      if (pshared)
-         return *(static_cast<std::shared_ptr<T> *>(pshared));
-      auto pobj = TakeObject();
-      if (pobj) {
-         std::shared_ptr<T> shared;
-         shared.reset(static_cast<T *>(pobj));
-         return shared;
-      }
+      return TClass::GetClass<T>()->InheritsFrom(GetClass());
+   }
+
+   template <class T>
+   bool CanCastTo() const
+   {
+      return const_cast<TClass *>(GetClass())->GetBaseClassOffset(TClass::GetClass<T>()) == 0;
+   }
+
+   /** Returns direct object pointer cast to provided class */
+
+   template<class T>
+   const T *Get() const
+   {
+      if (CanCastTo<T>())
+         return (const T *) GetObject();
 
       return nullptr;
    }
 
+   /** Clone container. Trivial for shared_ptr and TObject holder, does not work for unique_ptr */
+   auto Copy() const { return std::unique_ptr<RHolder>(DoCopy()); }
+
+
+   /** Returns unique_ptr of contained object */
+   template<class T>
+   std::unique_ptr<T> get_unique()
+   {
+      // ensure that direct inheritance is used
+      if (!CanCastTo<T>())
+         return nullptr;
+      auto pobj = TakeObject();
+      if (pobj) {
+         std::unique_ptr<T> unique;
+         unique.reset(static_cast<T *>(pobj));
+         return unique;
+      }
+      return nullptr;
+   }
+
+   /** Returns shared_ptr of contained object */
+   template<class T>
+   std::shared_ptr<T> get_shared()
+   {
+      // ensure that direct inheritance is used
+      if (!CanCastTo<T>())
+         return nullptr;
+      auto pshared = GetShared();
+      if (pshared)
+         return *(static_cast<std::shared_ptr<T> *>(pshared));
+
+      // automatically convert unique pointer to shared
+      return get_unique<T>();
+   }
+
+   /** Returns plains pointer on object without ownership, only can be used for TObjects */
    template<class T>
    T *get_object()
    {
-      if (!GetClass()->InheritsFrom(TClass::GetClass<T>()))
+      if (!CanCastTo<T>())
          return nullptr;
 
-      return (T *) GetObjectPlain();
+      return (T *) AccessObject();
    }
 };
-
-
-/** \class RTObjectHolder
-\ingroup rbrowser
-\brief Holder of TObject instance. Should not be used very often, while ownership is undefined for it
-\author Sergey Linev <S.Linev@gsi.de>
-\date 2019-10-19
-\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
-*/
-
-class RTObjectHolder : public RObject {
-   TObject* fObj{nullptr};   ///<! plain holder without IO
-protected:
-   const void *GetObjectPlain() const final { return fObj; }
-   RObject* DoCopy() const final { return new RTObjectHolder(fObj); }
-public:
-   RTObjectHolder(TObject *obj) { fObj = obj; }
-   virtual ~RTObjectHolder() = default;
-
-   const TClass *GetClass() const final { return fObj->IsA(); }
-   const void *GetObject() const final { return fObj; }
-};
-
-/** \class RAnyObjectHolder
-\ingroup rbrowser
-\brief Holder of any object instance. Should not be used very often, while ownership is undefined for it
-\author Sergey Linev <S.Linev@gsi.de>
-\date 2019-10-19
-\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
-*/
-
-class RAnyObjectHolder : public RObject {
-   const TClass *fClass{nullptr};  ///<! object class
-   void* fObj{nullptr};            ///<! plain holder without IO
-   bool fOwner{false};             ///<! is object owner
-protected:
-   void *TakeObject() final
-   {
-      void *res = fObj;
-      if (fOwner)
-         fObj = nullptr;
-      else
-         res = nullptr;
-      return res;
-   }
-   const void *GetObjectPlain() const final { return fOwner ? nullptr : fObj; }
-
-   RObject* DoCopy() const final
-   {
-      if (fOwner || !fObj || !fClass) return nullptr;
-      return new RAnyObjectHolder(fClass, fObj, false);
-   }
-
-public:
-   RAnyObjectHolder(const TClass *cl, void *obj, bool owner = false) { fClass = cl; fObj = obj; fOwner = owner; }
-   virtual ~RAnyObjectHolder()
-   {
-      if (fOwner)
-         const_cast<TClass *>(fClass)->Destructor(fObj);
-   }
-
-   const TClass *GetClass() const final { return fClass; }
-   const void *GetObject() const final { return fObj; }
-};
-
 
 
 /** \class RShared<T>
@@ -176,11 +138,11 @@ public:
 */
 
 template<class T>
-class RShared : public RObject {
+class RShared : public RHolder {
    std::shared_ptr<T> fShared;   ///<! holder without IO
 protected:
    void *GetShared() const final { return &fShared; }
-   RObject* DoCopy() const final { return new RShared<T>(fShared); }
+   RHolder* DoCopy() const final { return new RShared<T>(fShared); }
 public:
    RShared(T *obj) { fShared.reset(obj); }
    RShared(std::shared_ptr<T> obj) { fShared = obj; }
@@ -200,12 +162,10 @@ public:
 */
 
 template<class T>
-class RUnique : public RObject {
+class RUnique : public RHolder {
    std::unique_ptr<T> fUnique; ///<! holder without IO
 protected:
    void *TakeObject() final { return fUnique.release(); }
-   // clone does not supported for unique_ptr
-   RObject* DoCopy() const final { return nullptr; }
 public:
    RUnique(T *obj) { fUnique.reset(obj); }
    RUnique(std::unique_ptr<T> &&obj) { fUnique = std::move(obj); }
@@ -213,6 +173,50 @@ public:
 
    const TClass *GetClass() const final { return TClass::GetClass<T>(); }
    const void *GetObject() const final { return fUnique.get(); }
+};
+
+
+/** \class RAnyObjectHolder
+\ingroup rbrowser
+\brief Holder of any object instance. Normally used with TFile, where any object can be read. Normally RShread or RUnique should be used
+\author Sergey Linev <S.Linev@gsi.de>
+\date 2019-10-19
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
+
+class RAnyObjectHolder : public RHolder {
+   TClass *fClass{nullptr};   ///<! object class
+   void *fObj{nullptr};       ///<! plain holder without IO
+   bool fOwner{false};        ///<! is object owner
+protected:
+   void *AccessObject() final { return fOwner ? nullptr : fObj; }
+
+   void *TakeObject() final
+   {
+      if (!fOwner)
+         return nullptr;
+      auto res = fObj;
+      fObj = nullptr;
+      fOwner = false;
+      return res;
+   }
+
+   RHolder* DoCopy() const final
+   {
+      if (fOwner || !fObj || !fClass) return nullptr;
+      return new RAnyObjectHolder(fClass, fObj, false);
+   }
+
+public:
+   RAnyObjectHolder(TClass *cl, void *obj, bool owner = false) { fClass = cl; fObj = obj; fOwner = owner; }
+   virtual ~RAnyObjectHolder()
+   {
+      if (fOwner)
+         fClass->Destructor(fObj);
+   }
+
+   const TClass *GetClass() const final { return fClass; }
+   const void *GetObject() const final { return fObj; }
 };
 
 
@@ -245,7 +249,7 @@ public:
    virtual std::string GetTextContent() { return ""; }
 
    /** Access object */
-   virtual std::unique_ptr<RObject> GetObject(bool /* plain */ = false) { return nullptr; }
+   virtual std::unique_ptr<RHolder> GetObject() { return nullptr; }
 };
 
 /** \class RLevelIter
@@ -304,12 +308,12 @@ public:
    virtual ~RProvider();
 
    static std::shared_ptr<RElement> OpenFile(const std::string &extension, const std::string &fullname);
-   static std::shared_ptr<RElement> Browse(std::unique_ptr<Browsable::RObject> &obj);
+   static std::shared_ptr<RElement> Browse(std::unique_ptr<Browsable::RHolder> &obj);
 
 protected:
 
    using FileFunc_t = std::function<std::shared_ptr<RElement>(const std::string &)>;
-   using BrowseFunc_t = std::function<std::shared_ptr<RElement>(std::unique_ptr<Browsable::RObject> &)>;
+   using BrowseFunc_t = std::function<std::shared_ptr<RElement>(std::unique_ptr<Browsable::RHolder> &)>;
 
    void RegisterFile(const std::string &extension, FileFunc_t func);
    void RegisterBrowse(const TClass *cl, BrowseFunc_t func);

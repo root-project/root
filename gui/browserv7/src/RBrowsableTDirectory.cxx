@@ -8,6 +8,7 @@
 
 
 #include <ROOT/RBrowsableTDirectory.hxx>
+#include <ROOT/RBrowsableTObject.hxx>
 
 #include "ROOT/RLogger.hxx"
 
@@ -154,47 +155,39 @@ public:
           return std::make_unique<TDirectoryLevelIter>(subdir);
       }
 
-      auto obj = GetObject(true);
+      auto obj = GetObject();
 
       if (obj) {
-         printf("Try to browse class %s\n", obj->GetClass()->GetName());
-         // TODO: make clear ownership here, use RObject API here in the future
          auto elem = Browsable::RProvider::Browse(obj);
-         printf("Got element %p\n", elem.get());
          if (elem) return elem->GetChildsIter();
       }
 
       return nullptr;
    }
 
-   /** Return TObject depending from kind of requested result */
-   std::unique_ptr<RObject> GetObject(bool plain = false) override
+   /** Return Object depending from kind of requested result */
+   std::unique_ptr<RHolder> GetObject() override
    {
       std::string clname = fKey->GetClassName();
 
-      const TClass *obj_class = TClass::GetClass(clname.c_str());
-      if (!obj_class) return nullptr;
-
-      if (plain && obj_class->InheritsFrom(TObject::Class())) {
-         // for TObject means ownership keep for TDirectory
-
-         TObject *tobj = fKey->ReadObj();
-
-         if (!tobj)
-            return nullptr;
-
-         return std::make_unique<RTObjectHolder>(tobj);
-      }
+      auto obj_class = TClass::GetClass(clname.c_str());
+      if (!obj_class)
+         return nullptr;
 
       if (obj_class->InheritsFrom(TObject::Class())) {
-         TObject *tobj = fKey->ReadObj();
-         if (!tobj)
-            return nullptr;
-         if (tobj->InheritsFrom(TH1::Class()))
-            static_cast<TH1 *>(tobj)->SetDirectory(nullptr);
-         if (fDir)
-            fDir->Remove(tobj); // remove object while ownership will be delivered to return value
-         return std::make_unique<RUnique<TObject>>(tobj);
+
+         TObject *tobj = fDir->FindObject(fKey->GetName());
+
+         if (!tobj) {
+            tobj = fKey->ReadObj();
+
+            if (!tobj)
+               return nullptr;
+         }
+
+         bool owned_by_dir = fDir->FindObject(tobj) == tobj;
+
+         return std::make_unique<RTObjectHolder>(tobj, !owned_by_dir);
       }
 
       void *obj = fKey->ReadObjectAny(obj_class);
