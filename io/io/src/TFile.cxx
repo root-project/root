@@ -3960,7 +3960,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
          TFile::EAsyncOpenStatus aos = TFile::kAOSNotAsync;
          aos = TFile::GetAsyncOpenStatus(fh);
          Int_t xtms = toms;
-         while (aos != TFile::kAOSNotAsync && aos == TFile::kAOSInProgress && xtms > 0) {
+         while (aos == TFile::kAOSInProgress && xtms > 0) {
             gSystem->Sleep(1);
             xtms -= 1;
             aos = TFile::GetAsyncOpenStatus(fh);
