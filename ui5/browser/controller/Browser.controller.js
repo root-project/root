@@ -757,12 +757,15 @@ sap.ui.define(['sap/ui/core/Component',
             myThis._actionSheet = oFragment;
           });
         }
+        sap.ui.getCore().byId("NewTabR6").attachPress(this, this.newRootXCanvas);
+        sap.ui.getCore().byId("NewTabR7").attachPress(this, this.newRootXCanvas);
         this._actionSheet.openBy(oButton);
       },
 
-     newRootXCanvas: function(oEvent) {
-       if (this.isConnected)
-         this.websocket.Send("NEWCANVAS");
+     newRootXCanvas: function(oEvent, myThis) {
+       if (myThis.isConnected) {
+         myThis.websocket.Send("NEWCANVAS");
+       }
      },
 
       /** process initial message, now it is list of existing canvases */
