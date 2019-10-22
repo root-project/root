@@ -105,6 +105,7 @@ public:
       fIsExtended = rhs.fIsExtended;
       fWeight = rhs.fWeight;
       fExecutionPolicy = rhs.fExecutionPolicy;
+      return *this;
    }
 
 
