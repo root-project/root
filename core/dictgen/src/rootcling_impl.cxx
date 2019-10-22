@@ -3571,7 +3571,7 @@ public:
       // when building a non-system module as we will print an error below and the
       // user should see the detailed default clang diagnostic.
       bool isROOTSystemModuleDiag = module && llvm::StringRef(moduleName).startswith("ROOT_");
-      bool isSystemModuleDiag = module && module && module->IsSystem;
+      bool isSystemModuleDiag = module && module->IsSystem;
       if (!isROOTSystemModuleDiag && !isSystemModuleDiag)
          fChild->HandleDiagnostic(DiagLevel, Info);
 
