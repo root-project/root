@@ -35,13 +35,13 @@ public:
 
    virtual ~RDrawableProvider();
 
-   static bool DrawV6(TVirtualPad *subpad, std::unique_ptr<Browsable::RObject> &obj, const std::string &opt = "");
-   static bool DrawV7(std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RObject> &obj, const std::string &opt = "");
+   static bool DrawV6(TVirtualPad *subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt = "");
+   static bool DrawV7(std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt = "");
 
 protected:
 
-   using FuncV6_t = std::function<bool(TVirtualPad *, std::unique_ptr<Browsable::RObject> &, const std::string &)>;
-   using FuncV7_t = std::function<bool(std::shared_ptr<RPadBase> &, std::unique_ptr<Browsable::RObject> &, const std::string &)>;
+   using FuncV6_t = std::function<bool(TVirtualPad *, std::unique_ptr<Browsable::RHolder> &, const std::string &)>;
+   using FuncV7_t = std::function<bool(std::shared_ptr<RPadBase> &, std::unique_ptr<Browsable::RHolder> &, const std::string &)>;
 
    void RegisterV6(const TClass *cl, FuncV6_t func);
    void RegisterV7(const TClass *cl, FuncV7_t func);
