@@ -764,7 +764,7 @@ endif()
 #---Check for fitsio-------------------------------------------------------------------
 if(fitsio OR builtin_cfitsio)
   if(builtin_cfitsio)
-    set(cfitsio_version 3.280)
+    set(cfitsio_version 3.450)
     string(REPLACE "." "" cfitsio_version_no_dots ${cfitsio_version})
     message(STATUS "Downloading and building CFITSIO version ${cfitsio_version}")
     set(CFITSIO_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}cfitsio${CMAKE_STATIC_LIBRARY_SUFFIX})
@@ -793,7 +793,7 @@ if(fitsio OR builtin_cfitsio)
         CFITSIO
         # ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz
         URL ${lcgpackages}/cfitsio${cfitsio_version_no_dots}.tar.gz
-        URL_HASH SHA256=de8ce3f14c2f940fadf365fcc4a4f66553dd9045ee27da249f6e2c53e95362b3
+        URL_HASH SHA256=bf6012dbe668ecb22c399c4b7b2814557ee282c74a7d5dc704eb17c30d9fb92e
         INSTALL_DIR ${CMAKE_BINARY_DIR}
         CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
