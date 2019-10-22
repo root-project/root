@@ -2,11 +2,11 @@
   <ActionSheet
           title="Tabs selection"
           showCancelButton="true"
-          placement="Bottom">
+          placement="Left">
     <Button text="Code Editor" icon="sap-icon://write-new-document" press="actionSelected" />
     <Button text="Root 6 canvas" icon="sap-icon://column-chart-dual-axis" press="actionSelected" />
     <Button text="Root 7 canvas" icon="sap-icon://column-chart-dual-axis" press="actionSelected" />
     <Button text="Image viewer" icon="sap-icon://background" press="actionSelected" />
-    <Button text="Geom viewer" icon="sap-icon://database" press="actionSelected" />
+<!--    <Button text="Geom viewer" icon="sap-icon://database" press="actionSelected" />-->
   </ActionSheet>
 </core:FragmentDefinition>
