@@ -387,13 +387,9 @@ Bool_t RooAbsCategory::readFromStream(istream&, Bool_t, Bool_t)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object contents to ostream
 
-void RooAbsCategory::writeToStream(ostream& os, Bool_t compact) const
+void RooAbsCategory::writeToStream(ostream& os, Bool_t /* compact */) const
 {
-  if (compact) {
-    os << getLabel() ;
-  } else {
-    os << getLabel() ;
-  }
+  os << getLabel() ;
 }
 
 
