@@ -9,13 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TClientInfo
-#define ROOT_TClientInfo
+#ifndef ROOT_TMPIClientInfo
+#define ROOT_TMPIClientInfo
 
 #include "TFile.h"
 #include "TTimeStamp.h"
 
-class TClientInfo {
+class TMPIClientInfo {
 
 private:
    TFile *fFile;
@@ -25,9 +25,9 @@ private:
    Double_t fTimeSincePrevContact;
 
 public:
-   TClientInfo();                                      // default constructor
-   TClientInfo(const char *filename, UInt_t clientID); // another constructor
-   virtual ~TClientInfo();
+   TMPIClientInfo();                                      // default constructor
+   TMPIClientInfo(const char *filename, UInt_t clientID); // another constructor
+   virtual ~TMPIClientInfo();
 
    TFile *GetFile() const { return fFile; }
    TString GetLocalName() const { return fLocalName; }
@@ -38,6 +38,6 @@ public:
    void R__MigrateKey(TDirectory *destination, TDirectory *source);
    void R__DeleteObject(TDirectory *dir, Bool_t withReset);
 
-   ClassDef(TClientInfo, 0);
+   ClassDef(TMPIClientInfo, 0);
 };
 #endif

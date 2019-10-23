@@ -10,10 +10,10 @@
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RMPI
   HEADERS
-     TClientInfo.h
+     TMPIClientInfo.h
      TMPIFile.h
   SOURCES
-     src/TClientInfo.cxx
+     src/TMPIClientInfo.cxx
      src/TMPIFile.cxx
   DEPENDENCIES
      RIO
