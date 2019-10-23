@@ -557,7 +557,6 @@ sap.ui.define(['sap/ui/core/Component',
          let codeEditor = this.getSelectedCodeEditorTab();
          if(codeEditor !== -1) {
            var oModel = codeEditor.getModel();
-           console.log(oModel);
            oModel.setProperty("/fullpath", fullpath);
            this.getSaveButtonFromCodeEditor(codeEditor).setEnabled(true);
            var filename = fullpath.substr(fullpath.lastIndexOf('/') + 1);
@@ -598,17 +597,7 @@ sap.ui.define(['sap/ui/core/Component',
      getSelectedCodeEditorTab: function() {
        let oTabItemString = this.getView().byId("myTabContainer").getSelectedItem();
 
-       // console.log(oTabItemString);
-       // if(oTabItemString.indexOf("__item") !== -1) {
-       //   oTabItemString = oTabItemString.substr(6);
-       //   oTabItemString = parseInt(oTabItemString);
-       //   oTabItemString++;
-       //   oTabItemString = "__item" + oTabItemString;
-       // }
-       // console.log(oTabItemString);
-
        let oTabItem = sap.ui.getCore().byId(oTabItemString);
-       console.log(oTabItem);
        if(oTabItem) {
          let oTabItemContent = oTabItem.getContent();
          for (let i=0; i<oTabItemContent[0].mAggregations.contentAreas.length; i++) {
@@ -863,7 +852,6 @@ sap.ui.define(['sap/ui/core/Component',
 
           // TODO: use proper openui5 methods to get aggregation
           let editor = oFragment.mAggregations.contentAreas[1];
-          console.log(oFragment);
 
           editor.setModel(new JSONModel({
             code: "",
