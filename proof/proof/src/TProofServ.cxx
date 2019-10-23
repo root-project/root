@@ -1897,7 +1897,8 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                   TList* workerList = new TList();
                   EQueryAction retVal = GetWorkers(workerList, pc);
                   if (retVal != TProofServ::kQueryStop && retVal != TProofServ::kQueryEnqueued) {
-                     if (Int_t ret = fProof->AddWorkers(workerList) < 0) {
+                     Int_t ret = fProof->AddWorkers(workerList);
+                     if (ret < 0) {
                         Error("HandleSocketInput:kPROOF_GETSLAVEINFO",
                               "adding a list of worker nodes returned: %d", ret);
                      }
@@ -3891,12 +3892,15 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
             // change to an asynchronous query
             enqueued = kTRUE;
             Info("HandleProcess", "query %d enqueued", pq->GetSeqNum());
-         } else if (Int_t ret = fProof->AddWorkers(workerList) < 0) {
-            Error("HandleProcess", "Adding a list of worker nodes returned: %d",
-                  ret);
-            // To terminate collection
-            if (sync) SendLogFile();
-            return;
+         } else {
+            Int_t ret = fProof->AddWorkers(workerList);
+            if (ret < 0) {
+               Error("HandleProcess", "Adding a list of worker nodes returned: %d",
+                     ret);
+               // To terminate collection
+               if (sync) SendLogFile();
+               return;
+            }
          }
       } else {
          EQueryAction retVal = GetWorkers(0, pc);
