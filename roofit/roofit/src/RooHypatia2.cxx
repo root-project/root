@@ -93,12 +93,14 @@
 
 #include "RooAbsReal.h"
 #include "RooHelpers.h"
+#include "BatchHelpers.h"
 
 #include "TMath.h"
 #include "Math/SpecFunc.h"
 #include "ROOT/RConfig.hxx"
 
 #include <cmath>
+#include <algorithm>
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Construct a new Hypatia2 PDF.
@@ -326,6 +328,202 @@ double RooHypatia2::evaluate() const
   }
 
   return out;
+}
+
+namespace {
+//////////////////////////////////////////////////////////////////////////////////////////
+/// The generic compute function that recalculates everything for every loop iteration.
+/// This is only needed in the rare case where a parameter is used as an observable.
+template<typename Tx, typename Tl, typename Tz, typename Tb, typename Ts, typename Tm, typename Ta, typename Tn,
+typename Ta2, typename Tn2>
+void compute(RooSpan<double> output, Tx x, Tl lambda, Tz zeta, Tb beta, Ts sigma, Tm mu, Ta a, Tn n, Ta2 a2, Tn2 n2) {
+  const auto N = output.size();
+  const bool zetaIsAlwaysLargerZero = !zeta.isBatch() && zeta[0] > 0.;
+  const bool zetaIsAlwaysZero = !zeta.isBatch() && zeta[0] == 0.;
+
+  for (std::size_t i = 0; i < N; ++i) {
+
+    const double d = x[i] - mu[i];
+    const double cons0 = std::sqrt(zeta[i]);
+    const double asigma = a[i]*sigma[i];
+    const double a2sigma = a2[i]*sigma[i];
+//    const double beta = beta[i];
+
+    if (zetaIsAlwaysLargerZero || zeta[i] > 0.) {
+      const double phi = besselK(lambda[i]+1., zeta[i]) / besselK(lambda[i], zeta[i]);
+      const double cons1 = sigma[i]/std::sqrt(phi);
+      const double alpha  = cons0/cons1;
+      const double delta = cons0*cons1;
+
+      if (d < -asigma){
+        const double k1 = LogEval(-asigma, lambda[i], alpha, beta[i], delta);
+        const double k2 = diff_eval(-asigma, lambda[i], alpha, beta[i], delta);
+        const double B = -asigma + n[i]*k1/k2;
+        const double A = k1 * std::pow(B+asigma, n[i]);
+
+        output[i] = A * std::pow(B-d, -n[i]);
+      }
+      else if (d>a2sigma) {
+        const double k1 = LogEval(a2sigma, lambda[i], alpha, beta[i], delta);
+        const double k2 = diff_eval(a2sigma, lambda[i], alpha, beta[i], delta);
+        const double B = -a2sigma - n2[i]*k1/k2;
+        const double A = k1 * std::pow(B+a2sigma, n2[i]);
+
+        output[i] = A * std::pow(B+d, -n2[i]);
+      }
+      else {
+        output[i] = LogEval(d, lambda[i], alpha, beta[i], delta);
+      }
+    }
+
+    if ((!zetaIsAlwaysLargerZero && zetaIsAlwaysZero) || (zeta[i] == 0. && lambda[i] < 0.)) {
+      const double delta = sigma[i];
+
+      if (d < -asigma ) {
+        const double cons1 = std::exp(-beta[i]*asigma);
+        const double phi = 1. + a[i] * a[i];
+        const double k1 = cons1 * std::pow(phi, lambda[i]-0.5);
+        const double k2 = beta[i]*k1 - cons1*(lambda[i]-0.5) * std::pow(phi, lambda[i]-1.5) * 2.*a[i]/delta;
+        const double B = -asigma + n[i]*k1/k2;
+        const double A = k1*std::pow(B+asigma, n[i]);
+
+        output[i] = A*std::pow(B-d, -n[i]);
+      }
+      else if (d > a2sigma) {
+        const double cons1 = std::exp(beta[i]*a2sigma);
+        const double phi = 1. + a2[i]*a2[i];
+        const double k1 = cons1 * std::pow(phi, lambda[i]-0.5);
+        const double k2 = beta[i]*k1 + cons1*(lambda[i]-0.5) * std::pow(phi, lambda[i]-1.5) * 2.*a2[i]/delta;
+        const double B = -a2sigma - n2[i]*k1/k2;
+        const double A = k1*std::pow(B+a2sigma, n2[i]);
+
+        output[i] =  A*std::pow(B+d, -n2[i]);
+      }
+      else {
+        output[i] = std::exp(beta[i]*d) * std::pow(1. + d*d/(delta*delta), lambda[i] - 0.5);
+      }
+    }
+  }
+}
+
+template<bool right>
+std::pair<double, double> computeAB_zetaNZero(double asigma, double lambda, double alpha, double beta, double delta, double n) {
+  const double k1 = LogEval(right ? asigma : -asigma, lambda, alpha, beta, delta);
+  const double k2 = diff_eval(right ? asigma : -asigma, lambda, alpha, beta, delta);
+  const double B = -asigma + (right ? -1 : 1.) * n*k1/k2;
+  const double A = k1 * std::pow(B+asigma, n);
+
+  return {A, B};
+}
+
+template<bool right>
+std::pair<double, double> computeAB_zetaZero(double beta, double asigma, double a, double lambda, double delta, double n) {
+  const double cons1 = std::exp((right ? 1. : -1.) * beta*asigma);
+  const double phi = 1. + a * a;
+  const double k1 = cons1 * std::pow(phi, lambda-0.5);
+  const double k2 = beta*k1 + (right ? 1. : -1) * cons1*(lambda-0.5) * std::pow(phi, lambda-1.5) * 2.*a/delta;
+  const double B = -asigma + (right ? -1. : 1.) * n*k1/k2;
+  const double A = k1*std::pow(B+asigma, n);
+
+  return {A, B};
+}
+
+using BatchHelpers::BracketAdapter;
+//////////////////////////////////////////////////////////////////////////////////////////
+/// A specialised compute function where x is an observable, and all parameters are used as
+/// parameters. Since many things can be calculated outside of the loop, it is faster.
+void compute(RooSpan<double> output, RooSpan<const double> x,
+    BracketAdapter<double> lambda, BracketAdapter<double> zeta, BracketAdapter<double> beta,
+    BracketAdapter<double> sigma, BracketAdapter<double> mu,
+    BracketAdapter<double> a, BracketAdapter<double> n, BracketAdapter<double> a2, BracketAdapter<double> n2) {
+  const auto N = output.size();
+
+  const double cons0 = std::sqrt(zeta);
+  const double asigma = a*sigma;
+  const double a2sigma = a2*sigma;
+
+  if (zeta > 0.) {
+    const double phi = besselK(lambda+1., zeta) / besselK(lambda, zeta);
+    const double cons1 = sigma/std::sqrt(phi);
+    const double alpha  = cons0/cons1;
+    const double delta = cons0*cons1;
+
+    const auto AB_l = computeAB_zetaNZero<false>(asigma, lambda, alpha, beta, delta, n);
+    const auto AB_r = computeAB_zetaNZero<true>(a2sigma, lambda, alpha, beta, delta, n2);
+
+    for (std::size_t i = 0; i < N; ++i) {
+      const double d = x[i] - mu[i];
+
+      if (d < -asigma){
+        output[i] = AB_l.first * std::pow(AB_l.second - d, -n);
+      }
+      else if (d>a2sigma) {
+        output[i] = AB_r.first * std::pow(AB_r.second + d, -n2);
+      }
+      else {
+        output[i] = LogEval(d, lambda, alpha, beta, delta);
+      }
+    }
+  } else if (zeta == 0. && lambda < 0.) {
+    const double delta = sigma;
+
+    const auto AB_l = computeAB_zetaZero<false>(beta, asigma,  a,  lambda, delta, n);
+    const auto AB_r = computeAB_zetaZero<true>(beta, a2sigma, a2, lambda, delta, n2);
+
+    for (std::size_t i = 0; i < N; ++i) {
+      const double d = x[i] - mu[i];
+
+      if (d < -asigma ) {
+        output[i] = AB_l.first*std::pow(AB_l.second - d, -n);
+      }
+      else if (d > a2sigma) {
+        output[i] = AB_r.first * std::pow(AB_r.second + d, -n2);
+      }
+      else {
+        output[i] = std::exp(beta*d) * std::pow(1. + d*d/(delta*delta), lambda - 0.5);
+      }
+    }
+  }
+}
+
+}
+
+RooSpan<double> RooHypatia2::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
+  using namespace BatchHelpers;
+
+  auto x = _x.getValBatch(begin, batchSize);
+  auto lambda = _lambda.getValBatch(begin, batchSize);
+  auto zeta = _zeta.getValBatch(begin, batchSize);
+  auto beta = _beta.getValBatch(begin, batchSize);
+  auto sig = _sigma.getValBatch(begin, batchSize);
+  auto mu = _mu.getValBatch(begin, batchSize);
+  auto a = _a.getValBatch(begin, batchSize);
+  auto n = _n.getValBatch(begin, batchSize);
+  auto a2 = _a2.getValBatch(begin, batchSize);
+  auto n2 = _n2.getValBatch(begin, batchSize);
+
+  batchSize = BatchHelpers::findSize({x, lambda, zeta, beta, sig, mu, a, n, a2, n2});
+
+  auto output = _batchData.makeWritableBatchInit(begin, batchSize, 0.);
+
+  const std::vector<RooSpan<const double>> params = {lambda, zeta, beta, sig, mu, a, n, a2, n2};
+  auto emptySpan = [](const RooSpan<const double>& span) { return span.empty(); };
+  if (!x.empty() && std::all_of(params.begin(), params.end(), emptySpan)) {
+    compute(output, x,
+        BracketAdapter<double>(_lambda), BracketAdapter<double>(_zeta),
+        BracketAdapter<double>(_beta), BracketAdapter<double>(_sigma), BracketAdapter<double>(_mu),
+        BracketAdapter<double>(_a), BracketAdapter<double>(_n),
+        BracketAdapter<double>(_a2), BracketAdapter<double>(_n2));
+  } else {
+    compute(output, BracketAdapterWithMask(_x, x),
+        BracketAdapterWithMask(_lambda, lambda), BracketAdapterWithMask(_zeta, zeta),
+        BracketAdapterWithMask(_beta, beta), BracketAdapterWithMask(_sigma, sig),
+        BracketAdapterWithMask(_mu, mu),
+        BracketAdapterWithMask(_a, a), BracketAdapterWithMask(_n, n),
+        BracketAdapterWithMask(_a2, a2), BracketAdapterWithMask(_n2, n2));
+  }
+
+  return output;
 }
 
 

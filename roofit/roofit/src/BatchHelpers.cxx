@@ -18,13 +18,14 @@
 
 namespace BatchHelpers {
 
-/* This function returns the minimum size of the non-zero-sized batches
- * It is used when the number of parameters are<=3 and explicit instantiation
- * will be used. 
+/**
+ * This function returns the minimum size of the non-zero-sized batches.
+ * \param[in] parameters Vector of spans to read sizes from.
+ * \return Smallest non-zero size found.
  */
 size_t findSize(std::vector< RooSpan<const double> > parameters) 
 {
-  size_t ret = SIZE_MAX;
+  size_t ret = std::numeric_limits<std::size_t>::max();
   for (auto &param : parameters) 
     if (param.size()> 0 && param.size()<ret) ret=param.size();
     

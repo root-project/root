@@ -65,6 +65,10 @@ class BracketAdapter {
       return _payload;
     }
     
+    constexpr operator double() const {
+      return _payload;
+    }
+
     constexpr bool isBatch() const noexcept {
       return false;
     }
