@@ -801,9 +801,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     RooPlot* retFrame =  getPdf(_indexCat.arg().getLabel())->plotOn(frame,cmdList2) ;
 
     // Delete temporary dataset
-    if (projDataTmp) {
-      delete projDataTmp ;
-    }
+    delete projDataTmp ;
 
     delete wTable ;
     delete sliceSet ;
