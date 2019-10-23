@@ -28,7 +28,7 @@ sap.ui.define(['sap/ui/core/Component',
     * All Browser functionality is loaded after main ui5 rendering is performed */
 
    return Controller.extend("rootui5.browser.controller.Browser", {
-      onInit: function () {
+      onInit: async function () {
 
          this.websocket = this.getView().getViewData().conn_handle;
 
@@ -145,25 +145,23 @@ sap.ui.define(['sap/ui/core/Component',
                onAfterRendering: function() { this.assignRowHandlers(); }
             }, this);
 
-            this.getView().byId("aCodeEditor").setModel(new JSONModel({
-               code: "",
-               ext: "",
-               filename: "",
-               fullpath: "",
-               modified: false
+            let tabContainerItem = this.getView().byId("defaultCodeEditor");
+            await Fragment.load({name: "rootui5.browser.view.codeeditor"}).then(function (oFragment) {
+              tabContainerItem.removeAllContent();
+              tabContainerItem.addContent(oFragment);
+            });
+            let defaultCodeEditor = this.getView().byId("defaultCodeEditor").getContent()[0].mAggregations.contentAreas[1];
+            defaultCodeEditor.setModel(new JSONModel({
+              code: "",
+              ext: "",
+              filename: "",
+              fullpath: "",
+              modified: false
             }));
 
-            this.getView().byId("aCodeEditor").attachChange( function() {
+            defaultCodeEditor.attachChange( function() {
                this.getModel().setProperty("/modified", true);
             });
-
-            /* this.getView().byId("aRootCanvas1").setModel(new JSONModel({
-               rootCanvas: ""
-            }));
-            */
-     //    }
-
-          // this.addNewButtonPressHandler(); // always create new canvas in the beginning
 
             this.drawingOptions = { TH1: 'hist', TH2: 'COL', TProfile: 'E0'};
 
@@ -172,11 +170,12 @@ sap.ui.define(['sap/ui/core/Component',
       /** @brief Extract the file name and extension
       * @desc Used to set the editor's model properties and display the file name on the tab element  */
      setFileNameType: function(filename) {
-         var oEditor = this.getView().byId("aCodeEditor");
+         var oEditor = this.getSelectedCodeEditorTab();
          var oModel = oEditor.getModel();
          var oTabElement = oEditor.getParent().getParent();
          var ext = "txt";
-         this.getView().byId("run_macro").setEnabled(false);
+         let runButton = this.getRunButtonFromCodeEditor(oEditor);
+        runButton.setEnabled(false);
          if (filename.lastIndexOf('.') > 0)
             ext = filename.substr(filename.lastIndexOf('.') + 1);
          switch(ext.toLowerCase()) {
@@ -184,7 +183,8 @@ sap.ui.define(['sap/ui/core/Component',
             case "cc":
             case "cpp":
             case "cxx":
-               this.getView().byId("run_macro").setEnabled(true);
+              runButton.setEnabled(true);
+              break;
             case "h":
             case "hh":
             case "hxx":
@@ -550,13 +550,16 @@ sap.ui.define(['sap/ui/core/Component',
               return this.websocket.Send('DBLCLK: ["'  + fullpath + '","' + drawingOptions + '"]' );
             }
          }
-         var oEditor = this.getView().byId("aCodeEditor");
-         var oModel = oEditor.getModel();
-         oModel.setProperty("/fullpath", fullpath);
-         this.getView().byId("save_file").setEnabled(true);
-         var filename = fullpath.substr(fullpath.lastIndexOf('/') + 1);
-         if (this.setFileNameType(filename))
-            return this.websocket.Send("DBLCLK:" + fullpath);
+
+         let codeEditor = this.getSelectedCodeEditorTab();
+         if(codeEditor !== -1) {
+           var oModel = codeEditor.getModel();
+           oModel.setProperty("/fullpath", fullpath);
+           this.getSaveButtonFromCodeEditor(codeEditor).setEnabled(true);
+           var filename = fullpath.substr(fullpath.lastIndexOf('/') + 1);
+           if (this.setFileNameType(filename))
+              return this.websocket.Send("DBLCLK:" + fullpath);
+         }
        },
 
       getBaseClass: function(className) {
@@ -588,6 +591,37 @@ sap.ui.define(['sap/ui/core/Component',
          this.isConnected = false;
       },
 
+     getSelectedCodeEditorTab: function() {
+       let oTabItemString = this.getView().byId("myTabContainer").getSelectedItem();
+       let oTabItem = this.getView().byId(oTabItemString);
+       if(oTabItem) {
+         let oTabItemContent = oTabItem.getContent();
+         for (let i=0; i<oTabItemContent[0].mAggregations.contentAreas.length; i++) {
+           if (oTabItemContent[0].mAggregations.contentAreas[i].sId.indexOf("__editor") !== -1) {
+             return oTabItemContent[0].mAggregations.contentAreas[i];
+           }
+         }
+       }
+       MessageToast.show("Sorry, you need to select a code editor tab", {duration: 1500});
+       return -1;
+     },
+
+     getSaveButtonFromCodeEditor: function(oCodeEditor) {
+        let oSplitter = oCodeEditor.getParent();
+        let oToolBar = oSplitter.mAggregations.contentAreas[0];
+        let oToolBarContent = oToolBar.getContent();
+
+        return oToolBarContent[2];
+     },
+
+     getRunButtonFromCodeEditor: function(oCodeEditor) {
+       let oSplitter = oCodeEditor.getParent();
+       let oToolBar = oSplitter.mAggregations.contentAreas[0];
+       let oToolBarContent = oToolBar.getContent();
+
+       return oToolBarContent[3];
+     },
+
       /** Entry point for all data from server */
       OnWebsocketMsg: function(handle, msg, offset) {
 
@@ -609,7 +643,11 @@ sap.ui.define(['sap/ui/core/Component',
             this.parseDescription(msg, false);
             break;
          case "FREAD":  // file read
-            this.getView().byId("aCodeEditor").getModel().setProperty("/code", msg);
+
+            let result = this.getSelectedCodeEditorTab();
+            if (result !== -1) {
+              result.getModel().setProperty("/code", msg);
+            }
             break;
          case "FIMG":  // image file read
             console.log("Got image " + msg.substr(0,50) + "...");
@@ -773,7 +811,6 @@ sap.ui.define(['sap/ui/core/Component',
 
      newCodeEditor: async function(oEvent, myThis) {
         let oTabContainer = myThis.getView().byId("myTabContainer");
-        console.log(oTabContainer);
 
         let tabContainerItem = new TabContainerItem({
           icon: "sap-icon://write-new-document",
@@ -784,6 +821,7 @@ sap.ui.define(['sap/ui/core/Component',
           tabContainerItem.removeAllContent();
           tabContainerItem.addContent(oFragment);
         });
+
         oTabContainer.addItem(tabContainerItem);
 
         oTabContainer.setSelectedItem(tabContainerItem);
