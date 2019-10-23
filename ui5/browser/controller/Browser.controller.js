@@ -162,6 +162,12 @@ sap.ui.define(['sap/ui/core/Component',
               modified: false
             }));
 
+            let splitterUpperContent = this.getView().byId("defaultCodeEditor").getContent()[0].mAggregations.contentAreas[0].getContent();
+            splitterUpperContent[0].attachChange(this.onChangeFile, this);
+            splitterUpperContent[1].attachPress(this.onSaveAs, this);
+            splitterUpperContent[2].attachPress(this.onSaveFile, this);
+            splitterUpperContent[3].attachPress(this.onRunMacro, this);
+
             defaultCodeEditor.attachChange( function() {
                this.getModel().setProperty("/modified", true);
             });
@@ -240,7 +246,7 @@ sap.ui.define(['sap/ui/core/Component',
 
       /** @brief Handle the "Browse..." button press event */
       onChangeFile: function(oEvent) {
-         var oEditor = this.getView().byId("aCodeEditor");
+         var oEditor = this.getSelectedCodeEditorTab();
          var oModel = oEditor.getModel();
          var oReader = new FileReader();
          oReader.onload = function() {
@@ -868,6 +874,12 @@ sap.ui.define(['sap/ui/core/Component',
         });
 
         oTabContainer.addItem(tabContainerItem);
+
+       let splitterUpperContent = tabContainerItem.getContent()[0].mAggregations.contentAreas[0].getContent();
+       splitterUpperContent[0].attachChange(myThis.onChangeFile, myThis);
+       splitterUpperContent[1].attachPress(myThis.onSaveAs, myThis);
+       splitterUpperContent[2].attachPress(myThis.onSaveFile, myThis);
+       splitterUpperContent[3].attachPress(myThis.onRunMacro, myThis);
 
         oTabContainer.setSelectedItem(tabContainerItem);
      },
