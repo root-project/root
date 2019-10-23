@@ -4,13 +4,13 @@
       <layoutData><l:SplitterLayoutData size="35px" resizable="false"/></layoutData>
       <u:FileUploader change="onChangeFile"/>
       <Button text="Save as..." tooltip="Save current file as..." press="onSaveAs" />
-      <Button id="save_file" text="Save" tooltip="Save current file" press="onSaveFile" enabled="false" />
-      <Button id="run_macro" text="Run" icon="sap-icon://play" tooltip="Run Current Macro" press="onRunMacro" enabled="false" />
+      <Button text="Save" tooltip="Save current file" press="onSaveFile" enabled="false" />
+      <Button text="Run" icon="sap-icon://play" tooltip="Run Current Macro" press="onRunMacro" enabled="false" />
     </Toolbar>
     <e:CodeEditor
-            id="aCodeEditor"
             height="100%"
             colorTheme="default"
-            type="c_cpp" />
+            type="c_cpp"
+            value="{/code}" />
   </l:Splitter>
 </core:FragmentDefinition>

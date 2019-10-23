@@ -17,30 +17,8 @@
                       itemSelect="tabSelectItem"
                       itemClose="tabCloseHandler">
           <items>
-            <TabContainerItem name="Code Editor" icon="sap-icon://write-new-document" additionalText="untitled" >
-              <content>
-                <l:Splitter orientation="Vertical">
-                  <Toolbar>
-                    <layoutData><l:SplitterLayoutData size="35px" resizable="false"/></layoutData>
-                    <u:FileUploader change="onChangeFile"/>
-                    <Button text="Save as..." tooltip="Save current file as..." press="onSaveAs" />
-                    <Button id="save_file" text="Save" tooltip="Save current file" press="onSaveFile" enabled="false" />
-                    <Button id="run_macro" text="Run" icon="sap-icon://play" tooltip="Run Current Macro" press="onRunMacro" enabled="false" />
-                  </Toolbar>
-                  <e:CodeEditor
-                          id="aCodeEditor"
-                          height="100%"
-                          colorTheme="default"
-                          type="c_cpp"
-                          value="{/code}" />
-                </l:Splitter>
-              </content>
+            <TabContainerItem id="defaultCodeEditor" name="Code Editor" icon="sap-icon://write-new-document" additionalText="untitled" >
             </TabContainerItem>
-            <!--TabContainerItem name="ROOT Canvas" icon="sap-icon://column-chart-dual-axis" additionalText="" >
-              <content>
-                <core:HTML id="aRootCanvas1" content="&lt;div style=&quot;height:100%&quot;&gt;{/rootCanvas}&lt;/div&gt;" />
-              </content>
-            </TabContainerItem-->
           </items>
         </TabContainer>
       </Page>
