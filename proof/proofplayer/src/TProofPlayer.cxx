@@ -1189,7 +1189,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       // Initial memory footprint
       if (!CheckMemUsage(singleshot, warnHWMres, warnHWMvir, wmsg)) {
          Error("Process", "%s", wmsg.Data());
-         wmsg.Insert(0, TString::Format("ERROR:%s, after SlaveBegin(), ", gProofServ->GetOrdinal()));
+         wmsg.Insert(0, TString::Format("ERROR:%s, after SlaveBegin(), ", gProofServ ? gProofServ->GetOrdinal() : "gProofServ is nullptr"));
          fSelStatus->Add(wmsg.Data());
          if (gProofServ) {
             gProofServ->SendAsynMessage(wmsg.Data());
