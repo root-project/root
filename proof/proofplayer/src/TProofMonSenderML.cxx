@@ -160,7 +160,7 @@ Int_t TProofMonSenderML::SendSummary(TList *recs, const char *id)
 
    TObject *dsn = 0;
    // We may need to correct some variable names first
-   if (fSummaryVrs == 0) {
+   if (fSummaryVrs > 1) {
       if ((dsn = recs->FindObject("dataset"))) recs->Remove(dsn);
    } else if (fSummaryVrs == 0) {
       // Only the first records
