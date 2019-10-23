@@ -913,7 +913,7 @@ Int_t TProofBench::RunDataSet(const char *dset,
    if (!fDataPar.IsNull()) fRunDS->SetParList(fDataPar);
    fRunDS->SetReleaseCache(fReleaseCache);
    fRunDS->Run(dset, start, stop, step, fNtries, fDebug, -1);
-   if (!fReadType) SafeDelete(readType);
+   SafeDelete(readType);
 
    // Close the file
    if (SetOutFile(0) != 0)
@@ -946,7 +946,7 @@ Int_t TProofBench::RunDataSetx(const char *dset, Int_t start, Int_t stop)
    if (!fSelOption.IsNull()) fRunDS->SetSelOption(fSelOption);
    if (!fDataPar.IsNull()) fRunDS->SetParList(fDataPar);
    fRunDS->Run(dset, start, stop, -2, fNtries, fDebug, -1);
-   if (!fReadType) SafeDelete(readType);
+   SafeDelete(readType);
 
    // Close the file
    if (SetOutFile(0) != 0)
