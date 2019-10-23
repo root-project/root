@@ -967,7 +967,7 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend, Bool_t force)
 Int_t TProofPlayer::AssertSelector(const char *selector_file)
 {
    if (selector_file && strlen(selector_file)) {
-      if (fCreateSelObj) SafeDelete(fSelector);
+      SafeDelete(fSelector);
 
       // Get selector files from cache
       TString ocwd = gSystem->WorkingDirectory();
@@ -1491,7 +1491,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, TSelector *selector,
       return -1;
    }
 
-   if (fCreateSelObj) SafeDelete(fSelector);
+   SafeDelete(fSelector);
    fSelector = selector;
    fCreateSelObj = kFALSE;
    return Process(dset, (const char *)0, option, nentries, first);
@@ -2515,7 +2515,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, TSelector *selector,
 
    // Define fSelector in Client
    if (IsClient() && (selector != fSelector)) {
-      if (fCreateSelObj) SafeDelete(fSelector);
+      SafeDelete(fSelector);
       fSelector = selector;
    }
 
@@ -2942,7 +2942,7 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
          // so now we can cleanup the selector, making sure that we do not
          // touch the output objects
          if (output) { output->SetOwner(kFALSE); output->Clear("nodelete"); }
-         if (fCreateSelObj) SafeDelete(fSelector);
+         SafeDelete(fSelector);
 
          // Delete fOutput (not needed anymore, cannot be finalized twice),
          // making sure that the objects saved in TQueryResult are not deleted
