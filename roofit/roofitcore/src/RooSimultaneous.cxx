@@ -753,32 +753,31 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     // Construct cut string to only select projection data event that match the current slice
 
     const RooAbsData* projDataTmp(projData) ;
-    if (projData) {
-      // Make list of categories columns to exclude from projection data      
-      RooArgSet* indexCatComps = _indexCat.arg().getObservables(frame->getNormVars());
 
-      // Make cut string to exclude rows from projection data
-      TString cutString ;
-      TIterator* compIter =  indexCatComps->createIterator() ;    
-      RooAbsCategory* idxComp ;
-      Bool_t first(kTRUE) ;
-      while((idxComp=(RooAbsCategory*)compIter->Next())) {
-	if (!first) {
-	  cutString.Append("&&") ;
-	} else {
-	  first=kFALSE ;
-	}
-	cutString.Append(Form("%s==%d",idxComp->GetName(),idxComp->getIndex())) ;
+    // Make list of categories columns to exclude from projection data
+    RooArgSet* indexCatComps = _indexCat.arg().getObservables(frame->getNormVars());
+
+    // Make cut string to exclude rows from projection data
+    TString cutString ;
+    TIterator* compIter =  indexCatComps->createIterator();
+    RooAbsCategory* idxComp ;
+    Bool_t first(kTRUE) ;
+    while((idxComp=(RooAbsCategory*)compIter->Next())) {
+      if (!first) {
+        cutString.Append("&&") ;
+      } else {
+        first=kFALSE ;
       }
-      delete compIter ;
-
-      // Make temporary projData without RooSim index category components
-      RooArgSet projDataVars(*projData->get()) ;
-      projDataVars.remove(*indexCatComps,kTRUE,kTRUE) ;
-      
-      projDataTmp = ((RooAbsData*)projData)->reduce(projDataVars,cutString) ;
-      delete indexCatComps ;
+      cutString.Append(Form("%s==%d",idxComp->GetName(),idxComp->getIndex())) ;
     }
+    delete compIter ;
+
+    // Make temporary projData without RooSim index category components
+    RooArgSet projDataVars(*projData->get()) ;
+    projDataVars.remove(*indexCatComps,kTRUE,kTRUE) ;
+
+    projDataTmp = ((RooAbsData*)projData)->reduce(projDataVars,cutString) ;
+    delete indexCatComps ;
 
     // Multiply scale factor with fraction of events in current state of index
 
