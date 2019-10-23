@@ -362,7 +362,7 @@ sap.ui.define(['sap/ui/core/Component',
 
       /** @brief Handle the "Save" button press event */
       onSaveFile: function() {
-         var oEditor = this.getView().byId("aCodeEditor");
+         var oEditor = this.getSelectedCodeEditorTab();
          var oModel = oEditor.getModel();
          var sText = oModel.getProperty("/code");
          var fullpath = oModel.getProperty("/fullpath");
@@ -373,7 +373,7 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       reallyRunMacro: function() {
-         var oEditor = this.getView().byId("aCodeEditor");
+         var oEditor = this.getSelectedCodeEditorTab();
          var oModel = oEditor.getModel();
          var sText = oModel.getProperty("/code");
          var fullpath = oModel.getProperty("/fullpath");
@@ -385,7 +385,7 @@ sap.ui.define(['sap/ui/core/Component',
       /** @brief Handle the "Run" button press event */
       onRunMacro: function() {
          var pthis = this;
-         var oEditor = this.getView().byId("aCodeEditor");
+         var oEditor = this.getSelectedCodeEditorTab();
          var oModel = oEditor.getModel();
          if (oModel.getProperty("/modified") === true) {
             MessageBox.confirm('The text has been modified! Do you want to save it?', {
@@ -457,7 +457,7 @@ sap.ui.define(['sap/ui/core/Component',
           path += oLinks[i].getText() + "/";
         }
 
-        console.log('calling onBreadcrumbsPress', path)
+        console.log('calling onBreadcrumbsPress', path);
 
         this.websocket.Send('CHDIR:' + path);
 
@@ -554,6 +554,7 @@ sap.ui.define(['sap/ui/core/Component',
          let codeEditor = this.getSelectedCodeEditorTab();
          if(codeEditor !== -1) {
            var oModel = codeEditor.getModel();
+           console.log(oModel);
            oModel.setProperty("/fullpath", fullpath);
            this.getSaveButtonFromCodeEditor(codeEditor).setEnabled(true);
            var filename = fullpath.substr(fullpath.lastIndexOf('/') + 1);
@@ -593,7 +594,18 @@ sap.ui.define(['sap/ui/core/Component',
 
      getSelectedCodeEditorTab: function() {
        let oTabItemString = this.getView().byId("myTabContainer").getSelectedItem();
-       let oTabItem = this.getView().byId(oTabItemString);
+
+       // console.log(oTabItemString);
+       // if(oTabItemString.indexOf("__item") !== -1) {
+       //   oTabItemString = oTabItemString.substr(6);
+       //   oTabItemString = parseInt(oTabItemString);
+       //   oTabItemString++;
+       //   oTabItemString = "__item" + oTabItemString;
+       // }
+       // console.log(oTabItemString);
+
+       let oTabItem = sap.ui.getCore().byId(oTabItemString);
+       console.log(oTabItem);
        if(oTabItem) {
          let oTabItemContent = oTabItem.getContent();
          for (let i=0; i<oTabItemContent[0].mAggregations.contentAreas.length; i++) {
@@ -602,6 +614,7 @@ sap.ui.define(['sap/ui/core/Component',
            }
          }
        }
+
        MessageToast.show("Sorry, you need to select a code editor tab", {duration: 1500});
        return -1;
      },
@@ -820,6 +833,22 @@ sap.ui.define(['sap/ui/core/Component',
         await Fragment.load({name: "rootui5.browser.view.codeeditor"}).then(function (oFragment) {
           tabContainerItem.removeAllContent();
           tabContainerItem.addContent(oFragment);
+
+          let editor = oFragment.mAggregations.contentAreas[1];
+          console.log(oFragment);
+
+          editor.setModel(new JSONModel({
+            code: "",
+            ext: "",
+            filename: "",
+            fullpath: "",
+            modified: false
+          }));
+
+          editor.attachChange( function() {
+            this.getModel().setProperty("/modified", true);
+          });
+
         });
 
         oTabContainer.addItem(tabContainerItem);
