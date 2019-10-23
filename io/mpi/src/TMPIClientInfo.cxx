@@ -9,42 +9,41 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TClientInfo.h"
+#include "TMPIClientInfo.h"
 #include "TSystem.h"
 #include "TClass.h"
 #include "TKey.h"
 
-ClassImp(TClientInfo);
+ClassImp(TMPIClientInfo);
 
-TClientInfo::TClientInfo() : fFile(0), fLocalName(), fContactsCount(0), fTimeSincePrevContact(0) {}
+TMPIClientInfo::TMPIClientInfo() : fFile(0), fLocalName(), fContactsCount(0), fTimeSincePrevContact(0) {}
 
-TClientInfo::~TClientInfo() {}
-TClientInfo::TClientInfo(const char *filename, UInt_t clientId) : fFile(0), fContactsCount(0), fTimeSincePrevContact(0)
+TMPIClientInfo::~TMPIClientInfo() {}
+TMPIClientInfo::TMPIClientInfo(const char *filename, UInt_t clientId)
+   : fFile(0), fContactsCount(0), fTimeSincePrevContact(0)
 {
    fLocalName.Form("%s-%d-%d", filename, clientId, gSystem->GetPid());
 }
 
-void TClientInfo::SetFile(TFile *file)
+void TMPIClientInfo::SetFile(TFile *file)
 {
-   {
-      // Register the new file as coming from this client.
-      if (file != fFile) {
-         if (fFile) {
-            R__MigrateKey(fFile, file);
-            // delete the previous memory file (if any)
-            delete file;
-         } else {
-            fFile = file;
-         }
+   // Register the new file as coming from this client.
+   if (file != fFile) {
+      if (fFile) {
+         R__MigrateKey(fFile, file);
+         // delete the previous memory file (if any)
+         delete file;
+      } else {
+         fFile = file;
       }
-      TTimeStamp now;
-      fTimeSincePrevContact = now.AsDouble() - fLastContact.AsDouble();
-      fLastContact = now;
-      ++fContactsCount;
    }
+   TTimeStamp now;
+   fTimeSincePrevContact = now.AsDouble() - fLastContact.AsDouble();
+   fLastContact = now;
+   ++fContactsCount;
 }
 
-void TClientInfo::R__DeleteObject(TDirectory *dir, Bool_t withReset)
+void TMPIClientInfo::R__DeleteObject(TDirectory *dir, Bool_t withReset)
 {
    if (dir == 0)
       return;
@@ -75,12 +74,12 @@ void TClientInfo::R__DeleteObject(TDirectory *dir, Bool_t withReset)
    }
 }
 
-void TClientInfo::R__MigrateKey(TDirectory *destination, TDirectory *source)
+void TMPIClientInfo::R__MigrateKey(TDirectory *destination, TDirectory *source)
 {
    if (destination == 0 || source == 0)
       return;
    TIter nextkey(source->GetListOfKeys());
-   // std::cout<<"TClientInfo::Trying to migrate the keys here"<<std::endl;
+   // std::cout<<"TMPIClientInfo::Trying to migrate the keys here"<<std::endl;
    TKey *key;
    while ((key = (TKey *)nextkey())) {
       TClass *cl = TClass::GetClass(key->GetClassName());

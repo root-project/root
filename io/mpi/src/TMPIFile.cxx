@@ -101,7 +101,7 @@ TMPIFile::~TMPIFile()
    // the sub communicators should be freed for other things
    Int_t finalized = 0;
    MPI_Finalized(&finalized);
-   if (not finalized and fSplitLevel > 1) {
+   if (!finalized && (fSplitLevel > 1)) {
       MPI_Comm_free(&fSubComm);
    }
 }
@@ -227,11 +227,13 @@ TMPIFile::ParallelFileMerger::ParallelFileMerger(const char *filename, Int_t com
    : fFilename(filename), fClientsContact(0), fMerger(kFALSE, kTRUE)
 {
    fMerger.SetPrintLevel(0);
-   if (!fMerger.OutputFile(filename, "RECREATE"))
-      exit(1);
+   if (!fMerger.OutputFile(filename, "RECREATE")) {
+      Error("ParallelFileMerger", "Cannot recreate the output file");
+   }
    fMerger.GetOutputFile()->SetCompressionSettings(compression_settings);
-   if (writeCache)
+   if (writeCache) {
       new TFileCacheWrite(fMerger.GetOutputFile(), 32 * 1024 * 1024);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -241,8 +243,8 @@ TMPIFile::ParallelFileMerger::ParallelFileMerger(const char *filename, Int_t com
 
 TMPIFile::ParallelFileMerger::~ParallelFileMerger()
 {
-   for (ClientColl_t::iterator iter = fClients.begin(); iter != fClients.end(); ++iter)
-      delete iter->GetFile();
+   for (auto& client : fClients)
+      delete client.GetFile();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -309,7 +311,7 @@ void TMPIFile::ParallelFileMerger::RegisterClient(UInt_t clientID, TFile *file)
 {
    ++fNClientsContact;
    fClientsContact.SetBitNumber(clientID);
-   TClientInfo ntcl(std::string(fFilename).c_str(), clientID);
+   TMPIClientInfo ntcl(std::string(fFilename).c_str(), clientID);
    if (fClients.size() < clientID + 1) {
       fClients.push_back(ntcl);
    }
@@ -420,10 +422,7 @@ void TMPIFile::R__DeleteObject(TDirectory *dir, Bool_t withReset)
 
 Bool_t TMPIFile::IsCollector()
 {
-   if (this->fMPILocalRank) {
-      return kFALSE;
-   }
-   return kTRUE;
+   return !fMPILocalRank;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -434,8 +433,7 @@ Bool_t TMPIFile::IsCollector()
 void TMPIFile::CreateBufferAndSend()
 {
    if (this->IsCollector()) {
-      SysError("CreateBufferAndSend", " should not be called by a collector");
-      exit(1);
+      Error("CreateBufferAndSend", " should not be called by a collector");
    }
    this->Write();
    Int_t count = this->GetEND();
@@ -471,7 +469,7 @@ void TMPIFile::CreateEmptyBufferAndSend()
 void TMPIFile::Sync()
 {
    // check if the previous send request is accepted by master.
-   if (IsReceived()) { // if accpeted create and send current batch
+   if (IsReceived()) { // if accepted create and send current batch
       CreateBufferAndSend();
    } else {
       // if not accepted wait until received by master
@@ -528,7 +526,6 @@ void TMPIFile::CheckSplitLevel()
 {
    if (fSplitLevel < 1) {
       Error("CheckSplitLevel", "At least one collector is required instead of %d", fSplitLevel);
-      exit(1);
    }
 }
 
@@ -555,7 +552,6 @@ void TMPIFile::SplitMPIComm()
             " Number of processors should be two times larger than outpts. For %d outputs at least %d "
             "should be allocated instead of %d",
             fSplitLevel, MIN_FILE_NUM * fSplitLevel, fMPIGlobalSize);
-      throw std::exception();
    }
 
    // using one collector

@@ -28,20 +28,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TClientInfo
-#include "TClientInfo.h"
-#endif
-#ifndef ROOT_TBits
+#include "TMPIClientInfo.h"
 #include "TBits.h"
-#endif
-#ifndef ROOT_TFileMerger
 #include "TFileMerger.h"
-#endif
-#ifndef ROOT_TMemFile
 #include "TMemFile.h"
-#endif
 
-#include "mpi.h"
+#include <mpi.h>
 
 #include <vector>
 
@@ -66,7 +58,7 @@ private:
 
    struct ParallelFileMerger : public TObject {
    private:
-      using ClientColl_t = std::vector<TClientInfo>;
+      using ClientColl_t = std::vector<TMPIClientInfo>;
 
       TString fFilename;
       TBits fClientsContact;
@@ -74,7 +66,7 @@ private:
       ClientColl_t fClients;
       TTimeStamp fLastMerge;
       TFileMerger fMerger;
-      TClientInfo fClientInfo;
+      TMPIClientInfo fClientInfo;
 
    public:
       ParallelFileMerger(const char *filename, Int_t compression_settings, Bool_t writeCache = kFALSE);
