@@ -57,6 +57,7 @@ class RooRefArray : public TObjArray {
   } ;
   RooRefArray(const RooRefArray& other) : TObjArray(other) {
   }
+  RooRefArray& operator=(const RooRefArray& other) = default;
   virtual ~RooRefArray() {} ;
  protected:
   ClassDef(RooRefArray,1) // Helper class for proxy lists
@@ -78,6 +79,7 @@ public:
   virtual ~RooAbsArg();
   RooAbsArg(const char *name, const char *title);
   RooAbsArg(const RooAbsArg& other, const char* name=0) ;
+  RooAbsArg& operator=(const RooAbsArg& other);
   virtual TObject* clone(const char* newname=0) const = 0 ;
   virtual TObject* Clone(const char* newname = 0) const {
     return clone(newname && newname[0] != '\0' ? newname : nullptr);
@@ -557,7 +559,7 @@ private:
 
  protected:
 
-  // Client-Server relatation and Proxy management
+  // Client-Server relation and Proxy management
   friend class RooArgSet ;
   friend class RooAbsCollection ;
   friend class RooCustomizer ;
