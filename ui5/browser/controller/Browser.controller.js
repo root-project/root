@@ -146,10 +146,12 @@ sap.ui.define(['sap/ui/core/Component',
             }, this);
 
             let tabContainerItem = this.getView().byId("defaultCodeEditor");
-            await Fragment.load({name: "rootui5.browser.view.codeeditor"}).then(function (oFragment) {
+            await Fragment.load({name: "rootui5.browser.view.codeeditor", controller: this}).then(function (oFragment) {
               tabContainerItem.removeAllContent();
               tabContainerItem.addContent(oFragment);
             });
+
+            // TODO: use proper openui5 methods to get aggregation
             let defaultCodeEditor = this.getView().byId("defaultCodeEditor").getContent()[0].mAggregations.contentAreas[1];
             defaultCodeEditor.setModel(new JSONModel({
               code: "",
@@ -830,10 +832,11 @@ sap.ui.define(['sap/ui/core/Component',
           name:"Code Editor",
           additionalText: "untitled"
         });
-        await Fragment.load({name: "rootui5.browser.view.codeeditor"}).then(function (oFragment) {
+        await Fragment.load({name: "rootui5.browser.view.codeeditor", controller: this}).then(function (oFragment) {
           tabContainerItem.removeAllContent();
           tabContainerItem.addContent(oFragment);
 
+          // TODO: use proper openui5 methods to get aggregation
           let editor = oFragment.mAggregations.contentAreas[1];
           console.log(oFragment);
 
