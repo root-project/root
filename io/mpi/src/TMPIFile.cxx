@@ -92,18 +92,13 @@ TMPIFile::TMPIFile(const char *name, Option_t *option, Int_t split, const char *
 
 TMPIFile::~TMPIFile()
 {
-   // close the file
-   if (IsOpen())
-      Close();
-   // Close will call finalize if it has not already been called
-   // If MPI_Finalize has already been called no need for this
-   // but if the user wants to continue using MPI
-   // the sub communicators should be freed for other things
+   // Sub communicators should be freed
    Int_t finalized = 0;
    MPI_Finalized(&finalized);
    if (!finalized && (fSplitLevel > 1)) {
       MPI_Comm_free(&fSubComm);
    }
+   Close();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
