@@ -160,7 +160,7 @@ void TMPIFile::RunCollector(Bool_t cache)
          // create a TMemFile from the buffer
          TMemFile *infile = new TMemFile(fMPIFilename, buf, number_bytes, "UPDATE");
          if (infile->IsZombie()) {
-            exit(1);
+            Error("RunCollector", "Failed to create TMemFile from buffer");
          }
          // match compression settings of this TMPIFile object
          infile->SetCompressionSettings(this->GetCompressionSettings());
@@ -457,8 +457,9 @@ void TMPIFile::CreateEmptyBufferAndSend()
       delete[] fSendBuf;
    }
    Int_t sent = MPI_Send(fSendBuf, 0, MPI_CHAR, 0, fMPIColor, fSubComm);
-   if (sent) {
-      delete[] fSendBuf;
+   delete[] fSendBuf;
+   if (sent != MPI_SUCCESS) {
+      Error("CreateEmptyBufferAndSend", "MPI_Send() failed");
    }
 }
 
@@ -486,16 +487,18 @@ void TMPIFile::Sync()
 
 void TMPIFile::Close(Option_t *option)
 {
-   // sends empty buffer
-   CreateEmptyBufferAndSend();
-   // call parent close function
-   TMemFile::Close(option);
-
-   // check to see that MPI has not already been finalized
-   Int_t finalized = 0;
-   MPI_Finalized(&finalized);
-   if (!finalized) {
-      MPI_Finalize();
+   if (IsOpen()) {
+      // sends empty buffer
+      CreateEmptyBufferAndSend();
+      // call parent close function
+      TMemFile::Close(option);
+      
+      // check to see that MPI has not already been finalized
+      Int_t finalized = 0;
+      MPI_Finalized(&finalized);
+      if (!finalized) {
+         MPI_Finalize();
+      }
    }
 }
 
