@@ -18,9 +18,10 @@ sap.ui.define(['sap/ui/core/Component',
                "sap/ui/core/Fragment",
                "sap/m/Link",
                "sap/ui/codeeditor/CodeEditor",
-               "sap/m/TabContainerItem"
+               "sap/m/TabContainerItem",
+               "sap/ui/core/HTML"
 ],function(Component, Controller, CoreControl, CoreIcon, XMLView, mText, mCheckBox, MessageBox, MessageToast, TabContainerItem,
-           Splitter, ResizeHandler, HorizontalLayout, tableColumn, File, JSONModel, BrowserModel, Fragment, Link, CodeEditor) {
+           Splitter, ResizeHandler, HorizontalLayout, tableColumn, File, JSONModel, BrowserModel, Fragment, Link, CodeEditor, HTML) {
 
    "use strict";
 
@@ -834,6 +835,7 @@ sap.ui.define(['sap/ui/core/Component',
           sap.ui.getCore().byId("NewTabR6").attachPress(this, this.newRootXCanvas);
           sap.ui.getCore().byId("NewTabR7").attachPress(this, this.newRootXCanvas);
           sap.ui.getCore().byId("NewTabCE").attachPress(this, this.newCodeEditor);
+          sap.ui.getCore().byId("NewTabIV").attachPress(this, this.newImageViewer);
         }
         this._actionSheet.openBy(oButton);
       },
@@ -882,6 +884,19 @@ sap.ui.define(['sap/ui/core/Component',
        splitterUpperContent[3].attachPress(myThis.onRunMacro, myThis);
 
         oTabContainer.setSelectedItem(tabContainerItem);
+     },
+
+     newImageViewer: async function(oEvent, myThis) {
+       let oTabContainer = myThis.getView().byId("myTabContainer");
+
+       let tabContainerItem = new TabContainerItem({
+         icon: "sap-icon://background",
+         name:"Image viewer",
+         additionalText: "untitled",
+       });
+
+       oTabContainer.addItem(tabContainerItem);
+       oTabContainer.setSelectedItem(tabContainerItem);
      },
 
       /** process initial message, now it is list of existing canvases */
