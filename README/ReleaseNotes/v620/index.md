@@ -101,6 +101,8 @@ the network access (used to look up the hostname and its IP address) failed.
    values for creation and modification date of TKey/TDirectory objects and null
    value for TUUID objects inside TFile. As drawback, TRef objects stored in such
    file cannot be read correctly.
+* Significantly improved the scaling of hadd tear-down/cleanup-phase in the presence
+of large number histograms and in the presence of large number of directories.
 * TMemFile: Apply customization of minimal block size also to the first block.
 * Add renaming rule for instances of the math classes from `genvector` and `smatrix` to
 instance for one floating point type (`float`, `double`, `Double32_t`, `Float16_t`) to
