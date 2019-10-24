@@ -708,6 +708,11 @@ Released on September 19, 2017
 
 These changes will be part of the future 6.10/10
 
+## I/O Libraries
+
+* Significantly improved the scaling of hadd tear-down/cleanup-phase in the presence
+of large number histograms and in the presence of large number of directories.
+
 ### Tree Libraries
 
 - Add TBranch::BackFill to allowing the addition of new branches to an existing tree and keep the new basket clustered in the same way as the rest of the TTree.  Use with the following pattern, make sure to to call BackFill for the same entry for all the branches consecutively:
