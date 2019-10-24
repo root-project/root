@@ -162,9 +162,7 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t inMinVal,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// coverity[UNINIT_CTOR]
 /// Copy constructor
-
 RooAbsReal::RooAbsReal(const RooAbsReal& other, const char* name) :
   RooAbsArg(other,name), _plotMin(other._plotMin), _plotMax(other._plotMax),
   _plotBins(other._plotBins), _value(other._value), _unit(other._unit), _label(other._label),
@@ -175,6 +173,32 @@ RooAbsReal::RooAbsReal(const RooAbsReal& other, const char* name) :
   } else {
     _specIntegratorConfig = 0 ;
   }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Assign values, name and configs from another RooAbsReal.
+RooAbsReal& RooAbsReal::operator=(const RooAbsReal& other) {
+  RooAbsArg::operator=(other);
+
+  _plotMin = other._plotMin;
+  _plotMax = other._plotMax;
+  _plotBins = other._plotBins;
+  _value = other._value;
+  _unit = other._unit;
+  _label = other._label;
+  _forceNumInt = other._forceNumInt;
+  _treeVar = other._treeVar;
+  _selectComp = other._selectComp;
+  _lastNSet = other._lastNSet;
+
+  if (other._specIntegratorConfig) {
+    _specIntegratorConfig = new RooNumIntConfig(*other._specIntegratorConfig);
+  } else {
+    _specIntegratorConfig = nullptr;
+  }
+
+  return *this;
 }
 
 
@@ -605,8 +629,7 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* n
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Utility function for createIntegral that creates the actual integreal object
-
+/// Internal utility function for createIntegral() that creates the actual integral object.
 RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* nset2,
 				     const RooNumIntConfig* cfg, const char* rangeName) const
 {
