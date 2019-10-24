@@ -1,9 +1,5 @@
 <core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:l="sap.ui.layout" xmlns:e="sap.ui.codeeditor" xmlns:u="sap.ui.unified">
       <HBox alignContent="Center" alignItems="Center" justifyContent="Center" height="100%" width="100%">
-        <Image src="" densityAware="false">
-          <layoutData>
-            <FlexItemData growFactor="1" />
-          </layoutData>
-        </Image>
+        <Image src="" densityAware="false" />
       </HBox>
 </core:FragmentDefinition>
