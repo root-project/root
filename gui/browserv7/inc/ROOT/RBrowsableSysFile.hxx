@@ -42,6 +42,8 @@ public:
 
    // should be here, one needs virtual table for correct streaming of RRootBrowserReply
    virtual ~RBrowserFileItem() = default;
+
+   bool IsFolder() const override { return isdir; }
 };
 
 

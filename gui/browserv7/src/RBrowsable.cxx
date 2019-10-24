@@ -11,7 +11,9 @@
 #include "ROOT/RLogger.hxx"
 
 #include "TClass.h"
+#include "TBufferJSON.h"
 
+#include <algorithm>
 
 using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Browsable;
@@ -142,7 +144,6 @@ std::shared_ptr<RElement> RProvider::Browse(std::unique_ptr<Browsable::RHolder> 
 /// Find item with specified name
 /// Default implementation, should work for all
 
-
 bool RLevelIter::Find(const std::string &name)
 {
    if (!Reset()) return false;
@@ -157,42 +158,99 @@ bool RLevelIter::Find(const std::string &name)
 
 
 /////////////////////////////////////////////////////////////////////
+/// Sort created items
+
+void RLevelIter::Sort(std::vector<std::unique_ptr<RBrowserItem>> &vect, const std::string &method)
+{
+   if (method.empty()) {
+      bool is_folder{false}, is_nonfolder{false};
+
+      for (auto &item : vect)
+         if (item->IsFolder()) is_folder = true; else is_nonfolder = true;
+
+      // just move folders to the top
+      if (is_folder && is_nonfolder) {
+         std::vector<std::unique_ptr<RBrowserItem>> vect0;
+         std::swap(vect, vect0);
+
+         for (auto &&item : vect0)
+            if (item->IsFolder())
+               vect.emplace_back(std::move(item));
+
+         for (auto &&item : vect0)
+            if (item)
+               vect.emplace_back(std::move(item));
+      }
+   } else if (method != "unsorted") {
+      std::sort(vect.begin(), vect.end(), [](const std::unique_ptr<RBrowserItem> &a, const std::unique_ptr<RBrowserItem> &b) {
+         // directory listed always as first
+         if (a->IsFolder() != b->IsFolder())
+            return a->IsFolder();
+
+         return a->GetName() < b->GetName();
+      });
+   }
+}
+
+/////////////////////////////////////////////////////////////////////
+/// set top item
+
+void RBrowsable::SetTopItem(std::shared_ptr<Browsable::RElement> item)
+{
+   fLevels.clear();
+   fLevels.emplace_back("");
+   fLevels.front().item = item;
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Navigate to the top level
+
+bool RBrowsable::ResetLevels()
+{
+   while (fLevels.size() > 1)
+      fLevels.pop_back();
+
+   if (fLevels.size() != 1)
+      return false;
+
+   fLevels.front().iter.reset(nullptr);
+
+   return true;
+}
+
+
+/////////////////////////////////////////////////////////////////////
 /// Navigate to specified path
 
 bool RBrowsable::Navigate(const std::vector<std::string> &paths)
 {
-   if (!fItem) return false;
-
    // TODO: reuse existing items if any
-
-   fLevels.clear();
-
-   auto *curr = fItem.get(); // use pointer instead of
+   if (!ResetLevels())
+      return false;
 
    bool find = true;
 
    for (auto &subdir : paths) {
 
-      fLevels.emplace_back(subdir);
-
       auto &level = fLevels.back();
 
-      level.iter = curr->GetChildsIter();
+      level.iter = level.item->GetChildsIter();
       if (!level.iter || !level.iter->Find(subdir)) {
          find = false;
          break;
       }
 
-      level.item = level.iter->GetElement();
-      if (!level.item) {
+      auto subitem = level.iter->GetElement();
+      if (!subitem) {
          find = false;
          break;
       }
 
-      curr = level.item.get();
+      fLevels.emplace_back(subdir, subitem);
    }
 
-   if (!find) fLevels.clear();
+   if (!find)
+      ResetLevels();
 
    return find;
 }
@@ -223,13 +281,8 @@ bool RBrowsable::DecomposePath(const std::string &path, std::vector<std::string>
 }
 
 
-bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReplyNew &reply)
+bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReply &reply)
 {
-   reply.path = request.path;
-   reply.first = 0;
-   reply.nchilds = 0;
-   reply.nodes.clear();
-
    std::vector<std::string> arr;
 
    if (gDebug > 0)
@@ -246,42 +299,52 @@ bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReplyNew
    if (!Navigate(arr))
       return false;
 
-   auto iter = fLevels.empty() ? fItem->GetChildsIter() : fLevels.back().item->GetChildsIter();
+   auto &curr = fLevels.back();
 
-   if (gDebug > 0)
-      printf("REQ:Create iterator %p\n", iter.get());
+   // when request childs, always try to make elements
+   if (curr.chlds.size() == 0) {
+      auto iter = curr.item->GetChildsIter();
+      if (!iter) return false;
+      int id = 0;
+      curr.all_chlds = true;
 
-   if (!iter) return false;
-
-   int id = 0;
-
-   while (iter->Next()) {
-
-      if ((id >= request.first) && ((request.number == 0) || ((int) reply.nodes.size() < request.number))) {
-
-         // access item
-         auto item = iter->CreateBrowserItem();
-
-         // actually error
-         if (!item)
-            item = std::make_unique<RBrowserItem>(iter->GetName(), -1);
-
-         if (gDebug > 0)
-            printf("REQ:    item %s icon %s\n", item->GetName().c_str(), item->GetIcon().c_str());
-
-         reply.nodes.emplace_back(std::move(item));
+      while (iter->Next() && curr.all_chlds) {
+         curr.chlds.emplace_back(iter->CreateBrowserItem());
+         if (id++ > 10000)
+            curr.all_chlds = false;
       }
 
-      id++;
+      if (curr.all_chlds)
+         iter->Sort(curr.chlds);
+
    }
 
-   if (gDebug > 0)
-      printf("REQ:  Done processing cnt %d\n", id);
+   int first = request.first, last = curr.chlds.size();
+
+   if ((request.number > 0) && (request.first + request.number < last))
+      last = request.first + request.number;
+
+   for (auto id = first; id < last; id ++)
+      reply.nodes.emplace_back(curr.chlds[id].get());
 
    reply.first = request.first;
-   reply.nchilds = id; // total number of childs
+   reply.nchilds = curr.chlds.size(); // total number of childs
 
    return true;
+}
+
+
+std::string RBrowsable::ProcessRequest(const RBrowserRequest &request)
+{
+   RBrowserReply reply;
+
+   reply.path = request.path;
+   reply.first = 0;
+   reply.nchilds = 0;
+
+   ProcessRequest(request, reply);
+
+   return TBufferJSON::ToJSON(&reply, TBufferJSON::kSkipTypeInfo + TBufferJSON::kNoSpaces).Data();
 }
 
 
@@ -292,17 +355,10 @@ std::shared_ptr<RElement> RBrowsable::GetElement(const std::string &path)
    if (!DecomposePath(path, arr))
       return nullptr;
 
-   if (arr.size() == 0)
-      return fItem;
-
    if (!Navigate(arr))
       return nullptr;
 
-   auto res = std::move(fLevels.back().item);
-
-   fLevels.pop_back();
-
-   return res;
+   return fLevels.back().item;
 }
 
 

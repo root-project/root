@@ -49,6 +49,8 @@ public:
 
    const std::string &GetName() const { return name; }
    const std::string &GetIcon() const { return icon; }
+   virtual bool IsFolder() const { return false; }
+
 
    void SetChecked(bool on = true) { checked = on; }
    void SetExpanded(bool on = true) { expanded = on; }
@@ -63,16 +65,6 @@ public:
    int first{0};                      ///< first node in returned list
    std::vector<RBrowserItem *> nodes; ///< list of pointers, no ownership!
 };
-
-/** Reply on browser request, with ownership */
-class RBrowserReplyNew {
-public:
-   std::string path;                  ///< reply path
-   int nchilds{0};                    ///< total number of childs in the node
-   int first{0};                      ///< first node in returned list
-   std::vector<std::unique_ptr<RBrowserItem>> nodes; ///< list of pointers with ownership!
-};
-
 
 } // namespace Experimental
 } // namespace ROOT

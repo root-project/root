@@ -286,6 +286,8 @@ public:
       return std::make_unique<RBrowserItem>(GetName(), CanHaveChilds());
    }
 
+   virtual void Sort(std::vector<std::unique_ptr<RBrowserItem>> &vect, const std::string &method = "");
+
    /** Returns full information for current element */
    virtual std::shared_ptr<RElement> GetElement() { return nullptr; }
 };
@@ -347,37 +349,39 @@ private:
 class RBrowsable {
 
    struct RLevel {
-      std::string name;
-      std::unique_ptr<Browsable::RLevelIter> iter;
-      std::shared_ptr<Browsable::RElement> item;
+      std::string name;                                  ///<! name of item (empty for top level)
+      std::shared_ptr<Browsable::RElement> item;         ///<! element
+      std::unique_ptr<Browsable::RLevelIter> iter;       ///<! childs iterator
+      std::vector<std::unique_ptr<RBrowserItem>> chlds;  ///<! created browser items - used in requests
+      bool all_chlds{false};                             ///<! if all chlds were extracted
       RLevel(const std::string &_name) : name(_name) {}
+      RLevel(const std::string &_name, std::shared_ptr<Browsable::RElement> &_item) : name(_name) { item = std::move(_item); }
    };
 
-   std::shared_ptr<Browsable::RElement> fItem; ///<! top-level item to browse
    std::vector<RLevel> fLevels;           ///<! navigated levels
 
    bool Navigate(const std::vector<std::string> &path);
 
    bool DecomposePath(const std::string &path, std::vector<std::string> &arr);
 
+   bool ResetLevels();
+
+   bool ProcessRequest(const RBrowserRequest &request, RBrowserReply &reply);
+
 public:
    RBrowsable() = default;
 
    RBrowsable(std::shared_ptr<Browsable::RElement> item)
    {
-      fItem = item;
+      SetTopItem(item);
    }
 
    virtual ~RBrowsable() = default;
 
 
-   void SetTopItem(std::shared_ptr<Browsable::RElement> item)
-   {
-      fLevels.clear();
-      fItem = item;
-   }
+   void SetTopItem(std::shared_ptr<Browsable::RElement> item);
 
-   bool ProcessRequest(const RBrowserRequest &request, RBrowserReplyNew &reply);
+   std::string ProcessRequest(const RBrowserRequest &request);
 
    std::shared_ptr<Browsable::RElement> GetElement(const std::string &path);
 };
