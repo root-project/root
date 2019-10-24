@@ -559,7 +559,11 @@ sap.ui.define(['sap/ui/core/Component',
 
               return this.websocket.Send('DBLCLK: ["'  + fullpath + '","' + drawingOptions + '"]' );
             } else if (fullpath.endsWith(".png") || fullpath.endsWith(".jpg")) {
-              return this.websocket.Send('DBLCLK:'  + fullpath);
+              let oTab = this.getSelectedImageViewer();
+              if (oTab !== -1) {
+                oTab.setAdditionalText(fullpath);
+                return this.websocket.Send('DBLCLK:'  + fullpath);
+              }
             }
          }
 
@@ -680,7 +684,7 @@ sap.ui.define(['sap/ui/core/Component',
             let oTab = this.getSelectedImageViewer();
             if(oTab !== -1) {
               let oContent = sap.ui.getCore().byId(this.getView().byId("myTabContainer").getSelectedItem());
-              let oImage = oContent.getContent()[0].getContent()[0].getItems()[0];
+              let oImage = oContent.getContent()[0].getItems()[0];
 
               oImage.setSrc(msg);
             }
