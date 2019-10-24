@@ -744,5 +744,8 @@ Changes will be part of the future 6.06/10
 
 - Fixed the I/O of std::vector<T> where T is a class *and* no dictionary was generated for std::vector<T> *and* sizeof(T)%sizeof(T*) is not zero. [ROOT-8478]
 - Resolve several issues with Collection proxy for std::bitset and std::vector<bool>
+- Significantly improved the scaling of hadd tear-down/cleanup-phase in the presence
+of large number histograms and in the presence of large number of directories.
+
 
 ### Bugs fixed in this release
