@@ -351,18 +351,19 @@ class RBrowsable {
    struct RLevel {
       std::string name;                                  ///<! name of item (empty for top level)
       std::shared_ptr<Browsable::RElement> item;         ///<! element
-      std::unique_ptr<Browsable::RLevelIter> iter;       ///<! childs iterator
       std::vector<std::unique_ptr<RBrowserItem>> chlds;  ///<! created browser items - used in requests
       bool all_chlds{false};                             ///<! if all chlds were extracted
-      RLevel(const std::string &_name) : name(_name) {}
+      RLevel(const std::string &_name = "") : name(_name) {}
       RLevel(const std::string &_name, std::shared_ptr<Browsable::RElement> &_item) : name(_name) { item = std::move(_item); }
    };
 
    std::vector<RLevel> fLevels;           ///<! navigated levels
 
-   bool Navigate(const std::vector<std::string> &path);
+   std::shared_ptr<Browsable::RElement> DirectNavigate(std::shared_ptr<Browsable::RElement> item, const std::vector<std::string> &path, int indx = 0);
 
-   bool DecomposePath(const std::string &path, std::vector<std::string> &arr);
+   std::shared_ptr<Browsable::RElement> Navigate(const std::vector<std::string> &path, int *level_indx = nullptr);
+
+   std::vector<std::string> DecomposePath(const std::string &path);
 
    bool ResetLevels();
 
