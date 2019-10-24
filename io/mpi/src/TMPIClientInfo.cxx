@@ -43,43 +43,11 @@ void TMPIClientInfo::SetFile(TFile *file)
    ++fContactsCount;
 }
 
-void TMPIClientInfo::R__DeleteObject(TDirectory *dir, Bool_t withReset)
-{
-   if (dir == 0)
-      return;
-
-   TIter nextkey(dir->GetListOfKeys());
-   TKey *key;
-   while ((key = (TKey *)nextkey())) {
-      TClass *cl = TClass::GetClass(key->GetClassName());
-      if (cl->InheritsFrom(TDirectory::Class())) {
-         TDirectory *subdir = (TDirectory *)dir->GetList()->FindObject(key->GetName());
-         if (!subdir) {
-            subdir = (TDirectory *)key->ReadObj();
-         }
-         R__DeleteObject(subdir, withReset);
-      } else {
-         Bool_t todelete = kFALSE;
-         if (withReset) {
-            todelete = (0 != cl->GetResetAfterMerge());
-         } else {
-            todelete = (0 == cl->GetResetAfterMerge());
-         }
-         if (todelete) {
-            key->Delete();
-            dir->GetListOfKeys()->Remove(key);
-            delete key;
-         }
-      }
-   }
-}
-
 void TMPIClientInfo::R__MigrateKey(TDirectory *destination, TDirectory *source)
 {
    if (destination == 0 || source == 0)
       return;
    TIter nextkey(source->GetListOfKeys());
-   // std::cout<<"TMPIClientInfo::Trying to migrate the keys here"<<std::endl;
    TKey *key;
    while ((key = (TKey *)nextkey())) {
       TClass *cl = TClass::GetClass(key->GetClassName());
@@ -99,7 +67,7 @@ void TMPIClientInfo::R__MigrateKey(TDirectory *destination, TDirectory *source)
             oldkey->Delete();
             delete oldkey;
          }
-         TKey *newkey = new TKey(destination, *key, 0 /* pidoffset */); // a priori the file are from the same client ..
+         TKey *newkey = new TKey(destination, *key, 0 /* pidoffset */);
          destination->GetFile()->SumBuffer(newkey->GetObjlen());
          newkey->WriteFile(0);
          if (destination->GetFile()->TestBit(TFile::kWriteError)) {

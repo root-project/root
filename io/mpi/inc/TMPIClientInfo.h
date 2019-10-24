@@ -24,6 +24,8 @@ private:
    TTimeStamp fLastContact;
    Double_t fTimeSincePrevContact;
 
+   static void R__MigrateKey(TDirectory *destination, TDirectory *source);
+
 public:
    TMPIClientInfo();                                      // default constructor
    TMPIClientInfo(const char *filename, UInt_t clientID); // another constructor
@@ -34,9 +36,6 @@ public:
    Double_t GetTimeSincePrevContact() const { return fTimeSincePrevContact; }
 
    void SetFile(TFile *file);
-
-   void R__MigrateKey(TDirectory *destination, TDirectory *source);
-   void R__DeleteObject(TDirectory *dir, Bool_t withReset);
 
    ClassDef(TMPIClientInfo, 0);
 };
