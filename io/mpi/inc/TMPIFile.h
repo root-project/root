@@ -106,14 +106,14 @@ public:
 
    TString GetMPIFilename() const { return fMPIFilename; };
 
-   // Master Functions
+   // Collector Functions
    void RunCollector(Bool_t cache = kFALSE);
    static void R__MigrateKey(TDirectory *destination, TDirectory *source);
    static void R__DeleteObject(TDirectory *dir, Bool_t withReset);
    static Bool_t R__NeedInitialMerge(TDirectory *dir);
    Bool_t IsCollector();
 
-   // Worker Functions
+   // Sender Functions
    void CreateBufferAndSend();
    // Empty Buffer to signal the end of job...
    void CreateEmptyBufferAndSend();
