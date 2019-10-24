@@ -19,9 +19,8 @@ sap.ui.define(['sap/ui/core/Component',
                "sap/m/Link",
                "sap/ui/codeeditor/CodeEditor",
                "sap/m/TabContainerItem",
-               "sap/ui/core/HTML"
 ],function(Component, Controller, CoreControl, CoreIcon, XMLView, mText, mCheckBox, MessageBox, MessageToast, TabContainerItem,
-           Splitter, ResizeHandler, HorizontalLayout, tableColumn, File, JSONModel, BrowserModel, Fragment, Link, CodeEditor, HTML) {
+           Splitter, ResizeHandler, HorizontalLayout, tableColumn, File, JSONModel, BrowserModel, Fragment, Link, CodeEditor) {
 
    "use strict";
 
@@ -533,6 +532,7 @@ sap.ui.define(['sap/ui/core/Component',
         if (prop && prop.fullpath) {
             fullpath = prop.fullpath.substr(1, prop.fullpath.length-2);
             var dirname = fullpath.substr(0, fullpath.lastIndexOf('/'));
+
             if (dirname.endsWith(".root")) {
               let split = fullpath.split("/");
               let model = row.getModel().mainModel;
@@ -558,6 +558,8 @@ sap.ui.define(['sap/ui/core/Component',
               }
 
               return this.websocket.Send('DBLCLK: ["'  + fullpath + '","' + drawingOptions + '"]' );
+            } else if (fullpath.endsWith(".png") || fullpath.endsWith(".jpg")) {
+              return this.websocket.Send('DBLCLK:'  + fullpath);
             }
          }
 
@@ -618,6 +620,19 @@ sap.ui.define(['sap/ui/core/Component',
        return -1;
      },
 
+     getSelectedImageViewer: function() {
+       let oTabItemString = this.getView().byId("myTabContainer").getSelectedItem();
+
+       let oTabItem = sap.ui.getCore().byId(oTabItemString);
+
+       if (oTabItem.getName() === "Image Viewer") {
+         return oTabItem;
+       }
+
+       MessageToast.show("Sorry, you need to select an image viewer tab", {duration: 1500});
+       return -1;
+     },
+
      getSaveButtonFromCodeEditor: function(oCodeEditor) {
         let oSplitter = oCodeEditor.getParent();
         let oToolBar = oSplitter.mAggregations.contentAreas[0];
@@ -662,7 +677,13 @@ sap.ui.define(['sap/ui/core/Component',
             }
             break;
          case "FIMG":  // image file read
-            console.log("Got image " + msg.substr(0,50) + "...");
+            let oTab = this.getSelectedImageViewer();
+            if(oTab !== -1) {
+              let oContent = sap.ui.getCore().byId(this.getView().byId("myTabContainer").getSelectedItem());
+              let oImage = oContent.getContent()[0].getContent()[0].getItems()[0];
+
+              oImage.setSrc(msg);
+            }
             break;
          case "CANVS":  // canvas created by server, need to establish connection
             var arr = JSON.parse(msg);
@@ -891,8 +912,13 @@ sap.ui.define(['sap/ui/core/Component',
 
        let tabContainerItem = new TabContainerItem({
          icon: "sap-icon://background",
-         name:"Image viewer",
-         additionalText: "untitled",
+         name:"Image Viewer",
+         additionalText: "untitled"
+       });
+
+       await Fragment.load({name: "rootui5.browser.view.imageviewer"}).then(function (oFragment) {
+         tabContainerItem.removeAllContent();
+         tabContainerItem.addContent(oFragment);
        });
 
        oTabContainer.addItem(tabContainerItem);

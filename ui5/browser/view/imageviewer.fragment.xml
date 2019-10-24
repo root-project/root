@@ -1,0 +1,15 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:l="sap.ui.layout" xmlns:e="sap.ui.codeeditor" xmlns:u="sap.ui.unified">
+  <l:VerticalLayout
+          class="sapUiContentPadding"
+          width="100%">
+    <l:content>
+      <HBox alignContent="Center" alignItems="Center">
+        <Image src="" densityAware="false">
+          <layoutData>
+            <FlexItemData growFactor="1" />
+          </layoutData>
+        </Image>
+      </HBox>
+    </l:content>
+  </l:VerticalLayout>
+</core:FragmentDefinition>
