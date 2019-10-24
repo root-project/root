@@ -635,6 +635,11 @@ Changes will be part of the future 6.08/08
 - Re-enabled support for TMapFile (and libNew). (ROOT-8454)
 - Prevent leak of TProtoClass (when there is multiple dictionary, for example for STL collections).
 
+## I/O Libraries
+
+- Significantly improved the scaling of hadd tear-down/cleanup-phase in the presence
+of large number histograms and in the presence of large number of directories.
+
 ### TTree Libraries
 
 - Resolved O(N^2) scaling problem in ```TTree::Draw()``` observed when a branch that contains a
