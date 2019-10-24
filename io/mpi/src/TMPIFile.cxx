@@ -417,11 +417,8 @@ void TMPIFile::CreateEmptyBufferAndSend()
       MPI_Wait(&fMPIRequest, MPI_STATUS_IGNORE);
       delete[] fSendBuf;
    }
-   Int_t sent = MPI_Send(fSendBuf, 0, MPI_CHAR, 0, fMPIColor, fSubComm);
-   delete[] fSendBuf;
-   if (sent != MPI_SUCCESS) {
-      Error("CreateEmptyBufferAndSend", "MPI_Send() failed");
-   }
+   fSendBuf = nullptr;
+   MPI_Send(fSendBuf, 0, MPI_CHAR, 0, fMPIColor, fSubComm);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
