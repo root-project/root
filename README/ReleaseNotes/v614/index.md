@@ -631,6 +631,8 @@ typedefs (in particular `Double32_t`)
 * Fix `TTreeReader`'s use of `Set[Local]Entry`
 * Avoid deleted memory access in `MakeProject` and in handling of
 `I/O customization rules`.
+* Significantly improved the scaling of hadd tear-down/cleanup-phase in the presence
+of large number histograms and in the presence of large number of directories.
 
 ## TTree Libraries
 
