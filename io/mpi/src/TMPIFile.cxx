@@ -152,12 +152,12 @@ void TMPIFile::RunCollector(Bool_t cache)
          this->UpdateEndProcess();
       } else {
          // create a TMemFile from the buffer
-         TMemFile *infile = new TMemFile(fMPIFilename, buf, number_bytes, "UPDATE");
-         if (infile->IsZombie()) {
+         TMemFile *transient = new TMemFile(fMPIFilename, buf, number_bytes, "UPDATE");
+         if (transient->IsZombie()) {
             Error("RunCollector", "Failed to create TMemFile from buffer");
          }
          // match compression settings of this TMPIFile object
-         infile->SetCompressionSettings(this->GetCompressionSettings());
+         transient->SetCompressionSettings(this->GetCompressionSettings());
 
          // retrieve existing output file object
          ParallelFileMerger *info = (ParallelFileMerger *)mergers.FindObject(fMPIFilename);
@@ -169,14 +169,14 @@ void TMPIFile::RunCollector(Bool_t cache)
          }
 
          // first merge needs extra care
-         if (TMPIFile::R__NeedInitialMerge(infile)) {
-            info->InitialMerge(infile);
+         if (info->R__NeedInitialMerge(transient)) {
+            info->InitialMerge(transient);
          }
 
          // merge the data
-         info->RegisterClient(client_Id, infile);
+         info->RegisterClient(client_Id, transient);
          info->Merge();
-         infile = 0;
+         transient = 0;
 
          client_Id++;
       }
@@ -187,31 +187,6 @@ void TMPIFile::RunCollector(Bool_t cache)
       mergers.Delete();
       return;
    }
-}
-
-Bool_t TMPIFile::R__NeedInitialMerge(TDirectory *dir)
-{
-   if (dir == 0)
-      return kFALSE;
-   TIter nextkey(dir->GetListOfKeys());
-   TKey *key;
-   while ((key = (TKey *)nextkey())) {
-      TClass *cl = TClass::GetClass(key->GetClassName());
-      if (cl->InheritsFrom(TDirectory::Class())) {
-         TDirectory *subdir = (TDirectory *)dir->GetList()->FindObject(key->GetName());
-         if (!subdir) {
-            subdir = (TDirectory *)key->ReadObj();
-         }
-         if (TMPIFile::R__NeedInitialMerge(subdir)) {
-            return kTRUE;
-         }
-      } else {
-         if (0 != cl->GetResetAfterMerge()) {
-            return kTRUE;
-         }
-      }
-   }
-   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -241,6 +216,62 @@ TMPIFile::ParallelFileMerger::~ParallelFileMerger()
       delete client.GetFile();
 }
 
+void TMPIFile::ParallelFileMerger::R__DeleteObject(TDirectory *dir, Bool_t withReset)
+{
+   if (dir == 0)
+      return;
+
+   TIter nextkey(dir->GetListOfKeys());
+   TKey *key;
+   while ((key = (TKey *)nextkey())) {
+      TClass *cl = TClass::GetClass(key->GetClassName());
+      if (cl->InheritsFrom(TDirectory::Class())) {
+         TDirectory *subdir = (TDirectory *)dir->GetList()->FindObject(key->GetName());
+         if (!subdir) {
+            subdir = (TDirectory *)key->ReadObj();
+         }
+         R__DeleteObject(subdir, withReset);
+      } else {
+         Bool_t todelete = kFALSE;
+         if (withReset) {
+            todelete = (0 != cl->GetResetAfterMerge());
+         } else {
+            todelete = (0 == cl->GetResetAfterMerge());
+         }
+         if (todelete) {
+            key->Delete();
+            dir->GetListOfKeys()->Remove(key);
+            delete key;
+         }
+      }
+   }
+}
+
+Bool_t TMPIFile::ParallelFileMerger::R__NeedInitialMerge(TDirectory *dir)
+{
+   if (dir == 0)
+      return kFALSE;
+   TIter nextkey(dir->GetListOfKeys());
+   TKey *key;
+   while ((key = (TKey *)nextkey())) {
+      TClass *cl = TClass::GetClass(key->GetClassName());
+      if (cl->InheritsFrom(TDirectory::Class())) {
+         TDirectory *subdir = (TDirectory *)dir->GetList()->FindObject(key->GetName());
+         if (!subdir) {
+            subdir = (TDirectory *)key->ReadObj();
+         }
+         if (R__NeedInitialMerge(subdir)) {
+            return kTRUE;
+         }
+      } else {
+         if (0 != cl->GetResetAfterMerge()) {
+            return kTRUE;
+         }
+      }
+   }
+   return kFALSE;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Initial merge of the input to copy the resetable object (TTree) into the output
 /// and remove them from the input file.
@@ -254,7 +285,7 @@ Bool_t TMPIFile::ParallelFileMerger::InitialMerge(TFile *input)
    fMerger.AddFile(input);
    Bool_t result =
       fMerger.PartialMerge(TFileMerger::kIncremental | TFileMerger::kResetable | TFileMerger::kKeepCompression);
-   TMPIFile::R__DeleteObject(input, kTRUE);
+   R__DeleteObject(input, kTRUE);
    return result;
 }
 
@@ -266,7 +297,7 @@ Bool_t TMPIFile::ParallelFileMerger::InitialMerge(TFile *input)
 Bool_t TMPIFile::ParallelFileMerger::Merge()
 {
    // Remove object that can *not* be incrementally merge and will *not* be reset by the client code.
-   TMPIFile::R__DeleteObject(fMerger.GetOutputFile(), kFALSE);
+   R__DeleteObject(fMerger.GetOutputFile(), kFALSE);
    for (UInt_t f = 0; f < fClients.size(); ++f) {
       fMerger.AddFile(fClients[f].GetFile());
    }
@@ -277,14 +308,14 @@ Bool_t TMPIFile::ParallelFileMerger::Merge()
    // re-merged (Histograms).
    for (UInt_t f = 0; f < fClients.size(); ++f) {
       if (fClients[f].GetFile()) {
-         TMPIFile::R__DeleteObject(fClients[f].GetFile(), kTRUE);
+         R__DeleteObject(fClients[f].GetFile(), kTRUE);
       } else {
          // We back up the file (probably due to memory constraint)
          TFile *file = TFile::Open(fClients[f].GetLocalName(), "UPDATE");
          if (file->IsZombie())
             exit(1);
          // Remove object that can be incrementally merge and will be reset by the client code.
-         TMPIFile::R__DeleteObject(file, kTRUE);
+         R__DeleteObject(file, kTRUE);
          file->Write();
          delete file;
       }
@@ -345,71 +376,7 @@ Bool_t TMPIFile::ParallelFileMerger::NeedMerge(Float_t clientThreshold)
    return fClientsContact.CountBits() > cut || fNClientsContact > 2 * cut;
 }
 
-void TMPIFile::R__MigrateKey(TDirectory *destination, TDirectory *source)
-{
-   if (destination == 0 || source == 0)
-      return;
-   TIter nextkey(source->GetListOfKeys());
-   TKey *key;
-   while ((key = (TKey *)nextkey())) {
-      TClass *cl = TClass::GetClass(key->GetClassName());
-      if (cl->InheritsFrom(TDirectory::Class())) {
-         TDirectory *source_subdir = (TDirectory *)source->GetList()->FindObject(key->GetName());
-         if (!source_subdir) {
-            source_subdir = (TDirectory *)key->ReadObj();
-         }
-         TDirectory *destination_subdir = destination->GetDirectory(key->GetName());
-         if (!destination_subdir) {
-            destination_subdir = destination->mkdir(key->GetName());
-         }
-         TMPIFile::R__MigrateKey(destination, source);
-      } else {
-         TKey *oldkey = destination->GetKey(key->GetName());
-         if (oldkey) {
-            oldkey->Delete();
-            delete oldkey;
-         }
-         TKey *newkey = new TKey(destination, *key, 0 /* pidoffset */);
-         destination->GetFile()->SumBuffer(newkey->GetObjlen());
-         newkey->WriteFile(0);
-         if (destination->GetFile()->TestBit(TFile::kWriteError)) {
-            return;
-         }
-      }
-   }
-   destination->SaveSelf();
-}
 
-void TMPIFile::R__DeleteObject(TDirectory *dir, Bool_t withReset)
-{
-   if (dir == 0)
-      return;
-
-   TIter nextkey(dir->GetListOfKeys());
-   TKey *key;
-   while ((key = (TKey *)nextkey())) {
-      TClass *cl = TClass::GetClass(key->GetClassName());
-      if (cl->InheritsFrom(TDirectory::Class())) {
-         TDirectory *subdir = (TDirectory *)dir->GetList()->FindObject(key->GetName());
-         if (!subdir) {
-            subdir = (TDirectory *)key->ReadObj();
-         }
-         TMPIFile::R__DeleteObject(subdir, withReset);
-      } else {
-         Bool_t todelete = kFALSE;
-         if (withReset) {
-            todelete = (0 != cl->GetResetAfterMerge());
-         } else {
-            todelete = (0 == cl->GetResetAfterMerge());
-         }
-         if (todelete) {
-            key->Delete();
-            dir->GetListOfKeys()->Remove(key);
-            delete key;
-         }
-      }
-   }
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// return True if this is the Collector rank, otherwise False

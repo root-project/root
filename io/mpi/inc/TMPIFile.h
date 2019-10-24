@@ -66,14 +66,16 @@ private:
       ClientColl_t fClients;
       TTimeStamp fLastMerge;
       TFileMerger fMerger;
-      TMPIClientInfo fClientInfo;
-
+      
    public:
       ParallelFileMerger(const char *filename, Int_t compression_settings, Bool_t writeCache = kFALSE);
       virtual ~ParallelFileMerger();
 
       ULong_t Hash() const { return fFilename.Hash(); };
       const char *GetName() const { return fFilename; };
+
+      static void R__DeleteObject(TDirectory *dir, Bool_t withReset);
+      static Bool_t R__NeedInitialMerge(TDirectory *dir);
 
       Bool_t InitialMerge(TFile *input);
       Bool_t Merge();
@@ -108,9 +110,6 @@ public:
 
    // Collector Functions
    void RunCollector(Bool_t cache = kFALSE);
-   static void R__MigrateKey(TDirectory *destination, TDirectory *source);
-   static void R__DeleteObject(TDirectory *dir, Bool_t withReset);
-   static Bool_t R__NeedInitialMerge(TDirectory *dir);
    Bool_t IsCollector();
 
    // Sender Functions
