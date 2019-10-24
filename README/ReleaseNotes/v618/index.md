@@ -772,6 +772,11 @@ typedefs (in particular `Double32_t`)
 
 These changes will be part of a future 6.18/06.
 
+## I/O Libraries
+
+* Significantly improved the scaling of hadd tear-down/cleanup-phase in the presence
+of large number histograms and in the presence of large number of directories.
+
 ### TTree Libraries
 
 * Prevent a noticeable memory leak when reading uncompressed TTree.
