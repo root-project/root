@@ -130,6 +130,7 @@ void TMPIFile::RunCollector(Bool_t cache)
    THashTable mergers;
 
    Int_t client_Id = 0;
+   std::vector<char> buffer(0);
 
    // loop until all other ranks in the subcommunicator have exited
    while (fEndProcess != fMPILocalSize - 1) {
@@ -140,23 +141,21 @@ void TMPIFile::RunCollector(Bool_t cache)
       MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, fSubComm, &status);
 
       // get bytes received
-      Int_t count;
-      MPI_Get_count(&status, MPI_CHAR, &count);
-      Int_t number_bytes = sizeof(char) * count;
+      Int_t number_bytes;
+      MPI_Get_count(&status, MPI_CHAR, &number_bytes);
+      buffer.resize(number_bytes);
+      char *buf = buffer.data();
 
-      // create buffer to receive message
-      char *buf = new char[number_bytes];
       Int_t source = status.MPI_SOURCE;
       Int_t tag = status.MPI_TAG;
+
+      // retrieve the message
+      MPI_Recv(buf, number_bytes, MPI_CHAR, source, tag, fSubComm, MPI_STATUS_IGNORE);
 
       // empty message signifies a Worker exited
       if (number_bytes == 0) {
          this->UpdateEndProcess();
-         MPI_Recv(buf, number_bytes, MPI_CHAR, source, tag, fSubComm, MPI_STATUS_IGNORE);
       } else {
-         // retrieve the message
-         MPI_Recv(buf, number_bytes, MPI_CHAR, source, tag, fSubComm, MPI_STATUS_IGNORE);
-
          // create a TMemFile from the buffer
          TMemFile *infile = new TMemFile(fMPIFilename, buf, number_bytes, "UPDATE");
          if (infile->IsZombie()) {
@@ -186,7 +185,7 @@ void TMPIFile::RunCollector(Bool_t cache)
 
          client_Id++;
       }
-      delete[] buf;
+      buffer.resize(0);
    }
 
    if (fEndProcess == fMPILocalSize - 1) {
