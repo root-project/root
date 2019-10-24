@@ -114,14 +114,7 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
    if (!request)
       return res;
 
-   RBrowserReplyNew replynew;
-
-   fBrowsable.ProcessRequest(*request.get(), replynew);
-
-   res = "BREPL:";
-   res.append(TBufferJSON::ToJSON(&replynew, TBufferJSON::kSkipTypeInfo + TBufferJSON::kNoSpaces).Data());
-
-   return res;
+   return "BREPL:"s + fBrowsable.ProcessRequest(*request.get());
 }
 
 /////////////////////////////////////////////////////////////////////////////////

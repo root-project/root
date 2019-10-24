@@ -250,6 +250,24 @@ public:
       return std::make_shared<SysFileElement>(fCurrentStat, fPath, fCurrentName);
    }
 
+   void Sort(std::vector<std::unique_ptr<RBrowserItem>> &vect, const std::string &method = "") override
+   {
+      if (method != "size") {
+         RLevelIter::Sort(vect, method);
+         return;
+      }
+
+      std::sort(vect.begin(), vect.end(), [method](const std::unique_ptr<RBrowserItem> &a, const std::unique_ptr<RBrowserItem> &b) {
+         // directory listed always as first
+         if (a->IsFolder() != b->IsFolder())
+            return a->IsFolder();
+
+         auto fa = dynamic_cast<RBrowserFileItem *>(a.get());
+         auto fb = dynamic_cast<RBrowserFileItem *>(b.get());
+         return (fa ? fa->size : 0) < (fb ? fb->size : 1);
+      });
+   }
+
 };
 
 
@@ -276,6 +294,7 @@ std::string RSysDirLevelIter::GetFileIcon(const std::string &fname)
        (EndsWith(".cmake")) ||
        (EndsWith(".dat")) ||
        (EndsWith(".log")) ||
+       (EndsWith(".xml")) ||
        (EndsWith(".js")))
       return "sap-icon://document-text"s;
    if ((EndsWith(".bmp")) ||
