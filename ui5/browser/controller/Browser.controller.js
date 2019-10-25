@@ -800,6 +800,28 @@ sap.ui.define(['sap/ui/core/Component',
          this.websocket.Send("QUIT_ROOT");
       },
 
+      onSearch : function(oEvt) {
+         this.changeItemsFilter(oEvt.getSource().getValue());
+      },
+
+      /** Submit node search query to server, ignore in offline case */
+      changeItemsFilter: function(query, from_handler) {
+
+         if (!from_handler) {
+            // do not submit immediately, but after very short timeout
+            // if user types very fast - only last selection will be shown
+            if (this.search_handler) clearTimeout(this.search_handler);
+            this.search_handler = setTimeout(this.changeItemsFilter.bind(this, query, true), 1000);
+            return;
+         }
+
+         delete this.search_handler;
+
+         this.model.changeItemsFilter(query);
+      },
+
+
+
       /** @brief Add Tab event handler */
       addNewButtonPressHandler: async function(oEvent) {
         var oButton = oEvent.getSource().mAggregations._tabStrip.mAggregations.addButton;

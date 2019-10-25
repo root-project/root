@@ -23,6 +23,7 @@ sap.ui.define([
             this.loadDataCounter = 0; // counter of number of nodes
 
             this.sortOrder = "";
+            this.itemsFilter = "";
 
             this.threshold = 100; // default threshold to prefetch items
         },
@@ -196,7 +197,8 @@ sap.ui.define([
               path: path,
               first: first || 0,
               number: number || this.threshold || 100,
-              sort: this.sortOrder || ""
+              sort: this.sortOrder || "",
+              filter: this.itemsFilter || ""
            };
            this._websocket.Send("BRREQ:" + JSON.stringify(request));
         },
@@ -491,6 +493,22 @@ sap.ui.define([
 
 
            this.sortOrder = newValue;
+
+           // now we should request values once again
+
+           this.submitRequest(this.h, "/");
+
+        },
+
+        changeItemsFilter: function(newValue) {
+           if (newValue === undefined)
+              newValue = this.getProperty("/itemsFilter") || "";
+
+           // ignore same value
+           if (newValue === this.itemsFilter)
+              return;
+
+           this.itemsFilter = newValue;
 
            // now we should request values once again
 
