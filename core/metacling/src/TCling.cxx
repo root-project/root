@@ -1110,8 +1110,12 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
 
    // Load core modules
    // This should be vector in order to be able to pass it to LoadModules
-   std::vector<std::string> CoreModules = {"ROOT_Foundation_C", "ROOT_Config",
-                                           "ROOT_Foundation_Stage1_NoRTTI", "Core", "RIO"};
+   std::vector<std::string> CoreModules = {"ROOT_Foundation_C",
+                                           "ROOT_Config",
+                                           "ROOT_Rtypes",
+                                           "ROOT_Foundation_Stage1_NoRTTI",
+                                           "Core",
+                                           "RIO"};
 
    // FIXME: Reducing those will let us be less dependent on rootmap files
    static constexpr std::array<const char *, 3> ExcludeModules = {
