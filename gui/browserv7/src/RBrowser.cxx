@@ -62,7 +62,7 @@ ROOT::Experimental::RBrowser::RBrowser(bool use_rcanvas)
    fWorkingDirectory = gSystem->UnixPathName(gSystem->WorkingDirectory());
    printf("Current dir %s\n", fWorkingDirectory.c_str());
 
-   fBrowsable.SetTopItem(std::make_unique<SysFileElement>(fWorkingDirectory));
+   fBrowsable.SetTopElement(std::make_unique<SysFileElement>(fWorkingDirectory));
 
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
@@ -447,18 +447,18 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       fWebWindow->Send(connid, res);
    } else if (arg.compare(0,7, "DBLCLK:") == 0) {
 
+      std::string reply;
+
       if (arg.at(8) != '[') {
-         auto str = ProcessDblClick(arg.substr(7), "");
-         fWebWindow->Send(connid, str);
+         reply = ProcessDblClick(arg.substr(7), "");
       } else {
          auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
-         if (arr) {
-            auto str = ProcessDblClick(arr->at(0), arr->at(1));
-            if (str.length() > 0) {
-               fWebWindow->Send(connid, str);
-            }
-         }
+         if (arr && (arr->size() > 1))
+            reply = ProcessDblClick(arr->at(0), arr->at(1));
       }
+      if (!reply.empty())
+         fWebWindow->Send(connid, reply);
+
    } else if (arg.compare(0,9, "RUNMACRO:") == 0) {
       ProcessRunCommand(arg.substr(9));
    } else if (arg.compare(0,9, "SAVEFILE:") == 0) {
@@ -475,7 +475,7 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       fWorkingDirectory = arg.substr(6);
       if ((fWorkingDirectory.length()>1) && (fWorkingDirectory[fWorkingDirectory.length()-1] == '/')) fWorkingDirectory.resize(fWorkingDirectory.length()-1);
       printf("Current dir %s\n", fWorkingDirectory.c_str());
-      fBrowsable.SetTopItem(std::make_unique<SysFileElement>(fWorkingDirectory));
+      fBrowsable.SetTopElement(std::make_unique<SysFileElement>(fWorkingDirectory));
       gSystem->ChangeDirectory(fWorkingDirectory.c_str());
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
    }

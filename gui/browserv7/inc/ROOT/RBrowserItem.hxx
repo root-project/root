@@ -43,6 +43,7 @@ protected:
    bool checked{false};  ///< is checked, not used yet
    bool expanded{false}; ///< is expanded, not used yet
 public:
+
    RBrowserItem() = default;
    RBrowserItem(const std::string &_name, int _nchilds = 0) : name(_name), nchilds(_nchilds) {}
    // must be here, one needs virtual table for correct streaming of sub-classes
@@ -52,10 +53,17 @@ public:
    const std::string &GetIcon() const { return icon; }
    virtual bool IsFolder() const { return false; }
 
-
    void SetChecked(bool on = true) { checked = on; }
    void SetExpanded(bool on = true) { expanded = on; }
    void SetIcon(const std::string &_icon) { icon = _icon; }
+
+   virtual bool Compare(const RBrowserItem *b, const std::string &) const
+   {
+      if (IsFolder() != b->IsFolder())
+         return IsFolder();
+      return GetName() < b->GetName();
+   }
+
 };
 
 /** Reply on browser request */
@@ -64,7 +72,7 @@ public:
    std::string path;                  ///< reply path
    int nchilds{0};                    ///< total number of childs in the node
    int first{0};                      ///< first node in returned list
-   std::vector<RBrowserItem *> nodes; ///< list of pointers, no ownership!
+   std::vector<const RBrowserItem *> nodes; ///< list of pointers, no ownership!
 };
 
 } // namespace Experimental

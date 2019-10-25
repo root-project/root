@@ -25,7 +25,11 @@ using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Browsable;
 
 
-// ===============================================================================================================
+/** \class TDirectoryLevelIter
+\ingroup rbrowser
+
+Iterator over keys in TDirectory
+*/
 
 
 class TDirectoryLevelIter : public RLevelIter {
@@ -108,6 +112,12 @@ public:
 
 // ===============================================================================================================
 
+
+/** \class TKeyElement
+\ingroup rbrowser
+
+Element representing TKey from TDirectory
+*/
 
 
 class TKeyElement : public RElement {
@@ -198,6 +208,13 @@ std::shared_ptr<RElement> TDirectoryLevelIter::GetElement()
 
 // ==============================================================================================
 
+/** \class TDirectoryElement
+\ingroup rbrowser
+
+Element representing TDirectory
+*/
+
+
 class TDirectoryElement : public RElement {
    std::string fFileName;       ///<!   file name
    TDirectory *fDir{nullptr};   ///<!   subdirectory (ifany)
@@ -260,6 +277,15 @@ public:
 
 
 // ==============================================================================================
+
+
+/** \class RTFileProvider
+\ingroup rbrowser
+
+Provides access to ROOT files with extension "root"
+Other extensions can be registered
+*/
+
 
 class RTFileProvider : public RProvider {
 

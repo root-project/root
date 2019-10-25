@@ -30,12 +30,11 @@ using namespace std::string_literals;
 using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Browsable;
 
-/** \class ROOT::Experimental::RSysDirLevelIter
+/** \class RSysDirLevelIter
 \ingroup rbrowser
 
-Iterator over single file level
+Iterator over files in in sub-directory
 */
-
 
 class RSysDirLevelIter : public RLevelIter {
    std::string fPath;        ///<! fully qualified path
@@ -43,6 +42,7 @@ class RSysDirLevelIter : public RLevelIter {
    std::string fCurrentName; ///<! current file name
    FileStat_t fCurrentStat;  ///<! stat for current file name
 
+   /** Open directory for listing */
    bool OpenDir()
    {
       if (fDir)
@@ -57,6 +57,7 @@ class RSysDirLevelIter : public RLevelIter {
       return true;
    }
 
+   /** Close directory for listing */
    void CloseDir()
    {
       if (fDir)
@@ -65,6 +66,7 @@ class RSysDirLevelIter : public RLevelIter {
       fCurrentName.clear();
    }
 
+   /** Check if entry of that name exists */
    bool TestDirEntry(const std::string &name)
    {
       std::string path = fPath;
@@ -85,6 +87,7 @@ class RSysDirLevelIter : public RLevelIter {
       return true;
    }
 
+   /** Trying to gen next entry */
    bool NextDirEntry()
    {
       fCurrentName.clear();
@@ -114,6 +117,7 @@ class RSysDirLevelIter : public RLevelIter {
       return true;
    }
 
+   /** Try to find file directly by name */
    bool FindDirEntry(const std::string &name)
    {
       if (!fDir && !OpenDir())
@@ -157,7 +161,6 @@ public:
 
       // this is construction of current item
       char tmp[256];
-      Long64_t _fsize, bsize;
 
       item->type     = fCurrentStat.fMode;
       item->size     = fCurrentStat.fSize;
@@ -173,7 +176,7 @@ public:
          item->SetIcon(GetFileIcon(GetName()));
 
       // file size
-      _fsize = bsize = item->size;
+      Long64_t _fsize = item->size, bsize = item->size;
       if (_fsize > 1024) {
          _fsize /= 1024;
          if (_fsize > 1024) {
@@ -250,24 +253,6 @@ public:
       return std::make_shared<SysFileElement>(fCurrentStat, fPath, fCurrentName);
    }
 
-   void Sort(std::vector<std::unique_ptr<RBrowserItem>> &vect, const std::string &method = "") override
-   {
-      if (method != "size") {
-         RLevelIter::Sort(vect, method);
-         return;
-      }
-
-      std::sort(vect.begin(), vect.end(), [method](const std::unique_ptr<RBrowserItem> &a, const std::unique_ptr<RBrowserItem> &b) {
-         // directory listed always as first
-         if (a->IsFolder() != b->IsFolder())
-            return a->IsFolder();
-
-         auto fa = dynamic_cast<RBrowserFileItem *>(a.get());
-         auto fb = dynamic_cast<RBrowserFileItem *>(b.get());
-         return (fa ? fa->size : 0) < (fb ? fb->size : 1);
-      });
-   }
-
 };
 
 
@@ -313,7 +298,8 @@ std::string RSysDirLevelIter::GetFileIcon(const std::string &fname)
 }
 
 
-
+/////////////////////////////////////////////////////////////////////////////////
+/// Create file element
 
 SysFileElement::SysFileElement(const std::string &filename) : fFileName(filename)
 {
@@ -327,6 +313,9 @@ SysFileElement::SysFileElement(const std::string &filename) : fFileName(filename
    }
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+/// Returns full file name - including directory
+
 std::string SysFileElement::GetFullName() const
 {
    std::string path = fDirName;
@@ -336,25 +325,28 @@ std::string SysFileElement::GetFullName() const
    return path;
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+/// Returns iterator for files in directory
 
 std::unique_ptr<RLevelIter> SysFileElement::GetChildsIter()
 {
    if (!R_ISDIR(fStat.fMode))
       return nullptr;
 
-   // TODO: support .root file and all other file types later
-
    return std::make_unique<RSysDirLevelIter>(GetFullName());
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+/// Returns file content of requested kind
+
 std::string SysFileElement::GetContent(const std::string &kind)
 {
-   if ((kind == "text"s) && (RSysDirLevelIter::GetFileIcon(GetName()) == "sap-icon://document-text"s)) {
+   if ((GetContentKind(kind) == kText) && (RSysDirLevelIter::GetFileIcon(GetName()) == "sap-icon://document-text"s)) {
       std::ifstream t(GetFullName());
       return std::string(std::istreambuf_iterator<char>(t), std::istreambuf_iterator<char>());
    }
 
-   if ((kind == "image64"s) && (RSysDirLevelIter::GetFileIcon(GetName()) == "sap-icon://picture"s)) {
+   if ((GetContentKind(kind) == kImage) && (RSysDirLevelIter::GetFileIcon(GetName()) == "sap-icon://picture"s)) {
       std::ifstream t(GetFullName());
       std::string content = std::string(std::istreambuf_iterator<char>(t), std::istreambuf_iterator<char>());
 
@@ -366,5 +358,4 @@ std::string SysFileElement::GetContent(const std::string &kind)
    }
 
    return ""s;
-
 }

@@ -36,6 +36,7 @@ public:
    std::string fuid;     ///< user id
    std::string fgid;     ///< group id
 
+   /** Default constructor */
    RBrowserFileItem() = default;
 
    RBrowserFileItem(const std::string &_name, int _nchilds) : RBrowserItem(_name, _nchilds) {}
@@ -44,6 +45,21 @@ public:
    virtual ~RBrowserFileItem() = default;
 
    bool IsFolder() const override { return isdir; }
+
+
+   bool Compare(const RBrowserItem *b, const std::string &method) const override
+   {
+      if (IsFolder() != b->IsFolder())
+         return IsFolder();
+
+      if (method == "size") {
+         auto fb = dynamic_cast<const RBrowserFileItem *> (b);
+         if (fb)
+            return size < fb->size;
+      }
+
+      return GetName() < b->GetName();
+   }
 };
 
 
@@ -68,10 +84,10 @@ public:
 
    virtual ~SysFileElement() = default;
 
-   /** Name of RBrowsable, must be provided in derived classes */
+   /** Name of RElement - file name in this case */
    std::string GetName() const override { return fFileName; }
 
-   /** Title of RBrowsable (optional) */
+   /** Title of RElement - full file name  */
    std::string GetTitle() const override { return GetFullName(); }
 
    std::unique_ptr<RLevelIter> GetChildsIter() override;
