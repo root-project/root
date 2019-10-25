@@ -375,16 +375,19 @@ bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReply &r
          iter->Sort(curr.chlds);
    }
 
-   int first = request.first, last = curr.chlds.size();
+   int id = 0;
 
-   if ((request.number > 0) && (request.first + request.number < last))
-      last = request.first + request.number;
+   for (auto &item : curr.chlds) {
+      if (!request.filter.empty() && (item->GetName().compare(0, request.filter.length(), request.filter) != 0))
+         continue;
 
-   for (auto id = first; id < last; id ++)
-      reply.nodes.emplace_back(curr.chlds[id].get());
+      if ((id >= request.first) && ((request.number == 0) || (id < request.first + request.number)))
+         reply.nodes.emplace_back(item.get());
+      id++;
+   }
 
    reply.first = request.first;
-   reply.nchilds = curr.chlds.size(); // total number of childs
+   reply.nchilds = id; // total number of childs
 
    return true;
 }
