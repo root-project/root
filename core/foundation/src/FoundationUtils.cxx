@@ -128,9 +128,11 @@ const std::string& GetRootSys() {
 #endif
    static std::string rootsys;
    if (rootsys.empty()) {
-      rootsys = ::getenv("ROOTSYS");
-      // We cannot use gSystem->UnixPathName.
-      ConvertToUnixPath(rootsys);
+      if (const char* envValue = ::getenv("ROOTSYS")) {
+         rootsys = envValue;
+         // We cannot use gSystem->UnixPathName.
+         ConvertToUnixPath(rootsys);
+      }
    }
    // FIXME: Should this also call UnixPathName for consistency?
    if (rootsys.empty())
