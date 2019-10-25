@@ -45,6 +45,11 @@ void *RTObjectHolder::TakeObject()
 
 // ===============================================================================================================
 
+/** \class TObjectLevelIter
+\ingroup rbrowser
+
+Iterator over keys in TDirectory
+*/
 
 
 class TObjectLevelIter : public RLevelIter {
@@ -52,7 +57,6 @@ class TObjectLevelIter : public RLevelIter {
    std::vector<std::shared_ptr<Browsable::RElement>> fElements;
 
    int fCounter{-1};
-
 
    /** Actually, complete browsing happens here */
 
@@ -105,11 +109,11 @@ public:
 
 
 class TMyBrowserImp : public TBrowserImp {
-   TObjectLevelIter *fIter;
+   TObjectLevelIter &fIter;   ///<!  back-reference on iterat
 
 public:
 
-   TMyBrowserImp(TObjectLevelIter *iter) : TBrowserImp(nullptr), fIter(iter) {}
+   TMyBrowserImp(TObjectLevelIter &iter) : TBrowserImp(nullptr), fIter(iter) {}
    virtual ~TMyBrowserImp() = default;
 
    void Add(TObject* obj, const char* name, Int_t) override;
@@ -160,7 +164,7 @@ public:
 
       auto iter = std::make_unique<TObjectLevelIter>();
 
-      TMyBrowserImp *imp = new TMyBrowserImp(iter.get());
+      TMyBrowserImp *imp = new TMyBrowserImp(*(iter.get()));
 
       // must be new, otherwise TBrowser constructor ignores imp
       TBrowser *br = new TBrowser("name", "title", imp);
@@ -197,7 +201,7 @@ void TMyBrowserImp::Add(TObject *obj, const char *name, Int_t)
 {
    // printf("Adding object %p %s %s\n", obj, obj->GetName(), obj->ClassName());
 
-   fIter->AddElement(std::make_shared<TObjectElement>(obj, name ? name : ""));
+   fIter.AddElement(std::make_shared<TObjectElement>(obj, name ? name : ""));
 }
 
 

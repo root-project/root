@@ -20,6 +20,38 @@ using namespace ROOT::Experimental::Browsable;
 using namespace std::string_literals;
 
 
+/////////////////////////////////////////////////////////////////////
+/// Find item with specified name
+/// Default implementation, should work for all
+
+RElement::EContentKind RElement::GetContentKind(const std::string &kind)
+{
+   if (kind == "text") return kText;
+   if ((kind == "image") || (kind == "image64")) return kImage;
+   if (kind == "png") return kPng;
+   if ((kind == "jpg") || (kind == "jpeg")) return kJpeg;
+   return kNone;
+}
+
+
+/////////////////////////////////////////////////////////////////////
+/// Find item with specified name
+/// Default implementation, should work for all
+
+bool RLevelIter::Find(const std::string &name)
+{
+   if (!Reset()) return false;
+
+   while (Next()) {
+      if (GetName() == name)
+         return true;
+   }
+
+   return false;
+}
+
+
+
 std::string RProvider::GetClassIcon(const std::string &classname)
 {
    if (classname == "TTree" || classname == "TNtuple")
@@ -141,65 +173,13 @@ std::shared_ptr<RElement> RProvider::Browse(std::unique_ptr<Browsable::RHolder> 
 }
 
 /////////////////////////////////////////////////////////////////////
-/// Find item with specified name
-/// Default implementation, should work for all
-
-bool RLevelIter::Find(const std::string &name)
-{
-   if (!Reset()) return false;
-
-   while (Next()) {
-      if (GetName() == name)
-         return true;
-   }
-
-   return false;
-}
-
-
-/////////////////////////////////////////////////////////////////////
-/// Sort created items
-
-void RLevelIter::Sort(std::vector<std::unique_ptr<RBrowserItem>> &vect, const std::string &method)
-{
-   if (method.empty()) {
-      bool is_folder{false}, is_nonfolder{false};
-
-      for (auto &item : vect)
-         if (item->IsFolder()) is_folder = true; else is_nonfolder = true;
-
-      // just move folders to the top
-      if (is_folder && is_nonfolder) {
-         std::vector<std::unique_ptr<RBrowserItem>> vect0;
-         std::swap(vect, vect0);
-
-         for (auto &&item : vect0)
-            if (item->IsFolder())
-               vect.emplace_back(std::move(item));
-
-         for (auto &&item : vect0)
-            if (item)
-               vect.emplace_back(std::move(item));
-      }
-   } else if (method != "unsorted") {
-      std::sort(vect.begin(), vect.end(), [](const std::unique_ptr<RBrowserItem> &a, const std::unique_ptr<RBrowserItem> &b) {
-         // directory listed always as first
-         if (a->IsFolder() != b->IsFolder())
-            return a->IsFolder();
-
-         return a->GetName() < b->GetName();
-      });
-   }
-}
-
-/////////////////////////////////////////////////////////////////////
 /// set top item
 
-void RBrowsable::SetTopItem(std::shared_ptr<Browsable::RElement> item)
+void RBrowsable::SetTopElement(std::shared_ptr<Browsable::RElement> elem)
 {
    fLevels.clear();
    fLevels.emplace_back("");
-   fLevels.front().item = item;
+   fLevels.front().fElement = elem;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -255,7 +235,7 @@ std::shared_ptr<Browsable::RElement> RBrowsable::Navigate(const std::vector<std:
       return nullptr;
 
    if (paths.empty())
-      return fLevels.back().item;
+      return fLevels.back().fElement;
 
    int lindx = 0;
    if (paths[0] == "/")
@@ -277,7 +257,7 @@ std::shared_ptr<Browsable::RElement> RBrowsable::Navigate(const std::vector<std:
       }
 
       // path is matching
-      if ((lindx + 1 < (int) fLevels.size()) && (fLevels[lindx + 1].name == subdir)) {
+      if ((lindx + 1 < (int) fLevels.size()) && (fLevels[lindx + 1].fName == subdir)) {
          ++lindx;
          continue;
       }
@@ -285,11 +265,11 @@ std::shared_ptr<Browsable::RElement> RBrowsable::Navigate(const std::vector<std:
       auto &level = fLevels[lindx];
 
       // up to here we could follow existing paths
-      // but here , any next elements should be created direclty
+      // but here , any next elements should be created directly
       if (!level_indx)
-         return DirectNavigate(level.item, paths, pindx);
+         return DirectNavigate(level.fElement, paths, pindx);
 
-      auto iter = level.item->GetChildsIter();
+      auto iter = level.fElement->GetChildsIter();
 
       if (!iter || !iter->Find(subdir))
          return nullptr;
@@ -305,7 +285,7 @@ std::shared_ptr<Browsable::RElement> RBrowsable::Navigate(const std::vector<std:
 
    if (level_indx) *level_indx = lindx;
 
-   return fLevels[lindx].item;
+   return fLevels[lindx].fElement;
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -359,30 +339,53 @@ bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReply &r
    auto &curr = fLevels[lindx];
 
    // when request childs, always try to make elements
-   if (curr.chlds.size() == 0) {
-      auto iter = curr.item->GetChildsIter();
+   if (curr.fItems.size() == 0) {
+      auto iter = curr.fElement->GetChildsIter();
       if (!iter) return false;
       int id = 0;
-      curr.all_chlds = true;
+      curr.fAllChilds = true;
 
-      while (iter->Next() && curr.all_chlds) {
-         curr.chlds.emplace_back(iter->CreateBrowserItem());
+      while (iter->Next() && curr.fAllChilds) {
+         curr.fItems.emplace_back(iter->CreateBrowserItem());
          if (id++ > 10000)
-            curr.all_chlds = false;
+            curr.fAllChilds = false;
       }
 
-      if (curr.all_chlds)
-         iter->Sort(curr.chlds);
+      curr.fSortedItems.clear();
+      curr.fSortMethod.clear();
+   }
+
+   // create sorted array
+   if ((curr.fSortedItems.size() != curr.fItems.size()) || (curr.fSortMethod != request.sort)) {
+      curr.fSortedItems.resize(curr.fItems.size(), nullptr);
+      int id = 0;
+      if (request.sort.empty()) {
+         // no sorting, just move all folders up
+         for (auto &item : curr.fItems)
+            if (item->IsFolder())
+               curr.fSortedItems[id++] = item.get();
+         for (auto &item : curr.fItems)
+            if (!item->IsFolder())
+               curr.fSortedItems[id++] = item.get();
+      } else {
+         // copy items
+         for (auto &item : curr.fItems)
+            curr.fSortedItems[id++] = item.get();
+
+         if (request.sort != "unsorted")
+            std::sort(curr.fSortedItems.begin(), curr.fSortedItems.end(),
+                      [request](const RBrowserItem *a, const RBrowserItem *b) { return a->Compare(b, request.sort); });
+      }
+      curr.fSortMethod = request.sort;
    }
 
    int id = 0;
-
-   for (auto &item : curr.chlds) {
+   for (auto &item : curr.fSortedItems) {
       if (!request.filter.empty() && (item->GetName().compare(0, request.filter.length(), request.filter) != 0))
          continue;
 
       if ((id >= request.first) && ((request.number == 0) || (id < request.first + request.number)))
-         reply.nodes.emplace_back(item.get());
+         reply.nodes.emplace_back(item);
       id++;
    }
 

@@ -233,6 +233,17 @@ class RLevelIter;
 
 class RElement {
 public:
+
+   enum EContentKind {
+      kNone,      ///< not recognized
+      kText,      ///< "text" - plain text for code editor
+      kImage,     ///< "image64" - base64 for supported image formats (png/gif/gpeg)
+      kPng,       ///< "png" - plain png binary code, returned inside std::string
+      kJpeg      ///< "jpg" or "jpeg" - plain jpg binary code, returned inside std::string
+   };
+
+   static EContentKind GetContentKind(const std::string &kind);
+
    virtual ~RElement() = default;
 
    /** Name of RBrowsable, must be provided in derived classes */
@@ -265,31 +276,30 @@ public:
    virtual ~RLevelIter() = default;
 
    /** Shift to next element */
-   virtual bool Next() { return false; }
-
-   /** Reset iterator to the first element, returns false if not supported */
-   virtual bool Reset() { return false; }
+   virtual bool Next() = 0;
 
    /** Is there current element  */
-   virtual bool HasItem() const { return false; }
+   virtual bool HasItem() const = 0;
 
    /** Returns current element name  */
-   virtual std::string GetName() const { return ""; }
-
-   virtual bool Find(const std::string &name);
+   virtual std::string GetName() const = 0;
 
    /** If element may have childs: 0 - no, >0 - yes, -1 - maybe */
    virtual int CanHaveChilds() const { return 0; }
 
+   /** Returns full information for current element */
+   virtual std::shared_ptr<RElement> GetElement() = 0;
+
    virtual std::unique_ptr<RBrowserItem> CreateBrowserItem()
    {
-      return std::make_unique<RBrowserItem>(GetName(), CanHaveChilds());
+      return HasItem() ? std::make_unique<RBrowserItem>(GetName(), CanHaveChilds()) : nullptr;
    }
 
-   virtual void Sort(std::vector<std::unique_ptr<RBrowserItem>> &vect, const std::string &method = "");
+   /** Reset iterator to the first element, returns false if not supported */
+   virtual bool Reset() { return false; }
 
-   /** Returns full information for current element */
-   virtual std::shared_ptr<RElement> GetElement() { return nullptr; }
+   virtual bool Find(const std::string &name);
+
 };
 
 
@@ -349,12 +359,14 @@ private:
 class RBrowsable {
 
    struct RLevel {
-      std::string name;                                  ///<! name of item (empty for top level)
-      std::shared_ptr<Browsable::RElement> item;         ///<! element
-      std::vector<std::unique_ptr<RBrowserItem>> chlds;  ///<! created browser items - used in requests
-      bool all_chlds{false};                             ///<! if all chlds were extracted
-      RLevel(const std::string &_name = "") : name(_name) {}
-      RLevel(const std::string &_name, std::shared_ptr<Browsable::RElement> &_item) : name(_name) { item = std::move(_item); }
+      std::string fName;                                 ///<! name of the element (empty for top level)
+      std::shared_ptr<Browsable::RElement> fElement;     ///<! element
+      std::vector<std::unique_ptr<RBrowserItem>> fItems; ///<! created browser items - used in requests
+      bool fAllChilds{false};                            ///<! if all chlds were extracted
+      std::vector<const RBrowserItem *> fSortedItems;    ///<! sorted child items, used in requests
+      std::string fSortMethod;                           ///<! last sort method
+      RLevel(const std::string &name = "") : fName(name) {}
+      RLevel(const std::string &name, std::shared_ptr<Browsable::RElement> &elem) : fName(name) { fElement = std::move(elem); }
    };
 
    std::vector<RLevel> fLevels;           ///<! navigated levels
@@ -372,15 +384,14 @@ class RBrowsable {
 public:
    RBrowsable() = default;
 
-   RBrowsable(std::shared_ptr<Browsable::RElement> item)
+   RBrowsable(std::shared_ptr<Browsable::RElement> elem)
    {
-      SetTopItem(item);
+      SetTopElement(elem);
    }
 
    virtual ~RBrowsable() = default;
 
-
-   void SetTopItem(std::shared_ptr<Browsable::RElement> item);
+   void SetTopElement(std::shared_ptr<Browsable::RElement> elem);
 
    std::string ProcessRequest(const RBrowserRequest &request);
 
