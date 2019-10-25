@@ -1269,7 +1269,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
 #else
       constexpr char kEnvPathDelimiter = ':';
 #endif // R__WIN32
-      auto GetEnvVarPath = [](const std::string &EnvVar,
+      auto GetEnvVarPath = [=](const std::string &EnvVar,
                               std::vector<std::string> &Paths) {
          llvm::Optional<std::string> EnvOpt = llvm::sys::Process::GetEnv(EnvVar);
          if (EnvOpt.hasValue()) {
