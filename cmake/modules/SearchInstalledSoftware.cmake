@@ -1712,18 +1712,30 @@ if(webgui)
 endif()
 
 #------------------------------------------------------------------------------------
-# Look for libatomic. On ARM systems we need to explicitly link against that library
-# in certain places. But if it's not available, then assume that we are on a system
-# on which it is not needed.
+# Check if we need libatomic to use atomic operations in the C++ code. On ARM systems
+# we generally do. First just test if CMake is able to compile a test executable
+# using atomic operations without the help of a library. Only if it can't do we start
+# looking for libatomic for the build.
 #
-string(REPLACE ":" ";" _libatomicSearchPaths "$ENV{LD_LIBRARY_PATH}")
-find_library(ROOT_ATOMIC_LIB NAMES atomic
-  HINTS ${_libatomicSearchPaths}
-  DOC "Path to the atomic library to use during the build")
-mark_as_advanced(ROOT_ATOMIC_LIB)
-if(ROOT_ATOMIC_LIB)
-  set(ROOT_ATOMIC_LIBS ${ROOT_ATOMIC_LIB})
-else()
-  set(ROOT_ATOMIC_LIBS)
+include(CheckCXXSourceCompiles)
+check_cxx_source_compiles("
+#include <atomic>
+#include <cstdint>
+int main() {
+   std::atomic<int> a1;
+   int a1val = a1.load();
+   std::atomic<uint64_t> a2;
+   uint64_t a2val = a2.load(std::memory_order_relaxed);
+   return 0;
+}
+" ROOT_HAVE_CXX_ATOMICS_WITHOUT_LIB)
+set(ROOT_ATOMIC_LIBS)
+if(NOT ROOT_HAVE_CXX_ATOMICS_WITHOUT_LIB)
+  find_library(ROOT_ATOMIC_LIB NAMES atomic
+    HINTS ENV LD_LIBRARY_PATH
+    DOC "Path to the atomic library to use during the build")
+  mark_as_advanced(ROOT_ATOMIC_LIB)
+  if(ROOT_ATOMIC_LIB)
+    set(ROOT_ATOMIC_LIBS ${ROOT_ATOMIC_LIB})
+  endif()
 endif()
-unset(_libatomicSearchPaths)
