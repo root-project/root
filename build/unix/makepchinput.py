@@ -178,7 +178,7 @@ def getDictNames(theDirName):
    #`find $modules -name 'G__*.cxx' 2> /dev/null | grep -v core/metautils/src/G__std_`; do
    wildcards = (os.path.join(theDirName , "*", "*", "G__*.cxx"),
                 os.path.join(theDirName , "*", "G__*.cxx"),
-                os.path.join(theDirName , "*", "*", "PyROOT", "G__*.cxx")) # Exp PyROOT
+                os.path.join(theDirName , "*", "*", "PyROOT", "PyROOT","G__*.cxx")) # Exp PyROOT
    allDictNames = []
    for wildcard in wildcards:
       allDictNames += glob.glob(wildcard)
@@ -236,7 +236,7 @@ def isDirForPCH(dirName, expPyROOT):
                            "tmva",
                            "main"]
    if expPyROOT:
-      PCHPatternsWhitelist.append("bindings/pyroot_experimental/PyROOT")
+      PCHPatternsWhitelist.append("bindings/pyroot_experimental/PyROOT/PyROOT")
    else:
       PCHPatternsWhitelist.append("bindings/pyroot")
 
@@ -345,7 +345,7 @@ def copyLinkDefs(rootSrcDir, outdir):
    wildcards = (os.path.join("*", "inc", "*LinkDef*.h"),
                 os.path.join("*", "*", "inc", "*LinkDef*.h"),
                 os.path.join("*", "*", "inc", "*" , "*LinkDef*.h"),
-                os.path.join("*", "*", "PyROOT", "inc", "*LinkDef*.h")) # Exp PyROOT
+                os.path.join("*", "*", "PyROOT", "PyROOT", "inc", "*LinkDef*.h")) # Exp PyROOT
    linkDefNames = []
    for wildcard in wildcards:
       linkDefNames += glob.glob(wildcard)
