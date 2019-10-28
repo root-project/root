@@ -85,7 +85,7 @@ public:
    // required virtual destructor for correct cleanup at the end
    virtual ~RWebDisplayHandle() = default;
 
-   std::string GetUrl() const { return fUrl; }
+   std::string GetUrl(int UNUSED) const { return fUrl; }
 
    static std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args);
 
