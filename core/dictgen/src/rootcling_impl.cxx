@@ -4195,6 +4195,7 @@ int RootClingMain(int argc,
          remove((moduleCachePath + llvm::sys::path::get_separator() + "Cling_Runtime_Extra.pcm").str().c_str());
          remove((moduleCachePath + llvm::sys::path::get_separator() + "libc.pcm").str().c_str());
          remove((moduleCachePath + llvm::sys::path::get_separator() + "std.pcm").str().c_str());
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "cuda.pcm").str().c_str());
          remove((moduleCachePath + llvm::sys::path::get_separator() + "ROOT_Config.pcm").str().c_str());
          remove((moduleCachePath + llvm::sys::path::get_separator() + "ROOT_Rtypes.pcm").str().c_str());
          remove((moduleCachePath + llvm::sys::path::get_separator() + "ROOT_Foundation_C.pcm").str().c_str());
