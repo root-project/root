@@ -25,6 +25,7 @@ public:
     PyObject* CreateLowLevelView(type**, Py_ssize_t* shape = nullptr)
 
 CPPYY_DECL_VIEW_CREATOR(bool);
+CPPYY_DECL_VIEW_CREATOR(signed char);
 CPPYY_DECL_VIEW_CREATOR(unsigned char);
 CPPYY_DECL_VIEW_CREATOR(short);
 CPPYY_DECL_VIEW_CREATOR(unsigned short);
