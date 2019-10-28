@@ -418,9 +418,7 @@ Double_t TMVA::MethodMLP::CalculateEstimator( Types::ETreeType treeType, Int_t i
    //if      (DoRegression()) estimator = TMath::Sqrt(estimator/Float_t(nEvents));
    //else if (DoMulticlass()) estimator = TMath::Sqrt(estimator/Float_t(nEvents));
    //else                     estimator = estimator*0.5/Float_t(nEvents);
-   if      (DoRegression()) estimator = estimator/Float_t(sumOfWeights);
-   else if (DoMulticlass()) estimator = estimator/Float_t(sumOfWeights);
-   else                     estimator = estimator/Float_t(sumOfWeights);
+   estimator = estimator/Float_t(sumOfWeights);
 
 
    //if (fUseRegulator) estimator+=fPrior/Float_t(nEvents);  //zjh
