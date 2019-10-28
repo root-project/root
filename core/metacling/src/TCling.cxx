@@ -1269,18 +1269,20 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
 
    if (fCxxModulesEnabled) {
 #ifdef R__WIN32
-      const char EnvPathDelimiter = ';';
+      constexpr char kEnvPathDelimiter = ';';
 #else
-      const char EnvPathDelimiter = ':';
+      constexpr char kEnvPathDelimiter = ':';
 #endif // R__WIN32
-      auto GetEnvVarPath = [EnvPathDelimiter](const std::string &EnvVar,
-                                              std::vector<std::string> &Paths) {
+      // kEnvPathDelimiter does not need to be captured as it's a constant expr.
+      // MSVC gets it wrong, so provide copy-capture as fallback.
+      auto GetEnvVarPath = [=](const std::string &EnvVar,
+                              std::vector<std::string> &Paths) {
          llvm::Optional<std::string> EnvOpt = llvm::sys::Process::GetEnv(EnvVar);
          if (EnvOpt.hasValue()) {
             StringRef Env(*EnvOpt);
             while (!Env.empty()) {
                StringRef Arg;
-               std::tie(Arg, Env) = Env.split(EnvPathDelimiter);
+               std::tie(Arg, Env) = Env.split(kEnvPathDelimiter);
                if (std::find(Paths.begin(), Paths.end(), Arg.str()) == Paths.end())
                   Paths.push_back(Arg.str());
             }
@@ -1296,7 +1298,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       //GetEnvVarPath("LD_LIBRARY_PATH", Paths);
       std::string EnvVarPath;
       for (const std::string& P : Paths)
-         EnvVarPath += P + EnvPathDelimiter;
+         EnvVarPath += P + kEnvPathDelimiter;
       // FIXME: We should make cling -fprebuilt-module-path work.
       gSystem->Setenv("CLING_PREBUILT_MODULE_PATH", EnvVarPath.c_str());
    }
