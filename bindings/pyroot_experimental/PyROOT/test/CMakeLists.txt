@@ -8,8 +8,8 @@
 ROOT_ADD_PYUNITTEST(pyroot_root_module root_module.py)
 
 # General pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_pretty_printing pretty_printing.py ${PYTESTS_WILLFAIL})
-ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface array_interface.py ${PYTESTS_WILLFAIL})
+ROOT_ADD_PYUNITTEST(pyroot_pyz_pretty_printing pretty_printing.py)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface array_interface.py)
 
 # TObject and subclasses pythonisations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tobject_contains tobject_contains.py)
@@ -79,7 +79,7 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_tobjstring_str_repr tobjstring_str_repr.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tobjstring_comparisonops tobjstring_comparisonops.py)
 
 # RVec and subclasses pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_rvec_asrvec rvec_asrvec.py ${PYTESTS_WILLFAIL})
+ROOT_ADD_PYUNITTEST(pyroot_pyz_rvec_asrvec rvec_asrvec.py)
 
 # RDataFrame and subclasses pythonizations
 if (dataframe)

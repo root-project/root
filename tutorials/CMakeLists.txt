@@ -484,10 +484,6 @@ if(ROOT_python_FOUND)
   set(pyroot-na49view-depends tutorial-pyroot-geometry-py)
   set(roofit-rf104_classfactory-depends tutorial-roofit-rf104_classfactory) #Race condition
 
-  #---Tutorials expected to fail in PyROOT experimental
-  set(pyexp_fail tutorial-vecops-vo004_SortAndSelect-py
-                 tutorial-vecops-vo005_Combinations-py)
-
   foreach(t ${pytutorials})
     list(FIND returncode_1 ${t} index)
     if(index EQUAL -1)
