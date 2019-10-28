@@ -1315,6 +1315,7 @@ bool CPyCppyy::name##ArrayPtrConverter::SetArg(                              \
 
 //----------------------------------------------------------------------------
 CPPYY_IMPL_ARRAY_CONVERTER(Bool,     c_bool,       bool,                 'b') // signed char
+CPPYY_IMPL_ARRAY_CONVERTER(SChar,    c_char,       signed char,          'b')
 CPPYY_IMPL_ARRAY_CONVERTER(UChar,    c_ubyte,      unsigned char,        'B')
 CPPYY_IMPL_ARRAY_CONVERTER(Short,    c_short,      short,                'h')
 CPPYY_IMPL_ARRAY_CONVERTER(UShort,   c_ushort,     unsigned short,       'H')
@@ -2589,6 +2590,9 @@ public:
     // pointer/array factories
         gf["bool*"] =                       (cf_t)+[](dims_t d) { return new BoolArrayConverter{d}; };
         gf["bool**"] =                      (cf_t)+[](dims_t d) { return new BoolArrayPtrConverter{d}; };
+        gf["const signed char[]"] =         (cf_t)+[](dims_t d) { return new SCharArrayConverter{d}; };
+        gf["signed char[]"] =               (cf_t)+[](dims_t d) { return new SCharArrayConverter{d}; };
+        gf["signed char**"] =               (cf_t)+[](dims_t d) { return new SCharArrayPtrConverter{d}; };
         gf["const unsigned char*"] =        (cf_t)+[](dims_t d) { return new UCharArrayConverter{d}; };
         gf["unsigned char*"] =              (cf_t)+[](dims_t d) { return new UCharArrayConverter{d}; };
         gf["UCharAsInt*"] =                 (cf_t)+[](dims_t d) { return new UCharArrayConverter{d}; };
@@ -2636,8 +2640,10 @@ public:
         gf["const TString&"] =              (cf_t)+[](long) { return new TStringConverter{}; };
         gf["nullptr_t"] =                   (cf_t)+[](dims_t) { return new NullptrConverter{}; };
         gf["const char*"] =                 (cf_t)+[](dims_t) { return new CStringConverter{}; };
+        gf["const signed char*"] =          gf["const char*"];
         gf["const char[]"] =                (cf_t)+[](dims_t) { return new CStringConverter{}; };
         gf["char*"] =                       (cf_t)+[](dims_t) { return new NonConstCStringConverter{}; };
+        gf["signed char*"] =                gf["char*"];
         gf["wchar_t*"] =                    (cf_t)+[](dims_t) { return new WCStringConverter{}; };
 // TODO: Figure out these char types (as well as char8_t coming in C++20) on all platforms; using wchar
 // isn't properly tested, but based on https://en.cppreference.com/w/cpp/language/types .

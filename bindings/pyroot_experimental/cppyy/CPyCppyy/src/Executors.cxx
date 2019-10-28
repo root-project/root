@@ -847,7 +847,7 @@ public:
         gf["const char*"] =                 (ef_t)+[]() { return new CStringExecutor{}; };
         gf["char*"] =                       (ef_t)+[]() { return new CStringExecutor{}; };
         gf["const signed char*"] =          (ef_t)+[]() { return new CStringExecutor{}; };
-        gf["signed char*"] =                (ef_t)+[]() { return new CStringExecutor{}; };
+        gf["signed char*"] =                gf["char*"];
         gf["wchar_t*"] =                    (ef_t)+[]() { return new WCStringExecutor{}; };
         gf["std::string"] =                 (ef_t)+[]() { return new STLStringExecutor{}; };
         gf["string"] =                      (ef_t)+[]() { return new STLStringExecutor{}; };
