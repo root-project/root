@@ -798,14 +798,9 @@ void TKDTree<Index, Value>::UpdateRange(Index inode, Value* point, Value range, 
       }
       return;
    }
-   if (point[fAxis[inode]]<=fValue[inode]){
-      //first examine the node that contains the point
-      UpdateRange(GetLeft(inode),point, range, res);
-      UpdateRange(GetRight(inode),point, range, res);
-   } else {
-      UpdateRange(GetLeft(inode),point, range, res);
-      UpdateRange(GetRight(inode),point, range, res);
-   }
+
+   UpdateRange(GetLeft(inode),point, range, res);
+   UpdateRange(GetRight(inode),point, range, res);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
