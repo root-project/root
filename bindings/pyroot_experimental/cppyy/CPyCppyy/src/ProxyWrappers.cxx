@@ -257,6 +257,20 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass)
             if (isTemplate) ((TemplateProxy*)attr)->AdoptTemplate(pycall);
             else ((TemplateProxy*)attr)->AdoptMethod(pycall);
             Py_DECREF(attr);
+
+        // for operator[]/() that returns by ref, also add __setitem__
+            if (setupSetItem) {
+                TemplateProxy* pysi = (TemplateProxy*)PyObject_GetAttrString(pyclass, const_cast<char*>("__setitem__"));
+                if (!pysi) {
+                     pysi = TemplateProxy_New(mtCppName, "__setitem__", pyclass);
+                     PyObject_SetAttrString(pyclass, const_cast<char*>("__setitem__"), (PyObject*)pysi);
+                }
+
+                if (isTemplate) pysi->AdoptTemplate(new CPPSetItem(scope, method));
+                else pysi->AdoptMethod(new CPPSetItem(scope, method));
+                Py_XDECREF(pysi);
+            }
+
         } else {
         // lookup method dispatcher and store method
             Callables_t& md = (*(cache.insert(
