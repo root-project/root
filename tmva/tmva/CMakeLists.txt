@@ -425,6 +425,7 @@ if(tmva-cpu)
   )
   target_include_directories(TMVA PRIVATE ${TBB_INCLUDE_DIRS})
   target_link_libraries(TMVA PRIVATE ${TBB_LIBRARIES})
+  set_target_properties(TMVA PROPERTIES COMPILE_FLAGS "${TBB_CXXFLAGS}")
 
   if(BLAS_FOUND)
     target_link_libraries(TMVA PRIVATE ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
