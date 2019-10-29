@@ -30,8 +30,8 @@ class RooFormulaVar : public RooAbsReal {
 public:
   // Constructors, assignment etc
   RooFormulaVar() { }
-  RooFormulaVar(const char *name, const char *title, const char* formula, const RooArgList& dependents);
-  RooFormulaVar(const char *name, const char *title, const RooArgList& dependents);
+  RooFormulaVar(const char *name, const char *title, const char* formula, const RooArgList& dependents, bool checkVariables = true);
+  RooFormulaVar(const char *name, const char *title, const RooArgList& dependents, bool checkVariables = true);
   RooFormulaVar(const RooFormulaVar& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooFormulaVar(*this,newname); }
 

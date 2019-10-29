@@ -489,19 +489,16 @@ RooAbsData* RooAbsData::reduce(const RooArgSet& varSubset, const char* cut)
 {
   // Make sure varSubset doesn't contain any variable not in this dataset
   RooArgSet varSubset2(varSubset) ;
-  TIterator* iter = varSubset.createIterator() ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)iter->Next())) {
+  for (const auto arg : varSubset) {
     if (!_vars.find(arg->GetName())) {
       coutW(InputArguments) << "RooAbsData::reduce(" << GetName() << ") WARNING: variable "
              << arg->GetName() << " not in dataset, ignored" << endl ;
       varSubset2.remove(*arg) ;
     }
   }
-  delete iter ;
 
   if (cut && strlen(cut)>0) {
-    RooFormulaVar cutVar(cut,cut,*get()) ;
+    RooFormulaVar cutVar(cut, cut, *get(), false);
     return reduceEng(varSubset2,&cutVar,0,0,2000000000,kFALSE) ;
   }
   return reduceEng(varSubset2,0,0,0,2000000000,kFALSE) ;
@@ -1337,12 +1334,11 @@ TH1 *RooAbsData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char
   }
 
   // Create selection formula if selection cuts are specified
-  RooFormula* select = 0;
-  if(0 != cuts && strlen(cuts)) {
-    select=new RooFormula(cuts,cuts,_vars);
+  std::unique_ptr<RooFormula> select;
+  if (cuts != nullptr && strlen(cuts) > 0) {
+    select.reset(new RooFormula(cuts, cuts, _vars, false));
     if (!select || !select->ok()) {
       coutE(InputArguments) << ClassName() << "::" << GetName() << ":fillHistogram: invalid cuts \"" << cuts << "\"" << endl;
-      delete select;
       return 0 ;
     }
   }
@@ -1469,8 +1465,6 @@ TH1 *RooAbsData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char
     //cout << "RooTreeData::fillHistogram() bin = " << bin << " weight() = " << weight() << " we = " << we << endl ;
 
   }
-
-  if(0 != select) delete select;
 
   return hist;
 }
