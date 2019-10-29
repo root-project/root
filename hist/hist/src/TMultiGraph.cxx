@@ -1644,7 +1644,10 @@ void TMultiGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    TAxis *xaxis = GetXaxis();
    TAxis *yaxis = GetYaxis();
 
-   if (xaxis) xaxis->SaveAttributes(out, "multigraph","->GetXaxis()");
+   if (xaxis) {
+     out<<"   multigraph->GetXaxis()->SetLimits("<<xaxis->GetXmin()<<", "<<xaxis->GetXmax()<<");"<<std::endl;
+     xaxis->SaveAttributes(out, "multigraph","->GetXaxis()");
+   }
    if (yaxis) yaxis->SaveAttributes(out, "multigraph","->GetYaxis()");
 }
 
