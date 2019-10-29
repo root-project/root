@@ -952,7 +952,12 @@ class TestClassDATATYPES:
         def null_test(null):
             c.m_voidp = null
             assert c.m_voidp is self.nullptr
-        map(null_test, [0, None, self.nullptr])
+        if self.exp_pyroot:
+            # New Cppyy does not allow assignment of pointer type to None
+            null_list = [0, self.nullptr]
+        else:
+            null_list = [0, None, self.nullptr]
+        map(null_test, null_list)
 
         c.m_voidp = c2
         address_equality_test(c.m_voidp,     c2)
