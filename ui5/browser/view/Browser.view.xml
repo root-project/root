@@ -16,20 +16,20 @@
 
           <l:layoutData><l:SplitterLayoutData size="310px" resizable="true"/></l:layoutData>
 
-            <Toolbar>
-              <layoutData><l:SplitterLayoutData size="32px" resizable="false"/></layoutData>
-              <Button icon="sap-icon://synchronize" type="Transparent"
-                      tooltip="Refresh" press="onRealoadPress"/>
-              <Button icon="sap-icon://log" type="Transparent"
-                      tooltip="Quit ROOT session" press="onQuitRootPress"/>
-              <Button icon="sap-icon://settings" type="Transparent" tooltip="Settings" press="onSettingPress"/>
-              <ToolbarSpacer/>
-              <SearchField liveChange="onSearch"/>
-            </Toolbar>
+          <Toolbar>
+            <layoutData><l:SplitterLayoutData size="32px" resizable="false"/></layoutData>
+            <Button icon="sap-icon://synchronize" type="Transparent"
+                    tooltip="Refresh" press="onRealoadPress"/>
+            <Button icon="sap-icon://log" type="Transparent"
+                    tooltip="Quit ROOT session" press="onQuitRootPress"/>
+            <Button icon="sap-icon://settings" type="Transparent" tooltip="Settings" press="onSettingPress"/>
+            <ToolbarSpacer/>
+            <SearchField liveChange="onSearch"/>
+          </Toolbar>
 
-            <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan">
-              <layoutData><l:SplitterLayoutData size="32px" resizable="false"/></layoutData>
-            </Breadcrumbs>
+          <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan">
+            <layoutData><l:SplitterLayoutData size="32px" resizable="false"/></layoutData>
+          </Breadcrumbs>
 
           <t:TreeTable
                   id="treeTable"
