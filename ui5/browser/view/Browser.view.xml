@@ -24,9 +24,13 @@
       </Page>
     </detailPages>
     <masterPages id="myMaster">
-      <Page title="" showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false">
-        <Toolbar>
-          <layoutData><l:SplitterLayoutData size="35px" resizable="false"/></layoutData>
+      <Page title="" showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false" enableScrolling="false">
+        <FlexBox height="100%" direction="Column">
+          <items>
+          <Toolbar>
+            <layoutData>
+               <FlexItemData baseSize="40px"/>
+            </layoutData>
           <Button icon="sap-icon://synchronize" type="Transparent"
                   tooltip="Refresh" press="onRealoadPress"/>
           <Button icon="sap-icon://log" type="Transparent"
@@ -36,9 +40,17 @@
           <SearchField liveChange="onSearch"/>
         </Toolbar>
         <Toolbar>
-          <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan">
-          </Breadcrumbs>
+          <layoutData>
+            <FlexItemData baseSize="30px"/>
+          </layoutData>
+
+         <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan">
+           </Breadcrumbs>
         </Toolbar>
+        <VBox id="treeTableBox">
+          <layoutData>
+            <FlexItemData growFactor="1"/>
+          </layoutData>
         <t:TreeTable
                 id="treeTable"
                 columnHeaderVisible="true"
@@ -49,7 +61,11 @@
                 visibleRowCountMode="Auto"
                 showColumnVisibilityMenu="true"
                 rows="{/nodes}">
-        </t:TreeTable>
+
+          </t:TreeTable>
+          </VBox>
+          </items>
+        </FlexBox>
       </Page>
     </masterPages>
   </SplitApp>

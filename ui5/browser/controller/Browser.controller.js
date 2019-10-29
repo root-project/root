@@ -63,6 +63,7 @@ sap.ui.define(['sap/ui/core/Component',
                node.className = elem.className
             };
 
+
             var t = this.getView().byId("treeTable");
 
             t.setModel(this.model);
@@ -765,9 +766,21 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       onAfterRendering: function() {
+
+         var dd = this.getView().byId("treeTableBox").$();
+         // var dd = $("#TopBrowserId--treeTableBox");
+         console.log('found', dd.attr('id'));
+
+         dd.children().first().css('flex-grow',1);
+
+         $("#TopBrowserId--treeTableBox").select(":first-child").css('flex-grow',1);
+
+
          this.renderingDone = true;
 
          this.checkRequestMsg();
+
+
       },
 
       checkRequestMsg: function() {
