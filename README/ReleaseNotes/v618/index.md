@@ -780,3 +780,4 @@ of large number histograms and in the presence of large number of directories.
 ### TTree Libraries
 
 * Prevent a noticeable memory leak when reading uncompressed TTree.
+* Correct the support (in the schema evolution code) for a branch is created from a TFolder (or if the top level branch name contains a non trailing dot, case which is 'inadvertently confused with the TFolder case).
