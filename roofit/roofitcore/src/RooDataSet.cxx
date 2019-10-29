@@ -1862,11 +1862,9 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
   if (indexCat) {
     // Copy dynamically defined types from new data set to indexCat in original list
     RooCategory* origIndexCat = (RooCategory*) variables.find(indexCatName) ;
-    TIterator* tIter = indexCat->typeIterator() ;
-    RooCatType* type = 0;
-      while ((type=(RooCatType*)tIter->Next())) {
-	origIndexCat->defineType(type->GetName(),type->getVal()) ;
-      }
+    for (const auto type : *indexCat) {
+      origIndexCat->defineType(type->GetName(), type->getVal());
+    }
   }
   oocoutI((TObject*)0,DataHandling) << "RooDataSet::read: read " << data->numEntries()
 				    << " events (ignored " << outOfRange << " out of range events)" << endl;
