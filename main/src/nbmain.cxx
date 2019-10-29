@@ -133,16 +133,16 @@ static bool CreateJupyterConfig(string dest, string rootbin, string rootlib, str
       out << "rootbin = '" << rootbin << "'" << endl;
       out << "rootlib = '" << rootlib << "'" << endl;
 #ifdef WIN32
-      out << "jsrootsys = '" << rootdata << "\\js\\" << "'" << endl;
+      string jsrootsys = rootdata + "\\js\\";
       out << "os.environ['PYTHONPATH']      = '%s' % rootlib + ':' + os.getenv('PYTHONPATH', '')" << endl;
       out << "os.environ['PATH']            = '%s:%s\\bin' % (rootbin,rootbin) + ':' + '%s' % rootlib + ':' + os.getenv('PATH', '')" << endl;
 #else
-      out << "jsrootsys = '" << rootdata << "/js/" << "'" << endl;
+      string jsrootsys = rootdata + "/js/";
       out << "os.environ['PYTHONPATH']      = '%s' % rootlib + ':' + os.getenv('PYTHONPATH', '')" << endl;
       out << "os.environ['PATH']            = '%s:%s/bin' % (rootbin,rootbin) + ':' + os.getenv('PATH', '')" << endl;
       out << "os.environ['LD_LIBRARY_PATH'] = '%s' % rootlib + ':' + os.getenv('LD_LIBRARY_PATH', '')" << endl;
 #endif
-      out << "c.NotebookApp.extra_static_paths = ['%s'] % jsrootsys" << endl;
+      out << "c.NotebookApp.extra_static_paths = ['" << jsrootsys << "']" << endl;
       out.close();
       return true;
    }
