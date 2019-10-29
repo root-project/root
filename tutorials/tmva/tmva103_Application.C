@@ -16,7 +16,7 @@ using namespace TMVA::Experimental;
 void tmva103_Application()
 {
    // Load BDT model remotely from a webserver
-   RBDT<> bdt("myBDT", "https://root.cern/files/tmva101.root");
+   RBDT<> bdt("myBDT", "http://root.cern/files/tmva101.root");
 
    // Apply model on a single input
    auto y1 = bdt.Compute({1.0, 2.0, 3.0, 4.0});
