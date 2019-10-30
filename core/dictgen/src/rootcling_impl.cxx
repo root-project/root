@@ -3707,6 +3707,10 @@ static llvm::cl::opt<bool>
 gOptCxxModule("cxxmodule",
              llvm::cl::desc("Generate a C++ module."),
              llvm::cl::cat(gRootclingOptions));
+static llvm::cl::list<std::string>
+gOptModuleMapFiles("moduleMapFile",
+                   llvm::cl::desc("Specify a C++ modulemap file."),
+                   llvm::cl::cat(gRootclingOptions));
 // FIXME: Figure out how to combine the code of -umbrellaHeader and inlineInputHeader
 static llvm::cl::opt<bool>
 gOptUmbrellaInput("umbrellaHeader",
@@ -3964,6 +3968,14 @@ int RootClingMain(int argc,
       }
    }
 
+   if (!gOptModuleMapFiles.empty() && !gOptCxxModule) {
+      ROOT::TMetaUtils::Error("", "Option %s can be used only when option %s is specified.\n",
+                              gOptModuleMapFiles.ArgStr.str().c_str(),
+                              gOptCxxModule.ArgStr.str().c_str());
+      // FIXME: Show the output of -help.
+      return 1;
+   }
+
    // Set the default verbosity
    ROOT::TMetaUtils::GetErrorIgnoreLevel() = gOptVerboseLevel;
    if (gOptVerboseLevel == v4)
@@ -4163,6 +4175,10 @@ int RootClingMain(int argc,
       // clang correctly once it sees this flag.
       clingArgsInterpreter.push_back("-fmodules");
       clingArgsInterpreter.push_back("-fno-implicit-module-maps");
+
+      for (const std::string &modulemap : gOptModuleMapFiles)
+         clingArgsInterpreter.push_back("-fmodule-map-file=" + modulemap);
+
       clingArgsInterpreter.push_back("-fmodule-map-file=" +
                                      ROOT::FoundationUtils::GetIncludeDir() +
                                      "/module.modulemap");
