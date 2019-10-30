@@ -124,15 +124,10 @@ static bool InstallNbFiles(string source, string dest)
 /// Creates the Jupyter notebook configuration file that sets the
 /// necessary environment.
 
-static bool CreateJupyterConfig(string dest, string rootbin, string rootlib, int argc, char **argv)
+static bool CreateJupyterConfig(string dest, string rootbin, string rootlib)
 {
    string jupyconfig = dest + pathsep + JUPYTER_CONFIG;
    ofstream out(jupyconfig, ios::trunc);
-   string ip = "*";
-   for (int n=1;n<argc;++n) {
-      if (!strcmp(argv[n],"--localhost")) ip = "127.0.0.1";
-      if (!strncmp(argv[n], "--ip=", 5)) ip = argv[n] + 5;
-   }
    if (out.is_open()) {
       out << "import os" << endl;
       out << "rootbin = '" << rootbin << "'" << endl;
@@ -145,7 +140,7 @@ static bool CreateJupyterConfig(string dest, string rootbin, string rootlib, int
       out << "os.environ['PATH']            = '%s:%s/bin' % (rootbin,rootbin) + ':' + os.getenv('PATH', '')" << endl;
       out << "os.environ['LD_LIBRARY_PATH'] = '%s' % rootlib + ':' + os.getenv('LD_LIBRARY_PATH', '')" << endl;
 #endif
-      out << "c.NotebookApp.ip = '" << ip << "'" << endl;
+      out << "c.NotebookApp.ip = '*'" << endl;
       out.close();
       return true;
    }
@@ -192,12 +187,12 @@ int main(int argc, char **argv)
    string homedir(getenv("HOME"));
 #endif
    int inst = CheckNbInstallation(homedir);
-   if ((inst == -1) || (argc > 1)) {
+   if (inst == -1) {
       // The etc directory contains the ROOT notebook files to install
       string source(rootetc + pathsep + NB_CONF_DIR);
       string dest(homedir + pathsep + ROOTNB_DIR);
       bool res = InstallNbFiles(source, dest) &&
-                 CreateJupyterConfig(dest, rootbin, rootlib, argc, argv) &&
+                 CreateJupyterConfig(dest, rootbin, rootlib) &&
                  CreateStamp(dest);
       if (!res) return 1;
    }
@@ -210,8 +205,15 @@ int main(int argc, char **argv)
    putenv((char *)jupyconfdir.c_str());
    putenv((char *)jupypathdir.c_str());
 
+   char **jargv = new char* [argc + 2];
+   jargv[0] = (char *) JUPYTER_CMD;
+   jargv[1] = (char *) NB_OPT;
+   for (int n=1;n<argc;++n)
+      jargv[n+1] = argv[n];
+   jargv[argc+1] = nullptr;
+
    // Execute IPython notebook
-   execlp(JUPYTER_CMD, JUPYTER_CMD, NB_OPT, NULL);
+   execvp(JUPYTER_CMD, jargv);
 
    // Exec failed
    fprintf(stderr,
