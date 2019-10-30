@@ -4,7 +4,7 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-#---Check for installed packages depending on the build options/components eamnbled -
+#---Check for installed packages depending on the build options/components enabled --
 include(ExternalProject)
 include(FindPackageHandleStandardArgs)
 
