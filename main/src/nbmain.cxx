@@ -192,7 +192,7 @@ int main(int argc, char **argv)
    string homedir(getenv("HOME"));
 #endif
    int inst = CheckNbInstallation(homedir);
-   if (inst == -1) {
+   if ((inst == -1) || (argc > 1)) {
       // The etc directory contains the ROOT notebook files to install
       string source(rootetc + pathsep + NB_CONF_DIR);
       string dest(homedir + pathsep + ROOTNB_DIR);
