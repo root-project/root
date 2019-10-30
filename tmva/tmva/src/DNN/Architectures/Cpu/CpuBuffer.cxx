@@ -54,16 +54,18 @@ TCpuBuffer<AReal> TCpuBuffer<AReal>::GetSubBuffer(size_t offset, size_t size) co
 
 //______________________________________________________________________________
 template <typename AReal>
-void TCpuBuffer<AReal>::CopyFrom(TCpuBuffer &other)
+void TCpuBuffer<AReal>::CopyFrom(const TCpuBuffer &other)
 {
-   std::swap(*this->fBuffer, *other.fBuffer);
+   //std::copy*this->fBuffer, *other.fBuffer);
+   std::copy( *other.fBuffer, *other.fBuffer+fSize, *this->fBuffer);
 }
 
 //______________________________________________________________________________
 template <typename AReal>
-void TCpuBuffer<AReal>::CopyTo(TCpuBuffer &other)
+void TCpuBuffer<AReal>::CopyTo(TCpuBuffer &other) const
 {
-   std::swap(*this->fBuffer, *other.fBuffer);
+   std::copy( *this->fBuffer, *this->fBuffer+fSize, *other.fBuffer);
+   //std::swap(*this->fBuffer, *other.fBuffer);
 }
 
 //______________________________________________________________________________

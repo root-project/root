@@ -90,10 +90,10 @@ public:
 
     /** Copy data from another buffer. No real copying is performed, only the
      *  data pointers are swapped. */
-    void CopyFrom(TCpuBuffer &);
+    void CopyFrom(const TCpuBuffer &);
     /** Copy data to another buffer. No real copying is performed, only the
      *  data pointers are swapped. */
-    void CopyTo(TCpuBuffer &);
+    void CopyTo(TCpuBuffer &) const;
 
     /**
      * copy pointer from an external
