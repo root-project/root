@@ -124,10 +124,15 @@ static bool InstallNbFiles(string source, string dest)
 /// Creates the Jupyter notebook configuration file that sets the
 /// necessary environment.
 
-static bool CreateJupyterConfig(string dest, string rootbin, string rootlib)
+static bool CreateJupyterConfig(string dest, string rootbin, string rootlib, int argc, char **argv)
 {
    string jupyconfig = dest + pathsep + JUPYTER_CONFIG;
    ofstream out(jupyconfig, ios::trunc);
+   string ip = "*";
+   for (int n=1;n<argc;++n) {
+      if (!strcmp(argv[n],"--localhost")) ip = "127.0.0.1";
+      if (!strncmp(argv[n], "--ip=", 5)) ip = argv[n] + 5;
+   }
    if (out.is_open()) {
       out << "import os" << endl;
       out << "rootbin = '" << rootbin << "'" << endl;
@@ -140,11 +145,11 @@ static bool CreateJupyterConfig(string dest, string rootbin, string rootlib)
       out << "os.environ['PATH']            = '%s:%s/bin' % (rootbin,rootbin) + ':' + os.getenv('PATH', '')" << endl;
       out << "os.environ['LD_LIBRARY_PATH'] = '%s' % rootlib + ':' + os.getenv('LD_LIBRARY_PATH', '')" << endl;
 #endif
-      out << "c.NotebookApp.ip = '*'" << endl;
+      out << "c.NotebookApp.ip = '" << ip << "'" << endl;
       out.close();
       return true;
    }
-   else { 
+   else {
       fprintf(stderr,
               "Error installing notebook configuration files -- cannot create IPython config file at %s\n",
               jupyconfig.c_str());
@@ -174,7 +179,7 @@ static bool CreateStamp(string dest)
 ////////////////////////////////////////////////////////////////////////////////
 /// Spawn a Jupyter notebook customised by ROOT.
 
-int main()
+int main(int argc, char **argv)
 {
    string rootbin(TROOT::GetBinDir().Data());
    string rootlib(TROOT::GetLibDir().Data());
@@ -192,7 +197,7 @@ int main()
       string source(rootetc + pathsep + NB_CONF_DIR);
       string dest(homedir + pathsep + ROOTNB_DIR);
       bool res = InstallNbFiles(source, dest) &&
-                 CreateJupyterConfig(dest, rootbin, rootlib) &&
+                 CreateJupyterConfig(dest, rootbin, rootlib, argc, argv) &&
                  CreateStamp(dest);
       if (!res) return 1;
    }
