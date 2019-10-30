@@ -45,6 +45,7 @@
 #@hascefweb@ R__HAS_CEFWEB  /**/
 #@hasqt5webengine@ R__HAS_QT5WEB  /**/
 #@hasdavix@ R__HAS_DAVIX  /**/
+#@hasdataframe@ R__HAS_DATAFRAME /**/
 
 #if defined(R__HAS_VECCORE) && defined(R__HAS_VC)
 #ifndef VECCORE_ENABLE_VC

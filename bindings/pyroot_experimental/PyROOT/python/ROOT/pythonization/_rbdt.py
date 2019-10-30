@@ -9,8 +9,15 @@
 ################################################################################
 
 from ROOT import pythonization
-from libROOTPython import AsRVec, AsRTensor
+from libROOTPython import AsRVec
 import numpy as np
+
+
+try:
+    from libROOTPython import AsRTensor
+    has_rtensor = True
+except:
+    has_rtensor = False
 
 
 def Compute(self, x):
@@ -37,7 +44,7 @@ def pythonize_rbdt(klass, name):
     # klass: class to be pythonized
     # name: name of the class
 
-    if name.startswith("TMVA::Experimental::RBDT"):
+    if name.startswith("TMVA::Experimental::RBDT") and has_rtensor:
         klass._OriginalCompute = klass.Compute
         klass.Compute = Compute
 
