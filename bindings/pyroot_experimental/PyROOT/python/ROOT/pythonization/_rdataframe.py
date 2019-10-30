@@ -9,7 +9,6 @@
 ################################################################################
 
 from ROOT import pythonization
-from libROOTPython import MakeNumpyDataFrame
 
 # functools.partial does not add the self argument
 # this is done by functools.partialmethod which is
@@ -163,5 +162,9 @@ def pythonize_rdataframe(klass, name):
     return True
 
 # Add MakeNumpyDataFrame feature as free function to the ROOT module
-import cppyy
-cppyy.gbl.ROOT.RDF.MakeNumpyDataFrame = MakeNumpyDataFrame
+try:
+    from libROOTPython import MakeNumpyDataFrame
+    import cppyy
+    cppyy.gbl.ROOT.RDF.MakeNumpyDataFrame = MakeNumpyDataFrame
+except:
+    pass
