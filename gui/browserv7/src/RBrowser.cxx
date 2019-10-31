@@ -162,16 +162,23 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
    auto elem = fBrowsable.GetElement(item_path);
    if (!elem) return ""s;
 
-   // TODO: kind of content can be provided by client - depending which element is active
-   // if none elements are active, one could configure some rules
+   // TODO: one can send id of editor or canvas to be sure when sending back reply
 
-   auto img = elem->GetContent("image64");
-   if (!img.empty())
-      return "FIMG:"s + img;
+   if (drawingOptions == "$$$image$$$") {
+      auto img = elem->GetContent("image64");
+      if (!img.empty())
+         return "FIMG:"s + img;
+      else
+         return ""s;
+   }
 
-   auto code = elem->GetContent("text");
-   if (!code.empty())
-      return "FREAD:"s + code;
+   if (drawingOptions == "$$$editor$$$") {
+      auto code = elem->GetContent("text");
+      if (!code.empty())
+         return "FREAD:"s + code;
+      else
+         return ""s;
+   }
 
    auto canv = GetActiveCanvas();
    if (canv) {
@@ -449,13 +456,10 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
 
       std::string reply;
 
-      if (arg.at(8) != '[') {
-         reply = ProcessDblClick(arg.substr(7), "");
-      } else {
-         auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
-         if (arr && (arr->size() > 1))
-            reply = ProcessDblClick(arr->at(0), arr->at(1));
-      }
+      auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
+      if (arr && (arr->size() == 2))
+         reply = ProcessDblClick(arr->at(0), arr->at(1));
+
       if (!reply.empty())
          fWebWindow->Send(connid, reply);
 
