@@ -456,9 +456,12 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
             // For mergeable objects we add the names in a local hashlist handling them
             // again (see above)
             if (cl->GetMerge() || cl->InheritsFrom(TDirectory::Class()) ||
-               (cl->IsTObject() &&
-               (cl->GetMethodWithPrototype("Merge", "TCollection*,TFileMergeInfo*") ||
-                cl->GetMethodWithPrototype("Merge", "TCollection*"))))
+               (cl->IsTObject() && !cl->IsLoaded() &&
+                 /* If it has a dictionary and GetMerge() is nullptr then we already know the answer
+                    to the next question is 'no, if we were to ask we would useless trigger
+                    auto-parsing */
+                 (cl->GetMethodWithPrototype("Merge", "TCollection*,TFileMergeInfo*") ||
+                  cl->GetMethodWithPrototype("Merge", "TCollection*"))))
                allNames.Add(new TObjString(key->GetName()));
 
             if (fNoTrees && cl->InheritsFrom(R__TTree_Class)) {
