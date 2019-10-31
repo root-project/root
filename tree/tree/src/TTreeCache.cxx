@@ -2018,6 +2018,19 @@ Int_t TTreeCache::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 
 void TTreeCache::ResetCache()
 {
+   for (Int_t i = 0; i < fNbranches; ++i) {
+      TBranch *b = (TBranch*)fBranches->UncheckedAt(i);
+      if (b->GetDirectory()==0 || b->TestBit(TBranch::kDoNotProcess))
+         continue;
+      if (b->GetDirectory()->GetFile() != fFile)
+         continue;
+      b->fCacheInfo.Reset();
+   }
+   fEntryCurrent = -1;
+   fEntryNext = -1;
+   fCurrentClusterStart = -1;
+   fNextClusterStart = -1;
+
    TFileCacheRead::Prefetch(0,0);
 
    if (fEnablePrefetching) {
