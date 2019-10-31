@@ -69,7 +69,7 @@ static inline PyObject* add_template(PyObject* pyclass,
 }
 
 //----------------------------------------------------------------------------
-static int enum_setattro(PyObject* pyclass, PyObject* pyname, PyObject* pyval)
+static int enum_setattro(PyObject* /* pyclass */, PyObject* /* pyname */, PyObject* /* pyval */)
 {
 // Helper to make enums read-only.
     PyErr_SetString(PyExc_TypeError, "enum values are read-only");
