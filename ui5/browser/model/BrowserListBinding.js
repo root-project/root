@@ -23,53 +23,54 @@ sap.ui.define([
            for (var i = args.begin; i < args.end; i++)
               aNodes.push(nodes && nodes[i] ? nodes[i] : null);
 
-           console.log("root.model.hListBinding#getNodes(" + iStartIndex + ", " + iLength + ", " + iThreshold + ") res = " + aNodes.length);
+           // console.log("root.model.hListBinding#getNodes(" + iStartIndex + ", " + iLength + ", " + iThreshold + ") res = " + aNodes.length);
 
            return aNodes;
         },
 
         getContextByIndex: function(iIndex) {
-            Log.warning("root.model.hListBinding#getContextByIndex(" + iIndex + ")");
-            return this.getModel().getContext(this.getPath() + "/" + iIndex);
+           // Log.warning("root.model.hListBinding#getContextByIndex(" + iIndex + ")");
+           return this.getModel().getContext(this.getPath() + "/" + iIndex);
         },
 
         findNode: function() {
-            Log.warning("root.model.hListBinding#findNode()");
+           // Log.warning("root.model.hListBinding#findNode()");
         },
 
         nodeHasChildren: function(oNode) {
            // Log.warning("root.model.hListBinding#nodeHasChildren(" + oNode.type + ")");
-            return oNode.type === "folder";
+           return oNode.type === "folder";
         },
 
         isExpanded: function(iIndex) {
             var elem = this.getModel().getElementByIndex(iIndex);
             var res = elem ? !!elem.expanded : false;
 
-            Log.warning("root.model.hListBinding#isExpanded(" + iIndex + ") res = " + res + "  iselem = " + (elem ? elem._name : "---"));
+            // Log.warning("root.model.hListBinding#isExpanded(" + iIndex + ") res = " + res + "  iselem = " + (elem ? elem._name : "---"));
 
             return res;
         },
 
         expand: function(iIndex) {
-            Log.warning("root.model.hListBinding#expand(" + iIndex + ")");
+           // Log.warning("root.model.hListBinding#expand(" + iIndex + ")");
         },
 
         collapse: function(iIndex) {
-            Log.warning("root.model.hListBinding#collapse(" + iIndex + ")");
+           // Log.warning("root.model.hListBinding#collapse(" + iIndex + ")");
         },
 
         collapseToLevel: function(lvl) {
-           console.log('root.model.hListBinding#collapseToLevel', lvl);
+           // console.log('root.model.hListBinding#collapseToLevel', lvl);
         },
 
         expandToLevel: function(lvl) {
-           console.log('root.model.hListBinding#expandToLevel', lvl);
+           // console.log('root.model.hListBinding#expandToLevel', lvl);
         },
 
         // called by the TreeTable when a node is expanded/collapsed
         toggleIndex: function(iIndex) {
-            console.log("root.model.hListBinding#toggleIndex(" + iIndex + ")");
+            // console.log("root.model.hListBinding#toggleIndex(" + iIndex + ")");
+
             if (this.getModel().toggleNode(iIndex))
                this.checkUpdate(true);
 
@@ -77,13 +78,13 @@ sap.ui.define([
         },
 
         getSelectedIndex: function() {
-            Log.warning("root.model.hListBinding#getSelectedIndex(" + JSON.stringify(arguments) + ")");
+           // Log.warning("root.model.hListBinding#getSelectedIndex(" + JSON.stringify(arguments) + ")");
         },
 
         isIndexSelectable: function() {
-            Log.warning("root.model.hListBinding#isIndexSelectable(" + JSON.stringify(arguments) + ")");
+           // Log.warning("root.model.hListBinding#isIndexSelectable(" + JSON.stringify(arguments) + ")");
         },
-        
+
         attachSelectionChanged: function() {
            // dummy for compatibility with newest 1.70.0 version
         }

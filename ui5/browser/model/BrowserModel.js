@@ -125,7 +125,7 @@ sap.ui.define([
               if (!curr.childs) {
                  // request childs for current element
                  // TODO: we do not know child index, but simply can suply search child as argument
-                 if (!this.fullModel && curr.nchilds) {
+                 if (!this.fullModel && curr.nchilds && (curr.nchilds > 0)) {
                     curr.expanded = true;
                     this.reset_nodes = true;
                     this._expanding_path = path;
@@ -371,7 +371,8 @@ sap.ui.define([
                  // add new request - can we check if only special part of childs is required?
 
                  // TODO: probably one could guess more precise request
-                 pthis.submitRequest(elem, path);
+                 if ((elem.nchilds === undefined) || (elem.nchilds !== 0))
+                   pthis.submitRequest(elem, path);
 
                  return;
               }
