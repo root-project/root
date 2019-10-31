@@ -33,7 +33,7 @@ void *RTObjectHolder::TakeObject()
    if (fOwner) {
       fObj = nullptr;
       fOwner = false;
-   } else if (fObj && !fObj->IsA()->InheritsFrom("TDirectory") && !fObj->IsA()->InheritsFrom("TFile")) {
+   } else if (fObj && !fObj->IsA()->InheritsFrom("TDirectory") && !fObj->IsA()->InheritsFrom("TTree")) {
       res = fObj->Clone();
       TH1 *h1 = dynamic_cast<TH1 *>(res);
       if (h1) h1->SetDirectory(nullptr);
