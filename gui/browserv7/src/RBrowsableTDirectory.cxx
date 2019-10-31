@@ -46,12 +46,6 @@ class TDirectoryLevelIter : public RLevelIter {
       return true;
    }
 
-   void CloseIter()
-   {
-      fIter.reset(nullptr);
-      fKey = nullptr;
-   }
-
    bool NextDirEntry()
    {
       fCurrentName.clear();
@@ -165,7 +159,7 @@ public:
       return nullptr;
    }
 
-   /** Return Object depending from kind of requested result */
+   /** Return object associated with TKey, if TDirectory has object of that name it will be returned */
    std::unique_ptr<RHolder> GetObject() override
    {
       std::string clname = fKey->GetClassName();

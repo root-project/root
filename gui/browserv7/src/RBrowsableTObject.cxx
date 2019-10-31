@@ -33,10 +33,12 @@ void *RTObjectHolder::TakeObject()
    if (fOwner) {
       fObj = nullptr;
       fOwner = false;
-   } else if (fObj && !fObj->IsA()->InheritsFrom("TDirectory") && fObj->IsA()->InheritsFrom("TFile")) {
+   } else if (fObj && !fObj->IsA()->InheritsFrom("TDirectory") && !fObj->IsA()->InheritsFrom("TFile")) {
       res = fObj->Clone();
       TH1 *h1 = dynamic_cast<TH1 *>(res);
       if (h1) h1->SetDirectory(nullptr);
+   } else {
+      res = nullptr;
    }
 
    return res;
@@ -57,17 +59,6 @@ class TObjectLevelIter : public RLevelIter {
    std::vector<std::shared_ptr<Browsable::RElement>> fElements;
 
    int fCounter{-1};
-
-   /** Actually, complete browsing happens here */
-
-   void CloseIter()
-   {
-   }
-
-   bool NextDirEntry()
-   {
-      return true;
-   }
 
 public:
    explicit TObjectLevelIter() = default;
