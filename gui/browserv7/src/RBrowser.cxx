@@ -428,29 +428,23 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       // central place for processing browser requests
       auto json = ProcessBrowserRequest(arg.substr(6));
       if (json.length() > 0) fWebWindow->Send(connid, json);
-   } else if (arg.compare("NEWCANVAS") == 0) {
+   } else if (arg.compare("NEWRCANVAS") == 0) {
 
-      std::vector<std::string> reply;
+      auto canv = AddRCanvas();
+      auto url = GetRCanvasUrl(canv);
 
-      if (GetUseRCanvas()) {
-         auto canv = AddRCanvas();
-
-         auto url = GetRCanvasUrl(canv);
-
-         reply = {"root7"s, url, canv->GetTitle()};
-
-      } else {
-         // create canvas
-         auto canv = AddCanvas();
-
-         auto url = GetCanvasUrl(canv);
-
-         reply = {"root6"s, url, std::string(canv->GetName())};
-      }
-
+      std::vector<std::string> reply = {"root7"s, url, canv->GetTitle()};
       std::string res = "CANVS:";
       res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
+      fWebWindow->Send(connid, res);
+   } else if (arg.compare("NEWTCANVAS") == 0) {
 
+      auto canv = AddCanvas();
+      auto url = GetCanvasUrl(canv);
+
+      std::vector<std::string> reply = {"root6"s, url, std::string(canv->GetName())};
+      std::string res = "CANVS:";
+      res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
       fWebWindow->Send(connid, res);
    } else if (arg.compare(0,7, "DBLCLK:") == 0) {
 

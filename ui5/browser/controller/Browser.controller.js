@@ -561,44 +561,23 @@ sap.ui.define(['sap/ui/core/Component',
            return this.sendDblClick(fullpath, "$$$image$$$");
         }
 
-        var dirname = fullpath.substr(0, fullpath.lastIndexOf('/'));
+        let className = this.getBaseClass(prop ? prop.className : "");
+        let drawingOptions = "";
+        if (className && this.drawingOptions[className])
+           drawingOptions = this.drawingOptions[className];
 
-        if (dirname.endsWith(".root")) {
-           let split = fullpath.split("/");
-           let model = row.getModel().mainModel;
-           let className = "";
-
-           for (let i = 0; i<split.length; i++) {
-              for (let j=0; j<model.length; j++) {
-                 if (model[j].name === split[i]) {
-                    if(i === split.length-1 ) {
-                       className = model[j].className;
-                       break;
-                    } else {
-                       model = model[j].childs;
-                       break;
-                    }
-                 }
-              }
-           }
-           className = this.getBaseClass(className);
-           let drawingOptions = "";
-           if (this.drawingOptions[className]) {
-              drawingOptions = this.drawingOptions[className];
-           }
-
-           return this.sendDblClick(fullpath, drawingOptions);
-        }
-
-       },
+        return this.sendDblClick(fullpath, drawingOptions);
+      },
 
       getBaseClass: function(className) {
-        if (className.match(/^TH1/)) {
-          return "TH1";
-        } else if (className.match(/^TH2/)) {
-          return "TH2";
-        }
-        return className;
+         if (typeof className !== 'string')
+            className = "";
+         if (className.match(/^TH1/)) {
+            return "TH1";
+         } else if (className.match(/^TH2/)) {
+            return "TH2";
+         }
+         return className;
       },
 
       OnWebsocketOpened: function(handle) {
@@ -869,18 +848,17 @@ sap.ui.define(['sap/ui/core/Component',
             myThis.getView().addDependent(oFragment);
             myThis._actionSheet = oFragment;
           });
-          sap.ui.getCore().byId("NewTabR6").attachPress(this, this.newRootXCanvas);
-          sap.ui.getCore().byId("NewTabR7").attachPress(this, this.newRootXCanvas);
+          sap.ui.getCore().byId("NewTabR6").attachPress("NEWTCANVAS", this.newRootXCanvas, this);
+          sap.ui.getCore().byId("NewTabR7").attachPress("NEWRCANVAS", this.newRootXCanvas, this);
           sap.ui.getCore().byId("NewTabCE").attachPress(this, this.newCodeEditor);
           sap.ui.getCore().byId("NewTabIV").attachPress(this, this.newImageViewer);
         }
         this._actionSheet.openBy(oButton);
       },
 
-     newRootXCanvas: function(oEvent, myThis) {
-       if (myThis.isConnected) {
-         myThis.websocket.Send("NEWCANVAS");
-       }
+     newRootXCanvas: function(oEvent, msg) {
+       if (this.isConnected)
+          this.websocket.Send(msg);
      },
 
      newCodeEditor: async function(oEvent, myThis) {
@@ -914,11 +892,11 @@ sap.ui.define(['sap/ui/core/Component',
 
         oTabContainer.addItem(tabContainerItem);
 
-       let splitterUpperContent = tabContainerItem.getContent()[0].mAggregations.contentAreas[0].getContent();
-       splitterUpperContent[0].attachChange(myThis.onChangeFile, myThis);
-       splitterUpperContent[1].attachPress(myThis.onSaveAs, myThis);
-       splitterUpperContent[2].attachPress(myThis.onSaveFile, myThis);
-       splitterUpperContent[3].attachPress(myThis.onRunMacro, myThis);
+        let splitterUpperContent = tabContainerItem.getContent()[0].mAggregations.contentAreas[0].getContent();
+        splitterUpperContent[0].attachChange(myThis.onChangeFile, myThis);
+        splitterUpperContent[1].attachPress(myThis.onSaveAs, myThis);
+        splitterUpperContent[2].attachPress(myThis.onSaveFile, myThis);
+        splitterUpperContent[3].attachPress(myThis.onRunMacro, myThis);
 
         oTabContainer.setSelectedItem(tabContainerItem);
      },
