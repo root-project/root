@@ -479,11 +479,15 @@ sap.ui.define(['sap/ui/core/Component',
         this.doReload(true);
      },
 
+     sendDblClick: function(fullpath, opt) {
+        this.websocket.Send('DBLCLK: ["'  + fullpath + '","' + (opt || "") + '"]' );
+     },
+
       /** @brief Double-click event handler */
       onRowDblClick: function(row) {
-         var fullpath = "";
-         var ctxt = row.getBindingContext(),
-             prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
+        var ctxt = row.getBindingContext(),
+            prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null,
+            fullpath = (prop && prop.fullpath) ? prop.fullpath.substr(1, prop.fullpath.length-2) : "";
 
         if (row._bHasChildren){
           let rowText = row.getCells()[0].getContent()[1].getText().substr(1);
@@ -535,59 +539,57 @@ sap.ui.define(['sap/ui/core/Component',
           }
         }
 
-        if (prop && prop.fullpath) {
-            fullpath = prop.fullpath.substr(1, prop.fullpath.length-2);
-            var dirname = fullpath.substr(0, fullpath.lastIndexOf('/'));
+        if (!fullpath) return;
 
-            if (dirname.endsWith(".root")) {
-              let split = fullpath.split("/");
-              let model = row.getModel().mainModel;
-              let className = "";
+        // first try to activate editor
+        let codeEditor = this.getSelectedCodeEditorTab(true);
+        if(codeEditor !== -1) {
+          var oModel = codeEditor.getModel();
 
-              for (let i = 0; i<split.length; i++) {
-                for (let j=0; j<model.length; j++) {
-                  if (model[j].name === split[i]) {
+          // FIXME: wrong place, only when server returns result, one can update full path or model
+          oModel.setProperty("/fullpath", fullpath);
+          this.getSaveButtonFromCodeEditor(codeEditor).setEnabled(true);
+          var filename = fullpath.substr(fullpath.lastIndexOf('/') + 1);
+          if (this.setFileNameType(filename))
+             return this.sendDblClick(fullpath, "$$$editor$$$");
+        }
+
+        let viewerTab = this.getSelectedImageViewer(true);
+        if (viewerTab !== -1) {
+           // FIXME: wrong place, should be configured when server replied
+           viewerTab.setAdditionalText(fullpath);
+           return this.sendDblClick(fullpath, "$$$image$$$");
+        }
+
+        var dirname = fullpath.substr(0, fullpath.lastIndexOf('/'));
+
+        if (dirname.endsWith(".root")) {
+           let split = fullpath.split("/");
+           let model = row.getModel().mainModel;
+           let className = "";
+
+           for (let i = 0; i<split.length; i++) {
+              for (let j=0; j<model.length; j++) {
+                 if (model[j].name === split[i]) {
                     if(i === split.length-1 ) {
-                      className = model[j].className;
-                      break;
+                       className = model[j].className;
+                       break;
                     } else {
-                      model = model[j].childs;
-                      break;
+                       model = model[j].childs;
+                       break;
                     }
-                  }
-                }
+                 }
               }
-              className = this.getBaseClass(className);
-              let drawingOptions = "";
-              if (this.drawingOptions[className]) {
-                drawingOptions = this.drawingOptions[className];
-              }
+           }
+           className = this.getBaseClass(className);
+           let drawingOptions = "";
+           if (this.drawingOptions[className]) {
+              drawingOptions = this.drawingOptions[className];
+           }
 
-              return this.websocket.Send('DBLCLK: ["'  + fullpath + '","' + drawingOptions + '"]' );
-            } else if ( fullpath.endsWith(".png") ||
-                        fullpath.endsWith(".jpg") ||
-                        fullpath.endsWith(".bmp") ||
-                        fullpath.endsWith(".gif") ||
-                        fullpath.endsWith(".ico") ||
-                        // fullpath.endsWith(".svg") ||
-                        fullpath.endsWith(".webp")) {
-              let oTab = this.getSelectedImageViewer();
-              if (oTab !== -1) {
-                oTab.setAdditionalText(fullpath);
-                return this.websocket.Send('DBLCLK:'  + fullpath);
-              }
-            }
-         }
+           return this.sendDblClick(fullpath, drawingOptions);
+        }
 
-         let codeEditor = this.getSelectedCodeEditorTab();
-         if(codeEditor !== -1) {
-           var oModel = codeEditor.getModel();
-           oModel.setProperty("/fullpath", fullpath);
-           this.getSaveButtonFromCodeEditor(codeEditor).setEnabled(true);
-           var filename = fullpath.substr(fullpath.lastIndexOf('/') + 1);
-           if (this.setFileNameType(filename))
-              return this.websocket.Send("DBLCLK:" + fullpath);
-         }
        },
 
       getBaseClass: function(className) {
@@ -619,24 +621,27 @@ sap.ui.define(['sap/ui/core/Component',
          this.isConnected = false;
       },
 
-     getSelectedCodeEditorTab: function() {
-       let oTabItemString = this.getView().byId("myTabContainer").getSelectedItem();
+     getSelectedCodeEditorTab: function(no_warning) {
+        // FIXME: Thibault, one can much easily detect widget type
+        // otherwise too many checks required
+        let oTabItemString = this.getView().byId("myTabContainer").getSelectedItem();
 
-       let oTabItem = sap.ui.getCore().byId(oTabItemString);
-       if(oTabItem) {
-         let oTabItemContent = oTabItem.getContent();
-         for (let i=0; i<oTabItemContent[0].mAggregations.contentAreas.length; i++) {
-           if (oTabItemContent[0].mAggregations.contentAreas[i].sId.indexOf("__editor") !== -1) {
-             return oTabItemContent[0].mAggregations.contentAreas[i];
-           }
-         }
-       }
+        let oTabItem = sap.ui.getCore().byId(oTabItemString);
+        if(oTabItem) {
+           let oTabItemContent = oTabItem.getContent();
+           if (oTabItemContent[0].mAggregations.contentAreas)
+              for (let i=0; i<oTabItemContent[0].mAggregations.contentAreas.length; i++) {
+                 if (oTabItemContent[0].mAggregations.contentAreas[i].sId.indexOf("__editor") !== -1) {
+                    return oTabItemContent[0].mAggregations.contentAreas[i];
+                 }
+              }
+        }
 
-       MessageToast.show("Sorry, you need to select a code editor tab", {duration: 1500});
-       return -1;
+        if (!no_warning) MessageToast.show("Sorry, you need to select a code editor tab", {duration: 1500});
+        return -1;
      },
 
-     getSelectedImageViewer: function() {
+     getSelectedImageViewer: function(no_warning) {
        let oTabItemString = this.getView().byId("myTabContainer").getSelectedItem();
 
        let oTabItem = sap.ui.getCore().byId(oTabItemString);
@@ -645,7 +650,7 @@ sap.ui.define(['sap/ui/core/Component',
          return oTabItem;
        }
 
-       MessageToast.show("Sorry, you need to select an image viewer tab", {duration: 1500});
+       if (!no_warning) MessageToast.show("Sorry, you need to select an image viewer tab", {duration: 1500});
        return -1;
      },
 
@@ -686,19 +691,17 @@ sap.ui.define(['sap/ui/core/Component',
             this.parseDescription(msg, false);
             break;
          case "FREAD":  // file read
-
-            let result = this.getSelectedCodeEditorTab();
-            if (result !== -1) {
-              result.getModel().setProperty("/code", msg);
-            }
+            let result = this.getSelectedCodeEditorTab(true);
+            if (result !== -1)
+               result.getModel().setProperty("/code", msg);
             break;
          case "FIMG":  // image file read
-            let oTab = this.getSelectedImageViewer();
-            if(oTab !== -1) {
-              let oContent = sap.ui.getCore().byId(this.getView().byId("myTabContainer").getSelectedItem());
-              let oImage = oContent.getContent()[0].getItems()[0];
-
-              oImage.setSrc(msg);
+            let imageTab = this.getSelectedImageViewer(true);
+            if(imageTab !== -1) {
+               // FIXME: why not use imageTab??
+               let oContent = sap.ui.getCore().byId(this.getView().byId("myTabContainer").getSelectedItem());
+               let oImage = oContent.getContent()[0].getItems()[0];
+               oImage.setSrc(msg);
             }
             break;
          case "CANVS":  // canvas created by server, need to establish connection
