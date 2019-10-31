@@ -649,12 +649,11 @@ sap.ui.define(['sap/ui/core/Component',
        return oToolBarContent[3];
      },
 
-      /** Entry point for all data from server */
-      OnWebsocketMsg: function(handle, msg, offset) {
+     /** Entry point for all data from server */
+     OnWebsocketMsg: function(handle, msg, offset) {
 
          if (typeof msg != "string")
             return console.error("Browser do not uses binary messages len = " + mgs.byteLength);
-
 
          let mhdr = msg.split(":")[0];
          msg = msg.substr(mhdr.length+1);
@@ -836,7 +835,6 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
 
-
       /** @brief Add Tab event handler */
       addNewButtonPressHandler: async function(oEvent) {
         var oButton = oEvent.getSource().mAggregations._tabStrip.mAggregations.addButton;
@@ -850,8 +848,8 @@ sap.ui.define(['sap/ui/core/Component',
           });
           sap.ui.getCore().byId("NewTabR6").attachPress("NEWTCANVAS", this.newRootXCanvas, this);
           sap.ui.getCore().byId("NewTabR7").attachPress("NEWRCANVAS", this.newRootXCanvas, this);
-          sap.ui.getCore().byId("NewTabCE").attachPress(this, this.newCodeEditor);
-          sap.ui.getCore().byId("NewTabIV").attachPress(this, this.newImageViewer);
+          sap.ui.getCore().byId("NewTabCE").attachPress("", this.newCodeEditor, this);
+          sap.ui.getCore().byId("NewTabIV").attachPress("", this.newImageViewer, this);
         }
         this._actionSheet.openBy(oButton);
       },
@@ -861,8 +859,8 @@ sap.ui.define(['sap/ui/core/Component',
           this.websocket.Send(msg);
      },
 
-     newCodeEditor: async function(oEvent, myThis) {
-        let oTabContainer = myThis.getView().byId("myTabContainer");
+     newCodeEditor: async function() {
+        let oTabContainer = this.getView().byId("myTabContainer");
 
         let tabContainerItem = new TabContainerItem({
           icon: "sap-icon://write-new-document",
@@ -893,16 +891,16 @@ sap.ui.define(['sap/ui/core/Component',
         oTabContainer.addItem(tabContainerItem);
 
         let splitterUpperContent = tabContainerItem.getContent()[0].mAggregations.contentAreas[0].getContent();
-        splitterUpperContent[0].attachChange(myThis.onChangeFile, myThis);
-        splitterUpperContent[1].attachPress(myThis.onSaveAs, myThis);
-        splitterUpperContent[2].attachPress(myThis.onSaveFile, myThis);
-        splitterUpperContent[3].attachPress(myThis.onRunMacro, myThis);
+        splitterUpperContent[0].attachChange(this.onChangeFile, this);
+        splitterUpperContent[1].attachPress(this.onSaveAs, this);
+        splitterUpperContent[2].attachPress(this.onSaveFile, this);
+        splitterUpperContent[3].attachPress(this.onRunMacro, this);
 
         oTabContainer.setSelectedItem(tabContainerItem);
      },
 
-     newImageViewer: async function(oEvent, myThis) {
-       let oTabContainer = myThis.getView().byId("myTabContainer");
+     newImageViewer: async function() {
+       let oTabContainer = this.getView().byId("myTabContainer");
 
        let tabContainerItem = new TabContainerItem({
          icon: "sap-icon://background",
