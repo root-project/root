@@ -23,8 +23,8 @@
         </TabContainer>
       </Page>
     </detailPages>
-    <masterPages id="myMaster">
-      <Page title="" showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false" enableScrolling="false">
+    <masterPages>
+      <Page id="browserMaster" title="" showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false" enableScrolling="false">
         <FlexBox height="100%" direction="Column">
           <Toolbar>
             <layoutData>

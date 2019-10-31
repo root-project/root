@@ -146,6 +146,12 @@ sap.ui.define(['sap/ui/core/Component',
                onAfterRendering: function() { this.assignRowHandlers(); }
             }, this);
 
+            // FIXME: one have to find direct method to configure this
+            this.byId("browserMaster").addEventDelegate({
+               onAfterRendering: function() { this.getView().byId("treeTableBox").$().children().first().css('flex-grow',1); }
+            }, this);
+
+
             let tabContainerItem = this.getView().byId("defaultCodeEditor");
             await Fragment.load({name: "rootui5.browser.view.codeeditor", controller: this}).then(function (oFragment) {
               tabContainerItem.removeAllContent();
@@ -793,9 +799,6 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       onAfterRendering: function() {
-         // FIXME: one have to find direct method to configure this
-         this.getView().byId("treeTableBox").$().children().first().css('flex-grow',1);
-
          this.renderingDone = true;
          this.checkRequestMsg();
       },
