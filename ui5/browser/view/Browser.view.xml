@@ -24,22 +24,33 @@
       </Page>
     </detailPages>
     <masterPages id="myMaster">
-      <Page title="" showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false">
-        <Toolbar>
-          <layoutData><l:SplitterLayoutData size="35px" resizable="false"/></layoutData>
-          <Button icon="sap-icon://synchronize" type="Transparent"
-                  tooltip="Refresh" press="onRealoadPress"/>
-          <Button icon="sap-icon://log" type="Transparent"
-                  tooltip="Quit ROOT session" press="onQuitRootPress"/>
-          <Button icon="sap-icon://settings" type="Transparent" tooltip="Settings" press="onSettingPress"/>
-          <ToolbarSpacer/>
-          <SearchField liveChange="onSearch"/>
-        </Toolbar>
-        <Toolbar>
-          <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan">
-          </Breadcrumbs>
-        </Toolbar>
-        <t:TreeTable
+      <Page title="" showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false" enableScrolling="false">
+        <FlexBox height="100%" direction="Column">
+          <Toolbar>
+            <layoutData>
+               <FlexItemData baseSize="35px"/>
+            </layoutData>
+            <Button icon="sap-icon://synchronize" type="Transparent"
+                    tooltip="Refresh" press="onRealoadPress"/>
+            <Button icon="sap-icon://log" type="Transparent"
+                    tooltip="Quit ROOT session" press="onQuitRootPress"/>
+            <Button icon="sap-icon://settings" type="Transparent" tooltip="Settings" press="onSettingPress"/>
+            <ToolbarSpacer/>
+            <SearchField liveChange="onSearch"/>
+          </Toolbar>
+          <Toolbar>
+            <layoutData>
+              <FlexItemData baseSize="25px"/>
+            </layoutData>
+
+            <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan">
+            </Breadcrumbs>
+          </Toolbar>
+          <VBox id="treeTableBox">
+            <layoutData>
+              <FlexItemData growFactor="1"/>
+            </layoutData>
+            <t:TreeTable
                 id="treeTable"
                 columnHeaderVisible="true"
                 editable="false"
@@ -49,7 +60,9 @@
                 visibleRowCountMode="Auto"
                 showColumnVisibilityMenu="true"
                 rows="{/nodes}">
-        </t:TreeTable>
+             </t:TreeTable>
+          </VBox>
+        </FlexBox>
       </Page>
     </masterPages>
   </SplitApp>

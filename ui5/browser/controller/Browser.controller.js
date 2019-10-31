@@ -63,6 +63,7 @@ sap.ui.define(['sap/ui/core/Component',
                node.className = elem.className
             };
 
+
             var t = this.getView().byId("treeTable");
 
             t.setModel(this.model);
@@ -765,8 +766,10 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       onAfterRendering: function() {
-         this.renderingDone = true;
+         // FIXME: one have to find direct method to configure this
+         this.getView().byId("treeTableBox").$().children().first().css('flex-grow',1);
 
+         this.renderingDone = true;
          this.checkRequestMsg();
       },
 
