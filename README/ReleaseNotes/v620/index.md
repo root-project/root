@@ -170,6 +170,8 @@ typedefs (in particular `Double32_t`)
 - When starting Jupyter server with `root --notebook arg1 arg2 ...`, extra arguments can be provided.
   All these arguments delivered as is to jupyter executable and can be used for configuration.
   Like server binding to specific host `root --notebook --ip=hostname`
+- Remove `c.NotebookApp.ip = '*'` from default jupyter config. One has to provide ip address for server
+  binding using `root --notebook --ip=<hostaddr>` arguments
 
 
 ## JavaScript ROOT
