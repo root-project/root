@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <title>ROOT File Dialog</title>
+      <script type="text/javascript" src="jsrootsys/scripts/JSRootCore.js"></script>
+      <style>
+         html { height: 100%; }
+         body { min-height: 100%; margin: 0; overflow: hidden }
+         #BrowserDiv {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            padding: 1
+         }
+
+       </style>
+
+   </head>
+
+   <body>
+      <div id="FileDialogDiv">
+         loading scripts...
+      </div>
+
+      <script type='text/javascript'>
+
+        function InitUI(handle) {
+
+           sap.ui.require(["sap/ui/core/mvc/XMLView"], function(XMLView) {
+              XMLView.create({
+                 id: "TopDialogId",
+                 viewName: "rootui5.browser.view.FileDialog",
+                 viewData: { conn_handle: handle }
+              }).then(function(oView) {
+                 oView.placeAt("FileDialogDiv");
+              });
+           });
+
+        }
+
+//        if (JSROOT.GetUrlOption('libs')!==null) JSROOT.use_full_libs = true;
+
+        JSROOT.ConnectWebWindow({
+           prereq: "openui5",  // load v6,v7 because of canvas painter
+//           openui5src: "jsroot",    // use JSROOT provided package, default
+//           openui5src: "https://openui5.hana.ondemand.com/1.70.0/",
+           openui5libs: "sap.m, sap.ui.layout, sap.ui.unified, sap.ui.table", // customize openui5 libs later
+           prereq_logdiv: "FileDialogDiv",
+           callback: InitUI
+        });
+
+      </script>
+
+   </body>
+
+</html>
