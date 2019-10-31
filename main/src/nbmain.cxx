@@ -140,7 +140,6 @@ static bool CreateJupyterConfig(string dest, string rootbin, string rootlib)
       out << "os.environ['PATH']            = '%s:%s/bin' % (rootbin,rootbin) + ':' + os.getenv('PATH', '')" << endl;
       out << "os.environ['LD_LIBRARY_PATH'] = '%s' % rootlib + ':' + os.getenv('LD_LIBRARY_PATH', '')" << endl;
 #endif
-      out << "c.NotebookApp.ip = '*'" << endl;
       out.close();
       return true;
    }
