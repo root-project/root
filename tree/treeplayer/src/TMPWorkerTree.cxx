@@ -158,9 +158,9 @@ void TMPWorkerTree::SetupTreeCache(TTree *tree)
             fTreeCache = (TTreeCache *)curfile->GetCacheRead(tree);
             if (fCacheSize < 0) fCacheSize = tree->GetCacheSize();
          } else {
+            fTreeCache->UpdateBranches(tree);
             fTreeCache->ResetCache();
             curfile->SetCacheRead(fTreeCache, tree);
-            fTreeCache->UpdateBranches(tree);
          }
          if (fTreeCache) {
             fTreeCacheIsLearning = fTreeCache->IsLearning();
