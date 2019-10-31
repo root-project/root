@@ -30,4 +30,6 @@
 
 #pragma link C++ class ROOT::Experimental::RBrowser+;
 
+#pragma link C++ class ROOT::Experimental::RFileDialog+;
+
 #endif
