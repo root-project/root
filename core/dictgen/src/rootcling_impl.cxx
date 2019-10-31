@@ -4223,6 +4223,9 @@ int RootClingMain(int argc,
       clingArgsInterpreter.push_back("-fmodules-cache-path=" + moduleCachePath);
    }
 
+   if (gOptVerboseLevel == v4)
+      clingArgsInterpreter.push_back("-v");
+
    // Convert arguments to a C array and check if they are sane
    std::vector<const char *> clingArgsC;
    for (auto const &clingArg : clingArgsInterpreter) {
