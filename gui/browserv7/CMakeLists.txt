@@ -17,6 +17,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
     ROOT/RBrowserItem.hxx
     ROOT/RDrawableProvider.hxx
     ROOT/RBrowser.hxx
+    ROOT/RFileDialog.hxx
   SOURCES
     src/RBrowsable.cxx
     src/RBrowsableSysFile.cxx
@@ -25,6 +26,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
     src/RDrawableProvider.cxx
     src/RDrawableRHist.cxx
     src/RBrowser.cxx
+    src/RFileDialog.cxx
   DEPENDENCIES
     ROOTWebDisplay
     RIO
