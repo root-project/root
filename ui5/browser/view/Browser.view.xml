@@ -26,32 +26,31 @@
     <masterPages id="myMaster">
       <Page title="" showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false" enableScrolling="false">
         <FlexBox height="100%" direction="Column">
-          <items>
           <Toolbar>
             <layoutData>
-               <FlexItemData baseSize="40px"/>
+               <FlexItemData baseSize="35px"/>
             </layoutData>
-          <Button icon="sap-icon://synchronize" type="Transparent"
-                  tooltip="Refresh" press="onRealoadPress"/>
-          <Button icon="sap-icon://log" type="Transparent"
-                  tooltip="Quit ROOT session" press="onQuitRootPress"/>
-          <Button icon="sap-icon://settings" type="Transparent" tooltip="Settings" press="onSettingPress"/>
-          <ToolbarSpacer/>
-          <SearchField liveChange="onSearch"/>
-        </Toolbar>
-        <Toolbar>
-          <layoutData>
-            <FlexItemData baseSize="30px"/>
-          </layoutData>
+            <Button icon="sap-icon://synchronize" type="Transparent"
+                    tooltip="Refresh" press="onRealoadPress"/>
+            <Button icon="sap-icon://log" type="Transparent"
+                    tooltip="Quit ROOT session" press="onQuitRootPress"/>
+            <Button icon="sap-icon://settings" type="Transparent" tooltip="Settings" press="onSettingPress"/>
+            <ToolbarSpacer/>
+            <SearchField liveChange="onSearch"/>
+          </Toolbar>
+          <Toolbar>
+            <layoutData>
+              <FlexItemData baseSize="25px"/>
+            </layoutData>
 
-         <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan">
-           </Breadcrumbs>
-        </Toolbar>
-        <VBox id="treeTableBox">
-          <layoutData>
-            <FlexItemData growFactor="1"/>
-          </layoutData>
-        <t:TreeTable
+            <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan">
+            </Breadcrumbs>
+          </Toolbar>
+          <VBox id="treeTableBox">
+            <layoutData>
+              <FlexItemData growFactor="1"/>
+            </layoutData>
+            <t:TreeTable
                 id="treeTable"
                 columnHeaderVisible="true"
                 editable="false"
@@ -61,10 +60,8 @@
                 visibleRowCountMode="Auto"
                 showColumnVisibilityMenu="true"
                 rows="{/nodes}">
-
-          </t:TreeTable>
+             </t:TreeTable>
           </VBox>
-          </items>
         </FlexBox>
       </Page>
     </masterPages>

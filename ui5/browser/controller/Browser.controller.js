@@ -766,21 +766,11 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       onAfterRendering: function() {
-
-         var dd = this.getView().byId("treeTableBox").$();
-         // var dd = $("#TopBrowserId--treeTableBox");
-         console.log('found', dd.attr('id'));
-
-         dd.children().first().css('flex-grow',1);
-
-         $("#TopBrowserId--treeTableBox").select(":first-child").css('flex-grow',1);
-
+         // FIXME: one have to find direct method to configure this
+         this.getView().byId("treeTableBox").$().children().first().css('flex-grow',1);
 
          this.renderingDone = true;
-
          this.checkRequestMsg();
-
-
       },
 
       checkRequestMsg: function() {
