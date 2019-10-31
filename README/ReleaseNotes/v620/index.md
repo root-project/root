@@ -166,6 +166,11 @@ typedefs (in particular `Double32_t`)
 
 ## Language Bindings
 
+### Jupyter Notebook Integration
+- When starting Jupyter server with `root --notebook arg1 arg2 ...`, extra arguments can be provided.
+  All these arguments delivered as is to jupyter executable and can be used for configuration.
+  Like server binding to specific host `root --notebook --ip=hostname`
+
 
 ## JavaScript ROOT
 - Provide monitoring capabilities for TGeoManager object. Now geomtry with some tracks can be displayed and
