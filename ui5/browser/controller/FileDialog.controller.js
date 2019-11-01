@@ -1,27 +1,9 @@
 sap.ui.define(['rootui5/panel/Controller',
-               'sap/ui/core/Component',
-               'sap/ui/core/mvc/Controller',
-               'sap/ui/core/Control',
-               'sap/ui/core/Icon',
-               'sap/ui/core/mvc/XMLView',
-               'sap/m/Text',
-               'sap/m/CheckBox',
-               'sap/m/MessageBox',
-               'sap/m/MessageToast',
-               'sap/m/TabContainerItem',
-               'sap/ui/layout/Splitter',
-               "sap/ui/core/ResizeHandler",
-               "sap/ui/layout/HorizontalLayout",
-               "sap/ui/core/util/File",
                "sap/ui/model/json/JSONModel",
-               "rootui5/browser/model/BrowserModel",
-               "sap/ui/core/Fragment",
                "sap/m/Link"
-],function(GuiPanelController, Component, Controller, CoreControl, CoreIcon, XMLView, mText, mCheckBox, MessageBox, MessageToast, TabContainerItem,
-           Splitter, ResizeHandler, HorizontalLayout, File, JSONModel, BrowserModel, Fragment, Link) {
+],function(GuiPanelController, JSONModel, Link) {
 
    "use strict";
-   // FIXME: cleanup unused modules
 
    /** FileDialog controller */
 
@@ -29,6 +11,9 @@ sap.ui.define(['rootui5/panel/Controller',
 
       //function called from GuiPanelController
       onPanelInit : function() {
+
+
+         // TODO: provide functionality via BrowserModel - once we know that exactly we need
 
          // create model only for browser - no need for anybody else
          // this.model = new BrowserModel();

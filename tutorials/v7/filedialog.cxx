@@ -18,6 +18,13 @@
 #include <ROOT/RFileDialog.hxx>
 #include <ROOT/RDirectory.hxx>
 
+// Show how RFileDialog can be used in sync and async modes
+// Normally file dialogs will be used inside other widgets as ui5 dialogs
+// By default, dialog starts in async mode - means macro immediately returns to command line
+// To start OpenFile dialog in sync mode, call `root "filedialog.cxx(1)" -q`.
+// Once file is selected, root execution will be stopped
+
+
 using namespace ROOT::Experimental;
 
 void filedialog(int kind = 0)
@@ -36,16 +43,16 @@ void filedialog(int kind = 0)
       return;
    }
 
-   auto panel = std::make_shared<RFileDialog>(RFileDialog::kOpenFile, "Open file (async) title");
+   auto dialog = std::make_shared<RFileDialog>(RFileDialog::kOpenFile, "Open file (async) title");
    // add to global list
-   RDirectory::Heap().Add("filedialog", panel);
+   RDirectory::Heap().Add("filedialog", dialog);
 
-   panel->SetCallback([](const std::string &res) {
+   dialog->SetCallback([](const std::string &res) {
       printf("Selected %s\n", res.c_str());
       // remove from global list
       RDirectory::Heap().Remove("filedialog");
    });
 
-   panel->Show();
+   dialog->Show();
 }
 
