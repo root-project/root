@@ -158,6 +158,21 @@ if (build_timing)
   #set_property(GLOBAL PROPERTY RULE_LAUNCH_CUSTOM "${CMAKE_COMMAND} -E time")
 endif()
 
+#--- Set up address sanitizer builds ----------------------------------------------------------
+if(asan)
+  if(NOT CMAKE_COMPILER_IS_GNUCXX AND NOT CMAKE_CXX_COMPILER_ID MATCHES Clang)
+    message(WARNING "Address sanitizer builds only tested with gcc and Clang")
+  endif()
+
+  set(ASAN_EXTRA_LD_PRELOAD "${ASAN_RUNTIME_LIBRARY}:${CMAKE_BINARY_DIR}/lib/libROOTSanitizerConfig.so")
+
+  foreach(item IN LISTS ASAN_EXTRA_CXX_FLAGS)
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${item}>)
+  endforeach()
+  #add_link_options() not available in our CMake version:
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ASAN_EXTRA_SHARED_LINKER_FLAGS}")
+endif()
+
 #---Enable CTest package -----------------------------------------------------------------------
 #include(CTest)
 if(testing)

@@ -16,6 +16,7 @@ if(WIN32)
   set(runtimedir ${CMAKE_INSTALL_BINDIR})
 elseif(APPLE)
   set(ld_library_path DYLD_LIBRARY_PATH)
+  set(ld_preload DYLD_INSERT_LIBRARIES)
   set(libprefix ${CMAKE_SHARED_LIBRARY_PREFIX})
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
     set(libsuffix .so)
@@ -26,6 +27,7 @@ elseif(APPLE)
   set(runtimedir ${CMAKE_INSTALL_LIBDIR})
 else()
   set(ld_library_path LD_LIBRARY_PATH)
+  set(ld_preload LD_PRELOAD)
   set(libprefix ${CMAKE_SHARED_LIBRARY_PREFIX})
   set(libsuffix ${CMAKE_SHARED_LIBRARY_SUFFIX})
   set(localruntimedir ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
@@ -1232,7 +1234,10 @@ function(ROOT_EXECUTABLE executable)
       endif()
     endforeach()
   endif()
-
+  if(TARGET ROOT::ROOTStaticSanitizerConfig)
+    set_property(TARGET ${executable}
+      APPEND PROPERTY LINK_LIBRARIES ROOT::ROOTStaticSanitizerConfig)
+  endif()
   #----Installation details------------------------------------------------------
   if(NOT ARG_NOINSTALL AND CMAKE_RUNTIME_OUTPUT_DIRECTORY)
     if(ARG_CMAKENOEXPORT)
@@ -1379,6 +1384,19 @@ function(ROOT_ADD_TEST test)
   if(ARG_DIFFCMD)
     string(REPLACE ";" "^" _diff_cmd "${ARG_DIFFCMD}")
     set(_command ${_command} -DDIFFCMD=${_diff_cmd})
+    
+    if(TARGET ROOT::ROOTStaticSanitizerConfig)
+      # We have to set up leak sanitizer such that it doesn't report on suppressed
+      # leaks. Otherwise, all diffs will fail.
+      set(LSAN_OPT ARG_ENVIRONMENT)
+      list(FILTER LSAN_OPT INCLUDE REGEX LSAN_OPTIONS=[^;]+)
+      if(NOT LSAN_OPT MATCHES LSAN_OPTIONS=.*)
+        set(LSAN_OPT LSAN_OPTIONS=)
+      endif()
+      string(APPEND LSAN_OPT ":print_suppressions=0")
+      list(FILTER ARG_ENVIRONMENT EXCLUDE REGEX LSAN_OPTIONS.*)
+      list(APPEND ARG_ENVIRONMENT ${LSAN_OPT})
+    endif()
   endif()
 
   if(ARG_CHECKOUT)
@@ -1392,9 +1410,13 @@ function(ROOT_ADD_TEST test)
   set(_command ${_command} -DSYS=${ROOTSYS})
 
   #- Handle ENVIRONMENT argument
+  if(ASAN_EXTRA_LD_PRELOAD AND _command MATCHES python)
+    # Address sanitizer runtime needs to be preloaded in all python tests
+    list(APPEND ARG_ENVIRONMENT ${ld_preload}=${ASAN_EXTRA_LD_PRELOAD})
+  endif()
+
   if(ARG_ENVIRONMENT)
     string(REPLACE ";" "#" _env "${ARG_ENVIRONMENT}")
-    string(REPLACE "=" "@" _env "${_env}")
     set(_command ${_command} -DENV=${_env})
   endif()
 

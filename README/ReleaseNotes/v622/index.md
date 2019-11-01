@@ -168,6 +168,13 @@ By default, ROOT now falls back to the built-in version of xrootd if it can't fi
 This means that passing `-Dbuiltin_xrootd=ON` is not necessary anymore to build ROOT with xrootd support.
 Note that built-in xrootd requires a working network connection.
 
+### Experimental address sanitizer build configuration
+Added a build flag `asan` that switches on address sanitizer. It's experimental, so expect problems. For example, when building with gcc,
+manipulations in global variables in llvm will abort the build. Such checks can be disabled using environment variables. Check the address
+sanitizer documentation or the link below for details. In clang, which allows to blacklist functions, the build will continue.
+
+See [core/sanitizer](https://github.com/root-project/root/tree/master/core/sanitizer) for information.
+
 ## RDataFrame
 
 - Starting from this version, when `RSnapshotOptions.fMode` is `"UPDATE"` (i.e. the output file is opened in "UPDATE"
