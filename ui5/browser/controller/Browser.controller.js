@@ -29,6 +29,8 @@ sap.ui.define(['sap/ui/core/Component',
    return Controller.extend("rootui5.browser.controller.Browser", {
       onInit: async function () {
 
+        this.globalId = 1;
+
          this.websocket = this.getView().getViewData().conn_handle;
 
          // this is code for the Components.js
@@ -142,35 +144,175 @@ sap.ui.define(['sap/ui/core/Component',
          }, this);
 
 
-         let tabContainerItem = this.getView().byId("defaultCodeEditor");
-         await Fragment.load({name: "rootui5.browser.view.codeeditor", controller: this}).then(function (oFragment) {
-            tabContainerItem.removeAllContent();
-            tabContainerItem.addContent(oFragment);
-         });
+            let tabContainerItem = this.getView().byId("defaultCodeEditor");
 
-         // TODO: use proper openui5 methods to get aggregation
-         let defaultCodeEditor = this.getView().byId("defaultCodeEditor").getContent()[0].mAggregations.contentAreas[1];
-         defaultCodeEditor.setModel(new JSONModel({
-            code: "",
-            ext: "",
-            filename: "",
-            fullpath: "",
-            modified: false
-         }));
+            this.newCodeEditor();
 
-         let splitterUpperContent = this.getView().byId("defaultCodeEditor").getContent()[0].mAggregations.contentAreas[0].getContent();
-         splitterUpperContent[0].attachChange(this.onChangeFile, this);
-         splitterUpperContent[1].attachPress(this.onSaveAs, this);
-         splitterUpperContent[2].attachPress(this.onSaveFile, this);
-         splitterUpperContent[3].attachPress(this.onRunMacro, this);
+            //
+            // defaultCodeEditor.attachChange( function() {
+            //    this.getModel().setProperty("/modified", true);
+            // });
 
-         defaultCodeEditor.attachChange( function() {
-            this.getModel().setProperty("/modified", true);
-         });
-
-         this.drawingOptions = { TH1: 'hist', TH2: 'COL', TProfile: 'E0'};
+            this.drawingOptions = { TH1: 'hist', TH2: 'COL', TProfile: 'E0'};
 
       },
+
+     /* =========================================== */
+     /* =============== Code Editor =============== */
+     /* =========================================== */
+
+     newCodeEditor: async function () {
+       console.log("newCodeEditor()");
+       console.log("ID", this.globalId);
+       const oTabContainer = this.getView().byId("myTabContainer");
+
+       const oTabContainerItem = new TabContainerItem("CodeEditorTab"+this.globalId, {
+         icon: "sap-icon://write-new-document",
+         name: "Code Editor",
+         additionalText: "untitled"
+       });
+       const oCodeEditor = this.newCodeEditorFragment(this.globalId);
+       this.globalId++;
+
+       oCodeEditor.setModel(new JSONModel({
+         code: "",
+         ext: "",
+         filename: "",
+         fullpath: "",
+         modified: false
+       }));
+
+       oTabContainerItem.addContent(oCodeEditor);
+
+       oTabContainer.addItem(oTabContainerItem);
+
+       oTabContainer.setSelectedItem(oTabContainerItem);
+     },
+
+     newCodeEditorFragment: function(ID) {
+       console.log("newCodeEditorFragment()");
+       console.log("ID", this.globalId);
+       return new sap.ui.layout.Splitter("CodeEditorSplitter" + ID, {
+           orientation: "Vertical",
+           contentAreas: [
+             new sap.m.Toolbar("CodeEditorToolbar" + ID, {
+               content: [
+                 new sap.ui.unified.FileUploader("CodeEditorFileUploader" + ID, {
+                   // press: this.onChangeFile
+                 }),
+                 new sap.m.Button("CodeEditorSaveAs" + ID, {
+                   text: "Save as...",
+                   tooltip: "Save current file as...",
+                   press: this.onSaveAs
+                 }),
+                 new sap.m.Button("CodeEditorSave" + ID, {
+                   text: "Save",
+                   tooltip: "Save current file",
+                   press: this.onSaveFile
+                 }),
+                 new sap.m.Button("CodeEditorRun" + ID, {
+                   text: "Run",
+                   tooltip: "Run Current Macro",
+                   icon: "sap-icon://play",
+                   enabled: false,
+                   press: this.onRunMacro
+                 }),
+               ],
+               layoutData: new sap.ui.layout.SplitterLayoutData("CodeEditorSplitterLayoutData" + ID, {
+                 size: "35px",
+                 resizable: false
+               })
+             }),
+             new sap.ui.codeeditor.CodeEditor("CodeEditor" + ID, {
+               height: "100%",
+               colorTheme: "default",
+               type: "c_cpp"
+             })
+           ]
+         })
+     },
+
+     /** @brief Handle the "Save As..." button press event */
+     onSaveAs: function() {
+       var oEditor = this.getView().byId("aCodeEditor");
+       var oModel = oEditor.getModel();
+       var sText = oModel.getProperty("/code");
+       var filename = oModel.getProperty("/filename");
+       var ext = oModel.getProperty("/ext");
+       if (filename == undefined) filename = "untitled";
+       if (ext == undefined) ext = "txt";
+       File.save(sText, filename, ext);
+       oModel().setProperty("/modified", false);
+     },
+
+     /** @brief Handle the "Save" button press event */
+     onSaveFile: function() {
+       var oEditor = this.getSelectedCodeEditorTab();
+       var oModel = oEditor.getModel();
+       var sText = oModel.getProperty("/code");
+       var fullpath = oModel.getProperty("/fullpath");
+       if (fullpath == undefined)
+         return onSaveAs();
+       oModel.setProperty("/modified", false);
+       return this.websocket.Send("SAVEFILE:" + fullpath + ":" + sText);
+     },
+
+     reallyRunMacro: function() {
+       var oEditor = this.getSelectedCodeEditorTab();
+       var oModel = oEditor.getModel();
+       var sText = oModel.getProperty("/code");
+       var fullpath = oModel.getProperty("/fullpath");
+       if (fullpath == undefined)
+         return this.onSaveAs();
+       return this.websocket.Send("RUNMACRO:" + fullpath);
+     },
+
+     /** @brief Handle the "Run" button press event */
+     onRunMacro: function() {
+       var pthis = this;
+       var oEditor = this.getSelectedCodeEditorTab();
+       var oModel = oEditor.getModel();
+       if (oModel.getProperty("/modified") === true) {
+         MessageBox.confirm('The text has been modified! Do you want to save it?', {
+           title: 'Run Macro',
+           icon: sap.m.MessageBox.Icon.QUESTION,
+           actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO, sap.m.MessageBox.Action.CANCEL],
+           onClose: function (oAction) {
+             if (oAction === MessageBox.Action.YES)
+               pthis.onSaveFile();
+             else if (oAction === MessageBox.Action.CANCEL)
+               return;
+             return pthis.reallyRunMacro();
+           }
+         });
+       }
+       else
+         return this.reallyRunMacro();
+     },
+
+     getSelectedCodeEditorTab: function(no_warning) {
+       // FIXME: Thibault, one can much easily detect widget type
+       // otherwise too many checks required
+       let oTabItemString = this.getView().byId("myTabContainer").getSelectedItem();
+
+       let oTabItem = sap.ui.getCore().byId(oTabItemString);
+       if(oTabItem) {
+         let oTabItemContent = oTabItem.getContent();
+         if (oTabItemContent[0].mAggregations.contentAreas)
+           for (let i=0; i<oTabItemContent[0].mAggregations.contentAreas.length; i++) {
+             if (oTabItemContent[0].mAggregations.contentAreas[i].sId.indexOf("__editor") !== -1) {
+               return oTabItemContent[0].mAggregations.contentAreas[i];
+             }
+           }
+       }
+
+       if (!no_warning) MessageToast.show("Sorry, you need to select a code editor tab", {duration: 1500});
+       return -1;
+     },
+
+     /* =========================================== */
+     /* =============== Code Editor =============== */
+     /* =========================================== */
 
       /** @brief Extract the file name and extension
       * @desc Used to set the editor's model properties and display the file name on the tab element  */
@@ -352,64 +494,6 @@ sap.ui.define(['sap/ui/core/Component',
         // ß
      },
 
-      /** @brief Handle the "Save As..." button press event */
-      onSaveAs: function() {
-         var oEditor = this.getView().byId("aCodeEditor");
-         var oModel = oEditor.getModel();
-         var sText = oModel.getProperty("/code");
-         var filename = oModel.getProperty("/filename");
-         var ext = oModel.getProperty("/ext");
-         if (filename == undefined) filename = "untitled";
-         if (ext == undefined) ext = "txt";
-         File.save(sText, filename, ext);
-         oModel().setProperty("/modified", false);
-      },
-
-      /** @brief Handle the "Save" button press event */
-      onSaveFile: function() {
-         var oEditor = this.getSelectedCodeEditorTab();
-         var oModel = oEditor.getModel();
-         var sText = oModel.getProperty("/code");
-         var fullpath = oModel.getProperty("/fullpath");
-         if (fullpath == undefined)
-            return onSaveAs();
-         oModel.setProperty("/modified", false);
-         return this.websocket.Send("SAVEFILE:" + fullpath + ":" + sText);
-      },
-
-      reallyRunMacro: function() {
-         var oEditor = this.getSelectedCodeEditorTab();
-         var oModel = oEditor.getModel();
-         var sText = oModel.getProperty("/code");
-         var fullpath = oModel.getProperty("/fullpath");
-         if (fullpath == undefined)
-            return this.onSaveAs();
-         return this.websocket.Send("RUNMACRO:" + fullpath);
-      },
-
-      /** @brief Handle the "Run" button press event */
-      onRunMacro: function() {
-         var pthis = this;
-         var oEditor = this.getSelectedCodeEditorTab();
-         var oModel = oEditor.getModel();
-         if (oModel.getProperty("/modified") === true) {
-            MessageBox.confirm('The text has been modified! Do you want to save it?', {
-               title: 'Run Macro',
-               icon: sap.m.MessageBox.Icon.QUESTION,
-               actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO, sap.m.MessageBox.Action.CANCEL],
-               onClose: function (oAction) {
-                  if (oAction === MessageBox.Action.YES)
-                     pthis.onSaveFile();
-                  else if (oAction === MessageBox.Action.CANCEL)
-                     return;
-                  return pthis.reallyRunMacro();
-               }
-            });
-         }
-         else
-            return this.reallyRunMacro();
-      },
-
       /** @brief Assign the "double click" event handler to each row */
       assignRowHandlers: function() {
          var rows = this.byId("treeTable").getRows();
@@ -586,26 +670,6 @@ sap.ui.define(['sap/ui/core/Component',
 
          this.isConnected = false;
       },
-
-     getSelectedCodeEditorTab: function(no_warning) {
-        // FIXME: Thibault, one can much easily detect widget type
-        // otherwise too many checks required
-        let oTabItemString = this.getView().byId("myTabContainer").getSelectedItem();
-
-        let oTabItem = sap.ui.getCore().byId(oTabItemString);
-        if(oTabItem) {
-           let oTabItemContent = oTabItem.getContent();
-           if (oTabItemContent[0].mAggregations.contentAreas)
-              for (let i=0; i<oTabItemContent[0].mAggregations.contentAreas.length; i++) {
-                 if (oTabItemContent[0].mAggregations.contentAreas[i].sId.indexOf("__editor") !== -1) {
-                    return oTabItemContent[0].mAggregations.contentAreas[i];
-                 }
-              }
-        }
-
-        if (!no_warning) MessageToast.show("Sorry, you need to select a code editor tab", {duration: 1500});
-        return -1;
-     },
 
      getSelectedImageViewer: function(no_warning) {
        let oTabItemString = this.getView().byId("myTabContainer").getSelectedItem();
@@ -796,46 +860,6 @@ sap.ui.define(['sap/ui/core/Component',
      newRootXCanvas: function(oEvent, msg) {
        if (this.isConnected)
           this.websocket.Send(msg);
-     },
-
-     newCodeEditor: async function() {
-        let oTabContainer = this.getView().byId("myTabContainer");
-
-        let tabContainerItem = new TabContainerItem({
-          icon: "sap-icon://write-new-document",
-          name:"Code Editor",
-          additionalText: "untitled"
-        });
-        await Fragment.load({name: "rootui5.browser.view.codeeditor", controller: this}).then(function (oFragment) {
-          tabContainerItem.removeAllContent();
-          tabContainerItem.addContent(oFragment);
-
-          // TODO: use proper openui5 methods to get aggregation
-          let editor = oFragment.mAggregations.contentAreas[1];
-
-          editor.setModel(new JSONModel({
-            code: "",
-            ext: "",
-            filename: "",
-            fullpath: "",
-            modified: false
-          }));
-
-          editor.attachChange( function() {
-            this.getModel().setProperty("/modified", true);
-          });
-
-        });
-
-        oTabContainer.addItem(tabContainerItem);
-
-        let splitterUpperContent = tabContainerItem.getContent()[0].mAggregations.contentAreas[0].getContent();
-        splitterUpperContent[0].attachChange(this.onChangeFile, this);
-        splitterUpperContent[1].attachPress(this.onSaveAs, this);
-        splitterUpperContent[2].attachPress(this.onSaveFile, this);
-        splitterUpperContent[3].attachPress(this.onRunMacro, this);
-
-        oTabContainer.setSelectedItem(tabContainerItem);
      },
 
      newImageViewer: async function() {
