@@ -162,55 +162,51 @@ sap.ui.define(['sap/ui/core/Component',
      /* =========================================== */
 
      newCodeEditor: async function () {
-       console.log("newCodeEditor()");
-       console.log("ID", this.globalId);
        const oTabContainer = this.getView().byId("myTabContainer");
 
-       const oTabContainerItem = new TabContainerItem("CodeEditorTab"+this.globalId, {
+       const oTabContainerItem = new TabContainerItem("CodeEditor"+this.globalId, {
          icon: "sap-icon://write-new-document",
          name: "Code Editor",
          additionalText: "untitled"
        });
-       const oCodeEditor = this.newCodeEditorFragment(this.globalId);
+
+       const oCodeEditorFragment = this.newCodeEditorFragment(this.globalId);
+       let ID = this.globalId;
        this.globalId++;
 
-       oCodeEditor.setModel(new JSONModel({
+       oTabContainerItem.addContent(oCodeEditorFragment);
+       oTabContainer.addItem(oTabContainerItem);
+       oTabContainer.setSelectedItem(oTabContainerItem);
+
+       sap.ui.getCore().byId("CodeEditor" + ID + "CodeEditor").setModel(new JSONModel({
          code: "",
          ext: "",
          filename: "",
          fullpath: "",
          modified: false
        }));
-
-       oTabContainerItem.addContent(oCodeEditor);
-
-       oTabContainer.addItem(oTabContainerItem);
-
-       oTabContainer.setSelectedItem(oTabContainerItem);
      },
 
      newCodeEditorFragment: function(ID) {
-       console.log("newCodeEditorFragment()");
-       console.log("ID", this.globalId);
-       return new sap.ui.layout.Splitter("CodeEditorSplitter" + ID, {
+       return new sap.ui.layout.Splitter("CodeEditor" + ID + "Splitter", {
            orientation: "Vertical",
            contentAreas: [
-             new sap.m.Toolbar("CodeEditorToolbar" + ID, {
+             new sap.m.Toolbar("CodeEditor" + ID + "Toolbar", {
                content: [
-                 new sap.ui.unified.FileUploader("CodeEditorFileUploader" + ID, {
+                 new sap.ui.unified.FileUploader("CodeEditor" + ID + "FileUploader", {
                    // press: this.onChangeFile
                  }),
-                 new sap.m.Button("CodeEditorSaveAs" + ID, {
+                 new sap.m.Button("CodeEditor" + ID + "SaveAs", {
                    text: "Save as...",
                    tooltip: "Save current file as...",
                    press: this.onSaveAs
                  }),
-                 new sap.m.Button("CodeEditorSave" + ID, {
+                 new sap.m.Button("CodeEditor" + ID + "Save", {
                    text: "Save",
                    tooltip: "Save current file",
                    press: this.onSaveFile
                  }),
-                 new sap.m.Button("CodeEditorRun" + ID, {
+                 new sap.m.Button("CodeEditor" + ID + "Run", {
                    text: "Run",
                    tooltip: "Run Current Macro",
                    icon: "sap-icon://play",
@@ -218,15 +214,16 @@ sap.ui.define(['sap/ui/core/Component',
                    press: this.onRunMacro
                  }),
                ],
-               layoutData: new sap.ui.layout.SplitterLayoutData("CodeEditorSplitterLayoutData" + ID, {
+               layoutData: new sap.ui.layout.SplitterLayoutData("CodeEditor" + ID + "SplitterLayoutData", {
                  size: "35px",
                  resizable: false
                })
              }),
-             new sap.ui.codeeditor.CodeEditor("CodeEditor" + ID, {
+             new sap.ui.codeeditor.CodeEditor("CodeEditor" + ID + "CodeEditor", {
                height: "100%",
                colorTheme: "default",
-               type: "c_cpp"
+               type: "c_cpp",
+               value: "{/code}"
              })
            ]
          })
@@ -295,105 +292,101 @@ sap.ui.define(['sap/ui/core/Component',
        // otherwise too many checks required
        let oTabItemString = this.getView().byId("myTabContainer").getSelectedItem();
 
-       let oTabItem = sap.ui.getCore().byId(oTabItemString);
-       if(oTabItem) {
-         let oTabItemContent = oTabItem.getContent();
-         if (oTabItemContent[0].mAggregations.contentAreas)
-           for (let i=0; i<oTabItemContent[0].mAggregations.contentAreas.length; i++) {
-             if (oTabItemContent[0].mAggregations.contentAreas[i].sId.indexOf("__editor") !== -1) {
-               return oTabItemContent[0].mAggregations.contentAreas[i];
-             }
-           }
+       if(oTabItemString.indexOf("CodeEditor") !== -1) {
+         let oCodeEditor = sap.ui.getCore().byId(oTabItemString+"CodeEditor");
+         if (oCodeEditor) {
+           return oCodeEditor;
+         }
+       } else {
+         if (!no_warning) MessageToast.show("Sorry, you need to select a code editor tab", {duration: 1500});
+         return -1;
        }
+     },
 
-       if (!no_warning) MessageToast.show("Sorry, you need to select a code editor tab", {duration: 1500});
-       return -1;
+     /** @brief Extract the file name and extension
+      * @desc Used to set the editor's model properties and display the file name on the tab element  */
+     setFileNameType: function(filename) {
+       var oEditor = this.getSelectedCodeEditorTab();
+       var oModel = oEditor.getModel();
+       var oTabElement = oEditor.getParent().getParent();
+       var ext = "txt";
+       let runButton = this.getRunButtonFromCodeEditor(oEditor);
+       runButton.setEnabled(false);
+       if (filename.lastIndexOf('.') > 0)
+         ext = filename.substr(filename.lastIndexOf('.') + 1);
+       switch(ext.toLowerCase()) {
+         case "c":
+         case "cc":
+         case "cpp":
+         case "cxx":
+           runButton.setEnabled(true);
+           break;
+         case "h":
+         case "hh":
+         case "hxx":
+           oEditor.setType('c_cpp');
+           break;
+         case "f":
+           oEditor.setType('fortran');
+           break;
+         case "htm":
+         case "html":
+           oEditor.setType('html');
+           break;
+         case "js":
+           oEditor.setType('javascript');
+           break;
+         case "json":
+           oEditor.setType('json');
+           break;
+         case "md":
+           oEditor.setType('markdown');
+           break;
+         case "py":
+           oEditor.setType('python');
+           break;
+         case "tex":
+           oEditor.setType('latex');
+           break;
+         case "cmake":
+         case "log":
+         case "txt":
+           oEditor.setType('plain_text');
+           break;
+         case "xml":
+           oEditor.setType('xml');
+           break;
+         default: // unsupported type
+           if (filename.lastIndexOf('README') >= 0)
+             oEditor.setType('plain_text');
+           else
+             return false;
+           break;
+       }
+       oTabElement.setAdditionalText(filename);
+       if (filename.lastIndexOf('.') > 0)
+         filename = filename.substr(0, filename.lastIndexOf('.'));
+       oModel.setProperty("/filename", filename);
+       oModel.setProperty("/ext", ext);
+       return true;
+     },
+
+     /** @brief Handle the "Browse..." button press event */
+     onChangeFile: function(oEvent) {
+       var oEditor = this.getSelectedCodeEditorTab();
+       var oModel = oEditor.getModel();
+       var oReader = new FileReader();
+       oReader.onload = function() {
+         oModel.setProperty("/code", oReader.result);
+       };
+       var file = oEvent.getParameter("files")[0];
+       if (this.setFileNameType(file.name))
+         oReader.readAsText(file);
      },
 
      /* =========================================== */
      /* =============== Code Editor =============== */
      /* =========================================== */
-
-      /** @brief Extract the file name and extension
-      * @desc Used to set the editor's model properties and display the file name on the tab element  */
-     setFileNameType: function(filename) {
-         var oEditor = this.getSelectedCodeEditorTab();
-         var oModel = oEditor.getModel();
-         var oTabElement = oEditor.getParent().getParent();
-         var ext = "txt";
-         let runButton = this.getRunButtonFromCodeEditor(oEditor);
-        runButton.setEnabled(false);
-         if (filename.lastIndexOf('.') > 0)
-            ext = filename.substr(filename.lastIndexOf('.') + 1);
-         switch(ext.toLowerCase()) {
-            case "c":
-            case "cc":
-            case "cpp":
-            case "cxx":
-              runButton.setEnabled(true);
-              break;
-            case "h":
-            case "hh":
-            case "hxx":
-               oEditor.setType('c_cpp');
-               break;
-            case "f":
-               oEditor.setType('fortran');
-               break;
-            case "htm":
-            case "html":
-               oEditor.setType('html');
-               break;
-            case "js":
-               oEditor.setType('javascript');
-               break;
-            case "json":
-               oEditor.setType('json');
-               break;
-            case "md":
-               oEditor.setType('markdown');
-               break;
-            case "py":
-               oEditor.setType('python');
-               break;
-            case "tex":
-               oEditor.setType('latex');
-               break;
-            case "cmake":
-            case "log":
-            case "txt":
-               oEditor.setType('plain_text');
-               break;
-            case "xml":
-               oEditor.setType('xml');
-               break;
-            default: // unsupported type
-               if (filename.lastIndexOf('README') >= 0)
-                  oEditor.setType('plain_text');
-               else
-                  return false;
-               break;
-         }
-         oTabElement.setAdditionalText(filename);
-         if (filename.lastIndexOf('.') > 0)
-            filename = filename.substr(0, filename.lastIndexOf('.'));
-         oModel.setProperty("/filename", filename);
-         oModel.setProperty("/ext", ext);
-         return true;
-      },
-
-      /** @brief Handle the "Browse..." button press event */
-      onChangeFile: function(oEvent) {
-         var oEditor = this.getSelectedCodeEditorTab();
-         var oModel = oEditor.getModel();
-         var oReader = new FileReader();
-         oReader.onload = function() {
-            oModel.setProperty("/code", oReader.result);
-         };
-         var file = oEvent.getParameter("files")[0];
-         if (this.setFileNameType(file.name))
-            oReader.readAsText(file);
-      },
 
      _getSettingsMenu: async function () {
        if (!this._oSettingsMenu) {
@@ -563,7 +556,7 @@ sap.ui.define(['sap/ui/core/Component',
             prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null,
             fullpath = (prop && prop.fullpath) ? prop.fullpath.substr(1, prop.fullpath.length-2) : "";
 
-        if (row._bHasChildren){
+        if (row._bHasChildren) {
           let rowText = row.getCells()[0].getContent()[1].getText().substr(1);
           if(!rowText.endsWith(".root")) {
             let oBreadcrumbs = this.getView().byId("breadcrumbs");
@@ -616,7 +609,7 @@ sap.ui.define(['sap/ui/core/Component',
         if (!fullpath) return;
 
         // first try to activate editor
-        let codeEditor = this.getSelectedCodeEditorTab(true);
+        let codeEditor = this.getSelectedCodeEditorTab();
         if(codeEditor !== -1) {
           var oModel = codeEditor.getModel();
 
@@ -703,6 +696,8 @@ sap.ui.define(['sap/ui/core/Component',
      /** Entry point for all data from server */
      OnWebsocketMsg: function(handle, msg, offset) {
 
+       console.log(msg);
+
          if (typeof msg != "string")
             return console.error("Browser do not uses binary messages len = " + mgs.byteLength);
 
@@ -714,7 +709,7 @@ sap.ui.define(['sap/ui/core/Component',
             this.processInitMsg(msg);
             break;
          case "FREAD":  // file read
-            let result = this.getSelectedCodeEditorTab(true);
+            let result = this.getSelectedCodeEditorTab();
             if (result !== -1)
                result.getModel().setProperty("/code", msg);
             break;
