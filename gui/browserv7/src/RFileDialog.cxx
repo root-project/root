@@ -47,8 +47,11 @@ web-based FileDialog.
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-RFileDialog::RFileDialog()
+RFileDialog::RFileDialog(EDialogTypes kind, const std::string &title)
 {
+   fKind = kind;
+   fTitle = title;
+
    fWorkingDirectory = gSystem->UnixPathName(gSystem->WorkingDirectory());
    printf("Current dir %s\n", fWorkingDirectory.c_str());
 
@@ -59,13 +62,12 @@ RFileDialog::RFileDialog()
    fWebWindow->SetPanelName("rootui5.browser.view.FileDialog");
 
    // this is call-back, invoked when message received via websocket
-   fWebWindow->SetCallBacks([this](unsigned connid) { fConnId = connid; SendInitMsg(connid); SendDirContent(connid); },
-                            [this](unsigned connid, const std::string &arg) { WebWindowCallback(connid, arg); });
+   fWebWindow->SetCallBacks([this](unsigned connid) { fConnId = connid; SendInitMsg(connid); },
+                            [this](unsigned connid, const std::string &arg) { WebWindowCallback(connid, arg); },
+                            [this](unsigned connid) { if (fConnId == connid) fConnId = 0; if (fCallback && !fDidSelect) fCallback(""); fDidSelect = true; });
    fWebWindow->SetGeometry(800, 600); // configure predefined window geometry
    fWebWindow->SetConnLimit(1); // the only connection is allowed
    fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
-
-   Show();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -73,6 +75,18 @@ RFileDialog::RFileDialog()
 
 RFileDialog::~RFileDialog()
 {
+   printf("RFileDialog Destructor\n");
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Assign callback. If file was already selected, immediately call it
+
+void RFileDialog::SetCallback(RFileDialogCallback_t callback)
+{
+   fCallback = callback;
+   if (fDidSelect && fCallback)
+      fCallback(fSelect);
 }
 
 
@@ -104,15 +118,20 @@ std::string RFileDialog::ProcessBrowserRequest(const std::string &msg)
 /////////////////////////////////////////////////////////////////////////////////
 /// Show or update RFileDialog in web window
 /// If web window already started - just refresh it like "reload" button does
+/// Reset result of file selection (if any)
 
 void RFileDialog::Show(const RWebDisplayArgs &args)
 {
+   fDidSelect = false;
+   fSelect.clear();
+
    if (fWebWindow->NumConnections() == 0) {
       fWebWindow->Show(args);
    } else {
       WebWindowCallback(0, "RELOAD");
    }
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Hide ROOT Browser
@@ -127,7 +146,19 @@ void RFileDialog::Hide()
 
 void RFileDialog::SendInitMsg(unsigned connid)
 {
-   std::string jsoncode = "{ \"kind\" : \"SaveAs\", \"path\" : \" "s + fWorkingDirectory + "\" }"s;
+   RBrowserRequest request;
+   request.path = "/";
+   request.first = 0;
+   request.number = 0;
+
+   std::string kindstr;
+   switch(fKind) {
+      case kOpenFile : kindstr = "OpenFile"; break;
+      case kSaveAsFile : kindstr = "SaveAsFile"; break;
+      case kNewFile : kindstr = "NewFile"; break;
+   }
+
+   std::string jsoncode = "{ \"kind\" : \""s + kindstr + "\", \"title\" : \""s + fTitle + "\", \"path\" : \" "s + fWorkingDirectory + "\", \"brepl\" : "s + fBrowsable.ProcessRequest(request) + "   }"s;
 
    fWebWindow->Send(connid, "INMSG:"s + jsoncode);
 }
@@ -150,7 +181,6 @@ void RFileDialog::SendDirContent(unsigned connid)
    request.path = "/";
    request.first = 0;
    request.number = 0;
-
    auto msg = "BREPL:"s + fBrowsable.ProcessRequest(request);
 
    fWebWindow->Send(connid, msg);
@@ -181,8 +211,47 @@ void RFileDialog::WebWindowCallback(unsigned connid, const std::string &arg)
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
       SendDirContent(connid);
    } else if (arg.compare(0, 7, "SELECT:") == 0) {
-      auto res = fWorkingDirectory + "/"s + arg.substr(7);
+      fSelect = fWorkingDirectory + "/"s + arg.substr(7);
 
-      printf("Select %s\n", res.c_str());
+      if (fCallback && !fDidSelect)
+         fCallback(fSelect);
+
+      fDidSelect = true;
+
+      fWebWindow->Send(connid, "CLOSE:"s); // sending close
    }
 }
+
+std::string RFileDialog::Dialog(EDialogTypes kind, const std::string &title)
+{
+   RFileDialog dlg(kind, title);
+
+   dlg.Show();
+
+   dlg.fWebWindow->WaitForTimed([&](double) {
+      if (dlg.fDidSelect) return 1;
+
+      return 0; // continue waiting
+   });
+
+   return dlg.fSelect;
+}
+
+
+
+std::string RFileDialog::OpenFile(const std::string &title)
+{
+   return Dialog(kOpenFile, title);
+}
+
+std::string RFileDialog::SaveAsFile(const std::string &title)
+{
+   return Dialog(kSaveAsFile, title);
+}
+
+std::string RFileDialog::NewFile(const std::string &title)
+{
+   return Dialog(kNewFile, title);
+}
+
+

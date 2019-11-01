@@ -26,19 +26,40 @@
 namespace ROOT {
 namespace Experimental {
 
+
+/** Initial message send to client to configure layout */
+
+
+/// function signature for connect/disconnect call-backs
+/// argument is connection id
+using RFileDialogCallback_t = std::function<void(const std::string &)>;
+
+
 /** Web-based FileDialog */
 
 class RFileDialog {
+public:
+
+   enum EDialogTypes {
+      kOpenFile,
+      kSaveAsFile,
+      kNewFile
+   };
 
 protected:
 
-   std::string fTitle;  ///<! title
+   EDialogTypes fKind{kOpenFile};      ///<! dialog kind OpenFile, SaveAs, NewFile
+   std::string  fTitle;                ///<! title
+   std::string  fWorkingDirectory;     ///<! directory for which files list is produced
+   RBrowsable   fBrowsable;            ///<! central browsing element
+
    unsigned fConnId{0}; ///<! default connection id
 
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window for file dialog
 
-   std::string fWorkingDirectory;            ///<! directory for which files list is produced
-   RBrowsable  fBrowsable;                   ///<! central browsing element
+   bool fDidSelect{false};           ///<! true when dialog is selected or closed
+   std::string fSelect;              ///<! result of file selection
+   RFileDialogCallback_t fCallback;  ///<! function receiving result
 
    std::string ProcessBrowserRequest(const std::string &msg);
    std::string GetCurrentWorkingDirectory();
@@ -48,12 +69,24 @@ protected:
 
    void WebWindowCallback(unsigned connid, const std::string &arg);
 
+   static std::string Dialog(EDialogTypes kind, const std::string &title);
+
+public:
+
+   RFileDialog(EDialogTypes kind = kOpenFile, const std::string &title = "OpenFile dialog");
+   virtual ~RFileDialog();
+
+   void SetCallback(RFileDialogCallback_t callback);
+
    void Show(const RWebDisplayArgs &args = "");
    void Hide();
 
-public:
-   RFileDialog();
-   virtual ~RFileDialog();
+   bool IsCompleted() const { return fDidSelect; }
+   const std::string &GetFileName() const { return fSelect; }
+
+   static std::string OpenFile(const std::string &title);
+   static std::string SaveAsFile(const std::string &title);
+   static std::string NewFile(const std::string &title);
 
 };
 

@@ -46,7 +46,9 @@ sap.ui.define(['rootui5/panel/Controller',
          };
          */
 
-         this.oModel = new JSONModel({ filesList: [{name:"first.txt", counter: 11}, {name:"second.txt", counter: 22}, {name:"third.xml", counter: 33}]});
+         this.kind = "None"; // not yet known
+
+         this.oModel = new JSONModel({ dialogTitle: "Dialog Title", filesList: [{name:"first.txt", counter: 11}, {name:"second.txt", counter: 22}, {name:"third.xml", counter: 33}]});
          this.getView().setModel(this.oModel);
       },
 
@@ -107,7 +109,12 @@ sap.ui.define(['rootui5/panel/Controller',
 
         var cfg = JSON.parse(msg);
 
+        this.kind = cfg.kind; //
+
         this.updateBReadcrumbs(cfg.path);
+
+        this.oModel.setProperty("/dialogTitle", cfg.title);
+        this.oModel.setProperty("/filesList", cfg.brepl.nodes);
      },
 
      OnWebsocketOpened: function(handle) {
@@ -117,10 +124,17 @@ sap.ui.define(['rootui5/panel/Controller',
            this.model.sendFirstRequest(this.websocket);
       },
 
+      closeFileDialog: function() {
+         // add more logic when FileDialog embed into main window
+         if (this.did_close) return;
+         if (window) window.open('','_self').close();
+         this.did_close = true;
+      },
+
       OnWebsocketClosed: function() {
          // when connection closed, close panel as well
          console.log('CLOSE WINDOW WHEN CONNECTION CLOSED');
-         if (window) window.open('','_self').close();
+         this.closeFileDialog();
          this.isConnected = false;
       },
 
@@ -136,6 +150,9 @@ sap.ui.define(['rootui5/panel/Controller',
          switch (mhdr) {
          case "INMSG":
             this.processInitMsg(msg);
+            break;
+         case "CLOSE":
+            this.closeFileDialog();
             break;
          case "GETWORKDIR":
             this.updateBReadcrumbs(msg);
