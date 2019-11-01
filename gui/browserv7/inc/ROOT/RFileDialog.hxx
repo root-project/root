@@ -37,13 +37,15 @@ protected:
 
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window for file dialog
 
-   std::string fWorkingDirectory;            ///<! top working directory used by Browsable
+   std::string fWorkingDirectory;            ///<! directory for which files list is produced
    RBrowsable  fBrowsable;                   ///<! central browsing element
 
    std::string ProcessBrowserRequest(const std::string &msg);
    std::string GetCurrentWorkingDirectory();
 
    void SendInitMsg(unsigned connid);
+   void SendDirContent(unsigned connid);
+
    void WebWindowCallback(unsigned connid, const std::string &arg);
 
    void Show(const RWebDisplayArgs &args = "");
