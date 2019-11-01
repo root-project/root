@@ -1,0 +1,23 @@
+leak:llvm::SmallVectorBase::grow_pod
+leak:llvm::BumpPtrAllocatorImpl
+leak:llvm::DenseMap*grow
+leak:llvm::StringMapImpl
+leak:llvm::TinyPtr
+leak:llvm::FoldingSetBase
+leak:llvm::MemoryBuffer
+leak:llvm::CodeGenDAG
+leak:llvm::EmitFastISel
+
+#leak:clang::
+leak:clang::FileManager::getFile
+leak:clang::LineTableInfo
+leak:clang::HeaderSearch
+leak:clang::Diag
+leak:clang::Preprocessor::
+leak:clang::TextDiagnosticPrinter
+
+#cling macro execution
+leak:cling::IncrementalExecutor
+
+#When the fast stack unwinder gets stuck because of statically linked libstdc++ functions:
+#leak:std::__cxx11::basic_string*::_M_

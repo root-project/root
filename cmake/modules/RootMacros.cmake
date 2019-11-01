@@ -467,11 +467,11 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
   #---what rootcling command to use--------------------------
   if(ARG_STAGE1)
-    set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}" $<TARGET_FILE:rootcling_stage1>)
+    set(command ${CMAKE_COMMAND} -E env "${ld_library_path}=${CMAKE_BINARY_DIR}/lib:$ENV{${ld_library_path}}" "LSAN_OPTIONS=$ENV{LSAN_OPTIONS}:exitcode=0" $<TARGET_FILE:rootcling_stage1>)
     set(pcm_name)
   else()
     if(CMAKE_PROJECT_NAME STREQUAL ROOT)
-      set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}"
+      set(command ${CMAKE_COMMAND} -E env "${ld_library_path}=${CMAKE_BINARY_DIR}/lib:$ENV{${ld_library_path}}" "LSAN_OPTIONS=$ENV{LSAN_OPTIONS}:exitcode=0"
                   "ROOTIGNOREPREFIX=1" $<TARGET_FILE:rootcling> -rootbuild)
       set(ROOTCINTDEP rootcling)
     elseif(TARGET ROOT::rootcling)
@@ -1366,9 +1366,18 @@ function(ROOT_ADD_TEST test)
   set(_command ${_command} -DSYS=${ROOTSYS})
 
   #- Handle ENVIRONMENT argument
+  if(asan)
+    if(_command MATCHES python)
+      list(APPEND ARG_ENVIRONMENT LD_PRELOAD=${ASAN_RUNTIME_LIBRARY})
+      set(DISABLE_LSAN ":detect_leaks=0")
+    endif()
+    list(APPEND ARG_ENVIRONMENT ASAN_OPTIONS=$ENV{ASAN_OPTIONS}${DISABLE_LSAN})
+    list(APPEND ARG_ENVIRONMENT LSAN_OPTIONS=$ENV{LSAN_OPTIONS})
+    list(APPEND ARG_ENVIRONMENT ${ld_library_path}=$ENV{${ld_library_path}})
+  endif()
+
   if(ARG_ENVIRONMENT)
     string(REPLACE ";" "#" _env "${ARG_ENVIRONMENT}")
-    string(REPLACE "=" "@" _env "${_env}")
     set(_command ${_command} -DENV=${_env})
   endif()
 

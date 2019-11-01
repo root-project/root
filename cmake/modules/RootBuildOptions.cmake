@@ -189,6 +189,9 @@ option(minimal "Enable only required options by default" OFF)
 option(rootbench "Build rootbench if rootbench exists in root or if it is a sibling directory." OFF)
 option(roottest "Build roottest if roottest exists in root or if it is a sibling directory." OFF)
 option(testing "Enable testing with CTest" OFF)
+option(asan "Build ROOT with address sanitizer instrumentation" OFF)
+include(CMakeDependentOption)
+CMAKE_DEPENDENT_OPTION(lsan "When asan is enabled, also check for memory leaks." OFF "asan" OFF)
 
 set(gcctoolchain "" CACHE PATH "Set path to GCC toolchain used to build llvm/clang")
 
