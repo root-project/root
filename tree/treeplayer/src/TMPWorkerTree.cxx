@@ -164,8 +164,6 @@ void TMPWorkerTree::SetupTreeCache(TTree *tree)
          }
          if (fTreeCache) {
             fTreeCacheIsLearning = fTreeCache->IsLearning();
-            if (fTreeCacheIsLearning)
-               Info("SetupTreeCache","the tree cache is in learning phase");
          }
       } else {
          Warning("SetupTreeCache", "default tree does not have a file attached: corruption? Tree cache untouched");
