@@ -1,6 +1,5 @@
 sap.ui.define(['sap/ui/core/Component',
                'sap/ui/core/mvc/Controller',
-               'sap/ui/core/Control',
                'sap/ui/core/Icon',
                'sap/ui/core/mvc/XMLView',
                'sap/m/Text',
@@ -19,7 +18,7 @@ sap.ui.define(['sap/ui/core/Component',
                "sap/m/Link",
                "sap/ui/codeeditor/CodeEditor",
                "sap/m/TabContainerItem",
-],function(Component, Controller, CoreControl, CoreIcon, XMLView, mText, mCheckBox, MessageBox, MessageToast, TabContainerItem,
+],function(Component, Controller, CoreIcon, XMLView, mText, mCheckBox, MessageBox, MessageToast, TabContainerItem,
            Splitter, ResizeHandler, HorizontalLayout, tableColumn, File, JSONModel, BrowserModel, Fragment, Link, CodeEditor) {
 
    "use strict";
@@ -38,147 +37,138 @@ sap.ui.define(['sap/ui/core/Component',
          this.websocket.SetReceiver(this);
          this.websocket.Connect();
 
-         this.queue = []; // received draw messages
-
          // if true, most operations are performed locally without involving server
          this.standalone = this.websocket.kind == "file";
 
-/*         if (JSROOT.GetUrlOption('nobrowser') !== null) {
-            // remove complete area
-            this.getView().byId("mainSplitter").removeAllContentAreas();
-         } else {
-*/
-            // create model only for browser - no need for anybody else
-            this.model = new BrowserModel();
+         // create model only for browser - no need for anybody else
+         this.model = new BrowserModel();
 
-            // copy extra attributes from element to node in the browser
-            // later can be done automatically
-            this.model.addNodeAttributes = function(node, elem) {
-               node.icon = elem.icon;
-               node.fsize = elem.fsize;
-               node.mtime = elem.mtime;
-               node.ftype = elem.ftype;
-               node.fuid = elem.fuid;
-               node.fgid = elem.fgid;
-               node.className = elem.className
-            };
+         // copy extra attributes from element to node in the browser
+         // later can be done automatically
+         this.model.addNodeAttributes = function(node, elem) {
+            node.icon = elem.icon;
+            node.fsize = elem.fsize;
+            node.mtime = elem.mtime;
+            node.ftype = elem.ftype;
+            node.fuid = elem.fuid;
+            node.fgid = elem.fgid;
+            node.className = elem.className
+         };
 
+         var t = this.getView().byId("treeTable");
+         t.setModel(this.model);
 
-            var t = this.getView().byId("treeTable");
+         this.model.assignTreeTable(t);
+         t.addColumn(new tableColumn({
+            label: "Name",
+            autoResizable: true,
+            visible: true,
+            template: new HorizontalLayout({
+               content: [
+                         new CoreIcon({src:"{icon}"}),
+                         new mText({text:" {name}", renderWhitespace: true, wrapping: false })
+                         ]
+            })
+         }));
+         t.addColumn(new tableColumn({
+            label: "Size",
+            autoResizable: true,
+            visible: true,
+            template: new HorizontalLayout({
+               content: [
+                         new mText({text:"{fsize}", wrapping: false })
+                         ]
+            })
+         }));
+         t.addColumn(new tableColumn({
+            label: "Time",
+            autoResizable: true,
+            visible: false,
+            template: new HorizontalLayout({
+               content: [
+                         new mText({text:"{mtime}", wrapping: false })
+                         ]
+            })
+         }));
+         t.addColumn(new tableColumn({
+            label: "Type",
+            autoResizable: true,
+            visible: false,
+            template: new HorizontalLayout({
+               content: [
+                         new mText({text:"{ftype}", wrapping: false })
+                         ]
+            })
+         }));
+         t.addColumn(new tableColumn({
+            label: "UID",
+            autoResizable: true,
+            visible: false,
+            template: new HorizontalLayout({
+               content: [
+                         new mText({text:"{fuid}", wrapping: false })
+                         ]
+            })
+         }));
+         t.addColumn(new tableColumn({
+            label: "GID",
+            autoResizable: true,
+            visible: false,
+            template: new HorizontalLayout({
+               content: [
+                         new mText({text:"{fgid}", wrapping: false })
+                         ]
+            })
+         }));
+         t.addColumn(new tableColumn({
+            label: "ClassName",
+            autoResizable: true,
+            visible: false,
+            template: new HorizontalLayout({
+               content: [
+                         new mText({text:"{className}", wrapping: false })
+                         ]
+            })
+         }));
 
-            t.setModel(this.model);
+         // catch re-rendering of the table to assign handlers
+         t.addEventDelegate({
+            onAfterRendering: function() { this.assignRowHandlers(); }
+         }, this);
 
-            this.model.assignTreeTable(t);
-            t.addColumn(new tableColumn({
-               label: "Name",
-               autoResizable: true,
-               visible: true,
-               template: new HorizontalLayout({
-                  content: [
-                     new CoreIcon({src:"{icon}"}),
-                     new mText({text:" {name}", renderWhitespace: true, wrapping: false })
-                  ]
-               })
-            }));
-            t.addColumn(new tableColumn({
-               label: "Size",
-               autoResizable: true,
-               visible: true,
-               template: new HorizontalLayout({
-                  content: [
-                     new mText({text:"{fsize}", wrapping: false })
-                  ]
-               })
-            }));
-            t.addColumn(new tableColumn({
-               label: "Time",
-               autoResizable: true,
-               visible: false,
-               template: new HorizontalLayout({
-                  content: [
-                     new mText({text:"{mtime}", wrapping: false })
-                  ]
-               })
-            }));
-            t.addColumn(new tableColumn({
-               label: "Type",
-               autoResizable: true,
-               visible: false,
-               template: new HorizontalLayout({
-                  content: [
-                     new mText({text:"{ftype}", wrapping: false })
-                  ]
-               })
-            }));
-            t.addColumn(new tableColumn({
-               label: "UID",
-               autoResizable: true,
-               visible: false,
-               template: new HorizontalLayout({
-                  content: [
-                     new mText({text:"{fuid}", wrapping: false })
-                  ]
-               })
-            }));
-            t.addColumn(new tableColumn({
-               label: "GID",
-               autoResizable: true,
-               visible: false,
-               template: new HorizontalLayout({
-                  content: [
-                     new mText({text:"{fgid}", wrapping: false })
-                  ]
-               })
-            }));
-            t.addColumn(new tableColumn({
-              label: "ClassName",
-              autoResizable: true,
-              visible: false,
-              template: new HorizontalLayout({
-                content: [
-                  new mText({text:"{className}", wrapping: false })
-                ]
-              })
-            }));
-
-            // catch re-rendering of the table to assign handlers
-            t.addEventDelegate({
-               onAfterRendering: function() { this.assignRowHandlers(); }
-            }, this);
-
-            // FIXME: one have to find direct method to configure this
-            this.byId("browserMaster").addEventDelegate({
-               onAfterRendering: function() { this.getView().byId("treeTableBox").$().children().first().css('flex-grow',1); }
-            }, this);
+         // FIXME: one have to find direct method to configure this
+         this.byId("browserMaster").addEventDelegate({
+            onAfterRendering: function() { this.getView().byId("treeTableBox").$().children().first().css('flex-grow',1); }
+         }, this);
 
 
-            let tabContainerItem = this.getView().byId("defaultCodeEditor");
-            await Fragment.load({name: "rootui5.browser.view.codeeditor", controller: this}).then(function (oFragment) {
-              tabContainerItem.removeAllContent();
-              tabContainerItem.addContent(oFragment);
-            });
+         let tabContainerItem = this.getView().byId("defaultCodeEditor");
+         await Fragment.load({name: "rootui5.browser.view.codeeditor", controller: this}).then(function (oFragment) {
+            tabContainerItem.removeAllContent();
+            tabContainerItem.addContent(oFragment);
+         });
 
-            // TODO: use proper openui5 methods to get aggregation
-            let defaultCodeEditor = this.getView().byId("defaultCodeEditor").getContent()[0].mAggregations.contentAreas[1];
-            defaultCodeEditor.setModel(new JSONModel({
-              code: "",
-              ext: "",
-              filename: "",
-              fullpath: "",
-              modified: false
-            }));
+         // TODO: use proper openui5 methods to get aggregation
+         let defaultCodeEditor = this.getView().byId("defaultCodeEditor").getContent()[0].mAggregations.contentAreas[1];
+         defaultCodeEditor.setModel(new JSONModel({
+            code: "",
+            ext: "",
+            filename: "",
+            fullpath: "",
+            modified: false
+         }));
 
-            let splitterUpperContent = this.getView().byId("defaultCodeEditor").getContent()[0].mAggregations.contentAreas[0].getContent();
-            splitterUpperContent[0].attachChange(this.onChangeFile, this);
-            splitterUpperContent[1].attachPress(this.onSaveAs, this);
-            splitterUpperContent[2].attachPress(this.onSaveFile, this);
-            splitterUpperContent[3].attachPress(this.onRunMacro, this);
+         let splitterUpperContent = this.getView().byId("defaultCodeEditor").getContent()[0].mAggregations.contentAreas[0].getContent();
+         splitterUpperContent[0].attachChange(this.onChangeFile, this);
+         splitterUpperContent[1].attachPress(this.onSaveAs, this);
+         splitterUpperContent[2].attachPress(this.onSaveFile, this);
+         splitterUpperContent[3].attachPress(this.onRunMacro, this);
 
-            defaultCodeEditor.attachChange( function() {
-               this.getModel().setProperty("/modified", true);
-            });
+         defaultCodeEditor.attachChange( function() {
+            this.getModel().setProperty("/modified", true);
+         });
 
-            this.drawingOptions = { TH1: 'hist', TH2: 'COL', TProfile: 'E0'};
+         this.drawingOptions = { TH1: 'hist', TH2: 'COL', TProfile: 'E0'};
 
       },
 
@@ -586,9 +576,6 @@ sap.ui.define(['sap/ui/core/Component',
          if (this.model)
             this.model.sendFirstRequest(this.websocket);
 
-         // when connection established, checked if we can submit requested
-         this.checkRequestMsg();
-
       },
 
       OnWebsocketClosed: function() {
@@ -659,14 +646,8 @@ sap.ui.define(['sap/ui/core/Component',
          msg = msg.substr(mhdr.length+1);
 
          switch (mhdr) {
-         case "DESCR":  // browser hierarchy
-            this.parseDescription(msg, true);
-            break;
          case "INMSG":
             this.processInitMsg(msg);
-            break;
-         case "FESCR":  // searching hierarchy
-            this.parseDescription(msg, false);
             break;
          case "FREAD":  // file read
             let result = this.getSelectedCodeEditorTab(true);
@@ -698,37 +679,6 @@ sap.ui.define(['sap/ui/core/Component',
                break;
              }
            }
-           break;
-         case "FROOT": // Root file
-           var selecedTabID = this.getSelectedtabFromtabContainer("myTabContainer"); // The ID of the selected tab in the TabContainer
-
-           var jsonAnswer = JSON.parse(msg); // message received from the server to JSON
-
-           var rootFileArray = jsonAnswer.path.split("/"); // splitting the path on /
-           var  rootFileRelativePath = ""; // Declaration of the var to open the good file
-
-           var  i = 0; // Iterator
-           while (rootFileArray[i].slice(-5) !== ".root") { // Iterating over the splited path until it find the .root file
-             rootFileRelativePath += "/" + rootFileArray[i];
-             i++;
-           }
-           rootFileRelativePath += "/" + rootFileArray[i]; // Adding the last bit (the wanted graphic) to the relative path
-
-           var  oCanvas = this.getView().byId("aRootCanvas" + selecedTabID); // Get the drawing place object
-
-           if (oCanvas === undefined || oCanvas === null) { // If the selected tabs it not a Root canvas then display and error message
-             MessageToast.show("Please, select a Root Canvas tab", {duration: 1500});
-             return;
-           }
-
-           var  oTabElement = oCanvas.getParent(); // Get the tab from the drawing place
-           var  rootFileDisplayName = rootFileArray[i] + "/" + rootFileArray[i + 1]; // Creating a simple nameOfTheFile.root/graphic;1 to display on the tab
-
-           document.getElementById("TopBrowserId--aRootCanvas" + selecedTabID).innerHTML = ""; // Clearing the canvas
-           oTabElement.setAdditionalText(rootFileDisplayName); // Setting the tab file name
-           var  finalJsonRoot = JSROOT.JSONR_unref(jsonAnswer.data); // Creating the graphic from the json
-           JSROOT.draw("TopBrowserId--aRootCanvas" + selecedTabID, finalJsonRoot, "colz"); // Drawing the graphic into the selected tab canvas
-
            break;
          case "BREPL":   // browser reply
             if (this.model) {
@@ -775,23 +725,12 @@ sap.ui.define(['sap/ui/core/Component',
          }
       },
 
-      omBeforeRendering: function() {
+      onBeforeRendering: function() {
          this.renderingDone = false;
       },
 
       onAfterRendering: function() {
          this.renderingDone = true;
-         this.checkRequestMsg();
-      },
-
-      checkRequestMsg: function() {
-         if (this.isConnected && this.renderingDone) {
-
-            if (this.creator && !this.ask_getdraw) {
-               this.websocket.Send("GETDRAW");
-               this.ask_getdraw = true;
-            }
-         }
       },
 
       /** Reload (refresh) file tree browser */
