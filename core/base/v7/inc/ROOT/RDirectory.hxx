@@ -183,6 +183,19 @@ public:
       }
    }
 
+   /// Remove entry from RDirectory (if exists)
+   bool Remove(std::string_view name)
+   {
+      std::string sName(name);
+      auto idx = fContent.find(sName);
+      if (idx != fContent.end()) {
+         fContent.erase(idx);
+         return true;
+      }
+      return false;
+   }
+
+
    /// Dedicated, process-wide RDirectory.
    ///
    /// \note This is *not* thread-safe. You will need to syncronize yourself. In
