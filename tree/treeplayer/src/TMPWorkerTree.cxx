@@ -77,7 +77,7 @@ TMPWorkerTree::~TMPWorkerTree()
 /// Auxilliary method for common initializations
 void TMPWorkerTree::Setup()
 {
-   Int_t uc = gEnv->GetValue("MultiProc.UseTreeCache", 0);
+   Int_t uc = gEnv->GetValue("MultiProc.UseTreeCache", 1);
    if (uc != 1) fUseTreeCache = kFALSE;
    fCacheSize = gEnv->GetValue("MultiProc.CacheSize", -1);
 }
