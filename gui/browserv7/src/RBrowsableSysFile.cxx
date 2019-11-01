@@ -246,7 +246,10 @@ public:
    std::shared_ptr<RElement> GetElement() override
    {
       if (!R_ISDIR(fCurrentStat.fMode) && (fCurrentName.length() > 5) && (fCurrentName.rfind(".root") == fCurrentName.length()-5)) {
-         auto elem = RProvider::OpenFile("root", fCurrentName);
+         std::string fullname = fPath;
+         if (!fullname.empty()) fullname.append("/");
+         fullname.append(fCurrentName);
+         auto elem = RProvider::OpenFile("root", fullname);
          if (elem) return elem;
       }
 
@@ -266,6 +269,7 @@ std::string RSysDirLevelIter::GetFileIcon(const std::string &fname)
    };
 
    if ((EndsWith(".c")) ||
+       (EndsWith(".C")) ||
        (EndsWith(".cpp")) ||
        (EndsWith(".cxx")) ||
        (EndsWith(".c++")) ||
