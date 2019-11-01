@@ -265,11 +265,12 @@ public:
 std::string RSysDirLevelIter::GetFileIcon(const std::string &fname)
 {
    auto EndsWith = [fname](const std::string &suffix) {
-      return (fname.length() > suffix.length()) ? (0 == fname.compare (fname.length() - suffix.length(), suffix.length(), suffix)) : false;
+      std::string name = fname;
+      std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+      return (name.length() > suffix.length()) ? (0 == name.compare (name.length() - suffix.length(), suffix.length(), suffix)) : false;
    };
 
    if ((EndsWith(".c")) ||
-       (EndsWith(".C")) ||
        (EndsWith(".cpp")) ||
        (EndsWith(".cxx")) ||
        (EndsWith(".c++")) ||
