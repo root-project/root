@@ -104,6 +104,14 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS}")
   set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined -Wl,--hash-style=\"both\"")
+  
+  if(asan)
+    # See also core/sanitizer/README.md for what's happening.
+    execute_process(COMMAND ${CMAKE_CXX_COMPILER} --print-file-name=libclang_rt.asan-x86_64.so OUTPUT_VARIABLE ASAN_RUNTIME_LIBRARY OUTPUT_STRIP_TRAILING_WHITESPACE)
+    set(ASAN_EXTRA_CXX_FLAGS -fsanitize=address -fno-omit-frame-pointer -fsanitize-recover=address)
+    set(ASAN_EXTRA_SHARED_LINKER_FLAGS "-fsanitize=address -z undefs")
+    set(ASAN_EXTRA_EXE_LINKER_FLAGS "-fsanitize=address -z undefs -Wl,--undefined=__asan_default_options -Wl,--undefined=__lsan_default_options -Wl,--undefined=__lsan_default_suppressions")
+  endif()
 
   # Select flags.
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g -DNDEBUG"  CACHE STRING "Flags for release build with debug info")
@@ -124,6 +132,14 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
   set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS}")
   set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
+  
+  if(asan)
+    # See also core/sanitizer/README.md for what's happening.
+    execute_process(COMMAND ${CMAKE_CXX_COMPILER} --print-file-name=libclang_rt.asan-x86_64.so OUTPUT_VARIABLE ASAN_RUNTIME_LIBRARY OUTPUT_STRIP_TRAILING_WHITESPACE)
+    set(ASAN_EXTRA_CXX_FLAGS -fsanitize=address -fno-omit-frame-pointer -fsanitize-blacklist=${CMAKE_SOURCE_DIR}/build/ASan_blacklist.txt)
+    set(ASAN_EXTRA_SHARED_LINKER_FLAGS "-fsanitize=address -static-libsan -z undefs")
+    set(ASAN_EXTRA_EXE_LINKER_FLAGS "-fsanitize=address -static-libsan -z undefs -Wl,--undefined=__asan_default_options -Wl,--undefined=__lsan_default_options -Wl,--undefined=__lsan_default_suppressions")
+  endif()
 
   # Select flags.
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG"           CACHE STRING "Flags for release build with debug info")
