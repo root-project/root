@@ -314,12 +314,14 @@ sap.ui.define(['sap/ui/core/Component',
        runButton.setEnabled(false);
        if (filename.lastIndexOf('.') > 0)
          ext = filename.substr(filename.lastIndexOf('.') + 1);
+
        switch(ext.toLowerCase()) {
          case "c":
          case "cc":
          case "cpp":
          case "cxx":
            runButton.setEnabled(true);
+           oEditor.setType('c_cpp');
            break;
          case "h":
          case "hh":
@@ -363,6 +365,7 @@ sap.ui.define(['sap/ui/core/Component',
              return false;
            break;
        }
+       console.log(oEditor.getType());
        oTabElement.setAdditionalText(filename);
        if (filename.lastIndexOf('.') > 0)
          filename = filename.substr(0, filename.lastIndexOf('.'));
