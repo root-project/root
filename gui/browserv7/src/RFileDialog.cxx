@@ -34,9 +34,11 @@
 
 using namespace std::string_literals;
 
+using namespace ROOT::Experimental;
+
 using namespace ROOT::Experimental::Browsable;
 
-/** \class ROOT::Experimental::RFileDialog
+/** \class RFileDialog
 \ingroup rbrowser
 
 web-based FileDialog.
@@ -45,7 +47,7 @@ web-based FileDialog.
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-ROOT::Experimental::RFileDialog::RFileDialog()
+RFileDialog::RFileDialog()
 {
    fWorkingDirectory = gSystem->UnixPathName(gSystem->WorkingDirectory());
    printf("Current dir %s\n", fWorkingDirectory.c_str());
@@ -53,10 +55,11 @@ ROOT::Experimental::RFileDialog::RFileDialog()
    fBrowsable.SetTopElement(std::make_unique<SysFileElement>(fWorkingDirectory));
 
    fWebWindow = RWebWindow::Create();
-   fWebWindow->SetDefaultPage("file:rootui5sys/browser/filedialog.html");
+
+   fWebWindow->SetPanelName("rootui5.browser.view.FileDialog");
 
    // this is call-back, invoked when message received via websocket
-   fWebWindow->SetCallBacks([this](unsigned connid) { fConnId = connid; SendInitMsg(connid); },
+   fWebWindow->SetCallBacks([this](unsigned connid) { fConnId = connid; SendInitMsg(connid); SendDirContent(connid); },
                             [this](unsigned connid, const std::string &arg) { WebWindowCallback(connid, arg); });
    fWebWindow->SetGeometry(800, 600); // configure predefined window geometry
    fWebWindow->SetConnLimit(1); // the only connection is allowed
@@ -68,7 +71,7 @@ ROOT::Experimental::RFileDialog::RFileDialog()
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-ROOT::Experimental::RFileDialog::~RFileDialog()
+RFileDialog::~RFileDialog()
 {
 }
 
@@ -76,8 +79,10 @@ ROOT::Experimental::RFileDialog::~RFileDialog()
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Process browser request
 
-std::string ROOT::Experimental::RFileDialog::ProcessBrowserRequest(const std::string &msg)
+std::string RFileDialog::ProcessBrowserRequest(const std::string &msg)
 {
+
+   // not used now, can be reactivated later
    std::unique_ptr<RBrowserRequest> request;
 
    if (msg.empty()) {
@@ -100,7 +105,7 @@ std::string ROOT::Experimental::RFileDialog::ProcessBrowserRequest(const std::st
 /// Show or update RFileDialog in web window
 /// If web window already started - just refresh it like "reload" button does
 
-void ROOT::Experimental::RFileDialog::Show(const RWebDisplayArgs &args)
+void RFileDialog::Show(const RWebDisplayArgs &args)
 {
    if (fWebWindow->NumConnections() == 0) {
       fWebWindow->Show(args);
@@ -112,7 +117,7 @@ void ROOT::Experimental::RFileDialog::Show(const RWebDisplayArgs &args)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Hide ROOT Browser
 
-void ROOT::Experimental::RFileDialog::Hide()
+void RFileDialog::Hide()
 {
    fWebWindow->CloseConnections();
 }
@@ -120,23 +125,42 @@ void ROOT::Experimental::RFileDialog::Hide()
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Process client connect
 
-void ROOT::Experimental::RFileDialog::SendInitMsg(unsigned connid)
+void RFileDialog::SendInitMsg(unsigned connid)
 {
-   fWebWindow->Send(connid, "INMSG:"s + fWorkingDirectory);
+   std::string jsoncode = "{ \"kind\" : \"SaveAs\", \"path\" : \" "s + fWorkingDirectory + "\" }"s;
+
+   fWebWindow->Send(connid, "INMSG:"s + jsoncode);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Return the current directory of ROOT
 
-std::string ROOT::Experimental::RFileDialog::GetCurrentWorkingDirectory()
+std::string RFileDialog::GetCurrentWorkingDirectory()
 {
-   return "GETWORKDIR: { \"path\": \""s + fWorkingDirectory + "\"}"s;
+   return "GETWORKDIR:"s + fWorkingDirectory;
 }
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Sends files list to the browser
+
+void RFileDialog::SendDirContent(unsigned connid)
+{
+   RBrowserRequest request;
+   request.path = "/";
+   request.first = 0;
+   request.number = 0;
+
+   auto msg = "BREPL:"s + fBrowsable.ProcessRequest(request);
+
+   fWebWindow->Send(connid, msg);
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// receive data from client
 
-void ROOT::Experimental::RFileDialog::WebWindowCallback(unsigned connid, const std::string &arg)
+void RFileDialog::WebWindowCallback(unsigned connid, const std::string &arg)
 {
    size_t len = arg.find("\n");
    if (len != std::string::npos)
@@ -144,19 +168,21 @@ void ROOT::Experimental::RFileDialog::WebWindowCallback(unsigned connid, const s
    else
       printf("Recv %s\n", arg.c_str());
 
-   if (arg.compare(0,6, "BRREQ:") == 0) {
-      // central place for processing browser requests
-      auto json = ProcessBrowserRequest(arg.substr(6));
-      if (json.length() > 0) fWebWindow->Send(connid, json);
-   } else if (arg.compare(0, 11, "GETWORKDIR:") == 0) {
-      std::string res = GetCurrentWorkingDirectory();
-      fWebWindow->Send(connid, res);
-   } else if (arg.compare(0, 6, "CHDIR:") == 0) {
-      fWorkingDirectory = arg.substr(6);
-      if ((fWorkingDirectory.length()>1) && (fWorkingDirectory[fWorkingDirectory.length()-1] == '/')) fWorkingDirectory.resize(fWorkingDirectory.length()-1);
+   if (arg.compare(0, 6, "CHDIR:") == 0) {
+      auto chdir = arg.substr(6);
+      if (!chdir.empty() && (chdir[0] != '/'))
+         fWorkingDirectory += "/"s + chdir;
+      else
+         fWorkingDirectory = chdir;
+      if ((fWorkingDirectory.length()>1) && (fWorkingDirectory[fWorkingDirectory.length()-1] == '/'))
+         fWorkingDirectory.resize(fWorkingDirectory.length()-1);
       printf("Current dir %s\n", fWorkingDirectory.c_str());
       fBrowsable.SetTopElement(std::make_unique<SysFileElement>(fWorkingDirectory));
-      gSystem->ChangeDirectory(fWorkingDirectory.c_str());
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
+      SendDirContent(connid);
+   } else if (arg.compare(0, 7, "SELECT:") == 0) {
+      auto res = fWorkingDirectory + "/"s + arg.substr(7);
+
+      printf("Select %s\n", res.c_str());
    }
 }

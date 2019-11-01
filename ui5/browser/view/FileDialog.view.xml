@@ -1,0 +1,25 @@
+<mvc:View height="100%" width="100%" class="sapUiSizeCompact"
+          controllerName="rootui5.browser.controller.FileDialog"
+          xmlns="sap.m"
+          xmlns:mvc="sap.ui.core.mvc"
+          xmlns:core="sap.ui.core"
+          xmlns:t="sap.ui.table"
+          xmlns:l="sap.ui.layout">
+   <Page title="Open File Dialog" showNavButton="false" showFooter="true"
+         showSubHeader="false" showHeader="true" enableScrolling="true">
+         <content>
+            <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan">
+            </Breadcrumbs>
+            <List headerText="Files" items="{ path: '/filesList' }" itemPress="onItemPress">
+               <StandardListItem title="{name}" icon="{icon}" type="Active" />
+            </List>
+         </content>
+         <footer>
+            <OverflowToolbar>
+               <ToolbarSpacer/>
+               <Button text="Close" icon="sap-icon://log" type="Transparent"
+                       tooltip="close dialog" press="onClosePress"/>
+            </OverflowToolbar>
+         </footer>
+   </Page>
+</mvc:View>
