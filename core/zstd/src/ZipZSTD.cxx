@@ -20,7 +20,7 @@
 
 static const int kHeaderSize = 9;
 
-static const size_t errorCodeSmallBuffer = 18446744073709551546U;
+static const size_t errorCodeSmallBuffer = (size_t)-70;
 
 void R__zipZSTD(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
 {
@@ -35,9 +35,11 @@ void R__zipZSTD(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, i
                                         2*cxlevel);
 
     if (R__unlikely(ZSTD_isError(retval))) {
-        std::cerr << "Error in zip ZSTD. Type = " << ZSTD_getErrorName(retval) <<
-        " . Code = " << retval << std::endl;
-        return;
+        if (R__unlikely(retval != errorCodeSmallBuffer)) {
+            std::cerr << "Error in zip ZSTD. Type = " << ZSTD_getErrorName(retval) <<
+            " . Code = " << retval << std::endl;
+            return;
+        }
     }
     else {
         *irep = static_cast<size_t>(retval + kHeaderSize);
@@ -82,10 +84,12 @@ void R__unzipZSTD(int *srcsize, unsigned char *src, int *tgtsize, unsigned char 
     /* The error code 18446744073709551546 arises when the tgt buffer is too small
      * However this error is already handled outside of the compression algorithm
      */
-    if (R__unlikely(ZSTD_isError(retval)) && retval != errorCodeSmallBuffer) {
-        std::cerr << "Error in unzip ZSTD. Type = " << ZSTD_getErrorName(retval) <<
-        " . Code = " << retval << std::endl;
-        return;
+    if (R__unlikely(ZSTD_isError(retval))) {
+        if (R__unlikely(retval != errorCodeSmallBuffer)) {
+            std::cerr << "Error in unzip ZSTD. Type = " << ZSTD_getErrorName(retval) <<
+            " . Code = " << retval << std::endl;
+            return;
+        }
     }
     else {
         *irep = retval;
