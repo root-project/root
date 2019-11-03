@@ -6345,7 +6345,7 @@ void THistPainter::PaintErrors(Option_t *)
       Double_t xminTmp = gPad->XtoPad(fXaxis->GetBinLowEdge(k));
       Double_t xmaxTmp = gPad->XtoPad(fXaxis->GetBinUpEdge(k));
       Double_t w    = (xmaxTmp-xminTmp)*width;
-      xmaxTin += offset*(xmaxTmp-xminTmp);
+      xminTmp += offset*(xmaxTmp-xminTmp);
       xmaxTmp = xminTmp + w;
       xp = (xminTmp+xmaxTmp)/2.;
       
