@@ -526,6 +526,10 @@ N: Stephan Kluth
 E: skluth@mh1.lbl.gov
 D: changes in rootcint to handle templates
 
+N: Sven Kreiss
+E: svenkreiss@gmail.com
+D: co-author of RooStats
+
 N: Anna Kreshuk
 E: akrechtc@mail.cern.ch
 D: contrinutions to TMath, TH1::Chi2Test, TFitter::GraphFitChisquare
