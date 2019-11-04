@@ -11,7 +11,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/m/MessageBox',
                'sap/m/Text',
                'sap/ui/core/mvc/XMLView',
-               'sap/ui/core/Icon'
+               'sap/ui/core/Icon',
+               'sap/ui/layout/Splitter',
+               'sap/m/Toolbar',
+               'sap/ui/unified/FileUploader',
+               'sap/m/Button',
+               'sap/ui/layout/SplitterLayoutData',
+               'sap/ui/codeeditor/CodeEditor'
 ],function(Controller,
            Link,
            Fragment,
@@ -25,7 +31,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
            MessageBox,
            mText,
            XMLView,
-           CoreIcon) {
+           CoreIcon,
+           Splitter,
+           Toolbar,
+           FileUploader,
+           Button,
+           SplitterLayoutData,
+           CodeEditor) {
 
 
    "use strict";
@@ -203,33 +215,33 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       newCodeEditorFragment: function (ID) {
-         let fragment = new sap.ui.layout.Splitter("CodeEditor" + ID + "Splitter", {
+         let fragment = new Splitter("CodeEditor" + ID + "Splitter", {
             orientation: "Vertical",
             contentAreas: [
-               new sap.m.Toolbar("CodeEditor" + ID + "Toolbar", {
+               new Toolbar("CodeEditor" + ID + "Toolbar", {
                   content: [
-                     new sap.ui.unified.FileUploader("CodeEditor" + ID + "FileUploader", {}),
-                     new sap.m.Button("CodeEditor" + ID + "SaveAs", {
+                     new FileUploader("CodeEditor" + ID + "FileUploader", {}),
+                     new Button("CodeEditor" + ID + "SaveAs", {
                         text: "Save as...",
                         tooltip: "Save current file as...",
                      }),
-                     new sap.m.Button("CodeEditor" + ID + "Save", {
+                     new Button("CodeEditor" + ID + "Save", {
                         text: "Save",
                         tooltip: "Save current file",
                      }),
-                     new sap.m.Button("CodeEditor" + ID + "Run", {
+                     new Button("CodeEditor" + ID + "Run", {
                         text: "Run",
                         tooltip: "Run Current Macro",
                         icon: "sap-icon://play",
                         enabled: false,
                      }),
                   ],
-                  layoutData: new sap.ui.layout.SplitterLayoutData("CodeEditor" + ID + "SplitterLayoutData", {
+                  layoutData: new SplitterLayoutData("CodeEditor" + ID + "SplitterLayoutData", {
                      size: "35px",
                      resizable: false
                   })
                }),
-               new sap.ui.codeeditor.CodeEditor("CodeEditor" + ID + "Editor", {
+               new CodeEditor("CodeEditor" + ID + "Editor", {
                   height: "100%",
                   colorTheme: "default",
                   type: "c_cpp",
