@@ -188,30 +188,25 @@ sap.ui.define(['sap/ui/core/Component',
      },
 
      newCodeEditorFragment: function(ID) {
-       return new sap.ui.layout.Splitter("CodeEditor" + ID + "Splitter", {
+       let fragment = new sap.ui.layout.Splitter("CodeEditor" + ID + "Splitter", {
            orientation: "Vertical",
            contentAreas: [
              new sap.m.Toolbar("CodeEditor" + ID + "Toolbar", {
                content: [
-                 new sap.ui.unified.FileUploader("CodeEditor" + ID + "FileUploader", {
-                   // press: this.onChangeFile
-                 }),
+                 new sap.ui.unified.FileUploader("CodeEditor" + ID + "FileUploader", { }),
                  new sap.m.Button("CodeEditor" + ID + "SaveAs", {
                    text: "Save as...",
                    tooltip: "Save current file as...",
-                   press: this.onSaveAs
                  }),
                  new sap.m.Button("CodeEditor" + ID + "Save", {
                    text: "Save",
                    tooltip: "Save current file",
-                   press: this.onSaveFile
                  }),
                  new sap.m.Button("CodeEditor" + ID + "Run", {
                    text: "Run",
                    tooltip: "Run Current Macro",
                    icon: "sap-icon://play",
                    enabled: false,
-                   press: this.onRunMacro
                  }),
                ],
                layoutData: new sap.ui.layout.SplitterLayoutData("CodeEditor" + ID + "SplitterLayoutData", {
@@ -226,60 +221,66 @@ sap.ui.define(['sap/ui/core/Component',
                value: "{/code}"
              })
            ]
-         })
+         });
+       sap.ui.getCore().byId("CodeEditor" + ID + "FileUploader").attachChange(this.onChangeFile, this);
+       sap.ui.getCore().byId("CodeEditor" + ID + "SaveAs").attachPress(this.onSaveAs, this);
+       sap.ui.getCore().byId("CodeEditor" + ID + "Save").attachPress(this.onSaveFile, this);
+       sap.ui.getCore().byId("CodeEditor" + ID + "Run").attachPress(this.onRunMacro, this);
+       sap.ui.getCore().byId("CodeEditor" + ID + "CodeEditor").attachChange(function () {
+         this.getModel().setProperty("/modified", true);
+       });
+       return fragment;
      },
 
      /** @brief Handle the "Save As..." button press event */
      onSaveAs: function() {
-       var oEditor = this.getView().byId("aCodeEditor");
-       var oModel = oEditor.getModel();
-       var sText = oModel.getProperty("/code");
-       var filename = oModel.getProperty("/filename");
-       var ext = oModel.getProperty("/ext");
-       if (filename == undefined) filename = "untitled";
-       if (ext == undefined) ext = "txt";
+       const oEditor = this.getView().byId("aCodeEditor");
+       const oModel = oEditor.getModel();
+       const sText = oModel.getProperty("/code");
+       let filename = oModel.getProperty("/filename");
+       let ext = oModel.getProperty("/ext");
+       if (filename === undefined) filename = "untitled";
+       if (ext === undefined) ext = "txt";
        File.save(sText, filename, ext);
        oModel().setProperty("/modified", false);
      },
 
      /** @brief Handle the "Save" button press event */
      onSaveFile: function() {
-       var oEditor = this.getSelectedCodeEditorTab();
-       var oModel = oEditor.getModel();
-       var sText = oModel.getProperty("/code");
-       var fullpath = oModel.getProperty("/fullpath");
-       if (fullpath == undefined)
+       const oEditor = this.getSelectedCodeEditorTab();
+       const oModel = oEditor.getModel();
+       const sText = oModel.getProperty("/code");
+       const fullpath = oModel.getProperty("/fullpath");
+       if (fullpath === undefined)
          return onSaveAs();
        oModel.setProperty("/modified", false);
        return this.websocket.Send("SAVEFILE:" + fullpath + ":" + sText);
      },
 
      reallyRunMacro: function() {
-       var oEditor = this.getSelectedCodeEditorTab();
-       var oModel = oEditor.getModel();
-       var sText = oModel.getProperty("/code");
-       var fullpath = oModel.getProperty("/fullpath");
-       if (fullpath == undefined)
+       const oEditor = this.getSelectedCodeEditorTab();
+       const oModel = oEditor.getModel();
+       const fullpath = oModel.getProperty("/fullpath");
+       if (fullpath === undefined)
          return this.onSaveAs();
        return this.websocket.Send("RUNMACRO:" + fullpath);
      },
 
      /** @brief Handle the "Run" button press event */
      onRunMacro: function() {
-       var pthis = this;
-       var oEditor = this.getSelectedCodeEditorTab();
-       var oModel = oEditor.getModel();
+       const oEditor = this.getSelectedCodeEditorTab();
+       const oModel = oEditor.getModel();
        if (oModel.getProperty("/modified") === true) {
          MessageBox.confirm('The text has been modified! Do you want to save it?', {
            title: 'Run Macro',
            icon: sap.m.MessageBox.Icon.QUESTION,
            actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO, sap.m.MessageBox.Action.CANCEL],
-           onClose: function (oAction) {
+           onClose: (oAction) => {
              if (oAction === MessageBox.Action.YES)
-               pthis.onSaveFile();
+               this.onSaveFile();
              else if (oAction === MessageBox.Action.CANCEL)
                return;
-             return pthis.reallyRunMacro();
+             return this.reallyRunMacro();
            }
          });
        }
