@@ -58,10 +58,12 @@ public:
    TMatrixDSym GetCorrelationMatrix() const;
 
    // scan likelihood value of  parameter and fill the given graph.
+   using ROOT::Fit::FitResult::Scan;
    bool  Scan(unsigned int ipar, TGraph * gr, double xmin = 0, double xmax = 0);
 
    // create contour of two parameters around the minimum
    // pass as option confidence level:  default is a value of 0.683
+   using ROOT::Fit::FitResult::Contour;
    bool  Contour(unsigned int ipar, unsigned int jpar, TGraph * gr , double confLevel = 0.683);
 
    using TObject::Error;

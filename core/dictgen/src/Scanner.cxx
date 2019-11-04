@@ -485,6 +485,7 @@ bool RScanner::VisitNamespaceDecl(clang::NamespaceDecl* N)
       return true;
 
    // in case it is implicit we don't create a builder
+   // [Note: Can N be nullptr?, is so 'ShouldVisitDecl' should test or we should test sooner]
    if((N && N->isImplicit()) || !N){
       return true;
    }

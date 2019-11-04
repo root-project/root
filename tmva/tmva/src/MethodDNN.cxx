@@ -664,8 +664,8 @@ void TMVA::MethodDNN::Train()
       size_t nTrainingSamples = GetEventCollection(Types::kTraining).size() - nValidationSamples;
       size_t nTestSamples = nValidationSamples;
 
-      if (nTrainingSamples < settings.batchSize or
-          nValidationSamples < settings.batchSize or
+      if (nTrainingSamples < settings.batchSize ||
+          nValidationSamples < settings.batchSize ||
           nTestSamples < settings.batchSize) {
          Log() << kFATAL << "Number of samples in the datasets are train: "
                          << nTrainingSamples << " valid: " << nValidationSamples

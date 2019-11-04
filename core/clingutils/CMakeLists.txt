@@ -60,7 +60,7 @@ foreach(dict ${stldicts})
   string(REPLACE "complex" "root_std_complex.h" header ${header})
   string(REPLACE "multi" "" header ${header})
   ROOT_STANDARD_LIBRARY_PACKAGE(${dict}Dict
-                                NO_SOURCES NO_INSTALL_HEADERS NO_MODULE
+                                NO_SOURCES NO_INSTALL_HEADERS NO_CXXMODULE
                                 STAGE1
                                 NODEPHEADERS ${header}
                                 LINKDEF src/${dict}Linkdef.h
@@ -99,9 +99,9 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_V
 
 
 #---Install a bunch of files to /etc/cling------------------------------------
-set(clinginclude    ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
+set(clinginclude ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
 
-foreach(file module.modulemap.build
+foreach(file libc.modulemap cuda.modulemap std.modulemap module.modulemap.build
         Interpreter/DynamicExprInfo.h
         Interpreter/DynamicLookupRuntimeUniverse.h
         Interpreter/DynamicLookupLifetimeHandler.h
@@ -113,7 +113,7 @@ foreach(file module.modulemap.build
   set(dest_file ${file})
   if (${file} STREQUAL "module.modulemap.build")
     set(dest_file "module.modulemap")
-  else()
+  elseif(NOT ${file} MATCHES ".*modulemap")
     # We do not want our modulemap to be considered part of the PCH.
     set_property(GLOBAL APPEND PROPERTY CLINGETCPCH etc/cling/${dest_file})
   endif()
@@ -169,6 +169,12 @@ else()
         COMMENT "Copying LLVM resource and header files")
 endif()
 add_custom_target(LLVMRES DEPENDS ${stamp_file} CLING)
-
+# CLING is a shorthand for CLING_LIBRARIES and some other clang-specific
+# dependencies which ensure the correct order of building. Then the cling header
+# files (such as RuntimeUniverse.h) are moved to a semi-private place in ROOT
+# #ROOTSYS/etc. This is the place where ROOT will use them from and we should
+# add an explcit dependency to something cling-related which ROOT knows.
+# ClingUtils seems a good candidate because it is very foundational.
+add_dependencies(ClingUtils LLVMRES)
 ROOT_ADD_TEST_SUBDIRECTORY(test)
 

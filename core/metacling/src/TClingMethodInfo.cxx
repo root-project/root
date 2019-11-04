@@ -409,6 +409,12 @@ int TClingMethodInfo::InternalNext()
          // Iterator is now valid.
          return 1;
       }
+
+      // Collect internal `__cling_N5xxx' inline namespaces; they will be traversed later
+      if (auto NS = dyn_cast<NamespaceDecl>(*fIter)) {
+         if (NS->getDeclContext()->isTranslationUnit() && NS->isInlineNamespace())
+            fContexts.push_back(NS);
+      }
 //      if (clang::FunctionDecl *fdecl = llvm::dyn_cast<clang::FunctionDecl>(*fIter)) {
 //         if (fdecl->getAccess() == clang::AS_public || fdecl->getAccess() == clang::AS_none) {
 //            // Iterator is now valid.
@@ -431,6 +437,8 @@ long TClingMethodInfo::Property() const
    long property = 0L;
    property |= kIsCompiled;
    const clang::FunctionDecl *fd = GetMethodDecl();
+   if (fd->isConstexpr())
+      property |= kIsConstexpr;
    switch (fd->getAccess()) {
       case clang::AS_public:
          property |= kIsPublic;

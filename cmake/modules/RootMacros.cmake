@@ -243,7 +243,7 @@ endfunction(ROOT_GET_INSTALL_DIR)
 #   no error is emitted. The dictionary does not depend on these headers.
 #---------------------------------------------------------------------------------------------------
 function(ROOT_GENERATE_DICTIONARY dictionary)
-  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL"
+  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL;NO_CXXMODULE"
     "MODULE;LINKDEF" "NODEPHEADERS;OPTIONS;DEPENDENCIES;EXTRA_DEPENDENCIES;BUILTINS" ${ARGN})
 
   # Check if OPTIONS start with a dash.
@@ -393,28 +393,38 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endforeach()
 
   #---Build the names for library, pcm and rootmap file ----
+  set(library_target_name)
   if(dictionary MATCHES "^G__")
-    string(SUBSTRING ${dictionary} 3 -1 deduced_arg_module)
+    string(REGEX REPLACE "^G__(.*)" "\\1"  library_target_name ${dictionary})
+    if (ARG_MULTIDICT)
+      string(REGEX REPLACE "(.*)32$" "\\1"  library_target_name ${library_target_name})
+    endif (ARG_MULTIDICT)
   else()
-    get_filename_component(deduced_arg_module ${dictionary} NAME_WE)
+    get_filename_component(library_target_name ${dictionary} NAME_WE)
   endif()
+  if (ARG_MODULE)
+    if (NOT ${ARG_MODULE} STREQUAL ${library_target_name})
+#      message(AUTHOR_WARNING "The MODULE argument ${ARG_MODULE} and the deduced library name "
+#        "${library_target_name} mismatch. Deduction stem: ${dictionary}.")
+      set(library_target_name ${ARG_MODULE})
+    endif()
+  endif(ARG_MODULE)
 
   #---Set the library output directory-----------------------
   ROOT_GET_LIBRARY_OUTPUT_DIR(library_output_dir)
-  set (runtime_cxxmodule_dependencies )
+  set(runtime_cxxmodule_dependencies )
+  set(cpp_module)
+  set(library_name ${libprefix}${library_target_name}${libsuffix})
+  set(newargs -s ${library_output_dir}/${library_name})
+  set(rootmap_name ${library_output_dir}/${libprefix}${library_target_name}.rootmap)
+  set(pcm_name ${library_output_dir}/${libprefix}${library_target_name}_rdict.pcm)
   if(ARG_MODULE)
-    set(cpp_module)
-    set(library_name ${libprefix}${ARG_MODULE}${libsuffix})
-    set(newargs -s ${library_output_dir}/${library_name})
-    set(master_pcm_name ${library_output_dir}/${libprefix}${ARG_MODULE}_rdict.pcm)
     if(ARG_MULTIDICT)
       set(newargs ${newargs} -multiDict)
-      set(pcm_name ${library_output_dir}/${libprefix}${ARG_MODULE}_${dictionary}_rdict.pcm)
-      set(rootmap_name ${library_output_dir}/${libprefix}${deduced_arg_module}.rootmap)
+      set(pcm_name ${library_output_dir}/${libprefix}${library_target_name}_${dictionary}_rdict.pcm)
+      set(rootmap_name ${library_output_dir}/${libprefix}${library_target_name}32.rootmap)
     else()
-      set(cpp_module ${ARG_MODULE})
-      set(pcm_name ${master_pcm_name})
-      set(rootmap_name ${library_output_dir}/${libprefix}${ARG_MODULE}.rootmap)
+      set(cpp_module ${library_target_name})
     endif(ARG_MULTIDICT)
 
     if(runtime_cxxmodules)
@@ -432,11 +442,11 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
         endif()
       endif(cpp_module)
     endif()
-  else()
-    set(library_name ${libprefix}${deduced_arg_module}${libsuffix})
-    set(newargs -s ${library_output_dir}/${library_name})
-    set(pcm_name ${library_output_dir}/${libprefix}${deduced_arg_module}_rdict.pcm)
-    set(rootmap_name ${library_output_dir}/${libprefix}${deduced_arg_module}.rootmap)
+  endif()
+
+  if (ARG_NO_CXXMODULE)
+    unset(cpp_module)
+    unset(cpp_module_file)
   endif()
 
   if(CMAKE_ROOTTEST_NOROOTMAP OR cpp_module_file)
@@ -759,35 +769,9 @@ function(ROOT_LINKER_LIBRARY library)
     if(NOT TARGET ROOT::${library})
       add_library(ROOT::${library} ALIAS ${library})
     endif()
-
-    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-      target_include_directories(${library}
-        PRIVATE
-          ${CMAKE_CURRENT_SOURCE_DIR}/inc
-        INTERFACE
-          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
-      )
-    endif()
-
-    if(root7 AND IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
-      target_include_directories(${library}
-        PRIVATE
-          ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc
-        INTERFACE
-          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>
-      )
-    endif()
-
-    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/res)
-      target_include_directories(${library}
-        PRIVATE
-          ${CMAKE_CURRENT_SOURCE_DIR}/res
-      )
-    endif()
-
-    # needed for generated headers like RConfigure.h and ROOT/RConfig.hxx
-    target_include_directories(${library} PRIVATE ${CMAKE_BINARY_DIR}/include)
   endif()
+
+  ROOT_ADD_INCLUDE_DIRECTORIES(${library})
 
   if(TARGET G__${library})
     add_dependencies(${library} G__${library})
@@ -834,18 +818,11 @@ function(ROOT_LINKER_LIBRARY library)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_OBJECT_LIBRARY( <name> source1 source2 ... BUILTINS dep1 dep2 ...)
+#---ROOT_ADD_INCLUDE_DIRECTORIES( library )
 #---------------------------------------------------------------------------------------------------
-function(ROOT_OBJECT_LIBRARY library)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "" "BUILTINS"  ${ARGN})
-  ROOT_GET_SOURCES(lib_srcs src ${ARG_UNPARSED_ARGUMENTS})
-  add_library( ${library} OBJECT ${lib_srcs})
-  if(lib_srcs MATCHES "(^|/)(G__[^.]*)[.]cxx.*")
-     add_dependencies(${library} ${CMAKE_MATCH_2})
-  endif()
-  add_dependencies(${library} move_headers)
-
+function(ROOT_ADD_INCLUDE_DIRECTORIES library)
   if(PROJECT_NAME STREQUAL "ROOT")
+
     if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/inc)
       target_include_directories(${library}
         PRIVATE
@@ -871,9 +848,36 @@ function(ROOT_OBJECT_LIBRARY library)
       )
     endif()
 
-    # needed for generated headers like RConfigure.h and ROOT/RConfig.hxx
-    target_include_directories(${library} PRIVATE ${CMAKE_BINARY_DIR}/include)
+    if (cxxmodules)
+      # needed for generated headers like RConfigure.h and ROOT/RConfig.hxx
+      # FIXME: We prepend ROOTSYS/include because if we have built a module
+      # and try to resolve the 'same' header from a different location we will
+      # get a redefinition error.
+      # We should remove these lines when the fallback include is removed. Then
+      # we will need a module.modulemap file per `inc` directory.
+      target_include_directories(${library} BEFORE PRIVATE ${CMAKE_BINARY_DIR}/include)
+    else()
+      # needed for generated headers like RConfigure.h and ROOT/RConfig.hxx
+      target_include_directories(${library} PRIVATE ${CMAKE_BINARY_DIR}/include)
+    endif()
+
   endif()
+
+endfunction(ROOT_ADD_INCLUDE_DIRECTORIES)
+
+#---------------------------------------------------------------------------------------------------
+#---ROOT_OBJECT_LIBRARY( <name> source1 source2 ... BUILTINS dep1 dep2 ...)
+#---------------------------------------------------------------------------------------------------
+function(ROOT_OBJECT_LIBRARY library)
+  CMAKE_PARSE_ARGUMENTS(ARG "" "" "BUILTINS"  ${ARGN})
+  ROOT_GET_SOURCES(lib_srcs src ${ARG_UNPARSED_ARGUMENTS})
+  add_library( ${library} OBJECT ${lib_srcs})
+  if(lib_srcs MATCHES "(^|/)(G__[^.]*)[.]cxx.*")
+     add_dependencies(${library} ${CMAKE_MATCH_2})
+  endif()
+  add_dependencies(${library} move_headers)
+
+  ROOT_ADD_INCLUDE_DIRECTORIES(${library})
 
   #--- Only for building shared libraries
   set_property(TARGET ${library} PROPERTY POSITION_INDEPENDENT_CODE 1)
@@ -937,35 +941,7 @@ function(ROOT_MODULE_LIBRARY library)
   # macros.
   set_target_properties(${library} PROPERTIES DEFINE_SYMBOL "")
 
-  if(PROJECT_NAME STREQUAL "ROOT")
-    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-      target_include_directories(${library}
-        PRIVATE
-          ${CMAKE_CURRENT_SOURCE_DIR}/inc
-        INTERFACE
-          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
-      )
-    endif()
-
-    if(root7 AND IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
-      target_include_directories(${library}
-        PRIVATE
-          ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc
-        INTERFACE
-          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>
-      )
-    endif()
-
-    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/res)
-      target_include_directories(${library}
-        PRIVATE
-          ${CMAKE_CURRENT_SOURCE_DIR}/res
-      )
-    endif()
-
-    # needed for generated headers like RConfigure.h and ROOT/RConfig.hxx
-    target_include_directories(${library} PRIVATE ${CMAKE_BINARY_DIR}/include)
-  endif()
+  ROOT_ADD_INCLUDE_DIRECTORIES(${library})
 
   target_link_libraries(${library} PUBLIC ${ARG_LIBRARIES})
   #----Installation details-------------------------------------------------------
@@ -1095,11 +1071,11 @@ endfunction()
 #                                 LINKDEF LinkDef.h LinkDef2.h : linkdef files, default value is "LinkDef.h"
 #                                 DICTIONARY_OPTIONS option    : options passed to rootcling
 #                                 INSTALL_OPTIONS option       : options passed to install headers
-#                                 NO_MODULE                    : don't generate a C++ module for this package
+#                                 NO_CXXMODULE                 : don't generate a C++ module for this package
 #                                )
 #---------------------------------------------------------------------------------------------------
 function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
-  set(options NO_INSTALL_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY NO_MODULE)
+  set(options NO_INSTALL_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY NO_CXXMODULE)
   set(oneValueArgs)
   set(multiValueArgs DEPENDENCIES HEADERS NODEPHEADERS SOURCES BUILTINS LIBRARIES DICTIONARY_OPTIONS LINKDEF INSTALL_OPTIONS)
   CMAKE_PARSE_ARGUMENTS(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -1132,10 +1108,8 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
     set(STAGE1_FLAG "STAGE1")
   endif()
 
-  # Don't pass the MODULE arg to ROOT_GENERATE_DICTIONARY when
-  # NO_MODULE is set.
-  if(NOT ARG_NO_MODULE)
-    set(MODULE_GEN_ARG MODULE ${libname})
+  if (ARG_NO_CXXMODULE)
+    set(NO_CXXMODULE_FLAG "NO_CXXMODULE")
   endif()
 
   if(ARG_NO_SOURCES)
@@ -1179,18 +1153,15 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   endif()
 
   ROOT_GENERATE_DICTIONARY(G__${libname} ${ARG_HEADERS}
-                          ${MODULE_GEN_ARG}
+                          ${NO_CXXMODULE_FLAG}
                           ${STAGE1_FLAG}
+                          MODULE ${libname}
                           LINKDEF ${ARG_LINKDEF}
                           NODEPHEADERS ${ARG_NODEPHEADERS}
                           OPTIONS ${ARG_DICTIONARY_OPTIONS}
                           DEPENDENCIES ${ARG_DEPENDENCIES}
                           BUILTINS ${ARG_BUILTINS}
                           )
-
-  if(ARG_NO_MODULE)
-    target_sources(${libname} PRIVATE G__${libname}.cxx)
-  endif()
 
   # Dictionary might include things from the current src dir, e.g. tests. Alas
   # there is no way to set the include directory for a source file (except for
@@ -1229,7 +1200,9 @@ function(ROOT_EXECUTABLE executable)
   if (ARG_ADDITIONAL_COMPILE_FLAGS)
     set_target_properties(${executable} PROPERTIES COMPILE_FLAGS ${ARG_ADDITIONAL_COMPILE_FLAGS})
   endif()
-  add_dependencies(${executable} move_headers)
+  if(CMAKE_PROJECT_NAME STREQUAL ROOT)
+    add_dependencies(${executable} move_headers)
+  endif()
   if(ARG_BUILTINS)
     foreach(arg1 ${ARG_BUILTINS})
       if(${arg1}_TARGET)
@@ -1546,7 +1519,7 @@ function(ROOT_ADD_GTEST test_suite)
     gtest${mangled_name}
     COMMAND ${test_suite}
     WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
-    COPY_TO_BUILDDIR ${ARG_COPY_TO_BUiILDDIR}
+    COPY_TO_BUILDDIR ${ARG_COPY_TO_BUILDDIR}
     ${willfail}
   )
 endfunction()

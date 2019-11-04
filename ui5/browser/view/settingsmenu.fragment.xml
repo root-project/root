@@ -1,0 +1,63 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:l="sap.ui.layout" xmlns:f="sap.ui.layout.form">
+  <ViewSettingsDialog>
+    <customTabs>
+      <ViewSettingsCustomTab id="drawing-options" icon="sap-icon://signature" text="Drawing options" title="Drawing options" tooltip="Drawing options">
+        <content>
+          <Panel>
+            <content>
+              <f:Form>
+                <f:layout>
+                  <f:ResponsiveGridLayout
+                          labelSpanS="2"
+                          emptySpanS="0"
+                          singleContainerFullSize="false" />
+                </f:layout>
+                <f:formContainers>
+                  <f:FormContainer>
+                    <f:formElements>
+                      <f:FormElement label="TH1">
+                        <f:fields>
+                          <ComboBox
+                                id="do-TH1"
+                                items="{ path: '/TH1' }"
+                                selectedKey="hist">
+                          <core:Item text="{name}" key="{name}"/>
+                        </ComboBox>
+                        </f:fields>
+                      </f:FormElement>
+                      <f:FormElement label="TH2">
+                        <f:fields>
+                          <ComboBox
+                                  id="do-TH2"
+                                  items="{ path: '/TH2' }"
+                                  selectedKey="COL">
+                            <core:Item text="{name}" key="{name}"/>
+                          </ComboBox>
+                        </f:fields>
+                      </f:FormElement>
+                      <f:FormElement label="TProfile">
+                        <f:fields>
+                          <ComboBox
+                                  id="do-TProfile"
+                                  items="{ path: '/TProfile' }"
+                                  selectedKey="E0">
+                            <core:Item text="{name}" key="{name}"/>
+                          </ComboBox>
+                        </f:fields>
+                      </f:FormElement>
+                    </f:formElements>
+                  </f:FormContainer>
+                </f:formContainers>
+              </f:Form>
+            </content>
+          </Panel>
+        </content>
+      </ViewSettingsCustomTab>
+      <ViewSettingsCustomTab icon="sap-icon://add-equipment" >
+        <content>
+          <Text text="Other setting tab, that you can implement" />
+        </content>
+      </ViewSettingsCustomTab>
+    </customTabs>
+  </ViewSettingsDialog>
+</core:FragmentDefinition>

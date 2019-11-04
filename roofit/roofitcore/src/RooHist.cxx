@@ -31,6 +31,7 @@ a RooPlot.
 #include "RooHist.h"
 #include "RooHistError.h"
 #include "RooCurve.h"
+#include "RooScaledFunc.h"
 #include "RooMsgService.h"
 
 #include "TH1.h"
@@ -257,6 +258,79 @@ RooHist::RooHist(const RooHist& hist1, const RooHist& hist2, Double_t wgt1, Doub
     }
   }
 
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create histogram from a pdf or function. Errors are computed based on the fit result provided.
+///
+/// This signature is intended for unfolding/deconvolution scenarios,
+/// where a pdf is constructed as "data minus background" and is thus
+/// intended to be displayed as "data" (or at least data-like).
+/// Usage of this signature is triggered by the draw style "P" in RooAbsReal::plotOn.
+/// 
+/// More details.
+/// \param[in] f The function to be plotted.
+/// \param[in] x The variable on the x-axis
+/// \param[in] xErrorFrac Size of the errror in x as a fraction of the bin width
+/// \param[in] scaleFactor arbitrary scaling of the y-values
+/// \param[in] normVars variables over which to normalize
+RooHist::RooHist(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xErrorFrac, Double_t scaleFactor, const RooArgSet *normVars, const RooFitResult* fr) :
+  TGraphAsymmErrors(), _nSigma(1), _rawEntries(-1)
+{
+  // grab the function's name and title
+  TString name(f.GetName());
+  SetName(name.Data());
+  TString title(f.GetTitle());
+  SetTitle(title.Data());
+  // append " ( [<funit> ][/ <xunit> ])" to our y-axis label if necessary
+  if(0 != strlen(f.getUnit()) || 0 != strlen(x.getUnit())) {
+    title.Append(" ( ");
+    if(0 != strlen(f.getUnit())) {
+      title.Append(f.getUnit());
+      title.Append(" ");
+    }
+    if(0 != strlen(x.getUnit())) {
+      title.Append("/ ");
+      title.Append(x.getUnit());
+      title.Append(" ");
+    }
+    title.Append(")");
+  }
+  setYAxisLabel(title.Data());
+
+  RooAbsFunc *funcPtr = nullptr;
+  RooAbsFunc *rawPtr  = nullptr;
+  funcPtr= f.bindVars(x,normVars,kTRUE);
+
+  // apply a scale factor if necessary
+  if(scaleFactor != 1) {
+    rawPtr= funcPtr;
+    funcPtr= new RooScaledFunc(*rawPtr,scaleFactor);
+  }
+  
+  // apply a scale factor if necessary
+  assert(funcPtr);
+
+  // calculate the points to add to our curve
+  int xbins = x.numBins();
+  RooArgSet nset;
+  if(normVars) nset.add(*normVars);
+  for(int i=0; i<xbins; ++i){
+    double xval = x.getBinning().binCenter(i);
+    double xwidth = x.getBinning().binWidth(i);
+    Axis_t xval_ax = xval;
+    double yval = (*funcPtr)(&xval);
+    double yerr = sqrt(yval);
+    if(fr) yerr = f.getPropagatedError(*fr,nset);
+    addBinWithError(xval_ax,yval,yerr,yerr,xwidth,xErrorFrac,false,scaleFactor) ;
+    _entries += yval;
+  }
+  _nominalBinWidth = 1.;
+  
+  // cleanup
+  delete funcPtr;
+  if(rawPtr) delete rawPtr;
 }
 
 

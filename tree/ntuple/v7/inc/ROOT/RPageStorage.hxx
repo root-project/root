@@ -38,6 +38,7 @@ namespace Detail {
 class RColumn;
 class RPagePool;
 class RFieldBase;
+class RNTupleMetrics;
 
 enum class EPageStorageType {
    kSink,
@@ -82,6 +83,9 @@ public:
    /// Every page store needs to be able to free pages it handed out.  But Sinks and sources have different means
    /// of allocating pages.
    virtual void ReleasePage(RPage &page) = 0;
+
+   /// Page storage implementations usually have their own metrics
+   virtual RNTupleMetrics &GetMetrics() = 0;
 };
 
 // clang-format off

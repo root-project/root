@@ -64,7 +64,6 @@
 #include "TGStatusBar.h"
 #include "Varargs.h"
 #include "TInterpreter.h"
-#include "TBrowser.h"
 #include "TGFileDialog.h"
 #include "TObjString.h"
 #include "TVirtualPad.h"

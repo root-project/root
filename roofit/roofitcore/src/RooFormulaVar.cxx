@@ -64,9 +64,14 @@ ClassImp(RooFormulaVar);
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor with formula expression and list of input variables
-
-RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* inFormula, const RooArgList& dependents) : 
+/// Constructor with formula expression and list of input variables.
+/// \param[in] name Name of the formula.
+/// \param[in] title Title of the formula.
+/// \param[in] formula Expression to be evaluated.
+/// \param[in] dependents Variables that should be passed to the formula.
+/// \param[in] checkVariables Check that all variables from `dependents` or used in the expression.
+RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* inFormula, const RooArgList& dependents,
+    bool checkVariables) :
   RooAbsReal(name,title), 
   _actualVars("actualVars","Variables used by formula expression",this),
   _formExpr(inFormula)
@@ -76,16 +81,20 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* in
   if (_actualVars.getSize()==0) {
     _value = traceEval(0);
   } else {
-    _formula.reset(new RooFormula(GetName(), _formExpr, _actualVars));
+    _formula.reset(new RooFormula(GetName(), _formExpr, _actualVars, checkVariables));
   }
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor with formula expression, title and list of input variables
-
-RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgList& dependents) : 
+/// Constructor with formula expression, title and list of input variables.
+/// \param[in] name Name of the formula.
+/// \param[in] title Formula expression. Will also be used as the title.
+/// \param[in] dependents Variables that should be passed to the formula.
+/// \param[in] checkVariables Check that all variables from `dependents` or used in the expression.
+RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgList& dependents,
+    bool checkVariables) :
   RooAbsReal(name,title),
   _actualVars("actualVars","Variables used by formula expression",this),
   _formExpr(title)
@@ -95,7 +104,7 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgLi
   if (_actualVars.getSize()==0) {
     _value = traceEval(0);
   } else {
-    _formula.reset(new RooFormula(GetName(), _formExpr, _actualVars));
+    _formula.reset(new RooFormula(GetName(), _formExpr, _actualVars, checkVariables));
   }
 }
 
@@ -110,7 +119,7 @@ RooFormulaVar::RooFormulaVar(const RooFormulaVar& other, const char* name) :
   _formExpr(other._formExpr)
 {
   if (other._formula && other._formula->ok())
-    _formula.reset(new RooFormula(GetName(), _formExpr, _actualVars));
+    _formula.reset(new RooFormula(GetName(), _formExpr, _actualVars, false));
 }
 
 
@@ -205,15 +214,15 @@ void RooFormulaVar::writeToStream(ostream& os, Bool_t compact) const
 std::list<Double_t>* RooFormulaVar::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
   for (const auto par : _actualVars) {
-    assert(dynamic_cast<const RooAbsReal*>(par));
     auto func = static_cast<const RooAbsReal*>(par);
-    list<Double_t>* binb = func->binBoundaries(obs,xlo,xhi) ;      
-    if (binb) {
-      return binb ;
+    list<Double_t>* binb = nullptr;
+
+    if (func && (binb = func->binBoundaries(obs,xlo,xhi)) ) {
+      return binb;
     }
   }
   
-  return 0 ;  
+  return nullptr;
 }
 
 
@@ -224,16 +233,15 @@ std::list<Double_t>* RooFormulaVar::binBoundaries(RooAbsRealLValue& obs, Double_
 std::list<Double_t>* RooFormulaVar::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
   for (const auto par : _actualVars) {
-    assert(dynamic_cast<const RooAbsReal*>(par));
-    auto func = static_cast<const RooAbsReal*>(par);
+    auto func = dynamic_cast<const RooAbsReal*>(par);
+    list<Double_t>* hint = nullptr;
 
-    list<Double_t>* hint = func->plotSamplingHint(obs,xlo,xhi) ;      
-    if (hint) {
-      return hint ;
+    if (func && (hint = func->plotSamplingHint(obs,xlo,xhi)) ) {
+      return hint;
     }
   }
 
-  return 0 ;
+  return nullptr;
 }
 
 

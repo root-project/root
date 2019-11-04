@@ -52,7 +52,6 @@ In order to access the name of a class within the ROOT type system, the method T
 #include "TClassTable.h"
 #include "TDataMember.h"
 #include "TDataType.h"
-#include "TEnum.h"
 #include "TError.h"
 #include "TExMap.h"
 #include "TFunctionTemplate.h"
@@ -1378,6 +1377,17 @@ void TClass::Init(const char *name, Version_t cversion,
       // Move the Schema Rules too.
       fSchemaRules = oldcl->fSchemaRules;
       oldcl->fSchemaRules = 0;
+
+      // Move the TFunctions.
+      fFuncTemplate = oldcl->fFuncTemplate;
+      if (fFuncTemplate)
+         fFuncTemplate->fClass = this;
+      oldcl->fFuncTemplate = nullptr;
+      fMethod.store( oldcl->fMethod );
+      if (fMethod)
+         (*fMethod).fClass = this;
+      oldcl->fMethod = nullptr;
+
    }
 
    SetBit(kLoading);
@@ -6306,8 +6316,12 @@ UInt_t TClass::GetCheckSum(ECheckSum code, Bool_t &isvalid) const
    il = name.Length();
    for (int i=0; i<il; i++) id = id*3+name[i];
 
+   // Here we skip he base classes in case this is a pair or STL collection,
+   // otherwise, on some STL implementations, it can happen that pair has
+   // base classes which are an internal implementation detail.
    TList *tlb = ((TClass*)this)->GetListOfBases();
-   if (tlb && !GetCollectionProxy()) {   // Loop over bases if not a proxied collection
+   if (tlb && !GetCollectionProxy() && strncmp(GetName(), "pair<", 5)) {
+      // Loop over bases if not a proxied collection or a pair
 
       TIter nextBase(tlb);
 

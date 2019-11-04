@@ -812,7 +812,9 @@ void TFile::Init(Bool_t create)
          } else if (fVersion != gROOT->GetVersionInt() && fVersion > 30000) {
             // Don't complain about missing streamer info for empty files.
             if (fKeys->GetSize()) {
-               Warning("Init","no StreamerInfo found in %s therefore preventing schema evolution when reading this file.",GetName());
+               Warning("Init","no StreamerInfo found in %s therefore preventing schema evolution when reading this file."
+                              " The file was produced with version %d.%02d/%02d of ROOT.",
+                              GetName(),  fVersion / 10000, (fVersion / 100) % (100), fVersion  % 100);
             }
          }
       }
@@ -1081,7 +1083,12 @@ Int_t TFile::GetBestBuffer() const
    if (!fWritten) return TBuffer::kInitialSize;
    Double_t mean = fSumBuffer/fWritten;
    Double_t rms2 = TMath::Abs(fSum2Buffer/fSumBuffer -mean*mean);
-   return (Int_t)(mean + sqrt(rms2));
+   Double_t result = mean + sqrt(rms2);
+   if (result >= (double)std::numeric_limits<Int_t>::max()) {
+      return std::numeric_limits<Int_t>::max() -1;
+   } else {
+      return (Int_t)result;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2028,10 +2035,8 @@ Int_t TFile::ReOpen(Option_t *mode)
          FlushWriteCache();
 
          // delete free segments from free list
-         if (fFree) {
-            fFree->Delete();
-            SafeDelete(fFree);
-         }
+         fFree->Delete();
+         SafeDelete(fFree);
 
          SysClose(fD);
          fD = -1;
@@ -3953,7 +3958,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
          TFile::EAsyncOpenStatus aos = TFile::kAOSNotAsync;
          aos = TFile::GetAsyncOpenStatus(fh);
          Int_t xtms = toms;
-         while (aos != TFile::kAOSNotAsync && aos == TFile::kAOSInProgress && xtms > 0) {
+         while (aos == TFile::kAOSInProgress && xtms > 0) {
             gSystem->Sleep(1);
             xtms -= 1;
             aos = TFile::GetAsyncOpenStatus(fh);

@@ -5,8 +5,8 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 if(root7)
-  add_subdirectory(primitives)
   add_subdirectory(gpadv7)
+  add_subdirectory(primitivesv7)
 endif()
 add_subdirectory(gpad)
 add_subdirectory(graf)

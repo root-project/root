@@ -9,21 +9,20 @@
 /// \author Axel Naumann <axel@cern.ch>
 
 /*************************************************************************
- * Copyright (C) 1995-2015, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Rtypes.h"
-
-R__LOAD_LIBRARY(libROOTHistDraw);
-
-#include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RColor.hxx"
-#include "ROOT/RDirectory.hxx"
+#include "ROOT/RHistDrawable.hxx"
+
+// macro must be here while cling is not capable to load
+// library automatically for outlined function see ROOT-10336
+R__LOAD_LIBRARY(libROOTHistDraw)
 
 void draw()
 {
@@ -41,17 +40,14 @@ void draw()
    pHist->Fill({1.90, 1.02});
    pHist->Fill({0.75, -0.02});
 
-   // Register the histogram with ROOT: now it lives even after draw() ends.
-   RDirectory::Heap().Add("hist", pHist);
-
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("Canvas Title");
-   auto pOpts = canvas->Draw(pHist);
-   pOpts->BoxLine().SetColor(RColor::kRed);
+   auto draw1 = canvas->Draw(pHist);
+   draw1->AttrLine().SetColor(RColor::kRed);
 
-   RH2D other = *pHist;
-   auto pOptsOther = canvas->Draw(other, *pOpts);
-   pOptsOther->BoxLine().SetColor(RColor::kBlue).SetWidth(12);
+   auto other = std::make_shared<RH2D>(*pHist);
+   auto draw2 = canvas->Draw(other);
+   draw2->AttrLine().SetColor(RColor::kBlue).SetWidth(12);
 
    canvas->Show();
 }

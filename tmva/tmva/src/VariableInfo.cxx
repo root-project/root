@@ -32,6 +32,7 @@ Class for type info of MVA input variable
 */
 
 #include "TMVA/VariableInfo.h"
+#include "TMVA/DataSetInfo.h"
 
 #include "TMVA/Tools.h"
 
@@ -199,7 +200,10 @@ void TMVA::VariableInfo::AddToXML( void* varnode )
 
    TString typeStr(" ");
    typeStr[0] = GetVarType();
-   gTools().AddAttr( varnode, "Type", typeStr );
+   // in case of array variables, add "[]" to the type string: e.g. F[]
+   if (TestBit(DataSetInfo::kIsArrayVariable))
+      typeStr += "[]"; 
+   gTools().AddAttr(varnode, "Type", typeStr);
    gTools().AddAttr( varnode, "Min", gTools().StringFromDouble(GetMin()) );
    gTools().AddAttr( varnode, "Max", gTools().StringFromDouble(GetMax()) );
 }
@@ -220,4 +224,7 @@ void TMVA::VariableInfo::ReadFromXML( void* varnode )
    gTools().ReadAttr( varnode, "Max",        fXmaxNorm );
 
    SetVarType(type[0]);
+   // detect variables from array 
+   if (type.Contains("[]"))
+      SetBit(DataSetInfo::kIsArrayVariable);
 }

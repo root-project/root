@@ -27,8 +27,7 @@ ClassImp(TTreeFormulaManager);
    ////////////////////////////////////////////////////////////////////////////////
    /// Tree FormulaManger default constructor.
 
-   TTreeFormulaManager::TTreeFormulaManager()
-   : TObject()
+TTreeFormulaManager::TTreeFormulaManager() : TObject()
 {
    fMultiplicity = 0;
    fMultiVarDim = kFALSE;

@@ -36,8 +36,8 @@ private:
    TMemberStreamer *fStreamer;       //Object to stream the data member.
    Bool_t           fIsObject;       //true if member is an object
 
-   TRealData(const TRealData& rhs);  // Copying TRealData in not allowed.
-   TRealData& operator=(const TRealData& rhs);  // Copying TRealData in not allowed.
+   TRealData(const TRealData& rhs) = delete;  // Copying TRealData in not allowed.
+   TRealData& operator=(const TRealData& rhs) = delete;  // Copying TRealData in not allowed.
 
 public:
    enum EStatusBits {

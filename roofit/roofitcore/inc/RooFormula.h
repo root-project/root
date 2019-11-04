@@ -29,7 +29,7 @@ class RooFormula : public TNamed, public RooPrintable {
 public:
   // Constructors etc.
   RooFormula() ;
-  RooFormula(const char* name, const char* formula, const RooArgList& varList);
+  RooFormula(const char* name, const char* formula, const RooArgList& varList, bool checkVariables = true);
   RooFormula(const RooFormula& other, const char* name=0);
   virtual TObject* Clone(const char* newName = nullptr) const {return new RooFormula(*this, newName);}
 	

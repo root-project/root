@@ -28,6 +28,7 @@ The following people have contributed to this new version:
  Andrei Gheata, CERN/SFT,\
  Enrico Guiraud, CERN/SFT,\
  Stephan Hageboeck, CERN/SFT,\
+ Desislava Kalaydjieva, CERN/SFT,\
  Jan Knedlik, GSI,\
  Sergey Linev, GSI,\
  Pere Mato, CERN/SFT,\
@@ -37,6 +38,7 @@ The following people have contributed to this new version:
  Vincenzo Eduardo Padulano, Bicocca/SFT,\
  Danilo Piparo, CERN/SFT,\
  Fons Rademakers, CERN/SFT,\
+ Otto Schaile, Uni-Muenchen,\
  Henry Schreiner, Princeton,\
  Oksana Shadura, Nebraska,\
  Simon Spies, GSI,\
@@ -60,7 +62,7 @@ instead of the splash screen. The splash screen can still be seen with `root -a`
 or in `TBrowser` by opening `Browser Help → About ROOT`.
 
 ## Deprecation and Removal
- * rootcling flags `-cint`, `-reflex`, `-gccxml`, `-p` and `-c` have no effect
+ * rootcling flags `-cint`, `-gccxml`, `-p` and `-c` have no effect
    and will be removed. Please remove them from the rootcling invocations.
  * rootcling legacy cint flags `+P`, `+V` and `+STUB` have no effect and will be
    removed. Please remove them from the rootcling invocations.
@@ -69,6 +71,8 @@ or in `TBrowser` by opening `Browser Help → About ROOT`.
  * rootcling warns if it sees and unrecognized flag (usually coming from the
    CXXFLAGS of the build system). Please remove them from the invocation because
    the warning will become a hard error in the next releases.
+ * The empty headers `Gtypes.h` and `Htypes.h` are deprecated. Please include
+   `Rtypes.h`
 
 ### Deprecated packages
 
@@ -89,14 +93,16 @@ the network access (used to look up the hostname and its IP address) failed.
 
 * TFile: A new bit `TFile::kReproducible` was introduced. It can be enabled by
   specifying the `"reproducible"` url option when creating the file:
-   ```{.cpp}
+~~~ {.cpp}
       TFile *f = TFile::Open("name.root?reproducible","RECREATE","File title");
-   ```{.cpp}
+~~~
    Unlike regular `TFile`s, the content of such file has reproducible binary
    content when writing exactly same data. This achieved by writing pre-defined
    values for creation and modification date of TKey/TDirectory objects and null
    value for TUUID objects inside TFile. As drawback, TRef objects stored in such
    file cannot be read correctly.
+* Significantly improved the scaling of hadd tear-down/cleanup-phase in the presence
+of large number histograms and in the presence of large number of directories.
 * TMemFile: Apply customization of minimal block size also to the first block.
 * Add renaming rule for instances of the math classes from `genvector` and `smatrix` to
 instance for one floating point type (`float`, `double`, `Double32_t`, `Float16_t`) to
@@ -113,6 +119,7 @@ typedefs (in particular `Double32_t`)
 ## TTree Libraries
 
 * Prevent a situation in `TTreeFormula` when stale cached information was re-used.
+* Prevent a noticeable memory leak when reading uncompressed TTree.
 
 ## Histogram Libraries
 
@@ -129,6 +136,11 @@ typedefs (in particular `Double32_t`)
  * Provide support of NDC corrdinates for TArrow.
  * Fix interactive movement of TLine/TArrow objects when NDC coordinates are used
  * Provide TGraph::MovePoints() method
+ * New options `RX`and `RY` for TMultiGraph in order to draw reverse axis along X and Y.
+ * Combined with the option "Z" the option "CJUST" allows to draw the color palette
+   with axis labels justified on the color boundaries (implemented by Otto Schaile).
+ * The `TCanvas` Event Status Bar now displays the date and time when the mouse cursor
+   is moved over a time axis (implemented by Otto Schaile).
 
 
 ## 3D Graphics Libraries
@@ -154,6 +166,13 @@ typedefs (in particular `Double32_t`)
 
 ## Language Bindings
 
+### Jupyter Notebook Integration
+- When starting Jupyter server with `root --notebook arg1 arg2 ...`, extra arguments can be provided.
+  All these arguments delivered as is to jupyter executable and can be used for configuration.
+  Like server binding to specific host `root --notebook --ip=hostname`
+- Remove `c.NotebookApp.ip = '*'` from default jupyter config. One has to provide ip address for server
+  binding using `root --notebook --ip=<hostaddr>` arguments
+
 
 ## JavaScript ROOT
 - Provide monitoring capabilities for TGeoManager object. Now geomtry with some tracks can be displayed and
@@ -173,7 +192,16 @@ typedefs (in particular `Double32_t`)
 - Revisited the TSpectrum2 documentation. All the static images have been replaced
   by macros generating images at reference guide build time. These macros have
   been added in the tutorial section of the reference guide.
-
+- The Reference Guide can now be accessed directly from the ROOT prompt thanks to
+  a great extension (implemented by Desislava Kalaydjieva) of the `.help` command.
+  For example to access the Reference Guide for `TTree` it is enough to type:
+~~~ {.cpp}
+   root[0] .help TTree
+~~~
+  To open the reference guide for a function/member:
+~~~ {.cpp}
+   root[0] .help TTree::Draw
+~~~
 
 ## Build, Configuration and Testing Infrastructure
 

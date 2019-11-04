@@ -1,6 +1,7 @@
 /// \file ROOT/RBrowser.cxx
-/// \ingroup WebGui ROOT7
+/// \ingroup rbrowser
 /// \author Bertrand Bellenot <bertrand.bellenot@cern.ch>
+/// \author Sergey Linev <S.Linev@gsi.de>
 /// \date 2019-02-28
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
@@ -15,15 +16,23 @@
 
 #include <ROOT/RBrowser.hxx>
 
-#include <ROOT/RBrowserItem.hxx>
 #include <ROOT/RLogger.hxx>
-#include "ROOT/RMakeUnique.hxx"
+#include <ROOT/RMakeUnique.hxx>
+#include <ROOT/RObjectDrawable.hxx>
+#include <ROOT/RDrawableProvider.hxx>
+#include <ROOT/RBrowsableSysFile.hxx>
+#include <ROOT/RCanvas.hxx>
 
-#include "TKey.h"
 #include "TString.h"
 #include "TSystem.h"
 #include "TROOT.h"
+#include "TWebCanvas.h"
+#include "TCanvas.h"
 #include "TBufferJSON.h"
+#include "TLeaf.h"
+#include "TBranch.h"
+#include "TTree.h"
+#include "TH1.h"
 
 #include <sstream>
 #include <iostream>
@@ -33,8 +42,12 @@
 #include <thread>
 #include <fstream>
 
+using namespace std::string_literals;
+
+using namespace ROOT::Experimental::Browsable;
+
 /** \class ROOT::Experimental::RBrowser
-\ingroup webdisplay
+\ingroup rbrowser
 
 web-based ROOT Browser prototype.
 */
@@ -42,18 +55,33 @@ web-based ROOT Browser prototype.
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-ROOT::Experimental::RBrowser::RBrowser()
+ROOT::Experimental::RBrowser::RBrowser(bool use_rcanvas)
 {
+   SetUseRCanvas(use_rcanvas);
+
+   fWorkingDirectory = gSystem->UnixPathName(gSystem->WorkingDirectory());
+   printf("Current dir %s\n", fWorkingDirectory.c_str());
+
+   fBrowsable.SetTopElement(std::make_unique<SysFileElement>(fWorkingDirectory));
+
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
 
    // this is call-back, invoked when message received via websocket
-   fWebWindow->SetCallBacks([this](unsigned connid) { fConnId = connid; },
+   fWebWindow->SetCallBacks([this](unsigned connid) { fConnId = connid; SendInitMsg(connid); },
                             [this](unsigned connid, const std::string &arg) { WebWindowCallback(connid, arg); });
    fWebWindow->SetGeometry(1200, 700); // configure predefined window geometry
    fWebWindow->SetConnLimit(1); // the only connection is allowed
    fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
+
    Show();
+
+   // add first canvas by default
+
+   if (GetUseRCanvas())
+      AddRCanvas();
+   else
+      AddCanvas();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -61,251 +89,12 @@ ROOT::Experimental::RBrowser::RBrowser()
 
 ROOT::Experimental::RBrowser::~RBrowser()
 {
-}
-
-
-/////////////////////////////////////////////////////////////////////
-/// Collect information for provided root file
-
-void ROOT::Experimental::RBrowser::Browse(const std::string &path)
-{
-   fDescPath = path;
-   fDesc.clear();
-   fSorted.clear();
-   std::string keyname, classname, filename = path.substr(1, path.size()-2);
-   TDirectory *rfile = (TDirectory *)gROOT->ProcessLine(TString::Format("TFile::Open(\"%s\", \"READ\")",
-                                                       filename.c_str()));
-   if (rfile) {
-      // replace actual user data (TObjString) by the TDirectory...
-      int nkeys = rfile->GetListOfKeys()->GetEntries();
-      for (int i=0; i<nkeys; ++i) {
-         TKey *key = (TKey *)rfile->GetListOfKeys()->At(i);
-         keyname = key->GetName();
-         if (keyname.back() == '.')
-            keyname.pop_back();
-         keyname += ";";
-         keyname += std::to_string(key->GetCycle());
-         classname = key->GetClassName();
-         if (classname == "TTree" || classname == "TNtuple" ||
-             classname == "TDirectory" || classname == "TDirectoryFile")
-            fDesc.emplace_back(keyname, 0);// 1);
-         else
-            fDesc.emplace_back(keyname, 0);
-         auto &item   = fDesc.back();
-         item.type    = 0;
-         item.size    = 0;
-         item.uid     = 0;
-         item.gid     = 0;
-         item.modtime = 0;
-         item.islink  = 0;
-         item.isdir   = 0;
-         item.icon    = GetClassIcon(classname);
-         item.fsize   = "";
-         item.mtime   = "";
-         item.ftype   = "";
-         item.fuid    = "";
-         item.fgid    = "";
-      }
-   }
-   for (auto &item : fDesc)
-      fSorted.emplace_back(&item);
-}
-
-/////////////////////////////////////////////////////////////////////
-/// Collect information for provided directory
-
-void ROOT::Experimental::RBrowser::Build(const std::string &path)
-{
-   fDescPath = path;
-
-   void *dirp;
-   TString name;
-   std::string spath = path;
-   spath.insert(0, ".");
-   fDesc.clear();
-   fSorted.clear();
-
-   std::string savdir = gSystem->WorkingDirectory();
-   if (!gSystem->ChangeDirectory(spath.c_str())) return;
-
-   if ((dirp = gSystem->OpenDirectory(".")) != nullptr) {
-      while ((name = gSystem->GetDirEntry(dirp)) != "") {
-         if ((name == ".") || (name == "..")) continue;
-
-         FileStat_t stat;
-
-         if (gSystem->GetPathInfo(name, stat)) {
-            if (stat.fIsLink) {
-               std::cout << "AddFile : Broken symlink of " << name << std::endl;
-            } else {
-               std::cerr << "Can't read file attributes of \"" <<  name << "\": " << gSystem->GetError() << std::endl;;
-            }
-            continue;
-         }
-
-         int nchilds = R_ISDIR(stat.fMode) ? 1 : 0;
-         if (name.EndsWith(".root"))
-            nchilds = 1;
-
-         fDesc.emplace_back(name.Data(), nchilds);
-
-         auto &item = fDesc.back();
-
-         // this is construction of current item
-
-         char tmp[256];
-         Long64_t _fsize, bsize;
-
-         item.type     = stat.fMode;
-         item.size     = stat.fSize;
-         item.uid      = stat.fUid;
-         item.gid      = stat.fGid;
-         item.modtime  = stat.fMtime;
-         item.islink   = stat.fIsLink;
-         item.isdir    = R_ISDIR(stat.fMode);
-
-         if (item.isdir)
-            item.icon = "sap-icon://folder-blank";
-         else
-            item.icon = GetFileIcon(name);
-
-         // file size
-         _fsize = bsize = item.size;
-         if (_fsize > 1024) {
-            _fsize /= 1024;
-            if (_fsize > 1024) {
-               // 3.7MB is more informative than just 3MB
-               snprintf(tmp, sizeof(tmp), "%lld.%lldM", _fsize/1024, (_fsize%1024)/103);
-            } else {
-               snprintf(tmp, sizeof(tmp), "%lld.%lldK", bsize/1024, (bsize%1024)/103);
-            }
-         } else {
-            snprintf(tmp, sizeof(tmp), "%lld", bsize);
-         }
-         item.fsize = tmp;
-
-         // modification time
-         time_t loctime = (time_t) item.modtime;
-         struct tm *newtime = localtime(&loctime);
-         if (newtime) {
-            snprintf(tmp, sizeof(tmp), "%d-%02d-%02d %02d:%02d", newtime->tm_year + 1900,
-                     newtime->tm_mon+1, newtime->tm_mday, newtime->tm_hour,
-                     newtime->tm_min);
-            item.mtime = tmp;
-         } else {
-            item.mtime = "1901-01-01 00:00";
-         }
-
-         // file type
-         snprintf(tmp, sizeof(tmp), "%c%c%c%c%c%c%c%c%c%c",
-                  (item.islink ?
-                   'l' :
-                   R_ISREG(item.type) ?
-                   '-' :
-                   (R_ISDIR(item.type) ?
-                    'd' :
-                    (R_ISCHR(item.type) ?
-                     'c' :
-                     (R_ISBLK(item.type) ?
-                      'b' :
-                      (R_ISFIFO(item.type) ?
-                       'p' :
-                       (R_ISSOCK(item.type) ?
-                        's' : '?' )))))),
-                  ((item.type & kS_IRUSR) ? 'r' : '-'),
-                  ((item.type & kS_IWUSR) ? 'w' : '-'),
-                  ((item.type & kS_ISUID) ? 's' : ((item.type & kS_IXUSR) ? 'x' : '-')),
-                  ((item.type & kS_IRGRP) ? 'r' : '-'),
-                  ((item.type & kS_IWGRP) ? 'w' : '-'),
-                  ((item.type & kS_ISGID) ? 's' : ((item.type & kS_IXGRP) ? 'x' : '-')),
-                  ((item.type & kS_IROTH) ? 'r' : '-'),
-                  ((item.type & kS_IWOTH) ? 'w' : '-'),
-                  ((item.type & kS_ISVTX) ? 't' : ((item.type & kS_IXOTH) ? 'x' : '-')));
-         item.ftype = tmp;
-
-         struct UserGroup_t *user_group = gSystem->GetUserInfo(item.uid);
-         if (user_group) {
-            item.fuid = user_group->fUser;
-            item.fgid = user_group->fGroup;
-            delete user_group;
-         } else {
-            item.fuid = std::to_string(item.uid);
-            item.fgid = std::to_string(item.gid);
-         }
-
-         gSystem->ProcessEvents();
-      }
-
-      gSystem->FreeDirectory(dirp);
-   }
-
-   gSystem->ChangeDirectory(savdir.c_str());
-
-   // now build sorted list - first folders, then files
-   // later more complex sorting rules can be applied
-
-   for (auto &item : fDesc)
-      if (item.isdir)
-         fSorted.emplace_back(&item);
-
-   for (auto &item : fDesc)
-      if (!item.isdir)
-         fSorted.emplace_back(&item);
-}
-
-/////////////////////////////////////////////////////////////////////////////////
-/// Get icon for the given class name
-
-std::string ROOT::Experimental::RBrowser::GetClassIcon(std::string &classname)
-{
-   std::string res;
-   if (classname == "TTree" || classname == "TNtuple")
-      res = "sap-icon://tree";
-   else if (classname == "TDirectory" || classname == "TDirectoryFile")
-      res = "sap-icon://folder-blank";
-   else
-      res = "sap-icon://electronic-medical-record";
-   return res;
-}
-
-/////////////////////////////////////////////////////////////////////////////////
-/// Get icon for the type of given file name
-
-std::string ROOT::Experimental::RBrowser::GetFileIcon(TString &name)
-{
-   std::string res;
-   if ((name.EndsWith(".c")) ||
-       (name.EndsWith(".cpp")) ||
-       (name.EndsWith(".cxx")) ||
-       (name.EndsWith(".c++")) ||
-       (name.EndsWith(".cxx")) ||
-       (name.EndsWith(".h")) ||
-       (name.EndsWith(".hpp")) ||
-       (name.EndsWith(".hxx")) ||
-       (name.EndsWith(".h++")) ||
-       (name.EndsWith(".py")) ||
-       (name.EndsWith(".txt")) ||
-       (name.EndsWith(".cmake")) ||
-       (name.EndsWith(".dat")) ||
-       (name.EndsWith(".log")) ||
-       (name.EndsWith(".js")))
-      res ="sap-icon://document-text";
-   else if ((name.EndsWith(".bmp")) ||
-            (name.EndsWith(".gif")) ||
-            (name.EndsWith(".jpg")) ||
-            (name.EndsWith(".png")) ||
-            (name.EndsWith(".svg")))
-      res = "sap-icon://picture";
-   else if (name.EndsWith(".root"))
-      res = "sap-icon://org-chart";
-   else
-      res = "sap-icon://document";
-   return res;
+   fCanvases.clear();
 }
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-/// constructor
+/// Process browser request
 
 std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::string &msg)
 {
@@ -325,48 +114,125 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
    if (!request)
       return res;
 
-   if (request->sort == "DBLCLK") {
-      res = "FREAD:";
-      if (request->path.size() > 5 && request->path.compare(request->path.size() - 5, 5, ".root") == 0) {
+   return "BREPL:"s + fBrowsable.ProcessRequest(*request.get());
+}
 
-      } else {
-         std::ifstream t(request->path);
-         std::string str((std::istreambuf_iterator<char>(t)),
-                          std::istreambuf_iterator<char>());
-         res.append(str.c_str());
-      }
-      return res;
-   }
+/////////////////////////////////////////////////////////////////////////////////
+/// Process file save command in the editor
 
-   // rebuild list only when selected directory changed
-   if (!IsBuild() || (request->path != fDescPath)) {
-      fDescPath = request->path;
-      if (fDescPath.size() > 6 &&
-           fDescPath.compare(fDescPath.size() - 6, 6, ".root/") == 0)
-         Browse(request->path);
+bool ROOT::Experimental::RBrowser::ProcessSaveFile(const std::string &file_path)
+{
+   // Split the path (filename + text)
+   std::vector<std::string> split;
+   std::string buffer;
+   std::istringstream path(file_path);
+   if (std::getline(path, buffer, ':'))
+      split.push_back(buffer);
+   if (std::getline(path, buffer, '\0'))
+      split.push_back(buffer);
+   // TODO: can be done with RElement as well
+   std::ofstream ostrm(split[0]);
+   ostrm << split[1];
+   return true;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Process file save command in the editor
+
+long ROOT::Experimental::RBrowser::ProcessRunCommand(const std::string &file_path)
+{
+   // Split the path (filename + text)
+   std::vector<std::string> split;
+   std::string buffer;
+   std::istringstream path(file_path);
+   if (std::getline(path, buffer, ':'))
+      split.push_back(buffer);
+   if (std::getline(path, buffer, '\0'))
+      split.push_back(buffer);
+   return gInterpreter->ExecuteMacro(split[0].c_str());
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Process dbl click on browser item
+
+std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &item_path, const std::string &drawingOptions)
+{
+   printf("DoubleClick %s\n", item_path.c_str());
+
+   auto elem = fBrowsable.GetElement(item_path);
+   if (!elem) return ""s;
+
+   // TODO: one can send id of editor or canvas to be sure when sending back reply
+
+   if (drawingOptions == "$$$image$$$") {
+      auto img = elem->GetContent("image64");
+      if (!img.empty())
+         return "FIMG:"s + img;
       else
-         Build(request->path);
+         return ""s;
    }
 
-   RBrowserReply reply;
-   reply.path = request->path;
-   reply.first = request->first;
-   reply.nchilds = fDesc.size();
-
-   // return only requested number of nodes
-   // no items ownership, RRootBrowserReply must be always temporary object
-   // TODO: implement different sorting
-   int seq = 0;
-   for (auto &node : fSorted) {
-      if ((seq >= request->first) && ((seq < request->first + request->number) || (request->number == 0)))
-         reply.nodes.emplace_back(node);
-      seq++;
+   if (drawingOptions == "$$$editor$$$") {
+      auto code = elem->GetContent("text");
+      if (!code.empty())
+         return "FREAD:"s + code;
+      else
+         return ""s;
    }
 
-   res = "BREPL:";
-   res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kSkipTypeInfo + TBufferJSON::kNoSpaces).Data());
+   auto canv = GetActiveCanvas();
+   if (canv) {
 
-   return res;
+      auto obj = elem->GetObject();
+
+      if (obj)
+         if (ROOT::Experimental::RDrawableProvider::DrawV6(canv, obj, drawingOptions)) {
+            canv->ForceUpdate(); // force update async - do not wait for confirmation
+            return "SLCTCANV:"s + canv->GetName();
+         }
+   }
+
+   auto rcanv = GetActiveRCanvas();
+   if (rcanv) {
+
+      std::shared_ptr<RPadBase> subpad = rcanv;
+
+      auto obj = elem->GetObject();
+      if (obj)
+         if (ROOT::Experimental::RDrawableProvider::DrawV7(subpad, obj, drawingOptions)) {
+            rcanv->Modified();
+            rcanv->Update(true);
+            return "SLCTCANV:"s + rcanv->GetTitle();
+         }
+
+/*
+      if (rcanv->NumPrimitives() > 0) {
+         rcanv->Wipe();
+         rcanv->Modified();
+         rcanv->Update(true);
+      }
+
+      // FIXME: how to proceed with TObject ownership here
+      TObject *clone = tobj->Clone();
+      TH1 *h1 = dynamic_cast<TH1 *>(clone);
+      if (h1) h1->SetDirectory(nullptr);
+
+      std::shared_ptr<TObject> ptr;
+      ptr.reset(clone);
+      rcanv->Draw<RObjectDrawable>(ptr, drawingOptions);
+      rcanv->Modified();
+
+      rcanv->Update(true);
+
+      return "SLCTCANV:"s + rcanv->GetTitle();
+      */
+   }
+
+
+   printf("No active canvas to process dbl click\n");
+
+
+   return "";
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -398,11 +264,161 @@ void ROOT::Experimental::RBrowser::Hide()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+/// Create new web canvas, invoked when new canvas created on client side
+
+TCanvas *ROOT::Experimental::RBrowser::AddCanvas()
+{
+   TString canv_name;
+   canv_name.Form("webcanv%d", (int)(fCanvases.size()+1));
+
+   auto canv = std::make_unique<TCanvas>(kFALSE);
+   canv->SetName(canv_name.Data());
+   canv->SetTitle(canv_name.Data());
+   canv->ResetBit(TCanvas::kShowEditor);
+   canv->ResetBit(TCanvas::kShowToolBar);
+   canv->SetCanvas(canv.get());
+   canv->SetBatch(kTRUE); // mark canvas as batch
+   canv->SetEditable(kTRUE); // ensure fPrimitives are created
+   fActiveCanvas = canv->GetName();
+
+   // create implementation
+   TWebCanvas *web = new TWebCanvas(canv.get(), "title", 0, 0, 800, 600);
+
+   // assign implementation
+   canv->SetCanvasImp(web);
+
+   // initialize web window, but not start new web browser
+   web->ShowWebWindow("embed");
+
+   fCanvases.emplace_back(std::move(canv));
+
+   return fCanvases.back().get();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Creates RCanvas for the output
+
+std::shared_ptr<ROOT::Experimental::RCanvas> ROOT::Experimental::RBrowser::AddRCanvas()
+{
+   std::string name = "rcanv"s + std::to_string(fRCanvases.size()+1);
+
+   auto canv = ROOT::Experimental::RCanvas::Create(name);
+
+   canv->Show("embed");
+
+   fActiveCanvas = name;
+
+   fRCanvases.emplace_back(canv);
+
+   return canv;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Returns relative URL for canvas - required for client to establish connection
+
+std::string ROOT::Experimental::RBrowser::GetCanvasUrl(TCanvas *canv)
+{
+   TWebCanvas *web = dynamic_cast<TWebCanvas *>(canv->GetCanvasImp());
+   return fWebWindow->GetRelativeAddr(web->GetWebWindow());
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Returns relative URL for canvas - required for client to establish connection
+
+std::string ROOT::Experimental::RBrowser::GetRCanvasUrl(std::shared_ptr<RCanvas> &canv)
+{
+   return "../"s + canv->GetWindowAddr() + "/"s;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Returns active web canvas (if any)
+
+TCanvas *ROOT::Experimental::RBrowser::GetActiveCanvas() const
+{
+   auto iter = std::find_if(fCanvases.begin(), fCanvases.end(), [this](const std::unique_ptr<TCanvas> &canv) { return fActiveCanvas == canv->GetName(); });
+
+   if (iter != fCanvases.end())
+      return iter->get();
+
+   return nullptr;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Returns active RCanvas (if any)
+
+std::shared_ptr<ROOT::Experimental::RCanvas> ROOT::Experimental::RBrowser::GetActiveRCanvas() const
+{
+   auto iter = std::find_if(fRCanvases.begin(), fRCanvases.end(), [this](const std::shared_ptr<RCanvas> &canv) { return fActiveCanvas == canv->GetTitle(); });
+
+   if (iter != fRCanvases.end())
+      return *iter;
+
+   return nullptr;
+
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Close and delete specified canvas
+
+void ROOT::Experimental::RBrowser::CloseCanvas(const std::string &name)
+{
+   auto iter = std::find_if(fCanvases.begin(), fCanvases.end(), [name](std::unique_ptr<TCanvas> &canv) { return name == canv->GetName(); });
+
+   if (iter != fCanvases.end())
+      fCanvases.erase(iter);
+
+   if (fActiveCanvas == name)
+      fActiveCanvas.clear();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Process client connect
+
+void ROOT::Experimental::RBrowser::SendInitMsg(unsigned connid)
+{
+   std::vector<std::vector<std::string>> reply;
+
+   for (auto &canv : fCanvases) {
+      auto url = GetCanvasUrl(canv.get());
+      std::string name = canv->GetName();
+      std::vector<std::string> arr = {"root6", url, name};
+      reply.emplace_back(arr);
+   }
+
+   for (auto &canv : fRCanvases) {
+      auto url = GetRCanvasUrl(canv);
+      std::string name = canv->GetTitle();
+      std::vector<std::string> arr = {"root7", url, name};
+      reply.emplace_back(arr);
+   }
+
+   std::string msg = "INMSG:";
+   msg.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
+
+   printf("Init msg %s\n", msg.c_str());
+
+   fWebWindow->Send(connid, msg);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Return the current directory of ROOT
+
+std::string ROOT::Experimental::RBrowser::GetCurrentWorkingDirectory()
+{
+   return "GETWORKDIR: { \"path\": \""s + fWorkingDirectory + "\"}"s;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
 /// receive data from client
 
 void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std::string &arg)
 {
-   printf("Recv %s\n", arg.c_str());
+   size_t len = arg.find("\n");
+   if (len != std::string::npos)
+      printf("Recv %s\n", arg.substr(0, len).c_str());
+   else
+      printf("Recv %s\n", arg.c_str());
 
    if (arg == "QUIT_ROOT") {
 
@@ -410,8 +426,196 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
 
    } else if (arg.compare(0,6, "BRREQ:") == 0) {
       // central place for processing browser requests
-      //if (!fDesc.IsBuild()) fDesc.Build();
       auto json = ProcessBrowserRequest(arg.substr(6));
       if (json.length() > 0) fWebWindow->Send(connid, json);
+   } else if (arg.compare("NEWRCANVAS") == 0) {
+
+      auto canv = AddRCanvas();
+      auto url = GetRCanvasUrl(canv);
+
+      std::vector<std::string> reply = {"root7"s, url, canv->GetTitle()};
+      std::string res = "CANVS:";
+      res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
+      fWebWindow->Send(connid, res);
+   } else if (arg.compare("NEWTCANVAS") == 0) {
+
+      auto canv = AddCanvas();
+      auto url = GetCanvasUrl(canv);
+
+      std::vector<std::string> reply = {"root6"s, url, std::string(canv->GetName())};
+      std::string res = "CANVS:";
+      res.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
+      fWebWindow->Send(connid, res);
+   } else if (arg.compare(0,7, "DBLCLK:") == 0) {
+
+      std::string reply;
+
+      auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
+      if (arr && (arr->size() == 2))
+         reply = ProcessDblClick(arr->at(0), arr->at(1));
+
+      if (!reply.empty())
+         fWebWindow->Send(connid, reply);
+
+   } else if (arg.compare(0,9, "RUNMACRO:") == 0) {
+      ProcessRunCommand(arg.substr(9));
+   } else if (arg.compare(0,9, "SAVEFILE:") == 0) {
+      ProcessSaveFile(arg.substr(9));
+   } else if (arg.compare(0,14, "SELECT_CANVAS:") == 0) {
+      fActiveCanvas = arg.substr(14);
+      printf("Select %s\n", fActiveCanvas.c_str());
+   } else if (arg.compare(0,13, "CLOSE_CANVAS:") == 0) {
+      CloseCanvas(arg.substr(13));
+   } else if (arg.compare(0, 11, "GETWORKDIR:") == 0) {
+      std::string res = GetCurrentWorkingDirectory();
+      fWebWindow->Send(connid, res);
+   } else if (arg.compare(0, 6, "CHDIR:") == 0) {
+      fWorkingDirectory = arg.substr(6);
+      if ((fWorkingDirectory.length()>1) && (fWorkingDirectory[fWorkingDirectory.length()-1] == '/')) fWorkingDirectory.resize(fWorkingDirectory.length()-1);
+      printf("Current dir %s\n", fWorkingDirectory.c_str());
+      fBrowsable.SetTopElement(std::make_unique<SysFileElement>(fWorkingDirectory));
+      gSystem->ChangeDirectory(fWorkingDirectory.c_str());
+      fWebWindow->Send(connid, GetCurrentWorkingDirectory());
    }
 }
+
+
+
+// ============================================================================================
+
+using namespace ROOT::Experimental;
+
+class RV6DrawProvider : public RDrawableProvider {
+public:
+
+   RV6DrawProvider()
+   {
+      RegisterV6(nullptr, [](TVirtualPad *pad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt) -> bool {
+
+         // try take object without ownership
+         auto tobj = obj->get_object<TObject>();
+         if (!tobj) {
+            auto utobj = obj->get_unique<TObject>();
+            if (!utobj)
+               return false;
+            tobj = utobj.release();
+            tobj->SetBit(TObject::kMustCleanup); // TCanvas should care about cleanup
+         }
+
+         pad->GetListOfPrimitives()->Clear();
+
+         pad->GetListOfPrimitives()->Add(tobj, opt.c_str());
+
+         return true;
+      });
+
+      RegisterV6(TLeaf::Class(), [](TVirtualPad *pad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt) -> bool {
+
+         // try take object without ownership
+         auto tleaf = obj->get_object<TLeaf>();
+         if (!tleaf)
+            return false;
+
+         auto ttree = tleaf->GetBranch()->GetTree();
+         if (!ttree)
+            return false;
+
+
+         std::string expr = std::string(tleaf->GetName()) + ">>htemp_tree_draw";
+
+         ttree->Draw(expr.c_str(),"","goff");
+
+         if (!gDirectory)
+            return false;
+
+         auto htemp = dynamic_cast<TH1*>(gDirectory->FindObject("htemp_tree_draw"));
+
+         if (!htemp)
+            return false;
+
+         htemp->SetDirectory(nullptr);
+         htemp->SetName(tleaf->GetName());
+
+         pad->GetListOfPrimitives()->Clear();
+
+         pad->GetListOfPrimitives()->Add(htemp, opt.c_str());
+
+         return true;
+      });
+
+   }
+
+} newRV6DrawProvider;
+
+
+class RV7DrawProvider : public RDrawableProvider {
+public:
+   RV7DrawProvider()
+   {
+      RegisterV7(nullptr, [] (std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt) -> bool {
+
+         // here clear ownership is required
+         // If it possible, TObject will be cloned by RTObjectHolder
+         auto tobj = obj->get_shared<TObject>();
+         if (!tobj) return false;
+
+         if (subpad->NumPrimitives() > 0) {
+            subpad->Wipe();
+            subpad->GetCanvas()->Modified();
+            subpad->GetCanvas()->Update(true);
+         }
+
+         subpad->Draw<RObjectDrawable>(tobj, opt);
+         return true;
+      });
+
+
+      RegisterV7(TLeaf::Class(), [](std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt) -> bool {
+
+         // try take object without ownership
+         auto tleaf = obj->get_object<TLeaf>();
+         if (!tleaf)
+            return false;
+
+         auto ttree = tleaf->GetBranch()->GetTree();
+         if (!ttree)
+            return false;
+
+
+         std::string expr = std::string(tleaf->GetName()) + ">>htemp_tree_draw";
+
+         ttree->Draw(expr.c_str(),"","goff");
+
+         if (!gDirectory)
+            return false;
+
+         auto htemp = dynamic_cast<TH1*>(gDirectory->FindObject("htemp_tree_draw"));
+
+         if (!htemp)
+            return false;
+
+         htemp->SetDirectory(nullptr);
+         htemp->SetName(tleaf->GetName());
+
+         if (subpad->NumPrimitives() > 0) {
+            subpad->Wipe();
+            subpad->GetCanvas()->Modified();
+            subpad->GetCanvas()->Update(true);
+         }
+
+         std::shared_ptr<TH1> shared;
+         shared.reset(htemp);
+
+         subpad->Draw<RObjectDrawable>(shared, opt);
+
+
+         return true;
+      });
+
+
+   }
+
+
+
+} newRV7DrawProvider;
+

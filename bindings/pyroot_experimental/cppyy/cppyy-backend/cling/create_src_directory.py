@@ -19,7 +19,7 @@ def is_manylinux():
     _is_manylinux = False
     try:
         for line in open('/etc/redhat-release').readlines():
-            if 'CentOS release 5.11' in line:
+            if 'CentOS release 6.10 (Final)' in line:
                 _is_manylinux = True
                 break
     except (OSError, IOError):
@@ -464,9 +464,10 @@ except ImportError:
 
 for fdiff in ('scanner', 'scanner_2', 'faux_typedef', 'classrules', 'template_fwd', 'dep_template',
               'no_long64_t', 'using_decls', 'sfinae', 'typedef_of_private', 'optlevel2_forced',
-              'silence', 'explicit_template', 'alias_template', 'lambda', 'templ_ops', 'templ_ctor',
+              'silence', 'explicit_template', 'alias_template', 'lambda', 'templ_ops',
               'private_type_args', 'incomplete_types', 'helpers', 'clang_printing', 'resolution',
-              'stdfunc_printhack', 'pch', 'strip_lz4_lzma', 'msvc', 'win64rtti', 'win64', 'win64s2'):
+              'stdfunc_printhack', 'anon_union', 'no_inet', 'pch', 'strip_lz4_lzma',
+              'msvc', 'win64rtti', 'win64', 'win64s2'):
     fpatch = os.path.join('patches', fdiff+'.diff')
     print(' ==> applying patch:', fpatch)
     pset = patch.fromfile(fpatch)
@@ -478,6 +479,7 @@ for fdiff in ('scanner', 'scanner_2', 'faux_typedef', 'classrules', 'template_fw
 ## manylinux1 specific patch, as there a different, older, compiler is used
 #
 if is_manylinux():
+    print(' ==> applying patch:', 'manylinux1')
     patch.fromfile(os.path.join('patches', 'manylinux1.diff')).apply()
 
 #

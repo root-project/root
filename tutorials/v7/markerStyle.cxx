@@ -11,10 +11,10 @@
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RText.hxx"
 #include "ROOT/RMarker.hxx"
-#include "ROOT/RPadPos.hxx"
 #include <string>
 
-void markerStyle() {
+void markerStyle()
+{
    using namespace ROOT::Experimental;
 
    auto canvas = RCanvas::Create("Canvas Title");
@@ -22,26 +22,19 @@ void markerStyle() {
 
    double x = 0;
    double dx = 1/16.0;
-   for (Int_t i=1;i<16;i++) {
+   for (int i=1;i<16;i++) {
       x += dx;
+      for (int row=0;row<3;++row) {
+         int style = i;
 
-      RPadPos pt1(RPadLength::Normal(x), .12_normal);
-      auto ot1 = canvas->Draw(RText(pt1, std::to_string(i)));
-      RPadPos pm1(RPadLength::Normal(x), .25_normal);
-      auto om1 = canvas->Draw(RMarker(pm1));
-      om1->SetStyle(i).SetSize(2.5);
+         if (row==1) style+=19; else if (row==2) style+=34;
 
-      RPadPos pt2(RPadLength::Normal(x), .42_normal);
-      auto ot2 = canvas->Draw(RText(pt2, std::to_string(i+19)));
-      RPadPos pm2(RPadLength::Normal(x), .55_normal);
-      auto om2 = canvas->Draw(RMarker(pm2));
-      om2->SetStyle(i+19).SetSize(2.5);
+         RPadPos pt(RPadLength::Normal(x), .12_normal + 0.3_normal*row);
+         canvas->Draw<RText>(pt, std::to_string(style));
 
-      RPadPos pt3(RPadLength::Normal(x), .72_normal);
-      auto ot3 = canvas->Draw(RText(pt3, std::to_string(i+34)));
-      RPadPos pm3(RPadLength::Normal(x), .85_normal);
-      auto om3 = canvas->Draw(RMarker(pm3));
-      om3->SetStyle(i+34).SetSize(2.5);
+         RPadPos pm(RPadLength::Normal(x), .25_normal + 0.3_normal*row);
+         canvas->Draw<RMarker>(pm)->AttrMarker().SetStyle(style).SetSize(2.5);
+      }
    }
 
    canvas->Show();

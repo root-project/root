@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-
 #include "TObjArray.h"
-
 #include "TTreeFormula.h"
 
 class TArrayI;
@@ -50,8 +48,8 @@ private:
 
 private:
    // Not implemented yet
-   TTreeFormulaManager(const TTreeFormulaManager&);
-   TTreeFormulaManager& operator=(const TTreeFormulaManager&);
+   TTreeFormulaManager(const TTreeFormulaManager&) = delete;
+   TTreeFormulaManager& operator=(const TTreeFormulaManager&) = delete;
 
 protected:
 

@@ -30,6 +30,17 @@
 
 namespace {
    static TClassEdit::TInterpreterLookupHelper *gInterpreterHelper = 0;
+
+   template <typename T>
+   struct ShuttingDownSignaler : public T {
+      using T::T;
+
+      ~ShuttingDownSignaler()
+      {
+         if (gInterpreterHelper)
+            gInterpreterHelper->ShuttingDownSignal();
+      }
+   };
 }
 
 namespace std {} using namespace std;
@@ -55,7 +66,7 @@ static size_t StdLen(const std::string_view name)
                std::string scoperesult;
                // We assume that we are called in already serialized code.
                // Note: should we also cache the negative answers?
-               static std::set<std::string> gInlined;
+               static ShuttingDownSignaler<std::set<std::string>> gInlined;
 
                if (gInlined.find(scope) != gInlined.end()) {
                   len = i;
@@ -125,6 +136,18 @@ TClassEdit::EComplexType TClassEdit::GetComplexType(const char* clName)
       }
    }
    return EComplexType::kNone;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+TClassEdit::TInterpreterLookupHelper::~TInterpreterLookupHelper()
+{
+   // Already too late to call this->ShuttingDownSignal
+   // the virtual table has already lost (on some platform) the
+   // address of the derived function that we would need to call.
+   // But at least forget about this instance!
+
+   if (this == gInterpreterHelper)
+      gInterpreterHelper = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -974,6 +997,7 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
       unsigned int const_offset = (0==strncmp("const ",full.c_str(),6)) ? 6 : 0;
       bool isString = false;
       bool isStdString = false;
+      size_t std_offset = const_offset;
       static const char* basic_string_std = "std::basic_string<char";
       static const unsigned int basic_string_std_len = strlen(basic_string_std);
 
@@ -981,14 +1005,22 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
           && full.size() > basic_string_std_len) {
          isString = true;
          isStdString = true;
+         std_offset += 5;
       } else if (full.compare(const_offset,basic_string_std_len-5,basic_string_std+5) == 0
                  && full.size() > (basic_string_std_len-5)) {
          // no std.
          isString = true;
+      } else if (full.find("basic_string") != std::string::npos) {
+         size_t len = StdLen(full.c_str() + const_offset);
+         if (len && len != 5 && full.compare(const_offset + len, basic_string_std_len-5, basic_string_std+5) == 0) {
+            isString = true;
+            isStdString = true;
+            std_offset += len;
+         }
       }
       if (isString) {
-         size_t offset = isStdString ? basic_string_std_len : basic_string_std_len - 5;
-         offset += const_offset;
+         size_t offset = basic_string_std_len - 5;
+         offset += std_offset; // std_offset includs both the size of std prefix and const prefix.
          if ( full[offset] == '>' ) {
             // done.
          } else if (full[offset] == ',') {
@@ -1384,7 +1416,7 @@ static void ResolveTypedefProcessType(const char *tname,
                     : string(tname, start_of_type, end_of_type == 0 ? cursor - start_of_type : end_of_type - start_of_type));  // we need to try to avoid this copy
    string typeresult;
    if (gInterpreterHelper->ExistingTypeCheck(type, typeresult)
-       || gInterpreterHelper->GetPartiallyDesugaredNameWithScopeHandling(type, typeresult)) {
+       || gInterpreterHelper->GetPartiallyDesugaredNameWithScopeHandling(type, typeresult, false)) {
       // it is a known type
       if (!typeresult.empty()) {
          // and it is a typedef, we need to replace it in the output.
@@ -1454,11 +1486,6 @@ static void ResolveTypedefImpl(const char *tname,
 
    }
 
-   // When either of those two is true, we should probably go to modified
-   // mode. (Otherwise we rely on somebody else to strip the std::)
-   if (len > 5 && strncmp(tname+cursor,"std::",5) == 0) {
-      cursor += 5;
-   }
    if (len > 2 && strncmp(tname+cursor,"::",2) == 0) {
       cursor += 2;
       len -= 2;
@@ -1504,14 +1531,11 @@ static void ResolveTypedefImpl(const char *tname,
                      result += "::";
                   }
                } else if (modified) {
-                  result += std::string(tname+prevScope,cursor+1-prevScope);
+                  result += std::string(tname+prevScope,cursor+2-prevScope);
                }
             } else if (!gInterpreterHelper->IsDeclaredScope(scope,isInlined)) {
-               // the nesting namespace is not declared
-               if (modified) result += (tname+prevScope);
-               // Unfortunately, this is too harsh .. what about:
-               //    unknown::wrapper<Int_t>
-               return;
+               // the nesting namespace is not declared, just ignore it and move on
+               if (modified) result += std::string(tname+prevScope,cursor+2-prevScope);
             } else if (isInlined) {
                // humm ... just skip it.
                if (!modified) {
@@ -1522,7 +1546,7 @@ static void ResolveTypedefImpl(const char *tname,
                   result += string(tname,start_of_type,prevScope - start_of_type);
                }
             } else if (modified) {
-               result += std::string(tname+prevScope,cursor+1-prevScope);
+               result += std::string(tname+prevScope,cursor+2-prevScope);
             }
             // Consume the 1st semi colon, the 2nd will be consume by the for loop.
             ++cursor;
@@ -1832,7 +1856,7 @@ string TClassEdit::InsertStd(const char *tname)
       "vector",
       "wstring"
    };
-   static set<string> sSetSTLtypes;
+   static ShuttingDownSignaler<set<string>> sSetSTLtypes;
 
    if (tname==0 || tname[0]==0) return "";
 

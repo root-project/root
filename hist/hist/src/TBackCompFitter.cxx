@@ -37,9 +37,6 @@ class before issuing a new fit to avoid deleting this information.
 #include "TROOT.h"
 #include "TBackCompFitter.h"
 
-
-#include "TMethodCall.h"
-
 #include "Math/Util.h"
 
 #include <iostream>

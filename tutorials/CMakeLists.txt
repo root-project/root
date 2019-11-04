@@ -225,6 +225,7 @@ endif()
 if(root7)
   set(root7_veto dataframe/df013_InspectAnalysis.C
                  v7/browser.cxx
+                 v7/filedialog.cxx
                  v7/fitpanel.cxx
                  v7/fitpanel6.cxx
       )
@@ -386,6 +387,8 @@ set (tmva-TMVAClassificationCategoryApplication-depends tutorial-tmva-TMVAClassi
 set (tmva-TMVAMulticlass-depends tutorial-tmva-TMVAMultipleBackgroundExample)
 set (tmva-TMVAMulticlassApplication-depends tutorial-tmva-TMVAMulticlass)
 set (tmva-TMVARegressionApplication-depends tutorial-tmva-TMVARegression)
+set (tmva-tmva101_Training-depends tutorial-tmva-tmva100_DataPreparation-py)
+set (tmva-tmva102_Testing-depends tutorial-tmva-tmva101_Training-py)
 
 
 #---Loop over all tutorials and define the corresponding test---------
@@ -465,6 +468,12 @@ if(ROOT_python_FOUND)
     list(REMOVE_ITEM pytutorials pyroot/pyroot002_TTreeAsMatrix.py)
   endif()
 
+  find_python_module(xgboost QUIET)
+  if (NOT PY_XGBOOST_FOUND OR NOT dataframe)
+    file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*.py tmva/tmva10*.py)
+    list(REMOVE_ITEM pytutorials ${tmva_veto_py})
+  endif()
+
   #---Python tutorials dependencies--------------------------------------
   set(pyroot-ntuple1-depends tutorial-pyroot-hsimple-py)
   set(pyroot-h1draw-depends tutorial-pyroot-hsimple-py)
@@ -476,10 +485,6 @@ if(ROOT_python_FOUND)
   set(pyroot-fit1-depends tutorial-pyroot-fillrandom-py)
   set(pyroot-na49view-depends tutorial-pyroot-geometry-py)
   set(roofit-rf104_classfactory-depends tutorial-roofit-rf104_classfactory) #Race condition
-
-  #---Tutorials expected to fail in PyROOT experimental
-  set(pyexp_fail tutorial-vecops-vo004_SortAndSelect-py
-                 tutorial-vecops-vo005_Combinations-py)
 
   foreach(t ${pytutorials})
     list(FIND returncode_1 ${t} index)

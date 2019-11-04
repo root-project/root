@@ -814,11 +814,19 @@ void ROOT::Experimental::RWebWindow::Sync()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
+/// Returns window address which is used in URL
+
+std::string ROOT::Experimental::RWebWindow::GetAddr() const
+{
+    return fWSHandler->GetName();
+}
+
+///////////////////////////////////////////////////////////////////////////////////
 /// Returns relative URL address for the specified window
 /// Address can be required if one needs to access data from one window into another window
 /// Used for instance when inserting panel into canvas
 
-std::string ROOT::Experimental::RWebWindow::RelativeAddr(std::shared_ptr<RWebWindow> &win) const
+std::string ROOT::Experimental::RWebWindow::GetRelativeAddr(const std::shared_ptr<RWebWindow> &win) const
 {
    if (fMgr != win->fMgr) {
       R__ERROR_HERE("WebDisplay") << "Same web window manager should be used";
@@ -826,7 +834,7 @@ std::string ROOT::Experimental::RWebWindow::RelativeAddr(std::shared_ptr<RWebWin
    }
 
    std::string res("../");
-   res.append(win->fWSHandler->GetName());
+   res.append(win->GetAddr());
    res.append("/");
    return res;
 }

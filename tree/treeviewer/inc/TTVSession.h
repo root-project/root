@@ -19,7 +19,8 @@
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "TGFrame.h"
+#include "TObject.h"
+#include "TString.h"
 
 class TTreeViewer;
 class TClonesArray;

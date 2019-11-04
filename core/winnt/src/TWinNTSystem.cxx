@@ -23,6 +23,7 @@
 #endif
 
 #include "Windows4Root.h"
+#include "ROOT/FoundationUtils.hxx"
 #include "TWinNTSystem.h"
 #include "TROOT.h"
 #include "TError.h"
@@ -1102,16 +1103,7 @@ Bool_t TWinNTSystem::Init()
    fSigcnt = 0;
 
    // This is a fallback in case TROOT::GetRootSys() can't determine ROOTSYS
-   static char lpFilename[MAX_PATH];
-   if (::GetModuleFileName(
-          NULL,                   // handle to module to find filename for
-          lpFilename,             // pointer to buffer to receive module path
-          sizeof(lpFilename))) {  // size of buffer, in characters
-      const char *dirName = DirName(DirName(lpFilename));
-      gRootDir = StrDup(dirName);
-   } else {
-      gRootDir = 0;
-   }
+   gRootDir = ROOT::FoundationUtils::GetFallbackRootSys().c_str();
 
    // Increase the accuracy of Sleep() without needing to link to winmm.lib
    typedef UINT (WINAPI* LPTIMEBEGINPERIOD)( UINT uPeriod );
@@ -4282,6 +4274,11 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options,
             // Change .dll into .lib and remove the
             // path info if it not accessible.
             s = libs(index, end);
+            s.ToLower();
+            if ((s.Index("c:/windows/") != kNPOS)) {
+               start += end+1;
+               continue;
+            }
             if (s.Index(user_dll) != kNPOS) {
                s.ReplaceAll(".dll",".lib");
                if ( GetPathInfo( s, sbuf ) != 0 ) {
@@ -4295,7 +4292,9 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options,
                }
             }
             if (!ntlibs.IsNull()) ntlibs.Append(" ");
-            ntlibs.Append(s);
+            if ((s.Index("python") == kNPOS) && (s.Index("cppyy") == kNPOS) &&
+                (s.Index("vcruntime") == kNPOS) && (s.Index(".pyd") == kNPOS))
+              ntlibs.Append(s);
          }
          start += end+1;
       }

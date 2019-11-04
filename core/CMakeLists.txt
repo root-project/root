@@ -43,6 +43,7 @@ add_subdirectory(clingutils)
 add_subdirectory(cont)
 add_subdirectory(dictgen)
 add_subdirectory(foundation)
+add_subdirectory(gui)
 add_subdirectory(meta)
 add_subdirectory(metacling)
 if(NOT WIN32)
@@ -55,6 +56,7 @@ add_subdirectory(imt)
 add_subdirectory(zip)
 add_subdirectory(lzma)
 add_subdirectory(lz4)
+add_subdirectory(zstd)
 
 if(NOT WIN32)
   add_subdirectory(newdelete)
@@ -104,6 +106,7 @@ include_directories(
   winnt/inc
   clingutils/inc
   meta/inc
+  gui/inc
   textinput/inc
 )
 
@@ -113,14 +116,17 @@ set(objectlibs $<TARGET_OBJECTS:Base>
                $<TARGET_OBJECTS:Foundation>
                $<TARGET_OBJECTS:Lzma>
                $<TARGET_OBJECTS:Lz4>
+               $<TARGET_OBJECTS:Zstd>
                $<TARGET_OBJECTS:Zip>
                $<TARGET_OBJECTS:Meta>
+               $<TARGET_OBJECTS:GuiCore>
                $<TARGET_OBJECTS:TextInput>
                ${macosx_objects}
                ${unix_objects}
                ${winnt_objects})
 
 ROOT_OBJECT_LIBRARY(BaseTROOT ${CMAKE_SOURCE_DIR}/core/base/src/TROOT.cxx ${CMAKE_BINARY_DIR}/include/RGitCommit.h)
+target_include_directories(BaseTROOT PRIVATE foundation/res)
 add_dependencies(BaseTROOT gitcommit)
 #----------------------------------------------------------------------------------------
 
@@ -148,6 +154,7 @@ ROOT_GENERATE_DICTIONARY(G__Core
   ${Unix_dict_headers}
   ${Winnt_dict_headers}
   ${ClingUtils_dict_headers}
+  ${GuiCore_dict_headers}
   ${Meta_dict_headers}
   ${TextInput_dict_headers}
   STAGE1
@@ -169,6 +176,7 @@ target_link_libraries(Core
     xxHash::xxHash
     LZ4::LZ4
     ZLIB::ZLIB
+    ${ZSTD_LIBRARIES}
     ${CMAKE_DL_LIBS}
     ${CMAKE_THREAD_LIBS_INIT}
     ${corelinklibs}

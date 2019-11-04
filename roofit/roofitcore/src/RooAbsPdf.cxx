@@ -970,7 +970,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("interleave","NumCPU",1,0) ;
   pc.defineInt("verbose","Verbose",0,0) ;
   pc.defineInt("optConst","Optimize",0,0) ;
-  pc.defineInt("cloneData","CloneData",2,0) ;
+  pc.defineInt("cloneData","CloneData", 0, 2);
   pc.defineSet("projDepSet","ProjectedObservables",0,0) ;
   pc.defineSet("cPars","Constrain",0,0) ;
   pc.defineSet("glObs","GlobalObservables",0,0) ;
@@ -2349,16 +2349,13 @@ Bool_t RooAbsPdf::isDirectGenSafe(const RooAbsArg& arg) const
   if (!findServer(arg.GetName())) return kFALSE ;
 
   // There must be no other dependency routes
-  TIterator* sIter = serverIterator() ;
-  const RooAbsArg *server = 0;
-  while((server=(const RooAbsArg*)sIter->Next())) {
+  for (const auto server : _serverList) {
     if(server == &arg) continue;
     if(server->dependsOn(arg)) {
-      delete sIter ;
       return kFALSE ;
     }
   }
-  delete sIter ;
+
   return kTRUE ;
 }
 
@@ -3021,7 +3018,8 @@ RooPlot* RooAbsPdf::plotOn(RooPlot *frame, PlotOpt o) const
 ///   | `AutoPrecision(int n)` |  Controls precision. Number of shown digits is calculated from error + n specified additional digits (1 is sensible default)
 /// <tr><td> `Label(const chat* label)`           <td>  Add header label to parameter box
 /// <tr><td> `Layout(Double_t xmin, Double_t xmax, Double_t ymax)` <td>  Specify relative position of left/right side of box and top of box.
-///                                                                    Position of bottom of box is calculated automatically from number lines in box
+///                                                                      Coordinates are given as position on the pad between 0 and 1.
+///                                                                      The lower end of the box is calculated automatically from the number of lines in the box.
 /// </table>
 ///
 ///
@@ -3123,7 +3121,7 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooAbsData* data, const char *
 ///
 /// Optional label will be inserted as first line of the text box. Use 'sigDigits'
 /// to modify the default number of significant digits printed. The 'xmin,xmax,ymax'
-/// values specify the inital relative position of the text box in the plot frame  
+/// values specify the initial relative position of the text box in the plot frame
 
 RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooArgSet& params, Bool_t showConstants, const char *label,
 			    Int_t sigDigits, Option_t *options, Double_t xmin,

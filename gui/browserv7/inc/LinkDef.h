@@ -12,11 +12,24 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class ROOT::Experimental::RBrowserRequest+;
+#pragma link C++ class ROOT::Experimental::Browsable::RHolder+;
+#pragma link C++ class ROOT::Experimental::Browsable::RAnyObjectHolder+;
+#pragma link C++ class ROOT::Experimental::Browsable::RTObjectHolder+;
+#pragma link C++ class ROOT::Experimental::Browsable::RProvider+;
+#pragma link C++ class ROOT::Experimental::Browsable::RElement+;
+#pragma link C++ class ROOT::Experimental::Browsable::RLevelIter+;
+#pragma link C++ class ROOT::Experimental::RBrowsable+;
+
 #pragma link C++ class ROOT::Experimental::RBrowserItem+;
+#pragma link C++ class ROOT::Experimental::RBrowserTObjectItem+;
+#pragma link C++ class ROOT::Experimental::RBrowserTKeyItem+;
+#pragma link C++ class ROOT::Experimental::RBrowserFileItem+;
+
+#pragma link C++ class ROOT::Experimental::RBrowserRequest+;
 #pragma link C++ class ROOT::Experimental::RBrowserReply+;
 
-#pragma link C++ class ROOT::Experimental::RRootFileItem+;
 #pragma link C++ class ROOT::Experimental::RBrowser+;
+
+#pragma link C++ class ROOT::Experimental::RFileDialog+;
 
 #endif

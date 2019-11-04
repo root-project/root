@@ -25,6 +25,7 @@
 
 #include "RConfigure.h"
 #include <ROOT/RConfig.hxx>
+#include <ROOT/FoundationUtils.hxx>
 #include "Rtypes.h"
 
 #include "RStl.h"
@@ -477,10 +478,13 @@ TClingLookupHelper::TClingLookupHelper(cling::Interpreter &interpreter,
                                        TNormalizedCtxt &normCtxt,
                                        ExistingTypeCheck_t existingTypeCheck,
                                        AutoParse_t autoParse,
+                                       bool *shuttingDownPtr,
                                        const int* pgDebug /*= 0*/):
    fInterpreter(&interpreter),fNormalizedCtxt(&normCtxt),
    fExistingTypeCheck(existingTypeCheck),
-   fAutoParse(autoParse), fPDebug(pgDebug)
+   fAutoParse(autoParse),
+   fInterpreterIsShuttingDownPtr(shuttingDownPtr),
+   fPDebug(pgDebug)
 {
 }
 
@@ -551,7 +555,8 @@ bool TClingLookupHelper::IsDeclaredScope(const std::string &base, bool &isInline
 /// [const] typename[*&][const]
 
 bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::string &tname,
-                                                                    std::string &result)
+                                                                    std::string &result,
+                                                                    bool dropstd /* = true */)
 {
    if (tname.empty()) return false;
 
@@ -596,13 +601,13 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
          if (strncmp(result.c_str(), "const ", 6) == 0) {
             offset = 6;
          }
-         if (strncmp(result.c_str()+offset, "std::", 5) == 0) {
+         if (dropstd && strncmp(result.c_str()+offset, "std::", 5) == 0) {
             result.erase(offset,5);
          }
          for(unsigned int i = 1; i<result.length(); ++i) {
             if (result[i]=='s') {
                if (result[i-1]=='<' || result[i-1]==',' || result[i-1]==' ') {
-                  if (result.compare(i,5,"std::",5) == 0) {
+                  if (dropstd && result.compare(i,5,"std::",5) == 0) {
                      result.erase(i,5);
                   }
                }
@@ -629,9 +634,18 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
    return false;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// TClassEdit will call this routine as soon as any of its static variable (used
+// for caching) is destroyed.
+void TClingLookupHelper::ShuttingDownSignal()
+{
+   if (fInterpreterIsShuttingDownPtr)
+      *fInterpreterIsShuttingDownPtr = true;
+}
 
    } // end namespace ROOT
 } // end namespace TMetaUtils
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Insert the type with name into the collection of typedefs to keep.
@@ -3066,7 +3080,7 @@ llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::D
       // Check the token
       if (isdigit(current[0])) {
          for(i=0;i<strlen(current);i++) {
-            if (!isdigit(current[0])) {
+            if (!isdigit(current[i])) {
                // Error we only access integer.
                //NOTE: *** Need to print an error;
                //fprintf(stderr,"*** Datamember %s::%s: size of array (%s) is not an interger\n",
@@ -3994,7 +4008,7 @@ ROOT::TMetaUtils::GetNameTypeForIO(const clang::QualType& thisType,
    if (!hasChanged) return std::make_pair(thisTypeName,thisType);
 
    if (hasChanged && ROOT::TMetaUtils::GetErrorIgnoreLevel() <= ROOT::TMetaUtils::kNote) {
-      ROOT::TMetaUtils::Info("ROOT::TMetaUtils::GetTypeForIO", 
+      ROOT::TMetaUtils::Info("ROOT::TMetaUtils::GetTypeForIO",
         "Name changed from %s to %s\n", thisTypeName.c_str(), thisTypeNameForIO.c_str());
    }
 
@@ -4080,7 +4094,14 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
 
    // If the location is a macro get the expansion location.
    sourceLocation = sourceManager.getExpansionRange(sourceLocation).second;
-   if (sourceManager.isLoadedSourceLocation(sourceLocation)) {
+   // FIXME: We should optimize this routine instead making it do the wrong thing
+   // returning an empty comment if the decl came from the AST.
+   // In order to do that we need to: check if the decl has an attribute and
+   // return the attribute content (including walking the redecl chain) and if
+   // this is not the case we should try finding it in the header file.
+   // This will allow us to move the implementation of TCling*Info::Title() in
+   // TClingDeclInfo.
+   if (!decl.hasOwningModule() && sourceManager.isLoadedSourceLocation(sourceLocation)) {
       // Do not touch disk for nodes coming from the PCH.
       return "";
    }
@@ -4919,17 +4940,9 @@ void ROOT::TMetaUtils::ReplaceAll(std::string& str, const std::string& from, con
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the separator suitable for this platform.
-/// To be replaced at the next llvm upgrade by
-/// const StringRef llvm::sys::path::get_separator()
-
 const std::string& ROOT::TMetaUtils::GetPathSeparator()
 {
-#ifdef WIN32
-   static const std::string gPathSeparator ("\\");
-#else
-   static const std::string gPathSeparator ("/");
-#endif
-   return gPathSeparator;
+   return ROOT::FoundationUtils::GetPathSeparator();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

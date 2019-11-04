@@ -1426,7 +1426,38 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
    } else if ((special_kind > 0) && (special_kind < ROOT::kSTLend)) {
       // here make STL container processing
 
-      if (stack->fValues.empty()) {
+      if (map_convert == 2) {
+         // converting map into object
+
+         if (!stack->fValues.empty() && (fValue.Length() > 0))
+            stack->PushValue(fValue);
+
+         const char *separ = (fCompact < 2) ? ", " : ",";
+         const char *semi = (fCompact < 2) ? ": " : ":";
+         bool first = true;
+
+         fValue = "{";
+         if (fTypeNameTag.Length() > 0) {
+            fValue.Append("\"");
+            fValue.Append(fTypeNameTag);
+            fValue.Append("\"");
+            fValue.Append(semi);
+            fValue.Append("\"");
+            fValue.Append(cl->GetName());
+            fValue.Append("\"");
+            first = false;
+         }
+         for (Int_t k = 1; k < (int)stack->fValues.size() - 1; k += 2) {
+            if (!first)
+               fValue.Append(separ);
+            first = false;
+            fValue.Append(stack->fValues[k].c_str());
+            fValue.Append(semi);
+            fValue.Append(stack->fValues[k + 1].c_str());
+         }
+         fValue.Append("}");
+         stack->fValues.clear();
+      } else if (stack->fValues.empty()) {
          // empty container
          if (fValue != "0")
             Error("JsonWriteObject", "With empty stack fValue!=0");
@@ -1455,36 +1486,6 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
                fValue = "[]";
             }
 
-         } else if (map_convert == 2) {
-            // converting map into object
-            if (fValue.Length() > 0)
-               stack->PushValue(fValue);
-
-            const char *separ = (fCompact < 2) ? ", " : ",";
-            const char *semi = (fCompact < 2) ? ": " : ":";
-            bool first = true;
-
-            fValue = "{";
-            if (fTypeNameTag.Length() > 0) {
-               fValue.Append("\"");
-               fValue.Append(fTypeNameTag);
-               fValue.Append("\"");
-               fValue.Append(semi);
-               fValue.Append("\"");
-               fValue.Append(cl->GetName());
-               fValue.Append("\"");
-               first = false;
-            }
-            for (Int_t k = 1; k < (int) stack->fValues.size() - 1; k += 2) {
-               if (!first)
-                  fValue.Append(separ);
-               first = false;
-               fValue.Append(stack->fValues[k].c_str());
-               fValue.Append(semi);
-               fValue.Append(stack->fValues[k + 1].c_str());
-            }
-            fValue.Append("}");
-            stack->fValues.clear();
          } else {
             const char *separ = "[";
 

@@ -4,7 +4,7 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-#---Check for installed packages depending on the build options/components eamnbled -
+#---Check for installed packages depending on the build options/components enabled --
 include(ExternalProject)
 include(FindPackageHandleStandardArgs)
 
@@ -182,7 +182,7 @@ endif()
 
 if(builtin_lzma)
   set(lzma_version 5.2.4)
-  set(LIBLZMA_TARGET LZMA)
+  set(LZMA_TARGET LZMA)
   message(STATUS "Building LZMA version ${lzma_version} included in ROOT itself")
   if(WIN32)
     set(LIBLZMA_LIBRARIES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.lib)
@@ -222,6 +222,34 @@ if(builtin_lzma)
       BUILD_BYPRODUCTS ${LIBLZMA_LIBRARIES})
     set(LIBLZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
   endif()
+endif()
+
+#---Check for ZSTD-------------------------------------------------------------------
+if(NOT builtin_zstd)
+  message(STATUS "Looking for ZSTD")
+  foreach(suffix FOUND INCLUDE_DIR LIBRARY LIBRARIES LIBRARY_DEBUG LIBRARY_RELEASE)
+    unset(ZSTD_${suffix} CACHE)
+  endforeach()
+  if(fail-on-missing)
+    find_package(ZSTD REQUIRED)
+    if(ZSTD_VERSION VERSION_LESS 1.0.0)
+      message(FATAL "Version of installed ZSTD is too old: ${ZSTD_VERSION}. Please install newer version (>1.0.0)")
+    endif()
+  else()
+    find_package(ZSTD)
+    if(NOT ZSTD_FOUND)
+      message(STATUS "ZSTD not found. Switching on builtin_zstd option")
+      set(builtin_zstd ON CACHE BOOL "Enabled because ZSTD not found (${builtin_zstd_description})" FORCE)
+    elseif(ZSTD_FOUND AND ZSTD_VERSION VERSION_LESS 1.0.0)
+      message(STATUS "Version of installed ZSTD is too old: ${ZSTD_VERSION}. Switching on builtin_zstd option")
+      set(builtin_zstd ON CACHE BOOL "Enabled because ZSTD not found (${builtin_zstd_description})" FORCE)
+    endif()
+  endif()
+endif()
+
+if(builtin_zstd)
+  list(APPEND ROOT_BUILTINS ZSTD)
+  add_subdirectory(builtins/zstd)
 endif()
 
 #---Check for xxHash-----------------------------------------------------------------
@@ -468,15 +496,90 @@ endif()
 
 message(STATUS "Looking for python")
 # Python is required by header and manpage generation
-find_package(PythonInterp ${python_version} REQUIRED)
 
-if(python)
-  find_package(PythonLibs ${python_version} REQUIRED)
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
 
-  if(NOT "${PYTHONLIBS_VERSION_STRING}" MATCHES "${PYTHON_VERSION_STRING}")
-    message(FATAL_ERROR "Version mismatch between Python interpreter (${PYTHON_VERSION_STRING})"
-    " and libraries (${PYTHONLIBS_VERSION_STRING}).\nROOT cannot work with this configuration. "
-    "Please specify only PYTHON_EXECUTABLE to CMake with an absolute path to ensure matching versions are found.")
+  # Determine whether we should prefer Python 2 or Python 3:
+  set(PYTHON_PREFER_VERSION "3")
+  # Check whether old `find_package(PythonInterp)` variable was passed.
+  # If so, it will be passed to find_package(Python) below. Otherwise,
+  # check what `python` points to: Python 2 or 3:
+  if(NOT PYTHON_EXECUTABLE)
+    find_program(PYTHON_BINARY_IN_PATH "python")
+    if(PYTHON_BINARY_IN_PATH)
+      execute_process(COMMAND ${PYTHON_BINARY_IN_PATH} -c "import sys;print(sys.version_info[0])"
+                      OUTPUT_VARIABLE PYTHON_PREFER_VERSION
+                      ERROR_VARIABLE PYTHON_PREFER_VERSION_ERR)
+      if(PYTHON_PREFER_VERSION_ERR)
+        message(WARNING "Unable to determine version of ${PYTHON_BINARY_IN_PATH}: ${PYTHON_PREFER_VERSION_ERR}")
+      endif()
+      string(STRIP "${PYTHON_PREFER_VERSION}" PYTHON_PREFER_VERSION)
+    endif()
+  endif()
+
+  if(python)
+    set(REQUIRED_PYTHON_Development Development)
+  endif()
+
+  message(STATUS "Preferring Python version ${PYTHON_PREFER_VERSION}")
+
+  if("${PYTHON_PREFER_VERSION}" MATCHES "2")
+    # Means PYTHON_EXECUTABLE wasn't defined.
+    if(PYTHON_INCLUDE_DIRS AND NOT Python2_INCLUDE_DIRS)
+      set(Python2_INCLUDE_DIRS "${PYTHON_INCLUDE_DIRS}")
+    endif()
+    if(PYTHON_LIBRARIES AND NOT Python2_LIBRARIES)
+      set(Python2_LIBRARIES "${PYTHON_LIBRARIES}")
+    endif()
+    find_package(Python2 COMPONENTS Interpreter ${REQUIRED_PYTHON_Development} REQUIRED)
+    if(Python2_Development_FOUND)
+      # Re-run, now with NumPy, but not required:
+      find_package(Python2 COMPONENTS Interpreter Development NumPy)
+      # Compat with find_package(PythonInterp), find_package(PythonLibs)
+      set(PYTHON_INCLUDE_DIRS "${Python2_INCLUDE_DIRS}")
+      set(PYTHON_LIBRARIES "${Python2_LIBRARIES}")
+      set(PYTHON_VERSION_MAJOR "${Python2_VERSION_MAJOR}")
+      set(PYTHON_VERSION_MINOR "${Python2_VERSION_MINOR}")
+      set(NUMPY_FOUND ${Python2_NumPy_FOUND})
+      set(NUMPY_INCLUDE_DIRS "${Python2_NumPy_INCLUDE_DIRS}")
+    endif()
+  else()
+    if(PYTHON_EXECUTABLE AND NOT Python_EXECUTABLE)
+      set(Python_EXECUTABLE "${PYTHON_EXECUTABLE}")
+    endif()
+    if(PYTHON_INCLUDE_DIRS AND NOT Python_INCLUDE_DIRS)
+      set(Python_INCLUDE_DIRS "${PYTHON_INCLUDE_DIRS}")
+    endif()
+    if(PYTHON_LIBRARIES AND NOT Python_LIBRARIES)
+      set(Python_LIBRARIES "${PYTHON_LIBRARIES}")
+    endif()
+    find_package(Python COMPONENTS Interpreter ${REQUIRED_PYTHON_Development} REQUIRED)
+    if(Python_Development_FOUND)
+      # Re-run, now with NumPy, but not required:
+      find_package(Python COMPONENTS Interpreter Development NumPy)
+      # Compat with find_package(PythonInterp), find_package(PythonLibs), find_package(NumPy)
+      set(PYTHON_INCLUDE_DIRS "${Python_INCLUDE_DIRS}")
+      set(PYTHON_LIBRARIES "${Python_LIBRARIES}")
+      set(PYTHON_VERSION_MAJOR "${Python_VERSION_MAJOR}")
+      set(PYTHON_VERSION_MINOR "${Python_VERSION_MINOR}")
+      set(NUMPY_FOUND ${Python_NumPy_FOUND})
+      set(NUMPY_INCLUDE_DIRS "${Python_NumPy_INCLUDE_DIRS}")
+    endif()
+  endif()
+
+else()
+  find_package(PythonInterp ${python_version} REQUIRED)
+
+  if(python)
+    find_package(PythonLibs ${python_version} REQUIRED)
+
+    if(NOT "${PYTHONLIBS_VERSION_STRING}" MATCHES "${PYTHON_VERSION_STRING}")
+      message(FATAL_ERROR "Version mismatch between Python interpreter (${PYTHON_VERSION_STRING})"
+      " and libraries (${PYTHONLIBS_VERSION_STRING}).\nROOT cannot work with this configuration. "
+      "Please specify only PYTHON_EXECUTABLE to CMake with an absolute path to ensure matching versions are found.")
+    endif()
+
+    find_package(NumPy)
   endif()
 endif()
 
@@ -736,7 +839,7 @@ endif()
 #---Check for fitsio-------------------------------------------------------------------
 if(fitsio OR builtin_cfitsio)
   if(builtin_cfitsio)
-    set(cfitsio_version 3.280)
+    set(cfitsio_version 3.450)
     string(REPLACE "." "" cfitsio_version_no_dots ${cfitsio_version})
     message(STATUS "Downloading and building CFITSIO version ${cfitsio_version}")
     set(CFITSIO_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}cfitsio${CMAKE_STATIC_LIBRARY_SUFFIX})
@@ -765,13 +868,20 @@ if(fitsio OR builtin_cfitsio)
         CFITSIO
         # ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz
         URL ${lcgpackages}/cfitsio${cfitsio_version_no_dots}.tar.gz
-        URL_HASH SHA256=de8ce3f14c2f940fadf365fcc4a4f66553dd9045ee27da249f6e2c53e95362b3
+        URL_HASH SHA256=bf6012dbe668ecb22c399c4b7b2814557ee282c74a7d5dc704eb17c30d9fb92e
         INSTALL_DIR ${CMAKE_BINARY_DIR}
         CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
         BUILD_IN_SOURCE 1
         BUILD_BYPRODUCTS ${CFITSIO_LIBRARIES}
       )
+      # We need to know which CURL_LIBRARIES were used in CFITSIO ExternalProject build
+      # and which ${CURL_LIBRARIES} should be used after for linking in ROOT together with CFITSIO.
+      # (curl is not strictly required in CFITSIO CMakeList.txt).
+      find_package(CURL)
+      if(CURL_FOUND)
+        set(CFITSIO_LIBRARIES ${CFITSIO_LIBRARIES} ${CURL_LIBRARIES})
+      endif()
       set(CFITSIO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
     endif()
     set(fitsio ON CACHE BOOL "Enabled because builtin_cfitsio requested (${fitsio_description})" FORCE)
@@ -1094,15 +1204,15 @@ if(imt AND NOT builtin_tbb)
   else()
     find_package(TBB 2018)
     if(NOT TBB_FOUND)
-      message(WARNING "TBB not found, enabling 'builtin_tbb' option")
+      message(STATUS "TBB not found, enabling 'builtin_tbb' option")
       set(builtin_tbb ON CACHE BOOL "Enabled because imt is enabled, but TBB was not found" FORCE)
     endif()
   endif()
 endif()
 
 if(builtin_tbb)
-  set(tbb_builtin_version 2019_U8)
-  set(tbb_sha256 7b1fd8caea14be72ae4175896510bf99c809cd7031306a1917565e6de7382fba)
+  set(tbb_builtin_version 2019_U9)
+  set(tbb_sha256 15652f5328cf00c576f065e5cd3eaf3317422fe82afb67a9bcec0dc065bd2abe)
   if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
     set(_tbb_compiler compiler=clang)
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
@@ -1163,6 +1273,7 @@ if(builtin_tbb)
     install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libtbb*")
   endif()
   set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
+  set(TBB_CXXFLAGS "-DTBB_SUPPRESS_DEPRECATED_MESSAGES=1")
   set(TBB_TARGET TBB)
 endif()
 
@@ -1441,8 +1552,6 @@ if(tmva)
   endif()
 
   if(python AND tmva-pymva)
-    message(STATUS "Looking for Numpy")
-    find_package(NumPy)
     if(fail-on-missing AND NOT NUMPY_FOUND)
       message(FATAL_ERROR "TMVA: numpy python package not found and tmva-pymva component required"
                           " (python executable: ${PYTHON_EXECUTABLE})")
@@ -1480,7 +1589,9 @@ if (testing)
   if(MSVC)
     set(EXTRA_GTEST_OPTS
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=\\\"\\\"
-      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=\\\"\\\")
+      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_MINSIZEREL:PATH=\\\"\\\"
+      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=\\\"\\\"
+      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELWITHDEBINFO:PATH=\\\"\\\")
   endif()
   if(APPLE)
     set(EXTRA_GTEST_OPTS
@@ -1546,7 +1657,7 @@ if(webgui)
   ExternalProject_Add(
      OPENUI5
      URL ${CMAKE_SOURCE_DIR}/gui/webdisplay/res/openui5.tar.gz
-     URL_HASH SHA256=499f0dbe1eabb4fd9ebaeafd5788f485e43891ac01a879cd507328976037cc7d
+     URL_HASH SHA256=71a9f362bddae82122ff532887f7bb73b9e3915088a85a2afb7a6412ca7af71c
      CONFIGURE_COMMAND ""
      BUILD_COMMAND ""
      INSTALL_COMMAND ""

@@ -434,7 +434,7 @@ public:
 //===========================================================================
 class UsingBase1 {                 // using declaration testing
 public:
-    UsingBase1(int n = 13) : m_int(n) {} 
+    UsingBase1(int n = 13) : m_int(n) {}
     virtual ~UsingBase1() {}
     virtual char vcheck() { return 'A'; }
     int m_int;

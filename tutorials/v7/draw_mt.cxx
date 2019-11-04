@@ -25,13 +25,15 @@
 #include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RCanvas.hxx"
 
-R__LOAD_LIBRARY(libROOTWebDisplay);
-
 #include "TRandom3.h"
 #include "TEnv.h"
 #include "TROOT.h"
 
 #include <thread>
+
+// macro must be here while cling is not capable to load
+// library automatically for outlined function see ROOT-10336
+R__LOAD_LIBRARY(libROOTHistDraw)
 
 using namespace ROOT::Experimental;
 
@@ -53,8 +55,8 @@ void draw_canvas(const std::string &title, RColor col)
 
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create(title + " canvas");
-   canvas->Draw(pHist)->Line().SetColor(col);
-   canvas->Draw(pHist2)->Line().SetColor(RColor::kBlue);
+   canvas->Draw(pHist)->AttrLine().SetColor(col);
+   canvas->Draw(pHist2)->AttrLine().SetColor(RColor::kBlue);
 
    int maxloop = 50;
 
@@ -93,6 +95,9 @@ void draw_mt()
    gEnv->SetValue("WebGui.SenderThrds", "yes");
 
    ROOT::EnableThreadSafety();
+
+   // create instance in main thread, used to assign thread id as well
+   RWebWindowsManager::Instance();
 
    std::thread thrd1(draw_canvas, "First", RColor::kRed);
    std::thread thrd2(draw_canvas, "Second", RColor::kBlue);

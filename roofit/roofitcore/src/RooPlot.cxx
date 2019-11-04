@@ -266,7 +266,60 @@ RooPlot::RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_
   _normBinWidth = (xmax-xmin)/nbins ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new frame for a given variable in x. This is just a
+/// wrapper for the RooPlot constructor with the same interface.
+/// 
+/// More details.
+/// \param[in] var The variable on the x-axis
+/// \param[in] xmin Left edge of the x-axis
+/// \param[in] xmax Right edge of the x-axis
+/// \param[in] nBins number of bins on the x-axis
+RooPlot* RooPlot::frame(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nBins){
+  return new RooPlot(var,xmin,xmax,nBins);
+}
 
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new frame for a given variable in x, adding bin labels.
+/// The binning will be extracted from the variable given. The bin
+/// labels will be set as "%g-%g" for the left and right edges of each
+/// bin of the given variable.
+///
+/// More details.
+/// \param[in] var The variable on the x-axis
+RooPlot* RooPlot::frameWithLabels(const RooAbsRealLValue &var){
+  RooPlot* pl = new RooPlot();
+  int nbins = var.getBinning().numBins();
+
+  Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
+  TH1::AddDirectory(kFALSE) ;
+  pl->_hist = new TH1D(pl->histName(),"RooPlot",nbins,var.getMin(),var.getMax()) ;
+  pl->_hist->Sumw2(kFALSE) ;
+  pl->_hist->GetSumw2()->Set(0) ;
+  TH1::AddDirectory(histAddDirStatus) ;
+
+  pl->_hist->SetNdivisions(-nbins);
+  for(int i=0; i<nbins; ++i){
+    TString s = TString::Format("%g-%g",var.getBinning().binLow(i),var.getBinning().binHigh(i));
+    pl->_hist->GetXaxis()->SetBinLabel(i+1,s);
+  }
+
+  // plotVar can be a composite in case of a RooDataSet::plot, need deepClone
+  pl->_plotVarSet = (RooArgSet*) RooArgSet(var).snapshot() ;
+  pl->_plotVarClone= (RooAbsRealLValue*)pl->_plotVarSet->find(var.GetName()) ;
+
+  TString xtitle= var.getTitle(kTRUE);
+  pl->SetXTitle(xtitle.Data());
+
+  TString title("A RooPlot of \"");
+  title.Append(var.getTitle());
+  title.Append("\"");
+  pl->SetTitle(title.Data());
+  pl->initialize();
+
+  pl->_normBinWidth = 1.;
+  return pl;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return empty clone of current RooPlot
@@ -436,13 +489,106 @@ void RooPlot::addTH1(TH1 *hist, Option_t *drawOptions, Bool_t invisible)
 }
 
 
+namespace {
+  // this helper function is intended to translate a graph from a regular axis to a labelled axis
+  // this version uses TGraph, which is a parent of RooCurve
+  void translateGraph(TH1* hist, RooAbsRealLValue* xvar, TGraph* graph){
+    // if the graph already has a labelled axis, don't do anything
+    if(graph->GetXaxis()->IsAlphanumeric()) return;
+    double xmin = hist->GetXaxis()->GetXmin();
+    double xmax = hist->GetXaxis()->GetXmax();
+    if(graph->TestBit(TGraph::kIsSortedX)){
+      // sorted graphs are "line graphs"
+      // evaluate the graph at the lower and upper edge as well as the center of each bin
+      std::vector<double> x;
+      std::vector<double> y;
+      x.push_back(xmin);
+      y.push_back(graph->Eval(xvar->getBinning().binLow(0)));
+      for(int i=0; i<hist->GetNbinsX(); ++i){
+        x.push_back(hist->GetXaxis()->GetBinUpEdge(i+1));
+        y.push_back(graph->Eval(xvar->getBinning().binHigh(i)));
+        x.push_back(hist->GetXaxis()->GetBinCenter(i+1));
+        y.push_back(graph->Eval(xvar->getBinning().binCenter(i)));                
+      }
+      int n = x.size();
+      graph->Set(n);
+      for(int i=0; i<n; ++i){
+        graph->SetPoint(i,x[i],y[i]);
+      }
+      graph->Sort();
+    } else {
+      // unsorted graphs are "area graphs"
+      std::map<int,double> minValues;
+      std::map<int,double> maxValues;
+      int n = graph->GetN();
+      double x, y;
+      // for each bin, find the min and max points to form an envelope
+      for(int i=0; i<n; ++i){
+        graph->GetPoint(i,x,y);
+        int bin = xvar->getBinning().binNumber(x)+1;
+        if(maxValues.find(bin)!=maxValues.end()){
+          maxValues[bin] = std::max(maxValues[bin],y);
+        } else {
+          maxValues[bin] = y;
+        }
+        if(minValues.find(bin)!=minValues.end()){
+          minValues[bin] = std::min(minValues[bin],y);
+        } else {
+          minValues[bin] = y;
+        }
+      }
+      double xminY = graph->Eval(xmin);
+      double xmaxY = graph->Eval(xmax);
+      graph->Set(hist->GetNbinsX()+2);
+      int np=0;
+      graph->SetPoint(np,xmin,xminY);
+      // assign the calculated envelope boundaries to the bin centers of the bins
+      for(auto it = maxValues.begin(); it != maxValues.end(); ++it){
+        graph->SetPoint(++np,hist->GetXaxis()->GetBinCenter(it->first),it->second);
+      }
+      graph->SetPoint(++np,xmax,xmaxY);
+      for(auto it = minValues.rbegin(); it != minValues.rend(); ++it){
+        graph->SetPoint(++np,hist->GetXaxis()->GetBinCenter(it->first),it->second);
+      }
+      graph->SetPoint(++np,xmin,xminY);
+    }
+    // make sure that the graph also has the labels set, such that subsequent calls to translate this graph will not do anything
+    graph->GetXaxis()->Set(hist->GetNbinsX(),xmin,xmax);
+    for(int i=0; i<hist->GetNbinsX(); ++i){
+      graph->GetXaxis()->SetBinLabel(i+1,hist->GetXaxis()->GetBinLabel(i+1));
+    }
+  }
+  // this version uses TGraphErrors, which is a parent of RooHist
+  void translateGraph(TH1* hist, RooAbsRealLValue* xvar, TGraphAsymmErrors* graph){
+    // if the graph already has a labelled axis, don't do anything
+    if(graph->GetXaxis()->IsAlphanumeric()) return; 
+    int n = graph->GetN();
+    double xmin = hist->GetXaxis()->GetXmin();
+    double xmax = hist->GetXaxis()->GetXmax();
+    double x, y;
+    // as this graph is histogram-like, we expect there to be one point per bin
+    // we just move these points to the respective bin centers
+    for(int i=0; i<n; ++i){
+      if(graph->GetPoint(i,x,y)!=i) break;
+      int bin = xvar->getBinning().binNumber(x);
+      graph->SetPoint(i,hist->GetXaxis()->GetBinCenter(bin+1),y);
+      graph->SetPointEXhigh(i,0.5*hist->GetXaxis()->GetBinWidth(bin+1));
+      graph->SetPointEXlow(i,0.5*hist->GetXaxis()->GetBinWidth(bin+1));
+    }
+    graph->GetXaxis()->Set(hist->GetNbinsX(),xmin,xmax);
+    // make sure that the graph also has the labels set, such that subsequent calls to translate this graph will not do anything    
+    for(int i=0; i<hist->GetNbinsX(); ++i){
+      graph->GetXaxis()->SetBinLabel(i+1,hist->GetXaxis()->GetBinLabel(i+1));
+    }
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Add the specified plotable object to our plot. Increase our y-axis
 /// limits to fit this object if necessary. The default lower-limit
 /// is zero unless we are plotting an object that takes on negative values.
 /// This call transfers ownership of the plotable object to this class.
 /// The plotable object will be deleted when this plot object is deleted.
-
 void RooPlot::addPlotable(RooPlotable *plotable, Option_t *drawOptions, Bool_t invisible, Bool_t refreshNorm)
 {
   // update our y-axis label and limits
@@ -457,6 +603,15 @@ void RooPlot::addPlotable(RooPlotable *plotable, Option_t *drawOptions, Bool_t i
     coutE(InputArguments) << fName << "::add: cross-cast to TObject failed (nothing added)" << endl;
   }
   else {
+    // if the frame axis is alphanumeric, the coordinates of the graph need to be translated to this binning
+    if(this->_hist->GetXaxis()->IsAlphanumeric()){
+      if(obj->InheritsFrom(RooCurve::Class())){
+        ::translateGraph(this->_hist,_plotVarClone,static_cast<RooCurve*>(obj));
+      } else if(obj->InheritsFrom(RooHist::Class())){
+        ::translateGraph(this->_hist,_plotVarClone,static_cast<RooHist*>(obj));
+      }
+    }
+    
     DrawOpt opt(drawOptions) ;
     opt.invisible = invisible ;
     _items.Add(obj,opt.rawOpt());

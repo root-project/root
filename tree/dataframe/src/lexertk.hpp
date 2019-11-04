@@ -71,7 +71,7 @@ inline bool is_operator_char(const char c)
 
 inline bool is_letter(const char c)
 {
-   return (('a' <= c) && (c <= 'z')) || (('A' <= c) && (c <= 'Z'));
+   return (('a' <= c) && (c <= 'z')) || (('A' <= c) && (c <= 'Z')) || '_' == c;
 }
 
 inline bool is_digit(const char c)

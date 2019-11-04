@@ -327,7 +327,7 @@ sap.ui.define([], function() {
       delete this.map[elId];
       delSet.delete(elId);
 
-      console.log(" ecursiveRemove END", elId, delSet);
+     // console.log(" ecursiveRemove END", elId, delSet);
      // delete elem;
    }
 

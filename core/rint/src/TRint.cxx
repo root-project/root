@@ -14,7 +14,7 @@
 // Rint                                                                 //
 //                                                                      //
 // Rint is the ROOT Interactive Interface. It allows interactive access //
-// to the ROOT system via the CINT C/C++ interpreter.                   //
+// to the ROOT system via the Cling C/C++ interpreter.                  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -138,7 +138,7 @@ ClassImp(TRint);
 /// Create an application environment. The TRint environment provides an
 /// interface to the WM manager functionality and eventloop via inheritance
 /// of TApplication and in addition provides interactive access to
-/// the CINT C++ interpreter via the command line.
+/// the Cling C++ interpreter via the command line.
 
 TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
              Int_t numOptions, Bool_t noLogo):
@@ -159,7 +159,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    // Explicitly load libMathCore it cannot be auto-loaded it when using one
    // of its freestanding functions. Once functions can trigger autoloading we
    // can get rid of this.
-   if (!gInterpreter->HasPCMForLibrary("libMathCore") && !gClassTable->GetDict("TRandom"))
+   if (!gClassTable->GetDict("TRandom"))
       gSystem->Load("libMathCore");
 
    if (!gInterpreter->HasPCMForLibrary("std")) {
@@ -267,7 +267,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    Gl_in_key    = &Key_Pressed;
    Gl_beep_hook = &BeepHook;
 
-   // tell CINT to use our getline
+   // tell Cling to use our getline
    gCling->SetGetline(Getline, Gl_histadd);
 }
 

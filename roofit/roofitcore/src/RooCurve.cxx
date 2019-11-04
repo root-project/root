@@ -50,6 +50,7 @@ To retrieve a RooCurve from a RooPlot, use RooPlot::getCurve().
 #include "Riostream.h"
 #include "TClass.h"
 #include "TMath.h"
+#include "TAxis.h"
 #include "TMatrixD.h"
 #include "TVectorD.h"
 #include <iomanip>
@@ -118,13 +119,24 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Doubl
 
   // calculate the points to add to our curve
   Double_t prevYMax = getYAxisMax() ;
-  list<Double_t>* hint = f.plotSamplingHint(x,xlo,xhi) ;
-  addPoints(*funcPtr,xlo,xhi,xbins+1,prec,resolution,wmode,nEvalError,doEEVal,eeVal,hint);
-  if (_showProgress) {
-    ccoutP(Plotting) << endl ;
-  }
-  if (hint) {
-    delete hint ;
+  if(xbins > 0){
+    // regular mode - use the sampling hint to decide where to evaluate the pdf
+    list<Double_t>* hint = f.plotSamplingHint(x,xlo,xhi) ;
+    addPoints(*funcPtr,xlo,xhi,xbins+1,prec,resolution,wmode,nEvalError,doEEVal,eeVal,hint);
+    if (_showProgress) {
+      ccoutP(Plotting) << endl ;
+    }
+    if (hint) {
+      delete hint ;
+    }
+  } else {
+    // if number of bins is set to <= 0, skip any interpolation and just evaluate the pdf at the bin centers
+    // this is useful when plotting a pdf like a histogram
+    int nBinsX = x.numBins();
+    for(int i=0; i<nBinsX; ++i){
+      double xval = x.getBinning().binCenter(i);
+      addPoint(xval,(*funcPtr)(&xval)) ;      
+    }
   }
   initialize();
 
@@ -140,6 +152,7 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Doubl
     GetPoint(i,x2,y2) ;
     updateYAxisLimits(y2);
   }
+  this->Sort();
 }
 
 
@@ -170,6 +183,7 @@ RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
     GetPoint(i,x,y) ;
     updateYAxisLimits(y);
   }
+  this->Sort();
 }
 
 
@@ -219,7 +233,7 @@ RooCurve::RooCurve(const char* name, const char* title, const RooCurve& c1, cons
     }
     last = *iter ;
   }
-
+  this->Sort();
 }
 
 
@@ -328,7 +342,6 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
   step=0 ;
   for(list<Double_t>::iterator iter = xval->begin() ; iter!=xval->end() ; ++iter,++step) {
     Double_t xx = *iter ;
-    
     if (step==minPoints-1) xx-=1e-15 ;
 
     yval[step]= func(&xx);
@@ -742,7 +755,14 @@ RooCurve* RooCurve::makeErrorBand(const vector<RooCurve*>& variations, Double_t 
   }
   for (int i=GetN()-1 ; i>=0 ; i--) {
     band->addPoint(GetX()[i],bandHi[i]) ;
-  }	   
+  }	 
+  // if the axis of the old graph is alphanumeric, copy the labels to the new one as well
+  if(this->GetXaxis() && this->GetXaxis()->IsAlphanumeric()){
+    band->GetXaxis()->Set(this->GetXaxis()->GetNbins(),this->GetXaxis()->GetXmin(),this->GetXaxis()->GetXmax());
+    for(int i=0; i<this->GetXaxis()->GetNbins(); ++i){
+      band->GetXaxis()->SetBinLabel(i+1,this->GetXaxis()->GetBinLabel(i+1));
+    }
+  }
   
   return band ;
 }
@@ -757,6 +777,7 @@ RooCurve* RooCurve::makeErrorBand(const vector<RooCurve*>& variations, Double_t 
 
 RooCurve* RooCurve::makeErrorBand(const vector<RooCurve*>& plusVar, const vector<RooCurve*>& minusVar, const TMatrixD& C, Double_t Z) const
 {
+  
   RooCurve* band = new RooCurve ;
   band->SetName(Form("%s_errorband",GetName())) ;
   band->SetLineWidth(1) ;
@@ -776,6 +797,14 @@ RooCurve* RooCurve::makeErrorBand(const vector<RooCurve*>& plusVar, const vector
     band->addPoint(GetX()[i],bandHi[i]) ;
   }	   
   
+  // if the axis of the old graph is alphanumeric, copy the labels to the new one as well
+  if(this->GetXaxis() && this->GetXaxis()->IsAlphanumeric()){
+    band->GetXaxis()->Set(this->GetXaxis()->GetNbins(),this->GetXaxis()->GetXmin(),this->GetXaxis()->GetXmax());
+    for(int i=0; i<this->GetXaxis()->GetNbins(); ++i){
+      band->GetXaxis()->SetBinLabel(i+1,this->GetXaxis()->GetBinLabel(i+1));
+    }
+  }
+
   return band ;
 }
 

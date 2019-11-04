@@ -16,6 +16,7 @@
 #ifndef ROOT7_RNTuple
 #define ROOT7_RNTuple
 
+#include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleUtil.hxx>
@@ -80,6 +81,7 @@ public:
 enum class ENTupleInfo {
    kSummary,  // The ntuple name, description, number of entries
    kStorageDetails, // size on storage, page sizes, compression factor, etc.
+   kMetrics, // internals performance counters, requires that EnableMetrics() was called
 };
 
 enum class EFileOpeningOptions {
@@ -103,6 +105,7 @@ Individual fields can be read as well by instantiating a tree view.
 class RNTupleReader : public Detail::RNTuple {
 private:
    std::unique_ptr<Detail::RPageSource> fSource;
+   Detail::RNTupleMetrics fMetrics;
 
    void ConnectModel();
 
@@ -117,7 +120,7 @@ public:
       explicit RIterator(NTupleSize_t index) : fIndex(index) {}
       ~RIterator() = default;
 
-      iterator  operator++(int) /* postfix */        { auto r = *this; ++fIndex; return r; }
+      iterator  operator++(int) /* postfix */        { auto r = *this; fIndex++; return r; }
       iterator& operator++()    /* prefix */         { ++fIndex; return *this; }
       reference operator* ()                         { return fIndex; }
       pointer   operator->()                         { return &fIndex; }
@@ -156,6 +159,7 @@ public:
    ~RNTupleReader();
 
    NTupleSize_t GetNEntries() const { return fNEntries; }
+   const RNTupleDescriptor &GetDescriptor() const { return fSource->GetDescriptor(); }
 
    /// Prints a detailed summary of the ntuple, including a list of fields.
    void PrintInfo(const ENTupleInfo what = ENTupleInfo::kSummary, std::ostream &output = std::cout);
@@ -187,6 +191,8 @@ public:
 
    RIterator begin() { return RIterator(0); }
    RIterator end() { return RIterator(fNEntries); }
+
+   void EnableMetrics() { fMetrics.Enable(); }
 };
 
 // clang-format off

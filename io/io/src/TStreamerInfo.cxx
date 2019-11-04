@@ -39,8 +39,8 @@ element type.
 #include "TStreamerElement.h"
 #include "TClass.h"
 #include "TClassEdit.h"
+#include "TClassTable.h"
 #include "TDataMember.h"
-#include "TMethodCall.h"
 #include "TDataType.h"
 #include "TRealData.h"
 #include "TBaseClass.h"
@@ -1770,12 +1770,14 @@ void TStreamerInfo::BuildOld()
          if (element->IsA() == TStreamerBase::Class()) {
             TStreamerBase* base = (TStreamerBase*) element;
 #if defined(PROPER_IMPLEMEMANTION_OF_BASE_CLASS_RENAMING)
-            TClass* baseclass =  fClass->GetBaseClass( base->GetName() );
+            TClassRef baseclass =  fClass->GetBaseClass( base->GetName() );
 #else
             // Currently the base class renaming does not work, so we use the old
             // version of the code which essentially disable the next if(!baseclass ..
             // statement.
-            TClass* baseclass =  base->GetClassPointer();
+            // During the TStreamerElement's Init an emulated TClass might be replaced
+            // by one from the dictionary, we use a TClassRef to be informed of the change.
+            TClassRef baseclass =  base->GetClassPointer();
 #endif
 
             //------------------------------------------------------------------
@@ -3217,17 +3219,22 @@ UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
 
    TIter next(GetElements());
    TStreamerElement *el;
-   while ( (el=(TStreamerElement*)next()) && !fClass->GetCollectionProxy()) { // loop over bases if not a proxied collection
-      if (el->IsBase()) {
-         name = el->GetName();
-         il = name.Length();
-         for (int i=0; i<il; i++) id = id*3+name[i];
-         if (code > TClass::kNoBaseCheckSum && el->IsA() == TStreamerBase::Class()) {
-            TStreamerBase *base = (TStreamerBase*)el;
-            id = id*3 + base->GetBaseCheckSum();
+   // Here we skip he base classes in case this is a pair or STL collection,
+   // otherwise, on some STL implementations, it can happen that pair has
+   // base classes which are an internal implementation detail.
+   if (!fClass->GetCollectionProxy() && strncmp(fClass->GetName(), "pair<", 5)) {
+      while ( (el=(TStreamerElement*)next())) { // loop over bases
+         if (el->IsBase()) {
+            name = el->GetName();
+            il = name.Length();
+            for (int i=0; i<il; i++) id = id*3+name[i];
+            if (code > TClass::kNoBaseCheckSum && el->IsA() == TStreamerBase::Class()) {
+               TStreamerBase *base = (TStreamerBase*)el;
+               id = id*3 + base->GetBaseCheckSum();
+            }
          }
-      }
-   } /* End of Base Loop */
+      } /* End of Base Loop */
+   }
 
    next.Reset();
    while ( (el=(TStreamerElement*)next()) ) {
@@ -5296,7 +5303,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
       case kBits:              {UInt_t    *val = (UInt_t*   )ladd; printf("%d" ,*val);  break;}
 
          // array of basic types  array[8]
-      case kOffsetL + kBool:    {Bool_t    *val = (Bool_t*   )ladd; for(j=0;j<aleng;j++) { printf("%c " ,val[j]); PrintCR(j,aleng,20); } break;}
+      case kOffsetL + kBool:    {Bool_t    *val = (Bool_t*   )ladd; for(j=0;j<aleng;j++) { printf("%c " ,(char)val[j]); PrintCR(j,aleng,20); } break;}
       case kOffsetL + kChar:    {Char_t    *val = (Char_t*   )ladd; for(j=0;j<aleng;j++) { printf("%c " ,val[j]); PrintCR(j,aleng,20); } break;}
       case kOffsetL + kShort:   {Short_t   *val = (Short_t*  )ladd; for(j=0;j<aleng;j++) { printf("%d " ,val[j]); PrintCR(j,aleng,10); } break;}
       case kOffsetL + kInt:     {Int_t     *val = (Int_t*    )ladd; for(j=0;j<aleng;j++) { printf("%d " ,val[j]); PrintCR(j,aleng,10); } break;}
@@ -5489,9 +5496,9 @@ void TStreamerInfo::Update(const TClass *oldcl, TClass *newcl)
 void TStreamerInfo::TCompInfo::Update(const TClass *oldcl, TClass *newcl)
 {
    if (fType != -1) {
-      if (fClass == oldcl)
+      if (fClass == oldcl || strcmp(fClassName, newcl->GetName()) == 0)
          fClass = newcl;
-      else if (fClass == 0)
+      else if (fClass == 0 && TClassTable::GetDict(fClassName))
          fClass = TClass::GetClass(fClassName);
    }
 }

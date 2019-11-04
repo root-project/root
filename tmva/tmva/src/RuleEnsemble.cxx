@@ -311,11 +311,7 @@ void TMVA::RuleEnsemble::RemoveSimilarRules()
    for (UInt_t i=0; i<nrulesIn; i++) {
       if (removeMe[i]) {
          theRule = fRules[ind];
-#if _MSC_VER >= 1400
-         fRules.erase( std::vector<Rule *>::iterator(&fRules[ind], &fRules) );
-#else
          fRules.erase( fRules.begin() + ind );
-#endif
          delete theRule;
          ind--;
       }
@@ -342,11 +338,7 @@ void TMVA::RuleEnsemble::CleanupRules()
    for (UInt_t i=0; i<nrules; i++) {
       if (fRules[ind]->GetRelImportance()<fImportanceCut) {
          therule = fRules[ind];
-#if _MSC_VER >= 1400
-         fRules.erase( std::vector<Rule *>::iterator(&fRules[ind], &fRules) );
-#else
          fRules.erase( fRules.begin() + ind );
-#endif
          delete therule;
          ind--;
       }

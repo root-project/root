@@ -39,6 +39,30 @@ namespace FoundationUtils {
    std::string MakePathRelative(const std::string &path, const std::string &base,
                                 bool isBuildingROOT = false);
 
+   ///\returns the path separator slash or backslash depending on the platform.
+   inline const std::string& GetPathSeparator() {
+#ifdef WIN32
+      static const std::string gPathSeparator ("\\");
+#else
+      static const std::string gPathSeparator ("/");
+#endif
+      return gPathSeparator;
+   }
+
+   ///\returns the fallback directory in the installation (eg. /usr/local/root/).
+   const std::string& GetFallbackRootSys();
+
+   ///\returns the rootsys directory in the installation.
+   ///
+   const std::string& GetRootSys();
+
+   ///\ returns the include directory in the installation.
+   ///
+   const std::string& GetIncludeDir();
+
+   ///\returns the sysconfig directory in the installation.
+   const std::string& GetEtcDir();
+
    } // namespace FoundationUtils
 } // namespace ROOT
 

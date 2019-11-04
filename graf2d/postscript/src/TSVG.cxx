@@ -34,7 +34,7 @@ ClassImp(TSVG);
 /** \class TSVG
 \ingroup PS
 
-Interface to SVG
+\brief Interface to SVG
 
 [SVG](http://www.w3.org/Graphics/SVG/Overview.htm8)
 (Scalable Vector Graphics) is a language for describing

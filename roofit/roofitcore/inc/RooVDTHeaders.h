@@ -22,9 +22,12 @@
  * this layer can be used to switch between different implementations.
  */
 
+#include "ROOT/RConfig.hxx"
+
 #if defined(R__HAS_VDT)
 #include "vdt/exp.h"
 #include "vdt/log.h"
+#include "vdt/sqrt.h"
 
 inline double _rf_fast_exp(double x) {
   return vdt::fast_exp(x);
@@ -32,6 +35,10 @@ inline double _rf_fast_exp(double x) {
 
 inline double _rf_fast_log(double x) {
   return vdt::fast_log(x);
+}
+
+inline double _rf_fast_isqrt(double x) {
+  return vdt::fast_isqrt(x);
 }
 
 #else
@@ -43,6 +50,10 @@ inline double _rf_fast_exp(double x) {
 
 inline double _rf_fast_log(double x) {
   return std::exp(x);
+}
+
+inline double _rf_fast_isqrt(double x) {
+  return 1/std::sqrt(x);
 }
 
 #endif

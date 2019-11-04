@@ -362,24 +362,6 @@ Bool_t TH2Poly::Add(const TH1 *h1, Double_t c1)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Performs the operation: this = this + c1*f1.
-
-Bool_t TH2Poly::Add(TF1 *, Double_t, Option_t *)
-{
-   Warning("Add","Not implement for TH2Poly");
-   return kFALSE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Replace contents of this histogram by the addition of h1 and h2.
-
-Bool_t TH2Poly::Add(const TH1 *, const TH1 *, Double_t, Double_t)
-{
-   Warning("Add","Not implement for TH2Poly");
-   return kFALSE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Adds the input bin into the partition cell matrix. This method is called
 /// in AddBin() and ChangePartition().
 
@@ -1572,4 +1554,69 @@ Bool_t TH2PolyBin::IsInside(Double_t x, Double_t y) const
    }
 
    return in;
+}
+
+////////////////////////////////////////////////////////////////////////
+/// RE-implement dummy functions to avoid users calling the
+/// corresponding implemntations in TH1 or TH2
+//////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+/// Performs the operation: this = this + c1*f1. NOT IMPLEMENTED for TH2Poly
+Bool_t TH2Poly::Add(TF1 *, Double_t, Option_t *)
+{
+   Error("Add","Not implement for TH2Poly");
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Replace contents of this histogram by the addition of h1 and h2. NOT IMPLEMENTED for TH2Poly
+Bool_t TH2Poly::Add(const TH1 *, const TH1 *, Double_t, Double_t)
+{
+   Error("Add","Not implement for TH2Poly");
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Performs the operation: this = this / c1*f1. NOT IMPLEMENTED for TH2Poly
+Bool_t TH2Poly::Divide(TF1 *, Double_t)
+{
+   Error("Divide","Not implement for TH2Poly");
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// NOT IMPLEMENTED for TH2Poly
+Bool_t TH2Poly::Multiply(TF1 *, Double_t)
+{
+   Error("Multiply","Not implement for TH2Poly");
+   return kFALSE;
+}
+////////////////////////////////////////////////////////////////////////////////
+/// NOT IMPLEMENTED for TH2Poly
+Double_t TH2Poly::ComputeIntegral(Bool_t )
+{
+   Error("ComputeIntegral","Not implement for TH2Poly");
+   return TMath::QuietNaN();
+}
+////////////////////////////////////////////////////////////////////////////////
+/// NOT IMPLEMENTED for TH2Poly
+TH1 * TH2Poly::FFT(TH1*, Option_t * )
+{
+   Error("FFT","Not implement for TH2Poly");
+   return nullptr;
+}
+////////////////////////////////////////////////////////////////////////////////
+/// NOT IMPLEMENTED for TH2Poly
+TH1 * TH2Poly::GetAsymmetry(TH1* , Double_t,  Double_t)
+{
+   Error("GetAsymmetry","Not implement for TH2Poly");
+   return nullptr;
+}
+////////////////////////////////////////////////////////////////////////////////
+/// NOT IMPLEMENTED for TH2Poly
+Double_t TH2Poly::Interpolate(Double_t, Double_t)
+{
+   Error("Interpolate","Not implement for TH2Poly");
+   return TMath::QuietNaN();
 }

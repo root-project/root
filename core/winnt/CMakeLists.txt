@@ -19,4 +19,6 @@ ROOT_OBJECT_LIBRARY(Winnt
   src/Win32Splash.cxx
 )
 
+target_include_directories(Winnt PRIVATE ../foundation/res)
+
 ROOT_INSTALL_HEADERS()

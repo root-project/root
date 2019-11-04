@@ -8,8 +8,8 @@
 ROOT_ADD_PYUNITTEST(pyroot_root_module root_module.py)
 
 # General pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_pretty_printing pretty_printing.py ${PYTESTS_WILLFAIL})
-ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface array_interface.py ${PYTESTS_WILLFAIL})
+ROOT_ADD_PYUNITTEST(pyroot_pyz_pretty_printing pretty_printing.py)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface array_interface.py)
 
 # TObject and subclasses pythonisations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tobject_contains tobject_contains.py)
@@ -24,14 +24,11 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_tdirectoryfile_attrsyntax_get tdirectoryfile_attr
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tfile_attrsyntax_get_writeobject_open tfile_attrsyntax_get_writeobject_open.py)
 
 # TTree and subclasses pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch_attr ttree_branch_attr.py
-                    COPY_TO_BUILDDIR TreeHelper.h)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_iterable ttree_iterable.py
-                    COPY_TO_BUILDDIR TreeHelper.h)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_setbranchaddress ttree_setbranchaddress.py
-                    COPY_TO_BUILDDIR TreeHelper.h)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch ttree_branch.py
-                    COPY_TO_BUILDDIR TreeHelper.h)
+file(COPY TreeHelper.h DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch_attr ttree_branch_attr.py)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_iterable ttree_iterable.py)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_setbranchaddress ttree_setbranchaddress.py)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch ttree_branch.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_asmatrix ttree_asmatrix.py)
 
 # TH1 and subclasses pythonizations
@@ -82,7 +79,7 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_tobjstring_str_repr tobjstring_str_repr.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tobjstring_comparisonops tobjstring_comparisonops.py)
 
 # RVec and subclasses pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_rvec_asrvec rvec_asrvec.py ${PYTESTS_WILLFAIL})
+ROOT_ADD_PYUNITTEST(pyroot_pyz_rvec_asrvec rvec_asrvec.py)
 
 # RDataFrame and subclasses pythonizations
 if (dataframe)

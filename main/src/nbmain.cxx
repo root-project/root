@@ -140,11 +140,10 @@ static bool CreateJupyterConfig(string dest, string rootbin, string rootlib)
       out << "os.environ['PATH']            = '%s:%s/bin' % (rootbin,rootbin) + ':' + os.getenv('PATH', '')" << endl;
       out << "os.environ['LD_LIBRARY_PATH'] = '%s' % rootlib + ':' + os.getenv('LD_LIBRARY_PATH', '')" << endl;
 #endif
-      out << "c.NotebookApp.ip = '*'" << endl;
       out.close();
       return true;
    }
-   else { 
+   else {
       fprintf(stderr,
               "Error installing notebook configuration files -- cannot create IPython config file at %s\n",
               jupyconfig.c_str());
@@ -174,7 +173,7 @@ static bool CreateStamp(string dest)
 ////////////////////////////////////////////////////////////////////////////////
 /// Spawn a Jupyter notebook customised by ROOT.
 
-int main()
+int main(int argc, char **argv)
 {
    string rootbin(TROOT::GetBinDir().Data());
    string rootlib(TROOT::GetLibDir().Data());
@@ -205,8 +204,15 @@ int main()
    putenv((char *)jupyconfdir.c_str());
    putenv((char *)jupypathdir.c_str());
 
+   char **jargv = new char* [argc + 2];
+   jargv[0] = (char *) JUPYTER_CMD;
+   jargv[1] = (char *) NB_OPT;
+   for (int n=1;n<argc;++n)
+      jargv[n+1] = argv[n];
+   jargv[argc+1] = nullptr;
+
    // Execute IPython notebook
-   execlp(JUPYTER_CMD, JUPYTER_CMD, NB_OPT, NULL);
+   execvp(JUPYTER_CMD, jargv);
 
    // Exec failed
    fprintf(stderr,

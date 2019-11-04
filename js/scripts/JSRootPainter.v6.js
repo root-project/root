@@ -1530,6 +1530,7 @@
       this.axes_drawn = false;
    }
 
+   /** Returns frame rectangle plus extra info for hint display */
    TFramePainter.prototype.CleanFrameDrawings = function() {
 
       // cleanup all 3D drawings if any
@@ -2617,28 +2618,27 @@
       });  // end menu creation
    }
 
+   /** @summary Show axis status message
+   *
+   * @desc method called normally when mouse enter main object element
+   * @private
+   */
    TFramePainter.prototype.ShowAxisStatus = function(axis_name) {
       // method called normally when mouse enter main object element
 
       var status_func = this.GetShowStatusFunc();
 
-      if (!status_func) return;
+      if (typeof status_func != "function") return;
 
-      var taxis = this.histo ? this.histo['f'+axis_name.toUpperCase()+"axis"] : null;
+      var taxis = this.GetAxis(axis_name), hint_name = axis_name, hint_title = "TAxis",
+          m = d3.mouse(this.svg_frame().node()), id = (axis_name=="x") ? 0 : 1;
 
-      var hint_name = axis_name, hint_title = "TAxis";
-
-      if (taxis) { hint_name = taxis.fName; hint_title = taxis.fTitle || "histogram TAxis object"; }
-
-      var m = d3.mouse(this.svg_frame().node());
-
-      var id = (axis_name=="x") ? 0 : 1;
+      if (taxis) { hint_name = taxis.fName; hint_title = taxis.fTitle || ("TAxis object for " + axis_name); }
       if (this.swap_xy) id = 1-id;
 
       var axis_value = (axis_name=="x") ? this.RevertX(m[id]) : this.RevertY(m[id]);
 
-      status_func(hint_name, hint_title, axis_name + " : " + this.AxisAsText(axis_name, axis_value),
-                  m[0].toFixed(0)+","+ m[1].toFixed(0));
+      status_func(hint_name, hint_title, axis_name + " : " + this.AxisAsText(axis_name, axis_value), m[0]+","+m[1]);
    }
 
    TFramePainter.prototype.AddInteractive = function() {
@@ -2798,10 +2798,10 @@
       return indx+2;
    }
 
-   /// call function for each painter
-   /// kind == "all" for all objects (default)
-   /// kind == "pads" only pads and subpads
-   /// kind == "objects" only for object in current pad
+   /** Call function for each painter in pad
+     * kind == "all" for all objects (default)
+     * kind == "pads" only pads and subpads
+     * kind == "objects" only for object in current pad */
    TPadPainter.prototype.ForEachPainterInPad = function(userfunc, kind) {
       if (!kind) kind = "all";
       if (kind!="objects") userfunc(this);
@@ -3187,7 +3187,7 @@
       for (var i=0; i < this.pad.fPrimitives.arr.length; i++) {
          var obj = this.pad.fPrimitives.arr[i];
 
-         if ((exact_obj!==null) && (obj !== exact_obj)) continue;
+         if ((exact_obj !== null) && (obj !== exact_obj)) continue;
 
          if ((classname !== undefined) && (classname !== null))
             if (obj._typename !== classname) continue;
@@ -3201,8 +3201,8 @@
       return null;
    }
 
+   /** Return true if any objects beside sub-pads exists in the pad */
    TPadPainter.prototype.HasObjectsToDraw = function() {
-      // return true if any objects beside sub-pads exists in the pad
 
       if (!this.pad || !this.pad.fPrimitives) return false;
 
@@ -4621,12 +4621,12 @@
       this._websocket.Connect();
    }
 
-   TCanvasPainter.prototype.UseWebsocket = function(handle) {
+   TCanvasPainter.prototype.UseWebsocket = function(handle, href) {
       this.CloseWebsocket();
 
       this._websocket = handle;
       this._websocket.SetReceiver(this);
-      this._websocket.Connect();
+      this._websocket.Connect(href);
    }
 
    TCanvasPainter.prototype.OnWebsocketOpened = function(handle) {
@@ -4968,15 +4968,36 @@
       return res;
    }
 
+   /** Check if TGeo objects in the canvas - draw them directly @private */
+   TCanvasPainter.prototype.DirectGeoDraw = function() {
+      var lst = this.pad ? this.pad.fPrimitives : null;
+      if (!lst || (lst.arr.length != 1)) return;
+
+      var obj = lst.arr[0];
+      if (obj && obj._typename && (obj._typename.indexOf("TGeo")==0))
+         return JSROOT.draw(this.divid, obj, lst.opt[0]);
+   }
+
    function drawCanvas(divid, can, opt) {
       var nocanvas = !can;
       if (nocanvas) can = JSROOT.Create("TCanvas");
 
       var painter = new TCanvasPainter(can);
+      painter.SetDivId(divid, -1); // just assign id
+
+      if (!nocanvas && can.fCw && can.fCh && !JSROOT.BatchMode) {
+         var rect0 = painter.select_main().node().getBoundingClientRect();
+         if (!rect0.height && (rect0.width > 0.1*can.fCw)) {
+            painter.select_main().style("width", can.fCw+"px").style("height", can.fCh+"px");
+            painter._fixed_size = true;
+         }
+      }
+
+      var direct = painter.DirectGeoDraw();
+      if (direct) return direct;
+
       painter.DecodeOptions(opt);
       painter.normal_canvas = !nocanvas;
-
-      painter.SetDivId(divid, -1); // just assign id
       painter.CheckSpecialsInPrimitives(can);
       painter.CreateCanvasSvg(0);
       painter.SetDivId(divid);  // now add to painters list

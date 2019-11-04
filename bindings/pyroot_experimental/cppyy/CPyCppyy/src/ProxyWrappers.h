@@ -16,9 +16,9 @@ PyObject* CreateScopeProxy(
 
 // bind a C++ object into a Python proxy object (flags are CPPInstance::Default)
 PyObject* BindCppObjectNoCast(Cppyy::TCppObject_t object,
-    Cppyy::TCppType_t klass, int flags = 0x0001);
+    Cppyy::TCppType_t klass, const unsigned flags = 0);
 PyObject* BindCppObject(Cppyy::TCppObject_t object,
-    Cppyy::TCppType_t klass, int flags = 0x0001);
+    Cppyy::TCppType_t klass, const unsigned flags = 0);
 PyObject* BindCppObjectArray(
     Cppyy::TCppObject_t address, Cppyy::TCppType_t klass, Py_ssize_t* dims);
 

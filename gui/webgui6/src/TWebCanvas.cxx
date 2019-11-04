@@ -273,10 +273,10 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
    TList *primitives = pad->GetListOfPrimitives();
 
-   fPrimitivesLists.Add(primitives); // add list of primitives
+   if (primitives) fPrimitivesLists.Add(primitives); // add list of primitives
 
    TWebPS masterps;
-   bool usemaster = primitives->GetSize() > fPrimitivesMerge;
+   bool usemaster = primitives ? (primitives->GetSize() > fPrimitivesMerge) : false;
 
    TIter iter(primitives);
    TObject *obj = nullptr;
@@ -838,6 +838,16 @@ Bool_t TWebCanvas::PerformUpdate()
    WaitWhenCanvasPainted(fCanvVersion);
 
    return kTRUE;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Increment canvas version and force sending data to client - do not wit for reply
+
+void TWebCanvas::ForceUpdate()
+{
+   fCanvVersion++;
+
+   CheckDataToSend();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

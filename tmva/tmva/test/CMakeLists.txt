@@ -29,6 +29,16 @@ if(dataframe)
     ROOT_ADD_GTEST(rstandardscaler rstandardscaler.cxx LIBRARIES ROOTVecOps TMVA ROOTDataFrame)
     # RReader
     ROOT_ADD_GTEST(rreader rreader.cxx LIBRARIES ROOTVecOps TMVA ROOTDataFrame)
+    # Tree inference system and user interface
+    ROOT_ADD_GTEST(branchlessForest branchlessForest.cxx LIBRARIES TMVA)
+    ROOT_ADD_GTEST(rbdt rbdt.cxx LIBRARIES ROOTVecOps TMVA)
+endif()
+
+if(dataframe AND pyroot_experimental)
+  find_python_module(xgboost QUIET)
+  if (PY_XGBOOST_FOUND)
+    ROOT_ADD_PYUNITTEST(rbdt_xgboost rbdt_xgboost.py)
+  endif()
 endif()
 
 project(tmva-tests)

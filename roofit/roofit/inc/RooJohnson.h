@@ -1,8 +1,6 @@
 // Author: Stephan Hageboeck, CERN, May 2019
 /*****************************************************************************
  * Project: RooFit                                                           *
- * Package: RooFitModels                                                     *
- *    File: $Id: RooJohnson.h,v 1.16 2007/07/12 20:30:49 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *

@@ -38,7 +38,8 @@ protected:
   RooRealProxy k ;
 
   Double_t evaluate() const ;
-
+  RooSpan<double> evaluateBatch(std::size_t begin, std::size_t batchSize) const;
+  
 private:
 
   ClassDef(RooLognormal,1) // log-normal PDF

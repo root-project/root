@@ -328,14 +328,6 @@ install(FILES "${CMAKE_BINARY_DIR}/include/module.modulemap" DESTINATION ${CMAKE
 
 add_dependencies(move_headers copymodulemap)
 
-# Provide our own modulemap for implementations other than libcxx.
-if (NOT WIN32 AND NOT libcxx)
-  configure_file(${CMAKE_SOURCE_DIR}/build/unix/std.modulemap ${CMAKE_BINARY_DIR}/include/std.modulemap)
-  install(FILES "${CMAKE_BINARY_DIR}/include/std.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
-  configure_file(${CMAKE_SOURCE_DIR}/build/unix/libc.modulemap ${CMAKE_BINARY_DIR}/include/libc.modulemap)
-  install(FILES "${CMAKE_BINARY_DIR}/include/libc.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
-endif()
-
 # Take all the modulemap contents we collected from the packages and append them to our modulemap.
 # We have to delay this because the ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT is filled in the
 # add_subdirectory calls above.
@@ -421,7 +413,7 @@ install(
    DIRECTORY ${CMAKE_BINARY_DIR}/lib/
    DESTINATION ${CMAKE_INSTALL_LIBDIR}
    FILES_MATCHING PATTERN "*.pcm"
-   PATTERN ".*rdict.*" EXCLUDE
+   PATTERN "*_rdict.pcm" EXCLUDE
 )
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---

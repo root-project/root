@@ -19,6 +19,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace ROOT {
 namespace Experimental {
@@ -30,6 +31,7 @@ public:
    int first{0};     ///< first child to request
    int number{0};    ///< number of childs to request, 0 - all childs
    std::string sort; ///< kind of sorting
+   std::string filter; ///< filter expression for items
 };
 
 /** Representation of single item in the browser */
@@ -37,17 +39,31 @@ class RBrowserItem {
 protected:
    std::string name;     ///< item name
    int nchilds{0};       ///< number of childs
-   bool checked{false};  ///< is checked
-   bool expanded{false}; ///< is expanded
+   std::string icon;     ///< icon associated with item
+   bool checked{false};  ///< is checked, not used yet
+   bool expanded{false}; ///< is expanded, not used yet
 public:
+
    RBrowserItem() = default;
    RBrowserItem(const std::string &_name, int _nchilds = 0) : name(_name), nchilds(_nchilds) {}
+   // must be here, one needs virtual table for correct streaming of sub-classes
+   virtual ~RBrowserItem() = default;
+
+   const std::string &GetName() const { return name; }
+   const std::string &GetIcon() const { return icon; }
+   virtual bool IsFolder() const { return false; }
 
    void SetChecked(bool on = true) { checked = on; }
    void SetExpanded(bool on = true) { expanded = on; }
+   void SetIcon(const std::string &_icon) { icon = _icon; }
 
-   // must be here, one needs virtual table for correct streaming of RBrowserReply
-   virtual ~RBrowserItem() = default;
+   virtual bool Compare(const RBrowserItem *b, const std::string &) const
+   {
+      if (IsFolder() != b->IsFolder())
+         return IsFolder();
+      return GetName() < b->GetName();
+   }
+
 };
 
 /** Reply on browser request */
@@ -56,7 +72,7 @@ public:
    std::string path;                  ///< reply path
    int nchilds{0};                    ///< total number of childs in the node
    int first{0};                      ///< first node in returned list
-   std::vector<RBrowserItem *> nodes; ///< list of pointers, no ownership!
+   std::vector<const RBrowserItem *> nodes; ///< list of pointers, no ownership!
 };
 
 } // namespace Experimental

@@ -19,6 +19,7 @@
 
 #include "RooMsgService.h"
 #include "RooAbsArg.h"
+#include "RooAbsReal.h"
 
 #include <sstream>
 
@@ -146,8 +147,25 @@ class FormatPdfTree {
 
 /// Check if the parameters have a range, and warn if the range extends below / above the set limits.
 void checkRangeOfParameters(const RooAbsReal* callingClass, std::initializer_list<const RooAbsReal*> pars,
-    double min = -std::numeric_limits<double>::max(), double max = std::numeric_limits<double>::max());
+    double min = -std::numeric_limits<double>::max(), double max = std::numeric_limits<double>::max(),
+    bool limitsInAllowedRange = false, std::string extraMessage = "");
+
+
+/// Helper class to access a batch-related part of RooAbsReal's interface, which should not leak to the outside world.
+class BatchInterfaceAccessor {
+  public:
+    static void clearBatchMemory(RooAbsReal& theReal) {
+      theReal.clearBatchMemory();
+    }
+
+    static void checkBatchComputation(const RooAbsReal& theReal, std::size_t evtNo,
+        const RooArgSet* normSet = nullptr, double relAccuracy = 1.E-13) {
+      theReal.checkBatchComputation(evtNo, normSet, relAccuracy);
+    }
+};
+
 
 }
+
 
 #endif /* ROOFIT_ROOFITCORE_INC_ROOHELPERS_H_ */

@@ -82,8 +82,10 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
   fTitle(""), fContextIdx(0U), fIoType(""), fIoName(""){
 
    using namespace llvm;
-   assert((ci || isa<TranslationUnitDecl>(ValD->getDeclContext()) ||
-          (ValD->getDeclContext()->isTransparentContext() && isa<TranslationUnitDecl>(ValD->getDeclContext()->getParent()) ) ||
+   const auto DC = ValD->getDeclContext();
+   (void)DC;
+   assert((ci || isa<TranslationUnitDecl>(DC) ||
+          ((DC->isTransparentContext() || DC->isInlineNamespace()) && isa<TranslationUnitDecl>(DC->getParent()) ) ||
            isa<EnumConstantDecl>(ValD)) && "Not TU?");
    assert((isa<VarDecl>(ValD) ||
            isa<FieldDecl>(ValD) ||
@@ -295,6 +297,11 @@ int TClingDataMemberInfo::InternalNext()
          // and namespace variable members.
          return 1;
       }
+      // Collect internal `__cling_N5xxx' inline namespaces; they will be traversed later
+      if (auto NS = dyn_cast<NamespaceDecl>(*fIter)) {
+         if (NS->getDeclContext()->isTranslationUnit() && NS->isInlineNamespace())
+            fContexts.push_back(NS);
+      }
    }
    return 0;
 }
@@ -411,6 +418,8 @@ long TClingDataMemberInfo::Property() const
          break;
    }
    if (const clang::VarDecl *vard = llvm::dyn_cast<clang::VarDecl>(GetDecl())) {
+      if (vard->isConstexpr())
+         property |= kIsConstexpr;
       if (vard->getStorageClass() == clang::SC_Static) {
          property |= kIsStatic;
       } else if (declaccess->getDeclContext()->isNamespace()) {

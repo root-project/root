@@ -42,6 +42,9 @@ class RooFitResult ;
 class RooAbsMoment ;
 class RooDerivative ;
 class RooVectorDataStore ;
+namespace RooHelpers {
+class BatchInterfaceAccessor;
+}
 
 class TH1;
 class TH1F;
@@ -53,10 +56,6 @@ class TH3F;
 #include <iostream>
 #include <sstream>
 
-#ifndef NDEBUG
-#define ROOFIT_CHECK_CACHED_VALUES
-#endif
-
 class RooAbsReal : public RooAbsArg {
 public:
   // Constructors, assignment etc
@@ -65,6 +64,7 @@ public:
   RooAbsReal(const char *name, const char *title, Double_t minVal, Double_t maxVal, 
 	     const char *unit= "") ;
   RooAbsReal(const RooAbsReal& other, const char* name=0);
+  RooAbsReal& operator=(const RooAbsReal& other);
   virtual ~RooAbsReal();
 
 
@@ -84,18 +84,19 @@ public:
   /// the variables to normalise over.
   /// These are integrated over their current ranges to compute the normalisation constant,
   /// and the unnormalised result is divided by this value.
-#ifdef ROOFIT_CHECK_CACHED_VALUES
-  Double_t getVal(const RooArgSet* normalisationSet = nullptr) const;
-#else
   inline Double_t getVal(const RooArgSet* normalisationSet = nullptr) const {
+#ifdef ROOFIT_CHECK_CACHED_VALUES
+    return _DEBUG_getVal(normalisationSet);
+#else
+
 #ifndef _WIN32
     return (_fast && !_inhibitDirty) ? _value : getValV(normalisationSet) ;
 #else
     return (_fast && !inhibitDirty()) ? _value : getValV(normalisationSet) ;
 #endif
-  }
 
 #endif
+  }
 
   /// Like getVal(const RooArgSet*), but always requires an argument for normalisation.
   inline  Double_t getVal(const RooArgSet& normalisationSet) const { return _fast ? _value : getValV(&normalisationSet) ; }
@@ -104,7 +105,7 @@ public:
 
   virtual RooSpan<const double> getValBatch(std::size_t begin, std::size_t maxSize, const RooArgSet* normSet = nullptr) const;
 
-  Double_t getPropagatedError(const RooFitResult &fr, const RooArgSet &nset = RooArgSet());
+  Double_t getPropagatedError(const RooFitResult &fr, const RooArgSet &nset = RooArgSet()) const;
 
   Bool_t operator==(Double_t value) const ;
   virtual Bool_t operator==(const RooAbsArg& other) ;
@@ -175,21 +176,21 @@ public:
 			     const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(), 
 			     const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;
 
+  /// Create integral over observables in iset in range named rangeName.
   RooAbsReal* createIntegral(const RooArgSet& iset, const char* rangeName) const { 
-    // Create integral over observables in iset in range named rangeName
     return createIntegral(iset,0,0,rangeName) ; 
   }
+  /// Create integral over observables in iset in range named rangeName with integrand normalized over observables in nset
   RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, const char* rangeName=0) const { 
-    // Create integral over observables in iset in range named rangeName with integrand normalized over observables in nset
     return createIntegral(iset,&nset,0,rangeName) ; 
   }
-  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, const RooNumIntConfig& cfg, const char* rangeName=0) const { 
-    // Create integral over observables in iset in range named rangeName with integrand normalized over observables in nset while
-    // using specified configuration for any numeric integration
+  /// Create integral over observables in iset in range named rangeName with integrand normalized over observables in nset while
+  /// using specified configuration for any numeric integration.
+  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, const RooNumIntConfig& cfg, const char* rangeName=0) const {
     return createIntegral(iset,&nset,&cfg,rangeName) ; 
   }
+  /// Create integral over observables in iset in range named rangeName using specified configuration for any numeric integration.
   RooAbsReal* createIntegral(const RooArgSet& iset, const RooNumIntConfig& cfg, const char* rangeName=0) const { 
-    // Create integral over observables in iset in range named rangeName using specified configuration for any numeric integration
     return createIntegral(iset,0,&cfg,rangeName) ; 
   }
   virtual RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=0, const RooNumIntConfig* cfg=0, const char* rangeName=0) const ;  
@@ -397,17 +398,14 @@ protected:
 
   // Function evaluation and error tracing
   Double_t traceEval(const RooArgSet* set) const ;
-//  virtual Bool_t traceEvalHook(Double_t /*value*/) const {
-//    // Hook function to add functionality to evaluation tracing in derived classes
-//    return kFALSE ;
-//  }
+
   /// Evaluate this PDF / function / constant. Needs to be overridden by all derived classes.
   virtual Double_t evaluate() const = 0;
   virtual RooSpan<double> evaluateBatch(std::size_t begin, std::size_t maxSize) const;
 
   //---------- Interface to access batch data ---------------------------
   //
-  friend class BatchInterfaceAccessor;
+  friend class RooHelpers::BatchInterfaceAccessor;
   void clearBatchMemory() {
     _batchData.clear();
     for (auto arg : _serverList) {
@@ -418,13 +416,15 @@ protected:
     }
   }
 
-#ifdef ROOFIT_CHECK_CACHED_VALUES
- public:
+ private:
   void checkBatchComputation(std::size_t evtNo, const RooArgSet* normSet = nullptr, double relAccuracy = 1.E-13) const;
+
   const BatchHelpers::BatchData& batchData() const {
     return _batchData;
   }
-#endif
+
+  /// Debug version of getVal(), which is slow and does error checking.
+  Double_t _DEBUG_getVal(const RooArgSet* normalisationSet) const;
 
   //--------------------------------------------------------------------
 
@@ -449,12 +449,12 @@ protected:
   TString  _label ;         // Plot label for objects value
   Bool_t   _forceNumInt ;   // Force numerical integration if flag set
 
-  mutable Float_t _floatValue ; //! Transient cache for floating point values from tree branches 
-  mutable Int_t   _intValue   ; //! Transient cache for integer values from tree branches 
-  mutable Bool_t  _boolValue  ; //! Transient cache for bool values from tree branches 
-  mutable UChar_t _byteValue  ; //! Transient cache for byte values from tree branches 
-  mutable Char_t  _sbyteValue ; //! Transient cache for signed byte values from tree branches 
-  mutable UInt_t  _uintValue  ; //! Transient cache for unsigned integer values from tree branches 
+  mutable Float_t _floatValue{0.}; //! Transient cache for floating point values from tree branches
+  mutable Int_t   _intValue{0};    //! Transient cache for integer values from tree branches
+  mutable Bool_t  _boolValue{false}; //! Transient cache for bool values from tree branches
+  mutable UChar_t _byteValue{'\0'};  //! Transient cache for byte values from tree branches
+  mutable Char_t  _sbyteValue{'\0'}; //! Transient cache for signed byte values from tree branches
+  mutable UInt_t  _uintValue{0u};  //! Transient cache for unsigned integer values from tree branches
 
   friend class RooAbsPdf ;
   friend class RooAbsAnaConvPdf ;
@@ -471,7 +471,7 @@ protected:
    PlotOpt() : drawOptions("L"), scaleFactor(1.0), stype(Relative), projData(0), binProjData(kFALSE), projSet(0), precision(1e-3), 
                shiftToZero(kFALSE),projDataSet(0),normRangeName(0),rangeLo(0),rangeHi(0),postRangeFracScale(kFALSE),wmode(RooCurve::Extended),
                projectionRangeName(0),curveInvisible(kFALSE), curveName(0),addToCurveName(0),addToWgtSelf(1.),addToWgtOther(1.),
-               numCPU(1),interleave(RooFit::Interleave),curveNameSuffix(""), numee(10), eeval(0), doeeval(kFALSE), progress(kFALSE) {} ;
+               numCPU(1),interleave(RooFit::Interleave),curveNameSuffix(""), numee(10), eeval(0), doeeval(kFALSE), progress(kFALSE), errorFR(0) {} ;
    Option_t* drawOptions ;
    Double_t scaleFactor ;	 
    ScaleType stype ;
@@ -499,6 +499,7 @@ protected:
    Double_t eeval ;
    Bool_t   doeeval ;
    Bool_t progress ;
+   const RooFitResult* errorFR ;
   } ;
 
   // Plot implementation functions

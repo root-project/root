@@ -19,7 +19,6 @@
 #include "TDocInfo.h"
 #include "TDocParser.h"
 #include "TEnv.h"
-#include "TGlobal.h"
 #include "THtml.h"
 #include "TInterpreter.h"
 #include "TMethod.h"

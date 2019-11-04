@@ -14,7 +14,6 @@
 #include "TTreeReaderArray.h"
 #include "ROOT/TTreeReaderFast.hxx"
 #include "ROOT/TTreeReaderValueFast.hxx"
-#include "ROOT/TBulkBranchRead.hxx"
 #include "ROOT/TIOFeatures.hxx"
 
 #include "gtest/gtest.h"

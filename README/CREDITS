@@ -506,6 +506,10 @@ N: Pierre Juillot
 E: juillot@in2p3.fr
 D: various contributions to the postscript driver
 
+N: Desislava Kalaydjieva
+E: dnkalaydjieva@gmail.com
+D: .help TTree
+
 N: Michal Kapalka
 E: kapalka@icslab.agh.edu.pl
 D: improvements in the ZIP package
@@ -521,6 +525,10 @@ D: PROOF contributions
 N: Stephan Kluth
 E: skluth@mh1.lbl.gov
 D: changes in rootcint to handle templates
+
+N: Sven Kreiss
+E: svenkreiss@gmail.com
+D: co-author of RooStats
 
 N: Anna Kreshuk
 E: akrechtc@mail.cern.ch
@@ -589,6 +597,10 @@ D: Guide lines in Editor, Opacity, Gradient
 N: Constantin Loizides
 E: loizides@MIT.EDU
 D: PROOF testing and debugging
+
+N: Javier Lopez-Gomez
+E: jalopezg@inf.uc3m.es
+D: Cling support for redefinitions
 
 N: Johan Lundberg
 E: johan.lundberg@cern.ch

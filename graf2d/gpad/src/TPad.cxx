@@ -41,7 +41,6 @@
 #include "TDataMember.h"
 #include "TMethod.h"
 #include "TDataType.h"
-#include "TRealData.h"
 #include "TFrame.h"
 #include "TExec.h"
 #include "TDatime.h"
@@ -51,8 +50,6 @@
 #include "TEnv.h"
 #include "TImage.h"
 #include "TViewer3DPad.h"
-#include "TBuffer3D.h"
-#include "TBuffer3DTypes.h"
 #include "TCreatePrimitives.h"
 #include "TLegend.h"
 #include "TAtt3D.h"
@@ -1566,6 +1563,23 @@ void TPad::DrawCrosshair()
 ///   \param[in] title     Pad title.If title is of the form "stringt;stringx;stringy"
 ///                        the pad title is set to stringt, the x axis title to
 ///                        stringx, the y axis title to stringy.
+///
+/// #### Example:
+///
+/// Begin_Macro(source)
+/// {
+///    auto c = new TCanvas("c","c",200,10,500,300);
+///
+///    const Int_t n = 50;
+///    auto g = new TGraph();
+///    for (Int_t i=0;i<n;i++) g->SetPoint(i,i*0.1,100*sin(i*0.1+0.2));
+///
+///    auto frame = c->DrawFrame(0, -110, 2, 110);
+///    frame->GetXaxis()->SetTitle("X axis");
+///
+///    g->Draw("L*");
+/// }
+/// End_Macro
 
 TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title)
 {
@@ -3924,8 +3938,8 @@ void TPad::PaintFillAreaNDC(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 
 void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t FillStyle)
 {
-   static Double_t ang1[10] = {0., 10., 20., 30., 45.,5., 60., 70., 80., 90.};
-   static Double_t ang2[10] = {180.,170.,160.,150.,135.,5.,120.,110.,100., 90.};
+   static Double_t ang1[10] = {  0., 10., 20., 30., 45.,5., 60., 70., 80., 89.99};
+   static Double_t ang2[10] = {180.,170.,160.,150.,135.,5.,120.,110.,100., 89.99};
 
    Int_t fasi  = FillStyle%1000;
    Int_t idSPA = (Int_t)(fasi/100);
@@ -3989,7 +4003,7 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
 {
    Int_t i, i1, i2, nbi, m, inv;
    Double_t ratiox, ratioy, ymin, ymax, yrot, ycur;
-   const Double_t angr  = TMath::Pi()*(180-angle)/180.;
+   const Double_t angr  = TMath::Pi()*(180.-angle)/180.;
    const Double_t epsil = 0.0001;
    const Int_t maxnbi = 100;
    Double_t xli[maxnbi], xlh[2], ylh[2], xt1, xt2, yt1, yt2;
@@ -3999,8 +4013,8 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
    Double_t rwxmax = gPad->GetX2();
    Double_t rwymin = gPad->GetY1();
    Double_t rwymax = gPad->GetY2();
-   ratiox = 1/(rwxmax-rwxmin);
-   ratioy = 1/(rwymax-rwymin);
+   ratiox = 1./(rwxmax-rwxmin);
+   ratioy = 1./(rwymax-rwymin);
 
    Double_t sina = TMath::Sin(angr), sinb;
    Double_t cosa = TMath::Cos(angr), cosb;

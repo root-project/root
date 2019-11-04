@@ -26,6 +26,7 @@
 
    function THistPainter(histo) {
       JSROOT.TObjectPainter.call(this, histo);
+      this.csstype = "hist";
       this.draw_content = true;
       this.nbinsx = 0;
       this.nbinsy = 0;
@@ -51,7 +52,7 @@
 
    THistPainter.prototype.GetHImpl = function(obj) {
       if (obj && obj.fHistImpl)
-         return obj.fHistImpl.fIsWeak ? obj.fHistImpl.fWeakForIO : obj.fHistImpl.fUnique;
+         return obj.fHistImpl.fIO;
       return null;
    }
 
@@ -59,6 +60,7 @@
       var obj = this.GetObject(), histo = this.GetHImpl(obj);
 
       if (histo && !histo.getBinContent) {
+         console.log('histo type', histo._typename);
          if (histo.fAxes._1) {
             histo.getBin = function(x, y) { return (x + this.fAxes._0.fNBins * y); }
             histo.getBinContent = function(x, y) { return this.fStatistics.fBinContent[this.getBin(x, y)]; }
@@ -167,14 +169,10 @@
       }
 */
 
-      var opts = this.GetObject().fOpts,
-          pp   = this.canv_painter();
-
       this.createAttFill( { pattern: 0, color: 0 });
 
-      var lcol = pp.GetNewColor(opts, "contentLine.color");
-      var lwidth = pp.GetNewOpt(opts, "contentLine.width");
-      // console.log("new color lcol", lcol, lwidth);
+      var lcol = this.v7EvalColor( "line_color", "black"),
+          lwidth = this.v7EvalAttr( "line_width", 1);
 
       this.createAttLine({ color: lcol || 'black', width : parseInt(lwidth) || 1 });
    }
