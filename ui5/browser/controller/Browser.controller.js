@@ -155,14 +155,22 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
             this.newCodeEditor();
 
-            //
-            // defaultCodeEditor.attachChange( function() {
-            //    this.getModel().setProperty("/modified", true);
-            // });
-
             this.drawingOptions = { TH1: 'hist', TH2: 'COL', TProfile: 'E0'};
 
       },
+
+      /* ========================================================= */
+      /* =============== Generic factory functions =============== */
+      /* ========================================================= */
+
+      getElementFromCurrentTab: function(element) {
+         const currentTabID = this.getView().byId("myTabContainer").getSelectedItem();
+         return sap.ui.getCore().byId(currentTabID + element);
+      },
+
+      /* ========================================================= */
+      /* =============== Generic factory functions =============== */
+      /* ========================================================= */
 
       /* =========================================== */
       /* =============== Code Editor =============== */
@@ -185,7 +193,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          oTabContainer.addItem(oTabContainerItem);
          oTabContainer.setSelectedItem(oTabContainerItem);
 
-         sap.ui.getCore().byId("CodeEditor" + ID + "CodeEditor").setModel(new JSONModel({
+         sap.ui.getCore().byId("CodeEditor" + ID + "Editor").setModel(new JSONModel({
             code: "",
             ext: "",
             filename: "",
@@ -221,7 +229,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                      resizable: false
                   })
                }),
-               new sap.ui.codeeditor.CodeEditor("CodeEditor" + ID + "CodeEditor", {
+               new sap.ui.codeeditor.CodeEditor("CodeEditor" + ID + "Editor", {
                   height: "100%",
                   colorTheme: "default",
                   type: "c_cpp",
@@ -233,7 +241,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          sap.ui.getCore().byId("CodeEditor" + ID + "SaveAs").attachPress(this.onSaveAs, this);
          sap.ui.getCore().byId("CodeEditor" + ID + "Save").attachPress(this.onSaveFile, this);
          sap.ui.getCore().byId("CodeEditor" + ID + "Run").attachPress(this.onRunMacro, this);
-         sap.ui.getCore().byId("CodeEditor" + ID + "CodeEditor").attachChange(function () {
+         sap.ui.getCore().byId("CodeEditor" + ID + "Editor").attachChange(function () {
             this.getModel().setProperty("/modified", true);
          });
          return fragment;
@@ -298,7 +306,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          let oTabItemString = this.getView().byId("myTabContainer").getSelectedItem();
 
          if (oTabItemString.indexOf("CodeEditor") !== -1) {
-            let oCodeEditor = sap.ui.getCore().byId(oTabItemString + "CodeEditor");
+            let oCodeEditor = sap.ui.getCore().byId(oTabItemString + "Editor");
             if (oCodeEditor) {
                return oCodeEditor;
             }
@@ -315,7 +323,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          var oModel = oEditor.getModel();
          var oTabElement = oEditor.getParent().getParent();
          var ext = "txt";
-         let runButton = this.getRunButtonFromCodeEditor(oEditor);
+         let runButton = this.getElementFromCurrentTab( "Run");
          runButton.setEnabled(false);
          if (filename.lastIndexOf('.') > 0)
             ext = filename.substr(filename.lastIndexOf('.') + 1);
@@ -370,7 +378,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                   return false;
                break;
          }
-         console.log(oEditor.getType());
          oTabElement.setAdditionalText(filename);
          if (filename.lastIndexOf('.') > 0)
             filename = filename.substr(0, filename.lastIndexOf('.'));
@@ -623,7 +630,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
           // FIXME: wrong place, only when server returns result, one can update full path or model
           oModel.setProperty("/fullpath", fullpath);
-          this.getSaveButtonFromCodeEditor(codeEditor).setEnabled(true);
+          this.getElementFromCurrentTab("Save").setEnabled(true);
           var filename = fullpath.substr(fullpath.lastIndexOf('/') + 1);
           if (this.setFileNameType(filename))
              return this.sendDblClick(fullpath, "$$$editor$$$");
@@ -683,22 +690,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
        if (!no_warning) MessageToast.show("Sorry, you need to select an image viewer tab", {duration: 1500});
        return -1;
-     },
-
-     getSaveButtonFromCodeEditor: function(oCodeEditor) {
-        let oSplitter = oCodeEditor.getParent();
-        let oToolBar = oSplitter.mAggregations.contentAreas[0];
-        let oToolBarContent = oToolBar.getContent();
-
-        return oToolBarContent[2];
-     },
-
-     getRunButtonFromCodeEditor: function(oCodeEditor) {
-       let oSplitter = oCodeEditor.getParent();
-       let oToolBar = oSplitter.mAggregations.contentAreas[0];
-       let oToolBarContent = oToolBar.getContent();
-
-       return oToolBarContent[3];
      },
 
      /** Entry point for all data from server */
