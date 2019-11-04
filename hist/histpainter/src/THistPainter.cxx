@@ -6241,6 +6241,8 @@ void THistPainter::PaintErrors(Option_t *)
    Double_t xmin, xmax, ymin, ymax;
    Double_t logxmin = 0;
    Double_t logymin = 0;
+   Double_t offset = 0.;
+   Double_t width  = 0.;
    Int_t i, k, npoints, first, last, fixbin;
    Int_t if1 = 0;
    Int_t if2 = 0;
@@ -6264,6 +6266,9 @@ void THistPainter::PaintErrors(Option_t *)
    if (fXaxis->GetXbins()->fN) fixbin = 0;
    else                        fixbin = 1;
 
+   offset = fH->GetBarOffset();
+   width = fH->GetBarWidth();
+   
    errormarker = fH->GetMarkerStyle();
    if (optionEX0) {
       xerror = 0;
@@ -6335,7 +6340,15 @@ void THistPainter::PaintErrors(Option_t *)
       //     ey1   = Low Y error
       //     ey2   = Up Y error
       //     (xi,yi) = Error bars coordinates
-
+      
+      // apply offset on errors for bar histograms
+      Double_t xminTmp = gPad->XtoPad(fXaxis->GetBinLowEdge(k));
+      Double_t xmaxTmp = gPad->XtoPad(fXaxis->GetBinUpEdge(k));
+      Double_t w    = (xmaxTmp-xminTmp)*width;
+      xminTmp += offset*(xmaxTmp-xminTmp);
+      xmaxTmp = xminTmp + w;
+      xp = (xminTmp+xmaxTmp)/2.;
+      
       if (Hoption.Logx) {
          if (xp <= 0) goto L30;
          if (xp < logxmin) goto L30;
