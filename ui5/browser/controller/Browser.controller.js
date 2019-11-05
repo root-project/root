@@ -162,9 +162,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             onAfterRendering: function() { this.getView().byId("treeTableBox").$().children().first().css('flex-grow',1); }
          }, this);
 
-
-            let tabContainerItem = this.getView().byId("defaultCodeEditor");
-
             this.newCodeEditor();
 
             this.drawingOptions = { TH1: 'hist', TH2: 'COL', TProfile: 'E0'};
@@ -204,14 +201,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          oTabContainerItem.addContent(oCodeEditorFragment);
          oTabContainer.addItem(oTabContainerItem);
          oTabContainer.setSelectedItem(oTabContainerItem);
-
-         sap.ui.getCore().byId("CodeEditor" + ID + "Editor").setModel(new JSONModel({
-            code: "",
-            ext: "",
-            filename: "",
-            fullpath: "",
-            modified: false
-         }));
       },
 
       newCodeEditorFragment: function (ID) {
@@ -220,20 +209,25 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             contentAreas: [
                new Toolbar("CodeEditor" + ID + "Toolbar", {
                   content: [
-                     new FileUploader("CodeEditor" + ID + "FileUploader", {}),
+                     new FileUploader("CodeEditor" + ID + "FileUploader", {
+                        change: [this.onChangeFile, this]
+                     }),
                      new Button("CodeEditor" + ID + "SaveAs", {
                         text: "Save as...",
                         tooltip: "Save current file as...",
+                        press: [this.onSaveAs,, this]
                      }),
                      new Button("CodeEditor" + ID + "Save", {
                         text: "Save",
                         tooltip: "Save current file",
+                        press: [this.onSaveFile, this]
                      }),
                      new Button("CodeEditor" + ID + "Run", {
                         text: "Run",
                         tooltip: "Run Current Macro",
                         icon: "sap-icon://play",
                         enabled: false,
+                        press: [this.onRunMacro, this]
                      }),
                   ],
                   layoutData: new SplitterLayoutData("CodeEditor" + ID + "SplitterLayoutData", {
@@ -245,23 +239,25 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                   height: "100%",
                   colorTheme: "default",
                   type: "c_cpp",
-                  value: "{/code}"
-               })
+                  value: "{/code}",
+                  change: function () {
+                     this.getModel().setProperty("/modified", true);
+                  }
+               }).setModel(new JSONModel({
+                  code: "",
+                  ext: "",
+                  filename: "",
+                  fullpath: "",
+                  modified: false
+               }))
             ]
-         });
-         sap.ui.getCore().byId("CodeEditor" + ID + "FileUploader").attachChange(this.onChangeFile, this);
-         sap.ui.getCore().byId("CodeEditor" + ID + "SaveAs").attachPress(this.onSaveAs, this);
-         sap.ui.getCore().byId("CodeEditor" + ID + "Save").attachPress(this.onSaveFile, this);
-         sap.ui.getCore().byId("CodeEditor" + ID + "Run").attachPress(this.onRunMacro, this);
-         sap.ui.getCore().byId("CodeEditor" + ID + "Editor").attachChange(function () {
-            this.getModel().setProperty("/modified", true);
          });
          return fragment;
       },
 
       /** @brief Handle the "Save As..." button press event */
       onSaveAs: function () {
-         const oEditor = this.getView().byId("aCodeEditor");
+         const oEditor = this.getSelectedCodeEditorTab();
          const oModel = oEditor.getModel();
          const sText = oModel.getProperty("/code");
          let filename = oModel.getProperty("/filename");
