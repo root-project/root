@@ -23,5 +23,13 @@ foreach(py_source ${py_sources})
 endforeach()
 
 # create egg with cppyy info
-add_custom_target(cppyy_egg ALL COMMAND ${PYTHON_EXECUTABLE} setup.py install_egg_info -d ${py_localruntimedir}/cppyy WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-add_custom_command(TARGET cppyy_egg POST_BUILD COMMAND bash -c "rm -rf python/*.egg-info" WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+execute_process(COMMAND bash -c "${PYTHON_EXECUTABLE} -c 'import setuptools; import distutils'; echo $?" OUTPUT_VARIABLE packages_installed)
+execute_process(COMMAND bash -c "${PYTHON_EXECUTABLE} -c 'import setuptools as s; l = s.__version__.split(\".\"); l = l[0:2]; print(\".\".join(l))'" OUTPUT_VARIABLE setuptools_version)
+if(packages_installed EQUAL 0 AND setuptools_version GREATER_EQUAL 3.3)
+  add_custom_target(cppyy_egg ALL COMMAND ${PYTHON_EXECUTABLE} setup.py install_egg_info -d ${py_localruntimedir}/cppyy WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+  add_custom_command(TARGET cppyy_egg POST_BUILD COMMAND bash -c "rm -rf python/*.egg-info" WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+else()
+  # create cppyy egg in a dummy way
+  set(cppyy_egg "${CMAKE_CURRENT_BINARY_DIR}/cppyy.egg")
+  execute_process(COMMAND bash -c "touch ${cppyy_egg}; cat ${CMAKE_CURRENT_SOURCE_DIR}/python/cppyy/_version.py > ${cppyy_egg}")
+endif()

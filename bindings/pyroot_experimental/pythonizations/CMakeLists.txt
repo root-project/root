@@ -109,7 +109,14 @@ set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
 configure_file(${SETUP_PY_IN} ${SETUP_PY})
 
 # create egg with PyROOT info
-add_custom_target(ROOT_egg ALL COMMAND ${PYTHON_EXECUTABLE} setup.py install_egg_info -d ${py_localruntimedir}/ROOT WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-add_custom_command(TARGET ROOT_egg POST_BUILD COMMAND bash -c "rm -rf python/*.egg-info" WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+execute_process(COMMAND bash -c "${PYTHON_EXECUTABLE} -c 'import setuptools; import distutils'; echo $?" OUTPUT_VARIABLE packages_installed)
+if(packages_installed EQUAL 0)
+    add_custom_target(ROOT_egg ALL COMMAND ${PYTHON_EXECUTABLE} setup.py install_egg_info -d ${py_localruntimedir}/ROOT WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    add_custom_command(TARGET ROOT_egg POST_BUILD COMMAND bash -c "rm -rf python/*.egg-info" WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+else()
+    # create egg in a dummy way
+    set(ROOT_egg "${CMAKE_CURRENT_BINARY_DIR}/PyROOT.egg")
+    file(WRITE ROOT_egg "PyROOT ${ROOT_VERSION}")
+endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
