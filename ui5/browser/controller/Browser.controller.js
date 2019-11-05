@@ -257,7 +257,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @brief Handle the "Save As..." button press event */
       onSaveAs: function () {
-         const oEditor = this.getSelectedCodeEditorTab();
+         const oEditor = this.getSelectedCodeEditor();
          const oModel = oEditor.getModel();
          const sText = oModel.getProperty("/code");
          let filename = oModel.getProperty("/filename");
@@ -270,7 +270,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @brief Handle the "Save" button press event */
       onSaveFile: function () {
-         const oEditor = this.getSelectedCodeEditorTab();
+         const oEditor = this.getSelectedCodeEditor();
          const oModel = oEditor.getModel();
          const sText = oModel.getProperty("/code");
          const fullpath = oModel.getProperty("/fullpath");
@@ -281,7 +281,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       reallyRunMacro: function () {
-         const oEditor = this.getSelectedCodeEditorTab();
+         const oEditor = this.getSelectedCodeEditor();
          const oModel = oEditor.getModel();
          const fullpath = oModel.getProperty("/fullpath");
          if (fullpath === undefined)
@@ -291,7 +291,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @brief Handle the "Run" button press event */
       onRunMacro: function () {
-         const oEditor = this.getSelectedCodeEditorTab();
+         const oEditor = this.getSelectedCodeEditor();
          const oModel = oEditor.getModel();
          if (oModel.getProperty("/modified") === true) {
             MessageBox.confirm('The text has been modified! Do you want to save it?', {
@@ -310,7 +310,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             return this.reallyRunMacro();
       },
 
-      getSelectedCodeEditorTab: function (no_warning) {
+      getSelectedCodeEditor: function (no_warning) {
          let oTabItemString = this.getView().byId("myTabContainer").getSelectedItem();
 
          if (oTabItemString.indexOf("CodeEditor") !== -1) {
@@ -327,7 +327,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** @brief Extract the file name and extension
        * @desc Used to set the editor's model properties and display the file name on the tab element  */
       setFileNameType: function (filename) {
-         var oEditor = this.getSelectedCodeEditorTab();
+         var oEditor = this.getSelectedCodeEditor();
          var oModel = oEditor.getModel();
          var oTabElement = oEditor.getParent().getParent();
          var ext = "txt";
@@ -396,7 +396,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @brief Handle the "Browse..." button press event */
       onChangeFile: function (oEvent) {
-         var oEditor = this.getSelectedCodeEditorTab();
+         var oEditor = this.getSelectedCodeEditor();
          var oModel = oEditor.getModel();
          var oReader = new FileReader();
          oReader.onload = function () {
@@ -632,7 +632,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
         if (!fullpath) return;
 
         // first try to activate editor
-        let codeEditor = this.getSelectedCodeEditorTab();
+        let codeEditor = this.getSelectedCodeEditor();
         if(codeEditor !== -1) {
           var oModel = codeEditor.getModel();
 
@@ -714,7 +714,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.processInitMsg(msg);
             break;
          case "FREAD":  // file read
-            let result = this.getSelectedCodeEditorTab();
+            let result = this.getSelectedCodeEditor();
             if (result !== -1)
                result.getModel().setProperty("/code", msg);
             break;
