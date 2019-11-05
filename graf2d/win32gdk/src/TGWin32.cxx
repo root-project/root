@@ -175,7 +175,7 @@ static GdkPixmap *gFillPattern; // Fill pattern
 //
 // Text management
 //
-static char *gTextFont = "arial.ttf";      // Current font
+static const char *gTextFont = "arial.ttf";      // Current font
 
 //
 // Markers
@@ -248,7 +248,7 @@ struct KeySymbolMap_t {
    EKeySym fKeySym;
 };
 
-static char *keyCodeToString[] = {
+static const char *keyCodeToString[] = {
    "",                          /* 0x000 */
    "",                          /* 0x001, VK_LBUTTON */
    "",                          /* 0x002, VK_RBUTTON */

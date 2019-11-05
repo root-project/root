@@ -162,7 +162,7 @@ namespace {
    static struct signal_map {
       int code;
       SigHandler_t handler;
-      char *signame;
+      const char *signame;
    } signal_map[kMAXSIGNALS] = {   // the order of the signals should be identical
       -1 /*SIGBUS*/,   0, "bus error",    // to the one in SysEvtHandler.h
       SIGSEGV,  0, "segmentation violation",
@@ -406,7 +406,7 @@ namespace {
    /////////////////////////////////////////////////////////////////////////////
    /// Return the signal name associated with a signal.
 
-   static char *WinNTSigname(ESignals sig)
+   static const char *WinNTSigname(ESignals sig)
    {
       return signal_map[sig].signame;
    }
@@ -2878,10 +2878,10 @@ int TWinNTSystem::SetNonBlock(int fd)
 
 // expand the metacharacters as in the shell
 
-static char
-   *shellMeta      = "~*[]{}?$%",
-   *shellStuff     = "(){}<>\"'",
-   shellEscape     = '\\';
+static const char
+   *shellMeta  = "~*[]{}?$%",
+   *shellStuff = "(){}<>\"'",
+   shellEscape = '\\';
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Expand a pathname getting rid of special shell characaters like ~.$, etc.
@@ -5518,7 +5518,7 @@ typedef void (WINAPI *PGNSI)(LPSYSTEM_INFO);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static char *GetWindowsVersion()
+static const char *GetWindowsVersion()
 {
    OSVERSIONINFOEX osvi;
    SYSTEM_INFO si;
