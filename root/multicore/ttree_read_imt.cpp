@@ -63,6 +63,10 @@ Int_t ReadTree(TTree *tree, Int_t nentries, bool reuse)
      auto cache = tree->GetReadCache(tree->GetDirectory()->GetFile(), kTRUE);
      if (cache)
         cache->ResetCache();
+     // If the '2nd' (or later) basket is in memory, the redo of the cache
+     // will skip but when the '1st' basket is requested, the '2nd' will get
+     // evicted and later when the '2nd' is request, it wont be in the cache ...
+     tree->DropBaskets();
   }
   tree->SetCacheEntryRange(0, nentries);
   tree->AddBranchToCache("*", kTRUE);
