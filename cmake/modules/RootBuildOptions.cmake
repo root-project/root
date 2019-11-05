@@ -478,6 +478,15 @@ else()
   endif()
 endif()
 
+# set variables necessary for MultiPython
+set(python_dir "python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
+if(WIN32)
+  set(py_localruntimedir ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${python_dir})
+else()
+  set(py_localruntimedir ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${python_dir})
+endif()
+
+
 #---Add Installation Variables------------------------------------------------------------------
 include(RootInstallDirs)
 
