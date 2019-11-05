@@ -87,6 +87,8 @@ int main(int argc, char** argv) {
   const bool reuse = std::get<3>(options);
 
   TFile *file = TFile::Open(filename.c_str());
+  if (!file || file->IsZombie())
+    return 1;
   
   Int_t nbreadseq, nbreadseq2, nbreadpar, nbreadpar2;
 
