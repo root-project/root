@@ -204,18 +204,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       newCodeEditorFragment: function (ID) {
-         let fragment = new Splitter("CodeEditor" + ID + "Splitter", {
+         return new Splitter({
             orientation: "Vertical",
             contentAreas: [
-               new Toolbar("CodeEditor" + ID + "Toolbar", {
+               new Toolbar({
                   content: [
-                     new FileUploader("CodeEditor" + ID + "FileUploader", {
+                     new FileUploader({
                         change: [this.onChangeFile, this]
                      }),
                      new Button("CodeEditor" + ID + "SaveAs", {
                         text: "Save as...",
                         tooltip: "Save current file as...",
-                        press: [this.onSaveAs,, this]
+                        press: [this.onSaveAs, this]
                      }),
                      new Button("CodeEditor" + ID + "Save", {
                         text: "Save",
@@ -230,7 +230,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                         press: [this.onRunMacro, this]
                      }),
                   ],
-                  layoutData: new SplitterLayoutData("CodeEditor" + ID + "SplitterLayoutData", {
+                  layoutData: new SplitterLayoutData({
                      size: "35px",
                      resizable: false
                   })
@@ -252,7 +252,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                }))
             ]
          });
-         return fragment;
       },
 
       /** @brief Handle the "Save As..." button press event */
