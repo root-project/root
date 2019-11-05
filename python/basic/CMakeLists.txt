@@ -9,7 +9,10 @@ if(ROOT_python_FOUND)
                     MACRO PyROOT_datatypetest.py
                     COPY_TO_BUILDDIR DataTypes.C DataTypes.h
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ DataTypes.C+
-                    ENVIRONMENT EXP_PYROOT=${exp_pyroot})
+                    ENVIRONMENT CLING_STANDARD_PCH=none
+                                CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend.so
+                                ENVIRONMENT EXP_PYROOT=${exp_pyroot})
+
 
   ROOTTEST_ADD_TEST(operator
                     MACRO PyROOT_operatortests.py
