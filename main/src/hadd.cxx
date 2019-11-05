@@ -304,6 +304,8 @@ int main( int argc, char **argv )
                fileObjectsType = TFileMerger::kSkipListed;
             else if (tmp == "OnlyListed")
                fileObjectsType = TFileMerger::kOnlyListed;
+            else if (tmp == "OnlyListedDirectories")
+               fileObjectsType = TFileMerger::kOnlyListedDirectories;
             else
                std::cerr << "-objectmergetype: bad type specified. Parameter ignored.\n";
             ++a;
