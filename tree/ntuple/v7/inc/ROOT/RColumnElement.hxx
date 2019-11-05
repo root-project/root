@@ -21,6 +21,7 @@
 
 #include <TError.h>
 
+#include <cmath>
 #include <cstring> // for memcpy
 #include <cstdint>
 #include <type_traits>
@@ -232,6 +233,84 @@ public:
    static constexpr std::size_t kSize = sizeof(bool);
    static constexpr std::size_t kBitsOnStorage = 1;
    explicit RColumnElement(bool *value) : RColumnElementBase(value, kSize) {}
+   bool IsMappable() const final { return kIsMappable; }
+   std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
+
+   void Pack(void *dst, void *src, std::size_t count) const final;
+   void Unpack(void *dst, void *src, std::size_t count) const final;
+};
+
+template <>
+class RColumnElement<float, EColumnType::kReal24> : public RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = false;
+   static constexpr std::size_t kSize = sizeof(float);
+   static constexpr std::size_t kBitsOnStorage = 24;
+   explicit RColumnElement(float *value) : RColumnElementBase(value, kSize) {}
+   bool IsMappable() const final { return kIsMappable; }
+   std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
+
+   void Pack(void *dst, void *src, std::size_t count) const final;
+   void Unpack(void *dst, void *src, std::size_t count) const final;
+};
+
+template <>
+class RColumnElement<float, EColumnType::kReal16> : public RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = false;
+   static constexpr std::size_t kSize = sizeof(float);
+   static constexpr std::size_t kBitsOnStorage = 16;
+   explicit RColumnElement(float *value) : RColumnElementBase(value, kSize) {}
+   bool IsMappable() const final { return kIsMappable; }
+   std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
+
+   void Pack(void *dst, void *src, std::size_t count) const final;
+   void Unpack(void *dst, void *src, std::size_t count) const final;
+};
+
+template <>
+class RColumnElement<float, EColumnType::kReal8> : public RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = false;
+   static constexpr std::size_t kSize = sizeof(float);
+   static constexpr std::size_t kBitsOnStorage = 8;
+   explicit RColumnElement(float *value) : RColumnElementBase(value, kSize) {}
+   bool IsMappable() const final { return kIsMappable; }
+   std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
+
+   void Pack(void *dst, void *src, std::size_t count) const final;
+   void Unpack(void *dst, void *src, std::size_t count) const final;
+};
+
+template <>
+class RColumnElement<double, EColumnType::kCustomDouble> : public RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = false;
+   static constexpr std::size_t kSize = sizeof(double);
+   const std::size_t kBitsOnStorage;
+   const std::int64_t fMin;
+   const std::int64_t fMax;
+   const double fStep;
+   explicit RColumnElement(double *value) : RColumnElementBase(value, kSize), kBitsOnStorage{0}, fMin{0}, fMax{0}, fStep{0} {}
+   explicit RColumnElement(double *value, std::size_t p_nBits, std::int64_t p_min, std::int64_t p_max) : RColumnElementBase(value, kSize), kBitsOnStorage{p_nBits}, fMin{p_min}, fMax{p_max}, fStep{(p_max-p_min)/(std::pow(2, p_nBits)-4)} {}
+   bool IsMappable() const final { return kIsMappable; }
+   std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
+
+   void Pack(void *dst, void *src, std::size_t count) const final;
+   void Unpack(void *dst, void *src, std::size_t count) const final;
+};
+
+template <>
+class RColumnElement<float, EColumnType::kCustomFloat> : public RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = false;
+   static constexpr std::size_t kSize = sizeof(float);
+   const std::size_t kBitsOnStorage;
+   const std::int64_t fMin;
+   const std::int64_t fMax;
+   const double fStep;
+   explicit RColumnElement(float *value) : RColumnElementBase(value, kSize), kBitsOnStorage{0}, fMin{0}, fMax{0}, fStep{0} {}
+   explicit RColumnElement(float *value, std::size_t p_nBits, std::int64_t p_min, std::int64_t p_max) : RColumnElementBase(value, kSize), kBitsOnStorage{p_nBits}, fMin{p_min}, fMax{p_max}, fStep{(p_max-p_min)/(std::pow(2, p_nBits)-4)} {}
    bool IsMappable() const final { return kIsMappable; }
    std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
 

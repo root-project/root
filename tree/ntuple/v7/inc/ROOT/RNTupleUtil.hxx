@@ -138,6 +138,30 @@ public:
    NTupleFlags_t GetFlags() const { return fFlags; }
 };
 
+struct RFloat8 {
+   using FloatingPointType = float;
+   FloatingPointType fValue;
+   operator FloatingPointType() const { return fValue; } // casting to float
+   RFloat8(float x = 0.0f) { fValue = x; } // casting from float
+};
+using float8_t = RFloat8;
+
+struct RFloat16 {
+   using FloatingPointType = float;
+   FloatingPointType fValue;
+   operator FloatingPointType() const { return fValue; } // casting to float
+   RFloat16(float x = 0.0f) { fValue = x; } // casting from float
+};
+using float16_t = RFloat16;
+
+struct RFloat24 {
+   using FloatingPointType = float;
+   FloatingPointType fValue;
+   operator FloatingPointType() const { return fValue; } // casting to float
+   RFloat24(float x = 0.0f) { fValue = x; } // casting from float
+};
+using float24_t = RFloat24;
+
 } // namespace Experimental
 } // namespace ROOT
 

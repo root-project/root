@@ -33,6 +33,7 @@ namespace ROOT {
 namespace Experimental {
 
 class REntry;
+class RFieldEncoder;
 class RNTupleModel;
 
 namespace Detail {
@@ -161,6 +162,11 @@ public:
    RNTupleView<T> GetView(std::string_view fieldName) {
       auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName);
       return RNTupleView<T>(fieldId, fSource.get());
+   }
+   template<typename T, std::size_t nBits, std::int64_t min, std::int64_t max>
+   RNTupleView<T, RCustomSizedFloat> GetView(std::string_view fieldName) {
+      auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName);
+      return RNTupleView<T, RCustomSizedFloat>(fieldId, fSource.get(), nBits, min, max);
    }
    RNTupleViewCollection GetViewCollection(std::string_view fieldName) {
       auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName);
