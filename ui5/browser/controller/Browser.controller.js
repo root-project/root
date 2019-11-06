@@ -17,7 +17,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/ui/unified/FileUploader',
                'sap/m/Button',
                'sap/ui/layout/SplitterLayoutData',
-               'sap/ui/codeeditor/CodeEditor'
+               'sap/ui/codeeditor/CodeEditor',
+               'sap/m/HBox',
+               'sap/m/Image'
 ],function(Controller,
            Link,
            Fragment,
@@ -37,7 +39,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
            FileUploader,
            Button,
            SplitterLayoutData,
-           CodeEditor) {
+           CodeEditor,
+           HBox,
+           Image) {
 
 
    "use strict";
@@ -411,13 +415,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* ============================================ */
 
       newImageViewerFragment: function (ID) {
-         return new sap.m.HBox({
+         return new HBox({
             alignContent: "Center",
             alignItems: "Center",
             justifyContent: "Center",
             height: "100%",
             width: "100%",
-            items: new sap.m.Image(ID + "Image", {
+            items: new Image(ID + "Image", {
                src: "",
                densityAware: false
             })
@@ -436,7 +440,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             additionalText: "untitled",
             content: this.newImageViewerFragment(ID)
          });
-ƒ
+
          oTabContainer.addItem(tabContainerItem);
          oTabContainer.setSelectedItem(tabContainerItem);
       },
