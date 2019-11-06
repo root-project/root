@@ -172,7 +172,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* =============== Generic factory functions =============== */
       /* ========================================================= */
 
-      getElementFromCurrentTab: function(element) {
+      getElementFromCurrentTab: function (element) {
          const currentTabID = this.getView().byId("myTabContainer").getSelectedItem();
          return sap.ui.getCore().byId(currentTabID + element);
       },
@@ -188,17 +188,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       newCodeEditor: async function () {
          const oTabContainer = this.getView().byId("myTabContainer");
 
-         const oTabContainerItem = new TabContainerItem("CodeEditor" + this.globalId, {
-            icon: "sap-icon://write-new-document",
-            name: "Code Editor",
-            additionalText: "untitled"
-         });
-
-         const oCodeEditorFragment = this.newCodeEditorFragment(this.globalId);
-         let ID = this.globalId;
+         const ID = "CodeEditor" + this.globalId;
          this.globalId++;
 
-         oTabContainerItem.addContent(oCodeEditorFragment);
+         const oTabContainerItem = new TabContainerItem(ID, {
+            icon: "sap-icon://write-new-document",
+            name: "Code Editor",
+            additionalText: "untitled",
+            content: this.newCodeEditorFragment(ID)
+         });
+
          oTabContainer.addItem(oTabContainerItem);
          oTabContainer.setSelectedItem(oTabContainerItem);
       },
@@ -212,17 +211,17 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                      new FileUploader({
                         change: [this.onChangeFile, this]
                      }),
-                     new Button("CodeEditor" + ID + "SaveAs", {
+                     new Button(ID + "SaveAs", {
                         text: "Save as...",
                         tooltip: "Save current file as...",
                         press: [this.onSaveAs, this]
                      }),
-                     new Button("CodeEditor" + ID + "Save", {
+                     new Button(ID + "Save", {
                         text: "Save",
                         tooltip: "Save current file",
                         press: [this.onSaveFile, this]
                      }),
-                     new Button("CodeEditor" + ID + "Run", {
+                     new Button(ID + "Run", {
                         text: "Run",
                         tooltip: "Run Current Macro",
                         icon: "sap-icon://play",
@@ -235,7 +234,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                      resizable: false
                   })
                }),
-               new CodeEditor("CodeEditor" + ID + "Editor", {
+               new CodeEditor(ID + "Editor", {
                   height: "100%",
                   colorTheme: "default",
                   type: "c_cpp",
@@ -313,10 +312,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          let oTabItemString = this.getView().byId("myTabContainer").getSelectedItem();
 
          if (oTabItemString.indexOf("CodeEditor") !== -1) {
-            let oCodeEditor = sap.ui.getCore().byId(oTabItemString + "Editor");
-            if (oCodeEditor) {
-               return oCodeEditor;
-            }
+            return sap.ui.getCore().byId(oTabItemString + "Editor");
          } else {
             if (!no_warning) MessageToast.show("Sorry, you need to select a code editor tab", {duration: 1500});
             return -1;
@@ -330,7 +326,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          var oModel = oEditor.getModel();
          var oTabElement = oEditor.getParent().getParent();
          var ext = "txt";
-         let runButton = this.getElementFromCurrentTab( "Run");
+         let runButton = this.getElementFromCurrentTab("Run");
          runButton.setEnabled(false);
          if (filename.lastIndexOf('.') > 0)
             ext = filename.substr(filename.lastIndexOf('.') + 1);
@@ -409,6 +405,58 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* =========================================== */
       /* =============== Code Editor =============== */
       /* =========================================== */
+
+      /* ============================================ */
+      /* =============== Image viewer =============== */
+      /* ============================================ */
+
+      newImageViewerFragment: function (ID) {
+         return new sap.m.HBox({
+            alignContent: "Center",
+            alignItems: "Center",
+            justifyContent: "Center",
+            height: "100%",
+            width: "100%",
+            items: new sap.m.Image(ID + "Image", {
+               src: "",
+               densityAware: false
+            })
+         })
+      },
+
+      newImageViewer: async function() {
+         let oTabContainer = this.getView().byId("myTabContainer");
+
+         const ID = "ImageViewer" + this.globalId;
+         this.globalId++;
+
+         let tabContainerItem = new TabContainerItem(ID, {
+            icon: "sap-icon://background",
+            name:"Image Viewer",
+            additionalText: "untitled",
+            content: this.newImageViewerFragment(ID)
+         });
+ƒ
+         oTabContainer.addItem(tabContainerItem);
+         oTabContainer.setSelectedItem(tabContainerItem);
+      },
+
+      getSelectedImageViewer: function(no_warning) {
+         let oTabItemString = this.getView().byId("myTabContainer").getSelectedItem();
+
+
+         if (oTabItemString.indexOf("ImageViewer") !== -1) {
+            return sap.ui.getCore().byId(oTabItemString + "Image");
+         }
+
+         if (!no_warning) MessageToast.show("Sorry, you need to select an image viewer tab", {duration: 1500});
+         return -1;
+      },
+
+      /* ============================================ */
+      /* =============== Image viewer =============== */
+      /* ============================================ */
+
 
      _getSettingsMenu: async function () {
        if (!this._oSettingsMenu) {
@@ -646,7 +694,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
         let viewerTab = this.getSelectedImageViewer(true);
         if (viewerTab !== -1) {
            // FIXME: wrong place, should be configured when server replied
-           viewerTab.setAdditionalText(fullpath);
+           viewerTab.getParent().getParent().setAdditionalText(fullpath);
            return this.sendDblClick(fullpath, "$$$image$$$");
         }
 
@@ -686,19 +734,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.isConnected = false;
       },
 
-     getSelectedImageViewer: function(no_warning) {
-       let oTabItemString = this.getView().byId("myTabContainer").getSelectedItem();
-
-       let oTabItem = sap.ui.getCore().byId(oTabItemString);
-
-       if (oTabItem.getName() === "Image Viewer") {
-         return oTabItem;
-       }
-
-       if (!no_warning) MessageToast.show("Sorry, you need to select an image viewer tab", {duration: 1500});
-       return -1;
-     },
-
      /** Entry point for all data from server */
      OnWebsocketMsg: function(handle, msg, offset) {
 
@@ -718,12 +753,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                result.getModel().setProperty("/code", msg);
             break;
          case "FIMG":  // image file read
-            let imageTab = this.getSelectedImageViewer(true);
-            if(imageTab !== -1) {
-               // FIXME: why not use imageTab??
-               let oContent = sap.ui.getCore().byId(this.getView().byId("myTabContainer").getSelectedItem());
-               let oImage = oContent.getContent()[0].getItems()[0];
-               oImage.setSrc(msg);
+            const image = this.getSelectedImageViewer(true);
+            if(image !== -1) {
+               image.setSrc(msg);
             }
             break;
          case "CANVS":  // canvas created by server, need to establish connection
@@ -859,24 +891,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
      newRootXCanvas: function(oEvent, msg) {
        if (this.isConnected)
           this.websocket.Send(msg);
-     },
-
-     newImageViewer: async function() {
-       let oTabContainer = this.getView().byId("myTabContainer");
-
-       let tabContainerItem = new TabContainerItem({
-         icon: "sap-icon://background",
-         name:"Image Viewer",
-         additionalText: "untitled"
-       });
-
-       await Fragment.load({name: "rootui5.browser.view.imageviewer"}).then(function (oFragment) {
-         tabContainerItem.removeAllContent();
-         tabContainerItem.addContent(oFragment);
-       });
-
-       oTabContainer.addItem(tabContainerItem);
-       oTabContainer.setSelectedItem(tabContainerItem);
      },
 
       /** process initial message, now it is list of existing canvases */
