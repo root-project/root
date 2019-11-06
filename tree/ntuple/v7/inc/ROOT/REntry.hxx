@@ -70,7 +70,8 @@ public:
       return ptr;
    }
    
-   /// The same as AddValue, but creates an RField with an additional RFieldEncoder parameter.
+   /// The same as AddValue, but creates an RField with an additional RFieldEncoder parameter for custom-
+   /// sized floating-point types.
    template<typename T, typename... ArgsT>
    std::shared_ptr<T> AddValueEncoder(RField<T, RCustomSizedFloat>* field, ArgsT&&... args) {
       auto ptr = std::make_shared<T>(std::forward<ArgsT>(args)...);

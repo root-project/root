@@ -705,7 +705,7 @@ public:
    size_t GetValueSize() const final { return sizeof(float); }
 };
 
-/// Dummy class to produce different template specialization for custom-bit float and double.
+/// Dummy class to produce a different template specialization for custom-bit float and double.
 class RCustomSizedFloat{ }; // Members can be added later if required.
 
 /// Special version of RField<float> where the number of bits of a double-value in storage is defined by the user.
@@ -713,12 +713,18 @@ template<>
 class RField<float, RCustomSizedFloat> : public Detail::RFieldBase {
 private:
    std::size_t fNBits;
-   std::int64_t fMin; // integers were used to express the minimum and maximum instead of floating point numbers, because these fields are constructed by MakeField<double, nbits, min, max>(...), where it is not possible to write a floating point value as a template parameter.
+   // integers were used to express the minimum and maximum instead of floating point numbers, because these fields
+   // are constructed by MakeField<double, nbits, min, max>(...), where it is not possible to write a floating point
+   // value as a template parameter.
+   std::int64_t fMin;
    std::int64_t fMax;
 public:
-   std::string TypeName() { return "float(nBits(" + std::to_string(fNBits) + ")/min(" + std::to_string(fMin) + ")/max(" + std::to_string(fMax) + ")"; }
+   std::string TypeName() { return "float(nBits(" + std::to_string(fNBits) + ")/min(" + std::to_string(fMin) +
+      ")/max(" + std::to_string(fMax) + ")"; }
+   // TypeName relies on fNBits, fMin and fMax, so it has to be set after initializing those members.
    explicit RField(std::string_view name, std::size_t nBits, std::int64_t min, std::int64_t max)
-   : Detail::RFieldBase(name, "" /* fType */, ENTupleStructure::kLeaf, true /* isSimple */), fNBits{nBits}, fMin{min}, fMax{max} { SetType(TypeName()); } // TypeName relies on fNBits, etc. so it has to be set after initalizing fNBits, etc.
+   : Detail::RFieldBase(name, "" /* fType */, ENTupleStructure::kLeaf, true /* isSimple */), fNBits{nBits},
+      fMin{min}, fMax{max} { SetType(TypeName()); }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
@@ -749,7 +755,8 @@ public:
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final { return GenerateValue(where, 0.0); }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */,
-         Detail::RColumnElement<float, EColumnType::kCustomFloat>(static_cast<float*>(where), fNBits, fMin, fMax), this, where);
+         Detail::RColumnElement<float, EColumnType::kCustomFloat>(static_cast<float*>(where), fNBits, fMin, fMax),
+                                 this, where);
    }
    size_t GetValueSize() const final { return sizeof(float); }
 };
@@ -795,12 +802,18 @@ template<>
 class RField<double, RCustomSizedFloat> : public Detail::RFieldBase {
 private:
    std::size_t fNBits;
-   std::int64_t fMin; // integers were used to express the minimum and maximum instead of floating point numbers, because these fields are constructed by MakeField<double, nbits, min, max>(...), where it is not possible to write a floating point value as a template parameter.
+   // integers were used to express the minimum and maximum instead of floating point numbers, because these fields
+   // are constructed by MakeField<double, nbits, min, max>(...), where it is not possible to write a floating point
+   // value as a template parameter.
+   std::int64_t fMin;
    std::int64_t fMax;
 public:
-   std::string TypeName() { return "double(nBits(" + std::to_string(fNBits) + ")/min(" + std::to_string(fMin) + ")/max(" + std::to_string(fMax) + ")"; }
+   std::string TypeName() { return "double(nBits(" + std::to_string(fNBits) + ")/min(" + std::to_string(fMin) +
+      ")/max(" + std::to_string(fMax) + ")"; }
+   // TypeName relies on fNBits, fMin and fMax, so it has to be set after initializing those members.
    explicit RField(std::string_view name, std::size_t nBits, std::int64_t min, std::int64_t max)
-   : Detail::RFieldBase(name, "" /* TypeName() */, ENTupleStructure::kLeaf, true /* isSimple */), fNBits{nBits}, fMin{min}, fMax{max} { SetType(TypeName()); } // TypeName depends on fNBits, fMin and fMax, so these members should be initialized first.
+   : Detail::RFieldBase(name, "" /* TypeName() */, ENTupleStructure::kLeaf, true /* isSimple */), fNBits{nBits}, fMin{min},
+   fMax{max} { SetType(TypeName()); }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
@@ -1060,7 +1073,11 @@ private:
    std::int64_t fMax;
 public:
    explicit RField(std::string_view name, std::size_t nBits, std::int64_t min, std::int64_t max)
-   : RFieldArray(name, std::make_unique<RField<ItemT, RCustomSizedFloat>>(RField<ItemT>::TypeName() + "(nBits(" + std::to_string(nBits) + ")/min(" + std::to_string(min) + ")/max(" + std::to_string(max) + ")", nBits, min, max), N), fNBits{nBits}, fMin{min}, fMax{max}
+   : RFieldArray(name, std::make_unique<RField<ItemT, RCustomSizedFloat>>(RField<ItemT>::TypeName() + "(nBits(" +
+                                                                          std::to_string(nBits) + ")/min(" +
+                                                                          std::to_string(min) + ")/max(" +
+                                                                          std::to_string(max) + ")", nBits, min, max), N)
+   , fNBits{nBits}, fMin{min}, fMax{max}
    {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
@@ -1197,7 +1214,12 @@ private:
    std::int64_t fMax;
 public:
    explicit RField(std::string_view name, std::size_t nBits, std::int64_t min, std::int64_t max)
-      : RFieldVector(name, std::make_unique<RField<ItemT, RCustomSizedFloat>>(RField<ItemT>::TypeName() + "(nBits(" + std::to_string(nBits) + ")/min(" + std::to_string(min) + ")/max(" + std::to_string(max) + ")", nBits, min, max)), fNBits{nBits}, fMin{min}, fMax{max}
+      : RFieldVector(name, std::make_unique<RField<ItemT, RCustomSizedFloat>>(RField<ItemT>::TypeName() +
+                                                                              "(nBits(" + std::to_string(nBits) +
+                                                                              ")/min(" + std::to_string(min) +
+                                                                              ")/max(" + std::to_string(max) +
+                                                                              ")", nBits, min, max)),
+   fNBits{nBits}, fMin{min}, fMax{max}
    {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;

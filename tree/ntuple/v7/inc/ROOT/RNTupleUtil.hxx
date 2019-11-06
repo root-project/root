@@ -138,6 +138,7 @@ public:
    NTupleFlags_t GetFlags() const { return fFlags; }
 };
 
+/// Used as a template parameter in RField for 8bit-float.
 struct RFloat8 {
    using FloatingPointType = float;
    FloatingPointType fValue;
@@ -146,6 +147,7 @@ struct RFloat8 {
 };
 using float8_t = RFloat8;
 
+/// Used as a template parameter in RField for 16-bit float.
 struct RFloat16 {
    using FloatingPointType = float;
    FloatingPointType fValue;
@@ -154,6 +156,7 @@ struct RFloat16 {
 };
 using float16_t = RFloat16;
 
+/// Used as a template parameter in RField for 24-bit float.
 struct RFloat24 {
    using FloatingPointType = float;
    FloatingPointType fValue;

@@ -189,6 +189,7 @@ public:
    float operator()(const RClusterIndex &clusterIndex) { return *fField.Map(clusterIndex); }
 };
 
+/// Used when reading from RField<float, RCustomSizedFloat>
 template<>
 class RNTupleView<float, RCustomSizedFloat> {
    friend class RNTupleReader;
@@ -196,7 +197,8 @@ class RNTupleView<float, RCustomSizedFloat> {
 
 protected:
    RField<float, RCustomSizedFloat> fField;
-   RNTupleView(DescriptorId_t fieldId, Detail::RPageSource* pageSource, std::size_t nBits, std::int64_t min, std::int64_t max)
+   RNTupleView(DescriptorId_t fieldId, Detail::RPageSource* pageSource, std::size_t nBits, std::int64_t min,
+               std::int64_t max)
       : fField(pageSource->GetDescriptor().GetFieldDescriptor(fieldId).GetFieldName(), nBits, min, max)
    {
       Detail::RFieldFuse::Connect(fieldId, *pageSource, fField);
@@ -237,6 +239,7 @@ public:
    double operator()(const RClusterIndex &clusterIndex) { return *fField.Map(clusterIndex); }
 };
 
+/// Used when reading from RField<double, RCustomSizedFloat>
 template<>
 class RNTupleView<double, RCustomSizedFloat> {
    friend class RNTupleReader;
@@ -244,7 +247,8 @@ class RNTupleView<double, RCustomSizedFloat> {
 
 protected:
    RField<double, RCustomSizedFloat> fField;
-   RNTupleView(DescriptorId_t fieldId, Detail::RPageSource* pageSource, std::size_t nBits, std::int64_t min, std::int64_t max)
+   RNTupleView(DescriptorId_t fieldId, Detail::RPageSource* pageSource, std::size_t nBits, std::int64_t min,
+               std::int64_t max)
       : fField(pageSource->GetDescriptor().GetFieldDescriptor(fieldId).GetFieldName(), nBits, min, max)
    {
       Detail::RFieldFuse::Connect(fieldId, *pageSource, fField);
@@ -309,6 +313,7 @@ public:
    ClusterSize_t operator()(const RClusterIndex &clusterIndex) { return *fField.Map(clusterIndex); }
 };
 
+/// Used when reading from RField<std::vector<T>, RCustomSizedFloat> or RField<std::array<T, N>, RCustomSizedFloat>
 template <typename T>
 class RNTupleView<T, RCustomSizedFloat> {
    friend class RNTupleReader;
@@ -319,7 +324,8 @@ protected:
    Detail::RFieldValue fValue;
 
    RNTupleView(DescriptorId_t fieldId, Detail::RPageSource* pageSource, std::size_t nBits, std::int64_t min, std::int64_t max)
-      : fField(pageSource->GetDescriptor().GetFieldDescriptor(fieldId).GetFieldName(), nBits, min, max), fValue(fField.GenerateValue())
+      : fField(pageSource->GetDescriptor().GetFieldDescriptor(fieldId).GetFieldName(), nBits, min, max),
+      fValue(fField.GenerateValue())
    {
       Detail::RFieldFuse::Connect(fieldId, *pageSource, fField);
       std::unordered_map<const Detail::RFieldBase *, DescriptorId_t> field2Id;

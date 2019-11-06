@@ -79,6 +79,34 @@ void ROOT::Experimental::Detail::RColumnElement<bool, ROOT::Experimental::EColum
    }
 }
 
+/**
+ * How Pack()/Unpack() works for kReal24, kReal16 and kReal8:
+ *
+ * Notice: The idea is to replace this code eventually with a high performance library (e.g. MPFR). So it is not really
+ * worth understanding and modifying this code. However it should be enough to serve as a temporary solution.
+ *
+ * In a regular float and double value, the number is stored by a exponent bit, some exponent bits and some mantissa
+ * bits. When packing the original structure is retained, but the number of bits used for the mantissa and exponent are
+ * reduced. Example:
+ *
+ * Value: 10.7
+ * float:
+ *    Sign: 0 (1 bit)
+ *    Exponent: 1000'0010 (8 bits)
+ *    Mantissa: 010'1011'0011'0011'0011'0011 (23 bits)
+ * kReal16:
+ *    Sign: 0 (1 bit)
+ *    Exponent: 1'0010 (5 bits)
+ *    Mantissa: 01'0101'1001 (10 bits)
+ *
+ * When converting, the sign-bit is preserved, the new exponent bits are made up of the most left single exponent bit
+ * and the N-1 (in the example N=5) exponent bits on the most left side. The new Mantissa is the old Mantissa shifted to
+ * the right by the number of Mantissa bits lost (in the example 23-10=13 bits lost). The special cases +inf, -inf and
+ * NaN are stored in the same way as in a regular float defined by IEEE 754. When Unpack() is called, the lost bits are
+ * filled with 0 for the Mantissa. For the exponent if the first bit is a 0, then the missing bits are filled with 1. If
+ * the first bit is a 1, the missing bits are filled with 0.
+ */
+
 // Way to pack: 1 sign bit, 7 exponent bits, 16 mantissa bits. (same as in Radeon R300 and R420)
 void ROOT::Experimental::Detail::RColumnElement<float, ROOT::Experimental::EColumnType::kReal24>::Pack(
    void *dst, void *src, std::size_t count) const
@@ -303,6 +331,55 @@ void ROOT::Experimental::Detail::RColumnElement<float, ROOT::Experimental::EColu
    }
 }
 
+/**
+ *
+ * How Pack()/Unpack() works for kCustomDouble/kCustomFloat:
+ *
+ * Notice: The idea is to replace this code eventually with a high performance library (e.g. MPFR). So it is not really
+ * worth understanding and modifying this code. However it should be enough to serve as a temporary solution.
+ *
+ * In kCustomDouble/kCustomFloat the floating-point value (of type double or float) on disk is stored in an unusual way
+ * on storage. First the interval between fMin and fMax is devided into std::pow(2, kBitsOnStorage)-4 bins, its length
+ * is given by fStep. The number is then stored as totalNumSteps, where On-Disk-Value = fMin + fStep*(totalNumSteps-3).
+ * The following values of totalNumSteps have a special meaning:
+ * -> totalNumSteps = 0: +infinity or overflow (the number is bigger than fMax)
+ * -> totalNumSteps = 1: -infinity or underflow (the number is smaller than fMin)
+ * -> totalNumSteps = 2: NaN (Not A Number)
+ */
+// clang-format off
+/* Example: kBitsOnStorage = 5, fMin = 1, fMax = 2, numberToStore: 1.4
+ *    fStep = (fMax-fMin) / (std::pow(2, 5)-4) = (2-1) / (32-4) = 1/28
+ *    totalNumSteps = ((numberToStore - fMin)/fStep) + 3 = ((1.4 - 1)/(1/28)) + 3 = 0.4*28 + 3 = 11.2 + 3 = 14.2 -> 14
+ *                    (round to closest int)
+ *    Stored as: 0b 0'1110 = 14 -> 5bits
+ *
+ * Convert back: On-Disk-Value = fMin+fStep*(totalNumSteps-3) = 1+(1/28)*(14-3) = 1+(11/28) = 1.3929
+ *
+ * How the calculated totalNumSteps are packed in storage:
+ * It's complicated to explain this by words, so here are a few examples:
+ *
+ * 1.) The numbers (4 bits):
+ *    a.) 1010
+ *    b.) 0010                      1010'0010
+ *    c.) 1101   are packed as->    1101'1010
+ *    d.) 1010
+ *    The numbers are always packed into units of unsigned char (8 bits). The first value is located left, the later
+ *    values are located right.
+ * 2.) The numbers (5 bits):
+ *    a.) 10101                     10101'101
+ *    b.) 00101   are packed as->   00'11001'1
+ *    c.) 11001                     0001
+ *    d.) 00011
+ *    When there is limited space, the most right located bits are stored in the remaining space, the remaining bits
+ *    are stored in at the next available location. The reason for doing this is it allow the usage of bit shifting,
+ *    which simplifies the code and makes packing/unpacking more efficient.
+ * 3.) The numbers (10 bits):
+ *    a.) 10'1011'0101                    10110101
+ *    b.) 00'0101'0111  are packed as->   10'010111
+ *    c.) 11'0101'1111                    0001'1111
+ *                                        110101
+ */
+// clang-format on
 void ROOT::Experimental::Detail::RColumnElement<double, ROOT::Experimental::EColumnType::kCustomDouble>::Pack(
    void *dst, void *src, std::size_t count) const
 {
@@ -345,7 +422,7 @@ void ROOT::Experimental::Detail::RColumnElement<double, ROOT::Experimental::ECol
             short mask = (1 << nBitsToFill) - 1;
             unsigned char ToAdd{static_cast<unsigned char>(totalNumSteps & mask)};
             ToAdd <<= (8 - bitsFilledInCurrentCharArrayUpToNow - nBitsToFill);
-            charArray[index] += ToAdd; //>>= nBitsToFill);
+            charArray[index] += ToAdd;
             totalNumSteps >>= nBitsToFill;
             bitsFilledInCurrentCharArrayUpToNow += nBitsToFill;
             R__ASSERT(bitsFilledInCurrentCharArrayUpToNow <= 8);
@@ -429,7 +506,7 @@ void ROOT::Experimental::Detail::RColumnElement<double, ROOT::Experimental::ECol
             unfilledNumBitsOfCurrentValue -= 8;
             ++index;
          }
-         // Phase 3: Only empty what you need.
+         // Phase 3: Only empty the needed part of char.
          if (unfilledNumBitsOfCurrentValue != 0) {
             std::size_t toFill = charArray[index] >> (8 - unfilledNumBitsOfCurrentValue);
             totalNumSteps += toFill * ((std::size_t)1 << (kBitsOnStorage - unfilledNumBitsOfCurrentValue));
@@ -491,7 +568,7 @@ void ROOT::Experimental::Detail::RColumnElement<float, ROOT::Experimental::EColu
             short mask = (1 << nBitsToFill) - 1;
             unsigned char ToAdd{static_cast<unsigned char>(totalNumSteps & mask)};
             ToAdd <<= (8 - bitsFilledInCurrentCharArrayUpToNow - nBitsToFill);
-            charArray[index] += ToAdd; //>>= nBitsToFill);
+            charArray[index] += ToAdd;
             totalNumSteps >>= nBitsToFill;
             bitsFilledInCurrentCharArrayUpToNow += nBitsToFill;
             R__ASSERT(bitsFilledInCurrentCharArrayUpToNow <= 8);
@@ -576,7 +653,7 @@ void ROOT::Experimental::Detail::RColumnElement<float, ROOT::Experimental::EColu
             unfilledNumBitsOfCurrentValue -= 8;
             ++index;
          }
-         // Phase 3: Only empty what you need.
+         // Phase 3: Only empty the needed part of char.
          if (unfilledNumBitsOfCurrentValue != 0) {
             std::size_t toFill = charArray[index] >> (8 - unfilledNumBitsOfCurrentValue);
             totalNumSteps += toFill * ((std::size_t)1 << (kBitsOnStorage - unfilledNumBitsOfCurrentValue));
