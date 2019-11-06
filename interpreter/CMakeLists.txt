@@ -86,6 +86,10 @@ else()
   set(ROOT_CLING_TARGET "all")
 endif()
 
+if(NOT "${ROOT_CLING_TARGET}" STREQUAL "all")
+  string(APPEND ROOT_CLING_TARGET ";NVPTX")
+endif()
+
 if(MSVC)
   # replace dashes in the -EH* and -GR* flags with slashes (/EH* /GR*)
   string(REPLACE " -EH" " /EH" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
