@@ -428,7 +428,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          })
       },
 
-      newImageViewer: async function() {
+      newImageViewer: async function () {
          let oTabContainer = this.getView().byId("myTabContainer");
 
          const ID = "ImageViewer" + this.globalId;
@@ -436,7 +436,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          let tabContainerItem = new TabContainerItem(ID, {
             icon: "sap-icon://background",
-            name:"Image Viewer",
+            name: "Image Viewer",
             additionalText: "untitled",
             content: this.newImageViewerFragment(ID)
          });
@@ -445,7 +445,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          oTabContainer.setSelectedItem(tabContainerItem);
       },
 
-      getSelectedImageViewer: function(no_warning) {
+      getSelectedImageViewer: function (no_warning) {
          let oTabItemString = this.getView().byId("myTabContainer").getSelectedItem();
 
 
@@ -461,105 +461,113 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* =============== Image viewer =============== */
       /* ============================================ */
 
+      /* ============================================= */
+      /* =============== Settings menu =============== */
+      /* ============================================= */
 
-     _getSettingsMenu: async function () {
-       if (!this._oSettingsMenu) {
-         let myThis = this;
-         await Fragment.load({name: "rootui5.browser.view.settingsmenu"}).then(function (oSettingsMenu) {
-           let oModel = new JSONModel({
-             "TH1": [
-               { "name": "hist" },
-               { "name": "P" },
-               { "name": "P0" },
-               { "name": "E" },
-               { "name": "E1" },
-               { "name": "E2" },
-               { "name": "E3" },
-               { "name": "E4" },
-               { "name": "E1X0" },
-               { "name": "L" },
-               { "name": "LF2" },
-               { "name": "B" },
-               { "name": "B1" },
-               { "name": "A" },
-               { "name": "TEXT" },
-               { "name": "LEGO" },
-               { "name": "same" }
-             ],
-             "TH2": [
-               { "name": "COL" },
-               { "name": "COLZ" },
-               { "name": "COL0"},
-               { "name": "COL1" },
-               { "name": "COL0Z" },
-               { "name": "COL1Z" },
-               { "name": "COLA" },
-               { "name": "BOX" },
-               { "name": "BOX1" },
-               { "name": "PROJ" },
-               { "name": "PROJX1" },
-               { "name": "PROJX2" },
-               { "name": "PROJX3" },
-               { "name": "PROJY1" },
-               { "name": "PROJY2" },
-               { "name": "PROJY3" },
-               { "name": "SCAT" },
-               { "name": "TEXT" },
-               { "name": "TEXTE" },
-               { "name": "TEXTE0" },
-               { "name": "CONT" },
-               { "name": "CONT1" },
-               { "name": "CONT2" },
-               { "name": "CONT3" },
-               { "name": "CONT4" },
-               { "name": "ARR" },
-               { "name": "SURF" },
-               { "name": "SURF1" },
-               { "name": "SURF2" },
-               { "name": "SURF4" },
-               { "name": "SURF6" },
-               { "name": "E" },
-               { "name": "A" },
-               { "name": "LEGO" },
-               { "name": "LEGO0" },
-               { "name": "LEGO1" },
-               { "name": "LEGO2" },
-               { "name": "LEGO3" },
-               { "name": "LEGO4" },
-               { "name": "same" }
-             ],
-             "TProfile": [
-               { "name": "E0" },
-               { "name": "E1" },
-               { "name": "E2" },
-               { "name": "p" },
-               { "name": "AH" },
-               { "name": "hist" }
-             ]
-           });
-           oSettingsMenu.setModel(oModel);
-           oSettingsMenu.attachConfirm(myThis.handleSettingsConfirm);
-           myThis.getView().addDependent(oSettingsMenu);
+      _getSettingsMenu: async function () {
+         if (!this._oSettingsMenu) {
+            let fragment;
+            await Fragment.load({
+               name: "rootui5.browser.view.settingsmenu",
+               controller: this
+            }).then(function (oSettingsMenu) {
+               fragment = oSettingsMenu;
+            });
+            if (fragment) {
+               let oModel = new JSONModel({
+                  "TH1": [
+                     {"name": "hist"},
+                     {"name": "P"},
+                     {"name": "P0"},
+                     {"name": "E"},
+                     {"name": "E1"},
+                     {"name": "E2"},
+                     {"name": "E3"},
+                     {"name": "E4"},
+                     {"name": "E1X0"},
+                     {"name": "L"},
+                     {"name": "LF2"},
+                     {"name": "B"},
+                     {"name": "B1"},
+                     {"name": "A"},
+                     {"name": "TEXT"},
+                     {"name": "LEGO"},
+                     {"name": "same"}
+                  ],
+                  "TH2": [
+                     {"name": "COL"},
+                     {"name": "COLZ"},
+                     {"name": "COL0"},
+                     {"name": "COL1"},
+                     {"name": "COL0Z"},
+                     {"name": "COL1Z"},
+                     {"name": "COLA"},
+                     {"name": "BOX"},
+                     {"name": "BOX1"},
+                     {"name": "PROJ"},
+                     {"name": "PROJX1"},
+                     {"name": "PROJX2"},
+                     {"name": "PROJX3"},
+                     {"name": "PROJY1"},
+                     {"name": "PROJY2"},
+                     {"name": "PROJY3"},
+                     {"name": "SCAT"},
+                     {"name": "TEXT"},
+                     {"name": "TEXTE"},
+                     {"name": "TEXTE0"},
+                     {"name": "CONT"},
+                     {"name": "CONT1"},
+                     {"name": "CONT2"},
+                     {"name": "CONT3"},
+                     {"name": "CONT4"},
+                     {"name": "ARR"},
+                     {"name": "SURF"},
+                     {"name": "SURF1"},
+                     {"name": "SURF2"},
+                     {"name": "SURF4"},
+                     {"name": "SURF6"},
+                     {"name": "E"},
+                     {"name": "A"},
+                     {"name": "LEGO"},
+                     {"name": "LEGO0"},
+                     {"name": "LEGO1"},
+                     {"name": "LEGO2"},
+                     {"name": "LEGO3"},
+                     {"name": "LEGO4"},
+                     {"name": "same"}
+                  ],
+                  "TProfile": [
+                     {"name": "E0"},
+                     {"name": "E1"},
+                     {"name": "E2"},
+                     {"name": "p"},
+                     {"name": "AH"},
+                     {"name": "hist"}
+                  ]
+               });
+               fragment.setModel(oModel);
+               this.getView().addDependent(fragment);
+               this._oSettingsMenu = fragment;
+            }
+         }
+         return this._oSettingsMenu;
+      },
 
-           myThis._oSettingsMenu = oSettingsMenu;
-         });
-         sap.ui.getCore().byId("do-TH1").attachChange(this, this.handleSettingsChange);
-         sap.ui.getCore().byId("do-TH2").attachChange(this, this.handleSettingsChange);
-         sap.ui.getCore().byId("do-TProfile").attachChange(this, this.handleSettingsChange);
-       }
-       return this._oSettingsMenu;
-     },
+      onSettingPress: async function () {
+         await this._getSettingsMenu();
+         this._oSettingsMenu.open();
+      },
 
-     onSettingPress: async function() {
-        await this._getSettingsMenu();
-        this._oSettingsMenu.open();
-     },
+      handleSettingsChange: function (oEvent) {
+         console.log("chnage");
+         let graphType = oEvent.getSource().sId.split("-")[1];
+         this.drawingOptions[graphType] = oEvent.getSource().mProperties.value;
+      },
 
-     handleSettingsChange: function(oEvent, myThis) {
-        let graphType = oEvent.getSource().sId.split("-")[1];
-        myThis.drawingOptions[graphType] = oEvent.getSource().mProperties.value;
-        // ß
-     },
+      /* ============================================= */
+      /* =============== Settings menu =============== */
+      /* ============================================= */
 
       /** @brief Assign the "double click" event handler to each row */
       assignRowHandlers: function() {
