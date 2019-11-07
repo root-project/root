@@ -133,10 +133,10 @@ void TAttAxis::SaveAttributes(std::ostream &out, const char *name, const char *s
    if (TMath::Abs(fLabelOffset-0.005) > 0.0001) {
       out<<"   "<<name<<subname<<"->SetLabelOffset("<<fLabelOffset<<");"<<std::endl;
    }
-   if (TMath::Abs(fLabelSize-0.04) > 0.001) {
+   if (TMath::Abs(fLabelSize-0.035) > 0.001) {
       out<<"   "<<name<<subname<<"->SetLabelSize("<<fLabelSize<<");"<<std::endl;
    }
-   if (TMath::Abs(fTitleSize-0.04) > 0.001) {
+   if (TMath::Abs(fTitleSize-0.035) > 0.001) {
       out<<"   "<<name<<subname<<"->SetTitleSize("<<fTitleSize<<");"<<std::endl;
    }
    if (TMath::Abs(fTickLength-0.03) > 0.001) {
