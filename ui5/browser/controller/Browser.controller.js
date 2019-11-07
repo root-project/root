@@ -569,6 +569,44 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* =============== Settings menu =============== */
       /* ============================================= */
 
+      /* ========================================= */
+      /* =============== Tabs menu =============== */
+      /* ========================================= */
+
+      /** @brief Add Tab event handler */
+      addNewButtonPressHandler: async function (oEvent) {
+         var oButton = oEvent.getSource().mAggregations._tabStrip.mAggregations.addButton;
+
+         // create action sheet only once
+         if (!this._tabMenu) {
+            let fragment;
+            await Fragment.load({name: "rootui5.browser.view.tabsmenu", controller: this}).then(function (oFragment) {
+               fragment = oFragment;
+            });
+            if (fragment) {
+               this.getView().addDependent(fragment);
+               this._tabMenu = fragment;
+            }
+         }
+         this._tabMenu.openBy(oButton);
+      },
+
+      newRootXCanvas: function (oEvent) {
+         let msg;
+         if (oEvent.getSource().getText().indexOf("6") !== -1) {
+            msg = "NEWTCANVAS";
+         } else {
+            msg = "NEWRCANVAS";
+         }
+         if (this.isConnected) {
+            this.websocket.Send(msg);
+         }
+      },
+
+      /* ========================================= */
+      /* =============== Tabs menu =============== */
+      /* ========================================= */
+
       /** @brief Assign the "double click" event handler to each row */
       assignRowHandlers: function() {
          var rows = this.byId("treeTable").getRows();
@@ -879,31 +917,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          this.model.changeItemsFilter(query);
       },
-
-
-      /** @brief Add Tab event handler */
-      addNewButtonPressHandler: async function(oEvent) {
-        var oButton = oEvent.getSource().mAggregations._tabStrip.mAggregations.addButton;
-
-        // create action sheet only once
-        if (!this._actionSheet) {
-          let myThis = this;
-          await Fragment.load({name: "rootui5.browser.view.tabsmenu"}).then(function (oFragment) {
-            myThis.getView().addDependent(oFragment);
-            myThis._actionSheet = oFragment;
-          });
-          sap.ui.getCore().byId("NewTabR6").attachPress("NEWTCANVAS", this.newRootXCanvas, this);
-          sap.ui.getCore().byId("NewTabR7").attachPress("NEWRCANVAS", this.newRootXCanvas, this);
-          sap.ui.getCore().byId("NewTabCE").attachPress("", this.newCodeEditor, this);
-          sap.ui.getCore().byId("NewTabIV").attachPress("", this.newImageViewer, this);
-        }
-        this._actionSheet.openBy(oButton);
-      },
-
-     newRootXCanvas: function(oEvent, msg) {
-       if (this.isConnected)
-          this.websocket.Send(msg);
-     },
 
       /** process initial message, now it is list of existing canvases */
       processInitMsg: function(msg) {
