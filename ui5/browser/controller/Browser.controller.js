@@ -276,8 +276,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          const oModel = oEditor.getModel();
          const sText = oModel.getProperty("/code");
          const fullpath = oModel.getProperty("/fullpath");
-         if (fullpath === undefined)
+         if (fullpath === undefined) {
             return onSaveAs();
+         }
          oModel.setProperty("/modified", false);
          return this.websocket.Send("SAVEFILE:" + fullpath + ":" + sText);
       },
@@ -326,10 +327,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** @brief Extract the file name and extension
        * @desc Used to set the editor's model properties and display the file name on the tab element  */
       setFileNameType: function (filename) {
-         var oEditor = this.getSelectedCodeEditor();
-         var oModel = oEditor.getModel();
-         var oTabElement = oEditor.getParent().getParent();
-         var ext = "txt";
+         let oEditor = this.getSelectedCodeEditor();
+         let oModel = oEditor.getModel();
+         let oTabElement = oEditor.getParent().getParent();
+         let ext = "txt";
          let runButton = this.getElementFromCurrentTab("Run");
          runButton.setEnabled(false);
          if (filename.lastIndexOf('.') > 0)
@@ -395,13 +396,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @brief Handle the "Browse..." button press event */
       onChangeFile: function (oEvent) {
-         var oEditor = this.getSelectedCodeEditor();
-         var oModel = oEditor.getModel();
-         var oReader = new FileReader();
+         let oEditor = this.getSelectedCodeEditor();
+         let oModel = oEditor.getModel();
+         let oReader = new FileReader();
          oReader.onload = function () {
             oModel.setProperty("/code", oReader.result);
          };
-         var file = oEvent.getParameter("files")[0];
+         let file = oEvent.getParameter("files")[0];
          if (this.setFileNameType(file.name))
             oReader.readAsText(file);
       },
@@ -468,10 +469,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       _getSettingsMenu: async function () {
          if (!this._oSettingsMenu) {
             let fragment;
-            await Fragment.load({
-               name: "rootui5.browser.view.settingsmenu",
-               controller: this
-            }).then(function (oSettingsMenu) {
+            await Fragment.load({name: "rootui5.browser.view.settingsmenu", controller: this}).then(function (oSettingsMenu) {
                fragment = oSettingsMenu;
             });
             if (fragment) {
@@ -560,7 +558,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       handleSettingsChange: function (oEvent) {
-         console.log("chnage");
          let graphType = oEvent.getSource().sId.split("-")[1];
          this.drawingOptions[graphType] = oEvent.getSource().mProperties.value;
       },
@@ -575,7 +572,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @brief Add Tab event handler */
       addNewButtonPressHandler: async function (oEvent) {
-         var oButton = oEvent.getSource().mAggregations._tabStrip.mAggregations.addButton;
+         //TODO: Change to some UI5 function (unknown for now)
+         let oButton = oEvent.getSource().mAggregations._tabStrip.mAggregations.addButton;
 
          // create action sheet only once
          if (!this._tabMenu) {
