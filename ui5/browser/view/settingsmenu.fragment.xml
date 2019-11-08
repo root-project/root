@@ -20,7 +20,8 @@
                           <ComboBox
                                 id="do-TH1"
                                 items="{ path: '/TH1' }"
-                                selectedKey="hist">
+                                selectedKey="hist"
+                                change="handleSettingsChange">
                           <core:Item text="{name}" key="{name}"/>
                         </ComboBox>
                         </f:fields>
@@ -30,7 +31,8 @@
                           <ComboBox
                                   id="do-TH2"
                                   items="{ path: '/TH2' }"
-                                  selectedKey="COL">
+                                  selectedKey="COL"
+                                  change="handleSettingsChange">
                             <core:Item text="{name}" key="{name}"/>
                           </ComboBox>
                         </f:fields>
@@ -40,7 +42,8 @@
                           <ComboBox
                                   id="do-TProfile"
                                   items="{ path: '/TProfile' }"
-                                  selectedKey="E0">
+                                  selectedKey="E0"
+                                  change="handleSettingsChange">
                             <core:Item text="{name}" key="{name}"/>
                           </ComboBox>
                         </f:fields>
