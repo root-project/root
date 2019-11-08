@@ -605,6 +605,115 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* =============== Tabs menu =============== */
       /* ========================================= */
 
+      /* =========================================== */
+      /* =============== Breadcrumbs =============== */
+      /* =========================================== */
+
+      updateBReadcrumbs: function(jsonString) {
+         let json = JSON.parse(jsonString);
+         let split = json.path.split("/");
+         let oBreadcrumbs = this.getView().byId("breadcrumbs");
+         oBreadcrumbs.removeAllLinks();
+         for (let i=0; i<split.length; i++) {
+            if (i === split.length-1) {
+               oBreadcrumbs.setCurrentLocationText(split[i]);
+            } else if (i === 0) {
+               let link = new Link();
+               if (split[i].length === 2 && split[i][1] === ':') // Windows drive letter
+                  link.setText(split[i]);
+               else
+                  link.setText("/");
+               link.attachPress(this, this.onBreadcrumbsPress, this);
+               oBreadcrumbs.addLink(link);
+            } else {
+               let link = new Link({text: split[i]});
+               link.attachPress(this, this.onBreadcrumbsPress, this);
+               oBreadcrumbs.addLink(link);
+            }
+         }
+      },
+
+      onBreadcrumbsPress: function(oEvent) {
+         let sId = oEvent.getSource().sId;
+         let oBreadcrumbs = oEvent.getSource().getParent();
+         let oLinks = oBreadcrumbs.getLinks();
+         let path = "/";
+         for (let i = 1; i<oLinks.length; i++) {
+            if (oLinks[i].sId === sId ) {
+               path += oLinks[i].getText();
+               break;
+            }
+            path += oLinks[i].getText() + "/";
+         }
+
+         console.log('calling onBreadcrumbsPress', path);
+
+         this.websocket.Send('CHDIR:' + path);
+
+         this.doReload(true);
+      },
+
+      /* =========================================== */
+      /* =============== Breadcrumbs =============== */
+      /* =========================================== */
+
+      /* ============================================ */
+      /* =============== TabContainer =============== */
+      /* ============================================ */
+
+      tabSelectItem: function(oEvent) {
+         var oTabContainer = this.byId("myTabContainer");
+         var oItemSelected = oEvent.getParameter('item');
+
+         if (oItemSelected.getName() !== "ROOT Canvas") return;
+
+         console.log("Canvas selected:", oItemSelected.getAdditionalText());
+
+         this.websocket.Send("SELECT_CANVAS:" + oItemSelected.getAdditionalText());
+
+      },
+
+      /** @brief Close Tab event handler */
+      tabCloseHandler: function(oEvent) {
+         // prevent the tab being closed by default
+         oEvent.preventDefault();
+
+         let oTabContainer = this.byId("myTabContainer");
+         let oItemToClose = oEvent.getParameter('item');
+         // prevent closing the Code Editor
+         if (oItemToClose.getName() === "Code Editor") {
+            let count = 0;
+            const items = oTabContainer.getItems();
+            for (let i=0; i< items.length; i++) {
+               if (items[i].getId().indexOf("CodeEditor") !== -1) {
+                  count++
+               }
+            }
+            if (count <= 1) {
+               MessageToast.show("Sorry, you cannot close the Code Editor", {duration: 1500});
+               return;
+            }
+         }
+
+         let pthis = this;
+         MessageBox.confirm('Do you really want to close the "' + oItemToClose.getName() + '" tab?', {
+            onClose: function (oAction) {
+               if (oAction === MessageBox.Action.OK) {
+                  if (oItemToClose.getName() === "ROOT Canvas")
+                     pthis.websocket.Send("CLOSE_CANVAS:" + oItemToClose.getAdditionalText());
+
+                  oTabContainer.removeItem(oItemToClose);
+
+                  MessageToast.show('Closed the "' + oItemToClose.getName() + '" tab', {duration: 1500});
+               }
+            }
+         });
+      },
+
+      /* ============================================ */
+      /* =============== TabContainer =============== */
+      /* ============================================ */
+
       /** @brief Assign the "double click" event handler to each row */
       assignRowHandlers: function() {
          var rows = this.byId("treeTable").getRows();
@@ -619,50 +728,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          JSROOT.extend(req, args);
          this.websocket.Send("BRREQ:" + JSON.stringify(req));
       },
-
-      updateBReadcrumbs: function(jsonString) {
-        let json = JSON.parse(jsonString);
-        let split = json.path.split("/");
-        let oBreadcrumbs = this.getView().byId("breadcrumbs");
-        oBreadcrumbs.removeAllLinks();
-        for (let i=0; i<split.length; i++) {
-          if (i === split.length-1) {
-            oBreadcrumbs.setCurrentLocationText(split[i]);
-          } else if (i === 0) {
-             let link = new Link();
-             if (split[i].length === 2 && split[i][1] === ':') // Windows drive letter
-               link.setText(split[i]);
-             else
-               link.setText("/");
-            link.attachPress(this, this.onBreadcrumbsPress, this);
-            oBreadcrumbs.addLink(link);
-          } else {
-            let link = new Link({text: split[i]});
-            link.attachPress(this, this.onBreadcrumbsPress, this);
-            oBreadcrumbs.addLink(link);
-          }
-        }
-      },
-
-     onBreadcrumbsPress: function(oEvent) {
-        let sId = oEvent.getSource().sId;
-        let oBreadcrumbs = oEvent.getSource().getParent();
-        let oLinks = oBreadcrumbs.getLinks();
-        let path = "/";
-        for (let i = 1; i<oLinks.length; i++) {
-          if (oLinks[i].sId === sId ) {
-            path += oLinks[i].getText();
-            break;
-          }
-          path += oLinks[i].getText() + "/";
-        }
-
-        console.log('calling onBreadcrumbsPress', path);
-
-        this.websocket.Send('CHDIR:' + path);
-
-        this.doReload(true);
-     },
 
      sendDblClick: function(fullpath, opt) {
         this.websocket.Send('DBLCLK: ["'  + fullpath + '","' + (opt || "") + '"]' );
@@ -731,7 +796,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
         if(codeEditor !== -1) {
           var oModel = codeEditor.getModel();
 
-          // FIXME: wrong place, only when server returns result, one can update full path or model
+          // FIXME: wrong place, should be configured when server replied
           oModel.setProperty("/fullpath", fullpath);
           this.getElementFromCurrentTab("Save").setEnabled(true);
           var filename = fullpath.substr(fullpath.lastIndexOf('/') + 1);
@@ -741,6 +806,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
         let viewerTab = this.getSelectedImageViewer(true);
         if (viewerTab !== -1) {
+
            // FIXME: wrong place, should be configured when server replied
            viewerTab.getParent().getParent().setAdditionalText(fullpath);
            return this.sendDblClick(fullpath, "$$$image$$$");
@@ -980,47 +1046,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             // JSROOT.CallBack(call_back, true);
          });
       },
-
-      tabSelectItem: function(oEvent) {
-         var oTabContainer = this.byId("myTabContainer");
-         var oItemSelected = oEvent.getParameter('item');
-
-         if (oItemSelected.getName() != "ROOT Canvas") return;
-
-         console.log("Canvas selected:", oItemSelected.getAdditionalText());
-
-         this.websocket.Send("SELECT_CANVAS:" + oItemSelected.getAdditionalText());
-
-      },
-
-      /** @brief Close Tab event handler */
-      tabCloseHandler: function(oEvent) {
-         // prevent the tab being closed by default
-         oEvent.preventDefault();
-
-         var oTabContainer = this.byId("myTabContainer");
-         var oItemToClose = oEvent.getParameter('item');
-         // prevent closing the Code Editor
-         if (oItemToClose.getName() == "Code Editor") {
-            MessageToast.show("Sorry, you cannot close the Code Editor", {duration: 1500});
-            return;
-         }
-
-         var pthis = this;
-
-         MessageBox.confirm('Do you really want to close the "' + oItemToClose.getName() + '" tab?', {
-            onClose: function (oAction) {
-               if (oAction === MessageBox.Action.OK) {
-                  if (oItemToClose.getName() == "ROOT Canvas")
-                     pthis.websocket.Send("CLOSE_CANVAS:" + oItemToClose.getAdditionalText());
-
-                  oTabContainer.removeItem(oItemToClose);
-
-                  MessageToast.show('Closed the "' + oItemToClose.getName() + '" tab', {duration: 1500});
-               }
-            }
-         });
-      }
    });
 
 });
