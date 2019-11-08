@@ -69,7 +69,7 @@ ClassImp(RooFormulaVar);
 /// \param[in] title Title of the formula.
 /// \param[in] formula Expression to be evaluated.
 /// \param[in] dependents Variables that should be passed to the formula.
-/// \param[in] checkVariables Check that all variables from `dependents` or used in the expression.
+/// \param[in] checkVariables Check that all variables from `dependents` are used in the expression.
 RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* inFormula, const RooArgList& dependents,
     bool checkVariables) :
   RooAbsReal(name,title), 
@@ -82,6 +82,7 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* in
     _value = traceEval(0);
   } else {
     _formula.reset(new RooFormula(GetName(), _formExpr, _actualVars, checkVariables));
+    _formExpr = _formula->formulaString().c_str();
   }
 }
 
@@ -92,7 +93,7 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* in
 /// \param[in] name Name of the formula.
 /// \param[in] title Formula expression. Will also be used as the title.
 /// \param[in] dependents Variables that should be passed to the formula.
-/// \param[in] checkVariables Check that all variables from `dependents` or used in the expression.
+/// \param[in] checkVariables Check that all variables from `dependents` are used in the expression.
 RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgList& dependents,
     bool checkVariables) :
   RooAbsReal(name,title),
@@ -105,6 +106,7 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgLi
     _value = traceEval(0);
   } else {
     _formula.reset(new RooFormula(GetName(), _formExpr, _actualVars, checkVariables));
+    _formExpr = _formula->formulaString().c_str();
   }
 }
 
@@ -118,8 +120,10 @@ RooFormulaVar::RooFormulaVar(const RooFormulaVar& other, const char* name) :
   _actualVars("actualVars",this,other._actualVars),
   _formExpr(other._formExpr)
 {
-  if (other._formula && other._formula->ok())
-    _formula.reset(new RooFormula(GetName(), _formExpr, _actualVars, false));
+  if (other._formula && other._formula->ok()) {
+    _formula.reset(new RooFormula(GetName(), _formExpr, _actualVars));
+    _formExpr = _formula->formulaString().c_str();
+  }
 }
 
 
@@ -131,6 +135,7 @@ RooFormula& RooFormulaVar::formula() const
     // After being read from file, the formula object might not exist, yet:
     auto theFormula = new RooFormula(GetName(), _formExpr, _actualVars);
     const_cast<std::unique_ptr<RooFormula>&>(this->_formula).reset(theFormula);
+    const_cast<TString&>(_formExpr) = _formula->formulaString().c_str();
   }
 
   return *_formula;
@@ -152,7 +157,10 @@ Double_t RooFormulaVar::evaluate() const
 
 Bool_t RooFormulaVar::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t /*isRecursive*/)
 {
-  return formula().changeDependents(newServerList,mustReplaceAll,nameChange) ;
+  bool success = formula().changeDependents(newServerList,mustReplaceAll,nameChange);
+
+  _formExpr = formula().GetTitle();
+  return success;
 }
 
 
