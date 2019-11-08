@@ -1210,6 +1210,7 @@ if(imt AND NOT builtin_tbb)
       set(builtin_tbb ON CACHE BOOL "Enabled because imt is enabled, but TBB was not found" FORCE)
     endif()
   endif()
+  set(TBB_CXXFLAGS "-DTBB_SUPPRESS_DEPRECATED_MESSAGES=1")
 endif()
 
 if(builtin_tbb)
