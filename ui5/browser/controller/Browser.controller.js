@@ -792,7 +792,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
         if (!fullpath) return;
 
         // first try to activate editor
-        let codeEditor = this.getSelectedCodeEditor();
+        let codeEditor = this.getSelectedCodeEditor(true);
         if(codeEditor !== -1) {
           var oModel = codeEditor.getModel();
 
