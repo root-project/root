@@ -1,25 +1,48 @@
-sap.ui.define(['sap/ui/core/Component',
-               'sap/ui/core/mvc/Controller',
-               'sap/ui/core/Icon',
-               'sap/ui/core/mvc/XMLView',
-               'sap/m/Text',
-               'sap/m/CheckBox',
-               'sap/m/MessageBox',
-               'sap/m/MessageToast',
+sap.ui.define(['sap/ui/core/mvc/Controller',
+               'sap/m/Link',
+               'sap/ui/core/Fragment',
+               'rootui5/browser/model/BrowserModel',
+               'sap/ui/model/json/JSONModel',
+               'sap/ui/core/util/File',
+               'sap/ui/table/Column',
+               'sap/ui/layout/HorizontalLayout',
                'sap/m/TabContainerItem',
+               'sap/m/MessageToast',
+               'sap/m/MessageBox',
+               'sap/m/Text',
+               'sap/ui/core/mvc/XMLView',
+               'sap/ui/core/Icon',
                'sap/ui/layout/Splitter',
-               "sap/ui/core/ResizeHandler",
-               "sap/ui/layout/HorizontalLayout",
-               "sap/ui/table/Column",
-               "sap/ui/core/util/File",
-               "sap/ui/model/json/JSONModel",
-               "rootui5/browser/model/BrowserModel",
-               "sap/ui/core/Fragment",
-               "sap/m/Link",
-               "sap/ui/codeeditor/CodeEditor",
-               "sap/m/TabContainerItem",
-],function(Component, Controller, CoreIcon, XMLView, mText, mCheckBox, MessageBox, MessageToast, TabContainerItem,
-           Splitter, ResizeHandler, HorizontalLayout, tableColumn, File, JSONModel, BrowserModel, Fragment, Link, CodeEditor) {
+               'sap/m/Toolbar',
+               'sap/ui/unified/FileUploader',
+               'sap/m/Button',
+               'sap/ui/layout/SplitterLayoutData',
+               'sap/ui/codeeditor/CodeEditor',
+               'sap/m/HBox',
+               'sap/m/Image'
+],function(Controller,
+           Link,
+           Fragment,
+           BrowserModel,
+           JSONModel,
+           File,
+           tableColumn,
+           HorizontalLayout,
+           TabContainerItem,
+           MessageToast,
+           MessageBox,
+           mText,
+           XMLView,
+           CoreIcon,
+           Splitter,
+           Toolbar,
+           FileUploader,
+           Button,
+           SplitterLayoutData,
+           CodeEditor,
+           HBox,
+           Image) {
+
 
    "use strict";
 
@@ -28,6 +51,8 @@ sap.ui.define(['sap/ui/core/Component',
 
    return Controller.extend("rootui5.browser.controller.Browser", {
       onInit: async function () {
+
+        this.globalId = 1;
 
          this.websocket = this.getView().getViewData().conn_handle;
 
@@ -141,55 +166,184 @@ sap.ui.define(['sap/ui/core/Component',
             onAfterRendering: function() { this.getView().byId("treeTableBox").$().children().first().css('flex-grow',1); }
          }, this);
 
+            this.newCodeEditor();
 
-         let tabContainerItem = this.getView().byId("defaultCodeEditor");
-         await Fragment.load({name: "rootui5.browser.view.codeeditor", controller: this}).then(function (oFragment) {
-            tabContainerItem.removeAllContent();
-            tabContainerItem.addContent(oFragment);
-         });
-
-         // TODO: use proper openui5 methods to get aggregation
-         let defaultCodeEditor = this.getView().byId("defaultCodeEditor").getContent()[0].mAggregations.contentAreas[1];
-         defaultCodeEditor.setModel(new JSONModel({
-            code: "",
-            ext: "",
-            filename: "",
-            fullpath: "",
-            modified: false
-         }));
-
-         let splitterUpperContent = this.getView().byId("defaultCodeEditor").getContent()[0].mAggregations.contentAreas[0].getContent();
-         splitterUpperContent[0].attachChange(this.onChangeFile, this);
-         splitterUpperContent[1].attachPress(this.onSaveAs, this);
-         splitterUpperContent[2].attachPress(this.onSaveFile, this);
-         splitterUpperContent[3].attachPress(this.onRunMacro, this);
-
-         defaultCodeEditor.attachChange( function() {
-            this.getModel().setProperty("/modified", true);
-         });
-
-         this.drawingOptions = { TH1: 'hist', TH2: 'COL', TProfile: 'E0'};
+            this.drawingOptions = { TH1: 'hist', TH2: 'COL', TProfile: 'E0'};
 
       },
 
+      /* ========================================================= */
+      /* =============== Generic factory functions =============== */
+      /* ========================================================= */
+
+      getElementFromCurrentTab: function (element) {
+         const currentTabID = this.getView().byId("myTabContainer").getSelectedItem();
+         return sap.ui.getCore().byId(currentTabID + element);
+      },
+
+      /* ========================================================= */
+      /* =============== Generic factory functions =============== */
+      /* ========================================================= */
+
+      /* =========================================== */
+      /* =============== Code Editor =============== */
+      /* =========================================== */
+
+      newCodeEditor: async function () {
+         const oTabContainer = this.getView().byId("myTabContainer");
+
+         const ID = "CodeEditor" + this.globalId;
+         this.globalId++;
+
+         const oTabContainerItem = new TabContainerItem(ID, {
+            icon: "sap-icon://write-new-document",
+            name: "Code Editor",
+            additionalText: "untitled",
+            content: this.newCodeEditorFragment(ID)
+         });
+
+         oTabContainer.addItem(oTabContainerItem);
+         oTabContainer.setSelectedItem(oTabContainerItem);
+      },
+
+      newCodeEditorFragment: function (ID) {
+         return new Splitter({
+            orientation: "Vertical",
+            contentAreas: [
+               new Toolbar({
+                  content: [
+                     new FileUploader({
+                        change: [this.onChangeFile, this]
+                     }),
+                     new Button(ID + "SaveAs", {
+                        text: "Save as...",
+                        tooltip: "Save current file as...",
+                        press: [this.onSaveAs, this]
+                     }),
+                     new Button(ID + "Save", {
+                        text: "Save",
+                        tooltip: "Save current file",
+                        press: [this.onSaveFile, this]
+                     }),
+                     new Button(ID + "Run", {
+                        text: "Run",
+                        tooltip: "Run Current Macro",
+                        icon: "sap-icon://play",
+                        enabled: false,
+                        press: [this.onRunMacro, this]
+                     }),
+                  ],
+                  layoutData: new SplitterLayoutData({
+                     size: "35px",
+                     resizable: false
+                  })
+               }),
+               new CodeEditor(ID + "Editor", {
+                  height: "100%",
+                  colorTheme: "default",
+                  type: "c_cpp",
+                  value: "{/code}",
+                  change: function () {
+                     this.getModel().setProperty("/modified", true);
+                  }
+               }).setModel(new JSONModel({
+                  code: "",
+                  ext: "",
+                  filename: "",
+                  fullpath: "",
+                  modified: false
+               }))
+            ]
+         });
+      },
+
+      /** @brief Handle the "Save As..." button press event */
+      onSaveAs: function () {
+         const oEditor = this.getSelectedCodeEditor();
+         const oModel = oEditor.getModel();
+         const sText = oModel.getProperty("/code");
+         let filename = oModel.getProperty("/filename");
+         let ext = oModel.getProperty("/ext");
+         if (filename === undefined) filename = "untitled";
+         if (ext === undefined) ext = "txt";
+         File.save(sText, filename, ext);
+         oModel().setProperty("/modified", false);
+      },
+
+      /** @brief Handle the "Save" button press event */
+      onSaveFile: function () {
+         const oEditor = this.getSelectedCodeEditor();
+         const oModel = oEditor.getModel();
+         const sText = oModel.getProperty("/code");
+         const fullpath = oModel.getProperty("/fullpath");
+         if (fullpath === undefined) {
+            return onSaveAs();
+         }
+         oModel.setProperty("/modified", false);
+         return this.websocket.Send("SAVEFILE:" + fullpath + ":" + sText);
+      },
+
+      reallyRunMacro: function () {
+         const oEditor = this.getSelectedCodeEditor();
+         const oModel = oEditor.getModel();
+         const fullpath = oModel.getProperty("/fullpath");
+         if (fullpath === undefined)
+            return this.onSaveAs();
+         return this.websocket.Send("RUNMACRO:" + fullpath);
+      },
+
+      /** @brief Handle the "Run" button press event */
+      onRunMacro: function () {
+         const oEditor = this.getSelectedCodeEditor();
+         const oModel = oEditor.getModel();
+         if (oModel.getProperty("/modified") === true) {
+            MessageBox.confirm('The text has been modified! Do you want to save it?', {
+               title: 'Run Macro',
+               icon: sap.m.MessageBox.Icon.QUESTION,
+               actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO, sap.m.MessageBox.Action.CANCEL],
+               onClose: (oAction) => {
+                  if (oAction === MessageBox.Action.YES)
+                     this.onSaveFile();
+                  else if (oAction === MessageBox.Action.CANCEL)
+                     return;
+                  return this.reallyRunMacro();
+               }
+            });
+         } else
+            return this.reallyRunMacro();
+      },
+
+      getSelectedCodeEditor: function (no_warning) {
+         let oTabItemString = this.getView().byId("myTabContainer").getSelectedItem();
+
+         if (oTabItemString.indexOf("CodeEditor") !== -1) {
+            return sap.ui.getCore().byId(oTabItemString + "Editor");
+         } else {
+            if (!no_warning) MessageToast.show("Sorry, you need to select a code editor tab", {duration: 1500});
+            return -1;
+         }
+      },
+
       /** @brief Extract the file name and extension
-      * @desc Used to set the editor's model properties and display the file name on the tab element  */
-     setFileNameType: function(filename) {
-         var oEditor = this.getSelectedCodeEditorTab();
-         var oModel = oEditor.getModel();
-         var oTabElement = oEditor.getParent().getParent();
-         var ext = "txt";
-         let runButton = this.getRunButtonFromCodeEditor(oEditor);
-        runButton.setEnabled(false);
+       * @desc Used to set the editor's model properties and display the file name on the tab element  */
+      setFileNameType: function (filename) {
+         let oEditor = this.getSelectedCodeEditor();
+         let oModel = oEditor.getModel();
+         let oTabElement = oEditor.getParent().getParent();
+         let ext = "txt";
+         let runButton = this.getElementFromCurrentTab("Run");
+         runButton.setEnabled(false);
          if (filename.lastIndexOf('.') > 0)
             ext = filename.substr(filename.lastIndexOf('.') + 1);
-         switch(ext.toLowerCase()) {
+
+         switch (ext.toLowerCase()) {
             case "c":
             case "cc":
             case "cpp":
             case "cxx":
-              runButton.setEnabled(true);
-              break;
+               runButton.setEnabled(true);
+               oEditor.setType('c_cpp');
+               break;
             case "h":
             case "hh":
             case "hxx":
@@ -241,174 +395,324 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       /** @brief Handle the "Browse..." button press event */
-      onChangeFile: function(oEvent) {
-         var oEditor = this.getSelectedCodeEditorTab();
-         var oModel = oEditor.getModel();
-         var oReader = new FileReader();
-         oReader.onload = function() {
+      onChangeFile: function (oEvent) {
+         let oEditor = this.getSelectedCodeEditor();
+         let oModel = oEditor.getModel();
+         let oReader = new FileReader();
+         oReader.onload = function () {
             oModel.setProperty("/code", oReader.result);
          };
-         var file = oEvent.getParameter("files")[0];
+         let file = oEvent.getParameter("files")[0];
          if (this.setFileNameType(file.name))
             oReader.readAsText(file);
       },
 
-     _getSettingsMenu: async function () {
-       if (!this._oSettingsMenu) {
-         let myThis = this;
-         await Fragment.load({name: "rootui5.browser.view.settingsmenu"}).then(function (oSettingsMenu) {
-           let oModel = new JSONModel({
-             "TH1": [
-               { "name": "hist" },
-               { "name": "P" },
-               { "name": "P0" },
-               { "name": "E" },
-               { "name": "E1" },
-               { "name": "E2" },
-               { "name": "E3" },
-               { "name": "E4" },
-               { "name": "E1X0" },
-               { "name": "L" },
-               { "name": "LF2" },
-               { "name": "B" },
-               { "name": "B1" },
-               { "name": "A" },
-               { "name": "TEXT" },
-               { "name": "LEGO" },
-               { "name": "same" }
-             ],
-             "TH2": [
-               { "name": "COL" },
-               { "name": "COLZ" },
-               { "name": "COL0"},
-               { "name": "COL1" },
-               { "name": "COL0Z" },
-               { "name": "COL1Z" },
-               { "name": "COLA" },
-               { "name": "BOX" },
-               { "name": "BOX1" },
-               { "name": "PROJ" },
-               { "name": "PROJX1" },
-               { "name": "PROJX2" },
-               { "name": "PROJX3" },
-               { "name": "PROJY1" },
-               { "name": "PROJY2" },
-               { "name": "PROJY3" },
-               { "name": "SCAT" },
-               { "name": "TEXT" },
-               { "name": "TEXTE" },
-               { "name": "TEXTE0" },
-               { "name": "CONT" },
-               { "name": "CONT1" },
-               { "name": "CONT2" },
-               { "name": "CONT3" },
-               { "name": "CONT4" },
-               { "name": "ARR" },
-               { "name": "SURF" },
-               { "name": "SURF1" },
-               { "name": "SURF2" },
-               { "name": "SURF4" },
-               { "name": "SURF6" },
-               { "name": "E" },
-               { "name": "A" },
-               { "name": "LEGO" },
-               { "name": "LEGO0" },
-               { "name": "LEGO1" },
-               { "name": "LEGO2" },
-               { "name": "LEGO3" },
-               { "name": "LEGO4" },
-               { "name": "same" }
-             ],
-             "TProfile": [
-               { "name": "E0" },
-               { "name": "E1" },
-               { "name": "E2" },
-               { "name": "p" },
-               { "name": "AH" },
-               { "name": "hist" }
-             ]
-           });
-           oSettingsMenu.setModel(oModel);
-           oSettingsMenu.attachConfirm(myThis.handleSettingsConfirm);
-           myThis.getView().addDependent(oSettingsMenu);
+      /* =========================================== */
+      /* =============== Code Editor =============== */
+      /* =========================================== */
 
-           myThis._oSettingsMenu = oSettingsMenu;
+      /* ============================================ */
+      /* =============== Image viewer =============== */
+      /* ============================================ */
+
+      newImageViewerFragment: function (ID) {
+         return new HBox({
+            alignContent: "Center",
+            alignItems: "Center",
+            justifyContent: "Center",
+            height: "100%",
+            width: "100%",
+            items: new Image(ID + "Image", {
+               src: "",
+               densityAware: false
+            })
+         })
+      },
+
+      newImageViewer: async function () {
+         let oTabContainer = this.getView().byId("myTabContainer");
+
+         const ID = "ImageViewer" + this.globalId;
+         this.globalId++;
+
+         let tabContainerItem = new TabContainerItem(ID, {
+            icon: "sap-icon://background",
+            name: "Image Viewer",
+            additionalText: "untitled",
+            content: this.newImageViewerFragment(ID)
          });
-         sap.ui.getCore().byId("do-TH1").attachChange(this, this.handleSettingsChange);
-         sap.ui.getCore().byId("do-TH2").attachChange(this, this.handleSettingsChange);
-         sap.ui.getCore().byId("do-TProfile").attachChange(this, this.handleSettingsChange);
-       }
-       return this._oSettingsMenu;
-     },
 
-     onSettingPress: async function() {
-        await this._getSettingsMenu();
-        this._oSettingsMenu.open();
-     },
-
-     handleSettingsChange: function(oEvent, myThis) {
-        let graphType = oEvent.getSource().sId.split("-")[1];
-        myThis.drawingOptions[graphType] = oEvent.getSource().mProperties.value;
-        // ß
-     },
-
-      /** @brief Handle the "Save As..." button press event */
-      onSaveAs: function() {
-         var oEditor = this.getView().byId("aCodeEditor");
-         var oModel = oEditor.getModel();
-         var sText = oModel.getProperty("/code");
-         var filename = oModel.getProperty("/filename");
-         var ext = oModel.getProperty("/ext");
-         if (filename == undefined) filename = "untitled";
-         if (ext == undefined) ext = "txt";
-         File.save(sText, filename, ext);
-         oModel().setProperty("/modified", false);
+         oTabContainer.addItem(tabContainerItem);
+         oTabContainer.setSelectedItem(tabContainerItem);
       },
 
-      /** @brief Handle the "Save" button press event */
-      onSaveFile: function() {
-         var oEditor = this.getSelectedCodeEditorTab();
-         var oModel = oEditor.getModel();
-         var sText = oModel.getProperty("/code");
-         var fullpath = oModel.getProperty("/fullpath");
-         if (fullpath == undefined)
-            return onSaveAs();
-         oModel.setProperty("/modified", false);
-         return this.websocket.Send("SAVEFILE:" + fullpath + ":" + sText);
-      },
+      getSelectedImageViewer: function (no_warning) {
+         let oTabItemString = this.getView().byId("myTabContainer").getSelectedItem();
 
-      reallyRunMacro: function() {
-         var oEditor = this.getSelectedCodeEditorTab();
-         var oModel = oEditor.getModel();
-         var sText = oModel.getProperty("/code");
-         var fullpath = oModel.getProperty("/fullpath");
-         if (fullpath == undefined)
-            return this.onSaveAs();
-         return this.websocket.Send("RUNMACRO:" + fullpath);
-      },
 
-      /** @brief Handle the "Run" button press event */
-      onRunMacro: function() {
-         var pthis = this;
-         var oEditor = this.getSelectedCodeEditorTab();
-         var oModel = oEditor.getModel();
-         if (oModel.getProperty("/modified") === true) {
-            MessageBox.confirm('The text has been modified! Do you want to save it?', {
-               title: 'Run Macro',
-               icon: sap.m.MessageBox.Icon.QUESTION,
-               actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO, sap.m.MessageBox.Action.CANCEL],
-               onClose: function (oAction) {
-                  if (oAction === MessageBox.Action.YES)
-                     pthis.onSaveFile();
-                  else if (oAction === MessageBox.Action.CANCEL)
-                     return;
-                  return pthis.reallyRunMacro();
-               }
-            });
+         if (oTabItemString.indexOf("ImageViewer") !== -1) {
+            return sap.ui.getCore().byId(oTabItemString + "Image");
          }
-         else
-            return this.reallyRunMacro();
+
+         if (!no_warning) MessageToast.show("Sorry, you need to select an image viewer tab", {duration: 1500});
+         return -1;
       },
+
+      /* ============================================ */
+      /* =============== Image viewer =============== */
+      /* ============================================ */
+
+      /* ============================================= */
+      /* =============== Settings menu =============== */
+      /* ============================================= */
+
+      _getSettingsMenu: async function () {
+         if (!this._oSettingsMenu) {
+            let fragment;
+            await Fragment.load({name: "rootui5.browser.view.settingsmenu", controller: this}).then(function (oSettingsMenu) {
+               fragment = oSettingsMenu;
+            });
+            if (fragment) {
+               let oModel = new JSONModel({
+                  "TH1": [
+                     {"name": "hist"},
+                     {"name": "P"},
+                     {"name": "P0"},
+                     {"name": "E"},
+                     {"name": "E1"},
+                     {"name": "E2"},
+                     {"name": "E3"},
+                     {"name": "E4"},
+                     {"name": "E1X0"},
+                     {"name": "L"},
+                     {"name": "LF2"},
+                     {"name": "B"},
+                     {"name": "B1"},
+                     {"name": "A"},
+                     {"name": "TEXT"},
+                     {"name": "LEGO"},
+                     {"name": "same"}
+                  ],
+                  "TH2": [
+                     {"name": "COL"},
+                     {"name": "COLZ"},
+                     {"name": "COL0"},
+                     {"name": "COL1"},
+                     {"name": "COL0Z"},
+                     {"name": "COL1Z"},
+                     {"name": "COLA"},
+                     {"name": "BOX"},
+                     {"name": "BOX1"},
+                     {"name": "PROJ"},
+                     {"name": "PROJX1"},
+                     {"name": "PROJX2"},
+                     {"name": "PROJX3"},
+                     {"name": "PROJY1"},
+                     {"name": "PROJY2"},
+                     {"name": "PROJY3"},
+                     {"name": "SCAT"},
+                     {"name": "TEXT"},
+                     {"name": "TEXTE"},
+                     {"name": "TEXTE0"},
+                     {"name": "CONT"},
+                     {"name": "CONT1"},
+                     {"name": "CONT2"},
+                     {"name": "CONT3"},
+                     {"name": "CONT4"},
+                     {"name": "ARR"},
+                     {"name": "SURF"},
+                     {"name": "SURF1"},
+                     {"name": "SURF2"},
+                     {"name": "SURF4"},
+                     {"name": "SURF6"},
+                     {"name": "E"},
+                     {"name": "A"},
+                     {"name": "LEGO"},
+                     {"name": "LEGO0"},
+                     {"name": "LEGO1"},
+                     {"name": "LEGO2"},
+                     {"name": "LEGO3"},
+                     {"name": "LEGO4"},
+                     {"name": "same"}
+                  ],
+                  "TProfile": [
+                     {"name": "E0"},
+                     {"name": "E1"},
+                     {"name": "E2"},
+                     {"name": "p"},
+                     {"name": "AH"},
+                     {"name": "hist"}
+                  ]
+               });
+               fragment.setModel(oModel);
+               this.getView().addDependent(fragment);
+               this._oSettingsMenu = fragment;
+            }
+         }
+         return this._oSettingsMenu;
+      },
+
+      onSettingPress: async function () {
+         await this._getSettingsMenu();
+         this._oSettingsMenu.open();
+      },
+
+      handleSettingsChange: function (oEvent) {
+         let graphType = oEvent.getSource().sId.split("-")[1];
+         this.drawingOptions[graphType] = oEvent.getSource().mProperties.value;
+      },
+
+      /* ============================================= */
+      /* =============== Settings menu =============== */
+      /* ============================================= */
+
+      /* ========================================= */
+      /* =============== Tabs menu =============== */
+      /* ========================================= */
+
+      /** @brief Add Tab event handler */
+      addNewButtonPressHandler: async function (oEvent) {
+         //TODO: Change to some UI5 function (unknown for now)
+         let oButton = oEvent.getSource().mAggregations._tabStrip.mAggregations.addButton;
+
+         // create action sheet only once
+         if (!this._tabMenu) {
+            let fragment;
+            await Fragment.load({name: "rootui5.browser.view.tabsmenu", controller: this}).then(function (oFragment) {
+               fragment = oFragment;
+            });
+            if (fragment) {
+               this.getView().addDependent(fragment);
+               this._tabMenu = fragment;
+            }
+         }
+         this._tabMenu.openBy(oButton);
+      },
+
+      newRootXCanvas: function (oEvent) {
+         let msg;
+         if (oEvent.getSource().getText().indexOf("6") !== -1) {
+            msg = "NEWTCANVAS";
+         } else {
+            msg = "NEWRCANVAS";
+         }
+         if (this.isConnected) {
+            this.websocket.Send(msg);
+         }
+      },
+
+      /* ========================================= */
+      /* =============== Tabs menu =============== */
+      /* ========================================= */
+
+      /* =========================================== */
+      /* =============== Breadcrumbs =============== */
+      /* =========================================== */
+
+      updateBReadcrumbs: function(jsonString) {
+         let json = JSON.parse(jsonString);
+         let split = json.path.split("/");
+         let oBreadcrumbs = this.getView().byId("breadcrumbs");
+         oBreadcrumbs.removeAllLinks();
+         for (let i=0; i<split.length; i++) {
+            if (i === split.length-1) {
+               oBreadcrumbs.setCurrentLocationText(split[i]);
+            } else if (i === 0) {
+               let link = new Link();
+               if (split[i].length === 2 && split[i][1] === ':') // Windows drive letter
+                  link.setText(split[i]);
+               else
+                  link.setText("/");
+               link.attachPress(this, this.onBreadcrumbsPress, this);
+               oBreadcrumbs.addLink(link);
+            } else {
+               let link = new Link({text: split[i]});
+               link.attachPress(this, this.onBreadcrumbsPress, this);
+               oBreadcrumbs.addLink(link);
+            }
+         }
+      },
+
+      onBreadcrumbsPress: function(oEvent) {
+         let sId = oEvent.getSource().sId;
+         let oBreadcrumbs = oEvent.getSource().getParent();
+         let oLinks = oBreadcrumbs.getLinks();
+         let path = "/";
+         for (let i = 1; i<oLinks.length; i++) {
+            if (oLinks[i].sId === sId ) {
+               path += oLinks[i].getText();
+               break;
+            }
+            path += oLinks[i].getText() + "/";
+         }
+
+         console.log('calling onBreadcrumbsPress', path);
+
+         this.websocket.Send('CHDIR:' + path);
+
+         this.doReload(true);
+      },
+
+      /* =========================================== */
+      /* =============== Breadcrumbs =============== */
+      /* =========================================== */
+
+      /* ============================================ */
+      /* =============== TabContainer =============== */
+      /* ============================================ */
+
+      tabSelectItem: function(oEvent) {
+         var oTabContainer = this.byId("myTabContainer");
+         var oItemSelected = oEvent.getParameter('item');
+
+         if (oItemSelected.getName() !== "ROOT Canvas") return;
+
+         console.log("Canvas selected:", oItemSelected.getAdditionalText());
+
+         this.websocket.Send("SELECT_CANVAS:" + oItemSelected.getAdditionalText());
+
+      },
+
+      /** @brief Close Tab event handler */
+      tabCloseHandler: function(oEvent) {
+         // prevent the tab being closed by default
+         oEvent.preventDefault();
+
+         let oTabContainer = this.byId("myTabContainer");
+         let oItemToClose = oEvent.getParameter('item');
+         // prevent closing the Code Editor
+         if (oItemToClose.getName() === "Code Editor") {
+            let count = 0;
+            const items = oTabContainer.getItems();
+            for (let i=0; i< items.length; i++) {
+               if (items[i].getId().indexOf("CodeEditor") !== -1) {
+                  count++
+               }
+            }
+            if (count <= 1) {
+               MessageToast.show("Sorry, you cannot close the Code Editor", {duration: 1500});
+               return;
+            }
+         }
+
+         let pthis = this;
+         MessageBox.confirm('Do you really want to close the "' + oItemToClose.getName() + '" tab?', {
+            onClose: function (oAction) {
+               if (oAction === MessageBox.Action.OK) {
+                  if (oItemToClose.getName() === "ROOT Canvas")
+                     pthis.websocket.Send("CLOSE_CANVAS:" + oItemToClose.getAdditionalText());
+
+                  oTabContainer.removeItem(oItemToClose);
+
+                  MessageToast.show('Closed the "' + oItemToClose.getName() + '" tab', {duration: 1500});
+               }
+            }
+         });
+      },
+
+      /* ============================================ */
+      /* =============== TabContainer =============== */
+      /* ============================================ */
 
       /** @brief Assign the "double click" event handler to each row */
       assignRowHandlers: function() {
@@ -425,50 +729,6 @@ sap.ui.define(['sap/ui/core/Component',
          this.websocket.Send("BRREQ:" + JSON.stringify(req));
       },
 
-      updateBReadcrumbs: function(jsonString) {
-        let json = JSON.parse(jsonString);
-        let split = json.path.split("/");
-        let oBreadcrumbs = this.getView().byId("breadcrumbs");
-        oBreadcrumbs.removeAllLinks();
-        for (let i=0; i<split.length; i++) {
-          if (i === split.length-1) {
-            oBreadcrumbs.setCurrentLocationText(split[i]);
-          } else if (i === 0) {
-             let link = new Link();
-             if (split[i].length === 2 && split[i][1] === ':') // Windows drive letter
-               link.setText(split[i]);
-             else
-               link.setText("/");
-            link.attachPress(this, this.onBreadcrumbsPress, this);
-            oBreadcrumbs.addLink(link);
-          } else {
-            let link = new Link({text: split[i]});
-            link.attachPress(this, this.onBreadcrumbsPress, this);
-            oBreadcrumbs.addLink(link);
-          }
-        }
-      },
-
-     onBreadcrumbsPress: function(oEvent) {
-        let sId = oEvent.getSource().sId;
-        let oBreadcrumbs = oEvent.getSource().getParent();
-        let oLinks = oBreadcrumbs.getLinks();
-        let path = "/";
-        for (let i = 1; i<oLinks.length; i++) {
-          if (oLinks[i].sId === sId ) {
-            path += oLinks[i].getText();
-            break;
-          }
-          path += oLinks[i].getText() + "/";
-        }
-
-        console.log('calling onBreadcrumbsPress', path);
-
-        this.websocket.Send('CHDIR:' + path);
-
-        this.doReload(true);
-     },
-
      sendDblClick: function(fullpath, opt) {
         this.websocket.Send('DBLCLK: ["'  + fullpath + '","' + (opt || "") + '"]' );
      },
@@ -479,7 +739,7 @@ sap.ui.define(['sap/ui/core/Component',
             prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null,
             fullpath = (prop && prop.fullpath) ? prop.fullpath.substr(1, prop.fullpath.length-2) : "";
 
-        if (row._bHasChildren){
+        if (row._bHasChildren) {
           let rowText = row.getCells()[0].getContent()[1].getText().substr(1);
           if(!rowText.endsWith(".root")) {
             let oBreadcrumbs = this.getView().byId("breadcrumbs");
@@ -532,13 +792,13 @@ sap.ui.define(['sap/ui/core/Component',
         if (!fullpath) return;
 
         // first try to activate editor
-        let codeEditor = this.getSelectedCodeEditorTab(true);
+        let codeEditor = this.getSelectedCodeEditor(true);
         if(codeEditor !== -1) {
           var oModel = codeEditor.getModel();
 
-          // FIXME: wrong place, only when server returns result, one can update full path or model
+          // FIXME: wrong place, should be configured when server replied
           oModel.setProperty("/fullpath", fullpath);
-          this.getSaveButtonFromCodeEditor(codeEditor).setEnabled(true);
+          this.getElementFromCurrentTab("Save").setEnabled(true);
           var filename = fullpath.substr(fullpath.lastIndexOf('/') + 1);
           if (this.setFileNameType(filename))
              return this.sendDblClick(fullpath, "$$$editor$$$");
@@ -546,8 +806,9 @@ sap.ui.define(['sap/ui/core/Component',
 
         let viewerTab = this.getSelectedImageViewer(true);
         if (viewerTab !== -1) {
+
            // FIXME: wrong place, should be configured when server replied
-           viewerTab.setAdditionalText(fullpath);
+           viewerTab.getParent().getParent().setAdditionalText(fullpath);
            return this.sendDblClick(fullpath, "$$$image$$$");
         }
 
@@ -587,55 +848,6 @@ sap.ui.define(['sap/ui/core/Component',
          this.isConnected = false;
       },
 
-     getSelectedCodeEditorTab: function(no_warning) {
-        // FIXME: Thibault, one can much easily detect widget type
-        // otherwise too many checks required
-        let oTabItemString = this.getView().byId("myTabContainer").getSelectedItem();
-
-        let oTabItem = sap.ui.getCore().byId(oTabItemString);
-        if(oTabItem) {
-           let oTabItemContent = oTabItem.getContent();
-           if (oTabItemContent[0].mAggregations.contentAreas)
-              for (let i=0; i<oTabItemContent[0].mAggregations.contentAreas.length; i++) {
-                 if (oTabItemContent[0].mAggregations.contentAreas[i].sId.indexOf("__editor") !== -1) {
-                    return oTabItemContent[0].mAggregations.contentAreas[i];
-                 }
-              }
-        }
-
-        if (!no_warning) MessageToast.show("Sorry, you need to select a code editor tab", {duration: 1500});
-        return -1;
-     },
-
-     getSelectedImageViewer: function(no_warning) {
-       let oTabItemString = this.getView().byId("myTabContainer").getSelectedItem();
-
-       let oTabItem = sap.ui.getCore().byId(oTabItemString);
-
-       if (oTabItem.getName() === "Image Viewer") {
-         return oTabItem;
-       }
-
-       if (!no_warning) MessageToast.show("Sorry, you need to select an image viewer tab", {duration: 1500});
-       return -1;
-     },
-
-     getSaveButtonFromCodeEditor: function(oCodeEditor) {
-        let oSplitter = oCodeEditor.getParent();
-        let oToolBar = oSplitter.mAggregations.contentAreas[0];
-        let oToolBarContent = oToolBar.getContent();
-
-        return oToolBarContent[2];
-     },
-
-     getRunButtonFromCodeEditor: function(oCodeEditor) {
-       let oSplitter = oCodeEditor.getParent();
-       let oToolBar = oSplitter.mAggregations.contentAreas[0];
-       let oToolBarContent = oToolBar.getContent();
-
-       return oToolBarContent[3];
-     },
-
      /** Entry point for all data from server */
      OnWebsocketMsg: function(handle, msg, offset) {
 
@@ -650,17 +862,14 @@ sap.ui.define(['sap/ui/core/Component',
             this.processInitMsg(msg);
             break;
          case "FREAD":  // file read
-            let result = this.getSelectedCodeEditorTab(true);
+            let result = this.getSelectedCodeEditor();
             if (result !== -1)
                result.getModel().setProperty("/code", msg);
             break;
          case "FIMG":  // image file read
-            let imageTab = this.getSelectedImageViewer(true);
-            if(imageTab !== -1) {
-               // FIXME: why not use imageTab??
-               let oContent = sap.ui.getCore().byId(this.getView().byId("myTabContainer").getSelectedItem());
-               let oImage = oContent.getContent()[0].getItems()[0];
-               oImage.setSrc(msg);
+            const image = this.getSelectedImageViewer(true);
+            if(image !== -1) {
+               image.setSrc(msg);
             }
             break;
          case "CANVS":  // canvas created by server, need to establish connection
@@ -773,89 +982,6 @@ sap.ui.define(['sap/ui/core/Component',
          this.model.changeItemsFilter(query);
       },
 
-
-      /** @brief Add Tab event handler */
-      addNewButtonPressHandler: async function(oEvent) {
-        var oButton = oEvent.getSource().mAggregations._tabStrip.mAggregations.addButton;
-
-        // create action sheet only once
-        if (!this._actionSheet) {
-          let myThis = this;
-          await Fragment.load({name: "rootui5.browser.view.tabsmenu"}).then(function (oFragment) {
-            myThis.getView().addDependent(oFragment);
-            myThis._actionSheet = oFragment;
-          });
-          sap.ui.getCore().byId("NewTabR6").attachPress("NEWTCANVAS", this.newRootXCanvas, this);
-          sap.ui.getCore().byId("NewTabR7").attachPress("NEWRCANVAS", this.newRootXCanvas, this);
-          sap.ui.getCore().byId("NewTabCE").attachPress("", this.newCodeEditor, this);
-          sap.ui.getCore().byId("NewTabIV").attachPress("", this.newImageViewer, this);
-        }
-        this._actionSheet.openBy(oButton);
-      },
-
-     newRootXCanvas: function(oEvent, msg) {
-       if (this.isConnected)
-          this.websocket.Send(msg);
-     },
-
-     newCodeEditor: async function() {
-        let oTabContainer = this.getView().byId("myTabContainer");
-
-        let tabContainerItem = new TabContainerItem({
-          icon: "sap-icon://write-new-document",
-          name:"Code Editor",
-          additionalText: "untitled"
-        });
-        await Fragment.load({name: "rootui5.browser.view.codeeditor", controller: this}).then(function (oFragment) {
-          tabContainerItem.removeAllContent();
-          tabContainerItem.addContent(oFragment);
-
-          // TODO: use proper openui5 methods to get aggregation
-          let editor = oFragment.mAggregations.contentAreas[1];
-
-          editor.setModel(new JSONModel({
-            code: "",
-            ext: "",
-            filename: "",
-            fullpath: "",
-            modified: false
-          }));
-
-          editor.attachChange( function() {
-            this.getModel().setProperty("/modified", true);
-          });
-
-        });
-
-        oTabContainer.addItem(tabContainerItem);
-
-        let splitterUpperContent = tabContainerItem.getContent()[0].mAggregations.contentAreas[0].getContent();
-        splitterUpperContent[0].attachChange(this.onChangeFile, this);
-        splitterUpperContent[1].attachPress(this.onSaveAs, this);
-        splitterUpperContent[2].attachPress(this.onSaveFile, this);
-        splitterUpperContent[3].attachPress(this.onRunMacro, this);
-
-        oTabContainer.setSelectedItem(tabContainerItem);
-     },
-
-     newImageViewer: async function() {
-       let oTabContainer = this.getView().byId("myTabContainer");
-
-       let tabContainerItem = new TabContainerItem({
-         icon: "sap-icon://background",
-         name:"Image Viewer",
-         additionalText: "untitled"
-       });
-
-       await Fragment.load({name: "rootui5.browser.view.imageviewer"}).then(function (oFragment) {
-         tabContainerItem.removeAllContent();
-         tabContainerItem.addContent(oFragment);
-       });
-
-       oTabContainer.addItem(tabContainerItem);
-       oTabContainer.setSelectedItem(tabContainerItem);
-     },
-
       /** process initial message, now it is list of existing canvases */
       processInitMsg: function(msg) {
          this.websocket.Send('GETWORKDIR:'); // Update the breadcrumbs
@@ -920,47 +1046,6 @@ sap.ui.define(['sap/ui/core/Component',
             // JSROOT.CallBack(call_back, true);
          });
       },
-
-      tabSelectItem: function(oEvent) {
-         var oTabContainer = this.byId("myTabContainer");
-         var oItemSelected = oEvent.getParameter('item');
-
-         if (oItemSelected.getName() != "ROOT Canvas") return;
-
-         console.log("Canvas selected:", oItemSelected.getAdditionalText());
-
-         this.websocket.Send("SELECT_CANVAS:" + oItemSelected.getAdditionalText());
-
-      },
-
-      /** @brief Close Tab event handler */
-      tabCloseHandler: function(oEvent) {
-         // prevent the tab being closed by default
-         oEvent.preventDefault();
-
-         var oTabContainer = this.byId("myTabContainer");
-         var oItemToClose = oEvent.getParameter('item');
-         // prevent closing the Code Editor
-         if (oItemToClose.getName() == "Code Editor") {
-            MessageToast.show("Sorry, you cannot close the Code Editor", {duration: 1500});
-            return;
-         }
-
-         var pthis = this;
-
-         MessageBox.confirm('Do you really want to close the "' + oItemToClose.getName() + '" tab?', {
-            onClose: function (oAction) {
-               if (oAction === MessageBox.Action.OK) {
-                  if (oItemToClose.getName() == "ROOT Canvas")
-                     pthis.websocket.Send("CLOSE_CANVAS:" + oItemToClose.getAdditionalText());
-
-                  oTabContainer.removeItem(oItemToClose);
-
-                  MessageToast.show('Closed the "' + oItemToClose.getName() + '" tab', {duration: 1500});
-               }
-            }
-         });
-      }
    });
 
 });
