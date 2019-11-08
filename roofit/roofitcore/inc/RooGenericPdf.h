@@ -57,7 +57,7 @@ protected:
 
   virtual Bool_t isValidReal(Double_t value, Bool_t printError) const ;
 
-  std::unique_ptr<RooFormula> _formula ; //! Formula engine
+  std::unique_ptr<RooFormula> _formula{nullptr}; //! Formula engine
   TString _formExpr ;            // Formula expression string
 
   ClassDef(RooGenericPdf,1) // Generic PDF defined by string expression and list of variables

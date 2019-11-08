@@ -71,6 +71,10 @@ public:
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
+  std::string formulaString() const {
+    return _tFormula ? _tFormula->GetTitle() : "";
+  }
+
 private:
   RooFormula& operator=(const RooFormula& other);
   std::string processFormula(std::string origFormula) const;
