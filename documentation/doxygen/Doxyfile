@@ -824,6 +824,7 @@ INPUT                  = . \
                          ../../graf2d/x11/ \
                          ../../graf2d/x11ttf/ \
                          ../../graf3d/eve/ \
+                         ../../graf3d/eve7/ \
                          ../../graf3d/g3d/ \
                          ../../graf3d/gl/ \
                          ../../graf3d/gviz3d/ \
