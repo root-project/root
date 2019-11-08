@@ -68,5 +68,5 @@ void benchmarks() {
    bexec(dir,"geom/geometry.C");
    bexec(dir,"geom/na49view.C");
    bexec(dir,"tree/ntuple1.C");
-   bexec(dir,"rootmarks.C");
+   bexec(dir,"legacy/rootmarks.C");
 }
