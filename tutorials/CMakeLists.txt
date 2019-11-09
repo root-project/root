@@ -428,7 +428,9 @@ endforeach()
 
 #---Python tutorials-----------------------------------------------------
 if(ROOT_python_FOUND)
-  find_package(PythonInterp REQUIRED)
+  if(NOT PYTHON_EXECUTABLE)
+    find_package(PythonInterp REQUIRED)
+  endif()
 
   file(GLOB pytutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} */*.py)
   set(pyveto pyroot/demo.py         # requires GUI
