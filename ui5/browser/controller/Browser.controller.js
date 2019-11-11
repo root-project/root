@@ -739,55 +739,23 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null,
             fullpath = (prop && prop.fullpath) ? prop.fullpath.substr(1, prop.fullpath.length-2) : "";
 
-        if (row._bHasChildren) {
-          let rowText = row.getCells()[0].getContent()[1].getText().substr(1);
-          if(!rowText.endsWith(".root")) {
-            let oBreadcrumbs = this.getView().byId("breadcrumbs");
-            let links = oBreadcrumbs.getLinks();
-            let currentText =  oBreadcrumbs.getCurrentLocationText();
-            let path = "/";
-            for (let i = 1; i<links.length; i++) {
-              path += links[i].getText() + "/";
+         if (row._bHasChildren) {
+            if(!prop.fullpath.endsWith(".root/")) {
+
+               let oBreadcrumbs = this.getView().byId("breadcrumbs");
+               let links = oBreadcrumbs.getLinks();
+               let currentText =  oBreadcrumbs.getCurrentLocationText();
+               let path = "/";
+               for (let i = 1; i<links.length; i++) {
+                  path += links[i].getText() + "/";
+               }
+               path += currentText + prop.fullpath;
+
+               console.log(path);
+               this.websocket.Send('CHDIR:' + path);
+               return this.doReload(true);
             }
-            path += currentText + "/";
-
-            if (row._iLevel !== 0) { // If the clicked row is a child, i need to find all the path from that child to the upper parent
-              let ilevel = row._iLevel;
-              let rows = row.getParent().getRows();
-              let rowIndex;
-              let result = [];
-              let i;
-              for (i=0; i<rows.length; i++) {
-                if (rows[i] === row) {
-                  rowIndex = i;
-                  break;
-                }
-              }
-              for (i = rowIndex; i !== -1; i--) {
-                if (rows[i]._iLevel === ilevel-1) {
-                  result.push(rows[i].getCells()[0].getContent()[1].getText().substr(1));
-                  ilevel--;
-                  if(ilevel === 0) {
-                    break;
-                  }
-                }
-              }
-              result = result.reverse();
-              result.push(rowText);
-              for (i=0; i<result.length; i++) {
-                path += result[i] + "/";
-              }
-            } else {
-              path += rowText + "/";
-            }
-
-            this.websocket.Send('CHDIR:' + path);
-
-            this.doReload(true);
-
-            return;
-          }
-        }
+         }
 
         if (!fullpath) return;
 
