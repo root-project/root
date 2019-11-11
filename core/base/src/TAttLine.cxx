@@ -115,6 +115,14 @@ Begin_Macro
 }
 End_Macro
 
+Some line styles can be accessed via the following enum:
+
+~~~ {.cpp}
+   kSolid      = 1
+   kDashed     = 2
+   kDotted     = 3
+   kDashDotted = 4
+~~~
 
 Additional line styles can be defined using `TStyle::SetLineStyleString`.
 For example the line style number 11 can be defined as follow:
