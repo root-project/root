@@ -32,7 +32,7 @@ not forced by other constraints:
   2. Using the TList iterator TListIter (via the wrapper class TIter):
 ~~~ {.cpp}
          TIter next(GetListOfPrimitives());
-         while ((TObject *obj = next()))
+         while (TObject *obj = next())
             obj->Draw(next.GetOption());
 ~~~
   3. Using the TList iterator TListIter and std::for_each algorithm:
