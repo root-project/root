@@ -10,7 +10,7 @@ if(ROOT_python_FOUND)
                     LABELS longtest
                     COPY_TO_BUILDDIR ${scott_file} Scott2.C Scott3.C MuonTileID.C LoKiNamespace.C ULongLong.C 
                                      Till.C CoralAttributeList.C NestedNamespace.h Marco.C
-                    PRECMD ${ROOT_root_CMD} -b -q -l -e gSystem->AddLinkedLibs\(\"${PYTHON_LIBRARY}\"\)
+                    PRECMD ${ROOT_root_CMD} -b -q -l -e gSystem->AddLinkedLibs\(\"${PYTHON_LIBRARIES}\"\)
                                          -e .L\ ${scott_file}+
                                          -e .L\ Scott2.C+
                                          -e .L\ Scott3.C+
@@ -24,7 +24,7 @@ if(ROOT_python_FOUND)
   ROOTTEST_ADD_TEST(root_6023
                     MACRO exec_root_6023.py OPTS -b
                     COPY_TO_BUILDDIR root_6023.h
-                    PRECMD ${ROOT_root_CMD} -b -q -l -e gSystem->AddLinkedLibs\(\"${PYTHON_LIBRARY}\"\)
+                    PRECMD ${ROOT_root_CMD} -b -q -l -e gSystem->AddLinkedLibs\(\"${PYTHON_LIBRARIES}\"\)
                                                      -e .L\ root_6023.h+
                     ENVIRONMENT CLING_STANDARD_PCH=none
                                 CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend.so)
