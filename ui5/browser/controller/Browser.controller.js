@@ -824,7 +824,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             let result = this.getSelectedCodeEditor();
             if (result !== -1) {
                result.getModel().setProperty("/code", msg);
-               // this.getElementFromCurrentTab("Save").setEnabled(true);
+               this.getElementFromCurrentTab("Save").setEnabled(true);
                result.getModel().setProperty("/fullpath", this.nextElem.fullpath);
             }
             break;
