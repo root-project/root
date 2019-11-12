@@ -573,6 +573,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** @brief Add Tab event handler */
       addNewButtonPressHandler: async function (oEvent) {
          //TODO: Change to some UI5 function (unknown for now)
+
          let oButton = oEvent.getSource().mAggregations._tabStrip.mAggregations.addButton;
 
          // create action sheet only once
@@ -634,22 +635,19 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       onBreadcrumbsPress: function(oEvent) {
-         let sId = oEvent.getSource().sId;
+         let sId = oEvent.getSource().getId();
          let oBreadcrumbs = oEvent.getSource().getParent();
          let oLinks = oBreadcrumbs.getLinks();
          let path = "/";
          for (let i = 1; i<oLinks.length; i++) {
-            if (oLinks[i].sId === sId ) {
+            if (oLinks[i].getId() === sId ) {
                path += oLinks[i].getText();
                break;
             }
             path += oLinks[i].getText() + "/";
          }
 
-         console.log('calling onBreadcrumbsPress', path);
-
          this.websocket.Send('CHDIR:' + path);
-
          this.doReload(true);
       },
 
@@ -662,7 +660,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* ============================================ */
 
       tabSelectItem: function(oEvent) {
-         var oTabContainer = this.byId("myTabContainer");
          var oItemSelected = oEvent.getParameter('item');
 
          if (oItemSelected.getName() !== "ROOT Canvas") return;
@@ -715,77 +712,76 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* ============================================ */
 
       /** @brief Assign the "double click" event handler to each row */
-      assignRowHandlers: function() {
+      assignRowHandlers: function () {
          var rows = this.byId("treeTable").getRows();
-         for (var k=0;k<rows.length;++k) {
+         for (var k = 0; k < rows.length; ++k) {
             rows[k].$().dblclick(this.onRowDblClick.bind(this, rows[k]));
          }
       },
 
       /** @brief Send RBrowserRequest to the browser */
-      sendBrowserRequest: function(_oper, args) {
-         var req = { path: "", first: 0, number: 0, sort: _oper };
+      sendBrowserRequest: function (_oper, args) {
+         var req = {path: "", first: 0, number: 0, sort: _oper};
          JSROOT.extend(req, args);
          this.websocket.Send("BRREQ:" + JSON.stringify(req));
       },
 
-     sendDblClick: function(fullpath, opt) {
-        this.websocket.Send('DBLCLK: ["'  + fullpath + '","' + (opt || "") + '"]' );
-     },
+      sendDblClick: function (fullpath, opt) {
+         this.websocket.Send('DBLCLK: ["' + fullpath + '","' + (opt || "") + '"]');
+      },
 
       /** @brief Double-click event handler */
-      onRowDblClick: function(row) {
-        var ctxt = row.getBindingContext(),
+      onRowDblClick: function (row) {
+         let ctxt = row.getBindingContext(),
             prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null,
-            fullpath = (prop && prop.fullpath) ? prop.fullpath.substr(1, prop.fullpath.length-2) : "";
+            fullpath = (prop && prop.fullpath) ? prop.fullpath.substr(1, prop.fullpath.length - 2) : "";
+
+         if (!fullpath) return;
 
          if (row._bHasChildren) {
-            if(!prop.fullpath.endsWith(".root/")) {
+            if (!prop.fullpath.endsWith(".root/")) {
 
                let oBreadcrumbs = this.getView().byId("breadcrumbs");
                let links = oBreadcrumbs.getLinks();
-               let currentText =  oBreadcrumbs.getCurrentLocationText();
+               let currentText = oBreadcrumbs.getCurrentLocationText();
                let path = "/";
-               for (let i = 1; i<links.length; i++) {
+               for (let i = 1; i < links.length; i++) {
                   path += links[i].getText() + "/";
                }
                path += currentText + prop.fullpath;
 
-               console.log(path);
                this.websocket.Send('CHDIR:' + path);
                return this.doReload(true);
             }
          }
 
-        if (!fullpath) return;
+         // first try to activate editor
+         let codeEditor = this.getSelectedCodeEditor(true);
+         if (codeEditor !== -1) {
+            var oModel = codeEditor.getModel();
 
-        // first try to activate editor
-        let codeEditor = this.getSelectedCodeEditor(true);
-        if(codeEditor !== -1) {
-          var oModel = codeEditor.getModel();
+            // FIXME: wrong place, should be configured when server replied
+            oModel.setProperty("/fullpath", fullpath);
+            this.getElementFromCurrentTab("Save").setEnabled(true);
+            let filename = fullpath.substr(fullpath.lastIndexOf('/') + 1);
+            if (this.setFileNameType(filename))
+               return this.sendDblClick(fullpath, "$$$editor$$$");
+         }
 
-          // FIXME: wrong place, should be configured when server replied
-          oModel.setProperty("/fullpath", fullpath);
-          this.getElementFromCurrentTab("Save").setEnabled(true);
-          var filename = fullpath.substr(fullpath.lastIndexOf('/') + 1);
-          if (this.setFileNameType(filename))
-             return this.sendDblClick(fullpath, "$$$editor$$$");
-        }
+         let viewerTab = this.getSelectedImageViewer(true);
+         if (viewerTab !== -1) {
 
-        let viewerTab = this.getSelectedImageViewer(true);
-        if (viewerTab !== -1) {
+            // FIXME: wrong place, should be configured when server replied
+            viewerTab.getParent().getParent().setAdditionalText(fullpath);
+            return this.sendDblClick(fullpath, "$$$image$$$");
+         }
 
-           // FIXME: wrong place, should be configured when server replied
-           viewerTab.getParent().getParent().setAdditionalText(fullpath);
-           return this.sendDblClick(fullpath, "$$$image$$$");
-        }
+         let className = this.getBaseClass(prop ? prop.className : "");
+         let drawingOptions = "";
+         if (className && this.drawingOptions[className])
+            drawingOptions = this.drawingOptions[className];
 
-        let className = this.getBaseClass(prop ? prop.className : "");
-        let drawingOptions = "";
-        if (className && this.drawingOptions[className])
-           drawingOptions = this.drawingOptions[className];
-
-        return this.sendDblClick(fullpath, drawingOptions);
+         return this.sendDblClick(fullpath, drawingOptions);
       },
 
       getBaseClass: function(className) {
