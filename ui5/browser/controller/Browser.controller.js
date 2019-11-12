@@ -759,8 +759,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          // first try to activate editor
          let codeEditor = this.getSelectedCodeEditor(true);
          if (codeEditor !== -1) {
-            var oModel = codeEditor.getModel();
-
             this.nextElem = { fullpath };
             let filename = fullpath.substr(fullpath.lastIndexOf('/') + 1);
             if (this.setFileNameType(filename))
@@ -769,9 +767,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          let viewerTab = this.getSelectedImageViewer(true);
          if (viewerTab !== -1) {
-
-            // FIXME: wrong place, should be configured when server replied
-            viewerTab.getParent().getParent().setAdditionalText(fullpath);
             this.nextElem = { fullpath };
             return this.sendDblClick(fullpath, "$$$image$$$");
          }
@@ -836,6 +831,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          case "FIMG":  // image file read
             const image = this.getSelectedImageViewer(true);
             if(image !== -1) {
+               image.getParent().getParent().setAdditionalText(this.nextElem.fullpath);
                image.setSrc(msg);
             }
             break;
