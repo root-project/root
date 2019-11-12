@@ -53,6 +53,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       onInit: async function () {
 
         this.globalId = 1;
+        this.nextElem = "";
 
          this.websocket = this.getView().getViewData().conn_handle;
 
@@ -760,9 +761,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (codeEditor !== -1) {
             var oModel = codeEditor.getModel();
 
-            // FIXME: wrong place, should be configured when server replied
-            oModel.setProperty("/fullpath", fullpath);
-            this.getElementFromCurrentTab("Save").setEnabled(true);
+            this.nextElem = { fullpath };
             let filename = fullpath.substr(fullpath.lastIndexOf('/') + 1);
             if (this.setFileNameType(filename))
                return this.sendDblClick(fullpath, "$$$editor$$$");
@@ -773,6 +772,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
             // FIXME: wrong place, should be configured when server replied
             viewerTab.getParent().getParent().setAdditionalText(fullpath);
+            this.nextElem = { fullpath };
             return this.sendDblClick(fullpath, "$$$image$$$");
          }
 
@@ -827,8 +827,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             break;
          case "FREAD":  // file read
             let result = this.getSelectedCodeEditor();
-            if (result !== -1)
+            if (result !== -1) {
                result.getModel().setProperty("/code", msg);
+               // this.getElementFromCurrentTab("Save").setEnabled(true);
+               result.getModel().setProperty("/fullpath", this.nextElem.fullpath);
+            }
             break;
          case "FIMG":  // image file read
             const image = this.getSelectedImageViewer(true);
