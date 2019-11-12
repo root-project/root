@@ -284,34 +284,40 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          return this.websocket.Send("SAVEFILE:" + fullpath + ":" + sText);
       },
 
-      reallyRunMacro: function () {
-         const oEditor = this.getSelectedCodeEditor();
+      reallyRunMacro: function (myThis) {
+         const oEditor = myThis.getSelectedCodeEditor();
          const oModel = oEditor.getModel();
          const fullpath = oModel.getProperty("/fullpath");
          if (fullpath === undefined)
-            return this.onSaveAs();
-         return this.websocket.Send("RUNMACRO:" + fullpath);
+            return myThis.onSaveAs();
+         return myThis.websocket.Send("RUNMACRO:" + fullpath);
       },
 
       /** @brief Handle the "Run" button press event */
       onRunMacro: function () {
+         this.saveCheck(this.reallyRunMacro);
+      },
+
+      saveCheck: function(next) {
          const oEditor = this.getSelectedCodeEditor();
          const oModel = oEditor.getModel();
          if (oModel.getProperty("/modified") === true) {
             MessageBox.confirm('The text has been modified! Do you want to save it?', {
                title: 'Run Macro',
                icon: sap.m.MessageBox.Icon.QUESTION,
-               actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO, sap.m.MessageBox.Action.CANCEL],
                onClose: (oAction) => {
-                  if (oAction === MessageBox.Action.YES)
+                  if (oAction === MessageBox.Action.YES) {
                      this.onSaveFile();
-                  else if (oAction === MessageBox.Action.CANCEL)
+                  } else if (oAction === MessageBox.Action.CANCEL) {
                      return;
-                  return this.reallyRunMacro();
-               }
+                  }
+                  return next(this);
+               },
+               actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO, sap.m.MessageBox.Action.CANCEL]
             });
-         } else
-            return this.reallyRunMacro();
+         } else {
+            return next(this);
+         }
       },
 
       getSelectedCodeEditor: function (no_warning) {
