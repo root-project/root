@@ -303,7 +303,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          const oModel = oEditor.getModel();
          if (oModel.getProperty("/modified") === true) {
             MessageBox.confirm('The text has been modified! Do you want to save it?', {
-               title: 'Run Macro',
+               title: 'Unsaved file',
                icon: sap.m.MessageBox.Icon.QUESTION,
                onClose: (oAction) => {
                   if (oAction === MessageBox.Action.YES) {
@@ -684,8 +684,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          let oTabContainer = this.byId("myTabContainer");
          let oItemToClose = oEvent.getParameter('item');
-         // prevent closing the Code Editor
+
+
          if (oItemToClose.getName() === "Code Editor") {
+
             let count = 0;
             const items = oTabContainer.getItems();
             for (let i=0; i< items.length; i++) {
@@ -695,23 +697,25 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             }
             if (count <= 1) {
                MessageToast.show("Sorry, you cannot close the Code Editor", {duration: 1500});
-               return;
+            } else {
+               this.saveCheck(function ()  {oTabContainer.removeItem(oItemToClose);});
             }
-         }
+         } else {
+            let pthis = this;
+            MessageBox.confirm('Do you really want to close the "' + oItemToClose.getName() + '" tab?', {
+               onClose: function (oAction) {
+                  if (oAction === MessageBox.Action.OK) {
+                     if (oItemToClose.getName() === "ROOT Canvas")
+                        pthis.websocket.Send("CLOSE_CANVAS:" + oItemToClose.getAdditionalText());
 
-         let pthis = this;
-         MessageBox.confirm('Do you really want to close the "' + oItemToClose.getName() + '" tab?', {
-            onClose: function (oAction) {
-               if (oAction === MessageBox.Action.OK) {
-                  if (oItemToClose.getName() === "ROOT Canvas")
-                     pthis.websocket.Send("CLOSE_CANVAS:" + oItemToClose.getAdditionalText());
+                     oTabContainer.removeItem(oItemToClose);
 
-                  oTabContainer.removeItem(oItemToClose);
-
-                  MessageToast.show('Closed the "' + oItemToClose.getName() + '" tab', {duration: 1500});
+                     MessageToast.show('Closed the "' + oItemToClose.getName() + '" tab', {duration: 1500});
+                  }
                }
-            }
-         });
+            });
+
+         }
       },
 
       /* ============================================ */
