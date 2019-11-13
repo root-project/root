@@ -204,53 +204,44 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       newCodeEditorFragment: function (ID) {
-         return new Splitter({
-            orientation: "Vertical",
-            contentAreas: [
-               new Toolbar({
-                  content: [
-                     new FileUploader({
-                        change: [this.onChangeFile, this]
-                     }),
-                     new Button(ID + "SaveAs", {
-                        text: "Save as...",
-                        tooltip: "Save current file as...",
-                        press: [this.onSaveAs, this]
-                     }),
-                     new Button(ID + "Save", {
-                        text: "Save",
-                        tooltip: "Save current file",
-                        press: [this.onSaveFile, this]
-                     }),
-                     new Button(ID + "Run", {
-                        text: "Run",
-                        tooltip: "Run Current Macro",
-                        icon: "sap-icon://play",
-                        enabled: false,
-                        press: [this.onRunMacro, this]
-                     }),
-                  ],
-                  layoutData: new SplitterLayoutData({
-                     size: "35px",
-                     resizable: false
-                  })
-               }),
-               new CodeEditor(ID + "Editor", {
-                  height: "100%",
-                  colorTheme: "default",
-                  type: "c_cpp",
-                  value: "{/code}",
-                  change: function () {
-                     this.getModel().setProperty("/modified", true);
-                  }
-               }).setModel(new JSONModel({
-                  code: "",
-                  ext: "",
-                  filename: "",
-                  fullpath: "",
-                  modified: false
-               }))
-            ]
+         return new sap.m.Page({
+            headerContent: [
+                        new FileUploader({
+                           change: [this.onChangeFile, this]
+                        }),
+                        new Button(ID + "SaveAs", {
+                           text: "Save as...",
+                           tooltip: "Save current file as...",
+                           press: [this.onSaveAs, this]
+                        }),
+                        new Button(ID + "Save", {
+                           text: "Save",
+                           tooltip: "Save current file",
+                           press: [this.onSaveFile, this]
+                        }),
+                        new Button(ID + "Run", {
+                           text: "Run",
+                           tooltip: "Run Current Macro",
+                           icon: "sap-icon://play",
+                           enabled: false,
+                           press: [this.onRunMacro, this]
+                        }),
+            ],
+            content: new CodeEditor(ID + "Editor", {
+                     height: "100%",
+                     colorTheme: "default",
+                     type: "c_cpp",
+                     value: "{/code}",
+                     change: function () {
+                        this.getModel().setProperty("/modified", true);
+                     }
+                  }).setModel(new JSONModel({
+                     code: "",
+                     ext: "",
+                     filename: "",
+                     fullpath: "",
+                     modified: false
+                  }))
          });
       },
 
@@ -396,9 +387,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             case "csh":
             case "sh":
                oEditor.setType('sh');
-               break;
-            case "md":
-               oEditor.setType('markdown');
                break;
             case "xml":
                oEditor.setType('xml');
@@ -599,7 +587,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** @brief Add Tab event handler */
       addNewButtonPressHandler: async function (oEvent) {
          //TODO: Change to some UI5 function (unknown for now)
-
          let oButton = oEvent.getSource().mAggregations._tabStrip.mAggregations.addButton;
 
          // create action sheet only once
@@ -1087,6 +1074,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             // JSROOT.CallBack(call_back, true);
          });
       },
+
+
+
+      handlePressConfiguration: function(oEvent) {
+         var oItem = oEvent.getSource();
+         var oShell = this.byId("myShell");
+         var bState = oShell.getShowPane();
+         oShell.setShowPane(!bState);
+         oItem.setShowMarker(!bState);
+         oItem.setSelected(!bState);
+      },
+
    });
 
 });
