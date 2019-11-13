@@ -6,7 +6,17 @@
           xmlns:t="sap.ui.table"
           xmlns:l="sap.ui.layout"
           xmlns:u="sap.ui.unified"
-          xmlns:e="sap.ui.codeeditor">
+          xmlns:e="sap.ui.codeeditor"
+          xmlns:tnt="sap.tnt"
+          xmlns:f="sap.f">
+
+  <f:ShellBar
+          id="sapFShellBarSample"
+          title="ROOT"
+          homeIcon="https://raw.githubusercontent.com/root-project/root/master/etc/notebook/kernels/root/logo-64x64.png"
+          showSearch="true"
+          showMenuButton="true">
+  </f:ShellBar>
 
   <SplitApp id="SplitAppBrowser" initialDetail="detail" initialMaster="master" orientationChange="onOrientationChange">
     <detailPages>
@@ -30,46 +40,36 @@
       </l:Splitter>
     </detailPages>
     <masterPages>
-      <Page id="browserMaster" title="" showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false" enableScrolling="false">
-        <FlexBox height="100%" direction="Column">
-          <Toolbar>
-            <layoutData>
-               <FlexItemData baseSize="35px"/>
-            </layoutData>
-            <Button icon="sap-icon://synchronize" type="Transparent"
-                    tooltip="Refresh" press="onRealoadPress"/>
-            <Button icon="sap-icon://log" type="Transparent"
-                    tooltip="Quit ROOT session" press="onQuitRootPress"/>
-            <Button icon="sap-icon://settings" type="Transparent" tooltip="Settings" press="onSettingPress"/>
-            <ToolbarSpacer/>
-            <SearchField liveChange="onSearch"/>
-          </Toolbar>
-          <Toolbar>
-            <layoutData>
-              <FlexItemData baseSize="25px"/>
-            </layoutData>
-            <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan">
-            </Breadcrumbs>
-          </Toolbar>
-          <t:TreeTable
-              id="treeTable"
-              columnHeaderVisible="true"
-              editable="false"
-              enableSelectAll="false"
-              selectionBehavior="RowOnly"
-              selectionMode="Single"
-              visibleRowCountMode="Auto"
-              showColumnVisibilityMenu="true"
-              rows="{/nodes}">
-              <t:layoutData>
-                 <FlexItemData growFactor="1"/>
-              </t:layoutData>
-          </t:TreeTable>
-        </FlexBox>
+      <Page id="browserMaster" title="" showNavButton="false" showFooter="false" enableScrolling="false">
+        <headerContent>
+          <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan"/>
+        </headerContent>
+      <Page id="" title="" showNavButton="false" showFooter="false" enableScrolling="false">
+        <headerContent>
+          <Button icon="sap-icon://synchronize" type="Transparent"
+                  tooltip="Refresh" press="onRealoadPress"/>
+          <Button icon="sap-icon://log" type="Transparent"
+                  tooltip="Quit ROOT session" press="onQuitRootPress"/>
+          <Button icon="sap-icon://settings" type="Transparent" tooltip="Settings" press="onSettingPress"/>
+          <SearchField liveChange="onSearch"/>
+        </headerContent>
+        <t:TreeTable
+                id="treeTable"
+                columnHeaderVisible="true"
+                editable="false"
+                enableSelectAll="false"
+                selectionBehavior="RowOnly"
+                selectionMode="Single"
+                visibleRowCountMode="Auto"
+                showColumnVisibilityMenu="true"
+                rows="{/nodes}">
+          <t:layoutData>
+            <FlexItemData growFactor="1"/>
+          </t:layoutData>
+        </t:TreeTable>
+      </Page>
       </Page>
     </masterPages>
   </SplitApp>
+
 </mvc:View>
-
-
-
