@@ -284,18 +284,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          return this.websocket.Send("SAVEFILE:" + fullpath + ":" + sText);
       },
 
-      reallyRunMacro: function (myThis) {
-         const oEditor = myThis.getSelectedCodeEditor();
+      reallyRunMacro: function () {
+         const oEditor = this.getSelectedCodeEditor();
          const oModel = oEditor.getModel();
          const fullpath = oModel.getProperty("/fullpath");
          if (fullpath === undefined)
-            return myThis.onSaveAs();
-         return myThis.websocket.Send("RUNMACRO:" + fullpath);
+            return this.onSaveAs();
+         return this.websocket.Send("RUNMACRO:" + fullpath);
       },
 
       /** @brief Handle the "Run" button press event */
       onRunMacro: function () {
-         this.saveCheck(this.reallyRunMacro);
+         this.saveCheck(this.reallyRunMacro.bind(this));
       },
 
       saveCheck: function(next) {
