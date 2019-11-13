@@ -298,7 +298,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.saveCheck(this.reallyRunMacro.bind(this));
       },
 
-      saveCheck: function(next) {
+      saveCheck: function(functionToRunAfter) {
          const oEditor = this.getSelectedCodeEditor();
          const oModel = oEditor.getModel();
          if (oModel.getProperty("/modified") === true) {
@@ -311,12 +311,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                   } else if (oAction === MessageBox.Action.CANCEL) {
                      return;
                   }
-                  return next(this);
+                  return functionToRunAfter();
                },
                actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO, sap.m.MessageBox.Action.CANCEL]
             });
          } else {
-            return next(this);
+            return functionToRunAfter();
          }
       },
 
