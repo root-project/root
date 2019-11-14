@@ -26,6 +26,7 @@
 #include <TDirectory.h>
 #include <TFile.h>
 
+#include <cstdio>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -69,11 +70,15 @@ private:
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
 
    /// Currently, an ntuple is stored as a directory in a TFile
+   FILE *fBinaryFile = nullptr;
    std::unique_ptr<TFile> fFile;
    TDirectory *fDirectory = nullptr;
 
+
    /// Instead of a physical file offset, pages in root are identified by an index which becomes part of the key
    DescriptorId_t fLastPageIdx = 0;
+
+   std::uint64_t Write(void *from, size_t size, std::uint64_t offset);
 
 protected:
    void DoCreate(const RNTupleModel &model) final;
