@@ -105,9 +105,9 @@ TEST(RNTuple, ReconstructModel)
 
 TEST(RNTuple, StorageRoot)
 {
-   FileRaii fileGuard("test_ntuple_storage.root");
+   //FileRaii fileGuard("test_ntuple_storage.root");
    {
-      RPageSinkRoot sinkRoot("myTree", fileGuard.GetPath(), RNTupleWriteOptions());
+      RPageSinkRoot sinkRoot("myTree", "test_ntuple_storage.root"/*fileGuard.GetPath()*/, RNTupleWriteOptions());
 
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<float>("pt", 42.0);
@@ -122,8 +122,8 @@ TEST(RNTuple, StorageRoot)
       sinkRoot.CommitDataset();
    }
 
-   RPageSourceRoot sourceRoot("myTree", fileGuard.GetPath(), RNTupleReadOptions());
-   sourceRoot.Attach();
+   //RPageSourceRoot sourceRoot("myTree", fileGuard.GetPath(), RNTupleReadOptions());
+   //sourceRoot.Attach();
 }
 
 
