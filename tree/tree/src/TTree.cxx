@@ -8932,13 +8932,37 @@ void TTree::SetObject(const char* name, const char* title)
 
 void TTree::SetParallelUnzip(Bool_t opt, Float_t RelSize)
 {
-   if (opt) TTreeCacheUnzip::SetParallelUnzip(TTreeCacheUnzip::kEnable);
-   else     TTreeCacheUnzip::SetParallelUnzip(TTreeCacheUnzip::kDisable);
-
-   if (RelSize > 0) {
-      TTreeCacheUnzip::SetUnzipRelBufferSize(RelSize);
+#ifdef R__USE_IMT
+   if (GetTree() == 0) {
+      LoadTree(GetReadEntry());
+      if (!GetTree())
+         return;
    }
+   if (GetTree() != this) {
+      GetTree()->SetParallelUnzip(opt, RelSize);
+      return;
+   }
+   TFile* file = GetCurrentFile();
+   if (!file)
+      return;
 
+   TTreeCache* pf = GetReadCache(file);
+   if (pf && !( opt ^ (nullptr != dynamic_cast<TTreeCacheUnzip*>(pf)))) {
+      // done with opt and type are in agreement.
+      return;
+   }
+   delete pf;
+   auto cacheSize = GetCacheAutoSize(kTRUE);
+   if (opt) {
+      auto unzip = new TTreeCacheUnzip(this, cacheSize);
+      unzip->SetUnzipBufferSize( Long64_t(cacheSize * RelSize) );
+   } else {
+      pf = new TTreeCache(this, cacheSize);
+   }
+#else
+   (void)opt;
+   (void)RelSize;
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
