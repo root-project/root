@@ -172,6 +172,8 @@ typedefs (in particular `Double32_t`)
   Like server binding to specific host `root --notebook --ip=hostname`
 - Remove `c.NotebookApp.ip = '*'` from default jupyter config. One has to provide ip address for server
   binding using `root --notebook --ip=<hostaddr>` arguments
+- Now Jupyter Notebooks will use JSROOT provided with ROOT installation. This allows to use notebooks
+  without internet connection (offline).
 
 
 ## JavaScript ROOT

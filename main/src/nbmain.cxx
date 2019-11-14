@@ -124,7 +124,7 @@ static bool InstallNbFiles(string source, string dest)
 /// Creates the Jupyter notebook configuration file that sets the
 /// necessary environment.
 
-static bool CreateJupyterConfig(string dest, string rootbin, string rootlib)
+static bool CreateJupyterConfig(string dest, string rootbin, string rootlib, string rootdata)
 {
    string jupyconfig = dest + pathsep + JUPYTER_CONFIG;
    ofstream out(jupyconfig, ios::trunc);
@@ -133,13 +133,16 @@ static bool CreateJupyterConfig(string dest, string rootbin, string rootlib)
       out << "rootbin = '" << rootbin << "'" << endl;
       out << "rootlib = '" << rootlib << "'" << endl;
 #ifdef WIN32
+      string jsrootsys = rootdata + "\\js\\";
       out << "os.environ['PYTHONPATH']      = '%s' % rootlib + ':' + os.getenv('PYTHONPATH', '')" << endl;
       out << "os.environ['PATH']            = '%s:%s\\bin' % (rootbin,rootbin) + ':' + '%s' % rootlib + ':' + os.getenv('PATH', '')" << endl;
 #else
+      string jsrootsys = rootdata + "/js/";
       out << "os.environ['PYTHONPATH']      = '%s' % rootlib + ':' + os.getenv('PYTHONPATH', '')" << endl;
       out << "os.environ['PATH']            = '%s:%s/bin' % (rootbin,rootbin) + ':' + os.getenv('PATH', '')" << endl;
       out << "os.environ['LD_LIBRARY_PATH'] = '%s' % rootlib + ':' + os.getenv('LD_LIBRARY_PATH', '')" << endl;
 #endif
+      out << "c.NotebookApp.extra_static_paths = ['" << jsrootsys << "']" << endl;
       out.close();
       return true;
    }
@@ -178,6 +181,7 @@ int main(int argc, char **argv)
    string rootbin(TROOT::GetBinDir().Data());
    string rootlib(TROOT::GetLibDir().Data());
    string rootetc(TROOT::GetEtcDir().Data());
+   string rootdata(TROOT::GetDataDir().Data());
 
    // If needed, install ROOT notebook files in the user's home directory
 #ifdef WIN32
@@ -191,7 +195,7 @@ int main(int argc, char **argv)
       string source(rootetc + pathsep + NB_CONF_DIR);
       string dest(homedir + pathsep + ROOTNB_DIR);
       bool res = InstallNbFiles(source, dest) &&
-                 CreateJupyterConfig(dest, rootbin, rootlib) &&
+                 CreateJupyterConfig(dest, rootbin, rootlib, rootdata) &&
                  CreateStamp(dest);
       if (!res) return 1;
    }
