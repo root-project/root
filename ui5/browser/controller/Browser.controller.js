@@ -53,6 +53,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       onInit: async function () {
 
         this.globalId = 1;
+        this.nextElem = "";
 
          this.websocket = this.getView().getViewData().conn_handle;
 
@@ -294,23 +295,29 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @brief Handle the "Run" button press event */
       onRunMacro: function () {
+         this.saveCheck(this.reallyRunMacro.bind(this));
+      },
+
+      saveCheck: function(functionToRunAfter) {
          const oEditor = this.getSelectedCodeEditor();
          const oModel = oEditor.getModel();
          if (oModel.getProperty("/modified") === true) {
             MessageBox.confirm('The text has been modified! Do you want to save it?', {
-               title: 'Run Macro',
+               title: 'Unsaved file',
                icon: sap.m.MessageBox.Icon.QUESTION,
-               actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO, sap.m.MessageBox.Action.CANCEL],
                onClose: (oAction) => {
-                  if (oAction === MessageBox.Action.YES)
+                  if (oAction === MessageBox.Action.YES) {
                      this.onSaveFile();
-                  else if (oAction === MessageBox.Action.CANCEL)
+                  } else if (oAction === MessageBox.Action.CANCEL) {
                      return;
-                  return this.reallyRunMacro();
-               }
+                  }
+                  return functionToRunAfter();
+               },
+               actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO, sap.m.MessageBox.Action.CANCEL]
             });
-         } else
-            return this.reallyRunMacro();
+         } else {
+            return functionToRunAfter();
+         }
       },
 
       getSelectedCodeEditor: function (no_warning) {
@@ -573,6 +580,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** @brief Add Tab event handler */
       addNewButtonPressHandler: async function (oEvent) {
          //TODO: Change to some UI5 function (unknown for now)
+
          let oButton = oEvent.getSource().mAggregations._tabStrip.mAggregations.addButton;
 
          // create action sheet only once
@@ -634,22 +642,19 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       onBreadcrumbsPress: function(oEvent) {
-         let sId = oEvent.getSource().sId;
+         let sId = oEvent.getSource().getId();
          let oBreadcrumbs = oEvent.getSource().getParent();
          let oLinks = oBreadcrumbs.getLinks();
          let path = "/";
          for (let i = 1; i<oLinks.length; i++) {
-            if (oLinks[i].sId === sId ) {
+            if (oLinks[i].getId() === sId ) {
                path += oLinks[i].getText();
                break;
             }
             path += oLinks[i].getText() + "/";
          }
 
-         console.log('calling onBreadcrumbsPress', path);
-
          this.websocket.Send('CHDIR:' + path);
-
          this.doReload(true);
       },
 
@@ -662,7 +667,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* ============================================ */
 
       tabSelectItem: function(oEvent) {
-         var oTabContainer = this.byId("myTabContainer");
          var oItemSelected = oEvent.getParameter('item');
 
          if (oItemSelected.getName() !== "ROOT Canvas") return;
@@ -680,8 +684,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          let oTabContainer = this.byId("myTabContainer");
          let oItemToClose = oEvent.getParameter('item');
-         // prevent closing the Code Editor
+
+
          if (oItemToClose.getName() === "Code Editor") {
+
             let count = 0;
             const items = oTabContainer.getItems();
             for (let i=0; i< items.length; i++) {
@@ -691,23 +697,25 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             }
             if (count <= 1) {
                MessageToast.show("Sorry, you cannot close the Code Editor", {duration: 1500});
-               return;
+            } else {
+               this.saveCheck(function ()  {oTabContainer.removeItem(oItemToClose);});
             }
-         }
+         } else {
+            let pthis = this;
+            MessageBox.confirm('Do you really want to close the "' + oItemToClose.getName() + '" tab?', {
+               onClose: function (oAction) {
+                  if (oAction === MessageBox.Action.OK) {
+                     if (oItemToClose.getName() === "ROOT Canvas")
+                        pthis.websocket.Send("CLOSE_CANVAS:" + oItemToClose.getAdditionalText());
 
-         let pthis = this;
-         MessageBox.confirm('Do you really want to close the "' + oItemToClose.getName() + '" tab?', {
-            onClose: function (oAction) {
-               if (oAction === MessageBox.Action.OK) {
-                  if (oItemToClose.getName() === "ROOT Canvas")
-                     pthis.websocket.Send("CLOSE_CANVAS:" + oItemToClose.getAdditionalText());
+                     oTabContainer.removeItem(oItemToClose);
 
-                  oTabContainer.removeItem(oItemToClose);
-
-                  MessageToast.show('Closed the "' + oItemToClose.getName() + '" tab', {duration: 1500});
+                     MessageToast.show('Closed the "' + oItemToClose.getName() + '" tab', {duration: 1500});
+                  }
                }
-            }
-         });
+            });
+
+         }
       },
 
       /* ============================================ */
@@ -715,109 +723,70 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* ============================================ */
 
       /** @brief Assign the "double click" event handler to each row */
-      assignRowHandlers: function() {
+      assignRowHandlers: function () {
          var rows = this.byId("treeTable").getRows();
-         for (var k=0;k<rows.length;++k) {
+         for (var k = 0; k < rows.length; ++k) {
             rows[k].$().dblclick(this.onRowDblClick.bind(this, rows[k]));
          }
       },
 
       /** @brief Send RBrowserRequest to the browser */
-      sendBrowserRequest: function(_oper, args) {
-         var req = { path: "", first: 0, number: 0, sort: _oper };
+      sendBrowserRequest: function (_oper, args) {
+         var req = {path: "", first: 0, number: 0, sort: _oper};
          JSROOT.extend(req, args);
          this.websocket.Send("BRREQ:" + JSON.stringify(req));
       },
 
-     sendDblClick: function(fullpath, opt) {
-        this.websocket.Send('DBLCLK: ["'  + fullpath + '","' + (opt || "") + '"]' );
-     },
+      sendDblClick: function (fullpath, opt) {
+         this.websocket.Send('DBLCLK: ["' + fullpath + '","' + (opt || "") + '"]');
+      },
 
       /** @brief Double-click event handler */
-      onRowDblClick: function(row) {
-        var ctxt = row.getBindingContext(),
+      onRowDblClick: function (row) {
+         let ctxt = row.getBindingContext(),
             prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null,
-            fullpath = (prop && prop.fullpath) ? prop.fullpath.substr(1, prop.fullpath.length-2) : "";
+            fullpath = (prop && prop.fullpath) ? prop.fullpath.substr(1, prop.fullpath.length - 2) : "";
 
-        if (row._bHasChildren) {
-          let rowText = row.getCells()[0].getContent()[1].getText().substr(1);
-          if(!rowText.endsWith(".root")) {
-            let oBreadcrumbs = this.getView().byId("breadcrumbs");
-            let links = oBreadcrumbs.getLinks();
-            let currentText =  oBreadcrumbs.getCurrentLocationText();
-            let path = "/";
-            for (let i = 1; i<links.length; i++) {
-              path += links[i].getText() + "/";
+         if (!fullpath) return;
+
+         if (row._bHasChildren) {
+            if (!prop.fullpath.endsWith(".root/")) {
+
+               let oBreadcrumbs = this.getView().byId("breadcrumbs");
+               let links = oBreadcrumbs.getLinks();
+               let currentText = oBreadcrumbs.getCurrentLocationText();
+               let path = "/";
+               for (let i = 1; i < links.length; i++) {
+                  path += links[i].getText() + "/";
+               }
+               path += currentText + prop.fullpath;
+
+               this.websocket.Send('CHDIR:' + path);
+               return this.doReload(true);
             }
-            path += currentText + "/";
+         }
 
-            if (row._iLevel !== 0) { // If the clicked row is a child, i need to find all the path from that child to the upper parent
-              let ilevel = row._iLevel;
-              let rows = row.getParent().getRows();
-              let rowIndex;
-              let result = [];
-              let i;
-              for (i=0; i<rows.length; i++) {
-                if (rows[i] === row) {
-                  rowIndex = i;
-                  break;
-                }
-              }
-              for (i = rowIndex; i !== -1; i--) {
-                if (rows[i]._iLevel === ilevel-1) {
-                  result.push(rows[i].getCells()[0].getContent()[1].getText().substr(1));
-                  ilevel--;
-                  if(ilevel === 0) {
-                    break;
-                  }
-                }
-              }
-              result = result.reverse();
-              result.push(rowText);
-              for (i=0; i<result.length; i++) {
-                path += result[i] + "/";
-              }
-            } else {
-              path += rowText + "/";
-            }
+         // first try to activate editor
+         let codeEditor = this.getSelectedCodeEditor(true);
+         if (codeEditor !== -1) {
+            this.nextElem = { fullpath };
+            let filename = fullpath.substr(fullpath.lastIndexOf('/') + 1);
+            if (this.setFileNameType(filename))
+               return this.sendDblClick(fullpath, "$$$editor$$$");
+         }
 
-            this.websocket.Send('CHDIR:' + path);
+         let viewerTab = this.getSelectedImageViewer(true);
+         if (viewerTab !== -1) {
+            this.nextElem = { fullpath };
+            return this.sendDblClick(fullpath, "$$$image$$$");
+         }
 
-            this.doReload(true);
+         let className = this.getBaseClass(prop ? prop.className : "");
+         let drawingOptions = "";
+         if (className && this.drawingOptions[className])
+            drawingOptions = this.drawingOptions[className];
 
-            return;
-          }
-        }
-
-        if (!fullpath) return;
-
-        // first try to activate editor
-        let codeEditor = this.getSelectedCodeEditor(true);
-        if(codeEditor !== -1) {
-          var oModel = codeEditor.getModel();
-
-          // FIXME: wrong place, should be configured when server replied
-          oModel.setProperty("/fullpath", fullpath);
-          this.getElementFromCurrentTab("Save").setEnabled(true);
-          var filename = fullpath.substr(fullpath.lastIndexOf('/') + 1);
-          if (this.setFileNameType(filename))
-             return this.sendDblClick(fullpath, "$$$editor$$$");
-        }
-
-        let viewerTab = this.getSelectedImageViewer(true);
-        if (viewerTab !== -1) {
-
-           // FIXME: wrong place, should be configured when server replied
-           viewerTab.getParent().getParent().setAdditionalText(fullpath);
-           return this.sendDblClick(fullpath, "$$$image$$$");
-        }
-
-        let className = this.getBaseClass(prop ? prop.className : "");
-        let drawingOptions = "";
-        if (className && this.drawingOptions[className])
-           drawingOptions = this.drawingOptions[className];
-
-        return this.sendDblClick(fullpath, drawingOptions);
+         return this.sendDblClick(fullpath, drawingOptions);
       },
 
       getBaseClass: function(className) {
@@ -863,12 +832,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             break;
          case "FREAD":  // file read
             let result = this.getSelectedCodeEditor();
-            if (result !== -1)
+            if (result !== -1) {
                result.getModel().setProperty("/code", msg);
+               this.getElementFromCurrentTab("Save").setEnabled(true);
+               result.getModel().setProperty("/fullpath", this.nextElem.fullpath);
+            }
             break;
          case "FIMG":  // image file read
             const image = this.getSelectedImageViewer(true);
             if(image !== -1) {
+               image.getParent().getParent().setAdditionalText(this.nextElem.fullpath);
                image.setSrc(msg);
             }
             break;
