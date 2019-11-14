@@ -44,8 +44,8 @@ else() # standalone roottest.git
   find_program(ROOT_CONFIG_EXECUTABLE root-config)
   exec_program(${ROOT_CONFIG_EXECUTABLE} ARGS "--prefix" OUTPUT_VARIABLE ROOTSYS RETURN_VALUE RETVAR)
   set(ROOTSYS ${ROOTSYS} CACHE INTERNAL "")
-  # Some roottest.git tests are checking LZ4, which has different references depends on its version.
-  # We recover LZ4 version used in ROOT, stored in root-config --config output.
+  # Some roottest.git tests are checking LZ4 and ZSTD, which has different references depends on its version.
+  # We recover LZ4/ZSTD version used in ROOT, stored in root-config --config output.
   exec_program(${ROOT_CONFIG_EXECUTABLE} ARGS "--srcdir" OUTPUT_VARIABLE ROOT_SOURCE_DIR)
   exec_program(${ROOT_CONFIG_EXECUTABLE} ARGS "--config" OUTPUT_VARIABLE ROOT_CONFIG_VARIABLES RETURN_VALUE RETVAR)
   separate_arguments(ROOT_CONFIG_VARIABLES)
@@ -53,13 +53,19 @@ else() # standalone roottest.git
     if("${item}" MATCHES "LZ4_VERSION=(.*)")
       string(REGEX REPLACE "LZ4_VERSION=(.*)" "\\1" LZ4 ${item})
       set(LZ4_VERSION ${LZ4} CACHE INTERNAL "")
+    elseif("${item}" MATCHES "ZSTD_VERSION=(.*)")
+      string(REGEX REPLACE "ZSTD_VERSION=(.*)" "\\1" ZSTD ${item})
+      set(ZSTD_VERSION ${ZSTD} CACHE INTERNAL "")
     endif()
   endforeach()
-  # If we didn't manage to find LZ4_VERSION in "root-config --config" output,
-  # we consider that ROOT had used system LZ4 and we can find it via find_package().
+  # If we didn't manage to find LZ4_VERSION/ZSTD_VERSION in "root-config --config" output,
+  # we consider that ROOT had used system LZ4/ZSTD and we can find it via find_package().
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ROOTSYS}/cmake/modules ${ROOT_SOURCE_DIR}/cmake/modules)
   if(NOT LZ4_VERSION)
     find_package(LZ4)
+  endif()
+  if(NOT ZSTD_VERSION)
+    find_package(ZSTD)
   endif()
   # To be able to use the same C++ standard as used in ROOT, we can try to retrieve it from root-config --features
   exec_program(root-config ARGS "--features" OUTPUT_VARIABLE ROOT_FEATURES RETURN_VALUE RETVAR)
