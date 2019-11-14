@@ -813,7 +813,10 @@ std::string CPyCppyy::Utility::ClassName(PyObject* pyobj)
     std::string clname = "<unknown>";
     PyObject* pyclass = (PyObject*)Py_TYPE(pyobj);
     PyObject* pyname = PyObject_GetAttr(pyclass, PyStrings::gCppName);
-    if (!pyname) pyname = PyObject_GetAttr(pyclass, PyStrings::gName);
+    if (!pyname) {
+        PyErr_Clear();
+        pyname = PyObject_GetAttr(pyclass, PyStrings::gName);
+    }
     if (pyname) {
         clname = CPyCppyy_PyText_AsString(pyname);
         Py_DECREF(pyname);
