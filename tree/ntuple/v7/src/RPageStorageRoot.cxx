@@ -138,7 +138,7 @@ struct RTFDatetime {
       auto now = std::chrono::system_clock::now();
       auto tt = std::chrono::system_clock::to_time_t(now);
       auto tm = *localtime(&tt);
-      fDatetime = (tm.tm_year + 1900 - 1995) << 26 | (tm.tm_mon + 1) << 22 | tm.tm_mday << 16 |
+      fDatetime = (tm.tm_year + 1900 - 1995) << 26 | (tm.tm_mon + 1) << 22 | tm.tm_mday << 17 |
                   tm.tm_hour << 12 | tm.tm_min << 6 | tm.tm_sec;
    }
    explicit RTFDatetime(RUInt32BE val) : fDatetime(val) {}
@@ -313,7 +313,7 @@ struct RTFFile {
    char fWritable{1};
    RTFDatetime fDateC;
    RTFDatetime fDateM;
-   RUInt32BE fNBytesKeys{48};
+   RUInt32BE fNBytesKeys{0};
    RUInt32BE fNBytesName{56};
    RUInt32BE fSeekDir{100};
    RUInt32BE fSeekParent{0};
@@ -366,7 +366,8 @@ void ROOT::Experimental::Detail::RPageSinkRoot::DoCreate(const RNTupleModel & /*
    RTFString strEmpty;
 
    RTFFile fileRoot;
-   RTFKey keyRoot(100, 0, strTFile, strFileName, strEmpty, sizeof(fileRoot));
+   RTFKey keyRoot(100, 0, strTFile, strFileName, strEmpty,
+                  sizeof(fileRoot) + strFileName.GetSize() + strEmpty.GetSize());
 
    auto seekStreamerInfo = 100 + keyRoot.GetSize();
    RTFStreamerInfo streamerInfo;
@@ -374,8 +375,9 @@ void ROOT::Experimental::Detail::RPageSinkRoot::DoCreate(const RNTupleModel & /*
 
    auto seekKeyList = seekStreamerInfo + keyStreamerInfo.GetSize();
    RTFKeyList keyList;
-   RTFKey keyKeyList(seekKeyList, 100, strTFile, strFileName, strEmpty, keyList.GetSize());
+   RTFKey keyKeyList(seekKeyList, 100, strEmpty, strEmpty, strEmpty, keyList.GetSize());
    fileRoot.fSeekKeys = seekKeyList;
+   fileRoot.fNBytesKeys = keyKeyList.GetSize();
 
    auto seekFreeList = seekKeyList + keyKeyList.GetSize();
    RTFFreeEntry freeEntry(0, 2000000000);
@@ -389,6 +391,8 @@ void ROOT::Experimental::Detail::RPageSinkRoot::DoCreate(const RNTupleModel & /*
    pos = Write(&strTFile, strTFile.GetSize(), pos);
    pos = Write(&strFileName, strFileName.GetSize(), pos);
    pos = Write(&strEmpty, strEmpty.GetSize(), pos);
+   pos = Write(&strFileName, strFileName.GetSize(), pos);
+   pos = Write(&strEmpty, strEmpty.GetSize(), pos);
    pos = Write(&fileRoot, sizeof(fileRoot), pos);
 
    pos = Write(&keyStreamerInfo, keyStreamerInfo.fKeyHeaderSize, pos);
@@ -398,8 +402,8 @@ void ROOT::Experimental::Detail::RPageSinkRoot::DoCreate(const RNTupleModel & /*
    pos = Write(&streamerInfo, streamerInfo.GetSize(), pos);
 
    pos = Write(&keyKeyList, keyKeyList.fKeyHeaderSize, pos);
-   pos = Write(&strTFile, strTFile.GetSize(), pos);
-   pos = Write(&strFileName, strFileName.GetSize(), pos);
+   pos = Write(&strEmpty, strEmpty.GetSize(), pos);
+   pos = Write(&strEmpty, strEmpty.GetSize(), pos);
    pos = Write(&strEmpty, strEmpty.GetSize(), pos);
    pos = Write(&keyList, keyList.GetSize(), pos);
 
