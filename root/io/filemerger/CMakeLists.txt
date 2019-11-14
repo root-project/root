@@ -102,11 +102,19 @@ if(CMAKE_SIZEOF_VOID_P EQUAL 4)
                   DEPENDS datagen-hadd-mzstdfile12
                   DEPENDS datagen-hadd-mzstdfile34)
 else()
-   ROOTTEST_ADD_TEST(merged-zstd
+   if(${ZSTD_VERSION} VERSION_LESS_EQUAL "1.3.3")
+      ROOTTEST_ADD_TEST(merged-zstd
+                  PRECMD ${ROOT_hadd_CMD} -f505 mzstdfile1-4.root mzstdfile1-2.root mzstdfile3-4.root
+                  COMMAND ${ROOT_root_CMD} -q -l -b "${CMAKE_CURRENT_SOURCE_DIR}/testMergedFile.C(\"mzstdfile1-4.root\",505,4529,20)"
+                  DEPENDS datagen-hadd-mzstdfile12
+                  DEPENDS datagen-hadd-mzstdfile34)
+   else(${ZSTD_VERSION} VERSION_GREATER "1.3.3")
+      ROOTTEST_ADD_TEST(merged-zstd
                   PRECMD ${ROOT_hadd_CMD} -f505 mzstdfile1-4.root mzstdfile1-2.root mzstdfile3-4.root
                   COMMAND ${ROOT_root_CMD} -q -l -b "${CMAKE_CURRENT_SOURCE_DIR}/testMergedFile.C(\"mzstdfile1-4.root\",505,4454,20)"
                   DEPENDS datagen-hadd-mzstdfile12
-                  DEPENDS datagen-hadd-mzstdfile34)
+                  DEPENDS datagen-hadd-mzstdfile34)   
+   endif()
 endif()
 
 #TBD: add file generation as test fixture
