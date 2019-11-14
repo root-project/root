@@ -39,7 +39,7 @@ console.log("JupyROOT - %%cpp magic configured");
 _jsNotDrawableClassesPatterns = ["TEve*","TF3","TPolyLine3D"]
 
 
-_jsROOTSourceDir = "https://root.cern.ch/js/notebook/"
+_jsROOTSourceDir = "/static/"
 _jsCanvasWidth = 800
 _jsCanvasHeight = 600
 
@@ -51,7 +51,7 @@ _jsCode = """
 <script>
  requirejs.config({{
      paths: {{
-       'JSRootCore' : '{jsROOTSourceDir}/scripts/JSRootCore',
+       'JSRootCore' : '{jsROOTSourceDir}scripts/JSRootCore',
      }}
    }});
  require(['JSRootCore'],

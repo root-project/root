@@ -19,7 +19,7 @@
         paths: {
             "jquery-connections": baseURL + "jquery.connections.min",
             "jquery-timing": baseURL + "jquery-timing.min",
-            "d3": "https://root.cern.ch/js/notebook/scripts/d3.min"
+            "d3": "/static/scripts/d3.min"
         },
         shim: {
             "jquery-ui": {
