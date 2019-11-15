@@ -39,7 +39,9 @@ public:
 // visible in this TU.
 #ifndef R__CXXMODULES
 #ifndef __CINT__
+namespace ROOT {
 static TVersionCheck gVersionCheck(ROOT_VERSION_CODE);
+}
 #endif
 #endif
 
