@@ -141,6 +141,7 @@ typedefs (in particular `Double32_t`)
    with axis labels justified on the color boundaries (implemented by Otto Schaile).
  * The `TCanvas` Event Status Bar now displays the date and time when the mouse cursor
    is moved over a time axis (implemented by Otto Schaile).
+ * Negative values were not painted with option "TEXT" for TH2Poly.
 
 
 ## 3D Graphics Libraries
