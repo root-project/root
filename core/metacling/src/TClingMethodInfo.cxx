@@ -38,6 +38,7 @@ compiler, not CINT.
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
+#include "clang/AST/DeclLookups.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/GlobalDecl.h"
@@ -86,7 +87,6 @@ TClingMethodInfo& TClingMethodInfo::operator=(const TClingMethodInfo &rhs) {
    return *this;
 }
 
-
 TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
                                    TClingClassInfo *ci)
    : TClingDeclInfo(nullptr), fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""),
@@ -106,12 +106,21 @@ TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
 
       fInterp->getSema().ForceDeclarationOfImplicitMembers(cxxdecl);
    }
-   clang::DeclContext *dc =
+   clang::DeclContext *DC =
       llvm::cast<clang::DeclContext>(const_cast<clang::Decl*>(ci->GetDecl()));
-   dc->collectAllContexts(fContexts);
+   DC->collectAllContexts(fContexts);
    // Could trigger deserialization of decls.
    cling::Interpreter::PushTransactionRAII RAII(interp);
-   fIter = dc->decls_begin();
+   if (llvm::isa<clang::TranslationUnitDecl>(DC)) {
+      // Do not trigger deserialization of *lexically* global decls, but only semantically ones.
+      // Load everything that has a name on global scope.
+      // Don't care about the lookup result, but only about the fact that it got deserialized.
+      DC->lookups();
+      // Now all "relevant" decls were deserialized, do the no-load iteration.
+      fIter = DC->noload_decls_begin();
+   } else {
+      fIter = DC->decls_begin();
+   }
    InternalNext();
    fFirstTime = true;
 }

@@ -31,6 +31,7 @@ from the Clang C++ compiler, not CINT.
 #include "clang/AST/Attr.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
+#include "clang/AST/DeclLookups.h"
 #include "clang/AST/GlobalDecl.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
@@ -58,15 +59,26 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
    if (fClassInfo->IsValid()) {
       Decl *D = const_cast<Decl*>(fClassInfo->GetDecl());
 
-      clang::DeclContext *dc = llvm::cast<clang::DeclContext>(D);
-      dc->collectAllContexts(fContexts);
+      clang::DeclContext *DC = llvm::cast<clang::DeclContext>(D);
+      DC->collectAllContexts(fContexts);
 
       // Could trigger deserialization of decls.
       cling::Interpreter::PushTransactionRAII RAII(interp);
-      fIter = llvm::cast<clang::DeclContext>(D)->decls_begin();
-      const TagDecl *TD = ROOT::TMetaUtils::GetAnnotatedRedeclarable(llvm::dyn_cast<TagDecl>(D));
-      if (TD)
+
+      if (const TagDecl *TD = ROOT::TMetaUtils::GetAnnotatedRedeclarable(llvm::dyn_cast<TagDecl>(D))) {
          fIter = TD->decls_begin();
+      } else {
+         if (llvm::isa<clang::TranslationUnitDecl>(DC)) {
+            // Do not trigger deserialization of *lexically* global decls, but only semantically ones.
+            // Load everything that has a name on global scope.
+            // Don't care about the lookup result, but only about the fact that it got deserialized.
+            DC->lookups();
+            // Now all "relevant" decls were deserialized, do the no-load iteration.
+            fIter = DC->noload_decls_begin();
+         } else {
+            fIter = DC->decls_begin();
+         }
+      }
 
       // Move to first data member.
       InternalNext();
