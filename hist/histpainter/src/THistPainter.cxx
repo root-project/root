@@ -2496,10 +2496,10 @@ The red, green, and blue components of a color can be changed thanks to
 
 \since **ROOT version 6.19/01**
 
-As default labels and ticks are drawn by `TGAxis` at equidistant (lin or log) 
+As default labels and ticks are drawn by `TGAxis` at equidistant (lin or log)
 points as controlled by SetNdivisions.
-If option "CJUST" is given labels and ticks are justified at the 
-color boundaries defined by the contour levels. 
+If option "CJUST" is given labels and ticks are justified at the
+color boundaries defined by the contour levels.
 For more details see `TPaletteAxis`
 
 ### <a name="HP24"></a> Drawing a sub-range of a 2D histogram; the [cutg] option
@@ -6268,7 +6268,7 @@ void THistPainter::PaintErrors(Option_t *)
 
    offset = fH->GetBarOffset();
    width = fH->GetBarWidth();
-   
+
    errormarker = fH->GetMarkerStyle();
    if (optionEX0) {
       xerror = 0;
@@ -6340,7 +6340,7 @@ void THistPainter::PaintErrors(Option_t *)
       //     ey1   = Low Y error
       //     ey2   = Up Y error
       //     (xi,yi) = Error bars coordinates
-      
+
       // apply offset on errors for bar histograms
       Double_t xminTmp = gPad->XtoPad(fXaxis->GetBinLowEdge(k));
       Double_t xmaxTmp = gPad->XtoPad(fXaxis->GetBinUpEdge(k));
@@ -6348,7 +6348,7 @@ void THistPainter::PaintErrors(Option_t *)
       xminTmp += offset*(xmaxTmp-xminTmp);
       xmaxTmp = xminTmp + w;
       xp = (xminTmp+xmaxTmp)/2.;
-      
+
       if (Hoption.Logx) {
          if (xp <= 0) goto L30;
          if (xp < logxmin) goto L30;
@@ -9879,7 +9879,7 @@ void THistPainter::PaintTH2PolyText(Option_t *)
          else continue;
       }
       z = b->GetContent();
-      if (z < Hparam.zmin || (z == 0 && !Hoption.MinimumZero)) continue;
+      if (z < fH->GetMinimum() || (z == 0 && !Hoption.MinimumZero)) continue;
       if (opt==2) {
          e = fH->GetBinError(b->GetBinNumber());
          tf.Form("#splitline{%s%s}{#pm %s%s}",
