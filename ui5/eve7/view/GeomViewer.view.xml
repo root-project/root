@@ -82,17 +82,23 @@
                   <IconTabFilter text="Light">
                     <VBox>
                        <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
-                          <CheckBox text="Top" selected="{/light/top}" select="lightChanged"/>
-                          <CheckBox text="Bottom" selected="{/light/bottom}" select="lightChanged"/>
+                          <CheckBox text="Top" selected="{/light/top}" select="lightChanged" enabled="{= !${/light/ambient} }"/>
+                          <CheckBox text="Bottom" selected="{/light/bottom}" select="lightChanged" enabled="{= !${/light/ambient} }"/>
                        </HBox>
                        <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
-                          <CheckBox text="Left" selected="{/light/left}" select="lightChanged"/>
-                          <CheckBox text="Right" selected="{/light/right}" select="lightChanged"/>
+                          <CheckBox text="Left" selected="{/light/left}" select="lightChanged" enabled="{= !${/light/ambient} }"/>
+                          <CheckBox text="Right" selected="{/light/right}" select="lightChanged" enabled="{= !${/light/ambient} }"/>
                        </HBox>
                        <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
-                          <CheckBox text="Front" selected="{/light/front}" select="lightChanged"/>
-                          <CheckBox text="Specular" selected="{/light/specular}" select="lightChanged"/>
+                          <CheckBox text="Front" selected="{/light/front}" select="lightChanged" enabled="{= !${/light/ambient} }"/>
+                          <CheckBox text="Specular" selected="{/light/specular}" select="lightChanged" enabled="{= !${/light/ambient} }"/>
                        </HBox>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
+                          <CheckBox text="Ambient" selected="{/light/ambient}" select="lightChanged"/>
+                       </HBox>
+                       <Slider min="0" max="3" step="0.01" value="{/light/power}" width="100%"
+                               showAdvancedTooltip="true" showHandleTooltip="false" inputsAsTooltips="true"
+                               change="lightChanged" liveChange="lightChanged"/>
                     </VBox>
                   </IconTabFilter>
 
