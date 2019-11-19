@@ -39,6 +39,7 @@ struct RNTuple {
    std::uint32_t fNBytesHeader = 0;
    std::uint64_t fSeekFooter = 0;
    std::uint32_t fNBytesFooter = 0;
+   std::uint64_t fReserved = 0;
 };
 
 

@@ -401,6 +401,27 @@ struct RTFStreamerElementNBytesFooter {
    char fTypeName[12]{ 'u', 'n', 's', 'i', 'g', 'n', 'e', 'd', ' ', 'i', 'n', 't' };
 };
 
+struct RTFStreamerElementReserved {
+   RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerElementReserved) - sizeof(RUInt32BE))};
+   RUInt16BE fVersion{4};
+
+   RUInt32BE fByteCountNamed{0x40000000 |
+      (sizeof(RUInt16BE) + sizeof(RTFObject) + 11)};
+   RUInt16BE fVersionNamed{1};
+   RTFObject fObjectNamed{0x02000000 | 0x01000000};
+   char fLName = 9;
+   char fName[9]{ 'f', 'R', 'e', 's', 'e', 'r', 'v', 'e', 'd' };
+   char fLTitle = 0;
+
+   RUInt32BE fType{14};
+   RUInt32BE fSize{8};
+   RUInt32BE fArrLength{0};
+   RUInt32BE fArrDim{0};
+   char fMaxIndex[20]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+   char fLTypeName = 13;
+   char fTypeName[13]{ 'u', 'n', 's', 'i', 'g', 'n', 'e', 'd', ' ', 'l', 'o', 'n', 'g' };
+};
+
 struct RTFStreamerSeekHeader {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerSeekHeader) - sizeof(RUInt32BE))};
    RUInt32BE fNewClassTag{0xffffffff};
@@ -433,6 +454,14 @@ struct RTFStreamerNBytesFooter {
    RUInt32BE fByteCountRemaining{0x40000000 | (sizeof(RTFStreamerNBytesFooter) - 3 * sizeof(RUInt32BE))};
    RUInt16BE fVersion{2};
    RTFStreamerElementNBytesFooter fStreamerElementNBytesFooter;
+};
+
+struct RTFStreamerReserved {
+   RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerReserved) - sizeof(RUInt32BE))};
+   RUInt32BE fClassTag{0x80000000};  // Fix-up after construction, or'd with 0x80000000
+   RUInt32BE fByteCountRemaining{0x40000000 | (sizeof(RTFStreamerReserved) - 3 * sizeof(RUInt32BE))};
+   RUInt16BE fVersion{2};
+   RTFStreamerElementReserved fStreamerElementReserved;
 };
 
 struct RTFStreamerInfoObject {
@@ -469,7 +498,7 @@ struct RTFStreamerInfoObject {
    RTFObject fObjectObjArr{0x02000000};
    char fNameObjArr{0};
 
-   RUInt32BE fNObjects{4};
+   RUInt32BE fNObjects{5};
    RUInt32BE fLowerBound{0};
 
    struct {
@@ -477,6 +506,7 @@ struct RTFStreamerInfoObject {
       RTFStreamerNBytesHeader fStreamerNBytesHeader;
       RTFStreamerSeekFooter fStreamerSeekFooter;
       RTFStreamerNBytesFooter fStreamerNBytesFooter;
+      RTFStreamerReserved fStreamerReserved;
    } fStreamers;
 };
 
@@ -518,6 +548,7 @@ struct RTFNTuple {
    RUInt32BE fNBytesHeader{0};
    RUInt64BE fSeekFooter{0};
    RUInt32BE fNBytesFooter{0};
+   RUInt64BE fReserved{0};
    std::uint32_t GetSize() const { return sizeof(RTFNTuple); }
 };
 #pragma pack(pop)
@@ -581,6 +612,7 @@ void ROOT::Experimental::Detail::RPageSinkRoot::DoCreate(const RNTupleModel & /*
    streamerInfo.fStreamerInfo.fStreamers.fStreamerNBytesHeader.fClassTag = 0x80000000 | classTagOffset;
    streamerInfo.fStreamerInfo.fStreamers.fStreamerSeekFooter.fClassTag = 0x80000000 | classTagOffset;
    streamerInfo.fStreamerInfo.fStreamers.fStreamerNBytesFooter.fClassTag = 0x80000000 | classTagOffset;
+   streamerInfo.fStreamerInfo.fStreamers.fStreamerReserved.fClassTag = 0x80000000 | classTagOffset;
    // TODO: compress, fix key
 
    auto seekRNTuple = seekStreamerInfo + keyStreamerInfo.GetSize();
