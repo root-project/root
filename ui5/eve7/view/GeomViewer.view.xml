@@ -46,7 +46,7 @@
                </FlexBox>
             </content>
          </Page>
-         <Page id="geomControl" title="Control" showHeader="true" showFooter="false" showSubHeader="false" enableScrolling="false"
+         <Page id="geomControl" title="Control" showHeader="true" showFooter="false" showSubHeader="false" enableScrolling="true"
                 showNavButton="true" navButtonText="Back to hierarchy" navButtonPress="onPressMasterBack"
                 class="sapUiStdPage">
             <content>
