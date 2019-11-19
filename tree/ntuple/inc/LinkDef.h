@@ -26,5 +26,6 @@
 #pragma link C++ class ROOT::Experimental::RNTupleModel-;
 
 #pragma link C++ class ROOT::Experimental::Internal::RNTupleBlob+;
+#pragma link C++ class ROOT::Experimental::RNTuple+;
 
 #endif
