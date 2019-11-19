@@ -162,15 +162,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             onAfterRendering: function() { this.assignRowHandlers(); }
          }, this);
 
-         // FIXME: one have to find direct method to configure this
-         this.byId("browserMaster").addEventDelegate({
-            onAfterRendering: function() { this.getView().byId("treeTableBox").$().children().first().css('flex-grow',1); }
-         }, this);
+         this.newCodeEditor();
 
-            this.newCodeEditor();
-
-            this.drawingOptions = { TH1: 'hist', TH2: 'COL', TProfile: 'E0'};
-
+         this.drawingOptions = { TH1: 'hist', TH2: 'COL', TProfile: 'E0'};
       },
 
       /* ========================================================= */
