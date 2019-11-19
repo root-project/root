@@ -33,19 +33,16 @@
                      <ToolbarSpacer />
                      <SearchField liveChange="onSearch" />
                   </Toolbar>
-                  <VBox id="treeTableBox">
-                     <layoutData>
+                  <t:TreeTable id="treeTable"
+                     columnHeaderVisible="false" editable="false"
+                     enableSelectAll="false" selectionBehavior="RowOnly"
+                     selectionMode="Single" visibleRowCountMode="Auto"
+                     cellClick="onCellClick"
+                     rows="{/nodes}">
+                     <t:layoutData>
                         <FlexItemData growFactor="1"/>
-                     </layoutData>
-
-                     <t:TreeTable id="treeTable"
-                        columnHeaderVisible="false" editable="false"
-                        enableSelectAll="false" selectionBehavior="RowOnly"
-                        selectionMode="Single" visibleRowCountMode="Auto"
-                        cellClick="onCellClick"
-                        rows="{/nodes}">
-                     </t:TreeTable>
-                  </VBox>
+                     </t:layoutData>
+                  </t:TreeTable>
                </FlexBox>
             </content>
          </Page>

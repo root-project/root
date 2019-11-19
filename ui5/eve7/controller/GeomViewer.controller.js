@@ -127,11 +127,6 @@ sap.ui.define(['sap/ui/core/Component',
             t.addEventDelegate({
                onAfterRendering: function() { this.assignRowHandlers(); }
             }, this);
-
-            // FIXME: one have to find direct method to configure this
-            this.byId("geomHierarchy").addEventDelegate({
-               onAfterRendering: function() { this.getView().byId("treeTableBox").$().children().first().css('flex-grow',1); }
-            }, this);
          }
 
          JSROOT.AssertPrerequisites("geom", function() {
@@ -827,10 +822,6 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       onAfterMasterOpen: function() {
-         console.log('Get MAster open');
-         // FIXME: one have to find direct method to configure this
-         this.getView().byId("treeTableBox").$().children().first().css('flex-grow',1);
-
       },
 
       checkSendRequest: function(force) {
