@@ -333,7 +333,12 @@ add_dependencies(move_headers copymodulemap)
 # add_subdirectory calls above.
 get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT)
 string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
-file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" "${__modulemap_extra_content}")
+# Write module.modulemap.extra to a temporary file first, to not touch module.modulemap.extra
+# if it's unchanged.
+file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra.tmp" "${__modulemap_extra_content}")
+configure_file("${CMAKE_BINARY_DIR}/include/module.modulemap.extra.tmp"
+    "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
+    COPYONLY)
 
 # From now on we handled all exposed module and want to make all new modulemaps private to ROOT.
 set(ROOT_CXXMODULES_WRITE_TO_CURRENT_DIR ON)
