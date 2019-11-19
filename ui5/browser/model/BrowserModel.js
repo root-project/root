@@ -348,9 +348,9 @@ sap.ui.define([
                     fullpath: path,
                     index: id,
                     _elem: elem,
+                    isLeaf: !elem.nchilds,
                     // these are required by list binding, should be eliminated in the future
                     type: elem.nchilds ? "folder" : "file",
-                    isLeaf: !elem.nchilds,
                     level: lvl,
                     context: pthis.getContext("/nodes/" + id),
                     nodeState: {
