@@ -128,7 +128,7 @@ constexpr std::int32_t ChecksumString(std::int32_t id, const char *str) {
 
 constexpr std::int32_t ChecksumRNTupleClass() {
    std::int32_t id = 0;
-   id = ChecksumString(id, "RNTuple");
+   id = ChecksumString(id, "ROOT::Experimental::RNTuple");
    id = ChecksumString(id, "fSeekHeader");
    id = ChecksumString(id, "unsigned long");
    id = ChecksumString(id, "fNBytesHeader");
@@ -137,6 +137,8 @@ constexpr std::int32_t ChecksumRNTupleClass() {
    id = ChecksumString(id, "unsigned long");
    id = ChecksumString(id, "fNBytesFooter");
    id = ChecksumString(id, "unsigned int");
+   id = ChecksumString(id, "fReserved");
+   id = ChecksumString(id, "unsigned long");
    return id;
 }
 
@@ -595,7 +597,7 @@ void ROOT::Experimental::Detail::RPageSinkRoot::DoCreate(const RNTupleModel & /*
    RTFString strStreamerInfo{"StreamerInfo"};
    RTFString strStreamerTitle{"Doubly linked list"};
    RTFString strRNTuple{"ROOT::Experimental::RNTuple"};
-   RTFString strMyTuple{"MyTuple"};
+   RTFString strMyTuple{"MyNtuple"};
    RTFString strEmpty;
 
    RTFFile fileRoot;
