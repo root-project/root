@@ -1001,16 +1001,16 @@ void TPDF::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          LineTo(ix-m2, iy-m6);
          PrintFast(2," h");
       } else if (ms == 29 || ms == 30) {
-         MoveTo(ix           , iy+m2);
-         LineTo(ix+0.112255*m, iy+0.15451*m);
-         LineTo(ix+0.47552*m , iy+0.15451*m);
-         LineTo(ix+0.181635*m, iy-0.05902*m);
-         LineTo(ix+0.29389*m , iy-0.40451*m);
-         LineTo(ix           , iy-0.19098*m);
-         LineTo(ix-0.29389*m , iy-0.40451*m);
-         LineTo(ix-0.181635*m, iy-0.05902*m);
-         LineTo(ix-0.47552*m , iy+0.15451*m);
-         LineTo(ix-0.112255*m, iy+0.15451*m);
+         MoveTo(ix           , iy-m2);
+         LineTo(ix-0.112255*m, iy-0.15451*m);
+         LineTo(ix-0.47552*m , iy-0.15451*m);
+         LineTo(ix-0.181635*m, iy+0.05902*m);
+         LineTo(ix-0.29389*m , iy+0.40451*m);
+         LineTo(ix           , iy+0.19098*m);
+         LineTo(ix+0.29389*m , iy+0.40451*m);
+         LineTo(ix+0.181635*m, iy+0.05902*m);
+         LineTo(ix+0.47552*m , iy-0.15451*m);
+         LineTo(ix+0.112255*m, iy-0.15451*m);
          PrintFast(2," h");
       } else if (ms == 35 ) {
          MoveTo(ix-m2, iy   );
