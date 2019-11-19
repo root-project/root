@@ -37,26 +37,23 @@
             <layoutData>
               <FlexItemData baseSize="25px"/>
             </layoutData>
-
             <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan">
             </Breadcrumbs>
           </Toolbar>
-          <VBox id="treeTableBox">
-            <layoutData>
-              <FlexItemData growFactor="1"/>
-            </layoutData>
-            <t:TreeTable
-                id="treeTable"
-                columnHeaderVisible="true"
-                editable="false"
-                enableSelectAll="false"
-                selectionBehavior="RowOnly"
-                selectionMode="Single"
-                visibleRowCountMode="Auto"
-                showColumnVisibilityMenu="true"
-                rows="{/nodes}">
-             </t:TreeTable>
-          </VBox>
+          <t:TreeTable
+              id="treeTable"
+              columnHeaderVisible="true"
+              editable="false"
+              enableSelectAll="false"
+              selectionBehavior="RowOnly"
+              selectionMode="Single"
+              visibleRowCountMode="Auto"
+              showColumnVisibilityMenu="true"
+              rows="{/nodes}">
+              <t:layoutData>
+                 <FlexItemData growFactor="1"/>
+              </t:layoutData>
+          </t:TreeTable>
         </FlexBox>
       </Page>
     </masterPages>
