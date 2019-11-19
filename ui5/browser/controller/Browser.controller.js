@@ -743,7 +743,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          if (!fullpath) return;
 
-         if (row._bHasChildren) {
+         // do not use row._bHasChildren while it is not documented member of m.Row object
+         if (!prop.isLeaf) {
             if (!prop.fullpath.endsWith(".root/")) {
 
                let oBreadcrumbs = this.getView().byId("breadcrumbs");
