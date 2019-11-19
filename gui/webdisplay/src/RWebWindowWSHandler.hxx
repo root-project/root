@@ -17,6 +17,7 @@
 #define ROOT7_RWebWindowWSHandler
 
 #include "THttpWSHandler.h"
+#include "TEnv.h"
 
 #include <ROOT/RWebWindow.hxx>
 
@@ -48,10 +49,17 @@ protected:
          arg->AddNoCacheHeader();
       }
 
+      std::string more_args;
       auto user_args = fWindow.GetUserArgs();
-      if (!user_args.empty()) {
+      if (!user_args.empty())
+         more_args = "user_args: "s + user_args + ","s;
+      const char *ui5theme = gEnv->GetValue("WebGui.Ui5Theme","");
+      if (ui5theme && *ui5theme)
+         more_args.append("openui5theme: \""s + ui5theme + "\","s);
+
+      if (!more_args.empty()) {
          std::string search = "JSROOT.ConnectWebWindow({"s;
-         std::string replace = search + "user_args: " + user_args + ",";
+         std::string replace = search + more_args;
          arg->ReplaceAllinContent(search, replace, true);
          arg->AddNoCacheHeader();
       }
@@ -85,7 +93,7 @@ public:
    /// Allows usage of special threads for send operations
    Bool_t AllowMTSend() const override { return fWindow.fSendMT; }
 
-   /// React on completion of multithreaded send operation
+   /// React on completion of multi-threaded send operation
    void CompleteWSSend(UInt_t wsid) override { if (!IsDisabled()) fWindow.CompleteWSSend(wsid); }
 };
 
