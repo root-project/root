@@ -24,6 +24,7 @@
 
 #include <Compression.h>
 #include <RVersion.h>
+#include <RZip.h>
 #include <TKey.h>
 
 #include <chrono>
@@ -226,7 +227,7 @@ struct RTFHeader {
          RUInt32BE fSeekFree{0};
          RUInt32BE fNbytesFree{0};
          RUInt32BE fNfree{1};
-         RUInt32BE fNbytesName{56};
+         RUInt32BE fNbytesName{0};
          unsigned char fUnits{4};
          RUInt32BE fCompress{0};
          RUInt32BE fSeekInfo{0};
@@ -237,7 +238,7 @@ struct RTFHeader {
          RUInt64BE fSeekFree{0};
          RUInt32BE fNbytesFree{0};
          RUInt32BE fNfree{1};
-         RUInt32BE fNbytesName{56};
+         RUInt32BE fNbytesName{0};
          unsigned char fUnits{8};
          RUInt32BE fCompress{0};
          RUInt64BE fSeekInfo{0};
@@ -246,13 +247,8 @@ struct RTFHeader {
    };
 
    RTFHeader() : fInfoShort() {}
-   RTFHeader(int compression, const RTFKey &keyFreeList, const RTFKey &keyStreamerInfo) : fInfoShort() {
+   RTFHeader(int compression) : fInfoShort() {
       fInfoShort.fCompress = compression;
-      fInfoShort.fSeekFree = keyFreeList.fInfoShort.fSeekKey;
-      fInfoShort.fNbytesFree = keyFreeList.GetSize();
-      fInfoShort.fSeekInfo = keyStreamerInfo.fInfoShort.fSeekKey;
-      fInfoShort.fNbytesInfo = keyStreamerInfo.GetSize();
-      SetEnd(fInfoShort.fSeekFree + fInfoShort.fNbytesFree);
    }
 
    std::uint32_t GetSize() {
@@ -525,8 +521,9 @@ struct RTFStreamerInfoList {
 };
 
 struct RTFKeyList {
-   RUInt32BE fNKeys{0};
+   RUInt32BE fNKeys;
    std::uint32_t GetSize() const { return sizeof(RTFKeyList); }
+   explicit RTFKeyList(std::uint32_t nKeys) : fNKeys(nKeys) {}
 };
 
 struct RTFFile {
@@ -535,7 +532,7 @@ struct RTFFile {
    RTFDatetime fDateC;
    RTFDatetime fDateM;
    RUInt32BE fNBytesKeys{0};
-   RUInt32BE fNBytesName{56};
+   RUInt32BE fNBytesName{0};
    RUInt32BE fSeekDir{100};
    RUInt32BE fSeekParent{0};
    RUInt32BE fSeekKeys{0};
@@ -562,12 +559,20 @@ ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view ntuple
    : RPageSink(ntupleName, options)
    , fMetrics("RPageSinkRoot")
    , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
+   , fZipBuffer(std::make_unique<std::array<char, kMaxRecordSize>>())
 {
    R__WARNING_HERE("NTuple") << "The RNTuple file format will change. " <<
       "Do not store real data with this version of RNTuple!";
 
-   fBinaryFile = fopen(std::string(path).c_str(), "wb");
+   std::string strPath = std::string(path);
+   fBinaryFile = fopen(strPath.c_str(), "wb");
    R__ASSERT(fBinaryFile);
+   size_t idxDirSep = strPath.find_last_of("\\/");
+   if (idxDirSep != std::string::npos)
+   {
+      strPath.erase(0, idxDirSep + 1);
+   }
+   fFileName = strPath;
    //fFile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "RECREATE"));
    //fFile->SetCompressionSettings(fOptions.GetCompression());
 }
@@ -580,33 +585,77 @@ ROOT::Experimental::Detail::RPageSinkRoot::~RPageSinkRoot()
       fFile->Close();
 }
 
-std::uint64_t ROOT::Experimental::Detail::RPageSinkRoot::Write(void *from, size_t size, std::uint64_t offset)
+void ROOT::Experimental::Detail::RPageSinkRoot::Write(void *from, size_t size, std::int64_t offset)
 {
-   size_t retval = fseek(fBinaryFile, offset, SEEK_SET);
-   R__ASSERT(retval == 0);
+   R__ASSERT(fBinaryFile);
+   size_t retval;
+   if ((offset >= 0) && (static_cast<std::uint64_t>(offset) != fFilePos)) {
+      retval = fseek(fBinaryFile, offset, SEEK_SET);
+      R__ASSERT(retval == 0);
+      fFilePos = offset;
+   }
    retval = fwrite(from, 1, size, fBinaryFile);
    R__ASSERT(retval == size);
-   return offset + size;
+   fFilePos += size;
+}
+
+void ROOT::Experimental::Detail::RPageSinkRoot::WriteKey(
+   void *buffer, std::size_t nbytes, std::int64_t offset,
+   std::uint64_t directoryOffset, int compression,
+   const std::string &className,
+   const std::string &objectName,
+   const std::string &title)
+{
+   if (offset < 0)
+      offset = fFilePos;
+   RTFString strClass{className};
+   RTFString strObject{objectName};
+   RTFString strTitle{title};
+
+   int zipBytes = nbytes;
+   if (compression != 0) {
+      R__ASSERT(nbytes <= kMaxRecordSize);
+      auto level = compression % 100;
+      auto algorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(compression / 100);
+      int szZipBuffer = kMaxRecordSize;
+      int szSource = nbytes;
+      char *source = reinterpret_cast<char *>(buffer);
+      R__zipMultipleAlgorithm(level, &szSource, source, &szZipBuffer, fZipBuffer->data(), &zipBytes, algorithm);
+      if ((zipBytes > 0) && (zipBytes < szSource)) {
+         buffer = reinterpret_cast<unsigned char *>(fZipBuffer->data());
+      }
+   }
+   RTFKey key(offset, directoryOffset, strClass, strObject, strTitle, nbytes, zipBytes);
+   Write(&key, key.fKeyHeaderSize, offset);
+   Write(&strClass, strClass.GetSize());
+   Write(&strObject, strObject.GetSize());
+   Write(&strTitle, strTitle.GetSize());
+   Write(buffer, zipBytes);
 }
 
 void ROOT::Experimental::Detail::RPageSinkRoot::DoCreate(const RNTupleModel & /* model */)
 {
    RTFString strTFile{"TFile"};
-   RTFString strFileName{"empty.root"};
+   RTFString strFileName{fFileName};
    RTFString strTList{"TList"};
    RTFString strStreamerInfo{"StreamerInfo"};
    RTFString strStreamerTitle{"Doubly linked list"};
-   RTFString strRNTuple{"ROOT::Experimental::RNTuple"};
-   RTFString strMyTuple{"MyNtuple"};
+   RTFString strRNTupleClass{"ROOT::Experimental::RNTuple"};
+   RTFString strRNTupleName{fNTupleName};
    RTFString strEmpty;
+
+   RTFHeader fileHeader(fOptions.GetCompression());
 
    RTFFile fileRoot;
    RTFKey keyRoot(100, 0, strTFile, strFileName, strEmpty,
                   sizeof(fileRoot) + strFileName.GetSize() + strEmpty.GetSize());
+   std::uint32_t nbytesName = keyRoot.fKeyLen + strFileName.GetSize() + 1;
+   fileRoot.fNBytesName = nbytesName;
+   fileHeader.fInfoShort.fNbytesName = nbytesName;
 
-   auto seekStreamerInfo = 100 + keyRoot.GetSize();
+   fileHeader.fInfoShort.fSeekInfo = 100 + keyRoot.GetSize();
+   RTFKey keyStreamerInfo(fileHeader.fInfoShort.fSeekInfo, 100, strTList, strStreamerInfo, strStreamerTitle, 0);
    RTFStreamerInfoList streamerInfo;
-   RTFKey keyStreamerInfo(seekStreamerInfo, 100, strTList, strStreamerInfo, strStreamerTitle, streamerInfo.GetSize());
    auto classTagOffset = keyStreamerInfo.fKeyLen +
       offsetof(struct RTFStreamerInfoList, fStreamerInfo) +
       offsetof(struct RTFStreamerInfoObject, fStreamers) +
@@ -615,62 +664,46 @@ void ROOT::Experimental::Detail::RPageSinkRoot::DoCreate(const RNTupleModel & /*
    streamerInfo.fStreamerInfo.fStreamers.fStreamerSeekFooter.fClassTag = 0x80000000 | classTagOffset;
    streamerInfo.fStreamerInfo.fStreamers.fStreamerNBytesFooter.fClassTag = 0x80000000 | classTagOffset;
    streamerInfo.fStreamerInfo.fStreamers.fStreamerReserved.fClassTag = 0x80000000 | classTagOffset;
-   // TODO: compress, fix key
+   WriteKey(&streamerInfo, streamerInfo.GetSize(), fileHeader.fInfoShort.fSeekInfo, 100, 1,
+            "TList", "StreamerInfo", "Doubly linked list");
+   fileHeader.fInfoShort.fNbytesInfo = fFilePos - fileHeader.fInfoShort.fSeekInfo;
 
-   auto seekRNTuple = seekStreamerInfo + keyStreamerInfo.GetSize();
+   auto seekRNTuple = fFilePos;
    RTFNTuple ntuple;
-   RTFKey keyRNTuple(seekRNTuple, 100, strRNTuple, strMyTuple, strEmpty, ntuple.GetSize());
+   RTFKey keyRNTuple(seekRNTuple, 100, strRNTupleClass, strRNTupleName, strEmpty, ntuple.GetSize());
+   WriteKey(&ntuple, ntuple.GetSize(), -1, 100, 0, "ROOT::Experimental::RNTuple", fNTupleName, "");
 
-   auto seekKeyList = seekRNTuple + keyRNTuple.GetSize();
-   RTFKeyList keyList;
-   keyList.fNKeys = 1;
-   RTFKey keyKeyList(seekKeyList, 100, strEmpty, strEmpty, strEmpty, keyList.GetSize() + keyRNTuple.fKeyLen);
-   fileRoot.fSeekKeys = seekKeyList;
-   fileRoot.fNBytesKeys = keyKeyList.GetSize();
+   fileRoot.fSeekKeys = fFilePos;
+   RTFKeyList keyList{1};
+   RTFKey keyKeyList(fileRoot.fSeekKeys, 100, strEmpty, strEmpty, strEmpty, keyList.GetSize() + keyRNTuple.fKeyLen);
+   Write(&keyKeyList, keyKeyList.fKeyHeaderSize);
+   Write(&strEmpty, strEmpty.GetSize());
+   Write(&strEmpty, strEmpty.GetSize());
+   Write(&strEmpty, strEmpty.GetSize());
+   Write(&keyList, keyList.GetSize());
+   Write(&keyRNTuple, keyRNTuple.fKeyHeaderSize);
+   Write(&strRNTupleClass, strRNTupleClass.GetSize());
+   Write(&strRNTupleName, strRNTupleName.GetSize());
+   Write(&strEmpty, strEmpty.GetSize());
+   fileRoot.fNBytesKeys = fFilePos - fileRoot.fSeekKeys;
 
-   auto seekFreeList = seekKeyList + keyKeyList.GetSize();
+   fileHeader.fInfoShort.fSeekFree = fFilePos;
    RTFFreeEntry freeEntry(0, 2000000000);
-   RTFKey keyFreeList(seekFreeList, 100, strEmpty, strEmpty, strEmpty, freeEntry.GetSize());
-   freeEntry.fInfoShort.fFirst = seekFreeList + keyFreeList.GetSize();
+   RTFKey keyFreeList(fileHeader.fInfoShort.fSeekFree, 100, strEmpty, strEmpty, strEmpty, freeEntry.GetSize());
+   freeEntry.fInfoShort.fFirst = fileHeader.fInfoShort.fSeekFree + keyFreeList.GetSize();
+   WriteKey(&freeEntry, freeEntry.GetSize(), -1, 100, 0, "", "", "");
+   fileHeader.fInfoShort.fNbytesFree = fFilePos - fileHeader.fInfoShort.fSeekFree;
+   fileHeader.SetEnd(fileHeader.fInfoShort.fSeekFree + fileHeader.fInfoShort.fNbytesFree);
 
-   RTFHeader fileHeader(fOptions.GetCompression(), keyFreeList, keyStreamerInfo);
    Write(&fileHeader, fileHeader.GetSize(), 0);
 
-   auto pos = Write(&keyRoot, keyRoot.fKeyHeaderSize, 100);
-   pos = Write(&strTFile, strTFile.GetSize(), pos);
-   pos = Write(&strFileName, strFileName.GetSize(), pos);
-   pos = Write(&strEmpty, strEmpty.GetSize(), pos);
-   pos = Write(&strFileName, strFileName.GetSize(), pos);
-   pos = Write(&strEmpty, strEmpty.GetSize(), pos);
-   pos = Write(&fileRoot, sizeof(fileRoot), pos);
-
-   pos = Write(&keyStreamerInfo, keyStreamerInfo.fKeyHeaderSize, pos);
-   pos = Write(&strTList, strTList.GetSize(), pos);
-   pos = Write(&strStreamerInfo, strStreamerInfo.GetSize(), pos);
-   pos = Write(&strStreamerTitle, strStreamerTitle.GetSize(), pos);
-   pos = Write(&streamerInfo, streamerInfo.GetSize(), pos);
-
-   pos = Write(&keyRNTuple, keyRNTuple.fKeyHeaderSize, pos);
-   pos = Write(&strRNTuple, strRNTuple.GetSize(), pos);
-   pos = Write(&strMyTuple, strMyTuple.GetSize(), pos);
-   pos = Write(&strEmpty, strEmpty.GetSize(), pos);
-   pos = Write(&ntuple, ntuple.GetSize(), pos);
-
-   pos = Write(&keyKeyList, keyKeyList.fKeyHeaderSize, pos);
-   pos = Write(&strEmpty, strEmpty.GetSize(), pos);
-   pos = Write(&strEmpty, strEmpty.GetSize(), pos);
-   pos = Write(&strEmpty, strEmpty.GetSize(), pos);
-   pos = Write(&keyList, keyList.GetSize(), pos);
-   pos = Write(&keyRNTuple, keyRNTuple.fKeyHeaderSize, pos);
-   pos = Write(&strRNTuple, strRNTuple.GetSize(), pos);
-   pos = Write(&strMyTuple, strMyTuple.GetSize(), pos);
-   pos = Write(&strEmpty, strEmpty.GetSize(), pos);
-
-   pos = Write(&keyFreeList, keyFreeList.fKeyHeaderSize, pos);
-   pos = Write(&strEmpty, strEmpty.GetSize(), pos);
-   pos = Write(&strEmpty, strEmpty.GetSize(), pos);
-   pos = Write(&strEmpty, strEmpty.GetSize(), pos);
-   pos = Write(&freeEntry, freeEntry.GetSize(), pos);
+   Write(&keyRoot, keyRoot.fKeyHeaderSize, 100);
+   Write(&strTFile, strTFile.GetSize());
+   Write(&strFileName, strFileName.GetSize());
+   Write(&strEmpty, strEmpty.GetSize());
+   Write(&strFileName, strFileName.GetSize());
+   Write(&strEmpty, strEmpty.GetSize());
+   Write(&fileRoot, sizeof(fileRoot));
 
 //   fDirectory = fFile->mkdir(fNTupleName.c_str());
 //   // In TBrowser, use RNTupleBrowser(TDirectory *directory) in order to show the ntuple contents

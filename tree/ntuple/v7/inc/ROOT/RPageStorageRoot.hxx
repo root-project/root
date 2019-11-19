@@ -26,6 +26,7 @@
 #include <TDirectory.h>
 #include <TFile.h>
 
+#include <array>
 #include <cstdio>
 #include <memory>
 #include <string>
@@ -34,11 +35,26 @@
 namespace ROOT {
 namespace Experimental {
 
+// clang-format off
+/**
+\class ROOT::Experimental::RNTuple
+\ingroup NTuple
+\brief Entry point for an RNTuple in a root file
+
+The class points to the header and footer, which in turn have the references to the pages.
+Only the RNTuple key will be listed in the list of keys. Like TBaskets, the pages are "invisible" keys.
+*/
+// clang-format on
 struct RNTuple {
+   /// The file offset of the key containing the ntuple header
    std::uint64_t fSeekHeader = 0;
+   /// The size of the ntuple header including the TKey
    std::uint32_t fNBytesHeader = 0;
+   /// The file offset of the key containing the ntuple footer
    std::uint64_t fSeekFooter = 0;
+   /// The size of the ntuple footer including the TKey
    std::uint32_t fNBytesFooter = 0;
+   /// Currently unused, reserved for later use
    std::uint64_t fReserved = 0;
 };
 
@@ -74,12 +90,16 @@ class RPagePool;
 class RPageSinkRoot : public RPageSink {
 private:
    static constexpr std::size_t kDefaultElementsPerPage = 10000;
+   /// Cannot process data blocks larger than 1MB
+   static constexpr std::size_t kMaxRecordSize = 1024 * 1024;
 
    RNTupleMetrics fMetrics;
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
 
-   /// Currently, an ntuple is stored as a directory in a TFile
    FILE *fBinaryFile = nullptr;
+   std::uint64_t fFilePos = 0;
+   std::string fFileName;
+   std::unique_ptr<std::array<char, kMaxRecordSize>> fZipBuffer;
    std::unique_ptr<TFile> fFile;
    TDirectory *fDirectory = nullptr;
 
@@ -87,7 +107,12 @@ private:
    /// Instead of a physical file offset, pages in root are identified by an index which becomes part of the key
    DescriptorId_t fLastPageIdx = 0;
 
-   std::uint64_t Write(void *from, size_t size, std::uint64_t offset);
+   void Write(void *from, size_t size, std::int64_t offset = -1);
+   void WriteKey(void *buffer, std::size_t nbytes, std::int64_t offset = -1,
+                 std::uint64_t directoryOffset = 100, int compression = 0,
+                 const std::string &className = "",
+                 const std::string &objectName = "",
+                 const std::string &title = "");
 
 protected:
    void DoCreate(const RNTupleModel &model) final;
