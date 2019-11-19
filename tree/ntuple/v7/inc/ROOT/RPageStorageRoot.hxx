@@ -34,6 +34,14 @@
 namespace ROOT {
 namespace Experimental {
 
+struct RNTuple {
+   std::uint64_t fSeekHeader = 0;
+   std::uint32_t fNBytesHeader = 0;
+   std::uint64_t fSeekFooter = 0;
+   std::uint32_t fNBytesFooter = 0;
+};
+
+
 namespace Internal {
 
 struct RNTupleBlob {
