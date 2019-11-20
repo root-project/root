@@ -50,12 +50,20 @@ protected:
       }
 
       std::string more_args;
+      const char *ui5source = gEnv->GetValue("WebGui.openui5src","");
+      if (ui5source && *ui5source)
+         more_args.append("openui5src: \""s + ui5source + "\","s);
+      const char *ui5libs = gEnv->GetValue("WebGui.openui5libs","");
+      if (ui5libs && *ui5libs)
+         more_args.append("openui5libs: \""s + ui5libs + "\","s);
+      const char *ui5theme = gEnv->GetValue("WebGui.openui5theme","");
+      if (ui5theme && *ui5theme)
+         more_args.append("openui5theme: \""s + ui5theme + "\","s);
       auto user_args = fWindow.GetUserArgs();
       if (!user_args.empty())
          more_args = "user_args: "s + user_args + ","s;
-      const char *ui5theme = gEnv->GetValue("WebGui.Ui5Theme","");
-      if (ui5theme && *ui5theme)
-         more_args.append("openui5theme: \""s + ui5theme + "\","s);
+
+      printf("More ARGS %s\n", more_args.c_str());
 
       if (!more_args.empty()) {
          std::string search = "JSROOT.ConnectWebWindow({"s;
