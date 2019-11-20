@@ -371,6 +371,9 @@ std::string ROOT::Experimental::RWebWindowsManager::GetUrl(const ROOT::Experimen
 ///   WebGui.JsonComp: compression factor for JSON conversion, if not specified - each widget uses own default values
 ///   WebGui.ForceHttp: 0 - off (default), 1 - always create real http server to run web window
 ///   WebGui.Console: -1 - output only console.error(), 0 - add console.warn(), 1  - add console.log() output
+///   WebGui.openui5src:   alternative location for openui5 like https://openui5.hana.ondemand.com/
+///   WebGui.openui5libs:  list of pre-loaded ui5 libs like sap.m, sap.ui.layout, sap.ui.unified
+///   WebGui.openui5theme:  openui5 theme like sap_belize (default) or sap_fiori_3
 ///
 ///   HTTP-server related parameters documented in RWebWindowsManager::CreateServer() method
 
