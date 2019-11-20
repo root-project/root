@@ -63,8 +63,6 @@ protected:
       if (!user_args.empty())
          more_args = "user_args: "s + user_args + ","s;
 
-      printf("More ARGS %s\n", more_args.c_str());
-
       if (!more_args.empty()) {
          std::string search = "JSROOT.ConnectWebWindow({"s;
          std::string replace = search + more_args;
