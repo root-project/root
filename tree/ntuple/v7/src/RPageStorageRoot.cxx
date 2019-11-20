@@ -554,6 +554,18 @@ struct RTFNTuple {
 
 }
 
+namespace ROOT {
+namespace Experimental {
+namespace Internal {
+struct RTFileControlBlock {
+   RTFHeader fHeader;
+   RTFNTuple fNTuple;
+   std::uint32_t fSeekNTuple{0};
+};
+}
+}
+}
+
 ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view ntupleName, std::string_view path,
    const RNTupleWriteOptions &options)
    : RPageSink(ntupleName, options)
@@ -644,17 +656,19 @@ void ROOT::Experimental::Detail::RPageSinkRoot::DoCreate(const RNTupleModel & /*
    RTFString strRNTupleName{fNTupleName};
    RTFString strEmpty;
 
-   RTFHeader fileHeader(fOptions.GetCompression());
+   fControlBlock = std::make_unique<ROOT::Experimental::Internal::RTFileControlBlock>();
+   fControlBlock->fHeader = RTFHeader(fOptions.GetCompression());
 
    RTFFile fileRoot;
    RTFKey keyRoot(100, 0, strTFile, strFileName, strEmpty,
                   sizeof(fileRoot) + strFileName.GetSize() + strEmpty.GetSize());
    std::uint32_t nbytesName = keyRoot.fKeyLen + strFileName.GetSize() + 1;
    fileRoot.fNBytesName = nbytesName;
-   fileHeader.fInfoShort.fNbytesName = nbytesName;
+   fControlBlock->fHeader.fInfoShort.fNbytesName = nbytesName;
 
-   fileHeader.fInfoShort.fSeekInfo = 100 + keyRoot.GetSize();
-   RTFKey keyStreamerInfo(fileHeader.fInfoShort.fSeekInfo, 100, strTList, strStreamerInfo, strStreamerTitle, 0);
+   fControlBlock->fHeader.fInfoShort.fSeekInfo = 100 + keyRoot.GetSize();
+   RTFKey keyStreamerInfo(
+      fControlBlock->fHeader.fInfoShort.fSeekInfo, 100, strTList, strStreamerInfo, strStreamerTitle, 0);
    RTFStreamerInfoList streamerInfo;
    auto classTagOffset = keyStreamerInfo.fKeyLen +
       offsetof(struct RTFStreamerInfoList, fStreamerInfo) +
@@ -664,19 +678,18 @@ void ROOT::Experimental::Detail::RPageSinkRoot::DoCreate(const RNTupleModel & /*
    streamerInfo.fStreamerInfo.fStreamers.fStreamerSeekFooter.fClassTag = 0x80000000 | classTagOffset;
    streamerInfo.fStreamerInfo.fStreamers.fStreamerNBytesFooter.fClassTag = 0x80000000 | classTagOffset;
    streamerInfo.fStreamerInfo.fStreamers.fStreamerReserved.fClassTag = 0x80000000 | classTagOffset;
-   WriteKey(&streamerInfo, streamerInfo.GetSize(), fileHeader.fInfoShort.fSeekInfo, 100, 1,
+   WriteKey(&streamerInfo, streamerInfo.GetSize(), fControlBlock->fHeader.fInfoShort.fSeekInfo, 100, 1,
             "TList", "StreamerInfo", "Doubly linked list");
-   fileHeader.fInfoShort.fNbytesInfo = fFilePos - fileHeader.fInfoShort.fSeekInfo;
+   fControlBlock->fHeader.fInfoShort.fNbytesInfo = fFilePos - fControlBlock->fHeader.fInfoShort.fSeekInfo;
 
-   auto seekRNTuple = fFilePos;
-   RTFNTuple ntuple;
-   RTFKey keyRNTuple(seekRNTuple, 100, strRNTupleClass, strRNTupleName, strEmpty, ntuple.GetSize());
-   WriteKey(&ntuple, ntuple.GetSize(), -1, 100, 0, "ROOT::Experimental::RNTuple", fNTupleName, "");
+   fControlBlock->fSeekNTuple = fFilePos;
+   RTFKey keyRNTuple(fControlBlock->fSeekNTuple, 100, strRNTupleClass, strRNTupleName, strEmpty,
+                     fControlBlock->fNTuple.GetSize());
 
-   fileRoot.fSeekKeys = fFilePos;
+   fileRoot.fSeekKeys = fFilePos + keyRNTuple.GetSize();
    RTFKeyList keyList{1};
    RTFKey keyKeyList(fileRoot.fSeekKeys, 100, strEmpty, strEmpty, strEmpty, keyList.GetSize() + keyRNTuple.fKeyLen);
-   Write(&keyKeyList, keyKeyList.fKeyHeaderSize);
+   Write(&keyKeyList, keyKeyList.fKeyHeaderSize, fileRoot.fSeekKeys);
    Write(&strEmpty, strEmpty.GetSize());
    Write(&strEmpty, strEmpty.GetSize());
    Write(&strEmpty, strEmpty.GetSize());
@@ -687,15 +700,15 @@ void ROOT::Experimental::Detail::RPageSinkRoot::DoCreate(const RNTupleModel & /*
    Write(&strEmpty, strEmpty.GetSize());
    fileRoot.fNBytesKeys = fFilePos - fileRoot.fSeekKeys;
 
-   fileHeader.fInfoShort.fSeekFree = fFilePos;
-   RTFFreeEntry freeEntry(0, 2000000000);
-   RTFKey keyFreeList(fileHeader.fInfoShort.fSeekFree, 100, strEmpty, strEmpty, strEmpty, freeEntry.GetSize());
-   freeEntry.fInfoShort.fFirst = fileHeader.fInfoShort.fSeekFree + keyFreeList.GetSize();
-   WriteKey(&freeEntry, freeEntry.GetSize(), -1, 100, 0, "", "", "");
-   fileHeader.fInfoShort.fNbytesFree = fFilePos - fileHeader.fInfoShort.fSeekFree;
-   fileHeader.SetEnd(fileHeader.fInfoShort.fSeekFree + fileHeader.fInfoShort.fNbytesFree);
+   //fileHeader.fInfoShort.fSeekFree = fFilePos;
+   //RTFFreeEntry freeEntry(0, 2000000000);
+   //RTFKey keyFreeList(fileHeader.fInfoShort.fSeekFree, 100, strEmpty, strEmpty, strEmpty, freeEntry.GetSize());
+   //freeEntry.fInfoShort.fFirst = fileHeader.fInfoShort.fSeekFree + keyFreeList.GetSize();
+   //WriteKey(&freeEntry, freeEntry.GetSize(), -1, 100, 0, "", "", "");
+   //fileHeader.fInfoShort.fNbytesFree = fFilePos - fileHeader.fInfoShort.fSeekFree;
+   //fileHeader.SetEnd(fileHeader.fInfoShort.fSeekFree + fileHeader.fInfoShort.fNbytesFree);
 
-   Write(&fileHeader, fileHeader.GetSize(), 0);
+   // Write(&fileHeader, fileHeader.GetSize(), 0);
 
    Write(&keyRoot, keyRoot.fKeyHeaderSize, 100);
    Write(&strTFile, strTFile.GetSize());
@@ -710,13 +723,17 @@ void ROOT::Experimental::Detail::RPageSinkRoot::DoCreate(const RNTupleModel & /*
 //   fDirectory->SetBit(TDirectoryFile::kCustomBrowse);
 //   fDirectory->SetTitle("ROOT::Experimental::Detail::RNTupleBrowser");
 //
-//   const auto &descriptor = fDescriptorBuilder.GetDescriptor();
-//   auto szHeader = descriptor.SerializeHeader(nullptr);
-//   auto buffer = new unsigned char[szHeader];
-//   descriptor.SerializeHeader(buffer);
+   const auto &descriptor = fDescriptorBuilder.GetDescriptor();
+   auto szHeader = descriptor.SerializeHeader(nullptr);
+   auto buffer = new unsigned char[szHeader];
+   descriptor.SerializeHeader(buffer);
+   fControlBlock->fNTuple.fSeekHeader = fileRoot.fSeekKeys + keyKeyList.GetSize();
+   WriteKey(buffer, szHeader, fControlBlock->fNTuple.fSeekHeader, fControlBlock->fNTuple.fSeekHeader,
+            fOptions.GetCompression());
+   fControlBlock->fNTuple.fNBytesHeader = fFilePos - fControlBlock->fNTuple.fSeekHeader;
 //   ROOT::Experimental::Internal::RNTupleBlob blob(szHeader, buffer);
 //   fDirectory->WriteObject(&blob, kKeyNTupleHeader);
-//   delete[] buffer;
+   delete[] buffer;
 }
 
 ROOT::Experimental::RClusterDescriptor::RLocator
@@ -733,10 +750,11 @@ ROOT::Experimental::Detail::RPageSinkRoot::DoCommitPage(ColumnHandle_t columnHan
       element->Pack(buffer, page.GetBuffer(), page.GetNElements());
    }
 
-   ROOT::Experimental::Internal::RNTupleBlob pagePayload(packedBytes, buffer);
-   std::string keyName = std::string(kKeyPagePayload) +
-      std::to_string(fLastClusterId) + kKeySeparator +
-      std::to_string(fLastPageIdx);
+   WriteKey(buffer, packedBytes, -1, fFilePos, fOptions.GetCompression());
+   //ROOT::Experimental::Internal::RNTupleBlob pagePayload(packedBytes, buffer);
+   //std::string keyName = std::string(kKeyPagePayload) +
+   //   std::to_string(fLastClusterId) + kKeySeparator +
+   //   std::to_string(fLastPageIdx);
    //fDirectory->WriteObject(&pagePayload, keyName.c_str());
 
    if (!isMappable) {
@@ -758,15 +776,35 @@ ROOT::Experimental::Detail::RPageSinkRoot::DoCommitCluster(ROOT::Experimental::N
 
 void ROOT::Experimental::Detail::RPageSinkRoot::DoCommitDataset()
 {
-   if (!fDirectory)
-      return;
+   //if (!fDirectory)
+   //   return;
 
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
    auto szFooter = descriptor.SerializeFooter(nullptr);
    auto buffer = new unsigned char[szFooter];
    descriptor.SerializeFooter(buffer);
-   ROOT::Experimental::Internal::RNTupleBlob footerBlob(szFooter, buffer);
+   //ROOT::Experimental::Internal::RNTupleBlob footerBlob(szFooter, buffer);
    //fDirectory->WriteObject(&footerBlob, kKeyNTupleFooter);
+   fControlBlock->fNTuple.fSeekFooter = fFilePos;
+   WriteKey(buffer, szFooter, fFilePos, fFilePos, fOptions.GetCompression());
+   fControlBlock->fNTuple.fNBytesFooter = fFilePos - fControlBlock->fNTuple.fSeekFooter;
+   fControlBlock->fHeader.fInfoShort.fSeekFree = fFilePos;
+
+   WriteKey(&fControlBlock->fNTuple, fControlBlock->fNTuple.GetSize(), fControlBlock->fSeekNTuple,
+            100, 0, "ROOT::Experimental::RNTuple", fNTupleName, "");
+
+   RTFString strEmpty;
+   RTFFreeEntry freeEntry(0, 2000000000);
+   RTFKey keyFreeList(fFilePos, 100, strEmpty, strEmpty, strEmpty, freeEntry.GetSize());
+   freeEntry.fInfoShort.fFirst = fControlBlock->fHeader.fInfoShort.fSeekFree + keyFreeList.GetSize();
+   WriteKey(&freeEntry, freeEntry.GetSize(), fControlBlock->fHeader.fInfoShort.fSeekFree, 100, 0, "", "", "");
+   fControlBlock->fHeader.fInfoShort.fNbytesFree = fFilePos - fControlBlock->fHeader.fInfoShort.fSeekFree;
+   fControlBlock->fHeader.SetEnd(
+      fControlBlock->fHeader.fInfoShort.fSeekFree + fControlBlock->fHeader.fInfoShort.fNbytesFree);
+
+   Write(&fControlBlock->fHeader, fControlBlock->fHeader.GetSize(), 0);
+   std::cout << "HEADER OUT" << std::endl;
+
    delete[] buffer;
 }
 
