@@ -1,21 +1,29 @@
 # JSROOT changelog
 
-## Changes in dev
-1. Add "rotyNN" and "rotzNN" options to Geo painter - let customize camera position
-2. Provide context menu command to show current camera position
-3. Implement monitoring of TGeoManager with THttpServer
-4. Provide "showtop" option for TGeoManager (equivalent to gGeoManager->SetTopVisible())
-5. Provide "no_screen" option to let ignore kVisOnScreen bits for display, checked first by default
-6. Support different marker styles in 3D drawings
-7. Implement interactive movement of TArrow class
-8. New and simpler TArrow drawing without use of svg markers
-9. Use TGeoManager::fVisLevel in geometry painter
-10. Support "texte" and "texte0" draw options for TH2/TProfile2D classes
-11. Provide radial and z-axis interactive transformation for TGeo drawings
-12. Provide wrong_http_response workaround (#189)
-13. Improve "comp" and "compx" option to show TGeoCompositeShape components
-14. Update objects from list of histogram functions (#190)
-15. Add support of TGeo in TCanvas
+## Changes in 5.8.0
+1. Many TGeo-related changes:
+   - use TGeoManager::fVisLevel in geometry painter
+   - "showtop" draw option for TGeoManager (equivalent to gGeoManager->SetTopVisible())
+   - "no_screen" draw option to let ignore kVisOnScreen bits for display, checked first by default
+   - radial and z-axis interactive transformation for TGeo drawings
+   - improve "comp" and "compx" option to show TGeoCompositeShape components
+   - support of TGeo objects embed in TCanvas
+   - monitoring of TGeoManager with THttpServer
+   - "rotyNN" and "rotzNN" options to TGeo painter - let customize camera position
+   - context menu command to show current camera position
+2. New and simpler TArrow drawing without use of svg markers, interactive movement of TArrow class
+3. Support different marker styles in 3D drawings
+4. Support "texte" and "texte0" draw options for TH2/TProfile2D classes
+5. Provide wrong_http_response workaround (#189)
+6. Update objects from list of histogram functions (#190)
+
+
+## Changes in 5.7.2
+1. Fix - add missing factor in TGeoPgon shape
+2. Fix - correctly handle "sync" specifier in JSROOT.NewHttpRequest
+3. Fix - verify that TH1/TH2 superimposing in 3D works properly
+4. Fix - use provided options in JSROOT.redraw function
+5. Fix - arb8 shape, used in composite
 
 
 ## Changes in 5.7.1

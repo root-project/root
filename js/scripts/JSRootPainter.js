@@ -2119,6 +2119,7 @@
       if (arg.prereq) {
          if (arg.openui5src) JSROOT.openui5src = arg.openui5src;
          if (arg.openui5libs) JSROOT.openui5libs = arg.openui5libs;
+         if (arg.openui5theme) JSROOT.openui5theme = arg.openui5theme;
          return JSROOT.AssertPrerequisites(arg.prereq, function() {
             delete arg.prereq; JSROOT.ConnectWebWindow(arg);
          }, arg.prereq_logdiv);
@@ -3463,9 +3464,9 @@
 
       // check if element really exists
       if ((is_main >= 0) && this.select_main(true).empty()) {
-         if (typeof divid == 'string') console.error('element with id ' + divid + ' not exists');
+         if (typeof divid == 'string') console.error('not found HTML element with id: ' + divid);
                                   else console.error('specified HTML element can not be selected with d3.select()');
-         return;
+         return false;
       }
 
       this.create_canvas = false;
@@ -3480,9 +3481,9 @@
       }
 
       if (svg_c.empty()) {
-         if ((is_main < 0) || (is_main===5) || this.iscan) return;
+         if ((is_main < 0) || (is_main===5) || this.iscan) return true;
          this.AccessTopPainter(true);
-         return;
+         return true;
       }
 
       // SVG element where current pad is drawn (can be canvas itself)
@@ -3490,7 +3491,7 @@
       if (this.pad_name === undefined)
          this.pad_name = this.CurrentPadName();
 
-      if (is_main < 0) return;
+      if (is_main < 0) return true;
 
       // create TFrame element if not exists
       if (this.svg_frame().select(".main_layer").empty() && ((is_main == 1) || (is_main == 3) || (is_main == 4))) {
@@ -3500,7 +3501,7 @@
       }
 
       var svg_p = this.svg_pad();
-      if (svg_p.empty()) return;
+      if (svg_p.empty()) return true;
 
       var pp = svg_p.property('pad_painter');
       if (pp && (pp !== this))
@@ -3509,6 +3510,8 @@
       if (((is_main === 1) || (is_main === 4) || (is_main === 5)) && !svg_p.property('mainpainter'))
          // when this is first main painter in the pad
          svg_p.property('mainpainter', this);
+
+      return true;
    }
 
    /** @summary Calculate absolute position of provided selection.

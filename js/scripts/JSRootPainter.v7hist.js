@@ -47,7 +47,7 @@
          JSROOT.v7.drawFrame(divid, fr);
       }
 
-      this.SetDivId(divid, 1);
+      return this.SetDivId(divid, 1);
    }
 
    THistPainter.prototype.GetHImpl = function(obj) {
@@ -1753,7 +1753,7 @@
       // create painter and add it to canvas
       var painter = new TH1Painter(histo);
 
-      painter.PrepareFrame(divid);
+      if (!painter.PrepareFrame(divid)) return null;
 
       painter.options = { Hist: true, Bar: false, Error: false, ErrorKind: -1, errorX: 0, Zero: false, Mark: false,
                           Line: false, Fill: false, Lego: 0, Surf: 0,
@@ -3593,7 +3593,7 @@
       // create painter and add it to canvas
       var painter = new TH2Painter(obj);
 
-      painter.PrepareFrame(divid);
+      if (!painter.PrepareFrame(divid)) return null;
 
       painter.options = { Hist: false, Bar: false, Error: false, ErrorKind: -1, errorX: 0, Zero: false, Mark: false,
                           Line: false, Fill: false, Lego: 0, Surf: 0,
