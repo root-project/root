@@ -73,6 +73,8 @@ struct RNTupleBlob {
    unsigned char* fContent = nullptr; //[fSize]
 };
 
+struct RTFileControlBlock;
+
 } // namespace Internal
 
 
@@ -100,6 +102,7 @@ private:
    std::uint64_t fFilePos = 0;
    std::string fFileName;
    std::unique_ptr<std::array<char, kMaxRecordSize>> fZipBuffer;
+   std::unique_ptr<ROOT::Experimental::Internal::RTFileControlBlock> fControlBlock;
    std::unique_ptr<TFile> fFile;
    TDirectory *fDirectory = nullptr;
 
