@@ -4591,7 +4591,7 @@
       // create painter and add it to canvas
       var painter = new TH1Painter(histo);
 
-      painter.SetDivId(divid, 1);
+      if (!painter.SetDivId(divid, 1)) return null;
 
       // here we deciding how histogram will look like and how will be shown
       painter.DecodeOptions(opt);
@@ -6528,7 +6528,7 @@
       // create painter and add it to canvas
       var painter = new JSROOT.TH2Painter(histo);
 
-      painter.SetDivId(divid, 1);
+      if (!painter.SetDivId(divid, 1)) return null;
 
       // here we deciding how histogram will look like and how will be shown
       painter.DecodeOptions(opt);

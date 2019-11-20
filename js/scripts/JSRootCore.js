@@ -95,7 +95,7 @@
 
    "use strict";
 
-   JSROOT.version = "dev 9/10/2019";
+   JSROOT.version = "dev 20/11/2019";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -2282,6 +2282,7 @@
 
       if (arg.openui5src) JSROOT.openui5src = arg.openui5src;
       if (arg.openui5libs) JSROOT.openui5libs = arg.openui5libs;
+      if (arg.openui5theme) JSROOT.openui5theme = arg.openui5theme;
       JSROOT.AssertPrerequisites("2d;" + (arg && arg.prereq ? arg.prereq : ""), function() {
          if (arg && arg.prereq) delete arg.prereq;
          JSROOT.ConnectWebWindow(arg);
