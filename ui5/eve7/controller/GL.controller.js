@@ -118,7 +118,14 @@ sap.ui.define([
       OnEveManagerInit: function()
       {
          // called when manager was updated, need only in standalone modes to detect own element id
-         if (!this.standalone || this.elementid) return;
+         if (!this.standalone || this.elementid) {
+
+            // FIXME: this is just workaround, one have to invoke other methods when updating content
+            if (this.created_scenes !== undefined)
+               this.redrawScenes();
+
+            return;
+         }
 
          let viewers = this.mgr.FindViewers();
 

@@ -129,7 +129,7 @@ sap.ui.define([
    /** method insert all objects into three.js container */
    EveScene.prototype.redrawScene = function()
    {
-      if ( ! this.viewer) return;
+      if ( ! this.viewer ) return;
 
       let res3d = this.create3DObjects(true);
       if ( ! res3d.length && this.first_time) return;
