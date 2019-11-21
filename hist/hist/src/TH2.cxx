@@ -2352,13 +2352,10 @@ TH1D* TH2::QuantilesY( Double_t prob, const char * name) const
 TH1D* TH2::DoQuantiles(bool onX, const char * name, Double_t prob) const
 {
    const TAxis *outAxis = 0;
-   const TAxis *inAxis = 0;
    if ( onX )   {
       outAxis = GetXaxis();
-      inAxis = GetYaxis();
    }  else {
       outAxis = GetYaxis();
-      inAxis = GetXaxis();
    }
 
    // build first name of returned histogram
@@ -2398,7 +2395,7 @@ TH1D* TH2::DoQuantiles(bool onX, const char * name, Double_t prob) const
   pp[0] = prob;
 
   TH1D * slice = 0;
-  for (int ibin = inAxis->GetFirst() ; ibin <= inAxis->GetLast() ; ++ibin) {
+  for (int ibin = outAxis->GetFirst() ; ibin <= outAxis->GetLast() ; ++ibin) {
     Double_t qq[1];
     // do a projection on the opposite axis
     slice = DoProjection(!onX, "tmp",ibin,ibin,"");
