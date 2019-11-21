@@ -59,11 +59,11 @@ ROOT::Experimental::RBrowser::RBrowser(bool use_rcanvas)
 {
    SetUseRCanvas(use_rcanvas);
 
-   fWorkingDirectory = gSystem->UnixPathName(gSystem->WorkingDirectory());
-   printf("Current dir %s\n", fWorkingDirectory.c_str());
+   std::string workdir = gSystem->UnixPathName(gSystem->WorkingDirectory());
+   printf("Current dir %s\n", workdir.c_str());
 
    fBrowsable.SetTopElement(std::make_unique<SysFileElement>("/"));
-   fBrowsable.SetWorkingDirectory(fWorkingDirectory);
+   fBrowsable.SetWorkingDirectory(workdir);
 
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
@@ -409,9 +409,7 @@ void ROOT::Experimental::RBrowser::SendInitMsg(unsigned connid)
 
 std::string ROOT::Experimental::RBrowser::GetCurrentWorkingDirectory()
 {
-   auto path = fBrowsable.GetWorkingPath();
-
-   return "WORKPATH:"s + TBufferJSON::ToJSON(&path, TBufferJSON::kNoSpaces).Data();
+   return "WORKPATH:"s + TBufferJSON::ToJSON(&fBrowsable.GetWorkingPath()).Data();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -479,18 +477,12 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
 
       if (path) fBrowsable.SetWorkingPath(*path);
 
-      // TODO: do we really need to change system-wide working directory ???
-      // gSystem->ChangeDirectory(fWorkingDirectory.c_str());
-
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
    } else if (arg.compare(0, 6, "CHDIR:") == 0) {
 
       printf("CHDIR %s\n", arg.substr(6).c_str());
 
       fBrowsable.SetWorkingDirectory(arg.substr(6));
-
-      // TODO: do we really need to change system-wide working directory ???
-      // gSystem->ChangeDirectory(fWorkingDirectory.c_str());
 
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
    }
