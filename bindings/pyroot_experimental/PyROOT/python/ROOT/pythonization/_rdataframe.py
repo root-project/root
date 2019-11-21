@@ -58,7 +58,8 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None):
 
     # Find all column names in the dataframe if no column are specified
     if not columns:
-        columns = [c for c in df.GetColumnNames()]
+        column_names = df.GetColumnNames()
+        columns = [c for c in column_names]
 
     # Exclude the specified columns
     if exclude == None:
