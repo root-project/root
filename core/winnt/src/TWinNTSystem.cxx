@@ -4275,7 +4275,8 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options,
             // path info if it not accessible.
             s = libs(index, end);
             s.ToLower();
-            if ((s.Index("c:/windows/") != kNPOS)) {
+            if ((s.Index("c:/windows/") != kNPOS) ||
+                (s.Index("python") != kNPOS)) {
                start += end+1;
                continue;
             }
