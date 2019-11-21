@@ -50,39 +50,30 @@ sap.ui.define(['rootui5/panel/Controller',
       },
 
       updateBReadcrumbs: function(split) {
-        let oBreadcrumbs = this.getView().byId("breadcrumbs");
-        oBreadcrumbs.removeAllLinks();
-        for (let i=0; i<split.length; i++) {
-          if (i === 0) {
-             let link = new Link();
-             if (split[i].length === 2 && split[i][1] === ':') // Windows drive letter
-               link.setText(split[i]);
-             else
-               link.setText("/");
-            link.attachPress(this, this.onBreadcrumbsPress, this);
-            oBreadcrumbs.addLink(link);
-          } else {
-            let link = new Link({text: split[i]});
-            link.attachPress(this, this.onBreadcrumbsPress, this);
-            oBreadcrumbs.addLink(link);
-          }
-        }
+         let oBreadcrumbs = this.getView().byId("breadcrumbs");
+         oBreadcrumbs.removeAllLinks();
+         for (let i=-1; i<split.length; i++) {
+            let txt = i<0 ? "/": split[i];
+            if (i === split.length-1) {
+               oBreadcrumbs.setCurrentLocationText(txt);
+            } else {
+               let link = new Link({text: txt});
+               link.attachPress(this, this.onBreadcrumbsPress, this);
+               oBreadcrumbs.addLink(link);
+            }
+         }
       },
 
      onBreadcrumbsPress: function(oEvent) {
         let sId = oEvent.getSource().sId;
         let oBreadcrumbs = oEvent.getSource().getParent();
         let oLinks = oBreadcrumbs.getLinks();
-        let path = "/";
-        for (let i = 1; i<oLinks.length; i++) {
-          if (oLinks[i].sId === sId ) {
-            path += oLinks[i].getText();
-            break;
-          }
-          path += oLinks[i].getText() + "/";
+        let path = [];
+        for (let i = 0; i < oLinks.length; i++) {
+           if (i>0) path.push(oLinks[i].getText());
+           if (oLinks[i].getId() === sId ) break;
         }
-
-        this.websocket.Send('CHDIR:' + path); // dialog send reply itself
+        this.websocket.Send('CHPATH:' + JSON.stringify(path));
      },
 
      processInitMsg: function(msg) {

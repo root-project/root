@@ -201,14 +201,15 @@ void RFileDialog::WebWindowCallback(unsigned connid, const std::string &arg)
    else
       printf("Recv %s\n", arg.c_str());
 
-   if (arg.compare(0, 6, "CHDIR:") == 0) {
-      auto chdir = arg.substr(6);
-      if (!chdir.empty() && (chdir[0] != '/'))
-         fWorkingDirectory += "/"s + chdir;
-      else
-         fWorkingDirectory = chdir;
-      printf("Current dir %s\n", fWorkingDirectory.c_str());
-      fBrowsable.SetWorkingDirectory(fWorkingDirectory);
+   if (arg.compare(0, 7, "CHPATH:") == 0) {
+      printf("chpath %s\n", arg.substr(7).c_str());
+      auto path = TBufferJSON::FromJSON<RElementPath_t>(arg.substr(7));
+      if (path) fBrowsable.SetWorkingPath(*path);
+      fWebWindow->Send(connid, GetCurrentWorkingDirectory());
+      SendDirContent(connid);
+   } else if (arg.compare(0, 6, "CHDIR:") == 0) {
+      printf("chdir dir %s\n", arg.substr(6).c_str());
+      fBrowsable.SetWorkingDirectory(arg.substr(6));
 
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
       SendDirContent(connid);

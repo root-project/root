@@ -473,13 +473,25 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       CloseCanvas(arg.substr(13));
    } else if (arg == "GETWORKPATH") {
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
-   } else if (arg.compare(0, 6, "CHDIR:") == 0) {
-      fWorkingDirectory = arg.substr(6);
-      printf("Current dir %s\n", fWorkingDirectory.c_str());
-      fBrowsable.SetWorkingDirectory(fWorkingDirectory);
+   } else if (arg.compare(0, 7, "CHPATH:") == 0) {
+      printf("Current path %s\n", arg.substr(7).c_str());
+      auto path = TBufferJSON::FromJSON<RElementPath_t>(arg.substr(7));
+
+      if (path) fBrowsable.SetWorkingPath(*path);
 
       // TODO: do we really need to change system-wide working directory ???
       // gSystem->ChangeDirectory(fWorkingDirectory.c_str());
+
+      fWebWindow->Send(connid, GetCurrentWorkingDirectory());
+   } else if (arg.compare(0, 6, "CHDIR:") == 0) {
+
+      printf("CHDIR %s\n", arg.substr(6).c_str());
+
+      fBrowsable.SetWorkingDirectory(arg.substr(6));
+
+      // TODO: do we really need to change system-wide working directory ???
+      // gSystem->ChangeDirectory(fWorkingDirectory.c_str());
+
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
    }
 }
