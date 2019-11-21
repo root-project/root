@@ -34,6 +34,25 @@ RElement::EContentKind RElement::GetContentKind(const std::string &kind)
 }
 
 
+std::shared_ptr<RElement> RElement::GetSubElement(std::shared_ptr<RElement> &elem, const RElementPath_t &path)
+{
+   auto curr = elem;
+
+   for (auto &itemname : path) {
+      if (!curr)
+         return nullptr;
+
+      auto iter = curr->GetChildsIter();
+      if (!iter || !iter->Find(itemname))
+         return nullptr;
+
+      curr = iter->GetElement();
+   }
+
+   return curr;
+}
+
+
 /////////////////////////////////////////////////////////////////////
 /// Find item with specified name
 /// Default implementation, should work for all
@@ -173,10 +192,33 @@ std::shared_ptr<RElement> RProvider::Browse(std::unique_ptr<Browsable::RHolder> 
 }
 
 /////////////////////////////////////////////////////////////////////
-/// set top item
+/// set top element for browsing
 
 void RBrowsable::SetTopElement(std::shared_ptr<Browsable::RElement> elem)
 {
+   fTopElement = elem;
+
+   SetWorkingDirectory("");
+}
+
+/////////////////////////////////////////////////////////////////////
+/// set working directory relative to top element
+
+void RBrowsable::SetWorkingDirectory(const std::string &strpath)
+{
+   auto path = DecomposePath(strpath, false);
+
+   SetWorkingPath(path);
+}
+
+/////////////////////////////////////////////////////////////////////
+/// set working directory relative to top element
+
+void RBrowsable::SetWorkingPath(const RElementPath_t &path)
+{
+   auto elem = RElement::GetSubElement(fTopElement, path);
+
+   fWorkingPath = path;
    fLevels.clear();
    fLevels.emplace_back("");
    fLevels.front().fElement = elem;
@@ -200,7 +242,7 @@ bool RBrowsable::ResetLevels()
 /// Direct navigate to specified path without building levels
 /// Do not support ".." - navigation to level up
 
-std::shared_ptr<Browsable::RElement> RBrowsable::DirectNavigate(std::shared_ptr<Browsable::RElement> item, const std::vector<std::string> &paths, int indx)
+std::shared_ptr<Browsable::RElement> RBrowsable::DirectNavigate(std::shared_ptr<Browsable::RElement> item, const RElementPath_t &paths, int indx)
 {
    while (item && (indx < (int) paths.size())) {
       auto subdir = paths[indx++];
@@ -229,7 +271,7 @@ std::shared_ptr<Browsable::RElement> RBrowsable::DirectNavigate(std::shared_ptr<
 /// Any other will be ignored
 /// level_indx returns found index in the levels. If pointer not specified, levels will not be touched
 
-std::shared_ptr<Browsable::RElement> RBrowsable::Navigate(const std::vector<std::string> &paths, int *level_indx)
+std::shared_ptr<Browsable::RElement> RBrowsable::Navigate(const RElementPath_t &paths, int *level_indx)
 {
    if (fLevels.empty())
       return nullptr;
@@ -293,28 +335,34 @@ std::shared_ptr<Browsable::RElement> RBrowsable::Navigate(const std::vector<std:
 /// Returns array of names for each element in the path, first element either "/" or "."
 /// If returned array empty - it is error
 
-std::vector<std::string> RBrowsable::DecomposePath(const std::string &path)
+RElementPath_t RBrowsable::DecomposePath(const std::string &strpath, bool relative_path)
 {
-   if (path.empty())
-      return {"."};
+   RElementPath_t arr;
+
+   if (strpath.empty()) {
+      if (relative_path)
+         arr.emplace_back("."s);
+      return arr;
+   }
 
    std::string slash = "/";
 
-   std::vector<std::string> arr = { slash };
+   if (relative_path) arr.emplace_back(slash);
 
-   std::size_t previous = 0;
-   if (path[0] == slash[0]) previous++;
+   std::string::size_type previous = 0;
+   if (strpath[0] == slash[0]) previous++;
 
-   std::size_t current = path.find(slash, previous);
+   auto current = strpath.find(slash, previous);
    while (current != std::string::npos) {
       if (current > previous)
-         arr.emplace_back(path.substr(previous, current - previous));
+         arr.emplace_back(strpath.substr(previous, current - previous));
       previous = current + 1;
-      current = path.find(slash, previous);
+      current = strpath.find(slash, previous);
    }
 
-   if (previous < path.length())
-      arr.emplace_back(path.substr(previous));
+   if (previous < strpath.length())
+      arr.emplace_back(strpath.substr(previous));
+
    return arr;
 }
 

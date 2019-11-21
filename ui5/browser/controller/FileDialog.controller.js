@@ -49,11 +49,7 @@ sap.ui.define(['rootui5/panel/Controller',
          this.websocket.Send("BRREQ:" + JSON.stringify(req));
       },
 
-      updateBReadcrumbs: function(jsonpath) {
-         this.currentPath = jsonpath;
-
-        // let json = JSON.parse(jsonString);
-        let split = jsonpath.split("/");
+      updateBReadcrumbs: function(split) {
         let oBreadcrumbs = this.getView().byId("breadcrumbs");
         oBreadcrumbs.removeAllLinks();
         for (let i=0; i<split.length; i++) {
@@ -139,8 +135,8 @@ sap.ui.define(['rootui5/panel/Controller',
          case "CLOSE":
             this.closeFileDialog();
             break;
-         case "GETWORKDIR":
-            this.updateBReadcrumbs(msg);
+         case "WORKPATH":
+            this.updateBReadcrumbs(JSON.parse(msg));
             break;
          case "BREPL":   // browser reply
             var repl = JSON.parse(msg);

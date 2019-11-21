@@ -62,7 +62,8 @@ ROOT::Experimental::RBrowser::RBrowser(bool use_rcanvas)
    fWorkingDirectory = gSystem->UnixPathName(gSystem->WorkingDirectory());
    printf("Current dir %s\n", fWorkingDirectory.c_str());
 
-   fBrowsable.SetTopElement(std::make_unique<SysFileElement>(fWorkingDirectory));
+   fBrowsable.SetTopElement(std::make_unique<SysFileElement>("/"));
+   fBrowsable.SetWorkingDirectory(fWorkingDirectory);
 
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
@@ -379,6 +380,8 @@ void ROOT::Experimental::RBrowser::SendInitMsg(unsigned connid)
 {
    std::vector<std::vector<std::string>> reply;
 
+   reply.emplace_back(fBrowsable.GetWorkingPath()); // first element is current path
+
    for (auto &canv : fCanvases) {
       auto url = GetCanvasUrl(canv.get());
       std::string name = canv->GetName();
@@ -406,7 +409,9 @@ void ROOT::Experimental::RBrowser::SendInitMsg(unsigned connid)
 
 std::string ROOT::Experimental::RBrowser::GetCurrentWorkingDirectory()
 {
-   return "GETWORKDIR: { \"path\": \""s + fWorkingDirectory + "\"}"s;
+   auto path = fBrowsable.GetWorkingPath();
+
+   return "WORKPATH:"s + TBufferJSON::ToJSON(&path, TBufferJSON::kNoSpaces).Data();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -466,15 +471,15 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       printf("Select %s\n", fActiveCanvas.c_str());
    } else if (arg.compare(0,13, "CLOSE_CANVAS:") == 0) {
       CloseCanvas(arg.substr(13));
-   } else if (arg.compare(0, 11, "GETWORKDIR:") == 0) {
-      std::string res = GetCurrentWorkingDirectory();
-      fWebWindow->Send(connid, res);
+   } else if (arg == "GETWORKPATH") {
+      fWebWindow->Send(connid, GetCurrentWorkingDirectory());
    } else if (arg.compare(0, 6, "CHDIR:") == 0) {
       fWorkingDirectory = arg.substr(6);
-      if ((fWorkingDirectory.length()>1) && (fWorkingDirectory[fWorkingDirectory.length()-1] == '/')) fWorkingDirectory.resize(fWorkingDirectory.length()-1);
       printf("Current dir %s\n", fWorkingDirectory.c_str());
-      fBrowsable.SetTopElement(std::make_unique<SysFileElement>(fWorkingDirectory));
-      gSystem->ChangeDirectory(fWorkingDirectory.c_str());
+      fBrowsable.SetWorkingDirectory(fWorkingDirectory);
+
+      // TODO: do we really need to change system-wide working directory ???
+      // gSystem->ChangeDirectory(fWorkingDirectory.c_str());
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
    }
 }

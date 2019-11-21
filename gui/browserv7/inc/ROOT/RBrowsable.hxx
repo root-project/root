@@ -22,6 +22,10 @@
 
 class TObject;
 
+using RElementPath_t = std::vector<std::string>;
+
+
+
 namespace ROOT {
 namespace Experimental {
 
@@ -223,6 +227,7 @@ public:
 class RLevelIter;
 
 
+
 /** \class RElement
 \ingroup rbrowser
 \brief Basic element of RBrowsable hierarchy. Provides access to data, creates iterator if any
@@ -260,6 +265,8 @@ public:
 
    /** Access object */
    virtual std::unique_ptr<RHolder> GetObject() { return nullptr; }
+
+   static std::shared_ptr<RElement> GetSubElement(std::shared_ptr<RElement> &elem, const RElementPath_t &path);
 };
 
 /** \class RLevelIter
@@ -369,13 +376,16 @@ class RBrowsable {
       RLevel(const std::string &name, std::shared_ptr<Browsable::RElement> &elem) : fName(name) { fElement = std::move(elem); }
    };
 
-   std::vector<RLevel> fLevels;           ///<! navigated levels
 
-   std::shared_ptr<Browsable::RElement> DirectNavigate(std::shared_ptr<Browsable::RElement> item, const std::vector<std::string> &path, int indx = 0);
+   std::shared_ptr<Browsable::RElement> fTopElement;    ///<! top element for the RBrowsable
+   std::vector<std::string>  fWorkingPath;              ///<!
+   std::vector<RLevel> fLevels;                         ///<! navigated levels
 
-   std::shared_ptr<Browsable::RElement> Navigate(const std::vector<std::string> &path, int *level_indx = nullptr);
+   std::shared_ptr<Browsable::RElement> DirectNavigate(std::shared_ptr<Browsable::RElement> item, const RElementPath_t &path, int indx = 0);
 
-   std::vector<std::string> DecomposePath(const std::string &path);
+   std::shared_ptr<Browsable::RElement> Navigate(const RElementPath_t &path, int *level_indx = nullptr);
+
+   RElementPath_t DecomposePath(const std::string &path, bool relative_path = true);
 
    bool ResetLevels();
 
@@ -384,14 +394,16 @@ class RBrowsable {
 public:
    RBrowsable() = default;
 
-   RBrowsable(std::shared_ptr<Browsable::RElement> elem)
-   {
-      SetTopElement(elem);
-   }
+   RBrowsable(std::shared_ptr<Browsable::RElement> elem) { SetTopElement(elem); }
 
    virtual ~RBrowsable() = default;
 
    void SetTopElement(std::shared_ptr<Browsable::RElement> elem);
+
+   void SetWorkingDirectory(const std::string &strpath);
+   void SetWorkingPath(const RElementPath_t &path);
+
+   const RElementPath_t &GetWorkingPath() const { return fWorkingPath; }
 
    std::string ProcessRequest(const RBrowserRequest &request);
 
