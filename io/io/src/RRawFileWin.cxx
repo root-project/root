@@ -55,7 +55,7 @@ std::uint64_t ROOT::Experimental::Detail::RRawFileWin::DoGetSize()
 
 void ROOT::Experimental::Detail::RRawFileWin::DoOpen()
 {
-   fFilePtr = fopen(GetLocation(fUrl).c_str(), "r");
+   fFilePtr = fopen(GetLocation(fUrl).c_str(), "rb");
    if (fFilePtr == nullptr)
       throw std::runtime_error("Cannot open '" + fUrl + "', error: " + std::string(strerror(errno)));
    // Prevent double buffering

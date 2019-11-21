@@ -39,7 +39,7 @@ ROOT::Experimental::Detail::RPageSinkRaw::RPageSinkRaw(std::string_view ntupleNa
 {
    R__WARNING_HERE("NTuple") << "The RNTuple file format will change. " <<
       "Do not store real data with this version of RNTuple!";
-   fFile = fopen(std::string(path).c_str(), "w");
+   fFile = fopen(std::string(path).c_str(), "wb");
    R__ASSERT(fFile);
 }
 
