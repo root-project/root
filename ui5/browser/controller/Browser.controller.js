@@ -738,10 +738,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                let oBreadcrumbs = this.getView().byId("breadcrumbs");
                let links = oBreadcrumbs.getLinks();
                let currentText = oBreadcrumbs.getCurrentLocationText();
-               let path = "/";
-               for (let i = 1; i < links.length; i++)
-                  path += links[i].getText() + "/";
-               path += currentText + prop.fullpath;
+
+               let path = "";
+               if ((currentText == "/") || (links.length < 1)) {
+                  path = prop.fullpath;
+               } else {
+                  path = "/";
+                  for (let i = 1; i < links.length; i++)
+                     path += links[i].getText() + "/";
+                  path += currentText + prop.fullpath;
+               }
 
                // TODO: use plain array also here to avoid any possible confusion
                this.websocket.Send('CHDIR:' + path);
