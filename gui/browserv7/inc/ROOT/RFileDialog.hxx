@@ -50,7 +50,6 @@ protected:
 
    EDialogTypes fKind{kOpenFile};      ///<! dialog kind OpenFile, SaveAs, NewFile
    std::string  fTitle;                ///<! title
-   std::string  fWorkingDirectory;     ///<! directory for which files list is produced
    RBrowsable   fBrowsable;            ///<! central browsing element
 
    unsigned fConnId{0}; ///<! default connection id

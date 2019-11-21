@@ -50,7 +50,6 @@ protected:
 
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to browser
 
-   std::string fWorkingDirectory;            ///<! top working directory used by Browsable
    RBrowsable  fBrowsable;                   ///<! central browsing element
 
    TCanvas *AddCanvas();

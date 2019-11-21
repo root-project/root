@@ -52,11 +52,11 @@ RFileDialog::RFileDialog(EDialogTypes kind, const std::string &title)
    fKind = kind;
    fTitle = title;
 
-   fWorkingDirectory = gSystem->UnixPathName(gSystem->WorkingDirectory());
-   printf("Current dir %s\n", fWorkingDirectory.c_str());
+   std::string workdir = gSystem->UnixPathName(gSystem->WorkingDirectory());
+   printf("Current dir %s\n", workdir.c_str());
 
    fBrowsable.SetTopElement(std::make_unique<SysFileElement>("/"));
-   fBrowsable.SetWorkingDirectory(fWorkingDirectory);
+   fBrowsable.SetWorkingDirectory(workdir);
 
    fWebWindow = RWebWindow::Create();
 
@@ -161,7 +161,7 @@ void RFileDialog::SendInitMsg(unsigned connid)
 
    auto jpath = TBufferJSON::ToJSON(&fBrowsable.GetWorkingPath());
 
-   std::string jsoncode = "{ \"kind\" : \""s + kindstr + "\", \"title\" : \""s + fTitle + "\", \"path\" : \" "s + jpath.Data() + "\", \"brepl\" : "s + fBrowsable.ProcessRequest(request) + "   }"s;
+   std::string jsoncode = "{ \"kind\" : \""s + kindstr + "\", \"title\" : \""s + fTitle + "\", \"path\" : "s + jpath.Data() + ", \"brepl\" : "s + fBrowsable.ProcessRequest(request) + "   }"s;
 
    fWebWindow->Send(connid, "INMSG:"s + jsoncode);
 }
@@ -171,7 +171,7 @@ void RFileDialog::SendInitMsg(unsigned connid)
 
 std::string RFileDialog::GetCurrentWorkingDirectory()
 {
-   return "WORKPATH:"s + fWorkingDirectory;
+   return "WORKPATH:"s + TBufferJSON::ToJSON(&fBrowsable.GetWorkingPath()).Data();
 }
 
 
@@ -209,12 +209,19 @@ void RFileDialog::WebWindowCallback(unsigned connid, const std::string &arg)
       SendDirContent(connid);
    } else if (arg.compare(0, 6, "CHDIR:") == 0) {
       printf("chdir dir %s\n", arg.substr(6).c_str());
-      fBrowsable.SetWorkingDirectory(arg.substr(6));
+
+      auto path = fBrowsable.GetWorkingPath();
+      path.emplace_back(arg.substr(6));
+      fBrowsable.SetWorkingPath(path);
 
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
       SendDirContent(connid);
    } else if (arg.compare(0, 7, "SELECT:") == 0) {
-      fSelect = fWorkingDirectory + "/"s + arg.substr(7);
+
+      auto elem = fBrowsable.GetElement(arg.substr(7));
+
+      if (elem)
+         fSelect = elem->GetTitle();
 
       if (fCallback && !fDidSelect)
          fCallback(fSelect);
