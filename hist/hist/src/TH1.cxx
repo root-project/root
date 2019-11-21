@@ -5481,18 +5481,17 @@ static inline bool IsEquidistantBinning(const TAxis& axis)
 ////////////////////////////////////////////////////////////////////////////////
 /// Same limits and bins.
 
-Bool_t TH1::SameLimitsAndNBins(const TAxis& axis1, const TAxis& axis2)
-{
-   return axis1.GetNbins() == axis2.GetNbins()
-      && axis1.GetXmin() == axis2.GetXmin()
-      && axis1.GetXmax() == axis2.GetXmax();
+Bool_t TH1::SameLimitsAndNBins(const TAxis &axis1, const TAxis &axis2){
+   return axis1.GetNbins() == axis2.GetNbins() &&
+          TMath::AreEqualAbs(axis1.GetXmin(), axis2.GetXmin(), axis1.GetBinWidth(axis1.GetNbins()) * 1.E-10) &&
+          TMath::AreEqualAbs(axis1.GetXmax(), axis2.GetXmax(), axis1.GetBinWidth(axis1.GetNbins()) * 1.E-10);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Finds new limits for the axis for the Merge function.
 /// returns false if the limits are incompatible
 
-Bool_t TH1::RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis)
+Bool_t TH1::RecomputeAxisLimits(TAxis &destAxis, const TAxis &anAxis)
 {
    if (SameLimitsAndNBins(destAxis, anAxis))
       return kTRUE;
