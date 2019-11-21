@@ -615,19 +615,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          // already array with all items inside
          let oBreadcrumbs = this.getView().byId("breadcrumbs");
          oBreadcrumbs.removeAllLinks();
-         for (let i=0; i<split.length; i++) {
+         for (let i=-1; i<split.length; i++) {
+            let txt = i<0 ? "/": split[i];
             if (i === split.length-1) {
-               oBreadcrumbs.setCurrentLocationText(split[i]);
-            } else if (i === 0) {
-               let link = new Link();
-               if (split[i].length === 2 && split[i][1] === ':') // Windows drive letter
-                  link.setText(split[i]);
-               else
-                  link.setText("/");
-               link.attachPress(this, this.onBreadcrumbsPress, this);
-               oBreadcrumbs.addLink(link);
+               oBreadcrumbs.setCurrentLocationText(txt);
             } else {
-               let link = new Link({text: split[i]});
+               let link = new Link({text: txt});
                link.attachPress(this, this.onBreadcrumbsPress, this);
                oBreadcrumbs.addLink(link);
             }
@@ -638,16 +631,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          let sId = oEvent.getSource().getId();
          let oBreadcrumbs = oEvent.getSource().getParent();
          let oLinks = oBreadcrumbs.getLinks();
-         let path = "/";
-         for (let i = 1; i<oLinks.length; i++) {
-            if (oLinks[i].getId() === sId ) {
-               path += oLinks[i].getText();
-               break;
-            }
-            path += oLinks[i].getText() + "/";
+         let path = [];
+         for (let i = 0; i < oLinks.length; i++) {
+            if (i>0) path.push(oLinks[i].getText());
+            if (oLinks[i].getId() === sId ) break;
          }
-
-         this.websocket.Send('CHDIR:' + path);
+         this.websocket.Send('CHPATH:' + JSON.stringify(path));
          this.doReload(true);
       },
 
@@ -750,11 +739,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                let links = oBreadcrumbs.getLinks();
                let currentText = oBreadcrumbs.getCurrentLocationText();
                let path = "/";
-               for (let i = 1; i < links.length; i++) {
+               for (let i = 1; i < links.length; i++)
                   path += links[i].getText() + "/";
-               }
                path += currentText + prop.fullpath;
 
+               // TODO: use plain array also here to avoid any possible confusion
                this.websocket.Send('CHDIR:' + path);
                return this.doReload(true);
             }
@@ -960,9 +949,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          this.updateBReadcrumbs(arr[0]);
 
-         for (var k=0; k<arr.length; ++k) {
+         for (var k=1; k<arr.length; ++k)
             this.createCanvas(arr[k][0], arr[k][1], arr[k][2]);
-         }
       },
 
       createCanvas: function(kind, url, name) {
