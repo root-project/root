@@ -1662,7 +1662,7 @@ if(webgui)
   ExternalProject_Add(
      OPENUI5
      URL ${CMAKE_SOURCE_DIR}/gui/webdisplay/res/openui5.tar.gz
-     URL_HASH SHA256=71a9f362bddae82122ff532887f7bb73b9e3915088a85a2afb7a6412ca7af71c
+     URL_HASH SHA256=984d221d6a3246732ca75cc38de0d974b887f4bd6beb9346133face602398696
      CONFIGURE_COMMAND ""
      BUILD_COMMAND ""
      INSTALL_COMMAND ""
