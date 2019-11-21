@@ -55,7 +55,8 @@ RFileDialog::RFileDialog(EDialogTypes kind, const std::string &title)
    fWorkingDirectory = gSystem->UnixPathName(gSystem->WorkingDirectory());
    printf("Current dir %s\n", fWorkingDirectory.c_str());
 
-   fBrowsable.SetTopElement(std::make_unique<SysFileElement>(fWorkingDirectory));
+   fBrowsable.SetTopElement(std::make_unique<SysFileElement>("/"));
+   fBrowsable.SetWorkingDirectory(fWorkingDirectory);
 
    fWebWindow = RWebWindow::Create();
 
@@ -158,7 +159,9 @@ void RFileDialog::SendInitMsg(unsigned connid)
       case kNewFile : kindstr = "NewFile"; break;
    }
 
-   std::string jsoncode = "{ \"kind\" : \""s + kindstr + "\", \"title\" : \""s + fTitle + "\", \"path\" : \" "s + fWorkingDirectory + "\", \"brepl\" : "s + fBrowsable.ProcessRequest(request) + "   }"s;
+   auto jpath = TBufferJSON::ToJSON(&fBrowsable.GetWorkingPath());
+
+   std::string jsoncode = "{ \"kind\" : \""s + kindstr + "\", \"title\" : \""s + fTitle + "\", \"path\" : \" "s + jpath.Data() + "\", \"brepl\" : "s + fBrowsable.ProcessRequest(request) + "   }"s;
 
    fWebWindow->Send(connid, "INMSG:"s + jsoncode);
 }
@@ -168,7 +171,7 @@ void RFileDialog::SendInitMsg(unsigned connid)
 
 std::string RFileDialog::GetCurrentWorkingDirectory()
 {
-   return "GETWORKDIR:"s + fWorkingDirectory;
+   return "WORKPATH:"s + fWorkingDirectory;
 }
 
 
@@ -204,10 +207,9 @@ void RFileDialog::WebWindowCallback(unsigned connid, const std::string &arg)
          fWorkingDirectory += "/"s + chdir;
       else
          fWorkingDirectory = chdir;
-      if ((fWorkingDirectory.length()>1) && (fWorkingDirectory[fWorkingDirectory.length()-1] == '/'))
-         fWorkingDirectory.resize(fWorkingDirectory.length()-1);
       printf("Current dir %s\n", fWorkingDirectory.c_str());
-      fBrowsable.SetTopElement(std::make_unique<SysFileElement>(fWorkingDirectory));
+      fBrowsable.SetWorkingDirectory(fWorkingDirectory);
+
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
       SendDirContent(connid);
    } else if (arg.compare(0, 7, "SELECT:") == 0) {

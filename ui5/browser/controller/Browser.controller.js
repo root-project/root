@@ -611,9 +611,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* =============== Breadcrumbs =============== */
       /* =========================================== */
 
-      updateBReadcrumbs: function(jsonString) {
-         let json = JSON.parse(jsonString);
-         let split = json.path.split("/");
+      updateBReadcrumbs: function(split) {
+         // already array with all items inside
          let oBreadcrumbs = this.getView().byId("breadcrumbs");
          oBreadcrumbs.removeAllLinks();
          for (let i=0; i<split.length; i++) {
@@ -844,8 +843,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             var arr = JSON.parse(msg);
             this.createCanvas(arr[0], arr[1], arr[2]);
             break;
-         case "GETWORKDIR":
-            this.updateBReadcrumbs(msg);
+         case "WORKPATH":
+            this.updateBReadcrumbs(JSON.parse(msg));
             break;
          case "SLCTCANV": // Selected the back selected canvas
            let oTabContainer = this.byId("myTabContainer");
@@ -908,6 +907,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       onAfterRendering: function() {
          this.renderingDone = true;
+
+         // this is how master width can be changed, may be extra control can be provided
+         // var oSplitApp = this.getView().byId("SplitAppBrowser");
+         // oSplitApp.getAggregation("_navMaster").$().css("width", "400px");
       },
 
       /** Reload (refresh) file tree browser */
@@ -952,9 +955,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** process initial message, now it is list of existing canvases */
       processInitMsg: function(msg) {
-         this.websocket.Send('GETWORKDIR:'); // Update the breadcrumbs
          var arr = JSROOT.parse(msg);
          if (!arr) return;
+
+         this.updateBReadcrumbs(arr[0]);
 
          for (var k=0; k<arr.length; ++k) {
             this.createCanvas(arr[k][0], arr[k][1], arr[k][2]);
