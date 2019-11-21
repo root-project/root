@@ -388,6 +388,9 @@ include_regular_expression("^[^.]+$|[.]h$|[.]icc$|[.]hxx$|[.]hpp$")
 #---Check for Python installation-------------------------------------------------------
 
 message(STATUS "Looking for python")
+unset(PYTHON_INCLUDE_DIR CACHE)
+unset(PYTHON_LIBRARY CACHE)
+unset(CMAKE_INSTALL_PYROOTDIR)
 # Python is required by header and manpage generation
 
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
