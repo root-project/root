@@ -21,6 +21,7 @@
 #include <ROOT/RObjectDrawable.hxx>
 #include <ROOT/RDrawableProvider.hxx>
 #include <ROOT/RBrowsableSysFile.hxx>
+#include <ROOT/RBrowsableTObject.hxx>
 #include <ROOT/RCanvas.hxx>
 
 #include "TString.h"
@@ -33,6 +34,7 @@
 #include "TBranch.h"
 #include "TTree.h"
 #include "TH1.h"
+#include "TFolder.h"
 
 #include <sstream>
 #include <iostream>
@@ -87,6 +89,12 @@ ROOT::Experimental::RBrowser::RBrowser(bool use_rcanvas)
    comp->Add(std::make_shared<Browsable::RWrapper>(toplbl,std::make_unique<SysFileElement>(topdir)));
    if (!homedir.empty())
       comp->Add(std::make_shared<Browsable::RWrapper>("home",std::make_unique<SysFileElement>(homedir)));
+
+   std::unique_ptr<RHolder> rootfold = std::make_unique<RTObjectHolder>(gROOT->GetRootFolder(), kFALSE);
+   auto elem = Browsable::RProvider::Browse(rootfold);
+   if (elem)
+      comp->Add(std::make_shared<Browsable::RWrapper>("ROOT",elem));
+
 
    fBrowsable.SetTopElement(comp);
 
