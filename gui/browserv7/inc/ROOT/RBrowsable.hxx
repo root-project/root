@@ -244,7 +244,7 @@ public:
       kText,      ///< "text" - plain text for code editor
       kImage,     ///< "image64" - base64 for supported image formats (png/gif/gpeg)
       kPng,       ///< "png" - plain png binary code, returned inside std::string
-      kJpeg      ///< "jpg" or "jpeg" - plain jpg binary code, returned inside std::string
+      kJpeg       ///< "jpg" or "jpeg" - plain jpg binary code, returned inside std::string
    };
 
    static EContentKind GetContentKind(const std::string &kind);
@@ -269,6 +269,79 @@ public:
    static std::shared_ptr<RElement> GetSubElement(std::shared_ptr<RElement> &elem, const RElementPath_t &path);
 };
 
+/** \class RComposite
+\ingroup rbrowser
+\brief Composite elements - combines Basic element of RBrowsable hierarchy. Provides access to data, creates iterator if any
+\author Sergey Linev <S.Linev@gsi.de>
+\date 2019-11-22
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
+
+class RComposite : public RElement {
+
+   std::string fName;
+   std::string fTitle;
+   std::vector<std::shared_ptr<RElement>> fChilds;
+
+public:
+
+   RComposite(const std::string &name, const std::string &title = "") : RElement(), fName(name), fTitle(title) {}
+
+   virtual ~RComposite() = default;
+
+   /** Name of RBrowsable, must be provided in derived classes */
+   std::string GetName() const override { return fName; }
+
+   /** Title of RBrowsable (optional) */
+   std::string GetTitle() const override { return fTitle; }
+
+   /** Create iterator for childs elements if any */
+   std::unique_ptr<RLevelIter> GetChildsIter() override;
+
+   void Add(std::shared_ptr<RElement> elem) { fChilds.emplace_back(elem); }
+
+   auto &GetChilds() const { return fChilds; }
+};
+
+
+
+/** \class RWrapper
+\ingroup rbrowser
+\brief Wrapper for other element - to provide different name
+\author Sergey Linev <S.Linev@gsi.de>
+\date 2019-11-22
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
+
+class RWrapper : public RElement {
+   std::string fName;
+   std::shared_ptr<RElement> fElem;
+
+public:
+   RWrapper() = default;
+
+   RWrapper(const std::string &name, std::shared_ptr<RElement> elem) : fName(name), fElem(elem) {}
+
+   virtual ~RWrapper() = default;
+
+   /** Name of RBrowsable, must be provided in derived classes */
+   std::string GetName() const override { return fName; }
+
+   /** Title of RBrowsable (optional) */
+   std::string GetTitle() const override { return fElem->GetTitle(); }
+
+   /** Create iterator for childs elements if any */
+   std::unique_ptr<RLevelIter> GetChildsIter() override { return fElem->GetChildsIter(); }
+
+   /** Returns element content, depends from kind. Can be "text" or "image64" */
+   std::string GetContent(const std::string &kind = "text") override { return fElem->GetContent(kind); }
+
+   /** Access object */
+   std::unique_ptr<RHolder> GetObject() override { return fElem->GetObject(); }
+};
+
+
+
 /** \class RLevelIter
 \ingroup rbrowser
 \brief Iterator over single level hierarchy like any array, keys list, ...
@@ -276,7 +349,6 @@ public:
 \date 2019-10-14
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
-
 
 class RLevelIter {
 public:

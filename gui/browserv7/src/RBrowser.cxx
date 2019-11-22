@@ -60,10 +60,16 @@ ROOT::Experimental::RBrowser::RBrowser(bool use_rcanvas)
    SetUseRCanvas(use_rcanvas);
 
    std::string workdir = gSystem->UnixPathName(gSystem->WorkingDirectory());
-   printf("Current dir %s\n", workdir.c_str());
+   std::string homedir = gSystem->UnixPathName(gSystem->HomeDirectory());
+   printf("Current dir %s home %s\n", workdir.c_str(), homedir.c_str());
 
-   fBrowsable.SetTopElement(std::make_unique<SysFileElement>("/"));
-   fBrowsable.SetWorkingDirectory(workdir);
+   auto comp = std::make_shared<Browsable::RComposite>("top","very top of Root browser");
+   comp->Add(std::make_shared<Browsable::RWrapper>("fs",std::make_unique<SysFileElement>("/")));
+   comp->Add(std::make_shared<Browsable::RWrapper>("home",std::make_unique<SysFileElement>(homedir)));
+
+   fBrowsable.SetTopElement(comp);
+
+   fBrowsable.SetWorkingDirectory("/fs"s + workdir);
 
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
