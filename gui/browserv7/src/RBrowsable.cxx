@@ -216,9 +216,11 @@ void RBrowsable::SetWorkingDirectory(const std::string &strpath)
 
 void RBrowsable::SetWorkingPath(const RElementPath_t &path)
 {
-   auto elem = RElement::GetSubElement(fTopElement, path);
-
    fWorkingPath = path;
+   fWorkElement = RElement::GetSubElement(fTopElement, path);
+
+   ResetLastRequest();
+
    fLevels.clear();
    fLevels.emplace_back("");
    fLevels.front().fElement = elem;
@@ -236,6 +238,20 @@ bool RBrowsable::ResetLevels()
       return false;
 
    return true;
+}
+
+
+/////////////////////////////////////////////////////////////////////
+/// Reset all data correspondent to last request
+
+void RBrowsable::ResetLastRequest()
+{
+   fLastAllChilds = false;
+   fLastSortedItems.clear();
+   fLastSortMethod.clear();
+   fLastItems.clear();
+   fLastPath.clear();
+   fLastElement.reset();
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -367,68 +383,91 @@ RElementPath_t RBrowsable::DecomposePath(const std::string &strpath, bool relati
 }
 
 
+/////////////////////////////////////////////////////////////////////////
+/// Process browser request
+
+bool RBrowsable::SamePath(const RElementPath_t &p1, const RElementPath_t &p2) const
+{
+   if (p1.size() != p2.size())
+      return false;
+
+   for (unsigned n = 0; n < p1.size(); ++n)
+      if (p1[n] != p2[n])
+         return false;
+
+   return true;
+}
+
+
+/////////////////////////////////////////////////////////////////////////
+/// Process browser request
+
 bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReply &reply)
 {
    if (gDebug > 0)
       printf("REQ: Do decompose path '%s'\n",request.path.c_str());
 
-   auto arr = DecomposePath(request.path);
-   if (arr.empty()) return false;
+   auto arr = DecomposePath(request.path, false);
+
+   if (!SamePath(arr, fLastPath) || !fLastElement) {
+
+      auto elem = RElement::GetSubElement(fWorkElement, arr);
+      if (!elem) return false;
+
+      ResetLastRequest();
+
+      fLastPath = arr;
+      fLastElement = elem;
+   }
 
    if (gDebug > 0) {
       printf("REQ:Try to navigate %d\n", (int) arr.size());
       for (auto & subdir : arr) printf("   %s\n", subdir.c_str());
    }
 
-   int lindx = 0;
-   if (!Navigate(arr, &lindx))
-      return false;
-
-   auto &curr = fLevels[lindx];
-
    // when request childs, always try to make elements
-   if (curr.fItems.size() == 0) {
-      auto iter = curr.fElement->GetChildsIter();
+   if (fLastItems.empty()) {
+      auto iter = fLastElement->GetChildsIter();
       if (!iter) return false;
       int id = 0;
-      curr.fAllChilds = true;
+      fLastAllChilds = true;
 
-      while (iter->Next() && curr.fAllChilds) {
-         curr.fItems.emplace_back(iter->CreateBrowserItem());
+      while (iter->Next() && fLastAllChilds) {
+         fLastItems.emplace_back(iter->CreateBrowserItem());
          if (id++ > 10000)
-            curr.fAllChilds = false;
+            fLastAllChilds = false;
       }
 
-      curr.fSortedItems.clear();
-      curr.fSortMethod.clear();
+      fLastSortedItems.clear();
+      fLastSortMethod.clear();
    }
 
    // create sorted array
-   if ((curr.fSortedItems.size() != curr.fItems.size()) || (curr.fSortMethod != request.sort)) {
-      curr.fSortedItems.resize(curr.fItems.size(), nullptr);
+   if ((fLastSortedItems.size() != fLastItems.size()) || (fLastSortMethod != request.sort)) {
+      fLastSortedItems.resize(fLastItems.size(), nullptr);
       int id = 0;
       if (request.sort.empty()) {
          // no sorting, just move all folders up
-         for (auto &item : curr.fItems)
+         for (auto &item : fLastItems)
             if (item->IsFolder())
-               curr.fSortedItems[id++] = item.get();
-         for (auto &item : curr.fItems)
+               fLastSortedItems[id++] = item.get();
+         for (auto &item : fLastItems)
             if (!item->IsFolder())
-               curr.fSortedItems[id++] = item.get();
+               fLastSortedItems[id++] = item.get();
       } else {
          // copy items
-         for (auto &item : curr.fItems)
-            curr.fSortedItems[id++] = item.get();
+         for (auto &item : fLastItems)
+            fLastSortedItems[id++] = item.get();
 
          if (request.sort != "unsorted")
-            std::sort(curr.fSortedItems.begin(), curr.fSortedItems.end(),
+            std::sort(fLastSortedItems.begin(), fLastSortedItems.end(),
                       [request](const RBrowserItem *a, const RBrowserItem *b) { return a->Compare(b, request.sort); });
       }
-      curr.fSortMethod = request.sort;
+      fLastSortMethod = request.sort;
    }
 
    int id = 0;
-   for (auto &item : curr.fSortedItems) {
+   for (auto &item : fLastSortedItems) {
       if (!request.filter.empty() && (item->GetName().compare(0, request.filter.length(), request.filter) != 0))
          continue;
 

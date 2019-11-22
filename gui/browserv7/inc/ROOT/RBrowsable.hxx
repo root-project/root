@@ -378,7 +378,17 @@ class RBrowsable {
 
 
    std::shared_ptr<Browsable::RElement> fTopElement;    ///<! top element for the RBrowsable
-   std::vector<std::string>  fWorkingPath;              ///<!
+   RElementPath_t  fWorkingPath;                        ///<! path showed in Breadcrumb
+   std::shared_ptr<Browsable::RElement> fWorkElement;   ///<! main element used for working in browser dialog
+
+   RElementPath_t fLastPath;                             ///<! path to last used element
+   std::shared_ptr<Browsable::RElement> fLastElement;    ///<! last element used for request
+   std::vector<std::unique_ptr<RBrowserItem>> fLastItems; ///<! created browser items - used in requests
+   bool fLastAllChilds{false};                           ///<! if all chlds were extracted
+   std::vector<const RBrowserItem *> fLastSortedItems;   ///<! sorted child items, used in requests
+   std::string fLastSortMethod;                          ///<! last sort method
+
+
    std::vector<RLevel> fLevels;                         ///<! navigated levels
 
    std::shared_ptr<Browsable::RElement> DirectNavigate(std::shared_ptr<Browsable::RElement> item, const RElementPath_t &path, int indx = 0);
@@ -387,7 +397,11 @@ class RBrowsable {
 
    RElementPath_t DecomposePath(const std::string &path, bool relative_path = true);
 
+   bool SamePath(const RElementPath_t &p1, const RElementPath_t &p2) const;
+
    bool ResetLevels();
+
+   void ResetLastRequest();
 
    bool ProcessRequest(const RBrowserRequest &request, RBrowserReply &reply);
 
