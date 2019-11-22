@@ -292,6 +292,11 @@ public:
 
          return std::make_shared<TDirectoryElement>(fullname, f);
       });
+
+      RegisterBrowse(TFile::Class(), [](std::unique_ptr<Browsable::RHolder> &object) -> std::shared_ptr<RElement> {
+         return std::make_shared<TDirectoryElement>("", const_cast<TFile*>(object->Get<TFile>()));
+      });
+
    }
 
 } newRTFileProvider ;
