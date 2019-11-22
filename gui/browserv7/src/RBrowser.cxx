@@ -61,15 +61,36 @@ ROOT::Experimental::RBrowser::RBrowser(bool use_rcanvas)
 
    std::string workdir = gSystem->UnixPathName(gSystem->WorkingDirectory());
    std::string homedir = gSystem->UnixPathName(gSystem->HomeDirectory());
+
+   std::string seldir, topdir, toplbl;
+
    printf("Current dir %s home %s\n", workdir.c_str(), homedir.c_str());
 
+#ifdef WIN32
+   auto pos = workdir.find(":");
+   if (pos != std::string::npos) {
+      toplbl = workdir.substr(0,pos+1);
+      seldir = workdir;
+   } else {
+      seldir = toplbl = "c:"; // suppose that
+   }
+
+   topdir = toplbl + "\\";
+#else
+   topdir = "/";
+   toplbl = "fs";
+   seldir = "/fs"s + workdir;
+
+#endif
+
    auto comp = std::make_shared<Browsable::RComposite>("top","very top of Root browser");
-   comp->Add(std::make_shared<Browsable::RWrapper>("fs",std::make_unique<SysFileElement>("/")));
-   comp->Add(std::make_shared<Browsable::RWrapper>("home",std::make_unique<SysFileElement>(homedir)));
+   comp->Add(std::make_shared<Browsable::RWrapper>(toplbl,std::make_unique<SysFileElement>(topdir)));
+   if (!homedir.empty())
+      comp->Add(std::make_shared<Browsable::RWrapper>("home",std::make_unique<SysFileElement>(homedir)));
 
    fBrowsable.SetTopElement(comp);
 
-   fBrowsable.SetWorkingDirectory("/fs"s + workdir);
+   fBrowsable.SetWorkingDirectory(seldir);
 
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
@@ -627,10 +648,7 @@ public:
          return true;
       });
 
-
    }
-
-
 
 } newRV7DrawProvider;
 
