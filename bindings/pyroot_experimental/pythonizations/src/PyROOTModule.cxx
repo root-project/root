@@ -105,17 +105,17 @@ static int rootmodule_clear(PyObject *m)
    return 0;
 }
 
-static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,       "libROOTPython",  NULL,
+static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,       "libROOTPythonizations",  NULL,
                                        sizeof(struct module_state), gPyROOTMethods,   NULL,
                                        rootmodule_traverse,         rootmodule_clear, NULL};
 
-/// Initialization of extension module libROOTPython
+/// Initialization of extension module libROOTPythonizations
 
 #define PYROOT_INIT_ERROR return NULL
-extern "C" PyObject *PyInit_libROOTPython()
+extern "C" PyObject *PyInit_libROOTPythonizations()
 #else // PY_VERSION_HEX >= 0x03000000
 #define PYROOT_INIT_ERROR return
-extern "C" void initlibROOTPython()
+extern "C" void initlibROOTPythonizations()
 #endif
 {
    using namespace PyROOT;
@@ -128,7 +128,7 @@ extern "C" void initlibROOTPython()
 #if PY_VERSION_HEX >= 0x03000000
    gRootModule = PyModule_Create(&moduledef);
 #else
-   gRootModule = Py_InitModule(const_cast<char *>("libROOTPython"), gPyROOTMethods);
+   gRootModule = Py_InitModule(const_cast<char *>("libROOTPythonizations"), gPyROOTMethods);
 #endif
    if (!gRootModule)
       PYROOT_INIT_ERROR;
