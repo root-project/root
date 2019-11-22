@@ -206,7 +206,7 @@ void RBrowsable::SetTopElement(std::shared_ptr<Browsable::RElement> elem)
 
 void RBrowsable::SetWorkingDirectory(const std::string &strpath)
 {
-   auto path = DecomposePath(strpath, false);
+   auto path = DecomposePath(strpath);
 
    SetWorkingPath(path);
 }
@@ -220,26 +220,7 @@ void RBrowsable::SetWorkingPath(const RElementPath_t &path)
    fWorkElement = RElement::GetSubElement(fTopElement, path);
 
    ResetLastRequest();
-
-   fLevels.clear();
-   fLevels.emplace_back("");
-   fLevels.front().fElement = elem;
 }
-
-/////////////////////////////////////////////////////////////////////
-/// Navigate to the top level
-
-bool RBrowsable::ResetLevels()
-{
-   while (fLevels.size() > 1)
-      fLevels.pop_back();
-
-   if (fLevels.size() != 1)
-      return false;
-
-   return true;
-}
-
 
 /////////////////////////////////////////////////////////////////////
 /// Reset all data correspondent to last request
@@ -254,116 +235,19 @@ void RBrowsable::ResetLastRequest()
    fLastElement.reset();
 }
 
-/////////////////////////////////////////////////////////////////////
-/// Direct navigate to specified path without building levels
-/// Do not support ".." - navigation to level up
-
-std::shared_ptr<Browsable::RElement> RBrowsable::DirectNavigate(std::shared_ptr<Browsable::RElement> item, const RElementPath_t &paths, int indx)
-{
-   while (item && (indx < (int) paths.size())) {
-      auto subdir = paths[indx++];
-
-      if (subdir == ".") continue;
-
-      // not supported with direct navigate
-      if (subdir == "..") return nullptr;
-
-      auto iter = item->GetChildsIter();
-
-      if (!iter || !iter->Find(subdir))
-         return nullptr;
-
-      item = iter->GetElement();
-   }
-   return item;
-}
-
-
-/////////////////////////////////////////////////////////////////////
-/// Navigate to specified path
-/// If specified paths array empty - just do nothing
-/// If first element is "/", start from the most-top element
-/// If first element ".", start from current position
-/// Any other will be ignored
-/// level_indx returns found index in the levels. If pointer not specified, levels will not be touched
-
-std::shared_ptr<Browsable::RElement> RBrowsable::Navigate(const RElementPath_t &paths, int *level_indx)
-{
-   if (fLevels.empty())
-      return nullptr;
-
-   if (paths.empty())
-      return fLevels.back().fElement;
-
-   int lindx = 0;
-   if (paths[0] == "/")
-      lindx = 0;
-   else if (paths[0] == ".")
-      lindx = (int)fLevels.size() - 1;
-   else
-      return nullptr;
-
-   for (int pindx = 1; pindx < (int) paths.size(); pindx ++) {
-
-      auto subdir = paths[pindx];
-      if (subdir == ".") continue; // do nothing
-
-      if (subdir == "..") { // one level up
-         if (--lindx < 0)
-            return nullptr;
-         continue;
-      }
-
-      // path is matching
-      if ((lindx + 1 < (int) fLevels.size()) && (fLevels[lindx + 1].fName == subdir)) {
-         ++lindx;
-         continue;
-      }
-
-      auto &level = fLevels[lindx];
-
-      // up to here we could follow existing paths
-      // but here , any next elements should be created directly
-      if (!level_indx)
-         return DirectNavigate(level.fElement, paths, pindx);
-
-      auto iter = level.fElement->GetChildsIter();
-
-      if (!iter || !iter->Find(subdir))
-         return nullptr;
-
-      auto subitem = iter->GetElement();
-      if (!subitem)
-         return nullptr;
-
-      fLevels.resize(++lindx); // remove all other items which may be there before
-
-      fLevels.emplace_back(subdir, subitem);
-   }
-
-   if (level_indx) *level_indx = lindx;
-
-   return fLevels[lindx].fElement;
-}
-
 /////////////////////////////////////////////////////////////////////////
 /// Decompose path to elements
 /// Returns array of names for each element in the path, first element either "/" or "."
 /// If returned array empty - it is error
 
-RElementPath_t RBrowsable::DecomposePath(const std::string &strpath, bool relative_path)
+RElementPath_t RBrowsable::DecomposePath(const std::string &strpath)
 {
    RElementPath_t arr;
 
-   if (strpath.empty()) {
-      if (relative_path)
-         arr.emplace_back("."s);
+   if (strpath.empty())
       return arr;
-   }
 
    std::string slash = "/";
-
-   if (relative_path) arr.emplace_back(slash);
 
    std::string::size_type previous = 0;
    if (strpath[0] == slash[0]) previous++;
@@ -407,7 +291,7 @@ bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReply &r
    if (gDebug > 0)
       printf("REQ: Do decompose path '%s'\n",request.path.c_str());
 
-   auto arr = DecomposePath(request.path, false);
+   auto arr = DecomposePath(request.path);
 
    if (!SamePath(arr, fLastPath) || !fLastElement) {
 
@@ -496,14 +380,10 @@ std::string RBrowsable::ProcessRequest(const RBrowserRequest &request)
    return TBufferJSON::ToJSON(&reply, TBufferJSON::kSkipTypeInfo + TBufferJSON::kNoSpaces).Data();
 }
 
-
-std::shared_ptr<RElement> RBrowsable::GetElement(const std::string &path)
+std::shared_ptr<Browsable::RElement> RBrowsable::GetElement(const std::string &path)
 {
    auto arr = DecomposePath(path);
-   if (arr.empty()) return nullptr;
 
-   // find element using current levels when possible
-   return Navigate(arr);
+   return RElement::GetSubElement(fWorkElement, arr);
 }
-
 

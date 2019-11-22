@@ -365,41 +365,21 @@ private:
 
 class RBrowsable {
 
-   struct RLevel {
-      std::string fName;                                 ///<! name of the element (empty for top level)
-      std::shared_ptr<Browsable::RElement> fElement;     ///<! element
-      std::vector<std::unique_ptr<RBrowserItem>> fItems; ///<! created browser items - used in requests
-      bool fAllChilds{false};                            ///<! if all chlds were extracted
-      std::vector<const RBrowserItem *> fSortedItems;    ///<! sorted child items, used in requests
-      std::string fSortMethod;                           ///<! last sort method
-      RLevel(const std::string &name = "") : fName(name) {}
-      RLevel(const std::string &name, std::shared_ptr<Browsable::RElement> &elem) : fName(name) { fElement = std::move(elem); }
-   };
-
-
    std::shared_ptr<Browsable::RElement> fTopElement;    ///<! top element for the RBrowsable
+
    RElementPath_t  fWorkingPath;                        ///<! path showed in Breadcrumb
    std::shared_ptr<Browsable::RElement> fWorkElement;   ///<! main element used for working in browser dialog
 
    RElementPath_t fLastPath;                             ///<! path to last used element
-   std::shared_ptr<Browsable::RElement> fLastElement;    ///<! last element used for request
+   std::shared_ptr<Browsable::RElement> fLastElement;    ///<! last element used in request
    std::vector<std::unique_ptr<RBrowserItem>> fLastItems; ///<! created browser items - used in requests
    bool fLastAllChilds{false};                           ///<! if all chlds were extracted
    std::vector<const RBrowserItem *> fLastSortedItems;   ///<! sorted child items, used in requests
    std::string fLastSortMethod;                          ///<! last sort method
 
-
-   std::vector<RLevel> fLevels;                         ///<! navigated levels
-
-   std::shared_ptr<Browsable::RElement> DirectNavigate(std::shared_ptr<Browsable::RElement> item, const RElementPath_t &path, int indx = 0);
-
-   std::shared_ptr<Browsable::RElement> Navigate(const RElementPath_t &path, int *level_indx = nullptr);
-
-   RElementPath_t DecomposePath(const std::string &path, bool relative_path = true);
+   RElementPath_t DecomposePath(const std::string &path);
 
    bool SamePath(const RElementPath_t &p1, const RElementPath_t &p2) const;
-
-   bool ResetLevels();
 
    void ResetLastRequest();
 
