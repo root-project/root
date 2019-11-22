@@ -313,6 +313,10 @@ public:
 
 
       RegisterBrowse(nullptr, [](std::unique_ptr<Browsable::RHolder> &object) -> std::shared_ptr<RElement> {
+         if (object->CanCastTo<TFolder>())
+            return std::make_shared<TFolderElement>(object);
+         if (object->CanCastTo<TCollection>())
+            return std::make_shared<TCollectionElement>(object);
          if (object->CanCastTo<TObject>())
             return std::make_shared<TObjectElement>(object);
          return nullptr;
