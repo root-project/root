@@ -4,9 +4,9 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-############################################################################
-# CMakeLists.txt file for building ROOT bindings/pyroot_experimental package
-############################################################################
+##################################################################################################
+# CMakeLists.txt file for building ROOT bindings/pyroot_experimental/pythonizations/PyROOT package
+##################################################################################################
 
 if(dataframe)
     list(APPEND PYROOT_EXTRA_PYSOURCE
@@ -51,12 +51,7 @@ set(py_sources
   ${PYROOT_EXTRA_PYSOURCE}
 )
 
-ROOT_STANDARD_LIBRARY_PACKAGE(ROOTPython
-  HEADERS
-    TPyArg.h
-    TPyReturn.h
-    TPython.h
-  SOURCES
+set(cpp_sources
     src/CppCallablePyz.cxx
     src/PyROOTModule.cxx
     src/PyROOTStrings.cxx
@@ -70,57 +65,42 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTPython
     src/TDirectoryPyz.cxx
     src/TFilePyz.cxx
     src/TMemoryRegulator.cxx
-    src/TPyArg.cxx
-    src/TPyClassGenerator.cxx
-    src/TPyReturn.cxx
-    src/TPython.cxx
     src/TObjectPyz.cxx
     src/TTreePyz.cxx
     src/PyzCppHelpers.cxx
     src/PyzPythonHelpers.cxx
     src/CPPInstancePyz.cxx
     ${PYROOT_EXTRA_SOURCE}
-  DICTIONARY_OPTIONS
-    -writeEmptyRootPCM
-  DEPENDENCIES
-    Core
-    Tree
-    cppyy
 )
 
 set(ROOTDirName python/ROOT)
-set(JupyROOTDirName python/JupyROOT)
-set(JsMVADirName python/JsMVA)
+set(ROOT_headers inc)
 
-ROOT_LINKER_LIBRARY(JupyROOT ${JupyROOTDirName}/src/IOHandler.cxx DEPENDENCIES Core CMAKENOEXPORT)
-
-#---Install python modules----------------------------------------------------------------------
+ROOT_LINKER_LIBRARY(ROOTPythonizations ${cpp_sources} DEPENDENCIES Core Tree cppyy CMAKENOEXPORT)
+target_include_directories(ROOTPythonizations PRIVATE ${ROOT_headers} ${PYTHON_INCLUDE_DIRS})
 
 file(COPY ${ROOTDirName} DESTINATION ${py_localruntimedir})
 install(DIRECTORY ${ROOTDirName} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+# Copy headers inside build_dir/include/Pythonizations
+file(COPY ${ROOT_headers}/ DESTINATION ${CMAKE_BINARY_DIR}/include/ROOT)
 
 foreach(py_source ${py_sources})
   install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -m py_compile ${d}/${py_source})")
   install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -O -m py_compile ${d}/${py_source})")
 endforeach()
 
-file(COPY ${JupyROOTDirName} DESTINATION ${localruntimedir})
-install(DIRECTORY ${JupyROOTDirName} DESTINATION ${runtimedir})
-
-file(COPY ${JsMVADirName} DESTINATION ${localruntimedir})
-install(DIRECTORY ${JsMVADirName} DESTINATION ${runtimedir})
-
 # Disables warnings caused by Py_RETURN_TRUE/Py_RETURN_FALSE
 if(NOT MSVC)
-    target_compile_options(ROOTPython PRIVATE -Wno-strict-aliasing)
+    target_compile_options(ROOTPythonizations PRIVATE -Wno-strict-aliasing)
 endif()
 
 # Disables warnings originating from deprecated register keyword in Python
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_CXX_STANDARD GREATER_EQUAL 11)
-    target_compile_options(ROOTPython PRIVATE -Wno-register)
+    target_compile_options(ROOTPythonizations PRIVATE -Wno-register)
 endif()
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang" AND CMAKE_CXX_STANDARD GREATER_EQUAL 11)
-    target_compile_options(ROOTPython PRIVATE -Wno-deprecated-register)
+    target_compile_options(ROOTPythonizations PRIVATE -Wno-deprecated-register)
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
