@@ -33,6 +33,8 @@ RElement::EContentKind RElement::GetContentKind(const std::string &kind)
    return kNone;
 }
 
+/////////////////////////////////////////////////////////////////////
+/// Returns sub element
 
 std::shared_ptr<RElement> RElement::GetSubElement(std::shared_ptr<RElement> &elem, const RElementPath_t &path)
 {
@@ -50,6 +52,45 @@ std::shared_ptr<RElement> RElement::GetSubElement(std::shared_ptr<RElement> &ele
    }
 
    return curr;
+}
+
+
+
+class RCompositeIter : public RLevelIter {
+   int fIndx{-1};
+   RComposite &fComp;
+
+public:
+
+   explicit RCompositeIter(RComposite &comp) : fComp(comp) {}
+   virtual ~RCompositeIter() = default;
+
+   /** Shift to next element */
+   bool Next() override { fIndx++; return HasItem(); }
+
+   /** Is there current element  */
+   bool HasItem() const override { return (fIndx >= 0) &&  (fIndx < (int) fComp.GetChilds().size()); }
+
+   /** Returns current element name  */
+   std::string GetName() const override { return fComp.GetChilds()[fIndx]->GetName(); }
+
+   /** If element may have childs: 0 - no, >0 - yes, -1 - maybe */
+   int CanHaveChilds() const override { return fComp.GetChilds().size(); }
+
+   /** Returns full information for current element */
+   std::shared_ptr<RElement> GetElement() override { return fComp.GetChilds()[fIndx]; }
+
+   /** Reset iterator to the first element, returns false if not supported */
+   virtual bool Reset() { fIndx = -1; return true; }
+
+};
+
+/////////////////////////////////////////////////////////////////////
+/// Create iterator for childs of composite
+
+std::unique_ptr<RLevelIter> RComposite::GetChildsIter()
+{
+   return std::make_unique<RCompositeIter>(*this);
 }
 
 
