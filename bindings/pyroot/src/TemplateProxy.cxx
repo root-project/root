@@ -379,6 +379,56 @@ namespace {
    }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Explicit instantiation with square bracket syntax.
+/// Implementation is equivalent to case 2 in tpp_call (parenthesis syntax)
+
+   PyObject *tpp_subscript(TemplateProxy *pytmpl, PyObject *args)
+   {
+      bool justOne = !PyTuple_CheckExact(args);
+      Py_ssize_t nArgs;
+      if (justOne) {
+         nArgs = 1;
+         auto item = args;
+         args = PyTuple_New(nArgs);
+         PyTuple_SET_ITEM(args, 0, item);
+      } else {
+         nArgs = PyTuple_GET_SIZE(args);
+      }
+
+      Bool_t isType = false;
+      Int_t nStrings = 0;
+      for (int i = 0; i < nArgs; ++i) {
+         PyObject* itemi = PyTuple_GET_ITEM(args, i);
+         if (PyType_Check(itemi)) isType = kTRUE;
+#if PY_VERSION_HEX >= 0x03000000
+         else if (! isType && PyUnicode_Check(itemi)) nStrings += 1;
+#else
+         else if (! isType && PyBytes_Check(itemi)) nStrings += 1;
+#endif
+      }
+
+      // Build "< type, type, ... >" part of method name
+      PyObject* pyname = Utility::BuildTemplateName(pytmpl->fPyName, args, 0);
+      if (justOne) Py_DECREF(args);
+      if ((isType || nStrings == nArgs) && pyname) {  // types in args or all strings
+         // Lookup method on self (to make sure it propagates), which is readily callable
+         PyObject* pymeth = PyObject_GetAttr(pytmpl->fSelf ? pytmpl->fSelf : pytmpl->fPyClass, pyname);
+         if (pymeth) { // Overloads stop here, as this is an explicit match
+            Py_DECREF(pyname);
+            return pymeth; // Callable method, next step is by user
+         }
+      }
+
+      PyErr_Format(PyExc_TypeError, "cannot resolve method template instantiation for \'%s\'",
+         PyROOT_PyUnicode_AsString(pytmpl->fPyName));
+      return nullptr;
+   }
+
+////////////////////////////////////////////////////////////////////////////////
+
+   static PyMappingMethods tpp_as_mapping = {
+      nullptr, (binaryfunc)tpp_subscript, nullptr
+   };
 
    PyGetSetDef tpp_getset[] = {
       { (char*)"__doc__",    (getter)tpp_doc,    NULL, NULL, NULL },
@@ -402,7 +452,7 @@ PyTypeObject TemplateProxy_Type = {
    0,                         // tp_repr
    0,                         // tp_as_number
    0,                         // tp_as_sequence
-   0,                         // tp_as_mapping
+   &tpp_as_mapping,           // tp_as_mapping
    0,                         // tp_hash
    (ternaryfunc)tpp_call,     // tp_call
    0,                         // tp_str
