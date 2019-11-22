@@ -15,6 +15,7 @@
 #include "TH1.h"
 #include "TBrowser.h"
 #include "TBrowserImp.h"
+#include "TFolder.h"
 
 using namespace std::string_literals;
 
@@ -114,7 +115,7 @@ public:
 
 
 class TObjectElement : public RElement {
-
+protected:
    std::unique_ptr<Browsable::RHolder> fObject;
    TObject *fObj{nullptr};
    std::string fName;
@@ -220,17 +221,79 @@ std::unique_ptr<RBrowserItem> TObjectLevelIter::CreateBrowserItem()
 // ==============================================================================================
 
 
+class TFolderElement : public TObjectElement {
+
+public:
+
+   TFolderElement(std::unique_ptr<Browsable::RHolder> &obj) : TObjectElement(obj) {}
+
+   std::unique_ptr<RLevelIter> GetChildsIter() override;
+};
+
+
+class TFolderIter : public RLevelIter {
+
+   TIter  fIter;
+
+public:
+   explicit TFolderIter(const TFolder *f) : RLevelIter(), fIter(f->GetListOfFolders()) {};
+
+   virtual ~TFolderIter() = default;
+
+   bool Reset() override { fIter.Reset(); return true; }
+
+   bool Next() override { return fIter.Next() != nullptr; }
+
+   // use default implementation for now
+   // bool Find(const std::string &name) override { return FindDirEntry(name); }
+
+   bool HasItem() const override { return *fIter != nullptr; }
+
+   std::string GetName() const override { return (*fIter)->GetName(); }
+
+   int CanHaveChilds() const override { return 1; }
+
+   /** Returns full information for current element */
+   std::shared_ptr<RElement> GetElement() override
+   {
+      TObject *obj = *fIter;
+
+      std::unique_ptr<RHolder> holder = std::make_unique<RTObjectHolder>(obj, kFALSE);
+
+      if (obj->InheritsFrom(TFolder::Class()))
+         return std::make_shared<TFolderElement>(holder);
+
+      return Browsable::RProvider::Browse(holder);
+   }
+
+};
+
+
+
+std::unique_ptr<RLevelIter> TFolderElement::GetChildsIter()
+{
+  auto folder = fObject->Get<TFolder>();
+  if (folder) return std::make_unique<TFolderIter>(folder);
+  return TObjectElement::GetChildsIter();
+}
+
+
+// ==============================================================================================
+
+
 class RTObjectProvider : public RProvider {
 
 public:
    RTObjectProvider()
    {
+      RegisterBrowse(TFolder::Class(), [](std::unique_ptr<Browsable::RHolder> &object) -> std::shared_ptr<RElement> {
+         return std::make_shared<TFolderElement>(object);
+      });
+
       RegisterBrowse(nullptr, [](std::unique_ptr<Browsable::RHolder> &object) -> std::shared_ptr<RElement> {
          if (object->CanCastTo<TObject>())
             return std::make_shared<TObjectElement>(object);
-
          return nullptr;
-
       });
    }
 

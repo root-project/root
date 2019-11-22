@@ -81,7 +81,7 @@ public:
    std::shared_ptr<RElement> GetElement() override { return fComp.GetChilds()[fIndx]; }
 
    /** Reset iterator to the first element, returns false if not supported */
-   virtual bool Reset() { fIndx = -1; return true; }
+   bool Reset() override { fIndx = -1; return true; }
 
 };
 
