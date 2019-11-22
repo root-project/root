@@ -220,7 +220,6 @@ std::unique_ptr<RBrowserItem> TObjectLevelIter::CreateBrowserItem()
 
 // ==============================================================================================
 
-
 class TFolderElement : public TObjectElement {
 
 public:
@@ -230,15 +229,26 @@ public:
    std::unique_ptr<RLevelIter> GetChildsIter() override;
 };
 
+class TCollectionElement : public TObjectElement {
+public:
 
-class TFolderIter : public RLevelIter {
+   TCollectionElement(std::unique_ptr<Browsable::RHolder> &obj) : TObjectElement(obj) {}
+
+   std::unique_ptr<RLevelIter> GetChildsIter() override;
+};
+
+
+
+class TCollectionIter : public RLevelIter {
 
    TIter  fIter;
 
 public:
-   explicit TFolderIter(const TFolder *f) : RLevelIter(), fIter(f->GetListOfFolders()) {};
+   explicit TCollectionIter(const TFolder *f) : RLevelIter(), fIter(f->GetListOfFolders()) {};
 
-   virtual ~TFolderIter() = default;
+   explicit TCollectionIter(const TCollection *coll) : RLevelIter(), fIter(coll) {};
+
+   virtual ~TCollectionIter() = default;
 
    bool Reset() override { fIter.Reset(); return true; }
 
@@ -256,25 +266,29 @@ public:
    /** Returns full information for current element */
    std::shared_ptr<RElement> GetElement() override
    {
-      TObject *obj = *fIter;
-
-      std::unique_ptr<RHolder> holder = std::make_unique<RTObjectHolder>(obj, kFALSE);
-
-      if (obj->InheritsFrom(TFolder::Class()))
-         return std::make_shared<TFolderElement>(holder);
+      std::unique_ptr<RHolder> holder = std::make_unique<RTObjectHolder>(*fIter, kFALSE);
 
       return Browsable::RProvider::Browse(holder);
    }
-
 };
-
 
 
 std::unique_ptr<RLevelIter> TFolderElement::GetChildsIter()
 {
   auto folder = fObject->Get<TFolder>();
-  if (folder) return std::make_unique<TFolderIter>(folder);
+  if (folder)
+     return std::make_unique<TCollectionIter>(folder->GetListOfFolders());
+
   return TObjectElement::GetChildsIter();
+}
+
+std::unique_ptr<RLevelIter> TCollectionElement::GetChildsIter()
+{
+   auto coll = fObject->Get<TCollection>();
+   if (coll)
+      return std::make_unique<TCollectionIter>(coll);
+
+   return TObjectElement::GetChildsIter();
 }
 
 
@@ -289,6 +303,14 @@ public:
       RegisterBrowse(TFolder::Class(), [](std::unique_ptr<Browsable::RHolder> &object) -> std::shared_ptr<RElement> {
          return std::make_shared<TFolderElement>(object);
       });
+
+      auto coll_labmda = [](std::unique_ptr<Browsable::RHolder> &object) -> std::shared_ptr<RElement> {
+         return std::make_shared<TCollectionElement>(object);
+      };
+
+      RegisterBrowse(TList::Class(), coll_labmda);
+      RegisterBrowse(TObjArray::Class(), coll_labmda);
+
 
       RegisterBrowse(nullptr, [](std::unique_ptr<Browsable::RHolder> &object) -> std::shared_ptr<RElement> {
          if (object->CanCastTo<TObject>())

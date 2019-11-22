@@ -91,9 +91,14 @@ ROOT::Experimental::RBrowser::RBrowser(bool use_rcanvas)
       comp->Add(std::make_shared<Browsable::RWrapper>("home",std::make_unique<SysFileElement>(homedir)));
 
    std::unique_ptr<RHolder> rootfold = std::make_unique<RTObjectHolder>(gROOT->GetRootFolder(), kFALSE);
-   auto elem = Browsable::RProvider::Browse(rootfold);
-   if (elem)
-      comp->Add(std::make_shared<Browsable::RWrapper>("ROOT",elem));
+   auto elem_root = Browsable::RProvider::Browse(rootfold);
+   if (elem_root)
+      comp->Add(std::make_shared<Browsable::RWrapper>("root",elem_root));
+
+   std::unique_ptr<RHolder> rootfiles = std::make_unique<RTObjectHolder>(gROOT->GetListOfFiles(), kFALSE);
+   auto elem_files = Browsable::RProvider::Browse(rootfiles);
+   if (elem_files)
+      comp->Add(std::make_shared<Browsable::RWrapper>("ROOT Files",elem_files));
 
 
    fBrowsable.SetTopElement(comp);
