@@ -216,31 +216,34 @@ class Cpp02TemplateLookup( MyTestCase ):
       if self.exp_pyroot:
          # New cppyy needs square brackets for explicit instantiation here,
          # otherwise it tries to call the template proxy with the passed
-         # argument and it fails, since no instantiation is available. 
-         inst_char = m.GetSize['char']
-         inst_int = m.GetSize[int]
-         inst_long = m.GetSize['long']
-         inst_float = m.GetSize[float]
-         inst_double = m.GetSize['double']
-         inst_my_vec_double = m.GetSize['MyDoubleVector_t']
-         inst_vec_double = m.GetSize['vector<double>']
+         # argument and it fails, since no instantiation is available.
+         self.assertEqual( m.GetSize['char'](),   m.GetCharSize() )
+         self.assertEqual( m.GetSize[int](),      m.GetIntSize() )
+         self.assertEqual( m.GetSize['long'](),   m.GetLongSize() )
+         self.assertEqual( m.GetSize[float](),    m.GetFloatSize() )
+         self.assertEqual( m.GetSize['double'](), m.GetDoubleSize() )
+
+         self.assertEqual( m.GetSize['MyDoubleVector_t'](), m.GetVectorOfDoubleSize() )
+         self.assertEqual( m.GetSize['vector<double>'](), m.GetVectorOfDoubleSize() )
       else:
-         inst_char = m.GetSize('char')
-         inst_int = m.GetSize(int)
-         inst_long = m.GetSize('long')
-         inst_float = m.GetSize(float)
-         inst_double = m.GetSize('double')
-         inst_my_vec_double = m.GetSize('MyDoubleVector_t')
-         inst_vec_double = m.GetSize('vector<double>')
+         self.assertEqual( m.GetSize('char')(),   m.GetCharSize() )
+         self.assertEqual( m.GetSize(int)(),      m.GetIntSize() )
+         self.assertEqual( m.GetSize('long')(),   m.GetLongSize() )
+         self.assertEqual( m.GetSize(float)(),    m.GetFloatSize() )
+         self.assertEqual( m.GetSize('double')(), m.GetDoubleSize() )
 
-      self.assertEqual( inst_char(),   m.GetCharSize() )
-      self.assertEqual( inst_int(),      m.GetIntSize() )
-      self.assertEqual( inst_long(),   m.GetLongSize() )
-      self.assertEqual( inst_float(),    m.GetFloatSize() )
-      self.assertEqual( inst_double(), m.GetDoubleSize() )
+         self.assertEqual( m.GetSize('MyDoubleVector_t')(), m.GetVectorOfDoubleSize() )
+         self.assertEqual( m.GetSize('vector<double>')(), m.GetVectorOfDoubleSize() )
 
-      self.assertEqual( inst_my_vec_double(), m.GetVectorOfDoubleSize() )
-      self.assertEqual( inst_vec_double(), m.GetVectorOfDoubleSize() )
+         # Test new support for square bracket syntax
+         self.assertEqual( m.GetSize['char'](),   m.GetCharSize() )
+         self.assertEqual( m.GetSize[int](),      m.GetIntSize() )
+         self.assertEqual( m.GetSize['long'](),   m.GetLongSize() )
+         self.assertEqual( m.GetSize[float](),    m.GetFloatSize() )
+         self.assertEqual( m.GetSize['double'](), m.GetDoubleSize() )
+
+         self.assertEqual( m.GetSize['MyDoubleVector_t'](), m.GetVectorOfDoubleSize() )
+         self.assertEqual( m.GetSize['vector<double>'](), m.GetVectorOfDoubleSize() )
 
    def test05TemplateMemberFunctions( self ):
       """Test template member functions lookup and calls (set 2)"""
@@ -257,10 +260,12 @@ class Cpp02TemplateLookup( MyTestCase ):
          # the bindings to know we are explicitly instantiating for char,long.
          # Otherwise, the templated parameters are just (mis)interpreted as
          # strings and a call to the string,string instantiation is made.
-         inst = m.GetSize2['char', 'long']
+         self.assertEqual(m.GetSize2['char', 'long']( 1, 'a' ), m.GetCharSize() - m.GetLongSize() )
       else:
-         inst = m.GetSize2('char', 'long')
-      self.assertEqual(inst( 1, 'a' ), m.GetCharSize() - m.GetLongSize() )
+         self.assertEqual(m.GetSize2('char', 'long')( 1, 'a' ), m.GetCharSize() - m.GetLongSize() )
+         # Test new support for square bracket syntax
+         self.assertEqual(m.GetSize2['char', 'long']( 1, 'a' ), m.GetCharSize() - m.GetLongSize() )
+
       if self.exp_pyroot:
          # Cppyy's Long will be deprecated in favour of ctypes.c_long
          # https://bitbucket.org/wlav/cppyy/issues/101
@@ -291,13 +296,13 @@ class Cpp02TemplateLookup( MyTestCase ):
     # use existing explicit instantiations
       if self.exp_pyroot:
          # New cppyy: use bracket syntax for explicit instantiation
-         inst = m.GetSizeOL[float]
+         self.assertEqual( m.GetSizeOL[float]( 3.14 ),  m.GetFloatSize() )
       else:
-         inst = m.GetSizeOL(float)
-      num_new_inst = 1
-      self.assertEqual( inst( 3.14 ),  m.GetFloatSize() )
+         self.assertEqual( m.GetSizeOL(float)( 3.14 ),  m.GetFloatSize() )
+         # Test new support for square bracket syntax
+         self.assertEqual( m.GetSizeOL[float]( 3.14 ),  m.GetFloatSize() )
       self.assertEqual( m.GetSizeOL( 3.14 ), m.GetDoubleSize() )
-      num_new_inst += 1
+      num_new_inst = 2
 
       self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + num_new_inst)
 
@@ -305,10 +310,13 @@ class Cpp02TemplateLookup( MyTestCase ):
       if self.exp_pyroot:
          # New cppyy: use bracket syntax for explicit instantiation
          inst = m.GetSizeOL[int]
+         self.assertEqual( inst( 1 ),       m.GetIntSize() )
       else:
          inst = m.GetSizeOL(int)
+         self.assertEqual( inst( 1 ),       m.GetIntSize() )
+         # Test new support for square bracket syntax
+         self.assertEqual( m.GetSizeOL[int]( 1 ),       m.GetIntSize() )
       num_new_inst += 1
-      self.assertEqual( inst( 1 ),       m.GetIntSize() )
       self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + num_new_inst )
       self.assert_( 'GetSizeOL<int>' in dir(MyTemplatedMethodClass) )
       gzoi_id = id( MyTemplatedMethodClass.__dict__[ 'GetSizeOL<int>' ] )
@@ -348,14 +356,16 @@ class Cpp02TemplateLookup( MyTestCase ):
          # the bindings to know we are explicitly instantiating for char.
          # Otherwise, the templated parameter is just (mis)interpreted as
          # string and a call to the string instantiation is made.
-         inst_char = m.GetSizeNEI['char']
+         self.assertEqual(m.GetSizeNEI['char']('c'), m.GetCharSize())
          # This instantiation also needs square brackets in new Cppyy
-         inst_int = m.GetSizeNEI[int]
+         self.assertEqual(m.GetSizeNEI[int](1), m.GetIntSize())
       else:
-         inst_char = m.GetSizeNEI('char')
-         inst_int = m.GetSizeNEI(int)
-      self.assertEqual(inst_char('c'), m.GetCharSize())
-      self.assertEqual(inst_int(1), m.GetIntSize())
+         self.assertEqual(m.GetSizeNEI('char')('c'), m.GetCharSize())
+         self.assertEqual(m.GetSizeNEI(int)(1), m.GetIntSize())
+
+         # Test new support for square bracket syntax
+         self.assertEqual(m.GetSizeNEI['char']('c'), m.GetCharSize())
+         self.assertEqual(m.GetSizeNEI[int](1), m.GetIntSize())
 
       # Test the non-templated overload (must have been added to
       # the template proxy too)
