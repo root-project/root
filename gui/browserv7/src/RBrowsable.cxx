@@ -224,7 +224,7 @@ std::shared_ptr<RElement> RProvider::Browse(std::unique_ptr<Browsable::RHolder> 
    }
 
    for (auto &pair : bmap)
-      if ((pair.first == nullptr) || (pair.first == cl)) {
+      if ((pair.first == nullptr) || (cl == pair.first)) {
          auto res = pair.second.func(object);
          if (res || !object) return res;
       }
