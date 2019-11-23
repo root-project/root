@@ -185,6 +185,7 @@ called for each data event.
 #include "TMatrixD.h"
 #include "TMatrixDSym.h"
 #include "Math/CholeskyDecomp.h"
+#include "RooDerivative.h"
 
 #include <string>
 
@@ -1331,6 +1332,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("doEEWall","EvalErrorWall",0,1) ;
   pc.defineInt("doWarn","Warnings",0,1) ;
   pc.defineInt("doSumW2","SumW2Error",0,-1) ;
+  pc.defineInt("doAsymptotic","Asymptotic",0,-1) ;
   pc.defineInt("doOffset","OffsetLikelihood",0,0) ;
   pc.defineString("mintype","Minimizer",0,"Minuit") ;
   pc.defineString("minalg","Minimizer",1,"minuit") ;
@@ -1369,6 +1371,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   Int_t doEEWall = pc.getInt("doEEWall") ;
   Int_t doWarn   = pc.getInt("doWarn") ;
   Int_t doSumW2  = pc.getInt("doSumW2") ;
+  Int_t doAsymptotic = pc.getInt("doAsymptotic");
   const RooArgSet* minosSet = static_cast<RooArgSet*>(pc.getObject("minosSet")) ;
 #ifdef __ROOFIT_NOROOMINIMIZER
   const char* minType =0 ;
@@ -1380,8 +1383,8 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   // Determine if the dataset has weights  
   Bool_t weightedData = data.isNonPoissonWeighted() ;
 
-  // Warn user that a SumW2Error() argument should be provided if weighted data is offered
-  if (weightedData && doSumW2==-1) {
+  // Warn user that a method to determine parameter uncertainties should be provided if weighted data is offered
+  if (weightedData && doSumW2==-1 && doAsymptotic==-1) {
     coutW(InputArguments) << "RooAbsPdf::fitTo(" << GetName() << ") WARNING: a likelihood fit is requested of what appears to be weighted data.\n"
                           << "       While the estimated values of the parameters will always be calculated taking the weights into account,\n"
 			  << "       there are multiple ways to estimate the errors of the parameters. You are advised to make an'n"
@@ -1390,9 +1393,9 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 			  << "             (error will be proportional to the number of events in MC).\n"
 			  << "           - Or provide SumW2Error(false), to return errors from original HESSE error matrix\n"
 			  << "             (which will be proportional to the sum of the weights, i.e., a dataset with <sum of weights> events).\n"
-			  << "       If you want the errors to reflect the information contained in the provided simulation, choose true.\n"
-			  << "       If you want the errors to reflect the precision you would be able to obtain with an unweighted dataset\n"
-			  << "       with <sum of weights> events, choose false." << endl ;
+			  << "           - Or provide Asymptotic(true), to use the asymptotically correct expression\n"      
+			  << "             (for details see https://arxiv.org/abs/1911.01303)."
+			  << endl ;
   }
 
 
@@ -1400,6 +1403,9 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   if (doSumW2==1 && minos) {
     coutW(InputArguments) << "RooAbsPdf::fitTo(" << GetName() << ") WARNING: sum-of-weights correction does not apply to MINOS errors" << endl ;
   }
+  if (doAsymptotic==1 && minos) {
+      coutW(InputArguments) << "RooAbsPdf::fitTo(" << GetName() << ") WARNING: asymptotic correction does not apply to MINOS errors" << endl ;
+    }
     
   if (prefit != 0)  {
     size_t nEvents = static_cast<size_t>(prefit*data.numEntries());
@@ -1438,6 +1444,12 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   
   RooAbsReal* nll = createNLL(data,nllCmdList) ;  
   RooFitResult *ret = 0 ;    
+
+  //avoid setting both SumW2 and Asymptotic for uncertainty correction
+  if (doSumW2==1 && doAsymptotic==1) {
+      coutE(InputArguments) << "RooAbsPdf::fitTo(" << GetName() << ") ERROR: Can not run both asymptotically correct method and SumW2 correction" << endl ;
+      return ret;
+    }
 
   // Instantiate MINUIT
 
@@ -1496,7 +1508,54 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 	// Evaluate errors with Hesse
 	m.hesse() ;
       }
-      
+
+      //asymptotically correct approach
+      if (doAsymptotic==1 && m.getNPar()>0) {
+	// Calculated corrected errors for weighted likelihood fits
+	RooFitResult* rw = m.save();
+	//weighted inverse Hessian matrix
+	const TMatrixDSym& matV = rw->covarianceMatrix();
+	coutI(Fitting) << "RooAbsPdf::fitTo(" << GetName() << ") Calculating covariance matrix according to the asymptotically correct approach. If you find this method useful please consider citing https://arxiv.org/abs/1911.01303." << endl;
+	//initialise matrix containing first derivatives
+	TMatrixDSym num(rw->floatParsFinal().getSize());
+	for (int k=0; k<rw->floatParsFinal().getSize(); k++)
+	  for (int l=0; l<rw->floatParsFinal().getSize(); l++)
+	    num(k,l) = 0.0;
+	//determine matrix containing first derivatives
+	RooArgSet* obs = getObservables(data);      
+	for (int j=0; j<data.numEntries(); j++)
+	  {
+	    *obs = *data.get(j);//sets obs to current data point, this is where the pdf will be evaluated
+	    RooArgSet* floatingparams = (RooArgSet*)getParameters(data)->selectByAttrib("Constant", false);
+	    const RooArgList& floated = rw->floatParsFinal();
+	    //determine first derivatives
+	    vector<double> diffs(floated.getSize(), 0.0);
+	    for (int k=0; k<floated.getSize(); k++)
+	      {
+		RooRealVar* paramresult = (RooRealVar*)floated.at(k);
+		RooRealVar* paraminternal = (RooRealVar*)floatingparams->find(paramresult->getTitle());
+		//determine first derivative to parameter k at best estimate point
+		RooDerivative* deriv = derivative(*paraminternal, *obs, 1);
+		double diff = deriv->getVal();		
+		*paraminternal = paramresult->getVal();
+		diffs.at(k) = diff;
+		delete deriv;
+	      }
+	    //fill matrix
+	    for (int k=0; k<floated.getSize(); k++)
+	      {
+		for (int l=0; l<floated.getSize(); l++)
+		  {
+		    num(k,l) += data.weight()*data.weight()*diffs.at(k)*diffs.at(l)/getVal(obs)/getVal(obs);
+		  }
+	      }
+	  }
+	num.Similarity(matV);
+	// Propagate corrected errors to parameters objects
+	m.applyCovarianceMatrix(num);
+	delete rw;
+      }
+
       if (doSumW2==1 && m.getNPar()>0) {
 	// Make list of RooNLLVar components of FCN
 	RooArgSet* comps = nll->getComponents();
@@ -1624,7 +1683,54 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 	// Evaluate errors with Hesse
 	m.hesse() ;
       }
-      
+
+      //asymptotically correct approach
+      if (doAsymptotic==1 && m.getNPar()>0) {
+	// Calculated corrected errors for weighted likelihood fits
+	RooFitResult* rw = m.save();
+	//weighted inverse Hessian matrix
+	const TMatrixDSym& matV = rw->covarianceMatrix();
+	coutI(Fitting) << "RooAbsPdf::fitTo(" << GetName() << ") Calculating covariance matrix according to the asymptotically correct approach. If you find this method useful please consider citing https://arxiv.org/abs/1911.01303." << endl;
+	//initialise matrix containing first derivatives
+	TMatrixDSym num(rw->floatParsFinal().getSize());
+	for (int k=0; k<rw->floatParsFinal().getSize(); k++)
+	  for (int l=0; l<rw->floatParsFinal().getSize(); l++)
+	    num(k,l) = 0.0;
+	//determine matrix containing first derivatives
+	RooArgSet* obs = getObservables(data);      
+	for (int j=0; j<data.numEntries(); j++)
+	  {
+	    *obs = *data.get(j);//sets obs to current data point, this is where the pdf will be evaluated
+	    RooArgSet* floatingparams = (RooArgSet*)getParameters(data)->selectByAttrib("Constant", false);
+	    const RooArgList& floated = rw->floatParsFinal();
+	    //determine first derivatives
+	    vector<double> diffs(floated.getSize(), 0.0);
+	    for (int k=0; k<floated.getSize(); k++)
+	      {
+		RooRealVar* paramresult = (RooRealVar*)floated.at(k);
+		RooRealVar* paraminternal = (RooRealVar*)floatingparams->find(paramresult->getTitle());
+		//determine first derivative to parameter k at best estimate point
+		RooDerivative* deriv = derivative(*paraminternal, *obs, 1);
+		double diff = deriv->getVal();		
+		*paraminternal = paramresult->getVal();
+		diffs.at(k) = diff;
+		delete deriv;
+	      }
+	    //fill matrix
+	    for (int k=0; k<floated.getSize(); k++)
+	      {
+		for (int l=0; l<floated.getSize(); l++)
+		  {
+		    num(k,l) += data.weight()*data.weight()*diffs.at(k)*diffs.at(l)/getVal(obs)/getVal(obs);
+		  }
+	      }
+	  }
+	num.Similarity(matV);
+	// Propagate corrected errors to parameters objects
+	m.applyCovarianceMatrix(num);
+	delete rw;
+      }
+
       if (doSumW2==1 && m.getNPar()>0) {
 	
 	// Make list of RooNLLVar components of FCN
