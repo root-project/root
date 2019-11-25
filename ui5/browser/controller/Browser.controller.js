@@ -377,6 +377,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             case "txt":
                oEditor.setType('plain_text');
                break;
+            case "css":
+               oEditor.setType('css');
+               break;
+            case "csh":
+            case "sh":
+               oEditor.setType('sh');
+               break;
+            case "md":
+               oEditor.setType('markdown');
+               break;
             case "xml":
                oEditor.setType('xml');
                break;
