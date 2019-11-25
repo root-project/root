@@ -45,7 +45,7 @@ protected:
 public:
 
    RBrowserItem() = default;
-   RBrowserItem(const std::string &_name, int _nchilds = 0) : name(_name), nchilds(_nchilds) {}
+   RBrowserItem(const std::string &_name, int _nchilds = 0, const std::string &_icon = "") : name(_name), nchilds(_nchilds), icon(_icon) {}
    // must be here, one needs virtual table for correct streaming of sub-classes
    virtual ~RBrowserItem() = default;
 

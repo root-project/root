@@ -371,7 +371,7 @@ public:
 
    virtual std::unique_ptr<RBrowserItem> CreateBrowserItem()
    {
-      return HasItem() ? std::make_unique<RBrowserItem>(GetName(), CanHaveChilds()) : nullptr;
+      return HasItem() ? std::make_unique<RBrowserItem>(GetName(), CanHaveChilds(), CanHaveChilds() > 0 ? "sap-icon://folder-blank" : "sap-icon://document") : nullptr;
    }
 
    /** Reset iterator to the first element, returns false if not supported */
