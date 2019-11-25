@@ -15,7 +15,7 @@
 #include "PyROOTPythonize.h"
 #include "RConfig.h"
 #include "TInterpreter.h"
-#include "CPyCppyy/API.h"
+#include "PyzCppHelpers.hxx"
 
 #include <utility> // std::pair
 #include <sstream> // std::stringstream
@@ -98,7 +98,7 @@ PyObject *PyROOT::MakeNumpyDataFrame(PyObject * /*self*/, PyObject * pydata)
    const auto codeStr = code.str();
    auto address = (void*) gInterpreter->Calc(codeStr.c_str());
    const auto pythonOwns = true;
-   auto pyobj = TPython::CPPInstance_FromVoidPtr(address, "ROOT::RDataFrame", pythonOwns);
+   auto pyobj = CPPInstance_FromVoidPtr(address, "ROOT::RDataFrame", pythonOwns);
 
    // Bind pyobject holding adopted memory to the RVec
    if (PyObject_SetAttrString(pyobj, "__data__", pyvecs)) {

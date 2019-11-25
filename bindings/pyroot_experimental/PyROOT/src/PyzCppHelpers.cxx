@@ -14,8 +14,8 @@ Set of helper functions that are invoked from the C++ implementation of
 pythonizations.
 
 */
-
 #include "PyzCppHelpers.hxx"
+#include "ProxyWrappers.h"
 
 // Call method with signature: obj->meth()
 PyObject *CallPyObjMethod(PyObject *obj, const char *meth)
@@ -153,4 +153,19 @@ bool CheckEndianessFromTypestr(const std::string& typestr)
       return false;
    }
    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Bind the addr to a python object of class defined by classname.
+
+PyObject *CPPInstance_FromVoidPtr(void *addr, const char *classname, Bool_t python_owns)
+{
+   // perform cast (the call will check TClass and addr, and set python errors)
+   PyObject *pyobject = CPyCppyy::BindCppObjectNoCast(addr, Cppyy::GetScope(classname), false);
+
+   // give ownership, for ref-counting, to the python side, if so requested
+   if (python_owns && CPyCppyy::CPPInstance_Check(pyobject))
+      ((CPyCppyy::CPPInstance *)pyobject)->PythonOwns();
+
+   return pyobject;
 }
