@@ -127,8 +127,10 @@ private:
    std::vector<std::unique_ptr<RPageBox>> fPageBoxes;
    std::vector<std::unique_ptr<TText>> fTexts;
    std::vector<std::unique_ptr<TLine>> fLines;
-   std::vector<std::unique_ptr<TPad>> fPads;
-   std::vector<std::unique_ptr<TH1F>> fTH1Fs;
+   // Not Stored as a unique_ptr because ROOT keeps a list of open TPads and may delete fPad before the destructor of this class is called.
+   TPad* fPad;
+   // Not Stored as as unique_ptrs in a vector because ROOT keeps a list of open TPads and may delete fPad before the destructor of this class is called.
+   std::vector<TH1F*> fTH1Fs;
    std::string fNTupleName;
    std::string fAxisTitle; // for TLatex in RDrawStorage::Draw()
    std::unique_ptr<RMetaDataBox> fHeaderBox;

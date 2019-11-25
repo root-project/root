@@ -458,17 +458,17 @@ void ROOT::Experimental::Detail::RDrawStorage::Draw()
    // 3. Create a TPad in the canvas so that when zooming only the boxes and axis get zoomed
    constexpr double marginlength = 0.03;
    std::string uniquePadName = "RDrawStoragePad" + std::to_string(uniqueId);
-   fPads.emplace_back(std::make_unique<TPad>(uniquePadName.c_str(), "", marginlength, 0.55, 1 - marginlength, 0.87));
-   fPads.back()->SetTopMargin(0.2);
-   fPads.back()->SetBottomMargin(0.2);
-   fPads.back()->SetLeftMargin(0.01);
-   fPads.back()->SetRightMargin(0.01);
-   fPads.back()->Draw();
-   fPads.back()->cd();
+   fPad = new TPad(uniquePadName.c_str(), "", marginlength, 0.55, 1 - marginlength, 0.87);
+   fPad->SetTopMargin(0.2);
+   fPad->SetBottomMargin(0.2);
+   fPad->SetLeftMargin(0.01);
+   fPad->SetRightMargin(0.01);
+   fPad->Draw();
+   fPad->cd();
 
    // 4. Draw an empty histogram without a y-axis for zooming
    std::string uniqueTH1FName = "RDrawStorageTH1F" + std::to_string(uniqueId);
-   fTH1Fs.emplace_back(std::make_unique<TH1F>(uniqueTH1FName.c_str(), "", 500, 0, (double)fTotalNumBytes / fScalingFactorOfAxis));
+   fTH1Fs.emplace_back(new TH1F(uniqueTH1FName.c_str(), "", 500, 0, (double)fTotalNumBytes / fScalingFactorOfAxis));
    fTH1Fs.back()->SetMaximum(1);
    fTH1Fs.back()->SetMinimum(0);
    fTH1Fs.back()->GetYaxis()->SetTickLength(0);
@@ -483,7 +483,7 @@ void ROOT::Experimental::Detail::RDrawStorage::Draw()
       b->Draw();
    }
    fFooterBox->Draw();
-   fPads.back()->AddExec("ShowPageDetails", "ROOT::Experimental::Detail::RDrawStorage::RPageBoxClicked()");
+   fPad->AddExec("ShowPageDetails", "ROOT::Experimental::Detail::RDrawStorage::RPageBoxClicked()");
 
    // 6. Draw clusterAxis
    // fTexts.at(0) points to Title so skip
@@ -493,7 +493,7 @@ void ROOT::Experimental::Detail::RDrawStorage::Draw()
    for (const auto &l : fLines) {
       l->Draw();
    }
-   fPads.back()->Update();
+   fPad->Update();
 
    // 7. Return to canvas, draw title, legend and description of x-axis
    fCanvasPtrs.back()->cd();
