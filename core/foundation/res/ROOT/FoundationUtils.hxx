@@ -49,6 +49,17 @@ namespace FoundationUtils {
       return gPathSeparator;
    }
 
+   ///\returns the path separator for the PATH environment variable on the
+   /// platform.
+   inline const char& GetEnvPathSeparator() {
+#ifdef WIN32
+      static const char gEnvPathSeparator = ';';
+#else
+      static const char gEnvPathSeparator = ':';
+#endif
+      return gEnvPathSeparator;
+   }
+
    ///\returns the fallback directory in the installation (eg. /usr/local/root/).
    const std::string& GetFallbackRootSys();
 

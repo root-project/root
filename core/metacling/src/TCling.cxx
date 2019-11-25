@@ -1267,28 +1267,21 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       }
    }
 
-   if (fCxxModulesEnabled) {
-#ifdef R__WIN32
-      constexpr char kEnvPathDelimiter = ';';
-#else
-      constexpr char kEnvPathDelimiter = ':';
-#endif // R__WIN32
-      // kEnvPathDelimiter does not need to be captured as it's a constant expr.
-      // MSVC gets it wrong, so provide copy-capture as fallback.
-      auto GetEnvVarPath = [=](const std::string &EnvVar,
-                              std::vector<std::string> &Paths) {
-         llvm::Optional<std::string> EnvOpt = llvm::sys::Process::GetEnv(EnvVar);
-         if (EnvOpt.hasValue()) {
-            StringRef Env(*EnvOpt);
-            while (!Env.empty()) {
-               StringRef Arg;
-               std::tie(Arg, Env) = Env.split(kEnvPathDelimiter);
-               if (std::find(Paths.begin(), Paths.end(), Arg.str()) == Paths.end())
-                  Paths.push_back(Arg.str());
-            }
+   auto GetEnvVarPath = [](const std::string &EnvVar,
+                            std::vector<std::string> &Paths) {
+      llvm::Optional<std::string> EnvOpt = llvm::sys::Process::GetEnv(EnvVar);
+      if (EnvOpt.hasValue()) {
+         StringRef Env(*EnvOpt);
+         while (!Env.empty()) {
+            StringRef Arg;
+            std::tie(Arg, Env) = Env.split(ROOT::FoundationUtils::GetEnvPathSeparator());
+            if (std::find(Paths.begin(), Paths.end(), Arg.str()) == Paths.end())
+               Paths.push_back(Arg.str());
          }
-      };
+      }
+   };
 
+   if (fCxxModulesEnabled) {
       std::vector<std::string> Paths;
       // ROOT usually knows better where its libraries are. This way we can
       // discover modules without having to should thisroot.sh and should fix
@@ -1298,7 +1291,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       //GetEnvVarPath("LD_LIBRARY_PATH", Paths);
       std::string EnvVarPath;
       for (const std::string& P : Paths)
-         EnvVarPath += P + kEnvPathDelimiter;
+         EnvVarPath += P + ROOT::FoundationUtils::GetEnvPathSeparator();
       // FIXME: We should make cling -fprebuilt-module-path work.
       gSystem->Setenv("CLING_PREBUILT_MODULE_PATH", EnvVarPath.c_str());
    }
@@ -1312,11 +1305,23 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    // and rootcling because rootcling activates modules only if -cxxmodule
    // flag is passed.
    if (fCxxModulesEnabled && !fromRootCling) {
-      clingArgsStorage.push_back(("-fmodule-map-file=" +
-                                  TROOT::GetIncludeDir() + "/module.modulemap").Data());
-      std::string ModuleMapCWD = std::string(gSystem->WorkingDirectory()) + "/module.modulemap";
+      // For now we prefer rootcling to enumerate explicitly its modulemaps.
+      std::vector<std::string> Paths;
+      Paths.push_back(TROOT::GetIncludeDir().Data());
+      GetEnvVarPath("CLING_MODULEMAP_PATH", Paths);
+
+      // Give highest precedence of the modulemap in the cwd.
+      std::string CWD = gSystem->WorkingDirectory();
+      std::string ModuleMapCWD
+         = CWD + ROOT::FoundationUtils::GetPathSeparator() + "module.modulemap";
       if (llvm::sys::fs::exists(ModuleMapCWD))
-         clingArgsStorage.push_back("-fmodule-map-file=" + ModuleMapCWD);
+         Paths.push_back(CWD);
+
+      for (const std::string& P : Paths) {
+         clingArgsStorage.push_back(("-fmodule-map-file=" + P +
+                                     ROOT::FoundationUtils::GetPathSeparator()
+                                     + "module.modulemap"));
+      }
    }
 
    std::vector<const char*> interpArgs;
