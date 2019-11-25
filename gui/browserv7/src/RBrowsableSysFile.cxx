@@ -288,6 +288,9 @@ std::string RSysDirLevelIter::GetFileIcon(const std::string &fname)
        (EndsWith(".htm")) ||
        (EndsWith(".html")) ||
        (EndsWith(".json")) ||
+       (EndsWith(".sh")) ||
+       (EndsWith(".md")) ||
+       (EndsWith(".css")) ||
        (EndsWith(".js")))
       return "sap-icon://document-text"s;
    if ((EndsWith(".bmp")) ||
