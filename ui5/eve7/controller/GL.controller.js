@@ -118,7 +118,7 @@ sap.ui.define([
       OnEveManagerInit: function()
       {
          // called when manager was updated, need only in standalone modes to detect own element id
-         if (!this.standalone || this.elementid) return;
+         if (!this.standalone) return;
 
          let viewers = this.mgr.FindViewers();
 
