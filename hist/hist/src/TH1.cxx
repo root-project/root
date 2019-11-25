@@ -8437,7 +8437,8 @@ void TH1::SetStats(Bool_t stats)
 ///
 /// This function is automatically called when the histogram is created
 /// if the static function TH1::SetDefaultSumw2 has been called before.
-/// If flag = false the structure is deleted
+/// If flag = false the structure containing the sum of the square of weights
+/// is rest and it will be empty, but it is not deleted (i.e. GetSumw2()->fN = 0)
 
 void TH1::Sumw2(Bool_t flag)
 {
