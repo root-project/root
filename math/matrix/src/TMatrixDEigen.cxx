@@ -743,6 +743,9 @@ TMatrixDEigen &TMatrixDEigen::operator=(const TMatrixDEigen &source)
       fEigenVectors.ResizeTo(source.fEigenVectors);
       fEigenValuesRe.ResizeTo(source.fEigenValuesRe);
       fEigenValuesIm.ResizeTo(source.fEigenValuesIm);
+      fEigenVectors = source.fEigenVectors;
+      fEigenValuesRe = source.fEigenValuesRe;
+      fEigenValuesIm = source.fEigenValuesIm;
    }
    return *this;
 }
