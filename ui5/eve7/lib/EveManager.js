@@ -625,10 +625,11 @@ sap.ui.define([], function() {
       if ( ! element) return;
 
       let scene = this.GetElement(element.fSceneId);
-
-      for (let r of scene.$receivers)
-      {
-         r.SelectElement(selection_obj, element_id, sec_idcs);
+      if (scene.$receivers) {
+         for (let r of scene.$receivers)
+         {
+            r.SelectElement(selection_obj, element_id, sec_idcs);
+         }
       }
 
       // console.log("EveManager.SelectElement", element, scene.$receivers[0].viewer.outline_pass.id2obj_map);
@@ -641,9 +642,11 @@ sap.ui.define([], function() {
 
       let scene = this.GetElement(element.fSceneId);
 
-      for (let r of scene.$receivers)
-      {
-         r.UnselectElement(selection_obj, element_id);
+      if (scene.$receivers) {
+         for (let r of scene.$receivers)
+         {
+            r.UnselectElement(selection_obj, element_id);
+         }
       }
 
       // console.log("EveManager.UnselectElement", element, scene.$receivers[0].viewer.outline_pass.id2obj_map);
