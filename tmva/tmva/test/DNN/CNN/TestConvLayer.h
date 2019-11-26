@@ -201,7 +201,7 @@ bool testForward1_cudnn()
             45, 45, 45,
             45, 45, 45},
 
-           {60, 60, 60, 
+           {60, 60, 60,
             60, 60, 60,
             60, 60, 60},
 
@@ -397,7 +397,7 @@ bool testBackward1()
         }
     }
     Tensor_t activationsBackward ( activationsBackwardEvent, 3);
-   
+
 
     /////////////////////// Fill the expected output //////////////////////////
     double expectedActivationGradsBackward[][25] = {
@@ -449,16 +449,16 @@ bool testBackward1()
     // Init outputs - these should be filled by the computation.
     Matrix_t computedWeightGradients(numberFilters, imgDepth * fltHeight * fltWidth);
     Matrix_t computedBiasGradients(numberFilters, 1);
-    
+
     TDescriptors * convDescriptors = nullptr;
     TWorkspace   * convWorkspace   = nullptr;
 
     TConvParams params(1, imgDepth, imgHeight, imgWidth,
                        numberFilters, fltHeight, fltWidth,
                        strideRows, strideCols, zeroPaddingHeight, zeroPaddingWidth);
-    
+
     TConvLayer<Architecture> *layer = nullptr;
-    Architecture::InitializeConvDescriptors(convDescriptors, 0.0, layer);
+    Architecture::InitializeConvDescriptors(convDescriptors, layer);
     Architecture::InitializeConvWorkspace(convWorkspace, convDescriptors, params, layer);
 
     Tensor_t output = df;
@@ -539,7 +539,7 @@ bool testBackward1_cudnn()
              -0.09, 0.29, 0.10, -0.15, -0.11, 0.02, 0.08, 0.17, 0.35}
     };
 
-    
+
     std::vector<size_t> weightsShape {numberFilters, imgDepth, fltHeight, fltWidth};
     HostBuffer_t weights_hostbuffer(numberFilters * imgDepth * fltHeight * fltWidth);
     for (size_t i = 0; i < numberFilters; i++) {
@@ -549,7 +549,7 @@ bool testBackward1_cudnn()
     }
     Tensor_t weights(weights_hostbuffer, weightsShape, MemoryLayout::RowMajor, 0, 0);
     //weights.Print();
-    
+
 
     /// input x
     double activationsPreviousLayer[][25] = {
@@ -613,7 +613,7 @@ bool testBackward1_cudnn()
 
     std::vector<size_t> biasShape = {1,2, 1, 1 };
     Tensor_t biasesTensor( biasShape, MemoryLayout::RowMajor, 0, 0);
-    biasesTensor.Zero(); 
+    biasesTensor.Zero();
 
 
     double expectedBiasGrads[][1] = {
@@ -621,7 +621,7 @@ bool testBackward1_cudnn()
             {-0.36}
     };
 
-    Matrix_t expectedBiasGradients( biasShape,MemoryLayout::RowMajor, 0, 0); 
+    Matrix_t expectedBiasGradients( biasShape,MemoryLayout::RowMajor, 0, 0);
     for (size_t i = 0; i < imgDepth; i++) {
          expectedBiasGradients(0, i, 0, 0) = expectedBiasGrads[i][0];
     }
@@ -646,7 +646,7 @@ bool testBackward1_cudnn()
 
     TConvParams params(1, imgDepth, imgHeight, imgWidth, numberFilters, fltHeight, fltWidth, strideRows,
                       strideCols, zeroPaddingHeight, zeroPaddingWidth);
-    Tensor_t dummy; 
+    Tensor_t dummy;
     Architecture::ConvLayerForward(computedOutput, computedInputActivFunc, input, weights, biasesTensor, params,
                                        AFunct, dummy, convDescriptors, convWorkspace);
 
@@ -664,13 +664,13 @@ bool testBackward1_cudnn()
     // Check correctness.
     bool status = true;
 
-    Architecture::PrintTensor( expectedActivationGradientsBackward, "expected dx"); 
-    Architecture::PrintTensor( computedActivationGradientsBackward, "computed dx"); 
+    Architecture::PrintTensor( expectedActivationGradientsBackward, "expected dx");
+    Architecture::PrintTensor( computedActivationGradientsBackward, "computed dx");
 
-    Architecture::PrintTensor( expectedWeightGradients, "expected dw"); 
+    Architecture::PrintTensor( expectedWeightGradients, "expected dw");
     Architecture::PrintTensor( computedWeightGradients, "computed dw");
 
-    Architecture::PrintTensor( expectedBiasGradients, "expected db"); 
+    Architecture::PrintTensor( expectedBiasGradients, "expected db");
     Architecture::PrintTensor( computedBiasGradients, "computed db");
 
     // FIXME: Implement Almost Equals for CudaTensor

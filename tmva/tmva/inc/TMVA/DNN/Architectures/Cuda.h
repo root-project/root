@@ -21,7 +21,7 @@
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/CNN/ContextHandles.h"
 //#include "TMVA/DNN/CNN/Descriptors.h"
-//#include "TMVA/DNN/BatchNormLayer.h"
+#include "TMVA/DNN/BatchNormLayer.h"
 #include "TMVA/DNN/CNN/ConvLayer.h"
 #include "TMVA/DNN/CNN/MaxPoolLayer.h"
 
@@ -81,6 +81,7 @@ public:
    using DropoutDescriptor_t     = CudaDropoutDescriptor;
    //using OpTensorDescriptor_t    = CudaOpTensorDescriptor;
    using PoolingDescriptor_t     = CudaPoolingDescriptor;
+   using TensorDescriptor_t      = DummyType;
    //using ReductionDescriptor_t   = CudaReduceTensorDescriptor;
    using AlgorithmForward_t      = CudaConvolutionFwdAlgo;
    using AlgorithmBackward_t     = CudaConvolutionBwdDataAlgo;
@@ -90,9 +91,9 @@ public:
 
    using EmptyDescriptor_t       = CudaEmptyDescriptor;        // Used if a descriptor is not needed in a class
 
-   /*using BNormLayer_t            = DNN::TBatchNormLayer<TCuda<AReal>>;
-   using BNormDescriptors_t      = CNN::TCNNDescriptors<BNormLayer_t>;
-   using BNormWorkspace_t        = CNN::TCNNWorkspace<BNormLayer_t>;*/
+   using BNormLayer_t            = TBatchNormLayer<TCuda<AReal>>;
+   using BNormDescriptors_t      = TDNNGenDescriptors<BNormLayer_t>;
+
    using ConvLayer_t             = CNN::TConvLayer<TCuda<AReal>>;
    using ConvDescriptors_t       = CNN::TCNNDescriptors<ConvLayer_t>;
    using ConvWorkspace_t         = CNN::TCNNWorkspace<ConvLayer_t>;
@@ -128,19 +129,22 @@ public:
    //____________________________________________________________________________
 
    /** Initialize CNN data/operator descriptors. Not used at the moment.*/
-   # if 0
+
    static void InitializeBNormDescriptors(TDescriptors * & /*descriptors*/,
-                                          BNormLayer_t */*L = nullptr*/) {}
-   # endif
-   static void  InitializeConvDescriptors(TDescriptors *& /*descriptors*/, double /*coef = 0.0*/, ConvLayer_t * /*L = nullptr*/) {}
+                                          BNormLayer_t */*L = nullptr*/) {
+      Error("InitializeBNormDescriptrs", "Batch normalization on GPU is supported only with Cudnn");
+   }
+
+   static void  InitializeConvDescriptors(TDescriptors *& /*descriptors*/, ConvLayer_t * /*L = nullptr*/) {}
 
    static void InitializePoolDescriptors(TDescriptors *& /*descriptors*/, PoolingLayer_t * /*L = nullptr*/) {}
 
    static void InitializeActivationDescriptor(ActivationDescriptor_t &/*descriptors*/, EActivationFunction /*activFunc */ , double /*coef*/ = 0.0) {}
 
    /** Release CNN data/operator descriptors. Not used at the moment.*/
-   static void ReleaseConvDescriptors(TDescriptors * & /*descriptors*/, ConvLayer_t */*L = nullptr*/) {}
-   static void ReleasePoolDescriptors(TDescriptors * & /*descriptors*/, PoolingLayer_t */*L = nullptr*/) {}
+   static void ReleaseConvDescriptors(TDescriptors * & /*descriptors*/) {}
+   static void ReleasePoolDescriptors(TDescriptors * & /*descriptors*/) {}
+   static void ReleaseBNormDescriptors(TDescriptors *& /*descriptors*/) {}
 
    static void InitializeConvWorkspace(TWorkspace * & /*workspace*/,
                                        TDescriptors * & /*descriptors*/,
@@ -446,60 +450,28 @@ public:
      * and they are then scaled by two parameter, different for each input variable:
      *  - a scale factor \gamma gamma
      *  - an offset \beta beta */
-   static void BatchNormLayerForwardTraining(Matrix_t input,                        // input
-                                             Matrix_t & gamma,                      // gamma
-                                             Matrix_t & beta,                       // beta
-                                             Matrix_t outputActivation,             // out
-                                             Matrix_t & Xmu,                        // Xmu
-                                             Matrix_t & output,                     // Xhat
-                                             Matrix_t & Variance,                   // Var
-                                             Matrix_t & IVariance,                  // Ivar
-                                             # if 0
-                                             const BNormDescriptors_t & /*descriptors*/,
-                                             BNormWorkspace_t & /*workspace*/,
-                                             # endif
-                                             std::vector<Scalar_t> & RunningMeans,  // Mu_Training
-                                             std::vector<Scalar_t> & RunningVars,   // Var_Training
-                                             Scalar_t nTrainedBatches,              // TrainedBatches
-                                             Scalar_t momentum,                     // GD momentum
-                                             Scalar_t epsilon) {}                   // epsilon
+
+   static void BatchNormLayerForwardTraining(int axis, const Tensor_t &x, Tensor_t &y, Matrix_t &gamma, Matrix_t &beta,
+                                             Matrix_t &mean, Matrix_t &, Matrix_t &iVariance, Matrix_t &runningMeans,
+                                             Matrix_t &runningVars, Scalar_t nTrainedBatches, Scalar_t momentum,
+                                             Scalar_t epsilon, const TensorDescriptor_t &bnParDescriptor);
 
    /** During inference the inputs are not normalized using the batch mean but the previously computed
-     * at  running mean and variance */
-   static void BatchNormLayerForwardInference(Tensor_t input,
-                                              Matrix_t & gamma,
-                                              Matrix_t & beta,
-                                              Matrix_t outputActivation,
-                                              # if 0
-                                              const BNormDescriptors_t & /*descriptors*/,
-                                              BNormWorkspace_t & /*workspace*/,
-                                              # endif
-                                              std::vector<Scalar_t> & RunningMeans,
-                                              std::vector<Scalar_t> & RunningVars,
-                                              Scalar_t nTrainedBatches,
-                                              Scalar_t epsilon) {}
+    * at  running mean and variance */
 
-   /**
-    * */
-   static void BatchNormLayerForwardBackward(const Matrix_t & outputGrad,
-                                             const Matrix_t & gamma,
-                                             Matrix_t &dgamma,
-                                             Matrix_t &dbeta,
-                                             Matrix_t dx,
-                                             Matrix_t & output,
-                                             Matrix_t & Xmu,
-                                             Matrix_t & IVariance,
-                                             Matrix_t & Variance,
-                                             # if 0
-                                             const BNormDescriptors_t & /*descriptors*/,
-                                             BNormWorkspace_t & /*workspace*/,
-                                             # endif
-                                             Scalar_t epsilon) {}
+   static void BatchNormLayerForwardInference(int axis, const Tensor_t &x, Matrix_t &gamma, Matrix_t &beta, Tensor_t &y,
+                                              const Matrix_t &runningMeans, const Matrix_t &runningVars,
+                                              Scalar_t epsilon, const TensorDescriptor_t &);
 
-      //____________________________________________________________________________
-      //
-      //  Convolutional Layer Propagation
-      //____________________________________________________________________________
+   static void BatchNormLayerBackward(int axis, const Tensor_t &x, const Tensor_t &dy, Tensor_t &dx,
+                                      Matrix_t &gamma, //  Matrix_t &beta, (not needed)
+                                      Matrix_t &dgamma, Matrix_t &dbeta, const Matrix_t &mean, const Matrix_t &variance,
+                                      const Matrix_t &iVariance, Scalar_t epsilon, const TensorDescriptor_t &);
+
+   //____________________________________________________________________________
+   //
+   //  Convolutional Layer Propagation
+   //____________________________________________________________________________
 
    /** @name Forward Propagation in Convolutional Layer
     */

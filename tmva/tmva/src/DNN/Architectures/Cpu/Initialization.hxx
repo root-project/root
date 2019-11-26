@@ -29,31 +29,27 @@ template<typename AFloat>
 void TCpu<AFloat>::SetRandomSeed(size_t seed)
 {
    if (!fgRandomGen) fgRandomGen = new TRandom3();
-   fgRandomGen->SetSeed(seed); 
+   fgRandomGen->SetSeed(seed);
 }
 template<typename AFloat>
 TRandom & TCpu<AFloat>::GetRandomGenerator()
 {
    if (!fgRandomGen) fgRandomGen = new TRandom3(0);
-   return *fgRandomGen; 
+   return *fgRandomGen;
 }
 
 //______________________________________________________________________________
 template<typename AFloat>
 void TCpu<AFloat>::InitializeGauss(TCpuMatrix<AFloat> & A)
 {
-   size_t m,n;
-   m = A.GetNrows();
-   n = A.GetNcols();
+   size_t n = A.GetNcols();
 
    TRandom &  rand = GetRandomGenerator();
- 
+
    AFloat sigma = sqrt(2.0 / ((AFloat) n));
 
-   for (size_t i = 0; i < m; i++) {
-      for (size_t j = 0; j < n; j++) {
-         A(i,j) = rand.Gaus(0.0, sigma);
-      }
+   for (size_t i = 0; i < A.GetSize(); ++i) {
+      A.GetRawDataPointer()[i] = rand.Gaus(0.0, sigma);
    }
 }
 
@@ -69,7 +65,7 @@ void TCpu<AFloat>::InitializeUniform(TCpuMatrix<AFloat> & A)
    AFloat range = sqrt(2.0 / ((AFloat) n));
 
    // for debugging
-   //range = 1; 
+   //range = 1;
    //rand.SetSeed(111);
 
    for (size_t i = 0; i < A.GetSize(); ++i) {
@@ -80,14 +76,14 @@ void TCpu<AFloat>::InitializeUniform(TCpuMatrix<AFloat> & A)
  //______________________________________________________________________________
 ///  Truncated normal initialization (Glorot, called also Xavier normal)
 ///  The values are sample with a normal distribution with stddev = sqrt(2/N_input + N_output) and
-///   values larger than 2 * stddev are discarded 
+///   values larger than 2 * stddev are discarded
 ///  See Glorot & Bengio, AISTATS 2010 - http://jmlr.org/proceedings/papers/v9/glorot10a/glorot10a.pdf
 template<typename AFloat>
 void TCpu<AFloat>::InitializeGlorotNormal(TCpuMatrix<AFloat> & A)
 {
    size_t m,n;
-   // for conv layer weights output m is only output depth. It shouild ne multiplied also by filter sizes 
-   // e.g. 9 for a 3x3 filter. But this information is lost if we use Tensors of dims 2 
+   // for conv layer weights output m is only output depth. It shouild ne multiplied also by filter sizes
+   // e.g. 9 for a 3x3 filter. But this information is lost if we use Tensors of dims 2
    m = A.GetNrows();
    n = A.GetNcols();
 
@@ -96,15 +92,14 @@ void TCpu<AFloat>::InitializeGlorotNormal(TCpuMatrix<AFloat> & A)
    AFloat sigma = sqrt(2.0 /( ((AFloat) n) + ((AFloat) m)) );
    // AFloat sigma = sqrt(2.0 /( ((AFloat) m)) );
 
-   for (size_t i = 0; i < m; i++) {
-      for (size_t j = 0; j < n; j++) {
-         AFloat value = 0; 
-         do { 
-            value = rand.Gaus(0.0, sigma);
-         } while ( std::abs(value) > 2*sigma);
-         R__ASSERT( std::abs(value) < 2*sigma); 
-         A(i,j) = value;
-      }
+   size_t nsize = A.GetSize();
+   for (size_t i = 0; i < nsize; i++) {
+      AFloat value = 0;
+      do {
+         value = rand.Gaus(0.0, sigma);
+      } while (std::abs(value) > 2 * sigma);
+      R__ASSERT(std::abs(value) < 2 * sigma);
+      A.GetRawDataPointer()[i] = value;
    }
 }
 
@@ -124,13 +119,12 @@ void TCpu<AFloat>::InitializeGlorotUniform(TCpuMatrix<AFloat> & A)
 
    AFloat range = sqrt(6.0 /( ((AFloat) n) + ((AFloat) m)) );
 
-   for (size_t i = 0; i < m; i++) {
-      for (size_t j = 0; j < n; j++) {
-         A(i,j) = rand.Uniform(-range, range);
-      }
+   size_t nsize = A.GetSize();
+   for (size_t i = 0; i < nsize; i++) {
+      A.GetRawDataPointer()[i] = rand.Uniform(-range, range);
    }
 }
-  
+
 //______________________________________________________________________________
 template<typename AFloat>
 void TCpu<AFloat>::InitializeIdentity(TCpuMatrix<AFloat> & A)

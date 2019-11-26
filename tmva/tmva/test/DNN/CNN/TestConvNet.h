@@ -292,7 +292,7 @@ auto testConvLayerForward(const typename Architecture::Tensor_t &input,
     TWorkspace   * convWorkspace   = nullptr;
 
     TConvLayer<Architecture> *layer = nullptr;
-    Architecture::InitializeConvDescriptors(convDescriptors, 0.0, layer);
+    Architecture::InitializeConvDescriptors(convDescriptors, layer);
     Architecture::InitializeConvWorkspace(convWorkspace, convDescriptors, params, layer);
 
     Architecture::ConvLayerForward(computedOutput, computedDerivatives, input, weights, biases, params,

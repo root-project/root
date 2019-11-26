@@ -314,7 +314,7 @@ void TMaxPoolLayer<Architecture_t>::InitializeDescriptors() {
 
 template <typename Architecture_t>
 void TMaxPoolLayer<Architecture_t>::ReleaseDescriptors() {
-   Architecture_t::ReleasePoolDescriptors(fDescriptors, this);
+   Architecture_t::ReleasePoolDescriptors(fDescriptors);
 }
 
 //______________________________________________________________________________
