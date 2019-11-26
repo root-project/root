@@ -55,7 +55,21 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
    return Controller.extend("rootui5.browser.controller.Browser", {
       onInit: async function () {
 
-         this.globalId = 1;
+         let pthis = this;
+         sap.ui.Device.orientation.attachHandler(function(mParams) {
+            let burgerMenu = pthis.getView().byId("burgerMenu");
+            burgerMenu.detachPress(pthis.onFullScreenPressLandscape, pthis);
+            burgerMenu.detachPress(pthis.onFullScreenPressPortrait, pthis);
+
+            if (mParams.landscape) {
+               burgerMenu.attachPress(pthis.onFullScreenPressLandscape, pthis);
+            } else {
+               burgerMenu.attachPress(pthis.onFullScreenPressPortrait, pthis);
+            }
+         });
+
+        this.globalId = 1;
+        this.nextElem = "";
 
          this.websocket = this.getView().getViewData().conn_handle;
 
@@ -204,45 +218,59 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       newCodeEditorFragment: function (ID) {
-         return new sap.m.Page({
-            headerContent: [
-                        new FileUploader({
-                           change: [this.onChangeFile, this]
-                        }),
-                        new Button(ID + "SaveAs", {
-                           text: "Save as...",
-                           tooltip: "Save current file as...",
-                           press: [this.onSaveAs, this]
-                        }),
-                        new Button(ID + "Save", {
-                           text: "Save",
-                           tooltip: "Save current file",
-                           press: [this.onSaveFile, this]
-                        }),
-                        new Button(ID + "Run", {
-                           text: "Run",
-                           tooltip: "Run Current Macro",
-                           icon: "sap-icon://play",
-                           enabled: false,
-                           press: [this.onRunMacro, this]
-                        }),
-            ],
-            content: new CodeEditor(ID + "Editor", {
-                     height: "100%",
-                     colorTheme: "default",
-                     type: "c_cpp",
-                     value: "{/code}",
-                     change: function () {
-                        this.getModel().setProperty("/modified", true);
-                     }
-                  }).setModel(new JSONModel({
-                     code: "",
-                     ext: "",
-                     filename: "",
-                     fullpath: "",
-                     modified: false
-                  }))
-         });
+         return [
+               new sap.tnt.ToolHeader({
+                  height: "40px",
+                  content: [
+                     new FileUploader({
+                        change: [this.onChangeFile, this],
+                        style: "Transparent",
+                     }),
+                     new Button(ID + "Run", {
+                        text: "Run",
+                        tooltip: "Run Current Macro",
+                        icon: "sap-icon://play",
+                        type: "Transparent",
+                        enabled: false,
+                        press: [this.onRunMacro, this]
+                     }),
+                     new sap.m.ToolbarSpacer({
+                        layoutData: new sap.m.OverflowToolbarLayoutData({
+                           priority:"NeverOverflow",
+                           minWidth: "16px"
+                        })
+                     }),
+                     new Button(ID + "SaveAs", {
+                        text: "Save as...",
+                        tooltip: "Save current file as...",
+                        type: "Transparent",
+                        press: [this.onSaveAs, this]
+                     }),
+                     new Button(ID + "Save", {
+                        text: "Save",
+                        tooltip: "Save current file",
+                        type: "Transparent",
+                        press: [this.onSaveFile, this]
+                     })
+                  ]
+               }),
+               new CodeEditor(ID + "Editor", {
+                  // height: 'auto',
+                  colorTheme: "default",
+                  type: "c_cpp",
+                  value: "{/code}",
+                  height: "calc(100% - 40px)",
+                  change: function () {
+                     this.getModel().setProperty("/modified", true);
+                  }
+               }).setModel(new JSONModel({
+                  code: "",
+                  ext: "",
+                  filename: "",
+                  fullpath: "",
+                  modified: false
+               }))
+            ];
       },
 
       /** @brief Invoke dialog with server side code */
@@ -329,7 +357,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
        * @desc Used to set the editor's model properties and display the file name on the tab element  */
       setFileNameType: function (oEditor, fullname) {
          let oModel = oEditor.getModel();
-         let oTabElement = oEditor.getParent().getParent();
+         let oTabElement = oEditor.getParent();
          let ext = "txt";
          let runButton = this.getElementFromCurrentTab("Run");
          runButton.setEnabled(false);
@@ -1077,14 +1105,24 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
 
 
-      handlePressConfiguration: function(oEvent) {
-         var oItem = oEvent.getSource();
-         var oShell = this.byId("myShell");
-         var bState = oShell.getShowPane();
-         oShell.setShowPane(!bState);
-         oItem.setShowMarker(!bState);
-         oItem.setSelected(!bState);
+      onFullScreenPressLandscape: function () {
+         let splitApp = this.getView().byId("SplitAppBrowser");
+         let mode = splitApp.getMode();
+         if(mode === "ShowHideMode") {
+            splitApp.setMode("HideMode");
+         } else {
+            splitApp.setMode("ShowHideMode");
+         }
       },
+
+      onFullScreenPressPortrait: function () {
+         let splitApp = this.getView().byId("SplitAppBrowser");
+         if(splitApp.isMasterShown()) {
+            splitApp.hideMaster();
+         } else {
+            splitApp.showMaster();
+         }
+      }
 
    });
 
