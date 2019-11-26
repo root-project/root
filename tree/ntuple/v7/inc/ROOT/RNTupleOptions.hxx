@@ -23,6 +23,19 @@ namespace Experimental {
 
 // clang-format off
 /**
+\class ROOT::Experimental::ENTupleContainerFormat
+\ingroup NTuple
+\brief Describes the options for wrapping RNTuple data in files
+*/
+// clang-format on
+enum class ENTupleContainerFormat {
+  kTFile, // ROOT TFile
+  kRaw, // Raw file
+};
+
+
+// clang-format off
+/**
 \class ROOT::Experimental::RNTupleWriteOptions
 \ingroup NTuple
 \brief Common user-tunable settings for storing ntuples
@@ -31,14 +44,20 @@ All page sink classes need to support the common options.
 */
 // clang-format on
 class RNTupleWriteOptions {
-  int fCompression;
+  int fCompression{RCompressionSetting::EDefaults::kUseAnalysis};
+  ENTupleContainerFormat fContainerFormat{ENTupleContainerFormat::kTFile};
+
 public:
-  RNTupleWriteOptions() : fCompression(RCompressionSetting::EDefaults::kUseAnalysis) {}
+  RNTupleWriteOptions() = default;
+
   int GetCompression() const { return fCompression; }
   void SetCompression(int val) { fCompression = val; }
   void SetCompression(RCompressionSetting::EAlgorithm algorithm, int compressionLevel) {
     fCompression = CompressionSettings(algorithm, compressionLevel);
   }
+
+  ENTupleContainerFormat GetContainerFormat() const { return fContainerFormat; }
+  void SetContainerFormat(ENTupleContainerFormat val) { fContainerFormat = val; }
 };
 
 

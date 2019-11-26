@@ -460,9 +460,13 @@ void ROOT::Experimental::RField<std::string>::DoReadGlobal(
    RClusterIndex collectionStart;
    ClusterSize_t nChars;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nChars);
-   typedValue->resize(nChars);
-   Detail::RColumnElement<char, EColumnType::kByte> elemChars(const_cast<char*>(typedValue->data()));
-   fColumns[1]->ReadV(collectionStart, nChars, &elemChars);
+   if (nChars == 0) {
+      typedValue->clear();
+   } else {
+      typedValue->resize(nChars);
+      Detail::RColumnElement<char, EColumnType::kByte> elemChars(const_cast<char*>(typedValue->data()));
+      fColumns[1]->ReadV(collectionStart, nChars, &elemChars);
+   }
 }
 
 void ROOT::Experimental::RField<std::string>::CommitCluster()
